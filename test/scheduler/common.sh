@@ -628,11 +628,12 @@ collect_cpu_idle() {
 
 	get_cpu_time "$time" idle 0 1 "${cpus_to_collect[@]}"
 
-	local user_load
+	local user_load load_median
 	for cpu in "${cpus_to_collect[@]}"; do
 		samples=(${cpu_times[cpu]})
-		printf '* cpu%u idle samples: %s (avg: %u%%)\n' \
-			"$cpu" "${samples[*]}" "${avg_cpu_time[cpu]}"
+		load_median=$(calc_median "${samples[@]}")
+		printf '* cpu%u idle samples: %s (avg: %u%%, median: %u%%)\n' \
+			"$cpu" "${samples[*]}" "${avg_cpu_time[cpu]}" "$load_median"
 		# Cores with polling reactors have 0% idle time,
 		# while the ones in interrupt mode won't have 100% idle.
 		# During the tests, polling reactors spend the major portion
@@ -702,4 +703,21 @@ update_thread_cpus_map() {
 		done
 	done
 	((${#thread_cpus[@]} > 0))
+}
+
+calc_median() {
+	local samples=("$@") samples_sorted
+	local middle median sample
+
+	samples_sorted=($(printf '%s\n' "${samples[@]}" | sort -n))
+
+	middle=$((${#samples_sorted[@]} / 2))
+	if ((${#samples_sorted[@]} % 2 == 0)); then
+		median=$(((samples_sorted[middle - 1] + samples_sorted[middle]) / 2))
+	else
+		median=${samples_sorted[middle]}
+	fi
+
+	echo "$median"
+
 }
