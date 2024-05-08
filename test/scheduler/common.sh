@@ -216,15 +216,22 @@ get_proc_cpu_affinity() {
 	xtrace_disable
 
 	local pid=${1:-$$}
-	local status val
+	local status val status_file
 
-	[[ -e /proc/$pid/status ]] || return 1
+	if [[ -e $pid ]]; then
+		status_file=$pid
+	elif [[ -e /proc/$pid/status ]]; then
+		status_file=/proc/$pid/status
+	else
+		return 1
+	fi
+
 	while IFS=":"$'\t' read -r status val; do
 		if [[ $status == Cpus_allowed_list ]]; then
 			parse_cpu_list <(echo "$val")
 			return 0
 		fi
-	done < "/proc/$pid/status"
+	done < "$status_file"
 
 	xtrace_restore
 }
@@ -628,7 +635,7 @@ collect_cpu_idle() {
 
 	get_cpu_time "$time" idle 0 1 "${cpus_to_collect[@]}"
 
-	local user_load load_median
+	local user_load load_median user_spdk_load
 	for cpu in "${cpus_to_collect[@]}"; do
 		samples=(${cpu_times[cpu]})
 		load_median=$(calc_median "${samples[@]}")
@@ -652,6 +659,17 @@ collect_cpu_idle() {
 		else
 			printf '* cpu%u is not idle\n' "$cpu"
 			is_idle[cpu]=0
+			# HACK: Since we verify this in context of business of particular SPDK threads, make
+			# the last check against their {u,s}time to determine if we are really busy or not. This
+			# is meant to null and void potential jitter on the cpu.
+			# See https://github.com/spdk/spdk/issues/3362.
+			user_spdk_load=$(get_spdk_proc_time "$time" "$cpu")
+			if ((user_spdk_load <= 15)); then
+				printf '* SPDK thread pinned to cpu%u seems to be idle regardless (%u%%)\n' \
+					"$cpu" \
+					"$user_spdk_load"
+				is_idle[cpu]=1
+			fi
 		fi
 	done
 }
@@ -720,4 +738,45 @@ calc_median() {
 
 	echo "$median"
 
+}
+
+get_spdk_proc_time() {
+	# Similar to cpu_usage_clk_tck() but the values we are working here, per process, are already
+	# divided by SC_CLK_TCK. See proc(5).
+
+	xtrace_disable
+
+	local interval=$1 cpu=$2
+	local thread thread_to_time stats
+	local _time time _stime stime _utime utime
+
+	[[ -e /proc/$spdk_pid/status ]] || return 1
+
+	# Find SPDK thread pinned to given cpu
+	for thread in "/proc/$spdk_pid/task/"*; do
+		((cpu == $(get_proc_cpu_affinity "$thread/status"))) && thread_to_time=$thread && break
+	done
+
+	[[ -e $thread_to_time/stat ]] || return 1
+	interval=$((interval <= 1 ? 2 : interval))
+
+	while ((--interval >= 0)); do
+		# See cgroups.sh -> id_proc()
+		stats=$(< "$thread_to_time/stat") stats=(${stats/*) /})
+		_utime[interval]=${stats[11]} # Amount of time spent in user mode
+		_stime[interval]=${stats[12]} # Amount of time spent in kernel mode
+		_time[interval]=$((_utime[interval] + _stime[interval]))
+		((${#_time[@]} == 1)) && continue
+		utime+=($((_utime[interval] - _utime[interval + 1])))
+		stime+=($((_stime[interval] - _stime[interval + 1])))
+		time+=($((_time[interval] - _time[interval + 1])))
+		sleep 1
+	done
+
+	echo "stime samples: ${stime[*]}" >&2
+	echo "utime samples: ${utime[*]}" >&2
+
+	calc_median "${time[@]}"
+
+	xtrace_restore
 }
