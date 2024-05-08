@@ -57,8 +57,11 @@ struct accel_mlx5_dev_ctx {
 	struct ibv_context *context;
 	struct ibv_pd *pd;
 	struct spdk_memory_domain *domain;
+	struct spdk_mempool *psv_pool;
 	TAILQ_ENTRY(accel_mlx5_dev_ctx) link;
+	struct spdk_mlx5_psv **psvs;
 	bool crypto_mkeys;
+	bool sig_mkeys;
 	bool crypto_multi_block;
 };
 
@@ -72,6 +75,7 @@ struct accel_mlx5_module {
 	bool initialized;
 	bool enabled;
 	bool crypto_supported;
+	bool crc32c_supported;
 };
 
 struct accel_mlx5_sge {
@@ -91,6 +95,16 @@ enum accel_mlx5_opcode {
 	ACCEL_MLX5_OPC_COPY,
 	ACCEL_MLX5_OPC_CRYPTO,
 	ACCEL_MLX5_OPC_LAST
+};
+
+struct accel_mlx5_psv_wrapper {
+	uint32_t psv_index;
+	struct {
+		uint32_t error : 1;
+		uint32_t reserved : 31;
+	} bits;
+	uint32_t crc;
+	uint32_t crc_lkey;
 };
 
 struct accel_mlx5_task {
@@ -138,6 +152,7 @@ struct accel_mlx5_dev {
 	struct accel_mlx5_qp qp;
 	struct spdk_mlx5_cq *cq;
 	struct spdk_mlx5_mkey_pool *crypto_mkeys;
+	struct spdk_mlx5_mkey_pool *sig_mkeys;
 	struct spdk_rdma_utils_mem_map *mmap;
 	struct accel_mlx5_dev_ctx *dev_ctx;
 	uint16_t wrs_in_cq;
@@ -162,6 +177,12 @@ struct accel_mlx5_task_operations {
 	int (*process)(struct accel_mlx5_task *task);
 	int (*cont)(struct accel_mlx5_task *task);
 	void (*complete)(struct accel_mlx5_task *task);
+};
+
+struct accel_mlx5_psv_pool_iter_cb_args {
+	struct accel_mlx5_dev_ctx *dev;
+	struct spdk_rdma_utils_mem_map *map;
+	int rc;
 };
 
 static struct accel_mlx5_module g_accel_mlx5;
@@ -1336,6 +1357,9 @@ accel_mlx5_destroy_cb(void *io_device, void *ctx_buf)
 		if (dev->crypto_mkeys) {
 			spdk_mlx5_mkey_pool_put_ref(dev->crypto_mkeys);
 		}
+		if (dev->sig_mkeys) {
+			spdk_mlx5_mkey_pool_put_ref(dev->sig_mkeys);
+		}
 		spdk_rdma_utils_free_mem_map(&dev->mmap);
 	}
 	free(ch->devs);
@@ -1366,6 +1390,16 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 			dev->crypto_mkeys = spdk_mlx5_mkey_pool_get_ref(dev_ctx->pd, SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO);
 			if (!dev->crypto_mkeys) {
 				SPDK_ERRLOG("Failed to get crypto mkey pool channel, dev %s\n", dev_ctx->context->device->name);
+				/* Should not happen since mkey pool is created on accel_mlx5 initialization.
+				 * We should not be here if pool creation failed */
+				assert(0);
+				goto err_out;
+			}
+		}
+		if (dev_ctx->sig_mkeys) {
+			dev->sig_mkeys = spdk_mlx5_mkey_pool_get_ref(dev_ctx->pd, SPDK_MLX5_MKEY_POOL_FLAG_SIGNATURE);
+			if (!dev->sig_mkeys) {
+				SPDK_ERRLOG("Failed to get sig mkey pool channel, dev %s\n", dev_ctx->context->device->name);
 				/* Should not happen since mkey pool is created on accel_mlx5 initialization.
 				 * We should not be here if pool creation failed */
 				assert(0);
@@ -1528,6 +1562,35 @@ accel_mlx5_enable(struct accel_mlx5_attr *attr)
 }
 
 static void
+accel_mlx5_psvs_release(struct accel_mlx5_dev_ctx *dev_ctx)
+{
+	uint32_t i, num_psvs, num_psvs_in_pool;
+
+	if (!dev_ctx->psvs) {
+		return;
+	}
+
+	num_psvs = g_accel_mlx5.attr.num_requests;
+
+	for (i = 0; i < num_psvs; i++) {
+		if (dev_ctx->psvs[i]) {
+			spdk_mlx5_destroy_psv(dev_ctx->psvs[i]);
+			dev_ctx->psvs[i] = NULL;
+		}
+	}
+	free(dev_ctx->psvs);
+
+	if (!dev_ctx->psv_pool) {
+		return;
+	}
+	num_psvs_in_pool = spdk_mempool_count(dev_ctx->psv_pool);
+	if (num_psvs_in_pool != num_psvs) {
+		SPDK_ERRLOG("Expected %u reqs in the pool, but got only %u\n", num_psvs, num_psvs_in_pool);
+	}
+	spdk_mempool_free(dev_ctx->psv_pool);
+}
+
+static void
 accel_mlx5_free_resources(void)
 {
 	struct accel_mlx5_dev_ctx *dev_ctx;
@@ -1535,9 +1598,13 @@ accel_mlx5_free_resources(void)
 
 	for (i = 0; i < g_accel_mlx5.num_ctxs; i++) {
 		dev_ctx = &g_accel_mlx5.dev_ctxs[i];
+		accel_mlx5_psvs_release(dev_ctx);
 		if (dev_ctx->pd) {
 			if (dev_ctx->crypto_mkeys) {
 				spdk_mlx5_mkey_pool_destroy(SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO, dev_ctx->pd);
+			}
+			if (dev_ctx->sig_mkeys) {
+				spdk_mlx5_mkey_pool_destroy(SPDK_MLX5_MKEY_POOL_FLAG_SIGNATURE, dev_ctx->pd);
 			}
 			spdk_rdma_utils_put_pd(dev_ctx->pd);
 		}
@@ -1584,6 +1651,86 @@ accel_mlx5_mkeys_create(struct ibv_pd *pd, uint32_t num_mkeys, uint32_t flags)
 	return spdk_mlx5_mkey_pool_init(&pool_param, pd);
 }
 
+static void
+accel_mlx5_set_psv_in_pool(struct spdk_mempool *mp, void *cb_arg, void *_psv, unsigned obj_idx)
+{
+	struct spdk_rdma_utils_memory_translation translation = {};
+	struct accel_mlx5_psv_pool_iter_cb_args *args = cb_arg;
+	struct accel_mlx5_psv_wrapper *wrapper = _psv;
+	struct accel_mlx5_dev_ctx *dev_ctx = args->dev;
+	int rc;
+
+	if (args->rc) {
+		return;
+	}
+	assert(obj_idx < g_accel_mlx5.attr.num_requests);
+	assert(dev_ctx->psvs[obj_idx] != NULL);
+	memset(wrapper, 0, sizeof(*wrapper));
+	wrapper->psv_index = dev_ctx->psvs[obj_idx]->index;
+
+	rc = spdk_rdma_utils_get_translation(args->map, &wrapper->crc, sizeof(uint32_t), &translation);
+	if (rc) {
+		SPDK_ERRLOG("Memory translation failed, addr %p, length %zu\n", &wrapper->crc, sizeof(uint32_t));
+		args->rc = -EINVAL;
+	} else {
+		wrapper->crc_lkey = spdk_rdma_utils_memory_translation_get_lkey(&translation);
+	}
+}
+
+static int
+accel_mlx5_psvs_create(struct accel_mlx5_dev_ctx *dev_ctx)
+{
+	struct accel_mlx5_psv_pool_iter_cb_args args = {
+		.dev = dev_ctx
+	};
+	char pool_name[32];
+	uint32_t i;
+	uint32_t num_psvs = g_accel_mlx5.attr.num_requests;
+	uint32_t cache_size;
+	int rc;
+
+	dev_ctx->psvs = calloc(num_psvs, (sizeof(struct spdk_mlx5_psv *)));
+	if (!dev_ctx->psvs) {
+		SPDK_ERRLOG("Failed to alloc PSVs array\n");
+		return -ENOMEM;
+	}
+	for (i = 0; i < num_psvs; i++) {
+		dev_ctx->psvs[i] = spdk_mlx5_create_psv(dev_ctx->pd);
+		if (!dev_ctx->psvs[i]) {
+			SPDK_ERRLOG("Failed to create PSV on dev %s\n", dev_ctx->context->device->name);
+			return -EINVAL;
+		}
+	}
+
+	rc = snprintf(pool_name, sizeof(pool_name), "accel_psv_%s", dev_ctx->context->device->name);
+	if (rc < 0) {
+		assert(0);
+		return -EINVAL;
+	}
+	cache_size = num_psvs * 3 / 4 / spdk_env_get_core_count();
+	args.map = spdk_rdma_utils_create_mem_map(dev_ctx->pd, NULL,
+			IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
+	if (!args.map) {
+		return -ENOMEM;
+	}
+	dev_ctx->psv_pool = spdk_mempool_create_ctor(pool_name, num_psvs,
+			    sizeof(struct accel_mlx5_psv_wrapper),
+			    cache_size, SPDK_ENV_SOCKET_ID_ANY,
+			    accel_mlx5_set_psv_in_pool, &args);
+	spdk_rdma_utils_free_mem_map(&args.map);
+	if (!dev_ctx->psv_pool) {
+		SPDK_ERRLOG("Failed to create PSV memory pool\n");
+		return -ENOMEM;
+	}
+	if (args.rc) {
+		SPDK_ERRLOG("Failed to init PSV memory pool objects, rc %d\n", args.rc);
+		return args.rc;
+	}
+
+	return 0;
+}
+
+
 static int
 accel_mlx5_dev_ctx_init(struct accel_mlx5_dev_ctx *dev_ctx, struct ibv_context *dev,
 			struct spdk_mlx5_device_caps *caps)
@@ -1615,6 +1762,20 @@ accel_mlx5_dev_ctx_init(struct accel_mlx5_dev_ctx *dev_ctx, struct ibv_context *
 			return rc;
 		}
 		dev_ctx->crypto_mkeys = true;
+	}
+	if (g_accel_mlx5.crc32c_supported) {
+		rc = accel_mlx5_mkeys_create(pd, g_accel_mlx5.attr.num_requests,
+					     SPDK_MLX5_MKEY_POOL_FLAG_SIGNATURE);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create signature mkeys pool, rc %d, dev %s\n", rc, dev->device->name);
+			return rc;
+		}
+		dev_ctx->sig_mkeys = true;
+		rc = accel_mlx5_psvs_create(dev_ctx);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create PSVs pool, rc %d, dev %s\n", rc, dev->device->name);
+			return rc;
+		}
 	}
 
 	return 0;
@@ -1694,6 +1855,7 @@ accel_mlx5_init(void)
 	struct ibv_context **rdma_devs, *dev;
 	int num_devs = 0,  rc = 0, i;
 	int best_dev = -1, first_dev = 0;
+	int best_dev_stat = 0, dev_stat;
 	bool supports_crypto;
 	bool find_best_dev = g_accel_mlx5.allowed_devs_count == 0;
 
@@ -1712,6 +1874,7 @@ accel_mlx5_init(void)
 	}
 
 	g_accel_mlx5.crypto_supported = true;
+	g_accel_mlx5.crc32c_supported = true;
 	g_accel_mlx5.num_ctxs = 0;
 
 	/* Iterate devices. We support an offload if all devices support it */
@@ -1729,8 +1892,16 @@ accel_mlx5_init(void)
 				      rdma_devs[i]->device->name);
 			g_accel_mlx5.crypto_supported = false;
 		}
+		if (!caps[i].crc32c_supported) {
+			SPDK_DEBUGLOG(accel_mlx5, "Disable crc32c support because dev %s doesn't support it\n",
+				      rdma_devs[i]->device->name);
+			g_accel_mlx5.crc32c_supported = false;
+		}
 		if (find_best_dev) {
-			if (supports_crypto && best_dev == -1) {
+			/* Find device which supports max number of offloads */
+			dev_stat = (int)supports_crypto + (int)caps[i].crc32c_supported;
+			if (dev_stat > best_dev_stat) {
+				best_dev_stat = dev_stat;
 				best_dev = i;
 			}
 		}
@@ -1741,12 +1912,13 @@ accel_mlx5_init(void)
 		if (best_dev == -1) {
 			best_dev = 0;
 		}
-		supports_crypto = accel_mlx5_dev_supports_crypto(&caps[best_dev]);
-		SPDK_NOTICELOG("Select dev %s, crypto %d\n", rdma_devs[best_dev]->device->name, supports_crypto);
-		g_accel_mlx5.crypto_supported = supports_crypto;
+		g_accel_mlx5.crypto_supported = accel_mlx5_dev_supports_crypto(&caps[best_dev]);
+		g_accel_mlx5.crc32c_supported = caps[best_dev].crc32c_supported;
+		SPDK_NOTICELOG("Select dev %s, crypto %d, crc32c %d\n", rdma_devs[best_dev]->device->name,
+			       g_accel_mlx5.crypto_supported, g_accel_mlx5.crc32c_supported);
 		first_dev = best_dev;
 		num_devs = 1;
-		if (supports_crypto) {
+		if (g_accel_mlx5.crypto_supported) {
 			const char *const dev_name[] = { rdma_devs[best_dev]->device->name };
 			/* Let mlx5 library know which device to use */
 			spdk_mlx5_crypto_devs_allow(dev_name, 1);
