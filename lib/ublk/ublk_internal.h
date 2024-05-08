@@ -54,7 +54,7 @@ extern "C" {
 
 typedef void (*ublk_ctrl_cb)(void *cb_arg, int result);
 
-int ublk_create_target(const char *cpumask_str);
+int ublk_create_target(const char *cpumask_str, const struct spdk_json_val *params);
 int ublk_destroy_target(spdk_ublk_fini_cb cb_fn, void *cb_arg);
 int ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 		    uint32_t num_queues, uint32_t queue_depth,

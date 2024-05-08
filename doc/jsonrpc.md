@@ -11537,6 +11537,7 @@ ublk_destroy_target in between. It will use current cpumask in SPDK when user do
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 cpumask                 | Optional | string      | Cpumask for ublk target
+disable-user-copy       | Optional | boolean     | Disable user copy feature
 
 #### Response
 

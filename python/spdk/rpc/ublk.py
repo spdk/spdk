@@ -3,10 +3,12 @@
 #  All rights reserved.
 
 
-def ublk_create_target(client, cpumask=None):
+def ublk_create_target(client, cpumask=None, disable_user_copy=None):
     params = {}
     if cpumask:
         params['cpumask'] = cpumask
+    if disable_user_copy:
+        params['disable_user_copy'] = True
     return client.call('ublk_create_target', params)
 
 

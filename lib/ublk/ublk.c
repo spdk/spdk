@@ -44,6 +44,7 @@ static uint32_t g_num_ublk_poll_groups = 0;
 static uint32_t g_next_ublk_poll_group = 0;
 static uint32_t g_ublks_max = UBLK_DEFAULT_MAX_SUPPORTED_DEVS;
 static struct spdk_cpuset g_core_mask;
+static bool g_disable_user_copy = false;
 
 struct ublk_queue;
 struct ublk_poll_group;
@@ -531,7 +532,9 @@ ublk_ctrl_cmd_get_features(void)
 	if (cqe->res == 0) {
 		g_ublk_tgt.ioctl_encode = !!(g_ublk_tgt.features & UBLK_F_CMD_IOCTL_ENCODE);
 		g_ublk_tgt.user_copy = !!(g_ublk_tgt.features & UBLK_F_USER_COPY);
+		g_ublk_tgt.user_copy &= !g_disable_user_copy;
 		g_ublk_tgt.user_recovery = !!(g_ublk_tgt.features & UBLK_F_USER_RECOVERY);
+		SPDK_NOTICELOG("User Copy %s\n", g_ublk_tgt.user_copy ? "enabled" : "disabled");
 	}
 	io_uring_cqe_seen(&g_ublk_tgt.ctrl_ring, cqe);
 
@@ -666,12 +669,21 @@ ublk_poller_register(void *args)
 	}
 }
 
+struct rpc_create_target {
+	bool disable_user_copy;
+};
+
+static const struct spdk_json_object_decoder rpc_ublk_create_target[] = {
+	{"disable_user_copy", offsetof(struct rpc_create_target, disable_user_copy), spdk_json_decode_bool, true},
+};
+
 int
-ublk_create_target(const char *cpumask_str)
+ublk_create_target(const char *cpumask_str, const struct spdk_json_val *params)
 {
 	int rc;
 	uint32_t i;
 	char thread_name[32];
+	struct rpc_create_target req = {};
 	struct ublk_poll_group *poll_group;
 
 	if (g_ublk_tgt.active == true) {
@@ -682,6 +694,16 @@ ublk_create_target(const char *cpumask_str)
 	rc = ublk_parse_core_mask(cpumask_str);
 	if (rc != 0) {
 		return rc;
+	}
+
+	if (params) {
+		if (spdk_json_decode_object_relaxed(params, rpc_ublk_create_target,
+						    SPDK_COUNTOF(rpc_ublk_create_target),
+						    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			return -EINVAL;
+		}
+		g_disable_user_copy = req.disable_user_copy;
 	}
 
 	assert(g_ublk_tgt.poll_groups == NULL);

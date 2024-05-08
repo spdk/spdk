@@ -2388,10 +2388,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     # ublk
     def ublk_create_target(args):
         rpc.ublk.ublk_create_target(args.client,
-                                    cpumask=args.cpumask)
+                                    cpumask=args.cpumask,
+                                    disable_user_copy=args.disable_user_copy)
     p = subparsers.add_parser('ublk_create_target',
                               help='Create spdk ublk target for ublk dev')
     p.add_argument('-m', '--cpumask', help='cpu mask for ublk dev')
+    p.add_argument('--disable-user-copy', help='Disable user copy feature', action='store_true')
     p.set_defaults(func=ublk_create_target)
 
     def ublk_destroy_target(args):

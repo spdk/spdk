@@ -32,15 +32,15 @@ rpc_ublk_create_target(struct spdk_jsonrpc_request *request, const struct spdk_j
 	struct rpc_ublk_create_target req = {};
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_ublk_create_target_decoders,
-					    SPDK_COUNTOF(rpc_ublk_create_target_decoders),
-					    &req)) {
+		if (spdk_json_decode_object_relaxed(params, rpc_ublk_create_target_decoders,
+						    SPDK_COUNTOF(rpc_ublk_create_target_decoders),
+						    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			rc = -EINVAL;
 			goto invalid;
 		}
 	}
-	rc = ublk_create_target(req.cpumask);
+	rc = ublk_create_target(req.cpumask, params);
 	if (rc != 0) {
 		goto invalid;
 	}
