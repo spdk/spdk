@@ -87,8 +87,9 @@ struct spdk_mlx5_mkey_pool;
 
 enum spdk_mlx5_mkey_pool_flags {
 	SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO = 1 << 0,
+	SPDK_MLX5_MKEY_POOL_FLAG_SIGNATURE = 1 << 1,
 	/* Max number of pools of different types */
-	SPDK_MLX5_MKEY_POOL_FLAG_COUNT = 1,
+	SPDK_MLX5_MKEY_POOL_FLAG_COUNT = 2,
 };
 
 struct spdk_mlx5_mkey_pool_param {
@@ -153,6 +154,31 @@ struct spdk_mlx5_umr_crypto_attr {
 	uint64_t keytag; /* Must match DEK's keytag or 0 */
 };
 
+/* Persistent Signature Value (PSV) is used to contain a calculated signature value for a single signature
+ * along with some meta-data, such as error flags and status flags */
+struct spdk_mlx5_psv {
+	struct mlx5dv_devx_obj *devx_obj;
+	uint32_t index;
+};
+
+enum spdk_mlx5_umr_sig_domain {
+	SPDK_MLX5_UMR_SIG_DOMAIN_MEMORY,
+	SPDK_MLX5_UMR_SIG_DOMAIN_WIRE
+};
+
+struct spdk_mlx5_umr_sig_attr {
+	uint32_t seed;
+	/* Index of the PSV used by this UMR */
+	uint32_t psv_index;
+	enum spdk_mlx5_umr_sig_domain domain;
+	/* Number of sigerr completions received on the UMR */
+	uint32_t sigerr_count;
+	/* Number of bytes covered by this UMR */
+	uint32_t raw_data_size;
+	bool init; /* Set to true on the first UMR to initialize signature with its default values */
+	bool check_gen; /* Set to true for the last UMR to generate signature */
+};
+
 struct spdk_mlx5_device_crypto_caps {
 	bool wrapped_crypto_operational;
 	bool wrapped_crypto_going_to_commissioning;
@@ -166,6 +192,7 @@ struct spdk_mlx5_device_caps {
 	/* Content of this structure is valid only if crypto_supported is true */
 	struct spdk_mlx5_device_crypto_caps crypto;
 	bool crypto_supported;
+	bool crc32c_supported;
 };
 
 /**
@@ -300,6 +327,53 @@ int spdk_mlx5_qp_rdma_read(struct spdk_mlx5_qp *qp, struct ibv_sge *sge, uint32_
  */
 int spdk_mlx5_umr_configure_crypto(struct spdk_mlx5_qp *qp, struct spdk_mlx5_umr_attr *umr_attr,
 				   struct spdk_mlx5_umr_crypto_attr *crypto_attr, uint64_t wr_id, uint32_t flags);
+
+/**
+ * Create a PSV to be used for signature operations
+ *
+ * \param pd Protection Domain PSV belongs to
+ * \return 0 on success, negated errno on failure
+ */
+struct spdk_mlx5_psv *spdk_mlx5_create_psv(struct ibv_pd *pd);
+
+/**
+ * Destroy PSV
+ *
+ * \param psv PSV pointer
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_destroy_psv(struct spdk_mlx5_psv *psv);
+
+/**
+ * Once a signature error happens on PSV, it's state can be re-initialized via a special SET_PSV WQE
+ *
+ * \param qp qp to be used to re-initialize PSV after error
+ * \param psv_index index of the PSV object
+ * \param crc_seed CRC32C seed to be used for initialization
+ * \param wrid wrid which is returned in the CQE
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion or 0
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_qp_set_psv(struct spdk_mlx5_qp *qp, uint32_t psv_index, uint32_t crc_seed,
+			 uint64_t wr_id, uint32_t flags);
+
+/**
+ * Configure User Memory Region obtained using \ref spdk_mlx5_mkey_pool_get_bulk with CRC32C capabilities.
+ *
+ * Besides signature capabilities, it allows to gather memory chunks into virtually contig (from the NIC point of view)
+ * memory space with start address 0. The user must ensure that \b qp's capacity is enough to perform this operation.
+ *
+ * \param qp Qpair to be used for UMR configuration. If RDMA operation which references this UMR is used on the same \b qp
+ * then it is not necessary to wait for the UMR configuration to complete. Instead, first RDMA operation after UMR
+ * configuration must have flag SPDK_MLX5_WQE_CTRL_INITIATOR_SMALL_FENCE set to 1
+ * \param umr_attr Common UMR attributes, describe memory layout
+ * \param sig_attr Signature UMR attributes
+ * \param wr_id wrid which is returned in the CQE
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion; Any of SPDK_MLX5_WQE_CTRL_FENCE* or 0
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_umr_configure_sig(struct spdk_mlx5_qp *qp, struct spdk_mlx5_umr_attr *umr_attr,
+				struct spdk_mlx5_umr_sig_attr *sig_attr, uint64_t wr_id, uint32_t flags);
 
 /**
  * Return a NULL terminated array of devices which support crypto operation on Nvidia NICs

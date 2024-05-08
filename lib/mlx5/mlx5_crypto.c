@@ -263,6 +263,9 @@ spdk_mlx5_device_query_caps(struct ibv_context *context, struct spdk_mlx5_device
 		return rc;
 	}
 
+	caps->crc32c_supported = DEVX_GET(query_hca_cap_out, out, capability.cmd_hca_cap.sho) &&
+				 DEVX_GET(query_hca_cap_out, out, capability.cmd_hca_cap.sig_crc32c);
+
 	caps->crypto_supported = DEVX_GET(query_hca_cap_out, out, capability.cmd_hca_cap.crypto);
 	if (!caps->crypto_supported) {
 		return 0;

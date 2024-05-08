@@ -124,6 +124,51 @@ struct mlx5_crypto_bsf_seg {
 	uint8_t		rsvd3[16];
 };
 
+struct mlx5_sig_bsf_inl {
+	__be16 vld_refresh;
+	__be16 dif_apptag;
+	__be32 dif_reftag;
+	uint8_t sig_type;
+	uint8_t rp_inv_seed;
+	uint8_t rsvd[3];
+	uint8_t dif_inc_ref_guard_check;
+	__be16 dif_app_bitmask_check;
+};
+
+struct mlx5_sig_bsf_seg {
+	struct mlx5_sig_bsf_basic {
+		uint8_t bsf_size_sbs;
+		uint8_t check_byte_mask;
+		union {
+			uint8_t copy_byte_mask;
+			uint8_t bs_selector;
+			uint8_t rsvd_wflags;
+		} wire;
+		union {
+			uint8_t bs_selector;
+			uint8_t rsvd_mflags;
+		} mem;
+		__be32 raw_data_size;
+		__be32 w_bfs_psv;
+		__be32 m_bfs_psv;
+	} basic;
+	struct mlx5_sig_bsf_ext {
+		__be32 t_init_gen_pro_size;
+		__be32 rsvd_epi_size;
+		__be32 w_tfs_psv;
+		__be32 m_tfs_psv;
+	} ext;
+	struct mlx5_sig_bsf_inl w_inl;
+	struct mlx5_sig_bsf_inl m_inl;
+};
+
+struct mlx5_wqe_set_psv_seg {
+	__be32 psv_index;
+	__be16 syndrome;
+	uint8_t reserved[2];
+	__be64 transient_signature;
+};
+
 static inline uint8_t
 mlx5_qp_fm_ce_se_update(struct spdk_mlx5_qp *qp, uint8_t fm_ce_se)
 {

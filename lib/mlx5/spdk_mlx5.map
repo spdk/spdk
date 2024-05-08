@@ -15,6 +15,11 @@
     spdk_mlx5_qp_rdma_read;
 
     spdk_mlx5_umr_configure_crypto;
+    spdk_mlx5_umr_configure_sig;
+
+    spdk_mlx5_create_psv;
+    spdk_mlx5_destroy_psv;
+    spdk_mlx5_qp_set_psv;
 
     spdk_mlx5_crypto_devs_get;
     spdk_mlx5_crypto_devs_release;
