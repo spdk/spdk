@@ -34,6 +34,8 @@
 #include <libaio.h>
 #endif
 
+#define HELP_RETURN_CODE UINT16_MAX
+
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	enum spdk_nvme_transport_type		trtype;
@@ -2399,7 +2401,7 @@ parse_metadata(const char *metacfg_str)
 	return 0;
 }
 
-#define PERF_GETOPT_SHORT "a:b:c:d:e:gi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
+#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2412,6 +2414,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"metadata",			required_argument,	NULL, PERF_METADATA},
 #define PERF_MEM_SINGL_SEG	'g'
 	{"mem-single-seg", no_argument, NULL, PERF_MEM_SINGL_SEG},
+#define PERF_HELP		'h'
+	{"help", no_argument, NULL, PERF_HELP},
 #define PERF_SHMEM_GROUP_ID	'i'
 	{"shmem-grp-id",			required_argument,	NULL, PERF_SHMEM_GROUP_ID},
 #define PERF_ENABLE_SSD_LATENCY_TRACING	'l'
@@ -2768,6 +2772,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_NO_HUGE:
 			env_opts->no_huge = true;
 			break;
+		case PERF_HELP:
+			usage(argv[0]);
+			return HELP_RETURN_CODE;
 		default:
 			usage(argv[0]);
 			return 1;
@@ -3216,8 +3223,12 @@ main(int argc, char **argv)
 	opts.name = "perf";
 	opts.pci_allowed = g_allowed_pci_addr;
 	rc = parse_args(argc, argv, &opts);
-	if (rc != 0) {
+	if (rc != 0 || rc == HELP_RETURN_CODE) {
 		free(g_psk);
+		if (rc == HELP_RETURN_CODE) {
+			return 0;
+		}
+
 		return rc;
 	}
 	/* Transport statistics are printed from each thread.
