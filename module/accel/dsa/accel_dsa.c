@@ -119,7 +119,8 @@ dsa_done(void *cb_arg, int status)
 	 * calling the software DIF Verify operation.
 	 */
 	if (spdk_unlikely(status == -EIO)) {
-		if (idxd_task->task.op_code == SPDK_ACCEL_OPC_DIF_VERIFY) {
+		if (idxd_task->task.op_code == SPDK_ACCEL_OPC_DIF_VERIFY ||
+		    idxd_task->task.op_code == SPDK_ACCEL_OPC_DIF_VERIFY_COPY) {
 			rc = spdk_dif_verify(idxd_task->task.s.iovs, idxd_task->task.s.iovcnt,
 					     idxd_task->task.dif.num_blocks,
 					     idxd_task->task.dif.ctx, idxd_task->task.dif.err);
@@ -155,6 +156,46 @@ idxd_submit_dualcast(struct idxd_io_channel *ch, struct idxd_task *idxd_task, in
 	return spdk_idxd_submit_dualcast(ch->chan, task->d.iovs[0].iov_base,
 					 task->d2.iovs[0].iov_base, task->s.iovs[0].iov_base,
 					 task->d.iovs[0].iov_len, flags, dsa_done, idxd_task);
+}
+
+static int
+check_dsa_dif_strip_overlap_bufs(struct spdk_accel_task *task)
+{
+	uint64_t src_seg_addr_end_ext;
+	uint64_t dst_seg_addr_end_ext;
+	size_t i;
+
+	/* The number of source and destination iovecs must be the same.
+	 * If so, one of them can be used to iterate over both vectors
+	 * later in the loop. */
+	if (task->d.iovcnt != task->s.iovcnt) {
+		SPDK_ERRLOG("Mismatched iovcnts: src=%d, dst=%d\n",
+			    task->s.iovcnt, task->d.iovcnt);
+		return -EINVAL;
+	}
+
+	for (i = 0; i < task->s.iovcnt; i++) {
+		src_seg_addr_end_ext = (uint64_t)task->s.iovs[i].iov_base +
+				       task->s.iovs[i].iov_len;
+
+		dst_seg_addr_end_ext = (uint64_t)task->d.iovs[i].iov_base +
+				       task->s.iovs[i].iov_len;
+
+		if ((dst_seg_addr_end_ext >= (uint64_t)task->s.iovs[i].iov_base) &&
+		    (dst_seg_addr_end_ext <= src_seg_addr_end_ext)) {
+			return -EFAULT;
+		}
+	}
+
+	return 0;
+}
+
+static void
+spdk_accel_sw_task_complete(void *ctx)
+{
+	struct spdk_accel_task *task = (struct spdk_accel_task *)ctx;
+
+	spdk_accel_task_complete(task, task->status);
 }
 
 static int
@@ -206,6 +247,36 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 						 task->s.iovs, task->s.iovcnt,
 						 task->dif.num_blocks, task->dif.ctx, flags,
 						 dsa_done, idxd_task);
+		break;
+	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
+		/* For DIF strip operations, DSA may incorrectly report an overlapping buffer
+		 * error if the destination buffer immediately precedes the source buffer.
+		 * This is because DSA uses the transfer size in the descriptor for both
+		 * the source and destination buffers when checking for buffer overlap.
+		 * Since the transfer size applies to the source buffer, which is larger
+		 * than the destination buffer by metadata, it should not be used as
+		 * the destination buffer size. To avoid reporting errors by DSA, the software
+		 * checks whether such an error condition can occur, and if so the software
+		 * fallback is performed. */
+		rc = check_dsa_dif_strip_overlap_bufs(task);
+		if (rc == 0) {
+			rc = spdk_idxd_submit_dif_strip(chan->chan,
+							task->d.iovs, task->d.iovcnt,
+							task->s.iovs, task->s.iovcnt,
+							task->dif.num_blocks, task->dif.ctx, flags,
+							dsa_done, idxd_task);
+		} else if (rc == -EFAULT) {
+			rc = spdk_dif_verify_copy(task->d.iovs,
+						  task->d.iovcnt,
+						  task->s.iovs,
+						  task->s.iovcnt,
+						  task->dif.num_blocks,
+						  task->dif.ctx,
+						  task->dif.err);
+			idxd_task->task.status = rc;
+			spdk_thread_send_msg(spdk_get_thread(), spdk_accel_sw_task_complete, (void *)&idxd_task->task);
+			rc = 0;
+		}
 		break;
 	default:
 		assert(false);
@@ -319,6 +390,7 @@ dsa_supports_opcode(enum spdk_accel_opcode opc)
 		return true;
 	case SPDK_ACCEL_OPC_DIF_VERIFY:
 	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
+	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
 		/* Supported only if the IOMMU is enabled */
 		return spdk_iommu_is_enabled();
 	default:
