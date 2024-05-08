@@ -398,7 +398,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:gi:r:L:V")) != -1) {
+	while ((op = getopt(argc, argv, "d:ghi:r:L:V")) != -1) {
 		switch (op) {
 		case 'V':
 			g_vmd = true;
@@ -437,6 +437,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif
 			break;
+		case 'h':
+			usage(argv[0]);
+			exit(EXIT_SUCCESS);
 		default:
 			usage(argv[0]);
 			return 1;
