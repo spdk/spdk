@@ -22,8 +22,12 @@ case "$VERSION_CODENAME" in
 			source "$virtdir/bin/activate"
 			"$virtdir/bin/pip3" "$@"
 		)
+
+		apt-get install -y pkgconf
 		;;
-	*) ;;
+	*)
+		apt-get install -y pkg-config
+		;;
 esac
 
 apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev libjson-c-dev libcmocka-dev uuid-dev libiscsi-dev
