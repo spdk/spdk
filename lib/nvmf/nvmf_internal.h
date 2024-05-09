@@ -435,21 +435,6 @@ void nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk
 void nvmf_transport_listen_dump_trid(const struct spdk_nvme_transport_id *trid,
 				     struct spdk_json_write_ctx *w);
 
-/**
- * Sets the controller ID range for a subsystem.
- * Valid range is [1, 0xFFEF].
- *
- * May only be performed on subsystems in the INACTIVE state.
- *
- * \param subsystem Subsystem to modify.
- * \param min_cntlid Minimum controller ID.
- * \param max_cntlid Maximum controller ID.
- *
- * \return 0 on success, or negated errno value on failure.
- */
-int nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
-				    uint16_t min_cntlid, uint16_t max_cntlid);
-
 int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ctrlr_async_event_discovery_log_change_notice(void *ctx);

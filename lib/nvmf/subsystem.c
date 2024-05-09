@@ -2354,8 +2354,8 @@ spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
 }
 
 int
-nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
-				uint16_t min_cntlid, uint16_t max_cntlid)
+spdk_nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
+				     uint16_t min_cntlid, uint16_t max_cntlid)
 {
 	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
 		return -EAGAIN;

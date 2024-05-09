@@ -2,6 +2,11 @@
 
 ## v24.09: (Upcoming Release)
 
+### nvmf
+
+Added public API 'spdk_nvmf_subsystem_set_cntlid_range' to set controller ID
+range for a subsystem.
+
 ## v24.05
 
 ### accel
