@@ -502,13 +502,13 @@ main(int argc, char **argv)
 
 	printf("Initialization complete.\n");
 	hello_world();
+
+exit:
 	cleanup();
 	if (g_vmd) {
 		spdk_vmd_fini();
 	}
 
-exit:
-	cleanup();
 	spdk_env_fini();
 	return rc;
 }
