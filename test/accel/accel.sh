@@ -115,7 +115,7 @@ run_test "accel_dif_generate_copy" accel_test -t 1 -w dif_generate_copy
 if [[ $CONFIG_ISAL == y ]]; then
 	run_test "accel_comp" accel_test -t 1 -w compress -l $testdir/bib
 	run_test "accel_decomp" accel_test -t 1 -w decompress -l $testdir/bib -y
-	run_test "accel_decmop_full" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0
+	run_test "accel_decomp_full" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0
 	run_test "accel_decomp_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -m 0xf
 	run_test "accel_decomp_full_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
 	run_test "accel_decomp_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -T 2
@@ -126,7 +126,7 @@ if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
 	get_expected_opcs
 	run_test "accel_cdev_comp" accel_test -t 1 -w compress -l $testdir/bib
 	run_test "accel_cdev_decomp" accel_test -t 1 -w decompress -l $testdir/bib -y
-	run_test "accel_cdev_decmop_full" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0
+	run_test "accel_cdev_decomp_full" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0
 	run_test "accel_cdev_decomp_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -m 0xf
 	run_test "accel_cdev_decomp_full_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
 	run_test "accel_cdev_decomp_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -T 2
