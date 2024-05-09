@@ -65,7 +65,7 @@ function detach_volume() {
 }
 
 function vm_count_nvme() {
-	vm_exec $1 "grep -l SPDK /sys/class/nvme/*/model" | wc -l
+	vm_exec $1 "grep -sl SPDK /sys/class/nvme/*/model || true" | wc -l
 }
 
 function vm_check_subsys_volume() {
@@ -166,7 +166,7 @@ sma_waitforlisten
 rpc_cmd nvmf_get_transports --trtype VFIOUSER
 
 # Make sure no nvme subsystems are present
-[[ $(vm_exec ${vm_no} nvme list-subsys -o json | jq -r '.Subsystems | length') -eq 0 ]]
+vm_exec ${vm_no} '[[ ! -e /sys/class/nvme-subsystem/nvme-subsys0 ]]'
 
 # Create a couple of devices and verify them via RPC and SSH
 device0=$(create_device 0 0 | jq -r '.handle')

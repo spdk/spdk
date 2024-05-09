@@ -66,7 +66,7 @@ cuse_out[2]=$(nvme spdk list -v -o json)
 cuse_out[3]=$(nvme spdk list-subsys)
 
 # plugin does not support json output for the list-subsys
-[[ $(nvme spdk list-subsys -v -o json 2>&1) == "Json output format is not supported." ]]
+[[ $(nvme spdk list-subsys -v -o json 2>&1 || true) == "Json output format is not supported." ]]
 
 diff -ub \
 	<(printf '%s\n' "${kernel_out[@]}") \

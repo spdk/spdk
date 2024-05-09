@@ -688,9 +688,9 @@ cpu_usage_clk_tck() {
 
 	# Construct delta based on last two samples of a given time.
 	case "$time" in
-		user | all) ((clk_delta += (user[-1] - user[-2]))) ;;&
-		nice | all) ((clk_delta += (nice[-1] - nice[-2]))) ;;&
-		system | all) ((clk_delta += (system[-1] - system[-2]))) ;;
+		user | all) : $((clk_delta += (user[-1] - user[-2]))) ;;&
+		nice | all) : $((clk_delta += (nice[-1] - nice[-2]))) ;;&
+		system | all) : $((clk_delta += (system[-1] - system[-2]))) ;;
 		*) ;;
 	esac
 	# We assume 1s between each sample. See get_cpu_time().

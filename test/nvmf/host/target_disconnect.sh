@@ -29,16 +29,8 @@ function disconnect_init() {
 # Test to make sure we don't segfault or access null pointers when we try to connect to
 # a discovery controller that doesn't exist yet.
 function nvmf_target_disconnect_tc1() {
-	set +e
-	$SPDK_EXAMPLE_DIR/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+	NOT "$SPDK_EXAMPLE_DIR/reconnect" -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
 		-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
-	# If the program crashes, the high bit of $? will be set so we will get a value in the hundreds.
-	# But if the reconnect code detects errors and exits normally it will return 1.
-	if [ $? != 1 ]; then
-		set -e
-		exit 1
-	fi
-	set -e
 }
 
 function nvmf_target_disconnect_tc2() {

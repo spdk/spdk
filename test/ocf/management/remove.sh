@@ -79,7 +79,7 @@ waitforlisten $spdk_pid
 
 # Check that ocfWT was not loaded on app start
 
-[[ -z $("$rpc_py" bdev_ocf_get_bdevs | jq -r '.[] | select(name == "ocfWT") | .name') ]]
+(($("$rpc_py" bdev_ocf_get_bdevs | jq 'length') == 0))
 
 trap - SIGINT SIGTERM EXIT
 
