@@ -501,6 +501,7 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
+	scheduler = spdk_scheduler_get();
 	if (scheduler != NULL && scheduler->set_opts != NULL) {
 		ret = scheduler->set_opts(params);
 	}
