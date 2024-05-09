@@ -70,6 +70,10 @@ namespace masking to be controlled by these new RPCs.
 Added `spdk_nvmf_subsystem_get_ana_state` API to get current ANA state of
 a particular ANA group ID.
 
+Added support for enabling mDNS-based discovery of nvmf target for
+TCP transport with the addition of nvmf_publish_mdns_prr and
+nvmf_stop_mdns_prr RPCs.
+
 ### spdk_trace
 
 `spdk_trace` has learned how to use the most recent trace file in /dev/shm when
