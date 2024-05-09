@@ -1093,6 +1093,37 @@ test_governor(void)
 }
 #endif
 
+static void
+test_scheduler_set_isolated_core_mask(void)
+{
+	struct spdk_cpuset isolated_core_mask = {};
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	allocate_cores(3);
+
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
+
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 0, true);
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 1, true);
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 2, true);
+
+	spdk_cpuset_set_cpu(&isolated_core_mask, 1, true);
+	spdk_cpuset_set_cpu(&isolated_core_mask, 2, true);
+	CU_ASSERT(scheduler_set_isolated_core_mask(isolated_core_mask) == true);
+
+	spdk_cpuset_zero(&isolated_core_mask);
+
+	spdk_cpuset_set_cpu(&isolated_core_mask, 4, true);
+	CU_ASSERT(scheduler_set_isolated_core_mask(isolated_core_mask) == false);
+
+	spdk_cpuset_zero(&isolated_core_mask);
+
+	spdk_cpuset_set_cpu(&isolated_core_mask, 0, true);
+	spdk_cpuset_set_cpu(&isolated_core_mask, 1, true);
+	spdk_cpuset_set_cpu(&isolated_core_mask, 4, true);
+	CU_ASSERT(scheduler_set_isolated_core_mask(isolated_core_mask) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1116,6 +1147,7 @@ main(int argc, char **argv)
 	/* governor is only supported on Linux, so don't run this specific unit test on FreeBSD */
 	CU_ADD_TEST(suite, test_governor);
 #endif
+	CU_ADD_TEST(suite, test_scheduler_set_isolated_core_mask);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
