@@ -419,6 +419,16 @@ exec_under_dynamic_scheduler() {
 	"$rootdir/scripts/rpc.py" framework_start_init
 }
 
+exec_under_static_scheduler() {
+	if [[ -e /proc/$spdk_pid/status ]]; then
+		killprocess "$spdk_pid"
+	fi
+	"$@" --wait-for-rpc &
+	spdk_pid=$!
+	# Give some time for the app to init itself
+	waitforlisten "$spdk_pid"
+}
+
 # Gather busy/idle stats since this function was last called
 get_thread_stats_current() {
 	xtrace_disable
