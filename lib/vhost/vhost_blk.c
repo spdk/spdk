@@ -1436,10 +1436,10 @@ vhost_blk_stop(struct spdk_vhost_dev *vdev,
 	spdk_poller_unregister(&bvsession->requestq_poller);
 	vhost_blk_session_unregister_interrupts(bvsession);
 
-	/* vhost_user_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
-	bvsession->vsession.stop_retry_count = 4000;
+	bvsession->vsession.stop_retry_count = (SPDK_VHOST_SESSION_STOP_RETRY_TIMEOUT_IN_SEC * 1000 *
+						1000) / SPDK_VHOST_SESSION_STOP_RETRY_PERIOD_IN_US;
 	bvsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
-				 bvsession, 1000);
+				 bvsession, SPDK_VHOST_SESSION_STOP_RETRY_PERIOD_IN_US);
 	return 0;
 }
 

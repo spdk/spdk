@@ -37,6 +37,19 @@
 #define SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD 60000
 
 /*
+ * Timeout in seconds for vhost-user session stop message.
+ */
+#define SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC 3
+/*
+ * Stop retry timeout in seconds, this value should be greater than SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC.
+ */
+#define SPDK_VHOST_SESSION_STOP_RETRY_TIMEOUT_IN_SEC (SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC + 1)
+/*
+ * Stop retry period in microseconds
+ */
+#define SPDK_VHOST_SESSION_STOP_RETRY_PERIOD_IN_US 1000
+
+/*
  * Currently coalescing is not used by default.
  * Setting this to value > 0 here or by RPC will enable coalescing.
  */

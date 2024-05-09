@@ -1553,14 +1553,14 @@ vhost_scsi_stop(struct spdk_vhost_dev *vdev,
 	 */
 	spdk_poller_unregister(&svsession->mgmt_poller);
 
-	/* vhost_user_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
-	svsession->vsession.stop_retry_count = 4000;
+	svsession->vsession.stop_retry_count = (SPDK_VHOST_SESSION_STOP_RETRY_TIMEOUT_IN_SEC * 1000 *
+						1000) / SPDK_VHOST_SESSION_STOP_RETRY_PERIOD_IN_US;
 
 	/* Wait for all pending I/Os to complete, then process all the
 	 * remaining hotremove events one last time.
 	 */
 	svsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
-				 svsession, 1000);
+				 svsession, SPDK_VHOST_SESSION_STOP_RETRY_PERIOD_IN_US);
 
 	return 0;
 }

@@ -843,7 +843,8 @@ _stop_session(struct spdk_vhost_session *vsession)
 	int rc;
 	uint16_t i;
 
-	rc = vhost_user_wait_for_session_stop(vsession, 3, "stop session");
+	rc = vhost_user_wait_for_session_stop(vsession, SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC,
+					      "stop session");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
 		return rc;
