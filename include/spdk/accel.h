@@ -419,7 +419,7 @@ int spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
  *		  to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
  * \param dst_iovcnt The size of the destination I/O vectors array.
  * \param src_iovs The source I/O vector array. The total allocated memory size needs
- *		  to be at least: num_blocks * (block_size - md_size)
+ *		  to be at least: num_blocks * data_block_size.
  * \param src_iovcnt The size of the source I/O vectors array.
  * \param num_blocks Number of data blocks to process.
  * \param ctx DIF context. Contains the DIF configuration values, including the reference
@@ -473,7 +473,7 @@ int spdk_accel_submit_dif_generate(struct spdk_io_channel *ch,
  *		  to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
  * \param dst_iovcnt The size of the destination io vectors array.
  * \param src_iovs The source io vector array. The total allocated memory size needs
- *		  to be at least: num_blocks * block_size_no_md
+ *		  to be at least: num_blocks * data_block_size.
  * \param src_iovcnt The size of the source io vectors array.
  * \param num_blocks Number of data blocks to process.
  * \param ctx DIF context. Contains the DIF configuration values, including the reference

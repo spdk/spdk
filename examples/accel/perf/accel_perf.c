@@ -420,7 +420,7 @@ _get_task_data_bufs(struct ap_task *task)
 				       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
 				       0x123, 0xFFFF, 0x234, 0, 0, &dif_opts);
 		if (rc != 0) {
-			fprintf(stderr, "Initialization of DIF context failed\n");
+			fprintf(stderr, "Initialization of DIF context failed, error (%d)\n", rc);
 			return rc;
 		}
 	}
