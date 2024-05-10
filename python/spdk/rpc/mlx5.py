@@ -25,3 +25,12 @@ def mlx5_scan_accel_module(client, qp_size=None, num_requests=None, allowed_devs
     if crypto_split_blocks is not None:
         params['crypto_split_blocks'] = crypto_split_blocks
     return client.call('mlx5_scan_accel_module', params)
+
+
+def accel_mlx5_dump_stats(client, level=None):
+
+    params = {}
+
+    if level is not None:
+        params['level'] = level
+    return client.call('accel_mlx5_dump_stats', params)

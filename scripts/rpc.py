@@ -3396,6 +3396,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="Number of data blocks to be processed in 1 crypto UMR. [0-65535], 0 means no limit")
     p.set_defaults(func=mlx5_scan_accel_module)
 
+    def accel_mlx5_dump_stats(args):
+        print_dict(rpc.mlx5.accel_mlx5_dump_stats(args.client, level=args.level))
+
+    p = subparsers.add_parser('accel_mlx5_dump_stats', help='Dump accel mlx5 module statistics.')
+    p.add_argument('-l', '--level', type=str, help='Verbose level, one of \"total\", \"channel\" or \"device\"')
+    p.set_defaults(func=accel_mlx5_dump_stats)
+
     # accel_error
     def accel_error_inject_error(args):
         rpc.accel.accel_error_inject_error(args.client, opcode=args.opcode,

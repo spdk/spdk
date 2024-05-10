@@ -43,3 +43,80 @@ rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("mlx5_scan_accel_module", rpc_mlx5_scan_accel_module, SPDK_RPC_STARTUP)
+
+static int
+rpc_decode_dump_stat_level(const struct spdk_json_val *val, void *out)
+{
+	enum accel_mlx5_dump_state_level *level = out;
+
+	if (spdk_json_strequal(val, "total") == true) {
+		*level = ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL;
+	} else if (spdk_json_strequal(val, "channel") == true) {
+		*level = ACCEL_MLX5_DUMP_STAT_LEVEL_CHANNEL;
+	} else if (spdk_json_strequal(val, "device") == true) {
+		*level = ACCEL_MLX5_DUMP_STAT_LEVEL_DEV;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter value: level\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+struct accel_mlx5_rpc_dump_stats_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+accel_mlx5_dump_stats_done(void *_ctx, int rc)
+{
+	struct accel_mlx5_rpc_dump_stats_ctx *ctx = _ctx;
+	if (rc) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to dump stats");
+	} else {
+		spdk_jsonrpc_end_result(ctx->request, ctx->w);
+	}
+	free(ctx);
+}
+
+static const struct spdk_json_object_decoder rpc_accel_mlx5_dump_stats_decoder[] = {
+	{"level", 0, rpc_decode_dump_stat_level, true},
+};
+
+static void
+rpc_accel_mlx5_dump_stats(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct accel_mlx5_rpc_dump_stats_ctx *ctx;
+	enum accel_mlx5_dump_state_level level = ACCEL_MLX5_DUMP_STAT_LEVEL_CHANNEL;
+	int rc;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_accel_mlx5_dump_stats_decoder,
+					    SPDK_COUNTOF(rpc_accel_mlx5_dump_stats_decoder),
+					    &level)) {
+			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+							 "spdk_json_decode_object failed");
+			return;
+		}
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "memory allocation failed");
+		return;
+	}
+	ctx->request = request;
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	rc = accel_mlx5_dump_stats(ctx->w, level, accel_mlx5_dump_stats_done, ctx);
+	if (rc) {
+		spdk_json_write_null(ctx->w);
+		spdk_jsonrpc_end_result(ctx->request, ctx->w);
+		free(ctx);
+	}
+}
+SPDK_RPC_REGISTER("accel_mlx5_dump_stats", rpc_accel_mlx5_dump_stats, SPDK_RPC_RUNTIME)

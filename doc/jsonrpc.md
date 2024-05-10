@@ -456,6 +456,7 @@ Example response:
     "dpdk_cryptodev_set_driver",
     "dpdk_cryptodev_get_driver",
     "mlx5_scan_accel_module",
+    "accel_mlx5_dump_stats",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -2446,6 +2447,69 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### accel_mlx5_dump_stats {#rpc_accel_mlx5_dump_stats}
+
+Dump mlx5 accel module statistics
+
+#### Parameters
+
+Name                    | Optional | Type    | Description
+----------------------- | -------- |---------| -----------
+level                   | Optional | string  | Verbose level, one of \"total\", \"channel\" or \"device\"
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_mlx5_dump_stats",
+  "id": 1,
+  "params": {
+    "level": "total"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "total": {
+      "umrs": {
+        "crypto_umrs": 1234,
+        "sig_umrs": 2345,
+        "total": 3579
+      },
+      "rdma": {
+        "read": 0,
+        "write": 7035,
+        "total": 7035
+      },
+      "polling": {
+        "polls": 1096,
+        "idle_polls": 300,
+        "completions": 7035,
+        "idle_polls_percentage": 36.5,
+        "cpls_per_poll": 6.418,
+        "nomem_qdepth": 0,
+        "nomem_mkey": 0
+      },
+      "tasks": {
+        "copy": 0,
+        "crypto": 1234,
+        "crc32c": 2345,
+        "total": 3579
+      }
+    }
+  }
 }
 ~~~
 
