@@ -1531,6 +1531,15 @@ accel_mlx5_enable(struct accel_mlx5_attr *attr)
 		return -EEXIST;
 	}
 	if (attr) {
+		if (attr->num_requests / spdk_env_get_core_count() < ACCEL_MLX5_MAX_MKEYS_IN_TASK) {
+			SPDK_ERRLOG("num requests per core must not be less than %u, current value %u\n",
+				    ACCEL_MLX5_MAX_MKEYS_IN_TASK, attr->num_requests / spdk_env_get_core_count());
+			return -EINVAL;
+		}
+		if (attr->qp_size < 8) {
+			SPDK_ERRLOG("qp_size must be at least 8\n");
+			return -EINVAL;
+		}
 		g_accel_mlx5.attr = *attr;
 		g_accel_mlx5.attr.allowed_devs = NULL;
 
