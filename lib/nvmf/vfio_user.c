@@ -756,7 +756,7 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg,
 
 	ret = vfu_sgl_get(ctx, sg, iov, 1, 0);
 	if (ret != 0) {
-		SPDK_ERRLOG("failed to get IOVA for IOVA [%ld, %ld): %m\n",
+		SPDK_ERRLOG("failed to get iovec for IOVA [%#lx, %#lx): %m\n",
 			    addr, addr + len);
 		return NULL;
 	}
