@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
+ *   Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -1162,6 +1163,7 @@ error:
 
 	_free_task_buffers_in_pool(worker);
 	free(worker->task_base);
+	worker->task_base = NULL;
 no_worker:
 	shutdown_cb();
 	g_rc = -1;
