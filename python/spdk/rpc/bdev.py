@@ -51,7 +51,7 @@ def bdev_wait_for_examine(client):
     return client.call('bdev_wait_for_examine')
 
 
-def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
+def bdev_compress_create(client, base_bdev_name, pm_path, lb_size=None):
     """Construct a compress virtual block device.
 
     Args:
@@ -135,7 +135,7 @@ def bdev_crypto_delete(client, name):
     return client.call('bdev_crypto_delete', params)
 
 
-def bdev_ocf_create(client, name, mode, cache_line_size, cache_bdev_name, core_bdev_name):
+def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name, cache_line_size=None):
     """Add an OCF block device
 
     Args:
@@ -210,7 +210,7 @@ def bdev_ocf_get_bdevs(client, name=None):
     Returns:
         Array of OCF devices with their current status
     """
-    params = None
+    params = {}
     if name:
         params = {'name': name}
     return client.call('bdev_ocf_get_bdevs', params)
@@ -234,7 +234,7 @@ def bdev_ocf_set_cache_mode(client, name, mode):
     return client.call('bdev_ocf_set_cache_mode', params)
 
 
-def bdev_ocf_set_seqcutoff(client, name, policy, threshold, promotion_count):
+def bdev_ocf_set_seqcutoff(client, name, policy, threshold=None, promotion_count=None):
     """Set sequential cutoff parameters on all cores for the given OCF cache device
 
     Args:
@@ -950,7 +950,7 @@ def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
     return client.call('bdev_nvme_detach_controller', params)
 
 
-def bdev_nvme_reset_controller(client, name, cntlid):
+def bdev_nvme_reset_controller(client, name, cntlid=None):
     """Reset an NVMe controller or all NVMe controllers in an NVMe bdev controller.
 
     Args:
@@ -966,7 +966,7 @@ def bdev_nvme_reset_controller(client, name, cntlid):
     return client.call('bdev_nvme_reset_controller', params)
 
 
-def bdev_nvme_enable_controller(client, name, cntlid):
+def bdev_nvme_enable_controller(client, name, cntlid=None):
     """Enable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
 
     Args:
@@ -982,7 +982,7 @@ def bdev_nvme_enable_controller(client, name, cntlid):
     return client.call('bdev_nvme_enable_controller', params)
 
 
-def bdev_nvme_disable_controller(client, name, cntlid):
+def bdev_nvme_disable_controller(client, name, cntlid=None):
     """Disable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
 
     Args:
@@ -1076,7 +1076,7 @@ def bdev_nvme_get_discovery_info(client):
     return client.call('bdev_nvme_get_discovery_info')
 
 
-def bdev_nvme_get_io_paths(client, name):
+def bdev_nvme_get_io_paths(client, name=None):
     """Display all or the specified NVMe bdev's active I/O paths
 
     Args:
@@ -1105,7 +1105,7 @@ def bdev_nvme_set_preferred_path(client, name, cntlid):
     return client.call('bdev_nvme_set_preferred_path', params)
 
 
-def bdev_nvme_set_multipath_policy(client, name, policy, selector, rr_min_io):
+def bdev_nvme_set_multipath_policy(client, name, policy, selector=None, rr_min_io=None):
     """Set multipath policy of the NVMe bdev
 
     Args:
@@ -1191,7 +1191,7 @@ def bdev_zone_block_delete(client, name):
     return client.call('bdev_zone_block_delete', params)
 
 
-def bdev_rbd_register_cluster(client, name, user_id=None, config_param=None, config_file=None, key_file=None, core_mask=None):
+def bdev_rbd_register_cluster(client, name=None, user_id=None, config_param=None, config_file=None, key_file=None, core_mask=None):
     """Create a Rados Cluster object of the Ceph RBD backend.
 
     Args:
@@ -1205,8 +1205,9 @@ def bdev_rbd_register_cluster(client, name, user_id=None, config_param=None, con
     Returns:
         Name of registered Rados Cluster object.
     """
-    params = {'name': name}
-
+    params = {}
+    if name is not None:
+        params['name'] = name
     if user_id is not None:
         params['user_id'] = user_id
     if config_param is not None:
@@ -1231,7 +1232,7 @@ def bdev_rbd_unregister_cluster(client, name):
     return client.call('bdev_rbd_unregister_cluster', params)
 
 
-def bdev_rbd_get_clusters_info(client, name):
+def bdev_rbd_get_clusters_info(client, name=None):
     """Get the cluster(s) info
 
     Args:
@@ -1388,7 +1389,7 @@ def bdev_error_delete(client, name):
     return client.call('bdev_error_delete', params)
 
 
-def bdev_iscsi_set_options(client, timeout_sec):
+def bdev_iscsi_set_options(client, timeout_sec=None):
     """Set options for the bdev iscsi.
 
     Args:
@@ -1592,16 +1593,18 @@ def bdev_split_delete(client, base_bdev):
     return client.call('bdev_split_delete', params)
 
 
-def bdev_ftl_create(client, name, base_bdev, **kwargs):
+def bdev_ftl_create(client, name, base_bdev, cache, **kwargs):
     """Construct FTL bdev
 
     Args:
         name: name of the bdev
         base_bdev: name of the base bdev
+        cache: name of the cache device
         kwargs: optional parameters
     """
     params = {'name': name,
-              'base_bdev': base_bdev}
+              'base_bdev': base_bdev,
+              'cache': cache}
     for key, value in kwargs.items():
         if value is not None:
             params[key] = value
@@ -1609,16 +1612,18 @@ def bdev_ftl_create(client, name, base_bdev, **kwargs):
     return client.call('bdev_ftl_create', params)
 
 
-def bdev_ftl_load(client, name, base_bdev, **kwargs):
+def bdev_ftl_load(client, name, base_bdev, cache, **kwargs):
     """Load FTL bdev
 
     Args:
         name: name of the bdev
         base_bdev: name of the base bdev
+        cache: Name of the cache device
         kwargs: optional parameters
     """
     params = {'name': name,
-              'base_bdev': base_bdev}
+              'base_bdev': base_bdev,
+              'cache': cache}
     for key, value in kwargs.items():
         if value is not None:
             params[key] = value
@@ -1626,26 +1631,32 @@ def bdev_ftl_load(client, name, base_bdev, **kwargs):
     return client.call('bdev_ftl_load', params)
 
 
-def bdev_ftl_unload(client, name, fast_shutdown):
+def bdev_ftl_unload(client, name, fast_shutdown=None):
     """Unload FTL bdev
 
     Args:
         name: name of the bdev
+        fast_shutdown: When set FTL will minimize persisted data during deletion and rely on shared memory during next load
     """
-    params = {'name': name,
-              'fast_shutdown': fast_shutdown}
+    params = {'name': name}
+
+    if fast_shutdown is not None:
+        params['fast_shutdown'] = fast_shutdown
 
     return client.call('bdev_ftl_unload', params)
 
 
-def bdev_ftl_delete(client, name, fast_shutdown):
+def bdev_ftl_delete(client, name, fast_shutdown=None):
     """Delete FTL bdev
 
     Args:
         name: name of the bdev
+        fast_shutdown: When set FTL will minimize persisted data during deletion and rely on shared memory during next load
     """
-    params = {'name': name,
-              'fast_shutdown': fast_shutdown}
+    params = {'name': name}
+
+    if fast_shutdown is not None:
+        params['fast_shutdown'] = fast_shutdown
 
     return client.call('bdev_ftl_delete', params)
 
@@ -1757,6 +1768,7 @@ def bdev_enable_histogram(client, name, enable):
 
     Args:
         bdev_name: name of bdev
+        enable: Enable or disable histogram on specified device
     """
     params = {'name': name, "enable": enable}
     return client.call('bdev_enable_histogram', params)

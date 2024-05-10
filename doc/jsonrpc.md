@@ -2884,7 +2884,7 @@ Get a list of compressed volumes that are missing their pmem metadata.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Required | string      | Name of the compress bdev
+name                    | Optional | string      | Name of the compress bdev
 
 #### Example
 
@@ -2926,7 +2926,6 @@ key                     | Optional | string      | Key in hex form. Obsolete, se
 cipher                  | Optional | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create
 key2                    | Optional | string      | 2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create
 key_name                | Optional | string      | Name of the key created with accel_crypto_key_create
-module                  | Optional | string      | Name of the accel module which is used to create a key (if no key_name specified)
 
 Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
 afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
@@ -3583,6 +3582,7 @@ md_size                 | Optional | number      | Metadata size for this bdev (
 md_interleave           | Optional | boolean     | Metadata location, interleaved if true, and separated if false. Default is false.
 dif_type                | Optional | number      | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
 dif_is_head_of_md       | Optional | boolean     | Protection information is in the first 8 bytes of metadata. Default=false.
+physical_block_size     | Optional | number      | Physical block size of device; must be a power of 2 and at least 512
 
 #### Result
 
@@ -3660,7 +3660,7 @@ Construct @ref bdev_config_null
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Optional | string      | Bdev name to use
+name                    | Required | string      | Bdev name to use
 block_size              | Required | number      | Block size in bytes
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
@@ -3786,6 +3786,8 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Bdev name to use
 filename                | Required | number      | Path to device or file
 block_size              | Optional | number      | Block size in bytes
+readonly                | Optional | boolean     | set aio bdev as read-only
+fallocate               | Optional | boolean     | Enable UNMAP and WRITE ZEROES support. Intended only for testing purposes due to synchronous syscall.
 
 #### Result
 
@@ -4040,6 +4042,7 @@ trtype                     | Required | string      | NVMe-oF target trtype: rdm
 traddr                     | Required | string      | NVMe-oF target address: ip or BDF
 adrfam                     | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
 trsvcid                    | Optional | string      | NVMe-oF target trsvcid: port number
+priority                   | Optional | string      | Transport connection priority. Supported by TCP transport with POSIX sock module (see socket(7) man page).
 subnqn                     | Optional | string      | NVMe-oF target subnqn
 hostnqn                    | Optional | string      | NVMe-oF target hostnqn
 hostaddr                   | Optional | string      | NVMe-oF host address: ip address
@@ -5042,11 +5045,12 @@ This method is available only if SPDK was build with Ceph RBD support.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Required | string      | Registered Rados cluster object name
+name                    | Optional | string      | Registered Rados cluster object name
 user_id                 | Optional | string      | Ceph ID (i.e. admin, not client.admin)
 config_param            | Optional | string map  | Explicit librados configuration
-config_file             | Optional | string      | File path of libraodos configuration file
-key_file                | Optional | string      | File path of libraodos key file
+config_file             | Optional | string      | File path of librados configuration file
+key_file                | Optional | string      | File path of librados key file
+core_mask               | Optional | string      | Core mask for librados IO context threads
 
 This RPC registers a Rados Cluster object handle which is only known
 to rbd module, it uses user_id + config_param or user_id + config_file +
@@ -5380,6 +5384,7 @@ avg_read_latency        | Required | number      | average read latency (us)
 p99_read_latency        | Required | number      | p99 read latency (us)
 avg_write_latency       | Required | number      | average write latency (us)
 p99_write_latency       | Required | number      | p99 write latency (us)
+uuid                    | Optional | string      | UUID of new bdev
 
 #### Result
 
@@ -5748,6 +5753,7 @@ uuid                    | Optional | string      | UUID of restored bdev (not ap
 core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
 overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
 fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
+l2p_dram_limit          | Optional | int         | DRAM limit for most recent L2P addresses (default 2048 MiB)
 
 #### Result
 
@@ -5803,6 +5809,7 @@ uuid                    | Required | string      | UUID of restored bdev
 core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
 overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
 fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
+l2p_dram_limit          | Optional | int         | DRAM limit for most recent L2P addresses (default 2048 MiB)
 
 #### Result
 
