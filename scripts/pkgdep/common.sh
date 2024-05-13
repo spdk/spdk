@@ -35,17 +35,46 @@ install_uadk() {
 	ldconfig
 }
 
+_install_shfmt() {
+	local version=$1 arch=$2 type=$3
+
+	local shfmt_dir=/usr/local/src/shfmt shfmt_repo=https://github.com/mvdan/sh
+
+	if [[ $type != build ]]; then
+		echo "$shfmt_repo/releases/download/$version/shfmt_${version}_linux_${arch}"
+		return 0
+	fi
+
+	if [[ ! -e /etc/opt/spdk-pkgdep/paths/go.path ]]; then
+		install_golang
+	fi
+	source /etc/opt/spdk-pkgdep/paths/export.sh > /dev/null
+
+	rm -rf "$shfmt_dir"
+
+	git clone "$shfmt_repo" "$shfmt_dir"
+	git -C "$shfmt_dir" checkout "$version"
+
+	# See cmd/shfmt/Dockerfile
+	CGO_ENABLED=0 go -C "$shfmt_dir" build \
+		-ldflags "-w -s -extldflags '-static' -X main.version=$version" \
+		"$shfmt_dir/cmd/shfmt"
+
+	echo "file://$shfmt_dir/shfmt"
+}
+
 install_shfmt() {
 	# Fetch version that has been tested
-	local shfmt_version=3.1.0
+	local shfmt_version=v3.8.0
 	local shfmt=shfmt-$shfmt_version
 	local shfmt_dir=${SHFMT_DIR:-/opt/shfmt}
 	local shfmt_dir_out=${SHFMT_DIR_OUT:-/usr/bin}
 	local shfmt_url
 	local os
 	local arch
+	local cmdline
 
-	if hash "$shfmt" && [[ $("$shfmt" --version) == "v$shfmt_version" ]]; then
+	if hash "$shfmt" && [[ $("$shfmt" --version) == "$shfmt_version" ]]; then
 		echo "$shfmt already installed"
 		return 0
 	fi 2> /dev/null
@@ -63,14 +92,10 @@ install_shfmt() {
 			;;
 	esac
 
-	case "$os" in
-		Linux) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_linux_${arch} ;;
-		FreeBSD) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_freebsd_${arch} ;;
-		*)
-			echo "Not supported OS (${os:-Unknown}), skipping"
-			return 0
-			;;
-	esac
+	cmdline=("$shfmt_version" "$arch")
+	[[ $os == FreeBSD || -n $BUILD_SHFMT ]] && cmdline+=(build)
+
+	shfmt_url=$(_install_shfmt "${cmdline[@]}")
 
 	mkdir -p "$shfmt_dir"
 	mkdir -p "$shfmt_dir_out"
