@@ -109,10 +109,10 @@ function check_for_driver() {
 		return 1
 	fi
 
-	if [[ -d /sys/module/${1} || -d \
-		/sys/module/${1//-/_} || -d \
-		/sys/bus/pci/drivers/${1} || -d \
-		/sys/bus/pci/drivers/${1//-/_} ]]; then
+	if [[ -d /sys/module/${1} ||
+		-d /sys/module/${1//-/_} ||
+		-d /sys/bus/pci/drivers/${1} ||
+		-d /sys/bus/pci/drivers/${1//-/_} ]]; then
 		return 2
 	fi
 	return 0

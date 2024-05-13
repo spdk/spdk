@@ -110,8 +110,8 @@ get_auto_cfg() {
 		auto_cpu_map+=("$(
 			cat <<- CPU_VM
 				VM_${vm}_qemu_mask=$(
-				IFS=","
-				echo "${vm_cpus[*]}"
+					IFS=","
+					echo "${vm_cpus[*]}"
 				)
 				VM_${vm}_qemu_numa_node=$vm_node
 			CPU_VM

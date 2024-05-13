@@ -316,7 +316,7 @@ NOT "$rootdir/scripts/sma-client.py" <<- EOF
 	  "method": "SetQos",
 	  "params": {
 	    "device_handle": "$device",
-	    "volume_id": "$(base64 <<<'invalid'))",
+	    "volume_id": "$(base64 <<< 'invalid'))",
 	    "maximum": {
 	      "rd_iops": 0,
 	      "wr_iops": 0,

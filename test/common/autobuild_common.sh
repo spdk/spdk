@@ -258,7 +258,7 @@ _scanbuild_make() {
 			be updated with proper flags to build these files, or exceptions need
 			to be added to test/common/skipped_build_files.txt
 
-			$(<"$out/unbuilt_c_files.txt")
+			$(< "$out/unbuilt_c_files.txt")
 		ERROR
 		pass=false
 	fi

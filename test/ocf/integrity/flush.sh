@@ -56,8 +56,8 @@ bdevperf_config() {
 			  "subsystem": "bdev",
 			  "config": [
 				$(
-		IFS=","
-		printf '%s\n' "$config"
+			IFS=","
+			printf '%s\n' "$config"
 		),
 				{
 				  "method": "bdev_wait_for_examine"

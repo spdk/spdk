@@ -85,8 +85,8 @@ config+=(
 cat <<- CONFIG > "$curdir/modes.conf"
 	{"subsystems":[
 	$(
-	IFS=","
-	printf '%s\n' "${config[*]}"
+		IFS=","
+		printf '%s\n' "${config[*]}"
 	)
 	]}]}
 CONFIG

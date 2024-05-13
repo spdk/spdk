@@ -61,7 +61,7 @@ build_openssl_config() {
 
 build_openssl_config_fallback() {
 	build_openssl_config <<- FIPS
-		$(openssl fipsinstall -module "$(openssl info -modulesdir)/fips.so" 2>/dev/null)
+		$(openssl fipsinstall -module "$(openssl info -modulesdir)/fips.so" 2> /dev/null)
 
 		[openssl_spdk]
 		providers = provider_sect_spdk

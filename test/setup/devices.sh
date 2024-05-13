@@ -58,7 +58,7 @@ verify() {
 
 	local pci status
 	while read -r pci _ _ status; do
-		if [[ $pci == "$dev" && \
+		if [[ $pci == "$dev" &&
 			$status == *"Active devices: "*"$mounts"* ]]; then
 			found=1
 		fi

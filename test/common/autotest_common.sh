@@ -434,9 +434,8 @@ function get_config_params() {
 		fi
 	fi
 
-	if [[ $SPDK_TEST_UNITTEST -eq 0 && \
-		$SPDK_TEST_SCANBUILD -eq 0 && -z \
-		${SPDK_TEST_AUTOBUILD:-} ]]; then
+	if [[ $SPDK_TEST_UNITTEST -eq 0 &&
+		$SPDK_TEST_SCANBUILD -eq 0 && -z ${SPDK_TEST_AUTOBUILD:-} ]]; then
 		config_params+=' --disable-unit-tests'
 	fi
 
@@ -795,7 +794,7 @@ function process_core() {
 		cat <<- BT
 			##### CORE BT ${core##*/} #####
 
-			$(<"$core")
+			$(< "$core")
 
 			--
 		BT
@@ -1611,7 +1610,7 @@ function pap() {
 	while read -r file; do
 		cat <<- FILE
 			--- $file ---
-			$(<"$file")
+			$(< "$file")
 			--- $file ---
 		FILE
 		rm -f "$file"

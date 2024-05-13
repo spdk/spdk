@@ -534,15 +534,15 @@ function get_bash_files() {
 }
 
 function check_bash_style() {
-	local rc=0
+	local rc=0 supported_shfmt_version=v3.8.0
 
 	# find compatible shfmt binary
 	shfmt_bins=$(compgen -c | grep '^shfmt' | uniq || true)
 	for bin in $shfmt_bins; do
 		shfmt_version=$("$bin" --version)
-		if [ $shfmt_version != "v3.1.0" ]; then
-			echo "$bin version $shfmt_version not used (only v3.1.0 is supported)"
-			echo "v3.1.0 can be installed using 'scripts/pkgdep.sh -d'"
+		if [[ $shfmt_version != "$supported_shfmt_version" ]]; then
+			echo "$bin version $shfmt_version not used (only $supported_shfmt_version is supported)"
+			echo "$supported_shfmt_version can be installed using 'scripts/pkgdep.sh -d'"
 		else
 			shfmt=$bin
 			break
@@ -566,9 +566,7 @@ function check_bash_style() {
 
 			diff=${output_dir:-$PWD}/$shfmt.patch
 
-			# Explicitly tell shfmt to not look for .editorconfig. .editorconfig is also not looked up
-			# in case any formatting arguments has been passed on its cmdline.
-			if ! SHFMT_NO_EDITORCONFIG=true "$shfmt" "${shfmt_cmdline[@]}" "${sh_files[@]}" > "$diff"; then
+			if ! "$shfmt" "${shfmt_cmdline[@]}" "${sh_files[@]}" > "$diff"; then
 				# In case shfmt detects an actual syntax error it will write out a proper message on
 				# its stderr, hence the diff file should remain empty.
 				rc=1
