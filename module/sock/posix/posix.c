@@ -1118,6 +1118,7 @@ static struct spdk_sock *
 _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 {
 	struct spdk_posix_sock		*sock = __posix_sock(_sock);
+	struct spdk_posix_sock_group_impl *group = __posix_group_impl(sock->base.group_impl);
 	struct sockaddr_storage		sa;
 	socklen_t			salen;
 	int				rc, fd;
@@ -1130,6 +1131,12 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 	salen = sizeof(sa);
 
 	assert(sock != NULL);
+
+	/* epoll_wait will trigger again if there is more than one request */
+	if (group && sock->socket_has_data) {
+		sock->socket_has_data = false;
+		TAILQ_REMOVE(&group->socks_with_data, sock, link);
+	}
 
 	rc = accept(sock->fd, (struct sockaddr *)&sa, &salen);
 
