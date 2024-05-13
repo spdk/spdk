@@ -56,6 +56,7 @@ install_shfmt() {
 	case "$arch" in
 		x86_64) arch="amd64" ;;
 		aarch64) arch="arm" ;;
+		amd64) ;; # FreeBSD
 		*)
 			echo "Not supported arch (${arch:-Unknown}), skipping"
 			return 0
