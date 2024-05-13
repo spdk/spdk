@@ -367,6 +367,7 @@ struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_tcp_poll_group		*next_pg;
 
 	struct spdk_poller			*accept_poller;
+	struct spdk_sock_group			*listen_sock_group;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_tcp_poll_group)	poll_groups;
@@ -630,6 +631,7 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	}
 
 	spdk_poller_unregister(&ttransport->accept_poller);
+	spdk_sock_group_close(&ttransport->listen_sock_group);
 	free(ttransport);
 
 	if (cb_fn) {
@@ -639,6 +641,8 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 }
 
 static int nvmf_tcp_accept(void *ctx);
+
+static void nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock);
 
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
@@ -764,6 +768,14 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	ttransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_tcp_accept, &ttransport->transport,
 				    opts->acceptor_poll_rate);
 	if (!ttransport->accept_poller) {
+		free(ttransport);
+		return NULL;
+	}
+
+	ttransport->listen_sock_group = spdk_sock_group_create(NULL);
+	if (ttransport->listen_sock_group == NULL) {
+		SPDK_ERRLOG("Failed to create socket group for listen sockets\n");
+		spdk_poller_unregister(&ttransport->accept_poller);
 		free(ttransport);
 		return NULL;
 	}
@@ -896,6 +908,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+	int rc;
 
 	if (!strlen(trid->trsvcid)) {
 		SPDK_ERRLOG("Service id is required\n");
@@ -979,6 +992,15 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		return -EINVAL;
 	}
 
+	rc = spdk_sock_group_add_sock(ttransport->listen_sock_group, port->listen_sock, nvmf_tcp_accept_cb,
+				      port);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to add socket to the listen socket group\n");
+		spdk_sock_close(&port->listen_sock);
+		free(port);
+		return -errno;
+	}
+
 	port->transport = transport;
 
 	SPDK_NOTICELOG("*** NVMe/TCP Target Listening on %s port %s ***\n",
@@ -1002,6 +1024,7 @@ nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 
 	port = nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
+		spdk_sock_group_remove_sock(ttransport->listen_sock_group, port->listen_sock);
 		TAILQ_REMOVE(&ttransport->ports, port, link);
 		spdk_sock_close(&port->listen_sock);
 		free(port);
@@ -1402,16 +1425,24 @@ nvmf_tcp_accept(void *ctx)
 {
 	struct spdk_nvmf_transport *transport = ctx;
 	struct spdk_nvmf_tcp_transport *ttransport;
-	struct spdk_nvmf_tcp_port *port;
-	uint32_t count = 0;
+	int count;
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	TAILQ_FOREACH(port, &ttransport->ports, link) {
-		count += nvmf_tcp_port_accept(port);
+	count = spdk_sock_group_poll(ttransport->listen_sock_group);
+	if (count < 0) {
+		SPDK_ERRLOG("Fail in TCP listen socket group poll\n");
 	}
 
-	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+	return count != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
+static void
+nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_nvmf_tcp_port *port = ctx;
+
+	nvmf_tcp_port_accept(port);
 }
 
 static void
