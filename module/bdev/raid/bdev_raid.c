@@ -1936,8 +1936,6 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 		goto out;
 	}
 
-	raid_bdev_free_base_bdev_resource(base_info);
-
 	if (raid_bdev->sb) {
 		struct raid_bdev_superblock *sb = raid_bdev->sb;
 		uint8_t slot = raid_bdev_base_bdev_slot(base_info);
@@ -1987,6 +1985,8 @@ raid_bdev_channels_remove_base_bdev_done(struct spdk_io_channel_iter *i, int sta
 {
 	struct raid_base_bdev_info *base_info = spdk_io_channel_iter_get_ctx(i);
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
+
+	raid_bdev_free_base_bdev_resource(base_info);
 
 	spdk_bdev_unquiesce(&raid_bdev->bdev, &g_raid_if, raid_bdev_remove_base_bdev_on_unquiesced,
 			    base_info);
