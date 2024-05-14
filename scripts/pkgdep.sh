@@ -42,7 +42,6 @@ function install_all_dependencies() {
 	INSTALL_AVAHI=true
 	INSTALL_GOLANG=true
 	INSTALL_IDXD=true
-	INSTALL_UADK=true
 }
 
 INSTALL_CRYPTO=false
