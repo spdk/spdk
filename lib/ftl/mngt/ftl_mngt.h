@@ -338,7 +338,7 @@ int ftl_mngt_call_dev_startup(struct spdk_ftl_dev *dev, ftl_mngt_completion cb, 
  * The specific management functions
  */
 /**
- * @brief Issue unmap on FTL instance
+ * @brief Issue trim on FTL instance
  *
  * @param dev FTL device
  * @param cb Caller callback
@@ -348,8 +348,8 @@ int ftl_mngt_call_dev_startup(struct spdk_ftl_dev *dev, ftl_mngt_completion cb, 
  * @retval 0 The operation successful has started
  * @retval Non-zero Startup failure
  */
-int ftl_mngt_unmap(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb,
-		   void *cb_cntx);
+int ftl_mngt_trim(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb,
+		  void *cb_cntx);
 
 /**
  * @brief Shuts down a FTL instance

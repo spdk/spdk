@@ -45,9 +45,9 @@ enum ftl_trace_source {
 #define FTL_TRACE_MD_WRITE_SUBMISSION(src)	FTL_TPOINT_ID(17, src)
 #define FTL_TRACE_MD_WRITE_COMPLETION(src)	FTL_TPOINT_ID(18, src)
 
-#define FTL_TRACE_UNMAP_SCHEDULE(src)		FTL_TPOINT_ID(19, src)
-#define FTL_TRACE_UNMAP_SUBMISSION(src)		FTL_TPOINT_ID(20, src)
-#define FTL_TRACE_UNMAP_COMPLETION(src)		FTL_TPOINT_ID(21, src)
+#define FTL_TRACE_TRIM_SCHEDULE(src)		FTL_TPOINT_ID(19, src)
+#define FTL_TRACE_TRIM_SUBMISSION(src)		FTL_TPOINT_ID(20, src)
+#define FTL_TRACE_TRIM_COMPLETION(src)		FTL_TPOINT_ID(21, src)
 
 SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 {
@@ -162,8 +162,8 @@ ftl_trace_lba_io_init(struct spdk_ftl_dev *dev, const struct ftl_io *io)
 	case FTL_IO_WRITE:
 		tpoint_id = FTL_TRACE_WRITE_SCHEDULE(source);
 		break;
-	case FTL_IO_UNMAP:
-		tpoint_id = FTL_TRACE_UNMAP_SCHEDULE(source);
+	case FTL_IO_TRIM:
+		tpoint_id = FTL_TRACE_TRIM_SCHEDULE(source);
 		break;
 	default:
 		assert(0);
@@ -198,8 +198,8 @@ ftl_trace_completion(struct spdk_ftl_dev *dev, const struct ftl_io *io,
 	case FTL_IO_WRITE:
 		tpoint_id = FTL_TRACE_WRITE_COMPLETION(source);
 		break;
-	case FTL_IO_UNMAP:
-		tpoint_id = FTL_TRACE_UNMAP_COMPLETION(source);
+	case FTL_IO_TRIM:
+		tpoint_id = FTL_TRACE_TRIM_COMPLETION(source);
 		break;
 	default:
 		assert(0);
@@ -224,8 +224,8 @@ ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, ftl_addr
 	case FTL_IO_WRITE:
 		tpoint_id = FTL_TRACE_WRITE_SUBMISSION(source);
 		break;
-	case FTL_IO_UNMAP:
-		tpoint_id = FTL_TRACE_UNMAP_SUBMISSION(source);
+	case FTL_IO_TRIM:
+		tpoint_id = FTL_TRACE_TRIM_SUBMISSION(source);
 		break;
 	default:
 		assert(0);

@@ -47,8 +47,8 @@ DEFINE_STUB(ftl_io_get_lba, uint64_t, (const struct ftl_io *io, size_t offset), 
 DEFINE_STUB(ftl_io_channel_get_ctx, struct ftl_io_channel *, (struct spdk_io_channel *ioch), NULL);
 DEFINE_STUB(ftl_iovec_num_blocks, size_t, (struct iovec *iov, size_t iov_cnt), 0);
 DEFINE_STUB_V(ftl_io_complete, (struct ftl_io *io));
-DEFINE_STUB(ftl_mngt_unmap, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
-				  spdk_ftl_fn cb, void *cb_cntx), 0);
+DEFINE_STUB(ftl_mngt_trim, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
+				 spdk_ftl_fn cb, void *cb_cntx), 0);
 DEFINE_STUB(ftl_md_get_vss_buffer, union ftl_md_vss *, (struct ftl_md *md), NULL);
 DEFINE_STUB_V(ftl_writer_run, (struct ftl_writer *writer));
 DEFINE_STUB_V(ftl_reloc, (struct ftl_reloc *reloc));

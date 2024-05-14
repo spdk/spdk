@@ -34,7 +34,7 @@ enum ftl_io_flags {
 enum ftl_io_type {
 	FTL_IO_READ,
 	FTL_IO_WRITE,
-	FTL_IO_UNMAP,
+	FTL_IO_TRIM,
 };
 
 #define FTL_IO_MAX_IOVEC 4

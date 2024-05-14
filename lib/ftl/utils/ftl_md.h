@@ -124,7 +124,7 @@ union ftl_md_vss {
 		uint64_t	start_lba;
 		uint64_t	num_blocks;
 		uint64_t	seq_id;
-	} unmap;
+	} trim;
 
 	struct {
 		uint64_t	seq_id;

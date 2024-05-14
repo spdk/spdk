@@ -122,8 +122,8 @@ static const struct ftl_mngt_process_desc desc_startup = {
 		},
 		{
 			.name = "Initialize trim map",
-			.action = ftl_mngt_init_unmap_map,
-			.cleanup = ftl_mngt_deinit_unmap_map
+			.action = ftl_mngt_init_trim_map,
+			.cleanup = ftl_mngt_deinit_trim_map
 		},
 		{
 			.name = "Initialize bands metadata",
@@ -183,7 +183,7 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		},
 		{
 			.name = "Clear trim map",
-			.action = ftl_mngt_unmap_clear,
+			.action = ftl_mngt_trim_metadata_clear,
 		},
 		{
 			.name = "Set FTL dirty state",
@@ -275,7 +275,7 @@ ftl_mngt_call_dev_startup(struct spdk_ftl_dev *dev, ftl_mngt_completion cb, void
 	return ftl_mngt_process_execute(dev, &desc_startup, cb, cb_cntx);
 }
 
-struct ftl_unmap_ctx {
+struct ftl_trim_ctx {
 	uint64_t lba;
 	uint64_t num_blocks;
 	spdk_ftl_fn cb_fn;
@@ -285,7 +285,7 @@ struct ftl_unmap_ctx {
 };
 
 static void
-ftl_mngt_process_unmap_cb(void *ctx, int status)
+ftl_mngt_process_trim_cb(void *ctx, int status)
 {
 	struct ftl_mngt_process *mngt = ctx;
 
@@ -297,10 +297,10 @@ ftl_mngt_process_unmap_cb(void *ctx, int status)
 }
 
 static void
-ftl_mngt_process_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+ftl_mngt_process_trim(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_io *io = ftl_mngt_get_process_ctx(mngt);
-	struct ftl_unmap_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
+	struct ftl_trim_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
 	int rc;
 
 	if (!dev->ioch) {
@@ -308,52 +308,52 @@ ftl_mngt_process_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		return;
 	}
 
-	rc = spdk_ftl_unmap(dev, io, dev->ioch, ctx->lba, ctx->num_blocks, ftl_mngt_process_unmap_cb, mngt);
+	rc = spdk_ftl_unmap(dev, io, dev->ioch, ctx->lba, ctx->num_blocks, ftl_mngt_process_trim_cb, mngt);
 	if (rc == -EAGAIN) {
 		ftl_mngt_continue_step(mngt);
 	}
 }
 
 /*
- * RPC unmap path.
+ * RPC trim path.
  */
-static const struct ftl_mngt_process_desc g_desc_unmap = {
-	.name = "FTL unmap",
+static const struct ftl_mngt_process_desc g_desc_trim = {
+	.name = "FTL trim",
 	.ctx_size = sizeof(struct ftl_io),
 	.steps = {
 		{
-			.name = "Process unmap",
-			.action = ftl_mngt_process_unmap,
+			.name = "Process trim",
+			.action = ftl_mngt_process_trim,
 		},
 		{}
 	}
 };
 
 static void
-unmap_user_cb(void *_ctx)
+trim_user_cb(void *_ctx)
 {
-	struct ftl_unmap_ctx *ctx = _ctx;
+	struct ftl_trim_ctx *ctx = _ctx;
 
 	ctx->cb_fn(ctx->cb_arg, ctx->status);
 	free(ctx);
 }
 
 static void
-ftl_mngt_unmap_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
+ftl_mngt_trim_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
 {
-	struct ftl_unmap_ctx *ctx = _ctx;
+	struct ftl_trim_ctx *ctx = _ctx;
 	ctx->status = status;
 
-	if (spdk_thread_send_msg(ctx->thread, unmap_user_cb, ctx)) {
+	if (spdk_thread_send_msg(ctx->thread, trim_user_cb, ctx)) {
 		ftl_abort();
 	}
 }
 
 int
-ftl_mngt_unmap(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb,
-	       void *cb_cntx)
+ftl_mngt_trim(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb,
+	      void *cb_cntx)
 {
-	struct ftl_unmap_ctx *ctx;
+	struct ftl_trim_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -366,7 +366,7 @@ ftl_mngt_unmap(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk
 	ctx->cb_arg = cb_cntx;
 	ctx->thread = spdk_get_thread();
 
-	return ftl_mngt_process_execute(dev, &g_desc_unmap, ftl_mngt_unmap_cb, ctx);
+	return ftl_mngt_process_execute(dev, &g_desc_trim, ftl_mngt_trim_cb, ctx);
 }
 
 void

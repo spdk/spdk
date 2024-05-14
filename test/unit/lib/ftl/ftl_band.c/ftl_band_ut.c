@@ -81,8 +81,8 @@ DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB_V(ftl_reloc_halt, (struct ftl_reloc *reloc));
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), true);
 DEFINE_STUB(ftl_p2l_ckpt_acquire, struct ftl_p2l_ckpt *, (struct spdk_ftl_dev *dev), NULL);
-DEFINE_STUB(ftl_mngt_unmap, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
-				  spdk_ftl_fn cb, void *cb_cntx), 0);
+DEFINE_STUB(ftl_mngt_trim, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
+				 spdk_ftl_fn cb, void *cb_cntx), 0);
 DEFINE_STUB_V(ftl_p2l_ckpt_release, (struct spdk_ftl_dev *dev, struct ftl_p2l_ckpt *ckpt));
 
 DEFINE_STUB_V(ftl_l2p_process, (struct spdk_ftl_dev *dev));

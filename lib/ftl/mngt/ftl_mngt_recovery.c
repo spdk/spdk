@@ -713,7 +713,7 @@ ftl_mngt_restore_valid_counters(struct spdk_ftl_dev *dev, struct ftl_mngt_proces
 }
 
 static void
-ftl_mngt_complete_unmap_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+ftl_mngt_complete_trim_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
 
@@ -727,7 +727,7 @@ ftl_mngt_complete_unmap_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int stat
 }
 
 static void
-ftl_mngt_complete_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+ftl_mngt_complete_trim(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	uint64_t start_lba, num_blocks, seq_id;
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
@@ -739,20 +739,20 @@ ftl_mngt_complete_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 		assert(seq_id <= dev->sb->seq_id);
 
-		FTL_NOTICELOG(dev, "Incomplete unmap detected lba: %"PRIu64" num_blocks: %"PRIu64"\n",
+		FTL_NOTICELOG(dev, "Incomplete trim detected lba: %"PRIu64" num_blocks: %"PRIu64"\n",
 			      start_lba, num_blocks);
 
-		ftl_set_unmap_map(dev, start_lba, num_blocks, seq_id);
+		ftl_set_trim_map(dev, start_lba, num_blocks, seq_id);
 	}
 
 	md->owner.cb_ctx = mngt;
-	md->cb = ftl_mngt_complete_unmap_cb;
+	md->cb = ftl_mngt_complete_trim_cb;
 
 	ftl_md_persist(md);
 }
 
 static void
-ftl_mngt_recover_unmap_map_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+ftl_mngt_recover_trim_map_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
 	uint64_t num_md_blocks, first_page, num_pages;
@@ -770,9 +770,9 @@ ftl_mngt_recover_unmap_map_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int s
 	num_md_blocks = ftl_md_get_buffer_size(md) / FTL_BLOCK_SIZE;
 
 	for (i = 0; i < num_md_blocks; ++i, page_vss++) {
-		lba = page_vss->unmap.start_lba;
-		num_blocks = page_vss->unmap.num_blocks;
-		vss_seq_id = page_vss->unmap.seq_id;
+		lba = page_vss->trim.start_lba;
+		num_blocks = page_vss->trim.num_blocks;
+		vss_seq_id = page_vss->trim.seq_id;
 
 		first_page = lba / lbas_in_page;
 		num_pages = num_blocks / lbas_in_page;
@@ -791,18 +791,18 @@ ftl_mngt_recover_unmap_map_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int s
 }
 
 static void
-ftl_mngt_recover_unmap_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+ftl_mngt_recover_trim_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
 
 	if (ftl_fast_recovery(dev)) {
-		FTL_DEBUGLOG(dev, "SHM: skipping unmap map recovery\n");
+		FTL_DEBUGLOG(dev, "SHM: skipping trim map recovery\n");
 		ftl_mngt_next_step(mngt);
 		return;
 	}
 
 	md->owner.cb_ctx = mngt;
-	md->cb = ftl_mngt_recover_unmap_map_cb;
+	md->cb = ftl_mngt_recover_trim_map_cb;
 	ftl_md_restore(md);
 }
 
@@ -896,8 +896,8 @@ static const struct ftl_mngt_process_desc g_desc_recovery = {
 			.action = ftl_mngt_recover_seq_id
 		},
 		{
-			.name = "Recover unmap map",
-			.action = ftl_mngt_recover_unmap_map
+			.name = "Recover trim map",
+			.action = ftl_mngt_recover_trim_map
 		},
 		{
 			.name = "Recover open chunks P2L",
@@ -958,8 +958,8 @@ static const struct ftl_mngt_process_desc g_desc_recovery_shm = {
 			.action = ftl_mngt_restore_valid_counters,
 		},
 		{
-			.name = "Complete unmap transaction",
-			.action = ftl_mngt_complete_unmap,
+			.name = "Complete trim transaction",
+			.action = ftl_mngt_complete_trim,
 		},
 		{}
 	}

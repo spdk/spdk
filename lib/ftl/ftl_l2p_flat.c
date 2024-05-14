@@ -170,7 +170,7 @@ ftl_l2p_flat_deinit(struct spdk_ftl_dev *dev)
 }
 
 void
-ftl_l2p_flat_unmap(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+ftl_l2p_flat_trim(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 {
 	cb(dev, 0, cb_ctx);
 }
