@@ -15,7 +15,7 @@
 	url = https://github.com/nutanix/libvfio-user.git
 [submodule "xnvme"]
 	path = xnvme
-	url = https://github.com/OpenMPDK/xNVMe.git
+	url = https://github.com/xnvme/xnvme.git
 [submodule "isa-l-crypto"]
 	path = isa-l-crypto
 	url = https://github.com/intel/isa-l_crypto
