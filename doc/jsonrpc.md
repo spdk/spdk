@@ -790,6 +790,8 @@ Name                    | Description
 scheduler_name          | Current scheduler name
 scheduler_period        | Currently set scheduler period in microseconds
 governor_name           | Governor name
+scheduling_core         | Current scheduling core
+isolated_core_mask      | Current isolated core mask of scheduler
 
 #### Example
 
@@ -812,7 +814,9 @@ Example response:
   "result": {
     "scheduler_name": "static",
     "scheduler_period": 2800000000,
-    "governor_name": "default"
+    "governor_name": "default",
+    "scheduling_core": 1,
+    "isolated_core_mask": "0x4"
   }
 }
 ~~~
@@ -865,6 +869,45 @@ Example response:
       }
     ]
   }
+}
+~~~
+
+### scheduler_set_options
+
+Set options for scheduler.
+
+This RPC may only be called before SPDK subsystems have been initialized. This RPC can be called only once.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+scheduling_core         | Optional | number      | Main core of scheduler. Idle threads move to the scheduling core. Can be set only once
+isolated_core_mask      | Optional | string      | Select CPU cores to isolate from scheduling changes. Can be set only once
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "scheduler_set_options",
+  "params": {
+    "scheduling_core": 1,
+    "isolated_core_mask": "0x4"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 

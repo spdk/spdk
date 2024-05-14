@@ -6,6 +6,7 @@
 #define EVENT_INTERNAL_H
 
 #include "spdk/stdinc.h"
+#include "spdk/cpuset.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,4 +28,14 @@ int app_get_proc_stat(unsigned int core, uint64_t *usr, uint64_t *sys, uint64_t 
 }
 #endif
 
-#endif
+/**
+ * Get isolated CPU core mask.
+ */
+const char *scheduler_get_isolated_core_mask(void);
+
+/**
+ * Set isolated CPU core mask.
+ */
+bool scheduler_set_isolated_core_mask(struct spdk_cpuset isolated_core_mask);
+
+#endif /* EVENT_INTERNAL_H */

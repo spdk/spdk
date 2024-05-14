@@ -77,6 +77,15 @@ def framework_get_governor(client):
     return client.call('framework_get_governor')
 
 
+def scheduler_set_options(client, scheduling_core=None, isolated_core_mask=None):
+    params = {}
+    if isolated_core_mask is not None:
+        params['isolated_core_mask'] = isolated_core_mask
+    if scheduling_core is not None:
+        params['scheduling_core'] = scheduling_core
+    return client.call('scheduler_set_options', params)
+
+
 def thread_get_stats(client):
     """Query threads statistics.
 

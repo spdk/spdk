@@ -192,6 +192,7 @@ struct spdk_scheduler_core_info {
 	uint32_t threads_count;
 	bool interrupt_mode;
 	struct spdk_scheduler_thread_info *thread_infos;
+	bool isolated;
 };
 
 /**
@@ -291,6 +292,16 @@ void spdk_scheduler_register(struct spdk_scheduler *scheduler);
  * \return lcore of scheduling reactor
  */
 uint32_t spdk_scheduler_get_scheduling_lcore(void);
+
+/**
+ * Set scheduling reactor.
+ *
+ * All scheduler operations are performed from the scheduling reactor.
+ *
+ * \param lcore lcore of scheduling reactor
+ */
+bool spdk_scheduler_set_scheduling_lcore(uint32_t lcore);
+
 
 /*
  * Macro used to register new scheduler.

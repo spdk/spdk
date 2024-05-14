@@ -538,6 +538,7 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 	struct spdk_scheduler *scheduler = spdk_scheduler_get();
 	uint64_t scheduler_period = spdk_scheduler_get_period();
 	struct spdk_governor *governor = spdk_governor_get();
+	uint32_t scheduling_core = spdk_scheduler_get_scheduling_lcore();
 
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -551,6 +552,8 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 		spdk_json_write_named_string(w, "scheduler_name", scheduler->name);
 	}
 	spdk_json_write_named_uint64(w, "scheduler_period", scheduler_period);
+	spdk_json_write_named_string(w, "isolated_core_mask", scheduler_get_isolated_core_mask());
+	spdk_json_write_named_uint32(w, "scheduling_core", scheduling_core);
 	if (governor != NULL) {
 		spdk_json_write_named_string(w, "governor_name", governor->name);
 	}
@@ -620,6 +623,64 @@ rpc_framework_get_governor(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("framework_get_governor", rpc_framework_get_governor, SPDK_RPC_RUNTIME)
+
+struct rpc_set_scheduler_opts_ctx {
+	char *isolated_core_mask;
+	uint32_t scheduling_core;
+};
+
+static const struct spdk_json_object_decoder rpc_set_scheduler_opts_decoders[] = {
+	{"isolated_core_mask", offsetof(struct rpc_set_scheduler_opts_ctx, isolated_core_mask), spdk_json_decode_string, true},
+	{"scheduling_core", offsetof(struct rpc_set_scheduler_opts_ctx, scheduling_core), spdk_json_decode_uint32, true},
+};
+
+static void
+free_rpc_scheduler_set_options(struct rpc_set_scheduler_opts_ctx *r)
+{
+	free(r->isolated_core_mask);
+}
+
+static void
+rpc_scheduler_set_options(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_set_scheduler_opts_ctx req = {NULL};
+	struct spdk_cpuset core_mask;
+
+	req.scheduling_core = spdk_scheduler_get_scheduling_lcore();
+
+	if (spdk_json_decode_object(params, rpc_set_scheduler_opts_decoders,
+				    SPDK_COUNTOF(rpc_set_scheduler_opts_decoders), &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
+
+	if (req.isolated_core_mask != NULL) {
+		spdk_cpuset_parse(&core_mask, req.isolated_core_mask);
+		if (spdk_cpuset_get_cpu(&core_mask, req.scheduling_core)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Scheduling core cannot be included in isolated core mask.\n");
+			goto end;
+		}
+		if (scheduler_set_isolated_core_mask(core_mask) == false) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid isolated core mask\n");
+			goto end;
+		}
+	}
+
+	if (spdk_scheduler_set_scheduling_lcore(req.scheduling_core) == false) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid scheduling core.\n");
+		goto end;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+end:
+	free_rpc_scheduler_set_options(&req);
+}
+SPDK_RPC_REGISTER("scheduler_set_options", rpc_scheduler_set_options, SPDK_RPC_STARTUP)
 
 struct rpc_thread_set_cpumask_ctx {
 	struct spdk_jsonrpc_request *request;

@@ -20,6 +20,7 @@ struct core_stats {
 	uint64_t busy;
 	uint64_t idle;
 	uint32_t thread_count;
+	bool isolated;
 };
 
 static struct core_stats *g_cores;
@@ -60,6 +61,10 @@ _foreach_thread(struct spdk_scheduler_core_info *cores_info, _foreach_fn fn)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		core = &cores_info[i];
+		/* Skip cores that are isolated */
+		if (core->isolated) {
+			continue;
+		}
 		for (j = 0; j < core->threads_count; j++) {
 			fn(&core->thread_infos[j]);
 		}
@@ -230,6 +235,11 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 			continue;
 		}
 
+		/* Skip cores that are isolated */
+		if (g_cores[i].isolated) {
+			continue;
+		}
+
 		/* Search for least busy core. */
 		if (g_cores[i].busy < g_cores[least_busy_lcore].busy) {
 			least_busy_lcore = i;
@@ -264,7 +274,7 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 static int
 init(void)
 {
-	g_main_lcore = spdk_env_get_current_core();
+	g_main_lcore = spdk_scheduler_get_scheduling_lcore();
 
 	if (spdk_governor_set("dpdk_governor") != 0) {
 		SPDK_NOTICELOG("Unable to initialize dpdk governor\n");
@@ -328,6 +338,7 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 		g_cores[i].thread_count = cores_info[i].threads_count;
 		g_cores[i].busy = cores_info[i].current_busy_tsc;
 		g_cores[i].idle = cores_info[i].current_idle_tsc;
+		g_cores[i].isolated = cores_info[i].isolated;
 		SPDK_DTRACE_PROBE2(dynsched_core_info, i, &cores_info[i]);
 	}
 	main_core = &g_cores[g_main_lcore];

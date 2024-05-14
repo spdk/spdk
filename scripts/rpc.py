@@ -177,7 +177,7 @@ if __name__ == "__main__":
     p.add_argument('-p', '--period', help="Scheduler period in microseconds", type=int)
     p.add_argument('--load-limit', help="Scheduler load limit. Reserved for dynamic scheduler", type=int)
     p.add_argument('--core-limit', help="Scheduler core limit. Reserved for dynamic scheduler", type=int)
-    p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic schedler", type=int)
+    p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic scheduler", type=int)
     p.set_defaults(func=framework_set_scheduler)
 
     def framework_get_scheduler(args):
@@ -193,6 +193,16 @@ if __name__ == "__main__":
     p = subparsers.add_parser(
         'framework_get_governor', help='Display currently set governor and the available, set CPU frequencies.')
     p.set_defaults(func=framework_get_governor)
+
+    def scheduler_set_options(args):
+        rpc.app.scheduler_set_options(args.client,
+                                      isolated_core_mask=args.isolated_core_mask,
+                                      scheduling_core=args.scheduling_core)
+    p = subparsers.add_parser('scheduler_set_options', help='Set scheduler options')
+    p.add_argument('-i', '--isolated-core-mask', help="Mask of CPU cores to isolate from scheduling change", type=str)
+    p.add_argument('-s', '--scheduling-core', help="Scheduler scheduling core. Idle threads will move to scheduling core."
+                   "Reserved for dynamic scheduler.", type=int)
+    p.set_defaults(func=scheduler_set_options)
 
     def framework_disable_cpumask_locks(args):
         rpc.framework_disable_cpumask_locks(args.client)

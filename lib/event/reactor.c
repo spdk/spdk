@@ -6,6 +6,8 @@
 #include "spdk/stdinc.h"
 #include "spdk/likely.h"
 
+#include "event_internal.h"
+
 #include "spdk_internal/event.h"
 #include "spdk_internal/usdt.h"
 
@@ -46,6 +48,7 @@ bool g_scheduling_in_progress = false;
 static uint64_t g_scheduler_period = 0;
 static uint32_t g_scheduler_core_number;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
+static struct spdk_cpuset g_scheduler_isolated_core_mask;
 
 TAILQ_HEAD(, spdk_governor) g_governor_list
 	= TAILQ_HEAD_INITIALIZER(g_governor_list);
@@ -156,6 +159,46 @@ uint32_t
 spdk_scheduler_get_scheduling_lcore(void)
 {
 	return g_scheduling_reactor->lcore;
+}
+
+bool
+spdk_scheduler_set_scheduling_lcore(uint32_t core)
+{
+	struct spdk_reactor *reactor = spdk_reactor_get(core);
+	if (reactor == NULL) {
+		SPDK_ERRLOG("Failed to set scheduling reactor. Reactor(lcore:%d) does not exist", core);
+		return false;
+	}
+
+	g_scheduling_reactor = reactor;
+	return true;
+}
+
+bool
+scheduler_set_isolated_core_mask(struct spdk_cpuset isolated_core_mask)
+{
+	struct spdk_cpuset tmp_mask;
+
+	spdk_cpuset_copy(&tmp_mask, spdk_app_get_core_mask());
+	spdk_cpuset_or(&tmp_mask, &isolated_core_mask);
+	if (spdk_cpuset_equal(&tmp_mask, spdk_app_get_core_mask()) == false) {
+		SPDK_ERRLOG("Isolated core mask is not included in app core mask.\n");
+		return false;
+	}
+	spdk_cpuset_copy(&g_scheduler_isolated_core_mask, &isolated_core_mask);
+	return true;
+}
+
+const char *
+scheduler_get_isolated_core_mask(void)
+{
+	return spdk_cpuset_fmt(&g_scheduler_isolated_core_mask);
+}
+
+static bool
+scheduler_is_isolated_core(uint32_t core)
+{
+	return spdk_cpuset_get_cpu(&g_scheduler_isolated_core_mask, core);
 }
 
 static void
@@ -703,6 +746,11 @@ _threads_reschedule(struct spdk_scheduler_core_info *cores_info)
 		for (j = 0; j < core->threads_count; j++) {
 			thread_info = &core->thread_infos[j];
 			if (thread_info->lcore != i) {
+				if (core->isolated || cores_info[thread_info->lcore].isolated) {
+					SPDK_ERRLOG("A thread cannot be moved from an isolated core or \
+								moved to an isolated core. Skip rescheduling thread\n");
+					continue;
+				}
 				_threads_reschedule_thread(thread_info);
 			}
 		}
@@ -798,6 +846,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	core_info->total_busy_tsc = reactor->busy_tsc;
 	core_info->interrupt_mode = reactor->in_interrupt;
 	core_info->threads_count = 0;
+	core_info->isolated = scheduler_is_isolated_core(reactor->lcore);
 
 	SPDK_DEBUGLOG(reactor, "Gathering metrics on %u\n", reactor->lcore);
 
@@ -807,7 +856,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 			SPDK_ERRLOG("Failed to allocate memory when gathering metrics on %u\n", reactor->lcore);
 
 			/* Cancel this round of schedule work */
-			_event_call(g_scheduling_reactor->lcore, _reactors_scheduler_cancel, NULL, NULL);
+			_event_call(spdk_scheduler_get_scheduling_lcore(), _reactors_scheduler_cancel, NULL, NULL);
 			return;
 		}
 
@@ -832,7 +881,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	}
 
 	/* If we've looped back around to the scheduler thread, move to the next phase */
-	if (next_core == g_scheduling_reactor->lcore) {
+	if (next_core == spdk_scheduler_get_scheduling_lcore()) {
 		/* Phase 2 of scheduling is rebalancing - deciding which threads to move where */
 		_event_call(next_core, _reactors_scheduler_balance, NULL, NULL);
 		return;
