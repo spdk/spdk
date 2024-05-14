@@ -9,7 +9,6 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
                      bdev_auto_examine=None, iobuf_small_cache_size=None,
                      iobuf_large_cache_size=None):
     """Set parameters for the bdev subsystem.
-
     Args:
         bdev_io_pool_size: number of bdev_io structures in shared buffer pool (optional)
         bdev_io_cache_size: maximum number of bdev_io structures cached per thread (optional)
@@ -17,31 +16,28 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
         iobuf_small_cache_size: size of the small iobuf per thread cache
         iobuf_large_cache_size: size of the large iobuf per thread cache
     """
-    params = {}
-
-    if bdev_io_pool_size:
+    params = dict()
+    if bdev_io_pool_size is not None:
         params['bdev_io_pool_size'] = bdev_io_pool_size
-    if bdev_io_cache_size:
+    if bdev_io_cache_size is not None:
         params['bdev_io_cache_size'] = bdev_io_cache_size
     if bdev_auto_examine is not None:
-        params["bdev_auto_examine"] = bdev_auto_examine
+        params['bdev_auto_examine'] = bdev_auto_examine
     if iobuf_small_cache_size is not None:
-        params["iobuf_small_cache_size"] = iobuf_small_cache_size
+        params['iobuf_small_cache_size'] = iobuf_small_cache_size
     if iobuf_large_cache_size is not None:
-        params["iobuf_large_cache_size"] = iobuf_large_cache_size
+        params['iobuf_large_cache_size'] = iobuf_large_cache_size
     return client.call('bdev_set_options', params)
 
 
 def bdev_examine(client, name):
     """Examine a bdev manually. If the bdev does not exist yet when this RPC is called,
     it will be examined when it is created
-
     Args:
         name: name of the bdev
     """
-    params = {
-        'name': name
-    }
+    params = dict()
+    params['name'] = name
     return client.call('bdev_examine', params)
 
 
@@ -53,51 +49,46 @@ def bdev_wait_for_examine(client):
 
 def bdev_compress_create(client, base_bdev_name, pm_path, lb_size=None):
     """Construct a compress virtual block device.
-
     Args:
         base_bdev_name: name of the underlying base bdev
         pm_path: path to persistent memory
         lb_size: logical block size for the compressed vol in bytes.  Must be 4K or 512.
-
     Returns:
         Name of created virtual block device.
     """
-    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path}
-
-    if lb_size:
+    params = dict()
+    params['base_bdev_name'] = base_bdev_name
+    params['pm_path'] = pm_path
+    if lb_size is not None:
         params['lb_size'] = lb_size
-
     return client.call('bdev_compress_create', params)
 
 
 def bdev_compress_delete(client, name):
     """Delete compress virtual block device.
-
     Args:
         name: name of compress vbdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_compress_delete', params)
 
 
 def bdev_compress_get_orphans(client, name=None):
     """Get a list of comp bdevs that do not have a pmem file (aka orphaned).
-
     Args:
         name: comp bdev name to query (optional; if omitted, query all comp bdevs)
-
     Returns:
         List of comp bdev names.
     """
-    params = {}
-    if name:
+    params = dict()
+    if name is not None:
         params['name'] = name
     return client.call('bdev_compress_get_orphans', params)
 
 
 def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, cipher=None, key2=None, key_name=None):
     """Construct a crypto virtual block device.
-
     Args:
         base_bdev_name: name of the underlying base bdev
         name: name for the crypto vbdev
@@ -106,12 +97,12 @@ def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, 
         cipher: crypto algorithm to use
         key2: Optional second part of the key
         key_name: The key name to use in crypto operations
-
     Returns:
         Name of created virtual block device.
     """
-    params = {'base_bdev_name': base_bdev_name, 'name': name}
-
+    params = dict()
+    params['base_bdev_name'] = base_bdev_name
+    params['name'] = name
     if crypto_pmd is not None:
         params['crypto_pmd'] = crypto_pmd
     if key is not None:
@@ -127,167 +118,139 @@ def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, 
 
 def bdev_crypto_delete(client, name):
     """Delete crypto virtual block device.
-
     Args:
         name: name of crypto vbdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_crypto_delete', params)
 
 
 def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name, cache_line_size=None):
     """Add an OCF block device
-
     Args:
         name: name of constructed OCF bdev
         mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
         cache_line_size: OCF cache line size. The unit is KiB: {4, 8, 16, 32, 64}
         cache_bdev_name: name of underlying cache bdev
         core_bdev_name: name of underlying core bdev
-
     Returns:
         Name of created block device
     """
-    params = {
-        'name': name,
-        'mode': mode,
-        'cache_bdev_name': cache_bdev_name,
-        'core_bdev_name': core_bdev_name,
-    }
-
-    if cache_line_size:
+    params = dict()
+    params['name'] = name
+    params['mode'] = mode
+    params['cache_bdev_name'] = cache_bdev_name
+    params['core_bdev_name'] = core_bdev_name
+    if cache_line_size is not None:
         params['cache_line_size'] = cache_line_size
-
     return client.call('bdev_ocf_create', params)
 
 
 def bdev_ocf_delete(client, name):
     """Delete an OCF device
-
     Args:
         name: name of OCF bdev
-
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ocf_delete', params)
 
 
 def bdev_ocf_get_stats(client, name):
     """Get statistics of chosen OCF block device
-
     Args:
         name: name of OCF bdev
-
     Returns:
         Statistics as json object
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ocf_get_stats', params)
 
 
 def bdev_ocf_reset_stats(client, name):
     """Reset statistics of chosen OCF block device
-
     Args:
         name: name of OCF bdev
-
     Returns:
         None
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ocf_reset_stats', params)
 
 
 def bdev_ocf_get_bdevs(client, name=None):
     """Get list of OCF devices including unregistered ones
-
     Args:
         name: name of OCF vbdev or name of cache device or name of core device (optional)
-
     Returns:
         Array of OCF devices with their current status
     """
-    params = {}
-    if name:
-        params = {'name': name}
+    params = dict()
+    if name is not None:
+        params['name'] = name
     return client.call('bdev_ocf_get_bdevs', params)
 
 
 def bdev_ocf_set_cache_mode(client, name, mode):
     """Set cache mode of OCF block device
-
     Args:
         name: name of OCF bdev
         mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
-
     Returns:
         New cache mode name
     """
-    params = {
-        'name': name,
-        'mode': mode,
-    }
-
+    params = dict()
+    params['name'] = name
+    params['mode'] = mode
     return client.call('bdev_ocf_set_cache_mode', params)
 
 
 def bdev_ocf_set_seqcutoff(client, name, policy, threshold=None, promotion_count=None):
     """Set sequential cutoff parameters on all cores for the given OCF cache device
-
     Args:
         name: Name of OCF cache bdev
         policy: Sequential cutoff policy
         threshold: Activation threshold [KiB] (optional)
         promotion_count: Promotion request count (optional)
     """
-    params = {
-        'name': name,
-        'policy': policy,
-    }
-    if threshold:
+    params = dict()
+    params['name'] = name
+    params['policy'] = policy
+    if threshold is not None:
         params['threshold'] = threshold
-    if promotion_count:
+    if promotion_count is not None:
         params['promotion_count'] = promotion_count
-
     return client.call('bdev_ocf_set_seqcutoff', params)
 
 
 def bdev_ocf_flush_start(client, name):
     """Start flushing OCF cache device
-
     Args:
         name: name of OCF bdev
     """
-    params = {
-        'name': name,
-    }
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ocf_flush_start', params)
 
 
 def bdev_ocf_flush_status(client, name):
     """Get flush status of OCF cache device
-
     Args:
         name: name of OCF bdev
-
     Returns:
         Flush status
     """
-    params = {
-        'name': name,
-    }
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ocf_flush_status', params)
 
 
 def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None, name=None, uuid=None, optimal_io_boundary=None,
                        md_size=None, md_interleave=None, dif_type=None, dif_is_head_of_md=None):
     """Construct a malloc block device.
-
     Args:
         num_blocks: size of block device in blocks
         block_size: Data block size of device; must be a power of 2 and at least 512
@@ -299,45 +262,44 @@ def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None,
         md_interleave: metadata location, interleaved if set, and separated if omitted (optional)
         dif_type: protection information type (optional)
         dif_is_head_of_md: protection information is in the first 8 bytes of metadata (optional)
-
     Returns:
         Name of created block device.
     """
-    params = {'num_blocks': num_blocks, 'block_size': block_size}
-    if physical_block_size:
+    params = dict()
+    params['num_blocks'] = num_blocks
+    params['block_size'] = block_size
+    if physical_block_size is not None:
         params['physical_block_size'] = physical_block_size
-    if name:
+    if name is not None:
         params['name'] = name
-    if uuid:
+    if uuid is not None:
         params['uuid'] = uuid
-    if optimal_io_boundary:
+    if optimal_io_boundary is not None:
         params['optimal_io_boundary'] = optimal_io_boundary
-    if md_size:
+    if md_size is not None:
         params['md_size'] = md_size
-    if md_interleave:
+    if md_interleave is not None:
         params['md_interleave'] = md_interleave
-    if dif_type:
+    if dif_type is not None:
         params['dif_type'] = dif_type
-    if dif_is_head_of_md:
+    if dif_is_head_of_md is not None:
         params['dif_is_head_of_md'] = dif_is_head_of_md
-
     return client.call('bdev_malloc_create', params)
 
 
 def bdev_malloc_delete(client, name):
     """Delete malloc block device.
-
     Args:
         bdev_name: name of malloc bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_malloc_delete', params)
 
 
 def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=None, uuid=None, md_size=None,
                      dif_type=None, dif_is_head_of_md=None):
     """Construct a null block device.
-
     Args:
         num_blocks: size of block device in blocks
         block_size: block size of device; data part size must be a power of 2 and at least 512
@@ -347,79 +309,73 @@ def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=N
         md_size: metadata size of device (optional)
         dif_type: protection information type (optional)
         dif_is_head_of_md: protection information is in the first 8 bytes of metadata (optional)
-
     Returns:
         Name of created block device.
     """
-    params = {'name': name, 'num_blocks': num_blocks,
-              'block_size': block_size}
-    if physical_block_size:
+    params = dict()
+    params['name'] = name
+    params['num_blocks'] = num_blocks
+    params['block_size'] = block_size
+    if physical_block_size is not None:
         params['physical_block_size'] = physical_block_size
-    if uuid:
+    if uuid is not None:
         params['uuid'] = uuid
-    if md_size:
+    if md_size is not None:
         params['md_size'] = md_size
-    if dif_type:
+    if dif_type is not None:
         params['dif_type'] = dif_type
-    if dif_is_head_of_md:
+    if dif_is_head_of_md is not None:
         params['dif_is_head_of_md'] = dif_is_head_of_md
     return client.call('bdev_null_create', params)
 
 
 def bdev_null_delete(client, name):
     """Remove null bdev from the system.
-
     Args:
         name: name of null bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_null_delete', params)
 
 
 def bdev_null_resize(client, name, new_size):
     """Resize null bdev in the system.
-
     Args:
         name: name of null bdev to resize
         new_size: new bdev size of resize operation. The unit is MiB
     """
-    params = {
-            'name': name,
-            'new_size': new_size,
-            }
+    params = dict()
+    params['name'] = name
+    params['new_size'] = new_size
     return client.call('bdev_null_resize', params)
 
 
 def bdev_raid_set_options(client, process_window_size_kb=None):
     """Set options for bdev raid.
-
     Args:
         process_window_size_kb: Background process (e.g. rebuild) window size in KiB
     """
-    params = {}
-
+    params = dict()
     if process_window_size_kb is not None:
         params['process_window_size_kb'] = process_window_size_kb
-
     return client.call('bdev_raid_set_options', params)
 
 
 def bdev_raid_get_bdevs(client, category):
     """Get list of raid bdevs based on category
-
     Args:
         category: any one of all or online or configuring or offline
-
     Returns:
         List of raid bdev details
     """
-    params = {'category': category}
+    params = dict()
+    params['category'] = category
     return client.call('bdev_raid_get_bdevs', params)
 
 
-def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size_kb=None, uuid=None, superblock=False):
+def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size_kb=None, uuid=None, superblock=None):
     """Create raid bdev. Either strip size arg will work but one is required.
-
     Args:
         name: user defined raid bdev name
         strip_size_kb: strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, etc
@@ -428,183 +384,169 @@ def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size_kb=None, u
         uuid: UUID for this raid bdev (optional)
         superblock: information about raid bdev will be stored in superblock on each base bdev,
                     disabled by default due to backward compatibility
-
     Returns:
         None
     """
-    params = {'name': name, 'raid_level': raid_level, 'base_bdevs': base_bdevs, 'superblock': superblock}
-
-    if strip_size_kb:
+    params = dict()
+    params['name'] = name
+    params['raid_level'] = raid_level
+    params['base_bdevs'] = base_bdevs
+    if strip_size_kb is not None:
         params['strip_size_kb'] = strip_size_kb
-
-    if uuid:
+    if uuid is not None:
         params['uuid'] = uuid
-
+    if superblock is not None:
+        params['superblock'] = superblock
     return client.call('bdev_raid_create', params)
 
 
 def bdev_raid_delete(client, name):
     """Delete raid bdev
-
     Args:
         name: raid bdev name
-
     Returns:
         None
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_raid_delete', params)
 
 
 def bdev_raid_add_base_bdev(client, base_bdev, raid_bdev):
     """Add base bdev to existing raid bdev
-
     Args:
         raid_bdev: raid bdev name
         base_bdev: base bdev name
-
     Returns:
         None
     """
-    params = {'raid_bdev': raid_bdev, 'base_bdev': base_bdev}
+    params = dict()
+    params['base_bdev'] = base_bdev
+    params['raid_bdev'] = raid_bdev
     return client.call('bdev_raid_add_base_bdev', params)
 
 
 def bdev_raid_remove_base_bdev(client, name):
     """Remove base bdev from existing raid bdev
-
     Args:
         name: base bdev name
-
     Returns:
         None
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_raid_remove_base_bdev', params)
 
 
-def bdev_aio_create(client, filename, name, block_size=None, readonly=False, fallocate=False):
+def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fallocate=None):
     """Construct a Linux AIO block device.
-
     Args:
         filename: path to device or file (ex: /dev/sda)
         name: name of block device
         block_size: block size of device (optional; autodetected if omitted)
         readonly: set aio bdev as read-only
         fallocate: enable fallocate for UNMAP/WRITEZEROS support (note that fallocate syscall would block reactor)
-
     Returns:
         Name of created block device.
     """
-    params = {'name': name,
-              'filename': filename}
-
-    if block_size:
+    params = dict()
+    params['name'] = name
+    params['filename'] = filename
+    if block_size is not None:
         params['block_size'] = block_size
-
-    if readonly:
+    if readonly is not None:
         params['readonly'] = readonly
-
-    if fallocate:
+    if fallocate is not None:
         params['fallocate'] = fallocate
-
     return client.call('bdev_aio_create', params)
 
 
 def bdev_aio_rescan(client, name):
     """Rescan a Linux AIO block device.
-
     Args:
         name: name of aio bdev to rescan
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_aio_rescan', params)
 
 
 def bdev_aio_delete(client, name):
     """Remove aio bdev from the system.
-
     Args:
         name: name of aio bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_aio_delete', params)
 
 
 def bdev_uring_create(client, filename, name, block_size=None, uuid=None):
     """Create a bdev with Linux io_uring backend.
-
     Args:
         filename: path to device or file (ex: /dev/nvme0n1)
         name: name of bdev
         block_size: block size of device (optional; autodetected if omitted)
         uuid: UUID of block device (optional)
-
     Returns:
         Name of created bdev.
     """
-    params = {'name': name,
-              'filename': filename}
-
-    if block_size:
+    params = dict()
+    params['name'] = name
+    params['filename'] = filename
+    if block_size is not None:
         params['block_size'] = block_size
-
-    if uuid:
+    if uuid is not None:
         params['uuid'] = uuid
-
     return client.call('bdev_uring_create', params)
 
 
 def bdev_uring_rescan(client, name):
     """Rescan a Linux URING block device.
-
     Args:
         name: name of uring bdev to rescan
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_uring_rescan', params)
 
 
 def bdev_uring_delete(client, name):
     """Delete a uring bdev.
-
     Args:
         name: name of uring bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_uring_delete', params)
 
 
 def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu=None):
     """Create a bdev with xNVMe backend.
-
     Args:
         filename: path to device or file (ex: /dev/nvme0n1)
         name: name of xNVMe bdev to create
         io_mechanism: I/O mechanism to use (ex: io_uring, io_uring_cmd, etc.)
         conserve_cpu: Whether or not to conserve CPU when polling (default: False)
-
     Returns:
         Name of created bdev.
     """
-    params = {
-        'name': name,
-        'filename': filename,
-        'io_mechanism': io_mechanism,
-    }
-    if conserve_cpu:
+    params = dict()
+    params['name'] = name
+    params['filename'] = filename
+    params['io_mechanism'] = io_mechanism
+    if conserve_cpu is not None:
         params['conserve_cpu'] = conserve_cpu
-
     return client.call('bdev_xnvme_create', params)
 
 
 def bdev_xnvme_delete(client, name):
     """Delete a xNVMe bdev.
-
     Args:
         name: name of xNVMe bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_xnvme_delete', params)
 
 
@@ -619,7 +561,6 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           allow_accel_sequence=None, rdma_max_cq_size=None, rdma_cm_event_timeout_ms=None,
                           dhchap_digests=None, dhchap_dhgroups=None):
     """Set options for the bdev nvme. This is startup command.
-
     Args:
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
@@ -667,112 +608,79 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         rdma_cm_event_timeout_ms: Time to wait for RDMA CM event. Only applicable for RDMA transports.
         dhchap_digests: List of allowed DH-HMAC-CHAP digests. (optional)
         dhchap_dhgroups: List of allowed DH-HMAC-CHAP DH groups. (optional)
-
     """
-    params = {}
-
-    if action_on_timeout:
+    params = dict()
+    if action_on_timeout is not None:
         params['action_on_timeout'] = action_on_timeout
-
     if timeout_us is not None:
         params['timeout_us'] = timeout_us
-
     if timeout_admin_us is not None:
         params['timeout_admin_us'] = timeout_admin_us
-
     if keep_alive_timeout_ms is not None:
         params['keep_alive_timeout_ms'] = keep_alive_timeout_ms
-
     if arbitration_burst is not None:
         params['arbitration_burst'] = arbitration_burst
-
     if low_priority_weight is not None:
         params['low_priority_weight'] = low_priority_weight
-
     if medium_priority_weight is not None:
         params['medium_priority_weight'] = medium_priority_weight
-
     if high_priority_weight is not None:
         params['high_priority_weight'] = high_priority_weight
-
-    if nvme_adminq_poll_period_us:
+    if nvme_adminq_poll_period_us is not None:
         params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
-
     if nvme_ioq_poll_period_us is not None:
         params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
-
     if io_queue_requests is not None:
         params['io_queue_requests'] = io_queue_requests
-
     if delay_cmd_submit is not None:
         params['delay_cmd_submit'] = delay_cmd_submit
-
     if transport_retry_count is not None:
         params['transport_retry_count'] = transport_retry_count
-
     if bdev_retry_count is not None:
         params['bdev_retry_count'] = bdev_retry_count
-
     if transport_ack_timeout is not None:
         params['transport_ack_timeout'] = transport_ack_timeout
-
     if ctrlr_loss_timeout_sec is not None:
         params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
-
     if reconnect_delay_sec is not None:
         params['reconnect_delay_sec'] = reconnect_delay_sec
-
     if fast_io_fail_timeout_sec is not None:
         params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
-
     if disable_auto_failback is not None:
         params['disable_auto_failback'] = disable_auto_failback
-
     if generate_uuids is not None:
         params['generate_uuids'] = generate_uuids
-
     if transport_tos is not None:
         params['transport_tos'] = transport_tos
-
     if nvme_error_stat is not None:
         params['nvme_error_stat'] = nvme_error_stat
-
     if rdma_srq_size is not None:
         params['rdma_srq_size'] = rdma_srq_size
-
     if io_path_stat is not None:
         params['io_path_stat'] = io_path_stat
-
     if allow_accel_sequence is not None:
         params['allow_accel_sequence'] = allow_accel_sequence
-
     if rdma_max_cq_size is not None:
         params['rdma_max_cq_size'] = rdma_max_cq_size
-
     if rdma_cm_event_timeout_ms is not None:
         params['rdma_cm_event_timeout_ms'] = rdma_cm_event_timeout_ms
-
     if dhchap_digests is not None:
         params['dhchap_digests'] = dhchap_digests
-
     if dhchap_dhgroups is not None:
         params['dhchap_dhgroups'] = dhchap_dhgroups
-
     return client.call('bdev_nvme_set_options', params)
 
 
 def bdev_nvme_set_hotplug(client, enable, period_us=None):
     """Set options for the bdev nvme. This is startup command.
-
     Args:
        enable: True to enable hotplug, False to disable.
        period_us: how often the hotplug is processed for insert and remove events. Set 0 to reset to default. (optional)
     """
-    params = {'enable': enable}
-
-    if period_us:
+    params = dict()
+    params['enable'] = enable
+    if period_us is not None:
         params['period_us'] = period_us
-
     return client.call('bdev_nvme_set_hotplug', params)
 
 
@@ -784,7 +692,6 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
                                 reconnect_delay_sec=None, fast_io_fail_timeout_sec=None,
                                 psk=None, max_bdevs=None, dhchap_key=None, dhchap_ctrlr_key=None):
     """Construct block device for each NVMe namespace in the attached controller.
-
     Args:
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
         trtype: transport type ("PCIe", "RDMA", "FC", "TCP")
@@ -821,77 +728,55 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         max_bdevs: Size of the name array for newly created bdevs. Default is 128. (optional)
         dhchap_key: DH-HMAC-CHAP key name.
         dhchap_ctrlr_key: DH-HMAC-CHAP controller key name.
-
     Returns:
         Names of created block devices.
     """
-    params = {'name': name,
-              'trtype': trtype,
-              'traddr': traddr}
-
-    if hostnqn:
+    params = dict()
+    params['name'] = name
+    params['trtype'] = trtype
+    params['traddr'] = traddr
+    if hostnqn is not None:
         params['hostnqn'] = hostnqn
-
-    if hostaddr:
+    if hostaddr is not None:
         params['hostaddr'] = hostaddr
-
-    if hostsvcid:
+    if hostsvcid is not None:
         params['hostsvcid'] = hostsvcid
-
-    if adrfam:
+    if adrfam is not None:
         params['adrfam'] = adrfam
-
-    if trsvcid:
+    if trsvcid is not None:
         params['trsvcid'] = trsvcid
-
-    if priority:
+    if priority is not None:
         params['priority'] = priority
-
-    if subnqn:
+    if subnqn is not None:
         params['subnqn'] = subnqn
-
-    if prchk_reftag:
+    if prchk_reftag is not None:
         params['prchk_reftag'] = prchk_reftag
-
-    if prchk_guard:
+    if prchk_guard is not None:
         params['prchk_guard'] = prchk_guard
-
-    if hdgst:
+    if hdgst is not None:
         params['hdgst'] = hdgst
-
-    if ddgst:
+    if ddgst is not None:
         params['ddgst'] = ddgst
-
-    if fabrics_connect_timeout_us:
+    if fabrics_connect_timeout_us is not None:
         params['fabrics_connect_timeout_us'] = fabrics_connect_timeout_us
-
-    if multipath:
+    if multipath is not None:
         params['multipath'] = multipath
-
-    if num_io_queues:
+    if num_io_queues is not None:
         params['num_io_queues'] = num_io_queues
-
     if ctrlr_loss_timeout_sec is not None:
         params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
-
     if reconnect_delay_sec is not None:
         params['reconnect_delay_sec'] = reconnect_delay_sec
-
     if fast_io_fail_timeout_sec is not None:
         params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
-
-    if psk:
+    if psk is not None:
         params['psk'] = psk
-
     if max_bdevs is not None:
         params['max_bdevs'] = max_bdevs
-
     if dhchap_key is not None:
         params['dhchap_key'] = dhchap_key
-
     if dhchap_ctrlr_key is not None:
         params['dhchap_ctrlr_key'] = dhchap_ctrlr_key
-
     return client.call('bdev_nvme_attach_controller', params)
 
 
@@ -903,7 +788,6 @@ def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
        transport path from the specified controller. If that is the only
        available path for the controller, this will also result in the
        controller being detached and the associated bdevs being deleted.
-
     Args:
         name: controller name
         trtype: transport type ("PCIe", "RDMA")
@@ -914,78 +798,61 @@ def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
         hostaddr: Host address (IP address)
         hostsvcid: transport service ID on host side (port number)
     """
-
-    params = {'name': name}
-
-    if trtype:
+    params = dict()
+    params['name'] = name
+    if trtype is not None:
         params['trtype'] = trtype
-
-    if traddr:
+    if traddr is not None:
         params['traddr'] = traddr
-
-    if adrfam:
+    if adrfam is not None:
         params['adrfam'] = adrfam
-
-    if trsvcid:
+    if trsvcid is not None:
         params['trsvcid'] = trsvcid
-
-    if subnqn:
+    if subnqn is not None:
         params['subnqn'] = subnqn
-
-    if hostaddr:
+    if hostaddr is not None:
         params['hostaddr'] = hostaddr
-
-    if hostsvcid:
+    if hostsvcid is not None:
         params['hostsvcid'] = hostsvcid
-
     return client.call('bdev_nvme_detach_controller', params)
 
 
 def bdev_nvme_reset_controller(client, name, cntlid=None):
     """Reset an NVMe controller or all NVMe controllers in an NVMe bdev controller.
-
     Args:
         name: controller name
         cntlid: NVMe controller ID (optional)
     """
-
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     if cntlid is not None:
         params['cntlid'] = cntlid
-
     return client.call('bdev_nvme_reset_controller', params)
 
 
 def bdev_nvme_enable_controller(client, name, cntlid=None):
     """Enable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
-
     Args:
         name: controller name
         cntlid: NVMe controller ID (optional)
     """
-
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     if cntlid is not None:
         params['cntlid'] = cntlid
-
     return client.call('bdev_nvme_enable_controller', params)
 
 
 def bdev_nvme_disable_controller(client, name, cntlid=None):
     """Disable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
-
     Args:
         name: controller name
         cntlid: NVMe controller ID (optional)
     """
-
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     if cntlid is not None:
         params['cntlid'] = cntlid
-
     return client.call('bdev_nvme_disable_controller', params)
 
 
@@ -994,7 +861,6 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
                               reconnect_delay_sec=None, fast_io_fail_timeout_sec=None,
                               attach_timeout_ms=None):
     """Start discovery with the specified discovery subsystem
-
     Args:
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
         trtype: transport type ("PCIe", "RDMA", "FC", "TCP")
@@ -1019,45 +885,36 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1. (optional)
         attach_timeout_ms: Time to wait until the discovery and all discovered NVM subsystems are attached (optional)
     """
-    params = {'name': name,
-              'trtype': trtype,
-              'traddr': traddr}
-
-    if hostnqn:
+    params = dict()
+    params['name'] = name
+    params['trtype'] = trtype
+    params['traddr'] = traddr
+    if hostnqn is not None:
         params['hostnqn'] = hostnqn
-
-    if adrfam:
+    if adrfam is not None:
         params['adrfam'] = adrfam
-
-    if trsvcid:
+    if trsvcid is not None:
         params['trsvcid'] = trsvcid
-
-    if wait_for_attach:
-        params['wait_for_attach'] = True
-
+    if wait_for_attach is not None:
+        params['wait_for_attach'] = wait_for_attach
     if attach_timeout_ms is not None:
         params['attach_timeout_ms'] = attach_timeout_ms
-
     if ctrlr_loss_timeout_sec is not None:
         params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
-
     if reconnect_delay_sec is not None:
         params['reconnect_delay_sec'] = reconnect_delay_sec
-
     if fast_io_fail_timeout_sec is not None:
         params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
-
     return client.call('bdev_nvme_start_discovery', params)
 
 
 def bdev_nvme_stop_discovery(client, name):
     """Stop a previously started discovery service
-
     Args:
         name: name of discovery service to start
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_nvme_stop_discovery', params)
 
 
@@ -1069,122 +926,109 @@ def bdev_nvme_get_discovery_info(client):
 
 def bdev_nvme_get_io_paths(client, name=None):
     """Display all or the specified NVMe bdev's active I/O paths
-
     Args:
         name: Name of the NVMe bdev (optional)
-
     Returns:
         List of active I/O paths
     """
-    params = {}
-    if name:
+    params = dict()
+    if name is not None:
         params['name'] = name
     return client.call('bdev_nvme_get_io_paths', params)
 
 
 def bdev_nvme_set_preferred_path(client, name, cntlid):
     """Set the preferred I/O path for an NVMe bdev when in multipath mode
-
     Args:
         name: NVMe bdev name
         cntlid: NVMe-oF controller ID
     """
-
-    params = {'name': name,
-              'cntlid': cntlid}
-
+    params = dict()
+    params['name'] = name
+    params['cntlid'] = cntlid
     return client.call('bdev_nvme_set_preferred_path', params)
 
 
 def bdev_nvme_set_multipath_policy(client, name, policy, selector=None, rr_min_io=None):
     """Set multipath policy of the NVMe bdev
-
     Args:
         name: NVMe bdev name
         policy: Multipath policy (active_passive or active_active)
         selector: Multipath selector (round_robin, queue_depth)
         rr_min_io: Number of IO to route to a path before switching to another one (optional)
     """
-
-    params = {'name': name,
-              'policy': policy}
-    if selector:
+    params = dict()
+    params['name'] = name
+    params['policy'] = policy
+    if selector is not None:
         params['selector'] = selector
-    if rr_min_io:
+    if rr_min_io is not None:
         params['rr_min_io'] = rr_min_io
-
     return client.call('bdev_nvme_set_multipath_policy', params)
 
 
 def bdev_nvme_get_path_iostat(client, name):
     """Get I/O statistics for IO paths of the block device.
-
     Args:
         name: bdev name to query
-
     Returns:
         I/O statistics for IO paths of the requested block device.
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_nvme_get_path_iostat', params)
 
 
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
-
     Args:
         name: Name of the operating NVMe controller
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_nvme_cuse_register', params)
 
 
 def bdev_nvme_cuse_unregister(client, name):
     """Unregister CUSE devices on NVMe controller.
-
     Args:
         name: Name of the operating NVMe controller
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_nvme_cuse_unregister', params)
 
 
 def bdev_zone_block_create(client, name, base_bdev, zone_capacity, optimal_open_zones):
     """Creates a virtual zone device on top of existing non-zoned bdev.
-
     Args:
         name: Zone device name
         base_bdev: Base Nvme bdev name
         zone_capacity: Surfaced zone capacity in blocks
         optimal_open_zones: Number of zones required to reach optimal write speed (optional, default: 1)
-
     Returns:
         Name of created block device.
     """
-    params = {'name': name,
-              'base_bdev': base_bdev,
-              'zone_capacity': zone_capacity,
-              'optimal_open_zones': optimal_open_zones}
-
+    params = dict()
+    params['name'] = name
+    params['base_bdev'] = base_bdev
+    params['zone_capacity'] = zone_capacity
+    params['optimal_open_zones'] = optimal_open_zones
     return client.call('bdev_zone_block_create', params)
 
 
 def bdev_zone_block_delete(client, name):
     """Remove block zone bdev from the system.
-
     Args:
         name: name of block zone bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_zone_block_delete', params)
 
 
 def bdev_rbd_register_cluster(client, name=None, user_id=None, config_param=None, config_file=None, key_file=None, core_mask=None):
     """Create a Rados Cluster object of the Ceph RBD backend.
-
     Args:
         name: name of Rados Cluster
         user_id: Ceph user name (optional)
@@ -1192,11 +1036,10 @@ def bdev_rbd_register_cluster(client, name=None, user_id=None, config_param=None
         config_file: file path of Ceph configuration file (optional)
         key_file: file path of Ceph key file (optional)
         core_mask: core mask for librbd IO context threads (optional)
-
     Returns:
         Name of registered Rados Cluster object.
     """
-    params = {}
+    params = dict()
     if name is not None:
         params['name'] = name
     if user_id is not None:
@@ -1209,38 +1052,34 @@ def bdev_rbd_register_cluster(client, name=None, user_id=None, config_param=None
         params['key_file'] = key_file
     if core_mask is not None:
         params['core_mask'] = core_mask
-
     return client.call('bdev_rbd_register_cluster', params)
 
 
 def bdev_rbd_unregister_cluster(client, name):
     """Remove Rados cluster object from the system.
-
     Args:
         name: name of Rados cluster object to unregister
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_rbd_unregister_cluster', params)
 
 
 def bdev_rbd_get_clusters_info(client, name=None):
     """Get the cluster(s) info
-
     Args:
         name: name of Rados cluster object to query (optional; if omitted, query all clusters)
-
     Returns:
         List of registered Rados cluster information objects.
     """
-    params = {}
-    if name:
+    params = dict()
+    if name is not None:
         params['name'] = name
     return client.call('bdev_rbd_get_clusters_info', params)
 
 
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=None, config=None, cluster_name=None, uuid=None):
     """Create a Ceph RBD block device.
-
     Args:
         pool_name: Ceph RBD pool name
         rbd_name: Ceph RBD image name
@@ -1250,17 +1089,14 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=
         config: map of config keys to values (optional)
         cluster_name: Name to identify Rados cluster (optional)
         uuid: UUID of block device (optional)
-
     Returns:
         Name of created block device.
     """
-    params = {
-        'pool_name': pool_name,
-        'rbd_name': rbd_name,
-        'block_size': block_size,
-    }
-
-    if name:
+    params = dict()
+    params['pool_name'] = pool_name
+    params['rbd_name'] = rbd_name
+    params['block_size'] = block_size
+    if name is not None:
         params['name'] = name
     if user_id is not None:
         params['user_id'] = user_id
@@ -1272,42 +1108,39 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=
         print("WARNING:bdev_rbd_create should be used with specifying -c to have a cluster name after bdev_rbd_register_cluster.")
     if uuid is not None:
         params['uuid'] = uuid
-
     return client.call('bdev_rbd_create', params)
 
 
 def bdev_rbd_delete(client, name):
     """Remove rbd bdev from the system.
-
     Args:
         name: name of rbd bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_rbd_delete', params)
 
 
 def bdev_rbd_resize(client, name, new_size):
     """Resize rbd bdev in the system.
-
     Args:
         name: name of rbd bdev to resize
         new_size: new bdev size of resize operation. The unit is MiB
     """
-    params = {
-            'name': name,
-            'new_size': new_size,
-            }
+    params = dict()
+    params['name'] = name
+    params['new_size'] = new_size
     return client.call('bdev_rbd_resize', params)
 
 
 def bdev_error_create(client, base_name, uuid=None):
     """Construct an error injection block device.
-
     Args:
         base_name: base bdev name
         uuid: UUID for this bdev (optional)
     """
-    params = {'base_name': base_name}
+    params = dict()
+    params['base_name'] = base_name
     if uuid is not None:
         params['uuid'] = uuid
     return client.call('bdev_error_create', params)
@@ -1315,7 +1148,6 @@ def bdev_error_create(client, base_name, uuid=None):
 
 def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency, uuid=None):
     """Construct a delay block device.
-
     Args:
         base_bdev_name: name of the existing bdev
         name: name of block device
@@ -1324,70 +1156,63 @@ def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_l
         avg_write_latency: complete 99% of write ops with this delay
         p99_write_latency: complete 1% of write ops with this delay
         uuid: UUID of block device (optional)
-
     Returns:
         Name of created block device.
     """
-    params = {
-        'base_bdev_name': base_bdev_name,
-        'name': name,
-        'avg_read_latency': avg_read_latency,
-        'p99_read_latency': p99_read_latency,
-        'avg_write_latency': avg_write_latency,
-        'p99_write_latency': p99_write_latency,
-    }
-    if uuid:
+    params = dict()
+    params['base_bdev_name'] = base_bdev_name
+    params['name'] = name
+    params['avg_read_latency'] = avg_read_latency
+    params['p99_read_latency'] = p99_read_latency
+    params['avg_write_latency'] = avg_write_latency
+    params['p99_write_latency'] = p99_write_latency
+    if uuid is not None:
         params['uuid'] = uuid
     return client.call('bdev_delay_create', params)
 
 
 def bdev_delay_delete(client, name):
     """Remove delay bdev from the system.
-
     Args:
         name: name of delay bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_delay_delete', params)
 
 
 def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us):
     """Update the latency value for a delay block device
-
     Args:
         delay_bdev_name: name of the delay bdev
         latency_type: 'one of: avg_read, avg_write, p99_read, p99_write. No other values accepted.'
         latency_us: 'new latency value.'
-
     Returns:
         True if successful, or a specific error otherwise.
     """
-    params = {
-        'delay_bdev_name': delay_bdev_name,
-        'latency_type': latency_type,
-        'latency_us': latency_us,
-    }
+    params = dict()
+    params['delay_bdev_name'] = delay_bdev_name
+    params['latency_type'] = latency_type
+    params['latency_us'] = latency_us
     return client.call('bdev_delay_update_latency', params)
 
 
 def bdev_error_delete(client, name):
     """Remove error bdev from the system.
-
     Args:
         bdev_name: name of error bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_error_delete', params)
 
 
 def bdev_iscsi_set_options(client, timeout_sec=None):
     """Set options for the bdev iscsi.
-
     Args:
         timeout_sec: Timeout for command, in seconds, if 0, don't track timeout
     """
-    params = {}
-
+    params = dict()
     if timeout_sec is not None:
         params['timeout_sec'] = timeout_sec
 
@@ -1396,7 +1221,6 @@ def bdev_iscsi_set_options(client, timeout_sec=None):
 
 def bdev_iscsi_create(client, name, url, initiator_iqn):
     """Construct an iSCSI block device.
-
     Args:
         name: name of block device
         url: iSCSI URL
@@ -1405,27 +1229,25 @@ def bdev_iscsi_create(client, name, url, initiator_iqn):
     Returns:
         Name of created block device.
     """
-    params = {
-        'name': name,
-        'url': url,
-        'initiator_iqn': initiator_iqn,
-    }
+    params = dict()
+    params['name'] = name
+    params['url'] = url
+    params['initiator_iqn'] = initiator_iqn
     return client.call('bdev_iscsi_create', params)
 
 
 def bdev_iscsi_delete(client, name):
     """Remove iSCSI bdev from the system.
-
     Args:
         bdev_name: name of iSCSI bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_iscsi_delete', params)
 
 
 def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
     """Construct a pass-through block device.
-
     Args:
         base_bdev_name: name of the existing bdev
         name: name of block device
@@ -1434,28 +1256,26 @@ def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
     Returns:
         Name of created block device.
     """
-    params = {
-        'base_bdev_name': base_bdev_name,
-        'name': name,
-    }
-    if uuid:
+    params = dict()
+    params['base_bdev_name'] = base_bdev_name
+    params['name'] = name
+    if uuid is not None:
         params['uuid'] = uuid
     return client.call('bdev_passthru_create', params)
 
 
 def bdev_passthru_delete(client, name):
     """Remove pass through bdev from the system.
-
     Args:
         name: name of pass through bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_passthru_delete', params)
 
 
 def bdev_opal_create(client, nvme_ctrlr_name, nsid, locking_range_id, range_start, range_length, password):
     """Create opal virtual block devices from a base nvme bdev.
-
     Args:
         nvme_ctrlr_name: name of the nvme ctrlr
         nsid: namespace ID of nvme ctrlr
@@ -1463,52 +1283,42 @@ def bdev_opal_create(client, nvme_ctrlr_name, nsid, locking_range_id, range_star
         range_start: start address of this locking range
         range_length: length of this locking range
         password: admin password of base nvme bdev
-
     Returns:
         Name of the new created block devices.
     """
-    params = {
-        'nvme_ctrlr_name': nvme_ctrlr_name,
-        'nsid': nsid,
-        'locking_range_id': locking_range_id,
-        'range_start': range_start,
-        'range_length': range_length,
-        'password': password,
-    }
-
+    params = dict()
+    params['nvme_ctrlr_name'] = nvme_ctrlr_name
+    params['nsid'] = nsid
+    params['locking_range_id'] = locking_range_id
+    params['range_start'] = range_start
+    params['range_length'] = range_length
+    params['password'] = password
     return client.call('bdev_opal_create', params)
 
 
 def bdev_opal_get_info(client, bdev_name, password):
     """Get opal locking range info.
-
     Args:
         bdev_name: name of opal vbdev to get info
         password: admin password
-
     Returns:
         Locking range info.
     """
-    params = {
-        'bdev_name': bdev_name,
-        'password': password,
-    }
-
+    params = dict()
+    params['bdev_name'] = bdev_name
+    params['password'] = password
     return client.call('bdev_opal_get_info', params)
 
 
 def bdev_opal_delete(client, bdev_name, password):
     """Delete opal virtual bdev from the system.
-
     Args:
         bdev_name: name of opal vbdev to delete
         password: admin password of base nvme bdev
     """
-    params = {
-        'bdev_name': bdev_name,
-        'password': password,
-    }
-
+    params = dict()
+    params['bdev_name'] = bdev_name
+    params['password'] = password
     return client.call('bdev_opal_delete', params)
 
 
@@ -1521,38 +1331,32 @@ def bdev_opal_new_user(client, bdev_name, admin_password, user_id, user_password
         user_id: ID of the user who will be added to this opal bdev
         user_password: password set for this user
     """
-    params = {
-        'bdev_name': bdev_name,
-        'admin_password': admin_password,
-        'user_id': user_id,
-        'user_password': user_password,
-    }
-
+    params = dict()
+    params['bdev_name'] = bdev_name
+    params['admin_password'] = admin_password
+    params['user_id'] = user_id
+    params['user_password'] = user_password
     return client.call('bdev_opal_new_user', params)
 
 
 def bdev_opal_set_lock_state(client, bdev_name, user_id, password, lock_state):
     """set lock state for an opal bdev.
-
     Args:
         bdev_name: name of opal vbdev
         user_id: ID of the user who will set lock state
         password: password of the user
         lock_state: lock state to set
     """
-    params = {
-        'bdev_name': bdev_name,
-        'user_id': user_id,
-        'password': password,
-        'lock_state': lock_state,
-    }
-
+    params = dict()
+    params['bdev_name'] = bdev_name
+    params['user_id'] = user_id
+    params['password'] = password
+    params['lock_state'] = lock_state
     return client.call('bdev_opal_set_lock_state', params)
 
 
 def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     """Create split block devices from a base bdev.
-
     Args:
         base_bdev: name of bdev to split
         split_count: number of split bdevs to create
@@ -1561,224 +1365,205 @@ def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     Returns:
         List of created block devices.
     """
-    params = {
-        'base_bdev': base_bdev,
-        'split_count': split_count,
-    }
-    if split_size_mb:
+    params = dict()
+    params['base_bdev'] = base_bdev
+    params['split_count'] = split_count
+    if split_size_mb is not None:
         params['split_size_mb'] = split_size_mb
-
     return client.call('bdev_split_create', params)
 
 
 def bdev_split_delete(client, base_bdev):
     """Delete split block devices.
-
     Args:
         base_bdev: name of previously split bdev
     """
-    params = {
-        'base_bdev': base_bdev,
-    }
-
+    params = dict()
+    params['base_bdev'] = base_bdev
     return client.call('bdev_split_delete', params)
 
 
 def bdev_ftl_create(client, name, base_bdev, cache, **kwargs):
     """Construct FTL bdev
-
     Args:
         name: name of the bdev
         base_bdev: name of the base bdev
         cache: name of the cache device
         kwargs: optional parameters
     """
-    params = {'name': name,
-              'base_bdev': base_bdev,
-              'cache': cache}
+    params = dict()
+    params['name'] = name
+    params['base_bdev'] = base_bdev
+    params['cache'] = cache
     for key, value in kwargs.items():
         if value is not None:
             params[key] = value
-
     return client.call('bdev_ftl_create', params)
 
 
 def bdev_ftl_load(client, name, base_bdev, cache, **kwargs):
     """Load FTL bdev
-
     Args:
         name: name of the bdev
         base_bdev: name of the base bdev
         cache: Name of the cache device
         kwargs: optional parameters
     """
-    params = {'name': name,
-              'base_bdev': base_bdev,
-              'cache': cache}
+    params = dict()
+    params['name'] = name
+    params['base_bdev'] = base_bdev
+    params['cache'] = cache
     for key, value in kwargs.items():
         if value is not None:
             params[key] = value
-
     return client.call('bdev_ftl_load', params)
 
 
 def bdev_ftl_unload(client, name, fast_shutdown=None):
     """Unload FTL bdev
-
     Args:
         name: name of the bdev
         fast_shutdown: When set FTL will minimize persisted data during deletion and rely on shared memory during next load
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     if fast_shutdown is not None:
         params['fast_shutdown'] = fast_shutdown
-
     return client.call('bdev_ftl_unload', params)
 
 
 def bdev_ftl_delete(client, name, fast_shutdown=None):
     """Delete FTL bdev
-
     Args:
         name: name of the bdev
         fast_shutdown: When set FTL will minimize persisted data during deletion and rely on shared memory during next load
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     if fast_shutdown is not None:
         params['fast_shutdown'] = fast_shutdown
-
     return client.call('bdev_ftl_delete', params)
 
 
 def bdev_ftl_unmap(client, name, lba, num_blocks):
     """FTL unmap
-
     Args:
         name: name of the bdev
         lba: starting lba to be unmapped
         num_blocks: number of blocks to unmap
     """
-    params = {'name': name,
-              'lba': lba,
-              'num_blocks': num_blocks}
-
+    params = dict()
+    params['name'] = name
+    params['lba'] = lba
+    params['num_blocks'] = num_blocks
     return client.call('bdev_ftl_unmap', params)
 
 
 def bdev_ftl_get_stats(client, name):
     """get FTL stats
-
     Args:
         name: name of the bdev
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ftl_get_stats', params)
 
 
 def bdev_ftl_get_properties(client, name):
     """Get FTL properties
-
     Args:
         name: name of the bdev
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_ftl_get_properties', params)
 
 
 def bdev_ftl_set_property(client, name, ftl_property, value):
     """Set FTL property
-
     Args:
         name: name of the bdev
         property: name of the property to be set
         value: The new value of the updated property
     """
-    params = {'name': name, 'ftl_property': ftl_property, 'value': value}
-
+    params = dict()
+    params['name'] = name
+    params['ftl_property'] = ftl_property
+    params['value'] = value
     return client.call('bdev_ftl_set_property', params)
 
 
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
-
     Args:
         name: bdev name to query (optional; if omitted, query all bdevs)
         timeout: time in ms to wait for the bdev with specified name to appear
-
     Returns:
         List of bdev information objects.
     """
-    params = {}
-    if name:
+    params = dict()
+    if name is not None:
         params['name'] = name
-    if timeout:
+    if timeout is not None:
         params['timeout'] = timeout
     return client.call('bdev_get_bdevs', params)
 
 
 def bdev_get_iostat(client, name=None, per_channel=None):
     """Get I/O statistics for block devices.
-
     Args:
         name: bdev name to query (optional; if omitted, query all bdevs)
         per_channel: display per channel IO stats for specified bdev
-
     Returns:
         I/O statistics for the requested block devices.
     """
-    params = {}
-    if name:
+    params = dict()
+    if name is not None:
         params['name'] = name
-    if per_channel:
+    if per_channel is not None:
         params['per_channel'] = per_channel
     return client.call('bdev_get_iostat', params)
 
 
 def bdev_reset_iostat(client, name=None, mode=None):
     """Reset I/O statistics for block devices.
-
     Args:
         name: bdev name to reset (optional; if omitted, reset all bdevs)
         mode: mode to reset: all, maxmin (optional: if omitted, reset all fields)
     """
-    params = {}
-    if name:
+    params = dict()
+    if name is not None:
         params['name'] = name
-    if mode:
+    if mode is not None:
         params['mode'] = mode
-
     return client.call('bdev_reset_iostat', params)
 
 
 def bdev_enable_histogram(client, name, enable):
     """Control whether histogram is enabled for specified bdev.
-
     Args:
         bdev_name: name of bdev
         enable: Enable or disable histogram on specified device
     """
-    params = {'name': name, "enable": enable}
+    params = dict()
+    params['name'] = name
+    params['enable'] = enable
     return client.call('bdev_enable_histogram', params)
 
 
 def bdev_get_histogram(client, name):
     """Get histogram for specified bdev.
-
     Args:
         bdev_name: name of bdev
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_get_histogram', params)
 
 
-def bdev_error_inject_error(client, name, io_type, error_type, num,
-                            queue_depth, corrupt_offset, corrupt_value):
+def bdev_error_inject_error(client, name, io_type, error_type, num=None,
+                            queue_depth=None, corrupt_offset=None, corrupt_value=None):
     """Inject an error via an error bdev.
-
     Args:
         name: name of error bdev
         io_type: one of "clear", "read", "write", "unmap", "flush", or "all"
@@ -1788,33 +1573,28 @@ def bdev_error_inject_error(client, name, io_type, error_type, num,
         corrupt_offset: offset in bytes to xor with corrupt_value
         corrupt_value: value for xor (1-255, 0 is invalid)
     """
-    params = {
-        'name': name,
-        'io_type': io_type,
-        'error_type': error_type,
-    }
-
-    if num:
+    params = dict()
+    params['name'] = name
+    params['io_type'] = io_type
+    params['error_type'] = error_type
+    if num is not None:
         params['num'] = num
-    if queue_depth:
+    if queue_depth is not None:
         params['queue_depth'] = queue_depth
-    if corrupt_offset:
+    if corrupt_offset is not None:
         params['corrupt_offset'] = corrupt_offset
-    if corrupt_value:
+    if corrupt_value is not None:
         params['corrupt_value'] = corrupt_value
-
     return client.call('bdev_error_inject_error', params)
 
 
 def bdev_set_qd_sampling_period(client, name, period):
     """Enable queue depth tracking on a specified bdev.
-
     Args:
         name: name of a bdev on which to track queue depth.
         period: period (in microseconds) at which to update the queue depth reading. If set to 0, polling will be disabled.
     """
-
-    params = {}
+    params = dict()
     params['name'] = name
     params['period'] = period
     return client.call('bdev_set_qd_sampling_period', params)
@@ -1828,7 +1608,6 @@ def bdev_set_qos_limit(
         r_mbytes_per_sec=None,
         w_mbytes_per_sec=None):
     """Set QoS rate limit on a block device.
-
     Args:
         name: name of block device
         rw_ios_per_sec: R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.
@@ -1836,7 +1615,7 @@ def bdev_set_qos_limit(
         r_mbytes_per_sec: Read megabytes per second limit (>=10, example: 100). 0 means unlimited.
         w_mbytes_per_sec: Write megabytes per second limit (>=10, example: 100). 0 means unlimited.
     """
-    params = {}
+    params = dict()
     params['name'] = name
     if rw_ios_per_sec is not None:
         params['rw_ios_per_sec'] = rw_ios_per_sec
@@ -1851,15 +1630,13 @@ def bdev_set_qos_limit(
 
 def bdev_nvme_apply_firmware(client, bdev_name, filename):
     """Download and commit firmware to NVMe device.
-
     Args:
         bdev_name: name of NVMe block device
         filename: filename of the firmware to download
     """
-    params = {
-        'filename': filename,
-        'bdev_name': bdev_name,
-    }
+    params = dict()
+    params['filename'] = filename
+    params['bdev_name'] = bdev_name
     return client.call('bdev_nvme_apply_firmware', params)
 
 
@@ -1870,21 +1647,19 @@ def bdev_nvme_get_transport_statistics(client):
 
 def bdev_nvme_get_controller_health_info(client, name):
     """Display health log of the required NVMe bdev controller.
-
     Args:
         name: name of the required NVMe bdev controller
 
     Returns:
         Health log for the requested NVMe bdev controller.
     """
-    params = {}
+    params = dict()
     params['name'] = name
     return client.call('bdev_nvme_get_controller_health_info', params)
 
 
 def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=None, uuid=None):
     """Construct DAOS block device.
-
     Args:
         num_blocks: size of block device in blocks
         block_size: block size of device; must be a power of 2 and at least 512
@@ -1893,25 +1668,29 @@ def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=No
         cont: UUID of DAOS container
         uuid: UUID of block device (optional)
         oclass: DAOS object class (optional)
-
     Returns:
         Name of created block device.
     """
-    params = {'num_blocks': num_blocks, 'block_size': block_size, 'pool': pool, 'cont': cont, 'name': name}
-    if uuid:
+    params = dict()
+    params['num_blocks'] = num_blocks
+    params['block_size'] = block_size
+    params['pool'] = pool
+    params['cont'] = cont
+    params['name'] = name
+    if uuid is not None:
         params['uuid'] = uuid
-    if oclass:
+    if oclass is not None:
         params['oclass'] = oclass
     return client.call('bdev_daos_create', params)
 
 
 def bdev_daos_delete(client, name):
     """Delete DAOS block device.
-
     Args:
         bdev_name: name of DAOS bdev to delete
     """
-    params = {'name': name}
+    params = dict()
+    params['name'] = name
     return client.call('bdev_daos_delete', params)
 
 
@@ -1921,37 +1700,34 @@ def bdev_daos_resize(client, name, new_size):
         name: name of DAOS bdev to resize
         new_size: new bdev size of resize operation. The unit is MiB
     """
-    params = {
-            'name': name,
-            'new_size': new_size,
-            }
+    params = dict()
+    params['name'] = name
+    params['new_size'] = new_size
     return client.call('bdev_daos_resize', params)
 
 
 def bdev_nvme_start_mdns_discovery(client, name, svcname, hostnqn=None):
     """Start discovery with mDNS
-
     Args:
         name: bdev name prefix; "n" + unique seqno + namespace ID will be appended to create unique names
         svcname: service to discover ("_nvme-disc._tcp")
         hostnqn: NQN to connect from (optional)
     """
-    params = {'name': name,
-              'svcname': svcname}
-
-    if hostnqn:
+    params = dict()
+    params['name'] = name
+    params['svcname'] = svcname
+    if hostnqn is not None:
         params['hostnqn'] = hostnqn
     return client.call('bdev_nvme_start_mdns_discovery', params)
 
 
 def bdev_nvme_stop_mdns_discovery(client, name):
     """Stop a previously started mdns discovery service
-
     Args:
         name: name of the discovery service to stop
     """
-    params = {'name': name}
-
+    params = dict()
+    params['name'] = name
     return client.call('bdev_nvme_stop_mdns_discovery', params)
 
 
