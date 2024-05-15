@@ -107,10 +107,10 @@ def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, 
         params['crypto_pmd'] = crypto_pmd
     if key is not None:
         params['key'] = key
-    if key2 is not None:
-        params['key2'] = key2
     if cipher is not None:
         params['cipher'] = cipher
+    if key2 is not None:
+        params['key2'] = key2
     if key_name is not None:
         params['key_name'] = key_name
     return client.call('bdev_crypto_create', params)
@@ -131,9 +131,9 @@ def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name, cache_l
     Args:
         name: name of constructed OCF bdev
         mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
-        cache_line_size: OCF cache line size. The unit is KiB: {4, 8, 16, 32, 64}
         cache_bdev_name: name of underlying cache bdev
         core_bdev_name: name of underlying core bdev
+        cache_line_size: OCF cache line size. The unit is KiB: {4, 8, 16, 32, 64}
     Returns:
         Name of created block device
     """
@@ -313,9 +313,9 @@ def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=N
         Name of created block device.
     """
     params = dict()
-    params['name'] = name
     params['num_blocks'] = num_blocks
     params['block_size'] = block_size
+    params['name'] = name
     if physical_block_size is not None:
         params['physical_block_size'] = physical_block_size
     if uuid is not None:
@@ -378,9 +378,9 @@ def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size_kb=None, u
     """Create raid bdev. Either strip size arg will work but one is required.
     Args:
         name: user defined raid bdev name
-        strip_size_kb: strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, etc
         raid_level: raid level of raid bdev, supported values 0
         base_bdevs: Space separated names of Nvme bdevs in double quotes, like "Nvme0n1 Nvme1n1 Nvme2n1"
+        strip_size_kb: strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, etc
         uuid: UUID for this raid bdev (optional)
         superblock: information about raid bdev will be stored in superblock on each base bdev,
                     disabled by default due to backward compatibility
@@ -415,8 +415,8 @@ def bdev_raid_delete(client, name):
 def bdev_raid_add_base_bdev(client, base_bdev, raid_bdev):
     """Add base bdev to existing raid bdev
     Args:
-        raid_bdev: raid bdev name
         base_bdev: base bdev name
+        raid_bdev: raid bdev name
     Returns:
         None
     """
@@ -450,8 +450,8 @@ def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fall
         Name of created block device.
     """
     params = dict()
-    params['name'] = name
     params['filename'] = filename
+    params['name'] = name
     if block_size is not None:
         params['block_size'] = block_size
     if readonly is not None:
@@ -492,8 +492,8 @@ def bdev_uring_create(client, filename, name, block_size=None, uuid=None):
         Name of created bdev.
     """
     params = dict()
-    params['name'] = name
     params['filename'] = filename
+    params['name'] = name
     if block_size is not None:
         params['block_size'] = block_size
     if uuid is not None:
@@ -532,8 +532,8 @@ def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu=None):
         Name of created bdev.
     """
     params = dict()
-    params['name'] = name
     params['filename'] = filename
+    params['name'] = name
     params['io_mechanism'] = io_mechanism
     if conserve_cpu is not None:
         params['conserve_cpu'] = conserve_cpu
@@ -588,7 +588,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
         If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_sec has to be non-zero and less than ctrlr_loss_timeout_sec.
         This can be overridden by bdev_nvme_attach_controller. (optional)
-        fail_io_fast_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+        fast_io_fail_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
         0 means no such timeout.
         If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
@@ -720,7 +720,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
         If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_sec has to be non-zero and less than ctrlr_loss_timeout_sec.
         (optional)
-        fail_io_fast_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+        fast_io_fail_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
         0 means no such timeout.
         If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1. (optional)
@@ -735,12 +735,6 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
     params['name'] = name
     params['trtype'] = trtype
     params['traddr'] = traddr
-    if hostnqn is not None:
-        params['hostnqn'] = hostnqn
-    if hostaddr is not None:
-        params['hostaddr'] = hostaddr
-    if hostsvcid is not None:
-        params['hostsvcid'] = hostsvcid
     if adrfam is not None:
         params['adrfam'] = adrfam
     if trsvcid is not None:
@@ -749,6 +743,12 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         params['priority'] = priority
     if subnqn is not None:
         params['subnqn'] = subnqn
+    if hostnqn is not None:
+        params['hostnqn'] = hostnqn
+    if hostaddr is not None:
+        params['hostaddr'] = hostaddr
+    if hostsvcid is not None:
+        params['hostsvcid'] = hostsvcid
     if prchk_reftag is not None:
         params['prchk_reftag'] = prchk_reftag
     if prchk_guard is not None:
@@ -879,7 +879,7 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
         If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
         If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_sec has to be non-zero and less than ctrlr_loss_timeout_sec.
         (optional)
-        fail_io_fast_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+        fast_io_fail_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
         0 means no such timeout.
         If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1. (optional)
@@ -889,22 +889,22 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
     params['name'] = name
     params['trtype'] = trtype
     params['traddr'] = traddr
-    if hostnqn is not None:
-        params['hostnqn'] = hostnqn
     if adrfam is not None:
         params['adrfam'] = adrfam
     if trsvcid is not None:
         params['trsvcid'] = trsvcid
+    if hostnqn is not None:
+        params['hostnqn'] = hostnqn
     if wait_for_attach is not None:
         params['wait_for_attach'] = wait_for_attach
-    if attach_timeout_ms is not None:
-        params['attach_timeout_ms'] = attach_timeout_ms
     if ctrlr_loss_timeout_sec is not None:
         params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
     if reconnect_delay_sec is not None:
         params['reconnect_delay_sec'] = reconnect_delay_sec
     if fast_io_fail_timeout_sec is not None:
         params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
+    if attach_timeout_ms is not None:
+        params['attach_timeout_ms'] = attach_timeout_ms
     return client.call('bdev_nvme_start_discovery', params)
 
 
@@ -1215,7 +1215,6 @@ def bdev_iscsi_set_options(client, timeout_sec=None):
     params = dict()
     if timeout_sec is not None:
         params['timeout_sec'] = timeout_sec
-
     return client.call('bdev_iscsi_set_options', params)
 
 
@@ -1225,7 +1224,6 @@ def bdev_iscsi_create(client, name, url, initiator_iqn):
         name: name of block device
         url: iSCSI URL
         initiator_iqn: IQN name to be used by initiator
-
     Returns:
         Name of created block device.
     """
@@ -1252,7 +1250,6 @@ def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
         base_bdev_name: name of the existing bdev
         name: name of block device
         uuid: UUID of block device (optional)
-
     Returns:
         Name of created block device.
     """
@@ -1324,7 +1321,6 @@ def bdev_opal_delete(client, bdev_name, password):
 
 def bdev_opal_new_user(client, bdev_name, admin_password, user_id, user_password):
     """Add a user to opal bdev who can set lock state for this bdev.
-
     Args:
         bdev_name: name of opal vbdev
         admin_password: admin password
@@ -1361,7 +1357,6 @@ def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
         base_bdev: name of bdev to split
         split_count: number of split bdevs to create
         split_size_mb: size of each split volume in MiB (optional)
-
     Returns:
         List of created block devices.
     """
@@ -1483,7 +1478,7 @@ def bdev_ftl_set_property(client, name, ftl_property, value):
     """Set FTL property
     Args:
         name: name of the bdev
-        property: name of the property to be set
+        ftl_property: name of the property to be set
         value: The new value of the updated property
     """
     params = dict()
@@ -1542,7 +1537,7 @@ def bdev_reset_iostat(client, name=None, mode=None):
 def bdev_enable_histogram(client, name, enable):
     """Control whether histogram is enabled for specified bdev.
     Args:
-        bdev_name: name of bdev
+        name: name of bdev
         enable: Enable or disable histogram on specified device
     """
     params = dict()
@@ -1554,7 +1549,7 @@ def bdev_enable_histogram(client, name, enable):
 def bdev_get_histogram(client, name):
     """Get histogram for specified bdev.
     Args:
-        bdev_name: name of bdev
+        name: name of bdev
     """
     params = dict()
     params['name'] = name
@@ -1635,8 +1630,8 @@ def bdev_nvme_apply_firmware(client, bdev_name, filename):
         filename: filename of the firmware to download
     """
     params = dict()
-    params['filename'] = filename
     params['bdev_name'] = bdev_name
+    params['filename'] = filename
     return client.call('bdev_nvme_apply_firmware', params)
 
 
@@ -1649,7 +1644,6 @@ def bdev_nvme_get_controller_health_info(client, name):
     """Display health log of the required NVMe bdev controller.
     Args:
         name: name of the required NVMe bdev controller
-
     Returns:
         Health log for the requested NVMe bdev controller.
     """
@@ -1663,11 +1657,11 @@ def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=No
     Args:
         num_blocks: size of block device in blocks
         block_size: block size of device; must be a power of 2 and at least 512
-        name: name of block device (also the name of the backend file on DAOS DFS)
         pool: UUID of DAOS pool
         cont: UUID of DAOS container
-        uuid: UUID of block device (optional)
+        name: name of block device (also the name of the backend file on DAOS DFS)
         oclass: DAOS object class (optional)
+        uuid: UUID of block device (optional)
     Returns:
         Name of created block device.
     """
@@ -1677,10 +1671,10 @@ def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=No
     params['pool'] = pool
     params['cont'] = cont
     params['name'] = name
-    if uuid is not None:
-        params['uuid'] = uuid
     if oclass is not None:
         params['oclass'] = oclass
+    if uuid is not None:
+        params['uuid'] = uuid
     return client.call('bdev_daos_create', params)
 
 
