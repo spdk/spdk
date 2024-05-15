@@ -784,6 +784,70 @@ function raid_rebuild_test() {
 	return 0
 }
 
+function raid_io_error_test() {
+	local raid_level=$1
+	local num_base_bdevs=$2
+	local error_io_type=$3
+	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
+	local raid_bdev_name="raid_bdev1"
+	local strip_size
+	local create_arg
+	local bdevperf_log
+	local fail_per_s
+
+	if [ $raid_level != "raid1" ]; then
+		strip_size=64
+		create_arg+=" -z $strip_size"
+	else
+		strip_size=0
+	fi
+
+	bdevperf_log=$(mktemp -p "$tmp_dir")
+
+	"$rootdir/build/examples/bdevperf" -r $rpc_server -T $raid_bdev_name -t 60 -w randrw -M 50 -o 128k -q 1 -z -f -L bdev_raid > $bdevperf_log &
+	raid_pid=$!
+	waitforlisten $raid_pid $rpc_server
+
+	# Create base bdevs
+	for bdev in "${base_bdevs[@]}"; do
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${bdev}_malloc
+		$rpc_py bdev_error_create ${bdev}_malloc
+		$rpc_py bdev_passthru_create -b EE_${bdev}_malloc -p $bdev
+	done
+
+	# Create RAID bdev
+	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name -s
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+
+	# Start user I/O
+	"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s $rpc_server perform_tests &
+	sleep 1
+
+	# Inject an error
+	$rpc_py bdev_error_inject_error EE_${base_bdevs[0]}_malloc $error_io_type failure
+
+	local expected_num_base_bdevs
+	if [[ $raid_level = "raid1" && $error_io_type = "write" ]]; then
+		expected_num_base_bdevs=$((num_base_bdevs - 1))
+	else
+		expected_num_base_bdevs=$num_base_bdevs
+	fi
+	verify_raid_bdev_state $raid_bdev_name online $raid_level $strip_size $expected_num_base_bdevs
+
+	$rpc_py bdev_raid_delete $raid_bdev_name
+
+	killprocess $raid_pid
+
+	# Check I/O failures reported by bdevperf
+	# RAID levels with redundancy should handle the errors and not show any failures
+	fail_per_s=$(grep -v Job $bdevperf_log | grep $raid_bdev_name | awk '{print $6}')
+	if has_redundancy $raid_level; then
+		[[ "$fail_per_s" = "0.00" ]]
+	else
+		[[ "$fail_per_s" != "0.00" ]]
+	fi
+}
+
 mkdir -p "$tmp_dir"
 trap 'cleanup; exit 1' EXIT
 
@@ -803,6 +867,8 @@ for n in {2..4}; do
 		run_test "raid_state_function_test" raid_state_function_test $level $n false
 		run_test "raid_state_function_test_sb" raid_state_function_test $level $n true
 		run_test "raid_superblock_test" raid_superblock_test $level $n
+		run_test "raid_read_error_test" raid_io_error_test $level $n read
+		run_test "raid_write_error_test" raid_io_error_test $level $n write
 	done
 done
 
