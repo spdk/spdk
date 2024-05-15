@@ -928,6 +928,9 @@ struct spdk_bdev_io {
 		} zone_mgmt;
 	} u;
 
+	/** It may be used by modules to put the bdev_io into its own list. */
+	TAILQ_ENTRY(spdk_bdev_io) module_link;
+
 	/**
 	 *  Fields that are used internally by the bdev subsystem.  Bdev modules
 	 *  must not read or write to these fields.

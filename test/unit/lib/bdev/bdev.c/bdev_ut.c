@@ -126,12 +126,8 @@ struct ut_expected_io {
 	TAILQ_ENTRY(ut_expected_io)	link;
 };
 
-struct bdev_ut_io {
-	TAILQ_ENTRY(bdev_ut_io)		link;
-};
-
 struct bdev_ut_channel {
-	TAILQ_HEAD(, bdev_ut_io)	outstanding_io;
+	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
 	uint32_t			outstanding_io_count;
 	TAILQ_HEAD(, ut_expected_io)	expected_io;
 };
@@ -204,7 +200,6 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 	struct ut_expected_io *expected_io;
 	struct iovec *iov, *expected_iov;
 	struct spdk_bdev_io *bio_to_abort;
-	struct bdev_ut_io *bio;
 	int i;
 
 	g_bdev_io = bdev_io;
@@ -246,10 +241,9 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) {
 		if (g_io_exp_status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-			TAILQ_FOREACH(bio, &ch->outstanding_io, link) {
-				bio_to_abort = spdk_bdev_io_from_ctx(bio);
+			TAILQ_FOREACH(bio_to_abort, &ch->outstanding_io, module_link) {
 				if (bio_to_abort == bdev_io->u.abort.bio_to_abort) {
-					TAILQ_REMOVE(&ch->outstanding_io, bio, link);
+					TAILQ_REMOVE(&ch->outstanding_io, bio_to_abort, module_link);
 					ch->outstanding_io_count--;
 					spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_FAILED);
 					break;
@@ -303,7 +297,7 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 		bdev_io->u.bdev.seek.offset = g_seek_hole_offset;
 	}
 
-	TAILQ_INSERT_TAIL(&ch->outstanding_io, (struct bdev_ut_io *)bdev_io->driver_ctx, link);
+	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
 	ch->outstanding_io_count++;
 
 	expected_io = TAILQ_FIRST(&ch->expected_io);
@@ -372,7 +366,6 @@ static uint32_t
 stub_complete_io(uint32_t num_to_complete)
 {
 	struct bdev_ut_channel *ch = g_bdev_ut_channel;
-	struct bdev_ut_io *bio;
 	struct spdk_bdev_io *bdev_io;
 	static enum spdk_bdev_io_status io_status;
 	uint32_t num_completed = 0;
@@ -381,9 +374,8 @@ stub_complete_io(uint32_t num_to_complete)
 		if (TAILQ_EMPTY(&ch->outstanding_io)) {
 			break;
 		}
-		bio = TAILQ_FIRST(&ch->outstanding_io);
-		TAILQ_REMOVE(&ch->outstanding_io, bio, link);
-		bdev_io = spdk_bdev_io_from_ctx(bio);
+		bdev_io = TAILQ_FIRST(&ch->outstanding_io);
+		TAILQ_REMOVE(&ch->outstanding_io, bdev_io, module_link);
 		ch->outstanding_io_count--;
 		io_status = g_io_exp_status == SPDK_BDEV_IO_STATUS_SUCCESS ? SPDK_BDEV_IO_STATUS_SUCCESS :
 			    g_io_exp_status;
@@ -496,19 +488,12 @@ vbdev_ut_module_fini(void)
 {
 }
 
-static int
-vbdev_ut_get_ctx_size(void)
-{
-	return sizeof(struct bdev_ut_io);
-}
-
 struct spdk_bdev_module vbdev_ut_if = {
 	.name = "vbdev_ut",
 	.module_init = vbdev_ut_module_init,
 	.module_fini = vbdev_ut_module_fini,
 	.examine_config = vbdev_ut_examine_config,
 	.examine_disk = vbdev_ut_examine_disk,
-	.get_ctx_size = vbdev_ut_get_ctx_size,
 };
 
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, &bdev_ut_if)
