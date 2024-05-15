@@ -204,7 +204,7 @@ struct nvme_qpair {
 
 struct nvme_ctrlr_channel {
 	struct nvme_qpair		*qpair;
-	TAILQ_HEAD(, nvme_bdev_io)	pending_resets;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
 
 	struct spdk_io_channel_iter	*reset_iter;
 	struct spdk_poller		*connect_poller;
@@ -230,7 +230,7 @@ struct nvme_bdev_channel {
 	uint32_t				rr_min_io;
 	uint32_t				rr_counter;
 	STAILQ_HEAD(, nvme_io_path)		io_path_list;
-	TAILQ_HEAD(retry_io_head, nvme_bdev_io)	retry_io_list;
+	TAILQ_HEAD(retry_io_head, spdk_bdev_io)	retry_io_list;
 	struct spdk_poller			*retry_io_poller;
 };
 

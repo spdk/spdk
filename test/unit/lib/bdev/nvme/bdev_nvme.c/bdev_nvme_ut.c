@@ -1960,7 +1960,7 @@ test_pending_reset(void)
 	set_thread(0);
 
 	bdev_nvme_submit_request(ch1, second_bdev_io);
-	CU_ASSERT(spdk_bdev_io_from_ctx(TAILQ_FIRST(&ctrlr_ch1->pending_resets)) == second_bdev_io);
+	CU_ASSERT(TAILQ_FIRST(&ctrlr_ch1->pending_resets) == second_bdev_io);
 
 	poll_threads();
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
@@ -1985,7 +1985,7 @@ test_pending_reset(void)
 	set_thread(0);
 
 	bdev_nvme_submit_request(ch1, second_bdev_io);
-	CU_ASSERT(spdk_bdev_io_from_ctx(TAILQ_FIRST(&ctrlr_ch1->pending_resets)) == second_bdev_io);
+	CU_ASSERT(TAILQ_FIRST(&ctrlr_ch1->pending_resets) == second_bdev_io);
 
 	ctrlr->fail_reset = true;
 
@@ -2843,7 +2843,7 @@ test_abort(void)
 	bdev_nvme_submit_request(ch1, write_io);
 
 	CU_ASSERT(write_io->internal.in_submit_request == true);
-	CU_ASSERT(write_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch1->retry_io_list)));
+	CU_ASSERT(write_io == TAILQ_FIRST(&nbdev_ch1->retry_io_list));
 
 	/* Aborting the queued write request should succeed immediately. */
 	abort_io->internal.ch = (struct spdk_bdev_channel *)ch1;
@@ -4216,8 +4216,7 @@ test_reset_bdev_ctrlr(void)
 
 	CU_ASSERT(nvme_ctrlr1->resetting == true);
 	CU_ASSERT(nvme_ctrlr1->ctrlr_op_cb_arg == first_bio);
-	CU_ASSERT(TAILQ_FIRST(&io_path21->qpair->ctrlr_ch->pending_resets) ==
-		  (struct nvme_bdev_io *)second_bdev_io->driver_ctx);
+	CU_ASSERT(TAILQ_FIRST(&io_path21->qpair->ctrlr_ch->pending_resets) == second_bdev_io);
 
 	poll_threads();
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
@@ -4412,7 +4411,7 @@ test_retry_io_if_ana_state_is_updating(void)
 
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io1->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io1 == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io1 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	/* ANA state became accessible while I/O was queued. */
 	nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
@@ -4565,7 +4564,7 @@ test_retry_io_for_io_path_error(void)
 
 	CU_ASSERT(nvme_qpair1->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	poll_threads();
 
@@ -4626,7 +4625,7 @@ test_retry_io_for_io_path_error(void)
 	CU_ASSERT(nvme_qpair1->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(nvme_qpair2->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	spdk_nvme_ctrlr_free_io_qpair(nvme_qpair1->qpair);
 	nvme_qpair1->qpair = NULL;
@@ -4792,7 +4791,7 @@ test_retry_io_count(void)
 
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	poll_threads();
 
@@ -4823,7 +4822,7 @@ test_retry_io_count(void)
 
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	poll_threads();
 
@@ -5036,7 +5035,7 @@ test_retry_io_for_ana_error(void)
 
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 	/* I/O should be retried immediately. */
 	CU_ASSERT(bio->retry_ticks == now);
 	CU_ASSERT(nvme_ns->ana_state_updating == true);
@@ -5047,7 +5046,7 @@ test_retry_io_for_ana_error(void)
 	/* Namespace is inaccessible, and hence I/O should be queued again. */
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 	/* I/O should be retried after a second if no I/O path was found but
 	 * any I/O path may become available.
 	 */
@@ -5224,10 +5223,8 @@ test_retry_io_if_ctrlr_is_resetting(void)
 
 	CU_ASSERT(bdev_io1->internal.in_submit_request == true);
 	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io1 == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
-	CU_ASSERT(bdev_io2 == spdk_bdev_io_from_ctx(
-			  TAILQ_NEXT((struct nvme_bdev_io *)bdev_io1->driver_ctx,
-				     retry_link)));
+	CU_ASSERT(bdev_io1 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
+	CU_ASSERT(bdev_io2 == TAILQ_NEXT(bdev_io1, module_link));
 
 	poll_threads();
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
@@ -5243,7 +5240,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 1);
 	CU_ASSERT(bdev_io1->internal.in_submit_request == true);
 	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io2 == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io2 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	poll_threads();
 
@@ -5251,7 +5248,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	CU_ASSERT(bdev_io1->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io1->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io2 == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io2 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	spdk_delay_us(1);
 
@@ -5678,7 +5675,7 @@ test_fail_path(void)
 	bdev_nvme_submit_request(ch, bdev_io);
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	/* After a second, the I/O should be still queued and the ctrlr should be
 	 * still recovering.
@@ -5687,7 +5684,7 @@ test_fail_path(void)
 	poll_threads();
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(ctrlr->is_failed == false);
@@ -6548,7 +6545,7 @@ test_retry_io_to_same_path(void)
 
 	CU_ASSERT(io_path2->qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	/* The 2nd I/O should keep caching io_path2. */
 	CU_ASSERT(bio->io_path == io_path2);
@@ -6576,7 +6573,7 @@ test_retry_io_to_same_path(void)
 
 	CU_ASSERT(io_path2->qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
 	/* The 2nd I/O should keep caching io_path2. */
 	CU_ASSERT(bio->io_path == io_path2);
