@@ -34,7 +34,6 @@ function xtrace_fd() {
 set -e
 shopt -s nullglob
 shopt -s extglob
-shopt -s inherit_errexit
 
 if [ -z "${output_dir:-}" ]; then
 	mkdir -p "$rootdir/../output"
