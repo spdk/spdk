@@ -331,6 +331,14 @@ function collect_devices() {
 				MESSAGE
 			fi
 		fi
+		if [[ -n ${dsa_d["$bdf"]} ]] && [[ $PCI_ALLOWED != *"$bdf"* ]]; then
+			pci_dev_echo "$bdf" "Skipping not allowed DSA controller at $bdf"
+			in_use=1
+		fi
+		if [[ -n ${iaa_d["$bdf"]} ]] && [[ $PCI_ALLOWED != *"$bdf"* ]]; then
+			pci_dev_echo "$bdf" "Skipping not allowed IAA controller at $bdf"
+			in_use=1
+		fi
 		# Update in-use for each bdf. Default from the map_supported_devices() is 0 == "not used"
 		local -n type_ref=${all_devices_type_d["$bdf"]}_d
 		type_ref["$bdf"]=$in_use
