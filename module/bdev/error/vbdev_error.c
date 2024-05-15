@@ -37,6 +37,7 @@ struct vbdev_error_info {
 };
 
 struct error_io {
+	enum vbdev_error_type error_type;
 	TAILQ_ENTRY(error_io) link;
 };
 
@@ -168,8 +169,12 @@ vbdev_error_reset(struct error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 }
 
 static uint32_t
-vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
+vbdev_error_get_error_type(struct error_disk *error_disk, struct error_channel *ch,
+			   uint32_t io_type)
 {
+	uint32_t error_num;
+	struct vbdev_error_info *error_info;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -177,13 +182,25 @@ vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		break;
 	default:
-		return 0;
+		return VBDEV_IO_NO_ERROR;
 	}
 
-	if (error_disk->error_vector[io_type].error_num) {
-		return error_disk->error_vector[io_type].error_type;
+	error_info = &error_disk->error_vector[io_type];
+
+	if (ch->io_inflight < error_info->error_qd) {
+		return VBDEV_IO_NO_ERROR;
 	}
-	return 0;
+
+	error_num = error_info->error_num;
+	do {
+		if (error_num == 0) {
+			return VBDEV_IO_NO_ERROR;
+		}
+	} while (!__atomic_compare_exchange_n(&error_info->error_num,
+					      &error_num, error_num - 1,
+					      false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
+
+	return error_info->error_type;
 }
 
 static void
@@ -212,19 +229,16 @@ vbdev_error_corrupt_io_data(struct spdk_bdev_io *bdev_io, uint64_t corrupt_offse
 static void
 vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
+	struct error_io *error_io = (struct error_io *)bdev_io->driver_ctx;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
 	struct error_channel *ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
-	uint32_t error_type;
 
 	assert(ch->io_inflight > 0);
 	ch->io_inflight--;
 
 	if (success && bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
-		if (error_type == VBDEV_IO_CORRUPT_DATA) {
-			error_disk->error_vector[bdev_io->type].error_num--;
-
+		if (error_io->error_type == VBDEV_IO_CORRUPT_DATA) {
 			vbdev_error_corrupt_io_data(bdev_io,
 						    error_disk->error_vector[bdev_io->type].corrupt_offset,
 						    error_disk->error_vector[bdev_io->type].corrupt_value);
@@ -240,7 +254,6 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	struct error_io *error_io = (struct error_io *)bdev_io->driver_ctx;
 	struct error_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
-	uint32_t error_type;
 	int rc;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
@@ -248,35 +261,26 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		return;
 	}
 
-	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
+	error_io->error_type = vbdev_error_get_error_type(error_disk, ch, bdev_io->type);
 
-	if (error_type != 0 && ch->io_inflight < error_disk->error_vector[bdev_io->type].error_qd) {
-		error_type = 0;
-	}
-
-	switch (error_type) {
+	switch (error_io->error_type) {
 	case VBDEV_IO_FAILURE:
-		error_disk->error_vector[bdev_io->type].error_num--;
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
 	case VBDEV_IO_NOMEM:
-		error_disk->error_vector[bdev_io->type].error_num--;
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		break;
 	case VBDEV_IO_PENDING:
 		TAILQ_INSERT_TAIL(&error_disk->pending_ios, error_io, link);
-		error_disk->error_vector[bdev_io->type].error_num--;
 		break;
 	case VBDEV_IO_CORRUPT_DATA:
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			error_disk->error_vector[bdev_io->type].error_num--;
-
 			vbdev_error_corrupt_io_data(bdev_io,
 						    error_disk->error_vector[bdev_io->type].corrupt_offset,
 						    error_disk->error_vector[bdev_io->type].corrupt_value);
 		}
 	/* fallthrough */
-	case 0:
+	case VBDEV_IO_NO_ERROR:
 		rc = spdk_bdev_part_submit_request_ext(&ch->part_ch, bdev_io,
 						       vbdev_error_complete_request);
 

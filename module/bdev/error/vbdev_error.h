@@ -11,7 +11,8 @@
 #include "spdk/uuid.h"
 
 enum vbdev_error_type {
-	VBDEV_IO_FAILURE = 1,
+	VBDEV_IO_NO_ERROR = 0,
+	VBDEV_IO_FAILURE,
 	VBDEV_IO_PENDING,
 	VBDEV_IO_CORRUPT_DATA,
 	VBDEV_IO_NOMEM,
