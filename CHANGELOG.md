@@ -4,27 +4,22 @@
 
 ### accel
 
-spdk_accel_get/set_opts() has changed to act more like spdk_bdev's variant.
+`spdk_accel_get/set_opts()` has changed to act more like spdk_bdev's variant.
 
 ### bdev
 
 Added `spdk_bdev_get_nvme_ctratt()` API to get controller attributes of bdev.
 
-### lvol
+### bdev_uring
 
-Added `bdev_lvol_start_shallow_copy` RPC to start a shallow copy of an lvol over a given bdev and
-`bdev_lvol_check_shallow_copy` RPC to get the status of the operation.
-These RPCs use the new API `spdk_lvol_shallow_copy`.
-
-Added `bdev_lvol_set_parent` and `bdev_lvol_set_parent_bdev` RPC to change the parent of an existing lvol
-with the use of the new APIs `spdk_lvol_set_parent` and `spdk_lvol_set_external_parent`.
+Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
 
 ### blobstore
 
-Added new API `spdk_bs_blob_shallow_copy` to make a shallow copy from a blob to a blobstore device. Only clusters
+Added new API `spdk_bs_blob_shallow_copy()` to make a shallow copy from a blob to a blobstore device. Only clusters
 allocated to the blob will be written on the device.
 
-Added new APIs `spdk_bs_blob_set_parent` and `spdk_bs_blob_set_external_parent` to change the parent of an
+Added new APIs `spdk_bs_blob_set_parent()` and `spdk_bs_blob_set_external_parent()` to change the parent of an
 existing lvol. With these new API a thin provisioned blob can become a clone of an existing snapshot
 or of an existing external snapshot.
 
@@ -38,54 +33,60 @@ allowing user to provide a buffer with JSON config as alternative to providing J
 
 ### init
 
-Function `spdk_subsystem_init_from_json_config` is deprecated and will be removed in 24.09 release.
-Please use `spdk_subsystem_load_config` instead.
-
-### nvme
-
-Added `spdk_nvme_ctrlr_get_max_sges`.
-
-### bdev_uring
-
-Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
+Function `spdk_subsystem_init_from_json_config()` is deprecated and will be removed in 24.09 release.
+Please use `spdk_subsystem_load_config()` instead.
 
 ### iscsi
 
 Added `iscsi_get_stats` RPC method to get stat information about all active connections.
 
-Added `iscsi_enable_histogram` RPC method to enable or disable histogram for specified iscsi target.
+Added `iscsi_enable_histogram` RPC method to enable or disable histogram for specified iSCSI target.
 
-Added `iscsi_get_histogram` RPC method to get histogram for specified iscsi target.
+Added `iscsi_get_histogram` RPC method to get histogram for specified iSCSI target.
 
-### thread
+### lvol
 
-spdk_iobuf_get/set_opts() has changed to act more like spdk_bdev's variant.
+Added `bdev_lvol_start_shallow_copy` RPC to start a shallow copy of an lvol over a given bdev and
+`bdev_lvol_check_shallow_copy` RPC to get the status of the operation.
+These RPCs use the new API `spdk_lvol_shallow_copy()`.
 
-### trace
+Added `bdev_lvol_set_parent` and `bdev_lvol_set_parent_bdev` RPC to change the parent of an existing lvol
+with the use of the new APIs `spdk_lvol_set_parent()` and `spdk_lvol_set_external_parent()`.
 
-Merged `struct spdk_trace_flags` and `struct spdk_trace_histories` into
-new `struct spdk_trace_file`. Also renamed `spdk_get_trace_histories_size()`
-to `spdk_get_trace_file_size()`.
+### nvme
+
+Added `spdk_nvme_ctrlr_get_max_sges()` API to retrieve maximum number of SGEs per request
+for the given NVMe controller.
 
 ### nvmf
 
-Added support for namespace masking using new C APIs `spdk_nvmf_ns_add_host` and
-`spdk_nvmf_ns_remove_host` and RPCs `nvmf_ns_add_host` and `nvmf_ns_remove_host`.
+Added support for namespace masking using new C APIs `spdk_nvmf_ns_add_host()` and
+`spdk_nvmf_ns_remove_host()` and RPCs `nvmf_ns_add_host` and `nvmf_ns_remove_host`.
 Users must pass new `--no-auto-visible` parameter to `nvmf_subsystem_add_ns` RPC to allow
 namespace masking to be controlled by these new RPCs.
 
-Added `spdk_nvmf_subsystem_get_ana_state` API to get current ANA state of
+Added `spdk_nvmf_subsystem_get_ana_state()` API to get current ANA state of
 a particular ANA group ID.
 
 Added support for enabling mDNS-based discovery of nvmf target for
-TCP transport with the addition of nvmf_publish_mdns_prr and
-nvmf_stop_mdns_prr RPCs.
+TCP transport with the addition of `nvmf_publish_mdns_prr` and
+`nvmf_stop_mdns_prr` RPCs.
 
 ### spdk_trace
 
 `spdk_trace` has learned how to use the most recent trace file in /dev/shm when
 the user has specified neither `-f` nor `-s` options. This is only available on
 Linux since FreeBSD does not mount have a /dev/shm mount.
+
+### thread
+
+Changed `spdk_iobuf_get/set_opts()` API to act more like spdk_bdev's variant.
+
+### trace
+
+Merged `struct spdk_trace_flags` and `struct spdk_trace_histories` into
+new `struct spdk_trace_file`. Also renamed `spdk_get_trace_histories_size()`
+to `spdk_get_trace_file_size()`.
 
 ## v24.01
 
