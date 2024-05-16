@@ -6,7 +6,8 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 rpc_server=/var/tmp/spdk-raid.sock
-tmp_file=$SPDK_TEST_STORAGE/raidrandtest
+tmp_dir=$SPDK_TEST_STORAGE/raidtest
+tmp_file=$tmp_dir/raidrandtest
 
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
@@ -53,14 +54,12 @@ function raid_unmap_data_verify() {
 	return 0
 }
 
-function on_error_exit() {
-	if [ -n "$raid_pid" ]; then
+function cleanup() {
+	if [ -n "$raid_pid" ] && ps -p $raid_pid > /dev/null; then
 		killprocess $raid_pid
 	fi
 
-	rm -f $tmp_file
-	print_backtrace
-	exit 1
+	rm -rf "$tmp_dir"
 }
 
 function configure_raid_bdev() {
@@ -785,7 +784,8 @@ function raid_rebuild_test() {
 	return 0
 }
 
-trap 'on_error_exit;' ERR
+mkdir -p "$tmp_dir"
+trap 'cleanup; exit 1' EXIT
 
 base_blocklen=512
 
@@ -847,4 +847,5 @@ run_test "raid_state_function_test_sb_md_interleaved" raid_state_function_test r
 run_test "raid_superblock_test_md_interleaved" raid_superblock_test raid1 2
 run_test "raid_rebuild_test_sb_md_interleaved" raid_rebuild_test raid1 2 true false false
 
-rm -f $tmp_file
+trap - EXIT
+cleanup
