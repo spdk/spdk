@@ -153,6 +153,9 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 			kernel_idxd->portal = mmap(NULL, 0x1000, PROT_WRITE,
 						   MAP_SHARED | MAP_POPULATE, kernel_idxd->fd, 0);
 			if (kernel_idxd->portal == MAP_FAILED) {
+				if (errno == EPERM) {
+					SPDK_ERRLOG("CAP_SYS_RAWIO capabilities required to mmap the portal\n");
+				}
 				perror("mmap");
 				continue;
 			}
