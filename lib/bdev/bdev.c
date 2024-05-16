@@ -813,7 +813,7 @@ spdk_bdev_examine(const char *name)
 	}
 
 	if (g_bdev_opts.bdev_auto_examine) {
-		SPDK_ERRLOG("Manual examine is not allowed if auto examine is enabled");
+		SPDK_ERRLOG("Manual examine is not allowed if auto examine is enabled\n");
 		return -EINVAL;
 	}
 
