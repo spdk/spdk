@@ -105,7 +105,7 @@ wait_for_file(char *filename, bool exists)
 	return false;
 }
 
-static void
+static bool
 verify_devices(struct spdk_nvme_ctrlr *ctrlr)
 {
 	char ctrlr_name[256];
@@ -120,23 +120,36 @@ verify_devices(struct spdk_nvme_ctrlr *ctrlr)
 	SPDK_CU_ASSERT_FATAL(rv == 0);
 
 	rv = snprintf(ctrlr_dev, sizeof(ctrlr_dev), "/dev/%s", ctrlr_name);
-	CU_ASSERT(rv > 0);
-	CU_ASSERT(wait_for_file(ctrlr_dev, true));
+	SPDK_CU_ASSERT_FATAL(rv > 0);
+	if (!wait_for_file(ctrlr_dev, true)) {
+		SPDK_ERRLOG("Couldn't find controller device: %s\n", ctrlr_dev);
+		return false;
+	}
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 
 	for (nsid = 1; nsid <= num_ns; nsid++) {
 		snprintf(ns_dev, sizeof(ns_dev), "%sn%" PRIu32, ctrlr_dev, nsid);
 		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
-			CU_ASSERT(wait_for_file(ns_dev, true));
+			if (!wait_for_file(ns_dev, true)) {
+				SPDK_ERRLOG("Couldn't find namespace device: %s\n", ns_dev);
+				return false;
+			}
 		} else {
-			CU_ASSERT(wait_for_file(ns_dev, false));
+			if (!wait_for_file(ns_dev, false)) {
+				SPDK_ERRLOG("Found unexpected namespace device: %s\n", ns_dev);
+				return false;
+			}
 		}
 	}
 
 	/* Next one should never exist */
 	snprintf(ns_dev, sizeof(ns_dev), "%sn%" PRIu32, ctrlr_dev, nsid);
-	CU_ASSERT(wait_for_file(ns_dev, false));
+	if (!wait_for_file(ns_dev, false)) {
+		SPDK_ERRLOG("Found unexpected namespace device beyond max NSID value: %s\n", ns_dev);
+		return false;
+	}
+	return true;
 }
 
 static void
@@ -151,37 +164,37 @@ test_cuse_update(void)
 	g_active_num_ns = 4;
 	g_active_nsid_min = 1;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 0;
 	g_active_nsid_min = 1;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 4;
 	g_active_nsid_min = spdk_nvme_ctrlr_get_num_ns(&ctrlr) - g_active_num_ns;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 2;
 	g_active_nsid_min = 2;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 10;
 	g_active_nsid_min = 5;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 5;
 	g_active_nsid_min = 3;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 6;
 	g_active_nsid_min = 1;
 	nvme_cuse_update(&ctrlr);
-	verify_devices(&ctrlr);
+	CU_ASSERT(verify_devices(&ctrlr));
 
 	g_active_num_ns = 10;
 	g_active_nsid_min = 10;
