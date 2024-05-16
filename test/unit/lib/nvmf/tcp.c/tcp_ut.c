@@ -682,6 +682,7 @@ static void
 test_nvmf_tcp_in_capsule_data_handle(void)
 {
 	struct spdk_nvmf_tcp_transport ttransport = {};
+	struct spdk_nvmf_transport_ops ops = {};
 	struct spdk_nvmf_tcp_qpair tqpair = {};
 	struct nvme_tcp_pdu *pdu, pdu_in_progress = {};
 	union nvmf_c2h_msg rsp0 = {};
@@ -702,6 +703,7 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 	tqpair.pdu_in_progress = &pdu_in_progress;
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
 	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
+	ttransport.transport.ops = &ops;
 
 	tcp_group.sock_group = &grp;
 	TAILQ_INIT(&tcp_group.qpairs);

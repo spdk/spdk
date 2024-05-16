@@ -836,8 +836,6 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 	req->data_from_pool = false;
 }
 
-typedef int (*set_buffer_callback)(struct spdk_nvmf_request *req, void *buf,
-				   uint32_t length,	uint32_t io_unit_size);
 static int
 nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
 			uint32_t io_unit_size)
@@ -864,13 +862,16 @@ nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint3
 	return length;
 }
 
+static void nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf);
+
 static int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
 			 uint32_t length, uint32_t io_unit_size,
-			 set_buffer_callback cb_func)
+			 bool stripped_buffers)
 {
+	struct spdk_iobuf_entry *entry = NULL;
 	uint32_t num_buffers;
 	uint32_t i = 0;
 	void *buffer;
@@ -883,18 +884,50 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 		return -EINVAL;
 	}
 
+	/* Use iobuf queuing only if transport supports it */
+	if (transport->ops->req_get_buffers_done != NULL) {
+		entry = &req->iobuf.entry;
+	}
+
 	while (i < num_buffers) {
-		buffer = spdk_iobuf_get(group->buf_cache, spdk_min(io_unit_size, length), NULL, NULL);
+		buffer = spdk_iobuf_get(group->buf_cache, spdk_min(io_unit_size, length), entry,
+					nvmf_request_iobuf_get_cb);
 		if (spdk_unlikely(buffer == NULL)) {
+			req->iobuf.remaining_length = length;
 			return -ENOMEM;
 		}
-		length = cb_func(req, buffer, length, io_unit_size);
+		if (stripped_buffers) {
+			length = nvmf_request_set_stripped_buffer(req, buffer, length, io_unit_size);
+		} else {
+			length = nvmf_request_set_buffer(req, buffer, length, io_unit_size);
+		}
 		i++;
 	}
 
 	assert(length == 0);
+	req->data_from_pool = true;
 
 	return 0;
+}
+
+static void
+nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf)
+{
+	struct spdk_nvmf_request *req = SPDK_CONTAINEROF(entry, struct spdk_nvmf_request, iobuf.entry);
+	struct spdk_nvmf_transport *transport = req->qpair->transport;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(group, transport);
+	uint32_t length = req->iobuf.remaining_length;
+	uint32_t io_unit_size = transport->opts.io_unit_size;
+	int rc;
+
+	assert(tgroup != NULL);
+
+	length = nvmf_request_set_buffer(req, buf, length, io_unit_size);
+	rc = nvmf_request_get_buffers(req, tgroup, transport, length, io_unit_size, false);
+	if (rc == 0) {
+		transport->ops->req_get_buffers_done(req);
+	}
 }
 
 int
@@ -908,16 +941,48 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	assert(nvmf_transport_use_iobuf(transport));
 
 	req->iovcnt = 0;
-	rc = nvmf_request_get_buffers(req, group, transport, length,
-				      transport->opts.io_unit_size,
-				      nvmf_request_set_buffer);
-	if (spdk_likely(rc == 0)) {
-		req->data_from_pool = true;
-	} else if (rc == -ENOMEM) {
+	rc = nvmf_request_get_buffers(req, group, transport, length, transport->opts.io_unit_size, false);
+	if (spdk_unlikely(rc == -ENOMEM && transport->ops->req_get_buffers_done == NULL)) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
 	}
 
 	return rc;
+}
+
+static int
+nvmf_request_get_buffers_abort_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
+				  void *cb_ctx)
+{
+	struct spdk_nvmf_request *req, *req_to_abort = cb_ctx;
+
+	req = SPDK_CONTAINEROF(entry, struct spdk_nvmf_request, iobuf.entry);
+	if (req != req_to_abort) {
+		return 0;
+	}
+
+	spdk_iobuf_entry_abort(ch, entry, spdk_min(req->iobuf.remaining_length,
+			       req->qpair->transport->opts.io_unit_size));
+	return 1;
+}
+
+bool
+nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(req->qpair->group,
+			req->qpair->transport);
+	int rc;
+
+	assert(tgroup != NULL);
+
+	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, &tgroup->buf_cache->small,
+				       nvmf_request_get_buffers_abort_cb, req);
+	if (rc == 1) {
+		return true;
+	}
+
+	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, &tgroup->buf_cache->large,
+				       nvmf_request_get_buffers_abort_cb, req);
+	return rc == 1;
 }
 
 void
@@ -948,6 +1013,9 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 	uint32_t i;
 	int rc;
 
+	/* We don't support iobuf queueing with stripped buffers yet */
+	assert(transport->ops->req_get_buffers_done == NULL);
+
 	/* Data blocks must be block aligned */
 	for (i = 0; i < req->iovcnt; i++) {
 		if (req->iov[i].iov_len % block_size) {
@@ -963,8 +1031,7 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 	req->stripped_data = data;
 	req->stripped_data->iovcnt = 0;
 
-	rc = nvmf_request_get_buffers(req, group, transport, length, io_unit_size,
-				      nvmf_request_set_stripped_buffer);
+	rc = nvmf_request_get_buffers(req, group, transport, length, io_unit_size, true);
 	if (rc == -ENOMEM) {
 		nvmf_request_free_stripped_buffers(req, group, transport);
 		return rc;

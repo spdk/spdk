@@ -154,7 +154,8 @@ reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 static void
 test_spdk_nvmf_rdma_request_parse_sgl(void)
 {
-	struct spdk_nvmf_rdma_transport rtransport;
+	struct spdk_nvmf_rdma_transport rtransport = {};
+	struct spdk_nvmf_transport_ops ops = {};
 	struct spdk_nvmf_rdma_device device;
 	struct spdk_nvmf_rdma_request rdma_req = {};
 	struct spdk_nvmf_rdma_recv recv;
@@ -185,6 +186,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
 	rtransport.data_wr_pool = NULL;
+	rtransport.transport.ops = &ops;
 
 	device.attr.device_cap_flags = 0;
 	sgl->keyed.key = 0xEEEE;
@@ -513,6 +515,7 @@ static void
 test_spdk_nvmf_rdma_request_process(void)
 {
 	struct spdk_nvmf_rdma_transport rtransport = {};
+	struct spdk_nvmf_transport_ops ops = {};
 	struct spdk_nvmf_rdma_poll_group group = {};
 	struct spdk_nvmf_rdma_poller poller = {};
 	struct spdk_nvmf_rdma_device device = {};
@@ -533,6 +536,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	rtransport.data_wr_pool = spdk_mempool_create("test_wr_pool", 128,
 				  sizeof(struct spdk_nvmf_rdma_request_data),
 				  0, 0);
+	rtransport.transport.ops = &ops;
 	MOCK_CLEAR(spdk_iobuf_get);
 
 	device.attr.device_cap_flags = 0;
@@ -822,7 +826,8 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 static void
 test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 {
-	struct spdk_nvmf_rdma_transport rtransport;
+	struct spdk_nvmf_rdma_transport rtransport = {};
+	struct spdk_nvmf_transport_ops ops = {};
 	struct spdk_nvmf_rdma_device device;
 	struct spdk_nvmf_rdma_request rdma_req = {};
 	struct spdk_nvmf_rdma_recv recv;
@@ -861,6 +866,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
 	rtransport.data_wr_pool = NULL;
+	rtransport.transport.ops = &ops;
 
 	device.attr.device_cap_flags = 0;
 	device.map = NULL;

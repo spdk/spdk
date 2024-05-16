@@ -2,6 +2,20 @@
 
 ## v24.09: (Upcoming Release)
 
+### nvmf
+
+Enable iobuf based queuing for nvmf requests when there is not enough free buffers available.
+Perspective from the user of the spdk_nvmf_request_get_buffers() API is that whenever all iovecs
+are allocated immediately then nothing changes compared to the previous implementation.
+If iobuf does not have enough buffers then there are two flows now:
+
+- if req_get_buffers_done is not set in the spdk_nvmf_transport_ops then again, nothing changes. All
+  (if there were any) ioves are released and caller must try again later.
+- if callback was set then caller will be notified once all iovecs are allocated.
+
+As requests waiting for the buffer might get aborted, another API to remove such request from
+the iobuf queue is also added.
+
 ### sock
 
 New functions that allows to register interrupt for given socket group:

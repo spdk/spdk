@@ -119,10 +119,16 @@ struct spdk_nvmf_request {
 	struct spdk_poller		*poller;
 	struct spdk_bdev_io		*zcopy_bdev_io; /* Contains the bdev_io when using ZCOPY */
 
+	/* Internal state that keeps track of the iobuf allocation progress */
+	struct {
+		struct spdk_iobuf_entry	entry;
+		uint32_t		remaining_length;
+	} iobuf;
+
 	/* Timeout tracked for connect and abort flows. */
 	uint64_t timeout_tsc;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 776, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 808, "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
@@ -397,6 +403,16 @@ struct spdk_nvmf_transport_ops {
 	 * to the originator.
 	 */
 	int (*req_complete)(struct spdk_nvmf_request *req);
+
+	/**
+	 * Callback for the iobuf based queuing of requests awaiting free buffers.
+	 * Called when all requested buffers are allocated for the given request.
+	 * Used only if initial spdk_iobuf_get() call didn't allocate all buffers at once
+	 * and request was queued internally in the iobuf until free buffers become available.
+	 * This callback is optional and not all transports need to implement it.
+	 * If not set then transport implementation must queue such requests internally.
+	 */
+	void (*req_get_buffers_done)(struct spdk_nvmf_request *req);
 
 	/*
 	 * Deinitialize a connection.
