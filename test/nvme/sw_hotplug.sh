@@ -8,6 +8,11 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
+bdev_bdfs() {
+	jq -r '.[].driver_specific.nvme[].pci_address' \
+		<(rpc_cmd bdev_get_bdevs) | sort -u
+}
+
 # Pci bus hotplug
 # Helper function to remove/attach cotrollers
 debug_remove_attach_helper() {
@@ -37,8 +42,15 @@ remove_attach_helper() {
 
 		if "$use_bdev"; then
 			# Since we removed all the devices, when the sleep settles, we expect to find no bdevs
-			sleep "$hotplug_wait" && (($(rpc_cmd bdev_get_bdevs | jq 'length') == 0))
-		fi || return 1
+			# FIXME: For some unknown reason, SPDK may stay behind, still returning bdevs on the
+			# list which are not on the bus anymore. This happens until nvme_pcie_qpair_abort_trackers()
+			# finally returns (usually reporting an error while aborting outstanding commands).
+			# It's been noticed that it takes significant amount of time especially under ubuntu2004
+			# in the CI.
+			while bdfs=($(bdev_bdfs)) && ((${#bdfs[@]} > 0)) && sleep 0.5; do
+				printf 'Still waiting for %s to be gone\n' "${bdfs[@]}" >&2
+			done
+		fi
 
 		# Avoid setup.sh as it does some extra work which is not relevant for this test.
 		echo 1 > "/sys/bus/pci/rescan"
@@ -55,7 +67,7 @@ remove_attach_helper() {
 
 		if "$use_bdev"; then
 			# See if we get all the bdevs back in one bulk
-			bdfs=($(rpc_cmd bdev_get_bdevs | jq -r '.[].driver_specific.nvme[].pci_address' | sort))
+			bdfs=($(bdev_bdfs))
 			[[ ${bdfs[*]} == "${nvmes[*]}" ]]
 		fi
 	done
@@ -100,11 +112,6 @@ tgt_run_hotplug() {
 	trap 'killprocess ${spdk_tgt_pid}; echo 1 > /sys/bus/pci/rescan; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_tgt_pid
 
-	for dev in "${!nvmes[@]}"; do
-		rpc_cmd bdev_nvme_attach_controller -b "Nvme0$dev" -t PCIe -a "${nvmes[dev]}"
-		waitforbdev "Nvme0${dev}n1" "$hotplug_wait"
-	done
-
 	rpc_cmd bdev_nvme_set_hotplug -e
 
 	debug_remove_attach_helper "$hotplug_events" "$hotplug_wait" true
@@ -127,6 +134,12 @@ nvmes=($(nvme_in_userspace))
 nvme_count=$((${#nvmes[@]} > 2 ? 2 : ${#nvmes[@]}))
 nvmes=("${nvmes[@]::nvme_count}")
 
+# Let's dance! \o\ \o/ /o/ \o/
+"$rootdir/scripts/setup.sh" reset
+# Put on your red shoes ...
+PCI_ALLOWED="${nvmes[*]}" "$rootdir/scripts/setup.sh"
+# Let's sway! \o\ \o/ /o/ \o/
+
 xtrace_disable
 cache_pci_bus
 xtrace_restore
@@ -136,3 +149,6 @@ run_hotplug
 
 # Run SPDK target based hotplug
 tgt_run_hotplug
+
+# Under the moonlight, this serious moonlight! \o/
+"$rootdir/scripts/setup.sh"

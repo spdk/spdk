@@ -702,6 +702,7 @@ function timing_cmd() (
 	# The use-case here is this: ts=$(timing_cmd echo bar). Since stdout is always redirected
 	# to a pipe handling the $(), lookup the stdin's device and determine if it's sane to send
 	# cmd's output to it. If not, just null it.
+	local cmd_es=$?
 
 	[[ -t 0 ]] && exec {cmd_out}>&0 || exec {cmd_out}> /dev/null
 
@@ -711,9 +712,10 @@ function timing_cmd() (
 	# catch only output from the time builtin - output from the actual cmd would be still visible,
 	# but $() will return just the time's data, hence making it possible to just do:
 	#  time_of_super_verbose_cmd=$(timing_cmd super_verbose_cmd)
-	time=$({ time "$@" >&"$cmd_out" 2>&1; } 2>&1)
-
+	time=$({ time "$@" >&"$cmd_out" 2>&1; } 2>&1) || cmd_es=$?
 	echo "$time"
+
+	return "$cmd_es"
 )
 
 function timing_enter() {
