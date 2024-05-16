@@ -620,7 +620,6 @@ vbdev_passthru_register(const char *bdev_name)
 			break;
 		}
 		pt_node->pt_bdev.product_name = "passthru";
-		spdk_uuid_copy(&pt_node->pt_bdev.uuid, &name->uuid);
 
 		/* The base bdev that we're attaching to. */
 		rc = spdk_bdev_open_ext(bdev_name, true, vbdev_passthru_base_bdev_event_cb,
@@ -638,15 +637,20 @@ vbdev_passthru_register(const char *bdev_name)
 		bdev = spdk_bdev_desc_get_bdev(pt_node->base_desc);
 		pt_node->base_bdev = bdev;
 
-		/* Generate UUID based on namespace UUID + base bdev UUID. */
-		rc = spdk_uuid_generate_sha1(&pt_node->pt_bdev.uuid, &ns_uuid,
-					     (const char *)&pt_node->base_bdev->uuid, sizeof(struct spdk_uuid));
-		if (rc) {
-			SPDK_ERRLOG("Unable to generate new UUID for passthru bdev\n");
-			spdk_bdev_close(pt_node->base_desc);
-			free(pt_node->pt_bdev.name);
-			free(pt_node);
-			break;
+		if (!spdk_uuid_is_null(&name->uuid)) {
+			/* Use the configured UUID */
+			spdk_uuid_copy(&pt_node->pt_bdev.uuid, &name->uuid);
+		} else {
+			/* Generate UUID based on namespace UUID + base bdev UUID. */
+			rc = spdk_uuid_generate_sha1(&pt_node->pt_bdev.uuid, &ns_uuid,
+						     (const char *)&pt_node->base_bdev->uuid, sizeof(struct spdk_uuid));
+			if (rc) {
+				SPDK_ERRLOG("Unable to generate new UUID for passthru bdev\n");
+				spdk_bdev_close(pt_node->base_desc);
+				free(pt_node->pt_bdev.name);
+				free(pt_node);
+				break;
+			}
 		}
 
 		/* Copy some properties from the underlying base bdev. */
