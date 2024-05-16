@@ -191,8 +191,13 @@ struct spdk_app_opts {
 	 */
 	void *json_data;
 	size_t json_data_size;
+
+	/**
+	 * If set, disable CPU claiming.
+	 */
+	bool disable_cpumask_locks;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 252, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 253, "Incorrect size");
 
 /**
  * Initialize the default value of opts
