@@ -249,6 +249,11 @@ nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
+static void
+nvmf_tgt_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+}
+
 static int
 nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 {
@@ -267,6 +272,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	pthread_mutex_init(&group->mutex, NULL);
 
 	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
+	spdk_poller_register_interrupt(group->poller, nvmf_tgt_poller_set_interrupt_mode, NULL);
 
 	SPDK_DTRACE_PROBE1_TICKS(nvmf_create_poll_group, spdk_thread_get_id(thread));
 

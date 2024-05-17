@@ -4726,9 +4726,6 @@ vfio_user_poll_group_add_intr(struct nvmf_vfio_user_poll_group *vu_group,
 	vu_group->intr = SPDK_INTERRUPT_REGISTER(vu_group->intr_fd,
 			 vfio_user_poll_group_intr, vu_group);
 	assert(vu_group->intr != NULL);
-
-	spdk_poller_register_interrupt(group->poller, set_intr_mode_noop,
-				       vu_group);
 }
 
 static struct spdk_nvmf_transport_poll_group *
