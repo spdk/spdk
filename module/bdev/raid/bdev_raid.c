@@ -3902,39 +3902,33 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		assert(spdk_uuid_is_null(&base_info->uuid));
 		spdk_uuid_copy(&base_info->uuid, &sb_base_bdev->uuid);
 		SPDK_NOTICELOG("Re-adding bdev %s to raid bdev %s.\n", bdev->name, raid_bdev->bdev.name);
-		rc = raid_bdev_configure_base_bdev(base_info, true, cb_fn, cb_ctx);
-		if (rc != 0) {
-			SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
-				    bdev->name, raid_bdev->bdev.name, spdk_strerror(-rc));
+	} else {
+		if (sb_base_bdev->state != RAID_SB_BASE_BDEV_CONFIGURED) {
+			SPDK_NOTICELOG("Bdev %s is not an active member of raid bdev %s. Ignoring.\n",
+				       bdev->name, raid_bdev->bdev.name);
+			rc = -EINVAL;
+			goto out;
 		}
-		goto out;
-	}
 
-	if (sb_base_bdev->state != RAID_SB_BASE_BDEV_CONFIGURED) {
-		SPDK_NOTICELOG("Bdev %s is not an active member of raid bdev %s. Ignoring.\n",
-			       bdev->name, raid_bdev->bdev.name);
-		rc = -EINVAL;
-		goto out;
-	}
-
-	base_info = NULL;
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
-		if (spdk_uuid_compare(&iter->uuid, spdk_bdev_get_uuid(bdev)) == 0) {
-			base_info = iter;
-			break;
+		base_info = NULL;
+		RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
+			if (spdk_uuid_compare(&iter->uuid, spdk_bdev_get_uuid(bdev)) == 0) {
+				base_info = iter;
+				break;
+			}
 		}
-	}
 
-	if (base_info == NULL) {
-		SPDK_ERRLOG("Bdev %s is not a member of raid bdev %s\n",
-			    bdev->name, raid_bdev->bdev.name);
-		rc = -EINVAL;
-		goto out;
-	}
+		if (base_info == NULL) {
+			SPDK_ERRLOG("Bdev %s is not a member of raid bdev %s\n",
+				    bdev->name, raid_bdev->bdev.name);
+			rc = -EINVAL;
+			goto out;
+		}
 
-	if (base_info->is_configured) {
-		rc = -EEXIST;
-		goto out;
+		if (base_info->is_configured) {
+			rc = -EEXIST;
+			goto out;
+		}
 	}
 
 	rc = raid_bdev_configure_base_bdev(base_info, true, cb_fn, cb_ctx);
