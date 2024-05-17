@@ -258,6 +258,7 @@ DEFINE_STUB(nvmf_subsystem_host_auth_required, bool, (struct spdk_nvmf_subsystem
 DEFINE_STUB(nvmf_qpair_auth_init, int, (struct spdk_nvmf_qpair *q), 0);
 DEFINE_STUB(nvmf_auth_request_exec, int, (struct spdk_nvmf_request *r),
 	    SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+DEFINE_STUB(nvmf_request_get_buffers_abort, bool, (struct spdk_nvmf_request *r), false);
 
 struct spdk_io_channel *
 spdk_accel_get_io_channel(void)
@@ -688,7 +689,6 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 	union nvmf_c2h_msg rsp0 = {};
 	union nvmf_c2h_msg rsp = {};
 
-	struct spdk_nvmf_request *req_temp = NULL;
 	struct spdk_nvmf_tcp_req tcp_req2 = {};
 	struct spdk_nvmf_tcp_req tcp_req1 = {};
 
@@ -704,12 +704,12 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
 	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
 	ttransport.transport.ops = &ops;
+	ops.req_get_buffers_done = nvmf_tcp_req_get_buffers_done;
 
 	tcp_group.sock_group = &grp;
 	TAILQ_INIT(&tcp_group.qpairs);
 	group = &tcp_group.group;
 	group->transport = &ttransport.transport;
-	STAILQ_INIT(&group->pending_buf_queue);
 	tqpair.group = &tcp_group;
 
 	TAILQ_INIT(&tqpair.tcp_req_free_queue);
@@ -732,6 +732,7 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 	tcp_req1.req.cmd = (union nvmf_h2c_msg *)&tcp_req1.cmd;
 	tcp_req1.req.rsp = &rsp0;
 	tcp_req1.state = TCP_REQUEST_STATE_NEW;
+	tcp_req1.req.data_from_pool = false;
 
 	TAILQ_INSERT_TAIL(&tqpair.tcp_req_working_queue, &tcp_req1, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_NEW]++;
@@ -753,23 +754,22 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 
 	nvmf_capsule_data->fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 
-	/* insert tcp_req1 to pending_buf_queue, And this req takes precedence over the next req. */
+	/* pretend that tcp_req1 is waiting in the iobuf waiting queue */
 	nvmf_tcp_req_process(&ttransport, &tcp_req1);
-	CU_ASSERT(STAILQ_FIRST(&group->pending_buf_queue) == &tcp_req1.req);
+	CU_ASSERT(tcp_req1.req.data_from_pool == false);
 
 	sgl->unkeyed.length = UT_IO_UNIT_SIZE - 1;
 
-	/* process tqpair capsule req. but we still remain req in pending_buff. */
+	/* process tqpair capsule req. */
 	nvmf_tcp_capsule_cmd_hdr_handle(&ttransport, &tqpair, tqpair.pdu_in_progress);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
-	CU_ASSERT(STAILQ_FIRST(&group->pending_buf_queue) == &tcp_req1.req);
-	STAILQ_FOREACH(req_temp, &group->pending_buf_queue, buf_link) {
-		if (req_temp == &tcp_req2.req) {
-			break;
-		}
-	}
-	CU_ASSERT(req_temp == NULL);
 	CU_ASSERT(tqpair.pdu_in_progress->req == (void *)&tcp_req2);
+
+	/* pretend that buffer for tcp_req1 becomes available */
+	spdk_nvmf_request_get_buffers(&tcp_req1.req, group, &ttransport.transport, UT_IO_UNIT_SIZE - 1);
+	/* trigger callback as nvmf_request_iobuf_get_cb would */
+	ttransport.transport.ops->req_get_buffers_done(&tcp_req1.req);
+	CU_ASSERT(tcp_req1.state == TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 }
 
 static void
@@ -1005,7 +1005,6 @@ test_nvmf_tcp_check_xfer_type(void)
 	TAILQ_INIT(&tcp_group.qpairs);
 	group = &tcp_group.group;
 	group->transport = &ttransport.transport;
-	STAILQ_INIT(&group->pending_buf_queue);
 	tqpair.group = &tcp_group;
 
 	TAILQ_INIT(&tqpair.tcp_req_free_queue);
@@ -1044,7 +1043,6 @@ test_nvmf_tcp_check_xfer_type(void)
 
 	/* Process a command and ensure that it fails and the request is set up to return an error */
 	nvmf_tcp_req_process(&ttransport, &tcp_req);
-	CU_ASSERT(STAILQ_EMPTY(&group->pending_buf_queue));
 	CU_ASSERT(tcp_req.state == TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.cid == cid);
@@ -1080,7 +1078,6 @@ test_nvmf_tcp_invalid_sgl(void)
 	TAILQ_INIT(&tcp_group.qpairs);
 	group = &tcp_group.group;
 	group->transport = &ttransport.transport;
-	STAILQ_INIT(&group->pending_buf_queue);
 	tqpair.group = &tcp_group;
 
 	TAILQ_INIT(&tqpair.tcp_req_free_queue);
@@ -1122,7 +1119,6 @@ test_nvmf_tcp_invalid_sgl(void)
 
 	/* Process a command and ensure that it fails and the request is set up to return an error */
 	nvmf_tcp_req_process(&ttransport, &tcp_req);
-	CU_ASSERT(!STAILQ_EMPTY(&group->pending_buf_queue));
 	CU_ASSERT(tcp_req.state == TCP_REQUEST_STATE_NEED_BUFFER);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);

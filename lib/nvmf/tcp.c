@@ -22,6 +22,7 @@
 #include "spdk_internal/sock.h"
 
 #include "nvmf_internal.h"
+#include "transport.h"
 
 #include "spdk_internal/trace_defs.h"
 
@@ -64,41 +65,44 @@ enum spdk_nvmf_tcp_req_state {
 	/* The request is queued until a data buffer is available. */
 	TCP_REQUEST_STATE_NEED_BUFFER = 2,
 
+	/* The request has the data buffer available */
+	TCP_REQUEST_STATE_HAVE_BUFFER = 3,
+
 	/* The request is waiting for zcopy_start to finish */
-	TCP_REQUEST_STATE_AWAITING_ZCOPY_START = 3,
+	TCP_REQUEST_STATE_AWAITING_ZCOPY_START = 4,
 
 	/* The request has received a zero-copy buffer */
-	TCP_REQUEST_STATE_ZCOPY_START_COMPLETED = 4,
+	TCP_REQUEST_STATE_ZCOPY_START_COMPLETED = 5,
 
 	/* The request is currently transferring data from the host to the controller. */
-	TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER = 5,
+	TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER = 6,
 
 	/* The request is waiting for the R2T send acknowledgement. */
-	TCP_REQUEST_STATE_AWAITING_R2T_ACK = 6,
+	TCP_REQUEST_STATE_AWAITING_R2T_ACK = 7,
 
 	/* The request is ready to execute at the block device */
-	TCP_REQUEST_STATE_READY_TO_EXECUTE = 7,
+	TCP_REQUEST_STATE_READY_TO_EXECUTE = 8,
 
 	/* The request is currently executing at the block device */
-	TCP_REQUEST_STATE_EXECUTING = 8,
+	TCP_REQUEST_STATE_EXECUTING = 9,
 
 	/* The request is waiting for zcopy buffers to be committed */
-	TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT = 9,
+	TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT = 10,
 
 	/* The request finished executing at the block device */
-	TCP_REQUEST_STATE_EXECUTED = 10,
+	TCP_REQUEST_STATE_EXECUTED = 11,
 
 	/* The request is ready to send a completion */
-	TCP_REQUEST_STATE_READY_TO_COMPLETE = 11,
+	TCP_REQUEST_STATE_READY_TO_COMPLETE = 12,
 
 	/* The request is currently transferring final pdus from the controller to the host. */
-	TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST = 12,
+	TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST = 13,
 
 	/* The request is waiting for zcopy buffers to be released (without committing) */
-	TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE = 13,
+	TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE = 14,
 
 	/* The request completed and can be marked free. */
-	TCP_REQUEST_STATE_COMPLETED = 14,
+	TCP_REQUEST_STATE_COMPLETED = 15,
 
 	/* Terminator */
 	TCP_REQUEST_NUM_STATES,
@@ -123,6 +127,10 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					SPDK_TRACE_ARG_TYPE_INT, "qd");
 	spdk_trace_register_description("TCP_REQ_NEED_BUFFER",
 					TRACE_TCP_REQUEST_STATE_NEED_BUFFER,
+					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
+					SPDK_TRACE_ARG_TYPE_INT, "");
+	spdk_trace_register_description("TCP_REQ_HAVE_BUFFER",
+					TRACE_TCP_REQUEST_STATE_HAVE_BUFFER,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_WAIT_ZCPY_START",
@@ -243,6 +251,7 @@ struct spdk_nvmf_tcp_req  {
 
 	STAILQ_ENTRY(spdk_nvmf_tcp_req)		link;
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		state_link;
+	STAILQ_ENTRY(spdk_nvmf_tcp_req)		control_msg_link;
 };
 
 struct spdk_nvmf_tcp_qpair {
@@ -317,6 +326,7 @@ struct spdk_nvmf_tcp_control_msg {
 struct spdk_nvmf_tcp_control_msg_list {
 	void *msg_buf;
 	STAILQ_HEAD(, spdk_nvmf_tcp_control_msg) free_msgs;
+	STAILQ_HEAD(, spdk_nvmf_tcp_req) waiting_for_msg_reqs;
 };
 
 struct spdk_nvmf_tcp_poll_group {
@@ -460,6 +470,21 @@ nvmf_tcp_req_put(struct spdk_nvmf_tcp_qpair *tqpair, struct spdk_nvmf_tcp_req *t
 }
 
 static void
+nvmf_tcp_req_get_buffers_done(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_tcp_req *tcp_req;
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_tcp_transport *ttransport;
+
+	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
+	transport = req->qpair->transport;
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+
+	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_HAVE_BUFFER);
+	nvmf_tcp_req_process(ttransport, tcp_req);
+}
+
+static void
 nvmf_tcp_request_free(void *cb_arg)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
@@ -498,6 +523,34 @@ nvmf_tcp_drain_state_queue(struct spdk_nvmf_tcp_qpair *tqpair,
 	}
 }
 
+static inline void
+nvmf_tcp_request_get_buffers_abort(struct spdk_nvmf_tcp_req *tcp_req)
+{
+	/* Request can wait either for the iobuf or control_msg */
+	struct spdk_nvmf_poll_group *group = tcp_req->req.qpair->group;
+	struct spdk_nvmf_transport *transport = tcp_req->req.qpair->transport;
+	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(group, transport);
+	struct spdk_nvmf_tcp_poll_group *tcp_group = SPDK_CONTAINEROF(tgroup,
+			struct spdk_nvmf_tcp_poll_group, group);
+	struct spdk_nvmf_tcp_req *tmp_req, *abort_req;
+
+	assert(tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER);
+
+	STAILQ_FOREACH_SAFE(abort_req, &tcp_group->control_msg_list->waiting_for_msg_reqs, control_msg_link,
+			    tmp_req) {
+		if (abort_req == tcp_req) {
+			STAILQ_REMOVE(&tcp_group->control_msg_list->waiting_for_msg_reqs, abort_req, spdk_nvmf_tcp_req,
+				      control_msg_link);
+			return;
+		}
+	}
+
+	if (!nvmf_request_get_buffers_abort(&tcp_req->req)) {
+		SPDK_ERRLOG("Failed to abort tcp_req=%p\n", tcp_req);
+		assert(0 && "Should never happen");
+	}
+}
+
 static void
 nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 {
@@ -506,11 +559,10 @@ nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
-	/* Wipe the requests waiting for buffer from the global list */
+	/* Wipe the requests waiting for buffer from the waiting list */
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->tcp_req_working_queue, state_link, req_tmp) {
 		if (tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER) {
-			STAILQ_REMOVE(&tqpair->group->group.pending_buf_queue, &tcp_req->req,
-				      spdk_nvmf_request, buf_link);
+			nvmf_tcp_request_get_buffers_abort(tcp_req);
 		}
 	}
 
@@ -1495,6 +1547,7 @@ nvmf_tcp_control_msg_list_create(uint16_t num_messages)
 	}
 
 	STAILQ_INIT(&list->free_msgs);
+	STAILQ_INIT(&list->waiting_for_msg_reqs);
 
 	for (i = 0; i < num_messages; i++) {
 		msg = (struct spdk_nvmf_tcp_control_msg *)((char *)list->msg_buf + i *
@@ -2517,7 +2570,8 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static inline void *
-nvmf_tcp_control_msg_get(struct spdk_nvmf_tcp_control_msg_list *list)
+nvmf_tcp_control_msg_get(struct spdk_nvmf_tcp_control_msg_list *list,
+			 struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_control_msg *msg;
 
@@ -2526,6 +2580,7 @@ nvmf_tcp_control_msg_get(struct spdk_nvmf_tcp_control_msg_list *list)
 	msg = STAILQ_FIRST(&list->free_msgs);
 	if (!msg) {
 		SPDK_DEBUGLOG(nvmf_tcp, "Out of control messages\n");
+		STAILQ_INSERT_TAIL(&list->waiting_for_msg_reqs, tcp_req, control_msg_link);
 		return NULL;
 	}
 	STAILQ_REMOVE_HEAD(&list->free_msgs, link);
@@ -2536,12 +2591,21 @@ static inline void
 nvmf_tcp_control_msg_put(struct spdk_nvmf_tcp_control_msg_list *list, void *_msg)
 {
 	struct spdk_nvmf_tcp_control_msg *msg = _msg;
+	struct spdk_nvmf_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_transport *ttransport;
 
 	assert(list);
 	STAILQ_INSERT_HEAD(&list->free_msgs, msg, link);
+	if (!STAILQ_EMPTY(&list->waiting_for_msg_reqs)) {
+		tcp_req = STAILQ_FIRST(&list->waiting_for_msg_reqs);
+		STAILQ_REMOVE_HEAD(&list->waiting_for_msg_reqs, control_msg_link);
+		ttransport = SPDK_CONTAINEROF(tcp_req->req.qpair->transport,
+					      struct spdk_nvmf_tcp_transport, transport);
+		nvmf_tcp_req_process(ttransport, tcp_req);
+	}
 }
 
-static int
+static void
 nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		       struct spdk_nvmf_transport *transport,
 		       struct spdk_nvmf_transport_poll_group *group)
@@ -2583,20 +2647,22 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		if (nvmf_ctrlr_use_zcopy(req)) {
 			SPDK_DEBUGLOG(nvmf_tcp, "Using zero-copy to execute request %p\n", tcp_req);
 			req->data_from_pool = false;
-			return 0;
+			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_HAVE_BUFFER);
+			return;
 		}
 
 		if (spdk_nvmf_request_get_buffers(req, group, transport, length)) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(nvmf_tcp, "No available large data buffers. Queueing request %p\n",
 				      tcp_req);
-			return 0;
+			return;
 		}
 
+		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_HAVE_BUFFER);
 		SPDK_DEBUGLOG(nvmf_tcp, "Request %p took %d buffer/s from central pool, and data=%p\n",
 			      tcp_req, req->iovcnt, req->iov[0].iov_base);
 
-		return 0;
+		return;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
@@ -2641,12 +2707,12 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 				SPDK_DEBUGLOG(nvmf_tcp, "Getting a buffer from control msg list\n");
 				tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 				assert(tgroup->control_msg_list);
-				req->iov[0].iov_base = nvmf_tcp_control_msg_get(tgroup->control_msg_list);
+				req->iov[0].iov_base = nvmf_tcp_control_msg_get(tgroup->control_msg_list, tcp_req);
 				if (!req->iov[0].iov_base) {
 					/* No available buffers. Queue this request up. */
 					SPDK_DEBUGLOG(nvmf_tcp, "No available ICD buffers. Queueing request %p\n", tcp_req);
 					nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_BUF);
-					return 0;
+					return;
 				}
 			} else {
 				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
@@ -2668,8 +2734,9 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 
 		req->iov[0].iov_len = length;
 		req->iovcnt = 1;
+		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_HAVE_BUFFER);
 
-		return 0;
+		return;
 	}
 	/* If we want to handle the problem here, then we can't skip the following data segment.
 	 * Because this function runs before reading data part, now handle all errors as fatal errors. */
@@ -2679,7 +2746,6 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 	error_offset = offsetof(struct spdk_nvme_tcp_cmd, ccsqe.dptr.sgl1.generic);
 fatal_err:
 	nvmf_tcp_send_c2h_term_req(tcp_req->pdu->qpair, tcp_req->pdu, fes, error_offset);
-	return -1;
 }
 
 static inline enum spdk_nvme_media_error_status_code
@@ -2938,7 +3004,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 	/* If the qpair is not active, we need to abort the outstanding requests. */
 	if (!spdk_nvmf_qpair_is_active(&tqpair->qpair)) {
 		if (tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER) {
-			STAILQ_REMOVE(&group->pending_buf_queue, &tcp_req->req, spdk_nvmf_request, buf_link);
+			nvmf_tcp_request_get_buffers_abort(tcp_req);
 		}
 		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_COMPLETED);
 	}
@@ -3001,7 +3067,6 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 
 			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEED_BUFFER);
-			STAILQ_INSERT_TAIL(&group->pending_buf_queue, &tcp_req->req, buf_link);
 			break;
 		case TCP_REQUEST_STATE_NEED_BUFFER:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEED_BUFFER, tqpair->qpair.trace_id, 0,
@@ -3009,19 +3074,12 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (!tcp_req->has_in_capsule_data && (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue))) {
-				SPDK_DEBUGLOG(nvmf_tcp,
-					      "Not the first element to wait for the buf for tcp_req(%p) on tqpair=%p\n",
-					      tcp_req, tqpair);
-				/* This request needs to wait in line to obtain a buffer */
-				break;
-			}
-
 			/* Try to get a data buffer */
-			if (nvmf_tcp_req_parse_sgl(tcp_req, transport, group) < 0) {
-				break;
-			}
-
+			nvmf_tcp_req_parse_sgl(tcp_req, transport, group);
+			break;
+		case TCP_REQUEST_STATE_HAVE_BUFFER:
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_HAVE_BUFFER, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			/* Get a zcopy buffer if the request can be serviced through zcopy */
 			if (spdk_nvmf_request_using_zcopy(&tcp_req->req)) {
 				if (spdk_unlikely(tcp_req->req.dif_enabled)) {
@@ -3029,20 +3087,12 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 					tcp_req->req.length = tcp_req->req.dif.elba_length;
 				}
 
-				STAILQ_REMOVE(&group->pending_buf_queue, &tcp_req->req, spdk_nvmf_request, buf_link);
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_ZCOPY_START);
 				spdk_nvmf_request_zcopy_start(&tcp_req->req);
 				break;
 			}
 
-			if (tcp_req->req.iovcnt < 1) {
-				SPDK_DEBUGLOG(nvmf_tcp, "No buffer allocated for tcp_req(%p) on tqpair(%p\n)",
-					      tcp_req, tqpair);
-				/* No buffers available. */
-				break;
-			}
-
-			STAILQ_REMOVE(&group->pending_buf_queue, &tcp_req->req, spdk_nvmf_request, buf_link);
+			assert(tcp_req->req.iovcnt > 0);
 
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
@@ -3421,23 +3471,12 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int num_events, rc = 0, rc2;
-	struct spdk_nvmf_request *req, *req_tmp;
-	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
-	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(group->transport,
-			struct spdk_nvmf_tcp_transport, transport);
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
 	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs) && TAILQ_EMPTY(&tgroup->await_req))) {
 		return 0;
-	}
-
-	STAILQ_FOREACH_SAFE(req, &group->pending_buf_queue, buf_link, req_tmp) {
-		tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
-		if (nvmf_tcp_req_process(ttransport, tcp_req) == false) {
-			break;
-		}
 	}
 
 	num_events = spdk_sock_group_poll(tgroup->sock_group);
@@ -3546,9 +3585,7 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 		break;
 
 	case TCP_REQUEST_STATE_NEED_BUFFER:
-		STAILQ_REMOVE(&tqpair->group->group.pending_buf_queue,
-			      &tcp_req_to_abort->req, spdk_nvmf_request, buf_link);
-
+		nvmf_tcp_request_get_buffers_abort(tcp_req_to_abort);
 		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
 		nvmf_tcp_req_process(ttransport, tcp_req_to_abort);
 		break;
@@ -3904,6 +3941,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 
 	.req_free = nvmf_tcp_req_free,
 	.req_complete = nvmf_tcp_req_complete,
+	.req_get_buffers_done = nvmf_tcp_req_get_buffers_done,
 
 	.qpair_fini = nvmf_tcp_close_qpair,
 	.qpair_get_local_trid = nvmf_tcp_qpair_get_local_trid,
