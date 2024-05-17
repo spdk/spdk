@@ -199,6 +199,7 @@ struct spdk_vhost_dev {
 	char *name;
 	char *path;
 
+	bool use_default_cpumask;
 	struct spdk_thread *thread;
 
 	uint64_t virtio_features;

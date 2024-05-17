@@ -127,6 +127,10 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 			    mask_str, spdk_cpuset_fmt(&g_vhost_core_mask));
 		return -EINVAL;
 	}
+	vdev->use_default_cpumask = false;
+	if (!mask_str) {
+		vdev->use_default_cpumask = true;
+	}
 
 	spdk_vhost_lock();
 	if (spdk_vhost_dev_find(name)) {
