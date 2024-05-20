@@ -3751,6 +3751,11 @@ bdev_channel_poll_qos(void *arg)
 	int i;
 	int64_t remaining_last_timeslice;
 
+	if (spdk_unlikely(qos->thread == NULL)) {
+		/* Old QoS was unbound to remove and new QoS is not enabled yet. */
+		return SPDK_POLLER_IDLE;
+	}
+
 	if (now < (qos->last_timeslice + qos->timeslice_size)) {
 		/* We received our callback earlier than expected - return
 		 *  immediately and wait to do accounting until at least one
