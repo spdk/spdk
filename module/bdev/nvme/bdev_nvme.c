@@ -5885,7 +5885,7 @@ bdev_nvme_check_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 		if (!spdk_nvme_transport_id_compare(&tmp_trid->trid, trid)) {
 			SPDK_WARNLOG("This path (traddr: %s subnqn: %s) is already registered\n", trid->traddr,
 				     trid->subnqn);
-			return -EEXIST;
+			return -EALREADY;
 		}
 	}
 
