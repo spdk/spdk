@@ -280,12 +280,11 @@ The SPDK NVMe-oF target and initiator support establishing a secure TCP connecti
 Layer Security (TLS) protocol in compliance with NVMe TCP transport specification. Only version 1.3
 of the TLS protocol is supported. This feature is considered experimental.
 
-Currently, it is only possible to establish a fabric secure channel using TLS and NVMe-oF in-band
-authentication is not supported. The channel is protected by a symmetric pre-shared key (PSK) using
-either `TLS_AES_256_GCM_SHA384` (recommended) or `TLS_AES_128_GCM_SHA256` cipher suite. The cipher
-suite is selected based on the hash function associated with a key. During configuration, the keys
-are expected to be in the PSK interchange format (see NVMe TCP transport specification 1.0c,
-section 3.6.1.5).
+Currently, it is only possible to establish a fabric secure channel using TLS. The channel is
+protected by a symmetric pre-shared key (PSK) using either `TLS_AES_256_GCM_SHA384` (recommended) or
+`TLS_AES_128_GCM_SHA256` cipher suite. The cipher suite is selected based on the hash function
+associated with a key. During configuration, the keys are expected to be in the PSK interchange
+format (see NVMe TCP transport specification 1.0c, section 3.6.1.5).
 
 The target supports assigning different keys for each host connecting to a given subsystem. It is
 also possible for a single host to use different keys for different subsystems. The keys are
@@ -343,3 +342,45 @@ scripts/rpc.py -s /var/tmp/bdevperf.sock bdev_nvme_attach_controller -b TLSTEST 
 First of the two commands will launch bdevperf, the second one will attempt to construct NVMe bdev
 and establish TLS connection. Of course, the same PSK must be used on both the target and the
 initiator side.
+
+## NVMe-oF in-band authentication
+
+The NVMe-oF driver and NVMe-oF target both support in-band authentication using the DH-HMAC-CHAP
+protocol.  It allows the target to authenticate the host and the host to authenticate the target
+(the latter part is optional).
+
+The authentication will be performed if a subsystem is configured to allow a host with a set of
+DH-HMAC-CHAP keys.  Each host is allowed to use different keys to connect to different subsystems
+and each subsystem might use different keys for different hosts.  For instance, the following
+configures three hosts, two of which can request bidirectional authentication:
+
+```{.sh}
+$ scripts/rpc.py nvmf_subsystem_add_host nqn.2024-05.io.spdk:cnode0 nqn.2024-05.io.spdk:host0 \
+    --dhchap-key key0 --dhchap-ctrlr-key ctrlr-key0
+$ scripts/rpc.py nvmf_subsystem_add_host nqn.2024-05.io.spdk:cnode0 nqn.2024-05.io.spdk:host1 \
+    --dhchap-key key1 --dhchap-ctrlr-key ctrlr-key1
+$ scripts/rpc.py nvmf_subsystem_add_host nqn.2024-05.io.spdk:cnode0 nqn.2024-05.io.spdk:host2 \
+    --dhchap-key key2
+```
+
+On the host side, the keys are specified when attaching controllers, e.g.:
+
+```{.sh}
+$ scripts/rpc.py bdev_nvme_attach_controller -b nvme0 -t tcp -f ipv4 -a 127.0.0.1 -s 4420 \
+    -n nqn.2024-05.io.spdk:cnode0 -q nqn.2024-05.io.spdk:host0 --dhchap-key key0 \
+    --dhchap-ctrlr-key ctrlr-key0
+```
+
+All hash functions/Diffie-Hellman groups defined in the NVMe Base Specification 2.0d are supported
+and the algorithms used for a given DH-HMAC-CHAP transaction are negotiated at the beginning.  The
+SPDK NVMe-oF target selects the strongest available hash/group depending on its configuration and
+the capabilities of a peer.  Users can limit the allowed hash functions and/or Diffie-Hellman groups
+via RPCs.  For example, the following limits the target (`nvmf_set_config`) and the driver
+(`bdev_nvme_set_options`) to use sha384, sha512 and ffdhe6114, ffdhe8192:
+
+```{.sh}
+$ scripts/rpc.py nvmf_set_config --dhchap-digests sha384,sha512 \
+    --dhchap-dhgroups ffdhe6114,ffdhe8192
+$ scripts/rpc.py bdev_nvme_set_options --dhchap-digests sha384,sha512 \
+    --dhchap-dhgroups ffdhe6114,ffdhe8192
+```
