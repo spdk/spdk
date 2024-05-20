@@ -44,6 +44,15 @@ Added `iscsi_enable_histogram` RPC method to enable or disable histogram for spe
 
 Added `iscsi_get_histogram` RPC method to get histogram for specified iSCSI target.
 
+### keyring
+
+Added keyring library.  Its purpose is to provide secure access to cryptographic keys from other
+libraries.  Prior to being used, keys need to be attached to the keyring using one of the modules,
+which are responsible for retrieving keying material in a secure manner.  Currently, there are two
+keyring modules implemented: `keyring_file` (keys are stored in files on a filesystem) and
+`keyring_linux` (based on Linux kernel keyring).  The module interface is pluggable, so users can
+implement their own keyring modules.
+
 ### lvol
 
 Added `bdev_lvol_start_shallow_copy` RPC to start a shallow copy of an lvol over a given bdev and
