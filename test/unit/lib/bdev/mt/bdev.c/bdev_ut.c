@@ -2631,6 +2631,103 @@ event_notify_and_close(void)
 	teardown_test();
 }
 
+/* There was a bug that bdev_channel_poll_qos() called spdk_for_each_channel()
+ * after spdk_io_device_unregister() is called for a bdev.
+ *
+ * This occurred in the following sequence.
+ * - There was a bdev and a channel for it.
+ * - QoS was enabled and started.
+ * - spdk_bdev_unregister() was called. However, there was a open descriptor.
+ *   Hence, remove notification was sent and unregistration was pending.
+ * - Receiving a event notification, spdk_put_io_channel() and spdk_bdev_close() were
+ *   called. In spdk_bdev_close(), the existing QoS was unbound and a message was sent
+ *   to it, and then the pending spdk_io_device_unregister() was finally executed.
+ * - If bdev_channel_poll_qos() was executed before the message was processed,
+ *   bdev_channel_poll_qos() called spdk_bdev_for_each_channel() and hit assert().
+ *
+ * The fix was in this case bdev_channel_poll_qos() returned immediately because QoS
+ * was not enabled. bdev_qos_destroy() created a new disabled QoS and swapped it with
+ * the existing QoS.
+ *
+ * This test case was added to avoid degradation in future.
+ */
+static void
+unregister_and_qos_poller(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_bdev_qos *old_qos;
+	uint64_t limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {};
+	bool remove_notify = false, done_unregister = false;
+	int status = -1, rc;
+
+	setup_test();
+	set_thread(0);
+
+	MOCK_SET(spdk_get_ticks, 10);
+
+	/* setup_test() automatically opens the bdev, but this test needs to do
+	 * that in a different way.
+	 */
+	spdk_bdev_close(g_desc);
+	poll_threads();
+
+	/* We want to get remove event notification to check if unregistration
+	 * is deferred.
+	 */
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, &remove_notify, &desc);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(remove_notify == false);
+
+	io_ch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(io_ch != NULL);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+
+	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 10000;
+	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] = 0;
+	spdk_bdev_set_qos_rate_limits(&g_bdev.bdev, limits, qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	old_qos = g_bdev.bdev.internal.qos;
+	CU_ASSERT(old_qos != NULL);
+
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done_unregister);
+	CU_ASSERT(done_unregister == false);
+	CU_ASSERT(remove_notify == false);
+
+	poll_threads();
+	CU_ASSERT(done_unregister == false);
+	CU_ASSERT(remove_notify == true);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+
+	CU_ASSERT(g_bdev.bdev.internal.qos != NULL);
+	CU_ASSERT(g_bdev.bdev.internal.qos->thread == NULL);
+	CU_ASSERT(old_qos != g_bdev.bdev.internal.qos);
+
+	/* bdev_channel_poll_qos() has a chance to be executed in this small window. */
+	spdk_delay_us(SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
+
+	rc = bdev_channel_poll_qos(&g_bdev.bdev);
+	CU_ASSERT(rc == SPDK_POLLER_IDLE);
+
+	poll_threads();
+
+	CU_ASSERT(done_unregister == true);
+
+	/* Restore the original g_bdev so that we can use teardown_test(). */
+	set_thread(0);
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2666,6 +2763,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_wt, spdk_bdev_register_wt);
 	CU_ADD_TEST(suite_wt, spdk_bdev_examine_wt);
 	CU_ADD_TEST(suite, event_notify_and_close);
+	CU_ADD_TEST(suite, unregister_and_qos_poller);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
