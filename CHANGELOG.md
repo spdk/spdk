@@ -10,6 +10,20 @@
 
 Added `spdk_bdev_get_nvme_ctratt()` API to get controller attributes of bdev.
 
+### bdev_raid
+
+Added support for interleaved metadata.
+
+Added RAID1 I/O error handling.
+
+Examining a bdev with RAID superblock now searches for other base bdevs that may be present.
+
+Re-adding a removed base bdev with superblock will now begin rebuild on applicable RAID levels.
+
+Base bdevs can now be added back if were removed while in configuring state.
+
+RAID in configuring state will not be removed if the last base bdev is removed.
+
 ### bdev_uring
 
 Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
