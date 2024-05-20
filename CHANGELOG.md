@@ -69,6 +69,10 @@ with the use of the new APIs `spdk_lvol_set_parent()` and `spdk_lvol_set_externa
 Added `spdk_nvme_ctrlr_get_max_sges()` API to retrieve maximum number of SGEs per request
 for the given NVMe controller.
 
+The NVMe driver now supports in-band authentication using the DH-HMAC-CHAP protocol.  To enable it,
+users need to specify keys in the `bdev_nvme_attach_controller` RPC.  Additionally, it's possible to
+limit the allowed digests and Diffie-Hellman groups via `bdev_nvme_set_options`.
+
 ### nvmf
 
 Added support for namespace masking using new C APIs `spdk_nvmf_ns_add_host()` and
@@ -82,6 +86,11 @@ a particular ANA group ID.
 Added support for enabling mDNS-based discovery of nvmf target for
 TCP transport with the addition of `nvmf_publish_mdns_prr` and
 `nvmf_stop_mdns_prr` RPCs.
+
+The NVMe-oF target now supports in-band authentication using the DH-HMAC-CHAP protocol.  The target
+will request hosts to authenticate if they're configured to use DH-HMAC-CHAP keys.  The keys can be
+set in the `nvmf_subsystem_add_host` RPC.  Additionally, it's possible to limit the allowed digests
+and Diffie-Hellman groups via `nvmf_set_config`.
 
 ### spdk_trace
 
