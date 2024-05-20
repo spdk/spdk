@@ -384,7 +384,7 @@ rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 	struct spdk_jsonrpc_request *request = ctx->request;
 
 	if (rc < 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		free_rpc_bdev_nvme_attach_controller_ctx(ctx);
 		return;
 	}
