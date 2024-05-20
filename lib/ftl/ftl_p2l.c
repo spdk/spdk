@@ -233,11 +233,13 @@ ftl_p2l_validate_ckpt(struct ftl_band *band)
 {
 	struct ftl_p2l_ckpt *ckpt = band->p2l_map.p2l_ckpt;
 	uint64_t num_blks_tail_md = ftl_tail_md_num_blocks(band->dev);
-	uint64_t num_pages_tail_md = num_blks_tail_md / band->dev->xfer_size * ckpt->pages_per_xfer;
+	uint64_t num_pages_tail_md;
 
 	if (!ckpt) {
 		return;
 	}
+
+	num_pages_tail_md = num_blks_tail_md / band->dev->xfer_size * ckpt->pages_per_xfer;
 
 	assert(num_blks_tail_md % band->dev->xfer_size == 0);
 
