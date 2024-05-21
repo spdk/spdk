@@ -566,7 +566,7 @@ test_nvme_pcie_poll_group_get_stats(void)
 
 	/* Get state success */
 	rc = nvme_pcie_poll_group_get_stats(tgroup, &tgroup_stat);
-	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(tgroup_stat != NULL);
 	CU_ASSERT(tgroup_stat->trtype == SPDK_NVME_TRANSPORT_PCIE);
 	CU_ASSERT(memcmp(&tgroup_stat->pcie, &pgroup->stats, sizeof(struct spdk_nvme_pcie_stat)) == 0);
