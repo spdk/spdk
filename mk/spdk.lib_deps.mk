@@ -98,9 +98,6 @@ DEPDIRS-blob_bdev := log thread bdev
 
 # module/blobfs
 DEPDIRS-blobfs_bdev := $(BDEV_DEPS_THREAD) blob_bdev blobfs
-ifeq ($(CONFIG_FUSE),y)
-DEPDIRS-blobfs_bdev += event
-endif
 
 # module/accel
 DEPDIRS-accel_ioat := log ioat thread $(JSON_LIBS) accel
