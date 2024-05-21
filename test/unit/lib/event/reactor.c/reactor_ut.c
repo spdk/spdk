@@ -213,6 +213,8 @@ test_reschedule_thread(void)
 	CU_ASSERT(lw_thread->resched == false);
 	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
 
+	spdk_set_thread(NULL);
+
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
 	MOCK_SET(spdk_env_get_current_core, 0);
@@ -393,6 +395,7 @@ test_reactor_stats(void)
 	idle2 = spdk_poller_register(poller_run_idle, (void *)300, 0);
 	CU_ASSERT(idle2 != NULL);
 
+	spdk_set_thread(NULL);
 	_reactor_run(reactor);
 
 	spdk_set_thread(thread1);
@@ -464,6 +467,7 @@ test_reactor_stats(void)
 	busy1 = spdk_poller_register(poller_run_busy, (void *)100, 0);
 	CU_ASSERT(busy1 != NULL);
 
+	spdk_set_thread(NULL);
 	_reactor_run(reactor);
 
 	spdk_set_thread(thread1);
@@ -636,6 +640,7 @@ test_scheduler(void)
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
 	MOCK_SET(spdk_env_get_current_core, 0);
+	spdk_set_thread(NULL);
 	event_queue_run_batch(reactor);
 
 	reactor = spdk_reactor_get(0);
@@ -827,6 +832,8 @@ test_bind_thread(void)
 		CU_ASSERT(stats.idle_tsc == thread_idle_tsc[i]);
 	}
 	CU_ASSERT(spdk_get_ticks() == current_time);
+
+	spdk_set_thread(NULL);
 
 	/* Thread on core 2 should be scheduled to core 0 */
 	reactor = spdk_reactor_get(0);

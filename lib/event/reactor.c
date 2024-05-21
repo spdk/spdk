@@ -428,8 +428,8 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		return -ENOTSUP;
 	}
 
-	if (!spdk_thread_is_app_thread(NULL)) {
-		SPDK_ERRLOG("It is only permitted within spdk application thread.\n");
+	if (spdk_env_get_current_core() != g_scheduling_reactor->lcore) {
+		SPDK_ERRLOG("It is only permitted within scheduling reactor.\n");
 		return -EPERM;
 	}
 
@@ -535,8 +535,6 @@ event_queue_run_batch(void *arg)
 	struct spdk_reactor *reactor = arg;
 	size_t count, i;
 	void *events[SPDK_EVENT_BATCH_SIZE];
-	struct spdk_thread *thread;
-	struct spdk_lw_thread *lw_thread;
 
 #ifdef DEBUG
 	/*
@@ -580,26 +578,14 @@ event_queue_run_batch(void *arg)
 		return 0;
 	}
 
-	/* Execute the events. There are still some remaining events
-	 * that must occur on an SPDK thread. To accommodate those, try to
-	 * run them on the first thread in the list, if it exists. */
-	lw_thread = TAILQ_FIRST(&reactor->threads);
-	if (lw_thread) {
-		thread = spdk_thread_get_from_ctx(lw_thread);
-	} else {
-		thread = NULL;
-	}
-
 	for (i = 0; i < count; i++) {
 		struct spdk_event *event = events[i];
 
 		assert(event != NULL);
-		spdk_set_thread(thread);
-
+		assert(spdk_get_thread() == NULL);
 		SPDK_DTRACE_PROBE3(event_exec, event->fn,
 				   event->arg1, event->arg2);
 		event->fn(event->arg1, event->arg2);
-		spdk_set_thread(NULL);
 	}
 
 	spdk_mempool_put_bulk(g_spdk_event_mempool, events, count);
