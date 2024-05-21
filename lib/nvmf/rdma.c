@@ -2880,8 +2880,7 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 	}
 
 	if (rtransport->data_wr_pool != NULL) {
-		if (spdk_mempool_count(rtransport->data_wr_pool) !=
-		    (transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES)) {
+		if (spdk_mempool_count(rtransport->data_wr_pool) != transport->opts.data_wr_pool_size) {
 			SPDK_ERRLOG("transport wr pool count is %zu but should be %u\n",
 				    spdk_mempool_count(rtransport->data_wr_pool),
 				    transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES);
