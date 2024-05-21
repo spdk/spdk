@@ -1163,7 +1163,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static inline int
+static inline void
 nvmf_rdma_request_reset_transfer_in(struct spdk_nvmf_rdma_request *rdma_req,
 				    struct spdk_nvmf_rdma_transport *rtransport)
 {
@@ -1173,8 +1173,6 @@ nvmf_rdma_request_reset_transfer_in(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->remaining_tranfer_in_wrs = NULL;
 	rdma_req->num_outstanding_data_wr = rdma_req->num_remaining_data_wr;
 	rdma_req->num_remaining_data_wr = 0;
-
-	return 0;
 }
 
 static inline int
@@ -4771,15 +4769,9 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				if (rdma_req->num_outstanding_data_wr == 0) {
 					if (spdk_unlikely(rdma_req->num_remaining_data_wr)) {
 						/* Only part of RDMA_READ operations was submitted, process the rest */
-						rc = nvmf_rdma_request_reset_transfer_in(rdma_req, rtransport);
-						if (spdk_likely(!rc)) {
-							STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
-							rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
-						} else {
-							STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-							rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
-							rdma_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-						}
+						nvmf_rdma_request_reset_transfer_in(rdma_req, rtransport);
+						STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
+						rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
 						nvmf_rdma_request_process(rtransport, rdma_req);
 						break;
 					}
