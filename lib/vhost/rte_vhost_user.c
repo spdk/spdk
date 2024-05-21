@@ -1536,14 +1536,14 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 		}
 		break;
 	case VHOST_USER_SET_VRING_CALL:
-		qid = (uint16_t)msg->payload.u64;
+		qid = ((uint16_t)msg->payload.u64) & VHOST_USER_VRING_IDX_MASK;
 		rc = set_device_vq_callfd(vsession, qid);
 		if (rc) {
 			return RTE_VHOST_MSG_RESULT_ERR;
 		}
 		break;
 	case VHOST_USER_SET_VRING_KICK:
-		qid = (uint16_t)msg->payload.u64;
+		qid = ((uint16_t)msg->payload.u64) & VHOST_USER_VRING_IDX_MASK;
 		rc = enable_device_vq(vsession, qid);
 		if (rc) {
 			return RTE_VHOST_MSG_RESULT_ERR;
