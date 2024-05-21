@@ -4723,10 +4723,11 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rqpair->current_read_depth--;
 				/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
 				if (rdma_req->num_outstanding_data_wr == 0) {
-					if (spdk_unlikely(rdma_req->num_remaining_data_wr)) {
+					if (rdma_req->num_remaining_data_wr) {
 						/* Only part of RDMA_READ operations was submitted, process the rest */
 						nvmf_rdma_request_reset_transfer_in(rdma_req, rtransport);
-						STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
+						/* Prioritize partially handled request over others to avoid latency increase */
+						STAILQ_INSERT_HEAD(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
 						rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
 						nvmf_rdma_request_process(rtransport, rdma_req);
 						break;
