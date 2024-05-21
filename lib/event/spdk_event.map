@@ -23,6 +23,7 @@
 	spdk_scheduler_register;
 	spdk_scheduler_set_period;
 	spdk_scheduler_get_period;
+	spdk_scheduler_get_scheduling_lcore;
 	spdk_governor_set;
 	spdk_governor_get;
 	spdk_governor_register;

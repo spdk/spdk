@@ -257,6 +257,15 @@ uint64_t spdk_scheduler_get_period(void);
  */
 void spdk_scheduler_register(struct spdk_scheduler *scheduler);
 
+/**
+ * Get lcore of scheduling reactor.
+ *
+ * All scheduler operations are performed from the scheduling reactor.
+ *
+ * \return lcore of scheduling reactor
+ */
+uint32_t spdk_scheduler_get_scheduling_lcore(void);
+
 /*
  * Macro used to register new scheduler.
  */
