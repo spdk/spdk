@@ -1987,7 +1987,7 @@ vhost_user_fini(spdk_vhost_fini_cb vhost_cb)
 	 * a separate thread to avoid deadlock.
 	 */
 	rc = pthread_create(&tid, NULL, &vhost_user_session_shutdown, vhost_cb);
-	if (rc < 0) {
+	if (rc != 0) {
 		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, spdk_strerror(rc));
 		abort();
 	}
