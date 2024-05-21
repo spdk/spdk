@@ -92,7 +92,7 @@
 	DECLARE_MOCK_QUEUE(fn, ret); \
 	extern bool ut_ ## fn ## _mocked; \
 	extern ret ut_ ## fn; \
-	ret __wrap_ ## fn args; ret __real_ ## fn args
+	__attribute__((used)) ret __wrap_ ## fn args; ret __real_ ## fn args
 
 /*
  * For defining the implementation of wrappers for syscalls.
@@ -100,7 +100,7 @@
  */
 #define DEFINE_WRAPPER(fn, ret, dargs, pargs) \
 	DEFINE_WRAPPER_MOCK(fn, ret); \
-	__attribute__((used)) ret __wrap_ ## fn dargs \
+	ret __wrap_ ## fn dargs \
 	{ \
 		if (!ut_ ## fn ## _mocked) { \
 			return __real_ ## fn pargs; \
