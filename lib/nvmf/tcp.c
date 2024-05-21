@@ -1307,8 +1307,12 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 	char owner[256];
 	int rc;
 
-	spdk_sock_getaddr(tqpair->sock, saddr, sizeof(saddr), &sport,
-			  caddr, sizeof(caddr), &cport);
+	rc = spdk_sock_getaddr(tqpair->sock, saddr, sizeof(saddr), &sport,
+			       caddr, sizeof(caddr), &cport);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
+		return rc;
+	}
 	snprintf(owner, sizeof(owner), "%s:%d", caddr, cport);
 	tqpair->qpair.trace_id = spdk_trace_register_owner(OWNER_TYPE_NVMF_TCP, owner);
 	spdk_trace_record(TRACE_TCP_QP_SOCK_INIT, tqpair->qpair.trace_id, 0, 0);
