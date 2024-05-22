@@ -2,6 +2,7 @@
  *   Copyright (C) 2017 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2024 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -2837,6 +2838,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		 * NVM Discovery subsystem fields
 		 */
 		cdata->oaes.discovery_log_change_notices = 1;
+		cdata->cntrltype = SPDK_NVME_CTRLR_DISCOVERY;
 	} else {
 		cdata->vid = ctrlr->cdata.vid;
 		cdata->ssvid = ctrlr->cdata.ssvid;
@@ -2857,6 +2859,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.bits.host_id_exhid_supported = 1;
 		cdata->ctratt.bits.fdps = ctrlr->subsys->fdp_supported;
+		cdata->cntrltype = SPDK_NVME_CTRLR_IO;
 		/* We do not have any actual limitation to the number of abort commands.
 		 * We follow the recommendation by the NVMe specification.
 		 */

@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (C) 2015 Intel Corporation.
- *   All rights reserved.
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2024 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
 /**
@@ -4368,6 +4368,21 @@ struct spdk_nvme_ns_streams_status {
 	uint16_t stream_id[65535];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_streams_status) == 131072, "Incorrect size");
+
+enum spdk_nvme_ctrlr_type {
+	/* 0x00 - reserved */
+
+	/* I/O Controller */
+	SPDK_NVME_CTRLR_IO		= 0x1,
+
+	/* Discovery Controller */
+	SPDK_NVME_CTRLR_DISCOVERY	= 0x2,
+
+	/* Administrative Controller */
+	SPDK_NVME_CTRLR_ADMINISTRATIVE	= 0x3,
+
+	/* 0x4-0xFF - Reserved */
+};
 
 #define spdk_nvme_cpl_is_error(cpl)			\
 	((cpl)->status.sc != SPDK_NVME_SC_SUCCESS ||	\
