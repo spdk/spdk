@@ -102,9 +102,10 @@ done
 rm -Rf $testdir/match_files
 
 # Verify read/write path
-head -c512 /dev/urandom > "$testdir/write_file"
-${NVME_CMD} write $ns --data-size=512 --data=$testdir/write_file
-${NVME_CMD} read $ns --data-size=512 --data=$testdir/read_file
+bs=$($rpc_py bdev_get_bdevs | jq '.[].block_size')
+head -c"$bs" /dev/urandom > "$testdir/write_file"
+${NVME_CMD} write $ns --data-size="$bs" --data=$testdir/write_file
+${NVME_CMD} read $ns --data-size="$bs" --data=$testdir/read_file
 cmp "$testdir/write_file" "$testdir/read_file"
 rm -f $testdir/write_file $testdir/read_file
 
