@@ -97,28 +97,28 @@ dump_pci_device(void *ctx, struct spdk_pci_device *dev)
 	struct spdk_json_write_ctx *w = ctx;
 	struct spdk_pci_addr addr;
 	char config[4096], bdf[32];
-	int rc;
+	int rc, length = 0;
 
 	addr = spdk_pci_device_get_addr(dev);
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), &addr);
-
-	rc = spdk_pci_device_cfg_read(dev, config, sizeof(config), 0);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to read config space of device: %s\n", bdf);
-		return;
-	}
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "address", bdf);
 	spdk_json_write_named_string(w, "type", spdk_pci_device_get_type(dev));
 
-	/* Don't write the extended config space if it's all zeroes */
-	if (spdk_mem_all_zero(&config[256], sizeof(config) - 256)) {
-		spdk_json_write_named_bytearray(w, "config_space", config, 256);
-	} else {
-		spdk_json_write_named_bytearray(w, "config_space", config, sizeof(config));
+	spdk_json_write_name(w, "config_space");
+	rc = spdk_pci_device_cfg_read(dev, config, 256, 0);
+	if (rc == 0) {
+		length = 256;
+
+		rc = spdk_pci_device_cfg_read(dev, &config[256], sizeof(config) - 256, 256);
+		if (rc == 0 && spdk_mem_all_zero(&config[256], sizeof(config) - 256) != 0) {
+			/* Don't write the extended config space if it's all zeroes */
+			length = sizeof(config);
+		}
 	}
 
+	spdk_json_write_bytearray(w, config, length);
 	spdk_json_write_object_end(w);
 }
 
