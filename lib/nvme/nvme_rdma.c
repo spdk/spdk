@@ -1963,6 +1963,9 @@ quiet:
 static int
 nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 {
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
 	if (spdk_get_ticks() < rqpair->evt_timeout_ticks &&
 	    (rqpair->current_num_sends != 0 ||
 	     (!rqpair->srq && rqpair->rsps->current_num_recvs != 0))) {
@@ -1970,9 +1973,14 @@ nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 	}
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
-
 	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
+	if (!nvme_qpair_is_admin_queue(qpair)) {
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	}
 	nvme_rdma_qpair_destroy(rqpair);
+	if (!nvme_qpair_is_admin_queue(qpair)) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
 	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
 	return 0;
