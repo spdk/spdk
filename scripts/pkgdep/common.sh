@@ -230,7 +230,7 @@ install_golangci_lint() {
 	golangcidir=/opt/golangci/$lintversion/bin
 	export PATH=${golangcidir}:$PATH
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/v${lintversion}/install.sh \
-		| sh -s -- -b "${golangcidir}" || {
+		| sh -s -- -b "${golangcidir}" "v$lintversion" || {
 		echo "installing golangci-lint failed"
 		return 1
 	}
