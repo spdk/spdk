@@ -42,11 +42,6 @@ This function is deprecated and will be removed in the 24.09 release.  Instead, 
 `spdk_nvmf_request_exec()`, which now allows all transports (both fabrics and non-fabrics) to
 execute fabrics commands.
 
-#### `nvmf_get_subsystems`
-
-`transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
-`trtype` field should be used instead. `transport` field will be removed in 24.05 release.
-
 #### `nvmf_subsystem_add_host`
 
 The ability to specifying path to a PSK file via the `psk` parameter in `nvmf_subsystem_add_host` is
