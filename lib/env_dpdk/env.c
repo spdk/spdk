@@ -17,6 +17,7 @@
 #include <rte_mempool.h>
 #include <rte_memzone.h>
 #include <rte_version.h>
+#include <rte_eal.h>
 
 static __thread bool g_is_thread_unaffinitized;
 
@@ -430,4 +431,10 @@ spdk_env_dpdk_dump_mem_stats(FILE *file)
 	rte_malloc_dump_stats(file, NULL);
 	fprintf(file, "DPDK malloc heaps.\n");
 	rte_malloc_dump_heaps(file);
+}
+
+int
+spdk_get_tid(void)
+{
+	return rte_sys_gettid();
 }

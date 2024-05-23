@@ -1445,6 +1445,11 @@ int spdk_pci_register_error_handler(spdk_pci_error_handler sighandler, void *ctx
  */
 void spdk_pci_unregister_error_handler(spdk_pci_error_handler sighandler);
 
+/**
+ * Get the tid of the current thread
+ */
+int spdk_get_tid(void);
+
 #ifdef __cplusplus
 }
 #endif

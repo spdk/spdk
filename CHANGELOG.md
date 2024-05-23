@@ -7,6 +7,10 @@
 Added public API 'spdk_nvmf_subsystem_set_cntlid_range' to set controller ID
 range for a subsystem.
 
+### env_dpdk
+
+`spdk_get_tid` is added to get the tid of the current thread.
+
 ## v24.05
 
 ### accel
