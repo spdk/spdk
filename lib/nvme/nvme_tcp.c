@@ -485,6 +485,17 @@ pdu_write_fail(struct nvme_tcp_pdu *pdu, int status)
 }
 
 static void
+pdu_seq_fail(struct nvme_tcp_pdu *pdu, int status)
+{
+	struct nvme_tcp_req *treq = pdu->req;
+
+	SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
+	nvme_tcp_cond_schedule_qpair_polling(pdu->qpair);
+	treq->rsp.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	nvme_tcp_req_complete(treq, treq->tqpair, &treq->rsp, true);
+}
+
+static void
 _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 {
 	uint32_t mapped_length = 0;
@@ -518,8 +529,7 @@ tcp_write_pdu_seq_cb(void *ctx, int status)
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
-		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
-		pdu_write_fail(pdu, status);
+		pdu_seq_fail(pdu, status);
 		return;
 	}
 
@@ -585,8 +595,7 @@ pdu_accel_compute_crc32_seq_cb(void *cb_arg, int status)
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
-		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
-		pdu_write_fail(pdu, status);
+		pdu_seq_fail(pdu, status);
 		return;
 	}
 
@@ -670,8 +679,7 @@ pdu_compute_crc32_seq_cb(void *cb_arg, int status)
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
-		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
-		pdu_write_fail(pdu, status);
+		pdu_seq_fail(pdu, status);
 		return;
 	}
 
@@ -1282,8 +1290,8 @@ nvme_tcp_recv_payload_seq_cb(void *cb_arg, int status)
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
-		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
-		treq->rsp.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		pdu_seq_fail(treq->pdu, status);
+		return;
 	}
 
 	nvme_tcp_req_complete_safe(treq);
