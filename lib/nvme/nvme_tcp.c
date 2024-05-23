@@ -425,32 +425,43 @@ nvme_tcp_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+/* If there are queued requests, we assume they are queued because they are waiting
+ * for resources to be released. Those resources are almost certainly released in
+ * response to a PDU completing. However, to attempt to make forward progress
+ * the qpair needs to be polled and we can't rely on another network event to make
+ * that happen. Add it to a list of qpairs to poll regardless of network activity.
+ *
+ * Besides, when tqpair state is NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL or
+ * NVME_TCP_QPAIR_STATE_INITIALIZING, need to add it to needs_poll list too to make
+ * forward progress in case that the resources are released after icreq's or CONNECT's
+ * resp is processed. */
+static void
+nvme_tcp_cond_schedule_qpair_polling(struct nvme_tcp_qpair *tqpair)
+{
+	struct nvme_tcp_poll_group *pgroup;
+
+	if (tqpair->needs_poll || !tqpair->qpair.poll_group) {
+		return;
+	}
+
+	if (STAILQ_EMPTY(&tqpair->qpair.queued_req) &&
+	    spdk_likely(tqpair->state != NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL &&
+			tqpair->state != NVME_TCP_QPAIR_STATE_INITIALIZING)) {
+		return;
+	}
+
+	pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+	TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
+	tqpair->needs_poll = true;
+}
+
 static void
 pdu_write_done(void *cb_arg, int err)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
-	struct nvme_tcp_poll_group *pgroup;
 
-	/* If there are queued requests, we assume they are queued because they are waiting
-	 * for resources to be released. Those resources are almost certainly released in
-	 * response to a PDU completing here. However, to attempt to make forward progress
-	 * the qpair needs to be polled and we can't rely on another network event to make
-	 * that happen. Add it to a list of qpairs to poll regardless of network activity
-	 * here.
-	 * Besides, when tqpair state is NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL or
-	 * NVME_TCP_QPAIR_STATE_INITIALIZING, need to add it to needs_poll list too to make
-	 * forward progress in case that the resources are released after icreq's or CONNECT's
-	 * resp is processed. */
-	if (tqpair->qpair.poll_group && !tqpair->needs_poll && (!STAILQ_EMPTY(&tqpair->qpair.queued_req) ||
-			tqpair->state == NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL ||
-			tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING)) {
-		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-
-		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
-		tqpair->needs_poll = true;
-	}
-
+	nvme_tcp_cond_schedule_qpair_polling(tqpair);
 	TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 
 	if (err != 0) {
@@ -1263,18 +1274,11 @@ nvme_tcp_recv_payload_seq_cb(void *cb_arg, int status)
 	struct nvme_tcp_req *treq = cb_arg;
 	struct nvme_request *req = treq->req;
 	struct nvme_tcp_qpair *tqpair = treq->tqpair;
-	struct nvme_tcp_poll_group *group;
 
 	assert(treq->ordering.bits.in_progress_accel);
 	treq->ordering.bits.in_progress_accel = 0;
 
-	/* We need to force poll the qpair to make sure any queued requests will be resubmitted, see
-	 * comment in pdu_write_done(). */
-	if (tqpair->qpair.poll_group && !tqpair->needs_poll && !STAILQ_EMPTY(&tqpair->qpair.queued_req)) {
-		group = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-		TAILQ_INSERT_TAIL(&group->needs_poll, tqpair, link);
-		tqpair->needs_poll = true;
-	}
+	nvme_tcp_cond_schedule_qpair_polling(tqpair);
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
@@ -1392,7 +1396,6 @@ nvme_tcp_accel_recv_compute_crc32_done(void *cb_arg, int status)
 	struct nvme_tcp_pdu *pdu;
 	struct nvme_tcp_qpair *tqpair;
 	int rc;
-	struct nvme_tcp_poll_group *pgroup;
 	int dummy_reaped = 0;
 
 	pdu = tcp_req->pdu;
@@ -1404,13 +1407,7 @@ nvme_tcp_accel_recv_compute_crc32_done(void *cb_arg, int status)
 	assert(tcp_req->ordering.bits.in_progress_accel);
 	tcp_req->ordering.bits.in_progress_accel = 0;
 
-	/* We need to force poll the qpair to make sure any queued requests will be resubmitted, see
-	 * comment in pdu_write_done(). */
-	if (tqpair->qpair.poll_group && !tqpair->needs_poll && !STAILQ_EMPTY(&tqpair->qpair.queued_req)) {
-		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
-		tqpair->needs_poll = true;
-	}
+	nvme_tcp_cond_schedule_qpair_polling(tqpair);
 
 	if (spdk_unlikely(status)) {
 		SPDK_ERRLOG("Failed to compute the data digest for pdu =%p\n", pdu);
