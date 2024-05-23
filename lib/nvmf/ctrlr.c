@@ -297,8 +297,8 @@ nvmf_ctrlr_add_qpair(struct spdk_nvmf_qpair *qpair,
 			qpair->ctrlr = NULL;
 			spdk_nvmf_request_complete(req);
 		} else {
-			SPDK_WARNLOG("Duplicate QID detected, re-check in %dus\n",
-				     DUPLICATE_QID_RETRY_US);
+			SPDK_WARNLOG("Duplicate QID (%d) detected, re-check in %dus\n",
+				     qpair->qid, DUPLICATE_QID_RETRY_US);
 			qpair->connect_req = req;
 			/* Set qpair->ctrlr here so that we'll have it when the poller expires. */
 			nvmf_qpair_set_ctrlr(qpair, ctrlr);
@@ -324,6 +324,7 @@ _retry_qid_check(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 
 	spdk_poller_unregister(&req->poller);
+	SPDK_WARNLOG("Retrying adding qpair, qid:%d\n", qpair->qid);
 	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
 	return SPDK_POLLER_BUSY;
 }
@@ -4385,7 +4386,8 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	} else if (spdk_unlikely(req->qpair->first_fused_req != NULL)) {
 		struct spdk_nvme_cpl *fused_response = &req->qpair->first_fused_req->rsp->nvme_cpl;
 
-		SPDK_ERRLOG("Expected second of fused commands - failing first of fused commands\n");
+		SPDK_ERRLOG("Second fused cmd expected - failing first one (opcode:0x%x)\n",
+			    req->qpair->first_fused_req->cmd->nvmf_cmd.opcode);
 
 		/* abort req->qpair->first_fused_request and continue with new command */
 		fused_response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
