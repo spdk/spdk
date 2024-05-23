@@ -36,6 +36,11 @@ The function is deprecated and will be removed in 24.09 release. Please use
 
 ### nvmf
 
+#### `decode_rpc_listen_address`
+
+`transport` field in `listen_addresses` decoders is deprecated. `trtype` field should be used
+instead. `transport` field will be removed in 24.09 release.
+
 #### `spdk_nvmf_request_exec_fabrics`
 
 This function is deprecated and will be removed in the 24.09 release.  Instead, users should use
