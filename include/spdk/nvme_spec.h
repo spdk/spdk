@@ -1792,7 +1792,9 @@ spdk_nvme_bytes_to_numd(uint32_t len)
 #pragma pack(push, 1)
 struct spdk_nvme_host_behavior {
 	uint8_t acre;
-	uint8_t reserved[511];
+	uint8_t etdas;
+	uint8_t lbafee;
+	uint8_t reserved[509];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_host_behavior) == 512, "Incorrect size");
 #pragma pack(pop)
@@ -3016,6 +3018,46 @@ struct spdk_nvme_ns_data {
 	uint8_t			vendor_specific[3712];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data) == 4096, "Incorrect size");
+
+enum spdk_nvme_pi_format {
+	SPDK_NVME_16B_GUARD_PI	= 0,
+	SPDK_NVME_32B_GUARD_PI	= 1,
+	SPDK_NVME_64B_GUARD_PI	= 2,
+};
+
+struct spdk_nvme_nvm_ns_data {
+	/** logical block storage tag mask */
+	uint64_t		lbstm;
+
+	/** protection information capabilities */
+	struct {
+		/** 16b guard protection information storage tag support */
+		uint8_t		_16bpists	: 1;
+
+		/** 16b guard protection information storage tag mask */
+		uint8_t		_16bpistm	: 1;
+
+		/** storage tag check read support */
+		uint8_t		stcrs		: 1;
+
+		uint8_t		reserved	: 5;
+	} pic;
+
+	uint8_t			reserved[3];
+
+	struct {
+		/** storage tag size */
+		uint32_t	sts		: 7;
+
+		/** protection information format */
+		uint32_t	pif		: 2;
+
+		uint32_t	reserved	: 23;
+	} elbaf[64];
+
+	uint8_t			reserved2[3828];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_nvm_ns_data) == 4096, "Incorrect size");
 
 struct spdk_nvme_nvm_ctrlr_data {
 	/* verify size limit */
