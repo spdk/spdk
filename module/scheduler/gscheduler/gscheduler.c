@@ -47,7 +47,7 @@ balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 			return;
 		}
 
-		if (core->current_busy_tsc < (core->current_idle_tsc / 1000)) {
+		if (core->current_busy_tsc < (core->current_idle_tsc / 100)) {
 			rc = governor->set_core_freq_min(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to minimal frequency for core %u failed\n", core->lcore);
@@ -57,7 +57,7 @@ balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 			if (rc < 0) {
 				SPDK_ERRLOG("lowering frequency for core %u failed\n", core->lcore);
 			}
-		} else if (core->current_idle_tsc < (core->current_busy_tsc / 1000)) {
+		} else if (core->current_idle_tsc < (core->current_busy_tsc / 100)) {
 			rc = governor->set_core_freq_max(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to maximal frequency for core %u failed\n", core->lcore);
