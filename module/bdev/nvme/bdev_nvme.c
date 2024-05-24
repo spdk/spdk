@@ -8557,7 +8557,8 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 		}
 	} else {
 		if (nbdev_ch->current_io_path) {
-			current = (io_path == nbdev_ch->current_io_path);
+			current = nvme_io_path_is_available(io_path) &&
+				  (io_path == nbdev_ch->current_io_path);
 		} else {
 			struct nvme_io_path *first_path;
 

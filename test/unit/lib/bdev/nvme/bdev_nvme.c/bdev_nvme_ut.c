@@ -7360,6 +7360,98 @@ test_ns_remove_during_reset(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_io_path_is_current(void)
+{
+	struct nvme_bdev_channel nbdev_ch = {
+		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
+	};
+	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {}, qpair3 = {};
+	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {};
+	struct spdk_nvme_ns ns1 = {}, ns2 = {}, ns3 = {};
+	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, }, nvme_ctrlr2 = { .ctrlr = &ctrlr2, },
+	nvme_ctrlr3 = { .ctrlr = &ctrlr3, };
+	struct nvme_ctrlr_channel ctrlr_ch1 = {}, ctrlr_ch2 = {}, ctrlr_ch3 = {};
+	struct nvme_qpair nvme_qpair1 = { .qpair = &qpair1, .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, };
+	struct nvme_qpair nvme_qpair2 = { .qpair = &qpair2, .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, };
+	struct nvme_qpair nvme_qpair3 = { .qpair = &qpair3, .ctrlr_ch = &ctrlr_ch3, .ctrlr = &nvme_ctrlr3, };
+	struct nvme_ns nvme_ns1 = { .ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE, .ns = &ns1, };
+	struct nvme_ns nvme_ns2 = { .ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE, .ns = &ns2, };
+	struct nvme_ns nvme_ns3 = { .ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE, .ns = &ns3, };
+	struct nvme_io_path io_path1 = { .nbdev_ch = &nbdev_ch, .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
+	struct nvme_io_path io_path2 = { .nbdev_ch = &nbdev_ch, .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
+	struct nvme_io_path io_path3 = { .nbdev_ch = &nbdev_ch, .qpair = &nvme_qpair3, .nvme_ns = &nvme_ns3, };
+
+	/* io_path1 is deleting */
+	io_path1.nbdev_ch = NULL;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path1) == false);
+
+	io_path1.nbdev_ch = &nbdev_ch;
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path1, stailq);
+	io_path2.nbdev_ch = &nbdev_ch;
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path2, stailq);
+	io_path3.nbdev_ch = &nbdev_ch;
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path3, stailq);
+
+	/* active/active: io_path is current if it is available and ANA optimized. */
+	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == true);
+
+	/* active/active: io_path is not current if it is disconnected even if it is
+	 * ANA optimized.
+	 */
+	qpair2.failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);
+
+	qpair2.failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+
+	/* active/passive: io_path is current if it is available and cached.
+	 * (only ANA optimized path is cached for active/passive.)
+	 */
+	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+	nbdev_ch.current_io_path = &io_path2;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == true);
+
+	/* active:passive: io_path is not current if it is disconnected even if it is cached */
+	qpair2.failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);
+
+	qpair2.failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+
+	/* active/active and active/passive: io_path is not current if it is ANA inaccessible. */
+	nvme_ns2.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+
+	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE;
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);
+
+	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);
+
+	/* active/active: non-optimized path is current only if there is no optimized path. */
+	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == true);
+
+	/* active/passive: current is true if it is the first one when there is no optimized path. */
+	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+	nbdev_ch.current_io_path = NULL;
+
+	CU_ASSERT(nvme_io_path_is_current(&io_path1) == true);
+	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);
+	CU_ASSERT(nvme_io_path_is_current(&io_path3) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7418,6 +7510,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_disable_enable_ctrlr);
 	CU_ADD_TEST(suite, test_delete_ctrlr_done);
 	CU_ADD_TEST(suite, test_ns_remove_during_reset);
+	CU_ADD_TEST(suite, test_io_path_is_current);
 
 	allocate_threads(3);
 	set_thread(0);
