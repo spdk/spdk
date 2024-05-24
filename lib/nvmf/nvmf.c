@@ -1459,7 +1459,6 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			    struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	uint32_t new_num_ns, old_num_ns;
 	uint32_t i, j;
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_registrant *reg, *tmp;
@@ -1476,61 +1475,16 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup = &group->sgroups[subsystem->id];
 
 	/* Make sure the array of namespace information is the correct size */
-	new_num_ns = subsystem->max_nsid;
-	old_num_ns = sgroup->num_ns;
-
-	ns_changed = false;
-
-	if (old_num_ns == 0) {
-		if (new_num_ns > 0) {
-			/* First allocation */
-			sgroup->ns_info = calloc(new_num_ns, sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
-			if (!sgroup->ns_info) {
-				return -ENOMEM;
-			}
-		}
-	} else if (new_num_ns > old_num_ns) {
-		void *buf;
-
-		/* Make the array larger */
-		buf = realloc(sgroup->ns_info, new_num_ns * sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
-		if (!buf) {
+	if (sgroup->num_ns == 0 && subsystem->max_nsid > 0) {
+		/* First allocation */
+		sgroup->ns_info = calloc(subsystem->max_nsid, sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
+		if (!sgroup->ns_info) {
 			return -ENOMEM;
 		}
-
-		sgroup->ns_info = buf;
-
-		/* Null out the new namespace information slots */
-		for (i = old_num_ns; i < new_num_ns; i++) {
-			memset(&sgroup->ns_info[i], 0, sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
-		}
-	} else if (new_num_ns < old_num_ns) {
-		void *buf;
-
-		/* Free the extra I/O channels */
-		for (i = new_num_ns; i < old_num_ns; i++) {
-			ns_info = &sgroup->ns_info[i];
-
-			if (ns_info->channel) {
-				spdk_put_io_channel(ns_info->channel);
-				ns_info->channel = NULL;
-			}
-		}
-
-		/* Make the array smaller */
-		if (new_num_ns > 0) {
-			buf = realloc(sgroup->ns_info, new_num_ns * sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
-			if (!buf) {
-				return -ENOMEM;
-			}
-			sgroup->ns_info = buf;
-		} else {
-			free(sgroup->ns_info);
-			sgroup->ns_info = NULL;
-		}
+		sgroup->num_ns = subsystem->max_nsid;
 	}
 
-	sgroup->num_ns = new_num_ns;
+	ns_changed = false;
 
 	/* Detect bdevs that were added or removed */
 	for (i = 0; i < sgroup->num_ns; i++) {

@@ -2015,23 +2015,26 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		/*
 		 * NSID not specified - find a free index.
 		 *
-		 * If no free slots are found, opts.nsid will be subsystem->max_nsid + 1, which will
-		 * expand max_nsid if possible.
+		 * If no free slots are found, return error.
 		 */
 		for (opts.nsid = 1; opts.nsid <= subsystem->max_nsid; opts.nsid++) {
 			if (_nvmf_subsystem_get_ns(subsystem, opts.nsid) == NULL) {
 				break;
 			}
 		}
-	}
-
-	if (_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
-		SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
-		return 0;
+		if (opts.nsid > subsystem->max_nsid) {
+			SPDK_ERRLOG("No free namespace slot available in the subsystem\n");
+			return 0;
+		}
 	}
 
 	if (opts.nsid > subsystem->max_nsid) {
 		SPDK_ERRLOG("NSID greater than maximum not allowed\n");
+		return 0;
+	}
+
+	if (_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
+		SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
 		return 0;
 	}
 
