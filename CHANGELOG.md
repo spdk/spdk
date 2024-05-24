@@ -21,6 +21,11 @@ New function `spdk_fd_group_add_for_events()` was added alongside the existing `
 Difference is that new API allows for specifying a set of events to be monitored instead of default
 SPDK_INTERRUPT_EVENT_IN.
 
+### env
+
+Added `spdk_env_core_get_smt_cpuset()` API to get the list of SMT sibling
+cores for a given core ID.
+
 ### nvmf
 
 Added public API 'spdk_nvmf_subsystem_set_cntlid_range' to set controller ID

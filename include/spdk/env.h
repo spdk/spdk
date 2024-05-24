@@ -513,6 +513,30 @@ struct spdk_cpuset;
  */
 void spdk_env_get_cpuset(struct spdk_cpuset *cpuset);
 
+/**
+ * Create a cpuset with each SMT sibling core's bit set to true.
+ *
+ * This function will first zero the cpuset and then set the bit for each
+ * SMT sibling core to true.
+ *
+ * If the specified core has no SMT siblings, then only the specified
+ * core's bit will be set.
+ *
+ * If the specified core has SMT siblings, then all of the siblings, including
+ * the specified core, will be set. Note: this will set bits for all siblings,
+ * even ones not part of the application's core mask.
+ *
+ * If the specified core is UINT32_MAX, then bits will be set for all SMT
+ * siblings of all cores in the application's core mask.
+ *
+ * \param cpuset spdk_cpuset for SMT sibling cores
+ * \param core core to get siblings for (UINT32_MAX for all cores in app
+ *             core mask)
+ * \return true if environment supports SMT detection, false otherwise (in
+ *         which case the spdk_cpuset will be invalid)
+ */
+bool spdk_env_core_get_smt_cpuset(struct spdk_cpuset *cpuset, uint32_t core);
+
 typedef int (*thread_start_fn)(void *);
 
 /**
