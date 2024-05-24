@@ -8538,6 +8538,10 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 	const struct nvme_bdev_channel *nbdev_ch;
 	bool current;
 
+	if (!nvme_io_path_is_available(io_path)) {
+		return false;
+	}
+
 	nbdev_ch = io_path->nbdev_ch;
 	if (nbdev_ch == NULL) {
 		current = false;
@@ -8550,15 +8554,12 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 			}
 		}
 
-		current = nvme_io_path_is_available(io_path);
-		if (io_path->nvme_ns->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE) {
-			/* A non-optimized path is only current if there are no optimized paths. */
-			current = current && (optimized_io_path == NULL);
-		}
+		/* A non-optimized path is only current if there are no optimized paths. */
+		current = (io_path->nvme_ns->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE) ||
+			  (optimized_io_path == NULL);
 	} else {
 		if (nbdev_ch->current_io_path) {
-			current = nvme_io_path_is_available(io_path) &&
-				  (io_path == nbdev_ch->current_io_path);
+			current = (io_path == nbdev_ch->current_io_path);
 		} else {
 			struct nvme_io_path *first_path;
 
