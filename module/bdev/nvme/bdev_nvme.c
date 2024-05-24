@@ -8532,25 +8532,12 @@ bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 	return nvme_ns->ctrlr->ctrlr;
 }
 
-void
-nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path)
+static bool
+nvme_io_path_is_current(struct nvme_io_path *io_path)
 {
-	struct nvme_ns *nvme_ns = io_path->nvme_ns;
-	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
-	const struct spdk_nvme_ctrlr_data *cdata;
-	const struct spdk_nvme_transport_id *trid;
 	const struct nvme_bdev_channel *nbdev_ch;
-	const char *adrfam_str;
 	bool current;
 
-	spdk_json_write_object_begin(w);
-
-	spdk_json_write_named_string(w, "bdev_name", nvme_ns->bdev->disk.name);
-
-	cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
-	trid = spdk_nvme_ctrlr_get_transport_id(nvme_ctrlr->ctrlr);
-
-	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
 	nbdev_ch = io_path->nbdev_ch;
 	if (nbdev_ch == NULL) {
 		current = false;
@@ -8586,7 +8573,28 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 			}
 		}
 	}
-	spdk_json_write_named_bool(w, "current", current);
+
+	return current;
+}
+
+void
+nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path)
+{
+	struct nvme_ns *nvme_ns = io_path->nvme_ns;
+	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	const struct spdk_nvme_transport_id *trid;
+	const char *adrfam_str;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "bdev_name", nvme_ns->bdev->disk.name);
+
+	cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+	trid = spdk_nvme_ctrlr_get_transport_id(nvme_ctrlr->ctrlr);
+
+	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
+	spdk_json_write_named_bool(w, "current", nvme_io_path_is_current(io_path));
 	spdk_json_write_named_bool(w, "connected", nvme_qpair_is_connected(io_path->qpair));
 	spdk_json_write_named_bool(w, "accessible", nvme_ns_is_accessible(nvme_ns));
 
