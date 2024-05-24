@@ -51,8 +51,9 @@
 #define MAX_THREAD_NAME_LEN 26
 #define MAX_THREAD_COUNT_STR_LEN 10
 #define MAX_POLLER_NAME_LEN 36
-#define MAX_POLLER_COUNT_STR_LEN 16
+#define MAX_POLLER_TYPE_COUNT_STR_LEN 16
 #define MAX_POLLER_TYPE_STR_LEN 8
+#define MAX_POLLER_COUNT_STR_LEN 10
 #define MAX_STATUS_IND_STR_LEN 8
 #define MAX_POLLER_IND_STR_LEN 28
 #define MAX_CORE_MASK_STR_LEN 16
@@ -171,9 +172,9 @@ pthread_mutex_t g_thread_lock;
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	{	{.name = "Thread name", .max_data_string = MAX_THREAD_NAME_LEN},
 		{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
-		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
-		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
-		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
+		{.name = "Active pollers", .max_data_string = MAX_POLLER_TYPE_COUNT_STR_LEN},
+		{.name = "Timed pollers", .max_data_string = MAX_POLLER_TYPE_COUNT_STR_LEN},
+		{.name = "Paused pollers", .max_data_string = MAX_POLLER_TYPE_COUNT_STR_LEN},
 		{.name = "Idle [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = "Busy [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = "CPU %", .max_data_string = MAX_FLOAT_STR_LEN},
@@ -1336,7 +1337,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint16_t col = TABS_DATA_START_COL;
 	int core_idx, color_attr = COLOR_PAIR(6);
-	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
+	char pollers_number[MAX_POLLER_TYPE_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN],
 	     cpu_usage[MAX_FLOAT_STR_LEN], *status_str;
 
@@ -1354,7 +1355,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	}
 
 	if (!col_desc[COL_THREADS_ACTIVE_POLLERS].disabled) {
-		snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld",
+		snprintf(pollers_number, MAX_POLLER_TYPE_COUNT_STR_LEN, "%ld",
 			 g_threads_info[current_row].active_pollers_count);
 		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 			      col + (col_desc[COL_THREADS_ACTIVE_POLLERS].name_len / 2),
@@ -1363,7 +1364,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	}
 
 	if (!col_desc[COL_THREADS_TIMED_POLLERS].disabled) {
-		snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld",
+		snprintf(pollers_number, MAX_POLLER_TYPE_COUNT_STR_LEN, "%ld",
 			 g_threads_info[current_row].timed_pollers_count);
 		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 			      col + (col_desc[COL_THREADS_TIMED_POLLERS].name_len / 2),
@@ -1372,7 +1373,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	}
 
 	if (!col_desc[COL_THREADS_PAUSED_POLLERS].disabled) {
-		snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld",
+		snprintf(pollers_number, MAX_POLLER_TYPE_COUNT_STR_LEN, "%ld",
 			 g_threads_info[current_row].paused_pollers_count);
 		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 			      col + (col_desc[COL_THREADS_PAUSED_POLLERS].name_len / 2),
