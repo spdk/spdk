@@ -97,12 +97,20 @@ spdk_scheduler_set(const char *name)
 		return 0;
 	}
 
+	if (g_scheduler) {
+		g_scheduler->deinit();
+	}
+
 	rc = scheduler->init();
 	if (rc == 0) {
-		if (g_scheduler) {
-			g_scheduler->deinit();
-		}
 		g_scheduler = scheduler;
+	} else {
+		/* Could not switch to the new scheduler, so keep the old
+		 * one. We need to ->init() it again.
+		 */
+		SPDK_ERRLOG("Could not ->init() '%s' scheduler, reverting to '%s'\n",
+			    name, g_scheduler->name);
+		g_scheduler->init();
 	}
 
 	return rc;
