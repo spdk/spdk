@@ -1518,6 +1518,7 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	 * operation is completed */
 	treq.state = NVME_TCP_REQ_ACTIVE;
 	treq.ordering.bits.in_progress_accel = 1;
+	tqpair.async_complete = 0;
 	qpair->poll_group = NULL;
 	qpair->num_outstanding_reqs = 1;
 	qpair->state = NVME_QPAIR_DISCONNECTING;

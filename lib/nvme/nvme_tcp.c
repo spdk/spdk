@@ -921,12 +921,6 @@ nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 	assert(tcp_req->tqpair != NULL);
 	assert(tcp_req->req != NULL);
 
-	SPDK_DEBUGLOG(nvme, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tcp_req->tqpair);
-
-	if (!tcp_req->tqpair->qpair.in_completion_context) {
-		tcp_req->tqpair->async_complete++;
-	}
-
 	nvme_tcp_req_complete(tcp_req, tcp_req->tqpair, &tcp_req->rsp, true);
 	return true;
 }
@@ -1063,6 +1057,12 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	assert(tcp_req->req != NULL);
 	req = tcp_req->req;
 	qpair = req->qpair;
+
+	SPDK_DEBUGLOG(nvme, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
+
+	if (!tcp_req->tqpair->qpair.in_completion_context) {
+		tcp_req->tqpair->async_complete++;
+	}
 
 	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
 	memcpy(&cpl, rsp, sizeof(cpl));
