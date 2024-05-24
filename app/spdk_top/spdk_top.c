@@ -58,7 +58,7 @@
 #define MAX_POLLER_IND_STR_LEN 28
 #define MAX_CORE_MASK_STR_LEN 16
 #define MAX_CORE_STR_LEN 6
-#define MAX_CORE_FREQ_STR_LEN 18
+#define MAX_CORE_FREQ_STR_LEN 13
 #define MAX_TIME_STR_LEN 12
 #define MAX_FLOAT_STR_LEN 8
 #define MAX_POLLER_RUN_COUNT 20
@@ -200,7 +200,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "Sys %", .max_data_string = MAX_FLOAT_STR_LEN},
 		{.name = "Irq %", .max_data_string = MAX_FLOAT_STR_LEN},
 		{.name = "CPU %", .max_data_string = MAX_FLOAT_STR_LEN},
-		{.name = "Frequency [MHz]", .max_data_string = MAX_CORE_FREQ_STR_LEN},
+		{.name = "Freq [MHz]", .max_data_string = MAX_CORE_FREQ_STR_LEN},
 		{.name = (char *)NULL}
 	}
 };
