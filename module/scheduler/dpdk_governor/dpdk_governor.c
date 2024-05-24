@@ -154,6 +154,17 @@ _init(void)
 	uint32_t i, j;
 	int rc = 0;
 
+#if RTE_VERSION >= RTE_VERSION_NUM(23, 11, 0, 0)
+	for (i = PM_ENV_ACPI_CPUFREQ; i <= PM_ENV_AMD_PSTATE_CPUFREQ; i++) {
+#else
+	for (i = PM_ENV_ACPI_CPUFREQ; i <= PM_ENV_CPPC_CPUFREQ; i++) {
+#endif
+		if (rte_power_check_env_supported(i) == 1) {
+			rte_power_set_env(i);
+			break;
+		}
+	}
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		rc = _init_core(i);
 		if (rc != 0) {
@@ -175,6 +186,7 @@ _init(void)
 			SPDK_ERRLOG("Failed to deinitialize on core%d\n", j);
 		}
 	}
+	rte_power_unset_env();
 	return rc;
 }
 
@@ -188,6 +200,7 @@ _deinit(void)
 			SPDK_ERRLOG("Failed to deinitialize on core%d\n", i);
 		}
 	}
+	rte_power_unset_env();
 }
 
 static struct spdk_governor dpdk_governor = {

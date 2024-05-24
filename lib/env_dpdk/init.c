@@ -403,10 +403,18 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		return -1;
 	}
 
-	/* Lower default CRYPTO loglevel to RTE_LOG_ERR to avoid a ton of init msgs.
+	/* Lower default CRYPTO loglevel to RTE_LOG_WARNING to avoid a ton of init msgs.
 	 * This can be overridden by specifying the same option in opts->env_context
 	 */
 	args = push_arg(args, &argcount, strdup("--log-level=lib.cryptodev:5"));
+	if (args == NULL) {
+		return -1;
+	}
+
+	/* Lower default POWER loglevel to RTE_LOG_WARNING to avoid a ton of init msgs.
+	 * This can be overridden by specifying the same option in opts->env_context
+	 */
+	args = push_arg(args, &argcount, strdup("--log-level=lib.power:5"));
 	if (args == NULL) {
 		return -1;
 	}
