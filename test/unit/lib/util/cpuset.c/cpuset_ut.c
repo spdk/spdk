@@ -161,6 +161,27 @@ test_cpuset_parse(void)
 	CU_ASSERT(cpuset_check_range(core_mask, 168, 171, true) == 0);
 	CU_ASSERT(cpuset_check_range(core_mask, 172, SPDK_CPUSET_SIZE - 1, false) == 0);
 
+	/* Test masks with commas. The commas should be ignored by cpuset, to
+	 * allow using spdk_cpuset_parse() with Linux kernel sysfs strings
+	 * that insert commas for readability purposes.
+	 */
+	rc = spdk_cpuset_parse(core_mask, "FF,FF0000FF,00000000");
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 0, 31, false) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 32, 39, true) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 40, 55, false) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 56, 71, true) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 72, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* Test masks with random commas. We just ignore the commas, cpuset
+	 * should not try to validate that commas are only in certain positions.
+	 */
+	rc = spdk_cpuset_parse(core_mask, ",,,,,000,,1,0,0,,,,");
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 0, 7, false) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 8, 8, true) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 9, SPDK_CPUSET_SIZE - 1, false) == 0);
+
 	spdk_cpuset_free(core_mask);
 }
 

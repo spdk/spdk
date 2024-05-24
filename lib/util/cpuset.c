@@ -259,6 +259,10 @@ parse_mask(const char *mask, struct spdk_cpuset *set, size_t len)
 	spdk_cpuset_zero(set);
 	for (i = len - 1; i >= 0; i--) {
 		c = mask[i];
+		if (c == ',') {
+			/* Linux puts comma delimiters in its cpumasks, just skip them. */
+			continue;
+		}
 		val = hex_value(c);
 		if (val < 0) {
 			/* Invalid character */
