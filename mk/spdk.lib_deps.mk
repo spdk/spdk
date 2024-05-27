@@ -41,7 +41,7 @@ DEPDIRS-thread := log util trace
 DEPDIRS-keyring := log util $(JSON_LIBS)
 
 DEPDIRS-nvme := log keyring sock util trace dma
-ifeq ($(OS),Linux)
+ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-nvme += vfio_user
 endif
 ifeq ($(CONFIG_RDMA),y)
