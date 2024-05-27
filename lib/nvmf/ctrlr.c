@@ -379,9 +379,11 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->ieee[1] = 0xd2;
 	cdata->ieee[2] = 0x5c;
 	cdata->oncs.compare = 1;
+	cdata->oncs.dsm = 1;
+	cdata->oncs.write_zeroes = 1;
 	cdata->oncs.reservations = 1;
-	cdata->fuses.compare_and_write = 1;
 	cdata->oncs.copy = 1;
+	cdata->fuses.compare_and_write = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
@@ -2882,8 +2884,9 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
 
 		cdata->oncs.compare = ctrlr->cdata.oncs.compare;
-		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
-		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
+		cdata->oncs.dsm = ctrlr->cdata.oncs.dsm && nvmf_ctrlr_dsm_supported(ctrlr);
+		cdata->oncs.write_zeroes = ctrlr->cdata.oncs.write_zeroes &&
+					   nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = ctrlr->cdata.oncs.reservations;
 		cdata->oncs.copy = ctrlr->cdata.oncs.copy;
 		cdata->ocfs.copy_format0 = cdata->oncs.copy;
@@ -4413,20 +4416,35 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_OPC_WRITE:
 			return nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_COMPARE:
+			if (spdk_unlikely(!ctrlr->cdata.oncs.compare)) {
+				goto invalid_opcode;
+			}
 			return nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_WRITE_ZEROES:
+			if (spdk_unlikely(!ctrlr->cdata.oncs.write_zeroes)) {
+				goto invalid_opcode;
+			}
 			return nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_FLUSH:
 			return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+			if (spdk_unlikely(!ctrlr->cdata.oncs.dsm)) {
+				goto invalid_opcode;
+			}
 			return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_RESERVATION_REGISTER:
 		case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
 		case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		case SPDK_NVME_OPC_RESERVATION_REPORT:
+			if (spdk_unlikely(!ctrlr->cdata.oncs.reservations)) {
+				goto invalid_opcode;
+			}
 			spdk_thread_send_msg(ctrlr->subsys->thread, nvmf_ns_reservation_request, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		case SPDK_NVME_OPC_COPY:
+			if (spdk_unlikely(!ctrlr->cdata.oncs.copy)) {
+				goto invalid_opcode;
+			}
 			return nvmf_bdev_ctrlr_copy_cmd(bdev, desc, ch, req);
 		default:
 			if (spdk_unlikely(qpair->transport->opts.disable_command_passthru)) {
