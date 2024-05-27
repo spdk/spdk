@@ -4415,6 +4415,8 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 			return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_WRITE:
 			return nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_FLUSH:
+			return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_COMPARE:
 			if (spdk_unlikely(!ctrlr->cdata.oncs.compare)) {
 				goto invalid_opcode;
@@ -4425,8 +4427,6 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 				goto invalid_opcode;
 			}
 			return nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
-		case SPDK_NVME_OPC_FLUSH:
-			return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_DATASET_MANAGEMENT:
 			if (spdk_unlikely(!ctrlr->cdata.oncs.dsm)) {
 				goto invalid_opcode;
