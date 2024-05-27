@@ -1242,6 +1242,7 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 	uint32_t count;
 
 	spdk_bit_array_clear(ctrlr->qpair_mask, qpair_ctx->qid);
+	SPDK_DEBUGLOG(nvmf, "qpair_mask cleared, qid %u\n", qpair_ctx->qid);
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	if (count == 0) {
 		assert(!ctrlr->in_destruct);

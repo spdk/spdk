@@ -291,15 +291,16 @@ nvmf_ctrlr_add_qpair(struct spdk_nvmf_qpair *qpair,
 
 	if (spdk_bit_array_get(ctrlr->qpair_mask, qpair->qid)) {
 		if (qpair->connect_req != NULL) {
-			SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
+			SPDK_ERRLOG("Got I/O connect with duplicate QID %u (cntlid:%u)\n",
+				    qpair->qid, ctrlr->cntlid);
 			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 			qpair->connect_req = NULL;
 			qpair->ctrlr = NULL;
 			spdk_nvmf_request_complete(req);
 		} else {
-			SPDK_WARNLOG("Duplicate QID (%d) detected, re-check in %dus\n",
-				     qpair->qid, DUPLICATE_QID_RETRY_US);
+			SPDK_WARNLOG("Duplicate QID detected (cntlid:%u, qid:%u), re-check in %dus\n",
+				     ctrlr->cntlid, qpair->qid, DUPLICATE_QID_RETRY_US);
 			qpair->connect_req = req;
 			/* Set qpair->ctrlr here so that we'll have it when the poller expires. */
 			nvmf_qpair_set_ctrlr(qpair, ctrlr);
@@ -313,6 +314,7 @@ nvmf_ctrlr_add_qpair(struct spdk_nvmf_qpair *qpair,
 				 ctrlr->hostnqn);
 	nvmf_qpair_set_ctrlr(qpair, ctrlr);
 	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
+	SPDK_DEBUGLOG(nvmf, "qpair_mask set, qid %u\n", qpair->qid);
 
 	spdk_thread_send_msg(qpair->group->thread, nvmf_ctrlr_send_connect_rsp, req);
 }
@@ -4390,7 +4392,8 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	} else if (spdk_unlikely(qpair->first_fused_req != NULL)) {
 		struct spdk_nvme_cpl *fused_response = &qpair->first_fused_req->rsp->nvme_cpl;
 
-		SPDK_ERRLOG("Second fused cmd expected - failing first one (opcode:0x%x)\n",
+		SPDK_ERRLOG("Second fused cmd expected - failing first one (cntlid:%u, qid:%u, opcode:0x%x)\n",
+			    ctrlr->cntlid, qpair->qid,
 			    req->qpair->first_fused_req->cmd->nvmf_cmd.opcode);
 
 		/* abort qpair->first_fused_request and continue with new command */
