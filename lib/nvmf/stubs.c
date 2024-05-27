@@ -47,3 +47,12 @@ nvmf_auth_is_supported(void)
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf_auth)
 #endif /* !SPDK_CONFIG_HAVE_EVP_MAC */
+
+#ifndef SPDK_CONFIG_RDMA
+void
+spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
+{
+	SPDK_ERRLOG("spdk_nvmf_rdma_init_hooks() is unsupported: RDMA transport is not available\n");
+	abort();
+}
+#endif /* !SPDK_CONFIG_RDMA */
