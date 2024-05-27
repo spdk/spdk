@@ -133,25 +133,8 @@ function confirm_abi_deps() {
 	#	label = Added interrupt_mode field
 	#	name = spdk_app_opts
 	#	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
-	cat << EOF > ${suppression_file}
-[suppress_type]
-	label = Added interrupt_mode, no_huge fields
-	name = spdk_app_opts
-	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
-	has_data_member_regexp = ^reserved83$
-	has_data_member_regexp = ^reserved185$
-	has_data_members_inserted_between = {{664, 672}, {1480, 1488}}
-[suppress_type]
-	label = Added cmbs field
-	name = spdk_nvme_cap_register
-	soname_regexp = ^libspdk_nvme\\.so\\.11\\.*$
-[suppress_type]
-	label = Added iobuf_small/large_cache_size fields
-	name = spdk_bdev_opts
-	soname_regexp = ^libspdk_bdev\\.so\\.13\\.*$
-	has_data_member_regexp = ^reserved$
-	has_data_member_inserted_between = {192, 224}
-EOF
+	cat <<- EOF > ${suppression_file}
+	EOF
 
 	for object in "$libdir"/libspdk_*.so; do
 		abidiff_output=0
