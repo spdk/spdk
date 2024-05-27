@@ -134,6 +134,16 @@ function confirm_abi_deps() {
 	#	name = spdk_app_opts
 	#	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
 	cat <<- EOF > ${suppression_file}
+		[suppress_type]
+			label = Added disable_command_passthru field
+			name = spdk_nvmf_transport_opts
+			soname_regexp = ^libspdk_nvmf\\.so\\.18\\.*$
+			has_data_member_regexp = ^reserved29$
+			has_data_member_inserted_between = {232, 256}
+		[suppress_type]
+			label = Added opts.disable_command_passthru field
+			name = spdk_nvmf_transport
+			soname_regexp = ^libspdk_nvmf\\.so\\.18\\.*$
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

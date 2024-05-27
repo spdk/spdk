@@ -2380,6 +2380,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 	{
 		"data_wr_pool_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.data_wr_pool_size),
 		spdk_json_decode_uint32, true
+	},
+	{
+		"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, opts.disable_command_passthru),
+		spdk_json_decode_bool, true
 	}
 };
 

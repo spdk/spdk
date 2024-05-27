@@ -4429,9 +4429,18 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_OPC_COPY:
 			return nvmf_bdev_ctrlr_copy_cmd(bdev, desc, ch, req);
 		default:
+			if (spdk_unlikely(qpair->transport->opts.disable_command_passthru)) {
+				goto invalid_opcode;
+			}
 			return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 		}
 	}
+invalid_opcode:
+	SPDK_INFOLOG(nvmf, "Unsupported IO opcode 0x%x\n", cmd->opc);
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+	response->status.dnr = 1;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static void

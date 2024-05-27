@@ -76,9 +76,10 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	num_shared_buffers;
 	uint32_t	buf_cache_size;
 	bool		dif_insert_or_strip;
+	bool		disable_command_passthru;
 
-	/* Hole at bytes 29-31. */
-	uint8_t		reserved29[3];
+	/* Hole at bytes 30-31. */
+	uint8_t		reserved30[2];
 
 	uint32_t	abort_timeout_sec;
 	/* ms */
