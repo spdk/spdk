@@ -4325,8 +4325,9 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
-	struct spdk_nvmf_poll_group *group = req->qpair->group;
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_poll_group *group = qpair->group;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
@@ -4383,17 +4384,17 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	if (spdk_unlikely(cmd->fuse & SPDK_NVME_CMD_FUSE_MASK)) {
 		return nvmf_ctrlr_process_io_fused_cmd(req, bdev, desc, ch);
-	} else if (spdk_unlikely(req->qpair->first_fused_req != NULL)) {
-		struct spdk_nvme_cpl *fused_response = &req->qpair->first_fused_req->rsp->nvme_cpl;
+	} else if (spdk_unlikely(qpair->first_fused_req != NULL)) {
+		struct spdk_nvme_cpl *fused_response = &qpair->first_fused_req->rsp->nvme_cpl;
 
 		SPDK_ERRLOG("Second fused cmd expected - failing first one (opcode:0x%x)\n",
 			    req->qpair->first_fused_req->cmd->nvmf_cmd.opcode);
 
-		/* abort req->qpair->first_fused_request and continue with new command */
+		/* abort qpair->first_fused_request and continue with new command */
 		fused_response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
 		fused_response->status.sct = SPDK_NVME_SCT_GENERIC;
-		_nvmf_request_complete(req->qpair->first_fused_req);
-		req->qpair->first_fused_req = NULL;
+		_nvmf_request_complete(qpair->first_fused_req);
+		qpair->first_fused_req = NULL;
 	}
 
 	if (spdk_nvmf_request_using_zcopy(req)) {
