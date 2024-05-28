@@ -2539,7 +2539,7 @@ nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
 
 	if (offset < page_size) {
-		if (ctrlr->subsys->zone_append_supported) {
+		if (nvmf_subsystem_zone_append_supported(ctrlr->subsys)) {
 			cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_APPEND] =
 				csupp_and_lbcc_effect_entry;
 		}

@@ -86,7 +86,8 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_next_ns,
 	    struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns),
 	    NULL);
-
+DEFINE_STUB(nvmf_subsystem_zone_append_supported, bool,
+	    (struct spdk_nvmf_subsystem *subsystem), false);
 DEFINE_STUB(spdk_nvmf_subsystem_host_allowed,
 	    bool,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn),

@@ -1982,6 +1982,23 @@ static int nvmf_ns_reservation_load(const struct spdk_nvmf_ns *ns,
 static int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
 				       struct spdk_nvmf_reservation_info *info);
 
+bool
+nvmf_subsystem_zone_append_supported(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	     ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (spdk_bdev_is_zoned(ns->bdev) &&
+		    spdk_bdev_io_type_supported(ns->bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 uint32_t
 spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char *bdev_name,
 			       const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
@@ -2118,13 +2135,12 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 						   ns->bdev) * spdk_bdev_get_block_size(ns->bdev);
 
 		if (_nvmf_subsystem_get_first_zoned_ns(subsystem) != NULL &&
-		    (subsystem->zone_append_supported != zone_append_supported ||
+		    (nvmf_subsystem_zone_append_supported(subsystem) != zone_append_supported ||
 		     subsystem->max_zone_append_size_kib != max_zone_append_size_kib)) {
 			SPDK_ERRLOG("Namespaces with different zone append support or different zone append size are not allowed.\n");
 			goto err;
 		}
 
-		subsystem->zone_append_supported = zone_append_supported;
 		subsystem->max_zone_append_size_kib = max_zone_append_size_kib;
 	}
 
