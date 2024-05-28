@@ -1036,7 +1036,7 @@ _bdev_rbd_wait_for_latest_osdmap(void *arg)
 
 			// Calculate the elapsed time in seconds
 			elapsed_time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1.0e6;
-			SPDK_ERRLOG("rados_wait_for_latest_osdmap cluster: %s elapsed time: %f seconds\n",
+			SPDK_NOTICELOG("rados_wait_for_latest_osdmap cluster: %s elapsed time: %f seconds\n",
 					name, elapsed_time);
 			if (rc) {
 				SPDK_ERRLOG("Failed to wait for latest osd map, rados cluster=%s, rc=%d\n",
