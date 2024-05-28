@@ -237,23 +237,23 @@ class Server(ABC):
             self.set_pause_frames("on", "on")
 
     def configure_arfs(self):
-        rps_flow_cnt = 512
-        if not self.enable_arfs:
-            rps_flow_cnt = 0
+        rps_flow_cnt = 512 if self.enable_arfs else 0
 
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
         for nic_name in nic_names:
+            rps_wildcard_path = f"/sys/class/net/{nic_name}/queues/rx-*/rps_flow_cnt"
             self.exec_cmd(["sudo", "ethtool", "-K", nic_name, "ntuple", "on"])
-            self.log.info(f"Setting rps_flow_cnt={rps_flow_cnt} for {nic_name}")
-            queue_files = self.exec_cmd(["ls", f"/sys/class/net/{nic_name}/queues/"]).strip().split("\n")
-            queue_files = filter(lambda x: x.startswith("rx-"), queue_files)
+            self.log.info(f"Setting rps_flow_cnt={rps_flow_cnt} for {nic_name} rx queues")
 
-            for qf in queue_files:
-                self.exec_cmd(["sudo", "bash", "-c", f"echo {rps_flow_cnt} > /sys/class/net/{nic_name}/queues/{qf}/rps_flow_cnt"])
-                set_value = self.exec_cmd(["cat", f"/sys/class/net/{nic_name}/queues/{qf}/rps_flow_cnt"]).strip()
-                self.log.info(f"Confirmed rps_flow_cnt set to {set_value} in /sys/class/net/{nic_name}/queues/{qf}")
+            self.exec_cmd(["bash", "-c", f"echo {rps_flow_cnt} | sudo tee {rps_wildcard_path}"])
 
-            self.log.info(f"Configuration of {nic_name} completed with confirmed rps_flow_cnt settings.")
+            set_values = list(set(self.exec_cmd(["sudo", "bash", "-c", f'cat {rps_wildcard_path}']).strip().split("\n")))
+            if len(set_values) > 1:
+                self.log.error(f"""Not all NIC {nic_name} queues had rps_flow_cnt set properly. Found rps_flow_cnt values: {set_values}""")
+            elif set_values[0] != str(rps_flow_cnt):
+                self.log.error(f"""Wrong rps_flow_cnt set on {nic_name} queues. Found {set_values[0]}, should be {rps_flow_cnt}""")
+            else:
+                self.log.info(f"Configuration of {nic_name} completed with confirmed rps_flow_cnt settings.")
 
         self.log.info("ARFS configuration completed.")
 
