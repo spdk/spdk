@@ -1644,6 +1644,8 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 		}
 		snprintf(conn->target_short_name, MAX_TARGET_NAME, "%s",
 			 target_short_name);
+	} else {
+		snprintf(conn->target_short_name, MAX_TARGET_NAME, "%s", target_name);
 	}
 
 	pthread_mutex_lock(&g_iscsi.mutex);
