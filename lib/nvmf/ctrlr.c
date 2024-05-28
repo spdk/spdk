@@ -2538,6 +2538,10 @@ nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *
 	struct spdk_nvme_cmds_and_effect_entry zero = {};
 	struct spdk_iov_xfer ix;
 
+	if (!nvmf_subsystem_has_zns_iocs(ctrlr->subsys)) {
+		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_MGMT_SEND] = zero;
+		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_MGMT_RECV] = zero;
+	}
 	if (!nvmf_subsystem_zone_append_supported(ctrlr->subsys)) {
 		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_APPEND] = zero;
 	}
