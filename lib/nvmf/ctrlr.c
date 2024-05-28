@@ -400,7 +400,7 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 }
 
 static bool
-nvmf_subsys_has_multi_iocs(struct spdk_nvmf_subsystem *subsystem)
+nvmf_subsystem_has_zns_iocs(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_ns *ns;
 	uint32_t i;
@@ -542,7 +542,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	/* ready timeout - 500 msec units */
 	ctrlr->vcprop.cap.bits.to = NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS / 500;
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
-	subsys_has_multi_iocs = nvmf_subsys_has_multi_iocs(subsystem);
+	subsys_has_multi_iocs = nvmf_subsystem_has_zns_iocs(subsystem);
 	if (subsys_has_multi_iocs) {
 		ctrlr->vcprop.cap.bits.css =
 			SPDK_NVME_CAP_CSS_IOCS; /* One or more I/O command sets supported */
