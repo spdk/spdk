@@ -28,13 +28,20 @@ static uint32_t g_active_nsid_min = 1;
 bool
 spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	return nsid >= g_active_nsid_min && nsid < g_active_num_ns + g_active_nsid_min;
+	if (g_active_num_ns == 0) {
+		return false;
+	}
+	return nsid && nsid >= g_active_nsid_min && nsid < g_active_num_ns + g_active_nsid_min;
 }
 
 uint32_t
 spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return g_active_nsid_min;
+	if (g_active_num_ns > 0) {
+		return g_active_nsid_min;
+	} else {
+		return 0;
+	}
 }
 
 uint32_t
@@ -89,7 +96,7 @@ wait_for_file(char *filename, bool exists)
 {
 	int i;
 
-	for (i = 0; i < 1000; i++) {
+	for (i = 0; i < 10000; i++) {
 		if ((access(filename, F_OK) != -1) ^ (!exists)) {
 			return true;
 		}
@@ -173,6 +180,21 @@ test_cuse_update(void)
 
 	g_active_num_ns = 6;
 	g_active_nsid_min = 1;
+	nvme_cuse_update(&ctrlr);
+	verify_devices(&ctrlr);
+
+	g_active_num_ns = 10;
+	g_active_nsid_min = 10;
+	nvme_cuse_update(&ctrlr);
+	verify_devices(&ctrlr);
+
+	g_active_num_ns = 3;
+	g_active_nsid_min = 13;
+	nvme_cuse_update(&ctrlr);
+	verify_devices(&ctrlr);
+
+	g_active_num_ns = 10;
+	g_active_nsid_min = 10;
 	nvme_cuse_update(&ctrlr);
 	verify_devices(&ctrlr);
 
