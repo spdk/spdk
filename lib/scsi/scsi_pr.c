@@ -111,15 +111,21 @@ static void
 scsi_pr_release_reservation(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_registrant *reg)
 {
 	bool all_regs = false;
+	struct spdk_scsi_pr_registrant *curr_reg, *tmp;
 
 	SPDK_DEBUGLOG(scsi, "REGISTER: release reservation "
 		      "with type %u\n", lun->reservation.rtype);
 
 	/* TODO: Unit Attention */
 	all_regs = scsi_pr_is_all_registrants_type(lun);
-	if (all_regs && !TAILQ_EMPTY(&lun->reg_head)) {
-		lun->reservation.holder = TAILQ_FIRST(&lun->reg_head);
-		return;
+	if (all_regs) {
+		TAILQ_FOREACH_SAFE(curr_reg, &lun->reg_head, link, tmp) {
+			if (curr_reg != reg) {
+				lun->reservation.holder = curr_reg;
+				lun->reservation.crkey = curr_reg->rkey;
+				return;
+			}
+		}
 	}
 
 	memset(&lun->reservation, 0, sizeof(struct spdk_scsi_pr_reservation));
