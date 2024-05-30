@@ -319,6 +319,26 @@ ublk_ctrl_cmd_error(struct spdk_ublk_dev *ublk, int32_t res)
 	}
 }
 
+static int
+_ublk_get_device_state_retry(void *arg)
+{
+	struct spdk_ublk_dev *ublk = arg;
+	int rc;
+
+	spdk_poller_unregister(&ublk->retry_poller);
+
+	rc = ublk_ctrl_cmd_submit(ublk, UBLK_CMD_GET_DEV_INFO);
+	if (rc < 0) {
+		ublk_delete_dev(ublk);
+		if (ublk->ctrl_cb) {
+			ublk->ctrl_cb(ublk->cb_arg, rc);
+			ublk->ctrl_cb = NULL;
+		}
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 ublk_ctrl_process_cqe(struct io_uring_cqe *cqe)
 {
@@ -362,6 +382,20 @@ ublk_ctrl_process_cqe(struct io_uring_cqe *cqe)
 		ublk_free_dev(ublk);
 		break;
 	case UBLK_CMD_GET_DEV_INFO:
+		if (ublk->ublk_id != ublk->dev_info.dev_id) {
+			SPDK_ERRLOG("Invalid ublk ID\n");
+			rc = -EINVAL;
+			goto cb_done;
+		}
+
+		UBLK_DEBUGLOG(ublk, "Ublk %u device state %u\n", ublk->ublk_id, ublk->dev_info.state);
+		/* kernel ublk_drv driver returns -EBUSY if device state isn't UBLK_S_DEV_QUIESCED */
+		if ((ublk->dev_info.state != UBLK_S_DEV_QUIESCED) && (ublk->retry_count < 3)) {
+			ublk->retry_count++;
+			ublk->retry_poller = SPDK_POLLER_REGISTER(_ublk_get_device_state_retry, ublk, 1000000);
+			return;
+		}
+
 		rc = ublk_ctrl_start_recovery(ublk);
 		if (rc < 0) {
 			ublk_delete_dev(ublk);
@@ -1993,11 +2027,6 @@ ublk_ctrl_start_recovery(struct spdk_ublk_dev *ublk)
 {
 	int                     rc;
 	uint32_t                i;
-
-	if (ublk->ublk_id != ublk->dev_info.dev_id) {
-		SPDK_ERRLOG("Invalid ublk ID\n");
-		return -EINVAL;
-	}
 
 	ublk->num_queues = ublk->dev_info.nr_hw_queues;
 	ublk->queue_depth = ublk->dev_info.queue_depth;
