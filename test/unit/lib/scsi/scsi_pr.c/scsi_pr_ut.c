@@ -278,6 +278,77 @@ test_all_registrant_reservation_reserve(void)
 }
 
 static void
+test_all_registrant_reservation_access(void)
+{
+	struct spdk_scsi_pr_registrant *reg;
+	struct spdk_scsi_task task = {0};
+	uint8_t cdb[32] = {0};
+	uint32_t gen;
+	int rc;
+
+	task.lun = &g_lun;
+	task.target_port = &g_t_port_0;
+	task.cdb = cdb;
+
+	ut_init_reservation_test();
+
+	test_build_registrants();
+	gen = g_lun.pr_generation;
+
+	/* Test case: registered host A takes EXCLUSIVE_ACCESS_ALL_REGS reservation */
+	task.initiator_port = &g_i_port_a;
+	task.status = 0;
+	rc = scsi_pr_out_reserve(&task, SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS,
+				 0xa, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(task.status == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.rtype == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.crkey == 0xa);
+	SPDK_CU_ASSERT_FATAL(g_lun.pr_generation == gen);
+
+	/* Test case: registered host B tries getting read access */
+	task.initiator_port = &g_i_port_b;
+	task.status = 0;
+	task.cdb[0] = SPDK_SBC_READ_6;
+	rc = scsi_pr_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Test case: registered host B tries getting write access */
+	task.initiator_port = &g_i_port_b;
+	task.status = 0;
+	task.cdb[0] = SPDK_SBC_WRITE_12;
+	rc = scsi_pr_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Test case: B unregisters */
+	task.initiator_port = &g_i_port_b;
+	task.status = 0;
+	rc = scsi_pr_out_register(&task, SPDK_SCSI_PR_OUT_REGISTER,
+				  0xb, 0, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(task.status == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.pr_generation == ++gen);
+	reg = scsi_pr_get_registrant(&g_lun, &g_i_port_b, &g_t_port_0);
+	SPDK_CU_ASSERT_FATAL(reg == NULL);
+
+	/* Test case: un register host B tries getting read access */
+	task.initiator_port = &g_i_port_b;
+	task.status = 0;
+	task.cdb[0] = SPDK_SBC_READ_6;
+	rc = scsi_pr_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc < 0);
+
+	/* Test case: un register host B tries getting write access */
+	task.initiator_port = &g_i_port_b;
+	task.status = 0;
+	task.cdb[0] = SPDK_SBC_WRITE_12;
+	rc = scsi_pr_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc < 0);
+
+	ut_deinit_reservation_test();
+}
+
+static void
 test_reservation_reserve(void)
 {
 	struct spdk_scsi_pr_registrant *reg;
@@ -707,6 +778,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_register);
 	CU_ADD_TEST(suite, test_reservation_reserve);
 	CU_ADD_TEST(suite, test_all_registrant_reservation_reserve);
+	CU_ADD_TEST(suite, test_all_registrant_reservation_access);
 	CU_ADD_TEST(suite, test_reservation_preempt_non_all_regs);
 	CU_ADD_TEST(suite, test_reservation_preempt_all_regs);
 	CU_ADD_TEST(suite, test_reservation_cmds_conflict);

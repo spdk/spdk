@@ -55,7 +55,7 @@ static inline bool
 scsi_pr_registrant_is_holder(struct spdk_scsi_lun *lun,
 			     struct spdk_scsi_pr_registrant *reg)
 {
-	if (scsi_pr_is_all_registrants_type(lun)) {
+	if (reg != NULL && scsi_pr_is_all_registrants_type(lun)) {
 		return true;
 	}
 
