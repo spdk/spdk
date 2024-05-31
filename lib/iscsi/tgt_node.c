@@ -1345,6 +1345,26 @@ iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
 }
 
 static void
+iscsi_tgt_node_histogram_config_json(struct spdk_iscsi_tgt_node *target,
+				     struct spdk_json_write_ctx *w)
+{
+	if (!target->histogram) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "iscsi_enable_histogram");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", target->name);
+
+	spdk_json_write_named_bool(w, "enable", true);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
 iscsi_tgt_node_config_json(struct spdk_iscsi_tgt_node *target,
 			   struct spdk_json_write_ctx *w)
 {
@@ -1356,6 +1376,8 @@ iscsi_tgt_node_config_json(struct spdk_iscsi_tgt_node *target,
 	iscsi_tgt_node_info_json(target, w);
 
 	spdk_json_write_object_end(w);
+
+	iscsi_tgt_node_histogram_config_json(target, w);
 }
 
 void
