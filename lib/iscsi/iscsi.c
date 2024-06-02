@@ -1546,6 +1546,11 @@ iscsi_negotiate_chap_param(struct spdk_iscsi_conn *conn)
 static int
 iscsi_op_login_session_discovery_chap(struct spdk_iscsi_conn *conn)
 {
+	conn->disable_chap = g_iscsi.disable_chap;
+	conn->require_chap = g_iscsi.require_chap;
+	conn->mutual_chap = g_iscsi.mutual_chap;
+	conn->chap_group = g_iscsi.chap_group;
+
 	return iscsi_negotiate_chap_param(conn);
 }
 
