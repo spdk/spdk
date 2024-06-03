@@ -230,39 +230,6 @@ function linux_hugetlbfs_mounts() {
 	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
 
-function get_block_dev_from_bdf() {
-	local bdf=$1
-	local block blocks=() ctrl sub
-
-	for block in /sys/block/!(nvme*); do
-		if [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
-			blocks+=("${block##*/}")
-		fi
-	done
-
-	blocks+=($(get_block_dev_from_nvme "$bdf"))
-
-	printf '%s\n' "${blocks[@]}"
-}
-
-function get_block_dev_from_nvme() {
-	local bdf=$1 block ctrl sub
-
-	for ctrl in /sys/class/nvme/nvme*; do
-		[[ -e $ctrl/address && $(< "$ctrl/address") == "$bdf" ]] || continue
-		sub=$(< "$ctrl/subsysnqn") && break
-	done
-
-	[[ -n $sub ]] || return 0
-
-	for block in /sys/block/nvme*; do
-		[[ -e $block/hidden && $(< "$block/hidden") == 1 ]] && continue
-		if [[ -e $block/device/subsysnqn && $(< "$block/device/subsysnqn") == "$sub" ]]; then
-			echo "${block##*/}"
-		fi
-	done
-}
-
 function get_used_bdf_block_devs() {
 	local bdf=$1
 	local blocks block blockp dev mount holder

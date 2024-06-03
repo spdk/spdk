@@ -1474,24 +1474,7 @@ function freebsd_set_maxsock_buf() {
 }
 
 function get_nvme_name_from_bdf() {
-	blkname=()
-
-	nvme_devs=$(lsblk -d --output NAME | grep "^nvme") || true
-	if [ -z "${nvme_devs:-}" ]; then
-		return
-	fi
-	for dev in $nvme_devs; do
-		link_name=$(readlink /sys/block/$dev/device/device) || true
-		if [ -z "${link_name:-}" ]; then
-			link_name=$(readlink /sys/block/$dev/device)
-		fi
-		bdf=$(basename "$link_name")
-		if [ "$bdf" = "$1" ]; then
-			blkname+=($dev)
-		fi
-	done
-
-	printf '%s\n' "${blkname[@]}"
+	get_block_dev_from_nvme "$@"
 }
 
 function get_nvme_ctrlr_from_bdf() {

@@ -11,6 +11,9 @@
 # if PCI_BLOCKED is empty assume device is NOT blocked
 # Params:
 # $1 - PCI BDF
+
+shopt -s extglob
+
 function pci_can_use() {
 	local i
 
@@ -503,6 +506,39 @@ kmsg() {
 	((UID == 0)) || return 0
 	[[ -w /dev/kmsg && $(< /proc/sys/kernel/printk_devkmsg) == on ]] || return 0
 	echo "$*" > /dev/kmsg
+}
+
+function get_block_dev_from_bdf() {
+	local bdf=$1
+	local block blocks=() ctrl sub
+
+	for block in /sys/block/!(nvme*); do
+		if [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
+			blocks+=("${block##*/}")
+		fi
+	done
+
+	blocks+=($(get_block_dev_from_nvme "$bdf"))
+
+	printf '%s\n' "${blocks[@]}"
+}
+
+function get_block_dev_from_nvme() {
+	local bdf=$1 block ctrl sub
+
+	for ctrl in /sys/class/nvme/nvme*; do
+		[[ -e $ctrl/address && $(< "$ctrl/address") == "$bdf" ]] || continue
+		sub=$(< "$ctrl/subsysnqn") && break
+	done
+
+	[[ -n $sub ]] || return 0
+
+	for block in /sys/block/nvme*; do
+		[[ -e $block/hidden && $(< "$block/hidden") == 1 ]] && continue
+		if [[ -e $block/device/subsysnqn && $(< "$block/device/subsysnqn") == "$sub" ]]; then
+			echo "${block##*/}"
+		fi
+	done
 }
 
 if [[ -e "$CONFIG_WPDK_DIR/bin/wpdk_common.sh" ]]; then
