@@ -528,24 +528,30 @@ spdk_nvme_dhchap_dhkey_get_pubkey(struct spdk_nvme_dhchap_dhkey *dhkey, void *pu
 	EVP_PKEY *key = (EVP_PKEY *)dhkey;
 	BIGNUM *bn = NULL;
 	int rc;
+	const size_t num_bytes = (size_t)spdk_divide_round_up(EVP_PKEY_get_bits(key), 8);
+
+	if (num_bytes == 0) {
+		SPDK_ERRLOG("Failed to get key size\n");
+		return -EIO;
+	}
+
+	if (num_bytes > *len) {
+		SPDK_ERRLOG("Insufficient key buffer size=%zu (needed=%zu)",
+			    *len, num_bytes);
+		return -EINVAL;
+	}
+	*len = num_bytes;
 
 	if (EVP_PKEY_get_bn_param(key, "pub", &bn) != 1) {
 		rc = -EIO;
 		goto error;
 	}
-	if ((size_t)BN_num_bytes(bn) > *len) {
-		SPDK_ERRLOG("Insufficient key buffer size=%zu (needed=%d)",
-			    *len, BN_num_bytes(bn));
-		rc = -EINVAL;
-		goto error;
-	}
-	rc = BN_bn2bin(bn, pub);
+
+	rc = BN_bn2binpad(bn, pub, *len);
 	if (rc <= 0) {
 		rc = -EIO;
 		goto error;
 	}
-
-	*len = (size_t)BN_num_bytes(bn);
 	rc = 0;
 error:
 	BN_free(bn);
