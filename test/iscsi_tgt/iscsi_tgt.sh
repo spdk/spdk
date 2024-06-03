@@ -30,6 +30,7 @@ else
 fi
 run_test "iscsi_tgt_filesystem" $rootdir/test/iscsi_tgt/filesystem/filesystem.sh
 run_test "chap_during_discovery" $rootdir/test/iscsi_tgt/chap/chap_discovery.sh
+run_test "chap_mutual_auth" $rootdir/test/iscsi_tgt/chap/chap_mutual_not_set.sh
 run_test "iscsi_tgt_reset" $rootdir/test/iscsi_tgt/reset/reset.sh
 run_test "iscsi_tgt_rpc_config" $rootdir/test/iscsi_tgt/rpc_config/rpc_config.sh
 run_test "iscsi_tgt_iscsi_lvol" $rootdir/test/iscsi_tgt/lvol/iscsi_lvol.sh

@@ -978,6 +978,11 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 				goto error_return;
 			}
 
+			if (conn->mutual_chap == false) {
+				SPDK_ERRLOG("Initiator wants to use mutual CHAP for security, but it's not enabled.\n");
+				goto error_return;
+			}
+
 			md5init(&md5ctx);
 			/* Identifier */
 			md5update(&md5ctx, conn->auth.chap_mid, 1);
