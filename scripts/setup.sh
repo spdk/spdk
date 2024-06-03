@@ -257,7 +257,9 @@ function get_block_dev_from_nvme() {
 
 	for block in /sys/block/nvme*; do
 		[[ -e $block/hidden && $(< "$block/hidden") == 1 ]] && continue
-		[[ $(< "$block/device/subsysnqn") == "$sub" ]] && echo "${block##*/}"
+		if [[ -e $block/device/subsysnqn && $(< "$block/device/subsysnqn") == "$sub" ]]; then
+			echo "${block##*/}"
+		fi
 	done
 }
 
