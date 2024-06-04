@@ -562,7 +562,6 @@ if __name__ == "__main__":
                                        timeout_us=args.timeout_us,
                                        timeout_admin_us=args.timeout_admin_us,
                                        keep_alive_timeout_ms=args.keep_alive_timeout_ms,
-                                       retry_count=args.retry_count,
                                        arbitration_burst=args.arbitration_burst,
                                        low_priority_weight=args.low_priority_weight,
                                        medium_priority_weight=args.medium_priority_weight,
@@ -599,8 +598,6 @@ if __name__ == "__main__":
                    help="Timeout for each admin command, in microseconds. If 0, treat same as io timeouts.", type=int)
     p.add_argument('-k', '--keep-alive-timeout-ms',
                    help="Keep alive timeout period in millisecond. If 0, disable keep-alive.", type=int)
-    p.add_argument('-n', '--retry-count',
-                   help='the number of attempts per I/O when an I/O fails. (deprecated, please use --transport-retry-count.)', type=int)
     p.add_argument('--arbitration-burst',
                    help='the value is expressed as a power of two', type=int)
     p.add_argument('--low-priority-weight',

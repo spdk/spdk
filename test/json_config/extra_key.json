@@ -17,7 +17,7 @@
         },
         {
           "params": {
-            "retry_count": 4,
+            "transport_retry_count": 4,
             "timeout_us": 0,
             "nvme_adminq_poll_period_us": 100000,
             "action_on_timeout": "none",

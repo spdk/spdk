@@ -3906,7 +3906,6 @@ action_on_timeout          | Optional | string      | Action to take on command 
 timeout_us                 | Optional | number      | Timeout for each command, in microseconds. If 0, don't track timeouts
 timeout_admin_us           | Optional | number      | Timeout for each admin command, in microseconds. If 0, treat same as io timeouts ('timeout_us')
 keep_alive_timeout_ms      | Optional | number      | Keep alive timeout period in milliseconds, default is 10s
-retry_count                | Optional | number      | The number of attempts per I/O before an I/O fails. (Deprecated. Please use transport_retry_count instead.)
 arbitration_burst          | Optional | number      | The value is expressed as a power of two, a value of 111b indicates no limit
 low_priority_weight        | Optional | number      | The maximum number of commands that the controller may launch at one time from a low priority queue
 medium_priority_weight     | Optional | number      | The maximum number of commands that the controller may launch at one time from a medium priority queue

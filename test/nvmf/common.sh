@@ -564,7 +564,7 @@ function gen_nvmf_target_json() {
 			  "params": {
 				"action_on_timeout": "none",
 				"timeout_us": 0,
-				"retry_count": 4,
+				"transport_retry_count": 4,
 				"arbitration_burst": 0,
 				"low_priority_weight": 0,
 				"medium_priority_weight": 0,
