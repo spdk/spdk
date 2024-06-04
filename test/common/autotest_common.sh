@@ -1624,7 +1624,7 @@ function reap_spdk_processes() {
 	local bins test_bins procs
 	local spdk_procs spdk_pids
 
-	mapfile -t test_bins < <(find "$rootdir"/test/{app,env,event} -type f)
+	mapfile -t test_bins < <(find "$rootdir"/test/{app,env,event,nvme} -type f)
 	mapfile -t bins < <(
 		exec_files "${test_bins[@]}"
 		readlink -f "$SPDK_BIN_DIR/"* "$SPDK_EXAMPLE_DIR/"*
