@@ -151,8 +151,28 @@ _init_core(uint32_t lcore_id)
 static int
 _init(void)
 {
+	struct spdk_cpuset smt_mask, app_mask;
 	uint32_t i, j;
 	int rc = 0;
+
+	if (!spdk_env_core_get_smt_cpuset(&smt_mask, UINT32_MAX)) {
+		/* We could not get SMT status on this system, don't allow
+		 * the governor to load since we cannot guarantee we are running
+		 * on a subset of some SMT siblings.
+		 */
+		SPDK_ERRLOG("Cannot detect SMT status\n");
+		return -1;
+	}
+
+	/* Verify that if our app mask includes any SMT siblings, that it has
+	 * all of those siblings. Otherwise the governor cannot work.
+	 */
+	spdk_env_get_cpuset(&app_mask);
+	spdk_cpuset_and(&app_mask, &smt_mask);
+	if (!spdk_cpuset_equal(&app_mask, &smt_mask)) {
+		SPDK_ERRLOG("App core mask contains some but not all of a set of SMT siblings\n");
+		return -1;
+	}
 
 #if RTE_VERSION >= RTE_VERSION_NUM(23, 11, 0, 0)
 	for (i = PM_ENV_ACPI_CPUFREQ; i <= PM_ENV_AMD_PSTATE_CPUFREQ; i++) {

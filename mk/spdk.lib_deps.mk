@@ -122,7 +122,7 @@ DEPDIRS-sock_uring := log sock util thread trace
 # module/scheduler
 DEPDIRS-scheduler_dynamic := event log thread util json
 ifeq (y,$(DPDK_POWER))
-DEPDIRS-scheduler_dpdk_governor := event json log
+DEPDIRS-scheduler_dpdk_governor := event json log util
 DEPDIRS-scheduler_gscheduler := event log
 endif
 
