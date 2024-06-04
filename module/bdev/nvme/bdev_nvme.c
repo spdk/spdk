@@ -5265,6 +5265,26 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, int rc)
 	}
 }
 
+static int
+bdev_nvme_remove_poller(void *ctx)
+{
+	struct spdk_nvme_transport_id trid_pcie;
+
+	if (TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+		spdk_poller_unregister(&g_hotplug_poller);
+		return SPDK_POLLER_IDLE;
+	}
+
+	memset(&trid_pcie, 0, sizeof(trid_pcie));
+	spdk_nvme_trid_populate_transport(&trid_pcie, SPDK_NVME_TRANSPORT_PCIE);
+
+	if (spdk_nvme_scan_attached(&trid_pcie)) {
+		SPDK_ERRLOG_RATELIMIT("spdk_nvme_scan_attached() failed\n");
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 		       struct nvme_async_probe_ctx *ctx)
@@ -5276,6 +5296,11 @@ nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 				nvme_ctrlr->nbdev_ctrlr->name);
 
 	nvme_ctrlr_populate_namespaces(nvme_ctrlr, ctx);
+
+	if (g_hotplug_poller == NULL) {
+		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_remove_poller, NULL,
+							NVME_HOTPLUG_POLL_PERIOD_DEFAULT);
+	}
 }
 
 static void
@@ -5784,6 +5809,9 @@ set_nvme_hotplug_period_cb(void *_ctx)
 	spdk_poller_unregister(&g_hotplug_poller);
 	if (ctx->enabled) {
 		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_hotplug, NULL, ctx->period_us);
+	} else {
+		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_remove_poller, NULL,
+							NVME_HOTPLUG_POLL_PERIOD_DEFAULT);
 	}
 
 	g_nvme_hotplug_poll_period_us = ctx->period_us;
