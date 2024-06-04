@@ -779,10 +779,10 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                                 priority=None, subnqn=None, hostnqn=None, hostaddr=None,
                                 hostsvcid=None, prchk_reftag=None, prchk_guard=None,
-                                hdgst=None, ddgst=None, fabrics_timeout=None, multipath=None, num_io_queues=None,
-                                ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
-                                fast_io_fail_timeout_sec=None, psk=None, max_bdevs=None,
-                                dhchap_key=None, dhchap_ctrlr_key=None):
+                                hdgst=None, ddgst=None, fabrics_connect_timeout_us=None,
+                                multipath=None, num_io_queues=None, ctrlr_loss_timeout_sec=None,
+                                reconnect_delay_sec=None, fast_io_fail_timeout_sec=None,
+                                psk=None, max_bdevs=None, dhchap_key=None, dhchap_ctrlr_key=None):
     """Construct block device for each NVMe namespace in the attached controller.
 
     Args:
@@ -800,7 +800,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         prchk_guard: Enable checking of PI guard for I/O processing (optional)
         hdgst: Enable TCP header digest (optional)
         ddgst: Enable TCP data digest (optional)
-        fabrics_timeout: Fabrics connect timeout in us (optional)
+        fabrics_connect_timeout_us: Fabrics connect timeout in us (optional)
         multipath: The behavior when multiple paths are created ("disable", "failover", or "multipath"; failover if not specified)
         num_io_queues: The number of IO queues to request during initialization. (optional)
         ctrlr_loss_timeout_sec: Time to wait until ctrlr is reconnected before deleting ctrlr.
@@ -862,8 +862,8 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
     if ddgst:
         params['ddgst'] = ddgst
 
-    if fabrics_timeout:
-        params['fabrics_connect_timeout_us'] = fabrics_timeout
+    if fabrics_connect_timeout_us:
+        params['fabrics_connect_timeout_us'] = fabrics_connect_timeout_us
 
     if multipath:
         params['multipath'] = multipath

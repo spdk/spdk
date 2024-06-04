@@ -702,7 +702,7 @@ if __name__ == "__main__":
                                                          prchk_guard=args.prchk_guard,
                                                          hdgst=args.hdgst,
                                                          ddgst=args.ddgst,
-                                                         fabrics_timeout=args.fabrics_timeout,
+                                                         fabrics_connect_timeout_us=args.fabrics_connect_timeout_us,
                                                          multipath=args.multipath,
                                                          num_io_queues=args.num_io_queues,
                                                          ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
@@ -739,7 +739,8 @@ if __name__ == "__main__":
                    help='Enable TCP header digest.', action='store_true')
     p.add_argument('-d', '--ddgst',
                    help='Enable TCP data digest.', action='store_true')
-    p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds')
+    p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds',
+                   dest="fabrics_connect_timeout_us")
     p.add_argument('-x', '--multipath', help='Set multipath behavior (disable, failover, multipath)')
     p.add_argument('--num-io-queues', type=int, help='Set the number of IO queues to request during initialization.')
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
