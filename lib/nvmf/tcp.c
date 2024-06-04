@@ -335,6 +335,7 @@ struct spdk_nvmf_tcp_poll_group {
 struct spdk_nvmf_tcp_port {
 	const struct spdk_nvme_transport_id	*trid;
 	struct spdk_sock			*listen_sock;
+	struct spdk_nvmf_transport		*transport;
 	TAILQ_ENTRY(spdk_nvmf_tcp_port)		link;
 };
 
@@ -978,6 +979,8 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		return -EINVAL;
 	}
 
+	port->transport = transport;
+
 	SPDK_NOTICELOG("*** NVMe/TCP Target Listening on %s port %s ***\n",
 		       trid->traddr, trid->trsvcid);
 
@@ -1342,9 +1345,7 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
-			struct spdk_nvmf_tcp_port *port,
-			struct spdk_sock *sock)
+nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
 	int rc;
@@ -1362,7 +1363,7 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	tqpair->sock = sock;
 	tqpair->state_cntr[TCP_REQUEST_STATE_FREE] = 0;
 	tqpair->port = port;
-	tqpair->qpair.transport = transport;
+	tqpair->qpair.transport = port->transport;
 
 	rc = spdk_sock_getaddr(tqpair->sock, tqpair->target_addr,
 			       sizeof(tqpair->target_addr), &tqpair->target_port,
@@ -1374,11 +1375,11 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 		return;
 	}
 
-	spdk_nvmf_tgt_new_qpair(transport->tgt, &tqpair->qpair);
+	spdk_nvmf_tgt_new_qpair(port->transport->tgt, &tqpair->qpair);
 }
 
 static uint32_t
-nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvmf_tcp_port *port)
+nvmf_tcp_port_accept(struct spdk_nvmf_tcp_port *port)
 {
 	struct spdk_sock *sock;
 	uint32_t count = 0;
@@ -1390,7 +1391,7 @@ nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvmf_tcp
 			break;
 		}
 		count++;
-		nvmf_tcp_handle_connect(transport, port, sock);
+		nvmf_tcp_handle_connect(port, sock);
 	}
 
 	return count;
@@ -1407,7 +1408,7 @@ nvmf_tcp_accept(void *ctx)
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
 	TAILQ_FOREACH(port, &ttransport->ports, link) {
-		count += nvmf_tcp_port_accept(transport, port);
+		count += nvmf_tcp_port_accept(port);
 	}
 
 	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
