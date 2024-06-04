@@ -2017,13 +2017,13 @@ enum spdk_nvme_identify_cns {
 	/** List namespace identification descriptors */
 	SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST	= 0x03,
 
-	/** Identify namespace indicated in CDW1.NSID, specific to CWD11.CSI */
+	/** Identify namespace indicated in CDW1.NSID, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_NS_IOCS			= 0x05,
 
-	/** Identify controller, specific to CWD11.CSI */
+	/** Identify controller, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_CTRLR_IOCS			= 0x06,
 
-	/** List active NSIDs greater than CDW1.NSID, specific to CWD11.CSI */
+	/** List active NSIDs greater than CDW1.NSID, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST_IOCS		= 0x07,
 
 	/** List allocated NSIDs greater than CDW1.NSID */
@@ -2044,7 +2044,7 @@ enum spdk_nvme_identify_cns {
 	/** Get secondary controller list */
 	SPDK_NVME_IDENTIFY_SECONDARY_CTRLR_LIST		= 0x15,
 
-	/** List allocated NSIDs greater than CDW1.NSID, specific to CWD11.CSI */
+	/** List allocated NSIDs greater than CDW1.NSID, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST_IOCS	= 0x1a,
 
 	/** Identify namespace if CDW1.NSID is allocated, specific to CDWD11.CSI */
