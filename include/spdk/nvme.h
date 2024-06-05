@@ -4402,6 +4402,9 @@ struct spdk_nvme_transport_ops {
 	int (*ctrlr_ready)(struct spdk_nvme_ctrlr *ctrlr);
 
 	volatile struct spdk_nvme_registers *(*ctrlr_get_registers)(struct spdk_nvme_ctrlr *ctrlr);
+
+	/* Optional callback for transports to process removal events of attached controllers. */
+	int (*ctrlr_scan_attached)(struct spdk_nvme_probe_ctx *probe_ctx);
 };
 
 /**

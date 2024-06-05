@@ -130,6 +130,24 @@ nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 }
 
 int
+nvme_transport_ctrlr_scan_attached(struct spdk_nvme_probe_ctx *probe_ctx)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(probe_ctx->trid.trstring);
+
+	if (transport == NULL) {
+		SPDK_ERRLOG("Transport %s doesn't exist.", probe_ctx->trid.trstring);
+		return -ENOENT;
+	}
+
+	if (transport->ops.ctrlr_scan_attached != NULL) {
+		return transport->ops.ctrlr_scan_attached(probe_ctx);
+	}
+	SPDK_ERRLOG("Transport %s does not support ctrlr_scan_attached callback\n",
+		    probe_ctx->trid.trstring);
+	return -ENOTSUP;
+}
+
+int
 nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);

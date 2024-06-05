@@ -1625,6 +1625,7 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 		void *devhandle);
 int nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect);
+int nvme_transport_ctrlr_scan_attached(struct spdk_nvme_probe_ctx *probe_ctx);
 int nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
