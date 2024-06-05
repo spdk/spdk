@@ -1504,6 +1504,32 @@ spdk_nvme_prchk_flags_str(uint32_t prchk_flags)
 	}
 }
 
+int
+spdk_nvme_scan_attached(const struct spdk_nvme_transport_id *trid)
+{
+	int rc;
+	struct spdk_nvme_probe_ctx *probe_ctx;
+
+	rc = nvme_driver_init();
+	if (rc != 0) {
+		return rc;
+	}
+
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	if (!probe_ctx) {
+		return -ENOMEM;
+	}
+
+	nvme_probe_ctx_init(probe_ctx, trid, NULL, NULL, NULL, NULL, NULL);
+
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+	rc = nvme_transport_ctrlr_scan_attached(probe_ctx);
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+	free(probe_ctx);
+
+	return rc < 0 ? rc : 0;
+}
+
 struct spdk_nvme_probe_ctx *
 spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 		      void *cb_ctx,

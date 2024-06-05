@@ -1101,6 +1101,18 @@ int spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx);
 void spdk_nvme_detach_poll(struct spdk_nvme_detach_ctx *detach_ctx);
 
 /**
+ * Scan attached controllers for events.
+ *
+ * This function lets user act on events such as hot-remove without a need to
+ * enable hotplug explicitly. Only attached devices will be checked.
+ *
+ * \param trid Transport ID.
+ *
+ * \returns 0 on success, negative on failure.
+ */
+int spdk_nvme_scan_attached(const struct spdk_nvme_transport_id *trid);
+
+/**
  * Update the transport ID for a given controller.
  *
  * This function allows the user to set a new trid for a controller only if the
