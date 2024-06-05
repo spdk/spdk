@@ -853,6 +853,16 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 static int
+nvme_pci_ctrlr_scan_attached(struct spdk_nvme_probe_ctx *probe_ctx)
+{
+	/* Only the primary process can monitor hotplug. */
+	if (spdk_process_is_primary()) {
+		return _nvme_pcie_hotplug_monitor(probe_ctx);
+	}
+	return 0;
+}
+
+static int
 nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		     bool direct_connect)
 {
@@ -868,13 +878,10 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	}
 
 	/* Only the primary process can monitor hotplug. */
-	if (spdk_process_is_primary()) {
-		if (_nvme_pcie_hotplug_monitor(probe_ctx) > 0) {
-			/* Some removal events were received. Return immediately, avoiding
-			 * an spdk_pci_enumerate() which could trigger issue #3205.
-			 */
-			return 0;
-		}
+	if (nvme_pci_ctrlr_scan_attached(probe_ctx) > 0) {
+		/* Some removal events were received. Return immediately, avoiding
+		 * an spdk_pci_enumerate() which could trigger issue #3205. */
+		return 0;
 	}
 
 	if (enum_ctx.has_pci_addr == false) {
@@ -1077,6 +1084,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.type = SPDK_NVME_TRANSPORT_PCIE,
 	.ctrlr_construct = nvme_pcie_ctrlr_construct,
 	.ctrlr_scan = nvme_pcie_ctrlr_scan,
+	.ctrlr_scan_attached = nvme_pci_ctrlr_scan_attached,
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
 	.ctrlr_enable = nvme_pcie_ctrlr_enable,
 
