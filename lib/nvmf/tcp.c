@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/accel.h"
@@ -3365,7 +3365,7 @@ static int
 nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
-	int rc;
+	int num_events, rc = 0, rc2;
 	struct spdk_nvmf_request *req, *req_tmp;
 	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
@@ -3385,21 +3385,24 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		}
 	}
 
-	rc = spdk_sock_group_poll(tgroup->sock_group);
-	if (rc < 0) {
+	num_events = spdk_sock_group_poll(tgroup->sock_group);
+	if (spdk_unlikely(num_events < 0)) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
 	}
 
 	TAILQ_FOREACH_SAFE(tqpair, &tgroup->await_req, link, tqpair_tmp) {
-		rc = nvmf_tcp_sock_process(tqpair);
+		rc2 = nvmf_tcp_sock_process(tqpair);
 
 		/* If there was a new socket error, disconnect */
-		if (rc < 0) {
+		if (spdk_unlikely(rc2 < 0)) {
 			nvmf_tcp_qpair_disconnect(tqpair);
+			if (rc == 0) {
+				rc = rc2;
+			}
 		}
 	}
 
-	return rc;
+	return rc == 0 ? num_events : rc;
 }
 
 static int
