@@ -3574,7 +3574,7 @@ raid_bdev_examine_others(void *_ctx, int status)
 	struct raid_base_bdev_info *base_info;
 	char uuid_str[SPDK_UUID_STRING_LEN];
 
-	if (status != 0) {
+	if (status != 0 && status != -EEXIST) {
 		goto out;
 	}
 
@@ -3737,6 +3737,11 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		SPDK_ERRLOG("Bdev %s is not a member of raid bdev %s\n",
 			    bdev->name, raid_bdev->bdev.name);
 		rc = -EINVAL;
+		goto out;
+	}
+
+	if (base_info->is_configured) {
+		rc = -EEXIST;
 		goto out;
 	}
 
