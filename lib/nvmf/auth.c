@@ -361,6 +361,11 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 		goto out;
 	}
+	if ((msg->dhvlen % 4) != 0) {
+		AUTH_ERRLOG(qpair, "dhvlen=%u is not multiple of 4\n", msg->dhvlen);
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+		goto out;
+	}
 	if (req->length != sizeof(*msg) + 2 * hl + msg->dhvlen) {
 		AUTH_ERRLOG(qpair, "invalid message length: %"PRIu32" != %zu\n",
 			    req->length, sizeof(*msg) + 2 * hl);
