@@ -116,10 +116,7 @@ function is_bdf_not_mounted() {
 }
 
 function get_cores() {
-	local cpu_list="$1"
-	for cpu in ${cpu_list//,/ }; do
-		echo $cpu
-	done
+	parse_cpu_list <(echo "$1")
 }
 
 function get_cores_numa_node() {
