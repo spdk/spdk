@@ -2640,22 +2640,10 @@ nvme_ctrlr_identify_ns_zns_specific_async_done(void *arg, const struct spdk_nvme
 }
 
 static int
-nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
+nvme_ctrlr_identify_ns_zns_specific_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int rc;
-
-	switch (ns->csi) {
-	case SPDK_NVME_CSI_ZNS:
-		break;
-	default:
-		/*
-		 * This switch must handle all cases for which
-		 * nvme_ns_has_supported_iocs_specific_data() returns true,
-		 * other cases should never happen.
-		 */
-		assert(0);
-	}
 
 	assert(!ns->nsdata_zns);
 	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
@@ -2674,6 +2662,24 @@ nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 	}
 
 	return rc;
+}
+
+static int
+nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
+{
+	switch (ns->csi) {
+	case SPDK_NVME_CSI_ZNS:
+		return nvme_ctrlr_identify_ns_zns_specific_async(ns);
+	default:
+		/*
+		 * This switch must handle all cases for which
+		 * nvme_ns_has_supported_iocs_specific_data() returns true,
+		 * other cases should never happen.
+		 */
+		assert(0);
+	}
+
+	return -EINVAL;
 }
 
 static int

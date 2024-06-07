@@ -128,24 +128,12 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 }
 
 static int
-nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
+nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	struct spdk_nvme_zns_ns_data *nsdata_zns;
 	int rc;
-
-	switch (ns->csi) {
-	case SPDK_NVME_CSI_ZNS:
-		break;
-	default:
-		/*
-		 * This switch must handle all cases for which
-		 * nvme_ns_has_supported_iocs_specific_data() returns true,
-		 * other cases should never happen.
-		 */
-		assert(0);
-	}
 
 	nvme_ns_free_zns_specific_data(ns);
 
@@ -183,6 +171,24 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 	ns->nsdata_zns = nsdata_zns;
 
 	return 0;
+}
+
+static int
+nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
+{
+	switch (ns->csi) {
+	case SPDK_NVME_CSI_ZNS:
+		return nvme_ctrlr_identify_ns_zns_specific(ns);
+	default:
+		/*
+		 * This switch must handle all cases for which
+		 * nvme_ns_has_supported_iocs_specific_data() returns true,
+		 * other cases should never happen.
+		 */
+		assert(0);
+	}
+
+	return -EINVAL;
 }
 
 static int
