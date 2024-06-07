@@ -23,6 +23,7 @@
 #include "../isa-l/include/igzip_lib.h"
 #ifdef SPDK_CONFIG_ISAL_CRYPTO
 #include "../isa-l-crypto/include/aes_xts.h"
+#include "../isa-l-crypto/include/isal_crypto_api.h"
 #endif
 #endif
 
@@ -39,8 +40,9 @@ struct sw_accel_io_channel {
 	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
 };
 
-typedef void (*sw_accel_crypto_op)(uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
-				   const uint8_t *src, uint8_t *dst);
+typedef int (*sw_accel_crypto_op)(const uint8_t *k2, const uint8_t *k1,
+				  const uint8_t *initial_tweak, const uint64_t len_bytes,
+				  const void *in, void *out);
 
 struct sw_accel_crypto_key_data {
 	sw_accel_crypto_op encrypt;
@@ -313,6 +315,7 @@ _sw_accel_crypto_operation(struct spdk_accel_task *accel_task, struct spdk_accel
 	uint32_t i, block_size, crypto_len, crypto_accum_len = 0;
 	struct iovec *src_iov, *dst_iov;
 	uint8_t *src, *dst;
+	int rc;
 
 	/* iv is 128 bits, since we are using logical block address (64 bits) as iv, fill first 8 bytes with zeroes */
 	iv[0] = 0;
@@ -357,7 +360,10 @@ _sw_accel_crypto_operation(struct spdk_accel_task *accel_task, struct spdk_accel
 		src = (uint8_t *)src_iov->iov_base + src_offset;
 		dst = (uint8_t *)dst_iov->iov_base + dst_offset;
 
-		op((uint8_t *)key->key2, (uint8_t *)key->key, (uint8_t *)iv, crypto_len, src, dst);
+		rc = op((uint8_t *)key->key2, (uint8_t *)key->key, (uint8_t *)iv, crypto_len, src, dst);
+		if (rc != ISAL_CRYPTO_ERR_NONE) {
+			break;
+		}
 
 		src_offset += crypto_len;
 		dst_offset += crypto_len;
@@ -671,12 +677,12 @@ sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
 
 	switch (key->key_size) {
 	case SPDK_ACCEL_AES_XTS_128_KEY_SIZE:
-		key_data->encrypt = XTS_AES_128_enc;
-		key_data->decrypt = XTS_AES_128_dec;
+		key_data->encrypt = isal_aes_xts_enc_128;
+		key_data->decrypt = isal_aes_xts_dec_128;
 		break;
 	case SPDK_ACCEL_AES_XTS_256_KEY_SIZE:
-		key_data->encrypt = XTS_AES_256_enc;
-		key_data->decrypt = XTS_AES_256_dec;
+		key_data->encrypt = isal_aes_xts_enc_256;
+		key_data->decrypt = isal_aes_xts_dec_256;
 		break;
 	default:
 		assert(0);
