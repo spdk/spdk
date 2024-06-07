@@ -823,13 +823,14 @@ nvmf_auth_request_exec(struct spdk_nvmf_request *req)
 int
 nvmf_qpair_auth_init(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_qpair_auth *auth;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 	int rc;
 
-	assert(qpair->auth == NULL);
-	auth = calloc(1, sizeof(*qpair->auth));
 	if (auth == NULL) {
-		return -ENOMEM;
+		auth = calloc(1, sizeof(*qpair->auth));
+		if (auth == NULL) {
+			return -ENOMEM;
+		}
 	}
 
 	auth->digest = -1;
