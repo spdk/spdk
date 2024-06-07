@@ -586,6 +586,8 @@ struct spdk_nvme_ns {
 	/* Zoned Namespace Command Set Specific Identify Namespace data. */
 	struct spdk_nvme_zns_ns_data	*nsdata_zns;
 
+	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
+
 	RB_ENTRY(spdk_nvme_ns)		node;
 };
 
@@ -1307,6 +1309,7 @@ int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns);
+void	nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns);
 bool	nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,

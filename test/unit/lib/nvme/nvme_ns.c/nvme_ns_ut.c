@@ -34,6 +34,14 @@ static struct spdk_nvme_zns_ns_data nsdata_zns = {
 	.mar = 1024,
 	.mor = 1024,
 };
+static struct spdk_nvme_nvm_ns_data nsdata_nvm = {
+	.lbstm = 0xFFFFFFFF,
+	.pic._16bpists = 1,
+	.pic._16bpistm = 1,
+	.pic.stcrs = 1,
+	.elbaf[0].sts = 32,
+	.elbaf[0].pif = 0,
+};
 
 struct spdk_nvme_cmd g_ut_cmd = {};
 
@@ -54,9 +62,15 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		fake_cpl_sc(cb_fn, cb_arg);
 		return 0;
 	} else if (cns == SPDK_NVME_IDENTIFY_NS_IOCS) {
-		assert(payload_size == sizeof(struct spdk_nvme_zns_ns_data));
-		memcpy(payload, &nsdata_zns, sizeof(struct spdk_nvme_zns_ns_data));
-		return 0;
+		if (csi == SPDK_NVME_CSI_ZNS) {
+			assert(payload_size == sizeof(struct spdk_nvme_zns_ns_data));
+			memcpy(payload, &nsdata_zns, sizeof(struct spdk_nvme_zns_ns_data));
+			return 0;
+		} else if (csi == SPDK_NVME_CSI_NVM) {
+			assert(payload_size == sizeof(struct spdk_nvme_nvm_ns_data));
+			memcpy(payload, &nsdata_nvm, sizeof(struct spdk_nvme_nvm_ns_data));
+			return 0;
+		}
 	} else if (cns == SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST) {
 		g_ut_cmd.cdw10_bits.identify.cns = cns;
 		g_ut_cmd.cdw10_bits.identify.cntid = cntid;
@@ -400,15 +414,22 @@ spdk_nvme_ns_supports(void)
 static void
 test_nvme_ns_has_supported_iocs_specific_data(void)
 {
-	struct spdk_nvme_ns ns = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = { .ctrlr = &ctrlr, };
 
-	/* case 1: ns.csi == SPDK_NVME_CSI_NVM. Expect: false */
+	/* case 1: ns.csi == SPDK_NVME_CSI_NVM && !ctrlr.cdata.ctratt.bits.elbas.
+	 * Expect: false */
 	ns.csi = SPDK_NVME_CSI_NVM;
+	ctrlr.cdata.ctratt.bits.elbas = false;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
-	/* case 2: ns.csi == SPDK_NVME_CSI_ZNS. Expect: true */
+	/* case 2: ns.csi == SPDK_NVME_CSI_NVM && ctrlr.cdata.ctratt.bits.elbas.
+	 * Expect: true */
+	ctrlr.cdata.ctratt.bits.elbas = true;
+	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
+	/* case 3: ns.csi == SPDK_NVME_CSI_ZNS. Expect: true */
 	ns.csi = SPDK_NVME_CSI_ZNS;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
-	/* case 3: default ns.csi == SPDK_NVME_CSI_KV. Expect: false */
+	/* case 4: default ns.csi == SPDK_NVME_CSI_KV. Expect: false */
 	ns.csi = SPDK_NVME_CSI_KV;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
 }
@@ -428,12 +449,31 @@ test_nvme_ctrlr_identify_ns_iocs_specific(void)
 	/* case 1: Test nvme_ctrlr_identify_ns_iocs_specific. Expect: PASS. */
 	rc = nvme_ctrlr_identify_ns_iocs_specific(&ns);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(ns.nsdata_zns != NULL);
 	CU_ASSERT(ns.nsdata_zns->mar == 1024);
 	CU_ASSERT(ns.nsdata_zns->mor == 1024);
 
 	/* case 2: Test nvme_ns_free_zns_specific_data. Expect: PASS. */
 	nvme_ns_free_zns_specific_data(&ns);
 	CU_ASSERT(ns.nsdata_zns == NULL);
+
+	ns.csi = SPDK_NVME_CSI_NVM;
+	ctrlr.cdata.ctratt.bits.elbas = true;
+
+	/* case 3: Test nvme_ctrlr_identify_ns_iocs_specific. Expect: PASS. */
+	rc = nvme_ctrlr_identify_ns_iocs_specific(&ns);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(ns.nsdata_nvm != NULL);
+	CU_ASSERT(ns.nsdata_nvm->lbstm == 0xFFFFFFFF);
+	CU_ASSERT(ns.nsdata_nvm->pic._16bpists == 1);
+	CU_ASSERT(ns.nsdata_nvm->pic._16bpistm == 1);
+	CU_ASSERT(ns.nsdata_nvm->pic.stcrs == 1);
+	CU_ASSERT(ns.nsdata_nvm->elbaf[0].sts == 32);
+	CU_ASSERT(ns.nsdata_nvm->elbaf[0].pif == 0);
+
+	/* case 4: Test vnme_ns_free_nvm_specific_data. Expect: PASS. */
+	nvme_ns_free_nvm_specific_data(&ns);
+	CU_ASSERT(ns.nsdata_nvm == NULL);
 }
 
 static void

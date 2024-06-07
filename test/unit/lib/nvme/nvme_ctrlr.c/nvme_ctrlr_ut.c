@@ -670,6 +670,19 @@ nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
 }
 
 void
+nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns)
+{
+	if (!ns->id) {
+		return;
+	}
+
+	if (ns->nsdata_nvm) {
+		spdk_free(ns->nsdata_nvm);
+		ns->nsdata_nvm = NULL;
+	}
+}
+
+void
 nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {
 }

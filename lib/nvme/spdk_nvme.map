@@ -148,6 +148,7 @@
 	spdk_nvme_ns_get_flags;
 	spdk_nvme_ns_get_ana_group_id;
 	spdk_nvme_ns_get_ana_state;
+	spdk_nvme_nvm_ns_get_data;
 
 	spdk_nvme_ns_cmd_write;
 	spdk_nvme_ns_cmd_writev;

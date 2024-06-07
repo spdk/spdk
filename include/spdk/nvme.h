@@ -2877,6 +2877,19 @@ void spdk_nvme_poll_group_free_stats(struct spdk_nvme_poll_group *group,
 const struct spdk_nvme_ns_data *spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the I/O command set specific identify namespace data for NVM command set
+ * as defined by the NVMe specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace.
+ *
+ * \return a pointer to the identify namespace data.
+ */
+const struct spdk_nvme_nvm_ns_data *spdk_nvme_nvm_ns_get_data(struct spdk_nvme_ns *ns);
+
+/**
  * Get the namespace id (index number) from the given namespace handle.
  *
  * This function is thread safe and can be called at any point while the controller
