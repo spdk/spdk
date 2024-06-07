@@ -21,9 +21,11 @@ void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data	*nsdata;
+	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	uint32_t			format_index;
 
 	nsdata = _nvme_ns_get_data(ns);
+	nsdata_nvm = ns->nsdata_nvm;
 
 	ns->flags = 0x0000;
 	format_index = spdk_nvme_ns_get_format_index(nsdata);
@@ -85,6 +87,14 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	if (nsdata->lbaf[format_index].ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
+		if (nsdata_nvm != NULL && ns->ctrlr->cdata.ctratt.bits.elbas) {
+			/* We may have nsdata_nvm for other purposes but
+			 * the elbaf array is only valid when elbas is 1.
+			 */
+			ns->pi_format = nsdata_nvm->elbaf[format_index].pif;
+		} else {
+			ns->pi_format = SPDK_NVME_16B_GUARD_PI;
+		}
 	}
 }
 
@@ -360,6 +370,11 @@ spdk_nvme_ns_get_flags(struct spdk_nvme_ns *ns)
 enum spdk_nvme_pi_type
 spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns) {
 	return ns->pi_type;
+}
+
+enum spdk_nvme_pi_format
+spdk_nvme_ns_get_pi_format(struct spdk_nvme_ns *ns) {
+	return ns->pi_format;
 }
 
 bool

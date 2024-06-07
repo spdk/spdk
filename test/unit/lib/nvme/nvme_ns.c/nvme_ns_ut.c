@@ -283,6 +283,7 @@ test_nvme_ns_set_identify_data(void)
 	CU_ASSERT(ns.sectors_per_max_io == 252);
 	CU_ASSERT(ns.sectors_per_max_io_no_md == 256);
 	CU_ASSERT(spdk_nvme_ns_get_pi_type(&ns) == SPDK_NVME_FMT_NVM_PROTECTION_TYPE1);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(&ns) == SPDK_NVME_16B_GUARD_PI);
 
 	CU_ASSERT(spdk_nvme_ns_get_flags(&ns) & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED);
 	CU_ASSERT(spdk_nvme_ns_get_flags(&ns) & SPDK_NVME_NS_RESERVATION_SUPPORTED);
@@ -427,6 +428,7 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 	ctrlr.cdata.ctratt.bits.elbas = true;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
 	/* case 3: ns.csi == SPDK_NVME_CSI_ZNS. Expect: true */
+	ctrlr.cdata.ctratt.bits.elbas = false;
 	ns.csi = SPDK_NVME_CSI_ZNS;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
 	/* case 4: default ns.csi == SPDK_NVME_CSI_KV. Expect: false */
