@@ -825,6 +825,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
 
 	/**
+	 * Set the Host Behavior Support feature of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_HOST_FEATURE,
+
+	/**
+	 * Waiting for the Host Behavior Support feature of the controller.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_SET_HOST_FEATURE,
+
+	/**
 	 * Set Doorbell Buffer Config of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_DB_BUF_CFG,

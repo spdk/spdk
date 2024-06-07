@@ -1005,6 +1005,74 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_set_arbitration_feature(ctrlr);
 }
 
+static void
+nvme_ctrlr_set_host_feature_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	spdk_free(ctrlr->tmp_ptr);
+	ctrlr->tmp_ptr = NULL;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Set host behavior support feature failed: SC %x SCT %x\n",
+				  cpl->status.sc, cpl->status.sct);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	ctrlr->feature_supported[SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT] = true;
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_DB_BUF_CFG,
+			     ctrlr->opts.admin_timeout_ms);
+}
+
+/* We do not want to do add synchronous operation anymore.
+ * We set the Host Behavior Support feature asynchronousin in different states.
+ */
+static int
+nvme_ctrlr_set_host_feature(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_host_behavior *host;
+	int rc;
+
+	if (!ctrlr->cdata.ctratt.bits.elbas) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_DB_BUF_CFG,
+				     ctrlr->opts.admin_timeout_ms);
+		return 0;
+	}
+
+	ctrlr->tmp_ptr = spdk_dma_zmalloc(sizeof(struct spdk_nvme_host_behavior), 4096, NULL);
+	if (!ctrlr->tmp_ptr) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate host behavior support data\n");
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_SET_HOST_FEATURE,
+			     ctrlr->opts.admin_timeout_ms);
+
+	host = ctrlr->tmp_ptr;
+
+	host->lbafee = 1;
+
+	rc = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT,
+					     0, 0, host, sizeof(struct spdk_nvme_host_behavior),
+					     nvme_ctrlr_set_host_feature_done, ctrlr);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Set host behavior support feature failed: %d\n", rc);
+		goto error;
+	}
+
+	return 0;
+
+error:
+	spdk_free(ctrlr->tmp_ptr);
+	ctrlr->tmp_ptr = NULL;
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	return rc;
+}
+
 bool
 spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1422,6 +1490,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "wait for supported INTEL log pages";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
 		return "set supported features";
+	case NVME_CTRLR_STATE_SET_HOST_FEATURE:
+		return "set host behavior support feature";
+	case NVME_CTRLR_STATE_WAIT_FOR_SET_HOST_FEATURE:
+		return "wait for set host behavior support feature";
 	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
 		return "set doorbell buffer config";
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
@@ -4013,8 +4085,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
 		nvme_ctrlr_set_supported_features(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_DB_BUF_CFG,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_FEATURE,
 				     ctrlr->opts.admin_timeout_ms);
+		break;
+
+	case NVME_CTRLR_STATE_SET_HOST_FEATURE:
+		rc = nvme_ctrlr_set_host_feature(ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
@@ -4062,6 +4138,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_SUPPORTED_INTEL_LOG_PAGES:
+	case NVME_CTRLR_STATE_WAIT_FOR_SET_HOST_FEATURE:
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
 		/*
