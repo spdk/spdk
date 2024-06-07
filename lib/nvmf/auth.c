@@ -789,17 +789,42 @@ nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 	}
 }
 
+static bool
+nvmf_auth_check_state(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	int rc;
+
+	switch (qpair->state) {
+	case SPDK_NVMF_QPAIR_AUTHENTICATING:
+		break;
+	case SPDK_NVMF_QPAIR_ENABLED:
+		if (auth == NULL || auth->state == NVMF_QPAIR_AUTH_COMPLETED) {
+			rc = nvmf_qpair_auth_init(qpair);
+			if (rc != 0) {
+				nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
+							   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, 0);
+				return false;
+			}
+		}
+		break;
+	default:
+		nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
+					   SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR, 0);
+		return false;
+	}
+
+	return true;
+}
+
 int
 nvmf_auth_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	union nvmf_h2c_msg *cmd = req->cmd;
 
-	/* We don't support reauthentication */
-	if (qpair->state != SPDK_NVMF_QPAIR_AUTHENTICATING) {
-		nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
-					   SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR, 0);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	if (!nvmf_auth_check_state(qpair, req)) {
+		goto out;
 	}
 
 	assert(cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC);
@@ -816,7 +841,7 @@ nvmf_auth_request_exec(struct spdk_nvmf_request *req)
 					   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, 0);
 		break;
 	}
-
+out:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
