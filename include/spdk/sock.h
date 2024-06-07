@@ -529,7 +529,7 @@ void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
  * \param cb_fn Called when the operation completes.
  * \param cb_arg Argument passed to the callback function.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, -1 on failure with errno set.
  */
 int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			     spdk_sock_cb cb_fn, void *cb_arg);
@@ -540,7 +540,7 @@ int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *so
  * \param group Socket group.
  * \param sock Socket to remove.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, -1 on failure with errno set.
  */
 int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock);
 
