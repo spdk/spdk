@@ -138,13 +138,13 @@ struct spdk_fio_thread {
 	struct io_u			**iocq;		/* io completion queue */
 	unsigned int			iocq_count;	/* number of iocq entries filled by last getevents */
 	unsigned int			iocq_size;	/* number of iocq entries allocated */
-	struct fio_file			*current_f;	/* fio_file given by user */
 
 };
 
 struct spdk_fio_probe_ctx {
 	struct thread_data	*td;
 	char			hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	struct fio_file		*f; /* fio_file given by user */
 };
 
 static void *
@@ -316,7 +316,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ns_data	*nsdata;
-	struct fio_file		*f = fio_thread->current_f;
+	struct fio_file		*f = ctx->f;
 	uint32_t		ns_id;
 	char			*p;
 	long int		tmp;
@@ -709,8 +709,8 @@ spdk_fio_setup(struct thread_data *td)
 			}
 		}
 
-		fio_thread->current_f = f;
 		ctx.td = td;
+		ctx.f = f;
 
 		pthread_mutex_lock(&g_mutex);
 		fio_ctrlr = get_fio_ctrlr(&trid);
