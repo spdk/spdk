@@ -2085,6 +2085,11 @@ nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_fc_transport *ftransport =
 		SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
 
+	if (spdk_interrupt_mode_is_enabled()) {
+		SPDK_ERRLOG("FC transport does not support interrupt mode\n");
+		return NULL;
+	}
+
 	fgroup = calloc(1, sizeof(struct spdk_nvmf_fc_poll_group));
 	if (!fgroup) {
 		SPDK_ERRLOG("Unable to alloc FC poll group\n");

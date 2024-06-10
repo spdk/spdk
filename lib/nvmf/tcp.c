@@ -1477,6 +1477,11 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_tcp_transport	*ttransport;
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 
+	if (spdk_interrupt_mode_is_enabled()) {
+		SPDK_ERRLOG("TCP transport does not support interrupt mode\n");
+		return NULL;
+	}
+
 	tgroup = calloc(1, sizeof(*tgroup));
 	if (!tgroup) {
 		return NULL;

@@ -4080,6 +4080,11 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_rdma_device		*device;
 	int					rc;
 
+	if (spdk_interrupt_mode_is_enabled()) {
+		SPDK_ERRLOG("RDMA transport does not support interrupt mode\n");
+		return NULL;
+	}
+
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
 	rgroup = calloc(1, sizeof(*rgroup));
