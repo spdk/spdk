@@ -4215,6 +4215,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		if (disk->dif_type != SPDK_DIF_DISABLE) {
 			disk->dif_is_head_of_md = nsdata->dps.md_start;
 			disk->dif_check_flags = prchk_flags;
+			disk->dif_pi_format = (enum spdk_dif_pi_format)spdk_nvme_ns_get_pi_format(ns);
 		}
 	}
 
@@ -7302,7 +7303,7 @@ bdev_nvme_verify_pi_error(struct nvme_bdev_io *bio)
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
 			       bdev->dif_is_head_of_md, bdev->dif_type,

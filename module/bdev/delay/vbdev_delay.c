@@ -817,6 +817,7 @@ vbdev_delay_register(const char *bdev_name)
 		delay_node->delay_bdev.dif_type = bdev->dif_type;
 		delay_node->delay_bdev.dif_is_head_of_md = bdev->dif_is_head_of_md;
 		delay_node->delay_bdev.dif_check_flags = bdev->dif_check_flags;
+		delay_node->delay_bdev.dif_pi_format = bdev->dif_pi_format;
 
 		delay_node->delay_bdev.ctxt = delay_node;
 		delay_node->delay_bdev.fn_table = &vbdev_delay_fn_table;

@@ -524,7 +524,7 @@ raid_bdev_remap_dix_reftag(void *md_buf, uint64_t num_blocks,
 	}
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
 			       bdev->dif_is_head_of_md, bdev->dif_type,
@@ -564,7 +564,7 @@ raid_bdev_verify_dix_reftag(struct iovec *iovs, int iovcnt, void *md_buf,
 	}
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
 			       bdev->dif_is_head_of_md, bdev->dif_type,
@@ -3278,6 +3278,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		raid_bdev->bdev.dif_type = spdk_bdev_get_dif_type(bdev);
 		raid_bdev->bdev.dif_check_flags = bdev->dif_check_flags;
 		raid_bdev->bdev.dif_is_head_of_md = spdk_bdev_is_dif_head_of_md(bdev);
+		raid_bdev->bdev.dif_pi_format = bdev->dif_pi_format;
 	} else {
 		if (raid_bdev->bdev.blocklen != bdev->blocklen) {
 			SPDK_ERRLOG("Raid bdev '%s' blocklen %u differs from base bdev '%s' blocklen %u\n",
@@ -3290,7 +3291,8 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(bdev) ||
 		    raid_bdev->bdev.dif_type != spdk_bdev_get_dif_type(bdev) ||
 		    raid_bdev->bdev.dif_check_flags != bdev->dif_check_flags ||
-		    raid_bdev->bdev.dif_is_head_of_md != spdk_bdev_is_dif_head_of_md(bdev)) {
+		    raid_bdev->bdev.dif_is_head_of_md != spdk_bdev_is_dif_head_of_md(bdev) ||
+		    raid_bdev->bdev.dif_pi_format != bdev->dif_pi_format) {
 			SPDK_ERRLOG("Raid bdev '%s' has different metadata format than base bdev '%s'\n",
 				    raid_bdev->bdev.name, bdev->name);
 			rc = -EINVAL;

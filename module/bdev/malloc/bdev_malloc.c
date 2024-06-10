@@ -47,7 +47,7 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->u.bdev.memory_domain == NULL);
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
@@ -111,7 +111,7 @@ malloc_unmap_write_zeroes_generate_pi(struct spdk_bdev_io *bdev_io)
 	int rc;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
@@ -662,7 +662,7 @@ malloc_disk_setup_pi(struct malloc_disk *mdisk)
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	/* Set APPTAG|REFTAG_IGNORE to PI fields after creation of malloc bdev */
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
@@ -818,6 +818,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	case SPDK_DIF_DISABLE:
 		break;
 	}
+	mdisk->disk.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
 	if (opts->dif_type != SPDK_DIF_DISABLE) {
 		rc = malloc_disk_setup_pi(mdisk);

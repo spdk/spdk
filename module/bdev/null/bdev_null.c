@@ -99,7 +99,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 	    (SPDK_BDEV_IO_TYPE_READ == bdev_io->type ||
 	     SPDK_BDEV_IO_TYPE_WRITE == bdev_io->type)) {
 		dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-		dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+		dif_opts.dif_pi_format = bdev->dif_pi_format;
 		rc = spdk_dif_ctx_init(&dif_ctx,
 				       bdev->blocklen,
 				       bdev->md_len,
@@ -321,6 +321,7 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	case SPDK_DIF_DISABLE:
 		break;
 	}
+	null_disk->bdev.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
 	null_disk->bdev.uuid = *opts->uuid;
 	null_disk->bdev.ctxt = null_disk;

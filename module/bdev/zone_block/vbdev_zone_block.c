@@ -780,6 +780,7 @@ zone_block_register(const char *base_bdev_name)
 		bdev_node->bdev.dif_type = base_bdev->dif_type;
 		bdev_node->bdev.dif_is_head_of_md = base_bdev->dif_is_head_of_md;
 		bdev_node->bdev.dif_check_flags = base_bdev->dif_check_flags;
+		bdev_node->bdev.dif_pi_format = base_bdev->dif_pi_format;
 
 		bdev_node->bdev.zoned = true;
 		bdev_node->bdev.ctxt = bdev_node;
