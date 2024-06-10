@@ -2241,8 +2241,8 @@ add_trid(const char *trid_str)
 		return 1;
 	}
 
-	ns = strcasestr(trid_str, "ns:");
-	if (ns) {
+	if ((ns = strcasestr(trid_str, "ns:")) ||
+	    (ns = strcasestr(trid_str, "ns="))) {
 		char nsid_str[6]; /* 5 digits maximum in an nsid */
 		int len;
 		int nsid;
@@ -2269,8 +2269,8 @@ add_trid(const char *trid_str)
 		trid_entry->nsid = (uint16_t)nsid;
 	}
 
-	hostnqn = strcasestr(trid_str, "hostnqn:");
-	if (hostnqn) {
+	if ((hostnqn = strcasestr(trid_str, "hostnqn:")) ||
+	    (hostnqn = strcasestr(trid_str, "hostnqn="))) {
 		size_t len;
 
 		hostnqn += strlen("hostnqn:");
