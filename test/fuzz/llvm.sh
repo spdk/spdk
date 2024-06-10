@@ -59,8 +59,8 @@ fi
 
 for fuzzer in "${fuzzers[@]}"; do
 	case "$fuzzer" in
-		nvmf) run_test "nvmf_fuzz" "$testdir/llvm/$fuzzer/run.sh" ;;
-		vfio) run_test "vfio_fuzz" "$testdir/llvm/$fuzzer/run.sh" ;;
+		nvmf) run_test "nvmf_llvm_fuzz" "$testdir/llvm/$fuzzer/run.sh" ;;
+		vfio) run_test "vfio_llvm_fuzz" "$testdir/llvm/$fuzzer/run.sh" ;;
 	esac
 done
 
