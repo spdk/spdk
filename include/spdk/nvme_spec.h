@@ -4488,6 +4488,7 @@ enum spdk_nvme_ctrlr_type {
 /** Mask of valid io flags mask */
 #define SPDK_NVME_IO_FLAGS_VALID_MASK 0xFFFF0003
 #define SPDK_NVME_IO_FLAGS_CDW12_MASK 0xFFFF0000
+#define SPDK_NVME_IO_FLAGS_PRCHK_MASK 0x1C000000
 
 /** Identify command buffer response size */
 #define SPDK_NVME_IDENTIFY_BUFLEN 4096
