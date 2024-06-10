@@ -142,6 +142,11 @@ struct spdk_fio_thread {
 
 };
 
+struct spdk_fio_probe_ctx {
+	struct thread_data	*td;
+	char			hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+};
+
 static void *
 spdk_fio_poll_ctrlrs(void *arg)
 {
@@ -182,10 +187,13 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct thread_data	*td = cb_ctx;
+	struct spdk_fio_probe_ctx *ctx = cb_ctx;
+	struct thread_data *td = ctx->td;
 	struct spdk_fio_options *fio_options = td->eo;
 
-	if (fio_options->hostnqn) {
+	if (ctx->hostnqn[0] != '\0') {
+		memcpy(opts->hostnqn, ctx->hostnqn, sizeof(opts->hostnqn));
+	} else if (fio_options->hostnqn) {
 		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", fio_options->hostnqn);
 	}
 
@@ -301,7 +309,8 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct thread_data	*td = cb_ctx;
+	struct spdk_fio_probe_ctx *ctx = cb_ctx;
+	struct thread_data	*td = ctx->td;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_qpair	*fio_qpair;
@@ -539,6 +548,7 @@ spdk_fio_setup(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	struct spdk_fio_options *fio_options = td->eo;
+	struct spdk_fio_probe_ctx ctx;
 	struct spdk_env_opts opts;
 	struct fio_file *f;
 	char *p;
@@ -547,6 +557,7 @@ spdk_fio_setup(struct thread_data *td)
 	struct spdk_fio_ctrlr *fio_ctrlr;
 	char *trid_info;
 	unsigned int i;
+	size_t size;
 
 	/*
 	 * If we're running in a daemonized FIO instance, it's possible
@@ -650,6 +661,7 @@ spdk_fio_setup(struct thread_data *td)
 
 	for_each_file(td, f, i) {
 		memset(&trid, 0, sizeof(trid));
+		memset(&ctx, 0, sizeof(ctx));
 
 		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
@@ -685,18 +697,29 @@ spdk_fio_setup(struct thread_data *td)
 				snprintf(trid.subnqn, sizeof(trid.subnqn), "%s",
 					 SPDK_NVMF_DISCOVERY_NQN);
 			}
+			if ((p = strcasestr(f->file_name, "hostnqn:")) ||
+			    (p = strcasestr(f->file_name, "hostnqn="))) {
+				p += strlen("hostnqn:");
+				size = strcspn(p, " \t\n");
+				if (size > sizeof(ctx.hostnqn)) {
+					SPDK_ERRLOG("Invalid hostnqn: too long\n");
+					continue;
+				}
+				memcpy(ctx.hostnqn, p, size);
+			}
 		}
 
 		fio_thread->current_f = f;
+		ctx.td = td;
 
 		pthread_mutex_lock(&g_mutex);
 		fio_ctrlr = get_fio_ctrlr(&trid);
 		pthread_mutex_unlock(&g_mutex);
 		if (fio_ctrlr) {
-			attach_cb(td, &trid, fio_ctrlr->ctrlr, &fio_ctrlr->opts);
+			attach_cb(&ctx, &trid, fio_ctrlr->ctrlr, &fio_ctrlr->opts);
 		} else {
 			/* Enumerate all of the controllers */
-			if (spdk_nvme_probe(&trid, td, probe_cb, attach_cb, NULL) != 0) {
+			if (spdk_nvme_probe(&trid, &ctx, probe_cb, attach_cb, NULL) != 0) {
 				SPDK_ERRLOG("spdk_nvme_probe() failed\n");
 				continue;
 			}
