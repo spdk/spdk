@@ -7209,6 +7209,8 @@ claim_v1_existing_v2(void)
 	free_bdev(bdev);
 }
 
+static int ut_examine_claimed_init0(void);
+static int ut_examine_claimed_init1(void);
 static void ut_examine_claimed_config0(struct spdk_bdev *bdev);
 static void ut_examine_claimed_disk0(struct spdk_bdev *bdev);
 static void ut_examine_claimed_config1(struct spdk_bdev *bdev);
@@ -7218,14 +7220,14 @@ static void ut_examine_claimed_disk1(struct spdk_bdev *bdev);
 struct spdk_bdev_module examine_claimed_mods[UT_MAX_EXAMINE_MODS] = {
 	{
 		.name = "vbdev_ut_examine0",
-		.module_init = vbdev_ut_module_init,
+		.module_init = ut_examine_claimed_init0,
 		.module_fini = vbdev_ut_module_fini,
 		.examine_config = ut_examine_claimed_config0,
 		.examine_disk = ut_examine_claimed_disk0,
 	},
 	{
 		.name = "vbdev_ut_examine1",
-		.module_init = vbdev_ut_module_init,
+		.module_init = ut_examine_claimed_init1,
 		.module_fini = vbdev_ut_module_fini,
 		.examine_config = ut_examine_claimed_config1,
 		.examine_disk = ut_examine_claimed_disk1,
@@ -7251,6 +7253,38 @@ struct ut_examine_claimed_ctx {
 } examine_claimed_ctx[UT_MAX_EXAMINE_MODS];
 
 bool ut_testing_examine_claimed;
+
+/*
+ * Store the order in which the modules were initialized,
+ * since we have no guarantee on the order of execution of the constructors.
+ * Modules are examined in reverse order of their initialization.
+ */
+static int g_ut_examine_claimed_order[UT_MAX_EXAMINE_MODS];
+static int
+ut_examine_claimed_init(uint32_t modnum)
+{
+	static int current = UT_MAX_EXAMINE_MODS;
+
+	/* Only do this for thre first initialization of the bdev framework */
+	if (current == 0) {
+		return 0;
+	}
+	g_ut_examine_claimed_order[modnum] = --current;
+
+	return 0;
+}
+
+static int
+ut_examine_claimed_init0(void)
+{
+	return ut_examine_claimed_init(0);
+}
+
+static int
+ut_examine_claimed_init1(void)
+{
+	return ut_examine_claimed_init(1);
+}
 
 static void
 reset_examine_claimed_ctx(void)
@@ -7297,13 +7331,13 @@ examine_claimed_config(struct spdk_bdev *bdev, uint32_t modnum)
 static void
 ut_examine_claimed_config0(struct spdk_bdev *bdev)
 {
-	examine_claimed_config(bdev, 0);
+	examine_claimed_config(bdev, g_ut_examine_claimed_order[0]);
 }
 
 static void
 ut_examine_claimed_config1(struct spdk_bdev *bdev)
 {
-	examine_claimed_config(bdev, 1);
+	examine_claimed_config(bdev, g_ut_examine_claimed_order[1]);
 }
 
 static void
