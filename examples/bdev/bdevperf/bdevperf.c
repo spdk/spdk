@@ -848,7 +848,7 @@ bdevperf_verify_dif(struct bdevperf_task *task)
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = spdk_bdev_get_dif_pi_format(bdev);
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
 			       spdk_bdev_get_md_size(bdev),
@@ -1021,7 +1021,7 @@ bdevperf_generate_dif(struct bdevperf_task *task)
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = spdk_bdev_get_dif_pi_format(bdev);
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
 			       spdk_bdev_get_md_size(bdev),
