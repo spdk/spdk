@@ -1345,6 +1345,46 @@ print_zns_ns_data(const struct spdk_nvme_zns_ns_data *nsdata_zns)
 }
 
 static const char *
+pi_format_string(uint32_t pif)
+{
+	switch (pif) {
+	case 0:
+		return "16b Guard PI";
+	case 1:
+		return "32b Guard PI";
+	case 2:
+		return "64b Guard PI";
+	case 3:
+		return "Reserved";
+	default:
+		return "Unknown";
+	}
+}
+
+static void
+print_nvm_ns_data(const struct spdk_nvme_nvm_ns_data *nsdata_nvm,
+		  const struct spdk_nvme_ns_data *nsdata)
+{
+	uint32_t i;
+
+	printf("NVM Specific Namespace Data\n");
+	printf("===========================\n");
+	printf("Logical Block Storage Tag Mask:               %"PRIx64"\n", nsdata_nvm->lbstm);
+	printf("Protection Information Capabilities:\n");
+	printf("  16b Guard Protection Information Storage Tag Support:  %s\n",
+	       nsdata_nvm->pic._16bpists != 0 ? "Yes" : "No");
+	printf("  16b Guard Protection Information Storage Tag Mask:     %s\n",
+	       nsdata_nvm->pic._16bpistm != 0 ? "LBSTM must be all 1s" : "Any bit in LBSTM can be 0");
+	printf("  Storage Tag Check Read Support:                        %s\n",
+	       nsdata_nvm->pic.stcrs != 0 ? "Yes" : "No");
+
+	for (i = 0; i <= nsdata->nlbaf; i++) {
+		printf("Extended LBA Format #%02d: Storage Tag Size: %-2d, Protection Information Format: %s\n",
+		       i, nsdata_nvm->elbaf[i].sts, pi_format_string(nsdata_nvm->elbaf[i].pif));
+	}
+}
+
+static const char *
 csi_name(enum spdk_nvme_csi csi)
 {
 	switch (csi) {
@@ -1368,6 +1408,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	const struct spdk_nvme_ns_data		*nsdata;
 	const struct spdk_nvme_zns_ns_data	*nsdata_zns;
+	const struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	const struct spdk_uuid			*uuid;
 	uint32_t				i;
 	uint32_t				flags;
@@ -1378,6 +1419,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	nsdata = spdk_nvme_ns_get_data(ns);
 	nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
+	nsdata_nvm = spdk_nvme_nvm_ns_get_data(ns);
 	flags  = spdk_nvme_ns_get_flags(ns);
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
@@ -1569,6 +1611,8 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		print_zns_ns_data(nsdata_zns);
 		get_and_print_zns_zone_report(ns, qpair);
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	} else if (nsdata_nvm != NULL) {
+		print_nvm_ns_data(nsdata_nvm, nsdata);
 	}
 }
 
