@@ -92,6 +92,31 @@ _get_core_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *cap
 }
 
 static int
+_dump_info_json(struct spdk_json_write_ctx *w)
+{
+	enum power_management_env env;
+
+	env = rte_power_get_env();
+
+	if (env == PM_ENV_ACPI_CPUFREQ) {
+		spdk_json_write_named_string(w, "env", "acpi-cpufreq");
+	} else if (env == PM_ENV_KVM_VM) {
+		spdk_json_write_named_string(w, "env", "kvm");
+	} else if (env == PM_ENV_PSTATE_CPUFREQ) {
+		spdk_json_write_named_string(w, "env", "intel-pstate");
+	} else if (env == PM_ENV_CPPC_CPUFREQ) {
+		spdk_json_write_named_string(w, "env", "cppc-cpufreq");
+	} else if (env == PM_ENV_AMD_PSTATE_CPUFREQ) {
+		spdk_json_write_named_string(w, "env", "amd-pstate");
+	} else {
+		spdk_json_write_named_string(w, "env", "unknown");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
 _init_core(uint32_t lcore_id)
 {
 	struct rte_power_core_capabilities caps;
@@ -171,6 +196,7 @@ static struct spdk_governor dpdk_governor = {
 	.set_core_freq_max = _set_core_freq_max,
 	.set_core_freq_min = _set_core_freq_min,
 	.get_core_capabilities = _get_core_capabilities,
+	.dump_info_json = _dump_info_json,
 	.init = _init,
 	.deinit = _deinit,
 };

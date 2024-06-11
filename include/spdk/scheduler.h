@@ -103,6 +103,14 @@ struct spdk_governor {
 	int (*get_core_capabilities)(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities);
 
 	/**
+	 * Output governor-specific information to a JSON stream.
+	 *
+	 * The JSON write context will be initialized with an open object, so the governor
+	 * should write a name followed by a JSON value (most likely another nested object).
+	 */
+	int (*dump_info_json)(struct spdk_json_write_ctx *w);
+
+	/**
 	 * Initialize a governor.
 	 *
 	 * \return 0 on success, non-zero on error.
