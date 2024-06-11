@@ -67,6 +67,38 @@ _foreach_thread(struct spdk_scheduler_core_info *cores_info, _foreach_fn fn)
 }
 
 static void
+prepare_to_sleep(uint32_t core)
+{
+	struct spdk_governor *governor = spdk_governor_get();
+	int rc;
+
+	if (governor == NULL) {
+		return;
+	}
+
+	rc = governor->set_core_freq_min(core);
+	if (rc < 0) {
+		SPDK_ERRLOG("could not set_core_freq_min(%d)\n", core);
+	}
+}
+
+static void
+prepare_to_wake(uint32_t core)
+{
+	struct spdk_governor *governor = spdk_governor_get();
+	int rc;
+
+	if (governor == NULL) {
+		return;
+	}
+
+	rc = governor->set_core_freq_max(core);
+	if (rc < 0) {
+		SPDK_ERRLOG("could not set_core_freq_max(%d)\n", core);
+	}
+}
+
+static void
 _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 {
 	struct core_stats *dst = &g_cores[dst_core];
@@ -316,12 +348,14 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 		/* We can switch mode only if reactor already does not have any threads */
 		if (g_cores[i].thread_count == 0 && TAILQ_EMPTY(&reactor->threads)) {
 			core->interrupt_mode = true;
+			prepare_to_sleep(i);
 		} else if (g_cores[i].thread_count != 0) {
 			core->interrupt_mode = false;
 			if (i != g_main_lcore) {
 				/* If a thread is present on non g_main_lcore,
 				 * it has to be busy. */
 				busy_threads_present = true;
+				prepare_to_wake(i);
 			}
 		}
 	}
