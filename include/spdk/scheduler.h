@@ -35,6 +35,19 @@ struct spdk_governor {
 	const char *name;
 
 	/**
+	 * Get available frequencies of a given core.
+	 *
+	 * \param lcore_id Core ID.
+	 * \param freqs The buffer array to save the frequencies.
+	 * \param num Number of frequencies to get.
+	 *
+	 * \return The number of frequencies returned in freqs. 0 on error.
+	 *         0 is returned if it could not get the frequencies or
+	 *         if the freqs array is too small to fit the returned frequencies.
+	 */
+	uint32_t (*get_core_avail_freqs)(uint32_t lcore_id, uint32_t *freqs, uint32_t num);
+
+	/**
 	 * Get current frequency of a given core.
 	 *
 	 * \param lcore_id Core number.

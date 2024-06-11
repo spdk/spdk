@@ -14,6 +14,21 @@
 #include <rte_power.h>
 
 static uint32_t
+_get_core_avail_freqs(uint32_t lcore_id, uint32_t *freqs, uint32_t num)
+{
+	uint32_t rc;
+
+	rc = rte_power_freqs(lcore_id, freqs, num);
+	if (!rc) {
+		SPDK_ERRLOG("Unable to get current core frequency array for core %d\n.", lcore_id);
+
+		return 0;
+	}
+
+	return rc;
+}
+
+static uint32_t
 _get_core_curr_freq(uint32_t lcore_id)
 {
 	uint32_t freqs[SPDK_MAX_LCORE_FREQS];
@@ -149,6 +164,7 @@ _deinit(void)
 
 static struct spdk_governor dpdk_governor = {
 	.name = "dpdk_governor",
+	.get_core_avail_freqs = _get_core_avail_freqs,
 	.get_core_curr_freq = _get_core_curr_freq,
 	.core_freq_up = _core_freq_up,
 	.core_freq_down = _core_freq_down,
