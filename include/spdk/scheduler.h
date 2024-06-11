@@ -17,6 +17,11 @@ extern "C" {
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
+/**
+ * This matches the DPDK macro RTE_MAX_LCORE_FREQS
+ */
+#define	SPDK_MAX_LCORE_FREQS	64
+
 struct spdk_governor_capabilities {
 	bool priority; /* Core with higher base frequency */
 };

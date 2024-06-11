@@ -16,19 +16,18 @@
 static uint32_t
 _get_core_curr_freq(uint32_t lcore_id)
 {
-	const uint32_t MAX_CORE_FREQ_NUM = 64;
-	uint32_t freqs[MAX_CORE_FREQ_NUM];
+	uint32_t freqs[SPDK_MAX_LCORE_FREQS];
 	uint32_t freq_index;
 	int rc;
 
-	rc = rte_power_freqs(lcore_id, freqs, MAX_CORE_FREQ_NUM);
+	rc = rte_power_freqs(lcore_id, freqs, SPDK_MAX_LCORE_FREQS);
 	if (!rc) {
 		SPDK_ERRLOG("Unable to get current core frequency array for core %d\n.", lcore_id);
 
 		return 0;
 	}
 	freq_index = rte_power_get_freq(lcore_id);
-	if (freq_index >= MAX_CORE_FREQ_NUM) {
+	if (freq_index >= SPDK_MAX_LCORE_FREQS) {
 		SPDK_ERRLOG("Unable to get current core frequency for core %d\n.", lcore_id);
 
 		return 0;
