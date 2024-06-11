@@ -411,7 +411,6 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 	struct spdk_trace_tpoint *tpoint;
 	size_t i, max_name_length;
 
-	assert(opts->tpoint_id != 0);
 	assert(opts->tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
 
 	if (strnlen(opts->name, sizeof(tpoint->name)) == sizeof(tpoint->name)) {
