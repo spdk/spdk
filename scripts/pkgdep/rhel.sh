@@ -25,8 +25,10 @@ disclaimer() {
 			# fail on most calls so simply ignore its failures.
 			sub() { subscription-manager "$@" || :; }
 			;;
-
-		*) ;;
+		rocky)
+			[[ $VERSION_ID == 8* ]] || return 0
+			yum() { "$(type -P yum)" --setopt=skip_if_unavailable=True "$@"; }
+			;;
 	esac
 }
 
