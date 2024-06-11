@@ -554,6 +554,62 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("framework_get_scheduler", rpc_framework_get_scheduler, SPDK_RPC_RUNTIME)
 
+static void
+rpc_framework_get_governor(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_governor *governor = spdk_governor_get();
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'rpc_get_governor' requires no arguments");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+
+	if (governor != NULL) {
+		uint32_t core, index, num;
+		uint32_t freqs[SPDK_MAX_LCORE_FREQS];
+
+		spdk_json_write_named_string(w, "governor_name", governor->name);
+
+		spdk_json_write_named_object_begin(w, "module_specific");
+
+		governor->dump_info_json(w);
+
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_named_array_begin(w, "cores");
+
+		SPDK_ENV_FOREACH_CORE(core) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_uint32(w, "lcore_id", core);
+
+			memset(freqs, 0, SPDK_MAX_LCORE_FREQS * sizeof(uint32_t));
+
+			num = governor->get_core_avail_freqs(core, freqs, SPDK_MAX_LCORE_FREQS);
+
+			spdk_json_write_named_array_begin(w, "available_frequencies");
+			for (index = 0; index < num; index++) {
+				spdk_json_write_uint32(w, freqs[index]);
+			}
+			spdk_json_write_array_end(w);
+
+			spdk_json_write_named_uint32(w, "current_frequency", governor->get_core_curr_freq(core));
+			spdk_json_write_object_end(w);
+		}
+
+		spdk_json_write_array_end(w);
+	}
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("framework_get_governor", rpc_framework_get_governor, SPDK_RPC_RUNTIME)
+
 struct rpc_thread_set_cpumask_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_cpuset cpumask;

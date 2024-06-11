@@ -187,6 +187,13 @@ if __name__ == "__main__":
         'framework_get_scheduler', help='Display currently set scheduler and its properties.')
     p.set_defaults(func=framework_get_scheduler)
 
+    def framework_get_governor(args):
+        print_dict(rpc.app.framework_get_governor(args.client))
+
+    p = subparsers.add_parser(
+        'framework_get_governor', help='Display currently set governor and the available, set CPU frequencies.')
+    p.set_defaults(func=framework_get_governor)
+
     def framework_disable_cpumask_locks(args):
         rpc.framework_disable_cpumask_locks(args.client)
 

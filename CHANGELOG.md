@@ -26,6 +26,11 @@ The `framework_get_reactors` RPC method supports getting pid and tid.
 
 `spdk_get_tid` is added to get the tid of the current thread.
 
+### scheduler
+
+Added `framework_get_governor` RPC to retrieve the power governor name,
+power env and the frequencies available, frequency set to the cpu cores.
+
 ## v24.05
 
 ### accel

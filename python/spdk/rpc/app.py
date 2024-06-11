@@ -68,6 +68,15 @@ def framework_get_scheduler(client):
     return client.call('framework_get_scheduler')
 
 
+def framework_get_governor(client):
+    """Query current governor data.
+
+    Returns:
+        Name of currently set governor, available frequencies and currently set frequency of the CPU cores.
+    """
+    return client.call('framework_get_governor')
+
+
 def thread_get_stats(client):
     """Query threads statistics.
 
