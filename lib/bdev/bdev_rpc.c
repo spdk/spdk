@@ -633,6 +633,8 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	struct spdk_bdev_alias *tmp;
 	uint64_t qos_limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
 	struct spdk_memory_domain **domains;
+	enum spdk_bdev_io_type io_type;
+	const char *name = NULL;
 	int i, rc;
 
 	spdk_json_write_object_begin(w);
@@ -691,28 +693,10 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	}
 
 	spdk_json_write_named_object_begin(w, "supported_io_types");
-	spdk_json_write_named_bool(w, "read",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
-	spdk_json_write_named_bool(w, "write",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
-	spdk_json_write_named_bool(w, "unmap",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
-	spdk_json_write_named_bool(w, "write_zeroes",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
-	spdk_json_write_named_bool(w, "flush",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
-	spdk_json_write_named_bool(w, "reset",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
-	spdk_json_write_named_bool(w, "compare",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE));
-	spdk_json_write_named_bool(w, "compare_and_write",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE));
-	spdk_json_write_named_bool(w, "abort",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ABORT));
-	spdk_json_write_named_bool(w, "nvme_admin",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
-	spdk_json_write_named_bool(w, "nvme_io",
-				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
+	for (io_type = SPDK_BDEV_IO_TYPE_READ; io_type < SPDK_BDEV_NUM_IO_TYPES; ++io_type) {
+		name = spdk_bdev_get_io_type_name(io_type);
+		spdk_json_write_named_bool(w, name, spdk_bdev_io_type_supported(bdev, io_type));
+	}
 	spdk_json_write_object_end(w);
 
 	rc = spdk_bdev_get_memory_domains(bdev, NULL, 0);
