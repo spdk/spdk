@@ -1425,7 +1425,9 @@ _write_read_done(void *_req, int reduce_errno)
 	if (req->chunk_is_compressed) {
 		_reduce_vol_decompress_chunk_scratch(req, _write_decompress_done);
 	} else {
-		_write_decompress_done(req, req->chunk->compressed_size);
+		req->backing_cb_args.output_size = req->chunk->compressed_size;
+
+		_write_decompress_done(req, 0);
 	}
 }
 
@@ -1500,7 +1502,9 @@ _read_read_done(void *_req, int reduce_errno)
 			buf += req->iov[i].iov_len;
 		}
 
-		_read_decompress_done(req, req->chunk->compressed_size);
+		req->backing_cb_args.output_size = req->chunk->compressed_size;
+
+		_read_decompress_done(req, 0);
 	}
 }
 
