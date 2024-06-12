@@ -111,6 +111,7 @@
 	spdk_bdev_get_max_copy;
 	spdk_bdev_copy_blocks;
 	spdk_bdev_get_nvme_ctratt;
+	spdk_bdev_get_io_type_name;
 
 	# Public functions in bdev_module.h
 	spdk_bdev_register;

@@ -3704,6 +3704,39 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return supported;
 }
 
+static const char *g_io_type_strings[] = {
+	[SPDK_BDEV_IO_TYPE_READ] = "read",
+	[SPDK_BDEV_IO_TYPE_WRITE] = "write",
+	[SPDK_BDEV_IO_TYPE_UNMAP] = "unmap",
+	[SPDK_BDEV_IO_TYPE_FLUSH] = "flush",
+	[SPDK_BDEV_IO_TYPE_RESET] = "reset",
+	[SPDK_BDEV_IO_TYPE_NVME_ADMIN] = "nvme_admin",
+	[SPDK_BDEV_IO_TYPE_NVME_IO] = "nvme_io",
+	[SPDK_BDEV_IO_TYPE_NVME_IO_MD] = "nvme_io_md",
+	[SPDK_BDEV_IO_TYPE_WRITE_ZEROES] = "write_zeroes",
+	[SPDK_BDEV_IO_TYPE_ZCOPY] = "zcopy",
+	[SPDK_BDEV_IO_TYPE_GET_ZONE_INFO] = "get_zone_info",
+	[SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT] = "zone_management",
+	[SPDK_BDEV_IO_TYPE_ZONE_APPEND] = "zone_append",
+	[SPDK_BDEV_IO_TYPE_COMPARE] = "compare",
+	[SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE] = "compare_and_write",
+	[SPDK_BDEV_IO_TYPE_ABORT] = "abort",
+	[SPDK_BDEV_IO_TYPE_SEEK_HOLE] = "seek_hole",
+	[SPDK_BDEV_IO_TYPE_SEEK_DATA] = "seek_data",
+	[SPDK_BDEV_IO_TYPE_COPY] = "copy",
+	[SPDK_BDEV_IO_TYPE_NVME_IOV_MD] = "nvme_iov_md",
+};
+
+const char *
+spdk_bdev_get_io_type_name(enum spdk_bdev_io_type io_type)
+{
+	if (io_type <= SPDK_BDEV_IO_TYPE_INVALID || io_type >= SPDK_BDEV_NUM_IO_TYPES) {
+		return NULL;
+	}
+
+	return g_io_type_strings[io_type];
+}
+
 uint64_t
 spdk_bdev_io_get_submit_tsc(struct spdk_bdev_io *bdev_io)
 {

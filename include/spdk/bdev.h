@@ -575,6 +575,14 @@ int spdk_bdev_set_timeout(struct spdk_bdev_desc *desc, uint64_t timeout_in_sec,
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
 /**
+ * return the name of an IO type based on the io_type.
+ *
+ * \param io_type The specific I/O type like read, write, flush, unmap.
+ * \return Name of the IO type as a null-terminated string.
+ */
+const char *spdk_bdev_get_io_type_name(enum spdk_bdev_io_type io_type);
+
+/**
  * Output driver-specific information to a JSON stream.
  *
  * The JSON write context will be initialized with an open object, so the bdev
