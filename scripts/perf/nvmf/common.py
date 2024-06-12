@@ -14,7 +14,7 @@ from json.decoder import JSONDecodeError
 def read_json_stats(file):
     with open(file, "r") as json_data:
         data = json.load(json_data)
-        job_pos = 0  # job_post = 0 because using aggregated results
+        job_data = data["jobs"][0]  # 0 because using aggregated results, fio group reporting
 
         # Check if latency is in nano or microseconds to choose correct dict key
         def get_lat_unit(key_prefix, dict_section):
@@ -38,15 +38,15 @@ def read_json_stats(file):
                 # measurements were done, so just return zeroes
                 return [0, 0, 0, 0]
 
-        read_iops = float(data["jobs"][job_pos]["read"]["iops"])
-        read_bw = float(data["jobs"][job_pos]["read"]["bw"])
-        lat_key, lat_unit = get_lat_unit("lat", data["jobs"][job_pos]["read"])
-        read_avg_lat = float(data["jobs"][job_pos]["read"][lat_key]["mean"])
-        read_min_lat = float(data["jobs"][job_pos]["read"][lat_key]["min"])
-        read_max_lat = float(data["jobs"][job_pos]["read"][lat_key]["max"])
-        clat_key, clat_unit = get_lat_unit("clat", data["jobs"][job_pos]["read"])
+        read_iops = float(job_data["read"]["iops"])
+        read_bw = float(job_data["read"]["bw"])
+        lat_key, lat_unit = get_lat_unit("lat", job_data["read"])
+        read_avg_lat = float(job_data["read"][lat_key]["mean"])
+        read_min_lat = float(job_data["read"][lat_key]["min"])
+        read_max_lat = float(job_data["read"][lat_key]["max"])
+        clat_key, clat_unit = get_lat_unit("clat", job_data["read"])
         read_p99_lat, read_p99_9_lat, read_p99_99_lat, read_p99_999_lat = get_clat_percentiles(
-            data["jobs"][job_pos]["read"][clat_key])
+            job_data["read"][clat_key])
 
         if "ns" in lat_unit:
             read_avg_lat, read_min_lat, read_max_lat = [x / 1000 for x in [read_avg_lat, read_min_lat, read_max_lat]]
@@ -56,15 +56,15 @@ def read_json_stats(file):
             read_p99_99_lat = read_p99_99_lat / 1000
             read_p99_999_lat = read_p99_999_lat / 1000
 
-        write_iops = float(data["jobs"][job_pos]["write"]["iops"])
-        write_bw = float(data["jobs"][job_pos]["write"]["bw"])
-        lat_key, lat_unit = get_lat_unit("lat", data["jobs"][job_pos]["write"])
-        write_avg_lat = float(data["jobs"][job_pos]["write"][lat_key]["mean"])
-        write_min_lat = float(data["jobs"][job_pos]["write"][lat_key]["min"])
-        write_max_lat = float(data["jobs"][job_pos]["write"][lat_key]["max"])
-        clat_key, clat_unit = get_lat_unit("clat", data["jobs"][job_pos]["write"])
+        write_iops = float(job_data["write"]["iops"])
+        write_bw = float(job_data["write"]["bw"])
+        lat_key, lat_unit = get_lat_unit("lat", job_data["write"])
+        write_avg_lat = float(job_data["write"][lat_key]["mean"])
+        write_min_lat = float(job_data["write"][lat_key]["min"])
+        write_max_lat = float(job_data["write"][lat_key]["max"])
+        clat_key, clat_unit = get_lat_unit("clat", job_data["write"])
         write_p99_lat, write_p99_9_lat, write_p99_99_lat, write_p99_999_lat = get_clat_percentiles(
-            data["jobs"][job_pos]["write"][clat_key])
+            job_data["write"][clat_key])
 
         if "ns" in lat_unit:
             write_avg_lat, write_min_lat, write_max_lat = [x / 1000 for x in [write_avg_lat, write_min_lat, write_max_lat]]
