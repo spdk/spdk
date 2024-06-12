@@ -1534,15 +1534,18 @@ def bdev_reset_iostat(client, name=None, mode=None):
     return client.call('bdev_reset_iostat', params)
 
 
-def bdev_enable_histogram(client, name, enable):
+def bdev_enable_histogram(client, name, enable, opc):
     """Control whether histogram is enabled for specified bdev.
     Args:
         name: name of bdev
         enable: Enable or disable histogram on specified device
+        opc: name of io_type (optional)
     """
     params = dict()
     params['name'] = name
     params['enable'] = enable
+    if opc:
+        params['opc'] = opc
     return client.call('bdev_enable_histogram', params)
 
 

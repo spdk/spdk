@@ -100,6 +100,8 @@
 	spdk_bdev_io_get_cb_arg;
 	spdk_bdev_io_get_seek_offset;
 	spdk_bdev_histogram_enable;
+	spdk_bdev_histogram_enable_ext;
+	spdk_bdev_enable_histogram_opts_init;
 	spdk_bdev_histogram_get;
 	spdk_bdev_channel_get_histogram;
 	spdk_bdev_get_media_events;
@@ -112,6 +114,7 @@
 	spdk_bdev_copy_blocks;
 	spdk_bdev_get_nvme_ctratt;
 	spdk_bdev_get_io_type_name;
+	spdk_bdev_get_io_type;
 
 	# Public functions in bdev_module.h
 	spdk_bdev_register;

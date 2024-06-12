@@ -1886,6 +1886,12 @@ bdev_enable_histogram_config_json(struct spdk_bdev *bdev, struct spdk_json_write
 	spdk_json_write_named_string(w, "name", bdev->name);
 
 	spdk_json_write_named_bool(w, "enable", bdev->internal.histogram_enabled);
+
+	if (bdev->internal.histogram_io_type) {
+		spdk_json_write_named_string(w, "opc",
+					     spdk_bdev_get_io_type_name(bdev->internal.histogram_io_type));
+	}
+
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -3735,6 +3741,20 @@ spdk_bdev_get_io_type_name(enum spdk_bdev_io_type io_type)
 	}
 
 	return g_io_type_strings[io_type];
+}
+
+int
+spdk_bdev_get_io_type(const char *io_type_string)
+{
+	int i;
+
+	for (i = SPDK_BDEV_IO_TYPE_READ; i < SPDK_BDEV_NUM_IO_TYPES; ++i) {
+		if (!strcmp(io_type_string, g_io_type_strings[i])) {
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 uint64_t
@@ -7290,7 +7310,13 @@ bdev_io_complete(void *ctx)
 			      bdev_io->internal.caller_ctx, bdev_ch->queue_depth);
 
 	if (bdev_ch->histogram) {
-		spdk_histogram_data_tally(bdev_ch->histogram, tsc_diff);
+		if (bdev_io->bdev->internal.histogram_io_type == 0 ||
+		    bdev_io->bdev->internal.histogram_io_type == bdev_io->type) {
+			/*
+			 * Tally all I/O types if the histogram_io_type is set to 0.
+			 */
+			spdk_histogram_data_tally(bdev_ch->histogram, tsc_diff);
+		}
 	}
 
 	bdev_io_update_io_stat(bdev_io, tsc_diff);
@@ -9475,8 +9501,8 @@ bdev_histogram_enable_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev
 }
 
 void
-spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
-			   void *cb_arg, bool enable)
+spdk_bdev_histogram_enable_ext(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
+			       void *cb_arg, bool enable, struct spdk_bdev_enable_histogram_opts *opts)
 {
 	struct spdk_bdev_histogram_ctx *ctx;
 
@@ -9503,6 +9529,7 @@ spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	bdev->internal.histogram_enabled = enable;
+	bdev->internal.histogram_io_type = opts->io_type;
 
 	if (enable) {
 		/* Allocate histogram for each channel */
@@ -9512,6 +9539,51 @@ spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb
 		spdk_bdev_for_each_channel(bdev, bdev_histogram_disable_channel, ctx,
 					   bdev_histogram_disable_channel_cb);
 	}
+}
+
+void
+spdk_bdev_enable_histogram_opts_init(struct spdk_bdev_enable_histogram_opts *opts, size_t size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		assert(opts != NULL);
+		return;
+	}
+	if (size == 0) {
+		SPDK_ERRLOG("size should not be zero\n");
+		assert(size != 0);
+		return;
+	}
+
+	memset(opts, 0, size);
+	opts->size = size;
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_bdev_enable_histogram_opts, field) + sizeof(opts->field) <= size
+
+#define SET_FIELD(field, value) \
+        if (FIELD_OK(field)) { \
+                opts->field = value; \
+        } \
+
+	SET_FIELD(io_type, 0);
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_enable_histogram_opts) == 9, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+void
+spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
+			   void *cb_arg, bool enable)
+{
+	struct spdk_bdev_enable_histogram_opts opts;
+
+	spdk_bdev_enable_histogram_opts_init(&opts, sizeof(opts));
+	spdk_bdev_histogram_enable_ext(bdev, cb_fn, cb_arg, enable, &opts);
 }
 
 struct spdk_bdev_histogram_data_ctx {

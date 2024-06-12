@@ -978,17 +978,20 @@ SPDK_RPC_REGISTER("bdev_set_qos_limit", rpc_bdev_set_qos_limit, SPDK_RPC_RUNTIME
 struct rpc_bdev_enable_histogram_request {
 	char *name;
 	bool enable;
+	char *opc;
 };
 
 static void
 free_rpc_bdev_enable_histogram_request(struct rpc_bdev_enable_histogram_request *r)
 {
 	free(r->name);
+	free(r->opc);
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_request_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_enable_histogram_request, name), spdk_json_decode_string},
 	{"enable", offsetof(struct rpc_bdev_enable_histogram_request, enable), spdk_json_decode_bool},
+	{"opc", offsetof(struct rpc_bdev_enable_histogram_request, opc), spdk_json_decode_string, true},
 };
 
 static void
@@ -1010,6 +1013,8 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_enable_histogram_request req = {NULL};
 	struct spdk_bdev_desc *desc;
 	int rc;
+	struct spdk_bdev_enable_histogram_opts opts = {};
+	int io_type = 0;
 
 	if (spdk_json_decode_object(params, rpc_bdev_enable_histogram_request_decoders,
 				    SPDK_COUNTOF(rpc_bdev_enable_histogram_request_decoders),
@@ -1026,8 +1031,21 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_bdev_histogram_enable(spdk_bdev_desc_get_bdev(desc), bdev_histogram_status_cb,
-				   request, req.enable);
+	spdk_bdev_enable_histogram_opts_init(&opts, sizeof(opts));
+
+	if (req.opc != NULL) {
+		io_type = spdk_bdev_get_io_type(req.opc);
+		if (io_type == -1) {
+			SPDK_ERRLOG("Invalid IO type\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Invalid Io type");
+			goto cleanup;
+		}
+		opts.io_type = (uint8_t) io_type;
+	}
+
+	spdk_bdev_histogram_enable_ext(spdk_bdev_desc_get_bdev(desc), bdev_histogram_status_cb,
+				       request, req.enable, &opts);
 
 	spdk_bdev_close(desc);
 

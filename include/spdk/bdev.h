@@ -125,6 +125,17 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
+/**
+ * Structure with optional enable histogram parameters
+ */
+struct spdk_bdev_enable_histogram_opts {
+	/** Size of this structure in bytes */
+	size_t size;
+
+	uint8_t io_type;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_enable_histogram_opts) == 9, "Incorrect size");
+
 /** bdev QoS rate limit type */
 enum spdk_bdev_qos_rate_limit_type {
 	/** IOPS rate limit for both read and write */
@@ -581,6 +592,15 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
  * \return Name of the IO type as a null-terminated string.
  */
 const char *spdk_bdev_get_io_type_name(enum spdk_bdev_io_type io_type);
+
+/**
+ * Return the io_type based on the io_type_string.
+ *
+ * \param io_type_string Name of the IO type as a null-terminated string.
+ * \return io_type The specific I/O type like read, write, flush, unmap etc.
+ * This will map to enum spdk_bdev_io_type.
+ */
+int spdk_bdev_get_io_type(const char *io_type_string);
 
 /**
  * Output driver-specific information to a JSON stream.
@@ -2095,6 +2115,30 @@ uint64_t spdk_bdev_io_get_seek_offset(const struct spdk_bdev_io *bdev_io);
  */
 void spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
 				void *cb_arg, bool enable);
+
+/**
+ * Enable or disable collecting histogram data on a bdev. This differs from
+ * spdk_bdev_histogram_enable by allowing Optional structure with extended enable
+ * histogram options.
+ *
+ * \param bdev Block device.
+ * \param cb_fn Callback function to be called when histograms are enabled.
+ * \param cb_arg Argument to pass to cb_fn.
+ * \param enable Enable/disable flag
+ * \param opts Optional structure with extended enable histogram options. `size` member of this structure
+ *             is used for ABI compatibility and must be set to sizeof(struct spdk_bdev_enable_histogram_opts).
+ */
+void spdk_bdev_histogram_enable_ext(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
+				    void *cb_arg, bool enable, struct spdk_bdev_enable_histogram_opts *opts);
+
+/**
+ * Initialize bdev enable histogram options structure.
+ *
+ * \param opts The structure to initialize.
+ * \param size The size of *opts.
+ */
+void
+spdk_bdev_enable_histogram_opts_init(struct spdk_bdev_enable_histogram_opts *opts, size_t size);
 
 /**
  * Get aggregated histogram data from a bdev. Callback provides merged histogram

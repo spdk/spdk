@@ -2704,6 +2704,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 enable                  | Required | boolean     | Enable or disable histogram on specified device
+opc                     | Optional | string      | IO type name
 
 #### Example
 
@@ -2717,6 +2718,7 @@ Example request:
   "params": {
     "name": "Nvme0n1"
     "enable": true
+    "opc": "read"
   }
 }
 ~~~
