@@ -168,12 +168,13 @@ def parse_results(results_dir, csv_file):
                 try:
                     stats = read_json_stats(os.path.join(results_dir, r))
                     separate_stats.append(stats)
-                    logging.info(stats)
+                    logging.info([float("{0:.3f}".format(x)) for x in stats])
                 except JSONDecodeError:
                     logging.error("ERROR: Failed to parse %s results! Results might be incomplete!" % r)
 
             init_results = [sum(x) for x in zip(*separate_stats)]
             init_results = [x / len(separate_stats) for x in init_results]
+            init_results = [round(x, 3) for x in init_results]
             inits_avg_results.append(init_results)
 
             logging.info("\tAverage results for initiator %s" % i)
