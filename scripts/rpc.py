@@ -2869,6 +2869,22 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_remove_host)
 
+    def nvmf_subsystem_set_keys(args):
+        rpc.nvmf.nvmf_subsystem_set_keys(args.client,
+                                         nqn=args.nqn,
+                                         host=args.host,
+                                         tgt_name=args.tgt_name,
+                                         dhchap_key=args.dhchap_key,
+                                         dhchap_ctrlr_key=args.dhchap_ctrlr_key)
+
+    p = subparsers.add_parser('nvmf_subsystem_set_keys', help='Set keys required for a host to connect to a given subsystem')
+    p.add_argument('nqn', help='Subsystem NQN')
+    p.add_argument('host', help='Host NQN')
+    p.add_argument('-t', '--tgt-name', help='Name of the NVMe-oF target')
+    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
+    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
+    p.set_defaults(func=nvmf_subsystem_set_keys)
+
     def nvmf_subsystem_allow_any_host(args):
         rpc.nvmf.nvmf_subsystem_allow_any_host(args.client,
                                                nqn=args.nqn,

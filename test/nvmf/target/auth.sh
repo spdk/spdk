@@ -31,9 +31,29 @@ dumplogs() {
 hostrpc() { "$rootdir/scripts/rpc.py" -s "$hostsock" "$@"; }
 
 nvme_connect() {
-	# Force 1 I/O queue to speed up the connection
+	# Force 1 I/O queue to speed up the connection and keep ctrlr loss timeout at 0 to ensure
+	# immediate disconnect after unsuccessful reauthentication
 	nvme connect -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -n "$subnqn" -i 1 \
-		-q "$hostnqn" --hostid "$NVME_HOSTID" "$@"
+		-q "$hostnqn" --hostid "$NVME_HOSTID" -l 0 "$@"
+}
+
+nvme_get_ctrlr() {
+	local dev
+
+	for dev in /sys/devices/virtual/nvme-fabrics/ctl/nvme*; do
+		[[ "$subnqn" == "$(< "$dev/subsysnqn")" ]] && echo "${dev##*/}" && break
+	done || false
+}
+
+nvme_set_keys() {
+	local ctl key ckey dev timeout
+
+	ctl="$1" key="$2" ckey="$3" timeout="$4"
+	dev="/sys/devices/virtual/nvme-fabrics/ctl/$ctl"
+
+	[[ -z "$key" ]] || echo "$key" > "$dev/dhchap_secret"
+	[[ -z "$ckey" ]] || echo "$ckey" > "$dev/dhchap_ctrl_secret"
+	[[ -z "$timeout" ]] || sleep "$timeout"
 }
 
 bdev_connect() {
@@ -144,12 +164,17 @@ waitforlisten "$nvmfpid"
 rpc_cmd <<- CONFIG
 	nvmf_set_config --dhchap-digests sha384,sha512 --dhchap-dhgroups ffdhe6144,ffdhe8192
 	framework_start_init
+	bdev_null_create null0 100 4096
 	nvmf_create_transport -t "$TEST_TRANSPORT"
 	nvmf_create_subsystem "$subnqn"
 	nvmf_subsystem_add_listener -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" \
 		-s "$NVMF_PORT" "$subnqn"
-	keyring_file_add_key key3 "${keys[3]}"
+	nvmf_subsystem_add_ns "$subnqn" "null0" -n 1
 CONFIG
+for i in "${!keys[@]}"; do
+	rpc_cmd keyring_file_add_key "key$i" "${keys[i]}"
+	[[ -n "${ckeys[i]}" ]] && rpc_cmd keyring_file_add_key "ckey$i" "${ckeys[i]}"
+done
 
 connect_authenticate "sha512" "ffdhe8192" 3
 
@@ -188,6 +213,36 @@ NOT bdev_connect -b "nvme0" --dhchap-key "key0" --dhchap-ctrlr-key "key1"
 bdev_connect -b "nvme0" --dhchap-key "key0"
 [[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
 hostrpc bdev_nvme_detach_controller nvme0
+
+# Check changing the keys
+rpc_cmd nvmf_subsystem_set_keys "$subnqn" "$hostnqn" --dhchap-key "key1"
+bdev_connect -b "nvme0" --dhchap-key "key1"
+[[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
+# Change the keys again - this shouldn't affect existing connections
+rpc_cmd nvmf_subsystem_set_keys "$subnqn" "$hostnqn" --dhchap-key "key2" --dhchap-ctrlr-key "key3"
+[[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
+# But new connections require new keys
+nvme_connect --dhchap-secret "$(< ${keys[2]})" --dhchap-ctrl-secret "$(< ${keys[3]})"
+nctrlr=$(nvme_get_ctrlr)
+hostrpc bdev_nvme_detach_controller nvme0
+NOT bdev_connect -b "nvme0" --dhchap-key "key1"
+bdev_connect -b "nvme0" --dhchap-key "key2" --dhchap-ctrlr-key "key3"
+[[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
+hostrpc bdev_nvme_detach_controller nvme0
+# Clear the keys and check that the host is no longer required to authenticate
+rpc_cmd nvmf_subsystem_set_keys "$subnqn" "$hostnqn"
+bdev_connect -b "nvme0"
+[[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
+# Change the keys on the target once again, but this time force reauthentication on the already
+# established connections
+rpc_cmd nvmf_subsystem_set_keys "$subnqn" "$hostnqn" --dhchap-key "key1" --dhchap-ctrlr-key "key3"
+nvme_set_keys "$nctrlr" "$(< ${keys[1]})" "" 2s
+waitforblk "${nctrlr}n1"
+# Change the ctrlr key
+rpc_cmd nvmf_subsystem_set_keys "$subnqn" "$hostnqn" --dhchap-key "key1" --dhchap-ctrlr-key "key2"
+nvme_set_keys "$nctrlr" "" "$(< ${keys[2]})" 2s
+waitforblk "${nctrlr}n1"
+nvme disconnect -n "$subnqn"
 
 trap - SIGINT SIGTERM EXIT
 cleanup

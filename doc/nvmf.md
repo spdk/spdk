@@ -363,6 +363,18 @@ $ scripts/rpc.py nvmf_subsystem_add_host nqn.2024-05.io.spdk:cnode0 nqn.2024-05.
     --dhchap-key key2
 ```
 
+Additionally, it's possible to change the keys while preserving existing connections to a subsystem
+via `nvmf_subsystem_set_keys`.  After that's done, new connections and reauthentication requests
+will be required to use the new keys.
+
+```{.sh}
+$ scripts/rpc.py nvmf_subsystem_add_host nqn.2024-05.io.spdk:cnode0 nqn.2024-05.io.spdk:host0 \
+    --dhchap-key key0 --dhchap-ctrlr-key ctrlr-key0
+# Host nqn.2024-05.io.spdk:host0 connects to subsystem nqn.2024-05.io.spdk:cnode0
+$ scripts/rpc.py nvmf_subsystem_set_keys nqn.2024-05.io.spdk:cnode0 nqn.2024-05.io.spdk:host0 \
+    --dhchap-key key1 --dhchap-ctrlr-key ctrlr-key1
+```
+
 On the host side, the keys are specified when attaching controllers, e.g.:
 
 ```{.sh}

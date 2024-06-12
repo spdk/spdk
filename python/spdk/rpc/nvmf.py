@@ -583,6 +583,31 @@ def nvmf_subsystem_remove_host(client, nqn, host, tgt_name=None):
     return client.call('nvmf_subsystem_remove_host', params)
 
 
+def nvmf_subsystem_set_keys(client, nqn, host, tgt_name=None,
+                            dhchap_key=None, dhchap_ctrlr_key=None):
+    """Set keys required for a host to connect to a given subsystem.
+
+    Args:
+        nqn: Subsystem NQN.
+        host: Host NQN.
+        tgt_name: Name of the NVMe-oF target (optional).
+        dhchap_key: DH-HMAC-CHAP key name (optional)
+        dhchap_ctrlr_key: DH-HMAC-CHAP controller key name (optional)
+    """
+
+    params = {'nqn': nqn,
+              'host': host}
+
+    if tgt_name is not None:
+        params['tgt_name'] = tgt_name
+    if dhchap_key is not None:
+        params['dhchap_key'] = dhchap_key
+    if dhchap_ctrlr_key is not None:
+        params['dhchap_ctrlr_key'] = dhchap_ctrlr_key
+
+    return client.call('nvmf_subsystem_set_keys', params)
+
+
 def nvmf_subsystem_allow_any_host(client, nqn, disable, tgt_name=None):
     """Configure a subsystem to allow any host to connect or to enforce the host NQN list.
 

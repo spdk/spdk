@@ -2034,6 +2034,73 @@ rpc_nvmf_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_remove_host", rpc_nvmf_subsystem_remove_host,
 		  SPDK_RPC_RUNTIME)
 
+static void
+rpc_nvmf_subsystem_set_keys(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_host_ctx ctx = {};
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_key_opts opts = {};
+	struct spdk_nvmf_tgt *tgt;
+	struct spdk_key *key = NULL, *ckey = NULL;
+	int rc;
+
+	if (spdk_json_decode_object(params, nvmf_rpc_subsystem_host_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_subsystem_host_decoder), &ctx)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto out;
+	}
+
+	tgt = spdk_nvmf_get_tgt(ctx.tgt_name);
+	if (!tgt) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Invalid parameters");
+		goto out;
+	}
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, ctx.nqn);
+	if (!subsystem) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto out;
+	}
+
+	if (ctx.dhchap_key != NULL) {
+		key = spdk_keyring_get_key(ctx.dhchap_key);
+		if (key == NULL) {
+			SPDK_ERRLOG("Unable to find DH-HMAC-CHAP key: %s\n", ctx.dhchap_key);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			goto out;
+		}
+	}
+	if (ctx.dhchap_ctrlr_key != NULL) {
+		ckey = spdk_keyring_get_key(ctx.dhchap_ctrlr_key);
+		if (ckey == NULL) {
+			SPDK_ERRLOG("Unable to find DH-HMAC-CHAP ctrlr key: %s\n",
+				    ctx.dhchap_ctrlr_key);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			goto out;
+		}
+	}
+
+	opts.size = SPDK_SIZEOF(&opts, dhchap_ctrlr_key);
+	opts.dhchap_key = key;
+	opts.dhchap_ctrlr_key = ckey;
+	rc = spdk_nvmf_subsystem_set_keys(subsystem, ctx.host, &opts);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto out;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+out:
+	spdk_keyring_put_key(ckey);
+	spdk_keyring_put_key(key);
+	nvmf_rpc_host_ctx_free(&ctx);
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_set_keys", rpc_nvmf_subsystem_set_keys, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_any_host_decoder[] = {
 	{"nqn", offsetof(struct nvmf_rpc_host_ctx, nqn), spdk_json_decode_string},
@@ -2706,6 +2773,7 @@ dump_nvmf_qpair(struct spdk_json_write_ctx *w, struct spdk_nvmf_qpair *qpair)
 	spdk_json_write_named_uint32(w, "qid", qpair->qid);
 	spdk_json_write_named_string(w, "state", nvmf_qpair_state_str(qpair->state));
 	spdk_json_write_named_string(w, "thread", spdk_thread_get_name(spdk_get_thread()));
+	spdk_json_write_named_string(w, "hostnqn", qpair->ctrlr->hostnqn);
 
 	if (spdk_nvmf_qpair_get_listen_trid(qpair, &trid) == 0) {
 		spdk_json_write_named_object_begin(w, "listen_address");

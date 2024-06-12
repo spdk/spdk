@@ -654,6 +654,23 @@ int spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
  */
 int spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
+struct spdk_nvmf_subsystem_key_opts {
+	/** Size of this structure */
+	size_t				size;
+	/** DH-HMAC-CHAP key */
+	struct spdk_key			*dhchap_key;
+	/** DH-HMAC-CHAP controller key */
+	struct spdk_key			*dhchap_ctrlr_key;
+};
+
+/**
+ * Set keys required for a host to connect to a given subsystem.  This will override the keys set
+ * by `spdk_nvmf_subsystem_add_host_ext()`.
+ */
+int spdk_nvmf_subsystem_set_keys(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
+				 struct spdk_nvmf_subsystem_key_opts *opts);
+
+
 /**
  * Disconnect all connections originating from the provided hostnqn
  *

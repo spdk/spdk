@@ -8744,6 +8744,50 @@ Example response:
 }
 ~~~
 
+### nvmf_subsystem_set_keys {#rpc_nvmf_subsystem_set_keys}
+
+Set keys required for a host to connect to a given subsystem.  This will overwrite the keys set by
+`nvmf_subsystem_add_host`.  If none of the keys are provided, host's keys will be cleared, allowing
+it to connect without authentication.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+host                    | Required | string      | Host NQN
+tgt_name                | Optional | string      | NVMe-oF target name
+dhchap_key              | Optional | string      | DH-HMAC-CHAP key name (required if controller key is specified)
+dhchap_ctrlr_key        | Optional | string      | DH-HMAC-CHAP controller key name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_set_keys",
+  "params": {
+    "nqn": "nqn.2024-06.io.spdk:cnode1",
+    "host": "nqn.2024-06.io.spdk:host1",
+    "dhchap_key": "key0",
+    "dchap_ctrlr_key": "key1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### nvmf_subsystem_get_controllers {#rpc_nvmf_subsystem_get_controllers}
 
 #### Parameters

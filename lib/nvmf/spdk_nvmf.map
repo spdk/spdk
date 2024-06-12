@@ -42,6 +42,7 @@
 	spdk_nvmf_subsystem_host_allowed;
 	spdk_nvmf_subsystem_get_first_host;
 	spdk_nvmf_subsystem_get_next_host;
+	spdk_nvmf_subsystem_set_keys;
 	spdk_nvmf_host_get_nqn;
 	spdk_nvmf_subsystem_add_listener;
 	spdk_nvmf_subsystem_add_listener_ext;

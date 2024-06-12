@@ -1112,6 +1112,61 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 	return 0;
 }
 
+int
+spdk_nvmf_subsystem_set_keys(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
+			     struct spdk_nvmf_subsystem_key_opts *opts)
+{
+	struct spdk_nvmf_host *host;
+	struct spdk_key *key, *ckey;
+
+	if (!nvmf_auth_is_supported()) {
+		SPDK_ERRLOG("NVMe in-band authentication is unsupported\n");
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&subsystem->mutex);
+	host = nvmf_subsystem_find_host(subsystem, hostnqn);
+	if (host == NULL) {
+		pthread_mutex_unlock(&subsystem->mutex);
+		return -EINVAL;
+	}
+
+	if (SPDK_GET_FIELD(opts, dhchap_key, host->dhchap_key) == NULL &&
+	    SPDK_GET_FIELD(opts, dhchap_ctrlr_key, host->dhchap_ctrlr_key) != NULL) {
+		SPDK_ERRLOG("DH-HMAC-CHAP controller key requires host key to be set\n");
+		pthread_mutex_unlock(&subsystem->mutex);
+		return -EINVAL;
+	}
+	key = SPDK_GET_FIELD(opts, dhchap_key, NULL);
+	if (key != NULL) {
+		key = spdk_key_dup(key);
+		if (key == NULL) {
+			pthread_mutex_unlock(&subsystem->mutex);
+			return -EINVAL;
+		}
+	}
+	ckey = SPDK_GET_FIELD(opts, dhchap_ctrlr_key, NULL);
+	if (ckey != NULL) {
+		ckey = spdk_key_dup(ckey);
+		if (ckey == NULL) {
+			pthread_mutex_unlock(&subsystem->mutex);
+			spdk_keyring_put_key(key);
+			return -EINVAL;
+		}
+	}
+	if (SPDK_FIELD_VALID(opts, dhchap_key)) {
+		spdk_keyring_put_key(host->dhchap_key);
+		host->dhchap_key = key;
+	}
+	if (SPDK_FIELD_VALID(opts, dhchap_ctrlr_key)) {
+		spdk_keyring_put_key(host->dhchap_ctrlr_key);
+		host->dhchap_ctrlr_key = ckey;
+	}
+	pthread_mutex_unlock(&subsystem->mutex);
+
+	return 0;
+}
+
 struct nvmf_subsystem_disconnect_host_ctx {
 	struct spdk_nvmf_subsystem		*subsystem;
 	char					*hostnqn;
