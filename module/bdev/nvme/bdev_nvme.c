@@ -271,12 +271,15 @@ nvme_bdev_ctrlr_get_by_name(const char *name)
 
 static struct nvme_ctrlr *
 nvme_bdev_ctrlr_get_ctrlr(struct nvme_bdev_ctrlr *nbdev_ctrlr,
-			  const struct spdk_nvme_transport_id *trid)
+			  const struct spdk_nvme_transport_id *trid, const char *hostnqn)
 {
+	const struct spdk_nvme_ctrlr_opts *opts;
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->active_path_id->trid) == 0) {
+		opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->active_path_id->trid) == 0 &&
+		    strcmp(hostnqn, opts->hostnqn) == 0) {
 			break;
 		}
 	}
@@ -345,14 +348,14 @@ nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns)
 }
 
 static struct nvme_ctrlr *
-nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
+nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid, const char *hostnqn)
 {
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr = NULL;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, trid);
+		nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, trid, hostnqn);
 		if (nvme_ctrlr != NULL) {
 			break;
 		}
@@ -6163,8 +6166,9 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	/* TODO expand this check to include both the host and target TRIDs.
 	 * Only if both are the same should we fail.
 	 */
-	if (nvme_ctrlr_get(trid) != NULL) {
-		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
+	if (nvme_ctrlr_get(trid, drv_opts->hostnqn) != NULL) {
+		SPDK_ERRLOG("A controller with the provided trid (traddr: %s, hostnqn: %s) "
+			    "already exists.\n", trid->traddr, drv_opts->hostnqn);
 		return -EEXIST;
 	}
 

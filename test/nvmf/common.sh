@@ -754,3 +754,7 @@ get_main_ns_ip() {
 
 	echo "${!ip}"
 }
+
+uuid2nguid() {
+	tr -d - <<< "${1^^}"
+}
