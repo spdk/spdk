@@ -29,13 +29,21 @@ deinit(void)
 	spdk_governor_set(NULL);
 }
 
+static uint32_t
+calculate_busy_pct(struct spdk_scheduler_core_info *core)
+{
+	uint64_t total_tsc;
+
+	total_tsc = core->current_busy_tsc + core->current_idle_tsc;
+	return core->current_busy_tsc * 100 / total_tsc;
+}
+
 static void
 balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 {
 	struct spdk_governor *governor;
 	struct spdk_scheduler_core_info *core;
 	struct spdk_governor_capabilities capabilities;
-	uint64_t total_tsc;
 	uint32_t busy_pct;
 	uint32_t i;
 	int rc;
@@ -53,8 +61,7 @@ balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 			return;
 		}
 
-		total_tsc = core->current_busy_tsc + core->current_idle_tsc;
-		busy_pct = core->current_busy_tsc * 100 / total_tsc;
+		busy_pct = calculate_busy_pct(core);
 
 		if (busy_pct < g_min_threshold) {
 			rc = governor->set_core_freq_min(core->lcore);
