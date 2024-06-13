@@ -162,6 +162,9 @@ struct nvme_pcie_qpair {
 		uint8_t has_shadow_doorbell	: 1;
 		uint8_t has_pending_vtophys_failures : 1;
 		uint8_t defer_destruction	: 1;
+
+		/* Disable merging of physically contiguous SGL entries */
+		uint8_t disable_pcie_sgl_merge	: 1;
 	} flags;
 
 	/*

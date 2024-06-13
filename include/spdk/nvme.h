@@ -1662,8 +1662,15 @@ struct spdk_nvme_io_qpair_opts {
 	 */
 	bool async_mode;
 
-	/* Hole at bytes 66-71. */
-	uint8_t reserved66[6];
+	/**
+	 * This flag if set to true disables the merging of physically
+	 * contiguous SGL elements. Default mode is set to false to allow
+	 * merging of physically contiguous SGL elements.
+	 */
+	bool disable_pcie_sgl_merge;
+
+	/* Hole at bytes 67-71. */
+	uint8_t reserved67[5];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 72, "Incorrect size");
 

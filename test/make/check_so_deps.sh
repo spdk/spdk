@@ -149,6 +149,12 @@ function confirm_abi_deps() {
 			label = Added opts.disable_command_passthru field
 			name = spdk_nvmf_transport
 			soname_regexp = ^libspdk_nvmf\\.so\\.18\\.*$
+		[suppress_type]
+			label = Added disable_pcie_sgl_merge field
+			name = spdk_nvme_io_qpair_opts
+			soname_regexp = ^libspdk_nvme\\.so\\.13\\.*$
+			has_data_member_regexp = ^reserved66$
+			has_data_member_inserted_between = {528, end}
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

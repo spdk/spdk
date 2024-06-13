@@ -113,6 +113,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	if (opts) {
 		pqpair->sq_vaddr = opts->sq.vaddr;
 		pqpair->cq_vaddr = opts->cq.vaddr;
+		pqpair->flags.disable_pcie_sgl_merge = opts->disable_pcie_sgl_merge;
 		sq_paddr = opts->sq.paddr;
 		cq_paddr = opts->cq.paddr;
 	}
@@ -1386,6 +1387,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	uint32_t remaining_transfer_len, remaining_user_sge_len, length;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	uint32_t nseg = 0;
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
 	/*
 	 * Build scattered payloads.
@@ -1464,8 +1466,8 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			remaining_user_sge_len -= length;
 			virt_addr = (uint8_t *)virt_addr + length;
 
-			if (nseg > 0 && phys_addr ==
-			    (*(sgl - 1)).address + (*(sgl - 1)).unkeyed.length) {
+			if (!pqpair->flags.disable_pcie_sgl_merge && nseg > 0 &&
+			    phys_addr == (*(sgl - 1)).address + (*(sgl - 1)).unkeyed.length) {
 				/* extend previous entry */
 				(*(sgl - 1)).unkeyed.length += length;
 				continue;
