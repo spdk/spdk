@@ -109,12 +109,13 @@ spdk_cpuset_count(const struct spdk_cpuset *set)
 {
 	uint32_t count = 0;
 	uint8_t n;
-	unsigned int i;
+	unsigned int i, j;
 	for (i = 0; i < sizeof(set->cpus); i++) {
 		n = set->cpus[i];
-		while (n) {
-			n &= (n - 1);
-			count++;
+		for (j = 0; j < 8; j++) {
+			if (n & (1 << j)) {
+				count++;
+			}
 		}
 	}
 	return count;
