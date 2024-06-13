@@ -11,11 +11,11 @@ rpc_py="$rootdir/scripts/rpc.py"
 loops=5
 
 SUBSYSNQN="nqn.2016-06.io.spdk:cnode1"
-HOSTNQN="nqn.2016-06.io.spdk:host1"
+HOSTNQN1="nqn.2016-06.io.spdk:host1"
 HOSTID=$(uuidgen)
 
 function connect() {
-	nvme connect -t $TEST_TRANSPORT -n $SUBSYSNQN -q $HOSTNQN -I $HOSTID \
+	nvme connect -t $TEST_TRANSPORT -n $SUBSYSNQN -q $HOSTNQN1 -I $HOSTID \
 		-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 4
 	waitforserial "$NVMF_SERIAL" $1
 	ctrl_id=$(nvme list-subsys -o json \
@@ -79,30 +79,30 @@ NOT ns_is_visible "0x1"
 ns_is_visible "0x2"
 
 # hot attach and check ns1 visible
-$rpc_py nvmf_ns_add_host $SUBSYSNQN 1 $HOSTNQN
+$rpc_py nvmf_ns_add_host $SUBSYSNQN 1 $HOSTNQN1
 ns_is_visible "0x1"
 ns_is_visible "0x2"
 
 # hot detach and check ns1 invisible
-$rpc_py nvmf_ns_remove_host $SUBSYSNQN 1 $HOSTNQN
+$rpc_py nvmf_ns_remove_host $SUBSYSNQN 1 $HOSTNQN1
 NOT ns_is_visible "0x1"
 ns_is_visible "0x2"
 
 disconnect
 
 # cold attach, connect and check ns1 visible
-$rpc_py nvmf_ns_add_host $SUBSYSNQN 1 $HOSTNQN
+$rpc_py nvmf_ns_add_host $SUBSYSNQN 1 $HOSTNQN1
 connect 2
 ns_is_visible "0x1"
 ns_is_visible "0x2"
 
 # detach and check ns1 invisible
-$rpc_py nvmf_ns_remove_host $SUBSYSNQN 1 $HOSTNQN
+$rpc_py nvmf_ns_remove_host $SUBSYSNQN 1 $HOSTNQN1
 NOT ns_is_visible "0x1"
 ns_is_visible "0x2"
 
 # hot detach ns2 should not work, since ns2 is auto-visible
-NOT $rpc_py nvmf_ns_remove_host $SUBSYSNQN 2 $HOSTNQN
+NOT $rpc_py nvmf_ns_remove_host $SUBSYSNQN 2 $HOSTNQN1
 NOT ns_is_visible "0x1"
 ns_is_visible "0x2"
 disconnect
