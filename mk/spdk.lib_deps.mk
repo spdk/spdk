@@ -123,7 +123,7 @@ DEPDIRS-sock_uring := log sock util thread trace
 DEPDIRS-scheduler_dynamic := event log thread util json
 ifeq (y,$(DPDK_POWER))
 DEPDIRS-scheduler_dpdk_governor := event json log util
-DEPDIRS-scheduler_gscheduler := event log
+DEPDIRS-scheduler_gscheduler := event log util
 endif
 
 # module/bdev
