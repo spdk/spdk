@@ -31,6 +31,10 @@
 	spdk_accel_append_encrypt;
 	spdk_accel_append_decrypt;
 	spdk_accel_append_crc32c;
+	spdk_accel_append_dif_verify;
+	spdk_accel_append_dif_verify_copy;
+	spdk_accel_append_dif_generate;
+	spdk_accel_append_dif_generate_copy;
 	spdk_accel_sequence_finish;
 	spdk_accel_sequence_abort;
 	spdk_accel_sequence_reverse;

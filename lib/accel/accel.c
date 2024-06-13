@@ -1337,6 +1337,194 @@ spdk_accel_append_crc32c(struct spdk_accel_sequence **pseq, struct spdk_io_chann
 }
 
 int
+spdk_accel_append_dif_verify(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			     struct iovec *iovs, size_t iovcnt,
+			     struct spdk_memory_domain *domain, void *domain_ctx,
+			     uint32_t num_blocks,
+			     const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+			     spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->s.iovs = iovs;
+	task->s.iovcnt = iovcnt;
+	task->src_domain = domain;
+	task->src_domain_ctx = domain_ctx;
+	task->dst_domain = NULL;
+	task->dif.ctx = ctx;
+	task->dif.err = err;
+	task->dif.num_blocks = num_blocks;
+	task->nbytes = num_blocks * ctx->block_size;
+	task->op_code = SPDK_ACCEL_OPC_DIF_VERIFY;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
+spdk_accel_append_dif_verify_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+				  struct iovec *dst_iovs, size_t dst_iovcnt,
+				  struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				  struct iovec *src_iovs, size_t src_iovcnt,
+				  struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				  uint32_t num_blocks,
+				  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				  spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->dst_domain = dst_domain;
+	task->dst_domain_ctx = dst_domain_ctx;
+	task->d.iovs = dst_iovs;
+	task->d.iovcnt = dst_iovcnt;
+	task->src_domain = src_domain;
+	task->src_domain_ctx = src_domain_ctx;
+	task->s.iovs = src_iovs;
+	task->s.iovcnt = src_iovcnt;
+	task->dif.ctx = ctx;
+	task->dif.err = err;
+	task->dif.num_blocks = num_blocks;
+	task->nbytes = num_blocks * ctx->block_size;
+	task->op_code = SPDK_ACCEL_OPC_DIF_VERIFY_COPY;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
+spdk_accel_append_dif_generate(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			       struct iovec *iovs, size_t iovcnt,
+			       struct spdk_memory_domain *domain, void *domain_ctx,
+			       uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+			       spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->s.iovs = iovs;
+	task->s.iovcnt = iovcnt;
+	task->src_domain = domain;
+	task->src_domain_ctx = domain_ctx;
+	task->dst_domain = NULL;
+	task->dif.ctx = ctx;
+	task->dif.num_blocks = num_blocks;
+	task->nbytes = num_blocks * ctx->block_size;
+	task->op_code = SPDK_ACCEL_OPC_DIF_GENERATE;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
+spdk_accel_append_dif_generate_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+				    struct iovec *dst_iovs, size_t dst_iovcnt,
+				    struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				    struct iovec *src_iovs, size_t src_iovcnt,
+				    struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				    uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+				    spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->dst_domain = dst_domain;
+	task->dst_domain_ctx = dst_domain_ctx;
+	task->d.iovs = dst_iovs;
+	task->d.iovcnt = dst_iovcnt;
+	task->src_domain = src_domain;
+	task->src_domain_ctx = src_domain_ctx;
+	task->s.iovs = src_iovs;
+	task->s.iovcnt = src_iovcnt;
+	task->nbytes = num_blocks * ctx->block_size;
+	task->op_code = SPDK_ACCEL_OPC_DIF_GENERATE_COPY;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
 spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
 		   struct spdk_memory_domain **domain, void **domain_ctx)
 {
@@ -2019,6 +2207,8 @@ accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next
 	case SPDK_ACCEL_OPC_FILL:
 	case SPDK_ACCEL_OPC_ENCRYPT:
 	case SPDK_ACCEL_OPC_DECRYPT:
+	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
+	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
 		if (task->dst_domain != next->src_domain) {
 			return false;
 		}
@@ -2077,7 +2267,9 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		    next->op_code != SPDK_ACCEL_OPC_COPY &&
 		    next->op_code != SPDK_ACCEL_OPC_ENCRYPT &&
 		    next->op_code != SPDK_ACCEL_OPC_DECRYPT &&
-		    next->op_code != SPDK_ACCEL_OPC_COPY_CRC32C) {
+		    next->op_code != SPDK_ACCEL_OPC_COPY_CRC32C &&
+		    next->op_code != SPDK_ACCEL_OPC_DIF_GENERATE_COPY &&
+		    next->op_code != SPDK_ACCEL_OPC_DIF_VERIFY_COPY) {
 			break;
 		}
 		if (task->dst_domain != next->src_domain) {
@@ -2098,6 +2290,8 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 	case SPDK_ACCEL_OPC_ENCRYPT:
 	case SPDK_ACCEL_OPC_DECRYPT:
 	case SPDK_ACCEL_OPC_CRC32C:
+	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
+	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
 		/* We can only merge tasks when one of them is a copy */
 		if (next->op_code != SPDK_ACCEL_OPC_COPY) {
 			break;

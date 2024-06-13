@@ -664,6 +664,140 @@ int spdk_accel_append_crc32c(struct spdk_accel_sequence **seq, struct spdk_io_ch
 			     uint32_t seed, spdk_accel_step_cb cb_fn, void *cb_arg);
 
 /**
+ * Append a Data Integrity Field (DIF) verify operation to a sequence.
+ *
+ * This operation computes the DIF on the data and compares it against the DIF contained
+ * in the metadata.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param iovs The io vector array. The total allocated memory size needs to be at least:
+ *             num_blocks * block_size (including metadata)
+ * \param iovcnt The size of the io vectors array.
+ * \param domain Memory domain to which the data buffers belong.
+ * \param domain_ctx Data buffer domain context.
+ * \param num_blocks Number of data blocks to check.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to check
+ *            Note: the user must ensure the validity of this pointer throughout the entire operation
+ *            because it is not validated along the processing path.
+ * \param err DIF error detailed information.
+ *            Note: the user must ensure the validity of this pointer throughout the entire operation
+ *            because it is not validated along the processing path.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno on failure.
+ */
+int spdk_accel_append_dif_verify(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+				 struct iovec *iovs, size_t iovcnt,
+				 struct spdk_memory_domain *domain, void *domain_ctx,
+				 uint32_t num_blocks,
+				 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				 spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Append a Data Integrity Field (DIF) copy and verify operation to a sequence.
+ *
+ * This operation copies memory from the source to the destination address and removes
+ * the DIF data with its verification according to the flags provided in the context.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param dst_iovs The destination I/O vector array. The total allocated memory size needs
+ *                to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
+ * \param dst_iovcnt The size of the destination I/O vectors array.
+ * \param dst_domain Memory domain to which the destination buffers belong.
+ * \param dst_domain_ctx Destination buffer domain context.
+ * \param src_iovs The source I/O vector array. The total allocated memory size needs
+ *                to be at least: num_blocks * data_block_size.
+ * \param src_iovcnt The size of the source I/O vectors array.
+ * \param src_domain Memory domain to which the source buffers belong.
+ * \param src_domain_ctx Source buffer domain context.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to insert.
+ * \param err DIF error detailed information.
+ *            Note: the user must ensure the validity of this pointer throughout the entire operation
+ *            because it is not validated along the processing path.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_append_dif_verify_copy(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+				      struct iovec *dst_iovs, size_t dst_iovcnt,
+				      struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				      struct iovec *src_iovs, size_t src_iovcnt,
+				      struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				      uint32_t num_blocks,
+				      const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				      spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Append a Data Integrity Field (DIF) generate operation to a sequence.
+ *
+ * This operation compute the DIF on the source data and inserting the DIF in place into
+ * the source data.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel associated with this call.
+ * \param iovs The io vector array. The total allocated memory size needs to be at least:
+ *             num_blocks * block_size (including metadata)
+ * \param iovcnt The size of the io vectors array.
+ * \param domain Memory domain to which the data buffers belong.
+ * \param domain_ctx Data buffer domain context.
+ * \param num_blocks Number of data blocks.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to insert
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_append_dif_generate(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+				   struct iovec *iovs, size_t iovcnt,
+				   struct spdk_memory_domain *domain, void *domain_ctx,
+				   uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+				   spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Data Integrity Field (DIF) copy and generate request.
+ *
+ * This operation copies memory from the source to the destination address,
+ * while computing the DIF on the source data and inserting the DIF into
+ * the output data.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel associated with this call.
+ * \param dst_iovs The destination io vector array. The total allocated memory size needs
+ *                to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
+ * \param dst_iovcnt The size of the destination io vectors array.
+ * \param dst_domain Memory domain to which the destination buffers belong.
+ * \param dst_domain_ctx Destination buffer domain context.
+ * \param src_iovs The source io vector array. The total allocated memory size needs
+ *                to be at least: num_blocks * data_block_size.
+ * \param src_iovcnt The size of the source io vectors array.
+ * \param src_domain Memory domain to which the source buffers belong.
+ * \param src_domain_ctx Source buffer domain context.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to insert
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_append_dif_generate_copy(struct spdk_accel_sequence **seq,
+					struct spdk_io_channel *ch,
+					struct iovec *dst_iovs, size_t dst_iovcnt,
+					struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+					struct iovec *src_iovs, size_t src_iovcnt,
+					struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+					uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+					spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
  * Finish a sequence and execute all its operations. After the completion callback is executed, the
  * sequence object is automatically freed.
  *
