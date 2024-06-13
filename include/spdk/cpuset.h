@@ -116,6 +116,15 @@ void spdk_cpuset_set_cpu(struct spdk_cpuset *set, uint32_t cpu, bool state);
  */
 bool spdk_cpuset_get_cpu(const struct spdk_cpuset *set, uint32_t cpu);
 
+/** Call the specified function for each set cpu in the specified cpuset.
+ *
+ * \param set The cpuset to iterate
+ * \param fn The function to call for each set cpu
+ * \param ctx Context pointer to pass to fn
+ */
+void spdk_cpuset_for_each_cpu(const struct spdk_cpuset *set,
+			      void (*fn)(void *ctx, uint32_t cpu), void *ctx);
+
 /**
  * Get the number of CPUs that are set in CPU set.
  *

@@ -104,20 +104,36 @@ spdk_cpuset_get_cpu(const struct spdk_cpuset *set, uint32_t cpu)
 	return (set->cpus[cpu / 8] >> (cpu % 8)) & 1U;
 }
 
-uint32_t
-spdk_cpuset_count(const struct spdk_cpuset *set)
+void
+spdk_cpuset_for_each_cpu(const struct spdk_cpuset *set,
+			 void (*fn)(void *ctx, uint32_t cpu), void *ctx)
 {
-	uint32_t count = 0;
 	uint8_t n;
 	unsigned int i, j;
 	for (i = 0; i < sizeof(set->cpus); i++) {
 		n = set->cpus[i];
 		for (j = 0; j < 8; j++) {
 			if (n & (1 << j)) {
-				count++;
+				fn(ctx, i * 8 + j);
 			}
 		}
 	}
+}
+
+static void
+count_fn(void *ctx, uint32_t cpu)
+{
+	uint32_t *count = ctx;
+
+	(*count)++;
+}
+
+uint32_t
+spdk_cpuset_count(const struct spdk_cpuset *set)
+{
+	uint32_t count = 0;
+
+	spdk_cpuset_for_each_cpu(set, count_fn, &count);
 	return count;
 }
 

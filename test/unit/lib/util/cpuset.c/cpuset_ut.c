@@ -238,6 +238,26 @@ test_cpuset_fmt(void)
 	spdk_cpuset_free(core_mask);
 }
 
+static void
+set_bit(void *ctx, uint32_t cpu)
+{
+	uint64_t *mask = ctx;
+
+	SPDK_CU_ASSERT_FATAL(cpu < 64);
+	(*mask) |= (1 << cpu);
+}
+
+static void
+test_cpuset_foreach(void)
+{
+	struct spdk_cpuset cpuset = {};
+	uint64_t mask = 0;
+
+	CU_ASSERT(spdk_cpuset_parse(&cpuset, "0xF135704") == 0);
+	spdk_cpuset_for_each_cpu(&cpuset, set_bit, &mask);
+	CU_ASSERT(mask == 0xF135704);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -251,7 +271,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_cpuset);
 	CU_ADD_TEST(suite, test_cpuset_parse);
 	CU_ADD_TEST(suite, test_cpuset_fmt);
-
+	CU_ADD_TEST(suite, test_cpuset_foreach);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 

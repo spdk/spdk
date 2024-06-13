@@ -50,6 +50,7 @@
 	spdk_cpuset_zero;
 	spdk_cpuset_set_cpu;
 	spdk_cpuset_get_cpu;
+	spdk_cpuset_for_each_cpu;
 	spdk_cpuset_count;
 	spdk_cpuset_fmt;
 	spdk_cpuset_parse;
