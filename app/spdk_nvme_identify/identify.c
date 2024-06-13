@@ -2926,7 +2926,9 @@ main(int argc, char **argv)
 		struct spdk_nvme_ctrlr_opts opts;
 
 		spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
-		memcpy(opts.hostnqn, g_hostnqn, sizeof(opts.hostnqn));
+		if (g_hostnqn[0] != '\0') {
+			memcpy(opts.hostnqn, g_hostnqn, sizeof(opts.hostnqn));
+		}
 		ctrlr = spdk_nvme_connect(&g_trid, &opts, sizeof(opts));
 		if (!ctrlr) {
 			fprintf(stderr, "spdk_nvme_connect() failed\n");

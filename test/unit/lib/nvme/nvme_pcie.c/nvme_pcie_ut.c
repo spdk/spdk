@@ -109,7 +109,7 @@ DEFINE_STUB(nvme_ctrlr_probe, int, (const struct spdk_nvme_transport_id *trid,
 				    struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle), 0);
 DEFINE_STUB(spdk_pci_device_is_removed, bool, (struct spdk_pci_device *dev), false);
 DEFINE_STUB(nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
-	    (const struct spdk_nvme_transport_id *trid), NULL);
+	    (const struct spdk_nvme_transport_id *trid, const char *hostnqn), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts, union spdk_nvme_csts_register,
 	    (struct spdk_nvme_ctrlr *ctrlr), {});
 DEFINE_STUB(nvme_ctrlr_get_process, struct spdk_nvme_ctrlr_process *,

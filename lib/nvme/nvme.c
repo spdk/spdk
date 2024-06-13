@@ -655,7 +655,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
 
 	if (!probe_ctx->probe_cb || probe_ctx->probe_cb(probe_ctx->cb_ctx, trid, &opts)) {
-		ctrlr = nvme_get_ctrlr_by_trid_unsafe(trid);
+		ctrlr = nvme_get_ctrlr_by_trid_unsafe(trid, opts.hostnqn);
 		if (ctrlr) {
 			/* This ctrlr already exists. */
 
@@ -761,12 +761,12 @@ nvme_init_controllers(struct spdk_nvme_probe_ctx *probe_ctx)
 
 /* This function must not be called while holding g_spdk_nvme_driver->lock */
 static struct spdk_nvme_ctrlr *
-nvme_get_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid)
+nvme_get_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid, const char *hostnqn)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-	ctrlr = nvme_get_ctrlr_by_trid_unsafe(trid);
+	ctrlr = nvme_get_ctrlr_by_trid_unsafe(trid, hostnqn);
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 
 	return ctrlr;
@@ -774,22 +774,30 @@ nvme_get_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid)
 
 /* This function must be called while holding g_spdk_nvme_driver->lock */
 struct spdk_nvme_ctrlr *
-nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
+nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid, const char *hostnqn)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	/* Search per-process list */
 	TAILQ_FOREACH(ctrlr, &g_nvme_attached_ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
-			return ctrlr;
+		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) != 0) {
+			continue;
 		}
+		if (hostnqn && strcmp(ctrlr->opts.hostnqn, hostnqn) != 0) {
+			continue;
+		}
+		return ctrlr;
 	}
 
 	/* Search multi-process shared list */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
-			return ctrlr;
+		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) != 0) {
+			continue;
 		}
+		if (hostnqn && strcmp(ctrlr->opts.hostnqn, hostnqn) != 0) {
+			continue;
+		}
+		return ctrlr;
 	}
 
 	return NULL;
@@ -802,6 +810,7 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 {
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
+	const struct spdk_nvme_ctrlr_opts *opts = probe_ctx->opts;
 
 	if (strlen(probe_ctx->trid.trstring) == 0) {
 		/* If user didn't provide trstring, derive it from trtype */
@@ -838,6 +847,10 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 				continue;
 			}
 
+			if (opts && strcmp(opts->hostnqn, ctrlr->opts.hostnqn) != 0) {
+				continue;
+			}
+
 			/* Do not attach if we failed to initialize it in this process */
 			if (nvme_ctrlr_get_current_process(ctrlr) == NULL) {
 				continue;
@@ -865,12 +878,14 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 static void
 nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
 		    const struct spdk_nvme_transport_id *trid,
+		    const struct spdk_nvme_ctrlr_opts *opts,
 		    void *cb_ctx,
 		    spdk_nvme_probe_cb probe_cb,
 		    spdk_nvme_attach_cb attach_cb,
 		    spdk_nvme_remove_cb remove_cb)
 {
 	probe_ctx->trid = *trid;
+	probe_ctx->opts = opts;
 	probe_ctx->cb_ctx = cb_ctx;
 	probe_ctx->probe_cb = probe_cb;
 	probe_ctx->attach_cb = attach_cb;
@@ -989,15 +1004,23 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	struct spdk_nvme_probe_ctx *probe_ctx;
 	struct spdk_nvme_ctrlr_opts *opts_local_p = NULL;
 	struct spdk_nvme_ctrlr_opts opts_local;
+	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	if (trid == NULL) {
 		SPDK_ERRLOG("No transport ID specified\n");
 		return NULL;
 	}
 
+	rc = nvme_driver_init();
+	if (rc != 0) {
+		return NULL;
+	}
+
+	nvme_get_default_hostnqn(hostnqn, sizeof(hostnqn));
 	if (opts) {
 		opts_local_p = &opts_local;
 		nvme_ctrlr_opts_init(opts_local_p, opts, opts_size);
+		memcpy(hostnqn, opts_local.hostnqn, sizeof(hostnqn));
 	}
 
 	probe_ctx = spdk_nvme_connect_async(trid, opts_local_p, NULL);
@@ -1011,7 +1034,7 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 		return NULL;
 	}
 
-	ctrlr = nvme_get_ctrlr_by_trid(trid);
+	ctrlr = nvme_get_ctrlr_by_trid(trid, hostnqn);
 
 	return ctrlr;
 }
@@ -1501,7 +1524,7 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 		return NULL;
 	}
 
-	nvme_probe_ctx_init(probe_ctx, trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	nvme_probe_ctx_init(probe_ctx, trid, NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
 	rc = nvme_probe_internal(probe_ctx, false);
 	if (rc != 0) {
 		free(probe_ctx);
@@ -1559,7 +1582,7 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 		probe_cb = nvme_connect_probe_cb;
 	}
 
-	nvme_probe_ctx_init(probe_ctx, trid, (void *)opts, probe_cb, attach_cb, NULL);
+	nvme_probe_ctx_init(probe_ctx, trid, opts, (void *)opts, probe_cb, attach_cb, NULL);
 	rc = nvme_probe_internal(probe_ctx, true);
 	if (rc != 0) {
 		free(probe_ctx);

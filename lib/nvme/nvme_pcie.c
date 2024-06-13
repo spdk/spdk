@@ -79,7 +79,7 @@ _nvme_pcie_event_process(struct spdk_pci_event *event, void *cb_ctx)
 			return;
 		}
 
-		ctrlr = nvme_get_ctrlr_by_trid_unsafe(&trid);
+		ctrlr = nvme_get_ctrlr_by_trid_unsafe(&trid, NULL);
 		if (ctrlr == NULL) {
 			return;
 		}
@@ -833,7 +833,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_PCIE);
 	spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
 
-	ctrlr = nvme_get_ctrlr_by_trid_unsafe(&trid);
+	ctrlr = nvme_get_ctrlr_by_trid_unsafe(&trid, NULL);
 	if (!spdk_process_is_primary()) {
 		if (!ctrlr) {
 			SPDK_ERRLOG("Controller must be constructed in the primary process first.\n");

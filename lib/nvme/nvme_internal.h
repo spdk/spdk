@@ -1097,6 +1097,7 @@ struct spdk_nvme_ctrlr {
 
 struct spdk_nvme_probe_ctx {
 	struct spdk_nvme_transport_id		trid;
+	const struct spdk_nvme_ctrlr_opts	*opts;
 	void					*cb_ctx;
 	spdk_nvme_probe_cb			probe_cb;
 	spdk_nvme_attach_cb			attach_cb;
@@ -1610,7 +1611,7 @@ int	nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 
 struct spdk_nvme_ctrlr *nvme_get_ctrlr_by_trid_unsafe(
-	const struct spdk_nvme_transport_id *trid);
+	const struct spdk_nvme_transport_id *trid, const char *hostnqn);
 
 const struct spdk_nvme_transport *nvme_get_transport(const char *transport_name);
 const struct spdk_nvme_transport *nvme_get_first_transport(void);
