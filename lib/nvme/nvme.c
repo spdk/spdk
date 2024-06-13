@@ -1610,4 +1610,19 @@ nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const
 	return ret;
 }
 
+int
+nvme_get_default_hostnqn(char *buf, int len)
+{
+	char uuid[SPDK_UUID_STRING_LEN];
+	int rc;
+
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &g_spdk_nvme_driver->default_extended_host_id);
+	rc = snprintf(buf, len, "nqn.2014-08.org.nvmexpress:uuid:%s", uuid);
+	if (rc < 0 || rc >= len) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(nvme)

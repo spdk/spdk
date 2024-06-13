@@ -35,6 +35,8 @@ uint32_t set_size = 1;
 
 int set_status_cpl = -1;
 
+#define UT_HOSTID "e53e9258-c93b-48b5-be1a-f025af6d232a"
+
 DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
@@ -54,6 +56,17 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_send, int, (struct spdk_nvme_ctrlr *ctr
 		uint8_t secp, uint16_t spsp, uint8_t nssf, void *payload,
 		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB_V(nvme_qpair_abort_queued_reqs, (struct spdk_nvme_qpair *qpair));
+
+int
+nvme_get_default_hostnqn(char *buf, int len)
+{
+	const char *nqn = "nqn.2014-08.org.nvmexpress:uuid:" UT_HOSTID;
+
+	SPDK_CU_ASSERT_FATAL(len >= (int)strlen(nqn));
+	memcpy(buf, nqn, strlen(nqn));
+
+	return 0;
+}
 
 DEFINE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domains, int);
 int
@@ -1904,8 +1917,7 @@ test_ctrlr_get_default_ctrlr_opts(void)
 {
 	struct spdk_nvme_ctrlr_opts opts = {};
 
-	CU_ASSERT(spdk_uuid_parse(&g_spdk_nvme_driver->default_extended_host_id,
-				  "e53e9258-c93b-48b5-be1a-f025af6d232a") == 0);
+	CU_ASSERT(spdk_uuid_parse(&g_spdk_nvme_driver->default_extended_host_id, UT_HOSTID) == 0);
 
 	memset(&opts, 0, sizeof(opts));
 

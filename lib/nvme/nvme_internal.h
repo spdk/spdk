@@ -1687,6 +1687,7 @@ int	nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_reinitialize_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 int	nvme_parse_addr(struct sockaddr_storage *sa, int family,
 			const char *addr, const char *service, long int *port);
+int	nvme_get_default_hostnqn(char *buf, int len);
 
 static inline bool
 _is_page_aligned(uint64_t address, uint64_t page_size)

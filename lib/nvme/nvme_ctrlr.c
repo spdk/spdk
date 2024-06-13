@@ -168,8 +168,6 @@ nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr)
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
-	char host_id_str[SPDK_UUID_STRING_LEN];
-
 	assert(opts);
 
 	opts->opts_size = opts_size;
@@ -196,10 +194,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 
 	if (nvme_driver_init() == 0) {
 		if (FIELD_OK(hostnqn)) {
-			spdk_uuid_fmt_lower(host_id_str, sizeof(host_id_str),
-					    &g_spdk_nvme_driver->default_extended_host_id);
-			snprintf(opts->hostnqn, sizeof(opts->hostnqn),
-				 "nqn.2014-08.org.nvmexpress:uuid:%s", host_id_str);
+			nvme_get_default_hostnqn(opts->hostnqn, sizeof(opts->hostnqn));
 		}
 
 		if (FIELD_OK(extended_host_id)) {
