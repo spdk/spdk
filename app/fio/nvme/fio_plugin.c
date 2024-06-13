@@ -76,6 +76,7 @@ struct spdk_fio_options {
 	int	print_qid_mappings;
 	int	spdk_tracing;
 	char	*log_flags;
+	int	disable_pcie_sgl_merge;
 };
 
 struct spdk_fio_request {
@@ -753,6 +754,7 @@ spdk_fio_open(struct thread_data *td, struct fio_file *f)
 	if (fio_options->enable_wrr) {
 		qpopts.qprio = fio_options->wrr_priority;
 	}
+	qpopts.disable_pcie_sgl_merge = fio_options->disable_pcie_sgl_merge;
 
 	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
 	if (!fio_qpair->qpair) {
@@ -1770,6 +1772,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, sge_size),
 		.def		= "4096",
 		.help		= "SGL size in bytes for I/O Commands (default 4096)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "disable_pcie_sgl_merge",
+		.lname		= "Disable merging of physically contiguous SGL elements",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, disable_pcie_sgl_merge),
+		.def		= "0",
+		.help		= "Disable SGL element merging (0=merging, 1=no merging)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
