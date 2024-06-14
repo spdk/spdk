@@ -864,7 +864,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+		nvme_ctrlr_lock(ctrlr);
 	}
 
 	if (max_completions == 0 || max_completions > pqpair->max_completions_cap) {
@@ -968,7 +968,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			}
 		}
 
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		nvme_ctrlr_unlock(ctrlr);
 	}
 
 	if (spdk_unlikely(pqpair->flags.has_pending_vtophys_failures)) {
@@ -1630,7 +1630,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	bool			dword_aligned = true;
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+		nvme_ctrlr_lock(ctrlr);
 	}
 
 	tr = TAILQ_FIRST(&pqpair->free_tr);
@@ -1695,7 +1695,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 exit:
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		nvme_ctrlr_unlock(ctrlr);
 	}
 
 	return rc;

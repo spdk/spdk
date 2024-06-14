@@ -50,11 +50,11 @@ spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return -EINVAL;
 	}
 
-	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_lock(ctrlr);
 	req = nvme_allocate_request_user_copy(ctrlr->adminq,
 					      payload, payload_size, cb_fn, cb_arg, false);
 	if (req == NULL) {
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		nvme_ctrlr_unlock(ctrlr);
 		return -ENOMEM;
 	}
 
@@ -64,6 +64,6 @@ spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
-	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_unlock(ctrlr);
 	return rc;
 }
