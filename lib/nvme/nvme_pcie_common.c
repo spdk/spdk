@@ -1286,6 +1286,8 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 				       req->payload_size, qpair->ctrlr->page_size);
 	if (rc) {
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	} else {
+		SPDK_DEBUGLOG(nvme, "Number of PRP entries: %" PRIu32 "\n", prp_index);
 	}
 
 	return rc;
@@ -1371,6 +1373,7 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
 	}
 
+	SPDK_DEBUGLOG(nvme, "Number of SGL descriptors: %" PRIu32 "\n", nseg);
 	return 0;
 }
 
@@ -1502,6 +1505,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
 	}
 
+	SPDK_DEBUGLOG(nvme, "Number of SGL descriptors: %" PRIu32 "\n", nseg);
 	return 0;
 
 exit:
@@ -1558,6 +1562,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		remaining_transfer_len -= length;
 	}
 
+	SPDK_DEBUGLOG(nvme, "Number of PRP entries: %" PRIu32 "\n", prp_index);
 	return 0;
 }
 
