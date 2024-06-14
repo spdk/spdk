@@ -79,7 +79,7 @@ busy
 balanced
 core_load
 
-# Temporarily disable due to https://github.com/spdk/spdk/issues/3116 (kept in nightly)
+# Disabled due to https://github.com/spdk/spdk/issues/3345
 nvmf_device_removal
 nvmf_device_removal_pci_remove
 nvmf_device_removal_pci_remove_no_srq
