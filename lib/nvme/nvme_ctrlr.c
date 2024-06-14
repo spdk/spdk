@@ -4209,7 +4209,13 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 {
-	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
+	int rc;
+
+	rc = pthread_mutex_destroy(&ctrlr->ctrlr_lock);
+	if (rc) {
+		SPDK_ERRLOG("could not destroy ctrlr_lock: %s\n", spdk_strerror(rc));
+		assert(false);
+	}
 
 	nvme_ctrlr_free_processes(ctrlr);
 }
