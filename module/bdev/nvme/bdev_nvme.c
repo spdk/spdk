@@ -6213,12 +6213,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		}
 	}
 
-	if (drv_opts) {
-		memcpy(&ctx->drv_opts, drv_opts, sizeof(*drv_opts));
-	} else {
-		spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->drv_opts, sizeof(ctx->drv_opts));
-	}
-
+	memcpy(&ctx->drv_opts, drv_opts, sizeof(*drv_opts));
 	ctx->drv_opts.transport_retry_count = g_opts.transport_retry_count;
 	ctx->drv_opts.transport_ack_timeout = g_opts.transport_ack_timeout;
 	ctx->drv_opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
