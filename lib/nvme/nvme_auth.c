@@ -192,11 +192,11 @@ nvme_auth_get_seqnum(struct spdk_nvme_qpair *qpair)
 	uint32_t seqnum;
 	int rc;
 
-	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_lock(ctrlr);
 	if (ctrlr->auth_seqnum == 0) {
 		rc = RAND_bytes((void *)&ctrlr->auth_seqnum, sizeof(ctrlr->auth_seqnum));
 		if (rc != 1) {
-			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+			nvme_ctrlr_unlock(ctrlr);
 			return 0;
 		}
 	}
@@ -204,7 +204,7 @@ nvme_auth_get_seqnum(struct spdk_nvme_qpair *qpair)
 		ctrlr->auth_seqnum = 1;
 	}
 	seqnum = ctrlr->auth_seqnum;
-	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_unlock(ctrlr);
 
 	return seqnum;
 }
@@ -1237,9 +1237,9 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 	assert(qpair->poll_status == NULL);
 	qpair->poll_status = status;
 
-	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_lock(ctrlr);
 	auth->tid = ctrlr->auth_tid++;
-	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_unlock(ctrlr);
 
 	nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_NEGOTIATE);
 
