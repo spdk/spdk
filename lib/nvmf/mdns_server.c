@@ -28,7 +28,6 @@ static AvahiClient *g_avahi_publish_client = NULL;
 static AvahiEntryGroup *g_avahi_entry_group = NULL;
 
 struct mdns_publish_ctx {
-	bool				stop;
 	struct spdk_poller		*poller;
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_tgt		*tgt;
@@ -69,13 +68,6 @@ nvmf_avahi_publish_iterate(void *arg)
 		return SPDK_POLLER_IDLE;
 	}
 
-	if (ctx->stop) {
-		SPDK_INFOLOG(nvmf, "Stopping avahi publish poller\n");
-		spdk_poller_unregister(&ctx->poller);
-		nvmf_avahi_publish_destroy(ctx);
-		return SPDK_POLLER_BUSY;
-	}
-
 	rc = avahi_simple_poll_iterate(g_avahi_publish_simple_poll, 0);
 	if (rc && rc != -EAGAIN) {
 		SPDK_ERRLOG("avahi publish poll returned error\n");
@@ -90,7 +82,9 @@ nvmf_avahi_publish_iterate(void *arg)
 static void
 nvmf_ctx_stop_mdns_prr(struct mdns_publish_ctx *ctx)
 {
-	ctx->stop = true;
+	SPDK_INFOLOG(nvmf, "Stopping avahi publish poller\n");
+	spdk_poller_unregister(&ctx->poller);
+	nvmf_avahi_publish_destroy(ctx);
 }
 
 void
