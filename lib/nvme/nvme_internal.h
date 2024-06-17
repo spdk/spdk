@@ -1034,6 +1034,8 @@ struct spdk_nvme_ctrlr {
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
 
+	uint32_t			lock_depth;
+
 	/* CB to notify the user when the ctrlr is removed/failed. */
 	spdk_nvme_remove_cb			remove_cb;
 	void					*cb_ctx;
@@ -1165,7 +1167,11 @@ nvme_robust_mutex_lock(pthread_mutex_t *mtx)
 static inline int
 nvme_ctrlr_lock(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	int rc;
+
+	rc = nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	ctrlr->lock_depth++;
+	return rc;
 }
 
 static inline int
@@ -1177,6 +1183,7 @@ nvme_robust_mutex_unlock(pthread_mutex_t *mtx)
 static inline int
 nvme_ctrlr_unlock(struct spdk_nvme_ctrlr *ctrlr)
 {
+	ctrlr->lock_depth--;
 	return nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
