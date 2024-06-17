@@ -4197,6 +4197,11 @@ nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
+	if (ctrlr->lock_depth > 0) {
+		SPDK_ERRLOG("lock currently held (depth=%d)!\n", ctrlr->lock_depth);
+		assert(false);
+	}
+
 	rc = pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 	if (rc) {
 		SPDK_ERRLOG("could not destroy ctrlr_lock: %s\n", spdk_strerror(rc));
