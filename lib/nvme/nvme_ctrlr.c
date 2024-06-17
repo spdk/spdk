@@ -1024,6 +1024,7 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	}
 
 	ctrlr->is_failed = true;
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	NVME_CTRLR_ERRLOG(ctrlr, "in failed state.\n");
 }
