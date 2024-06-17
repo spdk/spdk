@@ -9,7 +9,7 @@
 struct spdk_cpuset *
 spdk_cpuset_alloc(void)
 {
-	return (struct spdk_cpuset *)calloc(sizeof(struct spdk_cpuset), 1);
+	return (struct spdk_cpuset *)calloc(1, sizeof(struct spdk_cpuset));
 }
 
 void
