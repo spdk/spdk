@@ -184,7 +184,7 @@ collect_readings() {
 		for module in "${modules_to_run[@]}"; do
 			local -n ref=${modules_out_refs["$module"]}
 			data=$("$module")
-			[[ -n $data ]] && ref+=("$data")
+			[[ -n $data ]] && ref+=("$data") && echo "$data"
 		done
 		sleep "${interval}s"
 	done
