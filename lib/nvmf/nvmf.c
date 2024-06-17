@@ -714,6 +714,10 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 		spdk_json_write_named_bool(w, "secure_channel", listener->opts.secure_channel);
 
+		if (listener->opts.sock_impl) {
+			spdk_json_write_named_string(w, "sock_impl", listener->opts.sock_impl);
+		}
+
 		/*     } "params" */
 		spdk_json_write_object_end(w);
 
@@ -796,11 +800,12 @@ nvmf_listen_opts_copy(struct spdk_nvmf_listen_opts *opts,
 	SET_FIELD(transport_specific);
 	SET_FIELD(secure_channel);
 	SET_FIELD(ana_state);
+	SET_FIELD(sock_impl);
 #undef SET_FIELD
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 24, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 32, "Incorrect size");
 }
 
 void

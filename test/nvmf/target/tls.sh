@@ -235,13 +235,15 @@ killprocess $bdevperf_pid
 killprocess $nvmfpid
 
 # Check the same, but this time, use keyring on the target side too
+# Additionally, use '-S ssl' instead of '-k' when adding the listener
+# as they *should* be the same
 nvmfappstart
 rpc_cmd << CONFIG
 	nvmf_create_transport $NVMF_TRANSPORT_OPTS
 	bdev_malloc_create 32 4096 -b malloc0
 	nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1
 	nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp \
-		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -k
+		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -S ssl
 	nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0
 	keyring_file_add_key key0 "$key_long_path"
 	nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 --psk key0

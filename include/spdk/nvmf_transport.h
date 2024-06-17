@@ -214,7 +214,7 @@ struct spdk_nvmf_poll_group {
 struct spdk_nvmf_listener {
 	struct spdk_nvme_transport_id	trid;
 	uint32_t			ref;
-
+	char				*sock_impl;
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 

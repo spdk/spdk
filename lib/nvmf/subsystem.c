@@ -354,6 +354,7 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
 	free(listener->ana_state);
 	spdk_bit_array_clear(subsystem->used_listener_ids, listener->id);
+	free(listener->opts.sock_impl);
 	free(listener);
 }
 
@@ -1364,6 +1365,7 @@ spdk_nvmf_subsystem_listener_opts_init(struct spdk_nvmf_listener_opts *opts, siz
 
 	SET_FIELD(secure_channel, false);
 	SET_FIELD(ana_state, SPDK_NVME_ANA_OPTIMIZED_STATE);
+	SET_FIELD(sock_impl, NULL);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -1391,9 +1393,10 @@ listener_opts_copy(struct spdk_nvmf_listener_opts *src, struct spdk_nvmf_listene
 
 	SET_FIELD(secure_channel);
 	SET_FIELD(ana_state);
+	SET_FIELD(sock_impl);
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 16, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 24, "Incorrect size");
 
 #undef SET_FIELD
 #undef FIELD_OK
@@ -1477,6 +1480,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (id == UINT32_MAX) {
 		SPDK_ERRLOG("Cannot add any more listeners\n");
 		free(listener->ana_state);
+		free(listener->opts.sock_impl);
 		free(listener);
 		cb_fn(cb_arg, -EINVAL);
 		return;

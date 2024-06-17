@@ -661,7 +661,11 @@ struct nvmf_rpc_listener_ctx {
 	bool				response_sent;
 	struct spdk_nvmf_listen_opts	opts;
 
-	/* Additional options for listener creation. */
+	/* Hole at bytes 705-711 */
+	uint8_t reserved1[7];
+
+	/* Additional options for listener creation.
+	 * Must be 8-byte aligned. */
 	struct spdk_nvmf_listener_opts	listener_opts;
 };
 
@@ -671,6 +675,7 @@ static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
 	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state_str), spdk_json_decode_string, true},
+	{"sock_impl", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.sock_impl), spdk_json_decode_string, true},
 };
 
 static void
@@ -954,6 +959,8 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		}
 		ctx->listener_opts.ana_state = ctx->ana_state;
 	}
+
+	ctx->opts.sock_impl = ctx->listener_opts.sock_impl;
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {

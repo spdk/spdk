@@ -264,6 +264,7 @@ def nvmf_subsystem_add_listener(client, **params):
         trsvcid: Transport service ID (required for RDMA or TCP).
         tgt_name: name of the parent NVMe-oF target (optional).
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+        sock_impl: The socket implementation to use for the listener (optional).
 
     Returns:
         True or False

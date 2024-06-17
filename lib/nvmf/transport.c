@@ -411,6 +411,7 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 
 		listener->ref = 1;
 		listener->trid = *trid;
+		listener->sock_impl = opts->sock_impl;
 		TAILQ_INSERT_TAIL(&transport->listeners, listener, link);
 		pthread_mutex_lock(&transport->mutex);
 		rc = transport->ops->listen(transport, &listener->trid, opts);
@@ -420,6 +421,12 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			free(listener);
 		}
 		return rc;
+	}
+
+	if (opts->sock_impl && strncmp(opts->sock_impl, listener->sock_impl, strlen(listener->sock_impl))) {
+		SPDK_ERRLOG("opts->sock_impl: '%s' doesn't match listener->sock_impl: '%s'\n", opts->sock_impl,
+			    listener->sock_impl);
+		return -EINVAL;
 	}
 
 	++listener->ref;

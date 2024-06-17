@@ -924,16 +924,30 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	opts.priority = ttransport->tcp_opts.sock_priority;
 	opts.ack_timeout = transport->opts.ack_timeout;
 	if (listen_opts->secure_channel) {
-		if (!g_tls_log) {
-			SPDK_NOTICELOG("TLS support is considered experimental\n");
-			g_tls_log = true;
+		if (listen_opts->sock_impl &&
+		    strncmp("ssl", listen_opts->sock_impl, strlen(listen_opts->sock_impl))) {
+			SPDK_ERRLOG("Enabling secure_channel while specifying a sock_impl different from 'ssl' is unsupported");
+			free(port);
+			return -EINVAL;
 		}
-		sock_impl_name = "ssl";
+		listen_opts->sock_impl = "ssl";
+	}
+
+	if (listen_opts->sock_impl) {
+		sock_impl_name = listen_opts->sock_impl;
 		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
-		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
-		impl_opts.get_key = tcp_sock_get_key;
-		impl_opts.get_key_ctx = ttransport;
-		impl_opts.tls_cipher_suites = "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
+
+		if (!strncmp("ssl", sock_impl_name, strlen(sock_impl_name))) {
+			if (!g_tls_log) {
+				SPDK_NOTICELOG("TLS support is considered experimental\n");
+				g_tls_log = true;
+			}
+			impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
+			impl_opts.get_key = tcp_sock_get_key;
+			impl_opts.get_key_ctx = ttransport;
+			impl_opts.tls_cipher_suites = "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
+		}
+
 		opts.impl_opts = &impl_opts;
 		opts.impl_opts_size = sizeof(impl_opts);
 	}

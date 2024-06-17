@@ -147,8 +147,10 @@ struct spdk_nvmf_listen_opts {
 	 */
 	enum spdk_nvme_ana_state ana_state;
 
+	/* The socket implementation to use for the listener. */
+	char *sock_impl;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 32, "Incorrect size");
 
 /**
  * Initialize listen options
@@ -768,8 +770,12 @@ struct spdk_nvmf_listener_opts {
 
 	/* Asymmetric namespace access state */
 	enum spdk_nvme_ana_state ana_state;
+
+	/* The socket implementation to use for the listener. */
+	char *sock_impl;
+
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 24, "Incorrect size");
 
 /**
  * Initialize options structure for listener creation.
