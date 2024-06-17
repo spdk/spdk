@@ -597,6 +597,21 @@ test_auth_timeout(void)
 	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	nvmf_qpair_auth_destroy(&qpair);
 	MOCK_SET(spdk_get_ticks, 0);
+
+	/* Check that a timeout during reauthentication doesn't disconnect the qpair, but only
+	 * resets the state of the authentication */
+	rc = nvmf_qpair_auth_init(&qpair);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	auth = qpair.auth;
+	auth->state = NVMF_QPAIR_AUTH_CHALLENGE;
+	qpair.state = SPDK_NVMF_QPAIR_ENABLED;
+
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_DEFAULT_KATO_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ENABLED);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_COMPLETED);
+	nvmf_qpair_auth_destroy(&qpair);
+	MOCK_SET(spdk_get_ticks, 0);
 }
 
 static void

@@ -139,6 +139,13 @@ nvmf_auth_dhgroup_allowed(struct spdk_nvmf_qpair *qpair, uint8_t dhgroup)
 	return tgt->dhchap_dhgroups & SPDK_BIT(dhgroup);
 }
 
+static void
+nvmf_auth_qpair_cleanup(struct spdk_nvmf_qpair_auth *auth)
+{
+	spdk_poller_unregister(&auth->poller);
+	spdk_nvme_dhchap_dhkey_free(&auth->dhkey);
+}
+
 static int
 nvmf_auth_timeout_poller(void *ctx)
 {
@@ -146,9 +153,15 @@ nvmf_auth_timeout_poller(void *ctx)
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 
 	AUTH_ERRLOG(qpair, "authentication timed out\n");
-
 	spdk_poller_unregister(&auth->poller);
-	nvmf_auth_disconnect_qpair(qpair);
+
+	if (qpair->state == SPDK_NVMF_QPAIR_ENABLED) {
+		/* Reauthentication timeout isn't considered to be a fatal failure */
+		nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_COMPLETED);
+		nvmf_auth_qpair_cleanup(auth);
+	} else {
+		nvmf_auth_disconnect_qpair(qpair);
+	}
 
 	return SPDK_POLLER_BUSY;
 }
@@ -171,13 +184,6 @@ nvmf_auth_rearm_poller(struct spdk_nvmf_qpair *qpair)
 	}
 
 	return 0;
-}
-
-static void
-nvmf_auth_qpair_cleanup(struct spdk_nvmf_qpair_auth *auth)
-{
-	spdk_poller_unregister(&auth->poller);
-	spdk_nvme_dhchap_dhkey_free(&auth->dhkey);
 }
 
 static int
