@@ -2207,7 +2207,9 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			/* We have already verified that this request is the head of the queue. */
-			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
+			if (rdma_req->num_remaining_data_wr == 0) {
+				STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
+			}
 
 			rc = request_transfer_in(&rdma_req->req);
 			if (spdk_likely(rc == 0)) {
@@ -4726,8 +4728,6 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 					if (rdma_req->num_remaining_data_wr) {
 						/* Only part of RDMA_READ operations was submitted, process the rest */
 						nvmf_rdma_request_reset_transfer_in(rdma_req, rtransport);
-						/* Prioritize partially handled request over others to avoid latency increase */
-						STAILQ_INSERT_HEAD(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
 						rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
 						nvmf_rdma_request_process(rtransport, rdma_req);
 						break;
