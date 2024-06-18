@@ -3781,7 +3781,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         args.func(args)
         check_called_name(args.called_rpc_name)
 
-    def execute_script(parser, client, fd):
+    def execute_script(parser, client, timeout, fd):
         executed_rpc = ""
         for rpc_call in map(str.rstrip, fd):
             if not rpc_call.strip():
@@ -3793,6 +3793,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 continue
             args = parser.parse_args(rpc_args)
             args.client = client
+            args.timeout = timeout
             try:
                 call_rpc_func(args)
             except JSONRPCException as ex:
@@ -3904,4 +3905,4 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             print(ex.message)
             exit(1)
     else:
-        execute_script(parser, args.client, sys.stdin)
+        execute_script(parser, args.client, args.timeout, sys.stdin)
