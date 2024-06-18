@@ -44,6 +44,7 @@
 	spdk_bdev_get_data_block_size;
 	spdk_bdev_get_physical_block_size;
 	spdk_bdev_get_dif_type;
+	spdk_bdev_get_dif_pi_format;
 	spdk_bdev_is_dif_head_of_md;
 	spdk_bdev_is_dif_check_enabled;
 	spdk_bdev_get_current_qd;

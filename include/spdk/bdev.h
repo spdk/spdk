@@ -812,6 +812,16 @@ uint32_t spdk_bdev_get_physical_block_size(const struct spdk_bdev *bdev);
 enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev);
 
 /**
+ * Get DIF protection information format of the block device.
+ *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ *
+ * \param bdev Block device to query.
+ * \return DIF protection information format of the block device.
+ */
+enum spdk_dif_pi_format spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev);
+
+/**
  * Check whether DIF is set in the first 8/16 bytes or the last 8/16 bytes of metadata.
  *
  * \param bdev Block device to query.

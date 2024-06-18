@@ -4896,6 +4896,7 @@ _bdev_get_block_size_with_md(const struct spdk_bdev *bdev)
 
 /* We have to use the typedef in the function declaration to appease astyle. */
 typedef enum spdk_dif_type spdk_dif_type_t;
+typedef enum spdk_dif_pi_format spdk_dif_pi_format_t;
 
 spdk_dif_type_t
 spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
@@ -4905,6 +4906,12 @@ spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
 	} else {
 		return SPDK_DIF_DISABLE;
 	}
+}
+
+spdk_dif_pi_format_t
+spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev)
+{
+	return bdev->dif_pi_format;
 }
 
 bool

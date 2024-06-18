@@ -548,6 +548,14 @@ struct spdk_bdev {
 	 */
 	enum spdk_dif_type dif_type;
 
+	/**
+	 * DIF protection information format for this bdev.
+	 *
+	 * Note that this field is valid only if there is metadata and dif_type is
+	 * not SPDK_DIF_DISABLE.
+	 */
+	enum spdk_dif_pi_format dif_pi_format;
+
 	/*
 	 * DIF location.
 	 *
