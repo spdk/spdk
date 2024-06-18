@@ -1,0 +1,304 @@
+#!/usr/bin/env perl
+# SPDX-License-Identifier: BSD-3-Clause
+
+#
+# match -- compare an output file with expected results
+#
+# usage: match [-adoqv] [match-file]...
+#
+# this script compares the output from a test run, stored in a file, with
+# the expected output.  comparison is done line-by-line until either all
+# lines compare correctly (exit code 0) or a miscompare is found (exit
+# code nonzero).
+#
+# expected output is stored in a ".match" file, which contains a copy of
+# the expected output with embedded tokens for things that should not be
+# exact matches.  the supported tokens are:
+#
+#	$(N)	an integer (i.e. one or more decimal digits)
+#	$(NC)	one or more decimal digits with comma separators
+#	$(FP)	a floating point number
+#	$(S)	ascii string
+#	$(X)	hex number
+#	$(XX)	hex number prefixed with 0x
+#	$(W)	whitespace
+#	$(nW)	non-whitespace
+#	$(*)	any string
+#	$(DD)	output of a "dd" run
+#	$(OPT)	line is optional (may be missing, matched if found)
+#	$(OPX)	ends a contiguous list of $(OPT)...$(OPX) lines, at least
+#		one of which must match
+#	$(UUID)	universally unique identifier
+#
+# Additionally, if any "X.ignore" file exists, strings or phrases found per
+# line in the file will be ignored if found as a substring in the
+# corresponding output file (making it easy to skip entire output lines).
+#
+# arguments are:
+#
+#	-a	find all files of the form "X.match" in the current
+#		directory and match them again the corresponding file "X".
+#
+#	-o	custom output filename - only one match file can be given
+#
+#	-d	debug -- show lots of debug output
+#
+#	-q	don't print log files on mismatch
+#
+#	-v	verbose -- show every line as it is being matched
+#
+
+use strict;
+use Getopt::Std;
+use Encode;
+use v5.16;
+
+select STDERR;
+binmode(STDOUT, ":utf8");
+binmode(STDERR, ":utf8");
+
+my $Me = $0;
+$Me =~ s,.*/,,;
+
+our ($opt_a, $opt_d, $opt_q, $opt_v, $opt_o);
+
+$SIG{HUP} = $SIG{INT} = $SIG{TERM} = $SIG{__DIE__} = sub {
+	die @_ if $^S;
+	my $errstr = shift;
+	die "FAIL: $Me: $errstr";
+};
+
+sub usage {
+	my $msg = shift;
+
+	warn "$Me: $msg\n" if $msg;
+	warn "Usage: $Me [-adqv] [match-file]...\n";
+	warn "   or: $Me [-dqv] -o output-file match-file...\n";
+	exit 1;
+}
+
+getopts('adoqv') or usage;
+
+my %match2file;
+
+if ($opt_a) {
+	usage("-a and filename arguments are mutually exclusive")
+		if $#ARGV != -1;
+	opendir(DIR, '.') or die "opendir: .: $!\n";
+	my @matchfiles = grep { /(.*)\.match$/ && -f $1 } readdir(DIR);
+	closedir(DIR);
+	die "no files found to process\n" unless @matchfiles;
+	foreach my $mfile (@matchfiles)  {
+		die "$mfile: $!\n" unless open(F, $mfile);
+		close(F);
+		my $ofile = $mfile;
+		$ofile =~ s/\.match$//;
+		die "$mfile found but cannot open $ofile: $!\n"
+			unless open(F, $ofile);
+		close(F);
+		$match2file{$mfile} = $ofile;
+	}
+} elsif ($opt_o) {
+	usage("-o argument requires two paths") if $#ARGV != 1;
+
+	$match2file{$ARGV[1]} = $ARGV[0];
+} else {
+	usage("no match-file arguments found") if $#ARGV == -1;
+
+	# to improve the failure case, check all filename args exist and
+	# are provided in pairs now, before going through and processing them
+	foreach my $mfile (@ARGV) {
+		my $ofile = $mfile;
+		usage("$mfile: not a .match file") unless
+			$ofile =~ s/\.match$//;
+		usage("$mfile: $!") unless open(F, $mfile);
+		close(F);
+		usage("$ofile: $!") unless open(F, $ofile);
+		close(F);
+		$match2file{$mfile} = $ofile;
+	}
+}
+
+my $mfile;
+my $ofile;
+my $ifile;
+print "Files to be processed:\n" if $opt_v;
+foreach $mfile (sort keys %match2file) {
+	$ofile = $match2file{$mfile};
+	$ifile = $ofile . ".ignore";
+	$ifile = undef unless (-f $ifile);
+	if ($opt_v) {
+		print "        match-file \"$mfile\" output-file \"$ofile\"";
+		if ($ifile) {
+			print " ignore-file $ifile\n";
+		} else {
+			print "\n";
+		}
+	}
+	match($mfile, $ofile, $ifile);
+}
+
+exit 0;
+
+#
+# strip_it - user can optionally ignore lines from files that contain
+# any number of substrings listed in a file called "X.ignore" where X
+# is the name of the output file.
+#
+sub strip_it {
+	my ($ifile, $file, $input) = @_;
+	# if there is no ignore file just return unaltered input
+	return $input unless $ifile;
+	my @lines_in = split /^/, $input;
+	my $output;
+	my $line_in;
+	my @i_file = split /^/, snarf($ifile);
+	my $i_line;
+	my $ignore_it = 0;
+
+	foreach $line_in (@lines_in) {
+		my @i_lines = @i_file;
+		foreach $i_line (@i_lines) {
+			# Check if both ignore and input lines are new lines
+			if ($i_line eq "\n" && $line_in eq "\n") {
+				$ignore_it = 1;
+				last;
+			}
+			# Find the ignore string in input line
+			chomp($i_line);
+			if (index($line_in, $i_line) != -1 && length($i_line) != 0) {
+				$ignore_it = 1;
+				last;
+			}
+		}
+		if ($ignore_it == 0) {
+			$output .= $line_in;
+		} elsif($opt_v) {
+			print "Ignoring (from $file): $line_in";
+		}
+		$ignore_it = 0;
+	}
+	return $output;
+}
+
+#
+# match -- process a match-file, output-file pair
+#
+sub match {
+	my ($mfile, $ofile, $ifile) = @_;
+	my $pat;
+	my $output = snarf($ofile);
+	$output = strip_it($ifile, $ofile, $output);
+	my $all_lines = $output;
+	my $line_pat = 0;
+	my $line_out = 0;
+	my $opt = 0;
+	my $opx = 0;
+	my $opt_found = 0;
+	my $fstr = snarf($mfile);
+	$fstr = strip_it($ifile, $mfile, $fstr);
+	for (split /^/, $fstr) {
+		$pat = $_;
+		$line_pat++;
+		$line_out++;
+		s/([*+?|{}.\\^\$\[()])/\\$1/g;
+		s/\\\$\\\(FP\\\)/[-+]?\\d*\\.?\\d+([eE][-+]?\\d+)?/g;
+		s/\\\$\\\(N\\\)/[-+]?\\d+/g;
+		s/\\\$\\\(NC\\\)/[-+]?\\d+(,[0-9]+)*/g;
+		s/\\\$\\\(\\\*\\\)/\\p{Print}*/g;
+		s/\\\$\\\(S\\\)/\\P{IsC}+/g;
+		s/\\\$\\\(X\\\)/\\p{XPosixXDigit}+/g;
+		s/\\\$\\\(XX\\\)/0x\\p{XPosixXDigit}+/g;
+		s/\\\$\\\(W\\\)/\\p{Blank}*/g;
+		s/\\\$\\\(nW\\\)/\\p{Graph}*/g;
+		s/\\\$\\\(DD\\\)/\\d+\\+\\d+ records in\n\\d+\\+\\d+ records out\n\\d+ bytes \\\(\\d+ .B\\\) copied, [.0-9e-]+[^,]*, [.0-9]+ .B.s/g;
+		s/\\\$\\\(UUID\\\)/\\p{XPosixXDigit}{8}-\\p{XPosixXDigit}{4}-\\p{XPosixXDigit}{4}-\\p{XPosixXDigit}{4}-\\p{XPosixXDigit}{12}/g;
+		if (s/\\\$\\\(OPT\\\)//) {
+			$opt = 1;
+		} elsif (s/\\\$\\\(OPX\\\)//) {
+			$opx = 1;
+		} else {
+			$opt_found = 0;
+		}
+
+		if ($opt_v) {
+			my @lines = split /\n/, $output;
+			my $line;
+			if (@lines) {
+				$line = $lines[0];
+			} else {
+				$line = "[EOF]";
+			}
+
+			printf("%s:%-3d %s%s:%-3d       %s\n", $mfile, $line_pat, $pat, $ofile, $line_out, $line);
+		}
+
+		print " => /$_/\n" if $opt_d;
+		print " [$output]\n" if $opt_d;
+		unless ($output =~ s/^$_//) {
+			if ($opt || ($opx && $opt_found)) {
+				printf("%s:%-3d      [skipping optional line]\n", $ofile, $line_out) if $opt_v;
+				$line_out--;
+				$opt = 0;
+			} else {
+				if (!$opt_v) {
+					if ($opt_q) {
+						print "[MATCHING FAILED]\n";
+					} else {
+						print "[MATCHING FAILED, COMPLETE FILE ($ofile) BELOW]\n$all_lines\n[EOF]\n";
+					}
+					$opt_v = 1;
+					match($mfile, $ofile);
+				}
+
+				die "$mfile:$line_pat did not match pattern\n";
+			}
+		} elsif ($opt) {
+			$opt_found = 1;
+		}
+		$opx = 0;
+	}
+
+	if ($output ne '') {
+		if (!$opt_v) {
+			if ($opt_q) {
+				print "[MATCHING FAILED]\n";
+			} else {
+				print "[MATCHING FAILED, COMPLETE FILE ($ofile) BELOW]\n$all_lines\n[EOF]\n";
+			}
+		}
+
+		# make it a little more print-friendly...
+		$output =~ s/\n/\\n/g;
+		die "line $line_pat: unexpected output: \"$output\"\n";
+	}
+}
+
+
+#
+# snarf -- slurp an entire file into memory
+#
+sub snarf {
+	my ($file) = @_;
+	my $fh;
+	open($fh, '<', $file) or die "$file $!\n";
+
+	local $/;
+	$_ = <$fh>;
+	close $fh;
+
+	# check known encodings or die
+	my $decoded;
+	my @encodings = ("UTF-8", "UTF-16", "UTF-16LE", "UTF-16BE");
+
+	foreach my $enc (@encodings) {
+		eval { $decoded = decode( $enc, $_, Encode::FB_CROAK ) };
+
+		if (!$@) {
+			$decoded =~ s/\R/\n/g;
+			return $decoded;
+		}
+	}
+
+	die "$Me: ERROR: Unknown file encoding";
+}

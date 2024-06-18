@@ -1,54 +1,48 @@
 #!/usr/bin/env bash
-
-set -xe
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2015 Intel Corporation
+#  All rights reserved.
+#
 
 rootdir=$(readlink -f $(dirname $0))
-source "$rootdir/scripts/autotest_common.sh"
-
-out=$PWD
+source "$rootdir/test/common/autobuild_common.sh"
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 
-timing_enter autopackage
-
-$MAKE clean
-
-if [ `git status --porcelain | wc -l` -ne 0 ]; then
-	echo make clean left the following files:
-	git status --porcelain
-	exit 1
+if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
+	build_packaging
+	$MAKE clean
 fi
 
-spdk_pv=spdk-$(date +%Y_%m_%d)
-spdk_tarball=${spdk_pv}.tar
-dpdk_pv=dpdk-$(date +%Y_%m_%d)
-dpdk_tarball=${dpdk_pv}.tar
-
-find . -iname "spdk-*.tar* dpdk-*.tar*" -delete
-git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
-
-# Build from packaged source
-tmpdir=$(mktemp -d)
-echo "tmpdir=$tmpdir"
-tar -C "$tmpdir" -xf $spdk_tarball
-
-if [ -z "$WITH_DPDK_DIR" ]; then
-	cd dpdk
-	git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball}
-	cd ..
-	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
+if [[ $RUN_NIGHTLY -eq 0 || $SPDK_TEST_UNITTEST -eq 0 ]]; then
+	timing_finish
+	exit 0
 fi
 
-(
-	cd "$tmpdir"/spdk-*
-	# use $config_params to get the right dependency options, but disable coverage and ubsan
-	#  explicitly since they are not needed for this build
-	./configure $config_params --disable-debug --enable-werror --disable-coverage --disable-ubsan
-	time $MAKE ${MAKEFLAGS}
-)
-rm -rf "$tmpdir"
+timing_enter build_release
 
-timing_exit autopackage
+# LTO needs a special compiler to work under clang. See detect_cc.sh for details.
+if [[ $CC == *clang* ]]; then
+	jobs=$(($(nproc) / 2))
+	case "$(uname -s)" in
+		Linux) # Shipped by default with binutils under most of the Linux distros
+			export LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs" ;;
+		FreeBSD) # Default compiler which does support LTO, set it explicitly for visibility
+			export LD=ld.lld ;;
+	esac
+fi
+
+if [[ -n $SPDK_TEST_NATIVE_DPDK && -e /tmp/spdk-ld-path ]]; then
+	source /tmp/spdk-ld-path
+fi
+
+config_params="$(get_config_params | sed 's/--enable-debug//g')"
+"$rootdir/configure" $config_params --enable-lto --disable-unit-tests
+
+$MAKE ${MAKEFLAGS}
+$MAKE ${MAKEFLAGS} clean
+
+timing_exit build_release
 
 timing_finish

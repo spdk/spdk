@@ -1,22 +1,149 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 set -e
 
-case `uname` in
-        FreeBSD)
-                bdfs=$(pciconf -l | grep "class=0x010802" | awk -F: ' {printf "0000:%02X:%02X.%X\n", $2, $3, $4}')
-                ;;
-        Linux)
-                bdfs=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}')
-                ;;
-        *)
-                exit 1
-                ;;
-esac
+rootdir=$(readlink -f $(dirname $0))/..
+source "$rootdir/scripts/common.sh"
 
-echo "[Nvme]"
-i=0
-for bdf in $bdfs; do
-        echo "  TransportID \"trtype:PCIe traddr:$bdf\" Nvme$i"
-        let i=i+1
+gen_subsystems=false
+gen_mode="local"
+gen_function="create_local_json_config"
+gen_args=()
+
+function usage() {
+	echo "Script for generating JSON configuration file for attaching"
+	echo "local userspace NVMe drives."
+	echo "Usage: ${0##*/} [OPTIONS]"
+	echo
+	echo "-h, --help                     Print help and exit"
+	echo "    --mode                     Generate 'local' or 'remote' NVMe JSON configuration. Default is 'local'."
+	echo "                               Remote needs --trid option to be present."
+	echo "    --trid                     Comma separated list target subsystem information containing transport type,"
+	echo "                               IP addresses, port numbers and NQN names."
+	echo "                               Example: tcp:127.0.0.1:4420:nqn.2016-06.io.spdk:cnode1,tcp:127.0.0.1:4421:nqn.2016-06.io.spdk:cnode2"
+	echo "    --json-with-subsystems     Wrap bdev subsystem JSON configuration with higher level 'subsystems' dictionary."
+	echo "-n, --bdev-count               Defines number of nvme bdevs to use in the configuration."
+	exit 0
+}
+
+function create_local_json_config() {
+	local bdev_json_cfg=()
+	local bdfs=()
+	local max_bdfs
+
+	bdfs=($(nvme_in_userspace))
+	max_bdfs=$((bdev_count > 0 && bdev_count < ${#bdfs[@]} ? bdev_count : ${#bdfs[@]}))
+
+	for ((i = 0; i < max_bdfs; i++)); do
+		bdev_json_cfg+=("$(
+			cat <<- JSON
+				{
+					"method": "bdev_nvme_attach_controller",
+					"params": {
+						"trtype": "PCIe",
+						"name":"Nvme${i}",
+						"traddr":"${bdfs[i]}"
+					}
+				}
+			JSON
+		)")
+	done
+
+	local IFS=","
+	cat <<- JSON
+		{
+			"subsystem": "bdev",
+			"config": [
+				${bdev_json_cfg[*]}
+			]
+		}
+	JSON
+}
+
+function create_remote_json_config() {
+	local trids
+	local bdev_json_cfg=()
+
+	IFS="," read -r -a trids <<< $1
+	for ((i = 0; i < ${#trids[@]}; i++)); do
+		local transport
+		local ip_addr
+		local svc_port
+		local nqn
+
+		IFS=":" read -r transport ip_addr svc_port nqn <<< ${trids[i]}
+		bdev_json_cfg+=("$(
+			cat <<- JSON
+				{
+					"method": "bdev_nvme_attach_controller",
+					"params": {
+						"trtype": "$transport",
+						"adrfam": "IPv4",
+						"name": "Nvme${i}",
+						"subnqn": "$nqn",
+						"traddr": "$ip_addr",
+						"trsvcid": "$svc_port"
+					}
+				}
+			JSON
+		)")
+	done
+
+	local IFS=","
+	cat <<- JSON
+		{
+			"subsystem": "bdev",
+			"config": [
+				${bdev_json_cfg[*]}
+			]
+		}
+	JSON
+}
+
+while getopts 'hn:-:' optchar; do
+	case "$optchar" in
+		-)
+			case "$OPTARG" in
+				help) usage ;;
+				mode=*)
+					gen_mode="${OPTARG#*=}"
+					gen_function="create_${OPTARG#*=}_json_config"
+					;;
+				trid=*) remote_trid="${OPTARG#*=}" ;;
+				json-with-subsystems) gen_subsystems=true ;;
+				bdev-count=*) bdev_count=${OPTARG#*=} ;;
+				*) echo "Invalid argument '$OPTARG'" && usage ;;
+			esac
+			;;
+		h) usage ;;
+		n) bdev_count=$OPTARG ;;
+		*) echo "Invalid argument '$OPTARG'" && usage ;;
+	esac
 done
+
+if [[ "$gen_mode" == "remote" ]] && [[ -z "$remote_trid" ]]; then
+	echo "For $gen_mode --trid argument must be provided."
+	exit 1
+fi
+
+if [[ "$gen_mode" == "remote" ]]; then
+	gen_args+=("$remote_trid")
+fi
+
+bdev_json_cfg=$("$gen_function" "${gen_args[@]}")
+if [[ $gen_subsystems == true ]]; then
+	bdev_json_cfg=$(
+		cat <<- JSON
+			{
+				"subsystems": [
+					$bdev_json_cfg
+				]
+			}
+		JSON
+	)
+fi
+
+echo "$bdev_json_cfg"

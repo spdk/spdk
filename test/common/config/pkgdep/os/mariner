@@ -1,0 +1,7 @@
+pre_install() {
+	if [[ $INSTALL_TSOCKS == true ]]; then
+		# tsocks package is not available in latest releases, so don't exit in case
+		# installation failed.
+		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
+	fi
+}

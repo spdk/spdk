@@ -1,0 +1,17 @@
+usdt:__EXE__:bdev_nvme_ctrlr_reconnect {
+	printf("%d.%06d: reconnect bdev controller %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1));
+}
+
+usdt:__EXE__:bdev_nvme_ctrlr_reconnect_delay {
+	printf("%d.%06d: reconnect delay bdev controller %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1));
+}
+
+usdt:__EXE__:bdev_nvme_ctrlr_reset {
+	printf("%d.%06d: reset bdev controller %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1));
+}

@@ -1,0 +1,560 @@
+function install_qat() {
+	if ! hash yasm; then
+		install yasm
+	fi
+
+	install libnl3 libnl3-devel || install libnl-3-200 libnl-3-dev
+
+	in_syms() {
+		local syms
+		if [[ -e /proc/kallsyms ]]; then
+			syms=/proc/kallsyms
+		elif [[ -e /boot/System.map-$kernel_ver ]]; then
+			syms=/boot/System.map-$kernel_ver
+		else
+			return 0
+		fi
+
+		grep -q "$1" "$syms"
+	}
+
+	if [[ -e /sys/module/qat_c62x ]]; then
+		sudo modprobe -r qat_c62x || :
+	fi
+	if [[ -d $GIT_REPOS/QAT ]]; then
+		sudo rm -rf "$GIT_REPOS/QAT"
+	fi
+
+	mkdir "$GIT_REPOS/QAT"
+
+	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
+
+	if ge "$kernel_ver" 6.7.0; then
+		patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-phys_proc_id.patch"
+
+	if ge "$kernel_ver" 6.8.0; then
+		patch --dir="$GIT_REPOS/QAT" -p1 < \
+			"$rootdir/test/common/config/pkgdep/patches/qat/0001-strlcpy-to-strscpy.patch"
+		patch --dir="$GIT_REPOS/QAT" -p1 < \
+			"$rootdir/test/common/config/pkgdep/patches/qat/0001-missing-prototypes.patch"
+	fi
+
+	patch --dir="$GIT_REPOS/QAT" -p1 \
+		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-no-vmlinux.patch"
+
+	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
+
+	if ! sudo service qat_service start; then
+		echo "failed to start the qat service. Something may be wrong with your device or package."
+	fi
+}
+
+function install_rocksdb() {
+	# Rocksdb is installed for use with the blobfs tests.
+	if [ ! -d /usr/src/rocksdb ]; then
+		git clone "${GIT_REPO_ROCKSDB}" "$GIT_REPOS/rocksdb"
+		git -C "$GIT_REPOS/rocksdb" checkout 6.15.fb
+		sudo mv "$GIT_REPOS/rocksdb" /usr/src/
+	else
+		sudo git -C /usr/src/rocksdb checkout 6.15.fb
+		echo "rocksdb already in /usr/src. Not checking out again"
+	fi
+}
+
+function install_ittapi() {
+	# Install Intel Instrumentation and Trace API
+	local ittapi_version=v3.24.5 ittapi_dir=/usr/src/ittapi
+
+	rm -rf "$ittapi_dir"
+	git clone "${GIT_REPO_ITTAPI}" --branch "$ittapi_version" "$GIT_REPOS/ittapi"
+	make -C "$GIT_REPOS/ittapi/src/ittnotify_refcol"
+
+	mv "$GIT_REPOS/ittapi" "$ittapi_dir"
+	ln -s . "$ittapi_dir/sdk"
+}
+
+function install_fio() {
+	# This version of fio is installed in /usr/src/fio to enable
+	# building the spdk fio plugin.
+	local fio_version="fio-3.35"
+
+	if [ ! -d /usr/src/fio ]; then
+		if [ ! -d fio ]; then
+			git clone "${GIT_REPO_FIO}" "$GIT_REPOS/fio"
+			sudo mv "$GIT_REPOS/fio" /usr/src/
+		else
+			sudo mv "$GIT_REPOS/fio" /usr/src/
+		fi
+		(
+			git -C /usr/src/fio checkout master \
+				&& git -C /usr/src/fio pull \
+				&& git -C /usr/src/fio checkout $fio_version \
+				&& if [ $OSID == 'freebsd' ]; then
+					gmake -C /usr/src/fio -j${jobs} \
+						&& sudo gmake -C /usr/src/fio install
+				else
+					make -C /usr/src/fio -j${jobs} \
+						&& sudo make -C /usr/src/fio install
+				fi
+		)
+	else
+		echo "fio already in /usr/src/fio. Not installing"
+	fi
+}
+
+function install_flamegraph() {
+	# Flamegraph is used when printing out timing graphs for the tests.
+	if [ ! -d /usr/local/FlameGraph ]; then
+		git clone "${GIT_REPO_FLAMEGRAPH}" "$GIT_REPOS/FlameGraph"
+		mkdir -p /usr/local
+		sudo mv "$GIT_REPOS/FlameGraph" /usr/local/FlameGraph
+	else
+		echo "flamegraph already installed. Skipping"
+	fi
+}
+
+function _install_qemu() {
+	local repo=$1
+	local branch=$2
+	local prefix=${3:-}
+	local name=${4:-}
+
+	mkdir -p "$GIT_REPOS/qemu"
+
+	local repo_dir=$GIT_REPOS/qemu/$branch
+	if [[ -n $prefix ]]; then
+		repo_dir=$GIT_REPOS/qemu/$prefix-$branch
+	fi
+
+	if [[ ! -d $repo_dir ]]; then
+		git clone "$repo" -b "$branch" "$repo_dir"
+	else
+		echo "qemu already checked out. Skipping"
+	fi
+
+	declare -a opt_params=("--prefix=/usr/local/qemu/${repo_dir##*/}")
+	declare -a extra_cflags=()
+
+	opt_params+=("--disable-docs")
+	if ((gcc_version >= 9)); then
+		opt_params+=("--disable-glusterfs")
+	fi
+
+	extra_cflags+=("-Wno-error")
+
+	# Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
+	# If using tsocks, please make sure to complete this config before trying to build qemu.
+	if [[ $INSTALL_TSOCKS == true && $NO_TSOCKS != true ]]; then
+		if hash tsocks 2> /dev/null; then
+			opt_params+=("--with-git='tsocks git'")
+		fi
+	fi
+	opt_params+=("--extra-cflags=${extra_cflags[*]}")
+
+	if [[ $prefix == vanilla ]]; then
+		# Latest qemu seems to take sysconfdir from the prefix and instead of checking /etc
+		# it looks under /usr/local/qemu/vanilla*/bin/../etc which is a bit peculiar. Fix it.
+		opt_params+=("--sysconfdir=/etc/")
+	fi
+
+	# The qemu configure script places several output files in the CWD.
+	(cd "$repo_dir" && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
+
+	make -C "$repo_dir" -j${jobs}
+	sudo make -C "$repo_dir" install
+
+	# Add a symlink to point at a latest build - this is useful to easily track QEMU flavors for which
+	# branches change quite often (e.g. vfio-user's).
+	[[ -n $name ]] || return 0
+	[[ -L /usr/local/qemu/$name-latest ]] && sudo rm "/usr/local/qemu/$name-latest"
+	sudo ln -s "/usr/local/qemu/${repo_dir##*/}" "/usr/local/qemu/$name-latest"
+}
+
+function install_qemu() {
+	# Four versions of QEMU are used in the tests, three are installed
+	# directly from the source. Each QEMU is dedicated for different
+	# use-cases:
+	#  - Packed QEMU: version provided by given distro. Used to boot VMs
+	#    from within vhost tests.
+	#  - vfio-user QEMU: A special fork to test libvfio-user components.
+	#  - Vanilla QEMU: Used by the CI to boot the testing VMs.
+
+	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH "" vfio-user
+	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH" vanilla vanilla
+}
+
+function install_nvmecli() {
+	# nvme-cli >1.11.1 should be used.
+	rm -rf "$GIT_REPOS/nvme-cli-cuse"
+	git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
+	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.5
+
+	meson setup --force-fallback-for=libnvme \
+		"$GIT_REPOS/nvme-cli-cuse/.build" \
+		"$GIT_REPOS/nvme-cli-cuse"
+	meson compile -C "$GIT_REPOS/nvme-cli-cuse/.build"
+
+	rm -rf /usr/local/src/nvme-cli
+	mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+
+	# Make sure binary is available for the cuse tests
+	if [[ -e /usr/local/src/nvme-cli/.build/nvme ]]; then
+		sudo ln -s .build/nvme /usr/local/src/nvme-cli/
+	fi
+}
+
+# This function install version of nvme-cli, that support listing spdk nvme
+# devices, should be remove after changes present in nvme-cli upstream.
+function install_nvmecli_plugin() {
+	rm -rf "$GIT_REPOS/nvme-cli-plugin"
+
+	git clone $GIT_REPO_NVME_CLI "$GIT_REPOS/nvme-cli-plugin"
+	git -C "$GIT_REPOS/nvme-cli-plugin" fetch $GIT_REPO_NVME_CLI refs/changes/95/16795/12
+	git -C "$GIT_REPOS/nvme-cli-plugin" checkout FETCH_HEAD
+
+	meson setup --force-fallback-for=libnvme,json-c \
+		"$GIT_REPOS/nvme-cli-plugin/.build" \
+		"$GIT_REPOS/nvme-cli-plugin"
+	meson compile -C "$GIT_REPOS/nvme-cli-plugin/.build"
+
+	rm -rf /usr/local/src/nvme-cli-plugin
+	mv "$GIT_REPOS/nvme-cli-plugin" /usr/local/src/nvme-cli-plugin
+
+	# Make sure binary is available for the plugin tests
+	if [[ -e /usr/local/src/nvme-cli-plugin/.build/nvme ]]; then
+		sudo ln -s .build/nvme /usr/local/src/nvme-cli-plugin/
+	fi
+}
+
+function install_libiscsi() {
+	# We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
+	# to later. Cloning from git is just future proofing the machines.
+	if [[ ! -d $GIT_REPOS/libiscsi ]]; then
+		git clone "${GIT_REPO_LIBISCSI}" "$GIT_REPOS/libiscsi"
+	else
+		echo "libiscsi already checked out. Skipping"
+	fi
+	(cd "$GIT_REPOS/libiscsi" && ./autogen.sh && ./configure --prefix=/usr/local/libiscsi)
+	make -C "$GIT_REPOS/libiscsi" -j${jobs} WARN_CFLAGS=
+	sudo make -C "$GIT_REPOS/libiscsi" install
+}
+
+function install_git() {
+	if type -P git; then
+		if ge "$(git --version | awk '{print $3}')" "$GIT_VERSION"; then
+			return 0
+		fi
+	fi >/dev/null
+
+	install zlib-devel curl-devel
+	tar -C "$GIT_REPOS" -xzof <(wget -qO- "$GIT_REPO_GIT")
+	(cd "$GIT_REPOS/git-$GIT_VERSION" \
+		&& make configure \
+		&& ./configure \
+		&& sudo make -j${jobs} install)
+}
+
+function install_extra_pkgs() {
+	if [[ $INSTALL_QAT == true ]]; then
+		install libudev-devel || install libudev-dev || :
+	fi
+
+	if [[ $INSTALL_QEMU == true ]]; then
+		install qemu-system-x86 qemu-img \
+			|| install qemu-system-x86 qemu-utils \
+			|| install qemu
+
+		# Install extra dependency which was removed from Qemu 7.2 source tree
+		install libslirp-devel \
+			|| install libslirp-dev
+	fi || :
+}
+
+function install_vagrant() {
+	local vagrant_version="2.2.7"
+	local vagrant_installer="vagrant_${vagrant_version}_x86_64.deb"
+	local vagrant_plugins=(vagrant-libvirt vagrant-sshfs vagrant-cachier vagrant-proxyconf)
+
+	if [[ $OSID != ubuntu ]]; then
+		echo "Currently, Vagrant installation is supported only on ubuntu"
+		return 0
+	fi
+
+	# Install vagrant and it's plugins dependencies
+	# function should be defined in pkgdep/$package_manager file
+	install_vagrant_dependencies
+
+	# Download and install vagrant
+	if hash vagrant &> /dev/null; then
+		echo "Vagrant is already installed"
+	else
+		wget "https://releases.hashicorp.com/vagrant/${vagrant_version}/${vagrant_installer}"
+		sudo dpkg -i "${vagrant_installer}"
+	fi
+	vagrant --version
+
+	# Install vagrant plugins
+	local vagrant_plugin_list
+	vagrant_plugin_list=$(vagrant plugin list)
+
+	local plugin
+	for plugin in "${vagrant_plugins[@]}"; do
+		if grep -Fq "$plugin" <<< "$vagrant_plugin_list"; then
+			echo "$plugin already installed"
+		else
+			vagrant plugin install "$plugin"
+		fi
+	done
+}
+
+function install_igb_uio() {
+	git clone "${GIT_REPO_DPDK_KMODS}" "$GIT_REPOS/dpdk-kmods"
+
+	(cd "$GIT_REPOS/dpdk-kmods/linux/igb_uio" && make -j ${jobs})
+	sudo mkdir -p "/lib/modules/$(uname -r)/extra/dpdk"
+	sudo cp "$GIT_REPOS/dpdk-kmods/linux/igb_uio/igb_uio.ko" "/lib/modules/$(uname -r)/extra/dpdk"
+	sudo depmod
+}
+
+function install_irdma() {
+	local RDMA_CORE_VERSION=51.0
+	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
+
+	if [[ $ID != fedora ]]; then
+		echo "Installation of the irdma can be attempted only on Fedora"
+		return 0
+	fi
+
+	# Install extra dependencies needed by the rdma-core
+	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel python3-Cython
+
+	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
+	rm -rf "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
+
+	curl -L -o- "$IRDMA_DRIVER" | tar -C "$GIT_REPOS" -xzf -
+	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/build.sh ]]
+
+	(
+		cd "$GIT_REPOS/irdma-$IRDMA_VERSION"
+		sed -i "s/IRDMA_FLUSH_DELAY_MS 1500/IRDMA_FLUSH_DELAY_MS 50/" \
+			"$GIT_REPOS/irdma-$IRDMA_VERSION/src/irdma/verbs.h"
+		"$GIT_REPOS/irdma-$IRDMA_VERSION/build.sh"
+	)
+
+	# Fetch and build the rdma-core irdma depends on
+	curl -L -o- "$RDMA_CORE" | tar -C "$GIT_REPOS" -xzf -
+	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch ]]
+
+	patch --dir="$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION" -p2 \
+		< "$GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch"
+
+	# Note that paths and the name of the package are hardcoded into .spec, hence they need to stay like this.
+	[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec ]]
+	mkdir -p "$HOME/rpmbuild/"{SOURCES,SPECS}
+	cp "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec" "$HOME/rpmbuild/SPECS"
+
+	# Re-package the source
+	tar -czf "$HOME/rpmbuild/SOURCES/rdma-core-$RDMA_CORE_VERSION.tar.gz" -C "$GIT_REPOS" "rdma-core-$RDMA_CORE_VERSION"
+
+	# Build the rpms
+	(
+		cd "$HOME/rpmbuild/SPECS"
+		# Make sure stock ninja-build is used
+		PATH="/usr/bin:$PATH" rpmbuild -ba rdma-core.spec
+	)
+
+	# Now, don't install the packages since this will, most likely, conflict with packages already installed
+	# in the system. Instead, simply inform user what the next step is and note what potential issues it may
+	# have with the installation.
+
+	shopt -s nullglob
+	local rpms=("$HOME/rpmbuild/RPMS/x86_64/"*.rpm)
+	shopt -u nullglob
+	((${#rpms[@]} > 0))
+
+	cat <<-EOF
+
+		INFO: rdma-core-$RDMA_CORE_VERSION was successfully built, following packages are
+		available for installation:
+
+		$(printf '  - %s\n' "${rpms[@]##*/}")
+
+		Note that installing the above packages may raise conflicts with their
+		potentially newer versions already installed on the system. Dependent
+		packages may be uninstalled during the process as well. Please, run the
+		following command to finish the installation:
+
+		  $package_manager install [--allowerasing] $HOME/rpmbuild/RPMS/x86_64/*.rpm
+
+	EOF
+}
+
+function install_ice() {
+	rm -rf "$GIT_REPOS/ice-$ICE_VERSION"
+
+	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
+
+	(
+		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
+		sudo make -j"$(nproc)" install
+	)
+}
+
+function install_lcov() {
+	local lcov_version=v1.15
+
+	install perl-IO-Compress || install perl-modules
+
+	rm -rf /usr/src/lcov
+	sudo git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
+	(cd /usr/src/lcov; sudo make install)
+}
+
+function install_bpftrace() {
+	local deps=() bcc_rev
+
+	deps+=(cereal-devel)
+	deps+=(clang-devel)
+	deps+=(cmake)
+	deps+=(dwarves)
+	deps+=(gmock-devel)
+	deps+=(gtest-devel)
+	deps+=(llvm-devel)
+	deps+=(bcc-devel)
+	deps+=(libbpf-devel)
+
+	install "${deps[@]}"
+
+	rm -rf $GIT_REPOS/bpftrace
+
+	git clone "$GIT_REPO_BPFTRACE" "$GIT_REPOS/bpftrace"
+	git -C $GIT_REPOS/bpftrace checkout $BPFTRACE_VERSION
+
+	mkdir -p "$GIT_REPOS/bpftrace/build"
+	cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTING=OFF \
+		-B "$GIT_REPOS/bpftrace/build" \
+		-S "$GIT_REPOS/bpftrace"
+
+	make -C $GIT_REPOS/bpftrace/build -j$(nproc)
+	sudo make -C $GIT_REPOS/bpftrace/build install
+}
+
+function install_doxygen() {
+	# Stable, 1.10 commit that works for our docs
+	local release=78422d3905e57acebf0374feefafa6578dbe86aa
+
+	rm -rf "$GIT_REPOS/doxygen"
+
+	git clone "$GIT_REPO_DOXYGEN" "$GIT_REPOS/doxygen"
+	git -C "$GIT_REPOS/doxygen" checkout "$release"
+
+	mkdir -p "$GIT_REPOS/doxygen/build"
+
+	cmake -G "Unix Makefiles" \
+		-B "$GIT_REPOS/doxygen/build" \
+		-S "$GIT_REPOS/doxygen"
+
+	# This build is quite heavy, so let's not go crazy with -j here
+	make -C "$GIT_REPOS/doxygen/build" -j$(($(nproc) / 2))
+	make -C "$GIT_REPOS/doxygen/build" install
+}
+
+function install_sources() {
+	if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
+		# install proper version of the git first
+		install_git
+	fi
+
+	IFS="," read -ra conf_env <<< "$CONF"
+	for conf in "${conf_env[@]}"; do
+		export "INSTALL_${conf^^}=true"
+	done
+
+	if [[ $OSID == freebsd ]]; then
+		jobs=$(($(sysctl -n hw.ncpu) * 2))
+	else
+		jobs=$(($(nproc) * 2))
+		sources+=(
+			install_irdma
+			install_libiscsi
+			install_nvmecli
+			install_nvmecli_plugin
+			install_qat
+			install_rocksdb
+			install_flamegraph
+			install_qemu
+			install_igb_uio
+			install_ice
+			install_lcov
+			install_bpftrace
+			install_doxygen
+		)
+		install_extra_pkgs
+	fi
+	sources+=(install_fio)
+	sources+=(install_vagrant)
+	sources+=(install_ittapi)
+
+	sudo mkdir -p /usr/{,local}/src
+	sudo mkdir -p "$GIT_REPOS"
+
+	for source in "${sources[@]}"; do
+		source_conf=${source^^}
+		if [[ ${!source_conf} == true ]]; then
+			"$source"
+		fi
+	done
+}
+
+GIT_VERSION=2.25.1
+IRDMA_VERSION=1.14.31
+ICE_VERSION=1.14.9
+
+BPFTRACE_VERSION=${BPFTRACE_VERSION:-f7bdfb44}
+VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}
+VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v8.0.0}
+
+: ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
+export GIT_REPO_ROCKSDB
+: ${GIT_REPO_FIO=https://github.com/axboe/fio.git}
+export GIT_REPO_FIO
+: ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}
+export GIT_REPO_FLAMEGRAPH
+: ${GIT_REPO_QEMU=https://github.com/qemu/qemu}
+export GIT_REPO_QEMU
+: ${GIT_REPO_QEMU_VFIO=https://github.com/oracle/qemu}
+export GIT_REPO_QEMU_VFIO
+: ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
+export GIT_REPO_LIBISCSI
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/795697/QAT.L.4.24.0-00005.tar.gz}
+export DRIVER_LOCATION_QAT
+: ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
+export GIT_REPO_GIT
+: ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
+export GIT_REPO_DPDK_KMODS
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/823677/irdma-$IRDMA_VERSION.tgz}
+export IRDMA_DRIVER
+: ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
+export ICE_DRIVER
+: ${GIT_REPO_LCOV=https://github.com/linux-test-project/lcov}
+export GIT_REPO_LCOV
+: ${GIT_REPO_BCC=https://github.com/iovisor/bcc.git}
+export GIT_REPO_BCC
+: ${GIT_REPO_BPFTRACE=https://github.com/iovisor/bpftrace.git}
+export GIT_REPO_BPFTRACE
+: ${GIT_REPO_NVME_CLI=https://review.spdk.io/gerrit/spdk/nvme-cli}
+export GIT_REPO_NVME_CLI
+: ${GIT_REPO_ITTAPI=https://github.com/intel/ittapi.git}
+export GIT_REPO_ITTAPI
+: ${GIT_REPO_DOXYGEN="https://github.com/doxygen/doxygen"}
+export GIT_REPO_DOXYGEN
+
+GIT_REPOS=${GIT_REPOS:-$HOME}
+
+gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
+if [[ -e /proc/sys/kernel/osrelease ]]; then
+	kernel_ver=$(< /proc/sys/kernel/osrelease)
+fi

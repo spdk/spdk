@@ -1,0 +1,20 @@
+Subject: [PATCH] pci/linux: free the device if no kernel driver configured
+---
+ drivers/bus/pci/linux/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bus/pci/linux/pci.c b/drivers/bus/pci/linux/pci.c
+index 619d209ad21..06b523a15f2 100644
+--- a/drivers/bus/pci/linux/pci.c
++++ b/drivers/bus/pci/linux/pci.c
+@@ -330,8 +330,8 @@ pci_scan_one(const char *dirname, const struct rte_pci_addr *addr)
+ 			dev->kdrv = RTE_PCI_KDRV_UIO_GENERIC;
+ 		else
+ 			dev->kdrv = RTE_PCI_KDRV_UNKNOWN;
+-	} else {
+-		dev->kdrv = RTE_PCI_KDRV_NONE;
++	} else { /* no kernel driver */
++		free(dev);
+ 		return 0;
+ 	}
+ 	/* device is valid, add in list (sorted) */

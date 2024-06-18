@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
+#
 
 set -e
 
-function usage()
-{
+trap 'echo -e "\n\nConfiguration failed\n\n" >&2' ERR
+
+rootdir=$(readlink -f $(dirname $0))
+source "$rootdir/scripts/common.sh"
+
+function usage() {
 	echo "'configure' configures SPDK to compile on supported platforms."
 	echo ""
 	echo "Usage: ./configure [OPTION]..."
@@ -12,13 +21,30 @@ function usage()
 	echo ""
 	echo "General:"
 	echo " -h, --help                Display this help and exit"
+	echo ""
+	echo " --prefix=path             Configure installation prefix (default: /usr/local)"
+	echo " --target-arch=arch        Target build architecture. Must be a valid GNU arch. Default: native"
+	echo ""
+	echo " --cross-prefix=prefix     Prefix for cross compilation (default: none)"
+	echo "                           example: aarch64-linux-gnu"
+	echo " --libdir=path             Configure installation path for the libraries (default: \$prefix/lib)"
+	echo " --max-lcores=VAL          DPDK configuration. VAL defines maximum number of lcores supported"
+	echo "                           by EAL, or enables autodetection if set to 'detect'. When 'detect'"
+	echo "                           is specified, DPDK will detect number of cores in the system during"
+	echo "                           compilation, and will set maximum number of lcores to this value"
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
-	echo " --with-env=path           Use an alternate environment implementation"
+	echo " --enable-pgo-capture[=PATH]      Enable generation of profile guided optimization data"
+	echo " --enable-pgo-use[=PATH]   Use previously captured profile guided optimization data"
+	echo " --enable-cet              Enable Intel Control-flow Enforcement Technology (CET)"
+	echo " --disable-tests           Disable building of functional tests"
+	echo " --disable-unit-tests      Disable building of unit tests"
+	echo " --disable-examples        Disable building of examples"
+	echo " --disable-apps            Disable building of apps"
 	echo ""
 	echo "Specifying Dependencies:"
 	echo "--with-DEPENDENCY[=path]   Use the given dependency. Optionally, provide the"
@@ -27,103 +53,643 @@ function usage()
 	echo "                           disable features and components."
 	echo ""
 	echo "Valid dependencies are listed below."
-	echo " dpdk                      Optional.  Uses dpdk submodule in spdk tree if not specified."
+	echo " --with-dpdk[=DIR]         Build against a custom dpdk version. By default, the dpdk"
+	echo " --without-dpdk            submodule in spdk tree will be used."
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
-	echo " fio                       Required to build fio_plugin."
-	echo "                           example: /usr/src/fio"
-	echo " rbd                       [disabled]"
-	echo "                           No path required."
-	echo " rdma                      [disabled]"
-	echo "                           No path required."
-	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
-	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
+	echo " --with-env=DIR            Use an alternate environment implementation instead of DPDK."
+	echo "                           Implies --without-dpdk."
+	echo " --with-idxd               Build the IDXD library and accel framework plug-in module."
+	echo " --without-idxd            Disabled while experimental. Only built for x86 when enabled."
+	echo " --with-crypto             Build isa-l-crypto and vbdev crypto module. No path required."
+	echo " --without-crypto          Disable isa-l-crypto and vbdev crypto module."
+	echo " --with-fio[=DIR]          Build fio_plugin."
+	echo " --without-fio             default: /usr/src/fio"
+	echo " --with-xnvme              Build xNVMe bdev module."
+	echo " --without-xnvme           No path required."
+	echo " --with-vhost              Build vhost target. Enabled by default."
+	echo " --without-vhost           No path required."
+	echo " --with-virtio             Build vhost initiator and virtio-pci bdev modules."
+	echo " --without-virtio          No path required."
+	echo " --with-vfio-user[=DIR]    Build custom vfio-user transport for NVMf target and vfio-user target."
+	echo "                           vfio-user initiator is always built-in in Linux."
+	echo "                           example: /usr/src/libvfio-user"
+	echo " --without-vfio-user       No path required."
+	echo " --with-vbdev-compress     Build vbdev compression module and dependencies."
+	echo " --without-vbdev-compress  No path required."
+	echo " --with-dpdk-compressdev   Build accel DPDK compression module and dependencies."
+	echo " --without-dpdk-compressdev No path required."
+	echo " --with-rbd                Build Ceph RBD bdev module."
+	echo " --without-rbd             No path required."
+	echo " --with-ublk               Build ublk library."
+	echo " --without-ublk            No path required."
+	echo " --with-rdma[=DIR]         Build RDMA transport for NVMf target and initiator."
+	echo " --without-rdma            Accepts optional RDMA provider name. Can be \"verbs\" or \"mlx5_dv\"."
+	echo "                           If no provider specified, \"verbs\" provider is used by default."
+	echo " --with-fc[=DIR]           Build FC transport for NVMf target."
+	echo " --without-fc              If an argument is provided, it is considered a directory containing"
+	echo "                           libufc.a and fc_lld.h. Otherwise the regular system paths will"
+	echo "                           be searched."
+	echo " --with-daos[=DIR]         Build DAOS bdev module."
+	echo " --without-daos            No path required."
+	echo " --with-shared             Build spdk shared libraries."
+	echo " --without-shared          No path required."
+	echo " --with-iscsi-initiator    Build with iscsi bdev module."
+	echo " --without-iscsi-initiator No path required."
+	echo " --with-vtune=DIR          Required to profile I/O under Intel VTune Profiler."
+	echo "                           example: /opt/intel/oneapi/vtune/version"
+	echo " --without-vtune           Support for Intel VTune Profiler will not be provided."
+	echo " --with-ocf[=DIR]          Build OCF library and bdev module."
+	echo " --without-ocf             If argument is directory, interpret it as root of OCF repo"
+	echo "                           If argument is file, interpret it as compiled OCF lib"
+	echo "                           If no argument is specified, OCF git submodule is used by default"
+	echo "                           example: /usr/src/ocf/"
+	echo " --with-uring[=DIR]        Build I/O uring bdev or socket module."
+	echo " --without-uring           If an argument is provided, it is considered a directory containing"
+	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
+	echo "                           be searched."
+	echo " --with-dpdk-uadk          Build uadk DPDK module. No path required."
+	echo " --without-dpdk-uadk       Disable uadk DPDK module."
+	echo " --without-uring-zns       Build I/O uring module without ZNS (zoned namespaces) support."
+	echo " --with-openssl[=DIR]      Build OPENSSL with custom path. Otherwise the regular system paths will"
+	echo "                           be searched."
+	echo " --with-fuse               Build FUSE components for mounting a blobfs filesystem."
+	echo " --without-fuse            No path required."
+	echo " --with-nvme-cuse          Build NVMe driver with support for CUSE-based character devices."
+	echo " --without-nvme-cuse       No path required."
+	echo " --with-raid5f             Build with bdev_raid module RAID5f support."
+	echo " --without-raid5f          No path required."
+	echo " --with-wpdk=DIR           Build using WPDK to provide support for Windows (experimental)."
+	echo " --without-wpdk            The argument must be a directory containing lib and include."
+	echo " --with-usdt               Build with userspace DTrace probes enabled."
+	echo " --without-usdt            No path required."
+	echo " --with-fuzzer             Build with LLVM fuzzing enabled."
+	echo "                           Path to clang_rt.fuzzer_no_main library required."
+	echo "                           Requires setting CC and CXX to clang."
+	echo "                           (Typically /usr/lib/llvm-VER/lib/clang/VER/lib/linux/libclang_rt.fuzzer_no_main-ARCH.a)"
+	echo " --with-sma                Generate Storage Management Agent's protobuf interface"
+	echo " --without-sma             No path required."
+	echo " --with-avahi              Build with Avahi mDNS discovery client service enabled in bdev-nvme module."
+	echo " --without-avahi           No path required."
+	echo " --with-golang             Build with components written in Go"
+	echo " --without-golang          No path required."
 	echo ""
+	echo "Environment variables:"
+	echo ""
+	echo "CC                         C compiler"
+	echo "CFLAGS                     C compiler flags"
+	echo "CXX                        C++ compiler"
+	echo "CXXFLAGS                   C++ compiler flags"
+	echo "LD                         Linker"
+	echo "LDFLAGS                    Linker flags"
+	echo "DESTDIR                    Destination for 'make install'"
+	echo ""
+}
+
+# Load default values
+# Convert config to sourceable configuration file
+sed -r 's/CONFIG_([[:alnum:]_]+)=(.*)/CONFIG[\1]=\2/g' $rootdir/CONFIG > $rootdir/CONFIG.sh
+declare -A CONFIG
+source $rootdir/CONFIG.sh
+rm $rootdir/CONFIG.sh
+
+# Try to expand literal ~ that might have been passed as an option via --long-opt=~/dir.
+set -- "${@//\~/~}"
+
+for i in "$@"; do
+	case "$i" in
+		--cross-prefix=*)
+			CONFIG[CROSS_PREFIX]="${i#*=}"
+			;;
+		--enable-lto)
+			CONFIG[LTO]=y
+			;;
+		--disable-lto)
+			CONFIG[LTO]=n
+			;;
+	esac
+done
+
+# Detect the compiler toolchain
+$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}" > $rootdir/mk/cc.mk
+
+mapfile -t cc < <(grep "=" "$rootdir/mk/cc.mk")
+source <(printf '%q\n' "${cc[@]}")
+CC=$DEFAULT_CC
+
+arch=$($CC -dumpmachine)
+sys_name=$(uname -s)
+
+if [[ $arch == *mingw* ]] || [[ $arch == *windows* ]]; then
+	sys_name=Windows
+fi
+
+if [[ $sys_name != "Linux" ]]; then
+	# Vhost, rte_vhost library and virtio are only supported on Linux.
+	CONFIG[VHOST]="n"
+	CONFIG[VIRTIO]="n"
+	CONFIG[NVME_CUSE]="n"
+	echo "Notice: Vhost, rte_vhost library, virtio, and fuse"
+	echo "are only supported on Linux. Turning off default feature."
+fi
+
+function check_dir() {
+	arg="$1"
+	dir="${arg#*=}"
+	if [ ! -d "$dir" ]; then
+		echo "$arg: directory not found"
+		exit 1
+	fi
+}
+
+# On x86_64 'clang -dumpmachine' produces x86_64-pc-linux-gnu
+# whereas the dpdk might be built with gcc and its libs lie in
+# x86_64-linux-gnu. Let's find the right libdir for dpdk libs.
+function find_dpdk_arch_libdir() {
+	local dpdk_libdir="$1/lib"
+
+	# Use libdir with 'lib' or 'lib64'
+	if [[ ! -d "$dpdk_libdir" ]]; then
+		dpdk_libdir+="64"
+	fi
+
+	# Checking first what we have with $arch, then clang
+	# variant of arch.
+	arches=("$arch" "$(echo $arch | sed 's/-pc//g')")
+	for a in "${arches[@]}"; do
+		local libdir_arch="$dpdk_libdir/$a"
+		if [[ -d "$libdir_arch" ]]; then
+			echo "$libdir_arch"
+			return
+		fi
+	done
+
+	# Fallback to the libdir without arch component
+	echo "$dpdk_libdir"
+}
+
+function check_IPSec_mb() {
+	local mode=$1
+	local dpdk_libdir=$2
+	local dpdk_incdir=$3
+	local have_ipsec_mb=n
+
+	if [[ $mode = "pkg-config" ]]; then
+		local dpdk_libs
+
+		# Request libdpdk pkg-config settings to figure out if the IPSec_MB is used
+		# as a dependency.
+		# Due to some reason pkg-config shows -lIPSec_MB only with --static option
+		dpdk_libs=$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --libs --static libdpdk)
+		if echo "$dpdk_libs" | grep "\-lIPSec_MB" > /dev/null 2>&1; then
+			have_ipsec_mb=y
+		fi
+	elif [[ $mode = "build-config" ]]; then
+		# Use dpdk build config header to check if the IPSec_MB was used.
+		if grep -F "define RTE_CRYPTO_IPSEC_MB 1" "$dpdk_incdir/rte_build_config.h" > /dev/null 2>&1; then
+			have_ipsec_mb=y
+		fi
+	else
+		echo "ERROR: Invalid IPSec_MB checking mode $mode."
+		echo "ERROR: Only \"pkg-config\" and \"build-config\" available."
+		exit 1
+	fi
+	if [[ $have_ipsec_mb = "n" ]]; then
+		CONFIG[IPSEC_MB]=n
+		return
+	fi
+
+	# Since we don't know the library path where the IPSec_MB is located
+	# let's find it out with the ldd utility. This can be a standard location
+	# or a custom build.
+	local librte_crypto_ipsec_mb="$dpdk_libdir/librte_crypto_ipsec_mb.so"
+	if [[ -f "$librte_crypto_ipsec_mb" ]]; then
+		local ipsec_mb_libdir
+
+		ipsec_mb_libdir=$(ldd "$librte_crypto_ipsec_mb" | grep "libIPSec_MB.so" \
+			| sed -e 's/\s*libIPSec_MB.so.*=>\s//' -e 's/\/libIPSec_MB.so.*$//')
+		if [[ -d $ipsec_mb_libdir ]]; then
+			CONFIG[IPSEC_MB]=y
+			CONFIG[IPSEC_MB_DIR]="$ipsec_mb_libdir"
+		elif [[ $ipsec_mb_libdir = "not found" ]]; then
+			# ldconfig cache is broken, old build with refs to non-existing libs, etc.
+			echo "ERROR: Invalid IPSec_MB installation. Library is not found and/or ldconfig cache is broken!"
+			exit 1
+		else
+			# Failed to check for IPSec_MB lib path. Let's just assume it is lives
+			# in one of the standard locations (/usr/lib, etc.).
+			CONFIG[IPSEC_MB]=y
+		fi
+	else
+		# pkg-config says there is IPSec_mb and dpdk lib does not have it. Let's just
+		# assume it is installed in the system in one of the standard locations.
+		CONFIG[IPSEC_MB]=y
+	fi
 }
 
 for i in "$@"; do
 	case "$i" in
-		-h|--help)
+		-h | --help)
 			usage
 			exit 0
 			;;
+		--cross-prefix=*) ;&
+		--enable-lto) ;&
+		--disable-lto)
+			# Options handled before detecting CC.
+			;;
+		--prefix=*)
+			CONFIG[PREFIX]="${i#*=}"
+			;;
+		--target-arch=*)
+			CONFIG[ARCH]="${i#*=}"
+			;;
+		--libdir=*)
+			CONFIG[LIBDIR]="${i#*=}"
+			;;
 		--enable-debug)
-			CONFIG_DEBUG=y
+			CONFIG[DEBUG]=y
 			;;
 		--disable-debug)
-			CONFIG_DEBUG=n
+			CONFIG[DEBUG]=n
 			;;
 		--enable-asan)
-			CONFIG_ASAN=y
+			CONFIG[ASAN]=y
 			;;
 		--disable-asan)
-			CONFIG_ASAN=n
+			CONFIG[ASAN]=n
 			;;
 		--enable-ubsan)
-			CONFIG_UBSAN=y
+			CONFIG[UBSAN]=y
 			;;
 		--disable-ubsan)
-			CONFIG_UBSAN=n
+			CONFIG[UBSAN]=n
 			;;
 		--enable-tsan)
-			CONFIG_TSAN=y
+			CONFIG[TSAN]=y
 			;;
 		--disable-tsan)
-			CONFIG_TSAN=n
+			CONFIG[TSAN]=n
 			;;
 		--enable-coverage)
-			CONFIG_COVERAGE=y
+			CONFIG[COVERAGE]=y
 			;;
 		--disable-coverage)
-			CONFIG_COVERAGE=n
+			CONFIG[COVERAGE]=n
 			;;
-		--enable-lto)
-			CONFIG_LTO=y
+		--enable-pgo-capture)
+			CONFIG[PGO_CAPTURE]=y
 			;;
-		--disable-lto)
-			CONFIG_LTO=n
+		--enable-pgo-capture=*)
+			CONFIG[PGO_CAPTURE]=y
+			CONFIG[PGO_DIR]="${i#*=}"
+			;;
+		--disable-pgo-capture)
+			CONFIG[PGO_CAPTURE]=n
+			;;
+		--enable-pgo-use)
+			CONFIG[PGO_USE]=y
+			;;
+		--enable-pgo-use=*)
+			CONFIG[PGO_USE]=y
+			CONFIG[PGO_DIR]="${i#*=}"
+			;;
+		--disable-pgo-use)
+			CONFIG[PGO_USE]=n
+			;;
+		--enable-tests)
+			CONFIG[TESTS]=y
+			;;
+		--disable-tests)
+			CONFIG[TESTS]=n
+			;;
+		--enable-unit-tests)
+			CONFIG[UNIT_TESTS]=y
+			;;
+		--disable-unit-tests)
+			CONFIG[UNIT_TESTS]=n
+			;;
+		--enable-examples)
+			CONFIG[EXAMPLES]=y
+			;;
+		--disable-examples)
+			CONFIG[EXAMPLES]=n
+			;;
+		--enable-apps)
+			CONFIG[APPS]=y
+			;;
+		--disable-apps)
+			CONFIG[APPS]=N
 			;;
 		--enable-werror)
-			CONFIG_WERROR=y
+			CONFIG[WERROR]=y
 			;;
 		--disable-werror)
-			CONFIG_WERROR=n
+			CONFIG[WERROR]=n
 			;;
-		--with-env=*)
-			CONFIG_ENV="${i#*=}"
+		--enable-cet)
+			CONFIG[CET]=y
 			;;
-		--with-rbd)
-			CONFIG_RBD=y
+		--disable-cet)
+			CONFIG[CET]=n
 			;;
-		--without-rbd)
-			CONFIG_RBD=n
-			;;
-		--with-rdma)
-			CONFIG_RDMA=y
-			;;
-		--without-rdma)
-			CONFIG_RDMA=n
+		--with-dpdk)
+			# Can we use pkg-config?
+			if command -v "pkg-config" > /dev/null 2>&1 && pkg-config --exists libdpdk; then
+				dpdk_libdir=$(pkg-config --variable=libdir libdpdk)
+				dpdk_libdir=$(readlink -f $dpdk_libdir)
+				dpdk_incdir=$(pkg-config --variable=includedir libdpdk)
+				echo "Using DPDK lib dir $dpdk_libdir"
+				CONFIG[DPDK_LIB_DIR]=$dpdk_libdir
+				CONFIG[DPDK_INC_DIR]=$dpdk_incdir
+				CONFIG[DPDK_PKG_CONFIG]=y
+				CFLAGS="${CFLAGS:+$CFLAGS }$(pkg-config --cflags libdpdk)"
+				check_IPSec_mb "pkg-config" "$dpdk_libdir" "$dpdk_incdir"
+			else
+				echo "libdpdk.pc not found, aborting"
+				exit 1
+			fi
 			;;
 		--with-dpdk=*)
-			CONFIG_DPDK_DIR=$(readlink -f ${i#*=})
+			check_dir "$i"
+			dpdk_dir=$(readlink -f ${i#*=})
+			dpdk_libdir=$(find_dpdk_arch_libdir $dpdk_dir)
+			dpdk_incdir="$dpdk_dir/include"
+
+			# Can we use pkg-config?
+			if command -v "pkg-config" > /dev/null 2>&1 && PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --exists libdpdk; then
+				echo "Using $dpdk_libdir/pkgconfig for additional libs..."
+				sysroot_dir=$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --variable=pc_sysrootdir libdpdk)
+				dpdk_libdir=$(PKG_CONFIG_SYSROOT_DIR='' PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --variable=libdir libdpdk)
+				dpdk_libdir=$(readlink -f "${sysroot_dir}$dpdk_libdir")
+				if ! echo $dpdk_libdir | grep $dpdk_dir > /dev/null 2>&1; then
+					echo "ERROR: pkg-config reported DPDK libdir $dpdk_libdir is out of the directory specified with --with-dpdk="
+					echo "ERROR: do you have another DPDK installed in the system?"
+					exit 1
+				fi
+				CFLAGS="${CFLAGS:+$CFLAGS }$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --cflags libdpdk)"
+				dpdk_incdir="${sysroot_dir}$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --variable=includedir libdpdk)"
+				check_IPSec_mb "pkg-config" "$dpdk_libdir" "$dpdk_incdir"
+			else
+				echo "Using $dpdk_incdir/rte_build_config.h for additional libs..."
+
+				check_IPSec_mb "build-config" "$dpdk_libdir" "$dpdk_incdir"
+			fi
+			echo "DPDK libraries: $dpdk_libdir"
+			echo "DPDK includes: $dpdk_incdir"
+			CONFIG[DPDK_DIR]=$dpdk_dir
+			CONFIG[DPDK_LIB_DIR]="$dpdk_libdir"
+			CONFIG[DPDK_INC_DIR]="$dpdk_incdir"
+			CONFIG[DPDK_PKG_CONFIG]=n
 			;;
 		--without-dpdk)
-			CONFIG_DPDK_DIR=
+			CONFIG[DPDK_DIR]=
 			;;
+		--with-wpdk=*)
+			check_dir "$i"
+			CONFIG[WPDK_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-wpdk)
+			CONFIG[WPDK_DIR]=
+			;;
+		--with-env=*)
+			CONFIG[ENV]="${i#*=}"
+			;;
+		--with-ublk)
+			CONFIG[UBLK]=y
+			;;
+		--without-ublk)
+			CONFIG[UBLK]=n
+			;;
+		--with-rbd)
+			CONFIG[RBD]=y
+			;;
+		--without-rbd)
+			CONFIG[RBD]=n
+			;;
+		--with-rdma=*)
+			CONFIG[RDMA]=y
+			CONFIG[RDMA_PROV]=${i#*=}
+			;;
+		--with-rdma)
+			CONFIG[RDMA]=y
+			CONFIG[RDMA_PROV]="verbs"
+			;;
+		--without-rdma)
+			CONFIG[RDMA]=n
+			;;
+		--with-fc=*)
+			CONFIG[FC]=y
+			CONFIG[FC_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-fc)
+			CONFIG[FC]=y
+			CONFIG[FC_PATH]=
+			;;
+		--without-fc)
+			CONFIG[FC]=n
+			CONFIG[FC_PATH]=
+			;;
+		--with-daos)
+			CONFIG[DAOS]=y
+			CONFIG[DAOS_DIR]=""
+			;;
+		--with-daos=*)
+			CONFIG[DAOS]=y
+			check_dir "$i"
+			CONFIG[DAOS_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-daos)
+			CONFIG[DAOS]=n
+			;;
+		--with-shared)
+			CONFIG[SHARED]=y
+			;;
+		--without-shared)
+			CONFIG[SHARED]=n
+			;;
+		--with-iscsi-initiator)
+			CONFIG[ISCSI_INITIATOR]=y
+			;;
+		--without-iscsi-initiator)
+			CONFIG[ISCSI_INITIATOR]=n
+			;;
+		--with-crypto)
+			CONFIG[CRYPTO]=y
+			;;
+		--without-crypto)
+			CONFIG[CRYPTO]=n
+			;;
+		--with-dpdk-uadk)
+			CONFIG[DPDK_UADK]=y
+			;;
+		--without-dpdk-uadk)
+			CONFIG[DPDK_UADK]=n
+			;;
+		--with-vhost)
+			CONFIG[VHOST]=y
+			;;
+		--without-vhost)
+			CONFIG[VHOST]=n
+			;;
+		--with-virtio)
+			CONFIG[VIRTIO]=y
+			;;
+		--without-virtio)
+			CONFIG[VIRTIO]=n
+			;;
+		--with-vfio-user)
+			CONFIG[VFIO_USER]=y
+			CONFIG[VFIO_USER_DIR]=""
+			;;
+		--with-vfio-user=*)
+			CONFIG[VFIO_USER]=y
+			check_dir "$i"
+			CONFIG[VFIO_USER_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-vfio-user)
+			CONFIG[VFIO_USER]=n
+			;;
+		--with-vbdev-compress)
+			CONFIG[VBDEV_COMPRESS]=y
+			;;
+		--without-vbdev-compress)
+			CONFIG[VBDEV_COMPRESS]=n
+			;;
+		--with-dpdk-compressdev)
+			CONFIG[DPDK_COMPRESSDEV]=y
+			;;
+		--without-dpdk-compressdev)
+			CONFIG[DPDK_COMPRESSDEV]=n
+			;;
+		--with-xnvme)
+			CONFIG[XNVME]=y
+			;;
+		--without-xnvme)
+			CONFIG[XNVME]=n
+			;;
+		--with-fio) ;&
 		--with-fio=*)
-			FIO_SOURCE_DIR="${i#*=}"
-			CONFIG_FIO_PLUGIN=y
+			if [[ ${i#*=} != "$i" ]]; then
+				CONFIG[FIO_SOURCE_DIR]=${i#*=}
+			fi
+			check_dir "--with-fio=${CONFIG[FIO_SOURCE_DIR]}"
+			CONFIG[FIO_SOURCE_DIR]=$(readlink -f "${CONFIG[FIO_SOURCE_DIR]}")
+			CONFIG[FIO_PLUGIN]=y
 			;;
 		--without-fio)
-			FIO_SOURCE_DIR=
-			CONFIG_FIO_PLUGIN=n
+			CONFIG[FIO_PLUGIN]=n
 			;;
 		--with-vtune=*)
-			VTUNE_SOURCE_DIR="${i#*=}"
-			CONFIG_VTUNE=y
+			check_dir "$i"
+			CONFIG[VTUNE_DIR]="${i#*=}"
+			CONFIG[VTUNE]=y
 			;;
 		--without-vtune)
-			VTUNE_SOURCE_DIR=
-			CONFIG_VTUNE=n
+			CONFIG[VTUNE_DIR]=
+			CONFIG[VTUNE]=n
+			;;
+		--with-ocf)
+			CONFIG[OCF]=y
+			CONFIG[OCF_PATH]=$(readlink -f "$rootdir/ocf")
+			;;
+		--with-ocf=*)
+			CONFIG[OCF]=y
+			CONFIG[OCF_PATH]=$(readlink -f ${i#*=})
+			;;
+		--without-ocf)
+			CONFIG[OCF]=n
+			CONFIG[OCF_PATH]=
+			;;
+		--with-uring=*)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-uring)
+			CONFIG[URING]=y
+			CONFIG[URING_ZNS]=y
+			CONFIG[URING_PATH]=
+			;;
+		--without-uring)
+			CONFIG[URING]=n
+			CONFIG[URING_PATH]=
+			;;
+		--without-uring-zns)
+			CONFIG[URING_ZNS]=n
+			;;
+		--with-openssl=*)
+			check_dir "$i"
+			CONFIG[OPENSSL_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-fuse)
+			CONFIG[FUSE]=y
+			;;
+		--without-fuse)
+			CONFIG[FUSE]=n
+			;;
+		--with-nvme-cuse)
+			CONFIG[NVME_CUSE]=y
+			;;
+		--without-nvme-cuse)
+			CONFIG[NVME_CUSE]=n
+			;;
+		--with-raid5f)
+			CONFIG[RAID5F]=y
+			;;
+		--without-raid5f)
+			CONFIG[RAID5F]=n
+			;;
+		--with-idxd)
+			CONFIG[IDXD]=y
+			CONFIG[IDXD_KERNEL]=n
+			;;
+		--without-idxd)
+			CONFIG[IDXD]=n
+			;;
+		--with-usdt)
+			CONFIG[USDT]=y
+			;;
+		--without-usdt)
+			CONFIG[USDT]=n
+			;;
+		--with-fuzzer)
+			echo "Must specify fuzzer library path with --with-fuzzer"
+			usage
+			exit 1
+			;;
+		--with-fuzzer=*)
+			CONFIG[FUZZER]=y
+			CONFIG[FUZZER_LIB]=$(readlink -f ${i#*=})
+			;;
+		--without-fuzzer)
+			CONFIG[FUZZER]=n
+			CONFIG[FUZZER_LIB]=
+			;;
+		--with-sma)
+			CONFIG[SMA]=y
+			;;
+		--without-sma)
+			CONFIG[SMA]=n
+			;;
+		--with-avahi)
+			CONFIG[AVAHI]=y
+			;;
+		--without-avahi)
+			CONFIG[AVAHI]=n
+			;;
+		--with-golang)
+			CONFIG[GOLANG]=y
+			;;
+		--without-golang)
+			CONFIG[GOLANG]=n
+			;;
+		--max-lcores='')
+			echo "Must specify max number of lcores for --max-lcores"
+			usage
+			exit 1
+			;;
+		--max-lcores=*)
+			CONFIG[MAX_LCORES]="${i#*=}"
+			CONFIG["MAX_LCORES"]=${CONFIG["MAX_LCORES"],,}
 			;;
 		--)
 			break
@@ -132,102 +698,713 @@ for i in "$@"; do
 			echo "Unrecognized option $i"
 			usage
 			exit 1
+			;;
 	esac
 done
 
-if [ -z "$CONFIG_ENV" ]; then
-	if [ -z "$CONFIG_DPDK_DIR" ]; then
-		rootdir=$(readlink -f $(dirname $0))
-		if [ ! -f "$rootdir"/dpdk/config/common_spdk ]; then
-			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
-			echo
-			echo "  git submodule update --init"
-			exit 1
-		fi
-		CONFIG_DPDK_DIR="$rootdir"/dpdk/build
-	fi
+if [[ $arch == x86_64* ]]; then
+	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS "-march=native")
+else
+	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
+fi
+BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
+BUILD_CMD+=("-fuse-ld=$LD_TYPE")
+if [[ -n "${CONFIG[OPENSSL_PATH]}" ]]; then
+	BUILD_CMD+=("-I${CONFIG[OPENSSL_PATH]}/include" "-L${CONFIG[OPENSSL_PATH]}")
 fi
 
-if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
-	if [ -z "$FIO_SOURCE_DIR" ]; then
-		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
+if [[ "${CONFIG[VFIO_USER]}" = "y" ]]; then
+	if ! echo -e '#include <json-c/json.h>' \
+		| "${BUILD_CMD[@]}" -E - 2> /dev/null; then
+		echo "ERROR: --with-vfio-user requires json-c-devel"
+		echo "Please install then re-run this script"
+		exit 1
+	fi
+	if ! echo -e '#include <cmocka.h>' \
+		| "${BUILD_CMD[@]}" -E - 2> /dev/null; then
+		echo "ERROR: --with-vfio-user requires libcmocka-devel"
+		echo "Please install then re-run this script"
 		exit 1
 	fi
 fi
 
-if [ "$CONFIG_VTUNE" = "y" ]; then
-	if [ -z "$VTUNE_SOURCE_DIR" ]; then
+# IDXD uses Intel specific instructions.
+if [[ "${CONFIG[IDXD]}" = "y" ]]; then
+	if [ $(uname -s) == "FreeBSD" ]; then
+		intel="hw.model: Intel"
+		cpu_vendor=$(sysctl -a | grep hw.model | cut -c 1-15)
+	else
+		intel="GenuineIntel"
+		cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo --max-count=1)
+	fi
+	if [[ "$cpu_vendor" != *"$intel"* ]]; then
+		echo "ERROR: IDXD cannot be used due to CPU incompatibility."
+		exit 1
+	fi
+	if [ -e /usr/include/accel-config/libaccel_config.h ]; then
+		CONFIG[IDXD_KERNEL]=y
+	fi
+
+fi
+
+if [ -z "${CONFIG[ENV]}" ]; then
+	CONFIG[ENV]=$rootdir/lib/env_dpdk
+	echo "Using default SPDK env in ${CONFIG[ENV]}"
+	if [[ -z "${CONFIG[DPDK_DIR]}" && "${CONFIG[DPDK_PKG_CONFIG]}" == n ]]; then
+		if [ ! -f "$rootdir"/dpdk/config/meson.build ]; then
+			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
+			echo
+			echo "  git submodule update --init"
+			exit 1
+		else
+			CONFIG[DPDK_DIR]="${rootdir}/dpdk/build"
+			# Default ipsec libs
+			if [[ "${CONFIG[CRYPTO]}" = "y" ]] && [[ $arch = x86_64* ]]; then
+				CONFIG[IPSEC_MB]=y
+				CONFIG[IPSEC_MB_DIR]="${rootdir}/intel-ipsec-mb/lib"
+			fi
+			echo "Using default DPDK in ${CONFIG[DPDK_DIR]}"
+		fi
+	fi
+else
+	if [[ -n "${CONFIG[DPDK_DIR]}" || "${CONFIG[DPDK_PKG_CONFIG]}" == y ]]; then
+		echo "--with-env and --with-dpdk are mutually exclusive."
+		exit 1
+	fi
+
+	if [ "${CONFIG[VHOST]}" = "y" ]; then
+		echo "Vhost is only supported when using the default DPDK environment. Disabling it."
+	fi
+	# Always disable vhost, but only print the error message if the user explicitly turned it on.
+	CONFIG[VHOST]="n"
+	if [ "${CONFIG[VIRTIO]}" = "y" ]; then
+		echo "Virtio is only supported when using the default DPDK environment. Disabling it."
+	fi
+	# Always disable virtio, but only print the error message if the user explicitly turned it on.
+	CONFIG[VIRTIO]="n"
+fi
+
+if [[ "${CONFIG[DPDK_PKG_CONFIG]}" == y ]]; then
+	if [[ "${CONFIG[SHARED]}" == n ]]; then
+		# dpdk-devel doesn't provide static libs
+		echo "Build against packaged DPDK requested, enabling shared libraries"
+		CONFIG[SHARED]=y
+	fi
+fi
+
+if [[ $sys_name == "Windows" ]]; then
+	if [ -z "${CONFIG[WPDK_DIR]}" ]; then
+		if [ ! -f "$rootdir"/wpdk/Makefile ]; then
+			echo "WPDK not found; please specify --with-wpdk=<path>. See https://wpdk.github.io."
+			exit 1
+		else
+			CONFIG[WPDK_DIR]="${rootdir}/wpdk/build"
+			echo "Using default WPDK in ${CONFIG[WPDK_DIR]}"
+		fi
+	fi
+else
+	if [ -n "${CONFIG[WPDK_DIR]}" ]; then
+		echo "ERROR: --with-wpdk is only supported for Windows"
+		exit 1
+	fi
+fi
+
+if [ "${CONFIG[VTUNE]}" = "y" ]; then
+	if [ -z "${CONFIG[VTUNE_DIR]}" ]; then
 		echo "When VTune is enabled, you must specify the VTune directory using --with-vtune=path"
 		exit 1
 	fi
 fi
 
-if [ "$CONFIG_ASAN" = "y" -a "$CONFIG_TSAN" = "y" ]; then
+if [[ "${CONFIG[ASAN]}" = "y" && "${CONFIG[TSAN]}" = "y" ]]; then
 	echo "ERROR: ASAN and TSAN cannot be enabled at the same time."
 	exit 1
 fi
 
-if [[ "$OSTYPE" == "FreeBSD"* ]]; then
-        # FreeBSD doesn't support all configurations
-        if [[ "$CONFIG_COVERAGE" == "y" ]]; then
-                echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
-                exit 1
-        fi
+if [[ "${CONFIG[FIO_PLUGIN]}" = "y" && "${CONFIG[EXAMPLES]}" = "n" ]]; then
+	echo "ERROR: --with-fio and --disable-examples are mutually exclusive."
+	exit 1
 fi
 
-echo -n "Creating CONFIG.local..."
-
-# Write the configuration file
-rm -f CONFIG.local
-if [ -n "$CONFIG_DEBUG" ]; then
-	echo "CONFIG_DEBUG?=$CONFIG_DEBUG" >> CONFIG.local
-fi
-if [ -n "$CONFIG_WERROR" ]; then
-	echo "CONFIG_WERROR?=$CONFIG_WERROR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_COVERAGE" ]; then
-	echo "CONFIG_COVERAGE?=$CONFIG_COVERAGE" >> CONFIG.local
-fi
-if [ -n "$CONFIG_LTO" ]; then
-	echo "CONFIG_LTO?=$CONFIG_LTO" >> CONFIG.local
-fi
-if [ -n "$CONFIG_ASAN" ]; then
-	echo "CONFIG_ASAN?=$CONFIG_ASAN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_UBSAN" ]; then
-	echo "CONFIG_UBSAN?=$CONFIG_UBSAN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_TSAN" ]; then
-	echo "CONFIG_TSAN?=$CONFIG_TSAN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_ENV" ]; then
-	echo "CONFIG_ENV?=$CONFIG_ENV" >> CONFIG.local
-fi
-if [ -n "$CONFIG_DPDK_DIR" ]; then
-	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_FIO_PLUGIN" ]; then
-	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
-fi
-if [ -n "$FIO_SOURCE_DIR" ]; then
-	echo "FIO_SOURCE_DIR?=$FIO_SOURCE_DIR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_RDMA" ]; then
-	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
-fi
-if [ -n "$CONFIG_RBD" ]; then
-	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VTUNE" ]; then
-	echo "CONFIG_VTUNE?=$CONFIG_VTUNE" >> CONFIG.local
-fi
-if [ -n "$VTUNE_SOURCE_DIR" ]; then
-	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
+if [[ $sys_name == "FreeBSD" ]]; then
+	# FreeBSD doesn't support all configurations
+	if [[ "${CONFIG[COVERAGE]}" == "y" ]]; then
+		echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
+		exit 1
+	fi
 fi
 
-python scripts/genconfig.py > config.h
+if [[ $sys_name == "Linux" ]]; then
+	if pkg-config libbsd; then
+		CONFIG[HAVE_LIBBSD]=y
+	fi
+fi
 
+if pkg-config libarchive; then
+	CONFIG[HAVE_LIBARCHIVE]=y
+fi
+
+if [[ $sys_name != "Linux" ]]; then
+	if [[ "${CONFIG[VHOST]}" == "y" ]]; then
+		echo "Vhost is only supported on Linux."
+		exit 1
+	fi
+	if [[ "${CONFIG[VIRTIO]}" == "y" ]]; then
+		echo "Virtio is only supported on Linux."
+		exit 1
+	fi
+fi
+
+if [ "${CONFIG[RDMA]}" = "y" ]; then
+	if [[ ! "${CONFIG[RDMA_PROV]}" == "verbs" ]] && [[ ! "${CONFIG[RDMA_PROV]}" == "mlx5_dv" ]]; then
+		echo "Invalid RDMA provider specified, must be \"verbs\" or \"mlx5_dv\""
+		exit 1
+	fi
+
+	if ! echo -e '#include <infiniband/verbs.h>\n#include <rdma/rdma_verbs.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -libverbs -lrdmacm - 2> /dev/null; then
+		echo "--with-rdma requires libverbs and librdmacm."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+
+	if echo -e '#include <infiniband/verbs.h>\n' \
+		'int main(void) { return !!IBV_WR_SEND_WITH_INV; }\n' \
+		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+		CONFIG[RDMA_SEND_WITH_INVAL]="y"
+	else
+		CONFIG[RDMA_SEND_WITH_INVAL]="n"
+		echo "
+*******************************************************************************
+WARNING: The Infiniband Verbs opcode Send With Invalidate is either not
+supported or is not functional with the current version of libibverbs installed
+on this system. Please upgrade to at least version 1.1.
+
+Beginning with Linux kernel 4.14, the kernel NVMe-oF initiator leverages Send
+With Invalidate RDMA operations to improve performance. Failing to use the
+Send With Invalidate operation on the NVMe-oF target side results in full
+functionality, but greatly reduced performance. The SPDK NVMe-oF target will
+be unable to leverage that operation using the currently installed version
+of libibverbs, so Linux kernel NVMe-oF initiators based on kernels greater
+than or equal to 4.14 will see significantly reduced performance.
+*******************************************************************************"
+	fi
+
+	if echo -e '#include <rdma/rdma_cma.h>\n' \
+		'int main(void) { return !!RDMA_OPTION_ID_ACK_TIMEOUT; }\n' \
+		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+		CONFIG[RDMA_SET_ACK_TIMEOUT]="y"
+	else
+		CONFIG[RDMA_SET_ACK_TIMEOUT]="n"
+		echo "RDMA_OPTION_ID_ACK_TIMEOUT is not supported"
+	fi
+
+	if echo -e '#include <rdma/rdma_cma.h>\n' \
+		'int main(void) { return !!RDMA_OPTION_ID_TOS; }\n' \
+		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+		CONFIG[RDMA_SET_TOS]="y"
+	else
+		CONFIG[RDMA_SET_TOS]="n"
+		echo "RDMA_OPTION_ID_TOS is not supported"
+	fi
+
+	if [ "${CONFIG[RDMA_PROV]}" == "mlx5_dv" ]; then
+		MLX5_DV_BUILD_BUILD_CMD="
+		#include <infiniband/mlx5dv.h>\n
+		#include <rdma/rdma_cma.h>\n
+		int main(void) { return rdma_establish(NULL) ||\n
+		!!IBV_QP_INIT_ATTR_SEND_OPS_FLAGS || !!MLX5_OPCODE_RDMA_WRITE"
+		if [ "${CONFIG[CRYPTO]}" = "y" ]; then
+			MLX5_DV_BUILD_BUILD_CMD+="|| !!MLX5DV_CRYPTO_ENGINES_CAP_AES_XTS_SINGLE_BLOCK"
+		fi
+		MLX5_DV_BUILD_BUILD_CMD+=";}"
+		if ! echo -e $MLX5_DV_BUILD_BUILD_CMD | "${BUILD_CMD[@]}" -lmlx5 -I${rootdir}/include -c -; then
+			echo "mlx5_dv provider is not supported"
+			exit 1
+		fi
+	fi
+
+	echo "Using '${CONFIG[RDMA_PROV]}' RDMA provider"
+fi
+
+if [[ "${CONFIG[FC]}" = "y" ]]; then
+	if [[ -n "${CONFIG[FC_PATH]}" ]]; then
+		check_dir "${CONFIG[FC_PATH]}"
+	fi
+fi
+
+function dpdk_version() {
+	# Check DPDK version to determine if mlx5_pci driver is supported
+	local dpdk_ver="none"
+	if [[ "${CONFIG[DPDK_DIR]}" == "$rootdir/dpdk/build" ]]; then
+		# DPDK_DIR points at our submodule so ./build may not exist yet. Use
+		# absolute path to lookup the version.
+		dpdk_ver=$(< "$rootdir/dpdk/VERSION")
+	elif [[ -f "${CONFIG[DPDK_DIR]}"/../VERSION ]]; then
+		dpdk_ver=$(< "${CONFIG[DPDK_DIR]}"/../VERSION)
+	fi
+	echo $dpdk_ver
+}
+
+function mlx5_build() {
+	# Check if libmlx5 exists to enable mlx5_pci compress/crypto PMD
+	if ! echo -e '#include <spdk/stdinc.h>\n' \
+		'#include <infiniband/mlx5dv.h>\n' \
+		'#include <infiniband/verbs.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lmlx5 -libverbs -I${rootdir}/include -c - 2> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+if [[ "${CONFIG[VBDEV_COMPRESS]}" = "y" ]]; then
+	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lpmem - 2> /dev/null; then
+		echo "--with-vbdev-compress requires libpmem."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+	# Try to enable mlx5 compress
+	CONFIG[VBDEV_COMPRESS_MLX5]="y"
+
+	# Check if libmlx5 exists to enable mlx5_pci compress PMD
+	if ! mlx5_build; then
+		echo "libmlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
+		CONFIG[VBDEV_COMPRESS_MLX5]="n"
+	else
+		if [[ "${CONFIG[DPDK_PKG_CONFIG]}" = "y" ]]; then
+			# Check if librte_compress_mlx5 exists in DPDK package
+			if [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
+				echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
+			fi
+		else
+			# Check DPDK version to determine if mlx5_pci driver is supported
+			dpdk_ver=$(dpdk_version)
+			if [[ $dpdk_ver = "none" ]]; then
+				echo "Cannot get DPDK version, so disabling DPDK mlx5_pci compress PMD"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
+			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.02.0; then
+				# mlx5_pci for compress is supported by DPDK >- 21.02.0
+				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci compress PMD"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
+			elif [[ -n ${CONFIG[DPDK_LIB_DIR]} ]] && [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
+				# This is only checked when --with-dpdk or --with-dpdk=* is used
+				echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
+			fi
+		fi
+	fi
+fi
+
+if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+	# Try to enable mlx5 crypto
+	CONFIG[CRYPTO_MLX5]="y"
+
+	# Check if libmlx5 exists to enable mlx5_pci compress PMD
+	if ! mlx5_build; then
+		echo "libmlx5 is not found, so disabling DPDK mlx5_pci crypto PMD"
+		CONFIG[CRYPTO_MLX5]="n"
+	else
+		if [[ "${CONFIG[DPDK_PKG_CONFIG]}" = "y" ]]; then
+			# Check if librte_crypto_mlx5 exists in DPDK package
+			if [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_crypto_mlx5.so ]; then
+				echo "librte_crypto_mlx5 is not found, so disabling DPDK mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			fi
+		else
+			# Check DPDK version to determine if mlx5_pci driver is supported
+			dpdk_ver=$(dpdk_version)
+			if [[ $dpdk_ver = "none" ]]; then
+				echo "Cannot get DPDK version, so disabling DPDK mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.11.0; then
+				# mlx5_pci for crypto is supported by DPDK >- 21.11.0
+				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			elif [[ -n ${CONFIG[DPDK_LIB_DIR]} ]] && [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_crypto_mlx5.so ]; then
+				# This is only checked when --with-dpdk or --with-dpdk=* is used
+				echo "librte_crypto_mlx5 is not found, so disabling DPDK mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			fi
+		fi
+	fi
+fi
+
+if [[ "${CONFIG[NVME_CUSE]}" = "y" ]]; then
+	if ! echo -e '#define FUSE_USE_VERSION 31\n#include <fuse3/cuse_lowlevel.h>\n#include <fuse3/fuse_lowlevel.h>\n#include <fuse3/fuse_opt.h>\nint main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lfuse3 -D_FILE_OFFSET_BITS=64 - 2> /dev/null; then
+		echo "--with-nvme-cuse requires libfuse3."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[RBD]}" = "y" ]]; then
+	if ! echo -e '#include <rbd/librbd.h>\n#include <rados/librados.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lrados -lrbd - 2> /dev/null; then
+		echo "--with-rbd requires librados and librbd."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[UBLK]}" = "y" ]]; then
+	if ! echo -e '#include <linux/ublk_cmd.h>\n#include <liburing.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -luring - 2> /dev/null; then
+		echo "--with-ublk requires liburing and ublk_drv."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[DPDK_UADK]}" = "y" ]]; then
+	if ! pkg-config --exists libwd; then
+		echo "--with-dpdk-uadk requires uadk library."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[ISCSI_INITIATOR]}" = "y" ]]; then
+	# Fedora installs libiscsi to /usr/lib64/iscsi for some reason.
+	if ! echo -e '#include <iscsi/iscsi.h>\n#include <iscsi/scsi-lowlevel.h>\n' \
+		'#if LIBISCSI_API_VERSION < 20150621\n' \
+		'#error\n' \
+		'#endif\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -L/usr/lib64/iscsi -liscsi - 2> /dev/null; then
+		echo "--with-iscsi-initiator requires libiscsi with"
+		echo "LIBISCSI_API_VERSION >= 20150621."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[DAOS]}" = "y" ]]; then
+	daos_build_cmd=("${BUILD_CMD[@]}")
+	if [[ -n "${CONFIG[DAOS_DIR]}" ]]; then
+		daos_build_cmd+=(-I"${CONFIG[DAOS_DIR]}"/include -L"${CONFIG[DAOS_DIR]}"/lib64)
+	fi
+	if ! echo -e '#include <daos.h>\n#include <daos_fs.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${daos_build_cmd[@]}" -lgurt -ldaos -ldaos_common -ldfs - 2> /dev/null; then
+		echo "--with-daos requires libdaos, libdaos_common, libdfs and libgurt"
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[ASAN]}" = "y" ]]; then
+	if ! echo -e 'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -fsanitize=address - 2> /dev/null; then
+		echo "--enable-asan requires libasan."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[UBSAN]}" = "y" ]]; then
+	if ! echo -e 'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -fsanitize=undefined - 2> /dev/null; then
+		echo "--enable-ubsan requires libubsan."
+		echo "Please install then re-run this script."
+		echo "If installed, please check that the GCC version is at least 6.4"
+		echo "and synchronize CC accordingly."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[TSAN]}" = "y" ]]; then
+	if ! echo -e 'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -fsanitize=thread - 2> /dev/null; then
+		echo "--enable-tsan requires libtsan."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if echo -e '#include <stdlib.h>\nint main(void) { arc4random(); return 0; }\n' \
+	| "${BUILD_CMD[@]}" - 2> /dev/null; then
+	CONFIG[HAVE_ARC4RANDOM]="y"
+fi
+
+if echo -e '#include <uuid/uuid.h>\nint main(void) { uuid_generate_sha1(NULL, NULL, NULL, 0); return 0; }\n' \
+	| "${BUILD_CMD[@]}" - -luuid 2> /dev/null; then
+	CONFIG[HAVE_UUID_GENERATE_SHA1]="y"
+fi
+
+if echo -e '#include <execinfo.h>' | "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+	CONFIG[HAVE_EXECINFO_H]=y
+fi
+
+if echo -e '#include <keyutils.h>\nint main(void) { request_key(0, 0, 0, -1); return 0; }' \
+	| "${BUILD_CMD[@]}" - -lkeyutils 2> /dev/null; then
+	CONFIG[HAVE_KEYUTILS]=y
+fi
+
+if echo -e '#include <openssl/evp.h>\nint main(void) { EVP_MAC *m = EVP_MAC_fetch(0, 0, 0); return 0; }' \
+	| "${BUILD_CMD[@]}" - -lcrypto 2> /dev/null; then
+	CONFIG[HAVE_EVP_MAC]=y
+fi
+
+if [[ "${CONFIG[OCF]}" = "y" ]]; then
+	# If OCF_PATH is a file, assume it is a library and use it to compile with
+	if [ -f ${CONFIG[OCF_PATH]} ]; then
+		CONFIG[CUSTOMOCF]=y
+	else
+		CONFIG[CUSTOMOCF]=n
+	fi
+fi
+
+if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
+	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
+	exit 1
+elif [[ "${CONFIG[PGO_CAPTURE]}" = "y" || "${CONFI[PGO_USE]}" = "y" ]]; then
+	if [[ -z "${CONFIG[PGO_DIR]}" ]]; then
+		CONFIG[PGO_DIR]=$(realpath $rootdir/build/pgo)
+	fi
+fi
+
+if [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
+	if [[ "$CC_TYPE" = "clang" ]]; then
+		# For clang we need to run an extra step on gathered profiling data.
+		echo "Generating suitable profile data"
+		llvm-profdata merge -output=${CONFIG[PGO_DIR]}/default.profdata ${CONFIG[PGO_DIR]}
+	fi
+fi
+
+if [[ "${CONFIG[URING]}" = "y" || "${CONFIG[XNVME]}" = "y" ]]; then
+	if [[ -n "${CONFIG[URING_PATH]}" ]]; then
+		check_dir "${CONFIG[URING_PATH]}"
+	elif ! echo -e '#include <liburing.h>\nint main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -luring - 2> /dev/null; then
+		echo "--with-uring requires liburing."
+		echo "Please build and install then re-run this script."
+		exit 1
+	fi
+	# Support for Zoned devices is enabled by default for Uring bdev. Check appropriate support in kernel.
+	if [[ "${CONFIG[URING_ZNS]}" = "y" ]]; then
+		if ! echo -e '#include<linux/blkzoned.h>\nint main(void) { return BLK_ZONE_REP_CAPACITY; }\n' \
+			| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+			echo "Disabling Zoned NS support in Uring! Requires blkzoned.h from kernel >= linux-5.9."
+			CONFIG[URING_ZNS]=n
+		fi
+	fi
+fi
+
+if [[ "${CONFIG[FUSE]}" = "y" ]]; then
+	if [[ ! -d /usr/include/fuse3 ]] && [[ ! -d /usr/local/include/fuse3 ]]; then
+		echo "--with-fuse requires libfuse3."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [ "${CONFIG[CET]}" = "y" ]; then
+	if ! echo -e 'int main(void) { return 0; }\n' | "${BUILD_CMD[@]}" -fcf-protection - 2> /dev/null; then
+		echo "--enable-cet requires compiler/linker that supports CET."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[FUZZER]}" = "y" && "$CC_TYPE" != "clang" ]]; then
+	echo "--with-fuzzer requires setting CC and CXX to clang."
+	exit 1
+fi
+
+if [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
+	CONFIG[ISAL]=y
+	# make sure the submodule is initialized
+	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
+		echo "ISA-L is required but was not found, please init the submodule with:"
+		echo "  git submodule update --init"
+		echo "and then re-run this script."
+		exit 1
+	fi
+	# for x86 only, check the nasm version for ISA-L and IPSEC
+	if [[ $arch == x86_64* ]]; then
+		ver=$(nasm -v 2> /dev/null | awk '{print $3}' | awk -Fr '{print $1}')
+		if lt "$ver" 2.14; then
+			CONFIG[ISAL]=n
+			# IPSEC has nasm requirement and DPDK crypto relies on IPSEC
+			CONFIG[IPSEC_MB]=n
+			echo "WARNING: ISA-L & DPDK crypto cannot be used as nasm ver must be 2.14 or newer."
+		fi
+	fi
+	# check gas version on aarch64
+	if [[ $arch == aarch64* ]]; then
+		ver=$(as --version 2> /dev/null | awk '/GNU assembler/{print $NF}')
+		if lt "$ver" 2.24; then
+			# ISA-L, compression & crypto require gas version 2.24 or newer.
+			CONFIG[ISAL]=n
+			echo "Notice: ISA-L, compression & crypto require GAS version 2.24 or newer. Turning off default ISA-L and crypto features."
+		elif lt "$ver" 2.34; then
+			#For gas v2.24~v2.34, sve2 instructions are not supported. To workaround it, sve2 optimization should be disabled
+			ISAL_CRYPTO_OPTS+=("--disable-sve2")
+		fi
+	fi
+else
+	# for PPC
+	CONFIG[ISAL]=n
+	echo "WARNING: ISA-L cannot be used due to architecture incompatibility."
+fi
+
+# now either configure ISA-L or disable unavailable features
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	cd $rootdir/isa-l
+	ISAL_LOG=$rootdir/.spdk-isal.log
+	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
+		ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
+	else
+		ISAL_OPTS=()
+	fi
+	if [[ "${CONFIG[SHARED]}" = "y" ]]; then
+		ISAL_OPTS+=("--enable-shared=yes")
+	else
+		ISAL_OPTS+=("--enable-shared=no")
+	fi
+	ISAL_OPTS+=("--prefix=${CONFIG[PREFIX]}")
+	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
+	./autogen.sh &> $ISAL_LOG
+	./configure CFLAGS="-fPIC -g -O2 -fuse-ld=$LD_TYPE -Wno-unused-command-line-argument" "${ISAL_OPTS[@]}" --enable-shared=no >> $ISAL_LOG 2>&1
+	echo "done."
+	cd $rootdir
+else
+	echo "Without ISA-L, there is no software support for crypto or compression,"
+	echo "so these features will be disabled."
+	CONFIG[CRYPTO]=n
+	CONFIG[VBDEV_COMPRESS]=n
+	CONFIG[DPDK_COMPRESSDEV]=n
+fi
+
+# ISA-L-crypto complements ISA-L functionality, it is only enabled together with ISA-L
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	if [ ! -f "$rootdir"/isa-l-crypto/autogen.sh ]; then
+		echo "ISA-L-crypto is required but was not found, please init the submodule with:"
+		echo "  git submodule update --init"
+		echo "and then re-run this script."
+		exit 1
+	fi
+
+	cd $rootdir/isa-l-crypto
+	ISAL_CRYPTO_LOG=$rootdir/.spdk-isal-crypto.log
+	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
+		ISAL_CRYPTO_OPTS+=("--host=${CONFIG[CROSS_PREFIX]}")
+	fi
+	if [[ "${CONFIG[SHARED]}" = "y" ]]; then
+		ISAL_CRYPTO_OPTS+=("--enable-shared=yes")
+	else
+		ISAL_CRYPTO_OPTS+=("--enable-shared=no")
+	fi
+	ISAL_CRYPTO_OPTS+=("--prefix=${CONFIG[PREFIX]}")
+	echo -n "Configuring ISA-L-crypto (logfile: $ISAL_CRYPTO_LOG)..."
+	./autogen.sh &> $ISAL_CRYPTO_LOG
+	./configure CFLAGS="-fPIC -g -O2 -fuse-ld=$LD_TYPE -Wno-unused-command-line-argument" "${ISAL_CRYPTO_OPTS[@]}" >> $ISAL_CRYPTO_LOG 2>&1
+	echo "done."
+	cd $rootdir
+	CONFIG[ISAL_CRYPTO]=y
+else
+	CONFIG[ISAL_CRYPTO]=n
+fi
+
+if [[ "${CONFIG[SMA]}" = "y" ]]; then
+	if ! python3 -c 'import grpc; import grpc_tools' 2> /dev/null; then
+		echo "--with-sma requires grpcio and grpcio-tools python packages."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[AVAHI]}" = "y" ]]; then
+	if ! echo -e '#include <avahi-client/client.h>\n#include <avahi-common/malloc.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lavahi-client -lavahi-common - 2> /dev/null; then
+		echo "--with-avahi requires libavahi-client and libavahi-common."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[GOLANG]}" = "y" ]]; then
+	if ! go version 2> /dev/null; then
+		echo "--with-golang requires Go installation."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ -n ${CONFIG[MAX_LCORES]} ]]; then
+	if [[ ! ${CONFIG[MAX_LCORES]} =~ ^([1-9][0-9]*|detect)$ ]] || ((CONFIG[MAX_LCORES] > 1024)); then
+		echo "ERROR: Max number of lcores must be a decimal number in range [1..1024] or 'detect' (given: ${CONFIG[MAX_LCORES]})"
+		exit 1
+	fi
+fi
+
+# For ARM Neoverse-N1 platform, debug build needs gcc version newer than 8.4
+if [[ "${CONFIG[DEBUG]}" = "y" && $arch = aarch64* && "$CC_TYPE" = "gcc" ]]; then
+	GCC_VERSION=$($CC -dumpfullversion)
+	PART_NUM=$(grep -i -m 1 "CPU part" /proc/cpuinfo | awk '{print $4}')
+
+	if [[ "$(printf '%s\n' "8.4.0" "$GCC_VERSION" | sort -V | head -n1)" != "8.4.0" ]]; then
+		if [[ $PART_NUM = 0xd0c ]]; then
+			echo "WARNING: For ARM Neoverse-N1 platform, debug build needs GCC version newer than 8.4."
+			echo "         Will work around this by using armv8.2-a+crypto as target architecture for now."
+			CONFIG[ARCH]=armv8.2-a+crypto
+		elif [[ $PART_NUM = 0x0b2 ]]; then
+			echo "WARNING: For ARM octeontx2 platform, debug build needs GCC version newer than 8.4."
+			echo "         Will work around this by using armv8.2-a+crypto as target architecture for now."
+			CONFIG[ARCH]=armv8.2-a+crypto
+		fi
+	fi
+fi
+
+# We are now ready to generate final configuration. But first do sanity
+# check to see if all keys in CONFIG array have its reflection in CONFIG file.
+if (($(grep -cE "^\s*CONFIG_[[:alnum:]_]+=" "$rootdir/CONFIG") != ${#CONFIG[@]})); then
+	echo ""
+	echo "BUG: Some configuration options are not present in CONFIG file. Please update this file."
+	echo "Missing options in CONFIG (+) file and in current config (-): "
+	diff -u --label "CONFIG file" --label "CONFIG[@]" \
+		<(sed -r -e '/^[[:space:]]*$/d; /^[[:space:]]*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
+		<(printf "CONFIG_%s\n" "${!CONFIG[@]}" | sort)
+	exit 1
+fi
+
+echo -n "Creating mk/config.mk..."
+cp -f $rootdir/CONFIG $rootdir/mk/config.mk
+ARGS=$(echo "$@" | sed 's/ /\\ /g')
+sed -i.bak -r "s#__CONFIGURE_OPTIONS__#${ARGS}#g" $rootdir/mk/config.mk
+for key in "${!CONFIG[@]}"; do
+	sed -i.bak -r "s#[[:space:]]*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
+done
+# On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
+rm -f $rootdir/mk/config.mk.bak
 echo "done."
-echo "Type 'make' to build."
+
+# Environment variables
+echo -n "Creating mk/cc.flags.mk..."
+rm -f $rootdir/mk/cc.flags.mk
+[ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" > $rootdir/mk/cc.flags.mk
+[ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> $rootdir/mk/cc.flags.mk
+[ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> $rootdir/mk/cc.flags.mk
+[ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> $rootdir/mk/cc.flags.mk
+echo "done."
+
+# Create .sh with build config for easy sourcing|lookup during the tests.
+for conf in "${!CONFIG[@]}"; do
+	echo "CONFIG_$conf=${CONFIG[$conf]}"
+done > "$rootdir/test/common/build_config.sh"
+
+if [[ $sys_name == "FreeBSD" ]]; then
+	echo "Type 'gmake' to build."
+else
+	echo "Type 'make' to build."
+fi
 
 exit 0

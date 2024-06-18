@@ -1,0 +1,11 @@
+{
+	global:
+
+    spdk_mlx5_crypto_devs_get;
+    spdk_mlx5_crypto_devs_release;
+    spdk_mlx5_crypto_keytag_create;
+    spdk_mlx5_crypto_keytag_destroy;
+    spdk_mlx5_crypto_set_attr;
+
+	local: *;
+};

@@ -1,41 +1,14 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
-#include "json_write.c"
+#include "json/json_write.c"
+#include "json/json_parse.c"
 
 #include "spdk/util.h"
 
@@ -61,15 +34,24 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	memset(g_buf, 0, sizeof(g_buf)); \
 	g_write_pos = g_buf; \
 	w = spdk_json_write_begin(write_cb, NULL, 0); \
-	CU_ASSERT_FATAL(w != NULL)
+	SPDK_CU_ASSERT_FATAL(w != NULL)
 
 #define END(json) \
 	CU_ASSERT(spdk_json_write_end(w) == 0); \
 	CU_ASSERT(g_write_pos - g_buf == sizeof(json) - 1); \
 	CU_ASSERT(memcmp(json, g_buf, sizeof(json) - 1) == 0)
 
+#define END_SIZE(val, size) \
+	CU_ASSERT(spdk_json_write_end(w) == 0); \
+	CU_ASSERT(g_write_pos - g_buf == size); \
+	CU_ASSERT(memcmp(val, g_buf, size) == 0)
+
 #define END_NOCMP() \
 	CU_ASSERT(spdk_json_write_end(w) == 0)
+
+#define END_SIZE_NOCMP(size) \
+	CU_ASSERT(spdk_json_write_end(w) == 0); \
+	CU_ASSERT(g_write_pos - g_buf == size)
 
 #define END_FAIL() \
 	CU_ASSERT(spdk_json_write_end(w) < 0)
@@ -86,6 +68,18 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define STR_FAIL(in) \
 	BEGIN(); VAL_STRING_FAIL(in); END_FAIL()
 
+#define VAL_STRING_UTF16LE(str) \
+	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) == 0)
+
+#define VAL_STRING_UTF16LE_FAIL(str) \
+	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) < 0)
+
+#define STR_UTF16LE_PASS(in, out) \
+	BEGIN(); VAL_STRING_UTF16LE(in); END("\"" out "\"")
+
+#define STR_UTF16LE_FAIL(in) \
+	BEGIN(); VAL_STRING_UTF16LE_FAIL(in); END_FAIL()
+
 #define VAL_NAME(name) \
 	CU_ASSERT(spdk_json_write_name_raw(w, name, sizeof(name) - 1) == 0)
 
@@ -95,6 +89,18 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 
 #define VAL_INT32(i) CU_ASSERT(spdk_json_write_int32(w, i) == 0);
 #define VAL_UINT32(u) CU_ASSERT(spdk_json_write_uint32(w, u) == 0);
+
+#define VAL_INT64(i) CU_ASSERT(spdk_json_write_int64(w, i) == 0);
+#define VAL_UINT64(u) CU_ASSERT(spdk_json_write_uint64(w, u) == 0);
+
+#define VAL_UINT128(low, high) \
+	CU_ASSERT(spdk_json_write_uint128(w, low, high) == 0);
+#define VAL_NAME_UINT128(name, low, high) \
+	CU_ASSERT(spdk_json_write_named_uint128(w, name, low, high) == 0);
+
+#define VAL_DOUBLE(d) CU_ASSERT(spdk_json_write_double(w, d) == 0);
+
+#define VAL_UUID(u) CU_ASSERT(spdk_json_write_uuid(w, u) == 0)
 
 #define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0)
 #define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0)
@@ -249,6 +255,37 @@ test_write_string_escapes(void)
 }
 
 static void
+test_write_string_utf16le(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	/* All characters in BMP */
+	STR_UTF16LE_PASS(((uint8_t[]) {
+		'H', 0, 'e', 0, 'l', 0, 'l', 0, 'o', 0, 0x15, 0xFE, 0, 0
+	}), "Hello\\uFE15");
+
+	/* Surrogate pair */
+	STR_UTF16LE_PASS(((uint8_t[]) {
+		'H', 0, 'i', 0,  0x34, 0xD8, 0x1E, 0xDD, '!', 0, 0, 0
+	}), "Hi\\uD834\\uDD1E!");
+
+	/* Valid high surrogate, but no low surrogate */
+	STR_UTF16LE_FAIL(((uint8_t[]) {
+		0x00, 0xD8, 0, 0 /* U+D800 */
+	}));
+
+	/* Invalid leading low surrogate */
+	STR_UTF16LE_FAIL(((uint8_t[]) {
+		0x00, 0xDC, 0x00, 0xDC, 0, 0 /* U+DC00 U+DC00 */
+	}));
+
+	/* Valid high surrogate followed by another high surrogate (invalid) */
+	STR_UTF16LE_FAIL(((uint8_t[]) {
+		0x00, 0xD8, 0x00, 0xD8, 0, 0 /* U+D800 U+D800 */
+	}));
+}
+
+static void
 test_write_number_int32(void)
 {
 	struct spdk_json_write_ctx *w;
@@ -302,6 +339,233 @@ test_write_number_uint32(void)
 	BEGIN();
 	VAL_UINT32(4294967295);
 	END("4294967295");
+}
+
+static int
+test_generate_string_uint128(char *buf, int buf_size, uint64_t low, uint64_t high)
+{
+	char tmp_buf[256] = {0};
+	unsigned __int128 total;
+	uint64_t seg;
+	int count = 0;
+
+	memset(buf, 0, buf_size);
+	total = ((unsigned __int128)high << 64) + (unsigned __int128)low;
+	while (total) {
+		/* Use the different calculation to get the 128bits decimal value in UT */
+		seg = total % 1000000000000000;
+		total = total / 1000000000000000;
+		if (total) {
+			snprintf(tmp_buf, buf_size, "%015" PRIu64 "%s", seg, buf);
+		} else {
+			snprintf(tmp_buf, buf_size, "%" PRIu64 "%s", seg, buf);
+		}
+
+		count = snprintf(buf, buf_size, "%s", tmp_buf);
+	}
+
+	return count;
+}
+
+static int
+test_generate_string_name_uint128(char *name, char *buf, int buf_size, uint64_t low, uint64_t high)
+{
+	char tmp_buf[256] = {0};
+	int count = test_generate_string_uint128(buf, buf_size, low, high);
+
+	memcpy(tmp_buf, buf, buf_size);
+	count = snprintf(buf, 256, "\"%s\":%s", name, tmp_buf);
+
+	return count;
+}
+
+static void
+test_write_number_uint128(void)
+{
+	struct spdk_json_write_ctx *w;
+	char buf[256] = {0};
+	int used_count = 0;
+
+	BEGIN();
+	VAL_UINT128(0, 0);
+	END("0");
+
+	BEGIN();
+	VAL_UINT128(1, 0);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 1, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(123, 0);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 123, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(2147483647, 0);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 2147483647, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(0, 1);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 0, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(4294967295, 1);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 4294967295, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(2147483647, 4294967295);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 2147483647, 4294967295);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(4294967295, 4294967295);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 4294967295, 4294967295);
+	END_SIZE(buf, used_count);
+}
+
+static void
+test_write_string_number_uint128(void)
+{
+	struct spdk_json_write_ctx *w;
+	char buf[256] = {0};
+	int used_count = 0;
+
+	BEGIN();
+	VAL_NAME_UINT128("case1", 0, 0);
+	END("\"case1\":0");
+
+	BEGIN();
+	VAL_NAME_UINT128("case2", 1, 0);
+	used_count = test_generate_string_name_uint128("case2", buf, sizeof(buf), 1, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case3", 123, 0);
+	used_count = test_generate_string_name_uint128("case3", buf, sizeof(buf), 123, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case4", 2147483647, 0);
+	used_count = test_generate_string_name_uint128("case4", buf, sizeof(buf), 2147483647, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case5", 0, 1);
+	used_count = test_generate_string_name_uint128("case5", buf, sizeof(buf), 0, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case6", 4294967295, 1);
+	used_count = test_generate_string_name_uint128("case6", buf, sizeof(buf), 4294967295, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case7", 2147483647, 4294967295);
+	used_count = test_generate_string_name_uint128("case7", buf, sizeof(buf), 2147483647, 4294967295);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case8", 4294967295, 4294967295);
+	used_count = test_generate_string_name_uint128("case8", buf, sizeof(buf), 4294967295, 4294967295);
+	END_SIZE(buf, used_count);
+}
+
+static void
+test_write_number_int64(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_INT64(0);
+	END("0");
+
+	BEGIN();
+	VAL_INT64(1);
+	END("1");
+
+	BEGIN();
+	VAL_INT64(123);
+	END("123");
+
+	BEGIN();
+	VAL_INT64(-123);
+	END("-123");
+
+	BEGIN();
+	VAL_INT64(INT64_MAX);
+	END("9223372036854775807");
+
+	BEGIN();
+	VAL_INT64(INT64_MIN);
+	END("-9223372036854775808");
+}
+
+static void
+test_write_number_uint64(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_UINT64(0);
+	END("0");
+
+	BEGIN();
+	VAL_UINT64(1);
+	END("1");
+
+	BEGIN();
+	VAL_UINT64(123);
+	END("123");
+
+	BEGIN();
+	VAL_UINT64(INT64_MAX);
+	END("9223372036854775807");
+
+	BEGIN();
+	VAL_UINT64(UINT64_MAX);
+	END("18446744073709551615");
+}
+
+static void
+test_write_number_double(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_DOUBLE(0);
+	END_SIZE("0.00000000000000000000e+00", 26);
+
+	BEGIN();
+	VAL_DOUBLE(1.2);
+	END_SIZE("1.19999999999999995559e+00", 26);
+
+
+	BEGIN();
+	VAL_DOUBLE(1234.5678);
+	END_SIZE("1.23456780000000003383e+03", 26);
+
+	BEGIN();
+	VAL_DOUBLE(-1234.5678);
+	END_SIZE("-1.23456780000000003383e+03", 27);
+}
+
+static void
+test_write_uuid(void)
+{
+#define UT_UUID "e524acae-8c26-43e4-882a-461b8690583b"
+	struct spdk_json_write_ctx *w;
+	struct spdk_uuid uuid;
+	int rc;
+
+	rc = spdk_uuid_parse(&uuid, UT_UUID);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	BEGIN();
+	VAL_UUID(&uuid);
+	END("\"" UT_UUID "\"");
 }
 
 static void
@@ -599,40 +863,36 @@ test_write_val(void)
 	END("{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}");
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_initialize_registry();
 
 	suite = CU_add_suite("json", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "write_literal", test_write_literal) == NULL ||
-		CU_add_test(suite, "write_string_simple", test_write_string_simple) == NULL ||
-		CU_add_test(suite, "write_string_escapes", test_write_string_escapes) == NULL ||
-		CU_add_test(suite, "write_number_int32", test_write_number_int32) == NULL ||
-		CU_add_test(suite, "write_number_uint32", test_write_number_uint32) == NULL ||
-		CU_add_test(suite, "write_array", test_write_array) == NULL ||
-		CU_add_test(suite, "write_object", test_write_object) == NULL ||
-		CU_add_test(suite, "write_nesting", test_write_nesting) == NULL ||
-		CU_add_test(suite, "write_val", test_write_val) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_ADD_TEST(suite, test_write_literal);
+	CU_ADD_TEST(suite, test_write_string_simple);
+	CU_ADD_TEST(suite, test_write_string_escapes);
+	CU_ADD_TEST(suite, test_write_string_utf16le);
+	CU_ADD_TEST(suite, test_write_number_int32);
+	CU_ADD_TEST(suite, test_write_number_uint32);
+	CU_ADD_TEST(suite, test_write_number_uint128);
+	CU_ADD_TEST(suite, test_write_string_number_uint128);
+	CU_ADD_TEST(suite, test_write_number_int64);
+	CU_ADD_TEST(suite, test_write_number_uint64);
+	CU_ADD_TEST(suite, test_write_number_double);
+	CU_ADD_TEST(suite, test_write_uuid);
+	CU_ADD_TEST(suite, test_write_array);
+	CU_ADD_TEST(suite, test_write_object);
+	CU_ADD_TEST(suite, test_write_nesting);
+	CU_ADD_TEST(suite, test_write_val);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
 
-	CU_basic_run_tests();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	return num_failures;

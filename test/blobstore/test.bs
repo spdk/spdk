@@ -1,0 +1,12 @@
+-i
+-l bdevs
+-n 1
+-p $B0
+-n 1
+-m $B1 test.pattern
+-d $B1 test.pattern.blob
+-x $B1 key val
+-s bs
+-s $B1
+-r $B1 key
+-s bs

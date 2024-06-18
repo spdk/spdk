@@ -1,0 +1,41 @@
+{
+	global:
+
+	# Public functions
+	spdk_app_opts_init;
+	spdk_app_start;
+	spdk_app_fini;
+	spdk_app_start_shutdown;
+	spdk_app_stop;
+	spdk_app_get_shm_id;
+	spdk_app_parse_core_mask;
+	spdk_app_get_core_mask;
+	spdk_app_parse_args;
+	spdk_app_usage;
+	spdk_event_allocate;
+	spdk_event_call;
+	spdk_framework_enable_context_switch_monitor;
+	spdk_framework_context_switch_monitor_enabled;
+
+	# Public scheduler functions
+	spdk_scheduler_set;
+	spdk_scheduler_get;
+	spdk_scheduler_register;
+	spdk_scheduler_set_period;
+	spdk_scheduler_get_period;
+	spdk_scheduler_get_scheduling_lcore;
+	spdk_governor_set;
+	spdk_governor_get;
+	spdk_governor_register;
+
+	# Functions used by other SPDK libraries
+	spdk_reactors_init;
+	spdk_reactors_fini;
+	spdk_reactors_start;
+	spdk_reactors_stop;
+	spdk_reactor_get;
+	spdk_for_each_reactor;
+	spdk_reactor_set_interrupt_mode;
+
+	local: *;
+};

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  */
 
 #ifndef SPDK_NVMF_TRANSPORT_H
@@ -36,97 +8,55 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/nvme.h"
 #include "spdk/nvmf.h"
+#include "spdk/nvmf_transport.h"
 
-struct spdk_nvmf_listen_addr;
+void nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+				      struct spdk_nvme_transport_id *trid,
+				      struct spdk_nvmf_discovery_log_page_entry *entry);
 
-struct spdk_nvmf_transport {
-	/**
-	 * Name of the transport.
-	 */
-	const char *name;
+struct spdk_nvmf_transport_poll_group *nvmf_transport_poll_group_create(
+	struct spdk_nvmf_transport *transport, struct spdk_nvmf_poll_group *group);
+struct spdk_nvmf_transport_poll_group *nvmf_transport_get_optimal_poll_group(
+	struct spdk_nvmf_transport *transport, struct spdk_nvmf_qpair *qpair);
 
-	/**
-	 * Initialize the transport.
-	 */
-	int (*transport_init)(uint16_t max_queue_depth, uint32_t max_io_size,
-			      uint32_t in_capsule_data_size);
+void nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
-	/**
-	 * Shut down the transport.
-	 */
-	int (*transport_fini)(void);
+int nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
+				  struct spdk_nvmf_qpair *qpair);
 
-	/**
-	 * Check for new connections on the transport.
-	 */
-	void (*acceptor_poll)(void);
+int nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
+				     struct spdk_nvmf_qpair *qpair);
 
-	/**
-	  * Instruct the acceptor to listen on the address provided. This
-	  * may be called multiple times.
-	  */
-	int (*listen_addr_add)(struct spdk_nvmf_listen_addr *listen_addr);
+int nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
-	/**
-	  * Instruct to remove listening on the address provided. This
-	  * may be called multiple times.
-	  */
-	int (*listen_addr_remove)(struct spdk_nvmf_listen_addr *listen_addr);
+int nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
-	/**
-	 * Fill out a discovery log entry for a specific listen address.
-	 */
-	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,
-				     struct spdk_nvmf_discovery_log_page_entry *entry);
+int nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
-	/**
-	 * Create a new session
-	 */
-	struct spdk_nvmf_session *(*session_init)(void);
+void nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
+			       spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg);
 
-	/**
-	 * Destroy a session
-	 */
-	void (*session_fini)(struct spdk_nvmf_session *session);
+int nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
+				       struct spdk_nvme_transport_id *trid);
 
-	/**
-	 * Add a connection to a session
-	 */
-	int (*session_add_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+int nvmf_transport_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
+					struct spdk_nvme_transport_id *trid);
 
-	/**
-	 * Remove a connection from a session
-	 */
-	int (*session_remove_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+int nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
+		struct spdk_nvme_transport_id *trid);
 
-	/*
-	 * Signal request completion, which sends a response
-	 * to the originator.
-	 */
-	int (*req_complete)(struct spdk_nvmf_request *req);
+void nvmf_transport_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+					struct spdk_nvmf_request *req);
 
-	/*
-	 * Deinitialize a connection.
-	 */
-	void (*conn_fini)(struct spdk_nvmf_conn *conn);
+void nvmf_request_free_stripped_buffers(struct spdk_nvmf_request *req,
+					struct spdk_nvmf_transport_poll_group *group,
+					struct spdk_nvmf_transport *transport);
 
-	/*
-	 * Poll a connection for events.
-	 */
-	int (*conn_poll)(struct spdk_nvmf_conn *conn);
-
-	/*
-	 * True if the conn has no pending IO.
-	 */
-	bool (*conn_is_idle)(struct spdk_nvmf_conn *conn);
-};
-
-int spdk_nvmf_transport_init(void);
-int spdk_nvmf_transport_fini(void);
-
-const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
-
-extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
+int nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
+				      struct spdk_nvmf_transport_poll_group *group,
+				      struct spdk_nvmf_transport *transport,
+				      uint32_t length);
 
 #endif /* SPDK_NVMF_TRANSPORT_H */

@@ -1,0 +1,10 @@
+filters:
+  - true
+
+commentBody: |
+  Thanks for your contribution!  Unfortunately, we don't use GitHub pull
+  requests to manage code contributions to this repository.  Instead, please
+  see https://spdk.io/development which provides instructions on how to
+  submit patches to the SPDK Gerrit instance.
+
+addLabel: false

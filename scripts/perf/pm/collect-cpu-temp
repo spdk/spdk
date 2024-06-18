@@ -1,0 +1,272 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2023 Intel Corporation
+#  All rights reserved.
+
+# Do similar thing to what turbostat.c does but in a more compact
+# scope. We just report temp as per coretemp's hwmon entries for
+# each core|package and check if there is any indication that
+# throttling took place (per cpu thread).
+set -e
+shopt -s extglob nullglob
+
+pmdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$pmdir/../../../")
+source "$rootdir/test/scheduler/common.sh"
+source "$pmdir/common"
+
+to_celsius() { echo $(($1 / 1000)); }
+
+report_hwmon() {
+	local hwmon hw_name
+
+	for hwmon in /sys/class/hwmon/hwmon*; do
+		[[ -e $hwmon/name ]] || continue
+		hw_name=$(< "$hwmon/name")
+		case "$hw_name" in
+			coretemp) report_hwmon_coretemp "$hwmon" ;;
+			*) report_hwmon_generic "$hwmon" 2> /dev/null ;;
+		esac || continue
+	done
+}
+
+report_hwmon_generic() {
+	local hwmon=$1 temp ts
+	local label dev
+
+	ts=$(dater)
+
+	# We report just the bare minimum as each device may come with
+	# different set of labels, inputs, etc.
+	[[ -e $hwmon/temp1_input ]] || return 0
+
+	# These entries, especially the ones dedicated for nvme, may disappear during
+	# tests, so try to handle them gracefully.
+
+	temp=$(< "$hwmon/temp1_input") && label=$(< "$hwmon/name") || return 0
+
+	if [[ -e $hwmon/temp1_label ]]; then
+		label+=":$(< "$hwmon/temp1_label")"
+	fi
+
+	if [[ -e $hwmon/device ]] && dev=$(readlink -f "$hwmon/device"); then
+		label+=":${dev##*/}"
+	fi
+
+	printf '(%s) --- %s (%u C) (test:%s)\n' \
+		"$ts" \
+		"$label" \
+		"$(to_celsius "$temp")" \
+		"$TEST_TAG"
+	printf '%s\n' "---"
+}
+
+report_hwmon_coretemp() {
+	local hwmon=$1 temp ts
+	local core crit input id label max node package threads
+	local cores_input=() cores_crit=() cores_max=()
+
+	ts=$(dater)
+
+	for label in "$hwmon/"temp+([0-9])_label; do
+		temp=${label%_label}
+		label=$(< "$label")
+		input=$(< "${temp}_input")
+		crit=$(< "${temp}_crit")
+		max=$(< "${temp}_max")
+		id=${label##* }
+		case "$label" in
+			Core*)
+				cores_input[id]=$input
+				cores_crit[id]=$crit
+				cores_max[id]=$max
+				;;
+			Package*) node=$id package[node]=$input ;;
+		esac
+	done
+	# No package_id? Something is amiss
+	# FIXME: This is a cheeky assumption that each physical package (socket) N maps to
+	# a corresponding numa node N. For physical systems this may be usually the case
+	# but for quirky vNUMA setups not necessarily. For similar systems (don't have
+	# any at hand and it's a bit tricky to test thermal stuff under VMs) this probably
+	# would need to drop the lookup of the "Package" label and just check each thread's
+	# physical_package_id and/or numa assignment (cpu_node_map[@]).
+	[[ -n $node ]] || return 1
+
+	printf '(%s) --- Node%u (%u C) (test:%s)\n' \
+		"$ts" \
+		"$node" \
+		"$(to_celsius "${package[node]}")" \
+		"$TEST_TAG"
+
+	for core in "${!cores_input[@]}"; do
+		threads=($(get_cpus "$node" "$core"))
+		printf '  (%s) Core%u (%s): %u C (crit: %u C, max: %u C)\n' \
+			"$ts" \
+			"$core" \
+			"${threads[*]}" \
+			"$(to_celsius "${cores_input[core]}")" \
+			"$(to_celsius "${cores_crit[core]}")" \
+			"$(to_celsius "${cores_max[core]}")"
+	done
+	printf '%s\n' "---"
+}
+
+report_throttling() {
+	# Quick check to see if MSRs report proper support - if this entry does not exist,
+	# then there's no point in looking up entire topology, support is simply not
+	# there.
+	[[ -e $sysfs_cpu/cpu0/thermal_throttle/core_throttle_count ]] || return 1
+
+	local cpu cpu_throttling=() cpu_throttling_time=() throttler=()
+	local throttle_count throttle_time
+	local node node_cpus=() node_throttled
+	local ts
+
+	throttler[0]="Normal Operation"
+	throttler[1]="Throttled"
+
+	ts=$(dater)
+	# Order the output similarly to hwmon, starting with a node|package
+	for node in "${nodes[@]}"; do
+		node_cpus=($(get_cpus "$node")) node_throttled=0 cpu_throttling=()
+		for cpu in "${node_cpus[@]}"; do
+			throttle_count=$(< "$sysfs_cpu/cpu$cpu/thermal_throttle/core_throttle_count")
+			throttle_time=$(< "$sysfs_cpu/cpu$cpu/thermal_throttle/core_throttle_total_time_ms")
+			cpu_throttling[cpu]=$throttle_count
+			cpu_throttling_time[cpu]=$((throttle_time / 1000))
+			if ((throttle_count > 0 || throttle_time > 0)); then
+				node_throttled=1
+			fi
+		done
+
+		((node_throttled == 1 || debug == 1)) || continue
+
+		printf '(%s) ###### Throttling Node%u Status: %s ######\n' \
+			"$ts" "$node" "${throttler[node_throttled]}"
+
+		for cpu in "${!cpu_throttling[@]}"; do
+			((cpu_throttling[cpu] > 0)) || continue
+			printf '(%s) CPU%u: %s (count: %u, time: %us)\n' \
+				"$ts" "$cpu" \
+				"${throttler[cpu_throttling[cpu] > 0 ? 1 : 0]}" \
+				"${cpu_throttling[cpu]}" \
+				"${cpu_throttling_time[cpu]}"
+		done
+	done
+}
+
+init_modules() {
+	local -gA modules_supported=()
+	local -gA modules_out_refs=()
+	local -ga modules_to_run=()
+	local module
+
+	modules_supported["hwmon"]=report_hwmon
+	modules_supported["throttle"]=report_throttling
+
+	for module in "${@:-"${!modules_supported[@]}"}"; do
+		if [[ -z ${modules_supported["$module"]} ]]; then
+			printf 'Module (%s) not supported\n' "$module" >&2
+			return 1
+		fi
+		modules_to_run+=("${modules_supported["$module"]}")
+		modules_out_refs["${modules_supported["$module"]}"]="_${modules_supported["$module"]}"
+	done
+}
+
+collect_readings() {
+	local _count=$count module data
+
+	map_cpus
+
+	while ((count <= 0 ? 1 : _count--)); do
+		for module in "${modules_to_run[@]}"; do
+			local -n ref=${modules_out_refs["$module"]}
+			data=$("$module")
+			[[ -n $data ]] && ref+=("$data")
+		done
+		sleep "${interval}s"
+	done
+}
+
+dater() {
+	date "+%R:%S %Z"
+}
+
+cleanup() {
+	local module
+
+	for module in "${!modules_out_refs[@]}"; do
+		local -n _ref=${modules_out_refs["$module"]}
+		((${#_ref[@]} > 0)) || continue
+		printf '%s\n' "${_ref[@]}" > "$PM_OUTPUTDIR/${prefix:+${prefix}_}$module.pm.txt"
+		printf 'Dumped %s module to %s\n' \
+			"$module" \
+			"$PM_OUTPUTDIR/${prefix:+${prefix}_}$module.pm.txt"
+	done
+
+	rm_pm_pid
+}
+
+help() {
+	cat <<- HELP
+
+		Usage: $0 [-h] [-c count] [-d dir] [-l] [-p prefix] [-t interval] [module0 module1 ...]
+
+		-h - Print this message.
+		-c - Execute module count times. 0 is the default and it means to run
+		     indefinitely.
+		-d - Directory where the results should be saved. Default is /tmp.
+		-l - Save output of the script to a log file (dir/${0##*/}.pm.log).
+		-p - Add prefix to saved files.
+		-t - How long to wait before executing modules. Default is 1s.
+
+		module - Module to execute. Currently supported: 'hwmon', 'throttle'. All modules are
+		         executed by default.
+
+		When started, ${0##*/} will enter loop to continuously execute specified
+		modules. Each execution will be logged to stderr. Upon termination, all
+		output will be dumped to /tmp or directory set by -d.
+
+	HELP
+}
+
+count=0
+debug=0
+interval=1
+log_to_file=no
+prefix=""
+
+while getopts c:d:hlp:t:v opt; do
+	case "$opt" in
+		c) count=$OPTARG ;;
+		d) PM_OUTPUTDIR=$OPTARG ;;
+		h)
+			help
+			exit 0
+			;;
+		l) log_to_file=yes ;;
+		p) prefix=$OPTARG ;;
+		t) interval=$OPTARG ;;
+		v) debug=1 ;;
+		*) ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+declare -r log_file=${prefix:+${prefix}_}${0##*/}.pm.log
+
+mkdir -p "$PM_OUTPUTDIR"
+if [[ $log_to_file == yes ]]; then
+	printf 'Redirecting to %s\n' "$PM_OUTPUTDIR/$log_file" >&2
+	exec > "$PM_OUTPUTDIR/$log_file" 2>&1
+fi
+
+save_pm_pid
+trap 'cleanup' EXIT
+trap 'retag' USR1
+
+init_modules "$@"
+
+collect_readings

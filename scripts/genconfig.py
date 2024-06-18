@@ -1,11 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
 
 import os
 import re
 import sys
 
-comment = re.compile('^\s*#')
-assign = re.compile('^\s*([a-zA-Z_]+)\s*(\?)?=\s*([^#]*)')
+comment = re.compile(r'^\s*#')
+assign = re.compile(r'^\s*([a-zA-Z0-9_]+)\s*(\?)?=\s*([^#]*)')
 
 args = os.environ.copy()
 for arg in sys.argv:
@@ -15,36 +19,31 @@ for arg in sys.argv:
         val = m.group(3).strip()
         args[var] = val
 
-# special case for DPDK_DIR, which is short for CONFIG_DPDK_DIR
-if 'DPDK_DIR' in args and 'CONFIG_DPDK_DIR' not in args:
-    args['CONFIG_DPDK_DIR'] = args['DPDK_DIR']
-
 defs = {}
-for config in ('CONFIG', 'CONFIG.local'):
-    try:
-        with open(config) as f:
-            for line in f:
-                line = line.strip()
-                if not comment.match(line):
-                    m = assign.match(line)
-                    if m:
-                        var = m.group(1).strip()
-                        default = m.group(3).strip()
-                        val = default
-                        if var in args:
-                            val = args[var]
-                        if default.lower() == 'y' or default.lower() == 'n':
-                            if val.lower() == 'y':
-                                defs["SPDK_{0}".format(var)] = 1
-                            else:
-                                defs["SPDK_{0}".format(var)] = 0
+try:
+    with open("mk/config.mk") as f:
+        for line in f:
+            line = line.strip()
+            if not comment.match(line):
+                m = assign.match(line)
+                if m:
+                    var = m.group(1).strip()
+                    default = m.group(3).strip()
+                    val = default
+                    if var in args:
+                        val = args[var]
+                    if default.lower() == 'y' or default.lower() == 'n':
+                        if val.lower() == 'y':
+                            defs["SPDK_{0}".format(var)] = 1
                         else:
-                            strval = val.replace('"', '\"')
-                            defs["SPDK_{0}".format(var)] = strval
-    except IOError:
-        continue
+                            defs["SPDK_{0}".format(var)] = 0
+                    else:
+                        strval = val.replace('"', '\"')
+                        defs["SPDK_{0}".format(var)] = strval
+except IOError:
+    print("mk/config.mk not found")
 
-for key, value in defs.items():
+for key, value in sorted(defs.items()):
     if value == 0:
         print("#undef {0}".format(key))
     else:

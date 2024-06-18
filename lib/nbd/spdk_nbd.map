@@ -1,0 +1,13 @@
+{
+	global:
+
+	# public functions
+	spdk_nbd_init;
+	spdk_nbd_fini;
+	spdk_nbd_start;
+	spdk_nbd_stop;
+	spdk_nbd_get_path;
+	spdk_nbd_write_config_json;
+
+	local: *;
+};

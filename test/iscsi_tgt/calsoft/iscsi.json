@@ -1,0 +1,15 @@
+{
+  "subsystem": "iscsi",
+  "config": [
+    {
+      "params": {
+        "allow_duplicated_isid": true,
+        "nop_timeout": 30,
+        "nop_in_interval": 10,
+        "max_sessions": 256,
+        "error_recovery_level": 2
+      },
+      "method": "iscsi_set_options"
+    }
+  ]
+}

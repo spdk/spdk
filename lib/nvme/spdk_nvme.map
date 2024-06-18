@@ -1,0 +1,275 @@
+{
+	global:
+
+	# public functions from nvme.h
+	spdk_nvme_transport_register;
+	spdk_nvme_transport_available;
+	spdk_nvme_transport_available_by_name;
+	spdk_nvme_transport_get_opts;
+	spdk_nvme_transport_set_opts;
+	spdk_nvme_transport_id_parse;
+	spdk_nvme_transport_id_populate_trstring;
+	spdk_nvme_transport_id_parse_trtype;
+	spdk_nvme_transport_id_trtype_str;
+	spdk_nvme_transport_id_adrfam_str;
+	spdk_nvme_transport_id_parse_adrfam;
+	spdk_nvme_transport_id_compare;
+	spdk_nvme_trid_populate_transport;
+	spdk_nvme_host_id_parse;
+
+	spdk_nvme_prchk_flags_parse;
+	spdk_nvme_prchk_flags_str;
+
+	spdk_nvme_probe;
+	spdk_nvme_connect;
+	spdk_nvme_connect_async;
+	spdk_nvme_probe_async;
+	spdk_nvme_probe_poll_async;
+	spdk_nvme_detach;
+	spdk_nvme_detach_async;
+	spdk_nvme_detach_poll_async;
+	spdk_nvme_detach_poll;
+
+	spdk_nvme_pcie_set_hotplug_filter;
+
+	spdk_nvme_ctrlr_is_discovery;
+	spdk_nvme_ctrlr_is_fabrics;
+	spdk_nvme_ctrlr_get_default_ctrlr_opts;
+	spdk_nvme_ctrlr_get_opts;
+	spdk_nvme_ctrlr_set_trid;
+	spdk_nvme_ctrlr_reset_subsystem;
+	spdk_nvme_ctrlr_reset;
+	spdk_nvme_ctrlr_disconnect;
+	spdk_nvme_ctrlr_reconnect_async;
+	spdk_nvme_ctrlr_reconnect_poll_async;
+	spdk_nvme_ctrlr_fail;
+	spdk_nvme_ctrlr_is_failed;
+	spdk_nvme_ctrlr_get_data;
+	spdk_nvme_ctrlr_get_regs_csts;
+	spdk_nvme_ctrlr_get_regs_cc;
+	spdk_nvme_ctrlr_get_regs_cap;
+	spdk_nvme_ctrlr_get_regs_vs;
+	spdk_nvme_ctrlr_get_regs_cmbsz;
+	spdk_nvme_ctrlr_get_regs_pmrcap;
+	spdk_nvme_ctrlr_get_regs_bpinfo;
+	spdk_nvme_ctrlr_get_pmrsz;
+	spdk_nvme_ctrlr_get_num_ns;
+	spdk_nvme_ctrlr_get_pci_device;
+	spdk_nvme_ctrlr_get_max_xfer_size;
+	spdk_nvme_ctrlr_get_max_sges;
+	spdk_nvme_ctrlr_is_active_ns;
+	spdk_nvme_ctrlr_get_first_active_ns;
+	spdk_nvme_ctrlr_get_next_active_ns;
+	spdk_nvme_ctrlr_is_log_page_supported;
+	spdk_nvme_ctrlr_is_feature_supported;
+	spdk_nvme_ctrlr_register_aer_callback;
+	spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page;
+	spdk_nvme_ctrlr_register_timeout_callback;
+	spdk_nvme_ctrlr_get_default_io_qpair_opts;
+	spdk_nvme_ctrlr_alloc_io_qpair;
+	spdk_nvme_ctrlr_connect_io_qpair;
+	spdk_nvme_ctrlr_disconnect_io_qpair;
+	spdk_nvme_ctrlr_reconnect_io_qpair;
+	spdk_nvme_ctrlr_get_admin_qp_failure_reason;
+	spdk_nvme_ctrlr_free_io_qpair;
+	spdk_nvme_ctrlr_io_cmd_raw_no_payload_build;
+	spdk_nvme_ctrlr_cmd_io_raw;
+	spdk_nvme_ctrlr_cmd_io_raw_with_md;
+	spdk_nvme_ctrlr_cmd_iov_raw_with_md;
+	spdk_nvme_ctrlr_cmd_admin_raw;
+	spdk_nvme_ctrlr_process_admin_completions;
+	spdk_nvme_ctrlr_get_ns;
+	spdk_nvme_ctrlr_cmd_get_log_page;
+	spdk_nvme_ctrlr_cmd_get_log_page_ext;
+	spdk_nvme_ctrlr_cmd_abort;
+	spdk_nvme_ctrlr_cmd_abort_ext;
+	spdk_nvme_ctrlr_cmd_set_feature;
+	spdk_nvme_ctrlr_cmd_get_feature;
+	spdk_nvme_ctrlr_cmd_get_feature_ns;
+	spdk_nvme_ctrlr_cmd_set_feature_ns;
+	spdk_nvme_ctrlr_cmd_security_receive;
+	spdk_nvme_ctrlr_cmd_security_send;
+	spdk_nvme_ctrlr_security_receive;
+	spdk_nvme_ctrlr_security_send;
+	spdk_nvme_ctrlr_cmd_directive_receive;
+	spdk_nvme_ctrlr_cmd_directive_send;
+	spdk_nvme_ctrlr_get_flags;
+	spdk_nvme_ctrlr_attach_ns;
+	spdk_nvme_ctrlr_detach_ns;
+	spdk_nvme_ctrlr_create_ns;
+	spdk_nvme_ctrlr_delete_ns;
+	spdk_nvme_ctrlr_format;
+	spdk_nvme_ctrlr_update_firmware;
+	spdk_nvme_ctrlr_reserve_cmb;
+	spdk_nvme_ctrlr_map_cmb;
+	spdk_nvme_ctrlr_unmap_cmb;
+	spdk_nvme_ctrlr_enable_pmr;
+	spdk_nvme_ctrlr_disable_pmr;
+	spdk_nvme_ctrlr_map_pmr;
+	spdk_nvme_ctrlr_unmap_pmr;
+	spdk_nvme_ctrlr_read_boot_partition_start;
+	spdk_nvme_ctrlr_read_boot_partition_poll;
+	spdk_nvme_ctrlr_write_boot_partition;
+	spdk_nvme_ctrlr_get_transport_id;
+	spdk_nvme_ctrlr_alloc_qid;
+	spdk_nvme_ctrlr_free_qid;
+	spdk_nvme_ctrlr_set_remove_cb;
+	spdk_nvme_ctrlr_get_memory_domains;
+	spdk_nvme_ctrlr_get_discovery_log_page;
+	spdk_nvme_ctrlr_get_registers;
+
+	spdk_nvme_poll_group_create;
+	spdk_nvme_poll_group_add;
+	spdk_nvme_poll_group_remove;
+	spdk_nvme_poll_group_destroy;
+	spdk_nvme_poll_group_process_completions;
+	spdk_nvme_poll_group_all_connected;
+	spdk_nvme_poll_group_get_ctx;
+
+	spdk_nvme_ns_get_data;
+	spdk_nvme_ns_get_id;
+	spdk_nvme_ns_get_ctrlr;
+	spdk_nvme_ns_is_active;
+	spdk_nvme_ns_get_max_io_xfer_size;
+	spdk_nvme_ns_get_sector_size;
+	spdk_nvme_ns_get_extended_sector_size;
+	spdk_nvme_ns_get_num_sectors;
+	spdk_nvme_ns_get_size;
+	spdk_nvme_ns_get_pi_type;
+	spdk_nvme_ns_get_md_size;
+	spdk_nvme_ns_get_format_index;
+	spdk_nvme_ns_supports_extended_lba;
+	spdk_nvme_ns_supports_compare;
+	spdk_nvme_ns_get_dealloc_logical_block_read_value;
+	spdk_nvme_ns_get_optimal_io_boundary;
+	spdk_nvme_ns_get_nguid;
+	spdk_nvme_ns_get_uuid;
+	spdk_nvme_ns_get_csi;
+	spdk_nvme_ns_get_flags;
+	spdk_nvme_ns_get_ana_group_id;
+	spdk_nvme_ns_get_ana_state;
+
+	spdk_nvme_ns_cmd_write;
+	spdk_nvme_ns_cmd_writev;
+	spdk_nvme_ns_cmd_writev_with_md;
+	spdk_nvme_ns_cmd_write_with_md;
+	spdk_nvme_ns_cmd_write_zeroes;
+	spdk_nvme_ns_cmd_write_uncorrectable;
+	spdk_nvme_ns_cmd_read;
+	spdk_nvme_ns_cmd_readv;
+	spdk_nvme_ns_cmd_readv_with_md;
+	spdk_nvme_ns_cmd_read_with_md;
+	spdk_nvme_ns_cmd_dataset_management;
+	spdk_nvme_ns_cmd_copy;
+	spdk_nvme_ns_cmd_flush;
+	spdk_nvme_ns_cmd_reservation_register;
+	spdk_nvme_ns_cmd_reservation_release;
+	spdk_nvme_ns_cmd_reservation_acquire;
+	spdk_nvme_ns_cmd_reservation_report;
+	spdk_nvme_ns_cmd_io_mgmt_recv;
+	spdk_nvme_ns_cmd_io_mgmt_send;
+	spdk_nvme_ns_cmd_compare;
+	spdk_nvme_ns_cmd_comparev;
+	spdk_nvme_ns_cmd_comparev_with_md;
+	spdk_nvme_ns_cmd_compare_with_md;
+	spdk_nvme_ns_cmd_writev_ext;
+	spdk_nvme_ns_cmd_write_ext;
+	spdk_nvme_ns_cmd_readv_ext;
+	spdk_nvme_ns_cmd_read_ext;
+	spdk_nvme_ns_cmd_verify;
+
+	spdk_nvme_qpair_get_optimal_poll_group;
+	spdk_nvme_qpair_process_completions;
+	spdk_nvme_qpair_get_failure_reason;
+	spdk_nvme_qpair_add_cmd_error_injection;
+	spdk_nvme_qpair_remove_cmd_error_injection;
+	spdk_nvme_qpair_print_command;
+	spdk_nvme_qpair_print_completion;
+	spdk_nvme_qpair_get_id;
+	spdk_nvme_qpair_get_num_outstanding_reqs;
+	spdk_nvme_qpair_set_abort_dnr;
+	spdk_nvme_qpair_is_connected;
+
+	spdk_nvme_print_command;
+	spdk_nvme_print_completion;
+
+	spdk_nvme_cpl_get_status_string;
+	spdk_nvme_cpl_get_status_type_string;
+
+	spdk_nvme_rdma_init_hooks;
+
+	spdk_nvme_cuse_get_ctrlr_name;
+	spdk_nvme_cuse_get_ns_name;
+	spdk_nvme_cuse_register;
+	spdk_nvme_cuse_unregister;
+	spdk_nvme_cuse_update_namespaces;
+
+	spdk_nvme_poll_group_get_stats;
+	spdk_nvme_poll_group_free_stats;
+
+	spdk_nvme_dhchap_get_digest_name;
+	spdk_nvme_dhchap_get_digest_id;
+	spdk_nvme_dhchap_get_digest_length;
+	spdk_nvme_dhchap_get_dhgroup_name;
+	spdk_nvme_dhchap_get_dhgroup_id;
+
+	# functions from spdk_internal/nvme.h
+	spdk_nvme_dhchap_calculate;
+	spdk_nvme_dhchap_generate_dhkey;
+	spdk_nvme_dhchap_dhkey_free;
+	spdk_nvme_dhchap_dhkey_get_pubkey;
+	spdk_nvme_dhchap_dhkey_derive_secret;
+
+	# public functions from nvme_zns.h
+	spdk_nvme_zns_ns_get_data;
+	spdk_nvme_zns_ns_get_zone_size_sectors;
+	spdk_nvme_zns_ns_get_zone_size;
+	spdk_nvme_zns_ns_get_num_zones;
+	spdk_nvme_zns_ns_get_max_open_zones;
+	spdk_nvme_zns_ns_get_max_active_zones;
+	spdk_nvme_zns_ctrlr_get_data;
+	spdk_nvme_zns_ctrlr_get_max_zone_append_size;
+	spdk_nvme_zns_zone_append;
+	spdk_nvme_zns_zone_append_with_md;
+	spdk_nvme_zns_zone_appendv;
+	spdk_nvme_zns_zone_appendv_with_md;
+	spdk_nvme_zns_close_zone;
+	spdk_nvme_zns_finish_zone;
+	spdk_nvme_zns_open_zone;
+	spdk_nvme_zns_reset_zone;
+	spdk_nvme_zns_offline_zone;
+	spdk_nvme_zns_set_zone_desc_ext;
+	spdk_nvme_zns_report_zones;
+	spdk_nvme_zns_ext_report_zones;
+
+	# public functions from nvme_ocssd.h
+	spdk_nvme_ctrlr_is_ocssd_supported;
+	spdk_nvme_ocssd_ctrlr_cmd_geometry;
+	spdk_nvme_ocssd_ns_cmd_vector_reset;
+	spdk_nvme_ocssd_ns_cmd_vector_write;
+	spdk_nvme_ocssd_ns_cmd_vector_write_with_md;
+	spdk_nvme_ocssd_ns_cmd_vector_read;
+	spdk_nvme_ocssd_ns_cmd_vector_read_with_md;
+	spdk_nvme_ocssd_ns_cmd_vector_copy;
+
+	# public functions from opal.h
+	spdk_opal_dev_construct;
+	spdk_opal_dev_destruct;
+	spdk_opal_get_d0_features_info;
+	spdk_opal_cmd_take_ownership;
+	spdk_opal_cmd_revert_tper;
+	spdk_opal_cmd_activate_locking_sp;
+	spdk_opal_cmd_lock_unlock;
+	spdk_opal_cmd_setup_locking_range;
+	spdk_opal_cmd_get_max_ranges;
+	spdk_opal_cmd_get_locking_range_info;
+	spdk_opal_cmd_enable_user;
+	spdk_opal_cmd_add_user_to_locking_range;
+	spdk_opal_cmd_set_new_passwd;
+	spdk_opal_cmd_erase_locking_range;
+	spdk_opal_cmd_secure_erase_locking_range;
+	spdk_opal_get_locking_range_info;
+	spdk_opal_free_locking_range_info;
+
+	local: *;
+};

@@ -1,0 +1,193 @@
+{
+	global:
+
+	# public functions in base64.h
+	spdk_base64_encode;
+	spdk_base64_urlsafe_encode;
+	spdk_base64_decode;
+	spdk_base64_urlsafe_decode;
+
+	# public functions in bit_array.h
+	spdk_bit_array_capacity;
+	spdk_bit_array_create;
+	spdk_bit_array_free;
+	spdk_bit_array_resize;
+	spdk_bit_array_get;
+	spdk_bit_array_set;
+	spdk_bit_array_clear;
+	spdk_bit_array_find_first_set;
+	spdk_bit_array_find_first_clear;
+	spdk_bit_array_count_set;
+	spdk_bit_array_count_clear;
+	spdk_bit_array_store_mask;
+	spdk_bit_array_load_mask;
+	spdk_bit_array_clear_mask;
+
+	# public functions in bit_pool.h
+	spdk_bit_pool_capacity;
+	spdk_bit_pool_create;
+	spdk_bit_pool_create_from_array;
+	spdk_bit_pool_free;
+	spdk_bit_pool_resize;
+	spdk_bit_pool_is_allocated;
+	spdk_bit_pool_allocate_bit;
+	spdk_bit_pool_free_bit;
+	spdk_bit_pool_count_allocated;
+	spdk_bit_pool_count_free;
+	spdk_bit_pool_store_mask;
+	spdk_bit_pool_load_mask;
+	spdk_bit_pool_free_all_bits;
+
+	# public functions in cpuset.h
+	spdk_cpuset_alloc;
+	spdk_cpuset_free;
+	spdk_cpuset_equal;
+	spdk_cpuset_copy;
+	spdk_cpuset_and;
+	spdk_cpuset_or;
+	spdk_cpuset_xor;
+	spdk_cpuset_negate;
+	spdk_cpuset_zero;
+	spdk_cpuset_set_cpu;
+	spdk_cpuset_get_cpu;
+	spdk_cpuset_count;
+	spdk_cpuset_fmt;
+	spdk_cpuset_parse;
+
+	# public functions in crc16.h
+	spdk_crc16_t10dif;
+	spdk_crc16_t10dif_copy;
+
+	# public functions in crc32.h
+	spdk_crc32_ieee_update;
+	spdk_crc32c_update;
+	spdk_crc32c_iov_update;
+	spdk_crc32c_nvme;
+
+	# public functions in crc64.h
+	spdk_crc64_nvme;
+
+	# public functions in dif.h
+	spdk_dif_ctx_init;
+	spdk_dif_ctx_set_data_offset;
+	spdk_dif_ctx_set_remapped_init_ref_tag;
+	spdk_dif_generate;
+	spdk_dif_verify;
+	spdk_dif_update_crc32c;
+	spdk_dif_generate_copy;
+	spdk_dif_verify_copy;
+	spdk_dif_inject_error;
+	spdk_dix_generate;
+	spdk_dix_verify;
+	spdk_dix_inject_error;
+	spdk_dif_set_md_interleave_iovs;
+	spdk_dif_generate_stream;
+	spdk_dif_verify_stream;
+	spdk_dif_update_crc32c_stream;
+	spdk_dif_get_range_with_md;
+	spdk_dif_get_length_with_md;
+	spdk_dif_remap_ref_tag;
+	spdk_dix_remap_ref_tag;
+
+	# public functions in fd.h
+	spdk_fd_get_size;
+	spdk_fd_get_blocklen;
+
+	# public functions in file.h
+	spdk_posix_file_load;
+	spdk_posix_file_load_from_name;
+
+	# public functions in hexlify.h
+	spdk_hexlify;
+	spdk_unhexlify;
+
+	# public functions in pipe.h
+	spdk_pipe_create;
+	spdk_pipe_destroy;
+	spdk_pipe_writer_get_buffer;
+	spdk_pipe_writer_advance;
+	spdk_pipe_reader_bytes_available;
+	spdk_pipe_reader_get_buffer;
+	spdk_pipe_reader_advance;
+	spdk_pipe_group_create;
+	spdk_pipe_group_destroy;
+	spdk_pipe_group_add;
+	spdk_pipe_group_remove;
+
+	# public functions in string.h
+	spdk_sprintf_alloc;
+	spdk_vsprintf_alloc;
+	spdk_sprintf_append_realloc;
+	spdk_vsprintf_append_realloc;
+	spdk_strlwr;
+	spdk_strsepq;
+	spdk_str_trim;
+	spdk_strerror_r;
+	spdk_strerror;
+	spdk_str_chomp;
+	spdk_strcpy_pad;
+	spdk_strlen_pad;
+	spdk_parse_ip_addr;
+	spdk_parse_capacity;
+	spdk_mem_all_zero;
+	spdk_strtol;
+	spdk_strtoll;
+	spdk_strarray_from_string;
+	spdk_strarray_dup;
+	spdk_strarray_free;
+	spdk_strcpy_replace;
+
+	# public functions in util.h
+	spdk_u32log2;
+	spdk_u64log2;
+	spdk_iovcpy;
+	spdk_iovmove;
+	spdk_ioviter_first;
+	spdk_ioviter_next;
+	spdk_ioviter_firstv;
+	spdk_ioviter_nextv;
+	spdk_iov_memset;
+	spdk_iov_xfer_init;
+	spdk_iov_xfer_from_buf;
+	spdk_iov_xfer_to_buf;
+	spdk_copy_iovs_to_buf;
+	spdk_copy_buf_to_iovs;
+	spdk_memset_s;
+
+	# resolvers for functions in util.h
+	spdk_u32log2.resolver;
+	spdk_u64log2.resolver;
+
+	# public functions in uuid.h
+	spdk_uuid_parse;
+	spdk_uuid_fmt_lower;
+	spdk_uuid_compare;
+	spdk_uuid_generate;
+	spdk_uuid_generate_sha1;
+	spdk_uuid_copy;
+	spdk_uuid_is_null;
+	spdk_uuid_set_null;
+
+	# public functions in fd_group.h
+	spdk_fd_group_create;
+	spdk_fd_group_destroy;
+	spdk_fd_group_get_epoll_event;
+	spdk_fd_group_wait;
+	spdk_fd_group_add;
+	spdk_fd_group_remove;
+	spdk_fd_group_event_modify;
+	spdk_fd_group_get_fd;
+	spdk_fd_group_nest;
+	spdk_fd_group_unnest;
+
+	# public functions in xor.h
+	spdk_xor_gen;
+	spdk_xor_get_optimal_alignment;
+
+	# public functions in zipf.h
+	spdk_zipf_create;
+	spdk_zipf_free;
+	spdk_zipf_generate;
+
+	local: *;
+};

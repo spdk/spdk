@@ -1,37 +1,13 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "json_internal.h"
+#include "spdk/json.h"
+
+#include "spdk_internal/utf.h"
+
+#define SPDK_JSON_MAX_NESTING_DEPTH	64
 
 static int
 hex_value(uint8_t c)
@@ -60,23 +36,23 @@ decode:
 	/* \uXXXX */
 	assert(buf_end > str);
 
-	if (*str++ != '\\') return SPDK_JSON_PARSE_INVALID;
-	if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+	if (*str++ != '\\') { return SPDK_JSON_PARSE_INVALID; }
+	if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 
-	if (*str++ != 'u') return SPDK_JSON_PARSE_INVALID;
-	if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+	if (*str++ != 'u') { return SPDK_JSON_PARSE_INVALID; }
+	if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 
-	if ((v3 = hex_value(*str++)) < 0) return SPDK_JSON_PARSE_INVALID;
-	if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+	if ((v3 = hex_value(*str++)) < 0) { return SPDK_JSON_PARSE_INVALID; }
+	if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 
-	if ((v2 = hex_value(*str++)) < 0) return SPDK_JSON_PARSE_INVALID;
-	if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+	if ((v2 = hex_value(*str++)) < 0) { return SPDK_JSON_PARSE_INVALID; }
+	if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 
-	if ((v1 = hex_value(*str++)) < 0) return SPDK_JSON_PARSE_INVALID;
-	if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+	if ((v1 = hex_value(*str++)) < 0) { return SPDK_JSON_PARSE_INVALID; }
+	if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 
-	if ((v0 = hex_value(*str++)) < 0) return SPDK_JSON_PARSE_INVALID;
-	if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+	if ((v0 = hex_value(*str++)) < 0) { return SPDK_JSON_PARSE_INVALID; }
+	if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 
 	val = v0 | (v1 << 4) | (v2 << 8) | (v3 << 12);
 
@@ -98,7 +74,7 @@ decode:
 		 *
 		 * Loop around to get the low half of the surrogate pair.
 		 */
-		if (buf_end == str) return SPDK_JSON_PARSE_INCOMPLETE;
+		if (buf_end == str) { return SPDK_JSON_PARSE_INCOMPLETE; }
 		goto decode;
 	} else if (utf16_valid_surrogate_low(val)) {
 		/*
@@ -261,20 +237,20 @@ json_valid_number(uint8_t *start, uint8_t *buf_end)
 	uint8_t *p = start;
 	uint8_t c;
 
-	if (p >= buf_end) return -1;
+	if (p >= buf_end) { return -1; }
 
 	c = *p++;
-	if (c >= '1' && c <= '9') goto num_int_digits;
-	if (c == '0') goto num_frac_or_exp;
-	if (c == '-') goto num_int_first_digit;
+	if (c >= '1' && c <= '9') { goto num_int_digits; }
+	if (c == '0') { goto num_frac_or_exp; }
+	if (c == '-') { goto num_int_first_digit; }
 	p--;
 	goto done_invalid;
 
 num_int_first_digit:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c == '0') goto num_frac_or_exp;
-		if (c >= '1' && c <= '9') goto num_int_digits;
+		if (c == '0') { goto num_frac_or_exp; }
+		if (c >= '1' && c <= '9') { goto num_int_digits; }
 		p--;
 	}
 	goto done_invalid;
@@ -282,9 +258,9 @@ num_int_first_digit:
 num_int_digits:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c >= '0' && c <= '9') goto num_int_digits;
-		if (c == '.') goto num_frac_first_digit;
-		if (c == 'e' || c == 'E') goto num_exp_sign;
+		if (c >= '0' && c <= '9') { goto num_int_digits; }
+		if (c == '.') { goto num_frac_first_digit; }
+		if (c == 'e' || c == 'E') { goto num_exp_sign; }
 		p--;
 	}
 	goto done_valid;
@@ -292,8 +268,8 @@ num_int_digits:
 num_frac_or_exp:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c == '.') goto num_frac_first_digit;
-		if (c == 'e' || c == 'E') goto num_exp_sign;
+		if (c == '.') { goto num_frac_first_digit; }
+		if (c == 'e' || c == 'E') { goto num_exp_sign; }
 		p--;
 	}
 	goto done_valid;
@@ -301,7 +277,7 @@ num_frac_or_exp:
 num_frac_first_digit:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c >= '0' && c <= '9') goto num_frac_digits;
+		if (c >= '0' && c <= '9') { goto num_frac_digits; }
 		p--;
 	}
 	goto done_invalid;
@@ -309,8 +285,8 @@ num_frac_first_digit:
 num_frac_digits:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c >= '0' && c <= '9') goto num_frac_digits;
-		if (c == 'e' || c == 'E') goto num_exp_sign;
+		if (c >= '0' && c <= '9') { goto num_frac_digits; }
+		if (c == 'e' || c == 'E') { goto num_exp_sign; }
 		p--;
 	}
 	goto done_valid;
@@ -318,8 +294,8 @@ num_frac_digits:
 num_exp_sign:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c >= '0' && c <= '9') goto num_exp_digits;
-		if (c == '-' || c == '+') goto num_exp_first_digit;
+		if (c >= '0' && c <= '9') { goto num_exp_digits; }
+		if (c == '-' || c == '+') { goto num_exp_first_digit; }
 		p--;
 	}
 	goto done_invalid;
@@ -327,7 +303,7 @@ num_exp_sign:
 num_exp_first_digit:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c >= '0' && c <= '9') goto num_exp_digits;
+		if (c >= '0' && c <= '9') { goto num_exp_digits; }
 		p--;
 	}
 	goto done_invalid;
@@ -335,7 +311,7 @@ num_exp_first_digit:
 num_exp_digits:
 	if (spdk_likely(p != buf_end)) {
 		c = *p++;
-		if (c >= '0' && c <= '9') goto num_exp_digits;
+		if (c >= '0' && c <= '9') { goto num_exp_digits; }
 		p--;
 	}
 	goto done_valid;
@@ -483,11 +459,11 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 		case 'f':
 		case 'n':
 			/* true, false, or null */
-			if (state != STATE_VALUE) goto done_invalid;
+			if (state != STATE_VALUE) { goto done_invalid; }
 			lit = &g_json_literals[(c >> 3) & 3]; /* See comment above g_json_literals[] */
 			assert(lit->str[0] == c);
 			rc = match_literal(data, json_end, lit->str, lit->len);
-			if (rc < 0) goto done_rc;
+			if (rc < 0) { goto done_rc; }
 			ADD_VALUE(lit->type, data, data + rc);
 			data += rc;
 			state = depth ? STATE_VALUE_SEPARATOR : STATE_END;
@@ -495,7 +471,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			break;
 
 		case '"':
-			if (state != STATE_VALUE && state != STATE_NAME) goto done_invalid;
+			if (state != STATE_VALUE && state != STATE_NAME) { goto done_invalid; }
 			rc = json_decode_string(data, json_end, &new_data, flags);
 			if (rc < 0) {
 				data = new_data;
@@ -527,9 +503,9 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 		case '7':
 		case '8':
 		case '9':
-			if (state != STATE_VALUE) goto done_invalid;
+			if (state != STATE_VALUE) { goto done_invalid; }
 			rc = json_valid_number(data, json_end);
-			if (rc < 0) goto done_rc;
+			if (rc < 0) { goto done_rc; }
 			ADD_VALUE(SPDK_JSON_VAL_NUMBER, data, data + rc);
 			data += rc;
 			state = depth ? STATE_VALUE_SEPARATOR : STATE_END;
@@ -538,7 +514,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 
 		case '{':
 		case '[':
-			if (state != STATE_VALUE) goto done_invalid;
+			if (state != STATE_VALUE) { goto done_invalid; }
 			if (depth == SPDK_JSON_MAX_NESTING_DEPTH) {
 				rc = SPDK_JSON_PARSE_MAX_DEPTH_EXCEEDED;
 				goto done_rc;
@@ -559,8 +535,8 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 
 		case '}':
 		case ']':
-			if (trailing_comma) goto done_invalid;
-			if (depth == 0) goto done_invalid;
+			if (trailing_comma) { goto done_invalid; }
+			if (depth == 0) { goto done_invalid; }
 			con_type = containers[--depth];
 			con_start_value = con_value[depth];
 			if (values && con_start_value < num_values) {
@@ -590,7 +566,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			break;
 
 		case ',':
-			if (state != STATE_VALUE_SEPARATOR) goto done_invalid;
+			if (state != STATE_VALUE_SEPARATOR) { goto done_invalid; }
 			data++;
 			assert(con_type == SPDK_JSON_VAL_ARRAY_BEGIN ||
 			       con_type == SPDK_JSON_VAL_OBJECT_BEGIN);
@@ -599,7 +575,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			break;
 
 		case ':':
-			if (state != STATE_NAME_SEPARATOR) goto done_invalid;
+			if (state != STATE_NAME_SEPARATOR) { goto done_invalid; }
 			data++;
 			state = STATE_VALUE;
 			break;
@@ -609,7 +585,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 				goto done_invalid;
 			}
 			rc = json_valid_comment(data, json_end);
-			if (rc < 0) goto done_rc;
+			if (rc < 0) { goto done_rc; }
 			/* Skip over comment */
 			data += rc;
 			break;

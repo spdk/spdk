@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -60,9 +32,11 @@ struct spdk_conf {
 	char *file;
 	struct spdk_conf_section *current_section;
 	struct spdk_conf_section *section;
+	bool merge_sections;
 };
 
 #define CF_DELIM " \t"
+#define CF_DELIM_KEY " \t="
 
 #define LIB_MAX_TMPBUF 1024
 
@@ -71,7 +45,13 @@ static struct spdk_conf *default_config = NULL;
 struct spdk_conf *
 spdk_conf_allocate(void)
 {
-	return calloc(1, sizeof(struct spdk_conf));
+	struct spdk_conf *ret = calloc(1, sizeof(struct spdk_conf));
+
+	if (ret) {
+		ret->merge_sections = true;
+	}
+
+	return ret;
 }
 
 static void
@@ -419,7 +399,7 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 		return -1;
 	}
 
-	value = (int)strtol(v, NULL, 10);
+	value = (int)spdk_strtol(v, 10);
 	return value;
 }
 
@@ -474,22 +454,33 @@ parse_line(struct spdk_conf *cp, char *lp)
 		for (p = key; *p != '\0' && !isdigit((int) *p); p++)
 			;
 		if (*p != '\0') {
-			num = (int)strtol(p, NULL, 10);
+			num = (int)spdk_strtol(p, 10);
 		} else {
 			num = 0;
 		}
 
-		sp = spdk_conf_find_section(cp, key);
+		if (cp->merge_sections) {
+			sp = spdk_conf_find_section(cp, key);
+		} else {
+			sp = NULL;
+		}
+
 		if (sp == NULL) {
 			sp = allocate_cf_section();
+			if (sp == NULL) {
+				SPDK_ERRLOG("cannot allocate cf section\n");
+				return -1;
+			}
 			append_cf_section(cp, sp);
+
+			sp->name = strdup(key);
+			if (sp->name == NULL) {
+				SPDK_ERRLOG("cannot duplicate %s to sp->name\n", key);
+				return -1;
+			}
 		}
 		cp->current_section = sp;
-		sp->name = strdup(key);
-		if (sp->name == NULL) {
-			perror("strdup sp->name");
-			return -1;
-		}
+
 
 		sp->num = num;
 	} else {
@@ -499,7 +490,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 			SPDK_ERRLOG("unknown section\n");
 			return -1;
 		}
-		key = spdk_strsepq(&arg, CF_DELIM);
+		key = spdk_strsepq(&arg, CF_DELIM_KEY);
 		if (key == NULL) {
 			SPDK_ERRLOG("broken key\n");
 			return -1;
@@ -513,7 +504,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		append_cf_item(sp, ip);
 		ip->key = strdup(key);
 		if (ip->key == NULL) {
-			perror("strdup ip->key");
+			SPDK_ERRLOG("cannot make duplicate of %s\n", key);
 			return -1;
 		}
 		ip->val = NULL;
@@ -529,7 +520,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 				append_cf_value(ip, vp);
 				vp->value = strdup(val);
 				if (vp->value == NULL) {
-					perror("strdup vp->value");
+					SPDK_ERRLOG("cannot duplicate %s to vp->value\n", val);
 					return -1;
 				}
 			}
@@ -617,7 +608,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 
 	cp->file = strdup(file);
 	if (cp->file == NULL) {
-		perror("strdup cp->file");
+		SPDK_ERRLOG("cannot duplicate %s to cp->file\n", file);
 		fclose(fp);
 		return -1;
 	}
@@ -679,4 +670,10 @@ void
 spdk_conf_set_as_default(struct spdk_conf *cp)
 {
 	default_config = cp;
+}
+
+void
+spdk_conf_disable_sections_merge(struct spdk_conf *cp)
+{
+	cp->merge_sections = false;
 }

@@ -1,0 +1,10 @@
+{
+	global:
+
+	# Functions used by other SPDK libraries
+	spdk_iscsi_init;
+	spdk_iscsi_fini;
+	spdk_iscsi_config_json;
+
+	local: *;
+};

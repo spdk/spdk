@@ -1,45 +1,15 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
-
-#include <rte_config.h>
-#include <rte_lcore.h>
 
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #define SRC_BUFFER_SIZE (512*1024)
 
@@ -59,7 +29,7 @@ struct ioat_device {
 	TAILQ_ENTRY(ioat_device) tailq;
 };
 
-static TAILQ_HEAD(, ioat_device) g_devices;
+static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static struct ioat_device *g_next_device;
 
 static struct user_config g_user_config;
@@ -73,6 +43,7 @@ struct thread_entry {
 	uint64_t current_queue_depth;
 	unsigned lcore_id;
 	bool is_draining;
+	bool init_failed;
 	struct spdk_mempool *data_pool;
 	struct spdk_mempool *task_pool;
 };
@@ -124,35 +95,37 @@ ioat_exit(void)
 		free(dev);
 	}
 }
-static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_task *ioat_task)
+static void
+prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_task *ioat_task)
 {
 	int len;
-	int src_offset;
-	int dst_offset;
-	int num_ddwords;
+	uintptr_t src_offset;
+	uintptr_t dst_offset;
 	uint64_t fill_pattern;
 
 	if (ioat_task->type == IOAT_FILL_TYPE) {
 		fill_pattern = rand_r(&seed);
 		fill_pattern = fill_pattern << 32 | rand_r(&seed);
 
-		/* ensure that the length of memset block is 8 Bytes aligned */
-		num_ddwords = (rand_r(&seed) % SRC_BUFFER_SIZE) / 8;
-		len = num_ddwords * 8;
-		if (len < 8)
-			len = 8;
-		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
+		/* Ensure that the length of memset block is 8 Bytes aligned.
+		 * In case the buffer crosses hugepage boundary and must be split,
+		 * we also need to ensure 8 byte address alignment. We do it
+		 * unconditionally to keep things simple.
+		 */
+		len = 8 + ((rand_r(&seed) % (SRC_BUFFER_SIZE - 16)) & ~0x7);
+		dst_offset = 8 + rand_r(&seed) % (SRC_BUFFER_SIZE - 8 - len);
 		ioat_task->fill_pattern = fill_pattern;
+		ioat_task->dst = (void *)(((uintptr_t)ioat_task->buffer + dst_offset) & ~0x7);
 	} else {
 		src_offset = rand_r(&seed) % SRC_BUFFER_SIZE;
 		len = rand_r(&seed) % (SRC_BUFFER_SIZE - src_offset);
 		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
 
 		memset(ioat_task->buffer, 0, SRC_BUFFER_SIZE);
-		ioat_task->src =  g_src + src_offset;
+		ioat_task->src = (void *)((uintptr_t)g_src + src_offset);
+		ioat_task->dst = (void *)((uintptr_t)ioat_task->buffer + dst_offset);
 	}
 	ioat_task->len = len;
-	ioat_task->dst = ioat_task->buffer + dst_offset;
 	ioat_task->thread_entry = thread_entry;
 }
 
@@ -174,8 +147,9 @@ ioat_done(void *cb_arg)
 			}
 			value += 8;
 		}
-		if (!failed)
+		if (!failed) {
 			thread_entry->fill_completed++;
+		}
 	} else {
 		if (memcmp(ioat_task->src, ioat_task->dst, ioat_task->len)) {
 			thread_entry->xfer_failed++;
@@ -226,8 +200,6 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 static int
 ioat_init(void)
 {
-	TAILQ_INIT(&g_devices);
-
 	if (spdk_ioat_probe(NULL, probe_cb, attach_cb) != 0) {
 		fprintf(stderr, "ioat_probe() failed\n");
 		return 1;
@@ -255,13 +227,13 @@ parse_args(int argc, char **argv)
 	while ((op = getopt(argc, argv, "c:ht:q:")) != -1) {
 		switch (op) {
 		case 't':
-			g_user_config.time_in_sec = atoi(optarg);
+			g_user_config.time_in_sec = spdk_strtol(optarg, 10);
 			break;
 		case 'c':
 			g_user_config.core_mask = optarg;
 			break;
 		case 'q':
-			g_user_config.queue_depth = atoi(optarg);
+			g_user_config.queue_depth = spdk_strtol(optarg, 10);
 			break;
 		case 'h':
 			usage(argv[0]);
@@ -271,7 +243,8 @@ parse_args(int argc, char **argv)
 			return 1;
 		}
 	}
-	if (!g_user_config.time_in_sec || !g_user_config.core_mask || !g_user_config.queue_depth) {
+	if (g_user_config.time_in_sec <= 0 || !g_user_config.core_mask ||
+	    g_user_config.queue_depth <= 0) {
 		usage(argv[0]);
 		return 1;
 	}
@@ -305,12 +278,15 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 	while (queue_depth-- > 0) {
 		struct ioat_task *ioat_task = NULL;
 		ioat_task = spdk_mempool_get(thread_entry->task_pool);
+		assert(ioat_task != NULL);
 		ioat_task->buffer = spdk_mempool_get(thread_entry->data_pool);
+		assert(ioat_task->buffer != NULL);
 
 		ioat_task->type = IOAT_COPY_TYPE;
 		if (spdk_ioat_get_dma_capabilities(thread_entry->chan) & SPDK_IOAT_ENGINE_FILL_SUPPORTED) {
-			if (queue_depth % 2)
+			if (queue_depth % 2) {
 				ioat_task->type = IOAT_FILL_TYPE;
+			}
 		}
 		prepare_ioat_task(thread_entry, ioat_task);
 		submit_single_xfer(ioat_task);
@@ -325,19 +301,23 @@ work_fn(void *arg)
 	struct thread_entry *t = (struct thread_entry *)arg;
 
 	if (!t->chan) {
-		return 0;
+		return 1;
 	}
 
-	t->lcore_id = rte_lcore_id();
+	t->lcore_id = spdk_env_get_current_core();
 
-	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
-	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1,
+	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%u", t->lcore_id);
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%u", t->lcore_id);
+	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE,
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
 	t->task_pool = spdk_mempool_create(task_pool_name, g_user_config.queue_depth,
-					   sizeof(struct ioat_task), -1, SPDK_ENV_SOCKET_ID_ANY);
+					   sizeof(struct ioat_task),
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
 	if (!t->data_pool || !t->task_pool) {
 		fprintf(stderr, "Could not allocate buffer pool.\n");
+		t->init_failed = true;
 		return 1;
 	}
 
@@ -362,7 +342,7 @@ init_src_buffer(void)
 	g_src = spdk_dma_zmalloc(SRC_BUFFER_SIZE, 512, NULL);
 	if (g_src == NULL) {
 		fprintf(stderr, "Allocate src buffer failed\n");
-		return -1;
+		return 1;
 	}
 
 	for (i = 0; i < SRC_BUFFER_SIZE / 4; i++) {
@@ -380,7 +360,10 @@ init(void)
 	spdk_env_opts_init(&opts);
 	opts.name = "verify";
 	opts.core_mask = g_user_config.core_mask;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	if (init_src_buffer() != 0) {
 		fprintf(stderr, "Could not init src buffer\n");
@@ -395,20 +378,31 @@ init(void)
 }
 
 static int
-dump_result(struct thread_entry *threads, int len)
+dump_result(struct thread_entry *threads, uint32_t num_threads)
 {
-	int i;
+	uint32_t i;
 	uint64_t total_completed = 0;
 	uint64_t total_failed = 0;
 
-	for (i = 0; i < len; i++) {
+	for (i = 0; i < num_threads; i++) {
 		struct thread_entry *t = &threads[i];
+
+		if (!t->chan) {
+			continue;
+		}
+
+		if (t->init_failed) {
+			total_failed++;
+			continue;
+		}
+
 		total_completed += t->xfer_completed;
 		total_completed += t->fill_completed;
 		total_failed += t->xfer_failed;
 		total_failed += t->fill_failed;
-		if (t->xfer_completed || t->xfer_failed)
-			printf("lcore = %d, copy success = %ld, copy failed = %ld, fill success = %ld, fill failed = %ld \n",
+		if (total_completed || total_failed)
+			printf("lcore = %d, copy success = %" PRIu64 ", copy failed = %" PRIu64 ", fill success = %" PRIu64
+			       ", fill failed = %" PRIu64 "\n",
 			       t->lcore_id, t->xfer_completed, t->xfer_failed, t->fill_completed, t->fill_failed);
 	}
 	return total_failed ? 1 : 0;
@@ -420,7 +414,8 @@ get_next_chan(void)
 	struct spdk_ioat_chan *chan;
 
 	if (g_next_device == NULL) {
-		fprintf(stderr, "Not enough ioat channels found. Check that ioatdma driver is unloaded.\n");
+		fprintf(stderr, "Not enough ioat channels found. Check that ioat channels are bound\n");
+		fprintf(stderr, "to uio_pci_generic or vfio-pci.  scripts/setup.sh can help with this.\n");
 		return NULL;
 	}
 
@@ -431,11 +426,27 @@ get_next_chan(void)
 	return chan;
 }
 
+static uint32_t
+get_max_core(void)
+{
+	uint32_t i;
+	uint32_t max_core = 0;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i > max_core) {
+			max_core = i;
+		}
+	}
+
+	return max_core;
+}
+
 int
 main(int argc, char **argv)
 {
 	uint32_t i, current_core;
-	struct thread_entry threads[RTE_MAX_LCORE] = {};
+	struct thread_entry *threads;
+	uint32_t num_threads;
 	int rc;
 
 	if (parse_args(argc, argv) != 0) {
@@ -450,11 +461,19 @@ main(int argc, char **argv)
 
 	g_next_device = TAILQ_FIRST(&g_devices);
 
+	num_threads = get_max_core() + 1;
+	threads = calloc(num_threads, sizeof(*threads));
+	if (!threads) {
+		fprintf(stderr, "Thread memory allocation failed\n");
+		rc = 1;
+		goto cleanup;
+	}
+
 	current_core = spdk_env_get_current_core();
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
 			threads[i].chan = get_next_chan();
-			rte_eal_remote_launch(work_fn, &threads[i], i);
+			spdk_env_thread_launch_pinned(i, work_fn, &threads[i]);
 		}
 	}
 
@@ -464,20 +483,14 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (i != current_core) {
-			if (rte_eal_wait_lcore(i) != 0) {
-				rc = 1;
-				goto cleanup;
-			}
-		}
-	}
-
-	rc = dump_result(threads, RTE_MAX_LCORE);
+	spdk_env_thread_wait_all();
+	rc = dump_result(threads, num_threads);
 
 cleanup:
 	spdk_dma_free(g_src);
 	ioat_exit();
+	free(threads);
 
+	spdk_env_fini();
 	return rc;
 }

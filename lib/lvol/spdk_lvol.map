@@ -1,0 +1,42 @@
+{
+	global:
+
+	# public functions
+	spdk_lvs_opts_init;
+	spdk_lvs_init;
+	spdk_lvs_rename;
+	spdk_lvs_unload;
+	spdk_lvs_destroy;
+	spdk_lvs_grow;
+	spdk_lvs_grow_live;
+	spdk_lvol_create;
+	spdk_lvol_create_snapshot;
+	spdk_lvol_create_clone;
+	spdk_lvol_rename;
+	spdk_lvol_deletable;
+	spdk_lvol_destroy;
+	spdk_lvol_close;
+	spdk_lvol_get_io_channel;
+	spdk_lvs_load;
+	spdk_lvs_load_ext;
+	spdk_lvol_open;
+	spdk_lvol_inflate;
+	spdk_lvol_decouple_parent;
+	spdk_lvol_create_esnap_clone;
+	spdk_lvol_iter_immediate_clones;
+	spdk_lvol_get_by_uuid;
+	spdk_lvol_get_by_names;
+	spdk_lvol_is_degraded;
+	spdk_lvol_shallow_copy;
+	spdk_lvol_set_parent;
+	spdk_lvol_set_external_parent;
+
+	# internal functions
+	spdk_lvol_resize;
+	spdk_lvol_set_read_only;
+	spdk_lvs_esnap_missing_add;
+	spdk_lvs_esnap_missing_remove;
+	spdk_lvs_notify_hotplug;
+
+	local: *;
+};

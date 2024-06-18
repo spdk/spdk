@@ -1,83 +1,11 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/log.h"
-
-static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
-
-int spdk_g_log_facility = LOG_DAEMON;
-static enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
-static enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
-
-SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
-
-#define MAX_TMPBUF 1024
-
-struct syslog_code {
-	const char *c_name;
-	int c_val;
-};
-
-static const struct syslog_code facilitynames[] = {
-	{ "auth",	LOG_AUTH,	},
-	{ "authpriv",	LOG_AUTHPRIV,	},
-	{ "cron",	LOG_CRON,	},
-	{ "daemon",	LOG_DAEMON,	},
-	{ "ftp",	LOG_FTP,	},
-	{ "kern",	LOG_KERN,	},
-	{ "lpr",	LOG_LPR,	},
-	{ "mail",	LOG_MAIL,	},
-	{ "news",	LOG_NEWS,	},
-	{ "syslog",	LOG_SYSLOG,	},
-	{ "user",	LOG_USER,	},
-	{ "uucp",	LOG_UUCP,	},
-	{ "local0",	LOG_LOCAL0,	},
-	{ "local1",	LOG_LOCAL1,	},
-	{ "local2",	LOG_LOCAL2,	},
-	{ "local3",	LOG_LOCAL3,	},
-	{ "local4",	LOG_LOCAL4,	},
-	{ "local5",	LOG_LOCAL5,	},
-	{ "local6",	LOG_LOCAL6,	},
-	{ "local7",	LOG_LOCAL7,	},
-#ifdef __FreeBSD__
-	{ "console",	LOG_CONSOLE,	},
-	{ "ntp",	LOG_NTP,	},
-	{ "security",	LOG_SECURITY,	},
-#endif
-	{ NULL,		-1,		}
-};
+#include "spdk/log.h"
 
 static const char *const spdk_level_names[] = {
 	[SPDK_LOG_ERROR]	= "ERROR",
@@ -87,25 +15,19 @@ static const char *const spdk_level_names[] = {
 	[SPDK_LOG_DEBUG]	= "DEBUG",
 };
 
-void
-spdk_log_open(void)
-{
-	if (spdk_g_log_facility != 0) {
-		openlog("spdk", LOG_PID, spdk_g_log_facility);
-	} else {
-		openlog("spdk", LOG_PID, LOG_DAEMON);
-	}
-}
+#define MAX_TMPBUF 1024
 
-void
-spdk_log_close(void)
-{
-	closelog();
-}
+static logfunc *g_log = NULL;
+static bool g_log_timestamps = true;
+
+enum spdk_log_level g_spdk_log_level;
+enum spdk_log_level g_spdk_log_print_level;
 
 void
 spdk_log_set_level(enum spdk_log_level level)
 {
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
 	g_spdk_log_level = level;
 }
 
@@ -117,6 +39,8 @@ spdk_log_get_level(void) {
 void
 spdk_log_set_print_level(enum spdk_log_level level)
 {
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
 	g_spdk_log_print_level = level;
 }
 
@@ -125,75 +49,174 @@ spdk_log_get_print_level(void) {
 	return g_spdk_log_print_level;
 }
 
-int
-spdk_set_log_facility(const char *facility)
+void
+spdk_log_open(logfunc *logf)
 {
-	int i;
-
-	for (i = 0; facilitynames[i].c_name != NULL; i++) {
-		if (strcasecmp(facilitynames[i].c_name, facility) == 0) {
-			spdk_g_log_facility = facilitynames[i].c_val;
-			return 0;
-		}
+	if (logf) {
+		g_log = logf;
+	} else {
+		openlog("spdk", LOG_PID, LOG_LOCAL7);
 	}
-
-	spdk_g_log_facility = LOG_DAEMON;
-	return -1;
 }
 
-const char *
-spdk_get_log_facility(void)
+void
+spdk_log_close(void)
 {
-	const char *def_name = NULL;
-	int i;
+	if (!g_log) {
+		closelog();
+	}
+}
 
-	for (i = 0; facilitynames[i].c_name != NULL; i++) {
-		if (facilitynames[i].c_val == spdk_g_log_facility) {
-			return facilitynames[i].c_name;
-		} else if (facilitynames[i].c_val == LOG_DAEMON) {
-			def_name = facilitynames[i].c_name;
-		}
+void
+spdk_log_enable_timestamps(bool value)
+{
+	g_log_timestamps = value;
+}
+
+static void
+get_timestamp_prefix(char *buf, int buf_size)
+{
+	struct tm *info;
+	char date[24];
+	struct timespec ts;
+	long usec;
+
+	if (!g_log_timestamps) {
+		buf[0] = '\0';
+		return;
 	}
 
-	return def_name;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	info = localtime(&ts.tv_sec);
+	usec = ts.tv_nsec / 1000;
+	if (info == NULL) {
+		snprintf(buf, buf_size, "[%s.%06ld] ", "unknown date", usec);
+		return;
+	}
+
+	strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", info);
+	snprintf(buf, buf_size, "[%s.%06ld] ", date, usec);
 }
 
 void
 spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	 const char *format, ...)
 {
-	int severity = LOG_INFO;
-	char buf[MAX_TMPBUF];
 	va_list ap;
 
+	va_start(ap, format);
+	spdk_vlog(level, file, line, func, format, ap);
+	va_end(ap);
+}
+
+int
+spdk_log_to_syslog_level(enum spdk_log_level level)
+{
 	switch (level) {
-	case SPDK_LOG_ERROR:
-		severity = LOG_ERR;
-		break;
-	case SPDK_LOG_WARN:
-		severity = LOG_WARNING;
-		break;
-	case SPDK_LOG_NOTICE:
-		severity = LOG_NOTICE;
-		break;
-	case SPDK_LOG_INFO:
 	case SPDK_LOG_DEBUG:
-		severity = LOG_INFO;
+	case SPDK_LOG_INFO:
+		return LOG_INFO;
+	case SPDK_LOG_NOTICE:
+		return LOG_NOTICE;
+	case SPDK_LOG_WARN:
+		return LOG_WARNING;
+	case SPDK_LOG_ERROR:
+		return LOG_ERR;
+	case SPDK_LOG_DISABLED:
+		return -1;
+	default:
 		break;
 	}
 
-	va_start(ap, format);
+	return LOG_INFO;
+}
 
-	vsnprintf(buf, sizeof(buf), format, ap);
+void
+spdk_vlog(enum spdk_log_level level, const char *file, const int line, const char *func,
+	  const char *format, va_list ap)
+{
+	int severity = LOG_INFO;
+	char *buf, _buf[MAX_TMPBUF], *ext_buf = NULL;
+	char timestamp[64];
+	int rc;
+
+	if (g_log) {
+		g_log(level, file, line, func, format, ap);
+		return;
+	}
+
+	if (level > g_spdk_log_print_level && level > g_spdk_log_level) {
+		return;
+	}
+
+	severity = spdk_log_to_syslog_level(level);
+	if (severity < 0) {
+		return;
+	}
+
+	buf = _buf;
+
+	rc = vsnprintf(_buf, sizeof(_buf), format, ap);
+	if (rc > MAX_TMPBUF) {
+		/* The output including the terminating was more than MAX_TMPBUF bytes.
+		 * Try allocating memory large enough to hold the output.
+		 */
+		rc = vasprintf(&ext_buf, format, ap);
+		if (rc < 0) {
+			/* Failed to allocate memory. Allow output to be truncated. */
+		} else {
+			buf = ext_buf;
+		}
+	}
 
 	if (level <= g_spdk_log_print_level) {
-		fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		get_timestamp_prefix(timestamp, sizeof(timestamp));
+		if (file) {
+			fprintf(stderr, "%s%s:%4d:%s: *%s*: %s", timestamp, file, line, func, spdk_level_names[level], buf);
+		} else {
+			fprintf(stderr, "%s%s", timestamp, buf);
+		}
 	}
 
 	if (level <= g_spdk_log_level) {
-		syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		if (file) {
+			syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		} else {
+			syslog(severity, "%s", buf);
+		}
 	}
 
+	free(ext_buf);
+}
+
+void
+spdk_vflog(FILE *fp, const char *file, const int line, const char *func,
+	   const char *format, va_list ap)
+{
+	char buf[MAX_TMPBUF];
+	char timestamp[64];
+
+	vsnprintf(buf, sizeof(buf), format, ap);
+
+	get_timestamp_prefix(timestamp, sizeof(timestamp));
+
+	if (file) {
+		fprintf(fp, "%s%s:%4d:%s: %s", timestamp, file, line, func, buf);
+	} else {
+		fprintf(fp, "%s%s", timestamp, buf);
+	}
+
+	fflush(fp);
+}
+
+void
+spdk_flog(FILE *fp, const char *file, const int line, const char *func,
+	  const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	spdk_vflog(fp, file, line, func, format, ap);
 	va_end(ap);
 }
 
@@ -213,6 +236,7 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 		if (idx != 0 && idx % 16 == 0) {
 			snprintf(tmpbuf + total, sizeof tmpbuf - total,
 				 " %s", buf16);
+			memset(buf16, 0, sizeof buf16);
 			fprintf(fp, "%s\n", tmpbuf);
 			total = 0;
 		}
@@ -229,8 +253,12 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
 	}
 	for (; idx % 16 != 0; idx++) {
+		if (idx == 8) {
+			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
+					  " ");
+		}
+
 		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
-		buf16[idx % 16] = ' ';
 	}
 	snprintf(tmpbuf + total, sizeof tmpbuf - total, "  %s", buf16);
 	fprintf(fp, "%s\n", tmpbuf);
@@ -238,123 +266,7 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 }
 
 void
-spdk_trace_dump(const char *label, const uint8_t *buf, size_t len)
+spdk_log_dump(FILE *fp, const char *label, const void *buf, size_t len)
 {
-	fdump(stderr, label, buf, len);
-}
-
-static struct spdk_trace_flag *
-get_trace_flag(const char *name)
-{
-	struct spdk_trace_flag *flag;
-
-	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
-		if (strcasecmp(name, flag->name) == 0) {
-			return flag;
-		}
-	}
-
-	return NULL;
-}
-
-void
-spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag)
-{
-	struct spdk_trace_flag *iter;
-
-	if (name == NULL || flag == NULL) {
-		SPDK_ERRLOG("missing spdk_trace_flag parameters\n");
-		abort();
-	}
-
-	if (get_trace_flag(name)) {
-		SPDK_ERRLOG("duplicate spdk_trace_flag '%s'\n", name);
-		abort();
-	}
-
-	TAILQ_FOREACH(iter, &g_trace_flags, tailq) {
-		if (strcasecmp(iter->name, flag->name) > 0) {
-			TAILQ_INSERT_BEFORE(iter, flag, tailq);
-			return;
-		}
-	}
-
-	TAILQ_INSERT_TAIL(&g_trace_flags, flag, tailq);
-}
-
-bool
-spdk_log_get_trace_flag(const char *name)
-{
-	struct spdk_trace_flag *flag = get_trace_flag(name);
-
-	if (flag && flag->enabled) {
-		return true;
-	}
-
-	return false;
-}
-
-static int
-set_trace_flag(const char *name, bool value)
-{
-	struct spdk_trace_flag *flag;
-
-	if (strcasecmp(name, "all") == 0) {
-		TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
-			flag->enabled = value;
-		}
-		return 0;
-	}
-
-	flag = get_trace_flag(name);
-	if (flag == NULL) {
-		return -1;
-	}
-
-	flag->enabled = value;
-
-	return 0;
-}
-
-int
-spdk_log_set_trace_flag(const char *name)
-{
-	return set_trace_flag(name, true);
-}
-
-int
-spdk_log_clear_trace_flag(const char *name)
-{
-	return set_trace_flag(name, false);
-}
-
-struct spdk_trace_flag *
-spdk_log_get_first_trace_flag(void)
-{
-	return TAILQ_FIRST(&g_trace_flags);
-}
-
-struct spdk_trace_flag *
-spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag)
-{
-	return TAILQ_NEXT(flag, tailq);
-}
-
-void
-spdk_tracelog_usage(FILE *f, const char *trace_arg)
-{
-#ifdef DEBUG
-	struct spdk_trace_flag *flag;
-
-	fprintf(f, " %s flag    enable trace flag (all", trace_arg);
-
-	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
-		fprintf(f, ", %s", flag->name);
-	}
-
-	fprintf(f, ")\n");
-#else
-	fprintf(f, " %s flag    enable trace flag (not supported - must rebuild with CONFIG_DEBUG=y)\n",
-		trace_arg);
-#endif
+	fdump(fp, label, buf, len);
 }

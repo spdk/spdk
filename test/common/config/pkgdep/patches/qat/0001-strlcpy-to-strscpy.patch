@@ -1,0 +1,533 @@
+strlcpy() was completely removed in 6.8.x and replaced entirely with
+strscpy().
+
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d26270061ae66b915138af7cd73ca6f8b85e6b44
+---
+ .../qat_kernel/src/lac_adf_interface_linux.c  |  2 +-
+ .../crypto/qat/qat_200xx/adf_200xx_hw_data.c  |  8 ++--
+ .../crypto/qat/qat_c3xxx/adf_c3xxx_hw_data.c  |  8 ++--
+ .../crypto/qat/qat_c62x/adf_c62x_hw_data.c    |  8 ++--
+ .../drivers/crypto/qat/qat_common/adf_cfg.c   | 14 +++---
+ .../crypto/qat/qat_common/adf_cfg_bundle.c    |  2 +-
+ .../crypto/qat/qat_common/adf_cfg_device.c    |  2 +-
+ .../crypto/qat/qat_common/adf_cfg_section.c   | 48 +++++++++----------
+ .../crypto/qat/qat_common/adf_ctl_drv.c       |  4 +-
+ .../crypto/qat/qat_common/adf_gen2_hw_data.c  |  4 +-
+ .../crypto/qat/qat_common/adf_gen3_hw_data.c  |  2 +-
+ .../qat/qat_common/adf_transport_debug.c      |  2 +-
+ .../crypto/qat/qat_common/qat_crypto.c        |  2 +-
+ .../crypto/qat/qat_d15xx/adf_d15xx_hw_data.c  |  8 ++--
+ .../qat/qat_dh895xcc/adf_dh895xcc_hw_data.c   |  8 ++--
+ 15 files changed, 61 insertions(+), 61 deletions(-)
+
+diff --git a/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c b/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c
+index da0edcd..75209ac 100644
+--- a/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c
++++ b/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c
+@@ -99,7 +99,7 @@ static icp_accel_dev_t *create_adf_dev_structure(
+     adf->accelId = accel_dev->accel_id;
+     adf->pAccelName = (char *)hw_data->dev_class->name;
+     adf->deviceType = (device_type_t)hw_data->dev_class->type;
+-    strlcpy(adf->deviceName, hw_data->dev_class->name, sizeof(adf->deviceName));
++    strscpy(adf->deviceName, hw_data->dev_class->name, sizeof(adf->deviceName));
+     adf->accelCapabilitiesMask = hw_data->accel_capabilities_mask;
+     adf->cipherCapabilitiesMask = hw_data->cipher_capabilities_mask;
+     adf->hashCapabilitiesMask = hw_data->hash_capabilities_mask;
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_200xx/adf_200xx_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_200xx/adf_200xx_hw_data.c
+index 5850ddb..778a3e5 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_200xx/adf_200xx_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_200xx/adf_200xx_hw_data.c
+@@ -508,19 +508,19 @@ static int get_fw_name(struct adf_accel_dev *accel_dev, char *uof_name)
+ 
+ 	switch (fw_image_type) {
+ 	case ADF_FW_IMAGE_DEFAULT:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME,
+ 			   ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CRYPTO:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
+ 			   ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_COMPRESSION:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
+ 			   ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CUSTOM1:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
+ 			   ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	default:
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_c3xxx/adf_c3xxx_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_c3xxx/adf_c3xxx_hw_data.c
+index 46912fc..57982f6 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_c3xxx/adf_c3xxx_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_c3xxx/adf_c3xxx_hw_data.c
+@@ -508,19 +508,19 @@ static int get_fw_name(struct adf_accel_dev *accel_dev, char *uof_name)
+ 
+ 	switch (fw_image_type) {
+ 	case ADF_FW_IMAGE_DEFAULT:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CRYPTO:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_COMPRESSION:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CUSTOM1:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	default:
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_c62x/adf_c62x_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_c62x/adf_c62x_hw_data.c
+index 503bcfe..5606c00 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_c62x/adf_c62x_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_c62x/adf_c62x_hw_data.c
+@@ -713,19 +713,19 @@ static int get_fw_name(struct adf_accel_dev *accel_dev, char *uof_name)
+ 
+ 	switch (fw_image_type) {
+ 	case ADF_FW_IMAGE_DEFAULT:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CRYPTO:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_COMPRESSION:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CUSTOM1:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	default:
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg.c
+index 2fa2fc8..b6a8970 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg.c
+@@ -180,7 +180,7 @@ static int adf_cfg_section_restore_all(struct adf_accel_dev *accel_dev,
+ 			goto err_restore;
+ 		}
+ 
+-		strlcpy(iter_sec->name, ptr_sec->name, sizeof(iter_sec->name));
++		strscpy(iter_sec->name, ptr_sec->name, sizeof(iter_sec->name));
+ 		INIT_LIST_HEAD(&iter_sec->param_head);
+ 
+ 		/* now we restore all the parameters */
+@@ -346,13 +346,13 @@ int adf_cfg_add_key_value_param(struct adf_accel_dev *accel_dev,
+ 		return -ENOMEM;
+ 
+ 	INIT_LIST_HEAD(&key_val->list);
+-	strlcpy(key_val->key, key, sizeof(key_val->key));
++	strscpy(key_val->key, key, sizeof(key_val->key));
+ 
+ 	if (type == ADF_DEC) {
+ 		snprintf(key_val->val, ADF_CFG_MAX_VAL_LEN_IN_BYTES,
+ 			 "%ld", (*((long *)val)));
+ 	} else if (type == ADF_STR) {
+-		strlcpy(key_val->val, (char *)val, sizeof(key_val->val));
++		strscpy(key_val->val, (char *)val, sizeof(key_val->val));
+ 	} else if (type == ADF_HEX) {
+ 		snprintf(key_val->val, ADF_CFG_MAX_VAL_LEN_IN_BYTES,
+ 			 "0x%lx", (unsigned long)val);
+@@ -401,7 +401,7 @@ int adf_cfg_save_section(struct adf_accel_dev *accel_dev,
+ 		return -EFAULT;
+ 	}
+ 
+-	strlcpy(section->name, name, sizeof(section->name));
++	strscpy(section->name, name, sizeof(section->name));
+ 	INIT_LIST_HEAD(&section->param_head);
+ 
+ 	/* now we save all the parameters */
+@@ -518,7 +518,7 @@ int adf_cfg_section_add(struct adf_accel_dev *accel_dev, const char *name)
+ 	if (!sec)
+ 		return -ENOMEM;
+ 
+-	strlcpy(sec->name, name, sizeof(sec->name));
++	strscpy(sec->name, name, sizeof(sec->name));
+ 	INIT_LIST_HEAD(&sec->param_head);
+ 	down_write(&cfg->lock);
+ 	list_add_tail(&sec->list, &cfg->sec_list);
+@@ -566,8 +566,8 @@ static int adf_cfg_restore_key_value_param(struct adf_accel_dev *accel_dev,
+ 
+ 	INIT_LIST_HEAD(&key_val->list);
+ 
+-	strlcpy(key_val->key, key, sizeof(key_val->key));
+-	strlcpy(key_val->val, val, sizeof(key_val->val));
++	strscpy(key_val->key, key, sizeof(key_val->key));
++	strscpy(key_val->val, val, sizeof(key_val->val));
+ 	key_val->type = type;
+ 	down_write(&cfg->lock);
+ 	adf_cfg_keyval_add(key_val, section);
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_bundle.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_bundle.c
+index c25cad8..85f5248 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_bundle.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_bundle.c
+@@ -102,7 +102,7 @@ int adf_cfg_get_ring_pairs_from_bundle(struct adf_cfg_bundle *bundle,
+ 		return -EFAULT;
+ 	}
+ 
+-	strlcpy(bundle->sections[bundle->section_index],
++	strscpy(bundle->sections[bundle->section_index],
+ 		process_name, ADF_CFG_MAX_STR_LEN);
+ 	bundle->section_index++;
+ 
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_device.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_device.c
+index 7edb99a..7aa5735 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_device.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_device.c
+@@ -918,7 +918,7 @@ static void adf_cfg_process_user_cy_section(struct adf_accel_dev *accel_dev,
+ 	list_for_each(list, &cfg->sec_list) {
+ 		sec = list_entry(list, struct adf_cfg_section, list);
+ 		if (!sec->processed && !sec->is_derived) {
+-			strlcpy(key, ADF_NUM_CY, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++			strscpy(key, ADF_NUM_CY, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 			if (adf_cfg_set_value(accel_dev, sec->name, key,
+ 					      &num_cy_inst))
+ 				num_cy_inst = 0;
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_section.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_section.c
+index bce450f..7c22979 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_section.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_cfg_section.c
+@@ -73,18 +73,18 @@ static int adf_cfg_set_core_number_for_instance(struct adf_accel_dev *accel_dev,
+ 	pos = strchr(core_val, ',');
+ 	while (pos) {
+ 		pos[0] = '\0';
+-		strlcpy(tokens[token_index++], core_val,
++		strscpy(tokens[token_index++], core_val,
+ 			ADF_CFG_MAX_TOKEN_LEN);
+ 		core_val = pos + 1;
+ 		pos = strchr(core_val, ',');
+ 		if (!pos)
+-			strlcpy(tokens[token_index++],
++			strscpy(tokens[token_index++],
+ 				core_val, ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 	}
+ 
+ 	/* in case there is only N-M */
+ 	if (token_index == 0)
+-		strlcpy(tokens[token_index++], core_val,
++		strscpy(tokens[token_index++], core_val,
+ 				ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 
+ 	/* parse the tokens such as N-M */
+@@ -213,7 +213,7 @@ static void adf_cfg_add_cy_inst_info(struct adf_accel_dev *accel_dev,
+ 	adf_cfg_add_key_value_param(accel_dev, derived_sec,
+ 				    key, (void *)&ring_number, ADF_DEC);
+ 
+-	strlcpy(key, ADF_CY_RING_ASYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_CY_RING_ASYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key, &asym_req))
+ 		asym_req = ADF_CFG_DEF_CY_RING_ASYM_SIZE;
+ 
+@@ -222,7 +222,7 @@ static void adf_cfg_add_cy_inst_info(struct adf_accel_dev *accel_dev,
+ 	adf_cfg_add_key_value_param(accel_dev, derived_sec,
+ 				    key, (void *)&asym_req, ADF_DEC);
+ 
+-	strlcpy(key, ADF_CY_RING_SYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_CY_RING_SYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key, &sym_req))
+ 		sym_req = ADF_CFG_DEF_CY_RING_SYM_SIZE;
+ 
+@@ -276,7 +276,7 @@ static void adf_cfg_add_dc_inst_info(struct adf_accel_dev *accel_dev,
+ 	adf_cfg_add_key_value_param(accel_dev, derived_sec,
+ 				    key, (void *)&ring_number, ADF_DEC);
+ 
+-	strlcpy(key, ADF_DC_RING_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_DC_RING_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key, &dc_req))
+ 		dc_req = ADF_CFG_DEF_DC_RING_SIZE;
+ 
+@@ -332,7 +332,7 @@ static void adf_cfg_add_asym_inst_info(struct adf_accel_dev *accel_dev,
+ 	adf_cfg_add_key_value_param(accel_dev, derived_sec,
+ 				    key, (void *)&ring_number, ADF_DEC);
+ 
+-	strlcpy(key, ADF_CY_RING_ASYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_CY_RING_ASYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key, &asym_req))
+ 		asym_req = ADF_CFG_DEF_CY_RING_ASYM_SIZE;
+ 
+@@ -388,7 +388,7 @@ static void adf_cfg_add_sym_inst_info(struct adf_accel_dev *accel_dev,
+ 	adf_cfg_add_key_value_param(accel_dev, derived_sec,
+ 				    key, (void *)&ring_number, ADF_DEC);
+ 
+-	strlcpy(key, ADF_CY_RING_SYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_CY_RING_SYM_SIZE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key, &sym_req))
+ 		sym_req = ADF_CFG_DEF_CY_RING_SYM_SIZE;
+ 
+@@ -503,7 +503,7 @@ static int adf_cfg_create_rings_entries_for_cy_inst(
+ 	}
+ 
+ 	if (!dc_enabled) {
+-		strlcpy(key, ADF_NUM_DC, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++		strscpy(key, ADF_NUM_DC, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 		if (adf_cfg_set_value(accel_dev, processed_sec, key,
+ 				&num_dc_inst)){
+ 			dev_warn(&GET_DEV(accel_dev),
+@@ -520,7 +520,7 @@ static int adf_cfg_create_rings_entries_for_cy_inst(
+ 		}
+ 	}
+ 
+-	strlcpy(key, ADF_NUM_CY, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_NUM_CY, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, processed_sec, key, &num_inst))
+ 		goto failed;
+ 
+@@ -556,7 +556,7 @@ static int adf_cfg_create_rings_entries_for_cy_inst(
+ 					    val))
+ 			goto failed;
+ 
+-		strlcpy(crypto_inst->name, val, sizeof(crypto_inst->name));
++		strscpy(crypto_inst->name, val, sizeof(crypto_inst->name));
+ 
+ 		snprintf(key, ADF_CFG_MAX_KEY_LEN_IN_BYTES,
+ 			 ADF_CY_POLL_MODE_FORMAT, i);
+@@ -657,7 +657,7 @@ static int adf_cfg_create_rings_entries_for_dc_inst(
+ 	}
+ 
+ 	if (!cy_enabled) {
+-		strlcpy(key, ADF_NUM_CY, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++		strscpy(key, ADF_NUM_CY, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 		if (adf_cfg_set_value(accel_dev, processed_sec, key,
+ 				&num_cy_inst)){
+ 			dev_warn(&GET_DEV(accel_dev),
+@@ -674,7 +674,7 @@ static int adf_cfg_create_rings_entries_for_dc_inst(
+ 		}
+ 	}
+ 
+-	strlcpy(key, ADF_NUM_DC, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_NUM_DC, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, processed_sec, key, &num_inst))
+ 		goto failed;
+ 
+@@ -712,7 +712,7 @@ static int adf_cfg_create_rings_entries_for_dc_inst(
+ 					    val))
+ 			goto failed;
+ 
+-		strlcpy(dc_inst->name, val, sizeof(dc_inst->name));
++		strscpy(dc_inst->name, val, sizeof(dc_inst->name));
+ 
+ 		snprintf(key, ADF_CFG_MAX_KEY_LEN_IN_BYTES,
+ 			 ADF_DC_POLL_MODE_FORMAT, i);
+@@ -771,11 +771,11 @@ static int adf_cfg_process_user_section(struct adf_accel_dev *accel_dev,
+ 		goto failed;
+ 
+ 	ret = -EFAULT;
+-	strlcpy(key, ADF_NUM_PROCESSES, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_NUM_PROCESSES, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, sec_name, key, &num_processes))
+ 		num_processes = 0;
+ 
+-	strlcpy(key, ADF_LIMIT_DEV_ACCESS, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_LIMIT_DEV_ACCESS, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, sec_name, key, &limit_dev_acc))
+ 		limit_dev_acc = 0;
+ 
+@@ -900,28 +900,28 @@ static int adf_cfg_cleanup_general_section(struct adf_accel_dev *accel_dev,
+ 
+ 	ret = -EFAULT;
+ 	/* Remove sections that not needed after processing */
+-	strlcpy(key, ADF_CONFIG_VERSION, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_CONFIG_VERSION, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_remove_key_param(accel_dev, sec_name, key))
+ 		goto failed;
+ 
+-	strlcpy(key, ADF_CY ADF_RING_ASYM_SIZE,
++	strscpy(key, ADF_CY ADF_RING_ASYM_SIZE,
+ 		ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_remove_key_param(accel_dev, sec_name, key))
+ 		goto failed;
+ 
+-	strlcpy(key, ADF_CY ADF_RING_SYM_SIZE,
++	strscpy(key, ADF_CY ADF_RING_SYM_SIZE,
+ 		ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_remove_key_param(accel_dev, sec_name, key))
+ 		goto failed;
+ 
+-	strlcpy(key, ADF_DC ADF_RING_DC_SIZE,
++	strscpy(key, ADF_DC ADF_RING_DC_SIZE,
+ 		ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_remove_key_param(accel_dev, sec_name, key))
+ 		goto failed;
+ 
+ 	/* After all processing done, set the "FirstUserBundle" value */
+ 	first_used_bundle = accel_dev->cfg->dev->max_kernel_bundle_nr + 1;
+-	strlcpy(key, ADF_FIRST_USER_BUNDLE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
++	strscpy(key, ADF_FIRST_USER_BUNDLE, ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_add_key_value_param(accel_dev,
+ 					sec_name,
+ 					key,
+@@ -1018,18 +1018,18 @@ static int adf_cfg_create_accel_section(struct adf_accel_dev *accel_dev,
+ 	if (!val)
+ 		goto failed;
+ 
+-	strlcpy(key, ADF_ETRMGR_COALESCING_ENABLED,
++	strscpy(key, ADF_ETRMGR_COALESCING_ENABLED,
+ 		ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key, &accel_coales))
+ 		accel_coales = ADF_CFG_ACCEL_DEF_COALES;
+ 
+-	strlcpy(key, ADF_ETRMGR_COALESCE_TIMER,
++	strscpy(key, ADF_ETRMGR_COALESCE_TIMER,
+ 		ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key,
+ 			      &accel_coales_timer))
+ 		accel_coales_timer = ADF_CFG_ACCEL_DEF_COALES_TIMER;
+ 
+-	strlcpy(key, ADF_ETRMGR_COALESCING_MSG_ENABLED,
++	strscpy(key, ADF_ETRMGR_COALESCING_MSG_ENABLED,
+ 		ADF_CFG_MAX_KEY_LEN_IN_BYTES);
+ 	if (adf_cfg_set_value(accel_dev, ADF_GENERAL_SEC, key,
+ 			      &accel_coales_num_msg))
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+index 8fe27c5..4433033 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+@@ -706,7 +706,7 @@ static int adf_ctl_ioctl_get_status(unsigned long arg)
+ 	dev_info.num_logical_accel = hw_data->num_logical_accel;
+ 	dev_info.banks_per_accel = hw_data->num_banks
+ 					/ hw_data->num_logical_accel;
+-	strlcpy(dev_info.name, hw_data->dev_class->name, sizeof(dev_info.name));
++	strscpy(dev_info.name, hw_data->dev_class->name, sizeof(dev_info.name));
+ 	dev_info.instance_id = hw_data->instance_id;
+ 	dev_info.node_id     = adf_get_dev_node_id(accel_to_pci_dev(accel_dev));
+ 	dev_info.type = hw_data->dev_class->type;
+@@ -845,7 +845,7 @@ static int adf_ctl_ioctl_debug_status_accel_dev(unsigned long arg)
+ 
+ 	hw_data = accel_dev->hw_device;
+ 	if (accel_dev->cfg) /* Acceleration framework device */
+-		strlcpy(dev_info.name, hw_data->dev_class->name,
++		strscpy(dev_info.name, hw_data->dev_class->name,
+ 			sizeof(dev_info.name));
+ 	else /* Detached VF fake accel device */
+ 		snprintf(dev_info.name, sizeof(dev_info.name),
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen2_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen2_hw_data.c
+index 1cdf9d1..ed7e2a5 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen2_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen2_hw_data.c
+@@ -137,10 +137,10 @@ int adf_gen2_ae_fw_load(struct adf_accel_dev *accel_dev)
+ 	accel_dev->fw_versions.mmp_version_patch = mmp_ver.ver_val[2];
+ 
+ 	if (pci_info->pci_dev->device == ADF_DH895XCC_PCI_DEVICE_ID) {
+-		strlcpy(uofname, ADF_DH895XCC_AE_FW_NAME,
++		strscpy(uofname, ADF_DH895XCC_AE_FW_NAME,
+ 			sizeof(uofname));
+ 	} else {
+-		strlcpy(uofname, ADF_CXXX_AE_FW_NAME, sizeof(uofname));
++		strscpy(uofname, ADF_CXXX_AE_FW_NAME, sizeof(uofname));
+ 	}
+ 
+ 	if (hw_device->accel_capabilities_mask &
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen3_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen3_hw_data.c
+index f7a17ab..af864eb 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen3_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_gen3_hw_data.c
+@@ -29,7 +29,7 @@ static int check_rl_capability_gen3(struct adf_accel_dev *accel_dev)
+ 	char key[ADF_CFG_MAX_KEY_LEN_IN_BYTES] = {'\0'};
+ 	char val[ADF_CFG_MAX_VAL_LEN_IN_BYTES] = {'\0'};
+ 
+-	strlcpy(key, ADF_RL_FIRMWARE_ENABLED, sizeof(key));
++	strscpy(key, ADF_RL_FIRMWARE_ENABLED, sizeof(key));
+ 	if (!adf_cfg_get_param_value(accel_dev, ADF_GENERAL_SEC, key, val))
+ 		if (kstrtoul(val, 0, &rl_enabled))
+ 			return -EFAULT;
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_transport_debug.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_transport_debug.c
+index 65675e7..65731ae 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_transport_debug.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_transport_debug.c
+@@ -114,7 +114,7 @@ int adf_ring_debugfs_add(struct adf_etr_ring_data *ring, const char *name)
+ 	if (!ring_debug)
+ 		return -ENOMEM;
+ 
+-	strlcpy(ring_debug->ring_name, name, sizeof(ring_debug->ring_name));
++	strscpy(ring_debug->ring_name, name, sizeof(ring_debug->ring_name));
+ 	snprintf(entry_name, sizeof(entry_name), "ring_%02d",
+ 		 ring->ring_number);
+ 
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/qat_crypto.c b/quickassist/qat/drivers/crypto/qat/qat_common/qat_crypto.c
+index dda64da..ba684eb 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/qat_crypto.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/qat_crypto.c
+@@ -445,7 +445,7 @@ static int qat_crypto_create_instances(struct adf_accel_dev *accel_dev)
+ 	struct adf_hw_device_data *hw_data = accel_dev->hw_device;
+ 
+ 	INIT_LIST_HEAD(&accel_dev->crypto_list);
+-	strlcpy(key, ADF_NUM_CY, sizeof(key));
++	strscpy(key, ADF_NUM_CY, sizeof(key));
+ 	if (adf_cfg_get_param_value(accel_dev, SEC, key, val))
+ 		return -EFAULT;
+ 
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_d15xx/adf_d15xx_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_d15xx/adf_d15xx_hw_data.c
+index 7bfd456..f783f52 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_d15xx/adf_d15xx_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_d15xx/adf_d15xx_hw_data.c
+@@ -519,19 +519,19 @@ static int get_fw_name(struct adf_accel_dev *accel_dev, char *uof_name)
+ 
+ 	switch (fw_image_type) {
+ 	case ADF_FW_IMAGE_DEFAULT:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CRYPTO:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CRYPTO,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_COMPRESSION:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_COMPRESSION,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CUSTOM1:
+-		strlcpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
++		strscpy(uof_name, ADF_CXXX_AE_FW_NAME_CUSTOM1,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	default:
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.c b/quickassist/qat/drivers/crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.c
+index 643c511..92fba44 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.c
+@@ -561,19 +561,19 @@ static int get_fw_name(struct adf_accel_dev *accel_dev, char *uof_name)
+ 
+ 	switch (fw_image_type) {
+ 	case ADF_FW_IMAGE_DEFAULT:
+-		strlcpy(uof_name, ADF_DH895XCC_AE_FW_NAME,
++		strscpy(uof_name, ADF_DH895XCC_AE_FW_NAME,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CRYPTO:
+-		strlcpy(uof_name, ADF_DH895XCC_AE_FW_NAME_CRYPTO,
++		strscpy(uof_name, ADF_DH895XCC_AE_FW_NAME_CRYPTO,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_COMPRESSION:
+-		strlcpy(uof_name, ADF_DH895XCC_AE_FW_NAME_COMPRESSION,
++		strscpy(uof_name, ADF_DH895XCC_AE_FW_NAME_COMPRESSION,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	case ADF_FW_IMAGE_CUSTOM1:
+-		strlcpy(uof_name, ADF_DH895XCC_AE_FW_NAME_CUSTOM1,
++		strscpy(uof_name, ADF_DH895XCC_AE_FW_NAME_CUSTOM1,
+ 			ADF_CFG_MAX_VAL_LEN_IN_BYTES);
+ 		break;
+ 	default:
+-- 

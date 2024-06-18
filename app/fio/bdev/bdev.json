@@ -1,0 +1,17 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "block_size": 512,
+            "num_blocks": 262144,
+            "name": "Malloc0"
+          },
+          "method": "bdev_malloc_create"
+        }
+      ]
+    }
+  ]
+}

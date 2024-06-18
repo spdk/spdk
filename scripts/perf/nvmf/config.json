@@ -1,0 +1,40 @@
+{
+  "general": {
+    "username": "uname",
+    "password": "pass",
+    "transport": "transport_type"
+  },
+  "target": {
+    "nic_ips": ["192.0.1.1", "192.0.2.1"],
+    "mode": "spdk",
+    "null_block_devices": 0,
+    "nvmet_dir": "/path/to/nvmetcli",
+    "core_mask": "[1]",
+    "num_shared_buffers": 4096
+  },
+  "initiator1": {
+    "ip": "10.0.0.1",
+    "nic_ips": ["192.0.1.2"],
+    "target_nic_ips": ["192.0.1.1"],
+    "mode": "spdk",
+    "fio_bin": "/path/to/fio/bin",
+    "nvmecli_bin": "/path/to/nvmecli/bin",
+    "num_cores": 4
+  },
+  "initiator2": {
+    "ip": "10.0.0.2",
+    "nic_ips": ["192.0.2.2"],
+    "target_nic_ips": ["192.0.2.1"],
+    "mode": "spdk"
+  },
+  "fio": {
+    "bs": ["4k"],
+    "qd": [128],
+    "rw": ["randrw"],
+    "rwmixread": 100,
+    "num_jobs": 1,
+    "run_time": 5,
+    "ramp_time": 1,
+    "run_num": 3
+  }
+}

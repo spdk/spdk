@@ -1,40 +1,9 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
-
-#include <rte_config.h>
-#include <rte_launch.h>
 
 #include "spdk/ioat.h"
 #include "spdk/env.h"
@@ -55,7 +24,7 @@ struct ioat_device {
 	TAILQ_ENTRY(ioat_device) tailq;
 };
 
-static TAILQ_HEAD(, ioat_device) g_devices;
+static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static struct ioat_device *g_next_device;
 
 static struct user_config g_user_config;
@@ -66,6 +35,8 @@ struct ioat_chan_entry {
 	uint64_t xfer_completed;
 	uint64_t xfer_failed;
 	uint64_t current_queue_depth;
+	uint64_t waiting_for_flush;
+	uint64_t flush_threshold;
 	bool is_draining;
 	struct spdk_mempool *data_pool;
 	struct spdk_mempool *task_pool;
@@ -73,7 +44,7 @@ struct ioat_chan_entry {
 };
 
 struct worker_thread {
-	struct ioat_chan_entry 	*ctx;
+	struct ioat_chan_entry	*ctx;
 	struct worker_thread	*next;
 	unsigned		core;
 };
@@ -165,7 +136,7 @@ register_workers(void)
 		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
 			fprintf(stderr, "Unable to allocate worker\n");
-			return -1;
+			return 1;
 		}
 
 		worker->core = i;
@@ -235,8 +206,6 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 static int
 ioat_init(void)
 {
-	TAILQ_INIT(&g_devices);
-
 	if (spdk_ioat_probe(NULL, probe_cb, attach_cb) != 0) {
 		fprintf(stderr, "ioat_probe() failed\n");
 		return 1;
@@ -253,7 +222,7 @@ usage(char *program_name)
 	printf("\t[-c core mask for distributing I/O submission/completion work]\n");
 	printf("\t[-q queue depth]\n");
 	printf("\t[-n number of channels]\n");
-	printf("\t[-s transfer size in bytes]\n");
+	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-v verify copy result if this switch is on]\n");
 }
@@ -264,19 +233,19 @@ parse_args(int argc, char **argv)
 	int op;
 
 	construct_user_config(&g_user_config);
-	while ((op = getopt(argc, argv, "c:hn:q:s:t:v")) != -1) {
+	while ((op = getopt(argc, argv, "c:hn:o:q:t:v")) != -1) {
 		switch (op) {
-		case 's':
-			g_user_config.xfer_size_bytes = atoi(optarg);
+		case 'o':
+			g_user_config.xfer_size_bytes = spdk_strtol(optarg, 10);
 			break;
 		case 'n':
-			g_user_config.ioat_chan_num = atoi(optarg);
+			g_user_config.ioat_chan_num = spdk_strtol(optarg, 10);
 			break;
 		case 'q':
-			g_user_config.queue_depth = atoi(optarg);
+			g_user_config.queue_depth = spdk_strtol(optarg, 10);
 			break;
 		case 't':
-			g_user_config.time_in_sec = atoi(optarg);
+			g_user_config.time_in_sec = spdk_strtol(optarg, 10);
 			break;
 		case 'c':
 			g_user_config.core_mask = optarg;
@@ -292,9 +261,9 @@ parse_args(int argc, char **argv)
 			return 1;
 		}
 	}
-	if (!g_user_config.xfer_size_bytes || !g_user_config.queue_depth ||
-	    !g_user_config.time_in_sec || !g_user_config.core_mask ||
-	    !g_user_config.ioat_chan_num) {
+	if (g_user_config.xfer_size_bytes <= 0 || g_user_config.queue_depth <= 0 ||
+	    g_user_config.time_in_sec <= 0 || !g_user_config.core_mask ||
+	    g_user_config.ioat_chan_num <= 0) {
 		usage(argv[0]);
 		return 1;
 	}
@@ -305,6 +274,7 @@ parse_args(int argc, char **argv)
 static void
 drain_io(struct ioat_chan_entry *ioat_chan_entry)
 {
+	spdk_ioat_flush(ioat_chan_entry->chan);
 	while (ioat_chan_entry->current_queue_depth > 0) {
 		spdk_ioat_process_events(ioat_chan_entry->chan);
 	}
@@ -318,13 +288,18 @@ submit_single_xfer(struct ioat_chan_entry *ioat_chan_entry, struct ioat_task *io
 	ioat_task->src = src;
 	ioat_task->dst = dst;
 
-	spdk_ioat_submit_copy(ioat_chan_entry->chan, ioat_task, ioat_done, dst, src,
-			      g_user_config.xfer_size_bytes);
+	spdk_ioat_build_copy(ioat_chan_entry->chan, ioat_task, ioat_done, dst, src,
+			     g_user_config.xfer_size_bytes);
+	ioat_chan_entry->waiting_for_flush++;
+	if (ioat_chan_entry->waiting_for_flush >= ioat_chan_entry->flush_threshold) {
+		spdk_ioat_flush(ioat_chan_entry->chan);
+		ioat_chan_entry->waiting_for_flush = 0;
+	}
 
 	ioat_chan_entry->current_queue_depth++;
 }
 
-static void
+static int
 submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 {
 	while (queue_depth-- > 0) {
@@ -334,9 +309,14 @@ submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 		src = spdk_mempool_get(ioat_chan_entry->data_pool);
 		dst = spdk_mempool_get(ioat_chan_entry->data_pool);
 		ioat_task = spdk_mempool_get(ioat_chan_entry->task_pool);
+		if (!ioat_task) {
+			fprintf(stderr, "Unable to get ioat_task\n");
+			return 1;
+		}
 
 		submit_single_xfer(ioat_chan_entry, ioat_task, dst, src);
 	}
+	return 0;
 }
 
 static int
@@ -352,8 +332,12 @@ work_fn(void *arg)
 
 	t = worker->ctx;
 	while (t != NULL) {
-		// begin to submit transfers
-		submit_xfers(t, g_user_config.queue_depth);
+		/* begin to submit transfers */
+		t->waiting_for_flush = 0;
+		t->flush_threshold = g_user_config.queue_depth / 2;
+		if (submit_xfers(t, g_user_config.queue_depth) != 0) {
+			return 1;
+		}
 		t = t->next;
 	}
 
@@ -371,7 +355,7 @@ work_fn(void *arg)
 
 	t = worker->ctx;
 	while (t != NULL) {
-		// begin to drain io
+		/* begin to drain io */
 		t->is_draining = true;
 		drain_io(t);
 		t = t->next;
@@ -386,9 +370,11 @@ init(void)
 	struct spdk_env_opts opts;
 
 	spdk_env_opts_init(&opts);
-	opts.name = "perf";
+	opts.name = "ioat_perf";
 	opts.core_mask = g_user_config.core_mask;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		return 1;
+	}
 
 	return 0;
 }
@@ -462,15 +448,21 @@ associate_workers_with_chan(void)
 	while (chan != NULL) {
 		t = calloc(1, sizeof(struct ioat_chan_entry));
 		if (!t) {
-			return -1;
+			return 1;
 		}
 
 		t->ioat_chan_id = i;
 		snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", i);
 		snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", i);
-		t->data_pool = spdk_mempool_create(buf_pool_name, 512, g_user_config.xfer_size_bytes, -1,
+		t->data_pool = spdk_mempool_create(buf_pool_name,
+						   g_user_config.queue_depth * 2, /* src + dst */
+						   g_user_config.xfer_size_bytes,
+						   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						   SPDK_ENV_SOCKET_ID_ANY);
-		t->task_pool = spdk_mempool_create(task_pool_name, 512, sizeof(struct ioat_task), -1,
+		t->task_pool = spdk_mempool_create(task_pool_name,
+						   g_user_config.queue_depth,
+						   sizeof(struct ioat_task),
+						   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						   SPDK_ENV_SOCKET_ID_ANY);
 		if (!t->data_pool || !t->task_pool) {
 			fprintf(stderr, "Could not allocate buffer pool.\n");
@@ -500,8 +492,8 @@ int
 main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker, *master_worker;
-	unsigned master_core;
+	struct worker_thread *worker, *main_worker;
+	unsigned main_core;
 
 	if (parse_args(argc, argv) != 0) {
 		return 1;
@@ -512,18 +504,18 @@ main(int argc, char **argv)
 	}
 
 	if (register_workers() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
 	if (ioat_init() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
 	if (g_ioat_chan_num == 0) {
 		printf("No channels found\n");
-		rc = 0;
+		rc = 1;
 		goto cleanup;
 	}
 
@@ -538,31 +530,31 @@ main(int argc, char **argv)
 	dump_user_config(&g_user_config);
 
 	if (associate_workers_with_chan() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
-	/* Launch all of the slave workers */
-	master_core = spdk_env_get_current_core();
-	master_worker = NULL;
+	/* Launch all of the secondary workers */
+	main_core = spdk_env_get_current_core();
+	main_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
-		if (worker->core != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->core);
+		if (worker->core != main_core) {
+			spdk_env_thread_launch_pinned(worker->core, work_fn, worker);
 		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
+			assert(main_worker == NULL);
+			main_worker = worker;
 		}
 		worker = worker->next;
 	}
 
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
-	if (rc < 0) {
+	assert(main_worker != NULL);
+	rc = work_fn(main_worker);
+	if (rc != 0) {
 		goto cleanup;
 	}
 
-	rte_eal_mp_wait_lcore();
+	spdk_env_thread_wait_all();
 
 	rc = dump_result();
 
@@ -570,5 +562,6 @@ cleanup:
 	unregister_workers();
 	ioat_exit();
 
+	spdk_env_fini();
 	return rc;
 }

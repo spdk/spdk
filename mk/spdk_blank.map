@@ -1,0 +1,6 @@
+{
+	# This file is a placeholder map file
+	# for all libraries that don't currently
+	# export any symbols.
+	local: *;
+};

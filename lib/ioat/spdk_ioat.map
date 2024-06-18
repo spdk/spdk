@@ -1,0 +1,17 @@
+{
+	global:
+
+	# public functions
+	spdk_ioat_probe;
+	spdk_ioat_detach;
+	spdk_ioat_build_copy;
+	spdk_ioat_submit_copy;
+	spdk_ioat_build_fill;
+	spdk_ioat_submit_fill;
+	spdk_ioat_flush;
+	spdk_ioat_process_events;
+	spdk_ioat_get_dma_capabilities;
+	spdk_ioat_get_max_descriptors;
+
+	local: *;
+};

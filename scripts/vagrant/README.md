@@ -1,181 +1,248 @@
-Introduction
-============
+# SPDK Vagrant and VirtualBox
 
-The idea behind our use of vagrant is to provide a quick way to get a basic
-NVMe enabled sandbox going without the need for any special hardware.
-The vagrant environment for SPDK has support for Ubuntu 16.04 and
-Centos 7.2. This environment requires vagrant 1.9.4 or newer and
-VirtualBox 5.1 or newer with the matching VirtualBox extension pack.
+The following guide explains how to use the scripts in the `spdk/scripts/vagrant`. Mac, Windows, and Linux platforms are supported.
 
-The VM builds SPDK and DPDK from source which can be located at /spdk.
+1. Install and configure [Git](https://git-scm.com/) on your platform.
+2. Install [VirtualBox 5.1](https://www.virtualbox.org/wiki/Downloads) or newer
+3. Install* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
+4. Install and configure [Vagrant 1.9.4](https://www.vagrantup.com) or newer
 
-Note: If you are behind a corporate firewall, set http_proxy and https_proxy in
-your environment before trying to start up the VM.  Also make sure that you
-have installed the optional vagrant module 'vagrant-proxyconf'.
+* Note: The extension pack has different licensing than main VirtualBox, please
+  review them carefully as the evaluation license is for personal use only.
 
-VM Configuration
-================
+## Mac OSX Setup (High Sierra)
 
-This vagrant environment creates a VM based on environment variables found in ./env.sh
-To use, edit env.sh then
+Quick start instructions for OSX:
 
-~~~{.sh}
-    cd scripts/vagrant
-    source ./env.sh
-    vagrant up
-~~~
+1. Install Homebrew
+2. Install Virtual Box Cask
+3. Install Virtual Box Extension Pack*
+4. Install Vagrant Cask
 
-At this point you can use "vagrant ssh" to ssh into the VM. The /spdk directory is
-sync'd from the host system and the build is automatically done.  Other notable files:
+* Note: The extension pack has different licensing than main VirtualBox, please
+  review them carefully as the evaluation license is for personal use only.
 
-    build.sh : is executed on the VM automatically when provisioned
-    Vagrantfile : startup parameters/commands for the VM
+```bash
+   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+   brew doctor
+   brew update
+   brew cask install virtualbox
+   brew cask install virtualbox-extension-pack
+   brew cask install vagrant
+```
 
-The few commands we mention here are enough to get you up and running, for additional
-support just use the vagrant help function to learn how to destroy, restart, etc.  Further
-below is sample output from a successful VM launch and execution of the NVMe hello
-world example application.
+## Windows 10 Setup
 
-~~~{.sh}
-    vagrant --help
-~~~
+1. Windows platforms should install some form of git.
+2. Install [VirtualBox 5.1](https://www.virtualbox.org/wiki/Downloads) or newer
+3. Install* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
+4. Install and configure [Vagrant 1.9.4](https://www.vagrantup.com) or newer
 
-By default, the VM created is/has:
-- Ubuntu 16.04
-- 2 vCPUs
-- 4G of RAM
-- 2 NICs (1 x NAT - host access, 1 x private network)
+* Note: The extension pack has different licensing than main VirtualBox, please
+  review them carefully as the evaluation license is for personal use only.
 
-Providers
-=========
+- Note: VirtualBox requires virtualization to be enabled in the BIOS.
+- Note: You should disable Hyper-V in Windows RS 3 laptop. Search `windows features` un-check Hyper-V, restart laptop
 
-Currently only the Virtualbox provider is supported.
+## Linux Setup
 
-Hello World
-===========
+Following the generic instructions should be sufficient for most Linux distributions. For more thorough instructions on installing
+VirtualBox on your distribution of choice, please see the following [guide](https://www.virtualbox.org/wiki/Linux_Downloads).
 
-The following shows sample output from starting up a VM and running
-the NVMe sample application "hello world". If you don't see the
-NVMe device as seen below in both the lspci output as well as the
-application output you likely have a VirtualBox and/or Vagrant
-versioning issue.
+ Examples on Fedora26/Fedora27/Fedora28
 
-~~~{.sh}
-user@dev-system:~$ cd spdk
-user@dev-system:~/spdk$ cd scripts/
-user@dev-system:~/spdk/scripts$ cd vagrant/
-user@dev-system:~/spdk/scripts/vagrant$ vagrant up
-Bringing machine 'default' up with 'virtualbox' provider...
-==> default: Clearing any previously set forwarded ports...
-==> default: Clearing any previously set network interfaces...
-==> default: Preparing network interfaces based on configuration...
-    default: Adapter 1: nat
-    default: Adapter 2: hostonly
-==> default: Forwarding ports...
-    default: 22 (guest) => 2222 (host) (adapter 1)
-==> default: Running 'pre-boot' VM customizations...
-==> default: Booting VM...
-==> default: Waiting for machine to boot. This may take a few minutes...
-    default: SSH address: 127.0.0.1:2222
-    default: SSH username: vagrant
-    default: SSH auth method: private key
-    default:
-    default: Vagrant insecure key detected. Vagrant will automatically replace
-    default: this with a newly generated keypair for better security.
-    default:
-    default: Inserting generated public key within guest...
-    default: Removing insecure key from the guest if it's present...
-    default: Key inserted! Disconnecting and reconnecting using new SSH key...
-==> default: Machine booted and ready!
-==> default: Checking for guest additions in VM...
-    default: Guest Additions Version: 5.1
-    default: VirtualBox Version: 5.1
-==> default: Configuring and enabling network interfaces...
-==> default: Rsyncing folder: /home/peluse/spdk/ => /spdk
-==> default: Mounting shared folders...
-    default: /vagrant => /home/peluse/spdk/scripts/vagrant
-==> default: Running provisioner: shell...
-    default: Running: /tmp/vagrant-shell20170524-2405-3cam94.sh
-==> default: vm.nr_hugepages = 1024
-==> default: Hit:1 http://us.archive.ubuntu.com/ubuntu xenial InRelease
-<< some output trimmed >>
-==> default: Fetched 2,329 kB in 3s (588 kB/s)
-==> default: Reading package lists...
-==> default: Building dependency tree...
-==> default: Reading state information...
-==> default: Calculating upgrade...
-==> default: The following packages have been kept back:
-==> default:   linux-generic linux-headers-generic linux-image-generic
-==> default: The following packages will be upgraded:
-==> default:   accountsservice apparmor apt apt-transport-https apt-utils base-files bash
-<< some output trimmed >>
-==> default: 167 upgraded, 0 newly installed, 0 to remove and 3 not upgraded.
-==> default: Need to get 124 MB of archives.
-==> default: After this operation, 39.5 MB of additional disk space will be used.
-==> default: Get:1 http://us.archive.ubuntu.com/ubuntu xenial-updates/main amd64 base-files amd64 9.4ubuntu4.4 [60.                 2 kB]
-<< some output trimmed >>
-==> default: Preconfiguring packages ...
-==> default: Fetched 11.8 MB in 17s (669 kB/s)
-==> default: Setting up libc6:amd64 (2.23-0ubuntu7) ...
-==> default: Processing triggers for libc-bin (2.23-0ubuntu3) ...
-<< some output trimmed >>
-==> default: Running provisioner: shell...
-    default: Running: /tmp/vagrant-shell20170524-2405-1wt8p3c.sh
-==> default: 0:/tmp/vagrant-shell
-==> default: SUDOCMD: sudo -H -u vagrant
-==> default: KERNEL_OS: GNU/Linux
-==> default: KERNEL_MACHINE: x86_64
-==> default: KERNEL_RELEASE: 4.4.0-21-generic
-==> default: KERNEL_VERSION: #37-Ubuntu SMP Mon Apr 18 18:33:37 UTC 2016
-==> default: DISTRIB_ID: Ubuntu
-==> default: DISTRIB_RELEASE: 16.04
-==> default: DISTRIB_CODENAME: xenial
-==> default: DISTRIB_DESCRIPTION: Ubuntu 16.04 LTS
-==> default: Reading package lists...
-==> default: Building dependency tree...
-<< some output trimmed >>
-==> default: Processing triggers for libc-bin (2.23-0ubuntu3) ...
-==> default: Creating CONFIG.local...
-==> default: done.
-==> default: Type 'make' to build.
-==> default: Configuration done
-==> default: make[3]: Entering directory '/spdk/dpdk'
-==> default: == Build lib
-==> default: == Build lib/librte_compat
-==> default: == Build lib/librte_eal
-==> default: == Build lib/librte_eal/common
-==> default:   SYMLINK-FILE include/rte_compat.h
-<< some output trimmed >>
-==> default: Build complete [x86_64-native-linuxapp-gcc]
-==> default: make[3]: Leaving directory '/spdk/dpdk'
-==> default:   CC lib/blob/blobstore.o
-==> default:   CC lib/bdev/bdev.o
-<< some output trimmed >>
-==> default:   LINK test/lib/nvme/e2edp/nvme_dp
-==> default: Running provisioner: shell...
-    default: Running: inline script
-==> default: 0000:00:0e.0 (80ee 4e56): nvme -> uio_pci_generic
+1. yum check-update
+2. yum update -y
+3. yum install qt*
+4. yum install libsdl*
+5. rpm -ivh VirtualBox-5.2-5.2.16_123759_fedora26-1.x86_64.rpm (select the right version in https://www.virtualbox.org/wiki/Linux_Downloads)
+6. VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-5.2.16.vbox-extpack(install the same pack* as your installed version of VirtualBox)
+7. rpm -ivh vagrant_2.1.2_x86_64.rpm
 
-user@dev-system:~/spdk/scripts/vagrant$ vagrant ssh
-Welcome to Ubuntu 16.04 LTS (GNU/Linux 4.4.0-21-generic x86_64)
+* Note: The extension pack has different licensing than main VirtualBox, please
+  review them carefully as the evaluation license is for personal use only.
 
- * Documentation:  https://help.ubuntu.com/
-vagrant@localhost:~$ lspci | grep "Non-Volatile"
-00:0e.0 Non-Volatile memory controller: InnoTek Systemberatung GmbH Device 4e56
+## Configure Vagrant
 
-vagrant@localhost:~$ sudo /spdk/examples/nvme/hello_world/hello_world
-Starting DPDK 17.02.0 initialization...
-[ DPDK EAL parameters: hello_world -c 0x1 --file-prefix=spdk_pid17681 ]
-EAL: Detected 2 lcore(s)
-EAL: Probing VFIO support...
-Initializing NVMe Controllers
-EAL: PCI device 0000:00:0e.0 on NUMA socket 0
-EAL:   probe driver: 80ee:4e56 spdk_nvme
-Attaching to 0000:00:0e.0
-Attached to 0000:00:0e.0
-Using controller ORCL-VBOX-NVME-VER12 (VB1234-56789        ) with 1 namespaces.
-  Namespace ID: 1 size: 1GB
-Initialization complete.
-Hello world!
-vagrant@localhost:~$
-~~~
+If you are behind a corporate firewall, configure the following proxy settings.
+
+1. Set the http_proxy and https_proxy
+2. Install the proxyconf plugin
+
+```bash
+  $ export http_proxy=....
+  $ export https_proxy=....
+  $ vagrant plugin install vagrant-proxyconf
+```
+
+## Download SPDK from GitHub
+
+Use git to clone a new spdk repository. GerritHub can also be used. See the instructions at
+[spdk.io](http://www.spdk.io/development/#gerrithub) to setup your GerritHub account. Note that this spdk
+repository will be rsync'd into your VM, so you can use this repository to continue development within the VM.
+
+## Create a Virtual Box
+
+Use the `spdk/scripts/vagrant/create_vbox.sh` script to create a VM of your choice.  Supported VM platforms are:
+
+- centos7
+- ubuntu16
+- ubuntu18
+- fedora26
+- fedora27
+- fedora28
+- freebsd11
+
+```bash
+$ spdk/scripts/vagrant/create_vbox.sh -h
+ Usage: create_vbox.sh [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>
+
+  distro = <centos7 | ubuntu16 | ubuntu18 | fedora26 | fedora27 | fedora28 | freebsd11>
+
+  -s <ram-size> in kb       default: 4096
+  -n <num-cpus> 1 to 4      default: 4
+  -x <http-proxy>           default: ""
+  -p <provider>             libvirt or virtualbox
+  --vhost-host-dir=<path>   directory path with vhost test dependencies
+                            (test VM qcow image, fio binary, ssh keys)
+  --vhost-vm-dir=<path>     directory where to put vhost dependencies in VM
+  -r dry-run
+  -l use a local copy of spdk, don't try to rsync from the host.
+  -d deploy a test vm by provisioning all prerequisites for spdk autotest
+  -h help
+  -v verbose
+
+ Examples:
+
+  ./scripts/vagrant/create_vbox.sh -x http://user:password@host:port fedora27
+  ./scripts/vagrant/create_vbox.sh -s 2048 -n 2 ubuntu16
+  ./scripts/vagrant/create_vbox.sh -rv freebsd
+  ./scripts/vagrant/create_vbox.sh fedora26
+```
+
+It is recommended that you call the `create_vbox.sh` script from outside of the spdk repository.
+Call this script from a parent directory. This will allow the creation of multiple VMs in separate
+<distro> directories, all using the same spdk repository.  For example:
+
+```bash
+   $ spdk/scripts/vagrant/create_vbox.sh -s 2048 -n 2 fedora26
+```
+
+This script will:
+
+1. create a subdirectory named <distro> in your $PWD
+2. copy the needed files from `spdk/scripts/vagrant/` into the <distro> directory
+3. create a working virtual box in the <distro> directory
+4. rsync the `~/.gitconfig` file to `/home/vagrant/` in the newly provisioned virtual box
+5. rsync a copy of the source `spdk` repository to `/home/vagrant/spdk_repo/spdk` (optional)
+6. rsync a copy of the `~/vagrant_tools` directory to `/home/vagrant/tools` (optional)
+7. execute autotest_setup.sh on the guest to install all spdk dependencies (optional)
+
+This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using the same
+spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
+
+```bash
+  $ cd <distro>
+  $ vagrant ssh
+```
+
+## Finish VM Initialization
+
+A copy of the `spdk` repository you cloned will exist in the `spdk_repo` directory of the `/home/vagrant` user
+account. After using `vagrant ssh` to enter your VM you must complete the initialization of your VM by running
+the `scripts/vagrant/update.sh` script. For example:
+
+```bash
+   $ script -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh' update.log
+```
+
+The `update.sh` script completes initialization of the VM by automating the following steps.
+
+1. Runs yum/apt-get update (Linux)
+2. Runs the scripts/pdkdep.sh script
+3. Installs the FreeBSD source in /usr/sys (FreeBSD only)
+
+This only needs to be done once. This is also not necessary for Fedora VMs provisioned with the -d flag. The `vm_setup`
+script performs these operations instead.
+
+## Post VM Initialization
+
+Following VM initialization you must:
+
+1. Verify you have an emulated NVMe device
+2. Compile your spdk source tree
+3. Run the hello_world example to validate the environment is set up correctly
+
+### Verify you have an emulated NVMe device
+
+```bash
+  $ lspci | grep "Non-Volatile"
+  00:0e.0 Non-Volatile memory controller: InnoTek Systemberatung GmbH Device 4e56
+```
+
+### Compile SPDK
+
+```bash
+  $ cd spdk_repo/spdk
+  $ git submodule update --init
+  $ ./configure --enable-debug
+  $ make
+```
+
+### Run the hello_world example script
+
+```bash
+  $ sudo scripts/setup.sh
+  $ sudo scripts/gen_nvme.sh --json-with-subsystems > ./build/examples/hello_bdev.json
+  $ sudo ./build/examples/hello_bdev --json ./build/examples/hello_bdev.json -b Nvme0n1
+```
+
+### Running autorun.sh with vagrant
+
+After running autotest_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.sh` on a Fedora vagrant machine.
+Note that the `spdk/scripts/vagrant/autorun-spdk.conf` should be copied to `~/autorun-spdk.conf` before starting your tests.
+
+```bash
+   $ cp spdk/scripts/vagrant/autorun-spdk.conf ~/
+   $ spdk/scripts/vagrant/run-autorun.sh -h
+     Usage: scripts/vagrant/run-autorun.sh -d <path_to_spdk_tree> [-h] | [-q] | [-n]
+       -d : Specify a path to an SPDK source tree
+       -q : No output to screen
+       -n : Noop - dry-run
+       -h : This help
+
+     Examples:
+         run-spdk-autotest.sh -d . -q
+         run-spdk-autotest.sh -d /home/vagrant/spdk_repo/spdk
+```
+
+## FreeBSD Appendix
+
+---
+**NOTE:** As of this writing the FreeBSD Virtualbox instance does not correctly support the vagrant-proxyconf feature.
+---
+
+The following steps are done by the `update.sh` script. It is recommended that you capture the output of `update.sh` with a typescript. E.g.:
+
+```bash
+  $ script update.log sudo spdk_repo/spdk/scripts/vagrant/update.sh
+```
+
+1. Updates the pkg catalog
+1. Installs the needed FreeBSD packages on the system by calling pkgdep.sh
+2. Installs the FreeBSD source in /usr/src
+
+```bash
+   $ sudo pkg upgrade -f
+   $ sudo spdk_repo/spdk/scripts/pkgdep.sh --all
+   $ sudo git clone --depth 10 -b releases/11.1.0 https://github.com/freebsd/freebsd.git /usr/src
+```
+
+To build spdk on FreeBSD use `gmake MAKE=gmake`.  E.g.:
+
+```bash
+    $ cd spdk_repo/spdk
+    $ git submodule update --init
+    $ ./configure --enable-debug
+    $ gmake MAKE=gmake
+```

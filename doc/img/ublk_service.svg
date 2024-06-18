@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<svg width="680" height="420" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+ <g class="layer">
+  <title>Layer 1</title>
+  <rect fill="#ffffff" height="369" id="svg_1" stroke="#000000" width="635.87" x="22.74" y="26.61"/>
+  <rect fill="#aaffff" height="0" id="svg_2" stroke="#000000" width="0" x="191.24" y="101.36">Application A</rect>
+  <rect fill="#aaffff" height="88.96" id="svg_3" stroke="#000000" width="171" x="400.9" y="67.61">ublk Server</rect>
+  <line fill="none" id="svg_4" stroke="#000000" stroke-dasharray="5,5" stroke-width="2" x1="23.11" x2="660.11" y1="199.03" y2="198.03">ublk Server</line>
+  <text fill="#000000" font-family="Serif" font-size="21" font-weight="bold" id="svg_5" stroke="#000000" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 1 0 0)" x="488.28" xml:space="preserve" y="122.24">ublk Server</text>
+  <rect fill="#aaffff" height="62" id="svg_6" stroke="#000000" transform="matrix(1 0 0 1 0 0)" width="161" x="384.38" y="311.2"/>
+  <text fill="#000000" font-family="Serif" font-size="21" font-weight="bold" id="svg_7" stroke="#000000" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 1 0 0)" x="468.93" xml:space="preserve" y="349.7">ublk Driver</text>
+  <rect fill="#ffff00" height="32" id="svg_8" stroke="#000000" width="98" x="144.36" y="212.94"/>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_9" stroke="#000000" stroke-width="0" text-anchor="middle" x="194.36" xml:space="preserve" y="235.94">/dev/ublkb3</text>
+  <rect fill="#ffffff" height="0" id="svg_10" stroke="#000000" width="0" x="175.36" y="246.94"/>
+  <rect fill="#ffff00" height="33" id="svg_11" stroke="#000000" width="97" x="200.03" y="239.6"/>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_12" stroke="#000000" stroke-width="0" text-anchor="middle" x="249.36" xml:space="preserve" y="263.27">/dev/ublkb2</text>
+  <rect fill="#ffffff" height="0" id="svg_13" stroke="#000000" width="0" x="174.36" y="264.94"/>
+  <rect fill="#ffff00" height="33" id="svg_14" stroke="#000000" width="97" x="33.99" y="244.06"/>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_15" stroke="#000000" stroke-width="0" text-anchor="middle" x="82.99" xml:space="preserve" y="267.06">/dev/ublkb1</text>
+  <rect fill="#00ff00" height="32" id="svg_16" stroke="#000000" width="93" x="35.99" y="206.31">le/dev/ublkb1</rect>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_17" stroke="#000000" stroke-width="0" text-anchor="middle" x="80.99" xml:space="preserve" y="226.31">Filesystem</text>
+  <path d="m383.94,359.38l-298.65,-1.66c0,0 -1.68,-79.96 -1.68,-79.96" fill="none" id="svg_22" stroke="#000000" stroke-linejoin="bevel" stroke-width="4"/>
+  <path d="m384.83,334.28l-148.14,-0.2c0,0 3.33,-62.12 3.33,-62.12" fill="none" id="svg_26" stroke="#000000" stroke-linejoin="bevel" stroke-width="4" transform="matrix(1 0 0 1 0 0)"/>
+  <path d="m384.69,347.33l-201.99,-0.22l0,-102.04" fill="none" id="svg_27" stroke="#000000" stroke-linejoin="bevel" stroke-width="4" transform="matrix(1 0 0 1 0 0)"/>
+  <path d="m454.33,155.75c0,0 0.48,154.94 0.32,154.69c-0.16,-0.25 -0.32,-154.69 -0.32,-154.69z" fill="none" id="svg_28" stroke="#000000" stroke-linejoin="bevel" stroke-width="3"/>
+  <path d="m468.6,156.42l0.18,155.99l-0.18,-155.99z" fill="none" id="svg_29" stroke="#000000" stroke-linejoin="bevel" stroke-width="3"/>
+  <path d="m482.69,157.08l-0.32,154.03l0.32,-154.03z" fill="none" id="svg_30" stroke="#000000" stroke-linecap="square" stroke-linejoin="bevel" stroke-width="3">ublk Server</path>
+  <rect fill="#aaffff" height="35.63" id="svg_40" stroke="#000000" width="109.37" x="65.74" y="91.86">Application A</rect>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_41" stroke="#000000" stroke-width="0" style="cursor: move;" text-anchor="middle" x="119.36" xml:space="preserve" y="112.19">Application D</text>
+  <rect fill="#aaffff" height="30.63" id="svg_42" stroke="#000000" width="109.37" x="89.49" y="115.61">Application A</rect>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_43" stroke="#000000" stroke-width="0" text-anchor="middle" x="143.11" xml:space="preserve" y="136.56">Application C</text>
+  <rect fill="#aaffff" height="31.25" id="svg_44" stroke="#000000" width="109.37" x="114.49" y="139.99">Application A</rect>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_45" stroke="#000000" stroke-width="0" style="cursor: move;" text-anchor="middle" x="169.36" xml:space="preserve" y="160.31">Application B</text>
+  <rect fill="#aaffff" height="30.63" id="svg_46" stroke="#000000" width="109.37" x="145.74" y="164.99">Application A</rect>
+  <text fill="#000000" font-family="Serif" font-size="18" id="svg_47" stroke="#000000" stroke-width="0" text-anchor="middle" x="201.24" xml:space="preserve" y="186.56">Application A</text>
+  <text fill="#000000" font-family="Serif" font-size="21" font-weight="bold" id="svg_50" stroke="#000000" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 1 0 0)" x="161.4" xml:space="preserve" y="82.24">ublk Workload</text>
+  <text fill="#000000" font-family="Serif" font-size="19" font-style="italic" font-weight="normal" id="svg_51" stroke="#000000" stroke-width="0" text-anchor="middle" x="602.65" xml:space="preserve" y="222.24">Kernel Space</text>
+  <text fill="#000000" font-family="Serif" font-size="19" font-style="italic" font-weight="normal" id="svg_52" stroke="#000000" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 1 0 0)" x="602.03" xml:space="preserve" y="188.49">Userspace</text>
+ </g>
+</svg>

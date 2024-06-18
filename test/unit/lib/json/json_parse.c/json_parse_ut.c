@@ -1,45 +1,19 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
-#include "json_parse.c"
+#include "json/json_parse.c"
+
+#define JSONVALUE_NUM 100
 
 static uint8_t g_buf[1000];
 static void *g_end;
-static struct spdk_json_val g_vals[100];
+static struct spdk_json_val g_vals[JSONVALUE_NUM];
 static int g_cur_val;
 
 /* Fill buf with raw data */
@@ -58,7 +32,7 @@ static int g_cur_val;
 	BUF_SETUP(in); \
 	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, flags) == num_vals); \
 	memset(g_vals, 0, sizeof(g_vals)); \
-	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, g_vals, sizeof(g_vals), &g_end, flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == num_vals); \
+	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, g_vals, JSONVALUE_NUM, &g_end, flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == num_vals); \
 	CU_ASSERT(g_end == g_buf + sizeof(in) - sizeof(trailing)); \
 	CU_ASSERT(memcmp(g_end, trailing, sizeof(trailing) - 1) == 0); \
 	g_cur_val = 0
@@ -170,6 +144,10 @@ test_parse_literal(void)
 	PARSE_FAIL("fals", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("n", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("nul", SPDK_JSON_PARSE_INCOMPLETE);
+
+	PARSE_FAIL("taaaaa", SPDK_JSON_PARSE_INVALID);
+	PARSE_FAIL("faaaaa", SPDK_JSON_PARSE_INVALID);
+	PARSE_FAIL("naaaaa", SPDK_JSON_PARSE_INVALID);
 }
 
 static void
@@ -402,6 +380,9 @@ test_parse_string_escapes_unicode(void)
 	/* High surrogate without low */
 	STR_FAIL("\\uD800", SPDK_JSON_PARSE_INVALID);
 	STR_FAIL("\\uD800abcdef", SPDK_JSON_PARSE_INVALID);
+
+	/* High surrogate followed by high surrogate */
+	STR_FAIL("\\uD800\\uD800", SPDK_JSON_PARSE_INVALID);
 }
 
 static void
@@ -473,6 +454,7 @@ test_parse_number(void)
 	NUM_FAIL("3e+", SPDK_JSON_PARSE_INCOMPLETE);
 	NUM_FAIL("3e-", SPDK_JSON_PARSE_INCOMPLETE);
 	NUM_FAIL("3.e4", SPDK_JSON_PARSE_INVALID);
+	NUM_FAIL("3.2eX", SPDK_JSON_PARSE_INVALID);
 	NUM_FAIL("-", SPDK_JSON_PARSE_INCOMPLETE);
 	NUM_FAIL("NaN", SPDK_JSON_PARSE_INVALID);
 	NUM_FAIL(".123", SPDK_JSON_PARSE_INVALID);
@@ -481,6 +463,8 @@ test_parse_number(void)
 static void
 test_parse_array(void)
 {
+	char buffer[SPDK_JSON_MAX_NESTING_DEPTH + 2] = {0};
+
 	PARSE_PASS("[]", 2, "");
 	VAL_ARRAY_BEGIN(0);
 	VAL_ARRAY_END();
@@ -527,6 +511,15 @@ test_parse_array(void)
 	PARSE_FAIL("[,true]", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("[true}", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("[true,,true]", SPDK_JSON_PARSE_INVALID);
+
+	/* Nested arrays exactly up to the allowed nesting depth */
+	memset(buffer, '[', SPDK_JSON_MAX_NESTING_DEPTH);
+	buffer[SPDK_JSON_MAX_NESTING_DEPTH] = ' ';
+	PARSE_FAIL(buffer, SPDK_JSON_PARSE_INCOMPLETE);
+
+	/* Nested arrays exceeding the maximum allowed nesting depth for this implementation */
+	buffer[SPDK_JSON_MAX_NESTING_DEPTH] = '[';
+	PARSE_FAIL(buffer, SPDK_JSON_PARSE_MAX_DEPTH_EXCEEDED);
 }
 
 static void
@@ -606,6 +599,7 @@ test_parse_object(void)
 	PARSE_FAIL("{\"a\":", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("{\"a\":true", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("{\"a\":true,", SPDK_JSON_PARSE_INCOMPLETE);
+	PARSE_FAIL("{\"a\":true]", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("{\"a\":true,}", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("{\"a\":true,\"}", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("{\"a\":true,\"b}", SPDK_JSON_PARSE_INCOMPLETE);
@@ -870,44 +864,39 @@ test_parse_comment(void)
 	PARSE_FAIL_FLAGS("//", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	PARSE_FAIL_FLAGS("// test", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	PARSE_FAIL_FLAGS("//\n", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+
+	/* Invalid character following slash */
+	PARSE_FAIL_FLAGS("[0/x", SPDK_JSON_PARSE_INVALID, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+
+	/* Single slash at end of buffer */
+	PARSE_FAIL_FLAGS("[0/", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_initialize_registry();
 
 	suite = CU_add_suite("json", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "parse_literal", test_parse_literal) == NULL ||
-		CU_add_test(suite, "parse_string_simple", test_parse_string_simple) == NULL ||
-		CU_add_test(suite, "parse_string_control_chars", test_parse_string_control_chars) == NULL ||
-		CU_add_test(suite, "parse_string_utf8", test_parse_string_utf8) == NULL ||
-		CU_add_test(suite, "parse_string_escapes_twochar", test_parse_string_escapes_twochar) == NULL ||
-		CU_add_test(suite, "parse_string_escapes_unicode", test_parse_string_escapes_unicode) == NULL ||
-		CU_add_test(suite, "parse_number", test_parse_number) == NULL ||
-		CU_add_test(suite, "parse_array", test_parse_array) == NULL ||
-		CU_add_test(suite, "parse_object", test_parse_object) == NULL ||
-		CU_add_test(suite, "parse_nesting", test_parse_nesting) == NULL ||
-		CU_add_test(suite, "parse_comment", test_parse_comment) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_ADD_TEST(suite, test_parse_literal);
+	CU_ADD_TEST(suite, test_parse_string_simple);
+	CU_ADD_TEST(suite, test_parse_string_control_chars);
+	CU_ADD_TEST(suite, test_parse_string_utf8);
+	CU_ADD_TEST(suite, test_parse_string_escapes_twochar);
+	CU_ADD_TEST(suite, test_parse_string_escapes_unicode);
+	CU_ADD_TEST(suite, test_parse_number);
+	CU_ADD_TEST(suite, test_parse_array);
+	CU_ADD_TEST(suite, test_parse_object);
+	CU_ADD_TEST(suite, test_parse_nesting);
+	CU_ADD_TEST(suite, test_parse_comment);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
 
-	CU_basic_run_tests();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	return num_failures;

@@ -1,43 +1,18 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
+#include "spdk/log.h"
+#include "spdk/rpc.h"
+
+static const char *g_rpc_addr = "/var/tmp/spdk.sock";
 
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
@@ -61,8 +36,6 @@ struct perf_task {
 	void			*buf;
 };
 
-static struct rte_mempool *task_pool;
-
 static TAILQ_HEAD(, dev_ctx) g_devs = TAILQ_HEAD_INITIALIZER(g_devs);
 
 static uint64_t g_tsc_rate;
@@ -75,9 +48,17 @@ static int g_expected_removal_times = -1;
 static int g_insert_times;
 static int g_removal_times;
 static int g_shm_id = -1;
+static const char *g_iova_mode = NULL;
+static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
+static struct spdk_nvme_detach_ctx *g_detach_ctx;
 
-static void
-task_complete(struct perf_task *task);
+static bool g_wait_for_rpc = false;
+static bool g_rpc_received = false;
+
+static void task_complete(struct perf_task *task);
+
+static void timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+		       struct spdk_nvme_qpair *qpair, uint16_t cid);
 
 static void
 register_dev(struct spdk_nvme_ctrlr *ctrlr)
@@ -97,6 +78,9 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->is_new = true;
 	dev->is_removed = false;
 	dev->is_draining = false;
+
+	spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout_in_us, g_timeout_in_us, timeout_cb,
+			NULL);
 
 	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
 
@@ -119,7 +103,7 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->size_in_ios = spdk_nvme_ns_get_size(dev->ns) / g_io_size_bytes;
 	dev->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(dev->ns);
 
-	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	if (!dev->qpair) {
 		fprintf(stderr, "ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		goto skip;
@@ -138,38 +122,48 @@ unregister_dev(struct dev_ctx *dev)
 	fprintf(stderr, "unregister_dev: %s\n", dev->name);
 
 	spdk_nvme_ctrlr_free_io_qpair(dev->qpair);
-	spdk_nvme_detach(dev->ctrlr);
+	spdk_nvme_detach_async(dev->ctrlr, &g_detach_ctx);
 
 	TAILQ_REMOVE(&g_devs, dev, tailq);
 	free(dev);
 }
 
-static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
+static struct perf_task *
+alloc_task(struct dev_ctx *dev)
 {
-	struct perf_task *task = __task;
+	struct perf_task *task;
+
+	task = calloc(1, sizeof(*task));
+	if (task == NULL) {
+		return NULL;
+	}
+
 	task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x200, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf rte_malloc failed\n");
-		exit(1);
+		free(task);
+		return NULL;
 	}
-	memset(task->buf, id % 8, g_io_size_bytes);
+
+	task->dev = dev;
+
+	return task;
+}
+
+static void
+free_task(struct perf_task *task)
+{
+	spdk_dma_free(task->buf);
+	free(task);
 }
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static void
-submit_single_io(struct dev_ctx *dev)
+submit_single_io(struct perf_task *task)
 {
-	struct perf_task	*task = NULL;
+	struct dev_ctx		*dev = task->dev;
 	uint64_t		offset_in_ios;
 	int			rc;
-
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
-		exit(1);
-	}
-
-	task->dev = dev;
 
 	offset_in_ios = dev->offset_in_ios++;
 	if (dev->offset_in_ios == dev->size_in_ios) {
@@ -182,7 +176,7 @@ submit_single_io(struct dev_ctx *dev)
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
-		rte_mempool_put(task_pool, task);
+		free_task(task);
 	} else {
 		dev->current_queue_depth++;
 	}
@@ -197,8 +191,6 @@ task_complete(struct perf_task *task)
 	dev->current_queue_depth--;
 	dev->io_completed++;
 
-	rte_mempool_put(task_pool, task);
-
 	/*
 	 * is_draining indicates when time has expired for the test run
 	 * and we are just waiting for the previously submitted I/O
@@ -206,7 +198,9 @@ task_complete(struct perf_task *task)
 	 * the one just completed.
 	 */
 	if (!dev->is_draining && !dev->is_removed) {
-		submit_single_io(dev);
+		submit_single_io(task);
+	} else {
+		free_task(task);
 	}
 }
 
@@ -225,8 +219,16 @@ check_io(struct dev_ctx *dev)
 static void
 submit_io(struct dev_ctx *dev, int queue_depth)
 {
+	struct perf_task *task;
+
 	while (queue_depth-- > 0) {
-		submit_single_io(dev);
+		task = alloc_task(dev);
+		if (task == NULL) {
+			fprintf(stderr, "task allocation failed\n");
+			exit(1);
+		}
+
+		submit_single_io(task);
 	}
 }
 
@@ -297,7 +299,17 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	 * in g_devs (for example, because we skipped it during register_dev),
 	 * so immediately detach it.
 	 */
-	spdk_nvme_detach(ctrlr);
+	spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
+}
+
+static void
+timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+	   struct spdk_nvme_qpair *qpair, uint16_t cid)
+{
+	/* leave hotplug monitor loop, use the timeout_cb to monitor the hotplug */
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
+	}
 }
 
 static void
@@ -306,8 +318,18 @@ io_loop(void)
 	struct dev_ctx *dev, *dev_tmp;
 	uint64_t tsc_end;
 	uint64_t next_stats_tsc;
+	int rc;
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	if (g_time_in_sec > 0) {
+		tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	} else {
+		/* User specified 0 seconds for timeout, which means no timeout.
+		 * So just set tsc_end to UINT64_MAX which ensures the loop
+		 * will never time out.
+		 */
+		tsc_end = UINT64_MAX;
+	}
+
 	next_stats_tsc = spdk_get_ticks();
 
 	while (1) {
@@ -350,17 +372,25 @@ io_loop(void)
 			}
 		}
 
+		if (g_detach_ctx) {
+			rc = spdk_nvme_detach_poll_async(g_detach_ctx);
+			if (rc == 0) {
+				g_detach_ctx = NULL;
+			}
+		}
+
+		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
+			break;
+		}
+
 		now = spdk_get_ticks();
 		if (now > tsc_end) {
+			SPDK_ERRLOG("Timing out hotplug application!\n");
 			break;
 		}
 		if (now > next_stats_tsc) {
 			print_stats();
 			next_stats_tsc += g_tsc_rate;
-		}
-
-		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
-			break;
 		}
 	}
 
@@ -368,49 +398,107 @@ io_loop(void)
 		drain_io(dev);
 		unregister_dev(dev);
 	}
+
+	if (g_detach_ctx) {
+		spdk_nvme_detach_poll(g_detach_ctx);
+	}
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
+	printf("\t[-c timeout for each command in second(default:1s)]\n");
 	printf("\t[-i shm id (optional)]\n");
 	printf("\t[-n expected hot insert times]\n");
 	printf("\t[-r expected hot removal times]\n");
-	printf("\t[-t time in seconds]\n");
+	printf("\t[-t time in seconds to wait for all events (default: forever)]\n");
+	printf("\t[-m iova mode: pa or va (optional)\n");
+	printf("\t[-l log level]\n");
+	printf("\t Available log levels:\n");
+	printf("\t  disabled, error, warning, notice, info, debug\n");
+	printf("\t[--wait-for-rpc wait for RPC perform_tests\n");
+	printf("\t  to proceed with starting IO on NVMe disks]\n");
 }
+
+static const struct option g_wait_option[] = {
+#define WAIT_FOR_RPC_OPT_IDX	257
+	{"wait-for-rpc", no_argument, NULL, WAIT_FOR_RPC_OPT_IDX},
+};
 
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, opt_idx;
+	long int val;
 
 	/* default value */
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "i:n:r:t:")) != -1) {
+	while ((op = getopt_long(argc, argv, "c:i:l:m:n:r:t:", g_wait_option, &opt_idx)) != -1) {
+		if (op == '?') {
+			usage(argv[0]);
+			return 1;
+		}
+
 		switch (op) {
+		case WAIT_FOR_RPC_OPT_IDX:
+			g_wait_for_rpc = true;
+			break;
+		case 'c':
 		case 'i':
-			g_shm_id = atoi(optarg);
-			break;
 		case 'n':
-			g_expected_insert_times = atoi(optarg);
-			break;
 		case 'r':
-			g_expected_removal_times = atoi(optarg);
-			break;
 		case 't':
-			g_time_in_sec = atoi(optarg);
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			switch (op) {
+			case 'c':
+				g_timeout_in_us = val * SPDK_SEC_TO_USEC;
+				break;
+			case 'i':
+				g_shm_id = val;
+				break;
+			case 'n':
+				g_expected_insert_times = val;
+				break;
+			case 'r':
+				g_expected_removal_times = val;
+				break;
+			case 't':
+				g_time_in_sec = val;
+				break;
+			}
+			break;
+		case 'm':
+			g_iova_mode = optarg;
+			break;
+		case 'l':
+			if (!strcmp(optarg, "disabled")) {
+				spdk_log_set_print_level(SPDK_LOG_DISABLED);
+			} else if (!strcmp(optarg, "error")) {
+				spdk_log_set_print_level(SPDK_LOG_ERROR);
+			} else if (!strcmp(optarg, "warning")) {
+				spdk_log_set_print_level(SPDK_LOG_WARN);
+			} else if (!strcmp(optarg, "notice")) {
+				spdk_log_set_print_level(SPDK_LOG_NOTICE);
+			} else if (!strcmp(optarg, "info")) {
+				spdk_log_set_print_level(SPDK_LOG_INFO);
+			} else if (!strcmp(optarg, "debug")) {
+				spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			} else {
+				fprintf(stderr, "Unrecognized log level: %s\n", optarg);
+				return 1;
+			}
 			break;
 		default:
 			usage(argv[0]);
 			return 1;
 		}
-	}
-
-	if (!g_time_in_sec) {
-		usage(argv[0]);
-		return 1;
 	}
 
 	return 0;
@@ -431,7 +519,41 @@ register_controllers(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+/* Hotplug RPC */
+static void
+rpc_perform_tests(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'perform_tests' requires no arguments");
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+
+	g_rpc_received = true;
+}
+SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME);
+
+static void
+wait_for_rpc_call(void)
+{
+	fprintf(stderr,
+		"Listening for perform_tests to start the application...\n");
+	spdk_rpc_listen(g_rpc_addr);
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	while (!g_rpc_received) {
+		spdk_rpc_accept();
+	}
+	/* Run spdk_rpc_accept() one more time to trigger
+	 * spdk_jsonrpv_server_poll() and send the RPC response. */
+	spdk_rpc_accept();
+}
+
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;
@@ -447,18 +569,24 @@ int main(int argc, char **argv)
 	if (g_shm_id > -1) {
 		opts.shm_id = g_shm_id;
 	}
-	spdk_env_init(&opts);
-
-	task_pool = rte_mempool_create("task_pool", 8192,
-				       sizeof(struct perf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	if (g_iova_mode) {
+		opts.iova_mode = g_iova_mode;
+	}
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 
 	/* Detect the controllers that are plugged in at startup. */
 	if (register_controllers() != 0) {
-		return 1;
+		rc = 1;
+		goto cleanup;
+	}
+
+	if (g_wait_for_rpc) {
+		wait_for_rpc_call();
 	}
 
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");
@@ -467,14 +595,18 @@ int main(int argc, char **argv)
 	if (g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) {
 		fprintf(stderr, "Expected inserts %d != actual inserts %d\n",
 			g_expected_insert_times, g_insert_times);
-		return 1;
+		rc = 1;
+		goto cleanup;
 	}
 
 	if (g_expected_removal_times != -1 && g_removal_times != g_expected_removal_times) {
 		fprintf(stderr, "Expected removals %d != actual removals %d\n",
 			g_expected_removal_times, g_removal_times);
-		return 1;
+		rc = 1;
 	}
 
-	return 0;
+cleanup:
+	spdk_rpc_close();
+	spdk_env_fini();
+	return rc;
 }

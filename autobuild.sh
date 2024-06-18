@@ -1,89 +1,70 @@
 #!/usr/bin/env bash
-
-set -e
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2015 Intel Corporation
+#  All rights reserved.
+#
 
 rootdir=$(readlink -f $(dirname $0))
-source "$rootdir/scripts/autotest_common.sh"
 
-out=$PWD
+source "$rootdir/test/common/autobuild_common.sh"
 
+SPDK_TEST_AUTOBUILD=${SPDK_TEST_AUTOBUILD:-}
 umask 022
-
 cd $rootdir
 
+# Print some test system info out for the log
 date -u
 git describe --tags
 
-timing_enter autobuild
-
-./configure $config_params
-
-timing_enter check_format
-./scripts/check_format.sh
-timing_exit check_format
-
-timing_enter build_kmod
-./scripts/build_kmod.sh build
-timing_exit build_kmod
-
-scanbuild=''
-if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
-	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
+if [ $SPDK_RUN_ASAN -eq 1 ]; then
+	run_test "asan" echo "using asan"
 fi
-echo $scanbuild
-$MAKE $MAKEFLAGS clean
 
-timing_enter scanbuild_make
-fail=0
-time $scanbuild $MAKE $MAKEFLAGS || fail=1
-if [ $fail -eq 1 ]; then
-	if [ -d $out/scan-build-tmp ]; then
-		scanoutput=$(ls -1 $out/scan-build-tmp/)
-		mv $out/scan-build-tmp/$scanoutput $out/scan-build
-		rm -rf $out/scan-build-tmp
-		chmod -R a+rX $out/scan-build
-	fi
-	exit 1
+if [ $SPDK_RUN_UBSAN -eq 1 ]; then
+	run_test "ubsan" echo "using ubsan"
+fi
+
+if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
+	build_native_dpdk
+fi
+
+case "$SPDK_TEST_AUTOBUILD" in
+	full)
+		$rootdir/configure $config_params
+		echo "** START ** Info for Hostname: $HOSTNAME"
+		uname -a
+		$MAKE cc_version
+		$MAKE cxx_version
+		echo "** END ** Info for Hostname: $HOSTNAME"
+		;;
+	ext | tiny | "") ;;
+	*)
+		echo "ERROR: supported values for SPDK_TEST_AUTOBUILD are 'full', 'tiny' and 'ext'"
+		exit 1
+		;;
+esac
+
+if [[ $SPDK_TEST_OCF -eq 1 ]]; then
+	ocf_precompile
+fi
+
+if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
+	llvm_precompile
+fi
+
+if [[ -n $SPDK_TEST_AUTOBUILD ]]; then
+	autobuild_test_suite
+elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
+	unittest_build
+elif [[ $SPDK_TEST_SCANBUILD -eq 1 ]]; then
+	scanbuild_make
 else
-	rm -rf $out/scan-build-tmp
-fi
-timing_exit scanbuild_make
-
-# Check for generated files that are not listed in .gitignore
-if [ `git status --porcelain | wc -l` -ne 0 ]; then
-	echo "Generated files missing from .gitignore:"
-	git status --porcelain
-	exit 1
-fi
-
-# Check that header file dependencies are working correctly by
-#  capturing a binary's stat data before and after touching a
-#  header file and re-making.
-STAT1=`stat examples/nvme/identify/identify`
-sleep 1
-touch lib/nvme/nvme_internal.h
-$MAKE $MAKEFLAGS
-STAT2=`stat examples/nvme/identify/identify`
-
-if [ "$STAT1" == "$STAT2" ]; then
-	echo "Header dependency check failed"
-	exit 1
-fi
-
-
-timing_enter doxygen
-if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
-	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS) &> "$out"/doxygen.log
-	if hash pdflatex; then
-		(cd "$rootdir"/doc/output/latex && $MAKE $MAKEFLAGS) &>> "$out"/doxygen.log
+	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
+		# if we are testing nvmf fuzz with llvm lib, --with-shared will cause lib link fail
+		$rootdir/configure $config_params
+	else
+		# if we aren't testing the unittests, build with shared objects.
+		$rootdir/configure $config_params --with-shared
 	fi
-	mkdir -p "$out"/doc
-	mv "$rootdir"/doc/output/html "$out"/doc
-	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
-		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
-	fi
-	rm -rf "$rootdir"/doc/output
+	run_test "make" $MAKE $MAKEFLAGS
 fi
-timing_exit doxygen
-
-timing_exit autobuild

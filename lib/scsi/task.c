@@ -1,41 +1,25 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "scsi_internal.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+
+static void
+scsi_task_free_data(struct spdk_scsi_task *task)
+{
+	if (task->alloc_len != 0) {
+		spdk_dma_free(task->iov.iov_base);
+		task->alloc_len = 0;
+	}
+
+	task->iov.iov_base = NULL;
+	task->iov.iov_len = 0;
+}
 
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
@@ -44,21 +28,17 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 		return;
 	}
 
+	assert(task->ref > 0);
 	task->ref--;
 
 	if (task->ref == 0) {
-		struct spdk_bdev_io *bdev_io = task->blockdev_io;
-
-		if (task->parent) {
-			spdk_scsi_task_put(task->parent);
-			task->parent = NULL;
-		}
+		struct spdk_bdev_io *bdev_io = task->bdev_io;
 
 		if (bdev_io) {
 			spdk_bdev_free_io(bdev_io);
 		}
 
-		spdk_scsi_task_free_data(task);
+		scsi_task_free_data(task);
 
 		task->free_fn(task);
 	}
@@ -67,8 +47,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 void
 spdk_scsi_task_construct(struct spdk_scsi_task *task,
 			 spdk_scsi_task_cpl cpl_fn,
-			 spdk_scsi_task_free free_fn,
-			 struct spdk_scsi_task *parent)
+			 spdk_scsi_task_free free_fn)
 {
 	assert(task != NULL);
 	assert(cpl_fn != NULL);
@@ -85,37 +64,22 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 	assert(task->iov.iov_base == NULL);
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
-
-	if (parent != NULL) {
-		parent->ref++;
-		task->parent = parent;
-		task->dxfer_dir = parent->dxfer_dir;
-		task->transfer_len = parent->transfer_len;
-		task->lun = parent->lun;
-		task->cdb = parent->cdb;
-		task->target_port = parent->target_port;
-		task->initiator_port = parent->initiator_port;
-	}
 }
 
-void
-spdk_scsi_task_free_data(struct spdk_scsi_task *task)
+static void *
+scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
-	if (task->alloc_len != 0) {
-		spdk_dma_free(task->iov.iov_base);
-		task->alloc_len = 0;
-	}
+	uint32_t zmalloc_len;
 
-	task->iov.iov_base = NULL;
-	task->iov.iov_len = 0;
-}
-
-void *
-spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
-{
 	assert(task->alloc_len == 0);
 
-	task->iov.iov_base = spdk_dma_zmalloc(alloc_len, 0, NULL);
+	/* Some ULPs (such as iSCSI) need to round len up to nearest
+	 * 4 bytes. We can help those ULPs by allocating memory here
+	 * up to next 4 byte boundary, so they don't have to worry
+	 * about handling out-of-bounds errors.
+	 */
+	zmalloc_len = 4 * spdk_divide_round_up(alloc_len, 4);
+	task->iov.iov_base = spdk_dma_zmalloc(zmalloc_len, 0, NULL);
 	task->iov.iov_len = alloc_len;
 	task->alloc_len = alloc_len;
 
@@ -131,11 +95,12 @@ spdk_scsi_task_scatter_data(struct spdk_scsi_task *task, const void *src, size_t
 	struct iovec *iovs = task->iovs;
 	const uint8_t *pos;
 
-	if (buf_len == 0)
+	if (buf_len == 0) {
 		return 0;
+	}
 
 	if (task->iovcnt == 1 && iovs[0].iov_base == NULL) {
-		spdk_scsi_task_alloc_data(task, buf_len);
+		scsi_task_alloc_data(task, buf_len);
 		iovs[0] = task->iov;
 	}
 
@@ -173,7 +138,8 @@ spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len)
 	uint8_t *buf, *pos;
 
 	for (i = 0; i < task->iovcnt; i++) {
-		assert(iovs[i].iov_base != NULL);
+		/* It is OK for iov_base to be NULL if iov_len is 0. */
+		assert(iovs[i].iov_base != NULL || iovs[i].iov_len == 0);
 		buf_len += iovs[i].iov_len;
 	}
 
@@ -182,7 +148,7 @@ spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len)
 		return NULL;
 	}
 
-	buf = spdk_dma_malloc(buf_len, 0, NULL);
+	buf = calloc(1, buf_len);
 	if (buf == NULL) {
 		*len = -1;
 		return NULL;
@@ -257,4 +223,59 @@ spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
 		spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 	}
 	task->status = sc;
+}
+
+void
+spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
+			   struct spdk_scsi_task *src)
+{
+	memcpy(dst->sense_data, src->sense_data, src->sense_data_len);
+	dst->sense_data_len = src->sense_data_len;
+	dst->status = src->status;
+}
+
+void
+spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
+{
+	uint8_t buffer[36];
+	uint32_t allocation_len;
+	uint32_t data_len;
+
+	task->length = task->transfer_len;
+	if (task->cdb[0] == SPDK_SPC_INQUIRY) {
+		/*
+		 * SPC-4 states that INQUIRY commands to an unsupported LUN
+		 *  must be served with PERIPHERAL QUALIFIER = 0x3 and
+		 *  PERIPHERAL DEVICE TYPE = 0x1F.
+		 */
+		data_len = sizeof(buffer);
+
+		memset(buffer, 0, data_len);
+		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
+		buffer[0] = 0x03 << 5 | 0x1f;
+		/* ADDITIONAL LENGTH */
+		buffer[4] = data_len - 5;
+
+		allocation_len = from_be16(&task->cdb[3]);
+		if (spdk_scsi_task_scatter_data(task, buffer, spdk_min(allocation_len, data_len)) >= 0) {
+			task->data_transferred = data_len;
+			task->status = SPDK_SCSI_STATUS_GOOD;
+		}
+	} else {
+		/* LOGICAL UNIT NOT SUPPORTED */
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_LOGICAL_UNIT_NOT_SUPPORTED,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		task->data_transferred = 0;
+	}
+}
+
+void
+spdk_scsi_task_process_abort(struct spdk_scsi_task *task)
+{
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_ABORTED_COMMAND,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 }

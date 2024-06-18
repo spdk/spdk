@@ -1,0 +1,252 @@
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ */
+
+#include "spdk/stdinc.h"
+#include "spdk_internal/cunit.h"
+#include "common/lib/test_env.c"
+#include "unit/lib/json_mock.c"
+#include "dma/dma.c"
+
+static bool g_memory_domain_pull_called;
+static bool g_memory_domain_push_called;
+static bool g_memory_domain_translate_called;
+static bool g_memory_domain_memzero_called;
+static int g_memory_domain_cb_rc = 123;
+
+static void
+test_memory_domain_data_cpl_cb(void *ctx, int rc)
+{
+}
+
+static int
+test_memory_domain_pull_data_cb(struct spdk_memory_domain *src_device,
+				void *src_device_ctx, struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov,
+				uint32_t dst_iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	g_memory_domain_pull_called = true;
+
+	return g_memory_domain_cb_rc;
+}
+
+static int
+test_memory_domain_push_data_cb(struct spdk_memory_domain *dst_domain,
+				void *dst_domain_ctx,
+				struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+				spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	g_memory_domain_push_called = true;
+
+	return g_memory_domain_cb_rc;
+}
+
+static int
+test_memory_domain_translate_memory_cb(struct spdk_memory_domain *src_device, void *src_device_ctx,
+				       struct spdk_memory_domain *dst_device, struct spdk_memory_domain_translation_ctx *dst_device_ctx,
+				       void *addr, size_t len, struct spdk_memory_domain_translation_result *result)
+{
+	g_memory_domain_translate_called = true;
+
+	return g_memory_domain_cb_rc;
+}
+
+static int
+test_memory_domain_memzero_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			      struct iovec *iov, uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	g_memory_domain_memzero_called = true;
+
+	return g_memory_domain_cb_rc;
+}
+
+static void
+test_dma(void)
+{
+	void *test_ibv_pd = (void *)0xdeadbeaf;
+	struct iovec src_iov = {}, dst_iov = {};
+	struct spdk_memory_domain *domain = NULL, *domain_2 = NULL, *domain_3 = NULL;
+	struct spdk_memory_domain *system_domain;
+	struct spdk_memory_domain_rdma_ctx rdma_ctx = { .ibv_pd = test_ibv_pd };
+	struct spdk_memory_domain_ctx memory_domain_ctx = { .user_ctx = &rdma_ctx };
+	struct spdk_memory_domain_ctx *stored_memory_domain_ctx;
+	struct spdk_memory_domain_translation_result translation_result;
+	const char *id;
+	int rc;
+
+	system_domain = spdk_memory_domain_get_system_domain();
+	CU_ASSERT(system_domain != NULL);
+
+	/* Create memory domain. No device ptr, expect fail */
+	rc = spdk_memory_domain_create(NULL, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test");
+	CU_ASSERT(rc != 0);
+
+	/* Create memory domain. ctx with zero size, expect fail */
+	memory_domain_ctx.size = 0;
+	rc = spdk_memory_domain_create(&domain, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test");
+	CU_ASSERT(rc != 0);
+
+	/* Create memory domain. expect pass */
+	memory_domain_ctx.size = sizeof(memory_domain_ctx);
+	rc = spdk_memory_domain_create(&domain, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test");
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(domain != NULL);
+
+	/* Get context. Expect pass */
+	stored_memory_domain_ctx = spdk_memory_domain_get_context(domain);
+	SPDK_CU_ASSERT_FATAL(stored_memory_domain_ctx != NULL);
+	CU_ASSERT(stored_memory_domain_ctx->user_ctx == &rdma_ctx);
+	CU_ASSERT(((struct spdk_memory_domain_rdma_ctx *)stored_memory_domain_ctx->user_ctx)->ibv_pd ==
+		  rdma_ctx.ibv_pd);
+
+	/* Get DMA device type. Expect pass */
+	CU_ASSERT(spdk_memory_domain_get_dma_device_type(domain) == SPDK_DMA_DEVICE_TYPE_RDMA);
+
+	/* Get DMA id. Expect pass */
+	id = spdk_memory_domain_get_dma_device_id(domain);
+	CU_ASSERT((!strcmp(id, domain->id)));
+
+	/* pull data, callback is NULL. Expect fail */
+	g_memory_domain_pull_called = false;
+	rc = spdk_memory_domain_pull_data(domain, NULL, &src_iov, 1, &dst_iov, 1,
+					  test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	CU_ASSERT(g_memory_domain_pull_called == false);
+
+	/* Set pull callback */
+	spdk_memory_domain_set_pull(domain, test_memory_domain_pull_data_cb);
+
+	/* pull data. Expect pass */
+	rc = spdk_memory_domain_pull_data(domain, NULL, &src_iov, 1, &dst_iov, 1,
+					  test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == g_memory_domain_cb_rc);
+	CU_ASSERT(g_memory_domain_pull_called == true);
+
+	/* push data, callback is NULL. Expect fail */
+	g_memory_domain_push_called = false;
+	rc = spdk_memory_domain_push_data(domain, NULL, &dst_iov, 1, &src_iov, 1,
+					  test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	CU_ASSERT(g_memory_domain_push_called == false);
+
+	/* Set push callback */
+	spdk_memory_domain_set_push(domain, test_memory_domain_push_data_cb);
+
+	/* push data. Expect pass */
+	rc = spdk_memory_domain_push_data(domain, NULL, &dst_iov, 1, &src_iov, 1,
+					  test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == g_memory_domain_cb_rc);
+	CU_ASSERT(g_memory_domain_push_called == true);
+
+	/* Translate data, callback is NULL. Expect fail */
+	g_memory_domain_translate_called = false;
+	rc = spdk_memory_domain_translate_data(domain, NULL, domain, NULL, (void *)0xfeeddbeef, 0x1000,
+					       &translation_result);
+	CU_ASSERT(rc == -ENOTSUP);
+	CU_ASSERT(g_memory_domain_translate_called == false);
+
+	/* Set translate callback */
+	spdk_memory_domain_set_translation(domain, test_memory_domain_translate_memory_cb);
+
+	/* Translate data. Expect pass */
+	g_memory_domain_translate_called = false;
+	rc = spdk_memory_domain_translate_data(domain, NULL, domain, NULL, (void *)0xfeeddbeef, 0x1000,
+					       &translation_result);
+	CU_ASSERT(rc == g_memory_domain_cb_rc);
+	CU_ASSERT(g_memory_domain_translate_called == true);
+
+	/* memzero, callback is NULL. Expect fail */
+	g_memory_domain_memzero_called = false;
+	rc = spdk_memory_domain_memzero(domain, NULL, &src_iov, 1, test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	CU_ASSERT(g_memory_domain_memzero_called == false);
+
+	/* Set memzero callback */
+	spdk_memory_domain_set_memzero(domain, test_memory_domain_memzero_cb);
+
+	/* memzero. Expect pass */
+	rc = spdk_memory_domain_memzero(domain, NULL, &src_iov, 1, test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == g_memory_domain_cb_rc);
+	CU_ASSERT(g_memory_domain_memzero_called == true);
+
+	/* Set translation callback to NULL. Expect pass */
+	spdk_memory_domain_set_translation(domain, NULL);
+	CU_ASSERT(domain->translate_cb == NULL);
+
+	/* Set translation callback. Expect pass */
+	spdk_memory_domain_set_translation(domain, test_memory_domain_translate_memory_cb);
+	CU_ASSERT(domain->translate_cb == test_memory_domain_translate_memory_cb);
+
+	/* Set pull callback to NULL. Expect pass */
+	spdk_memory_domain_set_pull(domain, NULL);
+	CU_ASSERT(domain->pull_cb == NULL);
+
+	/* Set pull callback. Expect pass */
+	spdk_memory_domain_set_pull(domain, test_memory_domain_pull_data_cb);
+	CU_ASSERT(domain->pull_cb == test_memory_domain_pull_data_cb);
+
+	/* Set memzero to NULL. Expect pass */
+	spdk_memory_domain_set_memzero(domain, NULL);
+	CU_ASSERT(domain->memzero_cb == NULL);
+
+	/* Set memzero callback. Expect pass */
+	spdk_memory_domain_set_memzero(domain, test_memory_domain_memzero_cb);
+	CU_ASSERT(domain->memzero_cb == test_memory_domain_memzero_cb);
+
+	/* Create 2nd and 3rd memory domains with equal id to test enumeration */
+	rc = spdk_memory_domain_create(&domain_2, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test_2");
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_memory_domain_create(&domain_3, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test_2");
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(spdk_memory_domain_get_first("test") == domain);
+	CU_ASSERT(spdk_memory_domain_get_next(domain, "test") == NULL);
+	CU_ASSERT(spdk_memory_domain_get_first("test_2") == domain_2);
+	CU_ASSERT(spdk_memory_domain_get_next(domain_2, "test_2") == domain_3);
+	CU_ASSERT(spdk_memory_domain_get_next(domain_3, "test_2") == NULL);
+
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+	CU_ASSERT(spdk_memory_domain_get_next(system_domain, NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_next(domain, NULL) == domain_2);
+	CU_ASSERT(spdk_memory_domain_get_next(domain_2, NULL) == domain_3);
+	CU_ASSERT(spdk_memory_domain_get_next(domain_3, NULL) == NULL);
+
+	/* Remove 2nd device, repeat iteration */
+	spdk_memory_domain_destroy(domain_2);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+	CU_ASSERT(spdk_memory_domain_get_next(system_domain, NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_next(domain, NULL) == domain_3);
+	CU_ASSERT(spdk_memory_domain_get_next(domain_3, NULL) == NULL);
+
+	/* Remove 3rd device, repeat iteration */
+	spdk_memory_domain_destroy(domain_3);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+	CU_ASSERT(spdk_memory_domain_get_next(system_domain, NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_next(domain, NULL) == NULL);
+	CU_ASSERT(spdk_memory_domain_get_first("test_2") == NULL);
+
+	/* Destroy memory domain, domain == NULL */
+	spdk_memory_domain_destroy(NULL);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+
+	/* Destroy memory domain */
+	spdk_memory_domain_destroy(domain);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+}
+
+int
+main(int argc, char **argv)
+{
+	CU_pSuite suite = NULL;
+	unsigned int num_failures;
+
+	CU_initialize_registry();
+
+	suite = CU_add_suite("dma_suite", NULL, NULL);
+	CU_ADD_TEST(suite, test_dma);
+
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
+	CU_cleanup_registry();
+
+	return num_failures;
+}

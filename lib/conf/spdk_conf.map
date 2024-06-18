@@ -1,0 +1,23 @@
+{
+	global:
+
+	# Public functions
+	spdk_conf_allocate;
+	spdk_conf_free;
+	spdk_conf_read;
+	spdk_conf_find_section;
+	spdk_conf_first_section;
+	spdk_conf_next_section;
+	spdk_conf_section_match_prefix;
+	spdk_conf_section_get_name;
+	spdk_conf_section_get_num;
+	spdk_conf_section_get_nmval;
+	spdk_conf_section_get_nval;
+	spdk_conf_section_get_val;
+	spdk_conf_section_get_intval;
+	spdk_conf_section_get_boolval;
+	spdk_conf_set_as_default;
+	spdk_conf_disable_sections_merge;
+
+	local: *;
+};

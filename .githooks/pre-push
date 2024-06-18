@@ -1,0 +1,84 @@
+#!/bin/sh
+#  SPDX-License-Identifier: BSD-3-Clause
+#  All rights reserved.
+
+# Verify what is about to be pushed.  Called by "git
+# push" after it has checked the remote status, but before anything has been
+# pushed.  If this script exits with a non-zero status nothing will be pushed.
+#
+# This hook is called with the following parameters:
+#
+# $1 -- Name of the remote to which the push is being done
+# $2 -- URL to which the push is being done
+#
+# If pushing without using a named remote those arguments will be equal.
+
+#   <local ref> <local sha1> <remote ref> <remote sha1>
+#
+
+rc=0
+SYSTEM=`uname -s`
+
+# Redirect output to stderr.
+exec 1>&2
+
+if [ "$SYSTEM" = "FreeBSD" ]; then
+	MAKE="gmake MAKE=gmake -j $(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')"
+	COMP="clang"
+else
+	MAKE="make -j $(nproc)"
+	COMP="gcc"
+fi
+
+echo "Running make with $COMP ..."
+echo "${MAKE} clean " > make.log
+$MAKE clean  >> make.log 2>&1
+
+echo "${MAKE} CONFIG_DEBUG=n CONFIG_WERROR=y " >> make.log
+$MAKE CONFIG_DEBUG=n CONFIG_WERROR=y  >> make.log 2>&1
+rc=$?
+if [ $rc -ne 0 ]; then
+	tail -20 make.log
+	echo ""
+	echo "ERROR make returned errors!"
+	echo "ERROR Fix the problem and use 'git commit' to update your changes."
+	echo "ERROR See `pwd`/make.log for more information."
+	echo ""
+	exit $rc
+fi
+
+echo "${MAKE} SKIP_DPDK_BUILD=1 clean " >> make.log
+$MAKE clean SKIP_DPDK_BUILD=1 >> make.log 2>&1
+echo "${MAKE} CONFIG_DEBUG=y CONFIG_WERROR=y SKIP_DPDK_BUILD=1 " >> make.log
+$MAKE CONFIG_DEBUG=y CONFIG_WERROR=y SKIP_DPDK_BUILD=1  >> make.log 2>&1
+rc=$?
+if [ $rc -ne 0 ]; then
+	tail -20 make.log
+	echo ""
+	echo "ERROR make returned errors!"
+	echo "ERROR Fix the problem and use 'git commit' to update your changes."
+	echo "ERROR See `pwd`/make.log for more information."
+	echo ""
+	exit $rc
+fi
+
+echo "Running unittest.sh ..."
+echo "./test/unit/unittest.sh" >> make.log
+"./test/unit/unittest.sh" >> make.log 2>&1
+rc=$?
+if [ $rc -ne 0 ]; then
+	tail -20 make.log
+	echo ""
+	echo "ERROR unittest returned errors!"
+	echo "ERROR Fix the problem and use 'git commit' to update your changes."
+	echo "ERROR See `pwd`/make.log for more information."
+	echo ""
+	exit $rc
+fi
+
+echo "$MAKE clean " >> make.log
+$MAKE clean  >> make.log 2>&1
+
+echo "Pushing to $1 $2"
+
+exit $rc

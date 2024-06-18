@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+
+# We simply check if BAR2, BAR4 are present as that's where PMR or CMB is
+# meant to be located under qemu. If found, print some stats then exit.
+shopt -s nullglob
+
+[[ $(uname -s) == Linux ]] || exit 0
+# Use MSR instead?
+[[ $(< /sys/class/dmi/id/chassis_vendor) == QEMU ]] || exit 0
+
+curdir=$(readlink -f "$(dirname "$0")")
+source "$curdir/common.sh"
+
+get_bar() {
+	echo "0x$(setpci -s "$1" "$2.${3:-L}")"
+}
+
+get_size() {
+	local addr=$1
+	local start end type
+
+	while IFS="- " read -r start end type; do
+		start=0x$start end=0x$end
+		if ((start == addr)) && [[ $type == *"$pci"* ]]; then
+			printf '0x%08x:0x%08x:0x%08x\n' \
+				"$start" "$end" $((end - start + 1))
+			return 0
+		fi
+	done < /proc/iomem
+	echo "unknown/unassigned"
+}
+
+info() {
+	local dev=$1
+
+	local pref
+	local head
+
+	local base_addr2
+	local base_addr4
+
+	local bar2 bar3 bar4 bar5
+
+	pref[0]=non-prefetchable
+	pref[1]=prefetchable
+
+	print_info() {
+		local bar=$1 base_addr=$2 bar_type=$3
+
+		printf '%s:%s:%s:%s:%s\n' \
+			"$dev" \
+			"64-bit" \
+			"${pref[bar & 1 << 3 ? 1 : 0]}" \
+			"$(get_size "$base_addr")" \
+			"$bar_type"
+	}
+
+	head=$(get_bar "$dev" 0x0e B)
+	bar2=$(get_bar "$dev" 0x18)
+	bar3=$(get_bar "$dev" 0x1c)
+	bar4=$(get_bar "$dev" 0x20)
+	bar5=$(get_bar "$dev" 0x24)
+
+	if ((head != 0)); then
+		echo "Wrong haeder type under $dev" >&2
+		return 1
+	fi
+
+	# QEMU uses 64-bit BARs. If there is no CMB or PMR present, report
+	# that to the user and signal failure.
+	if ((!(bar2 & 1 << 2) && !(bar4 & 1 << 2))); then
+		echo "No CMB|PMR present under $dev" >&2
+		return 1
+	fi
+
+	if ((bar2 & 1 << 2)); then
+		base_addr2=$(((bar2 & ~0xf) + (bar3 << 32)))
+		print_info "$bar2" "$base_addr2" cmb
+	fi
+
+	if ((bar4 & 1 << 2)); then
+		base_addr4=$(((bar4 & ~0xf) + (bar5 << 32)))
+		print_info "$bar4" "$base_addr4" pmr
+	fi
+}
+
+missing_buf=0
+cache_pci_bus
+
+for pci in ${pci_bus_cache[0x010802]}; do
+	info "$pci" || ((++missing_buf))
+done
+((missing_buf == 0))

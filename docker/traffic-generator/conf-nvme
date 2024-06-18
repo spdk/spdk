@@ -1,0 +1,22 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "method": "bdev_nvme_attach_controller",
+          "params": {
+            "name": "Nvme0",
+            "trtype": "TCP",
+            "adrfam": "IPv4",
+            "traddr": "192.168.42.3",
+            "trsvcid": "4420",
+            "subnqn": "nqn.2016-06.io.spdk:cnode1",
+            "prchk_reftag": false,
+            "prchk_guard": false
+          }
+        }
+      ]
+    }
+  ]
+}

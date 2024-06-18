@@ -1,173 +1,49 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright(c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation. All rights reserved.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
 #include "spdk/likely.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
-
+#include "spdk/memory.h"
+#include "spdk/barrier.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-#include "task.h"
-#include "vhost_iommu.h"
+#include "spdk/queue.h"
 
-static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 
-/* Path to folder where character device will be created. Can be set by user. */
-static char dev_dirname[PATH_MAX] = "";
+static struct spdk_cpuset g_vhost_core_mask;
 
-#define MAX_VHOST_DEVICES	15
+static TAILQ_HEAD(, spdk_vhost_dev) g_vhost_devices = TAILQ_HEAD_INITIALIZER(
+			g_vhost_devices);
+static pthread_mutex_t g_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+static TAILQ_HEAD(, spdk_virtio_blk_transport) g_virtio_blk_transports = TAILQ_HEAD_INITIALIZER(
+			g_virtio_blk_transports);
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
+static spdk_vhost_fini_cb g_fini_cb;
+
+struct spdk_vhost_dev *
+spdk_vhost_dev_next(struct spdk_vhost_dev *vdev)
 {
-	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
-}
-
-/*
- * Get available requests from avail ring.
- */
-uint16_t
-spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
-{
-	struct vring_avail *avail = vq->avail;
-	uint16_t size_mask = vq->size - 1;
-	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
-	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
-	uint16_t i;
-
-	if (spdk_likely(count == 0)) {
-		return 0;
+	if (vdev == NULL) {
+		return TAILQ_FIRST(&g_vhost_devices);
 	}
 
-	vq->last_avail_idx += count;
-	for (i = 0; i < count; i++) {
-		reqs[i] = vq->avail->ring[(last_idx + i) & size_mask];
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING,
-		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
-		      last_idx, avail_idx, count);
-
-	return count;
-}
-
-bool
-spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq)
-{
-	if ((vdev->negotiated_features & (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)) &&
-	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
-		return 1;
-	}
-
-	return !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
-}
-
-struct vring_desc *
-spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx)
-{
-	assert(req_idx < vq->size);
-	return &vq->desc[req_idx];
-}
-
-/*
- * Enqueue id and len to used ring.
- */
-void
-spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
-				uint16_t id,
-				uint32_t len)
-{
-	struct vring_used *used = vq->used;
-	uint16_t size_mask = vq->size - 1;
-	uint16_t last_idx = vq->last_used_idx;
-
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      last_idx, id, len);
-
-	vq->last_used_idx++;
-	last_idx &= size_mask;
-
-	used->ring[last_idx].id = id;
-	used->ring[last_idx].len = len;
-
-	rte_compiler_barrier();
-
-	vq->used->idx = vq->last_used_idx;
-	if (spdk_vhost_vq_should_notify(vdev, vq)) {
-		eventfd_write(vq->callfd, (eventfd_t)1);
-	}
-}
-
-bool
-spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc)
-{
-	return !!(cur_desc->flags & VRING_DESC_F_NEXT);
-}
-
-struct vring_desc *
-spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc, struct vring_desc *cur_desc)
-{
-	assert(spdk_vhost_vring_desc_has_next(cur_desc));
-	return &vq_desc[cur_desc->next];
-}
-
-bool
-spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
-{
-	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
-}
-
-bool
-spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
-			     const struct vring_desc *desc)
-{
-	iov->iov_base =  spdk_vhost_gpa_to_vva(vdev, desc->addr);
-	iov->iov_len = desc->len;
-	return !iov->iov_base;
+	return TAILQ_NEXT(vdev, tailq);
 }
 
 struct spdk_vhost_dev *
-spdk_vhost_dev_find_by_vid(int vid)
+spdk_vhost_dev_find(const char *ctrlr_name)
 {
-	unsigned i;
 	struct spdk_vhost_dev *vdev;
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		vdev = g_spdk_vhost_devices[i];
-		if (vdev && vdev->vid == vid) {
+	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
+		if (strcmp(vdev->name, ctrlr_name) == 0) {
 			return vdev;
 		}
 	}
@@ -175,276 +51,148 @@ spdk_vhost_dev_find_by_vid(int vid)
 	return NULL;
 }
 
-#define SHIFT_2MB	21
-#define SIZE_2MB	(1ULL << SHIFT_2MB)
-#define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
-#define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
-
-void
-spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
+static int
+vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
-	struct rte_vhost_mem_region *region;
-	uint32_t i;
+	int rc;
+	struct spdk_cpuset negative_vhost_mask;
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		len = end - start;
-		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
-			       start, len);
-		spdk_mem_register((void *)start, len);
-		if (spdk_iommu_mem_register(region->host_user_addr, region->size)) {
-			abort();
-		}
-	}
-}
-
-void
-spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
-{
-	struct rte_vhost_mem_region *region;
-	uint32_t i;
-
-	for (i = 0; i < vdev->mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		len = end - start;
-
-		if (spdk_iommu_mem_unregister(region->host_user_addr, region->size)) {
-			abort();
-		}
-
-		spdk_mem_unregister((void *)start, len);
-	}
-}
-
-void
-spdk_vhost_dev_task_ref(struct spdk_vhost_dev *vdev)
-{
-	assert(vdev->task_cnt < INT_MAX);
-	vdev->task_cnt++;
-}
-
-void
-spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev)
-{
-	assert(vdev->task_cnt > 0);
-	vdev->task_cnt--;
-}
-
-static void
-spdk_vhost_free_reactor(uint32_t lcore)
-{
-	g_num_ctrlrs[lcore]--;
-}
-
-struct spdk_vhost_dev *
-spdk_vhost_dev_find(const char *ctrlr_name)
-{
-	unsigned i;
-	size_t dev_dirname_len = strlen(dev_dirname);
-
-	if (strncmp(ctrlr_name, dev_dirname, dev_dirname_len) == 0) {
-		ctrlr_name += dev_dirname_len;
+	if (cpumask == NULL) {
+		return -1;
 	}
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		if (g_spdk_vhost_devices[i] == NULL) {
-			continue;
-		}
-
-		if (strcmp(g_spdk_vhost_devices[i]->name, ctrlr_name) == 0) {
-			return g_spdk_vhost_devices[i];
-		}
+	if (mask == NULL) {
+		spdk_cpuset_copy(cpumask, &g_vhost_core_mask);
+		return 0;
 	}
 
+	rc = spdk_cpuset_parse(cpumask, mask);
+	if (rc < 0) {
+		SPDK_ERRLOG("invalid cpumask %s\n", mask);
+		return -1;
+	}
+
+	spdk_cpuset_copy(&negative_vhost_mask, &g_vhost_core_mask);
+	spdk_cpuset_negate(&negative_vhost_mask);
+	spdk_cpuset_and(&negative_vhost_mask, cpumask);
+
+	if (spdk_cpuset_count(&negative_vhost_mask) != 0) {
+		SPDK_ERRLOG("one of selected cpu is outside of core mask(=%s)\n",
+			    spdk_cpuset_fmt(&g_vhost_core_mask));
+		return -1;
+	}
+
+	spdk_cpuset_and(cpumask, &g_vhost_core_mask);
+
+	if (spdk_cpuset_count(cpumask) == 0) {
+		SPDK_ERRLOG("no cpu is selected among core mask(=%s)\n",
+			    spdk_cpuset_fmt(&g_vhost_core_mask));
+		return -1;
+	}
+
+	return 0;
+}
+
+TAILQ_HEAD(, virtio_blk_transport_ops_list_element)
+g_spdk_virtio_blk_transport_ops = TAILQ_HEAD_INITIALIZER(g_spdk_virtio_blk_transport_ops);
+
+const struct spdk_virtio_blk_transport_ops *
+virtio_blk_get_transport_ops(const char *transport_name)
+{
+	struct virtio_blk_transport_ops_list_element *ops;
+	TAILQ_FOREACH(ops, &g_spdk_virtio_blk_transport_ops, link) {
+		if (strcasecmp(transport_name, ops->ops.name) == 0) {
+			return &ops->ops;
+		}
+	}
 	return NULL;
 }
 
 int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
+vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+		   const struct spdk_json_val *params, const struct spdk_vhost_dev_backend *backend,
+		   const struct spdk_vhost_user_dev_backend *user_backend, bool delay)
 {
-	unsigned ctrlr_num;
-	char path[PATH_MAX];
-	struct stat file_stat;
+	struct spdk_cpuset cpumask = {};
+	int rc;
 
 	assert(vdev);
-
 	if (name == NULL) {
 		SPDK_ERRLOG("Can't register controller with no name\n");
 		return -EINVAL;
 	}
 
-	if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
-		SPDK_ERRLOG("cpumask 0x%jx not a subset of app mask 0x%jx\n",
-			    cpumask, spdk_app_get_core_mask());
+	if (vhost_parse_core_mask(mask_str, &cpumask) != 0) {
+		SPDK_ERRLOG("cpumask %s is invalid (core mask is 0x%s)\n",
+			    mask_str, spdk_cpuset_fmt(&g_vhost_core_mask));
 		return -EINVAL;
 	}
+	vdev->use_default_cpumask = false;
+	if (!mask_str) {
+		vdev->use_default_cpumask = true;
+	}
 
+	spdk_vhost_lock();
 	if (spdk_vhost_dev_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
+		spdk_vhost_unlock();
 		return -EEXIST;
 	}
 
-	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
-		if (g_spdk_vhost_devices[ctrlr_num] == NULL) {
-			break;
-		}
-	}
-
-	if (ctrlr_num == MAX_VHOST_DEVICES) {
-		SPDK_ERRLOG("Max controllers reached (%d).\n", MAX_VHOST_DEVICES);
-		return -ENOSPC;
-	}
-
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
-			    name);
-		return -EINVAL;
-	}
-
-	/* Register vhost driver to handle vhost messages. */
-	if (stat(path, &file_stat) != -1) {
-		if (!S_ISSOCK(file_stat.st_mode)) {
-			SPDK_ERRLOG("Cannot remove %s: not a socket.\n", path);
-			return -EIO;
-		} else if (unlink(path) != 0) {
-			SPDK_ERRLOG("Cannot remove %s.\n", path);
-			return -EIO;
-		}
-	}
-
-	if (rte_vhost_driver_register(path, 0) != 0) {
-		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
-		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
-		return -EIO;
-	}
-	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
-	    rte_vhost_driver_disable_features(path, backend->disabled_features)) {
-		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
-
-		rte_vhost_driver_unregister(path);
-		return -EIO;
-	}
-
-	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
-		rte_vhost_driver_unregister(path);
-		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
-		return -EIO;
-	}
-
 	vdev->name = strdup(name);
-	vdev->vid = -1;
-	vdev->lcore = -1;
-	vdev->cpumask = cpumask;
-	vdev->type = type;
-
-	g_spdk_vhost_devices[ctrlr_num] = vdev;
-
-	if (rte_vhost_driver_start(path) != 0) {
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
-			    strerror(errno));
-		rte_vhost_driver_unregister(path);
+	if (vdev->name == NULL) {
+		spdk_vhost_unlock();
 		return -EIO;
 	}
 
-	SPDK_NOTICELOG("Controller %s: new controller added\n", vdev->name);
+	vdev->backend = backend;
+	if (vdev->backend->type == VHOST_BACKEND_SCSI) {
+		rc = vhost_user_dev_create(vdev, name, &cpumask, user_backend, delay);
+	} else {
+		/* When VHOST_BACKEND_BLK, delay should not be true. */
+		assert(delay == false);
+		rc = virtio_blk_construct_ctrlr(vdev, name, &cpumask, params, user_backend);
+	}
+	if (rc != 0) {
+		free(vdev->name);
+		spdk_vhost_unlock();
+		return rc;
+	}
+
+	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
+	spdk_vhost_unlock();
+
+	SPDK_INFOLOG(vhost, "Controller %s: new controller added\n", vdev->name);
 	return 0;
 }
 
 int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
+vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	unsigned ctrlr_num;
-	char path[PATH_MAX];
+	int rc;
 
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
-		return -ENODEV;
+	spdk_vhost_lock();
+	if (vdev->backend->type == VHOST_BACKEND_SCSI) {
+		rc = vhost_user_dev_unregister(vdev);
+	} else {
+		rc = virtio_blk_destroy_ctrlr(vdev);
+	}
+	if (rc != 0) {
+		spdk_vhost_unlock();
+		return rc;
 	}
 
-	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
-		if (g_spdk_vhost_devices[ctrlr_num] == vdev) {
-			break;
-		}
-	}
-
-	if (ctrlr_num == MAX_VHOST_DEVICES) {
-		SPDK_ERRLOG("Trying to remove invalid controller: %s.\n", vdev->name);
-		return -ENOSPC;
-	}
-
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
-			    vdev->name);
-		return -EINVAL;
-	}
-
-	if (rte_vhost_driver_unregister(path) != 0) {
-		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
-			    "Check if domain socket %s still exists\n", vdev->name, path);
-		return -EIO;
-	}
-
-	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
+	SPDK_INFOLOG(vhost, "Controller %s: removed\n", vdev->name);
 
 	free(vdev->name);
-	g_spdk_vhost_devices[ctrlr_num] = NULL;
-	return 0;
-}
 
-int
-spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
-{
-	char *end;
-
-	if (mask == NULL || cpumask == NULL) {
-		return -1;
+	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
+	if (TAILQ_EMPTY(&g_vhost_devices) && g_fini_cb != NULL) {
+		g_fini_cb();
 	}
-
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
-
-	if (*end != '\0' || errno || !*cpumask ||
-	    ((*cpumask & spdk_app_get_core_mask()) != *cpumask)) {
-
-		SPDK_ERRLOG("cpumask %s not a subset of app mask 0x%jx\n",
-			    mask, spdk_app_get_core_mask());
-		return -1;
-	}
+	spdk_vhost_unlock();
 
 	return 0;
-}
-
-struct spdk_vhost_dev *
-spdk_vhost_dev_next(struct spdk_vhost_dev *prev)
-{
-	int i = 0;
-
-	if (prev != NULL) {
-		for (; i < MAX_VHOST_DEVICES; i++) {
-			if (g_spdk_vhost_devices[i] == prev) {
-				break;
-			}
-		}
-
-		i++;
-	}
-
-	for (; i < MAX_VHOST_DEVICES; i++) {
-		if (g_spdk_vhost_devices[i] == NULL) {
-			continue;
-		}
-
-		return g_spdk_vhost_devices[i];
-	}
-
-	return NULL;
 }
 
 const char *
@@ -454,243 +202,330 @@ spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev)
 	return vdev->name;
 }
 
-uint64_t
+const struct spdk_cpuset *
 spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 {
 	assert(vdev != NULL);
-	return vdev->cpumask;
-}
-
-static uint32_t
-spdk_vhost_allocate_reactor(uint64_t cpumask)
-{
-	uint32_t i, selected_core;
-	uint32_t min_ctrlrs;
-
-	cpumask &= spdk_app_get_core_mask();
-
-	if (cpumask == 0) {
-		return 0;
-	}
-
-	min_ctrlrs = INT_MAX;
-	selected_core = 0;
-
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if (!((1ULL << i) & cpumask)) {
-			continue;
-		}
-
-		if (g_num_ctrlrs[i] < min_ctrlrs) {
-			selected_core = i;
-			min_ctrlrs = g_num_ctrlrs[i];
-		}
-	}
-
-	g_num_ctrlrs[selected_core]++;
-	return selected_core;
+	return spdk_thread_get_cpumask(vdev->thread);
 }
 
 void
-spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
+vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct rte_vhost_vring *q;
-	uint16_t i;
-
-	for (i = 0; i < vdev->num_queues; i++) {
-		q = &vdev->virtqueue[i];
-		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
-	}
-
-	free(vdev->mem);
-
-	spdk_vhost_free_reactor(vdev->lcore);
-	vdev->lcore = -1;
+	assert(vdev->backend->dump_info_json != NULL);
+	vdev->backend->dump_info_json(vdev, w);
 }
 
-struct spdk_vhost_dev *
-spdk_vhost_dev_load(int vid)
+int
+spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
+{
+	return vdev->backend->remove_device(vdev);
+}
+
+int
+spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			  uint32_t iops_threshold)
+{
+	assert(vdev->backend->set_coalescing != NULL);
+	return vdev->backend->set_coalescing(vdev, delay_base_us, iops_threshold);
+}
+
+void
+spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			  uint32_t *iops_threshold)
+{
+	assert(vdev->backend->get_coalescing != NULL);
+	vdev->backend->get_coalescing(vdev, delay_base_us, iops_threshold);
+}
+
+void
+spdk_vhost_lock(void)
+{
+	pthread_mutex_lock(&g_vhost_mutex);
+}
+
+int
+spdk_vhost_trylock(void)
+{
+	return -pthread_mutex_trylock(&g_vhost_mutex);
+}
+
+void
+spdk_vhost_unlock(void)
+{
+	pthread_mutex_unlock(&g_vhost_mutex);
+}
+
+void
+spdk_vhost_scsi_init(spdk_vhost_init_cb init_cb)
+{
+	uint32_t i;
+	int ret = 0;
+
+	ret = vhost_user_init();
+	if (ret != 0) {
+		init_cb(ret);
+		return;
+	}
+
+	spdk_cpuset_zero(&g_vhost_core_mask);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&g_vhost_core_mask, i, true);
+	}
+	init_cb(ret);
+}
+
+static void
+vhost_fini(void)
+{
+	struct spdk_vhost_dev *vdev, *tmp;
+
+	if (spdk_vhost_dev_next(NULL) == NULL) {
+		g_fini_cb();
+		return;
+	}
+
+	vdev = spdk_vhost_dev_next(NULL);
+	while (vdev != NULL) {
+		tmp = spdk_vhost_dev_next(vdev);
+		spdk_vhost_dev_remove(vdev);
+		/* don't care if it fails, there's nothing we can do for now */
+		vdev = tmp;
+	}
+
+	/* g_fini_cb will get called when last device is unregistered. */
+}
+
+void
+spdk_vhost_blk_init(spdk_vhost_init_cb init_cb)
+{
+	uint32_t i;
+	int ret = 0;
+
+	ret = virtio_blk_transport_create("vhost_user_blk", NULL);
+	if (ret != 0) {
+		goto out;
+	}
+
+	spdk_cpuset_zero(&g_vhost_core_mask);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&g_vhost_core_mask, i, true);
+	}
+out:
+	init_cb(ret);
+}
+
+void
+spdk_vhost_scsi_fini(spdk_vhost_fini_cb fini_cb)
+{
+	g_fini_cb = fini_cb;
+
+	vhost_user_fini(vhost_fini);
+}
+
+static void
+virtio_blk_transports_destroy(void)
+{
+	struct spdk_virtio_blk_transport *transport = TAILQ_FIRST(&g_virtio_blk_transports);
+
+	if (transport == NULL) {
+		g_fini_cb();
+		return;
+	}
+	TAILQ_REMOVE(&g_virtio_blk_transports, transport, tailq);
+	virtio_blk_transport_destroy(transport, virtio_blk_transports_destroy);
+}
+
+void
+spdk_vhost_blk_fini(spdk_vhost_fini_cb fini_cb)
+{
+	g_fini_cb = fini_cb;
+
+	virtio_blk_transports_destroy();
+}
+
+static void
+vhost_user_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	uint32_t delay_base_us;
+	uint32_t iops_threshold;
+
+	vdev->backend->write_config_json(vdev, w);
+
+	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+	if (delay_base_us) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "vhost_controller_set_coalescing");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "ctrlr", vdev->name);
+		spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
+		spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
+void
+spdk_vhost_scsi_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_vhost_dev *vdev;
-	char ifname[PATH_MAX];
 
-	uint16_t num_queues = rte_vhost_get_vring_num(vid);
-	uint16_t i;
+	spdk_json_write_array_begin(w);
 
-	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
-		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
-		return NULL;
-	}
-
-	vdev = spdk_vhost_dev_find(ifname);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller %s not found.\n", ifname);
-		return NULL;
-	}
-
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
-		return NULL;
-	}
-
-	if (num_queues > MAX_VHOST_VRINGS) {
-		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
-			    MAX_VHOST_VRINGS);
-		return NULL;
-	}
-
-	for (i = 0; i < num_queues; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
-			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			return NULL;
+	spdk_vhost_lock();
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
+		if (vdev->backend->type == VHOST_BACKEND_SCSI) {
+			vhost_user_config_json(vdev, w);
 		}
+	}
+	spdk_vhost_unlock();
 
-		/* Disable notifications. */
-		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
-			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			return NULL;
+	spdk_json_write_array_end(w);
+}
+
+static void
+vhost_blk_dump_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_virtio_blk_transport *transport;
+
+	/* Write vhost transports */
+	TAILQ_FOREACH(transport, &g_virtio_blk_transports, tailq) {
+		/* Since vhost_user_blk is always added on SPDK startup,
+		 * do not emit virtio_blk_create_transport RPC. */
+		if (strcasecmp(transport->ops->name, "vhost_user_blk") != 0) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "method", "virtio_blk_create_transport");
+			spdk_json_write_named_object_begin(w, "params");
+			transport->ops->dump_opts(transport, w);
+			spdk_json_write_object_end(w);
+			spdk_json_write_object_end(w);
 		}
-
 	}
-
-	vdev->vid = vid;
-	vdev->num_queues = num_queues;
-
-	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		return NULL;
-	}
-
-	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
-		return NULL;
-	}
-
-	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-
-	return vdev;
 }
 
 void
-spdk_vhost_startup(void *arg1, void *arg2)
+spdk_vhost_blk_config_json(struct spdk_json_write_ctx *w)
 {
-	int ret;
-	const char *basename = arg1;
+	struct spdk_vhost_dev *vdev;
 
-	if (basename && strlen(basename) > 0) {
-		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
-		if ((size_t)ret >= sizeof(dev_dirname) - 2) {
-			SPDK_ERRLOG("Char dev dir path length %d is too long\n", ret);
-			abort();
-		}
+	spdk_json_write_array_begin(w);
 
-		if (dev_dirname[ret - 1] != '/') {
-			dev_dirname[ret] = '/';
-			dev_dirname[ret + 1]  = '\0';
+	spdk_vhost_lock();
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
+		if (vdev->backend->type == VHOST_BACKEND_BLK) {
+			vhost_user_config_json(vdev, w);
 		}
 	}
+	spdk_vhost_unlock();
 
-	ret = spdk_vhost_scsi_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		abort();
-	}
+	vhost_blk_dump_config_json(w);
+
+	spdk_json_write_array_end(w);
 }
 
-static void *
-session_shutdown(void *arg)
+void
+virtio_blk_transport_register(const struct spdk_virtio_blk_transport_ops *ops)
 {
-	struct spdk_vhost_dev *vdev = NULL;
-	int i;
+	struct virtio_blk_transport_ops_list_element *new_ops;
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		vdev = g_spdk_vhost_devices[i];
-		if (vdev == NULL) {
-			continue;
-		}
-		rte_vhost_driver_unregister(vdev->name);
+	if (virtio_blk_get_transport_ops(ops->name) != NULL) {
+		SPDK_ERRLOG("Double registering virtio blk transport type %s.\n", ops->name);
+		assert(false);
+		return;
 	}
 
-	SPDK_NOTICELOG("Exiting\n");
-	spdk_app_stop(0);
+	new_ops = calloc(1, sizeof(*new_ops));
+	if (new_ops == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory to register new transport type %s.\n", ops->name);
+		assert(false);
+		return;
+	}
+
+	new_ops->ops = *ops;
+
+	TAILQ_INSERT_TAIL(&g_spdk_virtio_blk_transport_ops, new_ops, link);
+}
+
+int
+virtio_blk_transport_create(const char *transport_name,
+			    const struct spdk_json_val *params)
+{
+	const struct spdk_virtio_blk_transport_ops *ops = NULL;
+	struct spdk_virtio_blk_transport *transport;
+
+	TAILQ_FOREACH(transport, &g_virtio_blk_transports, tailq) {
+		if (strcasecmp(transport->ops->name, transport_name) == 0) {
+			return -EEXIST;
+		}
+	}
+
+	ops = virtio_blk_get_transport_ops(transport_name);
+	if (!ops) {
+		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
+		return -ENOENT;
+	}
+
+	transport = ops->create(params);
+	if (!transport) {
+		SPDK_ERRLOG("Unable to create new transport of type %s\n", transport_name);
+		return -EPERM;
+	}
+
+	transport->ops = ops;
+	TAILQ_INSERT_TAIL(&g_virtio_blk_transports, transport, tailq);
+	return 0;
+}
+
+struct spdk_virtio_blk_transport *
+virtio_blk_transport_get_first(void)
+{
+	return TAILQ_FIRST(&g_virtio_blk_transports);
+}
+
+struct spdk_virtio_blk_transport *
+virtio_blk_transport_get_next(struct spdk_virtio_blk_transport *transport)
+{
+	return TAILQ_NEXT(transport, tailq);
+}
+
+void
+virtio_blk_transport_dump_opts(struct spdk_virtio_blk_transport *transport,
+			       struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "name", transport->ops->name);
+
+	if (transport->ops->dump_opts) {
+		transport->ops->dump_opts(transport, w);
+	}
+
+	spdk_json_write_object_end(w);
+}
+
+struct spdk_virtio_blk_transport *
+virtio_blk_tgt_get_transport(const char *transport_name)
+{
+	struct spdk_virtio_blk_transport *transport;
+
+	TAILQ_FOREACH(transport, &g_virtio_blk_transports, tailq) {
+		if (strcasecmp(transport->ops->name, transport_name) == 0) {
+			return transport;
+		}
+	}
 	return NULL;
 }
 
-/*
- * When we receive a INT signal. Execute shutdown in separate thread to avoid deadlock.
- */
-void
-spdk_vhost_shutdown_cb(void)
+int
+virtio_blk_transport_destroy(struct spdk_virtio_blk_transport *transport,
+			     spdk_vhost_fini_cb cb_fn)
 {
-	pthread_t tid;
-	if (pthread_create(&tid, NULL, &session_shutdown, NULL) < 0) {
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s", errno, strerror(errno));
-		abort();
-	}
-	pthread_detach(tid);
+	return transport->ops->destroy(transport, cb_fn);
 }
 
-static void
-vhost_timed_event_fn(void *arg1, void *arg2)
-{
-	struct spdk_vhost_timed_event *ev = arg1;
-
-	if (ev->cb_fn) {
-		ev->cb_fn(arg2);
-	}
-
-	sem_post(&ev->sem);
-}
-
-static void
-vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcore,
-		       spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
-{
-	/* No way to free spdk event so don't allow to use it again without calling, waiting. */
-	assert(ev->spdk_event == NULL);
-
-	if (sem_init(&ev->sem, 0, 0) < 0)
-		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
-
-	ev->cb_fn = cb_fn;
-	clock_gettime(CLOCK_REALTIME, &ev->timeout);
-	ev->timeout.tv_sec += timeout_sec;
-	ev->spdk_event = spdk_event_allocate(lcore, vhost_timed_event_fn, ev, arg);
-}
-
-void
-spdk_vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcore,
-			    spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
-{
-	vhost_timed_event_init(ev, lcore, cb_fn, arg, timeout_sec);
-}
-
-void
-spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
-			    unsigned timeout_sec, const char *errmsg)
-{
-	struct spdk_vhost_timed_event ev = {0};
-
-	vhost_timed_event_init(&ev, lcore, cb_fn, arg, timeout_sec);
-	spdk_event_call(ev.spdk_event);
-	spdk_vhost_timed_event_wait(&ev, errmsg);
-}
-
-void
-spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errmsg)
-{
-	int rc;
-
-	assert(ev->spdk_event != NULL);
-
-	rc = sem_timedwait(&ev->sem, &ev->timeout);
-	if (rc != 0) {
-		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
-		abort();
-	}
-
-	ev->spdk_event = NULL;
-	sem_destroy(&ev->sem);
-}
-
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
+SPDK_LOG_REGISTER_COMPONENT(vhost)
+SPDK_LOG_REGISTER_COMPONENT(vhost_ring)

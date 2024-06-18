@@ -1,0 +1,65 @@
+package_manager=pacman
+
+upgrade() {
+	sudo "$package_manager" -Syu --noconfirm --needed
+}
+
+install() {
+	(($#)) || return 0
+
+	sudo "$package_manager" -Sy --noconfirm --needed "$@"
+}
+
+pre_install() {
+	if [[ $INSTALL_TSOCKS == true ]]; then
+		install tsocks
+	fi
+}
+
+packages=(
+	valgrind
+	jq
+	nvme-cli
+	ceph
+	gdb
+	fio
+	linux-headers
+	gflags
+	autoconf
+	automake
+	libtool
+	libutil-linux
+	libiscsi
+	open-isns
+	glib2
+	pixman
+	flex
+	bison
+	elfutils
+	libelf
+	astyle
+	gptfdisk
+	socat
+	openssl
+	sshfs
+	sshpass
+	python-pandas
+	btrfs-progs
+	iptables
+	clang
+	bc
+	perl-switch
+	open-iscsi
+	smartmontools
+	parted
+	wget
+	xfsprogs
+	avahi
+)
+
+# TODO:
+# These are either missing or require some other installation method
+# than pacman:
+# librbd-devel
+# perl-open
+# targetcli

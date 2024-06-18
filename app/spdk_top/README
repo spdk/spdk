@@ -1,0 +1,74 @@
+Contents
+========
+
+- Overview
+- Installation
+- Usage
+
+
+Overview
+========
+
+This application provides SPDK live statistics regarding usage of cores,
+threads, pollers, execution times, and relations between those. All data
+is being gathered from SPDK by calling appropriate RPC calls. Application
+consists of three selectable tabs providing statistics related to three
+main topics:
+
+- Threads
+- Pollers
+- Cores
+
+
+Installation
+============
+
+spdk_top requires Ncurses library (can by installed by running
+spdk/scripts/pkgdep.sh) and is compiled by default when SPDK compiles.
+
+
+
+Usage
+=====
+
+To run spdk_top:
+
+sudo spdk_top [options]
+
+options:
+ -r <path>  RPC listen address (optional, default: /var/tmp/spdk.sock)
+ -h         show help message
+
+Application consists of:
+- Tabs list (on top)
+- Statistics window (main windows in the middle)
+- Options window (below statistics window)
+- Page indicator / Error status
+
+Tabs list shows available tabs and highlights currently selected tab.
+Statistics window displays current statistics. Available statistics
+depend on which tab is currently selected. All time and run counter
+related statistics are relative - show elapsed time / number of runs
+since previous data refresh. Options windows provide hotkeys list
+to change application settings. Available options are:
+
+- [q] Quit - quit the application
+- [1-3] TAB selection - select tab to be displayed
+- [PgUp] Previous page - go to previous page
+- [PgDown] Next page - go to next page
+- [c] Columns - select which columns should be visible / hidden:
+  Use arrow up / down and space / enter keys to select which columns
+  should be visible. Select 'CLOSE' to confirm changes and close
+  the window.
+- [s] Sorting - change data sorting:
+  Use arrow up / down to select based on which column data should be
+  sorted. Use enter key to confirm or esc key to exit without
+  changing current sorting scheme.
+- [r]  Refresh rate - change data refresh rate:
+  Enter new data refresh rate value. Refresh rate accepts value
+  between 0 and 255 seconds. Use enter key to apply or escape key
+  to cancel.
+
+Page indicator show current data page. Error status can be displayed
+on bottom right side of the screen when the application encountered
+an error.

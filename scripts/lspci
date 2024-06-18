@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+
+set -e
+
+scriptdir=$(dirname $0)
+lspci -F <($scriptdir/rpc.py framework_get_pci_devices --format-lspci) "$@"

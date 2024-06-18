@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package sma.virtio_blk;
+
+option go_package = "github.com/spdk/sma-goapi/v1alpha1/virtio_blk";
+
+message DeviceParameters {
+  // Physical function index
+  uint32 physical_id = 1;
+  // Virtual function index
+  uint32 virtual_id = 2;
+}

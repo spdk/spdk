@@ -1,0 +1,43 @@
+Commit based on:
+https://github.com/spdk/dpdk/commit/c2c273d5c8fbf673623b427f8f4ab5af5ddf0e08
+---
+ drivers/common/qat/meson.build | 4 ++--
+ drivers/crypto/qat/meson.build | 7 ++-----
+ 2 files changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/common/qat/meson.build b/drivers/common/qat/meson.build
+index 29e1299f20b..9d67cfbb257 100644
+--- a/drivers/common/qat/meson.build
++++ b/drivers/common/qat/meson.build
+@@ -56,10 +56,10 @@ endif
+ 
+ if qat_crypto
+ 	foreach f: ['qat_sym_pmd.c', 'qat_sym.c', 'qat_sym_session.c',
+-			'qat_sym_hw_dp.c', 'qat_asym_pmd.c', 'qat_asym.c']
++			'qat_sym_hw_dp.c']
+ 		sources += files(join_paths(qat_crypto_relpath, f))
+ 	endforeach
+ 	deps += ['security']
+ 	ext_deps += libcrypto
+-	cflags += ['-DBUILD_QAT_SYM', '-DBUILD_QAT_ASYM']
++	cflags += ['-DBUILD_QAT_SYM']
+ endif
+diff --git a/drivers/crypto/qat/meson.build b/drivers/crypto/qat/meson.build
+index bc90ec44ccd..9e64ad6b2d6 100644
+--- a/drivers/crypto/qat/meson.build
++++ b/drivers/crypto/qat/meson.build
+@@ -13,12 +13,9 @@ qat_deps += 'security'
+ if dep.found()
+ 	# Add our sources files to the list
+ 	qat_sources += files('qat_sym_pmd.c',
+-			     'qat_sym.c',
+-			     'qat_sym_session.c',
+ 			     'qat_sym_hw_dp.c',
+-			     'qat_asym_pmd.c',
+-			     'qat_asym.c')
++			     'qat_sym.c',
++			     'qat_sym_session.c')
+ 	qat_ext_deps += dep
+ 	qat_cflags += '-DBUILD_QAT_SYM'
+-	qat_cflags += '-DBUILD_QAT_ASYM'
+ endif

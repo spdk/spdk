@@ -1,127 +1,112 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-if [ ! -z $1 ]; then
-	DPDK_DIR=$(readlink -f $1)
-fi
+cleanup() {
+	"$rpc_py" bdev_split_delete Nvme0n1 || true
+	"$rpc_py" bdev_error_delete EE_Malloc0 || true
+	"$rpc_py" bdev_nvme_detach_controller Nvme0
+	killprocess "$pid"
 
-timing_enter ext4test
+	mountpoint -q "/mnt/${dev}dir" && umount "/mnt/${dev}dir"
+	rm -rf "/mnt/${dev}dir"
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+	iscsicleanup
+	iscsitestfini
+}
 
-# iSCSI target configuration
-PORT=3260
-RPC_PORT=5260
-INITIATOR_TAG=2
-INITIATOR_NAME=ALL
-NETMASK=$INITIATOR_IP/32
+iscsitestinit
 
-rpc_py="python $rootdir/scripts/rpc.py"
+# Declare rpc_py here, because its default value points to rpc_cmd function,
+# which does not tolerate piping arguments into it.
+rpc_py="$rootdir/scripts/rpc.py"
+node_base="iqn.2013-06.com.intel.ch.spdk"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap 'cleanup' SIGINT SIGTERM EXIT
 
-waitforlisten $pid ${RPC_PORT}
+waitforlisten $pid
+$rpc_py iscsi_set_options -o 30 -a 4 -b $node_base
+$rpc_py framework_start_init
+$rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
+$rpc_py bdev_malloc_create 512 4096 --name Malloc0
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
-$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_error_bdev 'Malloc0'
+$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py bdev_error_create 'Malloc0'
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
-# "1 0 0 0" ==> disable CHAP authentication
-$rpc_py construct_target_node Target0 Target0_alias EE_Malloc0:0 1:2 64 1 0 0 0
+# "-d" ==> disable CHAP authentication
+$rpc_py iscsi_create_target_node Target0 Target0_alias EE_Malloc0:0 1:2 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
-
-trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; done; \
-	iscsicleanup; killprocess $pid; exit 1' SIGINT SIGTERM EXIT
-
-sleep 1
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+waitforiscsidevices 1
 
 echo "Test error injection"
-$rpc_py bdev_inject_error EE_Malloc0 'all' -n 1000
+$rpc_py bdev_error_inject_error EE_Malloc0 'all' 'failure' -n 1000
 
-dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
-
-set +e
-mkfs.ext4 -F /dev/$dev
-if [ $? -eq 0 ]; then
+dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}' | head -n1)
+waitforfile /dev/${dev}
+if make_filesystem ext4 /dev/${dev}; then
 	echo "mkfs successful - expected failure"
-	iscsicleanup
-	killprocess $pid
-	rm -f $testdir/iscsi.conf
 	exit 1
 else
 	echo "mkfs failed as expected"
 fi
-set -e
 
-$rpc_py bdev_inject_error EE_Malloc0 'clear'
+iscsicleanup
+$rpc_py bdev_error_inject_error EE_Malloc0 'clear' 'failure'
+$rpc_py iscsi_delete_target_node $node_base:Target0
 echo "Error injection test done"
 
-iscsicleanup
+bdev_size=$(get_bdev_size Nvme0n1)
+split_size=$((bdev_size / 2))
+split_size=$((split_size > 10000 ? 10000 : split_size))
+$rpc_py bdev_split_create Nvme0n1 2 -s $split_size
+$rpc_py iscsi_create_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
 
-if [ -z "$NO_NVME" ]; then
-$rpc_py construct_target_node Target1 Target1_alias Nvme0n1:0 1:2 64 1 0 0 0
-fi
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+waitforiscsidevices 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}' | head -n1)
+waitforfile "/dev/${dev}"
 
-devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+make_filesystem ext4 "/dev/${dev}"
+mkdir -p "/mnt/${dev}dir"
+mount -o sync "/dev/${dev}" "/mnt/${dev}dir"
 
-for dev in $devs; do
-	mkfs.ext4 -F /dev/$dev
-	mkdir -p /mnt/${dev}dir
-	mount -o sync /dev/$dev /mnt/${dev}dir
+rsync -qav --exclude=".git" --exclude="*.o" "$rootdir/" "/mnt/${dev}dir/spdk"
 
-	rsync -qav --exclude=".git" $rootdir/ /mnt/${dev}dir/spdk
+make -C "/mnt/${dev}dir/spdk" clean
+(cd "/mnt/${dev}dir/spdk" && ./configure --disable-unit-tests --disable-tests)
+make -C "/mnt/${dev}dir/spdk" -j
 
-	make -C /mnt/${dev}dir/spdk clean
-	(cd /mnt/${dev}dir/spdk && ./configure $config_params)
-	make -C /mnt/${dev}dir/spdk -j16
+rm -rf "/mnt/${dev}dir/spdk"
+umount "/mnt/${dev}dir"
+rm -rf "/mnt/${dev}dir"
 
-	# Print out space consumed on target device to help decide
-	#  if/when we need to increase the size of the malloc LUN
-	df -h /dev/$dev
+stats=($(cat "/sys/block/$dev/stat"))
 
-	rm -rf /mnt/${dev}dir/spdk
-done
-
-for dev in $devs; do
-	umount /mnt/${dev}dir
-	rm -rf /mnt/${dev}dir
-
-	stats=( $(cat /sys/block/$dev/stat) )
-	echo ""
-	echo "$dev stats"
-	printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
-		   ${stats[0]} ${stats[1]} ${stats[2]} ${stats[3]}
-	printf "WRITE IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
-		   ${stats[4]} ${stats[5]} ${stats[6]} ${stats[7]}
-	printf "in flight: % 8u io ticks: % 8u time in queue: % 8u\n" \
-		   ${stats[8]} ${stats[9]} ${stats[10]}
-	echo ""
-done
-
-trap - SIGINT SIGTERM EXIT
-
-rm -f $testdir/iscsi.conf
-iscsicleanup
-killprocess $pid
-timing_exit ext4test
+printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
+	"${stats[0]}" "${stats[1]}" "${stats[2]}" "${stats[3]}"
+printf "WRITE IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
+	"${stats[4]}" "${stats[5]}" "${stats[6]}" "${stats[7]}"
+printf "in flight: % 8u io ticks: % 8u time in queue: % 8u\n" \
+	"${stats[8]}" "${stats[9]}" "${stats[10]}"

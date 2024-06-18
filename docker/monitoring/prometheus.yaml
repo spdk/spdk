@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2023 Dell Inc, or its subsidiaries.
+#
+
+scrape_configs:
+  - job_name: telegraf
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - telegraf:9126

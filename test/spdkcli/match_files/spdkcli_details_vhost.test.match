@@ -1,0 +1,46 @@
+{
+  "aliases": [
+    "$(UUID)"
+  ],
+  "assigned_rate_limits": {
+    "r_mbytes_per_sec": $(N),
+    "rw_ios_per_sec": $(N),
+    "rw_mbytes_per_sec": $(N),
+    "w_mbytes_per_sec": $(N)
+  },
+  "block_size": $(N),
+  "claimed": false,
+  "driver_specific": {
+    "split": {
+      "base_bdev": "Nvme0n1",
+      "offset_blocks": $(N)
+    }
+  },
+  "name": "Nvme0n1p0",
+  "num_blocks": $(N),
+  "product_name": "Split Disk",
+  "supported_io_types": {
+    "abort": $(S),
+    "compare": $(S),
+    "compare_and_write": $(S),
+    "copy": $(S),
+    "flush": $(S),
+    "get_zone_info": $(S),
+    "nvme_admin": $(S),
+    "nvme_io": $(S),
+    "nvme_io_md": $(S),
+    "nvme_iov_md": $(S),
+    "read": $(S),
+    "reset": $(S),
+    "seek_data": $(S),
+    "seek_hole": $(S),
+    "unmap": $(S),
+    "write": $(S),
+    "write_zeroes": $(S),
+    "zcopy": $(S),
+    "zone_append": $(S),
+    "zone_management": $(S)
+  },
+  "uuid": "$(UUID)",
+  "zoned": false
+}

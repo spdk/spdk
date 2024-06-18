@@ -1,0 +1,30 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "accel",
+      "config": [
+        {
+          "method": "accel_assign_opc",
+          "params": {
+            "opname": "copy",
+            "module": "external"
+          }
+        },
+        {
+          "method": "accel_assign_opc",
+          "params": {
+            "opname": "fill",
+            "module": "external"
+          }
+        },
+        {
+          "method": "accel_assign_opc",
+          "params": {
+            "opname": "compare",
+            "module": "external"
+          }
+        }
+      ]
+    }
+  ]
+}

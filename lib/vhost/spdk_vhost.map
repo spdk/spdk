@@ -1,0 +1,31 @@
+{
+	global:
+
+	# public functions
+	spdk_vhost_set_socket_path;
+	spdk_vhost_scsi_init;
+	spdk_vhost_scsi_fini;
+	spdk_vhost_scsi_config_json;
+	spdk_vhost_blk_init;
+	spdk_vhost_blk_fini;
+	spdk_vhost_blk_config_json;
+	spdk_vhost_shutdown_cb;
+	spdk_vhost_lock;
+	spdk_vhost_trylock;
+	spdk_vhost_unlock;
+	spdk_vhost_dev_find;
+	spdk_vhost_dev_next;
+	spdk_vhost_dev_get_name;
+	spdk_vhost_dev_get_cpumask;
+	spdk_vhost_set_coalescing;
+	spdk_vhost_get_coalescing;
+	spdk_vhost_scsi_dev_construct;
+	spdk_vhost_scsi_dev_construct_no_start;
+	spdk_vhost_scsi_dev_add_tgt;
+	spdk_vhost_scsi_dev_get_tgt;
+	spdk_vhost_scsi_dev_remove_tgt;
+	spdk_vhost_blk_construct;
+	spdk_vhost_dev_remove;
+
+	local: *;
+};

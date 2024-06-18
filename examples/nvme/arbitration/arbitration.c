@@ -1,42 +1,11 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
-
+#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -45,7 +14,7 @@
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	struct spdk_nvme_intel_rw_latency_page	latency_page;
-	struct ctrlr_entry			*next;
+	TAILQ_ENTRY(ctrlr_entry)		link;
 	char					name[1024];
 };
 
@@ -55,7 +24,7 @@ struct ns_entry {
 		struct spdk_nvme_ns		*ns;
 	} nvme;
 
-	struct ns_entry				*next;
+	TAILQ_ENTRY(ns_entry)			link;
 	uint32_t				io_size_blocks;
 	uint64_t				size_in_ios;
 	char					name[1024];
@@ -68,7 +37,7 @@ struct ns_worker_ctx {
 	uint64_t				offset_in_ios;
 	bool					is_draining;
 	struct spdk_nvme_qpair			*qpair;
-	struct ns_worker_ctx			*next;
+	TAILQ_ENTRY(ns_worker_ctx)		link;
 };
 
 struct arb_task {
@@ -77,8 +46,8 @@ struct arb_task {
 };
 
 struct worker_thread {
-	struct ns_worker_ctx			*ns_ctx;
-	struct worker_thread			*next;
+	TAILQ_HEAD(, ns_worker_ctx)		ns_ctx;
+	TAILQ_ENTRY(worker_thread)		link;
 	unsigned				lcore;
 	enum spdk_nvme_qprio			qprio;
 };
@@ -108,13 +77,14 @@ struct feature {
 	bool					valid;
 };
 
-static struct rte_mempool *task_pool		= NULL;
+static struct spdk_mempool *task_pool		= NULL;
 
-static struct ctrlr_entry *g_controllers	= NULL;
-static struct ns_entry *g_namespaces		= NULL;
-static struct worker_thread *g_workers		= NULL;
+static TAILQ_HEAD(, ctrlr_entry) g_controllers	= TAILQ_HEAD_INITIALIZER(g_controllers);
+static TAILQ_HEAD(, ns_entry) g_namespaces	= TAILQ_HEAD_INITIALIZER(g_namespaces);
+static TAILQ_HEAD(, worker_thread) g_workers	= TAILQ_HEAD_INITIALIZER(g_workers);
 
-static struct feature features[256];
+static struct feature features[SPDK_NVME_FEAT_ARBITRATION + 1] = {};
+static struct spdk_nvme_transport_id g_trid = {};
 
 static struct arb_context g_arbitration = {
 	.shm_id					= -1,
@@ -135,6 +105,9 @@ static struct arb_context g_arbitration = {
 	.workload_type				= "randrw",
 };
 
+static int g_dpdk_mem = 0;
+static bool g_dpdk_mem_single_seg = false;
+
 /*
  * For weighted round robin arbitration mechanism, the smaller value between
  * weight and burst will be picked to execute the commands in one queue.
@@ -142,25 +115,6 @@ static struct arb_context g_arbitration = {
 #define USER_SPECIFIED_HIGH_PRIORITY_WEIGHT	32
 #define USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT	16
 #define USER_SPECIFIED_LOW_PRIORITY_WEIGHT	8
-#define USER_SPECIFIED_ARBITRATION_BURST	7	/* No limit */
-
-/*
- * Description of dword for priority weight and arbitration burst
- * ------------------------------------------------------------------------------
- *     31 : 24      |       23 : 16      |    15 : 08      | 07 : 03  | 02 : 00
- * ------------------------------------------------------------------------------
- * High Prio Weight | Medium Prio Weight | Low Prio Weight | Reserved | Arb Burst
- * ------------------------------------------------------------------------------
- *
- * The priority weights are zero based value.
- */
-#define SPDK_NVME_HIGH_PRIO_WEIGHT_SHIFT	24
-#define SPDK_NVME_MED_PRIO_WEIGHT_SHIFT		16
-#define SPDK_NVME_LOW_PRIO_WEIGHT_SHIFT		8
-#define SPDK_NVME_PRIO_WEIGHT_MASK		0xFF
-#define SPDK_NVME_ARB_BURST_MASK		0x7
-
-#define SPDK_NVME_QPRIO_MAX			(SPDK_NVME_QPRIO_LOW + 1)
 
 static void task_complete(struct arb_task *task);
 
@@ -181,19 +135,13 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (!spdk_nvme_ns_is_active(ns)) {
-		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
-		       cdata->mn, cdata->sn,
-		       spdk_nvme_ns_get_id(ns));
-		return;
-	}
-
 	if (spdk_nvme_ns_get_size(ns) < g_arbitration.io_size_bytes ||
-	    spdk_nvme_ns_get_sector_size(ns) > g_arbitration.io_size_bytes) {
+	    spdk_nvme_ns_get_extended_sector_size(ns) > g_arbitration.io_size_bytes ||
+	    g_arbitration.io_size_bytes % spdk_nvme_ns_get_extended_sector_size(ns)) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
-		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns),
+		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_extended_sector_size(ns),
 		       g_arbitration.io_size_bytes);
 		return;
 	}
@@ -213,8 +161,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
 	g_arbitration.num_namespaces++;
-	entry->next = g_namespaces;
-	g_namespaces = entry;
+	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
 }
 
 static void
@@ -254,9 +201,10 @@ set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
 static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int nsid, num_ns;
+	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = calloc(1, sizeof(struct ctrlr_entry));
+	union spdk_nvme_cap_register cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	if (entry == NULL) {
@@ -267,15 +215,15 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
 	entry->ctrlr = ctrlr;
-	entry->next = g_controllers;
-	g_controllers = entry;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
 
 	if ((g_arbitration.latency_tracking_enable != 0) &&
-	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 		set_latency_tracking_feature(ctrlr, true);
+	}
 
-	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	for (nsid = 1; nsid <= num_ns; nsid++) {
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
+	     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		if (ns == NULL) {
 			continue;
@@ -283,24 +231,14 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 		register_ns(ctrlr, ns);
 	}
 
-	if (g_arbitration.arbitration_mechanism == SPDK_NVME_CAP_AMS_WRR) {
+	if (g_arbitration.arbitration_mechanism == SPDK_NVME_CAP_AMS_WRR &&
+	    (cap.bits.ams & SPDK_NVME_CAP_AMS_WRR)) {
 		get_arb_feature(ctrlr);
 
 		if (g_arbitration.arbitration_config != 0) {
 			set_arb_feature(ctrlr);
 			get_arb_feature(ctrlr);
 		}
-	}
-}
-
-static void
-task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
-{
-	struct arb_task *task = __task;
-	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
-	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
-		exit(1);
 	}
 }
 
@@ -314,8 +252,16 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	int			rc;
 	struct ns_entry		*entry = ns_ctx->entry;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
+	task = spdk_mempool_get(task_pool);
+	if (!task) {
+		fprintf(stderr, "Failed to get task from task_pool\n");
+		exit(1);
+	}
+
+	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
+	if (!task->buf) {
+		spdk_mempool_put(task_pool, task);
+		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
 
@@ -344,9 +290,9 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
+	} else {
+		ns_ctx->current_queue_depth++;
 	}
-
-	ns_ctx->current_queue_depth++;
 }
 
 static void
@@ -358,7 +304,8 @@ task_complete(struct arb_task *task)
 	ns_ctx->current_queue_depth--;
 	ns_ctx->io_completed++;
 
-	rte_mempool_put(task_pool, task);
+	spdk_dma_free(task->buf);
+	spdk_mempool_put(task_pool, task);
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -403,7 +350,13 @@ drain_io(struct ns_worker_ctx *ns_ctx)
 static int
 init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx, enum spdk_nvme_qprio qprio)
 {
-	ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->nvme.ctrlr, qprio);
+	struct spdk_nvme_ctrlr *ctrlr = ns_ctx->entry->nvme.ctrlr;
+	struct spdk_nvme_io_qpair_opts opts;
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	opts.qprio = qprio;
+
+	ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 	if (!ns_ctx->qpair) {
 		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 		return 1;
@@ -419,31 +372,34 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-cleanup(void)
+cleanup(uint32_t task_count)
 {
-	struct ns_entry *entry			= g_namespaces;
-	struct ns_entry *next_entry		= NULL;
-	struct worker_thread *worker		= g_workers;
-	struct worker_thread *next_worker	= NULL;
-	struct arb_task *task			= NULL;
+	struct ns_entry *entry, *tmp_entry;
+	struct worker_thread *worker, *tmp_worker;
+	struct ns_worker_ctx *ns_ctx, *tmp_ns_ctx;
 
-	while (entry) {
-		next_entry = entry->next;
+	TAILQ_FOREACH_SAFE(entry, &g_namespaces, link, tmp_entry) {
+		TAILQ_REMOVE(&g_namespaces, entry, link);
 		free(entry);
-		entry = next_entry;
 	};
 
-	while (worker) {
-		next_worker = worker->next;
-		free(worker->ns_ctx);
+	TAILQ_FOREACH_SAFE(worker, &g_workers, link, tmp_worker) {
+		TAILQ_REMOVE(&g_workers, worker, link);
+
+		/* ns_worker_ctx is a list in the worker */
+		TAILQ_FOREACH_SAFE(ns_ctx, &worker->ns_ctx, link, tmp_ns_ctx) {
+			TAILQ_REMOVE(&worker->ns_ctx, ns_ctx, link);
+			free(ns_ctx);
+		}
+
 		free(worker);
-		worker = next_worker;
 	};
 
-	if (rte_mempool_get(task_pool, (void **)&task) == 0) {
-		spdk_dma_free(task->buf);
+	if (spdk_mempool_count(task_pool) != (size_t)task_count) {
+		fprintf(stderr, "task_pool count is %zu but should be %u\n",
+			spdk_mempool_count(task_pool), task_count);
 	}
-
+	spdk_mempool_free(task_pool);
 }
 
 static int
@@ -451,28 +407,23 @@ work_fn(void *arg)
 {
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
-	struct ns_worker_ctx *ns_ctx = NULL;
+	struct ns_worker_ctx *ns_ctx;
 
 	printf("Starting thread on core %u with %s\n", worker->lcore, print_qprio(worker->qprio));
 
 	/* Allocate a queue pair for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		if (init_ns_worker_ctx(ns_ctx, worker->qprio) != 0) {
 			printf("ERROR: init_ns_worker_ctx() failed\n");
 			return 1;
 		}
-		ns_ctx = ns_ctx->next;
 	}
 
 	tsc_end = spdk_get_ticks() + g_arbitration.time_in_sec * g_arbitration.tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
-	ns_ctx = worker->ns_ctx;
-
-	while (ns_ctx != NULL) {
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		submit_io(ns_ctx, g_arbitration.queue_depth);
-		ns_ctx = ns_ctx->next;
 	}
 
 	while (1) {
@@ -481,10 +432,8 @@ work_fn(void *arg)
 		 * I/O will be submitted in the io_complete callback
 		 * to replace each I/O that is completed.
 		 */
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
+		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			check_io(ns_ctx);
-			ns_ctx = ns_ctx->next;
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
@@ -492,11 +441,9 @@ work_fn(void *arg)
 		}
 	}
 
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		drain_io(ns_ctx);
 		cleanup_ns_worker_ctx(ns_ctx);
-		ns_ctx = ns_ctx->next;
 	}
 
 	return 0;
@@ -506,12 +453,19 @@ static void
 usage(char *program_name)
 {
 	printf("%s options", program_name);
-	printf("\n");
+	printf("\t\n");
+	printf("\t[-d DPDK huge memory size in MB]\n");
 	printf("\t[-q io depth]\n");
-	printf("\t[-s io size in bytes]\n");
+	printf("\t[-o io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
+#ifdef DEBUG
+	printf("\t[-L enable debug logging]\n");
+#else
+	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
+#endif
+	spdk_log_usage(stdout, "\t\t-L");
 	printf("\t[-l enable latency tracking, default: disabled]\n");
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
 	printf("\t[-t time in seconds]\n");
@@ -528,6 +482,8 @@ usage(char *program_name)
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
 	printf("\t[-n subjected IOs for performance comparison]\n");
 	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 }
 
 static const char *
@@ -552,7 +508,7 @@ static void
 print_configuration(char *program_name)
 {
 	printf("%s run with configuration:\n", program_name);
-	printf("%s -q %d -s %d -w %s -M %d -l %d -t %d -c %s -m %d -a %d -b %d -i %d\n",
+	printf("%s -q %d -s %d -w %s -M %d -l %d -t %d -c %s -m %d -a %d -b %d -n %d -i %d\n",
 	       program_name,
 	       g_arbitration.queue_depth,
 	       g_arbitration.io_size_bytes,
@@ -564,7 +520,8 @@ print_configuration(char *program_name)
 	       g_arbitration.max_completions,
 	       g_arbitration.arbitration_mechanism,
 	       g_arbitration.arbitration_config,
-	       g_arbitration.io_count);
+	       g_arbitration.io_count,
+	       g_arbitration.shm_id);
 }
 
 
@@ -575,18 +532,14 @@ print_performance(void)
 	struct worker_thread	*worker;
 	struct ns_worker_ctx	*ns_ctx;
 
-	worker = g_workers;
-	while (worker) {
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx) {
+	TAILQ_FOREACH(worker, &g_workers, link) {
+		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			io_per_second = (float)ns_ctx->io_completed / g_arbitration.time_in_sec;
 			sent_all_io_in_secs = g_arbitration.io_count / io_per_second;
 			printf("%-43.43s core %u: %8.2f IO/s %8.2f secs/%d ios\n",
 			       ns_ctx->entry->name, worker->lcore,
 			       io_per_second, sent_all_io_in_secs, g_arbitration.io_count);
-			ns_ctx = ns_ctx->next;
 		}
-		worker = worker->next;
 	}
 	printf("========================================================\n");
 
@@ -626,8 +579,7 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 
 	printf("%s Latency Statistics:\n", op_name);
 	printf("========================================================\n");
-	ctrlr = g_controllers;
-	while (ctrlr) {
+	TAILQ_FOREACH(ctrlr, &g_controllers, link) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
 			if (spdk_nvme_ctrlr_cmd_get_log_page(
 				    ctrlr->ctrlr, log_page,
@@ -646,23 +598,18 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 			printf("Controller %s: %s latency statistics not supported\n",
 			       ctrlr->name, op_name);
 		}
-		ctrlr = ctrlr->next;
 	}
 
 	while (g_arbitration.outstanding_commands) {
-		ctrlr = g_controllers;
-		while (ctrlr) {
+		TAILQ_FOREACH(ctrlr, &g_controllers, link) {
 			spdk_nvme_ctrlr_process_admin_completions(ctrlr->ctrlr);
-			ctrlr = ctrlr->next;
 		}
 	}
 
-	ctrlr = g_controllers;
-	while (ctrlr) {
+	TAILQ_FOREACH(ctrlr, &g_controllers, link) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
 			print_latency_page(ctrlr);
 		}
-		ctrlr = ctrlr->next;
 	}
 	printf("\n");
 }
@@ -687,50 +634,93 @@ parse_args(int argc, char **argv)
 	const char *workload_type	= NULL;
 	int op				= 0;
 	bool mix_specified		= false;
+	int				rc;
+	long int val;
 
-	while ((op = getopt(argc, argv, "c:l:i:m:q:s:t:w:M:a:b:n:h")) != -1) {
+	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	while ((op = getopt(argc, argv, "a:b:c:d:ghi:l:m:n:o:q:r:t:w:M:L:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_arbitration.core_mask = optarg;
 			break;
-		case 'i':
-			g_arbitration.shm_id = atoi(optarg);
-			break;
-		case 'l':
-			g_arbitration.latency_tracking_enable = atoi(optarg);
-			break;
-		case 'm':
-			g_arbitration.max_completions = atoi(optarg);
-			break;
-		case 'q':
-			g_arbitration.queue_depth = atoi(optarg);
-			break;
-		case 's':
-			g_arbitration.io_size_bytes = atoi(optarg);
-			break;
-		case 't':
-			g_arbitration.time_in_sec = atoi(optarg);
+		case 'd':
+			g_dpdk_mem = spdk_strtol(optarg, 10);
+			if (g_dpdk_mem < 0) {
+				fprintf(stderr, "Invalid DPDK memory size\n");
+				return g_dpdk_mem;
+			}
 			break;
 		case 'w':
 			g_arbitration.workload_type = optarg;
 			break;
-		case 'M':
-			g_arbitration.rw_percentage = atoi(optarg);
-			mix_specified = true;
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
 			break;
-		case 'a':
-			g_arbitration.arbitration_mechanism = atoi(optarg);
-			break;
-		case 'b':
-			g_arbitration.arbitration_config = atoi(optarg);
-			break;
-		case 'n':
-			g_arbitration.io_count = atoi(optarg);
+		case 'g':
+			g_dpdk_mem_single_seg = true;
 			break;
 		case 'h':
-		default:
+		case '?':
 			usage(argv[0]);
 			return 1;
+		case 'L':
+			rc = spdk_log_set_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifdef DEBUG
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#endif
+			break;
+		default:
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			switch (op) {
+			case 'i':
+				g_arbitration.shm_id = val;
+				break;
+			case 'l':
+				g_arbitration.latency_tracking_enable = val;
+				break;
+			case 'm':
+				g_arbitration.max_completions = val;
+				break;
+			case 'q':
+				g_arbitration.queue_depth = val;
+				break;
+			case 'o':
+				g_arbitration.io_size_bytes = val;
+				break;
+			case 't':
+				g_arbitration.time_in_sec = val;
+				break;
+			case 'M':
+				g_arbitration.rw_percentage = val;
+				mix_specified = true;
+				break;
+			case 'a':
+				g_arbitration.arbitration_mechanism = val;
+				break;
+			case 'b':
+				g_arbitration.arbitration_config = val;
+				break;
+			case 'n':
+				g_arbitration.io_count = val;
+				break;
+			default:
+				usage(argv[0]);
+				return -EINVAL;
+			}
 		}
 	}
 
@@ -826,9 +816,6 @@ register_workers(void)
 	struct worker_thread *worker;
 	enum spdk_nvme_qprio qprio = SPDK_NVME_QPRIO_URGENT;
 
-	g_workers = NULL;
-	g_arbitration.num_workers = 0;
-
 	SPDK_ENV_FOREACH_CORE(i) {
 		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
@@ -836,16 +823,16 @@ register_workers(void)
 			return -1;
 		}
 
+		TAILQ_INIT(&worker->ns_ctx);
 		worker->lcore = i;
-		worker->next = g_workers;
-		g_workers = worker;
+		TAILQ_INSERT_TAIL(&g_workers, worker, link);
 		g_arbitration.num_workers++;
 
 		if (g_arbitration.arbitration_mechanism == SPDK_NVME_CAP_AMS_WRR) {
 			qprio++;
 		}
 
-		worker->qprio = qprio % SPDK_NVME_QPRIO_MAX;
+		worker->qprio = qprio & SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK;
 	}
 
 	return 0;
@@ -880,7 +867,7 @@ register_controllers(void)
 {
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
@@ -896,24 +883,29 @@ register_controllers(void)
 static void
 unregister_controllers(void)
 {
-	struct ctrlr_entry *entry = g_controllers;
+	struct ctrlr_entry *entry, *tmp;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
-	while (entry) {
-		struct ctrlr_entry *next = entry->next;
+	TAILQ_FOREACH_SAFE(entry, &g_controllers, link, tmp) {
+		TAILQ_REMOVE(&g_controllers, entry, link);
 		if (g_arbitration.latency_tracking_enable &&
-		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 			set_latency_tracking_feature(entry->ctrlr, false);
-		spdk_nvme_detach(entry->ctrlr);
+		}
+		spdk_nvme_detach_async(entry->ctrlr, &detach_ctx);
 		free(entry);
-		entry = next;
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 }
 
 static int
 associate_workers_with_ns(void)
 {
-	struct ns_entry		*entry = g_namespaces;
-	struct worker_thread	*worker = g_workers;
+	struct ns_entry		*entry = TAILQ_FIRST(&g_namespaces);
+	struct worker_thread	*worker = TAILQ_FIRST(&g_workers);
 	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
@@ -933,17 +925,16 @@ associate_workers_with_ns(void)
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
 		ns_ctx->entry = entry;
-		ns_ctx->next = worker->ns_ctx;
-		worker->ns_ctx = ns_ctx;
+		TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
 
-		worker = worker->next;
+		worker = TAILQ_NEXT(worker, link);
 		if (worker == NULL) {
-			worker = g_workers;
+			worker = TAILQ_FIRST(&g_workers);
 		}
 
-		entry = entry->next;
+		entry = TAILQ_NEXT(entry, link);
 		if (entry == NULL) {
-			entry = g_namespaces;
+			entry = TAILQ_FIRST(&g_namespaces);
 		}
 
 	}
@@ -971,11 +962,14 @@ static int
 get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
 {
 	struct spdk_nvme_cmd cmd = {};
+	struct feature *feature = &features[fid];
+
+	feature->valid = false;
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = fid;
+	cmd.cdw10_bits.get_features.fid = fid;
 
-	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, &features[fid]);
+	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, feature);
 }
 
 static void
@@ -990,26 +984,21 @@ get_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
-		uint32_t arb = features[SPDK_NVME_FEAT_ARBITRATION].result;
-		unsigned ab, lpw, mpw, hpw;
-
-		ab = arb & SPDK_NVME_ARB_BURST_MASK;
-		lpw = ((arb >> SPDK_NVME_LOW_PRIO_WEIGHT_SHIFT) & SPDK_NVME_PRIO_WEIGHT_MASK) + 1;
-		mpw = ((arb >> SPDK_NVME_MED_PRIO_WEIGHT_SHIFT) & SPDK_NVME_PRIO_WEIGHT_MASK) + 1;
-		hpw = ((arb >> SPDK_NVME_HIGH_PRIO_WEIGHT_SHIFT) & SPDK_NVME_PRIO_WEIGHT_MASK) + 1;
+		union spdk_nvme_cmd_cdw11 arb;
+		arb.feat_arbitration.raw = features[SPDK_NVME_FEAT_ARBITRATION].result;
 
 		printf("Current Arbitration Configuration\n");
 		printf("===========\n");
 		printf("Arbitration Burst:           ");
-		if (ab == SPDK_NVME_ARB_BURST_MASK) {
+		if (arb.feat_arbitration.bits.ab == SPDK_NVME_ARBITRATION_BURST_UNLIMITED) {
 			printf("no limit\n");
 		} else {
-			printf("%u\n", 1u << ab);
+			printf("%u\n", 1u << arb.feat_arbitration.bits.ab);
 		}
 
-		printf("Low Priority Weight:         %u\n", lpw);
-		printf("Medium Priority Weight:      %u\n", mpw);
-		printf("High Priority Weight:        %u\n", hpw);
+		printf("Low Priority Weight:         %u\n", arb.feat_arbitration.bits.lpw + 1);
+		printf("Medium Priority Weight:      %u\n", arb.feat_arbitration.bits.mpw + 1);
+		printf("High Priority Weight:        %u\n", arb.feat_arbitration.bits.hpw + 1);
 		printf("\n");
 	}
 }
@@ -1035,21 +1024,17 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
 	struct spdk_nvme_cmd cmd = {};
-	uint32_t arb = 0;
-	unsigned ab, lpw, mpw, hpw;
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_ARBITRATION;
+	cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_ARBITRATION;
 
 	g_arbitration.outstanding_commands = 0;
 
 	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
-		ab = USER_SPECIFIED_ARBITRATION_BURST & SPDK_NVME_ARB_BURST_MASK;
-		hpw = USER_SPECIFIED_HIGH_PRIORITY_WEIGHT << SPDK_NVME_HIGH_PRIO_WEIGHT_SHIFT;
-		mpw = USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT << SPDK_NVME_MED_PRIO_WEIGHT_SHIFT;
-		lpw = USER_SPECIFIED_LOW_PRIORITY_WEIGHT << SPDK_NVME_LOW_PRIO_WEIGHT_SHIFT;
-		arb = hpw | mpw | lpw | ab;
-		cmd.cdw11 = arb;
+		cmd.cdw11_bits.feat_arbitration.bits.ab = SPDK_NVME_ARBITRATION_BURST_UNLIMITED;
+		cmd.cdw11_bits.feat_arbitration.bits.lpw = USER_SPECIFIED_LOW_PRIORITY_WEIGHT;
+		cmd.cdw11_bits.feat_arbitration.bits.mpw = USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT;
+		cmd.cdw11_bits.feat_arbitration.bits.hpw = USER_SPECIFIED_HIGH_PRIORITY_WEIGHT;
 	}
 
 	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0,
@@ -1076,10 +1061,10 @@ int
 main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker, *master_worker;
-	unsigned master_core;
+	struct worker_thread *worker, *main_worker;
+	unsigned main_core;
 	char task_pool_name[30];
-	uint32_t task_count;
+	uint32_t task_count = 0;
 	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
@@ -1089,22 +1074,29 @@ main(int argc, char **argv)
 
 	spdk_env_opts_init(&opts);
 	opts.name = "arb";
+	opts.mem_size = g_dpdk_mem;
+	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	opts.core_mask = g_arbitration.core_mask;
 	opts.shm_id = g_arbitration.shm_id;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		return 1;
+	}
 
 	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	if (register_controllers() != 0) {
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	if (associate_workers_with_ns() != 0) {
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
@@ -1118,46 +1110,45 @@ main(int argc, char **argv)
 		     g_arbitration.num_namespaces : g_arbitration.num_workers;
 	task_count *= g_arbitration.queue_depth;
 
-	task_pool = rte_mempool_create(task_pool_name, task_count,
-				       sizeof(struct arb_task),
-				       0, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	task_pool = spdk_mempool_create(task_pool_name, task_count,
+					sizeof(struct arb_task), 0, SPDK_ENV_SOCKET_ID_ANY);
 	if (task_pool == NULL) {
 		fprintf(stderr, "could not initialize task pool\n");
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	print_configuration(argv[0]);
 
 	printf("Initialization complete. Launching workers.\n");
 
-	/* Launch all of the slave workers */
-	master_core = rte_get_master_lcore();
-	master_worker = NULL;
-	worker = g_workers;
-	while (worker != NULL) {
-		if (worker->lcore != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+	/* Launch all of the secondary workers */
+	main_core = spdk_env_get_current_core();
+	main_worker = NULL;
+	TAILQ_FOREACH(worker, &g_workers, link) {
+		if (worker->lcore != main_core) {
+			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
+			assert(main_worker == NULL);
+			main_worker = worker;
 		}
-		worker = worker->next;
 	}
 
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
+	assert(main_worker != NULL);
+	rc = work_fn(main_worker);
 
-	rte_eal_mp_wait_lcore();
+	spdk_env_thread_wait_all();
 
 	print_stats();
 
+exit:
 	unregister_controllers();
+	cleanup(task_count);
 
-	cleanup();
+	spdk_env_fini();
 
 	if (rc != 0) {
-		fprintf(stderr, "%s: errors occured\n", argv[0]);
+		fprintf(stderr, "%s: errors occurred\n", argv[0]);
 	}
 
 	return rc;

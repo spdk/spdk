@@ -1,0 +1,94 @@
+package_manager=apt-get
+
+update() {
+	sudo "$package_manager" update
+}
+
+install() {
+	(( $# )) || return 0
+
+	sudo "$package_manager" install -y "$@"
+}
+
+upgrade() {
+	update
+	sudo "$package_manager" upgrade -y
+}
+
+
+pre_install() {
+	update
+
+	if [[ $INSTALL_TSOCKS == true ]]; then
+		install tsocks
+	fi
+
+	# asan an ubsan have to be installed together to not mix up gcc versions
+	install libasan5 || install libasan6
+	install libubsan1
+}
+
+packages=(
+	valgrind
+	jq
+	nvme-cli
+	ceph
+	gdb
+	fio
+	libaio-dev
+	libgflags-dev
+	autoconf
+	automake
+	libtool
+	libmount-dev
+	open-iscsi
+	libglib2.0-dev
+	libpixman-1-dev
+	astyle
+	elfutils
+	libelf-dev
+	flex
+	bison
+	libswitch-perl
+	gdisk
+	socat
+	openssl
+	sshfs
+	sshpass
+	python3-pandas
+	bc
+	smartmontools
+	wget
+	xfsprogs
+	ibverbs-utils
+	rdmacm-utils
+	ruby-dev
+	llvm
+	avahi-daemon
+	avahi-utils
+)
+
+install_vagrant_dependencies() {
+	local vagrant_packages
+	vagrant_packages=(
+		qemu
+		libvirt-bin
+		ebtables
+		dnsmasq-base
+		libxslt-dev
+		libxml2-dev
+		libvirt-dev
+		zlib1g-dev
+		ruby-dev
+	)
+
+	install "${vagrant_packages[@]}"
+}
+
+if [[ $OSID == debian ]]; then
+	packages+=("linux-headers-$kernel_ver-*")
+else
+	packages+=(linux-headers-generic)
+fi
+
+export DEBIAN_FRONTEND=noninteractive

@@ -1,0 +1,29 @@
+package_manager=pkg
+
+upgrade() {
+	sudo "$package_manager" upgrade -y
+}
+
+install() {
+	(($#)) || return 0
+
+	sudo "$package_manager" install -y "$@"
+}
+
+packages=(
+	pciutils
+	jq
+	gdb
+	fio
+	p5-extutils-pkgconfig
+	libtool
+	flex
+	bison
+	gdisk
+	socat
+	openssl
+	sshpass
+	wget
+	llvm-devel
+	avahi
+)

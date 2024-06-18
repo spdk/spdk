@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: SPDK Community
+    url: https://spdk.io/community/
+    about: Please ask and answer questions here.
+  - name: SPDK Common Vulnerabilities and Exposures (CVE) Process
+    url: https://spdk.io/cve_threat/
+    about: Please follow CVE process to responsibly disclose security vulnerabilities.

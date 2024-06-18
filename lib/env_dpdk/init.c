@@ -1,49 +1,40 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
 #include "env_internal.h"
 
+#include "spdk/version.h"
+#include "spdk/env_dpdk.h"
+#include "spdk/log.h"
+#include "spdk/config.h"
+
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 #include <rte_config.h>
 #include <rte_eal.h>
+#include <rte_errno.h>
+#include <rte_vfio.h>
 
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
 #define SPDK_ENV_DPDK_DEFAULT_MEM_SIZE		-1
-#define SPDK_ENV_DPDK_DEFAULT_MASTER_CORE	-1
+#define SPDK_ENV_DPDK_DEFAULT_MAIN_CORE		-1
 #define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
+#define SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
+
+#define DPDK_ALLOW_PARAM	"--allow"
+#define DPDK_BLOCK_PARAM	"--block"
+#define DPDK_MAIN_CORE_PARAM	"--main-lcore"
+
+static char **g_eal_cmdline;
+static int g_eal_cmdline_argcount;
+static bool g_external_init = true;
 
 static char *
 _sprintf_alloc(const char *format, ...)
@@ -108,37 +99,44 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->core_mask = SPDK_ENV_DPDK_DEFAULT_CORE_MASK;
 	opts->shm_id = SPDK_ENV_DPDK_DEFAULT_SHM_ID;
 	opts->mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
-	opts->master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
+	opts->main_core = SPDK_ENV_DPDK_DEFAULT_MAIN_CORE;
 	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
+	opts->base_virtaddr = SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR;
 }
 
 static void
-spdk_free_args(char **args, int argcount)
+free_args(char **args, int argcount)
 {
 	int i;
 
-	assert(args != NULL);
+	if (args == NULL) {
+		return;
+	}
 
 	for (i = 0; i < argcount; i++) {
-		assert(args[i] != NULL);
 		free(args[i]);
 	}
 
-	free(args);
+	if (argcount) {
+		free(args);
+	}
 }
 
 static char **
-spdk_push_arg(char *args[], int *argcount, char *arg)
+push_arg(char *args[], int *argcount, char *arg)
 {
 	char **tmp;
 
 	if (arg == NULL) {
+		SPDK_ERRLOG("%s: NULL arg supplied\n", __func__);
+		free_args(args, *argcount);
 		return NULL;
 	}
 
 	tmp = realloc(args, sizeof(char *) * (*argcount + 1));
 	if (tmp == NULL) {
-		spdk_free_args(args, *argcount);
+		free(arg);
+		free_args(args, *argcount);
 		return NULL;
 	}
 
@@ -148,51 +146,158 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
+#if defined(__linux__) && defined(__x86_64__)
+
+/* TODO: Can likely get this value from rlimits in the future */
+#define SPDK_IOMMU_VA_REQUIRED_WIDTH 48
+#define VTD_CAP_MGAW_SHIFT 16
+#define VTD_CAP_MGAW_MASK (0x3F << VTD_CAP_MGAW_SHIFT)
+#define RD_AMD_CAP_VASIZE_SHIFT 15
+#define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
+
 static int
-spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
+get_iommu_width(void)
+{
+	int width = 0;
+	glob_t glob_results = {};
+
+	/* Break * and / into separate strings to appease check_format.sh comment style check. */
+	glob("/sys/devices/virtual/iommu/dmar*" "/intel-iommu/cap", 0, NULL, &glob_results);
+	glob("/sys/class/iommu/ivhd*" "/amd-iommu/cap", GLOB_APPEND, NULL, &glob_results);
+
+	for (size_t i = 0; i < glob_results.gl_pathc; i++) {
+		const char *filename = glob_results.gl_pathv[0];
+		FILE *file = fopen(filename, "r");
+		uint64_t cap_reg = 0;
+
+		if (file == NULL) {
+			continue;
+		}
+
+		if (fscanf(file, "%" PRIx64, &cap_reg) == 1) {
+			if (strstr(filename, "intel-iommu") != NULL) {
+				/* We have an Intel IOMMU */
+				int mgaw = ((cap_reg & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
+
+				if (width == 0 || (mgaw > 0 && mgaw < width)) {
+					width = mgaw;
+				}
+			} else if (strstr(filename, "amd-iommu") != NULL) {
+				/* We have an AMD IOMMU */
+				int mgaw = ((cap_reg & RD_AMD_CAP_VASIZE_MASK) >> RD_AMD_CAP_VASIZE_SHIFT) + 1;
+
+				if (width == 0 || (mgaw > 0 && mgaw < width)) {
+					width = mgaw;
+				}
+			}
+		}
+
+		fclose(file);
+	}
+
+	globfree(&glob_results);
+	return width;
+}
+
+#endif
+
+static int
+build_eal_cmdline(const struct spdk_env_opts *opts)
 {
 	int argcount = 0;
 	char **args;
+	bool no_huge;
 
-	if (out == NULL) {
-		return -1;
-	}
-
-	*out = NULL;
 	args = NULL;
+	no_huge = opts->no_huge || (opts->env_context && strstr(opts->env_context, "--no-huge") != NULL);
 
 	/* set the program name */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", opts->name));
+	args = push_arg(args, &argcount, _sprintf_alloc("%s", opts->name));
 	if (args == NULL) {
 		return -1;
 	}
 
-	/* set the coremask */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("-c %s", opts->core_mask));
+	/* disable shared configuration files when in single process mode. This allows for cleaner shutdown */
+	if (opts->shm_id < 0) {
+		args = push_arg(args, &argcount, _sprintf_alloc("%s", "--no-shconf"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
+	/* Either lcore_map or core_mask must be set. If both, or none specified, fail */
+	if ((opts->core_mask == NULL) == (opts->lcore_map == NULL)) {
+		if (opts->core_mask && opts->lcore_map) {
+			fprintf(stderr,
+				"Both, lcore map and core mask are provided, while only one can be set\n");
+		} else {
+			fprintf(stderr, "Core mask or lcore map must be specified\n");
+		}
+		free_args(args, argcount);
+		return -1;
+	}
+
+	if (opts->lcore_map) {
+		/* If lcore list is set, generate --lcores parameter */
+		args = push_arg(args, &argcount, _sprintf_alloc("--lcores=%s", opts->lcore_map));
+	} else if (opts->core_mask[0] == '-') {
+		/*
+		 * Set the coremask:
+		 *
+		 * - if it starts with '-', we presume it's literal EAL arguments such
+		 *   as --lcores.
+		 *
+		 * - if it starts with '[', we presume it's a core list to use with the
+		 *   -l option.
+		 *
+		 * - otherwise, it's a CPU mask of the form "0xff.." as expected by the
+		 *   -c option.
+		 */
+		args = push_arg(args, &argcount, _sprintf_alloc("%s", opts->core_mask));
+	} else if (opts->core_mask[0] == '[') {
+		char *l_arg = _sprintf_alloc("-l %s", opts->core_mask + 1);
+
+		if (l_arg != NULL) {
+			int len = strlen(l_arg);
+
+			if (l_arg[len - 1] == ']') {
+				l_arg[len - 1] = '\0';
+			}
+		}
+		args = push_arg(args, &argcount, l_arg);
+	} else {
+		args = push_arg(args, &argcount, _sprintf_alloc("-c %s", opts->core_mask));
+	}
+
 	if (args == NULL) {
 		return -1;
 	}
 
 	/* set the memory channel number */
 	if (opts->mem_channel > 0) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-n %d", opts->mem_channel));
+		args = push_arg(args, &argcount, _sprintf_alloc("-n %d", opts->mem_channel));
 		if (args == NULL) {
 			return -1;
 		}
 	}
 
 	/* set the memory size */
-	if (opts->mem_size > 0) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-m %d", opts->mem_size));
+	if (opts->mem_size >= 0) {
+		args = push_arg(args, &argcount, _sprintf_alloc("-m %d", opts->mem_size));
 		if (args == NULL) {
 			return -1;
 		}
 	}
 
-	/* set the master core */
-	if (opts->master_core > 0) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--master-lcore=%d",
-				     opts->master_core));
+	/* set no huge pages */
+	if (opts->no_huge) {
+		mem_disable_huge_pages();
+	}
+
+	/* set the main core */
+	if (opts->main_core > 0) {
+		args = push_arg(args, &argcount, _sprintf_alloc("%s=%d",
+				DPDK_MAIN_CORE_PARAM, opts->main_core));
 		if (args == NULL) {
 			return -1;
 		}
@@ -200,89 +305,414 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 
 	/* set no pci  if enabled */
 	if (opts->no_pci) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--no-pci"));
+		args = push_arg(args, &argcount, _sprintf_alloc("--no-pci"));
 		if (args == NULL) {
 			return -1;
 		}
 	}
 
+	if (no_huge) {
+		if (opts->hugepage_single_segments || opts->unlink_hugepage || opts->hugedir) {
+			fprintf(stderr, "--no-huge invalid with other hugepage options\n");
+			free_args(args, argcount);
+			return -1;
+		}
+
+		if (opts->mem_size < 0) {
+			fprintf(stderr,
+				"Disabling hugepages requires specifying how much memory "
+				"will be allocated using -s parameter\n");
+			free_args(args, argcount);
+			return -1;
+		}
+
+		/* iova-mode=pa is incompatible with no_huge */
+		if (opts->iova_mode &&
+		    (strcmp(opts->iova_mode, "pa") == 0)) {
+			fprintf(stderr, "iova-mode=pa is incompatible with specified "
+				"no-huge parameter\n");
+			free_args(args, argcount);
+			return -1;
+		}
+
+		args = push_arg(args, &argcount, _sprintf_alloc("--no-huge"));
+		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=va"));
+
+	} else {
+		/* create just one hugetlbfs file */
+		if (opts->hugepage_single_segments) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--single-file-segments"));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+
+		/* unlink hugepages after initialization */
+		/* Note: Automatically unlink hugepage when shm_id < 0, since it means we're not using
+		 * multi-process so we don't need the hugepage links anymore.  But we need to make sure
+		 * we don't specify --huge-unlink implicitly if --single-file-segments was specified since
+		 * DPDK doesn't support that.
+		 */
+		if (opts->unlink_hugepage ||
+		    (opts->shm_id < 0 && !opts->hugepage_single_segments)) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--huge-unlink"));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+
+		/* use a specific hugetlbfs mount */
+		if (opts->hugedir) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--huge-dir=%s", opts->hugedir));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+	}
+
+	if (opts->num_pci_addr) {
+		size_t i;
+		char bdf[32];
+		struct spdk_pci_addr *pci_addr =
+				opts->pci_blocked ? opts->pci_blocked : opts->pci_allowed;
+
+		for (i = 0; i < opts->num_pci_addr; i++) {
+			spdk_pci_addr_fmt(bdf, 32, &pci_addr[i]);
+			args = push_arg(args, &argcount, _sprintf_alloc("%s=%s",
+					(opts->pci_blocked ? DPDK_BLOCK_PARAM : DPDK_ALLOW_PARAM),
+					bdf));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+	}
+
+	/* Disable DPDK telemetry information by default, can be modified with env_context.
+	 * Prevents creation of dpdk_telemetry socket and additional pthread for it.
+	 */
+	args = push_arg(args, &argcount, _sprintf_alloc("--no-telemetry"));
+	if (args == NULL) {
+		return -1;
+	}
+
+	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
+	 * This can be overridden by specifying the same option in opts->env_context
+	 */
+	args = push_arg(args, &argcount, strdup("--log-level=lib.eal:6"));
+	if (args == NULL) {
+		return -1;
+	}
+
+	/* Lower default CRYPTO loglevel to RTE_LOG_ERR to avoid a ton of init msgs.
+	 * This can be overridden by specifying the same option in opts->env_context
+	 */
+	args = push_arg(args, &argcount, strdup("--log-level=lib.cryptodev:5"));
+	if (args == NULL) {
+		return -1;
+	}
+
+	/* `user1` log type is used by rte_vhost, which prints an INFO log for each received
+	 * vhost user message. We don't want that. The same log type is also used by a couple
+	 * of other DPDK libs, but none of which we make use right now. If necessary, this can
+	 * be overridden via opts->env_context.
+	 */
+	args = push_arg(args, &argcount, strdup("--log-level=user1:6"));
+	if (args == NULL) {
+		return -1;
+	}
+
 #ifdef __linux__
-	if (opts->shm_id < 0) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
-				     getpid()));
+
+	if (opts->iova_mode) {
+		/* iova-mode=pa is incompatible with no_huge */
+		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=%s", opts->iova_mode));
 		if (args == NULL) {
 			return -1;
 		}
 	} else {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk%d",
-				     opts->shm_id));
+		/* When using vfio with enable_unsafe_noiommu_mode=Y, we need iova-mode=pa,
+		 * but DPDK guesses it should be iova-mode=va. Add a check and force
+		 * iova-mode=pa here. */
+		if (!no_huge && rte_vfio_noiommu_is_enabled()) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+
+#if defined(__x86_64__)
+		/* DPDK by default guesses that it should be using iova-mode=va so that it can
+		 * support running as an unprivileged user. However, some systems (especially
+		 * virtual machines) don't have an IOMMU capable of handling the full virtual
+		 * address space and DPDK doesn't currently catch that. Add a check in SPDK
+		 * and force iova-mode=pa here. */
+		if (!no_huge && get_iommu_width() < SPDK_IOMMU_VA_REQUIRED_WIDTH) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+#elif defined(__PPC64__)
+		/* On Linux + PowerPC, DPDK doesn't support VA mode at all. Unfortunately, it doesn't correctly
+		 * auto-detect at the moment, so we'll just force it here. */
+		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
 		if (args == NULL) {
 			return -1;
 		}
+#endif
+	}
 
-		/* set the base virtual address */
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x1000000000"));
+
+	/* Set the base virtual address - it must be an address that is not in the
+	 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
+	 * mmap hint.
+	 *
+	 * Ref: https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm
+	 */
+	args = push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x%" PRIx64, opts->base_virtaddr));
+	if (args == NULL) {
+		return -1;
+	}
+
+	/* --match-allocation prevents DPDK from merging or splitting system memory allocations under the hood.
+	 * This is critical for RDMA when attempting to use an rte_mempool based buffer pool. If DPDK merges two
+	 * physically or IOVA contiguous memory regions, then when we go to allocate a buffer pool, it can split
+	 * the memory for a buffer over two allocations meaning the buffer will be split over a memory region.
+	 */
+
+	/* --no-huge is incompatible with --match-allocations
+	 * Ref:  https://doc.dpdk.org/guides/prog_guide/env_abstraction_layer.html#hugepage-allocation-matching
+	 */
+	if (!no_huge &&
+	    (!opts->env_context || strstr(opts->env_context, "--legacy-mem") == NULL)) {
+		args = push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
+	if (opts->shm_id < 0) {
+		args = push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
+				getpid()));
+		if (args == NULL) {
+			return -1;
+		}
+	} else {
+		args = push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk%d",
+				opts->shm_id));
 		if (args == NULL) {
 			return -1;
 		}
 
 		/* set the process type */
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--proc-type=auto"));
+		args = push_arg(args, &argcount, _sprintf_alloc("--proc-type=auto"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
+	/* --vfio-vf-token used for VF initialized by vfio_pci driver. */
+	if (opts->vf_token) {
+		args = push_arg(args, &argcount, _sprintf_alloc("--vfio-vf-token=%s",
+				opts->vf_token));
 		if (args == NULL) {
 			return -1;
 		}
 	}
 #endif
 
-	*out = args;
+	if (opts->env_context) {
+		char *ptr = strdup(opts->env_context);
+		char *tok = strtok(ptr, " \t");
 
+		/* DPDK expects each argument as a separate string in the argv
+		 * array, so we need to tokenize here in case the caller
+		 * passed multiple arguments in the env_context string.
+		 */
+		while (tok != NULL) {
+			args = push_arg(args, &argcount, strdup(tok));
+			tok = strtok(NULL, " \t");
+		}
+
+		free(ptr);
+	}
+
+	g_eal_cmdline = args;
+	g_eal_cmdline_argcount = argcount;
 	return argcount;
 }
 
-void spdk_env_init(const struct spdk_env_opts *opts)
+int
+spdk_env_dpdk_post_init(bool legacy_mem)
 {
-	char **args = NULL;
+	int rc;
+
+	rc = pci_env_init();
+	if (rc < 0) {
+		SPDK_ERRLOG("pci_env_init() failed\n");
+		return rc;
+	}
+
+	rc = mem_map_init(legacy_mem);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to allocate mem_map\n");
+		return rc;
+	}
+
+	rc = vtophys_init();
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to initialize vtophys\n");
+		return rc;
+	}
+
+	return 0;
+}
+
+void
+spdk_env_dpdk_post_fini(void)
+{
+	pci_env_fini();
+
+	free_args(g_eal_cmdline, g_eal_cmdline_argcount);
+	g_eal_cmdline = NULL;
+	g_eal_cmdline_argcount = 0;
+}
+
+int
+spdk_env_init(const struct spdk_env_opts *opts)
+{
 	char **dpdk_args = NULL;
-	int argcount, i, rc;
+	char *args_print = NULL, *args_tmp = NULL;
+	OPENSSL_INIT_SETTINGS *settings;
+	int i, rc;
 	int orig_optind;
+	bool legacy_mem;
 
-	argcount = spdk_build_eal_cmdline(opts, &args);
-	if (argcount <= 0) {
-		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
-		exit(-1);
+	/* If SPDK env has been initialized before, then only pci env requires
+	 * reinitialization.
+	 */
+	if (g_external_init == false) {
+		if (opts != NULL) {
+			fprintf(stderr, "Invalid arguments to reinitialize SPDK env\n");
+			return -EINVAL;
+		}
+
+		printf("Starting %s / %s reinitialization...\n", SPDK_VERSION_STRING, rte_version());
+		pci_env_reinit();
+
+		return 0;
 	}
 
-	printf("Starting %s initialization...\n", rte_version());
-	printf("[ DPDK EAL parameters: ");
-	for (i = 0; i < argcount; i++) {
-		printf("%s ", args[i]);
+	if (opts == NULL) {
+		fprintf(stderr, "NULL arguments to initialize DPDK\n");
+		return -EINVAL;
 	}
-	printf("]\n");
+
+	settings = OPENSSL_INIT_new();
+	if (!settings) {
+		fprintf(stderr, "Failed to create openssl settings object\n");
+		ERR_print_errors_fp(stderr);
+		return -ENOMEM;
+	}
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000 /* OPENSSL 3.0.0 */
+	OPENSSL_INIT_set_config_file_flags(settings, 0);
+#endif
+	rc = OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, settings);
+	if (rc != 1) {
+		fprintf(stderr, "Failed to initialize OpenSSL\n");
+		ERR_print_errors_fp(stderr);
+		return -EINVAL;
+	}
+	OPENSSL_INIT_free(settings);
+
+	rc = build_eal_cmdline(opts);
+	if (rc < 0) {
+		SPDK_ERRLOG("Invalid arguments to initialize DPDK\n");
+		return -EINVAL;
+	}
+
+	SPDK_PRINTF("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
+
+	args_print = _sprintf_alloc("[ DPDK EAL parameters: ");
+	if (args_print == NULL) {
+		return -ENOMEM;
+	}
+	for (i = 0; i < g_eal_cmdline_argcount; i++) {
+		args_tmp = args_print;
+		args_print = _sprintf_alloc("%s%s ", args_tmp, g_eal_cmdline[i]);
+		if (args_print == NULL) {
+			free(args_tmp);
+			return -ENOMEM;
+		}
+		free(args_tmp);
+	}
+	SPDK_PRINTF("%s]\n", args_print);
+	free(args_print);
 
 	/* DPDK rearranges the array we pass to it, so make a copy
 	 * before passing so we can still free the individual strings
 	 * correctly.
 	 */
-	dpdk_args = calloc(argcount, sizeof(char *));
+	dpdk_args = calloc(g_eal_cmdline_argcount, sizeof(char *));
 	if (dpdk_args == NULL) {
-		fprintf(stderr, "Failed to allocate dpdk_args\n");
-		exit(-1);
+		SPDK_ERRLOG("Failed to allocate dpdk_args\n");
+		return -ENOMEM;
 	}
-	memcpy(dpdk_args, args, sizeof(char *) * argcount);
+	memcpy(dpdk_args, g_eal_cmdline, sizeof(char *) * g_eal_cmdline_argcount);
 
 	fflush(stdout);
 	orig_optind = optind;
 	optind = 1;
-	rc = rte_eal_init(argcount, dpdk_args);
+	rc = rte_eal_init(g_eal_cmdline_argcount, dpdk_args);
 	optind = orig_optind;
 
-	spdk_free_args(args, argcount);
 	free(dpdk_args);
 
 	if (rc < 0) {
-		fprintf(stderr, "Failed to initialize DPDK\n");
-		exit(-1);
+		if (rte_errno == EALREADY) {
+			SPDK_ERRLOG("DPDK already initialized\n");
+		} else {
+			SPDK_ERRLOG("Failed to initialize DPDK\n");
+		}
+		return -rte_errno;
 	}
 
-	spdk_vtophys_register_dpdk_mem();
+	legacy_mem = false;
+	if (opts->env_context && strstr(opts->env_context, "--legacy-mem") != NULL) {
+		legacy_mem = true;
+	}
+
+	rc = spdk_env_dpdk_post_init(legacy_mem);
+	if (rc == 0) {
+		g_external_init = false;
+	}
+
+	return rc;
+}
+
+/* We use priority 101 which is the highest priority level available
+ * to applications (the toolchains reserve 1 to 100 for internal usage).
+ * This ensures this destructor runs last, after any other destructors
+ * that might still need the environment up and running.
+ */
+__attribute__((destructor(101))) static void
+dpdk_cleanup(void)
+{
+	/* Only call rte_eal_cleanup if the SPDK env library called rte_eal_init. */
+	if (!g_external_init) {
+		rte_eal_cleanup();
+	}
+}
+
+void
+spdk_env_fini(void)
+{
+	spdk_env_dpdk_post_fini();
+}
+
+bool
+spdk_env_dpdk_external_init(void)
+{
+	return g_external_init;
 }

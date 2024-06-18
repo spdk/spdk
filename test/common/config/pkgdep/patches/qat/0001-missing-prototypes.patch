@@ -1,0 +1,281 @@
+Since 6.8.x, Linux kernel started to enforce -Wmissing-prototypes and
+-Wmissing-declarations by the very default (these options are always
+enabled). Try to untagle different QAT pieces to make sure all
+prototypes for missing functions are available.
+
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0fcb70851fbfea1776ae62f67c503fef8f0292b9
+---
+ quickassist/lookaside/access_layer/include/icp_adf_cfg.h | 4 ----
+ .../src/common/compression/icp_sal_dc_err_sim.c          | 2 ++
+ .../access_layer/src/common/crypto/sym/key/lac_sym_key.c | 2 ++
+ .../access_layer/src/common/crypto/sym/lac_sym_api.c     | 7 +++++++
+ .../access_layer/src/common/crypto/sym/lac_sym_dp.c      | 6 ++++++
+ .../access_layer/src/common/crypto/sym/lac_sym_stats.c   | 1 +
+ .../src/common/crypto/sym/qat/lac_sym_qat_hash.c         | 5 +++++
+ .../access_layer/src/common/ctrl/sal_compression.c       | 1 +
+ .../lookaside/access_layer/src/common/ctrl/sal_crypto.c  | 1 +
+ .../access_layer/src/common/ctrl/sal_get_instances.c     | 9 +++++++++
+ .../lookaside/access_layer/src/common/include/lac_sal.h  | 3 +++
+ .../access_layer/src/common/utils/lac_buffer_desc.c      | 1 +
+ .../lookaside/access_layer/src/common/utils/lac_mem.c    | 1 +
+ .../access_layer/src/common/utils/lac_sw_responses.c     | 2 ++
+ .../src/qat_kernel/src/lac_adf_interface_linux.c         | 4 ++++
+ .../access_layer/src/qat_kernel/src/qat_transport.c      | 2 ++
+ .../utilities/libusdm_drv/include/qae_mem_utils.h        | 2 ++
+ 17 files changed, 49 insertions(+), 4 deletions(-)
+
+diff --git a/quickassist/lookaside/access_layer/include/icp_adf_cfg.h b/quickassist/lookaside/access_layer/include/icp_adf_cfg.h
+index c0c1cff..58d1b75 100644
+--- a/quickassist/lookaside/access_layer/include/icp_adf_cfg.h
++++ b/quickassist/lookaside/access_layer/include/icp_adf_cfg.h
+@@ -97,10 +97,6 @@
+ #endif
+ /* Lowest Compatible Driver Version */
+ #define ICP_CFG_LO_COMPATIBLE_DRV_KEY ("Lowest_Compat_Drv_Ver")
+-/* Device node id, tells to which die the device is connected to */
+-#define ADF_DEV_NODE_ID ("Device_NodeId")
+-/* Device package id, this is accel_dev id */
+-#define ADF_DEV_PKG_ID ("Device_PkgId")
+ 
+ /*
+  * icp_adf_cfgGetParamValue
+diff --git a/quickassist/lookaside/access_layer/src/common/compression/icp_sal_dc_err_sim.c b/quickassist/lookaside/access_layer/src/common/compression/icp_sal_dc_err_sim.c
+index d2826af..7d8fb27 100644
+--- a/quickassist/lookaside/access_layer/src/common/compression/icp_sal_dc_err_sim.c
++++ b/quickassist/lookaside/access_layer/src/common/compression/icp_sal_dc_err_sim.c
+@@ -88,6 +88,8 @@
+ #include "dc_err_sim.h"
+ #endif
+ 
++#include "icp_sal.h"
++
+ #ifdef ICP_DC_ERROR_SIMULATION
+ CpaStatus icp_sal_dc_simulate_error(Cpa8U numErrors, Cpa8S dcError)
+ {
+diff --git a/quickassist/lookaside/access_layer/src/common/crypto/sym/key/lac_sym_key.c b/quickassist/lookaside/access_layer/src/common/crypto/sym/key/lac_sym_key.c
+index 51a1cd8..7a83ce0 100644
+--- a/quickassist/lookaside/access_layer/src/common/crypto/sym/key/lac_sym_key.c
++++ b/quickassist/lookaside/access_layer/src/common/crypto/sym/key/lac_sym_key.c
+@@ -102,6 +102,8 @@
+ #include "lac_hooks.h"
+ #include "lac_log.h"
+ 
++CpaInstanceHandle LacKey_GetHandle(CpaInstanceHandle instanceHandle_in);
++
+ /* Number of statistics */
+ #define LAC_KEY_NUM_STATS (sizeof(CpaCyKeyGenStats64) / sizeof(Cpa64U))
+ 
+diff --git a/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_api.c b/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_api.c
+index 8f3e1ac..f8105e1 100644
+--- a/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_api.c
++++ b/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_api.c
+@@ -147,6 +147,13 @@ void LacDp_WriteRingMsgOpt(CpaCySymDpOpData *pRequest,
+ void getCtxSize(const CpaCySymSessionSetupData *pSessionSetupData,
+                 Cpa32U *pSessionCtxSizeInBytes);
+ 
++void LacSync_GenBufListVerifyCb(void *pCallbackTag,
++                                CpaStatus status,
++                                CpaCySymOp operationType,
++                                void *pOpData,
++                                CpaBufferList *pDstBuffer,
++                                CpaBoolean opResult);
++
+ /**
+  *****************************************************************************
+  * @ingroup LacSym
+diff --git a/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_dp.c b/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_dp.c
+index 4e9c1aa..5dee5f2 100644
+--- a/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_dp.c
++++ b/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_dp.c
+@@ -522,6 +522,9 @@ STATIC CpaStatus LacDp_EnqueueParamCheck(const CpaCySymDpOpData *pRequest)
+  *
+  *****************************************************************************/
+ 
++void LacDp_WriteRingMsgOpt(CpaCySymDpOpData *pRequest,
++                           icp_qat_fw_la_bulk_req_t *pCurrentQatMsg);
++
+ void LacDp_WriteRingMsgOpt(CpaCySymDpOpData *pRequest,
+                            icp_qat_fw_la_bulk_req_t *pCurrentQatMsg)
+ {
+@@ -650,6 +653,9 @@ void LacDp_WriteRingMsgOpt(CpaCySymDpOpData *pRequest,
+  *
+  *****************************************************************************/
+ 
++void LacDp_WriteRingMsgFull(CpaCySymDpOpData *pRequest,
++                            icp_qat_fw_la_bulk_req_t *pCurrentQatMsg);
++
+ void LacDp_WriteRingMsgFull(CpaCySymDpOpData *pRequest,
+                             icp_qat_fw_la_bulk_req_t *pCurrentQatMsg)
+ {
+diff --git a/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_stats.c b/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_stats.c
+index ba62e19..c6a8289 100644
+--- a/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_stats.c
++++ b/quickassist/lookaside/access_layer/src/common/crypto/sym/lac_sym_stats.c
+@@ -90,6 +90,7 @@
+ #include "lac_sym_qat.h"
+ #include "lac_sal_types_crypto.h"
+ #include "sal_statistics.h"
++#include "lac_sym_stats.h"
+ 
+ /* Number of Symmetric Crypto statistics */
+ #define LAC_SYM_NUM_STATS (sizeof(CpaCySymStats64) / sizeof(Cpa64U))
+diff --git a/quickassist/lookaside/access_layer/src/common/crypto/sym/qat/lac_sym_qat_hash.c b/quickassist/lookaside/access_layer/src/common/crypto/sym/qat/lac_sym_qat_hash.c
+index a6a920f..240279d 100644
+--- a/quickassist/lookaside/access_layer/src/common/crypto/sym/qat/lac_sym_qat_hash.c
++++ b/quickassist/lookaside/access_layer/src/common/crypto/sym/qat/lac_sym_qat_hash.c
+@@ -117,6 +117,11 @@ typedef struct lac_hash_blk_ptrs_optimised_s
+ 
+ } lac_hash_blk_ptrs_optimised_t;
+ 
++void LacSymQat_HashOpHwBlockPtrsInit(
++    icp_qat_fw_auth_cd_ctrl_hdr_t *cd_ctrl,
++    void *pHwBlockBase,
++    lac_hash_blk_ptrs_optimised_t *pHashBlkPtrs);
++
+ /**
+  * This function calculates the pointers into the hash setup block
+  * based on the control block
+diff --git a/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c b/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c
+index f666415..2237322 100644
+--- a/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c
++++ b/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c
+@@ -80,6 +80,7 @@
+ #include "Osal.h"
+ 
+ /* ADF includes */
++#include "adf_cfg_strings.h"
+ #include "icp_adf_init.h"
+ #include "icp_adf_transport.h"
+ #include "icp_accel_devices.h"
+diff --git a/quickassist/lookaside/access_layer/src/common/ctrl/sal_crypto.c b/quickassist/lookaside/access_layer/src/common/ctrl/sal_crypto.c
+index 7ba7c1b..65223a6 100644
+--- a/quickassist/lookaside/access_layer/src/common/ctrl/sal_crypto.c
++++ b/quickassist/lookaside/access_layer/src/common/ctrl/sal_crypto.c
+@@ -96,6 +96,7 @@
+ #include "Osal.h"
+ 
+ /* ADF includes */
++#include "adf_cfg_strings.h"
+ #include "icp_adf_init.h"
+ #include "icp_adf_transport.h"
+ #include "icp_accel_devices.h"
+diff --git a/quickassist/lookaside/access_layer/src/common/ctrl/sal_get_instances.c b/quickassist/lookaside/access_layer/src/common/ctrl/sal_get_instances.c
+index e28cbde..27b2bfc 100644
+--- a/quickassist/lookaside/access_layer/src/common/ctrl/sal_get_instances.c
++++ b/quickassist/lookaside/access_layer/src/common/ctrl/sal_get_instances.c
+@@ -101,6 +101,15 @@
+ #include "lac_sal_types.h"
+ 
+ #ifndef ICP_DC_ONLY
++
++CpaStatus Lac_GetCyInstancesByType(
++    const CpaAccelerationServiceType accelerationServiceType,
++    Cpa16U numInstances,
++    CpaInstanceHandle *pInstances);
++
++CpaStatus Lac_GetCyNumInstancesByType(
++    const CpaAccelerationServiceType accelerationServiceType,
++    Cpa16U *pNumInstances);
+ /**
+  ******************************************************************************
+  * @ingroup SalCtrl
+diff --git a/quickassist/lookaside/access_layer/src/common/include/lac_sal.h b/quickassist/lookaside/access_layer/src/common/include/lac_sal.h
+index 74a8ba2..e85d21b 100644
+--- a/quickassist/lookaside/access_layer/src/common/include/lac_sal.h
++++ b/quickassist/lookaside/access_layer/src/common/include/lac_sal.h
+@@ -698,6 +698,9 @@ CpaBoolean SalCtrl_IsServiceEnabled(Cpa32U enabled_services,
+ CpaBoolean SalCtrl_IsServiceSupported(icp_accel_dev_t *device,
+                                       sal_service_type_t service);
+ 
++CpaStatus SalCtrl_GetSupportedServices(icp_accel_dev_t *device,
++                                       Cpa32U enabled_services);
++
+ #ifndef ICP_DC_ONLY
+ /**
+  *******************************************************************************
+diff --git a/quickassist/lookaside/access_layer/src/common/utils/lac_buffer_desc.c b/quickassist/lookaside/access_layer/src/common/utils/lac_buffer_desc.c
+index 630bd0b..8a4a4fd 100644
+--- a/quickassist/lookaside/access_layer/src/common/utils/lac_buffer_desc.c
++++ b/quickassist/lookaside/access_layer/src/common/utils/lac_buffer_desc.c
+@@ -79,6 +79,7 @@
+ #include "icp_adf_init.h"
+ #include "lac_list.h"
+ #include "lac_sal_types.h"
++#include "lac_buffer_desc.h"
+ #ifndef ICP_DC_DYN_NOT_SUPPORTED
+ #include "icp_buffer_desc.h"
+ #endif
+diff --git a/quickassist/lookaside/access_layer/src/common/utils/lac_mem.c b/quickassist/lookaside/access_layer/src/common/utils/lac_mem.c
+index 3e41ece..82817b6 100644
+--- a/quickassist/lookaside/access_layer/src/common/utils/lac_mem.c
++++ b/quickassist/lookaside/access_layer/src/common/utils/lac_mem.c
+@@ -92,6 +92,7 @@
+ #include "lac_sym_qat.h"
+ #include "icp_qat_fw_la.h"
+ #include "lac_sal_types_crypto.h"
++#include "icp_sal_iommu.h"
+ 
+ #ifdef KERNEL_SPACE
+ #include "qdm.h"
+diff --git a/quickassist/lookaside/access_layer/src/common/utils/lac_sw_responses.c b/quickassist/lookaside/access_layer/src/common/utils/lac_sw_responses.c
+index 6300876..b0c06e1 100644
+--- a/quickassist/lookaside/access_layer/src/common/utils/lac_sw_responses.c
++++ b/quickassist/lookaside/access_layer/src/common/utils/lac_sw_responses.c
+@@ -90,6 +90,8 @@
+ #define ASYM_NOT_SUPPORTED
+ #endif
+ 
++#include "lac_sw_responses.h"
++
+ static OsalAtomic lac_sw_resp_num_pools_busy = ATOMIC_INIT(0);
+ /**< @ingroup LacSwResponses
+  * Number of busy memory pools
+diff --git a/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c b/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c
+index 75209ac..577046a 100644
+--- a/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c
++++ b/quickassist/lookaside/access_layer/src/qat_kernel/src/lac_adf_interface_linux.c
+@@ -70,6 +70,8 @@
+ #include "icp_adf_init.h"
+ #include "lac_sal_ctrl.h"
+ #include "lac_log.h"
++#include "icp_adf_accel_mgr.h"
++#include "icp_adf_cfg.h"
+ 
+ STATIC subservice_registation_handle_t *salService = NULL;
+ STATIC struct service_hndl adfService = { 0 };
+@@ -78,6 +80,8 @@ STATIC icp_accel_dev_t *adfDevicesHead = NULL;
+ STATIC ICP_MUTEX adfDevicesLock;
+ #define ADF_EVENT_TIMEOUT 10000
+ 
++int adf_module_load(void);
++void adf_module_unload(void);
+ /*
+  * Need to keep track of what device is curently in error state
+  */
+diff --git a/quickassist/lookaside/access_layer/src/qat_kernel/src/qat_transport.c b/quickassist/lookaside/access_layer/src/qat_kernel/src/qat_transport.c
+index 8a32f5c..4ee1d36 100644
+--- a/quickassist/lookaside/access_layer/src/qat_kernel/src/qat_transport.c
++++ b/quickassist/lookaside/access_layer/src/qat_kernel/src/qat_transport.c
+@@ -69,6 +69,8 @@
+ #include "icp_adf_init.h"
+ #include "icp_adf_transport_dp.h"
+ #include "icp_adf_transport.h"
++#include "icp_sal_poll.h"
++#include "icp_adf_poll.h"
+ 
+ char *icp_module_name = "ADF_U2K_SHIM";
+ 
+diff --git a/quickassist/utilities/libusdm_drv/include/qae_mem_utils.h b/quickassist/utilities/libusdm_drv/include/qae_mem_utils.h
+index 214831c..91543bd 100644
+--- a/quickassist/utilities/libusdm_drv/include/qae_mem_utils.h
++++ b/quickassist/utilities/libusdm_drv/include/qae_mem_utils.h
+@@ -661,6 +661,8 @@ void qaeIOMMUDetachDev(void *dev);
+  ****************************************************************************/
+ void printMemAllocations(void);
+ 
++int handle_other_ioctls(uint32_t cmd);
++
+ #ifndef __KERNEL__
+ #ifdef ICP_WITHOUT_THREAD
+ #define mem_mutex_lock(x) (0)
+-- 

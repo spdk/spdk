@@ -1,0 +1,71 @@
+# Not configured to test vtune.
+lib/bdev/vtune
+
+# Not configured to test rocksdb env file
+lib/rocksdb/env_spdk.cc
+
+# Not configured to test FC
+lib/nvmf/fc
+lib/nvmf/fc_ls
+test/unit/lib/nvmf/fc.c/fc_ut
+test/unit/lib/nvmf/fc_ls.c/fc_ls_ut
+
+# Not configured for Neon testing
+lib/util/base64_neon
+
+# Not configured for ARM SVE testing
+lib/util/base64_sve
+
+# Not configured for mlx5 dv testing
+lib/rdma_provider/rdma_provider_mlx5_dv
+
+# Not configured for kernel idxd
+lib/idxd/idxd_kernel
+
+# These files all represent c files that are only compiled by direct inclusion in other files.
+test/common/lib/test_env
+test/common/lib/test_iobuf
+test/common/lib/test_sock
+test/common/lib/ut_multithread
+test/common/lib/test_rdma
+test/unit/lib/bdev/raid/common
+test/unit/lib/blob/blob.c/esnap_dev
+test/unit/lib/blob/blob.c/ext_dev
+test/unit/lib/blob/bs_dev_common
+test/unit/lib/blob/bs_scheduler
+test/unit/lib/ftl/common/utils
+test/unit/lib/iscsi/common
+test/unit/lib/json_mock
+
+# These files are in the external_code directory which doesn't get compiled with SPDK.
+test/external_code/accel/module
+test/external_code/accel/driver
+test/external_code/accel/app_module
+test/external_code/accel/app_driver
+test/external_code/hello_world/hello_bdev
+test/external_code/passthru/vbdev_passthru
+test/external_code/passthru/vbdev_passthru_rpc
+test/external_code/nvme/nvme
+test/external_code/nvme/identify
+
+# This file requires some additional work in CI and test scripts before it can
+# be part of autotest.
+test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz
+test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz
+
+# Disable DAOS. Development libraries are not available for Fedora which is
+# used for the main build and scanbuild tests.
+module/bdev/daos/bdev_daos
+module/bdev/daos/bdev_daos_rpc
+
+# Not configured to test mlx5 accel module & crypto lib
+module/accel/mlx5/accel_mlx5
+module/accel/mlx5/accel_mlx5_rpc
+lib/mlx5/mlx5_crypto
+
+# Not configured to build hello_gorpc example
+examples/go/hello_gorpc/hello_gorpc.go
+
+# TODO: remove this once CI is updated with libkeyutils
+module/keyring/linux/keyring
+module/keyring/linux/keyring_rpc

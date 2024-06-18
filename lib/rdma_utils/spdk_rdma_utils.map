@@ -1,0 +1,14 @@
+{
+	global:
+
+	# Public functions
+	spdk_rdma_utils_create_mem_map;
+	spdk_rdma_utils_free_mem_map;
+	spdk_rdma_utils_get_translation;
+	spdk_rdma_utils_get_pd;
+	spdk_rdma_utils_put_pd;
+	spdk_rdma_utils_get_memory_domain;
+	spdk_rdma_utils_put_memory_domain;
+
+	local: *;
+};

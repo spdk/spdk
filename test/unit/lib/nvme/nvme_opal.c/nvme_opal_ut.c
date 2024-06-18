@@ -1,0 +1,153 @@
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation.
+ *   All rights reserved.
+ */
+
+#include "spdk/stdinc.h"
+#include "spdk_internal/cunit.h"
+#include "nvme/nvme_opal.c"
+#include "common/lib/test_env.c"
+
+SPDK_LOG_REGISTER_COMPONENT(nvme)
+
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_receive, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, uint8_t secp, uint16_t spsp,
+	     uint8_t nssf, void *payload, uint32_t payload_size,
+	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 1);
+
+DEFINE_STUB(spdk_nvme_ctrlr_security_receive, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+	     uint16_t spsp, uint8_t nssf, void *payload, size_t size), 0);
+
+DEFINE_STUB(spdk_nvme_ctrlr_process_admin_completions, int,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0);
+
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_send, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+	     uint16_t spsp, uint8_t nssf, void *payload,
+	     uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+static int g_ut_recv_status = 0;
+static void *g_ut_sess_ctx;
+
+static void
+ut_opal_sess_cb(struct opal_session *sess, int status, void *ctx)
+{
+	g_ut_recv_status = status;
+	g_ut_sess_ctx = ctx;
+}
+
+static void
+reset_ut_global_variables(void)
+{
+	g_ut_recv_status = 0;
+	g_ut_sess_ctx = NULL;
+}
+
+static void
+test_opal_nvme_security_recv_send_done(void)
+{
+	struct spdk_nvme_cpl cpl = {};
+	struct spdk_opal_compacket header = {};
+	struct spdk_opal_dev dev = {};
+	struct opal_session sess = {};
+
+	sess.sess_cb = ut_opal_sess_cb;
+	sess.cb_arg = (void *)0xDEADBEEF;
+	sess.dev = &dev;
+	memcpy(sess.resp, &header, sizeof(header));
+
+	/* Case 1: receive/send IO error */
+	reset_ut_global_variables();
+	cpl.status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
+
+	opal_nvme_security_recv_done(&sess, &cpl);
+	CU_ASSERT(g_ut_recv_status == -EIO);
+	CU_ASSERT(g_ut_sess_ctx == (void *)0xDEADBEEF);
+
+	reset_ut_global_variables();
+	opal_nvme_security_send_done(&sess, &cpl);
+	CU_ASSERT(g_ut_recv_status == -EIO);
+	CU_ASSERT(g_ut_sess_ctx == (void *)0xDEADBEEF);
+
+	/* Case 2: receive with opal header no outstanding data */
+	reset_ut_global_variables();
+	memset(&header, 0, sizeof(header));
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	opal_nvme_security_recv_done(&sess, &cpl);
+	CU_ASSERT(g_ut_recv_status == 0);
+	CU_ASSERT(g_ut_sess_ctx == (void *)0xDEADBEEF);
+
+	/* Case 3: receive with opal header outstanding data and send done success */
+	reset_ut_global_variables();
+	header.outstanding_data = 0xff;
+	memcpy(sess.resp, &header, sizeof(header));
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	opal_nvme_security_recv_done(&sess, &cpl);
+	CU_ASSERT(g_ut_recv_status == 1);
+	CU_ASSERT(g_ut_sess_ctx == (void *)0xDEADBEEF);
+
+	reset_ut_global_variables();
+	opal_nvme_security_send_done(&sess, &cpl);
+	CU_ASSERT(g_ut_recv_status == 1);
+	CU_ASSERT(g_ut_sess_ctx == (void *)0xDEADBEEF);
+}
+
+static void
+test_opal_add_short_atom_header(void)
+{
+	struct opal_session sess = {};
+	int err = 0;
+
+	/* short atom header */
+	memset(&sess, 0, sizeof(sess));
+	sess.cmd_pos = 0;
+
+	opal_add_token_bytestring(&err, &sess, spdk_opal_uid[UID_SMUID],
+				  OPAL_UID_LENGTH);
+	CU_ASSERT(sess.cmd[0] & SPDK_SHORT_ATOM_ID);
+	CU_ASSERT(sess.cmd[0] & SPDK_SHORT_ATOM_BYTESTRING_FLAG);
+	CU_ASSERT((sess.cmd[0] & SPDK_SHORT_ATOM_SIGN_FLAG) == 0);
+	CU_ASSERT(sess.cmd_pos == OPAL_UID_LENGTH +  1);
+	CU_ASSERT(!memcmp(&sess.cmd[1], spdk_opal_uid, OPAL_UID_LENGTH + 1));
+
+	/* medium atom header */
+	memset(&sess, 0, sizeof(sess));
+	sess.cmd_pos = 0;
+
+	opal_add_token_bytestring(&err, &sess, spdk_opal_uid[UID_SMUID],
+				  0x10);
+	CU_ASSERT(sess.cmd[0] & SPDK_SHORT_ATOM_ID);
+	CU_ASSERT(sess.cmd[0] & SPDK_MEDIUM_ATOM_BYTESTRING_FLAG);
+	CU_ASSERT((sess.cmd[0] & SPDK_MEDIUM_ATOM_SIGN_FLAG) == 0);
+	CU_ASSERT(sess.cmd_pos == 0x12);
+	CU_ASSERT(!memcmp(&sess.cmd[2], spdk_opal_uid, 0x10));
+
+	/* Invalid length */
+	memset(&sess, 0, sizeof(sess));
+	err = 0;
+
+	opal_add_token_bytestring(&err, &sess, spdk_opal_uid[UID_SMUID],
+				  0x1000);
+	CU_ASSERT(err == -ERANGE);
+	CU_ASSERT(sess.cmd_pos == 0);
+}
+
+int
+main(int argc, char **argv)
+{
+	CU_pSuite	suite = NULL;
+	unsigned int	num_failures;
+
+	CU_initialize_registry();
+
+	suite = CU_add_suite("nvme_opal", NULL, NULL);
+	CU_ADD_TEST(suite, test_opal_nvme_security_recv_send_done);
+	CU_ADD_TEST(suite, test_opal_add_short_atom_header);
+
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
+	CU_cleanup_registry();
+	return num_failures;
+}

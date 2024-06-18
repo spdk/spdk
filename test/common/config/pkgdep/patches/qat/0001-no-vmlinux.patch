@@ -1,0 +1,35 @@
+Use of KBUILD_BUILTIN forces kernel's Makefile to attempt to rebuild
+the vmlinux.o as a dependency for the modpost target. This, in most
+cases, will fail, since the usual kernel headers setup won't provide
+proper environment for such build to succeed.
+
+Under < make-4.4.1, this failure was silently falling through, however,
+the make-4.4.1 fails the entire build immediately when the attempt to
+build the kernel_space/libosal.a lib is actually made.
+
+In both cases, this error can be seen in the output:
+
+make[4]: *** No rule to make target 'vmlinux.o', needed by 'modpost'.  Stop.
+
+To workaround this, pass single-build parameter which will null and void
+the vmlinux.o target.
+
+---
+ .../build_system/build_files/OS/linux_2.6_kernel_space_rules.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk b/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk
+index e572641..75193cc 100644
+--- a/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk
++++ b/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk
+@@ -72,7 +72,7 @@ endif
+ 
+ $(LIB_STATIC): dirs
+ 	@echo 'Creating static library ${LIB_STATIC}'; \
+-	$(MAKE) -C $(KERNEL_SOURCE_ROOT)/ M=$(PWD) obj-m="" KBUILD_BUILTIN=1; \
++	$(MAKE) -C $(KERNEL_SOURCE_ROOT)/ M=$(PWD) obj-m="" KBUILD_BUILTIN=1 single-build=1; \
+ 	echo 'Copying outputs';\
+ 	test -f lib.a  &&  (ar -t lib.a | xargs ar -rcsD $(LIB_STATIC)); \
+ 	test -f $(LIB_STATIC)  &&  mv -f $(LIB_STATIC) $($(PROG_ACY)_FINAL_OUTPUT_DIR)/$(LIB_STATIC); \
+-- 
+

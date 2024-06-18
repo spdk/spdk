@@ -1,0 +1,28 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation.
+#  All rights reserved.
+#
+
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+
+.PHONY: all clean install
+
+ifneq ($(Q),)
+REDIRECT=> /dev/null
+endif
+
+# Force-disable scan-build
+SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
+
+all:
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l all CC="$(SUB_CC)" $(REDIRECT)
+
+install: all
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l install $(REDIRECT)
+
+uninstall:
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l uninstall $(REDIRECT)
+
+clean:
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l clean $(REDIRECT)

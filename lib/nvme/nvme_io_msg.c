@@ -1,0 +1,217 @@
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
+ *   All rights reserved.
+ */
+
+#include "nvme_internal.h"
+#include "nvme_io_msg.h"
+
+#define SPDK_NVME_MSG_IO_PROCESS_SIZE 8
+
+/**
+ * Send message to IO queue.
+ */
+int
+nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_msg_fn fn,
+		 void *arg)
+{
+	int rc;
+	struct spdk_nvme_io_msg *io;
+
+	/* Protect requests ring against preemptive producers */
+	pthread_mutex_lock(&ctrlr->external_io_msgs_lock);
+
+	io = (struct spdk_nvme_io_msg *)calloc(1, sizeof(struct spdk_nvme_io_msg));
+	if (!io) {
+		SPDK_ERRLOG("IO msg allocation failed.");
+		pthread_mutex_unlock(&ctrlr->external_io_msgs_lock);
+		return -ENOMEM;
+	}
+
+	io->ctrlr = ctrlr;
+	io->nsid = nsid;
+	io->fn = fn;
+	io->arg = arg;
+
+	rc = spdk_ring_enqueue(ctrlr->external_io_msgs, (void **)&io, 1, NULL);
+	if (rc != 1) {
+		assert(false);
+		free(io);
+		pthread_mutex_unlock(&ctrlr->external_io_msgs_lock);
+		return -ENOMEM;
+	}
+
+	pthread_mutex_unlock(&ctrlr->external_io_msgs_lock);
+
+	return 0;
+}
+
+int
+nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int i;
+	int count;
+	struct spdk_nvme_io_msg *io;
+	void *requests[SPDK_NVME_MSG_IO_PROCESS_SIZE];
+
+	if (!spdk_process_is_primary()) {
+		return 0;
+	}
+
+	if (!ctrlr->external_io_msgs || !ctrlr->external_io_msgs_qpair || ctrlr->prepare_for_reset) {
+		/* Not ready or pending reset */
+		return 0;
+	}
+
+	if (ctrlr->needs_io_msg_update) {
+		ctrlr->needs_io_msg_update = false;
+		nvme_io_msg_ctrlr_update(ctrlr);
+	}
+
+	spdk_nvme_qpair_process_completions(ctrlr->external_io_msgs_qpair, 0);
+
+	count = spdk_ring_dequeue(ctrlr->external_io_msgs, requests,
+				  SPDK_NVME_MSG_IO_PROCESS_SIZE);
+	if (count == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < count; i++) {
+		io = requests[i];
+
+		assert(io != NULL);
+
+		io->fn(io->ctrlr, io->nsid, io->arg);
+		free(io);
+	}
+
+	return count;
+}
+
+static bool
+nvme_io_msg_is_producer_registered(struct spdk_nvme_ctrlr *ctrlr,
+				   struct nvme_io_msg_producer *io_msg_producer)
+{
+	struct nvme_io_msg_producer *tmp;
+
+	STAILQ_FOREACH(tmp, &ctrlr->io_producers, link) {
+		if (tmp == io_msg_producer) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int
+nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
+			   struct nvme_io_msg_producer *io_msg_producer)
+{
+	if (io_msg_producer == NULL) {
+		SPDK_ERRLOG("io_msg_producer cannot be NULL\n");
+		return -EINVAL;
+	}
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	if (nvme_io_msg_is_producer_registered(ctrlr, io_msg_producer)) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -EEXIST;
+	}
+
+	if (!STAILQ_EMPTY(&ctrlr->io_producers) || ctrlr->is_resetting) {
+		/* There are registered producers - IO messaging already started */
+		STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return 0;
+	}
+
+	pthread_mutex_init(&ctrlr->external_io_msgs_lock, NULL);
+
+	/**
+	 * Initialize ring and qpair for controller
+	 */
+	ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+	if (!ctrlr->external_io_msgs) {
+		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	ctrlr->external_io_msgs_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	if (ctrlr->external_io_msgs_qpair == NULL) {
+		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+		spdk_ring_free(ctrlr->external_io_msgs);
+		ctrlr->external_io_msgs = NULL;
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return 0;
+}
+
+void
+nvme_io_msg_ctrlr_update(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_io_msg_producer *io_msg_producer;
+
+	if (!spdk_process_is_primary()) {
+		ctrlr->needs_io_msg_update = true;
+		return;
+	}
+
+	/* Update all producers */
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	STAILQ_FOREACH(io_msg_producer, &ctrlr->io_producers, link) {
+		io_msg_producer->update(ctrlr);
+	}
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+void
+nvme_io_msg_ctrlr_detach(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_io_msg_producer *io_msg_producer, *tmp;
+
+	if (!spdk_process_is_primary()) {
+		return;
+	}
+
+	/* Stop all producers */
+	STAILQ_FOREACH_SAFE(io_msg_producer, &ctrlr->io_producers, link, tmp) {
+		io_msg_producer->stop(ctrlr);
+		STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
+	}
+
+	if (ctrlr->external_io_msgs) {
+		spdk_ring_free(ctrlr->external_io_msgs);
+		ctrlr->external_io_msgs = NULL;
+	}
+
+	if (ctrlr->external_io_msgs_qpair) {
+		spdk_nvme_ctrlr_free_io_qpair(ctrlr->external_io_msgs_qpair);
+		ctrlr->external_io_msgs_qpair = NULL;
+	}
+
+	pthread_mutex_destroy(&ctrlr->external_io_msgs_lock);
+}
+
+void
+nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
+			     struct nvme_io_msg_producer *io_msg_producer)
+{
+	assert(io_msg_producer != NULL);
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	if (!nvme_io_msg_is_producer_registered(ctrlr, io_msg_producer)) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return;
+	}
+
+	STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
+	if (STAILQ_EMPTY(&ctrlr->io_producers)) {
+		nvme_io_msg_ctrlr_detach(ctrlr);
+	}
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+}

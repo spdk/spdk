@@ -1,0 +1,191 @@
+usdt:__EXE__:nvmf_tgt_state {
+	printf("%d.%06d: nvmf_tgt reached state %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       @target[arg1]);
+}
+
+usdt:__EXE__:nvmf_subsystem_change_state {
+	printf("%d.%06d: %s change state from %s to %s start\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), @subsystem[arg3], @subsystem[arg2]);
+}
+
+usdt:__EXE__:nvmf_subsystem_change_state_done {
+	printf("%d.%06d: %s change state from %s to %s %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), @subsystem[arg3], @subsystem[arg2], arg4 ? "failed" : "done");
+}
+
+usdt:__EXE__:nvmf_pg_change_state {
+	printf("%d.%06d: %s on thread %d state to %s start\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg3, @subsystem[arg2]);
+}
+
+usdt:__EXE__:nvmf_pg_change_state_done {
+	printf("%d.%06d: %s on thread %d state to %s done\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg3, @subsystem[arg2]);
+}
+
+usdt:__EXE__:nvmf_create_poll_group {
+	printf("%d.%06d: create poll group on thread: %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1);
+}
+
+usdt:__EXE__:nvmf_destroy_poll_group {
+	printf("%d.%06d: destroy poll group on thread: %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1);
+}
+
+usdt:__EXE__:nvmf_poll_group_add_qpair {
+	printf("%d.%06d: add qpair: %p to poll group on thread %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2);
+}
+
+usdt:__EXE__:nvmf_destroy_poll_group_qpairs {
+	printf("%d.%06d: destroy qpairs on poll group on thread %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1);
+}
+
+usdt:__EXE__:nvmf_poll_group_remove_qpair {
+	printf("%d.%06d: remove qpair: %p from poll group on thread %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2);
+}
+
+usdt:__EXE__:nvmf_qpair_disconnect {
+	printf("%d.%06d: disconnect qpair: %p from poll group on thread %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2);
+}
+
+usdt:__EXE__:nvmf_transport_qpair_fini {
+	printf("%d.%06d: destroy qpair: %p on transport layer\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1);
+}
+
+usdt:__EXE__:nvmf_poll_group_drain_qpair {
+	printf("%d.%06d: drain qpair: %p from poll group on thread %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2);
+}
+
+usdt:__EXE__:nvmf_ctrlr_add_qpair {
+	printf("%d.%06d: %s add qpair: %p, qid: %d for host: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg3), arg1, arg2, str(arg4));
+}
+
+usdt:__EXE__:nvmf_subsystem_add_host {
+	printf("%d.%06d: subsystem: %s add host: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), str(arg2));
+}
+
+usdt:__EXE__:nvmf_subsystem_remove_host {
+	printf("%d.%06d: subsystem: %s remove host: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), str(arg2));
+}
+
+usdt:__EXE__:nvmf_subsystem_add_listener {
+	printf("%d.%06d: subsystem: %d add listener with trtype: %d, traddr: %s, trsvcid: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2, str(arg3), str(arg4));
+}
+
+usdt:__EXE__:nvmf_subsystem_remove_listener {
+	printf("%d.%06d: subsystem: %d remove listener with trtype: %d, traddr: %s, trsvcid: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2, str(arg3), str(arg4));
+}
+
+usdt:__EXE__:nvmf_subsystem_create {
+	printf("%d.%06d: create subsystem: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1));
+}
+
+usdt:__EXE__:nvmf_subsystem_destroy {
+	printf("%d.%06d: destroy subsystem: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1));
+}
+
+usdt:__EXE__:nvmf_ns_change {
+	printf("%d.%06d: namespace change: %d for subsystem: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, str(arg2));
+}
+
+usdt:__EXE__:nvmf_subsystem_add_ns {
+	printf("%d.%06d: subsystem: %s add namespace: %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2);
+}
+
+usdt:__EXE__:nvmf_subsystem_add_ctrlr {
+	printf("%d.%06d: subsystem: %s add controller: %p on host: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2, str(arg3));
+}
+
+usdt:__EXE__:nvmf_subsystem_remove_ctrlr {
+	printf("%d.%06d: subsystem: %s remove controller: %p on host: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2, str(arg3));
+}
+
+usdt:__EXE__:nvmf_transport_poll_group_add {
+	printf("%d.%06d: add qpair: %p with id: %d to poll group on thread: %lu\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2, arg3);
+}
+
+usdt:__EXE__:nvmf_transport_poll_group_remove {
+	printf("%d.%06d: remove qpair: %p with id: %d from poll group on thread: %lu\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2, arg3);
+}
+
+usdt:__EXE__:nvmf_tgt_add_transport {
+	printf("%d.%06d: add transport: %p to target: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, str(arg2));
+}
+
+usdt:__EXE__:nvmf_poll_group_add_subsystem {
+	printf("%d.%06d: poll group: %p add subsystem: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, str(arg2));
+}
+
+usdt:__EXE__:nvmf_poll_group_remove_subsystem {
+	printf("%d.%06d: poll group: %p on thread: %lu remove subsystem: %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2, str(arg3));
+}
+
+usdt:__EXE__:nvmf_ctrlr_create {
+	printf("%d.%06d: create ctrlr: %p on subsystem: %s on thread: %lu\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, str(arg2), arg3);
+}
+
+usdt:__EXE__:nvmf_ctrlr_destruct {
+	printf("%d.%06d: destroy ctrlr: %p on subsystem: %s on thread: %lu\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, str(arg2), arg3);
+}
+
+usdt:__EXE__:nvmf_ctrlr_add_io_qpair {
+	printf("%d.%06d: ctrlr: %p add io qpair: %p with id: %d on thread: %lu\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       arg1, arg2, arg3, arg4);
+}

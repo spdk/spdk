@@ -1,0 +1,45 @@
+{
+	global:
+
+	# public functions
+	spdk_fs_opts_init;
+	spdk_fs_init;
+	spdk_fs_load;
+	spdk_fs_unload;
+	spdk_fs_alloc_io_channel;
+	spdk_fs_free_io_channel;
+	spdk_fs_alloc_thread_ctx;
+	spdk_fs_free_thread_ctx;
+	spdk_fs_file_stat;
+	spdk_fs_create_file;
+	spdk_fs_open_file;
+	spdk_file_close;
+	spdk_fs_rename_file;
+	spdk_fs_delete_file;
+	spdk_fs_iter_first;
+	spdk_fs_iter_next;
+	spdk_file_truncate;
+	spdk_file_get_name;
+	spdk_file_get_length;
+	spdk_file_write;
+	spdk_file_read;
+	spdk_fs_set_cache_size;
+	spdk_fs_get_cache_size;
+	spdk_file_set_priority;
+	spdk_file_sync;
+	spdk_file_get_id;
+	spdk_file_readv_async;
+	spdk_file_writev_async;
+	spdk_fs_file_stat_async;
+	spdk_fs_create_file_async;
+	spdk_fs_open_file_async;
+	spdk_file_close_async;
+	spdk_fs_rename_file_async;
+	spdk_fs_delete_file_async;
+	spdk_file_truncate_async;
+	spdk_file_write_async;
+	spdk_file_read_async;
+	spdk_file_sync_async;
+
+	local: *;
+};

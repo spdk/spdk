@@ -1,67 +1,85 @@
 # BlobFS (Blobstore Filesystem) {#blobfs}
 
-# BlobFS Getting Started Guide {#blobfs_getting_started}
+## BlobFS Getting Started Guide {#blobfs_getting_started}
 
-# RocksDB Integration {#blobfs_rocksdb}
+## RocksDB Integration {#blobfs_rocksdb}
 
-1. Clone and build the SPDK repository as per https://github.com/spdk/spdk
+Clone and build the SPDK repository as per https://github.com/spdk/spdk
 
-  git clone https://github.com/spdk/spdk.git
-  cd spdk
-  ./configure
-  make
+~~~{.sh}
+git clone https://github.com/spdk/spdk.git
+cd spdk
+./configure
+make
+~~~
 
-2. Into a separate directory, clone the RocksDB git repo from the SPDK GitHub fork.  Make sure you check out the spdk branch.
+Clone the RocksDB repository from the SPDK GitHub fork into a separate directory.
+Make sure you check out the `6.15.fb` branch.
 
-  cd ..
-  git clone -b spdk https://github.com/spdk/rocksdb.git
+~~~{.sh}
+cd ..
+git clone -b 6.15.fb https://github.com/spdk/rocksdb.git
+~~~
 
-3. Build RocksDB.  Only the db_bench benchmarking tool is integrated with BlobFS.
-   (Note: add "DEBUG_LEVEL=0" for a release build.)
+Build RocksDB.  Only the `db_bench` benchmarking tool is integrated with BlobFS.
 
-  cd rocksdb
-  make db_bench SPDK_DIR=path/to/spdk
+~~~{.sh}
+cd rocksdb
+make db_bench SPDK_DIR=relative_path/to/spdk
+~~~
 
-4. Copy etc/spdk/rocksdb.conf.in from the spdk repository to /usr/local/etc/spdk/rocksdb.conf.
+Or you can also add `DEBUG_LEVEL=0` for a release build (need to turn on `USE_RTTI`).
 
-  cd ../spdk
-  cp etc/spdk/rocksdb.conf.in /usr/local/etc/spdk/rocksdb.conf
+~~~{.sh}
+export USE_RTTI=1 && make db_bench DEBUG_LEVEL=0 SPDK_DIR=relative_path/to/spdk
+~~~
 
-5. Append an NVMe section to the configuration file using SPDK's gen_nvme.sh script.
+Create an NVMe section in the configuration file using SPDK's `gen_nvme.sh` script.
 
-  scripts/gen_nvme.sh >> /usr/local/etc/spdk/rocksdb.conf
+~~~{.sh}
+scripts/gen_nvme.sh --json-with-subsystems > /usr/local/etc/spdk/rocksdb.json
+~~~
 
-6. Verify the configuration file has specified the correct NVMe SSD.  If there are any NVMe SSDs you do not wish to use for RocksDB/SPDK testing, remove them from the configuration file.
+Verify the configuration file has specified the correct NVMe SSD.
+If there are any NVMe SSDs you do not wish to use for RocksDB/SPDK testing, remove them from the configuration file.
 
-7. Make sure you have at least 5GB of memory allocated for huge pages.  By default the SPDK setup.sh script only allocates 2GB (1024 huge pages).  The following will allocate 5GB worth of 2MB huge pages (in addition to binding the NVMe devices to uio/vfio).  If using 1GB huge pages, adjust the NRHUGE value accordingly.
+Make sure you have at least 5GB of memory allocated for huge pages.
+By default, the SPDK `setup.sh` script only allocates 2GB.
+The following will allocate 5GB of huge page memory (in addition to binding the NVMe devices to uio/vfio).
 
-  NRHUGE=2560 scripts/setup.sh
+~~~{.sh}
+HUGEMEM=5120 scripts/setup.sh
+~~~
 
-8. Create an empty SPDK blobfs for testing.
+Create an empty SPDK blobfs for testing.
 
-  test/lib/blobfs/mkfs/mkfs /usr/local/etc/spdk/rocksdb.conf Nvme0n1
+~~~{.sh}
+test/blobfs/mkfs/mkfs /usr/local/etc/spdk/rocksdb.json Nvme0n1
+~~~
 
-At this point, RocksDB is ready for testing with SPDK.  Three db_bench parameters are used to configure SPDK:
+At this point, RocksDB is ready for testing with SPDK.  Three `db_bench` parameters are used to configure SPDK:
 
-1. spdk - Defines the name of the SPDK configuration file.  If omitted, RocksDB will use the default PosixEnv implementation
+1. `spdk` - Defines the name of the SPDK configuration file.  If omitted, RocksDB will use the default PosixEnv implementation
    instead of SpdkEnv. (Required)
-2. spdk_bdev - Defines the name of the SPDK block device which contains the BlobFS to be used for testing. (Required)
-3. spdk_cache_size - Defines the amount of userspace cache memory used by SPDK.  Specified in terms of megabytes (MB).
+2. `spdk_bdev` - Defines the name of the SPDK block device which contains the BlobFS to be used for testing. (Required)
+3. `spdk_cache_size` - Defines the amount of userspace cache memory used by SPDK.  Specified in terms of megabytes (MB).
    Default is 4096 (4GB).  (Optional)
 
-SPDK has a set of scripts which will run db_bench against a variety of workloads and capture performance and profiling
-data.  The primary script is `test/blobfs/rocksdb/run_tests.sh`.
+SPDK has a set of scripts which will run `db_bench` against a variety of workloads and capture performance and profiling
+data.  The primary script is `test/blobfs/rocksdb/rocksdb.sh`.
 
-# FUSE
+## FUSE
 
 BlobFS provides a FUSE plug-in to mount an SPDK BlobFS as a kernel filesystem for inspection or debug purposes.
 The FUSE plug-in requires fuse3 and will be built automatically when fuse3 is detected on the system.
 
-  test/lib/blobfs/fuse/fuse /usr/local/etc/spdk/rocksdb.conf Nvme0n1 /mnt/fuse
+~~~{.sh}
+test/blobfs/fuse/fuse /usr/local/etc/spdk/rocksdb.json Nvme0n1 /mnt/fuse
+~~~
 
 Note that the FUSE plug-in has some limitations - see the list below.
 
-# Limitations
+## Limitations
 
 * BlobFS has primarily been tested with RocksDB so far, so any use cases different from how RocksDB uses a filesystem
   may run into issues.  BlobFS will be tested in a broader range of use cases after this initial release.

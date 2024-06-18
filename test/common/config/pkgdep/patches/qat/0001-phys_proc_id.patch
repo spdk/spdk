@@ -1,0 +1,24 @@
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=02fb601d27
+---
+ quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+index c961930..8fe27c5 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+@@ -671,10 +671,10 @@ static int adf_get_dev_node_id(struct pci_dev *pdev)
+ 		/* if there is only one physical processor don't need
+ 		 * to do any further calculations
+ 		 */
+-		if (c->phys_proc_id == 0) {
++		if (c->topo.pkg_id == 0) {
+ 			node_id = 0;
+ 		} else {
+-			bus_per_cpu = MAX_PCI_BUS / (c->phys_proc_id + 1);
++			bus_per_cpu = MAX_PCI_BUS / (c->topo.pkg_id + 1);
+ 			if (bus_per_cpu != 0)
+ 				node_id = pdev->bus->number / bus_per_cpu;
+ 		}
+-- 
+

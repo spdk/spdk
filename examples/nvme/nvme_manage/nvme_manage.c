@@ -1,54 +1,30 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/opal.h"
 
 #define MAX_DEVS 64
 
 struct dev {
 	struct spdk_pci_addr			pci_addr;
-	struct spdk_nvme_ctrlr 			*ctrlr;
+	struct spdk_nvme_ctrlr			*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ns_data		*common_ns_data;
 	int					outstanding_admin_cmds;
+	struct spdk_opal_dev			*opal_dev;
 };
 
 static struct dev devs[MAX_DEVS];
 static int num_devs = 0;
+static int g_shm_id = -1;
 
 #define foreach_dev(iter) \
 	for (iter = devs; iter - devs < num_devs; iter++)
@@ -95,8 +71,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_nvme_cmd cmd;
 
 	/* add to dev list */
-	dev = &devs[num_devs++];
-	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
+	dev = &devs[num_devs];
+	if (spdk_pci_addr_parse(&dev->pci_addr, trid->traddr) != 0) {
+		fprintf(stderr, "spdk_pci_addr_parse failure\n");
+		assert(false);
+		return;
+	}
+	num_devs++;
+
 	dev->ctrlr = ctrlr;
 
 	/* Retrieve controller data */
@@ -111,7 +93,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Identify Namespace with NSID set to FFFFFFFFh to get common namespace capabilities. */
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
-	cmd.cdw10 = 0; /* CNS = 0 (Identify Namespace) */
+	cmd.cdw10_bits.identify.cns = 0; /* CNS = 0 (Identify Namespace) */
 	cmd.nsid = SPDK_NVME_GLOBAL_NS_TAG;
 
 	dev->outstanding_admin_cmds++;
@@ -127,7 +109,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static void usage(void)
+static void
+usage(void)
 {
 	printf("NVMe Management Options");
 	printf("\n");
@@ -138,7 +121,8 @@ static void usage(void)
 	printf("\t[5: detach namespace from controller]\n");
 	printf("\t[6: format namespace or controller]\n");
 	printf("\t[7: firmware update]\n");
-	printf("\t[8: quit]\n");
+	printf("\t[8: opal]\n");
+	printf("\t[9: quit]\n");
 }
 
 static void
@@ -177,8 +161,10 @@ display_namespace(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				i;
+	uint32_t				format_index;
 
 	nsdata = spdk_nvme_ns_get_data(ns);
+	format_index = spdk_nvme_ns_get_format_index(nsdata);
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
 
@@ -193,11 +179,12 @@ display_namespace(struct spdk_nvme_ns *ns)
 	       (long long)nsdata->nuse / 1024 / 1024);
 	printf("Format Progress Indicator:   %s\n",
 	       nsdata->fpi.fpi_supported ? "Supported" : "Not Supported");
-	if (nsdata->fpi.fpi_supported && nsdata->fpi.percentage_remaining)
+	if (nsdata->fpi.fpi_supported && nsdata->fpi.percentage_remaining) {
 		printf("Formatted Percentage:	%d%%\n", 100 - nsdata->fpi.percentage_remaining);
+	}
 	printf("Number of LBA Formats:       %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:          LBA Format #%02d\n",
-	       nsdata->flbas.format);
+	       format_index);
 	for (i = 0; i <= nsdata->nlbaf; i++)
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
@@ -220,7 +207,7 @@ display_controller(struct dev *dev, int model)
 	struct spdk_nvme_ns			*ns;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	uint8_t					str[128];
-	uint32_t				i;
+	uint32_t				nsid;
 
 	cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
 
@@ -261,11 +248,10 @@ display_controller(struct dev *dev, int model)
 	printf("\n");
 	printf("Namespace Attributes\n");
 	printf("============================\n");
-	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(dev->ctrlr); i++) {
-		ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, i);
-		if (ns == NULL) {
-			continue;
-		}
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(dev->ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(dev->ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, nsid);
+		assert(ns != NULL);
 		display_namespace(ns);
 	}
 }
@@ -281,14 +267,37 @@ display_controller_list(void)
 }
 
 static char *
-get_line(char *buf, int buf_size, FILE *f)
+get_line(char *buf, int buf_size, FILE *f, bool secret)
 {
-	char *ret;
+	char *ch;
 	size_t len;
+	struct termios default_attr = {}, new_attr = {};
+	int ret;
 
-	ret = fgets(buf, buf_size, f);
-	if (ret == NULL) {
+	if (secret) {
+		ret = tcgetattr(STDIN_FILENO, &default_attr);
+		if (ret) {
+			return NULL;
+		}
+
+		new_attr = default_attr;
+		new_attr.c_lflag &= ~ECHO;  /* disable echo */
+		ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_attr);
+		if (ret) {
+			return NULL;
+		}
+	}
+
+	ch = fgets(buf, buf_size, f);
+	if (ch == NULL) {
 		return NULL;
+	}
+
+	if (secret) {
+		ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &default_attr); /* restore default confing */
+		if (ret) {
+			return NULL;
+		}
 	}
 
 	len = strlen(buf);
@@ -313,10 +322,10 @@ get_controller(void)
 		display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
 	}
 
-	printf("Please Input PCI Address(domain:bus:dev.func): \n");
+	printf("Please Input PCI Address(domain:bus:dev.func):\n");
 
 	while ((ch = getchar()) != '\n' && ch != EOF);
-	p = get_line(address, 64, stdin);
+	p = get_line(address, 64, stdin, false);
 	if (p == NULL) {
 		return NULL;
 	}
@@ -382,7 +391,7 @@ get_allocated_nsid(struct dev *dev)
 	}
 
 	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
-	cmd.cdw10 = SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
+	cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
 	cmd.nsid = 0;
 
 	dev->outstanding_admin_cmds++;
@@ -407,7 +416,7 @@ get_allocated_nsid(struct dev *dev)
 
 	spdk_dma_free(ns_list);
 
-	printf("Please Input Namespace ID: \n");
+	printf("Please Input Namespace ID:\n");
 	if (!scanf("%u", &nsid)) {
 		printf("Invalid Namespace ID\n");
 		nsid = 0;
@@ -460,7 +469,8 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 
 	ndata->nsze = ns_size;
 	ndata->ncap = ns_capacity;
-	ndata->flbas.format = ns_lbasize;
+	ndata->flbas.format = ns_lbasize & 0xF;
+	ndata->flbas.msb_format = (ns_lbasize >> 4) & 0x3;
 	if (SPDK_NVME_FMT_NVM_PROTECTION_DISABLE != ns_dps_type) {
 		ndata->dps.pit = ns_dps_type;
 		ndata->dps.md_start = ns_dps_location;
@@ -494,11 +504,12 @@ nvme_manage_format(struct dev *device, int ns_id, int ses, int pi, int pil, int 
 	int ret = 0;
 	struct spdk_nvme_format format = {};
 
-	format.lbaf	= lbaf;
+	format.lbaf	= lbaf & 0xF;
 	format.ms	= ms;
 	format.pi	= pi;
 	format.pil	= pil;
 	format.ses	= ses;
+	format.lbafu	= (lbaf >> 4) & 0x3;
 	ret = spdk_nvme_ctrlr_format(device->ctrlr, ns_id, &format);
 	if (ret) {
 		fprintf(stdout, "nvme format: Failed\n");
@@ -538,9 +549,9 @@ add_ns(void)
 	uint64_t	ns_size		= 0;
 	uint64_t	ns_capacity	= 0;
 	int		ns_lbasize;
-	int 		ns_dps_type  	= 0;
-	int 		ns_dps_location = 0;
-	int	 	ns_nmic 	= 0;
+	int		ns_dps_type	= 0;
+	int		ns_dps_location	= 0;
+	int		ns_nmic		= 0;
 	struct dev	*ctrlr		= NULL;
 
 	ctrlr = get_controller();
@@ -565,21 +576,21 @@ add_ns(void)
 		return;
 	}
 
-	printf("Please Input Namespace Size (in LBAs): \n");
-	if (!scanf("%" SCNi64, &ns_size)) {
+	printf("Please Input Namespace Size (in LBAs):\n");
+	if (!scanf("%" SCNu64, &ns_size)) {
 		printf("Invalid Namespace Size\n");
 		while (getchar() != '\n');
 		return;
 	}
 
-	printf("Please Input Namespace Capacity (in LBAs): \n");
-	if (!scanf("%" SCNi64, &ns_capacity)) {
+	printf("Please Input Namespace Capacity (in LBAs):\n");
+	if (!scanf("%" SCNu64, &ns_capacity)) {
 		printf("Invalid Namespace Capacity\n");
 		while (getchar() != '\n');
 		return;
 	}
 
-	printf("Please Input Data Protection Type (0 - 3): \n");
+	printf("Please Input Data Protection Type (0 - 3):\n");
 	if (!scanf("%d", &ns_dps_type)) {
 		printf("Invalid Data Protection Type\n");
 		while (getchar() != '\n');
@@ -587,7 +598,7 @@ add_ns(void)
 	}
 
 	if (SPDK_NVME_FMT_NVM_PROTECTION_DISABLE != ns_dps_type) {
-		printf("Please Input Data Protection Location (1: Head; 0: Tail): \n");
+		printf("Please Input Data Protection Location (1: Head; 0: Tail):\n");
 		if (!scanf("%d", &ns_dps_location)) {
 			printf("Invalid Data Protection Location\n");
 			while (getchar() != '\n');
@@ -595,7 +606,7 @@ add_ns(void)
 		}
 	}
 
-	printf("Please Input Multi-path IO and Sharing Capabilities (1: Share; 0: Private): \n");
+	printf("Please Input Multi-path IO and Sharing Capabilities (1: Share; 0: Private):\n");
 	if (!scanf("%d", &ns_nmic)) {
 		printf("Invalid Multi-path IO and Sharing Capabilities\n");
 		while (getchar() != '\n');
@@ -609,7 +620,7 @@ add_ns(void)
 static void
 delete_ns(void)
 {
-	int 					ns_id;
+	int					ns_id;
 	struct dev				*ctrlr;
 
 	ctrlr = get_controller();
@@ -623,7 +634,7 @@ delete_ns(void)
 		return;
 	}
 
-	printf("Please Input Namespace ID: \n");
+	printf("Please Input Namespace ID:\n");
 	if (!scanf("%d", &ns_id)) {
 		printf("Invalid Namespace ID\n");
 		while (getchar() != '\n');
@@ -636,7 +647,7 @@ delete_ns(void)
 static void
 format_nvm(void)
 {
-	int 					ns_id;
+	int					ns_id;
 	int					ses;
 	int					pil;
 	int					pi;
@@ -665,7 +676,7 @@ format_nvm(void)
 		ns_id = SPDK_NVME_GLOBAL_NS_TAG;
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr->ctrlr, 1);
 	} else {
-		printf("Please Input Namespace ID (1 - %d): \n", cdata->nn);
+		printf("Please Input Namespace ID (1 - %d):\n", cdata->nn);
 		if (!scanf("%d", &ns_id)) {
 			printf("Invalid Namespace ID\n");
 			while (getchar() != '\n');
@@ -682,7 +693,7 @@ format_nvm(void)
 
 	nsdata = spdk_nvme_ns_get_data(ns);
 
-	printf("Please Input Secure Erase Setting: \n");
+	printf("Please Input Secure Erase Setting:\n");
 	printf("	0: No secure erase operation requested\n");
 	printf("	1: User data erase\n");
 	if (cdata->fna.crypto_erase_supported) {
@@ -701,7 +712,7 @@ format_nvm(void)
 	}
 
 	if (nsdata->lbaf[lbaf].ms) {
-		printf("Please Input Protection Information: \n");
+		printf("Please Input Protection Information:\n");
 		printf("	0: Protection information is not enabled\n");
 		printf("	1: Protection information is enabled, Type 1\n");
 		printf("	2: Protection information is enabled, Type 2\n");
@@ -713,7 +724,7 @@ format_nvm(void)
 		}
 
 		if (pi) {
-			printf("Please Input Protection Information Location: \n");
+			printf("Please Input Protection Information Location:\n");
 			printf("	0: Protection information transferred as the last eight bytes of metadata\n");
 			printf("	1: Protection information transferred as the first eight bytes of metadata\n");
 			if (!scanf("%d", &pil)) {
@@ -725,7 +736,7 @@ format_nvm(void)
 			pil = 0;
 		}
 
-		printf("Please Input Metadata Setting: \n");
+		printf("Please Input Metadata Setting:\n");
 		printf("	0: Metadata is transferred as part of a separate buffer\n");
 		printf("	1: Metadata is transferred as part of an extended data LBA\n");
 		if (!scanf("%d", &ms)) {
@@ -771,6 +782,8 @@ update_firmware_image(void)
 	void					*fw_image;
 	struct dev				*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
+	enum spdk_nvme_fw_commit_action		commit_action;
+	struct spdk_nvme_status			status;
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
@@ -787,7 +800,7 @@ update_firmware_image(void)
 
 	printf("Please Input The Path Of Firmware Image\n");
 
-	if (get_line(path, sizeof(path), stdin) == NULL) {
+	if (get_line(path, sizeof(path), stdin, false) == NULL) {
 		printf("Invalid path setting\n");
 		while (getchar() != '\n');
 		return;
@@ -828,7 +841,7 @@ update_firmware_image(void)
 	}
 	close(fd);
 
-	printf("Please Input Slot(0 - 7): \n");
+	printf("Please Input Slot(0 - 7):\n");
 	if (!scanf("%d", &slot)) {
 		printf("Invalid Slot\n");
 		spdk_dma_free(fw_image);
@@ -836,8 +849,12 @@ update_firmware_image(void)
 		return;
 	}
 
-	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot);
-	if (rc) {
+	commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
+	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot, commit_action, &status);
+	if (rc == -ENXIO && status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC &&
+	    status.sc == SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET) {
+		printf("conventional reset is needed to enable firmware !\n");
+	} else if (rc) {
 		printf("spdk_nvme_ctrlr_update_firmware failed\n");
 	} else {
 		printf("spdk_nvme_ctrlr_update_firmware success\n");
@@ -845,18 +862,763 @@ update_firmware_image(void)
 	spdk_dma_free(fw_image);
 }
 
-int main(int argc, char **argv)
+static void
+opal_dump_info(struct spdk_opal_d0_features_info *feat)
 {
-	int		i;
+	if (feat->tper.hdr.code) {
+		printf("\nOpal TPer feature:\n");
+		printf("ACKNACK = %s", (feat->tper.acknack ? "Y, " : "N, "));
+		printf("ASYNC = %s", (feat->tper.async ? "Y, " : "N, "));
+		printf("BufferManagement = %s\n", (feat->tper.buffer_management ? "Y, " : "N, "));
+		printf("ComIDManagement = %s", (feat->tper.comid_management ? "Y, " : "N, "));
+		printf("Streaming = %s", (feat->tper.streaming ? "Y, " : "N, "));
+		printf("Sync = %s\n", (feat->tper.sync ? "Y" : "N"));
+		printf("\n");
+	}
+
+	if (feat->locking.hdr.code) {
+		printf("Opal Locking feature:\n");
+		printf("Locked = %s", (feat->locking.locked ? "Y, " : "N, "));
+		printf("Locking Enabled = %s", (feat->locking.locking_enabled ? "Y, " : "N, "));
+		printf("Locking supported = %s\n", (feat->locking.locking_supported ? "Y" : "N"));
+
+		printf("MBR done = %s", (feat->locking.mbr_done ? "Y, " : "N, "));
+		printf("MBR enabled = %s", (feat->locking.mbr_enabled ? "Y, " : "N, "));
+		printf("Media encrypt = %s\n", (feat->locking.media_encryption ? "Y" : "N"));
+		printf("\n");
+	}
+
+	if (feat->geo.hdr.code) {
+		printf("Opal Geometry feature:\n");
+		printf("Align = %s", (feat->geo.alignment_granularity ? "Y, " : "N, "));
+		printf("Logical block size = %d, ", from_be32(&feat->geo.logical_block_size));
+		printf("Lowest aligned LBA = %" PRIu64 "\n", from_be64(&feat->geo.lowest_aligned_lba));
+		printf("\n");
+	}
+
+	if (feat->single_user.hdr.code) {
+		printf("Opal Single User Mode feature:\n");
+		printf("Any in SUM = %s", (feat->single_user.any ? "Y, " : "N, "));
+		printf("All in SUM = %s", (feat->single_user.all ? "Y, " : "N, "));
+		printf("Policy: %s Authority,\n", (feat->single_user.policy ? "Admin" : "Users"));
+		printf("Number of locking objects = %d\n ", from_be32(&feat->single_user.num_locking_objects));
+		printf("\n");
+	}
+
+	if (feat->datastore.hdr.code) {
+		printf("Opal DataStore feature:\n");
+		printf("Table alignment = %d, ", from_be32(&feat->datastore.alignment));
+		printf("Max number of tables = %d, ", from_be16(&feat->datastore.max_tables));
+		printf("Max size of tables = %d\n", from_be32(&feat->datastore.max_table_size));
+		printf("\n");
+	}
+
+	if (feat->v100.hdr.code) {
+		printf("Opal V100 feature:\n");
+		printf("Base comID = %d, ", from_be16(&feat->v100.base_comid));
+		printf("Number of comIDs = %d, ", from_be16(&feat->v100.number_comids));
+		printf("Range crossing = %s\n", (feat->v100.range_crossing ? "N" : "Y"));
+		printf("\n");
+	}
+
+	if (feat->v200.hdr.code) {
+		printf("Opal V200 feature:\n");
+		printf("Base comID = %d, ", from_be16(&feat->v200.base_comid));
+		printf("Number of comIDs = %d, ", from_be16(&feat->v200.num_comids));
+		printf("Initial PIN = %d,\n", feat->v200.initial_pin);
+		printf("Reverted PIN = %d, ", feat->v200.reverted_pin);
+		printf("Number of admins = %d, ", from_be16(&feat->v200.num_locking_admin_auth));
+		printf("Number of users = %d\n", from_be16(&feat->v200.num_locking_user_auth));
+		printf("\n");
+	}
+}
+
+static void
+opal_usage(void)
+{
+	printf("Opal General Usage:\n");
+	printf("\n");
+	printf("\t[1: scan device]\n");
+	printf("\t[2: init - take ownership and activate locking]\n");
+	printf("\t[3: revert tper]\n");
+	printf("\t[4: setup locking range]\n");
+	printf("\t[5: list locking ranges]\n");
+	printf("\t[6: enable user]\n");
+	printf("\t[7: set new password]\n");
+	printf("\t[8: add user to locking range]\n");
+	printf("\t[9: lock/unlock range]\n");
+	printf("\t[10: erase locking range]\n");
+	printf("\t[0: quit]\n");
+}
+
+static void
+opal_scan(struct dev *iter)
+{
+	while (getchar() != '\n');
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+
+		printf("\n\nOpal Supported:\n");
+		display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
+		opal_dump_info(spdk_opal_get_d0_features_info(iter->opal_dev));
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+		printf("%04x:%02x:%02x.%02x: Opal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_init(struct dev *iter)
+{
+	char new_passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please input the new password for ownership:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(new_passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n...\n");
+		if (passwd_p) {
+			ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
+			if (ret) {
+				printf("Take ownership failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			ret = spdk_opal_cmd_activate_locking_sp(iter->opal_dev, passwd_p);
+			if (ret) {
+				printf("Locking SP activate failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			printf("...\nOpal Init Success\n");
+		} else {
+			printf("Input password invalid. Opal Init failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_locking_usage(void)
+{
+	printf("Choose Opal locking state:\n");
+	printf("\n");
+	printf("\t[1: read write lock]\n");
+	printf("\t[2: read only]\n");
+	printf("\t[3: read write unlock]\n");
+}
+
+static void
+opal_setup_lockingrange(struct dev *iter)
+{
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+	uint64_t range_start;
+	uint64_t range_length;
+	int locking_range_id;
+	struct spdk_opal_locking_range_info *info;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please input the password for setting up locking range:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n");
+		if (passwd_p) {
+			printf("Specify locking range id:\n");
+			if (!scanf("%d", &locking_range_id)) {
+				printf("Invalid locking range id\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			printf("range length:\n");
+			if (!scanf("%" SCNu64, &range_length)) {
+				printf("Invalid range length\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			printf("range start:\n");
+			if (!scanf("%" SCNu64, &range_start)) {
+				printf("Invalid range start address\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			while (getchar() != '\n');
+
+			ret = spdk_opal_cmd_setup_locking_range(iter->opal_dev,
+								OPAL_ADMIN1, locking_range_id, range_start, range_length, passwd_p);
+			if (ret) {
+				printf("Setup locking range failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			ret = spdk_opal_cmd_get_locking_range_info(iter->opal_dev,
+					passwd_p, OPAL_ADMIN1, locking_range_id);
+			if (ret) {
+				printf("Get locking range info failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			info = spdk_opal_get_locking_range_info(iter->opal_dev, locking_range_id);
+
+			printf("\nlocking range ID: %d\n", info->locking_range_id);
+			printf("range start: %" PRIu64 "\n", info->range_start);
+			printf("range length: %" PRIu64 "\n", info->range_length);
+			printf("read lock enabled: %d\n", info->read_lock_enabled);
+			printf("write lock enabled: %d\n", info->write_lock_enabled);
+			printf("read locked: %d\n", info->read_locked);
+			printf("write locked: %d\n", info->write_locked);
+
+			printf("...\n...\nOpal setup locking range success\n");
+		} else {
+			printf("Input password invalid. Opal setup locking range failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_list_locking_ranges(struct dev *iter)
+{
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+	int max_ranges;
+	int i;
+	struct spdk_opal_locking_range_info *info;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please input password:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n");
+		if (passwd_p) {
+			ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
+			if (ret <= 0) {
+				printf("get max ranges failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			max_ranges = ret;
+			for (i = 0; i < max_ranges; i++) {
+				ret = spdk_opal_cmd_get_locking_range_info(iter->opal_dev,
+						passwd_p, OPAL_ADMIN1, i);
+				if (ret) {
+					printf("Get locking range info failure: %d\n", ret);
+					spdk_opal_dev_destruct(iter->opal_dev);
+					return;
+				}
+				info = spdk_opal_get_locking_range_info(iter->opal_dev, i);
+				if (info == NULL) {
+					continue;
+				}
+
+				printf("===============================================\n");
+				printf("locking range ID: %d\t", info->locking_range_id);
+				if (i == 0) { printf("(Global Range)"); }
+				printf("\n===============================================\n");
+				printf("range start: %" PRIu64 "\t", info->range_start);
+				printf("range length: %" PRIu64 "\n", info->range_length);
+				printf("read lock enabled: %d\t", info->read_lock_enabled);
+				printf("write lock enabled: %d\t", info->write_lock_enabled);
+				printf("read locked: %d\t", info->read_locked);
+				printf("write locked: %d\n", info->write_locked);
+				printf("\n");
+			}
+		} else {
+			printf("Input password invalid. List locking ranges failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_new_user_enable(struct dev *iter)
+{
+	int user_id;
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	char user_pw[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *user_pw_p;
+	int ret;
+	int ch;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please input admin password:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n");
+		if (passwd_p) {
+			printf("which user to enable: ");
+			if (!scanf("%d", &user_id)) {
+				printf("Invalid user id\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			ret = spdk_opal_cmd_enable_user(iter->opal_dev, user_id, passwd_p);
+			if (ret) {
+				printf("Enable user failure error code: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			printf("Please set a new password for this user:");
+			while ((ch = getchar()) != '\n' && ch != EOF);
+			user_pw_p = get_line(user_pw, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+			if (user_pw_p == NULL) {
+				printf("Input password invalid. Enable user failure\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			ret = spdk_opal_cmd_set_new_passwd(iter->opal_dev, user_id, user_pw_p, passwd_p, true);
+			if (ret) {
+				printf("Set new password failure error code: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			printf("\n...\n...\nEnable User Success\n");
+		} else {
+			printf("Input password invalid. Enable user failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_change_password(struct dev *iter)
+{
+	int user_id;
+	char old_passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *old_passwd_p;
+	char new_passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *new_passwd_p;
+	int ret;
+	int ch;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("user id: ");
+		if (!scanf("%d", &user_id)) {
+			printf("Invalid user id\n");
+			spdk_opal_dev_destruct(iter->opal_dev);
+			return;
+		}
+		printf("Password:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		old_passwd_p = get_line(old_passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n");
+		if (old_passwd_p) {
+			printf("Please input new password:\n");
+			new_passwd_p = get_line(new_passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
+			if (new_passwd_p == NULL) {
+				printf("Input password invalid. Change password failure\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			ret = spdk_opal_cmd_set_new_passwd(iter->opal_dev, user_id, new_passwd_p, old_passwd_p, false);
+			if (ret) {
+				printf("Set new password failure error code: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			printf("...\n...\nChange password Success\n");
+		} else {
+			printf("Input password invalid. Change password failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_add_user_to_locking_range(struct dev *iter)
+{
+	int locking_range_id, user_id;
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please input admin password:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n");
+		if (passwd_p) {
+			printf("Specify locking range id:\n");
+			if (!scanf("%d", &locking_range_id)) {
+				printf("Invalid locking range id\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			printf("which user to enable:\n");
+			if (!scanf("%d", &user_id)) {
+				printf("Invalid user id\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			while (getchar() != '\n');
+
+			ret = spdk_opal_cmd_add_user_to_locking_range(iter->opal_dev, user_id, locking_range_id,
+					OPAL_READONLY, passwd_p);
+			ret += spdk_opal_cmd_add_user_to_locking_range(iter->opal_dev, user_id, locking_range_id,
+					OPAL_READWRITE, passwd_p);
+			if (ret) {
+				printf("Add user to locking range error: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			printf("...\n...\nAdd user to locking range Success\n");
+		} else {
+			printf("Input password invalid. Add user to locking range failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_user_lock_unlock_range(struct dev *iter)
+{
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ch;
+	int ret;
+	int user_id;
+	int locking_range_id;
+	int state;
+	enum spdk_opal_lock_state state_flag;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("User id: ");
+		if (!scanf("%d", &user_id)) {
+			printf("Invalid user id\n");
+			spdk_opal_dev_destruct(iter->opal_dev);
+			return;
+		}
+
+		printf("Please input password:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n");
+		if (passwd_p) {
+			printf("Specify locking range id:\n");
+			if (!scanf("%d", &locking_range_id)) {
+				printf("Invalid locking range id\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+
+			opal_locking_usage();
+			if (!scanf("%d", &state)) {
+				printf("Invalid option\n");
+			}
+			switch (state) {
+			case 1:
+				state_flag = OPAL_RWLOCK;
+				break;
+			case 2:
+				state_flag = OPAL_READONLY;
+				break;
+			case 3:
+				state_flag = OPAL_READWRITE;
+				break;
+			default:
+				printf("Invalid options\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			while (getchar() != '\n');
+
+			ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, user_id, state_flag,
+							locking_range_id, passwd_p);
+			if (ret) {
+				printf("lock/unlock range failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			printf("...\n...\nLock/unlock range Success\n");
+		} else {
+			printf("Input password invalid. lock/unlock range failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_revert_tper(struct dev *iter)
+{
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please be noted this operation will erase ALL DATA on this drive\n");
+		printf("Please don't terminate this execution. Otherwise undefined error may occur\n");
+		printf("Please input password for revert TPer:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		printf("\n...\n");
+		if (passwd_p) {
+			ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
+			if (ret) {
+				printf("Revert TPer failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			printf("...\nRevert TPer Success\n");
+		} else {
+			printf("Input password invalid. Revert TPer failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_erase_locking_range(struct dev *iter)
+{
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+	int locking_range_id;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		printf("Please be noted this operation will erase ALL DATA on this range\n");
+		printf("Please input password for erase locking range:");
+		while ((ch = getchar()) != '\n' && ch != EOF);
+		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
+		if (passwd_p) {
+			printf("\nSpecify locking range id:\n");
+			if (!scanf("%d", &locking_range_id)) {
+				printf("Invalid locking range id\n");
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			printf("\n...\n");
+			ret = spdk_opal_cmd_secure_erase_locking_range(iter->opal_dev, OPAL_ADMIN1, locking_range_id,
+					passwd_p);
+			if (ret) {
+				printf("Erase locking range failure: %d\n", ret);
+				spdk_opal_dev_destruct(iter->opal_dev);
+				return;
+			}
+			printf("...\nErase locking range Success\n");
+		} else {
+			printf("Input password invalid. Erase locking range failure\n");
+		}
+		spdk_opal_dev_destruct(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+test_opal(void)
+{
+	int exit_flag = false;
+	struct dev *ctrlr;
+
+	ctrlr = get_controller();
+	if (ctrlr == NULL) {
+		printf("Invalid controller PCI Address.\n");
+		return;
+	}
+
+	opal_usage();
+	while (!exit_flag) {
+		int cmd;
+		if (!scanf("%d", &cmd)) {
+			printf("Invalid Command: command must be number 0-9\n");
+			while (getchar() != '\n');
+			opal_usage();
+			continue;
+		}
+
+		switch (cmd) {
+		case 0:
+			exit_flag = true;
+			continue;
+		case 1:
+			opal_scan(ctrlr);
+			break;
+		case 2:
+			opal_init(ctrlr);   /* Take ownership, Activate Locking SP */
+			break;
+		case 3:
+			opal_revert_tper(ctrlr);
+			break;
+		case 4:
+			opal_setup_lockingrange(ctrlr);
+			break;
+		case 5:
+			opal_list_locking_ranges(ctrlr);
+			break;
+		case 6:
+			opal_new_user_enable(ctrlr);
+			break;
+		case 7:
+			opal_change_password(ctrlr);
+			break;
+		case 8:
+			opal_add_user_to_locking_range(ctrlr);
+			break;
+		case 9:
+			opal_user_lock_unlock_range(ctrlr);
+			break;
+		case 10:
+			opal_erase_locking_range(ctrlr);
+			break;
+
+		default:
+			printf("Invalid option\n");
+		}
+
+		printf("\npress Enter to display Opal cmd menu ...\n");
+		while (getchar() != '\n');
+		opal_usage();
+	}
+}
+
+static void
+args_usage(const char *program_name)
+{
+	printf("%s [options]", program_name);
+	printf("\n");
+	printf("options:\n");
+	printf(" -i         shared memory group ID\n");
+}
+
+static int
+parse_args(int argc, char **argv)
+{
+	int op;
+
+	while ((op = getopt(argc, argv, "i:")) != -1) {
+		switch (op) {
+		case 'i':
+			g_shm_id = spdk_strtol(optarg, 10);
+			if (g_shm_id < 0) {
+				fprintf(stderr, "Invalid shared memory ID\n");
+				return g_shm_id;
+			}
+			break;
+		default:
+			args_usage(argv[0]);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+int
+main(int argc, char **argv)
+{
+	int			rc;
 	struct spdk_env_opts	opts;
+	struct dev		*dev;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
+
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
 
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_manage";
 	opts.core_mask = "0x1";
-	spdk_env_init(&opts);
+	opts.shm_id = g_shm_id;
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
+		spdk_env_fini();
 		return 1;
 	}
 
@@ -869,9 +1631,10 @@ int main(int argc, char **argv)
 		bool exit_flag = false;
 
 		if (!scanf("%d", &cmd)) {
-			printf("Invalid Command\n");
+			printf("Invalid Command: command must be number 1-8\n");
 			while (getchar() != '\n');
-			return 0;
+			usage();
+			continue;
 		}
 		switch (cmd) {
 		case 1:
@@ -896,6 +1659,9 @@ int main(int argc, char **argv)
 			update_firmware_image();
 			break;
 		case 8:
+			test_opal();
+			break;
+		case 9:
 			exit_flag = true;
 			break;
 		default:
@@ -903,8 +1669,9 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		if (exit_flag)
+		if (exit_flag) {
 			break;
+		}
 
 		while (getchar() != '\n');
 		printf("press Enter to display cmd menu ...\n");
@@ -914,10 +1681,15 @@ int main(int argc, char **argv)
 
 	printf("Cleaning up...\n");
 
-	for (i = 0; i < num_devs; i++) {
-		struct dev *dev = &devs[i];
-		spdk_nvme_detach(dev->ctrlr);
+	foreach_dev(dev) {
+		spdk_nvme_detach_async(dev->ctrlr, &detach_ctx);
 	}
+
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
+	}
+
+	spdk_env_fini();
 
 	return 0;
 }

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2023 Intel Corporation
+#  All rights reserved.
+
+_pmdir=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+_pmrootdir=$(readlink -f "$_pmdir/../../../")
+
+retag() {
+	[[ -s $TEST_TAG_FILE ]] || return 0
+	# If we got signalled but the tag didn't change, just bail
+	[[ $(< "$TEST_TAG_FILE") == "$TEST_TAG" ]] && return 0
+	TEST_TAG=$(< "$TEST_TAG_FILE")
+}
+
+start_monitor_resources() {
+	local monitor
+
+	for monitor in "${MONITOR_RESOURCES[@]}"; do
+		${SUDO[MONITOR_RESOURCES_SUDO["$monitor"]]} \
+			"$_pmdir/$monitor" -d "$PM_OUTPUTDIR" \
+			-l -p "monitor.${0##*/}.$(date +%s)" &
+	done
+	# Give our monitors some time to setup their traps
+	sleep 1
+}
+
+stop_monitor_resources() {
+	signal_monitor_resources TERM
+}
+
+update_tag_monitor_resources() {
+	local tag=${1:-N/A}
+
+	echo "$tag" > "$TEST_TAG_FILE"
+	signal_monitor_resources USR1
+}
+
+signal_monitor_resources() {
+	local monitor pid pids signal=${1:-15}
+
+	for monitor in "${MONITOR_RESOURCES[@]}"; do
+		if [[ -e $PM_OUTPUTDIR/$monitor.pid ]]; then
+			pid=$(< "$PM_OUTPUTDIR/$monitor.pid")
+		else
+			continue
+		fi
+
+		if ! ${SUDO[MONITOR_RESOURCES_SUDO["$monitor"]]} \
+			kill "-$signal" "$pid"; then
+			rm -f "$PM_OUTPUTDIR/$monitor.pid"
+		fi 2> /dev/null
+	done
+}
+
+save_pm_pid() {
+	echo "$$" > "$PM_OUTPUTDIR/${0##*/}.pid"
+}
+
+rm_pm_pid() {
+	rm -f "$PM_OUTPUTDIR/${0##*/}.pid"
+}
+
+TEST_TAG=${TEST_TAG:-N/A}
+TEST_TAG_FILE=${TEST_TAG_FILE:-"$_pmrootdir/.run_test_name"}
+# autotest's $output_dir has a prio
+PM_OUTPUTDIR=${output_dir:-/tmp}/power
+PM_OS=$(uname -s)
+
+declare -A MONITOR_RESOURCES_SUDO=()
+MONITOR_RESOURCES_SUDO["collect-bmc-pm"]=1
+MONITOR_RESOURCES_SUDO["collect-cpu-load"]=0
+MONITOR_RESOURCES_SUDO["collect-cpu-temp"]=0
+MONITOR_RESOURCES_SUDO["collect-vmstat"]=0
+
+SUDO[0]="" SUDO[1]="sudo -E"
+
+MONITOR_RESOURCES=(collect-cpu-load collect-vmstat)
+if [[ $PM_OS == FreeBSD ]]; then
+	MONITOR_RESOURCES=(collect-vmstat)
+elif [[ $PM_OS == Linux && $(< /sys/class/dmi/id/chassis_vendor) != QEMU && ! -e /.dockerenv ]]; then
+	# These are dedicated for the PHY platforms. Skip VMs and systems which identifies as
+	# a docker containers (latter is specific to our CI's use-case).
+	MONITOR_RESOURCES+=(collect-cpu-temp)
+	MONITOR_RESOURCES+=(collect-bmc-pm)
+fi
+
+if [[ ! -d $PM_OUTPUTDIR ]]; then
+	mkdir -p "$PM_OUTPUTDIR"
+	chmod 777 "$PM_OUTPUTDIR"
+fi

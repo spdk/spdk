@@ -1,0 +1,29 @@
+{
+	global:
+
+	# public functions
+	spdk_idxd_probe;
+	spdk_idxd_detach;
+	spdk_idxd_batch_prep_copy;
+	spdk_idxd_batch_prep_copy_crc32c;
+	spdk_idxd_batch_cancel;
+	spdk_idxd_get_socket;
+	spdk_idxd_set_config;
+	spdk_idxd_submit_compare;
+	spdk_idxd_submit_crc32c;
+	spdk_idxd_submit_copy_crc32c;
+	spdk_idxd_submit_copy;
+	spdk_idxd_submit_dualcast;
+	spdk_idxd_submit_fill;
+	spdk_idxd_submit_compress;
+	spdk_idxd_submit_decompress;
+	spdk_idxd_submit_dif_check;
+	spdk_idxd_submit_dif_insert;
+	spdk_idxd_submit_dif_strip;
+	spdk_idxd_submit_raw_desc;
+	spdk_idxd_process_events;
+	spdk_idxd_get_channel;
+	spdk_idxd_put_channel;
+
+	local: *;
+};

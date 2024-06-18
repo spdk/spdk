@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_ISCSI_TASK_H
@@ -37,12 +9,17 @@
 
 #include "iscsi/iscsi.h"
 #include "spdk/scsi.h"
+#include "spdk/util.h"
 
 struct spdk_iscsi_task {
 	struct spdk_scsi_task	scsi;
 
+	struct spdk_iscsi_task *parent;
+
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
+	struct spdk_mobj *mobj;
+	uint64_t start_tsc;
 	uint32_t outstanding_r2t;
 
 	uint32_t desired_data_transfer_length;
@@ -53,9 +30,9 @@ struct spdk_iscsi_task {
 	uint32_t data_out_cnt;
 
 	/*
-	 * Tracks the current offset of large read io.
+	 * Tracks the current offset of large read or write io.
 	 */
-	uint32_t current_datain_offset;
+	uint32_t current_data_offset;
 
 	/*
 	 * next_expected_r2t_offset is used when we receive
@@ -81,98 +58,113 @@ struct spdk_iscsi_task {
 	uint32_t datain_datasn;
 	uint32_t acked_data_sn; /* next expected datain datasn */
 	uint32_t ttt;
+	bool is_r2t_active;
 
 	uint32_t tag;
+
+	/**
+	 * Record the lun id just in case the lun is invalid,
+	 * which will happen when hot removing the lun.
+	 */
+	int lun_id;
+
+	struct spdk_poller *mgmt_poller;
 
 	TAILQ_ENTRY(spdk_iscsi_task) link;
 
 	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;
 	TAILQ_ENTRY(spdk_iscsi_task) subtask_link;
+	bool is_queued; /* is queued in scsi layer for handling */
 };
 
 static inline void
-spdk_iscsi_task_put(struct spdk_iscsi_task *task)
+iscsi_task_put(struct spdk_iscsi_task *task)
 {
 	spdk_scsi_task_put(&task->scsi);
 }
 
 static inline struct spdk_iscsi_pdu *
-spdk_iscsi_task_get_pdu(struct spdk_iscsi_task *task)
+iscsi_task_get_pdu(struct spdk_iscsi_task *task)
 {
 	return task->pdu;
 }
 
 static inline void
-spdk_iscsi_task_set_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
+iscsi_task_set_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
 {
 	task->pdu = pdu;
 }
 
 static inline struct iscsi_bhs *
-spdk_iscsi_task_get_bhs(struct spdk_iscsi_task *task)
+iscsi_task_get_bhs(struct spdk_iscsi_task *task)
 {
-	return &spdk_iscsi_task_get_pdu(task)->bhs;
+	return &iscsi_task_get_pdu(task)->bhs;
 }
 
 static inline void
-spdk_iscsi_task_associate_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
+iscsi_task_associate_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
 {
-	spdk_iscsi_task_set_pdu(task, pdu);
+	iscsi_task_set_pdu(task, pdu);
 	pdu->ref++;
 }
 
 static inline void
-spdk_iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
+iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
 {
-	if (spdk_iscsi_task_get_pdu(task)) {
-		spdk_put_pdu(spdk_iscsi_task_get_pdu(task));
-		spdk_iscsi_task_set_pdu(task, NULL);
+	if (iscsi_task_get_pdu(task)) {
+		iscsi_put_pdu(iscsi_task_get_pdu(task));
+		iscsi_task_set_pdu(task, NULL);
 	}
 }
 
 static inline int
-spdk_iscsi_task_is_immediate(struct spdk_iscsi_task *task)
+iscsi_task_is_immediate(struct spdk_iscsi_task *task)
 {
 	struct iscsi_bhs_scsi_req *scsi_req;
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
+	scsi_req = (struct iscsi_bhs_scsi_req *)iscsi_task_get_bhs(task);
 	return (scsi_req->immediate == 1);
 }
 
 static inline int
-spdk_iscsi_task_is_read(struct spdk_iscsi_task *task)
+iscsi_task_is_read(struct spdk_iscsi_task *task)
 {
 	struct iscsi_bhs_scsi_req *scsi_req;
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
-	return (scsi_req->read == 1);
+	scsi_req = (struct iscsi_bhs_scsi_req *)iscsi_task_get_bhs(task);
+	return (scsi_req->read_bit == 1);
 }
 
-static inline uint32_t
-spdk_iscsi_task_get_cmdsn(struct spdk_iscsi_task *task)
-{
-	return spdk_iscsi_task_get_pdu(task)->cmd_sn;
-}
-
-struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
-		struct spdk_iscsi_task *parent,
-		spdk_scsi_task_cpl cpl_fn);
+struct spdk_iscsi_task *iscsi_task_get(struct spdk_iscsi_conn *conn,
+				       struct spdk_iscsi_task *parent,
+				       spdk_scsi_task_cpl cpl_fn);
 
 static inline struct spdk_iscsi_task *
-spdk_iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
+iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
 {
-	return (struct spdk_iscsi_task *)((uintptr_t)task - offsetof(struct spdk_iscsi_task, scsi));
+	return SPDK_CONTAINEROF(task, struct spdk_iscsi_task, scsi);
 }
 
 static inline struct spdk_iscsi_task *
-spdk_iscsi_task_get_primary(struct spdk_iscsi_task *task)
+iscsi_task_get_primary(struct spdk_iscsi_task *task)
 {
-	struct spdk_scsi_task *scsi_task;
-	struct spdk_scsi_task *scsi_primary_task;
+	if (task->parent) {
+		return task->parent;
+	} else {
+		return task;
+	}
+}
 
-	scsi_task = &task->scsi;
-	scsi_primary_task = spdk_scsi_task_get_primary(scsi_task);
-	return spdk_iscsi_task_from_scsi_task(scsi_primary_task);
+static inline void
+iscsi_task_set_mobj(struct spdk_iscsi_task *task, struct spdk_mobj *mobj)
+{
+	task->mobj = mobj;
+}
+
+static inline struct spdk_mobj *
+iscsi_task_get_mobj(struct spdk_iscsi_task *task)
+{
+	return task->mobj;
 }
 
 #endif /* SPDK_ISCSI_TASK_H */

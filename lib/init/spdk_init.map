@@ -1,0 +1,22 @@
+{
+	global:
+
+	# Public functions
+	spdk_add_subsystem;
+	spdk_add_subsystem_depend;
+	spdk_subsystem_init;
+	spdk_subsystem_fini;
+	spdk_subsystem_init_next;
+	spdk_subsystem_fini_next;
+	spdk_subsystem_init_from_json_config;
+	spdk_subsystem_exists;
+
+	spdk_rpc_initialize;
+	spdk_rpc_finish;
+	spdk_rpc_server_finish;
+	spdk_rpc_server_pause;
+	spdk_rpc_server_resume;
+	spdk_subsystem_load_config;
+
+	local: *;
+};

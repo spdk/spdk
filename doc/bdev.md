@@ -1,93 +1,684 @@
-# Block Device Abstraction Layer {#bdev}
+# Block Device User Guide {#bdev}
 
-# SPDK bdev Getting Started Guide {#bdev_getting_started}
+## Target Audience {#bdev_ug_targetaudience}
 
-Block storage in SPDK applications is provided by the SPDK bdev layer.  SPDK bdev consists of:
+This user guide is intended for software developers who have knowledge of block storage, storage drivers, issuing JSON-RPC
+commands and storage services such as RAID, compression, crypto, and others.
 
-* a driver module API for implementing bdev drivers
-* an application API for enumerating and claiming SPDK block devices and performance operations
-(read, write, unmap, etc.) on those devices
-* bdev drivers for NVMe, malloc (ramdisk), Linux AIO and Ceph RBD
-* configuration via SPDK configuration files or JSON RPC
+## Introduction {#bdev_ug_introduction}
 
-# Configuring block devices {#bdev_config}
+The SPDK block device layer, often simply called *bdev*, is a C library
+intended to be equivalent to the operating system block storage layer that
+often sits immediately above the device drivers in a traditional kernel
+storage stack. Specifically, this library provides the following
+functionality:
 
-SPDK block devices are typically configured via an SPDK configuration file.  These block devices
-can then be associated with higher level abstractions such as iSCSI target nodes, NVMe-oF namespaces
-or vhost-scsi controllers.  This section will describe how to configure block devices for the
-SPDK bdev drivers included with SPDK.
+* A pluggable module API for implementing block devices that interface with different types of block storage devices.
+* Driver modules for NVMe, malloc (ramdisk), Linux AIO, virtio-scsi, Ceph RBD, Pmem and Vhost-SCSI Initiator and more.
+* An application API for enumerating and claiming SPDK block devices and then performing operations (read, write, unmap, etc.) on those devices.
+* Facilities to stack block devices to create complex I/O pipelines, including logical volume management (lvol) and partition support (GPT).
+* Configuration of block devices via JSON-RPC.
+* Request queueing, timeout, and reset handling.
+* Multiple, lockless queues for sending I/O to block devices.
 
-## NVMe
+Bdev module creates abstraction layer that provides common API for all devices.
+User can use available bdev modules or create own module with any type of
+device underneath (please refer to @ref bdev_module for details). SPDK
+provides also vbdev modules which creates block devices on existing bdev. For
+example @ref bdev_ug_logical_volumes or @ref bdev_ug_gpt
 
-The SPDK nvme bdev driver provides SPDK block layer access to NVMe SSDs via the SPDK userspace
-NVMe driver.  The nvme bdev driver binds only to devices explicitly specified.  These devices
-can be either locally attached SSDs or remote NVMe subsystems via NVMe-oF.
+## Prerequisites {#bdev_ug_prerequisites}
 
+This guide assumes that you can already build the standard SPDK distribution
+on your platform. The block device layer is a C library with a single public
+header file named bdev.h. All SPDK configuration described in following
+chapters is done by using JSON-RPC commands. SPDK provides a python-based
+command line tool for sending RPC commands located at `scripts/rpc.py`. User
+can list available commands by running this script with `-h` or `--help` flag.
+Additionally user can retrieve currently supported set of RPC commands
+directly from SPDK application by running `scripts/rpc.py rpc_get_methods`.
+Detailed help for each command can be displayed by adding `-h` flag as a
+command parameter.
+
+## Configuring Block Device Modules {#bdev_ug_general_rpcs}
+
+Block devices can be configured using JSON RPCs. A complete list of available RPC commands
+with detailed information can be found on the @ref jsonrpc_components_bdev page.
+
+## Common Block Device Configuration Examples
+
+## Ceph RBD {#bdev_config_rbd}
+
+The SPDK RBD bdev driver provides SPDK block layer access to Ceph RADOS block
+devices (RBD). Ceph RBD devices are accessed via librbd and librados libraries
+to access the RADOS block device exported by Ceph. To create Ceph bdev RPC
+command `bdev_rbd_register_cluster` and `bdev_rbd_create` should be used.
+
+SPDK provides two ways of creating a RBD bdev. One is to create a new Rados cluster object
+for each RBD bdev. Another is to share the same Rados cluster object for multiple RBD bdevs.
+Each Rados cluster object creates a small number of io_context_pool and messenger threads.
+Ceph commands `ceph config help librados_thread_count` and `ceph config help ms_async_op_threads`
+could help to check these threads information. Besides, you can specify the number of threads by
+updating ceph.conf file or using Ceph config commands. For more information, please refer to
+[Ceph configuration](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/)
+One set of threads may not be enough to maximize performance with a large number of RBD bdevs,
+but one set of threads per RBD bdev may add too much context switching. Therefore, performance
+tuning on the number of RBD bdevs per cluster object and thread may be required.
+
+Example command
+
+`rpc.py bdev_rbd_register_cluster rbd_cluster`
+
+This command will register a cluster named rbd_cluster. Optional `--config-file` and
+`--key-file` params are specified for the cluster.
+
+To remove a registered cluster use the bdev_rbd_unregister_cluster command.
+
+`rpc.py bdev_rbd_unregister_cluster rbd_cluster`
+
+To create RBD bdev with a registered cluster.
+
+`rpc.py bdev_rbd_create rbd foo 512 -c rbd_cluster`
+
+This command will create a bdev that represents the 'foo' image from a pool called 'rbd'.
+When specifying -c for `bdev_rbd_create`, RBD bdevs will share the same rados cluster with
+one connection of Ceph in librbd module. Instead it will create a new rados cluster with one
+cluster connection for every bdev without specifying -c.
+
+To remove a block device representation use the bdev_rbd_delete command.
+
+`rpc.py bdev_rbd_delete Rbd0`
+
+To resize a bdev use the bdev_rbd_resize command.
+
+`rpc.py bdev_rbd_resize Rbd0 4096`
+
+This command will resize the Rbd0 bdev to 4096 MiB.
+
+## Compression Virtual Bdev Module {#bdev_config_compress}
+
+The compression bdev module can be configured to provide compression/decompression
+services for an underlying thinly provisioned logical volume. Although the underlying
+module can be anything (i.e. NVME bdev) the overall compression benefits will not be realized
+unless the data stored on disk is placed appropriately. The compression vbdev module
+relies on an internal SPDK library called `reduce` to accomplish this, see @ref reduce
+for detailed information.
+
+The compression bdev module leverages the [Acceleration Framework](https://spdk.io/doc/accel_fw.html) to
+carry out the actual compression and decompression. The acceleration framework can be configured to use
+ISA-L software optimized compression or the DPDK Compressdev module for hardware acceleration. To configure
+the Compressdev module please see the `compressdev_scan_accel_module` documentation [here](https://spdk.io/doc/jsonrpc.html)
+
+Persistent memory is used to store metadata associated with the layout of the data on the
+backing device. SPDK relies on [PMDK](http://pmem.io/pmdk/) to interface persistent memory so any hardware
+supported by PMDK should work. If the directory for PMEM supplied upon vbdev creation does
+not point to persistent memory (i.e. a regular filesystem) performance will be severely
+impacted.  The vbdev module and reduce libraries were designed to use persistent memory for
+any production use.
+
+Example command
+
+`rpc.py bdev_compress_create -p /pmem_files -b myLvol`
+
+In this example, a compression vbdev is created using persistent memory that is mapped to
+the directory `pmem_files` on top of the existing thinly provisioned logical volume `myLvol`.
+The resulting compression bdev will be named `COMP_LVS/myLvol` where LVS is the name of the
+logical volume store that `myLvol` resides on.
+
+The logical volume is referred to as the backing device and once the compression vbdev is
+created it cannot be separated from the persistent memory file that will be created in
+the specified directory.  If the persistent memory file is not available, the compression
+vbdev will also not be available.
+
+To remove a compression vbdev, use the following command which will also delete the PMEM
+file.  If the logical volume is deleted the PMEM file will not be removed and the
+compression vbdev will not be available.
+
+`rpc.py bdev_compress_delete COMP_LVS/myLvol`
+
+To list compression volumes that are only available for deletion because their PMEM file
+was missing use the following. The name parameter is optional and if not included will list
+all volumes, if used it will return the name or an error that the device does not exist.
+
+`rpc.py bdev_compress_get_orphans --name COMP_Nvme0n1`
+
+## Crypto Virtual Bdev Module {#bdev_config_crypto}
+
+The crypto virtual bdev module can be configured to provide at rest data encryption
+for any underlying bdev. The module relies on the SPDK Accel Framework to provide
+all cryptographic functionality.
+One of the accel modules, dpdk_cryptodev is implemented with the DPDK CryptoDev API,
+it provides support for many different software only cryptographic modules as well hardware
+assisted support for the Intel QAT board and NVIDIA crypto enabled NICs.
+
+For reads, the buffer provided to the crypto block device will be used as the destination buffer
+for unencrypted data.  For writes, however, a temporary scratch buffer is used as the
+destination buffer for encryption which is then passed on to the underlying bdev as the
+write buffer.  This is done to avoid encrypting the data in the original source buffer which
+may cause problems in some use cases.
+
+Below is information about accel modules which support crypto operations:
+
+### dpdk_cryptodev accel module
+
+Supports the following ciphers:
+
+- AESN-NI Multi Buffer Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC
+- Intel(R) QuickAssist (QAT) Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC,
+  RTE_CRYPTO_CIPHER_AES128_XTS
+  (Note: QAT is functional however is marked as experimental until the hardware has
+  been fully integrated with the SPDK CI system.)
+- MLX5 Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES256_XTS, RTE_CRYPTO_CIPHER_AES512_XTS
+
+In order to support using the bdev block offset (LBA) as the initialization vector (IV),
+the crypto module break up all I/O into crypto operations of a size equal to the block
+size of the underlying bdev.  For example, a 4K I/O to a bdev with a 512B block size,
+would result in 8 cryptographic operations.
+
+### SW accel module
+
+Supports the following ciphers:
+
+- AES_XTS cipher with 128 or 256 bit keys implemented with ISA-L_crypto
+
+### General workflow
+
+- Set desired accel module to perform crypto operations, that can be done with `accel_assign_opc` RPC command
+- Create a named crypto key using `accel_crypto_key_create` RPC command. The key will use the assigned accel
+  module. Set of parameters and supported ciphers may be different in each accel module.
+- Create virtual crypto block device providing the base block device name and the crypto key name
+  using `bdev_crypto_create` RPC command
+
+#### Example
+
+Example command which uses dpdk_cryptodev accel module
+```
+# start SPDK application with `--wait-for-rpc` parameter
+rpc.py dpdk_cryptodev_scan_accel_module
+rpc.py dpdk_cryptodev_set_driver crypto_aesni_mb
+rpc.py accel_assign_opc -o encrypt -m dpdk_cryptodev
+rpc.py accel_assign_opc -o decrypt -m dpdk_cryptodev
+rpc.py framework_start_init
+rpc.py accel_crypto_key_create -c AES_CBC -k 01234567891234560123456789123456 -n key_aesni_cbc_1
+rpc.py bdev_crypto_create NVMe1n1 CryNvmeA -n key_aesni_cbc_1
+```
+
+These commands will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
+'NVMe1n1' and will use a key named `key_aesni_cbc_1`. The key will work with the accel module which
+has been assigned for encrypt operations, in this example it will be the dpdk_cryptodev.
+
+### Crypto key format
+
+Please make sure the keys are provided in hexlified format. This means string passed to
+rpc.py must be twice as long than the key length in binary form.
+
+#### Example command
+
+`rpc.py accel_crypto_key_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f -k d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09 -n sample_key`
+
+This command will create a key called `sample_key`, the AES key
+'d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09' and the XTS key
+'7859243a027411e581e0c40a35c8228f'. In other words, the compound AES_XTS key to be used is
+'d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b097859243a027411e581e0c40a35c8228f'
+
+### Delete the virtual crypto block device
+
+To remove the vbdev use the bdev_crypto_delete command.
+
+`rpc.py bdev_crypto_delete CryNvmeA`
+
+### dpdk_cryptodev mlx5_pci driver configuration
+
+The mlx5_pci driver works with crypto enabled Nvidia NICs and requires special configuration of
+DPDK environment to enable crypto function. It can be done via SPDK event library by configuring
+`env_context` member of `spdk_app_opts` structure or by passing corresponding CLI arguments in
+the following form: `--allow=BDF,class=crypto,wcs_file=/full/path/to/wrapped/credentials`, e.g.
+`--allow=0000:01:00.0,class=crypto,wcs_file=/path/credentials.txt`.
+
+## Delay Bdev Module {#bdev_config_delay}
+
+The delay vbdev module is intended to apply a predetermined additional latency on top of a lower
+level bdev. This enables the simulation of the latency characteristics of a device during the functional
+or scalability testing of an SPDK application. For example, to simulate the effect of drive latency when
+processing I/Os, one could configure a NULL bdev with a delay bdev on top of it.
+
+The delay bdev module is not intended to provide a high fidelity replication of a specific NVMe drive's latency,
+instead it's main purpose is to provide a "big picture" understanding of how a generic latency affects a given
+application.
+
+A delay bdev is created using the `bdev_delay_create` RPC. This rpc takes 6 arguments, one for the name
+of the delay bdev and one for the name of the base bdev. The remaining four arguments represent the following
+latency values: average read latency, average write latency, p99 read latency, and p99 write latency.
+Within the context of the delay bdev p99 latency means that one percent of the I/O will be delayed by at
+least by the value of the p99 latency before being completed to the upper level protocol. All of the latency values
+are measured in microseconds.
+
+Example command:
+
+`rpc.py bdev_delay_create -b Null0 -d delay0 -r 10 --nine-nine-read-latency 50 -w 30 --nine-nine-write-latency 90`
+
+This command will create a delay bdev with average read and write latencies of 10 and 30 microseconds and p99 read
+and write latencies of 50 and 90 microseconds respectively.
+
+A delay bdev can be deleted using the `bdev_delay_delete` RPC
+
+Example command:
+
+`rpc.py bdev_delay_delete delay0`
+
+## GPT (GUID Partition Table) {#bdev_config_gpt}
+
+The GPT virtual bdev driver is enabled by default and does not require any configuration.
+It will automatically detect @ref bdev_ug_gpt on any attached bdev and will create
+possibly multiple virtual bdevs.
+
+### SPDK GPT partition table {#bdev_ug_gpt}
+
+The SPDK partition type GUID is `6527994e-2c5a-4eec-9613-8f5944074e8b`. Existing SPDK bdevs
+can be exposed as Linux block devices via NBD and then can be partitioned with
+standard partitioning tools. After partitioning, the bdevs will need to be deleted and
+attached again for the GPT bdev module to see any changes. NBD kernel module must be
+loaded first. To create NBD bdev user should use `nbd_start_disk` RPC command.
+
+Example command
+
+`rpc.py nbd_start_disk Malloc0 /dev/nbd0`
+
+This will expose an SPDK bdev `Malloc0` under the `/dev/nbd0` block device.
+
+To remove NBD device user should use `nbd_stop_disk` RPC command.
+
+Example command
+
+`rpc.py nbd_stop_disk /dev/nbd0`
+
+To display full or specified nbd device list user should use `nbd_get_disks` RPC command.
+
+Example command
+
+`rpc.py nbd_stop_disk -n /dev/nbd0`
+
+### Creating a GPT partition table using NBD {#bdev_ug_gpt_create_part}
+
+~~~bash
+# Expose bdev Nvme0n1 as kernel block device /dev/nbd0 by JSON-RPC
+rpc.py nbd_start_disk Nvme0n1 /dev/nbd0
+
+# Create GPT partition table.
+parted -s /dev/nbd0 mklabel gpt
+
+# Add a partition consuming 50% of the available space.
+parted -s /dev/nbd0 mkpart MyPartition '0%' '50%'
+
+# Change the partition type to the SPDK GUID.
+# sgdisk is part of the gdisk package.
+sgdisk -t 1:6527994e-2c5a-4eec-9613-8f5944074e8b /dev/nbd0
+
+# Stop the NBD device (stop exporting /dev/nbd0).
+rpc.py nbd_stop_disk /dev/nbd0
+
+# Now Nvme0n1 is configured with a GPT partition table, and
+# the first partition will be automatically exposed as
+# Nvme0n1p1 in SPDK applications.
 ~~~
-[Nvme]
-  # NVMe Device Whitelist
-  # Users may specify which NVMe devices to claim by their transport id.
-  # See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.
-  # The devices will be assigned names in the format <YourName>nY, where YourName is the
-  # name specified at the end of the TransportId line and Y is the namespace id, which starts at 1.
-  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportID "trtype:RDMA subnqn:nqn.2016-06.io.spdk:cnode1 traddr:192.168.100.1 trsvcid:4420" Nvme1
+
+## iSCSI bdev {#bdev_config_iscsi}
+
+The SPDK iSCSI bdev driver depends on libiscsi and hence is not enabled by default.
+In order to use it, build SPDK with an extra `--with-iscsi-initiator` configure option.
+
+The following command creates an `iSCSI0` bdev from a single LUN exposed at given iSCSI URL
+with `iqn.2016-06.io.spdk:init` as the reported initiator IQN.
+
+`rpc.py bdev_iscsi_create -b iSCSI0 -i iqn.2016-06.io.spdk:init --url iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0`
+
+The URL is in the following format:
+`iscsi://[<username>[%<password>]@]<host>[:<port>]/<target-iqn>/<lun>`
+
+## Linux AIO bdev {#bdev_config_aio}
+
+The SPDK AIO bdev driver provides SPDK block layer access to Linux kernel block
+devices or a file on a Linux filesystem via Linux AIO. Note that O_DIRECT is
+used and thus bypasses the Linux page cache. This mode is probably as close to
+a typical kernel based target as a user space target can get without using a
+user-space driver. To create AIO bdev RPC command `bdev_aio_create` should be
+used.
+
+Example commands
+
+`rpc.py bdev_aio_create /dev/sda aio0`
+
+This command will create `aio0` device from /dev/sda.
+
+`rpc.py bdev_aio_create /tmp/file file 4096`
+
+This command will create `file` device with block size 4096 from /tmp/file.
+
+To delete an aio bdev use the bdev_aio_delete command.
+
+`rpc.py bdev_aio_delete aio0`
+
+## OCF Virtual bdev {#bdev_config_cas}
+
+OCF virtual bdev module is based on [Open CAS Framework](https://github.com/Open-CAS/ocf) - a
+high performance block storage caching meta-library.
+To enable the module, configure SPDK using `--with-ocf` flag.
+OCF bdev can be used to enable caching for any underlying bdev.
+
+Below is an example command for creating OCF bdev:
+
+`rpc.py bdev_ocf_create Cache1 wt Malloc0 Nvme0n1`
+
+This command will create new OCF bdev `Cache1` having bdev `Malloc0` as caching-device
+and `Nvme0n1` as core-device and initial cache mode `Write-Through`.
+`Malloc0` will be used as cache for `Nvme0n1`, so  data written to `Cache1` will be present
+on `Nvme0n1` eventually.
+By default, OCF will be configured with cache line size equal 4KiB
+and non-volatile metadata will be disabled.
+
+To remove `Cache1`:
+
+`rpc.py bdev_ocf_delete Cache1`
+
+During removal OCF-cache will be stopped and all cached data will be written to the core device.
+
+Note that OCF has a per-device RAM requirement. More details can be found in the
+[OCF documentation](https://open-cas.github.io/guide_system_requirements.html).
+
+## Malloc bdev {#bdev_config_malloc}
+
+Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
+application.
+
+Example command for creating malloc bdev:
+
+`rpc.py bdev_malloc_create -b Malloc0 64 512`
+
+Example command for removing malloc bdev:
+
+`rpc.py bdev_malloc_delete Malloc0`
+
+## Null {#bdev_config_null}
+
+The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
+data for reads.  It is useful for benchmarking the rest of the bdev I/O stack with minimal block
+device overhead and for testing configurations that can't easily be created with the Malloc bdev.
+To create Null bdev RPC command `bdev_null_create` should be used.
+
+Example command
+
+`rpc.py bdev_null_create Null0 8589934592 4096`
+
+This command will create an 8 petabyte `Null0` device with block size 4096.
+
+To delete a null bdev use the bdev_null_delete command.
+
+`rpc.py bdev_null_delete Null0`
+
+## NVMe bdev {#bdev_config_nvme}
+
+There are two ways to create block device based on NVMe device in SPDK. First
+way is to connect local PCIe drive and second one is to connect NVMe-oF device.
+In both cases user should use `bdev_nvme_attach_controller` RPC command to achieve that.
+
+Example commands
+
+`rpc.py bdev_nvme_attach_controller -b NVMe1 -t PCIe -a 0000:01:00.0`
+
+This command will create NVMe bdev of physical device in the system.
+
+`rpc.py bdev_nvme_attach_controller -b Nvme0 -t RDMA -a 192.168.100.1 -f IPv4 -s 4420 -n nqn.2016-06.io.spdk:cnode1`
+
+This command will create NVMe bdev of NVMe-oF resource.
+
+To remove an NVMe controller use the bdev_nvme_detach_controller command.
+
+`rpc.py bdev_nvme_detach_controller Nvme0`
+
+This command will remove NVMe bdev named Nvme0.
+
+The SPDK NVMe bdev driver provides the multipath feature. Please refer to
+@ref nvme_multipath for details.
+
+### NVMe bdev character device {#bdev_config_nvme_cuse}
+
+Example commands
+
+`rpc.py bdev_nvme_cuse_register -n Nvme3`
+
+This command will register a character device under /dev/spdk associated with Nvme3
+controller. If there are namespaces created on Nvme3 controller, a namespace
+character device is also created for each namespace.
+
+For example, the first controller registered will have a character device path of
+/dev/spdk/nvmeX, where X is replaced with a unique integer to differentiate it from
+other controllers.  Note that this 'nvmeX' name here has no correlation to the name
+associated with the controller in SPDK.  Namespace character devices will have a path
+of /dev/spdk/nvmeXnY, where Y is the namespace ID.
+
+Cuse devices are removed from system, when NVMe controller is detached or unregistered
+with command:
+
+`rpc.py bdev_nvme_cuse_unregister -n Nvme0`
+
+## Logical volumes {#bdev_ug_logical_volumes}
+
+The Logical Volumes library is a flexible storage space management system. It allows
+creating and managing virtual block devices with variable size on top of other bdevs.
+The SPDK Logical Volume library is built on top of @ref blob. For detailed description
+please refer to @ref lvol.
+
+### Logical volume store {#bdev_ug_lvol_store}
+
+Before creating any logical volumes (lvols), an lvol store has to be created first on
+selected block device. Lvol store is lvols vessel responsible for managing underlying
+bdev space assignment to lvol bdevs and storing metadata. To create lvol store user
+should use using `bdev_lvol_create_lvstore` RPC command.
+
+Example command
+
+`rpc.py bdev_lvol_create_lvstore Malloc2 lvs -c 4096`
+
+This will create lvol store named `lvs` with cluster size 4096, build on top of
+`Malloc2` bdev. In response user will be provided with uuid which is unique lvol store
+identifier.
+
+User can get list of available lvol stores using `bdev_lvol_get_lvstores` RPC command (no
+parameters available).
+
+Example response
+~~~
+{
+  "uuid": "330a6ab2-f468-11e7-983e-001e67edf35d",
+  "base_bdev": "Malloc2",
+  "free_clusters": 8190,
+  "cluster_size": 8192,
+  "total_data_clusters": 8190,
+  "block_size": 4096,
+  "name": "lvs"
+}
 ~~~
 
-This exports block devices for all namespaces attached to the two controllers.  Block devices
-for namespaces attached to the first controller will be in the format Nvme0nY, where Y is
-the namespace ID.  Most NVMe SSDs have a single namespace with ID=1.  Block devices attached to
-the second controller will be in the format Nvme1nY.
+To delete lvol store user should use `bdev_lvol_delete_lvstore` RPC command.
 
-## Malloc
+Example commands
 
-The SPDK malloc bdev driver allocates a buffer of memory in userspace as the target for block I/O
-operations.  This effectively serves as a userspace ramdisk target.
+`rpc.py bdev_lvol_delete_lvstore -u 330a6ab2-f468-11e7-983e-001e67edf35d`
 
-Configuration file syntax:
-~~~
-[Malloc]
-  NumberOfLuns 4
-  LunSizeInMB  64
-~~~
+`rpc.py bdev_lvol_delete_lvstore -l lvs`
 
-This exports 4 malloc block devices, named Malloc0 through Malloc3.  Each malloc block device will
-be 64MB in size.
+### Lvols {#bdev_ug_lvols}
 
-## Linux AIO
+To create lvols on existing lvol store user should use `bdev_lvol_create` RPC command.
+Each created lvol will be represented by new bdev.
 
-The SPDK aio bdev driver provides SPDK block layer access to Linux kernel block devices via Linux AIO.
-Note that O_DIRECT is used and thus bypasses the Linux page cache. This mode is probably as close to
-a typical kernel based target as a user space target can get without using a user-space driver.
+Example commands
 
-Configuration file syntax:
+`rpc.py bdev_lvol_create lvol1 25 -l lvs`
 
-~~~
-[AIO]
-  # AIO <file name> <bdev name>
-  # The file name is the backing device
-  # The bdev name can be referenced from elsewhere in the configuration file.
-  AIO /dev/sdb AIO0
-  AIO /dev/sdc AIO1
-~~~
+`rpc.py bdev_lvol_create lvol2 25 -u 330a6ab2-f468-11e7-983e-001e67edf35d`
 
-This exports 2 aio block devices, named AIO0 and AIO1.
+## Passthru {#bdev_config_passthru}
 
-## Ceph RBD
+The SPDK Passthru virtual block device module serves as an example of how to write a
+virtual block device module. It implements the required functionality of a vbdev module
+and demonstrates some other basic features such as the use of per I/O context.
 
-The SPDK rbd bdev driver provides SPDK block layer access to Ceph RADOS block devices (RBD).  Ceph
-RBD devices are accessed via librbd and librados libraries to access the RADOS block device
-exported by Ceph.
+Example commands
 
-Configuration file syntax:
+`rpc.py bdev_passthru_create -b aio -p pt`
 
-~~~
-[Ceph]
-  # The format of provided rbd info should be: Ceph rbd_pool_name rbd_name size.
-  # In the following example, rbd is the name of rbd_pool; foo is the name of
-  # rbd device exported by Ceph; value 512 represents the configured block size
-  # for this rbd, the block size should be a multiple of 512.
-  Ceph rbd foo 512
-~~~
+`rpc.py bdev_passthru_delete pt`
 
-This exports 1 rbd block device, named Ceph0.
+## RAID {#bdev_ug_raid}
+
+RAID virtual bdev module provides functionality to combine any SPDK bdevs into one
+RAID bdev. Currently SPDK supports RAID0, Concat, RAID1 and RAID5F levels. To enable
+RAID5F, configure SPDK using the `--with-raid5f` option. For RAID levels with redundancy
+(1 and 5F) degraded operation and rebuild are supported. RAID metadata may be stored
+on member disks if enabled when creating the RAID bdev, so user does not have to
+recreate the RAID volume when restarting application. It is not enabled by
+default for backward compatibility. User may specify member disks to create
+RAID volume even if they do not exist yet - as the member disks are registered at
+a later time, the RAID module will claim them and will surface the RAID volume
+after all of the member disks are available. It is allowed to use disks of
+different sizes - the smallest disk size will be the amount of space used on
+each member disk.
+
+Example commands
+
+`rpc.py bdev_raid_create -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
+
+`rpc.py bdev_raid_get_bdevs`
+
+`rpc.py bdev_raid_delete Raid0`
+
+## Split {#bdev_ug_split}
+
+The split block device module takes an underlying block device and splits it into
+several smaller equal-sized virtual block devices. This serves as an example to create
+more vbdevs on a given base bdev for user testing.
+
+Example commands
+
+To create four split bdevs with base bdev_b0 use the `bdev_split_create` command.
+Each split bdev will be one fourth the size of the base bdev.
+
+`rpc.py bdev_split_create bdev_b0 4`
+
+The `split_size_mb`(-s) parameter restricts the size of each split bdev.
+The total size of all split bdevs must not exceed the base bdev size.
+
+`rpc.py bdev_split_create bdev_b0 4 -s 128`
+
+To remove the split bdevs, use the `bdev_split_delete` command with the base bdev name.
+
+`rpc.py bdev_split_delete bdev_b0`
+
+## Uring {#bdev_ug_uring}
+
+The uring bdev module issues I/O to kernel block devices using the io_uring Linux kernel API. This module requires liburing.
+For more information on io_uring refer to kernel [IO_uring] (https://kernel.dk/io_uring.pdf)
+
+The user needs to configure SPDK to include io_uring support:
+
+`configure --with-uring`
+
+Support for zoned devices is enabled by default in uring bdev. It can be explicitly disabled as follows:
+
+`configure --with-uring --without-uring-zns`
+
+To create a uring bdev with given filename, bdev name and block size use the `bdev_uring_create` RPC.
+
+`rpc.py  bdev_uring_create /path/to/device bdev_u0 512`
+
+To remove a uring bdev use the `bdev_uring_delete` RPC.
+
+`rpc.py bdev_uring_delete bdev_u0`
+
+## xnvme {#bdev_ug_xnvme}
+
+The xnvme bdev module issues I/O to the underlying NVMe devices through various I/O mechanisms
+such as libaio, io_uring, Asynchronous IOCTL using io_uring passthrough, POSIX aio, emulated aio etc.
+
+This module requires xNVMe library.
+For more information on xNVMe refer to [xNVMe] (https://xnvme.io/docs/latest)
+
+The user needs to configure SPDK to include xNVMe support:
+
+`configure --with-xnvme`
+
+To create a xnvme bdev with given filename, bdev name and I/O mechanism use the `bdev_xnvme_create` RPC.
+
+`rpc.py  bdev_xnvme_create /dev/ng0n1 bdev_ng0n1 io_uring_cmd`
+
+To remove a xnvme bdev use the `bdev_xnvme_delete` RPC.
+
+`rpc.py bdev_xnvme_delete bdev_ng0n1`
+
+## Virtio Block {#bdev_config_virtio_blk}
+
+The Virtio-Block driver allows creating SPDK bdevs from Virtio-Block devices.
+
+The following command creates a Virtio-Block device named `VirtioBlk0` from a vhost-user
+socket `/tmp/vhost.0` exposed directly by SPDK @ref vhost. Optional `vq-count` and
+`vq-size` params specify number of request queues and queue depth to be used.
+
+`rpc.py bdev_virtio_attach_controller --dev-type blk --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioBlk0`
+
+The driver can be also used inside QEMU-based VMs. The following command creates a Virtio
+Block device named `VirtioBlk0` from a Virtio PCI device at address `0000:00:01.0`.
+The entire configuration will be read automatically from PCI Configuration Space. It will
+reflect all parameters passed to QEMU's vhost-user-scsi-pci device.
+
+`rpc.py bdev_virtio_attach_controller --dev-type blk --trtype pci --traddr 0000:01:00.0 VirtioBlk1`
+
+Virtio-Block devices can be removed with the following command
+
+`rpc.py bdev_virtio_detach_controller VirtioBlk0`
+
+## Virtio SCSI {#bdev_config_virtio_scsi}
+
+The Virtio-SCSI driver allows creating SPDK block devices from Virtio-SCSI LUNs.
+
+Virtio-SCSI bdevs are created the same way as Virtio-Block ones.
+
+`rpc.py bdev_virtio_attach_controller --dev-type scsi --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioScsi0`
+
+`rpc.py bdev_virtio_attach_controller --dev-type scsi --trtype pci --traddr 0000:01:00.0 VirtioScsi0`
+
+Each Virtio-SCSI device may export up to 64 block devices named VirtioScsi0t0 ~ VirtioScsi0t63,
+one LUN (LUN0) per SCSI device. The above 2 commands will output names of all exposed bdevs.
+
+Virtio-SCSI devices can be removed with the following command
+
+`rpc.py bdev_virtio_detach_controller VirtioScsi0`
+
+Removing a Virtio-SCSI device will destroy all its bdevs.
+
+## DAOS bdev {#bdev_config_daos}
+
+DAOS bdev creates SPDK block device on top of DAOS DFS, the name of the bdev defines the file name in DFS namespace.
+Note that DAOS container has to be POSIX type, e.g.: ` daos cont create --pool=test-pool --label=test-cont --type=POSIX`
+
+To build SPDK with daos support, daos-devel package has to be installed, please see the setup [guide](https://docs.daos.io/v2.0/).
+To enable the module, configure SPDK using `--with-daos` flag.
+
+Running `daos_agent` service on the target machine is required for the SPDK DAOS bdev communication with a DAOS cluster.
+
+The implementation uses the independent pool and container connections per device's channel for the best IO throughput, therefore,
+running a target application with multiple cores (`-m [0-7], for example) is highly advisable.
+
+Example command for creating daos bdev:
+
+`rpc.py bdev_daos_create daosdev0 test-pool test-cont 64 4096`
+
+Example command for removing daos bdev:
+
+`rpc.py bdev_daos_delete daosdev0`
+
+To resize a bdev use the bdev_daos_resize command.
+
+`rpc.py bdev_daos_resize daosdev0 8192`
+
+This command will resize the daosdev0 bdev to 8192 MiB.

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
+ * Copyright (C) 2015 Intel Corporation.
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +33,10 @@
 
 #ifndef SPDK_QUEUE_EXTRAS_H
 #define SPDK_QUEUE_EXTRAS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * This file defines four types of data structures: singly-linked lists,
@@ -105,6 +110,18 @@
  *
  */
 
+/* gcc-13 reports bogus Wdangling-pointer warnings on some of the macros below (see issue #3030) */
+#if defined(__GNUC__) && (__GNUC__ >= 13)
+#define SPDK_QE_SUPPRESS_WARNINGS() do {				\
+	_Pragma("GCC diagnostic push")					\
+	_Pragma("GCC diagnostic ignored \"-Wdangling-pointer\"")	\
+} while (0)
+#define SPDK_QE_UNSUPPRESS_WARNINGS() _Pragma("GCC diagnostic pop")
+#else
+#define SPDK_QE_SUPPRESS_WARNINGS()
+#define SPDK_QE_UNSUPPRESS_WARNINGS()
+#endif
+
 /*
  * Singly-linked Tail queue declarations.
  */
@@ -141,7 +158,7 @@ struct name {								\
 
 #define	STAILQ_LAST(head, type, field)					\
 	(STAILQ_EMPTY((head)) ? NULL :					\
-	    __containerof((head)->stqh_last, struct type, field.stqe_next))
+	    SPDK_CONTAINEROF((head)->stqh_last, struct type, field.stqe_next))
 
 #define	STAILQ_NEXT(elm, field)	((elm)->field.stqe_next)
 
@@ -197,7 +214,7 @@ struct {								\
 	if (LIST_NEXT((elm), field) != NULL &&				\
 	    LIST_NEXT((elm), field)->field.le_prev !=			\
 	     &((elm)->field.le_next))					\
-	     	panic("Bad link elm %p next->prev != elm", (elm));	\
+		panic("Bad link elm %p next->prev != elm", (elm));	\
 } while (0)
 
 #define	QMD_LIST_CHECK_PREV(elm, field) do {				\
@@ -233,7 +250,7 @@ struct {								\
 
 #define	LIST_PREV(elm, head, type, field)				\
 	((elm)->field.le_prev == &LIST_FIRST((head)) ? NULL :		\
-	    __containerof((elm)->field.le_prev, struct type, field.le_next))
+	    SPDK_CONTAINEROF((elm)->field.le_prev, struct type, field.le_next))
 
 #define LIST_SWAP(head1, head2, type, field) do {			\
 	struct type *swap_tmp = LIST_FIRST((head1));			\
@@ -244,6 +261,20 @@ struct {								\
 	if ((swap_tmp = LIST_FIRST((head2))) != NULL)			\
 		swap_tmp->field.le_prev = &LIST_FIRST((head2));		\
 } while (0)
+
+/*
+ * Singly-linked List functions.
+ */
+#define	SLIST_SWAP(head1, head2, type) do {			\
+	struct type *swap_tmp = SLIST_FIRST((head1));			\
+	SLIST_FIRST((head1)) = SLIST_FIRST((head2));			\
+	SLIST_FIRST((head2)) = swap_tmp;				\
+} while (0)
+
+#define	SLIST_FOREACH_SAFE(var, head, field, tvar)		\
+	for ((var) = SLIST_FIRST((head));				\
+	    (var) && ((tvar) = SLIST_NEXT((var), field), 1);		\
+	    (var) = (tvar))
 
 /*
  * Tail queue functions.
@@ -258,7 +289,7 @@ struct {								\
 
 #define	QMD_TAILQ_CHECK_TAIL(head, field) do {				\
 	if (*(head)->tqh_last != NULL)					\
-	    	panic("Bad tailq NEXT(%p->tqh_last) != NULL", (head)); 	\
+		panic("Bad tailq NEXT(%p->tqh_last) != NULL", (head));	\
 } while (0)
 
 #define	QMD_TAILQ_CHECK_NEXT(elm, field) do {				\
@@ -322,6 +353,7 @@ struct {								\
 	(*(((struct headname *)((elm)->field.tqe_prev))->tqh_last))
 
 #define TAILQ_SWAP(head1, head2, type, field) do {			\
+	SPDK_QE_SUPPRESS_WARNINGS();					\
 	struct type *swap_first = (head1)->tqh_first;			\
 	struct type **swap_last = (head1)->tqh_last;			\
 	(head1)->tqh_first = (head2)->tqh_first;			\
@@ -336,6 +368,11 @@ struct {								\
 		swap_first->field.tqe_prev = &(head2)->tqh_first;	\
 	else								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
+	SPDK_QE_UNSUPPRESS_WARNINGS();					\
 } while (0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

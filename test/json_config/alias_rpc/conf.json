@@ -1,0 +1,44 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "accel",
+      "config": []
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32
+          },
+          "method": "bdev_malloc_create"
+        },
+        {
+          "params": {
+            "name": "Malloc1",
+            "block_size": 4096,
+            "num_blocks": 32
+          },
+          "method": "bdev_malloc_create"
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    }
+  ]
+}

@@ -1,43 +1,58 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-timing_enter rpc_config
+iscsitestinit
 
-# iSCSI target configuration
-PORT=3260
-RPC_PORT=5260
-INITIATOR_TAG=2
-INITIATOR_NAME=ALL
-NETMASK=$INITIATOR_IP/32
 MALLOC_BDEV_SIZE=64
 
-
 rpc_py=$rootdir/scripts/rpc.py
-rpc_config_py="python $testdir/rpc_config.py"
+rpc_config_py="$testdir/rpc_config.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 
-waitforlisten $pid ${RPC_PORT}
+waitforlisten $pid
+$rpc_py framework_wait_init &
+rpc_wait_pid=$!
+$rpc_py iscsi_set_options -o 30 -a 16
+
+# RPC framework_wait_init should be blocked, so its process must be existed
+ps $rpc_wait_pid
+
+$rpc_py framework_start_init
+sleep 1
 echo "iscsi_tgt is listening. Running tests..."
+
+# RPC framework_wait_init should be already returned, so its process must be non-existed
+NOT ps $rpc_wait_pid
+
+# RPC framework_wait_init will directly returned after subsystem initialized.
+$rpc_py framework_wait_init &
+rpc_wait_pid=$!
+sleep 1
+NOT ps $rpc_wait_pid
 
 timing_exit start_iscsi_tgt
 
-$rpc_config_py $rpc_py
+$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $ISCSI_PORT $NETMASK $TARGET_NAMESPACE
 
-$rpc_py get_bdevs
+$rpc_py bdev_get_bdevs
 
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
-timing_exit rpc_config
+
+iscsitestfini

@@ -1,0 +1,16 @@
+[global]
+blocksize_range=4k-512k
+iodepth=512
+iodepth_batch=128
+iodepth_low=256
+ioengine=libaio
+size=10G
+filename=
+ramp_time=10
+group_reporting
+thread
+numjobs=1
+direct=1
+rw=randread
+fsync_on_close=1
+[nvme-host]

@@ -1,158 +1,109 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
-basedir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $basedir/../../..)
-testdir=$(readlink -f $rootdir/..)
-qemu_src_dir="$testdir/qemu"
-qemu_build_dir="$testdir/qemu/build"
-qemu_install_dir="$testdir/root"
-MAKE="make -j$(( $(nproc)  * 2 ))"
+ctrl_type="spdk_vhost_scsi"
+vm_fs="ext4"
 
-source $rootdir/scripts/autotest_common.sh
-
-if [ -z "$VM_IMG" ]; then
-    echo "ERROR: VM_IMG: path to qcow2 image not provided - not running"
-    exit 1
-fi
-
-if [ -z "$VM_QEMU" ]; then
-    echo "INFO: VM_QEMU: path to qemu binary not provided"
-    echo "INFO: Will use qemu from repository"
-fi
-
-if [ -z "$VM_FS" ]; then
-    VM_FS="ext4"
-    echo "INFO: Using default value for filesystem: $VM_FS"
-fi
-
-HOST_IP=192.200.200.1
-VM_IP=192.200.200.254
-VM_UNAME="root"
-VM_PASS="root"
-VM_NAME="int_test_vm"
-VM_NET_NAME="int_test_net"
-VM_MAC="02:de:ad:de:ad:01"
-VM_BAK_IMG="/tmp/int_test_backing.img"
-TIMEO=60
-SSHCMD="sshpass -p $VM_PASS ssh"
-SCPCMD="sshpass -p $VM_PASS scp"
-
-echo "FS: $VM_FS"
-
-function cleanup_virsh() {
-    virsh shutdown $VM_NAME || true
-    sleep 5
-    virsh net-destroy $VM_NET_NAME || true
-    rm $VM_BAK_IMG || true
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
+	echo "Shortcut script for doing automated test"
+	echo "Usage: $(basename $1) [OPTIONS]"
+	echo
+	echo "-h, --help                Print help and exit"
+	echo "    --ctrl-type=TYPE      Controller type to use for test:"
+	echo "                          spdk_vhost_scsi - use spdk vhost scsi"
+	echo "    --fs=FS_LIST          Filesystems to use for test in VM:"
+	echo "                          Example: --fs=\"ext4 ntfs ext2\""
+	echo "                          Default: ext4"
+	echo "                          spdk_vhost_blk - use spdk vhost block"
+	echo "-x                        set -x for script debug"
+	exit 0
 }
 
-timing_enter integrity_test
+function clean_lvol_cfg() {
+	notice "Removing lvol bdev and lvol store"
+	$rpc_py bdev_lvol_delete lvol_store/lvol_bdev
+	$rpc_py bdev_lvol_delete_lvstore -l lvol_store
+}
 
-# If no VM_QEMU argument is given - check if needed qemu is installed
-echo "INFO: Checking qemu..."
-if [[ ! -d $qemu_src_dir && -z "$VM_QEMU" ]]; then
-    echo "INFO: Cloning $qemu_src_dir"
-    rm -rf $qemu_src_dir
-    mkdir -p $qemu_src_dir
-    cd $(dirname $qemu_src_dir)
-    git clone -b dev/vhost_scsi ssh://az-sg-sw01.ch.intel.com:29418/qemu
-    echo "INFO: Cloning Qemu Done"
-else
-    echo "INFO: Qemu source exist $qemu_src_dir - not cloning"
-fi
-
-# Check if Qemu binary is present; build it if not
-if [[ ! -x $qemu_install_dir/bin/qemu-system-x86_64 && -z "$VM_QEMU" ]]; then
-    echo "INFO: Can't find $qemu_install_dir/bin/qemu-system-x86_64 - building and installing"
-    mkdir -p $qemu_build_dir
-    cd $qemu_build_dir
-
-    $qemu_src_dir/configure --prefix=$qemu_install_dir \
-    --target-list="x86_64-softmmu" \
-    --enable-kvm --enable-linux-aio --enable-numa
-
-    echo "INFO: Compiling and installing QEMU in $qemu_install_dir"
-    $MAKE install
-    VM_QEMU="$qemu_install_dir/bin/qemu-system-x86_64"
-    echo "INFO: DONE"
-elif [[ -z "$VM_QEMU" ]]; then
-    VM_QEMU="$qemu_install_dir/bin/qemu-system-x86_64"
-fi
-
-# Backing image for VM
-qemu-img create -f qcow2 -o backing_file=$VM_IMG $VM_BAK_IMG
-
-# Prepare vhost config
-cp $basedir/vhost.conf.in $basedir/vhost.conf
-$rootdir/scripts/gen_nvme.sh >> $basedir/vhost.conf
-
-# Prepare .xml files for Virsh
-cp $basedir/base_vm.xml $basedir/vm_conf.xml
-cp $basedir/base_vnet.xml $basedir/vnet_conf.xml
-sed -i "s@<name></name>@<name>$VM_NAME</name>@g" $basedir/vm_conf.xml
-sed -i "s@source file=''@source file='$VM_BAK_IMG'@g" $basedir/vm_conf.xml
-sed -i "s@<emulator></emulator>@<emulator>$VM_QEMU</emulator>@g" $basedir/vm_conf.xml
-sed -i "s@mac address=''@mac address='$VM_MAC'@g" $basedir/vm_conf.xml
-sed -i "s@source network=''@source network='$VM_NET_NAME'@g" $basedir/vm_conf.xml
-sed -i "s@<name></name>@<name>$VM_NET_NAME</name>@g" $basedir/vnet_conf.xml
-
-trap "cleanup_virsh; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
-
-virsh net-create $basedir/vnet_conf.xml
-
-# Change directory and ownership because virsh has issues with
-# paths that are in /root tree
-cd /tmp
-$rootdir/app/vhost/vhost -c $basedir/vhost.conf &
-pid=$!
-echo "Process pid: $pid"
-sleep 10
-chmod 777 /tmp/naa.0
-
-virsh create $basedir/vm_conf.xml
-virsh net-update $VM_NET_NAME add ip-dhcp-host "<host mac='$VM_MAC' name='$VM_NAME' ip='$VM_IP'/>"
-
-# Wait for VM to boot, disable trap temporarily
-# so that we don't exit on first fail
-echo "INFO: Trying to connect to virtual machine..."
-trap - SIGINT SIGTERM EXIT
-set +xe
-rc=-1
-while [[ $TIMEO -gt 0 && rc -ne 0 ]]; do
-    $SSHCMD root@$VM_IP -q -oStrictHostKeyChecking=no 'echo Hello'
-    rc=$?
-    ((TIMEO-=1))
+while getopts 'xh-:' optchar; do
+	case "$optchar" in
+		-)
+			case "$OPTARG" in
+				help) usage $0 ;;
+				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
+				fs=*) vm_fs="${OPTARG#*=}" ;;
+				*) usage $0 "Invalid argument '$OPTARG'" ;;
+			esac
+			;;
+		h) usage $0 ;;
+		x)
+			set -x
+			x="-x"
+			;;
+		*) usage $0 "Invalid argument '$OPTARG'" ;;
+	esac
 done
-set -xe
-trap "cleanup_virsh; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-if [[ $TIMEO -eq 0  ||  rc -ne 0 ]]; then
-    echo "ERROR: VM did not boot properly, exiting"
-    exit 1
+vhosttestinit
+
+. $(readlink -e "$(dirname $0)/../common.sh") || exit 1
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+
+trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
+
+# Try to kill if any VM remains from previous runs
+vm_kill_all
+
+notice "Starting SPDK vhost"
+vhost_run -n 0
+notice "..."
+
+# Set up lvols and vhost controllers
+trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
+notice "Creating lvol store and lvol bdev on top of Nvme0n1"
+lvs_uuid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvol_store)
+$rpc_py bdev_lvol_create lvol_bdev 10000 -l lvol_store
+
+if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
+	$rpc_py vhost_create_scsi_controller naa.Nvme0n1.0
+	$rpc_py vhost_scsi_controller_add_target naa.Nvme0n1.0 0 lvol_store/lvol_bdev
+elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
+	$rpc_py vhost_create_blk_controller naa.Nvme0n1.0 lvol_store/lvol_bdev
 fi
 
-# Run test on Virtual Machine
-$SCPCMD -r $basedir/integrity_vm.sh root@$VM_IP:~
-$SSHCMD root@$VM_IP "fs=$VM_FS ~/integrity_vm.sh"
+# Set up and run VM
+setup_cmd="vm_setup --disk-type=$ctrl_type --force=0"
+setup_cmd+=" --os=$VM_IMAGE"
+setup_cmd+=" --disks=Nvme0n1"
+$setup_cmd
 
-# Kill VM, cleanup config files
-cleanup_virsh
-rm $basedir/vm_conf.xml || true
-rm $basedir/vnet_conf.xml || true
-rm $basedir/vhost.conf || true
+# Run VM
+vm_run 0
+vm_wait_for_boot 300 0
 
-# Try to gracefully stop spdk vhost
-if /bin/kill -INT $pid; then
-    while /bin/kill -0 $pid; do
-        sleep 1
-    done
-elif /bin/kill -0 $pid; then
-    killprocess $pid
-    echo "ERROR: Vhost was not closed gracefully..."
-    exit 1
-else
-    exit 1
-fi
+# Run tests on VM
+vm_scp 0 $testdir/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
+vm_exec 0 "/root/integrity_vm.sh $ctrl_type \"$vm_fs\""
 
-trap - SIGINT SIGTERM EXIT
-timing_exit integrity_test
+notice "Shutting down virtual machine..."
+vm_shutdown_all
+
+clean_lvol_cfg
+
+$rpc_py bdev_nvme_detach_controller Nvme0
+
+notice "Shutting down SPDK vhost app..."
+vhost_kill 0
+
+vhosttestfini

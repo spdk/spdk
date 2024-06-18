@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -37,47 +9,54 @@
 #include "spdk/string.h"
 
 char *
-spdk_vsprintf_alloc(const char *format, va_list args)
+spdk_vsprintf_append_realloc(char *buffer, const char *format, va_list args)
 {
 	va_list args_copy;
-	char *buf;
-	size_t bufsize;
-	int rc;
+	char *new_buffer;
+	int orig_size = 0, new_size;
 
-	/* Try with a small buffer first. */
-	bufsize = 32;
-
-	/* Limit maximum buffer size to something reasonable so we don't loop forever. */
-	while (bufsize <= 1024 * 1024) {
-		buf = malloc(bufsize);
-		if (buf == NULL) {
-			return NULL;
-		}
-
-		va_copy(args_copy, args);
-		rc = vsnprintf(buf, bufsize, format, args_copy);
-		va_end(args_copy);
-
-		/*
-		 * If vsnprintf() returned a count within our current buffer size, we are done.
-		 * The count does not include the \0 terminator, so rc == bufsize is not OK.
-		 */
-		if (rc >= 0 && (size_t)rc < bufsize) {
-			return buf;
-		}
-
-		/*
-		 * vsnprintf() should return the required space, but some libc versions do not
-		 * implement this correctly, so just double the buffer size and try again.
-		 *
-		 * We don't need the data in buf, so rather than realloc(), use free() and malloc()
-		 * again to avoid a copy.
-		 */
-		free(buf);
-		bufsize *= 2;
+	/* Original buffer size */
+	if (buffer) {
+		orig_size = strlen(buffer);
 	}
 
-	return NULL;
+	/* Necessary buffer size */
+	va_copy(args_copy, args);
+	new_size = vsnprintf(NULL, 0, format, args_copy);
+	va_end(args_copy);
+
+	if (new_size < 0) {
+		return NULL;
+	}
+	new_size += orig_size + 1;
+
+	new_buffer = realloc(buffer, new_size);
+	if (new_buffer == NULL) {
+		return NULL;
+	}
+
+	vsnprintf(new_buffer + orig_size, new_size - orig_size, format, args);
+
+	return new_buffer;
+}
+
+char *
+spdk_sprintf_append_realloc(char *buffer, const char *format, ...)
+{
+	va_list args;
+	char *ret;
+
+	va_start(args, format);
+	ret = spdk_vsprintf_append_realloc(buffer, format, args);
+	va_end(args);
+
+	return ret;
+}
+
+char *
+spdk_vsprintf_alloc(const char *format, va_list args)
+{
+	return spdk_vsprintf_append_realloc(NULL, format, args);
 }
 
 char *
@@ -258,7 +237,7 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 	char *p;
 
 	if (ip == NULL) {
-		return -1;
+		return -EINVAL;
 	}
 
 	*host = NULL;
@@ -268,7 +247,7 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 		/* IPv6 */
 		p = strchr(ip, ']');
 		if (p == NULL) {
-			return -1;
+			return -EINVAL;
 		}
 		*host = &ip[1];
 		*p = '\0';
@@ -277,7 +256,7 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 		if (*p == '\0') {
 			return 0;
 		} else if (*p != ':') {
-			return -1;
+			return -EINVAL;
 		}
 
 		p++;
@@ -304,6 +283,314 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 
 		*port = p;
 	}
+
+	return 0;
+}
+
+size_t
+spdk_str_chomp(char *s)
+{
+	size_t len = strlen(s);
+	size_t removed = 0;
+
+	while (len > 0) {
+		if (s[len - 1] != '\r' && s[len - 1] != '\n') {
+			break;
+		}
+
+		s[len - 1] = '\0';
+		len--;
+		removed++;
+	}
+
+	return removed;
+}
+
+void
+spdk_strerror_r(int errnum, char *buf, size_t buflen)
+{
+	int rc;
+
+#if defined(__USE_GNU)
+	char *new_buffer;
+	new_buffer = strerror_r(errnum, buf, buflen);
+	if (new_buffer == buf) {
+		rc = 0;
+	} else if (new_buffer != NULL) {
+		snprintf(buf, buflen, "%s", new_buffer);
+		rc = 0;
+	} else {
+		rc = 1;
+	}
+#else
+	rc = strerror_r(errnum, buf, buflen);
+#endif
+
+	if (rc != 0) {
+		snprintf(buf, buflen, "Unknown error %d", errnum);
+	}
+}
+
+int
+spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
+{
+	int rc;
+	char bin_prefix;
+
+	rc = sscanf(cap_str, "%"SCNu64"%c", cap, &bin_prefix);
+	if (rc == 1) {
+		if (has_prefix != NULL) {
+			*has_prefix = false;
+		}
+		return 0;
+	} else if (rc == 0) {
+		if (errno == 0) {
+			/* No scanf matches - the string does not start with a digit */
+			return -EINVAL;
+		} else {
+			/* Parsing error */
+			return -errno;
+		}
+	}
+
+	if (has_prefix != NULL) {
+		*has_prefix = true;
+	}
+
+	switch (bin_prefix) {
+	case 'k':
+	case 'K':
+		*cap *= 1024;
+		break;
+	case 'm':
+	case 'M':
+		*cap *= 1024 * 1024;
+		break;
+	case 'g':
+	case 'G':
+		*cap *= 1024 * 1024 * 1024;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+bool
+spdk_mem_all_zero(const void *data, size_t size)
+{
+	const uint8_t *buf = data;
+
+	while (size--) {
+		if (*buf++ != 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+long int
+spdk_strtol(const char *nptr, int base)
+{
+	long val;
+	char *endptr;
+
+	/* Since strtoll() can legitimately return 0, LONG_MAX, or LONG_MIN
+	 * on both success and failure, the calling program should set errno
+	 * to 0 before the call.
+	 */
+	errno = 0;
+
+	val = strtol(nptr, &endptr, base);
+
+	if (!errno && *endptr != '\0') {
+		/* Non integer character was found. */
+		return -EINVAL;
+	} else if (errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) {
+		/* Overflow occurred. */
+		return -ERANGE;
+	} else if (errno != 0 && val == 0) {
+		/* Other error occurred. */
+		return -errno;
+	} else if (val < 0) {
+		/* Input string was negative number. */
+		return -ERANGE;
+	}
+
+	return val;
+}
+
+long long int
+spdk_strtoll(const char *nptr, int base)
+{
+	long long val;
+	char *endptr;
+
+	/* Since strtoll() can legitimately return 0, LLONG_MAX, or LLONG_MIN
+	 * on both success and failure, the calling program should set errno
+	 * to 0 before the call.
+	 */
+	errno = 0;
+
+	val = strtoll(nptr, &endptr, base);
+
+	if (!errno && *endptr != '\0') {
+		/* Non integer character was found. */
+		return -EINVAL;
+	} else if (errno == ERANGE && (val == LLONG_MAX || val == LLONG_MIN)) {
+		/* Overflow occurred. */
+		return -ERANGE;
+	} else if (errno != 0 && val == 0) {
+		/* Other error occurred. */
+		return -errno;
+	} else if (val < 0) {
+		/* Input string was negative number. */
+		return -ERANGE;
+	}
+
+	return val;
+}
+
+void
+spdk_strarray_free(char **strarray)
+{
+	size_t i;
+
+	if (strarray == NULL) {
+		return;
+	}
+
+	for (i = 0; strarray[i] != NULL; i++) {
+		free(strarray[i]);
+	}
+	free(strarray);
+}
+
+char **
+spdk_strarray_from_string(const char *str, const char *delim)
+{
+	const char *c = str;
+	size_t count = 0;
+	char **result;
+	size_t i;
+
+	assert(str != NULL);
+	assert(delim != NULL);
+
+	/* Count number of entries. */
+	for (;;) {
+		const char *next = strpbrk(c, delim);
+
+		count++;
+
+		if (next == NULL) {
+			break;
+		}
+
+		c = next + 1;
+	}
+
+	/* Account for the terminating NULL entry. */
+	result = calloc(count + 1, sizeof(char *));
+	if (result == NULL) {
+		return NULL;
+	}
+
+	c = str;
+
+	for (i = 0; i < count; i++) {
+		const char *next = strpbrk(c, delim);
+
+		if (next == NULL) {
+			result[i] = strdup(c);
+		} else {
+			result[i] = strndup(c, next - c);
+		}
+
+		if (result[i] == NULL) {
+			spdk_strarray_free(result);
+			return NULL;
+		}
+
+		if (next != NULL) {
+			c = next + 1;
+		}
+	}
+
+	return result;
+}
+
+char **
+spdk_strarray_dup(const char **strarray)
+{
+	size_t count, i;
+	char **result;
+
+	assert(strarray != NULL);
+
+	for (count = 0; strarray[count] != NULL; count++)
+		;
+
+	result = calloc(count + 1, sizeof(char *));
+	if (result == NULL) {
+		return NULL;
+	}
+
+	for (i = 0; i < count; i++) {
+		result[i] = strdup(strarray[i]);
+		if (result[i] == NULL) {
+			spdk_strarray_free(result);
+			return NULL;
+		}
+	}
+
+	return result;
+}
+
+int
+spdk_strcpy_replace(char *dst, size_t size, const char *src, const char *search,
+		    const char *replace)
+{
+	const char *p, *q;
+	char *r;
+	size_t c, search_size, replace_size, dst_size;
+
+	if (dst == NULL || src == NULL || search == NULL || replace == NULL) {
+		return -EINVAL;
+	}
+
+	search_size = strlen(search);
+	replace_size = strlen(replace);
+
+	c = 0;
+	for (p = strstr(src, search); p != NULL; p = strstr(p + search_size, search)) {
+		c++;
+	}
+
+	dst_size = strlen(src) + (replace_size - search_size) * c;
+	if (dst_size >= size) {
+		return -EINVAL;
+	}
+
+	q = src;
+	r = dst;
+
+	for (p = strstr(src, search); p != NULL; p = strstr(p + search_size, search)) {
+		memcpy(r, q, p - q);
+		r += p - q;
+
+		memcpy(r, replace, replace_size);
+		r += replace_size;
+
+		q = p + search_size;
+	}
+
+	memcpy(r, q, strlen(q));
+	r += strlen(q);
+
+	*r = '\0';
 
 	return 0;
 }

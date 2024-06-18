@@ -1,0 +1,90 @@
+Starting SPDK v19.10.1 / DPDK 19.08.0 initialization...
+[ DPDK EAL parameters: blobcli --no-shconf -c 0x1 --log-level=lib.eal:6 --log-level=lib.cryptodev:5 --log-level=user1:6 --iova-mode=pa --base-virtaddr=0x200000000000 --match-allocations --file-prefix=spdk_pid1641656 ]
+
+SCRIPT NOW PROCESSING: -i
+Init blobstore using bdev Name: Nvme0n1
+blobstore init'd: ($(XX))
+
+SCRIPT NOW PROCESSING: -l bdevs
+
+List bdevs:
+	bdev Name: Nvme0n1
+	bdev Product Name: NVMe disk
+
+
+SCRIPT NOW PROCESSING: -n 1
+New blob id $(XX)
+blob now has USED clusters of 1
+
+SCRIPT NOW PROCESSING: -p $B0
+Super Blob ID has been set.
+
+SCRIPT NOW PROCESSING: -n 1
+New blob id $(XX)
+blob now has USED clusters of 1
+
+SCRIPT NOW PROCESSING: -m $B1 test.pattern
+Working...............................................................................................................................................................................................................................................................
+Blob import complete (from test.pattern).
+
+SCRIPT NOW PROCESSING: -d $B1 test.pattern.blob
+Working................................................................................................................................................................................................................................................................
+File write complete (to test.pattern.blob).
+
+SCRIPT NOW PROCESSING: -x $B1 key val
+Xattr has been set.
+
+SCRIPT NOW PROCESSING: -s bs
+Blobstore Public Info:
+	Using bdev Product Name: NVMe disk
+	API Version: $(N)
+	super blob ID: $(XX)
+	page size: $(N)
+	io unit size: $(N)
+	cluster size: 1048576
+	# free clusters: $(N)
+	blobstore type:
+00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
+
+Blobstore Private Info:
+	Metadata start (pages): $(N)
+	Metadata length (pages): $(N)
+
+SCRIPT NOW PROCESSING: -s $B1
+Blob Public Info:
+blob ID: $(XX)
+# of clusters: 1
+# of bytes: 1048576
+# of pages: 256
+# of xattrs: 1
+xattrs:
+
+(0) Name:key
+(0) Value:
+
+00000000  76 61 6c                                           val
+
+Blob Private Info:
+state: CLEAN
+open ref count: 1
+
+SCRIPT NOW PROCESSING: -r $B1 key
+Xattr has been removed.
+
+SCRIPT NOW PROCESSING: -s bs
+Blobstore Public Info:
+	Using bdev Product Name: NVMe disk
+	API Version: 3
+	super blob ID: $(XX)
+	page size: $(N)
+	io unit size: $(N)
+	cluster size: 1048576
+	# free clusters: $(N)
+	blobstore type:
+00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
+
+Blobstore Private Info:
+	Metadata start (pages): $(N)
+	Metadata length (pages): $(N)
+
+SCRIPT NOW PROCESSING: -X

@@ -1,0 +1,8 @@
+usdt:__EXE__:nvmf_request_io_exec_path {
+	@path[str(arg2), str(arg3)] = count();
+}
+
+interval:s:1 {
+	print(@path);
+	clear(@path);
+}

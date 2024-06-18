@@ -1,0 +1,396 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+rootdir=$(readlink -f $(dirname $0)/../..)
+source "$rootdir/test/common/autotest_common.sh"
+source "$rootdir/test/nvmf/common.sh"
+source "$rootdir/test/json_config/common.sh"
+
+if [[ $SPDK_TEST_ISCSI -eq 1 ]]; then
+	source "$rootdir/test/iscsi_tgt/common.sh"
+fi
+
+if [[ $SPDK_TEST_VHOST -ne 1 && $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+	SPDK_TEST_VHOST=1
+	echo "WARNING: Virtio initiator JSON_config test requires vhost target."
+	echo "         Setting SPDK_TEST_VHOST=1 for duration of current script."
+fi
+
+if ((SPDK_TEST_BLOCKDEV + \
+	SPDK_TEST_ISCSI + \
+	SPDK_TEST_NVMF + \
+	SPDK_TEST_VHOST + \
+	SPDK_TEST_VHOST_INIT + \
+	SPDK_TEST_RBD == 0)); then
+	echo "WARNING: No tests are enabled so not running JSON configuration tests"
+	exit 0
+fi
+
+declare -A app_pid=([target]="" [initiator]="")
+declare -A app_socket=([target]='/var/tmp/spdk_tgt.sock' [initiator]='/var/tmp/spdk_initiator.sock')
+declare -A app_params=([target]='-m 0x1 -s 1024' [initiator]='-m 0x2 -g -u -s 1024')
+declare -A configs_path=([target]="$rootdir/spdk_tgt_config.json" [initiator]="$rootdir/spdk_initiator_config.json")
+
+function initiator_rpc() {
+	$rootdir/scripts/rpc.py -s "${app_socket[initiator]}" "$@"
+}
+
+last_event_id=0
+
+function tgt_check_notification_types() {
+	timing_enter "${FUNCNAME[0]}"
+
+	local ret=0
+	local enabled_types=("bdev_register" "bdev_unregister")
+
+	local get_types=($(tgt_rpc notify_get_types | jq -r '.[]'))
+	if [[ ${enabled_types[*]} != "${get_types[*]}" ]]; then
+		echo "ERROR: expected types: ${enabled_types[*]}, but got: ${get_types[*]}"
+		ret=1
+	fi
+
+	timing_exit "${FUNCNAME[0]}"
+	return $ret
+}
+
+get_notifications() {
+	local ev_type ev_ctx event_id
+
+	while IFS=":" read -r ev_type ev_ctx event_id; do
+		echo "$ev_type:$ev_ctx"
+	done < <(tgt_rpc notify_get_notifications -i "$last_event_id" | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
+}
+
+function tgt_check_notifications() {
+	local events_to_check
+	local recorded_events
+
+	# Seems like notifications don't necessarily have to come in order, so make sure they are sorted
+	events_to_check=($(printf '%s\n' "$@" | sort))
+	recorded_events=($(get_notifications | sort))
+
+	if [[ ${events_to_check[*]} != "${recorded_events[*]}" ]]; then
+		cat <<- ERROR
+			Expected events did not match.
+
+			Expected:
+			$(printf ' %s\n' "${events_to_check[@]}")
+			Recorded:
+			$(printf ' %s\n' "${recorded_events[@]}")
+		ERROR
+		return 1
+	fi
+
+	cat <<- INFO
+		Expected events matched:
+		$(printf ' %s\n' "${recorded_events[@]}")
+	INFO
+}
+
+function create_accel_config() {
+	timing_enter "${FUNCNAME[0]}"
+
+	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
+		tgt_rpc dpdk_cryptodev_scan_accel_module
+		tgt_rpc accel_assign_opc -o encrypt -m dpdk_cryptodev
+		tgt_rpc accel_assign_opc -o decrypt -m dpdk_cryptodev
+	fi
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function create_bdev_subsystem_config() {
+	timing_enter "${FUNCNAME[0]}"
+
+	local expected_notifications=()
+
+	# Consider multiple nvme devices loaded into the subsystem prior running
+	# the tests.
+	expected_notifications+=($(get_notifications))
+
+	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
+		local lvol_store_base_bdev=Nvme0n1
+
+		tgt_rpc bdev_split_create $lvol_store_base_bdev 2
+		tgt_rpc bdev_split_create Malloc0 3
+		tgt_rpc bdev_malloc_create 8 4096 --name Malloc3
+		tgt_rpc bdev_passthru_create -b Malloc3 -p PTBdevFromMalloc3
+
+		tgt_rpc bdev_null_create Null0 32 512
+
+		tgt_rpc bdev_malloc_create 32 512 --name Malloc0
+		tgt_rpc bdev_malloc_create 16 4096 --name Malloc1
+
+		expected_notifications+=(
+			bdev_register:${lvol_store_base_bdev}p1
+			bdev_register:${lvol_store_base_bdev}p0
+			bdev_register:Malloc3
+			bdev_register:PTBdevFromMalloc3
+			bdev_register:Null0
+			bdev_register:Malloc0
+			bdev_register:Malloc0p2
+			bdev_register:Malloc0p1
+			bdev_register:Malloc0p0
+			bdev_register:Malloc1
+		)
+
+		# This AIO bdev must be large enough to be used as LVOL store
+		dd if=/dev/zero of="$SPDK_TEST_STORAGE/sample_aio" bs=1024 count=102400
+		tgt_rpc bdev_aio_create "$SPDK_TEST_STORAGE/sample_aio" aio_disk 1024
+		expected_notifications+=(bdev_register:aio_disk)
+
+		# For LVOLs use split to check for proper order of initialization.
+		# If LVOLs configuration will be reordered (eg moved before splits or AIO/NVMe)
+		# it should fail loading JSON config from file.
+		tgt_rpc bdev_lvol_create_lvstore -c 1048576 ${lvol_store_base_bdev}p0 lvs_test
+
+		expected_notifications+=(
+			"bdev_register:$(tgt_rpc bdev_lvol_create -l lvs_test lvol0 32)"
+			"bdev_register:$(tgt_rpc bdev_lvol_create -l lvs_test -t lvol1 32)"
+			"bdev_register:$(tgt_rpc bdev_lvol_snapshot lvs_test/lvol0 snapshot0)"
+			"bdev_register:$(tgt_rpc bdev_lvol_clone lvs_test/snapshot0 clone0)"
+		)
+	fi
+
+	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
+		tgt_rpc bdev_malloc_create 8 1024 --name MallocForCryptoBdev
+		if [[ $(lspci -d:37c8 | wc -l) -eq 0 ]]; then
+			local crypto_driver=crypto_aesni_mb
+		else
+			local crypto_driver=crypto_qat
+		fi
+
+		tgt_rpc bdev_crypto_create MallocForCryptoBdev CryptoMallocBdev -p $crypto_driver -k 01234567891234560123456789123456
+		expected_notifications+=(
+			bdev_register:MallocForCryptoBdev
+			bdev_register:CryptoMallocBdev
+		)
+	fi
+
+	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
+		rbd_setup 127.0.0.1
+		tgt_rpc bdev_rbd_create $RBD_POOL $RBD_NAME 4096
+		expected_notifications+=(bdev_register:Ceph0)
+	fi
+
+	tgt_check_notifications "${expected_notifications[@]}"
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function cleanup_bdev_subsystem_config() {
+	timing_enter "${FUNCNAME[0]}"
+
+	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
+		tgt_rpc bdev_lvol_delete lvs_test/clone0
+		tgt_rpc bdev_lvol_delete lvs_test/lvol0
+		tgt_rpc bdev_lvol_delete lvs_test/snapshot0
+		tgt_rpc bdev_lvol_delete_lvstore -l lvs_test
+	fi
+
+	if [[ $(uname -s) = Linux ]]; then
+		rm -f "$SPDK_TEST_STORAGE/sample_aio"
+	fi
+
+	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
+		rbd_cleanup
+	fi
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function create_vhost_subsystem_config() {
+	timing_enter "${FUNCNAME[0]}"
+
+	tgt_rpc bdev_malloc_create 64 1024 --name MallocForVhost0
+	tgt_rpc bdev_split_create MallocForVhost0 8
+
+	tgt_rpc vhost_create_scsi_controller VhostScsiCtrlr0
+	tgt_rpc vhost_scsi_controller_add_target VhostScsiCtrlr0 0 MallocForVhost0p3
+	tgt_rpc vhost_scsi_controller_add_target VhostScsiCtrlr0 -1 MallocForVhost0p4
+	tgt_rpc vhost_controller_set_coalescing VhostScsiCtrlr0 1 100
+
+	tgt_rpc vhost_create_blk_controller VhostBlkCtrlr0 MallocForVhost0p5
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function create_iscsi_subsystem_config() {
+	timing_enter "${FUNCNAME[0]}"
+	tgt_rpc bdev_malloc_create 64 1024 --name MallocForIscsi0
+	tgt_rpc iscsi_create_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
+	tgt_rpc iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	tgt_rpc iscsi_create_target_node Target3 Target3_alias 'MallocForIscsi0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function create_nvmf_subsystem_config() {
+	timing_enter "${FUNCNAME[0]}"
+
+	NVMF_FIRST_TARGET_IP="127.0.0.1"
+	if [[ $SPDK_TEST_NVMF_TRANSPORT == "rdma" ]]; then
+		TEST_TRANSPORT=$SPDK_TEST_NVMF_TRANSPORT nvmftestinit
+	fi
+
+	if [[ -z $NVMF_FIRST_TARGET_IP ]]; then
+		echo "Error: no NIC for nvmf test"
+		return 1
+	fi
+
+	tgt_rpc bdev_malloc_create 8 512 --name MallocForNvmf0
+	tgt_rpc bdev_malloc_create 4 1024 --name MallocForNvmf1
+
+	tgt_rpc nvmf_create_transport -t $SPDK_TEST_NVMF_TRANSPORT -u 8192 -c 0
+	tgt_rpc nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+	tgt_rpc nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 MallocForNvmf0
+	tgt_rpc nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
+	tgt_rpc nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $SPDK_TEST_NVMF_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function create_virtio_initiator_config() {
+	timing_enter "${FUNCNAME[0]}"
+	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostScsiCtrlr0 -d scsi VirtioScsiCtrlr0
+	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostBlkCtrlr0 -d blk VirtioBlk0
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function json_config_test_init() {
+	timing_enter "${FUNCNAME[0]}"
+	timing_enter json_config_setup_target
+
+	json_config_test_start_app target --wait-for-rpc
+
+	#TODO: global subsystem params
+
+	create_accel_config
+
+	# Load nvme configuration. The load_config will issue framework_start_init automatically
+	(
+		$rootdir/scripts/gen_nvme.sh --json-with-subsystems
+	) | tgt_rpc load_config
+
+	tgt_check_notification_types
+
+	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
+		create_bdev_subsystem_config
+	fi
+
+	if [[ $SPDK_TEST_VHOST -eq 1 ]]; then
+		create_vhost_subsystem_config
+	fi
+
+	if [[ $SPDK_TEST_ISCSI -eq 1 ]]; then
+		create_iscsi_subsystem_config
+	fi
+
+	if [[ $SPDK_TEST_NVMF -eq 1 ]]; then
+		create_nvmf_subsystem_config
+	fi
+	timing_exit json_config_setup_target
+
+	if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+		json_config_test_start_app initiator
+		create_virtio_initiator_config
+	fi
+
+	tgt_rpc bdev_malloc_create 8 512 --name MallocBdevForConfigChangeCheck
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
+function json_config_test_fini() {
+	timing_enter "${FUNCNAME[0]}"
+	local ret=0
+
+	if [[ -n "${app_pid[initiator]}" ]]; then
+		if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+			initiator_rpc bdev_virtio_detach_controller VirtioScsiCtrlr0 || :
+			initiator_rpc bdev_virtio_detach_controller VirtioBlk0 || :
+		fi
+		killprocess ${app_pid[initiator]}
+	fi
+
+	if [[ -n "${app_pid[target]}" ]]; then
+
+		# Remove any artifacts we created (files, lvol etc)
+		cleanup_bdev_subsystem_config
+
+		# SPDK_TEST_NVMF: Should we clear something?
+		killprocess ${app_pid[target]}
+	fi
+
+	rm -f "${configs_path[@]}"
+	timing_exit "${FUNCNAME[0]}"
+	return $ret
+}
+
+function json_config_clear() {
+	[[ -n "${#app_socket[$1]}" ]] # Check app type
+	$rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
+
+	# Check if config is clean.
+	# Global params can't be cleared so need to filter them out.
+	local config_filter="$rootdir/test/json_config/config_filter.py"
+
+	# RPC's used to cleanup configuration (e.g. to delete split and nvme bdevs)
+	# complete immediately and they don't wait for the unregister callback.
+	# It causes that configuration may not be fully cleaned at this moment and
+	# we should to wait a while. (See github issue #789)
+	count=100
+	while [ $count -gt 0 ]; do
+		$rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty && break
+		count=$((count - 1))
+		sleep 0.1
+	done
+
+	if [ $count -eq 0 ]; then
+		return 1
+	fi
+}
+
+trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
+echo "INFO: JSON configuration test init"
+json_config_test_init
+
+tgt_rpc save_config > ${configs_path[target]}
+
+echo "INFO: shutting down applications..."
+if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+	initiator_rpc save_config > ${configs_path[initiator]}
+	json_config_clear initiator
+	json_config_test_shutdown_app initiator
+fi
+
+json_config_clear target
+json_config_test_shutdown_app target
+
+echo "INFO: relaunching applications..."
+json_config_test_start_app target --json ${configs_path[target]}
+if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+	json_config_test_start_app initiator --json ${configs_path[initiator]}
+fi
+
+echo "INFO: Checking if target configuration is the same..."
+$rootdir/test/json_config/json_diff.sh <(tgt_rpc save_config) "${configs_path[target]}"
+if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+	echo "INFO: Checking if virtio initiator configuration is the same..."
+	$rootdir/test/json_config/json_diff.sh <(initiator_rpc save_config) "${configs_path[initiator]}"
+fi
+
+echo "INFO: changing configuration and checking if this can be detected..."
+# Self test to check if configuration diff can be detected.
+tgt_rpc bdev_malloc_delete MallocBdevForConfigChangeCheck
+if $rootdir/test/json_config/json_diff.sh <(tgt_rpc save_config) "${configs_path[target]}" > /dev/null; then
+	echo "ERROR: intentional configuration difference not detected!"
+	false
+else
+	echo "INFO: configuration change detected."
+fi
+
+json_config_test_fini
+
+echo "INFO: Success"

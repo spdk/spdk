@@ -1,0 +1,32 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "retry_count": 4,
+            "nvme_adminq_poll_period_us": 100000,
+            "nvme_ioq_poll_period_us": 0,
+            "action_on_timeout": "none"
+          },
+          "method": "bdev_nvme_set_options"
+        }
+      ]
+    },
+    {
+      "subsystem": "iscsi",
+      "config": [
+        {
+          "method": "iscsi_set_options",
+          "params": {
+            "nop_timeout": 30,
+            "node_base": "iqn.2016-06.io.spdk",
+            "max_sessions": 16,
+            "error_recovery_level": 0
+          }
+        }
+      ]
+    }
+  ]
+}

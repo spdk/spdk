@@ -1,0 +1,17 @@
+[global]
+blocksize=4k
+iodepth=512
+iodepth_batch=128
+iodepth_low=256
+ioengine=libaio
+group_reporting
+thread
+numjobs=1
+direct=1
+rw=randwrite
+do_verify=1
+verify=md5
+verify_backlog=1024
+time_based=1
+runtime=10
+verify_state_save=0

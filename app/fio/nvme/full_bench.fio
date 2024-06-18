@@ -1,0 +1,40 @@
+[global]
+thread=1
+group_reporting=1
+direct=1
+verify=0
+norandommap=1
+cpumask=1
+disable_slat=1
+disable_bw=1
+lat_percentiles=1
+clat_percentiles=0
+percentile_list=50:99:99.999
+
+[precondition-sequential]
+stonewall
+description="Sequentially write to the device twice"
+rw=write
+iodepth=128
+bs=128k
+loops=2
+
+[4k_randwrite_qd1]
+stonewall
+description="4KiB Random Write QD=1"
+bs=4k
+rw=randwrite
+iodepth=1
+time_based=1
+ramp_time=60
+runtime=240
+
+[4k_randread_qd1]
+stonewall
+description="4KiB Random Read QD=1"
+bs=4k
+rw=randread
+iodepth=1
+time_based=1
+ramp_time=60
+runtime=240

@@ -1,47 +1,31 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
-#include "json_util.c"
+#include "json/json_util.c"
+
+/* For spdk_json_parse() */
+#include "json/json_parse.c"
 
 #define NUM_SETUP(x) \
 	snprintf(buf, sizeof(buf), "%s", x); \
 	v.type = SPDK_JSON_VAL_NUMBER; \
 	v.start = buf; \
 	v.len = sizeof(x) - 1
+
+#define NUM_UINT16_PASS(s, i) \
+	NUM_SETUP(s); \
+	CU_ASSERT(spdk_json_number_to_uint16(&v, &u16) == 0); \
+	CU_ASSERT(u16 == i)
+
+#define NUM_UINT16_FAIL(s) \
+	NUM_SETUP(s); \
+	CU_ASSERT(spdk_json_number_to_uint16(&v, &u16) != 0)
 
 #define NUM_INT32_PASS(s, i) \
 	NUM_SETUP(s); \
@@ -84,6 +68,30 @@ test_strequal(void)
 	v.start = "test\0hello";
 	v.len = sizeof("test\0hello") - 1;
 	CU_ASSERT(spdk_json_strequal(&v, "test") == false);
+}
+
+static void
+test_num_to_uint16(void)
+{
+	struct spdk_json_val v;
+	char buf[100];
+	uint16_t u16 = 0;
+
+	NUM_SETUP("1234");
+	CU_ASSERT(spdk_json_number_to_uint16(&v, &u16) == 0);
+	CU_ASSERT(u16 == 1234);
+
+	NUM_UINT16_PASS("0", 0);
+	NUM_UINT16_PASS("1234", 1234);
+	NUM_UINT16_PASS("1234.00000", 1234);
+	NUM_UINT16_PASS("1.2e1", 12);
+	NUM_UINT16_PASS("12340e-1", 1234);
+
+	NUM_UINT16_FAIL("1.2");
+	NUM_UINT16_FAIL("-1234");
+	NUM_UINT16_FAIL("1.2E0");
+	NUM_UINT16_FAIL("1.234e1");
+	NUM_UINT16_FAIL("12341e-1");
 }
 
 static void
@@ -164,14 +172,18 @@ test_decode_object(void)
 		{"third", offsetof(struct my_object, my_bool), spdk_json_decode_bool, false},
 		{"fourth", offsetof(struct my_object, my_bool), spdk_json_decode_bool, true},
 	};
-	struct my_object output;
-	output.my_name = NULL;
+	struct my_object output = {
+		.my_name = NULL,
+		.my_int = 0,
+		.my_bool = false,
+	};
 	uint32_t answer = 234;
 	char *answer_str = "HELLO";
 	bool answer_bool = true;
 
 	/* Passing Test: object containing simple types */
 	CU_ASSERT(spdk_json_decode_object(object, decoders, 4, &output) == 0);
+	SPDK_CU_ASSERT_FATAL(output.my_name != NULL);
 	CU_ASSERT(memcmp(output.my_name, answer_str, 6) == 0);
 	CU_ASSERT(output.my_int == answer);
 	CU_ASSERT(output.my_bool == answer_bool);
@@ -209,6 +221,37 @@ test_decode_object(void)
 	CU_ASSERT(spdk_json_decode_object(object, decoders, 3, &output) != 0);
 
 	free(output.my_name);
+}
+
+static void
+test_free_object(void)
+{
+	struct my_object {
+		char *my_name;
+		uint32_t my_int;
+		char *my_other_name;
+		char *empty_string;
+	};
+	struct spdk_json_object_decoder decoders[] = {
+		{"first", offsetof(struct my_object, my_name), spdk_json_decode_string, false},
+		{"second", offsetof(struct my_object, my_int), spdk_json_decode_uint32, false},
+		{"third", offsetof(struct my_object, my_other_name), spdk_json_decode_string, true},
+		{"fourth", offsetof(struct my_object, empty_string), spdk_json_decode_string, false},
+	};
+	struct my_object output = {
+		.my_name = strdup("hello"),
+		.my_int = 3,
+		.my_other_name = strdup("world"),
+		.empty_string = NULL
+	};
+
+	SPDK_CU_ASSERT_FATAL(output.my_name != NULL);
+	SPDK_CU_ASSERT_FATAL(output.my_other_name != NULL);
+
+	spdk_json_free_object(decoders, 4, &output);
+	CU_ASSERT(output.my_name == NULL);
+	CU_ASSERT(output.my_other_name == NULL);
+	CU_ASSERT(output.empty_string == NULL);
 }
 
 static void
@@ -315,7 +358,7 @@ test_decode_int32(void)
 	v.len = 2;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
-	CU_ASSERT(i == 33)
+	CU_ASSERT(i == 33);
 
 	/* correct type and invalid value (float) */
 	v.start = "32.45";
@@ -383,7 +426,7 @@ test_decode_int32(void)
 	v.len = 7;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
-	CU_ASSERT(i == -4)
+	CU_ASSERT(i == -4);
 
 	/* invalid exponent (overflow) */
 	v.start = "-2e32";
@@ -396,13 +439,102 @@ test_decode_int32(void)
 	v.len = 6;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
-	CU_ASSERT(i == 213)
+	CU_ASSERT(i == 213);
 
 	/* invalid exponent with decimal */
 	v.start = "2.134e2";
 	v.len = 7;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+}
+
+static void
+test_decode_uint16(void)
+{
+	struct spdk_json_val v;
+	uint32_t i;
+
+	/* incorrect type */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "Strin";
+	v.len = 5;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* invalid value (float) */
+	v.type = SPDK_JSON_VAL_NUMBER;
+	v.start = "123.4";
+	v.len = 5;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* edge case (0) */
+	v.start = "0";
+	v.len = 1;
+	i = 456;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 0);
+
+	/* invalid value (negative) */
+	v.start = "-1";
+	v.len = 2;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* edge case (maximum) */
+	v.start = "65535";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 65535);
+
+	/* invalid value (overflow) */
+	v.start = "65536";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* valid exponent */
+	v.start = "66E2";
+	v.len = 4;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 6600);
+
+	/* invalid exponent (overflow) */
+	v.start = "66E3";
+	v.len = 4;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* invalid exponent (decimal) */
+	v.start = "65.535E2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* valid exponent with decimal */
+	v.start = "65.53E2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 6553);
+
+	/* invalid negative exponent */
+	v.start = "40e-2";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* invalid negative exponent */
+	v.start = "-40e-1";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* valid negative exponent */
+	v.start = "40e-1";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 4);
 }
 
 static void
@@ -498,7 +630,7 @@ test_decode_uint32(void)
 	v.len = 5;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
-	CU_ASSERT(i == 1)
+	CU_ASSERT(i == 1);
 }
 
 static void
@@ -587,7 +719,7 @@ test_decode_uint64(void)
 	v.len = 6;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
-	CU_ASSERT(i == 4)
+	CU_ASSERT(i == 4);
 }
 
 static void
@@ -637,41 +769,259 @@ test_decode_string(void)
 	free(value);
 }
 
-int main(int argc, char **argv)
+static void
+test_decode_uuid(void)
+{
+	struct spdk_json_val v;
+	struct spdk_uuid expected, uuid = {};
+	const char *uuidstr = "e524acae-8c26-43e4-882a-461b8690583b";
+	const char *invalid = "e524acae-8c26";
+	int rc;
+
+	rc = spdk_uuid_parse(&expected, uuidstr);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	/* Check a valid UUID */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = (void *)uuidstr;
+	v.len = strlen(uuidstr);
+	rc = spdk_json_decode_uuid(&v, &uuid);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(spdk_uuid_compare(&uuid, &expected), 0);
+
+	/* Check empty string as UUID */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "";
+	v.len = 0;
+	rc = spdk_json_decode_uuid(&v, &uuid);
+	CU_ASSERT_EQUAL(rc, -1);
+
+	/* Check non-empty string that's not a UUID */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = (void *)invalid;
+	v.len = strlen(invalid);
+	rc = spdk_json_decode_uuid(&v, &uuid);
+	CU_ASSERT_EQUAL(rc, -1);
+
+	/* Check decoding UUID on a non-string value */
+	v.type = SPDK_JSON_VAL_TRUE;
+	v.start = NULL;
+	v.len = 0;
+	rc = spdk_json_decode_uuid(&v, &uuid);
+	CU_ASSERT_EQUAL(rc, -1);
+}
+
+char ut_json_text[] =
+	"{"
+	"	\"string\": \"Some string data\","
+	"	\"object\": { "
+	"		\"another_string\": \"Yet another string data\","
+	"		\"array name with space\": [1, [], {} ]"
+	"	},"
+	"	\"array\": [ \"Text\", 2, {} ]"
+	"}"
+	;
+
+static void
+test_find(void)
+{
+	struct spdk_json_val *values, *key, *val, *key2, *val2;
+	ssize_t values_cnt;
+	ssize_t rc;
+
+	values_cnt = spdk_json_parse(ut_json_text, strlen(ut_json_text), NULL, 0, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt > 0);
+
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	SPDK_CU_ASSERT_FATAL(values != NULL);
+
+	rc = spdk_json_parse(ut_json_text, strlen(ut_json_text), values, values_cnt, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt == rc);
+
+	key = val = NULL;
+	rc = spdk_json_find(values, "string", &key, &val, SPDK_JSON_VAL_STRING);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(key != NULL && spdk_json_strequal(key, "string") == true);
+	CU_ASSERT(val != NULL && spdk_json_strequal(val, "Some string data") == true);
+
+	key = val = NULL;
+	rc = spdk_json_find(values, "object", &key, &val, SPDK_JSON_VAL_OBJECT_BEGIN);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(key != NULL && spdk_json_strequal(key, "object") == true);
+
+	/* Find key in "object" by passing SPDK_JSON_VAL_ANY to match any type */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "array name with space", &key2, &val2, SPDK_JSON_VAL_ANY);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(key2 != NULL && spdk_json_strequal(key2, "array name with space") == true);
+	CU_ASSERT(val2 != NULL && val2->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	/* Find the "array" key in "object" by passing SPDK_JSON_VAL_ARRAY_BEGIN to match only array */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "array name with space", &key2, &val2, SPDK_JSON_VAL_ARRAY_BEGIN);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(key2 != NULL && spdk_json_strequal(key2, "array name with space") == true);
+	CU_ASSERT(val2 != NULL && val2->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	/* Negative test - key doesn't exist */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "this_key_does_not_exist", &key2, &val2, SPDK_JSON_VAL_ANY);
+	CU_ASSERT(rc == -ENOENT);
+
+	/* Negative test - key type doesn't match */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "another_string", &key2, &val2, SPDK_JSON_VAL_ARRAY_BEGIN);
+	CU_ASSERT(rc == -EDOM);
+
+	free(values);
+}
+
+static void
+test_find_array(void)
+{
+	char array_json_text[] = "[ \"Text\", 2, {} ]";
+	struct spdk_json_val *values, *key;
+	ssize_t values_cnt;
+	ssize_t rc;
+
+	values_cnt = spdk_json_parse(array_json_text, strlen(array_json_text), NULL, 0, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt > 0);
+
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	SPDK_CU_ASSERT_FATAL(values != NULL);
+
+	rc = spdk_json_parse(array_json_text, strlen(array_json_text), values, values_cnt, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt == rc);
+
+	/* spdk_json_find cannot be used on arrays.  The element "Text" does exist in the array,
+	 * but spdk_json_find can only be used for finding keys in an object.  So this
+	 * test should fail.
+	 */
+	key = NULL;
+	rc = spdk_json_find(values, "Text", &key, NULL, SPDK_JSON_VAL_STRING);
+	CU_ASSERT(rc == -EPROTOTYPE);
+
+	free(values);
+}
+
+static void
+test_iterating(void)
+{
+	struct spdk_json_val *values;
+	struct spdk_json_val *string_key;
+	struct spdk_json_val *object_key, *object_val;
+	struct spdk_json_val *array_key, *array_val;
+	struct spdk_json_val *another_string_key;
+	struct spdk_json_val *array_name_with_space_key, *array_name_with_space_val;
+	struct spdk_json_val *it;
+	ssize_t values_cnt;
+	ssize_t rc;
+
+	values_cnt = spdk_json_parse(ut_json_text, strlen(ut_json_text), NULL, 0, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt > 0);
+
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	SPDK_CU_ASSERT_FATAL(values != NULL);
+
+	rc = spdk_json_parse(ut_json_text, strlen(ut_json_text), values, values_cnt, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt == rc);
+
+	/* Iterate over object keys. JSON spec doesn't guarantee order of keys in object but
+	 * SPDK implementation implicitly does.
+	 */
+	string_key = spdk_json_object_first(values);
+	CU_ASSERT(spdk_json_strequal(string_key, "string") == true);
+
+	object_key = spdk_json_next(string_key);
+	object_val = json_value(object_key);
+	CU_ASSERT(spdk_json_strequal(object_key, "object") == true);
+
+	array_key = spdk_json_next(object_key);
+	array_val = json_value(array_key);
+	CU_ASSERT(spdk_json_strequal(array_key, "array") == true);
+
+	/* NULL '}' */
+	CU_ASSERT(spdk_json_next(array_key) == NULL);
+
+	/* Iterate over subobjects */
+	another_string_key = spdk_json_object_first(object_val);
+	CU_ASSERT(spdk_json_strequal(another_string_key, "another_string") == true);
+
+	array_name_with_space_key = spdk_json_next(another_string_key);
+	array_name_with_space_val = json_value(array_name_with_space_key);
+	CU_ASSERT(spdk_json_strequal(array_name_with_space_key, "array name with space") == true);
+
+	CU_ASSERT(spdk_json_next(array_name_with_space_key) == NULL);
+
+	/* Iterate over array in subobject */
+	it = spdk_json_array_first(array_name_with_space_val);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_NUMBER);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_OBJECT_BEGIN);
+
+	it = spdk_json_next(it);
+	CU_ASSERT(it == NULL);
+
+	/* Iterate over array in root object */
+	it = spdk_json_array_first(array_val);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_STRING);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_NUMBER);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_OBJECT_BEGIN);
+
+	/* Array end */
+	it = spdk_json_next(it);
+	CU_ASSERT(it == NULL);
+
+	free(values);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_initialize_registry();
 
 	suite = CU_add_suite("json", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "strequal", test_strequal) == NULL ||
-		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
-		CU_add_test(suite, "num_to_uint64", test_num_to_uint64) == NULL ||
-		CU_add_test(suite, "decode_object", test_decode_object) == NULL ||
-		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
-		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
-		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
-		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
-		CU_add_test(suite, "decode_uint64", test_decode_uint64) == NULL ||
-		CU_add_test(suite, "decode_string", test_decode_string) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_ADD_TEST(suite, test_strequal);
+	CU_ADD_TEST(suite, test_num_to_uint16);
+	CU_ADD_TEST(suite, test_num_to_int32);
+	CU_ADD_TEST(suite, test_num_to_uint64);
+	CU_ADD_TEST(suite, test_decode_object);
+	CU_ADD_TEST(suite, test_decode_array);
+	CU_ADD_TEST(suite, test_decode_bool);
+	CU_ADD_TEST(suite, test_decode_uint16);
+	CU_ADD_TEST(suite, test_decode_int32);
+	CU_ADD_TEST(suite, test_decode_uint32);
+	CU_ADD_TEST(suite, test_decode_uint64);
+	CU_ADD_TEST(suite, test_decode_string);
+	CU_ADD_TEST(suite, test_decode_uuid);
+	CU_ADD_TEST(suite, test_find);
+	CU_ADD_TEST(suite, test_find_array);
+	CU_ADD_TEST(suite, test_iterating);
+	CU_ADD_TEST(suite, test_free_object);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
 
-	CU_basic_run_tests();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	return num_failures;

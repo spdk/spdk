@@ -1,0 +1,9 @@
+{
+  "base_bdev": "Malloc0",
+  "block_size": 512,
+  "cluster_size": 4194304,
+  "free_clusters": 1,
+  "name": "lvs0",
+  "total_data_clusters": 9,
+  "uuid": "$(S)"
+}

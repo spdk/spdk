@@ -1,42 +1,45 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/nvme.h"
+#include "spdk/string.h"
+#include "spdk/thread.h"
 
 static char g_path[256];
+static struct spdk_poller *g_poller;
+/* default sleep time in ms */
+static uint32_t g_sleep_time = 1000;
+static uint32_t g_io_queue_size;
+
+struct ctrlr_entry {
+	struct spdk_nvme_ctrlr *ctrlr;
+	TAILQ_ENTRY(ctrlr_entry) link;
+};
+
+static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
+
+static void
+cleanup(void)
+{
+	struct ctrlr_entry *ctrlr_entry, *tmp;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
+
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp) {
+		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
+		spdk_nvme_cuse_unregister(ctrlr_entry->ctrlr);
+		spdk_nvme_detach_async(ctrlr_entry->ctrlr, &detach_ctx);
+		free(ctrlr_entry);
+	}
+
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
+	}
+}
 
 static void
 usage(char *executable_name)
@@ -46,8 +49,10 @@ usage(char *executable_name)
 	printf(" -i shared memory ID [required]\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -n channel number of memory channels used for DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
+	printf(" -p core    main (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
+	printf(" -t msec    sleep time (ms) between checking for admin completions\n");
+	printf(" -q size    override default io_queue_size when attaching controllers\n");
 	printf(" -H         show this usage\n");
 }
 
@@ -55,6 +60,9 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	if (g_io_queue_size > 0) {
+		opts->io_queue_size = g_io_queue_size;
+	}
 	return true;
 }
 
@@ -62,40 +70,117 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct ctrlr_entry *entry;
+
+	entry = malloc(sizeof(struct ctrlr_entry));
+	if (entry == NULL) {
+		fprintf(stderr, "Malloc error\n");
+		exit(1);
+	}
+
+	entry->ctrlr = ctrlr;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
+	if (spdk_nvme_cuse_register(ctrlr) != 0) {
+		fprintf(stderr, "could not register ctrlr with cuse\n");
+	}
+}
+
+static int
+stub_sleep(void *arg)
+{
+	struct ctrlr_entry *ctrlr_entry, *tmp;
+
+	usleep(g_sleep_time * 1000);
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr_entry->ctrlr);
+	}
+	return 0;
+}
+
+static void
+stub_start(void *arg1)
+{
+	int shm_id = (intptr_t)arg1;
+
+	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", shm_id);
+
+	/* If sentinel file already exists from earlier crashed stub, delete
+	 * it now to avoid mknod() failure after spdk_nvme_probe() completes.
+	 */
+	unlink(g_path);
+
+	spdk_unaffinitize_thread();
+
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
+		exit(1);
+	}
+
+	if (mknod(g_path, S_IFREG, 0) != 0) {
+		fprintf(stderr, "could not create sentinel file %s\n", g_path);
+		exit(1);
+	}
+
+	g_poller = SPDK_POLLER_REGISTER(stub_sleep, NULL, 0);
+}
+
+static void
+stub_shutdown(void)
+{
+	spdk_poller_unregister(&g_poller);
+	unlink(g_path);
+	spdk_app_stop(0);
 }
 
 int
 main(int argc, char **argv)
 {
 	int ch;
-	struct spdk_env_opts opts = {};
+	struct spdk_app_opts opts = {};
+	long int val;
 
 	/* default value in opts structure */
-	spdk_env_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 
 	opts.name = "stub";
+	opts.rpc_addr = NULL;
+	opts.env_context = "--proc-type=primary";
 
-	while ((ch = getopt(argc, argv, "i:m:n:p:s:H")) != -1) {
-		switch (ch) {
-		case 'i':
-			opts.shm_id = atoi(optarg);
-			break;
-		case 'm':
-			opts.core_mask = optarg;
-			break;
-		case 'n':
-			opts.mem_channel = atoi(optarg);
-			break;
-		case 'p':
-			opts.master_core = atoi(optarg);
-			break;
-		case 's':
-			opts.mem_size = atoi(optarg);
-			break;
-		case 'H':
-		default:
+	while ((ch = getopt(argc, argv, "i:m:n:p:q:s:t:H")) != -1) {
+		if (ch == 'm') {
+			opts.reactor_mask = optarg;
+		} else if (ch == '?' || ch == 'H') {
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
+		} else {
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				exit(1);
+			}
+			switch (ch) {
+			case 'i':
+				opts.shm_id = val;
+				break;
+			case 'n':
+				opts.mem_channel = val;
+				break;
+			case 'p':
+				opts.main_core = val;
+				break;
+			case 's':
+				opts.mem_size = val;
+				break;
+			case 't':
+				g_sleep_time = val;
+				break;
+			case 'q':
+				g_io_queue_size = val;
+				break;
+			default:
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 
@@ -105,21 +190,12 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	spdk_env_init(&opts);
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
-		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		exit(1);
-	}
+	opts.shutdown_cb = stub_shutdown;
 
-	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", opts.shm_id);
-	if (mknod(g_path, S_IFREG, 0) != 0) {
-		fprintf(stderr, "could not create sentinel file %s\n", g_path);
-		exit(1);
-	}
+	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id);
 
-	while (1) {
-		sleep(1);
-	}
+	cleanup();
+	spdk_app_fini();
 
-	return 0;
+	return ch;
 }

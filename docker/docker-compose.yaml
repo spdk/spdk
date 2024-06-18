@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2021 Intel Corporation
+#
+
+version: "3.8"
+services:
+  build_base:
+    image: spdk
+    build:
+      context: build_base
+    container_name: build_base
+  storage-target:
+    image: spdk-app
+    build:
+      context: spdk-app
+    container_name: storage-target
+    depends_on:
+      - build_base
+    networks:
+      spdk:
+        ipv4_address: 192.168.42.2
+    volumes:
+      - /dev/hugepages:/dev/hugepages
+      - ./spdk-app/storage-target.conf:/config
+    environment:
+      - SPDK_ARGS=-m 0x2
+    privileged: true
+  proxy-container:
+    image: spdk-app
+    build:
+      context: spdk-app
+    container_name: proxy-container
+    depends_on:
+      - storage-target
+    networks:
+      spdk:
+        ipv4_address: 192.168.42.3
+    volumes:
+      - /dev/hugepages:/dev/hugepages
+      - ./spdk-app/proxy-container.conf:/config
+      - vhost-user:/vhost-user
+    environment:
+      - SPDK_ARGS=-m 0x4 -S /vhost-user
+    privileged: true
+  traffic-generator-virtio:
+    image: traffic-generator
+    build:
+      context: traffic-generator
+    container_name: traffic-generator-virtio
+    depends_on:
+      - proxy-container
+    networks:
+      spdk:
+    volumes:
+      - /dev/hugepages:/dev/hugepages
+      - ./traffic-generator/conf-virtio:/config
+      - vhost-user:/vhost-user
+      - ./traffic-generator/fio-virtio.conf:/fio.conf
+    privileged: true
+  traffic-generator-nvme:
+    image: traffic-generator
+    build:
+      context: traffic-generator
+    container_name: traffic-generator-nvme
+    depends_on:
+      - proxy-container
+    networks:
+      spdk:
+    volumes:
+      - /dev/hugepages:/dev/hugepages
+      - ./traffic-generator/conf-nvme:/config
+      - ./traffic-generator/fio-nvme.conf:/fio.conf
+    privileged: true
+networks:
+  spdk:
+    name: "spdk"
+    ipam:
+      config:
+        - subnet: 192.168.42.0/29
+          gateway: 192.168.42.1
+volumes:
+  vhost-user:

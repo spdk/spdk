@@ -1,0 +1,15 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "accel",
+      "config": [
+        {
+          "method": "accel_set_driver",
+          "params": {
+            "name": "external"
+          }
+        }
+      ]
+    }
+  ]
+}

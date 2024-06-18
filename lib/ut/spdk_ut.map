@@ -1,0 +1,6 @@
+{
+	global:
+	spdk_ut_run_tests;
+
+	local: *;
+};

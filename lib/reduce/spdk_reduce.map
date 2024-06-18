@@ -1,0 +1,16 @@
+{
+	global:
+
+	# public functions
+	spdk_reduce_vol_get_uuid;
+	spdk_reduce_vol_init;
+	spdk_reduce_vol_load;
+	spdk_reduce_vol_unload;
+	spdk_reduce_vol_destroy;
+	spdk_reduce_vol_readv;
+	spdk_reduce_vol_writev;
+	spdk_reduce_vol_get_params;
+	spdk_reduce_vol_print_info;
+
+	local: *;
+};

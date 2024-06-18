@@ -1,0 +1,11 @@
+{
+  "id": 0,
+  "luns": [
+    {
+      "bdev_name": "Malloc2",
+      "id": 0
+    }
+  ],
+  "scsi_dev_num": 0,
+  "target_name": "Target 0"
+}

@@ -1,0 +1,14 @@
+[global]
+ioengine=spdk
+thread=1
+group_reporting=1
+direct=1
+verify=0
+time_based=1
+ramp_time=0
+runtime=2
+iodepth=128
+rw=randrw
+
+[test]
+numjobs=1

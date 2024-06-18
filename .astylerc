@@ -1,5 +1,7 @@
 # Bracket Style
 style=kr # K&R brackets
+j # Add braces to one-line conditional statements
+keep-one-line-blocks # Don't break blocks that are on one line
 
 # Indentation
 indent=force-tab=8 # Use tabs for indentation, spaces for minor alignment

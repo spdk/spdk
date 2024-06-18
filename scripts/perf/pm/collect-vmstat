@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2023 Intel Corporation
+#  All rights reserved.
+
+shopt -s nullglob extglob
+
+pmdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$pmdir/../../../")
+source "$pmdir/common"
+
+help() {
+	cat <<- HELP
+
+		Usage: $0 [-h] [-c count] [-d dir] [-l] [-p prefix] [-r reprint_header_count]
+
+		-h - Print this message.
+		-c - Execute count times. 0 is the default and it means to run
+		     indefinitely.
+		-d - Directory where results should be saved. Default is /tmp.
+		-l - Save output of the script to a log file (dir/${0##*/}.pm.log).
+		-p - Add prefix to saved files.
+		-r - Stat count after which header should be re-printed. Default is 20.
+		-t - How long to wait before each stat dump. Default is 1s.
+
+		When started, ${0##*/} will enter loop to continuosly dump
+		vmstat. Each iteration will be logged to stderr and a log file
+		(dir/${0##*/}.pm.log).
+
+	HELP
+}
+
+get_extra_info() {
+	local match="" data
+
+	case "$PM_OS" in
+		Linux)
+			match+="|MemAvailable"
+			match+="|Shmem"
+			match+="|HugePages_(Total|Free)"
+			match+="|Hugepagesize"
+
+			data=($(grep -E "^($match):" /proc/meminfo | awk '{print $2}'))
+			;&
+		*) data+=("$TEST_TAG") ;;
+	esac
+	echo "${data[*]}"
+}
+
+set_extra_info_header() {
+	local -n header_ref=$1
+	local _header
+
+	# Keep the header ordered as in get_extra_info()
+	case "$PM_OS" in
+		Linux) _header="avail shmem hp_total hp_free hp_size test" ;;
+		FreeBSD) _header="test" ;;
+	esac
+
+	header_ref[0]="${header_ref[0]} ----extra info----"
+	header_ref[1]="${header_ref[1]} $_header"
+}
+
+_vmstat() {
+	local count=$1 interval=$2 reprint_header=${3:-20} _count
+	local vmstat vmstat_cmdline=() _vmstat stat_idx header=()
+
+	[[ $PM_OS == Linux ]] && vmstat_cmdline+=(--timestamp)
+
+	_count=$count
+	while ((stat_idx = stat_idx == reprint_header ? 1 : ++stat_idx, count <= 0 ? 1 : _count--)); do
+		mapfile -t vmstat < <(vmstat "${vmstat_cmdline[@]}")
+		# Enhance output to include stuff we are most interested in
+		vmstat[2]="${vmstat[2]} $(get_extra_info)"
+		if ((stat_idx == 1)); then
+			header=("${vmstat[@]::2}")
+			set_extra_info_header header
+			_vmstat=("${header[@]}" "${vmstat[2]}")
+		else
+			_vmstat=("${vmstat[2]}")
+		fi
+		printf '%s\n' "${_vmstat[@]}"
+		sleep "${interval}"
+	done
+}
+
+cleanup() {
+	rm_pm_pid
+}
+
+count=0
+interval=1
+log_to_file=no
+prefix=""
+reprint_header=20
+
+while getopts c:d:hlp:r:t: opt; do
+	case "$opt" in
+		c) count=$OPTARG ;;
+		d) PM_OUTPUTDIR=$OPTARG ;;
+		h)
+			help
+			exit 0
+			;;
+		l) log_to_file=yes ;;
+		p) prefix=$OPTARG ;;
+		r) reprint_header=$OPTARG ;;
+		t) interval=$OPTARG ;;
+		*) ;;
+	esac
+done
+
+declare -r log_file=${prefix:+${prefix}_}${0##*/}.pm.log
+
+mkdir -p "$PM_OUTPUTDIR"
+if [[ $log_to_file == yes ]]; then
+	printf 'Redirecting to %s\n' "$PM_OUTPUTDIR/$log_file" >&2
+	exec > "$PM_OUTPUTDIR/$log_file" 2>&1
+fi
+
+save_pm_pid
+trap 'cleanup' EXIT
+trap 'retag' USR1
+
+_vmstat "$count" "$interval" "$reprint_header"
