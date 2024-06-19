@@ -6,21 +6,24 @@
 
 import logging
 import argparse
+import os
 import sys
 import shlex
-
-try:
-    from spdk.rpc.client import print_dict, JSONRPCException
-    import spdk.rpc as rpc
-except ImportError:
-    print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
-    print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
-    exit(1)
 
 try:
     from shlex import quote
 except ImportError:
     from pipes import quote
+
+try:
+    sys.path.append(os.path.dirname(__file__) + '/../../../python')
+    from spdk.rpc.client import print_dict, JSONRPCException  # noqa
+    import spdk.rpc as rpc  # noqa
+except ImportError:
+    print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
+    print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
+    exit(1)
+
 
 PATTERN_TYPES_STR = ("read", "write", "randread", "randwrite", "rw", "randrw", "verify", "reset",
                      "unmap", "flush", "write_zeroes")
