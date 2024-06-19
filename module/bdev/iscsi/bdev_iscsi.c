@@ -804,7 +804,7 @@ create_iscsi_lun(struct bdev_iscsi_conn_req *req, uint64_t num_blocks,
 	struct bdev_iscsi_lun *lun;
 	int rc;
 
-	lun = calloc(sizeof(*lun), 1);
+	lun = calloc(1, sizeof(*lun));
 	if (!lun) {
 		SPDK_ERRLOG("Unable to allocate enough memory for iscsi backend\n");
 		return -ENOMEM;
