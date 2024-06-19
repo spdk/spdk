@@ -30,6 +30,17 @@ dumplogs() {
 
 hostrpc() { "$rootdir/scripts/rpc.py" -s "$hostsock" "$@"; }
 
+nvme_connect() {
+	# Force 1 I/O queue to speed up the connection
+	nvme connect -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -n "$subnqn" -i 1 \
+		-q "$hostnqn" --hostid "$NVME_HOSTID" "$@"
+}
+
+bdev_connect() {
+	hostrpc bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -f ipv4 \
+		-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" "$@"
+}
+
 connect_authenticate() {
 	local digest dhgroup key ckey qpairs
 
@@ -37,9 +48,7 @@ connect_authenticate() {
 	ckey=(${ckeys[$3]:+--dhchap-ctrlr-key "ckey$3"})
 
 	rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "$key" "${ckey[@]}"
-	hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-		-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-		--dhchap-key "${key}" "${ckey[@]}"
+	bdev_connect -b "nvme0" --dhchap-key "$key" "${ckey[@]}"
 
 	[[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
 	qpairs=$(rpc_cmd nvmf_subsystem_get_qpairs "$subnqn")
@@ -48,9 +57,7 @@ connect_authenticate() {
 	[[ $(jq -r ".[0].auth.state" <<< "$qpairs") == "completed" ]]
 	hostrpc bdev_nvme_detach_controller nvme0
 
-	# Force 1 I/O queue to speed up the connection
-	nvme connect -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -n "$subnqn" -i 1 \
-		-q "$hostnqn" --hostid "$NVME_HOSTID" --dhchap-secret "$(< "${keys[$3]}")" \
+	nvme_connect --dhchap-secret "$(< "${keys[$3]}")" \
 		${ckeys[$3]:+--dhchap-ctrl-secret "$(< "${ckeys[$3]}")"}
 	nvme disconnect -n "$subnqn"
 	rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
@@ -115,23 +122,17 @@ connect_authenticate "${digests[-1]}" "${dhgroups[-1]}" 0
 
 # Check that mismatched keys result in failed attach
 rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "key1"
-NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key2"
+NOT bdev_connect -b "nvme0" --dhchap-key "key2"
 rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 
 # Check that mismatched controller keys result in failed attach
 rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "key1" --dhchap-ctrlr-key "ckey1"
-NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key1" --dhchap-ctrlr-key "ckey2"
+NOT bdev_connect -b "nvme0" --dhchap-key "key1" --dhchap-ctrlr-key "ckey2"
 rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 
 # Check that a missing controller key results in a failed attach
 rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "key1"
-NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key1" --dhchap-ctrlr-key "ckey1"
+NOT bdev_connect -b "nvme0" --dhchap-key "key1" --dhchap-ctrlr-key "ckey1"
 rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 
 # Limit allowed digests/dhgroups on the target
@@ -155,9 +156,7 @@ connect_authenticate "sha512" "ffdhe8192" 3
 # Check that authentication fails when no common digests are allowed
 rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key key3
 hostrpc bdev_nvme_set_options --dhchap-digests "sha256"
-NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key3"
+NOT bdev_connect -b "nvme0" --dhchap-key "key3"
 
 # Check that authentication fails when no common dhgroups are allowed
 hostrpc bdev_nvme_set_options --dhchap-dhgroups "ffdhe2048" \
@@ -166,9 +165,7 @@ hostrpc bdev_nvme_set_options --dhchap-dhgroups "ffdhe2048" \
 		IFS=,
 		printf "%s" "${digests[*]}"
 	)"
-NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key3"
+NOT bdev_connect -b "nvme0" --dhchap-key "key3"
 
 # Check that the authentication fails when the host wants to authenticate the target (i.e. user set
 # the dhchap_ctrlr_key), but the target doesn't require authentication
@@ -185,13 +182,10 @@ hostrpc bdev_nvme_set_options \
 	)"
 rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn"
-NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key0" --dhchap-ctrlr-key "key1"
+NOT bdev_connect -b "nvme0" --dhchap-key "key0" --dhchap-ctrlr-key "key1"
+
 # But it's fine when the host key is set and the controller key is not
-hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
-	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-	--dhchap-key "key0"
+bdev_connect -b "nvme0" --dhchap-key "key0"
 [[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
 hostrpc bdev_nvme_detach_controller nvme0
 
