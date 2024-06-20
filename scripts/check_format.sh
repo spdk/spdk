@@ -537,13 +537,10 @@ function check_bash_style() {
 	local rc=0 supported_shfmt_version=v3.8.0
 
 	# find compatible shfmt binary
-	shfmt_bins=$(compgen -c | grep '^shfmt' | uniq || true)
-	for bin in $shfmt_bins; do
+	shfmt_bins=($(compgen -c | grep '^shfmt' | uniq || true))
+	for bin in "${shfmt_bins[@]}"; do
 		shfmt_version=$("$bin" --version)
-		if [[ $shfmt_version != "$supported_shfmt_version" ]]; then
-			echo "$bin version $shfmt_version not used (only $supported_shfmt_version is supported)"
-			echo "$supported_shfmt_version can be installed using 'scripts/pkgdep.sh -d'"
-		else
+		if [[ $shfmt_version == "$supported_shfmt_version" ]]; then
 			shfmt=$bin
 			break
 		fi
@@ -602,7 +599,10 @@ function check_bash_style() {
 			fi
 		fi
 	else
-		echo "Supported version of shfmt not detected, Bash style formatting check is skipped"
+		cat <<- MSG
+			Supported version of shfmt not detected${shfmt_bins[*]:+ (only ${shfmt_bins[*]} is available)}.  Bash style
+			formatting check is skipped.  shfmt-$supported_shfmt_version can be installed using 'scripts/pkgdep.sh -d'.
+		MSG
 	fi
 
 	# Cleanup potential .orig files that shfmt creates
