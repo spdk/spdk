@@ -1103,7 +1103,7 @@ function run_test() {
 	fi
 
 	xtrace_disable
-	local test_name="$1" pid
+	local test_name="$1" pid es=0
 	shift
 
 	if [ -n "${test_domain:-}" ]; then
@@ -1120,7 +1120,7 @@ function run_test() {
 	echo "START TEST $test_name"
 	echo "************************************"
 	xtrace_restore
-	time "$@"
+	time "$@" || es=$?
 	xtrace_disable
 	echo "************************************"
 	echo "END TEST $test_name"
@@ -1138,6 +1138,8 @@ function run_test() {
 		echo "$test_domain $test_name" >> $output_dir/test_completions.txt
 	fi
 	xtrace_restore
+
+	return "$es"
 }
 
 function skip_run_test_with_warning() {
