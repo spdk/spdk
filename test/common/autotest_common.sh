@@ -1681,7 +1681,7 @@ set -o errtrace
 shopt -s extdebug
 trap "trap - ERR; print_backtrace >&2" ERR
 
-PS4=' \t $test_domain -- ${BASH_SOURCE#${BASH_SOURCE%/*/*}/}@${LINENO} -- \$ '
+PS4=' \t ${test_domain:-} -- ${BASH_SOURCE#${BASH_SOURCE%/*/*}/}@${LINENO} -- \$ '
 if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces, overriding any tracking information.
 	xtrace_fd
