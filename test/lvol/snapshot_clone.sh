@@ -677,7 +677,7 @@ function test_lvol_set_parent_from_snapshot() {
 	[ "$(jq '.[].driver_specific.lvol.esnap_clone' <<< "$clone_bdev")" = "false" ]
 
 	# Try again with aliases instead uuid
-	rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2 | grep "File exists"
+	NOT rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2
 
 	# Delete lvol2_temp
 	# New state:
@@ -777,7 +777,7 @@ function test_lvol_set_parent_from_esnap() {
 	[ "$(jq '.[].driver_specific.lvol.esnap_clone' <<< "$clone_bdev")" = "false" ]
 
 	# Try again with aliases instead uuid
-	rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2 | grep "File exists"
+	NOT rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2
 
 	# Delete lvol2_temp
 	# New state:
@@ -861,7 +861,7 @@ function test_lvol_set_parent_from_none() {
 	[ "$(jq '.[].driver_specific.lvol.esnap_clone' <<< "$clone_bdev")" = "false" ]
 
 	# Try again with aliases instead uuid
-	rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2 | grep "File exists"
+	NOT rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2
 
 	# Delete lvol2_temp
 	# New state:

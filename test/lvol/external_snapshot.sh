@@ -521,7 +521,7 @@ function test_lvol_set_parent_bdev_from_esnap() {
 	verify_esnap_clone "$lvol_uuid" "$esnap2_uuid"
 
 	# Try again with aliases instead uuid
-	rpc_cmd bdev_lvol_set_parent_bdev lvs_test/lvol esnap2 | grep "File exists"
+	NOT rpc_cmd bdev_lvol_set_parent_bdev lvs_test/lvol esnap2
 
 	# Calculate again md5 of the first 3 clusters and of last 2 clusters of lvol
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd2
@@ -604,7 +604,7 @@ function test_lvol_set_parent_bdev_from_snapshot() {
 	verify_esnap_clone "$lvol_uuid" "$esnap1_uuid"
 
 	# Try again with aliases instead uuid
-	rpc_cmd bdev_lvol_set_parent_bdev lvs_test/lvol esnap1 | grep "File exists"
+	NOT rpc_cmd bdev_lvol_set_parent_bdev lvs_test/lvol esnap1
 
 	# Calculate again md5 of the first 3 clusters and of last 2 clusters of lvol
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd2
@@ -674,7 +674,7 @@ function test_lvol_set_parent_bdev_from_none() {
 	verify_esnap_clone "$lvol_uuid" "$esnap_uuid"
 
 	# Try again with aliases instead uuid
-	rpc_cmd bdev_lvol_set_parent_bdev lvs_test/lvol esnap | grep "File exists"
+	NOT rpc_cmd bdev_lvol_set_parent_bdev lvs_test/lvol esnap
 
 	# Calculate again md5 of the first 3 clusters and of last 2 clusters of lvol
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd2
