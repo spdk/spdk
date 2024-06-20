@@ -1038,7 +1038,7 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	tqpair->qpair.queue_depth++;
-	spdk_trace_record(TRACE_NVME_TCP_SUBMIT, qpair->id, 0, (uintptr_t)req, req->cb_arg,
+	spdk_trace_record(TRACE_NVME_TCP_SUBMIT, qpair->id, 0, (uintptr_t)tcp_req->pdu, req->cb_arg,
 			  (uint32_t)req->cmd.cid, (uint32_t)req->cmd.opc,
 			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12, tqpair->qpair.queue_depth);
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
@@ -1088,7 +1088,7 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	}
 
 	tqpair->qpair.queue_depth--;
-	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)req, req->cb_arg,
+	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)tcp_req->pdu, req->cb_arg,
 			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw, tqpair->qpair.queue_depth);
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
@@ -3075,4 +3075,8 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 	spdk_trace_register_object(OBJECT_NVME_TCP_REQ, 'p');
 	spdk_trace_register_owner_type(OWNER_TYPE_NVME_TCP_QP, 'q');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+
+	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_QUEUE, OBJECT_NVME_TCP_REQ, 0);
+	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_PEND, OBJECT_NVME_TCP_REQ, 0);
+	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_COMPLETE, OBJECT_NVME_TCP_REQ, 0);
 }
