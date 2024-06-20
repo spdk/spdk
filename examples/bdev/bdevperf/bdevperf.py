@@ -97,6 +97,8 @@ if __name__ == "__main__":
             call_rpc_func(args)
 
     args = parser.parse_args()
+    if args.time_in_sec is not None:
+        args.timeout = max(float(args.time_in_sec + 5), args.timeout)
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
         call_rpc_func(args)
