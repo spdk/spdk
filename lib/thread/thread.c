@@ -490,14 +490,18 @@ struct spdk_thread *
 spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask)
 {
 	struct spdk_thread *thread, *null_thread;
+	size_t size = SPDK_ALIGN_CEIL(sizeof(*thread) + g_ctx_sz, SPDK_CACHE_LINE_SIZE);
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
 	int rc = 0, i;
 
-	thread = calloc(1, sizeof(*thread) + g_ctx_sz);
-	if (!thread) {
+	/* Since this spdk_thread object will be used by another core, ensure that it won't share a
+	 * cache line with any other object allocated on this core */
+	rc = posix_memalign((void **)&thread, SPDK_CACHE_LINE_SIZE, size);
+	if (rc != 0) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
 		return NULL;
 	}
+	memset(thread, 0, size);
 
 	if (cpumask) {
 		spdk_cpuset_copy(&thread->cpumask, cpumask);
