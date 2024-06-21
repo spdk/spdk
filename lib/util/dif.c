@@ -912,12 +912,12 @@ static int
 dif_verify(struct _dif_sgl *sgl, uint32_t num_blocks,
 	   const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 	int rc;
 	uint8_t *buf;
 	uint64_t guard = 0;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		_dif_sgl_get_buf(sgl, &buf, NULL);
 
 		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
@@ -930,10 +930,33 @@ dif_verify(struct _dif_sgl *sgl, uint32_t num_blocks,
 		}
 
 		_dif_sgl_advance(sgl, ctx->block_size);
-		offset_blocks++;
 	}
 
 	return 0;
+}
+
+static void
+dif_load_split(struct _dif_sgl *sgl, struct spdk_dif *dif,
+	       const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset = 0, rest_md_len, buf_len;
+	uint8_t *buf;
+
+	rest_md_len = ctx->block_size - ctx->guard_interval;
+
+	while (offset < rest_md_len) {
+		_dif_sgl_get_buf(sgl, &buf, &buf_len);
+
+		if (offset < _dif_size(ctx->dif_pi_format)) {
+			buf_len = spdk_min(buf_len, _dif_size(ctx->dif_pi_format) - offset);
+			memcpy((uint8_t *)dif + offset, buf, buf_len);
+		} else {
+			buf_len = spdk_min(buf_len, rest_md_len - offset);
+		}
+
+		_dif_sgl_advance(sgl, buf_len);
+		offset += buf_len;
+	}
 }
 
 static int
@@ -941,9 +964,7 @@ _dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_
 		  uint64_t *_guard, uint32_t offset_blocks,
 		  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
-	uint32_t offset_in_dif, buf_len;
-	uint8_t *buf;
-	uint64_t guard;
+	uint64_t guard = *_guard;
 	struct spdk_dif dif = {};
 	int rc;
 
@@ -952,44 +973,14 @@ _dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_
 	assert(offset_in_block + data_len < ctx->guard_interval ||
 	       offset_in_block + data_len == ctx->block_size);
 
-	guard = *_guard;
+	guard = dif_generate_guard_split(guard, sgl, offset_in_block, data_len, ctx);
 
-	/* Compute CRC over split logical block data. */
-	while (data_len != 0 && offset_in_block < ctx->guard_interval) {
-		_dif_sgl_get_buf(sgl, &buf, &buf_len);
-		buf_len = spdk_min(buf_len, data_len);
-		buf_len = spdk_min(buf_len, ctx->guard_interval - offset_in_block);
-
-		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-			guard = _dif_generate_guard(guard, buf, buf_len, ctx->dif_pi_format);
-		}
-
-		_dif_sgl_advance(sgl, buf_len);
-		offset_in_block += buf_len;
-		data_len -= buf_len;
-	}
-
-	if (offset_in_block < ctx->guard_interval) {
+	if (offset_in_block + data_len < ctx->guard_interval) {
 		*_guard = guard;
 		return 0;
 	}
 
-	/* Copy the split DIF field to the temporary DIF buffer, and then
-	 * skip metadata field after DIF field (if any). */
-	while (offset_in_block < ctx->block_size) {
-		_dif_sgl_get_buf(sgl, &buf, &buf_len);
-
-		if (offset_in_block < ctx->guard_interval + _dif_size(ctx->dif_pi_format)) {
-			offset_in_dif = offset_in_block - ctx->guard_interval;
-			buf_len = spdk_min(buf_len, _dif_size(ctx->dif_pi_format) - offset_in_dif);
-
-			memcpy((uint8_t *)&dif + offset_in_dif, buf, buf_len);
-		} else {
-			buf_len = spdk_min(buf_len, ctx->block_size - offset_in_block);
-		}
-		_dif_sgl_advance(sgl, buf_len);
-		offset_in_block += buf_len;
-	}
+	dif_load_split(sgl, &dif, ctx);
 
 	rc = _dif_verify(&dif, guard, offset_blocks, ctx, err_blk);
 	if (rc != 0) {
