@@ -184,15 +184,22 @@ _build_native_dpdk() {
 		-Dc_link_args="$dpdk_ldflags" -Dc_args="$dpdk_cflags" \
 		-Dmachine=native -Denable_drivers=$(printf "%s," "${DPDK_DRIVERS[@]}")
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
-	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
 
 	if [[ $(uname -s) == "FreeBSD" ]]; then
+		# Under FreeBSD, install requires root privileges since it also attempts to install
+		# requested drivers under /boot.
+		sudo -E ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
+		# Sanitize ownership of the target directory post sudo above
+		sudo chown -R "$USER" "$external_dpdk_base_dir"
 		# Make sure kernel modules are available for freebsd_update_contigmem_mod() to fetch
 		mapfile -t drivers < <(find "$external_dpdk_base_dir/build-tmp" -name '*.ko')
 		if ((${#drivers[@]} > 0)); then
 			mkdir -p "$external_dpdk_dir/kmod"
 			cp -f "${drivers[@]}" "$external_dpdk_dir/kmod/"
 		fi
+	else
+		ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
+
 	fi
 
 	# Save this path. In tests are run using autorun.sh then autotest.sh
