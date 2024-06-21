@@ -1,5 +1,9 @@
 # Performance Reports {#performance_reports}
 
+## Release 24.05
+
+- [SPDK 24.05 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2405.pdf)
+
 ## Release 24.01
 
 - [SPDK 24.01 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2401.pdf)
