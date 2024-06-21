@@ -2527,13 +2527,11 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_SHMEM_GROUP_ID:
 		case PERF_MAX_COMPLETIONS_PER_POLL:
 		case PERF_IO_QUEUES_PER_NS:
-		case PERF_IO_DEPTH:
 		case PERF_KEEPALIVE:
 		case PERF_TIME:
 		case PERF_RW_MIXREAD:
 		case PERF_NUM_UNUSED_IO_QPAIRS:
 		case PERF_CONTINUE_ON_ERROR:
-		case PERF_IO_QUEUE_SIZE:
 		case PERF_RDMA_SRQ_SIZE:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
@@ -2553,9 +2551,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_IO_QUEUES_PER_NS:
 				g_nr_io_queues_per_ns = val;
 				break;
-			case PERF_IO_DEPTH:
-				g_queue_depth = val;
-				break;
 			case PERF_KEEPALIVE:
 				g_keep_alive_timeout_in_ms = val;
 				break;
@@ -2573,9 +2568,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_NUM_UNUSED_IO_QPAIRS:
 				g_nr_unused_io_queues = val;
 				break;
-			case PERF_IO_QUEUE_SIZE:
-				g_io_queue_size = val;
-				break;
 			case PERF_RDMA_SRQ_SIZE:
 				g_rdma_srq_size = val;
 				break;
@@ -2587,6 +2579,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_BUFFER_ALIGNMENT:
 		case PERF_HUGEMEM_SIZE:
 		case PERF_NUMBER_IOS:
+		case PERF_IO_DEPTH:
+		case PERF_IO_QUEUE_SIZE:
 			rc = spdk_parse_capacity(optarg, &val_u64, NULL);
 			if (rc != 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -2601,6 +2595,12 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				break;
 			case PERF_ZEROCOPY_THRESHOLD:
 				g_sock_zcopy_threshold = (uint32_t)val_u64;
+				break;
+			case PERF_IO_DEPTH:
+				g_queue_depth = (uint32_t)val_u64;
+				break;
+			case PERF_IO_QUEUE_SIZE:
+				g_io_queue_size = (uint32_t)val_u64;
 				break;
 			case PERF_BUFFER_ALIGNMENT:
 				g_io_align = (uint32_t)val_u64;
