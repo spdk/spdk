@@ -1230,6 +1230,42 @@ dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 	}
 }
 
+static void
+_dif_disable_insert_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+			 const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset = 0, src_len, dst_len, buf_len, data_block_size;
+	uint8_t *src, *dst;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	while (offset < data_block_size) {
+		_dif_sgl_get_buf(src_sgl, &src, &src_len);
+		_dif_sgl_get_buf(dst_sgl, &dst, &dst_len);
+		buf_len = spdk_min(src_len, dst_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset);
+
+		memcpy(dst, src, buf_len);
+
+		_dif_sgl_advance(src_sgl, buf_len);
+		_dif_sgl_advance(dst_sgl, buf_len);
+		offset += buf_len;
+	}
+
+	_dif_sgl_advance(dst_sgl, ctx->md_size);
+}
+
+static void
+dif_disable_insert_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+			uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_blocks;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		_dif_disable_insert_copy(src_sgl, dst_sgl, ctx);
+	}
+}
+
 int
 spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 		       int bounce_iovcnt, uint32_t num_blocks,
@@ -1250,6 +1286,7 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs
 	}
 
 	if (_dif_is_disabled(ctx->dif_type)) {
+		dif_disable_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
 		return 0;
 	}
 
@@ -1360,6 +1397,42 @@ dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 	return 0;
 }
 
+static void
+_dif_disable_strip_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+			const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset = 0, src_len, dst_len, buf_len, data_block_size;
+	uint8_t *src, *dst;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	while (offset < data_block_size) {
+		_dif_sgl_get_buf(src_sgl, &src, &src_len);
+		_dif_sgl_get_buf(dst_sgl, &dst, &dst_len);
+		buf_len = spdk_min(src_len, dst_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset);
+
+		memcpy(dst, src, buf_len);
+
+		_dif_sgl_advance(src_sgl, buf_len);
+		_dif_sgl_advance(dst_sgl, buf_len);
+		offset += buf_len;
+	}
+
+	_dif_sgl_advance(src_sgl, ctx->md_size);
+}
+
+static void
+dif_disable_strip_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		       uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_blocks;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		_dif_disable_strip_copy(src_sgl, dst_sgl, ctx);
+	}
+}
+
 int
 spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 		     int bounce_iovcnt, uint32_t num_blocks,
@@ -1381,6 +1454,7 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 	}
 
 	if (_dif_is_disabled(ctx->dif_type)) {
+		dif_disable_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
 		return 0;
 	}
 
