@@ -7708,13 +7708,6 @@ bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->internal.pending_locked_ranges);
 	TAILQ_INIT(&bdev->aliases);
 
-	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
-	if (ret != 0) {
-		bdev_free_io_stat(bdev->internal.stat);
-		free(bdev_name);
-		return ret;
-	}
-
 	/* UUID may be specified by the user or defined by bdev itself.
 	 * Otherwise it will be generated here, so this field will never be empty. */
 	if (spdk_uuid_is_null(&bdev->uuid)) {
@@ -7727,7 +7720,6 @@ bdev_register(struct spdk_bdev *bdev)
 		ret = spdk_bdev_alias_add(bdev, uuid);
 		if (ret != 0) {
 			SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
-			bdev_name_del(&bdev->internal.bdev_name);
 			bdev_free_io_stat(bdev->internal.stat);
 			free(bdev_name);
 			return ret;
@@ -7768,14 +7760,32 @@ bdev_register(struct spdk_bdev *bdev)
 	bdev->internal.new_period = 0;
 	bdev->internal.trace_id = spdk_trace_register_owner(OWNER_TYPE_BDEV, bdev_name);
 
+	/*
+	 * Initialize spinlock before registering IO device because spinlock is used in
+	 * bdev_channel_create
+	 */
+	spdk_spin_init(&bdev->internal.spinlock);
+
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				bdev_channel_create, bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel),
 				bdev_name);
 
-	free(bdev_name);
+	/*
+	 * Register bdev name only after the bdev object is ready.
+	 * After bdev_name_add returns, it is possible for oter threads to start using the bdev,
+	 * create IO channels...
+	 */
+	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
+	if (ret != 0) {
+		spdk_io_device_unregister(__bdev_to_io_dev(bdev), NULL);
+		bdev_free_io_stat(bdev->internal.stat);
+		spdk_spin_destroy(&bdev->internal.spinlock);
+		free(bdev_name);
+		return ret;
+	}
 
-	spdk_spin_init(&bdev->internal.spinlock);
+	free(bdev_name);
 
 	SPDK_DEBUGLOG(bdev, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
