@@ -344,6 +344,44 @@ _dif_generate_guard_copy(uint64_t guard_seed, void *dst, void *src, size_t buf_l
 	return guard;
 }
 
+static uint64_t
+_dif_generate_guard_copy_split_src(uint64_t guard, uint8_t *dst,
+				   struct _dif_sgl *src_sgl, uint32_t data_len,
+				   enum spdk_dif_pi_format dif_pi_format)
+{
+	uint32_t offset = 0, src_len;
+	uint8_t *src;
+
+	while (offset < data_len) {
+		_dif_sgl_get_buf(src_sgl, &src, &src_len);
+		src_len = spdk_min(src_len, data_len - offset);
+
+		guard = _dif_generate_guard_copy(guard, dst + offset, src, src_len, dif_pi_format);
+
+		_dif_sgl_advance(src_sgl, src_len);
+		offset += src_len;
+	}
+
+	return guard;
+}
+
+static void
+_data_copy_split_src(uint8_t *dst, struct _dif_sgl *src_sgl, uint32_t data_len)
+{
+	uint32_t offset = 0, src_len;
+	uint8_t *src;
+
+	while (offset < data_len) {
+		_dif_sgl_get_buf(src_sgl, &src, &src_len);
+		src_len = spdk_min(src_len, data_len - offset);
+
+		memcpy(dst + offset, src, src_len);
+
+		_dif_sgl_advance(src_sgl, src_len);
+		offset += src_len;
+	}
+}
+
 static inline uint8_t
 _dif_apptag_offset(enum spdk_dif_pi_format dif_pi_format)
 {
@@ -1128,34 +1166,41 @@ spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 }
 
 static void
-dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		  uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+_dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		   uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_blocks = 0, data_block_size;
+	uint32_t data_block_size;
 	uint8_t *src, *dst;
-	uint64_t guard;
+	uint64_t guard = 0;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	while (offset_blocks < num_blocks) {
-		_dif_sgl_get_buf(src_sgl, &src, NULL);
-		_dif_sgl_get_buf(dst_sgl, &dst, NULL);
+	_dif_sgl_get_buf(src_sgl, &src, NULL);
+	_dif_sgl_get_buf(dst_sgl, &dst, NULL);
 
-		guard = 0;
-		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-			guard = _dif_generate_guard_copy(ctx->guard_seed, dst, src, data_block_size,
-							 ctx->dif_pi_format);
-			guard = _dif_generate_guard(guard, dst + data_block_size,
-						    ctx->guard_interval - data_block_size, ctx->dif_pi_format);
-		} else {
-			memcpy(dst, src, data_block_size);
-		}
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = _dif_generate_guard_copy(ctx->guard_seed, dst, src, data_block_size,
+						 ctx->dif_pi_format);
+		guard = _dif_generate_guard(guard, dst + data_block_size,
+					    ctx->guard_interval - data_block_size, ctx->dif_pi_format);
+	} else {
+		memcpy(dst, src, data_block_size);
+	}
 
-		_dif_generate(dst + ctx->guard_interval, guard, offset_blocks, ctx);
+	_dif_generate(dst + ctx->guard_interval, guard, offset_blocks, ctx);
 
-		_dif_sgl_advance(src_sgl, data_block_size);
-		_dif_sgl_advance(dst_sgl, ctx->block_size);
-		offset_blocks++;
+	_dif_sgl_advance(src_sgl, data_block_size);
+	_dif_sgl_advance(dst_sgl, ctx->block_size);
+}
+
+static void
+dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		  uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_blocks;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		_dif_generate_copy(src_sgl, dst_sgl, offset_blocks, ctx);
 	}
 }
 
@@ -1163,8 +1208,8 @@ static void
 _dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 			 uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_in_block, src_len, data_block_size;
-	uint8_t *src, *dst;
+	uint32_t data_block_size;
+	uint8_t *dst;
 	uint64_t guard = 0;
 
 	_dif_sgl_get_buf(dst_sgl, &dst, NULL);
@@ -1172,31 +1217,12 @@ _dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 	data_block_size = ctx->block_size - ctx->md_size;
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		guard = ctx->guard_seed;
-	}
-	offset_in_block = 0;
-
-	while (offset_in_block < data_block_size) {
-		/* Compute CRC over split logical block data and copy
-		 * data to bounce buffer.
-		 */
-		_dif_sgl_get_buf(src_sgl, &src, &src_len);
-		src_len = spdk_min(src_len, data_block_size - offset_in_block);
-
-		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-			guard = _dif_generate_guard_copy(guard, dst + offset_in_block,
-							 src, src_len, ctx->dif_pi_format);
-		} else {
-			memcpy(dst + offset_in_block, src, src_len);
-		}
-
-		_dif_sgl_advance(src_sgl, src_len);
-		offset_in_block += src_len;
-	}
-
-	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = _dif_generate_guard_copy_split_src(ctx->guard_seed, dst, src_sgl,
+				data_block_size, ctx->dif_pi_format);
 		guard = _dif_generate_guard(guard, dst + data_block_size,
 					    ctx->guard_interval - data_block_size, ctx->dif_pi_format);
+	} else {
+		_data_copy_split_src(dst, src_sgl, data_block_size);
 	}
 
 	_dif_sgl_advance(dst_sgl, ctx->block_size);
