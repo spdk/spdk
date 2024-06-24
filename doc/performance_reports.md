@@ -3,6 +3,8 @@
 ## Release 24.05
 
 - [SPDK 24.05 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2405.pdf)
+- [SPDK 24.05 NVMe-oF RDMA Performance Report (Mellanox ConnectX-5)](https://ci.spdk.io/download/performance-reports/SPDK_rdma_mlx_perf_report_2405.pdf)
+- [SPDK 24.05 NVMe-oF RDMA Performance Report (Intel E810-CQDA2 iWARP)](https://ci.spdk.io/download/performance-reports/SPDK_rdma_cvl_iwarp_perf_report_2405.pdf)
 
 ## Release 24.01
 
