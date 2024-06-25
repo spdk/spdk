@@ -70,6 +70,7 @@ reload_intel_qat
 _qat_pci_bdfs=(
 	/sys/bus/pci/drivers/c6xx/0000*
 	/sys/bus/pci/drivers/dh895xcc/0000*
+	/sys/bus/pci/drivers/4xxx/0000*
 )
 
 qat_pci_bdfs=("${_qat_pci_bdfs[@]#*drivers/}")
