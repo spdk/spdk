@@ -224,6 +224,10 @@ int spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 /**
  * Copy data and generate DIF for extended LBA payload.
  *
+ * NOTE: If PRACT is set in the DIF context, this function simulates the NVMe PRACT feature.
+ * If metadata size is larger than DIF size, not only bounce buffer but also source buffer
+ * should be extended LBA payload.
+
  * \param iovs iovec array describing the LBA payload.
  * \param iovcnt Number of elements in the iovec array.
  * \param bounce_iovs A contiguous buffer forming extended LBA payload.
@@ -239,6 +243,10 @@ int spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_
 
 /**
  * Verify DIF and copy data for extended LBA payload.
+ *
+ * NOTE: If PRACT is set in the DIF context, this function simulates the NVMe PRACT feature.
+ * If metadata size is larger than DIF size, not only bounce buffer but also destination buffer
+ * should be extended LBA payload.
  *
  * \param iovs iovec array describing the LBA payload.
  * \param iovcnt Number of elements in the iovec array.
