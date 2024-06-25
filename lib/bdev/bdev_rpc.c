@@ -740,13 +740,6 @@ struct rpc_bdev_get_bdevs {
 	uint64_t	timeout;
 };
 
-struct rpc_bdev_get_bdevs_ctx {
-	struct rpc_bdev_get_bdevs	rpc;
-	struct spdk_jsonrpc_request	*request;
-	struct spdk_poller		*poller;
-	uint64_t			timeout_ticks;
-};
-
 static void
 free_rpc_bdev_get_bdevs(struct rpc_bdev_get_bdevs *r)
 {
