@@ -1603,6 +1603,15 @@ bdevperf_test(void)
 {
 	struct bdevperf_job *job;
 
+	if (TAILQ_EMPTY(&g_bdevperf.jobs)) {
+		if (g_request) {
+			spdk_jsonrpc_send_error_response_fmt(g_request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "No jobs defined or bdevs created");
+			g_request = NULL;
+		}
+		return;
+	}
+
 	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / (uint64_t)SPDK_SEC_TO_USEC);
 	fflush(stdout);
 
