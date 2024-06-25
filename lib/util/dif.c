@@ -1266,38 +1266,46 @@ dif_disable_insert_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 	}
 }
 
+static int
+_spdk_dif_insert_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	if (!_dif_sgl_is_valid(src_sgl, data_block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(dst_sgl, ctx->block_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec arrays are not valid.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		dif_disable_insert_copy(src_sgl, dst_sgl, num_blocks, ctx);
+		return 0;
+	}
+
+	if (_dif_sgl_is_bytes_multiple(src_sgl, data_block_size) &&
+	    _dif_sgl_is_bytes_multiple(dst_sgl, ctx->block_size)) {
+		dif_insert_copy(src_sgl, dst_sgl, num_blocks, ctx);
+	} else {
+		dif_insert_copy_split(src_sgl, dst_sgl, num_blocks, ctx);
+	}
+
+	return 0;
+}
+
 int
 spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 		       int bounce_iovcnt, uint32_t num_blocks,
 		       const struct spdk_dif_ctx *ctx)
 {
 	struct _dif_sgl src_sgl, dst_sgl;
-	uint32_t data_block_size;
 
 	_dif_sgl_init(&src_sgl, iovs, iovcnt);
 	_dif_sgl_init(&dst_sgl, bounce_iovs, bounce_iovcnt);
 
-	data_block_size = ctx->block_size - ctx->md_size;
-
-	if (!_dif_sgl_is_valid(&src_sgl, data_block_size * num_blocks) ||
-	    !_dif_sgl_is_valid(&dst_sgl, ctx->block_size * num_blocks)) {
-		SPDK_ERRLOG("Size of iovec arrays are not valid.\n");
-		return -EINVAL;
-	}
-
-	if (_dif_is_disabled(ctx->dif_type)) {
-		dif_disable_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
-		return 0;
-	}
-
-	if (_dif_sgl_is_bytes_multiple(&src_sgl, data_block_size) &&
-	    _dif_sgl_is_bytes_multiple(&dst_sgl, ctx->block_size)) {
-		dif_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
-	} else {
-		dif_insert_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx);
-	}
-
-	return 0;
+	return _spdk_dif_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
 }
 
 static int
@@ -1433,6 +1441,34 @@ dif_disable_strip_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 	}
 }
 
+static int
+_spdk_dif_strip_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		     struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	if (!_dif_sgl_is_valid(dst_sgl, data_block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(src_sgl, ctx->block_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec arrays are not valid\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		dif_disable_strip_copy(src_sgl, dst_sgl, num_blocks, ctx);
+		return 0;
+	}
+
+	if (_dif_sgl_is_bytes_multiple(dst_sgl, data_block_size) &&
+	    _dif_sgl_is_bytes_multiple(src_sgl, ctx->block_size)) {
+		return dif_strip_copy(src_sgl, dst_sgl, num_blocks, ctx, err_blk);
+	} else {
+		return dif_strip_copy_split(src_sgl, dst_sgl, num_blocks, ctx, err_blk);
+	}
+}
+
 int
 spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 		     int bounce_iovcnt, uint32_t num_blocks,
@@ -1440,30 +1476,11 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 		     struct spdk_dif_error *err_blk)
 {
 	struct _dif_sgl src_sgl, dst_sgl;
-	uint32_t data_block_size;
 
 	_dif_sgl_init(&src_sgl, bounce_iovs, bounce_iovcnt);
 	_dif_sgl_init(&dst_sgl, iovs, iovcnt);
 
-	data_block_size = ctx->block_size - ctx->md_size;
-
-	if (!_dif_sgl_is_valid(&dst_sgl, data_block_size * num_blocks) ||
-	    !_dif_sgl_is_valid(&src_sgl, ctx->block_size * num_blocks)) {
-		SPDK_ERRLOG("Size of iovec arrays are not valid\n");
-		return -EINVAL;
-	}
-
-	if (_dif_is_disabled(ctx->dif_type)) {
-		dif_disable_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
-		return 0;
-	}
-
-	if (_dif_sgl_is_bytes_multiple(&dst_sgl, data_block_size) &&
-	    _dif_sgl_is_bytes_multiple(&src_sgl, ctx->block_size)) {
-		return dif_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
-	} else {
-		return dif_strip_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
-	}
+	return _spdk_dif_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
 }
 
 static void
