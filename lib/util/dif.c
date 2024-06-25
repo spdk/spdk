@@ -1156,8 +1156,8 @@ spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 }
 
 static void
-_dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		   uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+_dif_insert_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		 uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size;
 	uint8_t *src, *dst;
@@ -1184,19 +1184,19 @@ _dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 static void
-dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		  uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+dif_insert_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		_dif_generate_copy(src_sgl, dst_sgl, offset_blocks, ctx);
+		_dif_insert_copy(src_sgl, dst_sgl, offset_blocks, ctx);
 	}
 }
 
 static void
-_dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-			 uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+_dif_insert_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		       uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size;
 	uint64_t guard = 0;
@@ -1220,13 +1220,13 @@ _dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 static void
-dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-			uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+dif_insert_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		_dif_generate_copy_split(src_sgl, dst_sgl, offset_blocks, ctx);
+		_dif_insert_copy_split(src_sgl, dst_sgl, offset_blocks, ctx);
 	}
 }
 
@@ -1292,18 +1292,18 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs
 
 	if (_dif_sgl_is_bytes_multiple(&src_sgl, data_block_size) &&
 	    _dif_sgl_is_bytes_multiple(&dst_sgl, ctx->block_size)) {
-		dif_generate_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
+		dif_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
 	} else {
-		dif_generate_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx);
+		dif_insert_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx);
 	}
 
 	return 0;
 }
 
 static int
-_dif_verify_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		 uint32_t offset_blocks, const struct spdk_dif_ctx *ctx,
-		 struct spdk_dif_error *err_blk)
+_dif_strip_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		uint32_t offset_blocks, const struct spdk_dif_ctx *ctx,
+		struct spdk_dif_error *err_blk)
 {
 	uint32_t data_block_size;
 	uint8_t *src, *dst;
@@ -1336,15 +1336,15 @@ _dif_verify_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 static int
-dif_verify_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
-		struct spdk_dif_error *err_blk)
+dif_strip_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+	       uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+	       struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_blocks;
 	int rc;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		rc = _dif_verify_copy(src_sgl, dst_sgl, offset_blocks, ctx, err_blk);
+		rc = _dif_strip_copy(src_sgl, dst_sgl, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
@@ -1354,9 +1354,9 @@ dif_verify_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 static int
-_dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		       uint32_t offset_blocks, const struct spdk_dif_ctx *ctx,
-		       struct spdk_dif_error *err_blk)
+_dif_strip_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		      uint32_t offset_blocks, const struct spdk_dif_ctx *ctx,
+		      struct spdk_dif_error *err_blk)
 {
 	uint32_t data_block_size;
 	uint64_t guard = 0;
@@ -1380,15 +1380,15 @@ _dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 static int
-dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
-		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
-		      struct spdk_dif_error *err_blk)
+dif_strip_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
+		     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		     struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_blocks;
 	int rc;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		rc = _dif_verify_copy_split(src_sgl, dst_sgl, offset_blocks, ctx, err_blk);
+		rc = _dif_strip_copy_split(src_sgl, dst_sgl, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
@@ -1460,9 +1460,9 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 
 	if (_dif_sgl_is_bytes_multiple(&dst_sgl, data_block_size) &&
 	    _dif_sgl_is_bytes_multiple(&src_sgl, ctx->block_size)) {
-		return dif_verify_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
+		return dif_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
 	} else {
-		return dif_verify_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
+		return dif_strip_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
 	}
 }
 
