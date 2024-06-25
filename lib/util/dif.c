@@ -1305,7 +1305,12 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs
 	_dif_sgl_init(&src_sgl, iovs, iovcnt);
 	_dif_sgl_init(&dst_sgl, bounce_iovs, bounce_iovcnt);
 
-	return _spdk_dif_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
+	if (!(ctx->dif_flags & SPDK_DIF_FLAGS_NVME_PRACT) ||
+	    ctx->md_size == _dif_size(ctx->dif_pi_format)) {
+		return _spdk_dif_insert_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
+	} else {
+		return -ENOTSUP;
+	}
 }
 
 static int
@@ -1480,7 +1485,12 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
 	_dif_sgl_init(&src_sgl, bounce_iovs, bounce_iovcnt);
 	_dif_sgl_init(&dst_sgl, iovs, iovcnt);
 
-	return _spdk_dif_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
+	if (!(ctx->dif_flags & SPDK_DIF_FLAGS_NVME_PRACT) ||
+	    ctx->md_size == _dif_size(ctx->dif_pi_format)) {
+		return _spdk_dif_strip_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
+	} else {
+		return -ENOTSUP;
+	}
 }
 
 static void
