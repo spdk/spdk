@@ -12,6 +12,7 @@
 #include "spdk_internal/event.h"
 
 #include <rte_power.h>
+#include <rte_version.h>
 
 static uint32_t
 _get_core_avail_freqs(uint32_t lcore_id, uint32_t *freqs, uint32_t num)
@@ -106,8 +107,10 @@ _dump_info_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "env", "intel-pstate");
 	} else if (env == PM_ENV_CPPC_CPUFREQ) {
 		spdk_json_write_named_string(w, "env", "cppc-cpufreq");
+#if RTE_VERSION >= RTE_VERSION_NUM(23, 11, 0, 0)
 	} else if (env == PM_ENV_AMD_PSTATE_CPUFREQ) {
 		spdk_json_write_named_string(w, "env", "amd-pstate");
+#endif
 	} else {
 		spdk_json_write_named_string(w, "env", "unknown");
 		return -EINVAL;
