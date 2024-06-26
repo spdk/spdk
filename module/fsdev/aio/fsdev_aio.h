@@ -16,6 +16,7 @@ struct spdk_fsdev_aio_opts {
 	bool xattr_enabled;
 	bool writeback_cache_enabled;
 	uint32_t max_write;
+	bool skip_rw;
 };
 
 typedef void (*spdk_delete_aio_fsdev_complete)(void *cb_arg, int fsdeverrno);

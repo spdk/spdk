@@ -28,6 +28,7 @@ static const struct spdk_json_object_decoder rpc_aio_create_decoders[] = {
 	{"enable_xattr", offsetof(struct rpc_aio_create, opts.xattr_enabled), spdk_json_decode_bool, true},
 	{"enable_writeback_cache", offsetof(struct rpc_aio_create, opts.writeback_cache_enabled), spdk_json_decode_bool, true},
 	{"max_write", offsetof(struct rpc_aio_create, opts.max_write), spdk_json_decode_uint32, true},
+	{"skip_rw", offsetof(struct rpc_aio_create, opts.skip_rw), spdk_json_decode_bool, true},
 };
 
 static void
