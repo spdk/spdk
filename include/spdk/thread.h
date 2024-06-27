@@ -626,6 +626,13 @@ struct spdk_poller *spdk_poller_register_named(spdk_poller_fn fn,
 /**
  * Unregister a poller on the current thread.
  *
+ * This function will also write NULL to the spdk_poller pointer pointed
+ * to by ppoller, to help encourage a poller pointer not getting reused
+ * after it has been unregistered.
+ *
+ * It is OK to pass a ppoller parameter that points to NULL, in this case
+ * the function is a nop.
+ *
  * \param ppoller The poller to unregister.
  */
 void spdk_poller_unregister(struct spdk_poller **ppoller);
