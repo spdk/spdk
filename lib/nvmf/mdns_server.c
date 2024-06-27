@@ -149,8 +149,9 @@ publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *
 				0, name, type, domain, NULL, port, txt) < 0) {
 			SPDK_ERRLOG("Failed to add avahi service name: %s, type: %s, domain: %s, port: %d, error: %s\n",
 				    name, type, domain, port, avahi_strerror(avahi_client_errno(client)));
-			continue;
 		}
+		avahi_string_list_free(txt);
+		txt = NULL;
 	}
 
 	avahi_entry_group_commit(g_avahi_entry_group);
