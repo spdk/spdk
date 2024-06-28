@@ -40,6 +40,7 @@
 	spdk_accel_crypto_key_destroy;
 	spdk_accel_crypto_key_get;
 	spdk_accel_set_driver;
+	spdk_accel_get_driver_name;
 	spdk_accel_get_memory_domain;
 	spdk_accel_set_opts;
 	spdk_accel_get_opts;

@@ -764,6 +764,13 @@ void spdk_accel_write_config_json(struct spdk_json_write_ctx *w);
 int spdk_accel_set_driver(const char *name);
 
 /**
+ * Get platform driver name.
+ *
+ * \return Name of the driver as a null-terminated string or NULL if driver not set.
+ */
+const char *spdk_accel_get_driver_name(void);
+
+/**
  * Retrieves accel memory domain.
  *
  * \return Accel memory domain.

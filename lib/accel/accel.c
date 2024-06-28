@@ -3060,6 +3060,16 @@ spdk_accel_set_driver(const char *name)
 	return 0;
 }
 
+const char *
+spdk_accel_get_driver_name(void)
+{
+	if (!g_accel_driver) {
+		return NULL;
+	}
+
+	return g_accel_driver->name;
+}
+
 void
 spdk_accel_driver_register(struct spdk_accel_driver *driver)
 {
