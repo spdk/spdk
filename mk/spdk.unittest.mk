@@ -36,6 +36,7 @@ ENV_LINKER_ARGS =
 else
 # Rewrite the env linker args to be static.
 ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
+SPDK_LIB_LIST += env_dpdk
 endif
 
 install: all

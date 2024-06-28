@@ -30,7 +30,7 @@ SPDK_LIB_LINKER_ARGS = \
 # library with whole-archive, to keep its functions from getting stripped out
 # when LTO is enabled.
 SPDK_STATIC_LIB_LINKER_ARGS = \
-	$(SPDK_LIB_LIST:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a) \
+	$(SPDK_LIB_FILES) \
 	-Wl,--whole-archive \
 	$(SPDK_ROOT_DIR)/build/lib/libspdk_ut_mock.a \
 	-Wl,--no-whole-archive
