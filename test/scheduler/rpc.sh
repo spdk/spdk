@@ -12,6 +12,35 @@ source "$testdir/common.sh"
 
 rpc=rpc_cmd
 
+function framework_get_governor() {
+	# Start specifically on single core, which later is checked via RPC
+	"${SPDK_APP[@]}" -m "0x$spdk_main_core" &
+	spdk_pid=$!
+	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $spdk_pid
+
+	# Static scheduler does not use any governor
+	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "static" ]]
+	[[ -z "$($rpc framework_get_governor | jq -r '.[]')" ]]
+
+	# gscheduler uses the only currently implemented governor - dpdk_governor
+	$rpc framework_set_scheduler gscheduler
+	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "gscheduler" ]]
+	[[ "$($rpc framework_get_governor | jq -r '.governor_name')" == "dpdk_governor" ]]
+
+	# Check that there is only one core managed by governor, matches the mask and
+	# detects frequency
+	[[ "$($rpc framework_get_governor | jq -r '.cores | length')" -eq 1 ]]
+	[[ "$($rpc framework_get_governor | jq -r '.cores[0].lcore_id')" -eq "$spdk_main_core" ]]
+	[[ -n "$($rpc framework_get_governor | jq -r '.cores[0].current_frequency')" ]]
+
+	# dpdk_governor always has an env it uses
+	[[ -n "$($rpc framework_get_governor | jq -r '.module_specific.env')" ]]
+
+	trap - SIGINT SIGTERM EXIT
+	killprocess $spdk_pid
+}
+
 function scheduler_opts() {
 	"${SPDK_APP[@]}" -m "$spdk_cpumask" --wait-for-rpc &
 	spdk_pid=$!
@@ -66,3 +95,4 @@ function static_as_default() {
 
 run_test "scheduler_opts" scheduler_opts
 run_test "static_as_default" static_as_default
+run_test "framework_get_governor" framework_get_governor
