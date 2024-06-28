@@ -8,6 +8,7 @@
 #include "spdk/util.h"
 #include "spdk/env_dpdk.h"
 #include "spdk/log.h"
+#include "spdk/assert.h"
 
 #include "env_internal.h"
 
@@ -20,6 +21,8 @@
 #include <rte_eal.h>
 
 static __thread bool g_is_thread_unaffinitized;
+
+SPDK_STATIC_ASSERT(SOCKET_ID_ANY == SPDK_ENV_SOCKET_ID_ANY, "SOCKET_ID_ANY mismatch");
 
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *unused, int socket_id, uint32_t flags)
