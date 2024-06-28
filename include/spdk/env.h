@@ -15,6 +15,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
 #include "spdk/pci_ids.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,7 @@ struct spdk_env_opts {
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
 	bool			no_huge;
+	uint32_t		reserved;
 	size_t			num_pci_addr;
 	const char		*hugedir;
 	struct spdk_pci_addr	*pci_blocked;
@@ -67,6 +69,7 @@ struct spdk_env_opts {
 	void			*env_context;
 	const char		*vf_token;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_env_opts) == 112, "Incorrect size");
 
 /**
  * Allocate dma/sharable memory based on a given dma_flg. It is a memory buffer
