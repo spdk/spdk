@@ -2038,6 +2038,26 @@ spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr_unlock(ctrlr);
 }
 
+int
+spdk_nvme_ctrlr_set_keys(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ctrlr_key_opts *opts)
+{
+	nvme_ctrlr_lock(ctrlr);
+	if (SPDK_GET_FIELD(opts, dhchap_key, ctrlr->opts.dhchap_key) == NULL &&
+	    SPDK_GET_FIELD(opts, dhchap_ctrlr_key, ctrlr->opts.dhchap_ctrlr_key) != NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "DH-HMAC-CHAP controller key requires host key to be set\n");
+		nvme_ctrlr_unlock(ctrlr);
+		return -EINVAL;
+	}
+
+	ctrlr->opts.dhchap_key =
+		SPDK_GET_FIELD(opts, dhchap_key, ctrlr->opts.dhchap_key);
+	ctrlr->opts.dhchap_ctrlr_key =
+		SPDK_GET_FIELD(opts, dhchap_ctrlr_key, ctrlr->opts.dhchap_ctrlr_key);
+	nvme_ctrlr_unlock(ctrlr);
+
+	return 0;
+}
+
 static void
 nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {

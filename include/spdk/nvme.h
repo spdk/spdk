@@ -1218,6 +1218,31 @@ int spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_tra
 void spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
 				   spdk_nvme_remove_cb remove_cb, void *remove_ctx);
 
+struct spdk_nvme_ctrlr_key_opts {
+	/** Size of this structure */
+	size_t size;
+	/** DH-HMAC-CHAP host key */
+	struct spdk_key *dhchap_key;
+	/** DH-HMAC-CHAP controller key */
+	struct spdk_key *dhchap_ctrlr_key;
+};
+
+/**
+ * Set keys for a given NVMe controller.  These keys will override the keys specified in
+ * `spdk_nvme_ctrlr_opts` when attaching the controller and will be used from now on to authenticate
+ * all qpairs associated with this controller.
+ *
+ * This function only sets the keys, it doesn't force existing qpairs to use them.  To do that,
+ * users need to call `spdk_nvme_ctrlr_authenticate()` to authenticate the admin queue and
+ * `spdk_nvme_qpair_authenticate()` to authenticate IO queues.
+ *
+ * \param ctrlr NVMe controller.
+ * \param opts Key options.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_nvme_ctrlr_set_keys(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ctrlr_key_opts *opts);
+
 /**
  * Perform a full hardware reset of the NVMe controller.
  *
