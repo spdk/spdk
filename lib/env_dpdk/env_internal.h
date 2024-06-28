@@ -57,4 +57,9 @@ void vtophys_pci_device_removed(struct rte_pci_device *pci_device);
  */
 void mem_disable_huge_pages(void);
 
+/**
+ * Enforce socket ID allocations.
+ */
+void mem_enforce_numa(void);
+
 #endif

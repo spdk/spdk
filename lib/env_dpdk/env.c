@@ -21,6 +21,7 @@
 #include <rte_eal.h>
 
 static __thread bool g_is_thread_unaffinitized;
+static bool g_enforce_numa;
 
 SPDK_STATIC_ASSERT(SOCKET_ID_ANY == SPDK_ENV_NUMA_ID_ANY, "SOCKET_ID_ANY mismatch");
 
@@ -35,7 +36,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *unused, int numa_id, uint32_t f
 
 	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
 	buf = rte_malloc_socket(NULL, size, align, numa_id);
-	if (buf == NULL && numa_id != SOCKET_ID_ANY) {
+	if (buf == NULL && !g_enforce_numa && numa_id != SOCKET_ID_ANY) {
 		buf = rte_malloc_socket(NULL, size, align, SOCKET_ID_ANY);
 	}
 	return buf;
@@ -52,7 +53,7 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *unused, int numa_id, uint32_t 
 
 	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
 	buf = rte_zmalloc_socket(NULL, size, align, numa_id);
-	if (buf == NULL && numa_id != SOCKET_ID_ANY) {
+	if (buf == NULL && !g_enforce_numa && numa_id != SOCKET_ID_ANY) {
 		buf = rte_zmalloc_socket(NULL, size, align, SOCKET_ID_ANY);
 	}
 	return buf;
@@ -127,7 +128,7 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int numa_id,
 	}
 
 	mz = rte_memzone_reserve_aligned(name, len, numa_id, dpdk_flags, align);
-	if (mz == NULL && numa_id != SOCKET_ID_ANY) {
+	if (mz == NULL && !g_enforce_numa && numa_id != SOCKET_ID_ANY) {
 		mz = rte_memzone_reserve_aligned(name, len, SOCKET_ID_ANY, dpdk_flags, align);
 	}
 
@@ -201,7 +202,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
 				numa_id, 0);
-	if (mp == NULL && numa_id != SOCKET_ID_ANY) {
+	if (mp == NULL && !g_enforce_numa && numa_id != SOCKET_ID_ANY) {
 		mp = rte_mempool_create(name, count, ele_size, cache_size,
 					0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
 					SOCKET_ID_ANY, 0);
@@ -413,7 +414,7 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int numa_id)
 		 __atomic_fetch_add(&ring_num, 1, __ATOMIC_RELAXED), getpid());
 
 	ring = rte_ring_create(ring_name, count, numa_id, flags);
-	if (ring == NULL && numa_id != SOCKET_ID_ANY) {
+	if (ring == NULL && !g_enforce_numa && numa_id != SOCKET_ID_ANY) {
 		ring = rte_ring_create(ring_name, count, SOCKET_ID_ANY, flags);
 	}
 	return (struct spdk_ring *)ring;
@@ -465,4 +466,10 @@ int
 spdk_get_tid(void)
 {
 	return rte_sys_gettid();
+}
+
+void
+mem_enforce_numa(void)
+{
+	g_enforce_numa = true;
 }

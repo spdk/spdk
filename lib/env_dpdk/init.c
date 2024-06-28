@@ -112,6 +112,8 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 		opts->field = value; \
 	}
 
+	SET_FIELD(enforce_numa, false);
+
 #undef SET_FIELD
 }
 
@@ -303,6 +305,10 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	/* set no huge pages */
 	if (opts->no_huge) {
 		mem_disable_huge_pages();
+	}
+
+	if (opts->enforce_numa) {
+		mem_enforce_numa();
 	}
 
 	/* set the main core */
@@ -609,6 +615,8 @@ env_copy_opts(struct spdk_env_opts *opts, const struct spdk_env_opts *opts_user,
 	if (offsetof(struct spdk_env_opts, field) + sizeof(opts->field) <= user_opts_size) { \
 		opts->field = opts_user->field; \
 	}
+
+	SET_FIELD(enforce_numa);
 
 #undef SET_FIELD
 }
