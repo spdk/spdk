@@ -905,6 +905,7 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvmf_dhchap_reply *reply = status->dma_data;
 	struct nvme_auth *auth = &qpair->auth;
 	struct spdk_nvme_dhchap_dhkey *dhkey;
+	struct spdk_key *key = NULL, *ckey = NULL;
 	uint8_t hl, response[NVME_AUTH_DATA_SIZE];
 	uint8_t pubkey[NVME_AUTH_DH_KEY_MAX_SIZE];
 	uint8_t dhsec[NVME_AUTH_DH_KEY_MAX_SIZE];
@@ -922,52 +923,58 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		dhkey = spdk_nvme_dhchap_generate_dhkey(
 				(enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
 		if (dhkey == NULL) {
-			return -EINVAL;
+			rc = -EINVAL;
+			goto out;
 		}
 		rc = spdk_nvme_dhchap_dhkey_get_pubkey(dhkey, pubkey, &publen);
 		if (rc != 0) {
 			spdk_nvme_dhchap_dhkey_free(&dhkey);
-			return rc;
+			goto out;
 		}
 		AUTH_LOGDUMP("host pubkey:", pubkey, publen);
 		rc = spdk_nvme_dhchap_dhkey_derive_secret(dhkey,
 				&challenge->cval[hl], challenge->dhvlen, dhsec, &dhseclen);
 		spdk_nvme_dhchap_dhkey_free(&dhkey);
 		if (rc != 0) {
-			return rc;
+			goto out;
 		}
 
 		AUTH_LOGDUMP("dh secret:", dhsec, dhseclen);
 	}
 
+	nvme_ctrlr_lock(ctrlr);
+	key = ctrlr->opts.dhchap_key ? spdk_key_dup(ctrlr->opts.dhchap_key) : NULL;
+	ckey = ctrlr->opts.dhchap_ctrlr_key ? spdk_key_dup(ctrlr->opts.dhchap_ctrlr_key) : NULL;
+	nvme_ctrlr_unlock(ctrlr);
+
 	AUTH_DEBUGLOG(qpair, "key=%s, hash=%u, dhgroup=%u, seq=%u, tid=%u, subnqn=%s, hostnqn=%s, "
-		      "len=%u\n", spdk_key_get_name(ctrlr->opts.dhchap_key),
-		      challenge->hash_id, challenge->dhg_id, challenge->seqnum, auth->tid,
-		      ctrlr->trid.subnqn, ctrlr->opts.hostnqn, hl);
-	rc = spdk_nvme_dhchap_calculate(ctrlr->opts.dhchap_key,
-					(enum spdk_nvmf_dhchap_hash)challenge->hash_id,
+		      "len=%u\n", spdk_key_get_name(key), challenge->hash_id, challenge->dhg_id,
+		      challenge->seqnum, auth->tid, ctrlr->trid.subnqn, ctrlr->opts.hostnqn, hl);
+	rc = spdk_nvme_dhchap_calculate(key, (enum spdk_nvmf_dhchap_hash)challenge->hash_id,
 					"HostHost", challenge->seqnum, auth->tid, 0,
 					ctrlr->opts.hostnqn, ctrlr->trid.subnqn,
 					dhseclen > 0 ? dhsec : NULL, dhseclen,
 					challenge->cval, response);
 	if (rc != 0) {
 		AUTH_ERRLOG(qpair, "failed to calculate response: %s\n", spdk_strerror(-rc));
-		return rc;
+		goto out;
 	}
 
-	if (ctrlr->opts.dhchap_ctrlr_key != NULL) {
+	if (ckey != NULL) {
 		seqnum = nvme_auth_get_seqnum(qpair);
 		if (seqnum == 0) {
-			return -EIO;
+			rc = -EIO;
+			goto out;
 		}
 
 		assert(sizeof(ctrlr_challenge) >= hl);
 		rc = RAND_bytes(ctrlr_challenge, hl);
 		if (rc != 1) {
-			return -EIO;
+			rc = -EIO;
+			goto out;
 		}
 
-		rc = spdk_nvme_dhchap_calculate(ctrlr->opts.dhchap_ctrlr_key,
+		rc = spdk_nvme_dhchap_calculate(ckey,
 						(enum spdk_nvmf_dhchap_hash)challenge->hash_id,
 						"Controller", seqnum, auth->tid, 0,
 						ctrlr->trid.subnqn, ctrlr->opts.hostnqn,
@@ -976,7 +983,7 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		if (rc != 0) {
 			AUTH_ERRLOG(qpair, "failed to calculate controller's response: %s\n",
 				    spdk_strerror(-rc));
-			return rc;
+			goto out;
 		}
 	}
 
@@ -991,15 +998,20 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	reply->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_REPLY;
 	reply->t_id = auth->tid;
 	reply->hl = hl;
-	reply->cvalid = ctrlr->opts.dhchap_ctrlr_key != NULL;
+	reply->cvalid = ckey != NULL;
 	reply->dhvlen = publen;
 	reply->seqnum = seqnum;
 
 	/* The 2 * reply->hl below is because the spec says that both rval[hl] and cval[hl] must
 	 * always be part of the reply message, even cvalid is zero.
 	 */
-	return nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND,
-					sizeof(*reply) + 2 * reply->hl + publen);
+	rc = nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND,
+				      sizeof(*reply) + 2 * reply->hl + publen);
+out:
+	spdk_keyring_put_key(key);
+	spdk_keyring_put_key(ckey);
+
+	return rc;
 }
 
 static int
