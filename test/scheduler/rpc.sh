@@ -36,4 +36,23 @@ function scheduler_opts() {
 	killprocess $spdk_pid
 }
 
+function static_as_default() {
+	"${SPDK_APP[@]}" -m "$spdk_cpumask" &
+	spdk_pid=$!
+	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $spdk_pid
+
+	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "static" ]]
+
+	# It should never be possible to return to static scheduler after changing it
+	$rpc framework_set_scheduler dynamic
+	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "dynamic" ]]
+	NOT $rpc framework_set_scheduler static
+	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "dynamic" ]]
+
+	trap - SIGINT SIGTERM EXIT
+	killprocess $spdk_pid
+}
+
 run_test "scheduler_opts" scheduler_opts
+run_test "static_as_default" static_as_default
