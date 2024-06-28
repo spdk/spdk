@@ -22,6 +22,9 @@ function scheduler_opts() {
 	$rpc framework_set_scheduler static -p 424242
 	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == "static") | .scheduler_period')" -eq 424242 ]]
 
+	# It should not be possible to change settings that a scheduler does not support
+	NOT $rpc framework_set_scheduler static --core-limit 42
+
 	# Verify that the scheduler is changed and the non-default value is set
 	$rpc framework_set_scheduler dynamic --core-limit 42
 	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == "dynamic") | .core_limit')" -eq 42 ]]

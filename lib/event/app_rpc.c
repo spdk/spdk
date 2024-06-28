@@ -465,11 +465,18 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_set_scheduler_ctx req = {NULL};
 	struct spdk_scheduler *scheduler = NULL;
+	bool has_custom_opts = false;
 	int ret;
 
-	ret = spdk_json_decode_object_relaxed(params, rpc_set_scheduler_decoders,
-					      SPDK_COUNTOF(rpc_set_scheduler_decoders),
-					      &req);
+	ret = spdk_json_decode_object(params, rpc_set_scheduler_decoders,
+				      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+				      &req);
+	if (ret) {
+		has_custom_opts = true;
+		ret = spdk_json_decode_object_relaxed(params, rpc_set_scheduler_decoders,
+						      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+						      &req);
+	}
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -506,6 +513,9 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 	scheduler = spdk_scheduler_get();
 	if (scheduler != NULL && scheduler->set_opts != NULL) {
 		ret = scheduler->set_opts(params);
+	} else if (has_custom_opts) {
+		/* No custom options are allowed if set_opts are not implemented. */
+		ret = -EINVAL;
 	}
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ret));
