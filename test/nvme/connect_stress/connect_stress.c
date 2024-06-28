@@ -250,6 +250,7 @@ main(int argc, char **argv)
 	uint64_t tsc_end;
 	int rc;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "connect_stress";
 	rc = parse_args(argc, argv, &opts);

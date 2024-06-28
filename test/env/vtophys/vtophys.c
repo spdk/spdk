@@ -131,6 +131,7 @@ main(int argc, char **argv)
 	CU_pSuite suite = NULL;
 	unsigned num_failures;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "vtophys";
 	opts.core_mask = "0x1";

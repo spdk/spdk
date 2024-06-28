@@ -1516,6 +1516,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, admin_create_io_qp_max_qps);
 	CU_ADD_TEST(suite, admin_create_io_sq_shared_cq);
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_compliance";
 

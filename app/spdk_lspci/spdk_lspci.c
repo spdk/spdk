@@ -60,6 +60,7 @@ main(int argc, char **argv)
 		}
 	}
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "spdk_lspci";
 

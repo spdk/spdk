@@ -3219,6 +3219,7 @@ main(int argc, char **argv)
 	/* Use the runtime PID to set the random seed */
 	srand(getpid());
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "perf";
 	opts.pci_allowed = g_allowed_pci_addr;

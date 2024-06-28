@@ -336,6 +336,7 @@ spdk_init_thread_poll(void *arg)
 	}
 
 	/* Initialize the environment library */
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
 

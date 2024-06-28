@@ -476,6 +476,7 @@ app_setup_env(struct spdk_app_opts *opts)
 		return rc;
 	}
 
+	env_opts.opts_size = sizeof(env_opts);
 	spdk_env_opts_init(&env_opts);
 
 	env_opts.name = opts->name;

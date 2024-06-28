@@ -92,6 +92,7 @@ main(int argc, const char **argv)
 	struct nvme_ctrlr *ctrlr;
 	int rc;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "identify";
 

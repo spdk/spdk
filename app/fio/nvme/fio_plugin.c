@@ -603,6 +603,7 @@ spdk_fio_setup(struct thread_data *td)
 	TAILQ_INIT(&fio_thread->fio_qpair);
 
 	if (!g_spdk_env_initialized) {
+		opts.opts_size = sizeof(opts);
 		spdk_env_opts_init(&opts);
 		opts.name = "fio";
 		opts.mem_size = fio_options->mem_size;

@@ -68,8 +68,12 @@ struct spdk_env_opts {
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;
 	const char		*vf_token;
+
+	size_t			opts_size;
+
+	/* All new fields must be added at the end of this structure. */
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_env_opts) == 112, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_env_opts) == 120, "Incorrect size");
 
 /**
  * Allocate dma/sharable memory based on a given dma_flg. It is a memory buffer

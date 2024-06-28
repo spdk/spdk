@@ -696,6 +696,7 @@ main(int argc, char **argv)
 	int			rc;
 	struct spdk_env_opts	opts;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	rc = parse_args(argc, argv, &opts);
 	if (rc != 0) {

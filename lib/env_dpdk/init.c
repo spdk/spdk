@@ -102,6 +102,13 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->main_core = SPDK_ENV_DPDK_DEFAULT_MAIN_CORE;
 	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->base_virtaddr = SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR;
+
+#define SET_FIELD(field, value) \
+	if (offsetof(struct spdk_env_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
+		opts->field = value; \
+	}
+
+#undef SET_FIELD
 }
 
 static void
@@ -586,21 +593,40 @@ spdk_env_dpdk_post_fini(void)
 	g_eal_cmdline_argcount = 0;
 }
 
-int
-spdk_env_init(const struct spdk_env_opts *opts)
+static void
+env_copy_opts(struct spdk_env_opts *opts, const struct spdk_env_opts *opts_user,
+	      size_t user_opts_size)
 {
+	opts->opts_size = sizeof(*opts);
+	spdk_env_opts_init(opts);
+	memcpy(opts, opts_user, offsetof(struct spdk_env_opts, opts_size));
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_env_opts, field) + sizeof(opts->field) <= user_opts_size) { \
+		opts->field = opts_user->field; \
+	}
+
+#undef SET_FIELD
+}
+
+int
+spdk_env_init(const struct spdk_env_opts *opts_user)
+{
+	struct spdk_env_opts opts_local = {};
+	struct spdk_env_opts *opts = &opts_local;
 	char **dpdk_args = NULL;
 	char *args_print = NULL, *args_tmp = NULL;
 	OPENSSL_INIT_SETTINGS *settings;
 	int i, rc;
 	int orig_optind;
 	bool legacy_mem;
+	size_t min_opts_size, user_opts_size;
 
 	/* If SPDK env has been initialized before, then only pci env requires
 	 * reinitialization.
 	 */
 	if (g_external_init == false) {
-		if (opts != NULL) {
+		if (opts_user != NULL) {
 			fprintf(stderr, "Invalid arguments to reinitialize SPDK env\n");
 			return -EINVAL;
 		}
@@ -611,10 +637,20 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		return 0;
 	}
 
-	if (opts == NULL) {
+	if (opts_user == NULL) {
 		fprintf(stderr, "NULL arguments to initialize DPDK\n");
 		return -EINVAL;
 	}
+
+	min_opts_size = offsetof(struct spdk_env_opts, opts_size) + sizeof(opts->opts_size);
+	user_opts_size = opts_user->opts_size;
+	if (user_opts_size < min_opts_size) {
+		fprintf(stderr, "Invalid opts->opts_size %d too small, please set opts_size correctly\n",
+			(int)opts_user->opts_size);
+		user_opts_size = min_opts_size;
+	}
+
+	env_copy_opts(opts, opts_user, user_opts_size);
 
 	settings = OPENSSL_INIT_new();
 	if (!settings) {

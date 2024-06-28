@@ -369,6 +369,7 @@ init(void)
 {
 	struct spdk_env_opts opts;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "ioat_perf";
 	opts.core_mask = g_user_config.core_mask;

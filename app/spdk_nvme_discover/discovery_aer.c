@@ -257,6 +257,7 @@ main(int argc, char **argv)
 	struct spdk_nvme_ctrlr_opts ctrlr_opts;
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "discovery_aer";
 	rc = parse_args(argc, argv, &opts);

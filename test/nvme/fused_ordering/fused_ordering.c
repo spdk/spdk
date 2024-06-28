@@ -299,6 +299,7 @@ main(int argc, char **argv)
 	uint32_t main_core;
 	struct worker_thread *main_worker = NULL, *worker = NULL;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	spdk_log_set_print_level(SPDK_LOG_NOTICE);
 	rc = parse_args(argc, argv, &opts);

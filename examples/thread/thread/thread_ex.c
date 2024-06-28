@@ -499,6 +499,7 @@ main(int argc, char **argv)
 	uint64_t time_diff = 0;
 	struct poller_ctx ctx_counting, ctx_printing, ctx_for_each_thread, ctx_for_each_channel;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "thread-example";
 	opts.core_mask = "0x1";

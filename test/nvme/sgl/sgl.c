@@ -484,6 +484,7 @@ main(int argc, char **argv)
 	struct spdk_env_opts	opts;
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_sgl";
 	opts.core_mask = "0x1";

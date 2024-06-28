@@ -317,6 +317,7 @@ main(int argc, char **argv)
 	 * This library must be initialized first.
 	 *
 	 */
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "cmb_copy";
 	opts.shm_id = 0;

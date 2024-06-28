@@ -1075,6 +1075,7 @@ main(int argc, char **argv)
 		return rc;
 	}
 
+	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "abort";
 	opts.shm_id = g_shm_id;
