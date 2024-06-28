@@ -552,7 +552,8 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("framework_get_scheduler", rpc_framework_get_scheduler, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_get_scheduler", rpc_framework_get_scheduler,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 rpc_framework_get_governor(struct spdk_jsonrpc_request *request,

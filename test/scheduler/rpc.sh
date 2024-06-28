@@ -13,7 +13,7 @@ source "$testdir/common.sh"
 rpc=rpc_cmd
 
 function scheduler_opts() {
-	"${SPDK_APP[@]}" -m "$spdk_cpumask" &
+	"${SPDK_APP[@]}" -m "$spdk_cpumask" --wait-for-rpc &
 	spdk_pid=$!
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid
@@ -32,16 +32,23 @@ function scheduler_opts() {
 	$rpc framework_set_scheduler dynamic
 	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == "dynamic") | .core_limit')" -eq 42 ]]
 
+	# All the above configuration can happen before subsystems initialize
+	$rpc framework_start_init
+
 	trap - SIGINT SIGTERM EXIT
 	killprocess $spdk_pid
 }
 
 function static_as_default() {
-	"${SPDK_APP[@]}" -m "$spdk_cpumask" &
+	"${SPDK_APP[@]}" -m "$spdk_cpumask" --wait-for-rpc &
 	spdk_pid=$!
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid
 
+	# Before initialization scheduler is set to NULL. If unchanged, set to static
+	# during subsystem initialization.
+	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == null)')" ]]
+	$rpc framework_start_init
 	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "static" ]]
 
 	# It should never be possible to return to static scheduler after changing it
