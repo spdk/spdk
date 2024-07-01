@@ -34,6 +34,17 @@ struct nvmf_tgt_poll_group {
 	TAILQ_ENTRY(nvmf_tgt_poll_group)	link;
 };
 
+#define NVMF_TGT_DEFAULT_DIGESTS (SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA256) | \
+				  SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA384) | \
+				  SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA512))
+
+#define NVMF_TGT_DEFAULT_DHGROUPS (SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_NULL) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_2048) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_3072) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_4096) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_6144) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_8192))
+
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 	.opts = {
 		.size = SPDK_SIZEOF(&g_spdk_nvmf_tgt_conf.opts, dhchap_dhgroups),
@@ -41,8 +52,8 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 		.max_subsystems = 0,
 		.crdt = { 0, 0, 0 },
 		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
-		.dhchap_digests = UINT32_MAX,
-		.dhchap_dhgroups = UINT32_MAX,
+		.dhchap_digests = NVMF_TGT_DEFAULT_DIGESTS,
+		.dhchap_dhgroups = NVMF_TGT_DEFAULT_DHGROUPS,
 	},
 	.admin_passthru.identify_ctrlr = false
 };
@@ -552,6 +563,8 @@ nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
 static void
 nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
+	int i;
+
 	spdk_json_write_array_begin(w);
 
 	spdk_json_write_object_begin(w);
@@ -566,6 +579,20 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 	if (g_poll_groups_mask) {
 		spdk_json_write_named_string(w, "poll_groups_mask", spdk_cpuset_fmt(g_poll_groups_mask));
 	}
+	spdk_json_write_named_array_begin(w, "dhchap_digests");
+	for (i = 0; i < 32; ++i) {
+		if (g_spdk_nvmf_tgt_conf.opts.dhchap_digests & SPDK_BIT(i)) {
+			spdk_json_write_string(w, spdk_nvme_dhchap_get_digest_name(i));
+		}
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_named_array_begin(w, "dhchap_dhgroups");
+	for (i = 0; i < 32; ++i) {
+		if (g_spdk_nvmf_tgt_conf.opts.dhchap_dhgroups & SPDK_BIT(i)) {
+			spdk_json_write_string(w, spdk_nvme_dhchap_get_dhgroup_name(i));
+		}
+	}
+	spdk_json_write_array_end(w);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 
