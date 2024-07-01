@@ -148,6 +148,8 @@ static const struct option g_cmdline_options[] = {
 	{"no-huge",			no_argument,		NULL, NO_HUGE_OPT_IDX},
 #define NO_RPC_SERVER_OPT_IDX	273
 	{"no-rpc-server",		no_argument,		NULL, NO_RPC_SERVER_OPT_IDX},
+#define ENFORCE_NUMA_OPT_IDX 274
+	{"enforce-numa",		no_argument,		NULL, ENFORCE_NUMA_OPT_IDX},
 };
 
 static int
@@ -320,6 +322,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
 	SET_FIELD(interrupt_mode, false);
+	SET_FIELD(enforce_numa, false);
 	/* Don't set msg_mempool_size here, it is set or calculated later */
 	SET_FIELD(rpc_allowlist, NULL);
 	SET_FIELD(rpc_log_file, NULL);
@@ -500,6 +503,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.iova_mode = opts->iova_mode;
 	env_opts.vf_token = opts->vf_token;
 	env_opts.no_huge = opts->no_huge;
+	env_opts.enforce_numa = opts->enforce_numa;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blocked);
@@ -676,6 +680,7 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(base_virtaddr);
 	SET_FIELD(disable_signal_handlers);
 	SET_FIELD(interrupt_mode);
+	SET_FIELD(enforce_numa);
 	SET_FIELD(msg_mempool_size);
 	SET_FIELD(rpc_allowlist);
 	SET_FIELD(vf_token);
@@ -1115,6 +1120,7 @@ usage(void (*app_usage)(void))
 	printf("     --msg-mempool-size <size>  global message memory pool size in count (default: %d)\n",
 	       SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 	printf("     --no-huge             run without using hugepages\n");
+	printf("     --enforce-numa        enforce NUMA allocations from the specified NUMA node\n");
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
 	printf(" -g, --single-file-segments   force creating just one hugetlbfs file\n");
 
@@ -1290,6 +1296,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case NO_RPC_SERVER_OPT_IDX:
 			opts->rpc_addr = NULL;
+			break;
+		case ENFORCE_NUMA_OPT_IDX:
+			opts->enforce_numa = true;
 			break;
 		case MEM_SIZE_OPT_IDX: {
 			uint64_t mem_size_mb;
