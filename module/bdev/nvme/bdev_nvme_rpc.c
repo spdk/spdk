@@ -2741,3 +2741,57 @@ err:
 }
 SPDK_RPC_REGISTER("bdev_nvme_get_path_iostat", rpc_bdev_nvme_get_path_iostat,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_nvme_set_keys {
+	char *name;
+	char *dhchap_key;
+	char *dhchap_ctrlr_key;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_set_keys_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_nvme_set_keys, name), spdk_json_decode_string},
+	{"dhchap_key", offsetof(struct rpc_bdev_nvme_set_keys, dhchap_key), spdk_json_decode_string, true},
+	{"dhchap_ctrlr_key", offsetof(struct rpc_bdev_nvme_set_keys, dhchap_ctrlr_key), spdk_json_decode_string, true},
+};
+
+static void
+free_rpc_bdev_nvme_set_keys(struct rpc_bdev_nvme_set_keys *req)
+{
+	free(req->name);
+	free(req->dhchap_key);
+	free(req->dhchap_ctrlr_key);
+}
+
+static void
+rpc_bdev_nvme_set_keys_done(void *ctx, int status)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response(request, status, spdk_strerror(-status));
+	} else {
+		spdk_jsonrpc_send_bool_response(request, true);
+	}
+}
+
+static void
+rpc_bdev_nvme_set_keys(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_set_keys req = {};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_set_keys_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_set_keys_decoders), &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	rc = bdev_nvme_set_keys(req.name, req.dhchap_key, req.dhchap_ctrlr_key,
+				rpc_bdev_nvme_set_keys_done, request);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
+	free_rpc_bdev_nvme_set_keys(&req);
+}
+SPDK_RPC_REGISTER("bdev_nvme_set_keys", rpc_bdev_nvme_set_keys, SPDK_RPC_RUNTIME)

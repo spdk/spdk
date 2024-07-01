@@ -265,6 +265,12 @@ DEFINE_STUB_V(spdk_accel_sequence_finish,
 	      (struct spdk_accel_sequence *seq, spdk_accel_completion_cb cb_fn, void *cb_arg));
 DEFINE_STUB_V(spdk_accel_sequence_abort, (struct spdk_accel_sequence *seq));
 DEFINE_STUB_V(spdk_accel_sequence_reverse, (struct spdk_accel_sequence *seq));
+DEFINE_STUB(spdk_nvme_qpair_authenticate, int,
+	    (struct spdk_nvme_qpair *qpair, spdk_nvme_authenticate_cb cb_fn, void *cb_ctx), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_authenticate, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, spdk_nvme_authenticate_cb cb_fn, void *cb_ctx), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_set_keys, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ctrlr_key_opts *opts), 0);
 
 struct ut_nvme_req {
 	uint16_t			opc;

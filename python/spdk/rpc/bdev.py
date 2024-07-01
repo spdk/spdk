@@ -1024,6 +1024,21 @@ def bdev_nvme_cuse_unregister(client, name):
     return client.call('bdev_nvme_cuse_unregister', params)
 
 
+def bdev_nvme_set_keys(client, name, dhchap_key=None, dhchap_ctrlr_key=None):
+    """Set DH-HMAC-CHAP keys and force (re)authentication on all connected qpairs.
+    Args:
+        name: name of the NVMe controller
+        dhchap_key: DH-HMAC-CHAP key name
+        dhchap_ctrlr_key: DH-HMAC-CHAP controller key name
+    """
+    params = {'name': name}
+    if dhchap_key is not None:
+        params['dhchap_key'] = dhchap_key
+    if dhchap_ctrlr_key is not None:
+        params['dhchap_ctrlr_key'] = dhchap_ctrlr_key
+    return client.call('bdev_nvme_set_keys', params)
+
+
 def bdev_zone_block_create(client, name, base_bdev, zone_capacity, optimal_open_zones):
     """Creates a virtual zone device on top of existing non-zoned bdev.
     Args:

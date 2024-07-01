@@ -1016,6 +1016,17 @@ if __name__ == "__main__":
                    help='Name of the NVMe controller. Example: Nvme0', required=True)
     p.set_defaults(func=bdev_nvme_cuse_unregister)
 
+    def bdev_nvme_set_keys(args):
+        rpc.bdev.bdev_nvme_set_keys(args.client, args.name, args.dhchap_key, args.dhchap_ctrlr_key)
+
+    p = subparsers.add_parser('bdev_nvme_set_keys',
+                              help='Set DH-HMAC-CHAP keys and force (re)authentication on all '
+                              'connected qpairs')
+    p.add_argument('name', help='Name of the NVMe controller')
+    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
+    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
+    p.set_defaults(func=bdev_nvme_set_keys)
+
     def bdev_zone_block_create(args):
         print_json(rpc.bdev.bdev_zone_block_create(args.client,
                                                    name=args.name,

@@ -4922,6 +4922,47 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_set_keys {#rpc_bdev_nvme_set_keys}
+
+Set DH-HMAC-CHAP keys and force (re)authentication on all connected qpairs across all multipath
+controllers.  If none of the keys are provided, the keys will be cleared, meaning that any new
+qpairs won't be authenticated.
+
+If successful, existing qpairs won't be disconnected/reconnected.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe controller
+dhchap_key              | Optional | string      | DH-HMAC-CHAP key name (required if controller key is specified)
+dhchap_ctrlr_key        | Optional | string      | DH-HMAC-CHAP controller key name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "method": "bdev_nvme_set_keys",
+  "params": {
+    "name": "nvme0",
+    "dhchap_key": "key0",
+    "dhchap_ctrlr_key": "key1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_zone_block_create {#rpc_bdev_zone_block_create}
 
 Creates a virtual zone device on top of existing non-zoned bdev.

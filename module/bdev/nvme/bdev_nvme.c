@@ -8781,6 +8781,203 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 	return current;
 }
 
+struct bdev_nvme_set_keys_ctx {
+	struct nvme_ctrlr	*nctrlr;
+	struct spdk_key		*dhchap_key;
+	struct spdk_key		*dhchap_ctrlr_key;
+	struct spdk_thread	*thread;
+	bdev_nvme_set_keys_cb	cb_fn;
+	void			*cb_ctx;
+	int			status;
+};
+
+static void
+bdev_nvme_free_set_keys_ctx(struct bdev_nvme_set_keys_ctx *ctx)
+{
+	if (ctx == NULL) {
+		return;
+	}
+
+	spdk_keyring_put_key(ctx->dhchap_key);
+	spdk_keyring_put_key(ctx->dhchap_ctrlr_key);
+	free(ctx);
+}
+
+static void
+_bdev_nvme_set_keys_done(void *_ctx)
+{
+	struct bdev_nvme_set_keys_ctx *ctx = _ctx;
+
+	ctx->cb_fn(ctx->cb_ctx, ctx->status);
+
+	if (ctx->nctrlr != NULL) {
+		nvme_ctrlr_release(ctx->nctrlr);
+	}
+	bdev_nvme_free_set_keys_ctx(ctx);
+}
+
+static void
+bdev_nvme_set_keys_done(struct bdev_nvme_set_keys_ctx *ctx, int status)
+{
+	ctx->status = status;
+	spdk_thread_exec_msg(ctx->thread, _bdev_nvme_set_keys_done, ctx);
+}
+
+static void bdev_nvme_authenticate_ctrlr(struct bdev_nvme_set_keys_ctx *ctx);
+
+static void
+bdev_nvme_authenticate_ctrlr_continue(struct bdev_nvme_set_keys_ctx *ctx)
+{
+	struct nvme_ctrlr *next;
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	next = TAILQ_NEXT(ctx->nctrlr, tailq);
+	if (next != NULL) {
+		next->ref++;
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	nvme_ctrlr_release(ctx->nctrlr);
+	ctx->nctrlr = next;
+
+	if (next == NULL) {
+		bdev_nvme_set_keys_done(ctx, 0);
+	} else {
+		bdev_nvme_authenticate_ctrlr(ctx);
+	}
+}
+
+static void
+bdev_nvme_authenticate_qpairs_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct bdev_nvme_set_keys_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (status != 0) {
+		bdev_nvme_set_keys_done(ctx, status);
+		return;
+	}
+	bdev_nvme_authenticate_ctrlr_continue(ctx);
+}
+
+static void
+bdev_nvme_authenticate_qpair_done(void *ctx, int status)
+{
+	spdk_for_each_channel_continue(ctx, status);
+}
+
+static void
+bdev_nvme_authenticate_qpair(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_qpair *qpair = ctrlr_ch->qpair;
+	int rc;
+
+	if (!nvme_qpair_is_connected(qpair)) {
+		spdk_for_each_channel_continue(i, 0);
+		return;
+	}
+
+	rc = spdk_nvme_qpair_authenticate(qpair->qpair, bdev_nvme_authenticate_qpair_done, i);
+	if (rc != 0) {
+		spdk_for_each_channel_continue(i, rc);
+	}
+}
+
+static void
+bdev_nvme_authenticate_ctrlr_done(void *_ctx, int status)
+{
+	struct bdev_nvme_set_keys_ctx *ctx = _ctx;
+
+	if (status != 0) {
+		bdev_nvme_set_keys_done(ctx, status);
+		return;
+	}
+
+	spdk_for_each_channel(ctx->nctrlr, bdev_nvme_authenticate_qpair, ctx,
+			      bdev_nvme_authenticate_qpairs_done);
+}
+
+static void
+bdev_nvme_authenticate_ctrlr(struct bdev_nvme_set_keys_ctx *ctx)
+{
+	struct spdk_nvme_ctrlr_key_opts opts = {};
+	struct nvme_ctrlr *nctrlr = ctx->nctrlr;
+	int rc;
+
+	opts.size = SPDK_SIZEOF(&opts, dhchap_ctrlr_key);
+	opts.dhchap_key = ctx->dhchap_key;
+	opts.dhchap_ctrlr_key = ctx->dhchap_ctrlr_key;
+	rc = spdk_nvme_ctrlr_set_keys(nctrlr->ctrlr, &opts);
+	if (rc != 0) {
+		bdev_nvme_set_keys_done(ctx, rc);
+		return;
+	}
+
+	if (ctx->dhchap_key != NULL) {
+		rc = spdk_nvme_ctrlr_authenticate(nctrlr->ctrlr,
+						  bdev_nvme_authenticate_ctrlr_done, ctx);
+		if (rc != 0) {
+			bdev_nvme_set_keys_done(ctx, rc);
+		}
+	} else {
+		bdev_nvme_authenticate_ctrlr_continue(ctx);
+	}
+}
+
+int
+bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhchap_ctrlr_key,
+		   bdev_nvme_set_keys_cb cb_fn, void *cb_ctx)
+{
+	struct bdev_nvme_set_keys_ctx *ctx;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nctrlr;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	if (dhchap_key != NULL) {
+		ctx->dhchap_key = spdk_keyring_get_key(dhchap_key);
+		if (ctx->dhchap_key == NULL) {
+			SPDK_ERRLOG("Could not find key %s for bdev %s\n", dhchap_key, name);
+			bdev_nvme_free_set_keys_ctx(ctx);
+			return -ENOKEY;
+		}
+	}
+	if (dhchap_ctrlr_key != NULL) {
+		ctx->dhchap_ctrlr_key = spdk_keyring_get_key(dhchap_ctrlr_key);
+		if (ctx->dhchap_ctrlr_key == NULL) {
+			SPDK_ERRLOG("Could not find key %s for bdev %s\n", dhchap_ctrlr_key, name);
+			bdev_nvme_free_set_keys_ctx(ctx);
+			return -ENOKEY;
+		}
+	}
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
+	if (nbdev_ctrlr == NULL) {
+		SPDK_ERRLOG("Could not find bdev_ctrlr %s\n", name);
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		bdev_nvme_free_set_keys_ctx(ctx);
+		return -ENODEV;
+	}
+	assert(!TAILQ_EMPTY(&nbdev_ctrlr->ctrlrs));
+	nctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+	nctrlr->ref++;
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	ctx->nctrlr = nctrlr;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+	ctx->thread = spdk_get_thread();
+
+	bdev_nvme_authenticate_ctrlr(ctx);
+
+	return 0;
+}
+
 void
 nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path)
 {

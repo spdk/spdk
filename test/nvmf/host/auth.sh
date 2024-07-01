@@ -124,5 +124,30 @@ NOT rpc_cmd bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
 	-a "$(get_main_ns_ip)" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
 	--dhchap-key "key1" --dhchap-ctrlr-key "ckey2"
 
+# Check reauthentication
+rpc_cmd bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
+	-a "$(get_main_ns_ip)" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
+	--dhchap-key "key1" --dhchap-ctrlr-key "ckey1" --ctrlr-loss-timeout-sec 1 \
+	--reconnect-delay-sec 1
+nvmet_auth_set_key "sha256" "ffdhe2048" 2
+rpc_cmd bdev_nvme_set_keys "nvme0" --dhchap-key "key2" --dhchap-ctrlr-key "ckey2"
+[[ $(rpc_cmd bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
+# Use wrong keys and verify that the ctrlr will get disconnected after ctrlr-loss-timeout-sec
+NOT rpc_cmd bdev_nvme_set_keys "nvme0" --dhchap-key "key1" --dhchap-ctrlr-key "ckey2"
+while (($(rpc_cmd bdev_nvme_get_controllers | jq 'length') != 0)); do
+	sleep 1s
+done
+# Do the same, but this time try with a valid host key, but bad ctrlr key
+nvmet_auth_set_key "sha256" "ffdhe2048" 1
+rpc_cmd bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
+	-a "$(get_main_ns_ip)" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
+	--dhchap-key "key1" --dhchap-ctrlr-key "ckey1" --ctrlr-loss-timeout-sec 1 \
+	--reconnect-delay-sec 1
+nvmet_auth_set_key "sha256" "ffdhe2048" 2
+NOT rpc_cmd bdev_nvme_set_keys "nvme0" --dhchap-key "key2" --dhchap-ctrlr-key "ckey1"
+while (($(rpc_cmd bdev_nvme_get_controllers | jq 'length') != 0)); do
+	sleep 1s
+done
+
 trap - SIGINT SIGTERM EXIT
 cleanup

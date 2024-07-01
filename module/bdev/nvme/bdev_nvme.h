@@ -341,6 +341,11 @@ int bdev_nvme_stop_mdns_discovery(const char *name);
 void bdev_nvme_get_mdns_discovery_info(struct spdk_jsonrpc_request *request);
 void bdev_nvme_mdns_discovery_config_json(struct spdk_json_write_ctx *w);
 
+typedef void (*bdev_nvme_set_keys_cb)(void *ctx, int status);
+
+int bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhchap_ctrlr_key,
+		       bdev_nvme_set_keys_cb cb_fn, void *cb_ctx);
+
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 typedef void (*bdev_nvme_delete_done_fn)(void *ctx, int rc);
