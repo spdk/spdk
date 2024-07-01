@@ -8573,7 +8573,14 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	if (nvme_ctrlr->psk != NULL) {
 		spdk_json_write_named_string(w, "psk", spdk_key_get_name(nvme_ctrlr->psk));
 	}
-
+	if (nvme_ctrlr->dhchap_key != NULL) {
+		spdk_json_write_named_string(w, "dhchap_key",
+					     spdk_key_get_name(nvme_ctrlr->dhchap_key));
+	}
+	if (nvme_ctrlr->dhchap_ctrlr_key != NULL) {
+		spdk_json_write_named_string(w, "dhchap_ctrlr_key",
+					     spdk_key_get_name(nvme_ctrlr->dhchap_ctrlr_key));
+	}
 	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
 	spdk_json_write_named_string(w, "hostnqn", opts->hostnqn);
 	spdk_json_write_named_bool(w, "hdgst", opts->header_digest);
