@@ -7718,6 +7718,7 @@ bs_set_external_parent_refs(struct spdk_blob *blob, struct blob_parent *parent)
 		return rc;
 	}
 	blob->invalid_flags |= SPDK_BLOB_EXTERNAL_SNAPSHOT;
+	blob->parent_id = SPDK_BLOBID_EXTERNAL_SNAPSHOT;
 
 	bs_blob_list_add(blob);
 

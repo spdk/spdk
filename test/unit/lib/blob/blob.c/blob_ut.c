@@ -9766,6 +9766,7 @@ blob_set_external_parent(void)
 	CU_ASSERT(!spdk_blob_is_clone(blob2));
 	CU_ASSERT(rc == 0 && esnap_id_len == sizeof(esnap_opts2) &&
 		  memcmp(esnap_id, &esnap_opts2, esnap_id_len) == 0);
+	CU_ASSERT(blob2->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT);
 
 	/* Create a not thin-provisioned blob that is not a clone */
 	ut_spdk_blob_opts_init(&opts);
@@ -9802,6 +9803,7 @@ blob_set_external_parent(void)
 	CU_ASSERT(!spdk_blob_is_clone(blob4));
 	CU_ASSERT(rc == 0 && esnap_id_len == sizeof(esnap_opts) &&
 		  memcmp(esnap_id, &esnap_opts, esnap_id_len) == 0);
+	CU_ASSERT(blob4->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT);
 
 	ut_blob_close_and_delete(bs, blob4);
 	ut_blob_close_and_delete(bs, blob3);
