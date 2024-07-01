@@ -1068,9 +1068,14 @@ _write_write_done(void *_req, int reduce_errno)
 	_reduce_vol_complete_req(req, 0);
 }
 
+struct reduce_merged_io_desc {
+	uint64_t io_unit_index;
+	uint32_t num_io_units;
+};
+
 static void
-_issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *vol,
-		   reduce_request_fn next_fn, bool is_write)
+_issue_backing_ops_without_merge(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *vol,
+				 reduce_request_fn next_fn, bool is_write)
 {
 	struct iovec *iov;
 	uint8_t *buf;
@@ -1099,6 +1104,79 @@ _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *
 						req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		}
+	}
+}
+
+static void
+_issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *vol,
+		   reduce_request_fn next_fn, bool is_write)
+{
+	struct iovec *iov;
+	struct reduce_merged_io_desc merged_io_desc[4];
+	uint8_t *buf;
+	bool merge = false;
+	uint32_t num_io = 0;
+	uint32_t io_unit_counts = 0;
+	uint32_t merged_io_idx = 0;
+	uint32_t i;
+
+	/* The merged_io_desc value is defined here to contain four elements,
+	 * and the chunk size must be four times the maximum of the io unit.
+	 * if chunk size is too big, don't merge IO.
+	 */
+	if (vol->backing_io_units_per_chunk > 4) {
+		_issue_backing_ops_without_merge(req, vol, next_fn, is_write);
+		return;
+	}
+
+	if (req->chunk_is_compressed) {
+		iov = req->comp_buf_iov;
+		buf = req->comp_buf;
+	} else {
+		iov = req->decomp_buf_iov;
+		buf = req->decomp_buf;
+	}
+
+	for (i = 0; i < req->num_io_units; i++) {
+		if (!merge) {
+			merged_io_desc[merged_io_idx].io_unit_index = req->chunk->io_unit_index[i];
+			merged_io_desc[merged_io_idx].num_io_units = 1;
+			num_io++;
+		}
+
+		if (i + 1 == req->num_io_units) {
+			break;
+		}
+
+		if (req->chunk->io_unit_index[i] + 1 == req->chunk->io_unit_index[i + 1]) {
+			merged_io_desc[merged_io_idx].num_io_units += 1;
+			merge = true;
+			continue;
+		}
+		merge = false;
+		merged_io_idx++;
+	}
+
+	req->num_backing_ops = num_io;
+	req->backing_cb_args.cb_fn = next_fn;
+	req->backing_cb_args.cb_arg = req;
+	for (i = 0; i < num_io; i++) {
+		iov[i].iov_base = buf + io_unit_counts * vol->params.backing_io_unit_size;
+		iov[i].iov_len = vol->params.backing_io_unit_size * merged_io_desc[i].num_io_units;
+		if (is_write) {
+			vol->backing_dev->writev(vol->backing_dev, &iov[i], 1,
+						 merged_io_desc[i].io_unit_index * vol->backing_lba_per_io_unit,
+						 vol->backing_lba_per_io_unit * merged_io_desc[i].num_io_units,
+						 &req->backing_cb_args);
+		} else {
+			vol->backing_dev->readv(vol->backing_dev, &iov[i], 1,
+						merged_io_desc[i].io_unit_index * vol->backing_lba_per_io_unit,
+						vol->backing_lba_per_io_unit * merged_io_desc[i].num_io_units,
+						&req->backing_cb_args);
+		}
+
+		/* Collects the number of processed I/O. */
+		io_unit_counts += merged_io_desc[i].num_io_units;
 	}
 }
 
