@@ -2806,6 +2806,28 @@ nvme_rdma_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
 	return 0;
 }
 
+static int
+nvme_rdma_qpair_authenticate(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+	int rc;
+
+	/* If the qpair is still connecting, it'll be forced to authenticate later on */
+	if (rqpair->state < NVME_RDMA_QPAIR_STATE_RUNNING) {
+		return 0;
+	} else if (rqpair->state != NVME_RDMA_QPAIR_STATE_RUNNING) {
+		return -ENOTCONN;
+	}
+
+	rc = nvme_fabric_qpair_authenticate_async(qpair);
+	if (rc == 0) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTING);
+		rqpair->state = NVME_RDMA_QPAIR_STATE_AUTHENTICATING;
+	}
+
+	return rc;
+}
+
 static void
 nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
@@ -3328,6 +3350,7 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.qpair_submit_request = nvme_rdma_qpair_submit_request,
 	.qpair_process_completions = nvme_rdma_qpair_process_completions,
 	.qpair_iterate_requests = nvme_rdma_qpair_iterate_requests,
+	.qpair_authenticate = nvme_rdma_qpair_authenticate,
 	.admin_qpair_abort_aers = nvme_rdma_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_rdma_poll_group_create,

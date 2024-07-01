@@ -66,4 +66,12 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 {
 	return -ENOTSUP;
 }
+
+int
+spdk_nvme_qpair_authenticate(struct spdk_nvme_qpair *qpair,
+			     spdk_nvme_authenticate_cb cb_fn, void *cb_ctx)
+{
+	SPDK_ERRLOG("NVMe in-band authentication is unsupported\n");
+	return -ENOTSUP;
+}
 #endif /* !SPDK_CONFIG_HAVE_EVP_MAC */

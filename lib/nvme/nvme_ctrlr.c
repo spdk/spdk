@@ -604,6 +604,11 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		return 0;
 	}
 
+	if (qpair->auth.cb_fn != NULL) {
+		qpair->auth.cb_fn(qpair->auth.cb_ctx, -ECANCELED);
+		qpair->auth.cb_fn = NULL;
+	}
+
 	qpair->destroy_in_progress = 1;
 
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
@@ -5505,4 +5510,11 @@ spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_memory_domain **domains, int array_size)
 {
 	return nvme_transport_ctrlr_get_memory_domains(ctrlr, domains, array_size);
+}
+
+int
+spdk_nvme_ctrlr_authenticate(struct spdk_nvme_ctrlr *ctrlr,
+			     spdk_nvme_authenticate_cb cb_fn, void *cb_ctx)
+{
+	return spdk_nvme_qpair_authenticate(ctrlr->adminq, cb_fn, cb_ctx);
 }

@@ -642,7 +642,7 @@ nvme_fabric_qpair_auth_required(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
 	return qpair->auth.flags & (NVME_QPAIR_AUTH_FLAG_ATR | NVME_QPAIR_AUTH_FLAG_ASCR) ||
-	       ctrlr->opts.dhchap_ctrlr_key != NULL;
+	       ctrlr->opts.dhchap_ctrlr_key != NULL || qpair->auth.cb_fn != NULL;
 }
 
 int

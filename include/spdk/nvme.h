@@ -2107,6 +2107,41 @@ void spdk_nvme_qpair_set_abort_dnr(struct spdk_nvme_qpair *qpair, bool dnr);
  */
 bool spdk_nvme_qpair_is_connected(struct spdk_nvme_qpair *qpair);
 
+typedef void (*spdk_nvme_authenticate_cb)(void *ctx, int status);
+
+/**
+ * Force a qpair to authenticate.  As part of initialization, qpairs are authenticated automatically
+ * if the controller is configured with DH-HMAC-CHAP keys.  However, this function can be used to
+ * force authentication after a connection has already been established.
+ *
+ * This function doesn't disconnect the qpair if the authentication is successful.
+ *
+ * \param qpair The qpair to authenticate.
+ * \param cb_fn Callback to be executed after the authentication is done.
+ * \param cb_ctx Context passed to `cb_fn`.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_nvme_qpair_authenticate(struct spdk_nvme_qpair *qpair,
+				 spdk_nvme_authenticate_cb cb_fn, void *cb_ctx);
+
+/**
+ * Force authentication on the admin qpair of a controller.  As part of initialization, the admin
+ * qpair is authenticated automatically if the controller is configured with DH-HMAC-CHAP keys.
+ * However, this function can be used to force authentication after a connection has already been
+ * established.
+ *
+ * This function doesn't disconnect the admin qpair if the authentication is successful.
+ *
+ * \param ctrlr Controller to authenticate.
+ * \param cb_fn Callback to be executed after the authentication is done.
+ * \param cb_ctx Context passed to `cb_fn`.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_nvme_ctrlr_authenticate(struct spdk_nvme_ctrlr *ctrlr,
+				 spdk_nvme_authenticate_cb cb_fn, void *cb_ctx);
+
 /**
  * Send the given admin command to the NVMe controller.
  *
@@ -4458,6 +4493,8 @@ struct spdk_nvme_transport_ops {
 	int (*qpair_reset)(struct spdk_nvme_qpair *qpair);
 
 	int (*qpair_submit_request)(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
+
+	int (*qpair_authenticate)(struct spdk_nvme_qpair *qpair);
 
 	int32_t (*qpair_process_completions)(struct spdk_nvme_qpair *qpair, uint32_t max_completions);
 

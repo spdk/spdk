@@ -650,6 +650,19 @@ nvme_transport_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
 	return transport->ops.qpair_iterate_requests(qpair, iter_fn, arg);
 }
 
+int
+nvme_transport_qpair_authenticate(struct spdk_nvme_qpair *qpair)
+{
+	const struct spdk_nvme_transport *transport;
+
+	transport = nvme_get_transport(qpair->ctrlr->trid.trstring);
+	if (transport->ops.qpair_authenticate == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.qpair_authenticate(qpair);
+}
+
 void
 nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {

@@ -442,6 +442,9 @@ struct nvme_auth {
 	uint8_t				hash;
 	/* Buffer used for controller challenge */
 	uint8_t				challenge[NVME_AUTH_DIGEST_MAX_SIZE];
+	/* User's auth cb fn/ctx */
+	spdk_nvme_authenticate_cb	cb_fn;
+	void				*cb_ctx;
 };
 
 struct spdk_nvme_qpair {
@@ -1677,6 +1680,7 @@ void nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair);
 int nvme_transport_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
 		int (*iter_fn)(struct nvme_request *req, void *arg),
 		void *arg);
+int nvme_transport_qpair_authenticate(struct spdk_nvme_qpair *qpair);
 
 struct spdk_nvme_transport_poll_group *nvme_transport_poll_group_create(
 	const struct spdk_nvme_transport *transport);

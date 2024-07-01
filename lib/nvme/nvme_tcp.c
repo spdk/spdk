@@ -2774,6 +2774,28 @@ nvme_tcp_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
 	return 0;
 }
 
+static int
+nvme_tcp_qpair_authenticate(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	int rc;
+
+	/* If the qpair is still connecting, it'll be forced to authenticate later on */
+	if (tqpair->state < NVME_TCP_QPAIR_STATE_RUNNING) {
+		return 0;
+	} else if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
+		return -ENOTCONN;
+	}
+
+	rc = nvme_fabric_qpair_authenticate_async(qpair);
+	if (rc == 0) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTING);
+		tqpair->state = NVME_TCP_QPAIR_STATE_AUTHENTICATING;
+	}
+
+	return rc;
+}
+
 static void
 nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
@@ -3046,6 +3068,7 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.qpair_submit_request = nvme_tcp_qpair_submit_request,
 	.qpair_process_completions = nvme_tcp_qpair_process_completions,
 	.qpair_iterate_requests = nvme_tcp_qpair_iterate_requests,
+	.qpair_authenticate = nvme_tcp_qpair_authenticate,
 	.admin_qpair_abort_aers = nvme_tcp_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_tcp_poll_group_create,

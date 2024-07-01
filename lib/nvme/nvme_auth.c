@@ -1192,6 +1192,10 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 				spdk_free(status->dma_data);
 				free(status);
 			}
+			if (auth->cb_fn != NULL) {
+				auth->cb_fn(auth->cb_ctx, auth->status);
+				auth->cb_fn = NULL;
+			}
 			return auth->status;
 		default:
 			assert(0 && "invalid state");
@@ -1246,6 +1250,32 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 	/* Do the initial poll to kick-start the state machine */
 	rc = nvme_fabric_qpair_authenticate_poll(qpair);
 	return rc != -EAGAIN ? rc : 0;
+}
+
+int
+spdk_nvme_qpair_authenticate(struct spdk_nvme_qpair *qpair,
+			     spdk_nvme_authenticate_cb cb_fn, void *cb_ctx)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	int rc;
+
+	if (qpair->auth.cb_fn != NULL) {
+		SPDK_ERRLOG("authentication already in-progress\n");
+		return -EALREADY;
+	}
+
+	if (ctrlr->opts.dhchap_key == NULL) {
+		SPDK_ERRLOG("missing DH-HMAC-CHAP key\n");
+		return -ENOKEY;
+	}
+
+	rc = nvme_transport_qpair_authenticate(qpair);
+	if (rc == 0) {
+		qpair->auth.cb_fn = cb_fn;
+		qpair->auth.cb_ctx = cb_ctx;
+	}
+
+	return rc;
 }
 #endif /* SPDK_CONFIG_EVP_MAC */
 

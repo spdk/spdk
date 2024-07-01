@@ -121,6 +121,7 @@
 	spdk_nvme_ctrlr_get_memory_domains;
 	spdk_nvme_ctrlr_get_discovery_log_page;
 	spdk_nvme_ctrlr_get_registers;
+	spdk_nvme_ctrlr_authenticate;
 
 	spdk_nvme_poll_group_create;
 	spdk_nvme_poll_group_add;
@@ -195,6 +196,7 @@
 	spdk_nvme_qpair_get_num_outstanding_reqs;
 	spdk_nvme_qpair_set_abort_dnr;
 	spdk_nvme_qpair_is_connected;
+	spdk_nvme_qpair_authenticate;
 
 	spdk_nvme_print_command;
 	spdk_nvme_print_completion;
