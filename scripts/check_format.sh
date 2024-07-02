@@ -141,7 +141,7 @@ function check_c_style() {
 			rm -f astyle.log
 			touch astyle.log
 			# Exclude DPDK header files copied into our tree
-			git ls-files '*.[ch]' ':!:*/env_dpdk/*/*.h' \
+			git ls-files '*.[ch]' ':!:*/env_dpdk/*/*.h' ':!:include/linux/fuse_kernel.h' \
 				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
 					--options=.astylerc >> astyle.log
 			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
@@ -173,7 +173,7 @@ function check_comment_style() {
 
 	git grep --line-number -e '\/[*][^ *-]' -- '*.[ch]' > comment.log || true
 	git grep --line-number -e '[^ ][*]\/' -- '*.[ch]' ':!lib/rte_vhost*/*' >> comment.log || true
-	git grep --line-number -e '^[*]' -- '*.[ch]' >> comment.log || true
+	git grep --line-number -e '^[*]' -- '*.[ch]' ':!include/linux/fuse_kernel.h' >> comment.log || true
 	git grep --line-number -e '\s\/\/' -- '*.[ch]' >> comment.log || true
 	git grep --line-number -e '^\/\/' -- '*.[ch]' >> comment.log || true
 

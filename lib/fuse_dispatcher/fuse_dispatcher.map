@@ -1,0 +1,14 @@
+{
+	global:
+
+	# Public functions in fuse_dispatcher.h
+	spdk_fuse_dispatcher_create;
+	spdk_fuse_dispatcher_set_arch;
+	spdk_fuse_dispatcher_get_fsdev_name;
+	spdk_fuse_dispatcher_get_io_channel;
+	spdk_fuse_dispatcher_submit_request;
+	spdk_fuse_dispatcher_delete;
+
+	# Everything else
+	local: *;
+};
