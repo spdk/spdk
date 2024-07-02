@@ -1715,8 +1715,8 @@ uring_sock_group_impl_create(void)
 	TAILQ_INIT(&group_impl->pending_recv);
 
 	if (uring_sock_group_impl_buf_pool_alloc(group_impl) < 0) {
-		SPDK_ERRLOG("Failed to create buffer ring. Your kernel is likely not new enough. "
-			    "Please switch to the POSIX sock implementation instead.\n");
+		SPDK_ERRLOG("Failed to create buffer ring."
+			    "uring sock implementation is likely not supported on this kernel.\n");
 		io_uring_queue_exit(&group_impl->uring);
 		free(group_impl);
 		return NULL;
@@ -2064,4 +2064,16 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.set_opts		= uring_sock_impl_set_opts,
 };
 
-SPDK_NET_IMPL_REGISTER(uring, &g_uring_net_impl);
+__attribute__((constructor)) static void
+net_impl_register_uring(void)
+{
+	struct spdk_sock_group_impl *impl;
+
+	/* Check if we can create a uring sock group before we register
+	 * it as a valid impl. */
+	impl = uring_sock_group_impl_create();
+	if (impl) {
+		uring_sock_group_impl_close(impl);
+		spdk_net_impl_register(&g_uring_net_impl);
+	}
+}
