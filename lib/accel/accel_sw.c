@@ -83,6 +83,7 @@ sw_accel_supports_opcode(enum spdk_accel_opcode opc)
 	case SPDK_ACCEL_OPC_DIF_GENERATE:
 	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
 	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
+	case SPDK_ACCEL_OPC_DIX_GENERATE:
 		return true;
 	default:
 		return false;
@@ -494,6 +495,16 @@ _sw_accel_dif_generate_copy(struct sw_accel_io_channel *sw_ch, struct spdk_accel
 }
 
 static int
+_sw_accel_dix_generate(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+	return spdk_dix_generate(accel_task->s.iovs,
+				 accel_task->s.iovcnt,
+				 accel_task->d.iovs,
+				 accel_task->dif.num_blocks,
+				 accel_task->dif.ctx);
+}
+
+static int
 accel_comp_poll(void *arg)
 {
 	struct sw_accel_io_channel	*sw_ch = arg;
@@ -584,6 +595,9 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			break;
 		case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
 			rc = _sw_accel_dif_generate_copy(sw_ch, accel_task);
+			break;
+		case SPDK_ACCEL_OPC_DIX_GENERATE:
+			rc = _sw_accel_dix_generate(sw_ch, accel_task);
 			break;
 		default:
 			assert(false);

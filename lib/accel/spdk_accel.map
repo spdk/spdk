@@ -22,6 +22,7 @@
 	spdk_accel_submit_dif_verify_copy;
 	spdk_accel_submit_dif_generate;
 	spdk_accel_submit_dif_generate_copy;
+	spdk_accel_submit_dix_generate;
 	spdk_accel_get_opc_module_name;
 	spdk_accel_assign_opc;
 	spdk_accel_write_config_json;

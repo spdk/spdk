@@ -49,7 +49,8 @@ enum spdk_accel_opcode {
 	SPDK_ACCEL_OPC_DIF_VERIFY_COPY		= 12,
 	SPDK_ACCEL_OPC_DIF_GENERATE		= 13,
 	SPDK_ACCEL_OPC_DIF_GENERATE_COPY	= 14,
-	SPDK_ACCEL_OPC_LAST			= 15,
+	SPDK_ACCEL_OPC_DIX_GENERATE		= 15,
+	SPDK_ACCEL_OPC_LAST			= 16,
 };
 
 enum spdk_accel_cipher {
@@ -487,6 +488,30 @@ int spdk_accel_submit_dif_generate_copy(struct spdk_io_channel *ch, struct iovec
 					size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
 					uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 					spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Data Integrity Extension (DIX) generate operation.
+ *
+ * This operation computes Protection Information (DIX) and inserts it into metadata buffer.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param iovs The source io vector array. The total allocated memory size needs to be at least:
+ *	       num_blocks * block_size_no_md
+ * \param iovcnt The size of the source io vectors array.
+ * \param md_iov The metadata vector array. The total allocated memory size needs to be at least:
+ *		  num_blocks * md_size (8B or 16B, depending on the PI format)
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIX context. Contains the DIX configuration values, including the reference
+ *	      Application Tag value and initial value of the Reference Tag to insert
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_dix_generate(struct spdk_io_channel *ch, struct iovec *iovs,
+				   size_t iovcnt, struct iovec *md_iov, uint32_t num_blocks,
+				   const struct spdk_dif_ctx *ctx, spdk_accel_completion_cb cb_fn,
+				   void *cb_arg);
 
 /** Object grouping multiple accel operations to be executed at the same point in time */
 struct spdk_accel_sequence;
