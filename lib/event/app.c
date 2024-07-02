@@ -20,6 +20,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/file.h"
+#include "spdk/config.h"
 #include "event_internal.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
@@ -40,8 +41,6 @@
  * multiplied by factor of 4 to have space for multiple spdk threads running
  * on single core (e.g  iscsi + nvmf + vhost ). */
 #define SPDK_APP_PER_CORE_MSG_MEMPOOL_SIZE	(4 * SPDK_MSG_MEMPOOL_CACHE_SIZE)
-
-#define MAX_CPU_CORES				128
 
 struct spdk_app {
 	void				*json_data;
@@ -66,13 +65,13 @@ static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
 static bool g_disable_cpumask_locks = false;
 
-static int g_core_locks[MAX_CPU_CORES];
+static int g_core_locks[SPDK_CONFIG_MAX_LCORES];
 
 static struct {
 	uint64_t irq;
 	uint64_t usr;
 	uint64_t sys;
-} g_initial_stat[MAX_CPU_CORES];
+} g_initial_stat[SPDK_CONFIG_MAX_LCORES];
 
 int
 spdk_app_get_shm_id(void)
@@ -191,7 +190,7 @@ init_proc_stat(unsigned int core)
 {
 	uint64_t usr, sys, irq;
 
-	if (core >= MAX_CPU_CORES) {
+	if (core >= SPDK_CONFIG_MAX_LCORES) {
 		return -1;
 	}
 
@@ -211,7 +210,7 @@ app_get_proc_stat(unsigned int core, uint64_t *usr, uint64_t *sys, uint64_t *irq
 {
 	uint64_t _usr, _sys, _irq;
 
-	if (core >= MAX_CPU_CORES) {
+	if (core >= SPDK_CONFIG_MAX_LCORES) {
 		return -1;
 	}
 
@@ -696,7 +695,7 @@ unclaim_cpu_cores(uint32_t *failed_core)
 	uint32_t i;
 	int rc;
 
-	for (i = 0; i < MAX_CPU_CORES; i++) {
+	for (i = 0; i < SPDK_CONFIG_MAX_LCORES; i++) {
 		if (g_core_locks[i] != -1) {
 			snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", i);
 			rc = close(g_core_locks[i]);
@@ -893,7 +892,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	spdk_log_open(opts->log);
 
 	/* Initialize each lock to -1 to indicate "empty" status */
-	for (i = 0; i < MAX_CPU_CORES; i++) {
+	for (i = 0; i < SPDK_CONFIG_MAX_LCORES; i++) {
 		g_core_locks[i] = -1;
 	}
 
