@@ -50,7 +50,8 @@ enum spdk_accel_opcode {
 	SPDK_ACCEL_OPC_DIF_GENERATE		= 13,
 	SPDK_ACCEL_OPC_DIF_GENERATE_COPY	= 14,
 	SPDK_ACCEL_OPC_DIX_GENERATE		= 15,
-	SPDK_ACCEL_OPC_LAST			= 16,
+	SPDK_ACCEL_OPC_DIX_VERIFY		= 16,
+	SPDK_ACCEL_OPC_LAST			= 17,
 };
 
 enum spdk_accel_cipher {
@@ -512,6 +513,36 @@ int spdk_accel_submit_dix_generate(struct spdk_io_channel *ch, struct iovec *iov
 				   size_t iovcnt, struct iovec *md_iov, uint32_t num_blocks,
 				   const struct spdk_dif_ctx *ctx, spdk_accel_completion_cb cb_fn,
 				   void *cb_arg);
+
+/**
+ * Submit a Data Integrity Extension (DIX) verify request.
+ *
+ * This operation computes the Protection Information (DIX) on the data and compares it against
+ * the DIX contained in the metadata.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param iovs The io vector array. The total allocated memory size needs to be at least:
+ *             num_blocks * block_size
+ * \param iovcnt The size of the io vectors array.
+ * \param md_iov The metadata vector array. The total allocated memory size needs to be at least:
+ *		 num_blocks * md_size (8B or 16B, depending on the PI format)
+ * \param num_blocks Number of data blocks to check.
+ * \param ctx DIX context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to check
+ *            Note: the user must ensure the validity of this pointer throughout the entire
+ *	      operation because it is not validated along the processing path.
+ * \param err DIX error detailed information.
+ *            Note: the user must ensure the validity of this pointer throughout the entire
+ *	      operation because it is not validated along the processing path.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_dix_verify(struct spdk_io_channel *ch, struct iovec *iovs,
+				 size_t iovcnt,  struct iovec *md_iov, uint32_t num_blocks,
+				 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /** Object grouping multiple accel operations to be executed at the same point in time */
 struct spdk_accel_sequence;
