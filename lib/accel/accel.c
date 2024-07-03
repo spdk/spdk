@@ -295,6 +295,12 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 	return accel_task;
 }
 
+static void
+_put_task(struct accel_io_channel *ch, struct spdk_accel_task *task)
+{
+	STAILQ_INSERT_HEAD(&ch->task_pool, task, link);
+}
+
 void
 spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 {
@@ -326,7 +332,7 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	 * the accel task list is exhausted when there is recursive call to
 	 * allocate accel_task in user's call back function (cb_fn)
 	 */
-	STAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
+	_put_task(accel_ch, accel_task);
 
 	cb_fn(cb_arg, status);
 }
@@ -364,7 +370,7 @@ do {										\
         (task)->aux = SLIST_FIRST(&(task)->accel_ch->task_aux_data_pool);	\
         if (spdk_unlikely(!(task)->aux)) {					\
                 SPDK_ERRLOG("Fatal problem, aux data was not allocated\n");	\
-                STAILQ_INSERT_HEAD(&(task)->accel_ch->task_pool, (task), link);	\
+                _put_task(task->accel_ch, task);				\
                 assert(0);							\
                 return -ENOMEM;							\
         }									\
@@ -1092,8 +1098,9 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 		if (*pseq == NULL) {
 			accel_sequence_put((seq));
 		}
-		STAILQ_INSERT_HEAD(&task->accel_ch->task_pool, task, link);
+
 		task->seq = NULL;
+		_put_task(task->accel_ch, task);
 		assert(0);
 		return -ENOMEM;
 	}
@@ -1364,7 +1371,9 @@ accel_sequence_complete_task(struct spdk_accel_sequence *seq, struct spdk_accel_
 		task->aux = NULL;
 		task->has_aux = false;
 	}
-	STAILQ_INSERT_HEAD(&ch->task_pool, task, link);
+
+	_put_task(ch, task);
+
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg);
 	}
