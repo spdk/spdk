@@ -929,6 +929,10 @@ static struct spdk_nvme_ctrlr *
 					      NVME_PCIE_MIN_ADMIN_QUEUE_SIZE);
 	pci_id = spdk_pci_device_get_id(pci_dev);
 	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
+	if (pci_dev->numa_id != SPDK_ENV_NUMA_ID_ANY) {
+		pctrlr->ctrlr.numa.id_valid = 1;
+		pctrlr->ctrlr.numa.id = pci_dev->numa_id;
+	}
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {
