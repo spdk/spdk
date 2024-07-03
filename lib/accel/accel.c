@@ -37,6 +37,7 @@
 #define ACCEL_BUFFER_OFFSET_MASK	((uintptr_t)ACCEL_BUFFER_BASE - 1)
 
 #define ACCEL_CRYPTO_TWEAK_MODE_DEFAULT	SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA
+#define ACCEL_TASKS_IN_SEQUENCE_LIMIT	8
 
 struct accel_module {
 	struct spdk_accel_module_if	*module;
@@ -283,6 +284,7 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 		return NULL;
 	}
 
+	accel_update_stats(accel_ch, task_outstanding, 1);
 	STAILQ_REMOVE_HEAD(&accel_ch->task_pool, link);
 	accel_task->link.stqe_next = NULL;
 
@@ -299,6 +301,7 @@ static void
 _put_task(struct accel_io_channel *ch, struct spdk_accel_task *task)
 {
 	STAILQ_INSERT_HEAD(&ch->task_pool, task, link);
+	accel_update_stats(ch, task_outstanding, -1);
 }
 
 void
@@ -959,6 +962,17 @@ static inline struct spdk_accel_sequence *
 accel_sequence_get(struct accel_io_channel *ch)
 {
 	struct spdk_accel_sequence *seq;
+
+	assert(g_opts.task_count >= ch->stats.task_outstanding);
+
+	/* Sequence cannot be allocated if number of available task objects cannot satisfy required limit.
+	 * This is to prevent potential dead lock when few requests are pending task resource and none can
+	 * advance the processing. This solution should work only if there is single async operation after
+	 * sequence obj obtained, so assume that is possible to happen with io buffer allocation now, if
+	 * there are more async operations then solution should be improved. */
+	if (spdk_unlikely(g_opts.task_count - ch->stats.task_outstanding < ACCEL_TASKS_IN_SEQUENCE_LIMIT)) {
+		return NULL;
+	}
 
 	seq = SLIST_FIRST(&ch->seq_pool);
 	if (spdk_unlikely(seq == NULL)) {
@@ -2635,6 +2649,7 @@ accel_add_stats(struct accel_stats *total, struct accel_stats *stats)
 	total->sequence_executed += stats->sequence_executed;
 	total->sequence_failed += stats->sequence_failed;
 	total->sequence_outstanding += stats->sequence_outstanding;
+	total->task_outstanding += stats->task_outstanding;
 	total->retry.task += stats->retry.task;
 	total->retry.sequence += stats->retry.sequence;
 	total->retry.iobuf += stats->retry.iobuf;
@@ -3108,6 +3123,11 @@ spdk_accel_set_opts(const struct spdk_accel_opts *opts)
 	if (!opts->opts_size) {
 		SPDK_ERRLOG("opts_size inside opts cannot be zero value\n");
 		return -1;
+	}
+
+	if (SPDK_GET_FIELD(opts, task_count, g_opts.task_count,
+			   opts->opts_size) < ACCEL_TASKS_IN_SEQUENCE_LIMIT) {
+		return -EINVAL;
 	}
 
 #define SET_FIELD(field) \

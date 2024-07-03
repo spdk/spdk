@@ -33,6 +33,7 @@ struct accel_stats {
 	uint64_t			sequence_executed;
 	uint64_t			sequence_failed;
 	uint32_t			sequence_outstanding;
+	uint32_t			task_outstanding;
 
 	struct {
 		uint64_t task;

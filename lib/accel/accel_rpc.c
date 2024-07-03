@@ -424,6 +424,7 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 	spdk_json_write_named_uint64(w, "sequence_executed", stats->sequence_executed);
 	spdk_json_write_named_uint64(w, "sequence_failed", stats->sequence_failed);
 	spdk_json_write_named_uint64(w, "sequence_outstanding", stats->sequence_outstanding);
+	spdk_json_write_named_uint64(w, "task_outstanding", stats->task_outstanding);
 	spdk_json_write_named_array_begin(w, "operations");
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		if (stats->operations[i].executed + stats->operations[i].failed == 0) {
