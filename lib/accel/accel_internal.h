@@ -32,6 +32,7 @@ struct accel_stats {
 	struct accel_operation_stats	operations[SPDK_ACCEL_OPC_LAST];
 	uint64_t			sequence_executed;
 	uint64_t			sequence_failed;
+	uint32_t			sequence_outstanding;
 
 	struct {
 		uint64_t task;

@@ -966,6 +966,7 @@ accel_sequence_get(struct accel_io_channel *ch)
 		return NULL;
 	}
 
+	accel_update_stats(ch, sequence_outstanding, 1);
 	SLIST_REMOVE_HEAD(&ch->seq_pool, link);
 
 	TAILQ_INIT(&seq->tasks);
@@ -995,6 +996,7 @@ accel_sequence_put(struct spdk_accel_sequence *seq)
 	seq->ch = NULL;
 
 	SLIST_INSERT_HEAD(&ch->seq_pool, seq, link);
+	accel_update_stats(ch, sequence_outstanding, -1);
 }
 
 static void accel_sequence_task_cb(void *cb_arg, int status);
@@ -2632,6 +2634,7 @@ accel_add_stats(struct accel_stats *total, struct accel_stats *stats)
 
 	total->sequence_executed += stats->sequence_executed;
 	total->sequence_failed += stats->sequence_failed;
+	total->sequence_outstanding += stats->sequence_outstanding;
 	total->retry.task += stats->retry.task;
 	total->retry.sequence += stats->retry.sequence;
 	total->retry.iobuf += stats->retry.iobuf;
