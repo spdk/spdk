@@ -1384,20 +1384,23 @@ accel_sequence_complete_tasks(struct spdk_accel_sequence *seq)
 static void
 accel_sequence_complete(struct spdk_accel_sequence *seq)
 {
-	SPDK_DEBUGLOG(accel, "Completed sequence: %p with status: %d\n", seq, seq->status);
+	spdk_accel_completion_cb cb_fn = seq->cb_fn;
+	void *cb_arg = seq->cb_arg;
+	int status = seq->status;
+
+	SPDK_DEBUGLOG(accel, "Completed sequence: %p with status: %d\n", seq, status);
 
 	accel_update_stats(seq->ch, sequence_executed, 1);
-	if (spdk_unlikely(seq->status != 0)) {
+	if (spdk_unlikely(status != 0)) {
 		accel_update_stats(seq->ch, sequence_failed, 1);
 	}
 
 	/* First notify all users that appended operations to this sequence */
 	accel_sequence_complete_tasks(seq);
+	accel_sequence_put(seq);
 
 	/* Then notify the user that finished the sequence */
-	seq->cb_fn(seq->cb_arg, seq->status);
-
-	accel_sequence_put(seq);
+	cb_fn(cb_arg, status);
 }
 
 static void
