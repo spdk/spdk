@@ -295,7 +295,7 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 		opts->impl_opts = opts_user->impl_opts;
 	}
 
-	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts_size)) {
 		opts->impl_opts_size = opts_user->impl_opts_size;
 	}
 }
