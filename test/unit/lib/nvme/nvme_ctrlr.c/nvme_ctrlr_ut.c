@@ -3412,6 +3412,22 @@ test_nvme_ctrlr_disable(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_nvme_numa_id(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	ctrlr.numa.id = 3;
+	ctrlr.numa.id_valid = 0;
+	CU_ASSERT(spdk_nvme_ctrlr_get_numa_id(&ctrlr) == SPDK_ENV_NUMA_ID_ANY);
+
+	ctrlr.numa.id_valid = 1;
+	CU_ASSERT(spdk_nvme_ctrlr_get_numa_id(&ctrlr) == 3);
+
+	ctrlr.numa.id = SPDK_ENV_NUMA_ID_ANY;
+	CU_ASSERT(spdk_nvme_ctrlr_get_numa_id(&ctrlr) == SPDK_ENV_NUMA_ID_ANY);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3469,6 +3485,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domains);
 	CU_ADD_TEST(suite, test_nvme_transport_ctrlr_ready);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_disable);
+	CU_ADD_TEST(suite, test_nvme_numa_id);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

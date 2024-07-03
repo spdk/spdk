@@ -981,6 +981,12 @@ struct spdk_nvme_ctrlr {
 
 	struct spdk_nvme_transport_id	trid;
 
+	struct {
+		/** Is numa.id valid? Ensures numa.id == 0 is interpreted correctly. */
+		uint32_t		id_valid : 1;
+		int32_t			id : 31;
+	} numa;
+
 	union spdk_nvme_cap_register	cap;
 	union spdk_nvme_vs_register	vs;
 

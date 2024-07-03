@@ -1358,6 +1358,19 @@ uint32_t spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr);
 struct spdk_pci_device *spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NUMA ID for the given NVMe controller.
+ *
+ * For network-based transports, the NUMA ID will be correlated to the
+ * network interface.
+ *
+ * \param ctrlr Opaque handle to NVMe controller
+ *
+ * \return NUMA ID of the NVMe controller, or SPDK_ENV_NUMA_ID_ANY if
+ *         the NUMA ID is unknown
+ */
+int32_t spdk_nvme_ctrlr_get_numa_id(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the maximum data transfer size of a given NVMe controller.
  *
  * \param ctrlr Opaque handle to NVMe controller.

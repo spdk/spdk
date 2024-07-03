@@ -4723,6 +4723,16 @@ spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_ctrlr_proc_get_devhandle(ctrlr);
 }
 
+int32_t
+spdk_nvme_ctrlr_get_numa_id(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr->numa.id_valid) {
+		return ctrlr->numa.id;
+	} else {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+}
+
 uint32_t
 spdk_nvme_ctrlr_get_max_xfer_size(const struct spdk_nvme_ctrlr *ctrlr)
 {

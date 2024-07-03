@@ -56,6 +56,7 @@
 	spdk_nvme_ctrlr_get_pmrsz;
 	spdk_nvme_ctrlr_get_num_ns;
 	spdk_nvme_ctrlr_get_pci_device;
+	spdk_nvme_ctrlr_get_numa_id;
 	spdk_nvme_ctrlr_get_max_xfer_size;
 	spdk_nvme_ctrlr_get_max_sges;
 	spdk_nvme_ctrlr_is_active_ns;
