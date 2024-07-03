@@ -237,8 +237,18 @@ struct spdk_sock_opts {
 	 * Size of the impl_opts structure.
 	 */
 	size_t impl_opts_size;
+
+	/**
+	 * Source address.  If NULL, any available address will be used.  Only valid for connect().
+	 */
+	const char *src_addr;
+
+	/**
+	 * Source port.  If zero, a random ephemeral port will be used.  Only valid for connect().
+	 */
+	uint16_t src_port;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 40, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 56, "Incorrect size");
 
 /**
  * Initialize the default value of opts.
