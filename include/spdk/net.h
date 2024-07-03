@@ -29,6 +29,26 @@ extern "C" {
  */
 int spdk_net_get_interface_name(const char *ip, char *ifc, size_t len);
 
+/**
+ * Gets the address string for a given struct sockaddr
+ *
+ * \param sa sockaddr to get the address string for
+ * \param addr string to put the address
+ * \param len length of the the addr parameter
+ *
+ * \return 0 if successful, negative -errno otherwise
+ */
+int spdk_net_get_address_string(struct sockaddr *sa, char *addr, size_t len);
+
+/**
+ * Checks if the given fd is a loopback interface or not.
+ *
+ * \param fd file descriptor to check
+ *
+ * \return true if the fd is loopback, false if not
+ */
+bool spdk_net_is_loopback(int fd);
+
 #ifdef __cplusplus
 }
 #endif

@@ -25,7 +25,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk_internal/sock.h"
-#include "../sock_kernel.h"
+#include "spdk/net.h"
 
 #include "openssl/crypto.h"
 #include "openssl/err.h"
@@ -253,9 +253,9 @@ posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		return -1;
 	}
 
-	rc = get_addr_str((struct sockaddr *)&sa, saddr, slen);
+	rc = spdk_net_get_address_string((struct sockaddr *)&sa, saddr, slen);
 	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
+		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
 		return -1;
 	}
 
@@ -275,9 +275,9 @@ posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		return -1;
 	}
 
-	rc = get_addr_str((struct sockaddr *)&sa, caddr, clen);
+	rc = spdk_net_get_address_string((struct sockaddr *)&sa, caddr, clen);
 	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
+		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
 		return -1;
 	}
 
@@ -1079,7 +1079,7 @@ retry:
 	}
 
 	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	enable_zcopy_user_opts = opts->zcopy && !sock_is_loopback(fd) && !enable_ssl;
+	enable_zcopy_user_opts = opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl;
 
 	sock = posix_sock_alloc(fd, &impl_opts, enable_zcopy_user_opts && enable_zcopy_impl_opts);
 	if (sock == NULL) {

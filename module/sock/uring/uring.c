@@ -20,7 +20,7 @@
 
 #include "spdk_internal/sock.h"
 #include "spdk_internal/assert.h"
-#include "../sock_kernel.h"
+#include "spdk/net.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
@@ -258,9 +258,9 @@ uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		return -1;
 	}
 
-	rc = get_addr_str((struct sockaddr *)&sa, saddr, slen);
+	rc = spdk_net_get_address_string((struct sockaddr *)&sa, saddr, slen);
 	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
+		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
 		return -1;
 	}
 
@@ -280,9 +280,9 @@ uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		return -1;
 	}
 
-	rc = get_addr_str((struct sockaddr *)&sa, caddr, clen);
+	rc = spdk_net_get_address_string((struct sockaddr *)&sa, caddr, clen);
 	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
+		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
 		return -1;
 	}
 
@@ -670,7 +670,7 @@ retry:
 		return NULL;
 	}
 
-	enable_zcopy_user_opts = opts->zcopy && !sock_is_loopback(fd);
+	enable_zcopy_user_opts = opts->zcopy && !spdk_net_is_loopback(fd);
 	sock = uring_sock_alloc(fd, &impl_opts, enable_zcopy_user_opts && enable_zcopy_impl_opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
