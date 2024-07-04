@@ -2313,7 +2313,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	int rc;
 	struct nvme_tcp_qpair *tqpair;
 	int family;
-	long int port, src_port;
+	long int port, src_port = 0;
 	char *sock_impl_name;
 	struct spdk_sock_impl_opts impl_opts = {};
 	size_t impl_opts_size = sizeof(impl_opts);
@@ -2348,7 +2348,10 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	if (ctrlr->opts.src_addr[0] || ctrlr->opts.src_svcid[0]) {
 		memset(&src_addr, 0, sizeof(src_addr));
-		rc = nvme_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid, &src_port);
+		rc = nvme_parse_addr(&src_addr, family,
+				     ctrlr->opts.src_addr[0] ? ctrlr->opts.src_addr : NULL,
+				     ctrlr->opts.src_svcid[0] ? ctrlr->opts.src_svcid : NULL,
+				     &src_port);
 		if (rc != 0) {
 			SPDK_ERRLOG("src_addr nvme_parse_addr() failed\n");
 			return rc;

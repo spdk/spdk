@@ -1631,15 +1631,12 @@ nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
 
-	if (addr == NULL || service == NULL) {
-		SPDK_ERRLOG("addr and service must both be non-NULL\n");
-		return -EINVAL;
-	}
-
-	*port = spdk_strtol(service, 10);
-	if (*port <= 0 || *port >= 65536) {
-		SPDK_ERRLOG("Invalid port: %s\n", service);
-		return -EINVAL;
+	if (service != NULL) {
+		*port = spdk_strtol(service, 10);
+		if (*port <= 0 || *port >= 65536) {
+			SPDK_ERRLOG("Invalid port: %s\n", service);
+			return -EINVAL;
+		}
 	}
 
 	ret = getaddrinfo(addr, service, &hints, &res);
