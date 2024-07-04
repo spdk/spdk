@@ -396,7 +396,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 }
 
 static void
-gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
@@ -406,9 +406,8 @@ gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, voi
 	spdk_put_io_channel(gpt_base->ch);
 	gpt_base->ch = NULL;
 
-	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
-			    spdk_bdev_get_name(bdev), status);
+	if (!success) {
+		SPDK_ERRLOG("Gpt: bdev=%s io error\n", spdk_bdev_get_name(bdev));
 		goto end;
 	}
 
@@ -456,7 +455,7 @@ vbdev_gpt_read_secondary_table(struct gpt_base *gpt_base)
 }
 
 static void
-gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
@@ -464,9 +463,8 @@ gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 
 	spdk_bdev_free_io(bdev_io);
 
-	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
-			    spdk_bdev_get_name(bdev), status);
+	if (!success) {
+		SPDK_ERRLOG("Gpt: bdev=%s io error\n", spdk_bdev_get_name(bdev));
 		goto end;
 	}
 
