@@ -111,6 +111,8 @@ run_test "accel_xor" accel_test -t 1 -w xor -y -x 3
 run_test "accel_dif_verify" accel_test -t 1 -w dif_verify
 run_test "accel_dif_generate" accel_test -t 1 -w dif_generate
 run_test "accel_dif_generate_copy" accel_test -t 1 -w dif_generate_copy
+run_test "accel_dix_verify" accel_test -t 1 -w dix_verify
+run_test "accel_dix_generate" accel_test -t 1 -w dif_generate
 # do not run compress/decompress unless ISAL is installed
 if [[ $CONFIG_ISAL == y ]]; then
 	run_test "accel_comp" accel_test -t 1 -w compress -l $testdir/bib
