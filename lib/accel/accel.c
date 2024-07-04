@@ -272,6 +272,29 @@ spdk_accel_assign_opc(enum spdk_accel_opcode opcode, const char *name)
 	return 0;
 }
 
+inline static struct spdk_accel_task *
+_get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct spdk_accel_task *accel_task;
+
+	accel_task = STAILQ_FIRST(&accel_ch->task_pool);
+	if (spdk_unlikely(accel_task == NULL)) {
+		accel_update_stats(accel_ch, retry.task, 1);
+		return NULL;
+	}
+
+	STAILQ_REMOVE_HEAD(&accel_ch->task_pool, link);
+	accel_task->link.stqe_next = NULL;
+
+	accel_task->cb_fn = cb_fn;
+	accel_task->cb_arg = cb_arg;
+	accel_task->accel_ch = accel_ch;
+	accel_task->s.iovs = NULL;
+	accel_task->d.iovs = NULL;
+
+	return accel_task;
+}
+
 void
 spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 {
@@ -306,29 +329,6 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	STAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 
 	cb_fn(cb_arg, status);
-}
-
-inline static struct spdk_accel_task *
-_get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct spdk_accel_task *accel_task;
-
-	accel_task = STAILQ_FIRST(&accel_ch->task_pool);
-	if (spdk_unlikely(accel_task == NULL)) {
-		accel_update_stats(accel_ch, retry.task, 1);
-		return NULL;
-	}
-
-	STAILQ_REMOVE_HEAD(&accel_ch->task_pool, link);
-	accel_task->link.stqe_next = NULL;
-
-	accel_task->cb_fn = cb_fn;
-	accel_task->cb_arg = cb_arg;
-	accel_task->accel_ch = accel_ch;
-	accel_task->s.iovs = NULL;
-	accel_task->d.iovs = NULL;
-
-	return accel_task;
 }
 
 static inline int
