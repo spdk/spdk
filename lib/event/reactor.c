@@ -106,11 +106,15 @@ spdk_scheduler_set(const char *name)
 		g_scheduler = scheduler;
 	} else {
 		/* Could not switch to the new scheduler, so keep the old
-		 * one. We need to ->init() it again.
+		 * one. We need to check if it wasn't NULL, and ->init() it again.
 		 */
-		SPDK_ERRLOG("Could not ->init() '%s' scheduler, reverting to '%s'\n",
-			    name, g_scheduler->name);
-		g_scheduler->init();
+		if (g_scheduler) {
+			SPDK_ERRLOG("Could not ->init() '%s' scheduler, reverting to '%s'\n",
+				    name, g_scheduler->name);
+			g_scheduler->init();
+		} else {
+			SPDK_ERRLOG("Could not ->init() '%s' scheduler.\n", name);
+		}
 	}
 
 	return rc;
