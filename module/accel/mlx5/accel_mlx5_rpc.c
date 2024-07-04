@@ -36,7 +36,7 @@ rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 
 	rc = accel_mlx5_enable(&attr);
 	if (rc) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc, "mlx5 scan failed with %d\n", rc);
+		spdk_jsonrpc_send_error_response_fmt(request, rc, "mlx5 scan failed with %d", rc);
 	} else {
 		spdk_jsonrpc_send_bool_response(request, true);
 	}
