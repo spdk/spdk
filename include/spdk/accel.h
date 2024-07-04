@@ -683,7 +683,8 @@ void spdk_accel_sequence_reverse(struct spdk_accel_sequence *seq);
 
 /**
  * Abort a sequence.  This will execute the completion callbacks of all operations that were added
- * to the sequence and will then free the sequence object.
+ * to the sequence and will then free the sequence object.  This function can only be used before a
+ * sequence is executed, i.e. before calling `spdk_accel_sequence_finish()`.
  *
  * \param seq Sequence to abort.
  */
