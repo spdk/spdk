@@ -711,7 +711,7 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 		coremask = spdk_app_get_core_mask();
 		spdk_cpuset_copy(&tmp_mask, coremask);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "No CPU is selected from reactor mask %s\n",
+						     "No CPU is selected from reactor mask %s",
 						     spdk_cpuset_fmt(&tmp_mask));
 		goto err;
 	}
@@ -732,7 +732,7 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 		spdk_cpuset_and(&tmp_cpuset, &ctx->cpumask);
 		if (spdk_cpuset_count(&tmp_cpuset) == 0) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							     "cpumask %s are all in interrupt mode, and can't be scheduled yet\n",
+							     "cpumask %s are all in interrupt mode, and can't be scheduled yet",
 							     req.cpumask);
 			goto err;
 		}
