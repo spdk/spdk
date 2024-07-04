@@ -332,6 +332,7 @@ struct rpc_subsystem_create {
 	uint16_t max_cntlid;
 	uint64_t max_discard_size_kib;
 	uint64_t max_write_zeroes_size_kib;
+	bool passthrough;
 };
 
 static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
@@ -346,6 +347,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
 	{"max_cntlid", offsetof(struct rpc_subsystem_create, max_cntlid), spdk_json_decode_uint16, true},
 	{"max_discard_size_kib", offsetof(struct rpc_subsystem_create, max_discard_size_kib), spdk_json_decode_uint64, true},
 	{"max_write_zeroes_size_kib", offsetof(struct rpc_subsystem_create, max_write_zeroes_size_kib), spdk_json_decode_uint64, true},
+	{"passthrough", offsetof(struct rpc_subsystem_create, passthrough), spdk_json_decode_bool, true},
 };
 
 static void
@@ -451,6 +453,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 						     "Invalid max_write_zeroes_size_kib %"PRIu64, req->max_write_zeroes_size_kib);
 		goto cleanup;
 	}
+
+	subsystem->passthrough = req->passthrough;
 
 	rc = spdk_nvmf_subsystem_start(subsystem,
 				       rpc_nvmf_subsystem_started,

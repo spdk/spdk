@@ -56,6 +56,7 @@ static struct spdk_nvmf_custom_admin_cmd g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME
 
 static void _nvmf_request_complete(void *ctx);
 int nvmf_passthru_admin_cmd_for_ctrlr(struct spdk_nvmf_request *req, struct spdk_nvmf_ctrlr *ctrlr);
+static int nvmf_passthru_admin_cmd(struct spdk_nvmf_request *req);
 
 static inline void
 nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
@@ -3768,6 +3769,13 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		}
 	}
 
+	/* We only want to send passthrough admin commands to namespaces.
+	 * However, we don't want to passthrough a command with intended for all namespaces.
+	 */
+	if (ctrlr->subsys->passthrough && cmd->nsid && cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG) {
+		return nvmf_passthru_admin_cmd(req);
+	}
+
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
 		return nvmf_ctrlr_get_log_page(req);
@@ -4432,6 +4440,13 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		fused_response->status.sct = SPDK_NVME_SCT_GENERIC;
 		_nvmf_request_complete(qpair->first_fused_req);
 		qpair->first_fused_req = NULL;
+	}
+
+	if (ctrlr->subsys->passthrough) {
+		assert(ns->passthrough_nsid > 0);
+		req->cmd->nvme_cmd.nsid = ns->passthrough_nsid;
+
+		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
 
 	if (spdk_nvmf_request_using_zcopy(req)) {

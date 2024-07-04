@@ -2632,7 +2632,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        min_cntlid=args.min_cntlid,
                                        max_cntlid=args.max_cntlid,
                                        max_discard_size_kib=args.max_discard_size,
-                                       max_write_zeroes_size_kib=args.max_write_zeroes_size)
+                                       max_write_zeroes_size_kib=args.max_write_zeroes_size,
+                                       passthrough=args.passthrough)
 
     p = subparsers.add_parser('nvmf_create_subsystem', help='Create an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
@@ -2651,6 +2652,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-I", "--max_cntlid", help="Maximum controller ID", type=int)
     p.add_argument("--max-discard-size", help="Maximum discard size (Kib)", type=int)
     p.add_argument("--max-write-zeroes-size", help="Maximum write_zeroes size (Kib)", type=int)
+    p.add_argument("-p", "--passthrough", action='store_true', help="""Use NVMe passthrough for all I/O commands and namespace-directed
+                   admin commands""")
     p.set_defaults(func=nvmf_create_subsystem)
 
     def nvmf_delete_subsystem(args):

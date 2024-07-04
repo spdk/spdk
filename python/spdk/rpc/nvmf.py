@@ -196,7 +196,8 @@ def nvmf_create_subsystem(client,
                           min_cntlid=1,
                           max_cntlid=0xffef,
                           max_discard_size_kib=0,
-                          max_write_zeroes_size_kib=0):
+                          max_write_zeroes_size_kib=0,
+                          passthrough=False):
     """Construct an NVMe over Fabrics target subsystem.
 
     Args:
@@ -211,6 +212,7 @@ def nvmf_create_subsystem(client,
         max_cntlid: Maximum controller ID. Default: 0xffef
         max_discard_size: Maximum discard size (Kib). Default: 0
         max_write_zeroes_size: Maximum write_zeroes size (Kib). Default: 0
+        passthrough: for all I/O commands and namespace-directed admin commands. Default: False.
 
 
     Returns:
@@ -249,6 +251,9 @@ def nvmf_create_subsystem(client,
 
     if max_write_zeroes_size_kib is not None:
         params['max_write_zeroes_size_kib'] = max_write_zeroes_size_kib
+
+    if passthrough:
+        params['passthrough'] = passthrough
 
     return client.call('nvmf_create_subsystem', params)
 

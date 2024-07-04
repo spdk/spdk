@@ -350,6 +350,7 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, nvmf_subsystem_state_change_ctx)	state_changes;
 	/* In-band authentication sequence number, protected by ->mutex */
 	uint32_t					auth_seqnum;
+	bool						passthrough;
 };
 
 static int
