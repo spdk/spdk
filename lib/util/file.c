@@ -4,6 +4,7 @@
  */
 
 #include "spdk/file.h"
+#include "spdk/string.h"
 
 void *
 spdk_posix_file_load(FILE *file, size_t *size)
@@ -56,4 +57,58 @@ spdk_posix_file_load_from_name(const char *file_name, size_t *size)
 	fclose(file);
 
 	return data;
+}
+
+static int
+read_sysfs_attribute(char **attribute_p, const char *format, va_list args)
+{
+	char *attribute;
+	FILE *file;
+	char *path;
+	size_t len = 0;
+	ssize_t read;
+
+	path = spdk_vsprintf_alloc(format, args);
+	if (path == NULL) {
+		return -ENOMEM;
+	}
+
+	file = fopen(path, "r");
+	free(path);
+	if (file == NULL) {
+		return -errno;
+	}
+
+	*attribute_p = NULL;
+	read = getline(attribute_p, &len, file);
+	fclose(file);
+	attribute = *attribute_p;
+	if (read == -1) {
+		/* getline man page says line should be freed even on failure. */
+		free(attribute);
+		return -errno;
+	}
+
+	/* len is the length of the allocated buffer, which may be more than
+	 * the string's length. Reuse len to hold the actual strlen.
+	 */
+	len = strlen(attribute);
+	if (attribute[len - 1] == '\n') {
+		attribute[len - 1] = '\0';
+	}
+
+	return 0;
+}
+
+int
+spdk_read_sysfs_attribute(char **attribute_p, const char *path_format, ...)
+{
+	va_list args;
+	int rc;
+
+	va_start(args, path_format);
+	rc = read_sysfs_attribute(attribute_p, path_format, args);
+	va_end(args);
+
+	return rc;
 }

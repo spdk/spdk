@@ -36,6 +36,23 @@ void *spdk_posix_file_load(FILE *file, size_t *size);
  */
 void *spdk_posix_file_load_from_name(const char *file_name, size_t *size);
 
+/**
+ * Get the string value for a given sysfs attribute path
+ *
+ * When successful, the returned string will be null-terminated, without
+ * a trailing newline.
+ *
+ * \param attribute output parameter for contents of the attribute; caller must
+ *		    free() the buffer pointed to by attribute at some
+ *		    point after a successful call
+ * \param path_format format string for constructing patch to sysfs file
+ *
+ * \return 0 on success
+ *         negative errno if unable to read the attribute
+ */
+int spdk_read_sysfs_attribute(char **attribute, const char *path_format, ...)
+__attribute__((format(printf, 2, 3)));
+
 #ifdef __cplusplus
 }
 #endif
