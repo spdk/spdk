@@ -555,7 +555,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		if (ctx->req.multipath == BDEV_NVME_MP_MODE_DISABLE) {
 			/* The user does not want to do any form of multipathing. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
-							     "A controller named %s already exists and multipath is disabled\n",
+							     "A controller named %s already exists and multipath is disabled",
 							     ctx->req.name);
 			goto cleanup;
 		}
@@ -573,7 +573,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		    strncmp(ctx->req.drv_opts.src_svcid, drv_opts->src_svcid, sizeof(drv_opts->src_svcid)) == 0) {
 			/* Exactly same network path can't be added a second time */
 			spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
-							     "A controller named %s already exists with the specified network path\n",
+							     "A controller named %s already exists with the specified network path",
 							     ctx->req.name);
 			goto cleanup;
 		}
@@ -583,7 +583,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			    SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different SUBNQN is not allowed when specifying the same controller name. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-							     "A controller named %s already exists, but uses a different subnqn (%s)\n",
+							     "A controller named %s already exists, but uses a different subnqn (%s)",
 							     ctx->req.name, ctrlr_trid->subnqn);
 			goto cleanup;
 		}
@@ -591,14 +591,14 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		if (strncmp(ctx->req.drv_opts.hostnqn, drv_opts->hostnqn, SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different HOSTNQN is not allowed when specifying the same controller name. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-							     "A controller named %s already exists, but uses a different hostnqn (%s)\n",
+							     "A controller named %s already exists, but uses a different hostnqn (%s)",
 							     ctx->req.name, drv_opts->hostnqn);
 			goto cleanup;
 		}
 
 		if (ctx->req.bdev_opts.prchk_flags) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-							     "A controller named %s already exists. To add a path, do not specify PI options.\n",
+							     "A controller named %s already exists. To add a path, do not specify PI options.",
 							     ctx->req.name);
 			goto cleanup;
 		}
@@ -612,7 +612,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	if (ctx->req.drv_opts.num_io_queues == 0 || ctx->req.drv_opts.num_io_queues > UINT16_MAX + 1) {
 		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-						     "num_io_queues out of bounds, min: %u max: %u\n",
+						     "num_io_queues out of bounds, min: %u max: %u",
 						     1, UINT16_MAX + 1);
 		goto cleanup;
 	}
