@@ -255,7 +255,7 @@ rpc_accel_crypto_keys_get(struct spdk_jsonrpc_request *request,
 		key = spdk_accel_crypto_key_get(req.key_name);
 		free(req.key_name);
 		if (!key) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "key was not found\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "key was not found");
 			return;
 		}
 	}
@@ -306,7 +306,7 @@ rpc_accel_crypto_key_destroy(struct spdk_jsonrpc_request *request,
 	rc = spdk_accel_crypto_key_destroy(key);
 	if (rc) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Failed to destroy key, rc %d\n", rc);
+						     "Failed to destroy key, rc %d", rc);
 	} else {
 		spdk_jsonrpc_send_bool_response(request, true);
 	}
