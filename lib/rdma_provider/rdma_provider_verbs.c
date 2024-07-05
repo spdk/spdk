@@ -11,6 +11,7 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma_utils.h"
 #include "spdk/log.h"
 
 struct spdk_rdma_provider_qp *
@@ -52,10 +53,15 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 		free(spdk_rdma_qp);
 		return NULL;
 	}
-
-	qp_attr->cap = attr.cap;
 	spdk_rdma_qp->qp = cm_id->qp;
 	spdk_rdma_qp->cm_id = cm_id;
+	spdk_rdma_qp->domain = spdk_rdma_utils_get_memory_domain(qp_attr->pd);
+	if (!spdk_rdma_qp->domain) {
+		spdk_rdma_provider_qp_destroy(spdk_rdma_qp);
+		return NULL;
+	}
+
+	qp_attr->cap = attr.cap;
 
 	return spdk_rdma_qp;
 }
@@ -92,6 +98,9 @@ spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 
 	if (!spdk_rdma_qp->shared_stats) {
 		free(spdk_rdma_qp->stats);
+	}
+	if (spdk_rdma_qp->domain) {
+		spdk_rdma_utils_put_memory_domain(spdk_rdma_qp->domain);
 	}
 
 	free(spdk_rdma_qp);

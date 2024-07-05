@@ -49,6 +49,7 @@ struct spdk_rdma_provider_recv_wr_list {
 struct spdk_rdma_provider_qp {
 	struct ibv_qp *qp;
 	struct rdma_cm_id *cm_id;
+	struct spdk_memory_domain *domain;
 	struct spdk_rdma_provider_send_wr_list send_wrs;
 	struct spdk_rdma_provider_recv_wr_list recv_wrs;
 	struct spdk_rdma_provider_qp_stats *stats;

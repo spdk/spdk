@@ -961,7 +961,6 @@ test_nvme_rdma_qpair_init(void)
 	struct nvme_rdma_qpair		rqpair = {};
 	struct rdma_cm_id		cm_id = {};
 	struct ibv_pd			*pd = (struct ibv_pd *)0xfeedbeef;
-	struct spdk_memory_domain	*domain = (struct spdk_memory_domain *)0xf00dfeed;
 	struct ibv_qp			qp = { .pd = pd };
 	struct nvme_rdma_ctrlr		rctrlr = {};
 	int				rc = 0;
@@ -973,7 +972,6 @@ test_nvme_rdma_qpair_init(void)
 	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
 	g_spdk_rdma_qp.qp = &qp;
 	MOCK_SET(spdk_rdma_utils_get_pd, pd);
-	MOCK_SET(spdk_rdma_utils_get_memory_domain, domain);
 
 	rc = nvme_rdma_qpair_init(&rqpair);
 	CU_ASSERT(rc == 0);
@@ -983,10 +981,8 @@ test_nvme_rdma_qpair_init(void)
 	CU_ASSERT(rqpair.max_recv_sge == NVME_RDMA_DEFAULT_RX_SGE);
 	CU_ASSERT(rqpair.current_num_sends == 0);
 	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
-	CU_ASSERT(rqpair.memory_domain == domain);
 
 	MOCK_CLEAR(spdk_rdma_utils_get_pd);
-	MOCK_CLEAR(spdk_rdma_utils_get_memory_domain);
 }
 
 static void
@@ -1036,10 +1032,12 @@ test_rdma_ctrlr_get_memory_domains(void)
 {
 	struct nvme_rdma_ctrlr rctrlr = {};
 	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_rdma_provider_qp rdma_qp = {};
 	struct spdk_memory_domain *domain = (struct spdk_memory_domain *)0xbaadbeef;
 	struct spdk_memory_domain *domains[1] = {NULL};
 
-	rqpair.memory_domain = domain;
+	rdma_qp.domain = domain;
+	rqpair.rdma_qp = &rdma_qp;
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rctrlr.ctrlr.adminq = &rqpair.qpair;
 
@@ -1061,20 +1059,17 @@ test_rdma_ctrlr_get_memory_domains(void)
 static void
 test_rdma_get_memory_translation(void)
 {
+	struct spdk_memory_domain *domain = (struct spdk_memory_domain *) 0xfeedbeef;
 	struct ibv_qp qp = {.pd = (struct ibv_pd *) 0xfeedbeef};
-	struct spdk_rdma_provider_qp rdma_qp = {.qp = &qp};
+	struct spdk_rdma_provider_qp rdma_qp = {.qp = &qp, .domain = domain};
 	struct nvme_rdma_qpair rqpair = {.rdma_qp = &rdma_qp};
-	struct spdk_nvme_ns_cmd_ext_io_opts io_opts = {
-		.memory_domain = (struct spdk_memory_domain *) 0xdeaddead
-	};
+	struct spdk_nvme_ns_cmd_ext_io_opts io_opts = {.memory_domain = domain};
 	struct nvme_request req = {.payload = {.opts = &io_opts}};
 	struct nvme_rdma_memory_translation_ctx ctx = {
 		.addr = (void *) 0xBAADF00D,
 		.length = 0x100
 	};
 	int rc;
-
-	rqpair.memory_domain = (struct spdk_memory_domain *) 0xfeedbeef;
 
 	/* case 1, using extended IO opts with DMA device.
 	 * Test 1 - spdk_dma_translate_data error, expect fail */

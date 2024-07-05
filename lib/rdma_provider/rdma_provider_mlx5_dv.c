@@ -10,6 +10,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
+#include "spdk/dma.h"
 
 #include "spdk_internal/rdma_provider.h"
 #include "spdk/log.h"
@@ -17,6 +18,7 @@
 
 struct spdk_rdma_mlx5_dv_qp {
 	struct spdk_rdma_provider_qp common;
+	struct spdk_memory_domain_rdma_ctx domain_ctx;
 	struct ibv_qp_ex *qpex;
 };
 
@@ -86,6 +88,8 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 		.comp_mask = IBV_QP_INIT_ATTR_PD | IBV_QP_INIT_ATTR_SEND_OPS_FLAGS,
 		.pd = qp_attr->pd ? qp_attr->pd : cm_id->pd
 	};
+	struct spdk_memory_domain_ctx ctx = {};
+	int rc;
 
 	assert(dv_qp_attr.pd);
 
@@ -120,6 +124,18 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 	mlx5_qp->qpex = ibv_qp_to_qp_ex(qp);
 
 	if (!mlx5_qp->qpex) {
+		spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
+		return NULL;
+	}
+	mlx5_qp->domain_ctx.size = sizeof(mlx5_qp->domain_ctx);
+	mlx5_qp->domain_ctx.ibv_pd = qp_attr->pd;
+	ctx.size = sizeof(ctx);
+	ctx.user_ctx = &mlx5_qp->domain_ctx;
+	ctx.user_ctx_size = mlx5_qp->domain_ctx.size;
+	rc = spdk_memory_domain_create(&mlx5_qp->common.domain, SPDK_DMA_DEVICE_TYPE_RDMA, &ctx,
+				       SPDK_RDMA_DMA_DEVICE);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create memory domain\n");
 		spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
 		return NULL;
 	}
@@ -198,6 +214,9 @@ spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 		if (rc) {
 			SPDK_ERRLOG("Failed to destroy ibv qp %p, rc %d\n", mlx5_qp->common.qp, rc);
 		}
+	}
+	if (spdk_rdma_qp->domain) {
+		spdk_memory_domain_destroy(spdk_rdma_qp->domain);
 	}
 
 	free(mlx5_qp);

@@ -220,8 +220,6 @@ struct nvme_rdma_qpair {
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	outstanding_reqs;
 
-	struct spdk_memory_domain		*memory_domain;
-
 	/* Count of outstanding send objects */
 	uint16_t				current_num_sends;
 
@@ -723,12 +721,6 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	rqpair->rdma_qp = spdk_rdma_provider_qp_create(rqpair->cm_id, &attr);
 
 	if (!rqpair->rdma_qp) {
-		return -1;
-	}
-
-	rqpair->memory_domain = spdk_rdma_utils_get_memory_domain(rqpair->rdma_qp->qp->pd);
-	if (!rqpair->memory_domain) {
-		SPDK_ERRLOG("Failed to get memory domain\n");
 		return -1;
 	}
 
@@ -1384,7 +1376,7 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 
 		rc = spdk_memory_domain_translate_data(req->payload.opts->memory_domain,
 						       req->payload.opts->memory_domain_ctx,
-						       rqpair->memory_domain, &ctx, _ctx->addr,
+						       rqpair->rdma_qp->domain, &ctx, _ctx->addr,
 						       _ctx->length, &dma_translation);
 		if (spdk_unlikely(rc) || dma_translation.iov_count != 1) {
 			SPDK_ERRLOG("DMA memory translation failed, rc %d, iov count %u\n", rc, dma_translation.iov_count);
@@ -2078,11 +2070,6 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 
 	nvme_rdma_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	nvme_qpair_deinit(qpair);
-
-	if (spdk_rdma_utils_put_memory_domain(rqpair->memory_domain) != 0) {
-		SPDK_ERRLOG("Failed to release memory domain\n");
-		assert(0);
-	}
 
 	spdk_free(rqpair);
 
@@ -3315,7 +3302,7 @@ nvme_rdma_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(ctrlr->adminq);
 
 	if (domains && array_size > 0) {
-		domains[0] = rqpair->memory_domain;
+		domains[0] = rqpair->rdma_qp->domain;
 	}
 
 	return 1;
