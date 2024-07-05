@@ -16,6 +16,7 @@
 #include "spdk/json.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
+#include "spdk/file.h"
 
 #include "spdk/log.h"
 #include "spdk_internal/uring.h"
@@ -352,61 +353,6 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 #ifdef SPDK_CONFIG_URING_ZNS
 static int
-bdev_uring_read_sysfs_attr(const char *devname, const char *attr, char *str, int str_len)
-{
-	char *path = NULL;
-	char *device = NULL;
-	char *name;
-	FILE *file;
-	int ret = 0;
-
-	name = strdup(devname);
-	if (name == NULL) {
-		return -EINVAL;
-	}
-	device = basename(name);
-	path = spdk_sprintf_alloc("/sys/block/%s/%s", device, attr);
-	free(name);
-	if (!path) {
-		return -EINVAL;
-	}
-
-	file = fopen(path, "r");
-	if (!file) {
-		free(path);
-		return -ENOENT;
-	}
-
-	if (!fgets(str, str_len, file)) {
-		ret = -EINVAL;
-		goto close;
-	}
-
-	spdk_str_chomp(str);
-
-close:
-	free(path);
-	fclose(file);
-	return ret;
-}
-
-static int
-bdev_uring_read_sysfs_attr_long(const char *devname, const char *attr, long *val)
-{
-	char str[128];
-	int ret;
-
-	ret = bdev_uring_read_sysfs_attr(devname, attr, str, sizeof(str));
-	if (ret) {
-		return ret;
-	}
-
-	*val = spdk_strtol(str, 10);
-
-	return 0;
-}
-
-static int
 bdev_uring_fill_zone_type(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
 {
 	switch (zones_rep->type) {
@@ -567,12 +513,14 @@ bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
 static int
 bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const char *filename)
 {
-	char str[128];
-	long int val = 0;
+	char *filename_dup = NULL, *base;
+	char *str = NULL;
+	uint32_t val;
 	uint32_t zinfo;
 	int retval = -1;
 	struct stat sb;
 	char resolved_path[PATH_MAX], *rp;
+	char *sysfs_path = NULL;
 
 	uring->bdev.zoned = false;
 
@@ -586,9 +534,20 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 		return 0;
 	}
 
+	/* strdup() because basename() may modify the passed parameter */
+	filename_dup = strdup(filename);
+	if (filename_dup == NULL) {
+		SPDK_ERRLOG("Could not duplicate string %s\n", filename);
+		return -1;
+	}
+
+	base = basename(filename_dup);
+	free(filename_dup);
+	sysfs_path = spdk_sprintf_alloc("/sys/block/%s/queue/zoned", base);
+	retval = spdk_read_sysfs_attribute(&str, "%s", sysfs_path);
 	/* Check if this is a zoned block device */
-	if (bdev_uring_read_sysfs_attr(filename, "queue/zoned", str, sizeof(str))) {
-		SPDK_ERRLOG("Unable to open file %s/queue/zoned. errno: %d\n", filename, errno);
+	if (retval < 0) {
+		SPDK_ERRLOG("Unable to open file %s. errno: %d\n", sysfs_path, retval);
 	} else if (strcmp(str, "host-aware") == 0 || strcmp(str, "host-managed") == 0) {
 		/* Only host-aware & host-managed zns devices */
 		uring->bdev.zoned = true;
@@ -608,23 +567,26 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 		uring->bdev.zone_size = (zinfo >> uring->zd.lba_shift);
 		uring->zd.zone_shift = spdk_u32log2(zinfo >> uring->zd.lba_shift);
 
-		if (bdev_uring_read_sysfs_attr_long(filename, "queue/max_open_zones", &val)) {
-			SPDK_ERRLOG("Failed to get max open zones %d (%s)\n", errno, strerror(errno));
+		retval = spdk_read_sysfs_attribute_uint32(&val, "/sys/block/%s/queue/max_open_zones", base);
+		if (retval < 0) {
+			SPDK_ERRLOG("Failed to get max open zones %d (%s)\n", retval, strerror(-retval));
 			goto err_ret;
 		}
-		uring->bdev.max_open_zones = uring->bdev.optimal_open_zones = (uint32_t)val;
+		uring->bdev.max_open_zones = uring->bdev.optimal_open_zones = val;
 
-		if (bdev_uring_read_sysfs_attr_long(filename, "queue/max_active_zones", &val)) {
-			SPDK_ERRLOG("Failed to get max active zones %d (%s)\n", errno, strerror(errno));
+		retval = spdk_read_sysfs_attribute_uint32(&val, "/sys/block/%s/queue/max_active_zones", base);
+		if (retval < 0) {
+			SPDK_ERRLOG("Failed to get max active zones %d (%s)\n", retval, strerror(-retval));
 			goto err_ret;
 		}
-		uring->bdev.max_active_zones = (uint32_t)val;
+		uring->bdev.max_active_zones = val;
 		retval = 0;
 	} else {
 		retval = 0;        /* queue/zoned=none */
 	}
-
 err_ret:
+	free(str);
+	free(sysfs_path);
 	return retval;
 }
 #else
