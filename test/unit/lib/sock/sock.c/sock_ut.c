@@ -1236,6 +1236,53 @@ ut_sock_group_get_ctx(void)
 	CU_ASSERT(test_ctx1 == test_ctx2);
 }
 
+static void
+posix_get_interface_name(void)
+{
+	struct spdk_sock *lsock, *csock, *asock;
+	struct spdk_sock_opts opts;
+	struct spdk_sock_impl_opts impl_opts;
+	size_t opts_size;
+	int rc;
+
+	opts_size = sizeof(impl_opts);
+	rc = spdk_sock_impl_get_opts("posix", &impl_opts, &opts_size);
+	CU_ASSERT_EQUAL(rc, 0);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
+
+	lsock = spdk_sock_listen_ext("127.0.0.1", UT_PORT, "posix", &opts);
+	SPDK_CU_ASSERT_FATAL(lsock != NULL);
+
+	/* Check the same for connect() */
+	opts_size = sizeof(impl_opts);
+	rc = spdk_sock_impl_get_opts("posix", &impl_opts, &opts_size);
+	CU_ASSERT_EQUAL(rc, 0);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
+
+	csock = spdk_sock_connect_ext("127.0.0.1", UT_PORT, "posix", &opts);
+	SPDK_CU_ASSERT_FATAL(csock != NULL);
+
+	asock = spdk_sock_accept(lsock);
+	SPDK_CU_ASSERT_FATAL(asock != NULL);
+
+	SPDK_CU_ASSERT_FATAL(spdk_sock_get_interface_name(lsock) != NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_sock_get_interface_name(csock) != NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_sock_get_interface_name(asock) != NULL);
+	CU_ASSERT(strcmp(spdk_sock_get_interface_name(lsock), "lo") == 0);
+	CU_ASSERT(strcmp(spdk_sock_get_interface_name(csock), "ilo") == 0);
+	CU_ASSERT(strcmp(spdk_sock_get_interface_name(asock), "lo") == 0);
+
+	spdk_sock_close(&asock);
+	spdk_sock_close(&csock);
+	spdk_sock_close(&lsock);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1258,6 +1305,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_sock_map);
 	CU_ADD_TEST(suite, override_impl_opts);
 	CU_ADD_TEST(suite, ut_sock_group_get_ctx);
+	CU_ADD_TEST(suite, posix_get_interface_name);
 
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);

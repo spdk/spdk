@@ -233,6 +233,16 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport
 }
 
 const char *
+spdk_sock_get_interface_name(struct spdk_sock *sock)
+{
+	if (sock->net_impl->get_interface_name) {
+		return sock->net_impl->get_interface_name(sock);
+	} else {
+		return NULL;
+	}
+}
+
+const char *
 spdk_sock_get_impl_name(struct spdk_sock *sock)
 {
 	return sock->net_impl->name;

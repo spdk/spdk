@@ -24,6 +24,7 @@
 #include "spdk/sock.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
+#include "spdk/net.h"
 #include "spdk_internal/sock.h"
 #include "spdk/net.h"
 
@@ -56,6 +57,8 @@ struct spdk_posix_sock {
 	SSL			*ssl;
 
 	TAILQ_ENTRY(spdk_posix_sock)	link;
+
+	char			interface_name[IFNAMSIZ];
 };
 
 TAILQ_HEAD(spdk_has_data_list, spdk_posix_sock);
@@ -229,6 +232,27 @@ posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 
 	assert(sock != NULL);
 	return spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
+}
+
+static const char *
+posix_sock_get_interface_name(struct spdk_sock *_sock)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	char saddr[64];
+	int rc;
+
+	rc = spdk_net_getaddr(sock->fd, saddr, sizeof(saddr), NULL, NULL, 0, NULL);
+	if (rc != 0) {
+		return NULL;
+	}
+
+	rc = spdk_net_get_interface_name(saddr, sock->interface_name,
+					 sizeof(sock->interface_name));
+	if (rc != 0) {
+		return NULL;
+	}
+
+	return sock->interface_name;
 }
 
 enum posix_sock_create_type {
@@ -2163,6 +2187,7 @@ ssl_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 static struct spdk_net_impl g_posix_net_impl = {
 	.name		= "posix",
 	.getaddr	= posix_sock_getaddr,
+	.get_interface_name = posix_sock_get_interface_name,
 	.connect	= posix_sock_connect,
 	.listen		= posix_sock_listen,
 	.accept		= posix_sock_accept,
@@ -2214,6 +2239,7 @@ ssl_sock_accept(struct spdk_sock *_sock)
 static struct spdk_net_impl g_ssl_net_impl = {
 	.name		= "ssl",
 	.getaddr	= posix_sock_getaddr,
+	.get_interface_name = posix_sock_get_interface_name,
 	.connect	= ssl_sock_connect,
 	.listen		= ssl_sock_listen,
 	.accept		= ssl_sock_accept,

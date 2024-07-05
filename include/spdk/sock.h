@@ -365,6 +365,16 @@ struct spdk_sock *spdk_sock_listen_ext(const char *ip, int port, const char *imp
 struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
 
 /**
+ * Gets the name of the network interface of the local port for the socket.
+ *
+ * \param sock socket to find the interface name for
+ *
+ * \return null-terminated string containing interface name if found, NULL
+ *	   interface name could not be found
+ */
+const char *spdk_sock_get_interface_name(struct spdk_sock *sock);
+
+/**
  * Close a socket.
  *
  * \param sock Socket to close.

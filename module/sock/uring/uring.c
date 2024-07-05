@@ -17,6 +17,7 @@
 #include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/net.h"
 
 #include "spdk_internal/sock.h"
 #include "spdk_internal/assert.h"
@@ -90,6 +91,7 @@ struct spdk_uring_sock {
 	uint8_t                                 reserved[4];
 	uint8_t					buf[SPDK_SOCK_CMG_INFO_SIZE];
 	TAILQ_ENTRY(spdk_uring_sock)		link;
+	char					interface_name[IFNAMSIZ];
 };
 /* 'struct cmsghdr' is mapped to the buffer 'buf', and while first element
  * of this control message header has a size of 8 bytes, 'buf'
@@ -234,6 +236,27 @@ uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 
 	assert(sock != NULL);
 	return spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
+}
+
+static const char *
+uring_sock_get_interface_name(struct spdk_sock *_sock)
+{
+	struct spdk_uring_sock *sock = __uring_sock(_sock);
+	char saddr[64];
+	int rc;
+
+	rc = spdk_net_getaddr(sock->fd, saddr, sizeof(saddr), NULL, NULL, 0, NULL);
+	if (rc != 0) {
+		return NULL;
+	}
+
+	rc = spdk_net_get_interface_name(saddr, sock->interface_name,
+					 sizeof(sock->interface_name));
+	if (rc != 0) {
+		return NULL;
+	}
+
+	return sock->interface_name;
 }
 
 enum uring_sock_create_type {
@@ -1975,6 +1998,7 @@ uring_sock_group_impl_unregister_interrupt(struct spdk_sock_group_impl *_group)
 static struct spdk_net_impl g_uring_net_impl = {
 	.name		= "uring",
 	.getaddr	= uring_sock_getaddr,
+	.get_interface_name = uring_sock_get_interface_name,
 	.connect	= uring_sock_connect,
 	.listen		= uring_sock_listen,
 	.accept		= uring_sock_accept,
