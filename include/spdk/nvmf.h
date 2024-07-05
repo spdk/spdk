@@ -935,12 +935,44 @@ void spdk_nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
  * \return 0 on success, or negated errno value on failure.
  *
  */
-
 int spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
 				      const struct spdk_nvme_transport_id *trid,
 				      uint32_t anagrpid,
 				      enum spdk_nvme_ana_state *ana_state);
 
+/**
+ * Change ANA group ID of a namespace of a subsystem.
+ *
+ * May only be performed on subsystems in the INACTIVE or PAUSED state.
+ *
+ * \param subsystem Subsystem the namespace belongs to.
+ * \param nsid Namespace ID to change.
+ * \param anagrpid A new ANA group ID to set.
+ * \param transit_anagrpid This ANA group is used for transit before going to the final
+ *        ANA group. If 0, move directly to the final ANA group.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_nvmf_subsystem_set_ns_ana_group(struct spdk_nvmf_subsystem *subsystem,
+		uint32_t nsid, uint32_t anagrpid,
+		uint32_t transit_anagrpid);
+
+/**
+ * Sets the controller ID range for a subsystem.
+ *
+ * Valid range is [1, 0xFFEF].
+ * May only be performed on subsystems in the INACTIVE state.
+ *
+ * \param subsystem Subsystem to modify.
+ * \param min_cntlid Minimum controller ID.
+ * \param max_cntlid Maximum controller ID.
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
+		uint16_t min_cntlid, uint16_t max_cntlid);
+
+>>>>>>> cd16195a3 (nvmf: Add spdk_nvmf_subsystem_set_ns_ana_group())
 /** NVMe-oF target namespace creation options */
 struct spdk_nvmf_ns_opts {
 	/**

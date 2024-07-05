@@ -2205,6 +2205,65 @@ err:
 	return 0;
 }
 
+int
+spdk_nvmf_subsystem_set_ns_ana_group(struct spdk_nvmf_subsystem *subsystem,
+				     uint32_t nsid, uint32_t anagrpid,
+				     uint32_t transit_anagrpid)
+{
+	struct spdk_nvmf_ns *ns;
+
+	if (anagrpid > subsystem->max_nsid) {
+		SPDK_ERRLOG("ANAGRPID greater than maximum NSID not allowed\n");
+		return -1;
+	}
+
+	if (anagrpid == 0) {
+		SPDK_ERRLOG("Zero is not allowed to ANAGRPID\n");
+		return -1;
+	}
+
+	if (transit_anagrpid > subsystem->max_nsid) {
+		SPDK_ERRLOG("ANAGRPID greater than maximum NSID not allowed even for transit\n");
+		return -1;
+	}
+
+	if (nsid == 0 || nsid > subsystem->max_nsid) {
+		return -1;
+	}
+
+	ns = subsystem->ns[nsid - 1];
+	if (!ns) {
+		return -1;
+	}
+
+	assert(ns->anagrpid - 1 < subsystem->max_nsid);
+	assert(subsystem->ana_group[ns->anagrpid - 1] > 0);
+
+	subsystem->ana_group[ns->anagrpid - 1]--;
+
+	if (transit_anagrpid != 0) {
+		subsystem->ana_group[transit_anagrpid - 1]++;
+
+		ns->anagrpid = transit_anagrpid;
+		ns->opts.anagrpid = transit_anagrpid;
+
+		nvmf_subsystem_ns_changed(subsystem, nsid);
+
+		assert(subsystem->ana_group[ns->anagrpid - 1] > 0);
+
+		subsystem->ana_group[ns->anagrpid - 1]--;
+	}
+
+	subsystem->ana_group[anagrpid - 1]++;
+
+	ns->anagrpid = anagrpid;
+	ns->opts.anagrpid = anagrpid;
+
+	nvmf_subsystem_ns_changed(subsystem, nsid);
+
+	return 0;
+}
+
 static uint32_t
 nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsystem,
 				       uint32_t prev_nsid)
