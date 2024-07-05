@@ -8625,6 +8625,46 @@ Example response:
 }
 ~~~
 
+### nvmf_subsystem_set_ns_ana_group method {#rpc_nvmf_subsystem_set_ns_ana_group}
+
+Change ANA group ID of a namespace in a subsystem.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+nsid                    | Required | number      | Namespace ID
+anagrpid                | Required | number      | ANA group ID
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_set_ns_ana_group",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "nsid": 1,
+    "anagrpid": 2
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
 Add a host NQN to the list of allowed hosts.  Adding an already allowed host will result in an
