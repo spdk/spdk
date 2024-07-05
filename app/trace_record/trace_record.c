@@ -602,6 +602,7 @@ usage(void)
 	printf("                 '-p' to specify the trace PID\n");
 	printf("                      (one of -i or -p must be specified)\n");
 	printf("                 '-f' to specify output trace file name\n");
+	printf("                 '-t' to specify the duration of the trace record in seconds\n");
 	printf("                 '-h' to print usage information\n");
 }
 
@@ -614,12 +615,14 @@ main(int argc, char **argv)
 	char				shm_name[64];
 	int				shm_id = -1, shm_pid = -1;
 	int				rc = 0;
+	int				record_duration_in_sec = 0;
+	uint64_t			last_record_tsc = UINT64_MAX;
 	int				i;
 	struct aggr_trace_record_ctx	ctx = {};
 	struct lcore_trace_record_ctx	*lcore_port;
 
 	g_exe_name = argv[0];
-	while ((op = getopt(argc, argv, "f:i:p:qs:h")) != -1) {
+	while ((op = getopt(argc, argv, "f:i:p:qs:t:h")) != -1) {
 		switch (op) {
 		case 'i':
 			shm_id = spdk_strtol(optarg, 10);
@@ -635,6 +638,9 @@ main(int argc, char **argv)
 			break;
 		case 'f':
 			file_name = optarg;
+			break;
+		case 't':
+			record_duration_in_sec = spdk_strtol(optarg, 10);
 			break;
 		case 'h':
 			usage();
@@ -663,6 +669,12 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
+	if (record_duration_in_sec < 0) {
+		fprintf(stderr, "-t must be a positive integer\n");
+		usage();
+		exit(1);
+	}
+
 	if (shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, shm_id);
 	} else {
@@ -684,8 +696,12 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
+	if (record_duration_in_sec > 0) {
+		last_record_tsc = spdk_get_ticks() + record_duration_in_sec * g_tsc_rate;
+	}
+
 	printf("Start to poll trace shm file %s\n", shm_name);
-	while (!g_shutdown && rc == 0) {
+	while (!g_shutdown && rc == 0 && (spdk_get_ticks() <= last_record_tsc)) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			lcore_port = &ctx.lcore_ports[i];
 
