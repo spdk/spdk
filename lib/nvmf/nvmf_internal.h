@@ -125,6 +125,7 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	/* Host ID for the registrants with the namespace */
 	struct spdk_uuid		reg_hostid[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 	uint64_t			num_blocks;
+	uint32_t			anagrpid;
 
 	/* I/O outstanding to this namespace */
 	uint64_t			io_outstanding;

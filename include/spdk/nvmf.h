@@ -966,6 +966,20 @@ int spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
 				      enum spdk_nvme_ana_state *ana_state);
 
 /**
+ * Change ANA group ID of a namespace of a subsystem.
+ *
+ * May only be performed on subsystems in the INACTIVE or PAUSED state.
+ *
+ * \param subsystem Subsystem the namespace belongs to.
+ * \param nsid Namespace ID to change.
+ * \param anagrpid A new ANA group ID to set.
+ *
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_nvmf_subsystem_set_ns_ana_group(struct spdk_nvmf_subsystem *subsystem,
+		uint32_t nsid, uint32_t anagrpid);
+
+/**
  * Sets the controller ID range for a subsystem.
  *
  * Valid range is [1, 0xFFEF].
