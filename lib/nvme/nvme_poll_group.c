@@ -1,7 +1,8 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
+ *   Copyright (c) 2021 Mellanox Technologies LTD.
+ *   Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
- *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  */
 
 #include "nvme_internal.h"
@@ -29,12 +30,13 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 
 		SET_FIELD(submit_accel_crc32c);
 		SET_FIELD(append_crc32c);
+		SET_FIELD(append_copy);
 		SET_FIELD(finish_sequence);
 		SET_FIELD(reverse_sequence);
 		SET_FIELD(abort_sequence);
 		/* Do not remove this statement, you should always update this statement when you adding a new field,
 		 * and do not forget to add the SET_FIELD statement for your added field. */
-		SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_accel_fn_table) == 48, "Incorrect size");
+		SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_accel_fn_table) == 56, "Incorrect size");
 
 #undef SET_FIELD
 	}
@@ -51,8 +53,9 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 	}
 
 	/* Make sure that sequence callbacks are implemented if append* callbacks are provided */
-	if (group->accel_fn_table.append_crc32c && !group->accel_fn_table.finish_sequence) {
-		SPDK_ERRLOG("Invalid accel_fn_table configuration: append_crc32c requires sequence "
+	if ((group->accel_fn_table.append_crc32c || group->accel_fn_table.append_copy) &&
+	    !group->accel_fn_table.finish_sequence) {
+		SPDK_ERRLOG("Invalid accel_fn_table configuration: append_crc32c and/or append_copy require sequence "
 			    "callbacks to be provided\n");
 		free(group);
 		return NULL;

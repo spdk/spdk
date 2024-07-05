@@ -334,7 +334,7 @@ typedef void (*spdk_nvme_accel_step_cb)(void *cb_arg);
 struct spdk_nvme_accel_fn_table {
 	/**
 	 * The size of spdk_nvme_accel_fun_table according to the caller of
-	 * this library is used for ABI compatibility.  The library uses this
+	 * this library is used for ABI compatibility. The library uses this
 	 * field to know how many fields in this structure are valid.
 	 * And the library will populate any remaining fields with default values.
 	 * Newly added fields should be put at the end of the struct.
@@ -358,6 +358,13 @@ struct spdk_nvme_accel_fn_table {
 	int (*append_crc32c)(void *ctx, void **seq, uint32_t *dst, struct iovec *iovs, uint32_t iovcnt,
 			     struct spdk_memory_domain *memory_domain, void *domain_ctx,
 			     uint32_t seed, spdk_nvme_accel_step_cb cb_fn, void *cb_arg);
+
+	/** Append a copy operation to a sequence */
+	int (*append_copy)(void *ctx, void **seq, struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			   struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			   struct iovec *src_iovs, uint32_t src_iovcnt,
+			   struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			   spdk_nvme_accel_step_cb cb_fn, void *cb_arg);
 };
 
 /**
