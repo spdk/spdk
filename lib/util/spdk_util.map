@@ -98,6 +98,7 @@
 	spdk_posix_file_load;
 	spdk_posix_file_load_from_name;
 	spdk_read_sysfs_attribute;
+	spdk_read_sysfs_attribute_uint32;
 
 	# public functions in hexlify.h
 	spdk_hexlify;

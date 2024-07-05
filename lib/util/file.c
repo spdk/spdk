@@ -112,3 +112,29 @@ spdk_read_sysfs_attribute(char **attribute_p, const char *path_format, ...)
 
 	return rc;
 }
+
+int
+spdk_read_sysfs_attribute_uint32(uint32_t *attribute, const char *path_format, ...)
+{
+	char *attribute_str = NULL;
+	long long int val;
+	va_list args;
+	int rc;
+
+	va_start(args, path_format);
+	rc = read_sysfs_attribute(&attribute_str, path_format, args);
+	va_end(args);
+
+	if (rc != 0) {
+		return rc;
+	}
+
+	val = spdk_strtoll(attribute_str, 0);
+	free(attribute_str);
+	if (val < 0 || val > UINT32_MAX) {
+		return -EINVAL;
+	}
+
+	*attribute = (uint32_t)val;
+	return 0;
+}

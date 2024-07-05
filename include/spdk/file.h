@@ -53,6 +53,18 @@ void *spdk_posix_file_load_from_name(const char *file_name, size_t *size);
 int spdk_read_sysfs_attribute(char **attribute, const char *path_format, ...)
 __attribute__((format(printf, 2, 3)));
 
+/**
+ * Get the uint32 value for a given sysfs attribute path
+ *
+ * \param attribute output parameter for contents of the attribute
+ * \param path_format format string for constructing patch to sysfs file
+ *
+ * \return 0 on success
+ *         negative errno if unable to read the attribute or it is not a uint32
+ */
+int spdk_read_sysfs_attribute_uint32(uint32_t *attribute, const char *path_format, ...)
+__attribute__((format(printf, 2, 3)));
+
 #ifdef __cplusplus
 }
 #endif
