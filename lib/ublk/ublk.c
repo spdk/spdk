@@ -17,6 +17,7 @@
 #include "spdk/json.h"
 #include "spdk/ublk.h"
 #include "spdk/thread.h"
+#include "spdk/file.h"
 
 #include "ublk_internal.h"
 
@@ -552,30 +553,10 @@ ublk_queue_cmd_buf_sz(uint32_t q_depth)
 }
 
 static int
-ublk_get_max_support_devs(void)
-{
-	FILE *file;
-	char str[128];
-
-	file = fopen("/sys/module/ublk_drv/parameters/ublks_max", "r");
-	if (!file) {
-		return -ENOENT;
-	}
-
-	if (!fgets(str, sizeof(str), file)) {
-		fclose(file);
-		return -EINVAL;
-	}
-	fclose(file);
-
-	spdk_str_chomp(str);
-	return spdk_strtol(str, 10);
-}
-
-static int
 ublk_open(void)
 {
-	int rc, ublks_max;
+	uint32_t ublks_max;
+	int rc;
 
 	g_ublk_tgt.ctrl_fd = open(UBLK_CTRL_DEV, O_RDWR);
 	if (g_ublk_tgt.ctrl_fd < 0) {
@@ -584,8 +565,9 @@ ublk_open(void)
 		return -rc;
 	}
 
-	ublks_max = ublk_get_max_support_devs();
-	if (ublks_max > 0) {
+	rc = spdk_read_sysfs_attribute_uint32(&ublks_max, "%s",
+					      "/sys/module/ublk_drv/parameters/ublks_max");
+	if (rc == 0 && ublks_max > 0) {
 		g_ublks_max = ublks_max;
 	}
 
