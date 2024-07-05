@@ -138,12 +138,16 @@ function nvmfcleanup() {
 }
 
 function nvmf_veth_init() {
-	NVMF_INITIATOR_IP=10.0.0.1
-	NVMF_FIRST_TARGET_IP=10.0.0.2
-	NVMF_SECOND_TARGET_IP=10.0.0.3
+	NVMF_FIRST_INITIATOR_IP=10.0.0.1
+	NVMF_SECOND_INITIATOR_IP=10.0.0.2
+	NVMF_FIRST_TARGET_IP=10.0.0.3
+	NVMF_SECOND_TARGET_IP=10.0.0.4
+	NVMF_INITIATOR_IP=$NVMF_FIRST_INITIATOR_IP
 	NVMF_BRIDGE="nvmf_br"
 	NVMF_INITIATOR_INTERFACE="nvmf_init_if"
+	NVMF_INITIATOR_INTERFACE2="nvmf_init_if2"
 	NVMF_INITIATOR_BRIDGE="nvmf_init_br"
+	NVMF_INITIATOR_BRIDGE2="nvmf_init_br2"
 	NVMF_TARGET_NAMESPACE="nvmf_tgt_ns_spdk"
 	NVMF_TARGET_NS_CMD=(ip netns exec "$NVMF_TARGET_NAMESPACE")
 	NVMF_TARGET_INTERFACE="nvmf_tgt_if"
@@ -152,13 +156,16 @@ function nvmf_veth_init() {
 	NVMF_TARGET_BRIDGE2="nvmf_tgt_br2"
 
 	ip link set $NVMF_INITIATOR_BRIDGE nomaster || true
+	ip link set $NVMF_INITIATOR_BRIDGE2 nomaster || true
 	ip link set $NVMF_TARGET_BRIDGE nomaster || true
 	ip link set $NVMF_TARGET_BRIDGE2 nomaster || true
 	ip link set $NVMF_INITIATOR_BRIDGE down || true
+	ip link set $NVMF_INITIATOR_BRIDGE2 down || true
 	ip link set $NVMF_TARGET_BRIDGE down || true
 	ip link set $NVMF_TARGET_BRIDGE2 down || true
 	ip link delete $NVMF_BRIDGE type bridge || true
 	ip link delete $NVMF_INITIATOR_INTERFACE || true
+	ip link delete $NVMF_INITIATOR_INTERFACE2 || true
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE || true
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2 || true
 
@@ -167,6 +174,7 @@ function nvmf_veth_init() {
 
 	# Create veth (Virtual ethernet) interface pairs
 	ip link add $NVMF_INITIATOR_INTERFACE type veth peer name $NVMF_INITIATOR_BRIDGE
+	ip link add $NVMF_INITIATOR_INTERFACE2 type veth peer name $NVMF_INITIATOR_BRIDGE2
 	ip link add $NVMF_TARGET_INTERFACE type veth peer name $NVMF_TARGET_BRIDGE
 	ip link add $NVMF_TARGET_INTERFACE2 type veth peer name $NVMF_TARGET_BRIDGE2
 
@@ -175,13 +183,16 @@ function nvmf_veth_init() {
 	ip link set $NVMF_TARGET_INTERFACE2 netns $NVMF_TARGET_NAMESPACE
 
 	# Allocate IP addresses
-	ip addr add $NVMF_INITIATOR_IP/24 dev $NVMF_INITIATOR_INTERFACE
+	ip addr add $NVMF_FIRST_INITIATOR_IP/24 dev $NVMF_INITIATOR_INTERFACE
+	ip addr add $NVMF_SECOND_INITIATOR_IP/24 dev $NVMF_INITIATOR_INTERFACE2
 	"${NVMF_TARGET_NS_CMD[@]}" ip addr add $NVMF_FIRST_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE
 	"${NVMF_TARGET_NS_CMD[@]}" ip addr add $NVMF_SECOND_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE2
 
 	# Link up veth interfaces
 	ip link set $NVMF_INITIATOR_INTERFACE up
+	ip link set $NVMF_INITIATOR_INTERFACE2 up
 	ip link set $NVMF_INITIATOR_BRIDGE up
+	ip link set $NVMF_INITIATOR_BRIDGE2 up
 	ip link set $NVMF_TARGET_BRIDGE up
 	ip link set $NVMF_TARGET_BRIDGE2 up
 	"${NVMF_TARGET_NS_CMD[@]}" ip link set $NVMF_TARGET_INTERFACE up
@@ -194,17 +205,20 @@ function nvmf_veth_init() {
 
 	# Add veth interfaces to the bridge
 	ip link set $NVMF_INITIATOR_BRIDGE master $NVMF_BRIDGE
+	ip link set $NVMF_INITIATOR_BRIDGE2 master $NVMF_BRIDGE
 	ip link set $NVMF_TARGET_BRIDGE master $NVMF_BRIDGE
 	ip link set $NVMF_TARGET_BRIDGE2 master $NVMF_BRIDGE
 
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
+	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE2 -p tcp --dport $NVMF_PORT -j ACCEPT
 	iptables -A FORWARD -i $NVMF_BRIDGE -o $NVMF_BRIDGE -j ACCEPT
 
 	# Verify connectivity
 	ping -c 1 $NVMF_FIRST_TARGET_IP
 	ping -c 1 $NVMF_SECOND_TARGET_IP
-	"${NVMF_TARGET_NS_CMD[@]}" ping -c 1 $NVMF_INITIATOR_IP
+	"${NVMF_TARGET_NS_CMD[@]}" ping -c 1 $NVMF_FIRST_INITIATOR_IP
+	"${NVMF_TARGET_NS_CMD[@]}" ping -c 1 $NVMF_SECOND_INITIATOR_IP
 
 	NVMF_APP=("${NVMF_TARGET_NS_CMD[@]}" "${NVMF_APP[@]}")
 }
@@ -213,9 +227,11 @@ function nvmf_veth_fini() {
 	# Cleanup bridge, veth interfaces, and network namespace
 	# Note: removing one veth removes the pair
 	ip link set $NVMF_INITIATOR_BRIDGE nomaster
+	ip link set $NVMF_INITIATOR_BRIDGE2 nomaster
 	ip link set $NVMF_TARGET_BRIDGE nomaster
 	ip link set $NVMF_TARGET_BRIDGE2 nomaster
 	ip link set $NVMF_INITIATOR_BRIDGE down
+	ip link set $NVMF_INITIATOR_BRIDGE2 down
 	ip link set $NVMF_TARGET_BRIDGE down
 	ip link set $NVMF_TARGET_BRIDGE2 down
 	ip link delete $NVMF_BRIDGE type bridge
@@ -226,8 +242,9 @@ function nvmf_veth_fini() {
 }
 
 function nvmf_tcp_init() {
-	NVMF_INITIATOR_IP=10.0.0.1
+	NVMF_FIRST_INITIATOR_IP=10.0.0.1
 	NVMF_FIRST_TARGET_IP=10.0.0.2
+	NVMF_INITIATOR_IP=$NVMF_FIRST_INITIATOR_IP
 	TCP_INTERFACE_LIST=("${net_devs[@]}")
 
 	# We need two net devs at minimum
@@ -238,6 +255,7 @@ function nvmf_tcp_init() {
 
 	# Skip case nvmf_multipath in nvmf_tcp_init(), it will be covered by nvmf_veth_init().
 	NVMF_SECOND_TARGET_IP=""
+	NVMF_SECOND_INITIATOR_IP=""
 
 	NVMF_TARGET_NAMESPACE="${NVMF_TARGET_INTERFACE}_ns_spdk"
 	NVMF_TARGET_NS_CMD=(ip netns exec "$NVMF_TARGET_NAMESPACE")
