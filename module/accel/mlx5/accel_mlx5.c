@@ -72,6 +72,9 @@ enum accel_mlx5_opcode {
 	ACCEL_MLX5_OPC_LAST
 };
 
+SPDK_STATIC_ASSERT(ACCEL_MLX5_OPC_LAST <= 0xf,
+		   "accel opcode exceeds 4 bits, update accel_mlx5 struct");
+
 struct accel_mlx5_stats {
 	uint64_t crypto_umrs;
 	uint64_t sig_umrs;
@@ -152,8 +155,9 @@ struct accel_mlx5_task {
 		uint8_t raw;
 		struct {
 			uint8_t inplace : 1;
+			uint8_t driver_seq : 1;
 			uint8_t enc_order : 2;
-			uint8_t mlx5_opcode: 5;
+			uint8_t mlx5_opcode: 4;
 		};
 	};
 	/* Keep this array last since not all elements might be accessed, this reduces amount of data to be
@@ -167,7 +171,6 @@ struct accel_mlx5_qp {
 	struct spdk_mlx5_qp *qp;
 	struct ibv_qp *verbs_qp;
 	struct accel_mlx5_dev *dev;
-	struct accel_mlx5_io_channel *ch;
 	/* tasks submitted to HW. We can't complete a task even in error case until we reap completions for all
 	 * submitted requests */
 	STAILQ_HEAD(, accel_mlx5_task) in_hw;
@@ -184,6 +187,7 @@ struct accel_mlx5_dev {
 	struct spdk_mlx5_mkey_pool *sig_mkeys;
 	struct spdk_rdma_utils_mem_map *mmap;
 	struct accel_mlx5_dev_ctx *dev_ctx;
+	struct spdk_io_channel *ch;
 	uint16_t wrs_in_cq;
 	uint16_t wrs_in_cq_max;
 	uint16_t crypto_split_blocks;
@@ -224,6 +228,10 @@ struct accel_mlx5_dump_stats_ctx {
 };
 
 static struct accel_mlx5_module g_accel_mlx5;
+static struct spdk_accel_driver g_accel_mlx5_driver;
+
+static inline int accel_mlx5_execute_sequence(struct spdk_io_channel *ch,
+		struct spdk_accel_sequence *seq);
 
 static inline void
 accel_mlx5_iov_sgl_init(struct accel_mlx5_iov_sgl *s, struct iovec *iov, uint32_t iovcnt)
@@ -311,6 +319,9 @@ static inline void
 accel_mlx5_task_fail(struct accel_mlx5_task *task, int rc)
 {
 	struct accel_mlx5_dev *dev = task->qp->dev;
+	struct spdk_accel_task *next;
+	struct spdk_accel_sequence *seq;
+	bool driver_seq;
 
 	assert(task->num_reqs == task->num_completed_reqs);
 	SPDK_DEBUGLOG(accel_mlx5, "Fail task %p, opc %d, rc %d\n", task, task->base.op_code, rc);
@@ -324,7 +335,24 @@ accel_mlx5_task_fail(struct accel_mlx5_task *task, int rc)
 			spdk_mempool_put(dev->dev_ctx->psv_pool, task->psv);
 		}
 	}
+	next = spdk_accel_sequence_next_task(&task->base);
+	seq = task->base.seq;
+	driver_seq = task->driver_seq;
+
+	assert(task->num_reqs == task->num_completed_reqs);
+	SPDK_DEBUGLOG(accel_mlx5, "Fail task %p, opc %d, rc %d\n", task, task->mlx5_opcode, rc);
 	spdk_accel_task_complete(&task->base, rc);
+
+	if (driver_seq) {
+		struct spdk_io_channel *ch = task->qp->dev->ch;
+
+		assert(seq);
+		if (next) {
+			accel_mlx5_execute_sequence(ch, seq);
+		} else {
+			spdk_accel_sequence_continue(seq);
+		}
+	}
 }
 
 static int
@@ -1706,10 +1734,28 @@ static struct accel_mlx5_task_operations g_accel_mlx5_tasks_ops[] = {
 static inline void
 accel_mlx5_task_complete(struct accel_mlx5_task *task)
 {
+	struct spdk_accel_sequence *seq = task->base.seq;
+	struct spdk_accel_task *next;
+	bool driver_seq;
+
+	next = spdk_accel_sequence_next_task(&task->base);
+	driver_seq = task->driver_seq;
+
 	assert(task->num_reqs == task->num_completed_reqs);
 	SPDK_DEBUGLOG(accel_mlx5, "Complete task %p, opc %d\n", task, task->base.op_code);
 
 	g_accel_mlx5_tasks_ops[task->mlx5_opcode].complete(task);
+
+	if (driver_seq) {
+		struct spdk_io_channel *ch = task->qp->dev->ch;
+
+		assert(seq);
+		if (next) {
+			accel_mlx5_execute_sequence(ch, seq);
+		} else {
+			spdk_accel_sequence_continue(seq);
+		}
+	}
 }
 
 static inline int
@@ -2182,6 +2228,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 		dev->crypto_multi_block = dev_ctx->crypto_multi_block;
 		dev->crypto_split_blocks = dev_ctx->crypto_multi_block ? g_accel_mlx5.attr.crypto_split_blocks : 0;
 		dev->wrs_in_cq_max = g_accel_mlx5.attr.qp_size;
+		dev->ch = spdk_io_channel_from_ctx(ctx_buf);
 		STAILQ_INIT(&dev->nomem);
 	}
 
@@ -2203,6 +2250,7 @@ accel_mlx5_get_default_attr(struct accel_mlx5_attr *attr)
 	attr->num_requests = ACCEL_MLX5_NUM_REQUESTS;
 	attr->allowed_devs = NULL;
 	attr->crypto_split_blocks = 0;
+	attr->enable_driver = false;
 }
 
 static void
@@ -2707,6 +2755,12 @@ accel_mlx5_init(void)
 	free(rdma_devs);
 	free(caps);
 
+	if (g_accel_mlx5.attr.enable_driver) {
+		SPDK_NOTICELOG("Enabling mlx5 platform driver\n");
+		spdk_accel_driver_register(&g_accel_mlx5_driver);
+		spdk_accel_set_driver(g_accel_mlx5_driver.name);
+	}
+
 	return 0;
 
 cleanup:
@@ -2731,6 +2785,7 @@ accel_mlx5_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_string(w, "allowed_devs", g_accel_mlx5.attr.allowed_devs);
 		}
 		spdk_json_write_named_uint16(w, "crypto_split_blocks", g_accel_mlx5.attr.crypto_split_blocks);
+		spdk_json_write_named_bool(w, "enable_driver", g_accel_mlx5.attr.enable_driver);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
@@ -2973,6 +3028,26 @@ accel_mlx5_get_memory_domains(struct spdk_memory_domain **domains, int array_siz
 	return (int)g_accel_mlx5.num_ctxs;
 }
 
+static inline int
+accel_mlx5_execute_sequence(struct spdk_io_channel *ch, struct spdk_accel_sequence *seq)
+{
+	struct accel_mlx5_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct accel_mlx5_task *mlx5_task;
+
+	task = spdk_accel_sequence_first_task(seq);
+	assert(task);
+	mlx5_task = SPDK_CONTAINEROF(task, struct accel_mlx5_task, base);
+	mlx5_task->raw = 0;
+	mlx5_task->driver_seq = 1;
+	accel_mlx5_task_assign_qp(mlx5_task, accel_ch);
+	accel_mlx5_task_reset(mlx5_task);
+	accel_mlx5_task_init_opcode(mlx5_task);
+	SPDK_DEBUGLOG(accel_mlx5, "driver starts seq %p, ch %p, task %p\n", seq, accel_ch, task);
+
+	return _accel_mlx5_submit_tasks(accel_ch, task);
+}
+
 static struct accel_mlx5_module g_accel_mlx5 = {
 	.module = {
 		.module_init		= accel_mlx5_init,
@@ -2988,6 +3063,12 @@ static struct accel_mlx5_module g_accel_mlx5 = {
 		.crypto_supports_cipher	= accel_mlx5_crypto_supports_cipher,
 		.get_memory_domains	= accel_mlx5_get_memory_domains,
 	}
+};
+
+static struct spdk_accel_driver g_accel_mlx5_driver = {
+	.name			= "mlx5",
+	.execute_sequence	= accel_mlx5_execute_sequence,
+	.get_io_channel		= accel_mlx5_get_io_channel
 };
 
 SPDK_LOG_REGISTER_COMPONENT(accel_mlx5)

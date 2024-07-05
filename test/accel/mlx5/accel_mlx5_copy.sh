@@ -12,6 +12,7 @@ source $rootdir/test/nvmf/common.sh
 function gen_accel_mlx5_malloc_json() {
 	accel_qp_size=${1:-256}
 	accel_num_requests=${2:-2047}
+	accel_driver=${3:-false}
 
 	jq . <<- JSON
 		{
@@ -23,7 +24,8 @@ function gen_accel_mlx5_malloc_json() {
 		          "method": "mlx5_scan_accel_module",
 		          "params": {
 		            "qp_size": ${accel_qp_size},
-		            "num_requests": ${accel_num_requests}
+		            "num_requests": ${accel_num_requests},
+		            "enable_driver": ${accel_driver}
 		          }
 		        }
 		      ]
@@ -59,3 +61,6 @@ function gen_accel_mlx5_malloc_json() {
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 16 2047) -b "Malloc0" -f -x translate
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 256 64) -b "Malloc0" -f -x translate
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 16 64) -b "Malloc0" -f -x translate
+
+# Test copy operation with fragmented payload and platform driver enabled
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 17 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 256 2047 true) -b "Malloc0" -f -x translate

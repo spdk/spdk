@@ -15,6 +15,7 @@ function gen_accel_mlx5_crypto_json() {
 	crypto_split_blocks=${1:-0}
 	accel_qp_size=${2:-256}
 	accel_num_requests=${3:-2047}
+	accel_driver=${4:-false}
 
 	jq . <<- JSON
 		{
@@ -28,7 +29,8 @@ function gen_accel_mlx5_crypto_json() {
 		            "allowed_devs": "${allowed_devices}",
 		            "qp_size": ${accel_qp_size},
 		            "num_requests": ${accel_num_requests},
-		            "crypto_split_blocks": ${crypto_split_blocks}
+		            "crypto_split_blocks": ${crypto_split_blocks},
+		            "enable_driver": ${accel_driver}
 		          }
 		        },
 		        {
@@ -80,6 +82,9 @@ function gen_accel_mlx5_crypto_json() {
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 33 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 5) -b "Crypto0" -f -x translate
+
+# Test fragmented crypto operation with platform driver enabled
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 256 2047 true) -b "Crypto0" -f -x translate
 
 # Test lack of resources
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 16 2047) -b "Crypto0" -f -x translate

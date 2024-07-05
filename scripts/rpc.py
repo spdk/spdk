@@ -3401,7 +3401,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                         qp_size=args.qp_size,
                                         num_requests=args.num_requests,
                                         allowed_devs=args.allowed_devs,
-                                        crypto_split_blocks=args.crypto_split_blocks)
+                                        crypto_split_blocks=args.crypto_split_blocks,
+                                        enable_driver=args.enable_driver)
 
     p = subparsers.add_parser('mlx5_scan_accel_module', help='Enable mlx5 accel module.')
     p.add_argument('-q', '--qp-size', type=int, help='QP size')
@@ -3409,6 +3410,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-d', '--allowed-devs', help="Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1")
     p.add_argument('-s', '--crypto-split-blocks', type=int,
                    help="Number of data blocks to be processed in 1 crypto UMR. [0-65535], 0 means no limit")
+    p.add_argument('-e', '--enable-driver', dest='enable_driver', action='store_true', default=None,
+                   help="Enable mlx5 platform driver. Note: the driver supports reduced scope of operations, enable with care")
     p.set_defaults(func=mlx5_scan_accel_module)
 
     def accel_mlx5_dump_stats(args):

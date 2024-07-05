@@ -12,6 +12,7 @@ source $rootdir/test/nvmf/common.sh
 function gen_accel_mlx5_json() {
 	accel_qp_size=${1:-256}
 	accel_num_requests=${2:-2047}
+	accel_driver=${3:-false}
 
 	jq . <<- JSON
 		{
@@ -23,7 +24,8 @@ function gen_accel_mlx5_json() {
 		          "method": "mlx5_scan_accel_module",
 		          "params": {
 		            "qp_size": ${accel_qp_size},
-		            "num_requests": ${accel_num_requests}
+		            "num_requests": ${accel_num_requests},
+		            "enable_driver": ${accel_driver}
 		          }
 		        }
 		      ]
@@ -38,7 +40,7 @@ accelperf=$rootdir/build/examples/accel_perf
 $accelperf -c <(gen_accel_mlx5_json) -w crc32c -t 5 -m 0xf -y -C 1 -o 4096 -q 64
 $accelperf -c <(gen_accel_mlx5_json) -w crc32c -t 5 -m 0xf -y -C 33 -o 4096 -q 64
 $accelperf -c <(gen_accel_mlx5_json) -w crc32c -t 5 -m 0xf -y -C 33 -o 131072 -q 128
-# accel perf consumes to much memory in this test, lowe qd and number of cores
+# accel perf consumes to much memory in this test, lower qd and number of cores
 $accelperf -c <(gen_accel_mlx5_json) -w crc32c -t 5 -m 0x3 -y -C 77 -o 524288 -q 64
 
 $accelperf -c <(gen_accel_mlx5_json) -w copy_crc32c -t 5 -m 0xf -y -C 1 -o 4096 -q 64
@@ -55,6 +57,10 @@ $accelperf -c <(gen_accel_mlx5_json 16 32) -w crc32c -t 5 -m 0x3 -y -C 17 -o 131
 $accelperf -c <(gen_accel_mlx5_json 16 2047) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 $accelperf -c <(gen_accel_mlx5_json 256 32) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 $accelperf -c <(gen_accel_mlx5_json 16 32) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
+
+# Test copy operation with fragmented payload and platform driver enabled
+$accelperf -c <(gen_accel_mlx5_json 256 2047 true) -w crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
+$accelperf -c <(gen_accel_mlx5_json 256 2047 true) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 
 if [ "$TEST_TRANSPORT" != "tcp" ]; then
 	exit 0
