@@ -11927,6 +11927,7 @@ Example response:
   "id": 1,
   "result": 1
 }
+~~~
 
 ### ublk_stop_disk {#rpc_ublk_stop_disk}
 
