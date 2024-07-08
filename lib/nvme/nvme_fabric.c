@@ -637,10 +637,18 @@ finish:
 	return rc;
 }
 
+static bool
+nvme_fabric_qpair_auth_required(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	return qpair->auth.flags & (NVME_QPAIR_AUTH_FLAG_ATR | NVME_QPAIR_AUTH_FLAG_ASCR) ||
+	       ctrlr->opts.dhchap_ctrlr_key != NULL;
+}
+
 int
 nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 {
-	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	int rc;
 
 	switch (qpair->connect_state) {
@@ -649,8 +657,7 @@ nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 		if (rc != 0) {
 			break;
 		}
-		if (qpair->auth.flags & (NVME_QPAIR_AUTH_FLAG_ATR | NVME_QPAIR_AUTH_FLAG_ASCR) ||
-		    ctrlr->opts.dhchap_ctrlr_key != NULL) {
+		if (nvme_fabric_qpair_auth_required(qpair)) {
 			rc = nvme_fabric_qpair_authenticate_async(qpair);
 			if (rc == 0) {
 				qpair->connect_state = NVME_QPAIR_CONNECT_STATE_AUTHENTICATING;
