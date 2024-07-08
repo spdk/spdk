@@ -166,16 +166,6 @@ enum nvme_tcp_error_codes {
 	NVME_TCP_PDU_FATAL              = -2,
 };
 
-enum nvme_tcp_qpair_state {
-	NVME_TCP_QPAIR_STATE_INVALID = 0,
-	NVME_TCP_QPAIR_STATE_INITIALIZING = 1,
-	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND = 2,
-	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL = 3,
-	NVME_TCP_QPAIR_STATE_RUNNING = 4,
-	NVME_TCP_QPAIR_STATE_EXITING = 5,
-	NVME_TCP_QPAIR_STATE_EXITED = 6,
-};
-
 static const bool g_nvme_tcp_hdgst[] = {
 	[SPDK_NVME_TCP_PDU_TYPE_IC_REQ]         = false,
 	[SPDK_NVME_TCP_PDU_TYPE_IC_RESP]        = false,

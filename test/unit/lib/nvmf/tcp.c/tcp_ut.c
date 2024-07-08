@@ -615,7 +615,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	tqpair.qpair.transport = &ttransport.transport;
 
 	/* Set qpair state to make unrelated operations NOP */
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
 
 	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
@@ -687,7 +687,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 
 	/* Set qpair state to make unrelated operations NOP */
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
 	tqpair.resource_count = 1;
 	tqpair.reqs = &tcp_req;
@@ -759,7 +759,7 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 	TAILQ_INSERT_TAIL(&tqpair.tcp_req_free_queue, &tcp_req2, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_FREE]++;
 	tqpair.qpair.transport = &ttransport.transport;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
 	tqpair.qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 
@@ -1052,7 +1052,7 @@ test_nvmf_tcp_check_xfer_type(void)
 	TAILQ_INIT(&tqpair.tcp_req_working_queue);
 
 	tqpair.qpair.transport = &ttransport.transport;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
 	tqpair.qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 
@@ -1125,7 +1125,7 @@ test_nvmf_tcp_invalid_sgl(void)
 	TAILQ_INIT(&tqpair.tcp_req_working_queue);
 
 	tqpair.qpair.transport = &ttransport.transport;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
 	tqpair.qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 
@@ -1179,7 +1179,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 
 	/* Test case: Already received ICreq PDU. Expect: fail */
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INITIALIZING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_INITIALIZING;
 	nvmf_tcp_pdu_ch_handle(&tqpair);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
@@ -1189,7 +1189,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: Expected PDU header length and received are different. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_INVALID;
 	tqpair.pdu_in_progress->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_req);
 	tqpair.pdu_in_progress->hdr.common.hlen = 0;
 	nvmf_tcp_pdu_ch_handle(&tqpair);
@@ -1202,7 +1202,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: The TCP/IP tqpair connection is not negotiated. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_INVALID;
 	tqpair.pdu_in_progress->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_req);
 	tqpair.pdu_in_progress->hdr.common.hlen = 0;
 	nvmf_tcp_pdu_ch_handle(&tqpair);
@@ -1214,7 +1214,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: Unexpected PDU type. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
 	tqpair.pdu_in_progress->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_req);
 	nvmf_tcp_pdu_ch_handle(&tqpair);
@@ -1227,7 +1227,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: PDU type is SPDK_NVME_TCP_PDU_TYPE_IC_REQ, let plen error. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_INVALID;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
 	tqpair.pdu_in_progress->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_req);
 	nvmf_tcp_pdu_ch_handle(&tqpair);
@@ -1241,7 +1241,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: PDU type is SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD, let plen error. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.pdu_in_progress->hdr.common.flags = SPDK_NVME_TCP_CH_FLAGS_HDGSTF;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
 	tqpair.pdu_in_progress->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_cmd);
@@ -1256,7 +1256,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: PDU type is SPDK_NVME_TCP_PDU_TYPE_H2C_DATA, let plen error. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
 	tqpair.pdu_in_progress->hdr.common.pdo = 64;
 	tqpair.pdu_in_progress->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_h2c_data_hdr);
@@ -1271,7 +1271,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: PDU type is SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ, let plen error. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
 	tqpair.pdu_in_progress->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_term_req_hdr);
 	nvmf_tcp_pdu_ch_handle(&tqpair);
@@ -1285,7 +1285,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: PDU type is SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD, let pdo error. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.cpda = 1;
 	tqpair.pdu_in_progress->hdr.common.flags = SPDK_NVME_TCP_CH_FLAGS_HDGSTF;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
@@ -1302,7 +1302,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: PDU type is SPDK_NVME_TCP_PDU_TYPE_H2C_DATA, let pdo error. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
 	tqpair.cpda = 1;
 	tqpair.pdu_in_progress->hdr.common.plen = 0;
 	tqpair.pdu_in_progress->hdr.common.pdo = 63;
@@ -1318,7 +1318,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	/* Test case: All parameters is conformed to the function. Expect: PASS */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVMF_TCP_QPAIR_STATE_INVALID;
 	tqpair.pdu_in_progress->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_req);
 	tqpair.pdu_in_progress->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_req);
 	nvmf_tcp_pdu_ch_handle(&tqpair);

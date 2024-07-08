@@ -106,6 +106,14 @@ enum spdk_nvmf_tcp_req_state {
 	TCP_REQUEST_NUM_STATES,
 };
 
+enum nvmf_tcp_qpair_state {
+	NVMF_TCP_QPAIR_STATE_INVALID = 0,
+	NVMF_TCP_QPAIR_STATE_INITIALIZING = 1,
+	NVMF_TCP_QPAIR_STATE_RUNNING = 2,
+	NVMF_TCP_QPAIR_STATE_EXITING = 3,
+	NVMF_TCP_QPAIR_STATE_EXITED = 4,
+};
+
 static const char *spdk_nvmf_tcp_term_req_fes_str[] = {
 	"Invalid PDU Header Field",
 	"PDU Sequence Error",
@@ -258,7 +266,7 @@ struct spdk_nvmf_tcp_qpair {
 	struct spdk_sock			*sock;
 
 	enum nvme_tcp_pdu_recv_state		recv_state;
-	enum nvme_tcp_qpair_state		state;
+	enum nvmf_tcp_qpair_state		state;
 
 	/* PDU being actively received */
 	struct nvme_tcp_pdu			*pdu_in_progress;
@@ -1099,7 +1107,7 @@ static void nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 		enum nvme_tcp_pdu_recv_state state);
 
 static void
-nvmf_tcp_qpair_set_state(struct spdk_nvmf_tcp_qpair *tqpair, enum nvme_tcp_qpair_state state)
+nvmf_tcp_qpair_set_state(struct spdk_nvmf_tcp_qpair *tqpair, enum nvmf_tcp_qpair_state state)
 {
 	tqpair->state = state;
 	spdk_trace_record(TRACE_TCP_QP_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0,
@@ -1113,8 +1121,8 @@ nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	spdk_trace_record(TRACE_TCP_QP_DISCONNECT, tqpair->qpair.trace_id, 0, 0);
 
-	if (tqpair->state <= NVME_TCP_QPAIR_STATE_RUNNING) {
-		nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITING);
+	if (tqpair->state <= NVMF_TCP_QPAIR_STATE_RUNNING) {
+		nvmf_tcp_qpair_set_state(tqpair, NVMF_TCP_QPAIR_STATE_EXITING);
 		assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
 		spdk_poller_unregister(&tqpair->timeout_poller);
 
@@ -2235,7 +2243,7 @@ nvmf_tcp_send_icresp_complete(void *cb_arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair = cb_arg;
 
-	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_RUNNING);
+	nvmf_tcp_qpair_set_state(tqpair, NVMF_TCP_QPAIR_STATE_RUNNING);
 }
 
 static void
@@ -2304,7 +2312,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	SPDK_DEBUGLOG(nvmf_tcp, "host_hdgst_enable: %u\n", tqpair->host_hdgst_enable);
 	SPDK_DEBUGLOG(nvmf_tcp, "host_ddgst_enable: %u\n", tqpair->host_ddgst_enable);
 
-	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_INITIALIZING);
+	nvmf_tcp_qpair_set_state(tqpair, NVMF_TCP_QPAIR_STATE_INITIALIZING);
 	nvmf_tcp_qpair_write_mgmt_pdu(tqpair, nvmf_tcp_send_icresp_complete, tqpair);
 	nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	return;
@@ -2377,7 +2385,7 @@ nvmf_tcp_pdu_ch_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 	pdu = tqpair->pdu_in_progress;
 	assert(pdu);
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ) {
-		if (tqpair->state != NVME_TCP_QPAIR_STATE_INVALID) {
+		if (tqpair->state != NVMF_TCP_QPAIR_STATE_INVALID) {
 			SPDK_ERRLOG("Already received ICreq PDU, and reject this pdu=%p\n", pdu);
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
 			goto err;
@@ -2387,7 +2395,7 @@ nvmf_tcp_pdu_ch_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 			plen_error = true;
 		}
 	} else {
-		if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
+		if (tqpair->state != NVMF_TCP_QPAIR_STATE_RUNNING) {
 			SPDK_ERRLOG("The TCP/IP connection is not negotiated\n");
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
 			goto err;
@@ -2494,7 +2502,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 		/* FALLTHROUGH */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-			if (spdk_unlikely(tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING)) {
+			if (spdk_unlikely(tqpair->state == NVMF_TCP_QPAIR_STATE_INITIALIZING)) {
 				return rc;
 			}
 
@@ -3416,7 +3424,7 @@ nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	tqpair->group = tgroup;
-	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_INVALID);
+	nvmf_tcp_qpair_set_state(tqpair, NVMF_TCP_QPAIR_STATE_INVALID);
 	TAILQ_INSERT_TAIL(&tgroup->qpairs, tqpair, link);
 
 	return 0;
@@ -3512,7 +3520,7 @@ nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair,
 	tqpair->fini_cb_fn = cb_fn;
 	tqpair->fini_cb_arg = cb_arg;
 
-	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITED);
+	nvmf_tcp_qpair_set_state(tqpair, NVMF_TCP_QPAIR_STATE_EXITED);
 	nvmf_tcp_qpair_destroy(tqpair);
 }
 
