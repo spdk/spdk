@@ -228,13 +228,11 @@ static int
 nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 			      struct spdk_nvmf_transport *transport)
 {
-	struct spdk_nvmf_transport_poll_group *tgroup;
+	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(group, transport);
 
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		if (tgroup->transport == transport) {
-			/* Transport already in the poll group */
-			return 0;
-		}
+	if (tgroup != NULL) {
+		/* Transport already in the poll group */
+		return 0;
 	}
 
 	tgroup = nvmf_transport_poll_group_create(transport, group);
@@ -1217,7 +1215,7 @@ int
 spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			 struct spdk_nvmf_qpair *qpair)
 {
-	int rc = -1;
+	int rc;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
 	TAILQ_INIT(&qpair->outstanding);
@@ -1225,12 +1223,12 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	qpair->ctrlr = NULL;
 	qpair->disconnect_started = false;
 
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		if (tgroup->transport == qpair->transport) {
-			rc = nvmf_transport_poll_group_add(tgroup, qpair);
-			break;
-		}
+	tgroup = nvmf_get_transport_poll_group(group, qpair->transport);
+	if (tgroup == NULL) {
+		return -1;
 	}
+
+	rc = nvmf_transport_poll_group_add(tgroup, qpair);
 
 	/* We add the qpair to the group only it is successfully added into the tgroup */
 	if (rc == 0) {
@@ -1308,14 +1306,12 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 
 	/* Find the tgroup and remove the qpair from the tgroup */
-	TAILQ_FOREACH(tgroup, &qpair->group->tgroups, link) {
-		if (tgroup->transport == qpair->transport) {
-			rc = nvmf_transport_poll_group_remove(tgroup, qpair);
-			if (rc && (rc != ENOTSUP)) {
-				SPDK_ERRLOG("Cannot remove qpair=%p from transport group=%p\n",
-					    qpair, tgroup);
-			}
-			break;
+	tgroup = nvmf_get_transport_poll_group(qpair->group, qpair->transport);
+	if (tgroup != NULL) {
+		rc = nvmf_transport_poll_group_remove(tgroup, qpair);
+		if (rc && (rc != ENOTSUP)) {
+			SPDK_ERRLOG("Cannot remove qpair=%p from transport group=%p\n",
+				    qpair, tgroup);
 		}
 	}
 

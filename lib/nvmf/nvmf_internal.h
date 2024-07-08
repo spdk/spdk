@@ -581,4 +581,18 @@ int nvmf_publish_mdns_prr(struct spdk_nvmf_tgt *tgt);
  */
 void nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt);
 
+static inline struct spdk_nvmf_transport_poll_group *
+nvmf_get_transport_poll_group(struct spdk_nvmf_poll_group *group,
+			      struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (tgroup->transport == transport) {
+			return tgroup;
+		}
+	}
+
+	return NULL;
+}
 #endif /* __NVMF_INTERNAL_H__ */
