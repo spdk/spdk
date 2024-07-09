@@ -1667,6 +1667,103 @@ spdk_accel_append_dif_generate_copy(struct spdk_accel_sequence **pseq, struct sp
 }
 
 int
+spdk_accel_append_dix_generate(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			       struct iovec *iovs, size_t iovcnt, struct spdk_memory_domain *domain,
+			       void *domain_ctx, struct iovec *md_iov,
+			       struct spdk_memory_domain *md_domain, void *md_domain_ctx,
+			       uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+			       spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *pseq = *seq;
+
+	if (pseq == NULL) {
+		pseq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(pseq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(pseq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, pseq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*seq == NULL) {
+			accel_sequence_put(pseq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->d.iovs = md_iov;
+	task->d.iovcnt = 1;
+	task->dst_domain = md_domain;
+	task->dst_domain_ctx = md_domain_ctx;
+	task->s.iovs = iovs;
+	task->s.iovcnt = iovcnt;
+	task->src_domain = domain;
+	task->src_domain_ctx = domain_ctx;
+	task->dif.ctx = ctx;
+	task->dif.num_blocks = num_blocks;
+	task->nbytes = num_blocks * ctx->block_size;
+	task->op_code = SPDK_ACCEL_OPC_DIX_GENERATE;
+
+	TAILQ_INSERT_TAIL(&pseq->tasks, task, seq_link);
+	*seq = pseq;
+
+	return 0;
+}
+
+int
+spdk_accel_append_dix_verify(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			     struct iovec *iovs, size_t iovcnt, struct spdk_memory_domain *domain,
+			     void *domain_ctx, struct iovec *md_iov,
+			     struct spdk_memory_domain *md_domain, void *md_domain_ctx,
+			     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+			     struct spdk_dif_error *err, spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *pseq = *seq;
+
+	if (pseq == NULL) {
+		pseq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(pseq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(pseq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, pseq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*seq == NULL) {
+			accel_sequence_put(pseq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->d.iovs = md_iov;
+	task->d.iovcnt = 1;
+	task->dst_domain = md_domain;
+	task->dst_domain_ctx = md_domain_ctx;
+	task->s.iovs = iovs;
+	task->s.iovcnt = iovcnt;
+	task->src_domain = domain;
+	task->src_domain_ctx = domain_ctx;
+	task->dif.ctx = ctx;
+	task->dif.err = err;
+	task->dif.num_blocks = num_blocks;
+	task->nbytes = num_blocks * ctx->block_size;
+	task->op_code = SPDK_ACCEL_OPC_DIX_VERIFY;
+
+	TAILQ_INSERT_TAIL(&pseq->tasks, task, seq_link);
+	*seq = pseq;
+
+	return 0;
+}
+
+int
 spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
 		   struct spdk_memory_domain **domain, void **domain_ctx)
 {
@@ -2364,7 +2461,9 @@ accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next
 		task->dst_domain_ctx = next->dst_domain_ctx;
 		break;
 	case SPDK_ACCEL_OPC_CRC32C:
-		/* crc32 is special, because it doesn't have a dst buffer */
+	case SPDK_ACCEL_OPC_DIX_GENERATE:
+	case SPDK_ACCEL_OPC_DIX_VERIFY:
+		/* crc32 and dix_generate/verify are special, because they do not have a dst buffer */
 		if (task->src_domain != next->src_domain) {
 			return false;
 		}
@@ -2372,7 +2471,7 @@ accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next
 					next->s.iovs, next->s.iovcnt)) {
 			return false;
 		}
-		/* We can only change crc32's buffer if we can change previous task's buffer */
+		/* We can only change operation's buffer if we can change previous task's buffer */
 		prev = TAILQ_PREV(task, accel_sequence_tasks, seq_link);
 		if (prev == NULL) {
 			return false;
@@ -2434,6 +2533,8 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 	case SPDK_ACCEL_OPC_CRC32C:
 	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
 	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
+	case SPDK_ACCEL_OPC_DIX_GENERATE:
+	case SPDK_ACCEL_OPC_DIX_VERIFY:
 		/* We can only merge tasks when one of them is a copy */
 		if (next->op_code != SPDK_ACCEL_OPC_COPY) {
 			break;

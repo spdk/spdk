@@ -37,6 +37,8 @@
 	spdk_accel_append_dif_verify_copy;
 	spdk_accel_append_dif_generate;
 	spdk_accel_append_dif_generate_copy;
+	spdk_accel_append_dix_generate;
+	spdk_accel_append_dix_verify;
 	spdk_accel_sequence_finish;
 	spdk_accel_sequence_abort;
 	spdk_accel_sequence_reverse;

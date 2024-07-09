@@ -945,6 +945,69 @@ int spdk_accel_append_dif_generate_copy(struct spdk_accel_sequence **seq,
 					spdk_accel_step_cb cb_fn, void *cb_arg);
 
 /**
+ * Append DIX generate operation to a sequence.
+ *
+ * \param seq Sequence object. If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param iovs Source I/O vector array. The total allocated memory size needs to be at least:
+ *	num_blocks * block_size_no_md.
+ * \param iovcnt Size of the source I/O vectors' array.
+ * \param domain Memory domain to which the source buffers belong.
+ * \param domain_ctx Source buffer domain context.
+ * \param md_iov Metadata iovec. The total allocated memory size needs to be at least:
+ *	num_blocks * md_size (8B or 16B, depending on the PI format).
+ * \param md_domain Memory domain to which the metadata buffers belongs.
+ * \param md_domain_ctx Metadata buffer domain context.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIX context. Contains the DIX configuration values, including the reference
+ *	Application Tag value and initial value of the Reference Tag to insert.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \returns 0 on success, negative errno on failure.
+ */
+int spdk_accel_append_dix_generate(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+				   struct iovec *iovs, size_t iovcnt,
+				   struct spdk_memory_domain *domain, void *domain_ctx,
+				   struct iovec *md_iov, struct spdk_memory_domain *md_domain,
+				   void *md_domain_ctx, uint32_t num_blocks,
+				   const struct spdk_dif_ctx *ctx,
+				   spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Append DIX verify operation to a sequence.
+ *
+ * \param seq Sequence object. If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param iovs Source I/O vector array. The total allocated memory size needs to be at least:
+ *	num_blocks * block_size_no_md.
+ * \param iovcnt Size of the source I/O vectors' array.
+ * \param domain Memory domain to which the source buffers belong.
+ * \param domain_ctx Source buffer domain context.
+ * \param md_iov Metadata iovec. The total allocated memory size needs to be at least:
+ *	num_blocks * md_size (8B or 16B, depending on the PI format).
+ * \param md_domain Memory domain to which the metadata buffers belongs.
+ * \param md_domain_ctx Metadata buffer domain context.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIX context. Contains the DIX configuration values, including the reference
+ *	Application Tag value and initial value of the Reference Tag to insert.
+ * \param err DIX error detailed information.
+ *	Note: the user must ensure the validity of this pointer throughout the entire
+ *	operation because it is not validated along the processing path.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \returns 0 on success, negative errno on failure.
+ */
+int spdk_accel_append_dix_verify(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+				 struct iovec *iovs, size_t iovcnt,
+				 struct spdk_memory_domain *domain, void *domain_ctx,
+				 struct iovec *md_iov, struct spdk_memory_domain *md_domain,
+				 void *md_domain_ctx, uint32_t num_blocks,
+				 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				 spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
  * Finish a sequence and execute all its operations. After the completion callback is executed, the
  * sequence object is automatically freed.
  *

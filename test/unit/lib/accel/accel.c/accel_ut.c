@@ -4118,6 +4118,220 @@ test_sequence_crc32(void)
 	poll_threads();
 }
 
+static void
+test_sequence_dix_generate_verify(void)
+{
+	struct spdk_accel_sequence *seq;
+	struct spdk_io_channel *ioch;
+	struct ut_sequence ut_seq = {};
+	char srcbuf[3][4096], dstbuf[3][4096];
+	struct iovec src_iovs[3], dst_iovs[3];
+	uint32_t block_size = 512, md_size = 8;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct spdk_dif_ctx dif_ctx = {};
+	struct spdk_dif_error dif_err;
+	int i, rc, completed = 0;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	for (i = 0; i < 3; i++) {
+		memset(srcbuf[i], 0xdead, sizeof(srcbuf[i]));
+		memset(dstbuf[i], 0, sizeof(dstbuf[i]));
+		src_iovs[i].iov_base = srcbuf[i];
+		src_iovs[i].iov_len = sizeof(srcbuf[i]);
+		dst_iovs[i].iov_base = dstbuf[i];
+		dst_iovs[i].iov_len = sizeof(dstbuf[i]);
+	}
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	rc = spdk_dif_ctx_init(&dif_ctx, block_size, md_size, false, true, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			       SPDK_DIF_FLAGS_REFTAG_CHECK, 10, 0xFFFF, 20, 0, 0, &dif_opts);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	seq = NULL;
+	completed = 0;
+	for (i = 0; i < 3; i++) {
+		rc = spdk_accel_append_dix_generate(&seq, ioch, &dst_iovs[i], 1, NULL, NULL,
+						    &src_iovs[i], NULL, NULL,
+						    src_iovs[i].iov_len / block_size, &dif_ctx,
+						    ut_sequence_step_cb, &completed);
+		CU_ASSERT_EQUAL(rc, 0);
+		rc = spdk_accel_append_dix_verify(&seq, ioch, &dst_iovs[i], 1, NULL, NULL,
+						  &src_iovs[i], NULL, NULL,
+						  src_iovs[i].iov_len / block_size, &dif_ctx,
+						  &dif_err, ut_sequence_step_cb, &completed);
+		CU_ASSERT_EQUAL(rc, 0);
+	}
+
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 6);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+
+	/* DIX metadata should be equal for the same source buffers and tags */
+	CU_ASSERT_EQUAL(memcmp(dstbuf[0], dstbuf[1], 4096), 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf[0], dstbuf[2], 4096), 0);
+
+	ut_clear_operations();
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
+static void
+test_sequence_dix(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_sequence ut_seq = {};
+	char buf[3][4096], md_buf[64];
+	struct iovec iovs[3], md_iov;
+	uint32_t block_size = 512, md_size = 8;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct spdk_dif_ctx dif_ctx = {};
+	struct spdk_dif_error dif_err;
+	struct spdk_accel_crypto_key *key;
+	struct spdk_accel_crypto_key_create_param key_params = {
+		.cipher = "AES_XTS",
+		.hex_key = "00112233445566778899aabbccddeeff",
+		.hex_key2 = "ffeeddccbbaa99887766554433221100",
+		.key_name = "ut_key",
+	};
+	int i, rc, completed = 0;
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	rc = spdk_accel_crypto_key_create(&key_params);
+	CU_ASSERT_EQUAL(rc, 0);
+	key = spdk_accel_crypto_key_get(key_params.key_name);
+	SPDK_CU_ASSERT_FATAL(key != NULL);
+
+	/* Override the submit_tasks function. */
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
+		g_seq_operations[i].complete_status = 0;
+		g_seq_operations[i].submit_status = 0;
+		g_seq_operations[i].count = 0;
+
+		modules[i] = g_modules_opc[i];
+		g_modules_opc[i] = g_module;
+	}
+
+	for (i = 0; i < 3; i++) {
+		memset(buf[i], 0, sizeof(buf[i]));
+		iovs[i].iov_base = buf[i];
+		iovs[i].iov_len = sizeof(buf[i]);
+	}
+	memset(md_buf, 0, sizeof(md_buf));
+	md_iov.iov_base = md_buf;
+	md_iov.iov_len = sizeof(md_buf);
+
+	/* Prepare first source buffer. */
+	memset(iovs[0].iov_base, 0xde, iovs[0].iov_len);
+
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].src_iovs = &iovs[0];
+	/* Copy will be skipped, so the destination buffer of encrypt will change. */
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].dst_iovs = &iovs[2];
+
+	rc = spdk_accel_append_encrypt(&seq, ioch, key, &iovs[1], 1, NULL, NULL,
+				       &iovs[0], 1, NULL, NULL, 0, block_size,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	rc = spdk_dif_ctx_init(&dif_ctx, block_size, md_size, false, true, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			       SPDK_DIF_FLAGS_REFTAG_CHECK, 10, 0xFFFF, 20, 0, 0, &dif_opts);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	rc = spdk_accel_append_dix_generate(&seq, ioch, &iovs[1], 1, NULL, NULL,
+					    &md_iov, NULL, NULL, iovs[1].iov_len / block_size,
+					    &dif_ctx, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_copy(&seq, ioch, &iovs[2], 1, NULL, NULL,
+				    &iovs[1], 1, NULL, NULL,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+
+	seq = NULL;
+	completed = 0;
+
+	/* This time we start with first iovec containing encrypted data from previous sequence. */
+	memcpy(iovs[0].iov_base, iovs[2].iov_base, iovs[0].iov_len);
+
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_iovs = &iovs[0];
+	/* Copy will be skipped, so the destination buffer of decrypt will change. */
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_iovs = &iovs[2];
+
+	rc = spdk_accel_append_decrypt(&seq, ioch, key, &iovs[1], 1, NULL, NULL,
+				       &iovs[0], 1, NULL, NULL, 0, block_size,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_dix_verify(&seq, ioch, &iovs[1], 1, NULL, NULL, &md_iov, NULL, NULL,
+					  iovs[1].iov_len / block_size, &dif_ctx, &dif_err,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_copy(&seq, ioch, &iovs[2], 1, NULL, NULL, &iovs[1], 1, NULL, NULL,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+
+	ut_clear_operations();
+
+	/* Cleanup module pointers to make subsequent tests work correctly. */
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
+		g_modules_opc[i] = modules[i];
+	}
+
+	rc = spdk_accel_crypto_key_destroy(key);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
 static int
 test_sequence_setup(void)
 {
@@ -4208,6 +4422,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_driver);
 	CU_ADD_TEST(seq_suite, test_sequence_same_iovs);
 	CU_ADD_TEST(seq_suite, test_sequence_crc32);
+	CU_ADD_TEST(seq_suite, test_sequence_dix_generate_verify);
+	CU_ADD_TEST(seq_suite, test_sequence_dix);
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
