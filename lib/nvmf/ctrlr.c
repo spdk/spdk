@@ -1950,6 +1950,7 @@ nvmf_ctrlr_get_features_host_behavior_support(struct spdk_nvmf_request *req)
 	}
 
 	host_behavior.acre = ctrlr->acre_enabled;
+	host_behavior.lbafee = ctrlr->lbafee_enabled;
 
 	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
 	spdk_iov_xfer_from_buf(&ix, &host_behavior, sizeof(host_behavior));
@@ -1985,6 +1986,16 @@ nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
 		ctrlr->acre_enabled = true;
 	} else {
 		SPDK_ERRLOG("Host Behavior Support invalid acre: 0x%02x\n", host_behavior->acre);
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	if (host_behavior->lbafee == 0) {
+		ctrlr->lbafee_enabled = false;
+	} else if (host_behavior->lbafee == 1) {
+		ctrlr->lbafee_enabled = true;
+	} else {
+		SPDK_ERRLOG("Host Behavior Support invalid acre: 0x%02x\n", host_behavior->lbafee);
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

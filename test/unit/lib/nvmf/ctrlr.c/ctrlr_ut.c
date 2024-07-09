@@ -3111,11 +3111,14 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	SPDK_IOV_ONE(req.iov, &req.iovcnt, &behavior, req.length);
 
 	ctrlr.acre_enabled = true;
+	ctrlr.lbafee_enabled = true;
 	behavior.acre = false;
+	behavior.lbafee = false;
 
 	rc = nvmf_ctrlr_get_features_host_behavior_support(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(behavior.acre == true);
+	CU_ASSERT(behavior.lbafee == true);
 }
 
 static void
@@ -3159,8 +3162,9 @@ test_nvmf_ctrlr_set_features_host_behavior_support(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
 
-	/* acre is false */
+	/* acre is false but lbafee is true */
 	host_behavior.acre = 0;
+	host_behavior.lbafee = 1;
 	req.iov[0].iov_len = sizeof(struct spdk_nvme_host_behavior);
 	rc = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3171,9 +3175,11 @@ test_nvmf_ctrlr_set_features_host_behavior_support(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT(ctrlr.acre_enabled == false);
+	CU_ASSERT(ctrlr.lbafee_enabled == true);
 
-	/* acre is true */
+	/* acre is true but lbafee is false */
 	host_behavior.acre = 1;
+	host_behavior.lbafee = 0;
 	req.iov[0].iov_len = sizeof(struct spdk_nvme_host_behavior);
 	rc = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3184,9 +3190,21 @@ test_nvmf_ctrlr_set_features_host_behavior_support(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT(ctrlr.acre_enabled == true);
+	CU_ASSERT(ctrlr.lbafee_enabled == false);
 
 	/* Invalid acre */
 	host_behavior.acre = 2;
+	rc = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+
+	rc = nvmf_ctrlr_set_features_host_behavior_support(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Invalid lbafee */
+	host_behavior.lbafee = 3;
 	rc = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_SUCCESS;

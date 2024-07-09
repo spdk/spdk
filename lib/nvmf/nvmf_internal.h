@@ -256,6 +256,8 @@ struct spdk_nvmf_ctrlr {
 	bool				disconnect_is_shn;
 	bool				acre_enabled;
 	bool				dynamic_ctrlr;
+	/* LBA Format Extension Enabled (LBAFEE) */
+	bool				lbafee_enabled;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
