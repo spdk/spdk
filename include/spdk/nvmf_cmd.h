@@ -80,6 +80,19 @@ int spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 				struct spdk_nvme_ns_data *nsdata);
 
 /**
+ * Fills the identify namespace attributes for the specified controller.
+ *
+ * This funtion uses nvme passthru for the namespaces that are backed by bdevs
+ * that support NVME_ADMIN IO type. It differs from spdk_nvmf_ctrlr_identify_ns
+ * by requesting identify namespace data and populate performance and atomic
+ * operations fields.
+ *
+ * \param req The NVMe-oF request
+ * \return \ref spdk_nvmf_request_exec_status
+ */
+int spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req);
+
+/**
  * Callback function definition for a custom admin command handler.
  *
  * A function of this type is passed to \ref spdk_nvmf_set_custom_admin_cmd_hdlr.

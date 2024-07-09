@@ -102,6 +102,7 @@
 	spdk_nvmf_ctrlr_identify_ctrlr;
 	spdk_nvmf_ctrlr_identify_iocs_specific;
 	spdk_nvmf_ctrlr_identify_ns;
+	spdk_nvmf_ctrlr_identify_ns_ext;
 	spdk_nvmf_set_custom_admin_cmd_hdlr;
 	spdk_nvmf_set_passthru_admin_cmd;
 	spdk_nvmf_bdev_ctrlr_nvme_passthru_admin;

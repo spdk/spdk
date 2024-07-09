@@ -2759,11 +2759,11 @@ _nvmf_ctrlr_get_ns_safe(struct spdk_nvmf_ctrlr *ctrlr,
 	return ns;
 }
 
-int
-spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
-			    struct spdk_nvme_cmd *cmd,
-			    struct spdk_nvme_cpl *rsp,
-			    struct spdk_nvme_ns_data *nsdata)
+static void
+nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
+		       struct spdk_nvme_cmd *cmd,
+		       struct spdk_nvme_cpl *rsp,
+		       struct spdk_nvme_ns_data *nsdata)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
@@ -2772,7 +2772,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 
 	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, cmd->nsid, rsp);
 	if (ns == NULL) {
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return;
 	}
 
 	nvmf_bdev_ctrlr_identify_ns(ns, nsdata, ctrlr->dif_insert_or_strip);
@@ -2803,8 +2803,87 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			nsdata->nuse = 0;
 		}
 	}
+}
+
+int
+spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvme_cmd *cmd,
+			    struct spdk_nvme_cpl *rsp,
+			    struct spdk_nvme_ns_data *nsdata)
+{
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, nsdata);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static void
+identify_ns_passthru_cb(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
+	struct spdk_nvme_ns_data nvmf_nsdata = {};
+	struct spdk_nvme_ns_data nvme_nsdata = {};
+	size_t datalen;
+
+	/* This is the identify data from the NVMe drive */
+	datalen = spdk_nvmf_request_copy_to_buf(req, &nvme_nsdata,
+						sizeof(nvme_nsdata));
+
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nvmf_nsdata);
+
+	/* Update fabric's namespace according to SSD's namespace */
+	if (nvme_nsdata.nsfeat.optperf) {
+		nvmf_nsdata.nsfeat.optperf = nvme_nsdata.nsfeat.optperf;
+		nvmf_nsdata.npwg = nvme_nsdata.npwg;
+		nvmf_nsdata.npwa = nvme_nsdata.npwa;
+		nvmf_nsdata.npdg = nvme_nsdata.npdg;
+		nvmf_nsdata.npda = nvme_nsdata.npda;
+		nvmf_nsdata.nows = nvme_nsdata.nows;
+	}
+
+	if (nvme_nsdata.nsfeat.ns_atomic_write_unit) {
+		nvmf_nsdata.nsfeat.ns_atomic_write_unit = nvme_nsdata.nsfeat.ns_atomic_write_unit;
+		nvmf_nsdata.nawun = nvme_nsdata.nawun;
+		nvmf_nsdata.nawupf = nvme_nsdata.nawupf;
+		nvmf_nsdata.nacwu = nvme_nsdata.nacwu;
+	}
+
+	nvmf_nsdata.nabsn = nvme_nsdata.nabsn;
+	nvmf_nsdata.nabo = nvme_nsdata.nabo;
+	nvmf_nsdata.nabspf = nvme_nsdata.nabspf;
+
+	spdk_nvmf_request_copy_from_buf(req, &nvmf_nsdata, datalen);
+}
+
+int
+spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvme_ns_data nsdata = {};
+	struct spdk_iov_xfer ix;
+	int rc;
+
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nsdata);
+
+	rc = spdk_nvmf_request_get_bdev(cmd->nsid, req, &bdev, &desc, &ch);
+	if (rc) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_from_buf(&ix, &nsdata, sizeof(nsdata));
+
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, identify_ns_passthru_cb);
 }
 
 static void
@@ -3287,8 +3366,9 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 
 	switch (cns) {
 	case SPDK_NVME_IDENTIFY_NS:
-		ret = spdk_nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, (void *)&tmpbuf);
-		break;
+		/* Function below can be asynchronous & we always need to have the data in request's buffer
+		 * So just return here */
+		return spdk_nvmf_ctrlr_identify_ns_ext(req);
 	case SPDK_NVME_IDENTIFY_CTRLR:
 		ret = spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, (void *)&tmpbuf);
 		break;

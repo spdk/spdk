@@ -225,6 +225,9 @@ DEFINE_STUB(nvmf_auth_request_exec, int, (struct spdk_nvmf_request *r),
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
 
+DEFINE_STUB(spdk_bdev_io_type_supported, bool,
+	    (struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type), false);
+
 void
 nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair, enum spdk_nvmf_qpair_state state)
 {
