@@ -46,7 +46,11 @@ function tgt_check_notification_types() {
 	local enabled_types=("bdev_register" "bdev_unregister")
 
 	local get_types=($(tgt_rpc notify_get_types | jq -r '.[]'))
-	if [[ ${enabled_types[*]} != "${get_types[*]}" ]]; then
+
+	local type_diff
+	type_diff=$(echo "${enabled_types[@]}" "${get_types[@]}" | tr ' ' '\n' | sort | uniq -u)
+
+	if [[ -n "$type_diff" ]]; then
 		echo "ERROR: expected types: ${enabled_types[*]}, but got: ${get_types[*]}"
 		ret=1
 	fi
