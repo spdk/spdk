@@ -44,6 +44,13 @@ The `framework_get_reactors` RPC method supports getting pid and tid.
 Added `framework_get_governor` RPC to retrieve the power governor name,
 power env and the frequencies available, frequency set to the cpu cores.
 
+### dif
+
+Each element in `enum spdk_dif_pi_format` was subtracted by 1 to match the definition
+of the Protection Information Format in the NVMe specification. This is necessary change
+but breaks ABI compatibility. Please recompile your application if you added code using
+this enum of older SPDK.
+
 ## v24.05
 
 ### accel

@@ -47,9 +47,9 @@ enum spdk_dif_check_type {
 };
 
 enum spdk_dif_pi_format {
-	SPDK_DIF_PI_FORMAT_16 = 1,
-	SPDK_DIF_PI_FORMAT_32 = 2,
-	SPDK_DIF_PI_FORMAT_64 = 3
+	SPDK_DIF_PI_FORMAT_16 = 0,
+	SPDK_DIF_PI_FORMAT_32 = 1,
+	SPDK_DIF_PI_FORMAT_64 = 2,
 };
 
 struct spdk_dif_ctx_init_ext_opts {
