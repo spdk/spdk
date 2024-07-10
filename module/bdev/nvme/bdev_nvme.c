@@ -3616,6 +3616,7 @@ nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrl
 	const struct spdk_nvme_ctrlr_opts *opts;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	struct nvme_path_id *path_id;
+	int32_t numa_id;
 
 	spdk_json_write_object_begin(w);
 
@@ -3659,6 +3660,10 @@ nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrl
 	spdk_json_write_named_string(w, "svcid", opts->src_svcid);
 	spdk_json_write_object_end(w);
 
+	numa_id = spdk_nvme_ctrlr_get_numa_id(nvme_ctrlr->ctrlr);
+	if (numa_id != SPDK_ENV_NUMA_ID_ANY) {
+		spdk_json_write_named_uint32(w, "numa_id", numa_id);
+	}
 	spdk_json_write_object_end(w);
 }
 
