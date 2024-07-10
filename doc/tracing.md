@@ -1,4 +1,4 @@
-# NVMe-oF Target Tracepoints {#nvmf_tgt_tracepoints}
+# Tracing Framework {#tracepoints}
 
 ## Introduction {#tracepoints_intro}
 

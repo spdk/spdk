@@ -835,7 +835,6 @@ INPUT                  += \
                          nvme_spec.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
-                         nvmf_tracing.md \
                          nvmf_multipath_howto.md \
                          overview.md \
                          peer_2_peer.md \
@@ -849,6 +848,7 @@ INPUT                  += \
                          spdk_top.md \
                          ssd_internals.md \
                          system_configuration.md \
+                         tracing.md \
                          ublk.md \
                          usdt.md \
                          userspace.md \

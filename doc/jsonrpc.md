@@ -1157,7 +1157,7 @@ Enable tracepoint mask on a specific tpoint group. For example "bdev" for bdev t
 and 0x1 to enable the first tracepoint inside the group (BDEV_IO_START). This command will not
 disable already active tracepoints or those not specified in the mask. For a full description
 of all available trace groups, see
-[tracepoint documentation](https://spdk.io/doc/nvmf_tgt_tracepoints.html).
+[tracepoint documentation](https://spdk.io/doc/tracepoints.html).
 
 #### Parameters
 
@@ -1197,7 +1197,7 @@ Example response:
 Disable tracepoint mask on a specific tpoint group. For example "bdev" for bdev trace group,
 and 0x1 to disable the first tracepoint inside the group (BDEV_IO_START). For a full description
 of all available trace groups, see
-[tracepoint documentation](https://spdk.io/doc/nvmf_tgt_tracepoints.html).
+[tracepoint documentation](https://spdk.io/doc/tracepoints.html).
 
 #### Parameters
 

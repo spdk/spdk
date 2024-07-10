@@ -1,7 +1,7 @@
 # NVMe over Fabrics Target {#nvmf}
 
 @sa @ref nvme_fabrics_host
-@sa @ref nvmf_tgt_tracepoints
+@sa @ref tracepoints
 
 ## NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
 
@@ -267,7 +267,7 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 ## Enabling NVMe-oF target tracepoints for offline analysis and debug {#nvmf_trace}
 
 SPDK has a tracing framework for capturing low-level event information at runtime.
-@ref nvmf_tgt_tracepoints enable analysis of both performance and application crashes.
+@ref tracepoints enable analysis of both performance and application crashes.
 
 ## Enabling NVMe-oF Multipath
 
