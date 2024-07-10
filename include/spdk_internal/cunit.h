@@ -45,7 +45,7 @@ struct spdk_ut_opts {
 	void *cb_arg;
 	/** Extra option callback */
 	spdk_ut_option_cb option_cb_fn;
-	/** Init callack */
+	/** Init callback */
 	spdk_ut_init_cb init_cb_fn;
 	/** Usage callback */
 	spdk_ut_usage_cb usage_cb_fn;

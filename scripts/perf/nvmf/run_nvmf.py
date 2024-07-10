@@ -1580,7 +1580,7 @@ class SPDKInitiator(Initiator):
         self.exec_cmd(["echo", "'%s'" % bdev_conf, ">", "%s/bdev.conf" % self.spdk_dir])
 
     def init_disconnect(self):
-        # SPDK Initiator does not need to explicity disconnect as this gets done
+        # SPDK Initiator does not need to explicitly disconnect as this gets done
         # after fio bdev plugin finishes IO.
         return
 

@@ -189,7 +189,7 @@ custom_alloc() {
 }
 
 no_shrink_alloc() {
-	# Defalut HUGEMEM (2G) alloc on node0
+	# Default HUGEMEM (2G) alloc on node0
 	# attempt to shrink by half: 2G should remain
 
 	get_test_nr_hugepages $((2048 * 1024)) 0

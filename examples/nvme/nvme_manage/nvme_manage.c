@@ -294,7 +294,7 @@ get_line(char *buf, int buf_size, FILE *f, bool secret)
 	}
 
 	if (secret) {
-		ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &default_attr); /* restore default confing */
+		ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &default_attr); /* restore default config */
 		if (ret) {
 			return NULL;
 		}

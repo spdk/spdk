@@ -38,7 +38,7 @@ for encryption/decryption.
 SPDK uses various functions from OpenSSL library to perform tasks like key derivation in
 [NVMe TCP](https://github.com/spdk/spdk/blob/master/include/spdk_internal/nvme_tcp.h) and TLS
 handshake in [socket module](https://github.com/spdk/spdk/blob/master/module/sock/posix/posix.c).
-OpenSSL delivers code implemenations via
+OpenSSL delivers code implementations via
 [providers](https://www.openssl.org/docs/man3.0/man7/provider.html).
 
 One of such providers delivers Federal Information Processing Standards (FIPS) compliant functions,

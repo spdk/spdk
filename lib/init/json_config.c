@@ -31,7 +31,7 @@
  *           "method": "<< METHOD NAME >>",   <<== *method
  *           "params": { << PARAMS >> }       <<== *params
  *         },
- *         << MORE "config" ARRY ENTRIES >>
+ *         << MORE "config" ARRAY ENTRIES >>
  *      ]
  *    },
  *    << MORE "subsystems" ARRAY ENTRIES >>

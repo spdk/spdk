@@ -121,7 +121,7 @@ ut_jsonrpc_free_request(struct spdk_jsonrpc_request *request, int err)
 		return;
 	}
 
-	/* Need to emulate response to get the response write contex free */
+	/* Need to emulate response to get the response write context free */
 	if (err == 0) {
 		w = spdk_jsonrpc_begin_result(request);
 		spdk_json_write_string(w, "UT PASS response");

@@ -3268,7 +3268,7 @@ spdk_accel_get_buf_align(enum spdk_accel_opcode opcode,
 	}
 
 	/* If a driver is set, it'll execute most of the operations, while the rest will usually
-	 * fall back to accel_sw, which doesn't have any alignment requiremenets.  However, to be
+	 * fall back to accel_sw, which doesn't have any alignment requirements.  However, to be
 	 * extra safe, return the max(driver, module) if a driver delegates some operations to a
 	 * hardware module. */
 	return spdk_max(modinfo.required_alignment, drvinfo.required_alignment);

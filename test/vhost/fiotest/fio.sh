@@ -214,7 +214,7 @@ notice "Testing..."
 
 notice "Running fio jobs ..."
 
-# Check if all VM have disk in tha same location
+# Check if all VM have disk in the same location
 DISK=""
 
 fio_disks=""

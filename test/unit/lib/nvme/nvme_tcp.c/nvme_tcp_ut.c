@@ -1361,7 +1361,7 @@ test_nvme_tcp_capsule_resp_hdr_handle(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	tcp_req->ordering.bits.send_ack = 1;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
-	/* tqpair.recv_pdu will be reseted after handling */
+	/* tqpair.recv_pdu will be reset after handling */
 	memset(&rccqe_tgt, 0xff, sizeof(rccqe_tgt));
 	rccqe_tgt.cid = 0;
 	memcpy(&tqpair.recv_pdu->hdr.capsule_resp.rccqe, &rccqe_tgt, sizeof(rccqe_tgt));

@@ -130,7 +130,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	idxd_task = SPDK_CONTAINEROF(task, struct idxd_task, task);
 	idxd_task->chan = chan;
 
-	/* TODO: iovec supprot */
+	/* TODO: iovec support */
 	if (task->d.iovcnt > 1 || task->s.iovcnt > 1) {
 		SPDK_ERRLOG("fatal: IAA does not support > 1 iovec\n");
 		assert(0);

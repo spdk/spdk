@@ -81,7 +81,7 @@ struct spdk_rdma_provider_srq *spdk_rdma_provider_srq_create(
  * Destroy RDMA SRQ
  *
  * \param rdma_srq Pointer to SRQ
- * \return 0 on succes, errno on failure
+ * \return 0 on success, errno on failure
  */
 int spdk_rdma_provider_srq_destroy(struct spdk_rdma_provider_srq *rdma_srq);
 
@@ -101,7 +101,7 @@ bool spdk_rdma_provider_srq_queue_recv_wrs(struct spdk_rdma_provider_srq *rdma_s
  *
  * \param rdma_srq Pointer to SRQ
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
- * \return 0 on succes, errno on failure
+ * \return 0 on success, errno on failure
  */
 int spdk_rdma_provider_srq_flush_recv_wrs(struct spdk_rdma_provider_srq *rdma_srq,
 		struct ibv_recv_wr **bad_wr);
@@ -166,7 +166,7 @@ bool spdk_rdma_provider_qp_queue_send_wrs(struct spdk_rdma_provider_qp *spdk_rdm
  *
  * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
- * \return 0 on succes, errno on failure
+ * \return 0 on success, errno on failure
  */
 int spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 		struct ibv_send_wr **bad_wr);
@@ -186,7 +186,7 @@ bool spdk_rdma_provider_qp_queue_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdm
  * Submit all queued recv Work Request
  * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
- * \return 0 on succes, errno on failure
+ * \return 0 on success, errno on failure
  */
 int spdk_rdma_provider_qp_flush_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr);

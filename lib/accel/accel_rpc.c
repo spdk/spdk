@@ -40,7 +40,7 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 				spdk_json_write_named_string(w, name, module_name);
 			} else {
 				/* This isn't fatal but throw an informational message if we
-				 * cant get an module name right now */
+				 * can't get an module name right now */
 				SPDK_NOTICELOG("FYI error (%d) getting module name.\n", rc);
 			}
 		} else {

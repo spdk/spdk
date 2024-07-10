@@ -2788,7 +2788,7 @@ test_spdk_nvmf_request_zcopy_start(void)
 	ns_info.channel = &io_ch;
 	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
 
-	/* Queue the requet because NSID is not active */
+	/* Queue the request because NSID is not active */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	ns_info.state = SPDK_NVMF_SUBSYSTEM_PAUSING;

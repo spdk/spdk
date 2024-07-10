@@ -14,7 +14,7 @@ bdev_bdfs() {
 }
 
 # Pci bus hotplug
-# Helper function to remove/attach cotrollers
+# Helper function to remove/attach controllers
 debug_remove_attach_helper() {
 	local helper_time=0
 

@@ -133,7 +133,7 @@ class QMPClient():
 
     def _check_event(self, event, received):
         '''
-        Method for cheking if "received" is the "event" we are waiting for.
+        Method for checking if "received" is the "event" we are waiting for.
         :param event: dictionary description of event, mandatory fields are
                       'event' = QMP name of the event
                       'data' = event specific params in form of a dict.

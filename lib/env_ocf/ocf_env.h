@@ -784,7 +784,7 @@ env_ticks_to_usecs(uint64_t j)
 
 /**
  * @brief We can't divide ticks_hz by 10^9
- * because we can't assume that CPU frequency is prefectly divisible by 10^9.
+ * because we can't assume that CPU frequency is perfectly divisible by 10^9.
  * for example there are CPUs with 2.8GHz or 3.3GHz.
  * so in here we multiply j by 1000
  * which means we can only handle 54b of j correctly.

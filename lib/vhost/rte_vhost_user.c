@@ -1080,7 +1080,7 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 	}
 
 	if (packed_ring) {
-		/* Since packed ring flag is already negociated between SPDK and VM, VM doesn't
+		/* Since packed ring flag is already negotiated between SPDK and VM, VM doesn't
 		 * restore `last_avail_idx` and `last_used_idx` for packed ring, so use the
 		 * inflight mem to restore the `last_avail_idx` and `last_used_idx`.
 		 */

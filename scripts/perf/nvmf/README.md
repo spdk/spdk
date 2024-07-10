@@ -318,7 +318,7 @@ Required:
 Optional:
 
 - rate_iops - limit IOPS to this number
-- offset - bool; enable offseting of the IO to the file. When this option is
+- offset - bool; enable offsetting of the IO to the file. When this option is
   enabled the file is "split" into a number of chunks equal to "num_jobs"
   parameter value, and each "num_jobs" fio thread gets it's own chunk to
   work with.

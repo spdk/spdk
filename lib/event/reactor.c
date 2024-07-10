@@ -176,7 +176,7 @@ reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 
 	/* Always initialize interrupt facilities for reactor */
 	if (reactor_interrupt_init(reactor) != 0) {
-		/* Reactor interrupt facilities are necessary if seting app to interrupt mode. */
+		/* Reactor interrupt facilities are necessary if setting app to interrupt mode. */
 		if (spdk_interrupt_mode_is_enabled()) {
 			SPDK_ERRLOG("Failed to prepare intr facilities\n");
 			assert(false);

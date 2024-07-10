@@ -153,7 +153,7 @@ diff <(rpc_cmd bdev_get_bdevs -b null0 | jq --sort-keys '.[].assigned_rate_limit
 	EOF
 )
 
-# Check that specyfing an unsupported limit results in an error
+# Check that specifying an unsupported limit results in an error
 unsupported_max_limits=(rd_iops wr_iops)
 
 for limit in "${unsupported_max_limits[@]}"; do
@@ -201,7 +201,7 @@ NOT $smac <<- EOF
 	}
 EOF
 
-# Check that it's not possible to set limits without specyfing a volume/device
+# Check that it's not possible to set limits without specifying a volume/device
 NOT $smac <<- EOF
 	{
 	  "method": "SetQos",

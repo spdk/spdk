@@ -389,7 +389,7 @@ buffers to be described there. `spdk_nvmf_request_get_data()` has been removed.
 Added `spdk_nvmf_subsystem_add_listener_ext()` API for accepting new connections on the provided
 address, now allowing to specify additional options for the listener.
 
-Deprecated `spdk_nvmf_subsytem_any_listener_allowed()` API (to be removed in 24.01) and replaced with
+Deprecated `spdk_nvmf_subsystem_any_listener_allowed()` API (to be removed in 24.01) and replaced with
 spdk_nvmf_subsystem_any_listener_allowed()` API fixing the typo.
 
 Added `spdk_nvmf_subsystem_is_discovery()` API to check whether a given susbystem is discovery subsystem.
@@ -424,7 +424,7 @@ should have equal length and key size in hexlified form can be either 32 bytes f
 dropped, only plain text mode is supported.
 
 The accel library will now collect statistics on the number of executed operations and processed
-bytes.  These statistics can be retreived using the `accel_get_stats` RPC.
+bytes.  These statistics can be retrieved using the `accel_get_stats` RPC.
 
 Added support for appending a crc32 calculation to an accel sequence.
 

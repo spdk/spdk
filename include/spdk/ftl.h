@@ -122,7 +122,7 @@ struct spdk_ftl_conf {
 	 *
 	 * Advanced properties currently include entries, which will result in printing large amount of data
 	 * (e.g. state of all bands, or chunks); or allow for receiving internal state of FTL (e.g. bands currently
-	 * used for garbage collection) - live data which may be useful for profling, or debugging.
+	 * used for garbage collection) - live data which may be useful for profiling, or debugging.
 	 */
 	bool					verbose_mode;
 

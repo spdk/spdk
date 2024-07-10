@@ -102,7 +102,7 @@ on each other, multiple calls need to be issued.
 
 ## Configuring Logical Volumes
 
-There is no static configuration available for logical volumes. All configuration is done trough RPC. Information about
+There is no static configuration available for logical volumes. All configuration is done through RPC. Information about
 logical volumes is kept on block devices.
 
 ## RPC overview {#lvol_rpc}

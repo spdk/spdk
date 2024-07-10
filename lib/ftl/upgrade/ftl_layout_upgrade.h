@@ -119,7 +119,7 @@ int ftl_region_major_upgrade_enabled(struct spdk_ftl_dev *dev, struct ftl_layout
 /**
  * @brief Upgrade the superblock.
  *
- * This call is sychronous.
+ * This call is synchronous.
  *
  * @param dev FTL device
  * @return int 0: success, error code otherwise

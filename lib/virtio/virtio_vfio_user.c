@@ -395,7 +395,7 @@ virtio_vfio_user_dev_init(struct virtio_dev *vdev, const char *name, const char 
 	int rc;
 
 	if (name == NULL) {
-		SPDK_ERRLOG("No name gived for controller: %s\n", path);
+		SPDK_ERRLOG("No name given for controller: %s\n", path);
 		return -EINVAL;
 	}
 

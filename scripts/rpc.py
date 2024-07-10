@@ -780,7 +780,7 @@ if __name__ == "__main__":
                    type=int)
     p.add_argument('-k', '--psk',
                    help="""Set PSK and enable TCP SSL socket implementation.  The PSK can either be a
-                   name of a key attached to the keyring or a path to a file containig the key.  The
+                   name of a key attached to the keyring or a path to a file containing the key.  The
                    latter method is deprecated.""")
     p.add_argument('-m', '--max-bdevs', type=int,
                    help='The size of the name array for newly created bdevs. Default is 128',)
@@ -2815,7 +2815,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                  host=args.host,
                                  tgt_name=args.tgt_name)
 
-    p = subparsers.add_parser('nvmf_ns_remove_host', help='Make namespace not visible to controlelrs of host')
+    p = subparsers.add_parser('nvmf_ns_remove_host', help='Make namespace not visible to controllers of host')
     nvmf_ns_visible_add_args(p)
     p.set_defaults(func=nvmf_ns_remove_host)
 

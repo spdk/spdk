@@ -526,7 +526,7 @@ function qd_sampling_function_test() {
 	qd_sampling_period=$(jq -r '.bdevs[0].queue_depth_polling_period' <<< "$iostats")
 
 	if [ $qd_sampling_period == null ] || [ $qd_sampling_period -ne $sampling_period ]; then
-		echo "Qeueue depth polling period is not right"
+		echo "Queue depth polling period is not right"
 		$rpc_py bdev_malloc_delete $QD_DEV
 		killprocess $QD_PID
 		exit 1

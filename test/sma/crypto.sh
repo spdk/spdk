@@ -251,7 +251,7 @@ NOT attach_volume $device $uuid 8 $key0
 
 delete_device $device
 
-# Check that it's possible to create a device immediately specyfing a volume with crypto
+# Check that it's possible to create a device immediately specifying a volume with crypto
 device=$(create_device $uuid AES_CBC $key0 | jq -r '.handle')
 verify_crypto_volume $localnqn $uuid
 

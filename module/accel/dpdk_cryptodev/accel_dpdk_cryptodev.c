@@ -59,7 +59,7 @@
 
 #define ACCEL_DPDK_CRYPTODEV_AESNI_MB_NUM_QP		64
 
-/* Common for suported devices. */
+/* Common for supported devices. */
 #define ACCEL_DPDK_CRYPTODEV_DEFAULT_NUM_XFORMS		2
 #define ACCEL_DPDK_CRYPTODEV_IV_OFFSET (sizeof(struct rte_crypto_op) + \
                 sizeof(struct rte_crypto_sym_op) + \
@@ -398,7 +398,7 @@ accel_dpdk_cryptodev_mbuf_chain_remainder(struct accel_dpdk_cryptodev_task *task
 	rte_pktmbuf_attach_extbuf(chain_mbuf, addr, phys_addr, remainder, &g_shinfo);
 	rte_pktmbuf_append(chain_mbuf, remainder);
 
-	/* Chained buffer is released by rte_pktbuf_free_bulk() automagicaly. */
+	/* Chained buffer is released by rte_pktbuf_free_bulk() automagically. */
 	rte_pktmbuf_chain(orig_mbuf, chain_mbuf);
 	*_remainder = remainder;
 
@@ -1036,7 +1036,7 @@ accel_dpdk_cryptodev_create(uint8_t index, uint16_t num_lcores)
 	}
 
 	/* Before going any further, make sure we have enough resources for this
-	 * device type to function.  We need a unique queue pair per core accross each
+	 * device type to function.  We need a unique queue pair per core across each
 	 * device type to remain lockless....
 	 */
 	if ((rte_cryptodev_device_count_by_driver(cdrv_id) *

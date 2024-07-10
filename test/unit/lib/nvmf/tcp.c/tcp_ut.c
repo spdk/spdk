@@ -1160,7 +1160,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.plen == tqpair.mgmt_pdu->hdr.term_req.common.hlen);
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.fei[0] == 2);
 
-	/* Test case: The TCP/IP tqpair connection is not negotitated. Expect: fail */
+	/* Test case: The TCP/IP tqpair connection is not negotiated. Expect: fail */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
 	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;

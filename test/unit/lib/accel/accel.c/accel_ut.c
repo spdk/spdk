@@ -1025,7 +1025,7 @@ struct ut_sequence_operation {
 static struct ut_sequence_operation g_seq_operations[SPDK_ACCEL_OPC_LAST];
 
 static int
-ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task)
+ut_sequence_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 {
 	struct ut_sequence_operation *op = &g_seq_operations[task->op_code];
 
@@ -1083,7 +1083,7 @@ test_sequence_completion_error(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
@@ -1371,7 +1371,7 @@ test_sequence_reverse(void)
 		poll_threads();
 	}
 
-	/* First check that reversing a sequnce with a single operation is a no-op */
+	/* First check that reversing a sequence with a single operation is a no-op */
 	memset(buf, 0, sizeof(buf));
 	seq = NULL;
 	completed = 0;
@@ -1541,7 +1541,7 @@ test_sequence_copy_elision(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	g_module.supports_memory_domains = true;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_seq_operations[i].complete_status = 0;
@@ -2030,7 +2030,7 @@ test_sequence_accel_buffers(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
@@ -2499,7 +2499,7 @@ test_sequence_memory_domain(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	g_module.supports_memory_domains = false;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
@@ -2874,7 +2874,7 @@ test_sequence_module_memory_domain(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	g_module.supports_memory_domains = true;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
@@ -3301,7 +3301,7 @@ test_sequence_driver(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
@@ -3747,7 +3747,7 @@ test_sequence_same_iovs(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
@@ -3884,7 +3884,7 @@ test_sequence_crc32(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequence_submit_tasks;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_seq_operations[i].submit = sw_accel_submit_tasks;
 		modules[i] = g_modules_opc[i];

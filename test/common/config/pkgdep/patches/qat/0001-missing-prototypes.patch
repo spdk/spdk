@@ -250,7 +250,7 @@ index 75209ac..577046a 100644
 +int adf_module_load(void);
 +void adf_module_unload(void);
  /*
-  * Need to keep track of what device is curently in error state
+  * Need to keep track of what device is currently in error state
   */
 diff --git a/quickassist/lookaside/access_layer/src/qat_kernel/src/qat_transport.c b/quickassist/lookaside/access_layer/src/qat_kernel/src/qat_transport.c
 index 8a32f5c..4ee1d36 100644

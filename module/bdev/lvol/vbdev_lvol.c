@@ -1602,7 +1602,7 @@ vbdev_lvs_examine_config(struct spdk_bdev *bdev)
 	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
 
 	if (spdk_lvs_notify_hotplug(uuid_str, sizeof(uuid_str), vbdev_lvs_hotplug, bdev)) {
-		SPDK_INFOLOG(vbdev_lvol, "bdev %s: claimed by one ore more esnap clones\n",
+		SPDK_INFOLOG(vbdev_lvol, "bdev %s: claimed by one or more esnap clones\n",
 			     uuid_str);
 	}
 	spdk_bdev_module_examine_done(&g_lvol_if);

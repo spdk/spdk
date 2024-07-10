@@ -2448,7 +2448,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
-			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
+			/* All header(ch, psh, head digits) of this PDU has now been read from the socket. */
 			nvmf_tcp_pdu_psh_handle(tqpair, ttransport);
 			break;
 		/* Wait for the req slot */
@@ -3705,7 +3705,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	if (entry->key != NULL) {
 		rc = spdk_key_get_key(entry->key, psk_interchange, SPDK_TLS_PSK_MAX_LEN);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to retreive PSK '%s'\n", opts.psk);
+			SPDK_ERRLOG("Failed to retrieve PSK '%s'\n", opts.psk);
 			rc = -EINVAL;
 			goto end;
 		}

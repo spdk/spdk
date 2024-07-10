@@ -543,7 +543,7 @@ tgt_endpoint_thread_exit(void *arg1)
 	spdk_poller_unregister(&endpoint->accept_poller);
 	spdk_poller_unregister(&endpoint->vfu_ctx_poller);
 
-	/* Ensure the attached device is stopped before destorying the vfu context */
+	/* Ensure the attached device is stopped before destroying the vfu context */
 	if (endpoint->ops.detach_device) {
 		endpoint->ops.detach_device(endpoint);
 	}

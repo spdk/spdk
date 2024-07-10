@@ -17,7 +17,7 @@
 #define IOBUF_MIN_SMALL_BUFSIZE		4096
 #define IOBUF_MIN_LARGE_BUFSIZE		8192
 #define IOBUF_DEFAULT_SMALL_BUFSIZE	(8 * 1024)
-/* 132k is a weird choice at first, but this needs to be large enough to accomodate
+/* 132k is a weird choice at first, but this needs to be large enough to accommodate
  * the default maximum size (128k) plus metadata everywhere. For code paths that
  * are explicitly configured, the math is instead done properly. This is only
  * for the default. */

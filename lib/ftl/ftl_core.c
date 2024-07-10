@@ -613,8 +613,8 @@ ftl_trim_log_open_cb(int status, void *cb_arg)
 	struct ftl_io *io = cb_arg;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_md *trim_md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
-	uint64_t first, entires;
-	const uint64_t entires_in_block = FTL_BLOCK_SIZE / sizeof(uint64_t);
+	uint64_t first, entries;
+	const uint64_t entries_in_block = FTL_BLOCK_SIZE / sizeof(uint64_t);
 	char *buffer;
 
 	if (status) {
@@ -624,16 +624,16 @@ ftl_trim_log_open_cb(int status, void *cb_arg)
 
 	/* Map trim space into L2P pages */
 	first = io->lba / dev->layout.l2p.lbas_in_page;
-	entires = io->num_blocks / dev->layout.l2p.lbas_in_page;
+	entries = io->num_blocks / dev->layout.l2p.lbas_in_page;
 	/* Map pages into trim metadata location */
-	first = first / entires_in_block;
-	entires = spdk_divide_round_up(entires, entires_in_block);
+	first = first / entries_in_block;
+	entries = spdk_divide_round_up(entries, entries_in_block);
 
 	/* Get trim metadata buffer */
 	buffer = (char *)ftl_md_get_buffer(trim_md) + (FTL_BLOCK_SIZE * first);
 
 	/* Persist the trim metadata snippet which corresponds to the trim IO */
-	ftl_md_persist_entries(trim_md, first, entires, buffer, NULL,
+	ftl_md_persist_entries(trim_md, first, entries, buffer, NULL,
 			       ftl_trim_md_cb, io, &dev->trim_md_io_entry_ctx);
 }
 

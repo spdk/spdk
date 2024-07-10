@@ -1108,7 +1108,7 @@ err:
 }
 
 /*
- * Copy doorbells from one buffer to the other, during switches betweeen BAR0
+ * Copy doorbells from one buffer to the other, during switches between BAR0
  * doorbells and shadow doorbells.
  */
 static void
@@ -2587,7 +2587,7 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 			 * If there are no free cq slots then kick interrupt FD to loop
 			 * again to process remaining sq cmds.
 			 * In case of polling mode we will process remaining sq cmds during
-			 * next polling interation.
+			 * next polling iteration.
 			 * sq head is advanced only for consumed commands.
 			 */
 			if (in_interrupt_mode(ctrlr->transport)) {
@@ -3180,7 +3180,7 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 	 * Basically, once we call `vfu_device_quiesced` the device is
 	 * unquiesced from libvfio-user's perspective so from the moment
 	 * `vfio_user_quiesce_done` returns libvfio-user might quiesce the device
-	 * again. However, because the NVMf subsytem is an asynchronous
+	 * again. However, because the NVMf subsystem is an asynchronous
 	 * operation, this quiesce might come _before_ the NVMf subsystem has
 	 * been resumed, so in the callback of `spdk_nvmf_subsystem_resume` we
 	 * need to check whether a quiesce was requested.

@@ -746,7 +746,7 @@ posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *o
 
 	switch (impl_opts->tls_version) {
 	case 0:
-		/* auto-negotioation */
+		/* auto-negotiation */
 		break;
 	case SPDK_TLS_VERSION_1_3:
 		tls_version = TLS1_3_VERSION;

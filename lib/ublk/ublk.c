@@ -561,7 +561,7 @@ ublk_open(void)
 	g_ublk_tgt.ctrl_fd = open(UBLK_CTRL_DEV, O_RDWR);
 	if (g_ublk_tgt.ctrl_fd < 0) {
 		rc = errno;
-		SPDK_ERRLOG("UBLK conrol dev %s can't be opened, error=%s\n", UBLK_CTRL_DEV, spdk_strerror(errno));
+		SPDK_ERRLOG("UBLK control dev %s can't be opened, error=%s\n", UBLK_CTRL_DEV, spdk_strerror(errno));
 		return -rc;
 	}
 

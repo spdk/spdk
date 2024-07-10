@@ -164,7 +164,7 @@ function vhost_run() {
 		cmd+=(-S "$vhost_dir")
 	fi
 
-	notice "Loging to:   $vhost_log_file"
+	notice "Logging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     ${cmd[*]}"
 

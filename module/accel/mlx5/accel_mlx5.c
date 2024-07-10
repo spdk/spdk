@@ -638,7 +638,7 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 	rc = accel_mlx5_task_init(mlx5_task, dev);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(accel_mlx5, "no reqs to handle new task %p (requred %u), put to queue\n", mlx5_task,
+			SPDK_DEBUGLOG(accel_mlx5, "no reqs to handle new task %p (required %u), put to queue\n", mlx5_task,
 				      mlx5_task->num_reqs);
 			TAILQ_INSERT_TAIL(&dev->nomem, mlx5_task, link);
 			return 0;

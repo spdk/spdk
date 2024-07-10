@@ -3123,7 +3123,7 @@ lvol_esnap_hotplug(void)
 			{ MISSING_ESNAP("esnap1", &bs_dev, 1, 1) }
 		},
 		{
-			"one missing, cb retuns -ENOMEM",
+			"one missing, cb returns -ENOMEM",
 			{ HOTPLUG_LVOL("lvol1", "esnap1", -ENOMEM, true) },
 			{ MISSING_ESNAP("esnap1", &bs_dev, 1, 1) }
 		},

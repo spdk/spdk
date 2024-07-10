@@ -3856,7 +3856,7 @@ bdev_channel_poll_qos(void *arg)
 		if (remaining_last_timeslice < 0) {
 			/* There could be a race condition here as both bdev_qos_rw_queue_io() and bdev_channel_poll_qos()
 			 * potentially use 2 atomic ops each, so they can intertwine.
-			 * This race can potentialy cause the limits to be a little fuzzy but won't cause any real damage.
+			 * This race can potentially cause the limits to be a little fuzzy but won't cause any real damage.
 			 */
 			__atomic_store_n(&qos->rate_limits[i].remaining_this_timeslice,
 					 remaining_last_timeslice, __ATOMIC_RELAXED);
@@ -6447,7 +6447,7 @@ bdev_reset_check_outstanding_io_done(struct spdk_bdev *bdev, void *_ctx, int sta
 			} else {
 				/* We still have in progress memory domain pull/push or we're
 				 * executing accel sequence.  Since we cannot abort either of those
-				 * operaions, fail the reset request. */
+				 * operations, fail the reset request. */
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			}
 		}
@@ -7806,7 +7806,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	/*
 	 * Register bdev name only after the bdev object is ready.
-	 * After bdev_name_add returns, it is possible for oter threads to start using the bdev,
+	 * After bdev_name_add returns, it is possible for other threads to start using the bdev,
 	 * create IO channels...
 	 */
 	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);

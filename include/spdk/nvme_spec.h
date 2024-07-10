@@ -1323,7 +1323,7 @@ union spdk_nvme_cmd_cdw12 {
 	struct {
 		/* Number of Ranges */
 		uint32_t nr        : 8;
-		/* Desciptor Format */
+		/* Descriptor Format */
 		uint32_t df        : 4;
 		/* Protection Information Field Read */
 		uint32_t prinfor   : 4;
@@ -3380,7 +3380,7 @@ enum spdk_nvme_log_page {
 	/** Predictable latency per NVM set (optional) */
 	SPDK_NVME_LOG_PREDICATBLE_LATENCY	= 0x0A,
 
-	/** Predictable latency event aggregrate (optional) */
+	/** Predictable latency event aggregate (optional) */
 	SPDK_NVME_LOG_PREDICTABLE_LATENCY_EVENT	= 0x0B,
 
 	/** Asymmetric namespace access log (optional) */

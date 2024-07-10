@@ -104,7 +104,7 @@ get_error_log_page_completion(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 
 	/* TODO: do handling (print?) of error log page */
-	printf("Error Informaton Log Page received.\n");
+	printf("Error Information Log Page received.\n");
 	g_test_done = true;
 }
 

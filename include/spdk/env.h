@@ -875,7 +875,7 @@ int spdk_pci_device_enable_interrupt(struct spdk_pci_device *dev);
 int spdk_pci_device_disable_interrupt(struct spdk_pci_device *dev);
 
 /**
- * Get an event file descriptor assosiated with a PCI device interrupt.
+ * Get an event file descriptor associated with a PCI device interrupt.
  * (Experimental)
  *
  * \param dev PCI device.

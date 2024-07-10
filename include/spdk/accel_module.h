@@ -245,7 +245,7 @@ struct spdk_accel_module_if {
 
 	/**
 	 * Returns information/constraints for a given operation.  If unimplemented, it is assumed
-	 * that the module doens't have any constraints to execute any operation.
+	 * that the module doesn't have any constraints to execute any operation.
 	 */
 	int (*get_operation_info)(enum spdk_accel_opcode opcode,
 				  const struct spdk_accel_operation_exec_ctx *ctx,
@@ -361,7 +361,7 @@ struct spdk_accel_task *spdk_accel_sequence_first_task(struct spdk_accel_sequenc
 /**
  * Returns the next remaining task that follows a given task in a sequence.
  *
- * \param task Accel task.  This task must be still oustanding (i.e. it wasn't completed through
+ * \param task Accel task.  This task must be still outstanding (i.e. it wasn't completed through
  *             `spdk_accel_task_complete()`).
  *
  * \return the next task or NULL if `task` was the last task in a sequence.

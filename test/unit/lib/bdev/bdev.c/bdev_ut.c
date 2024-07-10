@@ -6177,7 +6177,7 @@ bdev_register_uuid_alias(void)
 	poll_threads();
 	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name(uuid));
 
-	/* Regiser the bdev using UUID as the name */
+	/* Register the bdev using UUID as the name */
 	bdev->name = uuid;
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT_EQUAL(rc, 0);
@@ -7265,7 +7265,7 @@ ut_examine_claimed_init(uint32_t modnum)
 {
 	static int current = UT_MAX_EXAMINE_MODS;
 
-	/* Only do this for thre first initialization of the bdev framework */
+	/* Only do this for the first initialization of the bdev framework */
 	if (current == 0) {
 		return 0;
 	}

@@ -52,7 +52,7 @@
 /*
  * MOCK_ENQUEUE() can be used to specify multiple different return values for the same function.
  * Each consecutive call to a function will return a value specified by this macro (in a FIFO
- * fashion).  Once all such values are exhausted (or none has been specified), the value assgined by
+ * fashion).  Once all such values are exhausted (or none has been specified), the value assigned by
  * MOCK_SET() will be returned.
  */
 #define MOCK_ENQUEUE(fn, _val) do { \
@@ -87,7 +87,7 @@
 #define MOCK_CLEARED_ASSERT(fn) \
 	SPDK_CU_ASSERT_FATAL(ut_ ## fn ## _mocked == false)
 
-/* for declaring function protoypes for wrappers */
+/* for declaring function prototypes for wrappers */
 #define DECLARE_WRAPPER(fn, ret, args) \
 	DECLARE_MOCK_QUEUE(fn, ret); \
 	extern bool ut_ ## fn ## _mocked; \

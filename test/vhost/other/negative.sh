@@ -209,7 +209,7 @@ notice "Trying to create already existing block transport layer"
 # vhost_user_blk transport is created by default on application start,
 # so first rpc call to create the transport should fail with EEXIST.
 if $rpc_py virtio_blk_create_transport vhost_user_blk; then
-	error "Creating already existing virtio blk transport succeded, but shouldn't"
+	error "Creating already existing virtio blk transport succeeded, but shouldn't"
 fi
 
 notice "Testing done -> shutting down"

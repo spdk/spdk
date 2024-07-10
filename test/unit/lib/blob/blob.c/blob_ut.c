@@ -2295,7 +2295,7 @@ blob_xattr(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(*(uint64_t *)value == length);
 
-	/* try to get internal xattr trough public call */
+	/* try to get internal xattr through public call */
 	rc = spdk_blob_get_xattr_value(blob, "internal", &value, &value_len);
 	CU_ASSERT(rc != 0);
 
@@ -3415,7 +3415,7 @@ bs_usable_clusters(void)
 
 	CU_ASSERT(spdk_bs_total_data_cluster_count(bs) == clusters);
 
-	/* Create and resize blobs to make sure that useable cluster count won't change */
+	/* Create and resize blobs to make sure that usable cluster count won't change */
 	for (i = 0; i < 4; i++) {
 		g_bserrno = -1;
 		g_blobid = SPDK_BLOBID_INVALID;

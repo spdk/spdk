@@ -129,7 +129,7 @@ test_keyring_add_remove(void)
 
 	spdk_keyring_put_key(key);
 
-	/* Remove the key without explicitly specyfing global keyring */
+	/* Remove the key without explicitly specifying global keyring */
 	spdk_keyring_remove_key("key0");
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key("key0"));
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key(":key0"));

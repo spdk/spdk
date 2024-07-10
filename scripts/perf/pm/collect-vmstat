@@ -23,7 +23,7 @@ help() {
 		-r - Stat count after which header should be re-printed. Default is 20.
 		-t - How long to wait before each stat dump. Default is 1s.
 
-		When started, ${0##*/} will enter loop to continuosly dump
+		When started, ${0##*/} will enter loop to continuously dump
 		vmstat. Each iteration will be logged to stderr and a log file
 		(dir/${0##*/}.pm.log).
 

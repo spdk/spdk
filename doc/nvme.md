@@ -27,7 +27,7 @@ entirely dissimilar from Linux's
 
 More recently, the library has been improved to also connect to remote NVMe
 devices via NVMe over Fabrics. Users may now call spdk_nvme_probe() on both
-local PCI busses and on remote NVMe over Fabrics discovery services. The API is
+local PCI buses and on remote NVMe over Fabrics discovery services. The API is
 otherwise unchanged.
 
 ## Examples {#nvme_examples}

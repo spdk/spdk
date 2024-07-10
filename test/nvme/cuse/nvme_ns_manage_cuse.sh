@@ -35,7 +35,7 @@ function reset_nvme_if_aer_unsupported() {
 
 function remove_all_namespaces() {
 	info_print "delete all namespaces"
-	# Cant globally detach all namespaces ... must do so one by one
+	# Can't globally detach all namespaces ... must do so one by one
 	for nsid in "${nsids[@]}"; do
 		info_print "removing nsid=${nsid}"
 		$NVME_CMD detach-ns ${nvme_dev} -n ${nsid} -c ${cntlid} || true

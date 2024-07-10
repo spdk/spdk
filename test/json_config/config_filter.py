@@ -74,7 +74,7 @@ def filter_methods(do_remove_global_rpcs):
 def check_empty():
     data = json.loads(sys.stdin.read())
     if not data:
-        raise EOFError("Cant read config!")
+        raise EOFError("Can't read config!")
 
     for s in data['subsystems']:
         if s['config']:

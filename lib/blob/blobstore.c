@@ -2961,7 +2961,7 @@ blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 		bs_sequence_finish(ctx->seq, bserrno);
 		if (ctx->in_submit_ctx) {
 			/* Defer freeing of the ctx object, since it will be
-			 * accessed when this unwinds back to the submisison
+			 * accessed when this unwinds back to the submission
 			 * context.
 			 */
 			ctx->done = true;

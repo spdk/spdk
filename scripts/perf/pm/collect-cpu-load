@@ -25,7 +25,7 @@ help() {
 
 		cpu - Valid cpu id (e.g. 0) to monitor.
 
-		When started, ${0##*/} will enter loop to continuosly monitor cpu
+		When started, ${0##*/} will enter loop to continuously monitor cpu
 		load. Each iteration will be logged to stderr and a log file
 		(dir/${0##*/}.pm.log).
 

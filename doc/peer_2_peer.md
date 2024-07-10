@@ -57,7 +57,7 @@ DMA buffer.
 
 * In some systems when performing peer-2-peer DMAs between PCIe EPs
   that are directly connected to the Root Complex (RC) the DMA may
-  fail or the performance may not be great. Basically your milage may
+  fail or the performance may not be great. Basically your mileage may
   vary. It is recommended that you use a PCIe switch (such as those
   provided by Broadcom or Microsemi) as that is know to provide good
   performance.

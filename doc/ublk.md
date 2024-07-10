@@ -134,7 +134,7 @@ Build SPDK with SPDK ublk target enabled.
 make -j
 ~~~
 
-SPDK ublk target related libaries will then be linked into SPDK appliation `spdk_tgt`.
+SPDK ublk target related libraries will then be linked into SPDK application `spdk_tgt`.
 Setup some hugepages for the SPDK, and then run the SPDK application `spdk_tgt`.
 
 ~~~{.sh}

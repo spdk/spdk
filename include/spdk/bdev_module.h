@@ -1714,17 +1714,17 @@ void spdk_bdev_get_current_qd(struct spdk_bdev *bdev,
 			      spdk_bdev_get_current_qd_cb cb_fn, void *cb_arg);
 
 /**
- * Add I/O statictics.
+ * Add I/O statistics.
  *
- * \param total The aggregated I/O statictics.
- * \param add The I/O statictics to be added.
+ * \param total The aggregated I/O statistics.
+ * \param add The I/O statistics to be added.
  */
 void spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add);
 
 /**
- * Output bdev I/O statictics information to a JSON stream.
+ * Output bdev I/O statistics information to a JSON stream.
  *
- * \param stat The bdev I/O statictics to output.
+ * \param stat The bdev I/O statistics to output.
  * \param w JSON write context.
  */
 void spdk_bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
@@ -1735,10 +1735,10 @@ enum spdk_bdev_reset_stat_mode {
 };
 
 /**
- * Reset I/O statictics structure.
+ * Reset I/O statistics structure.
  *
- * \param stat The I/O statictics to reset.
- * \param mode The mode to reset I/O statictics.
+ * \param stat The I/O statistics to reset.
+ * \param mode The mode to reset I/O statistics.
  */
 void spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode);
 

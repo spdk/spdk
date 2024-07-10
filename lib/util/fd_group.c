@@ -293,7 +293,7 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 	int epfd;
 
 	if (fgrp == NULL || efd < 0) {
-		SPDK_ERRLOG("Invalid to remvoe efd(%d) from fd_group(%p).\n", efd, fgrp);
+		SPDK_ERRLOG("Invalid to remove efd(%d) from fd_group(%p).\n", efd, fgrp);
 		assert(0);
 		return;
 	}

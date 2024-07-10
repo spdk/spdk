@@ -2073,7 +2073,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
-			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
+			/* All header(ch, psh, head digits) of this PDU has now been read from the socket. */
 			nvme_tcp_pdu_psh_handle(tqpair, reaped);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:

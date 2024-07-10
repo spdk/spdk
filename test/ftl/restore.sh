@@ -75,7 +75,7 @@ md5sum $testdir/testfile > $testdir/testfile.md5
 
 md5sum -c $testdir/testfile.md5
 
-# Write second time at overlapped sectors, read back and verify checkum
+# Write second time at overlapped sectors, read back and verify checksum
 "$SPDK_BIN_DIR/spdk_dd" --if=$testdir/testfile --ob=ftl0 --json=$testdir/config/ftl.json --seek=131072
 "$SPDK_BIN_DIR/spdk_dd" --ib=ftl0 --of=$testdir/testfile --json=$testdir/config/ftl.json --skip=131072 --count=262144
 

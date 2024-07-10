@@ -188,7 +188,7 @@ build_io_request_6(struct io_request *req)
 	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x1000;
 
-	/* 4KB for 2st sge */
+	/* 4KB for 2nd sge */
 	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[1].len = 0x1000;
 }

@@ -184,7 +184,7 @@ def parse_results(results_dir, csv_file):
                 fh.write(",".join([job_name, *["{0:.3f}".format(x) for x in init_results]]) + "\n")
 
         # Sum results of all initiators running this FIO job.
-        # Latency results are an average of latencies from accros all initiators.
+        # Latency results are an average of latencies from across all initiators.
         inits_avg_results = [sum(x) for x in zip(*inits_avg_results)]
         inits_avg_results = OrderedDict(zip(headers, inits_avg_results))
         for key in inits_avg_results:

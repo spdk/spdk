@@ -360,7 +360,7 @@ int spdk_idxd_submit_dif_insert(struct spdk_idxd_io_channel *chan,
  * This function will build the DIF strip descriptor and then immediately submit
  * by writing to the proper device portal. The transfer size must be a multiple
  * of the source block size plus metadata for each source block. The number
- * of bytes written to the destination is the transfer size minus metdata
+ * of bytes written to the destination is the transfer size minus metadata
  * for each source block. The source and destination data can be scattered across
  * several different buffers, but each source buffer has to be a multiple of
  * a block size and each destination buffer has to be a multiple of a data block size
@@ -396,7 +396,7 @@ int spdk_idxd_submit_dif_strip(struct spdk_idxd_io_channel *chan,
  * by writing to the proper device portal.
  *
  * \param chan IDXD channel to submit request.
- * \param desc proprely formatted IDXD descriptor.  Memory addresses should be physical.
+ * \param desc properly formatted IDXD descriptor.  Memory addresses should be physical.
  *             The completion address will be filled in by the lower level library.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in

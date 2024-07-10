@@ -1696,7 +1696,7 @@ destroy_session_poller_cb(void *arg)
 		return SPDK_POLLER_BUSY;
 	}
 
-	SPDK_DEBUGLOG(vhost_blk, "%s: session stoppped\n", vsession->name);
+	SPDK_DEBUGLOG(vhost_blk, "%s: session stopped\n", vsession->name);
 	free(bvsession->poll_groups);
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->stop_poller);

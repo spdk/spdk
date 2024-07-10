@@ -621,7 +621,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_migr_data) == 4096, "Incorrect 
  *
  * The API is experimental.
  *
- * It is allowed to save the data only when the nvmf subystem is in paused
+ * It is allowed to save the data only when the nvmf subsystem is in paused
  * state i.e. there are no outstanding cmds in nvmf layer (other than aer),
  * pending async event completions are getting blocked.
  *
@@ -641,7 +641,7 @@ int spdk_nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
  *
  * The API is experimental.
  *
- * It is allowed to restore the data only when the nvmf subystem is in paused
+ * It is allowed to restore the data only when the nvmf subsystem is in paused
  * state.
  *
  * To preserve thread safety this function must be executed on the same thread

@@ -36,7 +36,7 @@
 
 /* For core counts <= 63, the message memory pool size is set to
  * SPDK_DEFAULT_MSG_MEMPOOL_SIZE.
- * For core counts > 63, the message memory pool size is dependend on
+ * For core counts > 63, the message memory pool size is depended on
  * number of cores. Per core, it is calculated as SPDK_MSG_MEMPOOL_CACHE_SIZE
  * multiplied by factor of 4 to have space for multiple spdk threads running
  * on single core (e.g  iscsi + nvmf + vhost ). */

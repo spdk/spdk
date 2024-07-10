@@ -25,7 +25,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	pacman -Sy --needed --noconfirm git astyle autopep8 \
 		clang sg3_utils pciutils shellcheck bash-completion
-	#fakeroot needed to instal via makepkg
+	#fakeroot needed to install via makepkg
 	pacman -Sy --needed --noconfirm fakeroot
 	su - $SUDO_USER -c "pushd /tmp;
 		git clone https://aur.archlinux.org/perl-perlio-gzip.git;

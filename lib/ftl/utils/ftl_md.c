@@ -765,7 +765,7 @@ ftl_md_persist_entries(struct ftl_md *md, uint64_t start_entry, uint64_t num_ent
 		ftl_abort();
 	}
 	if (spdk_unlikely(start_entry + num_entries > md->region->num_entries)) {
-		/* Exceeding number of available entires */
+		/* Exceeding number of available entries */
 		ftl_abort();
 	}
 

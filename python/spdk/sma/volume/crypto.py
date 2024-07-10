@@ -37,7 +37,7 @@ class CryptoEngine:
     def verify(self, volume_id, key, cipher, key2=None, tweak_mode=None):
         """
         Verify that specified crypto parameters match those that are currently deployed on a given
-        volume.  If key is None, this mehtod ensures that the volume doesn't use crypto.  If
+        volume.  If key is None, this method ensures that the volume doesn't use crypto.  If
         something is wrong (e.g. keys don't match, different cipher is used, etc.), this method
         raises CryptoException.
         """

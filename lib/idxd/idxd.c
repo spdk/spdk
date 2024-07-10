@@ -1626,9 +1626,9 @@ idxd_validate_dif_insert_buf_align(const struct spdk_dif_ctx *ctx,
 		return -EINVAL;
 	}
 
-	/* The memory source and destiantion must hold the same number of blocks. */
+	/* The memory source and destination must hold the same number of blocks. */
 	if (src_len / data_block_size != (dst_len / ctx->block_size)) {
-		SPDK_ERRLOG("The memory source (%ld) and destiantion (%ld) must hold the same number of blocks.\n",
+		SPDK_ERRLOG("The memory source (%ld) and destination (%ld) must hold the same number of blocks.\n",
 			    src_len / data_block_size, dst_len / ctx->block_size);
 		return -EINVAL;
 	}
@@ -1747,9 +1747,9 @@ idxd_validate_dif_strip_buf_align(const struct spdk_dif_ctx *ctx,
 			    dst_len, data_block_size);
 		return -EINVAL;
 	}
-	/* The memory source and destiantion must hold the same number of blocks. */
+	/* The memory source and destination must hold the same number of blocks. */
 	if (src_len / ctx->block_size != dst_len / data_block_size) {
-		SPDK_ERRLOG("The memory source (%ld) and destiantion (%ld) must hold the same number of blocks.\n",
+		SPDK_ERRLOG("The memory source (%ld) and destination (%ld) must hold the same number of blocks.\n",
 			    src_len / data_block_size, dst_len / ctx->block_size);
 		return -EINVAL;
 	}

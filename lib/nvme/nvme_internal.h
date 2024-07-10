@@ -1460,7 +1460,7 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 	if (spdk_unlikely(req->accel_sequence != NULL)) {
 		struct spdk_nvme_poll_group *pg = qpair->poll_group->group;
 
-		/* Transports are required to execuete the sequence and clear req->accel_sequence.
+		/* Transports are required to execute the sequence and clear req->accel_sequence.
 		 * If it's left non-NULL it must mean the request is failed. */
 		assert(spdk_nvme_cpl_is_error(cpl));
 		pg->accel_fn_table.abort_sequence(req->accel_sequence);

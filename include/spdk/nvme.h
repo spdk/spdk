@@ -622,7 +622,7 @@ enum spdk_nvme_ctrlr_flags {
 	SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED		= 1 << 5, /**< Zone Append is supported (within Zoned Namespaces) */
 	SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED		= 1 << 6, /**< The Directives is supported */
 	SPDK_NVME_CTRLR_MPTR_SGL_SUPPORTED		= 1 << 7, /**< MPTR containing SGL descriptor is supported */
-	SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED	= 1 << 8, /**< Support for sending I/O requests with accel sequnece */
+	SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED	= 1 << 8, /**< Support for sending I/O requests with accel sequence */
 };
 
 /**

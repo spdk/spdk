@@ -6115,7 +6115,7 @@ test_find_io_path_min_qd(void)
 	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path2, stailq);
 	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path3, stailq);
 
-	/* Test if the minumum io_outstanding or the ANA optimized state is
+	/* Test if the minimum io_outstanding or the ANA optimized state is
 	 * prioritized when using least queue depth selector
 	 */
 	qpair1.num_outstanding_reqs = 2;

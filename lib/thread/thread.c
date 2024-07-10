@@ -3036,7 +3036,7 @@ sspin_stacks_print(const struct spdk_spinlock *sspin)
 		return;
 	}
 	SPDK_ERRLOG("spinlock %p\n", sspin);
-	sspin_stack_print("Lock initalized at", &sspin->internal->init_stack);
+	sspin_stack_print("Lock initialized at", &sspin->internal->init_stack);
 	sspin_stack_print("Last locked at", &sspin->internal->lock_stack);
 	sspin_stack_print("Last unlocked at", &sspin->internal->unlock_stack);
 }

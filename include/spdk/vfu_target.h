@@ -122,7 +122,7 @@ struct spdk_vfu_pci_region {
 /**
  * Vfio-user PCI device information.
  *
- * vfio-user target uses this data structure to get all the informations
+ * vfio-user target uses this data structure to get all the information
  * from backend emulated device module.
  */
 struct spdk_vfu_pci_device {
@@ -185,7 +185,7 @@ struct spdk_vfu_endpoint_ops {
 			       struct spdk_vfu_pci_device *device_info);
 
 	/**
-	 * Get vendor capabilitiy based on ID in PCI configuration space.
+	 * Get vendor capability based on ID in PCI configuration space.
 	 */
 	uint16_t (*get_vendor_capability)(struct spdk_vfu_endpoint *endpoint, char *buf,
 					  uint16_t buf_len, uint16_t idx);
@@ -297,7 +297,7 @@ const char *spdk_vfu_get_endpoint_name(struct spdk_vfu_endpoint *endpoint);
 vfu_ctx_t *spdk_vfu_get_vfu_ctx(struct spdk_vfu_endpoint *endpoint);
 
 /**
- * Get private opaque handle of backend PCI device moduel.
+ * Get private opaque handle of backend PCI device module.
  *
  * This function is used in backend PCI device module to get the internal
  * private data structure saved in vfu_target library.
@@ -313,7 +313,7 @@ void *spdk_vfu_get_endpoint_private(struct spdk_vfu_endpoint *endpoint);
  *
  * \param endpoint The PCI endpoint.
  *
- * \return ture if MSI-X is enabled, false otherwise.
+ * \return true if MSI-X is enabled, false otherwise.
  */
 bool spdk_vfu_endpoint_msix_enabled(struct spdk_vfu_endpoint *endpoint);
 

@@ -350,7 +350,7 @@ test_idxd_validate_dif_insert_buf_align(void)
 	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 4 * 520 + 10);
 	CU_ASSERT(rc == -EINVAL);
 
-	/* The memory source and destiantion must hold the same number of blocks */
+	/* The memory source and destination must hold the same number of blocks */
 	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 5 * 520);
 	CU_ASSERT(rc == -EINVAL);
 }
@@ -388,7 +388,7 @@ test_idxd_validate_dif_strip_buf_align(void)
 	rc = idxd_validate_dif_strip_buf_align(&dif_ctx, 4 * 512, 4 * 520 + 10);
 	CU_ASSERT(rc == -EINVAL);
 
-	/* The memory source and destiantion must hold the same number of blocks */
+	/* The memory source and destination must hold the same number of blocks */
 	rc = idxd_validate_dif_strip_buf_align(&dif_ctx, 4 * 520, 5 * 512);
 	CU_ASSERT(rc == -EINVAL);
 }

@@ -281,7 +281,7 @@ void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *
  *
  * \param lvol Handle to lvol.
  * \param cb_fn Function to call for each lvol that clones this lvol.
- * \param cb_arg Context to pass wtih cb_fn.
+ * \param cb_arg Context to pass with cb_fn.
  * \return -ENOMEM if memory allocation failed, non-zero return from cb_fn(), or 0.
  */
 int spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn, void *cb_arg);
@@ -298,7 +298,7 @@ struct spdk_lvol *spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid);
  * Get the lvol that has the specified name in the specified lvolstore.
  *
  * \param lvs_name Name of the lvolstore.
- * \param lvol_name Name ofthe lvol.
+ * \param lvol_name Name of the lvol.
  * \return A pointer to the requested lvol on success, else NULL.
  */
 struct spdk_lvol *spdk_lvol_get_by_names(const char *lvs_name, const char *lvol_name);
@@ -325,7 +325,7 @@ void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete 
 /**
  * Load lvolstore from the given blobstore device with options.
  *
- * If lvs_opts is not NULL, it should be initalized with spdk_lvs_opts_init().
+ * If lvs_opts is not NULL, it should be initialized with spdk_lvs_opts_init().
  *
  * \param bs_dev Pointer to the blobstore device.
  * \param lvs_opts lvolstore options.

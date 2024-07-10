@@ -13,7 +13,7 @@ blobstore, the startup time for the application can be cumbersome.
 
 You startup shell mode by using the -S command. At that point you will get
 a "blob>" prompt where you can enter any of the commands, including -h,
-to execute them. You can stil enter just one at a time but the initial
+to execute them. You can still enter just one at a time but the initial
 startup time for the application will not get in the way between commands
 anymore so it is much more usable.
 

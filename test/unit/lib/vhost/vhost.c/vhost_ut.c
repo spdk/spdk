@@ -652,7 +652,7 @@ vq_packed_ring_test(void)
 
 	/* There are four requests in Host, the new three ones and left one */
 	CU_ASSERT(vq->last_avail_idx == 3);
-	/* Available wrap conter should overturn */
+	/* Available wrap counter should overturn */
 	CU_ASSERT(vq->packed.avail_phase == 0);
 
 	/* Host complete all the requests */

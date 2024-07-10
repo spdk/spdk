@@ -34,7 +34,7 @@ crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t len, 
 	size_t count_pre, count_post, count_mid;
 	const uint64_t *dword_buf;
 
-	/* process the head and tail bytes seperately to make the buf address
+	/* process the head and tail bytes separately to make the buf address
 	 * passed to crc32_d is 8 byte aligned. This can avoid unaligned loads.
 	 */
 	count_pre = ((uint64_t)buf & 7) == 0 ? 0 : 8 - ((uint64_t)buf & 7);

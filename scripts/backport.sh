@@ -137,7 +137,7 @@ if [[ ! -f $CHERRY_PICK_TEMP ]]; then
 	TMP_DIR="$BACKPORT_DIR/temp_files"
 
 	if [[ ! -d $TMP_DIR ]]; then
-		# If this is not the first run, then the direcotry might already exist
+		# If this is not the first run, then the directory might already exist
 		mkdir "$TMP_DIR"
 	fi
 

@@ -865,7 +865,7 @@ unregister_workers(void)
 			printf("CTRLR: %s abort submitted %" PRIu64 ", failed to submit %" PRIu64 "\n",
 			       ctrlr_ctx->entry->name, ctrlr_ctx->abort_submitted,
 			       ctrlr_ctx->abort_submit_failed);
-			printf("\t success %" PRIu64 ", unsuccess %" PRIu64 ", failed %" PRIu64 "\n",
+			printf("\t success %" PRIu64 ", unsuccessful %" PRIu64 ", failed %" PRIu64 "\n",
 			       ctrlr_ctx->successful_abort, ctrlr_ctx->unsuccessful_abort,
 			       ctrlr_ctx->abort_failed);
 			free(ctrlr_ctx);

@@ -24,7 +24,7 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	const uint64_t *dword_buf;
 	uint64_t crc_tmp64;
 
-	/* process the head and tail bytes seperately to make the buf address
+	/* process the head and tail bytes separately to make the buf address
 	 * passed to _mm_crc32_u64 is 8 byte aligned. This can avoid unaligned loads.
 	 */
 	count_pre = ((uint64_t)buf & 7) == 0 ? 0 : 8 - ((uint64_t)buf & 7);
@@ -63,7 +63,7 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	size_t count_pre, count_post, count_mid;
 	const uint64_t *dword_buf;
 
-	/* process the head and tail bytes seperately to make the buf address
+	/* process the head and tail bytes separately to make the buf address
 	 * passed to crc32_cd is 8 byte aligned. This can avoid unaligned loads.
 	 */
 	count_pre = ((uint64_t)buf & 7) == 0 ? 0 : 8 - ((uint64_t)buf & 7);

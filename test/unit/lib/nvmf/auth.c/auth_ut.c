@@ -1039,7 +1039,7 @@ test_auth_reply(void)
 	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
 	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_FAILED);
 
-	/* Controller challange calcuation failure */
+	/* Controller challenge calculation failure */
 	g_req_completed = false;
 	auth->state = NVMF_QPAIR_AUTH_REPLY;
 	msg->cvalid = 1;

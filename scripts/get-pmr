@@ -65,7 +65,7 @@ info() {
 	bar5=$(get_bar "$dev" 0x24)
 
 	if ((head != 0)); then
-		echo "Wrong haeder type under $dev" >&2
+		echo "Wrong header type under $dev" >&2
 		return 1
 	fi
 

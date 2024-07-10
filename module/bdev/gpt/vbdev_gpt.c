@@ -353,7 +353,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		} else if (!SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
 						&SPDK_GPT_PART_TYPE_GUID)) {
 			/* Partition type isn't TYPE_GUID or TYPE_GUID_OLD, so this isn't
-			 * an SPDK parition.  Continue to the next partition.
+			 * an SPDK partition.  Continue to the next partition.
 			 */
 			continue;
 		}

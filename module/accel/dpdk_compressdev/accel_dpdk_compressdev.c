@@ -565,7 +565,7 @@ comp_dev_poller(void *args)
 						NUM_MAX_INFLIGHT_OPS);
 	for (i = 0; i < num_deq; i++) {
 
-		/* We store this off regardless of success/error so we know how to contruct the
+		/* We store this off regardless of success/error so we know how to construct the
 		 * next task
 		 */
 		task = (struct spdk_accel_task *)*RTE_MBUF_DYNFIELD(deq_ops[i]->m_src, g_mbuf_offset,
@@ -618,7 +618,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 
 	rc = _compress_operation(chan, task);
 	if (rc) {
-		SPDK_ERRLOG("Error (%d) in comrpess operation\n", rc);
+		SPDK_ERRLOG("Error (%d) in compress operation\n", rc);
 		assert(false);
 	}
 

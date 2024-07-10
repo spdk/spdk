@@ -997,7 +997,7 @@ test_reset_zone(void)
 	zone_id = num_zones * bdev->bdev.zone_size;
 	send_reset_zone(bdev, ch, zone_id, output_index, false);
 
-	/* Send reset to already resetted zone */
+	/* Send reset to already reset zone */
 	zone_id = 0;
 	send_reset_zone(bdev, ch, zone_id, output_index, true);
 	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);

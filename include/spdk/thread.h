@@ -50,7 +50,7 @@ struct spdk_io_channel_iter;
 
 /**
  * A function that is called each time a new thread is created.
- * The implementor of this function should frequently call
+ * The implementer of this function should frequently call
  * spdk_thread_poll() on the thread provided.
  *
  * \param thread The new spdk_thread.
@@ -61,7 +61,7 @@ typedef int (*spdk_new_thread_fn)(struct spdk_thread *thread);
  * SPDK thread operation type.
  */
 enum spdk_thread_op {
-	/* Called each time a new thread is created. The implementor of this operation
+	/* Called each time a new thread is created. The implementer of this operation
 	 * should frequently call spdk_thread_poll() on the thread provided.
 	 */
 	SPDK_THREAD_OP_NEW,
@@ -182,7 +182,7 @@ typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int st
 /**
  * Initialize the threading library. Must be called once prior to allocating any threads.
  *
- * \param new_thread_fn Called each time a new SPDK thread is created. The implementor
+ * \param new_thread_fn Called each time a new SPDK thread is created. The implementer
  * is expected to frequently call spdk_thread_poll() on the provided thread.
  * \param ctx_sz For each thread allocated, an additional region of memory of
  * size ctx_size will also be allocated, for use by the thread scheduler. A pointer

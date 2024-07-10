@@ -21,7 +21,7 @@
  * \param tid Transaction ID.
  * \param scc Secure channel concatenation.
  * \param nqn1 Host/Subsystem NQN, depending on challenge type (hostnqn for host challenge,
- * subnqn for controller challange).
+ * subnqn for controller challenge).
  * \param nqn2 The other NQN (if nqn1==hostnqn, then nqn2==subnqn).
  * \param dhkey Diffie-Hellman secret.
  * \param dhlen Size of `dhkey`.

@@ -22,7 +22,7 @@ sock_subsystem_init(void)
 				    " set by SPDK_SOCK_IMPL_DEFAULT environment variable\n",
 				    sock_impl_override);
 		} else {
-			SPDK_NOTICELOG("Default socket implementaion override: %s\n",
+			SPDK_NOTICELOG("Default socket implementation override: %s\n",
 				       sock_impl_override);
 		}
 	}

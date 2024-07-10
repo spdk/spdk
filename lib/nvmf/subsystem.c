@@ -3067,7 +3067,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 		      rrega, iekey, cptpl, key.crkey, key.nrkey);
 
 	if (cptpl == SPDK_NVME_RESERVE_PTPL_CLEAR_POWER_ON) {
-		/* Ture to OFF state, and need to be updated in the configuration file */
+		/* True to OFF state, and need to be updated in the configuration file */
 		if (ns->ptpl_activated) {
 			ns->ptpl_activated = 0;
 			update_sgroup = true;

@@ -2549,7 +2549,7 @@ create_ib_device(struct spdk_nvmf_rdma_transport *rtransport, struct ibv_context
 	}
 
 	TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
-	SPDK_DEBUGLOG(rdma, "New device %p is added to RDMA trasport\n", device);
+	SPDK_DEBUGLOG(rdma, "New device %p is added to RDMA transport\n", device);
 
 	if (g_nvmf_hooks.get_ibv_pd) {
 		device->pd = g_nvmf_hooks.get_ibv_pd(NULL, device->context);

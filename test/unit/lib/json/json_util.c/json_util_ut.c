@@ -456,7 +456,7 @@ test_decode_uint16(void)
 
 	/* incorrect type */
 	v.type = SPDK_JSON_VAL_STRING;
-	v.start = "Strin";
+	v.start = "String";
 	v.len = 5;
 	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
 
