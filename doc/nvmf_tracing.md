@@ -5,11 +5,8 @@
 SPDK has a tracing framework for capturing low-level event information at runtime.
 Tracepoints provide a high-performance tracing mechanism that is accessible at runtime.
 They are implemented as a circular buffer in shared memory that is accessible from other
-processes. The NVMe-oF target is instrumented with tracepoints to enable analysis of
-both performance and application crashes and it has to be configured beforehand using
-this [guide](https://spdk.io/doc/nvmf.html).
-(Note: the SPDK tracing framework should still be considered experimental.
-Work to formalize and document the framework is in progress.)
+processes. SPDK libraries and modules are instrumented with tracepoints to enable analysis of
+both performance and application crashes.
 
 ## Enabling Tracepoints {#enable_tracepoints}
 
@@ -19,34 +16,22 @@ inside a group.
 ### Enabling Tracepoints in Groups
 
 To enable the instrumentation of all the tracepoints groups in an SPDK target
-application, start the target with `-e` parameter set to `0xFFFF` or `all`:
-
-~~~bash
-build/bin/nvmf_tgt -e 0xFFFF
-~~~
-
-or
+application, start the target with `-e` parameter set to `all`:
 
 ~~~bash
 build/bin/nvmf_tgt -e all
 ~~~
 
 To enable the instrumentation of just the `NVMe-oF RDMA` tracepoints in an SPDK target
-application, start the target with the `-e` parameter set to `0x10`:
+application, start the target with the `-e` parameter set to `nvmf_rdma`:
 
 ~~~bash
-build/bin/nvmf_tgt -e 0x10
+build/bin/nvmf_tgt -e nvmf_rdma
 ~~~
 
 ### Enabling Individual Tracepoints
 
 To enable individual tracepoints inside a group:
-
-~~~bash
-build/bin/nvmf_tgt -e 0x10:B
-~~~
-
-or
 
 ~~~bash
 build/bin/nvmf_tgt -e nvmf_rdma:B
@@ -59,15 +44,16 @@ where `:` is a separator and `B` is the tracepoint mask. This will enable only t
 It is also possible to combine enabling whole groups of tpoints and individual ones:
 
 ~~~bash
-build/bin/nvmf_tgt -e 0x10:2,0x400
+build/bin/nvmf_tgt -e nvmf_rdma:2,thread
 ~~~
 
 This will enable the second tracepoint inside `NVMe-oF RDMA` group (0x10) and all of the tracepoints defined by the `thread` group (0x400).
 
-### Tracepoint Group Values
+### Tracepoint Group Names
 
-iscsi (0x2), scsi (0x4), bdev (0x8), nvmf_rdma (0x10), nvmf_tcp (0x20), ftl (0x40), blobfs (0x80), nvmf_fc (0x100),
-idxd (0x200), thread (0x400), nvme_pcie (0x800)
+The best way to get the current list of group names is from an application's
+help message. The list of available tracepoint group's for that application
+will be shown next to the `-e` option.
 
 ### Starting the SPDK Target
 
@@ -102,6 +88,9 @@ system running the NVMe-oF target, simply execute the command line shown in the 
 ~~~bash
 build/bin/spdk_trace -s nvmf -p 24147
 ~~~
+
+Note that you can also call `build/bin/spdk_trace` without any parameters on Linux, and it will
+use the most recent SPDK trace file generated on that system.
 
 To analyze the tracepoints on a different system, first prepare the tracepoint file for transfer.  The
 tracepoint file can be large, but usually compresses very well.  This step can also be used to prepare
