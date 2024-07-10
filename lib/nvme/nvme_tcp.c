@@ -2665,6 +2665,7 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 			 void *devhandle)
 {
 	struct nvme_tcp_ctrlr *tctrlr;
+	struct nvme_tcp_qpair *tqpair;
 	int rc;
 
 	tctrlr = calloc(1, sizeof(*tctrlr));
@@ -2717,6 +2718,10 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
 		return NULL;
 	}
+
+	tqpair = nvme_tcp_qpair(tctrlr->ctrlr.adminq);
+	tctrlr->ctrlr.numa.id_valid = 1;
+	tctrlr->ctrlr.numa.id = spdk_sock_get_numa_id(tqpair->sock);
 
 	if (nvme_ctrlr_add_process(&tctrlr->ctrlr, 0) != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");

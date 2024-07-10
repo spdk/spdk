@@ -36,6 +36,7 @@ DEFINE_STUB(spdk_sock_group_get_ctx,
 	    void *,
 	    (struct spdk_sock_group *group),
 	    NULL);
+DEFINE_STUB(spdk_sock_get_numa_id, int32_t, (struct spdk_sock *sock), SPDK_ENV_NUMA_ID_ANY);
 
 DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
