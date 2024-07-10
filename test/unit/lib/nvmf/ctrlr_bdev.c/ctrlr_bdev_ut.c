@@ -123,6 +123,15 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return bdev->blockcnt;
 }
 
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dif_pi_format spdk_dif_pi_format_t;
+
+spdk_dif_pi_format_t
+spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev)
+{
+	return bdev->dif_pi_format;
+}
+
 DEFINE_STUB(spdk_bdev_comparev_and_writev_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct iovec *compare_iov, int compare_iovcnt,

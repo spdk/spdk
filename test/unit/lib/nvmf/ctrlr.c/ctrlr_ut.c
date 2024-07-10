@@ -25,6 +25,7 @@ struct spdk_bdev {
 	uint32_t zone_size;
 	uint32_t max_open_zones;
 	uint32_t max_active_zones;
+	enum spdk_dif_type dif_type;
 };
 
 #define MAX_OPEN_ZONES 12
@@ -251,6 +252,22 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->flbas.format = 0;
 	nsdata->flbas.msb_format = 0;
 	nsdata->lbaf[0].lbads = spdk_u32log2(512);
+}
+
+void
+nvmf_bdev_ctrlr_identify_iocs_nvm(struct spdk_nvmf_ns *ns,
+				  struct spdk_nvme_nvm_ns_data *nsdata_nvm)
+{
+	if (ns->bdev->dif_type == SPDK_DIF_DISABLE) {
+		return;
+	}
+
+	nsdata_nvm->lbstm = 0;
+	nsdata_nvm->pic._16bpists = 0;
+	nsdata_nvm->pic._16bpistm = 1;
+	nsdata_nvm->pic.stcrs = 0;
+	nsdata_nvm->elbaf[0].sts = 16;
+	nsdata_nvm->elbaf[0].pif = SPDK_DIF_PI_FORMAT_32;
 }
 
 struct spdk_nvmf_ns *
@@ -1182,7 +1199,8 @@ test_identify_ns_iocs_specific(void)
 	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .admin_qpair = &admin_qpair };
 	struct spdk_nvme_cmd cmd = {};
 	struct spdk_nvme_cpl rsp = {};
-	struct spdk_nvme_zns_ns_data nsdata = {};
+	struct spdk_nvme_zns_ns_data nsdata_zns = {};
+	struct spdk_nvme_nvm_ns_data nsdata_nvm = {};
 	struct spdk_bdev bdev[2] = {{.blockcnt = 1234, .zoned = true, .zone_size = ZONE_SIZE, .max_open_zones = MAX_OPEN_ZONES, .max_active_zones = MAX_ACTIVE_ZONES}, {.blockcnt = 5678}};
 	struct spdk_nvmf_ns ns[2] = {{.bdev = &bdev[0]}, {.bdev = &bdev[1]}};
 	struct spdk_nvmf_ns *ns_arr[2] = {&ns[0], &ns[1]};
@@ -1198,53 +1216,63 @@ test_identify_ns_iocs_specific(void)
 
 	/* Invalid ZNS NSID 0 */
 	cmd.nsid = 0;
-	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&nsdata_zns, 0xFF, sizeof(nsdata_zns));
 	memset(&rsp, 0, sizeof(rsp));
 	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
-			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+			&nsdata_zns, sizeof(nsdata_zns)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
-	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+	CU_ASSERT(spdk_mem_all_zero(&nsdata_zns, sizeof(nsdata_zns)));
 
 	/* Valid ZNS NSID 1 */
 	cmd.nsid = 1;
-	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&nsdata_zns, 0xFF, sizeof(nsdata_zns));
 	memset(&rsp, 0, sizeof(rsp));
 	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
-			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+			&nsdata_zns, sizeof(nsdata_zns)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT(nsdata.ozcs.read_across_zone_boundaries == 1);
-	CU_ASSERT(nsdata.mar == MAX_ACTIVE_ZONES - 1);
-	CU_ASSERT(nsdata.mor == MAX_OPEN_ZONES - 1);
-	CU_ASSERT(nsdata.lbafe[0].zsze == ZONE_SIZE);
-	nsdata.ozcs.read_across_zone_boundaries = 0;
-	nsdata.mar = 0;
-	nsdata.mor = 0;
-	nsdata.lbafe[0].zsze = 0;
-	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+	CU_ASSERT(nsdata_zns.ozcs.read_across_zone_boundaries == 1);
+	CU_ASSERT(nsdata_zns.mar == MAX_ACTIVE_ZONES - 1);
+	CU_ASSERT(nsdata_zns.mor == MAX_OPEN_ZONES - 1);
+	CU_ASSERT(nsdata_zns.lbafe[0].zsze == ZONE_SIZE);
+	nsdata_zns.ozcs.read_across_zone_boundaries = 0;
+	nsdata_zns.mar = 0;
+	nsdata_zns.mor = 0;
+	nsdata_zns.lbafe[0].zsze = 0;
+	CU_ASSERT(spdk_mem_all_zero(&nsdata_zns, sizeof(nsdata_zns)));
 
 	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_NVM;
 
-	/* Valid NVM NSID 2 */
+	/* Valid NVM NSID 2 with DIF type 1 */
+	bdev[1].dif_type = SPDK_DIF_TYPE1;
 	cmd.nsid = 2;
-	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&nsdata_nvm, 0xFF, sizeof(nsdata_nvm));
 	memset(&rsp, 0, sizeof(rsp));
 	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
-			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+			&nsdata_nvm, sizeof(nsdata_nvm)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+	CU_ASSERT(nsdata_nvm.lbstm == 0);
+	CU_ASSERT(nsdata_nvm.pic._16bpists == 0);
+	CU_ASSERT(nsdata_nvm.pic._16bpistm == 1);
+	CU_ASSERT(nsdata_nvm.pic.stcrs == 0);
+	CU_ASSERT(nsdata_nvm.elbaf[0].sts == 16);
+	CU_ASSERT(nsdata_nvm.elbaf[0].pif == SPDK_DIF_PI_FORMAT_32);
+	nsdata_nvm.pic._16bpistm = 0;
+	nsdata_nvm.elbaf[0].sts = 0;
+	nsdata_nvm.elbaf[0].pif = 0;
+	CU_ASSERT(spdk_mem_all_zero(&nsdata_nvm, sizeof(nsdata_nvm)));
 
 	/* Invalid NVM NSID 3 */
 	cmd.nsid = 0;
-	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&nsdata_nvm, 0xFF, sizeof(nsdata_nvm));
 	memset(&rsp, 0, sizeof(rsp));
 	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
-			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+			&nsdata_nvm, sizeof(nsdata_nvm)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
-	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+	CU_ASSERT(spdk_mem_all_zero(&nsdata_nvm, sizeof(nsdata_nvm)));
 
 	spdk_bit_array_free(&ctrlr.visible_ns);
 }

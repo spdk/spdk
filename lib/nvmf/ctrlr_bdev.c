@@ -197,6 +197,58 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	}
 }
 
+void
+nvmf_bdev_ctrlr_identify_iocs_nvm(struct spdk_nvmf_ns *ns,
+				  struct spdk_nvme_nvm_ns_data *nsdata_nvm)
+{
+	struct spdk_bdev *bdev = ns->bdev;
+	uint8_t _16bpists;
+	uint32_t sts, pif;
+
+	if (spdk_bdev_get_dif_type(bdev) == SPDK_DIF_DISABLE) {
+		return;
+	}
+
+	pif = spdk_bdev_get_dif_pi_format(bdev);
+
+	/*
+	 * 16BPISTS shall be 1 for 32/64b Guard PI.
+	 * STCRS shall be 1 if 16BPISTS is 1.
+	 * 16 is the minimum value of STS for 32b Guard PI.
+	 */
+	switch (pif) {
+	case SPDK_DIF_PI_FORMAT_16:
+		_16bpists = 0;
+		sts = 0;
+		break;
+	case SPDK_DIF_PI_FORMAT_32:
+		_16bpists = 1;
+		sts = 16;
+		break;
+	case SPDK_DIF_PI_FORMAT_64:
+		_16bpists = 1;
+		sts = 0;
+		break;
+	default:
+		SPDK_WARNLOG("PI format %u is not supported\n", pif);
+		return;
+	}
+
+	/* For 16b Guard PI, Storage Tag is not available because we set STS to 0.
+	 * In this case, we do not have to set 16BPISTM to 1. For simplicity,
+	 * set 16BPISTM to 0 and set LBSTM to all zeroes.
+	 *
+	 * We will revisit here when we find any OS uses Storage Tag.
+	 */
+	nsdata_nvm->lbstm = 0;
+	nsdata_nvm->pic._16bpistm = 0;
+
+	nsdata_nvm->pic._16bpists = _16bpists;
+	nsdata_nvm->pic.stcrs = 0;
+	nsdata_nvm->elbaf[0].sts = sts;
+	nsdata_nvm->elbaf[0].pif = pif;
+}
+
 static void
 nvmf_bdev_ctrlr_get_rw_params(const struct spdk_nvme_cmd *cmd, uint64_t *start_lba,
 			      uint64_t *num_blocks)

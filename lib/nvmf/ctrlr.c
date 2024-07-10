@@ -2981,6 +2981,18 @@ nvmf_ns_identify_iocs_zns(struct spdk_nvmf_ns *ns,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ns_identify_iocs_nvm(struct spdk_nvmf_ns *ns,
+			  struct spdk_nvme_cpl *rsp,
+			  struct spdk_nvme_nvm_ns_data *nsdata_nvm)
+{
+	nvmf_bdev_ctrlr_identify_iocs_nvm(ns, nsdata_nvm);
+
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 int
 spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 				    struct spdk_nvme_cmd *cmd,
@@ -3002,6 +3014,11 @@ spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 	switch (csi) {
 	case SPDK_NVME_CSI_ZNS:
 		return nvmf_ns_identify_iocs_zns(ns, cmd, rsp, nsdata);
+	case SPDK_NVME_CSI_NVM:
+		if (!ctrlr->dif_insert_or_strip) {
+			return nvmf_ns_identify_iocs_nvm(ns, rsp, nsdata);
+		}
+		break;
 	default:
 		break;
 	}
