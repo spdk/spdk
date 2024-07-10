@@ -374,6 +374,16 @@ struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
  */
 const char *spdk_sock_get_interface_name(struct spdk_sock *sock);
 
+
+/**
+ * Gets the NUMA socket ID for the network interface of the local port for the TCP socket.
+ *
+ * \param sock TCP socket to find the NUMA socket ID for
+ *
+ * \return NUMA socket ID, or SPDK_ENV_SOCKET_ID_ANY if the NUMA socket ID is unknown
+ */
+uint32_t spdk_sock_get_numa_socket_id(struct spdk_sock *sock);
+
 /**
  * Close a socket.
  *

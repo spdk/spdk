@@ -25,6 +25,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/net.h"
+#include "spdk/file.h"
 #include "spdk_internal/sock.h"
 #include "spdk/net.h"
 
@@ -253,6 +254,27 @@ posix_sock_get_interface_name(struct spdk_sock *_sock)
 	}
 
 	return sock->interface_name;
+}
+
+static uint32_t
+posix_sock_get_numa_socket_id(struct spdk_sock *sock)
+{
+	const char *interface_name;
+	uint32_t numa_socket_id;
+	int rc;
+
+	interface_name = posix_sock_get_interface_name(sock);
+	if (interface_name == NULL) {
+		return SPDK_ENV_SOCKET_ID_ANY;
+	}
+
+	rc = spdk_read_sysfs_attribute_uint32(&numa_socket_id,
+					      "/sys/class/net/%s/device/numa_node", interface_name);
+	if (rc == 0) {
+		return numa_socket_id;
+	} else {
+		return SPDK_ENV_SOCKET_ID_ANY;
+	}
 }
 
 enum posix_sock_create_type {
@@ -2188,6 +2210,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.name		= "posix",
 	.getaddr	= posix_sock_getaddr,
 	.get_interface_name = posix_sock_get_interface_name,
+	.get_numa_socket_id = posix_sock_get_numa_socket_id,
 	.connect	= posix_sock_connect,
 	.listen		= posix_sock_listen,
 	.accept		= posix_sock_accept,
@@ -2240,6 +2263,7 @@ static struct spdk_net_impl g_ssl_net_impl = {
 	.name		= "ssl",
 	.getaddr	= posix_sock_getaddr,
 	.get_interface_name = posix_sock_get_interface_name,
+	.get_numa_socket_id = posix_sock_get_numa_socket_id,
 	.connect	= ssl_sock_connect,
 	.listen		= ssl_sock_listen,
 	.accept		= ssl_sock_accept,

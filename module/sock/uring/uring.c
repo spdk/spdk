@@ -18,6 +18,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/net.h"
+#include "spdk/file.h"
 
 #include "spdk_internal/sock.h"
 #include "spdk_internal/assert.h"
@@ -257,6 +258,27 @@ uring_sock_get_interface_name(struct spdk_sock *_sock)
 	}
 
 	return sock->interface_name;
+}
+
+static uint32_t
+uring_sock_get_numa_socket_id(struct spdk_sock *sock)
+{
+	const char *interface_name;
+	uint32_t numa_socket_id;
+	int rc;
+
+	interface_name = uring_sock_get_interface_name(sock);
+	if (interface_name == NULL) {
+		return SPDK_ENV_SOCKET_ID_ANY;
+	}
+
+	rc = spdk_read_sysfs_attribute_uint32(&numa_socket_id,
+					      "/sys/class/net/%s/device/numa_node", interface_name);
+	if (rc == 0) {
+		return numa_socket_id;
+	} else {
+		return SPDK_ENV_SOCKET_ID_ANY;
+	}
 }
 
 enum uring_sock_create_type {
@@ -1999,6 +2021,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.name		= "uring",
 	.getaddr	= uring_sock_getaddr,
 	.get_interface_name = uring_sock_get_interface_name,
+	.get_numa_socket_id = uring_sock_get_numa_socket_id,
 	.connect	= uring_sock_connect,
 	.listen		= uring_sock_listen,
 	.accept		= uring_sock_accept,
