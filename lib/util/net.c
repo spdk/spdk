@@ -122,12 +122,13 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		 char *paddr, int plen, uint16_t *pport)
 {
 	struct sockaddr_storage sa;
-	socklen_t salen;
+	int val;
+	socklen_t len;
 	int rc;
 
 	memset(&sa, 0, sizeof(sa));
-	salen = sizeof(sa);
-	rc = getsockname(fd, (struct sockaddr *)&sa, &salen);
+	len = sizeof(sa);
+	rc = getsockname(fd, (struct sockaddr *)&sa, &len);
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return -1;
@@ -160,9 +161,20 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		}
 	}
 
+	len = sizeof(val);
+	rc = getsockopt(fd, SOL_SOCKET, SO_ACCEPTCONN, &val, &len);
+	if (rc == 0 && val == 1) {
+		/* It is an error to getaddr for a peer address on a listen socket. */
+		if (paddr != NULL || pport != NULL) {
+			SPDK_ERRLOG("paddr, pport not valid on listen sockets\n");
+			return -1;
+		}
+		return 0;
+	}
+
 	memset(&sa, 0, sizeof(sa));
-	salen = sizeof(sa);
-	rc = getpeername(fd, (struct sockaddr *)&sa, &salen);
+	len = sizeof(sa);
+	rc = getpeername(fd, (struct sockaddr *)&sa, &len);
 	if (rc != 0) {
 		SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
 		return -1;
