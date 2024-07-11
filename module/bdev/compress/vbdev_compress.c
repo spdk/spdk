@@ -500,28 +500,10 @@ vbdev_compress_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
-/* This is used to generate JSON that can configure this module to its current state. */
 static int
 vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 {
-	struct vbdev_compress *comp_bdev;
-	const char *module_name = NULL;
-	int rc;
-
-	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_COMPRESS, &module_name);
-	if (rc) {
-		SPDK_ERRLOG("error getting module name (%d)\n", rc);
-	}
-
-	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "bdev_compress_create");
-		spdk_json_write_named_object_begin(w, "params");
-		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(comp_bdev->base_bdev));
-		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&comp_bdev->comp_bdev));
-		spdk_json_write_object_end(w);
-		spdk_json_write_object_end(w);
-	}
+	/* Nothing to dump as compress bdev configuration is saved on physical device. */
 	return 0;
 }
 
