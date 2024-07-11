@@ -147,10 +147,12 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		return -1;
 	}
 
-	rc = spdk_net_get_address_string((struct sockaddr *)&sa, laddr, llen);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
-		return -1;
+	if (laddr) {
+		rc = spdk_net_get_address_string((struct sockaddr *)&sa, laddr, llen);
+		if (rc != 0) {
+			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
+			return -1;
+		}
 	}
 
 	if (lport) {
@@ -180,10 +182,12 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		return -1;
 	}
 
-	rc = spdk_net_get_address_string((struct sockaddr *)&sa, paddr, plen);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
-		return -1;
+	if (paddr) {
+		rc = spdk_net_get_address_string((struct sockaddr *)&sa, paddr, plen);
+		if (rc != 0) {
+			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
+			return -1;
+		}
 	}
 
 	if (pport) {
