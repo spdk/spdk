@@ -825,15 +825,20 @@ static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 static void
 nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 {
+	struct spdk_nvme_ctrlr *ctrlr;
 	uint32_t max_io_size_bytes, max_io_md_size;
+	int32_t numa_id;
 	void *buf;
 	int rc;
+
+	ctrlr = task->ns_ctx->entry->u.nvme.ctrlr;
+	numa_id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
 
 	/* maximum extended lba format size from all active namespace,
 	 * it's same with g_io_size_bytes for namespace without metadata.
 	 */
 	max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
-	buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
+	buf = spdk_dma_zmalloc_socket(max_io_size_bytes, g_io_align, NULL, numa_id);
 	if (buf == NULL) {
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
@@ -1628,9 +1633,8 @@ allocate_task(struct ns_worker_ctx *ns_ctx, int queue_depth)
 		exit(1);
 	}
 
-	ns_ctx->entry->fn_table->setup_payload(task, queue_depth % 8 + 1);
-
 	task->ns_ctx = ns_ctx;
+	ns_ctx->entry->fn_table->setup_payload(task, queue_depth % 8 + 1);
 
 	return task;
 }
