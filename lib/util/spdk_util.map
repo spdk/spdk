@@ -108,6 +108,7 @@
 	spdk_net_get_interface_name;
 	spdk_net_get_address_string;
 	spdk_net_is_loopback;
+	spdk_net_getaddr;
 
 	# public functions in pipe.h
 	spdk_pipe_create;

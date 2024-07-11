@@ -49,6 +49,22 @@ int spdk_net_get_address_string(struct sockaddr *sa, char *addr, size_t len);
  */
 bool spdk_net_is_loopback(int fd);
 
+/*
+ * Get local and peer addresses of the given fd.
+ *
+ * \param fd file descriptor to get address.
+ * \param laddr A pointer to the buffer to hold the local address.
+ * \param llen Length of the buffer 'laddr'.
+ * \param lport A pointer (may be NULL) to the buffer to hold the local port info.
+ * \param paddr A pointer to the buffer to hold the peer address.
+ * \param plen Length of the buffer 'paddr'.
+ * \param pport A pointer (may be NULL) to the buffer to hold the peer port info.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
+		     char *paddr, int plen, uint16_t *pport);
+
 #ifdef __cplusplus
 }
 #endif

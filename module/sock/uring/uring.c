@@ -231,70 +231,9 @@ uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		   char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct sockaddr_storage sa;
-	socklen_t salen;
-	int rc;
 
 	assert(sock != NULL);
-
-	memset(&sa, 0, sizeof sa);
-	salen = sizeof sa;
-	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
-	if (rc != 0) {
-		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
-		return -1;
-	}
-
-	switch (sa.ss_family) {
-	case AF_UNIX:
-		/* Acceptable connection types that don't have IPs */
-		return 0;
-	case AF_INET:
-	case AF_INET6:
-		/* Code below will get IP addresses */
-		break;
-	default:
-		/* Unsupported socket family */
-		return -1;
-	}
-
-	rc = spdk_net_get_address_string((struct sockaddr *)&sa, saddr, slen);
-	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
-		return -1;
-	}
-
-	if (sport) {
-		if (sa.ss_family == AF_INET) {
-			*sport = ntohs(((struct sockaddr_in *) &sa)->sin_port);
-		} else if (sa.ss_family == AF_INET6) {
-			*sport = ntohs(((struct sockaddr_in6 *) &sa)->sin6_port);
-		}
-	}
-
-	memset(&sa, 0, sizeof sa);
-	salen = sizeof sa;
-	rc = getpeername(sock->fd, (struct sockaddr *) &sa, &salen);
-	if (rc != 0) {
-		SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
-		return -1;
-	}
-
-	rc = spdk_net_get_address_string((struct sockaddr *)&sa, caddr, clen);
-	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
-		return -1;
-	}
-
-	if (cport) {
-		if (sa.ss_family == AF_INET) {
-			*cport = ntohs(((struct sockaddr_in *) &sa)->sin_port);
-		} else if (sa.ss_family == AF_INET6) {
-			*cport = ntohs(((struct sockaddr_in6 *) &sa)->sin6_port);
-		}
-	}
-
-	return 0;
+	return spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
 }
 
 enum uring_sock_create_type {
