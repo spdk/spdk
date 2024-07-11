@@ -653,6 +653,9 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	spdk_json_write_named_uint32(w, "block_size", spdk_bdev_get_block_size(bdev));
 	spdk_json_write_named_uint64(w, "num_blocks", spdk_bdev_get_num_blocks(bdev));
 	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
+	if (bdev->numa.id_valid) {
+		spdk_json_write_named_int32(w, "numa_id", bdev->numa.id);
+	}
 
 	if (spdk_bdev_get_md_size(bdev) != 0) {
 		spdk_json_write_named_uint32(w, "md_size", spdk_bdev_get_md_size(bdev));

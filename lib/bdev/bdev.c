@@ -8564,6 +8564,16 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 }
 
+int32_t
+spdk_bdev_get_numa_id(struct spdk_bdev *bdev)
+{
+	if (bdev->numa.id_valid) {
+		return bdev->numa.id;
+	} else {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+}
+
 static void
 bdev_register_finished(void *arg)
 {

@@ -630,6 +630,16 @@ struct spdk_bdev {
 	 * sent down to the device, without any delays and waiting for outstanding IO. */
 	uint16_t reset_io_drain_timeout;
 
+	struct {
+		/** Is numa.id valid? Needed to know whether numa.id == 0 was
+		 *  explicitly set by bdev module or implicitly set when
+		 *  calloc()'ing the structure.
+		 */
+		uint32_t id_valid : 1;
+		/** NUMA node ID for the bdev */
+		int32_t id : 31;
+	} numa;
+
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */

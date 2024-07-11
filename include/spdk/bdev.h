@@ -510,6 +510,16 @@ int spdk_bdev_open_async(const char *bdev_name, bool write, spdk_bdev_event_cb_t
 void spdk_bdev_close(struct spdk_bdev_desc *desc);
 
 /**
+ * Get the NUMA node ID for the specified bdev.
+ *
+ * \param bdev Block device to get the NUMA node ID for
+ *
+ * \returns NUMA node ID for the bdev, SPDK_ENV_NODE_ID_ANY if the ID
+ *	    ID is unknown.
+ */
+int32_t spdk_bdev_get_numa_id(struct spdk_bdev *bdev);
+
+/**
  * Callback function for spdk_for_each_bdev() and spdk_for_each_bdev_leaf().
  *
  * \param ctx Context passed to the callback.

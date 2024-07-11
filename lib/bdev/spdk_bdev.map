@@ -20,6 +20,7 @@
 	spdk_bdev_open_ext;
 	spdk_bdev_open_async;
 	spdk_bdev_close;
+	spdk_bdev_get_numa_id;
 	spdk_bdev_desc_get_bdev;
 	spdk_bdev_set_timeout;
 	spdk_bdev_io_type_supported;

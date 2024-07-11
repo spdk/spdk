@@ -7450,6 +7450,22 @@ examine_claimed(void)
 	ut_testing_examine_claimed = false;
 }
 
+static void
+get_numa_id(void)
+{
+	struct spdk_bdev bdev = {};
+
+	bdev.numa.id = 0;
+	bdev.numa.id_valid = 0;
+	CU_ASSERT(spdk_bdev_get_numa_id(&bdev) == SPDK_ENV_NUMA_ID_ANY);
+
+	bdev.numa.id_valid = 1;
+	CU_ASSERT(spdk_bdev_get_numa_id(&bdev) == 0);
+
+	bdev.numa.id = SPDK_ENV_NUMA_ID_ANY;
+	CU_ASSERT(spdk_bdev_get_numa_id(&bdev) == SPDK_ENV_NUMA_ID_ANY);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7519,6 +7535,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, claim_v2_existing_v1);
 	CU_ADD_TEST(suite, claim_v1_existing_v2);
 	CU_ADD_TEST(suite, examine_claimed);
+	CU_ADD_TEST(suite, get_numa_id);
 
 	allocate_cores(1);
 	allocate_threads(1);
