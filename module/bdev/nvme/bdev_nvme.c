@@ -4262,6 +4262,9 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	disk->fn_table = &nvmelib_fn_table;
 	disk->module = &nvme_if;
 
+	disk->numa.id_valid = 1;
+	disk->numa.id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
+
 	return 0;
 }
 
