@@ -1175,6 +1175,9 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
+	ctrlr->numa.id_valid = 1;
+	ctrlr->numa.id = spdk_rdma_cm_id_get_numa_id(rqpair->cm_id);
+
 	return nvme_rdma_process_event_start(rqpair, RDMA_CM_EVENT_ESTABLISHED,
 					     nvme_rdma_connect_established);
 }
