@@ -49,7 +49,7 @@ ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvme += rdma_provider rdma_utils
 endif
 
-DEPDIRS-blob := log util thread dma
+DEPDIRS-blob := log util thread dma trace
 DEPDIRS-accel := log util thread json rpc jsonrpc dma
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-virtio := log util json thread vfio_user

@@ -11,7 +11,9 @@
 
 #include "spdk/thread.h"
 #include "spdk/queue.h"
+#include "spdk/trace.h"
 
+#include "spdk_internal/trace_defs.h"
 #include "spdk/log.h"
 
 void
@@ -58,6 +60,9 @@ bs_request_set_complete(struct spdk_bs_request_set *set)
 	struct spdk_bs_cpl cpl = set->cpl;
 	int bserrno = set->bserrno;
 
+	spdk_trace_record(TRACE_BLOB_REQ_SET_COMPLETE, 0, 0, (uintptr_t)&set->cb_args,
+			  (uintptr_t)set->cpl.u.blob_basic.cb_arg);
+
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
 
 	bs_call_cpl(&cpl, bserrno);
@@ -86,6 +91,9 @@ bs_sequence_start(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
 		return NULL;
 	}
 	TAILQ_REMOVE(&channel->reqs, set, link);
+
+	spdk_trace_record(TRACE_BLOB_REQ_SET_START, 0, 0, (uintptr_t)&set->cb_args,
+			  (uintptr_t)cpl->u.blob_basic.cb_arg);
 
 	set->cpl = *cpl;
 	set->bserrno = 0;
@@ -346,6 +354,9 @@ bs_batch_open(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl, struct 
 	}
 	TAILQ_REMOVE(&channel->reqs, set, link);
 
+	spdk_trace_record(TRACE_BLOB_REQ_SET_START, 0, 0, (uintptr_t)&set->cb_args,
+			  (uintptr_t)cpl->u.blob_basic.cb_arg);
+
 	set->cpl = *cpl;
 	set->bserrno = 0;
 	set->channel = channel;
@@ -482,6 +493,9 @@ bs_user_op_alloc(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
 		return NULL;
 	}
 	TAILQ_REMOVE(&channel->reqs, set, link);
+
+	spdk_trace_record(TRACE_BLOB_REQ_SET_START, 0, 0, (uintptr_t)&set->cb_args,
+			  (uintptr_t)cpl->u.blob_basic.cb_arg);
 
 	set->cpl = *cpl;
 	set->channel = channel;

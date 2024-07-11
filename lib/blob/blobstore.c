@@ -16,8 +16,10 @@
 #include "spdk/likely.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
+#include "spdk/trace.h"
 
 #include "spdk_internal/assert.h"
+#include "spdk_internal/trace_defs.h"
 #include "spdk/log.h"
 
 #include "blobstore.h"
@@ -10298,3 +10300,28 @@ spdk_blob_is_degraded(const struct spdk_blob *blob)
 
 SPDK_LOG_REGISTER_COMPONENT(blob)
 SPDK_LOG_REGISTER_COMPONENT(blob_esnap)
+
+SPDK_TRACE_REGISTER_FN(blob_trace, "blob", TRACE_GROUP_BLOB)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"BLOB_REQ_SET_START", TRACE_BLOB_REQ_SET_START,
+			OWNER_TYPE_NONE, OBJECT_BLOB_CB_ARG, 1,
+			{
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }
+			}
+		},
+		{
+			"BLOB_REQ_SET_COMPLETE", TRACE_BLOB_REQ_SET_COMPLETE,
+			OWNER_TYPE_NONE, OBJECT_BLOB_CB_ARG, 0,
+			{
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }
+			}
+		},
+	};
+
+	spdk_trace_register_object(OBJECT_BLOB_CB_ARG, 'a');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_BLOB_CB_ARG, 1);
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_BLOB_CB_ARG, 0);
+}
