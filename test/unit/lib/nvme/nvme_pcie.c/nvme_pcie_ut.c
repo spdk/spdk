@@ -30,6 +30,9 @@ DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr
 
 DEFINE_STUB(nvme_ctrlr_proc_get_devhandle, struct spdk_pci_device *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+DEFINE_STUB(spdk_nvme_ctrlr_get_numa_id, int32_t, (struct spdk_nvme_ctrlr *ctrlr),
+	    SPDK_ENV_NUMA_ID_ANY);
+
 DEFINE_STUB(spdk_pci_device_unmap_bar, int, (struct spdk_pci_device *dev, uint32_t bar, void *addr),
 	    0);
 DEFINE_STUB(spdk_pci_device_attach, int, (struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,

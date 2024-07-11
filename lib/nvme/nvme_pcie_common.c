@@ -107,6 +107,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	size_t			page_align = sysconf(_SC_PAGESIZE);
 	size_t			queue_align, queue_len;
 	uint32_t                flags = SPDK_MALLOC_DMA;
+	int32_t			numa_id;
 	uint64_t		sq_paddr = 0;
 	uint64_t		cq_paddr = 0;
 
@@ -182,7 +183,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	} else {
 		queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cpl);
 		queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
-		pqpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_NUMA_ID_ANY, flags);
+		numa_id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
+		pqpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL, numa_id, flags);
 		if (pqpair->cpl == NULL) {
 			SPDK_ERRLOG("alloc qpair_cpl failed\n");
 			return -ENOMEM;
