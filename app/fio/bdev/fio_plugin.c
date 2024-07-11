@@ -833,7 +833,26 @@ spdk_fio_close(struct thread_data *td, struct fio_file *f)
 static int
 spdk_fio_iomem_alloc(struct thread_data *td, size_t total_mem)
 {
-	td->orig_buffer = spdk_dma_zmalloc(total_mem, 0x1000, NULL);
+	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
+	struct spdk_fio_target	*fio_target;
+	int32_t numa_id = SPDK_ENV_NUMA_ID_ANY, tmp_numa_id;
+
+	/* If all bdevs used by this fio_thread have the same numa socket
+	 * id, allocate from that socket. If they come from different numa
+	 * sockets, then don't try to optimize and just use NUMA_ID_ANY.
+	 */
+	TAILQ_FOREACH(fio_target, &fio_thread->targets, link) {
+		tmp_numa_id = spdk_bdev_get_numa_id(fio_target->bdev);
+		if (numa_id == SPDK_ENV_NUMA_ID_ANY) {
+			numa_id = tmp_numa_id;
+		} else if (tmp_numa_id != numa_id ||
+			   tmp_numa_id == SPDK_ENV_NUMA_ID_ANY) {
+			numa_id = SPDK_ENV_NUMA_ID_ANY;
+			break;
+		}
+	}
+
+	td->orig_buffer = spdk_dma_zmalloc_socket(total_mem, 0x1000, NULL, numa_id);
 	return td->orig_buffer == NULL;
 }
 
