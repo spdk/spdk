@@ -19,6 +19,7 @@ function usage() {
 	echo "    -c, --config-file     Rebuilds SPDK according to config file from autotest"
 	echo "    -a, --spdk-abi-path   Use spdk-abi from specified path, otherwise"
 	echo "                          latest version is pulled and deleted after test"
+	echo "        --release=RELEASE Compare ABI against RELEASE"
 	echo "    -h, --help            Print this help"
 	echo "Example:"
 	echo "$script_name -c ./autotest.config -a /path/to/spdk-abi"
@@ -38,6 +39,9 @@ while getopts 'hc:a:-:' optchar; do
 					;;
 				spdk-abi-path=*)
 					user_abi_dir="$(readlink -f ${OPTARG#*=})"
+					;;
+				release=*)
+					RELEASE="${OPTARG#*=}"
 					;;
 				*) exit 1 ;;
 			esac
@@ -83,10 +87,11 @@ function check_header_filenames() {
 	fi
 }
 
-function get_release_branch() {
+function get_release() {
+	local tag
+
 	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude="*-pre" $1)
-	branch="${tag:0:6}.x"
-	echo "$branch"
+	echo "${tag:0:6}"
 }
 
 function confirm_abi_deps() {
@@ -96,7 +101,7 @@ function confirm_abi_deps() {
 	local release
 	local suppression_file="$testdir/abigail_suppressions.ini"
 
-	release=$(get_release_branch)
+	release="${RELEASE:-$(get_release)}.x"
 
 	if [[ ! -d $source_abi_dir ]]; then
 		mkdir -p $source_abi_dir
@@ -109,7 +114,7 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
-	echo "* Running ${FUNCNAME[0]} against the latest (${release%.*}) release" >&2
+	echo "* Running ${FUNCNAME[0]} against the ${release%.*} release" >&2
 
 	if ! hash abidiff; then
 		echo "Unable to check ABI compatibility. Please install abidiff."
@@ -228,7 +233,7 @@ function confirm_abi_deps() {
 
 			if [[ $so_name_changed == yes ]]; then
 				# All SO major versions are intentionally increased after LTS to allow SO minor changes during the supported period.
-				if [[ "$release" == "$(get_release_branch LTS)" ]]; then
+				if [[ "$release" == "$(get_release LTS).x" ]]; then
 					found_abi_change=true
 				fi
 				if ! $found_abi_change; then
