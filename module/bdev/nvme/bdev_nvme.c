@@ -4843,7 +4843,6 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 
 		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
 
-		assert(nvme_ns != NULL);
 		if (nvme_ns == NULL) {
 			/* Target told us that an inactive namespace had an ANA change */
 			continue;

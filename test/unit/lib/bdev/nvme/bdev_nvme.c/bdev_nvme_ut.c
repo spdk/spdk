@@ -4951,6 +4951,22 @@ test_concurrent_read_ana_log_page(void)
 
 	set_thread(0);
 
+	/* It is possible that target sent ANA change for inactive namespaces.
+	 *
+	 * Previously, assert() was added because this case was unlikely.
+	 * However, assert() was hit in real environment.
+
+	 * Hence, remove assert() and add unit test case.
+	 *
+	 * Simulate this case by depopulating namespaces and then parsing ANA
+	 * log page created when all namespaces are active.
+	 * Then, check if parsing ANA log page completes successfully.
+	 */
+	nvme_ctrlr_depopulate_namespaces(nvme_ctrlr);
+
+	rc = bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ctrlr_set_ana_states, nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
 	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
