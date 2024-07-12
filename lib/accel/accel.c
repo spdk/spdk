@@ -29,7 +29,7 @@
  */
 
 #define ALIGN_4K			0x1000
-#define MAX_TASKS_PER_CHANNEL		0x800
+#define ACCEL_TASKS_PER_CHANNEL		2048
 #define ACCEL_SMALL_CACHE_SIZE		128
 #define ACCEL_LARGE_CACHE_SIZE		16
 /* Set MSB, so we don't return NULL pointers as buffers */
@@ -68,9 +68,9 @@ static struct spdk_accel_driver *g_accel_driver;
 static struct spdk_accel_opts g_opts = {
 	.small_cache_size = ACCEL_SMALL_CACHE_SIZE,
 	.large_cache_size = ACCEL_LARGE_CACHE_SIZE,
-	.task_count = MAX_TASKS_PER_CHANNEL,
-	.sequence_count = MAX_TASKS_PER_CHANNEL,
-	.buf_count = MAX_TASKS_PER_CHANNEL,
+	.task_count = ACCEL_TASKS_PER_CHANNEL,
+	.sequence_count = ACCEL_TASKS_PER_CHANNEL,
+	.buf_count = ACCEL_TASKS_PER_CHANNEL,
 };
 static struct accel_stats g_stats;
 static struct spdk_spinlock g_stats_lock;
