@@ -1483,6 +1483,20 @@ int spdk_mem_unregister(void *vaddr, size_t len);
 int spdk_mem_reserve(void *vaddr, size_t len);
 
 /**
+ * Get the NUMA node ID for the specified memory buffer.
+ *
+ * Note: this only works for memory allocated via the environment layer.
+ *
+ * \param buf A pointer to a buffer.
+ * \param size Contains the size of the memory region pointed to by vaddr.
+ * If vaddr is successfully translated, then this is updated with the size of
+ * the memory region for which the translation is valid.
+ *
+ * \return NUMA ID of the buffer if known, SPDK_ENV_NUMA_ID_ANY otherwise
+ */
+int32_t spdk_mem_get_numa_id(const void *buf, uint64_t *size);
+
+/**
  * Get the address's file descriptor and offset, it works with spdk memory allocation APIs
  *
  * \param vaddr Virtual address to get

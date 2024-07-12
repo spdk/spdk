@@ -117,6 +117,7 @@
 	spdk_mem_register;
 	spdk_mem_unregister;
 	spdk_mem_get_fd_and_offset;
+	spdk_mem_get_numa_id;
 	spdk_pci_event_listen;
 	spdk_pci_get_event;
 	spdk_pci_register_error_handler;
