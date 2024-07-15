@@ -93,6 +93,9 @@ function usage() {
 	echo "                  Perform action only against selected type of devices. Supported:"
 	echo "                    IOAT|DSA|IAA|VIRTIO|VMD|NVME."
 	echo "                  Default is to select all types."
+	echo "FORCE_NIC_UIO_REBIND"
+	echo "                  When set to 'yes', an attempt to reload nic_uio will be made regardless"
+	echo "                  of the kernel environment. Applicable only under FreeBSD."
 	exit 0
 }
 
@@ -356,6 +359,8 @@ function collect_devices() {
 		nvme_d["$bdf"]=1 all_devices_d["$bdf"]=1
 		pci_dev_echo "$bdf" "Skipping nvme behind VMD (${nvme_vmd_d["$bdf"]})"
 	done
+
+	get_unsupported_nic_uio_hw
 
 	return 0
 }
@@ -789,27 +794,59 @@ function status_freebsd() {
 function configure_freebsd_pci() {
 	local BDFS
 
-	BDFS+=("${!nvme_d[@]}")
-	BDFS+=("${!ioat_d[@]}")
-	BDFS+=("${!dsa_d[@]}")
-	BDFS+=("${!iaa_d[@]}")
-	BDFS+=("${!vmd_d[@]}")
+	BDFS+=("$@")
 
-	# Drop the domain part from all the addresses
-	BDFS=("${BDFS[@]#*:}")
+	if ((${#unsupported_nic_uio_hw[@]} > 0)) && [[ $FORCE_NIC_UIO_REBIND != yes ]]; then
+		warn_unsupported_nic_uio_hw
+		return 1
+	fi
+
+	BDFS+=("${unsupported_nic_uio_hw[@]}")
+
+	if kldstat -n nic_uio &> /dev/null; then
+		kldunload nic_uio.ko
+	fi
 
 	local IFS=","
-	kldunload nic_uio.ko || true
 	kenv hw.nic_uio.bdfs="${BDFS[*]}"
 	kldload nic_uio.ko
 }
 
+function get_unsupported_nic_uio_hw() {
+	local bdfs bdf all_devices
+	local -g unsupported_nic_uio_hw
+
+	IFS="," read -ra bdfs < <(kenv hw.nic_uio.bdfs 2> /dev/null) || return 0
+
+	for bdf in "${bdfs[@]}"; do
+		grep -q "$bdf" <(printf '%s\n' "${!all_devices_d[@]}") || unsupported_nic_uio_hw+=("$bdf")
+	done
+
+	return 0
+}
+
+function warn_unsupported_nic_uio_hw() {
+	cat <<- NIC_UIO
+
+		WARNING: Unsupported devices detected in the nic_uio setup:
+
+		$(printf '  %s\n' "${unsupported_nic_uio_hw[@]}")
+
+		Remove them first or pass FORCE_NIC_UIO_REBIND=yes through the environment.
+
+	NIC_UIO
+}
+
 function configure_freebsd() {
+	_configure_freebsd "${!nvme_d[@]}" "${!ioat_d[@]}" "${!dsa_d[@]}" "${!iaa_d[@]}" "${!vmd_d[@]}"
+}
+
+function _configure_freebsd() {
 	if ! check_for_driver_freebsd; then
 		echo "DPDK drivers (contigmem and/or nic_uio) are missing, aborting" >&2
 		return 1
 	fi
-	configure_freebsd_pci
+	configure_freebsd_pci "$@"
 	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
 	#  previous value, unload contigmem so that we can reload with the new value.
 	if kldstat -q -m contigmem; then
@@ -831,8 +868,20 @@ function configure_freebsd() {
 }
 
 function reset_freebsd() {
+	# Don't reap the entire nic_uio setup in case there are unsupported devices in the kernel env
+	if ((${#unsupported_nic_uio_hw[@]} > 0)) && [[ $FORCE_NIC_UIO_REBIND != yes ]]; then
+		warn_unsupported_nic_uio_hw
+		return 1
+	fi
+
 	kldunload contigmem.ko || true
 	kldunload nic_uio.ko || true
+
+	if ((${#unsupported_nic_uio_hw[@]} > 0)); then
+		# HACK: try to be nice and recreate the setup but only with the unsupported devices
+		_unsupported_nic_uio_hw=("${unsupported_nic_uio_hw[@]}") unsupported_nic_uio_hw=()
+		_configure_freebsd "${_unsupported_nic_uio_hw[@]}"
+	fi
 }
 
 function set_hp() {

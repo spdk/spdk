@@ -179,7 +179,7 @@ cache_pci_bus_pciconf() {
 
 	while read -r pci pci_info; do
 		driver=${pci%@*}
-		pci=${pci##*pci} pci=${pci%:}
+		pci=${pci#*:} pci=${pci%:} # E.g.: nvme0@pci0:0:16:0: -> 0:16:0
 		source <(echo "$pci_info")
 		# pciconf under FreeBSD 13.1 provides vendor and device IDs in its
 		# output under separate, dedicated fields. For 12.x they need to
