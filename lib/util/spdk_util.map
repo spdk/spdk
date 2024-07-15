@@ -104,6 +104,9 @@
 	spdk_hexlify;
 	spdk_unhexlify;
 
+	# public functions in net.h
+	spdk_net_get_interface_name;
+
 	# public functions in pipe.h
 	spdk_pipe_create;
 	spdk_pipe_destroy;
