@@ -583,6 +583,15 @@ int nvmf_publish_mdns_prr(struct spdk_nvmf_tgt *tgt);
  */
 void nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt);
 
+/**
+ * Updates the listener list in the mDNS PRR (Pull Registration Request) for the NVMe-oF target.
+ *
+ * \param tgt The NVMe-oF target
+ *
+ * \return 0 on success, negative errno on failure
+ */
+int nvmf_tgt_update_mdns_prr(struct spdk_nvmf_tgt *tgt);
+
 static inline struct spdk_nvmf_transport_poll_group *
 nvmf_get_transport_poll_group(struct spdk_nvmf_poll_group *group,
 			      struct spdk_nvmf_transport *transport)

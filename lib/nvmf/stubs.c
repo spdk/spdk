@@ -70,4 +70,10 @@ void
 nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt)
 {
 }
+
+int
+nvmf_tgt_update_mdns_prr(struct spdk_nvmf_tgt *tgt)
+{
+	return 0;
+}
 #endif /* !SPDK_CONFIG_AVAHI */

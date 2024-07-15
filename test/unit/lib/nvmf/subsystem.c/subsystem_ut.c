@@ -72,6 +72,7 @@ DEFINE_STUB(spdk_key_dup, struct spdk_key *, (struct spdk_key *k), NULL);
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
 DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
 DEFINE_STUB(nvmf_auth_is_supported, bool, (void), false);
+DEFINE_STUB(nvmf_tgt_update_mdns_prr, int, (struct spdk_nvmf_tgt *tgt), 0);
 
 static struct spdk_nvmf_transport g_transport = {};
 

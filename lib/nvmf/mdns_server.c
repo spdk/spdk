@@ -154,6 +154,28 @@ avahi_entry_group_add_listeners(AvahiEntryGroup *avahi_entry_group,
 	avahi_entry_group_commit(avahi_entry_group);
 }
 
+int
+nvmf_tgt_update_mdns_prr(struct spdk_nvmf_tgt *tgt)
+{
+	int rc;
+
+	if (nvmf_tgt_is_mdns_running(tgt) == false || g_avahi_entry_group == NULL) {
+		SPDK_INFOLOG(nvmf,
+			     "nvmf_tgt_update_mdns_prr is only supported when mDNS servier is running on target\n");
+		return 0;
+	}
+
+	rc = avahi_entry_group_reset(g_avahi_entry_group);
+	if (rc) {
+		SPDK_ERRLOG("Failed to reset avahi_entry_group");
+		return -EINVAL;
+	}
+
+	avahi_entry_group_add_listeners(g_avahi_entry_group, g_mdns_publish_ctx->subsystem);
+
+	return 0;
+}
+
 static int
 publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *publish_ctx)
 {
@@ -261,5 +283,4 @@ nvmf_publish_mdns_prr(struct spdk_nvmf_tgt *tgt)
 	publish_ctx->poller = SPDK_POLLER_REGISTER(nvmf_avahi_publish_iterate, publish_ctx, 100 * 1000);
 	return 0;
 }
-
 #endif

@@ -351,6 +351,9 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	TAILQ_REMOVE(&subsystem->listeners, listener, link);
+	if (spdk_nvmf_subsystem_is_discovery(listener->subsystem)) {
+		nvmf_tgt_update_mdns_prr(listener->subsystem->tgt);
+	}
 	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
 	free(listener->ana_state);
 	spdk_bit_array_clear(subsystem->used_listener_ids, listener->id);
@@ -1334,6 +1337,17 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 	}
 
 	TAILQ_INSERT_HEAD(&listener->subsystem->listeners, listener, link);
+
+	if (spdk_nvmf_subsystem_is_discovery(listener->subsystem)) {
+		status = nvmf_tgt_update_mdns_prr(listener->subsystem->tgt);
+		if (status) {
+			TAILQ_REMOVE(&listener->subsystem->listeners, listener, link);
+			listener->cb_fn(listener->cb_arg, status);
+			free(listener);
+			return;
+		}
+	}
+
 	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
 	listener->cb_fn(listener->cb_arg, status);
 }
