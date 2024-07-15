@@ -98,10 +98,10 @@ nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt)
 	SPDK_ERRLOG("Failed to stop mDNS PRR. It is not running on target %s.\n", tgt->name);
 }
 
-static int
-publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *publish_ctx)
+static void
+avahi_entry_group_add_listeners(AvahiEntryGroup *avahi_entry_group,
+				struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_subsystem *subsystem = publish_ctx->subsystem;
 	struct spdk_nvmf_subsystem_listener *listener;
 	const char *name_base = "spdk";
 	const char *type_base = "_nvme-disc";
@@ -114,16 +114,6 @@ publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *
 	AvahiStringList *txt = NULL;
 	uint16_t port;
 	uint16_t id = 0;
-
-	if (g_avahi_entry_group != NULL) {
-		return 0;
-	}
-
-	g_avahi_entry_group = avahi_entry_group_new(client, NULL, NULL);
-	if (g_avahi_entry_group == NULL) {
-		SPDK_ERRLOG("avahi_entry_group_new failure: %s\n", avahi_strerror(avahi_client_errno(client)));
-		return -1;
-	}
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		if (listener->trid->trtype == SPDK_NVME_TRANSPORT_TCP) {
@@ -145,16 +135,34 @@ publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *
 		txt = avahi_string_list_add(txt, txt_nqn);
 		port = spdk_strtol(listener->trid->trsvcid, 10);
 
-		if (avahi_entry_group_add_service_strlst(g_avahi_entry_group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
+		if (avahi_entry_group_add_service_strlst(avahi_entry_group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
 				0, name, type, domain, NULL, port, txt) < 0) {
-			SPDK_ERRLOG("Failed to add avahi service name: %s, type: %s, domain: %s, port: %d, error: %s\n",
-				    name, type, domain, port, avahi_strerror(avahi_client_errno(client)));
+			SPDK_ERRLOG("Failed to add avahi service name: %s, type: %s, domain: %s, port: %d",
+				    name, type, domain, port);
 		}
 		avahi_string_list_free(txt);
 		txt = NULL;
 	}
 
-	avahi_entry_group_commit(g_avahi_entry_group);
+	avahi_entry_group_commit(avahi_entry_group);
+}
+
+static int
+publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *publish_ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem = publish_ctx->subsystem;
+
+	if (g_avahi_entry_group != NULL) {
+		return 0;
+	}
+
+	g_avahi_entry_group = avahi_entry_group_new(client, NULL, NULL);
+	if (g_avahi_entry_group == NULL) {
+		SPDK_ERRLOG("avahi_entry_group_new failure: %s\n", avahi_strerror(avahi_client_errno(client)));
+		return -1;
+	}
+
+	avahi_entry_group_add_listeners(g_avahi_entry_group, subsystem);
 
 	return 0;
 }
