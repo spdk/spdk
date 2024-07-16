@@ -850,6 +850,15 @@ int
 create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 {
 	struct vbdev_compress *comp_bdev = NULL;
+	struct stat info;
+
+	if (stat(pm_path, &info) != 0) {
+		SPDK_ERRLOG("PM path %s does not exist.\n", pm_path);
+		return -EINVAL;
+	} else if (!S_ISDIR(info.st_mode)) {
+		SPDK_ERRLOG("PM path %s is not a directory.\n", pm_path);
+		return -EINVAL;
+	}
 
 	if ((lb_size != 0) && (lb_size != LB_SIZE_4K) && (lb_size != LB_SIZE_512B)) {
 		SPDK_ERRLOG("Logical block size must be 512 or 4096\n");
