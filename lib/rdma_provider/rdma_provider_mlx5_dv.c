@@ -139,6 +139,9 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 		spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
 		return NULL;
 	}
+	if (qp_attr->domain_transfer) {
+		spdk_memory_domain_set_data_transfer(mlx5_qp->common.domain, qp_attr->domain_transfer);
+	}
 
 	qp_attr->cap = dv_qp_attr.cap;
 

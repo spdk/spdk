@@ -29,6 +29,11 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 		.qp_type = IBV_QPT_RC
 	};
 
+	if (qp_attr->domain_transfer) {
+		SPDK_ERRLOG("verbs provider doesn't support memory domain transfer functionality");
+		return NULL;
+	}
+
 	spdk_rdma_qp = calloc(1, sizeof(*spdk_rdma_qp));
 	if (!spdk_rdma_qp) {
 		SPDK_ERRLOG("qp memory allocation failed\n");
