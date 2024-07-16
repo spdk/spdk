@@ -3166,6 +3166,19 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 }
 
 static bool
+bdev_nvme_is_supported_csi(enum spdk_nvme_csi csi)
+{
+	switch (csi) {
+	case SPDK_NVME_CSI_NVM:
+		return true;
+	case SPDK_NVME_CSI_ZNS:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool
 bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct nvme_bdev *nbdev = ctx;
@@ -3179,6 +3192,20 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	ns = nvme_ns->ns;
 	if (ns == NULL) {
 		return false;
+	}
+
+	if (!bdev_nvme_is_supported_csi(spdk_nvme_ns_get_csi(ns))) {
+		switch (io_type) {
+		case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+		case SPDK_BDEV_IO_TYPE_NVME_IO:
+			return true;
+
+		case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+			return spdk_nvme_ns_get_md_size(ns) ? true : false;
+
+		default:
+			return false;
+		}
 	}
 
 	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
@@ -4117,6 +4144,10 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		disk->max_active_zones = spdk_nvme_zns_ns_get_max_active_zones(ns);
 		break;
 	default:
+		if (bdev_opts->allow_unrecognized_csi) {
+			disk->product_name = "NVMe Passthrough disk";
+			break;
+		}
 		SPDK_ERRLOG("unsupported CSI: %u\n", csi);
 		return -ENOTSUP;
 	}

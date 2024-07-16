@@ -4113,6 +4113,7 @@ psk                        | Optional | string      | Name of the pre-shared key
 max_bdevs                  | Optional | number      | The size of the name array for newly created bdevs. Default is 128.
 dhchap_key                 | Optional | string      | DH-HMAC-CHAP key name.
 dhchap_ctrlr_key           | Optional | string      | DH-HMAC-CHAP controller key name.
+allow_unrecognized_csi     | Optional | bool        | Allow attaching namespaces with unrecognized command set identifiers. These will only support NVMe passthrough.
 
 #### Example
 

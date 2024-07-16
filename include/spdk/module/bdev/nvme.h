@@ -38,6 +38,12 @@ struct spdk_bdev_nvme_ctrlr_opts {
 	char psk[PATH_MAX];
 	const char *dhchap_key;
 	const char *dhchap_ctrlr_key;
+
+	/**
+	 * Allow attaching namespaces with unrecognized command set identifiers.
+	 * These will only support NVMe passthrough.
+	 */
+	bool allow_unrecognized_csi;
 };
 
 /**

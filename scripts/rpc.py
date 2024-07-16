@@ -726,7 +726,8 @@ if __name__ == "__main__":
                                                          psk=args.psk,
                                                          max_bdevs=args.max_bdevs,
                                                          dhchap_key=args.dhchap_key,
-                                                         dhchap_ctrlr_key=args.dhchap_ctrlr_key))
+                                                         dhchap_ctrlr_key=args.dhchap_ctrlr_key,
+                                                         allow_unrecognized_csi=args.allow_unrecognized_csi))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', help='Add bdevs with nvme backend')
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
@@ -786,6 +787,8 @@ if __name__ == "__main__":
                    help='The size of the name array for newly created bdevs. Default is 128',)
     p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
     p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
+    p.add_argument('-U', '--allow-unrecognized-csi', help="""Allow attaching namespaces with unrecognized command set identifiers.
+                   These will only support NVMe passthrough.""", action='store_true')
 
     p.set_defaults(func=bdev_nvme_attach_controller)
 

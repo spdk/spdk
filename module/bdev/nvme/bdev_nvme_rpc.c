@@ -338,6 +338,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"max_bdevs", offsetof(struct rpc_bdev_nvme_attach_controller, max_bdevs), spdk_json_decode_uint32, true},
 	{"dhchap_key", offsetof(struct rpc_bdev_nvme_attach_controller, dhchap_key), spdk_json_decode_string, true},
 	{"dhchap_ctrlr_key", offsetof(struct rpc_bdev_nvme_attach_controller, dhchap_ctrlr_key), spdk_json_decode_string, true},
+	{"allow_unrecognized_csi", offsetof(struct rpc_bdev_nvme_attach_controller, bdev_opts.allow_unrecognized_csi), spdk_json_decode_bool, true},
 };
 
 #define DEFAULT_MAX_BDEVS_PER_RPC 128
