@@ -11,5 +11,6 @@ if [ ! $(uname -s) = Linux ]; then
 	exit 0
 fi
 
-run_test "nvmf_target" $rootdir/test/nvmf/nvmf_target.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+run_test "nvmf_target_core" $rootdir/test/nvmf/nvmf_target_core.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+run_test "nvmf_target_extra" $rootdir/test/nvmf/nvmf_target_extra.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 run_test "nvmf_host" $rootdir/test/nvmf/nvmf_host.sh --transport=$SPDK_TEST_NVMF_TRANSPORT

@@ -21,11 +21,8 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_multitarget" $rootdir/test/nvmf/target/multitarget.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_rpc" $rootdir/test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_invalid" $rootdir/test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_abort" $rootdir/test/nvmf/target/abort.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_ns_hotplug_stress" $rootdir/test/nvmf/target/ns_hotplug_stress.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_connect_stress" $rootdir/test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_fused_ordering" $rootdir/test/nvmf/target/fused_ordering.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_delete_subsystem" $rootdir/test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_ns_masking" test/nvmf/target/ns_masking.sh "${TEST_ARGS[@]}"
 	if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 		run_test "nvmf_nvme_cli" $rootdir/test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
@@ -37,16 +34,6 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	fi
 fi
 
-run_test "nvmf_host_management" $rootdir/test/nvmf/target/host_management.sh "${TEST_ARGS[@]}"
-run_test "nvmf_lvol" $rootdir/test/nvmf/target/nvmf_lvol.sh "${TEST_ARGS[@]}"
-run_test "nvmf_lvs_grow" $rootdir/test/nvmf/target/nvmf_lvs_grow.sh "${TEST_ARGS[@]}"
-run_test "nvmf_bdev_io_wait" $rootdir/test/nvmf/target/bdev_io_wait.sh "${TEST_ARGS[@]}"
-run_test "nvmf_queue_depth" $rootdir/test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
-run_test "nvmf_target_multipath" $rootdir/test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
-run_test "nvmf_zcopy" $rootdir/test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
-run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
-run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
-run_test "nvmf_bdevio" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_auth_target" "$rootdir/test/nvmf/target/auth.sh" "${TEST_ARGS[@]}"
 
 if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
