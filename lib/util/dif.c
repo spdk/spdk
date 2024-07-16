@@ -486,6 +486,19 @@ _dif_ignore(struct spdk_dif *dif, const struct spdk_dif_ctx *ctx)
 	return false;
 }
 
+static bool
+_dif_pi_format_is_valid(enum spdk_dif_pi_format dif_pi_format)
+{
+	switch (dif_pi_format) {
+	case SPDK_DIF_PI_FORMAT_16:
+	case SPDK_DIF_PI_FORMAT_32:
+	case SPDK_DIF_PI_FORMAT_64:
+		return true;
+	default:
+		return false;
+	}
+}
+
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
@@ -496,9 +509,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	enum spdk_dif_pi_format dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
 	if (opts != NULL) {
-		if (opts->dif_pi_format != SPDK_DIF_PI_FORMAT_16 &&
-		    opts->dif_pi_format != SPDK_DIF_PI_FORMAT_32 &&
-		    opts->dif_pi_format != SPDK_DIF_PI_FORMAT_64) {
+		if (!_dif_pi_format_is_valid(opts->dif_pi_format)) {
 			SPDK_ERRLOG("No valid DIF PI format provided.\n");
 			return -EINVAL;
 		}

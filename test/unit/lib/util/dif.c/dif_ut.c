@@ -4084,6 +4084,15 @@ dif_generate_and_verify_unmap_test(void)
 	_iov_free_buf(&iov);
 }
 
+static void
+dif_pi_format_check_test(void)
+{
+	CU_ASSERT(_dif_pi_format_is_valid(SPDK_DIF_PI_FORMAT_16) == true);
+	CU_ASSERT(_dif_pi_format_is_valid(SPDK_DIF_PI_FORMAT_32) == true);
+	CU_ASSERT(_dif_pi_format_is_valid(SPDK_DIF_PI_FORMAT_64) == true);
+	CU_ASSERT(_dif_pi_format_is_valid(SPDK_DIF_PI_FORMAT_64 + 1) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4173,7 +4182,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap_pi_16_test);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test);
 	CU_ADD_TEST(suite, dif_generate_and_verify_unmap_test);
-
+	CU_ADD_TEST(suite, dif_pi_format_check_test);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
