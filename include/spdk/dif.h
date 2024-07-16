@@ -122,6 +122,8 @@ struct spdk_dif_error {
 	/** Error type */
 	uint8_t		err_type;
 
+	uint8_t		rsvd[7];
+
 	/** Expected value */
 	uint64_t	expected;
 
