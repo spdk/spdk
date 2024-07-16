@@ -180,8 +180,12 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "dpdk_mem_utility" $rootdir/test/dpdk_memory_utility/test_dpdk_mem_info.sh
 	run_test "event" $rootdir/test/event/event.sh
 	run_test "thread" $rootdir/test/thread/thread.sh
-	run_test "accel" $rootdir/test/accel/accel.sh
-	run_test "accel_rpc" $rootdir/test/accel/accel_rpc.sh
+
+	if [[ $SPDK_TEST_ACCEL -eq 1 ]]; then
+		run_test "accel" $rootdir/test/accel/accel.sh
+		run_test "accel_rpc" $rootdir/test/accel/accel_rpc.sh
+	fi
+
 	run_test "app_cmdline" $rootdir/test/app/cmdline.sh
 	run_test "version" $rootdir/test/app/version.sh
 
