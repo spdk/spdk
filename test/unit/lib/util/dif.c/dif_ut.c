@@ -4093,6 +4093,16 @@ dif_pi_format_check_test(void)
 	CU_ASSERT(_dif_pi_format_is_valid(SPDK_DIF_PI_FORMAT_64 + 1) == false);
 }
 
+static void
+dif_type_check_test(void)
+{
+	CU_ASSERT(_dif_type_is_valid(SPDK_DIF_DISABLE) == true);
+	CU_ASSERT(_dif_type_is_valid(SPDK_DIF_TYPE1) == true);
+	CU_ASSERT(_dif_type_is_valid(SPDK_DIF_TYPE2) == true);
+	CU_ASSERT(_dif_type_is_valid(SPDK_DIF_TYPE3) == true);
+	CU_ASSERT(_dif_type_is_valid(SPDK_DIF_TYPE3 + 1) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4183,6 +4193,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test);
 	CU_ADD_TEST(suite, dif_generate_and_verify_unmap_test);
 	CU_ADD_TEST(suite, dif_pi_format_check_test);
+	CU_ADD_TEST(suite, dif_type_check_test);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 

@@ -499,6 +499,20 @@ _dif_pi_format_is_valid(enum spdk_dif_pi_format dif_pi_format)
 	}
 }
 
+static bool
+_dif_type_is_valid(enum spdk_dif_type dif_type)
+{
+	switch (dif_type) {
+	case SPDK_DIF_DISABLE:
+	case SPDK_DIF_TYPE1:
+	case SPDK_DIF_TYPE2:
+	case SPDK_DIF_TYPE3:
+		return true;
+	default:
+		return false;
+	}
+}
+
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
@@ -515,6 +529,11 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 		}
 
 		dif_pi_format = opts->dif_pi_format;
+	}
+
+	if (!_dif_type_is_valid(dif_type)) {
+		SPDK_ERRLOG("No valid DIF type was provided.\n");
+		return -EINVAL;
 	}
 
 	if (md_size < _dif_size(dif_pi_format)) {
