@@ -595,6 +595,9 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_uint32(w, "physical_block_size", bdev->phys_blocklen);
 	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
 	spdk_json_write_named_uint32(w, "optimal_io_boundary", bdev->optimal_io_boundary);
+	spdk_json_write_named_uint32(w, "md_size", bdev->md_len);
+	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
+	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
 
 	spdk_json_write_object_end(w);
 
