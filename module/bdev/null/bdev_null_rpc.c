@@ -46,40 +46,6 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.block_size < req.md_size) {
-		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-						     "Interleaved metadata size can not be greater than block size");
-		goto cleanup;
-	}
-
-	if (req.block_size % 512 != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-						     "Data block size %u is not a multiple of 512", req.block_size);
-		goto cleanup;
-	}
-
-	if (req.physical_block_size % 512 != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-						     "Physical block size %u is not a multiple of 512", req.physical_block_size);
-	}
-
-	if (req.num_blocks == 0) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL,
-						 "Disk num_blocks must be greater than 0");
-		goto cleanup;
-	}
-
-	if (req.dif_type < SPDK_DIF_DISABLE || req.dif_type > SPDK_DIF_TYPE3) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid protection information type");
-		goto cleanup;
-	}
-
-	if (req.dif_type != SPDK_DIF_DISABLE && !req.md_size) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL,
-						 "Interleaved metadata size should be set for DIF");
-		goto cleanup;
-	}
-
 	rc = bdev_null_create(&bdev, &req);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

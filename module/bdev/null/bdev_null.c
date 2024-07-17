@@ -235,6 +235,30 @@ static const struct spdk_bdev_fn_table null_fn_table = {
 	.write_config_json	= bdev_null_write_config_json,
 };
 
+/* Use a dummy DIF context to validate DIF configuration of the
+ * craeted bdev.
+ */
+static int
+_bdev_validate_dif_config(struct spdk_bdev *bdev)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
+
+	return spdk_dif_ctx_init(&dif_ctx,
+				 bdev->blocklen,
+				 bdev->md_len,
+				 true,
+				 bdev->dif_is_head_of_md,
+				 bdev->dif_type,
+				 bdev->dif_check_flags,
+				 SPDK_DIF_REFTAG_IGNORE,
+				 0xFFFF, SPDK_DIF_APPTAG_IGNORE,
+				 0, 0, &dif_opts);
+}
+
 int
 bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts)
 {
@@ -262,6 +286,11 @@ bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts)
 
 	if (opts->block_size % 512 != 0) {
 		SPDK_ERRLOG("Data block size %u is not a multiple of 512.\n", opts->block_size);
+		return -EINVAL;
+	}
+
+	if (opts->physical_block_size % 512 != 0) {
+		SPDK_ERRLOG("Physical block must be 512 bytes aligned\n");
 		return -EINVAL;
 	}
 
@@ -310,6 +339,15 @@ bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts)
 		break;
 	}
 	null_disk->bdev.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	if (opts->dif_type != SPDK_DIF_DISABLE) {
+		rc = _bdev_validate_dif_config(&null_disk->bdev);
+		if (rc != 0) {
+			SPDK_ERRLOG("DIF configuration was wrong\n");
+			free(null_disk);
+			return -EINVAL;
+		}
+	}
 
 	if (!spdk_uuid_is_null(&opts->uuid)) {
 		spdk_uuid_copy(&null_disk->bdev.uuid, &opts->uuid);
