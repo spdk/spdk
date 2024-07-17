@@ -23,7 +23,7 @@
 
 #ifdef for_each_rw_ddir
 #define FIO_HAS_ZBD (FIO_IOOPS_VERSION >= 26)
-#define FIO_HAS_FDP (FIO_IOOPS_VERSION >= 32)
+#define FIO_HAS_FDP (FIO_IOOPS_VERSION >= 35)
 #define FIO_HAS_MRT (FIO_IOOPS_VERSION >= 34)
 #else
 #define FIO_HAS_ZBD (0)
@@ -1548,6 +1548,12 @@ spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
 #endif
 
 #if FIO_HAS_FDP
+/**
+ * This is called twice as the number of ruhs descriptors are unknown.
+ * In the first call fio only sends a buffer to fetch the number of ruhs
+ * descriptors. In the second call fio will send a buffer to fetch all the
+ * ruhs descriptors.
+ */
 static int
 spdk_fio_fdp_fetch_ruhs(struct thread_data *td, struct fio_file *f,
 			struct fio_ruhs_info *fruhs_info)
@@ -1555,11 +1561,9 @@ spdk_fio_fdp_fetch_ruhs(struct thread_data *td, struct fio_file *f,
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_qpair *fio_qpair = NULL;
 	struct spdk_nvme_qpair *tmp_qpair;
-	struct {
-		struct spdk_nvme_fdp_ruhs ruhs;
-		struct spdk_nvme_fdp_ruhs_desc desc[128];
-	} fdp_ruhs;
-	uint16_t idx;
+	struct spdk_nvme_fdp_ruhs *fdp_ruhs;
+	uint32_t ruhs_nbytes;
+	uint16_t idx, nruhsd;
 	int completed = 0, err;
 
 	fio_qpair = get_fio_qpair(fio_thread, f);
@@ -1579,7 +1583,16 @@ spdk_fio_fdp_fetch_ruhs(struct thread_data *td, struct fio_file *f,
 		return -EIO;
 	}
 
-	err = spdk_nvme_ns_cmd_io_mgmt_recv(fio_qpair->ns, tmp_qpair, &fdp_ruhs, sizeof(fdp_ruhs),
+	nruhsd = fruhs_info->nr_ruhs;
+	ruhs_nbytes = sizeof(*fdp_ruhs) + nruhsd * sizeof(struct spdk_nvme_fdp_ruhs_desc);
+	fdp_ruhs = calloc(1, ruhs_nbytes);
+	if (!fdp_ruhs) {
+		log_err("spdk/nvme: failed fdp_fetch_ruhs(): ENOMEM\n");
+		err = -ENOMEM;
+		goto exit;
+	}
+
+	err = spdk_nvme_ns_cmd_io_mgmt_recv(fio_qpair->ns, tmp_qpair, fdp_ruhs, ruhs_nbytes,
 					    SPDK_NVME_FDP_IO_MGMT_RECV_RUHS, 0, pcu_cb, &completed);
 	if (err || pcu(tmp_qpair, &completed) || completed < 0) {
 		log_err("spdk/nvme: fetch_ruhs(): err: %d, cpl: %d\n", err, completed);
@@ -1587,13 +1600,14 @@ spdk_fio_fdp_fetch_ruhs(struct thread_data *td, struct fio_file *f,
 		goto exit;
 	}
 
-	fruhs_info->nr_ruhs = fdp_ruhs.ruhs.nruhsd;
-	for (idx = 0; idx < fdp_ruhs.ruhs.nruhsd; idx++) {
-		fruhs_info->plis[idx] = fdp_ruhs.desc[idx].pid;
+	fruhs_info->nr_ruhs = fdp_ruhs->nruhsd;
+	for (idx = 0; idx < nruhsd; idx++) {
+		fruhs_info->plis[idx] = fdp_ruhs->ruhs_desc[idx].pid;
 	}
 
 exit:
 	spdk_nvme_ctrlr_free_io_qpair(tmp_qpair);
+	free(fdp_ruhs);
 
 	return err;
 }
