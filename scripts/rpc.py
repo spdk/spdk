@@ -402,7 +402,8 @@ if __name__ == "__main__":
                                                md_size=args.md_size,
                                                md_interleave=args.md_interleave,
                                                dif_type=args.dif_type,
-                                               dif_is_head_of_md=args.dif_is_head_of_md))
+                                               dif_is_head_of_md=args.dif_is_head_of_md,
+                                               dif_pi_format=args.dif_pi_format))
     p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
@@ -421,6 +422,9 @@ if __name__ == "__main__":
                         'to be set along --dif-type. Default=0 - no protection.')
     p.add_argument('-d', '--dif-is-head-of-md', action='store_true',
                    help='Protection information is in the first 8 bytes of metadata. Default=false.')
+    p.add_argument('-f', '--dif-pi-format', type=int, choices=[0, 1, 2],
+                   help='Protection infromation format. Parameter --dif-type needs to be set together.'
+                        '0=16b Guard PI, 1=32b Guard PI, 2=64b Guard PI. Default=0.')
     p.set_defaults(func=bdev_malloc_create)
 
     def bdev_malloc_delete(args):

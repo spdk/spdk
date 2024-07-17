@@ -249,7 +249,7 @@ def bdev_ocf_flush_status(client, name):
 
 
 def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None, name=None, uuid=None, optimal_io_boundary=None,
-                       md_size=None, md_interleave=None, dif_type=None, dif_is_head_of_md=None):
+                       md_size=None, md_interleave=None, dif_type=None, dif_is_head_of_md=None, dif_pi_format=None):
     """Construct a malloc block device.
     Args:
         num_blocks: size of block device in blocks
@@ -262,6 +262,7 @@ def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None,
         md_interleave: metadata location, interleaved if set, and separated if omitted (optional)
         dif_type: protection information type (optional)
         dif_is_head_of_md: protection information is in the first 8 bytes of metadata (optional)
+        dif_pi_format: protection information format (optional)
     Returns:
         Name of created block device.
     """
@@ -284,6 +285,8 @@ def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None,
         params['dif_type'] = dif_type
     if dif_is_head_of_md is not None:
         params['dif_is_head_of_md'] = dif_is_head_of_md
+    if dif_pi_format is not None:
+        params['dif_pi_format'] = dif_pi_format
     return client.call('bdev_malloc_create', params)
 
 

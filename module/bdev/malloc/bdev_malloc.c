@@ -598,6 +598,7 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_uint32(w, "md_size", bdev->md_len);
 	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
 	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
+	spdk_json_write_named_uint32(w, "dif_pi_format", bdev->dif_pi_format);
 
 	spdk_json_write_object_end(w);
 
@@ -811,7 +812,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	case SPDK_DIF_DISABLE:
 		break;
 	}
-	mdisk->disk.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	mdisk->disk.dif_pi_format = opts->dif_pi_format;
 
 	if (opts->dif_type != SPDK_DIF_DISABLE) {
 		rc = malloc_disk_setup_pi(mdisk);
