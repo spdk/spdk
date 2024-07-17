@@ -548,19 +548,24 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 		}
 		data_block_size = block_size - md_size;
 	} else {
-		if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
-			if (block_size == 0 || (block_size % 512) != 0) {
-				SPDK_ERRLOG("Zero block size is not allowed and should be a multiple of 512B\n");
-				return -EINVAL;
-			}
-		} else {
-			if (block_size == 0 || (block_size % 4096) != 0) {
-				SPDK_ERRLOG("Zero block size is not allowed and should be a multiple of 4kB\n");
-				return -EINVAL;
-			}
-		}
-
 		data_block_size = block_size;
+	}
+
+	if (data_block_size == 0) {
+		SPDK_ERRLOG("Zero data block size is not allowed\n");
+		return -EINVAL;
+	}
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		if ((data_block_size % 512) != 0) {
+			SPDK_ERRLOG("Data block size should be a multiple of 512B\n");
+			return -EINVAL;
+		}
+	} else {
+		if ((data_block_size % 4096) != 0) {
+			SPDK_ERRLOG("Data block size should be a multiple of 4kB\n");
+			return -EINVAL;
+		}
 	}
 
 	ctx->block_size = block_size;

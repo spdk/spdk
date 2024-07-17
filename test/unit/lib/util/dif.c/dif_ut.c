@@ -535,6 +535,21 @@ dif_apptag_mask_test(void)
 }
 
 static void
+dif_sec_8_md_8_error_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	/* Metadata size is 8 and block size is 8. */
+	rc = spdk_dif_ctx_init(&ctx, 8, 8, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
 dif_sec_512_md_0_error_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
@@ -550,7 +565,29 @@ dif_sec_512_md_0_error_test(void)
 }
 
 static void
-_dif_sec_4096_md_0_error_test(enum spdk_dif_pi_format dif_pi_format)
+_dif_sec_512_md_16_error_test(enum spdk_dif_pi_format dif_pi_format)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = dif_pi_format;
+	/* Metadata size is 16 but block size is 512. */
+	rc = spdk_dif_ctx_init(&ctx, 512, 16, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+dif_sec_512_md_16_error_test(void)
+{
+	_dif_sec_512_md_16_error_test(SPDK_DIF_PI_FORMAT_32);
+	_dif_sec_512_md_16_error_test(SPDK_DIF_PI_FORMAT_64);
+}
+
+static void
+_dif_sec_4096_md_0_8_error_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	int rc;
@@ -562,13 +599,20 @@ _dif_sec_4096_md_0_error_test(enum spdk_dif_pi_format dif_pi_format)
 	rc = spdk_dif_ctx_init(&ctx, 4096, 0, true, false, SPDK_DIF_TYPE1, 0,
 			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc != 0);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = dif_pi_format;
+	/* Metadata size is 8. */
+	rc = spdk_dif_ctx_init(&ctx, 4096, 8, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
 }
 
 static void
-dif_sec_4096_md_0_error_test(void)
+dif_sec_4096_md_0_8_error_test(void)
 {
-	_dif_sec_4096_md_0_error_test(SPDK_DIF_PI_FORMAT_32);
-	_dif_sec_4096_md_0_error_test(SPDK_DIF_PI_FORMAT_64);
+	_dif_sec_4096_md_0_8_error_test(SPDK_DIF_PI_FORMAT_32);
+	_dif_sec_4096_md_0_8_error_test(SPDK_DIF_PI_FORMAT_64);
 }
 
 static void
@@ -1993,6 +2037,20 @@ dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test(void)
 }
 
 static void
+dix_sec_0_md_8_error(void)
+{
+	struct spdk_dif_ctx ctx;
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	rc = spdk_dif_ctx_init(&ctx, 0, 8, false, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
 dix_sec_512_md_0_error(void)
 {
 	struct spdk_dif_ctx ctx;
@@ -2004,6 +2062,56 @@ dix_sec_512_md_0_error(void)
 	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0,
 			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc != 0);
+}
+
+static void
+_dix_sec_512_md_16_error(enum spdk_dif_pi_format dif_pi_format)
+{
+	struct spdk_dif_ctx ctx;
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = dif_pi_format;
+	rc = spdk_dif_ctx_init(&ctx, 512, 16, false, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+dix_sec_512_md_16_error(void)
+{
+	_dix_sec_512_md_16_error(SPDK_DIF_PI_FORMAT_32);
+	_dix_sec_512_md_16_error(SPDK_DIF_PI_FORMAT_64);
+}
+
+static void
+_dix_sec_4096_md_0_8_error(enum spdk_dif_pi_format dif_pi_format)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = dif_pi_format;
+	/* Metadata size is 0. */
+	rc = spdk_dif_ctx_init(&ctx, 4096, 0, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = dif_pi_format;
+	/* Metadata size is 0. */
+	rc = spdk_dif_ctx_init(&ctx, 4096, 8, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+dix_sec_4096_md_0_8_error(void)
+{
+	_dix_sec_4096_md_0_8_error(SPDK_DIF_PI_FORMAT_32);
+	_dix_sec_4096_md_0_8_error(SPDK_DIF_PI_FORMAT_64);
 }
 
 static void
@@ -4117,8 +4225,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dif_disable_check_test);
 	CU_ADD_TEST(suite, dif_generate_and_verify_different_pi_formats_test);
 	CU_ADD_TEST(suite, dif_apptag_mask_test);
+	CU_ADD_TEST(suite, dif_sec_8_md_8_error_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_0_error_test);
-	CU_ADD_TEST(suite, dif_sec_4096_md_0_error_test);
+	CU_ADD_TEST(suite, dif_sec_512_md_16_error_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_0_8_error_test);
 	CU_ADD_TEST(suite, dif_sec_4100_md_128_error_test);
 	CU_ADD_TEST(suite, dif_guard_seed_test);
 	CU_ADD_TEST(suite, dif_guard_value_test);
@@ -4159,7 +4269,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test);
 	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
 	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test);
+	CU_ADD_TEST(suite, dix_sec_0_md_8_error);
 	CU_ADD_TEST(suite, dix_sec_512_md_0_error);
+	CU_ADD_TEST(suite, dix_sec_512_md_16_error);
+	CU_ADD_TEST(suite, dix_sec_4096_md_0_8_error);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_0_single_iov);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_0_single_iov_test);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs);
