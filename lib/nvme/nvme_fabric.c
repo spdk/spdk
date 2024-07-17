@@ -576,13 +576,12 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	}
 
 	qpair->auth.flags = 0;
-	qpair->connect_state = NVME_QPAIR_CONNECT_STATE_CONNECTING;
 	qpair->poll_status = status;
 	return 0;
 }
 
-static int
-_nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
+int
+nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvmf_fabric_connect_rsp *rsp;
@@ -637,56 +636,13 @@ finish:
 	return rc;
 }
 
-static bool
+bool
 nvme_fabric_qpair_auth_required(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
 	return qpair->auth.flags & (NVME_QPAIR_AUTH_FLAG_ATR | NVME_QPAIR_AUTH_FLAG_ASCR) ||
 	       ctrlr->opts.dhchap_ctrlr_key != NULL;
-}
-
-int
-nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
-{
-	int rc;
-
-	switch (qpair->connect_state) {
-	case NVME_QPAIR_CONNECT_STATE_CONNECTING:
-		rc = _nvme_fabric_qpair_connect_poll(qpair);
-		if (rc != 0) {
-			break;
-		}
-		if (nvme_fabric_qpair_auth_required(qpair)) {
-			rc = nvme_fabric_qpair_authenticate_async(qpair);
-			if (rc == 0) {
-				qpair->connect_state = NVME_QPAIR_CONNECT_STATE_AUTHENTICATING;
-				rc = -EAGAIN;
-			}
-			break;
-		}
-		qpair->connect_state = NVME_QPAIR_CONNECT_STATE_CONNECTED;
-		break;
-	case NVME_QPAIR_CONNECT_STATE_AUTHENTICATING:
-		rc = nvme_fabric_qpair_authenticate_poll(qpair);
-		if (rc == 0) {
-			qpair->connect_state = NVME_QPAIR_CONNECT_STATE_CONNECTED;
-		}
-		break;
-	/* Once qpair is connected or a failure occurs, users mustn't call this function anymore */
-	case NVME_QPAIR_CONNECT_STATE_CONNECTED:
-	case NVME_QPAIR_CONNECT_STATE_FAILED:
-	default:
-		assert(0 && "invalid state");
-		rc = -EINVAL;
-		break;
-	}
-
-	if (rc != 0 && rc != -EAGAIN) {
-		qpair->connect_state = NVME_QPAIR_CONNECT_STATE_FAILED;
-	}
-
-	return rc;
 }
 
 int

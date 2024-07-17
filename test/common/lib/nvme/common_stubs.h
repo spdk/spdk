@@ -93,6 +93,9 @@ DEFINE_STUB(nvme_fabric_qpair_connect, int, (struct spdk_nvme_qpair *qpair, uint
 DEFINE_STUB(nvme_fabric_qpair_connect_async, int, (struct spdk_nvme_qpair *qpair,
 		uint32_t num_entries), 0);
 DEFINE_STUB(nvme_fabric_qpair_connect_poll, int, (struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(nvme_fabric_qpair_auth_required, bool, (struct spdk_nvme_qpair *qpair), false);
+DEFINE_STUB(nvme_fabric_qpair_authenticate_async, int, (struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(nvme_fabric_qpair_authenticate_poll, int, (struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair));
 DEFINE_STUB(nvme_poll_group_disconnect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);

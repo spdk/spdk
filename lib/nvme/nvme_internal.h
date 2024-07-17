@@ -410,13 +410,6 @@ enum nvme_qpair_state {
 	NVME_QPAIR_DESTROYING,
 };
 
-enum nvme_qpair_connect_state {
-	NVME_QPAIR_CONNECT_STATE_CONNECTING,
-	NVME_QPAIR_CONNECT_STATE_AUTHENTICATING,
-	NVME_QPAIR_CONNECT_STATE_CONNECTED,
-	NVME_QPAIR_CONNECT_STATE_FAILED,
-};
-
 enum nvme_qpair_auth_state {
 	NVME_QPAIR_AUTH_STATE_NEGOTIATE,
 	NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE,
@@ -519,7 +512,6 @@ struct spdk_nvme_qpair {
 	/* Entries below here are not touched in the main I/O path. */
 
 	struct nvme_completion_poll_status	*poll_status;
-	enum nvme_qpair_connect_state		connect_state;
 
 	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)		tailq;
@@ -1353,6 +1345,7 @@ int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 int	nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 int	nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair);
+bool	nvme_fabric_qpair_auth_required(struct spdk_nvme_qpair *qpair);
 int	nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair);
 int	nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair);
 

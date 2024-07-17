@@ -46,9 +46,10 @@ enum nvme_tcp_qpair_state {
 	NVME_TCP_QPAIR_STATE_INITIALIZING = 1,
 	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND = 2,
 	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL = 3,
-	NVME_TCP_QPAIR_STATE_RUNNING = 4,
-	NVME_TCP_QPAIR_STATE_EXITING = 5,
-	NVME_TCP_QPAIR_STATE_EXITED = 6,
+	NVME_TCP_QPAIR_STATE_AUTHENTICATING = 4,
+	NVME_TCP_QPAIR_STATE_RUNNING = 5,
+	NVME_TCP_QPAIR_STATE_EXITING = 6,
+	NVME_TCP_QPAIR_STATE_EXITED = 7,
 };
 
 /* NVMe TCP transport extensions for spdk_nvme_ctrlr */
@@ -1175,6 +1176,7 @@ nvme_tcp_qpair_recv_state_valid(struct nvme_tcp_qpair *tqpair)
 	switch (tqpair->state) {
 	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND:
 	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL:
+	case NVME_TCP_QPAIR_STATE_AUTHENTICATING:
 	case NVME_TCP_QPAIR_STATE_RUNNING:
 		return true;
 	default:
@@ -2443,10 +2445,25 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL:
 		rc = nvme_fabric_qpair_connect_poll(&tqpair->qpair);
 		if (rc == 0) {
-			tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
-			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+			if (nvme_fabric_qpair_auth_required(qpair)) {
+				rc = nvme_fabric_qpair_authenticate_async(qpair);
+				if (rc == 0) {
+					tqpair->state = NVME_TCP_QPAIR_STATE_AUTHENTICATING;
+					rc = -EAGAIN;
+				}
+			} else {
+				tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
+				nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+			}
 		} else if (rc != -EAGAIN) {
 			SPDK_ERRLOG("Failed to poll NVMe-oF Fabric CONNECT command\n");
+		}
+		break;
+	case NVME_TCP_QPAIR_STATE_AUTHENTICATING:
+		rc = nvme_fabric_qpair_authenticate_poll(qpair);
+		if (rc == 0) {
+			tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
+			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 		}
 		break;
 	case NVME_TCP_QPAIR_STATE_RUNNING:

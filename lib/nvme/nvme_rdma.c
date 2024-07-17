@@ -156,6 +156,7 @@ enum nvme_rdma_qpair_state {
 	NVME_RDMA_QPAIR_STATE_INITIALIZING,
 	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND,
 	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL,
+	NVME_RDMA_QPAIR_STATE_AUTHENTICATING,
 	NVME_RDMA_QPAIR_STATE_RUNNING,
 	NVME_RDMA_QPAIR_STATE_EXITING,
 	NVME_RDMA_QPAIR_STATE_LINGERING,
@@ -1328,10 +1329,25 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 	case NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL:
 		rc = nvme_fabric_qpair_connect_poll(qpair);
 		if (rc == 0) {
-			rqpair->state = NVME_RDMA_QPAIR_STATE_RUNNING;
-			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+			if (nvme_fabric_qpair_auth_required(qpair)) {
+				rc = nvme_fabric_qpair_authenticate_async(qpair);
+				if (rc == 0) {
+					rqpair->state = NVME_RDMA_QPAIR_STATE_AUTHENTICATING;
+					rc = -EAGAIN;
+				}
+			} else {
+				rqpair->state = NVME_RDMA_QPAIR_STATE_RUNNING;
+				nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+			}
 		} else if (rc != -EAGAIN) {
 			SPDK_ERRLOG("Failed to poll NVMe-oF Fabric CONNECT command\n");
+		}
+		break;
+	case NVME_RDMA_QPAIR_STATE_AUTHENTICATING:
+		rc = nvme_fabric_qpair_authenticate_poll(qpair);
+		if (rc == 0) {
+			rqpair->state = NVME_RDMA_QPAIR_STATE_RUNNING;
+			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 		}
 		break;
 	case NVME_RDMA_QPAIR_STATE_RUNNING:
