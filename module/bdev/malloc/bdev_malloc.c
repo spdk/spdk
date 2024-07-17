@@ -741,16 +741,6 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 		block_size = opts->block_size;
 	}
 
-	if (opts->dif_type < SPDK_DIF_DISABLE || opts->dif_type > SPDK_DIF_TYPE3) {
-		SPDK_ERRLOG("DIF type is invalid\n");
-		return -EINVAL;
-	}
-
-	if (opts->dif_type != SPDK_DIF_DISABLE && opts->md_size == 0) {
-		SPDK_ERRLOG("Metadata size should not be zero if DIF is enabled\n");
-		return -EINVAL;
-	}
-
 	mdisk = calloc(1, sizeof(*mdisk));
 	if (!mdisk) {
 		SPDK_ERRLOG("mdisk calloc() failed\n");
