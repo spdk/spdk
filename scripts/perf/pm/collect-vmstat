@@ -8,6 +8,7 @@ shopt -s nullglob extglob
 pmdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$pmdir/../../../")
 source "$pmdir/common"
+source "$rootdir/test/scheduler/common.sh"
 
 help() {
 	cat <<- HELP
@@ -31,7 +32,7 @@ help() {
 }
 
 get_extra_info() {
-	local match="" data
+	local match="" data node hp hps
 
 	case "$PM_OS" in
 		Linux)
@@ -41,6 +42,15 @@ get_extra_info() {
 			match+="|Hugepagesize"
 
 			data=($(grep -E "^($match):" /proc/meminfo | awk '{print $2}'))
+			if is_numa; then
+				for node in "${nodes[@]}"; do
+					for hp in "/sys/devices/system/node/node$node/hugepages/"*; do
+						hps=${hps:+$hps,}N$node-${hp#*hugepages-}_f=$(< "$hp/free_hugepages")
+						hps=${hps:+$hps,}N$node-${hp#*hugepages-}_t=$(< "$hp/nr_hugepages")
+					done
+				done
+				data+=("$hps")
+			fi
 			;&
 		*) data+=("$TEST_TAG") ;;
 	esac
@@ -53,7 +63,13 @@ set_extra_info_header() {
 
 	# Keep the header ordered as in get_extra_info()
 	case "$PM_OS" in
-		Linux) _header="avail shmem hp_total hp_free hp_size test" ;;
+		Linux)
+			_header="avail shmem hp_total hp_free hp_size"
+			if is_numa; then
+				_header+=" hp_per_node"
+			fi
+			_header+=" test"
+			;;
 		FreeBSD) _header="test" ;;
 	esac
 
@@ -121,5 +137,7 @@ fi
 save_pm_pid
 trap 'cleanup' EXIT
 trap 'retag' USR1
+
+map_cpus
 
 _vmstat "$count" "$interval" "$reprint_header"
