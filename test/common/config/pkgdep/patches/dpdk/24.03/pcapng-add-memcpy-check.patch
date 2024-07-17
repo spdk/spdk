@@ -1,0 +1,35 @@
+From 06f69f8fdbd218ed7a7d664ee49bd27ee1641cdd Mon Sep 17 00:00:00 2001
+From: Stephen Hemminger <stephen@networkplumber.org>
+Date: Mon, 20 May 2024 18:01:03 -0700
+Subject: [PATCH] pcapng: add memcpy check
+
+When adding option with no data, the rte_pcapng_add_option would
+call memcpy with src of NULL and size of zero. This generates a
+warning if fortify is enabled.
+
+Bugzilla ID: 1446
+Fixes: 8d23ce8f5ee9 ("pcapng: add new library for writing pcapng files")
+Cc: stable@dpdk.org
+
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+---
+ lib/pcapng/rte_pcapng.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/pcapng/rte_pcapng.c b/lib/pcapng/rte_pcapng.c
+index f74ec939a9..7254defce7 100644
+--- a/lib/pcapng/rte_pcapng.c
++++ b/lib/pcapng/rte_pcapng.c
+@@ -128,7 +128,8 @@ pcapng_add_option(struct pcapng_option *popt, uint16_t code,
+ {
+ 	popt->code = code;
+ 	popt->length = len;
+-	memcpy(popt->data, data, len);
++	if (len > 0)
++		memcpy(popt->data, data, len);
+ 
+ 	return (struct pcapng_option *)((uint8_t *)popt + pcapng_optlen(len));
+ }
+-- 
+2.43.0
+
