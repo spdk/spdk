@@ -22,6 +22,7 @@ struct null_bdev_opts {
 	uint32_t md_size;
 	enum spdk_dif_type dif_type;
 	bool dif_is_head_of_md;
+	enum spdk_dif_pi_format dif_pi_format;
 };
 
 int bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts);
