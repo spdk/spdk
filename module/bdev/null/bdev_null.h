@@ -20,7 +20,6 @@ struct spdk_null_bdev_opts {
 	uint32_t block_size;
 	uint32_t physical_block_size;
 	uint32_t md_size;
-	bool md_interleave;
 	enum spdk_dif_type dif_type;
 	bool dif_is_head_of_md;
 };

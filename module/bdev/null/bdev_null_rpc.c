@@ -98,7 +98,6 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	opts.block_size = req.block_size + req.md_size;
 	opts.physical_block_size = req.physical_block_size;
 	opts.md_size = req.md_size;
-	opts.md_interleave = true;
 	opts.dif_type = req.dif_type;
 	opts.dif_is_head_of_md = req.dif_is_head_of_md;
 	rc = bdev_null_create(&bdev, &opts);

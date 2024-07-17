@@ -260,19 +260,11 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 		return -EINVAL;
 	}
 
-	if (opts->md_interleave) {
-		if (opts->block_size < opts->md_size) {
-			SPDK_ERRLOG("Interleaved metadata size can not be greater than block size.\n");
-			return -EINVAL;
-		}
-		data_block_size = opts->block_size - opts->md_size;
-	} else {
-		if (opts->md_size != 0) {
-			SPDK_ERRLOG("Metadata in separate buffer is not supported\n");
-			return -ENOTSUP;
-		}
-		data_block_size = opts->block_size;
+	if (opts->block_size < opts->md_size) {
+		SPDK_ERRLOG("Interleaved metadata size can not be greater than block size.\n");
+		return -EINVAL;
 	}
+	data_block_size = opts->block_size - opts->md_size;
 
 	if (data_block_size % 512 != 0) {
 		SPDK_ERRLOG("Data block size %u is not a multiple of 512.\n", opts->block_size);
@@ -302,7 +294,7 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	null_disk->bdev.phys_blocklen = opts->physical_block_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
 	null_disk->bdev.md_len = opts->md_size;
-	null_disk->bdev.md_interleave = opts->md_interleave;
+	null_disk->bdev.md_interleave = true;
 	null_disk->bdev.dif_type = opts->dif_type;
 	null_disk->bdev.dif_is_head_of_md = opts->dif_is_head_of_md;
 	/* Current block device layer API does not propagate
