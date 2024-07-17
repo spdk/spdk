@@ -495,6 +495,7 @@ vbdev_compress_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&comp_bdev->comp_bdev));
 	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(comp_bdev->base_bdev));
+	spdk_json_write_named_string(w, "pm_path", spdk_reduce_vol_get_pm_path(comp_bdev->vol));
 	spdk_json_write_object_end(w);
 
 	return 0;

@@ -231,6 +231,14 @@ const struct spdk_reduce_vol_params *spdk_reduce_vol_get_params(struct spdk_redu
  */
 void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol);
 
+/**
+ * Get the pm path for a libreduce compressed volume.
+ *
+ * \param vol Previously loaded or initialized compressed volume.
+ * \return pm path for the compressed volume.
+ */
+const char *spdk_reduce_vol_get_pm_path(const struct spdk_reduce_vol *vol);
+
 #ifdef __cplusplus
 }
 #endif

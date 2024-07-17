@@ -1788,6 +1788,12 @@ spdk_reduce_vol_get_params(struct spdk_reduce_vol *vol)
 	return &vol->params;
 }
 
+const char *
+spdk_reduce_vol_get_pm_path(const struct spdk_reduce_vol *vol)
+{
+	return vol->pm_file.path;
+}
+
 void
 spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol)
 {

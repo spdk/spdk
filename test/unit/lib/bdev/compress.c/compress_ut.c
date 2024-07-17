@@ -84,6 +84,8 @@ DEFINE_STUB_V(spdk_reduce_vol_load, (struct spdk_reduce_backing_dev *backing_dev
 				     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg));
 DEFINE_STUB(spdk_reduce_vol_get_params, const struct spdk_reduce_vol_params *,
 	    (struct spdk_reduce_vol *vol), NULL);
+DEFINE_STUB(spdk_reduce_vol_get_pm_path, const char *,
+	    (const struct spdk_reduce_vol *vol), NULL);
 DEFINE_STUB_V(spdk_reduce_vol_init, (struct spdk_reduce_vol_params *params,
 				     struct spdk_reduce_backing_dev *backing_dev,
 				     const char *pm_file_dir,
