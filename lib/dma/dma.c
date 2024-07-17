@@ -22,6 +22,8 @@ struct spdk_memory_domain {
 	TAILQ_ENTRY(spdk_memory_domain) link;
 	struct spdk_memory_domain_ctx *ctx;
 	char *id;
+	size_t user_ctx_size;
+	uint8_t user_ctx[];
 };
 
 static struct spdk_memory_domain g_system_domain = {
@@ -47,18 +49,24 @@ spdk_memory_domain_create(struct spdk_memory_domain **_domain, enum spdk_dma_dev
 			  struct spdk_memory_domain_ctx *ctx, const char *id)
 {
 	struct spdk_memory_domain *domain;
-	size_t ctx_size;
+	size_t ctx_size, user_ctx_size = 0;
 
 	if (!_domain) {
 		return -EINVAL;
 	}
 
-	if (ctx && ctx->size == 0) {
-		SPDK_ERRLOG("Context size can't be 0\n");
-		return -EINVAL;
+	if (ctx) {
+		if (ctx->size == 0) {
+			SPDK_ERRLOG("Context size can't be 0\n");
+			return -EINVAL;
+		}
+		if (ctx->user_ctx &&
+		    offsetof(struct spdk_memory_domain_ctx, user_ctx_size) + sizeof(ctx->user_ctx_size) <= ctx->size) {
+			user_ctx_size = ctx->user_ctx_size;
+		}
 	}
 
-	domain = calloc(1, sizeof(*domain));
+	domain = calloc(1, sizeof(*domain) + user_ctx_size);
 	if (!domain) {
 		SPDK_ERRLOG("Failed to allocate memory");
 		return -ENOMEM;
@@ -85,6 +93,12 @@ spdk_memory_domain_create(struct spdk_memory_domain **_domain, enum spdk_dma_dev
 		ctx_size = spdk_min(sizeof(*domain->ctx), ctx->size);
 		memcpy(domain->ctx, ctx, ctx_size);
 		domain->ctx->size = ctx_size;
+	}
+
+	if (user_ctx_size) {
+		assert(ctx);
+		memcpy(domain->user_ctx, ctx->user_ctx, user_ctx_size);
+		domain->user_ctx_size = user_ctx_size;
 	}
 
 	domain->type = type;
@@ -158,6 +172,19 @@ spdk_memory_domain_get_context(struct spdk_memory_domain *domain)
 	assert(domain);
 
 	return domain->ctx;
+}
+
+void *
+spdk_memory_domain_get_user_context(struct spdk_memory_domain *domain, size_t *ctx_size)
+{
+	assert(domain);
+
+	if (!domain->user_ctx_size) {
+		return NULL;
+	}
+
+	*ctx_size = domain->user_ctx_size;
+	return domain->user_ctx;
 }
 
 /* We have to use the typedef in the function declaration to appease astyle. */

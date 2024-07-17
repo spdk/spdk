@@ -206,6 +206,8 @@ struct spdk_memory_domain_ctx {
 	 * Depending on memory domain type, this pointer can be cast to a specific structure,
 	 * e.g. to spdk_memory_domain_rdma_ctx structure for RDMA memory domain */
 	void *user_ctx;
+	/** size of \b user_ctx in bytes */
+	size_t user_ctx_size;
 };
 
 /**
@@ -287,6 +289,15 @@ void spdk_memory_domain_set_memzero(struct spdk_memory_domain *domain,
  * \return Memory domain context
  */
 struct spdk_memory_domain_ctx *spdk_memory_domain_get_context(struct spdk_memory_domain *domain);
+
+/**
+ * Get an opaque pointer to the user context and its size.
+ *
+ * \param domain Memory domain
+ * \param ctx_size Stores size of the user context. NULL pointer is not allowed
+ * \return User context pointer
+ */
+void *spdk_memory_domain_get_user_context(struct spdk_memory_domain *domain, size_t *ctx_size);
 
 /**
  * Get type of the DMA device that can access this memory domain

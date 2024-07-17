@@ -10,6 +10,7 @@
 	spdk_memory_domain_set_data_transfer;
 	spdk_memory_domain_set_memzero;
 	spdk_memory_domain_get_context;
+	spdk_memory_domain_get_user_context;
 	spdk_memory_domain_get_dma_device_type;
 	spdk_memory_domain_get_dma_device_id;
 	spdk_memory_domain_destroy;
