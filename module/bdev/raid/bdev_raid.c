@@ -1727,7 +1727,7 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to register raid bdev '%s': %s\n",
 			    raid_bdev_gen->name, spdk_strerror(-rc));
-		goto err;
+		goto out;
 	}
 
 	/*
@@ -1744,19 +1744,25 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 		SPDK_ERRLOG("Failed to open raid bdev '%s': %s\n",
 			    raid_bdev_gen->name, spdk_strerror(-rc));
 		spdk_bdev_unregister(raid_bdev_gen, NULL, NULL);
-		goto err;
+		goto out;
 	}
 
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
 		      raid_bdev_gen->name, raid_bdev);
-	return;
-err:
-	if (raid_bdev->module->stop != NULL) {
-		raid_bdev->module->stop(raid_bdev);
+out:
+	if (rc != 0) {
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
+		spdk_io_device_unregister(raid_bdev, NULL);
+		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	}
-	spdk_io_device_unregister(raid_bdev, NULL);
-	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+
+	if (raid_bdev->configure_cb != NULL) {
+		raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, rc);
+		raid_bdev->configure_cb = NULL;
+	}
 }
 
 static void
@@ -1769,6 +1775,10 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
 			    raid_bdev->bdev.name, spdk_strerror(-status));
 		if (raid_bdev->module->stop != NULL) {
 			raid_bdev->module->stop(raid_bdev);
+		}
+		if (raid_bdev->configure_cb != NULL) {
+			raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, status);
+			raid_bdev->configure_cb = NULL;
 		}
 	}
 }
@@ -1785,7 +1795,7 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
  * non zero - failure
  */
 static int
-raid_bdev_configure(struct raid_bdev *raid_bdev)
+raid_bdev_configure(struct raid_bdev *raid_bdev, raid_bdev_configure_cb cb, void *cb_ctx)
 {
 	uint32_t data_block_size = spdk_bdev_get_data_block_size(&raid_bdev->bdev);
 	int rc;
@@ -1810,6 +1820,10 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		return rc;
 	}
 
+	assert(raid_bdev->configure_cb == NULL);
+	raid_bdev->configure_cb = cb;
+	raid_bdev->configure_cb_ctx = cb_ctx;
+
 	if (raid_bdev->superblock_enabled) {
 		if (raid_bdev->sb == NULL) {
 			rc = raid_bdev_alloc_superblock(raid_bdev, data_block_size);
@@ -1829,6 +1843,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		}
 
 		if (rc != 0) {
+			raid_bdev->configure_cb = NULL;
 			if (raid_bdev->module->stop != NULL) {
 				raid_bdev->module->stop(raid_bdev);
 			}
@@ -3154,9 +3169,12 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 	 * degraded.
 	 */
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational) {
-		rc = raid_bdev_configure(raid_bdev);
+		rc = raid_bdev_configure(raid_bdev,
+					 base_info->configure_cb, base_info->configure_cb_ctx);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
+		} else {
+			base_info->configure_cb = NULL;
 		}
 	} else if (base_info->is_process_target) {
 		raid_bdev->num_base_bdevs_operational++;

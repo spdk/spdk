@@ -175,6 +175,8 @@ struct raid_bdev_process_request {
 	TAILQ_ENTRY(raid_bdev_process_request) link;
 };
 
+typedef void (*raid_bdev_configure_cb)(void *cb_ctx, int rc);
+
 /*
  * raid_bdev is the single entity structure which contains SPDK block device
  * and the information related to any raid bdev either configured or
@@ -242,6 +244,10 @@ struct raid_bdev {
 
 	/* Raid bdev background process, e.g. rebuild */
 	struct raid_bdev_process	*process;
+
+	/* Callback and context for raid_bdev configuration */
+	raid_bdev_configure_cb		configure_cb;
+	void				*configure_cb_ctx;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
