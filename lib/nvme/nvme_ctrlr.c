@@ -1351,7 +1351,11 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		} else if (ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_NVM) {
 			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NVM;
 		} else if (ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_NOIO) {
-			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NOIO;
+			/* Technically we should respond with CC_CSS_NOIO in
+			 * this case, but we use NVM instead to work around
+			 * buggy targets and to match Linux driver behavior.
+			 */
+			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NVM;
 		} else {
 			/* Invalid supported bits detected, falling back to NVM. */
 			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NVM;
