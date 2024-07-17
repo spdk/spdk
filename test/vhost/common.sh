@@ -33,6 +33,13 @@ mkdir -p $TARGET_DIR
 source $rootdir/test/vhost/common/autotest.config
 source "$rootdir/test/scheduler/common.sh"
 
+if is_numa; then
+	# We need to make sure entire HUGEMEM default goes to a single node as
+	# we share hugepages with qemu instance(s) and we cannot split it across
+	# all numa nodes without making sure there's enough memory available.
+	HUGENODE=0 "$rootdir/scripts/setup.sh"
+fi
+
 function vhosttestinit() {
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh

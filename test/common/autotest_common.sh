@@ -271,12 +271,6 @@ fi
 if [ "$(uname -s)" = "Linux" ]; then
 	HUGEMEM=${HUGEMEM:-4096}
 	export CLEAR_HUGE=yes
-	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]]; then
-		# Make sure that memory is distributed across all NUMA nodes - by default, all goes to
-		# node0, but if QAT devices are attached to a different node, all of their VFs will end
-		# up under that node too and memory needs to be available there for the tests.
-		export HUGE_EVEN_ALLOC=yes
-	fi
 
 	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}

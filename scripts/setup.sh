@@ -51,9 +51,6 @@ function usage() {
 	echo "HUGEMEM           Size of hugepage memory to allocate (in MB). 2048 by default."
 	echo "                  For NUMA systems, the hugepages will be distributed on node0 by"
 	echo "                  default."
-	echo "HUGE_EVEN_ALLOC   If set to 'yes', hugepages will be evenly distributed across all"
-	echo "                  system's NUMA nodes (effectively ignoring anything set in HUGENODE)."
-	echo "                  Uses kernel's default for hugepages size."
 	echo "NRHUGE            Number of hugepages to allocate. This variable overwrites HUGEMEM."
 	echo "HUGENODE          Specific NUMA node to allocate hugepages on. Multiple nodes can be"
 	echo "                  separated with comas. By default, NRHUGE will be applied on each node."
@@ -64,7 +61,7 @@ function usage() {
 	echo "                  setting is used."
 	echo "SHRINK_HUGE       If set to 'yes', hugepages allocation won't be skipped in case"
 	echo "                  number of requested hugepages is lower from what's already"
-	echo "                  allocated. Doesn't apply when HUGE_EVEN_ALLOC is in use."
+	echo "                  allocated."
 	echo "CLEAR_HUGE        If set to 'yes', the attempt to remove hugepages from all nodes will"
 	echo "                  be made prior to allocation".
 	echo "PCI_ALLOWED"
@@ -553,8 +550,7 @@ configure_linux_hugepages() {
 		clear_hugepages
 	fi
 
-	if [[ $HUGE_EVEN_ALLOC == yes ]]; then
-		clear_hugepages
+	if [[ -z $HUGENODE ]]; then
 		check_hugepages_alloc /proc/sys/vm/nr_hugepages
 		return 0
 	fi

@@ -301,7 +301,6 @@ hugepages() {
 	[[ $os == Linux ]] || return 0
 	local hp
 
-	HUGE_EVEN_ALLOC=no
 	while read -rp "('clear' 'even' 'commit' HUGEMEM[=$HUGEMEM MB])> " hp; do
 		hp=${hp,,}
 		if [[ -z $hp ]]; then
@@ -309,8 +308,6 @@ hugepages() {
 		elif [[ $hp == clear ]]; then
 			clear_hugepages
 			return
-		elif [[ $hp == even ]]; then
-			HUGE_EVEN_ALLOC=yes
 		elif [[ $hp =~ ^[1-9][0-9]*$ ]]; then
 			NRHUGE=""
 			HUGEMEM=$hp

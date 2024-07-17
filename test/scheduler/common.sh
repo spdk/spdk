@@ -152,6 +152,12 @@ is_cpu_offline_f() {
 	! is_cpu_online_f "$1"
 }
 
+is_numa() {
+	local nodes=("$sysfs_node/node"+([0-9]))
+
+	((${#nodes[@]} > 1))
+}
+
 online_cpu() {
 	is_cpu_offline_f "$1" || return 0
 	echo 1 > "$sysfs_cpu/cpu$1/online"

@@ -13,7 +13,7 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
-HUGE_EVEN_ALLOC=yes HUGEMEM=1024 nvmftestinit
+HUGEMEM=1024 nvmftestinit
 
 function finish_test() {
 	{
