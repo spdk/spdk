@@ -11,42 +11,30 @@
 
 #include "bdev_null.h"
 
-struct rpc_construct_null {
-	char *name;
-	struct spdk_uuid uuid;
-	uint64_t num_blocks;
-	uint32_t block_size;
-	uint32_t physical_block_size;
-	uint32_t md_size;
-	int32_t dif_type;
-	bool dif_is_head_of_md;
-};
-
 static void
-free_rpc_construct_null(struct rpc_construct_null *req)
+free_rpc_construct_null(struct null_bdev_opts *req)
 {
 	free(req->name);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
-	{"name", offsetof(struct rpc_construct_null, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_uuid, true},
-	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint64},
-	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
-	{"physical_block_size", offsetof(struct rpc_construct_null, physical_block_size), spdk_json_decode_uint32, true},
-	{"md_size", offsetof(struct rpc_construct_null, md_size), spdk_json_decode_uint32, true},
-	{"dif_type", offsetof(struct rpc_construct_null, dif_type), spdk_json_decode_int32, true},
-	{"dif_is_head_of_md", offsetof(struct rpc_construct_null, dif_is_head_of_md), spdk_json_decode_bool, true},
+	{"name", offsetof(struct null_bdev_opts, name), spdk_json_decode_string},
+	{"uuid", offsetof(struct null_bdev_opts, uuid), spdk_json_decode_uuid, true},
+	{"num_blocks", offsetof(struct null_bdev_opts, num_blocks), spdk_json_decode_uint64},
+	{"block_size", offsetof(struct null_bdev_opts, block_size), spdk_json_decode_uint32},
+	{"physical_block_size", offsetof(struct null_bdev_opts, physical_block_size), spdk_json_decode_uint32, true},
+	{"md_size", offsetof(struct null_bdev_opts, md_size), spdk_json_decode_uint32, true},
+	{"dif_type", offsetof(struct null_bdev_opts, dif_type), spdk_json_decode_int32, true},
+	{"dif_is_head_of_md", offsetof(struct null_bdev_opts, dif_is_head_of_md), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_construct_null req = {};
+	struct null_bdev_opts req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
-	struct spdk_null_bdev_opts opts = {};
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
@@ -92,15 +80,7 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	opts.name = req.name;
-	opts.uuid = &req.uuid;
-	opts.num_blocks = req.num_blocks;
-	opts.block_size = req.block_size + req.md_size;
-	opts.physical_block_size = req.physical_block_size;
-	opts.md_size = req.md_size;
-	opts.dif_type = req.dif_type;
-	opts.dif_is_head_of_md = req.dif_is_head_of_md;
-	rc = bdev_null_create(&bdev, &opts);
+	rc = bdev_null_create(&bdev, &req);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

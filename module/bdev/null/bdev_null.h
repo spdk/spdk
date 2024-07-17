@@ -13,9 +13,9 @@ typedef void (*spdk_delete_null_complete)(void *cb_arg, int bdeverrno);
 struct spdk_bdev;
 struct spdk_uuid;
 
-struct spdk_null_bdev_opts {
-	const char *name;
-	const struct spdk_uuid *uuid;
+struct null_bdev_opts {
+	char *name;
+	struct spdk_uuid uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
 	uint32_t physical_block_size;
@@ -24,7 +24,7 @@ struct spdk_null_bdev_opts {
 	bool dif_is_head_of_md;
 };
 
-int bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts);
+int bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts);
 
 /**
  * Delete null bdev.

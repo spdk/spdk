@@ -236,10 +236,10 @@ static const struct spdk_bdev_fn_table null_fn_table = {
 };
 
 int
-bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts)
+bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts)
 {
 	struct null_bdev *null_disk;
-	uint32_t data_block_size;
+	uint32_t block_size;
 	int rc;
 
 	if (!opts) {
@@ -260,16 +260,12 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 		return -EINVAL;
 	}
 
-	if (opts->block_size < opts->md_size) {
-		SPDK_ERRLOG("Interleaved metadata size can not be greater than block size.\n");
-		return -EINVAL;
-	}
-	data_block_size = opts->block_size - opts->md_size;
-
-	if (data_block_size % 512 != 0) {
+	if (opts->block_size % 512 != 0) {
 		SPDK_ERRLOG("Data block size %u is not a multiple of 512.\n", opts->block_size);
 		return -EINVAL;
 	}
+
+	block_size = opts->block_size + opts->md_size;
 
 	if (opts->num_blocks == 0) {
 		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
@@ -290,7 +286,7 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	null_disk->bdev.product_name = "Null disk";
 
 	null_disk->bdev.write_cache = 0;
-	null_disk->bdev.blocklen = opts->block_size;
+	null_disk->bdev.blocklen = block_size;
 	null_disk->bdev.phys_blocklen = opts->physical_block_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
 	null_disk->bdev.md_len = opts->md_size;
@@ -315,7 +311,10 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	}
 	null_disk->bdev.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
-	null_disk->bdev.uuid = *opts->uuid;
+	if (!spdk_uuid_is_null(&opts->uuid)) {
+		spdk_uuid_copy(&null_disk->bdev.uuid, &opts->uuid);
+	}
+
 	null_disk->bdev.ctxt = null_disk;
 	null_disk->bdev.fn_table = &null_fn_table;
 	null_disk->bdev.module = &null_if;
