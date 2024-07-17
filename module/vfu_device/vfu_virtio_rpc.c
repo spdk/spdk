@@ -10,6 +10,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
+#include "spdk/config.h"
 
 #include "vfu_virtio_internal.h"
 

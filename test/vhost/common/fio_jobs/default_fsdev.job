@@ -1,0 +1,14 @@
+[global]
+blocksize=4k
+iodepth=512
+ioengine=libaio
+size=1G
+group_reporting
+thread
+numjobs=1
+direct=1
+invalidate=1
+rw=randrw
+do_verify=1
+filename=
+[job0]
