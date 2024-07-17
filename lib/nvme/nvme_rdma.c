@@ -198,8 +198,6 @@ struct nvme_rdma_qpair {
 
 	uint32_t				max_send_sge;
 
-	uint32_t				max_recv_sge;
-
 	uint16_t				num_entries;
 
 	bool					delay_cmd_submit;
@@ -726,7 +724,6 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	/* ibv_create_qp will change the values in attr.cap. Make sure we store the proper value. */
 	rqpair->max_send_sge = spdk_min(NVME_RDMA_DEFAULT_TX_SGE, attr.cap.max_send_sge);
-	rqpair->max_recv_sge = spdk_min(NVME_RDMA_DEFAULT_RX_SGE, attr.cap.max_recv_sge);
 	rqpair->current_num_sends = 0;
 
 	rqpair->cm_id->context = rqpair;
