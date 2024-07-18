@@ -22,8 +22,8 @@ struct spdk_nvme_transport {
 TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
-struct spdk_nvme_transport g_spdk_transports[SPDK_MAX_NUM_OF_TRANSPORTS] = {};
-int g_current_transport_index = 0;
+static struct spdk_nvme_transport g_transports[SPDK_MAX_NUM_OF_TRANSPORTS] = {};
+static int g_current_transport_index = 0;
 
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {
 	.rdma_srq_size = 0,
@@ -92,7 +92,7 @@ spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 		assert(false);
 		return;
 	}
-	new_transport = &g_spdk_transports[g_current_transport_index++];
+	new_transport = &g_transports[g_current_transport_index++];
 
 	new_transport->ops = *ops;
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, new_transport, link);
