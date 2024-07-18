@@ -615,6 +615,10 @@ spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 		entry = STAILQ_FIRST(pool->queue);
 		STAILQ_REMOVE_HEAD(pool->queue, stailq);
 		entry->cb_fn(entry, buf);
+		if (spdk_unlikely(entry == STAILQ_LAST(pool->queue, spdk_iobuf_entry, stailq))) {
+			STAILQ_REMOVE(pool->queue, entry, spdk_iobuf_entry, stailq);
+			STAILQ_INSERT_HEAD(pool->queue, entry, stailq);
+		}
 	}
 }
 
