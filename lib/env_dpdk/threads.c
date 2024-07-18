@@ -85,6 +85,40 @@ spdk_env_get_socket_id(uint32_t core)
 	return spdk_env_get_numa_id(core);
 }
 
+int32_t
+spdk_env_get_first_numa_id(void)
+{
+	assert(rte_socket_count() > 0);
+
+	return rte_socket_id_by_idx(0);
+}
+
+int32_t
+spdk_env_get_last_numa_id(void)
+{
+	assert(rte_socket_count() > 0);
+
+	return rte_socket_id_by_idx(rte_socket_count() - 1);
+}
+
+int32_t
+spdk_env_get_next_numa_id(int32_t prev_numa_id)
+{
+	uint32_t i;
+
+	for (i = 0; i < rte_socket_count(); i++) {
+		if (rte_socket_id_by_idx(i) == prev_numa_id) {
+			break;
+		}
+	}
+
+	if ((i + 1) < rte_socket_count()) {
+		return rte_socket_id_by_idx(i + 1);
+	} else {
+		return INT32_MAX;
+	}
+}
+
 void
 spdk_env_get_cpuset(struct spdk_cpuset *cpuset)
 {

@@ -526,6 +526,37 @@ int32_t spdk_env_get_numa_id(uint32_t core);
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
 
+/**
+ * Get the ID of the first NUMA node on this system.
+ *
+ * \return the ID of the first NUMA node
+ */
+int32_t spdk_env_get_first_numa_id(void);
+
+/**
+ * Get the ID of the last NUMA node on this system.
+ *
+ * \return the ID of the last NUMA node
+ */
+int32_t spdk_env_get_last_numa_id(void);
+
+/**
+ * Get the index of the next NUMA node on this system.
+ *
+ * If there is no next NUMA ID, or the passed prev_numa_id is not a
+ * valid NUMA ID, return INT32_MAX.
+ *
+ * \param prev_numa_id Index of previous NUMA ID.
+ *
+ * \return the index of the next NUMA ID, or INT32_MAX if there is no next one
+ */
+int32_t spdk_env_get_next_numa_id(int32_t prev_numa_id);
+
+#define SPDK_ENV_FOREACH_NUMA_ID(i)			\
+	for (i = spdk_env_get_first_numa_id();		\
+	     i < INT32_MAX;				\
+	     i = spdk_env_get_next_numa_id(i))
+
 struct spdk_cpuset;
 
 /**
