@@ -206,9 +206,10 @@ struct accel_mlx5_dev {
 struct accel_mlx5_io_channel {
 	struct accel_mlx5_dev *devs;
 	struct spdk_poller *poller;
-	uint32_t num_devs;
+	uint16_t num_devs;
 	/* Index in \b devs to be used for operations in round-robin way */
-	uint32_t dev_idx;
+	uint16_t dev_idx;
+	bool poller_handler_registered;
 };
 
 struct accel_mlx5_task_operations {
@@ -2017,6 +2018,25 @@ accel_mlx5_task_init_opcode(struct accel_mlx5_task *mlx5_task)
 	}
 }
 
+static void
+accel_mlx5_post_poller_handler(void *fn_arg)
+{
+	struct accel_mlx5_io_channel *ch = fn_arg;
+	struct accel_mlx5_dev *dev;
+	uint32_t i;
+
+	for (i = 0; i < ch->num_devs; i++) {
+		dev = &ch->devs[i];
+
+		if (dev->qp.ring_db) {
+			spdk_mlx5_qp_complete_send(dev->qp.qp);
+			dev->qp.ring_db = false;
+		}
+	}
+
+	ch->poller_handler_registered = false;
+}
+
 static inline int
 _accel_mlx5_submit_tasks(struct accel_mlx5_io_channel *accel_ch, struct spdk_accel_task *task)
 {
@@ -2043,6 +2063,13 @@ _accel_mlx5_submit_tasks(struct accel_mlx5_io_channel *accel_ch, struct spdk_acc
 	if (spdk_unlikely(mlx5_task->qp->recovering)) {
 		STAILQ_INSERT_TAIL(&dev->nomem, mlx5_task, link);
 		return 0;
+	}
+
+	if (!accel_ch->poller_handler_registered) {
+		spdk_thread_register_post_poller_handler(accel_mlx5_post_poller_handler, accel_ch);
+		/* Function above may fail to register our handler, in that case we ring doorbells on next polling
+		 * cycle. That is less efficient but still works */
+		accel_ch->poller_handler_registered = true;
 	}
 
 	return g_accel_mlx5_tasks_ops[mlx5_task->mlx5_opcode].process(mlx5_task);
@@ -2252,6 +2279,8 @@ accel_mlx5_poller(void *ctx)
 	int64_t completions = 0, rc;
 	uint32_t i;
 
+	/* reaped completions may register a post poller handler, that makes no sense in the scope of our own poller */
+	ch->poller_handler_registered = true;
 	for (i = 0; i < ch->num_devs; i++) {
 		dev = &ch->devs[i];
 		if (dev->wrs_in_cq) {
@@ -2269,6 +2298,7 @@ accel_mlx5_poller(void *ctx)
 			accel_mlx5_resubmit_nomem_tasks(dev);
 		}
 	}
+	ch->poller_handler_registered = false;
 
 	return !!completions;
 }
