@@ -36,6 +36,7 @@
 do {							\
 	assert((qp)->wrs_submitted < (qp)->wrs_max);	\
 	(qp)->wrs_submitted++;				\
+	(qp)->ring_db = true;				\
 	assert((task)->num_wrs < UINT16_MAX);		\
 	(task)->num_wrs++;				\
 } while (0)
@@ -46,6 +47,7 @@ do {									\
 	(dev)->wrs_in_cq++;						\
         assert((qp)->wrs_submitted < (qp)->wrs_max);			\
 	(qp)->wrs_submitted++;						\
+	(qp)->ring_db = true;						\
 	assert((task)->num_wrs < UINT16_MAX);				\
 	(task)->num_wrs++;						\
 } while (0)
@@ -178,6 +180,7 @@ struct accel_mlx5_qp {
 	STAILQ_HEAD(, accel_mlx5_task) in_hw;
 	uint16_t wrs_submitted;
 	uint16_t wrs_max;
+	bool ring_db;
 	bool recovering;
 	struct spdk_poller *recover_poller;
 };
@@ -2257,8 +2260,9 @@ accel_mlx5_poller(void *ctx)
 				SPDK_ERRLOG("Error %"PRId64" on CQ, dev %s\n", rc, dev->dev_ctx->context->device->name);
 			}
 			completions += rc;
-			if (dev->qp.wrs_submitted) {
+			if (dev->qp.ring_db) {
 				spdk_mlx5_qp_complete_send(dev->qp.qp);
+				dev->qp.ring_db = false;
 			}
 		}
 		if (!STAILQ_EMPTY(&dev->nomem)) {
