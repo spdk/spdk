@@ -23,7 +23,7 @@ struct spdk_deprecation {
 };
 
 static TAILQ_HEAD(, spdk_deprecation) g_deprecations = TAILQ_HEAD_INITIALIZER(g_deprecations);
-struct timespec g_deprecation_epoch;
+static struct timespec g_deprecation_epoch;
 
 static void
 __attribute__((constructor))
