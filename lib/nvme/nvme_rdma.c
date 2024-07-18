@@ -237,7 +237,6 @@ struct nvme_rdma_qpair {
 
 	uint8_t					stale_conn_retry_count;
 	bool					need_destroy;
-
 	TAILQ_ENTRY(nvme_rdma_qpair)		link_connecting;
 };
 
@@ -249,7 +248,8 @@ enum NVME_RDMA_COMPLETION_FLAGS {
 struct spdk_nvme_rdma_req {
 	uint16_t				id;
 	uint16_t				completion_flags: 2;
-	uint16_t				reserved: 14;
+	uint16_t				in_progress_accel: 1;
+	uint16_t				reserved: 13;
 	/* if completion of RDMA_RECV received before RDMA_SEND, we will complete nvme request
 	 * during processing of RDMA_SEND. To complete the request we must know the response
 	 * received in RDMA_RECV, so store it in this field */
@@ -264,6 +264,12 @@ struct spdk_nvme_rdma_req {
 	struct ibv_sge				send_sgl[NVME_RDMA_DEFAULT_TX_SGE];
 
 	TAILQ_ENTRY(spdk_nvme_rdma_req)		link;
+
+	/* Fields below are not used in regular IO path, keep them last */
+	spdk_memory_domain_data_cpl_cb		transfer_cpl_cb;
+	void					*transfer_cpl_cb_arg;
+	/* Accel sequence API works with iovec pointer, we need to store result of next_sge callback */
+	struct iovec				iovs[NVME_RDMA_MAX_SGL_DESCRIPTORS];
 };
 
 struct spdk_nvme_rdma_rsp {
@@ -307,6 +313,17 @@ static void nvme_rdma_poll_group_put_poller(struct nvme_rdma_poll_group *group,
 static int nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair);
 
+static inline int nvme_rdma_memory_domain_transfer_data(struct spdk_memory_domain *dst_domain,
+		void *dst_domain_ctx,
+		struct iovec *dst_iov, uint32_t dst_iovcnt,
+		struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+		struct iovec *src_iov, uint32_t src_iovcnt,
+		struct spdk_memory_domain_translation_result *translation,
+		spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+
+static inline int _nvme_rdma_qpair_submit_request(struct nvme_rdma_qpair *rqpair,
+		struct spdk_nvme_rdma_req *rdma_req);
+
 static inline struct nvme_rdma_qpair *
 nvme_rdma_qpair(struct spdk_nvme_qpair *qpair)
 {
@@ -346,7 +363,19 @@ nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdm
 	rdma_req->completion_flags = 0;
 	rdma_req->req = NULL;
 	rdma_req->rdma_rsp = NULL;
+	assert(rdma_req->transfer_cpl_cb == NULL);
 	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
+}
+
+static inline void
+nvme_rdma_finish_data_transfer(struct spdk_nvme_rdma_req *rdma_req, int rc)
+{
+	spdk_memory_domain_data_cpl_cb cb = rdma_req->transfer_cpl_cb;
+
+	SPDK_DEBUGLOG(nvme, "req %p, finish data transfer, rc %d\n", rdma_req, rc);
+	rdma_req->transfer_cpl_cb = NULL;
+	assert(cb);
+	cb(rdma_req->transfer_cpl_cb_arg, rc);
 }
 
 static void
@@ -704,7 +733,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 		attr.pd = spdk_rdma_utils_get_pd(rqpair->cm_id->verbs);
 	}
 
-	attr.stats =		rqpair->poller ? &rqpair->poller->stats.rdma_stats : NULL;
+	attr.stats		= rqpair->poller ? &rqpair->poller->stats.rdma_stats : NULL;
 	attr.send_cq		= rqpair->cq;
 	attr.recv_cq		= rqpair->cq;
 	attr.cap.max_send_wr	= rqpair->num_entries; /* SEND operations */
@@ -715,6 +744,8 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	}
 	attr.cap.max_send_sge	= spdk_min(NVME_RDMA_DEFAULT_TX_SGE, dev_attr.max_sge);
 	attr.cap.max_recv_sge	= spdk_min(NVME_RDMA_DEFAULT_RX_SGE, dev_attr.max_sge);
+	attr.domain_transfer	= spdk_rdma_provider_accel_sequence_supported() ?
+				  nvme_rdma_memory_domain_transfer_data : NULL;
 
 	rqpair->rdma_qp = spdk_rdma_provider_qp_create(rqpair->cm_id, &attr);
 
@@ -1707,6 +1738,198 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 }
 
 static inline int
+nvme_rdma_accel_append_copy(struct spdk_nvme_poll_group *pg, void **seq,
+			    struct spdk_memory_domain *rdma_domain, struct spdk_nvme_rdma_req *rdma_req,
+			    struct iovec *iovs, uint32_t iovcnt,
+			    struct spdk_memory_domain *src_domain, void *src_domain_ctx)
+{
+	return pg->accel_fn_table.append_copy(pg->ctx, seq, iovs, iovcnt, rdma_domain, rdma_req, iovs,
+					      iovcnt, src_domain, src_domain_ctx, NULL, NULL);
+}
+
+static inline void
+nvme_rdma_accel_reverse(struct spdk_nvme_poll_group *pg, void *seq)
+{
+	pg->accel_fn_table.reverse_sequence(seq);
+}
+
+static inline void
+nvme_rdma_accel_finish(struct spdk_nvme_poll_group *pg, void *seq,
+		       spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+{
+	pg->accel_fn_table.finish_sequence(seq, cb_fn, cb_arg);
+}
+
+static inline void
+nvme_rdma_accel_completion_cb(void *cb_arg, int status)
+{
+	struct spdk_nvme_rdma_req *rdma_req = cb_arg;
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
+	struct spdk_nvme_cpl cpl;
+	enum spdk_nvme_generic_command_status_code sc;
+	uint16_t dnr = 0;
+
+	rdma_req->in_progress_accel = 0;
+	rdma_req->req->accel_sequence = NULL;
+	SPDK_DEBUGLOG(nvme, "rdma_req %p qpair %p, accel completion rc %d\n", rdma_req, rqpair, status);
+
+	/* nvme_rdma driver may fail data transfer on WC_FLUSH error completion which is expected.
+	 * To prevent false errors from accel, first check if qpair is in the process of disconnect */
+	if (spdk_unlikely(!spdk_nvme_qpair_is_connected(&rqpair->qpair))) {
+		SPDK_DEBUGLOG(nvme, "qpair %p, req %p accel cpl in disconnecting, outstanding %u\n",
+			      rqpair, rdma_req, rqpair->qpair.num_outstanding_reqs);
+		sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+		goto fail_req;
+	}
+	if (spdk_unlikely(status)) {
+		SPDK_ERRLOG("qpair %p, req %p, accel sequence status %d\n", rdma_req->req->qpair, rdma_req, status);
+		sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		/* Something wrong happened, let the upper layer know that retry is no desired */
+		dnr = 1;
+		goto fail_req;
+	}
+
+	nvme_rdma_req_complete(rdma_req, &rdma_req->rdma_rsp->cpl, true);
+	return;
+
+fail_req:
+	memset(&cpl, 0, sizeof(cpl));
+	cpl.status.sc = sc;
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.dnr = dnr;
+	nvme_rdma_req_complete(rdma_req, &cpl, true);
+}
+
+static inline int
+nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
+			       struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct spdk_nvme_poll_group *pg = rqpair->qpair.poll_group->group;
+	struct spdk_memory_domain *src_domain;
+	void *src_domain_ctx;
+	void *accel_seq = req->accel_sequence;
+	uint32_t iovcnt = 0;
+	int rc;
+
+	SPDK_DEBUGLOG(nvme, "req %p, start accel seq %p\n", rdma_req, accel_seq);
+	if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
+		void *addr;
+		uint32_t sge_length, payload_size;
+
+		payload_size = req->payload_size;
+		assert(payload_size);
+		req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
+		do {
+			rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &addr, &sge_length);
+			if (spdk_unlikely(rc)) {
+				return -1;
+			}
+			sge_length = spdk_min(payload_size, sge_length);
+			rdma_req->iovs[iovcnt].iov_base = addr;
+			rdma_req->iovs[iovcnt].iov_len = sge_length;
+			iovcnt++;
+			payload_size -= sge_length;
+		} while (payload_size && iovcnt < NVME_RDMA_MAX_SGL_DESCRIPTORS);
+
+		if (spdk_unlikely(payload_size)) {
+			SPDK_ERRLOG("not enough iovs to handle req %p, remaining len %u\n", rdma_req, payload_size);
+			return -E2BIG;
+		}
+	} else {
+		rdma_req->iovs[iovcnt].iov_base = req->payload.contig_or_cb_arg;
+		rdma_req->iovs[iovcnt].iov_len = req->payload_size;
+		iovcnt = 1;
+	}
+	if (req->payload.opts && req->payload.opts->memory_domain) {
+		if (accel_seq) {
+			src_domain = rqpair->rdma_qp->domain;
+			src_domain_ctx = rdma_req;
+		} else {
+			src_domain = req->payload.opts->memory_domain;
+			src_domain_ctx = req->payload.opts->memory_domain_ctx;
+		}
+	} else {
+		src_domain = NULL;
+		src_domain_ctx = NULL;
+	}
+
+	rc = nvme_rdma_accel_append_copy(pg, &accel_seq, rqpair->rdma_qp->domain, rdma_req, rdma_req->iovs,
+					 iovcnt, src_domain, src_domain_ctx);
+	if (spdk_unlikely(rc)) {
+		return rc;
+	}
+
+	if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		nvme_rdma_accel_reverse(pg, accel_seq);
+	}
+
+	rdma_req->in_progress_accel = 1;
+	TAILQ_INSERT_TAIL(&rqpair->outstanding_reqs, rdma_req, link);
+	rqpair->num_outstanding_reqs++;
+
+	SPDK_DEBUGLOG(nvme, "req %p, finish accel seq %p\n", rdma_req, accel_seq);
+	nvme_rdma_accel_finish(pg, accel_seq, nvme_rdma_accel_completion_cb, rdma_req);
+
+	return 0;
+}
+
+static inline int
+nvme_rdma_memory_domain_transfer_data(struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				      struct iovec *dst_iov, uint32_t dst_iovcnt,
+				      struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				      struct iovec *src_iov, uint32_t src_iovcnt,
+				      struct spdk_memory_domain_translation_result *translation,
+				      spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct nvme_rdma_memory_translation_ctx ctx;
+	struct spdk_nvme_rdma_req *rdma_req = dst_domain_ctx;
+	struct nvme_request *req = rdma_req->req;
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
+	struct spdk_nvme_ctrlr *ctrlr = rqpair->qpair.ctrlr;
+	bool icd_supported;
+
+	assert(dst_domain == rqpair->rdma_qp->domain);
+	assert(src_domain);
+	assert(spdk_memory_domain_get_dma_device_type(src_domain) == SPDK_DMA_DEVICE_TYPE_RDMA);
+	/* We expect "inplace" operation */
+	assert(dst_iov == src_iov);
+	assert(dst_iovcnt == src_iovcnt);
+
+	if (spdk_unlikely(!src_domain ||
+			  spdk_memory_domain_get_dma_device_type(src_domain) != SPDK_DMA_DEVICE_TYPE_RDMA)) {
+		SPDK_ERRLOG("Unexpected source memory domain %p, type %d\n", src_domain,
+			    src_domain ? (int)spdk_memory_domain_get_dma_device_type(src_domain) : -1);
+		return -ENOTSUP;
+	}
+	if (spdk_unlikely(dst_iovcnt != 1 || !translation || translation->iov_count != 1)) {
+		SPDK_ERRLOG("Unexpected iovcnt %u or missed translation, rdma_req %p\n", dst_iovcnt, rdma_req);
+		return -ENOTSUP;
+	}
+	ctx.addr = translation->iov.iov_base;
+	ctx.length = translation->iov.iov_len;
+	ctx.lkey = translation->rdma.lkey;
+	ctx.rkey = translation->rdma.rkey;
+
+	SPDK_DEBUGLOG(nvme, "req %p, addr %p, len %zu, key %u\n", rdma_req, ctx.addr, ctx.length, ctx.rkey);
+	icd_supported = spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER
+			&& req->payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0;
+
+	/* We expect that result of accel sequence is a Memory Key which describes a virtually contig address space.
+	 * That means we prepare a contig request even if original payload was scattered */
+	if (icd_supported) {
+		nvme_rdma_configure_contig_inline_request(rdma_req, req, &ctx);
+	} else {
+		nvme_rdma_configure_contig_request(rdma_req, req, &ctx);
+	}
+	rdma_req->transfer_cpl_cb = cpl_cb;
+	rdma_req->transfer_cpl_cb_arg = cpl_cb_arg;
+
+	memcpy(&rqpair->cmds[rdma_req->id], &req->cmd, sizeof(req->cmd));
+
+	return _nvme_rdma_qpair_submit_request(rqpair, rdma_req);
+}
+
+static inline int
 nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
@@ -1881,7 +2104,9 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 
 	if (rqpair->need_destroy ||
 	    (rqpair->current_num_sends != 0 ||
-	     (!rqpair->srq && rqpair->rsps->current_num_recvs != 0))) {
+	     (!rqpair->srq && rqpair->rsps->current_num_recvs != 0)) ||
+	    ((rqpair->qpair.ctrlr->flags & SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED) &&
+	     (!TAILQ_EMPTY(&rqpair->outstanding_reqs)))) {
 		rqpair->state = NVME_RDMA_QPAIR_STATE_LINGERING;
 		rqpair->evt_timeout_ticks = (NVME_RDMA_DISCONNECTED_QPAIR_TIMEOUT_US * spdk_get_ticks_hz()) /
 					    SPDK_SEC_TO_USEC + spdk_get_ticks();
@@ -2197,6 +2422,9 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		SPDK_ERRLOG("failed to create admin qpair\n");
 		goto destruct_ctrlr;
 	}
+	if (spdk_rdma_provider_accel_sequence_supported()) {
+		rctrlr->ctrlr.flags |= SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED;
+	}
 
 	if (nvme_ctrlr_add_process(&rctrlr->ctrlr, 0) != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
@@ -2293,6 +2521,23 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	assert(rdma_req->req == NULL);
 	rdma_req->req = req;
 	req->cmd.cid = rdma_req->id;
+	if (req->accel_sequence) {
+		assert(spdk_rdma_provider_accel_sequence_supported());
+		assert(rqpair->qpair.poll_group->group);
+		assert(rqpair->qpair.poll_group->group->accel_fn_table.append_copy);
+		assert(rqpair->qpair.poll_group->group->accel_fn_table.reverse_sequence);
+		assert(rqpair->qpair.poll_group->group->accel_fn_table.finish_sequence);
+
+		rc = nvme_rdma_apply_accel_sequence(rqpair, req, rdma_req);
+		if (spdk_unlikely(rc)) {
+			SPDK_ERRLOG("failed to apply accel seq, rqpair %p, req %p, rc %d\n", rqpair, rdma_req, rc);
+			nvme_rdma_req_put(rqpair, rdma_req);
+			return rc;
+		}
+		/* Capsule will be sent in data_transfer callback */
+		return 0;
+	}
+
 	rc = nvme_rdma_req_init(rqpair, rdma_req);
 	if (spdk_unlikely(rc)) {
 		SPDK_ERRLOG("nvme_rdma_req_init() failed\n");
@@ -2336,6 +2581,10 @@ nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
+		if (rdma_req->in_progress_accel) {
+			/* We should wait for accel completion */
+			continue;
+		}
 		nvme_rdma_req_complete(rdma_req, &cpl, true);
 	}
 }
@@ -2385,7 +2634,18 @@ nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_re
 	struct spdk_nvme_rdma_rsp *rdma_rsp = rdma_req->rdma_rsp;
 	struct ibv_recv_wr *recv_wr = rdma_rsp->recv_wr;
 
-	nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
+	if (rdma_req->transfer_cpl_cb) {
+		int rc = 0;
+
+		if (spdk_unlikely(spdk_nvme_cpl_is_error(&rdma_rsp->cpl))) {
+			SPDK_WARNLOG("req %p, error cpl sct %d, sc %d\n", rdma_req, rdma_rsp->cpl.status.sct,
+				     rdma_rsp->cpl.status.sc);
+			rc = -EIO;
+		}
+		nvme_rdma_finish_data_transfer(rdma_req, rc);
+	} else {
+		nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
+	}
 
 	assert(rqpair->rsps->current_num_recvs < rqpair->rsps->num_entries);
 	rqpair->rsps->current_num_recvs++;
@@ -2531,6 +2791,10 @@ err_wc:
 	if (poller && poller->srq) {
 		spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
 	}
+	rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
+	if (rdma_req->transfer_cpl_cb) {
+		nvme_rdma_finish_data_transfer(rdma_req, -ENXIO);
+	}
 	return -ENXIO;
 }
 
@@ -2564,6 +2828,9 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 		if (rdma_req->rdma_rsp && poller && poller->srq) {
 			spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_req->rdma_rsp->recv_wr);
+		}
+		if (rdma_req->transfer_cpl_cb) {
+			nvme_rdma_finish_data_transfer(rdma_req, -ENXIO);
 		}
 		return -ENXIO;
 	}
