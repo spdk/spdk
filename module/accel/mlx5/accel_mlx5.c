@@ -1758,36 +1758,15 @@ accel_mlx5_task_init_opcode(struct accel_mlx5_task *mlx5_task)
 	}
 }
 
-static inline void
-accel_mlx5_task_reset(struct accel_mlx5_task *mlx5_task)
+static inline int
+_accel_mlx5_submit_tasks(struct accel_mlx5_io_channel *accel_ch, struct spdk_accel_task *task)
 {
-	mlx5_task->num_completed_reqs = 0;
-	mlx5_task->num_submitted_reqs = 0;
-	mlx5_task->num_ops = 0;
-	mlx5_task->num_processed_blocks = 0;
-	mlx5_task->raw = 0;
-}
-
-static int
-accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *task)
-{
-	struct accel_mlx5_io_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct accel_mlx5_task *mlx5_task = SPDK_CONTAINEROF(task, struct accel_mlx5_task, base);
-	struct accel_mlx5_dev *dev;
+	struct accel_mlx5_dev *dev = mlx5_task->qp->dev;
 	int rc;
 
 	/* We should not receive any tasks if the module was not enabled */
 	assert(g_accel_mlx5.enabled);
-
-	dev = &ch->devs[ch->dev_idx];
-	ch->dev_idx++;
-	if (ch->dev_idx == ch->num_devs) {
-		ch->dev_idx = 0;
-	}
-
-	mlx5_task->qp = &dev->qp;
-	accel_mlx5_task_reset(mlx5_task);
-	accel_mlx5_task_init_opcode(mlx5_task);
 
 	dev->stats.opcodes[mlx5_task->mlx5_opcode]++;
 	rc = g_accel_mlx5_tasks_ops[mlx5_task->mlx5_opcode].init(mlx5_task);
@@ -1808,6 +1787,43 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 	}
 
 	return g_accel_mlx5_tasks_ops[mlx5_task->mlx5_opcode].process(mlx5_task);
+}
+
+static inline void
+accel_mlx5_task_assign_qp(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_io_channel *accel_ch)
+{
+	struct accel_mlx5_dev *dev;
+
+	dev = &accel_ch->devs[accel_ch->dev_idx];
+	accel_ch->dev_idx++;
+	if (accel_ch->dev_idx == accel_ch->num_devs) {
+		accel_ch->dev_idx = 0;
+	}
+
+	mlx5_task->qp = &dev->qp;
+}
+
+static inline void
+accel_mlx5_task_reset(struct accel_mlx5_task *mlx5_task)
+{
+	mlx5_task->num_completed_reqs = 0;
+	mlx5_task->num_submitted_reqs = 0;
+	mlx5_task->num_ops = 0;
+	mlx5_task->num_processed_blocks = 0;
+	mlx5_task->raw = 0;
+}
+
+static int
+accel_mlx5_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task)
+{
+	struct accel_mlx5_task *mlx5_task = SPDK_CONTAINEROF(task, struct accel_mlx5_task, base);
+	struct accel_mlx5_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	accel_mlx5_task_assign_qp(mlx5_task, accel_ch);
+	accel_mlx5_task_reset(mlx5_task);
+	accel_mlx5_task_init_opcode(mlx5_task);
+
+	return _accel_mlx5_submit_tasks(accel_ch, task);
 }
 
 static void accel_mlx5_recover_qp(struct accel_mlx5_qp *qp);
@@ -1914,7 +1930,7 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 		assert(dev->wrs_in_cq > 0);
 		dev->wrs_in_cq--;
 
-		if (wc[i].status) {
+		if (spdk_unlikely(wc[i].status)) {
 			accel_mlx5_process_error_cpl(&wc[i], task);
 			if (qp->wrs_submitted == 0) {
 				assert(STAILQ_EMPTY(&qp->in_hw));
