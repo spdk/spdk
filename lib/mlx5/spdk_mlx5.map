@@ -35,5 +35,8 @@
     spdk_mlx5_mkey_pool_get_bulk;
     spdk_mlx5_mkey_pool_put_bulk;
 
+    spdk_mlx5_umr_implementer_register;
+    spdk_mlx5_umr_implementer_is_registered;
+
 	local: *;
 };

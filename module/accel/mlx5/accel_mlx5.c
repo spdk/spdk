@@ -2637,6 +2637,7 @@ accel_mlx5_deinit_cb(void *ctx)
 {
 	accel_mlx5_free_resources();
 	spdk_spin_destroy(&g_accel_mlx5.lock);
+	spdk_mlx5_umr_implementer_register(false);
 	spdk_accel_module_finish();
 }
 
@@ -2969,6 +2970,7 @@ accel_mlx5_init(void)
 		SPDK_NOTICELOG("Enabling mlx5 platform driver\n");
 		spdk_accel_driver_register(&g_accel_mlx5_driver);
 		spdk_accel_set_driver(g_accel_mlx5_driver.name);
+		spdk_mlx5_umr_implementer_register(true);
 	}
 
 	return 0;

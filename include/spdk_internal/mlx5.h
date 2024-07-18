@@ -499,4 +499,18 @@ int spdk_mlx5_mkey_pool_get_bulk(struct spdk_mlx5_mkey_pool *pool,
 void spdk_mlx5_mkey_pool_put_bulk(struct spdk_mlx5_mkey_pool *pool,
 				  struct spdk_mlx5_mkey_pool_obj **mkeys, uint32_t mkeys_count);
 
+/**
+ * Notify the mlx5 library that a module which can handle UMR configuration is registered or unregistered
+ *
+ * \param registered True if the module is registered, false otherwise
+ */
+void spdk_mlx5_umr_implementer_register(bool registered);
+
+/**
+ * Check whether a module which can handle UMR configuration is registered or not
+ *
+ * \return True of the UMR implementer is registered, false otherwise
+ */
+bool spdk_mlx5_umr_implementer_is_registered(void);
+
 #endif /* SPDK_MLX5_H */

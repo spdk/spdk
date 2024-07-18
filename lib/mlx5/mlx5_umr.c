@@ -68,6 +68,8 @@ struct spdk_mlx5_mkey_pool {
 	TAILQ_ENTRY(spdk_mlx5_mkey_pool) link;
 };
 
+static bool g_umr_implementer_registered;
+
 static int
 mlx5_key_obj_compare(struct spdk_mlx5_mkey_pool_obj *key1, struct spdk_mlx5_mkey_pool_obj *key2)
 {
@@ -1101,4 +1103,16 @@ spdk_mlx5_qp_set_psv(struct spdk_mlx5_qp *qp, uint32_t psv_index, uint32_t crc_s
 	qp->tx_available -= wqe_n_bb;
 
 	return 0;
+}
+
+void
+spdk_mlx5_umr_implementer_register(bool registered)
+{
+	g_umr_implementer_registered = registered;
+}
+
+bool
+spdk_mlx5_umr_implementer_is_registered(void)
+{
+	return g_umr_implementer_registered;
 }
