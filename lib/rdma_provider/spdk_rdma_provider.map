@@ -15,6 +15,7 @@
 	spdk_rdma_provider_qp_flush_send_wrs;
 	spdk_rdma_provider_qp_queue_recv_wrs;
 	spdk_rdma_provider_qp_flush_recv_wrs;
+	spdk_rdma_provider_accel_sequence_supported;
 
 	local: *;
 };

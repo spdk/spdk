@@ -13,6 +13,7 @@
 #include "spdk/dma.h"
 
 #include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/mlx5.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 
@@ -140,6 +141,11 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 		return NULL;
 	}
 	if (qp_attr->domain_transfer) {
+		if (!spdk_rdma_provider_accel_sequence_supported()) {
+			SPDK_ERRLOG("Data transfer functionality is not supported\n");
+			spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
+			return NULL;
+		}
 		spdk_memory_domain_set_data_transfer(mlx5_qp->common.domain, qp_attr->domain_transfer);
 	}
 
@@ -331,4 +337,10 @@ spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 	spdk_rdma_qp->stats->send.doorbell_updates++;
 
 	return rc;
+}
+
+bool
+spdk_rdma_provider_accel_sequence_supported(void)
+{
+	return spdk_mlx5_umr_implementer_is_registered();
 }

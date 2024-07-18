@@ -34,8 +34,7 @@ DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
 DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
 
-DEFINE_STUB(spdk_memory_domain_get_context, struct spdk_memory_domain_ctx *,
-	    (struct spdk_memory_domain *device), NULL);
+DEFINE_STUB(spdk_rdma_provider_accel_sequence_supported, bool, (void), false);
 DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
 	    (struct spdk_memory_domain *device), SPDK_DMA_DEVICE_TYPE_RDMA);
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));

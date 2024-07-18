@@ -181,3 +181,9 @@ spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 
 	return rc;
 }
+
+bool
+spdk_rdma_provider_accel_sequence_supported(void)
+{
+	return false;
+}

@@ -194,4 +194,6 @@ bool spdk_rdma_provider_qp_queue_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdm
 int spdk_rdma_provider_qp_flush_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr);
 
+bool spdk_rdma_provider_accel_sequence_supported(void);
+
 #endif /* SPDK_RDMA_H */
