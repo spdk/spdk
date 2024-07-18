@@ -7,8 +7,8 @@
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
-pthread_mutex_t g_dma_mutex = PTHREAD_MUTEX_INITIALIZER;
-TAILQ_HEAD(, spdk_memory_domain) g_dma_memory_domains = TAILQ_HEAD_INITIALIZER(
+static pthread_mutex_t g_dma_mutex = PTHREAD_MUTEX_INITIALIZER;
+static TAILQ_HEAD(, spdk_memory_domain) g_dma_memory_domains = TAILQ_HEAD_INITIALIZER(
 			g_dma_memory_domains);
 
 struct spdk_memory_domain {
