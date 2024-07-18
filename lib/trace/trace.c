@@ -22,10 +22,10 @@ static char g_shm_name[64];
 static __thread uint32_t t_ut_array_index;
 static __thread struct spdk_trace_history *t_ut_lcore_history;
 
-uint32_t g_user_thread_index_start;
+static uint32_t g_user_thread_index_start;
 struct spdk_trace_file *g_trace_file;
-struct spdk_bit_array *g_ut_array;
-pthread_mutex_t g_ut_array_mutex;
+static struct spdk_bit_array *g_ut_array;
+static pthread_mutex_t g_ut_array_mutex;
 
 #define TRACE_NUM_OWNERS (16 * 1024)
 #define TRACE_OWNER_DESCRIPTION_SIZE (119)
