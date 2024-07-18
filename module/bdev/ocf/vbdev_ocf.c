@@ -30,7 +30,7 @@ static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 static TAILQ_HEAD(, examining_bdev) g_ocf_examining_bdevs_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_examining_bdevs_head);
 
-bool g_fini_started = false;
+static bool g_fini_started = false;
 
 /* Structure for keeping list of bdevs that are claimed but not used yet */
 struct examining_bdev {
