@@ -27,7 +27,7 @@ static void vbdev_lvs_examine_config(struct spdk_bdev *bdev);
 static void vbdev_lvs_examine_disk(struct spdk_bdev *bdev);
 static bool g_shutdown_started = false;
 
-struct spdk_bdev_module g_lvol_if = {
+static struct spdk_bdev_module g_lvol_if = {
 	.name = "lvol",
 	.module_init = vbdev_lvs_init,
 	.fini_start = vbdev_lvs_fini_start,
