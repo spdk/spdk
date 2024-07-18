@@ -4155,7 +4155,7 @@ reconnect_delay_sec        | Optional | number      | Time to delay a reconnect 
 fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
 psk                        | Optional | string      | Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)
 max_bdevs                  | Optional | number      | The size of the name array for newly created bdevs. Default is 128.
-dhchap_key                 | Optional | string      | DH-HMAC-CHAP key name.
+dhchap_key                 | Optional | string      | DH-HMAC-CHAP key name (required if controller key is specified)
 dhchap_ctrlr_key           | Optional | string      | DH-HMAC-CHAP controller key name.
 allow_unrecognized_csi     | Optional | bool        | Allow attaching namespaces with unrecognized command set identifiers. These will only support NVMe passthrough.
 
@@ -8638,7 +8638,7 @@ nqn                     | Required | string      | Subsystem NQN
 host                    | Required | string      | Host NQN to add to the list of allowed host NQNs
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 psk                     | Optional | string      | Path to a file containing PSK for TLS connection
-dhchap_key              | Optional | string      | DH-HMAC-CHAP key name.
+dhchap_key              | Optional | string      | DH-HMAC-CHAP key name (required if controller key is specified)
 dhchap_ctrlr_key        | Optional | string      | DH-HMAC-CHAP controller key name.
 
 #### Example
