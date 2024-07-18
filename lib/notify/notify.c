@@ -20,7 +20,7 @@ struct spdk_notify_type {
 	TAILQ_ENTRY(spdk_notify_type) tailq;
 };
 
-pthread_mutex_t g_events_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_events_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct spdk_notify_event g_events[SPDK_NOTIFY_MAX_EVENTS];
 static uint64_t g_events_head;
 
