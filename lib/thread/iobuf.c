@@ -100,6 +100,10 @@ spdk_iobuf_initialize(void)
 	uint64_t i;
 	struct spdk_iobuf_buffer *buf;
 
+	/* Round up to the nearest alignment so that each element remains aligned */
+	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
+	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
+
 	g_iobuf.small_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, opts->small_pool_count,
 					      SPDK_ENV_NUMA_ID_ANY);
 	if (!g_iobuf.small_pool) {
@@ -108,8 +112,6 @@ spdk_iobuf_initialize(void)
 		goto error;
 	}
 
-	/* Round up to the nearest alignment so that each element remains aligned */
-	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
 	g_iobuf.small_pool_base = spdk_malloc(opts->small_bufsize * opts->small_pool_count, IOBUF_ALIGNMENT,
 					      NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_iobuf.small_pool_base == NULL) {
@@ -126,8 +128,6 @@ spdk_iobuf_initialize(void)
 		goto error;
 	}
 
-	/* Round up to the nearest alignment so that each element remains aligned */
-	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
 	g_iobuf.large_pool_base = spdk_malloc(opts->large_bufsize * opts->large_pool_count, IOBUF_ALIGNMENT,
 					      NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_iobuf.large_pool_base == NULL) {
