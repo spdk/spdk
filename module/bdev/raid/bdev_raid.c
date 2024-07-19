@@ -2322,7 +2322,7 @@ raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
 		for (i = 0; i < sb->base_bdevs_size; i++) {
 			struct raid_bdev_sb_base_bdev *sb_base_bdev = &sb->base_bdevs[i];
 
-			if (sb_base_bdev->state == RAID_SB_BASE_BDEV_CONFIGURED) {
+			if (sb_base_bdev->slot < raid_bdev->num_base_bdevs) {
 				base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
 				sb_base_bdev->data_size = base_info->data_size;
 			}
