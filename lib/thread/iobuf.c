@@ -35,7 +35,7 @@ struct iobuf_channel_node {
 };
 
 struct iobuf_channel {
-	struct iobuf_channel_node	node;
+	struct iobuf_channel_node	node[SPDK_IOBUF_MAX_NUMA_NODES];
 	struct spdk_iobuf_channel	*channels[IOBUF_MAX_CHANNELS];
 };
 
@@ -52,11 +52,11 @@ struct iobuf_node {
 };
 
 struct iobuf {
-	struct iobuf_node		node;
 	struct spdk_iobuf_opts		opts;
 	TAILQ_HEAD(, iobuf_module)	modules;
 	spdk_iobuf_finish_cb		finish_cb;
 	void				*finish_arg;
+	struct iobuf_node		node[SPDK_IOBUF_MAX_NUMA_NODES];
 };
 
 static struct iobuf g_iobuf = {
@@ -83,7 +83,7 @@ iobuf_channel_create_cb(void *io_device, void *ctx)
 	struct iobuf_channel *ch = ctx;
 	struct iobuf_channel_node *node;
 
-	node = &ch->node;
+	node = &ch->node[0];
 	STAILQ_INIT(&node->small_queue);
 	STAILQ_INIT(&node->large_queue);
 
@@ -96,7 +96,7 @@ iobuf_channel_destroy_cb(void *io_device, void *ctx)
 	struct iobuf_channel *ch = ctx;
 	struct iobuf_channel_node *node __attribute__((unused));
 
-	node = &ch->node;
+	node = &ch->node[0];
 	assert(STAILQ_EMPTY(&node->small_queue));
 	assert(STAILQ_EMPTY(&node->large_queue));
 }
@@ -197,7 +197,7 @@ spdk_iobuf_initialize(void)
 	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
 	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
 
-	node = &g_iobuf.node;
+	node = &g_iobuf.node[0];
 	rc = iobuf_node_initialize(node);
 	if (rc) {
 		return rc;
@@ -223,7 +223,7 @@ iobuf_unregister_cb(void *io_device)
 		free(module);
 	}
 
-	node = &g_iobuf.node;
+	node = &g_iobuf.node[0];
 	iobuf_node_free(node);
 
 	if (g_iobuf.finish_cb != NULL) {
@@ -341,7 +341,7 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	struct iobuf_module *module;
 	struct spdk_iobuf_buffer *buf;
 	struct spdk_iobuf_node_cache *cache;
-	struct iobuf_node *node = &g_iobuf.node;
+	struct iobuf_node *node = &g_iobuf.node[0];
 	struct iobuf_channel_node *ch_node;
 	uint32_t i;
 
@@ -378,8 +378,8 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 
 	ch->parent = ioch;
 	ch->module = module;
-	cache = &ch->cache;
-	ch_node = &iobuf_ch->node;
+	cache = &ch->cache[0];
+	ch_node = &iobuf_ch->node[0];
 
 	cache->small.queue = &ch_node->small_queue;
 	cache->large.queue = &ch_node->large_queue;
@@ -434,10 +434,10 @@ spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
 	struct spdk_iobuf_buffer *buf;
 	struct iobuf_channel *iobuf_ch;
 	struct spdk_iobuf_node_cache *cache;
-	struct iobuf_node *node = &g_iobuf.node;
+	struct iobuf_node *node = &g_iobuf.node[0];
 	uint32_t i;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	/* Make sure none of the wait queue entries are coming from this module */
 	STAILQ_FOREACH(entry, cache->small.queue, stailq) {
@@ -549,7 +549,7 @@ spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch,
 	struct spdk_iobuf_node_cache *cache;
 	int rc;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	rc = iobuf_pool_for_each_entry(ch, &cache->small, cb_fn, cb_ctx);
 	if (rc != 0) {
@@ -565,7 +565,7 @@ spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *e
 	struct spdk_iobuf_node_cache *cache;
 	struct spdk_iobuf_pool_cache *pool;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	if (len <= cache->small.bufsize) {
 		pool = &cache->small;
@@ -587,7 +587,7 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 	struct spdk_iobuf_pool_cache *pool;
 	void *buf;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
 	if (len <= cache->small.bufsize) {
@@ -643,7 +643,7 @@ spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 	struct spdk_iobuf_pool_cache *pool;
 	size_t sz;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
 	if (len <= cache->small.bufsize) {
@@ -724,12 +724,12 @@ iobuf_get_channel_stats(struct spdk_io_channel_iter *iter)
 			if (strcmp(it->module, module->name) == 0) {
 				struct spdk_iobuf_pool_cache *cache;
 
-				cache = &channel->cache.small;
+				cache = &channel->cache[0].small;
 				it->small_pool.cache += cache->stats.cache;
 				it->small_pool.main += cache->stats.main;
 				it->small_pool.retry += cache->stats.retry;
 
-				cache = &channel->cache.large;
+				cache = &channel->cache[0].large;
 				it->large_pool.cache += cache->stats.cache;
 				it->large_pool.main += cache->stats.main;
 				it->large_pool.retry += cache->stats.retry;

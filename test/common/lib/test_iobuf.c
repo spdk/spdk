@@ -56,7 +56,7 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 {
 	struct spdk_iobuf_node_cache *cache;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	STAILQ_INIT(&g_iobuf_entries);
 	cache->small.cache_count = small_cache_size;
@@ -78,7 +78,7 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 
 	HANDLE_RETURN_MOCK(spdk_iobuf_get);
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	if (len > g_iobuf.opts.small_bufsize) {
 		pool = &cache->large;
@@ -118,7 +118,7 @@ spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 	struct spdk_iobuf_pool_cache *pool;
 	uint32_t *count;
 
-	cache = &ch->cache;
+	cache = &ch->cache[0];
 
 	if (len > g_iobuf.opts.small_bufsize) {
 		pool = &cache->large;

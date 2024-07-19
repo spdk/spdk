@@ -1108,14 +1108,16 @@ struct spdk_iobuf_node_cache {
 	struct spdk_iobuf_pool_cache	large;
 };
 
+#define SPDK_IOBUF_MAX_NUMA_NODES	1
+
 /** iobuf channel */
 struct spdk_iobuf_channel {
-	/* Buffer cache */
-	struct spdk_iobuf_node_cache	cache;
 	/** Module pointer */
 	const void			*module;
 	/** Parent IO channel */
 	struct spdk_io_channel		*parent;
+	/* Buffer cache */
+	struct spdk_iobuf_node_cache	cache[SPDK_IOBUF_MAX_NUMA_NODES];
 };
 
 /**

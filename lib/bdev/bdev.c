@@ -1821,7 +1821,7 @@ bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 	max_len = bdev_io_get_max_buf_len(bdev_io, len);
 
-	if (spdk_unlikely(max_len > mgmt_ch->iobuf.cache.large.bufsize)) {
+	if (spdk_unlikely(max_len > mgmt_ch->iobuf.cache[0].large.bufsize)) {
 		SPDK_ERRLOG("Length %" PRIu64 " is larger than allowed\n", max_len);
 		bdev_io_get_buf_complete(bdev_io, false);
 		return;
