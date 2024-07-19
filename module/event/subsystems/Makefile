@@ -23,7 +23,7 @@ DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 # themselves. Should that tree change, these dependencies should change
 # accordingly.
 DEPDIRS-accel := iobuf
-DEPDIRS-bdev := accel vmd sock iobuf
+DEPDIRS-bdev := accel vmd sock iobuf keyring
 DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
 DEPDIRS-ublk := bdev
