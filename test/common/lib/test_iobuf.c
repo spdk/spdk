@@ -54,11 +54,15 @@ int
 spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 			uint32_t small_cache_size, uint32_t large_cache_size)
 {
+	struct spdk_iobuf_node_cache *cache;
+
+	cache = &ch->cache;
+
 	STAILQ_INIT(&g_iobuf_entries);
-	ch->small.cache_count = small_cache_size;
-	ch->small.cache_size = small_cache_size;
-	ch->large.cache_count = large_cache_size;
-	ch->large.cache_size = large_cache_size;
+	cache->small.cache_count = small_cache_size;
+	cache->small.cache_size = small_cache_size;
+	cache->large.cache_count = large_cache_size;
+	cache->large.cache_size = large_cache_size;
 	return 0;
 }
 
@@ -67,17 +71,20 @@ void *
 spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 	       struct spdk_iobuf_entry *entry, spdk_iobuf_get_cb cb_fn)
 {
-	struct spdk_iobuf_pool *pool;
+	struct spdk_iobuf_node_cache *cache;
+	struct spdk_iobuf_pool_cache *pool;
 	uint32_t *count;
 	void *buf;
 
 	HANDLE_RETURN_MOCK(spdk_iobuf_get);
 
+	cache = &ch->cache;
+
 	if (len > g_iobuf.opts.small_bufsize) {
-		pool = &ch->large;
+		pool = &cache->large;
 		count = &g_iobuf.large_pool_count;
 	} else {
-		pool = &ch->small;
+		pool = &cache->small;
 		count = &g_iobuf.small_pool_count;
 	}
 
@@ -107,14 +114,17 @@ void
 spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 {
 	struct spdk_iobuf_entry *entry;
-	struct spdk_iobuf_pool *pool;
+	struct spdk_iobuf_node_cache *cache;
+	struct spdk_iobuf_pool_cache *pool;
 	uint32_t *count;
 
+	cache = &ch->cache;
+
 	if (len > g_iobuf.opts.small_bufsize) {
-		pool = &ch->large;
+		pool = &cache->large;
 		count = &g_iobuf.large_pool_count;
 	} else {
-		pool = &ch->small;
+		pool = &cache->small;
 		count = &g_iobuf.small_pool_count;
 	}
 

@@ -2029,6 +2029,7 @@ test_sequence_accel_buffers(void)
 	void *buf[2], *domain_ctx[2], *iobuf_buf;
 	struct spdk_memory_domain *domain[2];
 	struct spdk_iobuf_buffer *cache_entry;
+	struct spdk_iobuf_pool_cache *small;
 	spdk_iobuf_buffer_stailq_t small_cache;
 	uint32_t small_cache_count;
 	int i, rc, completed;
@@ -2327,11 +2328,12 @@ test_sequence_accel_buffers(void)
 	 * available
 	 */
 	accel_ch = spdk_io_channel_get_ctx(ioch);
-	small_cache_count = accel_ch->iobuf.small.cache_count;
+	small = &accel_ch->iobuf.cache.small;
+	small_cache_count = small->cache_count;
 	STAILQ_INIT(&small_cache);
-	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
-	accel_ch->iobuf.small.cache_count = 0;
-	accel_ch->iobuf.small.cache_size = 0;
+	STAILQ_SWAP(&small->cache, &small_cache, spdk_iobuf_buffer);
+	small->cache_count = 0;
+	small->cache_size = 0;
 	g_iobuf.small_pool_count = 0;
 
 	/* First allocate a single buffer used by two operations */
@@ -2381,13 +2383,13 @@ test_sequence_accel_buffers(void)
 	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
 
 	/* Return the buffers back to the cache */
-	while (!STAILQ_EMPTY(&accel_ch->iobuf.small.cache)) {
-		cache_entry = STAILQ_FIRST(&accel_ch->iobuf.small.cache);
-		STAILQ_REMOVE_HEAD(&accel_ch->iobuf.small.cache, stailq);
+	while (!STAILQ_EMPTY(&small->cache)) {
+		cache_entry = STAILQ_FIRST(&small->cache);
+		STAILQ_REMOVE_HEAD(&small->cache, stailq);
 		STAILQ_INSERT_HEAD(&small_cache, cache_entry, stailq);
 		small_cache_count++;
 	}
-	accel_ch->iobuf.small.cache_count = 0;
+	small->cache_count = 0;
 	g_iobuf.small_pool_count = 0;
 
 	/* Check a bit more complex scenario, with two buffers in the sequence */
@@ -2461,17 +2463,17 @@ test_sequence_accel_buffers(void)
 	spdk_accel_put_buf(ioch, buf[1], domain[1], domain_ctx[1]);
 
 	/* Return the buffers back to the cache */
-	while (!STAILQ_EMPTY(&accel_ch->iobuf.small.cache)) {
-		cache_entry = STAILQ_FIRST(&accel_ch->iobuf.small.cache);
-		STAILQ_REMOVE_HEAD(&accel_ch->iobuf.small.cache, stailq);
+	while (!STAILQ_EMPTY(&small->cache)) {
+		cache_entry = STAILQ_FIRST(&small->cache);
+		STAILQ_REMOVE_HEAD(&small->cache, stailq);
 		STAILQ_INSERT_HEAD(&small_cache, cache_entry, stailq);
 		small_cache_count++;
 	}
-	accel_ch->iobuf.small.cache_count = 0;
+	small->cache_count = 0;
 
 	g_iobuf.small_pool_count = 32;
-	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
-	accel_ch->iobuf.small.cache_count = small_cache_count;
+	STAILQ_SWAP(&small->cache, &small_cache, spdk_iobuf_buffer);
+	small->cache_count = small_cache_count;
 
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
@@ -2505,6 +2507,7 @@ test_sequence_memory_domain(void)
 	struct spdk_iobuf_buffer *cache_entry;
 	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	struct spdk_memory_domain *accel_domain;
+	struct spdk_iobuf_pool_cache *small;
 	spdk_iobuf_buffer_stailq_t small_cache;
 	char srcbuf[4096], dstbuf[4096], expected[4096], tmp[4096];
 	struct iovec src_iovs[2], dst_iovs[2];
@@ -2674,10 +2677,11 @@ test_sequence_memory_domain(void)
 	seq = NULL;
 	/* Make sure the buffer pool is empty */
 	accel_ch = spdk_io_channel_get_ctx(ioch);
-	small_cache_count = accel_ch->iobuf.small.cache_count;
+	small = &accel_ch->iobuf.cache.small;
+	small_cache_count = small->cache_count;
 	STAILQ_INIT(&small_cache);
-	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
-	accel_ch->iobuf.small.cache_count = 0;
+	STAILQ_SWAP(&small->cache, &small_cache, spdk_iobuf_buffer);
+	small->cache_count = 0;
 	g_iobuf.small_pool_count = 0;
 
 	src_iovs[0].iov_base = (void *)0xdeadbeef;
@@ -2724,17 +2728,17 @@ test_sequence_memory_domain(void)
 	CU_ASSERT_EQUAL(memcmp(expected, dstbuf, sizeof(dstbuf)), 0);
 
 	/* Return the buffers back to the cache */
-	while (!STAILQ_EMPTY(&accel_ch->iobuf.small.cache)) {
-		cache_entry = STAILQ_FIRST(&accel_ch->iobuf.small.cache);
-		STAILQ_REMOVE_HEAD(&accel_ch->iobuf.small.cache, stailq);
+	while (!STAILQ_EMPTY(&small->cache)) {
+		cache_entry = STAILQ_FIRST(&small->cache);
+		STAILQ_REMOVE_HEAD(&small->cache, stailq);
 		STAILQ_INSERT_HEAD(&small_cache, cache_entry, stailq);
 		small_cache_count++;
 	}
-	accel_ch->iobuf.small.cache_count = 0;
+	small->cache_count = 0;
 
 	g_iobuf.small_pool_count = 32;
-	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
-	accel_ch->iobuf.small.cache_count = small_cache_count;
+	STAILQ_SWAP(&small->cache, &small_cache, spdk_iobuf_buffer);
+	small->cache_count = small_cache_count;
 
 	/* Check error cases, starting with an error from spdk_memory_domain_pull_data() */
 	completed = 0;
