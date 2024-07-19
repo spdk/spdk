@@ -118,16 +118,16 @@ end:
 }
 
 int
-spdk_net_getaddr(int fd, char *saddr, int slen, uint16_t *sport,
-		 char *caddr, int clen, uint16_t *cport)
+spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
+		 char *paddr, int plen, uint16_t *pport)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
 
-	memset(&sa, 0, sizeof sa);
-	salen = sizeof sa;
-	rc = getsockname(fd, (struct sockaddr *) &sa, &salen);
+	memset(&sa, 0, sizeof(sa));
+	salen = sizeof(sa);
+	rc = getsockname(fd, (struct sockaddr *)&sa, &salen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return -1;
@@ -146,39 +146,39 @@ spdk_net_getaddr(int fd, char *saddr, int slen, uint16_t *sport,
 		return -1;
 	}
 
-	rc = spdk_net_get_address_string((struct sockaddr *)&sa, saddr, slen);
+	rc = spdk_net_get_address_string((struct sockaddr *)&sa, laddr, llen);
 	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
+		SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
 		return -1;
 	}
 
-	if (sport) {
+	if (lport) {
 		if (sa.ss_family == AF_INET) {
-			*sport = ntohs(((struct sockaddr_in *) &sa)->sin_port);
+			*lport = ntohs(((struct sockaddr_in *)&sa)->sin_port);
 		} else if (sa.ss_family == AF_INET6) {
-			*sport = ntohs(((struct sockaddr_in6 *) &sa)->sin6_port);
+			*lport = ntohs(((struct sockaddr_in6 *)&sa)->sin6_port);
 		}
 	}
 
-	memset(&sa, 0, sizeof sa);
-	salen = sizeof sa;
-	rc = getpeername(fd, (struct sockaddr *) &sa, &salen);
+	memset(&sa, 0, sizeof(sa));
+	salen = sizeof(sa);
+	rc = getpeername(fd, (struct sockaddr *)&sa, &salen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
 		return -1;
 	}
 
-	rc = spdk_net_get_address_string((struct sockaddr *)&sa, caddr, clen);
+	rc = spdk_net_get_address_string((struct sockaddr *)&sa, paddr, plen);
 	if (rc != 0) {
-		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", rc);
+		SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
 		return -1;
 	}
 
-	if (cport) {
+	if (pport) {
 		if (sa.ss_family == AF_INET) {
-			*cport = ntohs(((struct sockaddr_in *) &sa)->sin_port);
+			*pport = ntohs(((struct sockaddr_in *)&sa)->sin_port);
 		} else if (sa.ss_family == AF_INET6) {
-			*cport = ntohs(((struct sockaddr_in6 *) &sa)->sin6_port);
+			*pport = ntohs(((struct sockaddr_in6 *)&sa)->sin6_port);
 		}
 	}
 
