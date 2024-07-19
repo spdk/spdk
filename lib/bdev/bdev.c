@@ -4318,10 +4318,7 @@ bdev_abort_all_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry 
 static void
 bdev_abort_all_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, struct spdk_bdev_channel *ch)
 {
-	spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.small,
-				  bdev_abort_all_buf_io_cb, ch);
-	spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.large,
-				  bdev_abort_all_buf_io_cb, ch);
+	spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, bdev_abort_all_buf_io_cb, ch);
 }
 
 /*
@@ -4388,14 +4385,7 @@ bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, struct spdk_bdev_io *b
 {
 	int rc;
 
-	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.small,
-				       bdev_abort_buf_io_cb, bio_to_abort);
-	if (rc == 1) {
-		return true;
-	}
-
-	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.large,
-				       bdev_abort_buf_io_cb, bio_to_abort);
+	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, bdev_abort_buf_io_cb, bio_to_abort);
 	return rc == 1;
 }
 

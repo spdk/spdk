@@ -476,8 +476,8 @@ spdk_iobuf_unregister_module(const char *name)
 	return -ENOENT;
 }
 
-int
-spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
+static int
+iobuf_pool_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
 			  spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx)
 {
 	struct spdk_iobuf_entry *entry, *tmp;
@@ -496,6 +496,19 @@ spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool 
 	}
 
 	return 0;
+}
+
+int
+spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch,
+			  spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx)
+{
+	int rc;
+
+	rc = iobuf_pool_for_each_entry(ch, &ch->small, cb_fn, cb_ctx);
+	if (rc != 0) {
+		return rc;
+	}
+	return iobuf_pool_for_each_entry(ch, &ch->large, cb_fn, cb_ctx);
 }
 
 void

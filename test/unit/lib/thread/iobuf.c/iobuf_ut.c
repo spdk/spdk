@@ -382,42 +382,26 @@ iobuf(void)
 	 * ->buf pointers to different values.
 	 */
 	set_thread(0);
-	rc = spdk_iobuf_for_each_entry(&mod0_ch[0], &mod0_ch[0].large,
-				       ut_iobuf_foreach_cb, (void *)0xdeadbeef);
+	rc = spdk_iobuf_for_each_entry(&mod0_ch[0], ut_iobuf_foreach_cb, (void *)0xdeadbeef);
 	CU_ASSERT_EQUAL(rc, 0);
-	rc = spdk_iobuf_for_each_entry(&mod0_ch[0], &mod0_ch[0].small,
-				       ut_iobuf_foreach_cb, (void *)0xbeefdead);
-	CU_ASSERT_EQUAL(rc, 0);
-	rc = spdk_iobuf_for_each_entry(&mod1_ch[0], &mod1_ch[0].large,
-				       ut_iobuf_foreach_cb, (void *)0xfeedbeef);
-	CU_ASSERT_EQUAL(rc, 0);
-	rc = spdk_iobuf_for_each_entry(&mod1_ch[0], &mod1_ch[0].small,
-				       ut_iobuf_foreach_cb, (void *)0xbeeffeed);
+	rc = spdk_iobuf_for_each_entry(&mod1_ch[0], ut_iobuf_foreach_cb, (void *)0xfeedbeef);
 	CU_ASSERT_EQUAL(rc, 0);
 	set_thread(1);
-	rc = spdk_iobuf_for_each_entry(&mod0_ch[1], &mod0_ch[1].large,
-				       ut_iobuf_foreach_cb, (void *)0xcafebabe);
+	rc = spdk_iobuf_for_each_entry(&mod0_ch[1], ut_iobuf_foreach_cb, (void *)0xcafebabe);
 	CU_ASSERT_EQUAL(rc, 0);
-	rc = spdk_iobuf_for_each_entry(&mod0_ch[1], &mod0_ch[1].small,
-				       ut_iobuf_foreach_cb, (void *)0xbabecafe);
-	CU_ASSERT_EQUAL(rc, 0);
-	rc = spdk_iobuf_for_each_entry(&mod1_ch[1], &mod1_ch[1].large,
-				       ut_iobuf_foreach_cb, (void *)0xbeefcafe);
-	CU_ASSERT_EQUAL(rc, 0);
-	rc = spdk_iobuf_for_each_entry(&mod1_ch[1], &mod1_ch[1].small,
-				       ut_iobuf_foreach_cb, (void *)0xcafebeef);
+	rc = spdk_iobuf_for_each_entry(&mod1_ch[1], ut_iobuf_foreach_cb, (void *)0xbeefcafe);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	/* thread 0 */
 	CU_ASSERT_PTR_EQUAL(mod0_entries[2].buf, (void *)0xdeadbeef);
-	CU_ASSERT_PTR_EQUAL(mod0_entries[3].buf, (void *)0xbeefdead);
+	CU_ASSERT_PTR_EQUAL(mod0_entries[3].buf, (void *)0xdeadbeef);
 	CU_ASSERT_PTR_EQUAL(mod1_entries[2].buf, (void *)0xfeedbeef);
-	CU_ASSERT_PTR_EQUAL(mod1_entries[3].buf, (void *)0xbeeffeed);
+	CU_ASSERT_PTR_EQUAL(mod1_entries[3].buf, (void *)0xfeedbeef);
 	/* thread 1 */
 	CU_ASSERT_PTR_EQUAL(mod0_entries[6].buf, (void *)0xcafebabe);
-	CU_ASSERT_PTR_EQUAL(mod0_entries[7].buf, (void *)0xbabecafe);
+	CU_ASSERT_PTR_EQUAL(mod0_entries[7].buf, (void *)0xcafebabe);
 	CU_ASSERT_PTR_EQUAL(mod1_entries[6].buf, (void *)0xbeefcafe);
-	CU_ASSERT_PTR_EQUAL(mod1_entries[7].buf, (void *)0xcafebeef);
+	CU_ASSERT_PTR_EQUAL(mod1_entries[7].buf, (void *)0xbeefcafe);
 
 	/* Clean everything up */
 	set_thread(0);

@@ -974,14 +974,7 @@ nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req)
 
 	assert(tgroup != NULL);
 
-	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, &tgroup->buf_cache->small,
-				       nvmf_request_get_buffers_abort_cb, req);
-	if (rc == 1) {
-		return true;
-	}
-
-	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, &tgroup->buf_cache->large,
-				       nvmf_request_get_buffers_abort_cb, req);
+	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, nvmf_request_get_buffers_abort_cb, req);
 	return rc == 1;
 }
 

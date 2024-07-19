@@ -1190,17 +1190,16 @@ typedef int (*spdk_iobuf_for_each_entry_fn)(struct spdk_iobuf_channel *ch,
 		struct spdk_iobuf_entry *entry, void *ctx);
 
 /**
- * Iterate over all entries on a given queue and execute a callback on those that were requested
- * using `ch`.  The iteration is stopped if the callback returns non-zero status.
+ * Iterate over all entries on a given channel and execute a callback on those that were requested.
+ * The iteration is stopped if the callback returns non-zero status.
  *
  * \param ch iobuf channel to iterate over.
- * \param pool Pool to iterate over (`small` or `large`).
- * \param cb_fn Callback to execute on each entry on the queue that was requested using `ch`.
+ * \param cb_fn Callback to execute on each entry on the channel that was requested.
  * \param cb_ctx Argument passed to `cb_fn`.
  *
  * \return status of the last callback.
  */
-int spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
+int spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch,
 			      spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx);
 
 /**
