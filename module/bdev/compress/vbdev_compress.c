@@ -596,82 +596,100 @@ comp_reduce_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 	cb_args->cb_fn(cb_args->cb_arg, reduce_errno);
 }
 
-/* This is the function provided to the reduceLib for sending reads directly to
- * the backing device.
- */
 static void
-_comp_reduce_readv(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
-		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+_comp_backing_bdev_read(struct spdk_reduce_backing_io *backing_io)
 {
-	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(dev, struct vbdev_compress,
+	struct spdk_reduce_vol_cb_args *backing_cb_args = backing_io->backing_cb_args;
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(backing_io->dev, struct vbdev_compress,
 					   backing_dev);
 	int rc;
 
 	rc = spdk_bdev_readv_blocks(comp_bdev->base_desc, comp_bdev->base_ch,
-				    iov, iovcnt, lba, lba_count,
+				    backing_io->iov, backing_io->iovcnt,
+				    backing_io->lba, backing_io->lba_count,
 				    comp_reduce_io_cb,
-				    args);
+				    backing_cb_args);
+
 	if (rc) {
 		if (rc == -ENOMEM) {
 			SPDK_ERRLOG("No memory, start to queue io.\n");
 			/* TODO: there's no bdev_io to queue */
 		} else {
-			SPDK_ERRLOG("submitting readv request\n");
+			SPDK_ERRLOG("submitting readv request, rc=%d\n", rc);
 		}
-		args->cb_fn(args->cb_arg, rc);
+		backing_cb_args->cb_fn(backing_cb_args->cb_arg, rc);
 	}
 }
 
-/* This is the function provided to the reduceLib for sending writes directly to
- * the backing device.
- */
 static void
-_comp_reduce_writev(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
-		    uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+_comp_backing_bdev_write(struct spdk_reduce_backing_io  *backing_io)
 {
-	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(dev, struct vbdev_compress,
+	struct spdk_reduce_vol_cb_args *backing_cb_args = backing_io->backing_cb_args;
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(backing_io->dev, struct vbdev_compress,
 					   backing_dev);
 	int rc;
 
 	rc = spdk_bdev_writev_blocks(comp_bdev->base_desc, comp_bdev->base_ch,
-				     iov, iovcnt, lba, lba_count,
+				     backing_io->iov, backing_io->iovcnt,
+				     backing_io->lba, backing_io->lba_count,
 				     comp_reduce_io_cb,
-				     args);
+				     backing_cb_args);
+
 	if (rc) {
 		if (rc == -ENOMEM) {
 			SPDK_ERRLOG("No memory, start to queue io.\n");
 			/* TODO: there's no bdev_io to queue */
 		} else {
-			SPDK_ERRLOG("error submitting writev request\n");
+			SPDK_ERRLOG("error submitting writev request, rc=%d\n", rc);
 		}
-		args->cb_fn(args->cb_arg, rc);
+		backing_cb_args->cb_fn(backing_cb_args->cb_arg, rc);
 	}
 }
 
-/* This is the function provided to the reduceLib for sending unmaps directly to
- * the backing device.
- */
 static void
-_comp_reduce_unmap(struct spdk_reduce_backing_dev *dev,
-		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+_comp_backing_bdev_unmap(struct spdk_reduce_backing_io *backing_io)
 {
-	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(dev, struct vbdev_compress,
+	struct spdk_reduce_vol_cb_args *backing_cb_args = backing_io->backing_cb_args;
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(backing_io->dev, struct vbdev_compress,
 					   backing_dev);
 	int rc;
 
 	rc = spdk_bdev_unmap_blocks(comp_bdev->base_desc, comp_bdev->base_ch,
-				    lba, lba_count,
+				    backing_io->lba, backing_io->lba_count,
 				    comp_reduce_io_cb,
-				    args);
+				    backing_cb_args);
 
 	if (rc) {
 		if (rc == -ENOMEM) {
 			SPDK_ERRLOG("No memory, start to queue io.\n");
 			/* TODO: there's no bdev_io to queue */
 		} else {
-			SPDK_ERRLOG("submitting unmap request\n");
+			SPDK_ERRLOG("submitting unmap request, rc=%d\n", rc);
 		}
-		args->cb_fn(args->cb_arg, rc);
+		backing_cb_args->cb_fn(backing_cb_args->cb_arg, rc);
+	}
+}
+
+/* This is the function provided to the reduceLib for sending reads/writes/unmaps
+ * directly to the backing device.
+ */
+static void
+_comp_reduce_submit_backing_io(struct spdk_reduce_backing_io *backing_io)
+{
+	switch (backing_io->backing_io_type) {
+	case SPDK_REDUCE_BACKING_IO_WRITE:
+		_comp_backing_bdev_write(backing_io);
+		break;
+	case SPDK_REDUCE_BACKING_IO_READ:
+		_comp_backing_bdev_read(backing_io);
+		break;
+	case SPDK_REDUCE_BACKING_IO_UNMAP:
+		_comp_backing_bdev_unmap(backing_io);
+		break;
+	default:
+		SPDK_ERRLOG("Unknown I/O type %d\n", backing_io->backing_io_type);
+		backing_io->backing_cb_args->cb_fn(backing_io->backing_cb_args->cb_arg, -EINVAL);
+		break;
 	}
 }
 
@@ -739,9 +757,7 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 		return NULL;
 	}
 
-	comp_bdev->backing_dev.unmap = _comp_reduce_unmap;
-	comp_bdev->backing_dev.readv = _comp_reduce_readv;
-	comp_bdev->backing_dev.writev = _comp_reduce_writev;
+	comp_bdev->backing_dev.submit_backing_io = _comp_reduce_submit_backing_io;
 	comp_bdev->backing_dev.compress = _comp_reduce_compress;
 	comp_bdev->backing_dev.decompress = _comp_reduce_decompress;
 

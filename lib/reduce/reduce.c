@@ -99,6 +99,7 @@ struct spdk_reduce_vol_request {
 	int					iovcnt;
 	int					num_backing_ops;
 	uint32_t				num_io_units;
+	struct spdk_reduce_backing_io           *backing_io;
 	bool					chunk_is_compressed;
 	bool					copy_after_decompress;
 	uint64_t				offset;
@@ -134,7 +135,9 @@ struct spdk_reduce_vol {
 
 	/* Single contiguous buffer used for all request buffers for this volume. */
 	uint8_t					*buf_mem;
-	struct iovec				*buf_iov_mem;
+	struct iovec                            *buf_iov_mem;
+	/* Single contiguous buffer used for backing io buffers for this volume. */
+	uint8_t                                 *buf_backing_io_mem;
 };
 
 static void _start_readv_request(struct spdk_reduce_vol_request *req);
@@ -305,6 +308,7 @@ struct reduce_init_load_ctx {
 	void					*cb_arg;
 	struct iovec				iov[LOAD_IOV_COUNT];
 	void					*path;
+	struct spdk_reduce_backing_io           *backing_io;
 };
 
 static inline bool
@@ -351,6 +355,7 @@ static int
 _allocate_vol_requests(struct spdk_reduce_vol *vol)
 {
 	struct spdk_reduce_vol_request *req;
+	struct spdk_reduce_backing_dev *backing_dev = vol->backing_dev;
 	uint32_t reqs_in_2mb_page, huge_pages_needed;
 	uint8_t *buffer, *buffer_end;
 	int i = 0;
@@ -392,12 +397,28 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 		return -ENOMEM;
 	}
 
+	vol->buf_backing_io_mem = calloc(REDUCE_NUM_VOL_REQUESTS, (sizeof(struct spdk_reduce_backing_io) +
+					 backing_dev->user_ctx_size) * vol->backing_io_units_per_chunk);
+	if (vol->buf_backing_io_mem == NULL) {
+		free(vol->request_mem);
+		free(vol->buf_iov_mem);
+		spdk_free(vol->buf_mem);
+		vol->request_mem = NULL;
+		vol->buf_iov_mem = NULL;
+		vol->buf_mem = NULL;
+		return -ENOMEM;
+	}
+
 	buffer = vol->buf_mem;
 	buffer_end = buffer + VALUE_2MB * huge_pages_needed;
 
 	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
 		req = &vol->request_mem[i];
 		TAILQ_INSERT_HEAD(&vol->free_requests, req, tailq);
+		req->backing_io = (struct spdk_reduce_backing_io *)(vol->buf_backing_io_mem + i *
+				  (sizeof(struct spdk_reduce_backing_io) + backing_dev->user_ctx_size) *
+				  vol->backing_io_units_per_chunk);
+
 		req->decomp_buf_iov = &vol->buf_iov_mem[(2 * i) * vol->backing_io_units_per_chunk];
 		req->comp_buf_iov = &vol->buf_iov_mem[(2 * i + 1) * vol->backing_io_units_per_chunk];
 
@@ -416,10 +437,12 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	}
 
 	if (rc) {
+		free(vol->buf_backing_io_mem);
 		free(vol->buf_iov_mem);
 		free(vol->request_mem);
 		spdk_free(vol->buf_mem);
 		vol->buf_mem = NULL;
+		vol->buf_backing_io_mem = NULL;
 		vol->buf_iov_mem = NULL;
 		vol->request_mem = NULL;
 	}
@@ -432,6 +455,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 {
 	if (ctx != NULL) {
 		spdk_free(ctx->path);
+		free(ctx->backing_io);
 		free(ctx);
 	}
 
@@ -444,6 +468,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 		spdk_bit_array_free(&vol->allocated_chunk_maps);
 		spdk_bit_array_free(&vol->allocated_backing_io_units);
 		free(vol->request_mem);
+		free(vol->buf_backing_io_mem);
 		free(vol->buf_iov_mem);
 		spdk_free(vol->buf_mem);
 		free(vol);
@@ -503,14 +528,22 @@ _init_write_path_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = init_ctx->vol;
+	struct spdk_reduce_backing_io *backing_io = init_ctx->backing_io;
 
 	init_ctx->iov[0].iov_base = vol->backing_super;
 	init_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
 	init_ctx->backing_cb_args.cb_fn = _init_write_super_cpl;
 	init_ctx->backing_cb_args.cb_arg = init_ctx;
-	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
-				 0, sizeof(*vol->backing_super) / vol->backing_dev->blocklen,
-				 &init_ctx->backing_cb_args);
+
+	backing_io->dev = vol->backing_dev;
+	backing_io->iov = init_ctx->iov;
+	backing_io->iovcnt = 1;
+	backing_io->lba = 0;
+	backing_io->lba_count = sizeof(*vol->backing_super) / vol->backing_dev->blocklen;
+	backing_io->backing_cb_args = &init_ctx->backing_cb_args;
+	backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_WRITE;
+
+	vol->backing_dev->submit_backing_io(backing_io);
 }
 
 static int
@@ -546,6 +579,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 {
 	struct spdk_reduce_vol *vol;
 	struct reduce_init_load_ctx *init_ctx;
+	struct spdk_reduce_backing_io *backing_io;
 	uint64_t backing_dev_size;
 	size_t mapped_len;
 	int dir_len, max_dir_len, rc;
@@ -582,8 +616,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	if (backing_dev->readv == NULL || backing_dev->writev == NULL ||
-	    backing_dev->unmap == NULL) {
+	if (backing_dev->submit_backing_io == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
@@ -613,6 +646,14 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		_init_load_cleanup(vol, NULL);
 		return;
 	}
+
+	backing_io = calloc(1, sizeof(*backing_io) + backing_dev->user_ctx_size);
+	if (backing_io == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		_init_load_cleanup(vol, init_ctx);
+		return;
+	}
+	init_ctx->backing_io = backing_io;
 
 	init_ctx->path = spdk_zmalloc(REDUCE_PATH_MAX, 0, NULL,
 				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -691,10 +732,15 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	 *  super block to guarantee we don't get the super block written without the
 	 *  the path if the system crashed in the middle of a write operation.
 	 */
-	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
-				 REDUCE_BACKING_DEV_PATH_OFFSET / vol->backing_dev->blocklen,
-				 REDUCE_PATH_MAX / vol->backing_dev->blocklen,
-				 &init_ctx->backing_cb_args);
+	backing_io->dev = vol->backing_dev;
+	backing_io->iov = init_ctx->iov;
+	backing_io->iovcnt = 1;
+	backing_io->lba = REDUCE_BACKING_DEV_PATH_OFFSET / vol->backing_dev->blocklen;
+	backing_io->lba_count = REDUCE_PATH_MAX / vol->backing_dev->blocklen;
+	backing_io->backing_cb_args = &init_ctx->backing_cb_args;
+	backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_WRITE;
+
+	vol->backing_dev->submit_backing_io(backing_io);
 }
 
 static void destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno);
@@ -810,9 +856,9 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 {
 	struct spdk_reduce_vol *vol;
 	struct reduce_init_load_ctx *load_ctx;
+	struct spdk_reduce_backing_io *backing_io;
 
-	if (backing_dev->readv == NULL || backing_dev->writev == NULL ||
-	    backing_dev->unmap == NULL) {
+	if (backing_dev->submit_backing_io == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
@@ -845,6 +891,15 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 		return;
 	}
 
+	backing_io = calloc(1, sizeof(*backing_io) + backing_dev->user_ctx_size);
+	if (backing_io == NULL) {
+		_init_load_cleanup(vol, load_ctx);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	load_ctx->backing_io = backing_io;
+
 	load_ctx->path = spdk_zmalloc(REDUCE_PATH_MAX, 64, NULL,
 				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (load_ctx->path == NULL) {
@@ -861,12 +916,18 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	load_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
 	load_ctx->iov[1].iov_base = load_ctx->path;
 	load_ctx->iov[1].iov_len = REDUCE_PATH_MAX;
+	backing_io->dev = vol->backing_dev;
+	backing_io->iov = load_ctx->iov;
+	backing_io->iovcnt = LOAD_IOV_COUNT;
+	backing_io->lba = 0;
+	backing_io->lba_count = (sizeof(*vol->backing_super) + REDUCE_PATH_MAX) /
+				vol->backing_dev->blocklen;
+	backing_io->backing_cb_args = &load_ctx->backing_cb_args;
+	backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_READ;
+
 	load_ctx->backing_cb_args.cb_fn = _load_read_super_and_path_cpl;
 	load_ctx->backing_cb_args.cb_arg = load_ctx;
-	vol->backing_dev->readv(vol->backing_dev, load_ctx->iov, LOAD_IOV_COUNT, 0,
-				(sizeof(*vol->backing_super) + REDUCE_PATH_MAX) /
-				vol->backing_dev->blocklen,
-				&load_ctx->backing_cb_args);
+	vol->backing_dev->submit_backing_io(backing_io);
 }
 
 void
@@ -897,6 +958,7 @@ struct reduce_destroy_ctx {
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
 	int					reduce_errno;
 	char					pm_path[REDUCE_PATH_MAX];
+	struct spdk_reduce_backing_io           *backing_io;
 };
 
 static void
@@ -917,6 +979,7 @@ destroy_unload_cpl(void *cb_arg, int reduce_errno)
 	 */
 	destroy_ctx->cb_fn(destroy_ctx->cb_arg, destroy_ctx->reduce_errno);
 	spdk_free(destroy_ctx->super);
+	free(destroy_ctx->backing_io);
 	free(destroy_ctx);
 }
 
@@ -934,6 +997,7 @@ static void
 destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
 	struct reduce_destroy_ctx *destroy_ctx = cb_arg;
+	struct spdk_reduce_backing_io *backing_io = destroy_ctx->backing_io;
 
 	if (reduce_errno != 0) {
 		destroy_ctx->cb_fn(destroy_ctx->cb_arg, reduce_errno);
@@ -948,9 +1012,16 @@ destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 	destroy_ctx->iov.iov_len = sizeof(*destroy_ctx->super);
 	destroy_ctx->backing_cb_args.cb_fn = _destroy_zero_super_cpl;
 	destroy_ctx->backing_cb_args.cb_arg = destroy_ctx;
-	vol->backing_dev->writev(vol->backing_dev, &destroy_ctx->iov, 1, 0,
-				 sizeof(*destroy_ctx->super) / vol->backing_dev->blocklen,
-				 &destroy_ctx->backing_cb_args);
+
+	backing_io->dev = vol->backing_dev;
+	backing_io->iov = &destroy_ctx->iov;
+	backing_io->iovcnt = 1;
+	backing_io->lba = 0;
+	backing_io->lba_count = sizeof(*destroy_ctx->super) / vol->backing_dev->blocklen;
+	backing_io->backing_cb_args = &destroy_ctx->backing_cb_args;
+	backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_WRITE;
+
+	vol->backing_dev->submit_backing_io(backing_io);
 }
 
 void
@@ -958,6 +1029,7 @@ spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
 			spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct reduce_destroy_ctx *destroy_ctx;
+	struct spdk_reduce_backing_io *backing_io;
 
 	destroy_ctx = calloc(1, sizeof(*destroy_ctx));
 	if (destroy_ctx == NULL) {
@@ -965,10 +1037,20 @@ spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
 		return;
 	}
 
+	backing_io = calloc(1, sizeof(*backing_io) + backing_dev->user_ctx_size);
+	if (backing_io == NULL) {
+		free(destroy_ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	destroy_ctx->backing_io = backing_io;
+
 	destroy_ctx->super = spdk_zmalloc(sizeof(*destroy_ctx->super), 64, NULL,
 					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (destroy_ctx->super == NULL) {
 		free(destroy_ctx);
+		free(backing_io);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -1078,6 +1160,19 @@ _write_write_done(void *_req, int reduce_errno)
 	_reduce_vol_complete_req(req, 0);
 }
 
+static struct spdk_reduce_backing_io *
+_reduce_vol_req_get_backing_io(struct spdk_reduce_vol_request *req, uint32_t index)
+{
+	struct spdk_reduce_backing_dev *backing_dev = req->vol->backing_dev;
+	struct spdk_reduce_backing_io *backing_io;
+
+	backing_io = (struct spdk_reduce_backing_io *)((uint8_t *)req->backing_io +
+			(sizeof(*backing_io) + backing_dev->user_ctx_size) * index);
+
+	return backing_io;
+
+}
+
 struct reduce_merged_io_desc {
 	uint64_t io_unit_index;
 	uint32_t num_io_units;
@@ -1088,6 +1183,7 @@ _issue_backing_ops_without_merge(struct spdk_reduce_vol_request *req, struct spd
 				 reduce_request_fn next_fn, bool is_write)
 {
 	struct iovec *iov;
+	struct spdk_reduce_backing_io *backing_io;
 	uint8_t *buf;
 	uint32_t i;
 
@@ -1103,17 +1199,21 @@ _issue_backing_ops_without_merge(struct spdk_reduce_vol_request *req, struct spd
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
 	for (i = 0; i < req->num_io_units; i++) {
+		backing_io = _reduce_vol_req_get_backing_io(req, i);
 		iov[i].iov_base = buf + i * vol->params.backing_io_unit_size;
 		iov[i].iov_len = vol->params.backing_io_unit_size;
+		backing_io->dev  = vol->backing_dev;
+		backing_io->iov = &iov[i];
+		backing_io->iovcnt = 1;
+		backing_io->lba = req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit;
+		backing_io->lba_count = vol->backing_lba_per_io_unit;
+		backing_io->backing_cb_args = &req->backing_cb_args;
 		if (is_write) {
-			vol->backing_dev->writev(vol->backing_dev, &iov[i], 1,
-						 req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
-						 vol->backing_lba_per_io_unit, &req->backing_cb_args);
+			backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_WRITE;
 		} else {
-			vol->backing_dev->readv(vol->backing_dev, &iov[i], 1,
-						req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
-						vol->backing_lba_per_io_unit, &req->backing_cb_args);
+			backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_READ;
 		}
+		vol->backing_dev->submit_backing_io(backing_io);
 	}
 }
 
@@ -1122,6 +1222,7 @@ _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *
 		   reduce_request_fn next_fn, bool is_write)
 {
 	struct iovec *iov;
+	struct spdk_reduce_backing_io *backing_io;
 	struct reduce_merged_io_desc merged_io_desc[4];
 	uint8_t *buf;
 	bool merge = false;
@@ -1171,19 +1272,21 @@ _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
 	for (i = 0; i < num_io; i++) {
+		backing_io = _reduce_vol_req_get_backing_io(req, i);
 		iov[i].iov_base = buf + io_unit_counts * vol->params.backing_io_unit_size;
 		iov[i].iov_len = vol->params.backing_io_unit_size * merged_io_desc[i].num_io_units;
+		backing_io->dev  = vol->backing_dev;
+		backing_io->iov = &iov[i];
+		backing_io->iovcnt = 1;
+		backing_io->lba = merged_io_desc[i].io_unit_index * vol->backing_lba_per_io_unit;
+		backing_io->lba_count = vol->backing_lba_per_io_unit * merged_io_desc[i].num_io_units;
+		backing_io->backing_cb_args = &req->backing_cb_args;
 		if (is_write) {
-			vol->backing_dev->writev(vol->backing_dev, &iov[i], 1,
-						 merged_io_desc[i].io_unit_index * vol->backing_lba_per_io_unit,
-						 vol->backing_lba_per_io_unit * merged_io_desc[i].num_io_units,
-						 &req->backing_cb_args);
+			backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_WRITE;
 		} else {
-			vol->backing_dev->readv(vol->backing_dev, &iov[i], 1,
-						merged_io_desc[i].io_unit_index * vol->backing_lba_per_io_unit,
-						vol->backing_lba_per_io_unit * merged_io_desc[i].num_io_units,
-						&req->backing_cb_args);
+			backing_io->backing_io_type = SPDK_REDUCE_BACKING_IO_READ;
 		}
+		vol->backing_dev->submit_backing_io(backing_io);
 
 		/* Collects the number of processed I/O. */
 		io_unit_counts += merged_io_desc[i].num_io_units;

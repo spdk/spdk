@@ -208,9 +208,7 @@ test_setup(void)
 	spdk_set_thread(thread);
 
 	g_comp_bdev.reduce_thread = thread;
-	g_comp_bdev.backing_dev.unmap = _comp_reduce_unmap;
-	g_comp_bdev.backing_dev.readv = _comp_reduce_readv;
-	g_comp_bdev.backing_dev.writev = _comp_reduce_writev;
+	g_comp_bdev.backing_dev.submit_backing_io = _comp_reduce_submit_backing_io;
 	g_comp_bdev.backing_dev.compress = _comp_reduce_compress;
 	g_comp_bdev.backing_dev.decompress = _comp_reduce_decompress;
 	g_comp_bdev.backing_dev.blocklen = 512;

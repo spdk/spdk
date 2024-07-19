@@ -378,6 +378,28 @@ backing_dev_io_execute(uint32_t count)
 	}
 }
 
+static void
+backing_dev_submit_io(struct spdk_reduce_backing_io *backing_io)
+{
+	switch (backing_io->backing_io_type) {
+	case SPDK_REDUCE_BACKING_IO_WRITE:
+		backing_dev_writev(backing_io->dev, backing_io->iov, backing_io->iovcnt,
+				   backing_io->lba, backing_io->lba_count, backing_io->backing_cb_args);
+		break;
+	case SPDK_REDUCE_BACKING_IO_READ:
+		backing_dev_readv(backing_io->dev, backing_io->iov, backing_io->iovcnt,
+				  backing_io->lba, backing_io->lba_count, backing_io->backing_cb_args);
+		break;
+	case SPDK_REDUCE_BACKING_IO_UNMAP:
+		backing_dev_unmap(backing_io->dev, backing_io->lba, backing_io->lba_count,
+				  backing_io->backing_cb_args);
+		break;
+	default:
+		CU_ASSERT(false);
+		break;
+	}
+}
+
 static int
 ut_compress(char *outbuf, uint32_t *compressed_len, char *inbuf, uint32_t inbuflen)
 {
@@ -533,9 +555,7 @@ backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce
 	size = 4 * 1024 * 1024;
 	backing_dev->blocklen = backing_blocklen;
 	backing_dev->blockcnt = size / backing_dev->blocklen;
-	backing_dev->readv = backing_dev_readv;
-	backing_dev->writev = backing_dev_writev;
-	backing_dev->unmap = backing_dev_unmap;
+	backing_dev->submit_backing_io = backing_dev_submit_io;
 	backing_dev->compress = backing_dev_compress;
 	backing_dev->decompress = backing_dev_decompress;
 	backing_dev->sgl_in = true;
@@ -1797,11 +1817,14 @@ static void
 test_allocate_vol_requests(void)
 {
 	struct spdk_reduce_vol *vol;
+	struct spdk_reduce_backing_dev backing_dev = {};
 	/* include chunk_sizes which are not power of 2 */
 	uint32_t chunk_sizes[] = {8192, 8320, 16384, 16416, 32768};
 	uint32_t io_unit_sizes[] = {512, 520, 4096, 4104, 4096};
 	uint32_t i;
 
+	/* bdev compress module can specify how big the user_ctx_size needs to be */
+	backing_dev.user_ctx_size = 64;
 	for (i = 0; i < 4; i++) {
 		vol = calloc(1, sizeof(*vol));
 		SPDK_CU_ASSERT_FATAL(vol);
@@ -1811,6 +1834,7 @@ test_allocate_vol_requests(void)
 		vol->params.backing_io_unit_size = io_unit_sizes[i];
 		vol->backing_io_units_per_chunk = vol->params.chunk_size / vol->params.backing_io_unit_size;
 		vol->logical_blocks_per_chunk = vol->params.chunk_size / vol->params.logical_block_size;
+		vol->backing_dev = &backing_dev;
 
 		CU_ASSERT(_validate_vol_params(&vol->params) == 0);
 		CU_ASSERT(_allocate_vol_requests(vol) == 0);

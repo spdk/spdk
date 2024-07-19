@@ -87,15 +87,25 @@ struct spdk_reduce_vol_cb_args {
 	void			*cb_arg;
 };
 
+enum spdk_reduce_backing_io_type {
+	SPDK_REDUCE_BACKING_IO_WRITE,
+	SPDK_REDUCE_BACKING_IO_READ,
+	SPDK_REDUCE_BACKING_IO_UNMAP,
+};
+
+struct spdk_reduce_backing_io {
+	struct spdk_reduce_backing_dev    *dev;
+	struct iovec                      *iov;
+	uint32_t                          iovcnt;
+	uint64_t                          lba;
+	uint32_t                          lba_count;
+	struct spdk_reduce_vol_cb_args    *backing_cb_args;
+	enum spdk_reduce_backing_io_type  backing_io_type;
+	char                              user_ctx[0];
+};
+
 struct spdk_reduce_backing_dev {
-	void (*readv)(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
-		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
-
-	void (*writev)(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
-		       uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
-
-	void (*unmap)(struct spdk_reduce_backing_dev *dev,
-		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
+	void (*submit_backing_io)(struct spdk_reduce_backing_io *backing_io);
 
 	void (*compress)(struct spdk_reduce_backing_dev *dev,
 			 struct iovec *src_iov, int src_iovcnt,
@@ -111,6 +121,7 @@ struct spdk_reduce_backing_dev {
 	uint32_t	blocklen;
 	bool		sgl_in;
 	bool		sgl_out;
+	uint32_t        user_ctx_size;
 };
 
 /**
