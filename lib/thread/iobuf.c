@@ -101,18 +101,13 @@ iobuf_channel_destroy_cb(void *io_device, void *ctx)
 	assert(STAILQ_EMPTY(&node->large_queue));
 }
 
-int
-spdk_iobuf_initialize(void)
+static int
+iobuf_node_initialize(struct iobuf_node *node)
 {
 	struct spdk_iobuf_opts *opts = &g_iobuf.opts;
-	struct iobuf_node *node = &g_iobuf.node;
-	int rc = 0;
-	uint64_t i;
 	struct spdk_iobuf_buffer *buf;
-
-	/* Round up to the nearest alignment so that each element remains aligned */
-	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
-	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
+	uint64_t i;
+	int rc;
 
 	node->small_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, opts->small_pool_count,
 					    SPDK_ENV_NUMA_ID_ANY);
@@ -156,11 +151,8 @@ spdk_iobuf_initialize(void)
 		spdk_ring_enqueue(node->large_pool, (void **)&buf, 1, NULL);
 	}
 
-	spdk_io_device_register(&g_iobuf, iobuf_channel_create_cb, iobuf_channel_destroy_cb,
-				sizeof(struct iobuf_channel), "iobuf");
-	g_iobuf_is_initialized = true;
-
 	return 0;
+
 error:
 	spdk_free(node->small_pool_base);
 	spdk_ring_free(node->small_pool);
@@ -171,18 +163,8 @@ error:
 }
 
 static void
-iobuf_unregister_cb(void *io_device)
+iobuf_node_free(struct iobuf_node *node)
 {
-	struct iobuf_module *module;
-	struct iobuf_node *node = &g_iobuf.node;
-
-	while (!TAILQ_EMPTY(&g_iobuf.modules)) {
-		module = TAILQ_FIRST(&g_iobuf.modules);
-		TAILQ_REMOVE(&g_iobuf.modules, module, tailq);
-		free(module->name);
-		free(module);
-	}
-
 	if (spdk_ring_count(node->small_pool) != g_iobuf.opts.small_pool_count) {
 		SPDK_ERRLOG("small iobuf pool count is %zu, expected %"PRIu64"\n",
 			    spdk_ring_count(node->small_pool), g_iobuf.opts.small_pool_count);
@@ -202,6 +184,47 @@ iobuf_unregister_cb(void *io_device)
 	node->large_pool_base = NULL;
 	spdk_ring_free(node->large_pool);
 	node->large_pool = NULL;
+}
+
+int
+spdk_iobuf_initialize(void)
+{
+	struct spdk_iobuf_opts *opts = &g_iobuf.opts;
+	struct iobuf_node *node;
+	int rc = 0;
+
+	/* Round up to the nearest alignment so that each element remains aligned */
+	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
+	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
+
+	node = &g_iobuf.node;
+	rc = iobuf_node_initialize(node);
+	if (rc) {
+		return rc;
+	}
+
+	spdk_io_device_register(&g_iobuf, iobuf_channel_create_cb, iobuf_channel_destroy_cb,
+				sizeof(struct iobuf_channel), "iobuf");
+	g_iobuf_is_initialized = true;
+
+	return 0;
+}
+
+static void
+iobuf_unregister_cb(void *io_device)
+{
+	struct iobuf_module *module;
+	struct iobuf_node *node;
+
+	while (!TAILQ_EMPTY(&g_iobuf.modules)) {
+		module = TAILQ_FIRST(&g_iobuf.modules);
+		TAILQ_REMOVE(&g_iobuf.modules, module, tailq);
+		free(module->name);
+		free(module);
+	}
+
+	node = &g_iobuf.node;
+	iobuf_node_free(node);
 
 	if (g_iobuf.finish_cb != NULL) {
 		g_iobuf.finish_cb(g_iobuf.finish_arg);
