@@ -121,7 +121,7 @@ if ! xtrace_disable_per_cmd reap_spdk_processes; then
 	echo "WARNING: Lingering SPDK processes were detected. Testing environment may be unstable" >&2
 fi
 
-if [ $(uname -s) = Linux ]; then
+if [[ $(uname -s) == Linux && $SPDK_TEST_SETUP -eq 1 ]]; then
 	run_test "setup.sh" "$rootdir/test/setup/test-setup.sh"
 fi
 
