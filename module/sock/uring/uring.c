@@ -881,8 +881,8 @@ uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
 
 	*_buf = tr->buf + sock->recv_offset;
 	*ctx = tr->ctx;
-    size_t tr_len = tr->len;
-    tr->len = 0;
+	size_t tr_len = tr->len;
+	tr->len = 0;
 
 	STAILQ_REMOVE_HEAD(&sock->recv_stream, link);
 	STAILQ_INSERT_HEAD(&group->free_trackers, tr, link);
@@ -949,7 +949,7 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 			if (sock->recv_offset == tr->len) {
 				sock->recv_offset = 0;
 				STAILQ_REMOVE_HEAD(&sock->recv_stream, link);
-                tr->len = 0;
+				tr->len = 0;
 				STAILQ_INSERT_HEAD(&sock->group->free_trackers, tr, link);
 				spdk_sock_group_provide_buf(sock->group->base.group, tr->buf, tr->buflen, tr->ctx);
 				tr = STAILQ_FIRST(&sock->recv_stream);
