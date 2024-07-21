@@ -289,8 +289,13 @@ bdev_blob_resubmit(void *arg)
 	switch (ctx->io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (ctx->iovcnt > 0) {
-			bdev_blob_readv_ext(ctx->dev, ctx->channel, (struct iovec *) ctx->payload, ctx->iovcnt,
-					    ctx->lba, ctx->lba_count, ctx->cb_args, ctx->ext_io_opts);
+			if (ctx->ext_io_opts) {
+				bdev_blob_readv_ext(ctx->dev, ctx->channel, (struct iovec *) ctx->payload, ctx->iovcnt,
+						    ctx->lba, ctx->lba_count, ctx->cb_args, ctx->ext_io_opts);
+			} else {
+				bdev_blob_readv(ctx->dev, ctx->channel, (struct iovec *) ctx->payload, ctx->iovcnt,
+						ctx->lba, ctx->lba_count, ctx->cb_args);
+			}
 		} else {
 			bdev_blob_read(ctx->dev, ctx->channel, ctx->payload,
 				       ctx->lba, ctx->lba_count, ctx->cb_args);
@@ -298,8 +303,13 @@ bdev_blob_resubmit(void *arg)
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		if (ctx->iovcnt > 0) {
-			bdev_blob_writev_ext(ctx->dev, ctx->channel, (struct iovec *) ctx->payload, ctx->iovcnt,
-					     ctx->lba, ctx->lba_count, ctx->cb_args, ctx->ext_io_opts);
+			if (ctx->ext_io_opts) {
+				bdev_blob_writev_ext(ctx->dev, ctx->channel, (struct iovec *) ctx->payload, ctx->iovcnt,
+						     ctx->lba, ctx->lba_count, ctx->cb_args, ctx->ext_io_opts);
+			} else {
+				bdev_blob_writev(ctx->dev, ctx->channel, (struct iovec *) ctx->payload, ctx->iovcnt,
+						 ctx->lba, ctx->lba_count, ctx->cb_args);
+			}
 		} else {
 			bdev_blob_write(ctx->dev, ctx->channel, ctx->payload,
 					ctx->lba, ctx->lba_count, ctx->cb_args);
