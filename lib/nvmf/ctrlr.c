@@ -1996,7 +1996,7 @@ nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
 	} else if (host_behavior->lbafee == 1) {
 		ctrlr->lbafee_enabled = true;
 	} else {
-		SPDK_ERRLOG("Host Behavior Support invalid acre: 0x%02x\n", host_behavior->lbafee);
+		SPDK_ERRLOG("Host Behavior Support invalid lbafee: 0x%02x\n", host_behavior->lbafee);
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
