@@ -430,6 +430,7 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(base_info->configure_cb == NULL);
 
 	free(base_info->name);
 	base_info->name = NULL;
@@ -3142,6 +3143,7 @@ static void
 raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
+	raid_base_bdev_cb configure_cb;
 	int rc;
 
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational &&
@@ -3162,6 +3164,8 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 	assert(raid_bdev->num_base_bdevs_operational <= raid_bdev->num_base_bdevs);
 	assert(raid_bdev->num_base_bdevs_operational >= raid_bdev->min_base_bdevs_operational);
 
+	configure_cb = base_info->configure_cb;
+	base_info->configure_cb = NULL;
 	/*
 	 * Configure the raid bdev when the number of discovered base bdevs reaches the number
 	 * of base bdevs we know to be operational members of the array. Usually this is equal
@@ -3169,12 +3173,11 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 	 * degraded.
 	 */
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational) {
-		rc = raid_bdev_configure(raid_bdev,
-					 base_info->configure_cb, base_info->configure_cb_ctx);
+		rc = raid_bdev_configure(raid_bdev, configure_cb, base_info->configure_cb_ctx);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
 		} else {
-			base_info->configure_cb = NULL;
+			configure_cb = NULL;
 		}
 	} else if (base_info->is_process_target) {
 		raid_bdev->num_base_bdevs_operational++;
@@ -3187,8 +3190,8 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 		rc = 0;
 	}
 
-	if (base_info->configure_cb != NULL) {
-		base_info->configure_cb(base_info->configure_cb_ctx, rc);
+	if (configure_cb != NULL) {
+		configure_cb(base_info->configure_cb_ctx, rc);
 	}
 }
 
@@ -3200,15 +3203,17 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 		void *ctx)
 {
 	struct raid_base_bdev_info *base_info = ctx;
+	raid_base_bdev_cb configure_cb = base_info->configure_cb;
 
 	switch (status) {
 	case 0:
 		/* valid superblock found */
+		base_info->configure_cb = NULL;
 		if (spdk_uuid_compare(&base_info->raid_bdev->bdev.uuid, &sb->uuid) == 0) {
 			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(base_info->desc);
 
 			raid_bdev_free_base_bdev_resource(base_info);
-			raid_bdev_examine_sb(sb, bdev, base_info->configure_cb, base_info->configure_cb_ctx);
+			raid_bdev_examine_sb(sb, bdev, configure_cb, base_info->configure_cb_ctx);
 			return;
 		}
 		SPDK_ERRLOG("Superblock of a different raid bdev found on bdev %s\n", base_info->name);
@@ -3225,8 +3230,9 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 		break;
 	}
 
-	if (base_info->configure_cb != NULL) {
-		base_info->configure_cb(base_info->configure_cb_ctx, status);
+	if (configure_cb != NULL) {
+		base_info->configure_cb = NULL;
+		configure_cb(base_info->configure_cb_ctx, status);
 	}
 }
 
@@ -3396,6 +3402,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		}
 	}
 
+	assert(base_info->configure_cb == NULL);
 	base_info->configure_cb = cb_fn;
 	base_info->configure_cb_ctx = cb_ctx;
 
@@ -3412,6 +3419,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 	}
 out:
 	if (rc != 0) {
+		base_info->configure_cb = NULL;
 		raid_bdev_free_base_bdev_resource(base_info);
 	}
 	return rc;
