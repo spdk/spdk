@@ -147,6 +147,9 @@ enum nvme_tcp_pdu_recv_state {
 	/* Active tqpair waiting for a tcp request, only use in target side */
 	NVME_TCP_PDU_RECV_STATE_AWAIT_REQ,
 
+	/* Active tqpair waiting for a free buffer to store PDU */
+	NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_BUF,
+
 	/* Active tqpair waiting for payload */
 	NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD,
 

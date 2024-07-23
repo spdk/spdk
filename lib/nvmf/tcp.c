@@ -2455,6 +2455,9 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_REQ:
 			nvmf_tcp_capsule_cmd_hdr_handle(ttransport, tqpair, pdu);
 			break;
+		/* Wait for the request processing loop to acquire a buffer for the PDU */
+		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_BUF:
+			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			/* check whether the data is valid, if not we just return */
 			if (!pdu->data_len) {
@@ -2642,6 +2645,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 				if (!req->iov[0].iov_base) {
 					/* No available buffers. Queue this request up. */
 					SPDK_DEBUGLOG(nvmf_tcp, "No available ICD buffers. Queueing request %p\n", tcp_req);
+					nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_BUF);
 					return 0;
 				}
 			} else {
