@@ -529,7 +529,7 @@ _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 
 	/* Set backing io unit bits associated with metadata. */
 	num_metadata_io_units = (sizeof(*vol->backing_super) + REDUCE_PATH_MAX) /
-				vol->backing_dev->blocklen;
+				vol->params.backing_io_unit_size;
 	for (i = 0; i < num_metadata_io_units; i++) {
 		spdk_bit_array_set(vol->allocated_backing_io_units, i);
 	}
