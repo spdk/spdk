@@ -511,24 +511,24 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 static void
 _vbdev_reduce_init_cb(void *ctx)
 {
-	struct vbdev_compress *meta_ctx = ctx;
+	struct vbdev_compress *comp_bdev = ctx;
 	int rc;
 
-	assert(meta_ctx->base_desc != NULL);
+	assert(comp_bdev->base_desc != NULL);
 
 	/* We're done with metadata operations */
-	spdk_put_io_channel(meta_ctx->base_ch);
+	spdk_put_io_channel(comp_bdev->base_ch);
 
-	if (meta_ctx->vol) {
-		rc = vbdev_compress_claim(meta_ctx);
+	if (comp_bdev->vol) {
+		rc = vbdev_compress_claim(comp_bdev);
 		if (rc == 0) {
 			return;
 		}
 	}
 
 	/* Close the underlying bdev on its same opened thread. */
-	spdk_bdev_close(meta_ctx->base_desc);
-	free(meta_ctx);
+	spdk_bdev_close(comp_bdev->base_desc);
+	free(comp_bdev);
 }
 
 /* Callback from reduce for when init is complete. We'll pass the vbdev_comp struct
@@ -538,19 +538,19 @@ _vbdev_reduce_init_cb(void *ctx)
 static void
 vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
-	struct vbdev_compress *meta_ctx = cb_arg;
+	struct vbdev_compress *comp_bdev = cb_arg;
 
 	if (reduce_errno == 0) {
-		meta_ctx->vol = vol;
+		comp_bdev->vol = vol;
 	} else {
 		SPDK_ERRLOG("for vol %s, error %u\n",
-			    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
+			    spdk_bdev_get_name(comp_bdev->base_bdev), reduce_errno);
 	}
 
-	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
-		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_init_cb, meta_ctx);
+	if (comp_bdev->thread && comp_bdev->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(comp_bdev->thread, _vbdev_reduce_init_cb, comp_bdev);
 	} else {
-		_vbdev_reduce_init_cb(meta_ctx);
+		_vbdev_reduce_init_cb(comp_bdev);
 	}
 }
 
@@ -707,37 +707,37 @@ vbdev_compress_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bd
 struct vbdev_compress *
 _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 {
-	struct vbdev_compress *meta_ctx;
+	struct vbdev_compress *comp_bdev;
 	struct spdk_bdev *bdev;
 
-	meta_ctx = calloc(1, sizeof(struct vbdev_compress));
-	if (meta_ctx == NULL) {
-		SPDK_ERRLOG("failed to alloc init contexts\n");
+	comp_bdev = calloc(1, sizeof(struct vbdev_compress));
+	if (comp_bdev == NULL) {
+		SPDK_ERRLOG("failed to alloc comp_bdev\n");
 		return NULL;
 	}
 
-	meta_ctx->backing_dev.unmap = _comp_reduce_unmap;
-	meta_ctx->backing_dev.readv = _comp_reduce_readv;
-	meta_ctx->backing_dev.writev = _comp_reduce_writev;
-	meta_ctx->backing_dev.compress = _comp_reduce_compress;
-	meta_ctx->backing_dev.decompress = _comp_reduce_decompress;
+	comp_bdev->backing_dev.unmap = _comp_reduce_unmap;
+	comp_bdev->backing_dev.readv = _comp_reduce_readv;
+	comp_bdev->backing_dev.writev = _comp_reduce_writev;
+	comp_bdev->backing_dev.compress = _comp_reduce_compress;
+	comp_bdev->backing_dev.decompress = _comp_reduce_decompress;
 
-	meta_ctx->base_desc = bdev_desc;
+	comp_bdev->base_desc = bdev_desc;
 	bdev = spdk_bdev_desc_get_bdev(bdev_desc);
-	meta_ctx->base_bdev = bdev;
+	comp_bdev->base_bdev = bdev;
 
-	meta_ctx->backing_dev.blocklen = bdev->blocklen;
-	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
+	comp_bdev->backing_dev.blocklen = bdev->blocklen;
+	comp_bdev->backing_dev.blockcnt = bdev->blockcnt;
 
-	meta_ctx->params.chunk_size = CHUNK_SIZE;
+	comp_bdev->params.chunk_size = CHUNK_SIZE;
 	if (lb_size == 0) {
-		meta_ctx->params.logical_block_size = bdev->blocklen;
+		comp_bdev->params.logical_block_size = bdev->blocklen;
 	} else {
-		meta_ctx->params.logical_block_size = lb_size;
+		comp_bdev->params.logical_block_size = lb_size;
 	}
 
-	meta_ctx->params.backing_io_unit_size = BACKING_IO_SZ;
-	return meta_ctx;
+	comp_bdev->params.backing_io_unit_size = BACKING_IO_SZ;
+	return comp_bdev;
 }
 
 /* Call reducelib to initialize a new volume */
@@ -745,7 +745,7 @@ static int
 vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 {
 	struct spdk_bdev_desc *bdev_desc = NULL;
-	struct vbdev_compress *meta_ctx;
+	struct vbdev_compress *comp_bdev;
 	int rc;
 
 	rc = spdk_bdev_open_ext(bdev_name, true, vbdev_compress_base_bdev_event_cb,
@@ -755,21 +755,21 @@ vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 		return rc;
 	}
 
-	meta_ctx = _prepare_for_load_init(bdev_desc, lb_size);
-	if (meta_ctx == NULL) {
+	comp_bdev = _prepare_for_load_init(bdev_desc, lb_size);
+	if (comp_bdev == NULL) {
 		spdk_bdev_close(bdev_desc);
 		return -EINVAL;
 	}
 
 	/* Save the thread where the base device is opened */
-	meta_ctx->thread = spdk_get_thread();
+	comp_bdev->thread = spdk_get_thread();
 
-	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
+	comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
 
-	spdk_reduce_vol_init(&meta_ctx->params, &meta_ctx->backing_dev,
+	spdk_reduce_vol_init(&comp_bdev->params, &comp_bdev->backing_dev,
 			     pm_path,
 			     vbdev_reduce_init_cb,
-			     meta_ctx);
+			     comp_bdev);
 	return 0;
 }
 
@@ -1085,44 +1085,44 @@ bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void
 static void
 _vbdev_reduce_load_cb(void *ctx)
 {
-	struct vbdev_compress *meta_ctx = ctx;
+	struct vbdev_compress *comp_bdev = ctx;
 	int rc;
 
-	assert(meta_ctx->base_desc != NULL);
+	assert(comp_bdev->base_desc != NULL);
 
 	/* Done with metadata operations */
-	spdk_put_io_channel(meta_ctx->base_ch);
+	spdk_put_io_channel(comp_bdev->base_ch);
 
-	if (meta_ctx->reduce_errno == 0) {
-		rc = vbdev_compress_claim(meta_ctx);
+	if (comp_bdev->reduce_errno == 0) {
+		rc = vbdev_compress_claim(comp_bdev);
 		if (rc != 0) {
 			goto err;
 		}
-	} else if (meta_ctx->reduce_errno == -ENOENT) {
-		if (_set_compbdev_name(meta_ctx)) {
+	} else if (comp_bdev->reduce_errno == -ENOENT) {
+		if (_set_compbdev_name(comp_bdev)) {
 			goto err;
 		}
 
 		/* Save the thread where the base device is opened */
-		meta_ctx->thread = spdk_get_thread();
+		comp_bdev->thread = spdk_get_thread();
 
-		meta_ctx->comp_bdev.module = &compress_if;
-		pthread_mutex_init(&meta_ctx->reduce_lock, NULL);
-		rc = spdk_bdev_module_claim_bdev(meta_ctx->base_bdev, meta_ctx->base_desc,
-						 meta_ctx->comp_bdev.module);
+		comp_bdev->comp_bdev.module = &compress_if;
+		pthread_mutex_init(&comp_bdev->reduce_lock, NULL);
+		rc = spdk_bdev_module_claim_bdev(comp_bdev->base_bdev, comp_bdev->base_desc,
+						 comp_bdev->comp_bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s, error %s\n", spdk_bdev_get_name(meta_ctx->base_bdev),
+			SPDK_ERRLOG("could not claim bdev %s, error %s\n", spdk_bdev_get_name(comp_bdev->base_bdev),
 				    spdk_strerror(-rc));
-			free(meta_ctx->comp_bdev.name);
+			free(comp_bdev->comp_bdev.name);
 			goto err;
 		}
 
-		meta_ctx->orphaned = true;
-		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
+		comp_bdev->orphaned = true;
+		TAILQ_INSERT_TAIL(&g_vbdev_comp, comp_bdev, link);
 	} else {
-		if (meta_ctx->reduce_errno != -EILSEQ) {
-			SPDK_ERRLOG("for vol %s, error %s\n", spdk_bdev_get_name(meta_ctx->base_bdev),
-				    spdk_strerror(-meta_ctx->reduce_errno));
+		if (comp_bdev->reduce_errno != -EILSEQ) {
+			SPDK_ERRLOG("for vol %s, error %s\n", spdk_bdev_get_name(comp_bdev->base_bdev),
+				    spdk_strerror(-comp_bdev->reduce_errno));
 		}
 		goto err;
 	}
@@ -1132,8 +1132,8 @@ _vbdev_reduce_load_cb(void *ctx)
 
 err:
 	/* Close the underlying bdev on its same opened thread. */
-	spdk_bdev_close(meta_ctx->base_desc);
-	free(meta_ctx);
+	spdk_bdev_close(comp_bdev->base_desc);
+	free(comp_bdev);
 	spdk_bdev_module_examine_done(&compress_if);
 }
 
@@ -1144,21 +1144,21 @@ err:
 static void
 vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
-	struct vbdev_compress *meta_ctx = cb_arg;
+	struct vbdev_compress *comp_bdev = cb_arg;
 
 	if (reduce_errno == 0) {
 		/* Update information following volume load. */
-		meta_ctx->vol = vol;
-		memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
+		comp_bdev->vol = vol;
+		memcpy(&comp_bdev->params, spdk_reduce_vol_get_params(vol),
 		       sizeof(struct spdk_reduce_vol_params));
 	}
 
-	meta_ctx->reduce_errno = reduce_errno;
+	comp_bdev->reduce_errno = reduce_errno;
 
-	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
-		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_load_cb, meta_ctx);
+	if (comp_bdev->thread && comp_bdev->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(comp_bdev->thread, _vbdev_reduce_load_cb, comp_bdev);
 	} else {
-		_vbdev_reduce_load_cb(meta_ctx);
+		_vbdev_reduce_load_cb(comp_bdev);
 	}
 
 }
@@ -1170,7 +1170,7 @@ static void
 vbdev_compress_examine(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc *bdev_desc = NULL;
-	struct vbdev_compress *meta_ctx;
+	struct vbdev_compress *comp_bdev;
 	int rc;
 
 	if (strcmp(bdev->product_name, COMP_BDEV_NAME) == 0) {
@@ -1187,18 +1187,18 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	meta_ctx = _prepare_for_load_init(bdev_desc, 0);
-	if (meta_ctx == NULL) {
+	comp_bdev = _prepare_for_load_init(bdev_desc, 0);
+	if (comp_bdev == NULL) {
 		spdk_bdev_close(bdev_desc);
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
 
 	/* Save the thread where the base device is opened */
-	meta_ctx->thread = spdk_get_thread();
+	comp_bdev->thread = spdk_get_thread();
 
-	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
-	spdk_reduce_vol_load(&meta_ctx->backing_dev, vbdev_reduce_load_cb, meta_ctx);
+	comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+	spdk_reduce_vol_load(&comp_bdev->backing_dev, vbdev_reduce_load_cb, comp_bdev);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vbdev_compress)
