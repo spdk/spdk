@@ -67,6 +67,7 @@ read_sysfs_attribute(char **attribute_p, const char *format, va_list args)
 	char *path;
 	size_t len = 0;
 	ssize_t read;
+	int errsv;
 
 	path = spdk_vsprintf_alloc(format, args);
 	if (path == NULL) {
@@ -74,19 +75,23 @@ read_sysfs_attribute(char **attribute_p, const char *format, va_list args)
 	}
 
 	file = fopen(path, "r");
+	errsv = errno;
 	free(path);
 	if (file == NULL) {
-		return -errno;
+		assert(errsv != 0);
+		return -errsv;
 	}
 
 	*attribute_p = NULL;
 	read = getline(attribute_p, &len, file);
+	errsv = errno;
 	fclose(file);
 	attribute = *attribute_p;
 	if (read == -1) {
 		/* getline man page says line should be freed even on failure. */
 		free(attribute);
-		return -errno;
+		assert(errsv != 0);
+		return -errsv;
 	}
 
 	/* len is the length of the allocated buffer, which may be more than
