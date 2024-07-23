@@ -1275,7 +1275,7 @@ posix_get_interface_name(void)
 	SPDK_CU_ASSERT_FATAL(spdk_sock_get_interface_name(csock) != NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_sock_get_interface_name(asock) != NULL);
 	CU_ASSERT(strcmp(spdk_sock_get_interface_name(lsock), "lo") == 0);
-	CU_ASSERT(strcmp(spdk_sock_get_interface_name(csock), "ilo") == 0);
+	CU_ASSERT(strcmp(spdk_sock_get_interface_name(csock), "lo") == 0);
 	CU_ASSERT(strcmp(spdk_sock_get_interface_name(asock), "lo") == 0);
 
 	spdk_sock_close(&asock);
