@@ -13,8 +13,7 @@ source "$testdir/common.sh"
 rpc=rpc_cmd
 
 function framework_get_governor() {
-	# Start specifically on single core, which later is checked via RPC
-	"${SPDK_APP[@]}" -m "0x$spdk_main_core" &
+	"${SPDK_APP[@]}" -m "$spdk_cpumask" &
 	spdk_pid=$!
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid
@@ -28,9 +27,8 @@ function framework_get_governor() {
 	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "gscheduler" ]]
 	[[ "$($rpc framework_get_governor | jq -r '.governor_name')" == "dpdk_governor" ]]
 
-	# Check that there is only one core managed by governor, matches the mask and
-	# detects frequency
-	[[ "$($rpc framework_get_governor | jq -r '.cores | length')" -eq 1 ]]
+	# Check that core length matches the cpumask and first one is the main core
+	[[ "$($rpc framework_get_governor | jq -r '.cores | length')" -eq "$spdk_cpus_no" ]]
 	[[ "$($rpc framework_get_governor | jq -r '.cores[0].lcore_id')" -eq "$spdk_main_core" ]]
 	[[ -n "$($rpc framework_get_governor | jq -r '.cores[0].current_frequency')" ]]
 
