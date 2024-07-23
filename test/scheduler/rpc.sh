@@ -47,12 +47,12 @@ function scheduler_opts() {
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid
 
-	# It is possible to change settings generic scheduler opts for schedulers in event framework
-	$rpc framework_set_scheduler static -p 424242
-	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == "static") | .scheduler_period')" -eq 424242 ]]
-
 	# It should not be possible to change settings that a scheduler does not support
 	NOT $rpc framework_set_scheduler static --core-limit 42
+
+	# It is possible to change settings generic scheduler opts for schedulers in event framework
+	$rpc framework_set_scheduler dynamic -p 424242
+	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == "dynamic") | .scheduler_period')" -eq 424242 ]]
 
 	# Verify that the scheduler is changed and the non-default value is set
 	$rpc framework_set_scheduler dynamic --core-limit 42
