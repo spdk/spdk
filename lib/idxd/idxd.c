@@ -1302,6 +1302,8 @@ idxd_get_dif_flags(const struct spdk_dif_ctx *ctx, uint8_t *flags)
 		return -EINVAL;
 	}
 
+	assert(ctx->md_interleave);
+
 	switch (ctx->guard_interval) {
 	case DATA_BLOCK_SIZE_512:
 		*flags = IDXD_DIF_FLAG_DIF_BLOCK_SIZE_512;
@@ -1846,6 +1848,181 @@ spdk_idxd_submit_dif_strip(struct spdk_idxd_io_channel *chan,
 		desc->dif_strip.app_tag_seed = ctx->app_tag;
 		desc->dif_strip.app_tag_mask = app_tag_mask;
 		desc->dif_strip.ref_tag_seed = (uint32_t)ctx->init_ref_tag;
+	}
+
+	return _idxd_flush_batch(chan);
+
+error:
+	chan->batch->index -= count;
+	return rc;
+}
+
+static inline int
+idxd_get_dix_flags(const struct spdk_dif_ctx *ctx, uint8_t *flags)
+{
+	uint32_t data_block_size = ctx->block_size;
+
+	assert(!ctx->md_interleave);
+
+	if (flags == NULL) {
+		SPDK_ERRLOG("Flag should be non-null");
+		return -EINVAL;
+	}
+
+	switch (data_block_size) {
+	case DATA_BLOCK_SIZE_512:
+		*flags = IDXD_DIF_FLAG_DIF_BLOCK_SIZE_512;
+		break;
+	case DATA_BLOCK_SIZE_4096:
+		*flags = IDXD_DIF_FLAG_DIF_BLOCK_SIZE_4096;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid DIX block size %d\n", data_block_size);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static inline int
+idxd_validate_dix_generate_params(const struct spdk_dif_ctx *ctx)
+{
+	/* Check for required DIF flags. Intel DSA is able to only generate all DIF fields. */
+	if (!(ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK))  {
+		SPDK_ERRLOG("Guard check flag must be set.\n");
+		return -EINVAL;
+	}
+
+	if (!(ctx->dif_flags & SPDK_DIF_FLAGS_APPTAG_CHECK))  {
+		SPDK_ERRLOG("Application Tag check flag must be set.\n");
+		return -EINVAL;
+	}
+
+	if (!(ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK))  {
+		SPDK_ERRLOG("Reference Tag check flag must be set.\n");
+		return -EINVAL;
+	}
+
+	/* Check byte offset from the start of the whole data buffer */
+	if (ctx->data_offset != 0) {
+		SPDK_ERRLOG("Byte offset from the start of the whole data buffer must be set to 0.");
+		return -EINVAL;
+	}
+
+	/* Check seed value for guard computation */
+	if (ctx->guard_seed != 0) {
+		SPDK_ERRLOG("Seed value for guard computation must be set to 0.");
+		return -EINVAL;
+	}
+
+	/* Check for supported metadata sizes */
+	if (ctx->md_size != METADATA_SIZE_8)  {
+		SPDK_ERRLOG("Metadata size %d is not supported.\n", ctx->md_size);
+		return -EINVAL;
+	}
+
+	/* Check for supported DIF PI formats */
+	if (ctx->dif_pi_format != SPDK_DIF_PI_FORMAT_16) {
+		SPDK_ERRLOG("DIF PI format %d is not supported.\n", ctx->dif_pi_format);
+		return -EINVAL;
+	}
+
+	/* Check for supported DIF block sizes */
+	if (ctx->block_size != DATA_BLOCK_SIZE_512 &&
+	    ctx->block_size != DATA_BLOCK_SIZE_4096) {
+		SPDK_ERRLOG("DIF block size %d is not supported.\n", ctx->block_size);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+int
+spdk_idxd_submit_dix_generate(struct spdk_idxd_io_channel *chan, struct iovec *siov,
+			      size_t siovcnt, struct iovec *mdiov, uint32_t num_blocks,
+			      const struct spdk_dif_ctx *ctx, int flags,
+			      spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *first_op = NULL, *op = NULL;
+	uint64_t src_seg_addr, src_seg_len;
+	uint64_t md_seg_addr, md_seg_len;
+	uint32_t num_blocks_done = 0;
+	uint8_t dif_flags = 0;
+	uint16_t app_tag_mask = 0;
+	int rc, count = 0;
+	size_t i;
+
+	rc = idxd_validate_dix_generate_params(ctx);
+	if (rc) {
+		return rc;
+	}
+
+	rc = idxd_get_dix_flags(ctx, &dif_flags);
+	if (rc) {
+		return rc;
+	}
+
+	rc = idxd_get_app_tag_mask(ctx, &app_tag_mask);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _idxd_setup_batch(chan);
+	if (rc) {
+		return rc;
+	}
+
+	md_seg_len = mdiov->iov_len;
+	md_seg_addr = (uint64_t)mdiov->iov_base;
+
+	if (md_seg_len % ctx->md_size != 0) {
+		SPDK_ERRLOG("The metadata buffer length (%ld) is not a multiple of metadata size.\n",
+			    md_seg_len);
+		return -EINVAL;
+	}
+
+	for (i = 0; i < siovcnt; i++) {
+		src_seg_addr = (uint64_t)siov[i].iov_base;
+		src_seg_len = siov[i].iov_len;
+
+		if (src_seg_len % ctx->block_size != 0) {
+			SPDK_ERRLOG("The source buffer length (%ld) is not a multiple of block size (%d).\n",
+				    src_seg_len, ctx->block_size);
+			goto error;
+		}
+
+		if (first_op == NULL) {
+			rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+			if (rc) {
+				goto error;
+			}
+
+			first_op = op;
+		} else {
+			rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+			if (rc) {
+				goto error;
+			}
+
+			first_op->count++;
+			op->parent = first_op;
+		}
+
+		count++;
+
+		desc->opcode = IDXD_OPCODE_DIX_GEN;
+		desc->src_addr = src_seg_addr;
+		desc->dst_addr = md_seg_addr;
+		desc->xfer_size = src_seg_len;
+		desc->dix_gen.flags = dif_flags;
+		desc->dix_gen.app_tag_seed = ctx->app_tag;
+		desc->dix_gen.app_tag_mask = ~ctx->apptag_mask;
+		desc->dix_gen.ref_tag_seed = (uint32_t)ctx->init_ref_tag + num_blocks_done;
+
+		num_blocks_done += src_seg_len / ctx->block_size;
+
+		md_seg_addr = (uint64_t)mdiov->iov_base + (num_blocks_done * ctx->md_size);
 	}
 
 	return _idxd_flush_batch(chan);

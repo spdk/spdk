@@ -278,6 +278,11 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 			rc = 0;
 		}
 		break;
+	case SPDK_ACCEL_OPC_DIX_GENERATE:
+		rc = spdk_idxd_submit_dix_generate(chan->chan, task->s.iovs, task->s.iovcnt,
+						   task->d.iovs, task->dif.num_blocks,
+						   task->dif.ctx, flags, dsa_done, idxd_task);
+		break;
 	default:
 		assert(false);
 		rc = -EINVAL;
@@ -391,6 +396,10 @@ dsa_supports_opcode(enum spdk_accel_opcode opc)
 	case SPDK_ACCEL_OPC_DIF_VERIFY:
 	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
 	case SPDK_ACCEL_OPC_DIF_VERIFY_COPY:
+	/* In theory, DIX Generate could work without the iommu, but iommu is required
+	 * for consistency with other DIF operations.
+	 */
+	case SPDK_ACCEL_OPC_DIX_GENERATE:
 		/* Supported only if the IOMMU is enabled */
 		return spdk_iommu_is_enabled();
 	default:

@@ -390,6 +390,30 @@ int spdk_idxd_submit_dif_strip(struct spdk_idxd_io_channel *chan,
 			       spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit DIX Generate request.
+ *
+ * This function will build DIX Generate descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit the request.
+ * \param siov Source iovecs.
+ * \param siovcnt Number of elements in siov.
+ * \param mdiov Metadata iovec for generated protection information.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIX context. Contains the DIX configuration values, including the reference
+ *	Application Tag and initial value of the Reference Tag to insert.
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called upon request completion.
+ * \param cb_arg Opaque value which will be passed as a parameter to the cb_fn.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_dix_generate(struct spdk_idxd_io_channel *chan, struct iovec *siov,
+				  size_t siovcnt, struct iovec *mdiov, uint32_t num_blocks,
+				  const struct spdk_dif_ctx *ctx, int flags,
+				  spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Build and submit an IDXD raw request.
  *
  * This function will process the supplied descriptor and then immediately submit

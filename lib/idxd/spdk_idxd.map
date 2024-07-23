@@ -20,6 +20,7 @@
 	spdk_idxd_submit_dif_check;
 	spdk_idxd_submit_dif_insert;
 	spdk_idxd_submit_dif_strip;
+	spdk_idxd_submit_dix_generate;
 	spdk_idxd_submit_raw_desc;
 	spdk_idxd_process_events;
 	spdk_idxd_get_channel;
