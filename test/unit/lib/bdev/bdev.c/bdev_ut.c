@@ -941,9 +941,12 @@ claim_test(void)
 static void
 bytes_to_blocks_test(void)
 {
+	struct spdk_bdev_desc desc;
 	struct spdk_bdev bdev;
 	uint64_t offset_blocks, num_blocks;
 
+
+	desc.bdev = &bdev;
 	memset(&bdev, 0, sizeof(bdev));
 
 	bdev.blocklen = 512;
@@ -951,27 +954,27 @@ bytes_to_blocks_test(void)
 	/* All parameters valid */
 	offset_blocks = 0;
 	num_blocks = 0;
-	CU_ASSERT(bdev_bytes_to_blocks(&bdev, 512, &offset_blocks, 1024, &num_blocks) == 0);
+	CU_ASSERT(bdev_bytes_to_blocks(&desc, 512, &offset_blocks, 1024, &num_blocks) == 0);
 	CU_ASSERT(offset_blocks == 1);
 	CU_ASSERT(num_blocks == 2);
 
 	/* Offset not a block multiple */
-	CU_ASSERT(bdev_bytes_to_blocks(&bdev, 3, &offset_blocks, 512, &num_blocks) != 0);
+	CU_ASSERT(bdev_bytes_to_blocks(&desc, 3, &offset_blocks, 512, &num_blocks) != 0);
 
 	/* Length not a block multiple */
-	CU_ASSERT(bdev_bytes_to_blocks(&bdev, 512, &offset_blocks, 3, &num_blocks) != 0);
+	CU_ASSERT(bdev_bytes_to_blocks(&desc, 512, &offset_blocks, 3, &num_blocks) != 0);
 
 	/* In case blocklen not the power of two */
 	bdev.blocklen = 100;
-	CU_ASSERT(bdev_bytes_to_blocks(&bdev, 100, &offset_blocks, 200, &num_blocks) == 0);
+	CU_ASSERT(bdev_bytes_to_blocks(&desc, 100, &offset_blocks, 200, &num_blocks) == 0);
 	CU_ASSERT(offset_blocks == 1);
 	CU_ASSERT(num_blocks == 2);
 
 	/* Offset not a block multiple */
-	CU_ASSERT(bdev_bytes_to_blocks(&bdev, 3, &offset_blocks, 100, &num_blocks) != 0);
+	CU_ASSERT(bdev_bytes_to_blocks(&desc, 3, &offset_blocks, 100, &num_blocks) != 0);
 
 	/* Length not a block multiple */
-	CU_ASSERT(bdev_bytes_to_blocks(&bdev, 100, &offset_blocks, 3, &num_blocks) != 0);
+	CU_ASSERT(bdev_bytes_to_blocks(&desc, 100, &offset_blocks, 3, &num_blocks) != 0);
 }
 
 static void
