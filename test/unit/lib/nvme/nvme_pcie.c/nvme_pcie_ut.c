@@ -620,7 +620,8 @@ test_nvme_pcie_qpair_build_prps_sgl_request(void)
 static void
 test_nvme_pcie_qpair_build_hw_sgl_request(void)
 {
-	struct spdk_nvme_qpair qpair = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_qpair *qpair = &pqpair.qpair;
 	struct nvme_request req = {};
 	struct nvme_tracker tr = {};
 	struct nvme_pcie_ut_bdev_io bio = {};
@@ -628,7 +629,7 @@ test_nvme_pcie_qpair_build_hw_sgl_request(void)
 	int rc;
 
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	qpair.ctrlr = &ctrlr;
+	qpair->ctrlr = &ctrlr;
 	req.payload = NVME_PAYLOAD_SGL(nvme_pcie_ut_reset_sgl, nvme_pcie_ut_next_sge, &bio, NULL);
 	req.cmd.opc = SPDK_NVME_OPC_WRITE;
 	tr.prp_sgl_bus_addr =  0xDAADBEE0;
@@ -644,7 +645,7 @@ test_nvme_pcie_qpair_build_hw_sgl_request(void)
 	bio.iovs[2].iov_base = (void *)0xDDADBEE0;
 	bio.iovs[2].iov_len = 2048;
 
-	rc = nvme_pcie_qpair_build_hw_sgl_request(&qpair, &req, &tr, true);
+	rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, &req, &tr, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 2048);
@@ -674,7 +675,7 @@ test_nvme_pcie_qpair_build_hw_sgl_request(void)
 	bio.iovs[0].iov_base = (void *)0xDBADBEE0;
 	bio.iovs[0].iov_len = 4096;
 
-	rc = nvme_pcie_qpair_build_hw_sgl_request(&qpair, &req, &tr, true);
+	rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, &req, &tr, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 4096);
