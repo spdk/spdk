@@ -1264,7 +1264,7 @@ accel_dif_generate_copy_op_iovecs_len_validate(void)
 	req.channel = g_channel;
 	req.dst_iovs = task->dst_iovs;
 	/* Make iov_len param incorrect */
-	req.dst_iovs->iov_len += 16;
+	req.dst_iovs->iov_len -= 16;
 	req.dst_iovcnt = task->dst_iovcnt;
 	req.src_iovs = task->src_iovs;
 	req.src_iovcnt = task->src_iovcnt;
