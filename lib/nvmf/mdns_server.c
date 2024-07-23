@@ -87,10 +87,19 @@ nvmf_ctx_stop_mdns_prr(struct mdns_publish_ctx *ctx)
 	nvmf_avahi_publish_destroy(ctx);
 }
 
+static bool
+nvmf_tgt_is_mdns_running(struct spdk_nvmf_tgt *tgt)
+{
+	if (g_mdns_publish_ctx && g_mdns_publish_ctx->tgt == tgt) {
+		return true;
+	}
+	return false;
+}
+
 void
 nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt)
 {
-	if (g_mdns_publish_ctx && g_mdns_publish_ctx->tgt == tgt) {
+	if (nvmf_tgt_is_mdns_running(tgt) == true) {
 		nvmf_ctx_stop_mdns_prr(g_mdns_publish_ctx);
 		return;
 	}
