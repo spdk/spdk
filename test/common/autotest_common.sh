@@ -107,6 +107,8 @@ export SPDK_TEST_RBD
 export SPDK_TEST_VHOST
 : ${SPDK_TEST_BLOCKDEV=0}
 export SPDK_TEST_BLOCKDEV
+: ${SPDK_TEST_RAID=0}
+export SPDK_TEST_RAID
 : ${SPDK_TEST_IOAT=0}
 export SPDK_TEST_IOAT
 : ${SPDK_TEST_BLOBFS=0}
@@ -139,8 +141,6 @@ export SPDK_TEST_OPAL
 export SPDK_TEST_NATIVE_DPDK
 : ${SPDK_AUTOTEST_X=true}
 export SPDK_AUTOTEST_X
-: ${SPDK_TEST_RAID5=0}
-export SPDK_TEST_RAID5
 : ${SPDK_TEST_URING=0}
 export SPDK_TEST_URING
 : ${SPDK_TEST_USDT=0}
@@ -482,7 +482,7 @@ function get_config_params() {
 		config_params+=' --with-ublk'
 	fi
 
-	if [ $SPDK_TEST_RAID5 -eq 1 ]; then
+	if [ $SPDK_TEST_RAID -eq 1 ]; then
 		config_params+=' --with-raid5f'
 	fi
 

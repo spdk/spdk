@@ -191,12 +191,17 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test "blockdev_general" $rootdir/test/bdev/blockdev.sh
-		run_test "bdev_raid" $rootdir/test/bdev/bdev_raid.sh
 		run_test "bdevperf_config" $rootdir/test/bdev/bdevperf/test_config.sh
 		if [[ $(uname -s) == Linux ]]; then
 			run_test "reactor_set_interrupt" $rootdir/test/interrupt/reactor_set_interrupt.sh
 			run_test "reap_unregistered_poller" $rootdir/test/interrupt/reap_unregistered_poller.sh
 		fi
+	fi
+
+	if [[ $SPDK_TEST_RAID -eq 1 ]]; then
+		run_test "bdev_raid" $rootdir/test/bdev/bdev_raid.sh
+		run_test "spdkcli_raid" $rootdir/test/spdkcli/raid.sh
+		run_test "blockdev_raid5f" $rootdir/test/bdev/blockdev.sh "raid5f"
 	fi
 
 	if [[ $(uname -s) == Linux ]]; then
@@ -266,9 +271,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 		run_test "iscsi_tgt" $rootdir/test/iscsi_tgt/iscsi_tgt.sh
 		run_test "spdkcli_iscsi" $rootdir/test/spdkcli/iscsi.sh
-
-		# Run raid spdkcli test under iSCSI since blockdev tests run on systems that can't run spdkcli yet
-		run_test "spdkcli_raid" $rootdir/test/spdkcli/raid.sh
 	fi
 
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
@@ -374,10 +376,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 		run_test "llvm_fuzz" $rootdir/test/fuzz/llvm.sh
-	fi
-
-	if [[ $SPDK_TEST_RAID5 -eq 1 ]]; then
-		run_test "blockdev_raid5f" $rootdir/test/bdev/blockdev.sh "raid5f"
 	fi
 fi
 

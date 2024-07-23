@@ -961,17 +961,15 @@ if [ "$has_nbd" = true ]; then
 	done
 fi
 
-if [ "$CONFIG_RAID5F" == y ]; then
-	for n in {3..4}; do
-		run_test "raid5f_state_function_test" raid_state_function_test raid5f $n false
-		run_test "raid5f_state_function_test_sb" raid_state_function_test raid5f $n true
-		run_test "raid5f_superblock_test" raid_superblock_test raid5f $n
-		if [ "$has_nbd" = true ]; then
-			run_test "raid5f_rebuild_test" raid_rebuild_test raid5f $n false false true
-			run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false true
-		fi
-	done
-fi
+for n in {3..4}; do
+	run_test "raid5f_state_function_test" raid_state_function_test raid5f $n false
+	run_test "raid5f_state_function_test_sb" raid_state_function_test raid5f $n true
+	run_test "raid5f_superblock_test" raid_superblock_test raid5f $n
+	if [ "$has_nbd" = true ]; then
+		run_test "raid5f_rebuild_test" raid_rebuild_test raid5f $n false false true
+		run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false true
+	fi
+done
 
 base_blocklen=4096
 
