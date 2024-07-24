@@ -352,8 +352,8 @@ _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 
 	if (target->new_in_interrupt == false) {
 		target->set_interrupt_mode_in_progress = false;
-		spdk_thread_send_msg(spdk_thread_get_app_thread(), target->set_interrupt_mode_cb_fn,
-				     target->set_interrupt_mode_cb_arg);
+		_event_call(spdk_scheduler_get_scheduling_lcore(), target->set_interrupt_mode_cb_fn,
+			    target->set_interrupt_mode_cb_arg, NULL);
 	} else {
 		_event_call(target->lcore, _reactor_set_interrupt_mode, target, NULL);
 	}
@@ -419,8 +419,8 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 		}
 
 		target->set_interrupt_mode_in_progress = false;
-		spdk_thread_send_msg(spdk_thread_get_app_thread(), target->set_interrupt_mode_cb_fn,
-				     target->set_interrupt_mode_cb_arg);
+		_event_call(spdk_scheduler_get_scheduling_lcore(), target->set_interrupt_mode_cb_fn,
+			    target->set_interrupt_mode_cb_arg, NULL);
 	}
 }
 
@@ -446,7 +446,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 	}
 
 	if (target->in_interrupt == new_in_interrupt) {
-		cb_fn(cb_arg);
+		cb_fn(cb_arg, NULL);
 		return 0;
 	}
 
@@ -722,7 +722,7 @@ _reactors_scheduler_fini(void)
 }
 
 static void
-_reactors_scheduler_update_core_mode(void *ctx)
+_reactors_scheduler_update_core_mode(void *ctx1, void *ctx2)
 {
 	struct spdk_reactor *reactor;
 	uint32_t i;
@@ -774,7 +774,7 @@ _reactors_scheduler_balance(void *arg1, void *arg2)
 	scheduler->balance(g_core_infos, g_reactor_count);
 
 	g_scheduler_core_number = spdk_env_get_first_core();
-	_reactors_scheduler_update_core_mode(NULL);
+	_reactors_scheduler_update_core_mode(NULL, NULL);
 }
 
 /* Phase 1 of thread scheduling is to gather metrics on the existing threads */

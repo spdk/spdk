@@ -504,7 +504,6 @@ static uint32_t
 _run_events_till_completion(uint32_t reactor_count)
 {
 	struct spdk_reactor *reactor;
-	struct spdk_thread *app_thread = spdk_thread_get_app_thread();
 	uint32_t i, events;
 	uint32_t total_events = 0;
 
@@ -516,9 +515,9 @@ _run_events_till_completion(uint32_t reactor_count)
 			MOCK_SET(spdk_env_get_current_core, i);
 			events += event_queue_run_batch(reactor);
 
-			/* Some events still require app_thread to run */
+			/* Some events require scheduling core to run */
 			MOCK_SET(spdk_env_get_current_core, g_scheduling_reactor->lcore);
-			spdk_thread_poll(app_thread, 0, 0);
+			events += event_queue_run_batch(g_scheduling_reactor);
 
 			MOCK_CLEAR(spdk_env_get_current_core);
 		}
@@ -875,6 +874,7 @@ test_bind_thread(void)
 	free_cores();
 }
 
+#ifndef __FreeBSD__
 uint8_t g_curr_freq;
 
 static int
@@ -1033,7 +1033,7 @@ test_governor(void)
 
 	i = _run_events_till_completion(2);
 	/* Six runs when interrupt mode is supported, two if not. */
-	CU_ASSERT(i == 6 || i == 2);
+	CU_ASSERT(i == 7 || i == 3);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	/* Main core should be busy more than 50% time now - frequency should be raised */
@@ -1058,7 +1058,7 @@ test_governor(void)
 
 	i = _run_events_till_completion(2);
 	/* Six runs when interrupt mode is supported, two if not. */
-	CU_ASSERT(i == 6 || i == 2);
+	CU_ASSERT(i == 7 || i == 3);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	for (i = 0; i < 2; i++) {
@@ -1091,6 +1091,7 @@ test_governor(void)
 
 	free_cores();
 }
+#endif
 
 int
 main(int argc, char **argv)
@@ -1111,7 +1112,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_for_each_reactor);
 	CU_ADD_TEST(suite, test_reactor_stats);
 	CU_ADD_TEST(suite, test_scheduler);
+#ifndef __FreeBSD__
+	/* governor is only supported on Linux, so don't run this specific unit test on FreeBSD */
 	CU_ADD_TEST(suite, test_governor);
+#endif
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

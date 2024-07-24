@@ -48,7 +48,7 @@ struct spdk_lw_thread {
  *
  * \param cb_arg Argument to pass to the callback function.
  */
-typedef void (*spdk_reactor_set_interrupt_mode_cb)(void *cb_arg);
+typedef void (*spdk_reactor_set_interrupt_mode_cb)(void *cb_arg1, void *cb_arg2);
 
 struct spdk_reactor {
 	/* Lightweight threads running on this reactor */

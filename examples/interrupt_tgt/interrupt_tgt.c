@@ -40,9 +40,9 @@ rpc_reactor_set_interrupt_mode_cb(void *cb_arg)
 }
 
 static void
-set_interrupt_mode_cb(void *arg)
+set_interrupt_mode_cb(void *arg1, void *arg2)
 {
-	struct rpc_reactor_set_interrupt_mode *req = arg;
+	struct rpc_reactor_set_interrupt_mode *req = arg1;
 
 	spdk_thread_send_msg(req->rpc_thread, rpc_reactor_set_interrupt_mode_cb, req);
 }
@@ -57,7 +57,7 @@ set_interrupt_mode(void *arg1, void *arg2)
 					     set_interrupt_mode_cb, req);
 	if (rc)	{
 		req->rc = rc;
-		set_interrupt_mode_cb(req);
+		set_interrupt_mode_cb(req, NULL);
 	}
 }
 
