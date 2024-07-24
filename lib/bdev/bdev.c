@@ -3545,13 +3545,9 @@ bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	_bdev_rw_split(bdev_io);
 }
 
-/* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
- *  be inlined, at least on some compilers.
- */
 static inline void
-_bdev_io_submit(void *ctx)
+_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 
