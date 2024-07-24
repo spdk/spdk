@@ -299,6 +299,15 @@ struct idxd_hw_desc {
 			uint16_t	app_tag_mask;
 			uint16_t	app_tag_seed;
 		} dif_strip;
+		struct {
+			uint8_t		rsvd1;
+			uint8_t		dest_flags;
+			uint8_t		flags;
+			uint8_t		rsvd2[13];
+			uint32_t	ref_tag_seed;
+			uint16_t	app_tag_mask;
+			uint16_t	app_tag_seed;
+		} dix_gen;
 		uint8_t		op_specific[24];
 	};
 } __attribute((aligned(64)));
@@ -335,6 +344,12 @@ struct dsa_hw_comp_record {
 			uint16_t	dest_app_tag_mask;
 			uint16_t	dest_app_tag;
 		} dif_upd_comp;
+		struct {
+			uint64_t	rsvd;
+			uint32_t	dix_gen_ref_tag;
+			uint16_t	dix_gen_app_tag_mask;
+			uint16_t	dix_gen_app_tag;
+		} dix_gen_comp;
 		uint8_t		op_specific[16];
 	};
 };
