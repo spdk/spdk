@@ -1191,6 +1191,7 @@ ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		FTL_ERRLOG(io->dev, "Non-volatile cache write failed at %"PRIx64"\n",
 			   io->addr);
 		io->status = -EIO;
+		ftl_l2p_unpin(io->dev, io->lba, io->num_blocks);
 		ftl_nv_cache_submit_cb_done(io);
 	} else {
 		ftl_nv_cache_l2p_update(io);
