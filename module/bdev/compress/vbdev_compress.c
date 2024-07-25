@@ -1122,6 +1122,11 @@ bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void
 }
 
 static void
+_vbdev_reduce_load_unload_cb(void *ctx, int reduce_errno)
+{
+}
+
+static void
 _vbdev_reduce_load_cb(void *ctx)
 {
 	struct vbdev_compress *comp_bdev = ctx;
@@ -1135,6 +1140,7 @@ _vbdev_reduce_load_cb(void *ctx)
 	if (comp_bdev->reduce_errno == 0) {
 		rc = vbdev_compress_claim(comp_bdev);
 		if (rc != 0) {
+			spdk_reduce_vol_unload(comp_bdev->vol, _vbdev_reduce_load_unload_cb, NULL);
 			goto err;
 		}
 	} else if (comp_bdev->reduce_errno == -ENOENT) {
