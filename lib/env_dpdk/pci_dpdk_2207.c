@@ -3,6 +3,7 @@
  *   All rights reserved.
  */
 
+#define ALLOW_INTERNAL_API
 #include <rte_config.h>
 #include <rte_version.h>
 #include "pci_dpdk.h"
@@ -163,6 +164,30 @@ pci_device_get_interrupt_efd_2207(struct rte_pci_device *rte_dev)
 }
 
 static int
+pci_device_create_interrupt_efds_2207(struct rte_pci_device *rte_dev, uint32_t count)
+{
+	return rte_intr_efd_enable(rte_dev->intr_handle, count);
+}
+
+static void
+pci_device_delete_interrupt_efds_2207(struct rte_pci_device *rte_dev)
+{
+	return rte_intr_efd_disable(rte_dev->intr_handle);
+}
+
+static int
+pci_device_get_interrupt_efd_by_index_2207(struct rte_pci_device *rte_dev, uint32_t index)
+{
+	return rte_intr_efds_index_get(rte_dev->intr_handle, index);
+}
+
+static int
+pci_device_interrupt_cap_multi_2207(struct rte_pci_device *rte_dev)
+{
+	return rte_intr_cap_multiple(rte_dev->intr_handle);
+}
+
+static int
 bus_probe_2207(void)
 {
 	return rte_bus_probe();
@@ -211,6 +236,10 @@ struct dpdk_fn_table fn_table_2207 = {
 	.pci_device_enable_interrupt	= pci_device_enable_interrupt_2207,
 	.pci_device_disable_interrupt	= pci_device_disable_interrupt_2207,
 	.pci_device_get_interrupt_efd	= pci_device_get_interrupt_efd_2207,
+	.pci_device_create_interrupt_efds = pci_device_create_interrupt_efds_2207,
+	.pci_device_delete_interrupt_efds = pci_device_delete_interrupt_efds_2207,
+	.pci_device_get_interrupt_efd_by_index = pci_device_get_interrupt_efd_by_index_2207,
+	.pci_device_interrupt_cap_multi	= pci_device_interrupt_cap_multi_2207,
 	.bus_scan			= bus_scan_2207,
 	.bus_probe			= bus_probe_2207,
 	.device_get_devargs		= device_get_devargs_2207,

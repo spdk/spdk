@@ -163,6 +163,30 @@ dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev)
 }
 
 int
+dpdk_pci_device_create_interrupt_efds(struct rte_pci_device *rte_dev, uint32_t count)
+{
+	return g_dpdk_fn_table->pci_device_create_interrupt_efds(rte_dev, count);
+}
+
+void
+dpdk_pci_device_delete_interrupt_efds(struct rte_pci_device *rte_dev)
+{
+	g_dpdk_fn_table->pci_device_delete_interrupt_efds(rte_dev);
+}
+
+int
+dpdk_pci_device_get_interrupt_efd_by_index(struct rte_pci_device *rte_dev, uint32_t index)
+{
+	return g_dpdk_fn_table->pci_device_get_interrupt_efd_by_index(rte_dev, index);
+}
+
+int
+dpdk_pci_device_interrupt_cap_multi(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_interrupt_cap_multi(rte_dev);
+}
+
+int
 dpdk_bus_probe(void)
 {
 	return g_dpdk_fn_table->bus_probe();

@@ -42,6 +42,10 @@ struct dpdk_fn_table {
 	int (*pci_device_enable_interrupt)(struct rte_pci_device *rte_dev);
 	int (*pci_device_disable_interrupt)(struct rte_pci_device *rte_dev);
 	int (*pci_device_get_interrupt_efd)(struct rte_pci_device *rte_dev);
+	int (*pci_device_create_interrupt_efds)(struct rte_pci_device *rte_dev, uint32_t count);
+	void (*pci_device_delete_interrupt_efds)(struct rte_pci_device *rte_dev);
+	int (*pci_device_get_interrupt_efd_by_index)(struct rte_pci_device *rte_dev, uint32_t index);
+	int (*pci_device_interrupt_cap_multi)(struct rte_pci_device *rte_dev);
 	void (*bus_scan)(void);
 	int (*bus_probe)(void);
 	struct rte_devargs *(*device_get_devargs)(struct rte_device *dev);
@@ -69,6 +73,10 @@ int dpdk_pci_driver_register(struct spdk_pci_driver *driver,
 int dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev);
 int dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev);
 int dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev);
+int dpdk_pci_device_create_interrupt_efds(struct rte_pci_device *rte_dev, uint32_t count);
+void dpdk_pci_device_delete_interrupt_efds(struct rte_pci_device *rte_dev);
+int dpdk_pci_device_get_interrupt_efd_by_index(struct rte_pci_device *rte_dev, uint32_t index);
+int dpdk_pci_device_interrupt_cap_multi(struct rte_pci_device *rte_dev);
 void dpdk_bus_scan(void);
 int dpdk_bus_probe(void);
 struct rte_devargs *dpdk_device_get_devargs(struct rte_device *dev);
