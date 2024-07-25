@@ -464,6 +464,7 @@ _alloc_zero_buff(void)
 					  64, NULL, SPDK_ENV_LCORE_ID_ANY,
 					  SPDK_MALLOC_DMA);
 		if (g_zero_buf == NULL) {
+			g_vol_count--;
 			rc = -ENOMEM;
 		}
 	}
