@@ -751,7 +751,7 @@ vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 	rc = spdk_bdev_open_ext(bdev_name, true, vbdev_compress_base_bdev_event_cb,
 				NULL, &bdev_desc);
 	if (rc) {
-		SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+		SPDK_ERRLOG("could not open bdev %s, error %s\n", bdev_name, spdk_strerror(-rc));
 		return rc;
 	}
 
@@ -977,7 +977,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	rc = spdk_uuid_generate_sha1(&comp_bdev->comp_bdev.uuid, &ns_uuid,
 				     (const char *)&comp_bdev->base_bdev->uuid, sizeof(struct spdk_uuid));
 	if (rc) {
-		SPDK_ERRLOG("Unable to generate new UUID for compress bdev\n");
+		SPDK_ERRLOG("Unable to generate new UUID for compress bdev, error %s\n", spdk_strerror(-rc));
 		return -EINVAL;
 	}
 
@@ -993,13 +993,14 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	rc = spdk_bdev_module_claim_bdev(comp_bdev->base_bdev, comp_bdev->base_desc,
 					 comp_bdev->comp_bdev.module);
 	if (rc) {
-		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(comp_bdev->base_bdev));
+		SPDK_ERRLOG("could not claim bdev %s, error %s\n", spdk_bdev_get_name(comp_bdev->base_bdev),
+			    spdk_strerror(-rc));
 		goto error_claim;
 	}
 
 	rc = spdk_bdev_register(&comp_bdev->comp_bdev);
 	if (rc < 0) {
-		SPDK_ERRLOG("trying to register bdev\n");
+		SPDK_ERRLOG("trying to register bdev, error %s\n", spdk_strerror(-rc));
 		goto error_bdev_register;
 	}
 
@@ -1110,7 +1111,8 @@ _vbdev_reduce_load_cb(void *ctx)
 		rc = spdk_bdev_module_claim_bdev(meta_ctx->base_bdev, meta_ctx->base_desc,
 						 meta_ctx->comp_bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			SPDK_ERRLOG("could not claim bdev %s, error %s\n", spdk_bdev_get_name(meta_ctx->base_bdev),
+				    spdk_strerror(-rc));
 			free(meta_ctx->comp_bdev.name);
 			goto err;
 		}
@@ -1119,8 +1121,8 @@ _vbdev_reduce_load_cb(void *ctx)
 		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
 	} else {
 		if (meta_ctx->reduce_errno != -EILSEQ) {
-			SPDK_ERRLOG("for vol %s, error %u\n",
-				    spdk_bdev_get_name(meta_ctx->base_bdev), meta_ctx->reduce_errno);
+			SPDK_ERRLOG("for vol %s, error %s\n", spdk_bdev_get_name(meta_ctx->base_bdev),
+				    spdk_strerror(-meta_ctx->reduce_errno));
 		}
 		goto err;
 	}
@@ -1179,7 +1181,8 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false,
 				vbdev_compress_base_bdev_event_cb, NULL, &bdev_desc);
 	if (rc) {
-		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
+		SPDK_ERRLOG("could not open bdev %s, error %s\n", spdk_bdev_get_name(bdev),
+			    spdk_strerror(-rc));
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
