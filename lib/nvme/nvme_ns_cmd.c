@@ -343,7 +343,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 	void *sgl_cb_arg = req->payload.contig_or_cb_arg;
 	uint64_t child_lba = lba;
 	uint32_t req_current_length = 0;
-	uint32_t child_length = 0;
+	uint32_t accumulated_length = 0;
 	uint32_t sge_length;
 	uint16_t max_sges, num_sges;
 	uintptr_t address;
@@ -360,7 +360,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 			sge_length = req->payload_size - req_current_length;
 		}
 
-		child_length += sge_length;
+		accumulated_length += sge_length;
 		req_current_length += sge_length;
 		num_sges++;
 
@@ -374,23 +374,33 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 		 *  create a child request when no splitting is required - in that case we will
 		 *  fall-through and just create a single request with no children for the entire I/O.
 		 */
-		if (child_length != req->payload_size) {
+		if (accumulated_length != req->payload_size) {
 			struct nvme_request *child;
 			uint32_t child_lba_count;
+			uint32_t child_length;
+			uint32_t extra_length;
 
-			if ((child_length % ns->extended_lba_size) != 0) {
-				SPDK_ERRLOG("child_length %u not even multiple of lba_size %u\n",
-					    child_length, ns->extended_lba_size);
-				*rc = -EINVAL;
-				return NULL;
+			child_length = accumulated_length;
+			/* Child length may not be a multiple of the block size! */
+			child_lba_count = child_length / ns->extended_lba_size;
+			extra_length = child_length - (child_lba_count * ns->extended_lba_size);
+			if (extra_length != 0) {
+				/* The last SGE does not end on a block boundary. We need to cut it off. */
+				if (extra_length >= child_length) {
+					SPDK_ERRLOG("Unable to send I/O. Would require more than the supported number of "
+						    "SGL Elements.");
+					*rc = -EINVAL;
+					return NULL;
+				}
+				child_length -= extra_length;
 			}
+
 			if (spdk_unlikely(accel_sequence != NULL)) {
 				SPDK_ERRLOG("Splitting requests with accel sequence is unsupported\n");
 				*rc = -EINVAL;
 				return NULL;
 			}
 
-			child_lba_count = child_length / ns->extended_lba_size;
 			/*
 			 * Note the last parameter is set to "false" - this tells the recursive
 			 *  call to _nvme_ns_cmd_rw() to not bother with checking for SGL splitting
@@ -406,12 +416,12 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 			payload_offset += child_length;
 			md_offset += child_lba_count * ns->md_size;
 			child_lba += child_lba_count;
-			child_length = 0;
-			num_sges = 0;
+			accumulated_length -= child_length;
+			num_sges = accumulated_length > 0;
 		}
 	}
 
-	if (child_length == req->payload_size) {
+	if (accumulated_length == req->payload_size) {
 		/* No splitting was required, so setup the whole payload as one request. */
 		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag, cdw13);
 	}

@@ -90,6 +90,8 @@ nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 	*address = (void *)ctx->iovs[ctx->cur_idx].iov_base;
 	*length = ctx->iovs[ctx->cur_idx].iov_len;
 
+	ctx->cur_idx++;
+
 	return 0;
 }
 
@@ -758,6 +760,99 @@ test_nvme_ns_cmd_readv(void)
 	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, 256, NULL, &sgl_ctx, 0, nvme_request_reset_sgl,
 				    NULL);
 	CU_ASSERT(rc != 0);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+}
+
+/* Like test_nvme_ns_cmd_readv, but the underlying controller has SGL support. */
+static void
+test_nvme_ns_cmd_readv_sgl(void)
+{
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	struct spdk_nvme_qpair		qpair;
+	int				rc = 0;
+	uint32_t			lba_count = 256;
+	uint32_t			sector_size = 512;
+	struct nvme_request_sgl_ctx	sgl_ctx = {};
+	struct iovec			iov[3] = {};
+	struct nvme_request		*child;
+	uint64_t			cmd_lba;
+	uint32_t			cmd_lba_count;
+
+	iov[0].iov_base = (void *)(uintptr_t)0x10000000;
+	iov[0].iov_len = sector_size * lba_count;
+	sgl_ctx.iovs = iov;
+	sgl_ctx.iovcnt = 1;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, 128 * 1024, 0, false);
+	ctrlr.flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+
+	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, 256, NULL, &sgl_ctx, 0, nvme_request_reset_sgl,
+				    NULL);
+	CU_ASSERT(rc != 0);
+
+
+	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, lba_count, NULL, &sgl_ctx, 0,
+				    nvme_request_reset_sgl, nvme_request_next_sge);
+
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_READ);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(g_request->payload.reset_sgl_fn == nvme_request_reset_sgl);
+	CU_ASSERT(g_request->payload.next_sge_fn == nvme_request_next_sge);
+	CU_ASSERT(g_request->payload.contig_or_cb_arg == &sgl_ctx);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	/* Set the controller to only support 1 sge per request. Then do a 2 sector I/O with
+	 * 3 unaligned sges. This will fail! */
+	ctrlr.max_sges = 1;
+	lba_count = 2;
+	iov[0].iov_base = (void *)(uintptr_t)0x10000000;
+	iov[0].iov_len = 300;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 300;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = (sector_size * lba_count) - iov[0].iov_len - iov[1].iov_len;
+	sgl_ctx.iovs = iov;
+	sgl_ctx.iovcnt = 3;
+
+	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, lba_count, NULL, &sgl_ctx, 0,
+				    nvme_request_reset_sgl, nvme_request_next_sge);
+
+	CU_ASSERT(rc != 0);
+
+	/* Let the controller support 2 sges per request and repeat. This should
+	 * succeed. */
+	ctrlr.max_sges = 2;
+	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, lba_count, NULL, &sgl_ctx, 0,
+				    nvme_request_reset_sgl, nvme_request_next_sge);
+
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->num_children == 2);
+
+	child = TAILQ_FIRST(&g_request->children);
+	nvme_request_remove_child(g_request, child);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == 512);
+	CU_ASSERT(cmd_lba == 0x1000);
+	CU_ASSERT(cmd_lba_count == 1);
+	nvme_free_request(child);
+
+	child = TAILQ_FIRST(&g_request->children);
+	nvme_request_remove_child(g_request, child);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == 512);
+	CU_ASSERT(cmd_lba == 0x1001);
+	CU_ASSERT(cmd_lba_count == 1);
+	nvme_free_request(child);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
 
 	nvme_free_request(g_request);
 	cleanup_after_test(&qpair);
@@ -2369,6 +2464,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_reservation_report);
 	CU_ADD_TEST(suite, test_cmd_child_request);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_readv);
+	CU_ADD_TEST(suite, test_nvme_ns_cmd_readv_sgl);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_read_with_md);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_writev);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_write_with_md);
