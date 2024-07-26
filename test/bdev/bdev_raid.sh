@@ -923,10 +923,44 @@ function raid_resize_superblock_test() {
 	return 0
 }
 
+function raid_resize_data_offset_test() {
+
+	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	raid_pid=$!
+	echo "Process raid pid: $raid_pid"
+	waitforlisten $raid_pid $rpc_server
+
+	# Create three base bdevs with one null bdev to be replaced later
+	$rpc_py bdev_malloc_create -b malloc0 64 $base_blocklen -o 16
+	$rpc_py bdev_malloc_create -b malloc1 64 $base_blocklen -o 16
+	$rpc_py bdev_null_create null0 64 $base_blocklen
+
+	$rpc_py bdev_raid_create -n Raid -r 1 -b "malloc0 malloc1 null0" -s
+
+	# Check data_offset
+	(($($rpc_py bdev_raid_get_bdevs all | jq -r '.[].base_bdevs_list[2].data_offset') == 2048))
+
+	$rpc_py bdev_null_delete null0
+
+	# Now null bdev is replaced with malloc, and optimal_io_boundary is changed to force
+	# recalculation
+	$rpc_py bdev_malloc_create -b malloc2 512 $base_blocklen -o 30
+	$rpc_py bdev_raid_add_base_bdev Raid malloc2
+
+	# Data offset is updated
+	(($($rpc_py bdev_raid_get_bdevs all | jq -r '.[].base_bdevs_list[2].data_offset') == 2070))
+
+	killprocess $raid_pid
+
+	return 0
+}
+
 mkdir -p "$tmp_dir"
 trap 'cleanup; exit 1' EXIT
 
 base_blocklen=512
+
+run_test "raid1_resize_data_offset_test" raid_resize_data_offset_test
 
 run_test "raid0_resize_superblock_test" raid_resize_superblock_test 0
 run_test "raid1_resize_superblock_test" raid_resize_superblock_test 1

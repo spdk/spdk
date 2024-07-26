@@ -439,6 +439,9 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	}
 	base_info->is_failed = false;
 
+	/* clear `data_offset` to allow it to be recalculated during configuration */
+	base_info->data_offset = 0;
+
 	if (base_info->desc == NULL) {
 		return;
 	}
@@ -2457,6 +2460,7 @@ raid_bdev_process_finish_write_sb(void *ctx)
 			base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
 			if (base_info->is_configured) {
 				sb_base_bdev->state = RAID_SB_BASE_BDEV_CONFIGURED;
+				sb_base_bdev->data_offset = base_info->data_offset;
 				spdk_uuid_copy(&sb_base_bdev->uuid, &base_info->uuid);
 			}
 		}
