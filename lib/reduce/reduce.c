@@ -1016,13 +1016,30 @@ _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
 }
 
 static void
+_reduce_vol_reset_chunk(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
+{
+	struct spdk_reduce_chunk_map *chunk;
+	uint32_t i;
+
+	chunk = _reduce_vol_get_chunk_map(vol, chunk_map_index);
+	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
+		if (chunk->io_unit_index[i] == REDUCE_EMPTY_MAP_ENTRY) {
+			break;
+		}
+		assert(spdk_bit_array_get(vol->allocated_backing_io_units,
+					  chunk->io_unit_index[i]) == true);
+		spdk_bit_array_clear(vol->allocated_backing_io_units, chunk->io_unit_index[i]);
+		chunk->io_unit_index[i] = REDUCE_EMPTY_MAP_ENTRY;
+	}
+	spdk_bit_array_clear(vol->allocated_chunk_maps, chunk_map_index);
+}
+
+static void
 _write_write_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
 	uint64_t old_chunk_map_index;
-	struct spdk_reduce_chunk_map *old_chunk;
-	uint32_t i;
 
 	if (reduce_errno != 0) {
 		req->reduce_errno = reduce_errno;
@@ -1040,16 +1057,7 @@ _write_write_done(void *_req, int reduce_errno)
 
 	old_chunk_map_index = vol->pm_logical_map[req->logical_map_index];
 	if (old_chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
-		old_chunk = _reduce_vol_get_chunk_map(vol, old_chunk_map_index);
-		for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-			if (old_chunk->io_unit_index[i] == REDUCE_EMPTY_MAP_ENTRY) {
-				break;
-			}
-			assert(spdk_bit_array_get(vol->allocated_backing_io_units, old_chunk->io_unit_index[i]) == true);
-			spdk_bit_array_clear(vol->allocated_backing_io_units, old_chunk->io_unit_index[i]);
-			old_chunk->io_unit_index[i] = REDUCE_EMPTY_MAP_ENTRY;
-		}
-		spdk_bit_array_clear(vol->allocated_chunk_maps, old_chunk_map_index);
+		_reduce_vol_reset_chunk(vol, old_chunk_map_index);
 	}
 
 	/*
