@@ -3565,6 +3565,34 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('fsdev-io-cache-size', help='Size of fsdev IO objects cache per thread', type=int)
     p.set_defaults(func=fsdev_set_opts)
 
+    def fsdev_aio_create(args):
+        print(rpc.fsdev.fsdev_aio_create(args.client, name=args.name, root_path=args.root_path,
+                                         enable_xattr=args.enable_xattr, enable_writeback_cache=args.enable_writeback_cache,
+                                         max_write=args.max_write))
+
+    p = subparsers.add_parser('fsdev_aio_create', help='Create a aio filesystem')
+    p.add_argument('name', help='Filesystem name. Example: aio0.')
+    p.add_argument('root_path', help='Path on the system fs to expose as SPDK filesystem')
+
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-xattr', help='Enable extended attributes', action='store_true', default=None)
+    group.add_argument('--disable-xattr', help='Disable extended attributes', dest='enable_xattr', action='store_false', default=None)
+
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-writeback-cache', help='Enable writeback cache', action='store_true', default=None)
+    group.add_argument('--disable-writeback-cache', help='Disable writeback cache', dest='enable_writeback_cache', action='store_false',
+                       default=None)
+
+    p.add_argument('-w', '--max-write', help='Max write size in bytes', type=int)
+    p.set_defaults(func=fsdev_aio_create)
+
+    def fsdev_aio_delete(args):
+        print(rpc.fsdev.fsdev_aio_delete(args.client, name=args.name))
+
+    p = subparsers.add_parser('fsdev_aio_delete', help='Delete a aio filesystem')
+    p.add_argument('name', help='Filesystem name. Example: aio0.')
+    p.set_defaults(func=fsdev_aio_delete)
+
     # sock
     def sock_impl_get_options(args):
         print_json(rpc.sock.sock_impl_get_options(args.client,
