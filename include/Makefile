@@ -6,7 +6,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
+HEADERS := $(shell find $(SPDK_ROOT_DIR)/include/spdk/ -name '*.h')
 INSTALLED_HEADERS := $(patsubst $(SPDK_ROOT_DIR)/include%,$(DESTDIR)$(includedir)%,$(HEADERS))
 
 $(INSTALLED_HEADERS):
@@ -19,7 +19,7 @@ endif
 .PHONY: $(INSTALLED_HEADERS)
 
 all:
-	$(Q)cp $(SPDK_ROOT_DIR)/include/spdk/*.h $(SPDK_ROOT_DIR)/build/include/spdk/
+	$(Q)cp -r $(SPDK_ROOT_DIR)/include/spdk/* $(SPDK_ROOT_DIR)/build/include/spdk/
 
 clean:
 	@:

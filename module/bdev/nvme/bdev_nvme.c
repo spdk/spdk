@@ -5090,7 +5090,7 @@ err_alloc:
 
 struct bdev_nvme_set_multipath_policy_ctx {
 	struct spdk_bdev_desc *desc;
-	bdev_nvme_set_multipath_policy_cb cb_fn;
+	spdk_bdev_nvme_set_multipath_policy_cb cb_fn;
 	void *cb_arg;
 };
 
@@ -5126,9 +5126,9 @@ _bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
 }
 
 void
-bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy policy,
-			       enum bdev_nvme_multipath_selector selector, uint32_t rr_min_io,
-			       bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
+spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multipath_policy policy,
+				    enum spdk_bdev_nvme_multipath_selector selector, uint32_t rr_min_io,
+				    spdk_bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
 {
 	struct bdev_nvme_set_multipath_policy_ctx *ctx;
 	struct spdk_bdev *bdev;
@@ -5532,7 +5532,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	if (ctx != NULL) {
 		memcpy(&nvme_ctrlr->opts, &ctx->bdev_opts, sizeof(ctx->bdev_opts));
 	} else {
-		bdev_nvme_get_default_ctrlr_opts(&nvme_ctrlr->opts);
+		spdk_bdev_nvme_get_default_ctrlr_opts(&nvme_ctrlr->opts);
 	}
 
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
@@ -5578,7 +5578,7 @@ err:
 }
 
 void
-bdev_nvme_get_default_ctrlr_opts(struct nvme_ctrlr_opts *opts)
+spdk_bdev_nvme_get_default_ctrlr_opts(struct spdk_bdev_nvme_ctrlr_opts *opts)
 {
 	opts->prchk_flags = 0;
 	opts->ctrlr_loss_timeout_sec = g_opts.ctrlr_loss_timeout_sec;
@@ -6165,15 +6165,15 @@ bdev_nvme_load_psk(const char *fname, char *buf, size_t bufsz)
 }
 
 int
-bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-		 const char *base_name,
-		 const char **names,
-		 uint32_t count,
-		 spdk_bdev_create_nvme_fn cb_fn,
-		 void *cb_ctx,
-		 struct spdk_nvme_ctrlr_opts *drv_opts,
-		 struct nvme_ctrlr_opts *bdev_opts,
-		 bool multipath)
+spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+		      const char *base_name,
+		      const char **names,
+		      uint32_t count,
+		      spdk_bdev_nvme_create_cb cb_fn,
+		      void *cb_ctx,
+		      struct spdk_nvme_ctrlr_opts *drv_opts,
+		      struct spdk_bdev_nvme_ctrlr_opts *bdev_opts,
+		      bool multipath)
 {
 	struct nvme_probe_skip_entry *entry, *tmp;
 	struct nvme_async_probe_ctx *ctx;
@@ -6217,7 +6217,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	if (bdev_opts) {
 		memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
 	} else {
-		bdev_nvme_get_default_ctrlr_opts(&ctx->bdev_opts);
+		spdk_bdev_nvme_get_default_ctrlr_opts(&ctx->bdev_opts);
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
@@ -6577,7 +6577,7 @@ struct discovery_ctx {
 	struct discovery_entry_ctx		*entry_ctx_in_use;
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		drv_opts;
-	struct nvme_ctrlr_opts			bdev_opts;
+	struct spdk_bdev_nvme_ctrlr_opts	bdev_opts;
 	struct spdk_nvmf_discovery_log_page	*log_page;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
 	TAILQ_HEAD(, discovery_entry_ctx)	nvm_entry_ctxs;
@@ -6932,14 +6932,14 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			}
 			spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->drv_opts, sizeof(new_ctx->drv_opts));
 			snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
-			rc = bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0,
-					      discovery_attach_controller_done, new_ctx,
-					      &new_ctx->drv_opts, &ctx->bdev_opts, true);
+			rc = spdk_bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0,
+						   discovery_attach_controller_done, new_ctx,
+						   &new_ctx->drv_opts, &ctx->bdev_opts, true);
 			if (rc == 0) {
 				TAILQ_INSERT_TAIL(&ctx->nvm_entry_ctxs, new_ctx, tailq);
 				ctx->attach_in_progress++;
 			} else {
-				DISCOVERY_ERRLOG(ctx, "bdev_nvme_create failed (%s)\n", spdk_strerror(-rc));
+				DISCOVERY_ERRLOG(ctx, "spdk_bdev_nvme_create failed (%s)\n", spdk_strerror(-rc));
 			}
 		}
 	}
@@ -7127,7 +7127,7 @@ int
 bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  struct spdk_nvme_ctrlr_opts *drv_opts,
-			  struct nvme_ctrlr_opts *bdev_opts,
+			  struct spdk_bdev_nvme_ctrlr_opts *bdev_opts,
 			  uint64_t attach_timeout,
 			  bool from_mdns,
 			  spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx)

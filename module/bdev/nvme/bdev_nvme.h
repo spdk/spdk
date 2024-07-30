@@ -13,6 +13,7 @@
 #include "spdk/queue.h"
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
+#include "spdk/module/bdev/nvme.h"
 #include "spdk/jsonrpc.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
@@ -23,31 +24,8 @@ extern struct spdk_thread *g_bdev_nvme_init_thread;
 
 #define NVME_MAX_CONTROLLERS 1024
 
-enum bdev_nvme_multipath_policy {
-	BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE,
-	BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
-};
-
-enum bdev_nvme_multipath_selector {
-	BDEV_NVME_MP_SELECTOR_ROUND_ROBIN = 1,
-	BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH,
-};
-
-typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
 typedef void (*spdk_bdev_nvme_start_discovery_fn)(void *ctx, int status);
 typedef void (*spdk_bdev_nvme_stop_discovery_fn)(void *ctx);
-
-struct nvme_ctrlr_opts {
-	uint32_t prchk_flags;
-	int32_t ctrlr_loss_timeout_sec;
-	uint32_t reconnect_delay_sec;
-	uint32_t fast_io_fail_timeout_sec;
-	bool from_discovery_service;
-	/* Name of the PSK or path to the file containing PSK. */
-	char psk[PATH_MAX];
-	const char *dhchap_key;
-	const char *dhchap_ctrlr_key;
-};
 
 struct nvme_async_probe_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
@@ -57,9 +35,9 @@ struct nvme_async_probe_ctx {
 	uint32_t reported_bdevs;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
-	struct nvme_ctrlr_opts bdev_opts;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 	struct spdk_nvme_ctrlr_opts drv_opts;
-	spdk_bdev_create_nvme_fn cb_fn;
+	spdk_bdev_nvme_create_cb cb_fn;
 	void *cb_ctx;
 	uint32_t populates_in_progress;
 	bool ctrlr_attached;
@@ -125,7 +103,7 @@ struct nvme_ctrlr {
 	uint32_t				dont_retry : 1;
 	uint32_t				disabled : 1;
 
-	struct nvme_ctrlr_opts			opts;
+	struct spdk_bdev_nvme_ctrlr_opts	opts;
 
 	RB_HEAD(nvme_ns_tree, nvme_ns)		namespaces;
 
@@ -176,18 +154,18 @@ struct nvme_error_stat {
 };
 
 struct nvme_bdev {
-	struct spdk_bdev		disk;
-	uint32_t			nsid;
-	struct nvme_bdev_ctrlr		*nbdev_ctrlr;
-	pthread_mutex_t			mutex;
-	int				ref;
-	enum bdev_nvme_multipath_policy	mp_policy;
-	enum bdev_nvme_multipath_selector mp_selector;
-	uint32_t			rr_min_io;
-	TAILQ_HEAD(, nvme_ns)		nvme_ns_list;
-	bool				opal;
-	TAILQ_ENTRY(nvme_bdev)		tailq;
-	struct nvme_error_stat		*err_stat;
+	struct spdk_bdev			disk;
+	uint32_t				nsid;
+	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
+	pthread_mutex_t				mutex;
+	int					ref;
+	enum spdk_bdev_nvme_multipath_policy	mp_policy;
+	enum spdk_bdev_nvme_multipath_selector	mp_selector;
+	uint32_t				rr_min_io;
+	TAILQ_HEAD(, nvme_ns)			nvme_ns_list;
+	bool					opal;
+	TAILQ_ENTRY(nvme_bdev)			tailq;
+	struct nvme_error_stat			*err_stat;
 };
 
 struct nvme_qpair {
@@ -225,8 +203,8 @@ struct nvme_io_path {
 
 struct nvme_bdev_channel {
 	struct nvme_io_path			*current_io_path;
-	enum bdev_nvme_multipath_policy		mp_policy;
-	enum bdev_nvme_multipath_selector	mp_selector;
+	enum spdk_bdev_nvme_multipath_policy	mp_policy;
+	enum spdk_bdev_nvme_multipath_selector	mp_selector;
 	uint32_t				rr_min_io;
 	uint32_t				rr_counter;
 	STAILQ_HEAD(, nvme_io_path)		io_path_list;
@@ -313,20 +291,8 @@ void bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
 
-void bdev_nvme_get_default_ctrlr_opts(struct nvme_ctrlr_opts *opts);
-
-int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-		     const char *base_name,
-		     const char **names,
-		     uint32_t count,
-		     spdk_bdev_create_nvme_fn cb_fn,
-		     void *cb_ctx,
-		     struct spdk_nvme_ctrlr_opts *drv_opts,
-		     struct nvme_ctrlr_opts *bdev_opts,
-		     bool multipath);
-
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
-			      struct spdk_nvme_ctrlr_opts *drv_opts, struct nvme_ctrlr_opts *bdev_opts,
+			      struct spdk_nvme_ctrlr_opts *drv_opts, struct spdk_bdev_nvme_ctrlr_opts *bdev_opts,
 			      uint64_t timeout, bool from_mdns,
 			      spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx);
 int bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_fn,
@@ -336,7 +302,7 @@ void bdev_nvme_get_discovery_info(struct spdk_json_write_ctx *w);
 int bdev_nvme_start_mdns_discovery(const char *base_name,
 				   const char *svcname,
 				   struct spdk_nvme_ctrlr_opts *drv_opts,
-				   struct nvme_ctrlr_opts *bdev_opts);
+				   struct spdk_bdev_nvme_ctrlr_opts *bdev_opts);
 int bdev_nvme_stop_mdns_discovery(const char *name);
 void bdev_nvme_get_mdns_discovery_info(struct spdk_jsonrpc_request *request);
 void bdev_nvme_mdns_discovery_config_json(struct spdk_json_write_ctx *w);
@@ -409,23 +375,5 @@ typedef void (*bdev_nvme_set_preferred_path_cb)(void *cb_arg, int rc);
  */
 void bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
 				  bdev_nvme_set_preferred_path_cb cb_fn, void *cb_arg);
-
-typedef void (*bdev_nvme_set_multipath_policy_cb)(void *cb_arg, int rc);
-
-/**
- * Set multipath policy of the NVMe bdev.
- *
- * \param name NVMe bdev name
- * \param policy Multipath policy (active-passive or active-active)
- * \param selector Multipath selector (round_robin, queue_depth)
- * \param rr_min_io Number of IO to route to a path before switching to another for round-robin
- * \param cb_fn Function to be called back after completion.
- */
-void bdev_nvme_set_multipath_policy(const char *name,
-				    enum bdev_nvme_multipath_policy policy,
-				    enum bdev_nvme_multipath_selector selector,
-				    uint32_t rr_min_io,
-				    bdev_nvme_set_multipath_policy_cb cb_fn,
-				    void *cb_arg);
 
 #endif /* SPDK_BDEV_NVME_H */

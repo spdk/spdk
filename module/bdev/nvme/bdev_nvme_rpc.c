@@ -237,7 +237,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *dhchap_key;
 	char *dhchap_ctrlr_key;
 	enum bdev_nvme_multipath_mode multipath;
-	struct nvme_ctrlr_opts bdev_opts;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 	struct spdk_nvme_ctrlr_opts drv_opts;
 	uint32_t max_bdevs;
 };
@@ -412,7 +412,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->req.drv_opts, sizeof(ctx->req.drv_opts));
-	bdev_nvme_get_default_ctrlr_opts(&ctx->req.bdev_opts);
+	spdk_bdev_nvme_get_default_ctrlr_opts(&ctx->req.bdev_opts);
 	/* For now, initialize the multipath parameter to add a failover path. This maintains backward
 	 * compatibility with past behavior. In the future, this behavior will change to "disable". */
 	ctx->req.multipath = BDEV_NVME_MP_MODE_FAILOVER;
@@ -622,9 +622,9 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->req.bdev_opts.from_discovery_service = false;
 	ctx->req.bdev_opts.dhchap_key = ctx->req.dhchap_key;
 	ctx->req.bdev_opts.dhchap_ctrlr_key = ctx->req.dhchap_ctrlr_key;
-	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
-			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
-			      &ctx->req.bdev_opts, multipath);
+	rc = spdk_bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
+				   rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
+				   &ctx->req.bdev_opts, multipath);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -1638,7 +1638,7 @@ struct rpc_bdev_nvme_start_discovery {
 	bool wait_for_attach;
 	uint64_t attach_timeout_ms;
 	struct spdk_nvme_ctrlr_opts opts;
-	struct nvme_ctrlr_opts bdev_opts;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 };
 
 static void
@@ -2291,8 +2291,8 @@ SPDK_RPC_REGISTER("bdev_nvme_set_preferred_path", rpc_bdev_nvme_set_preferred_pa
 
 struct rpc_set_multipath_policy {
 	char *name;
-	enum bdev_nvme_multipath_policy policy;
-	enum bdev_nvme_multipath_selector selector;
+	enum spdk_bdev_nvme_multipath_policy policy;
+	enum spdk_bdev_nvme_multipath_selector selector;
 	uint32_t rr_min_io;
 };
 
@@ -2305,7 +2305,7 @@ free_rpc_set_multipath_policy(struct rpc_set_multipath_policy *req)
 static int
 rpc_decode_mp_policy(const struct spdk_json_val *val, void *out)
 {
-	enum bdev_nvme_multipath_policy *policy = out;
+	enum spdk_bdev_nvme_multipath_policy *policy = out;
 
 	if (spdk_json_strequal(val, "active_passive") == true) {
 		*policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
@@ -2322,7 +2322,7 @@ rpc_decode_mp_policy(const struct spdk_json_val *val, void *out)
 static int
 rpc_decode_mp_selector(const struct spdk_json_val *val, void *out)
 {
-	enum bdev_nvme_multipath_selector *selector = out;
+	enum spdk_bdev_nvme_multipath_selector *selector = out;
 
 	if (spdk_json_strequal(val, "round_robin") == true) {
 		*selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
@@ -2403,9 +2403,9 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev_nvme_set_multipath_policy(ctx->req.name, ctx->req.policy, ctx->req.selector,
-				       ctx->req.rr_min_io,
-				       rpc_bdev_nvme_set_multipath_policy_done, ctx);
+	spdk_bdev_nvme_set_multipath_policy(ctx->req.name, ctx->req.policy, ctx->req.selector,
+					    ctx->req.rr_min_io,
+					    rpc_bdev_nvme_set_multipath_policy_done, ctx);
 	return;
 
 cleanup:
@@ -2420,7 +2420,7 @@ struct rpc_bdev_nvme_start_mdns_discovery {
 	char *svcname;
 	char *hostnqn;
 	struct spdk_nvme_ctrlr_opts opts;
-	struct nvme_ctrlr_opts bdev_opts;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 };
 
 static void

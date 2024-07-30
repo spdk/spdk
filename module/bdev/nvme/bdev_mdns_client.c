@@ -20,6 +20,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/nvme.h"
+#include "spdk/module/bdev/nvme.h"
 #include "bdev_nvme.h"
 
 #ifdef SPDK_CONFIG_AVAHI
@@ -47,7 +48,7 @@ struct mdns_discovery_ctx {
 	AvahiServiceBrowser                     *sb;
 	struct spdk_poller                      *poller;
 	struct spdk_nvme_ctrlr_opts             drv_opts;
-	struct nvme_ctrlr_opts                  bdev_opts;
+	struct spdk_bdev_nvme_ctrlr_opts        bdev_opts;
 	uint32_t                                seqno;
 	bool                                    stop;
 	struct spdk_thread                      *calling_thread;
@@ -456,7 +457,7 @@ int
 bdev_nvme_start_mdns_discovery(const char *base_name,
 			       const char *svcname,
 			       struct spdk_nvme_ctrlr_opts *drv_opts,
-			       struct nvme_ctrlr_opts *bdev_opts)
+			       struct spdk_bdev_nvme_ctrlr_opts *bdev_opts)
 {
 	AvahiServiceBrowser *sb = NULL;
 	int error;
@@ -635,7 +636,7 @@ int
 bdev_nvme_start_mdns_discovery(const char *base_name,
 			       const char *svcname,
 			       struct spdk_nvme_ctrlr_opts *drv_opts,
-			       struct nvme_ctrlr_opts *bdev_opts)
+			       struct spdk_bdev_nvme_ctrlr_opts *bdev_opts)
 {
 	SPDK_ERRLOG("spdk not built with --with-avahi option\n");
 	return -ENOTSUP;

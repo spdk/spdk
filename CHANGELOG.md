@@ -58,6 +58,12 @@ The `framework_get_reactors` RPC method supports getting pid and tid.
 Added `framework_get_governor` RPC to retrieve the power governor name,
 power env and the frequencies available, frequency set to the cpu cores.
 
+### bdev_nvme
+
+Introduced new header file /module/bdev/nvme.h and added public APIs `spdk_bdev_nvme_create`,
+`spdk_bdev_nvme_set_multipath_policy` and `spdk_bdev_nvme_get_default_ctrlr_opts`
+to get connectivity and multipathing capabilities of bdev_nvme.
+
 ### dif
 
 Each element in `enum spdk_dif_pi_format` was subtracted by 1 to match the definition
