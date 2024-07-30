@@ -2401,7 +2401,7 @@ spdk_nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-static uint16_t
+uint16_t
 nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
 	int count;

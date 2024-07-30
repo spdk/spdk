@@ -40,6 +40,7 @@ DEFINE_STUB(spdk_nvmf_ctrlr_save_migr_data, int, (struct spdk_nvmf_ctrlr *ctrlr,
 DEFINE_STUB(spdk_nvmf_ctrlr_restore_migr_data, int, (struct spdk_nvmf_ctrlr *ctrlr,
 		const struct spdk_nvmf_ctrlr_migr_data *data), 0);
 DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
+DEFINE_STUB(nvmf_subsystem_gen_cntlid, uint16_t, (struct spdk_nvmf_subsystem *subsystem), 1)
 
 static void *
 gpa_to_vva(void *prv, uint64_t addr, uint64_t len, uint32_t flags)

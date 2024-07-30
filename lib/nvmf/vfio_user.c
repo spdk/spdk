@@ -4368,8 +4368,11 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 		err = -ENOMEM;
 		goto out;
 	}
-	/* We can only support one connection for now */
-	ctrlr->cntlid = 0x1;
+	/*
+	 * We can only support one connection for now, but generate a unique cntlid in case vfio-user
+	 * transport is used together with RDMA or TCP transports in the same target
+	 */
+	ctrlr->cntlid = nvmf_subsystem_gen_cntlid(endpoint->subsystem);
 	ctrlr->intr_fd = -1;
 	ctrlr->transport = transport;
 	ctrlr->endpoint = endpoint;

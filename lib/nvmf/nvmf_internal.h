@@ -597,4 +597,14 @@ nvmf_get_transport_poll_group(struct spdk_nvmf_poll_group *group,
 
 	return NULL;
 }
+
+/**
+ * Generates a new NVMF controller id
+ *
+ * \param subsystem The subsystem
+ *
+ * \return unique controller id or 0xFFFF when all controller ids are in use
+ */
+uint16_t nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem);
+
 #endif /* __NVMF_INTERNAL_H__ */
