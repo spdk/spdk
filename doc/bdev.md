@@ -214,12 +214,12 @@ rpc.py must be twice as long than the key length in binary form.
 
 #### Example command
 
-`rpc.py accel_crypto_key_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f -k d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09 -n sample_key`
+`rpc.py accel_crypto_key_create -c AES_XTS -e 7859243a027411e581e0c40a35c8228f -k 10fee72b3d47553e065affdb48c54a81 -n sample_key`
 
 This command will create a key called `sample_key`, the AES key
-'d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09' and the XTS key
+'10fee72b3d47553e065affdb48c54a81' and the XTS key
 '7859243a027411e581e0c40a35c8228f'. In other words, the compound AES_XTS key to be used is
-'d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b097859243a027411e581e0c40a35c8228f'
+'10fee72b3d47553e065affdb48c54a817859243a027411e581e0c40a35c8228f'
 
 ### Delete the virtual crypto block device
 
