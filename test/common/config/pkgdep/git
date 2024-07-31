@@ -57,7 +57,7 @@ function install_rocksdb() {
 		git -C "$GIT_REPOS/rocksdb" checkout 6.15.fb
 		sudo mv "$GIT_REPOS/rocksdb" /usr/src/
 	else
-		sudo git -C /usr/src/rocksdb checkout 6.15.fb
+		sudo git -C /usr/src/rocksdb checkout spdk-v8.1.1
 		echo "rocksdb already in /usr/src. Not checking out again"
 	fi
 }
