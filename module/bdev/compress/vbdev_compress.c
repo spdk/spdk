@@ -508,10 +508,18 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+struct vbdev_init_reduce_ctx {
+	struct vbdev_compress   *comp_bdev;
+	int                     status;
+	bdev_compress_create_cb cb_fn;
+	void                    *cb_ctx;
+};
+
 static void
 _vbdev_reduce_init_cb(void *ctx)
 {
-	struct vbdev_compress *comp_bdev = ctx;
+	struct vbdev_init_reduce_ctx *init_ctx = ctx;
+	struct vbdev_compress *comp_bdev = init_ctx->comp_bdev;
 	int rc;
 
 	assert(comp_bdev->base_desc != NULL);
@@ -522,13 +530,17 @@ _vbdev_reduce_init_cb(void *ctx)
 	if (comp_bdev->vol) {
 		rc = vbdev_compress_claim(comp_bdev);
 		if (rc == 0) {
+			init_ctx->cb_fn(init_ctx->cb_ctx, rc);
+			free(init_ctx);
 			return;
 		}
+		init_ctx->cb_fn(init_ctx->cb_ctx, rc);
 	}
 
 	/* Close the underlying bdev on its same opened thread. */
 	spdk_bdev_close(comp_bdev->base_desc);
 	free(comp_bdev);
+	free(init_ctx);
 }
 
 /* Callback from reduce for when init is complete. We'll pass the vbdev_comp struct
@@ -538,19 +550,23 @@ _vbdev_reduce_init_cb(void *ctx)
 static void
 vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
-	struct vbdev_compress *comp_bdev = cb_arg;
+	struct vbdev_init_reduce_ctx *init_ctx = cb_arg;
+	struct vbdev_compress *comp_bdev = init_ctx->comp_bdev;
 
 	if (reduce_errno == 0) {
 		comp_bdev->vol = vol;
 	} else {
 		SPDK_ERRLOG("for vol %s, error %u\n",
 			    spdk_bdev_get_name(comp_bdev->base_bdev), reduce_errno);
+		init_ctx->cb_fn(init_ctx->cb_ctx, reduce_errno);
 	}
 
+	init_ctx->status = reduce_errno;
+
 	if (comp_bdev->thread && comp_bdev->thread != spdk_get_thread()) {
-		spdk_thread_send_msg(comp_bdev->thread, _vbdev_reduce_init_cb, comp_bdev);
+		spdk_thread_send_msg(comp_bdev->thread, _vbdev_reduce_init_cb, init_ctx);
 	} else {
-		_vbdev_reduce_init_cb(comp_bdev);
+		_vbdev_reduce_init_cb(init_ctx);
 	}
 }
 
@@ -742,24 +758,39 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 
 /* Call reducelib to initialize a new volume */
 static int
-vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
+vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size,
+		  bdev_compress_create_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev_desc *bdev_desc = NULL;
+	struct vbdev_init_reduce_ctx *init_ctx;
 	struct vbdev_compress *comp_bdev;
 	int rc;
+
+	init_ctx = calloc(1, sizeof(*init_ctx));
+	if (init_ctx == NULL) {
+		SPDK_ERRLOG("failed to alloc init contexts\n");
+		return - ENOMEM;
+	}
+
+	init_ctx->cb_fn = cb_fn;
+	init_ctx->cb_ctx = cb_arg;
 
 	rc = spdk_bdev_open_ext(bdev_name, true, vbdev_compress_base_bdev_event_cb,
 				NULL, &bdev_desc);
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s, error %s\n", bdev_name, spdk_strerror(-rc));
+		free(init_ctx);
 		return rc;
 	}
 
 	comp_bdev = _prepare_for_load_init(bdev_desc, lb_size);
 	if (comp_bdev == NULL) {
+		free(init_ctx);
 		spdk_bdev_close(bdev_desc);
 		return -EINVAL;
 	}
+
+	init_ctx->comp_bdev = comp_bdev;
 
 	/* Save the thread where the base device is opened */
 	comp_bdev->thread = spdk_get_thread();
@@ -769,7 +800,7 @@ vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 	spdk_reduce_vol_init(&comp_bdev->params, &comp_bdev->backing_dev,
 			     pm_path,
 			     vbdev_reduce_init_cb,
-			     comp_bdev);
+			     init_ctx);
 	return 0;
 }
 
@@ -847,7 +878,8 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 /* RPC entry point for compression vbdev creation. */
 int
-create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size)
+create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size,
+		     bdev_compress_create_cb cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 	struct stat info;
@@ -871,7 +903,7 @@ create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_siz
 			return -EBUSY;
 		}
 	}
-	return vbdev_init_reduce(bdev_name, pm_path, lb_size);
+	return vbdev_init_reduce(bdev_name, pm_path, lb_size, cb_fn, cb_arg);
 }
 
 static int
