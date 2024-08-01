@@ -311,12 +311,17 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		fi
 	fi
 
+	# For vfio_user and vhost tests We need to make sure entire HUGEMEM default
+	# goes to a single node as we share hugepages with qemu instance(s) and we
+	# cannot split it across all numa nodes without making sure there's enough
+	# memory available.
+
 	if [ $SPDK_TEST_VHOST -eq 1 ]; then
-		run_test "vhost" $rootdir/test/vhost/vhost.sh
+		HUGENODE=0 run_test "vhost" $rootdir/test/vhost/vhost.sh --iso
 	fi
 
 	if [ $SPDK_TEST_VFIOUSER_QEMU -eq 1 ]; then
-		run_test "vfio_user_qemu" $rootdir/test/vfio_user/vfio_user.sh
+		HUGENODE=0 run_test "vfio_user_qemu" $rootdir/test/vfio_user/vfio_user.sh --iso
 	fi
 
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
