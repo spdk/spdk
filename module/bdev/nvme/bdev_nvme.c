@@ -4087,7 +4087,7 @@ nvme_generate_uuid(const char *sn, uint32_t nsid, struct spdk_uuid *uuid)
 static int
 nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		 struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
-		 uint32_t prchk_flags, void *ctx)
+		 struct spdk_bdev_nvme_ctrlr_opts *bdev_opts, void *ctx)
 {
 	const struct spdk_uuid		*uuid;
 	const uint8_t *nguid;
@@ -4203,7 +4203,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		disk->dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
 		if (disk->dif_type != SPDK_DIF_DISABLE) {
 			disk->dif_is_head_of_md = nsdata->dps.md_start;
-			disk->dif_check_flags = prchk_flags;
+			disk->dif_check_flags = bdev_opts->prchk_flags;
 			disk->dif_pi_format = (enum spdk_dif_pi_format)spdk_nvme_ns_get_pi_format(ns);
 		}
 	}
@@ -4282,7 +4282,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	bdev->opal = nvme_ctrlr->opal_dev != NULL;
 
 	rc = nvme_disk_create(&bdev->disk, nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
-			      nvme_ns->ns, nvme_ctrlr->opts.prchk_flags, bdev);
+			      nvme_ns->ns, &nvme_ctrlr->opts, bdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
 		nvme_bdev_free(bdev);
