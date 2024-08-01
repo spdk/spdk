@@ -94,8 +94,6 @@ nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt)
 		nvmf_ctx_stop_mdns_prr(g_mdns_publish_ctx);
 		return;
 	}
-
-	SPDK_ERRLOG("Failed to stop mDNS PRR. It is not running on target %s.\n", tgt->name);
 }
 
 static void
