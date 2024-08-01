@@ -1855,7 +1855,10 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
 	struct spdk_vhost_session *vsession, *tmp_vsession;
 
-	pthread_mutex_lock(&user_dev->lock);
+	if (pthread_mutex_trylock(&user_dev->lock) != 0) {
+		return -EBUSY;
+	}
+
 	if (user_dev->pending_async_op_num) {
 		pthread_mutex_unlock(&user_dev->lock);
 		return -EBUSY;

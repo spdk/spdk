@@ -323,6 +323,13 @@ free_rpc_delete_vhost_ctrlr(struct rpc_delete_vhost_ctrlr *req)
 	free(req->ctrlr);
 }
 
+struct vhost_delete_ctrlr_context {
+	struct spdk_jsonrpc_request *request;
+	const struct spdk_json_val *params;
+};
+
+static void _rpc_vhost_delete_controller(void *arg);
+
 static void
 rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
@@ -349,6 +356,21 @@ rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_vhost_dev_remove(vdev);
 	if (rc < 0) {
+		if (rc == -EBUSY) {
+			struct vhost_delete_ctrlr_context *ctx;
+
+			ctx = calloc(1, sizeof(*ctx));
+			if (ctx == NULL) {
+				SPDK_ERRLOG("Failed to allocate memory for vhost_delete_ctrlr context\n");
+				rc = -ENOMEM;
+				goto invalid;
+			}
+			ctx->request = request;
+			ctx->params = params;
+			spdk_thread_send_msg(spdk_get_thread(), _rpc_vhost_delete_controller, ctx);
+			free_rpc_delete_vhost_ctrlr(&req);
+			return;
+		}
 		goto invalid;
 	}
 
@@ -364,6 +386,14 @@ invalid:
 
 }
 SPDK_RPC_REGISTER("vhost_delete_controller", rpc_vhost_delete_controller, SPDK_RPC_RUNTIME)
+
+static void _rpc_vhost_delete_controller(void *arg)
+{
+	struct vhost_delete_ctrlr_context *ctx = arg;
+
+	rpc_vhost_delete_controller(ctx->request, ctx->params);
+	free(ctx);
+}
 
 struct rpc_get_vhost_ctrlrs {
 	char *name;
