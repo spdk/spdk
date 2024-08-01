@@ -457,6 +457,8 @@ nvmf_tgt_destroy_cb(void *io_device)
 		free(referral);
 	}
 
+	nvmf_tgt_stop_mdns_prr(tgt);
+
 	/* We will be freeing subsystems in this loop, so we always need to get the next one
 	 * ahead of time, since we can't call get_next() on a subsystem that's been freed.
 	 */
