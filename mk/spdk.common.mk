@@ -99,6 +99,9 @@ endif
 ifeq ($(CONFIG_LTO),y)
 COMMON_CFLAGS += -flto=auto
 LDFLAGS += -flto=auto
+else
+COMMON_CFLAGS += -fno-lto
+LDFLAGS += -fno-lto
 endif
 
 ifeq ($(CONFIG_PGO_CAPTURE),y)
