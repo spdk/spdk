@@ -1051,6 +1051,7 @@ _write_write_done(void *_req, int reduce_errno)
 	}
 
 	if (req->reduce_errno != 0) {
+		_reduce_vol_reset_chunk(vol, req->chunk_map_index);
 		_reduce_vol_complete_req(req, req->reduce_errno);
 		return;
 	}
