@@ -851,6 +851,20 @@ nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t lengt
 }
 
 static int
+nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
+				 uint32_t io_unit_size)
+{
+	struct spdk_nvmf_stripped_data *data = req->stripped_data;
+
+	data->iov[data->iovcnt].iov_base = buf;
+	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
+	length -= data->iov[data->iovcnt].iov_len;
+	data->iovcnt++;
+
+	return length;
+}
+
+static int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
@@ -904,20 +918,6 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	}
 
 	return rc;
-}
-
-static int
-nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
-				 uint32_t io_unit_size)
-{
-	struct spdk_nvmf_stripped_data *data = req->stripped_data;
-
-	data->iov[data->iovcnt].iov_base = buf;
-	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
-	length -= data->iov[data->iovcnt].iov_len;
-	data->iovcnt++;
-
-	return length;
 }
 
 void
