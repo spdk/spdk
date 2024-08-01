@@ -210,9 +210,9 @@ function nvmf_veth_init() {
 	ip link set $NVMF_TARGET_BRIDGE2 master $NVMF_BRIDGE
 
 	# Accept connections from veth interface
-	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
-	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE2 -p tcp --dport $NVMF_PORT -j ACCEPT
-	iptables -A FORWARD -i $NVMF_BRIDGE -o $NVMF_BRIDGE -j ACCEPT
+	ipts -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
+	ipts -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE2 -p tcp --dport $NVMF_PORT -j ACCEPT
+	ipts -A FORWARD -i $NVMF_BRIDGE -o $NVMF_BRIDGE -j ACCEPT
 
 	# Verify connectivity
 	ping -c 1 $NVMF_FIRST_TARGET_IP
@@ -280,7 +280,7 @@ function nvmf_tcp_init() {
 	"${NVMF_TARGET_NS_CMD[@]}" ip link set lo up
 
 	# Accept connections from phy interface
-	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
+	ipts -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
 
 	# Verify connectivity
 	ping -c 1 $NVMF_FIRST_TARGET_IP
@@ -290,6 +290,7 @@ function nvmf_tcp_init() {
 }
 
 function nvmf_tcp_fini() {
+	iptr
 	if [[ "$NVMF_TARGET_NAMESPACE" == "nvmf_tgt_ns_spdk" ]]; then
 		nvmf_veth_fini
 		return 0
@@ -777,3 +778,6 @@ get_main_ns_ip() {
 uuid2nguid() {
 	tr -d - <<< "${1^^}"
 }
+
+ipts() { iptables "$@" -m comment --comment "SPDK_NVMF:$*"; }
+iptr() { iptables-save | grep -v SPDK_NVMF | iptables-restore; }
