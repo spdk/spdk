@@ -236,6 +236,7 @@ function nvmf_veth_fini() {
 	ip link set $NVMF_TARGET_BRIDGE2 down
 	ip link delete $NVMF_BRIDGE type bridge
 	ip link delete $NVMF_INITIATOR_INTERFACE
+	ip link delete $NVMF_INITIATOR_INTERFACE2
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2
 	remove_spdk_ns
@@ -289,7 +290,7 @@ function nvmf_tcp_init() {
 }
 
 function nvmf_tcp_fini() {
-	if [[ "$NVMF_TARGET_NAMESPACE" == "nvmf_tgt_ns" ]]; then
+	if [[ "$NVMF_TARGET_NAMESPACE" == "nvmf_tgt_ns_spdk" ]]; then
 		nvmf_veth_fini
 		return 0
 	fi
@@ -620,7 +621,7 @@ function _remove_spdk_ns() {
 		# from its own ifindex.
 		ns_net_devs=($(
 			ip netns exec "$ns" bash <<- 'IN_NS'
-				shopt -s extglob
+				shopt -s extglob nullglob
 				for dev in /sys/class/net/!(lo|bond*); do
 					(($(< "$dev/ifindex") == $(< "$dev/iflink"))) || continue
 					echo "${dev##*/}"
