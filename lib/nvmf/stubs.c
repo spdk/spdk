@@ -56,3 +56,18 @@ spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 	abort();
 }
 #endif /* !SPDK_CONFIG_RDMA */
+
+#ifndef SPDK_CONFIG_AVAHI
+int
+nvmf_publish_mdns_prr(struct spdk_nvmf_tgt *tgt)
+{
+	SPDK_ERRLOG("nvmf_publish_mdns_prr is supported when built with the --with-avahi option\n");
+
+	return -ENOTSUP;
+}
+
+void
+nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt)
+{
+}
+#endif /* !SPDK_CONFIG_AVAHI */

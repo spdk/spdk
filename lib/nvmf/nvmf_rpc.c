@@ -3022,12 +3022,6 @@ static void
 rpc_nvmf_publish_mdns_prr(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-#ifndef SPDK_CONFIG_AVAHI
-	SPDK_ERRLOG("nvmf_publish_mdns_prr is supported when SPDK is built with the --with-avahi option.\n");
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 "nvmf_publish_mdns_prr is supported when SPDK is built with the --with-avahi option.");
-	return;
-#endif
 	int rc;
 	struct rpc_mdns_prr req = { 0 };
 	struct spdk_nvmf_tgt *tgt;
@@ -3066,13 +3060,6 @@ static void
 rpc_nvmf_stop_mdns_prr(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-#ifndef SPDK_CONFIG_AVAHI
-	SPDK_ERRLOG("nvmf_stop_mdns_prr is supported when SPDK is built with the --with-avahi option.\n");
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 "nvmf_stop_mdns_prr is supported when SPDK is built with the --with-avahi option.");
-	return;
-#endif
-
 	struct rpc_mdns_prr req = { 0 };
 	struct spdk_nvmf_tgt *tgt;
 
