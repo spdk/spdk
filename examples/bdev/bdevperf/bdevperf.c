@@ -51,7 +51,7 @@ static bool g_abort = false;
 static bool g_error_to_exit = false;
 static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
-static int g_show_performance_real_time = 0;
+static bool g_summarize_performance = true;
 static uint64_t g_show_performance_period_in_usec = SPDK_SEC_TO_USEC;
 static uint64_t g_show_performance_period_num = 0;
 static uint64_t g_show_performance_ema_period = 0;
@@ -320,7 +320,8 @@ get_avg_latency(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 }
 
 static void
-performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job)
+performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job,
+		     bool print_job_info)
 {
 	double io_per_second, mb_per_second, failed_per_second, timeout_per_second;
 	double average_latency = 0.0, min_latency, max_latency;
@@ -328,27 +329,6 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	uint64_t tsc_rate;
 	uint64_t total_io;
 	struct latency_info latency_info = {};
-
-	if (job->workload_type == JOB_CONFIG_RW_RW || job->workload_type == JOB_CONFIG_RW_RANDRW) {
-		printf("\r Job: %s (Core Mask 0x%s, workload: %s, percentage: %d, depth: %d, IO size: %d)\n",
-		       job->name, spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)),
-		       parse_workload_type(job->workload_type), job->rw_percentage,
-		       job->queue_depth, job->io_size);
-	} else {
-		printf("\r Job: %s (Core Mask 0x%s, workload: %s, depth: %d, IO size: %d)\n",
-		       job->name, spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)),
-		       parse_workload_type(job->workload_type), job->queue_depth, job->io_size);
-	}
-
-
-	if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
-		printf("\r Job: %s ended in about %.2f seconds with error\n",
-		       job->name, (double)job->run_time_in_usec / SPDK_SEC_TO_USEC);
-	}
-	if (job->verify) {
-		printf("\t Verification LBA range: start 0x%" PRIx64 " length 0x%" PRIx64 "\n",
-		       job->ios_base, job->size_in_ios);
-	}
 
 	if (g_performance_dump_active == true) {
 		/* Use job's actual run time as Job has ended */
@@ -382,12 +362,35 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	failed_per_second = (double)job->io_failed * SPDK_SEC_TO_USEC / time_in_usec;
 	timeout_per_second = (double)job->io_timeout * SPDK_SEC_TO_USEC / time_in_usec;
 
-	printf("\t %-20s: %10.2f %10.2f %10.2f",
-	       job->name, (float)time_in_usec / SPDK_SEC_TO_USEC, io_per_second, mb_per_second);
-	printf(" %10.2f %8.2f",
-	       failed_per_second, timeout_per_second);
-	printf(" %10.2f %10.2f %10.2f\n",
-	       average_latency, min_latency, max_latency);
+	if (print_job_info) {
+		if (job->workload_type == JOB_CONFIG_RW_RW || job->workload_type == JOB_CONFIG_RW_RANDRW) {
+			printf("Job: %s (Core Mask 0x%s, workload: %s, percentage: %d, depth: %d, IO size: %d)\n",
+			       job->name, spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)),
+			       parse_workload_type(job->workload_type), job->rw_percentage,
+			       job->queue_depth, job->io_size);
+		} else {
+			printf("Job: %s (Core Mask 0x%s, workload: %s, depth: %d, IO size: %d)\n",
+			       job->name, spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)),
+			       parse_workload_type(job->workload_type), job->queue_depth, job->io_size);
+		}
+
+
+		if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
+			printf("Job: %s ended in about %.2f seconds with error\n",
+			       job->name, (double)job->run_time_in_usec / SPDK_SEC_TO_USEC);
+		}
+		if (job->verify) {
+			printf("\t Verification LBA range: start 0x%" PRIx64 " length 0x%" PRIx64 "\n",
+			       job->ios_base, job->size_in_ios);
+		}
+
+		printf("\t %-20s: %10.2f %10.2f %10.2f",
+		       job->name, (float)time_in_usec / SPDK_SEC_TO_USEC, io_per_second, mb_per_second);
+		printf(" %10.2f %8.2f",
+		       failed_per_second, timeout_per_second);
+		printf(" %10.2f %10.2f %10.2f\n",
+		       average_latency, min_latency, max_latency);
+	}
 
 	stats->total_io_per_second += io_per_second;
 	stats->total_mb_per_second += mb_per_second;
@@ -620,9 +623,7 @@ bdevperf_test_done(void *ctx)
 		}
 	}
 
-	if (g_show_performance_real_time) {
-		spdk_poller_unregister(&g_perf_timer);
-	}
+	spdk_poller_unregister(&g_perf_timer);
 
 	if (g_shutdown) {
 		g_shutdown_tsc = spdk_get_ticks() - g_start_tsc;
@@ -637,7 +638,7 @@ bdevperf_test_done(void *ctx)
 	       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s", "Average", "min", "max");
 
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
-		performance_dump_job(&g_stats, job);
+		performance_dump_job(&g_stats, job, true);
 	}
 
 	printf("\r =================================================================================="
@@ -1410,17 +1411,22 @@ _performance_dump_done(void *ctx)
 	struct bdevperf_aggregate_stats *stats = ctx;
 	double average_latency;
 
-	printf("\r =================================================================================="
-	       "=================================\n");
-	printf("\r %-28s: %10s %10.2f %10.2f",
-	       "Total", "", stats->total_io_per_second, stats->total_mb_per_second);
-	printf(" %10.2f %8.2f",
-	       stats->total_failed_per_second, stats->total_timeout_per_second);
+	if (g_summarize_performance) {
+		printf("%12.2f IOPS, %8.2f MiB/s", stats->total_io_per_second, stats->total_mb_per_second);
+		printf("\r");
+	} else {
+		printf("\r =================================================================================="
+		       "=================================\n");
+		printf("\r %-28s: %10s %10.2f %10.2f",
+		       "Total", "", stats->total_io_per_second, stats->total_mb_per_second);
+		printf(" %10.2f %8.2f",
+		       stats->total_failed_per_second, stats->total_timeout_per_second);
 
-	average_latency = ((double)stats->total_tsc / stats->total_io_completed) * SPDK_SEC_TO_USEC /
-			  spdk_get_ticks_hz();
-	printf(" %10.2f %10.2f %10.2f\n", average_latency, stats->min_latency, stats->max_latency);
-	printf("\n");
+		average_latency = ((double)stats->total_tsc / stats->total_io_completed) * SPDK_SEC_TO_USEC /
+				  spdk_get_ticks_hz();
+		printf(" %10.2f %10.2f %10.2f\n", average_latency, stats->min_latency, stats->max_latency);
+		printf("\n");
+	}
 
 	fflush(stdout);
 
@@ -1434,7 +1440,7 @@ _performance_dump(void *ctx)
 {
 	struct bdevperf_aggregate_stats *stats = ctx;
 
-	performance_dump_job(stats, stats->current_job);
+	performance_dump_job(stats, stats->current_job, !g_summarize_performance);
 
 	/* This assumes the jobs list is static after start up time.
 	 * That's true right now, but if that ever changed this would need a lock. */
@@ -1493,11 +1499,12 @@ bdevperf_test(void)
 
 	/* Start a timer to dump performance numbers */
 	g_start_tsc = spdk_get_ticks();
-	if (g_show_performance_real_time && !g_perf_timer) {
+	if (!g_summarize_performance) {
 		printf("%*s\n", 107, "Latency(us)");
 		printf("\r %-*s: %10s %10s %10s %10s %8s %10s %10s %10s\n",
 		       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s", "Average", "min", "max");
-
+	}
+	if (!g_perf_timer) {
 		g_perf_timer = SPDK_POLLER_REGISTER(performance_statistics_thread, NULL,
 						    g_show_performance_period_in_usec);
 	}
@@ -2694,7 +2701,7 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_show_performance_ema_period = tmp;
 			break;
 		case 'S':
-			g_show_performance_real_time = 1;
+			g_summarize_performance = false;
 			g_show_performance_period_in_usec = tmp * SPDK_SEC_TO_USEC;
 			break;
 		default:
@@ -2775,8 +2782,7 @@ verify_test_params(void)
 		printf("Timeout must be set for abort option, Ignoring g_abort\n");
 	}
 
-	if (g_show_performance_ema_period > 0 &&
-	    g_show_performance_real_time == 0) {
+	if (g_show_performance_ema_period > 0 && g_summarize_performance) {
 		fprintf(stderr, "-P option must be specified with -S option\n");
 		return 1;
 	}
