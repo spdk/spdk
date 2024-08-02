@@ -99,6 +99,14 @@ rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 		conf.mode |= SPDK_FTL_MODE_CREATE;
 	}
 
+	if (spdk_bdev_get_by_name(conf.name) != NULL) {
+		SPDK_ERRLOG("Bdev \"%s\" already exists", conf.name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Failed to create FTL bdev: %s",
+						     spdk_strerror(EEXIST));
+		goto out;
+	}
+
 	rc = bdev_ftl_create_bdev(&conf, rpc_bdev_ftl_create_cb, request);
 	if (rc == -ENODEV) {
 		rc = bdev_ftl_defer_init(&conf);
