@@ -185,6 +185,8 @@ struct spdk_nvmf_ns {
 	TAILQ_HEAD(, spdk_nvmf_host) hosts;
 	/* Namespace is always visible to all controllers */
 	bool always_visible;
+	/* Namespace id of the underlying device, used for passthrough commands */
+	uint32_t passthrough_nsid;
 };
 
 /*

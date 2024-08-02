@@ -2027,6 +2027,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	struct spdk_nvmf_ns *ns, *first_ns;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_reservation_info info = {0};
+	struct spdk_nvme_ns *nvme_ns;
 	int rc;
 	bool zone_append_supported;
 	uint64_t max_zone_append_size_kib;
@@ -2128,6 +2129,12 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		spdk_bdev_close(ns->desc);
 		free(ns);
 		return 0;
+	}
+
+	if (!strncmp(spdk_bdev_get_module_name(ns->bdev), "nvme",
+		     strlen(spdk_bdev_get_module_name(ns->bdev)))) {
+		nvme_ns = (struct spdk_nvme_ns *) spdk_bdev_get_module_ctx(ns->desc);
+		ns->passthrough_nsid = spdk_nvme_ns_get_id(nvme_ns);
 	}
 
 	/* Cache the zcopy capability of the bdev device */
