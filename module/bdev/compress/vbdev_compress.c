@@ -516,6 +516,11 @@ struct vbdev_init_reduce_ctx {
 };
 
 static void
+_vbdev_reduce_init_unload_cb(void *ctx, int reduce_errno)
+{
+}
+
+static void
 _vbdev_reduce_init_cb(void *ctx)
 {
 	struct vbdev_init_reduce_ctx *init_ctx = ctx;
@@ -533,6 +538,8 @@ _vbdev_reduce_init_cb(void *ctx)
 			init_ctx->cb_fn(init_ctx->cb_ctx, rc);
 			free(init_ctx);
 			return;
+		} else {
+			spdk_reduce_vol_unload(comp_bdev->vol, _vbdev_reduce_init_unload_cb, NULL);
 		}
 		init_ctx->cb_fn(init_ctx->cb_ctx, rc);
 	}
