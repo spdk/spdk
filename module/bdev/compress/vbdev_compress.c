@@ -84,6 +84,7 @@ struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, 
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void vbdev_compress_delete_done(void *cb_arg, int bdeverrno);
+static void _comp_reduce_resubmit_backing_io(void *_backing_io);
 
 /* for completing rw requests on the orig IO thread. */
 static void
@@ -597,6 +598,26 @@ comp_reduce_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 }
 
 static void
+_comp_backing_bdev_queue_io_wait(struct vbdev_compress *comp_bdev,
+				 struct spdk_reduce_backing_io *backing_io)
+{
+	struct spdk_bdev_io_wait_entry *waitq_entry;
+	int rc;
+
+	waitq_entry = (struct spdk_bdev_io_wait_entry *) &backing_io->user_ctx;
+	waitq_entry->bdev = spdk_bdev_desc_get_bdev(comp_bdev->base_desc);
+	waitq_entry->cb_fn = _comp_reduce_resubmit_backing_io;
+	waitq_entry->cb_arg = backing_io;
+
+	rc = spdk_bdev_queue_io_wait(waitq_entry->bdev, comp_bdev->base_ch, waitq_entry);
+	if (rc) {
+		SPDK_ERRLOG("Queue io failed in _comp_backing_bdev_queue_io_wait, rc=%d.\n", rc);
+		assert(false);
+		backing_io->backing_cb_args->cb_fn(backing_io->backing_cb_args->cb_arg, rc);
+	}
+}
+
+static void
 _comp_backing_bdev_read(struct spdk_reduce_backing_io *backing_io)
 {
 	struct spdk_reduce_vol_cb_args *backing_cb_args = backing_io->backing_cb_args;
@@ -612,8 +633,8 @@ _comp_backing_bdev_read(struct spdk_reduce_backing_io *backing_io)
 
 	if (rc) {
 		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io.\n");
-			/* TODO: there's no bdev_io to queue */
+			_comp_backing_bdev_queue_io_wait(comp_bdev, backing_io);
+			return;
 		} else {
 			SPDK_ERRLOG("submitting readv request, rc=%d\n", rc);
 		}
@@ -637,8 +658,8 @@ _comp_backing_bdev_write(struct spdk_reduce_backing_io  *backing_io)
 
 	if (rc) {
 		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io.\n");
-			/* TODO: there's no bdev_io to queue */
+			_comp_backing_bdev_queue_io_wait(comp_bdev, backing_io);
+			return;
 		} else {
 			SPDK_ERRLOG("error submitting writev request, rc=%d\n", rc);
 		}
@@ -661,8 +682,8 @@ _comp_backing_bdev_unmap(struct spdk_reduce_backing_io *backing_io)
 
 	if (rc) {
 		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io.\n");
-			/* TODO: there's no bdev_io to queue */
+			_comp_backing_bdev_queue_io_wait(comp_bdev, backing_io);
+			return;
 		} else {
 			SPDK_ERRLOG("submitting unmap request, rc=%d\n", rc);
 		}
@@ -691,6 +712,14 @@ _comp_reduce_submit_backing_io(struct spdk_reduce_backing_io *backing_io)
 		backing_io->backing_cb_args->cb_fn(backing_io->backing_cb_args->cb_arg, -EINVAL);
 		break;
 	}
+}
+
+static void
+_comp_reduce_resubmit_backing_io(void *_backing_io)
+{
+	struct spdk_reduce_backing_io *backing_io = _backing_io;
+
+	_comp_reduce_submit_backing_io(backing_io);
 }
 
 /* Called by reduceLib after performing unload vol actions following base bdev hotremove */
@@ -767,6 +796,8 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 
 	comp_bdev->backing_dev.blocklen = bdev->blocklen;
 	comp_bdev->backing_dev.blockcnt = bdev->blockcnt;
+
+	comp_bdev->backing_dev.user_ctx_size = sizeof(struct spdk_bdev_io_wait_entry);
 
 	comp_bdev->params.chunk_size = CHUNK_SIZE;
 	if (lb_size == 0) {
