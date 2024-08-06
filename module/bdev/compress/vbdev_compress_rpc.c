@@ -76,7 +76,34 @@ struct rpc_construct_compress {
 	char *base_bdev_name;
 	char *pm_path;
 	uint32_t lb_size;
+	enum spdk_accel_comp_algo comp_algo;
+	uint32_t comp_level;
 };
+
+static int
+rpc_decode_comp_algo(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_accel_comp_algo *algo = out;
+	char *name = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &name);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (strcmp(name, "deflate") == 0) {
+		*algo = SPDK_ACCEL_COMP_ALGO_DEFLATE;
+	} else if (strcmp(name, "lz4") == 0) {
+		*algo = SPDK_ACCEL_COMP_ALGO_LZ4;
+	} else {
+		rc = -EINVAL;
+	}
+
+	free(name);
+
+	return rc;
+}
 
 struct rpc_bdev_compress_create_ctx {
 	struct rpc_construct_compress req;
@@ -104,6 +131,8 @@ static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] =
 	{"base_bdev_name", offsetof(struct rpc_construct_compress, base_bdev_name), spdk_json_decode_string},
 	{"pm_path", offsetof(struct rpc_construct_compress, pm_path), spdk_json_decode_string},
 	{"lb_size", offsetof(struct rpc_construct_compress, lb_size), spdk_json_decode_uint32, true},
+	{"comp_algo", offsetof(struct rpc_construct_compress, comp_algo), rpc_decode_comp_algo, true},
+	{"comp_level", offsetof(struct rpc_construct_compress, comp_level), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -147,7 +176,8 @@ rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
 	}
 
 	req = &ctx->req;
-
+	req->comp_algo = SPDK_ACCEL_COMP_ALGO_DEFLATE;
+	req->comp_level = 1;
 	if (spdk_json_decode_object(params, rpc_construct_compress_decoders,
 				    SPDK_COUNTOF(rpc_construct_compress_decoders),
 				    req)) {
@@ -157,8 +187,8 @@ rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = create_compress_bdev(req->base_bdev_name, req->pm_path, req->lb_size,
-				  rpc_bdev_compress_create_cb, ctx);
+	rc = create_compress_bdev(req->base_bdev_name, req->pm_path, req->lb_size, req->comp_algo,
+				  req->comp_level, rpc_bdev_compress_create_cb, ctx);
 	if (rc != 0) {
 		if (rc == -EBUSY) {
 			spdk_jsonrpc_send_error_response(request, rc, "Base bdev already in use for compression.");

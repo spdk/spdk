@@ -47,12 +47,14 @@ def bdev_wait_for_examine(client):
     return client.call('bdev_wait_for_examine')
 
 
-def bdev_compress_create(client, base_bdev_name, pm_path, lb_size=None):
+def bdev_compress_create(client, base_bdev_name, pm_path, lb_size=None, comp_algo=None, comp_level=None):
     """Construct a compress virtual block device.
     Args:
         base_bdev_name: name of the underlying base bdev
         pm_path: path to persistent memory
         lb_size: logical block size for the compressed vol in bytes.  Must be 4K or 512.
+        comp_algo: compression algorithm for the compressed vol. Default is deflate.
+        comp_level: compression algorithm level for the compressed vol. Default is 1.
     Returns:
         Name of created virtual block device.
     """
@@ -61,6 +63,10 @@ def bdev_compress_create(client, base_bdev_name, pm_path, lb_size=None):
     params['pm_path'] = pm_path
     if lb_size is not None:
         params['lb_size'] = lb_size
+    if comp_algo is not None:
+        params['comp_algo'] = comp_algo
+    if comp_level is not None:
+        params['comp_level'] = comp_level
     return client.call('bdev_compress_create', params)
 
 

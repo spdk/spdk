@@ -21,7 +21,6 @@
 
 #include "spdk/accel_module.h"
 
-
 #define CHUNK_SIZE (1024 * 16)
 #define COMP_BDEV_NAME "compress"
 #define BACKING_IO_SZ (4 * 1024)
@@ -58,6 +57,8 @@ struct vbdev_compress {
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
 	struct spdk_thread		*thread;	/* thread where base device is opened */
+	enum spdk_accel_comp_algo       comp_algo;      /* compression algorithm for compress bdev */
+	uint32_t                        comp_level;     /* compression algorithm level */
 };
 static TAILQ_HEAD(, vbdev_compress) g_vbdev_comp = TAILQ_HEAD_INITIALIZER(g_vbdev_comp);
 
@@ -80,7 +81,8 @@ struct comp_bdev_io {
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static int vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
-struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size);
+struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size,
+		uint8_t comp_algo, uint32_t comp_level);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void vbdev_compress_delete_done(void *cb_arg, int bdeverrno);
@@ -134,13 +136,16 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 
 	if (compress) {
 		assert(dst_iovcnt == 1);
-		rc = spdk_accel_submit_compress(comp_bdev->accel_channel, dst_iovs[0].iov_base, dst_iovs[0].iov_len,
-						src_iovs, src_iovcnt, &reduce_cb_arg->output_size,
-						reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
+		rc = spdk_accel_submit_compress_ext(comp_bdev->accel_channel, dst_iovs[0].iov_base,
+						    dst_iovs[0].iov_len, src_iovs, src_iovcnt,
+						    comp_bdev->comp_algo, comp_bdev->comp_level,
+						    &reduce_cb_arg->output_size, reduce_cb_arg->cb_fn,
+						    reduce_cb_arg->cb_arg);
 	} else {
-		rc = spdk_accel_submit_decompress(comp_bdev->accel_channel, dst_iovs, dst_iovcnt,
-						  src_iovs, src_iovcnt, &reduce_cb_arg->output_size,
-						  reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
+		rc = spdk_accel_submit_decompress_ext(comp_bdev->accel_channel, dst_iovs, dst_iovcnt,
+						      src_iovs, src_iovcnt, comp_bdev->comp_algo,
+						      &reduce_cb_arg->output_size, reduce_cb_arg->cb_fn,
+						      reduce_cb_arg->cb_arg);
 	}
 
 	return rc;
@@ -775,7 +780,8 @@ vbdev_compress_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bd
  * information for reducelib to init or load.
  */
 struct vbdev_compress *
-_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
+_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size, uint8_t comp_algo,
+		       uint32_t comp_level)
 {
 	struct vbdev_compress *comp_bdev;
 	struct spdk_bdev *bdev;
@@ -799,6 +805,10 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 
 	comp_bdev->backing_dev.user_ctx_size = sizeof(struct spdk_bdev_io_wait_entry);
 
+	comp_bdev->comp_algo = comp_algo;
+	comp_bdev->comp_level = comp_level;
+	comp_bdev->params.comp_algo = comp_algo;
+	comp_bdev->params.comp_level = comp_level;
 	comp_bdev->params.chunk_size = CHUNK_SIZE;
 	if (lb_size == 0) {
 		comp_bdev->params.logical_block_size = bdev->blocklen;
@@ -812,8 +822,8 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 
 /* Call reducelib to initialize a new volume */
 static int
-vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size,
-		  bdev_compress_create_cb cb_fn, void *cb_arg)
+vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size, uint8_t comp_algo,
+		  uint32_t comp_level, bdev_compress_create_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev_desc *bdev_desc = NULL;
 	struct vbdev_init_reduce_ctx *init_ctx;
@@ -837,7 +847,7 @@ vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size,
 		return rc;
 	}
 
-	comp_bdev = _prepare_for_load_init(bdev_desc, lb_size);
+	comp_bdev = _prepare_for_load_init(bdev_desc, lb_size, comp_algo, comp_level);
 	if (comp_bdev == NULL) {
 		free(init_ctx);
 		spdk_bdev_close(bdev_desc);
@@ -930,13 +940,40 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 }
 
+static int
+_check_compress_bdev_comp_algo(enum spdk_accel_comp_algo algo, uint32_t comp_level)
+{
+	uint32_t min_level, max_level;
+	int rc;
+
+	rc = spdk_accel_get_compress_level_range(algo, &min_level, &max_level);
+	if (rc != 0) {
+		return rc;
+	}
+
+	/* If both min_level and max_level are 0, the compression level can be ignored.
+	 * The back-end implementation hardcodes the compression level.
+	 */
+	if (min_level == 0 && max_level == 0) {
+		return 0;
+	}
+
+	if (comp_level > max_level || comp_level < min_level) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 /* RPC entry point for compression vbdev creation. */
 int
 create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size,
+		     uint8_t comp_algo, uint32_t comp_level,
 		     bdev_compress_create_cb cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 	struct stat info;
+	int rc;
 
 	if (stat(pm_path, &info) != 0) {
 		SPDK_ERRLOG("PM path %s does not exist.\n", pm_path);
@@ -951,13 +988,20 @@ create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_siz
 		return -EINVAL;
 	}
 
+	rc = _check_compress_bdev_comp_algo(comp_algo, comp_level);
+	if (rc != 0) {
+		SPDK_ERRLOG("Compress bdev doesn't support compression algo(%u) or level(%u)\n",
+			    comp_algo, comp_level);
+		return rc;
+	}
+
 	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
 		if (strcmp(bdev_name, comp_bdev->base_bdev->name) == 0) {
 			SPDK_ERRLOG("Bass bdev %s already being used for a compress bdev\n", bdev_name);
 			return -EBUSY;
 		}
 	}
-	return vbdev_init_reduce(bdev_name, pm_path, lb_size, cb_fn, cb_arg);
+	return vbdev_init_reduce(bdev_name, pm_path, lb_size, comp_algo, comp_level, cb_fn, cb_arg);
 }
 
 static int
@@ -1243,6 +1287,8 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 		comp_bdev->vol = vol;
 		memcpy(&comp_bdev->params, spdk_reduce_vol_get_params(vol),
 		       sizeof(struct spdk_reduce_vol_params));
+		comp_bdev->comp_algo = comp_bdev->params.comp_algo;
+		comp_bdev->comp_level = comp_bdev->params.comp_level;
 	}
 
 	comp_bdev->reduce_errno = reduce_errno;
@@ -1279,7 +1325,7 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	comp_bdev = _prepare_for_load_init(bdev_desc, 0);
+	comp_bdev = _prepare_for_load_init(bdev_desc, 0, SPDK_ACCEL_COMP_ALGO_DEFLATE, 1);
 	if (comp_bdev == NULL) {
 		spdk_bdev_close(bdev_desc);
 		spdk_bdev_module_examine_done(&compress_if);

@@ -2915,6 +2915,8 @@ Name                    | Optional | Type        | Description
 base_bdev_name          | Required | string      | Name of the base bdev
 pm_path                 | Required | string      | Path to persistent memory
 lb_size                 | Optional | int         | Compressed vol logical block size (512 or 4096)
+comp_algo               | Optional | string      | Compression algorithm for the compressed vol. Default is deflate
+comp_level              | Optional | int         | Compression algorithm level for the compressed vol. Default is 1
 
 #### Result
 
@@ -2929,7 +2931,9 @@ Example request:
   "params": {
     "base_bdev_name": "Nvme0n1",
     "pm_path": "/pm_files",
-    "lb_size": 4096
+    "lb_size": 4096,
+    "comp_algo": "deflate",
+    "comp_level": 1
   },
   "jsonrpc": "2.0",
   "method": "bdev_compress_create",
