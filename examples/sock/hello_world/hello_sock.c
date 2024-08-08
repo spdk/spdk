@@ -335,34 +335,30 @@ err:
 static void
 hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
-	int rc;
-	struct hello_context_t *ctx = arg;
-	struct iovec iov = {};
 	ssize_t n;
-	void *user_ctx;
+	struct iovec iov;
+	struct hello_context_t *ctx = arg;
 
-	rc = spdk_sock_recv_next(sock, &iov.iov_base, &user_ctx);
-	if (rc < 0) {
+	n = spdk_sock_recv(sock, ctx->buf, BUFFER_SIZE);
+	if (n < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
 			return;
 		}
 
-		if (errno != ENOTCONN && errno != ECONNRESET) {
-			SPDK_ERRLOG("spdk_sock_recv_zcopy() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
-		}
+		SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+			    errno, spdk_strerror(errno));
 	}
 
-	if (rc > 0) {
-		iov.iov_len = rc;
-		ctx->bytes_in += iov.iov_len;
+	if (n > 0) {
+		ctx->bytes_in += n;
+		iov.iov_base = ctx->buf;
+		iov.iov_len = n;
 		n = spdk_sock_writev(sock, &iov, 1);
 		if (n > 0) {
-			assert(n == rc);
 			ctx->bytes_out += n;
 		}
-
-		spdk_sock_group_provide_buf(ctx->group, iov.iov_base, BUFFER_SIZE, NULL);
 		return;
 	}
 
@@ -475,8 +471,6 @@ hello_sock_listen(struct hello_context_t *ctx)
 		return -1;
 	}
 
-	spdk_sock_group_provide_buf(ctx->group, ctx->buf, BUFFER_SIZE, NULL);
-
 	g_is_running = true;
 
 	/*
@@ -562,22 +556,6 @@ main(int argc, char **argv)
 		exit(-1);
 	}
 	hello_context.n = 0;
-
-	if (hello_context.is_server) {
-		struct spdk_sock_impl_opts impl_opts = {};
-		size_t len = sizeof(impl_opts);
-
-		rc = spdk_sock_impl_get_opts(hello_context.sock_impl_name, &impl_opts, &len);
-		if (rc < 0) {
-			free(hello_context.buf);
-			exit(rc);
-		}
-
-		/* Our applications will post buffers to be used for receiving. That feature
-		 * is mutually exclusive with the recv pipe, so we need to disable it. */
-		impl_opts.enable_recv_pipe = false;
-		spdk_sock_impl_set_opts(hello_context.sock_impl_name, &impl_opts, len);
-	}
 
 	rc = spdk_app_start(&opts, hello_start, &hello_context);
 	if (rc) {
