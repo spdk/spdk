@@ -2078,6 +2078,14 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
 			STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
 			break;
+		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
+			if (rdma_req->num_remaining_data_wr) {
+				/* Partially sent request is still in the pending_rdma_read_queue,
+				 * remove it before completing */
+				rdma_req->num_remaining_data_wr = 0;
+				STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
+			}
+			break;
 		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
 			STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
 			break;
@@ -3347,6 +3355,12 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 
 	/* We process I/O in the data transfer pending queue at the highest priority. */
 	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_read_queue, state_link, req_tmp) {
+		if (rdma_req->state != RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING) {
+			/* Requests in this queue might be in state RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
+			 * they are transmitting data over network but we keep them in the list to guarantee
+			 * fair processing. */
+			continue;
+		}
 		if (nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
 		}
@@ -4749,7 +4763,14 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
 					rqpair->current_read_depth--;
 					if (rdma_req->num_outstanding_data_wr == 0) {
+						if (rdma_req->num_remaining_data_wr) {
+							/* Partially sent request is still in the pending_rdma_read_queue,
+							 * remove it now before completing */
+							rdma_req->num_remaining_data_wr = 0;
+							STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
+						}
 						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+						nvmf_rdma_request_process(rtransport, rdma_req);
 					}
 				}
 			}

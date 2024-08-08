@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2017 Intel Corporation
+#  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 #
 testdir=$(readlink -f $(dirname $0))
@@ -144,8 +145,30 @@ function nvmf_shutdown_tc3() {
 	stoptarget
 }
 
+# Test 4: Kill the target unexpectedly with I/O outstanding, highly fragmented payload
+function nvmf_shutdown_tc4() {
+	starttarget
+
+	# Run nvme_perf with highly fragmented payload
+	$rootdir/build/bin/spdk_nvme_perf -q 128 -o 45056 -O 4096 -w randwrite -t 20 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -P 4 &
+	perfpid=$!
+	sleep 5
+	# Expand the trap to clean up bdevperf if something goes wrong
+	trap 'process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid || true; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+
+	# Kill the target half way through
+	killprocess $nvmfpid
+	nvmfpid=
+
+	# Due to IOs are completed with errors, perf exits with bad status
+	sleep 1
+	wait $perfpid || true
+	stoptarget
+}
+
 run_test "nvmf_shutdown_tc1" nvmf_shutdown_tc1
 run_test "nvmf_shutdown_tc2" nvmf_shutdown_tc2
 run_test "nvmf_shutdown_tc3" nvmf_shutdown_tc3
+run_test "nvmf_shutdown_tc4" nvmf_shutdown_tc4
 
 trap - SIGINT SIGTERM EXIT
