@@ -143,24 +143,6 @@ spdk_sock_group_poll(struct spdk_sock_group *_group)
 	return 0;
 }
 
-DEFINE_RETURN_MOCK(spdk_sock_group_poll_count, int);
-int
-spdk_sock_group_poll_count(struct spdk_sock_group *_group, int max_events)
-{
-	struct test_sock_group *group;
-	int i;
-
-	HANDLE_RETURN_MOCK(spdk_sock_group_poll_count);
-
-	group = (struct test_sock_group *)_group;
-
-	for (i = 0; i < group->num_entries; i++) {
-		group->entries[i].cb_fn(group->entries[i].cb_arg, _group, group->entries[i].sock);
-	}
-
-	return 0;
-}
-
 DEFINE_RETURN_MOCK(spdk_sock_group_close, int);
 int
 spdk_sock_group_close(struct spdk_sock_group **group)

@@ -137,9 +137,8 @@ per I/O on the DIF path (the old in-place transport-side path is gone).
 
 #### Zero Copy Receive API Removals
 
-`spdk_sock_group_poll_count`, `spdk_sock_recv_next`, `spdk_sock_group_provide_buf` and
-`spdk_sock_group_get_buf` are deprecated and will be removed in v26.09. A new zero copy
-API will replace them.
+`spdk_sock_recv_next`, `spdk_sock_group_provide_buf` and `spdk_sock_group_get_buf` are
+deprecated and will be removed in v26.09. A new zero copy API will replace them.
 
 #### `spdk_sock_group_add_sock`, `spdk_sock_group_create`
 

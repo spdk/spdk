@@ -33,7 +33,6 @@
 	spdk_sock_group_remove_sock;
 	spdk_sock_group_provide_buf;
 	spdk_sock_group_poll;
-	spdk_sock_group_poll_count;
 	spdk_sock_group_close;
 	spdk_sock_get_optimal_sock_group;
 	spdk_sock_impl_get_opts;

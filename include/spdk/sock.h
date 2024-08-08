@@ -685,16 +685,6 @@ int spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t
 int spdk_sock_group_poll(struct spdk_sock_group *group);
 
 /**
- * Poll incoming events up to max_events for each registered socket.
- *
- * \param group Group to poll.
- * \param max_events Number of maximum events to poll for each socket.
- *
- * \return the number of events on success, negative errno value on failure.
- */
-int spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events);
-
-/**
  * Close all registered sockets of the group and then remove the group.
  *
  * If any sockets were added to the group by \ref spdk_sock_group_add_sock

@@ -1171,17 +1171,6 @@ spdk_sock_group_poll(struct spdk_sock_group *group)
 	return sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_poll_count,
-			      "use spdk_sock_group_poll instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-int
-spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
-{
-	SPDK_LOG_DEPRECATED(spdk_sock_group_poll_count);
-	return sock_group_poll_count(group, max_events);
-}
-
 int
 spdk_sock_group_close(struct spdk_sock_group **_group)
 {
