@@ -116,6 +116,7 @@ DEFINE_STUB(nvmf_nqn_is_discovery, bool, (const char *nqn), true);
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
 DEFINE_STUB(nvmf_qpair_auth_init, int, (struct spdk_nvmf_qpair *q), 0);
 DEFINE_STUB_V(nvmf_qpair_auth_destroy, (struct spdk_nvmf_qpair *q));
+DEFINE_STUB_V(nvmf_tgt_stop_mdns_prr, (struct spdk_nvmf_tgt *tgt));
 
 struct spdk_io_channel {
 	struct spdk_thread		*thread;
