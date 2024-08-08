@@ -1114,7 +1114,7 @@ struct ut_nested_dev {
 static int
 ut_null_poll(void *ctx)
 {
-	return -1;
+	return SPDK_POLLER_IDLE;
 }
 
 static int
@@ -2015,6 +2015,31 @@ for_each_thread_and_thread_exit_race(void)
 	free_threads();
 }
 
+static void
+poller_get_name(void)
+{
+	struct spdk_poller *named_poller = NULL;
+	struct spdk_poller *unnamed_poller = NULL;
+	char ut_null_poll_addr[15];
+
+	allocate_threads(1);
+	set_thread(0);
+
+	/* Register a named and unnamed poller */
+	named_poller = spdk_poller_register_named(ut_null_poll, NULL, 0, "name");
+	unnamed_poller = spdk_poller_register(ut_null_poll, NULL, 0);
+
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_name(named_poller), "name");
+
+	snprintf(ut_null_poll_addr, sizeof(ut_null_poll_addr), "%p", ut_null_poll);
+
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_name(unnamed_poller), ut_null_poll_addr);
+
+	spdk_poller_unregister(&named_poller);
+	spdk_poller_unregister(&unnamed_poller);
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2045,6 +2070,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, spdk_spin);
 	CU_ADD_TEST(suite, for_each_channel_and_thread_exit_race);
 	CU_ADD_TEST(suite, for_each_thread_and_thread_exit_race);
+	CU_ADD_TEST(suite, poller_get_name);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
