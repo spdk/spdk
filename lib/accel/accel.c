@@ -3329,12 +3329,14 @@ accel_find_driver(const char *name)
 int
 spdk_accel_set_driver(const char *name)
 {
-	struct spdk_accel_driver *driver;
+	struct spdk_accel_driver *driver = NULL;
 
-	driver = accel_find_driver(name);
-	if (driver == NULL) {
-		SPDK_ERRLOG("Couldn't find driver named '%s'\n", name);
-		return -ENODEV;
+	if (name != NULL && name[0] != '\0') {
+		driver = accel_find_driver(name);
+		if (driver == NULL) {
+			SPDK_ERRLOG("Couldn't find driver named '%s'\n", name);
+			return -ENODEV;
+		}
 	}
 
 	g_accel_driver = driver;

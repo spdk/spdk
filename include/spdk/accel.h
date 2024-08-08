@@ -948,7 +948,8 @@ void spdk_accel_write_config_json(struct spdk_json_write_ctx *w);
 /**
  * Select platform driver to execute operation chains.
  *
- * \param name Name of the driver.
+ * \param name Name of the driver.  If NULL or empty string, this function will clear the driver
+ * that was previously assigned.
  *
  * \return 0 on success, negetive errno otherwise.
  */

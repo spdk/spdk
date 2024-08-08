@@ -320,7 +320,7 @@ struct rpc_accel_set_driver {
 };
 
 static const struct spdk_json_object_decoder rpc_accel_set_driver_decoders[] = {
-	{"name", offsetof(struct rpc_accel_set_driver, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_accel_set_driver, name), spdk_json_decode_string, true},
 };
 
 static void
@@ -348,7 +348,7 @@ rpc_accel_set_driver(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		goto cleanup;
 	}
 
-	SPDK_NOTICELOG("Using accel driver: %s\n", req.name);
+	SPDK_NOTICELOG("Using accel driver: %s\n", req.name && req.name[0] ? req.name : "none");
 	spdk_jsonrpc_send_bool_response(request, true);
 cleanup:
 	free_rpc_accel_set_driver(&req);
