@@ -115,11 +115,6 @@ removed in v27.01. Use `discovery_filters` instead.
 
 ### sock
 
-#### Zero Copy Receive API Removals
-
-`spdk_sock_recv_next`, `spdk_sock_group_provide_buf` and `spdk_sock_group_get_buf` are
-deprecated and will be removed in v26.09. A new zero copy API will replace them.
-
 #### `spdk_sock_group_add_sock`, `spdk_sock_group_create`
 
 The `cb_fn` and `cb_arg` parameters of `spdk_sock_group_add_sock` are deprecated and will be

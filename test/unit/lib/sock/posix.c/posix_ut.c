@@ -24,10 +24,6 @@ DEFINE_STUB_V(spdk_sock_map_cleanup, (struct spdk_sock_map *map));
 DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl));
 DEFINE_STUB(spdk_sock_set_default_impl, int, (const char *impl_name), 0);
 DEFINE_STUB(spdk_sock_close, int, (struct spdk_sock **s), 0);
-DEFINE_STUB(spdk_sock_group_provide_buf, int, (struct spdk_sock_group *group, void *buf,
-		size_t len, void *ctx), 0);
-DEFINE_STUB(spdk_sock_group_get_buf, size_t, (struct spdk_sock_group *group, void **buf,
-		void **ctx), 0);
 DEFINE_STUB(spdk_sock_posix_fd_create, int, (struct addrinfo *res, struct spdk_sock_opts *opts,
 		struct spdk_sock_impl_opts *impl_opts), 0);
 DEFINE_STUB(spdk_sock_posix_fd_connect, int, (int fd, struct addrinfo *res,

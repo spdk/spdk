@@ -863,22 +863,6 @@ SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_recv_next,
 			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 int
-spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
-{
-	SPDK_LOG_DEPRECATED(spdk_sock_recv_next);
-
-	if (sock == NULL || sock->flags.closed) {
-		return -EBADF;
-	}
-
-	if (sock->group_impl == NULL) {
-		return -ENOTSUP;
-	}
-
-	return sock->net_impl->recv_next(sock, buf, ctx);
-}
-
-int
 spdk_sock_flush(struct spdk_sock *sock)
 {
 	if (sock == NULL || sock->flags.closed) {
@@ -945,7 +929,6 @@ spdk_sock_group_create(void *ctx)
 	}
 
 	STAILQ_INIT(&group->group_impls);
-	STAILQ_INIT(&group->pool);
 
 	if (g_init_opts.enable_interrupt_mode) {
 		rc = spdk_fd_group_create(&group->fgrp);
@@ -1061,49 +1044,6 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	}
 
 	return rc;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_provide_buf,
-			      "upcoming zero-copy receive API should be used instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-int
-spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t len, void *ctx)
-{
-	struct spdk_sock_group_provided_buf *provided;
-
-	SPDK_LOG_DEPRECATED(spdk_sock_group_provide_buf);
-
-	provided = (struct spdk_sock_group_provided_buf *)buf;
-
-	provided->len = len;
-	provided->ctx = ctx;
-	STAILQ_INSERT_HEAD(&group->pool, provided, link);
-
-	return 0;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_get_buf,
-			      "upcoming zero-copy receive API should be used instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-size_t
-spdk_sock_group_get_buf(struct spdk_sock_group *group, void **buf, void **ctx)
-{
-	struct spdk_sock_group_provided_buf *provided;
-
-	SPDK_LOG_DEPRECATED(spdk_sock_group_get_buf);
-
-	provided = STAILQ_FIRST(&group->pool);
-	if (provided == NULL) {
-		*buf = NULL;
-		return 0;
-	}
-	STAILQ_REMOVE_HEAD(&group->pool, link);
-
-	*buf = provided;
-	*ctx = provided->ctx;
-	return provided->len;
 }
 
 static int

@@ -37,9 +37,6 @@ enum uring_task_type {
 #define SPDK_ZEROCOPY
 #endif
 
-/* We don't know how big the buffers that the user posts will be, but this
- * is the maximum we'll ever allow it to receive in a single command.
- * If the user buffers are smaller, it will just receive less. */
 #define URING_MAX_RECV_SIZE (128 * 1024)
 
 /* We don't know how many buffers the user will post, but this is the
@@ -83,6 +80,7 @@ struct spdk_uring_sock {
 	bool					zcopy;
 	bool					pending_recv;
 	bool					pending_group_remove;
+	bool					is_listener;
 	int					zcopy_send_flags;
 	int					connection_status;
 	int					placement_id;
@@ -104,9 +102,7 @@ TAILQ_HEAD(pending_recv_list, spdk_uring_sock);
 
 struct spdk_uring_buf_tracker {
 	void					*buf;
-	size_t					buflen;
 	size_t					len;
-	void					*ctx;
 	int					id;
 	STAILQ_ENTRY(spdk_uring_buf_tracker)	link;
 };
@@ -575,7 +571,15 @@ retry:
 static struct spdk_sock *
 uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
+	struct spdk_uring_sock *sock;
+	struct spdk_sock *_sock;
+
+	_sock = uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
+	if (_sock != NULL) {
+		sock = __uring_sock(_sock);
+		sock->is_listener = true;
+	}
+	return _sock;
 }
 
 static struct spdk_sock *
@@ -742,51 +746,6 @@ uring_sock_read(struct spdk_uring_sock *sock)
 	return bytes;
 }
 
-static int
-uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
-{
-	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct spdk_uring_sock_group_impl *group;
-	struct spdk_uring_buf_tracker *tr;
-
-	if (sock->connection_status < 0) {
-		return sock->connection_status;
-	}
-
-	if (sock->recv_pipe != NULL) {
-		return -ENOTSUP;
-	}
-
-	group = __uring_group_impl(_sock->group_impl);
-
-	tr = STAILQ_FIRST(&sock->recv_stream);
-	if (tr == NULL) {
-		if (sock->group->buf_ring_count > 0) {
-			/* There are buffers posted, but data hasn't arrived. */
-			return -EAGAIN;
-		} else {
-			/* There are no buffers posted, so this won't ever
-			 * make forward progress. */
-			return -ENOBUFS;
-		}
-	}
-	assert(sock->pending_recv == true);
-	assert(tr->buf != NULL);
-
-	*_buf = tr->buf + sock->recv_offset;
-	*ctx = tr->ctx;
-
-	STAILQ_REMOVE_HEAD(&sock->recv_stream, link);
-	STAILQ_INSERT_HEAD(&group->free_trackers, tr, link);
-
-	if (STAILQ_EMPTY(&sock->recv_stream)) {
-		sock->pending_recv = false;
-		TAILQ_REMOVE(&group->pending_recv, sock, link);
-	}
-
-	return tr->len - sock->recv_offset;
-}
-
 static ssize_t
 uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt)
 {
@@ -840,7 +799,6 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 				sock->recv_offset = 0;
 				STAILQ_REMOVE_HEAD(&sock->recv_stream, link);
 				STAILQ_INSERT_HEAD(&sock->group->free_trackers, tr, link);
-				spdk_sock_group_provide_buf(sock->group->base.group, tr->buf, tr->buflen, tr->ctx);
 				tr = STAILQ_FIRST(&sock->recv_stream);
 			}
 
@@ -1308,8 +1266,6 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				tracker = &group->trackers[bid];
 
 				assert(tracker->buf != NULL);
-				assert(tracker->buflen != 0);
-
 				/* Append this data to the stream */
 				tracker->len = status;
 				STAILQ_INSERT_TAIL(&sock->recv_stream, tracker, link);
@@ -1574,12 +1530,25 @@ uring_sock_group_impl_get_optimal(struct spdk_sock *_sock, struct spdk_sock_grou
 static int
 uring_sock_group_impl_buf_pool_free(struct spdk_uring_sock_group_impl *group_impl)
 {
+	int i;
+
 	if (group_impl->buf_ring) {
 		io_uring_unregister_buf_ring(&group_impl->uring, URING_BUF_GROUP_ID);
 		free(group_impl->buf_ring);
+		group_impl->buf_ring = NULL;
 	}
 
+	/* Trackers handed to the buffer ring are not on the free list, so walk the array
+	 * rather than the list. */
+	if (group_impl->trackers != NULL) {
+		for (i = 0; i < URING_BUF_POOL_SIZE; i++) {
+			free(group_impl->trackers[i].buf);
+		}
+	}
+	STAILQ_INIT(&group_impl->free_trackers);
+
 	free(group_impl->trackers);
+	group_impl->trackers = NULL;
 
 	return 0;
 }
@@ -1640,9 +1609,13 @@ uring_sock_group_impl_buf_pool_alloc(struct spdk_uring_sock_group_impl *group_im
 	for (i = 0; i < URING_BUF_POOL_SIZE; i++) {
 		struct spdk_uring_buf_tracker *tracker = &group_impl->trackers[i];
 
-		tracker->buf = NULL;
-		tracker->len = 0;
-		tracker->ctx = NULL;
+		tracker->buf = malloc(URING_MAX_RECV_SIZE);
+		if (tracker->buf == NULL) {
+			uring_sock_group_impl_buf_pool_free(group_impl);
+			return -ENOMEM;
+		}
+
+		tracker->len = URING_MAX_RECV_SIZE;
 		tracker->id = i;
 
 		STAILQ_INSERT_TAIL(&group_impl->free_trackers, tracker, link);
@@ -1672,14 +1645,6 @@ uring_sock_group_impl_create(void)
 
 	TAILQ_INIT(&group_impl->pending_recv);
 
-	if (uring_sock_group_impl_buf_pool_alloc(group_impl) < 0) {
-		SPDK_ERRLOG("Failed to create buffer ring."
-			    "uring sock implementation is likely not supported on this kernel.\n");
-		io_uring_queue_exit(&group_impl->uring);
-		free(group_impl);
-		return NULL;
-	}
-
 	if (g_spdk_uring_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
 		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), &group_impl->base);
 	}
@@ -1694,6 +1659,16 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
 	int rc;
+
+	/* Listeners never receive, so don't allocate a buffer ring for a group
+	 * that only holds them. */
+	if (!sock->is_listener && group->buf_ring == NULL) {
+		rc = uring_sock_group_impl_buf_pool_alloc(group);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to create buffer ring: %s\n", spdk_strerror(-rc));
+			return rc;
+		}
+	}
 
 	sock->group = group;
 	sock->write_task.sock = sock;
@@ -1753,16 +1728,12 @@ uring_sock_group_populate_buf_ring(struct spdk_uring_sock_group_impl *group)
 	count = 0;
 	mask = io_uring_buf_ring_mask(URING_BUF_POOL_SIZE);
 	while (tracker != NULL) {
-		tracker->buflen = spdk_sock_group_get_buf(group->base.group, &tracker->buf, &tracker->ctx);
-		if (tracker->buflen == 0) {
-			break;
-		}
-
 		assert(tracker->buf != NULL);
 		STAILQ_REMOVE_HEAD(&group->free_trackers, link);
 		assert(STAILQ_FIRST(&group->free_trackers) != tracker);
 
-		io_uring_buf_ring_add(group->buf_ring, tracker->buf, tracker->buflen, tracker->id, mask, count);
+		io_uring_buf_ring_add(group->buf_ring, tracker->buf, URING_MAX_RECV_SIZE,
+				      tracker->id, mask, count);
 		count++;
 		tracker = STAILQ_FIRST(&group->free_trackers);
 	}
@@ -1997,7 +1968,6 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.recv		= uring_sock_recv,
 	.readv		= uring_sock_readv,
 	.writev		= uring_sock_writev,
-	.recv_next	= uring_sock_recv_next,
 	.writev_async	= uring_sock_writev_async,
 	.flush          = uring_sock_flush,
 	.set_recvlowat	= uring_sock_set_recvlowat,
