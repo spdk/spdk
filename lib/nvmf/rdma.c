@@ -1081,7 +1081,7 @@ nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_r
 	}
 }
 
-static int
+static inline void
 request_transfer_in(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req;
@@ -1109,7 +1109,6 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
 	assert(rqpair->current_send_depth + rdma_req->num_outstanding_data_wr <= rqpair->max_send_depth);
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr;
-	return 0;
 }
 
 static inline void
@@ -2218,14 +2217,9 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
 			}
 
-			rc = request_transfer_in(&rdma_req->req);
-			if (spdk_likely(rc == 0)) {
-				rdma_req->state = RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER;
-			} else {
-				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
-			}
+			request_transfer_in(&rdma_req->req);
+			rdma_req->state = RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER;
+
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER, 0, 0,
