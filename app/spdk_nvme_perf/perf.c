@@ -245,6 +245,7 @@ static uint64_t g_elapsed_time_in_usec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
 static uint32_t g_disable_sq_cmb;
+static bool g_enable_interrupt;
 static bool g_use_uring;
 static bool g_warn;
 static bool g_header_digest;
@@ -956,8 +957,12 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
 	int64_t rc;
 
-	rc = spdk_nvme_poll_group_process_completions(ns_ctx->u.nvme.group, g_max_completions,
-			perf_disconnect_cb);
+	if (g_enable_interrupt) {
+		rc = spdk_nvme_poll_group_wait(ns_ctx->u.nvme.group, perf_disconnect_cb);
+	} else {
+		rc = spdk_nvme_poll_group_process_completions(ns_ctx->u.nvme.group, g_max_completions,
+				perf_disconnect_cb);
+	}
 	if (rc < 0) {
 		fprintf(stderr, "NVMe io qpair process completion error\n");
 		ns_ctx->status = 1;
@@ -1019,7 +1024,8 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	if (opts.io_queue_requests < entry->num_io_requests) {
 		opts.io_queue_requests = entry->num_io_requests;
 	}
-	opts.delay_cmd_submit = true;
+
+	opts.delay_cmd_submit = g_enable_interrupt ? false : true;
 	opts.create_only = true;
 
 	ctrlr_opts = spdk_nvme_ctrlr_get_opts(entry->u.nvme.ctrlr);
@@ -1938,6 +1944,7 @@ usage(char *program_name)
 	printf("\t\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
 	printf("\t-V, --enable-vmd enable VMD enumeration\n");
 	printf("\t-D, --disable-sq-cmb disable submission queue in controller memory buffer, default: enabled\n");
+	printf("\t-E, --enable-interrupt enable interrupts on completion queue, default: disabled\n");
 	printf("\n");
 
 	printf("==== TCP OPTIONS ====\n\n");
@@ -2421,7 +2428,7 @@ alloc_key(const char *name, const char *path)
 	return key;
 }
 
-#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
+#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:z:A:C:DEF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2466,6 +2473,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"max-completion-per-poll",			required_argument,	NULL, PERF_MAX_COMPLETIONS_PER_POLL},
 #define PERF_DISABLE_SQ_CMB	'D'
 	{"disable-sq-cmb",			no_argument,	NULL, PERF_DISABLE_SQ_CMB},
+#define PERF_ENABLE_INTERRUPT	'E'
+	{"enable-interrupt",			no_argument,	NULL, PERF_ENABLE_INTERRUPT},
 #define PERF_ZIPF		'F'
 	{"zipf",				required_argument,	NULL, PERF_ZIPF},
 #define PERF_ENABLE_DEBUG	'G'
@@ -2683,6 +2692,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_DISABLE_SQ_CMB:
 			g_disable_sq_cmb = 1;
+			break;
+		case PERF_ENABLE_INTERRUPT:
+			g_enable_interrupt = 1;
 			break;
 		case PERF_ENABLE_DEBUG:
 #ifndef DEBUG
@@ -2982,6 +2994,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		if (g_no_shn_notification) {
 			opts->no_shn_notification = true;
 		}
+		if (g_enable_interrupt) {
+			opts->enable_interrupts = true;
+		}
 	}
 
 	if (trid->trtype != trid_entry->trid.trtype &&
@@ -3034,6 +3049,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		printf("Attached to NVMe Controller at %s [%04x:%04x]\n",
 		       trid->traddr,
 		       pci_id.vendor_id, pci_id.device_id);
+
+		if (g_enable_interrupt && !opts->enable_interrupts) {
+			fprintf(stderr, "Couldn't enable interrupts on NVMe controller at %s [%04x:%04x]\n",
+				trid->traddr,
+				pci_id.vendor_id, pci_id.device_id);
+			return;
+		}
 	}
 
 	register_ctrlr(ctrlr, trid_entry);
