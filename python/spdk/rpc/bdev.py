@@ -1431,7 +1431,7 @@ def bdev_iscsi_delete(client, name):
     return client.call('bdev_iscsi_delete', params)
 
 
-def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
+def bdev_passthru_create(client, base_bdev_name, name, uuid=None, block_sz=0):
     """Construct a pass-through block device.
 
     Args:
@@ -1448,6 +1448,8 @@ def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
     }
     if uuid:
         params['uuid'] = uuid
+    if block_sz:
+        params['block_sz'] = block_sz 
     return client.call('bdev_passthru_create', params)
 
 

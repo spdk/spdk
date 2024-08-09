@@ -14,6 +14,7 @@
 struct rpc_bdev_passthru_create {
 	char *base_bdev_name;
 	char *name;
+	uint32_t block_sz;
 	struct spdk_uuid uuid;
 };
 
@@ -29,6 +30,7 @@ free_rpc_bdev_passthru_create(struct rpc_bdev_passthru_create *r)
 static const struct spdk_json_object_decoder rpc_bdev_passthru_create_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_bdev_passthru_create, base_bdev_name), spdk_json_decode_string},
 	{"name", offsetof(struct rpc_bdev_passthru_create, name), spdk_json_decode_string},
+	{"block_sz", offsetof(struct rpc_bdev_passthru_create, block_sz), spdk_json_decode_uint32, true},
 	{"uuid", offsetof(struct rpc_bdev_passthru_create, uuid), spdk_json_decode_uuid, true},
 };
 
@@ -41,6 +43,7 @@ rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_passthru_create req = {NULL};
 	struct spdk_json_write_ctx *w;
+	int block_sz = 0;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_passthru_create_decoders,
@@ -52,7 +55,10 @@ rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = bdev_passthru_create_disk(req.base_bdev_name, req.name, &req.uuid);
+	if(req.block_sz){
+		block_sz = req.block_sz;
+	}
+	rc = bdev_passthru_create_disk(req.base_bdev_name, req.name, &req.uuid, block_sz);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

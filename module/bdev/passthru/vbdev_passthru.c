@@ -49,6 +49,7 @@ struct bdev_names {
 	char			*vbdev_name;
 	char			*bdev_name;
 	struct spdk_uuid	uuid;
+	uint32_t block_sz;
 	TAILQ_ENTRY(bdev_names)	link;
 };
 static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
@@ -58,6 +59,7 @@ struct vbdev_passthru {
 	struct spdk_bdev		*base_bdev; /* the thing we're attaching to */
 	struct spdk_bdev_desc		*base_desc; /* its descriptor we get from open */
 	struct spdk_bdev		pt_bdev;    /* the PT virtual bdev */
+	uint8_t multiplier;
 	TAILQ_ENTRY(vbdev_passthru)	link;
 	struct spdk_thread		*thread;    /* thread where base device is opened */
 };
@@ -248,8 +250,8 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 
 	pt_init_ext_io_opts(bdev_io, &io_opts);
 	rc = spdk_bdev_readv_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					bdev_io->u.bdev.num_blocks, _pt_complete_io,
+					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					bdev_io->u.bdev.num_blocks * pt_node->multiplier, _pt_complete_io,
 					bdev_io, &io_opts);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
@@ -290,26 +292,26 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		pt_init_ext_io_opts(bdev_io, &io_opts);
 		rc = spdk_bdev_writev_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-						 bdev_io->u.bdev.num_blocks, _pt_complete_io,
+						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+						 bdev_io->u.bdev.num_blocks * pt_node->multiplier, _pt_complete_io,
 						 bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(pt_node->base_desc, pt_ch->base_ch,
-						   bdev_io->u.bdev.offset_blocks,
-						   bdev_io->u.bdev.num_blocks,
+						   bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+						   bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 						   _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = spdk_bdev_unmap_blocks(pt_node->base_desc, pt_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks,
+					    bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					    bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 					    _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush_blocks(pt_node->base_desc, pt_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks,
+					    bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					    bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 					    _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -318,8 +320,8 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		break;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		rc = spdk_bdev_zcopy_start(pt_node->base_desc, pt_ch->base_ch, NULL, 0,
-					   bdev_io->u.bdev.offset_blocks,
-					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
+					   bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					   bdev_io->u.bdev.num_blocks * pt_node->multiplier, bdev_io->u.bdev.zcopy.populate,
 					   _pt_complete_zcopy_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
@@ -328,9 +330,9 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		break;
 	case SPDK_BDEV_IO_TYPE_COPY:
 		rc = spdk_bdev_copy_blocks(pt_node->base_desc, pt_ch->base_ch,
-					   bdev_io->u.bdev.offset_blocks,
-					   bdev_io->u.bdev.copy.src_offset_blocks,
-					   bdev_io->u.bdev.num_blocks,
+					   bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					   bdev_io->u.bdev.copy.src_offset_blocks * pt_node->multiplier,
+					   bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 					   _pt_complete_io, bdev_io);
 		break;
 	default:
@@ -456,7 +458,7 @@ pt_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
  * on the global list. */
 static int
 vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name,
-			   const struct spdk_uuid *uuid)
+			   const struct spdk_uuid *uuid, uint32_t block_sz)
 {
 	struct bdev_names *name;
 
@@ -472,6 +474,7 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name,
 		SPDK_ERRLOG("could not allocate bdev_names\n");
 		return -ENOMEM;
 	}
+	name->block_sz = block_sz;
 
 	name->bdev_name = strdup(bdev_name);
 	if (!name->bdev_name) {
@@ -652,9 +655,30 @@ vbdev_passthru_register(const char *bdev_name)
 		/* Copy some properties from the underlying base bdev. */
 		pt_node->pt_bdev.write_cache = bdev->write_cache;
 		pt_node->pt_bdev.required_alignment = bdev->required_alignment;
-		pt_node->pt_bdev.optimal_io_boundary = bdev->optimal_io_boundary;
-		pt_node->pt_bdev.blocklen = bdev->blocklen;
-		pt_node->pt_bdev.blockcnt = bdev->blockcnt;
+		pt_node->pt_bdev.optimal_io_boundary = bdev->optimal_io_boundary;		
+		if(name->block_sz){
+			bool wrong_convert = false;
+			if(name->block_sz < bdev->blocklen ){
+				SPDK_ERRLOG("Unable to do such convert for block size, it's less than the real one\n");
+				wrong_convert = true;
+			}
+			if(name->block_sz % bdev->blocklen != 0 ){
+				SPDK_ERRLOG("Unable to do such convert for block size, it's undividable\n");
+				wrong_convert = true;
+			}
+			if(wrong_convert){
+				spdk_bdev_close(pt_node->base_desc);
+				free(pt_node->pt_bdev.name);
+				free(pt_node);
+				break;
+			}
+			pt_node->multiplier = name->block_sz / bdev->blocklen;
+			pt_node->pt_bdev.blocklen = bdev->blocklen * pt_node->multiplier;
+			pt_node->pt_bdev.blockcnt = bdev->blockcnt / pt_node->multiplier;
+		} else{
+			pt_node->pt_bdev.blocklen = bdev->blocklen;
+			pt_node->pt_bdev.blockcnt = bdev->blockcnt;
+		}
 
 		pt_node->pt_bdev.md_interleave = bdev->md_interleave;
 		pt_node->pt_bdev.md_len = bdev->md_len;
@@ -711,14 +735,14 @@ vbdev_passthru_register(const char *bdev_name)
 /* Create the passthru disk from the given bdev and vbdev name. */
 int
 bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name,
-			  const struct spdk_uuid *uuid)
+			  const struct spdk_uuid *uuid, uint32_t block_sz)
 {
 	int rc;
 
 	/* Insert the bdev name into our global name list even if it doesn't exist yet,
 	 * it may show up soon...
 	 */
-	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name, uuid);
+	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name, uuid, block_sz);
 	if (rc) {
 		return rc;
 	}
