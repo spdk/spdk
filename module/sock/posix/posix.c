@@ -1043,6 +1043,8 @@ retry:
 						    src_addr ? src_addr : "", portnum);
 					close(fd);
 					fd = -1;
+					freeaddrinfo(src_ai);
+					src_ai = NULL;
 					break;
 				}
 				freeaddrinfo(src_ai);
