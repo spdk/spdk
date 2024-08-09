@@ -676,17 +676,7 @@ spdk_sock_connect(const char *ip, int port, const char *_impl_name, struct spdk_
 }
 
 struct spdk_sock *
-spdk_sock_listen(const char *ip, int port, const char *impl_name)
-{
-	struct spdk_sock_opts opts;
-
-	opts.opts_size = sizeof(opts);
-	spdk_sock_get_default_opts(&opts);
-	return spdk_sock_listen_ext(ip, port, impl_name, &opts);
-}
-
-struct spdk_sock *
-spdk_sock_listen_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
+spdk_sock_listen(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;

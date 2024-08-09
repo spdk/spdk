@@ -23,9 +23,7 @@ struct test_sock_group {
 
 DEFINE_STUB(spdk_sock_getaddr, int, (struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
 				     char *caddr, int clen, uint16_t *cport), 0);
-DEFINE_STUB(spdk_sock_listen, struct spdk_sock *, (const char *ip, int port, const char *impl_name),
-	    NULL);
-DEFINE_STUB(spdk_sock_listen_ext, struct spdk_sock *, (const char *ip, int port,
+DEFINE_STUB(spdk_sock_listen, struct spdk_sock *, (const char *ip, int port,
 		const char *impl_name, struct spdk_sock_opts *opts), NULL);
 DEFINE_STUB_V(spdk_sock_get_default_opts, (struct spdk_sock_opts *opts));
 DEFINE_STUB(spdk_sock_impl_get_opts, int, (const char *impl_name, struct spdk_sock_impl_opts *opts,

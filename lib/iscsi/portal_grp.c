@@ -143,8 +143,12 @@ static int
 iscsi_portal_open(struct spdk_iscsi_portal *p)
 {
 	struct spdk_sock *sock;
+	struct spdk_sock_opts opts;
 	int port;
 	int rc;
+
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
 
 	if (p->sock != NULL) {
 		SPDK_ERRLOG("portal (%s, %s) is already opened\n",
@@ -158,7 +162,7 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 		return -1;
 	}
 
-	sock = spdk_sock_listen(p->host, port, NULL);
+	sock = spdk_sock_listen(p->host, port, NULL, &opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("listen error %.64s.%d\n", p->host, port);
 		return -1;

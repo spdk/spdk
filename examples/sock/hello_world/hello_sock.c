@@ -507,7 +507,7 @@ hello_sock_listen(struct hello_context_t *ctx)
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
 
-	ctx->sock = spdk_sock_listen_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
+	ctx->sock = spdk_sock_listen(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
 		spdk_sock_group_close(&ctx->group);

@@ -1057,8 +1057,8 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		opts.impl_opts_size = sizeof(impl_opts);
 	}
 
-	port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int,
-			    sock_impl_name, &opts);
+	port->listen_sock = spdk_sock_listen(trid->traddr, trsvcid_int,
+					     sock_impl_name, &opts);
 	if (port->listen_sock == NULL) {
 		SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed: %s (%d)\n",
 			    trid->traddr, trsvcid_int,
