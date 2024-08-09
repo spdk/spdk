@@ -351,15 +351,16 @@ _sock(const char *ip, int port, char *impl_name)
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = impl_name;
 
-	listen_sock = spdk_sock_listen(ip, port, impl_name, &opts);
+	listen_sock = spdk_sock_listen(ip, port, &opts);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
 	CU_ASSERT(server_sock == NULL);
 	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
 
-	client_sock = spdk_sock_connect(ip, port, impl_name, &opts, NULL, NULL);
+	client_sock = spdk_sock_connect(ip, port, &opts, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	/*
@@ -503,15 +504,16 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = impl_name;
 
-	listen_sock = spdk_sock_listen(ip, port, impl_name, &opts);
+	listen_sock = spdk_sock_listen(ip, port, &opts);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
 	CU_ASSERT(server_sock == NULL);
 	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
 
-	client_sock = spdk_sock_connect(ip, port, impl_name, &opts, NULL, NULL);
+	client_sock = spdk_sock_connect(ip, port, &opts, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	usleep(1000);
@@ -638,15 +640,16 @@ posix_sock_group_fairness(void)
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 
-	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT, "posix", &opts);
+	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT, &opts);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	group = spdk_sock_group_create(NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	for (i = 0; i < 3; i++) {
-		client_sock[i] = spdk_sock_connect("127.0.0.1", UT_PORT, "posix", &opts, NULL, NULL);
+		client_sock[i] = spdk_sock_connect("127.0.0.1", UT_PORT, &opts, NULL, NULL);
 		SPDK_CU_ASSERT_FATAL(client_sock[i] != NULL);
 
 		usleep(1000);
@@ -770,11 +773,12 @@ _sock_close(const char *ip, int port, char *impl_name)
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = impl_name;
 
-	listen_sock = spdk_sock_listen(ip, port, impl_name, &opts);
+	listen_sock = spdk_sock_listen(ip, port, &opts);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
-	client_sock = spdk_sock_connect(ip, port, impl_name, &opts, NULL, NULL);
+	client_sock = spdk_sock_connect(ip, port, &opts, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	usleep(1000);
@@ -1148,6 +1152,7 @@ override_impl_opts(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
 
@@ -1155,7 +1160,7 @@ override_impl_opts(void)
 	send_buf_size = impl_opts.send_buf_size;
 	impl_opts.send_buf_size = send_buf_size + 1;
 
-	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, "posix", &opts);
+	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, &opts);
 	SPDK_CU_ASSERT_FATAL(lsock != NULL);
 	CU_ASSERT_EQUAL(lsock->impl_opts.send_buf_size, send_buf_size + 1);
 
@@ -1165,12 +1170,13 @@ override_impl_opts(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
 
 	impl_opts.send_buf_size = send_buf_size + 2;
 
-	csock = spdk_sock_connect("127.0.0.1", UT_PORT, "posix", &opts, NULL, NULL);
+	csock = spdk_sock_connect("127.0.0.1", UT_PORT, &opts, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(csock != NULL);
 	CU_ASSERT_EQUAL(csock->impl_opts.send_buf_size, send_buf_size + 2);
 
@@ -1189,13 +1195,14 @@ override_impl_opts(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = offsetof(struct spdk_sock_impl_opts, send_buf_size);
 
 	send_buf_size = impl_opts.send_buf_size;
 	impl_opts.send_buf_size = send_buf_size + 1;
 
-	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, "posix", &opts);
+	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, &opts);
 	SPDK_CU_ASSERT_FATAL(lsock != NULL);
 	CU_ASSERT_EQUAL(lsock->impl_opts.send_buf_size, send_buf_size);
 
@@ -1205,12 +1212,13 @@ override_impl_opts(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = offsetof(struct spdk_sock_impl_opts, send_buf_size);
 
 	impl_opts.send_buf_size = send_buf_size + 2;
 
-	csock = spdk_sock_connect("127.0.0.1", UT_PORT, "posix", &opts, NULL, NULL);
+	csock = spdk_sock_connect("127.0.0.1", UT_PORT, &opts, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(csock != NULL);
 	CU_ASSERT_EQUAL(csock->impl_opts.send_buf_size, send_buf_size);
 
@@ -1251,10 +1259,11 @@ posix_get_interface_name(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
 
-	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, "posix", &opts);
+	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, &opts);
 	SPDK_CU_ASSERT_FATAL(lsock != NULL);
 
 	/* Check the same for connect() */
@@ -1263,10 +1272,11 @@ posix_get_interface_name(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.impl_name = "posix";
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
 
-	csock = spdk_sock_connect("127.0.0.1", UT_PORT, "posix", &opts, NULL, NULL);
+	csock = spdk_sock_connect("127.0.0.1", UT_PORT, &opts, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(csock != NULL);
 
 	asock = spdk_sock_accept(lsock);

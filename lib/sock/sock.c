@@ -323,6 +323,10 @@ spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, connect_timeout)) {
 		opts->connect_timeout = SPDK_SOCK_DEFAULT_CONNECT_TIMEOUT;
 	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_name)) {
+		opts->impl_name = NULL;
+	}
 }
 
 /*
@@ -622,7 +626,7 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 }
 
 struct spdk_sock *
-spdk_sock_connect(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts,
+spdk_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 		  spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
 	struct spdk_net_impl *impl = NULL;
@@ -635,8 +639,8 @@ spdk_sock_connect(const char *ip, int port, const char *_impl_name, struct spdk_
 		return NULL;
 	}
 
-	if (_impl_name) {
-		impl_name = _impl_name;
+	if (opts->impl_name) {
+		impl_name = opts->impl_name;
 	} else if (g_default_impl) {
 		impl_name = g_default_impl->name;
 	}
@@ -676,7 +680,7 @@ spdk_sock_connect(const char *ip, int port, const char *_impl_name, struct spdk_
 }
 
 struct spdk_sock *
-spdk_sock_listen(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
+spdk_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
@@ -688,8 +692,8 @@ spdk_sock_listen(const char *ip, int port, const char *_impl_name, struct spdk_s
 		return NULL;
 	}
 
-	if (_impl_name) {
-		impl_name = _impl_name;
+	if (opts->impl_name) {
+		impl_name = opts->impl_name;
 	} else if (g_default_impl) {
 		impl_name = g_default_impl->name;
 	}
