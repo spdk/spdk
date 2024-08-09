@@ -89,11 +89,15 @@ _sprintf_alloc(const char *format, ...)
 void
 spdk_env_opts_init(struct spdk_env_opts *opts)
 {
+	size_t opts_size;
+
 	if (!opts) {
 		return;
 	}
 
+	opts_size = opts->opts_size;
 	memset(opts, 0, sizeof(*opts));
+	opts->opts_size = opts_size;
 
 	opts->name = SPDK_ENV_DPDK_DEFAULT_NAME;
 	opts->core_mask = SPDK_ENV_DPDK_DEFAULT_CORE_MASK;
