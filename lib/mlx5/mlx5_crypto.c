@@ -42,12 +42,6 @@ struct mlx5_crypto_dek_query_attr {
 	uint64_t opaque;
 };
 
-struct spdk_mlx5_crypto_dek_legacy {
-	struct mlx5dv_dek *dek_obj;
-	struct ibv_pd *pd;
-	struct ibv_context *context;
-};
-
 struct mlx5_crypto_dek {
 	struct mlx5dv_devx_obj *devx_obj;
 	struct ibv_pd *pd;
@@ -59,7 +53,6 @@ struct mlx5_crypto_dek {
 
 struct spdk_mlx5_crypto_keytag {
 	struct mlx5_crypto_dek *deks;
-	struct spdk_mlx5_crypto_dek_legacy *deks_legacy;
 	uint32_t deks_num;
 	bool has_keytag;
 	char keytag[8];
@@ -330,14 +323,8 @@ spdk_mlx5_crypto_keytag_destroy(struct spdk_mlx5_crypto_keytag *keytag)
 		if (dek->pd) {
 			spdk_rdma_utils_put_pd(dek->pd);
 		}
-
-		if (keytag->deks_legacy[i].dek_obj) {
-			mlx5dv_dek_destroy(keytag->deks_legacy[i].dek_obj);
-		}
-
 	}
 	spdk_memset_s(keytag->keytag, sizeof(keytag->keytag), 0, sizeof(keytag->keytag));
-	free(keytag->deks_legacy);
 	free(keytag->deks);
 	free(keytag);
 }
@@ -404,34 +391,6 @@ mlx5_crypto_dek_query(struct mlx5_crypto_dek *dek, struct mlx5_crypto_dek_query_
 	return 0;
 }
 
-static int
-mlx5_crypto_dek_create_legacy(struct spdk_mlx5_crypto_dek_legacy *dek,
-			      struct mlx5dv_dek_init_attr *init_attr_legacy)
-{
-	struct mlx5dv_dek_attr query_attr_legacy;
-	int rc;
-
-	init_attr_legacy->pd = dek->pd;
-
-	dek->dek_obj = mlx5dv_dek_create(dek->context, init_attr_legacy);
-	if (!dek->dek_obj) {
-		SPDK_ERRLOG("mlx5dv_dek_create failed on dev %s, errno %d\n", dek->context->device->name, errno);
-		return -EINVAL;
-	}
-
-	rc = mlx5dv_dek_query(dek->dek_obj, &query_attr_legacy);
-	if (rc) {
-		SPDK_ERRLOG("Failed to query DEK on dev %s, rc %d\n", dek->context->device->name, rc);
-		return rc;
-	}
-	if (query_attr_legacy.state != MLX5DV_DEK_STATE_READY) {
-		SPDK_ERRLOG("DEK on dev %s state %d\n", dek->context->device->name, query_attr_legacy.state);
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 int
 spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr,
 			       struct spdk_mlx5_crypto_keytag **out)
@@ -442,8 +401,6 @@ spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr,
 	struct ibv_pd *pd;
 	struct mlx5_crypto_dek_init_attr dek_attr = {};
 	struct mlx5_crypto_dek_query_attr query_attr;
-	struct mlx5dv_dek_init_attr init_attr_legacy = {};
-	struct spdk_mlx5_crypto_dek_legacy *dek_legacy;
 	struct spdk_mlx5_device_caps dev_caps;
 	int num_devs = 0, i, rc;
 
@@ -452,29 +409,21 @@ spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr,
 	dek_attr.opaque = 0;
 	switch (dek_attr.key_size_bytes) {
 	case SPDK_MLX5_AES_XTS_128_DEK_BYTES_WITH_KEYTAG:
-		init_attr_legacy.key_size = MLX5DV_CRYPTO_KEY_SIZE_128;
-		init_attr_legacy.has_keytag = true;
 		dek_attr.key_size = MLX5_ENCRYPTION_KEY_OBJ_KEY_SIZE_SIZE_128;
 		dek_attr.keytag = 1;
 		SPDK_DEBUGLOG(mlx5, "128b AES_XTS with keytag\n");
 		break;
 	case SPDK_MLX5_AES_XTS_256_DEK_BYTES_WITH_KEYTAG:
-		init_attr_legacy.key_size = MLX5DV_CRYPTO_KEY_SIZE_256;
-		init_attr_legacy.has_keytag = true;
 		dek_attr.key_size = MLX5_ENCRYPTION_KEY_OBJ_KEY_SIZE_SIZE_256;
 		dek_attr.keytag = 1;
 		SPDK_DEBUGLOG(mlx5, "256b AES_XTS with keytag\n");
 		break;
 	case SPDK_MLX5_AES_XTS_128_DEK_BYTES:
-		init_attr_legacy.key_size = MLX5DV_CRYPTO_KEY_SIZE_128;
-		init_attr_legacy.has_keytag = false;
 		dek_attr.key_size = MLX5_ENCRYPTION_KEY_OBJ_KEY_SIZE_SIZE_128;
 		dek_attr.keytag = 0;
 		SPDK_DEBUGLOG(mlx5, "128b AES_XTS\n");
 		break;
 	case SPDK_MLX5_AES_XTS_256_DEK_BYTES:
-		init_attr_legacy.key_size = MLX5DV_CRYPTO_KEY_SIZE_256;
-		init_attr_legacy.has_keytag = false;
 		dek_attr.key_size = MLX5_ENCRYPTION_KEY_OBJ_KEY_SIZE_SIZE_256;
 		dek_attr.keytag = 0;
 		SPDK_DEBUGLOG(mlx5, "256b AES_XTS\n");
@@ -509,20 +458,6 @@ spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr,
 		free(keytag);
 		return -ENOMEM;
 	}
-
-	/* Legacy part, to be removed soon */
-	memcpy(init_attr_legacy.key, attr->dek, attr->dek_len);
-	keytag->deks_legacy = calloc(num_devs, sizeof(struct spdk_mlx5_crypto_dek_legacy));
-	if (!keytag->deks_legacy) {
-		SPDK_ERRLOG("Memory allocation failed\n");
-		spdk_mlx5_crypto_devs_release(devs);
-		free(keytag->deks);
-		free(keytag);
-		return -ENOMEM;
-	}
-	init_attr_legacy.key_purpose = MLX5DV_CRYPTO_KEY_PURPOSE_AES_XTS;
-	init_attr_legacy.comp_mask = MLX5DV_DEK_INIT_ATTR_CRYPTO_LOGIN;
-	init_attr_legacy.crypto_login = NULL;
 
 	for (i = 0; i < num_devs; i++) {
 		keytag->deks_num++;
@@ -562,19 +497,7 @@ spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr,
 		dek->context = devs[i];
 		dek->tweak_mode = dev_caps.crypto.multi_block_be_tweak ?
 				  SPDK_MLX5_CRYPTO_KEY_TWEAK_MODE_SIMPLE_LBA_BE : SPDK_MLX5_CRYPTO_KEY_TWEAK_MODE_SIMPLE_LBA_LE;
-
-		/* Legacy part, to be removed soon */
-		dek_legacy = &keytag->deks_legacy[i];
-		dek_legacy->pd = pd;
-		dek_legacy->context = devs[i];
-		rc = mlx5_crypto_dek_create_legacy(dek_legacy, &init_attr_legacy);
-		if (rc) {
-			SPDK_ERRLOG("Failed to create legacy DEK on dev %s, rc %d\n", pd->context->device->name, rc);
-			goto err_out;
-		}
 	}
-
-	spdk_memset_s(init_attr_legacy.key, sizeof(init_attr_legacy.key), 0, sizeof(init_attr_legacy.key));
 
 	if (dek_attr.keytag) {
 		/* Save keytag, it will be used to configure crypto MKEY */
