@@ -661,6 +661,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 				/* This ctrlr is being destructed asynchronously. */
 				SPDK_ERRLOG("NVMe controller for SSD: %s is being destructed\n",
 					    trid->traddr);
+				probe_ctx->attach_fail_cb(probe_ctx->cb_ctx, trid, -EBUSY);
 				return -EBUSY;
 			}
 
@@ -679,6 +680,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 		ctrlr = nvme_transport_ctrlr_construct(trid, &opts, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Failed to construct NVMe controller for SSD: %s\n", trid->traddr);
+			probe_ctx->attach_fail_cb(probe_ctx->cb_ctx, trid, -ENODEV);
 			return -1;
 		}
 		ctrlr->remove_cb = probe_ctx->remove_cb;
@@ -704,6 +706,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		/* Controller failed to initialize. */
 		TAILQ_REMOVE(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 		SPDK_ERRLOG("Failed to initialize SSD: %s\n", ctrlr->trid.traddr);
+		probe_ctx->attach_fail_cb(probe_ctx->cb_ctx, &ctrlr->trid, rc);
 		nvme_ctrlr_lock(ctrlr);
 		nvme_ctrlr_fail(ctrlr, false);
 		nvme_ctrlr_unlock(ctrlr);
@@ -828,6 +831,7 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 		SPDK_ERRLOG("NVMe ctrlr scan failed\n");
 		TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
 			TAILQ_REMOVE(&probe_ctx->init_ctrlrs, ctrlr, tailq);
+			probe_ctx->attach_fail_cb(probe_ctx->cb_ctx, &ctrlr->trid, -EFAULT);
 			nvme_transport_ctrlr_destruct(ctrlr);
 		}
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
@@ -874,12 +878,23 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 }
 
 static void
+nvme_dummy_attach_fail_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			  int rc)
+{
+	SPDK_ERRLOG("Failed to attach nvme ctrlr: trtype=%s adrfam=%s traddr=%s trsvcid=%s "
+		    "subnqn=%s, %s\n", spdk_nvme_transport_id_trtype_str(trid->trtype),
+		    spdk_nvme_transport_id_adrfam_str(trid->adrfam), trid->traddr, trid->trsvcid,
+		    trid->subnqn, spdk_strerror(-rc));
+}
+
+static void
 nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
 		    const struct spdk_nvme_transport_id *trid,
 		    const struct spdk_nvme_ctrlr_opts *opts,
 		    void *cb_ctx,
 		    spdk_nvme_probe_cb probe_cb,
 		    spdk_nvme_attach_cb attach_cb,
+		    spdk_nvme_attach_fail_cb attach_fail_cb,
 		    spdk_nvme_remove_cb remove_cb)
 {
 	probe_ctx->trid = *trid;
@@ -887,6 +902,11 @@ nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
 	probe_ctx->cb_ctx = cb_ctx;
 	probe_ctx->probe_cb = probe_cb;
 	probe_ctx->attach_cb = attach_cb;
+	if (attach_fail_cb != NULL) {
+		probe_ctx->attach_fail_cb = attach_fail_cb;
+	} else {
+		probe_ctx->attach_fail_cb = nvme_dummy_attach_fail_cb;
+	}
 	probe_ctx->remove_cb = remove_cb;
 	TAILQ_INIT(&probe_ctx->init_ctrlrs);
 }
@@ -895,6 +915,14 @@ int
 spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		spdk_nvme_remove_cb remove_cb)
+{
+	return spdk_nvme_probe_ext(trid, cb_ctx, probe_cb, attach_cb, NULL, remove_cb);
+}
+
+int
+spdk_nvme_probe_ext(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+		    spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		    spdk_nvme_attach_fail_cb attach_fail_cb, spdk_nvme_remove_cb remove_cb)
 {
 	struct spdk_nvme_transport_id trid_pcie;
 	struct spdk_nvme_probe_ctx *probe_ctx;
@@ -905,8 +933,8 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		trid = &trid_pcie;
 	}
 
-	probe_ctx = spdk_nvme_probe_async(trid, cb_ctx, probe_cb,
-					  attach_cb, remove_cb);
+	probe_ctx = spdk_nvme_probe_async_ext(trid, cb_ctx, probe_cb,
+					      attach_cb, attach_fail_cb, remove_cb);
 	if (!probe_ctx) {
 		SPDK_ERRLOG("Create probe context failed\n");
 		return -1;
@@ -1518,7 +1546,7 @@ spdk_nvme_scan_attached(const struct spdk_nvme_transport_id *trid)
 		return -ENOMEM;
 	}
 
-	nvme_probe_ctx_init(probe_ctx, trid, NULL, NULL, NULL, NULL, NULL);
+	nvme_probe_ctx_init(probe_ctx, trid, NULL, NULL, NULL, NULL, NULL, NULL);
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 	rc = nvme_transport_ctrlr_scan_attached(probe_ctx);
@@ -1535,6 +1563,17 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 		      spdk_nvme_attach_cb attach_cb,
 		      spdk_nvme_remove_cb remove_cb)
 {
+	return spdk_nvme_probe_async_ext(trid, cb_ctx, probe_cb, attach_cb, NULL, remove_cb);
+}
+
+struct spdk_nvme_probe_ctx *
+spdk_nvme_probe_async_ext(const struct spdk_nvme_transport_id *trid,
+			  void *cb_ctx,
+			  spdk_nvme_probe_cb probe_cb,
+			  spdk_nvme_attach_cb attach_cb,
+			  spdk_nvme_attach_fail_cb attach_fail_cb,
+			  spdk_nvme_remove_cb remove_cb)
+{
 	int rc;
 	struct spdk_nvme_probe_ctx *probe_ctx;
 
@@ -1548,7 +1587,8 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 		return NULL;
 	}
 
-	nvme_probe_ctx_init(probe_ctx, trid, NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
+	nvme_probe_ctx_init(probe_ctx, trid, NULL, cb_ctx, probe_cb, attach_cb, attach_fail_cb,
+			    remove_cb);
 	rc = nvme_probe_internal(probe_ctx, false);
 	if (rc != 0) {
 		free(probe_ctx);
@@ -1606,7 +1646,7 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 		probe_cb = nvme_connect_probe_cb;
 	}
 
-	nvme_probe_ctx_init(probe_ctx, trid, opts, (void *)opts, probe_cb, attach_cb, NULL);
+	nvme_probe_ctx_init(probe_ctx, trid, opts, (void *)opts, probe_cb, attach_cb, NULL, NULL);
 	rc = nvme_probe_internal(probe_ctx, true);
 	if (rc != 0) {
 		free(probe_ctx);

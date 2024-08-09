@@ -164,14 +164,22 @@ dummy_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	ut_attach_cb_called = true;
 }
 
+static int ut_attach_fail_cb_rc = 0;
 static void
-test_spdk_nvme_probe(void)
+dummy_attach_fail_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid, int rc)
+{
+	ut_attach_fail_cb_rc = rc;
+}
+
+static void
+test_spdk_nvme_probe_ext(void)
 {
 	int rc = 0;
 	const struct spdk_nvme_transport_id *trid = NULL;
 	void *cb_ctx = NULL;
 	spdk_nvme_probe_cb probe_cb = NULL;
 	spdk_nvme_attach_cb attach_cb = dummy_attach_cb;
+	spdk_nvme_attach_fail_cb attach_fail_cb = dummy_attach_fail_cb;
 	spdk_nvme_remove_cb remove_cb = NULL;
 	struct spdk_nvme_ctrlr ctrlr;
 	pthread_mutexattr_t attr;
@@ -181,7 +189,7 @@ test_spdk_nvme_probe(void)
 	/* driver init fails */
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_lookup, NULL);
-	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	rc = spdk_nvme_probe_ext(trid, cb_ctx, probe_cb, attach_cb, attach_fail_cb, remove_cb);
 	CU_ASSERT(rc == -1);
 
 	/*
@@ -193,7 +201,7 @@ test_spdk_nvme_probe(void)
 	MOCK_SET(spdk_process_is_primary, true);
 	dummy.initialized = true;
 	g_spdk_nvme_driver = &dummy;
-	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	rc = spdk_nvme_probe_ext(trid, cb_ctx, probe_cb, attach_cb, attach_fail_cb, remove_cb);
 	CU_ASSERT(rc == -1);
 
 	/* driver init passes, transport available, secondary call attach_cb */
@@ -209,13 +217,13 @@ test_spdk_nvme_probe(void)
 	ut_attach_cb_called = false;
 	/* setup nvme_transport_ctrlr_scan() stub to also check the trype */
 	ut_check_trtype = true;
-	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	rc = spdk_nvme_probe_ext(trid, cb_ctx, probe_cb, attach_cb, attach_fail_cb, remove_cb);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ut_attach_cb_called == true);
 
 	/* driver init passes, transport available, we are primary */
 	MOCK_SET(spdk_process_is_primary, true);
-	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	rc = spdk_nvme_probe_ext(trid, cb_ctx, probe_cb, attach_cb, attach_fail_cb, remove_cb);
 	CU_ASSERT(rc == 0);
 
 	g_spdk_nvme_driver = NULL;
@@ -347,6 +355,7 @@ test_nvme_init_controllers(void)
 	struct nvme_driver test_driver = {};
 	void *cb_ctx = NULL;
 	spdk_nvme_attach_cb attach_cb = dummy_attach_cb;
+	spdk_nvme_attach_fail_cb attach_fail_cb = dummy_attach_fail_cb;
 	struct spdk_nvme_probe_ctx *probe_ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	pthread_mutexattr_t attr;
@@ -368,15 +377,18 @@ test_nvme_init_controllers(void)
 	MOCK_SET(spdk_process_is_primary, 1);
 	g_spdk_nvme_driver->initialized = false;
 	ut_destruct_called = false;
+	ut_attach_fail_cb_rc = 0;
 	probe_ctx = test_nvme_init_get_probe_ctx();
 	TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 	probe_ctx->cb_ctx = cb_ctx;
 	probe_ctx->attach_cb = attach_cb;
+	probe_ctx->attach_fail_cb = attach_fail_cb;
 	probe_ctx->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	rc = nvme_init_controllers(probe_ctx);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
 	CU_ASSERT(ut_destruct_called == true);
+	CU_ASSERT(ut_attach_fail_cb_rc == 1);
 
 	/*
 	 * Controller init OK, need to move the controller state machine
@@ -832,29 +844,47 @@ test_nvme_ctrlr_probe(void)
 	void *cb_ctx = NULL;
 	struct spdk_nvme_ctrlr *dummy = NULL;
 
+	nvme_driver_init();
+
 	ctrlr.adminq = &qpair;
+	nvme_get_default_hostnqn(ctrlr.opts.hostnqn, sizeof(ctrlr.opts.hostnqn));
 
 	TAILQ_INIT(&probe_ctx.init_ctrlrs);
-	nvme_driver_init();
 
 	/* test when probe_cb returns false */
 
 	MOCK_SET(dummy_probe_cb, false);
-	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL, NULL);
+	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL, NULL, NULL);
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 1);
+
+	/* probe_cb returns true but we find a destructing ctrlr */
+	MOCK_SET(dummy_probe_cb, true);
+	ut_attach_fail_cb_rc = 0;
+	ctrlr.is_destructed = true;
+	TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, &ctrlr, tailq);
+	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL,
+			    dummy_attach_fail_cb, NULL);
+	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
+	CU_ASSERT(rc == -EBUSY);
+	CU_ASSERT(ut_attach_fail_cb_rc == -EBUSY);
+	TAILQ_REMOVE(&g_nvme_attached_ctrlrs, &ctrlr, tailq);
+	ctrlr.is_destructed = false;
 
 	/* probe_cb returns true but we can't construct a ctrl */
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, NULL);
-	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL, NULL);
+	ut_attach_fail_cb_rc = 0;
+	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL,
+			    dummy_attach_fail_cb, NULL);
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == -1);
+	CU_ASSERT(ut_attach_fail_cb_rc == -ENODEV);
 
 	/* happy path */
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, &ctrlr);
-	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL, NULL);
+	nvme_probe_ctx_init(&probe_ctx, &trid, NULL, cb_ctx, dummy_probe_cb, NULL, NULL, NULL);
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 0);
 	dummy = TAILQ_FIRST(&probe_ctx.init_ctrlrs);
@@ -1424,13 +1454,16 @@ test_nvme_ctrlr_probe_internal(void)
 	rc = nvme_driver_init();
 	CU_ASSERT(rc == 0);
 
+	ut_attach_fail_cb_rc = 0;
 	ut_test_probe_internal = true;
 	MOCK_SET(dummy_probe_cb, true);
 	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	nvme_probe_ctx_init(probe_ctx, &trid, NULL, NULL, dummy_probe_cb, NULL, NULL);
+	nvme_probe_ctx_init(probe_ctx, &trid, NULL, NULL, dummy_probe_cb, NULL, dummy_attach_fail_cb,
+			    NULL);
 	rc = nvme_probe_internal(probe_ctx, false);
 	CU_ASSERT(rc < 0);
 	CU_ASSERT(TAILQ_EMPTY(&probe_ctx->init_ctrlrs));
+	CU_ASSERT(ut_attach_fail_cb_rc == -EFAULT);
 
 	free(probe_ctx);
 	ut_test_probe_internal = false;
@@ -1647,7 +1680,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_trid_trtype_str);
 	CU_ADD_TEST(suite, test_trid_adrfam_str);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_probe);
-	CU_ADD_TEST(suite, test_spdk_nvme_probe);
+	CU_ADD_TEST(suite, test_spdk_nvme_probe_ext);
 	CU_ADD_TEST(suite, test_spdk_nvme_connect);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_probe_internal);
 	CU_ADD_TEST(suite, test_nvme_init_controllers);

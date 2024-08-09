@@ -21,9 +21,11 @@
 	spdk_nvme_prchk_flags_str;
 
 	spdk_nvme_probe;
+	spdk_nvme_probe_ext;
 	spdk_nvme_connect;
 	spdk_nvme_connect_async;
 	spdk_nvme_probe_async;
+	spdk_nvme_probe_async_ext;
 	spdk_nvme_probe_poll_async;
 	spdk_nvme_detach;
 	spdk_nvme_detach_async;

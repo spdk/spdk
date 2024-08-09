@@ -863,6 +863,17 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_transpo
 				    const struct spdk_nvme_ctrlr_opts *opts);
 
 /**
+ * Callback for spdk_nvme_probe*_ext() to report a device that has been probed but
+ * unable to attach to the userspace NVMe driver.
+ *
+ * \param cb_ctx Opaque value passed to spdk_nvme_probe*_ext().
+ * \param trid NVMe transport identifier.
+ * \param rc Negative error code that provides information about the failure.
+ */
+typedef void (*spdk_nvme_attach_fail_cb)(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		int rc);
+
+/**
  * Callback for spdk_nvme_remove() to report that a device attached to the userspace
  * NVMe driver has been removed from the system.
  *
@@ -932,6 +943,37 @@ int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
 		    spdk_nvme_probe_cb probe_cb,
 		    spdk_nvme_attach_cb attach_cb,
 		    spdk_nvme_remove_cb remove_cb);
+
+/**
+ * Enumerate the bus indicated by the transport ID and attach the userspace NVMe
+ * driver to each device found if desired.
+ *
+ * This works just the same as spdk_nvme_probe(), except that it calls attach_fail_cb
+ * for devices that are probed but unabled to attach.
+ *
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype
+ * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
+ * fabrics (e.g. RDMA, TCP), the traddr and trsvcid must point at the location of an
+ * NVMe-oF discovery service.
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
+ * the callbacks.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true
+ * once that NVMe controller has been attached to the userspace driver.
+ * \param attach_fail_cb will be called for devices which probe_cb returned true
+ * but failed to attach to the userspace driver.
+ * \param remove_cb will be called for devices that were attached in a previous
+ * spdk_nvme_probe() call but are no longer attached to the system. Optional;
+ * specify NULL if removal notices are not desired.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_nvme_probe_ext(const struct spdk_nvme_transport_id *trid,
+			void *cb_ctx,
+			spdk_nvme_probe_cb probe_cb,
+			spdk_nvme_attach_cb attach_cb,
+			spdk_nvme_attach_fail_cb attach_fail_cb,
+			spdk_nvme_remove_cb remove_cb);
 
 /**
  * Connect the NVMe driver to the device located at the given transport ID.
@@ -1018,6 +1060,39 @@ struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transpo
 		void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb,
 		spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb);
+
+/**
+ * Probe and add controllers to the probe context list.
+ *
+ * Users must call spdk_nvme_probe_poll_async() to initialize
+ * controllers in the probe context list to the READY state.
+ *
+ * This works just the same as spdk_nvme_probe_async(), except that it calls
+ * attach_fail_cb for devices that are probed but unabled to attach.
+ *
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype
+ * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
+ * fabrics (e.g. RDMA, TCP), the traddr and trsvcid must point at the location of an
+ * NVMe-oF discovery service.
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
+ * the callbacks.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true
+ * once that NVMe controller has been attached to the userspace driver.
+ * \param attach_fail_cb will be called for devices which probe_cb returned true
+ * but failed to attach to the userspace driver.
+ * \param remove_cb will be called for devices that were attached in a previous
+ * spdk_nvme_probe() call but are no longer attached to the system. Optional;
+ * specify NULL if removal notices are not desired.
+ *
+ * \return probe context on success, NULL on failure.
+ */
+struct spdk_nvme_probe_ctx *spdk_nvme_probe_async_ext(const struct spdk_nvme_transport_id *trid,
+		void *cb_ctx,
+		spdk_nvme_probe_cb probe_cb,
+		spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_attach_fail_cb attach_fail_cb,
 		spdk_nvme_remove_cb remove_cb);
 
 /**
