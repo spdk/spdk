@@ -622,25 +622,13 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 }
 
 struct spdk_sock *
-spdk_sock_connect(const char *ip, int port, const char *impl_name)
-{
-	struct spdk_sock_opts opts;
-
-	opts.opts_size = sizeof(opts);
-	spdk_sock_get_default_opts(&opts);
-	return spdk_sock_connect_ext(ip, port, impl_name, &opts);
-}
-
-static struct spdk_sock *
-sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts,
-		 bool async, spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
+spdk_sock_connect(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts,
+		  spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
 	const char *impl_name = NULL;
-
-	assert(async || (!cb_fn && !cb_arg));
 
 	if (opts == NULL) {
 		SPDK_ERRLOG("the opts should not be NULL pointer\n");
@@ -664,11 +652,6 @@ sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_s
 		return NULL;
 	}
 
-	if (async && !impl->connect_async) {
-		SPDK_ERRLOG("Asynchronous connect is not supported by %s\n", impl->name);
-		return NULL;
-	}
-
 	SPDK_DEBUGLOG(sock, "Creating a client socket using impl %s\n", impl->name);
 	sock_init_opts(&opts_local, opts);
 	if (opts_local.connect_timeout > INT_MAX) {
@@ -676,12 +659,7 @@ sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_s
 		return NULL;
 	}
 
-	if (async) {
-		sock = impl->connect_async(ip, port, &opts_local, cb_fn, cb_arg);
-	} else {
-		sock = impl->connect(ip, port, &opts_local);
-	}
-
+	sock = impl->connect(ip, port, &opts_local, cb_fn, cb_arg);
 	if (!sock) {
 		return NULL;
 	}
@@ -695,19 +673,6 @@ sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_s
 	TAILQ_INIT(&sock->queued_reqs);
 	TAILQ_INIT(&sock->pending_reqs);
 	return sock;
-}
-
-struct spdk_sock *
-spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
-{
-	return sock_connect_ext(ip, port, _impl_name, opts, false, NULL, NULL);
-}
-
-struct spdk_sock *
-spdk_sock_connect_async(const char *ip, int port, const char *_impl_name,
-			struct spdk_sock_opts *opts, spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
-{
-	return sock_connect_ext(ip, port, _impl_name, opts, true, cb_fn, cb_arg);
 }
 
 struct spdk_sock *

@@ -196,7 +196,7 @@ struct spdk_sock_impl_opts {
 /**
  * Spdk socket initialization options.
  *
- * A pointer to this structure will be used by spdk_sock_listen_ext() or spdk_sock_connect_ext() to
+ * A pointer to this structure will be used by spdk_sock_listen_ext() or spdk_sock_connect() to
  * allow the user to request non-default options on the socket.
  */
 struct spdk_sock_opts {
@@ -339,37 +339,9 @@ int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *s
 const char *spdk_sock_get_impl_name(struct spdk_sock *sock);
 
 /**
- * Create a socket using the specific sock implementation, connect the socket
- * to the specified address and port (of the server), and then return the socket.
- * This function is used by client.
- *
- * \param ip IP address of the server.
- * \param port Port number of the server.
- * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
- *
- * \return a pointer to the connected socket on success, or NULL on failure.
- */
-struct spdk_sock *spdk_sock_connect(const char *ip, int port, const char *impl_name);
-
-/**
- * Create a socket using the specific sock implementation, connect the socket
- * to the specified address and port (of the server), and then return the socket.
- * This function is used by client.
- *
- * \param ip IP address of the server.
- * \param port Port number of the server.
- * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
- * \param opts The sock option pointer provided by the user which should not be NULL pointer.
- *
- * \return a pointer to the connected socket on success, or NULL on failure.
- */
-struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, const char *impl_name,
-					struct spdk_sock_opts *opts);
-
-/**
  * Signature for callback function invoked when a connection is completed.
  *
- * \param cb_arg Context specified by \ref spdk_sock_connect_async.
+ * \param cb_arg Context specified by \ref spdk_sock_connect.
  * \param status 0 on success, negative errno value on failure.
  */
 typedef void (*spdk_sock_connect_cb_fn)(void *cb_arg, int status);
@@ -379,14 +351,13 @@ typedef void (*spdk_sock_connect_cb_fn)(void *cb_arg, int status);
  * to the specified address and port (of the server), and then return the socket.
  * This function is used by client.
  *
- * Not every function with sock object on the interface is allowed if the conncection is not
- * established. In order to determine connection status use \p cb_fn. Functions taking sock
- * object as an input may return EAGAIN to indicate connection is in progress or other
- * errno values if connection failed.
+ * The connection is always established asynchronously. The socket is returned before the
+ * connection completes, and \p cb_fn reports the outcome. Not every function taking a sock
+ * object is allowed before the connection is established; such functions may return EAGAIN
+ * to indicate the connection is still in progress, or another errno value if it failed.
  *
  * Callback function \p cb_fn is invoked only if this function returns a non-NULL value, and
  * never before this function has returned.
- * If async connect is not supported by the \p impl_name specified then NULL is returned.
  *
  * \param ip IP address of the server.
  * \param port Port number of the server.
@@ -397,8 +368,9 @@ typedef void (*spdk_sock_connect_cb_fn)(void *cb_arg, int status);
  *
  * \return a pointer to the socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_connect_async(const char *ip, int port, const char *impl_name,
-		struct spdk_sock_opts *opts, spdk_sock_connect_cb_fn cb_fn, void *cb_arg);
+struct spdk_sock *spdk_sock_connect(const char *ip, int port, const char *impl_name,
+				    struct spdk_sock_opts *opts, spdk_sock_connect_cb_fn cb_fn,
+				    void *cb_arg);
 
 /**
  * Create a socket using the specific sock implementation, bind the socket to

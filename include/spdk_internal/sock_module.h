@@ -77,9 +77,8 @@ struct spdk_net_impl {
 		       int clen, uint16_t *cport);
 	const char *(*get_interface_name)(struct spdk_sock *sock);
 	int32_t (*get_numa_id)(struct spdk_sock *sock);
-	struct spdk_sock *(*connect)(const char *ip, int port, struct spdk_sock_opts *opts);
-	struct spdk_sock *(*connect_async)(const char *ip, int port, struct spdk_sock_opts *opts,
-					   spdk_sock_connect_cb_fn cb_fn, void *cb_arg);
+	struct spdk_sock *(*connect)(const char *ip, int port, struct spdk_sock_opts *opts,
+				     spdk_sock_connect_cb_fn cb_fn, void *cb_arg);
 	struct spdk_sock *(*listen)(const char *ip, int port, struct spdk_sock_opts *opts);
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);
 	int (*close)(struct spdk_sock *sock);

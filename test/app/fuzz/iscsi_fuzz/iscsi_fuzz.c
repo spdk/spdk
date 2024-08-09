@@ -674,21 +674,45 @@ iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *s
 }
 
 static void
+iscsi_fuzz_connect_cb(void *cb_arg, int status)
+{
+	*(int *)cb_arg = status;
+}
+
+static void
 iscsi_fuzz_sock_connect(struct spdk_iscsi_conn *conn, struct spdk_sock_group *group)
 {
 	const char *host = g_tgt_ip;
 	const char *port = g_tgt_port;
 	char saddr[INET6_ADDRSTRLEN], caddr[INET6_ADDRSTRLEN];
 	uint16_t cport, sport;
+	int status = -EAGAIN;
 	int rc = 0;
+	struct spdk_sock_opts opts;
 
-	conn->sock = spdk_sock_connect(host, spdk_strtol(port, 10), NULL);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+
+	conn->sock = spdk_sock_connect(host, spdk_strtol(port, 10), NULL, &opts,
+				       iscsi_fuzz_connect_cb, &status);
 	if (conn->sock == NULL) {
 		fprintf(stderr, "connect error(%d): %s\n", errno, spdk_strerror(errno));
-		spdk_sock_close(&conn->sock);
 		return;
 	}
 	fprintf(stderr, "\nConnecting to the server on %s:%s\n", host, port);
+
+	/* spdk_sock_connect() is asynchronous, but the rest of this app is not. The socket
+	 * isn't in a group yet, so poll it directly to drive the connect to completion. The
+	 * connect_timeout opt bounds the wait. */
+	while (status == -EAGAIN) {
+		spdk_sock_is_connected(conn->sock);
+	}
+
+	if (status != 0) {
+		fprintf(stderr, "connect error(%d): %s\n", -status, spdk_strerror(-status));
+		spdk_sock_close(&conn->sock);
+		return;
+	}
 
 	rc = spdk_sock_getaddr(conn->sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 	if (rc < 0) {

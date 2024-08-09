@@ -395,7 +395,7 @@ test_posix_sock_connect_failure(void)
 	struct spdk_sock *sock;
 	bool called = false;
 
-	sock = posix_sock_connect_async("invalid", 1, &opts, connect_cb, &called);
+	sock = posix_sock_connect("invalid", 1, &opts, connect_cb, &called);
 	CU_ASSERT(sock == NULL);
 	CU_ASSERT(called == false);
 }

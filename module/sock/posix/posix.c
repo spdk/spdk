@@ -1063,7 +1063,7 @@ sock_posix_connect_async(struct addrinfo *res, struct spdk_sock_opts *opts,
 static int posix_connect_poller(struct spdk_posix_sock *sock);
 
 static struct spdk_sock *
-_posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool async,
+_posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 		    bool enable_ssl, spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
 	struct spdk_sock_impl_opts impl_opts;
@@ -1080,43 +1080,25 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 
 	res0 = spdk_sock_posix_getaddrinfo(ip, port);
 	if (!res0) {
-		goto err;
+		return NULL;
 	}
 
 	sock = posix_sock_alloc(-1, &impl_opts);
 	if (!sock) {
-		goto err;
+		freeaddrinfo(res0);
+		return NULL;
 	}
 
 	rc = sock_posix_connect_async(res0, opts, &impl_opts, enable_ssl, cb_fn, cb_arg,
 				      &sock->connect_ctx);
 	if (rc < 0) {
-		goto err;
-	}
-
-	sock->fd = sock->connect_ctx->fd;
-	if (async) {
-		return &sock->base;
-	}
-
-	do {
-		rc = posix_connect_poller(sock);
-	} while (rc == -EAGAIN);
-
-	if (!sock->ready) {
+		freeaddrinfo(res0);
 		free(sock);
 		return NULL;
 	}
 
+	sock->fd = sock->connect_ctx->fd;
 	return &sock->base;
-
-err:
-	free(sock);
-	if (res0) {
-		freeaddrinfo(res0);
-	}
-
-	return NULL;
 }
 
 static struct spdk_sock *
@@ -1126,16 +1108,10 @@ posix_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 }
 
 static struct spdk_sock *
-posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
+posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
+		   spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
-	return _posix_sock_connect(ip, port, opts, false, false, NULL, NULL);
-}
-
-static struct spdk_sock *
-posix_sock_connect_async(const char *ip, int port, struct spdk_sock_opts *opts,
-			 spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
-{
-	return _posix_sock_connect(ip, port, opts, true, false, cb_fn, cb_arg);
+	return _posix_sock_connect(ip, port, opts, false, cb_fn, cb_arg);
 }
 
 static struct spdk_sock *
@@ -2352,10 +2328,9 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 
 	if (base->group_impl) {
 		rc = posix_sock_group_impl_add_sock(base->group_impl, base);
-		if (rc) {
-			SPDK_ERRLOG("Connection was established but delayed posix_sock_group_impl_add_sock() failed %d (errno=%d).\n",
-				    rc, errno);
-			rc = -errno;
+		if (rc < 0) {
+			SPDK_ERRLOG("Connection was established but delayed posix_sock_group_impl_add_sock() failed %d.\n",
+				    rc);
 			goto err;
 		}
 	}
@@ -2403,7 +2378,6 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.get_interface_name = posix_sock_get_interface_name,
 	.get_numa_id	= posix_sock_get_numa_id,
 	.connect	= posix_sock_connect,
-	.connect_async	= posix_sock_connect_async,
 	.listen		= posix_sock_listen,
 	.accept		= posix_sock_accept,
 	.close		= posix_sock_close,
@@ -2438,16 +2412,10 @@ ssl_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 }
 
 static struct spdk_sock *
-ssl_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
+ssl_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
+		 spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
-	return _posix_sock_connect(ip, port, opts, false, true, NULL, NULL);
-}
-
-static struct spdk_sock *
-ssl_sock_connect_async(const char *ip, int port, struct spdk_sock_opts *opts,
-		       spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
-{
-	return _posix_sock_connect(ip, port, opts, true, true, cb_fn, cb_arg);
+	return _posix_sock_connect(ip, port, opts, true, cb_fn, cb_arg);
 }
 
 static struct spdk_sock *
@@ -2469,7 +2437,6 @@ static struct spdk_net_impl g_ssl_net_impl = {
 	.get_interface_name = posix_sock_get_interface_name,
 	.get_numa_id	= posix_sock_get_numa_id,
 	.connect	= ssl_sock_connect,
-	.connect_async	= ssl_sock_connect_async,
 	.listen		= ssl_sock_listen,
 	.accept		= ssl_sock_accept,
 	.close		= posix_sock_close,

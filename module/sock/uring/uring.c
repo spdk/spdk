@@ -582,23 +582,17 @@ uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 	return _sock;
 }
 
+/* The connection itself is established synchronously here, but the callback is deferred
+ * rather than invoked inline. That keeps the spdk_sock_connect contract simple: the callback
+ * never fires before this function returns. */
 static struct spdk_sock *
-uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
-{
-	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
-}
-
-/* This is a dummy implementation of async connect, but it is required to simplify
- * the spdk_sock_connect_async contract — i.e., to remove the need for a synchronous fallback
- * and avoid the problematic case where the callback is invoked before this function returns. */
-static struct spdk_sock *
-uring_sock_connect_async(const char *ip, int port, struct spdk_sock_opts *opts,
-			 spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
+uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
+		   spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
 	struct spdk_sock *_sock;
 	struct spdk_uring_sock *sock;
 
-	_sock = uring_sock_connect(ip, port, opts);
+	_sock = uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 	if (!_sock) {
 		return NULL;
 	}
@@ -1097,7 +1091,7 @@ _sock_prep_errqueue(struct spdk_sock *_sock)
 
 #endif
 
-/* The connection is already established by the time uring_sock_connect_async() returns, so the
+/* The connection is already established by the time uring_sock_connect() returns, so the
  * deferred callback can fire from any operation that drives the socket. A caller might poll with
  * spdk_sock_is_connected(), receive data, or flush writes before adding the socket to a group.
  *
@@ -2000,7 +1994,6 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.get_interface_name = uring_sock_get_interface_name,
 	.get_numa_id	= uring_sock_get_numa_id,
 	.connect	= uring_sock_connect,
-	.connect_async	= uring_sock_connect_async,
 	.listen		= uring_sock_listen,
 	.accept		= uring_sock_accept,
 	.close		= uring_sock_close,

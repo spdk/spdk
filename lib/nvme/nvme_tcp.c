@@ -2582,8 +2582,8 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	}
 
 	nvme_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_SOCK_CONNECTING);
-	tqpair->sock = spdk_sock_connect_async(ctrlr->trid.traddr, port, sock_impl_name, &opts,
-					       nvme_tcp_sock_connect_cb_fn, tqpair);
+	tqpair->sock = spdk_sock_connect(ctrlr->trid.traddr, port, sock_impl_name, &opts,
+					 nvme_tcp_sock_connect_cb_fn, tqpair);
 	if (!tqpair->sock) {
 		NVME_TQPAIR_ERRLOG(tqpair, "sock connection error with addr=%s, port=%ld\n", ctrlr->trid.traddr,
 				   port);

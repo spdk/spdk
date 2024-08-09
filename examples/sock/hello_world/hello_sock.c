@@ -59,6 +59,7 @@ struct hello_context_t {
 	void *buf;
 	struct spdk_poller *poller_in;
 	struct spdk_poller *poller_out;
+	struct spdk_poller *poller_connect;
 	struct spdk_poller *time_out;
 
 	int rc;
@@ -295,12 +296,67 @@ hello_sock_group_poll(void *arg)
 	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
+/*
+ * spdk_sock_connect() is asynchronous. The connection state machine is driven by
+ * spdk_sock_is_connected(), so poll it until the callback below fires.
+ */
+static int
+hello_sock_connect_poll(void *arg)
+{
+	struct hello_context_t *ctx = arg;
+
+	spdk_sock_is_connected(ctx->sock);
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+hello_sock_connect_cb(void *cb_arg, int status)
+{
+	struct hello_context_t *ctx = cb_arg;
+	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
+	uint16_t cport, sport;
+	int rc;
+
+	spdk_poller_unregister(&ctx->poller_connect);
+
+	if (status != 0) {
+		SPDK_ERRLOG("connect error(%d): %s\n", -status, spdk_strerror(-status));
+		goto err;
+	}
+
+	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
+	if (rc < 0) {
+		SPDK_ERRLOG("Cannot get connection addresses\n");
+		goto err;
+	}
+
+	SPDK_NOTICELOG("Connection accepted from (%s, %hu) to (%s, %hu)\n", caddr, cport, saddr, sport);
+
+	if (spdk_fd_set_nonblock(STDIN_FILENO) < 0) {
+		goto err;
+	}
+
+	rc = spdk_sock_group_add_sock(ctx->group, ctx->sock, hello_sock_recv_poll, ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Cannot add socket to group\n");
+		goto err;
+	}
+
+	g_is_running = true;
+	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_group_poll, ctx, 0);
+	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_writev_poll, ctx, 0);
+
+	return;
+err:
+	spdk_sock_close(&ctx->sock);
+	spdk_sock_group_close(&ctx->group);
+	spdk_app_stop(-1);
+}
+
 static int
 hello_sock_connect(struct hello_context_t *ctx)
 {
-	int rc;
-	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
-	uint16_t cport, sport;
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
@@ -331,40 +387,17 @@ hello_sock_connect(struct hello_context_t *ctx)
 	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
 
-	ctx->sock = spdk_sock_connect_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
+	ctx->sock = spdk_sock_connect(ctx->host, ctx->port, ctx->sock_impl_name, &opts,
+				      hello_sock_connect_cb, ctx);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("connect error(%d): %s\n", errno, spdk_strerror(errno));
 		spdk_sock_group_close(&ctx->group);
 		return -1;
 	}
 
-	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
-	if (rc < 0) {
-		SPDK_ERRLOG("Cannot get connection addresses\n");
-		goto err;
-	}
-
-	SPDK_NOTICELOG("Connection accepted from (%s, %hu) to (%s, %hu)\n", caddr, cport, saddr, sport);
-
-	if (spdk_fd_set_nonblock(STDIN_FILENO) < 0) {
-		goto err;
-	}
-
-	rc = spdk_sock_group_add_sock(ctx->group, ctx->sock, hello_sock_recv_poll, ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Cannot add socket to group\n");
-		goto err;
-	}
-
-	g_is_running = true;
-	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_group_poll, ctx, 0);
-	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_writev_poll, ctx, 0);
+	ctx->poller_connect = SPDK_POLLER_REGISTER(hello_sock_connect_poll, ctx, 0);
 
 	return 0;
-err:
-	spdk_sock_close(&ctx->sock);
-	spdk_sock_group_close(&ctx->group);
-	return -1;
 }
 
 static void
