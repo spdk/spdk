@@ -41,6 +41,7 @@ static struct spdk_bdev_module passthru_if = {
 };
 
 SPDK_BDEV_MODULE_REGISTER(passthru, &passthru_if)
+#define MAX_MD_ALLOC 4096
 
 /* List of pt_bdev names and their base bdevs via configuration file.
  * Used so we can parse the conf once at init and use this list in examine().
@@ -50,6 +51,7 @@ struct bdev_names {
 	char			*bdev_name;
 	struct spdk_uuid	uuid;
 	uint32_t block_sz;
+	uint32_t md_sz;
 	TAILQ_ENTRY(bdev_names)	link;
 };
 static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
@@ -60,6 +62,9 @@ struct vbdev_passthru {
 	struct spdk_bdev_desc		*base_desc; /* its descriptor we get from open */
 	struct spdk_bdev		pt_bdev;    /* the PT virtual bdev */
 	uint8_t multiplier;
+	uint32_t md_len;
+	void				*malloc_md_buf;
+	uint32_t offset_start;
 	TAILQ_ENTRY(vbdev_passthru)	link;
 	struct spdk_thread		*thread;    /* thread where base device is opened */
 };
@@ -218,6 +223,251 @@ vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+
+
+static uint64_t
+get_md_offset(struct spdk_bdev_io *bdev_io, uint32_t md_len)
+{
+	return bdev_io->u.bdev.offset_blocks * md_len;
+}
+
+
+static uint64_t
+get_md_count(struct spdk_bdev_io *bdev_io, uint32_t md_len)
+{
+	return bdev_io->u.bdev.num_blocks * md_len;
+}
+
+
+static inline uint64_t
+byte_to_lba(struct spdk_bdev_io *bdev_io, uint64_t length)
+{
+	return (length / bdev_io->bdev->blocklen + ((length % bdev_io->bdev->blocklen) ? 1 : 0));
+}
+
+static inline uint64_t
+start_byte_to_lba(struct spdk_bdev_io *bdev_io, uint64_t offset)
+{
+	return offset / bdev_io->bdev->blocklen;
+}
+
+
+static void
+_pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
+	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
+	uint64_t lb,lb_count;
+	int rc;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	if (!success) {
+        spdk_bdev_io_complete(orig_io, status);
+		spdk_bdev_free_io(bdev_io);
+        return;
+    }
+
+	if (orig_io->u.bdev.md_buf == NULL) {
+		_pt_complete_io(bdev_io, success, cb_arg);
+		return;
+	}
+
+
+	memcpy(pt_node->malloc_md_buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), orig_io->u.bdev.md_buf, get_md_count(orig_io, pt_node->md_len));
+
+	lb = start_byte_to_lba(orig_io, get_md_offset(orig_io, pt_node->md_len));
+	lb_count = byte_to_lba(orig_io, get_md_count(orig_io, pt_node->md_len));
+
+	if(!lb_count) {
+		lb_count = 1;
+	}
+
+	rc = spdk_bdev_write_blocks(pt_node->base_desc, pt_ch->base_ch,
+		       pt_node->malloc_md_buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
+		       _pt_complete_io, orig_io);
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");			
+			vbdev_passthru_queue_io(orig_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+	spdk_bdev_free_io(bdev_io);
+	
+}
+
+
+static void
+_pt_complete_io2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
+	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
+	uint64_t lb,lb_count;
+	int rc;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	if (!success) {
+        spdk_bdev_io_complete(orig_io, status);
+		spdk_bdev_free_io(bdev_io);
+        return;
+    }
+
+	if (orig_io->u.bdev.md_buf == NULL) {
+		_pt_complete_io(bdev_io, success, cb_arg);
+		return;
+	}
+
+	lb = start_byte_to_lba(orig_io, get_md_offset(orig_io, pt_node->md_len));
+	lb_count = byte_to_lba(orig_io, get_md_count(orig_io, pt_node->md_len));
+
+	if(!lb_count) {
+		lb_count = 1;
+	}
+
+	rc = spdk_bdev_read_blocks(pt_node->base_desc, pt_ch->base_ch,
+		        pt_node->malloc_md_buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
+		       _pt_complete_io3, orig_io);
+
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
+			// io_ctx->ch = ch;
+			vbdev_passthru_queue_io(orig_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+	spdk_bdev_free_io(bdev_io);
+	
+}
+
+
+static void
+_pt_complete_io5(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
+	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);
+	uint64_t lb,lb_count;
+	int rc;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	if (!success) {
+        spdk_bdev_io_complete(orig_io, status);
+		spdk_bdev_free_io(bdev_io);
+        return;
+    }
+
+	if (orig_io->u.bdev.md_buf == NULL) {
+		void *md_buf = spdk_zmalloc(get_md_count(orig_io, pt_node->md_len), 2 * 1024 * 1024, NULL,
+						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!md_buf) {
+			SPDK_ERRLOG("malloc_md_buf spdk_zmalloc() failed\n");
+			_pt_complete_io(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, cb_arg);
+			return;
+		}		
+		spdk_bdev_io_set_md_buf(orig_io, md_buf, get_md_count(orig_io, pt_node->md_len));
+		_pt_complete_io(bdev_io, success, cb_arg);
+		return;
+	}
+	
+	memcpy(orig_io->u.bdev.md_buf, pt_node->malloc_md_buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
+	_pt_complete_io(bdev_io, success, cb_arg);
+	
+
+}
+
+
+
+static void
+_pt_complete_io4(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
+	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
+	uint64_t lb,lb_count;
+	int rc;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	if (!success) {
+        spdk_bdev_io_complete(orig_io, status);
+		spdk_bdev_free_io(bdev_io);
+        return;
+    }
+
+	if (orig_io->u.bdev.md_buf == NULL) {
+		_pt_complete_io(bdev_io, success, cb_arg);
+		return;
+	}
+
+	lb = start_byte_to_lba(orig_io, get_md_offset(orig_io, pt_node->md_len));
+	lb_count = byte_to_lba(orig_io, get_md_count(orig_io, pt_node->md_len));
+
+	if(!lb_count) {
+		lb_count = 1;
+	}
+
+	rc = spdk_bdev_read_blocks(pt_node->base_desc, pt_ch->base_ch,
+		        pt_node->malloc_md_buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
+		       _pt_complete_io5, orig_io);
+
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
+			// io_ctx->ch = ch;
+			vbdev_passthru_queue_io(orig_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+	spdk_bdev_free_io(bdev_io);	
+}
+
 static void
 pt_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
 {
@@ -225,7 +475,7 @@ pt_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *
 	opts->size = sizeof(*opts);
 	opts->memory_domain = bdev_io->u.bdev.memory_domain;
 	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
-	opts->metadata = bdev_io->u.bdev.md_buf;
+	opts->metadata = NULL;//bdev_io->u.bdev.md_buf;
 }
 
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
@@ -250,8 +500,8 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 
 	pt_init_ext_io_opts(bdev_io, &io_opts);
 	rc = spdk_bdev_readv_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
-					bdev_io->u.bdev.num_blocks * pt_node->multiplier, _pt_complete_io,
+					bdev_io->u.bdev.iovcnt, (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
+					bdev_io->u.bdev.num_blocks * pt_node->multiplier, _pt_complete_io4,
 					bdev_io, &io_opts);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
@@ -276,6 +526,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_bdev_ext_io_opts io_opts;
+	io_ctx->ch = ch;
 	int rc = 0;
 
 	/* Setup a per IO context value; we don't do anything with it in the vbdev other
@@ -292,25 +543,25 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		pt_init_ext_io_opts(bdev_io, &io_opts);
 		rc = spdk_bdev_writev_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
-						 bdev_io->u.bdev.num_blocks * pt_node->multiplier, _pt_complete_io,
+						 bdev_io->u.bdev.iovcnt, (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
+						 bdev_io->u.bdev.num_blocks * pt_node->multiplier, _pt_complete_io2,
 						 bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(pt_node->base_desc, pt_ch->base_ch,
-						   bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+						   (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
 						   bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 						   _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = spdk_bdev_unmap_blocks(pt_node->base_desc, pt_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					    (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
 					    bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 					    _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush_blocks(pt_node->base_desc, pt_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					    (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
 					    bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 					    _pt_complete_io, bdev_io);
 		break;
@@ -320,7 +571,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		break;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		rc = spdk_bdev_zcopy_start(pt_node->base_desc, pt_ch->base_ch, NULL, 0,
-					   bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					   (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
 					   bdev_io->u.bdev.num_blocks * pt_node->multiplier, bdev_io->u.bdev.zcopy.populate,
 					   _pt_complete_zcopy_io, bdev_io);
 		break;
@@ -330,7 +581,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		break;
 	case SPDK_BDEV_IO_TYPE_COPY:
 		rc = spdk_bdev_copy_blocks(pt_node->base_desc, pt_ch->base_ch,
-					   bdev_io->u.bdev.offset_blocks * pt_node->multiplier,
+					   (bdev_io->u.bdev.offset_blocks + pt_node->offset_start) * pt_node->multiplier,
 					   bdev_io->u.bdev.copy.src_offset_blocks * pt_node->multiplier,
 					   bdev_io->u.bdev.num_blocks * pt_node->multiplier,
 					   _pt_complete_io, bdev_io);
@@ -458,7 +709,7 @@ pt_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
  * on the global list. */
 static int
 vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name,
-			   const struct spdk_uuid *uuid, uint32_t block_sz)
+			   const struct spdk_uuid *uuid, const uint32_t block_sz, const uint32_t md_sz)
 {
 	struct bdev_names *name;
 
@@ -475,6 +726,7 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name,
 		return -ENOMEM;
 	}
 	name->block_sz = block_sz;
+	name->md_sz = md_sz;
 
 	name->bdev_name = strdup(bdev_name);
 	if (!name->bdev_name) {
@@ -678,10 +930,43 @@ vbdev_passthru_register(const char *bdev_name)
 		} else{
 			pt_node->pt_bdev.blocklen = bdev->blocklen;
 			pt_node->pt_bdev.blockcnt = bdev->blockcnt;
+			pt_node->multiplier = 1;
+		}
+
+		switch (name->md_sz) {
+			case 0:
+			case 8:
+			case 16:
+			case 32:
+			case 64:
+			case 128:
+				break;
+			default:
+				SPDK_ERRLOG("metadata size %u is not supported\n", name->md_sz);
+				spdk_bdev_close(pt_node->base_desc);
+				free(pt_node->pt_bdev.name);
+				free(pt_node);
+				return -EINVAL;
 		}
 
 		pt_node->pt_bdev.md_interleave = bdev->md_interleave;
-		pt_node->pt_bdev.md_len = bdev->md_len;
+		// pt_node->pt_bdev.md_len = bdev->md_len;
+		pt_node->pt_bdev.md_len = name->md_sz ? name->md_sz : bdev->md_len;
+		pt_node->md_len = name->md_sz ? name->md_sz : bdev->md_len;
+		uint32_t guest = pt_node->pt_bdev.blockcnt * pt_node->pt_bdev.md_len;
+		pt_node->offset_start = (guest / bdev->blocklen) + ((guest % bdev->blocklen) ? 1 : 0);
+		pt_node->offset_start = pt_node->offset_start  + ((pt_node->offset_start % pt_node->multiplier) ? pt_node->multiplier - (pt_node->offset_start % pt_node->multiplier) : 0);
+		pt_node->offset_start = (pt_node->offset_start * bdev->blocklen) / pt_node->pt_bdev.blocklen;
+		pt_node->pt_bdev.blockcnt -= pt_node->offset_start;
+		pt_node->malloc_md_buf = spdk_zmalloc(MAX_MD_ALLOC * pt_node->pt_bdev.blocklen, 2 * 1024 * 1024, NULL,
+						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!pt_node->malloc_md_buf) {
+			SPDK_ERRLOG("malloc_md_buf spdk_zmalloc() failed\n");
+			spdk_bdev_close(pt_node->base_desc);
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			return -ENOMEM;
+		}
 		pt_node->pt_bdev.dif_type = bdev->dif_type;
 		pt_node->pt_bdev.dif_is_head_of_md = bdev->dif_is_head_of_md;
 		pt_node->pt_bdev.dif_check_flags = bdev->dif_check_flags;
@@ -735,14 +1020,14 @@ vbdev_passthru_register(const char *bdev_name)
 /* Create the passthru disk from the given bdev and vbdev name. */
 int
 bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name,
-			  const struct spdk_uuid *uuid, uint32_t block_sz)
+			  const struct spdk_uuid *uuid, const uint32_t block_sz, const uint32_t md_sz)
 {
 	int rc;
 
 	/* Insert the bdev name into our global name list even if it doesn't exist yet,
 	 * it may show up soon...
 	 */
-	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name, uuid, block_sz);
+	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name, uuid, block_sz, md_sz);
 	if (rc) {
 		return rc;
 	}

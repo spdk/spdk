@@ -20,7 +20,7 @@
  * \return 0 on success, other on failure.
  */
 int bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name,
-			      const struct spdk_uuid *uuid, uint32_t block_sz);
+			      const struct spdk_uuid *uuid, const uint32_t block_sz, const uint32_t md_sz);
 
 /**
  * Delete passthru bdev.
