@@ -131,6 +131,15 @@ struct spdk_memory_domain *spdk_rdma_utils_get_memory_domain(struct ibv_pd *pd);
  */
 int spdk_rdma_utils_put_memory_domain(struct spdk_memory_domain *_domain);
 
+struct rdma_cm_id;
+/**
+ * Get the NUMA ID for the local interface associated with the given cm_id.
+ *
+ * \param cm_id cm_id
+ * \return NUMA ID
+ */
+int32_t spdk_rdma_cm_id_get_numa_id(struct rdma_cm_id *cm_id);
+
 #ifdef __cplusplus
 }
 #endif

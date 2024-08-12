@@ -9,6 +9,7 @@
 	spdk_rdma_utils_put_pd;
 	spdk_rdma_utils_get_memory_domain;
 	spdk_rdma_utils_put_memory_domain;
+	spdk_rdma_cm_id_get_numa_id;
 
 	local: *;
 };

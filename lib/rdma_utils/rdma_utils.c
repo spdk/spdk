@@ -8,6 +8,8 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
+#include "spdk/net.h"
+#include "spdk/file.h"
 
 #include "spdk_internal/assert.h"
 
@@ -518,4 +520,33 @@ spdk_rdma_utils_put_memory_domain(struct spdk_memory_domain *_domain)
 	pthread_mutex_unlock(&g_memory_domains_lock);
 
 	return 0;
+}
+
+int32_t
+spdk_rdma_cm_id_get_numa_id(struct rdma_cm_id *cm_id)
+{
+	struct sockaddr	*sa;
+	char		addr[64];
+	char		ifc[64];
+	uint32_t	numa_id;
+	int		rc;
+
+	sa = rdma_get_local_addr(cm_id);
+	if (sa == NULL) {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+	rc = spdk_net_get_address_string(sa, addr, sizeof(addr));
+	if (rc) {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+	rc = spdk_net_get_interface_name(addr, ifc, sizeof(ifc));
+	if (rc) {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+	rc = spdk_read_sysfs_attribute_uint32(&numa_id,
+					      "/sys/class/net/%s/device/numa_node", ifc);
+	if (rc || numa_id > INT32_MAX) {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+	return (int32_t)numa_id;
 }
