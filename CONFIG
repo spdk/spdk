@@ -236,6 +236,9 @@ CONFIG_AVAHI=n
 # Setup DPDK's RTE_MAX_LCORES
 CONFIG_MAX_LCORES=128
 
+# Maximum number of iobuf NUMA nodes supported
+CONFIG_MAX_NUMA_NODES=1
+
 # Build all Go components
 CONFIG_GOLANG=n
 

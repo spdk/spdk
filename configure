@@ -32,6 +32,8 @@ function usage() {
 	echo "                           by EAL, or enables autodetection if set to 'detect'. When 'detect'"
 	echo "                           is specified, DPDK will detect number of cores in the system during"
 	echo "                           compilation, and will set maximum number of lcores to this value"
+	echo " --max-numa-nodes=VAL      VAL defines maximum number of NUMA nodes supported for iobuf"
+	echo "                           buffer pools."
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
@@ -693,6 +695,15 @@ for i in "$@"; do
 			CONFIG[MAX_LCORES]="${i#*=}"
 			CONFIG["MAX_LCORES"]=${CONFIG["MAX_LCORES"],,}
 			;;
+		--max-numa-nodes='')
+			echo "Must specify max number of nodes for --max-numa-nodes"
+			usage
+			exit 1
+			;;
+		--max-numa-nodes=*)
+			CONFIG[MAX_NUMA_NODES]="${i#*=}"
+			CONFIG["MAX_NUMA_NODES"]=${CONFIG["MAX_NUMA_NODES"],,}
+			;;
 		--with-aio-fsdev)
 			CONFIG[AIO_FSDEV]=y
 			AIO_FSDEV_REQUIRED=y
@@ -1352,6 +1363,13 @@ fi
 if [[ -n ${CONFIG[MAX_LCORES]} ]]; then
 	if [[ ! ${CONFIG[MAX_LCORES]} =~ ^([1-9][0-9]*|detect)$ ]] || ((CONFIG[MAX_LCORES] > 1024)); then
 		echo "ERROR: Max number of lcores must be a decimal number in range [1..1024] or 'detect' (given: ${CONFIG[MAX_LCORES]})"
+		exit 1
+	fi
+fi
+
+if [[ -n ${CONFIG[MAX_NUMA_NODES]} ]]; then
+	if [[ ! ${CONFIG[MAX_NUMA_NODES]} =~ ^([1-9][0-9]*)$ ]] || ((CONFIG[MAX_NUMA_NODES] > 16)); then
+		echo "ERROR: Max number of lcores must be a decimal number in range [1..16] (given: ${CONFIG[MAX_LCORES]})"
 		exit 1
 	fi
 fi

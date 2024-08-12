@@ -35,7 +35,7 @@ struct iobuf_channel_node {
 };
 
 struct iobuf_channel {
-	struct iobuf_channel_node	node[SPDK_IOBUF_MAX_NUMA_NODES];
+	struct iobuf_channel_node	node[SPDK_CONFIG_MAX_NUMA_NODES];
 	struct spdk_iobuf_channel	*channels[IOBUF_MAX_CHANNELS];
 };
 
@@ -56,7 +56,7 @@ struct iobuf {
 	TAILQ_HEAD(, iobuf_module)	modules;
 	spdk_iobuf_finish_cb		finish_cb;
 	void				*finish_arg;
-	struct iobuf_node		node[SPDK_IOBUF_MAX_NUMA_NODES];
+	struct iobuf_node		node[SPDK_CONFIG_MAX_NUMA_NODES];
 };
 
 static struct iobuf g_iobuf = {

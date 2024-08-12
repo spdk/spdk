@@ -15,6 +15,7 @@
 #include <sys/epoll.h>
 #endif
 
+#include "spdk/config.h"
 #include "spdk/fd_group.h"
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
@@ -1108,8 +1109,6 @@ struct spdk_iobuf_node_cache {
 	struct spdk_iobuf_pool_cache	large;
 };
 
-#define SPDK_IOBUF_MAX_NUMA_NODES	1
-
 /** iobuf channel */
 struct spdk_iobuf_channel {
 	/** Module pointer */
@@ -1117,7 +1116,7 @@ struct spdk_iobuf_channel {
 	/** Parent IO channel */
 	struct spdk_io_channel		*parent;
 	/* Buffer cache */
-	struct spdk_iobuf_node_cache	cache[SPDK_IOBUF_MAX_NUMA_NODES];
+	struct spdk_iobuf_node_cache	cache[SPDK_CONFIG_MAX_NUMA_NODES];
 };
 
 /**
