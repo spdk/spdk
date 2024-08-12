@@ -31,6 +31,8 @@ DEFINE_STUB_V(spdk_env_thread_wait_all, (void));
 DEFINE_STUB_V(spdk_env_opts_init, (struct spdk_env_opts *opts));
 DEFINE_STUB(spdk_env_init, int, (const struct spdk_env_opts *opts), 0);
 DEFINE_STUB_V(spdk_env_fini, (void));
+DEFINE_STUB(spdk_env_get_first_numa_id, int32_t, (void), 0);
+DEFINE_STUB(spdk_env_get_next_numa_id, int32_t, (int32_t prev_numa_id), INT32_MAX);
 DEFINE_STUB(spdk_env_get_last_numa_id, int32_t, (void), 0);
 
 void

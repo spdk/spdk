@@ -59,6 +59,11 @@ struct iobuf {
 	struct iobuf_node		node[SPDK_CONFIG_MAX_NUMA_NODES];
 };
 
+#define IOBUF_FOREACH_NUMA_ID(i)						\
+	for (i = g_iobuf.opts.enable_numa ? spdk_env_get_first_numa_id() : 0;	\
+	     i < INT32_MAX;							\
+	     i = g_iobuf.opts.enable_numa ? spdk_env_get_next_numa_id(i) : INT32_MAX)
+
 static struct iobuf g_iobuf = {
 	.modules = TAILQ_HEAD_INITIALIZER(g_iobuf.modules),
 	.node = {},
@@ -82,10 +87,13 @@ iobuf_channel_create_cb(void *io_device, void *ctx)
 {
 	struct iobuf_channel *ch = ctx;
 	struct iobuf_channel_node *node;
+	int32_t i;
 
-	node = &ch->node[0];
-	STAILQ_INIT(&node->small_queue);
-	STAILQ_INIT(&node->large_queue);
+	IOBUF_FOREACH_NUMA_ID(i) {
+		node = &ch->node[i];
+		STAILQ_INIT(&node->small_queue);
+		STAILQ_INIT(&node->large_queue);
+	}
 
 	return 0;
 }
@@ -95,10 +103,13 @@ iobuf_channel_destroy_cb(void *io_device, void *ctx)
 {
 	struct iobuf_channel *ch = ctx;
 	struct iobuf_channel_node *node __attribute__((unused));
+	int32_t i;
 
-	node = &ch->node[0];
-	assert(STAILQ_EMPTY(&node->small_queue));
-	assert(STAILQ_EMPTY(&node->large_queue));
+	IOBUF_FOREACH_NUMA_ID(i) {
+		node = &ch->node[i];
+		assert(STAILQ_EMPTY(&node->small_queue));
+		assert(STAILQ_EMPTY(&node->large_queue));
+	}
 }
 
 static int
@@ -158,6 +169,7 @@ error:
 	spdk_ring_free(node->small_pool);
 	spdk_free(node->large_pool_base);
 	spdk_ring_free(node->large_pool);
+	memset(node, 0, sizeof(*node));
 
 	return rc;
 }
@@ -165,6 +177,11 @@ error:
 static void
 iobuf_node_free(struct iobuf_node *node)
 {
+	if (node->small_pool == NULL) {
+		/* This node didn't get allocated, so just return immediately. */
+		return;
+	}
+
 	if (spdk_ring_count(node->small_pool) != g_iobuf.opts.small_pool_count) {
 		SPDK_ERRLOG("small iobuf pool count is %zu, expected %"PRIu64"\n",
 			    spdk_ring_count(node->small_pool), g_iobuf.opts.small_pool_count);
@@ -191,16 +208,19 @@ spdk_iobuf_initialize(void)
 {
 	struct spdk_iobuf_opts *opts = &g_iobuf.opts;
 	struct iobuf_node *node;
+	int32_t i;
 	int rc = 0;
 
 	/* Round up to the nearest alignment so that each element remains aligned */
 	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
 	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
 
-	node = &g_iobuf.node[0];
-	rc = iobuf_node_initialize(node);
-	if (rc) {
-		return rc;
+	IOBUF_FOREACH_NUMA_ID(i) {
+		node = &g_iobuf.node[i];
+		rc = iobuf_node_initialize(node);
+		if (rc) {
+			goto err;
+		}
 	}
 
 	spdk_io_device_register(&g_iobuf, iobuf_channel_create_cb, iobuf_channel_destroy_cb,
@@ -208,6 +228,13 @@ spdk_iobuf_initialize(void)
 	g_iobuf_is_initialized = true;
 
 	return 0;
+
+err:
+	IOBUF_FOREACH_NUMA_ID(i) {
+		node = &g_iobuf.node[i];
+		iobuf_node_free(node);
+	}
+	return rc;
 }
 
 static void
@@ -215,6 +242,7 @@ iobuf_unregister_cb(void *io_device)
 {
 	struct iobuf_module *module;
 	struct iobuf_node *node;
+	int32_t i;
 
 	while (!TAILQ_EMPTY(&g_iobuf.modules)) {
 		module = TAILQ_FIRST(&g_iobuf.modules);
@@ -223,8 +251,10 @@ iobuf_unregister_cb(void *io_device)
 		free(module);
 	}
 
-	node = &g_iobuf.node[0];
-	iobuf_node_free(node);
+	IOBUF_FOREACH_NUMA_ID(i) {
+		node = &g_iobuf.node[i];
+		iobuf_node_free(node);
+	}
 
 	if (g_iobuf.finish_cb != NULL) {
 		g_iobuf.finish_cb(g_iobuf.finish_arg);
@@ -345,11 +375,11 @@ spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts, size_t opts_size)
 
 static void
 iobuf_channel_node_init(struct spdk_iobuf_channel *ch, struct iobuf_channel *iobuf_ch,
-			uint32_t socket_id, uint32_t small_cache_size, uint32_t large_cache_size)
+			int32_t numa_id, uint32_t small_cache_size, uint32_t large_cache_size)
 {
-	struct iobuf_node *node = &g_iobuf.node[socket_id];
-	struct spdk_iobuf_node_cache *cache = &ch->cache[socket_id];
-	struct iobuf_channel_node *ch_node = &iobuf_ch->node[socket_id];
+	struct iobuf_node *node = &g_iobuf.node[numa_id];
+	struct spdk_iobuf_node_cache *cache = &ch->cache[numa_id];
+	struct iobuf_channel_node *ch_node = &iobuf_ch->node[numa_id];
 
 	cache->small.queue = &ch_node->small_queue;
 	cache->large.queue = &ch_node->large_queue;
@@ -367,10 +397,10 @@ iobuf_channel_node_init(struct spdk_iobuf_channel *ch, struct iobuf_channel *iob
 }
 
 static int
-iobuf_channel_node_populate(struct spdk_iobuf_channel *ch, const char *name, uint32_t socket_id)
+iobuf_channel_node_populate(struct spdk_iobuf_channel *ch, const char *name, int32_t numa_id)
 {
-	struct iobuf_node *node = &g_iobuf.node[socket_id];
-	struct spdk_iobuf_node_cache *cache = &ch->cache[socket_id];
+	struct iobuf_node *node = &g_iobuf.node[numa_id];
+	struct spdk_iobuf_node_cache *cache = &ch->cache[numa_id];
 	uint32_t small_cache_size = cache->small.cache_size;
 	uint32_t large_cache_size = cache->large.cache_size;
 	struct spdk_iobuf_buffer *buf;
@@ -412,6 +442,7 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	struct iobuf_channel *iobuf_ch;
 	struct iobuf_module *module;
 	uint32_t i;
+	int32_t numa_id;
 	int rc;
 
 	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
@@ -448,10 +479,17 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 
 	ch->parent = ioch;
 	ch->module = module;
-	iobuf_channel_node_init(ch, iobuf_ch, 0, small_cache_size, large_cache_size);
-	rc = iobuf_channel_node_populate(ch, name, 0);
-	if (rc) {
-		goto error;
+
+	IOBUF_FOREACH_NUMA_ID(numa_id) {
+		iobuf_channel_node_init(ch, iobuf_ch, numa_id,
+					small_cache_size, large_cache_size);
+	}
+
+	IOBUF_FOREACH_NUMA_ID(numa_id) {
+		rc = iobuf_channel_node_populate(ch, name, numa_id);
+		if (rc) {
+			goto error;
+		}
 	}
 
 	return 0;
@@ -462,10 +500,10 @@ error:
 }
 
 static void
-iobuf_channel_node_fini(struct spdk_iobuf_channel *ch, uint32_t socket_id)
+iobuf_channel_node_fini(struct spdk_iobuf_channel *ch, int32_t numa_id)
 {
-	struct spdk_iobuf_node_cache *cache = &ch->cache[socket_id];
-	struct iobuf_node *node = &g_iobuf.node[socket_id];
+	struct spdk_iobuf_node_cache *cache = &ch->cache[numa_id];
+	struct iobuf_node *node = &g_iobuf.node[numa_id];
 	struct spdk_iobuf_entry *entry __attribute__((unused));
 	struct spdk_iobuf_buffer *buf;
 
@@ -501,7 +539,9 @@ spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
 	struct iobuf_channel *iobuf_ch;
 	uint32_t i;
 
-	iobuf_channel_node_fini(ch, 0);
+	IOBUF_FOREACH_NUMA_ID(i) {
+		iobuf_channel_node_fini(ch, i);
+	}
 
 	iobuf_ch = spdk_io_channel_get_ctx(ch->parent);
 	for (i = 0; i < IOBUF_MAX_CHANNELS; ++i) {
@@ -586,26 +626,34 @@ spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch,
 			  spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx)
 {
 	struct spdk_iobuf_node_cache *cache;
+	uint32_t i;
 	int rc;
 
-	cache = &ch->cache[0];
+	IOBUF_FOREACH_NUMA_ID(i) {
+		cache = &ch->cache[i];
 
-	rc = iobuf_pool_for_each_entry(ch, &cache->small, cb_fn, cb_ctx);
-	if (rc != 0) {
-		return rc;
+		rc = iobuf_pool_for_each_entry(ch, &cache->small, cb_fn, cb_ctx);
+		if (rc != 0) {
+			return rc;
+		}
+		rc = iobuf_pool_for_each_entry(ch, &cache->large, cb_fn, cb_ctx);
+		if (rc != 0) {
+			return rc;
+		}
 	}
-	return iobuf_pool_for_each_entry(ch, &cache->large, cb_fn, cb_ctx);
+
+	return 0;
 }
 
 static bool
-iobuf_entry_abort_node(struct spdk_iobuf_channel *ch, uint32_t socket_id,
+iobuf_entry_abort_node(struct spdk_iobuf_channel *ch, int32_t numa_id,
 		       struct spdk_iobuf_entry *entry, uint64_t len)
 {
 	struct spdk_iobuf_node_cache *cache;
 	struct spdk_iobuf_pool_cache *pool;
 	struct spdk_iobuf_entry *e;
 
-	cache = &ch->cache[socket_id];
+	cache = &ch->cache[numa_id];
 
 	if (len <= cache->small.bufsize) {
 		pool = &cache->small;
@@ -628,7 +676,11 @@ void
 spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
 		       uint64_t len)
 {
-	iobuf_entry_abort_node(ch, 0, entry, len);
+	uint32_t i;
+
+	IOBUF_FOREACH_NUMA_ID(i) {
+		iobuf_entry_abort_node(ch, i, entry, len);
+	}
 }
 
 #define IOBUF_BATCH_SIZE 32
@@ -777,16 +829,19 @@ iobuf_get_channel_stats(struct spdk_io_channel_iter *iter)
 			module = (struct iobuf_module *)channel->module;
 			if (strcmp(it->module, module->name) == 0) {
 				struct spdk_iobuf_pool_cache *cache;
+				uint32_t i;
 
-				cache = &channel->cache[0].small;
-				it->small_pool.cache += cache->stats.cache;
-				it->small_pool.main += cache->stats.main;
-				it->small_pool.retry += cache->stats.retry;
+				IOBUF_FOREACH_NUMA_ID(i) {
+					cache = &channel->cache[i].small;
+					it->small_pool.cache += cache->stats.cache;
+					it->small_pool.main += cache->stats.main;
+					it->small_pool.retry += cache->stats.retry;
 
-				cache = &channel->cache[0].large;
-				it->large_pool.cache += cache->stats.cache;
-				it->large_pool.main += cache->stats.main;
-				it->large_pool.retry += cache->stats.retry;
+					cache = &channel->cache[i].large;
+					it->large_pool.cache += cache->stats.cache;
+					it->large_pool.main += cache->stats.main;
+					it->large_pool.retry += cache->stats.retry;
+				}
 				break;
 			}
 		}
