@@ -1118,6 +1118,14 @@ ut_null_poll(void *ctx)
 }
 
 static int
+ut_assert_poller_state_running(void *ctx)
+{
+	struct spdk_poller *poller = ctx;
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "running");
+	return SPDK_POLLER_IDLE;
+}
+
+static int
 ut_nested_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct ut_nested_ch *_ch = ctx_buf;
@@ -2062,6 +2070,42 @@ poller_get_id(void)
 	free_threads();
 }
 
+static void
+poller_get_state_str(void)
+{
+	struct spdk_poller *poller = NULL;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	poller = spdk_poller_register(ut_assert_poller_state_running, NULL, 0);
+	poller->arg = poller;
+
+	/* Assert poller begins in "waiting" state */
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "waiting");
+
+	/* Assert poller state changes to "running" while being polled and returns to "waiting" */
+	poll_thread(0);
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "waiting");
+
+	/* Assert poller state changes to "paused" and remains "paused" */
+	spdk_poller_pause(poller);
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "pausing");
+	poll_thread(0);
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "paused");
+	poll_thread(0);
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "paused");
+
+	/* Assert poller state changes after being resumed  */
+	spdk_poller_resume(poller);
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "waiting");
+	poll_thread(0);
+	CU_ASSERT_STRING_EQUAL(spdk_poller_get_state_str(poller), "waiting");
+
+	spdk_poller_unregister(&poller);
+	free_threads();
+}
+
 
 int
 main(int argc, char **argv)
@@ -2095,6 +2139,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, for_each_thread_and_thread_exit_race);
 	CU_ADD_TEST(suite, poller_get_name);
 	CU_ADD_TEST(suite, poller_get_id);
+	CU_ADD_TEST(suite, poller_get_state_str);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
