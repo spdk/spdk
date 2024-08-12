@@ -1126,6 +1126,12 @@ ut_assert_poller_state_running(void *ctx)
 }
 
 static int
+ut_busy_poll(void *ctx)
+{
+	return SPDK_POLLER_BUSY;
+}
+
+static int
 ut_nested_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct ut_nested_ch *_ch = ctx_buf;
@@ -2129,6 +2135,40 @@ poller_get_period_ticks(void)
 	free_threads();
 }
 
+static void
+poller_get_stats(void)
+{
+	struct spdk_poller *idle_poller = NULL;
+	struct spdk_poller *busy_poller = NULL;
+	struct spdk_poller_stats stats;
+	int period = 5;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	/* Register a "busy" and "idle" poller */
+	idle_poller = spdk_poller_register(ut_null_poll, NULL, period);
+	busy_poller = spdk_poller_register(ut_busy_poll, NULL, period);
+
+	spdk_delay_us(period);
+	poll_thread(0);
+
+	/* Check busy poller stats */
+	spdk_poller_get_stats(busy_poller, &stats);
+	CU_ASSERT_EQUAL(stats.run_count, 1);
+	CU_ASSERT_EQUAL(stats.busy_count, 1);
+
+	memset(&stats, 0, sizeof(stats));
+	/* Check idle poller stats */
+	spdk_poller_get_stats(idle_poller, &stats);
+	CU_ASSERT_EQUAL(stats.run_count, 1);
+	CU_ASSERT_EQUAL(stats.busy_count, 0);
+
+	spdk_poller_unregister(&idle_poller);
+	spdk_poller_unregister(&busy_poller);
+	free_threads();
+}
+
 
 int
 main(int argc, char **argv)
@@ -2164,6 +2204,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, poller_get_id);
 	CU_ADD_TEST(suite, poller_get_state_str);
 	CU_ADD_TEST(suite, poller_get_period_ticks);
+	CU_ADD_TEST(suite, poller_get_stats);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
