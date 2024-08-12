@@ -1,0 +1,27 @@
+Ubuntu provides a diff for 5.15.x kernels which adds crypto_request_complete()
+to algapi.h. Originally this functionality was merged into >= 6.3 kernels.
+---
+ quickassist/qat/compat/qat_compat.h | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/quickassist/qat/compat/qat_compat.h b/quickassist/qat/compat/qat_compat.h
+index 2c3d9cb..c94345a 100644
+--- a/quickassist/qat/compat/qat_compat.h
++++ b/quickassist/qat/compat/qat_compat.h
+@@ -510,14 +510,6 @@ static inline void pci_ignore_hotplug(struct pci_dev *dev)
+ void kfree_sensitive(const void *p);
+ #endif
+ 
+-#if (KERNEL_VERSION(6, 3, 0) > LINUX_VERSION_CODE)
+-static inline void crypto_request_complete(struct crypto_async_request *req,
+-					   int err)
+-{
+-	req->complete(req, err);
+-}
+-#endif
+-
+ #if (KERNEL_VERSION(6, 6, 0) <= LINUX_VERSION_CODE)
+ 
+ #define PCI_EXP_AER_FLAGS (PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+-- 
+
