@@ -2106,6 +2106,29 @@ poller_get_state_str(void)
 	free_threads();
 }
 
+static void
+poller_get_period_ticks(void)
+{
+	struct spdk_poller *poller_1 = NULL;
+	struct spdk_poller *poller_2 = NULL;
+	uint64_t period_1 = 0;
+	uint64_t period_2 = 10;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	/* Register poller_1 with 0 us period and poller_2 with non-zero period */
+	poller_1 = spdk_poller_register(ut_null_poll, NULL, period_1);
+	poller_2 = spdk_poller_register(ut_null_poll, NULL, period_2);
+
+	CU_ASSERT_EQUAL(spdk_poller_get_period_ticks(poller_1), period_1);
+	CU_ASSERT_EQUAL(spdk_poller_get_period_ticks(poller_2), period_2);
+
+	spdk_poller_unregister(&poller_1);
+	spdk_poller_unregister(&poller_2);
+	free_threads();
+}
+
 
 int
 main(int argc, char **argv)
@@ -2140,6 +2163,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, poller_get_name);
 	CU_ADD_TEST(suite, poller_get_id);
 	CU_ADD_TEST(suite, poller_get_state_str);
+	CU_ADD_TEST(suite, poller_get_period_ticks);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
