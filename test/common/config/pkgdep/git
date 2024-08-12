@@ -423,20 +423,51 @@ function install_lcov() {
 	(cd /usr/src/lcov; sudo make install)
 }
 
-function install_bpftrace() {
-	local deps=() bcc_rev
+function install_libbpf() {
+	local libbpf_version=v1.4.5
 
-	deps+=(cereal-devel)
-	deps+=(clang-devel)
-	deps+=(cmake)
-	deps+=(dwarves)
-	deps+=(gmock-devel)
-	deps+=(gtest-devel)
-	deps+=(llvm-devel)
-	deps+=(bcc-devel)
-	deps+=(libbpf-devel)
+	rm -rf "$GIT_REPOS/libbpf"
+	git clone "$GIT_REPO_LIBBPF" --branch "$libbpf_version" "$GIT_REPOS/libbpf"
+
+	make -C "$GIT_REPOS/libbpf/src" -j install
+	# install target doesn't include the kernel header files
+	make -C "$GIT_REPOS/libbpf/src" install_uapi_headers
+}
+
+function install_bpftrace() {
+	local deps_fedora=() deps_ubuntu=() bcc_rev
+
+	deps_fedora+=(cereal-devel)
+	deps_fedora+=(clang-devel)
+	deps_fedora+=(dwarves)
+	deps_fedora+=(gmock-devel)
+	deps_fedora+=(gtest-devel)
+	deps_fedora+=(llvm-devel)
+	deps_fedora+=(bcc-devel)
+	deps_fedora+=(libbpf-devel)
+
+	deps_ubuntu+=(libcereal-dev)
+	deps_ubuntu+=(libclang-dev)
+	deps_ubuntu+=(llvm-dev)
+	# Under jammy (2204) the libbpf version is not compatible with the version of
+	# bpftrace that we are using. Instead, we are going to provide our own build
+	# of libbpf, including both up-to-date bpf.h and linux/bpf.h.
+	[[ $VERSION_CODENAME == jammy ]] || deps_ubuntu+=(libbpf-dev)
+	deps_ubuntu+=(libbpfcc-dev)
+	deps_ubuntu+=(libelf-dev)
+	deps_ubuntu+=(binutils-dev)
+
+	local -n deps="deps_$ID"
+
+	((${#deps[@]} > 0)) || return 1
+
+	deps+=(clang cmake)
 
 	install "${deps[@]}"
+
+	if [[ $VERSION_CODENAME == jammy ]]; then
+		install_libbpf
+	fi
 
 	rm -rf $GIT_REPOS/bpftrace
 
@@ -563,6 +594,8 @@ export GIT_REPO_NVME_CLI
 export GIT_REPO_ITTAPI
 : ${GIT_REPO_DOXYGEN="https://github.com/doxygen/doxygen"}
 export GIT_REPO_DOXYGEN
+: ${GIT_REPO_LIBBPF="https://github.com/libbpf/libbpf"}
+export GIT_REPO_LIBBPF
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
