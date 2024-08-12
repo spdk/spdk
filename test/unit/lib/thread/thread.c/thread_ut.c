@@ -2040,6 +2040,29 @@ poller_get_name(void)
 	free_threads();
 }
 
+static void
+poller_get_id(void)
+{
+	struct spdk_poller *pollers[3];
+	uint64_t poller_expected_id[3] = {1, 2, 3};
+	int i;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	for (i = 0; i < 3; i++) {
+		pollers[i] = spdk_poller_register(ut_null_poll, NULL, 0);
+	}
+
+	for (i = 0; i < 3; i++) {
+		CU_ASSERT_EQUAL(spdk_poller_get_id(pollers[i]), poller_expected_id[i]);
+		spdk_poller_unregister(&pollers[i]);
+	}
+
+	free_threads();
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -2071,6 +2094,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, for_each_channel_and_thread_exit_race);
 	CU_ADD_TEST(suite, for_each_thread_and_thread_exit_race);
 	CU_ADD_TEST(suite, poller_get_name);
+	CU_ADD_TEST(suite, poller_get_id);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
