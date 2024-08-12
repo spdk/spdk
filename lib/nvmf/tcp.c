@@ -1463,6 +1463,8 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
 	tqpair->state_cntr[TCP_REQUEST_STATE_FREE] = 0;
 	tqpair->port = port;
 	tqpair->qpair.transport = port->transport;
+	tqpair->qpair.numa.id_valid = 1;
+	tqpair->qpair.numa.id = spdk_sock_get_numa_id(sock);
 
 	rc = spdk_sock_getaddr(tqpair->sock, tqpair->target_addr,
 			       sizeof(tqpair->target_addr), &tqpair->target_port,
