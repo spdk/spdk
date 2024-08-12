@@ -367,6 +367,7 @@ esnap_hotplug(void)
 	struct spdk_bdev *malloc_bdev = NULL, *bdev;
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol;
+	struct spdk_uuid uuid = { 0 };
 	char aiopath[PATH_MAX];
 	int rc, rc2;
 
@@ -375,7 +376,7 @@ esnap_hotplug(void)
 	/* Create aio device to hold the lvstore. */
 	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "esnap_hotplug.aio");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	poll_threads();
 
@@ -420,7 +421,7 @@ esnap_hotplug(void)
 	SPDK_CU_ASSERT_FATAL(spdk_bdev_get_by_name(uuid_esnap) == NULL);
 
 	/* Trigger the reload of the lvstore */
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	rc = 0xbad;
 	spdk_bdev_wait_for_examine(esnap_wait_for_examine, &rc);
@@ -466,6 +467,7 @@ esnap_remove_degraded(void)
 	struct op_with_handle_data owh_data = { 0 };
 	struct spdk_lvol_store *lvs;
 	struct spdk_bdev *malloc_bdev = NULL;
+	struct spdk_uuid uuid = { 0 };
 	struct spdk_lvol *vol1, *vol2, *vol3;
 	char aiopath[PATH_MAX];
 	int rc, rc2;
@@ -475,7 +477,7 @@ esnap_remove_degraded(void)
 	/* Create aio device to hold the lvstore. */
 	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "remove_degraded.aio");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	poll_threads();
 
@@ -543,7 +545,7 @@ esnap_remove_degraded(void)
 	 *   (missing) <-- vol2 <-- vol1
 	 *                    `---- vol3
 	 */
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	rc = 0xbad;
 	spdk_bdev_wait_for_examine(esnap_wait_for_examine, &rc);
@@ -683,6 +685,7 @@ late_delete(void)
 	struct op_with_handle_data owh_data;
 	struct lvol_bdev *lvol_bdev;
 	struct spdk_lvol *lvol;
+	struct spdk_uuid uuid = { 0 };
 	int rc, rc2;
 	int count;
 
@@ -691,7 +694,7 @@ late_delete(void)
 	 */
 	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "late_delete.aio");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	poll_threads();
 

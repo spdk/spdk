@@ -765,6 +765,7 @@ static void
 bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	struct file_disk *fdisk = bdev->ctxt;
+	const struct spdk_uuid *uuid = spdk_bdev_get_uuid(bdev);
 
 	spdk_json_write_object_begin(w);
 
@@ -778,6 +779,9 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_string(w, "filename", fdisk->filename);
 	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
 	spdk_json_write_named_bool(w, "fallocate", fdisk->fallocate);
+	if (!spdk_uuid_is_null(uuid)) {
+		spdk_json_write_named_uuid(w, "uuid", uuid);
+	}
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -877,7 +881,7 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 
 int
 create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
-		bool fallocate)
+		bool fallocate, const struct spdk_uuid *uuid)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -976,6 +980,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 
 	fdisk->disk.blockcnt = disk_size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
+	spdk_uuid_copy(&fdisk->disk.uuid, uuid);
 
 	fdisk->disk.fn_table = &aio_fn_table;
 

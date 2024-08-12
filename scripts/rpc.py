@@ -506,7 +506,8 @@ if __name__ == "__main__":
                                             name=args.name,
                                             block_size=args.block_size,
                                             readonly=args.readonly,
-                                            fallocate=args.fallocate))
+                                            fallocate=args.fallocate,
+                                            uuid=args.uuid))
 
     p = subparsers.add_parser('bdev_aio_create', help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
@@ -514,6 +515,7 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
     p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
     p.add_argument("--fallocate", action='store_true', help='Support unmap/writezeros by fallocate')
+    p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
     p.set_defaults(func=bdev_aio_create)
 
     def bdev_aio_rescan(args):

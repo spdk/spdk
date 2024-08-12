@@ -449,7 +449,7 @@ def bdev_raid_remove_base_bdev(client, name):
     return client.call('bdev_raid_remove_base_bdev', params)
 
 
-def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fallocate=None):
+def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fallocate=None, uuid=None):
     """Construct a Linux AIO block device.
     Args:
         filename: path to device or file (ex: /dev/sda)
@@ -457,6 +457,7 @@ def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fall
         block_size: block size of device (optional; autodetected if omitted)
         readonly: set aio bdev as read-only
         fallocate: enable fallocate for UNMAP/WRITEZEROS support (note that fallocate syscall would block reactor)
+        uuid: UUID of the bdev (optional)
     Returns:
         Name of created block device.
     """
@@ -469,6 +470,8 @@ def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fall
         params['readonly'] = readonly
     if fallocate is not None:
         params['fallocate'] = fallocate
+    if uuid is not None:
+        params['uuid'] = uuid
     return client.call('bdev_aio_create', params)
 
 

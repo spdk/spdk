@@ -3884,6 +3884,7 @@ filename                | Required | number      | Path to device or file
 block_size              | Optional | number      | Block size in bytes
 readonly                | Optional | boolean     | set aio bdev as read-only
 fallocate               | Optional | boolean     | Enable UNMAP and WRITE ZEROES support. Intended only for testing purposes due to synchronous syscall.
+uuid                    | Optional | string      | UUID of new bdev
 
 #### Result
 
