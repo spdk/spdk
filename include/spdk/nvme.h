@@ -1915,6 +1915,31 @@ void spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair);
 int spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair);
 
 /**
+ * Opaque extended event handler options.
+ */
+struct spdk_event_handler_opts;
+
+/**
+ * Get file descriptor for the admin queue pair of a controller.
+ *
+ * Applications that enable interrupts for completion notification will register and unregister
+ * interrupt event source on its queue pair file descriptor. This function returns file descriptor
+ * of the admin queue pair.
+ * This function also allows the transport layer to fill out event handler opts required by the
+ * application during interrupt registration phase.
+ *
+ * \param ctrlr Controller for which fd has to be fetched.
+ * \param[out] opts Event handler options to be filled by the transport, or NULL.
+ *
+ * \return a valid fd on success, with opts filled out if specified.
+ * -ENOTSUP if transport does not support fetching fd for this controller.
+ * -EINVAL if opts is specified, but its size is incorrect.
+ * -EINVAL if fds are not reserved, -1 if interrupts are not enabled for this controller.
+ */
+int spdk_nvme_ctrlr_get_admin_qp_fd(struct spdk_nvme_ctrlr *ctrlr,
+				    struct spdk_event_handler_opts *opts);
+
+/**
  * Returns the reason the admin qpair for a given controller is disconnected.
  *
  * \param ctrlr The controller to check.
@@ -2096,6 +2121,26 @@ int spdk_nvme_ctrlr_cmd_iov_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 					void *cb_arg,
 					spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
 					spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
+ * Get file descriptor for an I/O queue pair.
+ *
+ * Applications that enable interrupts for completion notification will register and unregister
+ * interrupt event source on its queue pair file descriptor. This function returns file descriptor
+ * for an I/O queue pair.
+ * This function also allows the transport layer to fill out event handler opts required by the
+ * application during interrupt registration phase.
+ *
+ * \param qpair Opaque handle of the queue pair for which fd has to be fetched.
+ * \param[out] opts Opaque event handler options to be filled by the transport, or NULL.
+ *
+ * \return a valid fd on success, with opts filled out if specified
+ * -ENOTSUP if transport does not support fetching fd for the queue pair.
+ * -EINVAL if opts is specified but its size is incorrect.
+ * -EINVAL if fds are not reserved, -1 if interrupts are not enabled for the qpair controller.
+ */
+int spdk_nvme_qpair_get_fd(struct spdk_nvme_qpair *qpair,
+			   struct spdk_event_handler_opts *opts);
 
 /**
  * Process any outstanding completions for I/O submitted on a queue pair.
@@ -4549,6 +4594,8 @@ struct spdk_nvme_transport_ops {
 	int (*qpair_iterate_requests)(struct spdk_nvme_qpair *qpair,
 				      int (*iter_fn)(struct nvme_request *req, void *arg),
 				      void *arg);
+
+	int (*qpair_get_fd)(struct spdk_nvme_qpair *qpair, struct spdk_event_handler_opts *opts);
 
 	void (*admin_qpair_abort_aers)(struct spdk_nvme_qpair *qpair);
 

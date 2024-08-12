@@ -567,6 +567,20 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 	transport->ops.ctrlr_disconnect_qpair(ctrlr, qpair);
 }
 
+int
+nvme_transport_qpair_get_fd(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			    struct spdk_event_handler_opts *opts)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.qpair_get_fd != NULL) {
+		return transport->ops.qpair_get_fd(qpair, opts);
+	}
+
+	return -ENOTSUP;
+}
+
 void
 nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 {

@@ -28,6 +28,11 @@ enabled during initialization. Make sure to check the resulting value after the 
 check for success. This mode is currently only supported for PCIe transport. This is only
 supported within a primary SPDK process, and if enabled SPDK will not support secondary processes.
 
+Added APIs `spdk_nvme_qpair_get_fd()` and `spdk_nvme_ctrlr_get_admin_qp_fd()` to retrieve the file
+descriptor for an I/O and the admin queue pair of a given NVMe controller respectively.
+These APIs accept `spdk_event_handler_opts` structure, and if specified the transport layer will
+fill it out which can be used by the application to register interrupts on the queue pairs.
+
 ### nvmf
 
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page

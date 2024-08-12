@@ -1145,6 +1145,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.qpair_submit_request = nvme_pcie_qpair_submit_request,
 	.qpair_process_completions = nvme_pcie_qpair_process_completions,
 	.qpair_iterate_requests = nvme_pcie_qpair_iterate_requests,
+	.qpair_get_fd = nvme_pcie_qpair_get_fd,
 	.admin_qpair_abort_aers = nvme_pcie_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_pcie_poll_group_create,

@@ -298,6 +298,7 @@ nvme_pcie_qpair_ring_cq_doorbell(struct spdk_nvme_qpair *qpair)
 }
 
 int nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair);
+int nvme_pcie_qpair_get_fd(struct spdk_nvme_qpair *qpair, struct spdk_event_handler_opts *opts);
 int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 			      const struct spdk_nvme_io_qpair_opts *opts);
 int nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t num_entries);

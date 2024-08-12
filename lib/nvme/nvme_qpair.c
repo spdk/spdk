@@ -751,6 +751,14 @@ nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+int
+spdk_nvme_qpair_get_fd(struct spdk_nvme_qpair *qpair, struct spdk_event_handler_opts *opts)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	return nvme_transport_qpair_get_fd(ctrlr, qpair, opts);
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {

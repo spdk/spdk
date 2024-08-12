@@ -75,6 +75,7 @@
 	spdk_nvme_ctrlr_connect_io_qpair;
 	spdk_nvme_ctrlr_disconnect_io_qpair;
 	spdk_nvme_ctrlr_reconnect_io_qpair;
+	spdk_nvme_ctrlr_get_admin_qp_fd;
 	spdk_nvme_ctrlr_get_admin_qp_failure_reason;
 	spdk_nvme_ctrlr_free_io_qpair;
 	spdk_nvme_ctrlr_io_cmd_raw_no_payload_build;
@@ -195,6 +196,7 @@
 	spdk_nvme_qpair_print_command;
 	spdk_nvme_qpair_print_completion;
 	spdk_nvme_qpair_get_id;
+	spdk_nvme_qpair_get_fd;
 	spdk_nvme_qpair_get_num_outstanding_reqs;
 	spdk_nvme_qpair_set_abort_dnr;
 	spdk_nvme_qpair_is_connected;
