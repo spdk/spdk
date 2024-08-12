@@ -1158,10 +1158,10 @@ compaction_process_finish_read(struct ftl_nv_cache_compactor *compactor)
 			entry->seq_id = chunk->md->seq_id;
 		} else {
 			/* This address already invalidated, just omit this block */
-			chunk_compaction_advance(chunk, 1);
+			skip++;
 			ftl_l2p_unpin(dev, lba, 1);
 			compaction_process_invalidate_entry(entry);
-			skip++;
+			chunk_compaction_advance(chunk, 1);
 		}
 	}
 
