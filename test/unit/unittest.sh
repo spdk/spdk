@@ -281,12 +281,13 @@ if [ $(uname -s) = Linux ]; then
 	# There are several intermittent sock_ut failures on FreeBSD that need to be debugged.
 	# So just disable running it on FreeBSD for now.  See issue #2943.
 	run_test "unittest_sock" unittest_sock
-	# fsdev are only avaliable on Linux
-	run_test "unittest_fsdev" unittest_fsdev
 fi
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
 run_test "unittest_iobuf" $valgrind $testdir/lib/thread/iobuf.c/iobuf_ut
 run_test "unittest_util" unittest_util
+if grep -q '#define SPDK_CONFIG_FSDEV 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_fsdev" unittest_fsdev
+fi
 if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
