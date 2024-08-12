@@ -3,7 +3,7 @@
 #  All rights reserved.
 
 
-def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize, large_bufsize):
+def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize, large_bufsize, enable_numa=None):
     """Set iobuf pool options.
 
     Args:
@@ -11,6 +11,7 @@ def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize,
         large_pool_count: number of large buffers in the global pool
         small_bufsize: size of a small buffer
         large_bufsize: size of a large buffer
+        enable_numa: enable per-NUMA buffer pools
     """
     params = {}
 
@@ -22,6 +23,8 @@ def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize,
         params['small_bufsize'] = small_bufsize
     if large_bufsize is not None:
         params['large_bufsize'] = large_bufsize
+    if enable_numa is not None:
+        params['enable_numa'] = enable_numa
 
     return client.call('iobuf_set_options', params)
 

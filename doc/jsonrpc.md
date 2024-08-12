@@ -13269,6 +13269,7 @@ small_pool_count        | Optional | number      | Number of small buffers in th
 large_pool_count        | Optional | number      | Number of large buffers in the global pool
 small_bufsize           | Optional | number      | Size of a small buffer
 large_bufsize           | Optional | number      | Size of a small buffer
+enable_numa             | Optional | boolean     | Enable per-NUMA node buffer pools. Each node will allocate a full pool based on small_pool_count and large_pool_count.
 
 #### Example
 

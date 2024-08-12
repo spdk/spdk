@@ -51,6 +51,7 @@ iobuf_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "large_pool_count", opts.large_pool_count);
 	spdk_json_write_named_uint32(w, "small_bufsize", opts.small_bufsize);
 	spdk_json_write_named_uint32(w, "large_bufsize", opts.large_bufsize);
+	spdk_json_write_named_bool(w, "enable_numa", opts.enable_numa);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 

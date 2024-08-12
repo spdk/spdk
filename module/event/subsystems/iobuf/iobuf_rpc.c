@@ -14,6 +14,7 @@ static const struct spdk_json_object_decoder rpc_iobuf_set_options_decoders[] = 
 	{"large_pool_count", offsetof(struct spdk_iobuf_opts, large_pool_count), spdk_json_decode_uint64, true},
 	{"small_bufsize", offsetof(struct spdk_iobuf_opts, small_bufsize), spdk_json_decode_uint32, true},
 	{"large_bufsize", offsetof(struct spdk_iobuf_opts, large_bufsize), spdk_json_decode_uint32, true},
+	{"enable_numa", offsetof(struct spdk_iobuf_opts, enable_numa), spdk_json_decode_bool, true},
 };
 
 static void

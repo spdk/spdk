@@ -1050,6 +1050,8 @@ struct spdk_iobuf_opts {
 	 */
 	size_t opts_size;
 
+	/** Enable per-NUMA node buffer pools */
+	uint8_t	enable_numa;
 };
 
 struct spdk_iobuf_pool_stats {

@@ -282,6 +282,16 @@ spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->enable_numa &&
+	    spdk_env_get_last_numa_id() >= SPDK_CONFIG_MAX_NUMA_NODES) {
+		SPDK_ERRLOG("max NUMA ID %" PRIu32 " cannot be supported with "
+			    "SPDK_CONFIG_MAX_NUMA_NODES %" PRIu32 "\n",
+			    spdk_env_get_last_numa_id(), SPDK_CONFIG_MAX_NUMA_NODES);
+		SPDK_ERRLOG("Re-configure with --max-numa-nodes=%" PRIu32 "\n",
+			    spdk_env_get_last_numa_id() + 1);
+		return -EINVAL;
+	}
+
 #define SET_FIELD(field) \
         if (offsetof(struct spdk_iobuf_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
                 g_iobuf.opts.field = opts->field; \
@@ -291,6 +301,7 @@ spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 	SET_FIELD(large_pool_count);
 	SET_FIELD(small_bufsize);
 	SET_FIELD(large_bufsize);
+	SET_FIELD(enable_numa);
 
 	g_iobuf.opts.opts_size = opts->opts_size;
 
@@ -323,12 +334,13 @@ spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts, size_t opts_size)
 	SET_FIELD(large_pool_count);
 	SET_FIELD(small_bufsize);
 	SET_FIELD(large_bufsize);
+	SET_FIELD(enable_numa);
 
 #undef SET_FIELD
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_opts) == 32, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_opts) == 40, "Incorrect size");
 }
 
 
