@@ -540,7 +540,6 @@ spdk_delay_us(unsigned int us)
 	ut_spdk_get_ticks += us;
 }
 
-#ifndef UNIT_TEST_NO_PCI_ADDR
 DEFINE_RETURN_MOCK(spdk_pci_addr_parse, int);
 int
 spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
@@ -626,4 +625,3 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 
 	return 0;
 }
-#endif
