@@ -751,9 +751,16 @@ spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 	struct spdk_iobuf_buffer *iobuf_buf;
 	struct spdk_iobuf_node_cache *cache;
 	struct spdk_iobuf_pool_cache *pool;
+	uint32_t numa_id;
 	size_t sz;
 
-	cache = &ch->cache[0];
+	if (g_iobuf.opts.enable_numa) {
+		numa_id = spdk_mem_get_numa_id(buf, NULL);
+	} else {
+		numa_id = 0;
+	}
+
+	cache = &ch->cache[numa_id];
 
 	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
 	if (len <= cache->small.bufsize) {

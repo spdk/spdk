@@ -273,6 +273,10 @@ spdk_vtophys(const void *buf, uint64_t *size)
 }
 #endif
 
+#ifndef UNIT_TEST_NO_ENV_MEMORY
+DEFINE_STUB(spdk_mem_get_numa_id, int32_t, (const void *buf, uint64_t *size), 0);
+#endif
+
 void
 spdk_memzone_dump(FILE *f)
 {
