@@ -1454,8 +1454,6 @@ session_start_poll_group(void *args)
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(pg->vdev);
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(pg->vsession);
 
-	assert(bvdev != NULL);
-
 	if (bvdev->bdev) {
 		pg->io_channel = vhost_blk_get_io_channel(pg->vdev);
 		SPDK_DEBUGLOG(vhost_blk, "%s: pg %p, pg io channel %p, thread %s, lcore %u\n",
@@ -1696,7 +1694,7 @@ destroy_session_poller_cb(void *arg)
 		return SPDK_POLLER_BUSY;
 	}
 
-	SPDK_DEBUGLOG(vhost_blk, "%s: session stopped\n", vsession->name);
+	SPDK_DEBUGLOG(vhost_blk, "%s: session stoppped\n", vsession->name);
 	free(bvsession->poll_groups);
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->stop_poller);
