@@ -29,9 +29,13 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_buffer) <= IOBUF_MIN_SMALL_BUFSIZE,
 
 static bool g_iobuf_is_initialized = false;
 
-struct iobuf_channel {
+struct iobuf_channel_node {
 	spdk_iobuf_entry_stailq_t	small_queue;
 	spdk_iobuf_entry_stailq_t	large_queue;
+};
+
+struct iobuf_channel {
+	struct iobuf_channel_node	node;
 	struct spdk_iobuf_channel	*channels[IOBUF_MAX_CHANNELS];
 };
 
@@ -77,9 +81,11 @@ static int
 iobuf_channel_create_cb(void *io_device, void *ctx)
 {
 	struct iobuf_channel *ch = ctx;
+	struct iobuf_channel_node *node;
 
-	STAILQ_INIT(&ch->small_queue);
-	STAILQ_INIT(&ch->large_queue);
+	node = &ch->node;
+	STAILQ_INIT(&node->small_queue);
+	STAILQ_INIT(&node->large_queue);
 
 	return 0;
 }
@@ -87,10 +93,12 @@ iobuf_channel_create_cb(void *io_device, void *ctx)
 static void
 iobuf_channel_destroy_cb(void *io_device, void *ctx)
 {
-	struct iobuf_channel *ch __attribute__((unused)) = ctx;
+	struct iobuf_channel *ch = ctx;
+	struct iobuf_channel_node *node __attribute__((unused));
 
-	assert(STAILQ_EMPTY(&ch->small_queue));
-	assert(STAILQ_EMPTY(&ch->large_queue));
+	node = &ch->node;
+	assert(STAILQ_EMPTY(&node->small_queue));
+	assert(STAILQ_EMPTY(&node->large_queue));
 }
 
 int
@@ -311,6 +319,7 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	struct spdk_iobuf_buffer *buf;
 	struct spdk_iobuf_node_cache *cache;
 	struct iobuf_node *node = &g_iobuf.node;
+	struct iobuf_channel_node *ch_node;
 	uint32_t i;
 
 	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
@@ -347,9 +356,10 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	ch->parent = ioch;
 	ch->module = module;
 	cache = &ch->cache;
+	ch_node = &iobuf_ch->node;
 
-	cache->small.queue = &iobuf_ch->small_queue;
-	cache->large.queue = &iobuf_ch->large_queue;
+	cache->small.queue = &ch_node->small_queue;
+	cache->large.queue = &ch_node->large_queue;
 	cache->small.pool = node->small_pool;
 	cache->large.pool = node->large_pool;
 	cache->small.bufsize = g_iobuf.opts.small_bufsize;
