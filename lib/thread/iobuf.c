@@ -576,6 +576,7 @@ spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *e
 {
 	struct spdk_iobuf_node_cache *cache;
 	struct spdk_iobuf_pool_cache *pool;
+	struct spdk_iobuf_entry *e;
 
 	cache = &ch->cache[0];
 
@@ -586,7 +587,12 @@ spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *e
 		pool = &cache->large;
 	}
 
-	STAILQ_REMOVE(pool->queue, entry, spdk_iobuf_entry, stailq);
+	STAILQ_FOREACH(e, pool->queue, stailq) {
+		if (e == entry) {
+			STAILQ_REMOVE(pool->queue, entry, spdk_iobuf_entry, stailq);
+			return;
+		}
+	}
 }
 
 #define IOBUF_BATCH_SIZE 32
