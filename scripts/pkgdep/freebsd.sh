@@ -33,3 +33,6 @@ if [[ $INSTALL_RBD == "true" ]]; then
 		"$(freebsd-version)"
 	INSTALL_RBD=false
 fi
+if [[ $INSTALL_LZ4 == "true" ]]; then
+	pkg install -y liblz4
+fi

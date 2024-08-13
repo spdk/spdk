@@ -27,6 +27,7 @@ function usage() {
 	echo "  -A --avahi                  Additional dependencies for Avahi mDNS Discovery"
 	echo "  -G --golang                 Additional dependencies for go API generation"
 	echo "  -I --idxd                   Additional dependencies for IDXD"
+	echo "  -l --lz4                    Additional dependencies for lz4"
 	echo ""
 	exit 0
 }
@@ -42,6 +43,7 @@ function install_all_dependencies() {
 	INSTALL_AVAHI=true
 	INSTALL_GOLANG=true
 	INSTALL_IDXD=true
+	INSTALL_LZ4=true
 }
 
 INSTALL_CRYPTO=false
@@ -56,8 +58,9 @@ INSTALL_AVAHI=false
 INSTALL_GOLANG=false
 INSTALL_IDXD=false
 INSTALL_UADK=false
+INSTALL_LZ4=false
 
-while getopts 'abdfhipruADGIR-:' optchar; do
+while getopts 'abdfhilpruADGIR-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -74,6 +77,7 @@ while getopts 'abdfhipruADGIR-:' optchar; do
 				avahi) INSTALL_AVAHI=true ;;
 				golang) INSTALL_GOLANG=true ;;
 				idxd) INSTALL_IDXD=true ;;
+				lz4) INSTALL_LZ4=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -92,6 +96,7 @@ while getopts 'abdfhipruADGIR-:' optchar; do
 		A) INSTALL_AVAHI=true ;;
 		G) INSTALL_GOLANG=true ;;
 		I) INSTALL_IDXD=true ;;
+		l) INSTALL_LZ4=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage

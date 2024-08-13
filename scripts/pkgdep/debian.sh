@@ -87,3 +87,6 @@ if [[ $INSTALL_IDXD == "true" ]]; then
 		echo "libaccel-config is only present on Ubuntu 23.04 or higher."
 	fi
 fi
+if [[ $INSTALL_LZ4 == "true" ]]; then
+	apt-get install -y liblz4-dev
+fi

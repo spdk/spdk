@@ -221,3 +221,6 @@ if [[ $INSTALL_IDXD == "true" ]]; then
 		yum install -y accel-config-devel
 	fi
 fi
+if [[ $INSTALL_LZ4 == "true" ]]; then
+	yum install -y lz4-devel
+fi

@@ -50,6 +50,9 @@ additional_dependencies() {
 		# Additional dependencies for Avahi
 		tdnf install -y avahi-devel
 	fi
+	if [[ $INSTALL_LZ4 == "true" ]]; then
+		tdnf install -y liblz4
+	fi
 }
 
 tdnf install -y ca-certificates build-essential

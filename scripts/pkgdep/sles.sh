@@ -43,3 +43,6 @@ if [[ $INSTALL_AVAHI == "true" ]]; then
 	# Additional dependencies for Avahi
 	zypper install -y avahi-devel
 fi
+if [[ $INSTALL_LZ4 == "true" ]]; then
+	zypper install -y liblz4-devel
+fi
