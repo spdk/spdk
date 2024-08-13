@@ -111,8 +111,6 @@ struct spdk_vhost_virtqueue {
 	uint32_t vring_idx;
 
 	struct spdk_vhost_session *vsession;
-	/* Polling group private thread context */
-	void *poll_group;
 
 	struct spdk_interrupt *intr;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
