@@ -686,6 +686,13 @@ bdev_in_examine_allowlist(struct spdk_bdev *bdev)
 static inline bool
 bdev_ok_to_examine(struct spdk_bdev *bdev)
 {
+	/* Some bdevs may not support the READ command.
+	 * Do not try to examine them.
+	 */
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ)) {
+		return false;
+	}
+
 	if (g_bdev_opts.bdev_auto_examine) {
 		return true;
 	} else {
