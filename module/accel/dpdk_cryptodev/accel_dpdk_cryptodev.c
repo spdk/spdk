@@ -79,7 +79,8 @@
 #define ACCEL_DPDK_CRYPTODEV_AES_XTS	"AES_XTS" /* QAT and MLX5 */
 
 /* Specific to AES_CBC. */
-#define ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH			16
+#define ACCEL_DPDK_CRYPTODEV_AES_CBC_128_KEY_SIZE			16
+#define ACCEL_DPDK_CRYPTODEV_AES_CBC_256_KEY_SIZE			32
 
 /* Limit of the max memory len attached to mbuf - rte_pktmbuf_attach_extbuf has uint16_t `buf_len`
  * parameter, we use closes aligned value 32768 for better performance */
@@ -1423,7 +1424,8 @@ accel_dpdk_cryptodev_supports_cipher(enum spdk_accel_cipher cipher, size_t key_s
 		case SPDK_ACCEL_CIPHER_AES_XTS:
 			return key_size == SPDK_ACCEL_AES_XTS_128_KEY_SIZE;
 		case SPDK_ACCEL_CIPHER_AES_CBC:
-			return key_size == ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH;
+			return key_size == ACCEL_DPDK_CRYPTODEV_AES_CBC_128_KEY_SIZE ||
+			       key_size == ACCEL_DPDK_CRYPTODEV_AES_CBC_256_KEY_SIZE;
 		default:
 			return false;
 		}
