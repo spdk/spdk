@@ -1994,20 +1994,6 @@ nvme_pcie_poll_group_create(void)
 	return &group->group;
 }
 
-int
-nvme_pcie_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
-			 struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
-int
-nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
-			    struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
 int64_t
 nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)

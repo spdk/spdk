@@ -1159,8 +1159,6 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.admin_qpair_abort_aers = nvme_pcie_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_pcie_poll_group_create,
-	.poll_group_add = nvme_pcie_poll_group_add,
-	.poll_group_remove = nvme_pcie_poll_group_remove,
 	.poll_group_process_completions = nvme_pcie_poll_group_process_completions,
 	.poll_group_check_disconnected_qpairs = nvme_pcie_poll_group_check_disconnected_qpairs,
 	.poll_group_destroy = nvme_pcie_poll_group_destroy,

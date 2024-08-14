@@ -128,23 +128,13 @@ test_nvme_transport_poll_group_disconnect_qpair(void)
 	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
 }
 
-static int
-ut_poll_group_add_remove(struct spdk_nvme_transport_poll_group *tgroup,
-			 struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
 static void
 test_nvme_transport_poll_group_add_remove(void)
 {
 	int rc;
 	struct spdk_nvme_transport_poll_group tgroup = {};
 	struct spdk_nvme_qpair qpair = {};
-	const struct spdk_nvme_transport transport = {
-		.ops.poll_group_add = ut_poll_group_add_remove,
-		.ops.poll_group_remove = ut_poll_group_add_remove
-	};
+	const struct spdk_nvme_transport transport = {};
 
 	tgroup.transport = &transport;
 	qpair.poll_group = &tgroup;

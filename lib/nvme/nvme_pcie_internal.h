@@ -339,10 +339,6 @@ void nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgro
 				     struct spdk_nvme_transport_poll_group_stat *stats);
 
 struct spdk_nvme_transport_poll_group *nvme_pcie_poll_group_create(void);
-int nvme_pcie_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
-			     struct spdk_nvme_qpair *qpair);
-int nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
-				struct spdk_nvme_qpair *qpair);
 int64_t nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 		uint32_t completions_per_qpair,
 		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);

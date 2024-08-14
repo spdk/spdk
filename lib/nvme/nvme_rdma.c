@@ -3576,20 +3576,6 @@ nvme_rdma_poll_group_create(void)
 	return &group->group;
 }
 
-static int
-nvme_rdma_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
-			 struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
-static int
-nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
-			    struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
 static struct nvme_rdma_qpair *
 nvme_rdma_poll_group_find_qpair(struct nvme_rdma_poll_group *group, uint32_t qp_num)
 {
@@ -4003,8 +3989,6 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.admin_qpair_abort_aers = nvme_rdma_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_rdma_poll_group_create,
-	.poll_group_add = nvme_rdma_poll_group_add,
-	.poll_group_remove = nvme_rdma_poll_group_remove,
 	.poll_group_process_completions = nvme_rdma_poll_group_process_completions,
 	.poll_group_check_disconnected_qpairs = nvme_rdma_poll_group_check_disconnected_qpairs,
 	.poll_group_destroy = nvme_rdma_poll_group_destroy,
