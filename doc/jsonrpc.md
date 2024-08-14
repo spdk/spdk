@@ -10129,7 +10129,7 @@ Example request:
   "method": "bdev_lvol_create_lvstore",
   "params": {
     "lvs_name": "LVS0",
-    "bdev_name": "Malloc0"
+    "bdev_name": "Malloc0",
     "clear_method": "write_zeroes"
   }
 }
