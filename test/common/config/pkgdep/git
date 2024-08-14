@@ -29,20 +29,6 @@ function install_qat() {
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
 
-	if ge "$kernel_ver" 6.7.0; then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-phys_proc_id.patch"
-
-	if ge "$kernel_ver" 6.8.0; then
-		patch --dir="$GIT_REPOS/QAT" -p1 < \
-			"$rootdir/test/common/config/pkgdep/patches/qat/0001-strlcpy-to-strscpy.patch"
-		patch --dir="$GIT_REPOS/QAT" -p1 < \
-			"$rootdir/test/common/config/pkgdep/patches/qat/0001-missing-prototypes.patch"
-	fi
-
-	patch --dir="$GIT_REPOS/QAT" -p1 \
-		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-no-vmlinux.patch"
-
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
@@ -529,7 +515,7 @@ export GIT_REPO_QEMU
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
-: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/795697/QAT.L.4.24.0-00005.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/828487/QAT.L.4.26.0-00008.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
