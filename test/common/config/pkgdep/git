@@ -324,6 +324,12 @@ function install_irdma() {
 	rm -rf "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
 
 	curl -L -o- "$IRDMA_DRIVER" | tar -C "$GIT_REPOS" -xzf -
+
+	if ge "$kernel_ver" 6.10; then
+		patch --dir="$GIT_REPOS/irdma-$IRDMA_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/irdma/0001-ip_route_output.patch"
+	fi
+
 	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/build.sh ]]
 
 	(
