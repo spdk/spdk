@@ -19,6 +19,10 @@
 #include "spdk/xor.h"
 #include "spdk/dif.h"
 
+#ifdef SPDK_CONFIG_HAVE_LZ4
+#include <lz4.h>
+#endif
+
 #ifdef SPDK_CONFIG_ISAL
 #include "../isa-l/include/igzip_lib.h"
 #ifdef SPDK_CONFIG_ISAL_CRYPTO
@@ -54,6 +58,11 @@ struct sw_accel_io_channel {
 	struct comp_deflate_level_buf   deflate_level_bufs[COMP_DEFLATE_LEVEL_NUM];
 	uint8_t                         level_buf_mem[ISAL_DEF_LVL0_DEFAULT + ISAL_DEF_LVL1_DEFAULT +
 					      ISAL_DEF_LVL2_DEFAULT + ISAL_DEF_LVL3_DEFAULT];
+#endif
+#ifdef SPDK_CONFIG_HAVE_LZ4
+	/* for lz4 */
+	LZ4_stream_t                    *lz4_stream;
+	LZ4_streamDecode_t              *lz4_stream_decode;
 #endif
 	struct spdk_poller		*completion_poller;
 	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
@@ -183,6 +192,104 @@ static void
 _sw_accel_crc32cv(uint32_t *crc_dst, struct iovec *iov, uint32_t iovcnt, uint32_t seed)
 {
 	*crc_dst = spdk_crc32c_iov_update(iov, iovcnt, ~seed);
+}
+
+static int
+_sw_accel_compress_lz4(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+#ifdef SPDK_CONFIG_HAVE_LZ4
+	LZ4_stream_t *stream = sw_ch->lz4_stream;
+	struct iovec *siov = accel_task->s.iovs;
+	struct iovec *diov = accel_task->d.iovs;
+	size_t dst_segoffset = 0;
+	int32_t comp_size = 0;
+	uint32_t output_size = 0;
+	uint32_t i, d = 0;
+	int rc = 0;
+
+	LZ4_resetStream(stream);
+	for (i = 0; i < accel_task->s.iovcnt; i++) {
+		if ((diov[d].iov_len - dst_segoffset) == 0) {
+			if (++d < accel_task->d.iovcnt) {
+				dst_segoffset = 0;
+			} else {
+				SPDK_ERRLOG("Not enough destination buffer provided.\n");
+				rc = -ENOMEM;
+				break;
+			}
+		}
+
+		comp_size = LZ4_compress_fast_continue(stream, siov[i].iov_base, diov[d].iov_base + dst_segoffset,
+						       siov[i].iov_len, diov[d].iov_len - dst_segoffset,
+						       accel_task->comp.level);
+		if (comp_size <= 0) {
+			SPDK_ERRLOG("LZ4_compress_fast_continue was incorrectly executed.\n");
+			rc = -EIO;
+			break;
+		}
+
+		dst_segoffset += comp_size;
+		output_size += comp_size;
+	}
+
+	/* Get our total output size */
+	if (accel_task->output_size != NULL) {
+		*accel_task->output_size = output_size;
+	}
+
+	return rc;
+#else
+	SPDK_ERRLOG("LZ4 library is required to use software compression.\n");
+	return -EINVAL;
+#endif
+}
+
+static int
+_sw_accel_decompress_lz4(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+#ifdef SPDK_CONFIG_HAVE_LZ4
+	LZ4_streamDecode_t *stream = sw_ch->lz4_stream_decode;
+	struct iovec *siov = accel_task->s.iovs;
+	struct iovec *diov = accel_task->d.iovs;
+	size_t dst_segoffset = 0;
+	int32_t decomp_size = 0;
+	uint32_t output_size = 0;
+	uint32_t i, d = 0;
+	int rc = 0;
+
+	LZ4_setStreamDecode(stream, NULL, 0);
+	for (i = 0; i < accel_task->s.iovcnt; ++i) {
+		if ((diov[d].iov_len - dst_segoffset) == 0) {
+			if (++d < accel_task->d.iovcnt) {
+				dst_segoffset = 0;
+			} else {
+				SPDK_ERRLOG("Not enough destination buffer provided.\n");
+				rc = -ENOMEM;
+				break;
+			}
+		}
+		decomp_size = LZ4_decompress_safe_continue(stream, siov[i].iov_base,
+				diov[d].iov_base + dst_segoffset, siov[i].iov_len,
+				diov[d].iov_len - dst_segoffset);
+		if (decomp_size < 0) {
+			SPDK_ERRLOG("LZ4_compress_fast_continue was incorrectly executed.\n");
+			rc = -EIO;
+			break;
+		}
+		dst_segoffset += decomp_size;
+		output_size += decomp_size;
+	}
+
+	/* Get our total output size */
+	if (accel_task->output_size != NULL) {
+		*accel_task->output_size = output_size;
+	}
+
+	return rc;
+#else
+	SPDK_ERRLOG("LZ4 library is required to use software compression.\n");
+	return -EINVAL;
+#endif
 }
 
 static int
@@ -338,6 +445,8 @@ _sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *ac
 	switch (accel_task->comp.algo) {
 	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
 		return _sw_accel_compress_deflate(sw_ch, accel_task);
+	case SPDK_ACCEL_COMP_ALGO_LZ4:
+		return _sw_accel_compress_lz4(sw_ch, accel_task);
 	default:
 		assert(0);
 		return -EINVAL;
@@ -350,6 +459,8 @@ _sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *
 	switch (accel_task->comp.algo) {
 	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
 		return _sw_accel_decompress_deflate(sw_ch, accel_task);
+	case SPDK_ACCEL_COMP_ALGO_LZ4:
+		return _sw_accel_decompress_lz4(sw_ch, accel_task);
 	default:
 		assert(0);
 		return -EINVAL;
@@ -692,6 +803,19 @@ sw_accel_create_cb(void *io_device, void *ctx_buf)
 	STAILQ_INIT(&sw_ch->tasks_to_complete);
 	sw_ch->completion_poller = NULL;
 
+#ifdef SPDK_CONFIG_HAVE_LZ4
+	sw_ch->lz4_stream = LZ4_createStream();
+	if (sw_ch->lz4_stream == NULL) {
+		SPDK_ERRLOG("Failed to create the lz4 stream for compression\n");
+		return -ENOMEM;
+	}
+	sw_ch->lz4_stream_decode = LZ4_createStreamDecode();
+	if (sw_ch->lz4_stream_decode == NULL) {
+		SPDK_ERRLOG("Failed to create the lz4 stream for decompression\n");
+		LZ4_freeStream(sw_ch->lz4_stream);
+		return -ENOMEM;
+	}
+#endif
 #ifdef SPDK_CONFIG_ISAL
 	sw_ch->deflate_level_bufs[0].buf = sw_ch->level_buf_mem;
 	deflate_level_bufs = sw_ch->deflate_level_bufs;
@@ -727,6 +851,10 @@ sw_accel_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct sw_accel_io_channel *sw_ch = ctx_buf;
 
+#ifdef SPDK_CONFIG_HAVE_LZ4
+	LZ4_freeStream(sw_ch->lz4_stream);
+	LZ4_freeStreamDecode(sw_ch->lz4_stream_decode);
+#endif
 	spdk_poller_unregister(&sw_ch->completion_poller);
 }
 
@@ -828,11 +956,15 @@ sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 static bool
 sw_accel_compress_supports_algo(enum spdk_accel_comp_algo algo)
 {
-	if (algo == SPDK_ACCEL_COMP_ALGO_DEFLATE) {
+	switch (algo) {
+	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
+#ifdef SPDK_CONFIG_HAVE_LZ4
+	case SPDK_ACCEL_COMP_ALGO_LZ4:
+#endif
 		return true;
+	default:
+		return false;
 	}
-
-	return false;
 }
 
 static int
@@ -847,6 +979,15 @@ sw_accel_get_compress_level_range(enum spdk_accel_comp_algo algo,
 		return 0;
 #else
 		SPDK_ERRLOG("ISAL option is required to use software compression.\n");
+		return -EINVAL;
+#endif
+	case SPDK_ACCEL_COMP_ALGO_LZ4:
+#ifdef SPDK_CONFIG_HAVE_LZ4
+		*min_level = 1;
+		*max_level = 65537;
+		return 0;
+#else
+		SPDK_ERRLOG("LZ4 library is required to use software compression.\n");
 		return -EINVAL;
 #endif
 	default:

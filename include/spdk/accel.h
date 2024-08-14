@@ -24,6 +24,7 @@ extern "C" {
 
 enum spdk_accel_comp_algo {
 	SPDK_ACCEL_COMP_ALGO_DEFLATE = 0,
+	SPDK_ACCEL_COMP_ALGO_LZ4
 };
 
 /** Data Encryption Key identifier */

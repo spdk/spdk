@@ -346,6 +346,10 @@ SYS_LIBS += -lssl
 SYS_LIBS += -lcrypto
 SYS_LIBS += -lm
 
+ifeq ($(CONFIG_HAVE_LZ4),y)
+SYS_LIBS += -llz4
+endif
+
 ifeq ($(CONFIG_DPDK_UADK),y)
 SYS_LIBS += -lwd -lwd_crypto -lwd_comp
 endif
