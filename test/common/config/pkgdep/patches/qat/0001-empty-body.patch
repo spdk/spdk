@@ -1,0 +1,25 @@
+gcc complains about the following:
+
+error: suggest braces around empty body in an ‘if’ statement [-Werror=empty-body]
+
+---
+ .../lookaside/access_layer/src/common/ctrl/sal_compression.c    | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c b/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c
+index f30fad0..d36c59e 100644
+--- a/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c
++++ b/quickassist/lookaside/access_layer/src/common/ctrl/sal_compression.c
+@@ -844,8 +844,10 @@ cleanup:
+ 
+     /* destroy the initialized lock*/
+     if (CPA_STATUS_SUCCESS == lockStatus)
++    {
+         LAC_SPINLOCK_DESTROY(
+             &pCompressionService->generic_service_info.instanceLock);
++    }
+     SalCtrl_DcDebugShutdown(device, service);
+ 
+ #ifndef ICP_DC_ONLY
+-- 
+
