@@ -2835,15 +2835,8 @@ static int
 nvme_tcp_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
-	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
-
-	/* disconnected qpairs won't have a sock to add. */
-	if (nvme_qpair_get_state(qpair) >= NVME_QPAIR_CONNECTED) {
-		if (spdk_sock_group_add_sock(group->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair)) {
-			return -EPROTO;
-		}
-	}
+	/* The socket is disconnected when it is added to the poll group. We take no action
+	 * until it is connected later. */
 
 	return 0;
 }
