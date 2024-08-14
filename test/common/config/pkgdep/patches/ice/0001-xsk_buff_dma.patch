@@ -1,0 +1,29 @@
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=163943ac00
+---
+ src/ice_xsk.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/ice_xsk.c b/src/ice_xsk.c
+index 56b6280..40244e7 100644
+--- a/src/ice_xsk.c
++++ b/src/ice_xsk.c
+@@ -1182,7 +1182,7 @@ int ice_clean_rx_irq_zc(struct ice_rx_ring *rx_ring, int budget)
+ 		if (!rx_buf->xdp)
+ 			break;
+ 		rx_buf->xdp->data_end = (u8 *)rx_buf->xdp->data + size;
+-		xsk_buff_dma_sync_for_cpu(rx_buf->xdp, rx_ring->xsk_pool);
++		xsk_buff_dma_sync_for_cpu(rx_buf->xdp);
+ 
+ 		xdp_res = ice_run_xdp_zc(rx_ring, rx_buf->xdp);
+ #else
+@@ -1190,7 +1190,7 @@ int ice_clean_rx_irq_zc(struct ice_rx_ring *rx_ring, int budget)
+ 		if (!xdp)
+ 			break;
+ 		xsk_buff_set_size(xdp, size);
+-		xsk_buff_dma_sync_for_cpu(xdp, rx_ring->xsk_pool);
++		xsk_buff_dma_sync_for_cpu(xdp);
+ 
+ 		xdp_res = ice_run_xdp_zc(rx_ring, xdp);
+ #endif /* HAVE_XSK_BATCHED_RX_ALLOC */
+-- 
+

@@ -1,0 +1,48 @@
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6e9b01909a
+---
+ src/ice_txrx.c | 8 +++-----
+ src/ice_xsk.c  | 3 +--
+ 2 files changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/src/ice_txrx.c b/src/ice_txrx.c
+index 5fb23d2..d641628 100644
+--- a/src/ice_txrx.c
++++ b/src/ice_txrx.c
+@@ -623,9 +623,8 @@ ice_alloc_mapped_skb(struct ice_rx_ring *rx_ring, struct ice_rx_buf *bi)
+ 		skb = __netdev_alloc_skb(rx_ring->netdev, rx_ring->rx_buf_len,
+ 					 GFP_ATOMIC | __GFP_NOWARN);
+ 	else
+-		skb = __napi_alloc_skb(&rx_ring->q_vector->napi,
+-				       rx_ring->rx_buf_len,
+-				       GFP_ATOMIC | __GFP_NOWARN);
++		skb = napi_alloc_skb(&rx_ring->q_vector->napi,
++				       rx_ring->rx_buf_len);
+ 	if (unlikely(!skb)) {
+ 		rx_ring->ring_stats->rx_stats.alloc_buf_failed++;
+ 		preempt_enable();
+@@ -1328,8 +1327,7 @@ ice_construct_skb(struct ice_rx_ring *rx_ring, struct ice_rx_buf *rx_buf,
+ 	net_prefetch(xdp->data);
+ 
+ 	/* allocate a skb to store the frags */
+-	skb = __napi_alloc_skb(&rx_ring->q_vector->napi, ICE_RX_HDR_SIZE,
+-			       GFP_ATOMIC | __GFP_NOWARN);
++	skb = napi_alloc_skb(&rx_ring->q_vector->napi, ICE_RX_HDR_SIZE);
+ 	if (unlikely(!skb))
+ 		return NULL;
+ 
+diff --git a/src/ice_xsk.c b/src/ice_xsk.c
+index 54a2472..56b6280 100644
+--- a/src/ice_xsk.c
++++ b/src/ice_xsk.c
+@@ -1026,8 +1026,7 @@ ice_construct_skb_zc(struct ice_rx_ring *rx_ring, struct ice_rx_buf *rx_buf,
+ 				     xdp->data_hard_start;
+ 	struct sk_buff *skb;
+ 
+-	skb = __napi_alloc_skb(&rx_ring->q_vector->napi, datasize_hard,
+-			       GFP_ATOMIC | __GFP_NOWARN);
++	skb = napi_alloc_skb(&rx_ring->q_vector->napi, datasize_hard);
+ 	if (unlikely(!skb))
+ 		return NULL;
+ 
+-- 
+

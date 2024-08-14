@@ -386,6 +386,17 @@ function install_ice() {
 
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 
+	if ge "$kernel_ver" 6.10; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-__assign_str.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-napi_alloc_skb.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-devlink_param.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-xsk_buff_dma.patch"
+	fi
+
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install

@@ -1,0 +1,65 @@
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5625ca5640
+---
+ src/ice_devlink.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/ice_devlink.c b/src/ice_devlink.c
+index 623000e..a7fbe26 100644
+--- a/src/ice_devlink.c
++++ b/src/ice_devlink.c
+@@ -502,7 +502,7 @@ ice_devlink_minsrev_get(struct devlink *devlink, u32 id, struct devlink_param_gs
+  * Returns: zero on success, or an error code on failure.
+  */
+ static int
+-ice_devlink_minsrev_set(struct devlink *devlink, u32 id, struct devlink_param_gset_ctx *ctx)
++ice_devlink_minsrev_set(struct devlink *devlink, u32 id, struct devlink_param_gset_ctx *ctx, struct netlink_ext_ack *extack)
+ {
+ 	struct ice_pf *pf = devlink_priv(devlink);
+ 	struct device *dev = ice_pf_to_dev(pf);
+@@ -723,7 +723,7 @@ static int ice_devlink_txbalance_get(struct devlink *devlink, u32 id,
+  * Returns zero on success and negative value on failure.
+  */
+ static int ice_devlink_txbalance_set(struct devlink *devlink, u32 id,
+-				     struct devlink_param_gset_ctx *ctx)
++				     struct devlink_param_gset_ctx *ctx, struct netlink_ext_ack *extack)
+ {
+ 	struct ice_pf *pf = devlink_priv(devlink);
+ 	struct device *dev = ice_pf_to_dev(pf);
+@@ -838,7 +838,7 @@ static int ice_devlink_loopback_get(struct devlink *devlink, u32 id,
+  * Returns zero on success.
+  */
+ static int ice_devlink_loopback_set(struct devlink *devlink, u32 id,
+-				    struct devlink_param_gset_ctx *ctx)
++				    struct devlink_param_gset_ctx *ctx, struct netlink_ext_ack *extack)
+ {
+ 	int new_loopback_mode = ice_devlink_loopback_str_to_mode(ctx->val.vstr);
+ 	struct ice_pf *pf = devlink_priv(devlink);
+@@ -2957,7 +2957,7 @@ ice_devlink_tc_inline_fd_validate(struct devlink *devlink, u32 id,
+  */
+ static int
+ ice_devlink_tc_inline_fd_set(struct devlink *devlink, u32 id,
+-			     struct devlink_param_gset_ctx *ctx)
++			     struct devlink_param_gset_ctx *ctx, struct netlink_ext_ack *extack)
+ {
+ 	struct ice_pf *pf = devlink_priv(devlink);
+ 	struct ice_vsi *vsi = pf->vsi[0];
+@@ -3047,7 +3047,7 @@ ice_devlink_tc_qps_per_poller_validate(struct devlink *devlink, u32 id,
+  */
+ static int
+ ice_devlink_tc_qps_per_poller_set(struct devlink *devlink, u32 id,
+-				  struct devlink_param_gset_ctx *ctx)
++				  struct devlink_param_gset_ctx *ctx, struct netlink_ext_ack *extack)
+ {
+ 	struct ice_pf *pf = devlink_priv(devlink);
+ 	struct ice_vsi *ch_vsi;
+@@ -3135,7 +3135,7 @@ ice_devlink_tc_poller_timeout_validate(struct devlink *devlink, u32 id,
+  */
+ static int
+ ice_devlink_tc_poller_timeout_set(struct devlink *devlink, u32 id,
+-				  struct devlink_param_gset_ctx *ctx)
++				  struct devlink_param_gset_ctx *ctx, struct netlink_ext_ack *extack)
+ {
+ 	struct ice_pf *pf = devlink_priv(devlink);
+ 	struct ice_vsi *ch_vsi;
+-- 
+
