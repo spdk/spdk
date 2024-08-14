@@ -2465,12 +2465,14 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	}
 
 	if (qpair->poll_group) {
-		rc = nvme_poll_group_connect_qpair(qpair);
+		tgroup = nvme_tcp_poll_group(qpair->poll_group);
+
+		rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair);
 		if (rc) {
 			NVME_TQPAIR_ERRLOG(tqpair, "Unable to activate the tcp qpair.\n");
 			return rc;
 		}
-		tgroup = nvme_tcp_poll_group(qpair->poll_group);
+
 		tqpair->stats = &tgroup->stats;
 		tqpair->shared_stats = true;
 	} else {
@@ -2804,12 +2806,6 @@ nvme_tcp_poll_group_create(void)
 static int
 nvme_tcp_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
-	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
-
-	if (spdk_sock_group_add_sock(group->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair)) {
-		return -EPROTO;
-	}
 	return 0;
 }
 
