@@ -12,7 +12,8 @@ tmp_file=$tmp_dir/raidrandtest
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
-rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
+_rpc_cmd() { rpc_cmd -s "$rpc_server" "$@"; }
+rpc_py=_rpc_cmd
 
 function raid_unmap_data_verify() {
 	if hash blkdiscard; then
@@ -71,7 +72,7 @@ function configure_raid_bdev() {
 		bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_2
 		bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n raid
 	EOL
-	$rpc_py < $testdir/rpcs.txt
+	$rootdir/scripts/rpc.py -s $rpc_server < $testdir/rpcs.txt
 
 	rm -rf $testdir/rpcs.txt
 }
@@ -247,13 +248,13 @@ function raid_state_function_test() {
 
 	# Step1: create a RAID bdev with no base bdevs
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name
 	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
 	$rpc_py bdev_raid_delete $raid_bdev_name
 
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name
 	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[0]}
 	waitforbdev ${base_bdevs[0]}
 	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
@@ -261,7 +262,7 @@ function raid_state_function_test() {
 
 	# Step3: create remaining base bdevs and add to the RAID bdev
 	# Expect state: ONLINE
-	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name
 	for ((i = 1; i < num_base_bdevs; i++)); do
 		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
 		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[$i]}
@@ -302,7 +303,7 @@ function raid_state_function_test() {
 			$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[$i]}
 			waitforbdev ${base_bdevs[$i]}
 		done
-		$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+		$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name
 		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
 
 		$rpc_py bdev_raid_remove_base_bdev ${base_bdevs[1]}
@@ -362,9 +363,9 @@ function raid_resize_test() {
 	$rpc_py bdev_null_create Base_2 $bdev_size_mb $blksize
 
 	if [ $raid_level -eq 0 ]; then
-		$rpc_py bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n Raid
+		$rpc_py bdev_raid_create -z 64 -r $raid_level -b "'Base_1 Base_2'" -n Raid
 	else
-		$rpc_py bdev_raid_create -r $raid_level -b "Base_1 Base_2" -n Raid
+		$rpc_py bdev_raid_create -r $raid_level -b "'Base_1 Base_2'" -n Raid
 	fi
 
 	# Resize Base_1 first.
@@ -442,7 +443,7 @@ function raid_superblock_test() {
 	done
 
 	# Create RAID bdev with superblock
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs_pt[*]}" -n $raid_bdev_name -s
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "'${base_bdevs_pt[*]}'" -n $raid_bdev_name -s
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
 	verify_raid_bdev_properties $raid_bdev_name
 
@@ -469,7 +470,7 @@ function raid_superblock_test() {
 
 	# Try to create new RAID bdev from malloc bdevs
 	# Should fail due to superblock still present on base bdevs
-	NOT $rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs_malloc[*]}" -n $raid_bdev_name
+	NOT $rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "'${base_bdevs_malloc[*]}'" -n $raid_bdev_name
 
 	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[]')
 	if [ -n "$raid_bdev" ]; then
@@ -624,7 +625,7 @@ function raid_rebuild_test() {
 	$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
 
 	# Create RAID bdev
-	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
 
 	# Get RAID bdev's size
@@ -759,6 +760,7 @@ function raid_rebuild_test() {
 		# Remove then re-add a base bdev to assemble the raid bdev again
 		$rpc_py bdev_passthru_delete "spare"
 		$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
+		$rpc_py bdev_wait_for_examine
 
 		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs_operational
 		verify_raid_bdev_process $raid_bdev_name "none" "none"
@@ -832,7 +834,7 @@ function raid_io_error_test() {
 	done
 
 	# Create RAID bdev
-	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name -s
+	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name -s
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
 
 	# Start user I/O
@@ -881,8 +883,8 @@ function raid_resize_superblock_test() {
 	$rpc_py bdev_lvol_create -l lvs0 lvol1 64
 
 	case $raid_level in
-		0) $rpc_py bdev_raid_create -n Raid -r $raid_level -z 64 -b "lvs0/lvol0 lvs0/lvol1" -s ;;
-		1) $rpc_py bdev_raid_create -n Raid -r $raid_level -b "lvs0/lvol0 lvs0/lvol1" -s ;;
+		0) $rpc_py bdev_raid_create -n Raid -r $raid_level -z 64 -b "'lvs0/lvol0 lvs0/lvol1'" -s ;;
+		1) $rpc_py bdev_raid_create -n Raid -r $raid_level -b "'lvs0/lvol0 lvs0/lvol1'" -s ;;
 	esac
 
 	# Check size of base bdevs first
