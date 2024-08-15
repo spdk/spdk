@@ -174,7 +174,19 @@ struct spdk_nvmf_qpair {
 	uint16_t				queue_depth;
 
 	struct spdk_nvmf_qpair_auth		*auth;
+
+	struct {
+		/* Indicates whether numa.id is valid, needed for numa.id == 0 case */
+		uint32_t			id_valid : 1;
+		int32_t				id : 31;
+	} numa;
 };
+
+static inline int32_t
+spdk_nvmf_qpair_get_numa_id(struct spdk_nvmf_qpair *qpair)
+{
+	return qpair->numa.id_valid ? qpair->numa.id : SPDK_ENV_NUMA_ID_ANY;
+}
 
 struct spdk_nvmf_transport_poll_group {
 	struct spdk_nvmf_transport					*transport;
