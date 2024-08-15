@@ -113,15 +113,19 @@ iobuf_channel_destroy_cb(void *io_device, void *ctx)
 }
 
 static int
-iobuf_node_initialize(struct iobuf_node *node)
+iobuf_node_initialize(struct iobuf_node *node, uint32_t numa_id)
 {
 	struct spdk_iobuf_opts *opts = &g_iobuf.opts;
 	struct spdk_iobuf_buffer *buf;
 	uint64_t i;
 	int rc;
 
+	if (!g_iobuf.opts.enable_numa) {
+		numa_id = SPDK_ENV_NUMA_ID_ANY;
+	}
+
 	node->small_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, opts->small_pool_count,
-					    SPDK_ENV_NUMA_ID_ANY);
+					    numa_id);
 	if (!node->small_pool) {
 		SPDK_ERRLOG("Failed to create small iobuf pool\n");
 		rc = -ENOMEM;
@@ -129,7 +133,7 @@ iobuf_node_initialize(struct iobuf_node *node)
 	}
 
 	node->small_pool_base = spdk_malloc(opts->small_bufsize * opts->small_pool_count, IOBUF_ALIGNMENT,
-					    NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
+					    NULL, numa_id, SPDK_MALLOC_DMA);
 	if (node->small_pool_base == NULL) {
 		SPDK_ERRLOG("Unable to allocate requested small iobuf pool size\n");
 		rc = -ENOMEM;
@@ -137,7 +141,7 @@ iobuf_node_initialize(struct iobuf_node *node)
 	}
 
 	node->large_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, opts->large_pool_count,
-					    SPDK_ENV_NUMA_ID_ANY);
+					    numa_id);
 	if (!node->large_pool) {
 		SPDK_ERRLOG("Failed to create large iobuf pool\n");
 		rc = -ENOMEM;
@@ -145,7 +149,7 @@ iobuf_node_initialize(struct iobuf_node *node)
 	}
 
 	node->large_pool_base = spdk_malloc(opts->large_bufsize * opts->large_pool_count, IOBUF_ALIGNMENT,
-					    NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
+					    NULL, numa_id, SPDK_MALLOC_DMA);
 	if (node->large_pool_base == NULL) {
 		SPDK_ERRLOG("Unable to allocate requested large iobuf pool size\n");
 		rc = -ENOMEM;
@@ -217,7 +221,7 @@ spdk_iobuf_initialize(void)
 
 	IOBUF_FOREACH_NUMA_ID(i) {
 		node = &g_iobuf.node[i];
-		rc = iobuf_node_initialize(node);
+		rc = iobuf_node_initialize(node, i);
 		if (rc) {
 			goto err;
 		}
