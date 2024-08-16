@@ -3866,6 +3866,18 @@ err:
 }
 
 static void
+raid_bdev_examine_done(void *ctx, int status)
+{
+	struct spdk_bdev *bdev = ctx;
+
+	if (status != 0) {
+		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
+			    bdev->name, spdk_strerror(-status));
+	}
+	spdk_bdev_module_examine_done(&g_raid_if);
+}
+
+static void
 raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock *sb, int status,
 		       void *ctx)
 {
@@ -3878,14 +3890,11 @@ raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock
 	case -EINVAL:
 		/* no valid superblock, check if it can be claimed anyway */
 		raid_bdev_examine_no_sb(bdev);
-		break;
-	default:
-		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
-			    bdev->name, spdk_strerror(-status));
+		status = 0;
 		break;
 	}
 
-	spdk_bdev_module_examine_done(&g_raid_if);
+	raid_bdev_examine_done(bdev, status);
 }
 
 /*
@@ -3901,7 +3910,7 @@ raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock
 static void
 raid_bdev_examine(struct spdk_bdev *bdev)
 {
-	int rc;
+	int rc = 0;
 
 	if (raid_bdev_find_base_info_by_bdev(bdev) != NULL) {
 		goto done;
@@ -3914,14 +3923,12 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 
 	rc = raid_bdev_examine_load_sb(bdev->name, raid_bdev_examine_cont, NULL);
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
-			    bdev->name, spdk_strerror(-rc));
 		goto done;
 	}
 
 	return;
 done:
-	spdk_bdev_module_examine_done(&g_raid_if);
+	raid_bdev_examine_done(bdev, rc);
 }
 
 /* Log component for bdev raid bdev module */
