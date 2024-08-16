@@ -54,6 +54,9 @@
 	spdk_accel_get_buf_align;
 	spdk_accel_get_opcode_name;
 	spdk_accel_get_opc_memory_domains;
+	spdk_accel_submit_compress_ext;
+	spdk_accel_submit_decompress_ext;
+	spdk_accel_append_decompress_ext;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;

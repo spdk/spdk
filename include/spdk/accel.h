@@ -22,6 +22,10 @@ extern "C" {
 #define SPDK_ACCEL_AES_XTS_128_KEY_SIZE 16
 #define SPDK_ACCEL_AES_XTS_256_KEY_SIZE 32
 
+enum spdk_accel_comp_algo {
+	SPDK_ACCEL_COMP_ALGO_DEFLATE = 0,
+};
+
 /** Data Encryption Key identifier */
 struct spdk_accel_crypto_key;
 
@@ -262,7 +266,7 @@ int spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct
 				   spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a memory compress request.
+ * Build and submit a memory compress request using the deflate algorithm.
  *
  * This function will build the compress descriptor and submit it.
  *
@@ -284,7 +288,7 @@ int spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst,
 			       spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a memory decompress request.
+ * Build and submit a memory decompress request using the deflate algorithm.
  *
  * This function will build the decompress descriptor and submit it.
  *
@@ -304,6 +308,52 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_i
 				 size_t dst_iovcnt, struct iovec *src_iovs,
 				 size_t src_iovcnt, uint32_t *output_size,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a memory compress request using the specified algorithm.
+ *
+ * This function will build the compress descriptor and submit it.
+ *
+ * \param ch I/O channel associated with this call
+ * \param dst Destination to write the data to.
+ * \param nbytes Length in bytes.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param src_iovcnt The size of the src io vectors.
+ * \param comp_algo The compression algorithm, enum spdk_accel_comp_algo value.
+ * \param output_size The size of the compressed data (may be NULL if not desired)
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_compress_ext(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
+				   struct iovec *src_iovs, size_t src_iovcnt,
+				   enum spdk_accel_comp_algo comp_algo, uint32_t *output_size,
+				   spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a memory decompress request using the specified algorithm.
+ *
+ * This function will build the decompress descriptor and submit it.
+ *
+ * \param ch I/O channel associated with this call
+ * \param dst_iovs The io vector array which stores the dst data and len.
+ * \param dst_iovcnt The size of the dst io vectors.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param src_iovcnt The size of the src io vectors.
+ * \param decomp_algo The decompression algorithm, enum spdk_accel_comp_algo value.
+ * \param output_size The size of the compressed data (may be NULL if not desired)
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_decompress_ext(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+				     size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
+				     enum spdk_accel_comp_algo decomp_algo, uint32_t *output_size,
+				     spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit an xor request.
@@ -601,7 +651,34 @@ int spdk_accel_append_fill(struct spdk_accel_sequence **seq, struct spdk_io_chan
 			   spdk_accel_step_cb cb_fn, void *cb_arg);
 
 /**
- * Append a decompress operation to a sequence.
+ * Append a decompression operation using the specified algorithm to a sequence.
+ *
+ * \param pseq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param dst_iovs Destination I/O vector array.
+ * \param dst_iovcnt Size of the `dst_iovs` array.
+ * \param dst_domain Memory domain to which the destination buffers belong.
+ * \param dst_domain_ctx Destination buffer domain context.
+ * \param src_iovs Source I/O vector array.
+ * \param src_iovcnt Size of the `src_iovs` array.
+ * \param src_domain Memory domain to which the source buffers belong.
+ * \param src_domain_ctx Source buffer domain context.
+ * \param decomp_algo The decompression algorithm, enum spdk_accel_comp_algo value.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_decompress_ext(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+				     struct iovec *dst_iovs, size_t dst_iovcnt,
+				     struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				     struct iovec *src_iovs, size_t src_iovcnt,
+				     struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				     enum spdk_accel_comp_algo decomp_algo,
+				     spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Append a decompression operation using the deflate algorithm to a sequence.
  *
  * \param seq Sequence object.  If NULL, a new sequence object will be created.
  * \param ch I/O channel.

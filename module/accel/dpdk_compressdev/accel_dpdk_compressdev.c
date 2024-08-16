@@ -853,6 +853,16 @@ compress_supports_opcode(enum spdk_accel_opcode opc)
 	return false;
 }
 
+static bool
+compress_supports_algo(enum spdk_accel_comp_algo algo)
+{
+	if (algo == SPDK_ACCEL_COMP_ALGO_DEFLATE) {
+		return true;
+	}
+
+	return false;
+}
+
 static struct spdk_io_channel *
 compress_get_io_channel(void)
 {
@@ -861,14 +871,15 @@ compress_get_io_channel(void)
 
 static void accel_compress_exit(void *ctx);
 static struct spdk_accel_module_if g_compress_module = {
-	.module_init		= accel_compress_init,
-	.module_fini		= accel_compress_exit,
-	.write_config_json	= accel_compress_write_config_json,
-	.get_ctx_size		= accel_compress_get_ctx_size,
-	.name			= "dpdk_compressdev",
-	.supports_opcode	= compress_supports_opcode,
-	.get_io_channel		= compress_get_io_channel,
-	.submit_tasks		= compress_submit_tasks
+	.module_init	         = accel_compress_init,
+	.module_fini	         = accel_compress_exit,
+	.write_config_json       = accel_compress_write_config_json,
+	.get_ctx_size	         = accel_compress_get_ctx_size,
+	.name		         = "dpdk_compressdev",
+	.supports_opcode         = compress_supports_opcode,
+	.get_io_channel	         = compress_get_io_channel,
+	.submit_tasks            = compress_submit_tasks,
+	.compress_supports_algo  = compress_supports_algo
 };
 
 void

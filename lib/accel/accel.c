@@ -665,13 +665,33 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	return accel_submit_task(accel_ch, accel_task);
 }
 
+static int
+_accel_check_comp_algo(enum spdk_accel_comp_algo comp_algo)
+{
+	struct spdk_accel_module_if *module = g_modules_opc[SPDK_ACCEL_OPC_COMPRESS].module;
+
+	if (!module->compress_supports_algo || !module->compress_supports_algo(comp_algo)) {
+		SPDK_ERRLOG("Module %s doesn't support compression algo %d\n", module->name, comp_algo);
+		return -ENOTSUP;
+	}
+
+	return 0;
+}
+
 int
-spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
-			   struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size,
-			   spdk_accel_completion_cb cb_fn, void *cb_arg)
+spdk_accel_submit_compress_ext(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
+			       struct iovec *src_iovs, size_t src_iovcnt,
+			       enum spdk_accel_comp_algo comp_algo, uint32_t *output_size,
+			       spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
+	int rc;
+
+	rc = _accel_check_comp_algo(comp_algo);
+	if (spdk_unlikely(rc != 0)) {
+		return rc;
+	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (spdk_unlikely(accel_task == NULL)) {
@@ -691,18 +711,25 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	accel_task->op_code = SPDK_ACCEL_OPC_COMPRESS;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
+	accel_task->comp.algo = comp_algo;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
 
 int
-spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
-			     size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
-			     uint32_t *output_size, spdk_accel_completion_cb cb_fn,
-			     void *cb_arg)
+spdk_accel_submit_decompress_ext(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+				 size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
+				 enum spdk_accel_comp_algo decomp_algo, uint32_t *output_size,
+				 spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
+	int rc;
+
+	rc = _accel_check_comp_algo(decomp_algo);
+	if (spdk_unlikely(rc != 0)) {
+		return rc;
+	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (spdk_unlikely(accel_task == NULL)) {
@@ -718,8 +745,28 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	accel_task->op_code = SPDK_ACCEL_OPC_DECOMPRESS;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
+	accel_task->comp.algo = decomp_algo;
 
 	return accel_submit_task(accel_ch, accel_task);
+}
+
+int
+spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
+			   struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size,
+			   spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	return spdk_accel_submit_compress_ext(ch, dst, nbytes, src_iovs, src_iovcnt,
+					      SPDK_ACCEL_COMP_ALGO_DEFLATE, output_size, cb_fn, cb_arg);
+}
+
+int
+spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+			     size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
+			     uint32_t *output_size, spdk_accel_completion_cb cb_fn,
+			     void *cb_arg)
+{
+	return spdk_accel_submit_decompress_ext(ch, dst_iovs, dst_iovcnt, src_iovs, src_iovcnt,
+						SPDK_ACCEL_COMP_ALGO_DEFLATE, output_size, cb_fn, cb_arg);
 }
 
 int
@@ -1205,9 +1252,30 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 			     struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 			     spdk_accel_step_cb cb_fn, void *cb_arg)
 {
+	return spdk_accel_append_decompress_ext(pseq, ch, dst_iovs, dst_iovcnt, dst_domain,
+						dst_domain_ctx, src_iovs, src_iovcnt, src_domain,
+						src_domain_ctx, SPDK_ACCEL_COMP_ALGO_DEFLATE,
+						cb_fn, cb_arg);
+}
+
+int
+spdk_accel_append_decompress_ext(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+				 struct iovec *dst_iovs, size_t dst_iovcnt,
+				 struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				 struct iovec *src_iovs, size_t src_iovcnt,
+				 struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				 enum spdk_accel_comp_algo decomp_algo,
+				 spdk_accel_step_cb cb_fn, void *cb_arg)
+{
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *task;
 	struct spdk_accel_sequence *seq = *pseq;
+	int rc;
+
+	rc = _accel_check_comp_algo(decomp_algo);
+	if (spdk_unlikely(rc != 0)) {
+		return rc;
+	}
 
 	if (seq == NULL) {
 		seq = accel_sequence_get(accel_ch);
@@ -1238,6 +1306,7 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 	task->s.iovcnt = src_iovcnt;
 	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->op_code = SPDK_ACCEL_OPC_DECOMPRESS;
+	task->comp.algo = decomp_algo;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
 	*pseq = seq;

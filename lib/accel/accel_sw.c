@@ -167,7 +167,7 @@ _sw_accel_crc32cv(uint32_t *crc_dst, struct iovec *iov, uint32_t iovcnt, uint32_
 }
 
 static int
-_sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+_sw_accel_compress_deflate(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
 {
 #ifdef SPDK_CONFIG_ISAL
 	size_t last_seglen = accel_task->s.iovs[accel_task->s.iovcnt - 1].iov_len;
@@ -251,7 +251,7 @@ _sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *ac
 }
 
 static int
-_sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+_sw_accel_decompress_deflate(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
 {
 #ifdef SPDK_CONFIG_ISAL
 	struct iovec *siov = accel_task->s.iovs;
@@ -303,6 +303,30 @@ _sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *
 	SPDK_ERRLOG("ISAL option is required to use software decompression.\n");
 	return -EINVAL;
 #endif
+}
+
+static int
+_sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+	switch (accel_task->comp.algo) {
+	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
+		return _sw_accel_compress_deflate(sw_ch, accel_task);
+	default:
+		assert(0);
+		return -EINVAL;
+	}
+}
+
+static int
+_sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+	switch (accel_task->comp.algo) {
+	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
+		return _sw_accel_decompress_deflate(sw_ch, accel_task);
+	default:
+		assert(0);
+		return -EINVAL;
+	}
 }
 
 static int
@@ -760,6 +784,16 @@ sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 	}
 }
 
+static bool
+sw_accel_compress_supports_algo(enum spdk_accel_comp_algo algo)
+{
+	if (algo == SPDK_ACCEL_COMP_ALGO_DEFLATE) {
+		return true;
+	}
+
+	return false;
+}
+
 static int
 sw_accel_get_operation_info(enum spdk_accel_opcode opcode,
 			    const struct spdk_accel_operation_exec_ctx *ctx,
@@ -784,6 +818,7 @@ static struct spdk_accel_module_if g_sw_module = {
 	.crypto_key_deinit		= sw_accel_crypto_key_deinit,
 	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
 	.crypto_supports_cipher		= sw_accel_crypto_supports_cipher,
+	.compress_supports_algo         = sw_accel_compress_supports_algo,
 	.get_operation_info		= sw_accel_get_operation_info,
 };
 

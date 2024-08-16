@@ -121,6 +121,12 @@ _supports_opcode(enum spdk_accel_opcode opc)
 	return false;
 }
 
+static bool
+_supports_algo(enum spdk_accel_comp_algo algo)
+{
+	return true;
+}
+
 static int
 test_setup(void)
 {
@@ -141,6 +147,7 @@ test_setup(void)
 
 	g_module_if.submit_tasks = sw_accel_submit_tasks;
 	g_module_if.name = "software";
+	g_module_if.compress_supports_algo = _supports_algo;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; i++) {
 		g_accel_ch->module_ch[i] = g_module_ch;
 		g_modules_opc[i] = g_module;
@@ -4123,6 +4130,7 @@ test_sequence_setup(void)
 	}
 
 	g_module_if.name = "software";
+	g_module_if.compress_supports_algo = _supports_algo;
 
 	return 0;
 }
