@@ -27,23 +27,35 @@ SPDK_STATIC_ASSERT(SOCKET_ID_ANY == SPDK_ENV_NUMA_ID_ANY, "SOCKET_ID_ANY mismatc
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *unused, int numa_id, uint32_t flags)
 {
+	void *buf;
+
 	if (flags == 0 || unused != NULL) {
 		return NULL;
 	}
 
 	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
-	return rte_malloc_socket(NULL, size, align, numa_id);
+	buf = rte_malloc_socket(NULL, size, align, numa_id);
+	if (buf == NULL && numa_id != SOCKET_ID_ANY) {
+		buf = rte_malloc_socket(NULL, size, align, SOCKET_ID_ANY);
+	}
+	return buf;
 }
 
 void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *unused, int numa_id, uint32_t flags)
 {
+	void *buf;
+
 	if (flags == 0 || unused != NULL) {
 		return NULL;
 	}
 
 	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
-	return rte_zmalloc_socket(NULL, size, align, numa_id);
+	buf = rte_zmalloc_socket(NULL, size, align, numa_id);
+	if (buf == NULL && numa_id != SOCKET_ID_ANY) {
+		buf = rte_zmalloc_socket(NULL, size, align, SOCKET_ID_ANY);
+	}
+	return buf;
 }
 
 void *
@@ -115,6 +127,9 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int numa_id,
 	}
 
 	mz = rte_memzone_reserve_aligned(name, len, numa_id, dpdk_flags, align);
+	if (mz == NULL && numa_id != SOCKET_ID_ANY) {
+		mz = rte_memzone_reserve_aligned(name, len, SOCKET_ID_ANY, dpdk_flags, align);
+	}
 
 	if (mz != NULL) {
 		memset(mz->addr, 0, len);
@@ -186,6 +201,11 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
 				numa_id, 0);
+	if (mp == NULL && numa_id != SOCKET_ID_ANY) {
+		mp = rte_mempool_create(name, count, ele_size, cache_size,
+					0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
+					SOCKET_ID_ANY, 0);
+	}
 
 	return (struct spdk_mempool *)mp;
 }
@@ -373,6 +393,7 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int numa_id)
 	char ring_name[64];
 	static uint32_t ring_num = 0;
 	unsigned flags = RING_F_EXACT_SZ;
+	struct rte_ring *ring;
 
 	switch (type) {
 	case SPDK_RING_TYPE_SP_SC:
@@ -391,7 +412,11 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int numa_id)
 	snprintf(ring_name, sizeof(ring_name), "ring_%u_%d",
 		 __atomic_fetch_add(&ring_num, 1, __ATOMIC_RELAXED), getpid());
 
-	return (struct spdk_ring *)rte_ring_create(ring_name, count, numa_id, flags);
+	ring = rte_ring_create(ring_name, count, numa_id, flags);
+	if (ring == NULL && numa_id != SOCKET_ID_ANY) {
+		ring = rte_ring_create(ring_name, count, SOCKET_ID_ANY, flags);
+	}
+	return (struct spdk_ring *)ring;
 }
 
 void
