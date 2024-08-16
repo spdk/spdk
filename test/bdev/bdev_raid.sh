@@ -180,19 +180,17 @@ function verify_raid_bdev_process() {
 function verify_raid_bdev_properties() {
 	local raid_bdev_name=$1
 	local raid_bdev_info
-	local base_bdev_info
 	local base_bdev_names
 	local name
+	local cmp_raid_bdev cmp_base_bdev
 
 	raid_bdev_info=$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq '.[]')
 	base_bdev_names=$(jq -r '.driver_specific.raid.base_bdevs_list[] | select(.is_configured == true).name' <<< "$raid_bdev_info")
+	cmp_raid_bdev=$(jq -r '[.block_size, .md_size, .md_interleave, .dif_type] | join(" ")' <<< "$raid_bdev_info")
 
 	for name in $base_bdev_names; do
-		base_bdev_info=$($rpc_py bdev_get_bdevs -b $name | jq '.[]')
-		[[ $(jq '.block_size' <<< "$raid_bdev_info") == $(jq '.block_size' <<< "$base_bdev_info") ]]
-		[[ $(jq '.md_size' <<< "$raid_bdev_info") == $(jq '.md_size' <<< "$base_bdev_info") ]]
-		[[ $(jq '.md_interleave' <<< "$raid_bdev_info") == $(jq '.md_interleave' <<< "$base_bdev_info") ]]
-		[[ $(jq '.dif_type' <<< "$raid_bdev_info") == $(jq '.dif_type' <<< "$base_bdev_info") ]]
+		cmp_base_bdev=$($rpc_py bdev_get_bdevs -b $name | jq -r '.[] | [.block_size, .md_size, .md_interleave, .dif_type] | join(" ")')
+		[[ "$cmp_raid_bdev" == "$cmp_base_bdev" ]]
 	done
 }
 
