@@ -3885,8 +3885,8 @@ raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock
 	case 0:
 		/* valid superblock found */
 		SPDK_DEBUGLOG(bdev_raid, "raid superblock found on bdev %s\n", bdev->name);
-		raid_bdev_examine_sb(sb, bdev, NULL, NULL);
-		break;
+		raid_bdev_examine_sb(sb, bdev, raid_bdev_examine_done, bdev);
+		return;
 	case -EINVAL:
 		/* no valid superblock, check if it can be claimed anyway */
 		raid_bdev_examine_no_sb(bdev);
