@@ -242,7 +242,7 @@ spdk_sock_get_interface_name(struct spdk_sock *sock)
 	}
 }
 
-uint32_t
+int32_t
 spdk_sock_get_numa_socket_id(struct spdk_sock *sock)
 {
 	if (sock->net_impl->get_numa_socket_id) {

@@ -382,7 +382,7 @@ const char *spdk_sock_get_interface_name(struct spdk_sock *sock);
  *
  * \return NUMA socket ID, or SPDK_ENV_SOCKET_ID_ANY if the NUMA socket ID is unknown
  */
-uint32_t spdk_sock_get_numa_socket_id(struct spdk_sock *sock);
+int32_t spdk_sock_get_numa_socket_id(struct spdk_sock *sock);
 
 /**
  * Close a socket.

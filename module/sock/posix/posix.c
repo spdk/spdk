@@ -256,7 +256,7 @@ posix_sock_get_interface_name(struct spdk_sock *_sock)
 	return sock->interface_name;
 }
 
-static uint32_t
+static int32_t
 posix_sock_get_numa_socket_id(struct spdk_sock *sock)
 {
 	const char *interface_name;
@@ -270,8 +270,8 @@ posix_sock_get_numa_socket_id(struct spdk_sock *sock)
 
 	rc = spdk_read_sysfs_attribute_uint32(&numa_socket_id,
 					      "/sys/class/net/%s/device/numa_node", interface_name);
-	if (rc == 0) {
-		return numa_socket_id;
+	if (rc == 0 && numa_socket_id <= INT32_MAX) {
+		return (int32_t)numa_socket_id;
 	} else {
 		return SPDK_ENV_SOCKET_ID_ANY;
 	}
