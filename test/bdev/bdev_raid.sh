@@ -5,20 +5,17 @@
 #
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_server=/var/tmp/spdk-raid.sock
 tmp_dir=$SPDK_TEST_STORAGE/raidtest
 tmp_file=$tmp_dir/raidrandtest
 
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
-_rpc_cmd() { rpc_cmd -s "$rpc_server" "$@"; }
-rpc_py=_rpc_cmd
+rpc_py=rpc_cmd
 
 function raid_unmap_data_verify() {
 	if hash blkdiscard; then
 		local nbd=$1
-		local rpc_server=$2
 		local blksize
 		blksize=$(lsblk -o LOG-SEC $nbd | grep -v LOG-SEC | cut -d ' ' -f 5)
 		local rw_blk_num=4096
@@ -72,7 +69,7 @@ function configure_raid_bdev() {
 		bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_2
 		bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n raid
 	EOL
-	$rootdir/scripts/rpc.py -s $rpc_server < $testdir/rpcs.txt
+	$rootdir/scripts/rpc.py < $testdir/rpcs.txt
 
 	rm -rf $testdir/rpcs.txt
 }
@@ -82,10 +79,10 @@ function raid_function_test() {
 	local nbd=/dev/nbd0
 	local raid_bdev
 
-	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -L bdev_raid &
 	raid_pid=$!
 	echo "Process raid pid: $raid_pid"
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	configure_raid_bdev $raid_level
 	raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"] | select(.)')
@@ -94,16 +91,16 @@ function raid_function_test() {
 		return 1
 	fi
 
-	nbd_start_disks $rpc_server $raid_bdev $nbd
-	count=$(nbd_get_count $rpc_server)
+	nbd_start_disks $DEFAULT_RPC_ADDR $raid_bdev $nbd
+	count=$(nbd_get_count $DEFAULT_RPC_ADDR)
 	if [ $count -ne 1 ]; then
 		return 1
 	fi
 
-	raid_unmap_data_verify $nbd $rpc_server
+	raid_unmap_data_verify $nbd
 
-	nbd_stop_disks $rpc_server $nbd
-	count=$(nbd_get_count $rpc_server)
+	nbd_stop_disks $DEFAULT_RPC_ADDR $nbd
+	count=$(nbd_get_count $DEFAULT_RPC_ADDR)
 	if [ $count -ne 0 ]; then
 		return 1
 	fi
@@ -241,10 +238,10 @@ function raid_state_function_test() {
 		superblock_create_arg=""
 	fi
 
-	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -L bdev_raid &
 	raid_pid=$!
 	echo "Process raid pid: $raid_pid"
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	# Step1: create a RAID bdev with no base bdevs
 	# Expect state: CONFIGURING
@@ -354,10 +351,10 @@ function raid_resize_test() {
 	local new_raid_size_mb
 	local expected_size
 
-	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -L bdev_raid &
 	raid_pid=$!
 	echo "Process raid pid: $raid_pid"
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	$rpc_py bdev_null_create Base_1 $bdev_size_mb $blksize
 	$rpc_py bdev_null_create Base_2 $bdev_size_mb $blksize
@@ -424,9 +421,9 @@ function raid_superblock_test() {
 		strip_size=0
 	fi
 
-	"$rootdir/test/app/bdev_svc/bdev_svc" -r $rpc_server -L bdev_raid &
+	"$rootdir/test/app/bdev_svc/bdev_svc" -L bdev_raid &
 	raid_pid=$!
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	# Create base bdevs
 	for ((i = 1; i <= num_base_bdevs; i++)); do
@@ -609,9 +606,9 @@ function raid_rebuild_test() {
 		create_arg+=" -s"
 	fi
 
-	"$rootdir/build/examples/bdevperf" -r $rpc_server -T $raid_bdev_name -t 60 -w randrw -M 50 -o 3M -q 2 -U -z -L bdev_raid &
+	"$rootdir/build/examples/bdevperf" -T $raid_bdev_name -t 60 -w randrw -M 50 -o 3M -q 2 -U -z -L bdev_raid &
 	raid_pid=$!
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	# Create base bdevs
 	for bdev in "${base_bdevs[@]}"; do
@@ -636,12 +633,12 @@ function raid_rebuild_test() {
 
 	if [ $background_io = true ]; then
 		# Start user I/O
-		"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s $rpc_server perform_tests &
+		"$rootdir/examples/bdev/bdevperf/bdevperf.py" perform_tests &
 	elif [ $verify = true ]; then
 		local write_unit_size
 
 		# Write random data to the RAID bdev
-		nbd_start_disks $rpc_server $raid_bdev_name /dev/nbd0
+		nbd_start_disks $DEFAULT_RPC_ADDR $raid_bdev_name /dev/nbd0
 		if [ $raid_level = "raid5f" ]; then
 			write_unit_size=$((strip_size * 2 * (num_base_bdevs - 1)))
 			echo $((base_blocklen * write_unit_size / 1024)) > /sys/block/nbd0/queue/max_sectors_kb
@@ -649,7 +646,7 @@ function raid_rebuild_test() {
 			write_unit_size=1
 		fi
 		dd if=/dev/urandom of=/dev/nbd0 bs=$((base_blocklen * write_unit_size)) count=$((raid_bdev_size / write_unit_size)) oflag=direct
-		nbd_stop_disks $rpc_server /dev/nbd0
+		nbd_stop_disks $DEFAULT_RPC_ADDR /dev/nbd0
 	fi
 
 	# Remove one base bdev
@@ -738,21 +735,21 @@ function raid_rebuild_test() {
 	if [ $verify = true ]; then
 		if [ $background_io = true ]; then
 			# Compare data on the rebuilt and other base bdevs
-			nbd_start_disks $rpc_server "spare" "/dev/nbd0"
+			nbd_start_disks $DEFAULT_RPC_ADDR "spare" "/dev/nbd0"
 			for bdev in "${base_bdevs[@]:1}"; do
 				if [ -z "$bdev" ]; then
 					continue
 				fi
-				nbd_start_disks $rpc_server $bdev "/dev/nbd1"
+				nbd_start_disks $DEFAULT_RPC_ADDR $bdev "/dev/nbd1"
 				cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
-				nbd_stop_disks $rpc_server "/dev/nbd1"
+				nbd_stop_disks $DEFAULT_RPC_ADDR "/dev/nbd1"
 			done
-			nbd_stop_disks $rpc_server "/dev/nbd0"
+			nbd_stop_disks $DEFAULT_RPC_ADDR "/dev/nbd0"
 		else
 			# Compare data on the removed and rebuilt base bdevs
-			nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
+			nbd_start_disks $DEFAULT_RPC_ADDR "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
 			cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
-			nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
+			nbd_stop_disks $DEFAULT_RPC_ADDR "/dev/nbd0 /dev/nbd1"
 		fi
 	fi
 
@@ -822,9 +819,9 @@ function raid_io_error_test() {
 
 	bdevperf_log=$(mktemp -p "$tmp_dir")
 
-	"$rootdir/build/examples/bdevperf" -r $rpc_server -T $raid_bdev_name -t 60 -w randrw -M 50 -o 128k -q 1 -z -f -L bdev_raid > $bdevperf_log &
+	"$rootdir/build/examples/bdevperf" -T $raid_bdev_name -t 60 -w randrw -M 50 -o 128k -q 1 -z -f -L bdev_raid > $bdevperf_log &
 	raid_pid=$!
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	# Create base bdevs
 	for bdev in "${base_bdevs[@]}"; do
@@ -838,7 +835,7 @@ function raid_io_error_test() {
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
 
 	# Start user I/O
-	"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s $rpc_server perform_tests &
+	"$rootdir/examples/bdev/bdevperf/bdevperf.py" perform_tests &
 	sleep 1
 
 	# Inject an error
@@ -869,10 +866,10 @@ function raid_io_error_test() {
 function raid_resize_superblock_test() {
 	local raid_level=$1
 
-	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -L bdev_raid &
 	raid_pid=$!
 	echo "Process raid pid: $raid_pid"
-	waitforlisten $raid_pid $rpc_server
+	waitforlisten $raid_pid
 
 	$rpc_py bdev_malloc_create -b malloc0 512 $base_blocklen
 
