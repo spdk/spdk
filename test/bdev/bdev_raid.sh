@@ -60,20 +60,6 @@ function cleanup() {
 	rm -rf "$tmp_dir"
 }
 
-function configure_raid_bdev() {
-	local raid_level=$1
-	rm -rf $testdir/rpcs.txt
-
-	cat <<- EOL >> $testdir/rpcs.txt
-		bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_1
-		bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_2
-		bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n raid
-	EOL
-	$rootdir/scripts/rpc.py < $testdir/rpcs.txt
-
-	rm -rf $testdir/rpcs.txt
-}
-
 function raid_function_test() {
 	local raid_level=$1
 	local nbd=/dev/nbd0
@@ -84,7 +70,10 @@ function raid_function_test() {
 	echo "Process raid pid: $raid_pid"
 	waitforlisten $raid_pid
 
-	configure_raid_bdev $raid_level
+	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_1
+	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_2
+	$rpc_py bdev_raid_create -z 64 -r $raid_level -b "'Base_1 Base_2'" -n raid
+
 	raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"] | select(.)')
 	if [ $raid_bdev = "" ]; then
 		echo "No raid0 device in SPDK app"
