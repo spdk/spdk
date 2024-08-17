@@ -66,5 +66,6 @@ else
 		# if we aren't testing the unittests, build with shared objects.
 		$rootdir/configure $config_params --with-shared
 	fi
+	# shellcheck disable=SC2031
 	run_test "make" $MAKE $MAKEFLAGS
 fi
