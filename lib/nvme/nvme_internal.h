@@ -1519,6 +1519,7 @@ static inline bool
 nvme_request_abort_match(struct nvme_request *req, void *cmd_cb_arg)
 {
 	return req->cb_arg == cmd_cb_arg ||
+	       req->user_cb_arg == cmd_cb_arg ||
 	       (req->parent != NULL && req->parent->cb_arg == cmd_cb_arg);
 }
 
