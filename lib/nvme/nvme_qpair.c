@@ -616,8 +616,7 @@ nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd
 	uint32_t		aborting = 0;
 
 	STAILQ_FOREACH_SAFE(req, &qpair->queued_req, stailq, tmp) {
-		if ((req->cb_arg != cmd_cb_arg) &&
-		    (req->parent == NULL || req->parent->cb_arg != cmd_cb_arg)) {
+		if (!nvme_request_abort_match(req, cmd_cb_arg)) {
 			continue;
 		}
 

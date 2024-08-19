@@ -714,8 +714,7 @@ nvme_request_add_abort(struct nvme_request *req, void *arg)
 
 	cmd_cb_arg = parent->user_cb_arg;
 
-	if (req->cb_arg != cmd_cb_arg &&
-	    (req->parent == NULL || req->parent->cb_arg != cmd_cb_arg)) {
+	if (!nvme_request_abort_match(req, cmd_cb_arg)) {
 		return 0;
 	}
 
