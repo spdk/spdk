@@ -29,6 +29,15 @@ iscsi_portal_accept(void *arg, struct spdk_sock_group *group, struct spdk_sock *
 	while (1) {
 		sock = spdk_sock_accept(listen_sock);
 		if (sock != NULL) {
+			/* Remove the socket from the listen group. It will be added to a per-thread socket group
+			 * on the appropriate thread later. */
+			rc = spdk_sock_group_remove_sock(group, sock);
+			if (rc) {
+				spdk_sock_close(&sock);
+				SPDK_ERRLOG("spdk_sock_group_remove_sock() failed\n");
+				break;
+			}
+
 			rc = iscsi_conn_construct(portal, sock);
 			if (rc < 0) {
 				spdk_sock_close(&sock);
@@ -145,10 +154,11 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts;
 	int port;
-	int rc;
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.group = p->group->sock_group;
+	opts.user_ctx = p;
 
 	if (p->sock != NULL) {
 		SPDK_ERRLOG("portal (%s, %s) is already opened\n",
@@ -165,13 +175,6 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 	sock = spdk_sock_listen(p->host, port, &opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("listen error %.64s.%d\n", p->host, port);
-		return -1;
-	}
-
-	rc = spdk_sock_group_add_sock(p->group->sock_group, sock, p);
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		spdk_sock_close(&sock);
 		return -1;
 	}
 

@@ -39,13 +39,13 @@ struct spdk_sock_placement_id_entry {
 	STAILQ_ENTRY(spdk_sock_placement_id_entry) link;
 };
 
-static inline struct spdk_sock_group_impl *
-sock_get_group_impl_from_group(struct spdk_sock *sock, struct spdk_sock_group *group)
+struct spdk_sock_group_impl *
+spdk_sock_group_get_impl(struct spdk_sock_group *group, struct spdk_net_impl *net_impl)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
-		if (sock->net_impl == group_impl->net_impl) {
+		if (net_impl == group_impl->net_impl) {
 			return group_impl;
 		}
 	}
@@ -218,7 +218,7 @@ spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group 
 	assert(group != NULL);
 
 	if (hint != NULL) {
-		hint_group_impl = sock_get_group_impl_from_group(sock, hint);
+		hint_group_impl = spdk_sock_group_get_impl(hint, sock->net_impl);
 		if (hint_group_impl == NULL) {
 			return -EINVAL;
 		}
@@ -374,6 +374,10 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, connect_timeout)) {
 		opts->connect_timeout = opts_user->connect_timeout;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, group)) {
+		opts->group = opts_user->group;
 	}
 }
 
@@ -625,11 +629,27 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 	return sock_posix_fd_connect(fd, res, opts, true);
 }
 
+/* Do just the internal bookkeeping portion of adding a socket to a group */
+static void
+sock_group_impl_add_sock(struct spdk_sock_group_impl *group_impl, struct spdk_sock *sock)
+{
+	TAILQ_INSERT_TAIL(&group_impl->socks, sock, link);
+	sock->group_impl = group_impl;
+}
+
+static void
+sock_group_impl_remove_sock(struct spdk_sock_group_impl *group_impl, struct spdk_sock *sock)
+{
+	TAILQ_REMOVE(&group_impl->socks, sock, link);
+	sock->group_impl = NULL;
+}
+
 struct spdk_sock *
 spdk_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 		  spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
 	struct spdk_net_impl *impl = NULL;
+	struct spdk_sock_group_impl *group_impl;
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
 	const char *impl_name = NULL;
@@ -645,6 +665,11 @@ spdk_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 		impl_name = g_default_impl->name;
 	}
 
+	if (opts->group == NULL) {
+		SPDK_ERRLOG("the group should not be NULL pointer\n");
+		return NULL;
+	}
+
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1) == 0) {
 			break;
@@ -653,6 +678,12 @@ spdk_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 
 	if (!impl) {
 		SPDK_ERRLOG("Cannot find %s sock implementation\n", impl_name ? impl_name : "any");
+		return NULL;
+	}
+
+	group_impl = spdk_sock_group_get_impl(opts->group, impl);
+	if (group_impl == NULL) {
+		SPDK_ERRLOG("Unable to find group impl!\n");
 		return NULL;
 	}
 
@@ -674,8 +705,12 @@ spdk_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 	 * pointer */
 	sock->opts.impl_opts = NULL;
 	sock->net_impl = impl;
+	sock->cb_arg = opts->user_ctx;
 	TAILQ_INIT(&sock->queued_reqs);
 	TAILQ_INIT(&sock->pending_reqs);
+
+	sock_group_impl_add_sock(group_impl, sock);
+
 	return sock;
 }
 
@@ -683,12 +718,18 @@ struct spdk_sock *
 spdk_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
+	struct spdk_sock_group_impl *group_impl;
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
 	const char *impl_name = NULL;
 
 	if (opts == NULL) {
 		SPDK_ERRLOG("the opts should not be NULL pointer\n");
+		return NULL;
+	}
+
+	if (opts->group == NULL) {
+		SPDK_ERRLOG("the group should not be NULL pointer\n");
 		return NULL;
 	}
 
@@ -709,6 +750,12 @@ spdk_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 		return NULL;
 	}
 
+	group_impl = spdk_sock_group_get_impl(opts->group, impl);
+	if (group_impl == NULL) {
+		SPDK_ERRLOG("Unable to find group impl!\n");
+		return NULL;
+	}
+
 	SPDK_DEBUGLOG(sock, "Creating a listening socket using impl %s\n", impl->name);
 	sock_init_opts(&opts_local, opts);
 	sock = impl->listen(ip, port, &opts_local);
@@ -722,8 +769,12 @@ spdk_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 	 * pointer */
 	sock->opts.impl_opts = NULL;
 	sock->net_impl = impl;
+	sock->cb_arg = opts->user_ctx;
 	/* Don't need to initialize the request queues for listen
 	 * sockets. */
+
+	sock_group_impl_add_sock(group_impl, sock);
+
 	return sock;
 }
 
@@ -738,6 +789,7 @@ spdk_sock_accept(struct spdk_sock *sock)
 		new_sock->opts = sock->opts;
 		memcpy(&new_sock->opts, &sock->opts, sizeof(new_sock->opts));
 		new_sock->net_impl = sock->net_impl;
+		sock_group_impl_add_sock(sock->group_impl, new_sock);
 		TAILQ_INIT(&new_sock->queued_reqs);
 		TAILQ_INIT(&new_sock->pending_reqs);
 	}
@@ -755,15 +807,13 @@ int
 spdk_sock_close(struct spdk_sock **_sock)
 {
 	struct spdk_sock *sock = *_sock;
+	struct spdk_sock_group_impl *group_impl;
 
 	if (sock == NULL) {
 		return -EBADF;
 	}
 
-	if (sock->group_impl != NULL) {
-		/* This sock is still part of a sock_group. */
-		return -EBUSY;
-	}
+	group_impl = sock->group_impl;
 
 	/* Beyond this point the socket is considered closed. */
 	*_sock = NULL;
@@ -777,7 +827,11 @@ spdk_sock_close(struct spdk_sock **_sock)
 
 	spdk_sock_abort_requests(sock);
 
-	return sock->net_impl->close(sock);
+	if (group_impl) {
+		sock_group_impl_remove_sock(group_impl, sock);
+	}
+
+	return sock->net_impl->close(group_impl, sock);
 }
 
 ssize_t
@@ -951,20 +1005,11 @@ spdk_sock_group_get_ctx(struct spdk_sock_group *group)
 	return group->ctx;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_add_sock_callbacks,
-			      "cb_arg will be removed. Still pass context when adding sockets",
-			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
-
 int
-spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
-			 void *cb_arg)
+spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc;
-
-	if (cb_arg != NULL) {
-		SPDK_LOG_DEPRECATED(spdk_sock_group_add_sock_callbacks);
-	}
 
 	if (sock->group_impl != NULL) {
 		/*
@@ -973,7 +1018,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -EINVAL;
 	}
 
-	group_impl = sock_get_group_impl_from_group(sock, group);
+	group_impl = spdk_sock_group_get_impl(group, sock->net_impl);
 	if (group_impl == NULL) {
 		return -EINVAL;
 	}
@@ -983,9 +1028,8 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return rc;
 	}
 
-	TAILQ_INSERT_TAIL(&group_impl->socks, sock, link);
-	sock->group_impl = group_impl;
-	sock->cb_arg = cb_arg;
+	sock_group_impl_add_sock(group_impl, sock);
+
 	return 0;
 }
 
@@ -995,7 +1039,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc;
 
-	group_impl = sock_get_group_impl_from_group(sock, group);
+	group_impl = spdk_sock_group_get_impl(group, sock->net_impl);
 	if (group_impl == NULL) {
 		return -EINVAL;
 	}
@@ -1004,9 +1048,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
 	if (rc == 0) {
-		TAILQ_REMOVE(&group_impl->socks, sock, link);
-		sock->group_impl = NULL;
-		sock->cb_arg = NULL;
+		sock_group_impl_remove_sock(group_impl, sock);
 	}
 
 	return rc;

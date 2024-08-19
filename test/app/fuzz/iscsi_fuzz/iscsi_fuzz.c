@@ -692,6 +692,8 @@ iscsi_fuzz_sock_connect(struct spdk_iscsi_conn *conn, struct spdk_sock_group *gr
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
+	opts.group = group;
+	opts.user_ctx = conn;
 
 	conn->sock = spdk_sock_connect(host, spdk_strtol(port, 10), &opts,
 				       iscsi_fuzz_connect_cb, &status);
@@ -717,13 +719,6 @@ iscsi_fuzz_sock_connect(struct spdk_iscsi_conn *conn, struct spdk_sock_group *gr
 	rc = spdk_sock_getaddr(conn->sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 	if (rc < 0) {
 		fprintf(stderr, "Cannot get connection addresses\n");
-		spdk_sock_close(&conn->sock);
-		return;
-	}
-
-	rc = spdk_sock_group_add_sock(group, conn->sock, conn);
-	if (rc < 0) {
-		fprintf(stderr, "Cannot add socket to group\n");
 		spdk_sock_close(&conn->sock);
 		return;
 	}

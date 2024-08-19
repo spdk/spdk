@@ -178,7 +178,6 @@ portal_grp_register_twice_case(void)
 static void
 portal_grp_add_delete_case(void)
 {
-	struct spdk_sock sock = {};
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
 	int rc;
@@ -198,10 +197,8 @@ portal_grp_add_delete_case(void)
 
 	iscsi_portal_grp_add_portal(pg1, p);
 
-	MOCK_SET(spdk_sock_listen, &sock);
 	rc = iscsi_portal_grp_open(pg1, false);
 	CU_ASSERT(rc == 0);
-	MOCK_CLEAR_P(spdk_sock_listen);
 
 	rc = iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
@@ -224,7 +221,6 @@ portal_grp_add_delete_case(void)
 static void
 portal_grp_add_delete_twice_case(void)
 {
-	struct spdk_sock sock = {};
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
 	int rc;
@@ -244,7 +240,6 @@ portal_grp_add_delete_twice_case(void)
 
 	iscsi_portal_grp_add_portal(pg1, p);
 
-	MOCK_SET(spdk_sock_listen, &sock);
 	rc = iscsi_portal_grp_open(pg1, false);
 	CU_ASSERT(rc == 0);
 
@@ -276,8 +271,6 @@ portal_grp_add_delete_twice_case(void)
 
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
-
-	MOCK_CLEAR_P(spdk_sock_listen);
 
 	free_threads();
 }

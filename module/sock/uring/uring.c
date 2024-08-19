@@ -84,7 +84,8 @@ struct spdk_uring_sock {
 	int					zcopy_send_flags;
 	int					connection_status;
 	int					placement_id;
-	uint8_t                                 reserved[4];
+	bool					armed;
+	uint8_t                                 reserved[3];
 	uint8_t					buf[SPDK_SOCK_CMG_INFO_SIZE];
 	TAILQ_ENTRY(spdk_uring_sock)		link;
 	char					interface_name[IFNAMSIZ];
@@ -568,17 +569,42 @@ retry:
 	return &sock->base;
 }
 
+static int uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock);
+static int uring_sock_group_impl_attach_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock);
+static int uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock);
+static int uring_sock_close(struct spdk_sock_group_impl *group, struct spdk_sock *_sock);
+static struct spdk_net_impl g_uring_net_impl;
+
 static struct spdk_sock *
 uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
+	struct spdk_sock_group_impl *group;
 	struct spdk_uring_sock *sock;
 	struct spdk_sock *_sock;
+	int rc;
+
+	group = spdk_sock_group_get_impl(opts->group, &g_uring_net_impl);
+	if (group == NULL) {
+		return NULL;
+	}
 
 	_sock = uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
-	if (_sock != NULL) {
-		sock = __uring_sock(_sock);
-		sock->is_listener = true;
+	if (_sock == NULL) {
+		return NULL;
 	}
+
+	sock = __uring_sock(_sock);
+	sock->is_listener = true;
+
+	rc = uring_sock_group_impl_add_sock(group, _sock);
+	if (rc) {
+		uring_sock_close(NULL, _sock);
+		return NULL;
+	}
+
 	return _sock;
 }
 
@@ -589,17 +615,31 @@ static struct spdk_sock *
 uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 		   spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
-	struct spdk_sock *_sock;
+	struct spdk_sock_group_impl *group;
 	struct spdk_uring_sock *sock;
+	struct spdk_sock *_sock;
+	int rc;
+
+	group = spdk_sock_group_get_impl(opts->group, &g_uring_net_impl);
+	if (group == NULL) {
+		return NULL;
+	}
 
 	_sock = uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
-	if (!_sock) {
+	if (_sock == NULL) {
+		return NULL;
+	}
+
+	rc = uring_sock_group_impl_add_sock(group, _sock);
+	if (rc) {
+		uring_sock_close(NULL, _sock);
 		return NULL;
 	}
 
 	sock = __uring_sock(_sock);
 	sock->connect_cb_fn = cb_fn;
 	sock->connect_cb_arg = cb_arg;
+
 	return _sock;
 }
 
@@ -647,15 +687,31 @@ uring_sock_accept(struct spdk_sock *_sock)
 		return NULL;
 	}
 
+	/* The new socket inherits the listener's group, but is deliberately not armed for
+	 * receive here. Callers may hand the socket off to a per-thread group before it is
+	 * ever polled, and any data received in the meantime would be held in buffers owned
+	 * by the listener's group, which the destination group cannot release. A socket that
+	 * stays in this group is armed by uring_sock_group_impl_poll() instead. */
+	rc = uring_sock_group_impl_attach_sock(&sock->group->base, &new_sock->base);
+	if (rc) {
+		uring_sock_close(NULL, &new_sock->base);
+		return NULL;
+	}
+
 	return &new_sock->base;
 }
 
 static int
-uring_sock_close(struct spdk_sock *_sock)
+uring_sock_close(struct spdk_sock_group_impl *group, struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 
 	assert(TAILQ_EMPTY(&_sock->pending_reqs));
+
+	if (group) {
+		uring_sock_group_impl_remove_sock(group, _sock);
+	}
+
 	assert(sock->group == NULL);
 
 	/* If the socket fails to close, the best choice is to
@@ -1684,8 +1740,8 @@ uring_sock_group_impl_create(void)
 }
 
 static int
-uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
-			       struct spdk_sock *_sock)
+uring_sock_group_impl_attach_sock(struct spdk_sock_group_impl *_group,
+				  struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
@@ -1732,13 +1788,36 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 		}
 	}
 
+	return 0;
+}
+
+static void
+uring_sock_arm(struct spdk_uring_sock *sock)
+{
 	/* We get an async read going immediately */
 	_sock_prep_read(&sock->base);
 #ifdef SPDK_ZEROCOPY
 	if (sock->zcopy) {
-		_sock_prep_errqueue(_sock);
+		_sock_prep_errqueue(&sock->base);
 	}
 #endif
+
+	sock->armed = true;
+}
+
+static int
+uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
+			       struct spdk_sock *_sock)
+{
+	struct spdk_uring_sock *sock = __uring_sock(_sock);
+	int rc;
+
+	rc = uring_sock_group_impl_attach_sock(_group, _sock);
+	if (rc != 0) {
+		return rc;
+	}
+
+	uring_sock_arm(sock);
 
 	return 0;
 }
@@ -1791,6 +1870,14 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 			if (spdk_unlikely(sock->connection_status)) {
 				continue;
 			}
+
+			/* Sockets from uring_sock_accept() are attached but not armed. If one is
+			 * still here by the time this group polls, it was not handed off to
+			 * another group, so this group owns it and can arm it now. */
+			if (spdk_unlikely(!sock->armed)) {
+				uring_sock_arm(sock);
+			}
+
 			_sock_flush(_sock);
 		}
 	}
@@ -1882,6 +1969,7 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	}
 
 	sock->pending_group_remove = false;
+	sock->armed = false;
 	sock->group = NULL;
 	return 0;
 }

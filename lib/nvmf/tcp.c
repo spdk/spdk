@@ -1003,7 +1003,6 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
-	int rc;
 
 	if (!strlen(trid->trsvcid)) {
 		SPDK_ERRLOG("Service id is required\n");
@@ -1032,6 +1031,8 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ttransport->tcp_opts.sock_priority;
 	opts.ack_timeout = transport->opts.ack_timeout;
+	opts.group = ttransport->listen_sock_group;
+	opts.user_ctx = port;
 	if (listen_opts->secure_channel) {
 		if (listen_opts->sock_impl &&
 		    strncmp("ssl", listen_opts->sock_impl, strlen(listen_opts->sock_impl))) {
@@ -1085,14 +1086,6 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		spdk_sock_close(&port->listen_sock);
 		free(port);
 		return -EINVAL;
-	}
-
-	rc = spdk_sock_group_add_sock(ttransport->listen_sock_group, port->listen_sock, port);
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		spdk_sock_close(&port->listen_sock);
-		free(port);
-		return rc;
 	}
 
 	port->transport = transport;
@@ -1487,7 +1480,10 @@ static void
 nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
+	struct spdk_nvmf_tcp_transport *ttransport;
 	int rc;
+
+	ttransport = SPDK_CONTAINEROF(port->transport, struct spdk_nvmf_tcp_transport, transport);
 
 	SPDK_DEBUGLOG(nvmf_tcp, "New connection accepted on %s port %s\n",
 		      port->trid->traddr, port->trid->trsvcid);
@@ -1515,6 +1511,20 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
 		nvmf_tcp_qpair_destroy(tqpair);
 		return;
 	}
+
+	/* Remove the socket from the listen group. It will be added to a per-thread sock_group
+	 * later on. Kernel-based modules buffer incoming data during this window; user-space
+	 * modules may drop packets and require TCP retransmission, so keep the window short.
+	 */
+	rc = spdk_sock_group_remove_sock(ttransport->listen_sock_group, tqpair->sock);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, tqpair=%p, rc %d: %s\n",
+			    tqpair, rc, spdk_strerror(-rc));
+		nvmf_tcp_qpair_destroy(tqpair);
+		return;
+	}
+
+	spdk_sock_set_user_ctx(sock, tqpair);
 
 	spdk_nvmf_tgt_new_qpair(port->transport->tgt, &tqpair->qpair);
 }
@@ -3400,7 +3410,7 @@ nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, tqpair);
+	rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		return -1;

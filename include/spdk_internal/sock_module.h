@@ -81,7 +81,7 @@ struct spdk_net_impl {
 				     spdk_sock_connect_cb_fn cb_fn, void *cb_arg);
 	struct spdk_sock *(*listen)(const char *ip, int port, struct spdk_sock_opts *opts);
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);
-	int (*close)(struct spdk_sock *sock);
+	int (*close)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
 	ssize_t (*recv)(struct spdk_sock *sock, void *buf, size_t len);
 	ssize_t (*readv)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
@@ -113,6 +113,9 @@ struct spdk_net_impl {
 
 	STAILQ_ENTRY(spdk_net_impl) link;
 };
+
+struct spdk_sock_group_impl *spdk_sock_group_get_impl(struct spdk_sock_group *group,
+		struct spdk_net_impl *net_impl);
 
 void spdk_net_impl_register(struct spdk_net_impl *impl);
 struct spdk_net_impl *spdk_net_impl_get_by_name(const char *impl_name);

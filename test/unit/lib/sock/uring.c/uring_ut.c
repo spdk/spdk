@@ -22,6 +22,8 @@ DEFINE_STUB(spdk_sock_map_find_free, int, (struct spdk_sock_map *map), -1);
 DEFINE_STUB_V(spdk_sock_map_cleanup, (struct spdk_sock_map *map));
 
 DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl));
+DEFINE_STUB(spdk_sock_group_get_impl, struct spdk_sock_group_impl *,
+	    (struct spdk_sock_group *group, struct spdk_net_impl *net_impl), NULL);
 DEFINE_STUB(spdk_sock_set_default_impl, int, (const char *impl_name), 0);
 DEFINE_STUB(io_uring_submit, int, (struct io_uring *ring), 0);
 DEFINE_STUB(io_uring_queue_init, int, (unsigned entries, struct io_uring *ring, unsigned flags), 0);

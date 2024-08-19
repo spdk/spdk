@@ -262,8 +262,20 @@ struct spdk_sock_opts {
 	 * The sock implementation to use, such as "posix", or NULL for default.
 	 */
 	const char *impl_name;
+
+	/**
+	 * The socket group this socket belongs to. This is required.
+	 */
+	struct spdk_sock_group *group;
+
+	/**
+	 * Per-socket context passed as the first argument to the group's rx_cb when this
+	 * socket has data to receive. Can be NULL. May be changed later with
+	 * spdk_sock_set_user_ctx().
+	 */
+	void *user_ctx;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 80, "Incorrect size");
 
 /**
  * Options for the socket library.
@@ -392,6 +404,9 @@ struct spdk_sock *spdk_sock_listen(const char *ip, int port, struct spdk_sock_op
  * Accept a new connection from a client on the specified socket and return a
  * socket structure which holds the connection.
  *
+ * The new socket will belong to the same spdk_sock_group that the listen socket belongs to.
+ * The group can be changed using spdk_sock_group_remove_sock and spdk_sock_group_add_sock.
+ *
  * \param sock Listening socket.
  *
  * \return a pointer to the accepted socket on success, or NULL on failure.
@@ -401,9 +416,8 @@ struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
 /**
  * Change the user context callback argument passed to spdk_sock_cb for this socket.
  *
- * In v26.09, spdk_sock_group_add_sock() overwrites this context with its cb_arg argument.
- * Pass the intended context when adding a socket, even if it was already set here.
- * This function can update the context after the socket has been added to a group.
+ * This is intended for attaching per-connection state to a newly accepted socket. It can
+ * also update the context after the socket has been added to a group.
  *
  * \param sock The socket to change the callback argument for.
  * \param user_ctx The new callback argument to set.
@@ -432,6 +446,8 @@ int32_t spdk_sock_get_numa_id(struct spdk_sock *sock);
 
 /**
  * Close a socket.
+ *
+ * This will automatically remove the socket from its group.
  *
  * \param sock Socket to close.
  *
@@ -598,20 +614,23 @@ void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
 /**
  * Add a socket to the group.
  *
- * The cb_arg parameter is deprecated and will be removed in v27.01. In v26.09, adding a
- * socket overwrites any context previously set with spdk_sock_set_user_ctx(), so cb_arg
- * must still contain the intended callback context.
- *
  * \param group Socket group.
  * \param sock Socket to add.
- * \param cb_arg Argument passed to the callback function.
+ *
+ * If this socket was previously removed from another group, see
+ * spdk_sock_group_remove_sock() for module-specific behavior while the socket is not
+ * in any group.
  *
  * \return 0 on success, negative errno value on failure.
  */
-int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock, void *cb_arg);
+int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock);
 
 /**
  * Remove a socket from the group.
+ *
+ * While a socket is not in a group, no rx_cb will fire for that socket. For kernel-based
+ * modules, incoming data remains buffered by the kernel and becomes visible when the socket is
+ * re-added. For user-space modules, incoming data for that socket may be dropped.
  *
  * \param group Socket group.
  * \param sock Socket to remove.

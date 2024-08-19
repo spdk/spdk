@@ -164,7 +164,6 @@ hello_sock_close_timeout_poll(void *arg)
 
 	spdk_poller_unregister(&ctx->time_out);
 	spdk_poller_unregister(&ctx->poller_in);
-	spdk_sock_group_remove_sock(ctx->group, ctx->sock);
 	spdk_sock_close(&ctx->sock);
 	spdk_sock_group_close(&ctx->group);
 
@@ -337,21 +336,17 @@ hello_sock_connect_cb(void *cb_arg, int status)
 		goto err;
 	}
 
-	rc = spdk_sock_group_add_sock(ctx->group, ctx->sock, ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Cannot add socket to group\n");
-		goto err;
-	}
-
 	g_is_running = true;
 	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_group_poll, ctx, 0);
 	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_writev_poll, ctx, 0);
 
 	return;
 err:
-	spdk_sock_close(&ctx->sock);
-	spdk_sock_group_close(&ctx->group);
-	spdk_app_stop(-1);
+	/* The socket joined the group in hello_sock_connect(), and we're inside its own
+	 * callback, so spdk_sock_close() would only mark it closed and leave it registered
+	 * with the group. Tear down from the timeout poller instead, which runs once this
+	 * callback has unwound. */
+	hello_sock_quit(ctx, -1);
 }
 
 static int
@@ -389,6 +384,8 @@ hello_sock_connect(struct hello_context_t *ctx)
 	opts.impl_name = ctx->sock_impl_name;
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
+	opts.group = ctx->group;
+	opts.user_ctx = ctx;
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
@@ -431,13 +428,7 @@ hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 				SPDK_NOTICELOG("Accepting a new connection from (%s, %hu) to (%s, %hu)\n",
 					       caddr, cport, saddr, sport);
 
-				rc = spdk_sock_group_add_sock(ctx->group, new_sock, ctx);
-
-				if (rc < 0) {
-					spdk_sock_close(&new_sock);
-					SPDK_ERRLOG("failed\n");
-					break;
-				}
+				spdk_sock_set_user_ctx(new_sock, ctx);
 
 			} else {
 				if (errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -475,14 +466,12 @@ hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 
 	/* Connection closed */
 	SPDK_NOTICELOG("Connection closed\n");
-	spdk_sock_group_remove_sock(group, sock);
 	spdk_sock_close(&sock);
 }
 
 static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
-	int rc;
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
@@ -516,19 +505,13 @@ hello_sock_listen(struct hello_context_t *ctx)
 	opts.impl_name = ctx->sock_impl_name;
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
+	opts.group = ctx->group;
+	opts.user_ctx = ctx;
 
 	ctx->sock = spdk_sock_listen(ctx->host, ctx->port, &opts);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
 		spdk_sock_group_close(&ctx->group);
-		return -1;
-	}
-
-	rc = spdk_sock_group_add_sock(ctx->group, ctx->sock, ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Cannot add sock to group\n");
-		spdk_sock_group_close(&ctx->group);
-		spdk_sock_close(&ctx->sock);
 		return -1;
 	}
 

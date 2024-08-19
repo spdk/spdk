@@ -210,7 +210,13 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB_V(spdk_nvmf_transport_register, (const struct spdk_nvmf_transport_ops *ops));
 
-DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair));
+static struct spdk_nvmf_qpair *g_new_qpair;
+
+void
+spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair)
+{
+	g_new_qpair = qpair;
+}
 
 DEFINE_STUB_V(nvmf_transport_qpair_abort_request,
 	      (struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req));
@@ -767,19 +773,92 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 }
 
 static void
+test_nvmf_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+
+}
+
+static void
+test_nvmf_tcp_handle_connect(void)
+{
+	struct spdk_nvmf_tcp_transport transport = {};
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvmf_tcp_port port = {.transport = &transport.transport, .trid = &trid};
+	struct spdk_sock_group_opts group_opts = {.size = sizeof(group_opts)};
+	struct spdk_sock_opts sock_opts = {.opts_size = sizeof(sock_opts)};
+	struct spdk_sock *sock;
+	struct spdk_thread *thread;
+	struct spdk_nvmf_tcp_qpair *tqpair;
+	int i;
+
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
+	transport.listen_sock_group = spdk_sock_group_create(&group_opts);
+	SPDK_CU_ASSERT_FATAL(transport.listen_sock_group != NULL);
+	sock_opts.group = transport.listen_sock_group;
+
+	for (i = 0; i < 2; i++) {
+		sock = spdk_sock_connect("192.168.1.78", 23, &sock_opts, NULL, NULL);
+		SPDK_CU_ASSERT_FATAL(sock != NULL);
+		g_new_qpair = NULL;
+		if (i == 0) {
+			MOCK_SET(spdk_sock_group_remove_sock, -EIO);
+		}
+		nvmf_tcp_handle_connect(&port, sock);
+		MOCK_CLEAR(spdk_sock_group_remove_sock);
+		if (i == 0) {
+			CU_ASSERT(g_new_qpair == NULL);
+			CU_ASSERT(sock->group_impl != NULL);
+		} else {
+			SPDK_CU_ASSERT_FATAL(g_new_qpair != NULL);
+			tqpair = SPDK_CONTAINEROF(g_new_qpair, struct spdk_nvmf_tcp_qpair, qpair);
+			CU_ASSERT(sock->group_impl == NULL);
+			CU_ASSERT(sock->cb_arg == tqpair);
+			nvmf_tcp_qpair_destroy(tqpair);
+		}
+		spdk_thread_poll(thread, 0, 0);
+		CU_ASSERT(((struct test_sock_group *)transport.listen_sock_group)->num_entries == 0);
+	}
+	spdk_sock_group_close(&transport.listen_sock_group);
+	g_new_qpair = NULL;
+	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
+	spdk_thread_destroy(thread);
+}
+
+static void
 test_nvmf_tcp_qpair_init_mem_resource(void)
 {
 	int rc;
 	struct spdk_nvmf_tcp_qpair *tqpair = NULL;
+	struct spdk_sock_group *sock_group;
 	struct spdk_nvmf_transport transport = {};
 	struct spdk_thread *thread;
+	struct spdk_sock_opts sock_opts;
+	struct spdk_sock_group_opts sgroup_opts = {
+		.size = sizeof(sgroup_opts),
+		.ctx = NULL,
+		.rx_cb = test_nvmf_sock_cb
+	};
 
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
+	sock_group = spdk_sock_group_create(&sgroup_opts);
+	SPDK_CU_ASSERT_FATAL(sock_group != NULL);
+
+	sock_opts.opts_size = sizeof(sock_opts);
+	spdk_sock_get_default_opts(&sock_opts);
+	sock_opts.group = sock_group;
+	sock_opts.user_ctx = NULL;
+
 	tqpair = calloc(1, sizeof(*tqpair));
 	tqpair->qpair.transport = &transport;
+	tqpair->sock = spdk_sock_connect("192.168.1.78", 23, &sock_opts, NULL, NULL);
 
 	nvmf_tcp_opts_init(&transport.opts);
 	CU_ASSERT(transport.opts.max_queue_depth == SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH);
@@ -836,6 +915,8 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 		spdk_thread_poll(thread, 0, 0);
 	}
 	spdk_thread_destroy(thread);
+
+	spdk_sock_group_close(&sock_group);
 }
 
 static void
@@ -1592,6 +1673,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_h2c_data_hdr_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_in_capsule_data_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_qpair_init_mem_resource);
+	CU_ADD_TEST(suite, test_nvmf_tcp_handle_connect);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_term_req);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_capsule_resp_pdu);
 	CU_ADD_TEST(suite, test_nvmf_tcp_icreq_handle);

@@ -1101,10 +1101,38 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
 	return &sock->base;
 }
 
+static int posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock);
+static int posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock);
+static int posix_sock_close(struct spdk_sock_group_impl *group, struct spdk_sock *_sock);
+static struct spdk_net_impl g_posix_net_impl;
+static struct spdk_net_impl g_ssl_net_impl;
+
 static struct spdk_sock *
 posix_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return _posix_sock_listen(ip, port, opts, false);
+	struct spdk_sock_group_impl *group;
+	struct spdk_sock *sock;
+	int rc;
+
+	group = spdk_sock_group_get_impl(opts->group, &g_posix_net_impl);
+	if (group == NULL) {
+		return NULL;
+	}
+
+	sock = _posix_sock_listen(ip, port, opts, false);
+	if (sock == NULL) {
+		return sock;
+	}
+
+	rc = posix_sock_group_impl_add_sock(group, sock);
+	if (rc) {
+		posix_sock_close(NULL, sock);
+		return NULL;
+	}
+
+	return sock;
 }
 
 static struct spdk_sock *
@@ -1128,9 +1156,10 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 	salen = sizeof(sa);
 
 	assert(sock != NULL);
+	assert(group != NULL);
 
 	/* epoll_wait will trigger again if there is more than one request */
-	if (group && sock->socket_has_data) {
+	if (sock->socket_has_data) {
 		sock->socket_has_data = false;
 		TAILQ_REMOVE(&group->socks_with_data, sock, link);
 	}
@@ -1176,6 +1205,13 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 
 	/* Inherit the zero copy feature from the listen socket */
 	posix_sock_init(new_sock, sock->zcopy);
+
+	rc = posix_sock_group_impl_add_sock(&group->base, &new_sock->base);
+	if (rc) {
+		posix_sock_close(NULL, &new_sock->base);
+		return NULL;
+	}
+
 	return &new_sock->base;
 }
 
@@ -1186,7 +1222,7 @@ posix_sock_accept(struct spdk_sock *_sock)
 }
 
 static int
-posix_sock_close(struct spdk_sock *_sock)
+posix_sock_close(struct spdk_sock_group_impl *group, struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	void *pipe_buf;
@@ -1197,6 +1233,10 @@ posix_sock_close(struct spdk_sock *_sock)
 
 	if (sock->ssl != NULL) {
 		SSL_shutdown(sock->ssl);
+	}
+
+	if (group) {
+		posix_sock_group_impl_remove_sock(group, _sock);
 	}
 
 	/* If the socket fails to close, the best choice is to
@@ -2408,7 +2448,27 @@ SPDK_NET_IMPL_REGISTER_DEFAULT(posix, &g_posix_net_impl);
 static struct spdk_sock *
 ssl_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return _posix_sock_listen(ip, port, opts, true);
+	struct spdk_sock_group_impl *group;
+	struct spdk_sock *sock;
+	int rc;
+
+	group = spdk_sock_group_get_impl(opts->group, &g_ssl_net_impl);
+	if (group == NULL) {
+		return NULL;
+	}
+
+	sock = _posix_sock_listen(ip, port, opts, true);
+	if (sock == NULL) {
+		return sock;
+	}
+
+	rc = posix_sock_group_impl_add_sock(group, sock);
+	if (rc) {
+		posix_sock_close(NULL, sock);
+		return NULL;
+	}
+
+	return sock;
 }
 
 static struct spdk_sock *

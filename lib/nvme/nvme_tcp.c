@@ -12,6 +12,7 @@
 
 #include "spdk/endian.h"
 #include "spdk/likely.h"
+#include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/stdinc.h"
 #include "spdk/crc32.h"
@@ -86,6 +87,8 @@ struct nvme_tcp_poll_group {
 struct nvme_tcp_qpair {
 	struct spdk_nvme_qpair			qpair;
 	struct spdk_sock			*sock;
+	/* Owned by this qpair; shared poll-group socket groups are never stored here. */
+	struct spdk_sock_group			*sock_group;
 
 	TAILQ_HEAD(, nvme_tcp_req)		free_reqs;
 	TAILQ_HEAD(, nvme_tcp_req)		outstanding_reqs;
@@ -186,6 +189,8 @@ static struct spdk_nvme_tcp_stat g_dummy_stats = {};
 static void nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
 static int64_t nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group
 		*tgroup, uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
+static struct spdk_sock_group *nvme_tcp_qpair_create_sock_group(struct spdk_nvme_qpair *qpair);
+static int nvme_tcp_qpair_close_sock_group(struct spdk_nvme_qpair *qpair);
 static void nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu);
 static void nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req, struct nvme_tcp_qpair *tqpair,
 				  struct spdk_nvme_cpl *rsp, bool print_on_error);
@@ -427,7 +432,10 @@ nvme_tcp_qpair_try_disconnect_done(struct spdk_nvme_qpair *qpair)
 
 	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING &&
 	    TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
-		nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
+		/* Socket closure may be deferred until its callback unwinds. */
+		if (nvme_tcp_qpair_close_sock_group(qpair) == 0) {
+			nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
+		}
 	}
 
 	return nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED;
@@ -441,26 +449,18 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	int rc;
 	struct nvme_tcp_poll_group *group;
 
-	if (qpair->poll_group) {
-		group = nvme_tcp_poll_group(qpair->poll_group);
-
-		if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
-			TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
-		}
-
-		if (group->sock_group && tqpair->sock) {
-			rc = spdk_sock_group_remove_sock(group->sock_group, tqpair->sock);
-			if (rc < 0) {
-				SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-			}
-		}
-	}
-
 	rc = spdk_sock_close(&tqpair->sock);
 	if (rc < 0 || tqpair->sock) {
 		NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_close() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		/* Set it to NULL manually */
 		tqpair->sock = NULL;
+	}
+
+	if (qpair->poll_group) {
+		group = nvme_tcp_poll_group(qpair->poll_group);
+		if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
+			TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
+		}
 	}
 
 	/* clear the send_queue */
@@ -483,7 +483,7 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	} else {
 		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
-		nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
+		nvme_tcp_qpair_try_disconnect_done(qpair);
 	}
 }
 
@@ -491,8 +491,15 @@ static int
 nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	int rc;
 
 	assert(qpair != NULL);
+	/* A deferred socket close may have completed without another qpair poll. */
+	rc = nvme_tcp_qpair_close_sock_group(qpair);
+	if (rc != 0) {
+		return rc;
+	}
+
 	nvme_tcp_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
 
@@ -516,9 +523,13 @@ static int
 nvme_tcp_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_tcp_ctrlr *tctrlr = nvme_tcp_ctrlr(ctrlr);
+	int rc;
 
 	if (ctrlr->adminq) {
-		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, ctrlr->adminq);
+		rc = nvme_tcp_ctrlr_delete_io_qpair(ctrlr, ctrlr->adminq);
+		if (rc != 0) {
+			return rc;
+		}
 	}
 
 	nvme_ctrlr_destruct_finish(ctrlr);
@@ -2369,11 +2380,12 @@ static int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
-	struct nvme_tcp_poll_group *group;
 	uint32_t reaped;
 	int rc;
 
 	if (qpair->poll_group != NULL) {
+		struct nvme_tcp_poll_group *group;
+
 		group = nvme_tcp_poll_group(qpair->poll_group);
 
 		/* The socket belongs to the group's sock_group, so direct qpair polling still has
@@ -2396,10 +2408,26 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 			TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
 		}
 	} else {
-		rc = spdk_sock_flush(tqpair->sock);
-		if (rc < 0 && rc != -EAGAIN) {
-			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-			goto fail;
+		/* Disconnect may have already closed the internally-created socket group. */
+		if (tqpair->sock_group) {
+			/* Group-scoped implementations need polling during both normal operation
+			 * and teardown, even when only this qpair is being serviced.
+			 */
+			rc = spdk_sock_group_poll(tqpair->sock_group);
+			if (spdk_unlikely(rc < 0)) {
+				NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_group_poll() failed, rc %d: %s\n",
+						   rc, spdk_strerror(-rc));
+				goto fail;
+			}
+		}
+
+		if (tqpair->sock) {
+			rc = spdk_sock_flush(tqpair->sock);
+			if (rc < 0 && rc != -EAGAIN) {
+				NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n",
+						   rc, spdk_strerror(-rc));
+				goto fail;
+			}
 		}
 
 		if (qpair->ctrlr->timeout_enabled) {
@@ -2414,10 +2442,26 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	}
 
 	reaped = 0;
-	rc = nvme_tcp_read_pdu(tqpair, &reaped, max_completions);
-	if (rc < 0) {
-		NVME_TQPAIR_DEBUGLOG(tqpair, "Error polling CQ! (%d): %s\n", errno, spdk_strerror(errno));
-		goto fail;
+	if (tqpair->sock) {
+		rc = nvme_tcp_read_pdu(tqpair, &reaped, max_completions);
+		if (rc < 0) {
+			NVME_TQPAIR_ERRLOG(tqpair, "Error polling CQ! rc %d: %s\n",
+					   rc, spdk_strerror(-rc));
+			goto fail;
+		}
+	} else {
+		/* Don't return errors until the qpair gets disconnected. -ENXIO is what
+		 * spdk_nvme_ctrlr_process_admin_completions() needs to see to run
+		 * nvme_ctrlr_disconnect_done(); any other errno leaves
+		 * ctrlr->is_disconnecting set, and nvme_ctrlr_process_init() then parks in
+		 * NVME_CTRLR_STATE_DISABLED forever.
+		 */
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING &&
+		    !nvme_tcp_qpair_try_disconnect_done(qpair)) {
+			return 0;
+		}
+
+		return -ENXIO;
 	}
 
 	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
@@ -2500,6 +2544,56 @@ nvme_tcp_sock_connect_cb_fn(void *cb_arg, int status)
 	nvme_tcp_qpair_icreq_send(tqpair);
 }
 
+static void
+nvme_tcp_qpair_no_group_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	/* Do nothing. The qpair will be checked for recv data no matter what. */
+}
+
+static struct spdk_sock_group *
+nvme_tcp_qpair_create_sock_group(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct spdk_sock_group_opts opts = {
+		.size = sizeof(opts),
+		.ctx = NULL,
+		.rx_cb = nvme_tcp_qpair_no_group_sock_cb,
+	};
+
+	assert(qpair->poll_group == NULL);
+
+	/* The group from a previous connect attempt can outlive its socket. Closing the socket
+	 * from inside a socket callback defers the real close, so the socket is still registered
+	 * with the group when nvme_tcp_qpair_close_sock_group() runs and spdk_sock_group_close()
+	 * leaves it in place. Reuse that group instead of allocating a second one, which would
+	 * replace it in tqpair->sock_group and leak it.
+	 */
+	if (tqpair->sock_group != NULL) {
+		return tqpair->sock_group;
+	}
+
+	tqpair->sock_group = spdk_sock_group_create(&opts);
+	return tqpair->sock_group;
+}
+
+static int
+nvme_tcp_qpair_close_sock_group(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	int rc;
+
+	if (tqpair->sock_group == NULL) {
+		return 0;
+	}
+
+	rc = spdk_sock_group_close(&tqpair->sock_group);
+	if (rc != 0 && rc != -EBUSY) {
+		NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_group_close() failed, rc %d: %s\n",
+				   rc, spdk_strerror(-rc));
+	}
+	return rc;
+}
+
 static int
 nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -2513,6 +2607,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	struct spdk_sock_impl_opts impl_opts = {};
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+	struct spdk_sock_group *sock_group;
 	struct nvme_tcp_ctrlr *tcp_ctrlr;
 
 	tqpair = nvme_tcp_qpair(qpair);
@@ -2553,6 +2648,17 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 		}
 	}
 
+	if (qpair->poll_group) {
+		sock_group = nvme_tcp_poll_group(qpair->poll_group)->sock_group;
+	} else {
+		sock_group = nvme_tcp_qpair_create_sock_group(qpair);
+	}
+
+	if (!sock_group) {
+		SPDK_ERRLOG("Failed to create sock group\n");
+		return -1;
+	}
+
 	tcp_ctrlr = SPDK_CONTAINEROF(ctrlr, struct nvme_tcp_ctrlr, ctrlr);
 	sock_impl_name = tcp_ctrlr->psk[0] ? "ssl" : NULL;
 	NVME_TQPAIR_DEBUGLOG(tqpair, "sock_impl_name is %s\n", sock_impl_name);
@@ -2571,6 +2677,8 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	opts.zcopy = !nvme_qpair_is_admin_queue(qpair);
 	opts.src_addr = ctrlr->opts.src_addr[0] ? ctrlr->opts.src_addr : NULL;
 	opts.src_port = src_port;
+	opts.group = sock_group;
+	opts.user_ctx = qpair;
 	if (ctrlr->opts.transport_ack_timeout) {
 		opts.ack_timeout = 1ULL << ctrlr->opts.transport_ack_timeout;
 	}
@@ -2589,6 +2697,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	if (!tqpair->sock) {
 		NVME_TQPAIR_ERRLOG(tqpair, "sock connection error with addr=%s, port=%ld\n", ctrlr->trid.traddr,
 				   port);
+		nvme_tcp_qpair_close_sock_group(qpair);
 		rc = -1;
 		return rc;
 	}
@@ -2701,18 +2810,9 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		}
 	}
 
-	if (qpair->poll_group) {
-		tgroup = nvme_tcp_poll_group(qpair->poll_group);
-
-		rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, qpair);
-		if (rc < 0) {
-			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_group_add_sock() failed, rc %d: %s\n", rc,
-					   spdk_strerror(-rc));
-			return rc;
-		}
-	} else {
+	if (!qpair->poll_group) {
 		/* When resetting a controller, we disconnect adminq and then reconnect. The stats
-		 * is not freed when disconnecting. So when reconnecting, don't allocate memory
+		 * are not freed when disconnecting. So when reconnecting, don't allocate memory
 		 * again.
 		 */
 		if (tqpair->stats == NULL) {

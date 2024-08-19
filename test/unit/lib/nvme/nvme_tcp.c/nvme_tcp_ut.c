@@ -1145,20 +1145,6 @@ test_nvme_tcp_pdu_ch_handle(void)
 			  struct spdk_nvme_tcp_common_pdu_hdr));
 }
 
-DEFINE_RETURN_MOCK(spdk_sock_connect, struct spdk_sock *);
-struct spdk_sock *
-spdk_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts,
-		  spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
-{
-	HANDLE_RETURN_MOCK(spdk_sock_connect);
-	CU_ASSERT(port == 23);
-	CU_ASSERT(opts->opts_size == sizeof(*opts));
-	CU_ASSERT(opts->priority == 1);
-	CU_ASSERT(opts->zcopy == true);
-	CU_ASSERT(!strcmp(ip, "192.168.1.78"));
-	return (struct spdk_sock *)0xDDADBEEF;
-}
-
 static void
 test_nvme_tcp_qpair_connect_sock(void)
 {
@@ -1179,6 +1165,12 @@ test_nvme_tcp_qpair_connect_sock(void)
 
 	rc = nvme_tcp_qpair_connect_sock(ctrlr, &tqpair.qpair);
 	CU_ASSERT(rc == 0);
+
+	tqpair.qpair.state = NVME_QPAIR_CONNECTED;
+	nvme_ctrlr_disconnect_qpair(&tqpair.qpair);
+	CU_ASSERT(tqpair.sock == NULL);
+	CU_ASSERT(tqpair.sock_group == NULL);
+	CU_ASSERT_EQUAL(tqpair.qpair.state, NVME_QPAIR_DISCONNECTED);
 
 	/* Unsupported family of the transport address */
 	ctrlr->trid.adrfam = SPDK_NVMF_ADRFAM_IB;
@@ -1615,6 +1607,7 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 			.trtype = SPDK_NVME_TRANSPORT_TCP,
 			.ctrlr = &ctrlr,
 			.async = true,
+			.id = 1
 		},
 		.recv_pdu = &recv_pdu,
 	};
@@ -1653,6 +1646,7 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	/* Check that outstanding requests are aborted */
 	treq.state = NVME_TCP_REQ_ACTIVE;
 	qpair->poll_group = NULL;
+	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	qpair->num_outstanding_reqs = 1;
 	qpair->state = NVME_QPAIR_DISCONNECTING;
 	TAILQ_INSERT_TAIL(&tqpair.outstanding_reqs, &treq, link);
@@ -1670,6 +1664,7 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	treq.ordering.bits.in_progress_accel = 1;
 	tqpair.async_complete = 0;
 	qpair->poll_group = NULL;
+	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	qpair->num_outstanding_reqs = 1;
 	qpair->state = NVME_QPAIR_DISCONNECTING;
 	TAILQ_REMOVE(&tqpair.free_reqs, &treq, link);
@@ -1696,11 +1691,13 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	rc = nvme_tcp_qpair_process_completions(qpair, 0);
 	CU_ASSERT_EQUAL(rc, -ENXIO);
 	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTED);
+	CU_ASSERT_EQUAL(qpair->transport_failure_reason, SPDK_NVME_QPAIR_FAILURE_NONE);
 
-	/* Check the same scenario but this time with spdk_sock_flush() returning errors */
+	/* Check the same scenario for a qpair whose socket was already closed */
 	treq.state = NVME_TCP_REQ_ACTIVE;
 	treq.ordering.bits.in_progress_accel = 1;
 	qpair->num_outstanding_reqs = 1;
+	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	qpair->state = NVME_QPAIR_DISCONNECTING;
 	TAILQ_INSERT_TAIL(&tqpair.outstanding_reqs, &treq, link);
 
@@ -1710,7 +1707,6 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	CU_ASSERT_EQUAL(qpair->num_outstanding_reqs, 1);
 	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTING);
 
-	MOCK_SET(spdk_sock_flush, -ENOTCONN);
 	treq.ordering.bits.in_progress_accel = 0;
 	qpair->num_outstanding_reqs = 0;
 	TAILQ_REMOVE(&tqpair.outstanding_reqs, &treq, link);
@@ -1718,14 +1714,15 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	rc = nvme_tcp_qpair_process_completions(qpair, 0);
 	CU_ASSERT_EQUAL(rc, -ENXIO);
 	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTED);
-	MOCK_CLEAR(spdk_sock_flush);
 
 	/* Now check the same scenario, but with a qpair that's part of a poll group */
 	disconnected = 0;
 	group.ctx = &disconnected;
 	treq.state = NVME_TCP_REQ_ACTIVE;
 	treq.ordering.bits.in_progress_accel = 1;
+	tqpair.shared_stats = true;
 	qpair->poll_group = &tgroup.group;
+	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	qpair->num_outstanding_reqs = 1;
 	qpair->state = NVME_QPAIR_DISCONNECTING;
 	STAILQ_INSERT_TAIL(&tgroup.group.disconnected_qpairs, qpair, poll_group_stailq);
@@ -2069,6 +2066,173 @@ test_nvme_tcp_qpair_submit_request(void)
 	free(tctrlr);
 }
 
+static void
+test_nvme_tcp_internal_group_poll_error(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_sock_opts opts = {.opts_size = sizeof(opts)};
+	int rc;
+
+	tqpair.qpair.ctrlr = &ctrlr;
+	tqpair.qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	tqpair.qpair.id = 1;
+	tqpair.qpair.state = NVME_QPAIR_CONNECTED;
+	TAILQ_INIT(&tqpair.send_queue);
+	TAILQ_INIT(&tqpair.outstanding_reqs);
+	TAILQ_INIT(&tqpair.free_reqs);
+	nvme_tcp_qpair_create_sock_group(&tqpair.qpair);
+	SPDK_CU_ASSERT_FATAL(tqpair.sock_group != NULL);
+	opts.group = tqpair.sock_group;
+	tqpair.sock = spdk_sock_connect("192.168.1.78", 23, &opts, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(tqpair.sock != NULL);
+
+	MOCK_SET(spdk_sock_group_poll, -EIO);
+	rc = nvme_tcp_qpair_process_completions(&tqpair.qpair, 0);
+	MOCK_CLEAR(spdk_sock_group_poll);
+	CU_ASSERT_EQUAL(rc, -ENXIO);
+	CU_ASSERT_EQUAL(tqpair.qpair.transport_failure_reason, SPDK_NVME_QPAIR_FAILURE_UNKNOWN);
+	CU_ASSERT_EQUAL(tqpair.qpair.state, NVME_QPAIR_DISCONNECTED);
+	CU_ASSERT(tqpair.sock == NULL);
+	CU_ASSERT(tqpair.sock_group == NULL);
+}
+
+static void
+test_nvme_tcp_private_admin_groups(void)
+{
+	struct spdk_nvme_ctrlr ctrlr[2] = {};
+	struct nvme_tcp_qpair tqpair[2] = {};
+	struct spdk_sock_opts opts = {.opts_size = sizeof(opts)};
+	struct spdk_sock_group *group;
+	int i, rc;
+
+	for (i = 0; i < 2; i++) {
+		tqpair[i].qpair.ctrlr = &ctrlr[i];
+		tqpair[i].qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+		tqpair[i].qpair.state = NVME_QPAIR_CONNECTED;
+		tqpair[i].qpair.async = true;
+		TAILQ_INIT(&tqpair[i].send_queue);
+		TAILQ_INIT(&tqpair[i].outstanding_reqs);
+		TAILQ_INIT(&tqpair[i].free_reqs);
+		group = nvme_tcp_qpair_create_sock_group(&tqpair[i].qpair);
+		CU_ASSERT(group == tqpair[i].sock_group);
+		SPDK_CU_ASSERT_FATAL(tqpair[i].sock_group != NULL);
+		opts.group = tqpair[i].sock_group;
+		tqpair[i].sock = spdk_sock_connect("192.168.1.78", 23, &opts, NULL, NULL);
+		SPDK_CU_ASSERT_FATAL(tqpair[i].sock != NULL);
+	}
+	CU_ASSERT(tqpair[0].sock_group != tqpair[1].sock_group);
+
+	/* A close deferred by a socket callback must not lose the private admin group. */
+	group = tqpair[0].sock_group;
+	MOCK_SET(spdk_sock_group_close, -EBUSY);
+	nvme_ctrlr_disconnect_qpair(&tqpair[0].qpair);
+	CU_ASSERT(tqpair[0].sock == NULL);
+	CU_ASSERT(tqpair[0].sock_group == group);
+	CU_ASSERT(nvme_tcp_qpair_create_sock_group(&tqpair[0].qpair) == group);
+	CU_ASSERT(!nvme_tcp_qpair_try_disconnect_done(&tqpair[0].qpair));
+	CU_ASSERT_EQUAL(tqpair[0].qpair.state, NVME_QPAIR_DISCONNECTING);
+	MOCK_CLEAR(spdk_sock_group_close);
+	rc = nvme_tcp_qpair_process_completions(&tqpair[0].qpair, 0);
+	CU_ASSERT_EQUAL(rc, -ENXIO);
+	CU_ASSERT(tqpair[0].sock_group == NULL);
+	CU_ASSERT_EQUAL(tqpair[0].qpair.state, NVME_QPAIR_DISCONNECTED);
+	CU_ASSERT_EQUAL(tqpair[0].qpair.transport_failure_reason, SPDK_NVME_QPAIR_FAILURE_NONE);
+	CU_ASSERT_EQUAL(tqpair[1].qpair.state, NVME_QPAIR_CONNECTED);
+	CU_ASSERT(tqpair[1].sock != NULL);
+	CU_ASSERT(tqpair[1].sock_group != NULL);
+
+	nvme_ctrlr_disconnect_qpair(&tqpair[1].qpair);
+	rc = nvme_tcp_qpair_process_completions(&tqpair[1].qpair, 0);
+	CU_ASSERT_EQUAL(rc, -ENXIO);
+	CU_ASSERT(tqpair[1].sock_group == NULL);
+}
+
+static void
+ut_nvme_tcp_private_group_delete(bool async)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_tcp_qpair *tqpair;
+	struct spdk_sock_opts opts = {.opts_size = sizeof(opts)};
+	int rc;
+
+	tqpair = calloc(1, sizeof(*tqpair));
+	SPDK_CU_ASSERT_FATAL(tqpair != NULL);
+	tqpair->qpair.ctrlr = &ctrlr;
+	tqpair->qpair.state = NVME_QPAIR_CONNECTED;
+	tqpair->qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	tqpair->qpair.async = async;
+	tqpair->qpair.id = async ? 0 : 1;
+	TAILQ_INIT(&tqpair->send_queue);
+	TAILQ_INIT(&tqpair->outstanding_reqs);
+	TAILQ_INIT(&tqpair->free_reqs);
+	nvme_tcp_qpair_create_sock_group(&tqpair->qpair);
+	opts.group = tqpair->sock_group;
+	tqpair->sock = spdk_sock_connect("192.168.1.78", 23, &opts, NULL, NULL);
+
+	/* Disconnect inside a callback leaves the group busy until that callback unwinds. */
+	MOCK_SET(spdk_sock_group_close, -EBUSY);
+	nvme_ctrlr_disconnect_qpair(&tqpair->qpair);
+	CU_ASSERT_EQUAL(tqpair->qpair.state, NVME_QPAIR_DISCONNECTING);
+	rc = nvme_tcp_ctrlr_delete_io_qpair(&ctrlr, &tqpair->qpair);
+	MOCK_CLEAR(spdk_sock_group_close);
+	CU_ASSERT_EQUAL(rc, -EBUSY);
+	if (rc != -EBUSY) {
+		return;
+	}
+
+	/* Destruction must release the now-empty group without another completion poll. */
+	CU_ASSERT(tqpair->sock_group != NULL);
+	rc = nvme_tcp_ctrlr_delete_io_qpair(&ctrlr, &tqpair->qpair);
+	CU_ASSERT_EQUAL(rc, 0);
+}
+
+static void
+test_nvme_tcp_private_group_delete(void)
+{
+	ut_nvme_tcp_private_group_delete(true);
+	ut_nvme_tcp_private_group_delete(false);
+}
+
+static void
+test_nvme_tcp_shared_group_delete(void)
+{
+	struct nvme_tcp_ctrlr tctrlr = {};
+	struct nvme_tcp_poll_group *group;
+	struct nvme_tcp_qpair *tqpair;
+	int rc;
+
+	group = nvme_tcp_poll_group(nvme_tcp_poll_group_create());
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	tqpair = calloc(1, sizeof(*tqpair));
+	SPDK_CU_ASSERT_FATAL(tqpair != NULL);
+	tqpair->qpair.ctrlr = &tctrlr.ctrlr;
+	tqpair->qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	tqpair->qpair.id = 1;
+	tqpair->qpair.async = true;
+	tqpair->qpair.state = NVME_QPAIR_CONNECTED;
+	tqpair->qpair.poll_group = &group->group;
+	tqpair->shared_stats = true;
+	TAILQ_INIT(&tqpair->send_queue);
+	TAILQ_INIT(&tqpair->outstanding_reqs);
+	TAILQ_INIT(&tqpair->free_reqs);
+	tctrlr.ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	snprintf(tctrlr.ctrlr.trid.traddr, sizeof(tctrlr.ctrlr.trid.traddr), "192.168.1.78");
+	snprintf(tctrlr.ctrlr.trid.trsvcid, sizeof(tctrlr.ctrlr.trid.trsvcid), "23");
+	rc = nvme_tcp_qpair_connect_sock(&tctrlr.ctrlr, &tqpair->qpair);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(tqpair->sock_group == NULL);
+
+	nvme_ctrlr_disconnect_qpair(&tqpair->qpair);
+	CU_ASSERT(nvme_tcp_qpair_try_disconnect_done(&tqpair->qpair));
+	/* Poll-group removal clears this pointer before qpair destruction. */
+	tqpair->qpair.poll_group = NULL;
+	rc = nvme_tcp_ctrlr_delete_io_qpair(&tctrlr.ctrlr, &tqpair->qpair);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(spdk_sock_group_poll(group->sock_group), 0);
+	CU_ASSERT_EQUAL(nvme_tcp_poll_group_destroy(&group->group), 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2105,6 +2269,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_poll_group_get_stats);
 	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_construct);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_submit_request);
+	CU_ADD_TEST(suite, test_nvme_tcp_internal_group_poll_error);
+	CU_ADD_TEST(suite, test_nvme_tcp_private_admin_groups);
+	CU_ADD_TEST(suite, test_nvme_tcp_private_group_delete);
+	CU_ADD_TEST(suite, test_nvme_tcp_shared_group_delete);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
