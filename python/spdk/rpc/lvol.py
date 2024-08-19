@@ -250,30 +250,30 @@ def bdev_lvol_check_shallow_copy(client, operation_id):
     return client.call('bdev_lvol_check_shallow_copy', params)
 
 
-def bdev_lvol_set_parent(client, lvol_name, snapshot_name):
+def bdev_lvol_set_parent(client, lvol_name, parent_name):
     """Set the parent snapshot of a lvol
 
     Args:
         lvol_name: name of the lvol to set parent of
-        snapshot_name: name of the snapshot to become parent of lvol
+        parent_name: name of the snapshot to become parent of lvol
     """
     params = {
         'lvol_name': lvol_name,
-        'parent_name': snapshot_name
+        'parent_name': parent_name
     }
     return client.call('bdev_lvol_set_parent', params)
 
 
-def bdev_lvol_set_parent_bdev(client, lvol_name, esnap_name):
+def bdev_lvol_set_parent_bdev(client, lvol_name, parent_name):
     """Set the parent external snapshot of a lvol
 
     Args:
         lvol_name: name of the lvol to set parent of
-        esnap_name: name of the external snapshot to become parent of lvol
+        parent_name: name of the external snapshot to become parent of lvol
     """
     params = {
         'lvol_name': lvol_name,
-        'parent_name': esnap_name
+        'parent_name': parent_name
     }
     return client.call('bdev_lvol_set_parent_bdev', params)
 

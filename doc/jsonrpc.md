@@ -10815,7 +10815,7 @@ Lvol and parent snapshot must have the same size and must belong to the same lvo
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 lvol_name               | Required | string      | UUID or alias of the lvol to set parent of
-snapshot_name           | Required | string      | UUID or alias of the snapshot to become parent of lvol
+parent_name             | Required | string      | UUID or alias of the snapshot to become parent of lvol
 
 #### Example
 
@@ -10828,7 +10828,7 @@ Example request:
   "id": 1,
   "params": {
     "lvol_name": "LVS1/LVOL0",
-    "snapshot_name": "LVS1/SNAP0"
+    "parent_name": "LVS1/SNAP0"
   }
 }
 ~~~
@@ -10856,7 +10856,7 @@ The size of the external snapshot device must be an integer multiple of cluster 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 lvol_name               | Required | string      | UUID or alias of the lvol to set external parent of
-esnap_name              | Required | string      | UUID or name of the external snapshot to become parent of lvol
+parent_name             | Required | string      | UUID or name of the external snapshot to become parent of lvol
 
 #### Example
 
@@ -10869,7 +10869,7 @@ Example request:
   "id": 1,
   "params": {
     "lvol_name": "LVS1/LVOL0",
-    "esnap_name": "e465527b-f412-4f70-a03e-c4a5d608f65e"
+    "parent_name": "e465527b-f412-4f70-a03e-c4a5d608f65e"
   }
 }
 ~~~
