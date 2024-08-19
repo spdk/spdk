@@ -24,7 +24,7 @@
 
 /* This namespace UUID was generated using uuid_generate() method. */
 #define BDEV_PASSTHRU_NAMESPACE_UUID "7e25812e-c8c0-4d3f-8599-16d790555b85"
-
+#define SPDK_PAGE_SIZE 0x1000
 static int vbdev_passthru_init(void);
 static int vbdev_passthru_get_ctx_size(void);
 static void vbdev_passthru_examine(struct spdk_bdev *bdev);
@@ -91,6 +91,11 @@ struct passthru_bdev_io {
 
 	/* for bdev_io_wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
+};
+
+struct arg_requst {
+	struct spdk_bdev_io *bdev_io;
+	void *buf;
 };
 
 static void vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
@@ -177,6 +182,9 @@ _pt_complete_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	if(status == SPDK_BDEV_IO_STATUS_FAILED){
+		printf("error status");
+	}
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
 
 	/* We setup this value in the submission routine, just showing here that it is
@@ -240,9 +248,9 @@ get_md_count(struct spdk_bdev_io *bdev_io, uint32_t md_len)
 
 
 static inline uint64_t
-byte_to_lba(struct spdk_bdev_io *bdev_io, uint64_t length)
+byte_to_lba(struct spdk_bdev_io *bdev_io, uint32_t md_len, uint64_t length)
 {
-	return (length / bdev_io->bdev->blocklen + ((length % bdev_io->bdev->blocklen) ? 1 : 0));
+	return (length / bdev_io->bdev->blocklen + ((length % bdev_io->bdev->blocklen) ? 1 : 0) + ((get_md_offset(bdev_io, md_len) % bdev_io->bdev->blocklen) ? 1 : 0));
 }
 
 static inline uint64_t
@@ -251,11 +259,35 @@ start_byte_to_lba(struct spdk_bdev_io *bdev_io, uint64_t offset)
 	return offset / bdev_io->bdev->blocklen;
 }
 
+static void
+_pt_complete_io6(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+		// struct spdk_bdev_io *orig_io = cb_arg;
+	struct arg_requst *request = (struct arg_requst *)cb_arg;
+	struct spdk_bdev_io *orig_io = request->bdev_io;
+	// int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	_pt_complete_io(bdev_io, success, orig_io);
+	// free(request->buf);	
+	free(request);	
+}
+
 
 static void
 _pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io *orig_io = cb_arg;
+		// struct spdk_bdev_io *orig_io = cb_arg;
+	struct arg_requst *request = (struct arg_requst *)cb_arg;
+	struct spdk_bdev_io *orig_io = request->bdev_io;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
@@ -274,39 +306,55 @@ _pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (!success) {
         spdk_bdev_io_complete(orig_io, status);
 		spdk_bdev_free_io(bdev_io);
+		// free(request->buf);	
+		free(request);
         return;
     }
 
-	if (orig_io->u.bdev.md_buf == NULL) {
-		_pt_complete_io(bdev_io, success, cb_arg);
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		memset(request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), 0, get_md_count(orig_io, pt_node->md_len));
+		break;
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		if (orig_io->u.bdev.md_buf == NULL) {
+			_pt_complete_io(bdev_io, success, cb_arg);
+			// free(request->buf);	
+			free(request);
+			return;
+		}
+		memcpy(request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), orig_io->u.bdev.md_buf, get_md_count(orig_io, pt_node->md_len));
+		break;
+	default:
 		return;
 	}
 
-
-	memcpy(pt_node->malloc_md_buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), orig_io->u.bdev.md_buf, get_md_count(orig_io, pt_node->md_len));
-
+	
 	lb = start_byte_to_lba(orig_io, get_md_offset(orig_io, pt_node->md_len));
-	lb_count = byte_to_lba(orig_io, get_md_count(orig_io, pt_node->md_len));
+	lb_count = byte_to_lba(orig_io, pt_node->md_len, get_md_count(orig_io, pt_node->md_len));
 
 	if(!lb_count) {
 		lb_count = 1;
 	}
 
 	rc = spdk_bdev_write_blocks(pt_node->base_desc, pt_ch->base_ch,
-		       pt_node->malloc_md_buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
-		       _pt_complete_io, orig_io);
+		       request->buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
+		       _pt_complete_io6, request);
 
 	if (rc != 0) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");			
-			vbdev_passthru_queue_io(orig_io);
-		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+		// free(request->buf);	
+		free(request);
+		// if (rc == -ENOMEM) {
+		// 	SPDK_ERRLOG("No memory, start to queue io for passthru.\n");			
+		// 	vbdev_passthru_queue_io(orig_io);
+		// } else {
+		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		// }
 	}
-	spdk_bdev_free_io(bdev_io);
-	
+	spdk_bdev_free_io(bdev_io);	
 }
 
 
@@ -319,6 +367,7 @@ _pt_complete_io2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
 	uint64_t lb,lb_count;
+	struct arg_requst *request;
 	int rc;
 
 	/* We setup this value in the submission routine, just showing here that it is
@@ -341,26 +390,45 @@ _pt_complete_io2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	lb = start_byte_to_lba(orig_io, get_md_offset(orig_io, pt_node->md_len));
-	lb_count = byte_to_lba(orig_io, get_md_count(orig_io, pt_node->md_len));
+	lb_count = byte_to_lba(orig_io, pt_node->md_len, get_md_count(orig_io, pt_node->md_len));
 
 	if(!lb_count) {
 		lb_count = 1;
 	}
+	if(lb + lb_count >= pt_node->offset_start){
+		_pt_complete_io(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, cb_arg);
+		return;
+	}
 
+	request = calloc(1, sizeof(*request));
+	if (request == NULL) {
+		SPDK_ERRLOG("No memory,ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		spdk_bdev_free_io(bdev_io);	
+		return;
+	}
+	void *buf = spdk_zmalloc(SPDK_PAGE_SIZE * lb_count, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	memset(buf, 0, SPDK_PAGE_SIZE * lb_count);
+	request->buf = buf;
+	request->bdev_io = orig_io;
+	// pt_node->malloc_md_buf = spdk_zmalloc(SPDK_PAGE_SIZE * lb_count, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);	
+	
 	rc = spdk_bdev_read_blocks(pt_node->base_desc, pt_ch->base_ch,
-		        pt_node->malloc_md_buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
-		       _pt_complete_io3, orig_io);
+		        request->buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
+		       _pt_complete_io3, request);
 
 
 	if (rc != 0) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
-			// io_ctx->ch = ch;
-			vbdev_passthru_queue_io(orig_io);
-		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+		free(request->buf);
+		free(request);
+		// if (rc == -ENOMEM) {
+		// 	SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
+		// 	// io_ctx->ch = ch;
+		// 	vbdev_passthru_queue_io(orig_io);
+		// } else {
+		SPDK_ERRLOG("reading md blocks, ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		// }
 	}
 	spdk_bdev_free_io(bdev_io);
 	
@@ -370,13 +438,13 @@ _pt_complete_io2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 static void
 _pt_complete_io5(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io *orig_io = cb_arg;
+	// struct spdk_bdev_io *orig_io = cb_arg;
+	struct arg_requst *request = (struct arg_requst *)cb_arg;
+	struct spdk_bdev_io *orig_io = request->bdev_io;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
-	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
-	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);
-	uint64_t lb,lb_count;
-	int rc;
+	// struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
+	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
 
 	/* We setup this value in the submission routine, just showing here that it is
 	 * passed back to us.
@@ -389,26 +457,30 @@ _pt_complete_io5(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (!success) {
         spdk_bdev_io_complete(orig_io, status);
 		spdk_bdev_free_io(bdev_io);
+		// free(request->buf);	
+		free(request);
         return;
     }
 
 	if (orig_io->u.bdev.md_buf == NULL) {
-		void *md_buf = spdk_zmalloc(get_md_count(orig_io, pt_node->md_len), 2 * 1024 * 1024, NULL,
-						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (!md_buf) {
-			SPDK_ERRLOG("malloc_md_buf spdk_zmalloc() failed\n");
-			_pt_complete_io(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, cb_arg);
-			return;
-		}		
-		spdk_bdev_io_set_md_buf(orig_io, md_buf, get_md_count(orig_io, pt_node->md_len));
+		// void *md_buf = spdk_zmalloc(get_md_count(orig_io, pt_node->md_len), 2 * 1024 * 1024, NULL,
+		// 				    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		// if (!md_buf) {
+		// 	SPDK_ERRLOG("malloc_md_buf spdk_zmalloc() failed\n");
+		// 	_pt_complete_io(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, cb_arg);
+		// 	return;
+		// }		
+		// spdk_bdev_io_set_md_buf(orig_io, md_buf, get_md_count(orig_io, pt_node->md_len));
 		_pt_complete_io(bdev_io, success, cb_arg);
+		// free(request->buf);	
+		free(request);
 		return;
 	}
 	
-	memcpy(orig_io->u.bdev.md_buf, pt_node->malloc_md_buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
-	_pt_complete_io(bdev_io, success, cb_arg);
-	
-
+	memcpy(orig_io->u.bdev.md_buf, request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
+	_pt_complete_io(bdev_io, success, orig_io);
+	// free(request->buf);	
+	free(request);
 }
 
 
@@ -422,6 +494,7 @@ _pt_complete_io4(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
 	uint64_t lb,lb_count;
+	struct arg_requst *request;
 	int rc;
 
 	/* We setup this value in the submission routine, just showing here that it is
@@ -444,26 +517,47 @@ _pt_complete_io4(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	lb = start_byte_to_lba(orig_io, get_md_offset(orig_io, pt_node->md_len));
-	lb_count = byte_to_lba(orig_io, get_md_count(orig_io, pt_node->md_len));
+	lb_count = byte_to_lba(orig_io, pt_node->md_len, get_md_count(orig_io, pt_node->md_len));
 
 	if(!lb_count) {
 		lb_count = 1;
 	}
 
+	if(lb + lb_count >= pt_node->offset_start){
+		_pt_complete_io(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, cb_arg);
+		return;
+	}
+	request = calloc(1, sizeof(*request));
+	if (request == NULL) {
+		SPDK_ERRLOG("No memory, ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		spdk_bdev_free_io(bdev_io);
+		return;
+	}
+	void *buf = spdk_zmalloc(SPDK_PAGE_SIZE * lb_count, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	memset(buf, 0, SPDK_PAGE_SIZE * lb_count);
+	request->buf = buf;
+	request->bdev_io = orig_io;
+	// void *buf = spdk_realloc(pt_node->malloc_md_buf, SPDK_PAGE_SIZE * lb_count, 0);
+	// memset(buf, 0, SPDK_PAGE_SIZE * lb_count);
+	// pt_node->malloc_md_buf = spdk_zmalloc(SPDK_PAGE_SIZE * lb_count, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	// pt_node->malloc_md_buf = buf;
 	rc = spdk_bdev_read_blocks(pt_node->base_desc, pt_ch->base_ch,
-		        pt_node->malloc_md_buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
-		       _pt_complete_io5, orig_io);
+		        request->buf, lb * pt_node->multiplier, lb_count * pt_node->multiplier,
+		       _pt_complete_io5, request);
 
 
 	if (rc != 0) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
-			// io_ctx->ch = ch;
-			vbdev_passthru_queue_io(orig_io);
-		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+		free(request->buf);	
+		free(request);
+		// if (rc == -ENOMEM) {
+		// 	SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
+		// 	// io_ctx->ch = ch;
+		// 	vbdev_passthru_queue_io(orig_io);
+		// } else {
+		SPDK_ERRLOG("reading md for do write, ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		// }
 	}
 	spdk_bdev_free_io(bdev_io);	
 }
@@ -953,7 +1047,7 @@ vbdev_passthru_register(const char *bdev_name)
 		// pt_node->pt_bdev.md_len = bdev->md_len;
 		pt_node->pt_bdev.md_len = name->md_sz ? name->md_sz : bdev->md_len;
 		pt_node->md_len = name->md_sz ? name->md_sz : bdev->md_len;
-		uint32_t guest = pt_node->pt_bdev.blockcnt * pt_node->pt_bdev.md_len;
+		uint64_t guest = pt_node->pt_bdev.blockcnt * pt_node->pt_bdev.md_len;
 		pt_node->offset_start = (guest / bdev->blocklen) + ((guest % bdev->blocklen) ? 1 : 0);
 		pt_node->offset_start = pt_node->offset_start  + ((pt_node->offset_start % pt_node->multiplier) ? pt_node->multiplier - (pt_node->offset_start % pt_node->multiplier) : 0);
 		pt_node->offset_start = (pt_node->offset_start * bdev->blocklen) / pt_node->pt_bdev.blocklen;
