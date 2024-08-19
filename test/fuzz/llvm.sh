@@ -12,11 +12,13 @@ fuzzers=($(get_fuzzer_targets))
 
 llvm_out=$output_dir/llvm
 
-mkdir -p $rootdir/../corpus/ $llvm_out/coverage
+mkdir -p $rootdir/../corpus/ $llvm_out
 
 function lcov_start() {
 	local out=$llvm_out/coverage
 	local src=$rootdir
+
+	mkdir -p $out
 
 	if hash lcov; then
 		export LCOV_OPTS="
