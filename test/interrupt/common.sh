@@ -25,7 +25,7 @@ function reactor_is_busy_or_idle() {
 		cpu_rate=$(echo $top_reactor | sed -e 's/^\s*//g' | awk '{print $9}')
 		cpu_rate=${cpu_rate%.*}
 
-		if [[ $state = "busy" ]] && [[ $cpu_rate -lt 70 ]]; then
+		if [[ $state = "busy" ]] && [[ $cpu_rate -lt 65 ]]; then
 			sleep 1
 		elif [[ $state = "idle" ]] && [[ $cpu_rate -gt 30 ]]; then
 			sleep 1
