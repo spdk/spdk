@@ -345,6 +345,13 @@ xattrs_free(struct spdk_xattr_tailq *xattrs)
 }
 
 static void
+blob_unref_back_bs_dev(struct spdk_blob *blob)
+{
+	blob->back_bs_dev->destroy(blob->back_bs_dev);
+	blob->back_bs_dev = NULL;
+}
+
+static void
 blob_free(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
@@ -362,7 +369,7 @@ blob_free(struct spdk_blob *blob)
 	xattrs_free(&blob->xattrs_internal);
 
 	if (blob->back_bs_dev) {
-		blob->back_bs_dev->destroy(blob->back_bs_dev);
+		blob_unref_back_bs_dev(blob);
 	}
 
 	free(blob);
@@ -10221,8 +10228,7 @@ blob_frozen_set_back_bs_dev(void *_ctx, struct spdk_blob *blob, int bserrno)
 	}
 
 	if (blob->back_bs_dev != NULL) {
-		blob->back_bs_dev->destroy(blob->back_bs_dev);
-		blob->back_bs_dev = NULL;
+		blob_unref_back_bs_dev(blob);
 	}
 
 	if (ctx->parent_refs_cb_fn) {
