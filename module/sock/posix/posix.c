@@ -2134,7 +2134,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 			/* If the socket was closed or removed from
 			 * the group in response to a send ack, don't
 			 * add it to the array here. */
-			if (rc || sock->cb_fn == NULL) {
+			if (rc || sock->group_impl == NULL) {
 				continue;
 			}
 		}
@@ -2162,9 +2162,9 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 			break;
 		}
 
-		/* If the socket's cb_fn is NULL, just remove it from the
+		/* If the socket isn't supposed to be in a group, just remove it from the
 		 * list and do not add it to socks array */
-		if (spdk_unlikely(psock->base.cb_fn == NULL)) {
+		if (spdk_unlikely(psock->base.group_impl == NULL)) {
 			psock->socket_has_data = false;
 			psock->pipe_has_data = false;
 			TAILQ_REMOVE(&group->socks_with_data, psock, link);

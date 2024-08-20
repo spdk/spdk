@@ -43,9 +43,6 @@ static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
-static void iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
-			       struct spdk_sock *sock);
-
 static struct spdk_iscsi_conn *
 allocate_conn(void)
 {
@@ -117,7 +114,7 @@ iscsi_poll_group_add_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi_co
 {
 	int rc;
 
-	rc = spdk_sock_group_add_sock(pg->sock_group, conn->sock, iscsi_conn_sock_cb, conn);
+	rc = spdk_sock_group_add_sock(pg->sock_group, conn->sock, conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, sock=%p, conn=%p, rc %d: %s\n", conn->sock, conn,
 			    rc, spdk_strerror(-rc));
@@ -1480,7 +1477,7 @@ iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	spdk_sock_writev_async(conn->sock, &pdu->sock_req);
 }
 
-static void
+void
 iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct spdk_iscsi_conn *conn = arg;

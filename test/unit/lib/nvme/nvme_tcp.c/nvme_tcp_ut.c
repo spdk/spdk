@@ -1599,6 +1599,12 @@ ut_disconnect_qpair_poll_group_cb(struct spdk_nvme_qpair *qpair, void *ctx)
 }
 
 static void
+ut_sock_group_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+
+}
+
+static void
 test_nvme_tcp_ctrlr_disconnect_qpair(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
@@ -1619,7 +1625,8 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	int rc, disconnected;
 	struct spdk_sock_group_opts opts = {
 		.size = sizeof(opts),
-		.ctx = &tgroup
+		.ctx = &tgroup,
+		.rx_cb = ut_sock_group_cb
 	};
 
 	tgroup.sock_group = spdk_sock_group_create(&opts);

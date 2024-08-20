@@ -992,9 +992,14 @@ static int
 iscsi_poll_group_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_iscsi_poll_group *pg = ctx_buf;
+	struct spdk_sock_group_opts sgroup_opts = {
+		.size = sizeof(sgroup_opts),
+		.ctx = NULL,
+		.rx_cb = iscsi_conn_sock_cb
+	};
 
 	STAILQ_INIT(&pg->connections);
-	pg->sock_group = spdk_sock_group_create(NULL);
+	pg->sock_group = spdk_sock_group_create(&sgroup_opts);
 	assert(pg->sock_group != NULL);
 
 	pg->poller = SPDK_POLLER_REGISTER(iscsi_poll_group_poll, pg, 0);

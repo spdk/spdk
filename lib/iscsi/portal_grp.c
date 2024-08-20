@@ -168,7 +168,7 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 		return -1;
 	}
 
-	rc = spdk_sock_group_add_sock(p->group->sock_group, sock, iscsi_portal_accept, p);
+	rc = spdk_sock_group_add_sock(p->group->sock_group, sock, p);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		spdk_sock_close(&sock);
@@ -372,7 +372,8 @@ iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg, bool pause)
 {
 	struct spdk_sock_group_opts opts = {
 		.size = sizeof(opts),
-		.ctx = pg
+		.ctx = pg,
+		.rx_cb = iscsi_portal_accept
 	};
 	struct spdk_iscsi_portal *p;
 	int rc;

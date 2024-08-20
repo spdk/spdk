@@ -71,8 +71,7 @@ DEFINE_STUB(spdk_sock_set_recvbuf, int, (struct spdk_sock *sock, int sz), 0);
 DEFINE_STUB(spdk_sock_set_sendbuf, int, (struct spdk_sock *sock, int sz), 0);
 
 DEFINE_STUB(spdk_sock_group_add_sock, int,
-	    (struct spdk_sock_group *group, struct spdk_sock *sock,
-	     spdk_sock_cb cb_fn, void *cb_arg),
+	    (struct spdk_sock_group *group, struct spdk_sock *sock, void *cb_arg),
 	    0);
 
 DEFINE_STUB(spdk_sock_group_remove_sock, int,

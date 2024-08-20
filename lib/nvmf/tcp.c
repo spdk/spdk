@@ -748,7 +748,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	uint64_t period;
 	struct spdk_sock_group_opts sock_group_opts = {
 		.size = sizeof(sock_group_opts),
-		.ctx = NULL
+		.ctx = NULL,
+		.rx_cb = nvmf_tcp_accept_cb
 	};
 
 	ttransport = calloc(1, sizeof(*ttransport));
@@ -1087,8 +1088,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		return -EINVAL;
 	}
 
-	rc = spdk_sock_group_add_sock(ttransport->listen_sock_group, port->listen_sock, nvmf_tcp_accept_cb,
-				      port);
+	rc = spdk_sock_group_add_sock(ttransport->listen_sock_group, port->listen_sock, port);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		spdk_sock_close(&port->listen_sock);
@@ -1650,6 +1650,8 @@ nvmf_tcp_poll_group_intr(void *ctx)
 	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
+static void nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock);
+
 static struct spdk_nvmf_transport_poll_group *
 nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 			   struct spdk_nvmf_poll_group *group)
@@ -1663,8 +1665,9 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 		return NULL;
 	}
 
-	sock_group_opts.size = sizeof(sock_group_opts);
+	sock_group_opts.size = SPDK_SIZEOF(&sock_group_opts, rx_cb);
 	sock_group_opts.ctx = &tgroup->group;
+	sock_group_opts.rx_cb = nvmf_tcp_sock_cb;
 	tgroup->sock_group = spdk_sock_group_create(&sock_group_opts);
 	if (!tgroup->sock_group) {
 		goto cleanup;
@@ -3398,8 +3401,7 @@ nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock,
-				      nvmf_tcp_sock_cb, tqpair);
+	rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		return -1;

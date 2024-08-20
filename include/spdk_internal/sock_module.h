@@ -42,7 +42,6 @@ struct spdk_sock {
 	struct spdk_sock_request	*read_req;
 	int				queued_iovcnt;
 	int				cb_cnt;
-	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
 	struct {
 		uint8_t		closed		: 1;
@@ -55,6 +54,7 @@ struct spdk_sock_group {
 	STAILQ_HEAD(, spdk_sock_group_impl)	group_impls;
 	struct spdk_fd_group			*fgrp;
 	void					*ctx;
+	spdk_sock_cb				rx_cb;
 };
 
 struct spdk_sock_group_impl {

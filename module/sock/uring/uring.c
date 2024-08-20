@@ -1225,8 +1225,7 @@ uring_sock_fail(struct spdk_uring_sock *sock, int status)
 	rc = spdk_sock_abort_requests(&sock->base);
 
 	/* The user needs to be notified that this socket is dead. */
-	if (rc == 0 && sock->base.cb_fn != NULL &&
-	    sock->pending_recv == false) {
+	if (rc == 0 && sock->pending_recv == false) {
 		sock->pending_recv = true;
 		TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 	}
@@ -1278,8 +1277,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			} else if (status == -ENOBUFS) {
 				/* There's data in the socket but the user hasn't provided any buffers.
 				 * We need to notify the user that the socket has data pending. */
-				if (sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
+				if (sock->pending_recv == false) {
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
@@ -1302,8 +1300,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				assert(group->buf_ring_count > 0);
 				group->buf_ring_count--;
 
-				if (sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
+				if (sock->pending_recv == false) {
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
@@ -1365,8 +1362,8 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			break;
 		}
 
-		/* If the socket's cb_fn is NULL, do not add it to socks array */
-		if (spdk_unlikely(sock->base.cb_fn == NULL)) {
+		/* If the socket was removed from the group, do not add it to socks array */
+		if (spdk_unlikely(sock->group == NULL)) {
 			assert(sock->pending_recv == true);
 			sock->pending_recv = false;
 			TAILQ_REMOVE(&group->pending_recv, sock, link);

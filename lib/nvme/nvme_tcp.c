@@ -2703,7 +2703,7 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	if (qpair->poll_group) {
 		tgroup = nvme_tcp_poll_group(qpair->poll_group);
 
-		rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair);
+		rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, qpair);
 		if (rc < 0) {
 			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_group_add_sock() failed, rc %d: %s\n", rc,
 					   spdk_strerror(-rc));
@@ -3009,7 +3009,8 @@ nvme_tcp_poll_group_create(void)
 	struct nvme_tcp_poll_group *group = calloc(1, sizeof(*group));
 	struct spdk_sock_group_opts opts = {
 		.size = sizeof(opts),
-		.ctx = group
+		.ctx = group,
+		.rx_cb = nvme_tcp_qpair_sock_cb
 	};
 
 	if (group == NULL) {

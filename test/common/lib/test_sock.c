@@ -10,7 +10,6 @@
 
 struct test_sock_group_entry {
 	struct spdk_sock	*sock;
-	spdk_sock_cb		cb_fn;
 	void			*cb_arg;
 };
 
@@ -19,6 +18,7 @@ struct test_sock_group_entry {
 struct test_sock_group {
 	struct test_sock_group_entry	entries[MAX_SOCK_GROUP_ENTRIES];
 	int				num_entries;
+	spdk_sock_cb			rx_cb;
 };
 
 DEFINE_STUB(spdk_sock_getaddr, int, (struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
@@ -53,13 +53,16 @@ spdk_sock_group_create(const struct spdk_sock_group_opts *opts)
 	group = calloc(1, sizeof(*group));
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
+	if (opts) {
+		group->rx_cb = opts->rx_cb;
+	}
+
 	return (struct spdk_sock_group *)group;
 }
 
 DEFINE_RETURN_MOCK(spdk_sock_group_add_sock, int);
 int
-spdk_sock_group_add_sock(struct spdk_sock_group *_group, struct spdk_sock *sock, spdk_sock_cb cb_fn,
-			 void *cb_arg)
+spdk_sock_group_add_sock(struct spdk_sock_group *_group, struct spdk_sock *sock, void *cb_arg)
 {
 	struct test_sock_group *group;
 	struct test_sock_group_entry *entry;
@@ -73,7 +76,6 @@ spdk_sock_group_add_sock(struct spdk_sock_group *_group, struct spdk_sock *sock,
 	entry = &group->entries[group->num_entries++];
 
 	entry->cb_arg = cb_arg;
-	entry->cb_fn = cb_fn;
 	entry->sock = sock;
 
 	return 0;
@@ -117,7 +119,7 @@ spdk_sock_group_poll(struct spdk_sock_group *_group)
 	group = (struct test_sock_group *)_group;
 
 	for (i = 0; i < group->num_entries; i++) {
-		group->entries[i].cb_fn(group->entries[i].cb_arg, _group, group->entries[i].sock);
+		group->rx_cb(group->entries[i].cb_arg, _group, group->entries[i].sock);
 	}
 
 	return 0;

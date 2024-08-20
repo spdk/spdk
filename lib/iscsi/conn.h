@@ -173,6 +173,8 @@ struct spdk_iscsi_conn {
 	TAILQ_ENTRY(spdk_iscsi_conn)	conn_link;
 };
 
+void iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock);
+
 void iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
 void iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
 

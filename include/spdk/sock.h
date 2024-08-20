@@ -548,9 +548,9 @@ bool spdk_sock_is_ipv4(struct spdk_sock *sock);
 bool spdk_sock_is_connected(struct spdk_sock *sock);
 
 /**
- * Callback function for spdk_sock_group_add_sock().
+ * Callback function for spdk_sock_group_opts.
  *
- * \param arg Argument for the callback function.
+ * \param arg Socket argument for the callback function.
  * \param group Socket group.
  * \param sock Socket.
  */
@@ -559,14 +559,16 @@ typedef void (*spdk_sock_cb)(void *arg, struct spdk_sock_group *group, struct sp
 struct spdk_sock_group_opts {
 	/** Size of this structure */
 	size_t		size;
-	/** User context */
+	/** User context. Can be NULL */
 	void		*ctx;
+	/** Callback function for when sockets have new data to receive. Required. */
+	spdk_sock_cb	rx_cb;
 };
 
 /**
  * Create a new socket group.
  *
- * \param opts Socket group options.
+ * \param opts Socket group options. This is required and may not be NULL.
  *
  * \return a pointer to the created group on success, or NULL on failure.
  */
@@ -586,13 +588,11 @@ void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
  *
  * \param group Socket group.
  * \param sock Socket to add.
- * \param cb_fn Called when the operation completes.
  * \param cb_arg Argument passed to the callback function.
  *
  * \return 0 on success, negative errno value on failure.
  */
-int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
-			     spdk_sock_cb cb_fn, void *cb_arg);
+int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock, void *cb_arg);
 
 /**
  * Remove a socket from the group.
