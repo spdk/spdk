@@ -61,7 +61,7 @@ idxd_select_device(struct idxd_io_channel *chan)
 {
 	uint32_t count = 0;
 	struct idxd_device *dev;
-	uint32_t socket_id = spdk_env_get_socket_id(spdk_env_get_current_core());
+	uint32_t numa_id = spdk_env_get_numa_id(spdk_env_get_current_core());
 
 	/*
 	 * We allow channels to share underlying devices,
@@ -78,7 +78,7 @@ idxd_select_device(struct idxd_io_channel *chan)
 		dev = g_next_dev;
 		pthread_mutex_unlock(&g_dev_lock);
 
-		if (socket_id != spdk_idxd_get_socket(dev->iaa)) {
+		if (numa_id != spdk_idxd_get_socket(dev->iaa)) {
 			continue;
 		}
 
@@ -89,8 +89,8 @@ idxd_select_device(struct idxd_io_channel *chan)
 		 */
 		chan->chan = spdk_idxd_get_channel(dev->iaa);
 		if (chan->chan != NULL) {
-			SPDK_DEBUGLOG(accel_iaa, "On socket %d using device on socket %d\n",
-				      socket_id, spdk_idxd_get_socket(dev->iaa));
+			SPDK_DEBUGLOG(accel_iaa, "On socket %d using device on numa %d\n",
+				      numa_id, spdk_idxd_get_socket(dev->iaa));
 			return dev;
 		}
 	} while (++count < g_num_devices);

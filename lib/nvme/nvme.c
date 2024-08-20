@@ -543,8 +543,6 @@ nvme_driver_init(void)
 {
 	static pthread_mutex_t g_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 	int ret = 0;
-	/* Any socket ID */
-	int socket_id = -1;
 
 	/* Use a special process-private mutex to ensure the global
 	 * nvme driver object (g_spdk_nvme_driver) gets initialized by
@@ -570,7 +568,7 @@ nvme_driver_init(void)
 			return 0;
 		} else {
 			g_spdk_nvme_driver = spdk_memzone_reserve(SPDK_NVME_DRIVER_NAME,
-					     sizeof(struct nvme_driver), socket_id,
+					     sizeof(struct nvme_driver), SPDK_ENV_NUMA_ID_ANY,
 					     SPDK_MEMZONE_NO_IOVA_CONTIG);
 		}
 

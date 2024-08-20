@@ -74,3 +74,10 @@ a bdev of the correct size.
 
 These functions are deprecated and will be removed in 24.09 release. Please use
 `spdk_rpc_server_listen`, `spdk_rpc_server_accept` and `spdk_rpc_server_close` instead.
+
+### env
+
+#### `spdk_env_get_socket_id`
+
+This function is deprecated and will be removed in 25.05 release. Please use
+`spdk_env_get_numa_id` instead.

@@ -66,14 +66,23 @@ spdk_env_get_next_core(uint32_t prev_core)
 	return lcore;
 }
 
-uint32_t
-spdk_env_get_socket_id(uint32_t core)
+int32_t
+spdk_env_get_numa_id(uint32_t core)
 {
 	if (core >= RTE_MAX_LCORE) {
 		return SPDK_ENV_NUMA_ID_ANY;
 	}
 
 	return rte_lcore_to_socket_id(core);
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(env_socket_id, "spdk_env_get_socket_id", "v25.05", 0);
+
+uint32_t
+spdk_env_get_socket_id(uint32_t core)
+{
+	SPDK_LOG_DEPRECATED(env_socket_id);
+	return spdk_env_get_numa_id(core);
 }
 
 void

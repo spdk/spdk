@@ -507,11 +507,22 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
 	     i = spdk_env_get_next_core(i))
 
 /**
- * Get the NUMA socket ID for the given core.
+ * Get the NUMA node ID for the given core.
  *
  * \param core CPU core to query.
  *
- * \return the NUMA socket ID for the given core.
+ * \return the NUMA node ID for the given core.
+ */
+int32_t spdk_env_get_numa_id(uint32_t core);
+
+/**
+ * Get the NUMA node ID for the given core.
+ *
+ * Deprecated, use \ref spdk_env_get_numa_id() instead.
+ *
+ * \param core CPU core to query.
+ *
+ * \return the NUMA node ID for the given core.
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
 

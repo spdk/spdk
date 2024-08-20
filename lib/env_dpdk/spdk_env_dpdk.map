@@ -39,6 +39,7 @@
 	spdk_env_get_last_core;
 	spdk_env_get_next_core;
 	spdk_env_get_socket_id;
+	spdk_env_get_numa_id;
 	spdk_env_get_cpuset;
 	spdk_env_core_get_smt_cpuset;
 	spdk_env_thread_launch_pinned;
