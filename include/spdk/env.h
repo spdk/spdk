@@ -724,7 +724,10 @@ struct spdk_pci_device {
 	void				*dev_handle;
 	struct spdk_pci_addr		addr;
 	struct spdk_pci_id		id;
-	int				socket_id; /* NUMA socket node ID */
+	union {
+		int			numa_id;
+		int			socket_id; /* Legacy name for this field */
+	};
 	const char			*type;
 
 	int (*map_bar)(struct spdk_pci_device *dev, uint32_t bar,
@@ -998,6 +1001,17 @@ struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
 /**
  * Get the NUMA node the PCI device is on.
+ *
+ * \param dev PCI device.
+ *
+ * \return NUMA node index (>= 0).
+ */
+int spdk_pci_device_get_numa_id(struct spdk_pci_device *dev);
+
+/**
+ * Get the NUMA node the PCI device is on.
+ *
+ * Deprecated. Use `ref spdk_pci_device_get_numa_id()` instead.
  *
  * \param dev PCI device.
  *

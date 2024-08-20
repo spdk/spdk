@@ -386,7 +386,7 @@ pci_device_init(struct rte_pci_driver *_drv,
 	dev->id.subvendor_id = id->subsystem_vendor_id;
 	dev->id.subdevice_id = id->subsystem_device_id;
 
-	dev->socket_id = dpdk_pci_device_get_numa_node(_dev);
+	dev->numa_id = dpdk_pci_device_get_numa_node(_dev);
 	dev->type = "pci";
 
 	dev->map_bar = map_bar_rte;
@@ -863,9 +863,18 @@ spdk_pci_device_get_id(struct spdk_pci_device *dev)
 }
 
 int
+spdk_pci_device_get_numa_id(struct spdk_pci_device *dev)
+{
+	return dev->numa_id;
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(pci_device_socket_id, "spdk_pci_device_get_socket_id", "v25.05", 0);
+
+int
 spdk_pci_device_get_socket_id(struct spdk_pci_device *dev)
 {
-	return dev->socket_id;
+	SPDK_LOG_DEPRECATED(pci_device_socket_id);
+	return spdk_pci_device_get_numa_id(dev);
 }
 
 int

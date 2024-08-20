@@ -81,6 +81,7 @@
 	spdk_pci_device_get_subdevice_id;
 	spdk_pci_device_get_id;
 	spdk_pci_device_get_socket_id;
+	spdk_pci_device_get_numa_id;
 	spdk_pci_device_get_serial_number;
 	spdk_pci_device_claim;
 	spdk_pci_device_unclaim;
