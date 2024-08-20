@@ -29,6 +29,7 @@
 #define OBJECT_NVMF_TCP_IO	0x80
 #define OBJECT_NVMF_FC_IO	0xA0
 #define OBJECT_BLOB_CB_ARG      0xB0
+#define OBJECT_BDEV_RAID_IO     0xC0
 
 /* Trace group definitions */
 #define TRACE_GROUP_ISCSI	0x1
@@ -47,6 +48,7 @@
 #define TRACE_GROUP_BDEV_NVME	0xE
 #define TRACE_GROUP_SOCK	0xF
 #define TRACE_GROUP_BLOB	0x10
+#define TRACE_GROUP_BDEV_RAID	0x11
 
 /* Bdev tracepoint definitions */
 #define TRACE_BDEV_IO_START		SPDK_TPOINT_ID(TRACE_GROUP_BDEV, 0x0)
@@ -167,5 +169,9 @@
 /* blobstore tracepoint definitions */
 #define TRACE_BLOB_REQ_SET_START        SPDK_TPOINT_ID(TRACE_GROUP_BLOB, 0x0)
 #define TRACE_BLOB_REQ_SET_COMPLETE     SPDK_TPOINT_ID(TRACE_GROUP_BLOB, 0x1)
+
+/* Bdev raid tracepoint definitions */
+#define TRACE_BDEV_RAID_IO_START	SPDK_TPOINT_ID(TRACE_GROUP_BDEV_RAID, 0x0)
+#define TRACE_BDEV_RAID_IO_DONE		SPDK_TPOINT_ID(TRACE_GROUP_BDEV_RAID, 0x1)
 
 #endif /* SPDK_INTERNAL_TRACE_DEFS */

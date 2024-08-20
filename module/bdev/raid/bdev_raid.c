@@ -12,6 +12,8 @@
 #include "spdk/util.h"
 #include "spdk/json.h"
 #include "spdk/likely.h"
+#include "spdk/trace.h"
+#include "spdk_internal/trace_defs.h"
 
 #define RAID_OFFSET_BLOCKS_INVALID	UINT64_MAX
 #define RAID_BDEV_PROCESS_MAX_QD	16
@@ -606,6 +608,8 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	int rc;
 
+	spdk_trace_record(TRACE_BDEV_RAID_IO_DONE, 0, 0, (uintptr_t)raid_io, (uintptr_t)bdev_io);
+
 	if (raid_io->split.offset != RAID_OFFSET_BLOCKS_INVALID) {
 		struct iovec *split_iov = raid_io->split.iov;
 		const struct iovec *split_iov_orig = &raid_io->split.iov_copy;
@@ -937,6 +941,8 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 			  bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
 			  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.md_buf,
 			  bdev_io->u.bdev.memory_domain, bdev_io->u.bdev.memory_domain_ctx);
+
+	spdk_trace_record(TRACE_BDEV_RAID_IO_START, 0, 0, (uintptr_t)raid_io, (uintptr_t)bdev_io);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -3937,3 +3943,25 @@ done:
 
 /* Log component for bdev raid bdev module */
 SPDK_LOG_REGISTER_COMPONENT(bdev_raid)
+
+SPDK_TRACE_REGISTER_FN(bdev_raid_trace, "bdev_raid", TRACE_GROUP_BDEV_RAID)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"BDEV_RAID_IO_START", TRACE_BDEV_RAID_IO_START,
+			OWNER_TYPE_NONE, OBJECT_BDEV_RAID_IO, 1,
+			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+		},
+		{
+			"BDEV_RAID_IO_DONE", TRACE_BDEV_RAID_IO_DONE,
+			OWNER_TYPE_NONE, OBJECT_BDEV_RAID_IO, 0,
+			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+		}
+	};
+
+
+	spdk_trace_register_object(OBJECT_BDEV_RAID_IO, 'R');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_BDEV_RAID_IO, 1);
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_BDEV_RAID_IO, 0);
+}

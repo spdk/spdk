@@ -10633,4 +10633,6 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_NVME_IO_DONE, OBJECT_BDEV_IO, 0);
 	spdk_trace_tpoint_register_relation(TRACE_BLOB_REQ_SET_START, OBJECT_BDEV_IO, 0);
 	spdk_trace_tpoint_register_relation(TRACE_BLOB_REQ_SET_COMPLETE, OBJECT_BDEV_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_RAID_IO_START, OBJECT_BDEV_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_RAID_IO_DONE, OBJECT_BDEV_IO, 0);
 }
