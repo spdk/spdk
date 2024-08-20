@@ -144,7 +144,7 @@ spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *h
 	}
 
 	if (hooks) {
-		map = spdk_zmalloc(sizeof(*map), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+		map = spdk_zmalloc(sizeof(*map), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	} else {
 		map = calloc(1, sizeof(*map));
 	}

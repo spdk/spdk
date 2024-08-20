@@ -55,7 +55,7 @@ ftl_md_create_spdk_buf(struct ftl_md *md, uint64_t vss_blksz)
 	md->shm_fd = -1;
 	md->vss_data = NULL;
 	md->data = spdk_zmalloc(md->data_blocks * (FTL_BLOCK_SIZE + vss_blksz), FTL_BLOCK_SIZE, NULL,
-				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+				SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 
 	if (md->data && vss_blksz) {
 		md->vss_data = ((char *)md->data) + md->data_blocks * FTL_BLOCK_SIZE;

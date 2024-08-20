@@ -1248,7 +1248,7 @@ test_nvmf_rdma_request_free_data(void)
 				  SPDK_NVMF_MAX_SGL_ENTRIES,
 				  sizeof(struct spdk_nvmf_rdma_request_data),
 				  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				  SPDK_ENV_SOCKET_ID_ANY);
+				  SPDK_ENV_NUMA_ID_ANY);
 	next_request_data = spdk_mempool_get(rtransport.data_wr_pool);
 	SPDK_CU_ASSERT_FATAL(((struct test_mempool *)rtransport.data_wr_pool)->count ==
 			     SPDK_NVMF_MAX_SGL_ENTRIES - 1);

@@ -440,7 +440,7 @@ ftl_l2p_cache_init(struct spdk_ftl_dev *dev)
 	cache = (struct ftl_l2p_cache *)dev->l2p;
 	cache->page_sets_pool = ftl_mempool_create(page_sets_pool_size,
 				sizeof(struct ftl_l2p_page_set),
-				64, SPDK_ENV_SOCKET_ID_ANY);
+				64, SPDK_ENV_NUMA_ID_ANY);
 	if (!cache->page_sets_pool) {
 		return -1;
 	}

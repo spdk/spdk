@@ -131,7 +131,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 
 	/* Allocate memory for destroying. */
 	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
-			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+			      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	SPDK_CU_ASSERT_FATAL(pqpair != NULL);
 	pqpair->qpair.ctrlr = &pctrlr.ctrlr;
 	pqpair->num_entries = 2;
@@ -164,7 +164,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	/* Disable submission queue in controller memory buffer. */
 	pctrlr.ctrlr.opts.use_cmb_sqs = false;
 	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
-			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+			      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	SPDK_CU_ASSERT_FATAL(pqpair != NULL);
 	pqpair->qpair.ctrlr = &pctrlr.ctrlr;
 	pqpair->num_entries = 2;
@@ -190,7 +190,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	/* Disable submission queue in controller memory buffer, sq_vaddr and cq_vaddr invalid. */
 	pctrlr.ctrlr.opts.use_cmb_sqs = false;
 	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
-			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+			      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	SPDK_CU_ASSERT_FATAL(pqpair != NULL);
 	pqpair->qpair.ctrlr = &pctrlr.ctrlr;
 	pqpair->num_entries = 2;

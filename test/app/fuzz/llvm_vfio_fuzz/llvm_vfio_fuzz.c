@@ -510,10 +510,10 @@ init_io(void *ctx)
 	g_io_thread.buf_size = spdk_nvme_ns_get_sector_size(g_io_thread.io_ns);
 
 	g_io_thread.read_buf = spdk_zmalloc(g_io_thread.buf_size, 0x1000, NULL,
-					    SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					    SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 
 	g_io_thread.write_buf = spdk_zmalloc(g_io_thread.buf_size, 0x1000, NULL,
-					     SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					     SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 
 	if (!g_io_thread.write_buf || !g_io_thread.read_buf) {
 		fprintf(stderr, "cannot allocated memory for io buffers\n");

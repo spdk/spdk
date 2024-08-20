@@ -678,7 +678,7 @@ test_nvme_qpair_init_deinit(void)
 	CU_ASSERT(i == 3);
 
 	/* Allocate cmd memory for deinit using */
-	cmd = spdk_zmalloc(sizeof(*cmd), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+	cmd = spdk_zmalloc(sizeof(*cmd), 64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	SPDK_CU_ASSERT_FATAL(cmd != NULL);
 	TAILQ_INSERT_TAIL(&qpair.err_cmd_head, cmd, link);
 	for (int i = 0; i < 3; i++) {

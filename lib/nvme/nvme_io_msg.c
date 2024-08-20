@@ -129,7 +129,7 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 	/**
 	 * Initialize ring and qpair for controller
 	 */
-	ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+	ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_NUMA_ID_ANY);
 	if (!ctrlr->external_io_msgs) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
 		nvme_ctrlr_unlock(ctrlr);

@@ -333,7 +333,7 @@ mlx5_mkey_pools_init(struct spdk_mlx5_mkey_pool_param *params, struct ibv_pd *pd
 	RB_INIT(&new_pool->tree);
 	new_pool->mpool = spdk_mempool_create_ctor(pool_name, params->mkey_count,
 			  sizeof(struct spdk_mlx5_mkey_pool_obj),
-			  params->cache_per_thread, SPDK_ENV_SOCKET_ID_ANY,
+			  params->cache_per_thread, SPDK_ENV_NUMA_ID_ANY,
 			  mlx5_set_mkey_in_pool, new_pool);
 	if (!new_pool->mpool) {
 		SPDK_ERRLOG("Failed to create mempool\n");

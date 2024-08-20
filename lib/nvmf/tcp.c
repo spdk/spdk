@@ -1539,7 +1539,7 @@ nvmf_tcp_control_msg_list_create(uint16_t num_messages)
 	}
 
 	list->msg_buf = spdk_zmalloc(num_messages * SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE,
-				     NVMF_DATA_BUFFER_ALIGNMENT, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+				     NVMF_DATA_BUFFER_ALIGNMENT, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!list->msg_buf) {
 		SPDK_ERRLOG("Failed to allocate memory for control message buffers\n");
 		free(list);

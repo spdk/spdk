@@ -70,7 +70,7 @@ env_allocator_create_extended(uint32_t size, const char *name, int limit, bool z
 	allocator->mempool = spdk_mempool_create(qualified_name,
 			     GET_ELEMENTS_COUNT(limit), size,
 			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-			     SPDK_ENV_SOCKET_ID_ANY);
+			     SPDK_ENV_NUMA_ID_ANY);
 
 	if (!allocator->mempool) {
 		SPDK_ERRLOG("mempool creation failed\n");

@@ -101,7 +101,7 @@ spdk_iobuf_initialize(void)
 	struct spdk_iobuf_buffer *buf;
 
 	g_iobuf.small_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, opts->small_pool_count,
-					      SPDK_ENV_SOCKET_ID_ANY);
+					      SPDK_ENV_NUMA_ID_ANY);
 	if (!g_iobuf.small_pool) {
 		SPDK_ERRLOG("Failed to create small iobuf pool\n");
 		rc = -ENOMEM;
@@ -111,7 +111,7 @@ spdk_iobuf_initialize(void)
 	/* Round up to the nearest alignment so that each element remains aligned */
 	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
 	g_iobuf.small_pool_base = spdk_malloc(opts->small_bufsize * opts->small_pool_count, IOBUF_ALIGNMENT,
-					      NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					      NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_iobuf.small_pool_base == NULL) {
 		SPDK_ERRLOG("Unable to allocate requested small iobuf pool size\n");
 		rc = -ENOMEM;
@@ -119,7 +119,7 @@ spdk_iobuf_initialize(void)
 	}
 
 	g_iobuf.large_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, opts->large_pool_count,
-					      SPDK_ENV_SOCKET_ID_ANY);
+					      SPDK_ENV_NUMA_ID_ANY);
 	if (!g_iobuf.large_pool) {
 		SPDK_ERRLOG("Failed to create large iobuf pool\n");
 		rc = -ENOMEM;
@@ -129,7 +129,7 @@ spdk_iobuf_initialize(void)
 	/* Round up to the nearest alignment so that each element remains aligned */
 	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
 	g_iobuf.large_pool_base = spdk_malloc(opts->large_bufsize * opts->large_pool_count, IOBUF_ALIGNMENT,
-					      NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					      NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_iobuf.large_pool_base == NULL) {
 		SPDK_ERRLOG("Unable to allocate requested large iobuf pool size\n");
 		rc = -ENOMEM;

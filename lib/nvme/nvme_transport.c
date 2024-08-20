@@ -220,7 +220,7 @@ nvme_queue_register_operation_completion(struct spdk_nvme_ctrlr *ctrlr, uint64_t
 {
 	struct nvme_register_completion *ctx;
 
-	ctx = spdk_zmalloc(sizeof(*ctx), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+	ctx = spdk_zmalloc(sizeof(*ctx), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (ctx == NULL) {
 		return -ENOMEM;
 	}

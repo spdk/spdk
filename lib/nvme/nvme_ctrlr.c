@@ -2161,7 +2161,7 @@ nvme_ctrlr_get_zns_cmd_and_effects_log(struct spdk_nvme_ctrlr *ctrlr)
 
 	assert(!ctrlr->tmp_ptr);
 	ctrlr->tmp_ptr = spdk_zmalloc(sizeof(struct spdk_nvme_cmds_and_effect_log_page), 64, NULL,
-				      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+				      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
 	if (!ctrlr->tmp_ptr) {
 		rc = -ENOMEM;
 		goto error;
@@ -2242,7 +2242,7 @@ nvme_ctrlr_identify_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
 	 * which would require additional functions and complexity for no good reason.
 	 */
 	assert(!ctrlr->cdata_zns);
-	ctrlr->cdata_zns = spdk_zmalloc(sizeof(*ctrlr->cdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	ctrlr->cdata_zns = spdk_zmalloc(sizeof(*ctrlr->cdata_zns), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 					SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
 	if (!ctrlr->cdata_zns) {
 		rc = -ENOMEM;
@@ -2722,7 +2722,7 @@ nvme_ctrlr_identify_ns_zns_specific_async(struct spdk_nvme_ns *ns)
 	int rc;
 
 	assert(!ns->nsdata_zns);
-	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				      SPDK_MALLOC_SHARE);
 	if (!ns->nsdata_zns) {
 		return -ENOMEM;
@@ -2762,7 +2762,7 @@ nvme_ctrlr_identify_ns_nvm_specific_async(struct spdk_nvme_ns *ns)
 	int rc;
 
 	assert(!ns->nsdata_nvm);
-	ns->nsdata_nvm = spdk_zmalloc(sizeof(*ns->nsdata_nvm), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	ns->nsdata_nvm = spdk_zmalloc(sizeof(*ns->nsdata_nvm), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				      SPDK_MALLOC_SHARE);
 	if (!ns->nsdata_nvm) {
 		return -ENOMEM;
@@ -3271,7 +3271,7 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 	/* Add async event to each process objects event list */
 	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
 		/* Must be shared memory so other processes can access */
-		nvme_event = spdk_zmalloc(sizeof(*nvme_event), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		nvme_event = spdk_zmalloc(sizeof(*nvme_event), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 		if (!nvme_event) {
 			NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
 			return;
@@ -3480,7 +3480,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	/* Initialize the per process properties for this ctrlr */
 	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_process),
-				  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+				  64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (ctrlr_proc == NULL) {
 		NVME_CTRLR_ERRLOG(ctrlr, "failed to allocate memory to track the process props\n");
 
@@ -4693,7 +4693,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
 
 	if (ns == NULL) {
-		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns), 64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ns == NULL) {
 			nvme_ctrlr_unlock(ctrlr);
 			return NULL;

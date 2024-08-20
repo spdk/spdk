@@ -225,7 +225,7 @@ init_qpair(struct nvme_ctrlr *ctrlr, uint16_t id, uint16_t num_entries)
 	queue_len = num_entries * sizeof(struct spdk_nvme_cmd);
 	queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
 	qpair->cmd = spdk_zmalloc(queue_len, queue_align, NULL,
-				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+				  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!qpair->cmd) {
 		SPDK_ERRLOG("Failed to allocate submission queue buffer\n");
 		free_qpair(qpair);
@@ -235,7 +235,7 @@ init_qpair(struct nvme_ctrlr *ctrlr, uint16_t id, uint16_t num_entries)
 	queue_len = num_entries * sizeof(struct spdk_nvme_cpl);
 	queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
 	qpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL,
-				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+				  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!qpair->cpl) {
 		SPDK_ERRLOG("Failed to allocate completion queue buffer\n");
 		free_qpair(qpair);
@@ -315,7 +315,7 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	ctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
 
 	ctrlr->cdata = spdk_zmalloc(sizeof(*ctrlr->cdata), ctrlr->page_size, NULL,
-				    SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+				    SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctrlr->cdata) {
 		SPDK_ERRLOG("Failed to allocate identify data for NVMe controller: %s\n", addr);
 		spdk_pci_device_unclaim(pci_dev);

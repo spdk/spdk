@@ -70,7 +70,7 @@ uint32_t
 spdk_env_get_socket_id(uint32_t core)
 {
 	if (core >= RTE_MAX_LCORE) {
-		return SPDK_ENV_SOCKET_ID_ANY;
+		return SPDK_ENV_NUMA_ID_ANY;
 	}
 
 	return rte_lcore_to_socket_id(core);

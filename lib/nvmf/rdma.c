@@ -2756,7 +2756,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 	rtransport->data_wr_pool = spdk_mempool_create("spdk_nvmf_rdma_wr_data", data_wr_pool_size,
 				   sizeof(struct spdk_nvmf_rdma_request_data), SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				   SPDK_ENV_SOCKET_ID_ANY);
+				   SPDK_ENV_NUMA_ID_ANY);
 	if (!rtransport->data_wr_pool) {
 		if (spdk_mempool_lookup("spdk_nvmf_rdma_wr_data") != NULL) {
 			SPDK_ERRLOG("Unable to allocate work request pool for poll group: already exists\n");

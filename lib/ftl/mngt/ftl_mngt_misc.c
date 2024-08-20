@@ -57,7 +57,7 @@ init_band_md_pool(struct spdk_ftl_dev *dev)
 	dev->band_md_pool = ftl_mempool_create(P2L_MEMPOOL_SIZE,
 					       sizeof(struct ftl_band_md),
 					       FTL_BLOCK_SIZE,
-					       SPDK_ENV_SOCKET_ID_ANY);
+					       SPDK_ENV_NUMA_ID_ANY);
 	if (!dev->band_md_pool) {
 		return -ENOMEM;
 	}

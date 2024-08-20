@@ -147,7 +147,7 @@ nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
 
 	nvme_ns_free_zns_specific_data(ns);
 
-	nsdata_zns = spdk_zmalloc(sizeof(*nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	nsdata_zns = spdk_zmalloc(sizeof(*nsdata_zns), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				  SPDK_MALLOC_SHARE);
 	if (!nsdata_zns) {
 		return -ENOMEM;
@@ -193,7 +193,7 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 
 	nvme_ns_free_zns_specific_data(ns);
 
-	nsdata_nvm = spdk_zmalloc(sizeof(*nsdata_nvm), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	nsdata_nvm = spdk_zmalloc(sizeof(*nsdata_nvm), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				  SPDK_MALLOC_SHARE);
 	if (!nsdata_nvm) {
 		return -ENOMEM;

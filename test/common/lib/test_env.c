@@ -121,7 +121,7 @@ spdk_env_get_socket_id(uint32_t core)
 {
 	HANDLE_RETURN_MOCK(spdk_env_get_socket_id);
 
-	return SPDK_ENV_SOCKET_ID_ANY;
+	return SPDK_ENV_NUMA_ID_ANY;
 }
 
 /*

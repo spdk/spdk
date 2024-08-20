@@ -275,7 +275,7 @@ allocate_cache_pool(void)
 					   g_fs_cache_size / CACHE_BUFFER_SIZE,
 					   CACHE_BUFFER_SIZE,
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
+					   SPDK_ENV_NUMA_ID_ANY);
 	if (!g_cache_pool) {
 		if (spdk_mempool_lookup("spdk_fs_cache") != NULL) {
 			SPDK_ERRLOG("Unable to allocate mempool: already exists\n");
@@ -1831,7 +1831,7 @@ __readvwritev(struct spdk_file *file, struct spdk_io_channel *_channel,
 	pin_buf_length = num_lba * lba_size;
 	args->op.rw.length = pin_buf_length;
 	args->op.rw.pin_buf = spdk_malloc(pin_buf_length, lba_size, NULL,
-					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (args->op.rw.pin_buf == NULL) {
 		SPDK_DEBUGLOG(blobfs, "Failed to allocate buf for: file=%s offset=%jx length=%jx\n",
 			      file->name, offset, length);

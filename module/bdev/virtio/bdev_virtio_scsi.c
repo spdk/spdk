@@ -213,7 +213,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues, uint64_
 	}
 
 	ctrlq_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, CTRLQ_RING_SIZE,
-				      SPDK_ENV_SOCKET_ID_ANY);
+				      SPDK_ENV_NUMA_ID_ANY);
 	if (ctrlq_ring == NULL) {
 		SPDK_ERRLOG("Failed to allocate send ring for the controlq.\n");
 		return -1;

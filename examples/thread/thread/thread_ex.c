@@ -199,7 +199,7 @@ init_reactor(void)
 
 	g_main_reactor.core = main_core;
 
-	g_main_reactor.threads = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 1024, SPDK_ENV_SOCKET_ID_ANY);
+	g_main_reactor.threads = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 1024, SPDK_ENV_NUMA_ID_ANY);
 	if (!g_main_reactor.threads) {
 		fprintf(stderr, "ERROR: Failed to alloc thread ring!\n");
 		rc = -ENOMEM;

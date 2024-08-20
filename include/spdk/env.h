@@ -21,7 +21,14 @@
 extern "C" {
 #endif
 
+/* SPDK_ENV_NUMA_ID_ANY and SPDK_ENV_NUMA_ID_ANY mean the same thing.
+ * SOCKET_ID naming was inherited from DPDK, but the preferred use is
+ * NUMA_ID to avoid confusion with TCP sockets. But keep the old #define
+ * around since there is likely a lot of out-of-tree code using it.
+ */
+#define SPDK_ENV_NUMA_ID_ANY	(-1)
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
+
 #define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
 
 /**
@@ -84,14 +91,14 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_env_opts) == 120, "Incorrect size");
  * align. In this case, it must be a power of two. The returned buffer is always
  * aligned to at least cache line size.
  * \param unused **Invalid**. If not a NULL, the function will fail and return NULL.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
  * At least one flag must be specified.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_malloc(size_t size, size_t align, uint64_t *unused, int socket_id, uint32_t flags);
+void *spdk_malloc(size_t size, size_t align, uint64_t *unused, int numa_id, uint32_t flags);
 
 /**
  * Allocate dma/sharable memory based on a given dma_flg. It is a memory buffer
@@ -102,13 +109,13 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *unused, int socket_id, ui
  * align. In this case, it must be a power of two. The returned buffer is always
  * aligned to at least cache line size.
  * \param unused **Invalid**. If not a NULL, the function will fail and return NULL.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_zmalloc(size_t size, size_t align, uint64_t *unused, int socket_id, uint32_t flags);
+void *spdk_zmalloc(size_t size, size_t align, uint64_t *unused, int numa_id, uint32_t flags);
 
 /**
  * Resize a dma/sharable memory buffer with the given new size and alignment.
@@ -180,12 +187,12 @@ void *spdk_dma_malloc(size_t size, size_t align, uint64_t *unused);
  * align. In this case, it must be a power of two. The returned buffer is always
  * aligned to at least cache line size.
  * \param unused **Invalid**. If not a NULL, the function will fail and return NULL.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *unused, int socket_id);
+void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *unused, int numa_id);
 
 /**
  * Allocate a pinned memory buffer with the given size and alignment. The buffer
@@ -210,12 +217,12 @@ void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *unused);
  * align. In this case, it must be a power of two. The returned buffer is always
  * aligned to at least cache line size.
  * \param unused **Invalid**. If not a NULL, the function will fail and return NULL.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *unused, int socket_id);
+void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *unused, int numa_id);
 
 /**
  * Resize the allocated and pinned memory buffer with the given new size and
@@ -241,35 +248,35 @@ void *spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *unused);
 void spdk_dma_free(void *buf);
 
 /**
- * Reserve a named, process shared memory zone with the given size, socket_id
+ * Reserve a named, process shared memory zone with the given size, numa_id
  * and flags. Unless `SPDK_MEMZONE_NO_IOVA_CONTIG` flag is provided, the returned
  * memory will be IOVA contiguous.
  *
  * \param name Name to set for this memory zone.
  * \param len Length in bytes.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  * \param flags Flags to set for this memory zone.
  *
  * \return a pointer to the allocated memory address on success, or NULL on failure.
  */
-void *spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
+void *spdk_memzone_reserve(const char *name, size_t len, int numa_id, unsigned flags);
 
 /**
- * Reserve a named, process shared memory zone with the given size, socket_id,
+ * Reserve a named, process shared memory zone with the given size, numa_id,
  * flags and alignment. Unless `SPDK_MEMZONE_NO_IOVA_CONTIG` flag is provided,
  * the returned memory will be IOVA contiguous.
  *
  * \param name Name to set for this memory zone.
  * \param len Length in bytes.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  * \param flags Flags to set for this memory zone.
  * \param align Alignment for resulting memzone. Must be a power of 2.
  *
  * \return a pointer to the allocated memory address on success, or NULL on failure.
  */
-void *spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
+void *spdk_memzone_reserve_aligned(const char *name, size_t len, int numa_id,
 				   unsigned flags, unsigned align);
 
 /**
@@ -307,13 +314,13 @@ struct spdk_mempool;
  * \param ele_size Element size in bytes.
  * \param cache_size How many elements may be cached in per-core caches. Use
  * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  *
  * \return a pointer to the created memory pool.
  */
 struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
-		size_t ele_size, size_t cache_size, int socket_id);
+		size_t ele_size, size_t cache_size, int numa_id);
 
 /**
  * An object callback function for memory pool.
@@ -340,15 +347,15 @@ typedef void (spdk_mempool_mem_cb_t)(struct spdk_mempool *mp, void *opaque, void
  * \param ele_size Element size in bytes.
  * \param cache_size How many elements may be cached in per-core caches. Use
  * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  * \param obj_init User provided object callback initialization function.
  * \param obj_init_arg User provided callback initialization function argument.
  *
  * \return a pointer to the created memory pool.
  */
 struct spdk_mempool *spdk_mempool_create_ctor(const char *name, size_t count,
-		size_t ele_size, size_t cache_size, int socket_id,
+		size_t ele_size, size_t cache_size, int numa_id,
 		spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg);
 
 /**
@@ -500,11 +507,11 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
 	     i = spdk_env_get_next_core(i))
 
 /**
- * Get the socket ID for the given core.
+ * Get the NUMA socket ID for the given core.
  *
  * \param core CPU core to query.
  *
- * \return the socket ID for the given core.
+ * \return the NUMA socket ID for the given core.
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
 
@@ -610,12 +617,12 @@ enum spdk_ring_type {
  *
  * \param type Type for the ring. (SPDK_RING_TYPE_SP_SC or SPDK_RING_TYPE_MP_SC).
  * \param count Size of the ring in elements.
- * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
- * for any socket.
+ * \param numa_id NUMA node ID to allocate memory on, or SPDK_ENV_NUMA_ID_ANY
+ * for any NUMA node.
  *
  * \return a pointer to the created ring.
  */
-struct spdk_ring *spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id);
+struct spdk_ring *spdk_ring_create(enum spdk_ring_type type, size_t count, int numa_id);
 
 /**
  * Free the ring.
@@ -706,7 +713,7 @@ struct spdk_pci_device {
 	void				*dev_handle;
 	struct spdk_pci_addr		addr;
 	struct spdk_pci_id		id;
-	int				socket_id;
+	int				socket_id; /* NUMA socket node ID */
 	const char			*type;
 
 	int (*map_bar)(struct spdk_pci_device *dev, uint32_t bar,

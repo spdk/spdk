@@ -344,7 +344,7 @@ _thread_lib_init(size_t ctx_sz, size_t msg_mempool_sz)
 	g_spdk_msg_mempool = spdk_mempool_create(mempool_name, msg_mempool_sz,
 			     sizeof(struct spdk_msg),
 			     0, /* No cache. We do our own. */
-			     SPDK_ENV_SOCKET_ID_ANY);
+			     SPDK_ENV_NUMA_ID_ANY);
 
 	SPDK_DEBUGLOG(thread, "spdk_msg_mempool was created with size: %zu\n",
 		      msg_mempool_sz);
@@ -523,7 +523,7 @@ spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask)
 	 */
 	thread->next_poller_id = 1;
 
-	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_NUMA_ID_ANY);
 	if (!thread->messages) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
 		free(thread);

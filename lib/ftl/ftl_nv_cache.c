@@ -231,7 +231,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 
 	nv_cache->md_pool = ftl_mempool_create(dev->conf.user_io_pool_size,
 					       nv_cache->md_size * dev->xfer_size,
-					       FTL_BLOCK_SIZE, SPDK_ENV_SOCKET_ID_ANY);
+					       FTL_BLOCK_SIZE, SPDK_ENV_NUMA_ID_ANY);
 	if (!nv_cache->md_pool) {
 		FTL_ERRLOG(dev, "Failed to initialize NV cache metadata pool\n");
 		return -1;
@@ -304,7 +304,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	nv_cache->p2l_pool = ftl_mempool_create(FTL_MAX_OPEN_CHUNKS,
 						nv_cache_p2l_map_pool_elem_size(nv_cache),
 						FTL_BLOCK_SIZE,
-						SPDK_ENV_SOCKET_ID_ANY);
+						SPDK_ENV_NUMA_ID_ANY);
 	if (!nv_cache->p2l_pool) {
 		return -ENOMEM;
 	}
@@ -313,7 +313,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	nv_cache->chunk_md_pool = ftl_mempool_create(FTL_MAX_OPEN_CHUNKS,
 				  sizeof(struct ftl_nv_cache_chunk_md),
 				  FTL_BLOCK_SIZE,
-				  SPDK_ENV_SOCKET_ID_ANY);
+				  SPDK_ENV_NUMA_ID_ANY);
 	if (!nv_cache->chunk_md_pool) {
 		return -ENOMEM;
 	}
@@ -325,7 +325,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	nv_cache->free_chunk_md_pool = ftl_mempool_create(2 * FTL_NV_CACHE_NUM_COMPACTORS,
 				       sizeof(struct ftl_nv_cache_chunk_md),
 				       FTL_BLOCK_SIZE,
-				       SPDK_ENV_SOCKET_ID_ANY);
+				       SPDK_ENV_NUMA_ID_ANY);
 	if (!nv_cache->free_chunk_md_pool) {
 		return -ENOMEM;
 	}

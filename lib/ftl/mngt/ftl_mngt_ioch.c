@@ -79,21 +79,21 @@ io_channel_create_cb(void *io_device, void *ctx)
 				 dev->conf.user_io_pool_size,
 				 sizeof(ftl_addr) * dev->xfer_size,
 				 64,
-				 SPDK_ENV_SOCKET_ID_ANY);
+				 SPDK_ENV_NUMA_ID_ANY);
 	if (!ioch->map_pool) {
 		FTL_ERRLOG(dev, "Failed to create IO channel's  map IO pool\n");
 		goto fail_io_pool;
 	}
 
 	ioch->cq = spdk_ring_create(SPDK_RING_TYPE_SP_SC, spdk_align64pow2(dev->conf.user_io_pool_size + 1),
-				    SPDK_ENV_SOCKET_ID_ANY);
+				    SPDK_ENV_NUMA_ID_ANY);
 	if (!ioch->cq) {
 		FTL_ERRLOG(dev, "Failed to create IO channel completion queue\n");
 		goto fail_io_pool;
 	}
 
 	ioch->sq = spdk_ring_create(SPDK_RING_TYPE_SP_SC, spdk_align64pow2(dev->conf.user_io_pool_size + 1),
-				    SPDK_ENV_SOCKET_ID_ANY);
+				    SPDK_ENV_NUMA_ID_ANY);
 	if (!ioch->sq) {
 		FTL_ERRLOG(dev, "Failed to create IO channel submission queue\n");
 		goto fail_cq;

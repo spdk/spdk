@@ -211,7 +211,7 @@ reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 	reactor->thread_count = 0;
 	spdk_cpuset_zero(&reactor->notify_cpuset);
 
-	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_NUMA_ID_ANY);
 	if (reactor->events == NULL) {
 		SPDK_ERRLOG("Failed to allocate events ring\n");
 		assert(false);
@@ -279,7 +279,7 @@ spdk_reactors_init(size_t msg_mempool_size)
 			       262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
 			       sizeof(struct spdk_event),
 			       SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-			       SPDK_ENV_SOCKET_ID_ANY);
+			       SPDK_ENV_NUMA_ID_ANY);
 
 	if (g_spdk_event_mempool == NULL) {
 		SPDK_ERRLOG("spdk_event_mempool creation failed\n");

@@ -89,7 +89,7 @@ init_workers(void)
 
 	assert(g_num_workers);
 
-	cw_buf = spdk_zmalloc(FUSED_BLOCKS * 4096, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	cw_buf = spdk_zmalloc(FUSED_BLOCKS * 4096, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY,
 			      SPDK_MALLOC_DMA);
 	if (cw_buf == NULL) {
 		printf("ERROR: buffer allocation failed.\n");
@@ -97,7 +97,7 @@ init_workers(void)
 		goto error;
 	}
 
-	large_buf = spdk_zmalloc(WRITE_BLOCKS * 4096, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	large_buf = spdk_zmalloc(WRITE_BLOCKS * 4096, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (large_buf == NULL) {
 		printf("ERROR: buffer allocation failed.\n");

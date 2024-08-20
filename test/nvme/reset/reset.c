@@ -656,7 +656,7 @@ main(int argc, char **argv)
 
 	task_pool = spdk_mempool_create("task_pool", TASK_POOL_NUM,
 					sizeof(struct reset_task),
-					64, SPDK_ENV_SOCKET_ID_ANY);
+					64, SPDK_ENV_NUMA_ID_ANY);
 	if (!task_pool) {
 		fprintf(stderr, "Cannot create task pool\n");
 		return 1;

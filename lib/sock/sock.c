@@ -248,7 +248,7 @@ spdk_sock_get_numa_id(struct spdk_sock *sock)
 	if (sock->net_impl->get_numa_id) {
 		return sock->net_impl->get_numa_id(sock);
 	} else {
-		return SPDK_ENV_SOCKET_ID_ANY;
+		return SPDK_ENV_NUMA_ID_ANY;
 	}
 }
 

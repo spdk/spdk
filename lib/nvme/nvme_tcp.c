@@ -290,7 +290,7 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 	/* Add additional 2 member for the send_pdu, recv_pdu owned by the tqpair */
 	tqpair->send_pdus = spdk_zmalloc((tqpair->num_entries + 2) * sizeof(struct nvme_tcp_pdu),
 					 0x1000, NULL,
-					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					 SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 
 	if (tqpair->send_pdus == NULL) {
 		SPDK_ERRLOG("Failed to allocate send_pdus on tqpair=%p\n", tqpair);

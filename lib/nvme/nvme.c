@@ -434,7 +434,7 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 
 	if (buffer && payload_size) {
 		dma_buffer = spdk_zmalloc(payload_size, 4096, NULL,
-					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 		if (!dma_buffer) {
 			return NULL;
 		}

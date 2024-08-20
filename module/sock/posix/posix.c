@@ -265,7 +265,7 @@ posix_sock_get_numa_id(struct spdk_sock *sock)
 
 	interface_name = posix_sock_get_interface_name(sock);
 	if (interface_name == NULL) {
-		return SPDK_ENV_SOCKET_ID_ANY;
+		return SPDK_ENV_NUMA_ID_ANY;
 	}
 
 	rc = spdk_read_sysfs_attribute_uint32(&numa_id,
@@ -273,7 +273,7 @@ posix_sock_get_numa_id(struct spdk_sock *sock)
 	if (rc == 0 && numa_id <= INT32_MAX) {
 		return (int32_t)numa_id;
 	} else {
-		return SPDK_ENV_SOCKET_ID_ANY;
+		return SPDK_ENV_NUMA_ID_ANY;
 	}
 }
 

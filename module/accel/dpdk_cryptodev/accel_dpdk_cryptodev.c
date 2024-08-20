@@ -997,7 +997,7 @@ accel_dpdk_cryptodev_create(uint8_t index, uint16_t num_lcores)
 #endif
 	};
 	/* Setup queue pairs. */
-	struct rte_cryptodev_config conf = { .socket_id = SPDK_ENV_SOCKET_ID_ANY };
+	struct rte_cryptodev_config conf = { .socket_id = SPDK_ENV_NUMA_ID_ANY };
 	struct accel_dpdk_cryptodev_device *device;
 	uint8_t j, cdev_id, cdrv_id;
 	struct accel_dpdk_cryptodev_qp *dev_qp;
@@ -1219,7 +1219,7 @@ accel_dpdk_cryptodev_init(void)
 
 	g_mbuf_mp = rte_pktmbuf_pool_create("dpdk_crypto_mbuf_mp", ACCEL_DPDK_CRYPTODEV_NUM_MBUFS,
 					    ACCEL_DPDK_CRYPTODEV_POOL_CACHE_SIZE,
-					    0, 0, SPDK_ENV_SOCKET_ID_ANY);
+					    0, 0, SPDK_ENV_NUMA_ID_ANY);
 	if (g_mbuf_mp == NULL) {
 		SPDK_ERRLOG("Cannot create mbuf pool\n");
 		rc = -ENOMEM;

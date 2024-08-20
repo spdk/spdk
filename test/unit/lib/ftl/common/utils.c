@@ -94,7 +94,7 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 
 	dev->p2l_pool = (struct ftl_mempool *)spdk_mempool_create("ftl_ut", 2, 0x210200,
 			SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-			SPDK_ENV_SOCKET_ID_ANY);
+			SPDK_ENV_NUMA_ID_ANY);
 	SPDK_CU_ASSERT_FATAL(dev->p2l_pool != NULL);
 
 	TAILQ_INIT(&dev->free_bands);

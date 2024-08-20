@@ -338,7 +338,7 @@ nvmf_init_threads(void)
 
 		nvmf_reactor->core = i;
 
-		nvmf_reactor->threads = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 1024, SPDK_ENV_SOCKET_ID_ANY);
+		nvmf_reactor->threads = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 1024, SPDK_ENV_NUMA_ID_ANY);
 		if (!nvmf_reactor->threads) {
 			fprintf(stderr, "failed to alloc ring\n");
 			free(nvmf_reactor);

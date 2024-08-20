@@ -317,7 +317,7 @@ test_setup(void)
 	/* Allocate a real mbuf pool so we can test error paths */
 	g_mbuf_mp = rte_pktmbuf_pool_create("mbuf_mp", ACCEL_DPDK_CRYPTODEV_NUM_MBUFS,
 					    (unsigned)SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					    0, 0, SPDK_ENV_SOCKET_ID_ANY);
+					    0, 0, SPDK_ENV_NUMA_ID_ANY);
 	/* Instead of allocating real rte mempools for these, it's easier and provides the
 	 * same coverage just calloc them here.
 	 */

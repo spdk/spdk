@@ -78,7 +78,7 @@ boot_partition_test(void)
 	}
 
 	g_ctrlr.read_buf = spdk_memzone_reserve("boot_partition", bpsize,
-						SPDK_ENV_SOCKET_ID_ANY, 0);
+						SPDK_ENV_NUMA_ID_ANY, 0);
 
 	if (g_ctrlr.read_buf == NULL) {
 		printf("Error - could not allocate read buffer for test\n");

@@ -2211,7 +2211,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 				  sizeof(struct spdk_bdev_io) +
 				  bdev_module_get_max_ctx_size(),
 				  0,
-				  SPDK_ENV_SOCKET_ID_ANY);
+				  SPDK_ENV_NUMA_ID_ANY);
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool\n");

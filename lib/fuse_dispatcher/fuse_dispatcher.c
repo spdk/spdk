@@ -2933,7 +2933,7 @@ spdk_fuse_dispatcher_create(const char *fsdev_name, spdk_fuse_dispatcher_event_c
 		spdk_fsdev_get_opts(&opts, sizeof(opts));
 
 		g_fuse_mgr.fuse_io_pool = spdk_mempool_create("FUSE_disp_ios", opts.fsdev_io_pool_size,
-					  sizeof(struct fuse_io), opts.fsdev_io_cache_size, SPDK_ENV_SOCKET_ID_ANY);
+					  sizeof(struct fuse_io), opts.fsdev_io_cache_size, SPDK_ENV_NUMA_ID_ANY);
 		if (!g_fuse_mgr.fuse_io_pool) {
 			pthread_mutex_unlock(&g_fuse_mgr.lock);
 			SPDK_ERRLOG("Could not create mempool\n");

@@ -380,7 +380,7 @@ const char *spdk_sock_get_interface_name(struct spdk_sock *sock);
  *
  * \param sock TCP socket to find the NUMA socket ID for
  *
- * \return NUMA ID, or SPDK_ENV_SOCKET_ID_ANY if the NUMA ID is unknown
+ * \return NUMA ID, or SPDK_ENV_NUMA_ID_ANY if the NUMA ID is unknown
  */
 int32_t spdk_sock_get_numa_id(struct spdk_sock *sock);
 

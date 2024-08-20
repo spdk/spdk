@@ -159,7 +159,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 			 */
 			queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cmd);
 			queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
-			pqpair->cmd = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_SOCKET_ID_ANY, flags);
+			pqpair->cmd = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_NUMA_ID_ANY, flags);
 			if (pqpair->cmd == NULL) {
 				SPDK_ERRLOG("alloc qpair_cmd failed\n");
 				return -ENOMEM;
@@ -182,7 +182,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	} else {
 		queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cpl);
 		queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
-		pqpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_SOCKET_ID_ANY, flags);
+		pqpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_NUMA_ID_ANY, flags);
 		if (pqpair->cpl == NULL) {
 			SPDK_ERRLOG("alloc qpair_cpl failed\n");
 			return -ENOMEM;
@@ -209,7 +209,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
 	pqpair->tr = spdk_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), NULL,
-				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+				  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pqpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		return -ENOMEM;
@@ -236,7 +236,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t nu
 	struct nvme_pcie_qpair *pqpair;
 	int rc;
 
-	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pqpair == NULL) {
 		return -ENOMEM;
 	}
@@ -257,7 +257,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t nu
 		return rc;
 	}
 
-	pqpair->stat = spdk_zmalloc(sizeof(*pqpair->stat), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	pqpair->stat = spdk_zmalloc(sizeof(*pqpair->stat), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				    SPDK_MALLOC_SHARE);
 	if (!pqpair->stat) {
 		SPDK_ERRLOG("Failed to allocate admin qpair statistics\n");
@@ -1044,7 +1044,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	assert(ctrlr != NULL);
 
 	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
-			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+			      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pqpair == NULL) {
 		return NULL;
 	}

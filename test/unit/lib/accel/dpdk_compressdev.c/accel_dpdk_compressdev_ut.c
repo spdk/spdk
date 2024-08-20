@@ -213,7 +213,7 @@ rte_pktmbuf_pool_create(const char *name, unsigned n, unsigned cache_size,
 
 	tmp = spdk_mempool_create("mbuf_mp", 1024, sizeof(struct rte_mbuf),
 				  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				  SPDK_ENV_SOCKET_ID_ANY);
+				  SPDK_ENV_NUMA_ID_ANY);
 
 	return (struct rte_mempool *)tmp;
 }

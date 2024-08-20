@@ -321,7 +321,7 @@ spdk_fsdev_initialize(spdk_fsdev_init_cb cb_fn, void *cb_arg)
 				    sizeof(struct spdk_fsdev_io) +
 				    fsdev_module_get_max_ctx_size(),
 				    0,
-				    SPDK_ENV_SOCKET_ID_ANY);
+				    SPDK_ENV_NUMA_ID_ANY);
 
 	if (g_fsdev_mgr.fsdev_io_pool == NULL) {
 		SPDK_ERRLOG("Could not allocate spdk_fsdev_io pool\n");

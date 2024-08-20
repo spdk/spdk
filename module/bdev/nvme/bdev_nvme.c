@@ -5360,7 +5360,7 @@ nvme_ctrlr_init_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 			    sizeof(uint32_t);
 
 	nvme_ctrlr->ana_log_page = spdk_zmalloc(ana_log_page_size, 64, NULL,
-						SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+						SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (nvme_ctrlr->ana_log_page == NULL) {
 		SPDK_ERRLOG("could not allocate ANA log page buffer\n");
 		return -ENXIO;

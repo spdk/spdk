@@ -434,7 +434,7 @@ bdev_null_initialize(void)
 	 *  this same zeroed buffer.
 	 */
 	g_null_read_buf = spdk_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL,
-				       SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+				       SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_null_read_buf == NULL) {
 		return -1;
 	}

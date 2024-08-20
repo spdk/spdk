@@ -455,7 +455,7 @@ cuse_nvme_submit_io_write(struct cuse_device *cuse_device, fuse_req_t req, int c
 	ctx->lba_count = user_io->nblocks + 1;
 	ctx->data_len = ctx->lba_count * block_size;
 
-	ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (ctx->data == NULL) {
 		SPDK_ERRLOG("Write buffer allocation failed\n");
@@ -560,7 +560,7 @@ cuse_nvme_submit_io_read(struct cuse_device *cuse_device, fuse_req_t req, int cm
 	ctx->lba_count = user_io->nblocks + 1;
 
 	ctx->data_len = ctx->lba_count * block_size;
-	ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (ctx->data == NULL) {
 		SPDK_ERRLOG("Read buffer allocation failed\n");

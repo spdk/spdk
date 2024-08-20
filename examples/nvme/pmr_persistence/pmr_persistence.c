@@ -158,7 +158,7 @@ pmr_persistence(void)
 	/* Clear the done flag */
 	g_config.pmr_dev.done = 0;
 
-	buf = spdk_zmalloc(g_config.copy_size, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	buf = spdk_zmalloc(g_config.copy_size, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (buf == NULL) {
 		printf("ERROR: Buffer allocation failed\n");
 		rc = -ENOMEM;

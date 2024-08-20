@@ -913,7 +913,7 @@ static struct spdk_nvme_ctrlr *
 	}
 
 	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL,
-			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+			      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pctrlr == NULL) {
 		spdk_pci_device_unclaim(pci_dev);
 		SPDK_ERRLOG("could not allocate ctrlr\n");
