@@ -5,7 +5,7 @@
 	spdk_sock_get_default_opts;
 	spdk_sock_getaddr;
 	spdk_sock_get_interface_name;
-	spdk_sock_get_numa_socket_id;
+	spdk_sock_get_numa_id;
 	spdk_sock_connect;
 	spdk_sock_connect_ext;
 	spdk_sock_listen;

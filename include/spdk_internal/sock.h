@@ -81,7 +81,7 @@ struct spdk_net_impl {
 	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport, char *caddr,
 		       int clen, uint16_t *cport);
 	const char *(*get_interface_name)(struct spdk_sock *sock);
-	int32_t (*get_numa_socket_id)(struct spdk_sock *sock);
+	int32_t (*get_numa_id)(struct spdk_sock *sock);
 	struct spdk_sock *(*connect)(const char *ip, int port, struct spdk_sock_opts *opts);
 	struct spdk_sock *(*listen)(const char *ip, int port, struct spdk_sock_opts *opts);
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);

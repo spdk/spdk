@@ -243,10 +243,10 @@ spdk_sock_get_interface_name(struct spdk_sock *sock)
 }
 
 int32_t
-spdk_sock_get_numa_socket_id(struct spdk_sock *sock)
+spdk_sock_get_numa_id(struct spdk_sock *sock)
 {
-	if (sock->net_impl->get_numa_socket_id) {
-		return sock->net_impl->get_numa_socket_id(sock);
+	if (sock->net_impl->get_numa_id) {
+		return sock->net_impl->get_numa_id(sock);
 	} else {
 		return SPDK_ENV_SOCKET_ID_ANY;
 	}

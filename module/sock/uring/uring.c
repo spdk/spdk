@@ -261,10 +261,10 @@ uring_sock_get_interface_name(struct spdk_sock *_sock)
 }
 
 static int32_t
-uring_sock_get_numa_socket_id(struct spdk_sock *sock)
+uring_sock_get_numa_id(struct spdk_sock *sock)
 {
 	const char *interface_name;
-	uint32_t numa_socket_id;
+	uint32_t numa_id;
 	int rc;
 
 	interface_name = uring_sock_get_interface_name(sock);
@@ -272,10 +272,10 @@ uring_sock_get_numa_socket_id(struct spdk_sock *sock)
 		return SPDK_ENV_SOCKET_ID_ANY;
 	}
 
-	rc = spdk_read_sysfs_attribute_uint32(&numa_socket_id,
+	rc = spdk_read_sysfs_attribute_uint32(&numa_id,
 					      "/sys/class/net/%s/device/numa_node", interface_name);
-	if (rc == 0 && numa_socket_id <= INT32_MAX) {
-		return (int32_t)numa_socket_id;
+	if (rc == 0 && numa_id <= INT32_MAX) {
+		return (int32_t)numa_id;
 	} else {
 		return SPDK_ENV_SOCKET_ID_ANY;
 	}
@@ -2054,7 +2054,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.name		= "uring",
 	.getaddr	= uring_sock_getaddr,
 	.get_interface_name = uring_sock_get_interface_name,
-	.get_numa_socket_id = uring_sock_get_numa_socket_id,
+	.get_numa_id	= uring_sock_get_numa_id,
 	.connect	= uring_sock_connect,
 	.listen		= uring_sock_listen,
 	.accept		= uring_sock_accept,
