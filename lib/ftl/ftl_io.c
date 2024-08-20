@@ -173,7 +173,6 @@ ftl_io_init(struct spdk_io_channel *_ioch, struct ftl_io *io, uint64_t lba, size
 	io->flags |= FTL_IO_INITIALIZED;
 	io->type = type;
 	io->dev = dev;
-	io->lba = FTL_LBA_INVALID;
 	io->addr = FTL_ADDR_INVALID;
 	io->cb_ctx = cb_ctx;
 	io->lba = lba;
