@@ -67,7 +67,7 @@ struct vbdev_passthru {
 	uint8_t multiplier;
 	uint32_t md_len;
 	void				*malloc_md_buf;
-	uint32_t offset_start;
+	uint64_t offset_start;
 	TAILQ_ENTRY(vbdev_passthru)	link;
 	struct spdk_thread		*thread;    /* thread where base device is opened */
 };
@@ -1191,7 +1191,7 @@ vbdev_passthru_register(const char *bdev_name)
 		}
 		else{
 			rc = spdk_bdev_read_blocks(pt_node->base_desc, channel->base_ch, 
-			pt_node->malloc_md_buf, 0, pt_node->offset_start , _pt_complete_io_zero, NULL);
+			pt_node->malloc_md_buf, 0, (pt_node->offset_start) * 7, _pt_complete_io_zero, NULL);
 		}
 		SPDK_NOTICELOG("pt_bdev registered\n");
 		SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
