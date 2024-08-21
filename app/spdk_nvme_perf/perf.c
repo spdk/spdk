@@ -1487,7 +1487,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 static inline void
 submit_single_io(struct perf_task *task)
 {
-	uint64_t		offset_in_ios;
+	uint64_t		rand_value, offset_in_ios;
 	int			rc;
 	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
@@ -1497,7 +1497,14 @@ submit_single_io(struct perf_task *task)
 	if (entry->zipf) {
 		offset_in_ios = spdk_zipf_generate(entry->zipf);
 	} else if (g_is_random) {
-		offset_in_ios = rand_r(&entry->seed) % entry->size_in_ios;
+		/* rand_r() returns int, so we need to use two calls to ensure
+		 * we get a large enough value to cover a very large block
+		 * device.
+		 */
+		rand_value = (uint64_t)rand_r(&entry->seed) *
+			     ((uint64_t)RAND_MAX + 1) +
+			     rand_r(&entry->seed);
+		offset_in_ios = rand_value % entry->size_in_ios;
 	} else {
 		offset_in_ios = ns_ctx->offset_in_ios++;
 		if (ns_ctx->offset_in_ios == entry->size_in_ios) {
