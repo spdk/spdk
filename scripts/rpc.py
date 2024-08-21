@@ -1192,8 +1192,9 @@ if __name__ == "__main__":
                                                  base_bdev_name=args.base_bdev_name,
                                                  name=args.name,
                                                  uuid=args.uuid,
-                                                 block_sz=args.block_sz,
-                                                 md_sz=args.md_sz))
+                                                 block_sz=args.block_sz,                                                 
+                                                 md_sz=args.md_sz,
+                                                 reset=args.reset))
 
     p = subparsers.add_parser('bdev_passthru_create', help='Add a pass through bdev on existing bdev')
     p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
@@ -1201,6 +1202,7 @@ if __name__ == "__main__":
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument('-s', '--block_sz', type=int, help="Block size of the passthru bdev")
     p.add_argument('-m', '--md-sz', type=int, help='Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.')
+    p.add_argument('-r', '--reset', type=int, help='reset Metadata region for this bdev (0 or 1). Default is 1.')
     p.set_defaults(func=bdev_passthru_create)
 
     def bdev_passthru_delete(args):
