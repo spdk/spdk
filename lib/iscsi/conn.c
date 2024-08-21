@@ -581,9 +581,18 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	    conn->sess->session_type == SESSION_TYPE_NORMAL &&
 	    conn->full_feature) {
 		target = conn->sess->target;
+
+		pthread_mutex_lock(&g_iscsi.mutex);
 		pthread_mutex_lock(&target->mutex);
-		target->num_active_conns--;
+		if (conn->scheduled != 0) {
+			target->num_active_conns--;
+			if (target->num_active_conns == 0) {
+				assert(target->pg != NULL);
+				target->pg->num_active_targets--;
+			}
+		}
 		pthread_mutex_unlock(&target->mutex);
+		pthread_mutex_unlock(&g_iscsi.mutex);
 
 		iscsi_conn_close_luns(conn);
 	}
@@ -1520,7 +1529,23 @@ iscsi_conn_full_feature_migrate(void *arg)
 	iscsi_poll_group_add_conn(conn->pg, conn);
 }
 
-static struct spdk_iscsi_poll_group *g_next_pg = NULL;
+static struct spdk_iscsi_poll_group *
+iscsi_get_idlest_poll_group(void)
+{
+	struct spdk_iscsi_poll_group *pg, *idle_pg = NULL;
+	uint32_t min_num_targets = UINT32_MAX;
+
+	TAILQ_FOREACH(pg, &g_iscsi.poll_group_head, link) {
+		if (pg->num_active_targets == 0) {
+			return pg;
+		} else if (pg->num_active_targets < min_num_targets) {
+			min_num_targets = pg->num_active_targets;
+			idle_pg = pg;
+		}
+	}
+
+	return idle_pg;
+}
 
 void
 iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
@@ -1541,15 +1566,12 @@ iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	if (target->num_active_conns == 1) {
 		/**
 		 * This is the only active connection for this target node.
-		 *  Pick a poll group using round-robin.
+		 *  Pick the idlest poll group.
 		 */
-		if (g_next_pg == NULL) {
-			g_next_pg = TAILQ_FIRST(&g_iscsi.poll_group_head);
-			assert(g_next_pg != NULL);
-		}
+		pg = iscsi_get_idlest_poll_group();
+		assert(pg != NULL);
 
-		pg = g_next_pg;
-		g_next_pg = TAILQ_NEXT(g_next_pg, link);
+		pg->num_active_targets++;
 
 		/* Save the pg in the target node so it can be used for any other connections to this target node. */
 		target->pg = pg;
@@ -1570,6 +1592,7 @@ iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	iscsi_poll_group_remove_conn(conn->pg, conn);
 
 	conn->pg = pg;
+	conn->scheduled = 1;
 
 	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)),
 			     iscsi_conn_full_feature_migrate, conn);
