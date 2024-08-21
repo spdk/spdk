@@ -941,8 +941,8 @@ claim_test(void)
 static void
 bytes_to_blocks_test(void)
 {
-	struct spdk_bdev_desc desc;
-	struct spdk_bdev bdev;
+	struct spdk_bdev_desc desc = {0};
+	struct spdk_bdev bdev = {0};
 	uint64_t offset_blocks, num_blocks;
 
 
