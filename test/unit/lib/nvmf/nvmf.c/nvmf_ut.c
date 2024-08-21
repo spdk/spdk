@@ -108,8 +108,6 @@ DEFINE_STUB_V(nvmf_transport_dump_opts, (struct spdk_nvmf_transport *transport,
 		struct spdk_json_write_ctx *w, bool named));
 DEFINE_STUB_V(nvmf_transport_listen_dump_trid, (const struct spdk_nvme_transport_id *trid,
 		struct spdk_json_write_ctx *w));
-DEFINE_STUB_V(nvmf_transport_listen_dump_opts, (struct spdk_nvmf_transport *transport,
-		const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transport_id *trid1,
 		const struct spdk_nvme_transport_id *trid2), 0);
 DEFINE_STUB_V(nvmf_update_discovery_log, (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
