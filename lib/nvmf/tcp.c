@@ -697,12 +697,6 @@ static int nvmf_tcp_accept(void *ctx);
 
 static void nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock);
 
-static void
-nvmf_tcp_poller_set_interrupt_mode_nop(struct spdk_poller *poller, void *cb_arg,
-				       bool interrupt_mode)
-{
-}
-
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 {
@@ -833,8 +827,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	spdk_poller_register_interrupt(ttransport->accept_poller, nvmf_tcp_poller_set_interrupt_mode_nop,
-				       NULL);
+	spdk_poller_register_interrupt(ttransport->accept_poller, NULL, NULL);
 
 	ttransport->listen_sock_group = spdk_sock_group_create(NULL);
 	if (ttransport->listen_sock_group == NULL) {

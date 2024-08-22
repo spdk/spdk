@@ -124,6 +124,9 @@ typedef void (*spdk_poller_set_interrupt_mode_cb)(struct spdk_poller *poller, vo
  * When registering the poller set interrupt callback, the callback will get
  * executed immediately if its spdk_thread is in the interrupt mode.
  *
+ * Callers may pass NULL for the cb_fn, signifying that no callback is
+ * necessary when the interrupt mode changes.
+ *
  * \param poller The poller to register callback function.
  * \param cb_fn Callback function called when the poller must transition into or out of interrupt mode
  * \param cb_arg Argument passed to the callback function.

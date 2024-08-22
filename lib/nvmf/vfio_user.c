@@ -4258,12 +4258,6 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 
 static int nvmf_vfio_user_accept(void *ctx);
 
-static void
-set_intr_mode_noop(struct spdk_poller *poller, void *arg, bool interrupt_mode)
-{
-	/* Nothing for us to do here. */
-}
-
 /*
  * Register an "accept" poller: this is polling for incoming vfio-user socket
  * connections (on the listening socket).
@@ -4300,8 +4294,7 @@ vfio_user_register_accept_poller(struct nvmf_vfio_user_endpoint *endpoint)
 
 	assert(endpoint->accept_intr != NULL);
 
-	spdk_poller_register_interrupt(endpoint->accept_poller,
-				       set_intr_mode_noop, NULL);
+	spdk_poller_register_interrupt(endpoint->accept_poller, NULL, NULL);
 	return 0;
 }
 

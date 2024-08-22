@@ -835,12 +835,6 @@ bdev_aio_unregister_interrupt(struct bdev_aio_group_channel *ch)
 	ch->efd = -1;
 }
 
-static void
-bdev_aio_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
-{
-	return;
-}
-
 static int
 bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 {
@@ -859,7 +853,7 @@ bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 	}
 
 	ch->poller = SPDK_POLLER_REGISTER(bdev_aio_group_poll, ch, 0);
-	spdk_poller_register_interrupt(ch->poller, bdev_aio_poller_set_interrupt_mode, NULL);
+	spdk_poller_register_interrupt(ch->poller, NULL, NULL);
 
 	return 0;
 }

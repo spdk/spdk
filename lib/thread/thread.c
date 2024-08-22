@@ -1607,7 +1607,6 @@ spdk_poller_register_interrupt(struct spdk_poller *poller,
 			       void *cb_arg)
 {
 	assert(poller != NULL);
-	assert(cb_fn != NULL);
 	assert(spdk_get_thread() == poller->thread);
 
 	if (!spdk_interrupt_mode_is_enabled()) {
@@ -1623,7 +1622,7 @@ spdk_poller_register_interrupt(struct spdk_poller *poller,
 	poller->set_intr_cb_arg = cb_arg;
 
 	/* Set poller into interrupt mode if thread is in interrupt. */
-	if (poller->thread->in_interrupt) {
+	if (poller->thread->in_interrupt && poller->set_intr_cb_fn) {
 		poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, true);
 	}
 }
@@ -2078,7 +2077,9 @@ poller_set_interrupt_mode(struct spdk_poller *poller, bool interrupt_mode)
 		return;
 	}
 
-	poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, interrupt_mode);
+	if (poller->set_intr_cb_fn) {
+		poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, interrupt_mode);
+	}
 }
 
 void
