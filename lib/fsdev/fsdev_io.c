@@ -235,7 +235,7 @@ spdk_fsdev_symlink(struct spdk_fsdev_desc *desc, struct spdk_io_channel *ch, uin
 	}
 
 	fsdev_io->u_in.symlink.target = strdup(target);
-	if (!fsdev_io) {
+	if (!fsdev_io->u_in.symlink.target) {
 		fsdev_io_free(fsdev_io);
 		return -ENOMEM;
 	}

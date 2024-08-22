@@ -402,7 +402,7 @@ lo_opendir(struct spdk_io_channel *ch, struct spdk_fsdev_io *fsdev_io)
 	}
 
 	fhandle = file_handle_create(fobject, fd);
-	if (fd == -1) {
+	if (fhandle == NULL) {
 		error = -ENOMEM;
 		SPDK_ERRLOG("file_handle_create failed for " FOBJECT_FMT " (err=%d)\n", FOBJECT_ARGS(fobject),
 			    error);
@@ -496,6 +496,7 @@ lo_do_lookup(struct aio_fsdev *vfsdev, struct spdk_fsdev_file_object *parent_fob
 	fobject = lo_find_leaf_unsafe(parent_fobject, stat.st_ino, stat.st_dev);
 	if (fobject) {
 		close(newfd);
+		newfd = -1;
 		file_object_ref(fobject); /* reference by a lo_do_lookup caller */
 	} else {
 		fobject = file_object_create_unsafe(parent_fobject, newfd, stat.st_ino, stat.st_dev, stat.st_mode);
@@ -513,7 +514,9 @@ lo_do_lookup(struct aio_fsdev *vfsdev, struct spdk_fsdev_file_object *parent_fob
 		if (res) {
 			SPDK_ERRLOG("fill_attr(%s) failed with %d\n", name, res);
 			file_object_unref(fobject, 1);
-			close(newfd);
+			if (newfd != -1) {
+				close(newfd);
+			}
 			return res;
 		}
 	}
