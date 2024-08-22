@@ -16,6 +16,7 @@
 
     spdk_mlx5_umr_configure_crypto;
     spdk_mlx5_umr_configure_sig;
+    spdk_mlx5_umr_configure;
 
     spdk_mlx5_create_psv;
     spdk_mlx5_destroy_psv;
