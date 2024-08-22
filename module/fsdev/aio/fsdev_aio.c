@@ -453,16 +453,10 @@ lo_releasedir(struct spdk_io_channel *ch, struct spdk_fsdev_io *fsdev_io)
 		return -EINVAL;
 	}
 
-	file_handle_delete(fhandle);
-
-	/*
-	 * scan-build doesn't understand that we only print the value of an already
-	 * freed pointer and falsely reports "Use of memory after it is freed" here.
-	 */
-#ifndef __clang_analyzer__
 	SPDK_DEBUGLOG(fsdev_aio, "RELEASEDIR succeeded for " FOBJECT_FMT " (fh=%p)\n",
 		      FOBJECT_ARGS(fobject), fhandle);
-#endif
+
+	file_handle_delete(fhandle);
 
 	return 0;
 }
@@ -1029,10 +1023,11 @@ lo_release(struct spdk_io_channel *ch, struct spdk_fsdev_io *fsdev_io)
 		return -EINVAL;
 	}
 
-	file_handle_delete(fhandle);
-
 	SPDK_DEBUGLOG(fsdev_aio, "RELEASE succeeded for " FOBJECT_FMT " fh=%p)\n",
 		      FOBJECT_ARGS(fobject), fhandle);
+
+	file_handle_delete(fhandle);
+
 	return 0;
 }
 
