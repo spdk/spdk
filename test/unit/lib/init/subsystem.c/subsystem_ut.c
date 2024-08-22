@@ -57,7 +57,7 @@ static void
 subsystem_sort_test_depends_on_single(void)
 {
 	struct spdk_subsystem *subsystem;
-	int i;
+	short int i;
 	char subsystem_name[16];
 
 	global_rc = -1;
