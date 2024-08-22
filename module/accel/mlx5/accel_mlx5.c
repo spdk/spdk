@@ -62,6 +62,7 @@ struct accel_mlx5_dev_ctx {
 	struct spdk_mempool *psv_pool;
 	TAILQ_ENTRY(accel_mlx5_dev_ctx) link;
 	struct spdk_mlx5_psv **psvs;
+	bool mkeys;
 	bool crypto_mkeys;
 	bool sig_mkeys;
 	bool crypto_multi_block;
@@ -188,6 +189,7 @@ struct accel_mlx5_qp {
 struct accel_mlx5_dev {
 	struct accel_mlx5_qp qp;
 	struct spdk_mlx5_cq *cq;
+	struct spdk_mlx5_mkey_pool *mkeys;
 	struct spdk_mlx5_mkey_pool *crypto_mkeys;
 	struct spdk_mlx5_mkey_pool *sig_mkeys;
 	struct spdk_rdma_utils_mem_map *mmap;
@@ -2388,6 +2390,9 @@ accel_mlx5_destroy_cb(void *io_device, void *ctx_buf)
 			spdk_mlx5_cq_destroy(dev->cq);
 		}
 		spdk_poller_unregister(&dev->qp.recover_poller);
+		if (dev->mkeys) {
+			spdk_mlx5_mkey_pool_put_ref(dev->mkeys);
+		}
 		if (dev->crypto_mkeys) {
 			spdk_mlx5_mkey_pool_put_ref(dev->crypto_mkeys);
 		}
@@ -2422,6 +2427,16 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 		dev_ctx = &g_accel_mlx5.dev_ctxs[i];
 		dev = &ch->devs[i];
 		dev->dev_ctx = dev_ctx;
+
+		assert(dev_ctx->mkeys);
+		dev->mkeys = spdk_mlx5_mkey_pool_get_ref(dev_ctx->pd, 0);
+		if (!dev->mkeys) {
+			SPDK_ERRLOG("Failed to get mkey pool channel, dev %s\n", dev_ctx->context->device->name);
+			/* Should not happen since mkey pool is created on accel_mlx5 initialization.
+			 * We should not be here if pool creation failed */
+			assert(0);
+			goto err_out;
+		}
 
 		if (dev_ctx->crypto_mkeys) {
 			dev->crypto_mkeys = spdk_mlx5_mkey_pool_get_ref(dev_ctx->pd, SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO);
@@ -2648,6 +2663,9 @@ accel_mlx5_free_resources(void)
 		dev_ctx = &g_accel_mlx5.dev_ctxs[i];
 		accel_mlx5_psvs_release(dev_ctx);
 		if (dev_ctx->pd) {
+			if (dev_ctx->mkeys) {
+				spdk_mlx5_mkey_pool_destroy(0, dev_ctx->pd);
+			}
 			if (dev_ctx->crypto_mkeys) {
 				spdk_mlx5_mkey_pool_destroy(SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO, dev_ctx->pd);
 			}
@@ -2799,6 +2817,13 @@ accel_mlx5_dev_ctx_init(struct accel_mlx5_dev_ctx *dev_ctx, struct ibv_context *
 	if (!dev_ctx->domain) {
 		return -ENOMEM;
 	}
+
+	rc = accel_mlx5_mkeys_create(pd, g_accel_mlx5.attr.num_requests, 0);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create mkeys pool, rc %d, dev %s\n", rc, dev->device->name);
+		return rc;
+	}
+	dev_ctx->mkeys = true;
 
 	if (g_accel_mlx5.crypto_supported) {
 		dev_ctx->crypto_multi_block = caps->crypto.multi_block_be_tweak;
