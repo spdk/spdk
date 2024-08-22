@@ -7,7 +7,7 @@
 
 #include "iscsi/iscsi.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 iscsi_subsystem_init_complete(void *cb_arg, int rc)

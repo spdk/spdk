@@ -147,6 +147,94 @@ void spdk_rpc_server_pause(const char *listen_addr);
  */
 void spdk_rpc_server_resume(const char *listen_addr);
 
+struct spdk_json_write_ctx;
+
+struct spdk_subsystem {
+	const char *name;
+
+	/**
+	 * Optional. Initialize the subsystem. When complete, the subsystem must call
+	 * spdk_subsystem_init_next() with 0 on success or a negative errno on failure.
+	 * If NULL, the subsystem is considered initialized with no work to do.
+	 */
+	void (*init)(void);
+
+	/**
+	 * Optional. Tear down the subsystem. When complete, the subsystem must call
+	 * spdk_subsystem_fini_next(). If NULL, the subsystem is skipped during teardown.
+	 */
+	void (*fini)(void);
+
+	/**
+	 * Optional. Write the subsystem's current JSON-RPC configuration to \p w.
+	 * If NULL, a JSON null is written in place of the subsystem's configuration.
+	 *
+	 * \param w JSON write context.
+	 */
+	void (*write_config_json)(struct spdk_json_write_ctx *w);
+	TAILQ_ENTRY(spdk_subsystem) tailq;
+};
+
+struct spdk_subsystem_depend {
+	const char *name;
+	const char *depends_on;
+	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
+};
+
+/**
+ * Register a subsystem. Typically called via SPDK_SUBSYSTEM_REGISTER() rather
+ * than directly.
+ *
+ * \param subsystem Subsystem to register. Must have static lifetime.
+ */
+void spdk_add_subsystem(struct spdk_subsystem *subsystem);
+
+/**
+ * Declare a dependency between two subsystems. Typically called via
+ * SPDK_SUBSYSTEM_DEPEND() rather than directly.
+ *
+ * \param depend Dependency descriptor. Must have static lifetime.
+ */
+void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
+
+/**
+ * Called by a subsystem's init callback to signal completion.
+ *
+ * A non-zero \p rc aborts initialization of remaining subsystems and
+ * propagates the error to the spdk_subsystem_init() caller.
+ *
+ * \param rc 0 on success, negative errno on failure.
+ */
+void spdk_subsystem_init_next(int rc);
+
+/**
+ * Called by a subsystem's fini callback to signal that teardown is complete
+ * and the next subsystem may begin its teardown.
+ */
+void spdk_subsystem_fini_next(void);
+
+/**
+ * \brief Register a new subsystem
+ */
+#define SPDK_SUBSYSTEM_REGISTER(_name) \
+       __attribute__((constructor)) static void _name ## _register(void)       \
+       {                                                                       \
+               spdk_add_subsystem(&_name);                                     \
+       }
+
+/**
+ * \brief Declare that a subsystem depends on another subsystem.
+ */
+#define SPDK_SUBSYSTEM_DEPEND(_name, _depends_on)                                              \
+       static struct spdk_subsystem_depend __subsystem_ ## _name ## _depend_on ## _depends_on = { \
+       .name = #_name,                                                                         \
+       .depends_on = #_depends_on,                                                             \
+       };                                                                                      \
+       __attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)       \
+       {                                                                                       \
+               spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
+       }
+
 #ifdef __cplusplus
 }
 #endif

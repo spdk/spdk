@@ -7,7 +7,7 @@
 #include "spdk/thread.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static const struct spdk_json_object_decoder rpc_iobuf_set_options_decoders[] = {
 	{"small_pool_count", offsetof(struct spdk_iobuf_opts, small_pool_count), spdk_json_decode_uint64, true},

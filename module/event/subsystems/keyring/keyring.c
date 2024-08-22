@@ -4,7 +4,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/keyring.h"
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 keyring_subsystem_init(void)

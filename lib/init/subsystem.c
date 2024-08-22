@@ -10,7 +10,6 @@
 #include "spdk/queue.h"
 #include "spdk/thread.h"
 
-#include "spdk_internal/init.h"
 #include "spdk/env.h"
 
 #include "spdk/json.h"
