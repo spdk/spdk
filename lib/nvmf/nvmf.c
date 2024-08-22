@@ -1622,7 +1622,6 @@ nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				SPDK_ERRLOG("Transport request free error!\n");
 			}
 		}
-		assert(false);
 	}
 
 	rc = poll_group_update_subsystem(group, subsystem);
