@@ -1406,41 +1406,6 @@ function get_free_tcp_port() {
 	echo "$port"
 }
 
-function limit_vhost_kernel_threads() {
-	local cpus=$1 nodes cpu _cpus=() _nodes=()
-	local _pids=() pid cgroup pid
-
-	xtrace_disable_per_cmd map_cpus
-
-	_cpus=($(parse_cpu_list <(echo "$cpus")))
-
-	for cpu in "${_cpus[@]}"; do
-		_nodes+=("${cpu_node_map[cpu]}")
-	done
-
-	nodes=$(fold_array_onto_string "${_nodes[@]}")
-
-	# vhost kernel threads are named as vhost-PID
-	_pids=($(pgrep vhost))
-	((${#_pids[@]} > 0)) || return 1
-
-	# All threads should be located under the same initial cgroup. kthreadd does not put them
-	# under root cgroup, but rather the cgroup of a session from which target/vhost was configured.
-	# We create dedicated cgroup under the initial one to move all the threads only once instead of
-	# having an extra step of moving them to the root cgroup first.
-	set_cgroup_attr_top_bottom "${_pids[0]}" cgroup.subtree_control "+cpuset"
-
-	cgroup=$(get_cgroup "${_pids[0]}")
-	create_cgroup "$cgroup/vhost"
-
-	set_cgroup_attr "$cgroup/vhost" cpuset.cpus "$cpus"
-	set_cgroup_attr "$cgroup/vhost" cpuset.mems "$nodes"
-
-	for pid in "${_pids[@]}"; do
-		move_proc "$pid" "$cgroup/vhost" "$cgroup" cgroup.threads
-	done
-}
-
 function gen_cpu_vm_spdk_config() (
 	local vm_count=$1 vm_cpu_num=$2 vm
 	local spdk_cpu_num=${3:-1} spdk_cpu_list=${4:-} spdk_cpus

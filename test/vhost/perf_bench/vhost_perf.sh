@@ -467,10 +467,6 @@ done
 # Gather perf stats only from the vhost cpus
 perf_cpus=${vhost_reactor_mask//[\[\]]/}
 
-if [[ $ctrl_type == "kernel_vhost" ]]; then
-	limit_vhost_kernel_threads "$perf_cpus"
-fi
-
 # Run FIO traffic
 for fio_job in ${fio_jobs//,/ }; do
 	((enable_irq == 1)) && irqs $used_vms
