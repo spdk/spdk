@@ -57,8 +57,6 @@ DEFINE_STUB(spdk_bdev_get_aliases, const struct spdk_bdev_aliases_list *,
 	    (const struct spdk_bdev *bdev), NULL);
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
-DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
-		enum spdk_bdev_io_type io_type), 0);
 DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), 0);
@@ -317,9 +315,33 @@ test_reset(void)
 	 */
 }
 
+bool g_comp_base_support_rw = true;
+
+bool
+spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	return g_comp_base_support_rw;
+}
+
 static void
 test_supported_io(void)
 {
+	g_comp_base_support_rw = false;
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_READ) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_UNMAP) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_RESET) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_FLUSH) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) == false);
+
+	g_comp_base_support_rw = true;
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_READ) == true);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE) == true);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_UNMAP) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_RESET) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_FLUSH) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) == false);
+
 
 }
 
