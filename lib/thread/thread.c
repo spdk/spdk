@@ -2078,12 +2078,6 @@ poller_set_interrupt_mode(struct spdk_poller *poller, bool interrupt_mode)
 		return;
 	}
 
-	if (!poller->set_intr_cb_fn) {
-		SPDK_ERRLOG("Poller(%s) doesn't support set interrupt mode.\n", poller->name);
-		assert(false);
-		return;
-	}
-
 	poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, interrupt_mode);
 }
 
