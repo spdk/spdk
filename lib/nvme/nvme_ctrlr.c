@@ -3982,6 +3982,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 		switch (nvme_qpair_get_state(ctrlr->adminq)) {
 		case NVME_QPAIR_CONNECTING:
+			if (ctrlr->is_failed) {
+				nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
+				break;
+			}
+
 			break;
 		case NVME_QPAIR_CONNECTED:
 			nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
