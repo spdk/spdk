@@ -3077,8 +3077,12 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Max SGE is limited by capsule size */
 	max_sge = spdk_min(max_sge, max_in_capsule_sge);
-	/* Max SGE may be limited by MSDBD */
-	if (ctrlr->cdata.nvmf_specific.msdbd != 0) {
+	/* Max SGE may be limited by MSDBD.
+	 * If umr_per_io is enabled and supported, we always use virtually contig buffer, we don't limit max_sge by
+	 * MSDBD in that case */
+	if (!(g_spdk_nvme_transport_opts.rdma_umr_per_io &&
+	      spdk_rdma_provider_accel_sequence_supported()) &&
+	    ctrlr->cdata.nvmf_specific.msdbd != 0) {
 		max_sge = spdk_min(max_sge, ctrlr->cdata.nvmf_specific.msdbd);
 	}
 
