@@ -8,7 +8,6 @@
 	spdk_subsystem_fini;
 	spdk_subsystem_init_next;
 	spdk_subsystem_fini_next;
-	spdk_subsystem_init_from_json_config;
 	spdk_subsystem_exists;
 
 	spdk_rpc_initialize;

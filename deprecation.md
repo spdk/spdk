@@ -27,13 +27,6 @@ Passing NVMe/TLS pre-shared keys via `spdk_nvme_ctrlr_opts.psk` is deprecated an
 removed in the v24.09 release.  Instead, a key obtained from the keyring library should be passed
 in `spdk_nvme_ctrlr_opts.tls_psk`.
 
-### init
-
-#### `spdk_subsystem_init_from_json_config`
-
-The function is deprecated and will be removed in 24.09 release. Please use
-`spdk_subsystem_load_config` instead.
-
 ### nvmf
 
 #### `decode_rpc_listen_address`

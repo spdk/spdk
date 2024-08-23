@@ -645,32 +645,6 @@ fail:
 	app_json_config_load_done(ctx, -EINVAL);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_subsystem_init_from_json_config,
-			      "spdk_subsystem_init_from_json_config is deprecated", "v24.09", 0);
-
-void
-spdk_subsystem_init_from_json_config(const char *json_config_file, const char *rpc_addr,
-				     spdk_subsystem_init_fn cb_fn, void *cb_arg,
-				     bool stop_on_error)
-{
-	char *json = NULL;
-	ssize_t json_size = 0;
-
-	SPDK_LOG_DEPRECATED(spdk_subsystem_init_from_json_config);
-
-	assert(cb_fn);
-
-	json = spdk_posix_file_load_from_name(json_config_file, &json_size);
-	if (!json) {
-		SPDK_ERRLOG("Could not read JSON config file\n");
-		cb_fn(-EINVAL, cb_arg);
-		return;
-	}
-
-	json_config_prepare_ctx(cb_fn, cb_arg, stop_on_error, json, json_size, true);
-	free(json);
-}
-
 void
 spdk_subsystem_load_config(void *json, ssize_t json_size, spdk_subsystem_init_fn cb_fn,
 			   void *cb_arg, bool stop_on_error)
