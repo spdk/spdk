@@ -94,12 +94,14 @@ if __name__ == "__main__":
     def save_config(args):
         rpc.save_config(args.client,
                         sys.stdout,
-                        indent=args.indent)
+                        indent=args.indent,
+                        subsystems=args.subsystems)
 
     p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets to stdout.
     """)
     p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. Default indent level is 2.
     """, type=int, default=2)
+    p.add_argument('-s', '--subsystems', help="""Comma-separated list of subsystems (and their dependencies) to save""")
     p.set_defaults(func=save_config)
 
     def load_config(args):
