@@ -10,6 +10,7 @@
 #include "spdk/bdev_zone.h"
 #include "spdk/accel.h"
 #include "spdk/env.h"
+#include "spdk/file.h"
 #include "spdk/init.h"
 #include "spdk/thread.h"
 #include "spdk/log.h"
@@ -108,6 +109,8 @@ struct spdk_fio_oat_ctx {
 
 static bool g_spdk_env_initialized = false;
 static const char *g_json_config_file = NULL;
+static void *g_json_data;
+static size_t g_json_data_size;
 static const char *g_rpc_listen_addr = NULL;
 
 static int spdk_fio_init(struct thread_data *td);
@@ -265,11 +268,42 @@ spdk_fio_bdev_init_done(int rc, void *cb_arg)
 {
 	*(bool *)cb_arg = true;
 
+	free(g_json_data);
+	if (rc) {
+		SPDK_ERRLOG("RUNTIME RPCs failed\n");
+		exit(1);
+	}
+}
+
+static void
+spdk_fio_bdev_subsystem_init_done(int rc, void *cb_arg)
+{
+	if (rc) {
+		SPDK_ERRLOG("subsystem init failed\n");
+		exit(1);
+	}
+
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+	spdk_subsystem_load_config(g_json_data, g_json_data_size,
+				   spdk_fio_bdev_init_done, cb_arg, true);
+}
+
+static void
+spdk_fio_bdev_startup_done(int rc, void *cb_arg)
+{
+	if (rc) {
+		SPDK_ERRLOG("STARTUP RPCs failed\n");
+		exit(1);
+	}
+
 	if (g_rpc_listen_addr != NULL) {
-		if (spdk_rpc_initialize(g_rpc_listen_addr, NULL) == 0) {
-			spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+		if (spdk_rpc_initialize(g_rpc_listen_addr, NULL) != 0) {
+			SPDK_ERRLOG("could not initialize RPC address %s\n", g_rpc_listen_addr);
+			exit(1);
 		}
 	}
+
+	spdk_subsystem_init(spdk_fio_bdev_subsystem_init_done, cb_arg);
 }
 
 static void
@@ -277,8 +311,17 @@ spdk_fio_bdev_init_start(void *arg)
 {
 	bool *done = arg;
 
-	spdk_subsystem_init_from_json_config(g_json_config_file, SPDK_DEFAULT_RPC_ADDR,
-					     spdk_fio_bdev_init_done, done, true);
+	g_json_data = spdk_posix_file_load_from_name(g_json_config_file, &g_json_data_size);
+
+	if (g_json_data == NULL) {
+		SPDK_ERRLOG("could not allocate buffer for json config file\n");
+		exit(1);
+	}
+
+	/* Load SPDK_RPC_STARTUP RPCs from config file */
+	assert(spdk_rpc_get_state() == SPDK_RPC_STARTUP);
+	spdk_subsystem_load_config(g_json_data, g_json_data_size,
+				   spdk_fio_bdev_startup_done, done, true);
 }
 
 static void
