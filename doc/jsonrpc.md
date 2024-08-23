@@ -10518,7 +10518,7 @@ Example request:
   "method": "bdev_lvol_clone_bdev",
   "id": 1,
   "params": {
-    "bdev_uuid": "e4b40d8b-f623-416d-8234-baf5a4c83cbd",
+    "bdev": "e4b40d8b-f623-416d-8234-baf5a4c83cbd",
     "lvs_name": "lvs1",
     "clone_name": "clone2"
   }
