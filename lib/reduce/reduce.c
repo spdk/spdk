@@ -30,7 +30,7 @@
 struct spdk_reduce_vol_superblock {
 	uint8_t				signature[8];
 	struct spdk_reduce_vol_params	params;
-	uint8_t				reserved[4048];
+	uint8_t				reserved[4040];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
 

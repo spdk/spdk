@@ -58,6 +58,19 @@ struct spdk_reduce_vol_params {
 	 *  of the chunk size.
 	 */
 	uint64_t		vol_size;
+
+	/**
+	 * Compression algorithm, when creating initialization, it is
+	 * specified by the user
+	 */
+	uint32_t		comp_level;
+
+	/**
+	 * Compression algorithm, when creating initialization, it is
+	 * specified by the user
+	 */
+	uint8_t                 comp_algo;
+	uint8_t                 reserved[3];
 };
 
 struct spdk_reduce_vol;
