@@ -201,6 +201,9 @@ struct nvme_rdma_qpair {
 	uint16_t				num_entries;
 
 	bool					delay_cmd_submit;
+	/* Append copy task even if no accel sequence is attached to IO.
+	 * Result is UMR configured per IO data buffer */
+	bool					append_copy;
 
 	uint32_t				num_completions;
 	uint32_t				num_outstanding_reqs;
@@ -1776,10 +1779,15 @@ nvme_rdma_accel_completion_cb(void *cb_arg, int status)
 	/* nvme_rdma driver may fail data transfer on WC_FLUSH error completion which is expected.
 	 * To prevent false errors from accel, first check if qpair is in the process of disconnect */
 	if (spdk_unlikely(!spdk_nvme_qpair_is_connected(&rqpair->qpair))) {
-		SPDK_DEBUGLOG(nvme, "qpair %p, req %p accel cpl in disconnecting, outstanding %u\n",
-			      rqpair, rdma_req, rqpair->qpair.num_outstanding_reqs);
-		sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-		goto fail_req;
+		struct spdk_nvmf_fabric_connect_cmd *cmd = (struct spdk_nvmf_fabric_connect_cmd *)
+				&rdma_req->req->cmd;
+
+		if (cmd->opcode != SPDK_NVME_OPC_FABRIC && cmd->fctype != SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+			SPDK_DEBUGLOG(nvme, "qpair %p, req %p accel cpl in disconnecting, outstanding %u\n",
+				      rqpair, rdma_req, rqpair->qpair.num_outstanding_reqs);
+			sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+			goto fail_req;
+		}
 	}
 	if (spdk_unlikely(status)) {
 		SPDK_ERRLOG("qpair %p, req %p, accel sequence status %d\n", rdma_req->req->qpair, rdma_req, status);
@@ -2004,6 +2012,10 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rqpair->num_entries = qsize - 1;
 	rqpair->delay_cmd_submit = delay_cmd_submit;
 	rqpair->state = NVME_RDMA_QPAIR_STATE_INVALID;
+	rqpair->append_copy = g_spdk_nvme_transport_opts.rdma_umr_per_io &&
+			      spdk_rdma_provider_accel_sequence_supported() && qid != 0;
+	SPDK_DEBUGLOG(nvme, "rqpair %p, append_copy %s\n", rqpair,
+		      rqpair->append_copy ? "enabled" : "diabled");
 	qpair = &rqpair->qpair;
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, async);
 	if (rc != 0) {
@@ -2535,7 +2547,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	assert(rdma_req->req == NULL);
 	rdma_req->req = req;
 	req->cmd.cid = rdma_req->id;
-	if (req->accel_sequence) {
+	if (req->accel_sequence || rqpair->append_copy) {
 		assert(spdk_rdma_provider_accel_sequence_supported());
 		assert(rqpair->qpair.poll_group->group);
 		assert(rqpair->qpair.poll_group->group->accel_fn_table.append_copy);

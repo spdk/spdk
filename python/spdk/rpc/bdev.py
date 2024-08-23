@@ -578,7 +578,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           fast_io_fail_timeout_sec=None, disable_auto_failback=None, generate_uuids=None,
                           transport_tos=None, nvme_error_stat=None, rdma_srq_size=None, io_path_stat=None,
                           allow_accel_sequence=None, rdma_max_cq_size=None, rdma_cm_event_timeout_ms=None,
-                          dhchap_digests=None, dhchap_dhgroups=None):
+                          dhchap_digests=None, dhchap_dhgroups=None, rdma_umr_per_io=None):
     """Set options for the bdev nvme. This is startup command.
     Args:
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
@@ -627,6 +627,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         rdma_cm_event_timeout_ms: Time to wait for RDMA CM event. Only applicable for RDMA transports.
         dhchap_digests: List of allowed DH-HMAC-CHAP digests. (optional)
         dhchap_dhgroups: List of allowed DH-HMAC-CHAP DH groups. (optional)
+        rdma_umr_per_io: Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system (optional).
     """
     params = dict()
     if action_on_timeout is not None:
@@ -687,6 +688,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         params['dhchap_digests'] = dhchap_digests
     if dhchap_dhgroups is not None:
         params['dhchap_dhgroups'] = dhchap_dhgroups
+    if rdma_umr_per_io is not None:
+        params['rdma_umr_per_io'] = rdma_umr_per_io
     return client.call('bdev_nvme_set_options', params)
 
 

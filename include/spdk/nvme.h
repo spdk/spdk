@@ -4755,6 +4755,13 @@ struct spdk_nvme_transport_opts {
 	 * RDMA CM event timeout in milliseconds.
 	 */
 	uint16_t rdma_cm_event_timeout_ms;
+
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * Configure UMR per IO request if supported by the system
+	 */
+	bool rdma_umr_per_io;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 24, "Incorrect size");
 

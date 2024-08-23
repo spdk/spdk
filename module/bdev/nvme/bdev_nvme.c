@@ -187,6 +187,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.allow_accel_sequence = false,
 	.dhchap_digests = BDEV_NVME_DEFAULT_DIGESTS,
 	.dhchap_dhgroups = BDEV_NVME_DEFAULT_DHGROUPS,
+	.rdma_umr_per_io = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -6183,12 +6184,13 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
 	SET_FIELD(rdma_cm_event_timeout_ms, 0);
 	SET_FIELD(dhchap_digests, 0);
 	SET_FIELD(dhchap_dhgroups, 0);
+	SET_FIELD(rdma_umr_per_io, false);
 
 #undef SET_FIELD
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_nvme_opts) == 120, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_nvme_opts) == 128, "Incorrect size");
 }
 
 static bool bdev_nvme_check_io_error_resiliency_params(int32_t ctrlr_loss_timeout_sec,
@@ -6221,6 +6223,9 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 int
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
+	struct spdk_nvme_transport_opts drv_opts;
+	int ret;
+
 	if (!opts) {
 		SPDK_ERRLOG("opts cannot be NULL\n");
 		return -1;
@@ -6230,8 +6235,6 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 		SPDK_ERRLOG("opts_size inside opts cannot be zero value\n");
 		return -1;
 	}
-
-	int ret;
 
 	ret = bdev_nvme_validate_opts(opts);
 	if (ret) {
@@ -6245,27 +6248,23 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 		}
 	}
 
-	if (opts->rdma_srq_size != 0 ||
-	    opts->rdma_max_cq_size != 0 ||
-	    opts->rdma_cm_event_timeout_ms != 0) {
-		struct spdk_nvme_transport_opts drv_opts;
-
-		spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
-		if (opts->rdma_srq_size != 0) {
-			drv_opts.rdma_srq_size = opts->rdma_srq_size;
-		}
-		if (opts->rdma_max_cq_size != 0) {
-			drv_opts.rdma_max_cq_size = opts->rdma_max_cq_size;
-		}
-		if (opts->rdma_cm_event_timeout_ms != 0) {
-			drv_opts.rdma_cm_event_timeout_ms = opts->rdma_cm_event_timeout_ms;
-		}
-
-		ret = spdk_nvme_transport_set_opts(&drv_opts, sizeof(drv_opts));
-		if (ret) {
-			SPDK_ERRLOG("Failed to set NVMe transport opts.\n");
-			return ret;
-		}
+	spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
+	if (opts->rdma_srq_size != 0) {
+		drv_opts.rdma_srq_size = opts->rdma_srq_size;
+	}
+	if (opts->rdma_max_cq_size != 0) {
+		drv_opts.rdma_max_cq_size = opts->rdma_max_cq_size;
+	}
+	if (opts->rdma_cm_event_timeout_ms != 0) {
+		drv_opts.rdma_cm_event_timeout_ms = opts->rdma_cm_event_timeout_ms;
+	}
+	if (drv_opts.rdma_umr_per_io != opts->rdma_umr_per_io) {
+		drv_opts.rdma_umr_per_io = opts->rdma_umr_per_io;
+	}
+	ret = spdk_nvme_transport_set_opts(&drv_opts, sizeof(drv_opts));
+	if (ret) {
+		SPDK_ERRLOG("Failed to set NVMe transport opts.\n");
+		return ret;
 	}
 
 #define SET_FIELD(field, defval) \
@@ -8897,6 +8896,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	}
 
 	spdk_json_write_array_end(w);
+	spdk_json_write_named_bool(w, "rdma_umr_per_io", g_opts.rdma_umr_per_io);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

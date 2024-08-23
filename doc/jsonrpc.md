@@ -4097,6 +4097,7 @@ rdma_max_cq_size           | Optional | number      | Set the maximum size of a 
 rdma_cm_event_timeout_ms   | Optional | number      | Time to wait for RDMA CM events. Default: 0 (0 means using default value of driver).
 dhchap_digests             | Optional | list        | List of allowed DH-HMAC-CHAP digests.
 dhchap_dhgroups            | Optional | list        | List of allowed DH-HMAC-CHAP DH groups.
+rdma_umr_per_io            | Optional | boolean     | Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system
 
 #### Example
 
@@ -4125,7 +4126,8 @@ request:
     "dhchap_dhgroups": [
       "ffdhe6144",
       "ffdhe8192"
-    ]
+    ],
+    "rdma_umr_per_io": false
   },
   "jsonrpc": "2.0",
   "method": "bdev_nvme_set_options",

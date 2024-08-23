@@ -626,7 +626,8 @@ if __name__ == "__main__":
                                        rdma_max_cq_size=args.rdma_max_cq_size,
                                        rdma_cm_event_timeout_ms=args.rdma_cm_event_timeout_ms,
                                        dhchap_digests=args.dhchap_digests,
-                                       dhchap_dhgroups=args.dhchap_dhgroups)
+                                       dhchap_dhgroups=args.dhchap_dhgroups,
+                                       rdma_umr_per_io=args.rdma_umr_per_io)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -713,6 +714,12 @@ if __name__ == "__main__":
                    type=lambda d: d.split(','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
                    type=lambda d: d.split(','))
+    p.add_argument('--enable-rdma-umr-per-io',
+                   help='''Enable scatter-gather RDMA Memory Region per IO if supported by the system.''',
+                   action='store_true', dest='rdma_umr_per_io')
+    p.add_argument('--disable-rdma-umr-per-io',
+                   help='''Disable scatter-gather RDMA Memory Region per IO.''',
+                   action='store_false', dest='rdma_umr_per_io')
 
     p.set_defaults(func=bdev_nvme_set_options)
 

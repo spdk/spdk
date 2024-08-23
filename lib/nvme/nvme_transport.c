@@ -28,7 +28,8 @@ static int g_current_transport_index = 0;
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {
 	.rdma_srq_size = 0,
 	.rdma_max_cq_size = 0,
-	.rdma_cm_event_timeout_ms = 1000
+	.rdma_cm_event_timeout_ms = 1000,
+	.rdma_umr_per_io = false,
 };
 
 const struct spdk_nvme_transport *
@@ -899,6 +900,7 @@ spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_
 	SET_FIELD(rdma_srq_size);
 	SET_FIELD(rdma_max_cq_size);
 	SET_FIELD(rdma_cm_event_timeout_ms);
+	SET_FIELD(rdma_umr_per_io);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
@@ -928,6 +930,7 @@ spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t
 	SET_FIELD(rdma_srq_size);
 	SET_FIELD(rdma_max_cq_size);
 	SET_FIELD(rdma_cm_event_timeout_ms);
+	SET_FIELD(rdma_umr_per_io);
 
 	g_spdk_nvme_transport_opts.opts_size = opts->opts_size;
 
