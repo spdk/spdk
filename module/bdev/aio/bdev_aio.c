@@ -11,6 +11,7 @@
 #include "spdk/barrier.h"
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
+#include "spdk/bit_array.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/likely.h"
@@ -26,6 +27,52 @@
 #ifndef __FreeBSD__
 #include <libaio.h>
 #endif
+
+
+// enum spdk_task_state {
+// 	/* The blob in-memory version does not match the on-disk
+// 	 * version.
+// 	 */
+// 	SPDK_FILE_ONE_,
+
+// 	/* The blob in memory version of the blob matches the on disk
+// 	 * version.
+// 	 */
+// 	SPDK_FILE_STATE_OPENED,
+
+// 	/* The in-memory state being synchronized with the on-disk
+// 	 * blob state. */
+// 	SPDK_FILE_STATE_CLOSED,
+	
+// 	SPDK_FILE_STATE_DELETED,
+// };
+
+
+
+
+
+// static void
+// bs_claim_md_page(struct spdk_blob_store *bs, uint32_t page)
+// {
+// 	assert(spdk_spin_held(&bs->used_lock));
+// 	assert(page < spdk_bit_array_capacity(bs->used_md_pages));
+// 	assert(spdk_bit_array_get(bs->used_md_pages, page) == false);
+
+// 	spdk_bit_array_set(bs->used_md_pages, page);
+// }
+
+
+struct _file_md {
+	int fd;
+	char filename[200];
+	uint64_t start_offset;
+	uint64_t end_offset;
+	enum spdk_FILE_state state;
+	struct spdk_bit_array *used_blocks;
+	// bs->used_md_pages = spdk_bit_array_create(1);
+	// spdk_bit_array_get(blob->bs->used_md_pages, pages[i - 1].next)
+};
+
 
 struct bdev_aio_io_channel {
 	uint64_t				io_inflight;
@@ -52,9 +99,23 @@ struct bdev_aio_task {
 #ifdef __FreeBSD__
 	struct aiocb			aiocb;
 #else
-	struct iocb			iocb;
+	struct iocb			iocb[2]; //we need two iocb for splited IO
 #endif
+	uint32_t			idx_iovcnt;
+	uint8_t				mode;
+	uint32_t			in_iov_firstpart;
+	uint32_t			in_iov_secondpart;
+	int					iovcnt;
+	struct iovec 		*iov;
+	void 				*iovbase_hotspot;
 	uint64_t			len;
+	uint64_t			first_len;
+	bool				fisrt_part_done;
+	uint64_t			second_len;
+	bool				second_part_done;
+	bool		 		splite_io;
+	int					first_fid;
+	int					second_fid;
 	struct bdev_aio_io_channel	*ch;
 };
 
@@ -64,6 +125,10 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
+	uint32_t			id;
+	uint32_t    filecnt;
+	uint64_t	size_per_file;
+	struct _file_md *file_md_array;
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 	bool			readonly;
@@ -132,6 +197,31 @@ bdev_aio_open(struct file_disk *disk)
 }
 
 static int
+bdev_aio_open_part_file(struct file_disk *disk, struct _file_md *file_md)
+{
+	int fd;
+	int io_flag = disk->readonly ? O_RDONLY : O_RDWR;
+
+	fd = open(file_md->filename, io_flag | O_DIRECT);
+	if (fd < 0) {
+		/* Try without O_DIRECT for non-disk files */
+		fd = open(file_md->filename, io_flag | O_CREAT);
+		if (fd < 0) {
+			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
+				    file_md->filename, errno, spdk_strerror(errno));
+			disk->fd = -1;
+			return -1;
+		}
+	}
+
+	file_md->fd = fd;
+
+	return 0;
+}
+
+
+
+static int
 bdev_aio_close(struct file_disk *disk)
 {
 	int rc;
@@ -185,7 +275,7 @@ bdev_aio_submit_io(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 		   struct spdk_io_channel *ch, struct bdev_aio_task *aio_task,
 		   struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
-	struct iocb *iocb = &aio_task->iocb;
+	struct iocb *iocb = &aio_task->iocb[0];
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
@@ -199,11 +289,182 @@ bdev_aio_submit_io(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	}
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
+	aio_task->splite_io = false;
+	aio_task->mode = 0;
 	aio_task->ch = aio_ch;
 
 	return io_submit(aio_ch->io_ctx, 1, &iocb);
 }
+
+
+static int
+bdev_aio_submit_io_multifile_one(enum spdk_bdev_io_type type, struct file_disk *fdisk,
+		   struct spdk_io_channel *ch, struct bdev_aio_task *aio_task,
+		   struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
+{
+	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);	
+	struct iocb *iocb = &aio_task->iocb[0];
+	uint32_t idx = offset / fdisk->size_per_file;		
+	struct _file_md md = fdisk->file_md_array[idx];
+
+	if (type == SPDK_BDEV_IO_TYPE_READ) {
+		io_prep_preadv(iocb, md.fd, iov, iovcnt, offset - md.start_offset);
+	} else {
+		io_prep_pwritev(iocb, md.fd, iov, iovcnt, offset - md.start_offset);
+	}
+
+	if (aio_ch->group_ch->efd >= 0) {
+		io_set_eventfd(iocb, aio_ch->group_ch->efd);
+	}
+	iocb->data = aio_task;
+	aio_task->len = nbytes;
+	aio_task->mode = 0;
+	aio_task->first_len = 0;
+	aio_task->second_len = 0;
+	aio_task->splite_io = false;
+	aio_task->ch = aio_ch;
+
+	return io_submit(aio_ch->io_ctx, 1, &iocb);
+}
+
+
+static int
+bdev_aio_submit_io_multifile_two(enum spdk_bdev_io_type type, struct file_disk *fdisk,
+		   struct spdk_io_channel *ch, struct bdev_aio_task *aio_task,
+		   struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset, int index)
+{
+	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);	
+	uint32_t idx = offset / fdisk->size_per_file;			
+	struct _file_md md = fdisk->file_md_array[idx];
+	struct iocb *iocb = &aio_task->iocb[index];
+
+	if (type == SPDK_BDEV_IO_TYPE_READ) {
+		io_prep_preadv(iocb, md.fd, iov, iovcnt, offset - md.start_offset);
+	} else {
+		io_prep_pwritev(iocb, md.fd, iov, iovcnt, offset - md.start_offset);
+	}
+
+	if (aio_ch->group_ch->efd >= 0) {
+		io_set_eventfd(iocb, aio_ch->group_ch->efd);
+	}
+		
+	iocb->data = aio_task;
+	aio_task->ch = aio_ch;
+
+	return io_submit(aio_ch->io_ctx, 1, &iocb);
+}
+
 #endif
+static int
+bdev_aio_rw_split(enum spdk_bdev_io_type type, struct file_disk *fdisk,
+	    struct spdk_io_channel *ch, struct bdev_aio_task *aio_task,
+	    struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
+{
+	uint32_t idx = offset / fdisk->size_per_file;
+	uint32_t first_len = fdisk->file_md_array[idx].end_offset - offset;
+	uint32_t second_len = nbytes - first_len;
+	uint32_t tmp_len = 0, inside_vec_fp = 0, inside_vec_sp = 0;
+	uint8_t mode = 0;
+	uint32_t idx_iovcnt = 0;
+	int rc = 0;
+	aio_task->splite_io = true;
+	aio_task->first_len = first_len;
+	aio_task->second_len = second_len;
+	aio_task->fisrt_part_done = false;
+	aio_task->second_part_done = false;
+	aio_task->iov = iov;
+	aio_task->iovcnt = iovcnt;
+	aio_task->first_fid = fdisk->file_md_array[idx].fd;
+	aio_task->second_fid = fdisk->file_md_array[idx + 1].fd;
+	fdisk->id++;
+
+
+	if(iovcnt == 1) {
+		mode = 1;
+		iov[0].iov_len = first_len;
+		//sent the IO
+		aio_task->mode = mode;
+		aio_task->iovbase_hotspot = iov[0].iov_base;
+		rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, first_len, offset, 0);
+		if (spdk_unlikely(rc < 0)) {
+			return rc;
+		}
+
+		iov[0].iov_base = iov[0].iov_base + first_len;
+		iov[0].iov_len = second_len;
+		//send the second IO
+		rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, second_len, offset + first_len, 1);
+		if (spdk_unlikely(rc < 0)) {
+			return rc;
+		}
+		return rc;
+		
+	} else {
+		for (int i = 0; i < iovcnt; i++) {
+			tmp_len += iov[i].iov_len;
+			if(tmp_len == first_len) {
+				idx_iovcnt = i;
+				mode = 2;				
+				break;
+			}
+
+			if(tmp_len > first_len) {
+				idx_iovcnt = i;
+				inside_vec_fp = iov[i].iov_len - (tmp_len - first_len);
+				inside_vec_sp = (tmp_len - first_len);
+				mode = 3;
+				aio_task->mode = mode;
+				break;
+			}
+		}
+
+		aio_task->mode = mode;
+		if(mode == 2) {
+			int tmp = iovcnt;
+			iovcnt = idx_iovcnt;
+			aio_task->idx_iovcnt = idx_iovcnt;
+			aio_task->iovbase_hotspot = iov[idx_iovcnt + 1].iov_base;				
+			//sent the IO
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, first_len, offset, 0);
+			if (spdk_unlikely(rc < 0)) {
+				return rc;
+			}
+
+			iov = &iov[idx_iovcnt + 1];
+			iovcnt = tmp - idx_iovcnt;	
+			//send the second IO
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, second_len, offset + first_len, 1);
+			if (spdk_unlikely(rc < 0)) {
+				return rc;
+			}
+			return rc;
+		} else {
+			aio_task->idx_iovcnt = idx_iovcnt;
+			aio_task->in_iov_firstpart = inside_vec_fp;
+			aio_task->in_iov_secondpart = inside_vec_sp;
+			aio_task->iovbase_hotspot = iov[idx_iovcnt ].iov_base;
+			iov[idx_iovcnt].iov_len = inside_vec_fp;
+			//sent the IO
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, first_len, offset, 0);
+			if (spdk_unlikely(rc < 0)) {
+				return rc;
+			}
+			iov[idx_iovcnt].iov_base = iov[idx_iovcnt].iov_base + inside_vec_fp;
+			iov[idx_iovcnt].iov_len = inside_vec_sp;
+			iov = &iov[idx_iovcnt];
+			iovcnt = iovcnt - idx_iovcnt;
+			//send the second IO
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, second_len, offset + first_len, 1);
+			if (spdk_unlikely(rc < 0)) {
+				return rc;
+			}
+			return rc;
+		}
+	}
+	return -1;
+
+}
+
 
 static void
 bdev_aio_rw(enum spdk_bdev_io_type type, struct file_disk *fdisk,
@@ -211,33 +472,79 @@ bdev_aio_rw(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	    struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
+	bool split_io = false;
 	int rc;
 
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
-		SPDK_DEBUGLOG(aio, "read %d iovs size %lu to off: %#lx\n",
+		SPDK_NOTICELOG("AIO_BDEV: read %d iovs size %lu to off: %#lx\n",
 			      iovcnt, nbytes, offset);
 	} else {
-		SPDK_DEBUGLOG(aio, "write %d iovs size %lu from off: %#lx\n",
+		SPDK_NOTICELOG("AIO_BDEV: write %d iovs size %lu from off: %#lx\n",
 			      iovcnt, nbytes, offset);
 	}
 
-	rc = bdev_aio_submit_io(type, fdisk, ch, aio_task, iov, iovcnt, nbytes, offset);
-	if (spdk_unlikely(rc < 0)) {
-		if (rc == -EAGAIN) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+	if(fdisk->filecnt <= 1) {
+		rc = bdev_aio_submit_io(type, fdisk, ch, aio_task, iov, iovcnt, nbytes, offset);
+		if (spdk_unlikely(rc < 0)) {
+			if (rc == -EAGAIN) {
+				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+			} else {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
+				SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
+			}
 		} else {
-			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
-			SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
+			aio_ch->io_inflight++;
 		}
-	} else {
-		aio_ch->io_inflight++;
+		return;
 	}
+
+	uint64_t idx = offset / fdisk->size_per_file;
+	if(fdisk->file_md_array[idx].end_offset < (offset + nbytes)) {
+		split_io = true;
+	}
+
+	if(split_io) {
+		rc = bdev_aio_rw_split(type, fdisk, ch, aio_task, iov, iovcnt, nbytes, offset);
+		if (spdk_unlikely(rc < 0)) {
+			if (rc == -EAGAIN) {
+				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+			} else {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
+				SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
+			}
+		} else {
+			aio_ch->io_inflight+=2;
+		}
+		return;
+	} else {
+		rc = bdev_aio_submit_io_multifile_one(type, fdisk, ch, aio_task, iov, iovcnt, nbytes, offset);
+		if (spdk_unlikely(rc < 0)) {
+			if (rc == -EAGAIN) {
+				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+			} else {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
+				SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
+			}
+		} else {
+			aio_ch->io_inflight++;
+		}
+		return;
+	}
+
 }
 
 static void
 bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
-{
-	int rc = fsync(fdisk->fd);
+{	
+	int rc = 0;
+	if(fdisk->filecnt == 1){
+		rc = fsync(fdisk->fd);
+	} else {
+		for(uint32_t i = 0; i < fdisk->filecnt; i++){
+			rc = fsync(fdisk->file_md_array[i].fd);
+			if(rc < 0) break;			
+		}
+	}
 
 	if (rc == 0) {
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -428,6 +735,39 @@ bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *u
 }
 
 static int
+reasmble_io(struct bdev_aio_task *aio_task)
+{
+	
+	switch (aio_task->mode){
+		case 0:
+			return 0;
+		case 1:
+			struct iovec *tmp = aio_task->iov;
+			tmp[0].iov_base = aio_task->iovbase_hotspot;
+			tmp[0].iov_len = aio_task->first_len + aio_task->second_len;
+			break;
+		case 2:			
+		case 3:
+			break;
+	}
+	return 0;
+
+}
+
+static void
+reset_io_task(struct bdev_aio_task *aio_task)
+{	
+	aio_task->splite_io = false;
+	aio_task->first_fid = 0;
+	aio_task->second_fid = 0;
+	aio_task->fisrt_part_done = false;
+	aio_task->second_part_done = false;
+	aio_task->first_len = 0;
+	aio_task->second_len = 0;	
+}
+
+
+static int
 bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 {
 	int nr, i, res = 0;
@@ -442,20 +782,129 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	for (i = 0; i < nr; i++) {
 		aio_task = events[i].data;
 		aio_task->ch->io_inflight--;
-		if (events[i].res == aio_task->len) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+		if(aio_task->splite_io) {
+			if(aio_task->first_fid == events[i].obj->aio_fildes) {
+				if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREADV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREAD) {
+					if (events[i].res == 0) {
+						if(aio_task->second_part_done) {
+							aio_task->fisrt_part_done = true;
+							reasmble_io(aio_task);
+							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+							reset_io_task(aio_task);
+						}
+						else if(!aio_task->second_part_done) {						
+							aio_task->fisrt_part_done = true;
+						}
+						continue;
+					} else if( events[i].res == aio_task->first_len) {
+						if(aio_task->second_part_done) {
+							aio_task->fisrt_part_done = true;
+							reasmble_io(aio_task);
+							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+							reset_io_task(aio_task);
+						}
+						else if(!aio_task->second_part_done) {						
+							aio_task->fisrt_part_done = true;
+						}
+						continue;
+					} else {
+						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+						reset_io_task(aio_task);
+					}			
+				} else if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITE) {
+					if(events[i].res == aio_task->first_len) {
+						if(aio_task->second_part_done) {
+							aio_task->fisrt_part_done = true;							
+							reasmble_io(aio_task);
+							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+
+						}
+						else if(!aio_task->second_part_done) {
+							aio_task->fisrt_part_done = true;
+						}
+						fsync(aio_task->iocb[0].aio_fildes);
+						continue;						
+					} else {
+						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+					}
+				}
+			} else if(aio_task->second_fid == events[i].obj->aio_fildes) {
+				if(aio_task->iocb[1].aio_lio_opcode == IO_CMD_PREADV || aio_task->iocb[1].aio_lio_opcode == IO_CMD_PREAD) {
+					if (events[i].res == 0) {
+						if(aio_task->fisrt_part_done) {
+							aio_task->second_part_done = true;
+							reasmble_io(aio_task);
+							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+							reset_io_task(aio_task);
+						}
+						if(!aio_task->fisrt_part_done) {
+							aio_task->second_part_done = true;										
+						}						
+						continue;
+					} else if( events[i].res == aio_task->second_len) {
+						if(aio_task->fisrt_part_done) {
+							aio_task->second_part_done = true;
+							reasmble_io(aio_task);
+							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+							reset_io_task(aio_task);
+						}
+						else if(!aio_task->fisrt_part_done) {						
+							aio_task->second_part_done = true;
+						}
+						continue;
+					} else {
+						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+						reset_io_task(aio_task);
+					}		
+				} else if(aio_task->iocb[1].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[1].aio_lio_opcode == IO_CMD_PWRITE) {
+					if(events[i].res == aio_task->second_len) {
+						if(aio_task->fisrt_part_done) {
+							aio_task->second_part_done = true;
+							reasmble_io(aio_task);
+							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+							reset_io_task(aio_task);
+						}
+						else if(!aio_task->fisrt_part_done) {
+							aio_task->second_part_done = true;
+						}
+						fsync(aio_task->iocb[1].aio_fildes);
+						continue;	
+					} else {
+						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+						reset_io_task(aio_task);
+					}
+				}
+			}
 		} else {
-			/* From aio_abi.h, io_event.res is defined __s64, negative errno
-			 * will be assigned to io_event.res for error situation.
-			 * But from libaio.h, io_event.res is defined unsigned long, so
-			 * convert it to signed value for error detection.
-			 */
-			SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-			res = (int)events[i].res;
-			if (res < 0) {
-				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), res);
+			if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREADV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREAD) {
+				if (events[i].res == 0) {					
+					spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+					continue;
+				}			
+			}
+
+			if (events[i].res == aio_task->len) {
+				if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITE) {
+					fsync(aio_task->iocb[0].aio_fildes);
+				}
+				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
 			} else {
-				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+				/* From aio_abi.h, io_event.res is defined __s64, negative errno
+				* will be assigned to io_event.res for error situation.
+				* But from libaio.h, io_event.res is defined unsigned long, so
+				* convert it to signed value for error detection.
+				*/
+				SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+				res = (int)events[i].res;
+				if (res < 0) {
+					spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), res);
+				} else {
+					spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+				}
 			}
 		}
 	}
@@ -748,7 +1197,13 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "aio");
 
-	spdk_json_write_named_string(w, "filename", fdisk->filename);
+	if(fdisk->filecnt == 1) {
+		spdk_json_write_named_string(w, "filename", fdisk->filename);
+	} else {
+		spdk_json_write_named_string(w, "base_directory", fdisk->filename);
+		spdk_json_write_named_int64(w, "split_filecnt", fdisk->filecnt);
+		spdk_json_write_named_int64(w, "size_per_file", fdisk->size_per_file);		
+	}
 
 	spdk_json_write_named_bool(w, "block_size_override", fdisk->block_size_override);
 
@@ -875,14 +1330,91 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 	}
 }
 
+
+static int
+create_md_array(struct file_disk *fdisk, uint32_t file_cnt)
+{	
+	struct _file_md *md;	
+	int rc = 0;;	
+	int base_path_length = strlen(fdisk->filename) + strlen(fdisk->disk.name) + 32;	
+	uint32_t block_size = fdisk->disk.blocklen;
+	uint64_t size_per_file = fdisk->size_per_file;
+
+	md = calloc(file_cnt, sizeof(*md));
+	if(!md) {
+		rc = -ENOMEM;
+		goto error_return;
+	}
+
+	if(file_cnt <= 1)  {
+		if (bdev_aio_open(fdisk)) {
+			SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fdisk->filename, fdisk->fd, errno);
+			rc = -errno;
+			goto error_return;
+		}
+	} else {		
+		for(uint32_t i = 0; i < file_cnt; i++) {
+			struct _file_md *md_ref = &md[i];
+			if (snprintf(md_ref->filename, base_path_length, "%s/%s.%d", fdisk->filename, fdisk->disk.name, i) >= base_path_length) {
+                SPDK_ERRLOG("Filename too long\n");
+                rc = -ENAMETOOLONG;
+                goto error_return;
+            }
+
+			if (bdev_aio_open_part_file(fdisk, md_ref)) {
+				SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", md_ref->filename, md_ref->fd, errno);
+				rc = -errno;
+				goto error_return;
+			}
+			md_ref->state = SPDK_FILE_STATE_OPENED;
+			md_ref->start_offset = size_per_file * i;
+			md_ref->end_offset = size_per_file * (i + 1);
+			md_ref->used_blocks = spdk_bit_array_create(size_per_file/block_size);
+			if (!md_ref->used_blocks) {
+                SPDK_ERRLOG("Failed to create bit array for file %s\n", md_ref->filename);
+                rc = -ENOMEM;
+                goto error_return;
+            }
+			
+		}
+	}
+	fdisk->file_md_array = md;
+	return rc;
+
+error_return:
+	free(md);
+	return rc;
+}
+
+static int file_get_blocklen(char *filepath){    
+    struct stat st;
+    // Get file status
+    if (stat(filepath, &st) != 0) {
+        perror("stat failed");
+        return 1;
+    }
+
+    // Print the block size
+    printf("File system block size: %ld bytes\n", (long)st.st_blksize);
+	if((long)st.st_blksize)
+		return (long)st.st_blksize;
+    return 0;
+}
+
 int
 create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
-		bool fallocate)
+		bool fallocate, uint64_t disk_size_t, uint32_t size_per_file_t)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
+	uint64_t file_cnt = 1;
 	uint64_t disk_size;
 	int rc;
+	
+	if(disk_size_t && size_per_file_t) {
+		file_cnt = disk_size_t / size_per_file_t;
+	}
+	
 
 #ifdef __FreeBSD__
 	if (fallocate) {
@@ -905,25 +1437,36 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 		goto error_return;
 	}
 
-	if (bdev_aio_open(fdisk)) {
-		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
-		rc = -errno;
-		goto error_return;
-	}
-
-	disk_size = spdk_fd_get_size(fdisk->fd);
-
 	fdisk->disk.name = strdup(name);
 	if (!fdisk->disk.name) {
 		rc = -ENOMEM;
 		goto error_return;
 	}
+	fdisk->disk.blocklen = block_size;
+	fdisk->size_per_file = size_per_file_t;
+	fdisk->filecnt = file_cnt;
+
+	if(create_md_array(fdisk, fdisk->filecnt)) {
+		goto error_return;
+	}
+
+	if(disk_size_t) {
+		disk_size = disk_size_t;
+	} else {
+		disk_size = spdk_fd_get_size(fdisk->fd);
+	}
+
 	fdisk->disk.product_name = "AIO disk";
 	fdisk->disk.module = &aio_if;
 
 	fdisk->disk.write_cache = 1;
 
-	detected_block_size = spdk_fd_get_blocklen(fdisk->fd);
+	if(file_cnt) {
+		detected_block_size = file_get_blocklen(fdisk->file_md_array[0].filename);
+	} else {
+		detected_block_size = spdk_fd_get_blocklen(fdisk->fd);
+	}
+
 	if (block_size == 0) {
 		/* User did not specify block size - use autodetected block size. */
 		if (detected_block_size == 0) {
