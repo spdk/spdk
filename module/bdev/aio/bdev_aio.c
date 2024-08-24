@@ -377,7 +377,8 @@ bdev_aio_rw_split(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	aio_task->first_fid = fdisk->file_md_array[idx].fd;
 	aio_task->second_fid = fdisk->file_md_array[idx + 1].fd;
 	fdisk->id++;
-
+	// TODO: Implement function to check the enum method for mode operation
+	// FIXME: This task struct needs to be fixed and delete the extra var
 
 	if(iovcnt == 1) {
 		mode = 1;
@@ -474,7 +475,8 @@ bdev_aio_rw(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 	bool split_io = false;
 	int rc;
-
+	// TODO: Implement function to check if the file is opened or exist
+	// TODO: Implement function for claim used blocks in files with bit array
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
 		SPDK_NOTICELOG("AIO_BDEV: read %d iovs size %lu to off: %#lx\n",
 			      iovcnt, nbytes, offset);
@@ -737,7 +739,7 @@ bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *u
 static int
 reasmble_io(struct bdev_aio_task *aio_task)
 {
-	
+	// TODO: Implement function for reasamble mode 2 and 3 and make the mode enum 
 	switch (aio_task->mode){
 		case 0:
 			return 0;
@@ -778,7 +780,7 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	if (nr < 0) {
 		return 0;
 	}
-
+	// TODO: Implement function for check split IO and refactor this area
 	for (i = 0; i < nr; i++) {
 		aio_task = events[i].data;
 		aio_task->ch->io_inflight--;
@@ -1071,6 +1073,7 @@ _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 #ifndef __FreeBSD__
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		// TODO: Implement function for unmap
 		bdev_aio_unmap(bdev_io);
 		return 0;
 
