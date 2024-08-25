@@ -479,7 +479,11 @@ if __name__ == "__main__":
                                             name=args.name,
                                             block_size=args.block_size,
                                             readonly=args.readonly,
-                                            fallocate=args.fallocate))
+                                            fallocate=args.fallocate,
+                                            disk_sz=args.disk_sz,
+                                            sz_per_file=args.sz_per_file,
+                                            filled=args.filled))
+        
 
     p = subparsers.add_parser('bdev_aio_create', help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
@@ -487,6 +491,9 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
     p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
     p.add_argument("--fallocate", action='store_true', help='Support unmap/writezeros by fallocate')
+    p.add_argument("-d", '--disk_sz', help='disk_sz size for this bdev', type=int)
+    p.add_argument("-s", '--sz_per_file', help='sz_per_file size for this bdev', type=int)
+    p.add_argument("-f", "--filled", action='store_true', help='Allocate the file with zeros when it is first opened')
     p.set_defaults(func=bdev_aio_create)
 
     def bdev_aio_rescan(args):
