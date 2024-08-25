@@ -28,6 +28,7 @@
 #include <libaio.h>
 #endif
 
+#define MAX_PATH_FILE 100
 
 // enum spdk_task_state {
 // 	/* The blob in-memory version does not match the on-disk
@@ -51,23 +52,15 @@
 
 
 
-// static void
-// bs_claim_md_page(struct spdk_blob_store *bs, uint32_t page)
-// {
-// 	assert(spdk_spin_held(&bs->used_lock));
-// 	assert(page < spdk_bit_array_capacity(bs->used_md_pages));
-// 	assert(spdk_bit_array_get(bs->used_md_pages, page) == false);
 
-// 	spdk_bit_array_set(bs->used_md_pages, page);
-// }
 
 
 struct _file_md {
 	int fd;
-	char filename[200];
+	char filename[MAX_PATH_FILE];
 	uint64_t start_offset;
 	uint64_t end_offset;
-	enum spdk_FILE_state state;
+	enum spdk_file_state state;
 	struct spdk_bit_array *used_blocks;
 	// bs->used_md_pages = spdk_bit_array_create(1);
 	// spdk_bit_array_get(blob->bs->used_md_pages, pages[i - 1].next)
@@ -102,20 +95,20 @@ struct bdev_aio_task {
 	struct iocb			iocb[2]; //we need two iocb for splited IO
 #endif
 	uint32_t			idx_iovcnt;
-	uint8_t				mode;
-	uint32_t			in_iov_firstpart;
-	uint32_t			in_iov_secondpart;
-	int					iovcnt;
+	enum spdk_iov_state	mode;
 	struct iovec 		*iov;
 	void 				*iovbase_hotspot;
+	uint32_t			iovlen_hotspot;	
 	uint64_t			len;
 	uint64_t			first_len;
-	bool				fisrt_part_done;
+	bool				first_part_done;
 	uint64_t			second_len;
 	bool				second_part_done;
 	bool		 		splite_io;
 	int					first_fid;
 	int					second_fid;
+	bool				response_sent;
+	bool				write_zero;
 	struct bdev_aio_io_channel	*ch;
 };
 
@@ -125,10 +118,13 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
-	uint32_t			id;
 	uint32_t    filecnt;
 	uint64_t	size_per_file;
+	bool		filled;
 	struct _file_md *file_md_array;
+	struct spdk_bit_array *used_file;
+	struct spdk_spinlock 	used_lock;
+	// void *zero_buf;
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 	bool			readonly;
@@ -157,6 +153,28 @@ static TAILQ_HEAD(, file_disk) g_aio_disk_head = TAILQ_HEAD_INITIALIZER(g_aio_di
 
 #define SPDK_AIO_QUEUE_DEPTH 128
 #define MAX_EVENTS_PER_POLL 32
+
+
+// static void
+// fdisk_claim_file_bit(struct file_disk *fdisk, uint32_t idx)
+// {
+// 	assert(spdk_spin_held(&fdisk->used_lock));
+// 	assert(idx < spdk_bit_array_capacity(fdisk->used_file));
+// 	assert(spdk_bit_array_get(fdisk->used_file, idx) == false);
+
+// 	spdk_bit_array_set(fdisk->used_file, idx);
+// }
+
+
+// static void
+// fdisk_clear_file_bit(struct file_disk *fdisk, uint32_t idx)
+// {
+// 	assert(spdk_spin_held(&fdisk->used_lock));
+// 	assert(idx < spdk_bit_array_capacity(fdisk->used_file));
+// 	assert(spdk_bit_array_get(fdisk->used_file, idx) == true);
+
+// 	spdk_bit_array_clear(fdisk->used_file, idx);
+// }
 
 static int
 bdev_aio_get_ctx_size(void)
@@ -202,20 +220,45 @@ bdev_aio_open_part_file(struct file_disk *disk, struct _file_md *file_md)
 	int fd;
 	int io_flag = disk->readonly ? O_RDONLY : O_RDWR;
 
-	fd = open(file_md->filename, io_flag | O_DIRECT);
+	/* Try without O_DIRECT for non-disk files */
+	fd = open(file_md->filename, io_flag | O_CREAT);
 	if (fd < 0) {
-		/* Try without O_DIRECT for non-disk files */
-		fd = open(file_md->filename, io_flag | O_CREAT);
-		if (fd < 0) {
-			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
-				    file_md->filename, errno, spdk_strerror(errno));
-			disk->fd = -1;
-			return -1;
+		SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
+				file_md->filename, errno, spdk_strerror(errno));
+		disk->fd = -1;
+		return -1;
+	}
+
+	if((file_md->state == SPDK_FILE_STATE_DELETED || file_md->state == SPDK_FILE_STATE_CLEAN)) {
+		
+		// Set the file size to 1 GB
+		if (ftruncate(fd, disk->size_per_file) != 0) {
+			perror("Failed to set file size");
+			close(fd);
+			return 1;
 		}
+		// Reset the file offset to the beginning
+		if (lseek(fd, 0, SEEK_SET) == -1) {
+			perror("Failed to reset file offset");
+			close(fd);
+			return 1;
+		}
+		
+		if(disk->filled) {
+			char buffer[1048576] = {0};  // 1 MB buffer filled with zeros
+			for (uint64_t i = 0; i < disk->size_per_file; i += sizeof(buffer)) {
+				if (write(fd, buffer, sizeof(buffer)) != sizeof(buffer)) {
+					perror("Failed to write zeros to file");
+					close(fd);
+					return 1;
+				}
+			}
+		}
+
+		fsync(fd);
 	}
 
 	file_md->fd = fd;
-
 	return 0;
 }
 
@@ -290,7 +333,7 @@ bdev_aio_submit_io(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
 	aio_task->splite_io = false;
-	aio_task->mode = 0;
+	aio_task->mode = SPDK_IOVS_ONE_FILE;
 	aio_task->ch = aio_ch;
 
 	return io_submit(aio_ch->io_ctx, 1, &iocb);
@@ -304,7 +347,17 @@ bdev_aio_submit_io_multifile_one(enum spdk_bdev_io_type type, struct file_disk *
 {
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);	
 	struct iocb *iocb = &aio_task->iocb[0];
-	uint32_t idx = offset / fdisk->size_per_file;		
+	uint32_t idx = offset / fdisk->size_per_file;
+	// spdk_spin_lock(&fdisk->used_lock);
+	// fdisk_claim_file(fdisk, idx);
+	// spdk_spin_unlock(&fdisk->used_lock);
+	if(fdisk->file_md_array[idx].state != SPDK_FILE_STATE_OPENED) {
+		if (bdev_aio_open_part_file(fdisk, &fdisk->file_md_array[idx])) {
+			SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fdisk->file_md_array[idx].filename, fdisk->file_md_array[idx].fd, errno);
+			return -1;
+		}
+		fdisk->file_md_array[idx].state = SPDK_FILE_STATE_OPENED;	
+	}
 	struct _file_md md = fdisk->file_md_array[idx];
 
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
@@ -318,7 +371,7 @@ bdev_aio_submit_io_multifile_one(enum spdk_bdev_io_type type, struct file_disk *
 	}
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
-	aio_task->mode = 0;
+	aio_task->mode = SPDK_IOVS_ONE_FILE;
 	aio_task->first_len = 0;
 	aio_task->second_len = 0;
 	aio_task->splite_io = false;
@@ -335,8 +388,19 @@ bdev_aio_submit_io_multifile_two(enum spdk_bdev_io_type type, struct file_disk *
 {
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);	
 	uint32_t idx = offset / fdisk->size_per_file;			
-	struct _file_md md = fdisk->file_md_array[idx];
 	struct iocb *iocb = &aio_task->iocb[index];
+
+	// spdk_spin_lock(&fdisk->used_lock);
+	// fdisk_claim_file(fdisk, idx);
+	// spdk_spin_unlock(&fdisk->used_lock);
+	if(fdisk->file_md_array[idx].state != SPDK_FILE_STATE_OPENED) {
+		if (bdev_aio_open_part_file(fdisk, &fdisk->file_md_array[idx])) {
+			SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fdisk->file_md_array[idx].filename, fdisk->file_md_array[idx].fd, errno);
+			return -1;
+		}
+		fdisk->file_md_array[idx].state = SPDK_FILE_STATE_OPENED;	
+	}
+	struct _file_md md = fdisk->file_md_array[idx];
 
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
 		io_prep_preadv(iocb, md.fd, iov, iovcnt, offset - md.start_offset);
@@ -360,6 +424,7 @@ bdev_aio_rw_split(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	    struct spdk_io_channel *ch, struct bdev_aio_task *aio_task,
 	    struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
+	struct iovec *tmp_iov;
 	uint32_t idx = offset / fdisk->size_per_file;
 	uint32_t first_len = fdisk->file_md_array[idx].end_offset - offset;
 	uint32_t second_len = nbytes - first_len;
@@ -368,22 +433,20 @@ bdev_aio_rw_split(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	uint32_t idx_iovcnt = 0;
 	int rc = 0;
 	aio_task->splite_io = true;
+	aio_task->response_sent = false;
 	aio_task->first_len = first_len;
 	aio_task->second_len = second_len;
-	aio_task->fisrt_part_done = false;
+	aio_task->first_part_done = false;
 	aio_task->second_part_done = false;
 	aio_task->iov = iov;
-	aio_task->iovcnt = iovcnt;
 	aio_task->first_fid = fdisk->file_md_array[idx].fd;
 	aio_task->second_fid = fdisk->file_md_array[idx + 1].fd;
-	fdisk->id++;
-	// TODO: Implement function to check the enum method for mode operation
-	// FIXME: This task struct needs to be fixed and delete the extra var
+
 
 	if(iovcnt == 1) {
-		mode = 1;
+		mode = SPDK_IOV_SINGLE_IOVCNT;
 		iov[0].iov_len = first_len;
-		//sent the IO
+		//sent the fisrt IO
 		aio_task->mode = mode;
 		aio_task->iovbase_hotspot = iov[0].iov_base;
 		rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, first_len, offset, 0);
@@ -405,57 +468,51 @@ bdev_aio_rw_split(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 			tmp_len += iov[i].iov_len;
 			if(tmp_len == first_len) {
 				idx_iovcnt = i;
-				mode = 2;				
+				mode = SPDK_IOVS_SPLIT_IOVCNT;				
 				break;
 			}
 
 			if(tmp_len > first_len) {
 				idx_iovcnt = i;
 				inside_vec_fp = iov[i].iov_len - (tmp_len - first_len);
-				inside_vec_sp = (tmp_len - first_len);
-				mode = 3;
-				aio_task->mode = mode;
+				inside_vec_sp = (iov[i].iov_len - inside_vec_fp);
+				mode = SPDK_IOVS_SPLIT_IOV;
 				break;
 			}
 		}
 
 		aio_task->mode = mode;
-		if(mode == 2) {
-			int tmp = iovcnt;
-			iovcnt = idx_iovcnt;
-			aio_task->idx_iovcnt = idx_iovcnt;
-			aio_task->iovbase_hotspot = iov[idx_iovcnt + 1].iov_base;				
-			//sent the IO
-			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, first_len, offset, 0);
+		if(mode == SPDK_IOVS_SPLIT_IOVCNT) {						
+			//sent the first IO
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, idx_iovcnt, first_len, offset, 0);
 			if (spdk_unlikely(rc < 0)) {
 				return rc;
 			}
 
-			iov = &iov[idx_iovcnt + 1];
-			iovcnt = tmp - idx_iovcnt;	
+			struct iovec *tmp_iov = &iov[idx_iovcnt + 1];
+			iovcnt = iovcnt - idx_iovcnt;	
 			//send the second IO
-			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, second_len, offset + first_len, 1);
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, tmp_iov, iovcnt, second_len, offset + first_len, 1);
 			if (spdk_unlikely(rc < 0)) {
 				return rc;
 			}
 			return rc;
-		} else {
+		} else if(mode == SPDK_IOVS_SPLIT_IOV) {
 			aio_task->idx_iovcnt = idx_iovcnt;
-			aio_task->in_iov_firstpart = inside_vec_fp;
-			aio_task->in_iov_secondpart = inside_vec_sp;
-			aio_task->iovbase_hotspot = iov[idx_iovcnt ].iov_base;
+			aio_task->iovlen_hotspot = iov[idx_iovcnt].iov_len;			
+			aio_task->iovbase_hotspot = iov[idx_iovcnt].iov_base;
 			iov[idx_iovcnt].iov_len = inside_vec_fp;
-			//sent the IO
-			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, first_len, offset, 0);
+			//sent the first IO
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, idx_iovcnt, first_len, offset, 0);
 			if (spdk_unlikely(rc < 0)) {
 				return rc;
 			}
 			iov[idx_iovcnt].iov_base = iov[idx_iovcnt].iov_base + inside_vec_fp;
 			iov[idx_iovcnt].iov_len = inside_vec_sp;
-			iov = &iov[idx_iovcnt];
-			iovcnt = iovcnt - idx_iovcnt;
+			tmp_iov = &iov[idx_iovcnt];
+			iovcnt = iovcnt - idx_iovcnt + 1;
 			//send the second IO
-			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, iov, iovcnt, second_len, offset + first_len, 1);
+			rc = bdev_aio_submit_io_multifile_two(type, fdisk, ch, aio_task, tmp_iov, iovcnt, second_len, offset + first_len, 1);
 			if (spdk_unlikely(rc < 0)) {
 				return rc;
 			}
@@ -539,12 +596,14 @@ static void
 bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 {	
 	int rc = 0;
-	if(fdisk->filecnt == 1){
+	if(fdisk->filecnt == 1) {		
 		rc = fsync(fdisk->fd);
 	} else {
-		for(uint32_t i = 0; i < fdisk->filecnt; i++){
-			rc = fsync(fdisk->file_md_array[i].fd);
-			if(rc < 0) break;			
+		for(uint32_t i = 0; i < fdisk->filecnt; i++) {
+			if(fdisk->file_md_array[i].state == SPDK_FILE_STATE_OPENED) {
+				rc = fsync(fdisk->file_md_array[i].fd);
+				if(rc < 0) break;
+			}
 		}
 	}
 
@@ -555,7 +614,134 @@ bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 	}
 }
 
+static int delete_file(struct _file_md *md) {
+	if(md->state == SPDK_FILE_STATE_OPENED) {
+		close(md->fd);		
+		// Unlink the file
+		if (unlink(md->filename) == 0) {
+			printf("File '%s' deleted successfully.\n", md->filename);
+		} else {
+			perror("Failed to delete the file");
+		}
+		md->state = SPDK_FILE_STATE_DELETED;
+		// clear this bit array
+		spdk_bit_array_clear_mask(md->used_blocks);
+	}
+    return 0;
+}
+
 #ifndef __FreeBSD__
+
+static void
+bdev_aio_unmap_multi_file_mode(struct spdk_bdev_io *bdev_io, int mode)
+{
+	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+	struct bdev_aio_task *aio_task = (struct bdev_aio_task *)bdev_io->driver_ctx;
+	uint64_t offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+	uint64_t nbytes = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+	uint64_t idx = offset / fdisk->size_per_file;
+	struct _file_md md = fdisk->file_md_array[idx];
+	bool split_io = false;
+	int filecnt = 0;
+	uint64_t diff = nbytes > (md.end_offset - offset) ? nbytes - (md.end_offset - offset) : (md.end_offset - offset) - nbytes;
+	int rc;
+
+	SPDK_NOTICELOG("AIO_BDEV: Unmap or zero wirte %lu iovs size %lu to off: %#lx\n",
+			      bdev_io->u.bdev.num_blocks, nbytes, offset);
+	
+	if(md.end_offset < (offset + nbytes)) {
+		split_io = true;
+	}
+
+	if(!split_io) {
+		// aio_task->write_zero = true;;
+		// one file to be deleted 
+		if(md.start_offset == offset && nbytes == fdisk->size_per_file) {
+			delete_file(&fdisk->file_md_array[idx]);
+		} else {			
+			// send the write zero or unmap as ordinary write IO
+			if(fdisk->file_md_array[idx].state != SPDK_FILE_STATE_OPENED) {
+				if (bdev_aio_open_part_file(fdisk, &fdisk->file_md_array[idx])) {
+					SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fdisk->file_md_array[idx].filename, fdisk->file_md_array[idx].fd, errno);
+					return -1;
+				}
+				fdisk->file_md_array[idx].state = SPDK_FILE_STATE_OPENED;	
+			}
+			md = fdisk->file_md_array[idx];
+			rc = fallocate(md.fd, mode, (offset - md.start_offset), nbytes);
+			if(rc == 0) {
+				fsync(md.fd);
+			} else {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+				return;
+			}	
+		}
+	} else {
+		filecnt =  diff / fdisk->size_per_file;
+		bool last_part = diff % fdisk->size_per_file ? true : false;
+		bool first_part = md.start_offset == offset ? false : true;
+
+		if(!first_part) {
+			delete_file(&fdisk->file_md_array[idx]);
+		}
+
+		for(int i = 1; i <= filecnt; i++) {	
+			delete_file(&fdisk->file_md_array[idx + i]);
+		}
+
+		if(first_part) {			
+			// take care of first part in first file
+
+			if(fdisk->file_md_array[idx].state != SPDK_FILE_STATE_OPENED) {
+				if (bdev_aio_open_part_file(fdisk, &fdisk->file_md_array[idx])) {
+					SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fdisk->file_md_array[idx].filename, fdisk->file_md_array[idx].fd, errno);
+					return -1;
+				}
+				fdisk->file_md_array[idx].state = SPDK_FILE_STATE_OPENED;	
+			}
+			md = fdisk->file_md_array[idx];
+
+			rc = fallocate(md.fd, mode, (offset - md.start_offset), (md.end_offset - offset));
+			// rc = write_zeros(fdisk, md.fd, (offset - md.start_offset), (md.end_offset - offset));
+			if(rc == 0) {
+				fsync(md.fd);
+			} else {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+				return;
+			}
+		}
+
+		if(last_part) {
+
+			// take care of last part in last file
+			struct _file_md *tmp_md = &fdisk->file_md_array[idx + filecnt + 1];			
+			if(tmp_md->state != SPDK_FILE_STATE_OPENED) {
+				if (bdev_aio_open_part_file(fdisk, tmp_md)) {
+					SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", tmp_md->filename, tmp_md->fd, errno);
+					return -1;
+				}
+				tmp_md->state = SPDK_FILE_STATE_OPENED;	
+			}
+			md = fdisk->file_md_array[idx + filecnt + 1];		
+			uint64_t remain_byte = (nbytes - (fdisk->file_md_array[idx].end_offset - offset)) % fdisk->size_per_file;
+			rc = fallocate(md.fd, mode, 0, remain_byte);
+			// rc = write_zeros(fdisk, md.fd, 0, remain_byte);
+			if(rc == 0) {
+				fsync(md.fd);
+			} else {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+				return;
+			}
+		}
+	}
+
+	if (rc == 0) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+	}
+}
+
 static void
 bdev_aio_fallocate(struct spdk_bdev_io *bdev_io, int mode)
 {
@@ -582,8 +768,12 @@ static void
 bdev_aio_unmap(struct spdk_bdev_io *bdev_io)
 {
 	int mode = FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE;
-
-	bdev_aio_fallocate(bdev_io, mode);
+	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+	if(fdisk->filecnt > 1) {	
+		bdev_aio_unmap_multi_file_mode(bdev_io, mode);
+	} else {
+		bdev_aio_fallocate(bdev_io, mode);
+	}
 }
 
 
@@ -591,8 +781,12 @@ static void
 bdev_aio_write_zeros(struct spdk_bdev_io *bdev_io)
 {
 	int mode = FALLOC_FL_ZERO_RANGE;
-
-	bdev_aio_fallocate(bdev_io, mode);
+	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+	if(fdisk->filecnt > 1) {	
+		bdev_aio_unmap_multi_file_mode(bdev_io, mode);
+	} else {
+		bdev_aio_fallocate(bdev_io, mode);
+	}
 }
 #endif
 
@@ -738,22 +932,24 @@ bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *u
 
 static int
 reasmble_io(struct bdev_aio_task *aio_task)
-{
-	// TODO: Implement function for reasamble mode 2 and 3 and make the mode enum 
+{	
+	struct iovec *tmp_iov = aio_task->iov;	
+
 	switch (aio_task->mode){
-		case 0:
+		case SPDK_IOVS_ONE_FILE:
 			return 0;
-		case 1:
-			struct iovec *tmp = aio_task->iov;
-			tmp[0].iov_base = aio_task->iovbase_hotspot;
-			tmp[0].iov_len = aio_task->first_len + aio_task->second_len;
+		case SPDK_IOV_SINGLE_IOVCNT:			
+			tmp_iov[0].iov_base = aio_task->iovbase_hotspot;
+			tmp_iov[0].iov_len = aio_task->first_len + aio_task->second_len;
 			break;
-		case 2:			
-		case 3:
+		case SPDK_IOVS_SPLIT_IOVCNT:			
+			break;		
+		case SPDK_IOVS_SPLIT_IOV:
+			tmp_iov[aio_task->idx_iovcnt].iov_base = aio_task->iovbase_hotspot;
+			tmp_iov[aio_task->idx_iovcnt].iov_len = aio_task->iovlen_hotspot;
 			break;
 	}
 	return 0;
-
 }
 
 static void
@@ -762,10 +958,76 @@ reset_io_task(struct bdev_aio_task *aio_task)
 	aio_task->splite_io = false;
 	aio_task->first_fid = 0;
 	aio_task->second_fid = 0;
-	aio_task->fisrt_part_done = false;
+	aio_task->first_part_done = false;
 	aio_task->second_part_done = false;
 	aio_task->first_len = 0;
 	aio_task->second_len = 0;	
+}
+
+
+static void
+split_io_task_handler_first_part(struct bdev_aio_task *aio_task, struct io_event events, uint8_t idx)
+{	
+	if(events.res == aio_task->first_len) {
+		if(aio_task->second_part_done) {
+			aio_task->first_part_done = true;
+			reasmble_io(aio_task);
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+			reset_io_task(aio_task);
+		}
+		else if(!aio_task->second_part_done) {						
+			aio_task->first_part_done = true;
+		}
+		if(aio_task->iocb[idx].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[idx].aio_lio_opcode == IO_CMD_PWRITE){
+			fsync(aio_task->iocb[idx].aio_fildes);
+		}
+		return;
+	} else {
+		if(aio_task->response_sent) {
+				reset_io_task(aio_task);
+		}
+		else {
+			SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events.res);
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);			
+			aio_task->response_sent = true;
+			if(aio_task->second_part_done) {
+				reset_io_task(aio_task);
+			}
+		}		
+	}	
+}
+
+
+static void
+split_io_task_handler_second_part(struct bdev_aio_task *aio_task, struct io_event events, uint8_t idx)
+{
+	if(events.res == aio_task->second_len) {
+		if(aio_task->first_part_done) {
+			aio_task->second_part_done = true;
+			reasmble_io(aio_task);
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+			reset_io_task(aio_task);
+		}
+		else if(!aio_task->first_part_done) {						
+			aio_task->second_part_done = true;
+		}
+		if(aio_task->iocb[idx].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[idx].aio_lio_opcode == IO_CMD_PWRITE) {
+			fsync(aio_task->iocb[idx].aio_fildes);
+		}
+		return;
+	} else {
+		if(aio_task->response_sent) {
+				reset_io_task(aio_task);
+		}
+		else {
+			SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events.res);
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);			
+			aio_task->response_sent = true;
+			if(aio_task->first_part_done) {
+				reset_io_task(aio_task);
+			}
+		}
+	}
 }
 
 
@@ -786,109 +1048,13 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		aio_task->ch->io_inflight--;
 		if(aio_task->splite_io) {
 			if(aio_task->first_fid == events[i].obj->aio_fildes) {
-				if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREADV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREAD) {
-					if (events[i].res == 0) {
-						if(aio_task->second_part_done) {
-							aio_task->fisrt_part_done = true;
-							reasmble_io(aio_task);
-							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-							reset_io_task(aio_task);
-						}
-						else if(!aio_task->second_part_done) {						
-							aio_task->fisrt_part_done = true;
-						}
-						continue;
-					} else if( events[i].res == aio_task->first_len) {
-						if(aio_task->second_part_done) {
-							aio_task->fisrt_part_done = true;
-							reasmble_io(aio_task);
-							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-							reset_io_task(aio_task);
-						}
-						else if(!aio_task->second_part_done) {						
-							aio_task->fisrt_part_done = true;
-						}
-						continue;
-					} else {
-						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
-						reset_io_task(aio_task);
-					}			
-				} else if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITE) {
-					if(events[i].res == aio_task->first_len) {
-						if(aio_task->second_part_done) {
-							aio_task->fisrt_part_done = true;							
-							reasmble_io(aio_task);
-							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-
-						}
-						else if(!aio_task->second_part_done) {
-							aio_task->fisrt_part_done = true;
-						}
-						fsync(aio_task->iocb[0].aio_fildes);
-						continue;						
-					} else {
-						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
-					}
-				}
+				split_io_task_handler_first_part(aio_task, events[i], 0);
+				continue;
 			} else if(aio_task->second_fid == events[i].obj->aio_fildes) {
-				if(aio_task->iocb[1].aio_lio_opcode == IO_CMD_PREADV || aio_task->iocb[1].aio_lio_opcode == IO_CMD_PREAD) {
-					if (events[i].res == 0) {
-						if(aio_task->fisrt_part_done) {
-							aio_task->second_part_done = true;
-							reasmble_io(aio_task);
-							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-							reset_io_task(aio_task);
-						}
-						if(!aio_task->fisrt_part_done) {
-							aio_task->second_part_done = true;										
-						}						
-						continue;
-					} else if( events[i].res == aio_task->second_len) {
-						if(aio_task->fisrt_part_done) {
-							aio_task->second_part_done = true;
-							reasmble_io(aio_task);
-							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-							reset_io_task(aio_task);
-						}
-						else if(!aio_task->fisrt_part_done) {						
-							aio_task->second_part_done = true;
-						}
-						continue;
-					} else {
-						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
-						reset_io_task(aio_task);
-					}		
-				} else if(aio_task->iocb[1].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[1].aio_lio_opcode == IO_CMD_PWRITE) {
-					if(events[i].res == aio_task->second_len) {
-						if(aio_task->fisrt_part_done) {
-							aio_task->second_part_done = true;
-							reasmble_io(aio_task);
-							spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-							reset_io_task(aio_task);
-						}
-						else if(!aio_task->fisrt_part_done) {
-							aio_task->second_part_done = true;
-						}
-						fsync(aio_task->iocb[1].aio_fildes);
-						continue;	
-					} else {
-						SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-						spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
-						reset_io_task(aio_task);
-					}
-				}
+				split_io_task_handler_second_part(aio_task, events[i], 1);
+				continue;
 			}
 		} else {
-			if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREADV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PREAD) {
-				if (events[i].res == 0) {					
-					spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-					continue;
-				}			
-			}
-
 			if (events[i].res == aio_task->len) {
 				if(aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITEV || aio_task->iocb[0].aio_lio_opcode == IO_CMD_PWRITE) {
 					fsync(aio_task->iocb[0].aio_fildes);
@@ -1106,7 +1272,6 @@ bdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
-
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return fdisk->fallocate;
@@ -1358,18 +1523,19 @@ create_md_array(struct file_disk *fdisk, uint32_t file_cnt)
 	} else {		
 		for(uint32_t i = 0; i < file_cnt; i++) {
 			struct _file_md *md_ref = &md[i];
+			md_ref->state = SPDK_FILE_STATE_CLEAN;
 			if (snprintf(md_ref->filename, base_path_length, "%s/%s.%d", fdisk->filename, fdisk->disk.name, i) >= base_path_length) {
                 SPDK_ERRLOG("Filename too long\n");
                 rc = -ENAMETOOLONG;
                 goto error_return;
             }
 
-			if (bdev_aio_open_part_file(fdisk, md_ref)) {
-				SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", md_ref->filename, md_ref->fd, errno);
-				rc = -errno;
-				goto error_return;
-			}
-			md_ref->state = SPDK_FILE_STATE_OPENED;
+			// if (bdev_aio_open_part_file(fdisk, md_ref)) {
+			// 	SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", md_ref->filename, md_ref->fd, errno);
+			// 	rc = -errno;
+			// 	goto error_return;
+			// }
+			// md_ref->state = SPDK_FILE_STATE_OPENED;			
 			md_ref->start_offset = size_per_file * i;
 			md_ref->end_offset = size_per_file * (i + 1);
 			md_ref->used_blocks = spdk_bit_array_create(size_per_file/block_size);
@@ -1406,7 +1572,7 @@ static int file_get_blocklen(char *filepath){
 
 int
 create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
-		bool fallocate, uint64_t disk_size_t, uint32_t size_per_file_t)
+		bool fallocate, uint64_t disk_size_t, uint32_t size_per_file_t, bool filled_t)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -1433,6 +1599,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	}
 	fdisk->readonly = readonly;
 	fdisk->fallocate = fallocate;
+	fdisk->filled = filled_t;
 
 	fdisk->filename = strdup(filename);
 	if (!fdisk->filename) {
@@ -1448,6 +1615,14 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	fdisk->disk.blocklen = block_size;
 	fdisk->size_per_file = size_per_file_t;
 	fdisk->filecnt = file_cnt;
+
+	// fdisk->used_file = spdk_bit_array_create(file_cnt);
+	// if (!fdisk->used_file) {
+	// 	SPDK_ERRLOG("Failed to create bit array for main fdisk struct\n");
+	// 	rc = -ENOMEM;
+	// 	goto error_return;
+	// }
+	// spdk_spin_init(&fdisk->used_lock);
 
 	if(create_md_array(fdisk, fdisk->filecnt)) {
 		goto error_return;
@@ -1524,6 +1699,8 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;
+	// fdisk->zero_buf = spdk_zmalloc(1073741824, 2 * 1024 * 1024, NULL,
+	// 					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 
 	spdk_io_device_register(fdisk, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel),
