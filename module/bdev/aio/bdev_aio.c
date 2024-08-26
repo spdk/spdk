@@ -540,7 +540,7 @@ bdev_aio_rw(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	} else {
 		SPDK_NOTICELOG("AIO_BDEV: write %d iovs size %lu from off: %#lx\n",
 			      iovcnt, nbytes, offset);
-	}
+	}   
 
 	if(fdisk->filecnt <= 1) {
 		rc = bdev_aio_submit_io(type, fdisk, ch, aio_task, iov, iovcnt, nbytes, offset);
