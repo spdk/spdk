@@ -516,6 +516,7 @@ underflow_for_request_sense_test(void)
 	iscsi_task_set_pdu(&task, pdu1);
 	task.parent = NULL;
 
+	task.scsi.iov.iov_base = (void *)0xF000000;
 	task.scsi.iovs = &task.scsi.iov;
 	task.scsi.iovcnt = 1;
 	task.scsi.length = 512;
@@ -607,6 +608,7 @@ underflow_for_check_condition_test(void)
 	iscsi_task_set_pdu(&task, pdu);
 	task.parent = NULL;
 
+	task.scsi.iov.iov_base = (void *)0xF0000000;
 	task.scsi.iovs = &task.scsi.iov;
 	task.scsi.iovcnt = 1;
 	task.scsi.length = 512;
