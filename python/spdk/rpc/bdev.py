@@ -487,7 +487,7 @@ def bdev_raid_remove_base_bdev(client, name):
     return client.call('bdev_raid_remove_base_bdev', params)
 
 
-def bdev_aio_create(client, filename, name, block_size=None, readonly=False, fallocate=False, disk_sz=0, sz_per_file=0, filled=False):
+def bdev_aio_create(client, filename, name, block_size=None, readonly=False, fallocate=False):
     """Construct a Linux AIO block device.
 
     Args:
@@ -512,15 +512,6 @@ def bdev_aio_create(client, filename, name, block_size=None, readonly=False, fal
     if fallocate:
         params['fallocate'] = fallocate
     
-    if disk_sz:
-        params['disk_sz'] = disk_sz
-        
-    if sz_per_file:
-        params['sz_per_file'] = sz_per_file
-        
-    if filled:
-        params['filled'] = filled
-
     return client.call('bdev_aio_create', params)
 
 
