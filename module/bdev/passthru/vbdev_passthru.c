@@ -64,7 +64,7 @@ struct vbdev_passthru {
 	struct spdk_bdev		pt_bdev;    /* the PT virtual bdev */
 	struct spdk_io_channel		*md_channel;
 	struct spdk_spinlock		used_lock;
-	uint8_t multiplier;
+	uint64_t multiplier;
 	uint32_t md_len;
 	void				*malloc_md_buf;
 	uint64_t offset_start;
@@ -304,17 +304,21 @@ _pt_complete_io6(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			    io_ctx->test);
 	}
 
+	if (request->buf) {
+		spdk_free(request->buf);
+		request->buf = NULL;
+	}
+    
+    free(request);
 	_pt_complete_io(bdev_io, success, orig_io);
 	// spdk_spin_unlock(&pt_node->used_lock);
-	// free(request->buf);	
-	free(request);	
+	
 }
 
 
 static void
 _pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-		// struct spdk_bdev_io *orig_io = cb_arg;
+{		
 	struct arg_requst *request = (struct arg_requst *)cb_arg;
 	struct spdk_bdev_io *orig_io = request->bdev_io;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
@@ -334,9 +338,12 @@ _pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
         spdk_bdev_io_complete(orig_io, status);
-		spdk_bdev_free_io(bdev_io);
-		// free(request->buf);	
+		if (request->buf) {
+			spdk_free(request->buf);
+			request->buf = NULL;
+		}		
 		free(request);
+		spdk_bdev_free_io(bdev_io);		
         return;
     }
 
@@ -350,10 +357,13 @@ _pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (orig_io->u.bdev.md_buf == NULL) {
-			_pt_complete_io(bdev_io, success, cb_arg);
-			// free(request->buf);	
+		if (orig_io->u.bdev.md_buf == NULL) {			
+			if (request->buf) {
+				spdk_free(request->buf);
+				request->buf = NULL;
+			}			
 			free(request);
+			_pt_complete_io(bdev_io, success, cb_arg);			
 			return;
 		}
 		// if(strncmp(request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), pt_node->malloc_md_buf + get_md_offset(orig_io, pt_node->md_len), get_md_count(orig_io, pt_node->md_len)) != 0){
@@ -385,7 +395,10 @@ _pt_complete_io3(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	
 
 	if (rc != 0) {
-		// free(request->buf);	
+		if (request->buf) {
+			spdk_free(request->buf);
+			request->buf = NULL;
+		}	
 		free(request);
 		// if (rc == -ENOMEM) {
 		// 	SPDK_ERRLOG("No memory, start to queue io for passthru.\n");			
@@ -438,7 +451,8 @@ _pt_complete_io2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if(!lb_count) {
 		lb_count = 1;
 	}
-	if(lb + lb_count >= pt_node->offset_start){
+
+	if(lb + lb_count >= pt_node->offset_start) {
 		_pt_complete_io(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, cb_arg);
 		return;
 	}
@@ -475,75 +489,72 @@ _pt_complete_io2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 
 	if (rc != 0) {
-		free(request->buf);
+		if (request->buf) {
+			spdk_free(request->buf);
+			request->buf = NULL;
+		}	
 		free(request);
-		// if (rc == -ENOMEM) {
-		// 	SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
-		// 	// io_ctx->ch = ch;
-		// 	vbdev_passthru_queue_io(orig_io);
-		// } else {
 		SPDK_ERRLOG("reading md blocks, ERROR on bdev_io submission!\n");
-		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-		// }
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);		
 	}
 	spdk_bdev_free_io(bdev_io);	
 }
 
 
-static void
-_pt_complete_io5(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	// struct spdk_bdev_io *orig_io = cb_arg;
-	struct arg_requst *request = (struct arg_requst *)cb_arg;
-	struct spdk_bdev_io *orig_io = request->bdev_io;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
-	// struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
-	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
+// static void
+// _pt_complete_io5(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+// {
+// 	// struct spdk_bdev_io *orig_io = cb_arg;
+// 	struct arg_requst *request = (struct arg_requst *)cb_arg;
+// 	struct spdk_bdev_io *orig_io = request->bdev_io;
+// 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+// 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+// 	// struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
+// 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(orig_io->bdev, struct vbdev_passthru, pt_bdev);	
 
-	/* We setup this value in the submission routine, just showing here that it is
-	 * passed back to us.
-	 */
-	if (io_ctx->test != 0x5a) {
-		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
-			    io_ctx->test);
-	}
+// 	/* We setup this value in the submission routine, just showing here that it is
+// 	 * passed back to us.
+// 	 */
+// 	if (io_ctx->test != 0x5a) {
+// 		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+// 			    io_ctx->test);
+// 	}
 
-	if (!success) {
-        spdk_bdev_io_complete(orig_io, status);
-		spdk_bdev_free_io(bdev_io);
-		// free(request->buf);	
-		free(request);
-        return;
-    }
+// 	if (!success) {
+//         spdk_bdev_io_complete(orig_io, status);
+// 		spdk_bdev_free_io(bdev_io);
+// 		// free(request->buf);	
+// 		free(request);
+//         return;
+//     }
 
-	if (orig_io->u.bdev.md_buf == NULL) {
-		_pt_complete_io(bdev_io, success, cb_arg);
-		// free(request->buf);	
-		free(request);
-		return;
-	}
+// 	if (orig_io->u.bdev.md_buf == NULL) {
+// 		_pt_complete_io(bdev_io, success, cb_arg);
+// 		// free(request->buf);	
+// 		free(request);
+// 		return;
+// 	}
 
-	// spdk_spin_lock(&pt_node->used_lock);
-	// void *md_buf = spdk_zmalloc(get_md_count(orig_io, pt_node->md_len), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-	// memcpy(md_buf, request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
-	// spdk_bdev_io_set_md_buf(orig_io, md_buf, get_md_count(orig_io, pt_node->md_len));
-	// memcpy(orig_io->u.bdev.md_buf, (request->buf + (get_md_offset(orig_io, pt_node->md_len)) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
-	// memcpy(orig_io->u.bdev.md_buf, pt_node->malloc_md_buf + (get_md_offset(orig_io, pt_node->md_len)), get_md_count(orig_io, pt_node->md_len));
-	// if(strncmp(request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), pt_node->malloc_md_buf + get_md_offset(orig_io, pt_node->md_len), get_md_count(orig_io, pt_node->md_len)) != 0){
-	// 	char *a = request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen);
-	// 	char *b = pt_node->malloc_md_buf + get_md_offset(orig_io, pt_node->md_len);
-	// 	for(int i =0; i < get_md_count(orig_io, pt_node->md_len); i++ ){
-	// 		printf("first %02x second %02x \n", (int)a[i], (int)b[i]);
-	// 	}
-	// 	printf("not equal");
-	// 	fflush(stdout);
-	// }
-	// spdk_spin_unlock(&pt_node->used_lock);
-	_pt_complete_io(bdev_io, success, orig_io);
-	// free(request->buf);	
-	free(request);
-}
+// 	// spdk_spin_lock(&pt_node->used_lock);
+// 	// void *md_buf = spdk_zmalloc(get_md_count(orig_io, pt_node->md_len), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+// 	// memcpy(md_buf, request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
+// 	// spdk_bdev_io_set_md_buf(orig_io, md_buf, get_md_count(orig_io, pt_node->md_len));
+// 	// memcpy(orig_io->u.bdev.md_buf, (request->buf + (get_md_offset(orig_io, pt_node->md_len)) % orig_io->bdev->blocklen), get_md_count(orig_io, pt_node->md_len));
+// 	// memcpy(orig_io->u.bdev.md_buf, pt_node->malloc_md_buf + (get_md_offset(orig_io, pt_node->md_len)), get_md_count(orig_io, pt_node->md_len));
+// 	// if(strncmp(request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen), pt_node->malloc_md_buf + get_md_offset(orig_io, pt_node->md_len), get_md_count(orig_io, pt_node->md_len)) != 0){
+// 	// 	char *a = request->buf + (get_md_offset(orig_io, pt_node->md_len) % orig_io->bdev->blocklen);
+// 	// 	char *b = pt_node->malloc_md_buf + get_md_offset(orig_io, pt_node->md_len);
+// 	// 	for(int i =0; i < get_md_count(orig_io, pt_node->md_len); i++ ){
+// 	// 		printf("first %02x second %02x \n", (int)a[i], (int)b[i]);
+// 	// 	}
+// 	// 	printf("not equal");
+// 	// 	fflush(stdout);
+// 	// }
+// 	// spdk_spin_unlock(&pt_node->used_lock);
+// 	_pt_complete_io(bdev_io, success, orig_io);
+// 	// free(request->buf);	
+// 	free(request);
+// }
 
 
 
@@ -1127,8 +1138,16 @@ vbdev_passthru_register(const char *bdev_name)
 		// pt_node->offset_start = (pt_node->offset_start * bdev->blocklen) / pt_node->pt_bdev.blocklen;
 		// pt_node->offset_start = 20480;
 		pt_node->pt_bdev.blockcnt -= pt_node->offset_start;
-		pt_node->malloc_md_buf = spdk_zmalloc((pt_node->pt_bdev.blockcnt * pt_node->md_len) + pt_node->pt_bdev.blocklen, 2 * 1024 * 1024, NULL,
-						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		// pt_node->malloc_md_buf = spdk_zmalloc((pt_node->pt_bdev.blockcnt * pt_node->md_len) + pt_node->pt_bdev.blocklen, 2 * 1024 * 1024, NULL,
+		// 				    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+
+		pt_node->malloc_md_buf = spdk_zmalloc(
+					(pt_node->offset_start * pt_node->pt_bdev.blocklen) + pt_node->pt_bdev.blocklen,
+					spdk_bdev_get_buf_align(pt_node->base_bdev),
+					NULL,
+					SPDK_ENV_LCORE_ID_ANY,
+					SPDK_MALLOC_DMA
+				);
 
 		// pt_node->malloc_md_buf = spdk_zmalloc(MAX_MD_ALLOC * pt_node->pt_bdev.blocklen, 2 * 1024 * 1024, NULL,
 		// 				    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -1190,8 +1209,34 @@ vbdev_passthru_register(const char *bdev_name)
 					 	  pt_node->offset_start * pt_node->multiplier , _pt_complete_io_zero, NULL);
 		}
 		else{
-			rc = spdk_bdev_read_blocks(pt_node->base_desc, channel->base_ch, 
-			pt_node->malloc_md_buf, 0, (pt_node->offset_start) * 7, _pt_complete_io_zero, NULL);
+			// rc = spdk_bdev_read_blocks(pt_node->base_desc, channel->base_ch, 
+			// pt_node->malloc_md_buf, 0, (pt_node->offset_start) * pt_node->multiplier, _pt_complete_io_zero, NULL);
+
+			uint64_t blocks_to_read = 28000;
+			uint64_t max_blocks_per_io = 1024 * 1;  // or another value that works
+			uint64_t offset = 0;
+			while (blocks_to_read > 0) {
+				uint64_t blocks_this_io = spdk_min(blocks_to_read, max_blocks_per_io);
+
+				rc = spdk_bdev_read_blocks(
+					pt_node->base_desc, 
+					channel->base_ch, 
+					pt_node->malloc_md_buf + (offset * pt_node->pt_bdev.blocklen), 
+					offset * pt_node->multiplier, 
+					blocks_this_io * pt_node->multiplier, 
+					_pt_complete_io_zero, 
+					NULL
+				);
+
+				if (rc != 0) {
+					SPDK_ERRLOG("Error submitting read I/O\n");
+					break;
+				}
+
+				offset += blocks_this_io;
+				blocks_to_read -= blocks_this_io;
+			}
+
 		}
 		SPDK_NOTICELOG("pt_bdev registered\n");
 		SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
