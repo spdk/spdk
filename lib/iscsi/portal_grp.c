@@ -19,20 +19,15 @@
 #define PORTNUMSTRLEN 32
 #define ACCEPT_TIMEOUT_US 1000 /* 1ms */
 
-static int
-iscsi_portal_accept(void *arg)
+static void
+iscsi_portal_accept(void *arg, struct spdk_sock_group *group, struct spdk_sock *listen_sock)
 {
 	struct spdk_iscsi_portal	*portal = arg;
 	struct spdk_sock		*sock;
 	int				rc;
-	int				count = 0;
-
-	if (portal->sock == NULL) {
-		return -1;
-	}
 
 	while (1) {
-		sock = spdk_sock_accept(portal->sock);
+		sock = spdk_sock_accept(listen_sock);
 		if (sock != NULL) {
 			rc = iscsi_conn_construct(portal, sock);
 			if (rc < 0) {
@@ -40,7 +35,6 @@ iscsi_portal_accept(void *arg)
 				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
 				break;
 			}
-			count++;
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
@@ -48,8 +42,14 @@ iscsi_portal_accept(void *arg)
 			break;
 		}
 	}
+}
 
-	return count;
+static int
+iscsi_portal_group_poll(void *arg)
+{
+	struct spdk_iscsi_portal_grp *group = arg;
+
+	return spdk_sock_group_poll(group->sock_group);
 }
 
 static struct spdk_iscsi_portal *
@@ -104,7 +104,6 @@ iscsi_portal_create(const char *host, const char *port)
 
 	p->sock = NULL;
 	p->group = NULL; /* set at a later time by caller */
-	p->acceptor_poller = NULL;
 
 	pthread_mutex_lock(&g_iscsi.mutex);
 	tmp = iscsi_portal_find_by_addr(host, port);
@@ -145,6 +144,7 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 {
 	struct spdk_sock *sock;
 	int port;
+	int rc;
 
 	if (p->sock != NULL) {
 		SPDK_ERRLOG("portal (%s, %s) is already opened\n",
@@ -164,16 +164,14 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 		return -1;
 	}
 
-	p->sock = sock;
+	rc = spdk_sock_group_add_sock(p->group->sock_group, sock, iscsi_portal_accept, p);
+	if (rc) {
+		SPDK_ERRLOG("Unable to add listen socket to poll group\n");
+		spdk_sock_close(&sock);
+		return -1;
+	}
 
-	/*
-	 * When the portal is created by config file, incoming connection
-	 * requests for the socket are pended to accept until reactors start.
-	 * However the gap between listen() and accept() will be slight and
-	 * the requests will be queued by the nonzero backlog of the socket
-	 * or resend by TCP.
-	 */
-	p->acceptor_poller = SPDK_POLLER_REGISTER(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
+	p->sock = sock;
 
 	return 0;
 }
@@ -181,28 +179,19 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 static void
 iscsi_portal_close(struct spdk_iscsi_portal *p)
 {
+	int rc;
+
 	if (p->sock) {
 		SPDK_DEBUGLOG(iscsi, "close portal (%s, %s)\n",
 			      p->host, p->port);
-		spdk_poller_unregister(&p->acceptor_poller);
+
+		rc = spdk_sock_group_remove_sock(p->group->sock_group, p->sock);
+		if (rc) {
+			SPDK_ERRLOG("Unable to remove listen socket from poll group\n");
+		}
+
 		spdk_sock_close(&p->sock);
 	}
-}
-
-static void
-iscsi_portal_pause(struct spdk_iscsi_portal *p)
-{
-	assert(p->acceptor_poller != NULL);
-
-	spdk_poller_pause(p->acceptor_poller);
-}
-
-static void
-iscsi_portal_resume(struct spdk_iscsi_portal *p)
-{
-	assert(p->acceptor_poller != NULL);
-
-	spdk_poller_resume(p->acceptor_poller);
 }
 
 int
@@ -380,15 +369,35 @@ iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg, bool pause)
 	struct spdk_iscsi_portal *p;
 	int rc;
 
+	pg->sock_group = spdk_sock_group_create(pg);
+	if (pg->sock_group == NULL) {
+		return -ENOMEM;
+	}
+
+	/*
+	 * When the portal is created by config file, incoming connection
+	 * requests for the socket are pended to accept until reactors start.
+	 * However the gap between listen() and accept() will be slight and
+	 * the requests will be queued by the nonzero backlog of the socket
+	 * or resend by TCP.
+	 */
+	pg->acceptor_poller = SPDK_POLLER_REGISTER(iscsi_portal_group_poll, pg, ACCEPT_TIMEOUT_US);
+	if (pg->acceptor_poller == NULL) {
+		spdk_sock_group_close(&pg->sock_group);
+		return -ENOMEM;
+	}
+
+	if (pause) {
+		spdk_poller_pause(pg->acceptor_poller);
+	}
+
 	TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 		rc = iscsi_portal_open(p);
 		if (rc < 0) {
 			return rc;
 		}
 
-		if (pause) {
-			iscsi_portal_pause(p);
-		}
+
 	}
 	return 0;
 }
@@ -398,19 +407,13 @@ iscsi_portal_grp_close(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal *p;
 
+	spdk_poller_unregister(&pg->acceptor_poller);
+
 	TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 		iscsi_portal_close(p);
 	}
-}
 
-void
-iscsi_portal_grp_resume(struct spdk_iscsi_portal_grp *pg)
-{
-	struct spdk_iscsi_portal *p;
-
-	TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
-		iscsi_portal_resume(p);
-	}
+	spdk_sock_group_close(&pg->sock_group);
 }
 
 void

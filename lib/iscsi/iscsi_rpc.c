@@ -855,7 +855,7 @@ _rpc_iscsi_start_portal_group(int pg_tag)
 		return -ENODEV;
 	}
 
-	iscsi_portal_grp_resume(pg);
+	spdk_poller_resume(pg->acceptor_poller);
 	return 0;
 }
 

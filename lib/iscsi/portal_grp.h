@@ -18,7 +18,6 @@ struct spdk_iscsi_portal {
 	char				host[MAX_PORTAL_ADDR + 1];
 	char				port[MAX_PORTAL_PORT + 1];
 	struct spdk_sock		*sock;
-	struct spdk_poller		*acceptor_poller;
 	TAILQ_ENTRY(spdk_iscsi_portal)	per_pg_tailq;
 	TAILQ_ENTRY(spdk_iscsi_portal)	g_tailq;
 };
@@ -40,6 +39,8 @@ struct spdk_iscsi_portal_grp {
 	bool					require_chap;
 	bool					mutual_chap;
 	int32_t					chap_group;
+	struct spdk_sock_group			*sock_group;
+	struct spdk_poller			*acceptor_poller;
 	TAILQ_ENTRY(spdk_iscsi_portal_grp)	tailq;
 	TAILQ_HEAD(, spdk_iscsi_portal)		head;
 };
@@ -63,7 +64,6 @@ int iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg);
 struct spdk_iscsi_portal_grp *iscsi_portal_grp_unregister(int tag);
 struct spdk_iscsi_portal_grp *iscsi_portal_grp_find_by_tag(int tag);
 int iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg, bool pause);
-void iscsi_portal_grp_resume(struct spdk_iscsi_portal_grp *pg);
 int iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
 				     bool disable_chap, bool require_chap,
 				     bool mutual_chap, int32_t chap_group);
