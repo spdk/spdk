@@ -103,8 +103,7 @@ function setup_xnvme_conf() {
 function setup_gpt_conf() {
 	$rootdir/scripts/setup.sh reset
 	get_zoned_devs
-	# Get nvme devices by following drivers' links towards nvme class
-	local nvme_devs=(/sys/bus/pci/drivers/nvme/*/nvme/nvme*/nvme*n*) nvme_dev
+	local nvme_devs=(/sys/block/nvme!(*c*)) nvme_dev
 	gpt_nvme=""
 	# Pick first device which doesn't have any valid partition table
 	for nvme_dev in "${nvme_devs[@]}"; do
