@@ -206,7 +206,7 @@ test_nvme_rdma_build_sgl_request(void)
 	req.qpair = &rqpair.qpair;
 
 	for (i = 0; i < NVME_RDMA_MAX_SGL_DESCRIPTORS; i++) {
-		bio.iovs[i].iov_base = (void *)i + 1;
+		bio.iovs[i].iov_base = (void *)0xF00000000 + i + 1;
 		bio.iovs[i].iov_len = 0;
 	}
 
