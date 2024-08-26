@@ -138,6 +138,7 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 	int severity = LOG_INFO;
 	char *buf, _buf[MAX_TMPBUF], *ext_buf = NULL;
 	char timestamp[64];
+	va_list ap_copy;
 	int rc;
 
 	if (g_log) {
@@ -156,12 +157,13 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 
 	buf = _buf;
 
+	va_copy(ap_copy, ap);
 	rc = vsnprintf(_buf, sizeof(_buf), format, ap);
 	if (rc > MAX_TMPBUF) {
 		/* The output including the terminating was more than MAX_TMPBUF bytes.
 		 * Try allocating memory large enough to hold the output.
 		 */
-		rc = vasprintf(&ext_buf, format, ap);
+		rc = vasprintf(&ext_buf, format, ap_copy);
 		if (rc < 0) {
 			/* Failed to allocate memory. Allow output to be truncated. */
 		} else {
