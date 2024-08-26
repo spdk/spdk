@@ -474,23 +474,23 @@ spdk_bdev_readv_blocks_degraded(struct spdk_bdev_desc *desc, struct spdk_io_chan
 
 	if (chunk == stripe_req->parity_chunk) {
 		buf = io_info->reference_parity;
-		buf_md = io_info->reference_md_parity;
 	} else {
 		data_chunk_idx = chunk < stripe_req->parity_chunk ? chunk->index : chunk->index - 1;
 		buf = io_info->degraded_buf +
 		      data_chunk_idx * raid_bdev->strip_size * raid_bdev->bdev.blocklen;
-		buf_md = io_info->degraded_md_buf +
-			 data_chunk_idx * raid_bdev->strip_size * raid_bdev->bdev.md_len;
 	}
-
-	buf += (offset_blocks % raid_bdev->strip_size) * raid_bdev->bdev.blocklen;
-	buf_md += (offset_blocks % raid_bdev->strip_size) * raid_bdev->bdev.md_len;
-
-	src.iov_base = buf;
+	src.iov_base = buf + (offset_blocks % raid_bdev->strip_size) * raid_bdev->bdev.blocklen;
 	src.iov_len = num_blocks * raid_bdev->bdev.blocklen;
 
 	spdk_iovcpy(&src, 1, iov, iovcnt);
 	if (md_buf != NULL) {
+		if (chunk == stripe_req->parity_chunk) {
+			buf_md = io_info->reference_md_parity;
+		} else {
+			buf_md = io_info->degraded_md_buf +
+				 data_chunk_idx * raid_bdev->strip_size * raid_bdev->bdev.md_len;
+		}
+		buf_md += (offset_blocks % raid_bdev->strip_size) * raid_bdev->bdev.md_len;
 		memcpy(md_buf, buf_md, num_blocks * raid_bdev->bdev.md_len);
 	}
 
