@@ -385,6 +385,7 @@ underflow_for_read_transfer_test(void)
 	iscsi_task_set_pdu(&task, pdu);
 	task.parent = NULL;
 
+	task.scsi.iov.iov_base = (void *)0xF0000000;
 	task.scsi.iovs = &task.scsi.iov;
 	task.scsi.iovcnt = 1;
 	task.scsi.length = 512;
