@@ -580,7 +580,6 @@ SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_R
 
 struct rpc_listen_address {
 	char *transport;
-	char *trtype;
 	char *adrfam;
 	char *traddr;
 	char *trsvcid;
@@ -589,7 +588,7 @@ struct rpc_listen_address {
 static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
 	/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 	{"transport", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
-	{"trtype", offsetof(struct rpc_listen_address, trtype), spdk_json_decode_string, true},
+	{"trtype", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
 	{"adrfam", offsetof(struct rpc_listen_address, adrfam), spdk_json_decode_string, true},
 	{"traddr", offsetof(struct rpc_listen_address, traddr), spdk_json_decode_string},
 	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string, true},
@@ -611,18 +610,10 @@ decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 		return -1;
 	}
 
-	if (req->transport && req->trtype) {
-		SPDK_ERRLOG("It is invalid to specify both 'transport' and 'trtype'.\n");
-		return -1;
-	}
-
 	/* Log only once */
 	if (req->transport && !g_logged_deprecated_decode_rpc_listen_address) {
 		SPDK_LOG_DEPRECATED(decode_rpc_listen_address);
 		g_logged_deprecated_decode_rpc_listen_address = true;
-		/* Move ->transport to ->trtype since that's one we use now. */
-		req->trtype = req->transport;
-		req->transport = NULL;
 	}
 
 	return 0;
@@ -632,7 +623,6 @@ static void
 free_rpc_listen_address(struct rpc_listen_address *r)
 {
 	free(r->transport);
-	free(r->trtype);
 	free(r->adrfam);
 	free(r->traddr);
 	free(r->trsvcid);
@@ -838,13 +828,13 @@ rpc_listen_address_to_trid(const struct rpc_listen_address *address,
 
 	memset(trid, 0, sizeof(*trid));
 
-	if (spdk_nvme_transport_id_populate_trstring(trid, address->trtype)) {
-		SPDK_ERRLOG("Invalid trtype string: %s\n", address->trtype);
+	if (spdk_nvme_transport_id_populate_trstring(trid, address->transport)) {
+		SPDK_ERRLOG("Invalid transport string: %s\n", address->transport);
 		return -EINVAL;
 	}
 
-	if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, address->trtype)) {
-		SPDK_ERRLOG("Invalid trtype type: %s\n", address->trtype);
+	if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, address->transport)) {
+		SPDK_ERRLOG("Invalid transport type: %s\n", address->transport);
 		return -EINVAL;
 	}
 

@@ -214,9 +214,9 @@ nvme_queue_register_operation_completion(struct spdk_nvme_ctrlr *ctrlr, uint64_t
 	ctx->value = value;
 	ctx->pid = getpid();
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	STAILQ_INSERT_TAIL(&ctrlr->register_operations, ctx, stailq);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return 0;
 }

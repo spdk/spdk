@@ -1368,13 +1368,13 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 	case NVME_RDMA_QPAIR_STATE_INITIALIZING:
 	case NVME_RDMA_QPAIR_STATE_EXITING:
 		if (!nvme_qpair_is_admin_queue(qpair)) {
-			nvme_ctrlr_lock(ctrlr);
+			nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		}
 
 		rc = nvme_rdma_process_event_poll(rqpair);
 
 		if (!nvme_qpair_is_admin_queue(qpair)) {
-			nvme_ctrlr_unlock(ctrlr);
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		}
 
 		if (rc == 0) {
@@ -2014,13 +2014,13 @@ nvme_rdma_ctrlr_disconnect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 	switch (rqpair->state) {
 	case NVME_RDMA_QPAIR_STATE_EXITING:
 		if (!nvme_qpair_is_admin_queue(qpair)) {
-			nvme_ctrlr_lock(ctrlr);
+			nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		}
 
 		rc = nvme_rdma_process_event_poll(rqpair);
 
 		if (!nvme_qpair_is_admin_queue(qpair)) {
-			nvme_ctrlr_unlock(ctrlr);
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		}
 		break;
 

@@ -9,8 +9,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/scripts/common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 
 if [[ $CONFIG_FIO_PLUGIN != y ]]; then
@@ -73,7 +71,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 	sync
 	# Delete lvol_bdev and destroy lvol_store.
-	$rpc_py -t 120 bdev_lvol_delete lvs_n_0/lbd_nest_0
+	$rpc_py bdev_lvol_delete lvs_n_0/lbd_nest_0
 	$rpc_py bdev_lvol_delete_lvstore -l lvs_n_0
 	$rpc_py bdev_lvol_delete lvs_0/lbd_0
 	$rpc_py bdev_lvol_delete_lvstore -l lvs_0

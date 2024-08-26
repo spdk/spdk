@@ -729,7 +729,7 @@ nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 	STAILQ_HEAD(, nvme_register_completion) operations;
 
 	STAILQ_INIT(&operations);
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	STAILQ_FOREACH_SAFE(ctx, &ctrlr->register_operations, stailq, tmp) {
 		/* We need to make sure we complete the register operation in
 		 * the correct process.
@@ -740,7 +740,7 @@ nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE(&ctrlr->register_operations, ctx, nvme_register_completion, stailq);
 		STAILQ_INSERT_TAIL(&operations, ctx, stailq);
 	}
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	while (!STAILQ_EMPTY(&operations)) {
 		ctx = STAILQ_FIRST(&operations);
@@ -1159,7 +1159,7 @@ spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (qpair == NULL) {
 		qpair = ctrlr->adminq;
-		nvme_ctrlr_lock(ctrlr);
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
 	TAILQ_FOREACH(entry, &qpair->err_cmd_head, link) {
@@ -1186,7 +1186,7 @@ spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->status.sc = sc;
 out:
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
 	return rc;
@@ -1201,7 +1201,7 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (qpair == NULL) {
 		qpair = ctrlr->adminq;
-		nvme_ctrlr_lock(ctrlr);
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
@@ -1213,7 +1213,7 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 }
 

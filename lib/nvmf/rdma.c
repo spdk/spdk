@@ -1107,7 +1107,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static inline void
+static inline int
 nvmf_rdma_request_reset_transfer_in(struct spdk_nvmf_rdma_request *rdma_req,
 				    struct spdk_nvmf_rdma_transport *rtransport)
 {
@@ -1117,6 +1117,8 @@ nvmf_rdma_request_reset_transfer_in(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->remaining_tranfer_in_wrs = NULL;
 	rdma_req->num_outstanding_data_wr = rdma_req->num_remaining_data_wr;
 	rdma_req->num_remaining_data_wr = 0;
+
+	return 0;
 }
 
 static inline int
@@ -2207,9 +2209,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			/* We have already verified that this request is the head of the queue. */
-			if (rdma_req->num_remaining_data_wr == 0) {
-				STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
-			}
+			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
 
 			rc = request_transfer_in(&rdma_req->req);
 			if (spdk_likely(rc == 0)) {
@@ -4725,10 +4725,17 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rqpair->current_read_depth--;
 				/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
 				if (rdma_req->num_outstanding_data_wr == 0) {
-					if (rdma_req->num_remaining_data_wr) {
+					if (spdk_unlikely(rdma_req->num_remaining_data_wr)) {
 						/* Only part of RDMA_READ operations was submitted, process the rest */
-						nvmf_rdma_request_reset_transfer_in(rdma_req, rtransport);
-						rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
+						rc = nvmf_rdma_request_reset_transfer_in(rdma_req, rtransport);
+						if (spdk_likely(!rc)) {
+							STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
+							rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
+						} else {
+							STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+							rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+							rdma_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+						}
 						nvmf_rdma_request_process(rtransport, rdma_req);
 						break;
 					}

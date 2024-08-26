@@ -69,8 +69,3 @@ core_load
 
 # TODO: remove this once CI is updated with libkeyutils
 keyring_linux
-
-# Disabled due to https://github.com/spdk/spdk/issues/3345
-nvmf_device_removal
-nvmf_device_removal_pci_remove_no_srq
-nvmf_device_removal_pci_remove

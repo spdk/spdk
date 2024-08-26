@@ -30,12 +30,12 @@ extern "C" {
  * Patch level is incremented on maintenance branch releases and reset to 0 for each
  * new major.minor release.
  */
-#define SPDK_VERSION_PATCH	1
+#define SPDK_VERSION_PATCH	0
 
 /**
  * Version string suffix.
  */
-#define SPDK_VERSION_SUFFIX	"-pre"
+#define SPDK_VERSION_SUFFIX	""
 
 /**
  * Single numeric value representing a version number for compile-time comparisons.

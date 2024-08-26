@@ -111,16 +111,16 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 		return -EINVAL;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	if (nvme_io_msg_is_producer_registered(ctrlr, io_msg_producer)) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -EEXIST;
 	}
 
 	if (!STAILQ_EMPTY(&ctrlr->io_producers) || ctrlr->is_resetting) {
 		/* There are registered producers - IO messaging already started */
 		STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return 0;
 	}
 
@@ -132,7 +132,7 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 	ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!ctrlr->external_io_msgs) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
 	}
 
@@ -141,12 +141,12 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		spdk_ring_free(ctrlr->external_io_msgs);
 		ctrlr->external_io_msgs = NULL;
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
 	}
 
 	STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return 0;
 }
@@ -162,11 +162,11 @@ nvme_io_msg_ctrlr_update(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* Update all producers */
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	STAILQ_FOREACH(io_msg_producer, &ctrlr->io_producers, link) {
 		io_msg_producer->update(ctrlr);
 	}
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 void
@@ -203,9 +203,9 @@ nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
 {
 	assert(io_msg_producer != NULL);
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	if (!nvme_io_msg_is_producer_registered(ctrlr, io_msg_producer)) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return;
 	}
 
@@ -213,5 +213,5 @@ nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
 	if (STAILQ_EMPTY(&ctrlr->io_producers)) {
 		nvme_io_msg_ctrlr_detach(ctrlr);
 	}
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }

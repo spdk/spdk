@@ -2262,17 +2262,11 @@ bdev_nvme_reconnect_ctrlr_poll(void *arg)
 	struct nvme_ctrlr *nvme_ctrlr = arg;
 	int rc = -ETIMEDOUT;
 
-	if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
-		/* Mark the ctrlr as failed. The next call to
-		 * spdk_nvme_ctrlr_reconnect_poll_async() will then
-		 * do the necessary cleanup and return failure.
-		 */
-		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
-	}
-
-	rc = spdk_nvme_ctrlr_reconnect_poll_async(nvme_ctrlr->ctrlr);
-	if (rc == -EAGAIN) {
-		return SPDK_POLLER_BUSY;
+	if (!bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
+		rc = spdk_nvme_ctrlr_reconnect_poll_async(nvme_ctrlr->ctrlr);
+		if (rc == -EAGAIN) {
+			return SPDK_POLLER_BUSY;
+		}
 	}
 
 	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);

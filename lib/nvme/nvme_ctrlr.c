@@ -383,11 +383,11 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	cc.raw = ctrlr->process_init_cc.raw;
 
 	if (opts->qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
@@ -397,13 +397,13 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (opts->qprio != SPDK_NVME_QPRIO_URGENT)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "invalid queue priority for default round robin arbitration method\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
 	qid = spdk_nvme_ctrlr_alloc_qid(ctrlr);
 	if (qid < 0) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
@@ -411,7 +411,7 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	if (qpair == NULL) {
 		NVME_CTRLR_ERRLOG(ctrlr, "nvme_transport_ctrlr_create_io_qpair() failed\n");
 		spdk_nvme_ctrlr_free_qid(ctrlr, qid);
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
@@ -419,7 +419,7 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_ctrlr_proc_add_io_qpair(qpair);
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return qpair;
 }
@@ -433,9 +433,9 @@ spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		return -EISCONN;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (ctrlr->quirks & NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC) {
 		spdk_delay_us(100);
@@ -449,9 +449,9 @@ spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 struct spdk_nvme_qpair *
@@ -464,7 +464,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_io_qpair_opts	opts;
 	int				rc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	if (spdk_unlikely(ctrlr->state != NVME_CTRLR_STATE_READY)) {
 		/* When controller is resetting or initializing, free_io_qids is deleted or not created yet.
@@ -518,7 +518,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 unlock:
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return qpair;
 }
@@ -535,7 +535,7 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 	assert(qpair->ctrlr != NULL);
 
 	ctrlr = qpair->ctrlr;
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	qpair_state = nvme_qpair_get_state(qpair);
 
 	if (ctrlr->is_removed) {
@@ -565,7 +565,7 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 	}
 
 out:
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return rc;
 }
 
@@ -587,9 +587,9 @@ nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
 	assert(ctrlr != NULL);
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 int
@@ -634,7 +634,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		nvme_qpair_abort_all_queued_reqs(qpair);
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_proc_remove_io_qpair(qpair);
 
@@ -642,7 +642,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	spdk_nvme_ctrlr_free_qid(ctrlr, qpair->id);
 
 	nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
 }
 
@@ -1038,7 +1038,6 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	}
 
 	ctrlr->is_failed = true;
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	NVME_CTRLR_ERRLOG(ctrlr, "in failed state.\n");
 }
@@ -1051,9 +1050,9 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 void
 spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	nvme_ctrlr_fail(ctrlr, false);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 static void
@@ -1689,9 +1688,9 @@ spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	rc = nvme_ctrlr_disconnect(ctrlr);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
 }
@@ -1699,7 +1698,7 @@ spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 void
 spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	ctrlr->prepare_for_reset = false;
 
@@ -1803,7 +1802,7 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	ctrlr->is_resetting = false;
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (!ctrlr->cdata.oaes.ns_attribute_notices) {
 		/*
@@ -1863,14 +1862,14 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	rc = nvme_ctrlr_disconnect(ctrlr);
 	if (rc == 0) {
 		nvme_ctrlr_fail_io_qpairs(ctrlr);
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (rc != 0) {
 		if (rc == -EBUSY) {
@@ -1911,12 +1910,12 @@ spdk_nvme_ctrlr_reset_subsystem(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	NVME_CTRLR_NOTICELOG(ctrlr, "resetting subsystem\n");
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	ctrlr->is_resetting = true;
 	rc = nvme_ctrlr_set_nssr(ctrlr, SPDK_NVME_NSSR_VALUE);
 	ctrlr->is_resetting = false;
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	/*
 	 * No more cleanup at this point like in the ctrlr reset. A subsystem reset will cause
 	 * a hot remove for PCIe transport. The hot remove handling does all the necessary ctrlr cleanup.
@@ -1929,7 +1928,7 @@ spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_transpo
 {
 	int rc = 0;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	if (ctrlr->is_failed == false) {
 		rc = -EPERM;
@@ -1949,7 +1948,7 @@ spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_transpo
 	ctrlr->trid = *trid;
 
 out:
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return rc;
 }
 
@@ -1961,10 +1960,10 @@ spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
 		return;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	ctrlr->remove_cb = remove_cb;
 	ctrlr->cb_ctx = remove_ctx;
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 static void
@@ -3501,7 +3500,7 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_remove_inactive_proc(ctrlr);
 
@@ -3510,7 +3509,7 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 		active_proc->ref++;
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 void
@@ -3519,7 +3518,7 @@ nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	int				proc_count;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	proc_count = nvme_ctrlr_remove_inactive_proc(ctrlr);
 
@@ -3537,7 +3536,7 @@ nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 int
@@ -3546,7 +3545,7 @@ nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	int				ref = 0;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_remove_inactive_proc(ctrlr);
 
@@ -3554,7 +3553,7 @@ nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
 		ref += active_proc->ref;
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return ref;
 }
@@ -3568,14 +3567,14 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_pci_device		*devhandle = NULL;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		devhandle = active_proc->devhandle;
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return devhandle;
 }
@@ -4209,18 +4208,7 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc;
-
-	if (ctrlr->lock_depth > 0) {
-		SPDK_ERRLOG("lock currently held (depth=%d)!\n", ctrlr->lock_depth);
-		assert(false);
-	}
-
-	rc = pthread_mutex_destroy(&ctrlr->ctrlr_lock);
-	if (rc) {
-		SPDK_ERRLOG("could not destroy ctrlr_lock: %s\n", spdk_strerror(rc));
-		assert(false);
-	}
+	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_free_processes(ctrlr);
 }
@@ -4365,19 +4353,19 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	int32_t rc;
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	if (ctrlr->keep_alive_interval_ticks) {
 		rc = nvme_ctrlr_keep_alive(ctrlr);
 		if (rc) {
-			nvme_ctrlr_unlock(ctrlr);
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 			return rc;
 		}
 	}
 
 	rc = nvme_io_msg_process(ctrlr);
 	if (rc < 0) {
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return rc;
 	}
 	num_completions = rc;
@@ -4394,7 +4382,7 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_ctrlr_disconnect_done(ctrlr);
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (rc < 0) {
 		num_completions = rc;
@@ -4555,7 +4543,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return NULL;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	tmp.id = nsid;
 	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
@@ -4563,7 +4551,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	if (ns == NULL) {
 		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ns == NULL) {
-			nvme_ctrlr_unlock(ctrlr);
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 			return NULL;
 		}
 
@@ -4572,7 +4560,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		RB_INSERT(nvme_ns_tree, &ctrlr->ns, ns);
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return ns;
 }
@@ -4614,7 +4602,7 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct spdk_nvme_ctrlr_process *active_proc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
@@ -4622,7 +4610,7 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 		active_proc->aer_cb_arg = aer_cb_arg;
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 void
@@ -4638,7 +4626,7 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
@@ -4650,7 +4638,7 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 	ctrlr->timeout_enabled = true;
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 bool
@@ -4967,9 +4955,9 @@ spdk_nvme_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr)
 
 	size = cmbsz.bits.sz * (0x1000 << (cmbsz.bits.szu * 4));
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	rc = nvme_transport_ctrlr_reserve_cmb(ctrlr);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (rc < 0) {
 		return rc;
@@ -4983,9 +4971,9 @@ spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	void *buf;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	buf = nvme_transport_ctrlr_map_cmb(ctrlr, size);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return buf;
 }
@@ -4993,9 +4981,9 @@ spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 void
 spdk_nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	nvme_transport_ctrlr_unmap_cmb(ctrlr);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 int
@@ -5003,9 +4991,9 @@ spdk_nvme_ctrlr_enable_pmr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	rc = nvme_transport_ctrlr_enable_pmr(ctrlr);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
 }
@@ -5015,9 +5003,9 @@ spdk_nvme_ctrlr_disable_pmr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	rc = nvme_transport_ctrlr_disable_pmr(ctrlr);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
 }
@@ -5027,9 +5015,9 @@ spdk_nvme_ctrlr_map_pmr(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	void *buf;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	buf = nvme_transport_ctrlr_map_pmr(ctrlr, size);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return buf;
 }
@@ -5039,9 +5027,9 @@ spdk_nvme_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	rc = nvme_transport_ctrlr_unmap_pmr(ctrlr);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
 }
@@ -5068,25 +5056,25 @@ spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, void *p
 		return -EALREADY;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	bpmb_size = bprsz * 4096;
 	bpmbl = spdk_vtophys(payload, &bpmb_size);
 	if (bpmbl == SPDK_VTOPHYS_ERROR) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_vtophys of bpmbl failed\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -EFAULT;
 	}
 
 	if (bpmb_size != bprsz * 4096) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Boot Partition buffer is not physically contiguous\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -EFAULT;
 	}
 
 	if (nvme_ctrlr_set_bpmbl(ctrlr, bpmbl)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "set_bpmbl() failed\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -EIO;
 	}
 
@@ -5096,11 +5084,11 @@ spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, void *p
 
 	if (nvme_ctrlr_set_bprsel(ctrlr, &bprsel)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "set_bprsel() failed\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -EIO;
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
 }
 
@@ -5336,16 +5324,16 @@ spdk_nvme_ctrlr_alloc_qid(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t qid;
 
 	assert(ctrlr->free_io_qids);
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
 	if (qid > ctrlr->opts.num_io_queues) {
 		NVME_CTRLR_ERRLOG(ctrlr, "No free I/O queue IDs\n");
-		nvme_ctrlr_unlock(ctrlr);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -1;
 	}
 
 	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return qid;
 }
 
@@ -5354,13 +5342,13 @@ spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
 {
 	assert(qid <= ctrlr->opts.num_io_queues);
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	if (spdk_likely(ctrlr->free_io_qids)) {
 		spdk_bit_array_set(ctrlr->free_io_qids, qid);
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 int
