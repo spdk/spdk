@@ -1142,7 +1142,7 @@ vbdev_passthru_register(const char *bdev_name)
 		// 				    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 
 		pt_node->malloc_md_buf = spdk_zmalloc(
-					(pt_node->offset_start * pt_node->md_len) * pt_node->pt_bdev.blocklen,
+					(pt_node->offset_start * pt_node->pt_bdev.blocklen) + pt_node->pt_bdev.blocklen,
 					spdk_bdev_get_buf_align(pt_node->base_bdev),
 					NULL,
 					SPDK_ENV_LCORE_ID_ANY,
@@ -1212,7 +1212,7 @@ vbdev_passthru_register(const char *bdev_name)
 			// rc = spdk_bdev_read_blocks(pt_node->base_desc, channel->base_ch, 
 			// pt_node->malloc_md_buf, 0, (pt_node->offset_start) * pt_node->multiplier, _pt_complete_io_zero, NULL);
 
-			uint64_t blocks_to_read = 28000 * 8;
+			uint64_t blocks_to_read = 28000;
 			uint64_t max_blocks_per_io = 1024 * 1;  // or another value that works
 			uint64_t offset = 0;
 			while (blocks_to_read > 0) {
@@ -1221,8 +1221,8 @@ vbdev_passthru_register(const char *bdev_name)
 				rc = spdk_bdev_read_blocks(
 					pt_node->base_desc, 
 					channel->base_ch, 
-					pt_node->malloc_md_buf + offset * pt_node->pt_bdev.blocklen, 
-					offset, 
+					pt_node->malloc_md_buf + (offset * pt_node->pt_bdev.blocklen), 
+					offset * pt_node->multiplier, 
 					blocks_this_io * pt_node->multiplier, 
 					_pt_complete_io_zero, 
 					NULL
