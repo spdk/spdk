@@ -4122,6 +4122,8 @@ test_sequence_setup(void)
 		return -1;
 	}
 
+	g_module_if.name = "software";
+
 	return 0;
 }
 
