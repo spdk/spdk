@@ -1497,6 +1497,9 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	struct nvme_tcp_req treq = { .req = &req, .tqpair = &tqpair };
 	int rc, disconnected;
 
+	tgroup.sock_group = spdk_sock_group_create(&tgroup);
+	SPDK_CU_ASSERT_FATAL(tgroup.sock_group != NULL);
+
 	qpair = &tqpair.qpair;
 	qpair->poll_group = &tgroup.group;
 	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
@@ -1623,6 +1626,8 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	nvme_tcp_ctrlr_disconnect_qpair(&ctrlr, qpair);
 
 	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTED);
+
+	spdk_sock_group_close(&tgroup.sock_group);
 }
 
 static void
@@ -1718,12 +1723,10 @@ static void
 test_nvme_tcp_poll_group_get_stats(void)
 {
 	int rc = 0;
-	struct spdk_sock_group sgroup = {};
 	struct nvme_tcp_poll_group *pgroup = NULL;
 	struct spdk_nvme_transport_poll_group *tgroup = NULL;
 	struct spdk_nvme_transport_poll_group_stat *tgroup_stat = NULL;
 
-	MOCK_SET(spdk_sock_group_create, &sgroup);
 	tgroup = nvme_tcp_poll_group_create();
 	CU_ASSERT(tgroup != NULL);
 	pgroup = nvme_tcp_poll_group(tgroup);
@@ -1748,8 +1751,6 @@ test_nvme_tcp_poll_group_get_stats(void)
 	nvme_tcp_poll_group_free_stats(tgroup, tgroup_stat);
 	rc = nvme_tcp_poll_group_destroy(tgroup);
 	CU_ASSERT(rc == 0);
-
-	MOCK_CLEAR(spdk_sock_group_create);
 }
 
 static void
