@@ -76,8 +76,6 @@ struct nvme_tcp_ctrlr {
 struct nvme_tcp_poll_group {
 	struct spdk_nvme_transport_poll_group group;
 	struct spdk_sock_group *sock_group;
-	uint32_t completions_per_qpair;
-	int64_t num_completions;
 
 	TAILQ_HEAD(, nvme_tcp_qpair) needs_poll;
 	TAILQ_HEAD(, nvme_tcp_qpair) timeout_enabled;
@@ -2309,10 +2307,33 @@ static int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct nvme_tcp_poll_group *group;
 	uint32_t reaped;
 	int rc;
 
-	if (qpair->poll_group == NULL) {
+	if (qpair->poll_group != NULL) {
+		group = nvme_tcp_poll_group(qpair->poll_group);
+
+		/* The socket belongs to the group's sock_group, so direct qpair polling still has
+		 * to poll the group to drive socket implementations that make progress at group
+		 * scope. This may also mark other qpairs as needing poll.
+		 */
+		if (!TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
+			rc = spdk_sock_group_poll(group->sock_group);
+			if (spdk_unlikely(rc < 0)) {
+				NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_group_poll() failed, rc %d: %s\n",
+						   rc, spdk_strerror(-rc));
+				goto fail;
+			}
+		}
+
+		/* Consume only this qpair's pending marker; other qpairs marked by the group poll
+		 * remain queued for poll group processing.
+		 */
+		if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
+			TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
+		}
+	} else {
 		rc = spdk_sock_flush(tqpair->sock);
 		if (rc < 0 && rc != -EAGAIN) {
 			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
@@ -2366,20 +2387,10 @@ nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_soc
 {
 	struct spdk_nvme_qpair *qpair = ctx;
 	struct nvme_tcp_poll_group *pgroup = nvme_tcp_poll_group(qpair->poll_group);
-	int32_t num_completions;
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
-	if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
-		TAILQ_REMOVE_CLEAR(&pgroup->needs_poll, tqpair, link_poll);
-	}
-
-	num_completions = spdk_nvme_qpair_process_completions(qpair, pgroup->completions_per_qpair);
-
-	if (pgroup->num_completions >= 0 && num_completions >= 0) {
-		pgroup->num_completions += num_completions;
-		pgroup->stats.nvme_completions += num_completions;
-	} else {
-		pgroup->num_completions = -ENXIO;
+	if (!TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
+		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link_poll);
 	}
 }
 
@@ -2956,13 +2967,19 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
 	struct nvme_tcp_qpair *tqpair, *tmp_tqpair;
-	int rc, num_events;
+	int num_events, num_completions, rc;
 
-	group->completions_per_qpair = completions_per_qpair;
-	group->num_completions = 0;
+	num_completions = 0;
 	group->stats.polls++;
 
-	rc = spdk_sock_group_poll(group->sock_group);
+	num_events = spdk_sock_group_poll(group->sock_group);
+	if (num_events >= 0) {
+		group->stats.idle_polls += !num_events;
+		group->stats.socket_completions += num_events;
+	} else {
+		SPDK_ERRLOG("spdk_sock_group_poll() failed, rc %d: %s\n", num_events, spdk_strerror(-num_events));
+		num_completions = num_events;
+	}
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
 		nvme_tcp_qpair_try_disconnect_done(qpair);
@@ -2974,10 +2991,20 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 		}
 	}
 
-	/* If any qpairs were marked as needing to be polled due to an asynchronous write completion
-	 * and they weren't polled as a consequence of calling spdk_sock_group_poll above, poll them now. */
+	/* Polling the sock group above simply marks the qpairs as needing to be individually
+	 * polled. Do that polling here. */
 	TAILQ_FOREACH_SAFE(tqpair, &group->needs_poll, link_poll, tmp_tqpair) {
-		nvme_tcp_qpair_sock_cb(&tqpair->qpair, group->sock_group, tqpair->sock);
+		rc = spdk_nvme_qpair_process_completions(&tqpair->qpair, completions_per_qpair);
+
+		if (spdk_unlikely(rc < 0)) {
+			num_completions = -ENXIO;
+			continue;
+		}
+
+		if (spdk_likely(num_completions >= 0)) {
+			num_completions += rc;
+		}
+		group->stats.nvme_completions += rc;
 	}
 
 	TAILQ_FOREACH_SAFE(tqpair, &group->timeout_enabled, link_timeout, tmp_tqpair) {
@@ -2986,15 +3013,7 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 		nvme_tcp_qpair_check_timeout(qpair);
 	}
 
-	if (spdk_unlikely(rc < 0)) {
-		SPDK_ERRLOG("spdk_sock_group_poll() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		return rc;
-	}
-
-	num_events = rc;
-	group->stats.idle_polls += !num_events;
-	group->stats.socket_completions += num_events;
-	return group->num_completions;
+	return num_completions;
 }
 
 /*
