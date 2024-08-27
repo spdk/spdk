@@ -50,6 +50,14 @@ function adq_configure_nvmf_target() {
 }
 
 function adq_reload_driver() {
+	# Load sch_ modules by their canonical names in case they are blacklisted.
+	# >= 6.9 kernels call request_module() pointing at their alias now, hence
+	# when the request is passed down to modprobe it simply won't load it in
+	# blacklist is in place. So add whatever other NET_* modules are needed
+	# below.
+	modprobe -a \
+		sch_mqprio
+
 	rmmod ice
 	modprobe ice
 	sleep 5
