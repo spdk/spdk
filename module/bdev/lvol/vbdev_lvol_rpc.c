@@ -1191,6 +1191,9 @@ rpc_dump_lvols(struct spdk_json_write_ctx *w, struct lvol_store_bdev *lvs_bdev)
 	struct spdk_lvol *lvol;
 
 	TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+		if (lvol->ref_count == 0) {
+			continue;
+		}
 		rpc_dump_lvol(w, lvol);
 	}
 }
