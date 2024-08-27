@@ -665,6 +665,20 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	return accel_submit_task(accel_ch, accel_task);
 }
 
+int
+spdk_accel_get_compress_level_range(enum spdk_accel_comp_algo comp_algo,
+				    uint32_t *min_level, uint32_t *max_level)
+{
+	struct spdk_accel_module_if *module = g_modules_opc[SPDK_ACCEL_OPC_COMPRESS].module;
+
+	if (module->get_compress_level_range == NULL) {
+		SPDK_ERRLOG("Module %s doesn't implement callback fn get_compress_level_range.\n", module->name);
+		return -ENOTSUP;
+	}
+
+	return module->get_compress_level_range(comp_algo, min_level, max_level);
+}
+
 static int
 _accel_check_comp_algo(enum spdk_accel_comp_algo comp_algo)
 {
@@ -681,8 +695,8 @@ _accel_check_comp_algo(enum spdk_accel_comp_algo comp_algo)
 int
 spdk_accel_submit_compress_ext(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
 			       struct iovec *src_iovs, size_t src_iovcnt,
-			       enum spdk_accel_comp_algo comp_algo, uint32_t *output_size,
-			       spdk_accel_completion_cb cb_fn, void *cb_arg)
+			       enum spdk_accel_comp_algo comp_algo, uint32_t comp_level,
+			       uint32_t *output_size, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
@@ -712,6 +726,7 @@ spdk_accel_submit_compress_ext(struct spdk_io_channel *ch, void *dst, uint64_t n
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->comp.algo = comp_algo;
+	accel_task->comp.level = comp_level;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -756,7 +771,7 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 			   spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	return spdk_accel_submit_compress_ext(ch, dst, nbytes, src_iovs, src_iovcnt,
-					      SPDK_ACCEL_COMP_ALGO_DEFLATE, output_size, cb_fn, cb_arg);
+					      SPDK_ACCEL_COMP_ALGO_DEFLATE, 1, output_size, cb_fn, cb_arg);
 }
 
 int

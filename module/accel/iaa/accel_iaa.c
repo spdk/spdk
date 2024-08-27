@@ -269,20 +269,35 @@ iaa_compress_supports_algo(enum spdk_accel_comp_algo algo)
 	return false;
 }
 
+static int
+iaa_get_compress_level_range(enum spdk_accel_comp_algo algo,
+			     uint32_t *min_level, uint32_t *max_level)
+{
+	switch (algo) {
+	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
+		*min_level = 0;
+		*max_level = 0;
+		return 0;
+	default:
+		return -EINVAL;
+	}
+}
+
 static int accel_iaa_init(void);
 static void accel_iaa_exit(void *ctx);
 static void accel_iaa_write_config_json(struct spdk_json_write_ctx *w);
 
 static struct spdk_accel_module_if g_iaa_module = {
-	.module_init             = accel_iaa_init,
-	.module_fini             = accel_iaa_exit,
-	.write_config_json       = accel_iaa_write_config_json,
-	.get_ctx_size            = accel_iaa_get_ctx_size,
-	.name                    = "iaa",
-	.supports_opcode         = iaa_supports_opcode,
-	.get_io_channel	         = iaa_get_io_channel,
-	.submit_tasks            = iaa_submit_tasks,
-	.compress_supports_algo  = iaa_compress_supports_algo
+	.module_init                 = accel_iaa_init,
+	.module_fini                 = accel_iaa_exit,
+	.write_config_json           = accel_iaa_write_config_json,
+	.get_ctx_size                = accel_iaa_get_ctx_size,
+	.name                        = "iaa",
+	.supports_opcode             = iaa_supports_opcode,
+	.get_io_channel	             = iaa_get_io_channel,
+	.submit_tasks                = iaa_submit_tasks,
+	.compress_supports_algo      = iaa_compress_supports_algo,
+	.get_compress_level_range    = iaa_get_compress_level_range,
 };
 
 static int

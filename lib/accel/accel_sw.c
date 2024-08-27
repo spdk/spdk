@@ -30,11 +30,30 @@
 /* Per the AES-XTS spec, the size of data unit cannot be bigger than 2^20 blocks, 128b each block */
 #define ACCEL_AES_XTS_MAX_BLOCK_SIZE (1 << 24)
 
+#ifdef SPDK_CONFIG_ISAL
+#define COMP_DEFLATE_MIN_LEVEL ISAL_DEF_MIN_LEVEL
+#define COMP_DEFLATE_MAX_LEVEL ISAL_DEF_MAX_LEVEL
+#else
+#define COMP_DEFLATE_MIN_LEVEL 0
+#define COMP_DEFLATE_MAX_LEVEL 0
+#endif
+
+#define COMP_DEFLATE_LEVEL_NUM (COMP_DEFLATE_MAX_LEVEL + 1)
+
+struct comp_deflate_level_buf {
+	uint32_t size;
+	uint8_t  *buf;
+};
+
 struct sw_accel_io_channel {
 	/* for ISAL */
 #ifdef SPDK_CONFIG_ISAL
 	struct isal_zstream		stream;
 	struct inflate_state		state;
+	/* The array index corresponds to the algorithm level */
+	struct comp_deflate_level_buf   deflate_level_bufs[COMP_DEFLATE_LEVEL_NUM];
+	uint8_t                         level_buf_mem[ISAL_DEF_LVL0_DEFAULT + ISAL_DEF_LVL1_DEFAULT +
+					      ISAL_DEF_LVL2_DEFAULT + ISAL_DEF_LVL3_DEFAULT];
 #endif
 	struct spdk_poller		*completion_poller;
 	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
@@ -177,6 +196,11 @@ _sw_accel_compress_deflate(struct sw_accel_io_channel *sw_ch, struct spdk_accel_
 	uint32_t i, s = 0, d = 0;
 	int rc = 0;
 
+	if (accel_task->comp.level > COMP_DEFLATE_MAX_LEVEL) {
+		SPDK_ERRLOG("isal_deflate doesn't support this algorithm level(%u)\n", accel_task->comp.level);
+		return -EINVAL;
+	}
+
 	remaining = 0;
 	for (i = 0; i < accel_task->s.iovcnt; ++i) {
 		remaining += accel_task->s.iovs[i].iov_len;
@@ -188,6 +212,9 @@ _sw_accel_compress_deflate(struct sw_accel_io_channel *sw_ch, struct spdk_accel_
 	sw_ch->stream.avail_out = diov[d].iov_len;
 	sw_ch->stream.next_in = siov[s].iov_base;
 	sw_ch->stream.avail_in = siov[s].iov_len;
+	sw_ch->stream.level = accel_task->comp.level;
+	sw_ch->stream.level_buf = sw_ch->deflate_level_bufs[accel_task->comp.level].buf;
+	sw_ch->stream.level_buf_size = sw_ch->deflate_level_bufs[accel_task->comp.level].size;
 
 	do {
 		/* if isal has exhausted the current dst iovec, move to the next
@@ -657,20 +684,38 @@ static int
 sw_accel_create_cb(void *io_device, void *ctx_buf)
 {
 	struct sw_accel_io_channel *sw_ch = ctx_buf;
+#ifdef SPDK_CONFIG_ISAL
+	struct comp_deflate_level_buf *deflate_level_bufs;
+#endif
+	int i;
 
 	STAILQ_INIT(&sw_ch->tasks_to_complete);
 	sw_ch->completion_poller = NULL;
 
 #ifdef SPDK_CONFIG_ISAL
+	sw_ch->deflate_level_bufs[0].buf = sw_ch->level_buf_mem;
+	deflate_level_bufs = sw_ch->deflate_level_bufs;
+	deflate_level_bufs[0].size = ISAL_DEF_LVL0_DEFAULT;
+	for (i = 1; i < COMP_DEFLATE_LEVEL_NUM; i++) {
+		deflate_level_bufs[i].buf = deflate_level_bufs[i - 1].buf +
+					    deflate_level_bufs[i - 1].size;
+		switch (i) {
+		case 1:
+			deflate_level_bufs[i].size = ISAL_DEF_LVL1_DEFAULT;
+			break;
+		case 2:
+			deflate_level_bufs[i].size = ISAL_DEF_LVL2_DEFAULT;
+			break;
+		case 3:
+			deflate_level_bufs[i].size = ISAL_DEF_LVL3_DEFAULT;
+			break;
+		default:
+			assert(false);
+		}
+	}
+
 	isal_deflate_init(&sw_ch->stream);
 	sw_ch->stream.flush = NO_FLUSH;
-	sw_ch->stream.level = 1;
-	sw_ch->stream.level_buf = calloc(1, ISAL_DEF_LVL1_DEFAULT);
-	if (sw_ch->stream.level_buf == NULL) {
-		SPDK_ERRLOG("Could not allocate isal internal buffer\n");
-		return -ENOMEM;
-	}
-	sw_ch->stream.level_buf_size = ISAL_DEF_LVL1_DEFAULT;
 	isal_inflate_init(&sw_ch->state);
 #endif
 
@@ -681,10 +726,6 @@ static void
 sw_accel_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct sw_accel_io_channel *sw_ch = ctx_buf;
-
-#ifdef SPDK_CONFIG_ISAL
-	free(sw_ch->stream.level_buf);
-#endif
 
 	spdk_poller_unregister(&sw_ch->completion_poller);
 }
@@ -795,6 +836,25 @@ sw_accel_compress_supports_algo(enum spdk_accel_comp_algo algo)
 }
 
 static int
+sw_accel_get_compress_level_range(enum spdk_accel_comp_algo algo,
+				  uint32_t *min_level, uint32_t *max_level)
+{
+	switch (algo) {
+	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
+#ifdef SPDK_CONFIG_ISAL
+		*min_level = COMP_DEFLATE_MIN_LEVEL;
+		*max_level = COMP_DEFLATE_MAX_LEVEL;
+		return 0;
+#else
+		SPDK_ERRLOG("ISAL option is required to use software compression.\n");
+		return -EINVAL;
+#endif
+	default:
+		return -EINVAL;
+	}
+}
+
+static int
 sw_accel_get_operation_info(enum spdk_accel_opcode opcode,
 			    const struct spdk_accel_operation_exec_ctx *ctx,
 			    struct spdk_accel_opcode_info *info)
@@ -819,6 +879,7 @@ static struct spdk_accel_module_if g_sw_module = {
 	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
 	.crypto_supports_cipher		= sw_accel_crypto_supports_cipher,
 	.compress_supports_algo         = sw_accel_compress_supports_algo,
+	.get_compress_level_range       = sw_accel_get_compress_level_range,
 	.get_operation_info		= sw_accel_get_operation_info,
 };
 

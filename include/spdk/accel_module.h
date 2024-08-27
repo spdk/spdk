@@ -145,6 +145,7 @@ struct spdk_accel_task {
 		} dif;
 		struct {
 			enum spdk_accel_comp_algo       algo; /* compresssion/decompression algorithm */
+			uint32_t                        level; /* compression alogrithm level */
 		} comp;
 	};
 	union {
@@ -238,6 +239,12 @@ struct spdk_accel_module_if {
 	 * Return true if compresssion algo is supported, false otherwise.
 	 */
 	bool (*compress_supports_algo)(enum spdk_accel_comp_algo algo);
+
+	/**
+	 * Returns the lowest and highest levels of the specified algorithm.
+	 */
+	int (*get_compress_level_range)(enum spdk_accel_comp_algo algo,
+					uint32_t *min_level, uint32_t *max_level);
 
 	/**
 	 * Returns memory domains supported by the module.  If NULL, the module does not support

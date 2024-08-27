@@ -57,6 +57,7 @@
 	spdk_accel_submit_compress_ext;
 	spdk_accel_submit_decompress_ext;
 	spdk_accel_append_decompress_ext;
+	spdk_accel_get_compress_level_range;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;

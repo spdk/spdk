@@ -863,6 +863,26 @@ compress_supports_algo(enum spdk_accel_comp_algo algo)
 	return false;
 }
 
+static int
+compress_get_level_range(enum spdk_accel_comp_algo algo,
+			 uint32_t *min_level, uint32_t *max_level)
+{
+	switch (algo) {
+	case SPDK_ACCEL_COMP_ALGO_DEFLATE:
+		/**
+		 * Hardware compression is set to the highest level by default and
+		 * will not be affected by cover parameters in actual operation.
+		 * This is set to the maximum range.
+		 * */
+		*min_level = 0;
+		*max_level = 0;
+
+		return 0;
+	default:
+		return -EINVAL;
+	}
+}
+
 static struct spdk_io_channel *
 compress_get_io_channel(void)
 {
@@ -871,15 +891,16 @@ compress_get_io_channel(void)
 
 static void accel_compress_exit(void *ctx);
 static struct spdk_accel_module_if g_compress_module = {
-	.module_init	         = accel_compress_init,
-	.module_fini	         = accel_compress_exit,
-	.write_config_json       = accel_compress_write_config_json,
-	.get_ctx_size	         = accel_compress_get_ctx_size,
-	.name		         = "dpdk_compressdev",
-	.supports_opcode         = compress_supports_opcode,
-	.get_io_channel	         = compress_get_io_channel,
-	.submit_tasks            = compress_submit_tasks,
-	.compress_supports_algo  = compress_supports_algo
+	.module_init	             = accel_compress_init,
+	.module_fini	             = accel_compress_exit,
+	.write_config_json           = accel_compress_write_config_json,
+	.get_ctx_size	             = accel_compress_get_ctx_size,
+	.name		             = "dpdk_compressdev",
+	.supports_opcode             = compress_supports_opcode,
+	.get_io_channel	             = compress_get_io_channel,
+	.submit_tasks                = compress_submit_tasks,
+	.compress_supports_algo      = compress_supports_algo,
+	.get_compress_level_range    = compress_get_level_range,
 };
 
 void

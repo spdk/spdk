@@ -128,6 +128,15 @@ _supports_algo(enum spdk_accel_comp_algo algo)
 }
 
 static int
+_get_compress_level_range(enum spdk_accel_comp_algo algo, uint32_t *min_level, uint32_t *max_level)
+{
+	*min_level = 0;
+	*max_level = UINT32_MAX;
+
+	return 0;
+}
+
+static int
 test_setup(void)
 {
 	int i;
@@ -148,6 +157,7 @@ test_setup(void)
 	g_module_if.submit_tasks = sw_accel_submit_tasks;
 	g_module_if.name = "software";
 	g_module_if.compress_supports_algo = _supports_algo;
+	g_module_if.get_compress_level_range = _get_compress_level_range;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; i++) {
 		g_accel_ch->module_ch[i] = g_module_ch;
 		g_modules_opc[i] = g_module;
@@ -4131,6 +4141,7 @@ test_sequence_setup(void)
 
 	g_module_if.name = "software";
 	g_module_if.compress_supports_algo = _supports_algo;
+	g_module_if.get_compress_level_range = _get_compress_level_range;
 
 	return 0;
 }
