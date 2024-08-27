@@ -741,14 +741,14 @@ function timing_exit() {
 
 function timing_finish() {
 	flamegraph='/usr/local/FlameGraph/flamegraph.pl'
-	if [ -x "$flamegraph" ]; then
-		"$flamegraph" \
-			--title 'Build Timing' \
-			--nametype 'Step:' \
-			--countname seconds \
-			$output_dir/timing.txt \
-			> $output_dir/timing.svg
-	fi
+	[[ -x "$flamegraph" ]] || return 1
+
+	"$flamegraph" \
+		--title 'Build Timing' \
+		--nametype 'Step:' \
+		--countname seconds \
+		"$output_dir/timing.txt" \
+		> "$output_dir/timing.svg"
 }
 
 function create_test_list() {
