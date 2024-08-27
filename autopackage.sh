@@ -10,3 +10,5 @@ source "$rootdir/test/common/autobuild_common.sh"
 if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
 	build_release
 fi
+
+timing_finish
