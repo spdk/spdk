@@ -4146,7 +4146,7 @@ prchk_reftag               | Optional | bool        | Enable checking of PI refe
 prchk_guard                | Optional | bool        | Enable checking of PI guard for I/O processing
 hdgst                      | Optional | bool        | Enable TCP header digest
 ddgst                      | Optional | bool        | Enable TCP data digest
-fabrics_connect_timeout_us | Optional | bool        | Timeout for fabrics connect (in microseconds)
+fabrics_connect_timeout_us | Optional | number      | Timeout for fabrics connect (in microseconds)
 multipath                  | Optional | string      | Multipathing behavior: disable, failover, multipath. Default is failover.
 num_io_queues              | Optional | number      | The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024.
 ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
