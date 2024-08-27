@@ -480,14 +480,14 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 	result->rdma.rkey = req->mr->rkey;
 	result->dst_domain = dst_domain;
 
-	if (g_corrupt_mkey_counter && task->num_translations > g_corrupt_mkey_counter &&
+	task->num_translations++;
+
+	if (g_corrupt_mkey_counter && task->num_translations >= g_corrupt_mkey_counter &&
 	    task->num_translations % g_corrupt_mkey_counter == 0) {
 		SPDK_NOTICELOG("Corrupt mkey on core %u\n", task->lcore);
 		result->rdma.lkey = 0xffffffff;
 		result->rdma.rkey = 0xffffffff;
 	}
-
-	task->num_translations++;
 
 	return 0;
 }
