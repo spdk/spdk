@@ -414,13 +414,17 @@ function install_ice() {
 }
 
 function install_lcov() {
-	local lcov_version=v1.15
+	local lcov_version=v1.15 make=make
 
-	install perl-IO-Compress || install perl-modules
+	if [[ $OSID != freebsd ]]; then
+		install perl-IO-Compress || install perl-modules
+	else
+		make=gmake
+	fi
 
 	rm -rf /usr/src/lcov
-	sudo git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
-	(cd /usr/src/lcov; sudo make install)
+	git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
+	(cd /usr/src/lcov; "$make" install)
 }
 
 function install_libbpf() {
@@ -527,17 +531,17 @@ function install_sources() {
 			install_nvmecli_plugin
 			install_qat
 			install_rocksdb
-			install_flamegraph
 			install_qemu
 			install_igb_uio
 			install_ice
-			install_lcov
 			install_bpftrace
 			install_doxygen
 		)
 		install_extra_pkgs
 	fi
 	sources+=(install_fio)
+	sources+=(install_flamegraph)
+	sources+=(install_lcov)
 	sources+=(install_vagrant)
 	sources+=(install_ittapi)
 
