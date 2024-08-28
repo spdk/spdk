@@ -176,6 +176,9 @@ _build_native_dpdk() {
 	if lt "$dpdk_ver" 24.07.0; then
 		patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/24.03/pcapng-add-memcpy-check.patch"
 	fi
+	if ge "$dpdk_ver" 24.07.0; then
+		patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/24.07/uio-open-in-primary.patch"
+	fi
 
 	dpdk_kmods="false"
 	if [ "$(uname -s)" = "FreeBSD" ]; then

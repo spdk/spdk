@@ -1,0 +1,64 @@
+From e30bae301cc7248078280b51f86e9ba0f7069988 Mon Sep 17 00:00:00 2001
+From: Konrad Sztyber <konrad.sztyber@intel.com>
+Date: Tue, 27 Aug 2024 12:41:54 +0200
+Subject: [PATCH] bus/pci: don't open uio device in secondary process
+
+The uio_pci_generic driver clears the bus master bit when the device
+file is closed.  So, when the secondary process terminates after probing
+a device, that device becomes unusable in the primary process.
+
+To avoid that, the device file is now opened only in the primary
+process.  The commit that introduced this regression, 847d78fb95
+("bus/pci: fix FD in secondary process"), only mentioned enabling access
+to config space from secondary process, which still works, as it doesn't
+rely on the device file.
+
+Fixes: 847d78fb95 ("bus/pci: fix FD in secondary process")
+
+Change-Id: I7bcb9d682f42ad5796e17ce8fc20a4a88eea5921
+Signed-off-by: Konrad Sztyber <konrad.sztyber@intel.com>
+---
+
+diff --git a/drivers/bus/pci/linux/pci_uio.c b/drivers/bus/pci/linux/pci_uio.c
+index 4c1d332..432316a 100644
+--- a/drivers/bus/pci/linux/pci_uio.c
++++ b/drivers/bus/pci/linux/pci_uio.c
+@@ -232,18 +232,6 @@
+ 			loc->domain, loc->bus, loc->devid, loc->function);
+ 		return 1;
+ 	}
+-	snprintf(devname, sizeof(devname), "/dev/uio%u", uio_num);
+-
+-	/* save fd */
+-	fd = open(devname, O_RDWR);
+-	if (fd < 0) {
+-		PCI_LOG(ERR, "Cannot open %s: %s", devname, strerror(errno));
+-		goto error;
+-	}
+-
+-	if (rte_intr_fd_set(dev->intr_handle, fd))
+-		goto error;
+-
+ 	snprintf(cfgname, sizeof(cfgname),
+ 			"/sys/class/uio/uio%u/device/config", uio_num);
+ 
+@@ -273,6 +261,19 @@
+ 	if (rte_eal_process_type() != RTE_PROC_PRIMARY)
+ 		return 0;
+ 
++	/* the uio_pci_generic driver clears the bus master enable bit when the device file is
++	 * closed, so open it only in the primary process */
++	snprintf(devname, sizeof(devname), "/dev/uio%u", uio_num);
++	/* save fd */
++	fd = open(devname, O_RDWR);
++	if (fd < 0) {
++		PCI_LOG(ERR, "Cannot open %s: %s", devname, strerror(errno));
++		goto error;
++	}
++
++	if (rte_intr_fd_set(dev->intr_handle, fd))
++		goto error;
++
+ 	/* allocate the mapping details for secondary processes*/
+ 	*uio_res = rte_zmalloc("UIO_RES", sizeof(**uio_res), 0);
+ 	if (*uio_res == NULL) {
