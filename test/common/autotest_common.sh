@@ -477,9 +477,7 @@ function get_config_params() {
 		config_params+=' --enable-asan'
 	fi
 
-	if [ "$(uname -s)" = "Linux" ]; then
-		config_params+=' --enable-coverage'
-	fi
+	config_params+=' --enable-coverage'
 
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 		if [[ -d /usr/include/fuse3 ]] || [[ -d /usr/local/include/fuse3 ]]; then

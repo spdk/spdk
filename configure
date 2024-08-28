@@ -836,10 +836,6 @@ fi
 
 if [[ $sys_name == "FreeBSD" ]]; then
 	# FreeBSD doesn't support all configurations
-	if [[ "${CONFIG[COVERAGE]}" == "y" ]]; then
-		echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
-		exit 1
-	fi
 	CONFIG[FSDEV]=n
 fi
 
