@@ -344,6 +344,10 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 		rc = spdk_bdev_reset(base_desc, base_ch,
 				     bdev_part_complete_io, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_ABORT:
+		rc = spdk_bdev_abort(base_desc, base_ch, bdev_io->u.abort.bio_to_abort,
+				     bdev_part_complete_io, bdev_io);
+		break;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		rc = spdk_bdev_zcopy_start(base_desc, base_ch, NULL, 0, remapped_offset,
 					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
