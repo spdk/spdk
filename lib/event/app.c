@@ -1031,8 +1031,6 @@ log_deprecation_hits(void *ctx, struct spdk_deprecation *dep)
 static void
 app_stop(void *arg1)
 {
-	free(g_spdk_app.json_data);
-
 	if (g_spdk_app.rc == 0) {
 		g_spdk_app.rc = (int)(intptr_t)arg1;
 	}
@@ -1041,6 +1039,8 @@ app_stop(void *arg1)
 		SPDK_NOTICELOG("spdk_app_stop called twice\n");
 		return;
 	}
+
+	free(g_spdk_app.json_data);
 
 	g_spdk_app.stopped = true;
 	spdk_log_for_each_deprecation(NULL, log_deprecation_hits);
