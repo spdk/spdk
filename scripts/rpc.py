@@ -418,7 +418,7 @@ if __name__ == "__main__":
                                                dif_pi_format=args.dif_pi_format))
     p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
-    p.add_argument('-u', '--uuid', help="UUID of the bdev")
+    p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
     p.add_argument(
         'total_size', help='Size of malloc bdev in MB (float > 0)', type=float)
     p.add_argument('block_size', help='Data block size for this bdev', type=int)
@@ -465,7 +465,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_null_create', help='Add a bdev with null backend')
     p.add_argument('name', help='Block device name')
-    p.add_argument('-u', '--uuid', help='UUID of the bdev')
+    p.add_argument('-u', '--uuid', help='UUID of the bdev (optional)')
     p.add_argument('total_size', help='Size of null bdev in MB (int > 0). Includes only data blocks.', type=int)
     p.add_argument('block_size', help='Data block size for this bdev.', type=int)
     p.add_argument('-p', '--physical-block-size', help='Physical block size for this bdev.', type=int)
