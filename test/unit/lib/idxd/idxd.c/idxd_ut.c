@@ -398,7 +398,7 @@ test_idxd_get_dif_flags(void)
 {
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
-	uint8_t flags;
+	uint8_t flags = 0;
 	int rc;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
