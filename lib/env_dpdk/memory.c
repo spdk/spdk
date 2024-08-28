@@ -329,21 +329,22 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 }
 
 int
-spdk_mem_register(void *vaddr, size_t len)
+spdk_mem_register(void *_vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
 	int rc;
-	void *seg_vaddr;
+	uint64_t vaddr = (uintptr_t)_vaddr;
+	uint64_t seg_vaddr;
 	size_t seg_len;
 	uint64_t reg;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
-		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
+		DEBUG_PRINT("invalid usermode virtual address %jx\n", vaddr);
 		return -EINVAL;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+		DEBUG_PRINT("invalid %s parameters, vaddr=%jx len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
 	}
@@ -377,7 +378,8 @@ spdk_mem_register(void *vaddr, size_t len)
 	}
 
 	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-		rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+		rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER,
+					(void *)seg_vaddr, seg_len);
 		if (rc != 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return rc;
@@ -389,21 +391,22 @@ spdk_mem_register(void *vaddr, size_t len)
 }
 
 int
-spdk_mem_unregister(void *vaddr, size_t len)
+spdk_mem_unregister(void *_vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
 	int rc;
-	void *seg_vaddr;
+	uint64_t vaddr = (uintptr_t)_vaddr;
+	uint64_t seg_vaddr;
 	size_t seg_len;
 	uint64_t reg, newreg;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
-		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
+		DEBUG_PRINT("invalid usermode virtual address %jx\n", vaddr);
 		return -EINVAL;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+		DEBUG_PRINT("invalid %s parameters, vaddr=%jx len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
 	}
@@ -449,7 +452,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 
 		if (seg_len > 0 && (reg & REG_MAP_NOTIFY_START)) {
 			TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
-				rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
+				rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+							(void *)seg_vaddr, seg_len);
 				if (rc != 0) {
 					pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 					return rc;
@@ -468,7 +472,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 
 	if (seg_len > 0) {
 		TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
-			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
+			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+						(void *)seg_vaddr, seg_len);
 			if (rc != 0) {
 				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 				return rc;
