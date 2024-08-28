@@ -262,6 +262,16 @@ export AR_TOOL=$rootdir/scripts/ar-xnvme-fixer
 # For testing nvmes which are attached to some sort of a fanout switch in the CI pool
 export UNBIND_ENTIRE_IOMMU_GROUP=${UNBIND_ENTIRE_IOMMU_GROUP:-no}
 
+_LCOV_MAIN=0
+_LCOV_LLVM=1
+_LCOV=$LCOV_MAIN
+[[ $CC == *clang* || $SPDK_TEST_FUZZER -eq 1 ]] && _LCOV=$_LCOV_LLVM
+
+_lcov_opt[_LCOV_LLVM]="--gcov-tool $rootdir/test/fuzz/llvm/llvm-gcov.sh"
+_lcov_opt[_LCOV_MAIN]=""
+
+lcov_opt=${_lcov_opt[_LCOV]}
+
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''

@@ -178,23 +178,15 @@ if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 fi
 
 # setup local unit test coverage if cov is available
-# lcov takes considerable time to process clang coverage.
-# Disabling lcov allow us to do this.
-# More information: https://github.com/spdk/spdk/issues/1693
-CC_TYPE=$(grep CC_TYPE $rootdir/mk/cc.mk)
-if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h && ! [[ "$CC_TYPE" == *"clang"* ]]; then
+if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h; then
 	cov_avail="yes"
 else
 	cov_avail="no"
 fi
+
 if [ "$cov_avail" = "yes" ]; then
-	# set unit test output dir if not specified in env var
-	if [[ -z $output_dir ]]; then
-		UT_COVERAGE="ut_coverage"
-	else
-		UT_COVERAGE=$output_dir/ut_coverage
-	fi
-	mkdir -p $UT_COVERAGE
+	UT_COVERAGE=$output_dir/ut_coverage
+	mkdir -p "$UT_COVERAGE"
 	export LCOV_OPTS="
 		--rc lcov_branch_coverage=1
 		--rc lcov_function_coverage=1
@@ -202,6 +194,7 @@ if [ "$cov_avail" = "yes" ]; then
 		--rc genhtml_function_coverage=1
 		--rc genhtml_legend=1
 		--rc geninfo_all_blocks=1
+		$lcov_opt
 		"
 	export LCOV="lcov $LCOV_OPTS --no-external"
 	# zero out coverage data
@@ -296,7 +289,7 @@ run_test "unittest_dma" $valgrind $testdir/lib/dma/dma.c/dma_ut
 run_test "unittest_init" unittest_init
 run_test "unittest_keyring" $valgrind "$testdir/lib/keyring/keyring.c/keyring_ut"
 
-if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
+if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info
