@@ -564,8 +564,8 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	if (reduce_errno == 0) {
 		comp_bdev->vol = vol;
 	} else {
-		SPDK_ERRLOG("for vol %s, error %u\n",
-			    spdk_bdev_get_name(comp_bdev->base_bdev), reduce_errno);
+		SPDK_ERRLOG("for vol %s, error %s\n",
+			    spdk_bdev_get_name(comp_bdev->base_bdev), spdk_strerror(-reduce_errno));
 		init_ctx->cb_fn(init_ctx->cb_ctx, reduce_errno);
 	}
 
