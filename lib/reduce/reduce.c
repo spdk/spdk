@@ -6,6 +6,8 @@
 
 #include "spdk/stdinc.h"
 
+#include "queue_internal.h"
+
 #include "spdk/reduce.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -126,7 +128,15 @@ struct spdk_reduce_vol {
 	uint64_t				*pm_chunk_maps;
 
 	struct spdk_bit_array			*allocated_chunk_maps;
+	/* The starting position when looking for a block from allocated_chunk_maps */
+	uint64_t				find_chunk_offset;
+	/* Cache free chunks to speed up lookup of free chunk. */
+	struct reduce_queue			free_chunks_queue;
 	struct spdk_bit_array			*allocated_backing_io_units;
+	/* The starting position when looking for a block from allocated_backing_io_units */
+	uint64_t				find_block_offset;
+	/* Cache free blocks for backing bdev to speed up lookup of free backing blocks. */
+	struct reduce_queue			free_backing_blocks_queue;
 
 	struct spdk_reduce_vol_request		*request_mem;
 	TAILQ_HEAD(, spdk_reduce_vol_request)	free_requests;
@@ -135,9 +145,9 @@ struct spdk_reduce_vol {
 
 	/* Single contiguous buffer used for all request buffers for this volume. */
 	uint8_t					*buf_mem;
-	struct iovec                            *buf_iov_mem;
+	struct iovec				*buf_iov_mem;
 	/* Single contiguous buffer used for backing io buffers for this volume. */
-	uint8_t                                 *buf_backing_io_mem;
+	uint8_t					*buf_backing_io_mem;
 };
 
 static void _start_readv_request(struct spdk_reduce_vol_request *req);
@@ -554,8 +564,10 @@ _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 
 	total_chunks = _get_total_chunks(vol->params.vol_size, vol->params.chunk_size);
 	vol->allocated_chunk_maps = spdk_bit_array_create(total_chunks);
+	vol->find_chunk_offset = 0;
 	total_backing_io_units = total_chunks * (vol->params.chunk_size / vol->params.backing_io_unit_size);
 	vol->allocated_backing_io_units = spdk_bit_array_create(total_backing_io_units);
+	vol->find_block_offset = 0;
 
 	if (vol->allocated_chunk_maps == NULL || vol->allocated_backing_io_units == NULL) {
 		return -ENOMEM;
@@ -631,6 +643,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	TAILQ_INIT(&vol->free_requests);
 	TAILQ_INIT(&vol->executing_requests);
 	TAILQ_INIT(&vol->queued_requests);
+	queue_init(&vol->free_chunks_queue);
+	queue_init(&vol->free_backing_blocks_queue);
 
 	vol->backing_super = spdk_zmalloc(sizeof(*vol->backing_super), 0, NULL,
 					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -873,6 +887,8 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	TAILQ_INIT(&vol->free_requests);
 	TAILQ_INIT(&vol->executing_requests);
 	TAILQ_INIT(&vol->queued_requests);
+	queue_init(&vol->free_chunks_queue);
+	queue_init(&vol->free_backing_blocks_queue);
 
 	vol->backing_super = spdk_zmalloc(sizeof(*vol->backing_super), 64, NULL,
 					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -1101,17 +1117,28 @@ static void
 _reduce_vol_reset_chunk(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
 {
 	struct spdk_reduce_chunk_map *chunk;
+	uint64_t index;
+	bool success;
 	uint32_t i;
 
 	chunk = _reduce_vol_get_chunk_map(vol, chunk_map_index);
 	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-		if (chunk->io_unit_index[i] == REDUCE_EMPTY_MAP_ENTRY) {
+		index = chunk->io_unit_index[i];
+		if (index == REDUCE_EMPTY_MAP_ENTRY) {
 			break;
 		}
 		assert(spdk_bit_array_get(vol->allocated_backing_io_units,
-					  chunk->io_unit_index[i]) == true);
-		spdk_bit_array_clear(vol->allocated_backing_io_units, chunk->io_unit_index[i]);
+					  index) == true);
+		spdk_bit_array_clear(vol->allocated_backing_io_units, index);
+		success = queue_enqueue(&vol->free_backing_blocks_queue, index);
+		if (!success && index < vol->find_block_offset) {
+			vol->find_block_offset = index;
+		}
 		chunk->io_unit_index[i] = REDUCE_EMPTY_MAP_ENTRY;
+	}
+	success = queue_enqueue(&vol->free_chunks_queue, chunk_map_index);
+	if (!success && chunk_map_index < vol->find_chunk_offset) {
+		vol->find_chunk_offset = chunk_map_index;
 	}
 	spdk_bit_array_clear(vol->allocated_chunk_maps, chunk_map_index);
 }
@@ -1299,11 +1326,19 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 {
 	struct spdk_reduce_vol *vol = req->vol;
 	uint32_t i;
-	uint64_t chunk_offset, remainder, total_len = 0;
+	uint64_t chunk_offset, remainder, free_index, total_len = 0;
 	uint8_t *buf;
+	bool success;
 	int j;
 
-	req->chunk_map_index = spdk_bit_array_find_first_clear(vol->allocated_chunk_maps, 0);
+	success = queue_dequeue(&vol->free_chunks_queue, &free_index);
+	if (success) {
+		req->chunk_map_index = free_index;
+	} else {
+		req->chunk_map_index = spdk_bit_array_find_first_clear(vol->allocated_chunk_maps,
+				       vol->find_chunk_offset);
+		vol->find_chunk_offset = req->chunk_map_index + 1;
+	}
 
 	/* TODO: fail if no chunk map found - but really this should not happen if we
 	 * size the number of requests similarly to number of extra chunk maps
@@ -1347,7 +1382,14 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	}
 
 	for (i = 0; i < req->num_io_units; i++) {
-		req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
+		success = queue_dequeue(&vol->free_backing_blocks_queue, &free_index);
+		if (success) {
+			req->chunk->io_unit_index[i] = free_index;
+		} else {
+			req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units,
+						       vol->find_block_offset);
+			vol->find_block_offset = req->chunk->io_unit_index[i] + 1;
+		}
 		/* TODO: fail if no backing block found - but really this should also not
 		 * happen (see comment above).
 		 */
