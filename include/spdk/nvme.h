@@ -914,8 +914,8 @@ spdk_nvme_pcie_set_hotplug_filter(spdk_nvme_pcie_hotplug_filter_cb filter_cb);
  *
  * \param trid The transport ID indicating which bus to enumerate. If the trtype
  * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
- * RDMA, the traddr and trsvcid must point at the location of an NVMe-oF discovery
- * service.
+ * fabrics (e.g. RDMA, TCP), the traddr and trsvcid must point at the location of an
+ * NVMe-oF discovery service.
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
  * the callbacks.
  * \param probe_cb will be called once per NVMe device found in the system.
@@ -951,8 +951,9 @@ int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
  * spdk_nvme_detach() with the spdk_nvme_ctrlr instance returned by this function.
  *
  * \param trid The transport ID indicating which device to connect. If the trtype
- * is PCIe, this will connect the local PCIe bus. If the trtype is RDMA, the traddr
- * and trsvcid must point at the location of an NVMe-oF service.
+ * is PCIe, this will connect the local PCIe bus. If the trtype is fabrics
+ * (e.g. RDMA, TCP), the traddr and trsvcid must point at the location of an NVMe-oF
+ * service.
  * \param opts NVMe controller initialization options. Default values will be used
  * if the user does not specify the options. The controller may not support all
  * requested parameters.
@@ -976,8 +977,9 @@ struct spdk_nvme_probe_ctx;
  * until spdk_nvme_probe_poll_async() returns 0.
  *
  * \param trid The transport ID indicating which device to connect. If the trtype
- * is PCIe, this will connect the local PCIe bus. If the trtype is RDMA, the traddr
- * and trsvcid must point at the location of an NVMe-oF service.
+ * is PCIe, this will connect the local PCIe bus. If the trtype is fabrics
+ * (e.g. RDMA, TCP), the traddr and trsvcid must point at the location of an NVMe-oF
+ * service.
  * \param opts NVMe controller initialization options. Default values will be used
  * if the user does not specify the options. The controller may not support all
  * requested parameters.
@@ -999,8 +1001,8 @@ struct spdk_nvme_probe_ctx *spdk_nvme_connect_async(const struct spdk_nvme_trans
  *
  * \param trid The transport ID indicating which bus to enumerate. If the trtype
  * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
- * RDMA, the traddr and trsvcid must point at the location of an NVMe-oF discovery
- * service.
+ * fabrics (e.g. RDMA, TCP), the traddr and trsvcid must point at the location of an
+ * NVMe-oF discovery service.
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
  * the callbacks.
  * \param probe_cb will be called once per NVMe device found in the system.
