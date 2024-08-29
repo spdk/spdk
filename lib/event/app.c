@@ -404,6 +404,8 @@ app_subsystem_init_done(int rc, void *arg1)
 		spdk_subsystem_load_config(g_spdk_app.json_data, g_spdk_app.json_data_size,
 					   app_start_application, NULL,
 					   !g_spdk_app.json_config_ignore_errors);
+		free(g_spdk_app.json_data);
+		g_spdk_app.json_data = NULL;
 	} else {
 		app_start_application(0, NULL);
 	}
