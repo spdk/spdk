@@ -3231,6 +3231,15 @@ spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_begin(w);
 	accel_write_options(w);
 
+	if (g_accel_driver != NULL) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "accel_set_driver");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "name", g_accel_driver->name);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
 		if (accel_module->write_config_json) {
 			accel_module->write_config_json(w);
