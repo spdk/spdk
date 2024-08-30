@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-/* SPDK_ENV_NUMA_ID_ANY and SPDK_ENV_NUMA_ID_ANY mean the same thing.
+/* SPDK_ENV_NUMA_ID_ANY and SPDK_ENV_SOCKET_ID_ANY mean the same thing.
  * SOCKET_ID naming was inherited from DPDK, but the preferred use is
  * NUMA_ID to avoid confusion with TCP sockets. But keep the old #define
  * around since there is likely a lot of out-of-tree code using it.
