@@ -8610,7 +8610,8 @@ nvme_ctrlr_cuse_config_json(struct spdk_json_write_ctx *w,
 
 static void
 nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
-		       struct nvme_ctrlr *nvme_ctrlr)
+		       struct nvme_ctrlr *nvme_ctrlr,
+		       struct nvme_path_id *path_id)
 {
 	struct spdk_nvme_transport_id	*trid;
 	const struct spdk_nvme_ctrlr_opts *opts;
@@ -8623,7 +8624,7 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		return;
 	}
 
-	trid = &nvme_ctrlr->active_path_id->trid;
+	trid = &path_id->trid;
 
 	spdk_json_write_object_begin(w);
 
@@ -8682,6 +8683,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr;
 	struct discovery_ctx	*ctx;
+	struct nvme_path_id	*path_id;
 
 	bdev_nvme_opts_config_json(w);
 
@@ -8689,7 +8691,15 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-			nvme_ctrlr_config_json(w, nvme_ctrlr);
+			path_id = nvme_ctrlr->active_path_id;
+			assert(path_id == TAILQ_FIRST(&nvme_ctrlr->trids));
+			nvme_ctrlr_config_json(w, nvme_ctrlr, path_id);
+
+			path_id = TAILQ_NEXT(path_id, link);
+			while (path_id != NULL) {
+				nvme_ctrlr_config_json(w, nvme_ctrlr, path_id);
+				path_id = TAILQ_NEXT(path_id, link);
+			}
 
 #ifdef SPDK_CONFIG_NVME_CUSE
 			nvme_ctrlr_cuse_config_json(w, nvme_ctrlr);
