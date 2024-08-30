@@ -170,6 +170,7 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 			buf = ext_buf;
 		}
 	}
+	va_end(ap_copy);
 
 	if (level <= g_spdk_log_print_level) {
 		get_timestamp_prefix(timestamp, sizeof(timestamp));
