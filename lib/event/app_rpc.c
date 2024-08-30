@@ -464,7 +464,7 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_set_scheduler_ctx req = {NULL};
-	struct spdk_scheduler *scheduler = NULL;
+	struct spdk_scheduler *scheduler;
 	bool has_custom_opts = false;
 	int ret;
 
@@ -480,17 +480,6 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		goto end;
-	}
-
-	scheduler = spdk_scheduler_get();
-	/* SPDK does not support changing scheduler back to static. */
-	if (scheduler != NULL && (strcmp(req.name, "static") == 0) &&
-	    strcmp(scheduler->name, "static") != 0) {
-		spdk_jsonrpc_send_error_response(request,
-						 SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Static scheduler cannot be re-enabled "
-						 "after a different scheduler was selected");
 		goto end;
 	}
 

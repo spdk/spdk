@@ -1206,6 +1206,9 @@ _schedule_thread(void *arg1, void *arg2)
 	spdk_thread_get_stats(&lw_thread->total_stats);
 	spdk_set_thread(NULL);
 
+	if (lw_thread->initial_lcore == SPDK_ENV_LCORE_ID_ANY) {
+		lw_thread->initial_lcore = current_core;
+	}
 	lw_thread->lcore = current_core;
 
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
@@ -1231,7 +1234,7 @@ _schedule_thread(void *arg1, void *arg2)
 static int
 _reactor_schedule_thread(struct spdk_thread *thread)
 {
-	uint32_t core;
+	uint32_t core, initial_core;
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_event *evt = NULL;
 	struct spdk_cpuset *cpumask;
@@ -1246,7 +1249,9 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	lw_thread = spdk_thread_get_ctx(thread);
 	assert(lw_thread != NULL);
 	core = lw_thread->lcore;
+	initial_core = lw_thread->initial_lcore;
 	memset(lw_thread, 0, sizeof(*lw_thread));
+	lw_thread->initial_lcore = initial_core;
 
 	if (current_lcore != SPDK_ENV_LCORE_ID_ANY) {
 		local_reactor = spdk_reactor_get(current_lcore);
@@ -1363,6 +1368,7 @@ reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 	case SPDK_THREAD_OP_NEW:
 		lw_thread = spdk_thread_get_ctx(thread);
 		lw_thread->lcore = SPDK_ENV_LCORE_ID_ANY;
+		lw_thread->initial_lcore = SPDK_ENV_LCORE_ID_ANY;
 		return _reactor_schedule_thread(thread);
 	case SPDK_THREAD_OP_RESCHED:
 		_reactor_request_thread_reschedule(thread);

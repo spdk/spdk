@@ -81,11 +81,29 @@ function static_as_default() {
 	$rpc framework_start_init
 	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "static" ]]
 
-	# It should never be possible to return to static scheduler after changing it
+	# We should be able to return to static scheduler after changing it
+	# We also need to check that threads revert to their original core
+
+	main_cpu=$($rpc framework_get_reactors | jq -r '.reactors[0].lcore')
+	other_cpu=$($rpc framework_get_reactors | jq -r '.reactors[1].lcore')
+
+	# Find a thread that starts on a core other than main core
+	thread_id=$($rpc framework_get_reactors \
+		| jq -r ".reactors[] | select(.lcore == $other_cpu).lw_threads[0].id")
+
 	$rpc framework_set_scheduler dynamic
 	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "dynamic" ]]
-	NOT $rpc framework_set_scheduler static
-	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "dynamic" ]]
+
+	# Check that this thread is now on main core
+	$rpc framework_get_reactors \
+		| jq -e -r ".reactors[] | select(.lcore == $main_cpu).lw_threads[] | select(.id == $thread_id)"
+
+	$rpc framework_set_scheduler static
+	[[ "$($rpc framework_get_scheduler | jq -r '.scheduler_name')" == "static" ]]
+
+	# Check that this thread is back on its original core
+	$rpc framework_get_reactors \
+		| jq -e -r ".reactors[] | select(.lcore == $other_cpu).lw_threads[] | select(.id == $thread_id)"
 
 	trap - SIGINT SIGTERM EXIT
 	killprocess $spdk_pid
