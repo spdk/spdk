@@ -171,7 +171,8 @@ if __name__ == "__main__":
                                         period=args.period,
                                         load_limit=args.load_limit,
                                         core_limit=args.core_limit,
-                                        core_busy=args.core_busy)
+                                        core_busy=args.core_busy,
+                                        mappings=args.mappings)
 
     p = subparsers.add_parser(
         'framework_set_scheduler', help='Select thread scheduler that will be activated and its period (experimental)')
@@ -180,6 +181,7 @@ if __name__ == "__main__":
     p.add_argument('--load-limit', help="Scheduler load limit. Reserved for dynamic scheduler", type=int)
     p.add_argument('--core-limit', help="Scheduler core limit. Reserved for dynamic scheduler", type=int)
     p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic scheduler", type=int)
+    p.add_argument('--mappings', help="Comma-separated list of thread:core mappings. Reserved for static scheduler")
     p.set_defaults(func=framework_set_scheduler)
 
     def framework_get_scheduler(args):

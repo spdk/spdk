@@ -45,9 +45,6 @@ function scheduler_opts() {
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid
 
-	# It should not be possible to change settings that a scheduler does not support
-	NOT $rpc framework_set_scheduler static --core-limit 42
-
 	# It is possible to change settings generic scheduler opts for schedulers in event framework
 	$rpc framework_set_scheduler dynamic -p 424242
 	[[ "$($rpc framework_get_scheduler | jq -r '. | select(.scheduler_name == "dynamic") | .scheduler_period')" -eq 424242 ]]
@@ -104,6 +101,13 @@ function static_as_default() {
 	# Check that this thread is back on its original core
 	$rpc framework_get_reactors \
 		| jq -e -r ".reactors[] | select(.lcore == $other_cpu).lw_threads[] | select(.id == $thread_id)"
+
+	# Explicitly move that thread to the main core
+	$rpc framework_set_scheduler static --mappings "$thread_id:$main_cpu"
+
+	# Check that this thread is now on main core
+	$rpc framework_get_reactors \
+		| jq -e -r ".reactors[] | select(.lcore == $main_cpu).lw_threads[] | select(.id == $thread_id)"
 
 	trap - SIGINT SIGTERM EXIT
 	killprocess $spdk_pid
