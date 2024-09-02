@@ -897,6 +897,7 @@ function raid_resize_superblock_test() {
 
 	$rpc_py bdev_passthru_delete pt0
 	$rpc_py bdev_passthru_create -b malloc0 -p pt0
+	$rpc_py bdev_wait_for_examine
 
 	# After the passthru bdev is re-created, the RAID bdev should start from
 	# superblock and its size should be the same as after it was resized.
