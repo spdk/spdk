@@ -287,7 +287,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			# The keyring tests utilize NVMe/TLS
 			run_test "keyring_file" "$rootdir/test/keyring/file.sh"
 			if [[ "$CONFIG_HAVE_KEYUTILS" == y ]]; then
-				run_test "keyring_linux" "$rootdir/test/keyring/linux.sh"
+				run_test "keyring_linux" "$rootdir/scripts/keyctl-session-wrapper" \
+					"$rootdir/test/keyring/linux.sh"
 			fi
 		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "fc" ]; then
 			run_test "nvmf_fc" $rootdir/test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
