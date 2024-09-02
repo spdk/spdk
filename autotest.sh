@@ -65,7 +65,7 @@ cd $src
 freebsd_update_contigmem_mod
 freebsd_set_maxsock_buf
 
-if hash lcov; then
+if [[ $CONFIG_COVERAGE == y ]]; then
 	export LCOV_OPTS="
 		--rc lcov_branch_coverage=1
 		--rc lcov_function_coverage=1
@@ -396,7 +396,7 @@ chmod a+r $output_dir/timing.txt
 
 [[ -f "$output_dir/udev.log" ]] && rm -f "$output_dir/udev.log"
 
-if hash lcov; then
+if [[ $CONFIG_COVERAGE == y ]]; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
 	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info

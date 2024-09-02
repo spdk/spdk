@@ -177,14 +177,7 @@ if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	fi
 fi
 
-# setup local unit test coverage if cov is available
-if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h; then
-	cov_avail="yes"
-else
-	cov_avail="no"
-fi
-
-if [ "$cov_avail" = "yes" ]; then
+if [[ $CONFIG_COVERAGE == y ]]; then
 	UT_COVERAGE=$output_dir/ut_coverage
 	mkdir -p "$UT_COVERAGE"
 	export LCOV_OPTS="
@@ -286,7 +279,7 @@ run_test "unittest_dma" $valgrind $testdir/lib/dma/dma.c/dma_ut
 run_test "unittest_init" unittest_init
 run_test "unittest_keyring" $valgrind "$testdir/lib/keyring/keyring.c/keyring_ut"
 
-if [ "$cov_avail" = "yes" ]; then
+if [[ $CONFIG_COVERAGE == y ]]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info
