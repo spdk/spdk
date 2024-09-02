@@ -44,7 +44,7 @@ function tgt_check_notification_types() {
 
 	local ret=0
 	local enabled_types=("bdev_register" "bdev_unregister")
-	if grep -q '#define SPDK_CONFIG_FSDEV 1' $rootdir/include/spdk/config.h; then
+	if [[ $CONFIG_FSDEV == y ]]; then
 		enabled_types+=("fsdev_register" "fsdev_unregister")
 	fi
 

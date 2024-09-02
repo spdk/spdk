@@ -125,7 +125,7 @@ function unittest_sock() {
 	$valgrind $testdir/lib/sock/sock.c/sock_ut
 	$valgrind $testdir/lib/sock/posix.c/posix_ut
 	# Check whether uring is configured
-	if grep -q '#define SPDK_CONFIG_URING 1' $rootdir/include/spdk/config.h; then
+	if [[ $CONFIG_URING == y ]]; then
 		$valgrind $testdir/lib/sock/uring.c/uring_ut
 	fi
 }
@@ -162,7 +162,7 @@ fi
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
-	if grep -q '#undef SPDK_CONFIG_ASAN' $rootdir/include/spdk/config.h && hash valgrind; then
+	if [[ $CONFIG_ASAN == n ]] && hash valgrind; then
 		valgrind='valgrind --leak-check=full --error-exitcode=2 --verbose'
 	else
 		valgrind=''
@@ -209,21 +209,21 @@ fi
 run_test "unittest_pci_event" $valgrind $testdir/lib/env_dpdk/pci_event.c/pci_event_ut
 run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 run_test "unittest_bdev" unittest_bdev
-if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_CRYPTO == y ]]; then
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/accel/dpdk_cryptodev.c/accel_dpdk_cryptodev_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_VBDEV_COMPRESS 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_VBDEV_COMPRESS == y ]]; then
 	run_test "unittest_bdev_compress" $valgrind $testdir/lib/bdev/compress.c/compress_ut
 	run_test "unittest_lib_reduce" $valgrind $testdir/lib/reduce/reduce.c/reduce_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_DPDK_COMPRESSDEV 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
 	run_test "unittest_dpdk_compressdev" $valgrind $testdir/lib/accel/dpdk_compressdev.c/accel_dpdk_compressdev_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_RAID5F 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_RAID5F == y ]]; then
 	run_test "unittest_bdev_raid5f" $valgrind $testdir/lib/bdev/raid/raid5f.c/raid5f_ut
 fi
 
@@ -235,7 +235,7 @@ fi
 
 run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_ut
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
-if grep -q '#define SPDK_CONFIG_IDXD 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_IDXD == y ]]; then
 	run_test "unittest_idxd_user" $valgrind $testdir/lib/idxd/idxd_user.c/idxd_user_ut
 fi
 run_test "unittest_iscsi" unittest_iscsi
@@ -245,27 +245,24 @@ run_test "unittest_notify" $valgrind $testdir/lib/notify/notify.c/notify_ut
 run_test "unittest_nvme" unittest_nvme
 run_test "unittest_log" $valgrind $testdir/lib/log/log.c/log_ut
 run_test "unittest_lvol" $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
-if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_RDMA == y ]]; then
 	run_test "unittest_nvme_rdma" $valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 	run_test "unittest_nvmf_transport" $valgrind $testdir/lib/nvmf/transport.c/transport_ut
 	run_test "unittest_rdma" $valgrind $testdir/lib/rdma/common.c/common_ut
+	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_NVME_CUSE 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_NVME_CUSE == y ]]; then
 	run_test "unittest_nvme_cuse" $valgrind $testdir/lib/nvme/nvme_cuse.c/nvme_cuse_ut
 fi
 
 run_test "unittest_nvmf" unittest_nvmf
-if grep -q '#define SPDK_CONFIG_FC 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_FC == y ]]; then
 	run_test "unittest_nvmf_fc" $valgrind $testdir/lib/nvmf/fc.c/fc_ut
 	run_test "unittest_nvmf_fc_ls" $valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
-	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
-fi
-
-if grep -q '#define SPDK_CONFIG_VFIO_USER 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_VFIO_USER == y ]]; then
 	run_test "unittest_nvmf_vfio_user" $valgrind $testdir/lib/nvmf/vfio_user.c/vfio_user_ut
 fi
 
@@ -278,10 +275,10 @@ fi
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
 run_test "unittest_iobuf" $valgrind $testdir/lib/thread/iobuf.c/iobuf_ut
 run_test "unittest_util" unittest_util
-if grep -q '#define SPDK_CONFIG_FSDEV 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_FSDEV == y ]]; then
 	run_test "unittest_fsdev" unittest_fsdev
 fi
-if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
+if [[ $CONFIG_VHOST == y ]]; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
 run_test "unittest_dma" $valgrind $testdir/lib/dma/dma.c/dma_ut
@@ -314,7 +311,7 @@ if [ "$cov_avail" = "yes" ]; then
 else
 	echo "WARN: lcov not installed or SPDK built without coverage!"
 fi
-if grep -q '#undef SPDK_CONFIG_ASAN' $rootdir/include/spdk/config.h && [ "$valgrind" = "" ]; then
+if [[ $CONFIG_ASAN == n && $valgrind = "" ]]; then
 	echo "WARN: neither valgrind nor ASAN is enabled!"
 fi
 

@@ -355,7 +355,7 @@ function confirm_makefile_deps() {
 	rm -f $fail_file
 
 	declare -A IGNORED_LIBS=()
-	if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
+	if [[ $CONFIG_RDMA == n ]]; then
 		IGNORED_LIBS["rdma"]=1
 	fi
 
