@@ -1127,6 +1127,103 @@ test_scheduler_set_isolated_core_mask(void)
 	free_cores();
 }
 
+struct workload {
+	struct spdk_thread *thread;
+	uint64_t scheduling_period;
+
+	uint64_t busy_tsc_per_scheduling_period;
+
+	uint64_t polling_period_busy_tsc;
+	uint64_t polling_period_idle_tsc;
+};
+
+static int
+poller_run_mixed_workload(void *ctx)
+{
+	struct workload *workload = (struct workload *)ctx;
+	uint64_t curr_period_busy_tsc = spdk_thread_get_last_tsc(workload->thread) %
+					workload->scheduling_period;
+
+	if (curr_period_busy_tsc < workload->busy_tsc_per_scheduling_period) {
+		spdk_delay_us(workload->polling_period_busy_tsc);
+		return SPDK_POLLER_BUSY;
+	}
+	spdk_delay_us(workload->polling_period_idle_tsc);
+	return SPDK_POLLER_IDLE;
+}
+
+/**
+ * Test that poller_run_mixed_workload correctly mocks real poller behavior by mocking
+ * a mostly idle thread.
+ * The scheduling period is set to 1000 tsc and a total of 200 busy tsc will be
+ * consumed during the scheduling period. Then 800 tsc should be idle.
+ *
+ * Assert that the poller returns busy a few times (20) and that it returns idle
+ * many times (800) because it takes very little time to return when there is no
+ * work to do and longer to return when there is work to do.
+ *
+ */
+static void
+test_mixed_workload(void)
+{
+	struct workload workload  = {
+		.thread = NULL,
+		.scheduling_period = 1000,
+		.busy_tsc_per_scheduling_period = 200,
+		.polling_period_busy_tsc = 10,
+		.polling_period_idle_tsc = 1
+	};
+	struct spdk_poller *poller;
+	struct spdk_thread *thread;
+	struct spdk_reactor *reactor;
+	uint64_t i, busy_count, idle_count, rc;
+
+	allocate_cores(1);
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 0, true);
+
+	MOCK_SET(spdk_env_get_current_core, 0);
+	MOCK_SET(spdk_get_ticks, 0);
+	spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
+	reactor = spdk_reactor_get(0);
+
+	thread = spdk_thread_create(NULL, &g_reactor_core_mask);
+	workload.thread = thread;
+
+	_reactor_run(reactor);
+
+	spdk_set_thread(thread);
+	poller = spdk_poller_register(poller_run_mixed_workload, (void *)&workload, 0);
+
+	busy_count = 0;
+	idle_count = 0;
+	/* Simulate 3 scheduling periods */
+	for (i = 1; i <= 3; i++) {
+		while (spdk_thread_get_last_tsc(thread) < i * workload.scheduling_period) {
+			rc = spdk_thread_poll(thread, 0, spdk_thread_get_last_tsc(thread));
+
+			if (rc == SPDK_POLLER_BUSY) {
+				busy_count++;
+			} else {
+				idle_count++;
+			}
+		}
+		CU_ASSERT(busy_count == workload.busy_tsc_per_scheduling_period / workload.polling_period_busy_tsc);
+		CU_ASSERT(idle_count == (workload.scheduling_period - workload.busy_tsc_per_scheduling_period) /
+			  workload.polling_period_idle_tsc);
+		CU_ASSERT(spdk_thread_get_last_tsc(thread) == i * workload.scheduling_period);
+		busy_count = 0;
+		idle_count = 0;
+	}
+
+	spdk_poller_unregister(&poller);
+	spdk_thread_exit(thread);
+	_reactor_run(reactor);
+	spdk_thread_destroy(thread);
+	spdk_set_thread(NULL);
+	spdk_reactors_fini();
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1151,6 +1248,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_governor);
 #endif
 	CU_ADD_TEST(suite, test_scheduler_set_isolated_core_mask);
+	CU_ADD_TEST(suite, test_mixed_workload);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
