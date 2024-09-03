@@ -4481,6 +4481,8 @@ struct spdk_nvme_transport_ops {
 
 	int (*ctrlr_enable)(struct spdk_nvme_ctrlr *ctrlr);
 
+	int (*ctrlr_enable_interrupts)(struct spdk_nvme_ctrlr *ctrlr);
+
 	int (*ctrlr_set_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 
 	int (*ctrlr_set_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);

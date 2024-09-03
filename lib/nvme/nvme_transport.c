@@ -166,6 +166,19 @@ nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_transport_ctrlr_enable_interrupts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_enable_interrupts != NULL) {
+		return transport->ops.ctrlr_enable_interrupts(ctrlr);
+	}
+
+	return -ENOTSUP;
+}
+
+int
 nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
