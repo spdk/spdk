@@ -320,7 +320,7 @@ function nbd_function_test() {
 
 	nbd_rpc_start_stop_verify $rpc_server "${bdev_list[*]}"
 	nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
-	nbd_with_lvol_verify $rpc_server "${nbd_list[*]}"
+	nbd_with_lvol_verify $rpc_server "${nbd_list[0]}"
 
 	killprocess $nbd_pid
 	trap - SIGINT SIGTERM EXIT
