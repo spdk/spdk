@@ -136,6 +136,18 @@ function nbd_with_lvol_verify() {
 	$rootdir/scripts/rpc.py -s $rpc_server bdev_lvol_create lvol 4 -l lvs
 	$rootdir/scripts/rpc.py -s $rpc_server nbd_start_disk lvs/lvol "$nbd"
 
+	wait_for_nbd_set_capacity "$nbd"
+
 	mkfs.ext4 "$nbd"
 	nbd_stop_disks $rpc_server "$nbd"
+}
+
+function wait_for_nbd_set_capacity() {
+	local nbd=${1##*/}
+
+	[[ -e /sys/block/$nbd/size ]] || return 1
+
+	while (($(< "/sys/block/$nbd/size") == 0)); do
+		sleep 0.1
+	done
 }
