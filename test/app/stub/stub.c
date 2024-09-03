@@ -49,6 +49,7 @@ usage(char *executable_name)
 	printf(" -i shared memory ID [required]\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -n channel number of memory channels used for DPDK\n");
+	printf(" -L flag    enable log flag\n");
 	printf(" -p core    main (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
 	printf(" -t msec    sleep time (ms) between checking for admin completions\n");
@@ -146,9 +147,18 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.env_context = "--proc-type=primary";
 
-	while ((ch = getopt(argc, argv, "i:m:n:p:q:s:t:H")) != -1) {
+	while ((ch = getopt(argc, argv, "i:m:n:p:q:s:t:HL:")) != -1) {
 		if (ch == 'm') {
 			opts.reactor_mask = optarg;
+		} else if (ch == 'L') {
+			if (spdk_log_set_flag(optarg) != 0) {
+				SPDK_ERRLOG("unknown flag: %s\n", optarg);
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifdef DEBUG
+			opts.print_level = SPDK_LOG_DEBUG;
+#endif
 		} else if (ch == '?' || ch == 'H') {
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
