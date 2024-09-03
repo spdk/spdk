@@ -785,7 +785,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	/* error injection for those queued error requests */
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->err_req_head))) {
 		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
-			if (spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
+			if (req->pid == getpid() &&
+			    spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
 				STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
 				nvme_qpair_manual_complete_request(qpair, req,
 								   req->cpl.status.sct,
@@ -913,6 +914,7 @@ nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 
 	while (!STAILQ_EMPTY(&qpair->err_req_head)) {
 		req = STAILQ_FIRST(&qpair->err_req_head);
+		assert(req->pid == getpid());
 		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
 		nvme_qpair_manual_complete_request(qpair, req,
 						   req->cpl.status.sct,

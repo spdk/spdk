@@ -673,6 +673,7 @@ test_nvme_qpair_init_deinit(void)
 		/* Check requests address alignment */
 		CU_ASSERT((uint64_t)var_req % 64 == 0);
 		CU_ASSERT(var_req->qpair == &qpair);
+		var_req->pid = getpid();
 		reqs[i++] = var_req;
 	}
 	CU_ASSERT(i == 3);
