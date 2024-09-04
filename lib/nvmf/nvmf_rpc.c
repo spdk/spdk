@@ -19,8 +19,6 @@
 
 #include "nvmf_internal.h"
 
-static bool g_logged_deprecated_decode_rpc_listen_address = false;
-
 static int rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state);
 
 static int
@@ -583,7 +581,6 @@ invalid_custom_response:
 SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
 
 struct rpc_listen_address {
-	char *transport;
 	char *trtype;
 	char *adrfam;
 	char *traddr;
@@ -591,51 +588,24 @@ struct rpc_listen_address {
 };
 
 static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
-	/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
-	{"transport", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
 	{"trtype", offsetof(struct rpc_listen_address, trtype), spdk_json_decode_string, true},
 	{"adrfam", offsetof(struct rpc_listen_address, adrfam), spdk_json_decode_string, true},
 	{"traddr", offsetof(struct rpc_listen_address, traddr), spdk_json_decode_string},
 	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string, true},
 };
 
-SPDK_LOG_DEPRECATION_REGISTER(decode_rpc_listen_address,
-			      "[listen_]address.transport is deprecated in favor of trtype",
-			      "v24.09", 0);
-
 static int
 decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_listen_address *req = (struct rpc_listen_address *)out;
 
-	if (spdk_json_decode_object(val, rpc_listen_address_decoders,
-				    SPDK_COUNTOF(rpc_listen_address_decoders),
-				    req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		return -1;
-	}
-
-	if (req->transport && req->trtype) {
-		SPDK_ERRLOG("It is invalid to specify both 'transport' and 'trtype'.\n");
-		return -1;
-	}
-
-	/* Log only once */
-	if (req->transport && !g_logged_deprecated_decode_rpc_listen_address) {
-		SPDK_LOG_DEPRECATED(decode_rpc_listen_address);
-		g_logged_deprecated_decode_rpc_listen_address = true;
-		/* Move ->transport to ->trtype since that's one we use now. */
-		req->trtype = req->transport;
-		req->transport = NULL;
-	}
-
-	return 0;
+	return spdk_json_decode_object(val, rpc_listen_address_decoders,
+				       SPDK_COUNTOF(rpc_listen_address_decoders), req);
 }
 
 static void
 free_rpc_listen_address(struct rpc_listen_address *r)
 {
-	free(r->transport);
 	free(r->trtype);
 	free(r->adrfam);
 	free(r->traddr);
