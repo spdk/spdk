@@ -29,12 +29,6 @@ in `spdk_nvme_ctrlr_opts.tls_psk`.
 
 ### nvmf
 
-#### `spdk_nvmf_request_exec_fabrics`
-
-This function is deprecated and will be removed in the 24.09 release.  Instead, users should use
-`spdk_nvmf_request_exec()`, which now allows all transports (both fabrics and non-fabrics) to
-execute fabrics commands.
-
 #### `nvmf_subsystem_add_host`
 
 The ability to specifying path to a PSK file via the `psk` parameter in `nvmf_subsystem_add_host` is

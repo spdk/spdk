@@ -125,7 +125,6 @@
 	spdk_nvmf_request_free_buffers;
 	spdk_nvmf_request_get_buffers;
 	spdk_nvmf_request_get_dif_ctx;
-	spdk_nvmf_request_exec_fabrics;
 	spdk_nvmf_request_exec;
 	spdk_nvmf_request_free;
 	spdk_nvmf_request_complete;

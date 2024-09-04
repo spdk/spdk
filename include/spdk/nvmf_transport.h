@@ -549,7 +549,6 @@ int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
 
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
-void spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 void spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req);

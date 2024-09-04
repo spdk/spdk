@@ -4759,16 +4759,6 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_request_exec_fabrics, "spdk_nvmf_request_exec_fabrics()",
-			      "v24.09", 1);
-void
-spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
-{
-	SPDK_LOG_DEPRECATED(nvmf_request_exec_fabrics);
-
-	return spdk_nvmf_request_exec(req);
-}
-
 static bool
 nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 {
