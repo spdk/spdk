@@ -36,7 +36,8 @@ rpc_cmd << CMD
 	bdev_null_create null0 100 4096
 	nvmf_subsystem_add_ns "$subnqn" null0
 	nvmf_subsystem_add_listener -t tcp -a 127.0.0.1 -s 4420 --secure-channel "$subnqn"
-	nvmf_subsystem_add_host --psk "$key0path" "$subnqn" "$hostnqn"
+	keyring_file_add_key key0 "$key0path"
+	nvmf_subsystem_add_host --psk key0 "$subnqn" "$hostnqn"
 CMD
 
 # Test, if another listener cannot be added, with different secure channel value

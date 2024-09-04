@@ -28,8 +28,9 @@ setup_nvmf_tgt_conf() {
 		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -k
 		bdev_malloc_create 32 4096 -b malloc0
 		nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
+		keyring_file_add_key key0 "$key"
 		nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 \
-		--psk $key
+			--psk key0
 	EOF
 }
 

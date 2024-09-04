@@ -53,11 +53,12 @@ $rpc_py bdev_nvme_detach_controller $nvme_bdev
 key_path=$(mktemp)
 echo -n "NVMeTLSkey-1:01:MDAxMTIyMzM0NDU1NjY3Nzg4OTlhYWJiY2NkZGVlZmZwJEiQ:" > $key_path
 chmod 0600 $key_path
+$rpc_py keyring_file_add_key key0 "$key_path"
 $rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode0 --disable
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT \
 	-a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT --secure-channel
 $rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode0 nqn.2016-06.io.spdk:host1 \
-	--psk $key_path
+	--psk key0
 
 # Then attach NVMe bdev by connecting back to itself, with the target app running on a single core.
 # This verifies that the initialization is completely asynchronous, as each blocking call would

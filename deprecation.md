@@ -27,14 +27,6 @@ Passing NVMe/TLS pre-shared keys via `spdk_nvme_ctrlr_opts.psk` is deprecated an
 removed in the v24.09 release.  Instead, a key obtained from the keyring library should be passed
 in `spdk_nvme_ctrlr_opts.tls_psk`.
 
-### nvmf
-
-#### `nvmf_subsystem_add_host`
-
-The ability to specifying path to a PSK file via the `psk` parameter in `nvmf_subsystem_add_host` is
-deprecated and will be removed in the v24.09 release.  Instead, the name of a key attached to the
-keyring should be used.
-
 ### gpt
 
 #### `old_gpt_guid`

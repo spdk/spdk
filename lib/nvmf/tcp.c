@@ -48,8 +48,6 @@
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
-#define TCP_PSK_INVALID_PERMISSIONS 0177
-
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 static bool g_tls_log = false;
 
@@ -361,9 +359,6 @@ struct tcp_psk_entry {
 	char				pskid[NVMF_PSK_IDENTITY_LEN];
 	uint8_t				psk[SPDK_TLS_PSK_MAX_LEN];
 	struct spdk_key			*key;
-
-	/* Original path saved to emit SPDK configuration via "save_config". */
-	char				psk_path[PATH_MAX];
 	uint32_t			psk_size;
 	enum nvme_tcp_cipher_suite	tls_cipher_suite;
 	TAILQ_ENTRY(tcp_psk_entry)	link;
@@ -3716,45 +3711,6 @@ static const struct spdk_json_object_decoder tcp_subsystem_add_host_opts_decoder
 };
 
 static int
-tcp_load_psk(const char *fname, char *buf, size_t bufsz)
-{
-	FILE *psk_file;
-	struct stat statbuf;
-	int rc;
-
-	if (stat(fname, &statbuf) != 0) {
-		SPDK_ERRLOG("Could not read permissions for PSK file\n");
-		return -EACCES;
-	}
-
-	if ((statbuf.st_mode & TCP_PSK_INVALID_PERMISSIONS) != 0) {
-		SPDK_ERRLOG("Incorrect permissions for PSK file\n");
-		return -EPERM;
-	}
-	if ((size_t)statbuf.st_size > bufsz) {
-		SPDK_ERRLOG("Invalid PSK: too long\n");
-		return -EINVAL;
-	}
-	psk_file = fopen(fname, "r");
-	if (psk_file == NULL) {
-		SPDK_ERRLOG("Could not open PSK file\n");
-		return -EINVAL;
-	}
-
-	rc = fread(buf, 1, statbuf.st_size, psk_file);
-	if (rc != statbuf.st_size) {
-		SPDK_ERRLOG("Failed to read PSK\n");
-		fclose(psk_file);
-		return -EINVAL;
-	}
-
-	fclose(psk_file);
-	return 0;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_tcp_psk_path, "PSK path", "v24.09", 0);
-
-static int
 nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 			    const struct spdk_nvmf_subsystem *subsystem,
 			    const char *hostnqn,
@@ -3798,27 +3754,17 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	}
 
 	entry->key = spdk_keyring_get_key(opts.psk);
-	if (entry->key != NULL) {
-		rc = spdk_key_get_key(entry->key, psk_interchange, SPDK_TLS_PSK_MAX_LEN);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to retrieve PSK '%s'\n", opts.psk);
-			rc = -EINVAL;
-			goto end;
-		}
-	} else {
-		if (strlen(opts.psk) >= sizeof(entry->psk)) {
-			SPDK_ERRLOG("PSK path too long\n");
-			rc = -EINVAL;
-			goto end;
-		}
+	if (entry->key == NULL) {
+		SPDK_ERRLOG("Key '%s' does not exist\n", opts.psk);
+		rc = -EINVAL;
+		goto end;
+	}
 
-		rc = tcp_load_psk(opts.psk, psk_interchange, SPDK_TLS_PSK_MAX_LEN);
-		if (rc) {
-			SPDK_ERRLOG("Could not retrieve PSK from file\n");
-			goto end;
-		}
-
-		SPDK_LOG_DEPRECATED(nvmf_tcp_psk_path);
+	rc = spdk_key_get_key(entry->key, psk_interchange, SPDK_TLS_PSK_MAX_LEN);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to retrieve PSK '%s'\n", opts.psk);
+		rc = -EINVAL;
+		goto end;
 	}
 
 	/* Parse PSK interchange to get length of base64 encoded data.
@@ -3890,15 +3836,6 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		entry->psk_size = rc;
 	}
 
-	if (entry->key == NULL) {
-		rc = snprintf(entry->psk_path, sizeof(entry->psk_path), "%s", opts.psk);
-		if (rc < 0 || (size_t)rc >= sizeof(entry->psk_path)) {
-			SPDK_ERRLOG("Could not save PSK path!\n");
-			rc = -ENAMETOOLONG;
-			goto end;
-		}
-	}
-
 	TAILQ_INSERT_TAIL(&ttransport->psks, entry, link);
 	rc = 0;
 
@@ -3951,8 +3888,7 @@ nvmf_tcp_subsystem_dump_host(struct spdk_nvmf_transport *transport,
 	TAILQ_FOREACH(entry, &ttransport->psks, link) {
 		if ((strncmp(entry->hostnqn, hostnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0 &&
 		    (strncmp(entry->subnqn, subsystem->subnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0) {
-			spdk_json_write_named_string(w, "psk", entry->key ?
-						     spdk_key_get_name(entry->key) : entry->psk_path);
+			spdk_json_write_named_string(w, "psk",  spdk_key_get_name(entry->key));
 			break;
 		}
 	}

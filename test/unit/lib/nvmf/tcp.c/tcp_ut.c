@@ -256,10 +256,7 @@ DEFINE_STUB_V(spdk_sock_group_unregister_interrupt, (struct spdk_sock_group *gro
 DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
-DEFINE_STUB(spdk_keyring_get_key, struct spdk_key *, (const char *name), NULL);
 DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
-DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
-DEFINE_STUB(spdk_key_get_key, int, (struct spdk_key *k, void *buf, int len), 1);
 
 DEFINE_STUB(nvmf_ns_is_ptpl_capable, bool, (const struct spdk_nvmf_ns *ns), false);
 DEFINE_STUB(nvmf_subsystem_host_auth_required, bool, (struct spdk_nvmf_subsystem *s, const char *n),
@@ -288,6 +285,40 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_admin,
 	     struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
 	     spdk_nvmf_nvme_passthru_cmd_cb cb_fn),
 	    0)
+
+struct spdk_key {
+	const char *name;
+	char data[4096];
+	int len;
+} g_ut_psk = {
+	.name = "ut-key",
+};
+
+struct spdk_key *
+spdk_keyring_get_key(const char *name)
+{
+	if (strcmp(name, g_ut_psk.name) == 0) {
+		return &g_ut_psk;
+	}
+
+	return NULL;
+}
+
+int
+spdk_key_get_key(struct spdk_key *key, void *buf, int len)
+{
+	len = spdk_min(key->len, len);
+
+	memcpy(buf, key->data, len);
+
+	return len;
+}
+
+const char *
+spdk_key_get_name(struct spdk_key *k)
+{
+	return k->name;
+}
 
 struct spdk_bdev {
 	int ut_mock;
@@ -1309,10 +1340,7 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	const char subnqn[] = {"nqn.2016-06.io.spdk:cnode1"};
 	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
 	const char *psk = "NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:";
-	char *psk_file_path = "/tmp/psk.txt";
 	bool found = false;
-	FILE *psk_file = NULL;
-	mode_t oldmask;
 
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
@@ -1332,19 +1360,13 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 
 	memset(&subsystem, 0, sizeof(subsystem));
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
-
-	/* Create a text file containing PSK in interchange format. */
-	oldmask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
-	psk_file = fopen(psk_file_path, "w");
-	CU_ASSERT(psk_file != NULL);
-	CU_ASSERT(fprintf(psk_file, "%s", psk) > 0);
-	CU_ASSERT(fclose(psk_file) == 0);
-	umask(oldmask);
+	snprintf(g_ut_psk.data, sizeof(g_ut_psk.data), "%s", psk);
+	g_ut_psk.len = strlen(psk) + 1;
 
 	struct spdk_json_val psk_json[] = {
 		{"", 2, SPDK_JSON_VAL_OBJECT_BEGIN},
 		{"psk", 3, SPDK_JSON_VAL_NAME},
-		{psk_file_path, strlen(psk_file_path), SPDK_JSON_VAL_STRING},
+		{(void *)g_ut_psk.name, strlen(g_ut_psk.name), SPDK_JSON_VAL_STRING},
 		{"", 0, SPDK_JSON_VAL_OBJECT_END},
 	};
 
@@ -1372,8 +1394,6 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	}
 
 	CU_ASSERT(found == false);
-
-	CU_ASSERT(remove(psk_file_path) == 0);
 
 	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
 
