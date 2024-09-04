@@ -1122,6 +1122,9 @@ test_scheduler_set_isolated_core_mask(void)
 	spdk_cpuset_set_cpu(&isolated_core_mask, 1, true);
 	spdk_cpuset_set_cpu(&isolated_core_mask, 4, true);
 	CU_ASSERT(scheduler_set_isolated_core_mask(isolated_core_mask) == false);
+
+	spdk_reactors_fini();
+	free_cores();
 }
 
 int
