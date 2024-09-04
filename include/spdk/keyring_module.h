@@ -40,8 +40,11 @@ int spdk_keyring_add_key(const struct spdk_key_opts *opts);
  * Remove a key from the keyring.
  *
  * \param name Name of the key to remove.
+ * \param module Module owning the key to remove.
+ *
+ * \return 0 on success, negative errno otherwise.
  */
-void spdk_keyring_remove_key(const char *name);
+int spdk_keyring_remove_key(const char *name, struct spdk_keyring_module *module);
 
 struct spdk_keyring_module {
 	/** Name of the module */

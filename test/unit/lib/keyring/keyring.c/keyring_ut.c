@@ -85,6 +85,7 @@ test_keyring_add_remove(void)
 	struct spdk_key *key;
 	char keybuf[UT_KEY_SIZE] = {}, rcvbuf[UT_KEY_SIZE] = {};
 	struct ut_key_opts uopts = { .buf = keybuf, .len = UT_KEY_SIZE };
+	struct spdk_keyring_module module2 = { .name = "ut2" };
 	int rc;
 
 	/* Add a key */
@@ -106,7 +107,7 @@ test_keyring_add_remove(void)
 	CU_ASSERT_EQUAL(memcmp(rcvbuf, keybuf, UT_KEY_SIZE), 0);
 
 	/* Remove it and try to get another reference */
-	spdk_keyring_remove_key("key0");
+	spdk_keyring_remove_key("key0", &g_module);
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key("key0"));
 
 	/* Now that the key has been remove spdk_key_get_key() should result in an -ENOKEY error */
@@ -130,7 +131,7 @@ test_keyring_add_remove(void)
 	spdk_keyring_put_key(key);
 
 	/* Remove the key without explicitly specifying global keyring */
-	spdk_keyring_remove_key("key0");
+	spdk_keyring_remove_key("key0", &g_module);
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key("key0"));
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key(":key0"));
 
@@ -149,15 +150,20 @@ test_keyring_add_remove(void)
 	rc = spdk_keyring_add_key(&opts);
 	CU_ASSERT_EQUAL(rc, -EEXIST);
 
-	spdk_keyring_remove_key(":key0");
+	/* Try to remove a key owned by a different module */
+	spdk_keyring_remove_key("key0", &module2);
+	CU_ASSERT_PTR_NOT_NULL(spdk_keyring_get_key("key0"));
+	CU_ASSERT_PTR_NOT_NULL(spdk_keyring_get_key(":key0"));
+
+	spdk_keyring_remove_key(":key0", &g_module);
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key("key0"));
 	CU_ASSERT_PTR_NULL(spdk_keyring_get_key(":key0"));
 	CU_ASSERT(g_remove_called);
 	g_remove_called = false;
 
 	/* Remove an already removed key */
-	spdk_keyring_remove_key("key0");
-	spdk_keyring_remove_key(":key0");
+	spdk_keyring_remove_key("key0", &g_module);
+	spdk_keyring_remove_key(":key0", &g_module);
 	CU_ASSERT(!g_remove_called);
 
 	/* Check that an error from module's add_key() results in failure */
@@ -200,7 +206,7 @@ test_keyring_get_put(void)
 	/* Remove the key and verify (relying on the address sanitizer to catch any use-after-free
 	 * errors) that the reference is still valid
 	 */
-	spdk_keyring_remove_key("key0");
+	spdk_keyring_remove_key("key0", &g_module);
 	CU_ASSERT_EQUAL(strcmp(spdk_key_get_name(key), "key0"), 0);
 
 	/* Release all but one reference and verify that it's still valid (again, relying on the

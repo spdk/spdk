@@ -150,21 +150,30 @@ keyring_remove_key(struct spdk_key *key)
 	keyring_put_key(key);
 }
 
-void
-spdk_keyring_remove_key(const char *name)
+int
+spdk_keyring_remove_key(const char *name, struct spdk_keyring_module *module)
 {
 	struct spdk_key *key;
+	int rc = 0;
 
 	pthread_mutex_lock(&g_keyring.mutex);
 	key = keyring_find_key(name);
 	if (key == NULL) {
-		SPDK_WARNLOG("Key '%s' does not exist\n", name);
+		SPDK_ERRLOG("Key '%s' does not exist\n", name);
+		rc = -ENOKEY;
+		goto out;
+	}
+
+	if (key->module != module) {
+		SPDK_ERRLOG("Key '%s' is not owned by module '%s'\n", name, module->name);
+		rc = -EINVAL;
 		goto out;
 	}
 
 	keyring_remove_key(key);
 out:
 	pthread_mutex_unlock(&g_keyring.mutex);
+	return rc;
 }
 
 static struct spdk_key *

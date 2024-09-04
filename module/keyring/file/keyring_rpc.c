@@ -81,7 +81,7 @@ rpc_keyring_file_remove_key(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_keyring_remove_key(req.name);
+	spdk_keyring_remove_key(req.name, &g_keyring_file);
 	spdk_jsonrpc_send_bool_response(request, true);
 	free_rpc_keyring_file_remove_key(&req);
 }
