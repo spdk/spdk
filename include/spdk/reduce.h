@@ -237,6 +237,21 @@ void spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 			    spdk_reduce_vol_op_complete cb_fn, void *cb_arg);
 
 /**
+ * Unmap extent to a libreduce compressed volume.
+ *
+ * This function will clear the mapping info by full chunk or write zero to nonfull chunk.
+ *
+ * \param vol Volume to unmap.
+ * \param offset Offset (in logical blocks) of the extent to unmap on the compressed volume
+ * \param length Length (in logical blocks) of the extent to unmap on the compressed volume
+ * \param cb_fn Callback function to signal completion of the unmap operation.
+ * \param cb_arg Argument to pass to the callback function.
+ */
+void spdk_reduce_vol_unmap(struct spdk_reduce_vol *vol,
+			   uint64_t offset, uint64_t length,
+			   spdk_reduce_vol_op_complete cb_fn, void *cb_arg);
+
+/**
  * Get the params structure for a libreduce compressed volume.
  *
  * This function will populate the given params structure for a given volume.

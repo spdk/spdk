@@ -59,6 +59,7 @@ struct spdk_reduce_pm_file {
 
 #define REDUCE_IO_READV		1
 #define REDUCE_IO_WRITEV	2
+#define	REDUCE_IO_UNMAP		3
 
 struct spdk_reduce_chunk_map {
 	uint32_t		compressed_size;
@@ -1103,6 +1104,7 @@ _request_spans_chunk_boundary(struct spdk_reduce_vol *vol, uint64_t offset, uint
 }
 
 typedef void (*reduce_request_fn)(void *_req, int reduce_errno);
+static void _start_unmap_request_full_chunk(void *ctx);
 
 static void
 _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
@@ -1118,9 +1120,11 @@ _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
 			TAILQ_REMOVE(&vol->queued_requests, next_req, tailq);
 			if (next_req->type == REDUCE_IO_READV) {
 				_start_readv_request(next_req);
-			} else {
-				assert(next_req->type == REDUCE_IO_WRITEV);
+			} else if (next_req->type == REDUCE_IO_WRITEV) {
 				_start_writev_request(next_req);
+			} else {
+				assert(next_req->type == REDUCE_IO_UNMAP);
+				_start_unmap_request_full_chunk(next_req);
 			}
 			break;
 		}
@@ -1946,6 +1950,121 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		_start_writev_request(req);
 	} else {
 		TAILQ_INSERT_TAIL(&vol->queued_requests, req, tailq);
+	}
+}
+
+static void
+_start_unmap_request_full_chunk(void *ctx)
+{
+	struct spdk_reduce_vol_request *req = ctx;
+	struct spdk_reduce_vol *vol = req->vol;
+	uint64_t chunk_map_index;
+
+	RB_INSERT(executing_req_tree, &req->vol->executing_requests, req);
+
+	chunk_map_index = vol->pm_logical_map[req->logical_map_index];
+	if (chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
+		_reduce_vol_reset_chunk(vol, chunk_map_index);
+		req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
+		_reduce_persist(vol, req->chunk,
+				_reduce_vol_get_chunk_struct_size(vol->backing_io_units_per_chunk));
+		vol->pm_logical_map[req->logical_map_index] = REDUCE_EMPTY_MAP_ENTRY;
+		_reduce_persist(vol, &vol->pm_logical_map[req->logical_map_index], sizeof(uint64_t));
+	}
+	_reduce_vol_complete_req(req, 0);
+}
+
+static void
+_reduce_vol_unmap_full_chunk(struct spdk_reduce_vol *vol,
+			     uint64_t offset, uint64_t length,
+			     spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_reduce_vol_request *req;
+	uint64_t logical_map_index;
+	bool overlapped;
+
+	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	logical_map_index = offset / vol->logical_blocks_per_chunk;
+	overlapped = _check_overlap(vol, logical_map_index);
+
+	req = TAILQ_FIRST(&vol->free_requests);
+	if (req == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	TAILQ_REMOVE(&vol->free_requests, req, tailq);
+	req->type = REDUCE_IO_UNMAP;
+	req->vol = vol;
+	req->iov = NULL;
+	req->iovcnt = 0;
+	req->offset = offset;
+	req->logical_map_index = logical_map_index;
+	req->length = length;
+	req->copy_after_decompress = false;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	if (!overlapped) {
+		_start_unmap_request_full_chunk(req);
+	} else {
+		TAILQ_INSERT_TAIL(&vol->queued_requests, req, tailq);
+	}
+}
+
+struct unmap_partial_chunk_ctx {
+	struct spdk_reduce_vol *vol;
+	struct iovec iov;
+	spdk_reduce_vol_op_complete cb_fn;
+	void *cb_arg;
+};
+
+static void
+_reduce_unmap_partial_chunk_complete(void *_ctx, int reduce_errno)
+{
+	struct unmap_partial_chunk_ctx *ctx = _ctx;
+
+	ctx->cb_fn(ctx->cb_arg, reduce_errno);
+	free(ctx);
+}
+
+static void
+_reduce_vol_unmap_partial_chunk(struct spdk_reduce_vol *vol, uint64_t offset, uint64_t length,
+				spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
+{
+	struct unmap_partial_chunk_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct unmap_partial_chunk_ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->vol = vol;
+	ctx->iov.iov_base = g_zero_buf;
+	ctx->iov.iov_len = length * vol->params.logical_block_size;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_reduce_vol_writev(vol, &ctx->iov, 1, offset, length, _reduce_unmap_partial_chunk_complete,
+			       ctx);
+}
+
+void
+spdk_reduce_vol_unmap(struct spdk_reduce_vol *vol,
+		      uint64_t offset, uint64_t length,
+		      spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
+{
+	if (length < vol->logical_blocks_per_chunk) {
+		_reduce_vol_unmap_partial_chunk(vol, offset, length, cb_fn, cb_arg);
+	} else if (length == vol->logical_blocks_per_chunk) {
+		_reduce_vol_unmap_full_chunk(vol, offset, length, cb_fn, cb_arg);
+	} else {
+		cb_fn(cb_arg, -EINVAL);
 	}
 }
 

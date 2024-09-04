@@ -30,6 +30,8 @@ struct vbdev_compress g_comp_bdev;
 struct comp_bdev_io *g_io_ctx;
 struct comp_io_channel *g_comp_ch;
 
+struct spdk_reduce_vol_params g_vol_params;
+
 static int ut_spdk_reduce_vol_op_complete_err = 0;
 void
 spdk_reduce_vol_writev(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
@@ -45,6 +47,15 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt
 		      void *cb_arg)
 {
 	cb_fn(cb_arg, ut_spdk_reduce_vol_op_complete_err);
+}
+
+void
+spdk_reduce_vol_unmap(struct spdk_reduce_vol *vol,
+		      uint64_t offset, uint64_t length, spdk_reduce_vol_op_complete cb_fn,
+		      void *cb_arg)
+{
+	cb_fn(cb_arg, ut_spdk_reduce_vol_op_complete_err);
+	spdk_thread_poll(spdk_get_thread(), 0, 0);
 }
 
 #include "bdev/compress/vbdev_compress.c"
@@ -81,7 +92,7 @@ DEFINE_STUB_V(spdk_reduce_vol_unload, (struct spdk_reduce_vol *vol,
 DEFINE_STUB_V(spdk_reduce_vol_load, (struct spdk_reduce_backing_dev *backing_dev,
 				     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg));
 DEFINE_STUB(spdk_reduce_vol_get_params, const struct spdk_reduce_vol_params *,
-	    (struct spdk_reduce_vol *vol), NULL);
+	    (struct spdk_reduce_vol *vol), &g_vol_params);
 DEFINE_STUB(spdk_reduce_vol_get_pm_path, const char *,
 	    (const struct spdk_reduce_vol *vol), NULL);
 DEFINE_STUB_V(spdk_reduce_vol_init, (struct spdk_reduce_vol_params *params,
@@ -229,6 +240,9 @@ test_setup(void)
 	g_io_ctx->comp_ch = g_comp_ch;
 	g_io_ctx->comp_bdev = &g_comp_bdev;
 
+	g_vol_params.chunk_size = 16384;
+	g_vol_params.logical_block_size = 512;
+
 	return 0;
 }
 
@@ -299,6 +313,39 @@ test_vbdev_compress_submit_request(void)
 	vbdev_compress_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	CU_ASSERT(g_completion_called == true);
+
+	/* test unmap. for io unit = 4k, blocksize=512, chunksize=16k.
+	 * array about offset and length, unit block.
+	 * Contains cases of {one partial chunk;
+	 * one full chunk;
+	 * one full chunk and one partial tail chunks;
+	 * one full chunk and two partial head/tail chunks;
+	 * multi full chunk and two partial chunks} */
+	uint64_t unmap_io_array[][2] = {
+		{7, 15},
+		{0, 32},
+		{0, 47},
+		{7, 83},
+		{17, 261}
+	};
+	g_bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
+	for (uint64_t i = 0; i < SPDK_COUNTOF(unmap_io_array); i++) {
+		g_bdev_io->u.bdev.offset_blocks = unmap_io_array[i][0];
+		g_bdev_io->u.bdev.offset_blocks = unmap_io_array[i][1];
+		/* test success */
+		ut_spdk_reduce_vol_op_complete_err = 0;
+		g_completion_called = false;
+		vbdev_compress_submit_request(g_io_ch, g_bdev_io);
+		CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT(g_completion_called == true);
+
+		/* test fail */
+		ut_spdk_reduce_vol_op_complete_err = 1;
+		g_completion_called = false;
+		vbdev_compress_submit_request(g_io_ch, g_bdev_io);
+		CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+		CU_ASSERT(g_completion_called == true);
+	}
 }
 
 static void
@@ -331,7 +378,7 @@ test_supported_io(void)
 	g_comp_base_support_rw = false;
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_READ) == false);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE) == false);
-	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_UNMAP) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_UNMAP) == true);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_RESET) == false);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_FLUSH) == false);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) == false);
@@ -339,7 +386,7 @@ test_supported_io(void)
 	g_comp_base_support_rw = true;
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_READ) == true);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE) == true);
-	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_UNMAP) == false);
+	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_UNMAP) == true);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_RESET) == false);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_FLUSH) == false);
 	CU_ASSERT(vbdev_compress_io_type_supported(&g_comp_bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) == false);

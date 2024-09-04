@@ -64,14 +64,14 @@ function run_bdevio() {
 
 function run_bdevperf() {
 	if [[ $test_type == "compdev" ]]; then
-		$rootdir/build/examples/bdevperf -z -q $1 -o $2 -w verify -t $3 -C -m 0x6 -c $rootdir/test/compress/dpdk.json &
+		$rootdir/build/examples/bdevperf -z -q $1 -o $2 -t $3 -w $4 -C -m 0x6 -c $rootdir/test/compress/dpdk.json &
 	else
-		$rootdir/build/examples/bdevperf -z -q $1 -o $2 -w verify -t $3 -C -m 0x6 &
+		$rootdir/build/examples/bdevperf -z -q $1 -o $2 -t $3 -w $4 -C -m 0x6 &
 	fi
 	bdevperf_pid=$!
 	trap 'killprocess $bdevperf_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
-	create_vols $4
+	create_vols $5
 	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests
 	destroy_vols
 	trap - SIGINT SIGTERM EXIT
@@ -83,10 +83,19 @@ test_type=$1
 
 # per patch bdevperf uses slightly different params than nightly
 # logical block size same as underlying device, then 512 then 4096
-run_bdevperf 32 4096 3
-run_bdevperf 32 4096 3 512
-run_bdevperf 32 4096 3 4096
+run_bdevperf 32 4096 3 "verify"
+run_bdevperf 32 4096 3 "verify" 512
+run_bdevperf 32 4096 3 "verify" 4096
 run_bdevio
+
+# unmap test. 16kb per chunk.
+# one/multi chunks aligned/unaligned unmap;
+run_bdevperf 32 $((8 * 1024)) 3 "unmap" 512
+run_bdevperf 32 $((16 * 1024)) 3 "unmap" 512
+run_bdevperf 32 $((32 * 1024)) 3 "unmap" 512
+run_bdevperf 32 $((20 * 1024)) 3 "unmap" 512
+run_bdevperf 32 $((40 * 1024)) 3 "unmap" 512
+run_bdevperf 32 $((40 * 1024)) 3 "unmap" 4096
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_bdevperf 64 16384 30
