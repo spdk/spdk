@@ -523,7 +523,6 @@ function vm_setup() {
 	local vm_migrate_to=""
 	local force_vm=""
 	local guest_memory=1024
-	local queue_number=""
 	local vhost_dir
 	local packed=false
 	vhost_dir="$(get_vhost_dir 0)"
@@ -540,7 +539,6 @@ function vm_setup() {
 					raw-cache=*) raw_cache=",cache${OPTARG#*=}" ;;
 					force=*) force_vm=${OPTARG#*=} ;;
 					memory=*) guest_memory=${OPTARG#*=} ;;
-					queue_num=*) queue_number=${OPTARG#*=} ;;
 					incoming=*) vm_incoming="${OPTARG#*=}" ;;
 					migrate-to=*) vm_migrate_to="${OPTARG#*=}" ;;
 					vhost-name=*) vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
@@ -644,28 +642,14 @@ function vm_setup() {
 	local gdbserver_socket=$((vm_socket_offset + 4))
 	local vnc_socket=$((100 + vm_num))
 	local qemu_pid_file="$vm_dir/qemu.pid"
-	local cpu_num=0
+	local cpu_list
+	local cpu_num=0 queue_number=0
 
-	set +x
-	# cpu list for taskset can be comma separated or range
-	# or both at the same time, so first split on commas
-	cpu_list=$(echo $task_mask | tr "," "\n")
-	queue_number=0
-	for c in $cpu_list; do
-		# if range is detected - count how many cpus
-		if [[ $c =~ [0-9]+-[0-9]+ ]]; then
-			val=$((c - 1))
-			val=${val#-}
-		else
-			val=1
-		fi
-		cpu_num=$((cpu_num + val))
-		queue_number=$((queue_number + val))
-	done
+	cpu_list=($(parse_cpu_list <(echo "$task_mask")))
+	cpu_num=${#cpu_list[@]} queue_number=$cpu_num
 
-	if [ -z $queue_number ]; then
-		queue_number=$cpu_num
-	fi
+	# Let's be paranoid about it
+	((cpu_num > 0 && queue_number > 0)) || return 1
 
 	# Normalize tcp ports to make sure they are available
 	ssh_socket=$(get_free_tcp_port "$ssh_socket")
