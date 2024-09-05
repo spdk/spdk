@@ -1628,7 +1628,6 @@ test_nvme_tcp_ctrlr_create_io_qpair(void)
 
 	ctrlr->trid.priority = 1;
 	ctrlr->trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	memset(ctrlr->opts.psk, 0, sizeof(ctrlr->opts.psk));
 	memcpy(ctrlr->trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
 	memcpy(ctrlr->trid.trsvcid, "23", sizeof("23"));
 	memcpy(ctrlr->opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));

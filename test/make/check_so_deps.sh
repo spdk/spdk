@@ -155,6 +155,12 @@ function confirm_abi_deps() {
 			soname_regexp = ^libspdk_nvme\\.so\\.13\\.*$
 			has_data_member_regexp = ^reserved66$
 			has_data_member_inserted_between = {528, end}
+		[suppress_type]
+			label = Removed spdk_nvme_ctrlr_opts.psk field
+			name = spdk_nvme_ctrlr_opts
+			soname_regexp = ^libspdk_nvme\\.so\\.13\\.*$
+			has_data_member_regexp = ^psk$
+			has_data_member_inserted_between = {4936, 6536}
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

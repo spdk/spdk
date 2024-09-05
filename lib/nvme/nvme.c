@@ -1009,7 +1009,6 @@ nvme_ctrlr_opts_init(struct spdk_nvme_ctrlr_opts *opts,
 	SET_FIELD(fabrics_connect_timeout_us);
 	SET_FIELD(disable_read_ana_log_page);
 	SET_FIELD(disable_read_changed_ns_list_log_page);
-	SET_FIELD_ARRAY(psk);
 	SET_FIELD(tls_psk);
 	SET_FIELD(dhchap_key);
 	SET_FIELD(dhchap_ctrlr_key);

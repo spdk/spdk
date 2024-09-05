@@ -6303,45 +6303,6 @@ bdev_nvme_check_io_error_resiliency_params(int32_t ctrlr_loss_timeout_sec,
 	return true;
 }
 
-static int
-bdev_nvme_load_psk(const char *fname, char *buf, size_t bufsz)
-{
-	FILE *psk_file;
-	struct stat statbuf;
-	int rc;
-#define TCP_PSK_INVALID_PERMISSIONS 0177
-
-	if (stat(fname, &statbuf) != 0) {
-		SPDK_ERRLOG("Could not read permissions for PSK file\n");
-		return -EACCES;
-	}
-
-	if ((statbuf.st_mode & TCP_PSK_INVALID_PERMISSIONS) != 0) {
-		SPDK_ERRLOG("Incorrect permissions for PSK file\n");
-		return -EPERM;
-	}
-	if ((size_t)statbuf.st_size >= bufsz) {
-		SPDK_ERRLOG("Invalid PSK: too long\n");
-		return -EINVAL;
-	}
-	psk_file = fopen(fname, "r");
-	if (psk_file == NULL) {
-		SPDK_ERRLOG("Could not open PSK file\n");
-		return -EINVAL;
-	}
-
-	memset(buf, 0, bufsz);
-	rc = fread(buf, 1, statbuf.st_size, psk_file);
-	if (rc != statbuf.st_size) {
-		SPDK_ERRLOG("Failed to read PSK\n");
-		fclose(psk_file);
-		return -EINVAL;
-	}
-
-	fclose(psk_file);
-	return 0;
-}
-
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,
@@ -6356,7 +6317,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_probe_skip_entry *entry, *tmp;
 	struct nvme_async_probe_ctx *ctx;
 	spdk_nvme_attach_cb attach_cb;
-	int rc, len;
+	int len;
 
 	/* TODO expand this check to include both the host and target TRIDs.
 	 * Only if both are the same should we fail.
@@ -6415,17 +6376,12 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->drv_opts.disable_read_ana_log_page = true;
 	ctx->drv_opts.transport_tos = g_opts.transport_tos;
 
-	if (ctx->bdev_opts.psk[0] != '\0') {
-		/* Try to use the keyring first */
+	if (ctx->bdev_opts.psk != NULL) {
 		ctx->drv_opts.tls_psk = spdk_keyring_get_key(ctx->bdev_opts.psk);
 		if (ctx->drv_opts.tls_psk == NULL) {
-			rc = bdev_nvme_load_psk(ctx->bdev_opts.psk,
-						ctx->drv_opts.psk, sizeof(ctx->drv_opts.psk));
-			if (rc != 0) {
-				SPDK_ERRLOG("Could not load PSK from %s\n", ctx->bdev_opts.psk);
-				free_nvme_async_probe_ctx(ctx);
-				return rc;
-			}
+			SPDK_ERRLOG("Could not load PSK: %s\n", ctx->bdev_opts.psk);
+			free_nvme_async_probe_ctx(ctx);
+			return -ENOKEY;
 		}
 	}
 
@@ -8644,8 +8600,6 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 				     nvme_ctrlr->opts.fast_io_fail_timeout_sec);
 	if (nvme_ctrlr->psk != NULL) {
 		spdk_json_write_named_string(w, "psk", spdk_key_get_name(nvme_ctrlr->psk));
-	} else if (nvme_ctrlr->opts.psk[0] != '\0') {
-		spdk_json_write_named_string(w, "psk", nvme_ctrlr->opts.psk);
 	}
 
 	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);

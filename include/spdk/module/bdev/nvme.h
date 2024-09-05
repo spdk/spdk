@@ -34,8 +34,7 @@ struct spdk_bdev_nvme_ctrlr_opts {
 	uint32_t reconnect_delay_sec;
 	uint32_t fast_io_fail_timeout_sec;
 	bool from_discovery_service;
-	/* Name of the PSK or path to the file containing PSK. */
-	char psk[PATH_MAX];
+	const char *psk;
 	const char *dhchap_key;
 	const char *dhchap_ctrlr_key;
 

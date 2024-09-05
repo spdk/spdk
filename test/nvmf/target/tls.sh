@@ -20,7 +20,7 @@ cleanup() {
 
 function run_bdevperf() {
 	local subnqn hostnqn psk
-	subnqn=$1 hostnqn=$2 psk=${3:+--psk $3}
+	subnqn=$1 hostnqn=$2 psk=$3
 
 	bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 	# use bdevperf to test "bdev_nvme_attach_controller"
@@ -30,9 +30,10 @@ function run_bdevperf() {
 	trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
+	$rpc_py -s $bdevperf_rpc_sock keyring_file_add_key key0 "$psk"
 	# send RPC
 	if ! $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT \
-		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n "$subnqn" -q "$hostnqn" $psk; then
+		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n "$subnqn" -q "$hostnqn" --psk key0; then
 		killprocess $bdevperf_pid
 		return 1
 	fi
@@ -189,9 +190,10 @@ bdevperf_pid=$!
 
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+$rpc_py -s $bdevperf_rpc_sock keyring_file_add_key key0 "$key_long_path"
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT \
 	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 \
-	-q nqn.2016-06.io.spdk:host1 --psk $key_long_path
+	-q nqn.2016-06.io.spdk:host1 --psk key0
 
 tgtconf=$($rpc_py save_config)
 bdevperfconf=$($rpc_py -s $bdevperf_rpc_sock save_config)

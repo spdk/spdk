@@ -270,14 +270,8 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	uint8_t disable_read_changed_ns_list_log_page;
 
-	/**
-	 * Set PSK and enable SSL socket implementation for NVMe/TCP only.
-	 *
-	 * If empty, a default socket implementation will be used.
-	 * The TLS PSK interchange format is: NVMeTLSkey-1:xx:[Base64 encoded string]:
-	 * 12B (header) + 2B (hash) + 176B (base64 for 1024b + crc32) + 3B (colons) + 1B (NULL) + 6B (extra space for future)
-	 */
-	char psk[200];
+	/* Hole at bytes 617-816. */
+	uint8_t reserved617[200];
 
 	/**
 	 * It is used for RDMA transport.

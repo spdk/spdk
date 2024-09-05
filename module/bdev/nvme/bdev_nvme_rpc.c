@@ -258,7 +258,6 @@ free_rpc_bdev_nvme_attach_controller(struct rpc_bdev_nvme_attach_controller *req
 	free(req->psk);
 	free(req->dhchap_key);
 	free(req->dhchap_ctrlr_key);
-	spdk_memset_s(req->drv_opts.psk, sizeof(req->drv_opts.psk), 0, sizeof(req->drv_opts.psk));
 }
 
 static int
@@ -518,13 +517,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			SPDK_NOTICELOG("TLS support is considered experimental\n");
 			g_tls_log = true;
 		}
-
-		rc = snprintf(ctx->req.bdev_opts.psk, sizeof(ctx->req.bdev_opts.psk), "%s", ctx->req.psk);
-		if (rc < 0 || (size_t)rc >= sizeof(ctx->req.bdev_opts.psk)) {
-			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Could not store PSK: %s",
-							     ctx->req.psk);
-			goto cleanup;
-		}
 	}
 
 	if (ctx->req.hostaddr) {
@@ -621,6 +613,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	/* Should already be zero due to the calloc(), but set explicitly for clarity. */
 	ctx->req.bdev_opts.from_discovery_service = false;
+	ctx->req.bdev_opts.psk = ctx->req.psk;
 	ctx->req.bdev_opts.dhchap_key = ctx->req.dhchap_key;
 	ctx->req.bdev_opts.dhchap_ctrlr_key = ctx->req.dhchap_ctrlr_key;
 	ctx->req.bdev_opts.multipath = multipath;

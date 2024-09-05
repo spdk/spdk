@@ -19,14 +19,6 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### nvme
-
-#### `spdk_nvme_ctrlr_opts.psk`
-
-Passing NVMe/TLS pre-shared keys via `spdk_nvme_ctrlr_opts.psk` is deprecated and this field will be
-removed in the v24.09 release.  Instead, a key obtained from the keyring library should be passed
-in `spdk_nvme_ctrlr_opts.tls_psk`.
-
 ### gpt
 
 #### `old_gpt_guid`
