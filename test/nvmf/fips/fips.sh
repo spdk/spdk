@@ -135,7 +135,7 @@ trap 'cleanup' EXIT
 
 # Key taken from NVM Express TCP Transport Specification 1.0c.
 key="NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:"
-key_path="$testdir/key.txt"
+key_path="$(mktemp -t "spdk-psk.XXX")"
 echo -n "$key" > $key_path
 chmod 0600 $key_path
 
