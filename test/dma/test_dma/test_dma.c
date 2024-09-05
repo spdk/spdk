@@ -44,7 +44,6 @@ struct dma_test_task {
 	struct dma_test_task_stats stats;
 	struct dma_test_task_stats last_stats;
 	bool is_draining;
-	bool is_random;
 	struct dma_test_req *reqs;
 	struct spdk_thread *thread;
 	const char *bdev_name;
@@ -240,7 +239,7 @@ dma_test_get_offset_in_ios(struct dma_test_task *task)
 {
 	uint64_t offset;
 
-	if (task->is_random) {
+	if (g_is_random) {
 		offset = rand_r(&task->seed) % task->max_offset_in_ios;
 	} else {
 		offset = task->cur_io_offset++;
@@ -680,7 +679,6 @@ allocate_task(uint32_t core, const char *bdev_name)
 	task->seed = core;
 	task->lcore = core;
 	task->bdev_name = bdev_name;
-	task->is_random = g_is_random;
 	task->rw_percentage = g_rw_percentage;
 	task->num_blocks_per_io = g_num_blocks_per_io;
 	task->stats.min_tsc = UINT64_MAX;
