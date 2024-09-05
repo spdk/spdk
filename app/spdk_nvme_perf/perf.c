@@ -25,6 +25,8 @@
 #include "spdk/sock.h"
 #include "spdk/zipf.h"
 #include "spdk/nvmf.h"
+#include "spdk/keyring.h"
+#include "spdk/module/keyring/file.h"
 
 #ifdef SPDK_CONFIG_URING
 #include <liburing.h>
@@ -267,7 +269,7 @@ static char *g_sock_threshold_impl;
 static uint8_t g_transport_tos = 0;
 
 static uint32_t g_rdma_srq_size;
-uint8_t *g_psk = NULL;
+static struct spdk_key *g_psk = NULL;
 
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
@@ -343,30 +345,6 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 		sock_opts.tls_version = val;
 	} else if (strcmp(field, "ktls") == 0) {
 		sock_opts.enable_ktls = val;
-	} else if (strcmp(field, "psk_path") == 0) {
-		if (!valstr) {
-			fprintf(stderr, "No socket opts value specified\n");
-			return;
-		}
-		g_psk = calloc(1, SPDK_TLS_PSK_MAX_LEN + 1);
-		if (g_psk == NULL) {
-			fprintf(stderr, "Failed to allocate memory for psk\n");
-			return;
-		}
-		FILE *psk_file = fopen(valstr, "r");
-		if (psk_file == NULL) {
-			fprintf(stderr, "Could not open PSK file\n");
-			return;
-		}
-		if (fscanf(psk_file, "%" SPDK_STRINGIFY(SPDK_TLS_PSK_MAX_LEN) "s", g_psk) != 1) {
-			fprintf(stderr, "Could not retrieve PSK from file\n");
-			fclose(psk_file);
-			return;
-		}
-		if (fclose(psk_file)) {
-			fprintf(stderr, "Failed to close PSK file\n");
-			return;
-		}
 	} else if (strcmp(field, "zerocopy_threshold") == 0) {
 		sock_opts.zerocopy_threshold = val;
 	} else {
@@ -2412,6 +2390,37 @@ parse_metadata(const char *metacfg_str)
 	return 0;
 }
 
+static void
+free_key(struct spdk_key **key)
+{
+	if (*key == NULL) {
+		return;
+	}
+
+	spdk_keyring_put_key(*key);
+	spdk_keyring_file_remove_key(spdk_key_get_name(*key));
+	*key = NULL;
+}
+
+static struct spdk_key *
+alloc_key(const char *name, const char *path)
+{
+	struct spdk_key *key;
+	int rc;
+
+	rc = spdk_keyring_file_add_key(name, path);
+	if (rc != 0) {
+		return NULL;
+	}
+
+	key = spdk_keyring_get_key(name);
+	if (key == NULL) {
+		return NULL;
+	}
+
+	return key;
+}
+
 #define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
@@ -2740,7 +2749,12 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_PSK_PATH:
 			ssl_used = true;
-			perf_set_sock_opts("ssl", "psk_path", 0, optarg);
+			free_key(&g_psk);
+			g_psk = alloc_key("perf-psk", optarg);
+			if (g_psk == NULL) {
+				fprintf(stderr, "Unable to set PSK at %s\n", optarg);
+				return 1;
+			}
 			break;
 		case PERF_PSK_IDENTITY:
 			ssl_used = true;
@@ -2981,15 +2995,12 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->header_digest = g_header_digest;
 	opts->data_digest = g_data_digest;
 	opts->keep_alive_timeout_ms = g_keep_alive_timeout_in_ms;
+	opts->tls_psk = g_psk;
 	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
 
 	opts->transport_tos = g_transport_tos;
 	if (opts->num_io_queues < g_num_workers * g_nr_io_queues_per_ns) {
 		opts->num_io_queues = g_num_workers * g_nr_io_queues_per_ns;
-	}
-
-	if (g_psk != NULL) {
-		memcpy(opts->psk, g_psk, strlen(g_psk));
 	}
 
 	return true;
@@ -3236,7 +3247,7 @@ main(int argc, char **argv)
 	opts.pci_allowed = g_allowed_pci_addr;
 	rc = parse_args(argc, argv, &opts);
 	if (rc != 0 || rc == HELP_RETURN_CODE) {
-		free(g_psk);
+		free_key(&g_psk);
 		if (rc == HELP_RETURN_CODE) {
 			return 0;
 		}
@@ -3248,14 +3259,24 @@ main(int argc, char **argv)
 	rc = pthread_mutex_init(&g_stats_mutex, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "Failed to init mutex\n");
-		free(g_psk);
+		free_key(&g_psk);
 		return -1;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		unregister_trids();
 		pthread_mutex_destroy(&g_stats_mutex);
-		free(g_psk);
+		free_key(&g_psk);
+		return -1;
+	}
+
+	rc = spdk_keyring_init();
+	if (rc != 0) {
+		fprintf(stderr, "Unable to initialize keyring: %s\n", spdk_strerror(-rc));
+		unregister_trids();
+		pthread_mutex_destroy(&g_stats_mutex);
+		free_key(&g_psk);
+		spdk_env_fini();
 		return -1;
 	}
 
@@ -3364,9 +3385,9 @@ cleanup:
 	unregister_controllers();
 	unregister_workers();
 
+	free_key(&g_psk);
+	spdk_keyring_cleanup();
 	spdk_env_fini();
-
-	free(g_psk);
 
 	pthread_mutex_destroy(&g_stats_mutex);
 

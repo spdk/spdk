@@ -12,7 +12,7 @@ APP = spdk_nvme_perf
 
 C_SRCS := perf.c
 
-SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme vmd
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme vmd keyring_file
 
 ifeq ($(OS),Linux)
 SYS_LIBS += -laio
