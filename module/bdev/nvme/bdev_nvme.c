@@ -3546,33 +3546,6 @@ bdev_nvme_get_accel_channel(struct nvme_poll_group *group)
 }
 
 static void
-bdev_nvme_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
-			      uint32_t iov_cnt, uint32_t seed,
-			      spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct spdk_io_channel *accel_ch;
-	struct nvme_poll_group *group = ctx;
-	int rc;
-
-	assert(cb_fn != NULL);
-
-	accel_ch = bdev_nvme_get_accel_channel(group);
-	if (spdk_unlikely(accel_ch == NULL)) {
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
-
-	rc = spdk_accel_submit_crc32cv(accel_ch, dst, iov, iov_cnt, seed, cb_fn, cb_arg);
-	if (rc) {
-		/* For the two cases, spdk_accel_submit_crc32cv does not call the user's cb_fn */
-		if (rc == -ENOMEM || rc == -EINVAL) {
-			cb_fn(cb_arg, rc);
-		}
-		SPDK_ERRLOG("Cannot complete the accelerated crc32c operation with iov=%p\n", iov);
-	}
-}
-
-static void
 bdev_nvme_finish_sequence(void *seq, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
 {
 	spdk_accel_sequence_finish(seq, cb_fn, cb_arg);
@@ -3609,7 +3582,6 @@ bdev_nvme_append_crc32c(void *ctx, void **seq, uint32_t *dst, struct iovec *iovs
 
 static struct spdk_nvme_accel_fn_table g_bdev_nvme_accel_fn_table = {
 	.table_size		= sizeof(struct spdk_nvme_accel_fn_table),
-	.submit_accel_crc32c	= bdev_nvme_submit_accel_crc32c,
 	.append_crc32c		= bdev_nvme_append_crc32c,
 	.finish_sequence	= bdev_nvme_finish_sequence,
 	.reverse_sequence	= bdev_nvme_reverse_sequence,
