@@ -836,12 +836,41 @@ nbd_poll(void *arg)
 	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
 }
 
+struct spdk_nbd_start_ctx {
+	struct spdk_nbd_disk	*nbd;
+	spdk_nbd_start_cb	cb_fn;
+	void			*cb_arg;
+	struct spdk_thread	*thread;
+};
+
+static void
+nbd_start_complete(void *arg)
+{
+	struct spdk_nbd_start_ctx *ctx = arg;
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
+	}
+
+	/* nbd will possibly receive stop command while initing */
+	ctx->nbd->is_started = true;
+
+	free(ctx);
+}
+
 static void *
 nbd_start_kernel(void *arg)
 {
-	struct spdk_nbd_disk *nbd = arg;
+	struct spdk_nbd_start_ctx *ctx = arg;
+	struct spdk_nbd_disk *nbd = ctx->nbd;
 
 	spdk_unaffinitize_thread();
+
+	/* Send a message to complete the start context - this is the
+	 * latest point we can do it, since the NBD_DO_IT ioctl will
+	 * block in the kernel.
+	 */
+	spdk_thread_send_msg(ctx->thread, nbd_start_complete, ctx);
 
 	/* This will block in the kernel until we close the spdk_sp_fd. */
 	ioctl(nbd->dev_fd, NBD_DO_IT);
@@ -879,12 +908,6 @@ nbd_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	}
 }
 
-struct spdk_nbd_start_ctx {
-	struct spdk_nbd_disk	*nbd;
-	spdk_nbd_start_cb	cb_fn;
-	void			*cb_arg;
-};
-
 static void
 nbd_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
 {
@@ -894,7 +917,7 @@ nbd_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool int
 }
 
 static void
-nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
+nbd_start_continue(struct spdk_nbd_start_ctx *ctx)
 {
 	int		rc;
 	pthread_t	tid;
@@ -946,7 +969,7 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	}
 
 	ctx->nbd->has_nbd_pthread = true;
-	rc = pthread_create(&tid, NULL, nbd_start_kernel, ctx->nbd);
+	rc = pthread_create(&tid, NULL, nbd_start_kernel, ctx);
 	if (rc != 0) {
 		ctx->nbd->has_nbd_pthread = false;
 		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
@@ -967,15 +990,6 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 
 	ctx->nbd->nbd_poller = SPDK_POLLER_REGISTER(nbd_poll, ctx->nbd, 0);
 	spdk_poller_register_interrupt(ctx->nbd->nbd_poller, nbd_poller_set_interrupt_mode, ctx->nbd);
-
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
-	}
-
-	/* nbd will possibly receive stop command while initing */
-	ctx->nbd->is_started = true;
-
-	free(ctx);
 	return;
 
 err:
@@ -1030,7 +1044,7 @@ nbd_enable_kernel(void *arg)
 		spdk_poller_unregister(&ctx->nbd->retry_poller);
 	}
 
-	nbd_start_complete(ctx);
+	nbd_start_continue(ctx);
 
 	return SPDK_POLLER_BUSY;
 }
@@ -1064,6 +1078,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	ctx->nbd = nbd;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->thread = spdk_get_thread();
 
 	rc = spdk_bdev_open_ext(bdev_name, true, nbd_bdev_event_cb, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
