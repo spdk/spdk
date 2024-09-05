@@ -2,20 +2,24 @@
  * Copyright (c) 2024 Intel Corporation. All rights reserved.
  */
 
-#include "keyring_file.h"
 #include "spdk/json.h"
-#include "spdk/keyring_module.h"
+#include "spdk/module/keyring/file.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-static const struct spdk_json_object_decoder keyring_file_key_opts_decoders[] = {
-	{"name", offsetof(struct keyring_file_key_opts, name), spdk_json_decode_string},
-	{"path", offsetof(struct keyring_file_key_opts, path), spdk_json_decode_string},
+struct rpc_keyring_file_add_key {
+	char *name;
+	char *path;
+};
+
+static const struct spdk_json_object_decoder rpc_keyring_file_add_key_decoders[] = {
+	{"name", offsetof(struct rpc_keyring_file_add_key, name), spdk_json_decode_string},
+	{"path", offsetof(struct rpc_keyring_file_add_key, path), spdk_json_decode_string},
 };
 
 static void
-free_keyring_file_key_opts(struct keyring_file_key_opts *opts)
+free_rpc_keyring_file_add_key(struct rpc_keyring_file_add_key *opts)
 {
 	free(opts->name);
 	free(opts->path);
@@ -25,23 +29,18 @@ static void
 rpc_keyring_file_add_key(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct spdk_key_opts opts = {};
-	struct keyring_file_key_opts kopts = {};
+	struct rpc_keyring_file_add_key opts = {};
 	int rc;
 
-	if (spdk_json_decode_object_relaxed(params, keyring_file_key_opts_decoders,
-					    SPDK_COUNTOF(keyring_file_key_opts_decoders),
-					    &kopts)) {
+	if (spdk_json_decode_object_relaxed(params, rpc_keyring_file_add_key_decoders,
+					    SPDK_COUNTOF(rpc_keyring_file_add_key_decoders),
+					    &opts)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 spdk_strerror(EINVAL));
 		return;
 	}
 
-	opts.size = SPDK_SIZEOF(&opts, ctx);
-	opts.name = kopts.name;
-	opts.module = &g_keyring_file;
-	opts.ctx = &kopts;
-	rc = spdk_keyring_add_key(&opts);
+	rc = spdk_keyring_file_add_key(opts.name, opts.path);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto out;
@@ -49,7 +48,7 @@ rpc_keyring_file_add_key(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_send_bool_response(request, true);
 out:
-	free_keyring_file_key_opts(&kopts);
+	free_rpc_keyring_file_add_key(&opts);
 }
 SPDK_RPC_REGISTER("keyring_file_add_key", rpc_keyring_file_add_key, SPDK_RPC_RUNTIME)
 
@@ -72,6 +71,7 @@ rpc_keyring_file_remove_key(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_keyring_file_remove_key req = {};
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_keyring_file_remove_key_decoders,
 				    SPDK_COUNTOF(rpc_keyring_file_remove_key_decoders),
@@ -81,8 +81,14 @@ rpc_keyring_file_remove_key(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_keyring_remove_key(req.name, &g_keyring_file);
+	rc = spdk_keyring_file_remove_key(req.name);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto out;
+	}
+
 	spdk_jsonrpc_send_bool_response(request, true);
+out:
 	free_rpc_keyring_file_remove_key(&req);
 }
 SPDK_RPC_REGISTER("keyring_file_remove_key", rpc_keyring_file_remove_key, SPDK_RPC_RUNTIME)

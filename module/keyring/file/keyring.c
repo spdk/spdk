@@ -2,8 +2,8 @@
  * Copyright (c) 2024 Intel Corporation. All rights reserved.
  */
 
-#include "keyring_file.h"
 #include "spdk/keyring_module.h"
+#include "spdk/module/keyring/file.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
@@ -11,6 +11,8 @@
 struct keyring_file_key {
 	char *path;
 };
+
+static struct spdk_keyring_module g_keyring_file;
 
 static int
 keyring_file_check_path(const char *path, int *size)
@@ -130,16 +132,16 @@ keyring_file_remove_key(struct spdk_key *key)
 static int
 keyring_file_add_key(struct spdk_key *key, void *ctx)
 {
-	struct keyring_file_key_opts *opts = ctx;
 	struct keyring_file_key *kkey = spdk_key_get_ctx(key);
+	const char *path = ctx;
 	int rc;
 
-	rc = keyring_file_check_path(opts->path, NULL);
+	rc = keyring_file_check_path(path, NULL);
 	if (rc != 0) {
 		return rc;
 	}
 
-	kkey->path = strdup(opts->path);
+	kkey->path = strdup(path);
 	if (kkey->path == NULL) {
 		return -ENOMEM;
 	}
@@ -147,7 +149,26 @@ keyring_file_add_key(struct spdk_key *key, void *ctx)
 	return 0;
 }
 
-struct spdk_keyring_module g_keyring_file = {
+int
+spdk_keyring_file_add_key(const char *name, const char *path)
+{
+	struct spdk_key_opts opts = {};
+
+	opts.size = SPDK_SIZEOF(&opts, ctx);
+	opts.name = name;
+	opts.module = &g_keyring_file;
+	opts.ctx = (void *)path;
+
+	return spdk_keyring_add_key(&opts);
+}
+
+int
+spdk_keyring_file_remove_key(const char *name)
+{
+	return spdk_keyring_remove_key(name, &g_keyring_file);
+}
+
+static struct spdk_keyring_module g_keyring_file = {
 	.name = "keyring_file",
 	.add_key = keyring_file_add_key,
 	.remove_key = keyring_file_remove_key,
