@@ -801,8 +801,8 @@ spdk_fio_iomem_alloc(struct thread_data *td, size_t total_mem)
 		tmp_numa_id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
 		if (numa_id == SPDK_ENV_NUMA_ID_ANY) {
 			numa_id = tmp_numa_id;
-		} else if (tmp_numa_id != numa_id ||
-			   tmp_numa_id == SPDK_ENV_NUMA_ID_ANY) {
+		} else if (tmp_numa_id != numa_id &&
+			   tmp_numa_id != SPDK_ENV_NUMA_ID_ANY) {
 			numa_id = SPDK_ENV_NUMA_ID_ANY;
 			break;
 		}
