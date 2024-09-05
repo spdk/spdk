@@ -44,6 +44,9 @@ struct spdk_bdev_nvme_ctrlr_opts {
 	 * These will only support NVMe passthrough.
 	 */
 	bool allow_unrecognized_csi;
+
+	/* Set to true if multipath enabled */
+	bool multipath;
 };
 
 /**

@@ -623,6 +623,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->req.bdev_opts.from_discovery_service = false;
 	ctx->req.bdev_opts.dhchap_key = ctx->req.dhchap_key;
 	ctx->req.bdev_opts.dhchap_ctrlr_key = ctx->req.dhchap_ctrlr_key;
+	ctx->req.bdev_opts.multipath = multipath;
 	rc = spdk_bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
 				   rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
 				   &ctx->req.bdev_opts, multipath);

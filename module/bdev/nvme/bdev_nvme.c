@@ -5761,6 +5761,7 @@ spdk_bdev_nvme_get_default_ctrlr_opts(struct spdk_bdev_nvme_ctrlr_opts *opts)
 	opts->ctrlr_loss_timeout_sec = g_opts.ctrlr_loss_timeout_sec;
 	opts->reconnect_delay_sec = g_opts.reconnect_delay_sec;
 	opts->fast_io_fail_timeout_sec = g_opts.fast_io_fail_timeout_sec;
+	opts->multipath = false;
 }
 
 static void
@@ -8658,6 +8659,9 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "hostsvcid", opts->src_svcid);
 	}
 
+	if (nvme_ctrlr->opts.multipath) {
+		spdk_json_write_named_string(w, "multipath", "multipath");
+	}
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
