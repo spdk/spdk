@@ -369,7 +369,7 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 	}
 
-	nvme_tcp_qpair_abort_reqs(qpair, 0);
+	nvme_tcp_qpair_abort_reqs(qpair, qpair->abort_dnr);
 
 	/* If the qpair is marked as asynchronous, let it go through the process_completions() to
 	 * let any outstanding requests (e.g. those with outstanding accel operations) complete.
@@ -390,7 +390,7 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
 	assert(qpair != NULL);
-	nvme_tcp_qpair_abort_reqs(qpair, 0);
+	nvme_tcp_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
 
 	nvme_qpair_deinit(qpair);
