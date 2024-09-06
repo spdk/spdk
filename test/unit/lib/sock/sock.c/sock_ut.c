@@ -1398,6 +1398,122 @@ posix_get_interface_name(void)
 	CU_ASSERT(rc == 0);
 }
 
+static int
+ut_recv_next(struct spdk_sock *sock, void **buf, struct spdk_sock_buf_token **token)
+{
+	return 0;
+}
+
+static int
+ut_release_buf(struct spdk_sock_group_impl *group, void *buf,
+	       struct spdk_sock_buf_token *token)
+{
+	return 0;
+}
+
+static void
+sock_impl_supports_recv_next(void)
+{
+	struct spdk_net_impl impl = {.name = "ut_recv_next"};
+	struct spdk_net_impl *saved_default = g_default_impl;
+
+	spdk_net_impl_register(&impl);
+	g_default_impl = &impl;
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(impl.name));
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(NULL));
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next("unknown_impl"));
+
+	impl.recv_next = ut_recv_next;
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(impl.name));
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(NULL));
+
+	impl.group_impl_release_buf = ut_release_buf;
+	CU_ASSERT(spdk_sock_impl_supports_recv_next(impl.name));
+	CU_ASSERT(spdk_sock_impl_supports_recv_next(NULL));
+
+	impl.recv_next = NULL;
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(impl.name));
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(NULL));
+
+	g_default_impl = NULL;
+	CU_ASSERT(!spdk_sock_impl_supports_recv_next(NULL));
+	g_default_impl = saved_default;
+	STAILQ_REMOVE(&g_net_impls, &impl, spdk_net_impl, link);
+}
+
+static int
+ut_owned_buf_release(struct spdk_sock_group_impl *group, void *buf,
+		     struct spdk_sock_buf_token *token)
+{
+	int *calls = buf;
+
+	CU_ASSERT(group == token->group_impl);
+	(*calls)++;
+	return 0;
+}
+
+static int
+ut_other_buf_release(struct spdk_sock_group_impl *group, void *buf,
+		     struct spdk_sock_buf_token *token)
+{
+	CU_FAIL("Buffer dispatched to the wrong implementation");
+	return -EIO;
+}
+
+static int
+ut_owned_buf_sock_close(struct spdk_sock_group_impl *group, struct spdk_sock *sock)
+{
+	free(sock);
+	return 0;
+}
+
+static void
+sock_group_release_owned_buf(void)
+{
+	struct spdk_sock_group group = {}, wrong_group = {};
+	struct spdk_net_impl owner_impl = {
+		.group_impl_release_buf = ut_owned_buf_release,
+		.close = ut_owned_buf_sock_close,
+	};
+	struct spdk_net_impl other_impl = {.group_impl_release_buf = ut_other_buf_release};
+	struct spdk_sock_group_impl owner = {.group = &group, .net_impl = &owner_impl};
+	struct spdk_sock_group_impl other = {.group = &group, .net_impl = &other_impl};
+	struct spdk_sock_buf_token token = {.group_impl = &owner};
+	struct spdk_sock_buf_token invalid_token = {};
+	struct spdk_sock *sock;
+	int calls = 0;
+
+	STAILQ_INIT(&group.group_impls);
+	STAILQ_INSERT_TAIL(&group.group_impls, &other, link);
+	STAILQ_INSERT_TAIL(&group.group_impls, &owner, link);
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(&group, &calls, &token), 0);
+	CU_ASSERT_EQUAL(calls, 1);
+
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(&wrong_group, &calls, &token), -EINVAL);
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(NULL, &calls, &token), -EINVAL);
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(&group, &calls, NULL), -EINVAL);
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(&group, &calls, &invalid_token), -EINVAL);
+	CU_ASSERT_EQUAL(calls, 1);
+
+	sock = calloc(1, sizeof(*sock));
+	SPDK_CU_ASSERT_FATAL(sock != NULL);
+	sock->net_impl = &owner_impl;
+	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
+	TAILQ_INIT(&owner.socks);
+	sock_group_impl_add_sock(&owner, sock);
+	CU_ASSERT_EQUAL(spdk_sock_close(&sock), 0);
+	CU_ASSERT(sock == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&owner.socks));
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(&group, &calls, &token), 0);
+	CU_ASSERT_EQUAL(calls, 2);
+
+	STAILQ_REMOVE(&group.group_impls, &other, spdk_sock_group_impl, link);
+	STAILQ_INSERT_TAIL(&group.group_impls, &other, link);
+	CU_ASSERT_EQUAL(spdk_sock_group_release_buf(&group, &calls, &token), 0);
+	CU_ASSERT_EQUAL(calls, 3);
+}
+
 struct ut_async_write_ctx {
 	int legacy_calls;
 	int ext_calls;
@@ -1513,6 +1629,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_sock_group_get_ctx);
 	CU_ADD_TEST(suite, posix_get_interface_name);
 	CU_ADD_TEST(suite, sock_writev_async_dispatch);
+	CU_ADD_TEST(suite, sock_impl_supports_recv_next);
+	CU_ADD_TEST(suite, sock_group_release_owned_buf);
 
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);

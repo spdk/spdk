@@ -541,6 +541,57 @@ void spdk_sock_writev_async_ext(struct spdk_sock *sock, struct spdk_sock_request
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
+struct spdk_sock_buf_token;
+
+/**
+ * Receive the next portion of the stream from the socket.
+ *
+ * Callers must first check support using spdk_sock_impl_supports_recv_next(),
+ * or select a socket implementation known to support this operation.
+ *
+ * The buffer pointed to by `buf` must later be returned by calling
+ * `spdk_sock_group_release_buf()`.
+ *
+ * Note that the amount of data in buf is determined entirely by
+ * the sock layer. You cannot request to receive only a limited
+ * amount here. You simply get whatever the next portion of the stream
+ * is, as determined by the sock module.
+ *
+ * \param sock Socket to receive from.
+ * \param buf Populated with the next portion of the stream
+ * \param token Populated with the token for the buffer
+ *
+ * \return On success, the length of the buffer placed into buf. Zero means no buffer is
+ * available now. On failure, returns a negative errno value.
+ */
+int spdk_sock_recv_next(struct spdk_sock *sock, void **buf, struct spdk_sock_buf_token **token);
+
+/**
+ * Check whether a socket implementation supports spdk_sock_recv_next().
+ *
+ * \param impl_name The socket implementation to check, or NULL for the current default.
+ *
+ * \return true if the implementation supports spdk_sock_recv_next().
+ */
+bool spdk_sock_impl_supports_recv_next(const char *impl_name);
+
+/**
+ * Release a buffer obtained via spdk_sock_recv_next() back to the receive pool of the
+ * group that owns it, identified by the group rather than the socket it was received on.
+ *
+ * The buffer pool is owned by the group, not the socket, so buffers can be released after
+ * their socket has been closed (e.g. during qpair teardown).
+ * The group must remain open until all of its buffers have been released.
+ *
+ * \param group Socket group that owns the buffer pool.
+ * \param buf Pointer to the buffer.
+ * \param token Token for the buffer.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_sock_group_release_buf(struct spdk_sock_group *group, void *buf,
+				struct spdk_sock_buf_token *token);
+
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *

@@ -8,6 +8,7 @@
 
 #include "spdk/sock.h"
 #include "spdk_internal/sock_module.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
@@ -854,6 +855,52 @@ spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->readv(sock, iov, iovcnt);
 }
 
+int
+spdk_sock_recv_next(struct spdk_sock *sock, void **buf, struct spdk_sock_buf_token **token)
+{
+	if (sock == NULL || sock->flags.closed) {
+		return -EBADF;
+	}
+
+	assert(sock->net_impl->recv_next != NULL);
+
+	return sock->net_impl->recv_next(sock, buf, token);
+}
+
+bool
+spdk_sock_impl_supports_recv_next(const char *impl_name)
+{
+	struct spdk_net_impl *impl;
+
+	if (impl_name == NULL) {
+		impl = g_default_impl;
+	} else {
+		impl = spdk_net_impl_get_by_name(impl_name);
+	}
+
+	return impl != NULL && impl->recv_next != NULL &&
+	       impl->group_impl_release_buf != NULL;
+}
+
+int
+spdk_sock_group_release_buf(struct spdk_sock_group *group, void *buf,
+			    struct spdk_sock_buf_token *token)
+{
+	struct spdk_sock_group_impl *group_impl;
+
+	if (group == NULL || token == NULL) {
+		return -EINVAL;
+	}
+
+	group_impl = token->group_impl;
+	if (group_impl == NULL || group_impl->group != group) {
+		return -EINVAL;
+	}
+
+	assert(group_impl->net_impl->group_impl_release_buf != NULL);
+	return group_impl->net_impl->group_impl_release_buf(group_impl, buf, token);
+}
+
 ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
@@ -1172,6 +1219,7 @@ spdk_sock_group_close(struct spdk_sock_group **_group)
 			}
 		}
 
+		STAILQ_REMOVE_HEAD(&group->group_impls, link);
 		rc = group_impl->net_impl->group_impl_close(group_impl);
 		if (rc != 0) {
 			SPDK_ERRLOG("group_impl_close for net failed\n");

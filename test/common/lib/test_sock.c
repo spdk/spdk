@@ -34,6 +34,24 @@ DEFINE_STUB(spdk_sock_flush, int, (struct spdk_sock *sock), 0);
 DEFINE_STUB(spdk_sock_is_ipv6, bool, (struct spdk_sock *sock), false);
 DEFINE_STUB(spdk_sock_is_ipv4, bool, (struct spdk_sock *sock), true);
 DEFINE_STUB(spdk_sock_is_connected, bool, (struct spdk_sock *sock), true);
+DEFINE_STUB(spdk_sock_group_release_buf, int, (struct spdk_sock_group *group, void *buf,
+		struct spdk_sock_buf_token *token), 0);
+DEFINE_STUB(spdk_sock_get_default_impl, const char *, (void), "posix");
+DEFINE_STUB(spdk_sock_impl_supports_recv_next, bool, (const char *impl_name), false);
+
+static uint8_t g_buf[0x1000] = {};
+
+DEFINE_RETURN_MOCK(spdk_sock_recv_next, int);
+int
+spdk_sock_recv_next(struct spdk_sock *sock, void **buf, struct spdk_sock_buf_token **token)
+{
+	HANDLE_RETURN_MOCK(spdk_sock_recv_next);
+
+	*buf = g_buf;
+	*token = NULL;
+
+	return 0x1000;
+}
 
 DEFINE_RETURN_MOCK(spdk_sock_group_create, struct spdk_sock_group *);
 struct spdk_sock_group *
