@@ -4,6 +4,7 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+CONFIG_COVERAGE=n
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
