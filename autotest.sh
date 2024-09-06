@@ -66,16 +66,6 @@ freebsd_update_contigmem_mod
 freebsd_set_maxsock_buf
 
 if [[ $CONFIG_COVERAGE == y ]]; then
-	export LCOV_OPTS="
-		--rc lcov_branch_coverage=1
-		--rc lcov_function_coverage=1
-		--rc genhtml_branch_coverage=1
-		--rc genhtml_function_coverage=1
-		--rc genhtml_legend=1
-		--rc geninfo_all_blocks=1
-		$lcov_opt
-		"
-	export LCOV="lcov $LCOV_OPTS --no-external"
 	# Print lcov version to log
 	$LCOV --version
 	# zero out coverage data
