@@ -1691,5 +1691,5 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 		--rc geninfo_all_blocks=1
 		$lcov_opt
 		"
-	export LCOV="lcov $LCOV_OPTS --no-external"
+	export LCOV="lcov $LCOV_OPTS"
 fi

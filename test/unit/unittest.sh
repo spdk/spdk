@@ -181,7 +181,7 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 	UT_COVERAGE=$output_dir/ut_coverage
 	mkdir -p "$UT_COVERAGE"
 	# zero out coverage data
-	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
+	$LCOV -q -c --no-external -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
 fi
 
 # workaround for valgrind v3.13 on arm64
@@ -270,7 +270,7 @@ run_test "unittest_init" unittest_init
 run_test "unittest_keyring" $valgrind "$testdir/lib/keyring/keyring.c/keyring_ut"
 
 if [[ $CONFIG_COVERAGE == y ]]; then
-	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
+	$LCOV -q -d . -c --no-external -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/app/*" -o $UT_COVERAGE/ut_cov_unit.info
