@@ -1879,7 +1879,7 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 quiet:
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
 
-	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
+	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, rqpair->qpair.abort_dnr);
 	nvme_rdma_qpair_destroy(rqpair);
 	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
@@ -1899,7 +1899,7 @@ nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 	}
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
-	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
+	nvme_rdma_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	if (!nvme_qpair_is_admin_queue(qpair)) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
@@ -2060,7 +2060,7 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		assert(rc == 0);
 	}
 
-	nvme_rdma_qpair_abort_reqs(qpair, 0);
+	nvme_rdma_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	nvme_qpair_deinit(qpair);
 
 	if (spdk_rdma_utils_put_memory_domain(rqpair->memory_domain) != 0) {
