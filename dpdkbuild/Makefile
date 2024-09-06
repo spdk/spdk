@@ -16,6 +16,10 @@ ifeq ($(shell uname -m),aarch64)
 ifeq ($(shell uname -p),unknown)
 # Unknown ARM platform. ARM doesn't do platform=native which is DPDK's default. So change it.
 DPDK_OPTS += -Dplatform=generic
+else
+ifeq ($(shell $(SPDK_ROOT_DIR)/dpdk/config/arm/armv8_machine.py | cut -d' ' -f4),0x0)
+DPDK_OPTS += -Dplatform=generic
+endif
 endif
 endif
 
