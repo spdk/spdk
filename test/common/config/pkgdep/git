@@ -409,20 +409,6 @@ function install_ice() {
 	)
 }
 
-function install_lcov() {
-	local lcov_version=v1.15 make=make
-
-	if [[ $OSID != freebsd ]]; then
-		install perl-IO-Compress || install perl-modules
-	else
-		make=gmake
-	fi
-
-	rm -rf /usr/src/lcov
-	git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
-	(cd /usr/src/lcov; "$make" install)
-}
-
 function install_libbpf() {
 	local libbpf_version=v1.4.5
 
@@ -537,7 +523,6 @@ function install_sources() {
 	fi
 	sources+=(install_fio)
 	sources+=(install_flamegraph)
-	sources+=(install_lcov)
 	sources+=(install_vagrant)
 	sources+=(install_ittapi)
 
@@ -582,8 +567,6 @@ export GIT_REPO_DPDK_KMODS
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
-: ${GIT_REPO_LCOV=https://github.com/linux-test-project/lcov}
-export GIT_REPO_LCOV
 : ${GIT_REPO_BCC=https://github.com/iovisor/bcc.git}
 export GIT_REPO_BCC
 : ${GIT_REPO_BPFTRACE=https://github.com/iovisor/bpftrace.git}
