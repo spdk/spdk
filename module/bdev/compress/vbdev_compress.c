@@ -74,13 +74,11 @@ struct comp_bdev_io {
 	struct vbdev_compress		*comp_bdev;		/* vbdev associated with this IO */
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;		/* for bdev_io_wait */
 	struct spdk_bdev_io		*orig_io;		/* the original IO */
-	struct spdk_io_channel		*ch;			/* for resubmission */
 	int				status;			/* save for completion on orig thread */
 };
 
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static int vbdev_compress_claim(struct vbdev_compress *comp_bdev);
-static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
 struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size,
 		uint8_t comp_algo, uint32_t comp_level);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
@@ -97,7 +95,7 @@ _reduce_rw_blocks_cb(void *arg)
 	if (spdk_likely(io_ctx->status == 0)) {
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else if (io_ctx->status == -ENOMEM) {
-		vbdev_compress_queue_io(spdk_bdev_io_from_ctx(io_ctx));
+		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_NOMEM);
 	} else {
 		SPDK_ERRLOG("Failed to execute reduce api. %s\n", spdk_strerror(-io_ctx->status));
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -276,37 +274,6 @@ vbdev_compress_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
 		return false;
-	}
-}
-
-/* Resubmission function used by the bdev layer when a queued IO is ready to be
- * submitted.
- */
-static void
-vbdev_compress_resubmit_io(void *arg)
-{
-	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
-	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
-
-	vbdev_compress_submit_request(io_ctx->ch, bdev_io);
-}
-
-/* Used to queue an IO in the event of resource issues. */
-static void
-vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io)
-{
-	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
-	int rc;
-
-	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
-	io_ctx->bdev_io_wait.cb_fn = vbdev_compress_resubmit_io;
-	io_ctx->bdev_io_wait.cb_arg = bdev_io;
-
-	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->comp_bdev->base_ch, &io_ctx->bdev_io_wait);
-	if (rc) {
-		SPDK_ERRLOG("Queue io failed in vbdev_compress_queue_io, rc=%d.\n", rc);
-		assert(false);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
