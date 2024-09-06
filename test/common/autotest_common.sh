@@ -416,18 +416,11 @@ function get_config_params() {
 		config_params+=" --with-usdt"
 	fi
 
-	if [ $(uname -s) == "FreeBSD" ]; then
-		intel="hw.model: Intel"
-		cpu_vendor=$(sysctl -a | grep hw.model | cut -c 1-15)
-	else
-		intel="GenuineIntel"
-		cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo --max-count=1)
-	fi
-	if [[ "$cpu_vendor" != *"$intel"* ]]; then
-		config_params+=" --without-idxd"
-	else
-		config_params+=" --with-idxd"
-	fi
+	case "$(uname -s)" in
+		FreeBSD) [[ $(sysctl -n hw.model) == Intel* ]] ;;
+		Linux) [[ $(< /proc/cpuinfo) == *GenuineIntel* ]] ;;
+		*) false ;;
+	esac && config_params+=" --with-idxd" || config_params+=" --without-idxd"
 
 	if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
 		config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
