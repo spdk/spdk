@@ -497,8 +497,7 @@ void spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn);
 	__attribute__((constructor)) static void _ ## fn(void)	\
 	{							\
 		spdk_trace_add_register_fn(&reg_ ## fn);	\
-	}							\
-	static void fn(void)
+	}
 
 #ifdef __cplusplus
 }

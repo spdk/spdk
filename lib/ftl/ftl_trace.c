@@ -49,7 +49,8 @@ enum ftl_trace_source {
 #define FTL_TRACE_TRIM_SUBMISSION(src)		FTL_TPOINT_ID(20, src)
 #define FTL_TRACE_TRIM_COMPLETION(src)		FTL_TPOINT_ID(21, src)
 
-SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
+static void
+ftl_trace(void)
 {
 	const char source[] = { 'i', 'u' };
 	char descbuf[128];
@@ -121,6 +122,7 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 						OBJECT_NONE, 0, 0, "lba: ");
 	}
 }
+SPDK_TRACE_REGISTER_FN(ftl_trace, "ftl", TRACE_GROUP_FTL)
 
 static uint64_t
 ftl_trace_next_id(struct ftl_trace *trace)

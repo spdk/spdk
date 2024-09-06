@@ -123,7 +123,8 @@ static const char *spdk_nvmf_tcp_term_req_fes_str[] = {
 	"Unsupported parameter",
 };
 
-SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
+static void
+nvmf_tcp_trace(void)
 {
 	spdk_trace_register_owner_type(OWNER_TYPE_NVMF_TCP, 't');
 	spdk_trace_register_object(OBJECT_NVMF_TCP_IO, 'r');
@@ -220,6 +221,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_PEND, OBJECT_NVMF_TCP_IO, 0);
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_COMPLETE, OBJECT_NVMF_TCP_IO, 0);
 }
+SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 
 struct spdk_nvmf_tcp_req  {
 	struct spdk_nvmf_request		req;

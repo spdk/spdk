@@ -286,7 +286,8 @@ static uint32_t g_thread_count = 0;
 
 static __thread struct spdk_thread *tls_thread = NULL;
 
-SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
+static void
+thread_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -303,6 +304,7 @@ SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
+SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 
 /*
  * If this compare function returns zero when two next_run_ticks are equal,

@@ -10308,7 +10308,8 @@ spdk_blob_is_degraded(const struct spdk_blob *blob)
 SPDK_LOG_REGISTER_COMPONENT(blob)
 SPDK_LOG_REGISTER_COMPONENT(blob_esnap)
 
-SPDK_TRACE_REGISTER_FN(blob_trace, "blob", TRACE_GROUP_BLOB)
+static void
+blob_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -10332,3 +10333,4 @@ SPDK_TRACE_REGISTER_FN(blob_trace, "blob", TRACE_GROUP_BLOB)
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_BLOB_CB_ARG, 1);
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_BLOB_CB_ARG, 0);
 }
+SPDK_TRACE_REGISTER_FN(blob_trace, "blob", TRACE_GROUP_BLOB)

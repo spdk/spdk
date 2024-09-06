@@ -1828,7 +1828,8 @@ nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
 	free(stats);
 }
 
-SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
+static void
+nvme_pcie_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -1858,3 +1859,4 @@ SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
 	spdk_trace_register_owner_type(OWNER_TYPE_NVME_PCIE_QP, 'q');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
+SPDK_TRACE_REGISTER_FN(nvme_pcie_trace, "nvme_pcie", TRACE_GROUP_NVME_PCIE)

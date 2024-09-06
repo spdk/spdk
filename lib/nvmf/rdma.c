@@ -100,7 +100,8 @@ enum spdk_nvmf_rdma_request_state {
 	RDMA_REQUEST_NUM_STATES,
 };
 
-SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
+static void
+nvmf_trace(void)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 
@@ -187,6 +188,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_NVMF_RDMA_IO, 1);
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_NVMF_RDMA_IO, 0);
 }
+SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 
 enum spdk_nvmf_rdma_wr_type {
 	RDMA_WR_TYPE_RECV,

@@ -18,7 +18,8 @@ spdk_scsi_fini(void)
 {
 }
 
-SPDK_TRACE_REGISTER_FN(scsi_trace, "scsi", TRACE_GROUP_SCSI)
+static void
+scsi_trace(void)
 {
 	spdk_trace_register_owner_type(OWNER_TYPE_SCSI_DEV, 'd');
 	spdk_trace_register_object(OBJECT_SCSI_TASK, 't');
@@ -29,6 +30,7 @@ SPDK_TRACE_REGISTER_FN(scsi_trace, "scsi", TRACE_GROUP_SCSI)
 					OWNER_TYPE_SCSI_DEV, OBJECT_SCSI_TASK, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 }
+SPDK_TRACE_REGISTER_FN(scsi_trace, "scsi", TRACE_GROUP_SCSI)
 
 uint64_t
 spdk_scsi_lun_id_int_to_fmt(int lun_id)

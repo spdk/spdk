@@ -1029,7 +1029,8 @@ spdk_sock_group_unregister_interrupt(struct spdk_sock_group *group)
 
 SPDK_LOG_REGISTER_COMPONENT(sock)
 
-SPDK_TRACE_REGISTER_FN(sock_trace, "sock", TRACE_GROUP_SOCK)
+static void
+sock_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -1059,3 +1060,4 @@ SPDK_TRACE_REGISTER_FN(sock_trace, "sock", TRACE_GROUP_SOCK)
 	spdk_trace_register_object(OBJECT_SOCK_REQ, 's');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
+SPDK_TRACE_REGISTER_FN(sock_trace, "sock", TRACE_GROUP_SOCK)

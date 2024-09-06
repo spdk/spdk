@@ -3085,7 +3085,8 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 
 SPDK_NVME_TRANSPORT_REGISTER(tcp, &tcp_ops);
 
-SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
+static void
+nvme_tcp_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -3119,3 +3120,4 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_PEND, OBJECT_NVME_TCP_REQ, 0);
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_COMPLETE, OBJECT_NVME_TCP_REQ, 0);
 }
+SPDK_TRACE_REGISTER_FN(nvme_tcp_trace, "nvme_tcp", TRACE_GROUP_NVME_TCP)

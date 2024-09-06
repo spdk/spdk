@@ -1640,7 +1640,8 @@ iscsi_conn_get_login_phase(struct spdk_iscsi_conn *conn)
 	return "not_started";
 }
 
-SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
+static void
+iscsi_conn_trace(void)
 {
 	spdk_trace_register_owner_type(OWNER_TYPE_ISCSI_CONN, 'c');
 	spdk_trace_register_object(OBJECT_ISCSI_PDU, 'p');
@@ -1666,6 +1667,7 @@ SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_PEND, OBJECT_ISCSI_PDU, 0);
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_COMPLETE, OBJECT_ISCSI_PDU, 0);
 }
+SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 
 void
 iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn)
