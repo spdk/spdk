@@ -1678,9 +1678,13 @@ else
 fi
 
 if [[ $CONFIG_COVERAGE == y ]]; then
+	if lt "$(lcov --version | awk '{print $NF}')" 2; then
+		lcov_rc_opt="--rc lcov_branch_coverage=1 --rc lcov_function_coverage=1"
+	else
+		lcov_rc_opt="--rc branch_coverage=1 --rc function_coverage=1"
+	fi
 	export LCOV_OPTS="
-		--rc lcov_branch_coverage=1
-		--rc lcov_function_coverage=1
+		$lcov_rc_opt
 		--rc genhtml_branch_coverage=1
 		--rc genhtml_function_coverage=1
 		--rc genhtml_legend=1
