@@ -1689,6 +1689,7 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 		--rc genhtml_function_coverage=1
 		--rc genhtml_legend=1
 		--rc geninfo_all_blocks=1
+		--rc geninfo_unexecuted_blocks=1
 		$lcov_opt
 		"
 	export LCOV="lcov $LCOV_OPTS"
