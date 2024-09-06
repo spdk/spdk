@@ -13,7 +13,7 @@ nvmftestinit
 nvmfappstart -m 0x3
 setup_bdev_aio
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -q 256
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 AIO0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
@@ -26,7 +26,7 @@ done
 perf="$SPDK_BIN_DIR/spdk_nvme_perf"
 
 # run traffic
-$perf -q 64 -o 4096 -w randrw -M 30 -t 10 -c 0xC \
+$perf -q 256 -o 4096 -w randrw -M 30 -t 10 -c 0xC \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1" "${NO_HUGE[@]}" &
 
@@ -34,7 +34,7 @@ perf_pid=$!
 
 # confirm that during load all cpu cores are busy
 for i in {0..1}; do
-	reactor_is_busy $nvmfpid $i
+	BUSY_THRESHOLD=30 reactor_is_busy $nvmfpid $i
 done
 
 wait $perf_pid

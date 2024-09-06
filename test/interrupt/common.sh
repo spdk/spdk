@@ -10,6 +10,8 @@ function reactor_is_busy_or_idle() {
 	local pid=$1
 	local idx=$2
 	local state=$3
+	local busy_threshold=${BUSY_THRESHOLD:-65}
+	local idle_threshold=${IDLE_THRESHOLD:-30}
 
 	if [[ $state != "busy" ]] && [[ $state != "idle" ]]; then
 		return 1
@@ -25,9 +27,9 @@ function reactor_is_busy_or_idle() {
 		cpu_rate=$(echo $top_reactor | sed -e 's/^\s*//g' | awk '{print $9}')
 		cpu_rate=${cpu_rate%.*}
 
-		if [[ $state = "busy" ]] && [[ $cpu_rate -lt 65 ]]; then
+		if [[ $state = "busy" ]] && ((cpu_rate < busy_threshold)); then
 			sleep 1
-		elif [[ $state = "idle" ]] && [[ $cpu_rate -gt 30 ]]; then
+		elif [[ $state = "idle" ]] && ((cpu_rate > idle_threshold)); then
 			sleep 1
 		else
 			return 0
