@@ -147,6 +147,8 @@ get_nvmes_with_ns_management() {
 	for ctrl in "${!ctrls[@]}"; do
 		get_oacs "$ctrl" nsmgt && echo "$ctrl"
 	done
+
+	return 0
 }
 
 get_nvme_with_ns_management() {
