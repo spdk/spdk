@@ -1521,7 +1521,8 @@ function nvme_namespace_revert() {
 	$rootdir/scripts/setup.sh
 	sleep 1
 	local bdfs=()
-	bdfs=($(get_nvme_bdfs))
+	# If there are no nvme bdfs, just return immediately
+	bdfs=($(get_nvme_bdfs)) || return 0
 
 	$rootdir/scripts/setup.sh reset
 
@@ -1564,15 +1565,16 @@ function nvme_namespace_revert() {
 
 # Get BDFs based on device ID, such as 0x0a54
 function get_nvme_bdfs_by_id() {
-	local bdfs=()
-
-	for bdf in $(get_nvme_bdfs); do
+	local bdfs=() _bdfs=()
+	_bdfs=($(get_nvme_bdfs)) || return 0
+	for bdf in "${_bdfs[@]}"; do
 		device=$(cat /sys/bus/pci/devices/$bdf/device) || true
 		if [[ "$device" == "$1" ]]; then
 			bdfs+=($bdf)
 		fi
 	done
 
+	((${#bdfs[@]} > 0)) || return 0
 	printf '%s\n' "${bdfs[@]}"
 }
 
