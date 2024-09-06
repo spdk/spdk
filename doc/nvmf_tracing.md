@@ -215,7 +215,8 @@ within the application/library using the spdk_trace_register_description functio
 as shown below:
 
 ~~~c
-SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
+static void
+nvmf_trace(void)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 	spdk_trace_register_description("RDMA_REQ_NEW", TRACE_RDMA_REQUEST_STATE_NEW,
@@ -226,6 +227,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	...
 }
+SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 ~~~
 
 Finally, use the spdk_trace_record function at the appropriate point in the

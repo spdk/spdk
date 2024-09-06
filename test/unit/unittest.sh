@@ -171,35 +171,11 @@ if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	fi
 fi
 
-# setup local unit test coverage if cov is available
-# lcov takes considerable time to process clang coverage.
-# Disabling lcov allow us to do this.
-# More information: https://github.com/spdk/spdk/issues/1693
-CC_TYPE=$(grep CC_TYPE $rootdir/mk/cc.mk)
-if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h && ! [[ "$CC_TYPE" == *"clang"* ]]; then
-	cov_avail="yes"
-else
-	cov_avail="no"
-fi
-if [ "$cov_avail" = "yes" ]; then
-	# set unit test output dir if not specified in env var
-	if [[ -z $output_dir ]]; then
-		UT_COVERAGE="ut_coverage"
-	else
-		UT_COVERAGE=$output_dir/ut_coverage
-	fi
-	mkdir -p $UT_COVERAGE
-	export LCOV_OPTS="
-		--rc lcov_branch_coverage=1
-		--rc lcov_function_coverage=1
-		--rc genhtml_branch_coverage=1
-		--rc genhtml_function_coverage=1
-		--rc genhtml_legend=1
-		--rc geninfo_all_blocks=1
-		"
-	export LCOV="lcov $LCOV_OPTS --no-external"
+if [[ $CONFIG_COVERAGE == y ]]; then
+	UT_COVERAGE=$output_dir/ut_coverage
+	mkdir -p "$UT_COVERAGE"
 	# zero out coverage data
-	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
+	$LCOV -q -c --no-external -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
 fi
 
 # workaround for valgrind v3.13 on arm64
@@ -286,14 +262,13 @@ run_test "unittest_dma" $valgrind $testdir/lib/dma/dma.c/dma_ut
 
 run_test "unittest_init" unittest_init
 
-if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
-	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
+if [[ $CONFIG_COVERAGE == y ]]; then
+	$LCOV -q -d . -c --no-external -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/app/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/dpdk/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/examples/*" -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/lib/vhost/rte_vhost/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/test/*" -o $UT_COVERAGE/ut_cov_unit.info
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE

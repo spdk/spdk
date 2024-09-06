@@ -484,7 +484,8 @@ accel_dsa_write_config_json(struct spdk_json_write_ctx *w)
 	}
 }
 
-SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
+static void
+dsa_trace(void)
 {
 	spdk_trace_register_description("DSA_OP_SUBMIT", TRACE_ACCEL_DSA_OP_SUBMIT, OWNER_NONE, OBJECT_NONE,
 					0,
@@ -493,5 +494,6 @@ SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
 					OBJECT_NONE,
 					0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
+SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_dsa)

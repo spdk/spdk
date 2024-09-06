@@ -416,12 +416,14 @@ accel_iaa_write_config_json(struct spdk_json_write_ctx *w)
 	}
 }
 
-SPDK_TRACE_REGISTER_FN(iaa_trace, "iaa", TRACE_GROUP_ACCEL_IAA)
+static void
+iaa_trace(void)
 {
 	spdk_trace_register_description("IAA_OP_SUBMIT", TRACE_ACCEL_IAA_OP_SUBMIT, OWNER_NONE, OBJECT_NONE,
 					0, SPDK_TRACE_ARG_TYPE_INT, "count");
 	spdk_trace_register_description("IAA_OP_COMPLETE", TRACE_ACCEL_IAA_OP_COMPLETE, OWNER_NONE,
 					OBJECT_NONE, 0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
+SPDK_TRACE_REGISTER_FN(iaa_trace, "iaa", TRACE_GROUP_ACCEL_IAA)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_iaa)

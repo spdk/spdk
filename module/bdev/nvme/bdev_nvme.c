@@ -8340,7 +8340,8 @@ bdev_nvme_get_discovery_info(struct spdk_json_write_ctx *w)
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_nvme)
 
-SPDK_TRACE_REGISTER_FN(bdev_nvme_trace, "bdev_nvme", TRACE_GROUP_BDEV_NVME)
+static void
+bdev_nvme_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -8363,3 +8364,4 @@ SPDK_TRACE_REGISTER_FN(bdev_nvme_trace, "bdev_nvme", TRACE_GROUP_BDEV_NVME)
 	spdk_trace_tpoint_register_relation(TRACE_NVME_PCIE_COMPLETE, OBJECT_BDEV_NVME_IO, 0);
 	spdk_trace_tpoint_register_relation(TRACE_NVME_TCP_COMPLETE, OBJECT_BDEV_NVME_IO, 0);
 }
+SPDK_TRACE_REGISTER_FN(bdev_nvme_trace, "bdev_nvme", TRACE_GROUP_BDEV_NVME)

@@ -38,7 +38,8 @@ static struct spdk_thread *g_cache_pool_thread;
 static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
 
-SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
+static void
+blobfs_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -75,6 +76,7 @@ SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
+SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 
 void
 cache_buffer_free(struct cache_buffer *cache_buffer)

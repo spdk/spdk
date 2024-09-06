@@ -67,7 +67,8 @@ static char *fc_req_state_strs[] = {
 #define HWQP_CONN_TABLE_SIZE			8192
 #define HWQP_RPI_TABLE_SIZE			4096
 
-SPDK_TRACE_REGISTER_FN(nvmf_fc_trace, "nvmf_fc", TRACE_GROUP_NVMF_FC)
+static void
+nvmf_fc_trace(void)
 {
 	spdk_trace_register_object(OBJECT_NVMF_FC_IO, 'r');
 	spdk_trace_register_description("FC_NEW",
@@ -135,6 +136,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_fc_trace, "nvmf_fc", TRACE_GROUP_NVMF_FC)
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 }
+SPDK_TRACE_REGISTER_FN(nvmf_fc_trace, "nvmf_fc", TRACE_GROUP_NVMF_FC)
 
 /**
  * The structure used by all fc adm functions

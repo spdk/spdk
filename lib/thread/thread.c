@@ -286,7 +286,8 @@ static uint32_t g_thread_count = 0;
 
 static __thread struct spdk_thread *tls_thread = NULL;
 
-SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
+static void
+thread_trace(void)
 {
 	spdk_trace_register_description("THREAD_IOCH_GET",
 					TRACE_THREAD_IOCH_GET,
@@ -297,6 +298,7 @@ SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
 }
+SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 
 /*
  * If this compare function returns zero when two next_run_ticks are equal,

@@ -244,6 +244,16 @@ export AR_TOOL=$rootdir/scripts/ar-xnvme-fixer
 # For testing nvmes which are attached to some sort of a fanout switch in the CI pool
 export UNBIND_ENTIRE_IOMMU_GROUP=${UNBIND_ENTIRE_IOMMU_GROUP:-no}
 
+_LCOV_MAIN=0
+_LCOV_LLVM=1
+_LCOV=$LCOV_MAIN
+[[ $CC == *clang* || $SPDK_TEST_FUZZER -eq 1 ]] && _LCOV=$_LCOV_LLVM
+
+_lcov_opt[_LCOV_LLVM]="--gcov-tool $rootdir/test/fuzz/llvm/llvm-gcov.sh"
+_lcov_opt[_LCOV_MAIN]=""
+
+lcov_opt=${_lcov_opt[_LCOV]}
+
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
@@ -1674,4 +1684,22 @@ if $SPDK_AUTOTEST_X; then
 	xtrace_fd
 else
 	xtrace_disable
+fi
+
+if [[ $CONFIG_COVERAGE == y ]]; then
+	if lt "$(lcov --version | awk '{print $NF}')" 2; then
+		lcov_rc_opt="--rc lcov_branch_coverage=1 --rc lcov_function_coverage=1"
+	else
+		lcov_rc_opt="--rc branch_coverage=1 --rc function_coverage=1"
+	fi
+	export LCOV_OPTS="
+		$lcov_rc_opt
+		--rc genhtml_branch_coverage=1
+		--rc genhtml_function_coverage=1
+		--rc genhtml_legend=1
+		--rc geninfo_all_blocks=1
+		--rc geninfo_unexecuted_blocks=1
+		$lcov_opt
+		"
+	export LCOV="lcov $LCOV_OPTS"
 fi
