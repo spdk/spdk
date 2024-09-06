@@ -77,7 +77,7 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 		"
 	export LCOV="lcov $LCOV_OPTS --no-external"
 	# Print lcov version to log
-	$LCOV -v
+	$LCOV --version
 	# zero out coverage data
 	$LCOV -q -c -i -t "Baseline" -d $src -o $out/cov_base.info
 fi
