@@ -1634,6 +1634,7 @@ function reap_spdk_processes() {
 		exec_files "${test_bins[@]}"
 		readlink -f "$SPDK_BIN_DIR/"* "$SPDK_EXAMPLE_DIR/"*
 	)
+	((${#bins[@]} > 0)) || return 0
 
 	mapfile -t spdk_procs < <(get_proc_paths | grep -E "$(
 		IFS="|"
