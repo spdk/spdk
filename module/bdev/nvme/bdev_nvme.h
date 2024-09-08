@@ -71,6 +71,8 @@ struct nvme_bdev_io;
 struct nvme_bdev_ctrlr;
 struct nvme_bdev;
 struct nvme_io_path;
+struct nvme_ctrlr_channel_iter;
+struct nvme_bdev_channel_iter;
 
 struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
@@ -184,7 +186,7 @@ struct nvme_ctrlr_channel {
 	struct nvme_qpair		*qpair;
 	TAILQ_HEAD(, nvme_bdev_io)	pending_resets;
 
-	struct spdk_io_channel_iter	*reset_iter;
+	struct nvme_ctrlr_channel_iter	*reset_iter;
 	struct spdk_poller		*connect_poller;
 };
 
@@ -226,6 +228,21 @@ struct nvme_poll_group {
 void nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path);
 
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
+
+typedef void (*nvme_ctrlr_for_each_channel_msg)(struct nvme_ctrlr_channel_iter *iter,
+		struct nvme_ctrlr *nvme_ctrlr,
+		struct nvme_ctrlr_channel *ctrlr_ch,
+		void *ctx);
+
+typedef void (*nvme_ctrlr_for_each_channel_done)(struct nvme_ctrlr *nvme_ctrlr,
+		void *ctx, int status);
+
+void nvme_ctrlr_for_each_channel(struct nvme_ctrlr *nvme_ctrlr,
+				 nvme_ctrlr_for_each_channel_msg fn, void *ctx,
+				 nvme_ctrlr_for_each_channel_done cpl);
+
+void nvme_ctrlr_for_each_channel_continue(struct nvme_ctrlr_channel_iter *iter,
+		int status);
 
 struct nvme_ctrlr *nvme_bdev_ctrlr_get_ctrlr_by_id(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 		uint16_t cntlid);

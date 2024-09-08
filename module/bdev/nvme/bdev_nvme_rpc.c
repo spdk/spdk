@@ -1915,9 +1915,9 @@ struct rpc_add_error_injection_ctx {
 };
 
 static void
-rpc_add_error_injection_done(struct spdk_io_channel_iter *i, int status)
+rpc_add_error_injection_done(struct nvme_ctrlr *nvme_ctrlr, void *_ctx, int status)
 {
-	struct rpc_add_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_add_error_injection_ctx *ctx = _ctx;
 
 	if (status) {
 		spdk_jsonrpc_send_error_response(ctx->request, status,
@@ -1931,11 +1931,12 @@ rpc_add_error_injection_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-rpc_add_error_injection_per_channel(struct spdk_io_channel_iter *i)
+rpc_add_error_injection_per_channel(struct nvme_ctrlr_channel_iter *i,
+				    struct nvme_ctrlr *nvme_ctrlr,
+				    struct nvme_ctrlr_channel *ctrlr_ch,
+				    void *_ctx)
 {
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct rpc_add_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct rpc_add_error_injection_ctx *ctx = _ctx;
 	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = ctrlr_ch->qpair->ctrlr->ctrlr;
 	int rc = 0;
@@ -1946,7 +1947,7 @@ rpc_add_error_injection_per_channel(struct spdk_io_channel_iter *i)
 				ctx->rpc.sct, ctx->rpc.sc);
 	}
 
-	spdk_for_each_channel_continue(i, rc);
+	nvme_ctrlr_for_each_channel_continue(i, rc);
 }
 
 static void
@@ -1983,10 +1984,10 @@ rpc_bdev_nvme_add_error_injection(
 	}
 
 	if (ctx->rpc.cmd_type == NVME_IO_CMD) {
-		spdk_for_each_channel(nvme_ctrlr,
-				      rpc_add_error_injection_per_channel,
-				      ctx,
-				      rpc_add_error_injection_done);
+		nvme_ctrlr_for_each_channel(nvme_ctrlr,
+					    rpc_add_error_injection_per_channel,
+					    ctx,
+					    rpc_add_error_injection_done);
 
 		return;
 	} else {
@@ -2032,9 +2033,9 @@ struct rpc_remove_error_injection_ctx {
 };
 
 static void
-rpc_remove_error_injection_done(struct spdk_io_channel_iter *i, int status)
+rpc_remove_error_injection_done(struct nvme_ctrlr *nvme_ctrlr, void *_ctx, int status)
 {
-	struct rpc_remove_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_remove_error_injection_ctx *ctx = _ctx;
 
 	if (status) {
 		spdk_jsonrpc_send_error_response(ctx->request, status,
@@ -2048,11 +2049,12 @@ rpc_remove_error_injection_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-rpc_remove_error_injection_per_channel(struct spdk_io_channel_iter *i)
+rpc_remove_error_injection_per_channel(struct nvme_ctrlr_channel_iter *i,
+				       struct nvme_ctrlr *nvme_ctrlr,
+				       struct nvme_ctrlr_channel *ctrlr_ch,
+				       void *_ctx)
 {
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct rpc_remove_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct rpc_remove_error_injection_ctx *ctx = _ctx;
 	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = ctrlr_ch->qpair->ctrlr->ctrlr;
 
@@ -2060,7 +2062,7 @@ rpc_remove_error_injection_per_channel(struct spdk_io_channel_iter *i)
 		spdk_nvme_qpair_remove_cmd_error_injection(ctrlr, qpair, ctx->rpc.opc);
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	nvme_ctrlr_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -2094,10 +2096,10 @@ rpc_bdev_nvme_remove_error_injection(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->rpc.cmd_type == NVME_IO_CMD) {
-		spdk_for_each_channel(nvme_ctrlr,
-				      rpc_remove_error_injection_per_channel,
-				      ctx,
-				      rpc_remove_error_injection_done);
+		nvme_ctrlr_for_each_channel(nvme_ctrlr,
+					    rpc_remove_error_injection_per_channel,
+					    ctx,
+					    rpc_remove_error_injection_done);
 		return;
 	} else {
 		spdk_nvme_qpair_remove_cmd_error_injection(nvme_ctrlr->ctrlr, NULL, ctx->rpc.opc);
