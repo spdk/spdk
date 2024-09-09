@@ -66,6 +66,7 @@ packages=(
 	llvm
 	avahi-daemon
 	avahi-utils
+	ethtool
 )
 
 install_vagrant_dependencies() {
