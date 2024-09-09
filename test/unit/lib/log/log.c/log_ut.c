@@ -192,7 +192,54 @@ deprecation(void)
 	CU_ASSERT(g_found_limited);
 	CU_ASSERT(g_found_never_called);
 
-	g_log = NULL;
+	spdk_log_close();
+}
+
+enum log_ext_state {
+	LOG_EXT_UNUSED,
+	LOG_EXT_OPENED,
+	LOG_EXT_USED,
+	LOG_EXT_CLOSED,
+};
+
+enum log_ext_state g_log_state = LOG_EXT_UNUSED;
+
+static void
+log_ext_log_test(int level, const char *file, const int line, const char *func,
+		 const char *format, va_list args)
+{
+	g_log_state = LOG_EXT_USED;
+}
+
+static void
+log_ext_open_test(void *ctx)
+{
+	enum log_ext_state *state = ctx;
+
+	*state = LOG_EXT_OPENED;
+}
+
+static void
+log_ext_close_test(void *ctx)
+{
+	enum log_ext_state *state = ctx;
+
+	*state = LOG_EXT_CLOSED;
+}
+
+static void
+log_ext_test(void)
+{
+	struct spdk_log_opts opts = {.log = log_ext_log_test, .open = log_ext_open_test, .close = log_ext_close_test, .user_ctx = &g_log_state};
+	opts.size = SPDK_SIZEOF(&opts, user_ctx);
+
+	CU_ASSERT(g_log_state == LOG_EXT_UNUSED);
+	spdk_log_open_ext(&opts);
+	CU_ASSERT(g_log_state == LOG_EXT_OPENED);
+	SPDK_WARNLOG("log warning unit test\n");
+	CU_ASSERT(g_log_state == LOG_EXT_USED);
+	spdk_log_close();
+	CU_ASSERT(g_log_state == LOG_EXT_CLOSED);
 }
 
 int
@@ -207,6 +254,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, log_test);
 	CU_ADD_TEST(suite, deprecation);
+	CU_ADD_TEST(suite, log_ext_test);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

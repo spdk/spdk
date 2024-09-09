@@ -3,6 +3,7 @@
 
 	# public functions
 	spdk_log_open;
+	spdk_log_open_ext;
 	spdk_log_close;
 	spdk_log_set_level;
 	spdk_log_get_level;

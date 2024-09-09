@@ -122,7 +122,7 @@ struct spdk_app_opts {
 	/**
 	 * for passing user-provided log call
 	 */
-	logfunc         *log;
+	spdk_log_cb		*log;
 
 	uint64_t		base_virtaddr;
 
