@@ -134,13 +134,8 @@ function nvmf_shutdown_tc3() {
 
 	# Kill the target half way through
 	killprocess $nvmfpid
-	nvmfpid=
-
-	# Verify bdevperf exits successfully
 	sleep 1
-	# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
-	# and so it will never shut down. Just kill it.
-	kill -9 $perfpid || true
+	NOT wait $perfpid
 
 	stoptarget
 }
@@ -158,11 +153,9 @@ function nvmf_shutdown_tc4() {
 
 	# Kill the target half way through
 	killprocess $nvmfpid
-	nvmfpid=
-
-	# Due to IOs are completed with errors, perf exits with bad status
 	sleep 1
-	wait $perfpid || true
+	# Due to IOs are completed with errors, perf exits with bad status
+	NOT wait $perfpid
 	stoptarget
 }
 
