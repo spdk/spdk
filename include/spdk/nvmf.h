@@ -972,7 +972,6 @@ int spdk_nvmf_subsystem_set_ns_ana_group(struct spdk_nvmf_subsystem *subsystem,
 int spdk_nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t min_cntlid, uint16_t max_cntlid);
 
->>>>>>> cd16195a3 (nvmf: Add spdk_nvmf_subsystem_set_ns_ana_group())
 /** NVMe-oF target namespace creation options */
 struct spdk_nvmf_ns_opts {
 	/**
