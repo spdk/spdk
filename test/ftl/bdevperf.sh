@@ -14,7 +14,6 @@ use_append=$3
 rpc_py=$rootdir/scripts/rpc.py
 timeout=240
 
-timing_enter "$rootdir/build/examples/bdevperf -z -T ftl0"
 "$rootdir/build/examples/bdevperf" -z -T ftl0 &
 bdevperf_pid=$!
 
@@ -36,6 +35,5 @@ $rpc_py bdev_ftl_delete -b ftl0
 
 killprocess $bdevperf_pid
 trap - SIGINT SIGTERM EXIT
-timing_exit "$rootdir/build/examples/bdevperf -z -T ftl0"
 
 remove_shm
