@@ -16,17 +16,13 @@ if [[ ! -f $conf ]]; then
 	echo "ERROR: $conf doesn't exist"
 	exit 1
 fi
+source "$rootdir/test/common/autotest_common.sh"
 source "$conf"
 
-echo "Test configuration:"
-cat "$conf"
+trap 'timing_finish || exit 1' EXIT
 
 # Runs agent scripts
 $rootdir/autobuild.sh "$conf"
 if ((SPDK_TEST_UNITTEST == 1 || SPDK_RUN_FUNCTIONAL_TEST == 1)); then
 	sudo -E $rootdir/autotest.sh "$conf"
-fi
-
-if [[ $SPDK_TEST_AUTOBUILD != 'tiny' ]]; then
-	$rootdir/autopackage.sh "$conf"
 fi

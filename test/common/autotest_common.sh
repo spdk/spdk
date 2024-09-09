@@ -733,6 +733,8 @@ function timing_exit() {
 }
 
 function timing_finish() {
+	[[ -e $output_dir/timing.txt ]] || return 0
+
 	flamegraph='/usr/local/FlameGraph/flamegraph.pl'
 	[[ -x "$flamegraph" ]] || return 1
 
