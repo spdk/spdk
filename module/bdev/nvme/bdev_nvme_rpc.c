@@ -2583,11 +2583,12 @@ dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void
 }
 
 static void
-rpc_bdev_nvme_path_stat_per_channel(struct spdk_io_channel_iter *i)
+rpc_bdev_nvme_path_stat_per_channel(struct nvme_bdev_channel_iter *i,
+				    struct nvme_bdev *nbdev,
+				    struct nvme_bdev_channel *nbdev_ch,
+				    void *_ctx)
 {
-	struct rpc_bdev_nvme_path_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
+	struct rpc_bdev_nvme_path_stat_ctx *ctx = _ctx;
 	struct nvme_io_path *io_path;
 	struct path_stat *path_stat;
 	uint32_t j;
@@ -2605,14 +2606,13 @@ rpc_bdev_nvme_path_stat_per_channel(struct spdk_io_channel_iter *i)
 		}
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	nvme_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
-rpc_bdev_nvme_path_stat_done(struct spdk_io_channel_iter *i, int status)
+rpc_bdev_nvme_path_stat_done(struct nvme_bdev *nbdev, void *_ctx, int status)
 {
-	struct rpc_bdev_nvme_path_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct nvme_bdev *nbdev = spdk_io_channel_iter_get_io_device(i);
+	struct rpc_bdev_nvme_path_stat_ctx *ctx = _ctx;
 	struct spdk_json_write_ctx *w;
 	struct path_stat *path_stat;
 	uint32_t j;
@@ -2733,10 +2733,10 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	ctx->path_stat = path_stat;
 	ctx->num_paths = num_paths;
 
-	spdk_for_each_channel(nbdev,
-			      rpc_bdev_nvme_path_stat_per_channel,
-			      ctx,
-			      rpc_bdev_nvme_path_stat_done);
+	nvme_bdev_for_each_channel(nbdev,
+				   rpc_bdev_nvme_path_stat_per_channel,
+				   ctx,
+				   rpc_bdev_nvme_path_stat_done);
 	return;
 
 err:

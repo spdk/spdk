@@ -244,6 +244,22 @@ void nvme_ctrlr_for_each_channel(struct nvme_ctrlr *nvme_ctrlr,
 void nvme_ctrlr_for_each_channel_continue(struct nvme_ctrlr_channel_iter *iter,
 		int status);
 
+
+typedef void (*nvme_bdev_for_each_channel_msg)(struct nvme_bdev_channel_iter *iter,
+		struct nvme_bdev *nbdev,
+		struct nvme_bdev_channel *nbdev_ch,
+		void *ctx);
+
+typedef void (*nvme_bdev_for_each_channel_done)(struct nvme_bdev *nbdev,
+		void *ctx, int status);
+
+void nvme_bdev_for_each_channel(struct nvme_bdev *nbdev,
+				nvme_bdev_for_each_channel_msg fn, void *ctx,
+				nvme_bdev_for_each_channel_done cpl);
+
+void nvme_bdev_for_each_channel_continue(struct nvme_bdev_channel_iter *iter,
+		int status);
+
 struct nvme_ctrlr *nvme_bdev_ctrlr_get_ctrlr_by_id(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 		uint16_t cntlid);
 

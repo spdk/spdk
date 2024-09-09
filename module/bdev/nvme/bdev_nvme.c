@@ -461,6 +461,67 @@ nvme_ctrlr_for_each_channel(struct nvme_ctrlr *nvme_ctrlr,
 			      iter, nvme_ctrlr_each_channel_cpl);
 }
 
+struct nvme_bdev_channel_iter {
+	nvme_bdev_for_each_channel_msg fn;
+	nvme_bdev_for_each_channel_done cpl;
+	struct spdk_io_channel_iter *i;
+	void *ctx;
+};
+
+void
+nvme_bdev_for_each_channel_continue(struct nvme_bdev_channel_iter *iter, int status)
+{
+	spdk_for_each_channel_continue(iter->i, status);
+}
+
+static void
+nvme_bdev_each_channel_msg(struct spdk_io_channel_iter *i)
+{
+	struct nvme_bdev_channel_iter *iter = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_bdev *nbdev = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
+
+	iter->i = i;
+	iter->fn(iter, nbdev, nbdev_ch, iter->ctx);
+}
+
+static void
+nvme_bdev_each_channel_cpl(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvme_bdev_channel_iter *iter = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_bdev *nbdev = spdk_io_channel_iter_get_io_device(i);
+
+	iter->i = i;
+	iter->cpl(nbdev, iter->ctx, status);
+
+	free(iter);
+}
+
+void
+nvme_bdev_for_each_channel(struct nvme_bdev *nbdev,
+			   nvme_bdev_for_each_channel_msg fn, void *ctx,
+			   nvme_bdev_for_each_channel_done cpl)
+{
+	struct nvme_bdev_channel_iter *iter;
+
+	assert(nbdev != NULL && fn != NULL);
+
+	iter = calloc(1, sizeof(struct nvme_bdev_channel_iter));
+	if (iter == NULL) {
+		SPDK_ERRLOG("Unable to allocate iterator\n");
+		assert(false);
+		return;
+	}
+
+	iter->fn = fn;
+	iter->cpl = cpl;
+	iter->ctx = ctx;
+
+	spdk_for_each_channel(nbdev, nvme_bdev_each_channel_msg, iter,
+			      nvme_bdev_each_channel_cpl);
+}
+
 void
 nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
 {
@@ -2792,9 +2853,9 @@ nvme_bdev_ctrlr_op_rpc(struct nvme_bdev_ctrlr *nbdev_ctrlr, enum nvme_ctrlr_op o
 static int _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio);
 
 static void
-_bdev_nvme_reset_io_complete(struct spdk_io_channel_iter *i, int status)
+_bdev_nvme_reset_io_complete(struct nvme_bdev *nbdev, void *ctx, int status)
 {
-	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_bdev_io *bio = ctx;
 	enum spdk_bdev_io_status io_status;
 
 	if (bio->cpl.cdw0 == 0) {
@@ -2807,14 +2868,13 @@ _bdev_nvme_reset_io_complete(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_nvme_abort_bdev_channel(struct spdk_io_channel_iter *i)
+bdev_nvme_abort_bdev_channel(struct nvme_bdev_channel_iter *i,
+			     struct nvme_bdev *nbdev,
+			     struct nvme_bdev_channel *nbdev_ch, void *ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
-
 	bdev_nvme_abort_retry_ios(nbdev_ch);
 
-	spdk_for_each_channel_continue(i, 0);
+	nvme_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -2824,10 +2884,10 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio)
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
 
 	/* Abort all queued I/Os for retry. */
-	spdk_for_each_channel(nbdev,
-			      bdev_nvme_abort_bdev_channel,
-			      bio,
-			      _bdev_nvme_reset_io_complete);
+	nvme_bdev_for_each_channel(nbdev,
+				   bdev_nvme_abort_bdev_channel,
+				   bio,
+				   _bdev_nvme_reset_io_complete);
 }
 
 static void
@@ -4576,11 +4636,11 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 }
 
 static void
-bdev_nvme_add_io_path(struct spdk_io_channel_iter *i)
+bdev_nvme_add_io_path(struct nvme_bdev_channel_iter *i,
+		      struct nvme_bdev *nbdev,
+		      struct nvme_bdev_channel *nbdev_ch, void *ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
-	struct nvme_ns *nvme_ns = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ns *nvme_ns = ctx;
 	int rc;
 
 	rc = _bdev_nvme_add_io_path(nbdev_ch, nvme_ns);
@@ -4588,15 +4648,15 @@ bdev_nvme_add_io_path(struct spdk_io_channel_iter *i)
 		SPDK_ERRLOG("Failed to add I/O path to bdev_channel dynamically.\n");
 	}
 
-	spdk_for_each_channel_continue(i, rc);
+	nvme_bdev_for_each_channel_continue(i, rc);
 }
 
 static void
-bdev_nvme_delete_io_path(struct spdk_io_channel_iter *i)
+bdev_nvme_delete_io_path(struct nvme_bdev_channel_iter *i,
+			 struct nvme_bdev *nbdev,
+			 struct nvme_bdev_channel *nbdev_ch, void *ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
-	struct nvme_ns *nvme_ns = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ns *nvme_ns = ctx;
 	struct nvme_io_path *io_path;
 
 	io_path = _bdev_nvme_get_io_path(nbdev_ch, nvme_ns);
@@ -4604,31 +4664,30 @@ bdev_nvme_delete_io_path(struct spdk_io_channel_iter *i)
 		_bdev_nvme_delete_io_path(nbdev_ch, io_path);
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	nvme_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
-bdev_nvme_add_io_path_failed(struct spdk_io_channel_iter *i, int status)
+bdev_nvme_add_io_path_failed(struct nvme_bdev *nbdev, void *ctx, int status)
 {
-	struct nvme_ns *nvme_ns = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ns *nvme_ns = ctx;
 
 	nvme_ctrlr_populate_namespace_done(nvme_ns, -1);
 }
 
 static void
-bdev_nvme_add_io_path_done(struct spdk_io_channel_iter *i, int status)
+bdev_nvme_add_io_path_done(struct nvme_bdev *nbdev, void *ctx, int status)
 {
-	struct nvme_ns *nvme_ns = spdk_io_channel_iter_get_ctx(i);
-	struct nvme_bdev *bdev = spdk_io_channel_iter_get_io_device(i);
+	struct nvme_ns *nvme_ns = ctx;
 
 	if (status == 0) {
 		nvme_ctrlr_populate_namespace_done(nvme_ns, 0);
 	} else {
 		/* Delete the added io_paths and fail populating the namespace. */
-		spdk_for_each_channel(bdev,
-				      bdev_nvme_delete_io_path,
-				      nvme_ns,
-				      bdev_nvme_add_io_path_failed);
+		nvme_bdev_for_each_channel(nbdev,
+					   bdev_nvme_delete_io_path,
+					   nvme_ns,
+					   bdev_nvme_add_io_path_failed);
 	}
 }
 
@@ -4662,10 +4721,10 @@ nvme_bdev_add_ns(struct nvme_bdev *bdev, struct nvme_ns *nvme_ns)
 	pthread_mutex_unlock(&bdev->mutex);
 
 	/* Add nvme_io_path to nvme_bdev_channels dynamically. */
-	spdk_for_each_channel(bdev,
-			      bdev_nvme_add_io_path,
-			      nvme_ns,
-			      bdev_nvme_add_io_path_done);
+	nvme_bdev_for_each_channel(bdev,
+				   bdev_nvme_add_io_path,
+				   nvme_ns,
+				   bdev_nvme_add_io_path_done);
 
 	return 0;
 }
@@ -4727,9 +4786,9 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 }
 
 static void
-bdev_nvme_delete_io_path_done(struct spdk_io_channel_iter *i, int status)
+bdev_nvme_delete_io_path_done(struct nvme_bdev *nbdev, void *ctx, int status)
 {
-	struct nvme_ns *nvme_ns = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ns *nvme_ns = ctx;
 
 	nvme_ctrlr_depopulate_namespace_done(nvme_ns);
 }
@@ -4764,10 +4823,10 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 			/* Delete nvme_io_paths from nvme_bdev_channels dynamically. After that,
 			 * we call depopulate_namespace_done() to avoid use-after-free.
 			 */
-			spdk_for_each_channel(bdev,
-					      bdev_nvme_delete_io_path,
-					      nvme_ns,
-					      bdev_nvme_delete_io_path_done);
+			nvme_bdev_for_each_channel(bdev,
+						   bdev_nvme_delete_io_path,
+						   nvme_ns,
+						   bdev_nvme_delete_io_path_done);
 			return;
 		}
 	}
@@ -5033,9 +5092,9 @@ struct bdev_nvme_set_preferred_path_ctx {
 };
 
 static void
-bdev_nvme_set_preferred_path_done(struct spdk_io_channel_iter *i, int status)
+bdev_nvme_set_preferred_path_done(struct nvme_bdev *nbdev, void *_ctx, int status)
 {
-	struct bdev_nvme_set_preferred_path_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct bdev_nvme_set_preferred_path_ctx *ctx = _ctx;
 
 	assert(ctx != NULL);
 	assert(ctx->desc != NULL);
@@ -5049,11 +5108,11 @@ bdev_nvme_set_preferred_path_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_bdev_nvme_set_preferred_path(struct spdk_io_channel_iter *i)
+_bdev_nvme_set_preferred_path(struct nvme_bdev_channel_iter *i,
+			      struct nvme_bdev *nbdev,
+			      struct nvme_bdev_channel *nbdev_ch, void *_ctx)
 {
-	struct bdev_nvme_set_preferred_path_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
+	struct bdev_nvme_set_preferred_path_ctx *ctx = _ctx;
 	struct nvme_io_path *io_path, *prev;
 
 	prev = NULL;
@@ -5081,7 +5140,7 @@ _bdev_nvme_set_preferred_path(struct spdk_io_channel_iter *i)
 		bdev_nvme_clear_current_io_path(nbdev_ch);
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	nvme_bdev_for_each_channel_continue(i, 0);
 }
 
 static struct nvme_ns *
@@ -5165,10 +5224,10 @@ bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
 
 	pthread_mutex_unlock(&nbdev->mutex);
 
-	spdk_for_each_channel(nbdev,
-			      _bdev_nvme_set_preferred_path,
-			      ctx,
-			      bdev_nvme_set_preferred_path_done);
+	nvme_bdev_for_each_channel(nbdev,
+				   _bdev_nvme_set_preferred_path,
+				   ctx,
+				   bdev_nvme_set_preferred_path_done);
 	return;
 
 err_bdev:
@@ -5186,9 +5245,9 @@ struct bdev_nvme_set_multipath_policy_ctx {
 };
 
 static void
-bdev_nvme_set_multipath_policy_done(struct spdk_io_channel_iter *i, int status)
+bdev_nvme_set_multipath_policy_done(struct nvme_bdev *nbdev, void *_ctx, int status)
 {
-	struct bdev_nvme_set_multipath_policy_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct bdev_nvme_set_multipath_policy_ctx *ctx = _ctx;
 
 	assert(ctx != NULL);
 	assert(ctx->desc != NULL);
@@ -5202,18 +5261,16 @@ bdev_nvme_set_multipath_policy_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
+_bdev_nvme_set_multipath_policy(struct nvme_bdev_channel_iter *i,
+				struct nvme_bdev *nbdev,
+				struct nvme_bdev_channel *nbdev_ch, void *ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
-	struct nvme_bdev *nbdev = spdk_io_channel_get_io_device(_ch);
-
 	nbdev_ch->mp_policy = nbdev->mp_policy;
 	nbdev_ch->mp_selector = nbdev->mp_selector;
 	nbdev_ch->rr_min_io = nbdev->rr_min_io;
 	bdev_nvme_clear_current_io_path(nbdev_ch);
 
-	spdk_for_each_channel_continue(i, 0);
+	nvme_bdev_for_each_channel_continue(i, 0);
 }
 
 void
@@ -5284,10 +5341,10 @@ spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multip
 	nbdev->rr_min_io = rr_min_io;
 	pthread_mutex_unlock(&nbdev->mutex);
 
-	spdk_for_each_channel(nbdev,
-			      _bdev_nvme_set_multipath_policy,
-			      ctx,
-			      bdev_nvme_set_multipath_policy_done);
+	nvme_bdev_for_each_channel(nbdev,
+				   _bdev_nvme_set_multipath_policy,
+				   ctx,
+				   bdev_nvme_set_multipath_policy_done);
 	return;
 
 err_module:
