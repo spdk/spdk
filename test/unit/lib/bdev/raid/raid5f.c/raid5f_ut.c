@@ -461,7 +461,7 @@ spdk_bdev_readv_blocks_degraded(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	struct test_raid_bdev_io *test_raid_bdev_io;
 	struct raid_io_info *io_info;
 	struct raid_bdev *raid_bdev;
-	uint8_t data_chunk_idx;
+	uint8_t data_chunk_idx = 0;
 	void *buf, *buf_md;
 	struct iovec src;
 
