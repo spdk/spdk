@@ -212,6 +212,7 @@ struct nvme_bdev_channel {
 	STAILQ_HEAD(, nvme_io_path)		io_path_list;
 	TAILQ_HEAD(retry_io_head, nvme_bdev_io)	retry_io_list;
 	struct spdk_poller			*retry_io_poller;
+	bool					resetting;
 };
 
 struct nvme_poll_group {
