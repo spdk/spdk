@@ -34,10 +34,6 @@ function install_qat() {
 	patch --dir="$GIT_REPOS/QAT" -p1 \
 		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-empty-body.patch"
 
-	if [[ $ID == ubuntu ]] && ge "$kernel_ver" 5.15.0-118 && lt "$kernel_ver" 6.3; then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-ubuntu-algapi.patch"
-
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
