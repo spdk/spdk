@@ -2344,7 +2344,7 @@ nvmf_get_error_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int i
 
 static void
 nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
-		      uint64_t offset, uint32_t length, uint32_t rae)
+		      uint64_t offset, uint32_t length, uint32_t rae, uint32_t rgo)
 {
 	struct spdk_nvme_ana_page ana_hdr;
 	struct spdk_nvme_ana_group_descriptor ana_desc;
@@ -2396,7 +2396,11 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 			memset(&ana_desc, 0, sizeof(ana_desc));
 
 			ana_desc.ana_group_id = anagrpid;
-			ana_desc.num_of_nsid = ctrlr->subsys->ana_group[anagrpid - 1];
+			if (rgo) {
+				ana_desc.num_of_nsid = 0;
+			} else {
+				ana_desc.num_of_nsid = ctrlr->subsys->ana_group[anagrpid - 1];
+			}
 			ana_desc.ana_state = nvmf_ctrlr_get_ana_state(ctrlr, anagrpid);
 
 			copy_len = spdk_min(sizeof(ana_desc) - offset, length);
@@ -2409,6 +2413,10 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 			if (length == 0) {
 				goto done;
 			}
+		}
+
+		if (rgo) {
+			continue;
 		}
 
 		/* TODO: Revisit here about O(n^2) cost if we have subsystem with
@@ -2705,7 +2713,8 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 			if (subsystem->flags.ana_reporting) {
-				nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+				uint32_t rgo = cmd->cdw10_bits.get_log_page.lsp & 1;
+				nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae, rgo);
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			} else {
 				goto invalid_log_page;

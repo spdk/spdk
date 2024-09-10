@@ -2165,8 +2165,10 @@ test_multi_async_event_reqs(void)
 static void
 test_get_ana_log_page_one_ns_per_anagrp(void)
 {
-#define UT_ANA_DESC_SIZE (sizeof(struct spdk_nvme_ana_group_descriptor) + sizeof(uint32_t))
-#define UT_ANA_LOG_PAGE_SIZE (sizeof(struct spdk_nvme_ana_page) + 3 * UT_ANA_DESC_SIZE)
+#define UT_ANA_DESC_MAX_SIZE (sizeof(struct spdk_nvme_ana_group_descriptor) + sizeof(uint32_t))
+#define UT_ANA_LOG_PAGE_MAX_SIZE (sizeof(struct spdk_nvme_ana_page) + 3 * UT_ANA_DESC_MAX_SIZE)
+#define UT_ANA_DESC_SIZE(rgo) (sizeof(struct spdk_nvme_ana_group_descriptor) + (rgo ? 0 : sizeof(uint32_t)))
+#define UT_ANA_LOG_PAGE_SIZE(rgo) (sizeof(struct spdk_nvme_ana_page) + 3 * UT_ANA_DESC_SIZE(rgo))
 	uint32_t ana_group[3];
 	struct spdk_nvmf_subsystem subsystem = { .ana_group = ana_group };
 	struct spdk_nvmf_ctrlr ctrlr = {};
@@ -2177,12 +2179,13 @@ test_get_ana_log_page_one_ns_per_anagrp(void)
 	uint64_t offset;
 	uint32_t length;
 	int i;
-	char expected_page[UT_ANA_LOG_PAGE_SIZE] = {0};
-	char actual_page[UT_ANA_LOG_PAGE_SIZE] = {0};
+	char expected_page[UT_ANA_LOG_PAGE_MAX_SIZE] = {0};
+	char actual_page[UT_ANA_LOG_PAGE_MAX_SIZE] = {0};
 	struct iovec iov, iovs[2];
 	struct spdk_nvme_ana_page *ana_hdr;
-	char _ana_desc[UT_ANA_DESC_SIZE];
+	char _ana_desc[UT_ANA_DESC_MAX_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
+	uint32_t rgo;
 
 	subsystem.ns = ns_arr;
 	subsystem.max_nsid = 3;
@@ -2201,60 +2204,72 @@ test_get_ana_log_page_one_ns_per_anagrp(void)
 		ns_arr[i]->anagrpid = i + 1;
 	}
 
-	/* create expected page */
-	ana_hdr = (void *)&expected_page[0];
-	ana_hdr->num_ana_group_desc = 3;
-	ana_hdr->change_count = 0;
+	for (rgo = 0; rgo <= 1; rgo++) {
+		memset(expected_page, 0, sizeof(expected_page));
+		memset(actual_page, 0, sizeof(actual_page));
 
-	/* descriptor may be unaligned. So create data and then copy it to the location. */
-	ana_desc = (void *)_ana_desc;
-	offset = sizeof(struct spdk_nvme_ana_page);
+		/* create expected page */
+		ana_hdr = (void *)&expected_page[0];
+		ana_hdr->num_ana_group_desc = 3;
+		ana_hdr->change_count = 0;
 
-	for (i = 0; i < 3; i++) {
-		memset(ana_desc, 0, UT_ANA_DESC_SIZE);
-		ana_desc->ana_group_id = ns_arr[i]->nsid;
-		ana_desc->num_of_nsid = 1;
-		ana_desc->change_count = 0;
-		ana_desc->ana_state = ctrlr.listener->ana_state[i];
-		ana_desc->nsid[0] = ns_arr[i]->nsid;
-		memcpy(&expected_page[offset], ana_desc, UT_ANA_DESC_SIZE);
-		offset += UT_ANA_DESC_SIZE;
+		/* descriptor may be unaligned. So create data and then copy it to the location. */
+		ana_desc = (void *)_ana_desc;
+		offset = sizeof(struct spdk_nvme_ana_page);
+
+		for (i = 0; i < 3; i++) {
+			memset(ana_desc, 0, UT_ANA_DESC_MAX_SIZE);
+			ana_desc->ana_group_id = ns_arr[i]->nsid;
+			ana_desc->num_of_nsid = rgo ? 0 : 1;
+			ana_desc->change_count = 0;
+			ana_desc->ana_state = ctrlr.listener->ana_state[i];
+			if (!rgo) {
+				ana_desc->nsid[0] = ns_arr[i]->nsid;
+			}
+			memcpy(&expected_page[offset], ana_desc, UT_ANA_DESC_SIZE(rgo));
+			offset += UT_ANA_DESC_SIZE(rgo);
+		}
+
+		/* read entire actual log page */
+		offset = 0;
+		while (offset < UT_ANA_LOG_PAGE_MAX_SIZE) {
+			length = spdk_min(16, UT_ANA_LOG_PAGE_MAX_SIZE - offset);
+			iov.iov_base = &actual_page[offset];
+			iov.iov_len = length;
+			nvmf_get_ana_log_page(&ctrlr, &iov, 1, offset, length, 0, rgo);
+			offset += length;
+		}
+
+		/* compare expected page and actual page */
+		CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_MAX_SIZE) == 0);
+
+		memset(&actual_page[0], 0, UT_ANA_LOG_PAGE_MAX_SIZE);
+		offset = 0;
+		iovs[0].iov_base = &actual_page[offset];
+		iovs[0].iov_len = UT_ANA_LOG_PAGE_MAX_SIZE - UT_ANA_DESC_MAX_SIZE + 4;
+		offset += UT_ANA_LOG_PAGE_MAX_SIZE - UT_ANA_DESC_MAX_SIZE + 4;
+		iovs[1].iov_base = &actual_page[offset];
+		iovs[1].iov_len = UT_ANA_LOG_PAGE_MAX_SIZE - offset;
+		nvmf_get_ana_log_page(&ctrlr, &iovs[0], 2, 0, UT_ANA_LOG_PAGE_MAX_SIZE, 0, rgo);
+
+		CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_MAX_SIZE) == 0);
 	}
-
-	/* read entire actual log page */
-	offset = 0;
-	while (offset < UT_ANA_LOG_PAGE_SIZE) {
-		length = spdk_min(16, UT_ANA_LOG_PAGE_SIZE - offset);
-		iov.iov_base = &actual_page[offset];
-		iov.iov_len = length;
-		nvmf_get_ana_log_page(&ctrlr, &iov, 1, offset, length, 0);
-		offset += length;
-	}
-
-	/* compare expected page and actual page */
-	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
-
-	memset(&actual_page[0], 0, UT_ANA_LOG_PAGE_SIZE);
-	offset = 0;
-	iovs[0].iov_base = &actual_page[offset];
-	iovs[0].iov_len = UT_ANA_LOG_PAGE_SIZE - UT_ANA_DESC_SIZE + 4;
-	offset += UT_ANA_LOG_PAGE_SIZE - UT_ANA_DESC_SIZE + 4;
-	iovs[1].iov_base = &actual_page[offset];
-	iovs[1].iov_len = UT_ANA_LOG_PAGE_SIZE - offset;
-	nvmf_get_ana_log_page(&ctrlr, &iovs[0], 2, 0, UT_ANA_LOG_PAGE_SIZE, 0);
-
-	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
 
 #undef UT_ANA_DESC_SIZE
 #undef UT_ANA_LOG_PAGE_SIZE
+#undef UT_ANA_DESC_MAX_SIZE
+#undef UT_ANA_LOG_PAGE_MAX_SIZE
 }
 
 static void
 test_get_ana_log_page_multi_ns_per_anagrp(void)
 {
-#define UT_ANA_LOG_PAGE_SIZE	(sizeof(struct spdk_nvme_ana_page) +	\
-				 sizeof(struct spdk_nvme_ana_group_descriptor) * 2 +	\
-				 sizeof(uint32_t) * 5)
+#define UT_ANA_LOG_PAGE_SIZE(rgo)	(sizeof(struct spdk_nvme_ana_page) +	\
+					 sizeof(struct spdk_nvme_ana_group_descriptor) * 2 +	\
+					 (rgo ? 0 : (sizeof(uint32_t) * 5)))
+#define UT_ANA_LOG_PAGE_MAX_SIZE	(sizeof(struct spdk_nvme_ana_page) +	\
+					 sizeof(struct spdk_nvme_ana_group_descriptor) * 2 +	\
+					 sizeof(uint32_t) * 5)
 	struct spdk_nvmf_ns ns[5];
 	struct spdk_nvmf_ns *ns_arr[5] = {&ns[0], &ns[1], &ns[2], &ns[3], &ns[4]};
 	uint32_t ana_group[5] = {0};
@@ -2262,15 +2277,16 @@ test_get_ana_log_page_multi_ns_per_anagrp(void)
 	enum spdk_nvme_ana_state ana_state[5];
 	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state, };
 	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .listener = &listener, };
-	char expected_page[UT_ANA_LOG_PAGE_SIZE] = {0};
-	char actual_page[UT_ANA_LOG_PAGE_SIZE] = {0};
+	char expected_page[UT_ANA_LOG_PAGE_MAX_SIZE] = {0};
+	char actual_page[UT_ANA_LOG_PAGE_MAX_SIZE] = {0};
 	struct iovec iov, iovs[2];
 	struct spdk_nvme_ana_page *ana_hdr;
-	char _ana_desc[UT_ANA_LOG_PAGE_SIZE];
+	char _ana_desc[UT_ANA_LOG_PAGE_MAX_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
 	uint64_t offset;
 	uint32_t length;
 	int i;
+	uint32_t rgo;
 
 	subsystem.max_nsid = 5;
 	subsystem.ana_group[1] = 3;
@@ -2288,61 +2304,71 @@ test_get_ana_log_page_multi_ns_per_anagrp(void)
 	ns_arr[3]->anagrpid = 3;
 	ns_arr[4]->anagrpid = 2;
 
-	/* create expected page */
-	ana_hdr = (void *)&expected_page[0];
-	ana_hdr->num_ana_group_desc = 2;
-	ana_hdr->change_count = 0;
+	for (rgo = 0; rgo <= 1; rgo++) {
+		memset(expected_page, 0, sizeof(expected_page));
+		memset(actual_page, 0, sizeof(actual_page));
 
-	/* descriptor may be unaligned. So create data and then copy it to the location. */
-	ana_desc = (void *)_ana_desc;
-	offset = sizeof(struct spdk_nvme_ana_page);
+		/* create expected page */
+		ana_hdr = (void *)&expected_page[0];
+		ana_hdr->num_ana_group_desc = 2;
+		ana_hdr->change_count = 0;
 
-	memset(_ana_desc, 0, sizeof(_ana_desc));
-	ana_desc->ana_group_id = 2;
-	ana_desc->num_of_nsid = 3;
-	ana_desc->change_count = 0;
-	ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
-	ana_desc->nsid[0] = 1;
-	ana_desc->nsid[1] = 3;
-	ana_desc->nsid[2] = 5;
-	memcpy(&expected_page[offset], ana_desc, sizeof(struct spdk_nvme_ana_group_descriptor) +
-	       sizeof(uint32_t) * 3);
-	offset += sizeof(struct spdk_nvme_ana_group_descriptor) + sizeof(uint32_t) * 3;
+		/* descriptor may be unaligned. So create data and then copy it to the location. */
+		ana_desc = (void *)_ana_desc;
+		offset = sizeof(struct spdk_nvme_ana_page);
 
-	memset(_ana_desc, 0, sizeof(_ana_desc));
-	ana_desc->ana_group_id = 3;
-	ana_desc->num_of_nsid = 2;
-	ana_desc->change_count = 0;
-	ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
-	ana_desc->nsid[0] = 2;
-	ana_desc->nsid[1] = 4;
-	memcpy(&expected_page[offset], ana_desc, sizeof(struct spdk_nvme_ana_group_descriptor) +
-	       sizeof(uint32_t) * 2);
+		memset(_ana_desc, 0, sizeof(_ana_desc));
+		ana_desc->ana_group_id = 2;
+		ana_desc->num_of_nsid = rgo ? 0 : 3;
+		ana_desc->change_count = 0;
+		ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+		if (!rgo) {
+			ana_desc->nsid[0] = 1;
+			ana_desc->nsid[1] = 3;
+			ana_desc->nsid[2] = 5;
+		}
+		memcpy(&expected_page[offset], ana_desc, sizeof(struct spdk_nvme_ana_group_descriptor) +
+		       (rgo ? 0 : (sizeof(uint32_t) * 3)));
+		offset += sizeof(struct spdk_nvme_ana_group_descriptor) + (rgo ? 0 : (sizeof(uint32_t) * 3));
 
-	/* read entire actual log page, and compare expected page and actual page. */
-	offset = 0;
-	while (offset < UT_ANA_LOG_PAGE_SIZE) {
-		length = spdk_min(16, UT_ANA_LOG_PAGE_SIZE - offset);
-		iov.iov_base = &actual_page[offset];
-		iov.iov_len = length;
-		nvmf_get_ana_log_page(&ctrlr, &iov, 1, offset, length, 0);
-		offset += length;
+		memset(_ana_desc, 0, sizeof(_ana_desc));
+		ana_desc->ana_group_id = 3;
+		ana_desc->num_of_nsid = rgo ? 0 : 2;
+		ana_desc->change_count = 0;
+		ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+		if (!rgo) {
+			ana_desc->nsid[0] = 2;
+			ana_desc->nsid[1] = 4;
+		}
+		memcpy(&expected_page[offset], ana_desc, sizeof(struct spdk_nvme_ana_group_descriptor) +
+		       (rgo ? 0 : (sizeof(uint32_t) * 2)));
+
+		/* read entire actual log page, and compare expected page and actual page. */
+		offset = 0;
+		while (offset < UT_ANA_LOG_PAGE_MAX_SIZE) {
+			length = spdk_min(16, UT_ANA_LOG_PAGE_MAX_SIZE - offset);
+			iov.iov_base = &actual_page[offset];
+			iov.iov_len = length;
+			nvmf_get_ana_log_page(&ctrlr, &iov, 1, offset, length, 0, rgo);
+			offset += length;
+		}
+
+		CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_MAX_SIZE) == 0);
+
+		memset(&actual_page[0], 0, UT_ANA_LOG_PAGE_MAX_SIZE);
+		offset = 0;
+		iovs[0].iov_base = &actual_page[offset];
+		iovs[0].iov_len = UT_ANA_LOG_PAGE_MAX_SIZE - sizeof(uint32_t) * 5;
+		offset += UT_ANA_LOG_PAGE_MAX_SIZE - sizeof(uint32_t) * 5;
+		iovs[1].iov_base = &actual_page[offset];
+		iovs[1].iov_len = sizeof(uint32_t) * 5;
+		nvmf_get_ana_log_page(&ctrlr, &iovs[0], 2, 0, UT_ANA_LOG_PAGE_MAX_SIZE, 0, rgo);
+
+		CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_MAX_SIZE) == 0);
 	}
 
-	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
-
-	memset(&actual_page[0], 0, UT_ANA_LOG_PAGE_SIZE);
-	offset = 0;
-	iovs[0].iov_base = &actual_page[offset];
-	iovs[0].iov_len = UT_ANA_LOG_PAGE_SIZE - sizeof(uint32_t) * 5;
-	offset += UT_ANA_LOG_PAGE_SIZE - sizeof(uint32_t) * 5;
-	iovs[1].iov_base = &actual_page[offset];
-	iovs[1].iov_len = sizeof(uint32_t) * 5;
-	nvmf_get_ana_log_page(&ctrlr, &iovs[0], 2, 0, UT_ANA_LOG_PAGE_SIZE, 0);
-
-	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
-
 #undef UT_ANA_LOG_PAGE_SIZE
+#undef UT_ANA_LOG_PAGE_MAX_SIZE
 }
 static void
 test_multi_async_events(void)
