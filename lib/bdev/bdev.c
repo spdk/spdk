@@ -7013,7 +7013,7 @@ bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_ABORT;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	if (bdev->split_on_optimal_io_boundary && bio_to_abort->internal.f.split) {
+	if (bio_to_abort->internal.f.split) {
 		assert(bdev_io_should_split(bio_to_abort));
 		bdev_io->u.bdev.abort.bio_cb_arg = bio_to_abort;
 
