@@ -211,8 +211,7 @@ TAILQ_HEAD(, job_config) job_config_list
 
 static bool g_performance_dump_active = false;
 
-struct bdevperf_aggregate_stats {
-	struct bdevperf_job		*current_job;
+struct bdevperf_stats {
 	uint64_t			io_time_in_usec;
 	uint64_t			ema_period;
 	double				total_io_per_second;
@@ -225,7 +224,12 @@ struct bdevperf_aggregate_stats {
 	uint64_t			total_tsc;
 };
 
-static struct bdevperf_aggregate_stats g_stats = {.min_latency = (double)UINT64_MAX};
+struct bdevperf_aggregate_stats {
+	struct bdevperf_job		*current_job;
+	struct bdevperf_stats		total;
+};
+
+static struct bdevperf_aggregate_stats g_stats = {.total.min_latency = (double)UINT64_MAX};
 
 struct lcore_thread {
 	struct spdk_thread		*thread;
@@ -320,7 +324,7 @@ get_avg_latency(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 }
 
 static void
-performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job,
+performance_dump_job(struct bdevperf_aggregate_stats *aggregate, struct bdevperf_job *job,
 		     bool print_job_info)
 {
 	double io_per_second, mb_per_second, failed_per_second, timeout_per_second;
@@ -329,6 +333,7 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	uint64_t tsc_rate;
 	uint64_t total_io;
 	struct latency_info latency_info = {};
+	struct bdevperf_stats *stats = &aggregate->total;
 
 	if (g_performance_dump_active == true) {
 		/* Use job's actual run time as Job has ended */
@@ -615,7 +620,7 @@ bdevperf_test_done(void *ctx)
 	int rc;
 
 	if (g_time_in_usec) {
-		g_stats.io_time_in_usec = g_time_in_usec;
+		g_stats.total.io_time_in_usec = g_time_in_usec;
 
 		if (!g_run_rc && g_performance_dump_active) {
 			spdk_thread_send_msg(spdk_get_thread(), bdevperf_test_done, NULL);
@@ -644,17 +649,19 @@ bdevperf_test_done(void *ctx)
 	printf("\r =================================================================================="
 	       "=================================\n");
 	printf("\r %-28s: %10s %10.2f %10.2f",
-	       "Total", "", g_stats.total_io_per_second, g_stats.total_mb_per_second);
+	       "Total", "", g_stats.total.total_io_per_second, g_stats.total.total_mb_per_second);
 	printf(" %10.2f %8.2f",
-	       g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
+	       g_stats.total.total_failed_per_second, g_stats.total.total_timeout_per_second);
 
-	if (g_stats.total_io_completed != 0) {
-		average_latency = ((double)g_stats.total_tsc / g_stats.total_io_completed) * SPDK_SEC_TO_USEC /
+	if (g_stats.total.total_io_completed != 0) {
+		average_latency = ((double)g_stats.total.total_tsc / g_stats.total.total_io_completed) *
+				  SPDK_SEC_TO_USEC /
 				  spdk_get_ticks_hz();
 	}
-	printf(" %10.2f %10.2f %10.2f\n", average_latency, g_stats.min_latency, g_stats.max_latency);
+	printf(" %10.2f %10.2f %10.2f\n", average_latency, g_stats.total.min_latency,
+	       g_stats.total.max_latency);
 
-	if (g_latency_display_level == 0 || g_stats.total_io_completed == 0) {
+	if (g_latency_display_level == 0 || g_stats.total.total_io_completed == 0) {
 		goto clean;
 	}
 
@@ -1408,7 +1415,8 @@ bdevperf_job_run(void *ctx)
 static void
 _performance_dump_done(void *ctx)
 {
-	struct bdevperf_aggregate_stats *stats = ctx;
+	struct bdevperf_aggregate_stats *aggregate = ctx;
+	struct bdevperf_stats *stats = &aggregate->total;
 	double average_latency;
 
 	if (g_summarize_performance) {
@@ -1432,7 +1440,7 @@ _performance_dump_done(void *ctx)
 
 	g_performance_dump_active = false;
 
-	free(stats);
+	free(aggregate);
 }
 
 static void
@@ -1455,7 +1463,9 @@ _performance_dump(void *ctx)
 static int
 performance_statistics_thread(void *arg)
 {
-	struct bdevperf_aggregate_stats *stats;
+	struct bdevperf_aggregate_stats *aggregate;
+	struct bdevperf_stats *stats;
+
 
 	if (g_performance_dump_active) {
 		return -1;
@@ -1463,11 +1473,11 @@ performance_statistics_thread(void *arg)
 
 	g_performance_dump_active = true;
 
-	stats = calloc(1, sizeof(*stats));
-	if (stats == NULL) {
+	aggregate = calloc(1, sizeof(*aggregate));
+	if (aggregate == NULL) {
 		return -1;
 	}
-
+	stats = &aggregate->total;
 	stats->min_latency = (double)UINT64_MAX;
 
 	g_show_performance_period_num++;
@@ -1479,11 +1489,11 @@ performance_statistics_thread(void *arg)
 	 * These jobs will not get removed here until a final performance dump is run,
 	 * so this should be safe without locking.
 	 */
-	stats->current_job = TAILQ_FIRST(&g_bdevperf.jobs);
-	if (stats->current_job == NULL) {
-		spdk_thread_send_msg(g_main_thread, _performance_dump_done, stats);
+	aggregate->current_job = TAILQ_FIRST(&g_bdevperf.jobs);
+	if (aggregate->current_job == NULL) {
+		spdk_thread_send_msg(g_main_thread, _performance_dump_done, aggregate);
 	} else {
-		spdk_thread_send_msg(stats->current_job->thread, _performance_dump, stats);
+		spdk_thread_send_msg(aggregate->current_job->thread, _performance_dump, aggregate);
 	}
 
 	return -1;
