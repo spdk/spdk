@@ -2187,7 +2187,7 @@ Example response:
 
 Set config and enable compressdev accel module offload.
 Select the DPDK polled mode driver (pmd) for the accel compress module,
-0 = auto-select, 1= QAT only, 2 = mlx5_pci only.
+0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only.
 
 #### Parameters
 
