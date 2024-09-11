@@ -25,6 +25,7 @@
 #define BDEVPERF_CONFIG_UNDEFINED -1
 #define BDEVPERF_CONFIG_ERROR -2
 #define PATTERN_TYPES_STR "(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush, write_zeroes)"
+#define BDEVPERF_MAX_COREMASK_STRING 64
 
 struct bdevperf_task {
 	struct iovec			iov;
@@ -426,6 +427,50 @@ performance_dump_job_stdout(struct bdevperf_job *job,
 }
 
 static void
+performance_dump_job_json(struct bdevperf_job *job,
+			  struct spdk_json_write_ctx *w,
+			  struct bdevperf_stats *job_stats)
+{
+	char core_mask_string[BDEVPERF_MAX_COREMASK_STRING] = {0};
+
+	spdk_json_write_named_string(w, "job", job->name);
+	snprintf(core_mask_string, BDEVPERF_MAX_COREMASK_STRING,
+		 "0x%s", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
+	spdk_json_write_named_string(w, "core_mask", core_mask_string);
+	spdk_json_write_named_string(w, "workload", parse_workload_type(job->workload_type));
+
+	if (job->workload_type == JOB_CONFIG_RW_RW || job->workload_type == JOB_CONFIG_RW_RANDRW) {
+		spdk_json_write_named_uint32(w, "percentage", job->rw_percentage);
+	}
+
+	if (g_shutdown) {
+		spdk_json_write_named_string(w, "status", "terminated");
+	} else if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
+		spdk_json_write_named_string(w, "status", "failed");
+	} else {
+		spdk_json_write_named_string(w, "status", "finished");
+	}
+
+	if (job->verify) {
+		spdk_json_write_named_object_begin(w, "verify_range");
+		spdk_json_write_named_uint64(w, "start", job->ios_base);
+		spdk_json_write_named_uint64(w, "length", job->size_in_ios);
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_json_write_named_uint32(w, "queue_depth", job->queue_depth);
+	spdk_json_write_named_uint32(w, "io_size", job->io_size);
+	spdk_json_write_named_double(w, "runtime", (double)job_stats->io_time_in_usec / SPDK_SEC_TO_USEC);
+	spdk_json_write_named_double(w, "iops", job_stats->total_io_per_second);
+	spdk_json_write_named_double(w, "mibps", job_stats->total_mb_per_second);
+	spdk_json_write_named_uint64(w, "io_failed", job->io_failed);
+	spdk_json_write_named_uint64(w, "io_timeout", job->io_timeout);
+	spdk_json_write_named_double(w, "avg_latency_us", job_stats->average_latency);
+	spdk_json_write_named_double(w, "min_latency_us", job_stats->min_latency);
+	spdk_json_write_named_double(w, "max_latency_us", job_stats->max_latency);
+}
+
+static void
 generate_data(struct bdevperf_job *job, void *buf, void *md_buf, bool unique)
 {
 	int offset_blocks = 0, md_offset, data_block_size, inner_offset;
@@ -632,7 +677,9 @@ bdevperf_test_done(void *ctx)
 	double average_latency = 0.0;
 	uint64_t time_in_usec;
 	int rc;
+	struct spdk_json_write_ctx *w = NULL;
 	struct bdevperf_stats job_stats = {0};
+	struct spdk_cpuset cpu_mask;
 
 	if (g_time_in_usec) {
 		g_stats.total.io_time_in_usec = g_time_in_usec;
@@ -652,18 +699,40 @@ bdevperf_test_done(void *ctx)
 		printf("Received shutdown signal, test time was about %.6f seconds\n",
 		       (double)g_time_in_usec / SPDK_SEC_TO_USEC);
 	}
+	/* Send RPC response if g_run_rc indicate success, or shutdown request was sent to bdevperf.
+	 * rpc_perform_tests_cb will send error response in case of error.
+	 */
+	if ((g_run_rc == 0 || g_shutdown) && g_request) {
+		w = spdk_jsonrpc_begin_result(g_request);
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_array_begin(w, "results");
+	}
 
 	printf("\n%*s\n", 107, "Latency(us)");
 	printf("\r %-*s: %10s %10s %10s %10s %8s %10s %10s %10s\n",
 	       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s", "Average", "min", "max");
 
+
+	spdk_cpuset_zero(&cpu_mask);
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
+		spdk_cpuset_or(&cpu_mask, spdk_thread_get_cpumask(job->thread));
 		memset(&job_stats, 0, sizeof(job_stats));
 		bdevperf_job_get_stats(job, &job_stats, job->run_time_in_usec, 0);
 		bdevperf_job_stats_accumulate(&g_stats.total, &job_stats);
 		performance_dump_job_stdout(job, &job_stats);
+		if (w) {
+			spdk_json_write_object_begin(w);
+			performance_dump_job_json(job, w, &job_stats);
+			spdk_json_write_object_end(w);
+		}
 	}
 
+	if (w) {
+		spdk_json_write_array_end(w);
+		spdk_json_write_named_uint32(w, "core_count", spdk_cpuset_count(&cpu_mask));
+		spdk_json_write_object_end(w);
+		spdk_jsonrpc_end_result(g_request, w);
+	}
 	printf("\r =================================================================================="
 	       "=================================\n");
 	printf("\r %-28s: %10s %10.2f %10.2f",
@@ -2523,16 +2592,11 @@ rpc_perform_tests_reset(void)
 static void
 rpc_perform_tests_cb(void)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = g_request;
 
 	g_request = NULL;
 
-	if (g_run_rc == 0) {
-		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_uint32(w, g_run_rc);
-		spdk_jsonrpc_end_result(request, w);
-	} else {
+	if (g_run_rc) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
 	}
