@@ -22,6 +22,9 @@
 #include "spdk/trace.h"
 #include "spdk_internal/trace_defs.h"
 
+#define ACCEL_DSA_MD_IOBUF_SMALL_CACHE_SIZE			128
+#define ACCEL_DSA_MD_IOBUF_LARGE_CACHE_SIZE			32
+
 static bool g_dsa_enable = false;
 static bool g_kernel_mode = false;
 
@@ -44,6 +47,8 @@ static pthread_mutex_t g_dev_lock = PTHREAD_MUTEX_INITIALIZER;
 struct idxd_task {
 	struct spdk_accel_task	task;
 	struct idxd_io_channel	*chan;
+	struct iovec		md_iov;
+	struct spdk_iobuf_entry	iobuf;
 };
 
 struct idxd_io_channel {
@@ -53,6 +58,7 @@ struct idxd_io_channel {
 	struct spdk_poller		*poller;
 	uint32_t			num_outstanding;
 	STAILQ_HEAD(, spdk_accel_task)	queued_tasks;
+	struct spdk_iobuf_channel	iobuf;
 };
 
 static struct spdk_io_channel *dsa_get_io_channel(void);
@@ -198,6 +204,82 @@ spdk_accel_sw_task_complete(void *ctx)
 	spdk_accel_task_complete(task, task->status);
 }
 
+static void
+_accel_dsa_dix_verify_generate_cb(void *cb_arg, int status)
+{
+	struct idxd_task *idxd_task = cb_arg;
+	struct iovec *original_mdiov = idxd_task->task.d.iovs;
+	size_t mdiov_len = idxd_task->md_iov.iov_len;
+	int rc;
+
+	if (status != 0) {
+		SPDK_ERRLOG("Unable to complete DIX Verify (DIX Generate failed)\n");
+		goto end;
+	}
+
+	rc = memcmp(original_mdiov->iov_base, idxd_task->md_iov.iov_base, mdiov_len);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIX Verify failed\n");
+		status = -EINVAL;
+		rc = spdk_dix_verify(idxd_task->task.s.iovs, idxd_task->task.s.iovcnt,
+				     original_mdiov, idxd_task->task.dif.num_blocks,
+				     idxd_task->task.dif.ctx, idxd_task->task.dif.err);
+		if (rc != 0) {
+			SPDK_ERRLOG("DIX error detected. type=%d, offset=%" PRIu32 "\n",
+				    idxd_task->task.dif.err->err_type,
+				    idxd_task->task.dif.err->err_offset);
+		}
+	}
+
+end:
+	spdk_iobuf_put(&idxd_task->chan->iobuf, idxd_task->md_iov.iov_base, mdiov_len);
+	dsa_done(idxd_task, status);
+}
+
+static void
+_accel_dsa_dix_verify(struct idxd_task *idxd_task)
+{
+	int rc;
+
+	/* Since Intel DSA doesn't provide a separate DIX Verify operation, it is done
+	 * in two steps: DIX Generate to a new buffer and mem compare.
+	 */
+	rc = spdk_idxd_submit_dix_generate(idxd_task->chan->chan, idxd_task->task.s.iovs,
+					   idxd_task->task.s.iovcnt, &idxd_task->md_iov, idxd_task->task.dif.num_blocks,
+					   idxd_task->task.dif.ctx, 0, _accel_dsa_dix_verify_generate_cb, idxd_task);
+	if (rc != 0) {
+		SPDK_ERRLOG("Unable to complete DIX Verify (DIX Generate failed)\n");
+		spdk_iobuf_put(&idxd_task->chan->iobuf, idxd_task->md_iov.iov_base,
+			       idxd_task->md_iov.iov_len);
+		dsa_done(idxd_task, rc);
+	}
+}
+
+static void
+accel_dsa_dix_verify_get_iobuf_cb(struct spdk_iobuf_entry *iobuf, void *buf)
+{
+	struct idxd_task *idxd_task;
+
+	idxd_task = SPDK_CONTAINEROF(iobuf, struct idxd_task, iobuf);
+	idxd_task->md_iov.iov_base = buf;
+	_accel_dsa_dix_verify(idxd_task);
+}
+
+static int
+accel_dsa_dix_verify(struct idxd_io_channel *chan, int flags,
+		     struct idxd_task *idxd_task)
+{
+	idxd_task->md_iov.iov_len = idxd_task->task.d.iovs[0].iov_len;
+	idxd_task->md_iov.iov_base = spdk_iobuf_get(&chan->iobuf, idxd_task->md_iov.iov_len,
+				     &idxd_task->iobuf, accel_dsa_dix_verify_get_iobuf_cb);
+
+	if (idxd_task->md_iov.iov_base != NULL) {
+		_accel_dsa_dix_verify(idxd_task);
+	}
+
+	return 0;
+}
+
 static int
 _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 {
@@ -282,6 +364,9 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_dix_generate(chan->chan, task->s.iovs, task->s.iovcnt,
 						   task->d.iovs, task->dif.num_blocks,
 						   task->dif.ctx, flags, dsa_done, idxd_task);
+		break;
+	case SPDK_ACCEL_OPC_DIX_VERIFY:
+		rc = accel_dsa_dix_verify(chan, flags, idxd_task);
 		break;
 	default:
 		assert(false);
@@ -400,6 +485,7 @@ dsa_supports_opcode(enum spdk_accel_opcode opc)
 	 * for consistency with other DIF operations.
 	 */
 	case SPDK_ACCEL_OPC_DIX_GENERATE:
+	case SPDK_ACCEL_OPC_DIX_VERIFY:
 		/* Supported only if the IOMMU is enabled */
 		return spdk_iommu_is_enabled();
 	default:
@@ -427,6 +513,7 @@ dsa_create_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
 	struct idxd_device *dsa;
+	int rc;
 
 	dsa = idxd_select_device(chan);
 	if (dsa == NULL) {
@@ -439,6 +526,13 @@ dsa_create_cb(void *io_device, void *ctx_buf)
 	STAILQ_INIT(&chan->queued_tasks);
 	chan->num_outstanding = 0;
 	chan->state = IDXD_CHANNEL_ACTIVE;
+	rc = spdk_iobuf_channel_init(&chan->iobuf, "accel_dsa",
+				     ACCEL_DSA_MD_IOBUF_SMALL_CACHE_SIZE,
+				     ACCEL_DSA_MD_IOBUF_LARGE_CACHE_SIZE);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create an iobuf channel in accel dsa\n");
+		return -ENOMEM;
+	}
 
 	return 0;
 }
@@ -448,6 +542,7 @@ dsa_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
 
+	spdk_iobuf_channel_fini(&chan->iobuf);
 	spdk_poller_unregister(&chan->poller);
 	spdk_idxd_put_channel(chan->chan);
 }
@@ -512,6 +607,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 static int
 accel_dsa_init(void)
 {
+	int rc;
+
 	if (!g_dsa_enable) {
 		return -EINVAL;
 	}
@@ -523,6 +620,12 @@ accel_dsa_init(void)
 
 	if (TAILQ_EMPTY(&g_dsa_devices)) {
 		return -ENODEV;
+	}
+
+	rc = spdk_iobuf_register_module("accel_dsa");
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to register accel_dsa iobuf module\n");
+		return rc;
 	}
 
 	g_dsa_initialized = true;

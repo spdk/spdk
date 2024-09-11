@@ -721,6 +721,17 @@ static void
 accel_dix_verify_op_dix_generated_guard_check(void)
 {
 	struct accel_dif_request req;
+	const char *module_name = NULL;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
+
 	accel_dix_generate_verify(&req, SPDK_DIF_FLAGS_GUARD_CHECK |
 				  SPDK_DIF_FLAGS_APPTAG_CHECK |
 				  SPDK_DIF_FLAGS_REFTAG_CHECK, SPDK_DIF_FLAGS_GUARD_CHECK);
@@ -732,6 +743,17 @@ static void
 accel_dix_verify_op_dix_generated_apptag_check(void)
 {
 	struct accel_dif_request req;
+	const char *module_name = NULL;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
+
 	accel_dix_generate_verify(&req, SPDK_DIF_FLAGS_GUARD_CHECK |
 				  SPDK_DIF_FLAGS_APPTAG_CHECK |
 				  SPDK_DIF_FLAGS_REFTAG_CHECK, SPDK_DIF_FLAGS_APPTAG_CHECK);
@@ -743,6 +765,17 @@ static void
 accel_dix_verify_op_dix_generated_reftag_check(void)
 {
 	struct accel_dif_request req;
+	const char *module_name = NULL;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
+
 	accel_dix_generate_verify(&req, SPDK_DIF_FLAGS_GUARD_CHECK |
 				  SPDK_DIF_FLAGS_APPTAG_CHECK |
 				  SPDK_DIF_FLAGS_REFTAG_CHECK, SPDK_DIF_FLAGS_REFTAG_CHECK);
@@ -823,8 +856,18 @@ accel_dif_verify_op_dif_not_generated_guard_check(void)
 static void
 accel_dix_verify_op_dix_not_generated_guard_check(void)
 {
+	const char *module_name = NULL;
 	uint32_t dif_flags_verify = SPDK_DIF_FLAGS_GUARD_CHECK;
 	struct accel_dif_request req;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
 
 	accel_dix_generate_verify(&req, 0, dif_flags_verify);
 
@@ -841,8 +884,18 @@ accel_dif_verify_op_dif_not_generated_apptag_check(void)
 static void
 accel_dix_verify_op_dix_not_generated_apptag_check(void)
 {
+	const char *module_name = NULL;
 	uint32_t dif_flags_verify = SPDK_DIF_FLAGS_APPTAG_CHECK;
 	struct accel_dif_request req;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
 
 	accel_dix_generate_verify(&req, 0, dif_flags_verify);
 
@@ -859,13 +912,68 @@ accel_dif_verify_op_dif_not_generated_reftag_check(void)
 static void
 accel_dix_verify_op_dix_not_generated_reftag_check(void)
 {
+	const char *module_name = NULL;
 	uint32_t dif_flags_verify = SPDK_DIF_FLAGS_REFTAG_CHECK;
 	struct accel_dif_request req;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
 
 	accel_dix_generate_verify(&req, 0, dif_flags_verify);
 
 	CU_ASSERT_EQUAL(g_completion_success, false);
 	CU_ASSERT_EQUAL(accel_dif_error_validate(dif_flags_verify, req.err), true);
+}
+
+static void
+accel_dix_verify_op_dix_guard_not_generated_all_flags_check(void)
+{
+	struct accel_dif_request req;
+	accel_dix_generate_verify(&req,
+				  SPDK_DIF_FLAGS_APPTAG_CHECK |
+				  SPDK_DIF_FLAGS_REFTAG_CHECK,
+				  SPDK_DIF_FLAGS_GUARD_CHECK |
+				  SPDK_DIF_FLAGS_APPTAG_CHECK |
+				  SPDK_DIF_FLAGS_REFTAG_CHECK);
+
+	CU_ASSERT_EQUAL(g_completion_success, false);
+	CU_ASSERT_EQUAL(accel_dif_error_validate(SPDK_DIF_FLAGS_GUARD_CHECK, req.err), true);
+}
+
+static void
+accel_dix_verify_op_dix_apptag_not_generated_all_flags_check(void)
+{
+	struct accel_dif_request req;
+	accel_dix_generate_verify(&req,
+				  SPDK_DIF_FLAGS_GUARD_CHECK |
+				  SPDK_DIF_FLAGS_REFTAG_CHECK,
+				  SPDK_DIF_FLAGS_GUARD_CHECK |
+				  SPDK_DIF_FLAGS_APPTAG_CHECK |
+				  SPDK_DIF_FLAGS_REFTAG_CHECK);
+
+	CU_ASSERT_EQUAL(g_completion_success, false);
+	CU_ASSERT_EQUAL(accel_dif_error_validate(SPDK_DIF_FLAGS_APPTAG_CHECK, req.err), true);
+}
+
+static void
+accel_dix_verify_op_dix_reftag_not_generated_all_flags_check(void)
+{
+	struct accel_dif_request req;
+	accel_dix_generate_verify(&req,
+				  SPDK_DIF_FLAGS_GUARD_CHECK |
+				  SPDK_DIF_FLAGS_APPTAG_CHECK,
+				  SPDK_DIF_FLAGS_GUARD_CHECK |
+				  SPDK_DIF_FLAGS_APPTAG_CHECK |
+				  SPDK_DIF_FLAGS_REFTAG_CHECK);
+
+	CU_ASSERT_EQUAL(g_completion_success, false);
+	CU_ASSERT_EQUAL(accel_dif_error_validate(SPDK_DIF_FLAGS_REFTAG_CHECK, req.err), true);
 }
 
 static void
@@ -911,10 +1019,19 @@ accel_dif_verify_op_apptag_correct_apptag_check(void)
 static void
 accel_dix_verify_op_apptag_correct_apptag_check(void)
 {
+	const char *module_name = NULL;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 	struct accel_dif_request req;
 	struct dif_task *task = &g_dif_task;
 	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
 
 	rc = alloc_dix_bufs(task, 1);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -1106,10 +1223,21 @@ accel_dif_verify_op_tag_incorrect_no_check_or_ignore(uint32_t dif_flags)
 static void
 accel_dix_verify_op_tag_incorrect_no_check_or_ignore(uint32_t dif_flags)
 {
+	const char *module_name = NULL;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 	struct accel_dif_request req;
 	struct dif_task *task = &g_dif_task;
 	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verify for DIX */
+	if (!strcmp(module_name, "dsa") && (dif_flags != (SPDK_DIF_FLAGS_GUARD_CHECK |
+					    SPDK_DIF_FLAGS_APPTAG_CHECK |
+					    SPDK_DIF_FLAGS_REFTAG_CHECK))) {
+		return;
+	}
 
 	rc = alloc_dix_bufs(task, 1);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -1227,10 +1355,19 @@ accel_dif_verify_op_reftag_init_correct_reftag_check(void)
 static void
 accel_dix_verify_op_reftag_init_correct_reftag_check(void)
 {
+	const char *module_name = NULL;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 	struct accel_dif_request req;
 	struct dif_task *task = &g_dif_task;
 	int rc;
+
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_DIX_VERIFY, &module_name);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Intel DSA does not allow for selective DIF fields verification for DIX */
+	if (!strcmp(module_name, "dsa")) {
+		return;
+	}
 
 	rc = alloc_dix_bufs(task, 2);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -2083,6 +2220,12 @@ setup_accel_tests(void)
 			accel_dix_verify_op_dix_not_generated_reftag_check) == NULL ||
 	    CU_add_test(suite, "verify: DIX not generated, all flags check",
 			accel_dix_verify_op_dix_not_generated_all_flags_check) == NULL ||
+	    CU_add_test(suite, "verify: DIX guard not generated, all flags check",
+			accel_dix_verify_op_dix_guard_not_generated_all_flags_check) == NULL ||
+	    CU_add_test(suite, "verify: DIX apptag not generated, all flags check",
+			accel_dix_verify_op_dix_apptag_not_generated_all_flags_check) == NULL ||
+	    CU_add_test(suite, "verify: DIX reftag not generated, all flags check",
+			accel_dix_verify_op_dix_reftag_not_generated_all_flags_check) == NULL ||
 
 	    CU_add_test(suite, "verify: DIF APPTAG correct, APPTAG check",
 			accel_dif_verify_op_apptag_correct_apptag_check) == NULL ||
