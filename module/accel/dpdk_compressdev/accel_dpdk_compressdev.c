@@ -154,7 +154,7 @@ create_compress_dev(uint8_t index)
 	rc = rte_compressdev_configure(cdev_id, &config);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to configure compressdev %u\n", cdev_id);
-		goto err;
+		goto err_close;
 	}
 
 	/* Pre-setup all potential qpairs now and assign them in the channel
@@ -176,7 +176,7 @@ create_compress_dev(uint8_t index)
 				SPDK_ERRLOG("Failed to setup queue pair on "
 					    "compressdev %u with error %u\n", cdev_id, rc);
 				rc = -EINVAL;
-				goto err;
+				goto err_close;
 			}
 		}
 	}
@@ -185,7 +185,7 @@ create_compress_dev(uint8_t index)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to start device %u: error %d\n",
 			    cdev_id, rc);
-		goto err;
+		goto err_close;
 	}
 
 	if (device->cdev_info.capabilities->comp_feature_flags & RTE_COMP_FF_SHAREABLE_PRIV_XFORM) {
@@ -194,7 +194,7 @@ create_compress_dev(uint8_t index)
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
 				    cdev_id, rc);
-			goto err;
+			goto err_stop;
 		}
 
 		rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
@@ -202,11 +202,11 @@ create_compress_dev(uint8_t index)
 		if (rc) {
 			SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
 				    cdev_id, rc);
-			goto err;
+			goto err_stop;
 		}
 	} else {
 		SPDK_ERRLOG("PMD does not support shared transforms\n");
-		goto err;
+		goto err_stop;
 	}
 
 	/* Build up list of device/qp combinations */
@@ -214,7 +214,7 @@ create_compress_dev(uint8_t index)
 		dev_qp = calloc(1, sizeof(struct comp_device_qp));
 		if (!dev_qp) {
 			rc = -ENOMEM;
-			goto err;
+			goto err_qp;
 		}
 		dev_qp->device = device;
 		dev_qp->qp = i;
@@ -234,11 +234,15 @@ create_compress_dev(uint8_t index)
 
 	return 0;
 
-err:
+err_qp:
 	TAILQ_FOREACH_SAFE(dev_qp, &g_comp_device_qp, link, tmp_qp) {
 		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
 		free(dev_qp);
 	}
+err_stop:
+	rte_compressdev_stop(cdev_id);
+err_close:
+	rte_compressdev_close(cdev_id);
 	free(device);
 	return rc;
 }
@@ -861,6 +865,8 @@ _device_unregister_cb(void *io_device)
 
 	while ((device = TAILQ_FIRST(&g_compress_devs))) {
 		TAILQ_REMOVE(&g_compress_devs, device, link);
+		rte_compressdev_stop(device->cdev_id);
+		rte_compressdev_close(device->cdev_id);
 		free(device);
 	}
 

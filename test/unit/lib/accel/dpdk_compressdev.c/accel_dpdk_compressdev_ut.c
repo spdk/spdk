@@ -250,6 +250,9 @@ DEFINE_STUB(rte_mbuf_dynfield_register, int, (const struct rte_mbuf_dynfield *pa
 	    DPDK_DYNFIELD_OFFSET);
 DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
 DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
+DEFINE_STUB(rte_vdev_uninit, int, (const char *name), 0);
+DEFINE_STUB_V(rte_compressdev_stop, (uint8_t dev_id));
+DEFINE_STUB(rte_compressdev_close, int, (uint8_t dev_id), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
 DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
 
