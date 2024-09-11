@@ -3181,6 +3181,11 @@ spdk_accel_initialize(void)
 		SPDK_ERRLOG("Different accel modules are assigned to encrypt and decrypt operations");
 		return -EINVAL;
 	}
+	if (g_modules_opc[SPDK_ACCEL_OPC_COMPRESS].module !=
+	    g_modules_opc[SPDK_ACCEL_OPC_DECOMPRESS].module) {
+		SPDK_ERRLOG("Different accel modules are assigned to compress and decompress operations");
+		return -EINVAL;
+	}
 
 	for (op = 0; op < SPDK_ACCEL_OPC_LAST; op++) {
 		assert(g_modules_opc[op].module != NULL);
