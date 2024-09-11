@@ -19,7 +19,7 @@ static void
 rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct accel_mlx5_attr attr;
+	struct accel_mlx5_attr attr = {};
 	int rc;
 
 	accel_mlx5_get_default_attr(&attr);
@@ -29,6 +29,7 @@ rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 					    SPDK_COUNTOF(rpc_mlx5_module_decoder),
 					    &attr)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+			free(attr.allowed_devs);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 							 "spdk_json_decode_object failed");
 			return;
@@ -41,6 +42,7 @@ rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 	} else {
 		spdk_jsonrpc_send_bool_response(request, true);
 	}
+	free(attr.allowed_devs);
 }
 SPDK_RPC_REGISTER("mlx5_scan_accel_module", rpc_mlx5_scan_accel_module, SPDK_RPC_STARTUP)
 
