@@ -21,6 +21,13 @@ If multipathing shall be enabled for nvme bdev, `bdev_opts.multipath` shall be s
 Added 3 APIs to handle multiple interrupts for PCI device `spdk_pci_device_enable_interrupts()`,
 `spdk_pci_device_disable_interrupts()`, and `spdk_pci_device_get_interrupt_efd_by_index()`.
 
+### nvme
+
+Added `enable_interrupts` option to `spdk_nvme_ctrlr_opts`. If set to true then interrupts may be
+enabled during initialization. Make sure to check the resulting value after the attach step to
+check for success. This mode is currently only supported for PCIe transport. This is only
+supported within a primary SPDK process, and if enabled SPDK will not support secondary processes.
+
 ### nvmf
 
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page

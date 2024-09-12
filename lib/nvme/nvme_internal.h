@@ -162,6 +162,7 @@ extern struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts;
  *  try to configure, if available.
  */
 #define DEFAULT_MAX_IO_QUEUES		(1024)
+#define MAX_IO_QUEUES_WITH_INTERRUPTS	(256)
 #define DEFAULT_ADMIN_QUEUE_SIZE	(32)
 #define DEFAULT_IO_QUEUE_SIZE		(256)
 #define DEFAULT_IO_QUEUE_SIZE_FOR_QUIRK	(1024) /* Matches Linux kernel driver */

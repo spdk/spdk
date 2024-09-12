@@ -840,6 +840,11 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 			return -1;
 		}
 
+		if (ctrlr->opts.enable_interrupts) {
+			SPDK_ERRLOG("Secondary processes are not supported in interrupt mode.\n");
+			return -1;
+		}
+
 		return nvme_ctrlr_add_process(ctrlr, pci_dev);
 	}
 
@@ -1031,11 +1036,30 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_pcie_ctrlr_free_bars(pctrlr);
 
 	if (devhandle) {
+		if (ctrlr->opts.enable_interrupts) {
+			spdk_pci_device_disable_interrupts(devhandle);
+		}
 		spdk_pci_device_unclaim(devhandle);
 		spdk_pci_device_detach(devhandle);
 	}
 
 	spdk_free(pctrlr);
+
+	return 0;
+}
+
+static int
+nvme_pcie_ctrlr_enable_interrupts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_pci_device *devhandle = nvme_ctrlr_proc_get_devhandle(ctrlr);
+	int rc;
+
+	assert(devhandle != NULL);
+	rc = spdk_pci_device_enable_interrupts(devhandle, ctrlr->opts.num_io_queues);
+	if (rc) {
+		SPDK_ERRLOG("enable_interrupts() failed\n");
+		return -EIO;
+	}
 
 	return 0;
 }
@@ -1091,6 +1115,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_scan_attached = nvme_pci_ctrlr_scan_attached,
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
 	.ctrlr_enable = nvme_pcie_ctrlr_enable,
+	.ctrlr_enable_interrupts = nvme_pcie_ctrlr_enable_interrupts,
 
 	.ctrlr_get_registers = nvme_pcie_ctrlr_get_registers,
 	.ctrlr_set_reg_4 = nvme_pcie_ctrlr_set_reg_4,

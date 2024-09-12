@@ -61,8 +61,14 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	bool no_shn_notification;
 
-	/* Hole at bytes 6-7. */
-	uint8_t	reserved6[2];
+	/**
+	 * Enable interrupts for completion notification. This is only supported within a primary
+	 * SPDK process, and if enabled SPDK will not support secondary processes.
+	 */
+	bool enable_interrupts;
+
+	/* Hole at byte 7. */
+	uint8_t	reserved7;
 
 	/**
 	 * Type of arbitration mechanism

@@ -160,6 +160,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(num_io_queues, DEFAULT_MAX_IO_QUEUES);
 	SET_FIELD(use_cmb_sqs, false);
 	SET_FIELD(no_shn_notification, false);
+	SET_FIELD(enable_interrupts, false);
 	SET_FIELD(arb_mechanism, SPDK_NVME_CC_AMS_RR);
 	SET_FIELD(arbitration_burst, 0);
 	SET_FIELD(low_priority_weight, 0);
@@ -465,6 +466,11 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 				goto unlock;
 			}
 		}
+	}
+
+	if (ctrlr->opts.enable_interrupts && opts.delay_cmd_submit) {
+		NVME_CTRLR_ERRLOG(ctrlr, "delay command submit cannot work with interrupts\n");
+		goto unlock;
 	}
 
 	qpair = nvme_ctrlr_create_io_qpair(ctrlr, &opts);
@@ -2945,6 +2951,15 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 
 		/* Set number of queues to be minimum of requested and actually allocated. */
 		ctrlr->opts.num_io_queues = spdk_min(min_allocated, ctrlr->opts.num_io_queues);
+
+		if (ctrlr->opts.enable_interrupts) {
+			ctrlr->opts.num_io_queues = spdk_min(MAX_IO_QUEUES_WITH_INTERRUPTS,
+							     ctrlr->opts.num_io_queues);
+			if (nvme_transport_ctrlr_enable_interrupts(ctrlr) < 0) {
+				NVME_CTRLR_ERRLOG(ctrlr, "Failed to enable interrupts!\n");
+				ctrlr->opts.enable_interrupts = false;
+			}
+		}
 	}
 
 	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);

@@ -341,6 +341,7 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(io_que);
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	bool ien = ctrlr->opts.enable_interrupts;
 
 	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
 	if (req == NULL) {
@@ -354,6 +355,14 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->cdw10_bits.create_io_q.qsize = pqpair->num_entries - 1;
 
 	cmd->cdw11_bits.create_io_cq.pc = 1;
+	if (ien) {
+		cmd->cdw11_bits.create_io_cq.ien = 1;
+		/* The interrupt vector offset starts from 1. We directly map the
+		 * queue id to interrupt vector.
+		 */
+		cmd->cdw11_bits.create_io_cq.iv = io_que->id;
+	}
+
 	cmd->dptr.prp.prp1 = pqpair->cpl_bus_addr;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);

@@ -985,6 +985,7 @@ nvme_ctrlr_opts_init(struct spdk_nvme_ctrlr_opts *opts,
 	SET_FIELD(num_io_queues);
 	SET_FIELD(use_cmb_sqs);
 	SET_FIELD(no_shn_notification);
+	SET_FIELD(enable_interrupts);
 	SET_FIELD(arb_mechanism);
 	SET_FIELD(arbitration_burst);
 	SET_FIELD(low_priority_weight);
