@@ -500,6 +500,15 @@ class UIRoot(UINode):
                 return True
         return False
 
+    @verbose
+    def create_compress_bdev(self, **kwargs):
+        response = rpc.bdev.bdev_compress_create(self.client, **kwargs)
+        return response
+
+    @verbose
+    def bdev_compress_delete(self, **kwargs):
+        rpc.bdev.bdev_compress_delete(self.client, **kwargs)
+
 
 class Bdev(object):
     def __init__(self, bdev_info):

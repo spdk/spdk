@@ -81,6 +81,7 @@ class UIBdevs(UINode):
         UIVirtioScsiBdev(self)
         UIRaidBdev(self)
         UIUringBdev(self)
+        UICompressBdev(self)
 
 
 class UILvolStores(UINode):
@@ -871,5 +872,45 @@ class UIUringBdev(UIBdev):
 
         Arguments:
         name - uring bdev name
+        """
+        self.delete(name)
+
+
+class UICompressBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "compress", parent)
+
+    def delete(self, name):
+        self.get_root().bdev_compress_delete(name=name)
+
+    def ui_command_create(self, base_bdev_name, pm_path, lb_size=None, comp_algo=None, comp_level=None):
+        """
+        Construct a compress bdev.
+
+        Arguments:
+        base_bdev_name - Name of the base bdev.
+        pm_path - Path to persistent memory.
+        lb_size - Optional argument. Integer, compressed vol logical block size (optional, if used must be 512 or 4096).
+        comp_algo - Optional argument. Compression algorithm, (deflate, lz4). Default is deflate.
+        comp_level - Optional argument. Integer, compression algorithm level. if algo == deflate, level ranges from 0 to 3.
+                     if algo == lz4, level ranges from 1 to 65537
+        """
+
+        lb_size = self.ui_eval_param(lb_size, "number", None)
+        comp_level = self.ui_eval_param(comp_level, "number", None)
+        ret_name = self.get_root().create_compress_bdev(base_bdev_name=base_bdev_name,
+                                                        pm_path=pm_path,
+                                                        lb_size=lb_size,
+                                                        comp_algo=comp_algo,
+                                                        comp_level=comp_level)
+
+        self.shell.log.info(ret_name)
+
+    def ui_command_delete(self, name):
+        """
+        Deletes compress bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the compress bdev to be deleted - UUID number or name alias.
         """
         self.delete(name)
