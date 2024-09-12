@@ -1544,11 +1544,12 @@ def bdev_get_bdevs(client, name=None, timeout=None):
     return client.call('bdev_get_bdevs', params)
 
 
-def bdev_get_iostat(client, name=None, per_channel=None):
+def bdev_get_iostat(client, name=None, per_channel=None, reset_mode=None):
     """Get I/O statistics for block devices.
     Args:
         name: bdev name to query (optional; if omitted, query all bdevs)
         per_channel: display per channel IO stats for specified bdev
+        reset_mode: mode to reset stats after getting: all, maxmin, none (optional: if omitted, no reset will happen)
     Returns:
         I/O statistics for the requested block devices.
     """
@@ -1557,6 +1558,8 @@ def bdev_get_iostat(client, name=None, per_channel=None):
         params['name'] = name
     if per_channel is not None:
         params['per_channel'] = per_channel
+    if reset_mode is not None:
+        params['reset_mode'] = reset_mode
     return client.call('bdev_get_iostat', params)
 
 

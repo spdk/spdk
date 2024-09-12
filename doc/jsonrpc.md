@@ -2710,6 +2710,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
 per_channel             | Optional | bool        | Display per channel data for specified block device.
+reset_mode              | Optional | string      | Mode to reset I/O statistics after obtaining it: all, maxmin, none (default: none)
 
 #### Response
 
@@ -2774,7 +2775,7 @@ a block device may be specified by name.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
-mode                    | Optional | string      | Mode to reset I/O statistics: all, maxmin (default: all)
+mode                    | Optional | string      | Mode to reset I/O statistics: all, maxmin, none (default: all)
 
 #### Example
 

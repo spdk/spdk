@@ -739,7 +739,7 @@ get_device_stat_test(void)
 	}
 
 	done = false;
-	spdk_bdev_get_device_stat(bdev, stat, get_device_stat_cb, &done);
+	spdk_bdev_get_device_stat(bdev, stat, SPDK_BDEV_RESET_STAT_NONE, get_device_stat_cb, &done);
 	while (!done) { poll_threads(); }
 
 	free_bdev(bdev);
@@ -7562,6 +7562,86 @@ get_numa_id(void)
 	CU_ASSERT(spdk_bdev_get_numa_id(&bdev) == SPDK_ENV_NUMA_ID_ANY);
 }
 
+static void
+get_device_stat_with_reset_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void *cb_arg,
+			      int rc)
+{
+	*(bool *)cb_arg = true;
+}
+
+static void
+get_device_stat_with_given_reset(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
+				 enum spdk_bdev_reset_stat_mode mode)
+{
+	bool done = false;
+
+	spdk_bdev_get_device_stat(bdev, stat, mode, get_device_stat_with_reset_cb, &done);
+	while (!done) { poll_threads(); }
+}
+
+static void
+get_device_stat_with_reset(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {};
+	struct spdk_bdev_io_stat *stat;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 2;
+	bdev_opts.bdev_io_cache_size = 1;
+	ut_init_bdev(&bdev_opts);
+	bdev = allocate_bdev("bdev0");
+
+	CU_ASSERT(spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc) == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	g_io_done = false;
+	CU_ASSERT(spdk_bdev_read(desc, io_ch, (void *)0x1000, 0, 4096, io_done, NULL) == 0);
+	spdk_delay_us(10);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+
+	stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	SPDK_CU_ASSERT_FATAL(stat != NULL);
+
+	/* Get stat without resetting and check that it is correct  */
+	get_device_stat_with_given_reset(bdev, stat, SPDK_BDEV_RESET_STAT_NONE);
+	CU_ASSERT(stat->bytes_read == 4096);
+	CU_ASSERT(stat->max_read_latency_ticks == 10);
+
+	/**
+	 * Check that stat was not reseted after previous step,
+	 * send get request with resetting maxmin stats
+	 */
+	get_device_stat_with_given_reset(bdev, stat, SPDK_BDEV_RESET_STAT_MAXMIN);
+	CU_ASSERT(stat->bytes_read == 4096);
+	CU_ASSERT(stat->max_read_latency_ticks == 10);
+
+	/**
+	 * Check that maxmins stats are reseted after previous step,
+	 * send get request with resetting all stats
+	 */
+	get_device_stat_with_given_reset(bdev, stat, SPDK_BDEV_RESET_STAT_ALL);
+	CU_ASSERT(stat->bytes_read == 4096);
+	CU_ASSERT(stat->max_read_latency_ticks == 0);
+
+	/* Check that all stats are reseted after previous step */
+	get_device_stat_with_given_reset(bdev, stat, SPDK_BDEV_RESET_STAT_NONE);
+	CU_ASSERT(stat->bytes_read == 0);
+	CU_ASSERT(stat->max_read_latency_ticks == 0);
+
+	free(stat);
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7632,6 +7712,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, claim_v1_existing_v2);
 	CU_ADD_TEST(suite, examine_claimed);
 	CU_ADD_TEST(suite, get_numa_id);
+	CU_ADD_TEST(suite, get_device_stat_with_reset);
 
 	allocate_cores(1);
 	allocate_threads(1);

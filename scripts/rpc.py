@@ -1272,13 +1272,15 @@ if __name__ == "__main__":
     def bdev_get_iostat(args):
         print_dict(rpc.bdev.bdev_get_iostat(args.client,
                                             name=args.name,
-                                            per_channel=args.per_channel))
+                                            per_channel=args.per_channel,
+                                            reset_mode=args.reset_mode))
 
     p = subparsers.add_parser('bdev_get_iostat',
                               help='Display current I/O statistics of all the blockdevs or specified blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
     p.add_argument('-c', '--per-channel', default=False, dest='per_channel', help='Display per channel IO stats for specified device',
                    action='store_true')
+    p.add_argument('--reset-mode', help="Mode to reset I/O statistics after getting", choices=['all', 'maxmin', 'none'])
     p.set_defaults(func=bdev_get_iostat)
 
     def bdev_reset_iostat(args):
@@ -1287,7 +1289,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_reset_iostat',
                               help='Reset I/O statistics of all the blockdevs or specified blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
-    p.add_argument('-m', '--mode', help="Mode to reset I/O statistics", choices=['all', 'maxmin'])
+    p.add_argument('-m', '--mode', help="Mode to reset I/O statistics", choices=['all', 'maxmin', 'none'])
     p.set_defaults(func=bdev_reset_iostat)
 
     def bdev_enable_histogram(args):

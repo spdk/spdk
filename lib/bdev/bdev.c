@@ -360,6 +360,7 @@ struct spdk_bdev_desc {
 
 struct spdk_bdev_iostat_ctx {
 	struct spdk_bdev_io_stat *stat;
+	enum spdk_bdev_reset_stat_mode reset_mode;
 	spdk_bdev_get_device_stat_cb cb;
 	void *cb_arg;
 };
@@ -4523,6 +4524,10 @@ bdev_get_io_stat(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *fr
 void
 spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode)
 {
+	if (mode == SPDK_BDEV_RESET_STAT_NONE) {
+		return;
+	}
+
 	stat->max_read_latency_ticks = 0;
 	stat->min_read_latency_ticks = UINT64_MAX;
 	stat->max_write_latency_ticks = 0;
@@ -6690,11 +6695,12 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 void
 spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-		      struct spdk_bdev_io_stat *stat)
+		      struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode reset_mode)
 {
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	bdev_get_io_stat(stat, channel->stat);
+	spdk_bdev_reset_io_stat(stat, reset_mode);
 }
 
 static void
@@ -6715,12 +6721,13 @@ bdev_get_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *b
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	spdk_bdev_add_io_stat(bdev_iostat_ctx->stat, channel->stat);
+	spdk_bdev_reset_io_stat(channel->stat, bdev_iostat_ctx->reset_mode);
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 void
 spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
-			  spdk_bdev_get_device_stat_cb cb, void *cb_arg)
+			  enum spdk_bdev_reset_stat_mode reset_mode, spdk_bdev_get_device_stat_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx;
 
@@ -6738,10 +6745,12 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 	bdev_iostat_ctx->stat = stat;
 	bdev_iostat_ctx->cb = cb;
 	bdev_iostat_ctx->cb_arg = cb_arg;
+	bdev_iostat_ctx->reset_mode = reset_mode;
 
 	/* Start with the statistics from previously deleted channels. */
 	spdk_spin_lock(&bdev->internal.spinlock);
 	bdev_get_io_stat(bdev_iostat_ctx->stat, bdev->internal.stat);
+	spdk_bdev_reset_io_stat(bdev->internal.stat, reset_mode);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	/* Then iterate and add the statistics from each existing channel. */
