@@ -16,6 +16,11 @@ to `multipath` field in spdk_bdev_nvme_ctrlr_opts structure passed as a paramete
 If multipathing shall be enabled for nvme bdev, `bdev_opts.multipath` shall be set to `true`. When
 `bdev_opts.multipath` is set to `false`, failover mode is enabled.
 
+### env
+
+Added 3 APIs to handle multiple interrupts for PCI device `spdk_pci_device_enable_interrupts()`,
+`spdk_pci_device_disable_interrupts()`, and `spdk_pci_device_get_interrupt_efd_by_index()`.
+
 ### nvmf
 
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page
