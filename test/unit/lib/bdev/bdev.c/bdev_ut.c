@@ -5511,7 +5511,7 @@ bdev_io_abort(void)
 	bdev->optimal_io_boundary = 16;
 	g_io_done = false;
 
-	/* Test that a ingle-vector command which is split is aborted correctly.
+	/* Test that a single-vector command which is split is aborted correctly.
 	 * Differently from the above, the child abort request will be submitted
 	 * sequentially due to the capacity of spdk_bdev_io.
 	 */
@@ -5533,6 +5533,99 @@ bdev_io_abort(void)
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 	stub_complete_io(3);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	bdev->split_on_optimal_io_boundary = false;
+	bdev->split_on_write_unit = true;
+	bdev->write_unit_size = 16;
+
+	/* Test that a single-vector command which is split is aborted correctly.
+	 * Offset 16, length 32, payload 0xF000
+	 *  Child - Offset 16, length 16, payload 0xF000
+	 *  Child - Offset 32, length 16, payload 0xF000 + 16 * 512
+	 *
+	 * Use bdev->split_on_write_unit as a split condition.
+	 */
+	g_io_done = false;
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 16, 32, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(2);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	bdev->split_on_write_unit = false;
+	bdev->max_rw_size = 16;
+
+	/* Test that a single-vector command which is split is aborted correctly.
+	 * Use bdev->max_rw_size as a split condition.
+	 */
+	g_io_done = false;
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 0, 32, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(2);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	bdev->max_rw_size = 0;
+	bdev->max_segment_size = 512 * 16;
+	bdev->max_num_segments = 1;
+
+	/* Test that a single-vector command which is split is aborted correctly.
+	 * Use bdev->max_segment_size and bdev->max_num_segments together as split conditions.
+	 *
+	 * One single-vector command is changed to one two-vectors command, but
+	 * bdev->max_num_segments is 1 and it is split into two single-vector commands.
+	 */
+	g_io_done = false;
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 0, 32, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(2);
 	CU_ASSERT(g_abort_done == true);
 	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
