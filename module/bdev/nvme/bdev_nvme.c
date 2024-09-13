@@ -4248,6 +4248,7 @@ static bool
 bdev_nvme_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 {
 	struct nvme_bdev *nbdev = ctx;
+	struct nvme_ns *nvme_ns;
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	if (!g_opts.allow_accel_sequence) {
@@ -4262,7 +4263,10 @@ bdev_nvme_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 		return false;
 	}
 
-	ctrlr = bdev_nvme_get_ctrlr(&nbdev->disk);
+	nvme_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
+	assert(nvme_ns != NULL);
+
+	ctrlr = nvme_ns->ctrlr->ctrlr;
 	assert(ctrlr != NULL);
 
 	return spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED;
