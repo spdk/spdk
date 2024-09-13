@@ -772,6 +772,14 @@ nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static void
+nvme_ctrlr_get_ref(struct nvme_ctrlr *nvme_ctrlr)
+{
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	nvme_ctrlr->ref++;
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+}
+
+static void
 bdev_nvme_clear_current_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
 	nbdev_ch->current_io_path = NULL;
@@ -3585,9 +3593,7 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 
 	ctrlr_ch->qpair = nvme_qpair;
 
-	pthread_mutex_lock(&nvme_qpair->ctrlr->mutex);
-	nvme_qpair->ctrlr->ref++;
-	pthread_mutex_unlock(&nvme_qpair->ctrlr->mutex);
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 
 	return 0;
 }
@@ -4811,9 +4817,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 
 	if (rc == 0) {
 		nvme_ns->probe_ctx = NULL;
-		pthread_mutex_lock(&nvme_ctrlr->mutex);
-		nvme_ctrlr->ref++;
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		nvme_ctrlr_get_ref(nvme_ctrlr);
 	} else {
 		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
 		nvme_ns_free(nvme_ns);
