@@ -110,7 +110,7 @@ LDFLAGS += -fprofile-generate=$(CONFIG_PGO_DIR)
 endif
 
 ifeq ($(CONFIG_PGO_USE),y)
-COMMON_CFLAGS += -fprofile-use=$(CONFIG_PGO_DIR)
+COMMON_CFLAGS += -fprofile-use=$(CONFIG_PGO_DIR) -Wno-missing-profile
 LDFLAGS += -fprofile-use=$(CONFIG_PGO_DIR)
 endif
 

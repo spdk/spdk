@@ -52,6 +52,7 @@ endif
 
 ifeq ($(CONFIG_PGO_USE),y)
 DPDK_OPTS += -Db_pgo=use
+DPDK_CFLAGS += -Wno-missing-profile
 endif
 
 ifneq ($(CONFIG_PGO_DIR),)
