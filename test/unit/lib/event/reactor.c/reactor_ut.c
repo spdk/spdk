@@ -320,7 +320,7 @@ poller_run_idle(void *ctx)
 
 	spdk_delay_us(delay_us);
 
-	return 0;
+	return SPDK_POLLER_IDLE;
 }
 
 static int
@@ -330,7 +330,7 @@ poller_run_busy(void *ctx)
 
 	spdk_delay_us(delay_us);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
