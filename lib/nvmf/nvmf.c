@@ -1576,6 +1576,16 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				      ns_info->num_blocks,
 				      spdk_bdev_get_num_blocks(ns->bdev));
 			ns_changed = true;
+		} else if (ns_info->anagrpid != ns->anagrpid) {
+			/* Namespace is still there but ANA group ID has changed */
+			SPDK_ERRLOG("ANA group ID changed: subsystem_id %u,"
+				      "nsid %u, pg %p, old %u, new %u\n",
+				      subsystem->id,
+				      ns->nsid,
+				      group,
+				      ns_info->anagrpid,
+				      ns->anagrpid);
+			ns_changed = true;
 		}
 
 		if (ns == NULL) {
@@ -1583,6 +1593,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else {
 			ns_info->uuid = *spdk_bdev_get_uuid(ns->bdev);
 			ns_info->num_blocks = spdk_bdev_get_num_blocks(ns->bdev);
+			ns_info->anagrpid = ns->anagrpid;
 			ns_info->crkey = ns->crkey;
 			ns_info->rtype = ns->rtype;
 			if (ns->holder) {
