@@ -202,8 +202,6 @@ function get_disks_on_numa() {
 }
 
 function set_potential_poll_threads() {
-	[[ $PLUGIN =~ uring ]] || return 0
-
 	local _cpus=("$@") all_fio_cpus=() cpu _cpu poll_thread
 	local -g sqpoll_cpu_threads
 	local node
@@ -222,7 +220,7 @@ function set_potential_poll_threads() {
 	# sense to still use sqthread_poll?
 	#
 	# Here we build list of all potential candidates to hold sqpoll thread. Lists are per node and should hold
-	# all cpus outside of the fio cpus that were requested. So each get_poll_thread() should return a cpu
+	# all cpus outside of the fio cpus that were requested. So each get_sqthread_poll_cpu() should return a cpu
 	# thread which is guaranteed to be outside of the physical core of each of fio cpus (but still bound to
 	# the same numa node as the fio cpu selected for given job).
 	for cpu in "${cpus[@]}"; do
@@ -234,12 +232,14 @@ function set_potential_poll_threads() {
 	done
 }
 
-function get_poll_thread() {
+function get_sqthread_poll_cpu() {
+	((${#sqpoll_cpu_threads[@]} > 0)) || return 0
+
 	local node=$1 idx=$2
 	local -n node=${sqpoll_cpu_threads[node]}
 
 	# Default to the highest cpu
-	echo "${node[idx]:-${cpus[-1]}}"
+	echo "sqthread_poll_cpu=${node[idx]:-${cpus[-1]}}"
 }
 
 function create_fio_config() {
@@ -296,7 +296,9 @@ function create_fio_config() {
 	fi
 
 	# shellcheck disable=SC2068
-	set_potential_poll_threads ${cores[@]//,/ }
+	if [[ $PLUGIN =~ "uring" || $PLUGIN =~ "xnvme" ]]; then
+		set_potential_poll_threads ${cores[@]//,/ }
+	fi
 
 	for i in "${!cores[@]}"; do
 		local m=0 #Counter of disks per NUMA node
@@ -323,7 +325,7 @@ function create_fio_config() {
 			fio_job_section+=("[filename${i}]")
 			fio_job_section+=("iodepth=$QD")
 			fio_job_section+=("cpus_allowed=${cores[$i]} #CPU NUMA Node ${cores_numa[$i]} ($FIO_FNAME_STRATEGY)")
-			fio_job_section+=("sqthread_poll_cpu=$(get_poll_thread "${cores_numa[i]}" "$i")")
+			fio_job_section+=("$(get_sqthread_poll_cpu "${cores_numa[i]}" "$i")")
 		fi
 
 		while [[ "$m" -lt "$total_disks_per_core" ]]; do
@@ -335,7 +337,7 @@ function create_fio_config() {
 					fio_job_section+=("[filename${m}-${cores[$i]}]")
 					fio_job_section+=("iodepth=$QD")
 					fio_job_section+=("cpus_allowed=${cores[$i]} #CPU NUMA Node ${cores_numa[$i]}")
-					fio_job_section+=("sqthread_poll_cpu=$(get_poll_thread "${cores_numa[i]}" "$i")")
+					fio_job_section+=("$(get_sqthread_poll_cpu "${cores_numa[i]}" "$i")")
 				fi
 
 				if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
