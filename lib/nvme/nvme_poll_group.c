@@ -109,20 +109,6 @@ spdk_nvme_poll_group_set_interrupt_callback(struct spdk_nvme_poll_group *group,
 	return 0;
 }
 
-struct spdk_nvme_poll_group *
-spdk_nvme_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
-{
-	struct spdk_nvme_transport_poll_group *tgroup;
-
-	tgroup = nvme_transport_qpair_get_optimal_poll_group(qpair->transport, qpair);
-
-	if (tgroup == NULL) {
-		return NULL;
-	}
-
-	return tgroup->group;
-}
-
 #ifdef __linux__
 static int
 nvme_poll_group_read_disconnect_qpair_fd(void *arg)

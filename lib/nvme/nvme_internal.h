@@ -1800,9 +1800,6 @@ int nvme_transport_qpair_authenticate(struct spdk_nvme_qpair *qpair);
 
 struct spdk_nvme_transport_poll_group *nvme_transport_poll_group_create(
 	const struct spdk_nvme_transport *transport);
-struct spdk_nvme_transport_poll_group *nvme_transport_qpair_get_optimal_poll_group(
-	const struct spdk_nvme_transport *transport,
-	struct spdk_nvme_qpair *qpair);
 int nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 				  struct spdk_nvme_qpair *qpair);
 int nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,

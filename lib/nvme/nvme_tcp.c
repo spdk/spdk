@@ -2536,8 +2536,6 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	/* spdk_nvme_qpair_get_optimal_poll_group needs socket information.
-	 * So create the socket first when creating a qpair. */
 	rc = nvme_tcp_qpair_connect_sock(ctrlr, qpair);
 	if (rc) {
 		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
@@ -2803,21 +2801,6 @@ nvme_tcp_poll_group_create(void)
 	return &group->group;
 }
 
-static struct spdk_nvme_transport_poll_group *
-nvme_tcp_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
-	struct spdk_sock_group *group = NULL;
-	int rc;
-
-	rc = spdk_sock_get_optimal_sock_group(tqpair->sock, &group, NULL);
-	if (!rc && group != NULL) {
-		return spdk_sock_group_get_ctx(group);
-	}
-
-	return NULL;
-}
-
 static int
 nvme_tcp_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
@@ -3053,7 +3036,6 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.admin_qpair_abort_aers = nvme_tcp_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_tcp_poll_group_create,
-	.qpair_get_optimal_poll_group = nvme_tcp_qpair_get_optimal_poll_group,
 	.poll_group_connect_qpair = nvme_tcp_poll_group_connect_qpair,
 	.poll_group_disconnect_qpair = nvme_tcp_poll_group_disconnect_qpair,
 	.poll_group_add = nvme_tcp_poll_group_add,

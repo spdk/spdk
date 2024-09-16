@@ -3003,15 +3003,6 @@ struct spdk_nvme_poll_group *spdk_nvme_poll_group_create(void *ctx,
 		struct spdk_nvme_accel_fn_table *table);
 
 /**
- * Get a optimal poll group.
- *
- * \param qpair The qpair to get the optimal poll group.
- *
- * \return Pointer to the optimal poll group, or NULL if not found.
- */
-struct spdk_nvme_poll_group *spdk_nvme_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair);
-
-/**
  * Add an spdk_nvme_qpair to a poll group. qpairs may only be added to
  * a poll group if they are in the disconnected state; i.e. either they were
  * just allocated and not yet connected or they have been disconnected with a call
@@ -4684,8 +4675,6 @@ struct spdk_nvme_transport_ops {
 	void (*admin_qpair_abort_aers)(struct spdk_nvme_qpair *qpair);
 
 	struct spdk_nvme_transport_poll_group *(*poll_group_create)(void);
-	struct spdk_nvme_transport_poll_group *(*qpair_get_optimal_poll_group)(
-		struct spdk_nvme_qpair *qpair);
 
 	int (*poll_group_add)(struct spdk_nvme_transport_poll_group *tgroup, struct spdk_nvme_qpair *qpair);
 
