@@ -938,12 +938,7 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {
-		if (rc == -EBUSY) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "subsystem busy, retry later.");
-		} else {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_listener_ctx_free(ctx);
 	}
 }
@@ -1017,12 +1012,7 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {
-		if (rc == -EBUSY) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "subsystem busy, retry later.");
-		} else {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_listener_ctx_free(ctx);
 	}
 }
@@ -1584,12 +1574,7 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, ctx->ns_params.nsid, nvmf_rpc_ns_paused, ctx);
 	if (rc != 0) {
-		if (rc == -EBUSY) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "subsystem busy, retry later.");
-		} else {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_ns_ctx_free(ctx);
 	}
 }
@@ -1704,12 +1689,7 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, ctx->nsid, nvmf_rpc_remove_ns_paused, ctx);
 	if (rc != 0) {
-		if (rc == -EBUSY) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "subsystem busy, retry later.");
-		} else {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_remove_ns_ctx_free(ctx);
 	}
 }
@@ -1829,12 +1809,7 @@ nvmf_rpc_ns_visible(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, ctx->nsid, nvmf_rpc_ns_visible_paused, ctx);
 	if (rc != 0) {
-		if (rc == -EBUSY) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "subsystem busy, retry later.");
-		} else {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_ns_visible_ctx_free(ctx);
 	}
 }
