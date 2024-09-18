@@ -367,8 +367,8 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
 
 	if (reduce_errno) {
-		SPDK_ERRLOG("number %d\n", reduce_errno);
-		/* FIXME: callback should be executed. */
+		SPDK_ERRLOG("Failed to unload vol, error %s\n", spdk_strerror(-reduce_errno));
+		vbdev_compress_delete_done(comp_bdev->delete_ctx, reduce_errno);
 		return;
 	}
 
