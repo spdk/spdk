@@ -325,6 +325,7 @@ struct spdk_nvmf_tcp_qpair {
 	void					*fini_cb_arg;
 
 	TAILQ_ENTRY(spdk_nvmf_tcp_qpair)	link;
+	bool					pending_flush;
 };
 
 struct spdk_nvmf_tcp_control_msg {
@@ -1180,6 +1181,23 @@ _pdu_write_done(struct nvme_tcp_pdu *pdu, int err)
 }
 
 static void
+tcp_sock_flush_cb(void *arg)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair = arg;
+	int rc = spdk_sock_flush(tqpair->sock);
+
+	if (rc < 0 && errno == EAGAIN) {
+		spdk_thread_send_msg(spdk_get_thread(), tcp_sock_flush_cb, tqpair);
+		return;
+	}
+
+	tqpair->pending_flush = false;
+	if (rc < 0) {
+		SPDK_ERRLOG("Could not write to socket: rc=%d, errno=%d\n", rc, errno);
+	}
+}
+
+static void
 _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 {
 	int rc;
@@ -1201,6 +1219,12 @@ _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 				    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ?
 				    "IC_RESP" : "TERM_REQ", rc, errno);
 			_pdu_write_done(pdu, rc >= 0 ? -EAGAIN : -errno);
+		}
+	} else if (spdk_interrupt_mode_is_enabled()) {
+		/* Async writes must be flushed */
+		if (!tqpair->pending_flush) {
+			tqpair->pending_flush = true;
+			spdk_thread_send_msg(spdk_get_thread(), tcp_sock_flush_cb, tqpair);
 		}
 	}
 }
