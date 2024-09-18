@@ -15,6 +15,7 @@
 #include "spdk/util.h"
 #include "spdk/log.h"
 #include "spdk/memory.h"
+#include "spdk/tree.h"
 
 #include "libpmem.h"
 
@@ -112,6 +113,7 @@ struct spdk_reduce_vol_request {
 	spdk_reduce_vol_op_complete		cb_fn;
 	void					*cb_arg;
 	TAILQ_ENTRY(spdk_reduce_vol_request)	tailq;
+	RB_ENTRY(spdk_reduce_vol_request)	rbnode;
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
 };
 
@@ -140,7 +142,7 @@ struct spdk_reduce_vol {
 
 	struct spdk_reduce_vol_request		*request_mem;
 	TAILQ_HEAD(, spdk_reduce_vol_request)	free_requests;
-	TAILQ_HEAD(, spdk_reduce_vol_request)	executing_requests;
+	RB_HEAD(executing_req_tree, spdk_reduce_vol_request) executing_requests;
 	TAILQ_HEAD(, spdk_reduce_vol_request)	queued_requests;
 
 	/* Single contiguous buffer used for all request buffers for this volume. */
@@ -583,6 +585,15 @@ _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 	return 0;
 }
 
+static int
+overlap_cmp(struct spdk_reduce_vol_request *req1, struct spdk_reduce_vol_request *req2)
+{
+	return (req1->logical_map_index < req2->logical_map_index ? -1 : req1->logical_map_index >
+		req2->logical_map_index);
+}
+RB_GENERATE_STATIC(executing_req_tree, spdk_reduce_vol_request, rbnode, overlap_cmp);
+
+
 void
 spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		     struct spdk_reduce_backing_dev *backing_dev,
@@ -641,7 +652,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	}
 
 	TAILQ_INIT(&vol->free_requests);
-	TAILQ_INIT(&vol->executing_requests);
+	RB_INIT(&vol->executing_requests);
 	TAILQ_INIT(&vol->queued_requests);
 	queue_init(&vol->free_chunks_queue);
 	queue_init(&vol->free_backing_blocks_queue);
@@ -885,7 +896,7 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	}
 
 	TAILQ_INIT(&vol->free_requests);
-	TAILQ_INIT(&vol->executing_requests);
+	RB_INIT(&vol->executing_requests);
 	TAILQ_INIT(&vol->queued_requests);
 	queue_init(&vol->free_chunks_queue);
 	queue_init(&vol->free_backing_blocks_queue);
@@ -1095,7 +1106,7 @@ _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
 	struct spdk_reduce_vol *vol = req->vol;
 
 	req->cb_fn(req->cb_arg, reduce_errno);
-	TAILQ_REMOVE(&vol->executing_requests, req, tailq);
+	RB_REMOVE(executing_req_tree, &vol->executing_requests, req);
 
 	TAILQ_FOREACH(next_req, &vol->queued_requests, tailq) {
 		if (next_req->logical_map_index == req->logical_map_index) {
@@ -1778,21 +1789,17 @@ _iov_array_is_valid(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
 static bool
 _check_overlap(struct spdk_reduce_vol *vol, uint64_t logical_map_index)
 {
-	struct spdk_reduce_vol_request *req;
+	struct spdk_reduce_vol_request req;
 
-	TAILQ_FOREACH(req, &vol->executing_requests, tailq) {
-		if (logical_map_index == req->logical_map_index) {
-			return true;
-		}
-	}
+	req.logical_map_index = logical_map_index;
 
-	return false;
+	return (NULL != RB_FIND(executing_req_tree, &vol->executing_requests, &req));
 }
 
 static void
 _start_readv_request(struct spdk_reduce_vol_request *req)
 {
-	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
+	RB_INSERT(executing_req_tree, &req->vol->executing_requests, req);
 	_reduce_vol_read_chunk(req, _read_read_done);
 }
 
@@ -1867,7 +1874,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 {
 	struct spdk_reduce_vol *vol = req->vol;
 
-	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
+	RB_INSERT(executing_req_tree, &req->vol->executing_requests, req);
 	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
 		if ((req->length * vol->params.logical_block_size) < vol->params.chunk_size) {
 			/* Read old chunk, then overwrite with data from this write
