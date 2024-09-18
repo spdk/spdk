@@ -54,11 +54,6 @@ DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     uint64_t offset_blocks, uint64_t num_blocks,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
-DEFINE_STUB(spdk_mempool_create_ctor, struct spdk_mempool *,
-	    (const char *name, size_t count, size_t ele_size, size_t cache_size,
-	     int socket_id, spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg), NULL);
-DEFINE_STUB(spdk_mempool_obj_iter, uint32_t,
-	    (struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb, void *obj_cb_arg), 0);
 DEFINE_STUB_V(ftl_reloc, (struct ftl_reloc *reloc));
 DEFINE_STUB_V(ftl_reloc_free, (struct ftl_reloc *reloc));
 DEFINE_STUB_V(ftl_reloc_halt, (struct ftl_reloc *reloc));
