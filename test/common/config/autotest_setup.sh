@@ -13,7 +13,7 @@ sudo() {
 }
 
 set -e
-shopt -s extglob
+shopt -s extglob nullglob
 
 UPGRADE=false
 INSTALL=false

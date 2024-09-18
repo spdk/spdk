@@ -311,14 +311,31 @@ function install_igb_uio() {
 function install_irdma() {
 	local RDMA_CORE_VERSION=51.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
+	local packages=() hint=""
 
-	if [[ $ID != fedora ]]; then
-		echo "Installation of the irdma can be attempted only on Fedora"
-		return 0
-	fi
-
-	# Install extra dependencies needed by the rdma-core
-	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel python3-Cython
+	case "$ID" in
+		fedora)
+			install \
+				ninja-build \
+				pandoc \
+				perl-generators \
+				valgrind-devel \
+				python-docutils \
+				libnl3 \
+				libnl3-devel \
+				python3-Cython
+				;;
+		debian | ubuntu)
+			install \
+				debhelper \
+				dh-python \
+				python3-docutils
+			;;
+		*)
+			echo "irdma installation not supported under $ID" >&2
+			return 0
+			;;
+	esac
 
 	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
 	rm -rf "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
@@ -346,44 +363,59 @@ function install_irdma() {
 	patch --dir="$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION" -p2 \
 		< "$GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch"
 
-	# Note that paths and the name of the package are hardcoded into .spec, hence they need to stay like this.
-	[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec ]]
-	mkdir -p "$HOME/rpmbuild/"{SOURCES,SPECS}
-	cp "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec" "$HOME/rpmbuild/SPECS"
+	case "$ID" in
+		fedora)
+			[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec ]]
+			# Note that paths and the name of the package are hardcoded into .spec, hence they need
+			# to stay like this.
+			mkdir -p "$HOME/rpmbuild/"{SOURCES,SPECS}
+			cp "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec" "$HOME/rpmbuild/SPECS"
 
-	# Re-package the source
-	tar -czf "$HOME/rpmbuild/SOURCES/rdma-core-$RDMA_CORE_VERSION.tar.gz" -C "$GIT_REPOS" "rdma-core-$RDMA_CORE_VERSION"
+			# Re-package the source
+			tar -czf "$HOME/rpmbuild/SOURCES/rdma-core-$RDMA_CORE_VERSION.tar.gz" \
+				-C "$GIT_REPOS" "rdma-core-$RDMA_CORE_VERSION"
 
-	# Build the rpms
-	(
-		cd "$HOME/rpmbuild/SPECS"
-		# Make sure stock ninja-build is used
-		PATH="/usr/bin:$PATH" rpmbuild -ba rdma-core.spec
-	)
+			# Build the rpms
+			(
+				cd "$HOME/rpmbuild/SPECS"
+				# Make sure stock ninja-build is used
+				PATH="/usr/bin:$PATH" rpmbuild -ba rdma-core.spec
+			)
 
-	# Now, don't install the packages since this will, most likely, conflict with packages already installed
-	# in the system. Instead, simply inform user what the next step is and note what potential issues it may
-	# have with the installation.
+			packages=("$HOME/rpmbuild/RPMS/x86_64/"*.rpm)
+			hint="$package_manager install [--allowerasing] $HOME/rpmbuild/RPMS/x86_64/*.rpm"
+			;;
+		debian | ubuntu)
+			[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/debian/control ]]
 
-	shopt -s nullglob
-	local rpms=("$HOME/rpmbuild/RPMS/x86_64/"*.rpm)
-	shopt -u nullglob
-	((${#rpms[@]} > 0))
+			# Build the debs
+			(
+				cd "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
+				dh clean --with python3,systemd --builddirectory=build-deb
+				dh build --with systemd --builddirectory=build-deb
+				dh binary --with systemd --builddirectory=build-deb
+			)
+
+			packages=("$GIT_REPOS/"*.deb)
+			hint="dpkg --install $GIT_REPOS/*.deb"
+			;;
+	esac
+
+	((${#packages[@]} > 0)) || return 1
 
 	cat <<-EOF
 
 		INFO: rdma-core-$RDMA_CORE_VERSION was successfully built, following packages are
 		available for installation:
 
-		$(printf '  - %s\n' "${rpms[@]##*/}")
+		$(printf '  - %s\n' "${packages[@]##*/}")
 
 		Note that installing the above packages may raise conflicts with their
 		potentially newer versions already installed on the system. Dependent
 		packages may be uninstalled during the process as well. Please, run the
 		following command to finish the installation:
 
-		  $package_manager install [--allowerasing] $HOME/rpmbuild/RPMS/x86_64/*.rpm
-
+		  $hint
 	EOF
 }
 
