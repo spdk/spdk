@@ -1921,10 +1921,6 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 	memset(&event, 0, sizeof(event));
 	/* EPOLLERR is always on even if we don't set it, but be explicit for clarity */
 	event.events = EPOLLIN | EPOLLERR;
-	if (spdk_interrupt_mode_is_enabled()) {
-		event.events |= EPOLLOUT;
-	}
-
 	event.data.ptr = sock;
 
 	rc = epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
