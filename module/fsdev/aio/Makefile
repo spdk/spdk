@@ -18,9 +18,6 @@ $(info $(UNAME): using the POSIX aio)
 C_SRCS += aio_mgr.c
 endif
 
-CFLAGS += $(shell pkg-config --cflags glib-2.0)
-CXXFLAGS += $(shell pkg-config --cflags glib-2.0)
-
 LIBNAME = fsdev_aio
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
