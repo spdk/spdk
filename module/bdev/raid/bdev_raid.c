@@ -3944,7 +3944,8 @@ done:
 /* Log component for bdev raid bdev module */
 SPDK_LOG_REGISTER_COMPONENT(bdev_raid)
 
-SPDK_TRACE_REGISTER_FN(bdev_raid_trace, "bdev_raid", TRACE_GROUP_BDEV_RAID)
+static void
+bdev_raid_trace(void)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
@@ -3965,3 +3966,4 @@ SPDK_TRACE_REGISTER_FN(bdev_raid_trace, "bdev_raid", TRACE_GROUP_BDEV_RAID)
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_BDEV_RAID_IO, 1);
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_BDEV_RAID_IO, 0);
 }
+SPDK_TRACE_REGISTER_FN(bdev_raid_trace, "bdev_raid", TRACE_GROUP_BDEV_RAID)
