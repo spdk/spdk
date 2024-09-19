@@ -14,9 +14,30 @@ endif
 
 pylibdir := $(abspath $(shell python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])"))
 ifneq ($(CONFIG_PREFIX),)
-pylibdir := $(pylibdir:/usr%=%)
-pylibdir := $(pylibdir:/local%=%)
-pylibdir := $(CONFIG_PREFIX)$(pylibdir)
+# Consider different scenarios where purelib can be located:
+#
+# - /usr/lib/python*/site-packages
+# - /usr/local/lib/python*/site-packages
+# - /foo/bar/lib/python*/site-packages
+#
+# The latter here can be a result of using interpreter from within a venv
+# located at custom location - see how we handle PEP668 under ubuntu in
+# pkgdep/ubuntu.sh for instance.
+#
+# So the common part here is:
+#   *lib/python*/site-packages
+#
+# So we cut the path to get the prefix (whatever it may be) and then we nuke
+# it from the main path. So the corner case would look like so:
+#
+# pylibdir := /foo/bar/lib/python*/site-packages
+# pylibprefix := /foo/bar
+# pylibdir := $(CONFIG_PREFIX)/lib/python*/site-packages
+#
+# FIXME: I couldn't get patsubst to do the heavy lifting here, hence fallback
+# to shell.
+pylibprefix := $(shell a=$(pylibdir); echo $${a%/lib*})
+pylibdir := $(CONFIG_PREFIX)$(pylibdir:$(pylibprefix)%=%)
 endif
 
 all:
