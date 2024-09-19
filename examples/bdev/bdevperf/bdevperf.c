@@ -34,6 +34,7 @@ struct bdevperf_task {
 	void				*buf;
 	void				*verify_buf;
 	void				*md_buf;
+	void				*verify_md_buf;
 	uint64_t			offset_blocks;
 	struct bdevperf_task		*task_to_abort;
 	enum spdk_bdev_io_type		io_type;
@@ -794,6 +795,7 @@ clean:
 			spdk_free(task->buf);
 			spdk_free(task->verify_buf);
 			spdk_free(task->md_buf);
+			spdk_free(task->verify_md_buf);
 			free(task);
 		}
 
@@ -1070,7 +1072,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 	task->iov.iov_len = job->buf_size;
 
 	/* Read the data back in */
-	rc = spdk_bdev_readv_blocks_with_md(job->bdev_desc, job->ch, &task->iov, 1, NULL,
+	rc = spdk_bdev_readv_blocks_with_md(job->bdev_desc, job->ch, &task->iov, 1, task->verify_md_buf,
 					    task->offset_blocks, job->io_size_blocks,
 					    bdevperf_complete, task);
 
@@ -2013,6 +2015,18 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 				return -ENOMEM;
 			}
 
+			if (spdk_bdev_is_md_separate(job->bdev)) {
+				task->verify_md_buf = spdk_zmalloc(spdk_bdev_get_md_size(bdev) * job->io_size_blocks,
+								   spdk_bdev_get_buf_align(job->bdev), NULL, numa_id, SPDK_MALLOC_DMA);
+				if (!task->verify_md_buf) {
+					fprintf(stderr, "Cannot allocate verify_md_buf for task=%p\n", task);
+					spdk_free(task->buf);
+					spdk_free(task->verify_buf);
+					spdk_zipf_free(&job->zipf);
+					free(task);
+					return -ENOMEM;
+				}
+			}
 		}
 
 		if (spdk_bdev_is_md_separate(job->bdev)) {
@@ -2023,6 +2037,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
 				spdk_zipf_free(&job->zipf);
 				spdk_free(task->verify_buf);
+				spdk_free(task->verify_md_buf);
 				spdk_free(task->buf);
 				free(task);
 				return -ENOMEM;
