@@ -279,6 +279,7 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/test/*" -o $UT_COVERAGE/ut_cov_unit.info
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
+	echo "Note: coverage report is here: $UT_COVERAGE"
 fi
 
 set +x
@@ -288,11 +289,6 @@ echo
 echo "====================="
 echo "All unit tests passed"
 echo "====================="
-if [ "$cov_avail" = "yes" ]; then
-	echo "Note: coverage report is here: $rootdir/$UT_COVERAGE"
-else
-	echo "WARN: lcov not installed or SPDK built without coverage!"
-fi
 if [[ $CONFIG_ASAN == n && $valgrind = "" ]]; then
 	echo "WARN: neither valgrind nor ASAN is enabled!"
 fi
