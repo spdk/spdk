@@ -4304,6 +4304,166 @@ test_reset_bdev_ctrlr(void)
 	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(second_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
+	/* Reset of the first path succeeds, reset of the second path fails.
+	 * Since we have at least one working path we should not fail RESET IO.
+	 */
+	ctrlr1->is_failed = true;
+	curr_path1->last_failed_tsc = spdk_get_ticks();
+	ctrlr2->is_failed = true;
+	curr_path2->last_failed_tsc = spdk_get_ticks();
+	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	set_thread(0);
+	bdev_nvme_submit_request(ch1, first_bdev_io);
+
+	set_thread(1);
+	bdev_nvme_submit_request(ch2, second_bdev_io);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 2);
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+
+	CU_ASSERT(nvme_ctrlr1->resetting == true);
+	CU_ASSERT(nvme_ctrlr1->ctrlr_op_cb_arg == first_bio);
+	CU_ASSERT(TAILQ_FIRST(&io_path21->qpair->ctrlr_ch->pending_resets) ==
+		  (struct nvme_bdev_io *)second_bdev_io->driver_ctx);
+
+	ctrlr2->fail_reset = true;
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->is_failed == false);
+	CU_ASSERT(curr_path1->last_failed_tsc == 0);
+	CU_ASSERT(ctrlr2->is_failed == true);
+	CU_ASSERT(curr_path2->last_failed_tsc != 0);
+	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(second_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Path 2 recovers */
+	ctrlr2->fail_reset = false;
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr2->is_failed == false);
+	CU_ASSERT(curr_path2->last_failed_tsc == 0);
+
+	/* Reset of the first path fails, reset of the second path succeeds.
+	 * Since we have at least one working path we should not fail RESET IO.
+	 */
+	ctrlr1->is_failed = true;
+	curr_path1->last_failed_tsc = spdk_get_ticks();
+	ctrlr2->is_failed = true;
+	curr_path2->last_failed_tsc = spdk_get_ticks();
+	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	set_thread(0);
+	bdev_nvme_submit_request(ch1, first_bdev_io);
+
+	set_thread(1);
+	bdev_nvme_submit_request(ch2, second_bdev_io);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 2);
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+
+	CU_ASSERT(nvme_ctrlr1->resetting == true);
+	CU_ASSERT(nvme_ctrlr1->ctrlr_op_cb_arg == first_bio);
+	CU_ASSERT(TAILQ_FIRST(&io_path21->qpair->ctrlr_ch->pending_resets) ==
+		  (struct nvme_bdev_io *)second_bdev_io->driver_ctx);
+
+	ctrlr1->fail_reset = true;
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->is_failed == true);
+	CU_ASSERT(curr_path1->last_failed_tsc != 0);
+	CU_ASSERT(ctrlr2->is_failed == false);
+	CU_ASSERT(curr_path2->last_failed_tsc == 0);
+	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(second_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Path 1 recovers */
+	ctrlr1->fail_reset = false;
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->is_failed == false);
+	CU_ASSERT(curr_path1->last_failed_tsc == 0);
+
+	/* Reset of both paths fail.
+	 * Since we have no working paths we should fail RESET IO.
+	 */
+	ctrlr1->is_failed = true;
+	curr_path1->last_failed_tsc = spdk_get_ticks();
+	ctrlr2->is_failed = true;
+	curr_path2->last_failed_tsc = spdk_get_ticks();
+	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	set_thread(0);
+	bdev_nvme_submit_request(ch1, first_bdev_io);
+
+	set_thread(1);
+	bdev_nvme_submit_request(ch2, second_bdev_io);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 2);
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+
+	CU_ASSERT(nvme_ctrlr1->resetting == true);
+	CU_ASSERT(nvme_ctrlr1->ctrlr_op_cb_arg == first_bio);
+	CU_ASSERT(TAILQ_FIRST(&io_path21->qpair->ctrlr_ch->pending_resets) ==
+		  (struct nvme_bdev_io *)second_bdev_io->driver_ctx);
+
+	ctrlr1->fail_reset = true;
+	ctrlr2->fail_reset = true;
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->is_failed == true);
+	CU_ASSERT(curr_path1->last_failed_tsc != 0);
+	CU_ASSERT(ctrlr2->is_failed == true);
+	CU_ASSERT(curr_path2->last_failed_tsc != 0);
+	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(second_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	/* Paths 1 and 2 recover */
+	ctrlr1->fail_reset = false;
+	ctrlr2->fail_reset = false;
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->is_failed == false);
+	CU_ASSERT(curr_path1->last_failed_tsc == 0);
+	CU_ASSERT(ctrlr2->is_failed == false);
+	CU_ASSERT(curr_path2->last_failed_tsc == 0);
+
 	set_thread(0);
 
 	spdk_put_io_channel(ch1);

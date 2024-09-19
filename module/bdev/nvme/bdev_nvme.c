@@ -2905,10 +2905,6 @@ _bdev_nvme_reset_io_continue(void *ctx)
 	prev_io_path = bio->io_path;
 	bio->io_path = NULL;
 
-	if (bio->cpl.cdw0 != 0) {
-		goto complete;
-	}
-
 	next_io_path = STAILQ_NEXT(prev_io_path, stailq);
 	if (next_io_path == NULL) {
 		goto complete;
@@ -2918,8 +2914,6 @@ _bdev_nvme_reset_io_continue(void *ctx)
 	if (rc == 0) {
 		return;
 	}
-
-	bio->cpl.cdw0 = 1;
 
 complete:
 	bdev_nvme_reset_io_complete(bio);
@@ -2931,7 +2925,12 @@ bdev_nvme_reset_io_continue(void *cb_arg, int rc)
 	struct nvme_bdev_io *bio = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
-	bio->cpl.cdw0 = (rc == 0) ? 0 : 1;
+	/* Reset status is initialized as "failed". Set to "success" once we have at least one
+	 * successfully reset nvme_ctrlr.
+	 */
+	if (rc == 0) {
+		bio->cpl.cdw0 = 0;
+	}
 
 	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), _bdev_nvme_reset_io_continue, bio);
 }
@@ -2976,7 +2975,10 @@ bdev_nvme_freeze_bdev_channel_done(struct nvme_bdev *nbdev, void *ctx, int statu
 
 	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-	bio->cpl.cdw0 = 0;
+	/* Initialize with failed status. With multipath it is enough to have at least one successful
+	 * nvme_ctrlr reset. If there is none, reset status will remain failed.
+	 */
+	bio->cpl.cdw0 = 1;
 
 	/* Reset all nvme_ctrlrs of a bdev controller sequentially. */
 	io_path = STAILQ_FIRST(&nbdev_ch->io_path_list);
