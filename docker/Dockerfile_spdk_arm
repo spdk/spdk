@@ -1,0 +1,38 @@
+FROM fedora:37
+
+# push to "simplyblock/spdk-core:latest"
+
+USER root
+
+WORKDIR /root
+
+COPY api api/
+COPY scripts scripts/
+
+RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cmake nano systemd-udev
+
+#RUN wget https://github.com/apple/foundationdb/releases/download/7.3.3/foundationdb-clients-7.3.3-1.el7.x86_64.rpm
+#RUN rpm -Uvh foundationdb-clients-7.3.3-1.el7.x86_64.rpm
+#RUN rm -f foundationdb-clients-7.3.3-1.el7.x86_64.rpm
+
+RUN git clone https://github.com/simplyblock-io/spdk --depth 1 -b v24.05
+
+RUN cd spdk && git submodule update --init --depth 1
+
+RUN cd spdk && scripts/pkgdep.sh --rdma --pmem
+
+RUN mkdir /tmp/pmem
+
+RUN pip3 install grpcio-tools==1.51.3 protobuf==4.22.1
+
+RUN pip3 install -r /root/api/requirements.txt
+
+RUN sed -i "s/^#define SPDK_JSONRPC_RECV_BUF_SIZE.*/#define SPDK_JSONRPC_RECV_BUF_SIZE\t(32 * 1024 * 1024)/" /root/spdk/lib/jsonrpc/jsonrpc_internal.h
+
+RUN sed -i "s/^#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC.*/#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC\t200/" /root/spdk/lib/bdev/bdev.c
+
+RUN sed -i "s/^#define SPDK_BDEV_QOS_TIMESLICE_IN_USEC.*/#define SPDK_BDEV_QOS_TIMESLICE_IN_USEC\t5000/" /root/spdk/lib/bdev/bdev.c
+
+RUN cd spdk && ./configure --with-crypto --with-rdma --disable-tests --disable-unit-tests --disable-examples --with-ocf --with-fuse --with-nvme-cuse
+
+RUN cd spdk && make --no-builtin-rules -j16
