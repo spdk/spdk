@@ -890,6 +890,10 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
+	raid_io->iovs = bdev_io->u.bdev.iovs;
+	raid_io->iovcnt = bdev_io->u.bdev.iovcnt;
+	raid_io->md_buf = bdev_io->u.bdev.md_buf;
+
 	raid_bdev_submit_rw_request(raid_io);
 }
 
