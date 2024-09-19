@@ -797,8 +797,8 @@ sw_accel_create_cb(void *io_device, void *ctx_buf)
 	struct sw_accel_io_channel *sw_ch = ctx_buf;
 #ifdef SPDK_CONFIG_ISAL
 	struct comp_deflate_level_buf *deflate_level_bufs;
-#endif
 	int i;
+#endif
 
 	STAILQ_INIT(&sw_ch->tasks_to_complete);
 	sw_ch->completion_poller = NULL;
