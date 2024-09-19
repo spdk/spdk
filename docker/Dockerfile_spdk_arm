@@ -1,21 +1,14 @@
 FROM fedora:37
 
-# push to "simplyblock/spdk-core:latest"
+# push to "simplyblock/spdk-core:$TAG"
 
 USER root
 
 WORKDIR /root
 
-COPY api api/
-COPY scripts scripts/
+COPY ./ /root/spdk/
 
 RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cmake nano systemd-udev
-
-#RUN wget https://github.com/apple/foundationdb/releases/download/7.3.3/foundationdb-clients-7.3.3-1.el7.x86_64.rpm
-#RUN rpm -Uvh foundationdb-clients-7.3.3-1.el7.x86_64.rpm
-#RUN rm -f foundationdb-clients-7.3.3-1.el7.x86_64.rpm
-
-RUN git clone https://github.com/simplyblock-io/spdk --depth 1 -b v24.05
 
 RUN cd spdk && git submodule update --init --depth 1
 
@@ -24,8 +17,6 @@ RUN cd spdk && scripts/pkgdep.sh --rdma --pmem
 RUN mkdir /tmp/pmem
 
 RUN pip3 install grpcio-tools==1.51.3 protobuf==4.22.1
-
-RUN pip3 install -r /root/api/requirements.txt
 
 RUN sed -i "s/^#define SPDK_JSONRPC_RECV_BUF_SIZE.*/#define SPDK_JSONRPC_RECV_BUF_SIZE\t(32 * 1024 * 1024)/" /root/spdk/lib/jsonrpc/jsonrpc_internal.h
 

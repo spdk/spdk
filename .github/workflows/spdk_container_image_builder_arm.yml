@@ -8,7 +8,10 @@ jobs:
   build:
     runs-on: linux-arm
     steps:
-    - uses: actions/checkout@master
+    - name: Checkout the triggered branch
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.workflow_run.head_branch }}
 
     - name: Set docker image tag
       id: get_info
