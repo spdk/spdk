@@ -456,8 +456,15 @@ _build_release() (
 	if [[ $CC == *clang* ]]; then
 		jobs=$(($(nproc) / 2))
 		case "$(uname -s)" in
-			Linux) # Shipped by default with binutils under most of the Linux distros
-				export LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs" ;;
+			Linux)
+				# ld.gold is shipped by default with binutils under most of the Linux distros.
+				# But just in case, look for ld.lld as it's still better suited for the LTO
+				# build under clang.
+				if ! LD=$(type -P ld.lld); then
+					LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs"
+				fi
+				export LD LDFLAGS MAKEFLAGS
+				;;
 			FreeBSD) # Default compiler which does support LTO, set it explicitly for visibility
 				export LD=ld.lld ;;
 		esac
