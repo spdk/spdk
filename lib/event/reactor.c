@@ -268,6 +268,10 @@ spdk_reactor_get(uint32_t lcore)
 static int reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op);
 static bool reactor_thread_op_supported(enum spdk_thread_op op);
 
+/* Power of 2 minus 1 is optimal for memory consumption */
+#define EVENT_MSG_MEMPOOL_SHIFT 14 /* 2^14 = 16384 */
+#define EVENT_MSG_MEMPOOL_SIZE ((1 << EVENT_MSG_MEMPOOL_SHIFT) - 1)
+
 int
 spdk_reactors_init(size_t msg_mempool_size)
 {
@@ -278,7 +282,7 @@ spdk_reactors_init(size_t msg_mempool_size)
 
 	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
 	g_spdk_event_mempool = spdk_mempool_create(mempool_name,
-			       262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
+			       EVENT_MSG_MEMPOOL_SIZE,
 			       sizeof(struct spdk_event),
 			       SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 			       SPDK_ENV_NUMA_ID_ANY);
