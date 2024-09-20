@@ -306,8 +306,6 @@ typedef void (*spdk_poller_destroy_cb)(void *ctx);
 
 struct spdk_nvmf_rdma_ibv_event_ctx {
 	struct spdk_nvmf_rdma_qpair			*rqpair;
-	/* Link to other ibv events associated with this qpair */
-	STAILQ_ENTRY(spdk_nvmf_rdma_ibv_event_ctx)	link;
 };
 
 struct spdk_nvmf_rdma_qpair {
@@ -382,8 +380,8 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	struct spdk_io_channel		*destruct_channel;
 
-	/* List of ibv async events */
-	STAILQ_HEAD(, spdk_nvmf_rdma_ibv_event_ctx)	ibv_events;
+	/* ctx for async processing of last_wqe_reached event */
+	struct spdk_nvmf_rdma_ibv_event_ctx	*last_wqe_reached_ctx;
 
 	/* Lets us know that we have received the last_wqe event. */
 	bool					last_wqe_reached;
@@ -836,11 +834,12 @@ cleanup:
 static void
 nvmf_rdma_qpair_clean_ibv_events(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	struct spdk_nvmf_rdma_ibv_event_ctx *ctx, *tctx;
-	STAILQ_FOREACH_SAFE(ctx, &rqpair->ibv_events, link, tctx) {
+	struct spdk_nvmf_rdma_ibv_event_ctx *ctx;
+
+	ctx = rqpair->last_wqe_reached_ctx;
+	if (ctx) {
 		ctx->rqpair = NULL;
 		/* Memory allocated for ctx is freed in nvmf_rdma_qpair_process_last_wqe_event */
-		STAILQ_REMOVE(&rqpair->ibv_events, ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
 	}
 }
 
@@ -1378,7 +1377,6 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
-	STAILQ_INIT(&rqpair->ibv_events);
 	/* use qid from the private data to determine the qpair type
 	   qid will be set to the appropriate value when the controller is created */
 	rqpair->qpair.qid = private_data->qid;
@@ -3744,10 +3742,14 @@ static void
 nvmf_rdma_qpair_process_last_wqe_event(void *ctx)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *event_ctx = ctx;
+	struct spdk_nvmf_rdma_qpair *rqpair;
 
-	if (event_ctx->rqpair) {
-		STAILQ_REMOVE(&event_ctx->rqpair->ibv_events, event_ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
-		nvmf_rdma_handle_last_wqe_reached(event_ctx->rqpair);
+	rqpair = event_ctx->rqpair;
+
+	if (rqpair) {
+		assert(event_ctx == rqpair->last_wqe_reached_ctx);
+		nvmf_rdma_handle_last_wqe_reached(rqpair);
+		rqpair->last_wqe_reached_ctx = NULL;
 	}
 	free(event_ctx);
 }
@@ -3770,17 +3772,22 @@ nvmf_rdma_send_qpair_last_wqe_event(struct spdk_nvmf_rdma_qpair *rqpair)
 		return -EINVAL;
 	}
 
+	if (rqpair->last_wqe_reached || rqpair->last_wqe_reached_ctx != NULL) {
+		SPDK_ERRLOG("LAST_WQE_REACHED already received for rqpair %p\n", rqpair);
+		return -EALREADY;
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		return -ENOMEM;
 	}
 
 	ctx->rqpair = rqpair;
-	STAILQ_INSERT_TAIL(&rqpair->ibv_events, ctx, link);
+	rqpair->last_wqe_reached_ctx = ctx;
 
 	rc = spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_last_wqe_event, ctx);
 	if (rc) {
-		STAILQ_REMOVE(&rqpair->ibv_events, ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
+		rqpair->last_wqe_reached_ctx = NULL;
 		free(ctx);
 	}
 
