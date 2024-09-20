@@ -839,7 +839,7 @@ nvmf_rdma_qpair_clean_ibv_events(struct spdk_nvmf_rdma_qpair *rqpair)
 	struct spdk_nvmf_rdma_ibv_event_ctx *ctx, *tctx;
 	STAILQ_FOREACH_SAFE(ctx, &rqpair->ibv_events, link, tctx) {
 		ctx->rqpair = NULL;
-		/* Memory allocated for ctx is freed in nvmf_rdma_qpair_process_ibv_event */
+		/* Memory allocated for ctx is freed in nvmf_rdma_qpair_process_last_wqe_event */
 		STAILQ_REMOVE(&rqpair->ibv_events, ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
 	}
 }
@@ -3741,7 +3741,7 @@ nvmf_rdma_handle_last_wqe_reached(struct spdk_nvmf_rdma_qpair *rqpair)
 }
 
 static void
-nvmf_rdma_qpair_process_ibv_event(void *ctx)
+nvmf_rdma_qpair_process_last_wqe_event(void *ctx)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *event_ctx = ctx;
 
@@ -3778,7 +3778,7 @@ nvmf_rdma_send_qpair_last_wqe_event(struct spdk_nvmf_rdma_qpair *rqpair)
 	ctx->rqpair = rqpair;
 	STAILQ_INSERT_TAIL(&rqpair->ibv_events, ctx, link);
 
-	rc = spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_ibv_event, ctx);
+	rc = spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_last_wqe_event, ctx);
 	if (rc) {
 		STAILQ_REMOVE(&rqpair->ibv_events, ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
 		free(ctx);
