@@ -306,7 +306,6 @@ typedef void (*spdk_poller_destroy_cb)(void *ctx);
 
 struct spdk_nvmf_rdma_ibv_event_ctx {
 	struct spdk_nvmf_rdma_qpair			*rqpair;
-	spdk_nvmf_rdma_qpair_ibv_event			cb_fn;
 	/* Link to other ibv events associated with this qpair */
 	STAILQ_ENTRY(spdk_nvmf_rdma_ibv_event_ctx)	link;
 };
@@ -3748,16 +3747,13 @@ nvmf_rdma_qpair_process_ibv_event(void *ctx)
 
 	if (event_ctx->rqpair) {
 		STAILQ_REMOVE(&event_ctx->rqpair->ibv_events, event_ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
-		if (event_ctx->cb_fn) {
-			event_ctx->cb_fn(event_ctx->rqpair);
-		}
+		nvmf_rdma_handle_last_wqe_reached(event_ctx->rqpair);
 	}
 	free(event_ctx);
 }
 
 static int
-nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair,
-				 spdk_nvmf_rdma_qpair_ibv_event fn)
+nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *ctx;
 	struct spdk_thread *thr = NULL;
@@ -3780,7 +3776,6 @@ nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair,
 	}
 
 	ctx->rqpair = rqpair;
-	ctx->cb_fn = fn;
 	STAILQ_INSERT_TAIL(&rqpair->ibv_events, ctx, link);
 
 	rc = spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_ibv_event, ctx);
@@ -3833,7 +3828,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		case IBV_EVENT_QP_LAST_WQE_REACHED:
 			/* This event only occurs for shared receive queues. */
 			SPDK_DEBUGLOG(rdma, "Last WQE reached event received for rqpair %p\n", rqpair);
-			rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_last_wqe_reached);
+			rc = nvmf_rdma_send_qpair_async_event(rqpair);
 			if (rc) {
 				SPDK_WARNLOG("Failed to send LAST_WQE_REACHED event. rqpair %p, err %d\n", rqpair, rc);
 				rqpair->last_wqe_reached = true;
