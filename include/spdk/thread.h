@@ -581,6 +581,15 @@ void spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl);
 void spdk_thread_set_interrupt_mode(bool enable_interrupt);
 
 /**
+ * Get trace id.
+ *
+ * \param thread Thread to get trace_id from.
+ *
+ * \return Trace id of the specified thread.
+ */
+uint16_t spdk_thread_get_trace_id(struct spdk_thread *thread);
+
+/**
  * Register a poller on the current thread.
  *
  * The poller can be unregistered by calling spdk_poller_unregister().

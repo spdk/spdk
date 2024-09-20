@@ -152,9 +152,19 @@ struct spdk_thread {
 	bool				poller_unregistered;
 	struct spdk_fd_group		*fgrp;
 
+	uint16_t			trace_id;
+
+	uint8_t				reserved[6];
+
 	/* User context allocated at the end */
 	uint8_t				ctx[0];
 };
+
+/*
+ * Assert that spdk_thread struct is 8 byte aligned to ensure
+ * the user ctx is also 8-byte aligned.
+ */
+SPDK_STATIC_ASSERT((sizeof(struct spdk_thread)) % 8 == 0, "Incorrect size");
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -302,6 +312,7 @@ thread_trace(void)
 		}
 	};
 
+	spdk_trace_register_owner_type(OWNER_TYPE_THREAD, 't');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
 SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
@@ -548,6 +559,8 @@ spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask)
 	} else {
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 	}
+
+	thread->trace_id = spdk_trace_register_owner(OWNER_TYPE_THREAD, thread->name);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	if (g_thread_id == 0) {
@@ -1979,6 +1992,12 @@ struct spdk_io_channel *
 spdk_thread_get_next_io_channel(struct spdk_io_channel *prev)
 {
 	return RB_NEXT(io_channel_tree, &thread->io_channels, prev);
+}
+
+uint16_t
+spdk_thread_get_trace_id(struct spdk_thread *thread)
+{
+	return thread->trace_id;
 }
 
 struct call_thread {
