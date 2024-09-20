@@ -3753,7 +3753,7 @@ nvmf_rdma_qpair_process_ibv_event(void *ctx)
 }
 
 static int
-nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair)
+nvmf_rdma_send_qpair_last_wqe_event(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *ctx;
 	struct spdk_thread *thr = NULL;
@@ -3828,7 +3828,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		case IBV_EVENT_QP_LAST_WQE_REACHED:
 			/* This event only occurs for shared receive queues. */
 			SPDK_DEBUGLOG(rdma, "Last WQE reached event received for rqpair %p\n", rqpair);
-			rc = nvmf_rdma_send_qpair_async_event(rqpair);
+			rc = nvmf_rdma_send_qpair_last_wqe_event(rqpair);
 			if (rc) {
 				SPDK_WARNLOG("Failed to send LAST_WQE_REACHED event. rqpair %p, err %d\n", rqpair, rc);
 				rqpair->last_wqe_reached = true;
