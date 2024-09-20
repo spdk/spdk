@@ -11,7 +11,7 @@ pkg install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	pkg install -y devel/astyle bash sysutils/sg3_utils nasm \
-		bash-completion ruby devel/ruby-gems
+		bash-completion ruby devel/ruby-gems lcov
 	pkg install -g -y "py*-pycodestyle"
 	# ruby and ruby-gems are not preinstalled on FreeBSD but are needed to
 	# build mdl - make sure they are in place.
