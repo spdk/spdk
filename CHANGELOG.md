@@ -1,6 +1,8 @@
 # Changelog
 
-## v24.09: (Upcoming Release)
+## v25.01: (Upcoming Release)
+
+## v24.09
 
 ### nvmf
 
