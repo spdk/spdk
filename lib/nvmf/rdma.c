@@ -3424,11 +3424,11 @@ nvmf_rdma_poller_process_pending_buf_queue(struct spdk_nvmf_rdma_transport *rtra
 }
 
 static inline bool
-nvmf_rdma_can_ignore_last_wqe_reached(struct spdk_nvmf_rdma_device *device)
+nvmf_rdma_device_supports_last_wqe_reached(struct spdk_nvmf_rdma_device *device)
 {
 	/* iWARP transport and SoftRoCE driver don't support LAST_WQE_REACHED ibv async event */
-	return nvmf_rdma_is_rxe_device(device) ||
-	       device->context->device->transport_type == IBV_TRANSPORT_IWARP;
+	return !nvmf_rdma_is_rxe_device(device) &&
+	       device->context->device->transport_type != IBV_TRANSPORT_IWARP;
 }
 
 static void
@@ -3459,8 +3459,11 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 		return;
 	}
 
+	/* For devices that support LAST_WQE_REACHED with srq, we need to
+	 * wait to destroy the qpair until that event has been received.
+	 */
 	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false &&
-	    !nvmf_rdma_can_ignore_last_wqe_reached(rqpair->device)) {
+	    nvmf_rdma_device_supports_last_wqe_reached(rqpair->device)) {
 		return;
 	}
 
