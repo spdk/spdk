@@ -368,65 +368,6 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 	return NVME_TCP_CONNECTION_FATAL;
 }
 
-static int
-nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
-{
-	int rc;
-	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
-	int iovcnt;
-	struct spdk_iov_sgl sgl;
-	uint32_t i;
-
-	assert(sock != NULL);
-
-	spdk_iov_sgl_init(&sgl, iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu->rw_offset);
-
-	if (spdk_likely(!pdu->dif_ctx)) {
-		for (i = 0; i < pdu->data_iovcnt; i++) {
-			if (!spdk_iov_sgl_append(&sgl, pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len)) {
-				goto end;
-			}
-		}
-	} else {
-		if (!_nvme_tcp_sgl_append_multi_with_md(&sgl, pdu->data_iov, pdu->data_iovcnt,
-							pdu->data_len, pdu->dif_ctx)) {
-			goto end;
-		}
-	}
-
-	/* Data Digest */
-	if (pdu->ddgst_enable) {
-		spdk_iov_sgl_append(&sgl, pdu->data_digest, SPDK_NVME_TCP_DIGEST_LEN);
-	}
-
-end:
-	iovcnt = NVME_TCP_MAX_SGL_DESCRIPTORS + 1 - sgl.iovcnt;
-	assert(iovcnt > 0);
-
-	if (iovcnt == 1) {
-		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base);
-	}
-
-	rc = spdk_sock_readv(sock, iov, iovcnt);
-	if (rc > 0) {
-		return rc;
-	}
-
-	if (rc < 0) {
-		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
-			return 0;
-		}
-
-		/* For connect reset issue, do not output error log */
-		if (rc != -ECONNRESET) {
-			SPDK_ERRLOG("spdk_sock_readv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		}
-	}
-
-	/* connection closed */
-	return NVME_TCP_CONNECTION_FATAL;
-}
-
 static void
 nvme_tcp_pdu_set_data(struct nvme_tcp_pdu *pdu, void *data, uint32_t data_len)
 {
