@@ -162,6 +162,9 @@ function nvmf_shutdown_tc4() {
 run_test "nvmf_shutdown_tc1" nvmf_shutdown_tc1
 run_test "nvmf_shutdown_tc2" nvmf_shutdown_tc2
 run_test "nvmf_shutdown_tc3" nvmf_shutdown_tc3
-run_test "nvmf_shutdown_tc4" nvmf_shutdown_tc4
+# Temporarily disable on e810 due to issue #3523
+if ! [[ "$SPDK_TEST_NVMF_NICS" == "e810" && "$TEST_TRANSPORT" == "rdma" ]]; then
+	run_test "nvmf_shutdown_tc4" nvmf_shutdown_tc4
+fi
 
 trap - SIGINT SIGTERM EXIT
