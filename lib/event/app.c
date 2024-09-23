@@ -923,19 +923,6 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 
 	spdk_cpuset_set_cpu(&tmp_cpumask, spdk_env_get_current_core(), true);
 
-	/* Now that the reactors have been initialized, we can create the app thread. */
-	spdk_thread_create("app_thread", &tmp_cpumask);
-	if (!spdk_thread_get_app_thread()) {
-		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
-		return 1;
-	}
-
-	SPDK_ENV_FOREACH_CORE(core) {
-		rc = init_proc_stat(core);
-		if (rc) {
-			SPDK_NOTICELOG("Unable to parse /proc/stat [core: %d].\n", core);
-		}
-	}
 	/*
 	 * Disable and ignore trace setup if setting num_entries
 	 * to be 0.
@@ -948,6 +935,20 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	 */
 	if (opts->num_entries != 0 && app_setup_trace(opts) != 0) {
 		return 1;
+	}
+
+	/* Now that the reactors have been initialized, we can create the app thread. */
+	spdk_thread_create("app_thread", &tmp_cpumask);
+	if (!spdk_thread_get_app_thread()) {
+		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
+		return 1;
+	}
+
+	SPDK_ENV_FOREACH_CORE(core) {
+		rc = init_proc_stat(core);
+		if (rc) {
+			SPDK_NOTICELOG("Unable to parse /proc/stat [core: %d].\n", core);
+		}
 	}
 
 	if (!opts->disable_signal_handlers && app_setup_signal_handlers(opts) != 0) {
