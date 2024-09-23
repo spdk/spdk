@@ -8781,6 +8781,29 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 	return current;
 }
 
+static struct nvme_ctrlr *
+bdev_nvme_next_ctrlr_unsafe(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct nvme_ctrlr *prev)
+{
+	struct nvme_ctrlr *next;
+
+	/* Must be called under g_bdev_nvme_mutex */
+	next = prev != NULL ? TAILQ_NEXT(prev, tailq) : TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+	while (next != NULL) {
+		/* ref can be 0 when the ctrlr was released, but hasn't been detached yet */
+		pthread_mutex_lock(&next->mutex);
+		if (next->ref > 0) {
+			next->ref++;
+			pthread_mutex_unlock(&next->mutex);
+			return next;
+		}
+
+		pthread_mutex_unlock(&next->mutex);
+		next = TAILQ_NEXT(next, tailq);
+	}
+
+	return NULL;
+}
+
 struct bdev_nvme_set_keys_ctx {
 	struct nvme_ctrlr	*nctrlr;
 	struct spdk_key		*dhchap_key;
@@ -8831,10 +8854,7 @@ bdev_nvme_authenticate_ctrlr_continue(struct bdev_nvme_set_keys_ctx *ctx)
 	struct nvme_ctrlr *next;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	next = TAILQ_NEXT(ctx->nctrlr, tailq);
-	if (next != NULL) {
-		next->ref++;
-	}
+	next = bdev_nvme_next_ctrlr_unsafe(NULL, ctx->nctrlr);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	nvme_ctrlr_release(ctx->nctrlr);
@@ -8963,9 +8983,13 @@ bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhchap_
 		bdev_nvme_free_set_keys_ctx(ctx);
 		return -ENODEV;
 	}
-	assert(!TAILQ_EMPTY(&nbdev_ctrlr->ctrlrs));
-	nctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
-	nctrlr->ref++;
+	nctrlr = bdev_nvme_next_ctrlr_unsafe(nbdev_ctrlr, NULL);
+	if (nctrlr == NULL) {
+		SPDK_ERRLOG("Could not find any nvme_ctrlrs on bdev_ctrlr %s\n", name);
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		bdev_nvme_free_set_keys_ctx(ctx);
+		return -ENODEV;
+	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	ctx->nctrlr = nctrlr;
