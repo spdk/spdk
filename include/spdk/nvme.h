@@ -3027,6 +3027,35 @@ int spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvm
 int spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair);
 
 /**
+ * Wait for interrupt events on file descriptors of all the qpairs in this poll group.
+ *
+ * In interrupt mode all the file descriptors of qpairs are registered to the fd group within the
+ * poll group. This can collectively wait for interrupt events on all those file descriptors.
+ *
+ * the disconnected_qpair_cb will be called for all disconnected qpairs in the poll group
+ * including qpairs which fail within the context of this call.
+ * The user is responsible for trying to reconnect or destroy those qpairs.
+ *
+ * \param group The poll group on which to wait for interrupt events.
+ * \param disconnected_qpair_cb A callback function of type spdk_nvme_disconnected_qpair_cb. Must
+ * be non-NULL.
+ *
+ * \return number of events processed on success, -EINVAL if no disconnected_qpair_cb is passed, or
+ * -errno in case of failure.
+ */
+int spdk_nvme_poll_group_wait(struct spdk_nvme_poll_group *group,
+			      spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
+
+/**
+ * Return the internal epoll file descriptor of this poll group.
+ *
+ * \param group The poll group for which epoll fd is requested.
+ *
+ * \return epoll fd for the poll group, -EINVAL if there is no fd group for this poll group.
+ */
+int spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group);
+
+/**
  * Destroy an empty poll group.
  *
  * \param group The group to destroy.

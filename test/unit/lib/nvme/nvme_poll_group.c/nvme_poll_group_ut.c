@@ -32,6 +32,14 @@ struct spdk_nvme_transport t4 = {
 	.name = "transport4",
 };
 
+struct spdk_nvme_ctrlr c1 = {
+	.opts.enable_interrupts = 0,
+};
+
+struct spdk_nvme_ctrlr c2 = {
+	.opts.enable_interrupts = 1,
+};
+
 int64_t g_process_completions_return_value = 0;
 int g_destroy_return_value = 0;
 
@@ -48,6 +56,11 @@ DEFINE_STUB(nvme_transport_get_trtype,
 	    (const struct spdk_nvme_transport *transport),
 	    SPDK_NVME_TRANSPORT_PCIE);
 
+DEFINE_STUB(spdk_nvme_qpair_get_fd, int, (struct spdk_nvme_qpair *qpair,
+		struct spdk_event_handler_opts *opts), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_get_transport_id,
+	    const struct spdk_nvme_transport_id *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 int
 nvme_transport_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 				    struct spdk_nvme_transport_poll_group_stat **stats)
@@ -189,6 +202,12 @@ nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 	return -ENODEV;
 }
 
+int32_t
+spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+{
+	return g_process_completions_return_value;
+}
+
 int64_t
 nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
@@ -250,15 +269,89 @@ test_spdk_nvme_poll_group_add_remove(void)
 
 	group = spdk_nvme_poll_group_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(group->enable_interrupts_is_valid == false);
+	CU_ASSERT(group->enable_interrupts == false);
+	CU_ASSERT(STAILQ_EMPTY(&group->tgroups));
+
+	/* Add qpairs from different controllers. One with interrupts other without. */
+	qpair1_1.transport = &t1;
+	qpair1_1.ctrlr = &c1;
+	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
+	qpair1_2.transport = &t1;
+	qpair1_2.ctrlr = &c2;
+	qpair1_2.state = NVME_QPAIR_DISCONNECTED;
+	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
+	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_2) == -EINVAL);
+	CU_ASSERT(group->enable_interrupts_is_valid == true);
+	CU_ASSERT(group->enable_interrupts == false);
+	STAILQ_FOREACH(tmp_tgroup, &group->tgroups, link) {
+		if (tmp_tgroup->transport == &t1) {
+			tgroup = tmp_tgroup;
+		} else {
+			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->connected_qpairs));
+		}
+		i++;
+	}
+	CU_ASSERT(i == 1);
+	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
+	qpair = STAILQ_FIRST(&tgroup->connected_qpairs);
+	SPDK_CU_ASSERT_FATAL(qpair == &qpair1_1);
+	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
+	CU_ASSERT(qpair == NULL);
+
+	/* Add second qpair from the same controller as the first. */
+	qpair1_2.ctrlr = &c1;
+	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_2) == 0);
+	i = 0;
+	STAILQ_FOREACH(tmp_tgroup, &group->tgroups, link) {
+		if (tmp_tgroup->transport == &t1) {
+			tgroup = tmp_tgroup;
+		} else {
+			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->connected_qpairs));
+		}
+		i++;
+	}
+	CU_ASSERT(i == 1);
+	qpair = STAILQ_FIRST(&tgroup->connected_qpairs);
+	SPDK_CU_ASSERT_FATAL(qpair == &qpair1_1);
+	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
+	SPDK_CU_ASSERT_FATAL(qpair == &qpair1_2);
+	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
+	CU_ASSERT(qpair == NULL);
+
+	i = 0;
+	/* Remove both qpairs and delete the transport poll group. */
+	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair1_1) == 0);
+	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair1_2) == 0);
+	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
+		CU_ASSERT(STAILQ_EMPTY(&tgroup->connected_qpairs));
+		STAILQ_REMOVE(&group->tgroups, tgroup, spdk_nvme_transport_poll_group, link);
+		free(tgroup);
+		i++;
+	}
+	CU_ASSERT(i == 1);
+	CU_ASSERT(STAILQ_EMPTY(&group->tgroups));
+	CU_ASSERT(group->enable_interrupts == false);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_poll_group_destroy(group) == 0);
+
+	group = spdk_nvme_poll_group_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(group->enable_interrupts_is_valid == false);
+	CU_ASSERT(group->enable_interrupts == false);
 	CU_ASSERT(STAILQ_EMPTY(&group->tgroups));
 
 	/* Add qpairs to a single transport. */
 	qpair1_1.transport = &t1;
+	qpair1_1.ctrlr = &c1;
 	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
 	qpair1_2.transport = &t1;
+	qpair1_2.ctrlr = &c1;
 	qpair1_2.state = NVME_QPAIR_ENABLED;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_2) == -EINVAL);
+	CU_ASSERT(group->enable_interrupts_is_valid == true);
+	CU_ASSERT(group->enable_interrupts == false);
+	i = 0;
 	STAILQ_FOREACH(tmp_tgroup, &group->tgroups, link) {
 		if (tmp_tgroup->transport == &t1) {
 			tgroup = tmp_tgroup;
@@ -276,11 +369,15 @@ test_spdk_nvme_poll_group_add_remove(void)
 
 	/* Add qpairs to a second transport. */
 	qpair2_1.transport = &t2;
+	qpair2_1.ctrlr = &c1;
 	qpair2_2.transport = &t2;
+	qpair2_2.ctrlr = &c1;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair2_1) == 0);
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair2_2) == 0);
 	qpair4_1.transport = &t4;
 	qpair4_2.transport = &t4;
+	qpair4_1.ctrlr = &c1;
+	qpair4_2.ctrlr = &c1;
 	/* Add qpairs for a transport that doesn't exist. */
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair4_1) == -ENODEV);
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair4_2) == -ENODEV);
@@ -394,6 +491,7 @@ test_spdk_nvme_poll_group_process_completions(void)
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
 	qpair1_1.transport = &t1;
+	qpair1_1.ctrlr = &c1;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
 	qpair1_1.state = NVME_QPAIR_ENABLED;
 	CU_ASSERT(nvme_poll_group_connect_qpair(&qpair1_1) == 0);
@@ -432,6 +530,7 @@ test_spdk_nvme_poll_group_destroy(void)
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	qpair1_1.transport = &t1;
+	qpair1_1.ctrlr = &c1;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
 
 	/* Don't remove busy poll groups. */

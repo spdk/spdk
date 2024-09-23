@@ -35,6 +35,17 @@ fill it out which can be used by the application to register interrupts on the q
 
 Added `opts_size` in `spdk_nvme_io_qpair_opts` structure to align it with other opts structures.
 
+`spdk_nvme_poll_group_create()` now creates a fd group to manage interrupt events.
+
+Two new APIs have been added to manage interrupt events in poll group.
+
+`spdk_nvme_poll_group_get_fd()` retrieves the internal epoll file descriptor of the poll group.
+
+`spdk_nvme_poll_group_wait()` waits for interrupt events on all the I/O queue pair file descriptors
+in a poll group. When an interrupt event gets generated, it processes any outstanding completions
+on the I/O queue pair with interrupts. These interrupt events are registered at the the time of I/O
+queue pair creation.
+
 ### nvmf
 
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page
