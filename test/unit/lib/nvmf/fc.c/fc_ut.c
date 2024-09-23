@@ -78,6 +78,14 @@ DEFINE_STUB_V(spdk_nvmf_request_zcopy_start, (struct spdk_nvmf_request *req));
 DEFINE_STUB_V(spdk_nvmf_request_zcopy_end, (struct spdk_nvmf_request *req, bool commit));
 DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
+DEFINE_STUB(spdk_json_parse, ssize_t, (void *json, size_t size, struct spdk_json_val *values,
+				       size_t num_values, void **end, uint32_t flags), 0);
+DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
+DEFINE_STUB_V(nvmf_qpair_auth_destroy, (struct spdk_nvmf_qpair *q));
+DEFINE_STUB_V(nvmf_tgt_stop_mdns_prr, (struct spdk_nvmf_tgt *tgt));
+DEFINE_STUB(nvmf_tgt_update_mdns_prr, int, (struct spdk_nvmf_tgt *tgt), 0);
+DEFINE_STUB(spdk_posix_file_load_from_name, void *, (const char *file_name, size_t *size), NULL);
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {
@@ -213,13 +221,15 @@ create_transport_test(void)
 	const struct spdk_nvmf_transport_ops *ops = NULL;
 	struct spdk_nvmf_transport_opts opts = { 0 };
 	struct spdk_nvmf_target_opts tgt_opts = {
-		.size = SPDK_SIZEOF(&opts, discovery_filter),
+		.size = SPDK_SIZEOF(&tgt_opts, discovery_filter),
 		.name = "nvmf_test_tgt",
 		.max_subsystems = 0
 	};
 
 	allocate_threads(8);
 	set_thread(0);
+
+	spdk_iobuf_initialize();
 
 	g_nvmf_tgt = spdk_nvmf_tgt_create(&tgt_opts);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tgt != NULL);
