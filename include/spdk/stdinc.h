@@ -65,6 +65,7 @@ extern "C" {
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <regex.h>
+#include <dlfcn.h>
 #include <sys/statvfs.h>
 #include <sys/syscall.h>
 #include <sys/file.h>

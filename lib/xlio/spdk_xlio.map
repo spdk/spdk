@@ -1,0 +1,10 @@
+{
+	global:
+
+	g_xlio_api;
+	spdk_xlio_init;
+	spdk_xlio_fini;
+	spdk_xlio_is_initialized;
+
+	local: *;
+};

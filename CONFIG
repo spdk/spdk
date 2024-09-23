@@ -247,6 +247,11 @@ CONFIG_NVMF_MAX_SGL_ENTRIES=16
 # Build all Go components
 CONFIG_GOLANG=n
 
+# Build with libxlio support.
+CONFIG_XLIO=n
+CONFIG_XLIO_DIR=
+CONFIG_STATIC_XLIO=n
+
 # Build fsdev
 CONFIG_FSDEV=y
 

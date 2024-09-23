@@ -148,6 +148,15 @@ function usage() {
 	echo " --without-aio-fsdev       No path required."
 	echo " --with-vmd                Enable VMD support."
 	echo " --without-vmd             No path required."
+	echo " --with-xlio[=DIR]         Build xlio socket module."
+	echo "                           If DIR is given, it must contain include/mellanox/xlio_extra.h."
+	echo " --without-xlio            No path required."
+	echo " --with-static-xlio        Link libxlio statically. Requires --with-xlio and a libxlio"
+	echo "                           built with --enable-static. Its dependencies, including"
+	echo "                           libdpcp, are searched for in DIR/lib and the regular system"
+	echo "                           paths. Use LDFLAGS to add other paths."
+	echo " --without-static-xlio     Load libxlio at runtime from the path in the SPDK_XLIO_PATH"
+	echo "                           environment variable. This is the default."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -775,6 +784,25 @@ for i in "$@"; do
 		--without-vmd)
 			CONFIG[VMD]=n
 			;;
+		--with-xlio=*)
+			check_dir "$i"
+			CONFIG[XLIO_DIR]=$(readlink -f ${i#*=})
+			CONFIG[XLIO]=y
+			;;
+		--with-xlio)
+			CONFIG[XLIO_DIR]=
+			CONFIG[XLIO]=y
+			;;
+		--without-xlio)
+			CONFIG[XLIO_DIR]=
+			CONFIG[XLIO]=n
+			;;
+		--with-static-xlio)
+			CONFIG[STATIC_XLIO]=y
+			;;
+		--without-static-xlio)
+			CONFIG[STATIC_XLIO]=n
+			;;
 		--)
 			break
 			;;
@@ -914,6 +942,17 @@ fi
 
 if [[ "${CONFIG[FIO_PLUGIN]}" = "y" && "${CONFIG[EXAMPLES]}" = "n" ]]; then
 	echo "ERROR: --with-fio and --disable-examples are mutually exclusive."
+	exit 1
+fi
+
+if [[ "${CONFIG[XLIO]}" = "y" && "${CONFIG[RDMA]}" = "n" ]]; then
+	echo "ERROR: --with-xlio requires --with-rdma. The xlio sock module registers memory"
+	echo "ERROR: and creates memory domains through lib/rdma_utils."
+	exit 1
+fi
+
+if [[ "${CONFIG[STATIC_XLIO]}" = "y" && "${CONFIG[XLIO]}" = "n" ]]; then
+	echo "ERROR: --with-static-xlio requires --with-xlio."
 	exit 1
 fi
 

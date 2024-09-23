@@ -123,6 +123,43 @@ the NVMe-oF target application unable to terminate cleanly.
 
 The transport is built into the nvmf_tgt by default, and it does not need any special libraries.
 
+### XLIO {#nvmf_tcp_xlio}
+
+The TCP transport can also run on [XLIO](https://github.com/mellanox/libxlio), a userspace TCP
+stack for NVIDIA NICs, through the `xlio` sock module. XLIO drives the NIC through the RDMA
+libraries, so it requires `--with-rdma`. Build and install libxlio following its README, then:
+
+~~~{.sh}
+./configure --with-rdma --with-xlio=/path/to/libxlio/install <other config parameters>
+make
+~~~
+
+The path can be omitted if libxlio is installed in the regular system paths.
+
+By default SPDK doesn't link against libxlio. It loads it at startup with `dlopen()` from the path
+in the `SPDK_XLIO_PATH` environment variable, and the `xlio` module stays disabled if that
+variable isn't set. An empty value loads `libxlio.so` from the regular library search path.
+
+~~~{.sh}
+SPDK_XLIO_PATH=/path/to/libxlio/install/lib/libxlio.so build/bin/nvmf_tgt --wait-for-rpc
+scripts/rpc.py sock_set_default_impl -i xlio
+scripts/rpc.py framework_start_init
+~~~
+
+`--with-static-xlio` links libxlio into the application instead. Every XLIO call becomes a direct
+call rather than an indirect one through libxlio's function table, which is considerably faster,
+particularly with `--enable-lto` or PGO. `SPDK_XLIO_PATH` isn't used in this mode.
+
+libxlio doesn't build a static library by default, so configure it with `--enable-static`. A
+static link also pulls in libxlio's own dependencies, including libdpcp, which are searched for in
+the `lib` directory of the `--with-xlio` path and then the regular system paths. Either install
+libdpcp to the same prefix as libxlio, or add its location to `LDFLAGS`:
+
+~~~{.sh}
+LDFLAGS=-L/path/to/libdpcp/install/lib ./configure --with-rdma \
+	--with-xlio=/path/to/libxlio/install --with-static-xlio <other config parameters>
+~~~
+
 ## FC transport support {#nvmf_fc_transport}
 
 To build nvmf_tgt with the FC transport, there is an additional FC LLD (Low Level Driver) code dependency.

@@ -53,6 +53,10 @@ endif
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvme += rdma_provider rdma_utils rdma_cm
 endif
+ifeq ($(CONFIG_XLIO),y)
+DEPDIRS-nvme += xlio accel thread
+DEPDIRS-xlio += log
+endif
 
 DEPDIRS-blob := log util thread dma trace
 DEPDIRS-accel := log util thread json rpc jsonrpc dma
@@ -131,6 +135,7 @@ DEPDIRS-env_dpdk_rpc := $(JSON_LIBS)
 DEPDIRS-sock_posix := log sock util trace
 DEPDIRS-sock_uring := log sock util trace
 DEPDIRS-sock_error := log sock util trace $(JSON_LIBS)
+DEPDIRS-sock_xlio := dma log rdma_utils sock trace util xlio
 
 # module/scheduler
 DEPDIRS-scheduler_dynamic := event log thread util json
@@ -201,6 +206,10 @@ DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock
 DEPDIRS-event_vhost_blk := init vhost
 DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock log util thread
+ifeq ($(CONFIG_XLIO),y)
+DEPDIRS-event_sock += event_xlio
+DEPDIRS-event_xlio := init xlio
+endif
 DEPDIRS-event_vfu_tgt := init vfu_tgt event_bdev event_scsi
 ifeq ($(CONFIG_FSDEV),y)
 DEPDIRS-event_vfu_tgt += event_fsdev

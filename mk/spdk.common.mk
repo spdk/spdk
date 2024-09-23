@@ -303,6 +303,18 @@ endif
 SYS_LIBS += -lufc
 endif
 
+ifeq ($(CONFIG_XLIO), y)
+SYS_LIBS += -libverbs
+endif
+
+ifeq ($(CONFIG_STATIC_XLIO), y)
+ifneq ($(CONFIG_XLIO_DIR),)
+SYS_LIBS += -L$(CONFIG_XLIO_DIR)/lib
+endif
+SYS_LIBS += -lxlio -lnl-3 -lnl-route-3 -lstdc++
+SYS_LIBS += -ldpcp -lrdmacm -lmlx5
+endif
+
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -g3 -O0 -fno-omit-frame-pointer
 else

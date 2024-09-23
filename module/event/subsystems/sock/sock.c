@@ -63,3 +63,6 @@ static struct spdk_subsystem g_spdk_subsystem_sock = {
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_sock);
+#ifdef SPDK_CONFIG_XLIO
+SPDK_SUBSYSTEM_DEPEND(sock, xlio);
+#endif

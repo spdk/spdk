@@ -10,6 +10,7 @@ DIRS-y = posix error
 ifeq ($(OS), Linux)
 DIRS-$(CONFIG_URING) += uring
 endif
+DIRS-$(CONFIG_XLIO) += xlio
 
 .PHONY: all clean $(DIRS-y)
 

@@ -84,6 +84,12 @@ lib/mlx5/mlx5_dma
 lib/mlx5/mlx5_umr
 examples/accel/nvme_umr/nvme_umr
 
+# Not configured to test xlio. libxlio is not packaged for Fedora, which is
+# used for the main build and scanbuild tests.
+lib/xlio/xlio
+module/event/subsystems/xlio/xlio
+module/sock/xlio/xlio
+
 # Not configured to build hello_gorpc example
 examples/go/hello_gorpc/hello_gorpc.go
 

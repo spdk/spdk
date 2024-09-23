@@ -36,6 +36,7 @@ DIRS-$(CONFIG_RDMA) += rdma_cm
 DIRS-$(CONFIG_RDMA) += rdma_provider
 DIRS-$(CONFIG_RDMA) += rdma_utils
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
+DIRS-$(CONFIG_XLIO) += xlio
 DIRS-$(CONFIG_FSDEV) += fsdev fuse_dispatcher
 DIRS-$(CONFIG_VMD) += vmd
 
