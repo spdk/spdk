@@ -910,6 +910,7 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	qpair->connect_received = true;
 
 	pthread_mutex_lock(&qpair->group->mutex);
+	assert(qpair->group->current_unassociated_qpairs > 0);
 	qpair->group->current_unassociated_qpairs--;
 	pthread_mutex_unlock(&qpair->group->mutex);
 

@@ -1127,6 +1127,13 @@ _nvmf_poll_group_add(void *_ctx)
 
 	if (spdk_nvmf_poll_group_add(group, qpair) != 0) {
 		SPDK_ERRLOG("Unable to add the qpair to a poll group.\n");
+
+		assert(qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED);
+		pthread_mutex_lock(&group->mutex);
+		assert(group->current_unassociated_qpairs > 0);
+		group->current_unassociated_qpairs--;
+		pthread_mutex_unlock(&group->mutex);
+
 		spdk_nvmf_qpair_disconnect(qpair);
 	}
 }
@@ -1340,6 +1347,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 		}
 	} else {
 		pthread_mutex_lock(&qpair->group->mutex);
+		assert(qpair->group->current_unassociated_qpairs > 0);
 		qpair->group->current_unassociated_qpairs--;
 		pthread_mutex_unlock(&qpair->group->mutex);
 	}
