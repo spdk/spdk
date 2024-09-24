@@ -4,68 +4,16 @@
 
 ## v24.09
 
-### nvmf
-
-Added support for interrupt mode in the NVMe-of TCP transport.
-
-Enable iobuf based queuing for nvmf requests when there is not enough free buffers available.
-Perspective from the user of the spdk_nvmf_request_get_buffers() API is that whenever all iovecs
-are allocated immediately then nothing changes compared to the previous implementation.
-If iobuf does not have enough buffers then there are two flows now:
-
-- if req_get_buffers_done is not set in the spdk_nvmf_transport_ops then again, nothing changes. All
-  (if there were any) ioves are released and caller must try again later.
-- if callback was set then caller will be notified once all iovecs are allocated.
-
-As requests waiting for the buffer might get aborted, another API to remove such request from
-the iobuf queue is also added.
-
-### sock
-
-New functions that allows to register interrupt for given socket group:
-`spdk_sock_group_register_interrupt()`
-`spdk_sock_group_unregister_interrupt()`
-Both uses API exposed by the thread.h, see below for details.
-Support implemented only for the POSIX and SSL sockets.
-
-### thread
-
-New function `spdk_interrupt_register_for_events()` build on top of `spdk_fd_group_add_for_events()`.
-See below for details.
-
-### env
-
-Added `spdk_env_core_get_smt_cpuset()` API to get the list of SMT sibling
-cores for a given core ID.
-
-### nvmf
-
-Added public API 'spdk_nvmf_subsystem_set_cntlid_range' to set controller ID
-range for a subsystem.
-
 ### bdev
 
 `spdk_bdev_io_get_aux_buf` and `spdk_bdev_io_put_aux_buf` are deprecated and
 will be removed in the 25.01 release. We do not believe these are in use currently.
 
-### event
-
-The `framework_get_reactors` RPC method supports getting pid and tid.
-
-### env_dpdk
-
-`spdk_get_tid` is added to get the tid of the current thread.
-
-### scheduler
-
-Added `framework_get_governor` RPC to retrieve the power governor name,
-power env and the frequencies available, frequency set to the cpu cores.
-
 ### bdev_nvme
 
 Introduced new header file /module/bdev/nvme.h and added public APIs `spdk_bdev_nvme_create`,
 `spdk_bdev_nvme_set_multipath_policy` and `spdk_bdev_nvme_get_default_ctrlr_opts`
-to get connectivity and multipathing capabilities of bdev_nvme.
+to get connectivity and multipathing capabilities of `bdev_nvme`.
 
 ### dif
 
@@ -74,11 +22,60 @@ of the Protection Information Format in the NVMe specification. This is necessar
 but breaks ABI compatibility. Please recompile your application if you added code using
 this enum of older SPDK.
 
+### env
+
+Added `spdk_env_core_get_smt_cpuset()` API to get the list of SMT sibling
+cores for a given core ID.
+
+### env_dpdk
+
+`spdk_get_tid` is added to get the tid of the current thread.
+
+### event
+
+The `framework_get_reactors` RPC method supports getting pid and tid.
+
+### nvmf
+
+Added support for interrupt mode in the NVMe-of TCP transport.
+
+Enable iobuf based queuing for nvmf requests when there is not enough free buffers available.
+Perspective from the user of the `spdk_nvmf_request_get_buffers()` API is that whenever all iovecs
+are allocated immediately then nothing changes compared to the previous implementation.
+If iobuf does not have enough buffers then there are two flows now:
+
+- if `req_get_buffers_done` is not set in the `spdk_nvmf_transport_ops` then again, nothing
+  changes. All (if there were any) ioves are released and caller must try again later.
+- if callback was set then caller will be notified once all iovecs are allocated.
+
+As requests waiting for the buffer might get aborted, another API to remove such request from
+the iobuf queue is also added.
+
+Added public API `spdk_nvmf_subsystem_set_cntlid_range()` to set controller ID range for a
+subsystem.
+
+### scheduler
+
+Added `framework_get_governor` RPC to retrieve the power governor name,
+power env and the frequencies available, frequency set to the cpu cores.
+
+### sock
+
+New functions that allows to register interrupt for given socket group:
+`spdk_sock_group_register_interrupt()` and `spdk_sock_group_unregister_interrupt()`. Both uses API
+exposed by the thread.h, see below for details.  Support implemented only for the POSIX and SSL
+sockets.
+
+### thread
+
+New function `spdk_interrupt_register_for_events()` build on top of `spdk_fd_group_add_for_events()`.
+See below for details.
+
 ### util
 
 New function `spdk_fd_group_add_for_events()` was added alongside the existing `spdk_fd_group_add()`.
 Difference is that new API allows for specifying a set of events to be monitored instead of default
-SPDK_INTERRUPT_EVENT_IN.
+`SPDK_INTERRUPT_EVENT_IN`.
 
 Added API to calculate md5 hash.
 
