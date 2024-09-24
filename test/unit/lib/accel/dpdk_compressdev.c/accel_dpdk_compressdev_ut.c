@@ -889,7 +889,7 @@ test_poller(void)
 	/* Error from dequeue, nothing needing to be resubmitted.
 	 */
 	ut_rte_compressdev_dequeue_burst = 1;
-	ut_expected_task_status = RTE_COMP_OP_STATUS_NOT_PROCESSED;
+	ut_expected_task_status = -EIO;
 	/* setup what we want dequeue to return for the op */
 	*RTE_MBUF_DYNFIELD(g_comp_op[0].m_src, g_mbuf_offset, uint64_t *) = (uint64_t)&task[0];
 	g_comp_op[0].produced = 1;
@@ -899,7 +899,7 @@ test_poller(void)
 	rc = comp_dev_poller((void *)g_comp_ch);
 	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == SPDK_POLLER_BUSY);
-	ut_expected_task_status = RTE_COMP_OP_STATUS_SUCCESS;
+	ut_expected_task_status = 0;
 
 	/* Success from dequeue, 2 ops. nothing needing to be resubmitted.
 	 */
