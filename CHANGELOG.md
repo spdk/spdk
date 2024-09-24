@@ -4,16 +4,38 @@
 
 ## v24.09
 
+### accel
+
+Added `spdk_accel_submit_compress_ext()` and `spdk_accel_submit_decompress_ext()` API.  They differ
+from the non-ext variants in that these functions allow users to specify a compression algorithm and
+compression level.
+
+Added `spdk_accel_get_compress_level_range()` to get the valid level range of a given compression
+algorithm.
+
+Added API to generate and verify DIX.
+
+Added append version of `dif_verify`, `dif_verify_copy`, `dif_generate`, and `dif_generate_copy`.
+
+Added support for lz4 compression.
+
 ### bdev
 
 `spdk_bdev_io_get_aux_buf` and `spdk_bdev_io_put_aux_buf` are deprecated and
 will be removed in the 25.01 release. We do not believe these are in use currently.
+
+### bdev_compress
+
+Added support for specifying compression algorithm and level.
 
 ### bdev_nvme
 
 Introduced new header file /module/bdev/nvme.h and added public APIs `spdk_bdev_nvme_create`,
 `spdk_bdev_nvme_set_multipath_policy` and `spdk_bdev_nvme_get_default_ctrlr_opts`
 to get connectivity and multipathing capabilities of `bdev_nvme`.
+
+Added `bdev_nvme_set_keys` RPC to change DH-HMAC-CHAP keys and force reauthentication of all qpairs
+of a controller.
 
 ### dif
 
@@ -22,10 +44,24 @@ of the Protection Information Format in the NVMe specification. This is necessar
 but breaks ABI compatibility. Please recompile your application if you added code using
 this enum of older SPDK.
 
+### dma
+
+Added `spdk_memory_domain_transfer_data()` function to transfer data between two memory domains.
+
 ### env
 
 Added `spdk_env_core_get_smt_cpuset()` API to get the list of SMT sibling
 cores for a given core ID.
+
+Added `spdk_pci_device_get_numa_id()`, `spdk_env_get_numa_id()`, and `SPDK_ENV_NUMA_ID_ANY` to
+replace `socket_id` with `numa_id` when referring to a NUMA node.
+
+Added `spdk_env_get_first_numa_id()`, `spdk_env_get_last_numa_id()`, `spdk_env_get_next_numa_id()`,
+and `SPDK_ENV_FOREACH_NUMA_ID()` API to iterate over available NUMA nodes in a system.
+
+Added `enforce_numa` option to `spdk_env_opts`.  This option forces all hugepage memory
+allocations to allocate memory only from the specified NUMA node without trying to fallback to other
+NUMA nodes if it fails.
 
 ### env_dpdk
 
@@ -34,6 +70,25 @@ cores for a given core ID.
 ### event
 
 The `framework_get_reactors` RPC method supports getting pid and tid.
+
+### fsdev
+
+Added the fsdev library providing a filesystem abstraction.
+
+### fuse_dispatcher
+
+Added the `fuse_dispatcher` library that manages fsdevs and implements FUSE <-> fsdev API
+translation.
+
+### idxd
+
+Added `spdk_idxd_submit_dix_generate()` function to generate DIX using DSA.
+
+### nvme
+
+Added `spdk_nvme_ctrlr_set_keys()`, `spdk_nvme_ctrlr_authenticate()`, and
+`spdk_nvme_qpair_authenticate()` API to change the DH-HMAC-CHAP keys of a given controller and force
+reauthentication on its qpairs.
 
 ### nvmf
 
@@ -53,6 +108,12 @@ the iobuf queue is also added.
 
 Added public API `spdk_nvmf_subsystem_set_cntlid_range()` to set controller ID range for a
 subsystem.
+
+Added `nvmf_subsystem_set_keys` RPC to change DH-HMAC-CHAP keys for a given subsystem/host pair
+without having to remove and readd a host.
+
+Added `spdk_nvmf_subsystem_set_ns_ana_group()` function to change ANA group ID of an active
+namespace of a subsystem.
 
 ### scheduler
 
