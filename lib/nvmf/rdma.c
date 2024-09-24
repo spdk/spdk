@@ -3503,7 +3503,8 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 		return;
 	}
 
-	assert(rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR);
+	assert(rqpair->qpair.state == SPDK_NVMF_QPAIR_UNINITIALIZED ||
+	       rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR);
 
 	nvmf_rdma_qpair_destroy(rqpair);
 }
@@ -4464,17 +4465,9 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair,
 
 	rqpair->to_close = true;
 
-	/* This happens only when the qpair is disconnected before
-	 * it is added to the poll group. Since there is no poll group,
-	 * the RDMA qp has not been initialized yet and the RDMA CM
-	 * event has not yet been acknowledged, so we need to reject it.
-	 */
 	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
 		nvmf_rdma_qpair_reject_connection(rqpair);
-		nvmf_rdma_qpair_destroy(rqpair);
-		return;
 	}
-
 	if (rqpair->rdma_qp) {
 		spdk_rdma_provider_qp_disconnect(rqpair->rdma_qp);
 	}
