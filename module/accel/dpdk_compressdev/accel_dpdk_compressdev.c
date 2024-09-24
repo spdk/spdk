@@ -586,8 +586,10 @@ comp_dev_poller(void *args)
 			if (task->output_size != NULL) {
 				*task->output_size = deq_ops[i]->produced;
 			}
+			status = 0;
 		} else {
 			SPDK_NOTICELOG("Deque status %u\n", status);
+			status = -EIO;
 		}
 
 		spdk_accel_task_complete(task, status);
