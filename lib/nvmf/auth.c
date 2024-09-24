@@ -15,9 +15,10 @@
 
 #include "nvmf_internal.h"
 
-#define NVMF_AUTH_DEFAULT_KATO_US (120ull * 1000 * 1000)
-#define NVMF_AUTH_DIGEST_MAX_SIZE 64
-#define NVMF_AUTH_DH_KEY_MAX_SIZE 1024
+#define NVMF_AUTH_DEFAULT_KATO_US	(120ull * 1000 * 1000)
+#define NVMF_AUTH_FAILURE1_DELAY_US	(100ull * 1000)
+#define NVMF_AUTH_DIGEST_MAX_SIZE	64
+#define NVMF_AUTH_DH_KEY_MAX_SIZE	1024
 
 #define AUTH_ERRLOG(q, fmt, ...) \
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->subsys->subnqn, (q)->ctrlr->hostnqn, \
@@ -594,6 +595,18 @@ nvmf_auth_recv_complete(struct spdk_nvmf_request *req, uint32_t length)
 	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
 }
 
+static int
+nvmf_auth_recv_failure1_done(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+
+	spdk_poller_unregister(&auth->poller);
+	nvmf_auth_disconnect_qpair(qpair);
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 nvmf_auth_recv_failure1(struct spdk_nvmf_request *req, int fail_reason)
 {
@@ -617,7 +630,10 @@ nvmf_auth_recv_failure1(struct spdk_nvmf_request *req, int fail_reason)
 
 	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_FAILURE1);
 	nvmf_auth_recv_complete(req, sizeof(*failure));
-	nvmf_auth_disconnect_qpair(qpair);
+
+	spdk_poller_unregister(&auth->poller);
+	auth->poller = SPDK_POLLER_REGISTER(nvmf_auth_recv_failure1_done, qpair,
+					    NVMF_AUTH_FAILURE1_DELAY_US);
 }
 
 static int
