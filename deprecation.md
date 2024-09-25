@@ -26,18 +26,6 @@ The tags can be matched with the level 4 headers below.
 This callback is now deprecated and will be removed in the v25.01 release.  Please use the append
 API (`append_crc32c`, `finish_sequence`, `reverse_sequence`, `abort_sequence`) instead.
 
-#### `multipath_config` `failover_config`
-
-All controllers created with the same name shall be configured either for multipath or for failover.
-Otherwise we have configuration mismatch. Currently, using bdev_nvme_attach_controller RPC call, it
-is possible to create multiple controllers with the same name but different '-x' options. Starting
-from 25.01 we are going to perform controller configuration consistency check, and all controllers
-created with the same name will be forced to have consistent setting, either '-x multipath' or
-'-x failover'. No mixing of '-x' options will be allowed.
-Please also note there is planned default mode change in SPDK release 25.01: if no '-x' option will
-be specified in bdev_nvme_attach_controller RPC call, the multipath mode will be assigned
-as a default.
-
 ### gpt
 
 #### `old_gpt_guid`

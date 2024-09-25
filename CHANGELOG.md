@@ -2,6 +2,20 @@
 
 ## v25.01: (Upcoming Release)
 
+### bdev_nvme
+
+Added controller configuration consistency check, so all controllers created with the same name will
+be forced to have consistent setting, either multipath or failover. No mixing of different '-x'
+options will be allowed.
+
+Changed default mode: if no '-x' option is specified in bdev_nvme_attach_controller RPC call,
+the multipath mode will be assigned as a default.
+
+Changed `spdk_bdev_nvme_create` API function, the `multipath` pramater was removed as it is redundant
+to `multipath` field in spdk_bdev_nvme_ctrlr_opts structure passed as a parameter to this function.
+If multipathing shall be enabled for nvme bdev, `bdev_opts.multipath` shall be set to `true`. When
+`bdev_opts.multipath` is set to `false`, failover mode is enabled.
+
 ## v24.09
 
 ### accel
