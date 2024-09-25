@@ -881,6 +881,28 @@ struct spdk_interrupt *spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 struct spdk_interrupt *spdk_interrupt_register_for_events(int efd, uint32_t events,
 		spdk_interrupt_fn fn, void *arg, const char *name);
 
+/**
+ * Register an spdk_interrupt with specific event type stated in spdk_event_handler_opts argument
+ * on the current thread.
+ *
+ * The provided function will be called any time one of specified event types from
+ * spdk_event_handler_opts argument triggers on the associated file descriptor.
+ * Event types argument in spdk_event_handler_opts is a bit mask composed by ORing together
+ * enum spdk_interrupt_event_types values.
+ *
+ * \param efd File descriptor of the spdk_interrupt.
+ * \param fn Called each time there are events in spdk_interrupt.
+ * \param arg Function argument for fn.
+ * \param name Human readable name for the spdk_interrupt. Pointer of the spdk_interrupt
+ * name is set if NULL.
+ * \param opts Extended event handler option.
+ *
+ * \return a pointer to the spdk_interrupt registered on the current thread on success
+ * or NULL on failure.
+ */
+struct spdk_interrupt *spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn, void *arg,
+		const char *name, struct spdk_event_handler_opts *opts);
+
 /*
  * \brief Register an spdk_interrupt on the current thread with setting its name
  * to the string of the spdk_interrupt function name.
@@ -894,6 +916,13 @@ struct spdk_interrupt *spdk_interrupt_register_for_events(int efd, uint32_t even
  */
 #define SPDK_INTERRUPT_REGISTER_FOR_EVENTS(efd, events, fn, arg)	\
 	spdk_interrupt_register_for_events(efd, events, fn, arg, #fn)
+
+/*
+ * \brief Register an spdk_interrupt on the current thread with specific event types provided
+ * in opts and with setting its name to the string of the spdk_interrupt function name.
+ */
+#define SPDK_INTERRUPT_REGISTER_EXT(efd, fn, arg, opts)	\
+	spdk_interrupt_register_ext(efd, fn, arg, #fn, opts)
 
 /**
  * Unregister an spdk_interrupt on the current thread.
