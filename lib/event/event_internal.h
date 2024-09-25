@@ -24,10 +24,6 @@ extern "C" {
  */
 int app_get_proc_stat(unsigned int core, uint64_t *usr, uint64_t *sys, uint64_t *irq);
 
-#ifdef __cplusplus
-}
-#endif
-
 /**
  * Get isolated CPU core mask.
  */
@@ -37,5 +33,9 @@ const char *scheduler_get_isolated_core_mask(void);
  * Set isolated CPU core mask.
  */
 bool scheduler_set_isolated_core_mask(struct spdk_cpuset isolated_core_mask);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EVENT_INTERNAL_H */
