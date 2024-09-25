@@ -1922,6 +1922,11 @@ test_pending_reset(void)
 	struct nvme_io_path *io_path1, *io_path2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
@@ -1935,7 +1940,7 @@ test_pending_reset(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2076,6 +2081,11 @@ test_attach_ctrlr(void)
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *nbdev;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	set_thread(0);
 
@@ -2093,7 +2103,7 @@ test_attach_ctrlr(void)
 	g_ut_attach_bdev_count = 0;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2108,7 +2118,7 @@ test_attach_ctrlr(void)
 	g_ut_attach_ctrlr_status = 0;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2136,7 +2146,7 @@ test_attach_ctrlr(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2172,7 +2182,7 @@ test_attach_ctrlr(void)
 	g_ut_attach_bdev_count = 0;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2209,6 +2219,11 @@ test_aer_cb(void)
 	union spdk_nvme_async_event_completion event = {};
 	struct spdk_nvme_cpl cpl = {};
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	set_thread(0);
 
@@ -2227,7 +2242,7 @@ test_aer_cb(void)
 	g_ut_attach_bdev_count = 3;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2420,6 +2435,11 @@ test_submit_nvme_cmd(void)
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_io_channel *ch;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
@@ -2433,7 +2453,7 @@ test_submit_nvme_cmd(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2506,6 +2526,11 @@ test_add_remove_trid(void)
 	const char *attached_names[STRING_SIZE];
 	struct nvme_path_id *ctrid;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -2521,7 +2546,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2536,7 +2561,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2566,7 +2591,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr3 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path3.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2590,7 +2615,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2648,7 +2673,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2663,7 +2688,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2706,6 +2731,7 @@ test_abort(void)
 	struct nvme_io_path *io_path1;
 	struct nvme_qpair *nvme_qpair1;
 	int rc;
+	bool multipath = false;
 
 	/* Create ctrlr on thread 1 and submit I/O and admin requests to be aborted on
 	 * thread 0. Aborting I/O requests are submitted on thread 0. Aborting admin requests
@@ -2724,9 +2750,10 @@ test_abort(void)
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
+	opts.multipath = multipath;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, false);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -2996,6 +3023,11 @@ test_bdev_unregister(void)
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev1, *bdev2;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
@@ -3007,7 +3039,7 @@ test_bdev_unregister(void)
 	g_ut_attach_bdev_count = 2;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3115,6 +3147,11 @@ test_init_ana_log_page(void)
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	set_thread(0);
 
@@ -3134,7 +3171,7 @@ test_init_ana_log_page(void)
 	g_ut_attach_bdev_count = 5;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3277,6 +3314,11 @@ test_reconnect_qpair(void)
 	struct nvme_io_path *io_path1, *io_path2;
 	struct nvme_qpair *nvme_qpair1, *nvme_qpair2;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
@@ -3290,7 +3332,7 @@ test_reconnect_qpair(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3417,6 +3459,11 @@ test_create_bdev_ctrlr(void)
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -3429,7 +3476,7 @@ test_create_bdev_ctrlr(void)
 	g_ut_attach_bdev_count = 0;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3451,7 +3498,7 @@ test_create_bdev_ctrlr(void)
 	ctrlr2->cdata.cntlid = ctrlr1->cdata.cntlid;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3469,7 +3516,7 @@ test_create_bdev_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3502,7 +3549,7 @@ test_create_bdev_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3512,7 +3559,7 @@ test_create_bdev_ctrlr(void)
 	poll_threads();
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3585,6 +3632,11 @@ test_add_multi_ns_to_bdev(void)
 	struct spdk_uuid uuid4 = { .u.raw = { 0x4 } };
 	struct spdk_uuid uuid44 = { .u.raw = { 0x44 } };
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -3608,7 +3660,7 @@ test_add_multi_ns_to_bdev(void)
 	g_ut_attach_bdev_count = 3;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, 32,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3634,7 +3686,7 @@ test_add_multi_ns_to_bdev(void)
 	g_ut_attach_bdev_count = 2;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, 32,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3711,7 +3763,7 @@ test_add_multi_ns_to_bdev(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, 32,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3728,7 +3780,7 @@ test_add_multi_ns_to_bdev(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, 32,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3800,6 +3852,11 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	struct nvme_io_path *io_path1, *io_path2, *io_path3;
 	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -3816,7 +3873,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3831,7 +3888,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3879,7 +3936,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	ctrlr3->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path3.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3945,6 +4002,11 @@ test_admin_path(void)
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -3960,7 +4022,7 @@ test_admin_path(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -3975,7 +4037,7 @@ test_admin_path(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -4075,6 +4137,11 @@ test_reset_bdev_ctrlr(void)
 	struct nvme_bdev_channel *nbdev_ch1, *nbdev_ch2;
 	struct nvme_io_path *io_path11, *io_path12, *io_path21, *io_path22;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -4088,7 +4155,7 @@ test_reset_bdev_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -4101,7 +4168,7 @@ test_reset_bdev_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -4574,6 +4641,7 @@ test_retry_io_if_ana_state_is_updating(void)
 	struct nvme_io_path *io_path;
 	struct nvme_qpair *nvme_qpair;
 	int rc;
+	bool multipath = false;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
@@ -4588,9 +4656,10 @@ test_retry_io_if_ana_state_is_updating(void)
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
+	opts.multipath = multipath;
 
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, false);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -4701,6 +4770,11 @@ test_retry_io_for_io_path_error(void)
 	struct ut_nvme_req *req;
 	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -4719,7 +4793,7 @@ test_retry_io_for_io_path_error(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -4814,7 +4888,7 @@ test_retry_io_for_io_path_error(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -4909,6 +4983,11 @@ test_retry_io_count(void)
 	struct nvme_qpair *nvme_qpair;
 	struct ut_nvme_req *req;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
@@ -4922,7 +5001,7 @@ test_retry_io_count(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -5094,6 +5173,11 @@ test_concurrent_read_ana_log_page(void)
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
@@ -5109,7 +5193,7 @@ test_concurrent_read_ana_log_page(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -5211,6 +5295,11 @@ test_retry_io_for_ana_error(void)
 	struct ut_nvme_req *req;
 	uint64_t now;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = false;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
@@ -5226,7 +5315,7 @@ test_retry_io_for_ana_error(void)
 	g_ut_attach_bdev_count = 1;
 
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, false);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -5386,6 +5475,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	struct nvme_io_path *io_path;
 	struct nvme_qpair *nvme_qpair;
 	int rc;
+	bool multipath = false;
 
 	g_opts.bdev_retry_count = 1;
 
@@ -5402,9 +5492,10 @@ test_retry_io_if_ctrlr_is_resetting(void)
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
+	opts.multipath = multipath;
 
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, false);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -5846,6 +5937,7 @@ test_fail_path(void)
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 	int rc;
+	bool multipath = false;
 
 	/* The test scenario is the following.
 	 * - We set ctrlr_fail_timeout_sec to be smaller than ctrlr_loss_timeout_sec.
@@ -5873,9 +5965,10 @@ test_fail_path(void)
 	opts.ctrlr_loss_timeout_sec = 4;
 	opts.reconnect_delay_sec = 1;
 	opts.fast_io_fail_timeout_sec = 2;
+	opts.multipath = multipath;
 
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, false);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6103,6 +6196,11 @@ test_set_preferred_path(void)
 	const struct spdk_nvme_ctrlr_data *cdata;
 	bool done;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -6119,7 +6217,7 @@ test_set_preferred_path(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6133,7 +6231,7 @@ test_set_preferred_path(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6147,7 +6245,7 @@ test_set_preferred_path(void)
 	ctrlr3->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path3.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6373,6 +6471,7 @@ test_disable_auto_failback(void)
 	const struct spdk_nvme_ctrlr_data *cdata;
 	bool done;
 	int rc;
+	bool multipath = true;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -6384,6 +6483,7 @@ test_disable_auto_failback(void)
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
+	opts.multipath = multipath;
 
 	set_thread(0);
 
@@ -6393,7 +6493,7 @@ test_disable_auto_failback(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, true);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6407,7 +6507,7 @@ test_disable_auto_failback(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, true);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6527,6 +6627,7 @@ test_set_multipath_policy(void)
 	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int done;
 	int rc;
+	bool multipath = true;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path1.trid);
@@ -6538,6 +6639,7 @@ test_set_multipath_policy(void)
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
+	opts.multipath = multipath;
 
 	set_thread(0);
 
@@ -6547,7 +6649,7 @@ test_set_multipath_policy(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, true);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6561,7 +6663,7 @@ test_set_multipath_policy(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, true);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6687,6 +6789,11 @@ test_retry_io_to_same_path(void)
 	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int done;
 	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+	bool multipath = true;
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = multipath;
 
 	g_opts.nvme_ioq_poll_period_us = 1;
 
@@ -6704,7 +6811,7 @@ test_retry_io_to_same_path(void)
 	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6718,7 +6825,7 @@ test_retry_io_to_same_path(void)
 	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &opts, NULL, true);
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -7545,6 +7652,7 @@ test_ns_remove_during_reset(void)
 	union spdk_nvme_async_event_completion event = {};
 	struct spdk_nvme_cpl cpl = {};
 	int rc;
+	bool multipath = false;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
@@ -7557,8 +7665,10 @@ test_ns_remove_during_reset(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
+	opts.multipath = multipath;
+
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
-				   attach_ctrlr_done, NULL, &dopts, &opts, false);
+				   attach_ctrlr_done, NULL, &dopts, &opts, multipath);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -7732,6 +7842,7 @@ test_bdev_reset_abort_io(void)
 	struct nvme_io_path *io_path1, *io_path2;
 	struct nvme_qpair *nvme_qpair1, *nvme_qpair2;
 	int rc;
+	bool multipath = false;
 
 	g_opts.bdev_retry_count = -1;
 
@@ -7747,6 +7858,7 @@ test_bdev_reset_abort_io(void)
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
+	opts.multipath = multipath;
 
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &dopts, &opts, false);

@@ -5574,8 +5574,6 @@ bdev_nvme_check_multipath(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct spdk_nvme_
 	return true;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(multipath_config,
-			      "bdev_nvme_attach_controller.multipath configuration mismatch", "v25.01", 0);
 
 static int
 nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
@@ -5595,17 +5593,12 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 		}
 		TAILQ_FOREACH(nctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			if (nctrlr->opts.multipath != nvme_ctrlr->opts.multipath) {
-				/* All controllers created with the same name must be configured either
-				 * for multipath or for failover. Otherwise we have configuration mismatch.
-				 * While this is currently still supported, support for configuration where some
-				 * controllers with the same name are configured for multipath, while others
-				 * are configured for failover will be removed in release 25.01.
-				 * Default mode change: starting from SPDK 25.01, if the user will not provide
-				 * '-x <mode>' parameter in the bdev_nvme_attach_controller RPC call, default
-				 * mode assigned to the controller will be 'multipath'
+				/* All controllers with the same name must be configured the same
+				 * way, either for multipath or failover. If the configuration doesn't
+				 * match - report error.
 				 */
-				SPDK_LOG_DEPRECATED(multipath_config);
-				break;
+				rc = -EINVAL;
+				goto exit;
 			}
 		}
 	} else {
@@ -6223,8 +6216,6 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(failover_config,
-			      "bdev_nvme_attach_controller.failover configuration mismatch", "v25.01", 0);
 
 static void
 connect_set_failover_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -6241,18 +6232,6 @@ connect_set_failover_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name(ctx->base_name);
 	if (nvme_ctrlr) {
-		if (nvme_ctrlr->opts.multipath) {
-			/* All controllers created with the same name must be configured either
-			 * for multipath or for failover. Otherwise we have configuration mismatch.
-			 * While this is currently still supported, support for configuration where some
-			 * controllers with the same name are configured for multipath, while others
-			 * are configured for failover will be removed in release 25.01.
-			 * Default mode change: starting from SPDK 25.01, if the user will not provide
-			 * '-x <mode>' parameter in the bdev_nvme_attach_controller RPC call, default
-			 * mode assigned to the controller will be 'multipath'
-			 */
-			SPDK_LOG_DEPRECATED(failover_config);
-		}
 		rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, ctrlr, &ctx->trid);
 	} else {
 		rc = -ENODEV;
@@ -6347,6 +6326,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_probe_skip_entry *entry, *tmp;
 	struct nvme_async_probe_ctx *ctx;
 	spdk_nvme_attach_cb attach_cb;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int len;
 
 	/* TODO expand this check to include both the host and target TRIDs.
@@ -6442,6 +6422,16 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		attach_cb = connect_attach_cb;
 	} else {
 		attach_cb = connect_set_failover_cb;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name(ctx->base_name);
+	if (nvme_ctrlr  && nvme_ctrlr->opts.multipath != multipath) {
+		/* All controllers with the same name must be configured the same
+		 * way, either for multipath or failover. If the configuration doesn't
+		 * match - report error.
+		 */
+		free_nvme_async_probe_ctx(ctx);
+		return -EINVAL;
 	}
 
 	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->drv_opts, attach_cb);
@@ -7218,6 +7208,12 @@ discovery_poller(void *arg)
 		ctx->entry_ctx_in_use = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
 		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
 		trid = &ctx->entry_ctx_in_use->trid;
+
+		/* All controllers must be configured explicitely either for multipath or failover.
+		 * While discovery use multipath mode, we need to set this in bdev options as well.
+		 */
+		ctx->bdev_opts.multipath = true;
+
 		ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->drv_opts, discovery_attach_cb);
 		if (ctx->probe_ctx) {
 			spdk_poller_unregister(&ctx->poller);
