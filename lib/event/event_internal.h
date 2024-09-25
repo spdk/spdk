@@ -7,10 +7,23 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/cpuset.h"
+#include "spdk/queue.h"
+#include "spdk_internal/event.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct spdk_lw_thread {
+	TAILQ_ENTRY(spdk_lw_thread)	link;
+	uint64_t			tsc_start;
+	uint32_t                        lcore;
+	bool				resched;
+	/* stats over a lifetime of a thread */
+	struct spdk_thread_stats	total_stats;
+	/* stats during the last scheduling period */
+	struct spdk_thread_stats	current_stats;
+};
 
 /**
  * Parse proc/stat and get time spent processing system mode and user mode

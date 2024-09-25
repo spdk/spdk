@@ -32,16 +32,7 @@ enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_SHUTDOWN = 4,
 };
 
-struct spdk_lw_thread {
-	TAILQ_ENTRY(spdk_lw_thread)	link;
-	uint64_t			tsc_start;
-	uint32_t                        lcore;
-	bool				resched;
-	/* stats over a lifetime of a thread */
-	struct spdk_thread_stats	total_stats;
-	/* stats during the last scheduling period */
-	struct spdk_thread_stats	current_stats;
-};
+struct spdk_lw_thread;
 
 /**
  * Completion callback to set reactor into interrupt mode or poll mode.
