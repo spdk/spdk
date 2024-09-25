@@ -25,6 +25,8 @@ static pthread_mutex_t g_endpoint_lock = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_vfu_endpoint) g_endpoint = TAILQ_HEAD_INITIALIZER(g_endpoint);
 static TAILQ_HEAD(, tgt_pci_device_ops) g_pci_device_ops = TAILQ_HEAD_INITIALIZER(g_pci_device_ops);
 static char g_endpoint_path_dirname[PATH_MAX] = "";
+static uint32_t g_fini_endpoint_cnt = 0;
+static spdk_vfu_fini_cb g_fini_cb = NULL;
 
 static struct spdk_vfu_endpoint_ops *
 tgt_get_pci_device_ops(const char *device_type_name)
@@ -536,6 +538,43 @@ tgt_endpoint_start_thread(void *arg1)
 }
 
 static void
+tgt_endpoint_thread_try_exit(void *arg1)
+{
+	struct spdk_vfu_endpoint *endpoint = arg1;
+	static spdk_vfu_fini_cb fini_cb = NULL;
+	int res;
+
+	res = endpoint->ops.destruct(endpoint);
+	if (res == -EAGAIN) {
+		/* Let's retry */
+		spdk_thread_send_msg(endpoint->thread, tgt_endpoint_thread_try_exit, endpoint);
+		return;
+	} else if (res) {
+		/* We're ignoring this error for now as we have nothing to do with it */
+		SPDK_ERRLOG("Endpoint destruct failed with %d\n", res);
+	}
+
+	free(endpoint);
+
+	pthread_mutex_lock(&g_endpoint_lock);
+	if (g_fini_cb) { /* called due to spdk_vfu_fini() */
+		g_fini_endpoint_cnt--;
+
+		if (!g_fini_endpoint_cnt) {
+			fini_cb = g_fini_cb;
+			g_fini_cb = NULL;
+		}
+	}
+	pthread_mutex_unlock(&g_endpoint_lock);
+
+	if (fini_cb) {
+		fini_cb();
+	}
+
+	spdk_thread_exit(spdk_get_thread());
+}
+
+static void
 tgt_endpoint_thread_exit(void *arg1)
 {
 	struct spdk_vfu_endpoint *endpoint = arg1;
@@ -552,10 +591,7 @@ tgt_endpoint_thread_exit(void *arg1)
 		vfu_destroy_ctx(endpoint->vfu_ctx);
 	}
 
-	endpoint->ops.destruct(endpoint);
-	free(endpoint);
-
-	spdk_thread_exit(spdk_get_thread());
+	tgt_endpoint_thread_try_exit(endpoint);
 }
 
 int
@@ -628,9 +664,23 @@ spdk_vfu_create_endpoint(const char *endpoint_name, const char *cpumask_str,
 		return -EFAULT;
 	}
 
+	ret = 0;
 	pthread_mutex_lock(&g_endpoint_lock);
-	TAILQ_INSERT_TAIL(&g_endpoint, endpoint, link);
+	if (!g_fini_cb) {
+		TAILQ_INSERT_TAIL(&g_endpoint, endpoint, link);
+	} else { /* spdk_vfu_fini has been called */
+		ret = -EPERM;
+	}
 	pthread_mutex_unlock(&g_endpoint_lock);
+
+	if (ret) {
+		/* we're in the process of destruction, no new endpoint creation is allowed */
+		spdk_thread_destroy(endpoint->thread);
+		endpoint->ops.destruct(endpoint);
+		vfu_destroy_ctx(endpoint->vfu_ctx);
+		free(endpoint);
+		return -EFAULT;
+	}
 
 	spdk_thread_send_msg(endpoint->thread, tgt_endpoint_start_thread, endpoint);
 
@@ -769,8 +819,10 @@ spdk_vfu_fini(spdk_vfu_fini_cb fini_cb)
 {
 	struct spdk_vfu_endpoint *endpoint, *tmp;
 	struct tgt_pci_device_ops *ops, *ops_tmp;
+	uint32_t endpoint_cnt = 0;
 
 	pthread_mutex_lock(&g_endpoint_lock);
+	assert(!g_fini_cb);
 	TAILQ_FOREACH_SAFE(ops, &g_pci_device_ops, link, ops_tmp) {
 		TAILQ_REMOVE(&g_pci_device_ops, ops, link);
 		free(ops);
@@ -778,10 +830,19 @@ spdk_vfu_fini(spdk_vfu_fini_cb fini_cb)
 
 	TAILQ_FOREACH_SAFE(endpoint, &g_endpoint, link, tmp) {
 		TAILQ_REMOVE(&g_endpoint, endpoint, link);
+		endpoint_cnt++;
 		spdk_thread_send_msg(endpoint->thread, tgt_endpoint_thread_exit, endpoint);
+	}
+
+	/* NOTE: g_fini_cb and g_fini_endpoint_cnt are accessed under the same mutex so it's safe to assign them here */
+	if (endpoint_cnt) {
+		g_fini_endpoint_cnt = endpoint_cnt;
+		g_fini_cb = fini_cb;
 	}
 	pthread_mutex_unlock(&g_endpoint_lock);
 
-	fini_cb();
+	if (!endpoint_cnt) {
+		fini_cb();
+	}
 }
 SPDK_LOG_REGISTER_COMPONENT(vfu)
