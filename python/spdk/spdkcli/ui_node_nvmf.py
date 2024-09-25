@@ -4,6 +4,7 @@
 
 from ..rpc.client import JSONRPCException
 from .ui_node import UINode
+import json
 
 
 class UINVMf(UINode):
