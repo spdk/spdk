@@ -113,6 +113,7 @@ struct nvme_ctrlr {
 
 	struct spdk_poller			*adminq_timer_poller;
 	struct spdk_thread			*thread;
+	struct spdk_interrupt			*intr;
 
 	bdev_nvme_ctrlr_op_cb			ctrlr_op_cb_fn;
 	void					*ctrlr_op_cb_arg;
@@ -224,6 +225,7 @@ struct nvme_poll_group {
 	uint64_t				start_ticks;
 	uint64_t				end_ticks;
 	TAILQ_HEAD(, nvme_qpair)		qpair_list;
+	struct spdk_interrupt			*intr;
 };
 
 void nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path);
