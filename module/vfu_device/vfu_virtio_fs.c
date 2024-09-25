@@ -35,6 +35,7 @@ struct virtio_fs_endpoint {
 	struct spdk_thread *init_thread;
 	struct spdk_io_channel *io_channel;
 	struct virtio_fs_config	fs_cfg;
+	bool destruction_initiated;
 
 	/* virtio_fs ring process poller */
 	struct spdk_poller *ring_poller;
@@ -289,31 +290,33 @@ static void _vfu_virtio_fs_fuse_disp_delete(void *cb_arg);
 static void
 _vfu_virtio_fs_fuse_dispatcher_delete_cpl(void *cb_arg, int error)
 {
-	struct spdk_fuse_dispatcher *fuse_disp = cb_arg;
+	struct virtio_fs_endpoint *fs_endpoint = cb_arg;
 
 	if (error) {
 		SPDK_ERRLOG("%s: FUSE dispatcher deletion failed with %d. Retrying...\n",
-			    spdk_fuse_dispatcher_get_fsdev_name(fuse_disp), error);
-		spdk_thread_send_msg(spdk_get_thread(), _vfu_virtio_fs_fuse_disp_delete, fuse_disp);
+			    spdk_fuse_dispatcher_get_fsdev_name(fs_endpoint->fuse_disp), error);
+		spdk_thread_send_msg(spdk_get_thread(), _vfu_virtio_fs_fuse_disp_delete, fs_endpoint);
 	}
 
 	SPDK_NOTICELOG("FUSE dispatcher deleted\n");
+	fs_endpoint->fuse_disp = NULL;
 }
 
 static void
 _vfu_virtio_fs_fuse_disp_delete(void *cb_arg)
 {
-	struct spdk_fuse_dispatcher *fuse_disp = cb_arg;
+	struct virtio_fs_endpoint *fs_endpoint = cb_arg;
 	int res;
 
 	SPDK_DEBUGLOG(vfu_virtio_fs, "%s: initiating FUSE dispatcher deletion...\n",
-		      spdk_fuse_dispatcher_get_fsdev_name(fuse_disp));
+		      spdk_fuse_dispatcher_get_fsdev_name(fs_endpoint->fuse_disp));
 
-	res = spdk_fuse_dispatcher_delete(fuse_disp, _vfu_virtio_fs_fuse_dispatcher_delete_cpl, fuse_disp);
+	res = spdk_fuse_dispatcher_delete(fs_endpoint->fuse_disp, _vfu_virtio_fs_fuse_dispatcher_delete_cpl,
+					  fs_endpoint);
 	if (res) {
 		SPDK_ERRLOG("%s: FUSE dispatcher deletion failed with %d. Retrying...\n",
-			    spdk_fuse_dispatcher_get_fsdev_name(fuse_disp), res);
-		spdk_thread_send_msg(spdk_get_thread(), _vfu_virtio_fs_fuse_disp_delete, fuse_disp);
+			    spdk_fuse_dispatcher_get_fsdev_name(fs_endpoint->fuse_disp), res);
+		spdk_thread_send_msg(spdk_get_thread(), _vfu_virtio_fs_fuse_disp_delete, fs_endpoint);
 	}
 }
 
@@ -338,7 +341,7 @@ fuse_disp_event_cb(enum spdk_fuse_dispatcher_event_type type, struct spdk_fuse_d
 
 		if (fs_endpoint->fuse_disp) {
 			spdk_thread_send_msg(fs_endpoint->init_thread, _vfu_virtio_fs_fuse_disp_delete,
-					     fs_endpoint->fuse_disp);
+					     fs_endpoint);
 			fs_endpoint->fuse_disp = NULL;
 		}
 		break;
@@ -492,12 +495,15 @@ vfu_virtio_fs_endpoint_destruct(struct spdk_vfu_endpoint *endpoint)
 	struct virtio_fs_endpoint *fs_endpoint = to_fs_endpoint(virtio_endpoint);
 
 	if (fs_endpoint->fuse_disp) {
-		if (fs_endpoint->init_thread == spdk_get_thread()) {
-			_vfu_virtio_fs_fuse_disp_delete(fs_endpoint->fuse_disp);
-		} else {
-			spdk_thread_send_msg(spdk_get_thread(), _vfu_virtio_fs_fuse_disp_delete, fs_endpoint->fuse_disp);
+		if (!fs_endpoint->destruction_initiated) {
+			if (fs_endpoint->init_thread == spdk_get_thread()) {
+				_vfu_virtio_fs_fuse_disp_delete(fs_endpoint);
+			} else {
+				spdk_thread_send_msg(spdk_get_thread(), _vfu_virtio_fs_fuse_disp_delete, fs_endpoint);
+			}
+			fs_endpoint->destruction_initiated = true;
 		}
-		fs_endpoint->fuse_disp = NULL;
+		return -EAGAIN;
 	}
 
 	vfu_virtio_endpoint_destruct(&fs_endpoint->virtio);
