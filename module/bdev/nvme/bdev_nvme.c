@@ -5769,7 +5769,7 @@ spdk_bdev_nvme_get_default_ctrlr_opts(struct spdk_bdev_nvme_ctrlr_opts *opts)
 	opts->ctrlr_loss_timeout_sec = g_opts.ctrlr_loss_timeout_sec;
 	opts->reconnect_delay_sec = g_opts.reconnect_delay_sec;
 	opts->fast_io_fail_timeout_sec = g_opts.fast_io_fail_timeout_sec;
-	opts->multipath = false;
+	opts->multipath = true;
 }
 
 static void

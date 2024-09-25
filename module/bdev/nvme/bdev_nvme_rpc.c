@@ -413,9 +413,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->req.drv_opts, sizeof(ctx->req.drv_opts));
 	spdk_bdev_nvme_get_default_ctrlr_opts(&ctx->req.bdev_opts);
-	/* For now, initialize the multipath parameter to add a failover path. This maintains backward
-	 * compatibility with past behavior. In the future, this behavior will change to "disable". */
-	ctx->req.multipath = BDEV_NVME_MP_MODE_FAILOVER;
+	ctx->req.multipath = BDEV_NVME_MP_MODE_MULTIPATH;
 	ctx->req.max_bdevs = DEFAULT_MAX_BDEVS_PER_RPC;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_attach_controller_decoders,
