@@ -8,6 +8,7 @@
 #include "spdk/log.h"
 #include "spdk/trace_parser.h"
 #include "spdk/util.h"
+#include "spdk/env.h"
 
 #include <exception>
 #include <map>
@@ -74,7 +75,7 @@ private:
 	spdk_trace_entry_buffer *get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore);
 	bool build_arg(argument_context *argctx, const spdk_trace_argument *arg, int argid,
 		       spdk_trace_parser_entry *pe);
-	void populate_events(spdk_trace_history *history, int num_entries);
+	void populate_events(spdk_trace_history *history, int num_entries, bool overflowed);
 	bool init(const spdk_trace_parser_opts *opts);
 	void cleanup();
 
@@ -223,7 +224,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 }
 
 void
-spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries)
+spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries, bool overflowed)
 {
 	int i, num_entries_filled;
 	spdk_trace_entry *e;
@@ -253,12 +254,13 @@ spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries)
 	}
 
 	/*
-	 * We keep track of the highest first TSC out of all reactors.
+	 * We keep track of the highest first TSC out of all reactors iff. any
+	 * have overflowed their circular buffer.
 	 *  We will ignore any events that occurred before this TSC on any
 	 *  other reactors.  This will ensure we only print data for the
 	 *  subset of time where we have data across all reactors.
 	 */
-	if (e[first].tsc > _tsc_offset) {
+	if (e[first].tsc > _tsc_offset && overflowed) {
 		_tsc_offset = e[first].tsc;
 	}
 
@@ -282,7 +284,8 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 {
 	spdk_trace_history *history;
 	struct stat st;
-	int rc, i;
+	int rc, i, entry_num;
+	bool overflowed;
 
 	switch (opts->mode) {
 	case SPDK_TRACE_PARSER_MODE_FILE:
@@ -339,13 +342,32 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 	}
 
 	if (opts->lcore == SPDK_TRACE_MAX_LCORE) {
+		/* Check if any reactors have overwritten their circular buffer. */
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(_trace_file, i);
 			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
 				continue;
 			}
+			entry_num = history->num_entries - 1;
+			overflowed = true;
+			while (entry_num >= 0) {
+				if (history->entries[entry_num].tsc == 0) {
+					overflowed = false;
+					break;
+				}
+				entry_num--;
+			}
+			if (overflowed) {
+				break;
+			}
 
-			populate_events(history, history->num_entries);
+		}
+		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+			history = spdk_get_per_lcore_history(_trace_file, i);
+			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
+				continue;
+			}
+			populate_events(history, history->num_entries, overflowed);
 		}
 	} else {
 		history = spdk_get_per_lcore_history(_trace_file, opts->lcore);
@@ -355,7 +377,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 			return false;
 		}
 		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
-			populate_events(history, history->num_entries);
+			populate_events(history, history->num_entries, false);
 		}
 	}
 
