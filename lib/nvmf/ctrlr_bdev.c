@@ -715,10 +715,11 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		lba = dsm_range.starting_lba;
 		lba_count = dsm_range.length;
 		if (max_discard_size > 0 && lba_count > (max_discard_size << 10) / block_size) {
-			SPDK_ERRLOG("invalid unmap size, should not exceed %" PRIu64 "Kib\n", max_discard_size);
+			SPDK_ERRLOG("invalid unmap size %" PRIu32 " blocks, should not exceed %" PRIu64 " blocks\n",
+				    lba_count, max_discard_size << 1);
 			response->status.sct = SPDK_NVME_SCT_GENERIC;
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			break;
 		}
 
 		unmap_ctx->count++;
