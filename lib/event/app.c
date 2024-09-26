@@ -63,7 +63,6 @@ static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
-
 static int g_core_locks[SPDK_CONFIG_MAX_LCORES];
 
 static struct {
@@ -708,7 +707,7 @@ unclaim_cpu_cores(uint32_t *failed_core)
 	int rc;
 
 	for (i = 0; i < SPDK_CONFIG_MAX_LCORES; i++) {
-		if (g_core_locks[i] != -1) {
+		if (g_core_locks[i] != -1 && g_core_locks[i] != 0) {
 			snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", i);
 			rc = close(g_core_locks[i]);
 			if (rc) {
