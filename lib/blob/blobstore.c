@@ -1817,25 +1817,31 @@ bs_super_validate(struct spdk_bs_super_block *super, struct spdk_blob_store *bs)
 
 	if (super->version > SPDK_BS_VERSION ||
 	    super->version < SPDK_BS_INITIAL_VERSION) {
+		SPDK_ERRLOG("unsupported version on super block \n");
 		return -EILSEQ;
 	}
 
 	if (memcmp(super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 		   sizeof(super->signature)) != 0) {
+		SPDK_ERRLOG("Incorrect signature on super block \n");
 		return -EILSEQ;
 	}
 
 	crc = blob_md_page_calc_crc(super);
 	if (crc != super->crc) {
+		SPDK_ERRLOG("Mismatch crc on super block\n");
 		return -EILSEQ;
 	}
 
 	if (memcmp(&bs->bstype, &super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
 		SPDK_DEBUGLOG(blob, "Bstype matched - loading blobstore\n");
+		SPDK_INFOLOG(blob, "Bstype matched - loading blobstore\n");
 	} else if (memcmp(&bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
 		SPDK_DEBUGLOG(blob, "Bstype wildcard used - loading blobstore regardless bstype\n");
+		SPDK_INFOLOG(blob, "Bstype wildcard used - loading blobstore regardless bstype\n");
 	} else {
 		SPDK_DEBUGLOG(blob, "Unexpected bstype\n");
+		SPDK_ERRLOG("Unexpected bstype on superblock\n");
 		SPDK_LOGDUMP(blob, "Expected:", bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		SPDK_LOGDUMP(blob, "Found:", super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		return -ENXIO;
@@ -1843,6 +1849,8 @@ bs_super_validate(struct spdk_bs_super_block *super, struct spdk_blob_store *bs)
 
 	if (super->size > bs->dev->blockcnt * bs->dev->blocklen) {
 		SPDK_NOTICELOG("Size mismatch, dev size: %" PRIu64 ", blobstore size: %" PRIu64 "\n",
+			       bs->dev->blockcnt * bs->dev->blocklen, super->size);
+		SPDK_ERRLOG("Size mismatch, dev size: %" PRIu64 ", blobstore size: %" PRIu64 "\n",
 			       bs->dev->blockcnt * bs->dev->blocklen, super->size);
 		return -EILSEQ;
 	}
@@ -4285,7 +4293,7 @@ bs_load_complete(struct spdk_bs_load_ctx *ctx)
 		bs_dump_read_md_page(ctx->seq, ctx);
 		return;
 	}
-	spdk_bs_iter_first(ctx->bs, bs_load_iter, ctx);
+	spdk_bs_iter_first(ctx->bs, bs_load_iter, ctx);	
 }
 
 static void
@@ -4423,7 +4431,7 @@ static void
 bs_load_read_used_pages(struct spdk_bs_load_ctx *ctx)
 {
 	uint64_t lba, lba_count, mask_size;
-
+	SPDK_INFOLOG(blob, "Performing recovery on blobstore\n");
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
@@ -4470,6 +4478,7 @@ bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx, struct spdk_blob_md_p
 					 */
 					if (cluster_idx != 0) {
 						SPDK_NOTICELOG("Recover: cluster %" PRIu32 "\n", cluster_idx + j);
+						SPDK_INFOLOG(blob, "Recover: cluster %" PRIu32 "\n", cluster_idx + j);
 						spdk_bit_array_set(ctx->used_clusters, cluster_idx + j);
 						if (bs->num_free_clusters == 0) {
 							return -ENOSPC;
@@ -4710,6 +4719,7 @@ bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 		ctx->cur_page = ctx->page_index;
 		bs_load_replay_cur_md_page(ctx);
 	} else {
+		SPDK_INFOLOG(blob, "RECOVERY DONE....\n");
 		/* Claim all of the clusters used by the metadata */
 		num_md_clusters = spdk_divide_round_up(
 					  ctx->super->md_start + ctx->super->md_len, ctx->bs->pages_per_cluster);
@@ -4810,9 +4820,11 @@ bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			spdk_spin_unlock(&ctx->bs->used_lock);
 			if (page->sequence_num == 0) {
 				SPDK_NOTICELOG("Recover: blob 0x%" PRIx32 "\n", page_num);
+				SPDK_INFOLOG(blob, "Recover: blob 0x%" PRIx32 "\n", page_num);
 				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
 			}
 			if (bs_load_replay_md_parse_page(ctx, page)) {
+				SPDK_INFOLOG(blob, "Recover: blob 0x%" PRIx32 " failed\n", page_num);
 				bs_load_ctx_fail(ctx, -EILSEQ);
 				return;
 			}
@@ -4863,6 +4875,7 @@ bs_recover(struct spdk_bs_load_ctx *ctx)
 	int		rc;
 
 	SPDK_NOTICELOG("Performing recovery on blobstore\n");
+	SPDK_INFOLOG(blob, "Performing recovery on blobstore\n");
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->super->md_len);
 	if (rc < 0) {
 		bs_load_ctx_fail(ctx, -ENOMEM);
@@ -4948,10 +4961,12 @@ bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
-
+	SPDK_INFOLOG(blob, "Loading blobstore super block from base dev done\n");
 	if (ctx->super->used_blobid_mask_len == 0 || ctx->super->clean == 0 || ctx->force_recover) {
+		SPDK_INFOLOG(blob, "Loading lvols from base dev without gracefully unload start\n");
 		bs_recover(ctx);
 	} else {
+		SPDK_INFOLOG(blob, "Loading lvols from base dev with gracefully unload start\n");
 		bs_load_read_used_pages(ctx);
 	}
 }
@@ -5011,9 +5026,11 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	int err;
 
 	SPDK_DEBUGLOG(blob, "Loading blobstore from dev %p\n", dev);
+	SPDK_INFOLOG(blob, "Loading blobstore from dev %p\n", dev);
 
 	if ((SPDK_BS_PAGE_SIZE % dev->blocklen) != 0) {
 		SPDK_DEBUGLOG(blob, "unsupported dev block length of %d\n", dev->blocklen);
+		SPDK_ERRLOG("unsupported dev block length of %d\n", dev->blocklen);
 		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
@@ -8587,6 +8604,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 	uint32_t			page_num;
 
 	SPDK_DEBUGLOG(blob, "Opening blob 0x%" PRIx64 "\n", blobid);
+	SPDK_INFOLOG(blob, "Opening blob 0x%" PRIx64 "\n", blobid);	
 	assert(spdk_get_thread() == bs->md_thread);
 
 	page_num = bs_blobid_to_page(blobid);
@@ -9197,6 +9215,7 @@ bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 
 	if (bserrno == 0) {
 		ctx->cb_fn(ctx->cb_arg, _blob, bserrno);
+		SPDK_INFOLOG(blob, "====  blob id 0x%lx opened successfully\n", _blob->id);
 		free(ctx);
 		return;
 	}
@@ -9205,12 +9224,13 @@ bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	ctx->page_num = spdk_bit_array_find_first_set(bs->used_blobids, ctx->page_num);
 	if (ctx->page_num >= spdk_bit_array_capacity(bs->used_blobids)) {
 		ctx->cb_fn(ctx->cb_arg, NULL, -ENOENT);
+		SPDK_INFOLOG(blob, "OPENNING BLOBS DONE....\n");
 		free(ctx);
 		return;
 	}
 
 	id = bs_page_to_blobid(ctx->page_num);
-
+	SPDK_INFOLOG(blob, "====  Starting to open blob id 0x%lx and the page number is 0x%lx\n", id, ctx->page_num);
 	spdk_bs_open_blob(bs, id, bs_iter_cpl, ctx);
 }
 
@@ -9218,6 +9238,7 @@ void
 spdk_bs_iter_first(struct spdk_blob_store *bs,
 		   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
+	SPDK_INFOLOG(blob, "Starting to open the blobs that we found on superblock....\n");
 	struct spdk_bs_iter_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
