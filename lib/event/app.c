@@ -511,6 +511,9 @@ app_setup_env(struct spdk_app_opts *opts)
 
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+		if (getuid() != 0) {
+			SPDK_ERRLOG("You may need to run as root\n");
+		}
 	}
 
 	return rc;
