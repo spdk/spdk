@@ -1,6 +1,6 @@
 # Changelog
 
-## v24.09: (Upcoming Release)
+## v24.09
 
 ### accel
 
