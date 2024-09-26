@@ -396,3 +396,8 @@ $ scripts/rpc.py nvmf_set_config --dhchap-digests sha384,sha512 \
 $ scripts/rpc.py bdev_nvme_set_options --dhchap-digests sha384,sha512 \
     --dhchap-dhgroups ffdhe6114,ffdhe8192
 ```
+
+The NVMe specification describes the method for using in-band authentication in conjunction with
+establishing a secure channel (e.g. TLS).  However, that isn't supported currently, so in order to
+perform in-band authentication, hosts must connect over regular listeners (i.e. those that weren't
+created with the `--secure-channel` option).
