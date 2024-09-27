@@ -840,6 +840,7 @@ nvmf_rdma_qpair_clean_ibv_events(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (ctx) {
 		ctx->rqpair = NULL;
 		/* Memory allocated for ctx is freed in nvmf_rdma_qpair_process_last_wqe_event */
+		rqpair->last_wqe_reached_ctx = NULL;
 	}
 }
 
@@ -3748,8 +3749,8 @@ nvmf_rdma_qpair_process_last_wqe_event(void *ctx)
 
 	if (rqpair) {
 		assert(event_ctx == rqpair->last_wqe_reached_ctx);
-		nvmf_rdma_handle_last_wqe_reached(rqpair);
 		rqpair->last_wqe_reached_ctx = NULL;
+		nvmf_rdma_handle_last_wqe_reached(rqpair);
 	}
 	free(event_ctx);
 }
