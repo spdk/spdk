@@ -18,6 +18,8 @@
 #include "spdk/scheduler.h"
 #include "spdk/string.h"
 #include "spdk/fd_group.h"
+#include "spdk/trace.h"
+#include "spdk_internal/trace_defs.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -850,6 +852,10 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 
 	SPDK_DEBUGLOG(reactor, "Gathering metrics on %u\n", reactor->lcore);
 
+	spdk_trace_record(TRACE_SCHEDULER_CORE_STATS, reactor->trace_id, 0, 0,
+			  core_info->current_busy_tsc,
+			  core_info->current_idle_tsc);
+
 	if (reactor->thread_count > 0) {
 		core_info->thread_infos = calloc(reactor->thread_count, sizeof(*core_info->thread_infos));
 		if (core_info->thread_infos == NULL) {
@@ -871,6 +877,11 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 			core_info->thread_infos[i].current_stats = lw_thread->current_stats;
 			core_info->threads_count++;
 			assert(core_info->threads_count <= reactor->thread_count);
+
+			spdk_trace_record(TRACE_SCHEDULER_THREAD_STATS, spdk_thread_get_trace_id(thread), 0, 0,
+					  lw_thread->current_stats.busy_tsc,
+					  lw_thread->current_stats.idle_tsc);
+
 			i++;
 		}
 	}
@@ -995,6 +1006,8 @@ reactor_run(void *arg)
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	_set_thread_name(thread_name);
 
+	reactor->trace_id = spdk_trace_register_owner(OWNER_TYPE_REACTOR, thread_name);
+
 	reactor->tsc_last = spdk_get_ticks();
 
 	while (1) {
@@ -1018,6 +1031,7 @@ reactor_run(void *arg)
 				  !g_scheduling_in_progress)) {
 			last_sched = reactor->tsc_last;
 			g_scheduling_in_progress = true;
+			spdk_trace_record(TRACE_SCHEDULER_PERIOD_START, 0, 0, 0);
 			_reactors_scheduler_gather_metrics(NULL, NULL);
 		}
 
@@ -1286,6 +1300,11 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	}
 
 	evt = spdk_event_allocate(core, _schedule_thread, lw_thread, NULL);
+
+	if (current_lcore != core) {
+		spdk_trace_record(TRACE_SCHEDULER_MOVE_THREAD, spdk_thread_get_trace_id(thread), 0, 0,
+				  current_lcore, core);
+	}
 
 	pthread_mutex_unlock(&g_scheduler_mtx);
 
@@ -1601,3 +1620,47 @@ spdk_governor_register(struct spdk_governor *governor)
 }
 
 SPDK_LOG_REGISTER_COMPONENT(reactor)
+
+static void
+scheduler_trace(void)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"SCHEDULER_PERIOD_START", TRACE_SCHEDULER_PERIOD_START,
+			OWNER_TYPE_NONE, OBJECT_NONE, 0,
+			{
+
+			}
+		},
+		{
+			"SCHEDULER_CORE_STATS", TRACE_SCHEDULER_CORE_STATS,
+			OWNER_TYPE_REACTOR, OBJECT_NONE, 0,
+			{
+				{ "busy", SPDK_TRACE_ARG_TYPE_INT, 8},
+				{ "idle", SPDK_TRACE_ARG_TYPE_INT, 8}
+			}
+		},
+		{
+			"SCHEDULER_THREAD_STATS", TRACE_SCHEDULER_THREAD_STATS,
+			OWNER_TYPE_THREAD, OBJECT_NONE, 0,
+			{
+				{ "busy", SPDK_TRACE_ARG_TYPE_INT, 8},
+				{ "idle", SPDK_TRACE_ARG_TYPE_INT, 8}
+			}
+		},
+		{
+			"SCHEDULER_MOVE_THREAD", TRACE_SCHEDULER_MOVE_THREAD,
+			OWNER_TYPE_THREAD, OBJECT_NONE, 0,
+			{
+				{ "src", SPDK_TRACE_ARG_TYPE_INT, 8 },
+				{ "dst", SPDK_TRACE_ARG_TYPE_INT, 8 }
+			}
+		}
+	};
+
+	spdk_trace_register_owner_type(OWNER_TYPE_REACTOR, 'r');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+
+}
+
+SPDK_TRACE_REGISTER_FN(scheduler_trace, "scheduler", TRACE_GROUP_SCHEDULER)

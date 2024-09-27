@@ -86,6 +86,7 @@ struct spdk_reactor {
 
 	struct spdk_fd_group				*fgrp;
 	int						resched_fd;
+	uint16_t					trace_id;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 int spdk_reactors_init(size_t msg_mempool_size);
