@@ -2241,14 +2241,40 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static inline int
+_nvme_rdma_qpair_submit_request(struct nvme_rdma_qpair *rqpair,
+				struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
+	struct ibv_send_wr *wr;
+	struct nvme_rdma_poll_group *group;
+
+	if (!rqpair->link_active.tqe_prev && qpair->poll_group) {
+		group = nvme_rdma_poll_group(qpair->poll_group);
+		TAILQ_INSERT_TAIL(&group->active_qpairs, rqpair, link_active);
+	}
+	assert(rqpair->current_num_sends < rqpair->num_entries);
+	rqpair->current_num_sends++;
+
+	wr = &rdma_req->send_wr;
+	wr->next = NULL;
+	nvme_rdma_trace_ibv_sge(wr->sg_list);
+
+	spdk_rdma_provider_qp_queue_send_wrs(rqpair->rdma_qp, wr);
+
+	if (!rqpair->delay_cmd_submit) {
+		return nvme_rdma_qpair_submit_sends(rqpair);
+	}
+
+	return 0;
+}
+
 static int
 nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 			       struct nvme_request *req)
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_rdma_req *rdma_req;
-	struct ibv_send_wr *wr;
-	struct nvme_rdma_poll_group *group;
 	int rc;
 
 	rqpair = nvme_rdma_qpair(qpair);
@@ -2275,27 +2301,9 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	TAILQ_INSERT_TAIL(&rqpair->outstanding_reqs, rdma_req, link);
-
-	if (!rqpair->link_active.tqe_prev && qpair->poll_group) {
-		group = nvme_rdma_poll_group(qpair->poll_group);
-		TAILQ_INSERT_TAIL(&group->active_qpairs, rqpair, link_active);
-	}
 	rqpair->num_outstanding_reqs++;
 
-	assert(rqpair->current_num_sends < rqpair->num_entries);
-	rqpair->current_num_sends++;
-
-	wr = &rdma_req->send_wr;
-	wr->next = NULL;
-	nvme_rdma_trace_ibv_sge(wr->sg_list);
-
-	spdk_rdma_provider_qp_queue_send_wrs(rqpair->rdma_qp, wr);
-
-	if (!rqpair->delay_cmd_submit) {
-		return nvme_rdma_qpair_submit_sends(rqpair);
-	}
-
-	return 0;
+	return _nvme_rdma_qpair_submit_request(rqpair, rdma_req);
 }
 
 static int
