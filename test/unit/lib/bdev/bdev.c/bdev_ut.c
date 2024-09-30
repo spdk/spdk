@@ -7740,6 +7740,37 @@ open_ext_v2_test(void)
 	free_bdev(bdev);
 }
 
+static void
+bdev_io_init_dif_ctx_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_io bdev_io;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	/* This is invalid because md_len should be larger than PI size. */
+	bdev->dif_pi_format = SPDK_DIF_PI_FORMAT_32;
+	bdev->blocklen = 4096 + 8;
+	bdev->md_len = 8;
+	bdev->md_interleave = true;
+
+	bdev_io.bdev = bdev;
+
+	/* Check if initialization detects error. */
+	rc = bdev_io_init_dif_ctx(&bdev_io);
+	CU_ASSERT(rc != 0);
+
+	/* Increase md_len to pass initialization check. */
+	bdev->blocklen = 4096 + 16;
+	bdev->md_len = 16;
+
+	rc = bdev_io_init_dif_ctx(&bdev_io);
+	CU_ASSERT(rc == 0);
+
+	free_bdev(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7813,6 +7844,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, get_numa_id);
 	CU_ADD_TEST(suite, get_device_stat_with_reset);
 	CU_ADD_TEST(suite, open_ext_v2_test);
+	CU_ADD_TEST(suite, bdev_io_init_dif_ctx_test);
 
 	allocate_cores(1);
 	allocate_threads(1);

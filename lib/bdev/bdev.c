@@ -1061,6 +1061,12 @@ _are_iovs_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
 }
 
 static inline bool
+bdev_io_needs_metadata(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
+{
+	return desc->opts.hide_metadata && bdev_io->bdev->md_len != 0;
+}
+
+static inline bool
 bdev_io_needs_sequence_exec(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io_use_accel_sequence(bdev_io)) {
@@ -3689,6 +3695,28 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	_bdev_io_submit(bdev_io);
 }
 
+static inline int
+bdev_io_init_dif_ctx(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	memset(&bdev_io->u.bdev.dif_err, 0, sizeof(struct spdk_dif_error));
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = bdev->dif_pi_format;
+
+	return spdk_dif_ctx_init(&bdev_io->u.bdev.dif_ctx,
+				 bdev->blocklen,
+				 bdev->md_len,
+				 bdev->md_interleave,
+				 bdev->dif_is_head_of_md,
+				 bdev->dif_type,
+				 bdev_io->u.bdev.dif_check_flags,
+				 bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
+				 0xFFFF, 0, 0, 0, &dif_opts);
+}
+
 static inline void
 _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 {
@@ -3710,11 +3738,21 @@ _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	bool needs_exec = bdev_io_needs_sequence_exec(desc, bdev_io);
+	int rc;
 
 	if (spdk_unlikely(ch->flags & BDEV_CH_RESET_IN_PROGRESS)) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_ABORTED;
 		bdev_io_complete_unsubmitted(bdev_io);
 		return;
+	}
+
+	if (bdev_io_needs_metadata(desc, bdev_io)) {
+		rc = bdev_io_init_dif_ctx(bdev_io);
+		if (spdk_unlikely(rc != 0)) {
+			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			bdev_io_complete_unsubmitted(bdev_io);
+			return;
+		}
 	}
 
 	/* We need to allocate bounce buffer if bdev doesn't support memory domains, or if it does

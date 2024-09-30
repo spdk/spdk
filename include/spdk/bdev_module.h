@@ -875,6 +875,12 @@ struct spdk_bdev_io_block_params {
 		/** Starting source offset (in blocks) of the bdev for copy I/O. */
 		uint64_t src_offset_blocks;
 	} copy;
+
+	/** DIF context */
+	struct spdk_dif_ctx dif_ctx;
+
+	/** DIF error information */
+	struct spdk_dif_error dif_err;
 };
 
 struct spdk_bdev_io_reset_params {
@@ -1110,7 +1116,7 @@ struct spdk_bdev_io {
 		struct spdk_bdev_io_zone_mgmt_params zone_mgmt;
 	} u;
 
-	uint64_t reserved3;
+	uint8_t reserved3[40];
 
 	/**
 	 *  Fields that are used internally by the bdev subsystem.  Bdev modules
