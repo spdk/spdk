@@ -60,7 +60,7 @@ static void
 test_fd_group_nest_unnest(void)
 {
 	struct spdk_fd_group *parent, *child, *not_parent;
-	int fd_parent, fd_child;
+	int fd_parent, fd_child, fd_child_2;
 	int rc;
 	int cb_arg;
 
@@ -79,6 +79,9 @@ test_fd_group_nest_unnest(void)
 	fd_child = epoll_create1(0);
 	SPDK_CU_ASSERT_FATAL(fd_child >= 0);
 
+	fd_child_2 = epoll_create1(0);
+	SPDK_CU_ASSERT_FATAL(fd_child_2 >= 0);
+
 	rc = SPDK_FD_GROUP_ADD(parent, fd_parent, fd_group_cb_fn, &cb_arg);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(parent->num_fds == 1);
@@ -91,6 +94,16 @@ test_fd_group_nest_unnest(void)
 	rc = spdk_fd_group_nest(parent, child);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(child->parent == parent);
+	SPDK_CU_ASSERT_FATAL(parent->num_fds == 2);
+	SPDK_CU_ASSERT_FATAL(child->num_fds == 0);
+
+	/* Register second child fd to the child fd group and verify that the parent fd group
+	 * has the correct number of fds.
+	 */
+	rc = SPDK_FD_GROUP_ADD(child, fd_child_2, fd_group_cb_fn, &cb_arg);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(child->num_fds == 0);
+	SPDK_CU_ASSERT_FATAL(parent->num_fds == 3);
 
 	/* Unnest child fd group from wrong parent fd group and verify that it fails. */
 	rc = spdk_fd_group_unnest(not_parent, child);
@@ -100,14 +113,22 @@ test_fd_group_nest_unnest(void)
 	rc = spdk_fd_group_unnest(parent, child);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(child->parent == NULL);
+	SPDK_CU_ASSERT_FATAL(parent->num_fds == 1);
+	SPDK_CU_ASSERT_FATAL(child->num_fds == 2);
 
 	spdk_fd_group_remove(child, fd_child);
+	SPDK_CU_ASSERT_FATAL(child->num_fds == 1);
+
+	spdk_fd_group_remove(child, fd_child_2);
 	SPDK_CU_ASSERT_FATAL(child->num_fds == 0);
 
 	spdk_fd_group_remove(parent, fd_parent);
 	SPDK_CU_ASSERT_FATAL(parent->num_fds == 0);
 
 	rc = close(fd_child);
+	CU_ASSERT(rc == 0);
+
+	rc = close(fd_child_2);
 	CU_ASSERT(rc == 0);
 
 	rc = close(fd_parent);

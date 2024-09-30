@@ -45,7 +45,12 @@ struct event_handler {
 
 struct spdk_fd_group {
 	int epfd;
-	int num_fds; /* Number of fds registered in this group. */
+
+	/* Number of fds registered in this group. The epoll file descriptor of this fd group
+	 * i.e. epfd waits for interrupt event on all the fds from its interrupt sources list, as
+	 * well as from all its children fd group interrupt sources list.
+	 */
+	uint32_t num_fds;
 
 	struct spdk_fd_group *parent;
 
@@ -96,9 +101,10 @@ _fd_group_del_all(int epfd, struct spdk_fd_group *grp)
 				    ehdlr->fd, strerror(errno));
 			goto recover;
 		}
+		ret++;
 	}
 
-	return 0;
+	return ret;
 
 recover:
 	/* We failed to remove everything. Let's try to put everything back into
@@ -147,9 +153,10 @@ _fd_group_add_all(int epfd, struct spdk_fd_group *grp)
 				    ehdlr->fd, strerror(errno));
 			goto recover;
 		}
+		ret++;
 	}
 
-	return 0;
+	return ret;
 
 recover:
 	/* We failed to add everything, so try to remove what we did add. */
@@ -188,11 +195,21 @@ spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 	rc = _fd_group_del_all(parent->epfd, child);
 	if (rc < 0) {
 		return rc;
+	} else {
+		assert(parent->num_fds >= (uint32_t)rc);
+		parent->num_fds -= rc;
 	}
 
 	child->parent = NULL;
 
-	return _fd_group_add_all(child->epfd, child);
+	rc = _fd_group_add_all(child->epfd, child);
+	if (rc < 0) {
+		return rc;
+	} else {
+		child->num_fds += rc;
+	}
+
+	return 0;
 }
 
 int
@@ -217,11 +234,21 @@ spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 	rc = _fd_group_del_all(child->epfd, child);
 	if (rc < 0) {
 		return rc;
+	} else {
+		assert(child->num_fds >= (uint32_t)rc);
+		child->num_fds -= rc;
 	}
 
 	child->parent = parent;
 
-	return _fd_group_add_all(parent->epfd, child);
+	rc =  _fd_group_add_all(parent->epfd, child);
+	if (rc < 0) {
+		return rc;
+	} else {
+		parent->num_fds += rc;
+	}
+
+	return 0;
 }
 
 int
@@ -282,7 +309,11 @@ spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t event
 	}
 
 	TAILQ_INSERT_TAIL(&fgrp->event_handlers, ehdlr, next);
-	fgrp->num_fds++;
+	if (fgrp->parent) {
+		fgrp->parent->num_fds++;
+	} else {
+		fgrp->num_fds++;
+	}
 
 	return 0;
 }
@@ -327,8 +358,13 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 		return;
 	}
 
-	assert(fgrp->num_fds > 0);
-	fgrp->num_fds--;
+	if (fgrp->parent) {
+		assert(fgrp->parent->num_fds > 0);
+		fgrp->parent->num_fds--;
+	} else {
+		assert(fgrp->num_fds > 0);
+		fgrp->num_fds--;
+	}
 	TAILQ_REMOVE(&fgrp->event_handlers, ehdlr, next);
 
 	/* Delay ehdlr's free in case it is waiting for execution in fgrp wait loop */
@@ -413,9 +449,16 @@ spdk_fd_group_destroy(struct spdk_fd_group *fgrp)
 		if (!fgrp) {
 			SPDK_ERRLOG("fd_group doesn't exist.\n");
 		} else {
-			SPDK_ERRLOG("Cannot delete fd group(%p) as (%d) fds still registered to it.\n",
+			SPDK_ERRLOG("Cannot delete fd group(%p) as (%u) fds are still registered to it.\n",
 				    fgrp, fgrp->num_fds);
 		}
+		assert(0);
+		return;
+	}
+
+	/* Check if someone tried to delete the fd group before unnesting it */
+	if (!TAILQ_EMPTY(&fgrp->event_handlers)) {
+		SPDK_ERRLOG("Interrupt sources list not empty.\n");
 		assert(0);
 		return;
 	}
@@ -429,7 +472,7 @@ spdk_fd_group_destroy(struct spdk_fd_group *fgrp)
 int
 spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 {
-	int totalfds = fgrp->num_fds;
+	uint32_t totalfds = fgrp->num_fds;
 	struct epoll_event events[totalfds];
 	struct event_handler *ehdlr;
 	int n;
