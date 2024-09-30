@@ -334,6 +334,8 @@ function gather_supported_nvmf_pci_devs() {
 	mlx+=(${pci_bus_cache["$mellanox:0xa2d6"]})
 	# ConnectX-6 Dx
 	mlx+=(${pci_bus_cache["$mellanox:0x101d"]})
+	# ConnectX-6
+	mlx+=(${pci_bus_cache["$mellanox:0x101b"]})
 	# ConnectX-5
 	mlx+=(${pci_bus_cache["$mellanox:0x1017"]})
 	mlx+=(${pci_bus_cache["$mellanox:0x1019"]})
