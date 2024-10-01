@@ -482,10 +482,10 @@ int spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
  *
  * \param ch I/O channel associated with this call.
  * \param dst_iovs The destination I/O vector array. The total allocated memory size needs
- *		  to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
+ *		  to be at least: num_blocks * data_block_size.
  * \param dst_iovcnt The size of the destination I/O vectors array.
  * \param src_iovs The source I/O vector array. The total allocated memory size needs
- *		  to be at least: num_blocks * data_block_size.
+ *		  to be at least: num_blocks * block_size (including metadata)
  * \param src_iovcnt The size of the source I/O vectors array.
  * \param num_blocks Number of data blocks to process.
  * \param ctx DIF context. Contains the DIF configuration values, including the reference
@@ -852,12 +852,12 @@ int spdk_accel_append_dif_verify(struct spdk_accel_sequence **seq, struct spdk_i
  * \param seq Sequence object.  If NULL, a new sequence object will be created.
  * \param ch I/O channel.
  * \param dst_iovs The destination I/O vector array. The total allocated memory size needs
- *                to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
+ *                to be at least: num_blocks * data_block_size
  * \param dst_iovcnt The size of the destination I/O vectors array.
  * \param dst_domain Memory domain to which the destination buffers belong.
  * \param dst_domain_ctx Destination buffer domain context.
  * \param src_iovs The source I/O vector array. The total allocated memory size needs
- *                to be at least: num_blocks * data_block_size.
+ *                to be at least: num_blocks * block_size (including metadata)
  * \param src_iovcnt The size of the source I/O vectors array.
  * \param src_domain Memory domain to which the source buffers belong.
  * \param src_domain_ctx Source buffer domain context.
