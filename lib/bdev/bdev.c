@@ -1324,14 +1324,15 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
+	assert(bdev_io->internal.f.has_bounce_buf);
+
 	/* If we need to exec an accel sequence or the IO uses a memory domain buffer and has a
 	 * sequence, append a copy operation making accel change the src/dst buffers of the previous
 	 * operation */
 	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io) ||
 	    (bdev_io_use_accel_sequence(bdev_io) && bdev_io_use_memory_domain(bdev_io))) {
+		assert(bdev_io_use_accel_sequence(bdev_io));
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			assert(bdev_io_use_accel_sequence(bdev_io));
-			assert(bdev_io->internal.f.has_bounce_buf);
 			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						    NULL, NULL,
@@ -1343,8 +1344,6 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 		} else {
 			/* We need to reverse the src/dst for reads */
 			assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
-			assert(bdev_io_use_accel_sequence(bdev_io));
-			assert(bdev_io->internal.f.has_bounce_buf);
 			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
 						    bdev_io->internal.bounce_buf.orig_iovs,
 						    bdev_io->internal.bounce_buf.orig_iovcnt,
@@ -1361,7 +1360,6 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		/* if this is write path, copy data from original buffer to bounce buffer */
 		if (bdev_io_use_memory_domain(bdev_io)) {
-			assert(bdev_io->internal.f.has_bounce_buf);
 			TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 			bdev_io_increment_outstanding(ch, ch->shared_resource);
 			rc = spdk_memory_domain_pull_data(bdev_io->internal.memory_domain,
@@ -1384,7 +1382,6 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 			}
 		} else {
 			assert(bdev_io->u.bdev.iovcnt == 1);
-			assert(bdev_io->internal.f.has_bounce_buf);
 			spdk_copy_iovs_to_buf(bdev_io->u.bdev.iovs[0].iov_base,
 					      bdev_io->u.bdev.iovs[0].iov_len,
 					      bdev_io->internal.bounce_buf.orig_iovs,
