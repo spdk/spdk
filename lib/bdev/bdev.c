@@ -3733,11 +3733,28 @@ _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 				       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 }
 
+/* We need to allocate bounce buffer if bdev doesn't support memory domains, or if it does
+ * support them, but we need to execute an accel sequence and the data buffer is from accel
+ * memory domain (to avoid doing a push/pull from that domain).
+ */
+static inline bool
+bdev_io_needs_bounce_buffer(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
+{
+	if (bdev_io_use_memory_domain(bdev_io)) {
+		if (!desc->memory_domains_supported ||
+		    (bdev_io_needs_sequence_exec(desc, bdev_io) &&
+		     bdev_io->internal.memory_domain == spdk_accel_get_memory_domain())) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static inline void
 _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
-	bool needs_exec = bdev_io_needs_sequence_exec(desc, bdev_io);
 	int rc;
 
 	if (spdk_unlikely(ch->flags & BDEV_CH_RESET_IN_PROGRESS)) {
@@ -3755,19 +3772,12 @@ _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	/* We need to allocate bounce buffer if bdev doesn't support memory domains, or if it does
-	 * support them, but we need to execute an accel sequence and the data buffer is from accel
-	 * memory domain (to avoid doing a push/pull from that domain).
-	 */
-	if (bdev_io_use_memory_domain(bdev_io)) {
-		if (!desc->memory_domains_supported ||
-		    (needs_exec && bdev_io->internal.memory_domain == spdk_accel_get_memory_domain())) {
-			_bdev_io_ext_use_bounce_buffer(bdev_io);
-			return;
-		}
+	if (bdev_io_needs_bounce_buffer(desc, bdev_io)) {
+		_bdev_io_ext_use_bounce_buffer(bdev_io);
+		return;
 	}
 
-	if (needs_exec) {
+	if (bdev_io_needs_sequence_exec(desc, bdev_io)) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
 			return;
