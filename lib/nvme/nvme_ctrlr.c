@@ -3285,7 +3285,7 @@ static void
 nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			     const struct spdk_nvme_cpl *cpl)
 {
-	struct  spdk_nvme_ctrlr_aer_completion_list *nvme_event;
+	struct  spdk_nvme_ctrlr_aer_completion *nvme_event;
 	struct spdk_nvme_ctrlr_process *proc;
 
 	/* Add async event to each process objects event list */
@@ -3305,14 +3305,14 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 static void
 nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct  spdk_nvme_ctrlr_aer_completion_list  *nvme_event, *nvme_event_tmp;
+	struct  spdk_nvme_ctrlr_aer_completion  *nvme_event, *nvme_event_tmp;
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 
 	STAILQ_FOREACH_SAFE(nvme_event, &active_proc->async_events, link, nvme_event_tmp) {
 		STAILQ_REMOVE(&active_proc->async_events, nvme_event,
-			      spdk_nvme_ctrlr_aer_completion_list, link);
+			      spdk_nvme_ctrlr_aer_completion, link);
 		nvme_ctrlr_process_async_event(ctrlr, &nvme_event->cpl);
 		spdk_free(nvme_event);
 
@@ -3556,7 +3556,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 {
 	struct nvme_request	*req, *tmp_req;
 	struct spdk_nvme_qpair	*qpair, *tmp_qpair;
-	struct spdk_nvme_ctrlr_aer_completion_list *event;
+	struct spdk_nvme_ctrlr_aer_completion *event;
 
 	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
 		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);

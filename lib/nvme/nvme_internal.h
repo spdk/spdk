@@ -876,9 +876,9 @@ enum nvme_ctrlr_state {
 #define NVME_TIMEOUT_INFINITE		0
 #define NVME_TIMEOUT_KEEP_EXISTING	UINT64_MAX
 
-struct spdk_nvme_ctrlr_aer_completion_list {
+struct spdk_nvme_ctrlr_aer_completion {
 	struct spdk_nvme_cpl	cpl;
-	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion_list) link;
+	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion) link;
 };
 
 /*
@@ -918,7 +918,7 @@ struct spdk_nvme_ctrlr_process {
 	uint64_t			timeout_admin_ticks;
 
 	/** List to publish AENs to all procs in multiprocess setup */
-	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion_list)      async_events;
+	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion)      async_events;
 };
 
 struct nvme_register_completion {
