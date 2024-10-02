@@ -1021,6 +1021,14 @@ test_get_ns_id_desc_list(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT(spdk_mem_all_zero(buf, sizeof(buf)));
 
+	/* Valid NSID, but command not using NSID */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_KEEP_ALIVE;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+
 	/* Valid NSID, only EUI64 defined */
 	ns.opts.eui64[0] = 0x11;
 	ns.opts.eui64[7] = 0xFF;
@@ -2123,7 +2131,7 @@ test_multi_async_event_reqs(void)
 
 	for (i = 0; i < 5; i++) {
 		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-		cmd[i].nvme_cmd.nsid = 1;
+		cmd[i].nvme_cmd.nsid = 0;
 		cmd[i].nvme_cmd.cid = i;
 
 		req[i].qpair = &qpair;
@@ -2413,7 +2421,7 @@ test_multi_async_events(void)
 
 	for (i = 0; i < 4; i++) {
 		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-		cmd[i].nvme_cmd.nsid = 1;
+		cmd[i].nvme_cmd.nsid = 0;
 		cmd[i].nvme_cmd.cid = i;
 
 		req[i].qpair = &qpair;
@@ -2490,7 +2498,7 @@ test_rae(void)
 	req[0].cmd = &cmd[0];
 	req[0].rsp = &rsp[0];
 	cmd[0].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-	cmd[0].nvme_cmd.nsid = 1;
+	cmd[0].nvme_cmd.nsid = 0;
 	cmd[0].nvme_cmd.cid = 0;
 
 	for (i = 1; i < 3; i++) {

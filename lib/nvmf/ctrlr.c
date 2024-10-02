@@ -3816,6 +3816,30 @@ nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static bool
+is_cmd_ctrlr_specific(struct spdk_nvme_cmd *cmd)
+{
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_DELETE_IO_SQ:
+	case SPDK_NVME_OPC_CREATE_IO_SQ:
+	case SPDK_NVME_OPC_DELETE_IO_CQ:
+	case SPDK_NVME_OPC_CREATE_IO_CQ:
+	case SPDK_NVME_OPC_ABORT:
+	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
+	case SPDK_NVME_OPC_FIRMWARE_COMMIT:
+	case SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD:
+	case SPDK_NVME_OPC_KEEP_ALIVE:
+	case SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT:
+	case SPDK_NVME_OPC_NVME_MI_SEND:
+	case SPDK_NVME_OPC_NVME_MI_RECEIVE:
+	case SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG:
+	case SPDK_NVME_OPC_SANITIZE:
+		return true;
+	default:
+		return false;
+	}
+}
+
 int
 nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
@@ -3838,8 +3862,11 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	assert(spdk_get_thread() == ctrlr->thread);
 
-	if (cmd->fuse != 0) {
-		/* Fused admin commands are not supported. */
+	if (cmd->fuse != 0 ||
+	    (is_cmd_ctrlr_specific(cmd) && (cmd->nsid != 0))) {
+		/* Fused admin commands are not supported.
+		 * Commands with controller scope - should be rejected if NSID is set.
+		 */
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
