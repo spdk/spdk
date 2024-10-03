@@ -1894,31 +1894,6 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 }
 
 static void
-_bdev_memory_domain_get_io_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
-			      bool success)
-{
-	if (!success) {
-		SPDK_ERRLOG("Failed to get data buffer, completing IO\n");
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		bdev_io_complete_unsubmitted(bdev_io);
-		return;
-	}
-
-	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
-			return;
-		}
-		/* For reads we'll execute the sequence after the data is read, so, for now, only
-		 * clear out accel_sequence pointer and submit the IO */
-		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
-		bdev_io->u.bdev.accel_sequence = NULL;
-	}
-
-	bdev_io_submit(bdev_io);
-}
-
-static void
 _bdev_memory_domain_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
 			       uint64_t len)
 {
@@ -3715,6 +3690,31 @@ bdev_io_init_dif_ctx(struct spdk_bdev_io *bdev_io)
 				 bdev_io->u.bdev.dif_check_flags,
 				 bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
 				 0xFFFF, 0, 0, 0, &dif_opts);
+}
+
+static void
+_bdev_memory_domain_get_io_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+			      bool success)
+{
+	if (!success) {
+		SPDK_ERRLOG("Failed to get data buffer, completing IO\n");
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io_complete_unsubmitted(bdev_io);
+		return;
+	}
+
+	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
+			return;
+		}
+		/* For reads we'll execute the sequence after the data is read, so, for now, only
+		 * clear out accel_sequence pointer and submit the IO */
+		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+		bdev_io->u.bdev.accel_sequence = NULL;
+	}
+
+	bdev_io_submit(bdev_io);
 }
 
 static inline void
