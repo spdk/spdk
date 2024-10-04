@@ -1662,6 +1662,16 @@ function get_zoned_devs() {
 	done
 }
 
+function is_pid_child() {
+	local pid=$1 _pid
+
+	while read -r _pid; do
+		((pid == _pid)) && return 0
+	done < <(jobs -pr)
+
+	return 1
+}
+
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 
