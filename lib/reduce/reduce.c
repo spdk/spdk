@@ -782,6 +782,11 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	uint32_t j;
 	int rc;
 
+	if (reduce_errno != 0) {
+		rc = reduce_errno;
+		goto error;
+	}
+
 	rc = _alloc_zero_buff();
 	if (rc) {
 		goto error;
