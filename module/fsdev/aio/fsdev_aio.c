@@ -2005,19 +2005,21 @@ aio_io_poll(void *arg)
 {
 	struct aio_fsdev_io *vfsdev_io, *tmp;
 	struct aio_io_channel *ch = arg;
-	uint32_t num_completions = 0;
+	int res = SPDK_POLLER_IDLE;
 
-	spdk_aio_mgr_poll(ch->mgr);
+	if (spdk_aio_mgr_poll(ch->mgr)) {
+		res = SPDK_POLLER_BUSY;
+	}
 
 	TAILQ_FOREACH_SAFE(vfsdev_io, &ch->ios_to_complete, link, tmp) {
 		struct spdk_fsdev_io *fsdev_io = aio_to_fsdev_io(vfsdev_io);
 
 		TAILQ_REMOVE(&ch->ios_to_complete, vfsdev_io, link);
 		spdk_fsdev_io_complete(fsdev_io, 0);
-		num_completions++;
+		res = SPDK_POLLER_BUSY;
 	}
 
-	return num_completions ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+	return res;
 }
 
 static int

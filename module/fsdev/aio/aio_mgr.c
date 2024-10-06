@@ -242,10 +242,11 @@ spdk_aio_mgr_cancel(struct spdk_aio_mgr *mgr, struct spdk_aio_mgr_io *aio)
 	fsdev_aio_cancel(aio);
 }
 
-void
+bool
 spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr)
 {
 	struct spdk_aio_mgr_io *aio, *tmp_aio;
+	uint32_t num_completions = 0;
 	TAILQ_FOREACH_SAFE(aio, &mgr->in_flight, link, tmp_aio) {
 		struct spdk_aio_mgr_req *req, *tmp_req;
 		TAILQ_FOREACH_SAFE(req, &aio->reqs, link, tmp_req) {
@@ -255,7 +256,7 @@ spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr)
 				break; /* stop checking completions for this aio */
 			}
 
-			if (!err) { /* the request completed successfull */
+			if (!err) { /* the request completed successfully */
 				;
 			} else if (err == ECANCELED) { /* the request was canceled */
 				SPDK_WARNLOG("aio processing was cancelled\n");
@@ -275,6 +276,7 @@ spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr)
 			/* the request processing is done */
 			TAILQ_REMOVE(&aio->reqs, req, link); /* remove the req from the aio */
 			TAILQ_INSERT_TAIL(&mgr->reqs.pool, req, link); /* return the req to the pool */
+			num_completions++;
 			if (TAILQ_EMPTY(&aio->reqs)) { /* all the aio's requests have been processed */
 				SPDK_DEBUGLOG(spdk_aio_mgr_io, "aio=%p is done (data_size=%" PRIu32 ")\n", aio, aio->data_size);
 				aio->clb(aio->ctx, aio->data_size, aio->err); /* call the user's callback */
@@ -283,6 +285,8 @@ spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr)
 			}
 		}
 	}
+
+	return num_completions ? true : false;
 }
 
 void

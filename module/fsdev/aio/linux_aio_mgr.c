@@ -27,6 +27,7 @@ struct spdk_aio_mgr {
 		uint32_t size;
 		TAILQ_HEAD(, spdk_aio_mgr_io) pool;
 	} aios;
+	uint32_t num_completions;
 };
 
 static struct spdk_aio_mgr_io *
@@ -60,6 +61,8 @@ spdk_aio_mgr_io_cpl_cb(io_context_t ctx, struct iocb *iocb, long res, long res2)
 	TAILQ_REMOVE(&aio->mgr->in_flight, aio, link);
 
 	aio->clb(aio->ctx, res, -res2);
+
+	aio->mgr->num_completions++;
 
 	aio_mgr_put_aio(aio->mgr, aio);
 }
@@ -174,15 +177,19 @@ spdk_aio_mgr_cancel(struct spdk_aio_mgr *mgr, struct spdk_aio_mgr_io *aio)
 	}
 }
 
-void
+bool
 spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr)
 {
 	int res;
+
+	mgr->num_completions = 0;
 
 	res = io_queue_run(mgr->io_ctx);
 	if (res) {
 		SPDK_WARNLOG("polling failed with err=%d\n", res);
 	}
+
+	return mgr->num_completions ? true : false;
 }
 
 void

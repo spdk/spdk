@@ -23,7 +23,7 @@ struct spdk_aio_mgr_io *spdk_aio_mgr_read(struct spdk_aio_mgr *mgr, fsdev_aio_do
 struct spdk_aio_mgr_io *spdk_aio_mgr_write(struct spdk_aio_mgr *mgr, fsdev_aio_done_cb clb,
 		void *ctx, int fd, uint64_t offs, uint32_t size, const struct iovec *iovs, uint32_t iovcnt);
 void spdk_aio_mgr_cancel(struct spdk_aio_mgr *mgr, struct spdk_aio_mgr_io *aio);
-void spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr);
+bool spdk_aio_mgr_poll(struct spdk_aio_mgr *mgr); /* Returns true if it did some real work */
 void spdk_aio_mgr_delete(struct spdk_aio_mgr *mgr);
 
 #endif /* SPDK_AIO_MGR_H */
