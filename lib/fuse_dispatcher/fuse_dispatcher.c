@@ -3027,6 +3027,7 @@ spdk_fuse_dispatcher_submit_request(struct spdk_fuse_dispatcher *disp,
 
 struct fuse_dispatcher_delete_ctx {
 	struct spdk_fuse_dispatcher *disp;
+	struct spdk_thread *thread;
 	spdk_fuse_dispatcher_delete_cpl_cb cb;
 	void *cb_arg;
 };
@@ -3073,6 +3074,25 @@ fuse_dispatcher_delete_put_channel(struct spdk_io_channel_iter *i)
 }
 
 static void
+fuse_dispatcher_delete_done_msg(void *_ctx)
+{
+	struct fuse_dispatcher_delete_ctx *ctx = _ctx;
+
+	fuse_dispatcher_delete_done(ctx, 0);
+}
+
+static void
+fuse_dispatcher_delete_close_fsdev_msg(void *_ctx)
+{
+	struct fuse_dispatcher_delete_ctx *ctx = _ctx;
+	struct spdk_fuse_dispatcher *disp = ctx->disp;
+
+	spdk_fsdev_close(disp->desc);
+
+	spdk_thread_send_msg(ctx->thread, fuse_dispatcher_delete_done_msg, ctx);
+}
+
+static void
 fuse_dispatcher_delete_put_channel_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct fuse_dispatcher_delete_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
@@ -3087,9 +3107,7 @@ fuse_dispatcher_delete_put_channel_done(struct spdk_io_channel_iter *i, int stat
 	SPDK_DEBUGLOG(fuse_dispatcher, "%s: putting channels succeeded. Releasing the fdev\n",
 		      fuse_dispatcher_name(disp));
 
-	spdk_fsdev_close(disp->desc);
-
-	fuse_dispatcher_delete_done(ctx, 0);
+	spdk_thread_send_msg(disp->fsdev_thread, fuse_dispatcher_delete_close_fsdev_msg, ctx);
 }
 
 int
@@ -3107,6 +3125,7 @@ spdk_fuse_dispatcher_delete(struct spdk_fuse_dispatcher *disp,
 	ctx->disp = disp;
 	ctx->cb = cb;
 	ctx->cb_arg = cb_arg;
+	ctx->thread = spdk_get_thread();
 
 	if (disp->desc) {
 		SPDK_DEBUGLOG(fuse_dispatcher, "%s: fsdev still open. Releasing the channels.\n",
