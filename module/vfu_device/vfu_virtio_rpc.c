@@ -355,7 +355,7 @@ rpc_vfu_virtio_create_fs_endpoint(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_vfu_create_endpoint(req->name, req->cpumask, "virtio_fs");
 	if (rc) {
-		SPDK_ERRLOG("Failed to create virtio_blk endpoint\n");
+		SPDK_ERRLOG("Failed to create virtio_fs endpoint\n");
 		goto invalid;
 	}
 
