@@ -140,28 +140,6 @@ function confirm_abi_deps() {
 	#	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
 	cat <<- EOF > ${suppression_file}
 		[suppress_type]
-			label = Added disable_command_passthru field
-			name = spdk_nvmf_transport_opts
-			soname_regexp = ^libspdk_nvmf\\.so\\.18\\.*$
-			has_data_member_regexp = ^reserved29$
-			has_data_member_inserted_between = {232, 256}
-		[suppress_type]
-			label = Added opts.disable_command_passthru field
-			name = spdk_nvmf_transport
-			soname_regexp = ^libspdk_nvmf\\.so\\.18\\.*$
-		[suppress_type]
-			label = Added disable_pcie_sgl_merge field
-			name = spdk_nvme_io_qpair_opts
-			soname_regexp = ^libspdk_nvme\\.so\\.13\\.*$
-			has_data_member_regexp = ^reserved66$
-			has_data_member_inserted_between = {528, end}
-		[suppress_type]
-			label = Removed spdk_nvme_ctrlr_opts.psk field
-			name = spdk_nvme_ctrlr_opts
-			soname_regexp = ^libspdk_nvme\\.so\\.13\\.*$
-			has_data_member_regexp = ^psk$
-			has_data_member_inserted_between = {4936, 6536}
-		[suppress_type]
 			label = Removed spdk_nvme_accel_fn_table.submit_accel_crc32c field
 			name = spdk_nvme_accel_fn_table
 			soname_regexp = ^libspdk_nvme\\.so\\.14\\.*$
