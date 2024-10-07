@@ -187,14 +187,12 @@ struct spdk_nvmf_fc_nport {
 	TAILQ_ENTRY(spdk_nvmf_fc_nport) link; /* list of nports on a hw port. */
 };
 
+typedef void (*spdk_nvmf_fc_caller_cb)(void *hwqp, int32_t status, void *args);
 /*
  * NVMF FC Connection
  */
 struct spdk_nvmf_fc_conn {
 	struct spdk_nvmf_qpair qpair;
-	nvmf_qpair_disconnect_cb qpair_disconnect_cb_fn;
-	void *qpair_disconnect_ctx;
-
 	struct spdk_nvme_transport_id trid;
 
 	uint32_t s_id;
@@ -253,6 +251,10 @@ struct spdk_nvmf_fc_conn {
 
 	/* Delete conn callback list */
 	void *ls_del_op_ctx;
+
+	bool qpair_fini_done;
+	spdk_nvmf_fc_caller_cb qpair_fini_done_cb;
+	void *qpair_fini_done_cb_args;
 };
 
 /*
@@ -819,7 +821,6 @@ nvmf_fc_dump_buf_print(struct spdk_nvmf_fc_queue_dump_info *dump_info, char *fmt
 /*
  * NVMF FC caller callback definitions
  */
-typedef void (*spdk_nvmf_fc_caller_cb)(void *hwqp, int32_t status, void *args);
 
 struct spdk_nvmf_fc_caller_ctx {
 	void *ctx;

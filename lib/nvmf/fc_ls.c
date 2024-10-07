@@ -330,8 +330,6 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	fc_conn->conn_state = SPDK_NVMF_FC_OBJECT_CREATED;
 	TAILQ_INIT(&fc_conn->in_use_reqs);
 	TAILQ_INIT(&fc_conn->fused_waiting_queue);
-	fc_conn->qpair_disconnect_cb_fn = NULL;
-	fc_conn->qpair_disconnect_ctx = NULL;
 
 	/* save target port trid in connection (for subsystem
 	 * listener validation in fabric connect command)
@@ -1456,14 +1454,6 @@ nvmf_fc_poller_api_activate_queue(void *arg)
 }
 
 static void
-nvmf_fc_disconnect_qpair_cb(void *ctx)
-{
-	struct spdk_nvmf_fc_poller_api_cb_info *cb_info = ctx;
-	/* perform callback */
-	nvmf_fc_poller_api_perform_cb(cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
-}
-
-static void
 nvmf_fc_poller_conn_abort_done(void *hwqp, int32_t status, void *cb_args)
 {
 	struct spdk_nvmf_fc_poller_api_del_connection_args *conn_args = cb_args;
@@ -1475,31 +1465,33 @@ nvmf_fc_poller_conn_abort_done(void *hwqp, int32_t status, void *cb_args)
 	if (!conn_args->fc_request_cnt) {
 		struct spdk_nvmf_fc_conn *fc_conn = conn_args->fc_conn, *tmp;
 
+		SPDK_DEBUGLOG(nvmf_fc_poller_api, "Poller connection abort done, fc_conn %p conn_id 0x%lx "
+			      "s_id 0x%x rpi 0x%x qpair_fini_done %d\n", fc_conn, fc_conn->conn_id,
+			      fc_conn->s_id, fc_conn->rpi, fc_conn->qpair_fini_done);
+
+		if (!fc_conn->qpair_fini_done) { /* nvmf_fc_close_qpair not called yet */
+			fc_conn->qpair_fini_done_cb = nvmf_fc_poller_conn_abort_done;
+			fc_conn->qpair_fini_done_cb_args = cb_args;
+
+			spdk_nvmf_qpair_disconnect(&fc_conn->qpair);
+			/* Wait for upper layer to call qpair_fini */
+			return;
+		}
+
 		if (rte_hash_lookup_data(conn_args->hwqp->connection_list_hash,
 					 (void *)&fc_conn->conn_id, (void *)&tmp) >= 0) {
 			/* All the requests for this connection are aborted. */
 			nvmf_fc_poller_del_conn_lookup_data(conn_args->hwqp, fc_conn);
 			fc_conn->hwqp->num_conns--;
 
-			SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection deleted, conn_id 0x%lx\n", fc_conn->conn_id);
+			SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection lookup data deleted, fc_conn %p conn_id 0x%lx "
+				      "rport %p rpi 0x%x assoc %p\n", fc_conn, fc_conn->conn_id,
+				      fc_conn->fc_assoc->rport, fc_conn->rpi, fc_conn->fc_assoc);
 
-			if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
-				/* disconnect qpair from nvmf controller */
-				fc_conn->qpair_disconnect_cb_fn = nvmf_fc_disconnect_qpair_cb;
-				fc_conn->qpair_disconnect_ctx = &conn_args->cb_info;
-				spdk_nvmf_qpair_disconnect(&fc_conn->qpair);
-			} else {
-				nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
-			}
-		} else {
-			/*
-			 * Duplicate connection delete can happen if one is
-			 * coming in via an association disconnect and the other
-			 * is initiated by a port reset.
-			 */
-			SPDK_DEBUGLOG(nvmf_fc_poller_api, "Duplicate conn delete.");
 			/* perform callback */
 			nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
+		} else {
+			SPDK_ERRLOG("fc_conn %p conn_id 0x%lx hash on delete failed.\n", fc_conn, fc_conn->conn_id);
 		}
 	}
 }
@@ -1513,8 +1505,10 @@ nvmf_fc_poller_api_del_connection(void *arg)
 	struct spdk_nvmf_fc_request *fc_req = NULL, *tmp;
 	struct spdk_nvmf_fc_hwqp *hwqp = conn_args->hwqp;
 
-	SPDK_DEBUGLOG(nvmf_fc_poller_api, "Poller delete connection, conn_id 0x%lx\n",
-		      fc_conn->conn_id);
+	SPDK_DEBUGLOG(nvmf_fc_poller_api,
+		      "Poller delete connection, fc_conn %p conn_id 0x%lx s_id 0x%x rpi 0x%x\n",
+		      conn_args->fc_conn, conn_args->fc_conn->conn_id,
+		      conn_args->fc_conn->s_id, conn_args->fc_conn->rpi);
 
 	/* Make sure connection is valid */
 	if (rte_hash_lookup_data(hwqp->connection_list_hash,
@@ -1523,6 +1517,8 @@ nvmf_fc_poller_api_del_connection(void *arg)
 		nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_NO_CONN_ID);
 		return;
 	}
+
+	assert(conn_args->fc_conn == fc_conn);
 
 	conn_args->fc_request_cnt = 0;
 
@@ -1539,19 +1535,27 @@ nvmf_fc_poller_api_del_connection(void *arg)
 				      conn_args);
 	}
 
+	SPDK_DEBUGLOG(nvmf_fc_poller_api, "Poller Disconnect API, fc_conn %p conn_id 0x%lx "
+		      "s_id %x rpi %x requested abort count %d qpair_fini_done %d\n", fc_conn,
+		      fc_conn->conn_id, fc_conn->s_id, fc_conn->rpi,
+		      conn_args->fc_request_cnt, fc_conn->qpair_fini_done);
+
 	if (!conn_args->fc_request_cnt) {
-		SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection deleted.\n");
+		if (!fc_conn->qpair_fini_done) { /* nvmf_fc_close_qpair not called yet */
+			conn_args->fc_conn->qpair_fini_done_cb = nvmf_fc_poller_conn_abort_done;
+			conn_args->fc_conn->qpair_fini_done_cb_args = conn_args;
+			spdk_nvmf_qpair_disconnect(&fc_conn->qpair);
+			return;
+		}
+
+		SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection lookup data deleted, fc_conn %p conn_id 0x%lx "
+			      "rport %p rpi 0x%x assoc %p\n", fc_conn, fc_conn->conn_id,
+			      fc_conn->fc_assoc->rport, fc_conn->rpi, fc_conn->fc_assoc);
+
 		nvmf_fc_poller_del_conn_lookup_data(conn_args->hwqp, conn_args->fc_conn);
 		hwqp->num_conns--;
 
-		if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
-			/* disconnect qpair from nvmf controller */
-			fc_conn->qpair_disconnect_cb_fn = nvmf_fc_disconnect_qpair_cb;
-			fc_conn->qpair_disconnect_ctx = &conn_args->cb_info;
-			spdk_nvmf_qpair_disconnect(&fc_conn->qpair);
-		} else {
-			nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
-		}
+		nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 	}
 }
 

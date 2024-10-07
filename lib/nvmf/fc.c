@@ -1305,7 +1305,8 @@ nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 	switch (fc_req->state) {
 	case SPDK_NVMF_FC_REQ_BDEV_ABORTED:
 		/* Aborted by backend */
-		goto complete;
+		_nvmf_fc_request_free(fc_req);
+		break;
 
 	case SPDK_NVMF_FC_REQ_READ_BDEV:
 	case SPDK_NVMF_FC_REQ_WRITE_BDEV:
@@ -2225,6 +2226,9 @@ _nvmf_fc_close_qpair(void *arg)
 	int rc;
 
 	fc_conn = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_fc_conn, qpair);
+
+	SPDK_NOTICELOG("Close qpair %p, fc_conn %p conn_state %d conn_id 0x%lx\n",
+		       qpair, fc_conn, fc_conn->conn_state, fc_conn->conn_id);
 	if (fc_conn->conn_id == NVMF_FC_INVALID_CONN_ID) {
 		struct spdk_nvmf_fc_ls_add_conn_api_data *api_data = NULL;
 
@@ -2242,11 +2246,7 @@ _nvmf_fc_close_qpair(void *arg)
 			return;
 		}
 
-		SPDK_ERRLOG("%s: Delete FC connection failed.\n", __func__);
-	} else if (fc_conn->conn_state == SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
-		/* This is the case where deletion started from FC layer. */
-		spdk_thread_send_msg(fc_ctx->qpair_thread, fc_conn->qpair_disconnect_cb_fn,
-				     fc_conn->qpair_disconnect_ctx);
+		SPDK_ERRLOG("Delete fc_conn %p failed.\n", fc_conn);
 	}
 
 	nvmf_fc_connection_delete_done_cb(fc_ctx);
@@ -2257,6 +2257,25 @@ nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair,
 		    spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_fc_qpair_remove_ctx *fc_ctx;
+	struct spdk_nvmf_fc_conn *fc_conn;
+
+	fc_conn = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_fc_conn, qpair);
+	fc_conn->qpair_fini_done = true;
+
+	if (fc_conn->conn_state == SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
+		if (fc_conn->qpair_fini_done_cb) {
+			SPDK_NOTICELOG("Invoke qpair_fini_done_cb, fc_conn %p conn_id 0x%lx qpair %p conn_state %d\n",
+				       fc_conn, fc_conn->conn_id, qpair, fc_conn->conn_state);
+
+			fc_conn->qpair_fini_done_cb(fc_conn->hwqp, 0, fc_conn->qpair_fini_done_cb_args);
+		}
+
+		if (cb_fn) {
+			cb_fn(cb_arg);
+		}
+
+		return;
+	}
 
 	fc_ctx = calloc(1, sizeof(struct spdk_nvmf_fc_qpair_remove_ctx));
 	if (!fc_ctx) {
@@ -2264,8 +2283,10 @@ nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair,
 		if (cb_fn) {
 			cb_fn(cb_arg);
 		}
+
 		return;
 	}
+
 	fc_ctx->qpair = qpair;
 	fc_ctx->cb_fn = cb_fn;
 	fc_ctx->cb_ctx = cb_arg;
