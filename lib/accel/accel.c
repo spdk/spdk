@@ -1656,6 +1656,8 @@ spdk_accel_append_dif_generate_copy(struct spdk_accel_sequence **pseq, struct sp
 	task->src_domain_ctx = src_domain_ctx;
 	task->s.iovs = src_iovs;
 	task->s.iovcnt = src_iovcnt;
+	task->dif.ctx = ctx;
+	task->dif.num_blocks = num_blocks;
 	task->nbytes = num_blocks * ctx->block_size;
 	task->op_code = SPDK_ACCEL_OPC_DIF_GENERATE_COPY;
 
