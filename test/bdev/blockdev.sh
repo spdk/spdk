@@ -609,6 +609,44 @@ function stat_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+# Create three types of DIF configuration, 512 + 8, 512 + 16 (DIF is first 8bytes), and
+# 512 + 16 (DIF is last 8 bytes)
+function dif_insert_strip_test_suite() {
+	DIF_DEV_1="Malloc_DIF_1"
+	DIF_DEV_2="Malloc_DIF_2"
+	DIF_DEV_3="Malloc_DIF_3"
+
+	"$rootdir/build/examples/bdevperf" -z -m 0xf -q 32 -o 4096 -w randrw -M 50 -t 5 -C -N "$env_ctx" &
+	DIF_PID=$!
+	echo "Process bdev DIF insert/strip testing pid: $DIF_PID"
+	trap 'cleanup; killprocess $DIF_PID; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $DIF_PID
+
+	$rpc_py bdev_malloc_create -b $DIF_DEV_1 1 512 -m 8 -t 1 -f 0 -i
+	waitforbdev $DIF_DEV_1
+	$rpc_py bdev_malloc_create -b $DIF_DEV_2 1 512 -m 16 -t 1 -f 0 -i
+	waitforbdev $DIF_DEV_2
+	$rpc_py bdev_malloc_create -b $DIF_DEV_3 1 512 -m 16 -t 1 -f 0 -i -d
+	waitforbdev $DIF_DEV_3
+
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests &
+	sleep 10
+
+	# Bdevperf is expected to be there because DIF error should not happen.
+	if kill -0 $DIF_PID; then
+		echo "Process is existed. Pid: $DIF_PID"
+	else
+		echo "Process exited unexpectedly. Pid: $DIF_PID"
+		exit 1
+	fi
+
+	$rpc_py bdev_malloc_delete $DIF_DEV_1
+	$rpc_py bdev_malloc_delete $DIF_DEV_2
+	$rpc_py bdev_malloc_delete $DIF_DEV_3
+	killprocess $DIF_PID
+	trap - SIGINT SIGTERM EXIT
+}
+
 function bdev_gpt_uuid() {
 	local bdev
 
@@ -788,6 +826,7 @@ if [[ $test_type == bdev ]]; then
 	run_test "bdev_qd_sampling" qd_sampling_test_suite "$env_ctx"
 	run_test "bdev_error" error_test_suite "$env_ctx"
 	run_test "bdev_stat" stat_test_suite "$env_ctx"
+	run_test "bdev_dif_insert_strip" dif_insert_strip_test_suite "$env_ctx"
 fi
 
 if [[ $test_type == gpt ]]; then
