@@ -402,7 +402,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	const struct spdk_nvme_transport_id *ctrlr_trid;
 	struct nvme_ctrlr *ctrlr = NULL;
 	size_t len, maxlen;
-	bool multipath = false;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -597,8 +596,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		ctx->req.bdev_opts.prchk_flags = ctrlr->opts.prchk_flags;
 	}
 
-	if (ctx->req.multipath == BDEV_NVME_MP_MODE_MULTIPATH) {
-		multipath = true;
+	if (ctx->req.multipath != BDEV_NVME_MP_MODE_MULTIPATH) {
+		ctx->req.bdev_opts.multipath = false;
 	}
 
 	if (ctx->req.drv_opts.num_io_queues == 0 || ctx->req.drv_opts.num_io_queues > UINT16_MAX + 1) {
@@ -614,10 +613,9 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->req.bdev_opts.psk = ctx->req.psk;
 	ctx->req.bdev_opts.dhchap_key = ctx->req.dhchap_key;
 	ctx->req.bdev_opts.dhchap_ctrlr_key = ctx->req.dhchap_ctrlr_key;
-	ctx->req.bdev_opts.multipath = multipath;
 	rc = spdk_bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
 				   rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
-				   &ctx->req.bdev_opts, multipath);
+				   &ctx->req.bdev_opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

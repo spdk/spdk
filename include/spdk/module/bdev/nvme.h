@@ -61,7 +61,6 @@ struct spdk_bdev_nvme_ctrlr_opts {
  * \param cb_ctx Context to pass to cb_fn.
  * \param drv_opts NVMe driver options.
  * \param bdev_opts NVMe bdev options.
- * \param multipath Whether to enable multipathing (if true) else failover mode.
  * \return 0 on success, negative errno on failure.
  */
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
@@ -71,8 +70,7 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  spdk_bdev_nvme_create_cb cb_fn,
 			  void *cb_ctx,
 			  struct spdk_nvme_ctrlr_opts *drv_opts,
-			  struct spdk_bdev_nvme_ctrlr_opts *bdev_opts,
-			  bool multipath);
+			  struct spdk_bdev_nvme_ctrlr_opts *bdev_opts);
 
 /**
  * Set multipath policy of the NVMe bdev.

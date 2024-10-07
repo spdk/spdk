@@ -6320,8 +6320,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      spdk_bdev_nvme_create_cb cb_fn,
 		      void *cb_ctx,
 		      struct spdk_nvme_ctrlr_opts *drv_opts,
-		      struct spdk_bdev_nvme_ctrlr_opts *bdev_opts,
-		      bool multipath)
+		      struct spdk_bdev_nvme_ctrlr_opts *bdev_opts)
 {
 	struct nvme_probe_skip_entry *entry, *tmp;
 	struct nvme_async_probe_ctx *ctx;
@@ -6418,14 +6417,14 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		}
 	}
 
-	if (nvme_bdev_ctrlr_get_by_name(base_name) == NULL || multipath) {
+	if (nvme_bdev_ctrlr_get_by_name(base_name) == NULL || ctx->bdev_opts.multipath) {
 		attach_cb = connect_attach_cb;
 	} else {
 		attach_cb = connect_set_failover_cb;
 	}
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name(ctx->base_name);
-	if (nvme_ctrlr  && nvme_ctrlr->opts.multipath != multipath) {
+	if (nvme_ctrlr  && nvme_ctrlr->opts.multipath != ctx->bdev_opts.multipath) {
 		/* All controllers with the same name must be configured the same
 		 * way, either for multipath or failover. If the configuration doesn't
 		 * match - report error.
@@ -7088,7 +7087,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
 			rc = spdk_bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0,
 						   discovery_attach_controller_done, new_ctx,
-						   &new_ctx->drv_opts, &ctx->bdev_opts, true);
+						   &new_ctx->drv_opts, &ctx->bdev_opts);
 			if (rc == 0) {
 				TAILQ_INSERT_TAIL(&ctx->nvm_entry_ctxs, new_ctx, tailq);
 				ctx->attach_in_progress++;
