@@ -161,6 +161,12 @@ function confirm_abi_deps() {
 			soname_regexp = ^libspdk_nvme\\.so\\.13\\.*$
 			has_data_member_regexp = ^psk$
 			has_data_member_inserted_between = {4936, 6536}
+		[suppress_type]
+			label = Removed spdk_nvme_accel_fn_table.submit_accel_crc32c field
+			name = spdk_nvme_accel_fn_table
+			soname_regexp = ^libspdk_nvme\\.so\\.14\\.*$
+			has_data_member_regexp = ^submit_accel_crc32c$
+			has_data_member_inserted_between = {64, 128}
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

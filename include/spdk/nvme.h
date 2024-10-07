@@ -341,9 +341,8 @@ struct spdk_nvme_accel_fn_table {
 	 */
 	size_t table_size;
 
-	/** The accelerated crc32c function. */
-	void (*submit_accel_crc32c)(void *ctx, uint32_t *dst, struct iovec *iov,
-				    uint32_t iov_cnt, uint32_t seed, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg);
+	/* Hole at bytes 8-15. */
+	uint8_t reserved8[8];
 
 	/** Finish an accel sequence */
 	void (*finish_sequence)(void *seq, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg);

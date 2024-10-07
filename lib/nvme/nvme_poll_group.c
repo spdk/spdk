@@ -7,9 +7,6 @@
 
 #include "nvme_internal.h"
 
-SPDK_LOG_DEPRECATION_REGISTER(nvme_accel_fn_submit_crc,
-			      "spdk_nvme_accel_fn_table.submit_accel_crc32c", "v25.01", 0);
-
 struct spdk_nvme_poll_group *
 spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 {
@@ -28,7 +25,6 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 		group->accel_fn_table.field = table->field; \
 	} \
 
-		SET_FIELD(submit_accel_crc32c);
 		SET_FIELD(append_crc32c);
 		SET_FIELD(append_copy);
 		SET_FIELD(finish_sequence);
@@ -59,10 +55,6 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 			    "callbacks to be provided\n");
 		free(group);
 		return NULL;
-	}
-
-	if (group->accel_fn_table.submit_accel_crc32c != NULL) {
-		SPDK_LOG_DEPRECATED(nvme_accel_fn_submit_crc);
 	}
 
 	group->ctx = ctx;

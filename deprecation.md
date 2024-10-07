@@ -19,13 +19,6 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### nvme
-
-#### `spdk_nvme_accel_fn_table.submit_accel_crc32c`
-
-This callback is now deprecated and will be removed in the v25.01 release.  Please use the append
-API (`append_crc32c`, `finish_sequence`, `reverse_sequence`, `abort_sequence`) instead.
-
 ### gpt
 
 #### `old_gpt_guid`
