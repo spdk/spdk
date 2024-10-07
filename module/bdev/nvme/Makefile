@@ -8,7 +8,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 7
-SO_MINOR := 0
+SO_MINOR := 1
 
 C_SRCS = bdev_nvme.c bdev_nvme_rpc.c nvme_rpc.c bdev_mdns_client.c
 C_SRCS-$(CONFIG_NVME_CUSE) += bdev_nvme_cuse_rpc.c
@@ -18,6 +18,6 @@ C_SRCS += vbdev_opal.c vbdev_opal_rpc.c
 endif
 LIBNAME = bdev_nvme
 
-SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_bdev_nvme.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
