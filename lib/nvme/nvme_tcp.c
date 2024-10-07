@@ -583,32 +583,29 @@ pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 		return false;
 	}
 
-	if (tqpair->qpair.poll_group == NULL) {
+	if (tqpair->qpair.poll_group == NULL ||
+	    tgroup->group.group->accel_fn_table.append_crc32c == NULL) {
 		return false;
 	}
 
-	if (tgroup->group.group->accel_fn_table.append_crc32c != NULL) {
-		rc = nvme_tcp_accel_append_crc32c(tgroup, &req->accel_sequence,
-						  &pdu->data_digest_crc32,
-						  pdu->data_iov, pdu->data_iovcnt, 0,
-						  pdu_accel_seq_compute_crc32_done, pdu);
-		if (spdk_unlikely(rc != 0)) {
-			/* If accel is out of resources, fall back to non-accelerated crc32 */
-			if (rc == -ENOMEM) {
-				return false;
-			}
-
-			SPDK_ERRLOG("Failed to append crc32c operation: %d\n", rc);
-			pdu_write_fail(pdu, rc);
-			return true;
+	rc = nvme_tcp_accel_append_crc32c(tgroup, &req->accel_sequence,
+					  &pdu->data_digest_crc32,
+					  pdu->data_iov, pdu->data_iovcnt, 0,
+					  pdu_accel_seq_compute_crc32_done, pdu);
+	if (spdk_unlikely(rc != 0)) {
+		/* If accel is out of resources, fall back to non-accelerated crc32 */
+		if (rc == -ENOMEM) {
+			return false;
 		}
 
-		tcp_write_pdu(pdu);
-
+		SPDK_ERRLOG("Failed to append crc32c operation: %d\n", rc);
+		pdu_write_fail(pdu, rc);
 		return true;
 	}
 
-	return false;
+	tcp_write_pdu(pdu);
+
+	return true;
 }
 
 static void
@@ -1386,28 +1383,29 @@ nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu
 		return false;
 	}
 
-	if (tgroup->group.group->accel_fn_table.append_crc32c != NULL) {
-		nvme_tcp_req_copy_pdu(treq, pdu);
-		rc = nvme_tcp_accel_append_crc32c(tgroup, &req->accel_sequence,
-						  &treq->pdu->data_digest_crc32,
-						  treq->pdu->data_iov, treq->pdu->data_iovcnt, 0,
-						  nvme_tcp_accel_seq_recv_compute_crc32_done, treq);
-		if (spdk_unlikely(rc != 0)) {
-			/* If accel is out of resources, fall back to non-accelerated crc32 */
-			if (rc == -ENOMEM) {
-				return false;
-			}
-
-			SPDK_ERRLOG("Failed to append crc32c operation: %d\n", rc);
-			treq->rsp.status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
-		}
-
-		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-		nvme_tcp_c2h_data_payload_handle(tqpair, treq->pdu, &dummy);
-		return true;
+	if (tgroup->group.group->accel_fn_table.append_crc32c == NULL) {
+		return false;
 	}
 
-	return false;
+	nvme_tcp_req_copy_pdu(treq, pdu);
+	rc = nvme_tcp_accel_append_crc32c(tgroup, &req->accel_sequence,
+					  &treq->pdu->data_digest_crc32,
+					  treq->pdu->data_iov, treq->pdu->data_iovcnt, 0,
+					  nvme_tcp_accel_seq_recv_compute_crc32_done, treq);
+	if (spdk_unlikely(rc != 0)) {
+		/* If accel is out of resources, fall back to non-accelerated crc32 */
+		if (rc == -ENOMEM) {
+			return false;
+		}
+
+		SPDK_ERRLOG("Failed to append crc32c operation: %d\n", rc);
+		treq->rsp.status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
+	}
+
+	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	nvme_tcp_c2h_data_payload_handle(tqpair, treq->pdu, &dummy);
+
+	return true;
 }
 
 static void
