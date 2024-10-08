@@ -290,6 +290,8 @@ struct spdk_nvmf_tcp_qpair {
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
 
+	bool					await_req_msg_pending;
+
 	/* This is a spare PDU used for sending special management
 	 * operations. Primarily, this is used for the initial
 	 * connection response and c2h termination request. */
@@ -343,7 +345,6 @@ struct spdk_nvmf_tcp_poll_group {
 	struct spdk_sock_group			*sock_group;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
-	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	await_req;
 
 	struct spdk_io_channel			*accel_channel;
 	struct spdk_nvmf_tcp_control_msg_list	*control_msg_list;
@@ -412,6 +413,7 @@ static void nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *g
 
 static void _nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 				    struct spdk_nvmf_tcp_req *tcp_req);
+static void nvmf_tcp_qpair_process(struct spdk_nvmf_tcp_qpair *tqpair);
 
 static inline void
 nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
@@ -464,6 +466,17 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	return tcp_req;
 }
 
+static void
+handle_await_req(void *arg)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair = arg;
+
+	tqpair->await_req_msg_pending = false;
+	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
+		nvmf_tcp_qpair_process(tqpair);
+	}
+}
+
 static inline void
 nvmf_tcp_req_put(struct spdk_nvmf_tcp_qpair *tqpair, struct spdk_nvmf_tcp_req *tcp_req)
 {
@@ -473,6 +486,11 @@ nvmf_tcp_req_put(struct spdk_nvmf_tcp_qpair *tqpair, struct spdk_nvmf_tcp_req *t
 	TAILQ_INSERT_TAIL(&tqpair->tcp_req_free_queue, tcp_req, state_link);
 	tqpair->qpair.queue_depth--;
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_FREE);
+	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ &&
+	    !tqpair->await_req_msg_pending) {
+		tqpair->await_req_msg_pending = true;
+		spdk_thread_send_msg(spdk_get_thread(), handle_await_req, tqpair);
+	}
 }
 
 static void
@@ -1649,7 +1667,6 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 	}
 
 	TAILQ_INIT(&tgroup->qpairs);
-	TAILQ_INIT(&tgroup->await_req);
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
@@ -1784,15 +1801,6 @@ nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	if (spdk_unlikely(state == NVME_TCP_PDU_RECV_STATE_ERROR)) {
 		assert(tqpair->tcp_pdu_working_count == 0);
-	}
-
-	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
-		/* When leaving the await req state, move the qpair to the main list */
-		TAILQ_REMOVE(&tqpair->group->await_req, tqpair, link);
-		TAILQ_INSERT_TAIL(&tqpair->group->qpairs, tqpair, link);
-	} else if (state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
-		TAILQ_REMOVE(&tqpair->group->qpairs, tqpair, link);
-		TAILQ_INSERT_TAIL(&tqpair->group->await_req, tqpair, link);
 	}
 
 	SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv state=%d\n", tqpair, state);
@@ -3406,17 +3414,11 @@ nvmf_tcp_qpair_process(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-tcp_sock_cb(void *arg)
+nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair = arg;
 
 	nvmf_tcp_qpair_process(tqpair);
-}
-
-static void
-nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
-{
-	tcp_sock_cb(arg);
 }
 
 static int
@@ -3501,11 +3503,9 @@ nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_req *tcp_req;
-	struct spdk_nvmf_tcp_qpair *tqpair;
 
 	ttransport = SPDK_CONTAINEROF(req->qpair->transport, struct spdk_nvmf_tcp_transport, transport);
 	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
-	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
 	switch (tcp_req->state) {
 	case TCP_REQUEST_STATE_EXECUTING:
@@ -3517,15 +3517,6 @@ nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 		break;
 	case TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE:
 		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_COMPLETED);
-		/* In the interrupt mode it's possible that all responses are already written out over
-		 * the socket but zero-copy buffers are still not released. In that case there won't be
-		 * any event to trigger further socket processing. Send msg to a thread to avoid deadlock.
-		 */
-		if (spdk_unlikely(spdk_interrupt_mode_is_enabled() &&
-				  tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ &&
-				  spdk_nvmf_qpair_is_active(&tqpair->qpair))) {
-			spdk_thread_send_msg(spdk_get_thread(), tcp_sock_cb, tqpair);
-		}
 		break;
 	default:
 		SPDK_ERRLOG("Unexpected request state %d (cntlid:%d, qid:%d)\n",
@@ -3562,22 +3553,16 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int num_events;
-	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
-	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs) && TAILQ_EMPTY(&tgroup->await_req))) {
+	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
 		return 0;
 	}
 
 	num_events = spdk_sock_group_poll(tgroup->sock_group);
 	if (spdk_unlikely(num_events < 0)) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
-	}
-
-	TAILQ_FOREACH_SAFE(tqpair, &tgroup->await_req, link, tqpair_tmp) {
-		num_events++;
-		nvmf_tcp_qpair_process(tqpair);
 	}
 
 	return num_events;
