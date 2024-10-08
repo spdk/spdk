@@ -19,7 +19,6 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 /* Context of cache instance */
 struct vbdev_ocf_cache_ctx {
 	ocf_queue_t                  mngt_queue;
-	pthread_mutex_t              lock;
 	env_atomic                   refcnt;
 };
 
@@ -32,6 +31,8 @@ void vbdev_ocf_ctx_cleanup(void);
 /* Thread safe queue creation and deletion
  * These are wrappers for original ocf_queue_create() and ocf_queue_put() */
 int vbdev_ocf_queue_create(ocf_cache_t cache, ocf_queue_t *queue, const struct ocf_queue_ops *ops);
+int vbdev_ocf_queue_create_mngt(ocf_cache_t cache, ocf_queue_t *queue,
+				const struct ocf_queue_ops *ops);
 void vbdev_ocf_queue_put(ocf_queue_t queue);
 
 #endif

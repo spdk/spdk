@@ -119,10 +119,10 @@ is_ocf_cache_running(struct vbdev_ocf *vbdev)
 }
 
 static bool
-is_ocf_cache_initializing(struct vbdev_ocf *vbdev)
+is_ocf_cache_detached(struct vbdev_ocf *vbdev)
 {
 	if (vbdev->cache.attached && vbdev->ocf_cache) {
-		return ocf_cache_is_initializing(vbdev->ocf_cache);
+		return ocf_cache_is_detached(vbdev->ocf_cache);
 	}
 	return false;
 }
@@ -141,7 +141,7 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 		if (strcmp(cmp->cache.name, vbdev->cache.name)) {
 			continue;
 		}
-		if (is_ocf_cache_running(cmp) || is_ocf_cache_initializing(cmp)) {
+		if (is_ocf_cache_running(cmp) || is_ocf_cache_detached(cmp)) {
 			return cmp->ocf_cache;
 		}
 	}
@@ -543,9 +543,9 @@ vbdev_ocf_foreach(vbdev_ocf_foreach_fn fn, void *ctx)
 
 /* Called from OCF when SPDK_IO is completed */
 static void
-vbdev_ocf_io_submit_cb(struct ocf_io *io, int error)
+vbdev_ocf_io_submit_cb(ocf_io_t io, void *priv1, void *priv2, int error)
 {
-	struct spdk_bdev_io *bdev_io = io->priv1;
+	struct spdk_bdev_io *bdev_io = priv1;
 
 	if (error == 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -560,7 +560,7 @@ vbdev_ocf_io_submit_cb(struct ocf_io *io, int error)
 
 /* Configure io parameters and send it to OCF */
 static int
-io_submit_to_ocf(struct spdk_bdev_io *bdev_io, struct ocf_io *io)
+io_submit_to_ocf(struct spdk_bdev_io *bdev_io, ocf_io_t io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -586,7 +586,7 @@ static void
 io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_ocf *vbdev = bdev_io->bdev->ctxt;
-	struct ocf_io *io = NULL;
+	ocf_io_t io = NULL;
 	struct bdev_ocf_data *data = NULL;
 	struct vbdev_ocf_qctx *qctx = spdk_io_channel_get_ctx(ch);
 	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
@@ -1009,6 +1009,7 @@ static void
 start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 {
 	struct vbdev_ocf *vbdev = priv;
+	uint64_t volume_size;
 	uint64_t mem_needed;
 
 	ocf_mngt_cache_unlock(cache);
@@ -1018,14 +1019,14 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 			    error, vbdev->name);
 
 		if (error == -OCF_ERR_NO_MEM) {
-			ocf_mngt_get_ram_needed(cache, &vbdev->cfg.attach.device, &mem_needed);
+			volume_size = vbdev->cache.bdev->blockcnt * vbdev->cache.bdev->blocklen;
+			mem_needed = ocf_mngt_get_ram_needed(cache, volume_size);
 
 			SPDK_NOTICELOG("Try to increase hugepage memory size or cache line size. "
 				       "For your configuration:\nDevice size: %"PRIu64" bytes\n"
 				       "Cache line size: %"PRIu64" bytes\nFree memory needed to start "
-				       "cache: %"PRIu64" bytes\n", vbdev->cache.bdev->blockcnt *
-				       vbdev->cache.bdev->blocklen, vbdev->cfg.cache.cache_line_size,
-				       mem_needed);
+				       "cache: %"PRIu64" bytes\n",
+				       volume_size, vbdev->cfg.cache.cache_line_size, mem_needed);
 		}
 
 		vbdev_ocf_mngt_exit(vbdev, unregister_path_dirty, error);
@@ -1041,7 +1042,8 @@ create_management_queue(struct vbdev_ocf *vbdev)
 	struct spdk_poller *mngt_poller;
 	int rc;
 
-	rc = vbdev_ocf_queue_create(vbdev->ocf_cache, &vbdev->cache_ctx->mngt_queue, &mngt_queue_ops);
+	rc = vbdev_ocf_queue_create_mngt(vbdev->ocf_cache,
+					 &vbdev->cache_ctx->mngt_queue, &mngt_queue_ops);
 	if (rc) {
 		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
 		return rc;
@@ -1054,7 +1056,6 @@ create_management_queue(struct vbdev_ocf *vbdev)
 	}
 
 	ocf_queue_set_priv(vbdev->cache_ctx->mngt_queue, mngt_poller);
-	ocf_mngt_cache_set_mngt_queue(vbdev->ocf_cache, vbdev->cache_ctx->mngt_queue);
 
 	return 0;
 }
@@ -1099,7 +1100,6 @@ start_cache(struct vbdev_ocf *vbdev)
 	}
 
 	vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
-	pthread_mutex_init(&vbdev->cache_ctx->lock, NULL);
 
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache, NULL);
 	if (rc) {
