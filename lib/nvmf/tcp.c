@@ -3554,7 +3554,7 @@ static int
 nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
-	int num_events, rc = 0, rc2;
+	int num_events, rc;
 	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
@@ -3569,18 +3569,16 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	TAILQ_FOREACH_SAFE(tqpair, &tgroup->await_req, link, tqpair_tmp) {
-		rc2 = nvmf_tcp_sock_process(tqpair);
+		num_events++;
+		rc = nvmf_tcp_sock_process(tqpair);
 
 		/* If there was a new socket error, disconnect */
-		if (spdk_unlikely(rc2 < 0)) {
+		if (spdk_unlikely(rc < 0)) {
 			nvmf_tcp_qpair_disconnect(tqpair);
-			if (rc == 0) {
-				rc = rc2;
-			}
 		}
 	}
 
-	return rc == 0 ? num_events : rc;
+	return num_events;
 }
 
 static int
