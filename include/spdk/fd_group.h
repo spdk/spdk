@@ -25,6 +25,12 @@ extern "C" {
  */
 enum spdk_fd_type {
 	SPDK_FD_TYPE_DEFAULT		= 0x0,
+	/**
+	 * Event file descriptors. Once an event is generated on these file descriptors, event
+	 * handler will perform a read operation on it to reset its internal eventfd object
+	 * counter value to 0.
+	 */
+	SPDK_FD_TYPE_EVENTFD		= 0x1,
 };
 
 struct spdk_event_handler_opts {

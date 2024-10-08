@@ -559,8 +559,11 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 	uint32_t totalfds = fgrp->num_fds;
 	struct epoll_event events[totalfds];
 	struct event_handler *ehdlr;
+	uint64_t count;
 	int n;
 	int nfds;
+	int bytes_read;
+	int read_errno;
 
 	if (fgrp->parent != NULL) {
 		if (timeout < 0) {
@@ -617,6 +620,27 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 		}
 
 		g_event = &events[n];
+
+		/* read fd to reset the internal eventfd object counter value to 0 */
+		if (ehdlr->fd_type == SPDK_FD_TYPE_EVENTFD) {
+			bytes_read = read(ehdlr->fd, &count, sizeof(count));
+			if (bytes_read < 0) {
+				g_event = NULL;
+				if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
+					continue;
+				}
+				read_errno = errno;
+				/* TODO: Device is buggy. Handle this properly */
+				SPDK_ERRLOG("Failed to read fd (%d) %s\n",
+					    ehdlr->fd, strerror(errno));
+				return -read_errno;
+			} else if (bytes_read == 0) {
+				SPDK_ERRLOG("Read nothing from fd (%d)\n", ehdlr->fd);
+				g_event = NULL;
+				return -EINVAL;
+			}
+		}
+
 		/* call the interrupt response function */
 		ehdlr->fn(ehdlr->fn_arg);
 		g_event = NULL;
