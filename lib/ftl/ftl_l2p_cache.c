@@ -1486,12 +1486,12 @@ ftl_l2p_cache_process_eviction(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *c
 		return;
 	}
 
-	ftl_add_io_activity(dev);
-
 	page = eviction_get_page(dev, cache);
 	if (spdk_unlikely(!page)) {
 		return;
 	}
+
+	ftl_add_io_activity(dev);
 
 	if (page->updates) {
 		page->state = L2P_CACHE_PAGE_FLUSHING;
