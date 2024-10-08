@@ -513,27 +513,38 @@ static void
 _init_write_super_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
-	int rc;
+	int rc = 0;
+
+	if (reduce_errno != 0) {
+		rc = reduce_errno;
+		goto err;
+	}
 
 	rc = _allocate_vol_requests(init_ctx->vol);
 	if (rc != 0) {
-		init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
-		_init_load_cleanup(init_ctx->vol, init_ctx);
-		return;
+		goto err;
 	}
 
 	rc = _alloc_zero_buff();
 	if (rc != 0) {
-		init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
-		_init_load_cleanup(init_ctx->vol, init_ctx);
-		return;
+		goto err;
 	}
 
-	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, reduce_errno);
+	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, rc);
 	/* Only clean up the ctx - the vol has been passed to the application
 	 *  for use now that initialization was successful.
 	 */
 	_init_load_cleanup(NULL, init_ctx);
+
+	return;
+err:
+	if (unlink(init_ctx->path)) {
+		SPDK_ERRLOG("%s could not be unlinked: %s\n",
+			    (char *)init_ctx->path, spdk_strerror(errno));
+	}
+
+	init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
+	_init_load_cleanup(init_ctx->vol, init_ctx);
 }
 
 static void
@@ -542,6 +553,11 @@ _init_write_path_cpl(void *cb_arg, int reduce_errno)
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = init_ctx->vol;
 	struct spdk_reduce_backing_io *backing_io = init_ctx->backing_io;
+
+	if (reduce_errno != 0) {
+		_init_write_super_cpl(cb_arg, reduce_errno);
+		return;
+	}
 
 	init_ctx->iov[0].iov_base = vol->backing_super;
 	init_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
