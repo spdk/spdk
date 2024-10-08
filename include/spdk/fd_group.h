@@ -17,6 +17,33 @@
 extern "C" {
 #endif
 
+#include "spdk/assert.h"
+
+/**
+ * File descriptor type. The event handler may have extra checks and can do extra
+ * processing based on this.
+ */
+enum spdk_fd_type {
+	SPDK_FD_TYPE_DEFAULT		= 0x0,
+};
+
+struct spdk_event_handler_opts {
+	/**
+	 * The size of spdk_event_handler_opts according to the caller of this library is used for
+	 * ABI compatibility. The library uses this field to know how many fields in this structure
+	 * are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
+
+	/** Event notification types */
+	uint32_t events;
+
+	/** fd type \ref spdk_fd_type */
+	uint32_t fd_type;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_event_handler_opts) == 16, "Incorrect size");
+
 /**
  * Callback function registered for the event source file descriptor.
  *
@@ -34,6 +61,15 @@ typedef int (*spdk_fd_fn)(void *ctx);
  * Taking "fgrp" as short name for file descriptor group of event sources.
  */
 struct spdk_fd_group;
+
+/**
+ * Initialize a spdk_event_handler_opts structure to the default values.
+ *
+ * \param[out] opts Will be filled with default option.
+ * \param opts_size Must be the size of spdk_event_handler_opts structure.
+ */
+void spdk_fd_group_get_default_event_handler_opts(struct spdk_event_handler_opts *opts,
+		size_t opts_size);
 
 /**
  * Initialize one fd_group.
@@ -132,12 +168,38 @@ int spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd,
 int spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t events,
 				 spdk_fd_fn fn, void *arg,  const char *name);
 
+/**
+ * Register one event type stated in spdk_event_handler_opts agrument to the specified fgrp.
+ *
+ * spdk_event_handler_opts argument consists of event which is a bit mask composed by ORing
+ * together enum spdk_interrupt_event_types values. It also consists of fd_type, which can be
+ * used by event handler to perform extra checks during the spdk_fd_group_wait call.
+ *
+ * \param fgrp The fgrp registered to.
+ * \param efd File descriptor of the event source.
+ * \param fn Called each time there are events in event source.
+ * \param arg Function argument for fn.
+ * \param name Name of the event source.
+ * \param opts Extended event handler option.
+ *
+ * \return 0 if success or -errno if failed
+ */
+int spdk_fd_group_add_ext(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn, void *arg,
+			  const char *name, struct spdk_event_handler_opts *opts);
+
 /*
  * \brief Register an event source with the name set to the string of the
  * callback function.
  */
 #define SPDK_FD_GROUP_ADD(fgrp, efd, fn, arg) \
 	spdk_fd_group_add(fgrp, efd, fn, arg, #fn)
+
+/*
+ * \brief Register an event source provided in opts with the name set to the string of the
+ * callback function.
+ */
+#define SPDK_FD_GROUP_ADD_EXT(fgrp, efd, fn, arg, opts) \
+	spdk_fd_group_add_ext(fgrp, efd, fn, arg, #fn, opts)
 
 /**
  * Unregister one event source from one fgrp.

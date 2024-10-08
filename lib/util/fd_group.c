@@ -8,6 +8,7 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/queue.h"
+#include "spdk/util.h"
 
 #include "spdk/fd_group.h"
 
@@ -40,6 +41,7 @@ struct event_handler {
 	/* file descriptor of the interrupt event */
 	int				fd;
 	uint32_t			events;
+	uint32_t			fd_type;
 	char				name[SPDK_MAX_EVENT_NAME_LEN + 1];
 };
 
@@ -251,6 +253,68 @@ spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 	return 0;
 }
 
+void
+spdk_fd_group_get_default_event_handler_opts(struct spdk_event_handler_opts *opts,
+		size_t opts_size)
+{
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
+
+	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_event_handler_opts, field) + sizeof(opts->field) <= opts_size
+
+#define SET_FIELD(field, value) \
+        if (FIELD_OK(field)) { \
+                opts->field = value; \
+        } \
+
+	SET_FIELD(events, EPOLLIN);
+	SET_FIELD(fd_type, SPDK_FD_TYPE_DEFAULT);
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+static void
+event_handler_opts_copy(const struct spdk_event_handler_opts *src,
+			struct spdk_event_handler_opts *dst)
+{
+	if (!src->opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		assert(false);
+	}
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_event_handler_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(events);
+	SET_FIELD(fd_type);
+
+	dst->opts_size = src->opts_size;
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_event_handler_opts) == 16, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
 int
 spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
 		  void *arg, const char *name)
@@ -262,14 +326,33 @@ int
 spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t events,
 			     spdk_fd_fn fn, void *arg, const char *name)
 {
+	struct spdk_event_handler_opts opts = {};
+
+	spdk_fd_group_get_default_event_handler_opts(&opts, sizeof(opts));
+	opts.events = events;
+	opts.fd_type = SPDK_FD_TYPE_DEFAULT;
+
+	return spdk_fd_group_add_ext(fgrp, efd, fn, arg, name, &opts);
+}
+
+int
+spdk_fd_group_add_ext(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn, void *arg,
+		      const char *name, struct spdk_event_handler_opts *opts)
+{
 	struct event_handler *ehdlr = NULL;
 	struct epoll_event epevent = {0};
+	struct spdk_event_handler_opts eh_opts = {};
 	int rc;
 	int epfd;
 
 	/* parameter checking */
 	if (fgrp == NULL || efd < 0 || fn == NULL) {
 		return -EINVAL;
+	}
+
+	spdk_fd_group_get_default_event_handler_opts(&eh_opts, sizeof(eh_opts));
+	if (opts) {
+		event_handler_opts_copy(opts, &eh_opts);
 	}
 
 	/* check if there is already one function registered for this fd */
@@ -289,7 +372,8 @@ spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t event
 	ehdlr->fn = fn;
 	ehdlr->fn_arg = arg;
 	ehdlr->state = EVENT_HANDLER_STATE_WAITING;
-	ehdlr->events = events;
+	ehdlr->events = eh_opts.events;
+	ehdlr->fd_type = eh_opts.fd_type;
 	snprintf(ehdlr->name, sizeof(ehdlr->name), "%s", name);
 
 	if (fgrp->parent) {
@@ -550,7 +634,7 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 	return nfds;
 }
 
-#else
+#else /* !__linux__ */
 
 int
 spdk_fd_group_get_epoll_event(struct epoll_event *event)
@@ -570,6 +654,20 @@ spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t event
 			     void *arg, const char *name)
 {
 	return -ENOTSUP;
+}
+
+int
+spdk_fd_group_add_ext(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn, void *arg,
+		      const char *name, struct spdk_event_handler_opts *opts)
+{
+	return -ENOTSUP;
+}
+
+void
+spdk_fd_group_get_default_event_handler_opts(struct spdk_event_handler_opts *opts,
+		size_t opts_size)
+{
+	assert(false);
 }
 
 void
@@ -613,4 +711,4 @@ spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 	return -ENOTSUP;
 }
 
-#endif
+#endif /* __linux__ */

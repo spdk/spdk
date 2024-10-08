@@ -7,7 +7,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 10
-SO_MINOR := 0
+SO_MINOR := 1
 
 C_SRCS = base64.c bit_array.c cpuset.c crc16.c crc32.c crc32c.c crc32_ieee.c crc64.c \
 	 dif.c fd.c fd_group.c file.c hexlify.c iov.c math.c net.c \

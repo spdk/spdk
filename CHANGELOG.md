@@ -37,6 +37,11 @@ change notice to client.
 
 Add `spdk_reduce_vol_get_info()` to get the information for the compressed volume.
 
+### util
+
+Added `spdk_fd_group_add_ext()` API which can receive `spdk_event_handler_opts` structure. This is
+to prevent any further expansion of `spdk_fd_group_add()` API.
+
 ## v24.09
 
 ### accel
