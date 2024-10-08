@@ -3392,9 +3392,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 }
 
 static void
-tcp_sock_cb(void *arg)
+nvmf_tcp_qpair_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-	struct spdk_nvmf_tcp_qpair *tqpair = arg;
 	int rc;
 
 	assert(tqpair != NULL);
@@ -3404,6 +3403,14 @@ tcp_sock_cb(void *arg)
 	if (rc < 0) {
 		nvmf_tcp_qpair_disconnect(tqpair);
 	}
+}
+
+static void
+tcp_sock_cb(void *arg)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair = arg;
+
+	nvmf_tcp_qpair_process(tqpair);
 }
 
 static void
@@ -3554,7 +3561,7 @@ static int
 nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
-	int num_events, rc;
+	int num_events;
 	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
@@ -3570,12 +3577,7 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 	TAILQ_FOREACH_SAFE(tqpair, &tgroup->await_req, link, tqpair_tmp) {
 		num_events++;
-		rc = nvmf_tcp_sock_process(tqpair);
-
-		/* If there was a new socket error, disconnect */
-		if (spdk_unlikely(rc < 0)) {
-			nvmf_tcp_qpair_disconnect(tqpair);
-		}
+		nvmf_tcp_qpair_process(tqpair);
 	}
 
 	return num_events;
