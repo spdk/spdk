@@ -25,6 +25,7 @@ static void compaction_process_read_entry(void *arg);
 static void ftl_property_dump_cache_dev(struct spdk_ftl_dev *dev,
 					const struct ftl_property *property,
 					struct spdk_json_write_ctx *w);
+static void read_chunk_p2l_map(void *arg);
 
 static inline void
 nvc_validate_md(struct ftl_nv_cache *nv_cache,
@@ -841,7 +842,9 @@ read_chunk_p2l_map_cb(struct ftl_basic_rq *brq)
 
 	if (!brq->success) {
 #ifdef SPDK_FTL_RETRY_ON_ERROR
+		chunk_free_p2l_map(chunk);
 		read_chunk_p2l_map(chunk);
+		return;
 #else
 		ftl_abort();
 #endif
@@ -871,6 +874,7 @@ read_chunk_p2l_map(void *arg)
 			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 			struct spdk_bdev_io_wait_entry *wait_entry = &chunk->metadata_rq.io.bdev_io_wait;
 
+			chunk_free_p2l_map(chunk);
 			wait_entry->bdev = bdev;
 			wait_entry->cb_fn = read_chunk_p2l_map;
 			wait_entry->cb_arg = chunk;
