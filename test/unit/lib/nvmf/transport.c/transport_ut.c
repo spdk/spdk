@@ -4,7 +4,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk_internal/cunit.h"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "common/lib/test_iobuf.c"
 #include "nvmf/transport.c"
 #include "nvmf/rdma.c"
@@ -394,6 +394,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_transport_poll_group_create);
 	CU_ADD_TEST(suite, test_spdk_nvmf_transport_opts_init);
 	CU_ADD_TEST(suite, test_spdk_nvmf_transport_listen_ext);
+
+	allocate_threads(1);
+	set_thread(0);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

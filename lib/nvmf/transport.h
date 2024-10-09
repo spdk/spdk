@@ -23,6 +23,9 @@ struct spdk_nvmf_transport_poll_group *nvmf_transport_get_optimal_poll_group(
 
 void nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
+void nvmf_transport_poll_group_pause(struct spdk_nvmf_transport_poll_group *group);
+void nvmf_transport_poll_group_resume(struct spdk_nvmf_transport_poll_group *group);
+
 int nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 				  struct spdk_nvmf_qpair *qpair);
 

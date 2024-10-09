@@ -571,6 +571,26 @@ nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 	transport->ops->listener_discover(transport, trid, entry);
 }
 
+static int
+nvmf_tgroup_poll(void *arg)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup = arg;
+	int rc;
+
+	rc = nvmf_transport_poll_group_poll(tgroup);
+	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
+}
+
+static void
+nvmf_transport_poll_group_create_poller(struct spdk_nvmf_transport_poll_group *tgroup)
+{
+	char poller_name[SPDK_NVMF_TRSTRING_MAX_LEN + 32];
+
+	snprintf(poller_name, sizeof(poller_name), "nvmf_%s", tgroup->transport->ops->name);
+	tgroup->poller = spdk_poller_register_named(nvmf_tgroup_poll, tgroup, 0, poller_name);
+	spdk_poller_register_interrupt(tgroup->poller, NULL, NULL);
+}
+
 struct spdk_nvmf_transport_poll_group *
 nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 				 struct spdk_nvmf_poll_group *group)
@@ -587,6 +607,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		return NULL;
 	}
 	tgroup->transport = transport;
+	nvmf_transport_poll_group_create_poller(tgroup);
 
 	STAILQ_INIT(&tgroup->pending_buf_queue);
 
@@ -672,6 +693,8 @@ nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	transport = group->transport;
 
+	spdk_poller_unregister(&group->poller);
+
 	if (!STAILQ_EMPTY(&group->pending_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
 	}
@@ -691,6 +714,18 @@ nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		spdk_iobuf_channel_fini(ch);
 		free(ch);
 	}
+}
+
+void
+nvmf_transport_poll_group_pause(struct spdk_nvmf_transport_poll_group *tgroup)
+{
+	spdk_poller_unregister(&tgroup->poller);
+}
+
+void
+nvmf_transport_poll_group_resume(struct spdk_nvmf_transport_poll_group *tgroup)
+{
+	nvmf_transport_poll_group_create_poller(tgroup);
 }
 
 int

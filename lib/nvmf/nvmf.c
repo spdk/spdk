@@ -145,25 +145,6 @@ nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
 	qpair->state = state;
 }
 
-static int
-nvmf_poll_group_poll(void *ctx)
-{
-	struct spdk_nvmf_poll_group *group = ctx;
-	int rc;
-	int count = 0;
-	struct spdk_nvmf_transport_poll_group *tgroup;
-
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		rc = nvmf_transport_poll_group_poll(tgroup);
-		if (rc < 0) {
-			return SPDK_POLLER_BUSY;
-		}
-		count += rc;
-	}
-
-	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
-}
-
 /*
  * Reset and clean up the poll group (I/O channel code will actually free the
  * group).
@@ -196,8 +177,6 @@ nvmf_tgt_cleanup_poll_group(struct spdk_nvmf_poll_group *group)
 	}
 
 	free(group->sgroups);
-
-	spdk_poller_unregister(&group->poller);
 
 	if (group->destroy_cb_fn) {
 		group->destroy_cb_fn(group->destroy_cb_arg, 0);
@@ -265,9 +244,6 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&group->qpairs);
 	group->thread = thread;
 	pthread_mutex_init(&group->mutex, NULL);
-
-	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
-	spdk_poller_register_interrupt(group->poller, NULL, NULL);
 
 	SPDK_DTRACE_PROBE1_TICKS(nvmf_create_poll_group, spdk_thread_get_id(thread));
 
@@ -996,8 +972,11 @@ _nvmf_tgt_pause_polling(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	struct spdk_nvmf_transport_poll_group *tgroup;
 
-	spdk_poller_unregister(&group->poller);
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		nvmf_transport_poll_group_pause(tgroup);
+	}
 
 	spdk_for_each_channel_continue(i, 0);
 }
@@ -1055,9 +1034,11 @@ _nvmf_tgt_resume_polling(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	struct spdk_nvmf_transport_poll_group *tgroup;
 
-	assert(group->poller == NULL);
-	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		nvmf_transport_poll_group_resume(tgroup);
+	}
 
 	spdk_for_each_channel_continue(i, 0);
 }

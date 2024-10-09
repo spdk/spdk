@@ -208,7 +208,6 @@ test_nvmf_tgt_create_poll_group(void)
 	CU_ASSERT(TAILQ_FIRST(&tgt.poll_groups) == &group);
 	CU_ASSERT(tgt.num_poll_groups == 1);
 	CU_ASSERT(group.thread == thread);
-	CU_ASSERT(group.poller != NULL);
 
 	nvmf_tgt_destroy_poll_group((void *)&tgt, (void *)&group);
 	CU_ASSERT(TAILQ_EMPTY(&tgt.poll_groups));
