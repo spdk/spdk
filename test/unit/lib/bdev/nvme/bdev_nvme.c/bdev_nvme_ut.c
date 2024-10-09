@@ -43,6 +43,8 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_max_sges, uint16_t, (const struct spdk_nvme_ctrl
 DEFINE_STUB(spdk_nvme_ctrlr_get_numa_id, int32_t, (struct spdk_nvme_ctrlr *ctrlr),
 	    SPDK_ENV_NUMA_ID_ANY);
 
+DEFINE_STUB(spdk_nvme_qpair_get_id, uint16_t, (struct spdk_nvme_qpair *qpair), 0);
+
 DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
 DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
 
