@@ -59,6 +59,7 @@ struct vbdev_compress {
 	struct spdk_thread		*thread;	/* thread where base device is opened */
 	enum spdk_accel_comp_algo       comp_algo;      /* compression algorithm for compress bdev */
 	uint32_t                        comp_level;     /* compression algorithm level */
+	bool				init_failed;	/* compress bdev initialization failed */
 };
 static TAILQ_HEAD(, vbdev_compress) g_vbdev_comp = TAILQ_HEAD_INITIALIZER(g_vbdev_comp);
 
@@ -480,11 +481,17 @@ _vbdev_compress_destruct_cb(void *ctx)
 {
 	struct vbdev_compress *comp_bdev = ctx;
 
-	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
-	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 	/* Close the underlying bdev on its same opened thread. */
 	spdk_bdev_close(comp_bdev->base_desc);
 	comp_bdev->vol = NULL;
+	if (comp_bdev->init_failed) {
+		free(comp_bdev);
+		return;
+	}
+
+	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
+	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
+
 	if (comp_bdev->orphaned == false) {
 		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
 	} else {
@@ -521,11 +528,11 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 
 	comp_bdev->vol = NULL;
 	spdk_put_io_channel(comp_bdev->base_ch);
-	if (comp_bdev->orphaned == false) {
+	if (comp_bdev->init_failed || comp_bdev->orphaned) {
+		vbdev_compress_destruct_cb((void *)comp_bdev, 0);
+	} else {
 		spdk_bdev_unregister(&comp_bdev->comp_bdev, vbdev_compress_delete_done,
 				     comp_bdev->delete_ctx);
-	} else {
-		vbdev_compress_destruct_cb((void *)comp_bdev, 0);
 	}
 
 }
@@ -691,8 +698,37 @@ struct vbdev_init_reduce_ctx {
 };
 
 static void
-_vbdev_reduce_init_unload_cb(void *ctx, int reduce_errno)
+_cleanup_vol_unload_cb(void *ctx)
 {
+	struct vbdev_compress *comp_bdev = ctx;
+
+	assert(!comp_bdev->reduce_thread ||
+	       comp_bdev->reduce_thread == spdk_get_thread());
+
+	comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+
+	spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
+}
+
+static void
+init_vol_unload_cb(void *ctx, int reduce_errno)
+{
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
+
+	if (reduce_errno) {
+		SPDK_ERRLOG("Failed to unload vol, error %s\n", spdk_strerror(-reduce_errno));
+	}
+
+	pthread_mutex_lock(&comp_bdev->reduce_lock);
+	if (comp_bdev->reduce_thread && comp_bdev->reduce_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(comp_bdev->reduce_thread,
+				     _cleanup_vol_unload_cb, comp_bdev);
+		pthread_mutex_unlock(&comp_bdev->reduce_lock);
+	} else {
+		pthread_mutex_unlock(&comp_bdev->reduce_lock);
+
+		_cleanup_vol_unload_cb(comp_bdev);
+	}
 }
 
 static void
@@ -700,25 +736,31 @@ _vbdev_reduce_init_cb(void *ctx)
 {
 	struct vbdev_init_reduce_ctx *init_ctx = ctx;
 	struct vbdev_compress *comp_bdev = init_ctx->comp_bdev;
-	int rc;
+	int rc = init_ctx->status;
 
 	assert(comp_bdev->base_desc != NULL);
 
 	/* We're done with metadata operations */
 	spdk_put_io_channel(comp_bdev->base_ch);
 
-	if (comp_bdev->vol) {
-		rc = vbdev_compress_claim(comp_bdev);
-		if (rc == 0) {
-			init_ctx->cb_fn(init_ctx->cb_ctx, rc);
-			free(init_ctx);
-			return;
-		} else {
-			spdk_reduce_vol_unload(comp_bdev->vol, _vbdev_reduce_init_unload_cb, NULL);
-		}
-		init_ctx->cb_fn(init_ctx->cb_ctx, rc);
+	if (rc != 0) {
+		goto err;
 	}
 
+	assert(comp_bdev->vol != NULL);
+
+	rc = vbdev_compress_claim(comp_bdev);
+	if (rc != 0) {
+		comp_bdev->init_failed = true;
+		spdk_reduce_vol_unload(comp_bdev->vol, init_vol_unload_cb, comp_bdev);
+	}
+
+	init_ctx->cb_fn(init_ctx->cb_ctx, rc);
+	free(init_ctx);
+	return;
+
+err:
+	init_ctx->cb_fn(init_ctx->cb_ctx, rc);
 	/* Close the underlying bdev on its same opened thread. */
 	spdk_bdev_close(comp_bdev->base_desc);
 	free(comp_bdev);
@@ -740,7 +782,6 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	} else {
 		SPDK_ERRLOG("for vol %s, error %s\n",
 			    spdk_bdev_get_name(comp_bdev->base_bdev), spdk_strerror(-reduce_errno));
-		init_ctx->cb_fn(init_ctx->cb_ctx, reduce_errno);
 	}
 
 	init_ctx->status = reduce_errno;
