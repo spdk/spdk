@@ -1738,29 +1738,30 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 			/* We are in a full reset sequence. */
 			if (ctrlr_ch->connect_poller != NULL) {
 				/* qpair was failed to connect. Abort the reset sequence. */
-				NVME_CTRLR_DEBUGLOG(nvme_ctrlr,
-						    "qpair %p was failed to connect. abort the reset ctrlr sequence.\n",
-						    qpair);
+				NVME_CTRLR_INFOLOG(nvme_ctrlr,
+						   "qpair %p was failed to connect. abort the reset ctrlr sequence.\n",
+						   qpair);
 				spdk_poller_unregister(&ctrlr_ch->connect_poller);
 				status = -1;
 			} else {
 				/* qpair was completed to disconnect. Just move to the next ctrlr_channel. */
-				NVME_CTRLR_DEBUGLOG(nvme_ctrlr,
-						    "qpair %p was disconnected and freed in a reset ctrlr sequence.\n",
-						    qpair);
+				NVME_CTRLR_INFOLOG(nvme_ctrlr,
+						   "qpair %p was disconnected and freed in a reset ctrlr sequence.\n",
+						   qpair);
 				status = 0;
 			}
 			nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, status);
 			ctrlr_ch->reset_iter = NULL;
 		} else {
 			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
-			NVME_CTRLR_NOTICELOG(nvme_ctrlr, "qpair %p was disconnected and freed. reset controller.\n",
-					     qpair);
+			NVME_CTRLR_INFOLOG(nvme_ctrlr, "qpair %p was disconnected and freed. reset controller.\n",
+					   qpair);
 			bdev_nvme_failover_ctrlr(nvme_ctrlr);
 		}
 	} else {
 		/* In this case, ctrlr_channel is already deleted. */
-		NVME_CTRLR_DEBUGLOG(nvme_ctrlr, "qpair %p was disconnected and freed. delete nvme_qpair.\n", qpair);
+		NVME_CTRLR_INFOLOG(nvme_ctrlr, "qpair %p was disconnected and freed. delete nvme_qpair.\n",
+				   qpair);
 		nvme_qpair_delete(nvme_qpair);
 	}
 }
@@ -2525,7 +2526,7 @@ bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->dont_retry = true;
 
 	if (nvme_ctrlr->reconnect_is_delayed) {
-		NVME_CTRLR_DEBUGLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
+		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
 		msg_fn = bdev_nvme_reconnect_ctrlr_now;
 		nvme_ctrlr->reconnect_is_delayed = false;
 	} else {
