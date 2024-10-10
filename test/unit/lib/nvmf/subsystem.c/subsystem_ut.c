@@ -37,7 +37,7 @@ DEFINE_STUB(spdk_bdev_io_type_supported, bool,
 	    (struct spdk_bdev *bdev,
 	     enum spdk_bdev_io_type io_type), false);
 
-DEFINE_STUB_V(nvmf_update_discovery_log,
+DEFINE_STUB_V(spdk_nvmf_send_discovery_log_notice,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
 DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
 

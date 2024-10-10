@@ -7,7 +7,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 19
-SO_MINOR := 0
+SO_MINOR := 1
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
 	 subsystem.c nvmf.c nvmf_rpc.c transport.c tcp.c \

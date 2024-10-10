@@ -498,7 +498,7 @@ test_discovery_log_with_filters(void)
 	TAILQ_INSERT_HEAD(&tgt.referrals, &ref1, link);
 	TAILQ_INSERT_HEAD(&tgt.referrals, &ref2, link);
 
-	nvmf_update_discovery_log(&tgt, NULL);
+	spdk_nvmf_send_discovery_log_notice(&tgt, NULL);
 
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	memset(buffer, 0, sizeof(buffer));

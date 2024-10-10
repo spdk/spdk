@@ -61,7 +61,7 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req),
 	    -ENOSPC);
 
-DEFINE_STUB_V(nvmf_update_discovery_log,
+DEFINE_STUB_V(spdk_nvmf_send_discovery_log_notice,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
 
 DEFINE_STUB(rte_hash_create, struct rte_hash *, (const struct rte_hash_parameters *params),

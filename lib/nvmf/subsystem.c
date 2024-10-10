@@ -354,7 +354,7 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (spdk_nvmf_subsystem_is_discovery(listener->subsystem)) {
 		nvmf_tgt_update_mdns_prr(listener->subsystem->tgt);
 	}
-	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
+	spdk_nvmf_send_discovery_log_notice(listener->subsystem->tgt, NULL);
 	free(listener->ana_state);
 	spdk_bit_array_clear(subsystem->used_listener_ids, listener->id);
 	free(listener->opts.sock_impl);
@@ -1043,7 +1043,7 @@ spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 
 	if (!TAILQ_EMPTY(&subsystem->listeners)) {
-		nvmf_update_discovery_log(subsystem->tgt, hostnqn);
+		spdk_nvmf_send_discovery_log_notice(subsystem->tgt, hostnqn);
 	}
 
 	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
@@ -1097,7 +1097,7 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 	nvmf_subsystem_remove_host(subsystem, host);
 
 	if (!TAILQ_EMPTY(&subsystem->listeners)) {
-		nvmf_update_discovery_log(subsystem->tgt, hostnqn);
+		spdk_nvmf_send_discovery_log_notice(subsystem->tgt, hostnqn);
 	}
 
 	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
@@ -1251,7 +1251,7 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 	pthread_mutex_lock(&subsystem->mutex);
 	subsystem->allow_any_host = allow_any_host;
 	if (!TAILQ_EMPTY(&subsystem->listeners)) {
-		nvmf_update_discovery_log(subsystem->tgt, NULL);
+		spdk_nvmf_send_discovery_log_notice(subsystem->tgt, NULL);
 	}
 	pthread_mutex_unlock(&subsystem->mutex);
 
@@ -1403,7 +1403,7 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 		}
 	}
 
-	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
+	spdk_nvmf_send_discovery_log_notice(listener->subsystem->tgt, NULL);
 	listener->cb_fn(listener->cb_arg, status);
 }
 

@@ -104,7 +104,7 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 	spdk_strcpy_pad(referral->entry.traddr, trid->traddr, sizeof(referral->entry.traddr), ' ');
 
 	TAILQ_INSERT_HEAD(&tgt->referrals, referral, link);
-	nvmf_update_discovery_log(tgt, NULL);
+	spdk_nvmf_send_discovery_log_notice(tgt, NULL);
 
 	return 0;
 }
@@ -128,7 +128,7 @@ spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 	}
 
 	TAILQ_REMOVE(&tgt->referrals, referral, link);
-	nvmf_update_discovery_log(tgt, NULL);
+	spdk_nvmf_send_discovery_log_notice(tgt, NULL);
 
 	free(referral);
 

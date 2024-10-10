@@ -1567,6 +1567,20 @@ struct spdk_nvmf_ns_reservation_ops {
  */
 void spdk_nvmf_set_custom_ns_reservation_ops(const struct spdk_nvmf_ns_reservation_ops *ops);
 
+/**
+ * Send discovery log page change AEN.
+ *
+ * This sends discovery log page change notice to all the controllers in the
+ * target's discovery subsystem associated with host 'hostnqn'.
+ *
+ * \param tgt The target for which discovery log page change notice is to be
+ *            sent.
+ * \param hostnqn The hostnqn to which the notice will be sent. If NULL, all
+ *                the controllers associated with discovery subsystem will have
+ *                the discovery log page change notice.
+ */
+void spdk_nvmf_send_discovery_log_notice(struct spdk_nvmf_tgt *tgt, const char *hostnqn);
+
 #ifdef __cplusplus
 }
 #endif
