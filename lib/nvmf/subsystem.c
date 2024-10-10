@@ -262,7 +262,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->id = sid;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
-	subsystem->next_cntlid = 0;
+	subsystem->next_cntlid = 1;
 	subsystem->min_cntlid = NVMF_MIN_CNTLID;
 	subsystem->max_cntlid = NVMF_MAX_CNTLID;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
@@ -2514,8 +2514,8 @@ spdk_nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
 	}
 	subsystem->min_cntlid = min_cntlid;
 	subsystem->max_cntlid = max_cntlid;
-	if (subsystem->next_cntlid < min_cntlid || subsystem->next_cntlid > max_cntlid - 1) {
-		subsystem->next_cntlid = min_cntlid - 1;
+	if (subsystem->next_cntlid < min_cntlid || subsystem->next_cntlid > max_cntlid) {
+		subsystem->next_cntlid = min_cntlid;
 	}
 
 	return 0;
@@ -2525,21 +2525,24 @@ uint16_t
 nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
 	int count;
+	uint16_t cntlid;
 
 	/*
 	 * In the worst case, we might have to try all CNTLID values between min_cntlid and max_cntlid
 	 * before we find one that is unused (or find that all values are in use).
 	 */
 	for (count = 0; count < subsystem->max_cntlid - subsystem->min_cntlid + 1; count++) {
+		cntlid = subsystem->next_cntlid;
 		subsystem->next_cntlid++;
+
 		if (subsystem->next_cntlid > subsystem->max_cntlid) {
 			subsystem->next_cntlid = subsystem->min_cntlid;
 		}
 
 		/* Check if a controller with this cntlid currently exists. */
-		if (nvmf_subsystem_get_ctrlr(subsystem, subsystem->next_cntlid) == NULL) {
+		if (nvmf_subsystem_get_ctrlr(subsystem, cntlid) == NULL) {
 			/* Found unused cntlid */
-			return subsystem->next_cntlid;
+			return cntlid;
 		}
 	}
 
