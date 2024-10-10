@@ -40,7 +40,7 @@ struct spdk_fd_group;
  *
  * \param fgrp A pointer to return the initialized fgrp.
  *
- * \return 0 if success or -errno if failed
+ * \return 0 on success, negated errno on failure.
  */
 int spdk_fd_group_create(struct spdk_fd_group **fgrp);
 
@@ -61,8 +61,7 @@ void spdk_fd_group_destroy(struct spdk_fd_group *fgrp);
  * \param timeout Specifies the number of milliseconds that will block.
  * -1 causes indefinitely blocking; 0 causes immediately return.
  *
- * \return the number of processed events
- * or -errno if failed
+ * \return the number of events processed on success, negated errno on failure.
  */
 int spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout);
 
@@ -110,7 +109,7 @@ int spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *chi
  * \param arg Function argument for fn.
  * \param name Name of the event source.
  *
- * \return 0 if success or -errno if failed
+ * \return 0 on success, negated errno on failure.
  */
 int spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd,
 		      spdk_fd_fn fn, void *arg, const char *name);
@@ -128,7 +127,7 @@ int spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd,
  * \param arg Function argument for fn.
  * \param name Name of the event source.
  *
- * \return 0 if success or -errno if failed
+ * \return 0 on success, negated errno on failure.
  */
 int spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t events,
 				 spdk_fd_fn fn, void *arg,  const char *name);
@@ -157,7 +156,7 @@ void spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd);
  * \param efd File descriptor of the event source.
  * \param event_types The event notification types.
  *
- * \return 0 if success or -errno if failed
+ * \return 0 on success, negated errno on failure.
  */
 int spdk_fd_group_event_modify(struct spdk_fd_group *fgrp,
 			       int efd, int event_types);
@@ -173,8 +172,8 @@ struct epoll_event;
  * This function can only be called by the callback function, doing otherwise
  * results in undefined behavior.
  *
- * \param event pointer to an epoll(7) event to copy to
- * \return 0 on success, -errno on error
+ * \param event pointer to an epoll(7) event to copy to.
+ * \return 0 on success, negated errno on failure.
  */
 int spdk_fd_group_get_epoll_event(struct epoll_event *event);
 

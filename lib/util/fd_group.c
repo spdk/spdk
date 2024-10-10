@@ -30,8 +30,6 @@ enum event_handler_state {
 	EVENT_HANDLER_STATE_REMOVED,
 };
 
-/* file descriptor of the interrupt event */
-
 /* Taking "ehdlr" as short name for file descriptor handler of the interrupt event. */
 struct event_handler {
 	TAILQ_ENTRY(event_handler)	next;
@@ -94,7 +92,8 @@ _fd_group_del_all(int epfd, struct spdk_fd_group *grp)
 			}
 
 			ret = -errno;
-			SPDK_ERRLOG("Failed to remove fd %d from group: %s\n", ehdlr->fd, strerror(errno));
+			SPDK_ERRLOG("Failed to remove fd: %d from group: %s\n",
+				    ehdlr->fd, strerror(errno));
 			goto recover;
 		}
 	}
@@ -102,7 +101,7 @@ _fd_group_del_all(int epfd, struct spdk_fd_group *grp)
 	return 0;
 
 recover:
-	/* We failed to remove everything. Let's try to get everything put back into
+	/* We failed to remove everything. Let's try to put everything back into
 	 * the original group. */
 	TAILQ_FOREACH(ehdlr, &grp->event_handlers, next) {
 		epevent.events = ehdlr->events;
@@ -144,7 +143,8 @@ _fd_group_add_all(int epfd, struct spdk_fd_group *grp)
 			}
 
 			ret = -errno;
-			SPDK_ERRLOG("Failed to add fd to fd group: %s\n", strerror(errno));
+			SPDK_ERRLOG("Failed to add fd: %d to fd group: %s\n",
+				    ehdlr->fd, strerror(errno));
 			goto recover;
 		}
 	}
@@ -209,7 +209,7 @@ spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 	}
 
 	if (parent->parent) {
-		/* More than one layer of nesting is not currently supported */
+		/* More than one layer of nesting is currently not supported */
 		assert(false);
 		return -ENOTSUP;
 	}
@@ -275,6 +275,8 @@ spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t event
 	epevent.data.ptr = ehdlr;
 	rc = epoll_ctl(epfd, EPOLL_CTL_ADD, efd, &epevent);
 	if (rc < 0) {
+		SPDK_ERRLOG("Failed to add fd: %d to fd group(%p): %s\n",
+			    efd, fgrp, strerror(errno));
 		free(ehdlr);
 		return -errno;
 	}
@@ -293,7 +295,7 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 	int epfd;
 
 	if (fgrp == NULL || efd < 0) {
-		SPDK_ERRLOG("Invalid to remove efd(%d) from fd_group(%p).\n", efd, fgrp);
+		SPDK_ERRLOG("Cannot remove fd: %d from fd group(%p)\n", efd, fgrp);
 		assert(0);
 		return;
 	}
@@ -306,7 +308,7 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 	}
 
 	if (ehdlr == NULL) {
-		SPDK_ERRLOG("efd(%d) is not existed in fgrp(%p)\n", efd, fgrp);
+		SPDK_ERRLOG("fd: %d doesn't exist in fd group(%p)\n", efd, fgrp);
 		return;
 	}
 
@@ -320,7 +322,8 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 
 	rc = epoll_ctl(epfd, EPOLL_CTL_DEL, ehdlr->fd, NULL);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to delete the fd(%d) from the epoll group(%p)\n", efd, fgrp);
+		SPDK_ERRLOG("Failed to remove fd: %d from fd group(%p): %s\n",
+			    ehdlr->fd, fgrp, strerror(errno));
 		return;
 	}
 
@@ -407,7 +410,12 @@ void
 spdk_fd_group_destroy(struct spdk_fd_group *fgrp)
 {
 	if (fgrp == NULL || fgrp->num_fds > 0) {
-		SPDK_ERRLOG("Invalid fd_group(%p) to destroy.\n", fgrp);
+		if (!fgrp) {
+			SPDK_ERRLOG("fd_group doesn't exist.\n");
+		} else {
+			SPDK_ERRLOG("Cannot delete fd group(%p) as (%d) fds still registered to it.\n",
+				    fgrp, fgrp->num_fds);
+		}
 		assert(0);
 		return;
 	}
@@ -433,7 +441,7 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 			assert(false);
 			return -EINVAL;
 		} else {
-			SPDK_WARNLOG("Calling spdk_fd_group_wait on a group nested in another group will never find any events\n");
+			SPDK_WARNLOG("Calling spdk_fd_group_wait on a group nested in another group will never find any events.\n");
 			return 0;
 		}
 	}
@@ -441,7 +449,8 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 	nfds = epoll_wait(fgrp->epfd, events, totalfds, timeout);
 	if (nfds < 0) {
 		if (errno != EINTR) {
-			SPDK_ERRLOG("fgrp epoll_wait returns with fail. errno is %d\n", errno);
+			SPDK_ERRLOG("fd group(%p) epoll_wait failed: %s\n",
+				    fgrp, strerror(errno));
 		}
 
 		return -errno;
