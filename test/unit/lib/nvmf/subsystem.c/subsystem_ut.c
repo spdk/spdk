@@ -1999,8 +1999,8 @@ test_nvmf_ns_reservation_restore(void)
 	reg0 = TAILQ_FIRST(&ns.registrants);
 	reg1 = TAILQ_NEXT(reg0, link);
 	CU_ASSERT(ns.holder == reg0);
-	CU_ASSERT(reg0->rkey = 0xb);
-	CU_ASSERT(reg1->rkey = 0xc);
+	CU_ASSERT(reg0->rkey == 0xb);
+	CU_ASSERT(reg1->rkey == 0xc);
 
 	rc = nvmf_ns_reservation_clear_all_registrants(&ns);
 	CU_ASSERT(rc == 2);
@@ -2030,8 +2030,8 @@ test_nvmf_ns_reservation_restore(void)
 	CU_ASSERT(ns.holder == NULL);
 	reg0 = TAILQ_FIRST(&ns.registrants);
 	reg1 = TAILQ_NEXT(reg0, link);
-	CU_ASSERT(reg0->rkey = 0xb);
-	CU_ASSERT(reg1->rkey = 0xc);
+	CU_ASSERT(reg0->rkey == 0xb);
+	CU_ASSERT(reg1->rkey == 0xc);
 
 	rc = nvmf_ns_reservation_clear_all_registrants(&ns);
 	CU_ASSERT(rc == 2);

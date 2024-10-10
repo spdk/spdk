@@ -216,7 +216,7 @@ test_cuse_nvme_submit_io_read_write(void)
 				 block_size, md_size, user_io, in_bufsz, out_bufsz);
 	CU_ASSERT(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->req == req);
-	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
+	CU_ASSERT(g_ut_ctx->lba == user_io->slba);
 	CU_ASSERT(g_ut_ctx->lba_count == (uint32_t)(user_io->nblocks + 1));
 	CU_ASSERT(g_ut_ctx->data_len ==
 		  (int)((user_io->nblocks + 1) * block_size));
@@ -234,7 +234,7 @@ test_cuse_nvme_submit_io_read_write(void)
 				  block_size, md_size, user_io, in_bufsz, out_bufsz);
 	CU_ASSERT(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->req == req);
-	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
+	CU_ASSERT(g_ut_ctx->lba == user_io->slba);
 	CU_ASSERT(g_ut_ctx->lba_count == (uint32_t)(user_io->nblocks + 1));
 	CU_ASSERT(g_ut_ctx->data_len ==
 		  (int)((user_io->nblocks + 1) * block_size));
@@ -278,7 +278,7 @@ test_cuse_nvme_submit_io_read_write_with_md(void)
 				 block_size, md_size, user_io, in_bufsz, out_bufsz);
 	CU_ASSERT(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->req == req);
-	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
+	CU_ASSERT(g_ut_ctx->lba == user_io->slba);
 	CU_ASSERT(g_ut_ctx->lba_count == (uint32_t)(user_io->nblocks + 1));
 	CU_ASSERT(g_ut_ctx->data_len ==
 		  (int)((user_io->nblocks + 1) * block_size));
@@ -297,7 +297,7 @@ test_cuse_nvme_submit_io_read_write_with_md(void)
 				  block_size, md_size, user_io, in_bufsz, out_bufsz);
 	CU_ASSERT(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->req == req);
-	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
+	CU_ASSERT(g_ut_ctx->lba == user_io->slba);
 	CU_ASSERT(g_ut_ctx->lba_count == (uint32_t)(user_io->nblocks + 1));
 	CU_ASSERT(g_ut_ctx->data_len ==
 		  (int)((user_io->nblocks + 1) * block_size));
@@ -475,7 +475,7 @@ test_cuse_nvme_submit_io(void)
 	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_nsid == 1);
 	CU_ASSERT(g_ut_ctx->req == (void *)0xDEEACDFF);
-	CU_ASSERT(g_ut_ctx->lba = 1024);
+	CU_ASSERT(g_ut_ctx->lba == 1024);
 	CU_ASSERT(g_ut_ctx->lba_count == 2);
 	CU_ASSERT(g_ut_ctx->data_len == 2 * 4096);
 	CU_ASSERT(g_ut_ctx->data != NULL);
@@ -494,7 +494,7 @@ test_cuse_nvme_submit_io(void)
 	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_nsid == 1);
 	CU_ASSERT(g_ut_ctx->req == req);
-	CU_ASSERT(g_ut_ctx->lba = 1024);
+	CU_ASSERT(g_ut_ctx->lba == 1024);
 	CU_ASSERT(g_ut_ctx->lba_count == 2);
 	CU_ASSERT(g_ut_ctx->data_len == 2 * 4096);
 	CU_ASSERT(g_ut_ctx->data != NULL);

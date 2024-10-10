@@ -809,7 +809,7 @@ test_setup_compress_mbuf(void)
 	rc = _setup_compress_mbuf(exp_src_mbuf, &src_mbuf_added, &total_length,
 				  &src_iovs, src_iovcnt, &task);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(total_length = src_iovs.iov_len);
+	CU_ASSERT(total_length == src_iovs.iov_len);
 	CU_ASSERT(src_mbuf_added == 0);
 	CU_ASSERT(ut_total_rte_pktmbuf_attach_extbuf == 1);
 
@@ -827,7 +827,7 @@ test_setup_compress_mbuf(void)
 	rc = _setup_compress_mbuf(exp_src_mbuf, &src_mbuf_added, &total_length,
 				  &src_iovs, src_iovcnt, &task);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(total_length = src_iovs.iov_len);
+	CU_ASSERT(total_length == src_iovs.iov_len);
 	CU_ASSERT(src_mbuf_added == 0);
 	CU_ASSERT(ut_total_rte_pktmbuf_attach_extbuf == 2);
 
@@ -844,7 +844,7 @@ test_setup_compress_mbuf(void)
 	rc = _setup_compress_mbuf(exp_src_mbuf, &src_mbuf_added, &total_length,
 				  &src_iovs, src_iovcnt, &task);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(total_length = src_iovs.iov_len);
+	CU_ASSERT(total_length == src_iovs.iov_len);
 	CU_ASSERT(src_mbuf_added == 0);
 	CU_ASSERT(ut_total_rte_pktmbuf_attach_extbuf == 3);
 

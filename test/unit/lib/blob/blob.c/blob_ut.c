@@ -1682,7 +1682,7 @@ blob_rw_verify_iov_nomem(void)
 	req_count = bs_channel_get_req_count(channel);
 	spdk_blob_io_writev(blob, channel, iov_write, 3, 250, 10, blob_op_complete, NULL);
 	poll_threads();
-	CU_ASSERT(g_bserrno = -ENOMEM);
+	CU_ASSERT(g_bserrno == -ENOMEM);
 	CU_ASSERT(req_count == bs_channel_get_req_count(channel));
 	MOCK_CLEAR(calloc);
 

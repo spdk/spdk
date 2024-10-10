@@ -1431,7 +1431,7 @@ test_nvmf_rdma_resize_cq(void)
 
 	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(rpoller.num_cqe = 30);
+	CU_ASSERT(rpoller.num_cqe == 30);
 	CU_ASSERT(rpoller.required_num_wr == 18 + MAX_WR_PER_QP(rqpair.max_queue_depth));
 	CU_ASSERT(rpoller.required_num_wr > tnum_wr);
 	CU_ASSERT(rpoller.num_cqe > tnum_cqe);

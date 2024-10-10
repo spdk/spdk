@@ -2143,8 +2143,8 @@ test_multi_async_event_reqs(void)
 	/* Exceeding the SPDK_NVMF_MAX_ASYNC_EVENTS reports error */
 	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[4]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(ctrlr.nr_aer_reqs == SPDK_NVMF_MAX_ASYNC_EVENTS);
-	CU_ASSERT(rsp[4].nvme_cpl.status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC);
-	CU_ASSERT(rsp[4].nvme_cpl.status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED);
+	CU_ASSERT(rsp[4].nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp[4].nvme_cpl.status.sc == SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED);
 
 	/* Test if the aer_reqs keep continuous when abort a req in the middle */
 	CU_ASSERT(nvmf_qpair_abort_aer(&qpair, 2) == true);

@@ -515,7 +515,7 @@ test_data(void)
 	CU_ASSERT(rc == 1);
 
 	data = iovs[0].iov_base;
-	CU_ASSERT(*data = 'A');
+	CU_ASSERT(*data == 'A');
 
 	spdk_pipe_reader_advance(pipe, 1);
 

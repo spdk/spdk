@@ -633,7 +633,7 @@ test_nvmf_tcp_send_c2h_data(void)
 
 	c2h_data = &pdu.hdr.c2h_data;
 	CU_ASSERT(c2h_data->datao == 0);
-	CU_ASSERT(c2h_data->datal = 300);
+	CU_ASSERT(c2h_data->datal == 300);
 	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + 300);
 	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU);
 	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS);

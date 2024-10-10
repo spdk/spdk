@@ -364,7 +364,7 @@ test_get_dif_ctx(void)
 
 	ret = nvmf_bdev_ctrlr_get_dif_ctx(&bdev, &cmd, &dif_ctx);
 	CU_ASSERT(ret == true);
-	CU_ASSERT(dif_ctx.block_size = 520);
+	CU_ASSERT(dif_ctx.block_size == 520);
 	CU_ASSERT(dif_ctx.md_size == 8);
 	CU_ASSERT(dif_ctx.init_ref_tag == 0x90ABCDEF);
 }

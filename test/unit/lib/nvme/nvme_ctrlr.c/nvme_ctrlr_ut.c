@@ -2368,7 +2368,7 @@ test_spdk_nvme_ctrlr_set_trid(void)
 	ctrlr.is_failed = true;
 	new_trid.trtype = SPDK_NVME_TRANSPORT_TCP;
 	CU_ASSERT(spdk_nvme_ctrlr_set_trid(&ctrlr, &new_trid) == -EINVAL);
-	CU_ASSERT(ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(ctrlr.trid.trtype == SPDK_NVME_TRANSPORT_RDMA);
 
 	new_trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	snprintf(new_trid.subnqn, SPDK_NVMF_NQN_MAX_LEN, "%s", "nqn.2016-06.io.spdk:cnode2");

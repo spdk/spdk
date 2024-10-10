@@ -4687,7 +4687,7 @@ test_retry_io_if_ana_state_is_updating(void)
 
 	poll_threads();
 	CU_ASSERT(bdev_io1->internal.f.in_submit_request == false);
-	CU_ASSERT(bdev_io1->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(bdev_io1->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/* If ANA state of namespace is inaccessible, I/O should be queued. */
 	nvme_ns->ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
@@ -5522,7 +5522,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 
 	poll_threads();
 	CU_ASSERT(bdev_io1->internal.f.in_submit_request == false);
-	CU_ASSERT(bdev_io1->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(bdev_io1->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/* If qpair is disconnected, it is freed and then reconnected via resetting
 	 * the corresponding nvme_ctrlr. I/O should be queued if it is submitted
@@ -6861,7 +6861,7 @@ test_retry_io_to_same_path(void)
 
 	poll_threads();
 	CU_ASSERT(bdev_io->internal.f.in_submit_request == false);
-	CU_ASSERT(bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/* The 2nd I/O should be submitted to io_path2 because the path selection
 	 * policy is round-robin.
@@ -6945,7 +6945,7 @@ test_retry_io_to_same_path(void)
 
 	/* The 2nd I/O should succeed by io_path1. */
 	CU_ASSERT(bdev_io->internal.f.in_submit_request == false);
-	CU_ASSERT(bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(bio->io_path == io_path1);
 
 	free(bdev_io);

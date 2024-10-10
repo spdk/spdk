@@ -155,7 +155,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 					   (page_align - 1)));
 	CU_ASSERT(pqpair->sq_tdbl == (void *)0xF7000008);
 	CU_ASSERT(pqpair->cq_hdbl == (void *)0xF700000C);
-	CU_ASSERT(pqpair->flags.phase = 1);
+	CU_ASSERT(pqpair->flags.phase == 1);
 	CU_ASSERT(pqpair->tr != NULL);
 	CU_ASSERT(pqpair->tr == TAILQ_FIRST(&pqpair->free_tr));
 	CU_ASSERT(pctrlr.cmb.current_offset == (uintptr_t)pqpair->cmd + (pqpair->num_entries * sizeof(
@@ -184,7 +184,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	CU_ASSERT(pqpair->cmd_bus_addr == 0xDEADBEEF);
 	CU_ASSERT(pqpair->sq_tdbl == (void *)0xF7000008);
 	CU_ASSERT(pqpair->cq_hdbl == (void *)0xF700000C);
-	CU_ASSERT(pqpair->flags.phase = 1);
+	CU_ASSERT(pqpair->flags.phase == 1);
 	CU_ASSERT(pqpair->tr != NULL);
 	CU_ASSERT(pqpair->tr == TAILQ_FIRST(&pqpair->free_tr));
 	nvme_pcie_qpair_destroy(&pqpair->qpair);
@@ -209,7 +209,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	CU_ASSERT(pqpair->cmd_bus_addr == 0xDAADBEEF);
 	CU_ASSERT(pqpair->sq_tdbl == (void *)0xF7000008);
 	CU_ASSERT(pqpair->cq_hdbl == (void *)0xF700000c);
-	CU_ASSERT(pqpair->flags.phase = 1);
+	CU_ASSERT(pqpair->flags.phase == 1);
 	CU_ASSERT(pqpair->tr != NULL);
 	CU_ASSERT(pqpair->tr == TAILQ_FIRST(&pqpair->free_tr));
 	nvme_pcie_qpair_destroy(&pqpair->qpair);
@@ -253,7 +253,7 @@ test_nvme_pcie_ctrlr_cmd_create_delete_io_queue(void)
 	CU_ASSERT(req.cmd.cdw10_bits.create_io_q.qsize == 0);
 	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.pc == 1);
 	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
-	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.cqid = 1);
+	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.cqid == 1);
 	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0xDDADBEEF);
 	CU_ASSERT(STAILQ_EMPTY(&ctrlr.adminq->free_req));
 
@@ -343,7 +343,7 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qsize == 0);
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.pc == 1);
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
-	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid == 1);
 	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
 
 	pqpair.qpair.state = NVME_QPAIR_CONNECTING;
@@ -397,7 +397,7 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qsize == 0);
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.pc == 1);
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
-	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid == 1);
 	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
 
 	pqpair.qpair.state = NVME_QPAIR_CONNECTING;

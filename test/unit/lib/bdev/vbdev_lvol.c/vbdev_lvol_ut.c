@@ -1738,19 +1738,19 @@ ut_lvol_read_write(void)
 	g_io->u.bdev.num_blocks = 20;
 
 	lvol_read(g_ch, g_io);
-	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	lvol_write(g_lvol, g_ch, g_io);
-	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	g_ext_api_called = false;
 	lvol_read(g_ch, g_io);
-	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_ext_api_called == true);
 	g_ext_api_called = false;
 
 	lvol_write(g_lvol, g_ch, g_io);
-	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_ext_api_called == true);
 	g_ext_api_called = false;
 
