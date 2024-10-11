@@ -1,0 +1,14 @@
+8,13d7
+< #include <rte_bus.h>
+< #include <rte_compat.h>
+< #include <rte_dev.h>
+< #include <rte_eal.h>
+< #include <rte_tailq.h>
+< 
+16a11,16
+> 
+> #include "rte_bus.h"
+> #include <rte_compat.h>
+> #include "rte_dev.h"
+> #include <rte_eal.h>
+> #include <rte_tailq.h>

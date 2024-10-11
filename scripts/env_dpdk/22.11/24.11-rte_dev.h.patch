@@ -1,0 +1,76 @@
+15a16,19
+> #ifdef __cplusplus
+> extern "C" {
+> #endif
+> 
+19a24
+> #include <rte_compat.h>
+22,25d26
+< #ifdef __cplusplus
+< extern "C" {
+< #endif
+< 
+43a45,57
+> /* Macros to check for invalid function pointers */
+> #define RTE_FUNC_PTR_OR_ERR_RET(func, retval) RTE_DEPRECATED(RTE_FUNC_PTR_OR_ERR_RET) \
+> do { \
+> 	if ((func) == NULL) \
+> 		return retval; \
+> } while (0)
+> 
+> #define RTE_FUNC_PTR_OR_RET(func) RTE_DEPRECATED(RTE_FUNC_PTR_OR_RET) \
+> do { \
+> 	if ((func) == NULL) \
+> 		return; \
+> } while (0)
+> 
+342a357
+> __rte_experimental
+361a377
+> __rte_experimental
+371a388,390
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+386a406
+> __rte_experimental
+392a413,415
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+407a431
+> __rte_experimental
+413a438,440
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+421a449
+> __rte_experimental
+426a455,457
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+432a464
+> __rte_experimental
+436a469,471
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+442a478
+> __rte_experimental
+446a483,485
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+452a492
+> __rte_experimental
+456a497,499
+>  * @warning
+>  * @b EXPERIMENTAL: this API may change without prior notice
+>  *
+462a506
+> __rte_experimental
+485a530
+> __rte_experimental
+508a554
+> __rte_experimental

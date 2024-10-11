@@ -1,0 +1,14 @@
+7a8,11
+> #ifdef __cplusplus
+> extern "C" {
+> #endif
+> 
+9c13
+< #include <rte_dev.h>
+---
+> #include "rte_dev.h"
+31a36,39
+> 
+> #ifdef __cplusplus
+> }
+> #endif

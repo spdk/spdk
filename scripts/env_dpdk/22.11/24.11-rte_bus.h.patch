@@ -1,0 +1,10 @@
+17,20d16
+< #include <stdio.h>
+< 
+< #include <rte_eal.h>
+< 
+23a20,23
+> 
+> #include <stdio.h>
+> 
+> #include <rte_eal.h>
