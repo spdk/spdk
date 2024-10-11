@@ -326,7 +326,7 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 	}
 
 	CU_ASSERT(expected_io->offset == bdev_io->u.bdev.offset_blocks);
-	CU_ASSERT(expected_io->length = bdev_io->u.bdev.num_blocks);
+	CU_ASSERT(expected_io->length == bdev_io->u.bdev.num_blocks);
 	if (expected_io->type == SPDK_BDEV_IO_TYPE_COPY) {
 		CU_ASSERT(expected_io->src_offset == bdev_io->u.bdev.copy.src_offset_blocks);
 	}
@@ -2005,7 +2005,7 @@ bdev_io_boundary_split_test(void)
 	 * 0x4200 bytes for the IO.
 	 */
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, SPDK_BDEV_IO_NUM_CHILD_IOV,
-					   SPDK_BDEV_IO_NUM_CHILD_IOV, 2);
+					   1, 2);
 	/* position 30 picked up the remaining bytes to the next boundary */
 	ut_expected_io_set_iov(expected_io, 0,
 			       (void *)(iov[SPDK_BDEV_IO_NUM_CHILD_IOV - 2].iov_base + 0x1e4), 0x2e);
@@ -2566,7 +2566,7 @@ bdev_io_max_size_and_segment_split_test(void)
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_FLUSH, 15, 4, 0);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
-	rc = spdk_bdev_flush_blocks(desc, io_ch, 15, 2, io_done, NULL);
+	rc = spdk_bdev_flush_blocks(desc, io_ch, 15, 4, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
