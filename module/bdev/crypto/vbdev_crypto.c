@@ -673,6 +673,18 @@ vbdev_crypto_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 	}
 }
 
+static void
+vbdev_crypto_base_bdev_resize_cb(struct spdk_bdev *bdev_find)
+{
+	struct vbdev_crypto *crypto_bdev;
+
+	TAILQ_FOREACH(crypto_bdev, &g_vbdev_crypto, link) {
+		if (bdev_find == crypto_bdev->base_bdev) {
+			spdk_bdev_notify_blockcnt_change(&crypto_bdev->crypto_bdev, bdev_find->blockcnt);
+		}
+	}
+}
+
 /* Called when the underlying base bdev triggers asynchronous event such as bdev removal. */
 static void
 vbdev_crypto_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
@@ -681,6 +693,9 @@ vbdev_crypto_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 		vbdev_crypto_base_bdev_hotremove_cb(bdev);
+		break;
+	case SPDK_BDEV_EVENT_RESIZE:
+		vbdev_crypto_base_bdev_resize_cb(bdev);
 		break;
 	default:
 		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);

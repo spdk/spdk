@@ -80,6 +80,7 @@ DEFINE_STUB(spdk_accel_get_buf_align, uint8_t,
 DEFINE_STUB(spdk_accel_get_opc_memory_domains, int, (enum spdk_accel_opcode opcode,
 		struct spdk_memory_domain **domains,
 		int array_size), 0);
+DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
 
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_bdev_io *g_base_io;
