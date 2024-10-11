@@ -35,7 +35,11 @@ calculate_busy_pct(struct spdk_scheduler_core_info *core)
 	uint64_t total_tsc;
 
 	total_tsc = core->current_busy_tsc + core->current_idle_tsc;
-	return core->current_busy_tsc * 100 / total_tsc;
+	if (total_tsc == 0) {
+		return 0;
+	} else {
+		return core->current_busy_tsc * 100 / total_tsc;
+	}
 }
 
 struct check_sibling_ctx {
