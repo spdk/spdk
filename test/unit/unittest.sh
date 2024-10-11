@@ -143,7 +143,9 @@ function unittest_util() {
 	$valgrind $testdir/lib/util/iov.c/iov_ut
 	$valgrind $testdir/lib/util/math.c/math_ut
 	$valgrind $testdir/lib/util/pipe.c/pipe_ut
-	$valgrind $testdir/lib/util/xor.c/xor_ut
+	if [ $(uname -s) = Linux ]; then
+		$valgrind $testdir/lib/util/fd_group.c/fd_group_ut
+	fi
 }
 
 function unittest_fsdev() {
