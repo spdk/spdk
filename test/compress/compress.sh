@@ -98,7 +98,7 @@ run_bdevperf 32 $((40 * 1024)) 3 "unmap" 512
 run_bdevperf 32 $((40 * 1024)) 3 "unmap" 4096
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_bdevperf 64 16384 30
+	run_bdevperf 64 16384 30 "verify"
 
 	# run perf on nvmf target w/compressed vols
 	export TEST_TRANSPORT=tcp
