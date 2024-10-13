@@ -499,6 +499,39 @@ lo_releasedir(struct spdk_io_channel *ch, struct spdk_fsdev_io *fsdev_io)
 }
 
 static int
+fsdev_aio_negotiate_opts(void *ctx, struct spdk_fsdev_open_opts *opts)
+{
+	struct aio_fsdev *vfsdev = ctx;
+
+	assert(opts != 0);
+	assert(opts->opts_size != 0);
+
+	UNUSED(vfsdev);
+
+	if (opts->opts_size > offsetof(struct spdk_fsdev_open_opts, max_write)) {
+		/* Set the value the aio fsdev was created with */
+		opts->max_write = vfsdev->fsdev.opts.max_write;
+	}
+
+	if (opts->opts_size > offsetof(struct spdk_fsdev_open_opts, writeback_cache_enabled)) {
+		if (vfsdev->fsdev.opts.writeback_cache_enabled) {
+			/* The writeback_cache_enabled was enabled upon creation => we follow the opts */
+			vfsdev->fsdev.opts.writeback_cache_enabled = opts->writeback_cache_enabled;
+		} else {
+			/* The writeback_cache_enabled was disabled upon creation => we reflect it in the opts */
+			opts->writeback_cache_enabled = false;
+		}
+	}
+
+	/* The AIO doesn't apply any additional restrictions, so we just accept the requested opts */
+	SPDK_DEBUGLOG(fsdev_aio,
+		      "aio filesystem %s: opts updated: max_write=%" PRIu32 ", writeback_cache=%" PRIu8 "\n",
+		      vfsdev->fsdev.name, vfsdev->fsdev.opts.max_write, vfsdev->fsdev.opts.writeback_cache_enabled);
+
+	return 0;
+}
+
+static int
 lo_do_lookup(struct aio_fsdev *vfsdev, struct spdk_fsdev_file_object *parent_fobject,
 	     const char *name, struct spdk_fsdev_file_object **pfobject,
 	     struct spdk_fsdev_file_attr *attr)
@@ -2227,39 +2260,6 @@ static struct spdk_io_channel *
 fsdev_aio_get_io_channel(void *ctx)
 {
 	return spdk_get_io_channel(&g_aio_fsdev_head);
-}
-
-static int
-fsdev_aio_negotiate_opts(void *ctx, struct spdk_fsdev_open_opts *opts)
-{
-	struct aio_fsdev *vfsdev = ctx;
-
-	assert(opts != 0);
-	assert(opts->opts_size != 0);
-
-	UNUSED(vfsdev);
-
-	if (opts->opts_size > offsetof(struct spdk_fsdev_open_opts, max_write)) {
-		/* Set the value the aio fsdev was created with */
-		opts->max_write = vfsdev->fsdev.opts.max_write;
-	}
-
-	if (opts->opts_size > offsetof(struct spdk_fsdev_open_opts, writeback_cache_enabled)) {
-		if (vfsdev->fsdev.opts.writeback_cache_enabled) {
-			/* The writeback_cache_enabled was enabled upon creation => we follow the opts */
-			vfsdev->fsdev.opts.writeback_cache_enabled = opts->writeback_cache_enabled;
-		} else {
-			/* The writeback_cache_enabled was disabled upon creation => we reflect it in the opts */
-			opts->writeback_cache_enabled = false;
-		}
-	}
-
-	/* The AIO doesn't apply any additional restrictions, so we just accept the requested opts */
-	SPDK_DEBUGLOG(fsdev_aio,
-		      "aio filesystem %s: opts updated: max_write=%" PRIu32 ", writeback_cache=%" PRIu8 "\n",
-		      vfsdev->fsdev.name, vfsdev->fsdev.opts.max_write, vfsdev->fsdev.opts.writeback_cache_enabled);
-
-	return 0;
 }
 
 static void
