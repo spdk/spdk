@@ -13,6 +13,12 @@
 		usr_cb_fn(_fsdev_io->internal.usr_cb_arg, ch, _fsdev_io->internal.status, ## __VA_ARGS__); \
 	} while (0)
 
+#define CALL_USR_NO_STATUS_CLB(_fsdev_io, ch, type, ...) \
+	do { \
+		type *usr_cb_fn = _fsdev_io->internal.usr_cb_fn; \
+		usr_cb_fn(_fsdev_io->internal.usr_cb_arg, ch, ## __VA_ARGS__); \
+	} while (0)
+
 static struct spdk_fsdev_io *
 fsdev_io_get_and_fill(struct spdk_fsdev_desc *desc, struct spdk_io_channel *ch, uint64_t unique,
 		      void *usr_cb_fn, void *usr_cb_arg, spdk_fsdev_io_completion_cb cb_fn, void *cb_arg,
@@ -45,6 +51,63 @@ static inline void
 fsdev_io_free(struct spdk_fsdev_io *fsdev_io)
 {
 	spdk_fsdev_free_io(fsdev_io);
+}
+
+static void
+_spdk_fsdev_mount_cb(struct spdk_fsdev_io *fsdev_io, void *cb_arg)
+{
+	struct spdk_io_channel *ch = cb_arg;
+
+	CALL_USR_CLB(fsdev_io, ch, spdk_fsdev_mount_cpl_cb, &fsdev_io->u_out.mount.opts,
+		     fsdev_io->u_out.mount.root_fobject);
+
+	fsdev_io_free(fsdev_io);
+}
+
+int
+spdk_fsdev_mount(struct spdk_fsdev_desc *desc, struct spdk_io_channel *ch,
+		 uint64_t unique, const struct spdk_fsdev_mount_opts *opts,
+		 spdk_fsdev_mount_cpl_cb cb_fn, void *cb_arg)
+{
+	struct spdk_fsdev_io *fsdev_io;
+
+	fsdev_io = fsdev_io_get_and_fill(desc, ch, unique, cb_fn, cb_arg, _spdk_fsdev_mount_cb, ch,
+					 SPDK_FSDEV_IO_MOUNT);
+	if (!fsdev_io) {
+		return -ENOBUFS;
+	}
+
+	fsdev_io->u_in.mount.opts = *opts;
+
+	fsdev_io_submit(fsdev_io);
+	return 0;
+}
+
+static void
+_spdk_fsdev_umount_cb(struct spdk_fsdev_io *fsdev_io, void *cb_arg)
+{
+	struct spdk_io_channel *ch = cb_arg;
+
+	CALL_USR_NO_STATUS_CLB(fsdev_io, ch, spdk_fsdev_umount_cpl_cb);
+
+	fsdev_io_free(fsdev_io);
+}
+
+int
+spdk_fsdev_umount(struct spdk_fsdev_desc *desc, struct spdk_io_channel *ch,
+		  uint64_t unique, spdk_fsdev_umount_cpl_cb cb_fn, void *cb_arg)
+{
+	struct spdk_fsdev_io *fsdev_io;
+
+	fsdev_io = fsdev_io_get_and_fill(desc, ch, unique, cb_fn, cb_arg, _spdk_fsdev_umount_cb, ch,
+					 SPDK_FSDEV_IO_UMOUNT);
+	if (!fsdev_io) {
+		return -ENOBUFS;
+	}
+
+	fsdev_io_submit(fsdev_io);
+	return 0;
+
 }
 
 static void

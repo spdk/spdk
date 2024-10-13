@@ -21,6 +21,8 @@
 	spdk_fsdev_get_memory_domains;
 	spdk_fsdev_init;
 	spdk_fsdev_cleanup;
+	spdk_fsdev_mount;
+	spdk_fsdev_umount;
 	spdk_fsdev_lookup;
 	spdk_fsdev_forget;
 	spdk_fsdev_getattr;

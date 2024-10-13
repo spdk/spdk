@@ -72,10 +72,10 @@ struct spdk_fsdev_opts {
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_fsdev_opts) == 12, "Incorrect size");
 
-/** fsdev device options */
-struct spdk_fsdev_open_opts {
+/** fsdev mount options */
+struct spdk_fsdev_mount_opts {
 	/**
-	 * The size of spdk_fsdev_open_opts according to the caller of this library is used for ABI
+	 * The size of spdk_fsdev_mount_opts according to the caller of this library is used for ABI
 	 * compatibility.  The library uses this field to know how many fields in this
 	 * structure are valid. And the library will populate any remaining fields with default values.
 	 * New added fields should be put at the end of the struct.
@@ -99,7 +99,7 @@ struct spdk_fsdev_open_opts {
 	uint8_t writeback_cache_enabled;
 
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_fsdev_open_opts) == 9, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_fsdev_mount_opts) == 9, "Incorrect size");
 
 /**
  * Structure with optional fsdev IO parameters
@@ -180,12 +180,11 @@ const char *spdk_fsdev_get_module_name(const struct spdk_fsdev *fsdev);
  * the descriptor will have to be manually closed to make the fsdev unregister
  * proceed.
  * \param event_ctx param for event_cb.
- * \param opts optional open opts.
  * \param desc output parameter for the descriptor when operation is successful
  * \return 0 if operation is successful, suitable errno value otherwise
  */
 int spdk_fsdev_open(const char *fsdev_name, spdk_fsdev_event_cb_t event_cb,
-		    void *event_ctx, struct spdk_fsdev_open_opts *opts, struct spdk_fsdev_desc **desc);
+		    void *event_ctx, struct spdk_fsdev_desc **desc);
 
 /**
  * Close a previously opened filesystem device.
@@ -305,6 +304,67 @@ struct spdk_fsdev_file_statfs {
 	uint32_t namelen;
 	uint32_t frsize;
 };
+
+/**
+ * Mount operation completion callback.
+ *
+ * \param cb_arg Context passed to the corresponding spdk_fsdev_ API
+ * \param ch I/O channel.
+ * \param status Operation status, 0 on success or error code otherwise.
+ * \param opts Result options.
+ * \param root_fobject Root file object
+ */
+typedef void (spdk_fsdev_mount_cpl_cb)(void *cb_arg, struct spdk_io_channel *ch, int status,
+				       const struct spdk_fsdev_mount_opts *opts,
+				       struct spdk_fsdev_file_object *root_fobject);
+
+/**
+ * Mount the filesystem.
+ *
+ * \param desc Filesystem device descriptor.
+ * \param ch I/O channel.
+ * \param unique Unique I/O id.
+ * \param opts Requested options.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Context to be passed to the completion callback.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *
+ * Note: the \p opts are the subject of negotiation. An API user provides a desired \p opts here
+ * and gets a result \p opts in the \p cb_fn. The result \p opts are filled by the underlying
+ * fsdev module which may agree or reduce (but not expand) the desired features set.
+ */
+int spdk_fsdev_mount(struct spdk_fsdev_desc *desc, struct spdk_io_channel *ch,
+		     uint64_t unique, const struct spdk_fsdev_mount_opts *opts,
+		     spdk_fsdev_mount_cpl_cb cb_fn, void *cb_arg);
+
+/**
+ * Umount operation completion callback.
+ *
+ * \param cb_arg Context passed to the corresponding spdk_fsdev_ API
+ * \param ch I/O channel.
+ */
+typedef void (spdk_fsdev_umount_cpl_cb)(void *cb_arg, struct spdk_io_channel *ch);
+
+/**
+ * Unmount the filesystem.
+ *
+ * \param desc Filesystem device descriptor.
+ * \param ch I/O channel.
+ * \param unique Unique I/O id.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Context to be passed to the completion callback.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *
+ * NOTE: on unmount the lookup count for all fobjects implicitly drops to zero.
+ */
+int spdk_fsdev_umount(struct spdk_fsdev_desc *desc, struct spdk_io_channel *ch,
+		      uint64_t unique, spdk_fsdev_umount_cpl_cb cb_fn, void *cb_arg);
 
 /**
  * Lookup file operation completion callback

@@ -533,7 +533,7 @@ hello_start(void *arg1)
 	 */
 	SPDK_NOTICELOG("Opening the fsdev %s\n", hello_context->fsdev_name);
 	rc = spdk_fsdev_open(hello_context->fsdev_name,
-			     hello_fsdev_event_cb, NULL, NULL,
+			     hello_fsdev_event_cb, NULL,
 			     &hello_context->fsdev_desc);
 	if (rc) {
 		SPDK_ERRLOG("Could not open fsdev: %s\n", hello_context->fsdev_name);

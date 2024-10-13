@@ -275,7 +275,6 @@ ut_fsdev_destruct(void *ctx)
 	return 0;
 }
 
-static int ut_negotiate_opts_desired_err;
 static struct spdk_fsdev_file_attr ut_fsdev_attr;
 static struct spdk_fsdev_file_object ut_fsdev_fobject;
 static struct iovec ut_iov[5];
@@ -285,6 +284,7 @@ static bool ut_listxattr_size_only;
 static uint64_t ut_readdir_offset;
 static uint64_t ut_readdir_num_entries;
 static uint64_t ut_readdir_num_entry_cb_calls;
+static struct spdk_fsdev_mount_opts ut_mount_opts;
 
 static void
 ut_fsdev_submit_request(struct spdk_io_channel *_ch, struct spdk_fsdev_io *fsdev_io)
@@ -309,6 +309,14 @@ ut_fsdev_submit_request(struct spdk_io_channel *_ch, struct spdk_fsdev_io *fsdev
 	CU_ASSERT(ut_call_record_get_current_param_count() == UT_SUBMIT_IO_NUM_COMMON_PARAMS);
 
 	switch (type) {
+	case SPDK_FSDEV_IO_MOUNT:
+		ut_call_record_param_hash(&fsdev_io->u_in.mount.opts, sizeof(fsdev_io->u_in.mount.opts));
+		fsdev_io->u_out.mount.root_fobject = UT_FOBJECT;
+		fsdev_io->u_out.mount.opts.opts_size = fsdev_io->u_in.mount.opts.opts_size;
+		fsdev_io->u_out.mount.opts.max_write = fsdev_io->u_in.mount.opts.max_write / 2;
+		fsdev_io->u_out.mount.opts.writeback_cache_enabled =
+			!fsdev_io->u_in.mount.opts.writeback_cache_enabled;
+		break;
 	case SPDK_FSDEV_IO_LOOKUP:
 		ut_call_record_param_str(fsdev_io->u_in.lookup.name);
 		ut_call_record_param_ptr(fsdev_io->u_in.lookup.parent_fobject);
@@ -557,22 +565,6 @@ ut_fsdev_get_io_channel(void *ctx)
 	return spdk_get_io_channel(&g_call_list);
 }
 
-static int
-ut_fsdev_negotiate_opts(void *ctx, struct spdk_fsdev_open_opts *opts)
-{
-	ut_call_record_begin(ut_fsdev_negotiate_opts);
-	ut_call_record_param_ptr(ctx);
-	ut_call_record_param_ptr(opts);
-	ut_call_record_end();
-
-	if (!ut_negotiate_opts_desired_err) {
-		opts->max_write = opts->max_write / 2;
-		opts->writeback_cache_enabled = !opts->writeback_cache_enabled;
-	}
-
-	return ut_negotiate_opts_desired_err;
-}
-
 static void
 ut_fsdev_write_config_json(struct spdk_fsdev *fsdev, struct spdk_json_write_ctx *w)
 {
@@ -590,7 +582,6 @@ static const struct spdk_fsdev_fn_table ut_fdev_fn_table = {
 	.destruct		= ut_fsdev_destruct,
 	.submit_request		= ut_fsdev_submit_request,
 	.get_io_channel		= ut_fsdev_get_io_channel,
-	.negotiate_opts		= ut_fsdev_negotiate_opts,
 	.write_config_json	= ut_fsdev_write_config_json,
 	.get_memory_domains	= ut_fsdev_get_memory_domains,
 };
@@ -719,11 +710,10 @@ fsdev_event_cb(enum spdk_fsdev_event_type type, struct spdk_fsdev *fsdev,
 }
 
 static void
-ut_fsdev_test_open_close(bool with_opts, bool opts_negotiation_fails)
+ut_fsdev_test_open_close(void)
 {
 	struct ut_fsdev *utfsdev;
 	struct spdk_fsdev_desc *fsdev_desc;
-	struct spdk_fsdev_open_opts opts, *popts = NULL;
 	int rc;
 
 	utfsdev = ut_fsdev_create("utfsdev0");
@@ -732,63 +722,17 @@ ut_fsdev_test_open_close(bool with_opts, bool opts_negotiation_fails)
 	CU_ASSERT(!strcmp(spdk_fsdev_get_module_name(&utfsdev->fsdev), ut_fsdev_module.name));
 	CU_ASSERT(!strcmp(spdk_fsdev_get_name(&utfsdev->fsdev), "utfsdev0"));
 
-	if (with_opts) {
-		memset(&opts, 0, sizeof(opts));
-		opts.opts_size = sizeof(opts);
-		opts.max_write = UINT32_MAX;
-		opts.writeback_cache_enabled = true;
-		popts = &opts;
-		ut_negotiate_opts_desired_err = opts_negotiation_fails ? EINVAL : 0;
-	} else {
-		ut_negotiate_opts_desired_err = 0;
-	}
-
 	ut_calls_reset();
-	rc = spdk_fsdev_open("utfsdev0", fsdev_event_cb, NULL, popts, &fsdev_desc);
-	if (!with_opts || !opts_negotiation_fails) {
-		CU_ASSERT(rc == 0);
-		CU_ASSERT(fsdev_desc != NULL);
-		CU_ASSERT(spdk_fsdev_desc_get_fsdev(fsdev_desc) == &utfsdev->fsdev);
-	} else {
-		CU_ASSERT(rc == ut_negotiate_opts_desired_err);
-		CU_ASSERT(fsdev_desc == NULL);
-	}
-
-	if (with_opts) {
-		CU_ASSERT(ut_calls_get_func(0) == ut_fsdev_negotiate_opts);
-		CU_ASSERT(ut_calls_get_param_count(0) == 2);
-		CU_ASSERT(ut_calls_param_get_ptr(0, 0) == utfsdev);
-		CU_ASSERT(ut_calls_param_get_ptr(0, 1) == popts);
-
-		if (!opts_negotiation_fails) {
-			CU_ASSERT(opts.max_write == UINT32_MAX / 2);
-			CU_ASSERT(opts.writeback_cache_enabled == false);
-		}
-	}
+	rc = spdk_fsdev_open("utfsdev0", fsdev_event_cb, NULL, &fsdev_desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(fsdev_desc != NULL);
+	CU_ASSERT(spdk_fsdev_desc_get_fsdev(fsdev_desc) == &utfsdev->fsdev);
 
 	if (fsdev_desc) {
 		spdk_fsdev_close(fsdev_desc);
 	}
 
 	ut_fsdev_destroy(utfsdev);
-}
-
-static void
-ut_fsdev_test_open_close_no_opts(void)
-{
-	ut_fsdev_test_open_close(false, false);
-}
-
-static void
-ut_fsdev_test_open_close_good_opts(void)
-{
-	ut_fsdev_test_open_close(true, false);
-}
-
-static void
-ut_fsdev_test_open_close_bad_opts(void)
-{
-	ut_fsdev_test_open_close(true, true);
 }
 
 static void
@@ -833,7 +777,7 @@ ut_fsdev_test_get_io_channel(void)
 	utfsdev = ut_fsdev_create("utfsdev0");
 	CU_ASSERT(utfsdev != NULL);
 
-	rc = spdk_fsdev_open("utfsdev0", fsdev_event_cb, NULL, NULL, &fsdev_desc);
+	rc = spdk_fsdev_open("utfsdev0", fsdev_event_cb, NULL, &fsdev_desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(fsdev_desc != NULL);
 	CU_ASSERT(spdk_fsdev_desc_get_fsdev(fsdev_desc) == &utfsdev->fsdev);
@@ -882,7 +826,7 @@ ut_fsdev_test_io(enum spdk_fsdev_io_type type, int desired_io_status, size_t num
 	utfsdev = ut_fsdev_create("utfsdev0");
 	CU_ASSERT(utfsdev != NULL);
 
-	rc = spdk_fsdev_open("utfsdev0", fsdev_event_cb, NULL, NULL, &fsdev_desc);
+	rc = spdk_fsdev_open("utfsdev0", fsdev_event_cb, NULL, &fsdev_desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(fsdev_desc != NULL);
 
@@ -918,6 +862,82 @@ ut_fsdev_test_io(enum spdk_fsdev_io_type type, int desired_io_status, size_t num
 	spdk_fsdev_close(fsdev_desc);
 
 	ut_fsdev_destroy(utfsdev);
+}
+
+static void
+ut_fsdev_mount_cpl_cb(void *cb_arg, struct spdk_io_channel *ch, int status,
+		      const struct spdk_fsdev_mount_opts *opts, struct spdk_fsdev_file_object *root_fobject)
+
+{
+	int *clb_status = cb_arg;
+	*clb_status = status;
+	if (!status) {
+		CU_ASSERT(root_fobject == UT_FOBJECT);
+		CU_ASSERT(opts != NULL);
+		CU_ASSERT(opts->opts_size == ut_mount_opts.opts_size);
+		CU_ASSERT(opts->max_write == ut_mount_opts.max_write / 2);
+		CU_ASSERT(opts->writeback_cache_enabled == !ut_mount_opts.writeback_cache_enabled);
+	}
+}
+
+static int
+ut_fsdev_mount_execute_clb(struct ut_fsdev *utfsdev, struct spdk_io_channel *ch,
+			   struct spdk_fsdev_desc *fsdev_desc, int *status)
+{
+	memset(&ut_mount_opts, 0, sizeof(ut_mount_opts));
+	ut_mount_opts.opts_size = sizeof(ut_mount_opts);
+	ut_mount_opts.max_write = UINT32_MAX;
+	ut_mount_opts.writeback_cache_enabled = true;
+
+	return spdk_fsdev_mount(fsdev_desc, ch, UT_UNIQUE, &ut_mount_opts, ut_fsdev_mount_cpl_cb, status);
+}
+
+static void
+ut_fsdev_mount_check_clb(void)
+{
+	CU_ASSERT(ut_calls_param_get_hash(0, UT_SUBMIT_IO_NUM_COMMON_PARAMS) ==
+		  ut_hash(&ut_mount_opts, sizeof(ut_mount_opts)));
+}
+
+static void
+ut_fsdev_test_mount_ok(void)
+{
+	ut_fsdev_test_io(SPDK_FSDEV_IO_MOUNT, 0, 1, ut_fsdev_mount_execute_clb,
+			 ut_fsdev_mount_check_clb);
+}
+
+static void
+ut_fsdev_test_mount_err(void)
+{
+	ut_fsdev_test_io(SPDK_FSDEV_IO_MOUNT, -EINVAL, 1, ut_fsdev_mount_execute_clb,
+			 ut_fsdev_mount_check_clb);
+}
+
+static void
+ut_fsdev_umount_cpl_cb(void *cb_arg, struct spdk_io_channel *ch)
+{
+	int *clb_status = cb_arg;
+	*clb_status = 0; /* the callback doesn't get status, so we just zero it here */
+}
+
+static int
+ut_fsdev_umount_execute_clb(struct ut_fsdev *utfsdev, struct spdk_io_channel *ch,
+			    struct spdk_fsdev_desc *fsdev_desc, int *status)
+{
+	return spdk_fsdev_umount(fsdev_desc, ch, UT_UNIQUE, ut_fsdev_umount_cpl_cb, status);
+}
+
+static void
+ut_fsdev_umount_check_clb(void)
+{
+	/* Nothing to check here */
+}
+
+static void
+ut_fsdev_test_umount(void)
+{
+	ut_fsdev_test_io(SPDK_FSDEV_IO_UMOUNT, 0, 0, ut_fsdev_umount_execute_clb,
+			 ut_fsdev_umount_check_clb);
 }
 
 static void
@@ -2039,11 +2059,12 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("fsdev", ut_fsdev_setup, ut_fsdev_teardown);
 
-	CU_ADD_TEST(suite, ut_fsdev_test_open_close_no_opts);
-	CU_ADD_TEST(suite, ut_fsdev_test_open_close_good_opts);
-	CU_ADD_TEST(suite, ut_fsdev_test_open_close_bad_opts);
+	CU_ADD_TEST(suite, ut_fsdev_test_open_close);
 	CU_ADD_TEST(suite, ut_fsdev_test_set_opts);
 	CU_ADD_TEST(suite, ut_fsdev_test_get_io_channel);
+	CU_ADD_TEST(suite, ut_fsdev_test_mount_ok);
+	CU_ADD_TEST(suite, ut_fsdev_test_mount_err);
+	CU_ADD_TEST(suite, ut_fsdev_test_umount);
 	CU_ADD_TEST(suite, ut_fsdev_test_lookup_ok);
 	CU_ADD_TEST(suite, ut_fsdev_test_lookup_err);
 	CU_ADD_TEST(suite, ut_fsdev_test_forget);
