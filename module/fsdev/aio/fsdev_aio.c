@@ -358,6 +358,40 @@ utimensat_empty(struct aio_fsdev *vfsdev, struct spdk_fsdev_file_object *fobject
 	return res;
 }
 
+static void
+fsdev_free_leafs(struct spdk_fsdev_file_object *fobject)
+{
+	while (!TAILQ_EMPTY(&fobject->handles)) {
+		struct spdk_fsdev_file_handle *fhandle = TAILQ_FIRST(&fobject->handles);
+		file_handle_delete(fhandle);
+#ifdef __clang_analyzer__
+		/*
+		 * scan-build fails to comprehend that file_handle_delete() removes the fhandle
+		 * from the queue, so it thinks it's remained accessible and throws the "Use of
+		 * memory after it is freed" error here.
+		 * The loop below "teaches" the scan-build that the freed fhandle is not on the
+		 * list anymore and supresses the error in this way.
+		 */
+		struct spdk_fsdev_file_handle *tmp;
+		TAILQ_FOREACH(tmp, &fobject->handles, link) {
+			assert(tmp != fhandle);
+		}
+#endif
+	}
+
+	while (!TAILQ_EMPTY(&fobject->leafs)) {
+		struct spdk_fsdev_file_object *leaf_fobject = TAILQ_FIRST(&fobject->leafs);
+		fsdev_free_leafs(leaf_fobject);
+	}
+
+	if (fobject->refcount) {
+		/* if still referenced - zero refcount */
+		int res = file_object_unref(fobject, fobject->refcount);
+		assert(res == 0);
+		UNUSED(res);
+	}
+}
+
 static int
 lo_getattr(struct spdk_io_channel *ch, struct spdk_fsdev_io *fsdev_io)
 {
@@ -2120,40 +2154,6 @@ fsdev_aio_free(struct aio_fsdev *vfsdev)
 	free(vfsdev->root_path);
 
 	free(vfsdev);
-}
-
-static void
-fsdev_free_leafs(struct spdk_fsdev_file_object *fobject)
-{
-	while (!TAILQ_EMPTY(&fobject->handles)) {
-		struct spdk_fsdev_file_handle *fhandle = TAILQ_FIRST(&fobject->handles);
-		file_handle_delete(fhandle);
-#ifdef __clang_analyzer__
-		/*
-		 * scan-build fails to comprehend that file_handle_delete() removes the fhandle
-		 * from the queue, so it thinks it's remained accessible and throws the "Use of
-		 * memory after it is freed" error here.
-		 * The loop below "teaches" the scan-build that the freed fhandle is not on the
-		 * list anymore and supresses the error in this way.
-		 */
-		struct spdk_fsdev_file_handle *tmp;
-		TAILQ_FOREACH(tmp, &fobject->handles, link) {
-			assert(tmp != fhandle);
-		}
-#endif
-	}
-
-	while (!TAILQ_EMPTY(&fobject->leafs)) {
-		struct spdk_fsdev_file_object *leaf_fobject = TAILQ_FIRST(&fobject->leafs);
-		fsdev_free_leafs(leaf_fobject);
-	}
-
-	if (fobject->refcount) {
-		/* if still referenced - zero refcount */
-		int res = file_object_unref(fobject, fobject->refcount);
-		assert(res == 0);
-		UNUSED(res);
-	}
 }
 
 static int
