@@ -104,6 +104,8 @@ struct spdk_blob_list {
 struct spdk_blob {
 	struct spdk_blob_store *bs;
 
+	int priority_class; // to save the lvol's priority class across cluster allocations
+
 	uint32_t	open_ref;
 
 	spdk_blob_id	id;
@@ -161,6 +163,8 @@ struct spdk_blob_store {
 	uint32_t			max_channel_ops;
 
 	struct spdk_thread		*md_thread;
+
+	int priority_class; // max priority_class of all constituent blobs to speed up metadata I/Os
 
 	struct spdk_bs_dev		*dev;
 

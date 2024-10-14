@@ -228,6 +228,11 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 	return spdk_get_io_channel(&g_bdev_ch_io_device);
 }
 
+struct spdk_io_channel *
+spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io) {
+ 	return spdk_get_io_channel(&g_bdev_ch_io_device);
+}
+
 static int
 set_test_opts(void)
 {

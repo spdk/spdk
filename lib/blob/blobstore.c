@@ -3349,6 +3349,7 @@ rw_iov_split_next(void *cb_arg, int bserrno)
 
 	io_unit_offset = ctx->io_unit_offset;
 	io_units_to_boundary = bs_num_io_units_to_cluster_boundary(blob, io_unit_offset);
+	
 	io_units_count = spdk_min(ctx->io_units_remaining, io_units_to_boundary);
 	/*
 	 * Get index and offset into the original iov array for our current position in the I/O sequence.
@@ -3921,6 +3922,8 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	bs->dev = dev;
 	bs->md_thread = spdk_get_thread();
 	assert(bs->md_thread != NULL);
+
+	bs->priority_class = 0;
 
 	/*
 	 * Do not use bs_lba_to_cluster() here since blockcnt may not be an
@@ -8786,7 +8789,7 @@ blob_free_cluster_msg_cb(void *arg, int bserrno)
 	struct spdk_blob_cluster_op_ctx *ctx = arg;
 
 	spdk_spin_lock(&ctx->blob->bs->used_lock);
-	bs_release_cluster(ctx->blob->bs, bs_lba_to_cluster(ctx->blob->bs, ctx->cluster));
+	bs_release_cluster(ctx->blob->bs, ctx->cluster);
 	spdk_spin_unlock(&ctx->blob->bs->used_lock);
 
 	ctx->rc = bserrno;
@@ -8964,7 +8967,7 @@ blob_free_cluster_msg(void *arg)
 	bool free_extent_page = true;
 	size_t i;
 
-	ctx->cluster = ctx->blob->active.clusters[ctx->cluster_num];
+	ctx->cluster = bs_lba_to_cluster(ctx->blob->bs, ctx->blob->active.clusters[ctx->cluster_num]);
 
 	/* There were concurrent unmaps to the same cluster, only release the cluster on the first one */
 	if (ctx->cluster == 0) {
@@ -8980,7 +8983,7 @@ blob_free_cluster_msg(void *arg)
 	if (ctx->blob->use_extent_table == false) {
 		/* Extent table is not used, proceed with sync of md that will only use extents_rle. */
 		spdk_spin_lock(&ctx->blob->bs->used_lock);
-		bs_release_cluster(ctx->blob->bs, bs_lba_to_cluster(ctx->blob->bs, ctx->cluster));
+		bs_release_cluster(ctx->blob->bs, ctx->cluster);
 		spdk_spin_unlock(&ctx->blob->bs->used_lock);
 		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
 		blob_sync_md(ctx->blob, blob_op_cluster_msg_cb, ctx);
@@ -8994,6 +8997,10 @@ blob_free_cluster_msg(void *arg)
 
 	start_cluster_idx = (ctx->cluster_num / SPDK_EXTENTS_PER_EP) * SPDK_EXTENTS_PER_EP;
 	for (i = 0; i < SPDK_EXTENTS_PER_EP; ++i) {
+		if (ctx->blob->active.num_clusters <= start_cluster_idx + i) {
+			break;
+		}
+
 		if (ctx->blob->active.clusters[start_cluster_idx + i] != 0) {
 			free_extent_page = false;
 			break;
@@ -10314,6 +10321,13 @@ spdk_blob_is_degraded(const struct spdk_blob *blob)
 	}
 
 	return blob->back_bs_dev->is_degraded(blob->back_bs_dev);
+}
+
+void
+spdk_blob_set_io_priority_class(struct spdk_blob* blob, int priority_class)
+{
+	blob->priority_class = priority_class;
+	if (priority_class) { blob->bs->priority_class = MAX_PRIORITY_CLASS; } // max priority for metadata I/O if priority is supported
 }
 
 SPDK_LOG_REGISTER_COMPONENT(blob)

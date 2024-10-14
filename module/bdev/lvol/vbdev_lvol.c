@@ -898,6 +898,7 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	uint64_t start_page, num_pages;
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
 	struct spdk_blob *blob = lvol->blob;
+
 	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
 
 	start_page = bdev_io->u.bdev.offset_blocks;
@@ -917,7 +918,7 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	uint64_t start_page, num_pages;
 	struct spdk_blob *blob = lvol->blob;
 	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
-
+	
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
@@ -1192,8 +1193,10 @@ _vbdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 		goto end;
 	}
 
-	lvolerrno = _create_lvol_disk(lvol, true);
+	lvol->priority_class = req->lvol_priority_class;
+	vbdev_lvol_set_io_priority_class(lvol);
 
+	lvolerrno = _create_lvol_disk(lvol, true);
 end:
 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
 	free(req);
@@ -1201,7 +1204,8 @@ end:
 
 int
 vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		  bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
+		  bool thin_provision, enum lvol_clear_method clear_method, int8_t lvol_priority_class,
+		  spdk_lvol_op_with_handle_complete cb_fn,
 		  void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
@@ -1211,6 +1215,7 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	if (req == NULL) {
 		return -ENOMEM;
 	}
+	req->lvol_priority_class = lvol_priority_class;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
@@ -1222,6 +1227,7 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	return rc;
 }
+
 
 void
 vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
@@ -2059,6 +2065,10 @@ vbdev_lvol_set_external_parent(struct spdk_lvol *lvol, const char *esnap_name,
 	spdk_lvol_set_external_parent(lvol, bdev_uuid, sizeof(bdev_uuid), cb_fn, cb_arg);
 
 	spdk_bdev_close(desc);
+}
+
+void vbdev_lvol_set_io_priority_class(struct spdk_lvol *lvol) {
+	spdk_blob_set_io_priority_class(lvol->blob, lvol->priority_class);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vbdev_lvol)

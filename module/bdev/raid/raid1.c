@@ -113,7 +113,7 @@ raid1_correct_read_error(void *_raid_io)
 	raid1_init_ext_io_opts(&io_opts, raid_io);
 	ret = raid_bdev_writev_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
 					  raid_io->offset_blocks, raid_io->num_blocks,
-					  raid1_correct_read_error_completion, raid_io, &io_opts);
+					  raid1_correct_read_error_completion, raid_io, &io_opts, raid_io->priority_class);
 	if (spdk_unlikely(ret != 0)) {
 		if (ret == -ENOMEM) {
 			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
@@ -169,7 +169,7 @@ raid1_read_other_base_bdev(void *_raid_io)
 		raid1_init_ext_io_opts(&io_opts, raid_io);
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
 						 raid_io->offset_blocks, raid_io->num_blocks,
-						 raid1_read_other_completion, raid_io, &io_opts);
+						 raid1_read_other_completion, raid_io, &io_opts, raid_io->priority_class);
 		if (spdk_unlikely(ret != 0)) {
 			if (ret == -ENOMEM) {
 				raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
@@ -258,7 +258,7 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 	raid1_init_ext_io_opts(&io_opts, raid_io);
 	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
 					 raid_io->offset_blocks, raid_io->num_blocks,
-					 raid1_read_bdev_io_completion, raid_io, &io_opts);
+					 raid1_read_bdev_io_completion, raid_io, &io_opts, raid_io->priority_class);
 
 	if (spdk_likely(ret == 0)) {
 		raid1_channel_inc_read_counters(raid_ch, idx, raid_io->num_blocks);
@@ -302,7 +302,7 @@ raid1_submit_write_request(struct raid_bdev_io *raid_io)
 
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
 						  raid_io->offset_blocks, raid_io->num_blocks,
-						  raid1_write_bdev_io_completion, raid_io, &io_opts);
+						  raid1_write_bdev_io_completion, raid_io, &io_opts, raid_io->priority_class);
 		if (spdk_unlikely(ret != 0)) {
 			if (spdk_unlikely(ret == -ENOMEM)) {
 				raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
@@ -453,7 +453,7 @@ raid1_process_submit_write(struct raid_bdev_process_request *process_req)
 	ret = raid_bdev_writev_blocks_ext(process_req->target, process_req->target_ch,
 					  raid_io->iovs, raid_io->iovcnt,
 					  raid_io->offset_blocks, raid_io->num_blocks,
-					  raid1_process_write_completed, process_req, &io_opts);
+					  raid1_process_write_completed, process_req, &io_opts, raid_io->priority_class);
 	if (spdk_unlikely(ret != 0)) {
 		if (ret == -ENOMEM) {
 			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(process_req->target->desc),
@@ -489,6 +489,7 @@ raid1_submit_process_request(struct raid_bdev_process_request *process_req,
 			  process_req->offset_blocks, process_req->num_blocks,
 			  &process_req->iov, 1, process_req->md_buf, NULL, NULL);
 	raid_io->completion_cb = raid1_process_read_completed;
+	raid_io->priority_class = raid_io->raid_bdev->supports_priority_class ? MAX_PRIORITY_CLASS : 0;
 
 	ret = raid1_submit_read_request(raid_io);
 	if (spdk_likely(ret == 0)) {
