@@ -256,7 +256,6 @@ map_cpufreq() {
 	local -g cpufreq_is_turbo=()
 	local -g cpufreq_available_freqs=()
 	local -g cpufreq_available_governors=()
-	local -g cpufreq_high_prio=()
 	local -g cpufreq_non_turbo_ratio=()
 	local -g cpufreq_setspeed=()
 	local -g cpuinfo_max_freqs=()
@@ -306,10 +305,8 @@ map_cpufreq() {
 					1 * (cpuinfo_min_freqs[cpu_idx] + (100 - non_turbo_ratio) * \
 					1 * (cpuinfo_max_freqs[cpu_idx] - cpuinfo_min_freqs[cpu_idx]) / 100) / 100000))
 				if ((cpufreq_base_freqs[cpu_idx] / 100000 > cpufreq_non_turbo_ratio[cpu_idx])); then
-					cpufreq_high_prio[cpu_idx]=1
 					base_max_freq=${cpufreq_base_freqs[cpu_idx]}
 				else
-					cpufreq_high_prio[cpu_idx]=0
 					base_max_freq=$((cpufreq_non_turbo_ratio[cpu_idx] * 100000))
 				fi
 				num_freqs=$(((base_max_freq - cpuinfo_min_freqs[cpu_idx]) / 100000 + 1))
