@@ -13,6 +13,7 @@
 	spdk_reduce_vol_get_params;
 	spdk_reduce_vol_print_info;
 	spdk_reduce_vol_get_pm_path;
+	spdk_reduce_vol_get_info;
 
 	local: *;
 };

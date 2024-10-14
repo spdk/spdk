@@ -20,6 +20,15 @@ extern "C" {
 #define REDUCE_MAX_IOVECS	33
 
 /**
+ * Describes the information of spdk_reduce_vol.
+ */
+struct spdk_reduce_vol_info {
+	/* Statistics on the number of allocated io units */
+	uint64_t		allocated_io_units;
+	/* TODO: Migrate other vol properties to this structure */
+};
+
+/**
  * Describes the parameters of an spdk_reduce_vol.
  */
 struct spdk_reduce_vol_params {
@@ -277,6 +286,14 @@ void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol);
  * \return pm path for the compressed volume.
  */
 const char *spdk_reduce_vol_get_pm_path(const struct spdk_reduce_vol *vol);
+
+/**
+ * Get the information for a libreduce compressed volume.
+ *
+ * \param vol Previously loaded or initialized compressed volume.
+ * \return spdk_reduce_vol_info structure for the compressed volume.
+ */
+const struct spdk_reduce_vol_info *spdk_reduce_vol_get_info(const struct spdk_reduce_vol *vol);
 
 #ifdef __cplusplus
 }

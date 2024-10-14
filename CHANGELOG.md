@@ -21,6 +21,10 @@ If multipathing shall be enabled for nvme bdev, `bdev_opts.multipath` shall be s
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page
 change notice to client.
 
+### reduce
+
+Add `spdk_reduce_vol_get_info()` to get the information for the compressed volume.
+
 ## v24.09
 
 ### accel
