@@ -46,7 +46,7 @@ NOT ps $rpc_wait_pid
 
 timing_exit start_iscsi_tgt
 
-$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $ISCSI_PORT $NETMASK $TARGET_NAMESPACE
+$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $ISCSI_PORT $NETMASK
 
 $rpc_py bdev_get_bdevs
 
