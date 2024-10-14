@@ -649,6 +649,7 @@ static int
 vbdev_compress_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
+	const struct spdk_reduce_vol_info *vol_info;
 	char *comp_algo = NULL;
 
 	if (comp_bdev->params.comp_algo == SPDK_ACCEL_COMP_ALGO_LZ4) {
@@ -668,6 +669,8 @@ vbdev_compress_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "comp_level", comp_bdev->params.comp_level);
 	spdk_json_write_named_uint32(w, "chunk_size", comp_bdev->params.chunk_size);
 	spdk_json_write_named_uint32(w, "backing_io_unit_size", comp_bdev->params.backing_io_unit_size);
+	vol_info = spdk_reduce_vol_get_info(comp_bdev->vol);
+	spdk_json_write_named_uint64(w, "allocated_io_units", vol_info->allocated_io_units);
 	spdk_json_write_object_end(w);
 
 	return 0;
