@@ -705,7 +705,7 @@ late_delete(void)
 	lvs = owh_data.u.lvs;
 
 	/* Create an lvol */
-	vbdev_lvol_create(lvs, "lvol", 1, true, LVOL_CLEAR_WITH_DEFAULT,
+	vbdev_lvol_create(lvs, "lvol", 1, true, LVOL_CLEAR_WITH_DEFAULT, 0,
 			  lvol_op_with_handle_cb, clear_owh(&owh_data));
 	poll_error_updated(&owh_data.lvserrno);
 	CU_ASSERT(owh_data.lvserrno == 0);

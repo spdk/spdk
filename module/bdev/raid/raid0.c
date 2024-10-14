@@ -37,7 +37,7 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 
 			rc = raid_bdev_verify_dix_reftag(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 							 bdev_io->u.bdev.md_buf, bdev_io->u.bdev.num_blocks, bdev_io->bdev,
-							 bdev_io->u.bdev.offset_blocks);
+							 bdev_io->u.bdev.offset_blocks & MASK_OUT_PRIORITY_CLASS);
 			if (rc != 0) {
 				SPDK_ERRLOG("Reftag verify failed.\n");
 				raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -127,7 +127,7 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch,
 						 raid_io->iovs, raid_io->iovcnt,
 						 pd_lba, pd_blocks, raid0_bdev_io_completion,
-						 raid_io, &io_opts);
+						 raid_io, &io_opts, raid_io->priority_class);
 	} else if (raid_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		struct spdk_bdev *bdev = &base_info->raid_bdev->bdev;
 
@@ -145,7 +145,7 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch,
 						  raid_io->iovs, raid_io->iovcnt,
 						  pd_lba, pd_blocks, raid0_bdev_io_completion,
-						  raid_io, &io_opts);
+						  raid_io, &io_opts, raid_io->priority_class);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", raid_io->type);
 		assert(0);

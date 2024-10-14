@@ -355,12 +355,15 @@ _raid_bdev_write_superblock(void *_ctx)
 			continue;
 		}
 
-		rc = spdk_bdev_write(base_info->desc, base_info->app_thread_ch,
-				     raid_bdev->sb_io_buf, 0, raid_bdev->sb_io_buf_size,
+		struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+
+		const uint64_t offset_blocks = 0;
+		const uint64_t num_blocks = raid_bdev->sb_io_buf_size / bdev->blocklen;
+
+		rc = spdk_bdev_write_blocks(base_info->desc, base_info->app_thread_ch,
+				     raid_bdev->sb_io_buf, offset_blocks, num_blocks,
 				     raid_bdev_write_superblock_cb, ctx);
 		if (rc != 0) {
-			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(base_info->desc);
-
 			if (rc == -ENOMEM) {
 				ctx->wait_entry.bdev = bdev;
 				ctx->wait_entry.cb_fn = _raid_bdev_write_superblock;

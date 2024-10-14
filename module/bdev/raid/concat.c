@@ -111,12 +111,12 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch,
 						 raid_io->iovs, raid_io->iovcnt,
 						 pd_lba, pd_blocks, concat_bdev_io_completion,
-						 raid_io, &io_opts);
+						 raid_io, &io_opts, raid_io->priority_class);
 	} else if (raid_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch,
 						  raid_io->iovs, raid_io->iovcnt,
 						  pd_lba, pd_blocks, concat_bdev_io_completion,
-						  raid_io, &io_opts);
+						  raid_io, &io_opts, raid_io->priority_class);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", raid_io->type);
 		assert(0);

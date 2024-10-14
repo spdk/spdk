@@ -159,6 +159,40 @@ spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
+int
+spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *buf, uint64_t offset, uint64_t nblock,
+		spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct raid_bdev_superblock *sb = buf;
+	struct spdk_bdev_io *bdev_io;
+	void *dest = g_buf;
+	uint32_t data_block_size = spdk_bdev_get_data_block_size(bdev);
+
+	g_write_counter++;
+	CU_ASSERT(offset == 0);
+	CU_ASSERT(nblock == spdk_divide_round_up(sb->length, data_block_size));
+
+	while (nblock > 0) {
+		memcpy(dest, buf, data_block_size);
+		dest += data_block_size;
+		buf += bdev->blocklen;
+		nblock -= 1;
+	}
+
+	bdev_io = calloc(1, sizeof(*bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io->internal.cb = cb;
+	bdev_io->internal.caller_ctx = cb_arg;
+	bdev_io->bdev = bdev;
+
+	TAILQ_INSERT_TAIL(&g_bdev_io_queue, bdev_io, internal.link);
+
+	return 0;
+}
+
+
 static void
 process_io_completions(void)
 {

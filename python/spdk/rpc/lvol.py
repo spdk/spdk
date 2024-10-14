@@ -59,7 +59,7 @@ def bdev_lvol_grow_lvstore(client, uuid=None, lvs_name=None):
     return client.call('bdev_lvol_grow_lvstore', params)
 
 
-def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
+def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=None, lvs_name=None, clear_method=None, lvol_priority_class=0):
     """Create a logical volume on a logical volume store.
 
     Args:
@@ -68,6 +68,7 @@ def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=
         thin_provision: True to enable thin provisioning
         uuid: UUID of logical volume store to create logical volume on (optional)
         lvs_name: name of logical volume store to create logical volume on (optional)
+        lvol_priority_class: integer lvol priority class for priority I/O within the range [0, 15], default 0 (optional)
 
     Either uuid or lvs_name must be specified, but not both.
 
@@ -76,6 +77,12 @@ def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=
     """
     if (uuid and lvs_name) or (not uuid and not lvs_name):
         raise ValueError("Either uuid or lvs_name must be specified, but not both")
+    
+    nbits_priority_class = 4
+    min_priority_class = 0
+    max_priority_class = 2**(nbits_priority_class) - 1
+    if not (lvol_priority_class >= min_priority_class and lvol_priority_class <= max_priority_class):
+        raise ValueError("lvol_priority_class must be in the range [{}, {}]".format(min_priority_class, max_priority_class))
 
     params = {'lvol_name': lvol_name, 'size_in_mib': size_in_mib}
     if thin_provision:
@@ -86,8 +93,23 @@ def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=
         params['lvs_name'] = lvs_name
     if clear_method:
         params['clear_method'] = clear_method
+    params['lvol_priority_class'] = lvol_priority_class
     return client.call('bdev_lvol_create', params)
 
+def bdev_lvol_set_priority_class(client, lvol_name, lvol_priority_class):
+    """Set the I/O priority class of a logical volume.
+
+    Args:
+        lvol_name: name of logical volume to create
+        lvol_priority_class: integer lvol priority class for priority I/O within the range [0, 15]
+    """
+    nbits_priority_class = 4
+    min_priority_class = 0
+    max_priority_class = 2**(nbits_priority_class) - 1
+    if not (lvol_priority_class >= min_priority_class and lvol_priority_class <= max_priority_class):
+        raise ValueError("lvol_priority_class must be in the range [{}, {}]".format(min_priority_class, max_priority_class))
+    params = {'lvol_name': lvol_name, 'lvol_priority_class': lvol_priority_class}
+    return client.call('bdev_lvol_set_priority_class', params)
 
 def bdev_lvol_snapshot(client, lvol_name, snapshot_name):
     """Capture a snapshot of the current state of a logical volume.

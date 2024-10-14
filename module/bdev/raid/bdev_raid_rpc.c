@@ -126,6 +126,9 @@ struct rpc_bdev_raid_create {
 	/* RAID strip size in KB */
 	uint32_t                             strip_size_kb;
 
+	/* RAID limit on unmap io */
+	uint32_t 							 io_unmap_limit;
+
 	/* RAID raid level */
 	enum raid_level                      level;
 
@@ -180,6 +183,7 @@ decode_base_bdevs(const struct spdk_json_val *val, void *out)
 static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_raid_create, name), spdk_json_decode_string},
 	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create, strip_size_kb), spdk_json_decode_uint32, true},
+	{"io_unmap_limit", offsetof(struct rpc_bdev_raid_create, io_unmap_limit), spdk_json_decode_uint32, true},
 	{"raid_level", offsetof(struct rpc_bdev_raid_create, level), decode_raid_level},
 	{"base_bdevs", offsetof(struct rpc_bdev_raid_create, base_bdevs), decode_base_bdevs},
 	{"uuid", offsetof(struct rpc_bdev_raid_create, uuid), spdk_json_decode_uuid, true},
@@ -258,7 +262,8 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_raid_create	*req;
 	struct raid_bdev		*raid_bdev;
 	int				rc;
-	size_t				i;
+	uint32_t		io_unmap_limit = 2000;
+	size_t			i;
 	struct rpc_bdev_raid_create_ctx *ctx;
 	uint8_t				num_base_bdevs;
 
@@ -286,9 +291,13 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 	}
+	
+	if (req->io_unmap_limit > 0) {
+		io_unmap_limit = req->io_unmap_limit;
+	}
 
 	rc = raid_bdev_create(req->name, req->strip_size_kb, num_base_bdevs,
-			      req->level, req->superblock_enabled, &req->uuid, &raid_bdev);
+			      req->level, req->superblock_enabled, &req->uuid, &raid_bdev, io_unmap_limit);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
 						     "Failed to create RAID bdev %s: %s",

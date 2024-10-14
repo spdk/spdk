@@ -10,6 +10,7 @@
 #include "spdk/lvol.h"
 #include "spdk/bdev_module.h"
 #include "spdk/blob_bdev.h"
+#include "spdk/priority_class.h"
 
 #include "spdk_internal/lvolstore.h"
 
@@ -36,6 +37,7 @@ void vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, v
 
 int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		      bool thin_provisioned, enum lvol_clear_method clear_method,
+			  int8_t lvol_priority_class,
 		      spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
 
@@ -142,5 +144,11 @@ int vbdev_lvol_shallow_copy(struct spdk_lvol *lvol, const char *bdev_name,
  */
 void vbdev_lvol_set_external_parent(struct spdk_lvol *lvol, const char *esnap_name,
 				    spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/* Sets the upper NBITS_PRIORITY_CLASS bits of all future logical block addresses of the underlying blob to 
+the lvol's priority class bits. These bits must be cleared when the I/O reaches the lvolstore and added
+again when it exits the lvolstore so that no internal lvolstore operation sees these bits.
+*/
+void vbdev_lvol_set_io_priority_class(struct spdk_lvol* lvol);
 
 #endif /* SPDK_VBDEV_LVOL_H */

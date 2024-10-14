@@ -204,6 +204,11 @@ class UIRoot(UINode):
     def bdev_lvol_create_lvstore(self, **kwargs):
         response = rpc.lvol.bdev_lvol_create_lvstore(self.client, **kwargs)
         return response
+    
+    @verbose
+    def bdev_lvol_set_priority_class(self, **kwargs):
+        response = rpc.lvol.bdev_lvol_set_priority_class(self.client, **kwargs)
+        return response
 
     @verbose
     def bdev_lvol_delete_lvstore(self, **kwargs):

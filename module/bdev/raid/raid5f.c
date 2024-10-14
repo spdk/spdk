@@ -448,7 +448,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
 						  base_offset_blocks, raid_bdev->strip_size,
-						  raid5f_chunk_complete_bdev_io, chunk, &io_opts);
+						  raid5f_chunk_complete_bdev_io, chunk, &io_opts, raid_io->priority_class);
 		break;
 	case STRIPE_REQ_RECONSTRUCT:
 		if (chunk == stripe_req->reconstruct.chunk) {
@@ -460,7 +460,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
 						 base_offset_blocks, raid_io->num_blocks,
-						 raid5f_chunk_complete_bdev_io, chunk, &io_opts);
+						 raid5f_chunk_complete_bdev_io, chunk, &io_opts, raid_io->priority_class);
 		break;
 	default:
 		assert(false);
@@ -791,7 +791,7 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 
 	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
 					 base_offset_blocks, raid_io->num_blocks,
-					 raid5f_chunk_read_complete, raid_io, &io_opts);
+					 raid5f_chunk_read_complete, raid_io, &io_opts, raid_io->priority_class);
 	if (spdk_unlikely(ret == -ENOMEM)) {
 		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
 					base_ch, _raid5f_submit_rw_request);
@@ -1174,7 +1174,7 @@ raid5f_process_submit_write(struct raid_bdev_process_request *process_req)
 	ret = raid_bdev_writev_blocks_ext(process_req->target, process_req->target_ch,
 					  raid_io->iovs, raid_io->iovcnt,
 					  stripe_index << raid_bdev->strip_size_shift, raid_bdev->strip_size,
-					  raid5f_process_write_completed, process_req, &io_opts);
+					  raid5f_process_write_completed, process_req, &io_opts, raid_io->priority_class);
 	if (spdk_unlikely(ret != 0)) {
 		if (ret == -ENOMEM) {
 			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(process_req->target->desc),
@@ -1223,6 +1223,7 @@ raid5f_submit_process_request(struct raid_bdev_process_request *process_req,
 	raid_bdev_io_init(raid_io, raid_ch, SPDK_BDEV_IO_TYPE_READ,
 			  process_req->offset_blocks, raid_bdev->strip_size,
 			  &process_req->iov, 1, process_req->md_buf, NULL, NULL);
+	raid_io->priority_class = raid_io->raid_bdev->supports_priority_class ? MAX_PRIORITY_CLASS : 0;
 
 	ret = raid5f_submit_reconstruct_read(raid_io, stripe_index, chunk_idx, 0,
 					     raid5f_process_stripe_request_reconstruct_xor_done);
