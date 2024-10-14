@@ -60,25 +60,15 @@ accel_error_task_complete_cb(void *arg, int status)
 	spdk_accel_completion_cb cb_fn = errtask->cb_fn;
 	void *cb_arg = errtask->cb_arg;
 
-	info->interval++;
-	if (info->interval >= info->opts.interval) {
-		info->interval = 0;
-		info->count++;
-
-		if (info->count <= info->opts.count) {
-			switch (info->opts.type) {
-			case ACCEL_ERROR_INJECT_CORRUPT:
-				accel_error_corrupt_task(task);
-				break;
-			case ACCEL_ERROR_INJECT_FAILURE:
-				status = info->opts.errcode;
-				break;
-			default:
-				break;
-			}
-		} else {
-			info->opts.type = ACCEL_ERROR_INJECT_DISABLE;
-		}
+	switch (info->opts.type) {
+	case ACCEL_ERROR_INJECT_CORRUPT:
+		accel_error_corrupt_task(task);
+		break;
+	case ACCEL_ERROR_INJECT_FAILURE:
+		status = info->opts.errcode;
+		break;
+	default:
+		break;
 	}
 
 	cb_fn(cb_arg, status);
@@ -89,13 +79,30 @@ accel_error_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *tas
 {
 	struct accel_error_channel *errch = spdk_io_channel_get_ctx(ch);
 	struct accel_error_task *errtask = accel_error_get_task_ctx(task);
+	struct accel_error_inject_info *info = &errch->injects[task->op_code];
 
-	errtask->ch = errch;
-	errtask->cb_fn = task->cb_fn;
-	errtask->cb_arg = task->cb_arg;
-	task->cb_fn = accel_error_task_complete_cb;
-	task->cb_arg = task;
+	if (info->opts.type == ACCEL_ERROR_INJECT_DISABLE) {
+		goto submit;
+	}
 
+	info->interval++;
+	if (info->interval >= info->opts.interval) {
+		info->interval = 0;
+		info->count++;
+
+		if (info->count <= info->opts.count) {
+			errtask->ch = errch;
+			errtask->cb_fn = task->cb_fn;
+			errtask->cb_arg = task->cb_arg;
+			task->cb_fn = accel_error_task_complete_cb;
+			task->cb_arg = task;
+		} else {
+			info->opts.type = ACCEL_ERROR_INJECT_DISABLE;
+			info->interval = 0;
+			info->count = 0;
+		}
+	}
+submit:
 	return g_sw_module->submit_tasks(errch->swch, task);
 }
 
