@@ -588,7 +588,7 @@ struct spdk_nvme_ns {
 };
 
 #define CTRLR_STRING(ctrlr) \
-	((ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP || ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) ? \
+	(spdk_nvme_trtype_is_fabrics(ctrlr->trid.trtype) ? \
 	ctrlr->trid.subnqn : ctrlr->trid.traddr)
 
 #define NVME_CTRLR_ERRLOG(ctrlr, format, ...) \
