@@ -47,7 +47,8 @@ TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
 static struct spdk_scheduler *g_scheduler = NULL;
 static struct spdk_reactor *g_scheduling_reactor;
 bool g_scheduling_in_progress = false;
-static uint64_t g_scheduler_period = 0;
+static uint64_t g_scheduler_period_in_tsc = 0;
+static uint64_t g_scheduler_period_in_us;
 static uint32_t g_scheduler_core_number;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
 static struct spdk_cpuset g_scheduler_isolated_core_mask;
@@ -134,15 +135,14 @@ spdk_scheduler_get(void)
 uint64_t
 spdk_scheduler_get_period(void)
 {
-	/* Convert from ticks to microseconds */
-	return (g_scheduler_period * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
+	return g_scheduler_period_in_us;
 }
 
 void
 spdk_scheduler_set_period(uint64_t period)
 {
-	/* Convert microseconds to ticks */
-	g_scheduler_period = period * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	g_scheduler_period_in_us = period;
+	g_scheduler_period_in_tsc = period * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 }
 
 void
@@ -1029,8 +1029,8 @@ reactor_run(void *arg)
 			}
 		}
 
-		if (spdk_unlikely(g_scheduler_period > 0 &&
-				  (reactor->tsc_last - last_sched) > g_scheduler_period &&
+		if (spdk_unlikely(g_scheduler_period_in_tsc > 0 &&
+				  (reactor->tsc_last - last_sched) > g_scheduler_period_in_tsc &&
 				  reactor == g_scheduling_reactor &&
 				  !g_scheduling_in_progress)) {
 			last_sched = reactor->tsc_last;
