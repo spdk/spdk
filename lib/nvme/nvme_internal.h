@@ -587,6 +587,29 @@ struct spdk_nvme_ns {
 	RB_ENTRY(spdk_nvme_ns)		node;
 };
 
+#define CTRLR_STRING(ctrlr) \
+	((ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP || ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) ? \
+	ctrlr->trid.subnqn : ctrlr->trid.traddr)
+
+#define NVME_CTRLR_ERRLOG(ctrlr, format, ...) \
+	SPDK_ERRLOG("[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+
+#define NVME_CTRLR_WARNLOG(ctrlr, format, ...) \
+	SPDK_WARNLOG("[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+
+#define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) \
+	SPDK_NOTICELOG("[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+
+#define NVME_CTRLR_INFOLOG(ctrlr, format, ...) \
+	SPDK_INFOLOG(nvme, "[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+
+#ifdef DEBUG
+#define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) \
+	SPDK_DEBUGLOG(nvme, "[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+#else
+#define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
+#endif
+
 /**
  * State of struct spdk_nvme_ctrlr (in particular, during initialization).
  */
