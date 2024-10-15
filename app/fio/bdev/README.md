@@ -104,7 +104,7 @@ These examples assume you have built fio and SPDK with `--with-fio` option enabl
     ```bash
     scripts/gen_nvme.sh --json-with-subsystems > /tmp/bdev.json
 
-    cat /tmp/bdev_local.json  | jq
+    cat /tmp/bdev.json  | jq
     {
         "subsystems": [
         {
