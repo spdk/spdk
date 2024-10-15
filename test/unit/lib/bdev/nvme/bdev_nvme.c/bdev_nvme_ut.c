@@ -4517,6 +4517,39 @@ test_reset_bdev_ctrlr(void)
 	CU_ASSERT(ctrlr2->is_failed == false);
 	CU_ASSERT(curr_path2->last_failed_tsc == 0);
 
+	/* Reset of the first path failes, reset of the second path succeeds.
+	 * Since we have at least one working path we should not fail RESET IO.
+	 *
+	 * Here, reset of the first path fails immediately because it is disabled.
+	 *
+	 * The purpose is to verify the fix. We had a bug that bdev_io did not
+	 * hold io_path when reset of it failed immediately, and then continue
+	 * operation caused NULL pointer access.
+	 */
+	nvme_ctrlr1->disabled = true;
+	ctrlr1->is_failed = true;
+	curr_path1->last_failed_tsc = spdk_get_ticks();
+	ctrlr2->is_failed = true;
+	curr_path2->last_failed_tsc = spdk_get_ticks();
+	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	set_thread(0);
+	bdev_nvme_submit_request(ch1, first_bdev_io);
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->is_failed == true);
+	CU_ASSERT(curr_path1->last_failed_tsc != 0);
+	CU_ASSERT(ctrlr2->is_failed == false);
+	CU_ASSERT(curr_path2->last_failed_tsc == 0);
+	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	nvme_ctrlr1->disabled = false;
+	ctrlr1->is_failed = false;
+	curr_path1->last_failed_tsc = 0;
+
 	set_thread(0);
 
 	spdk_put_io_channel(ch1);

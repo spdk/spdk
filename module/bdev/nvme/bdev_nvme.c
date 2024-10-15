@@ -2941,14 +2941,14 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 	struct nvme_ctrlr_channel *ctrlr_ch;
 	int rc;
 
+	assert(bio->io_path == NULL);
+	bio->io_path = io_path;
+
 	rc = nvme_ctrlr_op(io_path->qpair->ctrlr, NVME_CTRLR_OP_RESET,
 			   bdev_nvme_reset_io_continue, bio);
 	if (rc != 0 && rc != -EBUSY) {
 		return rc;
 	}
-
-	assert(bio->io_path == NULL);
-	bio->io_path = io_path;
 
 	if (rc == -EBUSY) {
 		ctrlr_ch = io_path->qpair->ctrlr_ch;
