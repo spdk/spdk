@@ -347,6 +347,11 @@ function install_irdma() {
 			< "$rootdir/test/common/config/pkgdep/patches/irdma/0001-ip_route_output.patch"
 	fi
 
+	if ge "$kernel_ver" 6.11; then
+		patch --dir="$GIT_REPOS/irdma-$IRDMA_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/irdma/0001-uverbs_attr.patch"
+	fi
+
 	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/build.sh ]]
 
 	(

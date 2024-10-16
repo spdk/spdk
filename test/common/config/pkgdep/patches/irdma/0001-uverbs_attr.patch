@@ -1,0 +1,51 @@
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=dd6d7f8574d7f8b6a0bf1aeef0b285d2706b8c2a
+
+We shove this change under CREATE_CQ_VER_3 since it's defined for most
+recent rhel|ubuntu distros which we support.
+
+---
+ src/irdma/irdma_kcompat.c | 5 +++--
+ src/irdma/irdma_kcompat.h | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/irdma/irdma_kcompat.c b/src/irdma/irdma_kcompat.c
+index 5abe37e..763a0cf 100644
+--- a/src/irdma/irdma_kcompat.c
++++ b/src/irdma/irdma_kcompat.c
+@@ -2301,12 +2301,12 @@ free_rsrc:
+  * irdma_create_cq - create cq
+  * @ibcq: CQ allocated
+  * @attr: attributes for cq
+- * @udata: user data
++ * @attrs: uverbs attribute bundle
+  */
+ #ifdef CREATE_CQ_VER_3
+ int irdma_create_cq(struct ib_cq *ibcq,
+ 		    const struct ib_cq_init_attr *attr,
+-		    struct ib_udata *udata)
++		    struct uverbs_attr_bundle *attrs)
+ #elif defined(CREATE_CQ_VER_2)
+ struct ib_cq *irdma_create_cq(struct ib_device *ibdev,
+ 			      const struct ib_cq_init_attr *attr,
+@@ -2321,6 +2321,7 @@ struct ib_cq *irdma_create_cq(struct ib_device *ibdev,
+ #define IRDMA_CREATE_CQ_MIN_REQ_LEN offsetofend(struct irdma_create_cq_req, user_cq_buf)
+ #define IRDMA_CREATE_CQ_MIN_RESP_LEN offsetofend(struct irdma_create_cq_resp, cq_size)
+ #ifdef CREATE_CQ_VER_3
++	struct ib_udata *udata = &attrs->driver_udata;
+ 	struct ib_device *ibdev = ibcq->device;
+ #endif
+ 	struct irdma_device *iwdev = to_iwdev(ibdev);
+diff --git a/src/irdma/irdma_kcompat.h b/src/irdma/irdma_kcompat.h
+index 56e8047..f190ba4 100644
+--- a/src/irdma/irdma_kcompat.h
++++ b/src/irdma/irdma_kcompat.h
+@@ -290,7 +290,7 @@ int irdma_destroy_ah(struct ib_ah *ibah);
+ #ifdef CREATE_CQ_VER_3
+ int irdma_create_cq(struct ib_cq *ibcq,
+ 		    const struct ib_cq_init_attr *attr,
+-		    struct ib_udata *udata);
++		    struct uverbs_attr_bundle *attrs);
+ #endif
+ 
+ #ifdef CREATE_CQ_VER_2
+-- 
