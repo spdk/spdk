@@ -2029,6 +2029,17 @@ test_ctrlr_get_default_io_qpair_opts(void)
 	CU_ASSERT_EQUAL(opts.qprio, SPDK_NVME_QPRIO_URGENT);
 	CU_ASSERT_EQUAL(opts.io_queue_size, DEFAULT_IO_QUEUE_SIZE);
 	CU_ASSERT_EQUAL(opts.io_queue_requests, DEFAULT_IO_QUEUE_REQUESTS);
+	CU_ASSERT_EQUAL(opts.delay_cmd_submit, false);
+	CU_ASSERT_EQUAL(opts.sq.vaddr, NULL);
+	CU_ASSERT_EQUAL(opts.sq.paddr, 0);
+	CU_ASSERT_EQUAL(opts.sq.buffer_size, 0);
+	CU_ASSERT_EQUAL(opts.cq.vaddr, NULL);
+	CU_ASSERT_EQUAL(opts.cq.paddr, 0);
+	CU_ASSERT_EQUAL(opts.cq.buffer_size, 0);
+	CU_ASSERT_EQUAL(opts.create_only, false);
+	CU_ASSERT_EQUAL(opts.async_mode, false);
+	CU_ASSERT_EQUAL(opts.disable_pcie_sgl_merge, false);
+	CU_ASSERT_EQUAL(opts.opts_size, sizeof(opts));
 }
 
 #if 0 /* TODO: move to PCIe-specific unit test */

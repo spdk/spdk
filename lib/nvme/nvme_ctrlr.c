@@ -284,59 +284,73 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 	assert(opts);
 
 	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
 
 #define FIELD_OK(field) \
 	offsetof(struct spdk_nvme_io_qpair_opts, field) + sizeof(opts->field) <= opts_size
 
-	if (FIELD_OK(qprio)) {
-		opts->qprio = SPDK_NVME_QPRIO_URGENT;
-	}
+#define SET_FIELD(field, value) \
+        if (FIELD_OK(field)) { \
+                opts->field = value; \
+        } \
 
-	if (FIELD_OK(io_queue_size)) {
-		opts->io_queue_size = ctrlr->opts.io_queue_size;
-	}
-
-	if (FIELD_OK(io_queue_requests)) {
-		opts->io_queue_requests = ctrlr->opts.io_queue_requests;
-	}
-
-	if (FIELD_OK(delay_cmd_submit)) {
-		opts->delay_cmd_submit = false;
-	}
-
-	if (FIELD_OK(sq.vaddr)) {
-		opts->sq.vaddr = NULL;
-	}
-
-	if (FIELD_OK(sq.paddr)) {
-		opts->sq.paddr = 0;
-	}
-
-	if (FIELD_OK(sq.buffer_size)) {
-		opts->sq.buffer_size = 0;
-	}
-
-	if (FIELD_OK(cq.vaddr)) {
-		opts->cq.vaddr = NULL;
-	}
-
-	if (FIELD_OK(cq.paddr)) {
-		opts->cq.paddr = 0;
-	}
-
-	if (FIELD_OK(cq.buffer_size)) {
-		opts->cq.buffer_size = 0;
-	}
-
-	if (FIELD_OK(create_only)) {
-		opts->create_only = false;
-	}
-
-	if (FIELD_OK(async_mode)) {
-		opts->async_mode = false;
-	}
+	SET_FIELD(qprio, SPDK_NVME_QPRIO_URGENT);
+	SET_FIELD(io_queue_size, ctrlr->opts.io_queue_size);
+	SET_FIELD(io_queue_requests, ctrlr->opts.io_queue_requests);
+	SET_FIELD(delay_cmd_submit, false);
+	SET_FIELD(sq.vaddr, NULL);
+	SET_FIELD(sq.paddr, 0);
+	SET_FIELD(sq.buffer_size, 0);
+	SET_FIELD(cq.vaddr, NULL);
+	SET_FIELD(cq.paddr, 0);
+	SET_FIELD(cq.buffer_size, 0);
+	SET_FIELD(create_only, false);
+	SET_FIELD(async_mode, false);
+	SET_FIELD(disable_pcie_sgl_merge, false);
 
 #undef FIELD_OK
+#undef SET_FIELD
+}
+
+static void
+nvme_ctrlr_io_qpair_opts_copy(struct spdk_nvme_io_qpair_opts *dst,
+			      const struct spdk_nvme_io_qpair_opts *src, size_t opts_size_src)
+{
+	if (!opts_size_src) {
+		SPDK_ERRLOG("opts_size_src should not be zero value\n");
+		assert(false);
+	}
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_nvme_io_qpair_opts, field) + sizeof(src->field) <= opts_size_src
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(qprio);
+	SET_FIELD(io_queue_size);
+	SET_FIELD(io_queue_requests);
+	SET_FIELD(delay_cmd_submit);
+	SET_FIELD(sq.vaddr);
+	SET_FIELD(sq.paddr);
+	SET_FIELD(sq.buffer_size);
+	SET_FIELD(cq.vaddr);
+	SET_FIELD(cq.paddr);
+	SET_FIELD(cq.buffer_size);
+	SET_FIELD(create_only);
+	SET_FIELD(async_mode);
+	SET_FIELD(disable_pcie_sgl_merge);
+
+	dst->opts_size = opts_size_src;
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 80, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
 }
 
 static struct spdk_nvme_qpair *
@@ -456,7 +470,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	if (user_opts) {
-		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
+		nvme_ctrlr_io_qpair_opts_copy(&opts, user_opts, spdk_min(opts.opts_size, opts_size));
 
 		/* If user passes buffers, make sure they're big enough for the requested queue size */
 		if (opts.sq.vaddr) {

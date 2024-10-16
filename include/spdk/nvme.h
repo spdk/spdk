@@ -1813,8 +1813,16 @@ struct spdk_nvme_io_qpair_opts {
 
 	/* Hole at bytes 67-71. */
 	uint8_t reserved67[5];
+
+	/**
+	 * The size of spdk_nvme_io_qpair_opts according to the caller of this library is used for
+	 * ABI compatibility. The library uses this field to know how many fields in this structure
+	 * are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 72, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 80, "Incorrect size");
 
 /**
  * Get the default options for I/O qpair creation for a specific NVMe controller.

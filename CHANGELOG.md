@@ -33,6 +33,8 @@ descriptor for an I/O and the admin queue pair of a given NVMe controller respec
 These APIs accept `spdk_event_handler_opts` structure, and if specified the transport layer will
 fill it out which can be used by the application to register interrupts on the queue pairs.
 
+Added `opts_size` in `spdk_nvme_io_qpair_opts` structure to align it with other opts structures.
+
 ### nvmf
 
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page
