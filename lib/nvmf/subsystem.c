@@ -921,14 +921,10 @@ nvmf_ns_visible(struct spdk_nvmf_subsystem *subsystem,
 	/* Also apply to existing controllers. */
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		if (strcmp(hostnqn, ctrlr->hostnqn) ||
-		    spdk_bit_array_get(ctrlr->visible_ns, nsid - 1) == visible) {
+		    nvmf_ctrlr_ns_is_visible(ctrlr, nsid) == visible) {
 			continue;
 		}
-		if (visible) {
-			spdk_bit_array_set(ctrlr->visible_ns, nsid - 1);
-		} else {
-			spdk_bit_array_clear(ctrlr->visible_ns, nsid - 1);
-		}
+		nvmf_ctrlr_ns_set_visible(ctrlr, nsid, visible);
 		send_async_event_ns_notice(ctrlr);
 		nvmf_ctrlr_ns_changed(ctrlr, nsid);
 	}
@@ -1807,7 +1803,7 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	nvmf_subsystem_ns_changed(subsystem, nsid);
 
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-		spdk_bit_array_clear(ctrlr->visible_ns, nsid - 1);
+		nvmf_ctrlr_ns_set_visible(ctrlr, nsid, false);
 	}
 
 	return 0;
@@ -2148,7 +2144,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	ns->always_visible = !opts.no_auto_visible;
 	if (ns->always_visible) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-			spdk_bit_array_set(ctrlr->visible_ns, opts.nsid - 1);
+			nvmf_ctrlr_ns_set_visible(ctrlr, opts.nsid, true);
 		}
 	}
 

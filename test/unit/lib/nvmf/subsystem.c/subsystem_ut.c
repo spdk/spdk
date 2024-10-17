@@ -616,10 +616,10 @@ test_spdk_nvmf_ns_visible(void)
 	CU_ASSERT(nvmf_ns_find_host(&ns1, ctrlrB.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrA.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrB.hostnqn) == NULL);
-	CU_ASSERT(spdk_bit_array_get(ctrlrA.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid));
+	CU_ASSERT(nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid + 1));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid + 1));
 	/* check last ns_changed */
 	CU_ASSERT(g_ns_changed_ctrlr == &ctrlrA);
 	CU_ASSERT(g_ns_changed_nsid == nsid);
@@ -637,10 +637,10 @@ test_spdk_nvmf_ns_visible(void)
 	CU_ASSERT(nvmf_ns_find_host(&ns1, ctrlrB.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrA.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrB.hostnqn) == NULL);
-	CU_ASSERT(spdk_bit_array_get(ctrlrA.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid));
+	CU_ASSERT(nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid + 1));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid + 1));
 	/* check last ns_changed */
 	CU_ASSERT(g_ns_changed_ctrlr == NULL);
 	CU_ASSERT(g_ns_changed_nsid == 0);
@@ -658,10 +658,10 @@ test_spdk_nvmf_ns_visible(void)
 	CU_ASSERT(nvmf_ns_find_host(&ns1, ctrlrB.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrA.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrB.hostnqn) == NULL);
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid + 1));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid + 1));
 	/* check last ns_changed */
 	CU_ASSERT(g_ns_changed_ctrlr == &ctrlrA);
 	CU_ASSERT(g_ns_changed_nsid == nsid);
@@ -679,10 +679,10 @@ test_spdk_nvmf_ns_visible(void)
 	CU_ASSERT(nvmf_ns_find_host(&ns1, ctrlrB.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrA.hostnqn) == NULL);
 	CU_ASSERT(nvmf_ns_find_host(&ns2, ctrlrB.hostnqn) == NULL);
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid + 1));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid + 1));
 	/* check last ns_changed */
 	CU_ASSERT(g_ns_changed_ctrlr == NULL);
 	CU_ASSERT(g_ns_changed_nsid == 0);
@@ -699,8 +699,8 @@ test_spdk_nvmf_ns_visible(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvmf_ns_find_host(ns3, ctrlrA.hostnqn) != NULL);
 	CU_ASSERT(nvmf_ns_find_host(ns3, ctrlrB.hostnqn) == NULL);
-	CU_ASSERT(spdk_bit_array_get(ctrlrA.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid - 1));
+	CU_ASSERT(nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid));
 	/* check last ns_changed */
 	CU_ASSERT(g_ns_changed_ctrlr == &ctrlrA);
 	CU_ASSERT(g_ns_changed_nsid == nsid);
@@ -713,8 +713,8 @@ test_spdk_nvmf_ns_visible(void)
 	g_ns_changed_nsid = 0;
 	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, nsid);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(!spdk_bit_array_get(ctrlrA.visible_ns, nsid - 1));
-	CU_ASSERT(!spdk_bit_array_get(ctrlrB.visible_ns, nsid - 1));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrA, nsid));
+	CU_ASSERT(!nvmf_ctrlr_ns_is_visible(&ctrlrB, nsid));
 	/* check last ns_changed */
 	CU_ASSERT(g_ns_changed_ctrlr == &ctrlrA);
 	CU_ASSERT(g_ns_changed_nsid == nsid);

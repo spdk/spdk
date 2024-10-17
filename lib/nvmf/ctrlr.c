@@ -424,7 +424,7 @@ nvmf_ctrlr_init_visible_ns(struct spdk_nvmf_ctrlr *ctrlr)
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
 		if (ns->always_visible || nvmf_ns_find_host(ns, ctrlr->hostnqn) != NULL) {
-			spdk_bit_array_set(ctrlr->visible_ns, ns->nsid - 1);
+			nvmf_ctrlr_ns_set_visible(ctrlr, ns->nsid, true);
 		}
 	}
 }

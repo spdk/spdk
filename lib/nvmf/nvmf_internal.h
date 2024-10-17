@@ -491,7 +491,19 @@ void nvmf_ctrlr_set_fatal_status(struct spdk_nvmf_ctrlr *ctrlr);
 static inline bool
 nvmf_ctrlr_ns_is_visible(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
+	assert(nsid > 0 && nsid <= ctrlr->subsys->max_nsid);
 	return spdk_bit_array_get(ctrlr->visible_ns, nsid - 1);
+}
+
+static inline void
+nvmf_ctrlr_ns_set_visible(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid, bool visible)
+{
+	assert(nsid > 0 && nsid <= ctrlr->subsys->max_nsid);
+	if (visible) {
+		spdk_bit_array_set(ctrlr->visible_ns, nsid - 1);
+	} else {
+		spdk_bit_array_clear(ctrlr->visible_ns, nsid - 1);
+	}
 }
 
 static inline struct spdk_nvmf_ns *
