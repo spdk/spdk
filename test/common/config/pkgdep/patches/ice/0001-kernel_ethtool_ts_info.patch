@@ -1,0 +1,20 @@
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2111375b85ad1
+---
+ src/ice_ethtool.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/ice_ethtool.c b/src/ice_ethtool.c
+index e8aadaa..ceef806 100644
+--- a/src/ice_ethtool.c
++++ b/src/ice_ethtool.c
+@@ -5330,7 +5330,7 @@ ice_set_rxfh(struct net_device *netdev, const u32 *indir, const u8 *key)
+ #endif /* ETHTOOL_GRSSH && ETHTOOL_SRSSH */
+ 
+ static int
+-ice_get_ts_info(struct net_device *dev, struct ethtool_ts_info *info)
++ice_get_ts_info(struct net_device *dev, struct kernel_ethtool_ts_info *info)
+ {
+ 	struct ice_pf *pf = ice_netdev_to_pf(dev);
+ 
+-- 
+

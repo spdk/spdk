@@ -440,6 +440,13 @@ function install_ice() {
 			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-xsk_buff_dma.patch"
 	fi
 
+	if ge "$kernel_ver" 6.11; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-kernel_ethtool_ts_info.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-ptp.patch"
+	fi
+
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install
