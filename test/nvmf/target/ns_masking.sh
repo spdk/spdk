@@ -134,6 +134,14 @@ hostrpc bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_
 [[ $(hostrpc bdev_get_bdevs | jq -r '.[].name' | sort | xargs) == "nvme0n1 nvme1n2" ]]
 [[ $(hostrpc bdev_get_bdevs -b nvme0n1 | jq -r '.[].uuid') == "$ns1uuid" ]]
 [[ $(hostrpc bdev_get_bdevs -b nvme1n2 | jq -r '.[].uuid') == "$ns2uuid" ]]
+"$rpc_py" nvmf_subsystem_remove_ns "$SUBSYSNQN" 1
+"$rpc_py" nvmf_subsystem_remove_ns "$SUBSYSNQN" 2
+
+# Check that a failed add_ns doesn't leave the ns visible flag set, see issue #3544
+NOT "$rpc_py" nvmf_subsystem_add_ns "$SUBSYSNQN" invalid -n 1 -g $(uuid2nguid "$ns1uuid")
+"$rpc_py" nvmf_subsystem_add_ns "$SUBSYSNQN" Malloc1 -n 1 -g $(uuid2nguid "$ns1uuid") -i
+sleep 2s
+(($(hostrpc bdev_get_bdevs | jq 'length') == 0))
 
 killprocess $hostpid
 $rpc_py nvmf_delete_subsystem $SUBSYSNQN

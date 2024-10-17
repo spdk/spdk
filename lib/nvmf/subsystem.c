@@ -2142,10 +2142,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	TAILQ_INIT(&ns->hosts);
 	ns->always_visible = !opts.no_auto_visible;
-	if (ns->always_visible) {
-		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-			nvmf_ctrlr_ns_set_visible(ctrlr, opts.nsid, true);
-		}
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		nvmf_ctrlr_ns_set_visible(ctrlr, opts.nsid, ns->always_visible);
 	}
 
 	rc = spdk_bdev_open_ext(bdev_name, true, nvmf_ns_event, ns, &ns->desc);
