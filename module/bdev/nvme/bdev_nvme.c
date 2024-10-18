@@ -55,6 +55,20 @@
 #define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
 #endif
 
+#define BDEV_STRING(nbdev) (nbdev->disk.name)
+
+#define NVME_BDEV_ERRLOG(nbdev, format, ...) \
+	SPDK_ERRLOG("[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
+
+#define NVME_BDEV_WARNLOG(nbdev, format, ...) \
+	SPDK_WARNLOG("[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
+
+#define NVME_BDEV_NOTICELOG(nbdev, format, ...) \
+	SPDK_NOTICELOG("[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
+
+#define NVME_BDEV_INFOLOG(nbdev, format, ...) \
+	SPDK_INFOLOG(bdev_nvme, "[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
+
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 #define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
@@ -2946,6 +2960,8 @@ bdev_nvme_unfreeze_bdev_channel_done(struct nvme_bdev *nbdev, void *ctx, int sta
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
+	NVME_BDEV_INFOLOG(nbdev, "reset_io %p completed, status:%d\n", bio, io_status);
+
 	__bdev_nvme_io_complete(spdk_bdev_io_from_ctx(bio), io_status, NULL);
 }
 
@@ -3002,6 +3018,9 @@ bdev_nvme_reset_io_continue(void *cb_arg, int rc)
 {
 	struct nvme_bdev_io *bio = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+
+	NVME_BDEV_INFOLOG(nbdev, "continue reset_io %p, rc:%d\n", bio, rc);
 
 	/* Reset status is initialized as "failed". Set to "success" once we have at least one
 	 * successfully reset nvme_ctrlr.
@@ -3016,19 +3035,22 @@ bdev_nvme_reset_io_continue(void *cb_arg, int rc)
 static int
 _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 {
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 	int rc;
 
 	assert(bio->io_path == NULL);
 	bio->io_path = io_path;
 
-	rc = nvme_ctrlr_op(io_path->qpair->ctrlr, NVME_CTRLR_OP_RESET,
+	rc = nvme_ctrlr_op(nvme_ctrlr, NVME_CTRLR_OP_RESET,
 			   bdev_nvme_reset_io_continue, bio);
-	if (rc != 0 && rc != -EBUSY) {
-		return rc;
-	}
 
-	if (rc == -EBUSY) {
+	if (rc == 0) {
+		NVME_BDEV_INFOLOG(nbdev, "reset_io %p started resetting ctrlr %s.\n",
+				  bio, CTRLR_STRING(nvme_ctrlr));
+	} else if (rc == -EBUSY) {
 		ctrlr_ch = io_path->qpair->ctrlr_ch;
 		assert(ctrlr_ch != NULL);
 		/*
@@ -3037,9 +3059,18 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
 		 */
 		TAILQ_INSERT_TAIL(&ctrlr_ch->pending_resets, bio, retry_link);
+
+		rc = 0;
+
+		NVME_BDEV_INFOLOG(nbdev, "reset_io %p was queued to ctrlr %s.\n",
+				  bio, CTRLR_STRING(nvme_ctrlr));
+
+	} else {
+		NVME_BDEV_INFOLOG(nbdev, "reset_io %p could not reset ctrlr %s, rc:%d\n",
+				  bio, CTRLR_STRING(nvme_ctrlr), rc);
 	}
 
-	return 0;
+	return rc;
 }
 
 static void
@@ -3084,6 +3115,8 @@ bdev_nvme_freeze_bdev_channel(struct nvme_bdev_channel_iter *i,
 static void
 bdev_nvme_reset_io(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio)
 {
+	NVME_BDEV_INFOLOG(nbdev, "reset_io %p started.\n", bio);
+
 	nvme_bdev_for_each_channel(nbdev,
 				   bdev_nvme_freeze_bdev_channel,
 				   bio,
