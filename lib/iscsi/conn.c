@@ -818,6 +818,7 @@ iscsi_conn_request_logout(struct spdk_iscsi_conn *conn)
 	if (conn->state == ISCSI_CONN_STATE_INVALID) {
 		/* Move it to EXITING state if the connection is in login. */
 		conn->state = ISCSI_CONN_STATE_EXITING;
+		spdk_poller_unregister(&conn->login_timer);
 	} else if (conn->state == ISCSI_CONN_STATE_RUNNING &&
 		   conn->logout_request_timer == NULL) {
 		thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg));
