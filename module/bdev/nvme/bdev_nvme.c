@@ -2586,24 +2586,18 @@ _bdev_nvme_reset_ctrlr(void *ctx)
 }
 
 static int
-bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
+bdev_nvme_reset_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 {
-	spdk_msg_fn msg_fn;
-
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return -ENXIO;
 	}
 
 	if (nvme_ctrlr->resetting) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Unable to perform reset, already in progress.\n");
 		return -EBUSY;
 	}
 
 	if (nvme_ctrlr->disabled) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Unable to perform reset. Controller is disabled.\n");
 		return -EALREADY;
 	}
@@ -2613,19 +2607,33 @@ bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	if (nvme_ctrlr->reconnect_is_delayed) {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
-		msg_fn = bdev_nvme_reconnect_ctrlr_now;
+		*msg_fn = bdev_nvme_reconnect_ctrlr_now;
 		nvme_ctrlr->reconnect_is_delayed = false;
 	} else {
-		msg_fn = _bdev_nvme_reset_ctrlr;
+		*msg_fn = _bdev_nvme_reset_ctrlr;
 		assert(nvme_ctrlr->reset_start_tsc == 0);
 	}
 
 	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
 
+	return 0;
+}
+
+static int
+bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
+{
+	spdk_msg_fn msg_fn;
+	int rc;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	rc = bdev_nvme_reset_ctrlr_unsafe(nvme_ctrlr, &msg_fn);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	spdk_thread_send_msg(nvme_ctrlr->thread, msg_fn, nvme_ctrlr);
-	return 0;
+	if (rc == 0) {
+		spdk_thread_send_msg(nvme_ctrlr->thread, msg_fn, nvme_ctrlr);
+	}
+
+	return rc;
 }
 
 static int
