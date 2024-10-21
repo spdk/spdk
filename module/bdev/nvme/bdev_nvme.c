@@ -3076,10 +3076,14 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 	assert(bio->io_path == NULL);
 	bio->io_path = io_path;
 
-	rc = nvme_ctrlr_op(nvme_ctrlr, NVME_CTRLR_OP_RESET,
-			   bdev_nvme_reset_io_continue, bio);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 
 	if (rc == 0) {
+		assert(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
+		assert(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
+		nvme_ctrlr->ctrlr_op_cb_fn = bdev_nvme_reset_io_continue;
+		nvme_ctrlr->ctrlr_op_cb_arg = bio;
+
 		NVME_BDEV_INFOLOG(nbdev, "reset_io %p started resetting ctrlr [%s, %u].\n",
 				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr));
 	} else if (rc == -EBUSY) {
