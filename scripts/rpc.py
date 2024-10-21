@@ -578,13 +578,14 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_xnvme_create(args.client,
                                               filename=args.filename,
                                               name=args.name,
-                                              io_mechanism=args.io_mechanism))
+                                              io_mechanism=args.io_mechanism,
+                                              conserve_cpu=args.conserve_cpu))
 
     p = subparsers.add_parser('bdev_xnvme_create', help='Create a bdev with xNVMe backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
     p.add_argument('name', help='name of xNVMe bdev to create')
     p.add_argument('io_mechanism', help='IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)')
-    p.add_argument('conserve_cpu', action='store_true', help='Whether or not to conserve CPU when polling')
+    p.add_argument('-c', '--conserve-cpu', action='store_true', help='Whether or not to conserve CPU when polling')
     p.set_defaults(func=bdev_xnvme_create)
 
     def bdev_xnvme_delete(args):

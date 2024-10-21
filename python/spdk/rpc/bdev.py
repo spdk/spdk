@@ -541,7 +541,7 @@ def bdev_uring_delete(client, name):
     return client.call('bdev_uring_delete', params)
 
 
-def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu=None):
+def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu):
     """Create a bdev with xNVMe backend.
     Args:
         filename: path to device or file (ex: /dev/nvme0n1)
@@ -555,8 +555,7 @@ def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu=None):
     params['filename'] = filename
     params['name'] = name
     params['io_mechanism'] = io_mechanism
-    if conserve_cpu is not None:
-        params['conserve_cpu'] = conserve_cpu
+    params['conserve_cpu'] = conserve_cpu
     return client.call('bdev_xnvme_create', params)
 
 
