@@ -2047,6 +2047,13 @@ nvmf_rdma_check_fused_ordering(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
+static void
+nvmf_rdma_poll_group_insert_need_buffer_req(struct spdk_nvmf_rdma_poll_group *rgroup,
+		struct spdk_nvmf_rdma_request *rdma_req)
+{
+	STAILQ_INSERT_TAIL(&rgroup->group.pending_buf_queue, &rdma_req->req, buf_link);
+}
+
 bool
 nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			  struct spdk_nvmf_rdma_request *rdma_req)
@@ -2154,7 +2161,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			rdma_req->state = RDMA_REQUEST_STATE_NEED_BUFFER;
-			STAILQ_INSERT_TAIL(&rgroup->group.pending_buf_queue, &rdma_req->req, buf_link);
+			nvmf_rdma_poll_group_insert_need_buffer_req(rgroup, rdma_req);
 			break;
 		case RDMA_REQUEST_STATE_NEED_BUFFER:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEED_BUFFER, 0, 0,
