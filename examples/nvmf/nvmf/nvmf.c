@@ -183,8 +183,7 @@ nvmf_reactor_run(void *arg)
 
 			spdk_thread_poll(thread, 0, 0);
 
-			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
-					  spdk_thread_is_idle(thread))) {
+			if (spdk_unlikely(spdk_thread_is_exited(thread))) {
 				spdk_thread_destroy(thread);
 			} else if (spdk_unlikely(lw_thread->resched)) {
 				lw_thread->resched = false;

@@ -99,9 +99,8 @@ reactor_run(void)
 		spdk_thread_poll(thread, 0, 0);
 
 		/* spdk_unlikely() is a branch prediction macro. Here it means the
-		 * thread should not be exited and idle, but it is still possible. */
-		if (spdk_unlikely(spdk_thread_is_exited(thread) &&
-				  spdk_thread_is_idle(thread))) {
+		 * thread should not be exited, but it is still possible. */
+		if (spdk_unlikely(spdk_thread_is_exited(thread))) {
 			spdk_thread_destroy(thread);
 		} else {
 			spdk_ring_enqueue(reactor->threads, (void **)&lw_thread, 1, NULL);
