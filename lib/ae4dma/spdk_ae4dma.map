@@ -1,0 +1,12 @@
+{
+	global:
+
+	# public functions
+	spdk_ae4dma_probe;
+	spdk_ae4dma_detach;
+	spdk_ae4dma_build_copy;
+	spdk_ae4dma_flush;
+	spdk_ae4dma_process_events;
+
+	local: *;
+};

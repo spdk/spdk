@@ -581,19 +581,25 @@ test_spdk_accel_module_find_by_name(void)
 	struct spdk_accel_module_if mod1 = {};
 	struct spdk_accel_module_if mod2 = {};
 	struct spdk_accel_module_if mod3 = {};
+	struct spdk_accel_module_if mod4 = {};
 	struct spdk_accel_module_if *accel_module = NULL;
 
 	mod1.name = "ioat";
 	mod2.name = "idxd";
-	mod3.name = "software";
+	mod3.name = "ae4dma";
+	mod4.name = "software";
 
 	TAILQ_INIT(&spdk_accel_module_list);
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod1, tailq);
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod2, tailq);
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod3, tailq);
+	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod4, tailq);
 
 	/* Now let's find a valid engine */
 	accel_module = _module_find_by_name("ioat");
+	CU_ASSERT(accel_module != NULL);
+
+	accel_module = _module_find_by_name("ae4dma");
 	CU_ASSERT(accel_module != NULL);
 
 	/* Try to find one that doesn't exist */

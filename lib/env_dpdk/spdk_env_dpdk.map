@@ -64,6 +64,7 @@
 	spdk_pci_vmd_get_driver;
 	spdk_pci_idxd_get_driver;
 	spdk_pci_ioat_get_driver;
+	spdk_pci_ae4dma_get_driver;
 	spdk_pci_virtio_get_driver;
 	spdk_pci_enumerate;
 	spdk_pci_for_each_device;

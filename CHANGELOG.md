@@ -23,6 +23,23 @@ Add support for preempt-and-abort mode of persistent reservations acquire comman
 
 Added support for adding and deleting hosts from a discovery referral.
 
+### AE4DMA
+
+This release adds a user-space driver with support for the AE4DMA (AMD EPYC 4th Generation
+Direct Memory Access) offload engine.
+
+AE4DMA
+
+- The AE4DMA user-space driver offloads memory copies to the DMA engine in AMD Embedded EPYC
+  processors.
+- Added a new AE4DMA module to the Accel Framework. To use the AE4DMA module,
+  use the new RPC ae4dma_scan_accel_module.
+
+### rpc
+
+A new RPC ae4dma_scan_accel_module has been added to the accel framework
+to enable the AE4DMA module.
+
 ## v25.09
 
 ### bdev

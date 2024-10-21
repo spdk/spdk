@@ -2126,6 +2126,36 @@ Example response:
 }
 ~~~
 
+### ae4dma_scan_accel_module {#rpc_ae4dma_scan_accel_module}
+
+Enable ae4dma accel module offload.
+
+#### Parameters
+
+{{ ae4dma_scan_accel_module_params }}
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ae4dma_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### cuda_scan_accel_module {#rpc_cuda_scan_accel_module}
 
 Enable cuda accel module offload.

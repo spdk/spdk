@@ -133,6 +133,14 @@ def add_parser(subparsers):
     p = subparsers.add_parser('dpdk_cryptodev_get_driver', help='Get the DPDK cryptodev driver')
     p.set_defaults(func=dpdk_cryptodev_get_driver)
 
+    # ae4dma
+    def ae4dma_scan_accel_module(args):
+        args.client.ae4dma_scan_accel_module()
+
+    p = subparsers.add_parser('ae4dma_scan_accel_module',
+                              help='Enable AE4DMA accel module offload.')
+    p.set_defaults(func=ae4dma_scan_accel_module)
+
     # mlx5
     def mlx5_scan_accel_module(args):
         args.client.mlx5_scan_accel_module(

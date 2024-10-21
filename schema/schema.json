@@ -776,6 +776,10 @@
       "params": []
     },
     {
+      "name": "ae4dma_scan_accel_module",
+      "params": []
+    },
+    {
       "name": "dpdk_cryptodev_scan_accel_module",
       "params": []
     },

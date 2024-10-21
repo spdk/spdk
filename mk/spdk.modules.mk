@@ -90,7 +90,7 @@ SOCK_MODULES_LIST += sock_uring
 endif
 endif
 
-ACCEL_MODULES_LIST = accel_error accel_ioat ioat
+ACCEL_MODULES_LIST = accel_error accel_ioat ioat accel_ae4dma ae4dma
 ifeq ($(CONFIG_IDXD),y)
 ACCEL_MODULES_LIST += accel_dsa accel_iaa idxd
 endif

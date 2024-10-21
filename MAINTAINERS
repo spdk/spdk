@@ -56,6 +56,17 @@ F:	test/unit/lib/accel/
 X:	test/unit/lib/accel/dpdk_*dev.c/
 S:	Supported
 
+AMD AE4DMA DRIVER
+M:	Bhagyada Modali <bhagyada.modali@amd.com>
+F:	lib/ae4dma/
+F:	test/unit/lib/ae4dma/
+S:	Supported
+
+AMD ACCEL MODULE
+M:	Bhagyada Modali <bhagyada.modali@amd.com>
+F:	module/accel/ae4dma/
+S:	Supported
+
 BDEV (BLOCK DEVICE) LAYER
 M:	Jim Harris <jim.harris@nvidia.com>
 M:	Konrad Sztyber <ksztyber@nvidia.com>
