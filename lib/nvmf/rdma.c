@@ -2051,7 +2051,38 @@ static void
 nvmf_rdma_poll_group_insert_need_buffer_req(struct spdk_nvmf_rdma_poll_group *rgroup,
 		struct spdk_nvmf_rdma_request *rdma_req)
 {
-	STAILQ_INSERT_TAIL(&rgroup->group.pending_buf_queue, &rdma_req->req, buf_link);
+	struct spdk_nvmf_request *r;
+
+	/* CONNECT commands have a timeout, so we need to avoid a CONNECT command
+	 * from getting buried behind a long list of other non-FABRIC requests
+	 * waiting for a buffer. Note that even though the CONNECT command's data is
+	 * in-capsule, the request still goes to this STAILQ.
+	 */
+	if (spdk_likely(rdma_req->req.cmd->nvme_cmd.opc != SPDK_NVME_OPC_FABRIC)) {
+		/* This is the most likely case. */
+		STAILQ_INSERT_TAIL(&rgroup->group.pending_buf_queue, &rdma_req->req, buf_link);
+		return;
+	} else {
+		/* STAILQ doesn't have INSERT_BEFORE, so we need to either INSERT_HEAD
+		 * or INSERT_AFTER. Put it after any other FABRIC commands that are
+		 * already in the queue.
+		 */
+		r = STAILQ_FIRST(&rgroup->group.pending_buf_queue);
+		if (r == NULL || r->cmd->nvme_cmd.opc != SPDK_NVME_OPC_FABRIC) {
+			STAILQ_INSERT_HEAD(&rgroup->group.pending_buf_queue, &rdma_req->req, buf_link);
+			return;
+		}
+		while (true) {
+			struct spdk_nvmf_request *next;
+
+			next = STAILQ_NEXT(r, buf_link);
+			if (next == NULL || next->cmd->nvme_cmd.opc != SPDK_NVME_OPC_FABRIC) {
+				STAILQ_INSERT_AFTER(&rgroup->group.pending_buf_queue, r, &rdma_req->req, buf_link);
+				return;
+			}
+			r = next;
+		}
+	}
 }
 
 bool
