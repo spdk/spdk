@@ -1437,8 +1437,6 @@ function autotest_cleanup() {
 			echo l > /proc/sysrq-trigger
 			# Show mem usage
 			echo m > /proc/sysrq-trigger
-			# show task states
-			echo t > /proc/sysrq-trigger
 			# show blocked tasks
 			echo w > /proc/sysrq-trigger
 
