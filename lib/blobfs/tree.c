@@ -5,13 +5,9 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/blobfs.h"
 #include "cache_tree.h"
 
-#include "spdk/queue.h"
 #include "spdk/assert.h"
-#include "spdk/env.h"
-#include "spdk/log.h"
 
 struct cache_buffer *
 tree_find_buffer(struct cache_tree *tree, uint64_t offset)
