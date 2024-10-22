@@ -12,6 +12,9 @@
 #define DEV_BUFFER_BLOCKLEN (4096)
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
 #define DEV_MAX_PHYS_BLOCKLEN (16384)
+#define FIRST_DATA_CLUSTER(bs) \
+	((DEV_BUFFER_SIZE / spdk_bs_get_cluster_size(bs)) - spdk_bs_total_data_cluster_count(bs))
+
 uint8_t *g_dev_buffer;
 uint64_t g_dev_write_bytes;
 uint64_t g_dev_read_bytes;

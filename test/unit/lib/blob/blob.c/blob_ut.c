@@ -1576,6 +1576,7 @@ blob_rw_verify_iov(void)
 	struct iovec iov_read[3];
 	struct iovec iov_write[3];
 	void *buf;
+	uint32_t first_data_cluster = FIRST_DATA_CLUSTER(bs);
 
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
@@ -1592,9 +1593,9 @@ blob_rw_verify_iov(void)
 	 *  that cross cluster boundaries.  Start by asserting that the allocated
 	 *  clusters are where we expect before modifying the second cluster.
 	 */
-	CU_ASSERT(blob->active.clusters[0] == 1 * 256);
-	CU_ASSERT(blob->active.clusters[1] == 2 * 256);
-	blob->active.clusters[1] = 3 * 256;
+	CU_ASSERT(blob->active.clusters[0] == first_data_cluster * 256);
+	CU_ASSERT(blob->active.clusters[1] == (first_data_cluster + 1) * 256);
+	blob->active.clusters[1] = (first_data_cluster + 2) * 256;
 
 	memset(payload_write, 0xE5, sizeof(payload_write));
 	iov_write[0].iov_base = payload_write;
@@ -1626,7 +1627,8 @@ blob_rw_verify_iov(void)
 	buf = calloc(1, 256 * BLOCKLEN);
 	SPDK_CU_ASSERT_FATAL(buf != NULL);
 	/* Check that cluster 2 on "disk" was not modified. */
-	CU_ASSERT(memcmp(buf, &g_dev_buffer[512 * BLOCKLEN], 256 * BLOCKLEN) == 0);
+	CU_ASSERT(memcmp(buf, &g_dev_buffer[(first_data_cluster + 1) * 256 * BLOCKLEN],
+			 256 * BLOCKLEN) == 0);
 	free(buf);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -2085,6 +2087,7 @@ blob_unmap(void)
 	struct spdk_io_channel *channel;
 	struct spdk_blob_opts opts;
 	uint8_t payload[BLOCKLEN];
+	uint32_t first_data_cluster = FIRST_DATA_CLUSTER(bs);
 	int i;
 
 	channel = spdk_bs_alloc_io_channel(bs);
@@ -2105,10 +2108,9 @@ blob_unmap(void)
 
 	/*
 	 * Set first byte of every cluster to 0xFF.
-	 * First cluster on device is reserved so let's start from cluster number 1
 	 */
-	for (i = 1; i < 11; i++) {
-		g_dev_buffer[i * SPDK_BLOB_OPTS_CLUSTER_SZ] = 0xFF;
+	for (i = 0; i < 10; i++) {
+		g_dev_buffer[(first_data_cluster + i) * SPDK_BLOB_OPTS_CLUSTER_SZ] = 0xFF;
 	}
 
 	/* Confirm writes */
@@ -2140,17 +2142,17 @@ blob_unmap(void)
 	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* Confirm that only 'allocated' clusters were unmapped */
-	for (i = 1; i < 11; i++) {
+	for (i = 0; i < 10; i++) {
 		switch (i) {
+		case 1:
 		case 2:
 		case 3:
-		case 4:
-		case 7:
-		case 9:
-			CU_ASSERT(g_dev_buffer[i * SPDK_BLOB_OPTS_CLUSTER_SZ] == 0xFF);
+		case 6:
+		case 8:
+			CU_ASSERT(g_dev_buffer[(first_data_cluster + i) * SPDK_BLOB_OPTS_CLUSTER_SZ] == 0xFF);
 			break;
 		default:
-			CU_ASSERT(g_dev_buffer[i * SPDK_BLOB_OPTS_CLUSTER_SZ] == 0);
+			CU_ASSERT(g_dev_buffer[(first_data_cluster + i) * SPDK_BLOB_OPTS_CLUSTER_SZ] == 0);
 			break;
 		}
 	}
@@ -6602,6 +6604,7 @@ blob_delete_snapshot_power_failure(void)
 	int rc;
 	bool deleted = false;
 	int delete_snapshot_bserrno = -1;
+	uint32_t first_data_cluster;
 
 	thresholds.general_threshold = 1;
 	while (!deleted) {
@@ -6612,6 +6615,8 @@ blob_delete_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+
+		first_data_cluster = FIRST_DATA_CLUSTER(bs);
 
 		/* Create blob */
 		ut_spdk_blob_opts_init(&opts);
@@ -6629,8 +6634,8 @@ blob_delete_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 		snapshotid = g_blobid;
-		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, 1));
-		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, 11));
+		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster + 10));
 
 		dev_set_power_failure_thresholds(thresholds);
 
@@ -6643,8 +6648,8 @@ blob_delete_snapshot_power_failure(void)
 		dev_reset_power_failure_event();
 		ut_bs_dirty_load(&bs, NULL);
 
-		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, 1));
-		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, 11));
+		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster + 10));
 
 		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
@@ -6713,6 +6718,7 @@ blob_create_snapshot_power_failure(void)
 	int rc;
 	bool created = false;
 	int create_snapshot_bserrno = -1;
+	uint32_t first_data_cluster;
 
 	thresholds.general_threshold = 1;
 	while (!created) {
@@ -6724,6 +6730,8 @@ blob_create_snapshot_power_failure(void)
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
 
+		first_data_cluster = FIRST_DATA_CLUSTER(bs);
+
 		/* Create blob */
 		ut_spdk_blob_opts_init(&opts);
 		opts.num_clusters = 10;
@@ -6733,8 +6741,8 @@ blob_create_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 		blobid = g_blobid;
-		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, 1));
-		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, 11));
+		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster + 10));
 
 		dev_set_power_failure_thresholds(thresholds);
 
@@ -6743,16 +6751,16 @@ blob_create_snapshot_power_failure(void)
 		poll_threads();
 		create_snapshot_bserrno = g_bserrno;
 		snapshotid = g_blobid;
-		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, 1));
-		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, 11));
+		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster + 10));
 
 		/* Do not shut down cleanly. Assumption is that after create snapshot
 		 * reports success, both blobs should be power-fail safe. */
 		dev_reset_power_failure_event();
 		ut_bs_dirty_load(&bs, NULL);
 
-		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, 1));
-		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, 11));
+		SPDK_CU_ASSERT_FATAL(spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_pool_is_allocated(bs->used_clusters, first_data_cluster + 10));
 
 		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
