@@ -29,7 +29,7 @@ typedef void (*spdk_bdev_nvme_stop_discovery_fn)(void *ctx);
 
 struct nvme_async_probe_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
-	const char *base_name;
+	char *base_name;
 	const char **names;
 	uint32_t max_bdevs;
 	uint32_t reported_bdevs;
