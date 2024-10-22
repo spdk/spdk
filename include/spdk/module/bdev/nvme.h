@@ -56,33 +56,33 @@ enum spdk_bdev_timeout_action {
 
 struct spdk_bdev_nvme_opts {
 	enum spdk_bdev_timeout_action action_on_timeout;
+	uint32_t keep_alive_timeout_ms;
 	uint64_t timeout_us;
 	uint64_t timeout_admin_us;
-	uint32_t keep_alive_timeout_ms;
 	/* The number of attempts per I/O in the transport layer before an I/O fails. */
 	uint32_t transport_retry_count;
 	uint32_t arbitration_burst;
 	uint32_t low_priority_weight;
 	uint32_t medium_priority_weight;
 	uint32_t high_priority_weight;
+	uint32_t io_queue_requests;
 	uint64_t nvme_adminq_poll_period_us;
 	uint64_t nvme_ioq_poll_period_us;
-	uint32_t io_queue_requests;
 	bool delay_cmd_submit;
 	/* The number of attempts per I/O in the bdev layer before an I/O fails. */
 	int32_t bdev_retry_count;
-	uint8_t transport_ack_timeout;
 	int32_t ctrlr_loss_timeout_sec;
 	uint32_t reconnect_delay_sec;
 	uint32_t fast_io_fail_timeout_sec;
+	uint8_t transport_ack_timeout;
 	bool disable_auto_failback;
 	bool generate_uuids;
 	/* Type of Service - RDMA only */
 	uint8_t transport_tos;
 	bool nvme_error_stat;
-	uint32_t rdma_srq_size;
 	bool io_path_stat;
 	bool allow_accel_sequence;
+	uint32_t rdma_srq_size;
 	uint32_t rdma_max_cq_size;
 	uint16_t rdma_cm_event_timeout_ms;
 	uint32_t dhchap_digests;
