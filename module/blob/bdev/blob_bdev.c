@@ -494,6 +494,7 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	b->desc = desc;
 	b->bs_dev.blockcnt = spdk_bdev_get_num_blocks(bdev);
 	b->bs_dev.blocklen = spdk_bdev_get_block_size(bdev);
+	b->bs_dev.phys_blocklen = spdk_bdev_get_physical_block_size(bdev);
 	b->bs_dev.create_channel = bdev_blob_create_channel;
 	b->bs_dev.destroy_channel = bdev_blob_destroy_channel;
 	b->bs_dev.destroy = bdev_blob_destroy;

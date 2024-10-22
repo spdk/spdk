@@ -424,6 +424,7 @@ init_dev(void)
 	dev->copy = g_dev_copy_enabled ? dev_copy : NULL;
 	dev->blockcnt = DEV_BUFFER_BLOCKCNT;
 	dev->blocklen = DEV_BUFFER_BLOCKLEN;
+	dev->phys_blocklen = g_phys_blocklen;
 
 	return dev;
 }

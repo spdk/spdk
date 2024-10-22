@@ -57,6 +57,7 @@ struct spdk_bdev {
 	char name[16];
 	uint64_t blockcnt;
 	uint32_t blocklen;
+	uint32_t phys_blocklen;
 	uint32_t open_cnt;
 	enum spdk_bdev_claim_type claim_type;
 	struct spdk_bdev_module *claim_module;
@@ -161,6 +162,12 @@ uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 {
 	return bdev->blocklen;
+}
+
+uint32_t
+spdk_bdev_get_physical_block_size(const struct spdk_bdev *bdev)
+{
+	return bdev->phys_blocklen;
 }
 
 /* This is a simple approximation: it does not support shared claims */
