@@ -685,6 +685,12 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 	return &ctrlr->cdata;
 }
 
+uint16_t
+spdk_nvme_ctrlr_get_id(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->cdata.cntlid;
+}
+
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {

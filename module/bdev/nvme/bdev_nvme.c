@@ -36,21 +36,23 @@
 	(spdk_nvme_trtype_is_fabrics(nvme_ctrlr->active_path_id->trid.trtype) ? \
 	nvme_ctrlr->active_path_id->trid.subnqn : nvme_ctrlr->active_path_id->trid.traddr)
 
+#define CTRLR_ID(nvme_ctrlr)	(spdk_nvme_ctrlr_get_id(nvme_ctrlr->ctrlr))
+
 #define NVME_CTRLR_ERRLOG(ctrlr, format, ...) \
-	SPDK_ERRLOG("[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+	SPDK_ERRLOG("[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
 
 #define NVME_CTRLR_WARNLOG(ctrlr, format, ...) \
-	SPDK_WARNLOG("[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+	SPDK_WARNLOG("[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
 
 #define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) \
-	SPDK_NOTICELOG("[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+	SPDK_NOTICELOG("[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
 
 #define NVME_CTRLR_INFOLOG(ctrlr, format, ...) \
-	SPDK_INFOLOG(bdev_nvme, "[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+	SPDK_INFOLOG(bdev_nvme, "[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
 
 #ifdef DEBUG
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) \
-	SPDK_DEBUGLOG(bdev_nvme, "[%s] " format, CTRLR_STRING(ctrlr), ##__VA_ARGS__);
+	SPDK_DEBUGLOG(bdev_nvme, "[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
 #else
 #define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
 #endif
@@ -2458,6 +2460,7 @@ static int
 bdev_nvme_reconnect_ctrlr_poll(void *arg)
 {
 	struct nvme_ctrlr *nvme_ctrlr = arg;
+	struct spdk_nvme_transport_id *trid;
 	int rc = -ETIMEDOUT;
 
 	if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
@@ -2475,7 +2478,14 @@ bdev_nvme_reconnect_ctrlr_poll(void *arg)
 
 	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
 	if (rc == 0) {
-		NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was connected. Create qpairs.\n");
+		trid = &nvme_ctrlr->active_path_id->trid;
+
+		if (spdk_nvme_trtype_is_fabrics(trid->trtype)) {
+			NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was connected to %s:%s. Create qpairs.\n",
+					   trid->traddr, trid->trsvcid);
+		} else {
+			NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was connected. Create qpairs.\n");
+		}
 
 		nvme_ctrlr_check_namespaces(nvme_ctrlr);
 
@@ -3048,8 +3058,8 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 			   bdev_nvme_reset_io_continue, bio);
 
 	if (rc == 0) {
-		NVME_BDEV_INFOLOG(nbdev, "reset_io %p started resetting ctrlr %s.\n",
-				  bio, CTRLR_STRING(nvme_ctrlr));
+		NVME_BDEV_INFOLOG(nbdev, "reset_io %p started resetting ctrlr [%s, %u].\n",
+				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr));
 	} else if (rc == -EBUSY) {
 		ctrlr_ch = io_path->qpair->ctrlr_ch;
 		assert(ctrlr_ch != NULL);
@@ -3062,12 +3072,11 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 
 		rc = 0;
 
-		NVME_BDEV_INFOLOG(nbdev, "reset_io %p was queued to ctrlr %s.\n",
-				  bio, CTRLR_STRING(nvme_ctrlr));
-
+		NVME_BDEV_INFOLOG(nbdev, "reset_io %p was queued to ctrlr [%s, %u].\n",
+				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr));
 	} else {
-		NVME_BDEV_INFOLOG(nbdev, "reset_io %p could not reset ctrlr %s, rc:%d\n",
-				  bio, CTRLR_STRING(nvme_ctrlr), rc);
+		NVME_BDEV_INFOLOG(nbdev, "reset_io %p could not reset ctrlr [%s, %u], rc:%d\n",
+				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr), rc);
 	}
 
 	return rc;
@@ -5567,6 +5576,15 @@ static void
 nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 		       struct nvme_async_probe_ctx *ctx)
 {
+	struct spdk_nvme_transport_id *trid = &nvme_ctrlr->active_path_id->trid;
+
+	if (spdk_nvme_trtype_is_fabrics(trid->trtype)) {
+		NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was created to %s:%s\n",
+				   trid->traddr, trid->trsvcid);
+	} else {
+		NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was created\n");
+	}
+
 	spdk_io_device_register(nvme_ctrlr,
 				bdev_nvme_create_ctrlr_channel_cb,
 				bdev_nvme_destroy_ctrlr_channel_cb,
