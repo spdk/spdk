@@ -117,6 +117,55 @@ xnvme_fio_plugin() {
 	done
 }
 
+xnvme_rpc() {
+	local xnvme0=null0 xnvme0_dev xnvme_io=()
+	local io flip=0 cc=() cc_b=()
+
+	"${SPDK_APP[@]}" &
+	spdk_tgt=$!
+	waitforlisten "$spdk_tgt"
+
+	# Use 1GB null_blk for the xnvme backend
+	init_null_blk gb=1
+
+	xnvme_io+=(libaio)
+	xnvme_io+=(io_uring)
+	xnvme_io+=(io_uring_cmd)
+
+	cc[0]="" cc[1]="-c"
+	cc_b[0]=false cc_b[1]=true
+
+	xnvme0_dev=/dev/nullb0
+
+	for io in "${xnvme_io[@]}"; do
+		flip=$((!flip))
+
+		rpc_cmd bdev_xnvme_create \
+			"$xnvme0_dev" \
+			"$xnvme0" \
+			"$io" \
+			"${cc[flip]}"
+
+		[[ $(rpc_xnvme "name") == "$xnvme0" ]]
+		[[ $(rpc_xnvme "filename") == "$xnvme0_dev" ]]
+		[[ $(rpc_xnvme "io_mechanism") == "$io" ]]
+		[[ $(rpc_xnvme "conserve_cpu") == "${cc_b[flip]}" ]]
+
+		rpc_cmd bdev_xnvme_delete \
+			"$xnvme0"
+	done
+
+	killprocess "$spdk_tgt"
+}
+
+rpc_xnvme() {
+	rpc_cmd framework_get_config bdev \
+		| jq -r ".[] | select(.method == \"bdev_xnvme_create\").params.${1:-name}"
+}
+
+trap 'killprocess "$spdk_tgt"' EXIT
+
+run_test "xnvme_rpc" xnvme_rpc
 run_test "xnvme_to_malloc_dd_copy" malloc_to_xnvme_copy
 run_test "xnvme_bdevperf" xnvme_bdevperf
 run_test "xnvme_fio_plugin" xnvme_fio_plugin
