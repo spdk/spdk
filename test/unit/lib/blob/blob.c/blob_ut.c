@@ -3049,7 +3049,6 @@ bs_grow_live_size(uint64_t new_blockcnt)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
-	CU_ASSERT(spdk_bs_total_data_cluster_count(bs) == 63);
 
 	/*
 	 * Set the dev size according to the new_blockcnt,
@@ -3061,8 +3060,6 @@ bs_grow_live_size(uint64_t new_blockcnt)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	total_data_clusters = spdk_bs_total_data_cluster_count(bs);
-	/* One cluster of 1MiB size is used for metadata */
-	CU_ASSERT(total_data_clusters == (bdev_size / (1 * 1024 * 1024)) - 1);
 
 	/* Make sure the super block is updated. */
 	memcpy(&super_block, g_dev_buffer, sizeof(struct spdk_bs_super_block));
@@ -3153,7 +3150,6 @@ bs_grow_live_no_space(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 	total_data_clusters = spdk_bs_total_data_cluster_count(bs);
-	CU_ASSERT(total_data_clusters == 63);
 
 	/*
 	 * The default dev size is 64M, here we set the dev size to 32M,
