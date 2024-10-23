@@ -6809,10 +6809,12 @@ blob_create_snapshot_power_failure(void)
 	}
 }
 
+#define IO_UT_BLOCKS_PER_CLUSTER 32
+
 static void
 test_io_write(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
-	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
+	const uint32_t SZ = IO_UT_BLOCKS_PER_CLUSTER;
 	uint8_t payload_ff[SZ * 512];
 	uint8_t payload_aa[SZ * 512];
 	uint8_t payload_00[SZ * 512];
@@ -6929,7 +6931,7 @@ test_io_write(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_ch
 static void
 test_io_read(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
-	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
+	const uint32_t SZ = IO_UT_BLOCKS_PER_CLUSTER;
 	uint8_t payload_read[2 * SZ * 512];
 	uint8_t payload_ff[SZ * 512];
 	uint8_t payload_aa[SZ * 512];
@@ -7041,7 +7043,7 @@ test_io_read(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_cha
 static void
 test_io_unmap(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
-	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
+	const uint32_t SZ = IO_UT_BLOCKS_PER_CLUSTER;
 	uint8_t payload_ff[SZ * 512];
 	uint8_t payload_aa[SZ * 512];
 	uint8_t payload_00[SZ * 512];
@@ -7067,7 +7069,7 @@ test_io_unmap(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_ch
 static void
 test_io_zeroes(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
-	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
+	const uint32_t SZ = IO_UT_BLOCKS_PER_CLUSTER;
 	uint8_t payload_ff[SZ * 512];
 	uint8_t payload_aa[SZ * 512];
 	uint8_t payload_00[SZ * 512];
@@ -7115,7 +7117,7 @@ static void
 test_iov_write(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel,
 	       bool ext_api)
 {
-	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
+	const uint32_t SZ = IO_UT_BLOCKS_PER_CLUSTER;
 	uint8_t payload_ff[SZ * 512];
 	uint8_t payload_aa[SZ * 512];
 	uint8_t payload_00[SZ * 512];
@@ -7280,7 +7282,7 @@ static void
 test_iov_read(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel,
 	      bool ext_api)
 {
-	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
+	const uint32_t SZ = IO_UT_BLOCKS_PER_CLUSTER;
 	uint8_t payload_read[2 * SZ * 512];
 	uint8_t payload_ff[SZ * 512];
 	uint8_t payload_aa[SZ * 512];
@@ -7444,7 +7446,7 @@ blob_io_unit(void)
 	/* Create dev with 512 bytes io unit size */
 
 	spdk_bs_opts_init(&bsopts, sizeof(bsopts));
-	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4;	/* 8 * 4 = 32 io_unit */
+	bsopts.cluster_sz = IO_UT_BLOCKS_PER_CLUSTER * 512;
 	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
 
 	/* Try to initialize a new blob store with unsupported io_unit */
