@@ -43,8 +43,8 @@ declare -a io_uring_cmd_fio=(
 )
 
 declare -A xnvme_filename=(
-	["libaio"]=/dev/nullb0
-	["io_uring"]=/dev/nullb0
+	["libaio"]=/dev/nvme0n1
+	["io_uring"]=/dev/nvme0n1
 	["io_uring_cmd"]=/dev/ng0n1
 )
 
@@ -66,8 +66,6 @@ rpc_xnvme() {
 	rpc_cmd framework_get_config bdev \
 		| jq -r ".[] | select(.method == \"bdev_xnvme_create\").params.${1:-name}"
 }
-
-init_null_blk gb=1
 
 for dev in "${xnvme_filename[@]}"; do
 	[[ -e $dev ]]
