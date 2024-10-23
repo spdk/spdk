@@ -82,5 +82,41 @@ xnvme_bdevperf() {
 	remove_null_blk
 }
 
+xnvme_fio_plugin() {
+	# Use 1GB null_blk for the xnvme backend
+	init_null_blk gb=1
+
+	local xnvme0=null0 xnvme0_dev xnvme_io=()
+	local io
+
+	xnvme_io+=(libaio)
+	xnvme_io+=(io_uring)
+
+	xnvme0_dev=/dev/nullb0
+
+	local -A method_bdev_xnvme_create_0=()
+	method_bdev_xnvme_create_0["name"]=$xnvme0
+	method_bdev_xnvme_create_0["filename"]=$xnvme0_dev
+	method_bdev_xnvme_create_0["conserve_cpu"]=true
+
+	for io in "${xnvme_io[@]}"; do
+		method_bdev_xnvme_create_0["io_mechanism"]="$io"
+		fio_bdev \
+			--ioengine=spdk_bdev \
+			--spdk_json_conf=<(gen_conf) \
+			--filename="$xnvme0" \
+			--direct=1 \
+			--bs=4k \
+			--iodepth=64 \
+			--numjobs=1 \
+			--rw=randread \
+			--time_based \
+			--runtime=5 \
+			--thread=1 \
+			--name "xnvme_bdev"
+	done
+}
+
 run_test "xnvme_to_malloc_dd_copy" malloc_to_xnvme_copy
 run_test "xnvme_bdevperf" xnvme_bdevperf
+run_test "xnvme_fio_plugin" xnvme_fio_plugin
