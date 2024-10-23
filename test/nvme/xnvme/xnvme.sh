@@ -57,7 +57,7 @@ xnvme_bdevperf() {
 	init_null_blk gb=1
 
 	local xnvme0=null0 xnvme0_dev xnvme_io=()
-	local io
+	local io io_pattern
 
 	xnvme_io+=(libaio)
 	xnvme_io+=(io_uring)
@@ -70,13 +70,16 @@ xnvme_bdevperf() {
 
 	for io in "${xnvme_io[@]}"; do
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
-		"$rootdir/build/examples/bdevperf" \
-			--json <(gen_conf) \
-			-q 64 \
-			-w randread \
-			-t 5 \
-			-T "$xnvme0" \
-			-o 4096
+		local -n io_pattern_ref=$io
+		for io_pattern in "${io_pattern_ref[@]}"; do
+			"$rootdir/build/examples/bdevperf" \
+				--json <(gen_conf) \
+				-q 64 \
+				-w "$io_pattern" \
+				-t 5 \
+				-T "$xnvme0" \
+				-o 4096
+		done
 	done
 
 	remove_null_blk
@@ -87,7 +90,7 @@ xnvme_fio_plugin() {
 	init_null_blk gb=1
 
 	local xnvme0=null0 xnvme0_dev xnvme_io=()
-	local io
+	local io io_pattern
 
 	xnvme_io+=(libaio)
 	xnvme_io+=(io_uring)
@@ -101,19 +104,22 @@ xnvme_fio_plugin() {
 
 	for io in "${xnvme_io[@]}"; do
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
-		fio_bdev \
-			--ioengine=spdk_bdev \
-			--spdk_json_conf=<(gen_conf) \
-			--filename="$xnvme0" \
-			--direct=1 \
-			--bs=4k \
-			--iodepth=64 \
-			--numjobs=1 \
-			--rw=randread \
-			--time_based \
-			--runtime=5 \
-			--thread=1 \
-			--name "xnvme_bdev"
+		local -n io_pattern_ref=$io
+		for io_pattern in "${io_pattern_ref[@]}"; do
+			fio_bdev \
+				--ioengine=spdk_bdev \
+				--spdk_json_conf=<(gen_conf) \
+				--filename="$xnvme0" \
+				--direct=1 \
+				--bs=4k \
+				--iodepth=64 \
+				--numjobs=1 \
+				--rw="$io_pattern" \
+				--time_based \
+				--runtime=5 \
+				--thread=1 \
+				--name "xnvme_bdev"
+		done
 	done
 }
 
@@ -164,6 +170,9 @@ rpc_xnvme() {
 }
 
 trap 'killprocess "$spdk_tgt"' EXIT
+
+# Prep global refs for io_pattern supported per io_mechanism
+libaio=(randread randwrite) io_uring=(randread randwrite)
 
 run_test "xnvme_rpc" xnvme_rpc
 run_test "xnvme_to_malloc_dd_copy" malloc_to_xnvme_copy
