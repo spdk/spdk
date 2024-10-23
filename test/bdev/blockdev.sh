@@ -93,7 +93,7 @@ function setup_xnvme_conf() {
 
 	for nvme in /dev/nvme*n*; do
 		[[ -b $nvme && -z ${zoned_devs["${nvme##*/}"]} ]] || continue
-		nvmes+=("bdev_xnvme_create $nvme ${nvme##*/} $io_mechanism")
+		nvmes+=("bdev_xnvme_create $nvme ${nvme##*/} $io_mechanism -c")
 	done
 
 	((${#nvmes[@]} > 0))

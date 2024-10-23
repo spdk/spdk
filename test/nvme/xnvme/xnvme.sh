@@ -6,8 +6,6 @@
 
 testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../../")
-
-"$rootdir/scripts/setup.sh" reset
 source "$testdir/common.sh"
 
 xnvme_bdevperf() {

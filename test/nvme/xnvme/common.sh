@@ -67,6 +67,16 @@ rpc_xnvme() {
 		| jq -r ".[] | select(.method == \"bdev_xnvme_create\").params.${1:-name}"
 }
 
+prep_nvme() {
+	"$rootdir/scripts/setup.sh" reset
+
+	# Make sure io_poll gets enabled
+	modprobe -r nvme
+	modprobe nvme poll_queues=$(nproc)
+}
+
+prep_nvme
+
 for dev in "${xnvme_filename[@]}"; do
 	[[ -e $dev ]]
 done
