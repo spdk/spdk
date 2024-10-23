@@ -6813,9 +6813,9 @@ static void
 test_io_write(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
 	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
-	uint8_t payload_ff[64 * 512];
-	uint8_t payload_aa[64 * 512];
-	uint8_t payload_00[64 * 512];
+	uint8_t payload_ff[SZ * 512];
+	uint8_t payload_aa[SZ * 512];
+	uint8_t payload_00[SZ * 512];
 	uint8_t *cluster0, *cluster1;
 
 	memset(payload_ff, 0xFF, sizeof(payload_ff));
@@ -6930,10 +6930,10 @@ static void
 test_io_read(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
 	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
-	uint8_t payload_read[64 * 512];
-	uint8_t payload_ff[64 * 512];
-	uint8_t payload_aa[64 * 512];
-	uint8_t payload_00[64 * 512];
+	uint8_t payload_read[2 * SZ * 512];
+	uint8_t payload_ff[SZ * 512];
+	uint8_t payload_aa[SZ * 512];
+	uint8_t payload_00[SZ * 512];
 
 	memset(payload_ff, 0xFF, sizeof(payload_ff));
 	memset(payload_aa, 0xAA, sizeof(payload_aa));
@@ -7042,9 +7042,9 @@ static void
 test_io_unmap(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
 	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
-	uint8_t payload_ff[64 * 512];
-	uint8_t payload_aa[64 * 512];
-	uint8_t payload_00[64 * 512];
+	uint8_t payload_ff[SZ * 512];
+	uint8_t payload_aa[SZ * 512];
+	uint8_t payload_00[SZ * 512];
 	uint8_t *cluster0, *cluster1;
 
 	memset(payload_ff, 0xFF, sizeof(payload_ff));
@@ -7068,9 +7068,9 @@ static void
 test_io_zeroes(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
 	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
-	uint8_t payload_ff[64 * 512];
-	uint8_t payload_aa[64 * 512];
-	uint8_t payload_00[64 * 512];
+	uint8_t payload_ff[SZ * 512];
+	uint8_t payload_aa[SZ * 512];
+	uint8_t payload_00[SZ * 512];
 	uint8_t *cluster0, *cluster1;
 
 	memset(payload_ff, 0xFF, sizeof(payload_ff));
@@ -7116,9 +7116,9 @@ test_iov_write(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_c
 	       bool ext_api)
 {
 	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
-	uint8_t payload_ff[64 * 512];
-	uint8_t payload_aa[64 * 512];
-	uint8_t payload_00[64 * 512];
+	uint8_t payload_ff[SZ * 512];
+	uint8_t payload_aa[SZ * 512];
+	uint8_t payload_00[SZ * 512];
 	uint8_t *cluster0, *cluster1;
 	struct iovec iov[4];
 	struct spdk_blob_ext_io_opts ext_opts = {
@@ -7281,10 +7281,10 @@ test_iov_read(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_ch
 	      bool ext_api)
 {
 	const uint32_t SZ = 32; /* size of cluster in 512-byte blocks */
-	uint8_t payload_read[64 * 512];
-	uint8_t payload_ff[64 * 512];
-	uint8_t payload_aa[64 * 512];
-	uint8_t payload_00[64 * 512];
+	uint8_t payload_read[2 * SZ * 512];
+	uint8_t payload_ff[SZ * 512];
+	uint8_t payload_aa[SZ * 512];
+	uint8_t payload_00[SZ * 512];
 	struct iovec iov[4];
 	struct spdk_blob_ext_io_opts ext_opts = {
 		.memory_domain = (struct spdk_memory_domain *)0xfeedbeef,
