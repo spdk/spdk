@@ -416,7 +416,8 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 		goto error_return;
 	}
 
-	if (!conserve_cpu) {
+	xnvme->conserve_cpu = conserve_cpu;
+	if (!xnvme->conserve_cpu) {
 		if (!strcmp(xnvme->io_mechanism, "libaio")) {
 			opts.poll_io = 1;
 		} else if (!strcmp(xnvme->io_mechanism, "io_uring")) {
