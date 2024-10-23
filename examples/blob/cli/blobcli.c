@@ -375,7 +375,7 @@ show_bs_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 		printf("\tsuper blob ID: none assigned\n");
 	}
 
-	printf("\tpage size: %" PRIu64 "\n", cli_context->page_size);
+	printf("\tmd page size: %" PRIu64 "\n", cli_context->page_size);
 	printf("\tio unit size: %" PRIu64 "\n", cli_context->io_unit_size);
 
 	val = spdk_bs_get_cluster_size(cli_context->bs);
@@ -422,8 +422,8 @@ show_blob(struct cli_context_t *cli_context)
 	printf("# of bytes: %" PRIu64 "\n",
 	       val * spdk_bs_get_cluster_size(cli_context->bs));
 
-	val = spdk_blob_get_num_pages(cli_context->blob);
-	printf("# of pages: %" PRIu64 "\n", val);
+	val = spdk_blob_get_num_io_units(cli_context->blob);
+	printf("# of io units: %" PRIu64 "\n", val);
 
 	spdk_blob_get_xattr_names(cli_context->blob, &names);
 

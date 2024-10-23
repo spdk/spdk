@@ -176,7 +176,9 @@ struct spdk_blob_store {
 	uint64_t			total_data_clusters;
 	uint64_t			num_free_clusters;	/* Protected by used_lock */
 	uint64_t			pages_per_cluster;
+	uint64_t			io_units_per_cluster;
 	uint8_t				pages_per_cluster_shift;
+	uint8_t				io_units_per_cluster_shift;
 	uint32_t			io_unit_size;
 
 	spdk_blob_id			super_blob;
@@ -484,35 +486,23 @@ bs_md_page_to_lba(struct spdk_blob_store *bs, uint32_t page)
 }
 
 static inline uint64_t
-bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
+bs_dev_io_unit_to_lba(struct spdk_blob *blob, struct spdk_bs_dev *bs_dev, uint64_t io_unit)
 {
-	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
+	return io_unit * blob->bs->io_unit_size / bs_dev->blocklen;
 }
 
 static inline uint64_t
-bs_io_unit_per_page(struct spdk_blob_store *bs)
+bs_cluster_to_io_unit(struct spdk_blob_store *bs, uint32_t cluster)
 {
-	return SPDK_BS_PAGE_SIZE / bs->io_unit_size;
-}
-
-static inline uint64_t
-bs_io_unit_to_page(struct spdk_blob_store *bs, uint64_t io_unit)
-{
-	return io_unit / bs_io_unit_per_page(bs);
-}
-
-static inline uint64_t
-bs_cluster_to_page(struct spdk_blob_store *bs, uint32_t cluster)
-{
-	return (uint64_t)cluster * bs->pages_per_cluster;
+	return (uint64_t)cluster * bs->io_units_per_cluster;
 }
 
 static inline uint32_t
-bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
+bs_io_unit_to_cluster(struct spdk_blob_store *bs, uint64_t io_unit)
 {
-	assert(page % bs->pages_per_cluster == 0);
+	assert(io_unit % bs->io_units_per_cluster == 0);
 
-	return page / bs->pages_per_cluster;
+	return io_unit / bs->io_units_per_cluster;
 }
 
 static inline uint64_t
@@ -557,16 +547,7 @@ bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
 static inline uint64_t
 bs_io_units_per_cluster(struct spdk_blob *blob)
 {
-	uint64_t	io_units_per_cluster;
-	uint8_t		shift = blob->bs->pages_per_cluster_shift;
-
-	if (shift != 0) {
-		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
-	} else {
-		io_units_per_cluster = bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
-	}
-
-	return io_units_per_cluster;
+	return blob->bs->io_units_per_cluster;
 }
 
 /* End basic conversions */
@@ -597,29 +578,21 @@ static inline uint64_t
 bs_blob_io_unit_to_lba(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	lba;
-	uint64_t	pages_per_cluster;
 	uint8_t		shift;
-	uint64_t	io_units_per_cluster;
-	uint64_t	io_units_per_page;
-	uint64_t	page;
+	uint64_t	io_units_per_cluster = blob->bs->io_units_per_cluster;
 
-	page = bs_io_unit_to_page(blob->bs, io_unit);
-
-	pages_per_cluster = blob->bs->pages_per_cluster;
-	shift = blob->bs->pages_per_cluster_shift;
-	io_units_per_page = bs_io_unit_per_page(blob->bs);
-
-	assert(page < blob->active.num_clusters * pages_per_cluster);
-
+	shift = blob->bs->io_units_per_cluster_shift;
+	assert(io_unit < blob->active.num_clusters * io_units_per_cluster);
 	if (shift != 0) {
-		io_units_per_cluster = io_units_per_page << shift;
-		lba = blob->active.clusters[page >> shift];
+		lba = blob->active.clusters[io_unit >> shift];
 	} else {
-		io_units_per_cluster = io_units_per_page * pages_per_cluster;
-		lba = blob->active.clusters[page / pages_per_cluster];
+		lba = blob->active.clusters[io_unit / io_units_per_cluster];
 	}
-	lba += io_unit % io_units_per_cluster;
-	return lba;
+	if (lba == 0) {
+		return 0;
+	} else {
+		return lba + io_unit % io_units_per_cluster;
+	}
 }
 
 /* Given an io_unit offset into a blob, look up the number of io_units until the
@@ -635,32 +608,26 @@ bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 	return io_units_per_cluster - (io_unit % io_units_per_cluster);
 }
 
-/* Given an io_unit offset into a blob, look up the number of pages into blob to beginning of current cluster */
+/* Given an io_unit offset into a blob, look up the number of io_unit into blob to beginning of current cluster */
 static inline uint64_t
 bs_io_unit_to_cluster_start(struct spdk_blob *blob, uint64_t io_unit)
 {
-	uint64_t	pages_per_cluster;
-	uint64_t	page;
+	uint64_t	io_units_per_cluster = blob->bs->io_units_per_cluster;
 
-	pages_per_cluster = blob->bs->pages_per_cluster;
-	page = bs_io_unit_to_page(blob->bs, io_unit);
-
-	return page - (page % pages_per_cluster);
+	return io_unit - (io_unit % io_units_per_cluster);
 }
 
 /* Given an io_unit offset into a blob, look up the number of pages into blob to beginning of current cluster */
 static inline uint32_t
 bs_io_unit_to_cluster_number(struct spdk_blob *blob, uint64_t io_unit)
 {
-	uint64_t	pages_per_cluster = blob->bs->pages_per_cluster;
-	uint8_t		shift = blob->bs->pages_per_cluster_shift;
-	uint64_t	page_offset;
+	uint64_t	io_units_per_cluster = blob->bs->io_units_per_cluster;
+	uint8_t		shift = blob->bs->io_units_per_cluster_shift;
 
-	page_offset = io_unit / bs_io_unit_per_page(blob->bs);
 	if (shift != 0) {
-		return page_offset >> shift;
+		return io_unit >> shift;
 	} else {
-		return page_offset / pages_per_cluster;
+		return io_unit / io_units_per_cluster;
 	}
 }
 
@@ -668,22 +635,7 @@ bs_io_unit_to_cluster_number(struct spdk_blob *blob, uint64_t io_unit)
 static inline bool
 bs_io_unit_is_allocated(struct spdk_blob *blob, uint64_t io_unit)
 {
-	uint64_t	lba;
-	uint64_t	page;
-	uint64_t	pages_per_cluster;
-	uint8_t		shift;
-
-	shift = blob->bs->pages_per_cluster_shift;
-	pages_per_cluster = blob->bs->pages_per_cluster;
-	page = bs_io_unit_to_page(blob->bs, io_unit);
-
-	assert(page < blob->active.num_clusters * pages_per_cluster);
-
-	if (shift != 0) {
-		lba = blob->active.clusters[page >> shift];
-	} else {
-		lba = blob->active.clusters[page / pages_per_cluster];
-	}
+	uint64_t lba = bs_blob_io_unit_to_lba(blob, io_unit);
 
 	if (lba == 0) {
 		assert(spdk_blob_is_thin_provisioned(blob));

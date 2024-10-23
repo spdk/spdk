@@ -2623,7 +2623,7 @@ blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 struct spdk_blob_copy_cluster_ctx {
 	struct spdk_blob *blob;
 	uint8_t *buf;
-	uint64_t page;
+	uint64_t io_unit;
 	uint64_t new_cluster;
 	uint32_t new_extent_page;
 	spdk_bs_sequence_t *seq;
@@ -2761,7 +2761,7 @@ blob_write_copy_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	cluster_number = bs_page_to_cluster(ctx->blob->bs, ctx->page);
+	cluster_number = bs_io_unit_to_cluster(ctx->blob->bs, ctx->io_unit);
 
 	blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
 					 ctx->new_extent_page, ctx->new_cluster_page, blob_insert_cluster_cpl, ctx);
@@ -2786,9 +2786,9 @@ blob_write_copy(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static bool
-blob_can_copy(struct spdk_blob *blob, uint64_t cluster_start_page, uint64_t *base_lba)
+blob_can_copy(struct spdk_blob *blob, uint64_t cluster_start_io_unit, uint64_t *base_lba)
 {
-	uint64_t lba = bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page);
+	uint64_t lba = bs_dev_io_unit_to_lba(blob, blob->back_bs_dev, cluster_start_io_unit);
 
 	return (!blob_is_esnap_clone(blob) && blob->bs->dev->copy != NULL) &&
 	       blob->back_bs_dev->translate_lba(blob->back_bs_dev, lba, base_lba);
@@ -2815,7 +2815,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	struct spdk_bs_cpl cpl;
 	struct spdk_bs_channel *ch;
 	struct spdk_blob_copy_cluster_ctx *ctx;
-	uint64_t cluster_start_page;
+	uint64_t cluster_start_io_unit;
 	uint32_t cluster_number;
 	bool is_zeroes;
 	bool can_copy;
@@ -2833,8 +2833,8 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		return;
 	}
 
-	/* Round the io_unit offset down to the first page in the cluster */
-	cluster_start_page = bs_io_unit_to_cluster_start(blob, io_unit);
+	/* Round the io_unit offset down to the first io_unit in the cluster */
+	cluster_start_io_unit = bs_io_unit_to_cluster_start(blob, io_unit);
 
 	/* Calculate which index in the metadata cluster array the corresponding
 	 * cluster is supposed to be at. */
@@ -2849,7 +2849,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	assert(blob->bs->cluster_sz % blob->back_bs_dev->blocklen == 0);
 
 	ctx->blob = blob;
-	ctx->page = cluster_start_page;
+	ctx->io_unit = cluster_start_io_unit;
 	ctx->new_cluster_page = ch->new_cluster_page;
 	memset(ctx->new_cluster_page, 0, SPDK_BS_PAGE_SIZE);
 
@@ -2858,13 +2858,13 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	 * For other backing dev e.g. a snapshot, it could be invalid if
 	 * the blob has been resized after snapshot was taken. */
 	is_valid_range = blob->back_bs_dev->is_range_valid(blob->back_bs_dev,
-			 bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
+			 bs_dev_io_unit_to_lba(blob, blob->back_bs_dev, cluster_start_io_unit),
 			 bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
 
-	can_copy = is_valid_range && blob_can_copy(blob, cluster_start_page, &copy_src_lba);
+	can_copy = is_valid_range && blob_can_copy(blob, cluster_start_io_unit, &copy_src_lba);
 
 	is_zeroes = is_valid_range && blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
-			bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
+			bs_dev_io_unit_to_lba(blob, blob->back_bs_dev, cluster_start_io_unit),
 			bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
 	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes && !can_copy) {
 		ctx->buf = spdk_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen,
@@ -2913,7 +2913,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		} else {
 			/* Read cluster from backing device */
 			bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
-						bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
+						bs_dev_io_unit_to_lba(blob, blob->back_bs_dev, cluster_start_io_unit),
 						bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz),
 						blob_write_copy, ctx);
 		}
@@ -3878,6 +3878,10 @@ bs_init_per_cluster_fields(struct spdk_blob_store *bs)
 	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	if (spdk_u32_is_pow2(bs->pages_per_cluster)) {
 		bs->pages_per_cluster_shift = spdk_u32log2(bs->pages_per_cluster);
+	}
+	bs->io_units_per_cluster = bs->cluster_sz / bs->io_unit_size;
+	if (spdk_u32_is_pow2(bs->io_units_per_cluster)) {
+		bs->io_units_per_cluster_shift = spdk_u32log2(bs->io_units_per_cluster);
 	}
 }
 
@@ -6096,19 +6100,11 @@ spdk_blob_get_id(struct spdk_blob *blob)
 }
 
 uint64_t
-spdk_blob_get_num_pages(struct spdk_blob *blob)
-{
-	assert(blob != NULL);
-
-	return bs_cluster_to_page(blob->bs, blob->active.num_clusters);
-}
-
-uint64_t
 spdk_blob_get_num_io_units(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 
-	return spdk_blob_get_num_pages(blob) * bs_io_unit_per_page(blob->bs);
+	return bs_cluster_to_io_unit(blob->bs, blob->active.num_clusters);
 }
 
 uint64_t

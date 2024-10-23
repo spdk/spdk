@@ -4962,7 +4962,7 @@ blob_thin_prov_rle(void)
 	CU_ASSERT(channel != NULL);
 
 	/* Target specifically second cluster in a blob as first allocation */
-	io_unit = bs_cluster_to_page(bs, 1) * bs_io_unit_per_page(bs);
+	io_unit = bs_cluster_to_io_unit(bs, 1);
 
 	/* Payload should be all zeros from unallocated clusters */
 	memset(payload_read, 0xFF, sizeof(payload_read));

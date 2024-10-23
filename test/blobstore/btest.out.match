@@ -39,7 +39,7 @@ Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: $(N)
 	super blob ID: $(XX)
-	page size: $(N)
+	md page size: $(N)
 	io unit size: $(N)
 	cluster size: 1048576
 	# free clusters: $(N)
@@ -55,7 +55,7 @@ Blob Public Info:
 blob ID: $(XX)
 # of clusters: 1
 # of bytes: 1048576
-# of pages: 256
+# of io units: 2048
 # of xattrs: 1
 xattrs:
 
@@ -76,7 +76,7 @@ Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: 3
 	super blob ID: $(XX)
-	page size: $(N)
+	md page size: $(N)
 	io unit size: $(N)
 	cluster size: 1048576
 	# free clusters: $(N)

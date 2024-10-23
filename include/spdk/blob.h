@@ -440,7 +440,7 @@ void spdk_bs_get_super(struct spdk_blob_store *bs,
 uint64_t spdk_bs_get_cluster_size(struct spdk_blob_store *bs);
 
 /**
- * Get the page size in bytes. This is the write and read granularity of blobs.
+ * Get the metadata page size in bytes.
  *
  * \param bs blobstore to query.
  *
@@ -483,15 +483,6 @@ uint64_t spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs);
  * \return blob id.
  */
 spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob);
-
-/**
- * Get the number of pages allocated to the blob.
- *
- * \param blob Blob struct to query.
- *
- * \return the number of pages.
- */
-uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 
 /**
  * Get the number of io_units allocated to the blob.

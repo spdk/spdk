@@ -18,7 +18,6 @@
 	spdk_bs_grow;
 	spdk_bs_grow_live;
 	spdk_blob_get_id;
-	spdk_blob_get_num_pages;
 	spdk_blob_get_num_io_units;
 	spdk_blob_get_num_clusters;
 	spdk_blob_get_num_allocated_clusters;
