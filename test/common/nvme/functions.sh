@@ -51,7 +51,7 @@ scan_nvme_ctrls() {
 		ctrl_dev=${ctrl##*/}
 		nvme_get "$ctrl_dev" id-ctrl "/dev/$ctrl_dev"
 		local -n _ctrl_ns=${ctrl_dev}_ns
-		for ns in "$ctrl/${ctrl##*/}n"*; do
+		for ns in "$ctrl/"@("ng${ctrl##*nvme}"|"${ctrl##*/}n")*; do
 			[[ -e $ns ]] || continue
 			ns_dev=${ns##*/}
 			nvme_get "$ns_dev" id-ns "/dev/$ns_dev"

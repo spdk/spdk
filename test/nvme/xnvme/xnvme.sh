@@ -8,6 +8,7 @@ testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../../")
 # Hook into dd suite to perform some basic IO tests
 source "$rootdir/test/dd/common.sh"
+source "$rootdir/test/common/nvme/functions.sh"
 
 malloc_to_xnvme_copy() {
 	# Use 1GB null_blk for the xnvme backend
@@ -61,6 +62,7 @@ xnvme_bdevperf() {
 
 	xnvme_io+=(libaio)
 	xnvme_io+=(io_uring)
+	xnvme_io+=(io_uring_cmd)
 
 	xnvme0_dev=/dev/nullb0
 
@@ -69,6 +71,12 @@ xnvme_bdevperf() {
 	method_bdev_xnvme_create_0["filename"]=$xnvme0_dev
 
 	for io in "${xnvme_io[@]}"; do
+		if [[ $io == io_uring_cmd ]]; then
+			# This can work only with generic nvme devices (char) so
+			# fail hard if it's not around.
+			[[ -n ${ng0n1[*]} ]]
+			method_bdev_xnvme_create_0["filename"]=/dev/ng0n1
+		fi
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
 		local -n io_pattern_ref=$io
 		for io_pattern in "${io_pattern_ref[@]}"; do
@@ -94,6 +102,7 @@ xnvme_fio_plugin() {
 
 	xnvme_io+=(libaio)
 	xnvme_io+=(io_uring)
+	xnvme_io+=(io_uring_cmd)
 
 	xnvme0_dev=/dev/nullb0
 
@@ -103,8 +112,14 @@ xnvme_fio_plugin() {
 	method_bdev_xnvme_create_0["conserve_cpu"]=true
 
 	for io in "${xnvme_io[@]}"; do
+		if [[ $io == io_uring_cmd ]]; then
+			# This can work only with generic nvme devices (char) so
+			# fail hard if it's not around.
+			[[ -n ${ng0n1[*]} ]]
+			method_bdev_xnvme_create_0["filename"]=/dev/ng0n1
+		fi
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
-		local -n io_pattern_ref=$io
+		local -n io_pattern_ref=${io}_fio
 		for io_pattern in "${io_pattern_ref[@]}"; do
 			fio_bdev \
 				--ioengine=spdk_bdev \
@@ -172,9 +187,20 @@ rpc_xnvme() {
 trap 'killprocess "$spdk_tgt"' EXIT
 
 # Prep global refs for io_pattern supported per io_mechanism
-libaio=(randread randwrite) io_uring=(randread randwrite)
+libaio=(randread randwrite)
+io_uring=(randread randwrite)
+io_uring_cmd=(randread randwrite unmap write_zeroes)
+libaio_fio=("${libaio[@]}")
+io_uring_fio=("${io_uring[@]}")
+io_uring_cmd_fio=("${io_uring_fio[@]}")
+
+"$rootdir/scripts/setup.sh" reset
+
+scan_nvme_ctrls
 
 run_test "xnvme_rpc" xnvme_rpc
 run_test "xnvme_to_malloc_dd_copy" malloc_to_xnvme_copy
 run_test "xnvme_bdevperf" xnvme_bdevperf
 run_test "xnvme_fio_plugin" xnvme_fio_plugin
+
+"$rootdir/scripts/setup.sh"
