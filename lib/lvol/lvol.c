@@ -647,12 +647,13 @@ lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst)
 	SET_FIELD(num_md_pages_per_cluster_ratio);
 	SET_FIELD(opts_size);
 	SET_FIELD(esnap_bs_dev_create);
+	SET_FIELD(md_page_size);
 
 	dst->opts_size = src->opts_size;
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_lvs_opts) == 88, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_lvs_opts) == 92, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -669,6 +670,7 @@ setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o, uint32_t t
 	bs_opts->cluster_sz = o->cluster_sz;
 	bs_opts->clear_method = (enum bs_clear_method)o->clear_method;
 	bs_opts->num_md_pages = (o->num_md_pages_per_cluster_ratio * total_clusters) / 100;
+	bs_opts->md_page_size = o->md_page_size;
 	bs_opts->esnap_bs_dev_create = o->esnap_bs_dev_create;
 	bs_opts->esnap_ctx = esnap_ctx;
 	snprintf(bs_opts->bstype.bstype, sizeof(bs_opts->bstype.bstype), "LVOLSTORE");

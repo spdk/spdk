@@ -2053,7 +2053,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                      lvs_name=args.lvs_name,
                                                      cluster_sz=args.cluster_sz,
                                                      clear_method=args.clear_method,
-                                                     num_md_pages_per_cluster_ratio=args.md_pages_per_cluster_ratio))
+                                                     num_md_pages_per_cluster_ratio=args.md_pages_per_cluster_ratio,
+                                                     md_page_size=args.md_page_size))
 
     p = subparsers.add_parser('bdev_lvol_create_lvstore', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
@@ -2062,6 +2063,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--clear-method', help="""Change clear method for data region.
         Available: none, unmap, write_zeroes""")
     p.add_argument('-m', '--md-pages-per-cluster-ratio', help='reserved metadata pages for each cluster', type=int)
+    p.add_argument('-s', '--md-page-size', help='size of metadata page (in bytes)', type=int)
     p.set_defaults(func=bdev_lvol_create_lvstore)
 
     def bdev_lvol_rename_lvstore(args):

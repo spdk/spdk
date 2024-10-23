@@ -210,9 +210,9 @@ end:
 }
 
 int
-vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
-		 enum lvs_clear_method clear_method, uint32_t num_md_pages_per_cluster_ratio,
-		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+vbdev_lvs_create_ext(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
+		     enum lvs_clear_method clear_method, uint32_t num_md_pages_per_cluster_ratio,
+		     uint32_t md_page_size, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
@@ -252,6 +252,17 @@ vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_
 	snprintf(opts.name, sizeof(opts.name), "%s", name);
 	opts.esnap_bs_dev_create = vbdev_lvol_esnap_dev_create;
 
+	if (md_page_size != 0 && (md_page_size < 4096 || md_page_size > 65536)) {
+		SPDK_ERRLOG("Invalid metadata page size %" PRIu32 " (must be between 4096B and 65536B).\n",
+			    md_page_size);
+		return -EINVAL;
+	}
+
+	if (md_page_size != 0 && (!spdk_u32_is_pow2(md_page_size))) {
+		SPDK_ERRLOG("Invalid metadata page size %" PRIu32 " (must be a power of 2.)\n", md_page_size);
+		return -EINVAL;
+	}
+
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
 		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
@@ -266,6 +277,11 @@ vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_
 		return rc;
 	}
 
+	if (md_page_size > bs_dev->phys_blocklen) {
+		SPDK_WARNLOG("Metadata page size is greater than physical block length\n");
+	}
+
+	opts.md_page_size = md_page_size;
 	lvs_req->bs_dev = bs_dev;
 	lvs_req->base_bdev = bs_dev->get_base_bdev(bs_dev);
 	lvs_req->cb_fn = cb_fn;
@@ -279,6 +295,17 @@ vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_
 	}
 
 	return 0;
+}
+
+int
+vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
+		 enum lvs_clear_method clear_method, uint32_t num_md_pages_per_cluster_ratio,
+		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	uint32_t md_page_size = 0;
+
+	return vbdev_lvs_create_ext(base_bdev_name, name, cluster_sz, clear_method,
+				    num_md_pages_per_cluster_ratio, md_page_size, cb_fn, cb_arg);
 }
 
 static void
@@ -1149,6 +1176,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = &g_lvol_if;
+	bdev->phys_blocklen = lvol->lvol_store->bs_dev->phys_blocklen;
 
 	/* Set default bdev reset waiting time. This value indicates how much
 	 * time a reset should wait before forcing a reset down to the underlying

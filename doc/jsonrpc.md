@@ -10339,6 +10339,7 @@ lvs_name                      | Required | string      | Name of the logical vol
 cluster_sz                    | Optional | number      | Cluster size of the logical volume store in bytes (Default: 4MiB)
 clear_method                  | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
 num_md_pages_per_cluster_ratio| Optional | number      | Reserved metadata pages per cluster (Default: 100)
+md_page_size                  | Optional | number      | Metadata page size of the logical volume store in bytes (Default: max(4KB, bdev phys blocklen)
 
 The num_md_pages_per_cluster_ratio defines the amount of metadata to
 allocate when the logical volume store is created. The default value
@@ -10371,6 +10372,7 @@ Example request:
     "lvs_name": "LVS0",
     "bdev_name": "Malloc0",
     "clear_method": "write_zeroes"
+    "md_page_size": "4096"
   }
 }
 ~~~
