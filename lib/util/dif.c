@@ -673,10 +673,14 @@ _dif_generate(void *_dif, uint64_t guard, uint32_t offset_blocks,
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		_dif_set_guard(dif, guard, ctx->dif_pi_format);
+	} else {
+		_dif_set_guard(dif, 0, ctx->dif_pi_format);
 	}
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_APPTAG_CHECK) {
 		_dif_set_apptag(dif, ctx->app_tag, ctx->dif_pi_format);
+	} else {
+		_dif_set_apptag(dif, 0, ctx->dif_pi_format);
 	}
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
@@ -702,6 +706,8 @@ _dif_generate(void *_dif, uint64_t guard, uint32_t offset_blocks,
 		}
 
 		_dif_set_reftag(dif, ref_tag, ctx->dif_pi_format);
+	} else {
+		_dif_set_reftag(dif, 0, ctx->dif_pi_format);
 	}
 }
 
