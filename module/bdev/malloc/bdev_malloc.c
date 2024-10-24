@@ -106,19 +106,22 @@ malloc_unmap_write_zeroes_generate_pi(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct malloc_disk *mdisk = bdev_io->bdev->ctxt;
 	uint32_t block_size = bdev_io->bdev->blocklen;
+	uint32_t dif_check_flags;
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 	int rc;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = bdev->dif_pi_format;
+	dif_check_flags = bdev->dif_check_flags | SPDK_DIF_CHECK_TYPE_REFTAG |
+			  SPDK_DIF_FLAGS_APPTAG_CHECK;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
 			       bdev->md_interleave,
 			       bdev->dif_is_head_of_md,
 			       bdev->dif_type,
-			       bdev->dif_check_flags,
+			       dif_check_flags,
 			       SPDK_DIF_REFTAG_IGNORE,
 			       0xFFFF, SPDK_DIF_APPTAG_IGNORE,
 			       0, 0, &dif_opts);
@@ -662,19 +665,22 @@ malloc_disk_setup_pi(struct malloc_disk *mdisk)
 	struct spdk_bdev *bdev = &mdisk->disk;
 	struct spdk_dif_ctx dif_ctx;
 	struct iovec iov, md_iov;
+	uint32_t dif_check_flags;
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = bdev->dif_pi_format;
 	/* Set APPTAG|REFTAG_IGNORE to PI fields after creation of malloc bdev */
+	dif_check_flags = bdev->dif_check_flags | SPDK_DIF_CHECK_TYPE_REFTAG |
+			  SPDK_DIF_FLAGS_APPTAG_CHECK;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
 			       bdev->md_interleave,
 			       bdev->dif_is_head_of_md,
 			       bdev->dif_type,
-			       bdev->dif_check_flags,
+			       dif_check_flags,
 			       SPDK_DIF_REFTAG_IGNORE,
 			       0xFFFF, SPDK_DIF_APPTAG_IGNORE,
 			       0, 0, &dif_opts);
