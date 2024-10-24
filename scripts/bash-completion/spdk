@@ -201,17 +201,38 @@ _rpc() {
 	_init_completion || return
 	_is_app "$1" || return
 
-	local rpc=$1 rpc_sock="" method=""
-	local -A rpc_methods=()
+	local rpc=$1 method=""
+	local -g rpc_sock="" rpc_sock_ts old_rpc_sock_ts
+	local -gA rpc_methods
+	local -gA __comps
 
 	_set_rpc_sock
-	_get_rpc_methods "$rpc"
+	# Verify sock against the creation time - this is meant to cover cases of different
+	# applications re-creating the socket file at the same location.
+	rpc_sock_ts=$(stat --print="%W" "$rpc_sock" 2> /dev/null)
+	# Always try to refresh list of methods when sock changed or when the list
+	# is empty.
+	if [[ $old_rpc_sock_ts != "$rpc_sock_ts" ]] || ((${#rpc_methods[@]} == 0)); then
+		rpc_methods=()
+		_get_rpc_methods "$rpc"
+	fi
+	old_rpc_sock_ts=$rpc_sock_ts
 
 	if method=$(_method_in_words); then
-		COMPREPLY=($(compgen -W '$(_get_help_rpc_method "$rpc" "$method")' -- "$cur"))
+		if [[ -n ${__comps["$rpc:$method:$cur"]} ]]; then
+			COMPREPLY=(${__comps["$rpc:$method:$cur"]})
+		else
+			COMPREPLY=($(compgen -W '$(_get_help_rpc_method "$rpc" "$method")' -- "$cur"))
+			__comps["$rpc:$method:$cur"]=${COMPREPLY[*]}
+		fi
 		compopt -o nosort
 	elif [[ $cur == -* ]]; then
-		COMPREPLY=($(compgen -W '$(_parse_help "$rpc")' -- "$cur"))
+		if [[ -n ${__comps["$rpc:$cur"]} ]]; then
+			COMPREPLY=(${__comps["$rpc:$cur"]})
+		else
+			COMPREPLY=($(compgen -W '$(_parse_help "$rpc")' -- "$cur"))
+			__comps["$rpc:$cur"]=${COMPREPLY[*]}
+		fi
 	elif [[ $prev == --verbose ]]; then
 		COMPREPLY=($(compgen -W 'DEBUG INFO ERROR' -- "$cur"))
 	elif [[ $prev == -s ]]; then
