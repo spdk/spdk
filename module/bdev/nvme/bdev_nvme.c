@@ -2231,6 +2231,49 @@ bdev_nvme_start_reconnect_delay_timer(struct nvme_ctrlr *nvme_ctrlr)
 
 static void remove_discovery_entry(struct nvme_ctrlr *nvme_ctrlr);
 
+static void _bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int status);
+
+static void
+bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
+{
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	if (!success) {
+		/* Connecting the active trid failed. Set the next alternate trid to the
+		 * active trid if it exists.
+		 */
+		if (bdev_nvme_failover_trid(nvme_ctrlr, false, false)) {
+			/* The next alternate trid exists and is ready to try. Try it now. */
+			pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+			NVME_CTRLR_INFOLOG(nvme_ctrlr, "Try the next alternate trid %s:%s now.\n",
+					   nvme_ctrlr->active_path_id->trid.traddr,
+					   nvme_ctrlr->active_path_id->trid.trsvcid);
+
+			nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
+			return;
+		}
+
+		/* We came here if there is no alternate trid or if the next trid exists but
+		 * is not ready to try. We will try the active trid after reconnect_delay_sec
+		 * seconds if it is non-zero or at the next reset call otherwise.
+		 */
+	} else {
+		/* Connecting the active trid succeeded. Clear the last failed time because it
+		 * means the trid is failed if its last failed time is non-zero.
+		 */
+		nvme_ctrlr->active_path_id->last_failed_tsc = 0;
+	}
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Clear pending resets.\n");
+
+	/* Make sure we clear any pending resets before returning. */
+	nvme_ctrlr_for_each_channel(nvme_ctrlr,
+				    bdev_nvme_complete_pending_resets,
+				    success ? NULL : (void *)0x1,
+				    _bdev_nvme_reset_ctrlr_complete);
+}
+
 static void
 _bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int status)
 {
@@ -2282,47 +2325,6 @@ _bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int st
 	default:
 		break;
 	}
-}
-
-static void
-bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
-{
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	if (!success) {
-		/* Connecting the active trid failed. Set the next alternate trid to the
-		 * active trid if it exists.
-		 */
-		if (bdev_nvme_failover_trid(nvme_ctrlr, false, false)) {
-			/* The next alternate trid exists and is ready to try. Try it now. */
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-			NVME_CTRLR_INFOLOG(nvme_ctrlr, "Try the next alternate trid %s:%s now.\n",
-					   nvme_ctrlr->active_path_id->trid.traddr,
-					   nvme_ctrlr->active_path_id->trid.trsvcid);
-
-			nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
-			return;
-		}
-
-		/* We came here if there is no alternate trid or if the next trid exists but
-		 * is not ready to try. We will try the active trid after reconnect_delay_sec
-		 * seconds if it is non-zero or at the next reset call otherwise.
-		 */
-	} else {
-		/* Connecting the active trid succeeded. Clear the last failed time because it
-		 * means the trid is failed if its last failed time is non-zero.
-		 */
-		nvme_ctrlr->active_path_id->last_failed_tsc = 0;
-	}
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Clear pending resets.\n");
-
-	/* Make sure we clear any pending resets before returning. */
-	nvme_ctrlr_for_each_channel(nvme_ctrlr,
-				    bdev_nvme_complete_pending_resets,
-				    success ? NULL : (void *)0x1,
-				    _bdev_nvme_reset_ctrlr_complete);
 }
 
 static void
@@ -2666,6 +2668,18 @@ bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	return 0;
 }
 
+static void _bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int status);
+
+static void
+bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
+{
+	/* Make sure we clear any pending resets before returning. */
+	nvme_ctrlr_for_each_channel(nvme_ctrlr,
+				    bdev_nvme_complete_pending_resets,
+				    NULL,
+				    _bdev_nvme_disable_ctrlr_complete);
+}
+
 static void
 _bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int status)
 {
@@ -2702,16 +2716,6 @@ _bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int 
 		break;
 	}
 
-}
-
-static void
-bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
-{
-	/* Make sure we clear any pending resets before returning. */
-	nvme_ctrlr_for_each_channel(nvme_ctrlr,
-				    bdev_nvme_complete_pending_resets,
-				    NULL,
-				    _bdev_nvme_disable_ctrlr_complete);
 }
 
 static void
