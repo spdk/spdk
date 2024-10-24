@@ -5049,6 +5049,12 @@ union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev)
 	return bdev->ctratt;
 }
 
+uint32_t
+spdk_bdev_get_nvme_nsid(struct spdk_bdev *bdev)
+{
+	return bdev->nsid;
+}
+
 static void bdev_update_qd_sampling_period(void *ctx);
 
 static void

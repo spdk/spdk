@@ -115,6 +115,7 @@
 	spdk_bdev_get_max_copy;
 	spdk_bdev_copy_blocks;
 	spdk_bdev_get_nvme_ctratt;
+	spdk_bdev_get_nvme_nsid;
 	spdk_bdev_get_io_type_name;
 	spdk_bdev_get_io_type;
 

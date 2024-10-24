@@ -4500,6 +4500,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	disk->blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 	disk->max_segment_size = spdk_nvme_ctrlr_get_max_xfer_size(ctrlr);
 	disk->ctratt.raw = cdata->ctratt.raw;
+	disk->nsid = spdk_nvme_ns_get_id(ns);
 	/* NVMe driver will split one request into multiple requests
 	 * based on MDTS and stripe boundary, the bdev layer will use
 	 * max_segment_size and max_num_segments to split one big IO

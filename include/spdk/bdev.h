@@ -2291,6 +2291,15 @@ void spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_chann
  */
 union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev);
 
+/**
+ * Get NVMe namespace ID for a given bdev (only for NVMe bdevs).
+ *
+ * \param bdev Block device to query.
+ *
+ * \return Namespace ID or 0 if it's not available.
+ */
+uint32_t spdk_bdev_get_nvme_nsid(struct spdk_bdev *bdev);
+
 #ifdef __cplusplus
 }
 #endif

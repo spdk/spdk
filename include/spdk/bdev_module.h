@@ -612,6 +612,11 @@ struct spdk_bdev {
 	 */
 	union spdk_bdev_nvme_ctratt ctratt;
 
+	/**
+	 * NVMe namespace ID.
+	 */
+	uint32_t nsid;
+
 	/* Upon receiving a reset request, this is the amount of time in seconds
 	 * to wait for all I/O to complete before moving forward with the reset.
 	 * If all I/O completes prior to this time out, the reset will be skipped.
