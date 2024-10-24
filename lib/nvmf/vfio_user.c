@@ -76,23 +76,19 @@ SPDK_STATIC_ASSERT(NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR >= 2 &&
  * this.
  */
 
+#define NVMF_VFIO_USER_MSIX_NUM MAX(CHAR_BIT, NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR)
+
+#define NVMF_VFIO_USER_MSIX_TABLE_BIR (4)
+#define NVMF_VFIO_USER_BAR4_SIZE SPDK_ALIGN_CEIL((NVMF_VFIO_USER_MSIX_NUM * 16), 0x1000)
+SPDK_STATIC_ASSERT(NVMF_VFIO_USER_BAR4_SIZE > 0, "Incorrect size");
+
 /*
- * MSI-X Pending Bit Array Size
- *
  * TODO according to the PCI spec we need one bit per vector, document the
  * relevant section.
- *
- * If the first argument to SPDK_ALIGN_CEIL is 0 then the result is 0, so we
- * would end up with a 0-size BAR5.
  */
-#define NVME_IRQ_MSIX_NUM MAX(CHAR_BIT, NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR)
-#define NVME_BAR5_SIZE SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM / CHAR_BIT), 0x1000)
-SPDK_STATIC_ASSERT(NVME_BAR5_SIZE > 0, "Incorrect size");
-
-/* MSI-X Table Size */
-#define NVME_BAR4_SIZE SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM * 16), 0x1000)
-SPDK_STATIC_ASSERT(NVME_BAR4_SIZE > 0, "Incorrect size");
-
+#define NVMF_VFIO_USER_MSIX_PBA_BIR (5)
+#define NVMF_VFIO_USER_BAR5_SIZE SPDK_ALIGN_CEIL((NVMF_VFIO_USER_MSIX_NUM / CHAR_BIT), 0x1000)
+SPDK_STATIC_ASSERT(NVMF_VFIO_USER_BAR5_SIZE > 0, "Incorrect size");
 struct nvmf_vfio_user_req;
 
 typedef int (*nvmf_vfio_user_req_cb_fn)(struct nvmf_vfio_user_req *req, void *cb_arg);
@@ -2154,7 +2150,7 @@ handle_create_io_cq(struct nvmf_vfio_user_ctrlr *ctrlr,
 		return SPDK_NVME_SC_INVALID_FIELD;
 	}
 
-	if (cmd->cdw11_bits.create_io_cq.iv > NVME_IRQ_MSIX_NUM - 1) {
+	if (cmd->cdw11_bits.create_io_cq.iv > NVMF_VFIO_USER_MSIX_NUM - 1) {
 		SPDK_ERRLOG("%s: IV is too big\n", ctrlr_id(ctrlr));
 		*sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		return SPDK_NVME_SC_INVALID_INTERRUPT_VECTOR;
@@ -4107,9 +4103,9 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 
 	struct msixcap msixcap = {
 		.hdr.id = PCI_CAP_ID_MSIX,
-		.mxc.ts = NVME_IRQ_MSIX_NUM - 1,
-		.mtab = {.tbir = 0x4, .to = 0x0},
-		.mpba = {.pbir = 0x5, .pbao = 0x0}
+		.mxc.ts = NVMF_VFIO_USER_MSIX_NUM - 1,
+		.mtab = {.tbir = NVMF_VFIO_USER_MSIX_TABLE_BIR, .to = 0x0},
+		.mpba = {.pbir = NVMF_VFIO_USER_MSIX_PBA_BIR, .pbao = 0x0}
 	};
 
 	struct iovec sparse_mmap[] = {
@@ -4182,14 +4178,14 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		return ret;
 	}
 
-	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR4_REGION_IDX, NVME_BAR4_SIZE,
+	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR4_REGION_IDX, NVMF_VFIO_USER_BAR4_SIZE,
 			       NULL, VFU_REGION_FLAG_RW, NULL, 0, -1, 0);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup bar 4\n", vfu_ctx);
 		return ret;
 	}
 
-	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR5_REGION_IDX, NVME_BAR5_SIZE,
+	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR5_REGION_IDX, NVMF_VFIO_USER_BAR5_SIZE,
 			       NULL, VFU_REGION_FLAG_RW, NULL, 0, -1, 0);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup bar 5\n", vfu_ctx);
@@ -4214,7 +4210,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		return ret;
 	}
 
-	ret = vfu_setup_device_nr_irqs(vfu_ctx, VFU_DEV_MSIX_IRQ, NVME_IRQ_MSIX_NUM);
+	ret = vfu_setup_device_nr_irqs(vfu_ctx, VFU_DEV_MSIX_IRQ, NVMF_VFIO_USER_MSIX_NUM);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup MSIX\n", vfu_ctx);
 		return ret;
