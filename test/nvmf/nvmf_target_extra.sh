@@ -64,5 +64,6 @@ if [[ $NET_TYPE == phy ]]; then
 	fi
 	run_test "nvmf_shutdown" $rootdir/test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 fi
+run_test "nvmf_nsid" "$rootdir/test/nvmf/target/nsid.sh" "${TEST_ARGS[@]}"
 
 trap - SIGINT SIGTERM EXIT

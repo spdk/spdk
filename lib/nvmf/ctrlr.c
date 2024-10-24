@@ -2839,8 +2839,7 @@ identify_ns_passthru_cb(struct spdk_nvmf_request *req)
 	/* This is the identify data from the NVMe drive */
 	datalen = spdk_nvmf_request_copy_to_buf(req, &nvme_nsdata,
 						sizeof(nvme_nsdata));
-
-	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nvmf_nsdata, cmd->nsid);
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nvmf_nsdata, req->orig_nsid);
 
 	/* Update fabric's namespace according to SSD's namespace */
 	if (nvme_nsdata.nsfeat.optperf) {
@@ -2871,6 +2870,7 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	struct spdk_nvmf_ns *ns = nvmf_ctrlr_get_ns(ctrlr, cmd->nsid);
 	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
@@ -2892,6 +2892,10 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	assert(ns->passthrough_nsid != 0);
+	req->orig_nsid = ns->nsid;
+	cmd->nsid = ns->passthrough_nsid;
 
 	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, identify_ns_passthru_cb);
 }
