@@ -3872,6 +3872,15 @@ struct spdk_bs_load_ctx {
 	char					xattr_name[4096];
 };
 
+static void
+bs_init_per_cluster_fields(struct spdk_blob_store *bs)
+{
+	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	if (spdk_u32_is_pow2(bs->pages_per_cluster)) {
+		bs->pages_per_cluster_shift = spdk_u32log2(bs->pages_per_cluster);
+	}
+}
+
 static int
 bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_store **_bs,
 	 struct spdk_bs_load_ctx **_ctx)
@@ -3938,12 +3947,9 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 		return -ENOMEM;
 	}
 
-	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
-	if (spdk_u32_is_pow2(bs->pages_per_cluster)) {
-		bs->pages_per_cluster_shift = spdk_u32log2(bs->pages_per_cluster);
-	}
 	bs->num_free_clusters = bs->total_clusters;
 	bs->io_unit_size = dev->blocklen;
+	bs_init_per_cluster_fields(bs);
 
 	bs->max_channel_ops = opts->max_channel_ops;
 	bs->super_blob = SPDK_BLOBID_INVALID;
@@ -4917,11 +4923,8 @@ bs_parse_super(struct spdk_bs_load_ctx *ctx)
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
 	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
-	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
-	if (spdk_u32_is_pow2(ctx->bs->pages_per_cluster)) {
-		ctx->bs->pages_per_cluster_shift = spdk_u32log2(ctx->bs->pages_per_cluster);
-	}
 	ctx->bs->io_unit_size = ctx->super->io_unit_size;
+	bs_init_per_cluster_fields(ctx->bs);
 	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
 		return -ENOMEM;
@@ -9624,11 +9627,8 @@ bs_load_grow_continue(struct spdk_bs_load_ctx *ctx)
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
 	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
-	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
-	if (spdk_u32_is_pow2(ctx->bs->pages_per_cluster)) {
-		ctx->bs->pages_per_cluster_shift = spdk_u32log2(ctx->bs->pages_per_cluster);
-	}
 	ctx->bs->io_unit_size = ctx->super->io_unit_size;
+	bs_init_per_cluster_fields(ctx->bs);
 	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
 		bs_load_ctx_fail(ctx, -ENOMEM);
