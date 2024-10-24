@@ -8,7 +8,7 @@ WORKDIR /root
 
 COPY ./ /root/spdk/
 
-RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cmake nano systemd-udev libasan
+RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cmake nano systemd-udev libasan8
 
 RUN cd spdk && git submodule update --init --depth 1
 
