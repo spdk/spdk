@@ -2772,14 +2772,15 @@ static void
 nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvme_cmd *cmd,
 		       struct spdk_nvme_cpl *rsp,
-		       struct spdk_nvme_ns_data *nsdata)
+		       struct spdk_nvme_ns_data *nsdata,
+		       uint32_t nsid)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
 	uint32_t max_num_blocks, format_index;
 	enum spdk_nvme_ana_state ana_state;
 
-	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, cmd->nsid, rsp);
+	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, nsid, rsp);
 	if (ns == NULL) {
 		return;
 	}
@@ -2820,7 +2821,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvme_cpl *rsp,
 			    struct spdk_nvme_ns_data *nsdata)
 {
-	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, nsdata);
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, nsdata, cmd->nsid);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -2839,7 +2840,7 @@ identify_ns_passthru_cb(struct spdk_nvmf_request *req)
 	datalen = spdk_nvmf_request_copy_to_buf(req, &nvme_nsdata,
 						sizeof(nvme_nsdata));
 
-	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nvmf_nsdata);
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nvmf_nsdata, cmd->nsid);
 
 	/* Update fabric's namespace according to SSD's namespace */
 	if (nvme_nsdata.nsfeat.optperf) {
@@ -2878,7 +2879,7 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 	struct spdk_iov_xfer ix;
 	int rc;
 
-	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nsdata);
+	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nsdata, cmd->nsid);
 
 	rc = spdk_nvmf_request_get_bdev(cmd->nsid, req, &bdev, &desc, &ch);
 	if (rc) {
