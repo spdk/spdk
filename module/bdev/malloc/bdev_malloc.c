@@ -102,12 +102,29 @@ _malloc_verify_pi(struct spdk_bdev_io *bdev_io, struct iovec *iovs, int iovcnt,
 }
 
 static int
-malloc_verify_pi(struct spdk_bdev_io *bdev_io)
+malloc_verify_pi_io_buf(struct spdk_bdev_io *bdev_io)
 {
 	return _malloc_verify_pi(bdev_io,
 				 bdev_io->u.bdev.iovs,
 				 bdev_io->u.bdev.iovcnt,
 				 bdev_io->u.bdev.md_buf);
+}
+
+static int
+malloc_verify_pi_malloc_buf(struct spdk_bdev_io *bdev_io)
+{
+	struct iovec iov;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct malloc_disk *mdisk = bdev->ctxt;
+	uint64_t len, offset;
+
+	len = bdev_io->u.bdev.num_blocks * bdev->blocklen;
+	offset = bdev_io->u.bdev.offset_blocks * bdev->blocklen;
+
+	iov.iov_base = mdisk->malloc_buf + offset;
+	iov.iov_len = len;
+
+	return _malloc_verify_pi(bdev_io, &iov, 1, NULL);
 }
 
 static int
@@ -194,7 +211,18 @@ malloc_done(void *ref, int status)
 	    task->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
-			rc = malloc_verify_pi(bdev_io);
+			if (!spdk_bdev_io_hide_metadata(bdev_io)) {
+				rc = malloc_verify_pi_io_buf(bdev_io);
+			} else {
+				rc = 0;
+			}
+			break;
+		case SPDK_BDEV_IO_TYPE_WRITE:
+			if (!spdk_bdev_io_hide_metadata(bdev_io)) {
+				rc = 0;
+			} else {
+				rc = malloc_verify_pi_malloc_buf(bdev_io);
+			}
 			break;
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 		case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
@@ -494,12 +522,22 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 			return 0;
 		}
 
+		if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE &&
+		    spdk_bdev_io_hide_metadata(bdev_io)) {
+			rc = malloc_verify_pi_malloc_buf(bdev_io);
+			if (rc != 0) {
+				malloc_complete_task(task, mch, SPDK_BDEV_IO_STATUS_FAILED);
+				return 0;
+			}
+		}
+
 		bdev_malloc_readv(disk, mch->accel_channel, task, bdev_io);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE) {
-			rc = malloc_verify_pi(bdev_io);
+		if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE &&
+		    !spdk_bdev_io_hide_metadata(bdev_io)) {
+			rc = malloc_verify_pi_io_buf(bdev_io);
 			if (rc != 0) {
 				malloc_complete_task(task, mch, SPDK_BDEV_IO_STATUS_FAILED);
 				return 0;
@@ -646,12 +684,6 @@ bdev_malloc_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, i
 static bool
 bdev_malloc_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 {
-	struct malloc_disk *malloc_disk = ctx;
-
-	if (malloc_disk->disk.dif_type != SPDK_DIF_DISABLE) {
-		return false;
-	}
-
 	switch (type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
