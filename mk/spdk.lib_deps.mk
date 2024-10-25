@@ -138,7 +138,6 @@ DEPDIRS-bdev_ftl := $(BDEV_DEPS) ftl
 endif
 DEPDIRS-bdev_gpt := bdev json log thread util
 
-DEPDIRS-bdev_error := $(BDEV_DEPS)
 DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
 DEPDIRS-bdev_split := $(BDEV_DEPS)
@@ -147,6 +146,7 @@ DEPDIRS-bdev_aio := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce accel
 DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
+DEPDIRS-bdev_error := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_THREAD) accel dma
 DEPDIRS-bdev_null := $(BDEV_DEPS_THREAD)

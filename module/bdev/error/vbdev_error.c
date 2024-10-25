@@ -45,12 +45,12 @@ struct error_io {
 struct error_disk {
 	struct spdk_bdev_part		part;
 	struct vbdev_error_info		error_vector[SPDK_BDEV_IO_TYPE_RESET];
-	TAILQ_HEAD(, error_io)	pending_ios;
 };
 
 struct error_channel {
 	struct spdk_bdev_part_channel	part_ch;
 	uint64_t			io_inflight;
+	TAILQ_HEAD(, error_io)		pending_ios;
 };
 
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -157,15 +157,38 @@ exit:
 }
 
 static void
+vbdev_error_ch_abort_ios(struct spdk_io_channel_iter *i)
+{
+	struct error_channel *ch = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	struct error_io *error_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(error_io, &ch->pending_ios, link, tmp) {
+		TAILQ_REMOVE(&ch->pending_ios, error_io, link);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(error_io), SPDK_BDEV_IO_STATUS_ABORTED);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+vbdev_error_ch_abort_ios_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev_io *reset_io = spdk_io_channel_iter_get_ctx(i);
+
+	if (status != 0) {
+		SPDK_ERRLOG("Failed to abort pending I/Os on bdev %s, status = %d\n",
+			    reset_io->bdev->name, status);
+		spdk_bdev_io_complete(reset_io, SPDK_BDEV_IO_STATUS_FAILED);
+	} else {
+		spdk_bdev_io_complete(reset_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
+}
+
+static void
 vbdev_error_reset(struct error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 {
-	struct error_io *pending_io, *tmp;
-
-	TAILQ_FOREACH_SAFE(pending_io, &error_disk->pending_ios, link, tmp) {
-		TAILQ_REMOVE(&error_disk->pending_ios, pending_io, link);
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(pending_io), SPDK_BDEV_IO_STATUS_FAILED);
-	}
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	spdk_for_each_channel(&error_disk->part, vbdev_error_ch_abort_ios, bdev_io,
+			      vbdev_error_ch_abort_ios_done);
 }
 
 static uint32_t
@@ -271,7 +294,7 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		break;
 	case VBDEV_IO_PENDING:
-		TAILQ_INSERT_TAIL(&error_disk->pending_ios, error_io, link);
+		TAILQ_INSERT_TAIL(&ch->pending_ios, error_io, link);
 		break;
 	case VBDEV_IO_CORRUPT_DATA:
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
@@ -349,6 +372,22 @@ vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 }
 
 static int
+vbdev_error_ch_create_cb(void *io_device, void *ctx_buf)
+{
+	struct error_channel *ch = ctx_buf;
+
+	ch->io_inflight = 0;
+	TAILQ_INIT(&ch->pending_ios);
+
+	return 0;
+}
+
+static void
+vbdev_error_ch_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+static int
 _vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid)
 {
 	struct spdk_bdev_part_base *base = NULL;
@@ -361,7 +400,8 @@ _vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid)
 					       vbdev_error_base_bdev_hotremove_cb,
 					       &error_if, &vbdev_error_fn_table, &g_error_disks,
 					       NULL, NULL, sizeof(struct error_channel),
-					       NULL, NULL, &base);
+					       vbdev_error_ch_create_cb, vbdev_error_ch_destroy_cb,
+					       &base);
 	if (rc != 0) {
 		if (rc != -ENODEV) {
 			SPDK_ERRLOG("could not construct part base for bdev %s\n", base_bdev_name);
@@ -401,8 +441,6 @@ _vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid)
 		free(disk);
 		return rc;
 	}
-
-	TAILQ_INIT(&disk->pending_ios);
 
 	return 0;
 }
