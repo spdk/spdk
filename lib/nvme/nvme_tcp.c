@@ -2859,6 +2859,15 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	return group->num_completions;
 }
 
+/*
+ * Handle disconnected qpairs when interrupt support gets added.
+ */
+static void
+nvme_tcp_poll_group_check_disconnected_qpairs(struct spdk_nvme_transport_poll_group *tgroup,
+		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
+{
+}
+
 static int
 nvme_tcp_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {
@@ -2967,6 +2976,7 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.poll_group_add = nvme_tcp_poll_group_add,
 	.poll_group_remove = nvme_tcp_poll_group_remove,
 	.poll_group_process_completions = nvme_tcp_poll_group_process_completions,
+	.poll_group_check_disconnected_qpairs = nvme_tcp_poll_group_check_disconnected_qpairs,
 	.poll_group_destroy = nvme_tcp_poll_group_destroy,
 	.poll_group_get_stats = nvme_tcp_poll_group_get_stats,
 	.poll_group_free_stats = nvme_tcp_poll_group_free_stats,

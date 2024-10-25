@@ -774,6 +774,14 @@ nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_gr
 			disconnected_qpair_cb);
 }
 
+void
+nvme_transport_poll_group_check_disconnected_qpairs(struct spdk_nvme_transport_poll_group *tgroup,
+		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
+{
+	return tgroup->transport->ops.poll_group_check_disconnected_qpairs(tgroup,
+			disconnected_qpair_cb);
+}
+
 int
 nvme_transport_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {

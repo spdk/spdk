@@ -3219,6 +3219,15 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	return rc2 != 0 ? rc2 : total_completions;
 }
 
+/*
+ * Handle disconnected qpairs when interrupt support gets added.
+ */
+static void
+nvme_rdma_poll_group_check_disconnected_qpairs(struct spdk_nvme_transport_poll_group *tgroup,
+		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
+{
+}
+
 static int
 nvme_rdma_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {
@@ -3359,6 +3368,7 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.poll_group_add = nvme_rdma_poll_group_add,
 	.poll_group_remove = nvme_rdma_poll_group_remove,
 	.poll_group_process_completions = nvme_rdma_poll_group_process_completions,
+	.poll_group_check_disconnected_qpairs = nvme_rdma_poll_group_check_disconnected_qpairs,
 	.poll_group_destroy = nvme_rdma_poll_group_destroy,
 	.poll_group_get_stats = nvme_rdma_poll_group_get_stats,
 	.poll_group_free_stats = nvme_rdma_poll_group_free_stats,

@@ -1817,6 +1817,17 @@ nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	return total_completions;
 }
 
+void
+nvme_pcie_poll_group_check_disconnected_qpairs(struct spdk_nvme_transport_poll_group *tgroup,
+		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
+{
+	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
+		disconnected_qpair_cb(qpair, tgroup->group->ctx);
+	}
+}
+
 int
 nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {

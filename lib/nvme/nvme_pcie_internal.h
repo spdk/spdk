@@ -348,6 +348,9 @@ int nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 int64_t nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 		uint32_t completions_per_qpair,
 		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
+void nvme_pcie_poll_group_check_disconnected_qpairs(
+	struct spdk_nvme_transport_poll_group *tgroup,
+	spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 int nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup);
 
 #endif
