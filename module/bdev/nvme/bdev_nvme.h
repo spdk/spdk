@@ -189,7 +189,7 @@ struct nvme_bdev {
 	TAILQ_ENTRY(nvme_bdev)		tailq;
 	struct nvme_error_stat		*err_stat;
 
-         uint32_t                        bdev_seq;
+         uint32_t                        _seq;
 };
 
 struct nvme_qpair {
