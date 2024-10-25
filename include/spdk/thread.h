@@ -1111,6 +1111,13 @@ struct spdk_iobuf_node_cache {
 	struct spdk_iobuf_pool_cache	large;
 };
 
+#ifndef SPDK_CONFIG_MAX_NUMA_NODES
+/* Set this default temporarily, for users that may pull latest code without
+ * re-running configure.
+ */
+#define SPDK_CONFIG_MAX_NUMA_NODES 1
+#endif
+
 /** iobuf channel */
 struct spdk_iobuf_channel {
 	/** Module pointer */
