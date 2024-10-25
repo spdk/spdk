@@ -188,6 +188,8 @@ struct nvme_bdev {
 	bool				opal;
 	TAILQ_ENTRY(nvme_bdev)		tailq;
 	struct nvme_error_stat		*err_stat;
+
+         uint32_t                        bdev_seq;
 };
 
 struct nvme_qpair {
