@@ -2423,9 +2423,11 @@ bdev_nvme_reset_create_qpair(struct nvme_ctrlr_channel_iter *i,
 {
 	struct nvme_qpair *nvme_qpair = ctrlr_ch->qpair;
 	struct spdk_nvme_qpair *qpair;
-	int rc;
+	int rc = 0;
 
-	rc = bdev_nvme_create_qpair(nvme_qpair);
+	if (nvme_qpair->qpair == NULL) {
+		rc = bdev_nvme_create_qpair(nvme_qpair);
+	}
 	if (rc == 0) {
 		ctrlr_ch->connect_poller = SPDK_POLLER_REGISTER(bdev_nvme_reset_check_qpair_connected,
 					   ctrlr_ch, 0);
