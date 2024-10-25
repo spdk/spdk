@@ -247,6 +247,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "ublk" $rootdir/test/ublk/ublk.sh
 			run_test "ublk_recovery" $rootdir/test/ublk/ublk_recovery.sh
 		fi
+
+		if [[ $SPDK_TEST_NVME_INTERRUPT -eq 1 ]]; then
+			run_test "nvme_interrupt" "$rootdir/test/nvme/interrupt.sh"
+		fi
 	fi
 
 	if [ $SPDK_TEST_IOAT -eq 1 ]; then
