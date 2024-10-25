@@ -304,14 +304,15 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		}
 	/* fallthrough */
 	case VBDEV_IO_NO_ERROR:
+		ch->io_inflight++;
 		rc = spdk_bdev_part_submit_request_ext(&ch->part_ch, bdev_io,
 						       vbdev_error_complete_request);
 
 		if (rc) {
 			SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			ch->io_inflight--;
 		}
-		ch->io_inflight++;
 		break;
 	default:
 		assert(false);
