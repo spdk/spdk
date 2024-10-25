@@ -3675,6 +3675,12 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 	raid_bdev = raid_bdev_find_by_uuid(&sb->uuid);
 
 	if (raid_bdev) {
+		if (raid_bdev->sb == NULL) {
+			SPDK_WARNLOG("raid superblock is null\n");
+			rc = -EINVAL;
+			goto out;
+		}
+
 		if (sb->seq_number > raid_bdev->sb->seq_number) {
 			SPDK_DEBUGLOG(bdev_raid,
 				      "raid superblock seq_number on bdev %s (%lu) greater than existing raid bdev %s (%lu)\n",
