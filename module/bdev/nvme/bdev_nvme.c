@@ -99,8 +99,10 @@ struct nvme_bdev_io {
 	uint64_t submit_tsc;
 };
 
-static uint64_t _cnt[4];
-static uint64_t _timep;
+static uint64_t _cnt[100][4];
+static uint32_t _seq=0;
+static uint64_t _ptin=0;
+static uint64_t _ptout=0;
 
 struct nvme_probe_skip_entry {
 	struct spdk_nvme_transport_id		trid;
@@ -1257,12 +1259,14 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 		return;
 	}
 
+        struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	
 	tsc_diff = spdk_get_ticks() - bio->submit_tsc;
 	stat = bio->io_path->stat;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		_cnt[0]--;
+		_cnt[nbdev->_seq][0]--;
                 stat->bytes_read += num_blocks * blocklen;
 		stat->num_read_ops++;
 		stat->read_latency_ticks += tsc_diff;
@@ -1274,7 +1278,7 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-                _cnt[1]--;
+                _cnt[nbdev->_seq][1]--;
 		stat->bytes_written += num_blocks * blocklen;
 		stat->num_write_ops++;
 		stat->write_latency_ticks += tsc_diff;
@@ -1286,7 +1290,7 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		_cnt[2]--;
+		_cnt[nbdev->_seq][2]--;
 		stat->bytes_unmapped += num_blocks * blocklen;
 		stat->num_unmap_ops++;
 		stat->unmap_latency_ticks += tsc_diff;
@@ -1339,7 +1343,11 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 		break;
 	}
 
-        _timep+=tsc_diff;
+       if(((spdk_get_ticks() / spdk_get_ticks_hz()) - _ptout) > 1000000000)
+	{	
+           _ptout=spdk_get_ticks() / spdk_get_ticks_hz();
+           SPDK_ERRLOG("CNT OUT for %s: %lld %lld %lld.\n",nbdev->disk.name, _cnt[nbdev->_seq][0],_cnt[nbdev->_seq][1],_cnt[nbdev->_seq][2]);
+	}
 		
 }
 
@@ -2999,18 +3007,21 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 {
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
+        
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	
 	struct nvme_bdev_io *nbdev_io_to_abort;
 	int rc = 0;
 
-        if(_timep > 2000000000)
+        if(((spdk_get_ticks() / spdk_get_ticks_hz()) - _ptin) > 1000000000)
 	{	
-           _timep=0;
-           SPDK_ERRLOG("CNT for %s: %lld %lld %lld.\n",bdev->disk.name, _cnt[0],_cnt[1],_cnt[2]);
+           _ptin=spdk_get_ticks() / spdk_get_ticks_hz();
+           SPDK_ERRLOG("CNT IN for %s: %lld %lld %lld.\n",nbdev->disk.name, _cnt[nbdev->_seq][0],_cnt[nbdev->_seq][1],_cnt[nbdev->_seq][2]);
 	}
         
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-                 _cnt[0]++;
+                 _cnt[nbdev->_seq][0]++;
 		if (bdev_io->u.bdev.iovs && bdev_io->u.bdev.iovs[0].iov_base) {
 			rc = bdev_nvme_readv(nbdev_io,
 					     bdev_io->u.bdev.iovs,
@@ -3029,7 +3040,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		_cnt[1]++;
+		_cnt[nbdev->_seq][1]++;
 		rc = bdev_nvme_writev(nbdev_io,
 				      bdev_io->u.bdev.iovs,
 				      bdev_io->u.bdev.iovcnt,
@@ -3064,7 +3075,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 						   bdev_io->u.bdev.dif_check_flags);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-                 _cnt[2]++;
+                 _cnt[nbdev->_seq][2]++;
 		rc = bdev_nvme_unmap(nbdev_io,
 				     bdev_io->u.bdev.offset_blocks,
 				     bdev_io->u.bdev.num_blocks);
@@ -4321,6 +4332,12 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 
 	nvme_ns->bdev = bdev;
 	bdev->nsid = nvme_ns->id;
+
+	//msi
+	bdev->_seq=_seq;
+        _seq++;
+        //end-msi
+
 	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 
 	bdev->nbdev_ctrlr = nbdev_ctrlr;
@@ -5450,8 +5467,6 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_path_id *path_id;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	int rc;
-
-        _cnt[0]=0;_cnt[1]=0;_cnt[2]=0;
 
 	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
 	if (nvme_ctrlr == NULL) {
