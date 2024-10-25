@@ -48,10 +48,9 @@ declare -A xnvme_filename=(
 	["io_uring_cmd"]=/dev/ng0n1
 )
 
-declare -A xnvme_conserve_cpu=(
-	["libaio"]=false
-	["io_uring"]=false
-	["io_uring_cmd"]=true
+declare -a xnvme_conserve_cpu=(
+	false
+	true
 )
 
 # Prep some sane default for the gen_conf()
@@ -59,7 +58,7 @@ declare -A method_bdev_xnvme_create_0=(
 	["name"]=xnvme_bdev
 	["filename"]=${xnvme_filename["libaio"]}
 	["io_mechanism"]=libaio
-	["conserve_cpu"]=${xnvme_conserve_cpu["libaio"]}
+	["conserve_cpu"]=false
 )
 
 rpc_xnvme() {
