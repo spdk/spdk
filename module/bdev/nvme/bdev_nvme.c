@@ -1346,8 +1346,8 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
        if(((spdk_get_ticks() / spdk_get_ticks_hz()) - _ptout) > 3000000000)
 	{	
            _ptout=spdk_get_ticks() / spdk_get_ticks_hz();
-            for (int i=0;i<_sq;i++)
-                  SPDK_ERRLOG("CNT IN for %l: %lld %lld %lld.\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
+            for (int i=0;i<_seq;i++)
+                  SPDK_ERRLOG("CNT IN for %d - %lld %lld %lld.\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
 	}
 		
 }
@@ -3017,8 +3017,8 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
         if(((spdk_get_ticks() / spdk_get_ticks_hz()) - _ptin) > 3000000000)
 	{	
            _ptin=spdk_get_ticks() / spdk_get_ticks_hz();
-           for (int i=0;i<_sq;i++)
-                  SPDK_ERRLOG("CNT IN for %l: %lld %lld %lld.\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
+           for (int i=0;i<_seq;i++)
+                  SPDK_ERRLOG("CNT IN for %d - %lld %lld %lld.\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
 	}
         
 	switch (bdev_io->type) {
