@@ -1516,18 +1516,27 @@ def bdev_reset_iostat(client, name=None, mode=None):
     return client.call('bdev_reset_iostat', params)
 
 
-def bdev_enable_histogram(client, name, enable, opc):
+def bdev_enable_histogram(client, name, enable, opc, granularity, min_nsec, max_nsec):
     """Control whether histogram is enabled for specified bdev.
     Args:
         name: name of bdev
         enable: Enable or disable histogram on specified device
         opc: name of io_type (optional)
+        granularity: bucket granularity
+        min_nsec: min value of histogram in nanoseconds
+        max_nsec: max value of histogram in nanoseconds
     """
     params = dict()
     params['name'] = name
     params['enable'] = enable
     if opc:
         params['opc'] = opc
+    if granularity:
+        params['granularity'] = granularity
+    if min_nsec:
+        params['min_nsec'] = min_nsec
+    if max_nsec:
+        params['max_nsec'] = max_nsec
     return client.call('bdev_enable_histogram', params)
 
 

@@ -132,9 +132,14 @@ struct spdk_bdev_enable_histogram_opts {
 	/** Size of this structure in bytes */
 	size_t size;
 
+	/** Min value in nanoseconds to track in histogram */
+	uint64_t min_nsec;
+	/** Max value in nanoseconds to track in histogram */
+	uint64_t max_nsec;
 	uint8_t io_type;
+	uint8_t granularity;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_enable_histogram_opts) == 9, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_enable_histogram_opts) == 26, "Incorrect size");
 
 /** bdev QoS rate limit type */
 enum spdk_bdev_qos_rate_limit_type {

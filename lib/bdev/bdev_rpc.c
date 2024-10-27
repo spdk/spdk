@@ -991,6 +991,9 @@ struct rpc_bdev_enable_histogram_request {
 	char *name;
 	bool enable;
 	char *opc;
+	uint8_t granularity;
+	uint64_t min_nsec;
+	uint64_t max_nsec;
 };
 
 static void
@@ -1004,6 +1007,9 @@ static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_request_d
 	{"name", offsetof(struct rpc_bdev_enable_histogram_request, name), spdk_json_decode_string},
 	{"enable", offsetof(struct rpc_bdev_enable_histogram_request, enable), spdk_json_decode_bool},
 	{"opc", offsetof(struct rpc_bdev_enable_histogram_request, opc), spdk_json_decode_string, true},
+	{"granularity", offsetof(struct rpc_bdev_enable_histogram_request, granularity), spdk_json_decode_uint8, true},
+	{"min_nsec", offsetof(struct rpc_bdev_enable_histogram_request, min_nsec), spdk_json_decode_uint64, true},
+	{"max_nsec", offsetof(struct rpc_bdev_enable_histogram_request, max_nsec), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -1022,7 +1028,10 @@ static void
 rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_bdev_enable_histogram_request req = {NULL};
+	struct rpc_bdev_enable_histogram_request req = {.granularity = SPDK_HISTOGRAM_GRANULARITY_DEFAULT,
+		       .min_nsec = 0,
+		       .max_nsec = UINT64_MAX
+	};
 	struct spdk_bdev_desc *desc;
 	int rc;
 	struct spdk_bdev_enable_histogram_opts opts = {};
@@ -1055,6 +1064,10 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 		}
 		opts.io_type = (uint8_t) io_type;
 	}
+
+	opts.granularity = req.granularity;
+	opts.min_nsec = req.min_nsec;
+	opts.max_nsec = req.max_nsec;
 
 	spdk_bdev_histogram_enable_ext(spdk_bdev_desc_get_bdev(desc), bdev_histogram_status_cb,
 				       request, req.enable, &opts);
@@ -1120,6 +1133,8 @@ _rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "histogram", encoded_histogram);
 	spdk_json_write_named_int64(w, "granularity", histogram->granularity);
+	spdk_json_write_named_uint32(w, "min_range", histogram->min_range);
+	spdk_json_write_named_uint32(w, "max_range", histogram->max_range);
 	spdk_json_write_named_int64(w, "tsc_rate", spdk_get_ticks_hz());
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
@@ -1137,6 +1152,7 @@ rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_get_histogram_request req = {NULL};
 	struct spdk_histogram_data *histogram;
 	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_request_decoders,
@@ -1154,14 +1170,17 @@ rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	histogram = spdk_histogram_data_alloc();
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
+	histogram = spdk_histogram_data_alloc_sized_ext(bdev->internal.histogram_granularity,
+			bdev->internal.histogram_min_val, bdev->internal.histogram_max_val);
 	if (histogram == NULL) {
 		spdk_bdev_close(desc);
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		goto cleanup;
 	}
 
-	spdk_bdev_histogram_get(spdk_bdev_desc_get_bdev(desc), histogram,
+	spdk_bdev_histogram_get(bdev, histogram,
 				_rpc_bdev_histogram_data_cb, request);
 
 	spdk_bdev_close(desc);

@@ -10033,7 +10033,8 @@ bdev_histogram_enable_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev
 	int status = 0;
 
 	if (ch->histogram == NULL) {
-		ch->histogram = spdk_histogram_data_alloc();
+		ch->histogram = spdk_histogram_data_alloc_sized_ext(bdev->internal.histogram_granularity,
+				bdev->internal.histogram_min_val, bdev->internal.histogram_max_val);
 		if (ch->histogram == NULL) {
 			status = -ENOMEM;
 		}
@@ -10072,6 +10073,13 @@ spdk_bdev_histogram_enable_ext(struct spdk_bdev *bdev, spdk_bdev_histogram_statu
 
 	bdev->internal.histogram_enabled = enable;
 	bdev->internal.histogram_io_type = opts->io_type;
+	bdev->internal.histogram_granularity = opts->granularity;
+	bdev->internal.histogram_min_val = opts->min_nsec * spdk_get_ticks_hz() / SPDK_SEC_TO_NSEC;
+	if (opts->max_nsec == UINT64_MAX) {
+		bdev->internal.histogram_max_val = UINT64_MAX;
+	} else {
+		bdev->internal.histogram_max_val = opts->max_nsec * spdk_get_ticks_hz() / SPDK_SEC_TO_NSEC;
+	}
 
 	if (enable) {
 		/* Allocate histogram for each channel */
@@ -10109,10 +10117,13 @@ spdk_bdev_enable_histogram_opts_init(struct spdk_bdev_enable_histogram_opts *opt
         } \
 
 	SET_FIELD(io_type, 0);
+	SET_FIELD(granularity, SPDK_HISTOGRAM_GRANULARITY_DEFAULT);
+	SET_FIELD(min_nsec, 0);
+	SET_FIELD(max_nsec, UINT64_MAX);
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_enable_histogram_opts) == 9, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_enable_histogram_opts) == 26, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD

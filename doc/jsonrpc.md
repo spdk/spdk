@@ -2813,6 +2813,9 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Block device name
 enable                  | Required | boolean     | Enable or disable histogram on specified device
 opc                     | Optional | string      | IO type name
+granularity             | Optional | number      | Histogram bucket granularity. Default: 7
+min_nsec                | Optional | number      | Min value in nanoseconds to track. Default: 0
+max_nsec                | Optional | number      | Max value in nanoseconds to track. Default: UINT64_T (max possible value)
 
 #### Example
 
@@ -2824,9 +2827,12 @@ Example request:
   "id": 1,
   "method": "bdev_enable_histogram",
   "params": {
-    "name": "Nvme0n1"
-    "enable": true
-    "opc": "read"
+    "name": "Nvme0n1",
+    "enable": true,
+    "opc": "read",
+    "granularity": 7,
+    "min_nsec": 1000,
+    "max_nsec": 1000000000,
   }
 }
 ~~~
@@ -2857,6 +2863,8 @@ Name                    | Description
 ------------------------| -----------
 histogram               | Base64 encoded histogram
 granularity             | Granularity of the histogram buckets
+min_range               | Minimal range tracked in histogram
+max_range               | Maximal range tracked in histogram
 tsc_rate                | Ticks per second
 
 #### Example
@@ -2885,6 +2893,9 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
     "histogram": "AAAAAAAAAAAAAA...AAAAAAAAA==",
     "tsc_rate": 2300000000,
     "granularity": 7
+    "min_range": 5,
+    "max_range": 25,
+    "tsc_rate": 2300000000
   }
 }
 ~~~
