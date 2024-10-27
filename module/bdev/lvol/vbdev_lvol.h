@@ -41,6 +41,10 @@ int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz
 		      spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
 
+int vbdev_lvs_dump(struct spdk_lvol_store *lvs, const char *file,
+		      spdk_lvol_op_with_handle_complete cb_fn,
+		      void *cb_arg);			  
+
 void vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 				spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 

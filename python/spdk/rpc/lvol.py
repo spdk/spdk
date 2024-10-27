@@ -96,6 +96,18 @@ def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=
     params['lvol_priority_class'] = lvol_priority_class
     return client.call('bdev_lvol_create', params)
 
+def bdev_lvs_dump(client, file, uuid=None, lvs_name=None):
+    """Create a logical volume on a logical volume store."""
+    if (uuid and lvs_name) or (not uuid and not lvs_name):
+        raise ValueError("Either uuid or lvs_name must be specified, but not both")
+
+    params = {'file': file}
+    if uuid:
+        params['uuid'] = uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name    
+    return client.call('bdev_lvs_dump', params)
+
 def bdev_lvol_set_priority_class(client, lvol_name, lvol_priority_class):
     """Set the I/O priority class of a logical volume.
 

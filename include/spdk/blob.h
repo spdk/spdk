@@ -387,6 +387,8 @@ typedef void (*spdk_bs_dump_print_xattr)(FILE *fp, const char *bstype, const cha
  */
 void spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_xattr_fn,
 		  spdk_bs_op_complete cb_fn, void *cb_arg);
+
+void spdk_bs_dumpv2(struct spdk_blob_store *bs, FILE *fp, spdk_bs_op_complete cb_fn, void *cb_arg);
 /**
  * Destroy the blobstore.
  *

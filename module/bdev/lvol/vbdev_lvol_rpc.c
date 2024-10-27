@@ -388,6 +388,83 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_lvol_create", rpc_bdev_lvol_create, SPDK_RPC_RUNTIME)
 
+
+struct rpc_bdev_lvs_dump {
+	char *uuid;
+	char *lvs_name;
+	char *file;	
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_lvs_dump_decoders[] = {
+	{"uuid", offsetof(struct rpc_bdev_lvs_dump, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_bdev_lvs_dump, lvs_name), spdk_json_decode_string, true},
+	{"file", offsetof(struct rpc_bdev_lvs_dump, file), spdk_json_decode_string},	
+};
+
+static void
+free_rpc_bdev_lvs_dump(struct rpc_bdev_lvs_dump *req)
+{
+	free(req->uuid);
+	free(req->lvs_name);
+	free(req->file);	
+}
+
+static void
+rpc_bdev_lvs_dump_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;	
+	if (lvolerrno == 0) {
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_string(w, "done");
+		spdk_jsonrpc_end_result(request, w);
+		return;
+	}
+
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-lvolerrno));
+}
+
+
+static void
+rpc_bdev_lvs_dump(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
+{
+	struct rpc_bdev_lvs_dump req = {};
+	int rc = 0;
+	struct spdk_lvol_store *lvs = NULL;
+
+	SPDK_INFOLOG(lvol_rpc, "Dumping blobstore\n");
+
+	if (spdk_json_decode_object(params, rpc_bdev_lvs_dump_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvs_dump_decoders),
+				    &req)) {
+		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+
+	rc = vbdev_lvs_dump(lvs, req.file, rpc_bdev_lvs_dump_cb, request);
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+cleanup:
+	free_rpc_bdev_lvs_dump(&req);
+}
+
+SPDK_RPC_REGISTER("bdev_lvs_dump", rpc_bdev_lvs_dump, SPDK_RPC_RUNTIME)
+
+
 struct rpc_bdev_lvol_snapshot {
 	char *lvol_name;
 	char *snapshot_name;

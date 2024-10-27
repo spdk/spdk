@@ -2049,6 +2049,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('size_in_mib', help='size in MiB for this bdev', type=int)
     p.add_argument('lvol_priority_class', help='integer I/O priority class for this lvol in the range [0, 15], default 0', type=int)
     p.set_defaults(func=bdev_lvol_create)
+    
+    def bdev_lvs_dump(args):
+        print_json(rpc.lvol.bdev_lvs_dump(args.client,
+                                            file=args.file,
+                                            uuid=args.uuid,
+                                            lvs_name=args.lvs_name))
+
+    p = subparsers.add_parser('bdev_lvs_dump', help='dump data from blobstore')
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
+    p.add_argument('-f', '--file', help='file path for dump data')
+    p.set_defaults(func=bdev_lvs_dump)
 
     def bdev_lvol_set_priority_class(args):
         print_json(rpc.lvol.bdev_lvol_set_priority_class(args.client,

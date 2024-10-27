@@ -1202,6 +1202,52 @@ end:
 	free(req);
 }
 
+static void
+spdk_bsdump_done(void *arg, int bserrno)
+{
+	struct spdk_lvol_with_handle_req *req = arg;	
+	if (bserrno != 0) {
+		SPDK_ERRLOG("lvs dump failed.\n");
+	}
+	SPDK_INFOLOG(vbdev_lvol, "lvs dumping done successfully.\n");
+	fclose(req->fp);
+	req->cb_fn(req->cb_arg, NULL, bserrno);
+	free(req);
+}
+
+
+int
+vbdev_lvs_dump(struct spdk_lvol_store *lvs, const char *file, spdk_lvol_op_with_handle_complete cb_fn,
+		  void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	FILE *fp = NULL;
+
+	fp = fopen(file, "w");  // Open the file in write mode
+
+	// Check if the file opened successfully
+	if (fp == NULL) {
+		SPDK_ERRLOG("Error opening file for writing\n");
+		return -1;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}	
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->fp = fp;
+
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		return -EINVAL;
+	}
+	
+	spdk_bs_dumpv2(lvs->blobstore, fp, spdk_bsdump_done, req);
+	return 0;
+}
+
 int
 vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		  bool thin_provision, enum lvol_clear_method clear_method, int8_t lvol_priority_class,
