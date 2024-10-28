@@ -1275,7 +1275,7 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 	{	
            _ptout=spdk_get_ticks();
             for (int i=0;i<_seq;i++)
-                  SPDK_ERRLOG("CNT IN for %d - %%I64u %%I64u %%I64u.\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
+                  SPDK_ERRLOG("CNT IN for %d - %I64u %I64u %I64u .\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
 	}
 
 	if (bio->io_path->stat == NULL) {
@@ -3030,7 +3030,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 	{	
            _ptin=spdk_get_ticks();
            for (int i=0;i<_seq;i++)
-                  SPDK_ERRLOG("CNT IN for %d - %%I64u %%I64u %%I64u.\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
+                  SPDK_ERRLOG("CNT IN for %d - %I64u %I64u %I64u .\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
 	}
         
 	switch (bdev_io->type) {
