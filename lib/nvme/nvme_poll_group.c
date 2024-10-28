@@ -70,6 +70,7 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 #endif
 	}
 
+	group->disconnect_qpair_fd = -1;
 	group->ctx = ctx;
 	STAILQ_INIT(&group->tgroups);
 
@@ -102,11 +103,73 @@ spdk_nvme_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
 	return tgroup->group;
 }
 
+#ifdef __linux__
+static int
+nvme_poll_group_read_disconnect_qpair_fd(void *arg)
+{
+	return 0;
+}
+
+void
+nvme_poll_group_write_disconnect_qpair_fd(struct spdk_nvme_poll_group *group)
+{
+	uint64_t notify = 1;
+	int rc;
+
+	if (!group->enable_interrupts) {
+		return;
+	}
+
+	/* Write to the disconnect qpair fd. This will generate event on the epoll fd of poll
+	 * group. We then check for disconnected qpairs in spdk_nvme_poll_group_wait() */
+	rc = write(group->disconnect_qpair_fd, &notify, sizeof(notify));
+	if (rc < 0) {
+		SPDK_ERRLOG("failed to write the disconnect qpair fd: %s.\n", strerror(errno));
+	}
+}
+
+static int
+nvme_poll_group_add_disconnect_qpair_fd(struct spdk_nvme_poll_group *group)
+{
+	struct spdk_event_handler_opts opts = {};
+	int fd;
+
+	fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (fd < 0) {
+		return fd;
+	}
+
+	assert(group->disconnect_qpair_fd == -1);
+	group->disconnect_qpair_fd = fd;
+
+	spdk_fd_group_get_default_event_handler_opts(&opts, sizeof(opts));
+	opts.fd_type = SPDK_FD_TYPE_EVENTFD;
+
+	return SPDK_FD_GROUP_ADD_EXT(group->fgrp, fd, nvme_poll_group_read_disconnect_qpair_fd,
+				     group, &opts);
+}
+
+#else
+
+void
+nvme_poll_group_write_disconnect_qpair_fd(struct spdk_nvme_poll_group *group)
+{
+}
+
+static int
+nvme_poll_group_add_disconnect_qpair_fd(struct spdk_nvme_poll_group *group)
+{
+	return -ENOTSUP;
+}
+
+#endif
+
 int
 spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
 	const struct spdk_nvme_transport *transport;
+	int rc;
 
 	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTED) {
 		return -EINVAL;
@@ -115,6 +178,12 @@ spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qp
 	if (!group->enable_interrupts_is_valid) {
 		group->enable_interrupts_is_valid = true;
 		group->enable_interrupts = qpair->ctrlr->opts.enable_interrupts;
+		if (group->enable_interrupts) {
+			rc = nvme_poll_group_add_disconnect_qpair_fd(group);
+			if (rc != 0) {
+				return rc;
+			}
+		}
 	} else if (qpair->ctrlr->opts.enable_interrupts != group->enable_interrupts) {
 		SPDK_ERRLOG("Queue pair %s interrupts cannot be added to poll group\n",
 			    qpair->ctrlr->opts.enable_interrupts ? "without" : "with");
@@ -333,6 +402,7 @@ int
 spdk_nvme_poll_group_destroy(struct spdk_nvme_poll_group *group)
 {
 	struct spdk_nvme_transport_poll_group *tgroup, *tmp_tgroup;
+	struct spdk_fd_group *fgrp = group->fgrp;
 
 	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
 		STAILQ_REMOVE(&group->tgroups, tgroup, spdk_nvme_transport_poll_group, link);
@@ -343,8 +413,12 @@ spdk_nvme_poll_group_destroy(struct spdk_nvme_poll_group *group)
 
 	}
 
-	if (group->fgrp) {
-		spdk_fd_group_destroy(group->fgrp);
+	if (fgrp) {
+		if (group->enable_interrupts) {
+			spdk_fd_group_remove(fgrp, group->disconnect_qpair_fd);
+			close(group->disconnect_qpair_fd);
+		}
+		spdk_fd_group_destroy(fgrp);
 	}
 
 	free(group);

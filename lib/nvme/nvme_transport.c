@@ -589,6 +589,13 @@ nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 		nvme_qpair_abort_all_queued_reqs(qpair);
 	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+
+	/* In interrupt mode qpairs that are added to poll group need an event for the
+	 * disconnected qpairs handling to kick in.
+	 */
+	if (qpair->poll_group) {
+		nvme_poll_group_write_disconnect_qpair_fd(qpair->poll_group->group);
+	}
 }
 
 int
