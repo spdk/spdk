@@ -765,7 +765,7 @@ compress_create_cb(void *io_device, void *ctx_buf)
 	chan->dst_mbufs = spdk_zmalloc(length, 0x40, NULL,
 				       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (chan->dst_mbufs == NULL) {
-		free(chan->src_mbufs);
+		spdk_free(chan->src_mbufs);
 		return -ENOMEM;
 	}
 
