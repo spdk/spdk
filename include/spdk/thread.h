@@ -11,10 +11,6 @@
 #ifndef SPDK_THREAD_H_
 #define SPDK_THREAD_H_
 
-#ifdef __linux__
-#include <sys/epoll.h>
-#endif
-
 #include "spdk/config.h"
 #include "spdk/fd_group.h"
 #include "spdk/stdinc.h"

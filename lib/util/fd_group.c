@@ -12,10 +12,6 @@
 
 #include "spdk/fd_group.h"
 
-#ifdef __linux__
-#include <sys/epoll.h>
-#endif
-
 #define SPDK_MAX_EVENT_NAME_LEN 256
 
 enum event_handler_state {

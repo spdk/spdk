@@ -10,7 +10,6 @@
 #include <sys/event.h>
 #define SPDK_KEVENT
 #else
-#include <sys/epoll.h>
 #define SPDK_EPOLL
 #endif
 

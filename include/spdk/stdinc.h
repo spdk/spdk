@@ -76,6 +76,7 @@ extern "C" {
 #ifdef __linux__
 #include <sys/xattr.h>
 #include <sys/eventfd.h>
+#include <sys/epoll.h>
 #include <sched.h>
 #endif
 

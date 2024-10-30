@@ -7,7 +7,6 @@
 #include "spdk/config.h"
 
 #include <linux/errqueue.h>
-#include <sys/epoll.h>
 #include <liburing.h>
 
 #include "spdk/barrier.h"
