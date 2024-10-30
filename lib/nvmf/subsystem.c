@@ -2179,8 +2179,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		return 0;
 	}
 
-	ns->passthrough_nsid = spdk_bdev_get_nvme_nsid(ns->bdev);
-	if (subsystem->passthrough && ns->passthrough_nsid == 0) {
+	ns->passthru_nsid = spdk_bdev_get_nvme_nsid(ns->bdev);
+	if (subsystem->passthrough && ns->passthru_nsid == 0) {
 		SPDK_ERRLOG("Only bdev_nvme namespaces can be added to a passthrough subsystem.\n");
 		goto err;
 	}

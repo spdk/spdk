@@ -2893,9 +2893,9 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	assert(ns->passthrough_nsid != 0);
+	assert(ns->passthru_nsid != 0);
 	req->orig_nsid = ns->nsid;
-	cmd->nsid = ns->passthrough_nsid;
+	cmd->nsid = ns->passthru_nsid;
 
 	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, identify_ns_passthru_cb);
 }
@@ -4554,8 +4554,8 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (ctrlr->subsys->passthrough) {
-		assert(ns->passthrough_nsid > 0);
-		req->cmd->nvme_cmd.nsid = ns->passthrough_nsid;
+		assert(ns->passthru_nsid > 0);
+		req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
 
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
@@ -4604,8 +4604,8 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 			if (spdk_unlikely(qpair->transport->opts.disable_command_passthru)) {
 				goto invalid_opcode;
 			}
-			if (ns->passthrough_nsid) {
-				req->cmd->nvme_cmd.nsid = ns->passthrough_nsid;
+			if (ns->passthru_nsid) {
+				req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
 			}
 			return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 		}
@@ -5011,8 +5011,8 @@ nvmf_passthru_admin_cmd_for_bdev_nsid(struct spdk_nvmf_request *req, uint32_t bd
 	ctrlr = req->qpair->ctrlr;
 	ns = nvmf_ctrlr_get_ns(ctrlr, bdev_nsid);
 
-	if (ns->passthrough_nsid) {
-		req->cmd->nvme_cmd.nsid = ns->passthrough_nsid;
+	if (ns->passthru_nsid) {
+		req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
 	}
 
 	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, NULL);
