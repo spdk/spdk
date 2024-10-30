@@ -160,3 +160,9 @@ bs_create_zeroes_dev(void)
 {
 	return &g_zeroes_bs_dev;
 }
+
+bool
+blob_backed_with_zeroes_dev(struct spdk_blob *blob)
+{
+	return blob != NULL && blob->back_bs_dev == &g_zeroes_bs_dev;
+}

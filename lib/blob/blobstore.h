@@ -439,6 +439,7 @@ struct spdk_bs_dev *bs_create_zeroes_dev(void);
 struct spdk_bs_dev *bs_create_blob_bs_dev(struct spdk_blob *blob);
 struct spdk_io_channel *blob_esnap_get_io_channel(struct spdk_io_channel *ch,
 		struct spdk_blob *blob);
+bool blob_backed_with_zeroes_dev(struct spdk_blob *blob);
 
 /* Unit Conversions
  *
@@ -639,7 +640,7 @@ bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 }
 
 /* Given an io_unit offset into a blob, look up the number of pages into blob to beginning of current cluster */
-static inline uint32_t
+static inline uint64_t
 bs_io_unit_to_cluster_start(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	pages_per_cluster;
@@ -657,7 +658,7 @@ bs_io_unit_to_cluster_number(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	pages_per_cluster = blob->bs->pages_per_cluster;
 	uint8_t		shift = blob->bs->pages_per_cluster_shift;
-	uint32_t	page_offset;
+	uint64_t	page_offset;
 
 	page_offset = io_unit / bs_io_unit_per_page(blob->bs);
 	if (shift != 0) {

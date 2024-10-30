@@ -319,12 +319,30 @@ static void
 bs_batch_completion(struct spdk_io_channel *_channel,
 		    void *cb_arg, int bserrno)
 {
-	struct spdk_bs_request_set	*set = cb_arg;
-
+	struct spdk_bs_request_set	*set = cb_arg;	
+	struct spdk_bs_channel		*channel = set->channel;
+	struct limit *ctx;
 	set->u.batch.outstanding_ops--;
 	if (bserrno != 0) {
 		set->bserrno = bserrno;
 	}
+
+	if (set->u.batch.is_unmap) {
+		int loop_gurd = 0;
+		// while(loop_gurd++ < 4) {
+			if (!TAILQ_EMPTY(&set->u.batch.unmap_queue)) {        
+				ctx = TAILQ_FIRST(&set->u.batch.unmap_queue);
+				assert(ctx != NULL);
+				TAILQ_REMOVE(&set->u.batch.unmap_queue, ctx, entries); // Remove it from the queue.			
+				channel->dev->priority_class = set->priority_class;
+				channel->dev->unmap(channel->dev, channel->dev_channel, ctx->lba, ctx->lba_count,
+						&set->cb_args);
+				free(ctx);			
+			// } else {
+			// 	break;
+			// }
+		}
+	}	
 
 	if (set->u.batch.outstanding_ops == 0 && set->u.batch.batch_closed) {
 		if (set->u.batch.cb_fn) {
@@ -427,11 +445,24 @@ bs_batch_unmap_dev(spdk_bs_batch_t *batch,
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
+	struct limit *ctx = NULL;
 
 	SPDK_DEBUGLOG(blob_rw, "Unmapping %" PRIu64 " blocks at LBA %" PRIu64 "\n", lba_count,
 		      lba);
 
-	set->u.batch.outstanding_ops++;
+	if (set->u.batch.is_unmap && set->u.batch.outstanding_ops > 2000) {
+		ctx = calloc(1, sizeof(*ctx));
+		if (!ctx) {
+			goto out;
+		}
+		ctx->lba = lba;
+		ctx->lba_count = lba_count;
+		TAILQ_INSERT_TAIL(&set->u.batch.unmap_queue, ctx, entries);
+		set->u.batch.outstanding_ops++;
+		return;
+	}
+out:
+	set->u.batch.outstanding_ops++;	
 	channel->dev->priority_class = batch->priority_class;
 	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
 			    &set->cb_args);
@@ -478,6 +509,8 @@ bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, void *
 	set->u.batch.cb_arg = cb_arg;
 	set->u.batch.outstanding_ops = 0;
 	set->u.batch.batch_closed = 0;
+	set->u.batch.is_unmap = false;
+	TAILQ_INIT(&set->u.batch.unmap_queue);
 
 	set->cb_args.cb_fn = bs_batch_completion;
 

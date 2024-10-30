@@ -51,7 +51,7 @@ int spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t even
  *
  * \param bdev_name The bdev to use.
  * \param write If true, open device read-write, else open read-only.
- * \param opts Additonal options; none currently supported.
+ * \param opts Additional options; none currently supported.
  * \param opts_size Size of structure referenced by opts.
  * \param event_cb Called when the bdev triggers asynchronous event.
  * \param event_ctx Argument passed to function event_cb.
