@@ -318,8 +318,6 @@ struct spdk_bdev_channel {
 	struct spdk_bdev_io_stat *prev_stat;
 #endif
 
-	bdev_io_tailq_t		queued_resets;
-
 	lba_range_tailq_t	locked_ranges;
 
 	/** List of I/Os queued by QoS. */
@@ -4230,7 +4228,6 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	}
 
 	ch->io_outstanding = 0;
-	TAILQ_INIT(&ch->queued_resets);
 	TAILQ_INIT(&ch->locked_ranges);
 	TAILQ_INIT(&ch->qos_queued_io);
 	ch->flags = 0;
@@ -4654,8 +4651,6 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 	spdk_spin_lock(&ch->bdev->internal.spinlock);
 	spdk_bdev_add_io_stat(ch->bdev->internal.stat, ch->stat);
 	spdk_spin_unlock(&ch->bdev->internal.spinlock);
-
-	bdev_abort_all_queued_io(&ch->queued_resets, ch);
 
 	bdev_channel_abort_queued_ios(ch);
 
@@ -6507,18 +6502,14 @@ static int bdev_reset_poll_for_outstanding_io(void *ctx);
 static void
 bdev_reset_check_outstanding_io_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_channel *ch = _ctx;
-	struct spdk_bdev_io *bdev_io;
-
-	bdev_io = TAILQ_FIRST(&ch->queued_resets);
+	struct spdk_bdev_io *bdev_io = _ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	if (status == -EBUSY) {
 		if (spdk_get_ticks() < bdev_io->u.reset.wait_poller.stop_time_tsc) {
 			bdev_io->u.reset.wait_poller.poller = SPDK_POLLER_REGISTER(bdev_reset_poll_for_outstanding_io,
-							      ch, BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
+							      bdev_io, BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
 		} else {
-			TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
-
 			if (TAILQ_EMPTY(&ch->io_memory_domain) && TAILQ_EMPTY(&ch->io_accel_exec)) {
 				/* If outstanding IOs are still present and reset_io_drain_timeout
 				 * seconds passed, start the reset. */
@@ -6531,7 +6522,6 @@ bdev_reset_check_outstanding_io_done(struct spdk_bdev *bdev, void *_ctx, int sta
 			}
 		}
 	} else {
-		TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
 		SPDK_DEBUGLOG(bdev,
 			      "Skipping reset for underlying device of bdev: %s - no outstanding I/O.\n",
 			      ch->bdev->name);
@@ -6561,13 +6551,10 @@ bdev_reset_check_outstanding_io(struct spdk_bdev_channel_iter *i, struct spdk_bd
 static int
 bdev_reset_poll_for_outstanding_io(void *ctx)
 {
-	struct spdk_bdev_channel *ch = ctx;
-	struct spdk_bdev_io *bdev_io;
-
-	bdev_io = TAILQ_FIRST(&ch->queued_resets);
+	struct spdk_bdev_io *bdev_io = ctx;
 
 	spdk_poller_unregister(&bdev_io->u.reset.wait_poller.poller);
-	spdk_bdev_for_each_channel(ch->bdev, bdev_reset_check_outstanding_io, ch,
+	spdk_bdev_for_each_channel(bdev_io->bdev, bdev_reset_check_outstanding_io, bdev_io,
 				   bdev_reset_check_outstanding_io_done);
 
 	return SPDK_POLLER_BUSY;
@@ -6576,25 +6563,20 @@ bdev_reset_poll_for_outstanding_io(void *ctx)
 static void
 bdev_reset_freeze_channel_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_channel *ch = _ctx;
-	struct spdk_bdev_io *bdev_io;
-
-	bdev_io = TAILQ_FIRST(&ch->queued_resets);
+	struct spdk_bdev_io *bdev_io = _ctx;
 
 	if (bdev->reset_io_drain_timeout == 0) {
-		TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
-
 		bdev_io_submit_reset(bdev_io);
 		return;
 	}
 
 	bdev_io->u.reset.wait_poller.stop_time_tsc = spdk_get_ticks() +
-			(ch->bdev->reset_io_drain_timeout * spdk_get_ticks_hz());
+			(bdev->reset_io_drain_timeout * spdk_get_ticks_hz());
 
 	/* In case bdev->reset_io_drain_timeout is not equal to zero,
 	 * submit the reset to the underlying module only if outstanding I/O
 	 * remain after reset_io_drain_timeout seconds have passed. */
-	spdk_bdev_for_each_channel(ch->bdev, bdev_reset_check_outstanding_io, ch,
+	spdk_bdev_for_each_channel(bdev, bdev_reset_check_outstanding_io, bdev_io,
 				   bdev_reset_check_outstanding_io_done);
 }
 
@@ -6627,35 +6609,34 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 }
 
 static void
-bdev_start_reset(void *ctx)
+bdev_start_reset(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_channel *ch = ctx;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	bool freeze_channel = false;
 
-	spdk_bdev_for_each_channel(ch->bdev, bdev_reset_freeze_channel, ch,
-				   bdev_reset_freeze_channel_done);
-}
+	bdev_ch_add_to_io_submitted(bdev_io);
 
-static void
-bdev_channel_start_reset(struct spdk_bdev_channel *ch)
-{
-	struct spdk_bdev *bdev = ch->bdev;
-
-	assert(!TAILQ_EMPTY(&ch->queued_resets));
+	/**
+	 * Take a channel reference for the target bdev for the life of this
+	 *  reset.  This guards against the channel getting destroyed before
+	 *  the reset is completed.  We will release the reference when this
+	 *  reset is completed.
+	 */
+	bdev_io->u.reset.ch_ref = spdk_get_io_channel(__bdev_to_io_dev(bdev));
 
 	spdk_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.reset_in_progress == NULL) {
-		bdev->internal.reset_in_progress = TAILQ_FIRST(&ch->queued_resets);
-		/*
-		 * Take a channel reference for the target bdev for the life of this
-		 *  reset.  This guards against the channel getting destroyed while
-		 *  spdk_bdev_for_each_channel() calls related to this reset IO are in
-		 *  progress.  We will release the reference when this reset is
-		 *  completed.
-		 */
-		bdev->internal.reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(__bdev_to_io_dev(bdev));
-		bdev_start_reset(ch);
+		bdev->internal.reset_in_progress = bdev_io;
+		freeze_channel = true;
+	} else {
+		TAILQ_INSERT_TAIL(&bdev->internal.queued_resets, bdev_io, internal.link);
 	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
+
+	if (freeze_channel) {
+		spdk_bdev_for_each_channel(bdev, bdev_reset_freeze_channel, bdev_io,
+					   bdev_reset_freeze_channel_done);
+	}
 }
 
 int
@@ -6675,17 +6656,9 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->internal.desc = desc;
 	bdev_io->internal.submit_tsc = spdk_get_ticks();
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
-	bdev_io->u.reset.ch_ref = NULL;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_spin_lock(&bdev->internal.spinlock);
-	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, internal.link);
-	spdk_spin_unlock(&bdev->internal.spinlock);
-
-	bdev_ch_add_to_io_submitted(bdev_io);
-
-	bdev_channel_start_reset(channel);
-
+	bdev_start_reset(bdev_io);
 	return 0;
 }
 
@@ -7435,17 +7408,45 @@ bdev_io_complete_unsubmitted(struct spdk_bdev_io *bdev_io)
 
 static void bdev_destroy_cb(void *io_device);
 
+static inline void
+_bdev_reset_complete(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	/* Put the channel reference we got in submission. */
+	assert(bdev_io->u.reset.ch_ref != NULL);
+	spdk_put_io_channel(bdev_io->u.reset.ch_ref);
+	bdev_io->u.reset.ch_ref = NULL;
+
+	bdev_io_complete(bdev_io);
+}
+
 static void
 bdev_reset_complete(struct spdk_bdev *bdev, void *_ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = _ctx;
+	bdev_io_tailq_t queued_resets;
+	struct spdk_bdev_io *queued_reset;
 
-	if (bdev_io->u.reset.ch_ref != NULL) {
-		spdk_put_io_channel(bdev_io->u.reset.ch_ref);
-		bdev_io->u.reset.ch_ref = NULL;
+	assert(bdev_io == bdev->internal.reset_in_progress);
+
+	TAILQ_INIT(&queued_resets);
+
+	spdk_spin_lock(&bdev->internal.spinlock);
+	TAILQ_SWAP(&bdev->internal.queued_resets, &queued_resets,
+		   spdk_bdev_io, internal.link);
+	bdev->internal.reset_in_progress = NULL;
+	spdk_spin_unlock(&bdev->internal.spinlock);
+
+	while (!TAILQ_EMPTY(&queued_resets)) {
+		queued_reset = TAILQ_FIRST(&queued_resets);
+		TAILQ_REMOVE(&queued_resets, queued_reset, internal.link);
+		queued_reset->internal.status = bdev_io->internal.status;
+		spdk_thread_send_msg(spdk_bdev_io_get_thread(queued_reset),
+				     _bdev_reset_complete, queued_reset);
 	}
 
-	bdev_io_complete(bdev_io);
+	_bdev_reset_complete(bdev_io);
 
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING &&
 	    TAILQ_EMPTY(&bdev->internal.open_descs)) {
@@ -7457,16 +7458,9 @@ static void
 bdev_unfreeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		      struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_io *bdev_io = _ctx;
 	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
-	struct spdk_bdev_io *queued_reset;
 
 	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
-	while (!TAILQ_EMPTY(&ch->queued_resets)) {
-		queued_reset = TAILQ_FIRST(&ch->queued_resets);
-		TAILQ_REMOVE(&ch->queued_resets, queued_reset, internal.link);
-		spdk_bdev_io_complete(queued_reset, bdev_io->internal.status);
-	}
 
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
@@ -7505,23 +7499,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->internal.status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
-		bool unlock_channels = false;
-
-		if (status == SPDK_BDEV_IO_STATUS_NOMEM) {
-			SPDK_ERRLOG("NOMEM returned for reset\n");
-		}
-		spdk_spin_lock(&bdev->internal.spinlock);
-		if (bdev_io == bdev->internal.reset_in_progress) {
-			bdev->internal.reset_in_progress = NULL;
-			unlock_channels = true;
-		}
-		spdk_spin_unlock(&bdev->internal.spinlock);
-
-		if (unlock_channels) {
-			spdk_bdev_for_each_channel(bdev, bdev_unfreeze_channel, bdev_io,
-						   bdev_reset_complete);
-			return;
-		}
+		assert(bdev_io == bdev->internal.reset_in_progress);
+		spdk_bdev_for_each_channel(bdev, bdev_unfreeze_channel, bdev_io,
+					   bdev_reset_complete);
+		return;
 	} else {
 		bdev_io_decrement_outstanding(bdev_ch, shared_resource);
 		if (spdk_likely(status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
@@ -7826,6 +7807,7 @@ bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->internal.open_descs);
 	TAILQ_INIT(&bdev->internal.locked_ranges);
 	TAILQ_INIT(&bdev->internal.pending_locked_ranges);
+	TAILQ_INIT(&bdev->internal.queued_resets);
 	TAILQ_INIT(&bdev->aliases);
 
 	/* UUID may be specified by the user or defined by bdev itself.

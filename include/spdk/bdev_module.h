@@ -731,6 +731,9 @@ struct spdk_bdev {
 		/** points to a reset bdev_io if one is in progress. */
 		struct spdk_bdev_io *reset_in_progress;
 
+		/** List of reset bdev_ios that are not submitted to the underlying device. */
+		bdev_io_tailq_t		queued_resets;
+
 		/** poller for tracking the queue_depth of a device, NULL if not tracking */
 		struct spdk_poller *qd_poller;
 
