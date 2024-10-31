@@ -54,6 +54,8 @@ struct spdk_fd_group {
 
 	/* interrupt sources list */
 	TAILQ_HEAD(, event_handler) event_handlers;
+	TAILQ_HEAD(, spdk_fd_group) children;
+	TAILQ_ENTRY(spdk_fd_group) link;
 };
 
 int
@@ -199,6 +201,7 @@ spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 	}
 
 	child->parent = NULL;
+	TAILQ_REMOVE(&parent->children, child, link);
 
 	rc = _fd_group_add_all(child->epfd, child);
 	if (rc < 0) {
@@ -237,14 +240,15 @@ spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 		child->num_fds -= rc;
 	}
 
-	child->parent = parent;
-
 	rc =  _fd_group_add_all(parent->epfd, child);
 	if (rc < 0) {
 		return rc;
 	} else {
 		parent->num_fds += rc;
 	}
+
+	child->parent = parent;
+	TAILQ_INSERT_TAIL(&parent->children, child, link);
 
 	return 0;
 }
@@ -509,6 +513,7 @@ spdk_fd_group_create(struct spdk_fd_group **_egrp)
 
 	/* init the event source head */
 	TAILQ_INIT(&fgrp->event_handlers);
+	TAILQ_INIT(&fgrp->children);
 
 	fgrp->num_fds = 0;
 	fgrp->epfd = epoll_create1(EPOLL_CLOEXEC);
@@ -543,6 +548,8 @@ spdk_fd_group_destroy(struct spdk_fd_group *fgrp)
 		return;
 	}
 
+	assert(fgrp->parent == NULL);
+	assert(TAILQ_EMPTY(&fgrp->children));
 	close(fgrp->epfd);
 	free(fgrp);
 
