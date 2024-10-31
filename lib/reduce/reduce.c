@@ -1897,6 +1897,7 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	req->copy_after_decompress = false;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
+	req->reduce_errno = 0;
 
 	if (!overlapped) {
 		_start_readv_request(req);
@@ -1972,6 +1973,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->copy_after_decompress = false;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
+	req->reduce_errno = 0;
 
 	if (!overlapped) {
 		_start_writev_request(req);
@@ -2035,6 +2037,7 @@ _reduce_vol_unmap_full_chunk(struct spdk_reduce_vol *vol,
 	req->copy_after_decompress = false;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
+	req->reduce_errno = 0;
 
 	if (!overlapped) {
 		_start_unmap_request_full_chunk(req);
