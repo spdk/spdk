@@ -925,6 +925,17 @@ struct spdk_interrupt *spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn
 	spdk_interrupt_register_ext(efd, fn, arg, #fn, opts)
 
 /**
+ * Register an interrupt listening for all events associated with an fd_group on current thread.
+ *
+ * \param fgrp fd_group describing the events to listen for.
+ * \param name Name of the interrupt.
+ *
+ * return Pointer to spdk_interrupt or NULL in case of failure.
+ */
+struct spdk_interrupt *spdk_interrupt_register_fd_group(struct spdk_fd_group *fgrp,
+		const char *name);
+
+/**
  * Unregister an spdk_interrupt on the current thread.
  *
  * \param pintr The spdk_interrupt to unregister.

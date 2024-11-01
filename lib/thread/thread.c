@@ -41,6 +41,7 @@ static struct spdk_thread *g_app_thread;
 
 struct spdk_interrupt {
 	int			efd;
+	struct spdk_fd_group	*fgrp;
 	struct spdk_thread	*thread;
 	spdk_interrupt_fn	fn;
 	void			*arg;
@@ -2881,7 +2882,8 @@ spdk_interrupt_register_for_events(int efd, uint32_t events, spdk_interrupt_fn f
 }
 
 static struct spdk_interrupt *
-alloc_interrupt(int efd, spdk_interrupt_fn fn, void *arg, const char *name)
+alloc_interrupt(int efd, struct spdk_fd_group *fgrp, spdk_interrupt_fn fn, void *arg,
+		const char *name)
 {
 	struct spdk_thread *thread;
 	struct spdk_interrupt *intr;
@@ -2909,7 +2911,9 @@ alloc_interrupt(int efd, spdk_interrupt_fn fn, void *arg, const char *name)
 		snprintf(intr->name, sizeof(intr->name), "%p", fn);
 	}
 
+	assert(efd < 0 || fgrp == NULL);
 	intr->efd = efd;
+	intr->fgrp = fgrp;
 	intr->thread = thread;
 	intr->fn = fn;
 	intr->arg = arg;
@@ -2924,7 +2928,7 @@ spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn, void *arg, const char
 	struct spdk_interrupt *intr;
 	int ret;
 
-	intr = alloc_interrupt(efd, fn, arg, name);
+	intr = alloc_interrupt(efd, NULL, fn, arg, name);
 	if (intr == NULL) {
 		return NULL;
 	}
@@ -2934,6 +2938,55 @@ spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn, void *arg, const char
 	if (ret != 0) {
 		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",
 			    intr->thread->name, efd, spdk_strerror(-ret));
+		free(intr);
+		return NULL;
+	}
+
+	return intr;
+}
+
+static int
+interrupt_fd_group_wrapper(void *wrap_ctx, spdk_fd_fn cb_fn, void *cb_ctx)
+{
+	struct spdk_interrupt *intr = wrap_ctx;
+	struct spdk_thread *orig_thread, *thread;
+	int rc;
+
+	orig_thread = spdk_get_thread();
+	thread = intr->thread;
+
+	spdk_set_thread(thread);
+	rc = cb_fn(cb_ctx);
+	SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
+	spdk_set_thread(orig_thread);
+
+	return rc;
+}
+
+struct spdk_interrupt *
+spdk_interrupt_register_fd_group(struct spdk_fd_group *fgrp, const char *name)
+{
+	struct spdk_interrupt *intr;
+	int rc;
+
+	intr = alloc_interrupt(-1, fgrp, NULL, NULL, name);
+	if (intr == NULL) {
+		return NULL;
+	}
+
+	rc = spdk_fd_group_set_wrapper(fgrp, interrupt_fd_group_wrapper, intr);
+	if (rc != 0) {
+		SPDK_ERRLOG("thread %s: failed to set wrapper for fd_group %d: %s\n",
+			    intr->thread->name, spdk_fd_group_get_fd(fgrp), spdk_strerror(-rc));
+		free(intr);
+		return NULL;
+	}
+
+	rc = spdk_fd_group_nest(intr->thread->fgrp, fgrp);
+	if (rc != 0) {
+		SPDK_ERRLOG("thread %s: failed to nest fd_group %d: %s\n",
+			    intr->thread->name, spdk_fd_group_get_fd(fgrp), spdk_strerror(-rc));
+		spdk_fd_group_set_wrapper(fgrp, NULL, NULL);
 		free(intr);
 		return NULL;
 	}
@@ -2965,7 +3018,14 @@ spdk_interrupt_unregister(struct spdk_interrupt **pintr)
 		return;
 	}
 
-	spdk_fd_group_remove(thread->fgrp, intr->efd);
+	if (intr->fgrp != NULL) {
+		assert(intr->efd < 0);
+		spdk_fd_group_unnest(thread->fgrp, intr->fgrp);
+		spdk_fd_group_set_wrapper(thread->fgrp, NULL, NULL);
+	} else {
+		spdk_fd_group_remove(thread->fgrp, intr->efd);
+	}
+
 	free(intr);
 }
 
@@ -2983,6 +3043,11 @@ spdk_interrupt_set_event_types(struct spdk_interrupt *intr,
 
 	if (intr->thread != thread) {
 		wrong_thread(__func__, intr->name, intr->thread, thread);
+		return -EINVAL;
+	}
+
+	if (intr->efd < 0) {
+		assert(false);
 		return -EINVAL;
 	}
 
