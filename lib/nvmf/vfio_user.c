@@ -662,6 +662,13 @@ ctrlr_to_poll_group(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 				group);
 }
 
+static inline struct nvmf_vfio_user_poll_group *
+sq_to_poll_group(struct nvmf_vfio_user_sq *sq)
+{
+	return SPDK_CONTAINEROF(sq->group, struct nvmf_vfio_user_poll_group,
+				group);
+}
+
 static inline struct spdk_thread *
 poll_group_to_thread(struct nvmf_vfio_user_poll_group *vu_pg)
 {
@@ -2587,7 +2594,8 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 			 * sq head is advanced only for consumed commands.
 			 */
 			if (in_interrupt_mode(ctrlr->transport)) {
-				eventfd_write(ctrlr->intr_fd, 1);
+				struct nvmf_vfio_user_poll_group *vu_group = sq_to_poll_group(sq);
+				eventfd_write(vu_group->intr_fd, 1);
 			}
 			break;
 		}
