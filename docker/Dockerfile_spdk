@@ -12,7 +12,7 @@ RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cma
 
 RUN cd spdk && git submodule update --init --depth 1
 
-RUN cd spdk && scripts/pkgdep.sh --rdma --pmem
+RUN cd spdk && scripts/pkgdep.sh --rdma --pmem --idxd
 
 RUN mkdir /tmp/pmem
 
