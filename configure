@@ -737,10 +737,10 @@ if [[ "${CONFIG[IDXD]}" = "y" ]]; then
 		intel="GenuineIntel"
 		cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo --max-count=1)
 	fi
-	if [[ "$cpu_vendor" != *"$intel"* ]]; then
-		echo "WARNING: IDXD cannot be used due to CPU incompatibility."
-		echo "cpu_vendor: $cpu_vendor"
-	fi
+#	if [[ "$cpu_vendor" != *"$intel"* ]]; then
+#		echo "WARNING: IDXD cannot be used due to CPU incompatibility."
+#		echo "cpu_vendor: $cpu_vendor"
+#	fi
 	if [ -e /usr/include/accel-config/libaccel_config.h ]; then
 		CONFIG[IDXD_KERNEL]=y
 	fi
