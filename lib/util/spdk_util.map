@@ -192,6 +192,7 @@
 	spdk_fd_group_get_fd;
 	spdk_fd_group_nest;
 	spdk_fd_group_unnest;
+	spdk_fd_group_set_wrapper;
 
 	# public functions in xor.h
 	spdk_xor_gen;

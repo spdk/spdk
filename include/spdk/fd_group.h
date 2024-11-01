@@ -245,6 +245,22 @@ struct epoll_event;
  */
 int spdk_fd_group_get_epoll_event(struct epoll_event *event);
 
+typedef int (*spdk_fd_group_wrapper_fn)(void *wrapper_ctx, spdk_fd_fn cb_fn, void *cb_ctx);
+
+/**
+ * Set a wrapper function to be called when an epoll(7) event is received.  The callback associated
+ * with that event is passed to the wrapper, which is responsible for executing it.  Only one
+ * wrapper can be assigned to an fd_group at a time.
+ *
+ * \param fgrp fd group.
+ * \param cb_fn Wrapper callback.
+ * \param cb_ctx Wrapper callback's context.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_fd_group_set_wrapper(struct spdk_fd_group *fgrp, spdk_fd_group_wrapper_fn cb_fn,
+			      void *cb_ctx);
+
 #ifdef __cplusplus
 }
 #endif

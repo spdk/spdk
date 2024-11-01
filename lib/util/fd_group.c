@@ -38,6 +38,7 @@ struct event_handler {
 	int				fd;
 	uint32_t			events;
 	uint32_t			fd_type;
+	struct spdk_fd_group		*owner;
 	char				name[SPDK_MAX_EVENT_NAME_LEN + 1];
 };
 
@@ -51,6 +52,8 @@ struct spdk_fd_group {
 	uint32_t num_fds;
 
 	struct spdk_fd_group *parent;
+	spdk_fd_group_wrapper_fn wrapper_fn;
+	void *wrapper_arg;
 
 	/* interrupt sources list */
 	TAILQ_HEAD(, event_handler) event_handlers;
@@ -286,6 +289,10 @@ spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 		return -EINVAL;
 	}
 
+	if (parent->wrapper_fn != NULL) {
+		return -EINVAL;
+	}
+
 	/* The epoll instance at the root holds all fds, so either the parent is the root or it
 	 * doesn't hold any fds.
 	 */
@@ -424,6 +431,7 @@ spdk_fd_group_add_ext(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn, void *
 	ehdlr->state = EVENT_HANDLER_STATE_WAITING;
 	ehdlr->events = eh_opts.events;
 	ehdlr->fd_type = eh_opts.fd_type;
+	ehdlr->owner = fgrp;
 	snprintf(ehdlr->name, sizeof(ehdlr->name), "%s", name);
 
 	root = fd_group_get_root(fgrp);
@@ -583,6 +591,7 @@ spdk_fd_group_destroy(struct spdk_fd_group *fgrp)
 int
 spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 {
+	struct spdk_fd_group *owner;
 	uint32_t totalfds = fgrp->num_fds;
 	struct epoll_event events[totalfds];
 	struct event_handler *ehdlr;
@@ -669,7 +678,12 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 		}
 
 		/* call the interrupt response function */
-		ehdlr->fn(ehdlr->fn_arg);
+		owner = ehdlr->owner;
+		if (owner->wrapper_fn != NULL) {
+			owner->wrapper_fn(owner->wrapper_arg, ehdlr->fn, ehdlr->fn_arg);
+		} else {
+			ehdlr->fn(ehdlr->fn_arg);
+		}
 		g_event = NULL;
 
 		/* It is possible that the ehdlr was removed
@@ -683,6 +697,23 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 	}
 
 	return nfds;
+}
+
+int
+spdk_fd_group_set_wrapper(struct spdk_fd_group *fgrp, spdk_fd_group_wrapper_fn fn, void *ctx)
+{
+	if (fgrp->wrapper_fn != NULL && fn != NULL) {
+		return -EEXIST;
+	}
+
+	if (!TAILQ_EMPTY(&fgrp->children)) {
+		return -EINVAL;
+	}
+
+	fgrp->wrapper_fn = fn;
+	fgrp->wrapper_arg = ctx;
+
+	return 0;
 }
 
 #else /* !__linux__ */
@@ -758,6 +789,12 @@ spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
 
 int
 spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child)
+{
+	return -ENOTSUP;
+}
+
+int
+spdk_fd_group_set_wrapper(struct spdk_fd_group *fgrp, spdk_fd_group_wrapper_fn fn, void *ctx)
 {
 	return -ENOTSUP;
 }
