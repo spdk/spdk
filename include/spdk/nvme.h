@@ -23,6 +23,7 @@ extern "C" {
 #include "spdk/keyring.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/util.h"
 
 #define SPDK_NVME_TRANSPORT_NAME_FC		"FC"
 #define SPDK_NVME_TRANSPORT_NAME_PCIE		"PCIE"
@@ -3054,6 +3055,15 @@ int spdk_nvme_poll_group_wait(struct spdk_nvme_poll_group *group,
  * \return epoll fd for the poll group, -EINVAL if there is no fd group for this poll group.
  */
 int spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group);
+
+/**
+ * Return the fd_group associated with this poll group.
+ *
+ * \param group Poll group.
+ *
+ * \return fd_group or NULL if there's no fd_group associated with this poll group.
+ */
+struct spdk_fd_group *spdk_nvme_poll_group_get_fd_group(struct spdk_nvme_poll_group *group);
 
 /**
  * Destroy an empty poll group.

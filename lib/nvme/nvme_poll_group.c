@@ -89,6 +89,12 @@ spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group)
 	return spdk_fd_group_get_fd(group->fgrp);
 }
 
+struct spdk_fd_group *
+spdk_nvme_poll_group_get_fd_group(struct spdk_nvme_poll_group *group)
+{
+	return group->fgrp;
+}
+
 struct spdk_nvme_poll_group *
 spdk_nvme_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
 {
