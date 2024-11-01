@@ -139,6 +139,156 @@ test_fd_group_nest_unnest(void)
 	spdk_fd_group_destroy(not_parent);
 }
 
+struct ut_fgrp {
+	struct spdk_fd_group	*fgrp;
+	size_t			num_fds;
+#define UT_MAX_FDS 4
+	int			fd[UT_MAX_FDS];
+};
+
+static void
+test_fd_group_multi_nest(void)
+{
+	struct ut_fgrp fgrp[] = {
+		{ .num_fds = 1 },
+		{ .num_fds = 2 },
+		{ .num_fds = 2 },
+		{ .num_fds = 3 },
+	};
+	size_t i, j;
+	int fd, rc;
+
+	/* Create four fd_groups with the folowing hierarchy:
+	 *           fgrp[0]
+	 *           (fd:0)
+	 *              |
+	 *  fgrp[1]-----+-----fgrp[2]
+	 * (fd:1,2)          (fd:3,4)
+	 *     |
+	 *  fgrp[3]
+	 * (fd:5,6,7)
+	 */
+	for (i = 0; i < SPDK_COUNTOF(fgrp); i++) {
+		rc = spdk_fd_group_create(&fgrp[i].fgrp);
+		SPDK_CU_ASSERT_FATAL(rc == 0);
+		for (j = 0; j < fgrp[i].num_fds; j++) {
+			fgrp[i].fd[j] = fd = eventfd(0, 0);
+			CU_ASSERT(fd >= 0);
+			rc = SPDK_FD_GROUP_ADD(fgrp[i].fgrp, fd, fd_group_cb_fn, NULL);
+			CU_ASSERT_EQUAL(rc, 0);
+		}
+	}
+
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds, fgrp[0].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, fgrp[1].num_fds);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, fgrp[2].num_fds);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, fgrp[3].num_fds);
+
+	rc = spdk_fd_group_nest(fgrp[0].fgrp, fgrp[2].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_fd_group_nest(fgrp[1].fgrp, fgrp[3].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_fd_group_nest(fgrp[0].fgrp, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[1].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[3].fgrp->parent, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds,
+			fgrp[0].num_fds + fgrp[1].num_fds +
+			fgrp[2].num_fds + fgrp[3].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, 0);
+
+	/* Unnest fgrp[1] and verify that it now owns its own fds along with fgrp[3] fds */
+	rc = spdk_fd_group_unnest(fgrp[0].fgrp, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[1].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[3].fgrp->parent, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds, fgrp[0].num_fds + fgrp[2].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, fgrp[1].num_fds + fgrp[3].num_fds);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, 0);
+
+	/* Nest it again, keeping the same configuration */
+	rc = spdk_fd_group_nest(fgrp[0].fgrp, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[1].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[3].fgrp->parent, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds,
+			fgrp[0].num_fds + fgrp[1].num_fds +
+			fgrp[2].num_fds + fgrp[3].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, 0);
+
+	/* Add a new fd to the fgrp at the bottom, fgrp[3] */
+	fgrp[3].fd[fgrp[3].num_fds++] = fd = eventfd(0, 0);
+	rc = SPDK_FD_GROUP_ADD(fgrp[3].fgrp, fd, fd_group_cb_fn, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds,
+			fgrp[0].num_fds + fgrp[1].num_fds +
+			fgrp[2].num_fds + fgrp[3].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, 0);
+
+	/* Remove one of the fds from fgrp[2] */
+	fd = fgrp[2].fd[--fgrp[2].num_fds];
+	spdk_fd_group_remove(fgrp[2].fgrp, fd);
+	close(fd);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds,
+			fgrp[0].num_fds + fgrp[1].num_fds +
+			fgrp[2].num_fds + fgrp[3].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, 0);
+
+	/* Unnest the fgrp at the bottom, fgrp[3] */
+	rc = spdk_fd_group_unnest(fgrp[1].fgrp, fgrp[3].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[1].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_PTR_EQUAL(fgrp[3].fgrp->parent, NULL);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds, fgrp[0].num_fds + fgrp[1].num_fds + fgrp[2].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+	CU_ASSERT_EQUAL(fgrp[3].fgrp->num_fds, fgrp[3].num_fds);
+
+	/* Unnest the remaining fgrps, fgrp[1] and fgrp[2] */
+	rc = spdk_fd_group_unnest(fgrp[0].fgrp, fgrp[1].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[1].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, fgrp[0].fgrp);
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds, fgrp[0].num_fds + fgrp[2].num_fds);
+	CU_ASSERT_EQUAL(fgrp[1].fgrp->num_fds, fgrp[1].num_fds);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, 0);
+
+	rc = spdk_fd_group_unnest(fgrp[0].fgrp, fgrp[2].fgrp);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, NULL);;
+	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds, fgrp[0].num_fds);
+	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, fgrp[2].num_fds);
+
+	for (i = 0; i < SPDK_COUNTOF(fgrp); i++) {
+		for (j = 0; j < fgrp[i].num_fds; j++) {
+			spdk_fd_group_remove(fgrp[i].fgrp, fgrp[i].fd[j]);
+			close(fgrp[i].fd[j]);
+		}
+		spdk_fd_group_destroy(fgrp[i].fgrp);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -151,6 +301,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_fd_group_basic);
 	CU_ADD_TEST(suite, test_fd_group_nest_unnest);
+	CU_ADD_TEST(suite, test_fd_group_multi_nest);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
