@@ -2880,13 +2880,11 @@ spdk_interrupt_register_for_events(int efd, uint32_t events, spdk_interrupt_fn f
 	return spdk_interrupt_register_ext(efd, fn, arg, name, &opts);
 }
 
-struct spdk_interrupt *
-spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn, void *arg, const char *name,
-			    struct spdk_event_handler_opts *opts)
+static struct spdk_interrupt *
+alloc_interrupt(int efd, spdk_interrupt_fn fn, void *arg, const char *name)
 {
 	struct spdk_thread *thread;
 	struct spdk_interrupt *intr;
-	int ret;
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -2916,11 +2914,26 @@ spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn, void *arg, const char
 	intr->fn = fn;
 	intr->arg = arg;
 
-	ret = spdk_fd_group_add_ext(thread->fgrp, efd, _interrupt_wrapper, intr, intr->name, opts);
+	return intr;
+}
 
+struct spdk_interrupt *
+spdk_interrupt_register_ext(int efd, spdk_interrupt_fn fn, void *arg, const char *name,
+			    struct spdk_event_handler_opts *opts)
+{
+	struct spdk_interrupt *intr;
+	int ret;
+
+	intr = alloc_interrupt(efd, fn, arg, name);
+	if (intr == NULL) {
+		return NULL;
+	}
+
+	ret = spdk_fd_group_add_ext(intr->thread->fgrp, efd,
+				    _interrupt_wrapper, intr, intr->name, opts);
 	if (ret != 0) {
 		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",
-			    thread->name, efd, spdk_strerror(-ret));
+			    intr->thread->name, efd, spdk_strerror(-ret));
 		free(intr);
 		return NULL;
 	}
