@@ -81,12 +81,15 @@ DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
 DEFINE_STUB(spdk_nvme_scan_attached, int, (const struct spdk_nvme_transport_id *trid), 0);
 
-DEFINE_STUB(spdk_nvme_poll_group_get_fd, int, (struct spdk_nvme_poll_group *group), 0);
+DEFINE_STUB(spdk_nvme_poll_group_get_fd_group, struct spdk_fd_group *,
+	    (struct spdk_nvme_poll_group *group), NULL);
 DEFINE_STUB(spdk_nvme_poll_group_wait, int, (struct spdk_nvme_poll_group *group,
 		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
 DEFINE_STUB(spdk_nvme_ctrlr_get_admin_qp_fd, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_event_handler_opts *opts), 0);
-
+DEFINE_STUB(spdk_nvme_poll_group_set_interrupt_callback, int,
+	    (struct spdk_nvme_poll_group *group,
+	     spdk_nvme_poll_group_interrupt_cb cb_fn, void *ctx), 0);
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_memory_domain **domains, int array_size)

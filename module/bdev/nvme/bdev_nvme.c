@@ -3750,26 +3750,19 @@ static struct spdk_nvme_accel_fn_table g_bdev_nvme_accel_fn_table = {
 	.abort_sequence		= bdev_nvme_abort_sequence,
 };
 
-static int
-bdev_nvme_interrupt_wrapper(void *ctx)
+static void
+bdev_nvme_poll_group_interrupt_cb(struct spdk_nvme_poll_group *group, void *ctx)
 {
-	int num_events;
-	struct nvme_poll_group *group = ctx;
-
-	num_events = spdk_nvme_poll_group_wait(group->group, bdev_nvme_disconnected_qpair_cb);
-	if (spdk_unlikely(num_events < 0)) {
-		bdev_nvme_check_io_qpairs(group);
-	}
-
-	return num_events;
+	bdev_nvme_poll(ctx);
 }
 
 static int
 bdev_nvme_create_poll_group_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_poll_group *group = ctx_buf;
+	struct spdk_fd_group *fgrp;
 	uint64_t period;
-	int fd;
+	int rc;
 
 	TAILQ_INIT(&group->qpair_list);
 
@@ -3789,13 +3782,20 @@ bdev_nvme_create_poll_group_cb(void *io_device, void *ctx_buf)
 	if (spdk_interrupt_mode_is_enabled()) {
 		spdk_poller_register_interrupt(group->poller, NULL, NULL);
 
-		fd = spdk_nvme_poll_group_get_fd(group->group);
-		if (fd < 0) {
+		fgrp = spdk_nvme_poll_group_get_fd_group(group->group);
+		if (fgrp == NULL) {
 			spdk_nvme_poll_group_destroy(group->group);
 			return -1;
 		}
 
-		group->intr = SPDK_INTERRUPT_REGISTER(fd, bdev_nvme_interrupt_wrapper, group);
+		rc = spdk_nvme_poll_group_set_interrupt_callback(group->group,
+				bdev_nvme_poll_group_interrupt_cb, group);
+		if (rc != 0) {
+			spdk_nvme_poll_group_destroy(group->group);
+			return -1;
+		}
+
+		group->intr = spdk_interrupt_register_fd_group(fgrp, "bdev_nvme_interrupt");
 		if (!group->intr) {
 			spdk_nvme_poll_group_destroy(group->group);
 			return -1;
