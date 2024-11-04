@@ -283,8 +283,6 @@ struct nvme_ns *nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr);
 struct nvme_ns *nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns);
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
-void bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
-int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
 
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,

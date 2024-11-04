@@ -55,6 +55,13 @@ enum spdk_bdev_timeout_action {
 };
 
 struct spdk_bdev_nvme_opts {
+	/**
+	 * The size of spdk_bdev_nvme_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
 	enum spdk_bdev_timeout_action action_on_timeout;
 	uint32_t keep_alive_timeout_ms;
 	uint64_t timeout_us;
@@ -69,6 +76,8 @@ struct spdk_bdev_nvme_opts {
 	uint64_t nvme_adminq_poll_period_us;
 	uint64_t nvme_ioq_poll_period_us;
 	bool delay_cmd_submit;
+	/* Hole at bytes 73-75. */
+	uint8_t reserved73[3];
 	/* The number of attempts per I/O in the bdev layer before an I/O fails. */
 	int32_t bdev_retry_count;
 	int32_t ctrlr_loss_timeout_sec;
@@ -82,12 +91,17 @@ struct spdk_bdev_nvme_opts {
 	bool nvme_error_stat;
 	bool io_path_stat;
 	bool allow_accel_sequence;
+	/* Hole at byte 99. */
+	uint8_t reserved99[1];
 	uint32_t rdma_srq_size;
 	uint32_t rdma_max_cq_size;
 	uint16_t rdma_cm_event_timeout_ms;
+	/* Hole at byte 110-111. */
+	uint8_t reserved110[2];
 	uint32_t dhchap_digests;
 	uint32_t dhchap_dhgroups;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_nvme_opts) == 120, "Incorrect size");
 
 /**
  * Connect to the NVMe controller and populate namespaces as bdevs.
@@ -135,6 +149,22 @@ void spdk_bdev_nvme_set_multipath_policy(const char *name,
  * \param opts Ctrlr opts object to be loaded with default values.
  */
 void spdk_bdev_nvme_get_default_ctrlr_opts(struct spdk_bdev_nvme_ctrlr_opts *opts);
+
+/**
+ * Get the default value for bdev nvme options.
+ *
+ * \param[out] opts Bdev nvme options object to be filled with default values.
+ * \param opts_size Must be set to sizeof(struct spdk_bdev_nvme_opts).
+ */
+void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size);
+
+/**
+ * Set the bdev nvme options.
+ *
+ * \param opts New value of bdev nvme options to be set.
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 
 #ifdef __cplusplus
 }

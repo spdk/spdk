@@ -147,7 +147,7 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev_nvme_opts opts;
 	int rc;
 
-	bdev_nvme_get_opts(&opts);
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_options_decoders,
 					      SPDK_COUNTOF(rpc_bdev_nvme_options_decoders),
 					      &opts)) {
@@ -157,7 +157,7 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = bdev_nvme_set_opts(&opts);
+	rc = spdk_bdev_nvme_set_opts(&opts);
 	if (rc == -EPERM) {
 		spdk_jsonrpc_send_error_response(request, -EPERM,
 						 "RPC not permitted with nvme controllers already attached");
@@ -2653,7 +2653,7 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	uint32_t num_paths = 0, i = 0;
 	int rc;
 
-	bdev_nvme_get_opts(&opts);
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
 	if (!opts.io_path_stat) {
 		SPDK_ERRLOG("RPC not enabled if enable_io_path_stat is false\n");
 		spdk_jsonrpc_send_error_response(request, -EPERM,
