@@ -765,12 +765,16 @@ get_spdk_proc_time() {
 	local interval=$1 cpu=$2
 	local thread thread_to_time stats
 	local _time time _stime stime _utime utime
+	local thread_cpu_list
 
 	[[ -e /proc/$spdk_pid/status ]] || return 1
 
 	# Find SPDK thread pinned to given cpu
 	for thread in "/proc/$spdk_pid/task/"*; do
-		((cpu == $(get_proc_cpu_affinity "$thread/status"))) && thread_to_time=$thread && break
+		thread_cpu_list=($(get_proc_cpu_affinity "$thread/status"))
+		# we aim at reactor threads and these should be bound to a single cpu
+		((${#thread_cpu_list[@]} > 1)) && continue
+		((thread_cpu_list[0] == cpu)) && thread_to_time=$thread && break
 	done
 
 	[[ -e $thread_to_time/stat ]] || return 1
