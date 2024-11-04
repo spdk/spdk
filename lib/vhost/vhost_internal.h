@@ -17,6 +17,7 @@
 #include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/config.h"
+#include "spdk/tree.h"
 
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
@@ -211,7 +212,7 @@ struct spdk_vhost_dev {
 	/* Context passed from transport */
 	void *ctxt;
 
-	TAILQ_ENTRY(spdk_vhost_dev) tailq;
+	RB_ENTRY(spdk_vhost_dev) node;
 };
 
 static inline struct spdk_vhost_user_dev *
