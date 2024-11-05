@@ -20,6 +20,22 @@ struct vbdev_lvol_io {
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
+
+// Queue for the the delete lvol requests.
+struct lvol_delete_request {
+	struct spdk_lvol *lvol;  // Pointer to the lvol to be deleted
+	TAILQ_ENTRY(lvol_delete_request) entries;  // Tail queue linkage
+};
+
+// TAILQ head structure with size tracking
+struct lvol_delete_requests {
+	TAILQ_HEAD(, lvol_delete_request) lvol_delete_requests_queue;  // TAILQ head
+	bool is_deletion_in_progress; // Any deletion request is in progress.
+	size_t size;  // Number of elements in the queue
+};
+
+static struct lvol_delete_requests *g_lvol_delete_requests = NULL;
+
 static int vbdev_lvs_init(void);
 static void vbdev_lvs_fini_start(void);
 static int vbdev_lvs_get_ctx_size(void);
@@ -40,7 +56,102 @@ static struct spdk_bdev_module g_lvol_if = {
 
 SPDK_BDEV_MODULE_REGISTER(lvol, &g_lvol_if)
 
-static void _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+static void _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg, bool is_sync);
+static void _vbdev_lvol_async_delete_internal_cb(void *cb_arg, int lvolerrno);
+
+/* Asyn delete lvol queue implementation Start */
+struct vbdev_lvol_async_destroy_internal_ctx {
+	char	unique_id[SPDK_LVOL_UNIQUE_ID_MAX];
+};
+
+static void lvol_delete_requests_init(void) {
+	if(g_lvol_delete_requests == NULL) {
+		g_lvol_delete_requests = calloc(1, sizeof(struct lvol_delete_requests));
+		if (!g_lvol_delete_requests) {
+			SPDK_ERRLOG("Memory full. Delete request will not be queued.");
+			return;
+		}
+		// Initialize TAILQ
+		TAILQ_INIT(&g_lvol_delete_requests->lvol_delete_requests_queue);
+		g_lvol_delete_requests->size = 0;
+		g_lvol_delete_requests->is_deletion_in_progress = false;
+	}
+}
+
+// Clear the entire queue
+static void lvol_delete_requests_clear(void) {
+	struct lvol_delete_request *current, *temp;
+	if(g_lvol_delete_requests != NULL) {
+		TAILQ_FOREACH_SAFE(current, &g_lvol_delete_requests->lvol_delete_requests_queue, entries, temp) {
+			TAILQ_REMOVE(&g_lvol_delete_requests->lvol_delete_requests_queue, current, entries);
+			free(current);
+			current = NULL;
+		}
+		g_lvol_delete_requests->size = 0;
+		g_lvol_delete_requests->is_deletion_in_progress = false;
+	}
+}
+
+// Enqueue a new delete request (thread-safe)
+static int lvol_delete_requests_enqueue(struct spdk_lvol *lvol) {
+	struct lvol_delete_request *new_request = NULL;
+
+	if(g_lvol_delete_requests == NULL) {
+		return -ENOMEM;
+	}
+
+	new_request = calloc(1, sizeof(struct lvol_delete_request));
+	if (!new_request) {
+		return -ENOMEM;  // Memory allocation failed
+	}
+	new_request->lvol = lvol;
+	TAILQ_INSERT_TAIL(&g_lvol_delete_requests->lvol_delete_requests_queue, new_request, entries);
+	g_lvol_delete_requests->size++;
+
+	return 0;
+}
+
+// Dequeue and return the first delete request (thread-safe)
+static struct spdk_lvol* lvol_delete_requests_dequeue(void) {
+	struct lvol_delete_request *first_request = NULL;
+	struct spdk_lvol *lvol = NULL;
+
+	if(g_lvol_delete_requests == NULL) {
+		return NULL;
+	}
+
+	first_request = TAILQ_FIRST(&g_lvol_delete_requests->lvol_delete_requests_queue);
+	lvol = first_request ? first_request->lvol : NULL;
+
+	if (first_request) {
+		TAILQ_REMOVE(&g_lvol_delete_requests->lvol_delete_requests_queue, first_request, entries);
+		free(first_request);
+		first_request = NULL;
+		g_lvol_delete_requests->size--;
+	}
+	return lvol;
+}
+
+// Check if a specific lvol is already in the queue
+static bool lvol_delete_requests_contains(struct spdk_lvol *lvol) {
+	// Flag to track if lvol is found
+	bool found = false;
+	struct lvol_delete_request *current = NULL;
+
+	if(g_lvol_delete_requests == NULL) {
+		return found;
+	}
+
+    // Traverse the queue
+	TAILQ_FOREACH(current, &g_lvol_delete_requests->lvol_delete_requests_queue, entries) {
+		if (current->lvol == lvol) {
+			found = true;
+			break;
+		}
+	}
+	return found;
+}
+/* Asyn delete lvol queue implementation End */
 
 struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
@@ -366,7 +477,7 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 	lvol = TAILQ_FIRST(&lvs->lvols);
 	while (lvol != NULL) {
 		if (spdk_lvol_deletable(lvol)) {
-			_vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_lvol_cb, lvs_bdev);
+			_vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_lvol_cb, lvs_bdev, false);
 			return;
 		}
 		lvol = TAILQ_NEXT(lvol, link);
@@ -548,6 +659,7 @@ vbdev_get_lvol_store_by_name(const char *name)
 
 struct vbdev_lvol_destroy_ctx {
 	struct spdk_lvol *lvol;
+	bool is_sync;
 	spdk_lvol_op_complete cb_fn;
 	void *cb_arg;
 };
@@ -603,10 +715,72 @@ vbdev_lvol_unregister(void *ctx)
 }
 
 static void
+check_and_process_delete_lvol_from_queue(void) {
+	struct spdk_lvol *lvol = NULL;
+	struct vbdev_lvol_async_destroy_internal_ctx *ctx = NULL;
+	// Check is there are any delete requests in the queue to process.
+	if(g_lvol_delete_requests->size > 0) {
+		// Dequeue the next lvol delete request and process it.
+		lvol = lvol_delete_requests_dequeue();
+		if(lvol != NULL){
+			ctx = calloc(1, sizeof(struct vbdev_lvol_async_destroy_internal_ctx));
+			if(ctx) {
+				strcpy(ctx->unique_id,lvol->unique_id);
+				_vbdev_lvol_destroy(lvol, _vbdev_lvol_async_delete_internal_cb, ctx, false);
+			}
+		}
+	}
+	else {
+		g_lvol_delete_requests->is_deletion_in_progress = false;
+	}
+	return;
+}
+
+static void
+_vbdev_lvol_async_delete_internal_cb(void *cb_arg, int lvolerrno)
+{
+	struct vbdev_lvol_async_destroy_internal_ctx *ctx = cb_arg;
+
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Error deleting lvol %s, errorcode %d. \n", ctx->unique_id, lvolerrno);
+		// Process the queued request in case of error.
+		check_and_process_delete_lvol_from_queue();
+	}
+
+	if (ctx)
+	{
+		free(ctx);
+	}
+	return;
+}
+
+static void
+bdev_lvol_async_delete_cb(void *cb_arg, int lvolerrno)
+{
+	struct vbdev_lvol_async_destroy_internal_ctx *ctx = cb_arg;
+
+	if (lvolerrno != 0) {
+		// Set the previous error. This will be used to check is the asyn delete lvol request has failed.
+		SPDK_ERRLOG("Error deleting lvol %s, errorcode %d. \n", ctx->unique_id, lvolerrno);
+	}
+	else {
+		SPDK_NOTICELOG("lvol %s deleted. \n", ctx->unique_id);
+	}
+
+	if(ctx) {
+		free(ctx);
+	}
+	check_and_process_delete_lvol_from_queue();
+	return;
+}
+
+
+static void
 _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 {
 	struct vbdev_lvol_destroy_ctx *ctx = cb_arg;
 	struct spdk_lvol *lvol = ctx->lvol;
+	struct vbdev_lvol_async_destroy_internal_ctx *async_ctx = NULL;
 
 	if (bdeverrno < 0) {
 		SPDK_INFOLOG(vbdev_lvol, "Could not unregister bdev during lvol (%s) destroy\n",
@@ -616,12 +790,28 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 		return;
 	}
 
-	spdk_lvol_destroy(lvol, ctx->cb_fn, ctx->cb_arg);
-	free(ctx);
+	if(ctx->is_sync == true) {
+		spdk_lvol_destroy(lvol, ctx->cb_fn, ctx->cb_arg);
+	}
+	else {
+		// Return immediately and check the delete lvol status later.
+		async_ctx = calloc(1, sizeof(struct vbdev_lvol_async_destroy_internal_ctx));
+		if(async_ctx){
+			strcpy(async_ctx->unique_id, lvol->unique_id);
+			spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, async_ctx);
+			ctx->cb_fn(ctx->cb_arg, 0);
+		}
+		else {
+			ctx->cb_fn(ctx->cb_arg, -ENOMEM);
+		}
+	}
+	if(ctx){
+		free(ctx);
+	}
 }
 
 static void
-_vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+_vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg, bool is_sync)
 {
 	struct vbdev_lvol_destroy_ctx *ctx;
 	size_t count;
@@ -649,6 +839,7 @@ _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *c
 	}
 
 	ctx->lvol = lvol;
+	ctx->is_sync = is_sync;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
@@ -661,14 +852,21 @@ _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *c
 }
 
 void
-vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg, bool is_sync)
 {
 	struct lvol_store_bdev *lvs_bdev;
+	int ret = 0;
+
+	if (lvol->action_in_progress == true) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
 
 	/*
 	 * During destruction of an lvolstore, _vbdev_lvs_unload() iterates through lvols until they
 	 * are all deleted. There may be some IO required
 	 */
+
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (lvs_bdev == NULL) {
 		SPDK_DEBUGLOG(vbdev_lvol, "lvol %s: lvolstore is being removed\n",
@@ -677,7 +875,36 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		return;
 	}
 
-	_vbdev_lvol_destroy(lvol, cb_fn, cb_arg);
+	//Check if any other deletion request is in progress
+	if(is_sync == true) {
+		if(g_lvol_delete_requests->is_deletion_in_progress == true)
+		{
+			// Operation not permitted as there is already async delete request in progress.
+			SPDK_NOTICELOG("Async delete lvol is already in progress for other LVOLs.\n");
+			cb_fn(cb_arg, -EPERM);
+			return;
+		}
+	} 
+	else {
+		if(g_lvol_delete_requests->is_deletion_in_progress == true)
+		{
+			// Check is delete request for this lvol is already in queue.
+			if(lvol_delete_requests_contains(lvol) == true) {
+				// Queue this request and return.
+				SPDK_NOTICELOG("Delete lvol request for the lvol %s is already in queue.\n", lvol->unique_id);
+				cb_fn(cb_arg, 0);
+				return;	
+			}
+			SPDK_NOTICELOG("Delete lvol for %s is queued, as there are other lvol delete requests in progress.\n",lvol->unique_id);
+			ret = lvol_delete_requests_enqueue(lvol);
+			cb_fn(cb_arg, ret);
+			return;
+		} else {
+			// Mark lvol deletion is in progress.
+			g_lvol_delete_requests->is_deletion_in_progress = true;
+		}
+	}
+	_vbdev_lvol_destroy(lvol, cb_fn, cb_arg, is_sync);
 }
 
 static char *
@@ -1507,6 +1734,8 @@ vbdev_lvol_set_read_only(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, vo
 static int
 vbdev_lvs_init(void)
 {
+	// Initilize the queue for delete requests.
+	lvol_delete_requests_init();
 	return 0;
 }
 
@@ -1550,6 +1779,12 @@ static void
 vbdev_lvs_fini_start(void)
 {
 	g_shutdown_started = true;
+
+	// Clear the queue and delete the global object.
+	lvol_delete_requests_clear();
+	free(g_lvol_delete_requests);
+	g_lvol_delete_requests =  NULL;
+
 	vbdev_lvs_fini_start_iter(vbdev_lvol_store_first());
 }
 
