@@ -23,17 +23,17 @@ nvme_connect() {
 	local ctrlr
 
 	nvme connect -t "$TEST_TRANSPORT" -a "$tgt2addr" -s "$NVMF_SECOND_PORT" -n "$subnqn3" \
-		"${NVME_HOST[@]}" "$@"
+		"${NVME_HOST[@]}" "$@" >&2
 
 	for ctrlr in /sys/class/nvme/nvme*; do
 		# shellcheck disable=SC2053
 		[[ -e $ctrlr/subsysnqn && $(< "$ctrlr/subsysnqn") == "$subnqn3" ]] || continue
 		echo "${ctrlr##*/}"
-		return
+		return 0
 	done
 
-	nvme disconnect -n "$subnqn3"
-	false
+	nvme disconnect -n "$subnqn3" >&2
+	return 1
 }
 
 nvme_get_nguid() {
