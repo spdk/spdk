@@ -1453,9 +1453,18 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return spdk_pci_addr_compare(&pci_addr1, &pci_addr2);
 	}
 
-	cmp = strcasecmp(trid1->traddr, trid2->traddr);
-	if (cmp) {
-		return cmp;
+	if (trid1->trtype == SPDK_NVME_TRANSPORT_TCP &&
+		((trid1->adrfam == SPDK_NVMF_ADRFAM_IPV4 && strcasecmp(trid1->traddr, "0.0.0.0") == 0) ||
+		(trid1->adrfam == SPDK_NVMF_ADRFAM_IPV6 && strcasecmp(trid1->traddr, "::") == 0))) {
+
+		/* If the listener uses INADDR_ANY allow all IP addresses */
+		cmp = 0;
+	}
+	else {
+		cmp = strcasecmp(trid1->traddr, trid2->traddr);
+		if (cmp) {
+			return cmp;
+		}
 	}
 
 	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
