@@ -541,6 +541,10 @@ struct spdk_nvme_poll_group {
 	bool						enable_interrupts_is_valid;
 	int						disconnect_qpair_fd;
 	struct spdk_fd_group				*fgrp;
+	struct {
+		spdk_nvme_poll_group_interrupt_cb	cb_fn;
+		void					*cb_ctx;
+	} interrupt;
 };
 
 struct spdk_nvme_transport_poll_group {

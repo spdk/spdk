@@ -136,6 +136,7 @@
 	spdk_nvme_poll_group_wait;
 	spdk_nvme_poll_group_get_fd;
 	spdk_nvme_poll_group_get_fd_group;
+	spdk_nvme_poll_group_set_interrupt_callback;
 
 	spdk_nvme_ns_get_data;
 	spdk_nvme_ns_get_id;

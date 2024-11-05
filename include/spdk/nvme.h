@@ -3065,6 +3065,22 @@ int spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group);
  */
 struct spdk_fd_group *spdk_nvme_poll_group_get_fd_group(struct spdk_nvme_poll_group *group);
 
+typedef void (*spdk_nvme_poll_group_interrupt_cb)(struct spdk_nvme_poll_group *group, void *ctx);
+
+/**
+ * Register a callback to notify that a poll group needs to be polled when in interrupt mode.  This
+ * isn't required to poll IO completions, but is necessary to process some events, e.g. qpair
+ * disconnection.
+ *
+ * \param group Poll group.
+ * \param cb_fn Callback to be executed when the poll group needs to be polled.
+ * \param cb_ctx Callback's context.
+ *
+ * \return 0 on success or negative errno otherwise.
+ */
+int spdk_nvme_poll_group_set_interrupt_callback(struct spdk_nvme_poll_group *group,
+		spdk_nvme_poll_group_interrupt_cb cb_fn, void *cb_ctx);
+
 /**
  * Destroy an empty poll group.
  *
