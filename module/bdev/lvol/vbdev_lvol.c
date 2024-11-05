@@ -603,6 +603,25 @@ vbdev_lvol_unregister(void *ctx)
 }
 
 static void
+bdev_lvol_async_delete_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	printf("Sangram: lvol deleted: ");
+	SPDK_NOTICELOG("lvol deleted\n");
+	return;
+
+invalid:
+	printf("Sangram: Cannot delete lvol");
+	SPDK_ERRLOG("Cannot delete lvol\n");
+}
+
+
+static void
 _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 {
 	struct vbdev_lvol_destroy_ctx *ctx = cb_arg;
@@ -616,7 +635,10 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 		return;
 	}
 
-	spdk_lvol_destroy(lvol, ctx->cb_fn, ctx->cb_arg);
+	spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, ctx->cb_arg);
+	// Sangram: Return the call and let the deletion of lvol continue.
+	printf("Sangram: Returning early in case of async deletion");
+	ctx->cb_fn(ctx->cb_arg, 0);
 	free(ctx);
 }
 
