@@ -8666,6 +8666,7 @@ eui64                   | Optional | string      | 8-byte namespace EUI-64 in he
 uuid                    | Optional | string      | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
 ptpl_file               | Optional | string      | File path to save/restore persistent reservation information
 anagrpid                | Optional | number      | ANA group ID. Default: Namespace ID.
+hide_metadata           | Optional | bool        | Enable hide_metadata option to the bdev. Default: false
 
 #### Example
 

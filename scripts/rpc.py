@@ -2821,6 +2821,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-a', '--anagrpid', help='ANA group ID (optional)', type=int)
     p.add_argument('-i', '--no-auto-visible', action='store_true',
                    help='Do not auto make namespace visible to controllers (optional)')
+    p.add_argument('-N', '--hide-metadata', action='store_true',
+                   help='Enable hide_metadata option to the bdev (optional)')
     p.set_defaults(func=nvmf_subsystem_add_ns)
 
     def nvmf_subsystem_set_ns_ana_group(args):

@@ -209,8 +209,9 @@ struct spdk_bdev_desc {
 };
 
 int
-spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
-		   void *event_ctx, struct spdk_bdev_desc **_desc)
+spdk_bdev_open_ext_v2(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		      void *event_ctx, struct spdk_bdev_open_opts *opts,
+		      struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
 	size_t i;
@@ -228,6 +229,12 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	}
 
 	return -EINVAL;
+}
+
+void
+spdk_bdev_open_opts_init(struct spdk_bdev_open_opts *opts, size_t opts_size)
+{
+	memset(opts, 0, opts_size);
 }
 
 void

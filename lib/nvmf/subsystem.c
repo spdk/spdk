@@ -1996,6 +1996,7 @@ spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 	}
 	SET_FIELD(anagrpid, 0);
 	SET_FIELD(transport_specific, NULL);
+	SET_FIELD(hide_metadata, false);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -2027,13 +2028,14 @@ nvmf_ns_opts_copy(struct spdk_nvmf_ns_opts *opts,
 	SET_FIELD(anagrpid);
 	SET_FIELD(no_auto_visible);
 	SET_FIELD(transport_specific);
+	SET_FIELD(hide_metadata);
 
 	opts->opts_size = user_opts->opts_size;
 
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement.
 	 */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 72, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 73, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -2075,6 +2077,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_ns_opts opts;
+	struct spdk_bdev_open_opts open_opts = {};
 	struct spdk_nvmf_ns *ns, *first_ns;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_reservation_info info = {0};
@@ -2145,7 +2148,10 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		nvmf_ctrlr_ns_set_visible(ctrlr, opts.nsid, ns->always_visible);
 	}
 
-	rc = spdk_bdev_open_ext(bdev_name, true, nvmf_ns_event, ns, &ns->desc);
+	spdk_bdev_open_opts_init(&open_opts, sizeof(open_opts));
+	open_opts.hide_metadata = opts.hide_metadata;
+
+	rc = spdk_bdev_open_ext_v2(bdev_name, true, nvmf_ns_event, ns, &open_opts, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, bdev_name, rc);

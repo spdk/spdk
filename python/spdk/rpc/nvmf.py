@@ -473,7 +473,8 @@ def nvmf_subsystem_add_ns(client, **params):
         eui64: 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789") (optional).
         uuid: Namespace UUID (optional).
         anagrpid: ANA group ID (optional).
-        no_auto_visible: Do not automatically make namespace visible to controllers
+        no_auto_visible: Do not automatically make namespace visible to controllers (optional)
+        hide_metadata: Enable hide_metadata option to the bdev (optional)
 
     Returns:
         The namespace ID
@@ -482,7 +483,8 @@ def nvmf_subsystem_add_ns(client, **params):
     strip_globals(params)
     apply_defaults(params, tgt_name=None)
     group_as(params, 'namespace', ['bdev_name', 'ptpl_file', 'nsid',
-                                   'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible'])
+                                   'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible',
+                                   'hide_metadata'])
     remove_null(params)
 
     return client.call('nvmf_subsystem_add_ns', params)

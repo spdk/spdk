@@ -1060,8 +1060,13 @@ struct spdk_nvmf_ns_opts {
 	 * after namespace has been added object becomes invalid.
 	 */
 	const struct spdk_json_val *transport_specific;
+
+	/**
+	 * Enable hide_metadata option to the bdev.
+	 */
+	bool hide_metadata;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 72, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 73, "Incorrect size");
 
 /**
  * Get default namespace creation options.

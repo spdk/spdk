@@ -1377,6 +1377,7 @@ struct nvmf_rpc_ns_params {
 	struct spdk_uuid uuid;
 	uint32_t anagrpid;
 	bool no_auto_visible;
+	bool hide_metadata;
 };
 
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
@@ -1388,6 +1389,7 @@ static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"uuid", offsetof(struct nvmf_rpc_ns_params, uuid), spdk_json_decode_uuid, true},
 	{"anagrpid", offsetof(struct nvmf_rpc_ns_params, anagrpid), spdk_json_decode_uint32, true},
 	{"no_auto_visible", offsetof(struct nvmf_rpc_ns_params, no_auto_visible), spdk_json_decode_bool, true},
+	{"hide_metadata", offsetof(struct nvmf_rpc_ns_params, hide_metadata), spdk_json_decode_bool, true},
 };
 
 static int
@@ -1509,6 +1511,7 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 
 	ns_opts.anagrpid = ctx->ns_params.anagrpid;
 	ns_opts.no_auto_visible = ctx->ns_params.no_auto_visible;
+	ns_opts.hide_metadata = ctx->ns_params.hide_metadata;
 
 	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, ctx->ns_params.bdev_name,
 			      &ns_opts, sizeof(ns_opts),
