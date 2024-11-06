@@ -2053,7 +2053,7 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 		uint64_t next_lba = blob->active.clusters[i];
 		uint64_t next_lba_count = bs_cluster_to_lba(bs, 1);
 
-		if (next_lba > 0 && (lba + lba_count) == next_lba) {
+		if (next_lba > 0 && (lba + lba_count) == next_lba && lba_count < 2048) {
 			/* This cluster is contiguous with the previous one. */
 			lba_count += next_lba_count;
 			continue;

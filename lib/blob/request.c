@@ -131,7 +131,9 @@ bs_sequence_start_blob(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl
 		}
 	}
 	spdk_bs_sequence_t *seq = bs_sequence_start(_channel, cpl, esnap_ch);
-	seq->priority_class = blob->priority_class; // set here if blobstore priority is different from this specific blob's priority
+	if (seq) {
+		seq->priority_class = blob->priority_class; // set here if blobstore priority is different from this specific blob's priority
+	}
 	return seq;
 }
 
