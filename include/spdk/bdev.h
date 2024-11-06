@@ -616,6 +616,87 @@ int spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn);
 struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
 
 /**
+ * Get logical block size, specific to a bdev descriptor.
+ *
+ * \param desc Open block device descriptor.
+ * \return Size of logical block for this bdev in bytes.
+ */
+uint32_t spdk_bdev_desc_get_block_size(struct spdk_bdev_desc *desc);
+
+/**
+ * Get metadata size, specific to a bdev descriptor.
+ *
+ * \param desc Open block device descriptor
+ * \return Size of metadata for this bdev in bytes.
+ */
+uint32_t spdk_bdev_desc_get_md_size(struct spdk_bdev_desc *desc);
+
+/**
+ * Query whether metadata is interleaved with block data or separated
+ * with block data, specific to a bdev descriptor.
+ *
+ * Note this function is valid only if there is metadata.
+ *
+ * \param desc Open block device descriptor.
+ * \return true if metadata is interleaved with block data or false
+ * if metadata is separated with block data.
+ */
+bool spdk_bdev_desc_is_md_interleaved(struct spdk_bdev_desc *desc);
+
+/**
+ * Query whether metadata is interleaved with block data or separated
+ * from block data, specific to a bdev descriptor
+ *
+ * Note this function is valid only if there is metadata.
+ *
+ * \param desc Open block device descriptor.
+ * \return true if metadata is separated from block data, false
+ * otherwise.
+ */
+bool spdk_bdev_desc_is_md_separate(struct spdk_bdev_desc *desc);
+
+/**
+ * Get DIF type, specific to a bdev descriptor.
+ *
+ * \param desc Open block device descriptor.
+ * \return DIF type of the block device.
+ */
+enum spdk_dif_type spdk_bdev_desc_get_dif_type(struct spdk_bdev_desc *desc);
+
+/**
+ * Get DIF protection information format of the block device, specific to
+ * a bdev descriptor.
+ *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ *
+ * \param desc Open block device descriptor.
+ * \return DIF protection information format of the block device.
+ */
+enum spdk_dif_pi_format spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc);
+
+/**
+ * Check whether DIF is set in the first 8/16 bytes or the last 8/16 bytes of metadata,
+ * specific to a bdev descriptor.
+ *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ *
+ * \param desc Open block device descriptor..
+ * \return true if DIF is set in the first 8/16 bytes of metadata, or false
+ * if DIF is set in the last 8/16 bytes of metadata.
+ */
+bool spdk_bdev_desc_is_dif_head_of_md(struct spdk_bdev_desc *desc);
+
+/**
+ * Check whether the DIF check type is enabled, specific to a bdev descriptor.
+ *
+ * \param desc Open block device descriptor.
+ * \param check_type The specific DIF check type.
+ * \return true if enabled, false otherwise.
+ */
+bool spdk_bdev_desc_is_dif_check_enabled(struct spdk_bdev_desc *desc,
+		enum spdk_dif_check_type check_type);
+
+/**
  * Set a time limit for the timeout IO of the bdev and timeout callback.
  * We can use this function to enable/disable the timeout handler. If
  * the timeout_in_sec > 0 then it means to enable the timeout IO handling
@@ -814,11 +895,11 @@ uint32_t spdk_bdev_get_md_size(const struct spdk_bdev *bdev);
  * Query whether metadata is interleaved with block data or separated
  * with block data.
  *
+ * Note this function is valid only if there is metadata.
+ *
  * \param bdev Block device to query.
  * \return true if metadata is interleaved with block data or false
  * if metadata is separated with block data.
- *
- * Note this function is valid only if there is metadata.
  */
 bool spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev);
 
@@ -826,11 +907,11 @@ bool spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev);
  * Query whether metadata is interleaved with block data or separated
  * from block data.
  *
+ * Note this function is valid only if there is metadata.
+ *
  * \param bdev Block device to query.
  * \return true if metadata is separated from block data, false
  * otherwise.
- *
- * Note this function is valid only if there is metadata.
  */
 bool spdk_bdev_is_md_separate(const struct spdk_bdev *bdev);
 
@@ -884,11 +965,11 @@ enum spdk_dif_pi_format spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev
 /**
  * Check whether DIF is set in the first 8/16 bytes or the last 8/16 bytes of metadata.
  *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ *
  * \param bdev Block device to query.
  * \return true if DIF is set in the first 8/16 bytes of metadata, or false
  * if DIF is set in the last 8/16 bytes of metadata.
- *
- * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
  */
 bool spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev);
 

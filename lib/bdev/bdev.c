@@ -5061,6 +5061,71 @@ spdk_bdev_get_nvme_nsid(struct spdk_bdev *bdev)
 	return bdev->nsid;
 }
 
+uint32_t
+spdk_bdev_desc_get_block_size(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? bdev->blocklen - bdev->md_len : bdev->blocklen;
+}
+
+uint32_t
+spdk_bdev_desc_get_md_size(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? 0 : bdev->md_len;
+}
+
+bool
+spdk_bdev_desc_is_md_interleaved(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? false : spdk_bdev_is_md_interleaved(bdev);
+}
+
+bool
+spdk_bdev_desc_is_md_separate(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? false : spdk_bdev_is_md_separate(bdev);
+}
+
+spdk_dif_type_t
+spdk_bdev_desc_get_dif_type(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? SPDK_DIF_DISABLE : spdk_bdev_get_dif_type(bdev);
+}
+
+spdk_dif_pi_format_t
+spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? SPDK_DIF_PI_FORMAT_16 : spdk_bdev_get_dif_pi_format(bdev);
+}
+
+bool
+spdk_bdev_desc_is_dif_head_of_md(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? false : spdk_bdev_is_dif_head_of_md(bdev);
+}
+
+bool
+spdk_bdev_desc_is_dif_check_enabled(struct spdk_bdev_desc *desc,
+				    enum spdk_dif_check_type check_type)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? false : spdk_bdev_is_dif_check_enabled(bdev, check_type);
+}
+
 static void bdev_update_qd_sampling_period(void *ctx);
 
 static void
