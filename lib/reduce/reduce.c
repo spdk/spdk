@@ -1564,7 +1564,6 @@ static inline void
 _prepare_compress_chunk_copy_user_buffers(struct spdk_reduce_vol_request *req, bool zero_paddings)
 {
 	struct spdk_reduce_vol *vol = req->vol;
-	char *padding_buffer = zero_paddings ? g_zero_buf : req->decomp_buf;
 	uint64_t chunk_offset, ttl_len = 0;
 	uint64_t remainder = 0;
 	char *copy_offset = NULL;
@@ -1579,9 +1578,9 @@ _prepare_compress_chunk_copy_user_buffers(struct spdk_reduce_vol_request *req, b
 
 	if (chunk_offset) {
 		ttl_len += chunk_offset * lbsize;
-		/* copy_offset already points to padding buffer if zero_paddings=false */
+		/* copy_offset already points to the correct buffer if zero_paddings=false */
 		if (zero_paddings) {
-			memcpy(copy_offset, padding_buffer, ttl_len);
+			memset(copy_offset, 0, ttl_len);
 		}
 		copy_offset += ttl_len;
 	}
@@ -1595,9 +1594,9 @@ _prepare_compress_chunk_copy_user_buffers(struct spdk_reduce_vol_request *req, b
 
 	remainder = vol->params.chunk_size - ttl_len;
 	if (remainder) {
-		/* copy_offset already points to padding buffer if zero_paddings=false */
+		/* copy_offset already points to the correct buffer if zero_paddings=false */
 		if (zero_paddings) {
-			memcpy(copy_offset, padding_buffer + ttl_len, remainder);
+			memset(copy_offset, 0, remainder);
 		}
 		ttl_len += remainder;
 	}
