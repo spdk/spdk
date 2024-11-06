@@ -120,6 +120,7 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 			    bool dif_insert_or_strip)
 {
 	struct spdk_bdev *bdev = ns->bdev;
+	struct spdk_bdev_desc *desc = ns->desc;
 	uint64_t num_blocks;
 	uint32_t phys_blocklen;
 	uint32_t max_copy;
@@ -134,13 +135,13 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->flbas.msb_format = 0;
 	nsdata->nacwu = spdk_bdev_get_acwu(bdev) - 1; /* nacwu is 0-based */
 	if (!dif_insert_or_strip) {
-		nsdata->lbaf[0].ms = spdk_bdev_get_md_size(bdev);
-		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
+		nsdata->lbaf[0].ms = spdk_bdev_desc_get_md_size(desc);
+		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_desc_get_block_size(desc));
 		if (nsdata->lbaf[0].ms != 0) {
 			nsdata->flbas.extended = 1;
 			nsdata->mc.extended = 1;
 			nsdata->mc.pointer = 0;
-			nsdata->dps.md_start = spdk_bdev_is_dif_head_of_md(bdev);
+			nsdata->dps.md_start = spdk_bdev_desc_is_dif_head_of_md(desc);
 			/* NVMf library doesn't process PRACT and PRCHK flags, we
 			 * leave the use of extended LBA buffer to users.
 			 */
@@ -201,15 +202,15 @@ void
 nvmf_bdev_ctrlr_identify_iocs_nvm(struct spdk_nvmf_ns *ns,
 				  struct spdk_nvme_nvm_ns_data *nsdata_nvm)
 {
-	struct spdk_bdev *bdev = ns->bdev;
+	struct spdk_bdev_desc *desc = ns->desc;
 	uint8_t _16bpists;
 	uint32_t sts, pif;
 
-	if (spdk_bdev_get_dif_type(bdev) == SPDK_DIF_DISABLE) {
+	if (spdk_bdev_desc_get_dif_type(desc) == SPDK_DIF_DISABLE) {
 		return;
 	}
 
-	pif = spdk_bdev_get_dif_pi_format(bdev);
+	pif = spdk_bdev_desc_get_dif_pi_format(desc);
 
 	/*
 	 * 16BPISTS shall be 1 for 32/64b Guard PI.
@@ -341,7 +342,7 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		.accel_sequence = req->accel_sequence,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
@@ -393,7 +394,7 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		.accel_sequence = req->accel_sequence,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
@@ -440,7 +441,7 @@ nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
@@ -484,7 +485,7 @@ nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 				      struct spdk_io_channel *ch, struct spdk_nvmf_request *cmp_req, struct spdk_nvmf_request *write_req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmp_cmd = &cmp_req->cmd->nvme_cmd;
 	struct spdk_nvme_cmd *write_cmd = &write_req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &write_req->rsp->nvme_cpl;
@@ -548,7 +549,7 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
 	if (spdk_unlikely(max_write_zeroes_size > 0 &&
-			  num_blocks > (max_write_zeroes_size << 10) / spdk_bdev_get_block_size(bdev))) {
+			  num_blocks > (max_write_zeroes_size << 10) / spdk_bdev_desc_get_block_size(desc))) {
 		SPDK_ERRLOG("invalid write zeroes size, should not exceed %" PRIu64 "Kib\n", max_write_zeroes_size);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -674,7 +675,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t max_discard_size = req->qpair->ctrlr->subsys->max_discard_size_kib;
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_iov_xfer ix;
 	uint64_t lba;
 	uint32_t lba_count;
@@ -925,36 +926,36 @@ spdk_nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *de
 }
 
 bool
-nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
+nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev_desc *desc, struct spdk_nvme_cmd *cmd,
 			    struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t init_ref_tag, dif_check_flags = 0;
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	if (spdk_bdev_get_md_size(bdev) == 0) {
+	if (spdk_bdev_desc_get_md_size(desc) == 0) {
 		return false;
 	}
 
 	/* Initial Reference Tag is the lower 32 bits of the start LBA. */
 	init_ref_tag = (uint32_t)from_le64(&cmd->cdw10);
 
-	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+	if (spdk_bdev_desc_is_dif_check_enabled(desc, SPDK_DIF_CHECK_TYPE_REFTAG)) {
 		dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
 	}
 
-	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+	if (spdk_bdev_desc_is_dif_check_enabled(desc, SPDK_DIF_CHECK_TYPE_GUARD)) {
 		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
 	}
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(dif_ctx,
-			       spdk_bdev_get_block_size(bdev),
-			       spdk_bdev_get_md_size(bdev),
-			       spdk_bdev_is_md_interleaved(bdev),
-			       spdk_bdev_is_dif_head_of_md(bdev),
-			       spdk_bdev_get_dif_type(bdev),
+			       spdk_bdev_desc_get_block_size(desc),
+			       spdk_bdev_desc_get_md_size(desc),
+			       spdk_bdev_desc_is_md_interleaved(desc),
+			       spdk_bdev_desc_is_dif_head_of_md(desc),
+			       spdk_bdev_desc_get_dif_type(desc),
 			       dif_check_flags,
 			       init_ref_tag, 0, 0, 0, 0, &dif_opts);
 
@@ -1007,7 +1008,7 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	uint64_t start_lba;
 	uint64_t num_blocks;
 	int rc;

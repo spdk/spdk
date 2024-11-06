@@ -2155,17 +2155,18 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	ns->bdev = spdk_bdev_desc_get_bdev(ns->desc);
 
-	if (spdk_bdev_get_md_size(ns->bdev) != 0) {
-		if (!spdk_bdev_is_md_interleaved(ns->bdev)) {
+	if (spdk_bdev_desc_get_md_size(ns->desc) != 0) {
+		if (!spdk_bdev_desc_is_md_interleaved(ns->desc)) {
 			SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
 			spdk_bdev_close(ns->desc);
 			free(ns);
 			return 0;
 		}
 
-		if (spdk_bdev_get_md_size(ns->bdev) > SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE) {
+		if (spdk_bdev_desc_get_md_size(ns->desc) > SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE) {
 			SPDK_ERRLOG("Maximum supported interleaved md size %u, current md size %u\n",
-				    SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE, spdk_bdev_get_md_size(ns->bdev));
+				    SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE,
+				    spdk_bdev_desc_get_md_size(ns->desc));
 			spdk_bdev_close(ns->desc);
 			free(ns);
 			return 0;
@@ -2204,8 +2205,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 		zone_append_supported = spdk_bdev_io_type_supported(ns->bdev,
 					SPDK_BDEV_IO_TYPE_ZONE_APPEND);
-		max_zone_append_size_kib = spdk_bdev_get_max_zone_append_size(
-						   ns->bdev) * spdk_bdev_get_block_size(ns->bdev);
+		max_zone_append_size_kib = spdk_bdev_get_max_zone_append_size(ns->bdev) *
+					   spdk_bdev_desc_get_block_size(ns->desc);
 
 		if (_nvmf_subsystem_get_first_zoned_ns(subsystem) != NULL &&
 		    (nvmf_subsystem_zone_append_supported(subsystem) != zone_append_supported ||

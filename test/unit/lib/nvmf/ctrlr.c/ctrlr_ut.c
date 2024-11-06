@@ -173,7 +173,7 @@ DEFINE_STUB(nvmf_transport_req_complete,
 DEFINE_STUB_V(nvmf_ns_reservation_request, (void *ctx));
 
 DEFINE_STUB(nvmf_bdev_ctrlr_get_dif_ctx, bool,
-	    (struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
+	    (struct spdk_bdev_desc *desc, struct spdk_nvme_cmd *cmd,
 	     struct spdk_dif_ctx *dif_ctx),
 	    true);
 

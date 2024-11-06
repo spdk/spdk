@@ -5439,7 +5439,7 @@ get_nvmf_io_req_length(struct spdk_nvmf_request *req)
 	}
 
 	nlb = (cmd->cdw12 & 0x0000ffffu) + 1;
-	return nlb * spdk_bdev_get_block_size(ns->bdev);
+	return nlb * spdk_bdev_desc_get_block_size(ns->desc);
 }
 
 static int

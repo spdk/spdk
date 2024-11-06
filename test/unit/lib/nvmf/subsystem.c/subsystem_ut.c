@@ -24,14 +24,14 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 
-DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
-	    (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_bdev_desc_get_block_size, uint32_t,
+	    (struct spdk_bdev_desc *desc), 512);
 
-DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
-	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_desc_get_md_size, uint32_t,
+	    (struct spdk_bdev_desc *desc), 0);
 
-DEFINE_STUB(spdk_bdev_is_md_interleaved, bool,
-	    (const struct spdk_bdev *bdev), false);
+DEFINE_STUB(spdk_bdev_desc_is_md_interleaved, bool,
+	    (struct spdk_bdev_desc *desc), false);
 
 DEFINE_STUB(spdk_bdev_io_type_supported, bool,
 	    (struct spdk_bdev *bdev,

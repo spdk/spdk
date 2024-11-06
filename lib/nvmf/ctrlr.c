@@ -4963,7 +4963,7 @@ nvmf_ctrlr_get_dif_ctx(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		       struct spdk_dif_ctx *dif_ctx)
 {
 	struct spdk_nvmf_ns *ns;
-	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
 
 	if (ctrlr == NULL || cmd == NULL) {
 		return false;
@@ -4974,13 +4974,13 @@ nvmf_ctrlr_get_dif_ctx(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		return false;
 	}
 
-	bdev = ns->bdev;
+	desc = ns->desc;
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:
 	case SPDK_NVME_OPC_COMPARE:
-		return nvmf_bdev_ctrlr_get_dif_ctx(bdev, cmd, dif_ctx);
+		return nvmf_bdev_ctrlr_get_dif_ctx(desc, cmd, dif_ctx);
 	default:
 		break;
 	}

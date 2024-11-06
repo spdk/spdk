@@ -54,6 +54,10 @@ DEFINE_STUB_V(spdk_bdev_io_get_iovec,
 	      (struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp));
 DEFINE_STUB(spdk_bdev_get_write_unit_size, uint32_t, (const struct spdk_bdev *bdev), 1);
 
+struct spdk_bdev_desc {
+	struct spdk_bdev *bdev;
+};
+
 uint32_t
 spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
 {
@@ -132,6 +136,45 @@ spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev)
 	return bdev->dif_pi_format;
 }
 
+uint32_t
+spdk_bdev_desc_get_md_size(struct spdk_bdev_desc *desc)
+{
+	return spdk_bdev_get_md_size(desc->bdev);
+}
+
+bool
+spdk_bdev_desc_is_md_interleaved(struct spdk_bdev_desc *desc)
+{
+	return spdk_bdev_is_md_interleaved(desc->bdev);
+}
+
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dif_type spdk_dif_type_t;
+
+spdk_dif_type_t
+spdk_bdev_desc_get_dif_type(struct spdk_bdev_desc *desc)
+{
+	return spdk_bdev_get_dif_type(desc->bdev);
+}
+
+bool
+spdk_bdev_desc_is_dif_head_of_md(struct spdk_bdev_desc *desc)
+{
+	return spdk_bdev_is_dif_head_of_md(desc->bdev);
+}
+
+uint32_t
+spdk_bdev_desc_get_block_size(struct spdk_bdev_desc *desc)
+{
+	return spdk_bdev_get_block_size(desc->bdev);
+}
+
+spdk_dif_pi_format_t
+spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc)
+{
+	return spdk_bdev_get_dif_pi_format(desc->bdev);
+}
+
 DEFINE_STUB(spdk_bdev_comparev_and_writev_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct iovec *compare_iov, int compare_iovcnt,
@@ -145,8 +188,8 @@ DEFINE_STUB(nvmf_ctrlr_process_io_cmd, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_fused_status, (const struct spdk_bdev_io *bdev_io,
 		uint32_t *cdw0, int *cmp_sct, int *cmp_sc, int *wr_sct, int *wr_sc));
 
-DEFINE_STUB(spdk_bdev_is_dif_check_enabled, bool,
-	    (const struct spdk_bdev *bdev, enum spdk_dif_check_type check_type), false);
+DEFINE_STUB(spdk_bdev_desc_is_dif_check_enabled, bool,
+	    (struct spdk_bdev_desc *desc, enum spdk_dif_check_type check_type), false);
 
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
 	    (struct spdk_bdev_desc *desc), NULL);
@@ -349,20 +392,21 @@ static void
 test_get_dif_ctx(void)
 {
 	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc desc = { .bdev = &bdev, };
 	struct spdk_nvme_cmd cmd = {};
 	struct spdk_dif_ctx dif_ctx = {};
 	bool ret;
 
 	bdev.md_len = 0;
 
-	ret = nvmf_bdev_ctrlr_get_dif_ctx(&bdev, &cmd, &dif_ctx);
+	ret = nvmf_bdev_ctrlr_get_dif_ctx(&desc, &cmd, &dif_ctx);
 	CU_ASSERT(ret == false);
 
 	to_le64(&cmd.cdw10, 0x1234567890ABCDEF);
 	bdev.blocklen = 520;
 	bdev.md_len = 8;
 
-	ret = nvmf_bdev_ctrlr_get_dif_ctx(&bdev, &cmd, &dif_ctx);
+	ret = nvmf_bdev_ctrlr_get_dif_ctx(&desc, &cmd, &dif_ctx);
 	CU_ASSERT(ret == true);
 	CU_ASSERT(dif_ctx.block_size == 520);
 	CU_ASSERT(dif_ctx.md_size == 8);
@@ -374,7 +418,7 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 {
 	int rc;
 	struct spdk_bdev bdev = {};
-	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_bdev_desc desc = { .bdev = &bdev, };
 	struct spdk_io_channel ch = {};
 
 	struct spdk_nvmf_request cmp_req = {};
@@ -442,7 +486,7 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
 
-	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, &desc, &ch, &cmp_req, &write_req);
 
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
@@ -458,7 +502,7 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
 
-	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, &desc, &ch, &cmp_req, &write_req);
 
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
@@ -474,7 +518,7 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	write_cmd.cdw12 = 100;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
 
-	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, &desc, &ch, &cmp_req, &write_req);
 
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
@@ -490,7 +534,7 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen - 1;
 
-	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, &desc, &ch, &cmp_req, &write_req);
 
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
@@ -505,9 +549,12 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	struct spdk_nvmf_ns ns = {};
 	struct spdk_nvme_ns_data nsdata = {};
 	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc desc = {};
 	uint8_t ns_g_id[16] = "abcdefgh";
 	uint8_t eui64[8] = "12345678";
 
+	desc.bdev = &bdev;
+	ns.desc = &desc;
 	ns.bdev = &bdev;
 	ns.ptpl_file = (void *)0xDEADBEEF;
 	memcpy(ns.opts.nguid, ns_g_id, 16);
@@ -580,7 +627,7 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 {
 	int rc;
 	struct spdk_bdev bdev = {};
-	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_bdev_desc desc = { .bdev = &bdev, };
 	struct spdk_io_channel ch = {};
 
 	struct spdk_nvmf_request write_req = {};
@@ -632,7 +679,7 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
 
-	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, desc, &ch, &write_req);
+	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, &desc, &ch, &write_req);
 
 	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
@@ -643,7 +690,7 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 	write_cmd.cdw12 = 100;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
 
-	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, desc, &ch, &write_req);
+	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, &desc, &ch, &write_req);
 
 	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
@@ -654,7 +701,7 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
 	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen - 1;
 
-	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, desc, &ch, &write_req);
+	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, &desc, &ch, &write_req);
 
 	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
@@ -666,6 +713,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 {
 	int rc;
 	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc desc = { .bdev = &bdev, };
 	struct spdk_io_channel ch = {};
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
@@ -683,13 +731,13 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	cmd.nvme_cmd.cdw12 = 2;
 
 	/* Compare status asynchronous */
-	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 	/* SLBA out of range */
 	cmd.nvme_cmd.cdw10 = 3;
 
-	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_LBA_OUT_OF_RANGE);
@@ -699,7 +747,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	req.length = 512;
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
@@ -709,7 +757,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	memset(&rsp, 0, sizeof(rsp));
 	MOCK_SET(spdk_bdev_comparev_blocks, -1);
 
-	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
@@ -718,7 +766,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	MOCK_SET(spdk_bdev_io_type_supported, false);
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
@@ -728,7 +776,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	MOCK_SET(spdk_bdev_flush_blocks, -1);
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
@@ -736,7 +784,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	/* Flush blocks status asynchronous */
 	MOCK_SET(spdk_bdev_flush_blocks, 0);
 
-	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	MOCK_CLEAR(spdk_bdev_io_type_supported);
 	MOCK_CLEAR(spdk_bdev_flush_blocks);
@@ -746,12 +794,12 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem };
 	qpair.ctrlr = &ctrlr;
 
-	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 	cmd.nvme_cmd.cdw12 = 3;
 	subsystem.max_write_zeroes_size_kib = 1;
-	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 
 	/* SLBA out of range */
@@ -760,7 +808,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	cmd.nvme_cmd.cdw10 = 3;
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_LBA_OUT_OF_RANGE);
@@ -770,7 +818,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	cmd.nvme_cmd.cdw10 = 0;
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
@@ -792,7 +840,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	MOCK_SET(spdk_bdev_io_type_supported, false);
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 	MOCK_SET(spdk_bdev_io_type_supported, true);
@@ -802,7 +850,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	req.length = 64;
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_CMD_SIZE_LIMIT_SIZE_EXCEEDED);
@@ -814,7 +862,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	cmd.nvme_cmd.cdw12_bits.copy.df = 1;
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
@@ -825,7 +873,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	MOCK_SET(spdk_bdev_copy_blocks, -1);
 	memset(&rsp, 0, sizeof(rsp));
 
-	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
@@ -838,6 +886,7 @@ static void
 test_nvmf_bdev_ctrlr_read_write_cmd(void)
 {
 	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc desc = { .bdev = &bdev, };
 	struct spdk_nvmf_request req = {};
 	union nvmf_c2h_msg rsp = {};
 	union nvmf_h2c_msg cmd = {};
@@ -853,7 +902,7 @@ test_nvmf_bdev_ctrlr_read_write_cmd(void)
 	req.length = 8192;
 	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
 
-	rc = nvmf_bdev_ctrlr_read_cmd(&bdev, NULL, NULL, &req);
+	rc = nvmf_bdev_ctrlr_read_cmd(&bdev, &desc, NULL, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 	/* Write two blocks, block size 4096 */
@@ -863,7 +912,7 @@ test_nvmf_bdev_ctrlr_read_write_cmd(void)
 	req.length = 8192;
 	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
 
-	rc = nvmf_bdev_ctrlr_write_cmd(&bdev, NULL, NULL, &req);
+	rc = nvmf_bdev_ctrlr_write_cmd(&bdev, &desc, NULL, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 }
 
