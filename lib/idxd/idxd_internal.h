@@ -19,11 +19,23 @@ extern "C" {
 
 /* TODO: get the gcc intrinsic to work. */
 #define nop() asm volatile ("nop")
-static inline void movdir64b(void *dst, const void *src)
-{
-	asm volatile(".byte 0x66, 0x0f, 0x38, 0xf8, 0x02"
-		     : "=m"(*(char *)dst)
-		     : "d"(src), "a"(dst));
+#include <string.h>
+#ifdef __ARM_NEON
+#include <arm_neon.h>
+#endif
+static inline void movdir64b(void *dst, const void *src) {
+#ifdef __x86_64__
+    asm volatile(".byte 0x66, 0x0f, 0x38, 0xf8, 0x02"
+                 : "=m"(*(char *)dst)
+                 : "d"(src), "a"(dst));
+#elif defined(__ARM_NEON)
+    vst1q_u8((uint8_t *)dst, vld1q_u8((const uint8_t *)src));
+    vst1q_u8((uint8_t *)dst + 16, vld1q_u8((const uint8_t *)src + 16));
+    vst1q_u8((uint8_t *)dst + 32, vld1q_u8((const uint8_t *)src + 32));
+    vst1q_u8((uint8_t *)dst + 48, vld1q_u8((const uint8_t *)src + 48));
+#else
+    memcpy(dst, src, 64);
+#endif
 }
 
 #define IDXD_REGISTER_TIMEOUT_US		50
