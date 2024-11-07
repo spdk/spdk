@@ -2647,6 +2647,12 @@ nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_re
 		nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
 	}
 
+	if (spdk_unlikely(rqpair->state >= NVME_RDMA_QPAIR_STATE_EXITING && !rqpair->srq)) {
+		/* Skip posting back recv wr if we are in a disconnection process. We may never get
+		 * a WC and we may end up stuck in LINGERING state until the timeout. */
+		return;
+	}
+
 	assert(rqpair->rsps->current_num_recvs < rqpair->rsps->num_entries);
 	rqpair->rsps->current_num_recvs++;
 
