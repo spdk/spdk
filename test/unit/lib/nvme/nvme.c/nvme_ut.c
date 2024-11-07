@@ -344,6 +344,7 @@ test_nvme_init_get_probe_ctx(void)
 	probe_ctx = calloc(1, sizeof(*probe_ctx));
 	SPDK_CU_ASSERT_FATAL(probe_ctx != NULL);
 	TAILQ_INIT(&probe_ctx->init_ctrlrs);
+	TAILQ_INIT(&probe_ctx->failed_ctxs.head);
 
 	return probe_ctx;
 }
@@ -850,6 +851,7 @@ test_nvme_ctrlr_probe(void)
 	nvme_get_default_hostnqn(ctrlr.opts.hostnqn, sizeof(ctrlr.opts.hostnqn));
 
 	TAILQ_INIT(&probe_ctx.init_ctrlrs);
+	TAILQ_INIT(&probe_ctx.failed_ctxs.head);
 
 	/* test when probe_cb returns false */
 
@@ -1463,6 +1465,7 @@ test_nvme_ctrlr_probe_internal(void)
 	rc = nvme_probe_internal(probe_ctx, false);
 	CU_ASSERT(rc < 0);
 	CU_ASSERT(TAILQ_EMPTY(&probe_ctx->init_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&probe_ctx->failed_ctxs.head));
 	CU_ASSERT(ut_attach_fail_cb_rc == -EFAULT);
 
 	free(probe_ctx);

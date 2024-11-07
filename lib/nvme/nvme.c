@@ -699,6 +699,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 			 struct spdk_nvme_probe_ctx *probe_ctx)
 {
 	int rc = 0;
+	struct nvme_ctrlr_detach_ctx *detach_ctx;
 
 	rc = nvme_ctrlr_process_init(ctrlr);
 
@@ -710,7 +711,17 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ctrlr_lock(ctrlr);
 		nvme_ctrlr_fail(ctrlr, false);
 		nvme_ctrlr_unlock(ctrlr);
-		nvme_ctrlr_destruct(ctrlr);
+
+		/* allocate a context to detach this controller asynchronously */
+		detach_ctx = calloc(1, sizeof(*detach_ctx));
+		if (detach_ctx == NULL) {
+			SPDK_WARNLOG("Failed to allocate asynchronous detach context. Performing synchronous destruct.\n");
+			nvme_ctrlr_destruct(ctrlr);
+			return;
+		}
+		detach_ctx->ctrlr = ctrlr;
+		TAILQ_INSERT_TAIL(&probe_ctx->failed_ctxs.head, detach_ctx, link);
+		nvme_ctrlr_destruct_async(ctrlr, detach_ctx);
 		return;
 	}
 
@@ -909,6 +920,7 @@ nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
 	}
 	probe_ctx->remove_cb = remove_cb;
 	TAILQ_INIT(&probe_ctx->init_ctrlrs);
+	TAILQ_INIT(&probe_ctx->failed_ctxs.head);
 }
 
 int
@@ -1602,6 +1614,8 @@ int
 spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
+	struct nvme_ctrlr_detach_ctx *detach_ctx, *detach_ctx_tmp;
+	int rc;
 
 	if (!spdk_process_is_primary() && probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		free(probe_ctx);
@@ -1612,7 +1626,22 @@ spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 		nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
 	}
 
-	if (TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
+	/* poll failed controllers destruction */
+	TAILQ_FOREACH_SAFE(detach_ctx, &probe_ctx->failed_ctxs.head, link, detach_ctx_tmp) {
+		rc = nvme_ctrlr_destruct_poll_async(detach_ctx->ctrlr, detach_ctx);
+		if (rc == -EAGAIN) {
+			continue;
+		}
+
+		if (rc != 0) {
+			SPDK_ERRLOG("Failure while polling the controller destruction (rc = %d)\n", rc);
+		}
+
+		TAILQ_REMOVE(&probe_ctx->failed_ctxs.head, detach_ctx, link);
+		free(detach_ctx);
+	}
+
+	if (TAILQ_EMPTY(&probe_ctx->init_ctrlrs) && TAILQ_EMPTY(&probe_ctx->failed_ctxs.head)) {
 		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		g_spdk_nvme_driver->initialized = true;
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
