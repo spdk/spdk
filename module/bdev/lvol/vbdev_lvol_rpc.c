@@ -1111,6 +1111,7 @@ SPDK_RPC_REGISTER("bdev_lvol_set_read_only", rpc_bdev_lvol_set_read_only, SPDK_R
 
 struct rpc_bdev_lvol_delete {
 	char *name;
+	bool async;
 };
 
 static void
@@ -1121,6 +1122,7 @@ free_rpc_bdev_lvol_delete(struct rpc_bdev_lvol_delete *req)
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_lvol_delete, name), spdk_json_decode_string},
+	{"async", offsetof(struct rpc_bdev_lvol_delete, name), spdk_json_decode_bool, true},
 };
 
 static void
@@ -1192,12 +1194,19 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 		}
 	}
 
+	if(req.async == false)
+	{
+		printf("Sangram: asyn is set to false.\n");
+	} else
+	{
+		printf("Sangram: asyn is set to true.\n");
+	}
 	/* Could not find lvol, degraded or not. */
 	spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 	goto cleanup;
 
 done:
-	vbdev_lvol_destroy(lvol, rpc_bdev_lvol_delete_cb, request);
+	vbdev_lvol_destroy(lvol, rpc_bdev_lvol_delete_cb, request, req.async);
 
 cleanup:
 	free_rpc_bdev_lvol_delete(&req);

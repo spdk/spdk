@@ -40,7 +40,7 @@ static struct spdk_bdev_module g_lvol_if = {
 
 SPDK_BDEV_MODULE_REGISTER(lvol, &g_lvol_if)
 
-static void _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+static void _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg, bool is_async);
 
 struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
@@ -366,7 +366,7 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 	lvol = TAILQ_FIRST(&lvs->lvols);
 	while (lvol != NULL) {
 		if (spdk_lvol_deletable(lvol)) {
-			_vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_lvol_cb, lvs_bdev);
+			_vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_lvol_cb, lvs_bdev, false);
 			return;
 		}
 		lvol = TAILQ_NEXT(lvol, link);
@@ -548,6 +548,7 @@ vbdev_get_lvol_store_by_name(const char *name)
 
 struct vbdev_lvol_destroy_ctx {
 	struct spdk_lvol *lvol;
+	bool is_async;
 	spdk_lvol_op_complete cb_fn;
 	void *cb_arg;
 };
@@ -635,15 +636,22 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 		return;
 	}
 
-	spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, ctx->cb_arg);
-	// Sangram: Return the call and let the deletion of lvol continue.
-	printf("Sangram: Returning early in case of async deletion");
-	ctx->cb_fn(ctx->cb_arg, 0);
+	if(ctx->is_async == false) {
+		printf("Sangram: Non async call");
+		spdk_lvol_destroy(lvol, ctx->cb_fn, ctx->cb_arg);
+	}
+	else {
+		// Sangram: Return the call and let the deletion of lvol continue.
+		// Update the callback here.
+		printf("Sangram: async call");
+		spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, ctx->cb_arg);
+		ctx->cb_fn(ctx->cb_arg, 0);
+	}
 	free(ctx);
 }
 
 static void
-_vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+_vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg, bool is_async)
 {
 	struct vbdev_lvol_destroy_ctx *ctx;
 	size_t count;
@@ -671,6 +679,7 @@ _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *c
 	}
 
 	ctx->lvol = lvol;
+	ctx->is_async = is_async;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
@@ -683,7 +692,7 @@ _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *c
 }
 
 void
-vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg, bool is_async)
 {
 	struct lvol_store_bdev *lvs_bdev;
 
@@ -699,7 +708,7 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		return;
 	}
 
-	_vbdev_lvol_destroy(lvol, cb_fn, cb_arg);
+	_vbdev_lvol_destroy(lvol, cb_fn, cb_arg, is_async);
 }
 
 static char *
