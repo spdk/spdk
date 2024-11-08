@@ -4002,19 +4002,6 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 }
 
 static void
-bs_load_ctx_fail(struct spdk_bs_load_ctx *ctx, int bserrno)
-{
-	assert(bserrno != 0);
-
-	spdk_free(ctx->mask);
-	spdk_free(ctx->super);
-	bs_sequence_finish(ctx->seq, bserrno);
-	bs_free(ctx->bs);
-	spdk_bit_array_free(&ctx->used_clusters);
-	free(ctx);
-}
-
-static void
 bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
 	       struct spdk_bs_super_block *super, spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
@@ -4038,7 +4025,7 @@ bs_write_used_clusters(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
 				 SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		bs_load_ctx_fail(ctx, -ENOMEM);
+		cb_fn(seq, arg, -ENOMEM);
 		return;
 	}
 
@@ -4071,7 +4058,7 @@ bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl cb_fn)
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
 				 SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		bs_load_ctx_fail(ctx, -ENOMEM);
+		cb_fn(seq, arg, -ENOMEM);
 		return;
 	}
 
@@ -4104,7 +4091,7 @@ bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl c
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		bs_load_ctx_fail(ctx, -ENOMEM);
+		cb_fn(seq, arg, -ENOMEM);
 		return;
 	}
 
@@ -4317,6 +4304,19 @@ bs_load_complete(struct spdk_bs_load_ctx *ctx)
 		return;
 	}
 	spdk_bs_iter_first(ctx->bs, bs_load_iter, ctx);
+}
+
+static void
+bs_load_ctx_fail(struct spdk_bs_load_ctx *ctx, int bserrno)
+{
+	assert(bserrno != 0);
+
+	spdk_free(ctx->mask);
+	spdk_free(ctx->super);
+	bs_sequence_finish(ctx->seq, bserrno);
+	bs_free(ctx->bs);
+	spdk_bit_array_free(&ctx->used_clusters);
+	free(ctx);
 }
 
 static void
@@ -5819,6 +5819,7 @@ bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 
 	spdk_free(ctx->mask);
+	ctx->mask = NULL;
 
 	if (bserrno != 0) {
 		bs_unload_finish(ctx, bserrno);
