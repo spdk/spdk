@@ -3351,6 +3351,7 @@ bs_unload(void)
 {
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_blob *blob;
+	struct spdk_power_failure_thresholds thresholds = {};
 
 	/* Create a blob and open it. */
 	blob = ut_blob_create_and_open(bs, NULL);
@@ -3367,6 +3368,23 @@ bs_unload(void)
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
+
+	/* Try to unload blobstore, should fail due to I/O error */
+	thresholds.general_threshold = 2;
+	dev_set_power_failure_thresholds(thresholds);
+	g_bserrno = -1;
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EIO);
+	dev_reset_power_failure_event();
+
+	/* Try to unload blobstore, should fail with spdk_zmalloc returning NULL */
+	g_bserrno = -1;
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	MOCK_SET(spdk_zmalloc, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -ENOMEM);
+	MOCK_CLEAR(spdk_zmalloc);
 }
 
 /*
@@ -3564,6 +3582,7 @@ bs_destroy(void)
 {
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
+	struct spdk_power_failure_thresholds thresholds = {};
 
 	/* Initialize a new blob store */
 	dev = init_dev();
@@ -3572,6 +3591,15 @@ bs_destroy(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
+
+	/* Destroy the blobstore, should fail due to I/O error */
+	thresholds.general_threshold = 1;
+	dev_set_power_failure_thresholds(thresholds);
+	g_bserrno = -1;
+	spdk_bs_destroy(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EIO);
+	dev_reset_power_failure_event();
 
 	/* Destroy the blob store */
 	g_bserrno = -1;

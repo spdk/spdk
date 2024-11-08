@@ -5724,6 +5724,13 @@ bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	struct spdk_blob_store *bs = ctx->bs;
 
+	free(ctx);
+
+	if (bserrno != 0) {
+		bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
 	/*
 	 * We need to defer calling bs_call_cpl() until after
 	 * dev destruction, so tuck these away for later use.
@@ -5731,11 +5738,9 @@ bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	bs->unload_err = bserrno;
 	memcpy(&bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
 	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
-
 	bs_sequence_finish(seq, bserrno);
 
 	bs_free(bs);
-	free(ctx);
 }
 
 void
@@ -5788,21 +5793,26 @@ static void
 bs_unload_finish(struct spdk_bs_load_ctx *ctx, int bserrno)
 {
 	spdk_bs_sequence_t *seq = ctx->seq;
+	struct spdk_blob_store *bs = ctx->bs;
 
 	spdk_free(ctx->super);
+	free(ctx);
+
+	if (bserrno != 0) {
+		bs_sequence_finish(seq, bserrno);
+		return;
+	}
 
 	/*
 	 * We need to defer calling bs_call_cpl() until after
 	 * dev destruction, so tuck these away for later use.
 	 */
-	ctx->bs->unload_err = bserrno;
-	memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
+	bs->unload_err = bserrno;
+	memcpy(&bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
 	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
-
 	bs_sequence_finish(seq, bserrno);
 
-	bs_free(ctx->bs);
-	free(ctx);
+	bs_free(bs);
 }
 
 static void
