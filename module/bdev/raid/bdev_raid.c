@@ -655,7 +655,7 @@ bdev_io_unmap_limiter(struct raid_bdev_io *raid_io, bool unmap_done, bool new_un
     // Ensure the raid_bdev is operating at RAID0 level. This assert is for debugging purposes.
 	assert(raid_bdev != NULL);
     assert(raid_bdev->level == RAID0);
-	SPDK_NOTICELOG("limit unmap stat - unmap_inflight: %u , new_unmap: %d, unmap_done: %d, total:%d \n", raid_bdev->unmap_inflight, new_unmap, unmap_done, raid_bdev->total);
+	//SPDK_NOTICELOG("limit unmap stat - unmap_inflight: %u , new_unmap: %d, unmap_done: %d, total:%d \n", raid_bdev->unmap_inflight, new_unmap, unmap_done, raid_bdev->total);
     // Check if the limit on inflight unmap operations is reached, and the operation isn't complete yet.
     if ((raid_bdev->io_unmap_limit > 0 && raid_bdev->unmap_inflight > raid_bdev->io_unmap_limit && !unmap_done) ) {        
         if (new_unmap) {

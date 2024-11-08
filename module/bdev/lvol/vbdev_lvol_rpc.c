@@ -1122,7 +1122,7 @@ free_rpc_bdev_lvol_delete(struct rpc_bdev_lvol_delete *req)
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_lvol_delete, name), spdk_json_decode_string},
-	{"async", offsetof(struct rpc_bdev_lvol_delete, name), spdk_json_decode_bool, true},
+	{"async", offsetof(struct rpc_bdev_lvol_delete, async), spdk_json_decode_bool, true},
 };
 
 static void
@@ -1156,6 +1156,7 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 	struct spdk_uuid uuid;
 	char *lvs_name, *lvol_name;
 
+		SPDK_ERRLOG("Starting the rpc_bdev_lvol_delete\n");
 	if (spdk_json_decode_object(params, rpc_bdev_lvol_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_lvol_delete_decoders),
 				    &req)) {
@@ -1165,6 +1166,7 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+		SPDK_ERRLOG("1 Starting the rpc_bdev_lvol_delete\n");
 	/* lvol is not degraded, get lvol via bdev name or alias */
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev != NULL) {
@@ -1173,6 +1175,7 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 			goto done;
 		}
 	}
+		SPDK_ERRLOG("2 Starting the rpc_bdev_lvol_delete\n");
 
 	/* lvol is degraded, get lvol via UUID */
 	if (spdk_uuid_parse(&uuid, req.name) == 0) {
@@ -1181,6 +1184,7 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 			goto done;
 		}
 	}
+		SPDK_ERRLOG("3 Starting the rpc_bdev_lvol_delete\n");
 
 	/* lvol is degraded, get lvol via lvs_name/lvol_name */
 	lvol_name = strchr(req.name, '/');
@@ -1196,10 +1200,10 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 
 	if(req.async == false)
 	{
-		printf("Sangram: asyn is set to false.\n");
+		SPDK_ERRLOG("Sangram: asyn is set to false.\n");
 	} else
 	{
-		printf("Sangram: asyn is set to true.\n");
+		SPDK_ERRLOG("Sangram: asyn is set to true.\n");
 	}
 	/* Could not find lvol, degraded or not. */
 	spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
@@ -1209,6 +1213,7 @@ done:
 	vbdev_lvol_destroy(lvol, rpc_bdev_lvol_delete_cb, request, req.async);
 
 cleanup:
+		SPDK_ERRLOG("4 Starting the rpc_bdev_lvol_delete\n");
 	free_rpc_bdev_lvol_delete(&req);
 }
 

@@ -612,12 +612,12 @@ bdev_lvol_async_delete_cb(void *cb_arg, int lvolerrno)
 		goto invalid;
 	}
 
-	printf("Sangram: lvol deleted: ");
+	SPDK_ERRLOG("Sangram: lvol deleted: \n");
 	SPDK_NOTICELOG("lvol deleted\n");
 	return;
 
 invalid:
-	printf("Sangram: Cannot delete lvol");
+	SPDK_ERRLOG("Sangram: Cannot delete lvol\n");
 	SPDK_ERRLOG("Cannot delete lvol\n");
 }
 
@@ -637,13 +637,13 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 	}
 
 	if(ctx->is_async == false) {
-		printf("Sangram: Non async call");
+		SPDK_ERRLOG("Sangram: Non async call");
 		spdk_lvol_destroy(lvol, ctx->cb_fn, ctx->cb_arg);
 	}
 	else {
 		// Sangram: Return the call and let the deletion of lvol continue.
 		// Update the callback here.
-		printf("Sangram: async call");
+		SPDK_ERRLOG("Sangram: async call\n");
 		spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, ctx->cb_arg);
 		ctx->cb_fn(ctx->cb_arg, 0);
 	}
