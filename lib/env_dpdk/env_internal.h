@@ -31,7 +31,9 @@ int pci_env_init(void);
 void pci_env_reinit(void);
 void pci_env_fini(void);
 int mem_map_init(bool legacy_mem);
+void mem_map_fini(void);
 int vtophys_init(void);
+void vtophys_fini(void);
 
 int vtophys_iommu_map_dma_bar(uint64_t vaddr, uint64_t iova, uint64_t size);
 int vtophys_iommu_unmap_dma_bar(uint64_t vaddr);

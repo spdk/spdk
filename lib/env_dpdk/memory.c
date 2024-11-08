@@ -796,6 +796,13 @@ err_free_reg_map:
 	return rc;
 }
 
+void
+mem_map_fini(void)
+{
+	mem_map_mem_event_callback_unregister();
+	spdk_mem_map_free(&g_mem_reg_map);
+}
+
 bool
 spdk_iommu_is_enabled(void)
 {
@@ -1605,6 +1612,14 @@ vtophys_init(void)
 		}
 	}
 	return 0;
+}
+
+void
+vtophys_fini(void)
+{
+	spdk_mem_map_free(&g_vtophys_map);
+	spdk_mem_map_free(&g_numa_map);
+	spdk_mem_map_free(&g_phys_ref_map);
 }
 
 uint64_t
