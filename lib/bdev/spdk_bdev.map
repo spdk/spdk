@@ -192,6 +192,7 @@
 	spdk_bdev_unquiesce;
 	spdk_bdev_quiesce_range;
 	spdk_bdev_unquiesce_range;
+	spdk_bdev_io_hide_metadata;
 
 	# Public functions in bdev_zone.h
 	spdk_bdev_get_zone_size;

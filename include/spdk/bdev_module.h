@@ -1411,6 +1411,15 @@ struct spdk_io_channel *spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io
 uint64_t spdk_bdev_io_get_submit_tsc(struct spdk_bdev_io *bdev_io);
 
 /**
+ * Query if metadata is hidden from the bdev I/O.
+ *
+ * \param bdev_io The bdev I/O to query.
+ *
+ * \return true if metadata is hidden from the bdev I/O, or false otherwise.
+ */
+bool spdk_bdev_io_hide_metadata(struct spdk_bdev_io *bdev_io);
+
+/**
  * Resize for a bdev.
  *
  * Change number of blocks for provided block device.
