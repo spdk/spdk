@@ -2830,6 +2830,52 @@ bs_load_after_failed_grow(void)
 }
 
 static void
+bs_load_error(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts opts;
+	struct spdk_power_failure_thresholds thresholds = {};
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Unload the blob store */
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Load fails with I/O error */
+	thresholds.general_threshold = 2;
+	dev_set_power_failure_thresholds(thresholds);
+	g_bserrno = -1;
+	dev = init_dev();
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EIO);
+	CU_ASSERT(g_bs == NULL);
+	dev_reset_power_failure_event();
+
+	/* Load fails with NOMEM error */
+	g_bserrno = -1;
+	dev = init_dev();
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	MOCK_SET(spdk_zmalloc, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -ENOMEM);
+	CU_ASSERT(g_bs == NULL);
+	MOCK_CLEAR(spdk_zmalloc);
+}
+
+static void
 bs_type(void)
 {
 	struct spdk_blob_store *bs;
@@ -10143,6 +10189,7 @@ main(int argc, char **argv)
 		CU_ADD_TEST(suite_bs, bs_load_pending_removal);
 		CU_ADD_TEST(suite, bs_load_custom_cluster_size);
 		CU_ADD_TEST(suite, bs_load_after_failed_grow);
+		CU_ADD_TEST(suite, bs_load_error);
 		CU_ADD_TEST(suite_bs, bs_unload);
 		CU_ADD_TEST(suite, bs_cluster_sz);
 		CU_ADD_TEST(suite_bs, bs_usable_clusters);

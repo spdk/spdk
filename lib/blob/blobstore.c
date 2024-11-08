@@ -4006,6 +4006,7 @@ bs_load_ctx_fail(struct spdk_bs_load_ctx *ctx, int bserrno)
 {
 	assert(bserrno != 0);
 
+	spdk_free(ctx->mask);
 	spdk_free(ctx->super);
 	bs_sequence_finish(ctx->seq, bserrno);
 	bs_free(ctx->bs);
@@ -4301,7 +4302,6 @@ bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 	ctx->iter_cb_fn = NULL;
 
 	spdk_free(ctx->super);
-	spdk_free(ctx->mask);
 	bs_sequence_finish(ctx->seq, bserrno);
 	free(ctx);
 }
@@ -4338,12 +4338,13 @@ bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_blobids, ctx->mask->length);
 	if (rc < 0) {
-		spdk_free(ctx->mask);
 		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
 
 	spdk_bit_array_load_mask(ctx->bs->used_blobids, ctx->mask->mask);
+	spdk_free(ctx->mask);
+
 	bs_load_complete(ctx);
 }
 
@@ -4428,7 +4429,6 @@ bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->mask->length);
 	if (rc < 0) {
-		spdk_free(ctx->mask);
 		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
@@ -4678,6 +4678,9 @@ static void
 bs_load_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	spdk_free(ctx->mask);
+	ctx->mask = NULL;
 
 	if (bserrno != 0) {
 		bs_load_ctx_fail(ctx, bserrno);
