@@ -1426,8 +1426,8 @@ rpc_bdev_lvol_get_lvol_delete_status(struct spdk_jsonrpc_request *request, const
 	}
 
 	/* Could not find lvol, degraded or not. */
-	spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-	goto cleanup;
+	//spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+	//goto cleanup;
 
 
 	done:
