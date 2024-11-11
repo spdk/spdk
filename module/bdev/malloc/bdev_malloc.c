@@ -37,7 +37,8 @@ struct malloc_channel {
 };
 
 static int
-malloc_verify_pi(struct spdk_bdev_io *bdev_io)
+_malloc_verify_pi(struct spdk_bdev_io *bdev_io, struct iovec *iovs, int iovcnt,
+		  void *md_buf)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_dif_ctx dif_ctx;
@@ -63,14 +64,14 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 	}
 
 	if (spdk_bdev_is_md_interleaved(bdev)) {
-		rc = spdk_dif_verify(bdev_io->u.bdev.iovs,
-				     bdev_io->u.bdev.iovcnt,
+		rc = spdk_dif_verify(iovs,
+				     iovcnt,
 				     bdev_io->u.bdev.num_blocks,
 				     &dif_ctx,
 				     &err_blk);
 	} else {
 		struct iovec md_iov = {
-			.iov_base	= bdev_io->u.bdev.md_buf,
+			.iov_base	= md_buf,
 			.iov_len	= bdev_io->u.bdev.num_blocks * bdev->md_len,
 		};
 
@@ -78,8 +79,8 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 			return 0;
 		}
 
-		rc = spdk_dix_verify(bdev_io->u.bdev.iovs,
-				     bdev_io->u.bdev.iovcnt,
+		rc = spdk_dix_verify(iovs,
+				     iovcnt,
 				     &md_iov,
 				     bdev_io->u.bdev.num_blocks,
 				     &dif_ctx,
@@ -98,6 +99,15 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 	}
 
 	return rc;
+}
+
+static int
+malloc_verify_pi(struct spdk_bdev_io *bdev_io)
+{
+	return _malloc_verify_pi(bdev_io,
+				 bdev_io->u.bdev.iovs,
+				 bdev_io->u.bdev.iovcnt,
+				 bdev_io->u.bdev.md_buf);
 }
 
 static int
