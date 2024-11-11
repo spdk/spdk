@@ -8984,6 +8984,7 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 		return;
 	}
 	ctx->bs = blob->bs;
+	assert(extent != 0);
 	ctx->extent = extent;
 	ctx->page = page;
 
