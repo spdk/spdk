@@ -1435,6 +1435,10 @@ rpc_bdev_lvol_get_lvol_delete_status(struct spdk_jsonrpc_request *request, const
 		SPDK_ERRLOG("Lvol not available means this lvol was deleted\n");
 		spdk_jsonrpc_send_bool_response(request, true);
 	}
+	else if (lvol->previous_delete_action_error != 0 ) {
+		SPDK_ERRLOG("Error deleteing the lvol\n");
+		spdk_jsonrpc_send_bool_response(request, false);
+	}
 	else if (lvol->action_in_progress == true) {
 		SPDK_ERRLOG("Cannot open lvol - operations on lvol pending\n");
 		spdk_jsonrpc_send_bool_response(request, false);

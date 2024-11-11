@@ -606,9 +606,12 @@ vbdev_lvol_unregister(void *ctx)
 static void
 bdev_lvol_async_delete_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_jsonrpc_request *request = cb_arg;
+	struct vbdev_lvol_destroy_ctx *ctx = cb_arg;
+	struct spdk_lvol *lvol = ctx->lvol;
 
 	if (lvolerrno != 0) {
+		// Set the previous error. This will be used to check is the asyn delete lvol request has failed.
+		lvol->previous_delete_action_error = lvolerrno;
 		goto invalid;
 	}
 
@@ -644,7 +647,7 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 		// Sangram: Return the call and let the deletion of lvol continue.
 		// Update the callback here.
 		SPDK_ERRLOG("Sangram: async call\n");
-		spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, ctx->cb_arg);
+		spdk_lvol_destroy(lvol, bdev_lvol_async_delete_cb, ctx);
 		ctx->cb_fn(ctx->cb_arg, 0);
 	}
 	free(ctx);
@@ -696,6 +699,14 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 {
 	struct lvol_store_bdev *lvs_bdev;
 
+	if (lvol->previous_delete_action_error != 0 ) {
+		SPDK_WARNLOG("Previous error occured deleting the lvol, attempting to delete the lvol again.");
+		lvol->previous_delete_action_error = 0;
+	}
+
+	if (lvol->action_in_progress == true) {
+		cb_fn(cb_arg, -EPERM);
+	}
 	/*
 	 * During destruction of an lvolstore, _vbdev_lvs_unload() iterates through lvols until they
 	 * are all deleted. There may be some IO required

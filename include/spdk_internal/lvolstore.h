@@ -120,6 +120,7 @@ struct spdk_lvol {
 	struct spdk_bdev		*bdev;
 	int				ref_count;
 	bool				action_in_progress;
+	int					previous_delete_action_error;
 	enum blob_clear_method		clear_method;
 	TAILQ_ENTRY(spdk_lvol)		link;
 	struct spdk_lvs_degraded_lvol_set *degraded_set;
