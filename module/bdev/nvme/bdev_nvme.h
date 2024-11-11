@@ -75,10 +75,10 @@ struct nvme_io_path;
 struct nvme_ctrlr_channel_iter;
 struct nvme_bdev_channel_iter;
 
-struct nvme_path_id {
+struct spdk_nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_nvme_host_id		hostid;
-	TAILQ_ENTRY(nvme_path_id)		link;
+	TAILQ_ENTRY(spdk_nvme_path_id)		link;
 	uint64_t				last_failed_tsc;
 };
 
@@ -92,7 +92,7 @@ struct nvme_ctrlr {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr			*ctrlr;
-	struct nvme_path_id			*active_path_id;
+	struct spdk_nvme_path_id		*active_path_id;
 	int					ref;
 
 	uint32_t				resetting : 1;
@@ -133,7 +133,7 @@ struct nvme_ctrlr {
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
 
-	TAILQ_HEAD(nvme_paths, nvme_path_id)	trids;
+	TAILQ_HEAD(nvme_paths, spdk_nvme_path_id)	trids;
 
 	uint32_t				max_ana_log_page_size;
 	struct spdk_nvme_ana_page		*ana_log_page;
@@ -308,24 +308,6 @@ int bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhc
 		       bdev_nvme_set_keys_cb cb_fn, void *cb_ctx);
 
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
-
-typedef void (*bdev_nvme_delete_done_fn)(void *ctx, int rc);
-
-/**
- * Delete NVMe controller with all bdevs on top of it, or delete the specified path
- * if there is any alternative path. Requires to pass name of NVMe controller.
- *
- * \param name NVMe controller name
- * \param path_id The specified path to remove (optional)
- * \param delete_done Callback function on delete complete (optional)
- * \param delete_done_ctx Context passed to callback (optional)
- * \return zero on success,
- *		-EINVAL on wrong parameters or
- *		-ENODEV if controller is not found or
- *		-ENOMEM on no memory
- */
-int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id,
-		     bdev_nvme_delete_done_fn delete_done, void *delete_done_ctx);
 
 enum nvme_ctrlr_op {
 	NVME_CTRLR_OP_RESET = 1,

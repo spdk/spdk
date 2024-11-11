@@ -19,6 +19,8 @@ If multipathing shall be enabled for nvme bdev, `bdev_opts.multipath` shall be s
 Added public APIs `spdk_bdev_nvme_get_opts` and `spdk_bdev_nvme_set_opts` to get default bdev nvme
 options and set them respectively.
 
+Added public API `spdk_bdev_nvme_delete` to delete the specified NVMe controller or one of its paths.
+
 ### env
 
 Added 3 APIs to handle multiple interrupts for PCI device `spdk_pci_device_enable_interrupts()`,

@@ -758,7 +758,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_detach_controller req = {NULL};
-	struct nvme_path_id path = {};
+	struct spdk_nvme_path_id path = {};
 	size_t len, maxlen;
 	int rc = 0;
 
@@ -854,7 +854,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 		snprintf(path.hostid.hostsvcid, maxlen, "%s", req.hostsvcid);
 	}
 
-	rc = bdev_nvme_delete(req.name, &path, rpc_bdev_nvme_detach_controller_done, request);
+	rc = spdk_bdev_nvme_delete(req.name, &path, rpc_bdev_nvme_detach_controller_done, request);
 
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

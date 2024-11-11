@@ -617,7 +617,7 @@ nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 static void
 _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
-	struct nvme_path_id *path_id, *tmp_path;
+	struct spdk_nvme_path_id *path_id, *tmp_path;
 	struct nvme_ns *ns, *tmp_ns;
 
 	free(nvme_ctrlr->copied_ana_desc);
@@ -2032,7 +2032,7 @@ bdev_nvme_complete_pending_resets(struct nvme_ctrlr *nvme_ctrlr, bool success)
 static bool
 bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove, bool start)
 {
-	struct nvme_path_id *path_id, *next_path;
+	struct spdk_nvme_path_id *path_id, *next_path;
 	int rc __attribute__((unused));
 
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
@@ -3952,7 +3952,7 @@ nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrl
 	struct spdk_nvme_transport_id *trid;
 	const struct spdk_nvme_ctrlr_opts *opts;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	struct nvme_path_id *path_id;
+	struct spdk_nvme_path_id *path_id;
 	int32_t numa_id;
 
 	spdk_json_write_object_begin(w);
@@ -5871,7 +5871,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		  struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
-	struct nvme_path_id *path_id;
+	struct spdk_nvme_path_id *path_id;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	struct spdk_event_handler_opts opts = {
 		.opts_size = SPDK_SIZEOF(&opts, fd_type),
@@ -6445,7 +6445,7 @@ bdev_nvme_check_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 			       struct spdk_nvme_ctrlr *new_ctrlr,
 			       struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_path_id *tmp_trid;
+	struct spdk_nvme_path_id *tmp_trid;
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		NVME_CTRLR_ERRLOG(nvme_ctrlr, "PCIe failover is not supported.\n");
@@ -6508,7 +6508,7 @@ static int
 _bdev_nvme_add_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 			      struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_path_id *active_id, *new_trid, *tmp_trid;
+	struct spdk_nvme_path_id *active_id, *new_trid, *tmp_trid;
 
 	new_trid = calloc(1, sizeof(*new_trid));
 	if (new_trid == NULL) {
@@ -6838,9 +6838,9 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 struct bdev_nvme_delete_ctx {
 	char                        *name;
-	struct nvme_path_id         path_id;
-	bdev_nvme_delete_done_fn    delete_done;
-	void                        *delete_done_ctx;
+	struct spdk_nvme_path_id    path_id;
+	spdk_bdev_nvme_delete_cb    delete_cb;
+	void                        *delete_cb_ctx;
 	uint64_t                    timeout_ticks;
 	struct spdk_poller          *poller;
 };
@@ -6855,7 +6855,7 @@ free_bdev_nvme_delete_ctx(struct bdev_nvme_delete_ctx *ctx)
 }
 
 static bool
-nvme_path_id_compare(struct nvme_path_id *p, const struct nvme_path_id *path_id)
+nvme_path_id_compare(struct spdk_nvme_path_id *p, const struct spdk_nvme_path_id *path_id)
 {
 	if (path_id->trid.trtype != 0) {
 		if (path_id->trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
@@ -6909,11 +6909,11 @@ nvme_path_id_compare(struct nvme_path_id *p, const struct nvme_path_id *path_id)
 }
 
 static bool
-nvme_path_id_exists(const char *name, const struct nvme_path_id *path_id)
+nvme_path_id_exists(const char *name, const struct spdk_nvme_path_id *path_id)
 {
 	struct nvme_bdev_ctrlr  *nbdev_ctrlr;
 	struct nvme_ctrlr       *ctrlr;
-	struct nvme_path_id     *p;
+	struct spdk_nvme_path_id     *p;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
@@ -6955,16 +6955,16 @@ bdev_nvme_delete_complete_poll(void *arg)
 
 	spdk_poller_unregister(&ctx->poller);
 
-	ctx->delete_done(ctx->delete_done_ctx, rc);
+	ctx->delete_cb(ctx->delete_cb_ctx, rc);
 	free_bdev_nvme_delete_ctx(ctx);
 
 	return SPDK_POLLER_BUSY;
 }
 
 static int
-_bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path_id)
+_bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct spdk_nvme_path_id *path_id)
 {
-	struct nvme_path_id	*p, *t;
+	struct spdk_nvme_path_id	*p, *t;
 	spdk_msg_fn		msg_fn;
 	int			rc = -ENXIO;
 
@@ -7017,8 +7017,8 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 }
 
 int
-bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id,
-		 bdev_nvme_delete_done_fn delete_done, void *delete_done_ctx)
+spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path_id,
+		      spdk_bdev_nvme_delete_cb delete_cb, void *cb_ctx)
 {
 	struct nvme_bdev_ctrlr		*nbdev_ctrlr;
 	struct nvme_ctrlr		*nvme_ctrlr, *tmp_nvme_ctrlr;
@@ -7058,7 +7058,7 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id,
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	if (rc != 0 || delete_done == NULL) {
+	if (rc != 0 || delete_cb == NULL) {
 		goto exit;
 	}
 
@@ -7076,8 +7076,8 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id,
 		goto exit;
 	}
 
-	ctx->delete_done = delete_done;
-	ctx->delete_done_ctx = delete_done_ctx;
+	ctx->delete_cb = delete_cb;
+	ctx->delete_cb_ctx = cb_ctx;
 	ctx->path_id = *path_id;
 	ctx->timeout_ticks = spdk_get_ticks() + 10 * spdk_get_ticks_hz();
 	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_delete_complete_poll, ctx, 1000);
@@ -7239,11 +7239,11 @@ _stop_discovery(void *_ctx)
 
 	while (!TAILQ_EMPTY(&ctx->nvm_entry_ctxs)) {
 		struct discovery_entry_ctx *entry_ctx;
-		struct nvme_path_id path = {};
+		struct spdk_nvme_path_id path = {};
 
 		entry_ctx = TAILQ_FIRST(&ctx->nvm_entry_ctxs);
 		path.trid = entry_ctx->trid;
-		bdev_nvme_delete(entry_ctx->name, &path, NULL, NULL);
+		spdk_bdev_nvme_delete(entry_ctx->name, &path, NULL, NULL);
 		TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
 		free(entry_ctx);
 	}
@@ -7278,7 +7278,7 @@ static void
 remove_discovery_entry(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct discovery_ctx *d_ctx;
-	struct nvme_path_id *path_id;
+	struct spdk_nvme_path_id *path_id;
 	struct spdk_nvme_transport_id trid = {};
 	struct discovery_entry_ctx *entry_ctx, *tmp;
 
@@ -7327,13 +7327,13 @@ discovery_remove_controllers(struct discovery_ctx *ctx)
 			}
 		}
 		if (!found) {
-			struct nvme_path_id path = {};
+			struct spdk_nvme_path_id path = {};
 
 			DISCOVERY_INFOLOG(ctx, "NVM %s:%s:%s not found\n",
 					  old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
 
 			path.trid = entry_ctx->trid;
-			bdev_nvme_delete(entry_ctx->name, &path, NULL, NULL);
+			spdk_bdev_nvme_delete(entry_ctx->name, &path, NULL, NULL);
 			TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
 			free(entry_ctx);
 		}
@@ -8987,7 +8987,7 @@ nvme_ctrlr_cuse_config_json(struct spdk_json_write_ctx *w,
 static void
 nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		       struct nvme_ctrlr *nvme_ctrlr,
-		       struct nvme_path_id *path_id)
+		       struct spdk_nvme_path_id *path_id)
 {
 	struct spdk_nvme_transport_id	*trid;
 	const struct spdk_nvme_ctrlr_opts *opts;
@@ -9067,7 +9067,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr;
 	struct discovery_ctx	*ctx;
-	struct nvme_path_id	*path_id;
+	struct spdk_nvme_path_id	*path_id;
 
 	bdev_nvme_opts_config_json(w);
 
