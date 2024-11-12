@@ -1249,6 +1249,29 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 	uint32_t blocklen = bdev_io->bdev->blocklen;
 	struct spdk_bdev_io_stat *stat;
 	uint64_t tsc_diff;
+     
+        struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		_cnt[nbdev->_seq][0]--;
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+                _cnt[nbdev->_seq][1]--;
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		_cnt[nbdev->_seq][2]--;
+		break;
+	default:
+		break;
+	}
+
+       //if((spdk_get_ticks()  - _ptout) > 8000000000)
+	//{	
+         //  _ptout=spdk_get_ticks();
+         //   for (int i=0;i<_seq;i++)
+          //        SPDK_ERRLOG("CNT IN for %d - %I64u %I64u %I64u .\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
+	//}
 
 	if (bio->io_path->stat == NULL) {
 		return;
