@@ -68,7 +68,9 @@ DPDK_LIBS = eal ring mempool pci
 DPDK_LIBS += log kvargs telemetry
 # Governor required libs
 DPDK_LIBS += power timer ethdev net
-
+# rte_power drivers
+DPDK_DRIVERS += power/acpi power/amd_pstate power/cppc power/intel_pstate power/intel_uncore \
+		power/kvm_vm
 # common crypto/compress drivers
 ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_CRYPTO)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat

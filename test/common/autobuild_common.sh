@@ -97,8 +97,9 @@ _build_native_dpdk() {
 	# the drivers we use
 	# net/i40e driver is not really needed by us, but it's built as a workaround
 	# for DPDK issue: https://bugs.dpdk.org/show_bug.cgi?id=576
-	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring" "net/i40e" "net/i40e/base")
-
+	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring" "net/i40e" "net/i40e/base"
+		"power/acpi" "power/amd_pstate" "power/cppc" "power/intel_pstate"
+		"power/intel_uncore" "power/kvm_vm")
 	local mlx5_libs_added="n"
 	if [[ "$SPDK_TEST_CRYPTO" -eq 1 || "$SPDK_TEST_SMA" -eq 1 ]]; then
 		intel_ipsec_mb_ver=v0.54

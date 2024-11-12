@@ -11,8 +11,13 @@
 
 #include "spdk_internal/event.h"
 
-#include <rte_power.h>
+#include <rte_common.h>
 #include <rte_version.h>
+#if RTE_VERSION >= RTE_VERSION_NUM(24, 11, 0, 0)
+#include <rte_power_cpufreq.h>
+#else
+#include <rte_power.h>
+#endif
 
 static uint32_t
 _get_core_avail_freqs(uint32_t lcore_id, uint32_t *freqs, uint32_t num)

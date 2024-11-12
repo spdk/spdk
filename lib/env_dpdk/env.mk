@@ -48,6 +48,11 @@ DPDK_POWER=y
 # Since DPDK 21.02 rte_power depends on rte_ethdev that
 # in turn depends on rte_net.
 DPDK_LIB_LIST += rte_power rte_ethdev rte_net
+# rte_power drivers, available since 24.11.0
+ifneq ($(wildcard $(DPDK_LIB_DIR)/librte_power_*),)
+DPDK_LIB_LIST += rte_power_acpi rte_power_amd_pstate rte_power_cppc rte_power_intel_pstate \
+		 rte_power_intel_uncore rte_power_kvm_vm
+endif
 endif
 endif
 
