@@ -72,10 +72,18 @@ prep_nvme() {
 	# Make sure io_poll gets enabled
 	modprobe -r nvme
 	modprobe nvme poll_queues=$(nproc)
+
+	# As a last touch update xnvme_filename[@] with a device that we consider "free"
+	local nvme
+	for nvme in /dev/nvme*n!(*p*); do
+		block_in_use "$nvme" && continue
+		xnvme_filename["libaio"]=$nvme
+		xnvme_filename["io_uring"]=$nvme
+		xnvme_filename["io_uring_cmd"]=${nvme/nvme/ng}
+		return 0
+	done
+
+	return 1
 }
 
 prep_nvme
-
-for dev in "${xnvme_filename[@]}"; do
-	[[ -e $dev ]]
-done
