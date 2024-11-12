@@ -79,6 +79,13 @@ struct spdk_bs_cpl {
 typedef void (*spdk_bs_sequence_cpl)(spdk_bs_sequence_t *sequence,
 				     void *cb_arg, int bserrno);
 
+struct limit {
+	bool 			is_unmap;
+	uint64_t			lba;
+	uint64_t			lba_count;
+	TAILQ_ENTRY(limit) entries;
+};
+
 /* A generic request set. Can be a sequence, batch or a user_op. */
 struct spdk_bs_request_set {
 	struct spdk_bs_cpl      cpl;
@@ -111,6 +118,9 @@ struct spdk_bs_request_set {
 			uint32_t		batch_closed;
 			spdk_bs_sequence_cpl	cb_fn;
 			void			*cb_arg;
+			/* unmap io number inflight */
+			bool			is_unmap;		
+			TAILQ_HEAD(unmap_io_queue, limit) unmap_queue;
 		} batch;
 
 		struct spdk_bs_user_op_args {

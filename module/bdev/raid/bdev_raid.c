@@ -17,6 +17,7 @@
 #define RAID_BDEV_PROCESS_MAX_QD	16
 
 #define RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT 1024
+#define RAID_BDEV_PROCESS_MAX_BANDWIDTH_MB_SEC_DEFAULT	0
 
 static bool g_shutdown_started = false;
 
@@ -51,6 +52,15 @@ enum raid_bdev_process_state {
 	RAID_PROCESS_STATE_STOPPED,
 };
 
+struct raid_process_qos {
+	bool enable_qos;
+	uint64_t last_tsc;
+	double bytes_per_tsc;
+	double bytes_available;
+	double bytes_max;
+	struct spdk_poller *process_continue_poller;
+};
+
 struct raid_bdev_process {
 	struct raid_bdev		*raid_bdev;
 	enum raid_process_type		type;
@@ -67,6 +77,7 @@ struct raid_bdev_process {
 	struct raid_base_bdev_info	*target;
 	int				status;
 	TAILQ_HEAD(, raid_process_finish_action) finish_actions;
+	struct raid_process_qos		qos;
 };
 
 struct raid_process_finish_action {
@@ -77,6 +88,7 @@ struct raid_process_finish_action {
 
 static struct spdk_raid_bdev_opts g_opts = {
 	.process_window_size_kb = RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT,
+	.process_max_bandwidth_mb_sec = RAID_BDEV_PROCESS_MAX_BANDWIDTH_MB_SEC_DEFAULT,
 };
 
 void
@@ -418,6 +430,7 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(base_info->configure_cb == NULL);
 
 	free(base_info->name);
 	base_info->name = NULL;
@@ -425,6 +438,9 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 		spdk_uuid_set_null(&base_info->uuid);
 	}
 	base_info->is_failed = false;
+
+	/* clear `data_offset` to allow it to be recalculated during configuration */
+	base_info->data_offset = 0;
 
 	if (base_info->desc == NULL) {
 		return;
@@ -638,12 +654,11 @@ bdev_io_unmap_limiter(struct raid_bdev_io *raid_io, bool unmap_done, bool new_un
 
     // Ensure the raid_bdev is operating at RAID0 level. This assert is for debugging purposes.
 	assert(raid_bdev != NULL);
-    assert(raid_bdev->level == RAID0);
-
+    assert(raid_bdev->level == RAID0);	
     // Check if the limit on inflight unmap operations is reached, and the operation isn't complete yet.
-    if (raid_bdev->io_unmap_limit > 0 && raid_bdev->unmap_inflight > raid_bdev->io_unmap_limit && !unmap_done) {        
+    if ((raid_bdev->io_unmap_limit > 0 && raid_bdev->unmap_inflight > raid_bdev->io_unmap_limit && !unmap_done) ) {        
         if (new_unmap) {
-            spdk_spin_lock(&raid_bdev->used_lock);
+            spdk_spin_lock(&raid_bdev->used_lock);			
             // Add the current raid_io to the unmap queue if increase is true.
             TAILQ_INSERT_TAIL(&raid_bdev->unmap_queue, raid_io, entries);
             spdk_spin_unlock(&raid_bdev->used_lock);
@@ -654,7 +669,7 @@ bdev_io_unmap_limiter(struct raid_bdev_io *raid_io, bool unmap_done, bool new_un
     // If new_unmap is true, increase the inflight counter and submit the request.
     if (new_unmap) {
 		bool direct_send = true;
-        spdk_spin_lock(&raid_bdev->used_lock);
+        spdk_spin_lock(&raid_bdev->used_lock);		
 		if (!TAILQ_EMPTY(&raid_bdev->unmap_queue)) {
 			TAILQ_INSERT_TAIL(&raid_bdev->unmap_queue, raid_io, entries);
 			queued_raid_io = TAILQ_FIRST(&raid_bdev->unmap_queue);
@@ -991,6 +1006,10 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
+
+	raid_io->iovs = bdev_io->u.bdev.iovs;
+	raid_io->iovcnt = bdev_io->u.bdev.iovcnt;
+	raid_io->md_buf = bdev_io->u.bdev.md_buf;
 
 	raid_bdev_submit_rw_request(raid_io);
 }
@@ -1492,7 +1511,19 @@ raid_bdev_process_to_str(enum raid_process_type value)
 static void
 raid_bdev_fini_start(void)
 {
+	struct raid_bdev *raid_bdev;
+	struct raid_base_bdev_info *base_info;
+
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_fini_start\n");
+
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+			RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+				raid_bdev_free_base_bdev_resource(base_info);
+			}
+		}
+	}
+
 	g_shutdown_started = true;
 }
 
@@ -1525,6 +1556,8 @@ raid_bdev_opts_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "process_window_size_kb", g_opts.process_window_size_kb);
+	spdk_json_write_named_uint32(w, "process_max_bandwidth_mb_sec",
+				     g_opts.process_max_bandwidth_mb_sec);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -1707,7 +1740,7 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		TAILQ_INIT(&raid_bdev->unmap_queue);
 		spdk_spin_init(&raid_bdev->used_lock);
 		raid_bdev->io_unmap_limit = io_unmap_limit;
-		raid_bdev->unmap_inflight = 0;		
+		raid_bdev->unmap_inflight = 0;
 	}
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
 
@@ -1846,7 +1879,7 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to register raid bdev '%s': %s\n",
 			    raid_bdev_gen->name, spdk_strerror(-rc));
-		goto err;
+		goto out;
 	}
 
 	/*
@@ -1863,19 +1896,25 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 		SPDK_ERRLOG("Failed to open raid bdev '%s': %s\n",
 			    raid_bdev_gen->name, spdk_strerror(-rc));
 		spdk_bdev_unregister(raid_bdev_gen, NULL, NULL);
-		goto err;
+		goto out;
 	}
 
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
 		      raid_bdev_gen->name, raid_bdev);
-	return;
-err:
-	if (raid_bdev->module->stop != NULL) {
-		raid_bdev->module->stop(raid_bdev);
+out:
+	if (rc != 0) {
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
+		spdk_io_device_unregister(raid_bdev, NULL);
+		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	}
-	spdk_io_device_unregister(raid_bdev, NULL);
-	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+
+	if (raid_bdev->configure_cb != NULL) {
+		raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, rc);
+		raid_bdev->configure_cb = NULL;
+	}
 }
 
 static void
@@ -1888,6 +1927,10 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
 			    raid_bdev->bdev.name, spdk_strerror(-status));
 		if (raid_bdev->module->stop != NULL) {
 			raid_bdev->module->stop(raid_bdev);
+		}
+		if (raid_bdev->configure_cb != NULL) {
+			raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, status);
+			raid_bdev->configure_cb = NULL;
 		}
 	}
 }
@@ -1904,7 +1947,7 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
  * non zero - failure
  */
 static int
-raid_bdev_configure(struct raid_bdev *raid_bdev)
+raid_bdev_configure(struct raid_bdev *raid_bdev, raid_bdev_configure_cb cb, void *cb_ctx)
 {
 	uint32_t data_block_size = spdk_bdev_get_data_block_size(&raid_bdev->bdev);
 	int rc;
@@ -1929,6 +1972,10 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		return rc;
 	}
 
+	assert(raid_bdev->configure_cb == NULL);
+	raid_bdev->configure_cb = cb;
+	raid_bdev->configure_cb_ctx = cb_ctx;
+
 	if (raid_bdev->superblock_enabled) {
 		if (raid_bdev->sb == NULL) {
 			rc = raid_bdev_alloc_superblock(raid_bdev, data_block_size);
@@ -1948,6 +1995,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		}
 
 		if (rc != 0) {
+			raid_bdev->configure_cb = NULL;
 			if (raid_bdev->module->stop != NULL) {
 				raid_bdev->module->stop(raid_bdev);
 			}
@@ -2441,7 +2489,7 @@ raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
 		for (i = 0; i < sb->base_bdevs_size; i++) {
 			struct raid_bdev_sb_base_bdev *sb_base_bdev = &sb->base_bdevs[i];
 
-			if (sb_base_bdev->state == RAID_SB_BASE_BDEV_CONFIGURED) {
+			if (sb_base_bdev->slot < raid_bdev->num_base_bdevs) {
 				base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
 				sb_base_bdev->data_size = base_info->data_size;
 			}
@@ -2560,6 +2608,7 @@ raid_bdev_process_finish_write_sb(void *ctx)
 			base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
 			if (base_info->is_configured) {
 				sb_base_bdev->state = RAID_SB_BASE_BDEV_CONFIGURED;
+				sb_base_bdev->data_offset = base_info->data_offset;
 				spdk_uuid_copy(&sb_base_bdev->uuid, &base_info->uuid);
 			}
 		}
@@ -2581,6 +2630,8 @@ _raid_bdev_process_finish_done(void *ctx)
 		finish_action->cb(finish_action->cb_ctx);
 		free(finish_action);
 	}
+
+	spdk_poller_unregister(&process->qos.process_continue_poller);
 
 	raid_bdev_process_free(process);
 
@@ -2915,11 +2966,64 @@ raid_bdev_process_window_range_locked(void *ctx, int status)
 	_raid_bdev_process_thread_run(process);
 }
 
+static bool
+raid_bdev_process_consume_token(struct raid_bdev_process *process)
+{
+	struct raid_bdev *raid_bdev = process->raid_bdev;
+	uint64_t now = spdk_get_ticks();
+
+	process->qos.bytes_available = spdk_min(process->qos.bytes_max,
+						process->qos.bytes_available +
+						(now - process->qos.last_tsc) * process->qos.bytes_per_tsc);
+	process->qos.last_tsc = now;
+	if (process->qos.bytes_available > 0.0) {
+		process->qos.bytes_available -= process->window_size * raid_bdev->bdev.blocklen;
+		return true;
+	}
+	return false;
+}
+
+static bool
+raid_bdev_process_lock_window_range(struct raid_bdev_process *process)
+{
+	struct raid_bdev *raid_bdev = process->raid_bdev;
+	int rc;
+
+	assert(process->window_range_locked == false);
+
+	if (process->qos.enable_qos) {
+		if (raid_bdev_process_consume_token(process)) {
+			spdk_poller_pause(process->qos.process_continue_poller);
+		} else {
+			spdk_poller_resume(process->qos.process_continue_poller);
+			return false;
+		}
+	}
+
+	rc = spdk_bdev_quiesce_range(&raid_bdev->bdev, &g_raid_if,
+				     process->window_offset, process->max_window_size,
+				     raid_bdev_process_window_range_locked, process);
+	if (rc != 0) {
+		raid_bdev_process_window_range_locked(process, rc);
+	}
+	return true;
+}
+
+static int
+raid_bdev_process_continue_poll(void *arg)
+{
+	struct raid_bdev_process *process = arg;
+
+	if (raid_bdev_process_lock_window_range(process)) {
+		return SPDK_POLLER_BUSY;
+	}
+	return SPDK_POLLER_IDLE;
+}
+
 static void
 raid_bdev_process_thread_run(struct raid_bdev_process *process)
 {
 	struct raid_bdev *raid_bdev = process->raid_bdev;
-	int rc;
 
 	assert(spdk_get_thread() == process->thread);
 	assert(process->window_remaining == 0);
@@ -2938,13 +3042,7 @@ raid_bdev_process_thread_run(struct raid_bdev_process *process)
 
 	process->max_window_size = spdk_min(raid_bdev->bdev.blockcnt - process->window_offset,
 					    process->max_window_size);
-
-	rc = spdk_bdev_quiesce_range(&raid_bdev->bdev, &g_raid_if,
-				     process->window_offset, process->max_window_size,
-				     raid_bdev_process_window_range_locked, process);
-	if (rc != 0) {
-		raid_bdev_process_window_range_locked(process, rc);
-	}
+	raid_bdev_process_lock_window_range(process);
 }
 
 static void
@@ -2965,6 +3063,12 @@ raid_bdev_process_thread_init(void *ctx)
 
 	process->raid_ch = spdk_io_channel_get_ctx(ch);
 	process->state = RAID_PROCESS_STATE_RUNNING;
+
+	if (process->qos.enable_qos) {
+		process->qos.process_continue_poller = SPDK_POLLER_REGISTER(raid_bdev_process_continue_poll,
+						       process, 0);
+		spdk_poller_pause(process->qos.process_continue_poller);
+	}
 
 	SPDK_NOTICELOG("Started %s on raid bdev %s\n",
 		       raid_bdev_process_to_str(process->type), raid_bdev->bdev.name);
@@ -3132,6 +3236,15 @@ raid_bdev_process_alloc(struct raid_bdev *raid_bdev, enum raid_process_type type
 	TAILQ_INIT(&process->requests);
 	TAILQ_INIT(&process->finish_actions);
 
+	if (g_opts.process_max_bandwidth_mb_sec != 0) {
+		process->qos.enable_qos = true;
+		process->qos.last_tsc = spdk_get_ticks();
+		process->qos.bytes_per_tsc = g_opts.process_max_bandwidth_mb_sec * 1024 * 1024.0 /
+					     spdk_get_ticks_hz();
+		process->qos.bytes_max = g_opts.process_max_bandwidth_mb_sec * 1024 * 1024.0 / SPDK_SEC_TO_MSEC;
+		process->qos.bytes_available = 0.0;
+	}
+
 	for (i = 0; i < RAID_BDEV_PROCESS_MAX_QD; i++) {
 		process_req = raid_bdev_process_alloc_request(process);
 		if (process_req == NULL) {
@@ -3182,6 +3295,7 @@ static void
 raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
+	raid_base_bdev_cb configure_cb;
 	int rc;
 
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational &&
@@ -3202,6 +3316,8 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 	assert(raid_bdev->num_base_bdevs_operational <= raid_bdev->num_base_bdevs);
 	assert(raid_bdev->num_base_bdevs_operational >= raid_bdev->min_base_bdevs_operational);
 
+	configure_cb = base_info->configure_cb;
+	base_info->configure_cb = NULL;
 	/*
 	 * Configure the raid bdev when the number of discovered base bdevs reaches the number
 	 * of base bdevs we know to be operational members of the array. Usually this is equal
@@ -3209,9 +3325,11 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 	 * degraded.
 	 */
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational) {
-		rc = raid_bdev_configure(raid_bdev);
+		rc = raid_bdev_configure(raid_bdev, configure_cb, base_info->configure_cb_ctx);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
+		} else {
+			configure_cb = NULL;
 		}
 	} else if (base_info->is_process_target) {
 		raid_bdev->num_base_bdevs_operational++;
@@ -3224,8 +3342,8 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 		rc = 0;
 	}
 
-	if (base_info->configure_cb != NULL) {
-		base_info->configure_cb(base_info->configure_cb_ctx, rc);
+	if (configure_cb != NULL) {
+		configure_cb(base_info->configure_cb_ctx, rc);
 	}
 }
 
@@ -3237,15 +3355,17 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 		void *ctx)
 {
 	struct raid_base_bdev_info *base_info = ctx;
+	raid_base_bdev_cb configure_cb = base_info->configure_cb;
 
 	switch (status) {
 	case 0:
 		/* valid superblock found */
+		base_info->configure_cb = NULL;
 		if (spdk_uuid_compare(&base_info->raid_bdev->bdev.uuid, &sb->uuid) == 0) {
 			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(base_info->desc);
 
 			raid_bdev_free_base_bdev_resource(base_info);
-			raid_bdev_examine_sb(sb, bdev, base_info->configure_cb, base_info->configure_cb_ctx);
+			raid_bdev_examine_sb(sb, bdev, configure_cb, base_info->configure_cb_ctx);
 			return;
 		}
 		SPDK_ERRLOG("Superblock of a different raid bdev found on bdev %s\n", base_info->name);
@@ -3262,8 +3382,9 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 		break;
 	}
 
-	if (base_info->configure_cb != NULL) {
-		base_info->configure_cb(base_info->configure_cb_ctx, status);
+	if (configure_cb != NULL) {
+		base_info->configure_cb = NULL;
+		configure_cb(base_info->configure_cb_ctx, status);
 	}
 }
 
@@ -3431,6 +3552,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		}
 	}
 
+	assert(base_info->configure_cb == NULL);
 	base_info->configure_cb = cb_fn;
 	base_info->configure_cb_ctx = cb_ctx;
 
@@ -3447,6 +3569,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 	}
 out:
 	if (rc != 0) {
+		base_info->configure_cb = NULL;
 		raid_bdev_free_base_bdev_resource(base_info);
 	}
 	return rc;
@@ -3627,7 +3750,7 @@ raid_bdev_examine_others(void *_ctx, int status)
 	struct raid_base_bdev_info *base_info;
 	char uuid_str[SPDK_UUID_STRING_LEN];
 
-	if (status != 0) {
+	if (status != 0 && status != -EEXIST) {
 		goto out;
 	}
 
@@ -3793,6 +3916,11 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		goto out;
 	}
 
+	if (base_info->is_configured) {
+		rc = -EEXIST;
+		goto out;
+	}
+
 	rc = raid_bdev_configure_base_bdev(base_info, true, cb_fn, cb_ctx);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
@@ -3888,6 +4016,18 @@ err:
 }
 
 static void
+raid_bdev_examine_done(void *ctx, int status)
+{
+	struct spdk_bdev *bdev = ctx;
+
+	if (status != 0) {
+		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
+			    bdev->name, spdk_strerror(-status));
+	}
+	spdk_bdev_module_examine_done(&g_raid_if);
+}
+
+static void
 raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock *sb, int status,
 		       void *ctx)
 {
@@ -3895,19 +4035,16 @@ raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock
 	case 0:
 		/* valid superblock found */
 		SPDK_DEBUGLOG(bdev_raid, "raid superblock found on bdev %s\n", bdev->name);
-		raid_bdev_examine_sb(sb, bdev, NULL, NULL);
-		break;
+		raid_bdev_examine_sb(sb, bdev, raid_bdev_examine_done, bdev);
+		return;
 	case -EINVAL:
 		/* no valid superblock, check if it can be claimed anyway */
 		raid_bdev_examine_no_sb(bdev);
-		break;
-	default:
-		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
-			    bdev->name, spdk_strerror(-status));
+		status = 0;
 		break;
 	}
 
-	spdk_bdev_module_examine_done(&g_raid_if);
+	raid_bdev_examine_done(bdev, status);
 }
 
 /*
@@ -3923,7 +4060,7 @@ raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock
 static void
 raid_bdev_examine(struct spdk_bdev *bdev)
 {
-	int rc;
+	int rc = 0;
 
 	if (raid_bdev_find_base_info_by_bdev(bdev) != NULL) {
 		goto done;
@@ -3936,14 +4073,12 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 
 	rc = raid_bdev_examine_load_sb(bdev->name, raid_bdev_examine_cont, NULL);
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
-			    bdev->name, spdk_strerror(-rc));
 		goto done;
 	}
 
 	return;
 done:
-	spdk_bdev_module_examine_done(&g_raid_if);
+	raid_bdev_examine_done(bdev, rc);
 }
 
 /* Log component for bdev raid bdev module */

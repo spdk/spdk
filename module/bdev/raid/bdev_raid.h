@@ -148,7 +148,6 @@ struct raid_bdev_io {
 	enum spdk_bdev_io_status	base_bdev_io_status;
 	/* This will be the raid_io completion status unless any base io's status is different. */
 	enum spdk_bdev_io_status	base_bdev_io_status_default;
-	TAILQ_ENTRY(raid_bdev_io) entries;
 
 	/* Private data for the raid module */
 	void				*module_private;
@@ -161,6 +160,8 @@ struct raid_bdev_io {
 		struct iovec		*iov;
 		struct iovec		iov_copy;
 	} split;
+
+	TAILQ_ENTRY(raid_bdev_io) entries;
 };
 
 struct raid_bdev_process_request {
@@ -177,6 +178,8 @@ struct raid_bdev_process_request {
 	struct raid_bdev_io raid_io;
 	TAILQ_ENTRY(raid_bdev_process_request) link;
 };
+
+typedef void (*raid_bdev_configure_cb)(void *cb_ctx, int rc);
 
 /*
  * raid_bdev is the single entity structure which contains SPDK block device
@@ -202,7 +205,7 @@ struct raid_bdev {
 	uint32_t			strip_size;
 
 	/* unmap io number inflight */
-	uint32_t			unmap_inflight;
+	uint32_t			unmap_inflight;	
 	uint32_t 			io_unmap_limit;	
 	struct spdk_spinlock		used_lock;
 	TAILQ_HEAD(unmap_io_queue, raid_bdev_io) unmap_queue;
@@ -253,6 +256,10 @@ struct raid_bdev {
 
 	/* Raid bdev background process, e.g. rebuild */
 	struct raid_bdev_process	*process;
+
+	/* Callback and context for raid_bdev configuration */
+	raid_bdev_configure_cb		configure_cb;
+	void				*configure_cb_ctx;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
@@ -574,6 +581,8 @@ int raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk
 struct spdk_raid_bdev_opts {
 	/* Size of the background process window in KiB */
 	uint32_t process_window_size_kb;
+	/* Maximum bandwidth in MiB to process per second */
+	uint32_t process_max_bandwidth_mb_sec;
 };
 
 void raid_bdev_get_opts(struct spdk_raid_bdev_opts *opts);

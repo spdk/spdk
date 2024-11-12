@@ -27,7 +27,7 @@ static void vbdev_lvs_examine_config(struct spdk_bdev *bdev);
 static void vbdev_lvs_examine_disk(struct spdk_bdev *bdev);
 static bool g_shutdown_started = false;
 
-struct spdk_bdev_module g_lvol_if = {
+static struct spdk_bdev_module g_lvol_if = {
 	.name = "lvol",
 	.module_init = vbdev_lvs_init,
 	.fini_start = vbdev_lvs_fini_start,
@@ -898,7 +898,6 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	uint64_t start_page, num_pages;
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
 	struct spdk_blob *blob = lvol->blob;
-
 	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
 
 	start_page = bdev_io->u.bdev.offset_blocks;
@@ -1197,6 +1196,7 @@ _vbdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	vbdev_lvol_set_io_priority_class(lvol);
 
 	lvolerrno = _create_lvol_disk(lvol, true);
+
 end:
 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
 	free(req);
@@ -1654,7 +1654,7 @@ vbdev_lvs_examine_config(struct spdk_bdev *bdev)
 	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
 
 	if (spdk_lvs_notify_hotplug(uuid_str, sizeof(uuid_str), vbdev_lvs_hotplug, bdev)) {
-		SPDK_INFOLOG(vbdev_lvol, "bdev %s: claimed by one ore more esnap clones\n",
+		SPDK_INFOLOG(vbdev_lvol, "bdev %s: claimed by one or more esnap clones\n",
 			     uuid_str);
 	}
 	spdk_bdev_module_examine_done(&g_lvol_if);

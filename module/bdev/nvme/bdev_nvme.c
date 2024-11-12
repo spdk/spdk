@@ -99,11 +99,6 @@ struct nvme_bdev_io {
 	uint64_t submit_tsc;
 };
 
-static uint64_t _cnt[100][4];
-static uint32_t _seq=0;
-static uint64_t _ptin=0;
-static uint64_t _ptout=0;
-
 struct nvme_probe_skip_entry {
 	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
@@ -1282,13 +1277,12 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 		return;
 	}
 
-	
 	tsc_diff = spdk_get_ticks() - bio->submit_tsc;
 	stat = bio->io_path->stat;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-                stat->bytes_read += num_blocks * blocklen;
+		stat->bytes_read += num_blocks * blocklen;
 		stat->num_read_ops++;
 		stat->read_latency_ticks += tsc_diff;
 		if (stat->max_read_latency_ticks < tsc_diff) {
@@ -1361,7 +1355,6 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 	default:
 		break;
 	}
-		
 }
 
 static bool
@@ -3020,22 +3013,11 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 {
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
-        
-	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
-	
 	struct nvme_bdev_io *nbdev_io_to_abort;
 	int rc = 0;
 
-        //if((spdk_get_ticks()  - _ptin) > 8000000000)
-	//{	
-        //   _ptin=spdk_get_ticks();
-        //   for (int i=0;i<_seq;i++)
-         //         SPDK_ERRLOG("CNT IN for %d - %I64u %I64u %I64u .\n",i, _cnt[i][0],_cnt[i][1],_cnt[i][2]);
-	//}
-        
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-                 _cnt[nbdev->_seq][0]++;
 		if (bdev_io->u.bdev.iovs && bdev_io->u.bdev.iovs[0].iov_base) {
 			rc = bdev_nvme_readv(nbdev_io,
 					     bdev_io->u.bdev.iovs,
@@ -3054,7 +3036,6 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		_cnt[nbdev->_seq][1]++;
 		rc = bdev_nvme_writev(nbdev_io,
 				      bdev_io->u.bdev.iovs,
 				      bdev_io->u.bdev.iovcnt,
@@ -3089,7 +3070,6 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 						   bdev_io->u.bdev.dif_check_flags);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-                 _cnt[nbdev->_seq][2]++;
 		rc = bdev_nvme_unmap(nbdev_io,
 				     bdev_io->u.bdev.offset_blocks,
 				     bdev_io->u.bdev.num_blocks);
@@ -4346,13 +4326,6 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 
 	nvme_ns->bdev = bdev;
 	bdev->nsid = nvme_ns->id;
-
-	//msi
-	bdev->_seq=_seq;
-        SPDK_ERRLOG("BDEV %s - %d \n",bdev->disk.name,_seq); 
-        _seq++;
-        //end-msi
-
 	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 
 	bdev->nbdev_ctrlr = nbdev_ctrlr;
