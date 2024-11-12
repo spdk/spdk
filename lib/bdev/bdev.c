@@ -658,6 +658,20 @@ bdev_examine_allowlist_check(const char *name)
 }
 
 static inline void
+bdev_examine_allowlist_remove(const char *name)
+{
+	struct spdk_bdev_examine_item *item;
+	TAILQ_FOREACH(item, &g_bdev_examine_allowlist, link) {
+		if (strcmp(name, item->name) == 0) {
+			TAILQ_REMOVE(&g_bdev_examine_allowlist, item, link);
+			free(item->name);
+			free(item);
+			break;
+		}
+	}
+}
+
+static inline void
 bdev_examine_allowlist_free(void)
 {
 	struct spdk_bdev_examine_item *item;
@@ -7949,6 +7963,7 @@ static int
 bdev_unregister_unsafe(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc	*desc, *tmp;
+	struct spdk_bdev_alias	*alias;
 	int			rc = 0;
 	char			uuid[SPDK_UUID_STRING_LEN];
 
@@ -7969,6 +7984,10 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 
 	/* If there are no descriptors, proceed removing the bdev */
 	if (rc == 0) {
+		bdev_examine_allowlist_remove(bdev->name);
+		TAILQ_FOREACH(alias, &bdev->aliases, tailq) {
+			bdev_examine_allowlist_remove(alias->alias.name);
+		}
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
 		SPDK_DEBUGLOG(bdev, "Removing bdev %s from list done\n", bdev->name);
 
