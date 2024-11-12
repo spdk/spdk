@@ -654,13 +654,11 @@ bdev_io_unmap_limiter(struct raid_bdev_io *raid_io, bool unmap_done, bool new_un
 
     // Ensure the raid_bdev is operating at RAID0 level. This assert is for debugging purposes.
 	assert(raid_bdev != NULL);
-    assert(raid_bdev->level == RAID0);
-	// SPDK_NOTICELOG("limit unmap stat - unmap_inflight: %u , new_unmap: %d, unmap_done: %d, total:%d \n", raid_bdev->unmap_inflight, new_unmap, unmap_done, raid_bdev->total);
+    assert(raid_bdev->level == RAID0);	
     // Check if the limit on inflight unmap operations is reached, and the operation isn't complete yet.
     if ((raid_bdev->io_unmap_limit > 0 && raid_bdev->unmap_inflight > raid_bdev->io_unmap_limit && !unmap_done) ) {        
         if (new_unmap) {
-            spdk_spin_lock(&raid_bdev->used_lock);
-			raid_bdev->total++;
+            spdk_spin_lock(&raid_bdev->used_lock);			
             // Add the current raid_io to the unmap queue if increase is true.
             TAILQ_INSERT_TAIL(&raid_bdev->unmap_queue, raid_io, entries);
             spdk_spin_unlock(&raid_bdev->used_lock);
@@ -671,8 +669,7 @@ bdev_io_unmap_limiter(struct raid_bdev_io *raid_io, bool unmap_done, bool new_un
     // If new_unmap is true, increase the inflight counter and submit the request.
     if (new_unmap) {
 		bool direct_send = true;
-        spdk_spin_lock(&raid_bdev->used_lock);
-		raid_bdev->total++;
+        spdk_spin_lock(&raid_bdev->used_lock);		
 		if (!TAILQ_EMPTY(&raid_bdev->unmap_queue)) {
 			TAILQ_INSERT_TAIL(&raid_bdev->unmap_queue, raid_io, entries);
 			queued_raid_io = TAILQ_FIRST(&raid_bdev->unmap_queue);
@@ -1744,7 +1741,6 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		spdk_spin_init(&raid_bdev->used_lock);
 		raid_bdev->io_unmap_limit = io_unmap_limit;
 		raid_bdev->unmap_inflight = 0;
-		raid_bdev->total = 0;	
 	}
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
 

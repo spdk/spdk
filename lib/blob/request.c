@@ -330,19 +330,14 @@ bs_batch_completion(struct spdk_io_channel *_channel,
 	}
 
 	if (set->u.batch.is_unmap) {
-		int loop_gurd = 0;
-		// while(loop_gurd++ < 4) {
-			if (!TAILQ_EMPTY(&set->u.batch.unmap_queue)) {        
-				ctx = TAILQ_FIRST(&set->u.batch.unmap_queue);
-				assert(ctx != NULL);
-				TAILQ_REMOVE(&set->u.batch.unmap_queue, ctx, entries); // Remove it from the queue.			
-				channel->dev->priority_class = set->priority_class;
-				channel->dev->unmap(channel->dev, channel->dev_channel, ctx->lba, ctx->lba_count,
-						&set->cb_args);
-				free(ctx);			
-			// } else {
-			// 	break;
-			// }
+		if (!TAILQ_EMPTY(&set->u.batch.unmap_queue)) {        
+			ctx = TAILQ_FIRST(&set->u.batch.unmap_queue);
+			assert(ctx != NULL);
+			TAILQ_REMOVE(&set->u.batch.unmap_queue, ctx, entries); // Remove it from the queue.			
+			channel->dev->priority_class = set->priority_class;
+			channel->dev->unmap(channel->dev, channel->dev_channel, ctx->lba, ctx->lba_count,
+					&set->cb_args);
+			free(ctx);
 		}
 	}	
 
