@@ -1244,6 +1244,10 @@ spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
 int
 spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bool allow_any_host)
 {
+	if (subsystem->allow_any_host == allow_any_host) {
+		return 0;
+	}
+
 	pthread_mutex_lock(&subsystem->mutex);
 	subsystem->allow_any_host = allow_any_host;
 	if (!TAILQ_EMPTY(&subsystem->listeners)) {
