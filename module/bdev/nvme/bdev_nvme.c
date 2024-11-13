@@ -3642,12 +3642,13 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
 	if (nvme_qpair->qpair != NULL) {
-		if (ctrlr_ch->reset_iter == NULL) {
-			spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
-		} else {
+		/* Always try to disconnect the qpair, even if a reset is in progress.
+		 * The qpair may have been created after the reset process started.
+		 */
+		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
+		if (ctrlr_ch->reset_iter) {
 			/* Skip current ctrlr_channel in a full reset sequence because
-			 * it is being deleted now. The qpair is already being disconnected.
-			 * We do not have to restart disconnecting it.
+			 * it is being deleted now.
 			 */
 			nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
 		}
