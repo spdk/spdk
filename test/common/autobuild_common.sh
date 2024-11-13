@@ -105,7 +105,13 @@ _build_native_dpdk() {
 		intel_ipsec_mb_ver=v0.54
 		intel_ipsec_mb_drv=crypto/aesni_mb
 		intel_ipsec_lib=""
-		if ge "$dpdk_ver" 21.11.0; then
+		if ge "$dpdk_ver" 24.11.0; then
+			# Starting from 24.11.0, the minimum supported version of intel-ipsec-mb is
+			# v1.5.
+			intel_ipsec_mb_ver=v1.5
+			intel_ipsec_mb_drv=crypto/ipsec_mb
+			intel_ipsec_lib=lib
+		elif ge "$dpdk_ver" 21.11.0; then
 			# Minimum supported version of intel-ipsec-mb, for DPDK >= 21.11, is 1.0.
 			# Source of the aesni_mb driver was moved to ipsec_mb. .{h,so,a} were moved
 			# to ./lib.
