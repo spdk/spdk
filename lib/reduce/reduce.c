@@ -1389,7 +1389,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	/* TODO: fail if no chunk map found - but really this should not happen if we
 	 * size the number of requests similarly to number of extra chunk maps
 	 */
-	assert(req->chunk_map_index != UINT32_MAX);
+	assert(req->chunk_map_index != REDUCE_EMPTY_MAP_ENTRY);
 	spdk_bit_array_set(vol->allocated_chunk_maps, req->chunk_map_index);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
@@ -1439,7 +1439,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 		/* TODO: fail if no backing block found - but really this should also not
 		 * happen (see comment above).
 		 */
-		assert(req->chunk->io_unit_index[i] != UINT32_MAX);
+		assert(req->chunk->io_unit_index[i] != REDUCE_EMPTY_MAP_ENTRY);
 		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
 		vol->info.allocated_io_units++;
 	}
@@ -1793,7 +1793,7 @@ _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn ne
 	struct spdk_reduce_vol *vol = req->vol;
 
 	req->chunk_map_index = vol->pm_logical_map[req->logical_map_index];
-	assert(req->chunk_map_index != UINT32_MAX);
+	assert(req->chunk_map_index != REDUCE_EMPTY_MAP_ENTRY);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
 	req->num_io_units = spdk_divide_round_up(req->chunk->compressed_size,
