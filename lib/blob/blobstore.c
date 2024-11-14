@@ -3835,6 +3835,12 @@ bs_opts_verify(struct spdk_bs_opts *opts)
 		return -1;
 	}
 
+	if ((opts->cluster_sz % SPDK_BS_PAGE_SIZE) != 0) {
+		SPDK_ERRLOG("Cluster size %" PRIu32 " is not an integral multiple of blocklen %" PRIu32"\n",
+			    opts->cluster_sz, SPDK_BS_PAGE_SIZE);
+		return -1;
+	}
+
 	return 0;
 }
 
