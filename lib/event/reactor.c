@@ -611,16 +611,6 @@ event_queue_run_batch(void *arg)
 		uint64_t notify = 1;
 		int rc;
 
-		/* There may be race between event_acknowledge and another producer's event_notify,
-		 * so event_acknowledge should be applied ahead. And then check for self's event_notify.
-		 * This can avoid event notification missing.
-		 */
-		rc = read(reactor->events_fd, &notify, sizeof(notify));
-		if (rc < 0) {
-			SPDK_ERRLOG("failed to acknowledge event queue: %s.\n", spdk_strerror(errno));
-			return -errno;
-		}
-
 		count = spdk_ring_dequeue(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
 
 		if (spdk_ring_count(reactor->events) != 0) {
@@ -1471,14 +1461,8 @@ reactor_schedule_thread_event(void *arg)
 	struct spdk_reactor *reactor = arg;
 	struct spdk_lw_thread *lw_thread, *tmp;
 	uint32_t count = 0;
-	uint64_t notify = 1;
 
 	assert(reactor->in_interrupt);
-
-	if (read(reactor->resched_fd, &notify, sizeof(notify)) < 0) {
-		SPDK_ERRLOG("failed to acknowledge reschedule: %s.\n", spdk_strerror(errno));
-		return -errno;
-	}
 
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		count += reactor_post_process_lw_thread(reactor, lw_thread) ? 1 : 0;
@@ -1490,6 +1474,7 @@ reactor_schedule_thread_event(void *arg)
 static int
 reactor_interrupt_init(struct spdk_reactor *reactor)
 {
+	struct spdk_event_handler_opts opts = {};
 	int rc;
 
 	rc = spdk_fd_group_create(&reactor->fgrp);
@@ -1503,8 +1488,11 @@ reactor_interrupt_init(struct spdk_reactor *reactor)
 		goto err;
 	}
 
-	rc = SPDK_FD_GROUP_ADD(reactor->fgrp, reactor->resched_fd, reactor_schedule_thread_event,
-			       reactor);
+	spdk_fd_group_get_default_event_handler_opts(&opts, sizeof(opts));
+	opts.fd_type = SPDK_FD_TYPE_EVENTFD;
+
+	rc = SPDK_FD_GROUP_ADD_EXT(reactor->fgrp, reactor->resched_fd,
+				   reactor_schedule_thread_event, reactor, &opts);
 	if (rc) {
 		close(reactor->resched_fd);
 		goto err;
@@ -1519,8 +1507,8 @@ reactor_interrupt_init(struct spdk_reactor *reactor)
 		goto err;
 	}
 
-	rc = SPDK_FD_GROUP_ADD(reactor->fgrp, reactor->events_fd,
-			       event_queue_run_batch, reactor);
+	rc = SPDK_FD_GROUP_ADD_EXT(reactor->fgrp, reactor->events_fd,
+				   event_queue_run_batch, reactor, &opts);
 	if (rc) {
 		spdk_fd_group_remove(reactor->fgrp, reactor->resched_fd);
 		close(reactor->resched_fd);
