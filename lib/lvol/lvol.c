@@ -703,9 +703,9 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -EINVAL;
 	}
 
-	if (lvs_opts.cluster_sz < bs_dev->blocklen) {
-		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than blocklen %" PRIu32 "\n",
-			    lvs_opts.cluster_sz, bs_dev->blocklen);
+	if (lvs_opts.cluster_sz < bs_dev->blocklen || (lvs_opts.cluster_sz % bs_dev->blocklen) != 0) {
+		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than blocklen %" PRIu32
+			    "Or not an integral multiple\n", lvs_opts.cluster_sz, bs_dev->blocklen);
 		return -EINVAL;
 	}
 	total_clusters = bs_dev->blockcnt / (lvs_opts.cluster_sz / bs_dev->blocklen);
