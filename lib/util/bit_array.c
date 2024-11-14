@@ -304,6 +304,29 @@ spdk_bit_array_store_mask(const struct spdk_bit_array *ba, void *mask)
 }
 
 void
+spdk_bit_array_store_mask_one_page(const struct spdk_bit_array *ba, void *mask, uint64_t fisrtbit, uint64_t lastbit)
+{
+	uint32_t size, i, skip;
+	uint32_t num_bits = spdk_bit_array_capacity(ba);
+	assert(num_bits >= lastbit);
+	size = (lastbit - fisrtbit) / CHAR_BIT;
+	if (!fisrtbit) {
+		skip = 0;
+	} else {
+		skip = fisrtbit / CHAR_BIT;
+	}
+	memcpy(mask, ba->words + skip, size);
+
+	for (i = 0; i < (lastbit - fisrtbit) % CHAR_BIT; i++) {
+		if (spdk_bit_array_get(ba, i + size * CHAR_BIT)) {
+			((uint8_t *)mask)[size] |= (1U << i);
+		} else {
+			((uint8_t *)mask)[size] &= ~(1U << i);
+		}
+	}
+}
+
+void
 spdk_bit_array_load_mask(struct spdk_bit_array *ba, const void *mask)
 {
 	uint32_t size, i;
