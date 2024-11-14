@@ -2769,15 +2769,6 @@ thread_interrupt_msg_process(void *arg)
 	orig_thread = spdk_get_thread();
 	spdk_set_thread(thread);
 
-	/* There may be race between msg_acknowledge and another producer's msg_notify,
-	 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
-	 * This can avoid msg notification missing.
-	 */
-	rc = read(thread->msg_fd, &notify, sizeof(notify));
-	if (rc < 0 && errno != EAGAIN) {
-		SPDK_ERRLOG("failed to acknowledge msg event: %s.\n", spdk_strerror(errno));
-	}
-
 	critical_msg = thread->critical_msg;
 	if (spdk_unlikely(critical_msg != NULL)) {
 		critical_msg(NULL);
@@ -2808,12 +2799,14 @@ thread_interrupt_msg_process(void *arg)
 static int
 thread_interrupt_create(struct spdk_thread *thread)
 {
+	struct spdk_event_handler_opts opts = {};
 	int rc;
 
 	SPDK_INFOLOG(thread, "Create fgrp for thread (%s)\n", thread->name);
 
 	rc = spdk_fd_group_create(&thread->fgrp);
 	if (rc) {
+		thread->msg_fd = -1;
 		return rc;
 	}
 
@@ -2826,8 +2819,11 @@ thread_interrupt_create(struct spdk_thread *thread)
 		return rc;
 	}
 
-	return SPDK_FD_GROUP_ADD(thread->fgrp, thread->msg_fd,
-				 thread_interrupt_msg_process, thread);
+	spdk_fd_group_get_default_event_handler_opts(&opts, sizeof(opts));
+	opts.fd_type = SPDK_FD_TYPE_EVENTFD;
+
+	return SPDK_FD_GROUP_ADD_EXT(thread->fgrp, thread->msg_fd,
+				     thread_interrupt_msg_process, thread, &opts);
 }
 #else
 static int
