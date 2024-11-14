@@ -9131,7 +9131,8 @@ blob_free_cluster_msg(void *arg)
 			break;
 		}
 	}
-
+	
+	memset(ctx->page, 0, SPDK_BS_PAGE_SIZE);
 	if (free_extent_page) {
 		assert(ctx->extent_page != 0);
 		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
