@@ -5055,6 +5055,8 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	spdk_bs_opts_init(&opts, sizeof(opts));
 	if (o) {
 		if (bs_opts_copy(o, &opts)) {
+			dev->destroy(dev);
+			cb_fn(cb_arg, NULL, -EINVAL);
 			return;
 		}
 	}
@@ -5529,6 +5531,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	spdk_bs_opts_init(&opts, sizeof(opts));
 	if (o) {
 		if (bs_opts_copy(o, &opts)) {
+			dev->destroy(dev);
+			cb_fn(cb_arg, NULL, -EINVAL);
 			return;
 		}
 	}
@@ -9983,6 +9987,8 @@ spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	spdk_bs_opts_init(&opts, sizeof(opts));
 	if (o) {
 		if (bs_opts_copy(o, &opts)) {
+			dev->destroy(dev);
+			cb_fn(cb_arg, NULL, -EINVAL);
 			return;
 		}
 	}
