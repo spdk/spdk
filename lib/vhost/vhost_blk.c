@@ -620,6 +620,9 @@ virtio_blk_process_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
 				blk_request_queue_io(vdev, ch, task);
+			} else if (rc == -ENOTSUP) {
+				blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
+				return -1;
 			} else {
 				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
