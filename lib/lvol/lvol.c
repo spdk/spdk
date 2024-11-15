@@ -685,7 +685,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	struct spdk_bs_opts opts = {};
 	struct spdk_lvs_opts lvs_opts;
 	uint32_t total_clusters;
-	int rc;
+	int rc, len;
 
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Blobstore device does not exist\n");
@@ -718,14 +718,9 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 
 	setup_lvs_opts(&opts, o, total_clusters, lvs);
 
-	if (strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
-		SPDK_ERRLOG("Name has no null terminator.\n");
-		lvs_free(lvs);
-		return -EINVAL;
-	}
-
-	if (strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX) == 0) {
-		SPDK_ERRLOG("No name specified.\n");
+	len = strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX);
+	if (len == 0 || len == SPDK_LVS_NAME_MAX) {
+		SPDK_ERRLOG("Name must be between 1 and %d characters\n", SPDK_LVS_NAME_MAX - 1);
 		lvs_free(lvs);
 		return -EINVAL;
 	}
