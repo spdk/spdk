@@ -6683,7 +6683,7 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	bdev_get_io_stat(stat, channel->stat);
-	spdk_bdev_reset_io_stat(stat, reset_mode);
+	spdk_bdev_reset_io_stat(channel->stat, reset_mode);
 }
 
 static void
