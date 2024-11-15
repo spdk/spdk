@@ -89,6 +89,7 @@
 	spdk_dif_get_length_with_md;
 	spdk_dif_remap_ref_tag;
 	spdk_dix_remap_ref_tag;
+	spdk_dif_pi_format_get_size;
 
 	# public functions in fd.h
 	spdk_fd_get_size;

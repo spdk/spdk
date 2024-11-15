@@ -194,6 +194,12 @@ _dif_size(enum spdk_dif_pi_format dif_pi_format)
 	return size;
 }
 
+uint32_t
+spdk_dif_pi_format_get_size(enum spdk_dif_pi_format dif_pi_format)
+{
+	return _dif_size(dif_pi_format);
+}
+
 static uint32_t
 _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md_interleave,
 		    size_t dif_size)

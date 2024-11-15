@@ -476,6 +476,16 @@ int spdk_dix_remap_ref_tag(struct iovec *md_iov, uint32_t num_blocks,
 			   const struct spdk_dif_ctx *dif_ctx,
 			   struct spdk_dif_error *err_blk,
 			   bool check_ref_tag);
+
+/**
+ * Get PI field size for the PI format
+ *
+ * \param dif_pi_format DIF PI format type
+ *
+ * \return Size of the PI field.
+ */
+uint32_t spdk_dif_pi_format_get_size(enum spdk_dif_pi_format dif_pi_format);
+
 #ifdef __cplusplus
 }
 #endif
