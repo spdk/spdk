@@ -399,6 +399,11 @@ struct spdk_blob_md_page {
 	uint32_t	next;
 	uint32_t	crc;
 };
+
+struct spdk_bit_page {	
+	uint8_t		descriptors[4096];
+};
+
 #define SPDK_BS_PAGE_SIZE 0x1000
 #define SPDK_BS_PAGE_SIZE_INBIT  (SPDK_BS_PAGE_SIZE * 8)
 #define SPDK_BS_MD_STRUCT_INBIT  (sizeof(struct spdk_bs_md_mask) * 8)
