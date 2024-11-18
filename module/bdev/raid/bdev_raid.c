@@ -394,6 +394,9 @@ raid_bdev_free(struct raid_bdev *raid_bdev)
 	raid_bdev_free_superblock(raid_bdev);
 	free(raid_bdev->base_bdev_info);
 	free(raid_bdev->bdev.name);
+	if (raid_bdev->level == RAID0) {
+		spdk_spin_destroy(&raid_bdev->used_lock);
+	}
 	free(raid_bdev);
 }
 
