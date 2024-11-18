@@ -1969,8 +1969,8 @@ persist_bs_write_used_blobids_batch(spdk_bs_sequence_t *batch, struct spdk_blob_
 	if (ctx->bit_page != NULL) {
 		ctx->bit_page = spdk_realloc(ctx->bit_page, SPDK_BS_PAGE_SIZE * len, 0);
 	} else {
-		ctx->bit_page = spdk_zmalloc(len, SPDK_BS_PAGE_SIZE, NULL,
-				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);	
+		ctx->bit_page = spdk_zmalloc(len * SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE, NULL,
+				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	}
 
 	if (!ctx->bit_page) {
@@ -2022,8 +2022,8 @@ persist_bs_write_used_md_batch(spdk_bs_sequence_t *batch, struct spdk_blob_persi
 	if (ctx->bit_page != NULL) {
 		ctx->bit_page = spdk_realloc(ctx->bit_page, SPDK_BS_PAGE_SIZE * len, 0);
 	} else {
-		ctx->bit_page = spdk_zmalloc(len, SPDK_BS_PAGE_SIZE, NULL,
-				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);	
+		ctx->bit_page = spdk_zmalloc(len * SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE, NULL,
+				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	}
 
 	if (!ctx->bit_page) {
