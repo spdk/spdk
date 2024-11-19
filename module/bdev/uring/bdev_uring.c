@@ -254,16 +254,20 @@ bdev_uring_reap(struct io_uring *ring, int max)
 	for (i = 0; i < max; i++) {
 		ret = io_uring_peek_cqe(ring, &cqe);
 		if (ret != 0) {
-			return ret;
-		}
-
-		if (cqe == NULL) {
+			assert(ret == -EAGAIN || ret == -EWOULDBLOCK);
 			return count;
 		}
 
+		assert(cqe != NULL);
+
 		uring_task = (struct bdev_uring_task *)cqe->user_data;
-		if (cqe->res != (signed)uring_task->len) {
-			status = SPDK_BDEV_IO_STATUS_FAILED;
+		if (spdk_unlikely(cqe->res != (signed)uring_task->len)) {
+			if (cqe->res == -EAGAIN || cqe->res == -EWOULDBLOCK) {
+				status = SPDK_BDEV_IO_STATUS_NOMEM;
+			} else {
+				SPDK_ERRLOG("I/O failed with error %d\n", cqe->res);
+				status = SPDK_BDEV_IO_STATUS_FAILED;
+			}
 		} else {
 			status = SPDK_BDEV_IO_STATUS_SUCCESS;
 		}
