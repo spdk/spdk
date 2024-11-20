@@ -616,6 +616,10 @@ free_job_config(void)
 static void
 bdevperf_job_free(struct bdevperf_job *job)
 {
+	if (job->bdev_desc != NULL) {
+		spdk_bdev_close(job->bdev_desc);
+	}
+
 	spdk_histogram_data_free(job->histogram);
 	spdk_bit_array_free(&job->outstanding);
 	spdk_bit_array_free(&job->random_map);
@@ -828,7 +832,14 @@ clean:
 static void
 bdevperf_job_end(void *ctx)
 {
+	struct bdevperf_job *job = ctx;
+
 	assert(g_main_thread == spdk_get_thread());
+
+	if (job->bdev_desc != NULL) {
+		spdk_bdev_close(job->bdev_desc);
+		job->bdev_desc = NULL;
+	}
 
 	if (--g_bdevperf.running_jobs == 0) {
 		bdevperf_test_done(NULL);
@@ -856,8 +867,7 @@ bdevperf_job_empty(struct bdevperf_job *job)
 	spdk_bdev_channel_get_histogram(job->ch, bdevperf_channel_get_histogram_cb,
 					job->histogram);
 	spdk_put_io_channel(job->ch);
-	spdk_bdev_close(job->bdev_desc);
-	spdk_thread_send_msg(g_main_thread, bdevperf_job_end, NULL);
+	spdk_thread_send_msg(g_main_thread, bdevperf_job_end, job);
 }
 
 static void
@@ -1493,8 +1503,6 @@ bdevperf_job_run(void *ctx)
 							10 * SPDK_SEC_TO_USEC);
 	}
 
-	spdk_bdev_set_timeout(job->bdev_desc, g_timeout_in_sec, bdevperf_timeout_cb, job);
-
 	for (i = 0; i < job->queue_depth; i++) {
 		task = bdevperf_job_get_task(job);
 		bdevperf_submit_single(job, task);
@@ -1631,9 +1639,17 @@ bdevperf_test(void)
 
 	/* Iterate jobs to start all I/O */
 	TAILQ_FOREACH(job, &g_bdevperf.jobs, link) {
+		spdk_bdev_set_timeout(job->bdev_desc, g_timeout_in_sec, bdevperf_timeout_cb, job);
+
 		g_bdevperf.running_jobs++;
 		spdk_thread_send_msg(job->thread, bdevperf_job_run, job);
 	}
+}
+
+static void
+_bdevperf_job_drain(void *ctx)
+{
+	bdevperf_job_drain(ctx);
 }
 
 static void
@@ -1642,7 +1658,7 @@ bdevperf_bdev_removed(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, vo
 	struct bdevperf_job *job = event_ctx;
 
 	if (SPDK_BDEV_EVENT_REMOVE == type) {
-		bdevperf_job_drain(job);
+		spdk_thread_send_msg(job->thread, _bdevperf_job_drain, job);
 	}
 }
 
@@ -1774,15 +1790,6 @@ static void
 _bdevperf_construct_job(void *ctx)
 {
 	struct bdevperf_job *job = ctx;
-	int rc;
-
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(job->bdev), true, bdevperf_bdev_removed, job,
-				&job->bdev_desc);
-	if (rc != 0) {
-		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(job->bdev), rc);
-		g_run_rc = -EINVAL;
-		goto end;
-	}
 
 	if (g_zcopy) {
 		if (!spdk_bdev_io_type_supported(job->bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
@@ -1794,9 +1801,7 @@ _bdevperf_construct_job(void *ctx)
 
 	job->ch = spdk_bdev_get_io_channel(job->bdev_desc);
 	if (!job->ch) {
-		SPDK_ERRLOG("Could not get io_channel for device %s, error=%d\n", spdk_bdev_get_name(job->bdev),
-			    rc);
-		spdk_bdev_close(job->bdev_desc);
+		SPDK_ERRLOG("Could not get io_channel for device %s\n", spdk_bdev_get_name(job->bdev));
 		g_run_rc = -ENOMEM;
 		goto end;
 	}
@@ -1874,11 +1879,20 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		return -ENOMEM;
 	}
 
+	job->thread = thread;
+
 	job->name = strdup(spdk_bdev_get_name(bdev));
 	if (!job->name) {
 		fprintf(stderr, "Unable to allocate memory for job name.\n");
 		bdevperf_job_free(job);
 		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open_ext(job->name, true, bdevperf_bdev_removed, job, &job->bdev_desc);
+	if (rc != 0) {
+		fprintf(stderr, "Could not open leaf bdev %s, error=%d\n", job->name, rc);
+		bdevperf_job_free(job);
+		return rc;
 	}
 
 	job->workload_type = config->rw;
@@ -2046,8 +2060,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		task->job = job;
 		TAILQ_INSERT_TAIL(&job->task_list, task, link);
 	}
-
-	job->thread = thread;
 
 	g_construct_job_count++;
 
@@ -2731,12 +2743,6 @@ rpc_error:
 	free(backup.workload_type);
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
-
-static void
-_bdevperf_job_drain(void *ctx)
-{
-	bdevperf_job_drain(ctx);
-}
 
 static void
 spdk_bdevperf_shutdown_cb(void)
