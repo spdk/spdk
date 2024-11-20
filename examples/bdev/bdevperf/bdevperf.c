@@ -1797,7 +1797,6 @@ _bdevperf_construct_job(void *ctx)
 		SPDK_ERRLOG("Could not get io_channel for device %s, error=%d\n", spdk_bdev_get_name(job->bdev),
 			    rc);
 		spdk_bdev_close(job->bdev_desc);
-		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
 		g_run_rc = -ENOMEM;
 		goto end;
 	}
