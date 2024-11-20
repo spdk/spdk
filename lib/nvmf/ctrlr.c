@@ -311,6 +311,8 @@ nvmf_ctrlr_add_qpair(struct spdk_nvmf_qpair *qpair,
 		return;
 	}
 
+	qpair->connect_req = NULL;
+
 	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
 				 ctrlr->hostnqn);
 	nvmf_qpair_set_ctrlr(qpair, ctrlr);
