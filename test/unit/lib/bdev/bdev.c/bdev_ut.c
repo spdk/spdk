@@ -7709,6 +7709,37 @@ get_device_stat_with_reset(void)
 	ut_fini_bdev();
 }
 
+static void
+open_ext_v2_test(void)
+{
+	struct spdk_bdev_open_opts opts;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext_v2("bdev0", true, bdev_ut_event_cb, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(desc->write == true);
+	CU_ASSERT(desc->opts.hide_metadata == false);
+
+	spdk_bdev_close(desc);
+
+	spdk_bdev_open_opts_init(&opts, sizeof(opts));
+	opts.hide_metadata = true;
+
+	rc = spdk_bdev_open_ext_v2("bdev0", true, bdev_ut_event_cb, NULL, &opts, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc->write == true);
+	CU_ASSERT(desc->opts.hide_metadata == true);
+
+	spdk_bdev_close(desc);
+
+	free_bdev(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7781,6 +7812,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, examine_claimed_manual);
 	CU_ADD_TEST(suite, get_numa_id);
 	CU_ADD_TEST(suite, get_device_stat_with_reset);
+	CU_ADD_TEST(suite, open_ext_v2_test);
 
 	allocate_cores(1);
 	allocate_threads(1);

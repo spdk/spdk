@@ -18,6 +18,8 @@
 	spdk_for_each_bdev;
 	spdk_for_each_bdev_leaf;
 	spdk_bdev_open_ext;
+	spdk_bdev_open_ext_v2;
+	spdk_bdev_open_opts_init;
 	spdk_bdev_open_async;
 	spdk_bdev_close;
 	spdk_bdev_get_numa_id;

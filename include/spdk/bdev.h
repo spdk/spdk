@@ -445,6 +445,28 @@ struct spdk_bdev *spdk_bdev_first_leaf(void);
 struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
 
 /**
+ * Structure with optional synchronous bdev open parameters.
+ */
+struct spdk_bdev_open_opts {
+	/* Size of this structure in bytes. */
+	size_t size;
+
+	/* To indicate that the upper layer do not want to use metadata
+	 * with this bdev.
+	 */
+	bool hide_metadata;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_open_opts) == 16, "Incorrect size");
+
+/**
+ * Initialize bdev open options.
+ *
+ * \param opts Bdev open options.
+ * \param opts_size Must be set to sizeof(struct spdk_bdev_open_opts).
+ */
+void spdk_bdev_open_opts_init(struct spdk_bdev_open_opts *opts, size_t opts_size);
+
+/**
  * Open a block device for I/O operations.
  *
  * \param bdev_name Block device name to open.
@@ -460,6 +482,25 @@ struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
  */
 int spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
 		       void *event_ctx, struct spdk_bdev_desc **desc);
+
+/**
+ * Open a block device for I/O operations with options.
+ *
+ * \param bdev_name Block device name to open.
+ * \param write true is read/write access requested, false if read-only
+ * \param event_cb notification callback to be called when the bdev triggers
+ * asynchronous event such as bdev removal. This will always be called on the
+ * same thread that spdk_bdev_open_ext() was called on. In case of removal event
+ * the descriptor will have to be manually closed to make the bdev unregister
+ * proceed.
+ * \param event_ctx param for event_cb.
+ * \param opts Option for block device open. If NULL, default values are used.
+ * \param desc output parameter for the descriptor when operation is successful
+ * \return 0 if operation is successful, suitable errno value otherwise
+ */
+int spdk_bdev_open_ext_v2(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+			  void *event_ctx, struct spdk_bdev_open_opts *opts,
+			  struct spdk_bdev_desc **desc);
 
 /**
  * Block device asynchronous open callback.
