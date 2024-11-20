@@ -168,6 +168,7 @@ struct bdevperf_job {
 	uint64_t			buf_size;
 	uint32_t			dif_check_flags;
 	bool				is_draining;
+	bool				md_check;
 	struct spdk_poller		*run_timer;
 	struct spdk_poller		*reset_timer;
 	struct spdk_bit_array		*outstanding;
@@ -993,12 +994,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct bdevperf_job	*job;
 	struct bdevperf_task	*task = cb_arg;
-	bool			md_check;
 	uint64_t		offset_in_ios;
 	int			rc;
 
 	job = task->job;
-	md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
 
 	if (g_error_to_exit == true) {
 		bdevperf_job_drain(job);
@@ -1016,7 +1015,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 spdk_bdev_get_block_size(job->bdev),
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(job->bdev),
-				 job->io_size_blocks, md_check)) {
+				 job->io_size_blocks, job->md_check)) {
 			printf("Buffer mismatch! Target: %s Disk Offset: %" PRIu64 "\n", job->name, task->offset_blocks);
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
@@ -1905,6 +1904,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	job->buf_size = job->io_size_blocks * block_size;
 	job->abort = g_abort;
 	job_init_rw(job, config->rw);
+	job->md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
 
 	if ((job->io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
