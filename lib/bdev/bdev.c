@@ -333,15 +333,15 @@ struct media_event_entry {
 
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
+	bool				write;
+	bool				memory_domains_supported;
+	bool				accel_sequence_supported[SPDK_BDEV_NUM_IO_TYPES];
 	struct spdk_thread		*thread;
 	struct {
 		spdk_bdev_event_cb_t event_fn;
 		void *ctx;
 	}				callback;
 	bool				closed;
-	bool				write;
-	bool				memory_domains_supported;
-	bool				accel_sequence_supported[SPDK_BDEV_NUM_IO_TYPES];
 	struct spdk_spinlock		spinlock;
 	uint32_t			refs;
 	TAILQ_HEAD(, media_event_entry)	pending_media_events;
