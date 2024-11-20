@@ -477,8 +477,8 @@ generate_data(struct bdevperf_job *job, void *buf, void *md_buf, bool unique)
 {
 	int offset_blocks = 0, md_offset, data_block_size, inner_offset;
 	int buf_len = job->buf_size;
-	int block_size = spdk_bdev_get_block_size(job->bdev);
-	int md_size = spdk_bdev_get_md_size(job->bdev);
+	int block_size = spdk_bdev_desc_get_block_size(job->bdev_desc);
+	int md_size = spdk_bdev_desc_get_md_size(job->bdev_desc);
 	int num_blocks = job->io_size_blocks;
 
 	if (buf_len < num_blocks * block_size) {
@@ -1012,16 +1012,16 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	} else if (job->verify || job->reset) {
 		if (!verify_data(task->buf, job->buf_size,
 				 task->iov.iov_base, job->buf_size,
-				 spdk_bdev_get_block_size(job->bdev),
+				 spdk_bdev_desc_get_block_size(job->bdev_desc),
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
-				 spdk_bdev_get_md_size(job->bdev),
+				 spdk_bdev_desc_get_md_size(job->bdev_desc),
 				 job->io_size_blocks, job->md_check)) {
 			printf("Buffer mismatch! Target: %s Disk Offset: %" PRIu64 "\n", job->name, task->offset_blocks);
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
 		}
 	} else if (job->dif_check_flags != 0) {
-		if (task->io_type == SPDK_BDEV_IO_TYPE_READ && spdk_bdev_get_md_size(job->bdev) != 0) {
+		if (task->io_type == SPDK_BDEV_IO_TYPE_READ && spdk_bdev_desc_get_md_size(job->bdev_desc) != 0) {
 			rc = bdevperf_verify_dif(task);
 			if (rc != 0) {
 				printf("DIF error detected. task offset: %" PRIu64 " on job bdev=%s\n",
@@ -1121,19 +1121,19 @@ static int
 bdevperf_generate_dif(struct bdevperf_task *task)
 {
 	struct bdevperf_job	*job = task->job;
-	struct spdk_bdev	*bdev = job->bdev;
+	struct spdk_bdev_desc	*desc = job->bdev_desc;
 	struct spdk_dif_ctx	dif_ctx;
 	int			rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = spdk_bdev_get_dif_pi_format(bdev);
+	dif_opts.dif_pi_format = spdk_bdev_desc_get_dif_pi_format(desc);
 	rc = spdk_dif_ctx_init(&dif_ctx,
-			       spdk_bdev_get_block_size(bdev),
-			       spdk_bdev_get_md_size(bdev),
-			       spdk_bdev_is_md_interleaved(bdev),
-			       spdk_bdev_is_dif_head_of_md(bdev),
-			       spdk_bdev_get_dif_type(bdev),
+			       spdk_bdev_desc_get_block_size(desc),
+			       spdk_bdev_desc_get_md_size(desc),
+			       spdk_bdev_desc_is_md_interleaved(desc),
+			       spdk_bdev_desc_is_dif_head_of_md(desc),
+			       spdk_bdev_desc_get_dif_type(desc),
 			       job->dif_check_flags,
 			       task->offset_blocks, 0, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
@@ -1141,12 +1141,12 @@ bdevperf_generate_dif(struct bdevperf_task *task)
 		return rc;
 	}
 
-	if (spdk_bdev_is_md_interleaved(bdev)) {
+	if (spdk_bdev_desc_is_md_interleaved(desc)) {
 		rc = spdk_dif_generate(&task->iov, 1, job->io_size_blocks, &dif_ctx);
 	} else {
 		struct iovec md_iov = {
 			.iov_base	= task->md_buf,
-			.iov_len	= spdk_bdev_get_md_size(bdev) * job->io_size_blocks,
+			.iov_len	= spdk_bdev_desc_get_md_size(desc) * job->io_size_blocks,
 		};
 
 		rc = spdk_dix_generate(&task->iov, 1, &md_iov, job->io_size_blocks, &dif_ctx);
@@ -1175,7 +1175,7 @@ bdevperf_submit_task(void *arg)
 
 	switch (task->io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (spdk_bdev_get_md_size(job->bdev) != 0 && job->dif_check_flags != 0) {
+		if (spdk_bdev_desc_get_md_size(desc) != 0 && job->dif_check_flags != 0) {
 			rc = bdevperf_generate_dif(task);
 		}
 		if (rc == 0) {
@@ -1275,9 +1275,9 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 		assert(iovs != NULL);
 
 		copy_data(iovs[0].iov_base, iovs[0].iov_len, task->buf, job->buf_size,
-			  spdk_bdev_get_block_size(job->bdev),
+			  spdk_bdev_desc_get_block_size(job->bdev_desc),
 			  spdk_bdev_io_get_md_buf(bdev_io), task->md_buf,
-			  spdk_bdev_get_md_size(job->bdev), job->io_size_blocks);
+			  spdk_bdev_desc_get_md_size(job->bdev_desc), job->io_size_blocks);
 	}
 
 	bdevperf_submit_task(task);
@@ -1869,9 +1869,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	int task_num, n;
 	int32_t numa_id;
 
-	block_size = spdk_bdev_get_block_size(bdev);
-	data_block_size = spdk_bdev_get_data_block_size(bdev);
-
 	job = calloc(1, sizeof(struct bdevperf_job));
 	if (!job) {
 		fprintf(stderr, "Unable to allocate memory for new job.\n");
@@ -1893,6 +1890,9 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		bdevperf_job_free(job);
 		return rc;
 	}
+
+	block_size = spdk_bdev_desc_get_block_size(job->bdev_desc);
+	data_block_size = spdk_bdev_get_data_block_size(bdev);
 
 	job->workload_type = config->rw;
 	job->io_size = config->bs;
@@ -1919,10 +1919,10 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		return -ENOTSUP;
 	}
 
-	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+	if (spdk_bdev_desc_is_dif_check_enabled(job->bdev_desc, SPDK_DIF_CHECK_TYPE_REFTAG)) {
 		job->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
 	}
-	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+	if (spdk_bdev_desc_is_dif_check_enabled(job->bdev_desc, SPDK_DIF_CHECK_TYPE_GUARD)) {
 		job->dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
 	}
 
@@ -2042,9 +2042,9 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			}
 		}
 
-		if (spdk_bdev_is_md_separate(job->bdev)) {
+		if (spdk_bdev_desc_is_md_separate(job->bdev_desc)) {
 			task->md_buf = spdk_zmalloc(job->io_size_blocks *
-						    spdk_bdev_get_md_size(job->bdev), 0, NULL,
+						    spdk_bdev_desc_get_md_size(job->bdev_desc), 0, NULL,
 						    numa_id, SPDK_MALLOC_DMA);
 			if (!task->md_buf) {
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
