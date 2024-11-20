@@ -92,6 +92,8 @@ discovery_log_header_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
+	ctx->start_genctr = ctx->log_page->genctr;
+
 	numrec = from_le64(&ctx->log_page->numrec);
 
 	if (numrec == 0) {
@@ -101,8 +103,6 @@ discovery_log_header_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 		get_log_page_completion(ctx, cpl);
 		return;
 	}
-
-	ctx->start_genctr = ctx->log_page->genctr;
 
 	/*
 	 * Now that we know how many entries should be in the log page, we can allocate
