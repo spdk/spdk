@@ -974,6 +974,16 @@ bdev_desc_get_block_size(struct spdk_bdev_desc *desc)
 static inline uint32_t
 bdev_io_get_block_size(struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_bdev *bdev = bdev_io->bdev;
+
+	if (bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT) {
+		if (bdev->md_len == spdk_dif_pi_format_get_size(bdev->dif_pi_format)) {
+			return bdev->blocklen - bdev->md_len;
+		} else {
+			return bdev->blocklen;
+		}
+	}
+
 	return bdev_desc_get_block_size(bdev_io->internal.desc);
 }
 
@@ -1065,7 +1075,9 @@ _are_iovs_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
 static inline bool
 bdev_io_needs_metadata(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
-	return desc->opts.hide_metadata && bdev_io->bdev->md_len != 0;
+	return (bdev_io->bdev->md_len != 0) &&
+	       (desc->opts.hide_metadata ||
+		(bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT));
 }
 
 static inline bool
@@ -1331,6 +1343,8 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 
 	if (bdev_io_needs_metadata(desc, bdev_io)) {
 		assert(bdev_io->bdev->md_interleave);
+
+		bdev_io->u.bdev.dif_check_flags &= ~SPDK_DIF_FLAGS_NVME_PRACT;
 
 		if (!bdev_io_use_accel_sequence(bdev_io)) {
 			bdev_io->internal.accel_sequence = NULL;
@@ -5887,6 +5901,7 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	struct spdk_accel_sequence *seq = NULL;
 	void *domain_ctx = NULL, *md = NULL;
 	uint32_t dif_check_flags = 0;
+	uint32_t nvme_cdw12_raw;
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 
 	if (opts) {
@@ -5898,6 +5913,7 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		domain = bdev_get_ext_io_opt(opts, memory_domain, NULL);
 		domain_ctx = bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL);
 		seq = bdev_get_ext_io_opt(opts, accel_sequence, NULL);
+		nvme_cdw12_raw = bdev_get_ext_io_opt(opts, nvme_cdw12.raw, 0);
 		if (md) {
 			if (spdk_unlikely(!spdk_bdev_is_md_separate(bdev))) {
 				return -EINVAL;
@@ -5910,11 +5926,20 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			if (spdk_unlikely(seq != NULL)) {
 				return -EINVAL;
 			}
+
+			if (nvme_cdw12_raw & SPDK_DIF_FLAGS_NVME_PRACT) {
+				SPDK_ERRLOG("Separate metadata with NVMe PRACT is not supported.\n");
+				return -ENOTSUP;
+			}
+		}
+
+		if (nvme_cdw12_raw & SPDK_DIF_FLAGS_NVME_PRACT) {
+			dif_check_flags |= SPDK_DIF_FLAGS_NVME_PRACT;
 		}
 	}
 
-	dif_check_flags = bdev->dif_check_flags &
-			  ~(bdev_get_ext_io_opt(opts, dif_check_flags_exclude_mask, 0));
+	dif_check_flags |= bdev->dif_check_flags &
+			   ~(bdev_get_ext_io_opt(opts, dif_check_flags_exclude_mask, 0));
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
 					 num_blocks, domain, domain_ctx, seq, dif_check_flags, cb, cb_arg);
@@ -6150,11 +6175,20 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			if (spdk_unlikely(seq != NULL)) {
 				return -EINVAL;
 			}
+
+			if (nvme_cdw12_raw & SPDK_DIF_FLAGS_NVME_PRACT) {
+				SPDK_ERRLOG("Separate metadata with NVMe PRACT is not supported.\n");
+				return -ENOTSUP;
+			}
+		}
+
+		if (nvme_cdw12_raw & SPDK_DIF_FLAGS_NVME_PRACT) {
+			dif_check_flags |= SPDK_DIF_FLAGS_NVME_PRACT;
 		}
 	}
 
-	dif_check_flags = bdev->dif_check_flags &
-			  ~(bdev_get_ext_io_opt(opts, dif_check_flags_exclude_mask, 0));
+	dif_check_flags |= bdev->dif_check_flags &
+			   ~(bdev_get_ext_io_opt(opts, dif_check_flags_exclude_mask, 0));
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks, num_blocks,
 					  domain, domain_ctx, seq, dif_check_flags,
