@@ -1655,12 +1655,30 @@ function is_block_zoned() {
 
 function get_zoned_devs() {
 	local -gA zoned_devs=()
-	local nvme bdf
+	local -A zoned_ctrls=()
+	local nvme bdf ns
 
-	for nvme in /sys/block/nvme*; do
-		if is_block_zoned "${nvme##*/}"; then
-			zoned_devs["${nvme##*/}"]=$(< "$nvme/device/address")
-		fi
+	# When given ctrl has > 1 namespaces attached, we need to make
+	# sure we pick up ALL of them, even if only one of them is zoned.
+	# This is because the zoned_devs[] is mainly used for PCI_BLOCKED
+	# which passed to setup.sh will skip entire ctrl, not a single
+	# ns. FIXME: this should not be necessary. We need to find a way
+	# to handle zoned devices more gracefully instead of hiding them
+	# like that from all the other non-zns test suites.
+	for nvme in /sys/class/nvme/nvme*; do
+		bdf=$(< "$nvme/address")
+		for ns in "$nvme/"nvme*n*; do
+			if is_block_zoned "${ns##*/}"; then
+				zoned_ctrls["$nvme"]=$bdf
+				continue 2
+			fi
+		done
+	done
+
+	for nvme in "${!zoned_ctrls[@]}"; do
+		for ns in "$nvme/"nvme*n*; do
+			zoned_devs["${ns##*/}"]=${zoned_ctrls["$nvme"]}
+		done
 	done
 }
 
