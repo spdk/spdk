@@ -350,6 +350,9 @@ struct nvmf_vfio_user_cq {
 	uint16_t				iv;
 	bool					ien;
 
+	/* Number of outstanding IOs that will complete in this queue. */
+	size_t					nr_outstanding;
+
 	uint32_t				last_head;
 	uint32_t				last_trigger_irq_tail;
 };
@@ -384,6 +387,11 @@ struct nvmf_vfio_user_poll_group {
 		uint64_t ctrlr_kicks;
 
 		/*
+		 * Number of times this poll group was kicked.
+		 */
+		uint64_t pg_kicks;
+
+		/*
 		 * How many times we won the race arming an SQ.
 		 */
 		uint64_t won;
@@ -405,6 +413,11 @@ struct nvmf_vfio_user_poll_group {
 		 */
 		uint64_t rearms;
 
+		/*
+		 * Number of times we had to apply flow control to this SQ.
+		 */
+		uint64_t cq_full;
+
 		uint64_t pg_process_count;
 		uint64_t intr;
 		uint64_t polls;
@@ -414,6 +427,9 @@ struct nvmf_vfio_user_poll_group {
 		uint64_t cqh_admin_writes;
 		uint64_t cqh_io_writes;
 	} stats;
+
+	/* Whether this PG needs kicking to wake up again. */
+	bool need_kick;
 };
 
 struct nvmf_vfio_user_shadow_doorbells {
@@ -697,13 +713,8 @@ in_interrupt_mode(struct nvmf_vfio_user_transport *vu_transport)
 static int vfio_user_ctrlr_intr(void *ctx);
 
 static void
-vfio_user_msg_ctrlr_intr(void *ctx)
+vfio_user_ctrlr_intr_msg(void *ctx)
 {
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx;
-	struct nvmf_vfio_user_poll_group *vu_ctrlr_group = ctrlr_to_poll_group(vu_ctrlr);
-
-	vu_ctrlr_group->stats.ctrlr_kicks++;
-
 	vfio_user_ctrlr_intr(ctx);
 }
 
@@ -721,8 +732,22 @@ ctrlr_kick(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 
 	vu_ctrlr_group = ctrlr_to_poll_group(vu_ctrlr);
 
+	vu_ctrlr_group->stats.ctrlr_kicks++;
+
 	spdk_thread_send_msg(poll_group_to_thread(vu_ctrlr_group),
-			     vfio_user_msg_ctrlr_intr, vu_ctrlr);
+			     vfio_user_ctrlr_intr_msg, vu_ctrlr);
+}
+
+/*
+ * Force a wake-up for this particular poll group and its contained SQs.
+ */
+static void
+poll_group_kick(struct nvmf_vfio_user_poll_group *vu_group)
+{
+	vu_group->stats.pg_kicks++;
+	assert(vu_group->need_kick);
+	vu_group->need_kick = false;
+	eventfd_write(vu_group->intr_fd, 1);
 }
 
 /*
@@ -1559,22 +1584,14 @@ vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
 		ret = nvmf_vfio_user_sq_poll(sq);
 
 		count += (ret < 0) ? 1 : ret;
-
-		/*
-		 * set_sq_eventidx() hit the race, so we expected
-		 * to process at least one command from this queue.
-		 * If there were no new commands waiting for us, then
-		 * we must have hit an unexpected race condition.
-		 */
-		if (ret == 0) {
-			SPDK_ERRLOG("%s: unexpected race condition detected "
-				    "while updating the shadow doorbell buffer\n",
-				    ctrlr_id(ctrlr));
-
-			fail_ctrlr(ctrlr);
-			return count;
-		}
 	}
+
+	/*
+	 * We couldn't arrange an eventidx guaranteed to cause a BAR0 write, as
+	 * we raced with the producer too many times; force ourselves to wake up
+	 * instead. We'll process all queues at that point.
+	 */
+	vu_group->need_kick = true;
 
 	SPDK_DEBUGLOG(vfio_user_db,
 		      "%s: set_sq_eventidx() lost the race %zu times\n",
@@ -1582,13 +1599,6 @@ vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	vu_group->stats.lost++;
 	vu_group->stats.lost_count += count;
-
-	/*
-	 * We couldn't arrange an eventidx guaranteed to cause a BAR0 write, as
-	 * we raced with the producer too many times; force ourselves to wake up
-	 * instead. We'll process all queues at that point.
-	 */
-	ctrlr_kick(ctrlr);
 
 	return count;
 }
@@ -1619,6 +1629,10 @@ vfio_user_poll_group_rearm(struct nvmf_vfio_user_poll_group *vu_group)
 		}
 	}
 
+	if (vu_group->need_kick) {
+		poll_group_kick(vu_group);
+	}
+
 	return count;
 }
 
@@ -1646,6 +1660,7 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	*cq_tailp(cq) = 0;
 	cq->ien = true;
 	cq->phase = true;
+	cq->nr_outstanding = 0;
 
 	ret = map_q(ctrlr, &cq->mapping, MAP_RW | MAP_INITIALIZE);
 	if (ret) {
@@ -1769,11 +1784,10 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 
 	/*
 	 * As per NVMe Base spec 3.3.1.2.1, we are supposed to implement CQ flow
-	 * control: if there is no space in the CQ, we should wait until there is.
+	 * control: that is, we should handle running out of free CQ slots.
 	 *
-	 * In practice, we just fail the controller instead: as it happens, all host
-	 * implementations we care about right-size the CQ: this is required anyway for
-	 * NVMEoF support (see 3.3.2.8).
+	 * Instead, we implement this by applying flow control on the submission
+	 * side: see handle_sq_tdbl_write().
 	 */
 	if (cq_is_full(cq)) {
 		SPDK_ERRLOG("%s: cqid:%d full (tail=%d, head=%d)\n",
@@ -1805,6 +1819,8 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 	cpl_status.sc = sc;
 	cpl_status.p = cq->phase;
 	cpl->status = cpl_status;
+
+	cq->nr_outstanding--;
 
 	/* Ensure the Completion Queue Entry is visible. */
 	spdk_wmb();
@@ -1841,6 +1857,7 @@ delete_cq_done(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
 	cq->size = 0;
 	cq->cq_state = VFIO_USER_CQ_DELETED;
 	cq->group = NULL;
+	cq->nr_outstanding = 0;
 }
 
 /* Deletes a SQ, if this SQ is the last user of the associated CQ
@@ -2575,33 +2592,49 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 		struct spdk_nvme_cmd *cmd;
 
 		/*
-		 * Linux host nvme driver can submit cmd's more than free cq slots
-		 * available. So process only those who have cq slots available.
+		 * At least the Linux nvme driver can submit more requests than
+		 * our current view of the available free CQ slots, although it
+		 * is not clear exactly why or how; it is relatively rare even
+		 * under high load.
+		 *
+		 * As we need to make sure we have free CQ slots (see
+		 * post_completion()), we implement flow control here: if the
+		 * number of currently outstanding requests for this SQ would
+		 * use all the available CQ slots, then we cannot submit this
+		 * new request.
+		 *
+		 * Instead we back off until the driver has informed us that CQ
+		 * slots are available.
 		 */
-		if (free_cq_slots-- == 0) {
+		if ((free_cq_slots-- <= cq->nr_outstanding)) {
+			struct nvmf_vfio_user_poll_group *vu_group;
 			cq->last_head = *cq_dbl_headp(cq);
 
 			free_cq_slots = cq_free_slots(cq);
-			if (free_cq_slots > 0) {
+			if (free_cq_slots > cq->nr_outstanding) {
 				continue;
 			}
 
+			vu_group = sq_to_poll_group(sq);
+
+			vu_group->stats.cq_full++;
+
 			/*
-			 * If there are no free cq slots then kick interrupt FD to loop
-			 * again to process remaining sq cmds.
-			 * In case of polling mode we will process remaining sq cmds during
-			 * next polling iteration.
-			 * sq head is advanced only for consumed commands.
+			 * There are no free CQ slots, so stop processing
+			 * submissions for this SQ until "a later time". In
+			 * interrupt mode, we need to kick ourselves, so that we
+			 * are guaranteed to wake up and come back here.
 			 */
 			if (in_interrupt_mode(ctrlr->transport)) {
-				struct nvmf_vfio_user_poll_group *vu_group = sq_to_poll_group(sq);
-				eventfd_write(vu_group->intr_fd, 1);
+				vu_group->need_kick = true;
 			}
 			break;
 		}
 
 		cmd = &queue[*sq_headp(sq)];
 		count++;
+
+		cq->nr_outstanding++;
 
 		/*
 		 * SQHD must contain the new head pointer, so we must increase
@@ -5779,6 +5812,10 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		vu_group->stats.polls_spurious++;
 	}
 
+	if (vu_group->need_kick) {
+		poll_group_kick(vu_group);
+	}
+
 	return count;
 }
 
@@ -5857,10 +5894,12 @@ nvmf_vfio_user_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group
 
 	spdk_json_write_named_uint64(w, "ctrlr_intr", vu_group->stats.ctrlr_intr);
 	spdk_json_write_named_uint64(w, "ctrlr_kicks", vu_group->stats.ctrlr_kicks);
+	spdk_json_write_named_uint64(w, "pg_kicks", vu_group->stats.pg_kicks);
 	spdk_json_write_named_uint64(w, "won", vu_group->stats.won);
 	spdk_json_write_named_uint64(w, "lost", vu_group->stats.lost);
 	spdk_json_write_named_uint64(w, "lost_count", vu_group->stats.lost_count);
 	spdk_json_write_named_uint64(w, "rearms", vu_group->stats.rearms);
+	spdk_json_write_named_uint64(w, "cq_full", vu_group->stats.cq_full);
 	spdk_json_write_named_uint64(w, "pg_process_count", vu_group->stats.pg_process_count);
 	spdk_json_write_named_uint64(w, "intr", vu_group->stats.intr);
 	spdk_json_write_named_uint64(w, "polls", vu_group->stats.polls);
