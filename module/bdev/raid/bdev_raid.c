@@ -174,7 +174,7 @@ raid_bdev_channel_get_base_info(struct raid_bdev_io_channel *raid_ch, struct spd
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
 static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
-				      raid_bdev_destruct_cb cb_fn, void *cb_arg);
+				      raid_bdev_action_cb cb_fn, void *cb_arg);
 
 static void
 raid_bdev_ch_process_cleanup(struct raid_bdev_io_channel *raid_ch)
@@ -1855,7 +1855,7 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
  * non zero - failure
  */
 static int
-raid_bdev_configure(struct raid_bdev *raid_bdev, raid_bdev_configure_cb cb, void *cb_ctx)
+raid_bdev_configure(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb, void *cb_ctx)
 {
 	uint32_t data_block_size = spdk_bdev_get_data_block_size(&raid_bdev->bdev);
 	int rc;
@@ -1931,8 +1931,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev, raid_bdev_configure_cb cb, void
  * none
  */
 static void
-raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
-		      void *cb_arg)
+raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb_fn, void *cb_arg)
 {
 	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 		if (cb_fn) {
@@ -2238,7 +2237,7 @@ raid_bdev_process_base_bdev_remove(struct raid_bdev_process *process,
 
 static int
 _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
-			    raid_base_bdev_cb cb_fn, void *cb_ctx)
+			    raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 	int ret = 0;
@@ -2308,7 +2307,7 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
  * non zero - failure
  */
 int
-raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_base_bdev_cb cb_fn, void *cb_ctx)
+raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info;
 
@@ -2475,7 +2474,7 @@ raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
  * cb_arg - argument to callback function
  */
 void
-raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_arg)
+raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb_fn, void *cb_arg)
 {
 	struct raid_base_bdev_info *base_info;
 
@@ -3228,7 +3227,7 @@ static void
 raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
-	raid_base_bdev_cb configure_cb;
+	raid_bdev_action_cb configure_cb;
 	int rc;
 
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational &&
@@ -3281,14 +3280,14 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 }
 
 static void raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
-				 raid_base_bdev_cb cb_fn, void *cb_ctx);
+				 raid_bdev_action_cb cb_fn, void *cb_ctx);
 
 static void
 raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb, int status,
 		void *ctx)
 {
 	struct raid_base_bdev_info *base_info = ctx;
-	raid_base_bdev_cb configure_cb = base_info->configure_cb;
+	raid_bdev_action_cb configure_cb = base_info->configure_cb;
 
 	switch (status) {
 	case 0:
@@ -3323,7 +3322,7 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 
 static int
 raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existing,
-			      raid_base_bdev_cb cb_fn, void *cb_ctx)
+			      raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 	struct spdk_bdev_desc *desc;
@@ -3511,7 +3510,7 @@ out:
 
 int
 raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
-			raid_base_bdev_cb cb_fn, void *cb_ctx)
+			raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info = NULL, *iter;
 	int rc;
@@ -3639,7 +3638,7 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 struct raid_bdev_examine_others_ctx {
 	struct spdk_uuid raid_bdev_uuid;
 	uint8_t current_base_bdev_idx;
-	raid_base_bdev_cb cb_fn;
+	raid_bdev_action_cb cb_fn;
 	void *cb_ctx;
 };
 
@@ -3659,7 +3658,7 @@ typedef void (*raid_bdev_examine_load_sb_cb)(struct spdk_bdev *bdev,
 static int raid_bdev_examine_load_sb(const char *bdev_name, raid_bdev_examine_load_sb_cb cb,
 				     void *cb_ctx);
 static void raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
-				 raid_base_bdev_cb cb_fn, void *cb_ctx);
+				 raid_bdev_action_cb cb_fn, void *cb_ctx);
 static void raid_bdev_examine_others(void *_ctx, int status);
 
 static void
@@ -3721,7 +3720,7 @@ out:
 
 static void
 raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
-		     raid_base_bdev_cb cb_fn, void *cb_ctx)
+		     raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
 	const struct raid_bdev_sb_base_bdev *sb_base_bdev = NULL;
 	struct raid_bdev *raid_bdev;
