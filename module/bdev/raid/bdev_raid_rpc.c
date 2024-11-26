@@ -169,10 +169,7 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
 /* TODO: replace with rpc_bdev_raid_create_ctx */
 struct rpc_bdev_raid_create_ctx_tmp {
 	struct rpc_bdev_raid_create req;
-	struct raid_bdev *raid_bdev;
 	struct spdk_jsonrpc_request *request;
-	uint8_t remaining;
-	int status;
 };
 
 static void
@@ -196,25 +193,15 @@ free_rpc_bdev_raid_create_ctx(struct rpc_bdev_raid_create_ctx_tmp *ctx)
 }
 
 static void
-rpc_bdev_raid_create_add_base_bdev_cb(void *_ctx, int status)
+rpc_bdev_raid_create_cb(void *_ctx, int status)
 {
 	struct rpc_bdev_raid_create_ctx_tmp *ctx = _ctx;
 
 	if (status != 0) {
-		ctx->status = status;
-	}
-
-	assert(ctx->remaining != 0);
-	if (--ctx->remaining > 0) {
-		return;
-	}
-
-	if (ctx->status != 0) {
-		raid_bdev_delete(ctx->raid_bdev, NULL, NULL);
-		spdk_jsonrpc_send_error_response_fmt(ctx->request, ctx->status,
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, status,
 						     "Failed to create RAID bdev %s: %s",
 						     ctx->req.name,
-						     spdk_strerror(-ctx->status));
+						     spdk_strerror(-status));
 	} else {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	}
@@ -237,11 +224,9 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_raid_create	*req;
-	struct raid_bdev		*raid_bdev;
 	int				rc;
 	size_t				i;
 	struct rpc_bdev_raid_create_ctx_tmp *ctx;
-	uint8_t				num_base_bdevs;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -257,9 +242,8 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
-	num_base_bdevs = req->base_bdevs.num_base_bdevs;
 
-	for (i = 0; i < num_base_bdevs; i++) {
+	for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
 		if (strlen(req->base_bdevs.base_bdevs[i]) == 0) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "The base bdev name cannot be empty: %s",
@@ -268,37 +252,14 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	rc = raid_bdev_create(req->name, req->strip_size_kb, num_base_bdevs,
-			      req->level, req->superblock_enabled, &req->uuid, &raid_bdev);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc,
-						     "Failed to create RAID bdev %s: %s",
-						     req->name, spdk_strerror(-rc));
-		goto cleanup;
-	}
-
-	ctx->raid_bdev = raid_bdev;
 	ctx->request = request;
-	ctx->remaining = num_base_bdevs;
 
-	assert(num_base_bdevs > 0);
-
-	for (i = 0; i < num_base_bdevs; i++) {
-		const char *base_bdev_name = req->base_bdevs.base_bdevs[i];
-
-		rc = raid_bdev_add_base_bdev(raid_bdev, base_bdev_name,
-					     rpc_bdev_raid_create_add_base_bdev_cb, ctx);
-		if (rc == -ENODEV) {
-			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n", base_bdev_name);
-			assert(ctx->remaining > 1 || i + 1 == num_base_bdevs);
-			rpc_bdev_raid_create_add_base_bdev_cb(ctx, 0);
-		} else if (rc != 0) {
-			SPDK_DEBUGLOG(bdev_raid, "Failed to add base bdev %s to RAID bdev %s: %s",
-				      base_bdev_name, req->name, spdk_strerror(-rc));
-			ctx->remaining -= (num_base_bdevs - i - 1);
-			rpc_bdev_raid_create_add_base_bdev_cb(ctx, rc);
-			break;
-		}
+	rc = raid_bdev_create(req->name, req->strip_size_kb,
+			      req->base_bdevs.num_base_bdevs, req->base_bdevs.base_bdevs,
+			      req->level, req->superblock_enabled, &req->uuid,
+			      rpc_bdev_raid_create_cb, ctx);
+	if (rc != 0) {
+		rpc_bdev_raid_create_cb(ctx, rc);
 	}
 	return;
 cleanup:

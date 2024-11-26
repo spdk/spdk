@@ -1657,6 +1657,39 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	return 0;
 }
 
+struct raid_bdev_create_ctx {
+	struct raid_bdev *raid_bdev;
+	uint8_t remaining;
+	int status;
+	raid_bdev_action_cb create_done_fn;
+	void *create_done_ctx;
+};
+
+static void
+raid_bdev_create_configure_base_bdev_cb(void *_ctx, int status)
+{
+	struct raid_bdev_create_ctx *ctx = _ctx;
+
+	if (status != 0) {
+		ctx->status = status;
+	}
+
+	assert(ctx->remaining != 0);
+	if (--ctx->remaining > 0) {
+		return;
+	}
+
+	if (ctx->status != 0) {
+		raid_bdev_delete(ctx->raid_bdev, NULL, NULL);
+	}
+
+	ctx->create_done_fn(ctx->create_done_ctx, ctx->status);
+	free(ctx);
+}
+
+static int raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existing,
+		raid_bdev_action_cb cb_fn, void *cb_ctx);
+
 /*
  * brief:
  * raid_bdev_create allocates raid bdev based on passed configuration
@@ -1664,23 +1697,29 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
  * name - name for raid bdev
  * strip_size - strip size in KB
  * num_base_bdevs - number of base bdevs
+ * base_bdev_names - array of base bdev names
  * level - raid level
  * superblock_enabled - true if raid should have superblock
  * uuid - uuid to set for the bdev
- * raid_bdev_out - the created raid bdev
+ * cb_fn - callback function
+ * cb_arg - argument to callback function
  * returns:
  * 0 - success
  * non zero - failure
  */
 int
 raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		 enum raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
-		 struct raid_bdev **raid_bdev_out)
+		 char **base_bdev_names, enum raid_level level, bool superblock_enabled,
+		 const struct spdk_uuid *uuid, raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
+	struct raid_bdev_create_ctx *ctx;
 	struct raid_bdev *raid_bdev;
+	struct raid_base_bdev_info *base_info;
+	uint8_t i;
 	int rc;
 
 	assert(uuid != NULL);
+	assert(cb_fn != NULL);
 
 	rc = _raid_bdev_create(name, strip_size, num_base_bdevs, level, superblock_enabled, uuid,
 			       &raid_bdev);
@@ -1693,9 +1732,47 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		spdk_uuid_generate(&raid_bdev->bdev.uuid);
 	}
 
+	assert(num_base_bdevs > 0);
 	raid_bdev->num_base_bdevs_operational = num_base_bdevs;
 
-	*raid_bdev_out = raid_bdev;
+	for (i = 0; i < num_base_bdevs; i++) {
+		base_info = &raid_bdev->base_bdev_info[i];
+
+		base_info->name = strdup(base_bdev_names[i]);
+		if (base_info->name == NULL) {
+			raid_bdev_delete(raid_bdev, NULL, NULL);
+			return -ENOMEM;
+		}
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		raid_bdev_delete(raid_bdev, NULL, NULL);
+		return -ENOMEM;
+	}
+
+	ctx->raid_bdev = raid_bdev;
+	ctx->remaining = num_base_bdevs;
+	ctx->create_done_fn = cb_fn;
+	ctx->create_done_ctx = cb_ctx;
+
+	for (i = 0; i < num_base_bdevs; i++) {
+		base_info = &raid_bdev->base_bdev_info[i];
+
+		rc = raid_bdev_configure_base_bdev(base_info, false,
+						   raid_bdev_create_configure_base_bdev_cb, ctx);
+		if (rc == -ENODEV) {
+			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n", base_info->name);
+			assert(ctx->remaining > 1 || i + 1 == num_base_bdevs);
+			raid_bdev_create_configure_base_bdev_cb(ctx, 0);
+		} else if (rc != 0) {
+			SPDK_DEBUGLOG(bdev_raid, "Failed to add base bdev %s to RAID bdev %s: %s",
+				      base_info->name, name, spdk_strerror(-rc));
+			ctx->remaining -= (num_base_bdevs - i - 1);
+			raid_bdev_create_configure_base_bdev_cb(ctx, rc);
+			break;
+		}
+	}
 
 	return 0;
 }
