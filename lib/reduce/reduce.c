@@ -1993,7 +1993,7 @@ _start_unmap_request_full_chunk(void *ctx)
 	chunk_map_index = vol->pm_logical_map[req->logical_map_index];
 	if (chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
 		_reduce_vol_reset_chunk(vol, chunk_map_index);
-		req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
+		req->chunk = _reduce_vol_get_chunk_map(vol, chunk_map_index);
 		_reduce_persist(vol, req->chunk,
 				_reduce_vol_get_chunk_struct_size(vol->backing_io_units_per_chunk));
 		vol->pm_logical_map[req->logical_map_index] = REDUCE_EMPTY_MAP_ENTRY;
