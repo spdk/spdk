@@ -11,7 +11,37 @@
 static bool
 is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
 {
-	return spdk_bdev_get_block_size(bdev) == FTL_BLOCK_SIZE;
+	uint64_t write_unit_size = spdk_bdev_get_write_unit_size(bdev);
+
+	if (spdk_bdev_get_block_size(bdev) != FTL_BLOCK_SIZE) {
+		FTL_ERRLOG(dev, "Unsupported block size, only 4096 is supprted.\nn");
+		return false;
+	}
+
+	if (spdk_bdev_get_md_size(bdev) != 0) {
+		/* Bdev's metadata is unsupported */
+		FTL_ERRLOG(dev, "Unsupported metadata size, sector metadata isn't supported.\n");
+		return false;
+	}
+
+	if (write_unit_size == 1) {
+		/* No write unit size, all alignments will work out fine */
+		return true;
+	}
+
+	if (!spdk_u32_is_pow2(write_unit_size) || write_unit_size > (MiB / FTL_BLOCK_SIZE)) {
+		/* Needs to be a power of 2 for current band size (1GiB) restrictions.
+		 * Current buffers are allocated in 1MiB sizes (256 blocks), so it can't be larger than that.
+		 * In the future, if the restriction is relaxed, the ftl_bitmap_buffer_alignment (64 blocks)
+		 * will need to be taken into consideration as well.
+		 */
+		FTL_ERRLOG(dev,
+			   "Unsupported write unit size (%lu), must be a power of 2 (in blocks). Can't be larger than 256 (1MiB)\n",
+			   write_unit_size);
+		return false;
+	}
+
+	return true;
 }
 
 static void
