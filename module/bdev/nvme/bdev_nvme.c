@@ -349,17 +349,17 @@ nvme_bdev_ctrlr_get_ctrlr_by_id(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 static struct nvme_bdev *
 nvme_bdev_ctrlr_get_bdev(struct nvme_bdev_ctrlr *nbdev_ctrlr, uint32_t nsid)
 {
-	struct nvme_bdev *bdev;
+	struct nvme_bdev *nbdev;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH(bdev, &nbdev_ctrlr->bdevs, tailq) {
-		if (bdev->nsid == nsid) {
+	TAILQ_FOREACH(nbdev, &nbdev_ctrlr->bdevs, tailq) {
+		if (nbdev->nsid == nsid) {
 			break;
 		}
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	return bdev;
+	return nbdev;
 }
 
 struct nvme_ns *
@@ -1889,23 +1889,23 @@ bdev_nvme_poll_adminq(void *arg)
 static void
 nvme_bdev_free(void *io_device)
 {
-	struct nvme_bdev *nvme_disk = io_device;
+	struct nvme_bdev *nbdev = io_device;
 
-	pthread_mutex_destroy(&nvme_disk->mutex);
-	free(nvme_disk->disk.name);
-	free(nvme_disk->err_stat);
-	free(nvme_disk);
+	pthread_mutex_destroy(&nbdev->mutex);
+	free(nbdev->disk.name);
+	free(nbdev->err_stat);
+	free(nbdev);
 }
 
 static int
 bdev_nvme_destruct(void *ctx)
 {
-	struct nvme_bdev *nvme_disk = ctx;
+	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns, *tmp_nvme_ns;
 
-	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nvme_disk->nbdev_ctrlr->name, nvme_disk->nsid);
+	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nbdev->nbdev_ctrlr->name, nbdev->nsid);
 
-	TAILQ_FOREACH_SAFE(nvme_ns, &nvme_disk->nvme_ns_list, tailq, tmp_nvme_ns) {
+	TAILQ_FOREACH_SAFE(nvme_ns, &nbdev->nvme_ns_list, tailq, tmp_nvme_ns) {
 		pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
 		nvme_ns->bdev = NULL;
@@ -1923,10 +1923,10 @@ bdev_nvme_destruct(void *ctx)
 	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_REMOVE(&nvme_disk->nbdev_ctrlr->bdevs, nvme_disk, tailq);
+	TAILQ_REMOVE(&nbdev->nbdev_ctrlr->bdevs, nbdev, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	spdk_io_device_unregister(nvme_disk, nvme_bdev_free);
+	spdk_io_device_unregister(nbdev, nvme_bdev_free);
 
 	return 0;
 }
@@ -3826,22 +3826,22 @@ bdev_nvme_destroy_poll_group_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 bdev_nvme_get_io_channel(void *ctx)
 {
-	struct nvme_bdev *nvme_bdev = ctx;
+	struct nvme_bdev *nbdev = ctx;
 
-	return spdk_get_io_channel(nvme_bdev);
+	return spdk_get_io_channel(nbdev);
 }
 
 static void *
 bdev_nvme_get_module_ctx(void *ctx)
 {
-	struct nvme_bdev *nvme_bdev = ctx;
+	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns;
 
-	if (!nvme_bdev || nvme_bdev->disk.module != &nvme_if) {
+	if (!nbdev || nbdev->disk.module != &nvme_if) {
 		return NULL;
 	}
 
-	nvme_ns = TAILQ_FIRST(&nvme_bdev->nvme_ns_list);
+	nvme_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
 	if (!nvme_ns) {
 		return NULL;
 	}
@@ -4125,23 +4125,23 @@ nvme_bdev_get_mp_selector_str(struct nvme_bdev *nbdev)
 static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
-	struct nvme_bdev *nvme_bdev = ctx;
+	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns;
 
-	pthread_mutex_lock(&nvme_bdev->mutex);
+	pthread_mutex_lock(&nbdev->mutex);
 	spdk_json_write_named_array_begin(w, "nvme");
-	TAILQ_FOREACH(nvme_ns, &nvme_bdev->nvme_ns_list, tailq) {
+	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		nvme_namespace_info_json(w, nvme_ns);
 	}
 	spdk_json_write_array_end(w);
-	spdk_json_write_named_string(w, "mp_policy", nvme_bdev_get_mp_policy_str(nvme_bdev));
-	if (nvme_bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
-		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nvme_bdev));
-		if (nvme_bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
-			spdk_json_write_named_uint32(w, "rr_min_io", nvme_bdev->rr_min_io);
+	spdk_json_write_named_string(w, "mp_policy", nvme_bdev_get_mp_policy_str(nbdev));
+	if (nbdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nbdev));
+		if (nbdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
 		}
 	}
-	pthread_mutex_unlock(&nvme_bdev->mutex);
+	pthread_mutex_unlock(&nbdev->mutex);
 
 	return 0;
 }
@@ -4429,9 +4429,9 @@ nvme_generate_uuid(const char *sn, uint32_t nsid, struct spdk_uuid *uuid)
 }
 
 static int
-nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
-		 struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
-		 struct spdk_bdev_nvme_ctrlr_opts *bdev_opts, void *ctx)
+nbdev_create(struct spdk_bdev *disk, const char *base_name,
+	     struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
+	     struct spdk_bdev_nvme_ctrlr_opts *bdev_opts, void *ctx)
 {
 	const struct spdk_uuid		*uuid;
 	const uint8_t *nguid;
@@ -4584,83 +4584,83 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 static struct nvme_bdev *
 nvme_bdev_alloc(void)
 {
-	struct nvme_bdev *bdev;
+	struct nvme_bdev *nbdev;
 	int rc;
 
-	bdev = calloc(1, sizeof(*bdev));
-	if (!bdev) {
-		SPDK_ERRLOG("bdev calloc() failed\n");
+	nbdev = calloc(1, sizeof(*nbdev));
+	if (!nbdev) {
+		SPDK_ERRLOG("nbdev calloc() failed\n");
 		return NULL;
 	}
 
 	if (g_opts.nvme_error_stat) {
-		bdev->err_stat = calloc(1, sizeof(struct nvme_error_stat));
-		if (!bdev->err_stat) {
+		nbdev->err_stat = calloc(1, sizeof(struct nvme_error_stat));
+		if (!nbdev->err_stat) {
 			SPDK_ERRLOG("err_stat calloc() failed\n");
-			free(bdev);
+			free(nbdev);
 			return NULL;
 		}
 	}
 
-	rc = pthread_mutex_init(&bdev->mutex, NULL);
+	rc = pthread_mutex_init(&nbdev->mutex, NULL);
 	if (rc != 0) {
-		free(bdev->err_stat);
-		free(bdev);
+		free(nbdev->err_stat);
+		free(nbdev);
 		return NULL;
 	}
 
-	bdev->ref = 1;
-	bdev->mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
-	bdev->mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
-	bdev->rr_min_io = UINT32_MAX;
-	TAILQ_INIT(&bdev->nvme_ns_list);
+	nbdev->ref = 1;
+	nbdev->mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+	nbdev->mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+	nbdev->rr_min_io = UINT32_MAX;
+	TAILQ_INIT(&nbdev->nvme_ns_list);
 
-	return bdev;
+	return nbdev;
 }
 
 static int
 nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
-	struct nvme_bdev *bdev;
+	struct nvme_bdev *nbdev;
 	struct nvme_bdev_ctrlr *nbdev_ctrlr = nvme_ctrlr->nbdev_ctrlr;
 	int rc;
 
-	bdev = nvme_bdev_alloc();
-	if (bdev == NULL) {
+	nbdev = nvme_bdev_alloc();
+	if (nbdev == NULL) {
 		SPDK_ERRLOG("Failed to allocate NVMe bdev\n");
 		return -ENOMEM;
 	}
 
-	bdev->opal = nvme_ctrlr->opal_dev != NULL;
+	nbdev->opal = nvme_ctrlr->opal_dev != NULL;
 
-	rc = nvme_disk_create(&bdev->disk, nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
-			      nvme_ns->ns, &nvme_ctrlr->opts, bdev);
+	rc = nbdev_create(&nbdev->disk, nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
+			  nvme_ns->ns, &nvme_ctrlr->opts, nbdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
-		nvme_bdev_free(bdev);
+		nvme_bdev_free(nbdev);
 		return rc;
 	}
 
-	spdk_io_device_register(bdev,
+	spdk_io_device_register(nbdev,
 				bdev_nvme_create_bdev_channel_cb,
 				bdev_nvme_destroy_bdev_channel_cb,
 				sizeof(struct nvme_bdev_channel),
-				bdev->disk.name);
+				nbdev->disk.name);
 
-	nvme_ns->bdev = bdev;
-	bdev->nsid = nvme_ns->id;
-	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
+	nvme_ns->bdev = nbdev;
+	nbdev->nsid = nvme_ns->id;
+	TAILQ_INSERT_TAIL(&nbdev->nvme_ns_list, nvme_ns, tailq);
 
-	bdev->nbdev_ctrlr = nbdev_ctrlr;
-	TAILQ_INSERT_TAIL(&nbdev_ctrlr->bdevs, bdev, tailq);
+	nbdev->nbdev_ctrlr = nbdev_ctrlr;
+	TAILQ_INSERT_TAIL(&nbdev_ctrlr->bdevs, nbdev, tailq);
 
-	rc = spdk_bdev_register(&bdev->disk);
+	rc = spdk_bdev_register(&nbdev->disk);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_bdev_register() failed\n");
-		spdk_io_device_unregister(bdev, NULL);
+		spdk_io_device_unregister(nbdev, NULL);
 		nvme_ns->bdev = NULL;
-		TAILQ_REMOVE(&nbdev_ctrlr->bdevs, bdev, tailq);
-		nvme_bdev_free(bdev);
+		TAILQ_REMOVE(&nbdev_ctrlr->bdevs, nbdev, tailq);
+		nvme_bdev_free(nbdev);
 		return rc;
 	}
 
@@ -4892,7 +4892,7 @@ bdev_nvme_add_io_path_done(struct nvme_bdev *nbdev, void *ctx, int status)
 }
 
 static int
-nvme_bdev_add_ns(struct nvme_bdev *bdev, struct nvme_ns *nvme_ns)
+nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 {
 	struct nvme_ns *tmp_ns;
 	const struct spdk_nvme_ns_data *nsdata;
@@ -4903,25 +4903,25 @@ nvme_bdev_add_ns(struct nvme_bdev *bdev, struct nvme_ns *nvme_ns)
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&bdev->mutex);
+	pthread_mutex_lock(&nbdev->mutex);
 
-	tmp_ns = TAILQ_FIRST(&bdev->nvme_ns_list);
+	tmp_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
 	assert(tmp_ns != NULL);
 
 	if (tmp_ns->ns != NULL && !bdev_nvme_compare_ns(nvme_ns->ns, tmp_ns->ns)) {
-		pthread_mutex_unlock(&bdev->mutex);
+		pthread_mutex_unlock(&nbdev->mutex);
 		SPDK_ERRLOG("Namespaces are not identical.\n");
 		return -EINVAL;
 	}
 
-	bdev->ref++;
-	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
-	nvme_ns->bdev = bdev;
+	nbdev->ref++;
+	TAILQ_INSERT_TAIL(&nbdev->nvme_ns_list, nvme_ns, tailq);
+	nvme_ns->bdev = nbdev;
 
-	pthread_mutex_unlock(&bdev->mutex);
+	pthread_mutex_unlock(&nbdev->mutex);
 
 	/* Add nvme_io_path to nvme_bdev_channels dynamically. */
-	nvme_bdev_for_each_channel(bdev,
+	nvme_bdev_for_each_channel(nbdev,
 				   bdev_nvme_add_io_path,
 				   nvme_ns,
 				   bdev_nvme_add_io_path_done);
@@ -4996,34 +4996,34 @@ bdev_nvme_delete_io_path_done(struct nvme_bdev *nbdev, void *ctx, int status)
 static void
 nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
-	struct nvme_bdev *bdev;
+	struct nvme_bdev *nbdev;
 
 	spdk_poller_unregister(&nvme_ns->anatt_timer);
 
-	bdev = nvme_ns->bdev;
-	if (bdev != NULL) {
-		pthread_mutex_lock(&bdev->mutex);
+	nbdev = nvme_ns->bdev;
+	if (nbdev != NULL) {
+		pthread_mutex_lock(&nbdev->mutex);
 
-		assert(bdev->ref > 0);
-		bdev->ref--;
-		if (bdev->ref == 0) {
-			pthread_mutex_unlock(&bdev->mutex);
+		assert(nbdev->ref > 0);
+		nbdev->ref--;
+		if (nbdev->ref == 0) {
+			pthread_mutex_unlock(&nbdev->mutex);
 
-			spdk_bdev_unregister(&bdev->disk, NULL, NULL);
+			spdk_bdev_unregister(&nbdev->disk, NULL, NULL);
 		} else {
 			/* spdk_bdev_unregister() is not called until the last nvme_ns is
 			 * depopulated. Hence we need to remove nvme_ns from bdev->nvme_ns_list
 			 * and clear nvme_ns->bdev here.
 			 */
-			TAILQ_REMOVE(&bdev->nvme_ns_list, nvme_ns, tailq);
+			TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
 			nvme_ns->bdev = NULL;
 
-			pthread_mutex_unlock(&bdev->mutex);
+			pthread_mutex_unlock(&nbdev->mutex);
 
 			/* Delete nvme_io_paths from nvme_bdev_channels dynamically. After that,
 			 * we call depopulate_namespace_done() to avoid use-after-free.
 			 */
-			nvme_bdev_for_each_channel(bdev,
+			nvme_bdev_for_each_channel(nbdev,
 						   bdev_nvme_delete_io_path,
 						   nvme_ns,
 						   bdev_nvme_delete_io_path_done);
@@ -5041,7 +5041,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ns	*nvme_ns, *next;
 	struct spdk_nvme_ns	*ns;
-	struct nvme_bdev	*bdev;
+	struct nvme_bdev	*nbdev;
 	uint32_t		nsid;
 	int			rc;
 	uint64_t		num_sectors;
@@ -5069,20 +5069,20 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			}
 
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
-			bdev = nvme_ns->bdev;
-			assert(bdev != NULL);
-			if (bdev->disk.blockcnt != num_sectors) {
+			nbdev = nvme_ns->bdev;
+			assert(nbdev != NULL);
+			if (nbdev->disk.blockcnt != num_sectors) {
 				NVME_CTRLR_NOTICELOG(nvme_ctrlr,
 						     "NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
 						     nvme_ns->id,
-						     bdev->disk.name,
-						     bdev->disk.blockcnt,
+						     nbdev->disk.name,
+						     nbdev->disk.blockcnt,
 						     num_sectors);
-				rc = spdk_bdev_notify_blockcnt_change(&bdev->disk, num_sectors);
+				rc = spdk_bdev_notify_blockcnt_change(&nbdev->disk, num_sectors);
 				if (rc != 0) {
 					NVME_CTRLR_ERRLOG(nvme_ctrlr,
 							  "Could not change num blocks for nvme bdev: name %s, errno: %d.\n",
-							  bdev->disk.name, rc);
+							  nbdev->disk.name, rc);
 				}
 			}
 		} else {
