@@ -1905,6 +1905,8 @@ bdev_nvme_destruct(void *ctx)
 
 	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nbdev->nbdev_ctrlr->name, nbdev->nsid);
 
+	pthread_mutex_lock(&nbdev->mutex);
+
 	TAILQ_FOREACH_SAFE(nvme_ns, &nbdev->nvme_ns_list, tailq, tmp_nvme_ns) {
 		pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
@@ -1921,6 +1923,8 @@ bdev_nvme_destruct(void *ctx)
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 		}
 	}
+
+	pthread_mutex_unlock(&nbdev->mutex);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&nbdev->nbdev_ctrlr->bdevs, nbdev, tailq);
@@ -5016,7 +5020,10 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 			 * and clear nvme_ns->bdev here.
 			 */
 			TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
+
+			pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 			nvme_ns->bdev = NULL;
+			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 			pthread_mutex_unlock(&nbdev->mutex);
 
