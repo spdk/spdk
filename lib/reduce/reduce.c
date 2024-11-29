@@ -2016,6 +2016,14 @@ _reduce_vol_unmap_full_chunk(struct spdk_reduce_vol *vol,
 	logical_map_index = offset / vol->logical_blocks_per_chunk;
 	overlapped = _check_overlap(vol, logical_map_index);
 
+	if (!overlapped && vol->pm_logical_map[logical_map_index] == REDUCE_EMPTY_MAP_ENTRY) {
+		/*
+		 * This chunk hasn't been allocated. Nothing needs to be done.
+		 */
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
 	req = TAILQ_FIRST(&vol->free_requests);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
