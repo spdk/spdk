@@ -75,8 +75,10 @@ lvs_alloc(void)
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
 	TAILQ_INIT(&lvs->retry_open_lvols);
+	TAILQ_INIT(&lvs->pending_update_lvols);
 
 	lvs->load_esnaps = false;
+	lvs->leader = false;
 	RB_INIT(&lvs->degraded_lvol_sets_tree);
 	lvs->thread = spdk_get_thread();
 
@@ -99,9 +101,10 @@ lvs_free(struct spdk_lvol_store *lvs)
 
 static struct spdk_lvol *
 lvol_alloc(struct spdk_lvol_store *lvs, const char *name, bool thin_provision,
-	   enum lvol_clear_method clear_method)
+	   enum lvol_clear_method clear_method, const char *uuid_str)
 {
 	struct spdk_lvol *lvol;
+	struct spdk_uuid uuid;
 
 	lvol = calloc(1, sizeof(*lvol));
 	if (lvol == NULL) {
@@ -109,9 +112,19 @@ lvol_alloc(struct spdk_lvol_store *lvs, const char *name, bool thin_provision,
 	}
 
 	lvol->lvol_store = lvs;
+	// TODO add flag to check if load successfully done for blob
+	// on the fail we should response the incoming IO with fail
+	lvol->leader = false;
 	lvol->clear_method = (enum blob_clear_method)clear_method;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
-	spdk_uuid_generate(&lvol->uuid);
+	if (uuid_str == NULL) {
+		spdk_uuid_generate(&lvol->uuid);
+	} else {
+		if (spdk_uuid_parse(&uuid, uuid_str)) {
+			return NULL;
+		}
+		spdk_uuid_copy(&lvol->uuid, &uuid);
+	}
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 	spdk_uuid_fmt_lower(lvol->unique_id, sizeof(lvol->uuid_str), &lvol->uuid);
 
@@ -1206,7 +1219,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	lvol = lvol_alloc(lvs, name, thin_provision, clear_method);
+	lvol = lvol_alloc(lvs, name, thin_provision, clear_method, NULL);
 	if (!lvol) {
 		free(req);
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
@@ -1225,6 +1238,18 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	spdk_bs_create_blob_ext(lvs->blobstore, &opts, lvol_create_cb, req);
 
+	return 0;
+}
+
+
+// TODO check the reference for that blob incase of snapshots and clons
+int
+spdk_lvol_copy_blob(struct spdk_lvol *lvol)
+{
+	lvol->tmp_blob = spdk_bs_copy_blob(lvol->lvol_store->blobstore, lvol->blob);
+	if (!lvol->tmp_blob) {
+		return -1;
+	}
 	return 0;
 }
 
@@ -1269,7 +1294,7 @@ spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t siz
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	lvol = lvol_alloc(lvs, clone_name, true, LVOL_CLEAR_WITH_DEFAULT);
+	lvol = lvol_alloc(lvs, clone_name, true, LVOL_CLEAR_WITH_DEFAULT, NULL);
 	if (!lvol) {
 		free(req);
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
@@ -1333,7 +1358,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	}
 
 	newlvol = lvol_alloc(origlvol->lvol_store, snapshot_name, true,
-			     (enum lvol_clear_method)origlvol->clear_method);
+			     (enum lvol_clear_method)origlvol->clear_method, NULL);
 	if (!newlvol) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		free(req);
@@ -1393,7 +1418,7 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 		return;
 	}
 
-	newlvol = lvol_alloc(lvs, clone_name, true, (enum lvol_clear_method)origlvol->clear_method);
+	newlvol = lvol_alloc(lvs, clone_name, true, (enum lvol_clear_method)origlvol->clear_method, NULL);
 	if (!newlvol) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		free(req);
@@ -1458,6 +1483,58 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	req->lvol = lvol;
 
 	spdk_blob_resize(blob, new_clusters, lvol_blob_resize_cb, req);
+}
+
+int
+spdk_lvol_register_live(struct spdk_lvol_store *lvs, const char *name, const char *uuid_str, uint64_t blobid,
+		 bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
+		 void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	// struct spdk_blob_store *bs;
+	struct spdk_lvol *lvol;
+	// struct spdk_blob_opts opts;
+	// char *xattr_names[] = {LVOL_NAME, "uuid"};
+	int rc;
+
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		return -EINVAL;
+	}
+
+	rc = lvs_verify_lvol_name(lvs, name);
+	if (rc < 0) {
+		return rc;
+	}
+
+	// bs = lvs->blobstore;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	lvol = lvol_alloc(lvs, name, thin_provision, clear_method, uuid_str);
+	if (!lvol) {
+		free(req);
+		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
+		return -ENOMEM;
+	}
+
+	req->lvol = lvol;
+	// spdk_blob_opts_init(&opts, sizeof(opts));
+	// opts.thin_provision = thin_provision;
+	// opts.num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
+	// opts.clear_method = lvol->clear_method;
+	// opts.xattrs.count = SPDK_COUNTOF(xattr_names);
+	// opts.xattrs.names = xattr_names;
+	// opts.xattrs.ctx = lvol;
+	// opts.xattrs.get_value = lvol_get_xattr_value;
+	lvol_create_cb((void *)req, blobid, 0);	
+	return 0;	
 }
 
 static void
@@ -1599,8 +1676,13 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	}
 
 	lvol->action_in_progress = true;
-
-	spdk_bs_delete_blob(bs, lvol->blob_id, lvol_delete_blob_cb, req);
+	if (lvol->leader) {
+		spdk_bs_delete_blob(bs, lvol->blob_id, lvol_delete_blob_cb, req);
+	} else {
+		// TODO add check for snapshots and clons
+		spdk_bs_delete_blob_non_leader(bs, lvol->tmp_blob);
+		lvol_delete_blob_cb(req , 0);
+	}
 }
 
 void
@@ -1765,6 +1847,167 @@ spdk_lvs_grow_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void
 	req->lvol_store = lvs;
 
 	spdk_bs_grow_live(lvs->blobstore, lvs_grow_live_cb, req);
+}
+
+static void
+lvs_update_live_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_req *req = (struct spdk_lvs_req *)cb_arg;
+
+	if (req->cb_fn) {
+		req->cb_fn(req->cb_arg, lvolerrno);
+	}
+	free(req);
+	return;
+}
+
+void
+spdk_lvs_update_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOMEM);
+		}
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol_store = lvs;
+	assert(lvs->leader == false);
+	spdk_bs_update_live(lvs->blobstore, lvs_update_live_cb, req);
+}
+
+static void
+lvol_update_on_failover_cpl(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_update_on_failover_req *req = cb_arg;
+	struct spdk_lvol *lvol = req->lvol;
+	spdk_lvol_set_leader_by_uuid(&lvol->uuid, true);
+	// spdk_blob_failover_unfreaze(lvol->blob, NULL, NULL);
+	if (lvolerrno < 0) {
+		// lvol_free(lvol);
+		//remember call function to drop the IO for this lvol
+		// req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		free(req);
+		assert(false);
+		return;
+	}
+	
+	free(req);
+}
+
+void
+lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_msg)
+{
+
+	struct spdk_lvol_update_on_failover_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+		//remember call function to drop the IO for this lvol
+		assert(false);
+		// if (cb_fn) {
+		// 	cb_fn(cb_arg, -ENOMEM);
+		// }
+		return;
+	}
+
+	// remember
+	// call function to drop the IO for this lvol
+	// req->cb_fn = lvol_update_cpl;
+	req->cb_arg = lvol;
+	req->lvol_store = lvs;
+	req->lvol = lvol;
+	if (!send_msg) {
+		spdk_blob_update_on_failover(lvol->blob, lvol_update_on_failover_cpl, req);
+	} else {
+		// we should send msg to below function on md thread
+		spdk_blob_update_on_failover_send_msg(lvol->blob, lvol_update_on_failover_cpl, req);
+		// spdk_blob_update_on_failover(lvol->blob, lvol_update_on_failover_cpl, req);
+	}
+}
+
+static void
+lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_req *req = (struct spdk_lvs_req *)cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_lvol *lvol, *tmp;
+	if (lvolerrno == 0) {
+		spdk_lvs_set_leader_by_uuid(&lvs->uuid, true);		
+		free(req);
+		TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
+			TAILQ_REMOVE(&lvs->pending_update_lvols, lvol, entry_to_update);
+			assert(lvol->update_in_progress == true);
+			// still in md thread so we can call the load function
+			lvol_update_on_failover(lvs, lvol, false);
+		}
+		return;
+	}
+	// no idea what to do it should never come here	
+	SPDK_ERRLOG("Cannot update lvolstore on failover ...\n");
+	//remember call function to drop the IO for this lvol
+	assert(false);
+	// if (req->cb_fn) {
+	// 	req->cb_fn(req->cb_arg, lvolerrno);
+	// }
+
+	free(req);
+	return;	
+}
+
+void
+spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs)
+{
+	struct spdk_lvs_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+		// if (cb_fn) {
+		// 	cb_fn(cb_arg, -ENOMEM);
+		// }
+		return;
+	}
+
+	req->cb_fn = NULL;
+	req->cb_arg = NULL;
+	req->lvol_store = lvs;
+
+	spdk_bs_update_on_failover(lvs->blobstore, lvs_update_on_failover_cpl, req);
+}
+
+
+void
+spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol)
+{
+	bool update = false;
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	if (!lvol->update_in_progress) {
+		assert(lvol->leader == false);
+		lvol->update_in_progress = true;
+		blob_freeze_on_failover(lvol->blob);
+		if (lvs->leader) {
+			update = true;
+		} else {
+			assert(lvs->update_in_progress == true);
+			TAILQ_INSERT_TAIL(&lvs->pending_update_lvols, lvol, entry_to_update);
+			// add to queue to process after lvs get the leadership
+		}
+	}	
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	// we need to first create function on blobstore to send msg to md thread
+	// second we need to call lvol update function or load
+	// third call callback function to change the state to leader
+	if (update) {
+		lvol_update_on_failover(lvs, lvol, true);
+	}	
 }
 
 void
@@ -2206,6 +2449,76 @@ spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid)
 
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 	return NULL;
+}
+
+bool
+spdk_lvs_check_active_process(struct spdk_lvol_store *lvs)
+{
+	bool start;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	if (!lvs->update_in_progress) {
+		lvs->update_in_progress = true;
+		start = true;
+	} else {
+		start = false;
+	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	return start;
+}
+
+void
+spdk_lvs_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader)
+{
+	struct spdk_lvol_store *lvs;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		if (spdk_uuid_compare(uuid, &lvs->uuid) == 0) {
+			lvs->leader = leader;
+		}
+	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+}
+
+void
+spdk_lvol_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+			if (spdk_uuid_compare(uuid, &lvol->uuid) == 0) {
+				lvol->leader = leader;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+}
+
+void
+spdk_set_leader_all(bool leader)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		lvs->leader = leader;
+		lvs->update_in_progress = leader;
+		TAILQ_FOREACH(lvol, &lvs->lvols, link) {			
+			lvol->leader = leader;
+			lvol->update_in_progress = leader;			
+		}
+	}
+
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
 }
 
 struct spdk_lvol *

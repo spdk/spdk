@@ -676,7 +676,14 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
-
+	if (!lvol->leader) {
+		// check blob state it must be CLEAN
+		// copy the blob
+		if (spdk_lvol_copy_blob(lvol)) {
+			cb_fn(cb_arg, -ENODEV);
+			return;
+		}
+	}
 	_vbdev_lvol_destroy(lvol, cb_fn, cb_arg);
 }
 
@@ -738,6 +745,10 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "snapshot", spdk_blob_is_snapshot(blob));
 
 	spdk_json_write_named_bool(w, "clone", spdk_blob_is_clone(blob));
+	spdk_json_write_named_bool(w, "lvol_leadership", lvol->leader);
+	spdk_json_write_named_bool(w, "lvs_leadership", lvol->lvol_store->leader);
+	spdk_json_write_named_uint64(w, "blobid", spdk_blob_get_id(blob));
+	spdk_json_write_named_uint8(w, "lvol_priority_class", lvol->priority_class);
 
 	if (spdk_blob_is_clone(blob)) {
 		spdk_blob_id snapshotid = spdk_blob_get_parent_snapshot(lvol->lvol_store->blobstore, lvol->blob_id);
@@ -952,6 +963,17 @@ static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+	bool allow_active = false;
+	if (!lvol->lvol_store->leader && !lvol->lvol_store->update_in_progress) {
+		allow_active = spdk_lvs_check_active_process(lvol->lvol_store);
+		if (allow_active) {
+			spdk_lvs_update_on_failover(lvol->lvol_store);			
+		}
+	}
+
+	if (!lvol->leader && !lvol->update_in_progress) {
+		spdk_lvol_update_on_failover(lvol->lvol_store, lvol);
+	}
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -1274,6 +1296,31 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	return rc;
 }
 
+int
+vbdev_lvol_register(struct spdk_lvol_store *lvs, const char *name, const char *registered_uuid, uint64_t blobid,
+		  bool thin_provision, enum lvol_clear_method clear_method, int8_t lvol_priority_class,
+		  spdk_lvol_op_with_handle_complete cb_fn,
+		  void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+	req->lvol_priority_class = lvol_priority_class;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_register_live(lvs, name, registered_uuid, blobid, thin_provision, clear_method,
+			      _vbdev_lvol_create_cb, req);
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}
 
 void
 vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
