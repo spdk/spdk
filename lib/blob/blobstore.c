@@ -645,11 +645,22 @@ blob_deserialize_xattr(struct spdk_blob *blob,
 {
 	struct spdk_xattr                       *xattr;
 	struct spdk_xattr                       *xattr_tmp;
+	struct spdk_xattr                       *xattr_tmp;
 
 	if (desc_xattr->length != sizeof(desc_xattr->name_length) +
 	    sizeof(desc_xattr->value_length) +
 	    desc_xattr->name_length + desc_xattr->value_length) {
 		return -EINVAL;
+	}
+
+
+	// remember 
+	// TODO maybe its better to clear the xatters so that we did not need this check
+	TAILQ_FOREACH(xattr_tmp, internal ? &blob->xattrs_internal : &blob->xattrs, link) {
+		if (!strcmp(desc_xattr->name, xattr_tmp->name)) {
+			// TODO check if the value is same too.
+			return 0;
+		}
 	}
 
 

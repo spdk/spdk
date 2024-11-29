@@ -399,6 +399,39 @@ void
 spdk_blob_update_on_failover_send_msg(struct spdk_blob *blob,
 				spdk_blob_op_complete cb_fn, void *cb_arg);
 /**
+ * update a blobstore according to bit array synced.
+ * Can be used on loaded blobstore, even with opened blobs.
+ *
+ * \param bs blobstore to update.
+ * \param cb_fn Called when the updating is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_update_live(struct spdk_blob_store *bs,
+		       spdk_bs_op_complete cb_fn, void *cb_arg);
+
+void spdk_blob_failover_unfreaze(struct spdk_blob *blob, 
+				spdk_blob_op_complete cb_fn, void *cb_arg);
+
+void
+blob_freeze_on_failover(struct spdk_blob *blob);
+/**
+ * update a blobstore according to bit array synced.
+ * Can be used on loaded blobstore, even with opened blobs.
+ *
+ * \param bs blobstore to update.
+ * \param cb_fn Called when the updating is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void
+spdk_bs_update_on_failover(struct spdk_blob_store *bs,
+		       spdk_bs_op_complete cb_fn, void *cb_arg);
+
+void spdk_blob_update_on_failover(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
+
+void
+spdk_blob_update_on_failover_send_msg(struct spdk_blob *blob,
+				spdk_blob_op_complete cb_fn, void *cb_arg);
+/**
  * Initialize a blobstore on the given device.
  *
  * \param dev Blobstore block device.
