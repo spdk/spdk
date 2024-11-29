@@ -810,26 +810,24 @@ dd_uring_poll(void *ctx)
 
 	for (i = 0; i < (int)g_opts.queue_depth; i++) {
 		rc = io_uring_peek_cqe(&g_job.u.uring.ring, &cqe);
-		if (rc == 0) {
-			if (cqe->res == -EAGAIN) {
-				continue;
-			} else if (cqe->res < 0) {
-				SPDK_ERRLOG("%s\n", strerror(-cqe->res));
-				g_error = cqe->res;
-			}
-
-			io = io_uring_cqe_get_data(cqe);
-			io_uring_cqe_seen(&g_job.u.uring.ring, cqe);
-
-			dd_complete_poll(io);
-		} else if (rc != - EAGAIN) {
-			SPDK_ERRLOG("%s\n", strerror(-rc));
-			g_error = rc;
+		if (rc == -EAGAIN) {
+			break;
 		}
+		assert(cqe != NULL);
+
+		io = io_uring_cqe_get_data(cqe);
+		if (cqe->res < 0) {
+			SPDK_ERRLOG("%s\n", strerror(-cqe->res));
+			dd_exit(cqe->res);
+		}
+
+		io_uring_cqe_seen(&g_job.u.uring.ring, cqe);
+		dd_complete_poll(io);
 	}
 
-	return rc;
+	return (i ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE);
 }
+
 #endif
 
 static int
@@ -860,7 +858,7 @@ dd_aio_poll(void *ctx)
 		dd_complete_poll(io);
 	}
 
-	return rc;
+	return (i ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE);
 }
 
 static int
