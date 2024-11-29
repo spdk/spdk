@@ -4655,6 +4655,8 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	nbdev->nsid = nvme_ns->id;
 	TAILQ_INSERT_TAIL(&nbdev->nvme_ns_list, nvme_ns, tailq);
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
 	nbdev->nbdev_ctrlr = nbdev_ctrlr;
 	TAILQ_INSERT_TAIL(&nbdev_ctrlr->bdevs, nbdev, tailq);
 
@@ -4663,10 +4665,16 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		SPDK_ERRLOG("spdk_bdev_register() failed\n");
 		spdk_io_device_unregister(nbdev, NULL);
 		nvme_ns->bdev = NULL;
+
 		TAILQ_REMOVE(&nbdev_ctrlr->bdevs, nbdev, tailq);
+
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
 		nvme_bdev_free(nbdev);
 		return rc;
 	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	return 0;
 }
@@ -4827,7 +4835,10 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 		nvme_ns->probe_ctx = NULL;
 		nvme_ctrlr_get_ref(nvme_ctrlr);
 	} else {
+		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
 		nvme_ns_free(nvme_ns);
 	}
 
@@ -5124,7 +5135,9 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			}
 			nvme_ns->probe_ctx = ctx;
 
+			pthread_mutex_lock(&nvme_ctrlr->mutex);
 			RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
+			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 			nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
 		}
@@ -6363,6 +6376,9 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 	 * There can be more than one bdev per NVMe controller.
 	 */
 	j = 0;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+
 	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
 	while (nvme_ns != NULL) {
 		nvme_bdev = nvme_ns->bdev;
@@ -6370,6 +6386,8 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 			ctx->names[j] = nvme_bdev->disk.name;
 			j++;
 		} else {
+			pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
 			NVME_CTRLR_ERRLOG(nvme_ctrlr,
 					  "Maximum number of namespaces supported per NVMe controller is %du. "
 					  "Unable to return all names of created bdevs\n",
@@ -6381,6 +6399,8 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 
 		nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
 	}
+
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	ctx->reported_bdevs = j;
 	populate_namespaces_cb(ctx, 0);
