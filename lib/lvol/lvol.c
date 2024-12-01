@@ -114,7 +114,11 @@ lvol_alloc(struct spdk_lvol_store *lvs, const char *name, bool thin_provision,
 	lvol->lvol_store = lvs;
 	// TODO add flag to check if load successfully done for blob
 	// on the fail we should response the incoming IO with fail
-	lvol->leader = false;
+	if (lvs->leader) {
+		lvol->leader = true;
+	} else {
+		lvol->leader = false;
+	}
 	lvol->clear_method = (enum blob_clear_method)clear_method;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	if (uuid_str == NULL) {
