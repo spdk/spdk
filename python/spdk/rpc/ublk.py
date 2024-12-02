@@ -43,6 +43,6 @@ def ublk_recover_disk(client, bdev_name, ublk_id):
 
 def ublk_get_disks(client, ublk_id=1):
     params = {}
-    if ublk_id:
+    if ublk_id is not None:
         params['ublk_id'] = ublk_id
     return client.call('ublk_get_disks', params)
