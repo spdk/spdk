@@ -251,6 +251,12 @@ struct spdk_bdev_shared_resource {
 	 */
 	uint64_t		nomem_threshold;
 
+	/*
+	 * Indicate whether aborting nomem I/Os is in progress.
+	 * If true, we should not touch the nomem_io list on I/O completions.
+	 */
+	bool			nomem_abort_in_progress;
+
 	/* I/O channel allocated by a bdev module */
 	struct spdk_io_channel	*shared_ch;
 
@@ -1622,6 +1628,13 @@ static void
 bdev_shared_ch_retry_io(struct spdk_bdev_shared_resource *shared_resource)
 {
 	struct spdk_bdev_io *bdev_io;
+
+	if (shared_resource->nomem_abort_in_progress) {
+		/**
+		 * We are aborting nomem I/Os, do not touch nomem_io list now.
+		 */
+		return;
+	}
 
 	if (shared_resource->io_outstanding > shared_resource->nomem_threshold) {
 		/*
@@ -4592,6 +4605,16 @@ bdev_abort_all_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 	}
 }
 
+static inline void
+bdev_abort_all_nomem_io(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
+
+	shared_resource->nomem_abort_in_progress = true;
+	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
+	shared_resource->nomem_abort_in_progress = false;
+}
+
 static bool
 bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort)
 {
@@ -4880,7 +4903,7 @@ bdev_channel_abort_queued_ios(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	struct spdk_bdev_mgmt_channel *mgmt_ch = shared_resource->mgmt_ch;
 
-	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
+	bdev_abort_all_nomem_io(ch);
 	bdev_abort_all_buf_io(mgmt_ch, ch);
 }
 
@@ -6924,7 +6947,11 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
-	bdev_abort_all_queued_io(&shared_resource->nomem_io, channel);
+	/**
+	 * Abort nomem I/Os first so that aborting other queued I/Os won't resubmit
+	 * nomem I/Os of this channel.
+	 */
+	bdev_abort_all_nomem_io(channel);
 	bdev_abort_all_buf_io(mgmt_channel, channel);
 
 	if ((channel->flags & BDEV_CH_QOS_ENABLED) != 0) {

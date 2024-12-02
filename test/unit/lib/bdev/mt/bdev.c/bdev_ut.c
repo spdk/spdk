@@ -1665,6 +1665,66 @@ enomem_multi_io_target(void)
 }
 
 static void
+enomem_retry_during_abort(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 16;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE], status_reset;
+	uint32_t i;
+	int rc;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	shared_resource = bdev_ch->shared_resource;
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
+	ut_ch->avail_cnt = 0;
+
+	/**
+	 * Submit a number of IOs.
+	 * All of these I/Os will queue in nomem_io list due to ut_ch->avail_cnt == 0.
+	 */
+	for (i = 0; i < IO_ARRAY_SIZE; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == IO_ARRAY_SIZE);
+	CU_ASSERT(shared_resource->io_outstanding == 0);
+
+	/* Allow some I/Os to be submitted. */
+	ut_ch->avail_cnt = IO_ARRAY_SIZE / 2;
+
+	/* Submit a reset to abort the I/Os. */
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch, enomem_done, &status_reset);
+	poll_threads();
+	CU_ASSERT(rc == 0);
+
+	/* Complete the reset. */
+	stub_complete_io(g_bdev.io_target, 1);
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* All I/Os are aborted. */
+	for (i = 0; i < IO_ARRAY_SIZE; i++) {
+		CU_ASSERT(status[i] == SPDK_BDEV_IO_STATUS_FAILED);
+	}
+
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == 0);
+	CU_ASSERT(shared_resource->io_outstanding == 0);
+
+	spdk_put_io_channel(io_ch);
+	poll_threads();
+	teardown_test();
+}
+
+static void
 qos_dynamic_enable_done(void *cb_arg, int status)
 {
 	int *rc = cb_arg;
@@ -2830,6 +2890,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, enomem_multi_bdev);
 	CU_ADD_TEST(suite, enomem_multi_bdev_unregister);
 	CU_ADD_TEST(suite, enomem_multi_io_target);
+	CU_ADD_TEST(suite, enomem_retry_during_abort);
 	CU_ADD_TEST(suite, qos_dynamic_enable);
 	CU_ADD_TEST(suite, bdev_histograms_mt);
 	CU_ADD_TEST(suite, bdev_set_io_timeout_mt);
