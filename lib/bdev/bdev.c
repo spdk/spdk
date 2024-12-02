@@ -6917,9 +6917,6 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_shared_resource *shared_resource;
-	bdev_io_tailq_t			tmp_queued;
-
-	TAILQ_INIT(&tmp_queued);
 
 	channel = __io_ch_to_bdev_ch(ch);
 	shared_resource = channel->shared_resource;
@@ -6927,13 +6924,12 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
-	if ((channel->flags & BDEV_CH_QOS_ENABLED) != 0) {
-		TAILQ_SWAP(&channel->qos_queued_io, &tmp_queued, spdk_bdev_io, internal.link);
-	}
-
 	bdev_abort_all_queued_io(&shared_resource->nomem_io, channel);
 	bdev_abort_all_buf_io(mgmt_channel, channel);
-	bdev_abort_all_queued_io(&tmp_queued, channel);
+
+	if ((channel->flags & BDEV_CH_QOS_ENABLED) != 0) {
+		bdev_abort_all_queued_io(&channel->qos_queued_io, channel);
+	}
 
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
