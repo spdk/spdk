@@ -547,8 +547,9 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 #endif
 
 	if (opts->env_context) {
+		char *sp = NULL;
 		char *ptr = strdup(opts->env_context);
-		char *tok = strtok(ptr, " \t");
+		char *tok = strtok_r(ptr, " \t", &sp);
 
 		/* DPDK expects each argument as a separate string in the argv
 		 * array, so we need to tokenize here in case the caller
@@ -556,7 +557,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		 */
 		while (tok != NULL) {
 			args = push_arg(args, &argcount, strdup(tok));
-			tok = strtok(NULL, " \t");
+			tok = strtok_r(NULL, " \t", &sp);
 		}
 
 		free(ptr);

@@ -993,6 +993,7 @@ parse_expected_ops(const char *_str)
 {
 	char *str = strdup(_str);
 	char *tok;
+	char *sp = NULL;
 	int rc = 0;
 
 	if (!str) {
@@ -1000,7 +1001,7 @@ parse_expected_ops(const char *_str)
 		return -ENOMEM;
 	}
 
-	tok = strtok(str, ",");
+	tok = strtok_r(str, ",", &sp);
 	while (tok) {
 		if (strcmp(tok, "translate") == 0) {
 			g_test_ops |= DMA_TEST_DOMAIN_OP_TRANSLATE;
@@ -1013,7 +1014,7 @@ parse_expected_ops(const char *_str)
 			rc = -EINVAL;
 			break;
 		}
-		tok = strtok(NULL, ",");
+		tok = strtok_r(NULL, ",", &sp);
 	}
 
 	free(str);

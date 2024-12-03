@@ -2485,7 +2485,7 @@ accel_mlx5_allowed_devs_free(void)
 static int
 accel_mlx5_allowed_devs_parse(const char *allowed_devs)
 {
-	char *str, *tmp, *tok;
+	char *str, *tmp, *tok, *sp = NULL;
 	size_t devs_count = 0;
 
 	str = strdup(allowed_devs);
@@ -2509,7 +2509,7 @@ accel_mlx5_allowed_devs_parse(const char *allowed_devs)
 	}
 
 	devs_count = 0;
-	tok = strtok(str, ",");
+	tok = strtok_r(str, ",", &sp);
 	while (tok) {
 		g_accel_mlx5.allowed_devs[devs_count] = strdup(tok);
 		if (!g_accel_mlx5.allowed_devs[devs_count]) {
@@ -2517,7 +2517,7 @@ accel_mlx5_allowed_devs_parse(const char *allowed_devs)
 			accel_mlx5_allowed_devs_free();
 			return -ENOMEM;
 		}
-		tok = strtok(NULL, ",");
+		tok = strtok_r(NULL, ",", &sp);
 		devs_count++;
 		g_accel_mlx5.allowed_devs_count++;
 	}

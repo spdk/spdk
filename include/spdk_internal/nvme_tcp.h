@@ -800,6 +800,7 @@ nvme_tcp_parse_interchange_psk(const char *psk_in, uint8_t *psk_out, size_t psk_
 {
 	const char *delim = ":";
 	char psk_cpy[SPDK_TLS_PSK_MAX_LEN] = {};
+	char *sp = NULL;
 	uint8_t psk_base64_decoded[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint64_t psk_configured_size = 0;
 	uint32_t crc32_calc, crc32;
@@ -825,10 +826,10 @@ nvme_tcp_parse_interchange_psk(const char *psk_in, uint8_t *psk_out, size_t psk_
 
 	/* Check provided hash function string. */
 	memcpy(psk_cpy, psk_in, strlen(psk_in));
-	strtok(psk_cpy, delim);
-	strtok(NULL, delim);
+	strtok_r(psk_cpy, delim, &sp);
+	strtok_r(NULL, delim, &sp);
 
-	psk_base64 = strtok(NULL, delim);
+	psk_base64 = strtok_r(NULL, delim, &sp);
 	if (psk_base64 == NULL) {
 		SPDK_ERRLOG("Could not get base64 string from PSK interchange!\n");
 		return -EINVAL;

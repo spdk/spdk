@@ -626,7 +626,8 @@ spdk_fio_setup(struct thread_data *td)
 		}
 
 		if (fio_options->log_flags) {
-			char *tok = strtok(fio_options->log_flags, ",");
+			char *sp = NULL;
+			char *tok = strtok_r(fio_options->log_flags, ",", &sp);
 			do {
 				rc = spdk_log_set_flag(tok);
 				if (rc < 0) {
@@ -634,7 +635,7 @@ spdk_fio_setup(struct thread_data *td)
 					g_log_flag_error = true;
 					return 1;
 				}
-			} while ((tok = strtok(NULL, ",")) != NULL);
+			} while ((tok = strtok_r(NULL, ",", &sp)) != NULL);
 #ifdef DEBUG
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif

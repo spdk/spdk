@@ -205,16 +205,17 @@ static void
 parse(char *in, struct nvme_io *io)
 {
 	char *tok = NULL;
+	char *sp = NULL;
 	long int val;
 
-	tok = strtok(in, CMB_COPY_DELIM);
+	tok = strtok_r(in, CMB_COPY_DELIM, &sp);
 	if (tok == NULL) {
 		goto err;
 	}
 	snprintf(&io->trid.traddr[0], SPDK_NVMF_TRADDR_MAX_LEN + 1,
 		 "%s", tok);
 
-	tok = strtok(NULL, CMB_COPY_DELIM);
+	tok = strtok_r(NULL, CMB_COPY_DELIM, &sp);
 	if (tok == NULL) {
 		goto err;
 	}
@@ -224,7 +225,7 @@ parse(char *in, struct nvme_io *io)
 	}
 	io->nsid  = (unsigned)val;
 
-	tok = strtok(NULL, CMB_COPY_DELIM);
+	tok = strtok_r(NULL, CMB_COPY_DELIM, &sp);
 	if (tok == NULL) {
 		goto err;
 	}
@@ -234,7 +235,7 @@ parse(char *in, struct nvme_io *io)
 	}
 	io->slba  = (unsigned)val;
 
-	tok = strtok(NULL, CMB_COPY_DELIM);
+	tok = strtok_r(NULL, CMB_COPY_DELIM, &sp);
 	if (tok == NULL) {
 		goto err;
 	}
@@ -244,7 +245,7 @@ parse(char *in, struct nvme_io *io)
 	}
 	io->nlbas = (unsigned)val;
 
-	tok = strtok(NULL, CMB_COPY_DELIM);
+	tok = strtok_r(NULL, CMB_COPY_DELIM, &sp);
 	if (tok != NULL) {
 		goto err;
 	}

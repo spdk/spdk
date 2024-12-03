@@ -70,6 +70,7 @@ decode_discovery_filter(const struct spdk_json_val *val, void *out)
 	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
 	char *tokens = spdk_json_strdup(val);
 	char *tok;
+	char *sp = NULL;
 	int rc = -EINVAL;
 	bool all_specified = false;
 
@@ -77,7 +78,7 @@ decode_discovery_filter(const struct spdk_json_val *val, void *out)
 		return -ENOMEM;
 	}
 
-	tok = strtok(tokens, ",");
+	tok = strtok_r(tokens, ",", &sp);
 	while (tok) {
 		if (strncmp(tok, "match_any", 9) == 0) {
 			if (filter != SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY) {
@@ -101,7 +102,7 @@ decode_discovery_filter(const struct spdk_json_val *val, void *out)
 			}
 		}
 
-		tok = strtok(NULL, ",");
+		tok = strtok_r(NULL, ",", &sp);
 	}
 
 	rc = 0;

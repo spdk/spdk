@@ -74,7 +74,7 @@ static const struct spdk_json_object_decoder static_sched_decoders[] = {
 static int
 set_opts_static(const struct spdk_json_val *opts)
 {
-	char *tok, *mappings = NULL, *copy;
+	char *tok, *mappings = NULL, *copy, *sp = NULL;
 	bool valid;
 
 	if (opts != NULL) {
@@ -97,7 +97,7 @@ set_opts_static(const struct spdk_json_val *opts)
 	}
 
 	valid = true;
-	tok = strtok(mappings, ":");
+	tok = strtok_r(mappings, ":", &sp);
 	while (tok) {
 		struct spdk_lw_thread *lw_thread = NULL;
 		struct spdk_thread *thread;
@@ -116,7 +116,7 @@ set_opts_static(const struct spdk_json_val *opts)
 			break;
 		}
 
-		tok = strtok(NULL, ",");
+		tok = strtok_r(NULL, ",", &sp);
 		core = spdk_strtol(tok, 10);
 		if (core < 0 || spdk_reactor_get(core) == NULL) {
 			SPDK_ERRLOG("invalid core number '%s' in mappings '%s'\n", tok, copy);
@@ -130,7 +130,7 @@ set_opts_static(const struct spdk_json_val *opts)
 			break;
 		}
 
-		tok = strtok(NULL, ":");
+		tok = strtok_r(NULL, ":", &sp);
 	}
 	free(mappings);
 	if (!valid) {
@@ -138,7 +138,7 @@ set_opts_static(const struct spdk_json_val *opts)
 		return -EINVAL;
 	}
 
-	tok = strtok(copy, ":");
+	tok = strtok_r(copy, ":", &sp);
 	while (tok) {
 		struct spdk_lw_thread *lw_thread = NULL;
 		struct spdk_thread *thread;
@@ -147,7 +147,7 @@ set_opts_static(const struct spdk_json_val *opts)
 		thread_id = spdk_strtol(tok, 10);
 		thread = spdk_thread_get_by_id(thread_id);
 		lw_thread = spdk_thread_get_ctx(thread);
-		tok = strtok(NULL, ",");
+		tok = strtok_r(NULL, ",", &sp);
 		core = spdk_strtol(tok, 10);
 		/* initial_lcore saves the static scheduler's lcore mapping.
 		 * This is used to restore the previous mapping if we
@@ -156,7 +156,7 @@ set_opts_static(const struct spdk_json_val *opts)
 		 * put the new mapping into effect.
 		 */
 		lw_thread->initial_lcore = core;
-		tok = strtok(NULL, ":");
+		tok = strtok_r(NULL, ":", &sp);
 	}
 	free(copy);
 

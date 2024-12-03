@@ -399,7 +399,8 @@ spdk_init_thread_poll(void *arg)
 	spdk_unaffinitize_thread();
 
 	if (eo->log_flags) {
-		char *tok = strtok(eo->log_flags, ",");
+		char *sp = NULL;
+		char *tok = strtok_r(eo->log_flags, ",", &sp);
 		do {
 			rc = spdk_log_set_flag(tok);
 			if (rc < 0) {
@@ -407,7 +408,7 @@ spdk_init_thread_poll(void *arg)
 				rc = EINVAL;
 				goto err_exit;
 			}
-		} while ((tok = strtok(NULL, ",")) != NULL);
+		} while ((tok = strtok_r(NULL, ",", &sp)) != NULL);
 #ifdef DEBUG
 		spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif
