@@ -353,8 +353,8 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 
 		args = push_arg(args, &argcount, _sprintf_alloc("--no-huge"));
+		args = push_arg(args, &argcount, _sprintf_alloc("--legacy-mem"));
 		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=va"));
-
 	} else {
 		/* create just one hugetlbfs file */
 		if (opts->hugepage_single_segments) {
