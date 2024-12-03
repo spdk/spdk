@@ -2506,7 +2506,7 @@ spdk_lvol_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader)
 }
 
 void
-spdk_set_leader_all(bool leader)
+spdk_set_leader_all(struct spdk_lvol_store *t_lvs, bool leader)
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol;
@@ -2514,11 +2514,13 @@ spdk_set_leader_all(bool leader)
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
-		lvs->leader = leader;
-		lvs->update_in_progress = leader;
-		TAILQ_FOREACH(lvol, &lvs->lvols, link) {			
-			lvol->leader = leader;
-			lvol->update_in_progress = leader;			
+		if (t_lvs == lvs) {
+			lvs->leader = leader;
+			lvs->update_in_progress = leader;
+			TAILQ_FOREACH(lvol, &lvs->lvols, link) {			
+				lvol->leader = leader;
+				lvol->update_in_progress = leader;			
+			}
 		}
 	}
 

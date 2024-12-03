@@ -1637,10 +1637,14 @@ SPDK_RPC_REGISTER("bdev_lvol_update_lvstore", rpc_bdev_lvol_update_lvstore, SPDK
 
 
 struct rpc_bdev_lvol_leadership {
+	char *uuid;
+	char *lvs_name;
 	bool leadership;
 };
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_leadership_decoders[] = {
+	{"uuid", offsetof(struct rpc_bdev_lvol_grow_lvstore, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_bdev_lvol_grow_lvstore, lvs_name), spdk_json_decode_string, true},
 	{"leadership", offsetof(struct rpc_bdev_lvol_leadership, leadership), spdk_json_decode_bool},
 };
 
@@ -1649,6 +1653,8 @@ rpc_bdev_lvol_set_leader_all(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_leadership req = {};
+	struct spdk_lvol_store *lvs = NULL;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_lvol_leadership_decoders,
 				    SPDK_COUNTOF(rpc_bdev_lvol_leadership_decoders),
@@ -1656,13 +1662,23 @@ rpc_bdev_lvol_set_leader_all(struct spdk_jsonrpc_request *request,
 		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		return;
+		goto cleanup;
 	}
 
-	spdk_set_leader_all(req.leadership);
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	spdk_set_leader_all(lvs, req.leadership);
 	spdk_jsonrpc_send_bool_response(request, true);
+cleanup:
+	free(req.uuid);
+	free(req.lvs_name);
 	return;
 }
+
 SPDK_RPC_REGISTER("bdev_lvol_set_leader_all", rpc_bdev_lvol_set_leader_all, SPDK_RPC_RUNTIME)
 
 struct rpc_bdev_lvol_shallow_copy {

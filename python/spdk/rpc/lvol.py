@@ -74,13 +74,20 @@ def bdev_lvol_update_lvstore(client, uuid=None, lvs_name=None):
         params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_update_lvstore', params)
 
-def bdev_lvol_set_leader_all(client, leadership=False):
+def bdev_lvol_set_leader_all(client, uuid=None, lvs_name=None, leadership=False):
     """Change state of the leadership
 
     Args:
         leadership: BOOL of new state (optional)
-    """    
+    """  
     params = {'leadership': leadership}
+    
+    if (uuid and lvs_name):
+        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    if uuid:
+        params['uuid'] = uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_set_leader_all', params)
 
 def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=None, lvs_name=None, clear_method=None, lvol_priority_class=0):
