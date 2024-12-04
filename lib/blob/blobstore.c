@@ -5119,7 +5119,8 @@ bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 		ctx->bs->num_free_clusters -= num_md_clusters;
 		spdk_free(ctx->page);
 		spdk_bit_array_free(&ctx->used_md_pages);
-		bs_load_write_used_md(ctx);
+		// bs_load_write_used_md(ctx);
+		bs_load_complete(ctx);
 	}
 }
 
