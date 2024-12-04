@@ -534,7 +534,7 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 	}
 
 	/* Perform check on block devices only */
-	if (stat(filename, &sb) == 0 && S_ISBLK(sb.st_mode)) {
+	if (stat(filename, &sb) == 0 && !S_ISBLK(sb.st_mode)) {
 		return 0;
 	}
 
@@ -546,7 +546,6 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 	}
 
 	base = basename(filename_dup);
-	free(filename_dup);
 	sysfs_path = spdk_sprintf_alloc("/sys/block/%s/queue/zoned", base);
 	retval = spdk_read_sysfs_attribute(&str, "%s", sysfs_path);
 	/* Check if this is a zoned block device */
@@ -591,6 +590,7 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 err_ret:
 	free(str);
 	free(sysfs_path);
+	free(filename_dup);
 	return retval;
 }
 #else
