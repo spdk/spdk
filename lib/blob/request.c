@@ -558,7 +558,7 @@ bs_user_op_execute(spdk_bs_user_op_t *op)
 	set = (struct spdk_bs_request_set *)op;
 	args = &set->u.user_op;
 	ch = spdk_io_channel_from_ctx(set->channel);
-	SPDK_NOTICELOG("IO OP blocks at LBA: %" PRIu64 " blocks CNT %" PRIu64 " and the type is %d \n", args->offset, args->length, args->type);
+	// SPDK_NOTICELOG("IO OP blocks at LBA: %" PRIu64 " blocks CNT %" PRIu64 " and the type is %d \n", args->offset, args->length, args->type);
 	switch (args->type) {
 	case SPDK_BLOB_READ:
 		spdk_blob_io_read(args->blob, ch, args->payload, args->offset, args->length,
