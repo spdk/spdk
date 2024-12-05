@@ -4657,7 +4657,9 @@ bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 	ctx->iter_cb_fn = NULL;
 
 	spdk_free(ctx->super);
-	spdk_free(ctx->mask);
+	if (ctx->mask) {
+		spdk_free(ctx->mask);
+	}
 	bs_sequence_finish(ctx->seq, bserrno);
 	free(ctx);
 }
@@ -5120,6 +5122,7 @@ bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 		spdk_free(ctx->page);
 		spdk_bit_array_free(&ctx->used_md_pages);
 		// bs_load_write_used_md(ctx);
+		ctx->mask = NULL;
 		bs_load_complete(ctx);
 	}
 }
@@ -5327,6 +5330,7 @@ bs_load_only_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	spdk_bit_array_load_mask(ctx->used_md_pages, ctx->mask->mask);
 	spdk_free(ctx->mask);
+	ctx->mask = NULL;
 	bs_recover(ctx);	
 }
 

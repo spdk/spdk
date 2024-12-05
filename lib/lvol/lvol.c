@@ -1894,6 +1894,7 @@ lvol_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	spdk_lvol_set_leader_by_uuid(&lvol->uuid, true);
 	// spdk_blob_failover_unfreaze(lvol->blob, NULL, NULL);
 	if (lvolerrno < 0) {
+		SPDK_ERRLOG("Cannot update lvol on failover blob 0x%" PRIx64 "\n", lvol->blob_id);
 		// lvol_free(lvol);
 		//remember call function to drop the IO for this lvol
 		// req->cb_fn(req->cb_arg, NULL, lvolerrno);
@@ -1901,6 +1902,7 @@ lvol_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 		assert(false);
 		return;
 	}
+	SPDK_NOTICELOG("Update done: blob 0x%" PRIx64 "\n", lvol->blob_id);
 	
 	free(req);
 }
@@ -1928,6 +1930,7 @@ lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, boo
 	req->cb_arg = lvol;
 	req->lvol_store = lvs;
 	req->lvol = lvol;
+	SPDK_NOTICELOG("Update start: blob 0x%" PRIx64 "\n", lvol->blob_id);
 	if (!send_msg) {
 		spdk_blob_update_on_failover(lvol->blob, lvol_update_on_failover_cpl, req);
 	} else {
@@ -1944,7 +1947,8 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	struct spdk_lvol_store *lvs = req->lvol_store;
 	struct spdk_lvol *lvol, *tmp;
 	if (lvolerrno == 0) {
-		spdk_lvs_set_leader_by_uuid(&lvs->uuid, true);		
+		spdk_lvs_set_leader_by_uuid(&lvs->uuid, true);
+		SPDK_NOTICELOG("Update lvolstore done.\n");	
 		free(req);
 		TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
 			TAILQ_REMOVE(&lvs->pending_update_lvols, lvol, entry_to_update);
@@ -1983,7 +1987,7 @@ spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs)
 	req->cb_fn = NULL;
 	req->cb_arg = NULL;
 	req->lvol_store = lvs;
-
+	SPDK_NOTICELOG("Update lvolstore starting.... read super block.\n");	
 	spdk_bs_update_on_failover(lvs->blobstore, lvs_update_on_failover_cpl, req);
 }
 
