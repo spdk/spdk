@@ -3369,6 +3369,15 @@ nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(qpair->poll_group);
 
+	if (rqpair->poller) {
+		/* A qpair may skip transport disconnect part if it was already disconnecting. But on RDMA level a qpair
+		 * may still have a poller reference. In that case we should continue transport disconnect here
+		 * because a poller depends on the poll group reference which is going to be removed */
+		SPDK_INFOLOG(nvme, "qpair %p, id %u, nvme state %d, rdma state %d, force disconnect\n",
+			     qpair, qpair->id, qpair->state, rqpair->state);
+		nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
+	}
+
 	if (rqpair->link_active.tqe_prev) {
 		TAILQ_REMOVE(&group->active_qpairs, rqpair, link_active);
 		rqpair->link_active.tqe_prev = NULL;
