@@ -54,6 +54,7 @@ struct nvme_ns {
 	enum spdk_nvme_ana_state	ana_state;
 	bool				ana_state_updating;
 	bool				ana_transition_timedout;
+	bool				depopulating;
 	struct spdk_poller		*anatt_timer;
 	struct nvme_async_probe_ctx	*probe_ctx;
 	TAILQ_ENTRY(nvme_ns)		tailq;

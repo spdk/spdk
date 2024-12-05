@@ -5013,6 +5013,12 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 {
 	struct nvme_bdev *nbdev;
 
+	if (nvme_ns->depopulating) {
+		/* Maybe we received 2 AENs in a row */
+		return;
+	}
+	nvme_ns->depopulating = true;
+
 	spdk_poller_unregister(&nvme_ns->anatt_timer);
 
 	nbdev = nvme_ns->bdev;
