@@ -41,6 +41,7 @@ struct spdk_xattr {
 struct spdk_blob_mut_data {
 	/* Number of data clusters in the blob */
 	uint64_t	num_clusters;
+	uint64_t	num_clusters_on_update;
 
 	/* Array LBAs that are the beginning of a cluster, in
 	 * the order they appear in the blob.

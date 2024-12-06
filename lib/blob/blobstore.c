@@ -3660,10 +3660,18 @@ blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 		return;
 	}
 
-	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-		cb_fn(cb_arg, -EINVAL);
-		return;
+	if (blob->active.num_clusters != 0) {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	} else {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
 	}
+
 	if (length <= bs_num_io_units_to_cluster_boundary(blob, offset)) {
 		blob_request_submit_op_single(_channel, blob, payload, offset, length,
 					      cb_fn, cb_arg, op_type);
@@ -3786,11 +3794,17 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 		return;
 	}
 
-	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-		cb_fn(cb_arg, -EINVAL);
-		return;
+	if (blob->active.num_clusters != 0) {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	} else {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
 	}
-
 	/*
 	 * For now, we implement readv/writev using a sequence (instead of a batch) to account for having
 	 *  to split a request that spans a cluster boundary.  For I/O that do not span a cluster boundary,
@@ -9008,6 +9022,7 @@ bs_update_blob_on_failover(struct spdk_blob_store *bs,
 	if (blob->active.clusters) {
 		free(blob->active.clusters);
 		blob->active.clusters = NULL;
+		blob->active.num_clusters_on_update = blob->active.num_clusters;
 		blob->active.num_clusters = 0;
 		blob->active.cluster_array_size = 0;
 	}
