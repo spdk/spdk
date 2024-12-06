@@ -88,9 +88,18 @@ function check_header_filenames() {
 }
 
 function get_release() {
-	local tag
+	local tag version major minor patch suffix
 
-	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude="*-pre" $1)
+	if [[ -n "$1" ]]; then
+		version="$1"
+	else
+		IFS='.-' read -r major minor patch suffix < "$rootdir/VERSION"
+		version="v$major.$minor"
+		((patch > 0)) && version+=".$patch"
+		version+=${suffix:+-$suffix}
+	fi
+
+	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude="*-pre" "$version")
 	echo "${tag:0:6}"
 }
 
