@@ -13,7 +13,7 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 #include "spdk/likely.h"
-#include "spdk/fuse_dispatcher.h"
+#include "spdk_internal/fuse_dispatcher.h"
 #include "linux/fuse_kernel.h"
 
 #ifndef UNUSED

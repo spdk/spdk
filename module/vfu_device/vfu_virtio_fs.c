@@ -20,7 +20,7 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/pci_ids.h"
-#include "spdk/fuse_dispatcher.h"
+#include "spdk_internal/fuse_dispatcher.h"
 #include "linux/fuse_kernel.h"
 
 #include "vfu_virtio_internal.h"
