@@ -3499,6 +3499,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 
 		op = bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
 		if (!op) {
+			SPDK_NOTICELOG("FAILED on seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}
@@ -3662,13 +3663,19 @@ blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 
 	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
 		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-			cb_fn(cb_arg, -EINVAL);
-			return;
+			if (!blob->frozen_refcnt) {
+				SPDK_NOTICELOG("FAILED on check size 1 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+				cb_fn(cb_arg, -EINVAL);
+				return;
+			}
 		}
 	} else {
 		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
-			cb_fn(cb_arg, -EINVAL);
-			return;
+			if (!blob->frozen_refcnt) {
+				SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+				cb_fn(cb_arg, -EINVAL);
+				return;
+			}
 		}
 	}
 
@@ -3796,13 +3803,19 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 
 	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
 		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-			cb_fn(cb_arg, -EINVAL);
-			return;
+			if (!blob->frozen_refcnt) {
+				SPDK_NOTICELOG("FAILED on check size blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+				cb_fn(cb_arg, -EINVAL);
+				return;
+			}
 		}
 	} else {
 		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
-			cb_fn(cb_arg, -EINVAL);
-			return;
+			if (!blob->frozen_refcnt) {
+				SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+				cb_fn(cb_arg, -EINVAL);
+				return;
+			}
 		}
 	}
 	/*
@@ -3837,6 +3850,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 			op_type = read ? SPDK_BLOB_READV : SPDK_BLOB_WRITEV;
 			op = bs_user_op_alloc(_channel, &cpl, op_type, blob, iov, iovcnt, offset, length);
 			if (!op) {
+				SPDK_NOTICELOG("FAILED on get seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 				cb_fn(cb_arg, -ENOMEM);
 				return;
 			}
