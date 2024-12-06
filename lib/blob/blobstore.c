@@ -3660,7 +3660,7 @@ blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 		return;
 	}
 
-	if (blob->active.num_clusters != 0) {
+	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
 		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
 			cb_fn(cb_arg, -EINVAL);
 			return;
@@ -3794,7 +3794,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 		return;
 	}
 
-	if (blob->active.num_clusters != 0) {
+	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
 		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
 			cb_fn(cb_arg, -EINVAL);
 			return;
@@ -8976,6 +8976,7 @@ bs_update_blob_on_failover_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno
 		SPDK_ERRLOG("Update blob on failover failed, ctx->rc=%d\n", ctx->rc);		
 	}
 	//remember fisrt call unfreaze function
+	blob->active.num_clusters_on_update = 0;
 	blob_unfreeze_io(ctx->blob, blob_failover_unfreeze_cpl, ctx);	
 }
 
@@ -9111,6 +9112,7 @@ blob_freeze_on_failover(struct spdk_blob *blob)
 {
 	/* Freeze I/O on blob */
 	assert(blob->frozen_refcnt == 0);
+	blob->active.num_clusters_on_update = blob->active.num_clusters;
 	blob->frozen_refcnt++;
 }
 
