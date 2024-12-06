@@ -979,7 +979,7 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	if (!lvol->leader && !lvol->update_in_progress) {
 		spdk_lvol_update_on_failover(lvol->lvol_store, lvol);
 	}
-	SPDK_NOTICELOG("IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 " CNT %" PRIu64 " type is %d \n", lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
+	// SPDK_NOTICELOG("IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 " CNT %" PRIu64 " type is %d \n", lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, lvol_get_buf_cb,
