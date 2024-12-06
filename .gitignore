@@ -25,6 +25,7 @@ cscope.out
 dpdk-*
 CUnit-Memory-Dump.xml
 include/spdk/config.h
+include/spdk/version.h
 CONFIG.local
 *VC.db
 .vscode
@@ -36,6 +37,7 @@ mk/cc.mk
 mk/config.mk
 mk/cc.flags.mk
 PYTHON_COMMAND
+python/spdk/version.py
 test_completions.txt
 timing.txt
 test/common/build_config.sh

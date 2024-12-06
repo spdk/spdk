@@ -17,12 +17,12 @@ extern "C" {
 /**
  * Major version number (year of original release minus 2000).
  */
-#define SPDK_VERSION_MAJOR	25
+#define SPDK_VERSION_MAJOR	$SPDK_VERSION_MAJOR
 
 /**
  * Minor version number (month of original release).
  */
-#define SPDK_VERSION_MINOR	1
+#define SPDK_VERSION_MINOR	$SPDK_VERSION_MINOR
 
 /**
  * Patch level.
@@ -30,12 +30,12 @@ extern "C" {
  * Patch level is incremented on maintenance branch releases and reset to 0 for each
  * new major.minor release.
  */
-#define SPDK_VERSION_PATCH	0
+#define SPDK_VERSION_PATCH	$SPDK_VERSION_PATCH
 
 /**
  * Version string suffix.
  */
-#define SPDK_VERSION_SUFFIX	"-pre"
+#define SPDK_VERSION_SUFFIX	"$SPDK_VERSION_SUFFIX"
 
 /**
  * Single numeric value representing a version number for compile-time comparisons.

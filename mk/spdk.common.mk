@@ -580,6 +580,11 @@ define cc_version_eq
 $(shell [ "$(call cc_version)" = "$(1)" ] && echo 1 || echo 0)
 endef
 
+version_major := $(shell IFS='-.' read -r v _ _ _ < $(SPDK_ROOT_DIR)/VERSION; echo $$v)
+version_minor := $(shell IFS='-.' read -r _ v _ _ < $(SPDK_ROOT_DIR)/VERSION; echo $${v#0})
+version_patch := $(shell IFS='-.' read -r _ _ v _ < $(SPDK_ROOT_DIR)/VERSION; echo $$v)
+version_suffix := $(shell IFS='-.' read -r _ _ _ v < $(SPDK_ROOT_DIR)/VERSION; echo $${v:+-$$v})
+
 # _uniq returns the unique elements from the list specified. It does
 # not change the order of the elements. If the same element occurs
 # multiple times in the list, the last instance is kept and the others

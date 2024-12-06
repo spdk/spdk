@@ -40,9 +40,15 @@ pylibprefix := $(shell a=$(pylibdir); echo $${a%/lib*})
 pylibdir := $(CONFIG_PREFIX)$(pylibdir:$(pylibprefix)%=%)
 endif
 
-all:
+all: spdk/version.py
 
 clean:
+	$(Q)rm -f spdk/version.py
+
+spdk/version.py: $(SPDK_ROOT_DIR)/VERSION
+	$(Q)printf "__version__ = '%d.%d%s'\n" \
+		$(version_major) $(version_minor) \
+		$(shell echo -n \"$(version_suffix)\" | sed 's/-pre/rc0/g' | tr -d -) > spdk/version.py
 
 install: rpc spdkcli
 	$(Q)$(setup_cmd) $(SPDK_ROOT_DIR)/python

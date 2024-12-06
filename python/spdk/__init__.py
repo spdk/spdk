@@ -2,4 +2,8 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
-__version__ = "25.1rc0"
+try:
+    # version.py is generated during the build, so ignore it if it doesn't exist
+    from .version import __version__
+except ModuleNotFoundError:
+    __version__ = '0.0'
