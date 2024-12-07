@@ -507,6 +507,7 @@ int vhost_user_dev_create(struct spdk_vhost_dev *vdev, const char *name,
 int vhost_user_dev_init(struct spdk_vhost_dev *vdev, const char *name,
 			struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);
 int vhost_user_dev_start(struct spdk_vhost_dev *vdev);
+bool vhost_user_dev_busy(struct spdk_vhost_dev *vdev);
 int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 void vhost_user_fini(spdk_vhost_fini_cb vhost_cb);

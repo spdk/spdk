@@ -939,6 +939,11 @@ vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 	int rc = 0, i;
 
 	assert(svdev != NULL);
+
+	if (vhost_user_dev_busy(vdev)) {
+		return -EBUSY;
+	}
+
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev_state[i].dev) {
 			rc = spdk_vhost_scsi_dev_remove_tgt(vdev, i, NULL, NULL);

@@ -1849,6 +1849,26 @@ vhost_user_dev_create(struct spdk_vhost_dev *vdev, const char *name, struct spdk
 	return rc;
 }
 
+
+bool
+vhost_user_dev_busy(struct spdk_vhost_dev *vdev)
+{
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
+
+	if (pthread_mutex_trylock(&user_dev->lock) != 0) {
+		return true;
+	}
+
+	/* This is the case that uses RPC call `vhost_delete_controller` while VM is connected */
+	if (!TAILQ_EMPTY(&user_dev->vsessions) && g_vhost_user_started) {
+		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
+		pthread_mutex_unlock(&user_dev->lock);
+		return true;
+	}
+	pthread_mutex_unlock(&user_dev->lock);
+	return false;
+}
+
 int
 vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 {
