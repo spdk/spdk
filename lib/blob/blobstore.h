@@ -106,7 +106,7 @@ struct spdk_blob {
 	struct spdk_blob_store *bs;
 
 	int priority_class; // to save the lvol's priority class across cluster allocations
-
+	bool  failed_on_update;
 	uint32_t	open_ref;
 
 	spdk_blob_id	id;
