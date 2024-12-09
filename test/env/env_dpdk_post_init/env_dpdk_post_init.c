@@ -68,6 +68,7 @@ main(int argc, char **argv)
 	int ret;
 	int i;
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
+	bool legacy_mem;
 
 	printf("Starting DPDK initialization...\n");
 	ret = rte_eal_init(argc, argv);
@@ -77,7 +78,15 @@ main(int argc, char **argv)
 	}
 
 	printf("Starting SPDK post initialization...\n");
-	ret = spdk_env_dpdk_post_init(false);
+#ifdef __FreeBSD__
+	/**
+	 * DPDK always uses legacy mem mode in FreeBSD.
+	 */
+	legacy_mem = true;
+#else
+	legacy_mem = false;
+#endif
+	ret = spdk_env_dpdk_post_init(legacy_mem);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to initialize SPDK\n");
 		return -1;

@@ -735,10 +735,17 @@ spdk_env_init(const struct spdk_env_opts *opts_user)
 		return -rte_errno;
 	}
 
+#ifdef __FreeBSD__
+	/**
+	 * DPDK always uses legacy mem mode in FreeBSD.
+	 */
+	legacy_mem = true;
+#else
 	legacy_mem = false;
-	if (opts->env_context && strstr(opts->env_context, "--legacy-mem") != NULL) {
+	if (opts->no_huge || (opts->env_context && strstr(opts->env_context, "--legacy-mem") != NULL)) {
 		legacy_mem = true;
 	}
+#endif
 
 	rc = spdk_env_dpdk_post_init(legacy_mem);
 	if (rc == 0) {
