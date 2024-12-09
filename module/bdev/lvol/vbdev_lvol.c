@@ -874,6 +874,7 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
+
 	if (!lvol->leader) {
 		// check blob state it must be CLEAN
 		// copy the blob
