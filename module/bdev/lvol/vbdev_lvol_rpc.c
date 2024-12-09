@@ -500,13 +500,14 @@ rpc_bdev_lvol_register(struct spdk_jsonrpc_request *request,
 	if (ctx == NULL) {
 		SPDK_ERRLOG("Cannot allocate context for lvol register.'\n");
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		goto cleanup;
+		return;
 	}
 	req = calloc(1, sizeof(struct rpc_bdev_lvol_register));
 	if (req == NULL) {
 		SPDK_ERRLOG("Cannot allocate context for lvol register.'\n");
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		goto cleanup;
+		free(ctx);
+		return;
 	}
 	SPDK_INFOLOG(lvol_rpc, "Register blob\n");
 
