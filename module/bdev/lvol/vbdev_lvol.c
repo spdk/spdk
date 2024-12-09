@@ -851,6 +851,9 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	if (bserrno != 0) {
+		struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+		SPDK_NOTICELOG("FAILED IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 "  CNT %" PRIu64 "  type is %d \n",
+		 	lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		if (bserrno == -ENOMEM) {
 			status = SPDK_BDEV_IO_STATUS_NOMEM;
 		} else {
@@ -943,8 +946,10 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 static int
 lvol_reset(struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-
+	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+	SPDK_NOTICELOG("FAILED reset IO OP in blob: %" PRIu64 " blocks at LBA: %" PRIu64 " blocks CNT %" PRIu64 " and the type is %d \n",
+		 lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);	
 	return 0;
 }
 
@@ -952,6 +957,9 @@ static void
 lvol_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	if (!success) {
+		struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+		SPDK_NOTICELOG("FAILED getbuf IO OP in blob: %" PRIu64 " blocks at LBA: %" PRIu64 " blocks CNT %" PRIu64 " and the type is %d \n",
+		 			lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -973,6 +981,13 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 
 	if (!lvol->leader && !lvol->update_in_progress) {
 		spdk_lvol_update_on_failover(lvol->lvol_store, lvol);
+	}
+
+	if (lvol->failed_on_update || lvol->lvol_store->failed_on_update) {
+		SPDK_NOTICELOG("FAILED IO - update failed blob: %" PRIu64 "  Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
+		 				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
 	}
 
 	switch (bdev_io->type) {
@@ -1000,6 +1015,8 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		break;
 	default:
 		SPDK_INFOLOG(vbdev_lvol, "lvol: unsupported I/O type %d\n", bdev_io->type);
+		SPDK_NOTICELOG("FAILED IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 "  CNT %" PRIu64 "  type is %d \n", 
+				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}

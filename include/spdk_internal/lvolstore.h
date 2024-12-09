@@ -119,6 +119,7 @@ struct spdk_lvol_store {
 	struct spdk_thread		*thread;
 	bool				leader;
 	bool				update_in_progress;
+	bool				failed_on_update;
 };
 
 struct spdk_lvol {
@@ -128,6 +129,7 @@ struct spdk_lvol {
 	spdk_blob_id			blob_id;
 	bool				leader;
 	bool				update_in_progress;
+	bool				failed_on_update;
 	char				unique_id[SPDK_LVOL_UNIQUE_ID_MAX];
 	char				name[SPDK_LVOL_NAME_MAX];
 	struct spdk_uuid		uuid;

@@ -503,7 +503,11 @@ blob_execute_queued_io(struct spdk_io_channel_iter *i)
 
 		if (args->blob == ctx->blob) {
 			TAILQ_REMOVE(&ch->queued_io, op, link);
-			bs_user_op_execute(op);
+			if (!ctx->blob->failed_on_update) {
+				bs_user_op_execute(op);
+			} else {
+				bs_user_op_abort(op, -EIO);
+			}			
 		}
 	}
 
@@ -3499,6 +3503,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 
 		op = bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
 		if (!op) {
+			SPDK_NOTICELOG("FAILED on seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}
@@ -3660,10 +3665,25 @@ blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 		return;
 	}
 
-	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-		cb_fn(cb_arg, -EINVAL);
-		return;
+	if (blob->failed_on_update) {
+		SPDK_NOTICELOG("FAILED IO on update filed condition.\n");
+		cb_fn(cb_arg, -EIO);
 	}
+
+	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
+			SPDK_NOTICELOG("FAILED on check size 1 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	} else {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {			
+			SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	}
+
 	if (length <= bs_num_io_units_to_cluster_boundary(blob, offset)) {
 		blob_request_submit_op_single(_channel, blob, payload, offset, length,
 					      cb_fn, cb_arg, op_type);
@@ -3786,11 +3806,24 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 		return;
 	}
 
-	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-		cb_fn(cb_arg, -EINVAL);
-		return;
+	if (blob->failed_on_update) {
+		SPDK_NOTICELOG("FAILED IO on update filed condition \n");
+		cb_fn(cb_arg, -EIO);
 	}
 
+	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
+			SPDK_NOTICELOG("FAILED on check size blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	} else {
+		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
+			SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	}
 	/*
 	 * For now, we implement readv/writev using a sequence (instead of a batch) to account for having
 	 *  to split a request that spans a cluster boundary.  For I/O that do not span a cluster boundary,
@@ -3823,6 +3856,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 			op_type = read ? SPDK_BLOB_READV : SPDK_BLOB_WRITEV;
 			op = bs_user_op_alloc(_channel, &cpl, op_type, blob, iov, iovcnt, offset, length);
 			if (!op) {
+				SPDK_NOTICELOG("FAILED on get seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 				cb_fn(cb_arg, -ENOMEM);
 				return;
 			}
@@ -8958,10 +8992,14 @@ bs_update_blob_on_failover_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno
 	// struct spdk_blob *blob = cb_arg;
 	struct spdk_blob_update_ctx *ctx = cb_arg;
 	if (bserrno != 0) {
+		if (blob) {
+			blob->failed_on_update = true;
+		}
 		ctx->rc = bserrno;
 		SPDK_ERRLOG("Update blob on failover failed, ctx->rc=%d\n", ctx->rc);		
 	}
 	//remember fisrt call unfreaze function
+	blob->active.num_clusters_on_update = 0;
 	blob_unfreeze_io(ctx->blob, blob_failover_unfreeze_cpl, ctx);	
 }
 
@@ -8971,8 +9009,9 @@ bs_update_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob *blob = cb_arg;
 
 	if (bserrno != 0) {
-		// blob_free(blob);
-		// seq->cpl.u.blob_handle.blob = NULL;
+		if (blob) {
+			blob->failed_on_update = true;
+		}
 		bs_sequence_finish(seq, bserrno);
 		return;
 	}
@@ -8998,7 +9037,7 @@ bs_update_blob_on_failover(struct spdk_blob_store *bs,
 	page_num = bs_blobid_to_page(blob->id);
 	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
 		/* Invalid blobid */
-		cb_fn(cb_arg, NULL, -ENOENT);
+		cb_fn(cb_arg, blob, -ENOENT);
 		return;
 	}
 
@@ -9027,7 +9066,7 @@ bs_update_blob_on_failover(struct spdk_blob_store *bs,
 	seq = bs_sequence_start_bs(bs->md_channel, &cpl);
 	if (!seq) {
 		// blob_free(blob);
-		cb_fn(cb_arg, NULL, -ENOMEM);
+		cb_fn(cb_arg, blob, -ENOMEM);
 		return;
 	}
 
@@ -9042,20 +9081,22 @@ spdk_blob_update_on_failover(struct spdk_blob *blob, spdk_blob_op_complete cb_fn
 	blob_verify_md_op(blob);
 
 	SPDK_NOTICELOG("Updating blob 0x%" PRIx64 " on failover.\n", blob->id);
-	// SPDK_DEBUGLOG(blob, "Updating blob 0x%" PRIx64 " on failover.\n", blob->id);
 
 	if (blob->md_ro) {
+		blob->failed_on_update = true;
 		cb_fn(cb_arg, -EPERM);
 		return;
 	}
 
 	if (blob->locked_operation_in_progress) {
+		blob->failed_on_update = true;
 		cb_fn(cb_arg, -EBUSY);
 		return;
 	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		blob->failed_on_update = true;
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -9066,6 +9107,36 @@ spdk_blob_update_on_failover(struct spdk_blob *blob, spdk_blob_op_complete cb_fn
 	ctx->blob = blob;
 
 	bs_update_blob_on_failover(blob->bs, blob, bs_update_blob_on_failover_cpl, ctx);
+}
+
+void
+spdk_blob_update_failed_cleanup(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_update_ctx *ctx;
+
+	blob_verify_md_op(blob);
+
+	SPDK_NOTICELOG("Updating failed and unfreeze IOs in blob 0x%" PRIx64 " on failover.\n", blob->id);
+
+	if (blob->locked_operation_in_progress) {
+		blob->failed_on_update = true;
+		cb_fn(cb_arg, -EBUSY);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		blob->failed_on_update = true;
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	blob->locked_operation_in_progress = true;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->blob = blob;
+	blob->failed_on_update = true;
+	blob_unfreeze_io(ctx->blob, blob_failover_unfreeze_cpl, ctx);
 }
 
 static void
@@ -9096,6 +9167,7 @@ blob_freeze_on_failover(struct spdk_blob *blob)
 {
 	/* Freeze I/O on blob */
 	assert(blob->frozen_refcnt == 0);
+	blob->active.num_clusters_on_update = blob->active.num_clusters;
 	blob->frozen_refcnt++;
 }
 

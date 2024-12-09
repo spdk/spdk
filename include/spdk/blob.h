@@ -378,6 +378,9 @@ void spdk_blob_failover_unfreaze(struct spdk_blob *blob,
 
 void
 blob_freeze_on_failover(struct spdk_blob *blob);
+
+void
+spdk_blob_update_failed_cleanup(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 /**
  * update a blobstore according to bit array synced.
  * Can be used on loaded blobstore, even with opened blobs.

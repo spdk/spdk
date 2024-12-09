@@ -1895,16 +1895,27 @@ lvol_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	// spdk_blob_failover_unfreaze(lvol->blob, NULL, NULL);
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Cannot update lvol on failover blob 0x%" PRIx64 "\n", lvol->blob_id);
-		// lvol_free(lvol);
 		//remember call function to drop the IO for this lvol
-		// req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		//change the state to drop;
+		lvol->failed_on_update = true;
 		free(req);
-		assert(false);
 		return;
 	}
 	SPDK_NOTICELOG("Update done: blob 0x%" PRIx64 "\n", lvol->blob_id);
 	
 	free(req);
+}
+
+static void
+lvol_update_failed_cpl(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol *lvol = cb_arg;
+	spdk_lvol_set_leader_by_uuid(&lvol->uuid, true);
+	if (lvolerrno < 0) {
+		SPDK_ERRLOG("Cannot unfreeze on filed update on failover blob 0x%" PRIx64 "\n", lvol->blob_id);
+		return;
+	}
+	SPDK_NOTICELOG("Unfreezed on filed update on failover blob 0x%" PRIx64 "\n", lvol->blob_id);
 }
 
 void
@@ -1915,18 +1926,13 @@ lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, boo
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
-		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
-		//remember call function to drop the IO for this lvol
-		assert(false);
-		// if (cb_fn) {
-		// 	cb_fn(cb_arg, -ENOMEM);
-		// }
+		SPDK_ERRLOG("Cannot alloc memory for request structure.\n");
+		// change the state to drop incoming IO;
+		// we should call the cleanup
+		lvol->failed_on_update = true;
 		return;
 	}
 
-	// remember
-	// call function to drop the IO for this lvol
-	// req->cb_fn = lvol_update_cpl;
 	req->cb_arg = lvol;
 	req->lvol_store = lvs;
 	req->lvol = lvol;
@@ -1934,9 +1940,8 @@ lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, boo
 	if (!send_msg) {
 		spdk_blob_update_on_failover(lvol->blob, lvol_update_on_failover_cpl, req);
 	} else {
-		// we should send msg to below function on md thread
+		// we should send msg to spdk_blob_update_on_failover on md thread
 		spdk_blob_update_on_failover_send_msg(lvol->blob, lvol_update_on_failover_cpl, req);
-		// spdk_blob_update_on_failover(lvol->blob, lvol_update_on_failover_cpl, req);
 	}
 }
 
@@ -1952,7 +1957,7 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 		free(req);
 		TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
 			TAILQ_REMOVE(&lvs->pending_update_lvols, lvol, entry_to_update);
-			assert(lvol->update_in_progress == true);
+			assert(lvol->update_in_progress == true);		
 			// still in md thread so we can call the load function
 			lvol_update_on_failover(lvs, lvol, false);
 		}
@@ -1960,12 +1965,18 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	}
 	// no idea what to do it should never come here	
 	SPDK_ERRLOG("Cannot update lvolstore on failover ...\n");
+	spdk_lvs_set_failed_on_update(lvs, true);
 	//remember call function to drop the IO for this lvol
-	assert(false);
-	// if (req->cb_fn) {
-	// 	req->cb_fn(req->cb_arg, lvolerrno);
-	// }
-
+	TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
+		TAILQ_REMOVE(&lvs->pending_update_lvols, lvol, entry_to_update);
+		assert(lvol->update_in_progress == true);		
+		// still in md thread so we can call spdk_blob_update_failed_cleanup.
+		// 1.first set lvol to failed on update state.
+		// 2.set the blob on failed on update.
+		// 3.call unfreeze function.
+		lvol->failed_on_update = true;
+		spdk_blob_update_failed_cleanup(lvol->blob, lvol_update_failed_cpl, lvol);		
+	}
 	free(req);
 	return;	
 }
@@ -1978,16 +1989,14 @@ spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs)
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
-		// if (cb_fn) {
-		// 	cb_fn(cb_arg, -ENOMEM);
-		// }
+		spdk_lvs_set_failed_on_update(lvs, true);
 		return;
 	}
 
 	req->cb_fn = NULL;
 	req->cb_arg = NULL;
 	req->lvol_store = lvs;
-	SPDK_NOTICELOG("Update lvolstore starting.... read super block.\n");	
+	SPDK_NOTICELOG("Update lvolstore starting.... read super block.\n");
 	spdk_bs_update_on_failover(lvs->blobstore, lvs_update_on_failover_cpl, req);
 }
 
@@ -2000,6 +2009,11 @@ spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol
 	if (!lvol->update_in_progress) {
 		assert(lvol->leader == false);
 		lvol->update_in_progress = true;
+		if (lvs->failed_on_update) {
+			lvol->failed_on_update = true;
+			pthread_mutex_unlock(&g_lvol_stores_mutex);
+			return;
+		}
 		blob_freeze_on_failover(lvol->blob);
 		if (lvs->leader) {
 			update = true;
@@ -2008,7 +2022,7 @@ spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol
 			TAILQ_INSERT_TAIL(&lvs->pending_update_lvols, lvol, entry_to_update);
 			// add to queue to process after lvs get the leadership
 		}
-	}	
+	}
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 	// we need to first create function on blobstore to send msg to md thread
 	// second we need to call lvol update function or load
@@ -2487,6 +2501,14 @@ spdk_lvs_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader)
 			lvs->leader = leader;
 		}
 	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+}
+
+void
+spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state)
+{
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	lvs->failed_on_update = state;
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 }
 
