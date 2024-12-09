@@ -1064,7 +1064,7 @@ ut_lvol_init(void)
 	assert_blockcnt(g_lvol, sz);
 
 	/* Successful lvol destroy */
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -1107,12 +1107,12 @@ ut_lvol_snapshot(void)
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Successful lvol destroy */
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Successful snap destroy */
 	g_lvol = lvol;
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -1169,17 +1169,17 @@ ut_lvol_clone(void)
 
 	/* Successful lvol destroy */
 	g_lvol = lvol;
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Successful clone destroy */
 	g_lvol = clone;
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Successful lvol destroy */
 	g_lvol = snap;
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -1378,10 +1378,10 @@ ut_lvol_rename(void)
 	CU_ASSERT_STRING_EQUAL(lvol->name, "new_lvol_name");
 
 	/* Successful lvols destroy */
-	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
-	vbdev_lvol_destroy(lvol2, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(lvol2, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -1447,7 +1447,7 @@ ut_bdev_finish(void)
 	lvol2 = g_lvol;
 
 	/* Destroy explicitly first lvol */
-	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
@@ -1503,7 +1503,7 @@ ut_lvol_resize(void)
 	assert_blockcnt(g_lvol, sz);
 
 	/* Successful lvol destroy */
-	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -1544,7 +1544,7 @@ ut_lvol_set_read_only(void)
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Successful lvol destroy */
-	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -2046,7 +2046,7 @@ ut_lvol_shallow_copy(void)
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Successful lvol destroy */
-	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL, false);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
