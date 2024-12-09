@@ -307,8 +307,8 @@ void
 spdk_bit_array_store_mask_one_page(const struct spdk_bit_array *ba, void *mask, uint64_t fisrtbit, uint64_t lastbit)
 {
 	uint32_t size, i, skip;
-	uint32_t num_bits = spdk_bit_array_capacity(ba);
-	assert(num_bits >= lastbit);
+	// uint32_t num_bits = spdk_bit_array_capacity(ba);
+	assert(spdk_bit_array_capacity(ba) >= lastbit);
 	size = (lastbit - fisrtbit) / CHAR_BIT;
 	if (!fisrtbit) {
 		skip = 0;
