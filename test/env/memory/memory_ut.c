@@ -22,6 +22,7 @@ DEFINE_STUB(rte_mem_virt2memseg, struct rte_memseg *,
 DEFINE_STUB(spdk_env_dpdk_external_init, bool, (void), true);
 DEFINE_STUB(rte_mem_event_callback_register, int,
 	    (const char *name, rte_mem_event_callback_t clb, void *arg), 0);
+DEFINE_STUB(rte_mem_event_callback_unregister, int, (const char *name, void *arg), 0);
 DEFINE_STUB(rte_mem_virt2iova, rte_iova_t, (const void *virtaddr), 0);
 DEFINE_STUB(rte_eal_iova_mode, enum rte_iova_mode, (void), RTE_IOVA_VA);
 DEFINE_STUB(rte_vfio_is_enabled, int, (const char *modname), 0);
