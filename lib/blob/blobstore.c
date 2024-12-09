@@ -645,7 +645,6 @@ blob_deserialize_xattr(struct spdk_blob *blob,
 {
 	struct spdk_xattr                       *xattr;
 	struct spdk_xattr                       *xattr_tmp;
-	struct spdk_xattr                       *xattr_tmp;
 
 	if (desc_xattr->length != sizeof(desc_xattr->name_length) +
 	    sizeof(desc_xattr->value_length) +

@@ -240,8 +240,6 @@ int spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t
 
 int spdk_lvol_copy_blob(struct spdk_lvol *lvol);
 
-int spdk_lvol_copy_blob(struct spdk_lvol *lvol);
-
 /**
  * Rename lvol with new_name.
  *

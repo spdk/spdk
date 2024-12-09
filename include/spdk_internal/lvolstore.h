@@ -126,7 +126,6 @@ struct spdk_lvol {
 	struct spdk_lvol_store		*lvol_store;
 	struct spdk_blob		*blob;
 	struct spdk_blob		*tmp_blob;
-	struct spdk_blob		*tmp_blob;
 	spdk_blob_id			blob_id;
 	bool				leader;
 	bool				update_in_progress;

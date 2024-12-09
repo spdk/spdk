@@ -105,7 +105,6 @@ lvol_alloc(struct spdk_lvol_store *lvs, const char *name, bool thin_provision,
 {
 	struct spdk_lvol *lvol;
 	struct spdk_uuid uuid;
-	struct spdk_uuid uuid;
 
 	lvol = calloc(1, sizeof(*lvol));
 	if (lvol == NULL) {
@@ -121,16 +120,9 @@ lvol_alloc(struct spdk_lvol_store *lvs, const char *name, bool thin_provision,
 		lvol->leader = false;
 	}
 	lvol->clear_method = (enum blob_clear_method)clear_method;
-	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
+	snprintf(lvol->name, sizeof(lvol->name), "%s", name);	
 	if (uuid_str == NULL) {
-		if (uuid_str == NULL) {
 		spdk_uuid_generate(&lvol->uuid);
-	} else {
-		if (spdk_uuid_parse(&uuid, uuid_str)) {
-			return NULL;
-		}
-		spdk_uuid_copy(&lvol->uuid, &uuid);
-	}
 	} else {
 		if (spdk_uuid_parse(&uuid, uuid_str)) {
 			return NULL;
