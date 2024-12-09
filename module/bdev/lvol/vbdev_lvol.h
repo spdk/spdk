@@ -40,6 +40,9 @@ int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz
 			  int8_t lvol_priority_class,
 		      spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
+int vbdev_lvol_register(struct spdk_lvol_store *lvs, const char *name, const char *registered_uuid, 
+			  uint64_t blobid, bool thin_provision, enum lvol_clear_method clear_method, 
+			  int8_t lvol_priority_class, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 int vbdev_lvs_dump(struct spdk_lvol_store *lvs, const char *file,
 		      spdk_lvol_op_with_handle_complete cb_fn,

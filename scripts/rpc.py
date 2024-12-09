@@ -2029,6 +2029,30 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.set_defaults(func=bdev_lvol_grow_lvstore)
 
+    def bdev_lvol_update_lvstore(args):
+        print_dict(rpc.lvol.bdev_lvol_update_lvstore(args.client,
+                                                   uuid=args.uuid,
+                                                   lvs_name=args.lvs_name))
+
+    p = subparsers.add_parser('bdev_lvol_update_lvstore',
+                              help='Update the lvstore on the secondary node')
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
+    p.set_defaults(func=bdev_lvol_update_lvstore)
+    
+    def bdev_lvol_set_leader_all(args):
+        print_dict(rpc.lvol.bdev_lvol_set_leader_all(args.client,
+                                                   uuid=args.uuid,
+                                                   lvs_name=args.lvs_name,
+                                                   leadership=args.leadership))
+
+    p = subparsers.add_parser('bdev_lvol_set_leader_all',
+                              help='Change leadership state for lvstore and lvols')
+    p.add_argument('-l','--leadership', action='store_true', help='Leadership state')
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-s', '--lvs-name', help='lvol store name')
+    p.set_defaults(func=bdev_lvol_set_leader_all)
+
     def bdev_lvol_create(args):
         print_json(rpc.lvol.bdev_lvol_create(args.client,
                                              lvol_name=args.lvol_name,
@@ -2049,6 +2073,29 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('size_in_mib', help='size in MiB for this bdev', type=int)
     p.add_argument('lvol_priority_class', help='integer I/O priority class for this lvol in the range [0, 15], default 0', type=int)
     p.set_defaults(func=bdev_lvol_create)
+    
+    def bdev_lvol_register(args):
+        print_json(rpc.lvol.bdev_lvol_register(args.client,
+                                             lvol_name=args.lvol_name,
+                                             registered_uuid=args.registered_uuid,
+                                             blobid=args.blobid,
+                                             thin_provision=args.thin_provision,
+                                             clear_method=args.clear_method,
+                                             uuid=args.uuid,
+                                             lvs_name=args.lvs_name,
+                                             lvol_priority_class=args.priority_class))
+
+    p = subparsers.add_parser('bdev_lvol_register', help='Register bdev with an logical volume backend for secondary node')
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
+    p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
+    p.add_argument('-c', '--clear-method', help="""Change default data clusters clear method.
+        Available: none, unmap, write_zeroes""")
+    p.add_argument('lvol_name', help='name for this lvol')
+    p.add_argument('-r', '--registered-uuid', help='registered lvol UUID')
+    p.add_argument('-b', '--blobid', help='blob id page for registered lvol', type=int)    
+    p.add_argument('-p','--priority-class', help='integer I/O priority class for this lvol in the range [0, 15], default 0', type=int, default=0, required=False)
+    p.set_defaults(func=bdev_lvol_register)
     
     def bdev_lvs_dump(args):
         print_json(rpc.lvol.bdev_lvs_dump(args.client,

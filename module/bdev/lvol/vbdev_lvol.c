@@ -875,6 +875,14 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		return;
 	}
 
+	if (!lvol->leader) {
+		// check blob state it must be CLEAN
+		// copy the blob
+		if (spdk_lvol_copy_blob(lvol)) {
+			cb_fn(cb_arg, -ENODEV);
+			return;
+		}
+	}
 	//Check if any other deletion request is in progress
 	if(is_sync == true) {
 		if(g_lvol_delete_requests->is_deletion_in_progress == true)
@@ -965,6 +973,10 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "snapshot", spdk_blob_is_snapshot(blob));
 
 	spdk_json_write_named_bool(w, "clone", spdk_blob_is_clone(blob));
+	spdk_json_write_named_bool(w, "lvol_leadership", lvol->leader);
+	spdk_json_write_named_bool(w, "lvs_leadership", lvol->lvol_store->leader);
+	spdk_json_write_named_uint64(w, "blobid", spdk_blob_get_id(blob));
+	spdk_json_write_named_uint8(w, "lvol_priority_class", lvol->priority_class);
 
 	if (spdk_blob_is_clone(blob)) {
 		spdk_blob_id snapshotid = spdk_blob_get_parent_snapshot(lvol->lvol_store->blobstore, lvol->blob_id);
@@ -1067,6 +1079,9 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	if (bserrno != 0) {
+		struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+		SPDK_NOTICELOG("FAILED IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 "  CNT %" PRIu64 "  type is %d \n",
+		 	lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		if (bserrno == -ENOMEM) {
 			status = SPDK_BDEV_IO_STATUS_NOMEM;
 		} else {
@@ -1159,8 +1174,10 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 static int
 lvol_reset(struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-
+	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+	SPDK_NOTICELOG("FAILED reset IO OP in blob: %" PRIu64 " blocks at LBA: %" PRIu64 " blocks CNT %" PRIu64 " and the type is %d \n",
+		 lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);	
 	return 0;
 }
 
@@ -1168,6 +1185,9 @@ static void
 lvol_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	if (!success) {
+		struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+		SPDK_NOTICELOG("FAILED getbuf IO OP in blob: %" PRIu64 " blocks at LBA: %" PRIu64 " blocks CNT %" PRIu64 " and the type is %d \n",
+		 			lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -1179,6 +1199,24 @@ static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+	bool allow_active = false;
+	if (!lvol->lvol_store->leader && !lvol->lvol_store->update_in_progress) {
+		allow_active = spdk_lvs_check_active_process(lvol->lvol_store);
+		if (allow_active) {
+			spdk_lvs_update_on_failover(lvol->lvol_store);			
+		}
+	}
+
+	if (!lvol->leader && !lvol->update_in_progress) {
+		spdk_lvol_update_on_failover(lvol->lvol_store, lvol);
+	}
+
+	if (lvol->failed_on_update || lvol->lvol_store->failed_on_update) {
+		SPDK_NOTICELOG("FAILED IO - update failed blob: %" PRIu64 "  Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
+		 				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -1205,6 +1243,8 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		break;
 	default:
 		SPDK_INFOLOG(vbdev_lvol, "lvol: unsupported I/O type %d\n", bdev_io->type);
+		SPDK_NOTICELOG("FAILED IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 "  CNT %" PRIu64 "  type is %d \n", 
+				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -1501,6 +1541,31 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	return rc;
 }
 
+int
+vbdev_lvol_register(struct spdk_lvol_store *lvs, const char *name, const char *registered_uuid, uint64_t blobid,
+		  bool thin_provision, enum lvol_clear_method clear_method, int8_t lvol_priority_class,
+		  spdk_lvol_op_with_handle_complete cb_fn,
+		  void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+	req->lvol_priority_class = lvol_priority_class;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_register_live(lvs, name, registered_uuid, blobid, thin_provision, clear_method,
+			      _vbdev_lvol_create_cb, req);
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}
 
 void
 vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,

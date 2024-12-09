@@ -238,6 +238,8 @@ int spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t
 				 struct spdk_lvol_store *lvs, const char *clone_name,
 				 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
+int spdk_lvol_copy_blob(struct spdk_lvol *lvol);
+
 /**
  * Rename lvol with new_name.
  *
@@ -293,6 +295,41 @@ int spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb
  * \return A pointer to the requested lvol on success, else NULL.
  */
 struct spdk_lvol *spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid);
+
+void
+spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol);
+void
+lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_msg);
+void
+spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs);
+bool
+spdk_lvs_check_active_process(struct spdk_lvol_store *lvs);
+void
+spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state);
+/**
+ * Get the lvol that has a particular UUID.
+ *
+ * \param uuid The lvs's UUID.
+ * \param leader The lvs's flag to set as leader or non leader.
+ * \return A pointer to the requested lvol on success, else NULL.
+ */
+void spdk_lvs_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader);
+
+/**
+ * Get the lvol that has a particular UUID.
+ *
+ * \param uuid The lvol's UUID.
+ * \param leader The lvs's flag to set as leader or non leader.
+ * \return A pointer to the requested lvol on success, else NULL.
+ */
+void spdk_lvol_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader);
+
+/**
+ * set the leadership for all lvs and lvol.
+ *
+ * \param leader The lvs's flag to set as leader or non leader.
+ */
+void spdk_set_leader_all(struct spdk_lvol_store *t_lvs, bool leader);
 
 /**
  * Get the lvol that has the specified name in the specified lvolstore.
@@ -355,6 +392,8 @@ void spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete 
  * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvs_grow_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
+
+void spdk_lvs_update_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 /**
  * Open a lvol.
