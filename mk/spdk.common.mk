@@ -581,7 +581,7 @@ $(shell [ "$(call cc_version)" = "$(1)" ] && echo 1 || echo 0)
 endef
 
 version_major := $(shell IFS='-.' read -r v _ _ _ < $(SPDK_ROOT_DIR)/VERSION; echo $$v)
-version_minor := $(shell IFS='-.' read -r _ v _ _ < $(SPDK_ROOT_DIR)/VERSION; echo $${v#0})
+version_minor := $(shell IFS='-.' read -r _ v _ _ < $(SPDK_ROOT_DIR)/VERSION; echo $$v | sed -e 's/^0//g')
 version_patch := $(shell IFS='-.' read -r _ _ v _ < $(SPDK_ROOT_DIR)/VERSION; echo $$v)
 version_suffix := $(shell IFS='-.' read -r _ _ _ v < $(SPDK_ROOT_DIR)/VERSION; echo $${v:+-$$v})
 
