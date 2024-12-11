@@ -1277,7 +1277,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_INITIALIZING;
 
-	if (qpair->poll_group != NULL) {
+	if (qpair->poll_group != NULL && rqpair->link_connecting.tqe_prev == NULL) {
 		group = nvme_rdma_poll_group(qpair->poll_group);
 		TAILQ_INSERT_TAIL(&group->connecting_qpairs, rqpair, link_connecting);
 	}
