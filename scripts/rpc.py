@@ -19,7 +19,7 @@ try:
 except ImportError:
     from pipes import quote
 
-sys.path.append(os.path.dirname(__file__) + '/../python')
+sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 
 import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, JSONRPCException  # noqa
