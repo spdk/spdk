@@ -297,7 +297,7 @@ virtio_pci_scsi_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 	if (name == NULL) {
 		default_name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, pci_dev_counter++);
 		if (default_name == NULL) {
-			free(vdev);
+			free(svdev);
 			return NULL;
 		}
 		name = default_name;

@@ -539,7 +539,7 @@ virtio_pci_blk_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 	if (name == NULL) {
 		default_name = spdk_sprintf_alloc("VirtioBlk%"PRIu32, pci_dev_counter++);
 		if (default_name == NULL) {
-			free(vdev);
+			free(bvdev);
 			return NULL;
 		}
 		name = default_name;
