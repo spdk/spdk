@@ -3056,6 +3056,7 @@ blob_allocate_and_copy_cluster_cpl(void *cb_arg, int bserrno)
 		if (bserrno == 0) {
 			bs_user_op_execute(op);
 		} else {
+			SPDK_NOTICELOG("FAILED in proccess IO blob.\n");
 			bs_user_op_abort(op, bserrno);
 		}
 	}
@@ -3242,6 +3243,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_NOTICELOG("FAILED on mem2 op blob: %" PRIu64 " \n",blob->id);
 		bs_user_op_abort(op, -ENOMEM);
 		return;
 	}
@@ -3285,6 +3287,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	if (rc != 0) {
 		spdk_free(ctx->buf);
 		free(ctx);
+		SPDK_NOTICELOG("FAILED allocate cluster op blob: %" PRIu64 " \n", blob->id);
 		bs_user_op_abort(op, rc);
 		return;
 	}
@@ -3300,6 +3303,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		spdk_spin_unlock(&blob->bs->used_lock);
 		spdk_free(ctx->buf);
 		free(ctx);
+		SPDK_NOTICELOG("FAILED on get seq 2 op blob: %" PRIu64 " \n", blob->id);
 		bs_user_op_abort(op, -ENOMEM);
 		return;
 	}
@@ -3906,6 +3910,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 
 			seq = bs_sequence_start_blob(_channel, &cpl, blob);
 			if (!seq) {
+				SPDK_NOTICELOG("FAILED on get seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 				cb_fn(cb_arg, -ENOMEM);
 				return;
 			}
@@ -3924,6 +3929,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 
 				seq = bs_sequence_start_blob(_channel, &cpl, blob);
 				if (!seq) {
+					SPDK_NOTICELOG("FAILED on get seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 					cb_fn(cb_arg, -ENOMEM);
 					return;
 				}
@@ -3938,6 +3944,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 				op = bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, blob, iov, iovcnt, offset,
 						      length);
 				if (!op) {
+					SPDK_NOTICELOG("FAILED on get seq op blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 					cb_fn(cb_arg, -ENOMEM);
 					return;
 				}
@@ -3952,6 +3959,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 
 		ctx = calloc(1, sizeof(struct rw_iov_ctx) + iovcnt * sizeof(struct iovec));
 		if (ctx == NULL) {
+			SPDK_NOTICELOG("FAILED on mem ctx blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
 			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}

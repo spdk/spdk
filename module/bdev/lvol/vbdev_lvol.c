@@ -1080,8 +1080,8 @@ lvol_op_comp(void *cb_arg, int bserrno)
 
 	if (bserrno != 0) {
 		struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
-		SPDK_NOTICELOG("FAILED IO OP in blob: %" PRIu64 "  LBA: %" PRIu64 "  CNT %" PRIu64 "  type is %d \n",
-		 	lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
+		SPDK_NOTICELOG("FAILED IO blob: %" PRIu64 " LBA: %" PRIu64 " CNT %" PRIu64 " type %d, rc %d \n",
+		 	lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type, bserrno);
 		if (bserrno == -ENOMEM) {
 			status = SPDK_BDEV_IO_STATUS_NOMEM;
 		} else {
