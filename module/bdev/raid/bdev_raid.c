@@ -784,6 +784,10 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		}
+
+		if (status == SPDK_BDEV_IO_STATUS_FAILED) {
+			SPDK_NOTICELOG("FAILED in proccess IO RAID.\n");	
+		}
 		spdk_bdev_io_complete(bdev_io, status);
 	}
 }
