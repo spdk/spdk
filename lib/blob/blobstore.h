@@ -93,6 +93,12 @@ enum spdk_blob_state {
 	SPDK_BLOB_STATE_LOADING,
 };
 
+enum spdk_blob_load_status {
+	SPDK_BLOB_UPDATE_NORMAL,
+	SPDK_BLOB_UPDATE_LIVE,
+	SPDK_BLOB_UPDATE_FAILOVER,
+};
+
 TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr);
 
 struct spdk_blob_list {

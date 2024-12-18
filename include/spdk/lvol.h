@@ -204,6 +204,13 @@ int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
  */
 void spdk_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+			
+void spdk_lvol_update_snapshot_clone(struct spdk_lvol *lvol, 
+			struct spdk_lvol *origlvol, 
+			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+			
+void spdk_lvol_update_clone(struct spdk_lvol *lvol,
+			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
  * Create clone of given snapshot.
@@ -313,7 +320,7 @@ spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state);
  * \param leader The lvs's flag to set as leader or non leader.
  * \return A pointer to the requested lvol on success, else NULL.
  */
-void spdk_lvs_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader);
+void spdk_lvs_set_leader_by_uuid(struct spdk_lvol_store *lvs, bool leader);
 
 /**
  * Get the lvol that has a particular UUID.

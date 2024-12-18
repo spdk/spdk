@@ -1585,6 +1585,48 @@ vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 	spdk_lvol_create_snapshot(lvol, snapshot_name, _vbdev_lvol_create_cb, req);
 }
 
+
+static void
+vbdev_lvol_update_snapshot_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+	free(req);
+	// if (lvolerrno < 0) {
+	// 	goto end;
+	// }
+
+	// lvol->priority_class = req->lvol_priority_class;
+	// vbdev_lvol_set_io_priority_class(lvol);
+
+	// lvolerrno = _create_lvol_disk(lvol, true);
+
+// end:
+// 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+// 	free(req);
+}
+
+void
+vbdev_lvol_update_snapshot_clone(struct spdk_lvol *lvol, struct spdk_lvol *origlvol,
+			   bool clone, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	if (clone) {
+		spdk_lvol_update_clone(lvol, vbdev_lvol_update_snapshot_clone_cb, req);
+		return;
+	}
+	spdk_lvol_update_snapshot_clone(lvol, origlvol, vbdev_lvol_update_snapshot_clone_cb, req);
+}
+
 void
 vbdev_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
 			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)

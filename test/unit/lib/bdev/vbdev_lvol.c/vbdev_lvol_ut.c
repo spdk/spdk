@@ -42,7 +42,7 @@ bool g_bdev_is_missing = false;
 DEFINE_STUB_V(spdk_bdev_module_fini_start_done, (void));
 DEFINE_STUB_V(spdk_bdev_update_bs_blockcnt, (struct spdk_bs_dev *bs_dev));
 DEFINE_STUB_V(spdk_blob_set_io_priority_class, (struct spdk_blob *blob, int priority_class));
-DEFINE_STUB_V(spdk_lvs_set_leader_by_uuid, (const struct spdk_uuid *uuid, bool leader));
+DEFINE_STUB_V(spdk_lvs_set_leader_by_uuid, (struct spdk_lvol_store *lvs, bool leader));
 DEFINE_STUB_V(spdk_lvol_set_leader_by_uuid, (const struct spdk_uuid *uuid, bool leader));
 DEFINE_STUB_V(spdk_lvs_update_on_failover, (struct spdk_lvol_store *lvs));
 DEFINE_STUB_V(spdk_lvol_update_on_failover, (struct spdk_lvol_store *lvs, struct spdk_lvol *lvol));
