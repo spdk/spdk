@@ -227,6 +227,50 @@ def bdev_lvol_clone(client, snapshot_name, clone_name):
     }
     return client.call('bdev_lvol_clone', params)
 
+def bdev_lvol_snapshot_register(client, lvol_name, snapshot_name, registered_uuid, blobid):
+    """Register a snapshot of the current state of a logical volume.
+
+    Args:
+        lvol_name: logical volume to create a snapshot from
+        snapshot_name: name for the newly created snapshot
+
+    Returns:
+        Name of registered logical volume snapshot.
+    """
+    if not registered_uuid:
+        raise ValueError("registered_uuid must be specified")
+    if not blobid:
+        raise ValueError("blobid must be specified")
+    
+    params = {
+        'lvol_name': lvol_name,
+        'snapshot_name': snapshot_name,
+        'registered_uuid': registered_uuid,
+        'blobid': blobid
+    }
+    return client.call('bdev_lvol_snapshot_register', params)
+
+def bdev_lvol_clone_register(client, snapshot_name, clone_name, registered_uuid, blobid):
+    """Register a logical volume based on a snapshot.
+
+    Args:
+        snapshot_name: snapshot to clone
+        clone_name: name of logical volume to create
+
+    Returns:
+        Name of registered logical volume clone.
+    """
+    if not registered_uuid:
+        raise ValueError("registered_uuid must be specified")
+    if not blobid:
+        raise ValueError("blobid must be specified")
+    params = {
+        'snapshot_name': snapshot_name,
+        'clone_name': clone_name,
+        'registered_uuid': registered_uuid,
+        'blobid': blobid
+    }
+    return client.call('bdev_lvol_clone_register', params)
 
 def bdev_lvol_clone_bdev(client, bdev, lvs_name, clone_name):
     """Create a logical volume based on a snapshot.

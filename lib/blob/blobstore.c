@@ -3707,19 +3707,19 @@ blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 		cb_fn(cb_arg, -EIO);
 	}
 
-	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
-		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-			SPDK_NOTICELOG("FAILED on check size 1 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
-			cb_fn(cb_arg, -EINVAL);
-			return;
-		}
-	} else {
-		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {			
-			SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
-			cb_fn(cb_arg, -EINVAL);
-			return;
-		}
+	// if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
+	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
+		SPDK_NOTICELOG("FAILED on check size 1 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+		cb_fn(cb_arg, -EINVAL);
+		return;
 	}
+	// } else {
+	// 	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {			
+	// 		SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+	// 		cb_fn(cb_arg, -EINVAL);
+	// 		return;
+	// 	}
+	// }
 
 	if (length <= bs_num_io_units_to_cluster_boundary(blob, offset)) {
 		blob_request_submit_op_single(_channel, blob, payload, offset, length,
@@ -3848,19 +3848,19 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 		cb_fn(cb_arg, -EIO);
 	}
 
-	if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
-		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
-			SPDK_NOTICELOG("FAILED on check size blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
-			cb_fn(cb_arg, -EINVAL);
-			return;
-		}
-	} else {
-		if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
-			SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
-			cb_fn(cb_arg, -EINVAL);
-			return;
-		}
+	// if (blob->active.num_clusters != 0 && blob->active.num_clusters_on_update == 0) {
+	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
+		SPDK_NOTICELOG("FAILED on check size blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+		cb_fn(cb_arg, -EINVAL);
+		return;
 	}
+	// } else {
+	// 	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters_on_update)) {
+	// 		SPDK_NOTICELOG("FAILED on check size 2 blob: %" PRIu64 " blocks at LBA: %" PRIu64 " \n",blob->id, offset);
+	// 		cb_fn(cb_arg, -EINVAL);
+	// 		return;
+	// 	}
+	// }
 	/*
 	 * For now, we implement readv/writev using a sequence (instead of a batch) to account for having
 	 *  to split a request that spans a cluster boundary.  For I/O that do not span a cluster boundary,
@@ -7058,6 +7058,8 @@ spdk_bs_copy_blob(struct spdk_blob_store *bs,
 	tmp_blob->open_ref = blob->open_ref;
 	tmp_blob->parent_id = blob->parent_id;
 	free(tmp_blob->active.pages);
+
+	// TODO no need for allocate buf for clean pages
 	tmp_blob->clean.pages = calloc(1, sizeof(*blob->active.pages));
 	tmp_blob->clean.extent_pages = calloc(1, sizeof(*blob->active.extent_pages));
 	tmp_blob->clean.clusters = calloc(1, sizeof(*blob->active.clusters));
@@ -8948,8 +8950,7 @@ bs_update_blob_on_failover_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno
 		ctx->rc = bserrno;
 		SPDK_ERRLOG("Update blob on failover failed, ctx->rc=%d\n", ctx->rc);		
 	}
-	//remember fisrt call unfreaze function
-	blob->active.num_clusters_on_update = 0;
+	//remember fisrt call unfreaze function	
 	blob_unfreeze_io(ctx->blob, blob_failover_unfreeze_cpl, ctx);	
 }
 
@@ -9236,7 +9237,7 @@ blob_freeze_on_failover(struct spdk_blob *blob)
 {
 	/* Freeze I/O on blob */
 	assert(blob->frozen_refcnt == 0);
-	blob->active.num_clusters_on_update = blob->active.num_clusters;
+	// blob->active.num_clusters_on_update = blob->active.num_clusters;
 	blob->frozen_refcnt++;
 }
 
@@ -9757,95 +9758,6 @@ bs_is_blob_deletable(struct spdk_blob *blob, bool *update_clone)
 int
 spdk_bs_delete_blob_non_leader(struct spdk_blob_store *bs, struct spdk_blob *blob) 
 {
-
-
-	// struct spdk_blob_list *parent_snapshot_entry;
-	// struct spdk_blob *snapshot = blob;
-	// struct spdk_blob_md_page *page;
-	// bool snapshot_md_ro;
-	// struct spdk_blob *clone;
-
-	// // struct delete_snapshot_ctx *ctx = cb_arg;
-	// struct spdk_blob_list *parent_snapshot_entry = NULL;
-	// struct spdk_blob_list *snapshot_entry = NULL;
-	// struct spdk_blob_list *clone_entry = NULL;
-	// struct spdk_blob_list *snapshot_clone_entry = NULL;
-//********************************* */
-
-	// snapshot_entry = bs_get_snapshot_entry(snapshot->bs, snapshot->id);
-
-	// assert(snapshot_entry != NULL);
-
-	// /* Get clone of the snapshot (at this point there can be only one clone) */
-	// clone_entry = TAILQ_FIRST(&snapshot_entry->clones);
-	// assert(snapshot_entry->clone_count == 1);
-	// assert(clone_entry != NULL);
-
-	// /* Get snapshot entry for parent snapshot and clone entry within that snapshot for
-	//  * snapshot that we are removing */
-	// blob_get_snapshot_and_clone_entries(snapshot, &ctx->parent_snapshot_entry,
-	// 				    &snapshot_clone_entry);
-
-	// if (ctx->parent_snapshot_entry != NULL) {
-	// 	/* ...to parent snapshot */
-	// 	ctx->clone->parent_id = ctx->parent_snapshot_entry->id;
-	// 	ctx->clone->back_bs_dev = ctx->snapshot->back_bs_dev;
-	// 	// blob_set_xattr(ctx->clone, BLOB_SNAPSHOT, &ctx->parent_snapshot_entry->id,
-	// 	// 	       sizeof(spdk_blob_id),
-	// 	// 	       true);
-	// } else {
-	// 	/* ...to blobid invalid and zeroes dev */
-	// 	ctx->clone->parent_id = SPDK_BLOBID_INVALID;
-	// 	ctx->clone->back_bs_dev = bs_create_zeroes_dev();
-	// 	// blob_remove_xattr(ctx->clone, BLOB_SNAPSHOT, true);
-	// }
-
-	// if (ctx->parent_snapshot_entry != NULL) {
-	// 	ctx->snapshot->back_bs_dev = NULL;
-	// }
-
-	// /* Get snapshot entry for the snapshot we want to remove */
-	// snapshot_entry = bs_get_snapshot_entry(ctx->snapshot->bs, ctx->snapshot->id);
-
-	// assert(snapshot_entry != NULL);
-
-	// /* Remove clone entry in this snapshot (at this point there can be only one clone) */
-	// clone_entry = TAILQ_FIRST(&snapshot_entry->clones);
-	// assert(clone_entry != NULL);
-	// TAILQ_REMOVE(&snapshot_entry->clones, clone_entry, link);
-	// snapshot_entry->clone_count--;
-	// assert(TAILQ_EMPTY(&snapshot_entry->clones));
-
-	// switch (ctx->snapshot->parent_id) {
-	// case SPDK_BLOBID_INVALID:
-	// case SPDK_BLOBID_EXTERNAL_SNAPSHOT:
-	// 	/* No parent snapshot - just remove clone entry */
-	// 	free(clone_entry);
-	// 	break;
-	// default:
-	// 	/* This snapshot is at the same time a clone of another snapshot - we need to
-	// 	 * update parent snapshot (remove current clone, add new one inherited from
-	// 	 * the snapshot that is being removed) */
-
-	// 	/* Get snapshot entry for parent snapshot and clone entry within that snapshot for
-	// 	 * snapshot that we are removing */
-	// 	blob_get_snapshot_and_clone_entries(ctx->snapshot, &parent_snapshot_entry,
-	// 					    &snapshot_clone_entry);
-
-	// 	/* Switch clone entry in parent snapshot */
-	// 	TAILQ_INSERT_TAIL(&parent_snapshot_entry->clones, clone_entry, link);
-	// 	TAILQ_REMOVE(&parent_snapshot_entry->clones, snapshot_clone_entry, link);
-	// 	free(snapshot_clone_entry);
-	// }
-
-
-//****************************** */
-
-
-
-
-
-
 	bool update_clone = false;
 
 	/* Check if blob can be removed and if it is a snapshot with clone on top of it */
@@ -9861,8 +9773,8 @@ spdk_bs_delete_blob_non_leader(struct spdk_blob_store *bs, struct spdk_blob *blo
 		// spdk_blob_close(blob, delete_blob_cleanup_finish, ctx);
 		return -EBUSY;
 	}
-
-	blob->locked_operation_in_progress = true;
+	// TODO check if we need this line
+	// blob->locked_operation_in_progress = true;
 
 	/*
 	 * Remove the blob from the blob_store list now, to ensure it does not
@@ -9931,47 +9843,45 @@ spdk_bs_delete_blob_non_leader(struct spdk_blob_store *bs, struct spdk_blob *blo
 				free(snapshot_clone_entry);
 		}
 		// TODO reload the clone
-		blob_free(blob);				
+		blob_free(blob);
 	} else {
 		/* This blob does not have any clones - just remove it */
-		if (blob->open_ref == 1) {
-			bs_blob_list_remove(blob);
-			uint32_t page_num;
-			uint32_t i;
-			spdk_spin_lock(&bs->used_lock);
+		bs_blob_list_remove(blob);
+		uint32_t page_num;
+		uint32_t i;
+		spdk_spin_lock(&bs->used_lock);
 
-			page_num = bs_blobid_to_page(blob->id);
+		page_num = bs_blobid_to_page(blob->id);
 
-			spdk_bit_array_clear(bs->used_blobids, page_num);
-			bs_release_md_page(bs, page_num);
+		spdk_bit_array_clear(bs->used_blobids, page_num);
+		bs_release_md_page(bs, page_num);
 
-			for (i = 1; i < blob->active.num_pages; i++) {
-				if (blob->active.pages[i] != 0) {
-					bs_release_md_page(bs, blob->active.pages[i]);
-				}
+		for (i = 1; i < blob->active.num_pages; i++) {
+			if (blob->active.pages[i] != 0) {
+				bs_release_md_page(bs, blob->active.pages[i]);
 			}
-				
-			/* Release all clusters that were truncated */
-			for (i = 0; i < blob->active.num_clusters; i++) {
-				uint32_t cluster_num = bs_lba_to_cluster(bs, blob->active.clusters[i]);
-
-				/* Nothing to release if it was not allocated */
-				if (blob->active.clusters[i] != 0) {
-					bs_release_cluster(bs, cluster_num);
-				}
-			}
-
-			/* Release all extent_pages that were truncated */
-			for (i = 0; i < blob->active.num_extent_pages; i++) {
-				/* Nothing to release if it was not allocated */
-				if (blob->active.extent_pages[i] != 0) {
-					bs_release_md_page(bs, blob->active.extent_pages[i]);	
-				}
-			}
-
-			spdk_spin_unlock(&bs->used_lock);
-			blob_free(blob);
 		}
+			
+		/* Release all clusters that were truncated */
+		for (i = 0; i < blob->active.num_clusters; i++) {
+			uint32_t cluster_num = bs_lba_to_cluster(bs, blob->active.clusters[i]);
+
+			/* Nothing to release if it was not allocated */
+			if (blob->active.clusters[i] != 0) {
+				bs_release_cluster(bs, cluster_num);
+			}
+		}
+
+		/* Release all extent_pages that were truncated */
+		for (i = 0; i < blob->active.num_extent_pages; i++) {
+			/* Nothing to release if it was not allocated */
+			if (blob->active.extent_pages[i] != 0) {
+				bs_release_md_page(bs, blob->active.extent_pages[i]);	
+			}
+		}
+
+		spdk_spin_unlock(&bs->used_lock);
+		blob_free(blob);
 	}
 	return 0;
 }

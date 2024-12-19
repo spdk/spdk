@@ -129,6 +129,8 @@ struct spdk_lvol {
 	spdk_blob_id			blob_id;
 	bool				leader;
 	bool				update_in_progress;
+	// uint64_t 			timeout_update_bs;
+	// uint64_t 			timeout_change_leadership;
 	bool				failed_on_update;
 	char				unique_id[SPDK_LVOL_UNIQUE_ID_MAX];
 	char				name[SPDK_LVOL_NAME_MAX];

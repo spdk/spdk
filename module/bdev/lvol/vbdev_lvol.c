@@ -875,7 +875,7 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		return;
 	}
 
-	if (!lvol->leader) {
+	if (!lvol->lvol_store->leader) {
 		// check blob state it must be CLEAN
 		// copy the blob
 		if (spdk_lvol_copy_blob(lvol)) {
@@ -1208,7 +1208,7 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	}
 
 	if (!lvol->leader && !lvol->update_in_progress) {
-		spdk_lvol_update_on_failover(lvol->lvol_store, lvol);
+		spdk_lvol_update_on_failover(lvol->lvol_store, lvol, true);
 	}
 
 	if (lvol->failed_on_update || lvol->lvol_store->failed_on_update) {

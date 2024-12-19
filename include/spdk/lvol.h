@@ -304,7 +304,7 @@ int spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb
 struct spdk_lvol *spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid);
 
 void
-spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol);
+spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_md_thread);
 void
 lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_msg);
 void
