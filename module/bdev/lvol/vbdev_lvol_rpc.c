@@ -825,8 +825,7 @@ rpc_bdev_lvol_snapshot_register(struct spdk_jsonrpc_request *request,
 	SPDK_INFOLOG(lvol_rpc, "Register snapshot blob.\n");
 
 	if (spdk_json_decode_object(params, rpc_snapshot_register_decoders,
-				    SPDK_COUNTOF(rpc_snapshot_register_decoders),
-				    &req)) {
+				    SPDK_COUNTOF(rpc_snapshot_register_decoders), req)) {
 		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -1064,8 +1063,7 @@ rpc_bdev_lvol_clone_register(struct spdk_jsonrpc_request *request,
 	SPDK_INFOLOG(lvol_rpc, "Register cloning blob.\n");
 
 	if (spdk_json_decode_object(params, rpc_clone_register_decoders,
-				    SPDK_COUNTOF(rpc_clone_register_decoders),
-				    &req)) {
+				    SPDK_COUNTOF(rpc_clone_register_decoders), req)) {
 		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
