@@ -9784,8 +9784,10 @@ spdk_bs_delete_blob_non_leader(struct spdk_blob_store *bs, struct spdk_blob *blo
 	 * Remove the blob from the blob_store list now, to ensure it does not
 	 *  get returned after this point by blob_lookup().
 	 */
-	spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
-	RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
+	if (blob_lookup(blob->bs, blob->id)) {
+		spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
+		RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
+	}
 
 	if (update_clone) {
 		struct spdk_blob *snapshot = blob;

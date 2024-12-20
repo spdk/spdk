@@ -1042,7 +1042,8 @@ lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not remove blob on lvol gracefully - forced removal\n");
 	} else {
-		SPDK_INFOLOG(lvol, "Lvol %s deleted\n", lvol->unique_id);
+		// SPDK_INFOLOG(lvol, "Lvol %s deleted\n", lvol->unique_id);
+		SPDK_NOTICELOG("Lvol %s deleted\n", lvol->unique_id);
 	}
 
 	if (lvol->degraded_set != NULL) {
@@ -1780,6 +1781,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	if (lvol->lvol_store->leader) {
 		spdk_bs_delete_blob(bs, lvol->blob_id, lvol_delete_blob_cb, req);
 	} else {
+		SPDK_NOTICELOG("Deleting tmpblob 0x%" PRIx64 " on failover.\n", lvol->blob_id);
 		// TODO add check for snapshots and clons
 		pthread_mutex_lock(&g_lvol_stores_mutex);
 		spdk_bs_delete_blob_non_leader(bs, lvol->tmp_blob);
