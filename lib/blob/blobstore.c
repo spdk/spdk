@@ -7055,6 +7055,7 @@ spdk_bs_copy_blob(struct spdk_blob_store *bs,
 	if (!tmp_blob) {
 		return NULL;
 	}
+	SPDK_NOTICELOG( "Copy blob 0x%" PRIx64 " ref: 0x%" PRIx32 " \n", blob->id, blob->open_ref);
 	tmp_blob->open_ref = blob->open_ref;
 	tmp_blob->parent_id = blob->parent_id;
 	free(tmp_blob->active.pages);
@@ -8865,6 +8866,7 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 static void
 bs_swap_blobs(struct spdk_blob *destblob, struct spdk_blob *srcblob)
 {
+	SPDK_NOTICELOG("swap blobs 0x%" PRIx64 " \n", destblob->id);
 	uint32_t *active_extent_pages = NULL, *clean_extent_pages = NULL;
 	uint64_t *active_clusters = NULL, *clean_clusters = NULL;
 	uint32_t *active_pages = NULL, *clean_pages = NULL;
@@ -9110,6 +9112,7 @@ spdk_bs_update_snapshot_clone(struct spdk_blob_store *bs, struct spdk_blob *orig
 {
 	struct spdk_blob tmpblob;
 	if (leader || update_in_progress) {
+		SPDK_NOTICELOG("Create snap in failover blob 0x%" PRIx64 " \n", origblob->id);
 		tmpblob.bs = bs;
 		tmpblob.id = origblob->id;
 		tmpblob.parent_id = newblob->parent_id;
@@ -9133,6 +9136,7 @@ spdk_bs_update_snapshot_clone_live(struct spdk_blob_store *bs, struct spdk_blob 
 {
 	//loading or updating the original blob
 	// blob->open_ref=1;
+	SPDK_NOTICELOG("Updating the after snap blob 0x%" PRIx64 " ref: 0x%" PRIx32 " \n", blob->id, blob->open_ref);
 	bs_update_blob_on_live(bs, blob, cb_fn, cb_arg);
 }
 
@@ -10068,6 +10072,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 	blob = blob_lookup(bs, blobid);
 	if (blob) {
 		blob->open_ref++;
+		SPDK_NOTICELOG("Opening blob 0x%" PRIx64 " from tree ref: 0x%" PRIx32 " \n", blobid, blob->open_ref);
 		cb_fn(cb_arg, blob, 0);
 		return;
 	}
@@ -10128,6 +10133,7 @@ bs_open_blob_on_failover(struct spdk_blob_store *bs,
 	blob = blob_lookup(bs, blobid);
 	if (blob) {
 		blob->open_ref++;
+		SPDK_NOTICELOG("Opening blob 0x%" PRIx64 " from tree ref: 0x%" PRIx32 " \n", blobid, blob->open_ref);
 		cb_fn(cb_arg, blob, 0);
 		return;
 	}
@@ -10173,6 +10179,7 @@ void
 spdk_bs_open_blob_on_failover(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
+	SPDK_NOTICELOG("Opening blob snap 0x%" PRIx64 " \n", blobid);
 	bs_open_blob_on_failover(bs, blobid, SPDK_BLOB_UPDATE_FAILOVER, NULL, cb_fn, cb_arg);
 }
 
