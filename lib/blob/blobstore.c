@@ -9793,10 +9793,11 @@ spdk_bs_delete_blob_non_leader(struct spdk_blob_store *bs, struct spdk_blob *blo
 		struct spdk_blob_list *snapshot_clone_entry = NULL;
 		struct spdk_blob *clone = NULL;
 
-		if (blob_lookup(blob->bs, blob->id)) {
-			spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
-			RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
-		}
+		//TODO bcs we work with tmp and try to delete that from tree we face problem
+		// if (blob_lookup(blob->bs, blob->id)) {
+		// 	spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
+		// 	RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
+		// }
 		// TO DO this snapshot had clone and it should reload it again in nonleader state
 		/* This blob is a snapshot with active clone - update clone first */
 
