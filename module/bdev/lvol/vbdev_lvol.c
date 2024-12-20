@@ -878,6 +878,7 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 	if (!lvol->lvol_store->leader) {
 		// check blob state it must be CLEAN
 		// copy the blob
+		SPDK_NOTICELOG("Deleting blob 0x%" PRIx64 " in secondary mode.\n", lvol->blob_id);
 		if (spdk_lvol_copy_blob(lvol)) {
 			cb_fn(cb_arg, -ENODEV);
 			return;

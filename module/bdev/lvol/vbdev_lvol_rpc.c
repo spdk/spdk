@@ -510,6 +510,7 @@ rpc_bdev_lvol_register(struct spdk_jsonrpc_request *request,
 		return;
 	}
 	SPDK_INFOLOG(lvol_rpc, "Register blob\n");
+	SPDK_NOTICELOG("Register blob on secondary.\n");
 
 	if (spdk_json_decode_object(params, rpc_bdev_lvol_register_decoders,
 				    SPDK_COUNTOF(rpc_bdev_lvol_register_decoders),
