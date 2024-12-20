@@ -1,0 +1,76 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      pkgdep_args: '--developer-tools'
+      configure_args: '--enable-coverage'
+  test-nvme-tcp:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Unpack pre-built SPDK
+        run: tar -vxf ./compiled-spdk/spdk.tar
+      - name: Start SPDK NVMe/TCP target
+        # working-directory: compiled-spdk
+        run: |
+          sync
+          echo 1 | sudo tee /proc/sys/vm/drop_caches
+          echo 1024 | sudo tee /proc/sys/vm/nr_hugepages
+          grep "" /sys/kernel/mm/hugepages/hugepages-*/nr_hugepages
+          sudo ./build/bin/spdk_tgt -m 0x1 -s 512 --no-pci 2>&1 &
+          echo wait 5s... && sleep 5s
+          for i in {1..10}; do sudo ./scripts/rpc.py spdk_get_version && break || sleep 1; done
+          sudo ./scripts/rpc.py bdev_malloc_create -b Malloc0 64 512
+          sudo ./scripts/rpc.py bdev_malloc_create -b Malloc1 64 512
+          sudo ./scripts/rpc.py nvmf_create_transport -t TCP -u 8192 -m 4 -c 0
+          sudo ./scripts/rpc.py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -d SPDK_Controller1
+          sudo ./scripts/rpc.py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp -a 127.0.0.1 -s 4420
+          sudo ./scripts/rpc.py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0 -n 1
+          sudo ./scripts/rpc.py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 2
+          # RUN PERF
+          sudo ./build/bin/spdk_nvme_identify -r "traddr:127.0.0.1 trtype:TCP adrfam:IPv4 trsvcid:4420 hostnqn:nqn.2014-08.org.nvmexpress:uuid:feb98abe-d51f-40c8-b348-2753f3571d3c"
+          sudo ./build/bin/spdk_nvme_perf     -r "traddr:127.0.0.1 trtype:TCP adrfam:IPv4 trsvcid:4420 hostnqn:nqn.2014-08.org.nvmexpress:uuid:feb98abe-d51f-40c8-b348-2753f3571d3c subnqn:nqn.2016-06.io.spdk:cnode1" -c 0x1 -q 1 -o 4096 -w randread -t 10 | tee lognotls.txt
+
+  unittest:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: tar -vxf ./compiled-spdk/spdk.tar
+      - run: sudo ./scripts/pkgdep.sh --developer-tools
+      - run: ./test/unit/unittest.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-spdk
+          path: output/ut_coverage
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v5.1.2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: glimchb/spdk
+
+  autorun-unittest:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: tar -vxf ./compiled-spdk/spdk.tar
+      - run: sudo ./scripts/pkgdep.sh --developer-tools
+      - run: |
+          echo "SPDK_TEST_UNITTEST=1" > /tmp/auto.conf
+          sudo -E ./autotest.sh /tmp/auto.conf

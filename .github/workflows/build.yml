@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      pkgdep_args:
+        required: false
+        default: ''
+        type: string
+      configure_args:
+        required: false
+        default: ''
+        type: string
+  workflow_call:
+    inputs:
+      pkgdep_args:
+        required: false
+        default: ''
+        type: string
+      configure_args:
+        required: false
+        default: ''
+        type: string
+
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # See https://github.com/clearlinux/distribution/issues/1464
+      - name: Hack - why meson is not installed ?
+        run: sudo apt-get install meson python3-pyelftools
+
+      - name: Install additional packages
+        run: sudo ./scripts/pkgdep.sh ${{ inputs.pkgdep_args }}
+
+      - name: Configure
+        run: |
+          ./configure ${{ inputs.configure_args }} \
+              --without-uring \
+              --without-fio \
+              --without-rbd \
+              --without-rdma \
+              --without-shared \
+              --without-iscsi-initiator \
+              --without-vtune \
+              --without-vfio-user
+
+      - name: Make
+        run: make -j
+
+      - name: Tar files before upload to preserve permissions
+        run: tar -cvf spdk.tar --exclude-vcs .
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-spdk
+          path: spdk.tar

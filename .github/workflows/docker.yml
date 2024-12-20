@@ -1,0 +1,98 @@
+name: Docker
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3.0.0
+
+      - name: Log in to the GH Container registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5.5.0
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+
+      - name: Package SPDK
+        run: tar -czf build_base/spdk.tar.gz --exclude='docker/*' -C .. .
+        working-directory: docker
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v5.1.0
+        with:
+          context: docker/build_base
+          #platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
+          #push: ${{ github.event_name != 'pull_request' }}
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@edfb0fe6204400c56fbfd3feba3fe9ad1adfa345
+
+      - name: Package SPDK
+        run: tar -czf build_base/spdk.tar.gz --exclude='docker/*' -C .. .
+        working-directory: docker
+
+      - name: Start containers
+        run: docker compose up --build --force-recreate --detach
+        working-directory: docker
+
+      - name: Run Tests
+        run: |
+          set -x
+          name=$(docker compose ps | grep device | awk '{print $1}')
+          rc=$(docker wait "${name}")
+          if [ "${rc}" != "0" ]; then
+              echo "device failed:"
+              docker logs "${name}"
+              exit 1
+          fi
+          # Test without SSL first
+          docker compose exec -T spdk sh -xc 'spdk_nvme_identify -r "traddr:`hostname -i` trtype:TCP adrfam:IPv4 trsvcid:5555 hostnqn:nqn.2014-08.org.nvmexpress:uuid:feb98abe-d51f-40c8-b348-2753f3571d3c"'
+          docker compose exec -T spdk sh -xc 'spdk_nvme_perf     -r "traddr:`hostname -i` trtype:TCP adrfam:IPv4 trsvcid:5555 hostnqn:nqn.2014-08.org.nvmexpress:uuid:feb98abe-d51f-40c8-b348-2753f3571d3c subnqn:nqn.2016-06.io.spdk:cnode1" -c 0x1 -q 1 -o 4096 -w randread -t 10' | tee lognotls.txt
+          grep "Total" lognotls.txt
+          # TODO: identify doesn't work with SSL yet
+          docker compose exec -T spdk sh -xc 'spdk_nvme_perf     -r "traddr:`hostname -i` trtype:TCP adrfam:IPv4 trsvcid:4444 hostnqn:nqn.2014-08.org.nvmexpress:uuid:feb98abe-d51f-40c8-b348-2753f3571d3c subnqn:nqn.2016-06.io.spdk:cnode1" -c 0x1 -q 1 -o 4096 -w randread -t 10 -S ssl --psk-path /tmp/opikey.txt' | tee log.txt
+          grep "Total" log.txt
+
+      - name: Logs
+        if: always()
+        run: docker compose logs
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down --volumes --remove-orphans
