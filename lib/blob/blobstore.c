@@ -9111,6 +9111,16 @@ spdk_bs_update_snapshot_clone(struct spdk_blob_store *bs, struct spdk_blob *orig
 			 struct spdk_blob *newblob, bool leader, bool update_in_progress)
 {
 	struct spdk_blob tmpblob;
+	struct spdk_blob *parentblob;
+	if (newblob->parent_id != SPDK_BLOBID_INVALID) {
+		parentblob = blob_lookup(newblob->bs, newblob->parent_id);
+		if (parentblob) {			
+			parentblob->open_ref--;
+			SPDK_NOTICELOG("Check ref on register snap in secondary parentblob 0x%" PRIx64 " "
+						"0x%" PRIx32 " \n", parentblob->id, parentblob->open_ref);
+		}
+	}
+
 	if (leader || update_in_progress) {
 		SPDK_NOTICELOG("Create snap in failover blob 0x%" PRIx64 " \n", origblob->id);
 		tmpblob.bs = bs;
@@ -9128,6 +9138,11 @@ spdk_bs_update_snapshot_clone(struct spdk_blob_store *bs, struct spdk_blob *orig
 	origblob->parent_id = newblob->id;
 	bs_blob_list_add(newblob);
 	bs_blob_list_add(origblob);
+	SPDK_NOTICELOG("Check ref on register snap in secondary "
+               "origblob 0x%" PRIx64 " 0x%" PRIx32 " "
+               "newblob 0x%" PRIx64 " 0x%" PRIx32 " \n",
+               origblob->id, origblob->open_ref, 
+               newblob->id, newblob->open_ref);
 }
 
 void
@@ -9135,8 +9150,8 @@ spdk_bs_update_snapshot_clone_live(struct spdk_blob_store *bs, struct spdk_blob 
 			 spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	//loading or updating the original blob
-	// blob->open_ref=1;
-	SPDK_NOTICELOG("Updating the after snap blob 0x%" PRIx64 " ref: 0x%" PRIx32 " \n", blob->id, blob->open_ref);
+	SPDK_NOTICELOG("Updating origblob after register snap blob 0x%" PRIx64 " ref: "
+					"0x%" PRIx32 " \n", blob->id, blob->open_ref);
 	bs_update_blob_on_live(bs, blob, cb_fn, cb_arg);
 }
 
