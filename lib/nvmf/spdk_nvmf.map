@@ -96,6 +96,7 @@
 	spdk_nvmf_subsystem_set_ana_state;
 	spdk_nvmf_subsystem_get_ana_state;
 	spdk_nvmf_subsystem_set_ns_ana_group;
+	spdk_nvmf_subsystem_set_ns_visibility;
 	spdk_nvmf_subsystem_is_discovery;
 	spdk_nvmf_subsystem_set_cntlid_range;
 	spdk_nvmf_set_custom_ns_reservation_ops;

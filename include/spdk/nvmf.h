@@ -984,6 +984,20 @@ int spdk_nvmf_subsystem_set_ns_ana_group(struct spdk_nvmf_subsystem *subsystem,
 		uint32_t nsid, uint32_t anagrpid);
 
 /**
+ * Change visibility of a namespace of a subsystem.
+ *
+ * May only be performed on subsystems in the INACTIVE or PAUSED state.
+ *
+ * \param subsystem Subsystem the namespace belongs to.
+ * \param nsid Namespace ID to change.
+ * \param visibility A new visibility to set.
+ *
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_nvmf_subsystem_set_ns_visibility(struct spdk_nvmf_subsystem *subsystem,
+		uint32_t nsid, bool auto_visible);
+
+/**
  * Sets the controller ID range for a subsystem.
  *
  * Valid range is [1, 0xFFEF].
