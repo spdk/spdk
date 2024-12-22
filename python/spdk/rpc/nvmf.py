@@ -544,6 +544,29 @@ def nvmf_subsystem_set_ns_ana_group(client, nqn, nsid, anagrpid, tgt_name=None):
 
 
 @deprecated_method
+def nvmf_subsystem_set_ns_visibility(client, nqn, nsid, auto_visible, tgt_name=None):
+    """Change visibility of a namespace.
+
+    Args:
+        nqn: Subsystem NQN.
+        nsid: Namespace ID.
+        auto_visible: visibility
+        tgt_name: name of the parent NVMe-oF target (optional).
+
+    Returns:
+        True or False
+    """
+    params = {'nqn': nqn,
+              'nsid': nsid,
+              'auto_visible': auto_visible}
+
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_subsystem_set_ns_visibility', params)
+
+
+@deprecated_method
 def nvmf_subsystem_remove_ns(client, nqn, nsid, tgt_name=None):
     """Remove a existing namespace from a subsystem.
 

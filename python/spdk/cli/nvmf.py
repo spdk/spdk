@@ -293,6 +293,20 @@ def add_parser(subparsers):
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_set_ns_ana_group)
 
+    def nvmf_subsystem_set_ns_visibility(args):
+        rpc.nvmf.nvmf_subsystem_set_ns_visibility(args.client,
+                                                 nqn=args.nqn,
+                                                 nsid=args.nsid,
+                                                 auto_visible=args.auto_visible,
+                                                 tgt_name=args.tgt_name)
+
+    p = subparsers.add_parser('nvmf_subsystem_set_ns_visibility', help='Change visibility of a namespace')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('nsid', help='The requested NSID', type=int)
+    p.add_argument('auto-visible', help='Auto visible', action='store_true')
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.set_defaults(func=nvmf_subsystem_set_ns_visibility)
+
     def nvmf_subsystem_remove_ns(args):
         args.client.nvmf_subsystem_remove_ns(
                                           nqn=args.nqn,
