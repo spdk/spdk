@@ -2348,6 +2348,56 @@ spdk_nvmf_subsystem_set_ns_ana_group(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
+int
+spdk_nvmf_subsystem_set_ns_visibility(struct spdk_nvmf_subsystem *subsystem,
+				     uint32_t nsid, bool auto_visible)
+{
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_host *host;
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	if (nsid == 0 || nsid > subsystem->max_nsid) {
+		return -1;
+	}
+
+	ns = subsystem->ns[nsid - 1];
+	if (!ns) {
+		return -1;
+	}
+
+	if (ns->always_visible == auto_visible)
+		return 0;
+
+	ns->always_visible = auto_visible;
+	if (ns->always_visible) {
+		while(!TAILQ_EMPTY(&ns->hosts)) {
+			host = TAILQ_FIRST(&ns->hosts);
+			if (host != NULL)
+				nvmf_ns_remove_host(ns, host);
+		}
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		    	if (spdk_bit_array_get(ctrlr->visible_ns, nsid - 1))
+				continue;
+			spdk_bit_array_set(ctrlr->visible_ns, nsid - 1);
+			send_async_event_ns_notice(ctrlr);
+			nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		}
+	}
+	else {
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		    	if (!spdk_bit_array_get(ctrlr->visible_ns, nsid - 1))
+				continue;
+			spdk_bit_array_clear(ctrlr->visible_ns, nsid - 1);
+			send_async_event_ns_notice(ctrlr);
+			nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		}
+	}
+	
+	nvmf_subsystem_ns_changed(subsystem, nsid);
+
+	return 0;
+}
+
 static uint32_t
 nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsystem,
 				       uint32_t prev_nsid)
