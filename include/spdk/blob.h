@@ -370,7 +370,7 @@ void spdk_bs_grow_live(struct spdk_blob_store *bs,
  * \param cb_fn Called when the updating is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
-void spdk_bs_update_live(struct spdk_blob_store *bs,
+void spdk_bs_update_live(struct spdk_blob_store *bs, bool failover,
 		       spdk_bs_op_complete cb_fn, void *cb_arg);
 
 void spdk_blob_failover_unfreaze(struct spdk_blob *blob, 
@@ -525,6 +525,15 @@ uint64_t spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs);
  * \return blob id.
  */
 spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob);
+
+/**
+ * Get the blob open ref.
+ *
+ * \param blob Blob struct to query.
+ *
+ * \return blob open ref.
+ */
+uint32_t spdk_blob_get_open_ref(struct spdk_blob *blob);
 
 /**
  * Get the number of pages allocated to the blob.
@@ -701,9 +710,7 @@ void spdk_bs_update_snapshot_clone(struct spdk_blob_store *bs,
 			struct spdk_blob *origblob, struct spdk_blob *newblob,
 			bool leader, bool update_in_progress);
 
-void spdk_bs_update_snapshot_clone_live(struct spdk_blob_store *bs, 
-			struct spdk_blob *blob,
-			spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_bs_update_snapshot_clone_live(struct spdk_blob *origblob, struct spdk_blob *newblob);
 
 void spdk_bs_update_clone(struct spdk_blob *clone);
 

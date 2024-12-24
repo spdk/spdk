@@ -1459,15 +1459,14 @@ spdk_lvol_update_snapshot_clone(struct spdk_lvol *lvol, struct spdk_lvol *origlv
 	if (update_on_failover) {
 		//TODO check should not send to md thread bcs we already there
 		spdk_lvol_update_on_failover(lvs, origlvol, false);
-		snapshot_clone_update_cb(req, snapshot_blob, 0);
-		return;
+		// snapshot_clone_update_cb(req, snapshot_blob, 0);
+		// return;
 	}
 
 	if (update_blob) {
 		// TODO here we will return origblob not snapshot blob
-		spdk_bs_update_snapshot_clone_live(lvs->blobstore, origblob,
-			 snapshot_clone_update_cb, req);
-		return;
+		spdk_bs_update_snapshot_clone_live(origblob, snapshot_blob);
+		// return;
 	}
 
 	snapshot_clone_update_cb(req, snapshot_blob, 0);
@@ -1984,7 +1983,7 @@ spdk_lvs_update_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, vo
 	req->cb_arg = cb_arg;
 	req->lvol_store = lvs;
 	assert(lvs->leader == false);
-	spdk_bs_update_live(lvs->blobstore, lvs_update_live_cb, req);
+	spdk_bs_update_live(lvs->blobstore, false, lvs_update_live_cb, req);
 }
 
 static void

@@ -977,6 +977,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "lvol_leadership", lvol->leader);
 	spdk_json_write_named_bool(w, "lvs_leadership", lvol->lvol_store->leader);
 	spdk_json_write_named_uint64(w, "blobid", spdk_blob_get_id(blob));
+	spdk_json_write_named_uint32(w, "open_ref", spdk_blob_get_open_ref(blob));
 	spdk_json_write_named_uint8(w, "lvol_priority_class", lvol->priority_class);
 
 	if (spdk_blob_is_clone(blob)) {
