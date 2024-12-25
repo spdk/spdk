@@ -30,7 +30,7 @@ static int bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 static void blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 		uint64_t cluster, uint32_t extent, struct spdk_blob_md_page *page,
-		spdk_blob_op_complete cb_fn, void *cb_arg);
+		bool copy, spdk_blob_op_complete cb_fn, void *cb_arg);
 static void blob_free_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 		uint32_t extent_page, struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg);
 
@@ -3143,7 +3143,9 @@ blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 			blob_insert_cluster_clear(ctx);
 			return;
 		}
-
+		if (bserrno == -EAGAIN) {
+			bserrno = 0;
+		}
 		blob_insert_cluster_revert(ctx);
 	}
 
@@ -3165,7 +3167,7 @@ blob_write_copy_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	cluster_number = bs_page_to_cluster(ctx->blob->bs, ctx->page);
 
 	blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
-					 ctx->new_extent_page, ctx->new_cluster_page, blob_insert_cluster_cpl, ctx);
+					 ctx->new_extent_page, ctx->new_cluster_page, true, blob_insert_cluster_cpl, ctx);
 }
 
 static void
@@ -3324,7 +3326,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	} else {
 		blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
-						 ctx->new_extent_page, ctx->new_cluster_page, blob_insert_cluster_cpl, ctx);
+						 ctx->new_extent_page, ctx->new_cluster_page, false, blob_insert_cluster_cpl, ctx);
 	}
 }
 
@@ -10250,6 +10252,7 @@ struct spdk_blob_cluster_op_ctx {
 	uint32_t		extent_page;	/* extent page on disk */
 	struct spdk_blob_md_page *page; /* preallocated extent page */
 	int			rc;
+	bool		copy;
 	spdk_blob_op_complete	cb_fn;
 	void			*cb_arg;
 };
@@ -10490,11 +10493,27 @@ blob_insert_cluster_msg(void *arg)
 		return;
 	}
 
+	if (ctx->blob->frozen_refcnt) {
+		ctx->rc = -EAGAIN;
+		spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
+		return;
+	}
+
 	extent_page = bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
 	if (*extent_page == 0) {
 		/* Extent page requires allocation.
 		 * It was already claimed in the used_md_pages map and placed in ctx. */
-		assert(ctx->extent_page != 0);
+		// assert(ctx->extent_page != 0);
+		if (ctx->extent_page == 0) {
+			if (ctx->copy) {
+				ctx->rc = -EEXIST;				
+			} else {
+				ctx->rc = -EAGAIN;
+			}
+			spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
+			return;
+		}
+
 		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
 		blob_write_extent_page(ctx->blob, ctx->extent_page, ctx->cluster_num, ctx->page,
 				       blob_insert_new_ep_cb, ctx);
@@ -10519,7 +10538,7 @@ blob_insert_cluster_msg(void *arg)
 static void
 blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 				 uint64_t cluster, uint32_t extent_page, struct spdk_blob_md_page *page,
-				 spdk_blob_op_complete cb_fn, void *cb_arg)
+				 bool copy, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_cluster_op_ctx *ctx;
 
@@ -10537,6 +10556,7 @@ blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 	ctx->page = page;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->copy = copy;
 
 	spdk_thread_send_msg(blob->bs->md_thread, blob_insert_cluster_msg, ctx);
 }

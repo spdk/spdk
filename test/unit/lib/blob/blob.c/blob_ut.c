@@ -4387,7 +4387,7 @@ blob_insert_cluster_msg_test(void)
 	spdk_spin_unlock(&bs->used_lock);
 
 	blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, extent_page, &page,
-					 blob_op_complete, NULL);
+					 false, blob_op_complete, NULL);
 	poll_threads();
 
 	CU_ASSERT(blob->active.clusters[cluster_num] != 0);
