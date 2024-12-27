@@ -1201,19 +1201,28 @@ static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
-	bool allow_active = false;
-	if (!lvol->lvol_store->leader && !lvol->lvol_store->update_in_progress) {
-		allow_active = spdk_lvs_check_active_process(lvol->lvol_store);
-		if (allow_active) {
-			spdk_lvs_update_on_failover(lvol->lvol_store);			
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
+
+	if (!lvs->leader) {
+		if (spdk_lvs_nonleader_timeout(lvs)) {
+			SPDK_NOTICELOG("FAILED IO-TO change leader - blob: %" PRIu64 "  "
+							"Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
+		 					lvol->blob_id, bdev_io->u.bdev.offset_blocks,
+							bdev_io->u.bdev.num_blocks, bdev_io->type);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+
+		if (!lvs->update_in_progress) {
+			spdk_lvs_check_active_process(lvs);			
 		}
 	}
 
 	if (!lvol->leader && !lvol->update_in_progress) {
-		spdk_lvol_update_on_failover(lvol->lvol_store, lvol, true);
+		spdk_lvol_update_on_failover(lvs, lvol, true);
 	}
 
-	if (lvol->failed_on_update || lvol->lvol_store->failed_on_update) {
+	if (lvol->failed_on_update || lvs->failed_on_update) {
 		SPDK_NOTICELOG("FAILED IO - update failed blob: %" PRIu64 "  Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
 		 				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);

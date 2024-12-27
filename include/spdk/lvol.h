@@ -303,16 +303,13 @@ int spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb
  */
 struct spdk_lvol *spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid);
 
-void
-spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_md_thread);
-void
-lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_msg);
-void
-spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs);
-bool
-spdk_lvs_check_active_process(struct spdk_lvol_store *lvs);
-void
-spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state);
+void spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_md_thread);
+void lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, bool send_msg);
+void spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs);
+void spdk_lvs_check_active_process(struct spdk_lvol_store *lvs);
+bool spdk_lvs_nonleader_timeout(struct spdk_lvol_store *lvs);
+void spdk_lvs_change_leader_state(uint64_t groupid);
+void spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state);
 /**
  * Get the lvol that has a particular UUID.
  *

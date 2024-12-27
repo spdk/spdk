@@ -1323,6 +1323,48 @@ spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t siz
 	return 0;
 }
 
+// struct spdk_poller_handle_req {
+// 	uint32_t	index;
+// 	uint16_t	value_len;
+// 	char		*name;
+// 	void		*value;
+// 	TAILQ_ENTRY(spdk_xattr)	link;
+// 	spdk_lvol_op_with_handle_complete cb_fn;
+// 	void				*cb_arg;
+// 	FILE *fp;
+// 	int lvol_priority_class;
+// 	struct spdk_lvol		*lvol;
+// 	struct spdk_lvol		*origlvol;
+// };
+
+static int
+spdk_lvol_create_snapshot_poller(void *cb_arg) {
+	struct spdk_lvol_store *lvs;
+	struct spdk_blob *origblob;
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	struct spdk_blob_xattr_opts snapshot_xattrs;
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
+
+	origblob = req->origlvol->blob;
+	lvs = req->origlvol->lvol_store;
+
+	spdk_poller_unregister(&req->poller);
+
+	if (!lvs->leader) {
+		lvol_create_cb(req, 0, -1);
+		return -1;
+	}
+
+	snapshot_xattrs.count = SPDK_COUNTOF(xattr_names);
+	snapshot_xattrs.ctx = req->lvol;
+	snapshot_xattrs.names = xattr_names;
+	snapshot_xattrs.get_value = lvol_get_xattr_value;
+
+	spdk_bs_create_snapshot(lvs->blobstore, spdk_blob_get_id(origblob), &snapshot_xattrs,
+				lvol_create_cb, req);
+	return -1;
+}
+
 void
 spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 			  spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
@@ -1331,8 +1373,6 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	struct spdk_lvol *newlvol;
 	struct spdk_blob *origblob;
 	struct spdk_lvol_with_handle_req *req;
-	struct spdk_blob_xattr_opts snapshot_xattrs;
-	char *xattr_names[] = {LVOL_NAME, "uuid"};
 	int rc;
 
 	if (origlvol == NULL) {
@@ -1370,18 +1410,14 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
-
-	snapshot_xattrs.count = SPDK_COUNTOF(xattr_names);
-	snapshot_xattrs.ctx = newlvol;
-	snapshot_xattrs.names = xattr_names;
-	snapshot_xattrs.get_value = lvol_get_xattr_value;
 	req->lvol = newlvol;
 	req->origlvol = origlvol;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	spdk_bs_create_snapshot(lvs->blobstore, spdk_blob_get_id(origblob), &snapshot_xattrs,
-				lvol_create_cb, req);
+	blob_freeze_on_failover(origblob);
+	//TODO take the delay from rpc maybe its better
+	req->poller = spdk_poller_register(spdk_lvol_create_snapshot_poller, req, 50000); // Delay of 50ms	
 }
 
 static void
@@ -2081,23 +2117,14 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	return;	
 }
 
-void
-spdk_lvs_update_on_failover(struct spdk_lvol_store *lvs)
+static int
+spdk_lvs_update_on_failover_poller(void *cb_arg)
 {
-	struct spdk_lvs_req *req;
-
-	req = calloc(1, sizeof(*req));
-	if (req == NULL) {
-		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
-		spdk_lvs_set_failed_on_update(lvs, true);
-		return;
-	}
-
-	req->cb_fn = NULL;
-	req->cb_arg = NULL;
-	req->lvol_store = lvs;
+	struct spdk_lvs_req *req = cb_arg;
+	spdk_poller_unregister(&req->poller);
 	SPDK_NOTICELOG("Update lvolstore starting.... read super block.\n");
-	spdk_bs_update_on_failover(lvs->blobstore, lvs_update_on_failover_cpl, req);
+	spdk_bs_update_on_failover(req->lvol_store->blobstore, lvs_update_on_failover_cpl, req);
+	return -1;
 }
 
 
@@ -2574,29 +2601,87 @@ spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid)
 }
 
 bool
-spdk_lvs_check_active_process(struct spdk_lvol_store *lvs)
+spdk_lvs_nonleader_timeout(struct spdk_lvol_store *lvs)
 {
-	bool start;
+	bool state = false;
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
-	if (!lvs->update_in_progress) {
-		lvs->update_in_progress = true;
-		start = true;
-	} else {
-		start = false;
+
+	if (!lvs->leader) {
+		uint64_t timeout_ticks = spdk_get_ticks_hz() * 10;
+		uint64_t current_time = spdk_get_ticks();
+		if (current_time - lvs->leadership_timeout < timeout_ticks)	{
+			state = true;
+		}
 	}
+
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
-	return start;
+	return state;
+}
+
+void
+spdk_lvs_change_leader_state(uint64_t groupid)
+{
+	struct spdk_lvol_store *lvs;
+	uint64_t timeout_ticks;
+
+	SPDK_NOTICELOG("Attempting to change leadership state internally.\n");
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		if (lvs->groupid != groupid) {
+			if (lvs->leader) {
+				lvs->leader = false;
+				lvs->update_in_progress = false;
+				lvs->leadership_timeout = spdk_get_ticks();
+				timeout_ticks = spdk_get_ticks_hz() * 10;
+				SPDK_NOTICELOG("Leadership state changed internally to false. Timeout set to %" PRIu64 " "
+								"and current time is %" PRIu64 " seconds.\n",
+								timeout_ticks, lvs->leadership_timeout);
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	return;
+}
+
+void
+spdk_lvs_check_active_process(struct spdk_lvol_store *lvs)
+{
+	struct spdk_lvs_req *req;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	if (!lvs->update_in_progress) {		
+		req = calloc(1, sizeof(*req));
+		if (req == NULL) {
+			SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+			pthread_mutex_unlock(&g_lvol_stores_mutex);
+			return;
+		}
+
+		req->cb_fn = NULL;
+		req->cb_arg = NULL;
+		req->lvol_store = lvs;
+		lvs->update_in_progress = true;
+		SPDK_NOTICELOG("Lvolstore failover set poller.\n");
+		req->poller = spdk_poller_register(spdk_lvs_update_on_failover_poller, req, 250000); // Delay of 250ms
+	}
+
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	return;
 }
 
 void
 spdk_lvs_set_leader_by_uuid(struct spdk_lvol_store *lvs, bool leader)
 {
-	// struct spdk_lvol_store *lvs;
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
+
 	lvs->leader = leader;
 	lvs->update_in_progress = !leader;
+
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 }
 
@@ -2604,8 +2689,10 @@ void
 spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state)
 {
 	pthread_mutex_lock(&g_lvol_stores_mutex);
+
 	lvs->failed_on_update = state;
 	lvs->update_in_progress = false;
+
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 }
 
@@ -2634,7 +2721,7 @@ spdk_set_leader_all(struct spdk_lvol_store *t_lvs, bool leader)
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol;
-
+	SPDK_NOTICELOG("Lvolstore leadership state changed via RPC.\n");
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {

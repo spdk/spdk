@@ -38,6 +38,7 @@ DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), fals
 DEFINE_STUB(spdk_blob_is_degraded, bool, (const struct spdk_blob *blob), false);
 DEFINE_STUB_V(spdk_bs_grow_live,
 	      (struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg));
+DEFINE_STUB_V(blob_freeze_on_failover, (struct spdk_blob *blob));
 DEFINE_STUB(spdk_bs_delete_blob_non_leader, int ,(struct spdk_blob_store *bs, struct spdk_blob *blob), 0);		  
 
 

@@ -7559,7 +7559,7 @@ static void
 bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
-	struct spdk_blob *origblob = ctx->original.blob;
+	// struct spdk_blob *origblob = ctx->original.blob;
 	struct spdk_blob *newblob = _blob;
 
 	if (bserrno != 0) {
@@ -7574,7 +7574,8 @@ bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	assert(spdk_mem_all_zero(newblob->active.extent_pages,
 				 newblob->active.num_extent_pages * sizeof(*newblob->active.extent_pages)));
 
-	blob_freeze_io(origblob, bs_snapshot_freeze_cpl, ctx);
+	// blob_freeze_io(origblob, bs_snapshot_freeze_cpl, ctx);
+	bs_snapshot_freeze_cpl(ctx, 0);
 }
 
 static void
@@ -9008,62 +9009,64 @@ bs_update_blob_on_failover(struct spdk_blob_store *bs,
 	blob_load(seq, newblob, bs_update_blob_cpl, ctx, SPDK_BLOB_UPDATE_FAILOVER);
 }
 
-static void
-bs_update_blob_on_live(struct spdk_blob_store *bs,
-	     struct spdk_blob		*origblob,
-	     spdk_blob_op_with_handle_complete cb_fn,
-	     void *cb_arg)
-{
-	struct spdk_update_ctx *ctx;
-	assert(origblob != NULL);
-	struct spdk_bs_cpl		cpl;
-	spdk_bs_sequence_t		*seq;
-	uint32_t			page_num;
-	struct spdk_blob		*newblob;
 
-	assert(spdk_get_thread() == bs->md_thread);
+// This function is disabled due to an atomicity problem.
+// static void
+// bs_update_blob_on_live(struct spdk_blob_store *bs,
+// 	     struct spdk_blob		*origblob,
+// 	     spdk_blob_op_with_handle_complete cb_fn,
+// 	     void *cb_arg)
+// {
+// 	struct spdk_update_ctx *ctx;
+// 	assert(origblob != NULL);
+// 	struct spdk_bs_cpl		cpl;
+// 	spdk_bs_sequence_t		*seq;
+// 	uint32_t			page_num;
+// 	struct spdk_blob		*newblob;
 
-	page_num = bs_blobid_to_page(origblob->id);
-	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
-		/* Invalid blobid */
-		cb_fn(cb_arg, origblob, -ENOENT);
-		return;
-	}
+// 	assert(spdk_get_thread() == bs->md_thread);
 
-	newblob = blob_alloc(bs, origblob->id);
-	if (!newblob) {
-		origblob->failed_on_update = true;
-		cb_fn(cb_arg, origblob, -ENOMEM);
-		return;
-	}
+// 	page_num = bs_blobid_to_page(origblob->id);
+// 	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
+// 		/* Invalid blobid */
+// 		cb_fn(cb_arg, origblob, -ENOENT);
+// 		return;
+// 	}
 
-	newblob->clear_method = origblob->clear_method;
+// 	newblob = blob_alloc(bs, origblob->id);
+// 	if (!newblob) {
+// 		origblob->failed_on_update = true;
+// 		cb_fn(cb_arg, origblob, -ENOMEM);
+// 		return;
+// 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		blob_free(newblob);
-		origblob->failed_on_update = true;
-		cb_fn(cb_arg, origblob, -ENOMEM);
-		return;
-	}
-	ctx->newblob = newblob;
-	ctx->origblob = origblob;
+// 	newblob->clear_method = origblob->clear_method;
 
-	cpl.type = SPDK_BS_CPL_TYPE_BLOB_HANDLE;
-	cpl.u.blob_handle.cb_fn = cb_fn;
-	cpl.u.blob_handle.cb_arg = cb_arg;
-	cpl.u.blob_handle.blob = origblob;
-	cpl.u.blob_handle.esnap_ctx = NULL;
+// 	ctx = calloc(1, sizeof(*ctx));
+// 	if (!ctx) {
+// 		blob_free(newblob);
+// 		origblob->failed_on_update = true;
+// 		cb_fn(cb_arg, origblob, -ENOMEM);
+// 		return;
+// 	}
+// 	ctx->newblob = newblob;
+// 	ctx->origblob = origblob;
 
-	seq = bs_sequence_start_bs(bs->md_channel, &cpl);
-	if (!seq) {
-		blob_free(newblob);
-		cb_fn(cb_arg, origblob, -ENOMEM);
-		return;
-	}
+// 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_HANDLE;
+// 	cpl.u.blob_handle.cb_fn = cb_fn;
+// 	cpl.u.blob_handle.cb_arg = cb_arg;
+// 	cpl.u.blob_handle.blob = origblob;
+// 	cpl.u.blob_handle.esnap_ctx = NULL;
 
-	blob_load(seq, newblob, bs_update_blob_cpl, ctx, SPDK_BLOB_UPDATE_LIVE);
-}
+// 	seq = bs_sequence_start_bs(bs->md_channel, &cpl);
+// 	if (!seq) {
+// 		blob_free(newblob);
+// 		cb_fn(cb_arg, origblob, -ENOMEM);
+// 		return;
+// 	}
+
+// 	blob_load(seq, newblob, bs_update_blob_cpl, ctx, SPDK_BLOB_UPDATE_LIVE);
+// }
 
 void
 spdk_bs_update_snapshot_clone(struct spdk_blob_store *bs, struct spdk_blob *origblob,
@@ -10495,6 +10498,7 @@ blob_insert_cluster_msg(void *arg)
 
 	if (ctx->blob->frozen_refcnt) {
 		ctx->rc = -EAGAIN;
+		SPDK_NOTICELOG("Frozen refcnt while IO proccess tryagain 1.\n");
 		spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
 		return;
 	}
@@ -10506,8 +10510,10 @@ blob_insert_cluster_msg(void *arg)
 		// assert(ctx->extent_page != 0);
 		if (ctx->extent_page == 0) {
 			if (ctx->copy) {
+				SPDK_NOTICELOG("Frozen refcnt while IO proccess 2.\n");
 				ctx->rc = -EEXIST;				
 			} else {
+				SPDK_NOTICELOG("Frozen refcnt while IO proccess tryagain 2.\n");
 				ctx->rc = -EAGAIN;
 			}
 			spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);

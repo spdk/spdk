@@ -24,6 +24,7 @@ struct spdk_lvs_req {
 	spdk_lvs_op_complete    cb_fn;
 	void                    *cb_arg;
 	struct spdk_lvol_store		*lvol_store;
+	struct spdk_poller *poller;
 	int				lvserrno;
 };
 
@@ -84,6 +85,7 @@ struct spdk_lvol_with_handle_req {
 	void				*cb_arg;
 	FILE *fp;
 	int lvol_priority_class;
+	struct spdk_poller *poller;
 	struct spdk_lvol		*lvol;
 	struct spdk_lvol		*origlvol;
 };
@@ -120,6 +122,8 @@ struct spdk_lvol_store {
 	bool				leader;
 	bool				update_in_progress;
 	bool				failed_on_update;
+	uint64_t			groupid;
+	uint64_t			leadership_timeout;
 };
 
 struct spdk_lvol {
