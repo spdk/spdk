@@ -1323,20 +1323,6 @@ spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t siz
 	return 0;
 }
 
-// struct spdk_poller_handle_req {
-// 	uint32_t	index;
-// 	uint16_t	value_len;
-// 	char		*name;
-// 	void		*value;
-// 	TAILQ_ENTRY(spdk_xattr)	link;
-// 	spdk_lvol_op_with_handle_complete cb_fn;
-// 	void				*cb_arg;
-// 	FILE *fp;
-// 	int lvol_priority_class;
-// 	struct spdk_lvol		*lvol;
-// 	struct spdk_lvol		*origlvol;
-// };
-
 static int
 spdk_lvol_create_snapshot_poller(void *cb_arg) {
 	struct spdk_lvol_store *lvs;
@@ -1351,6 +1337,8 @@ spdk_lvol_create_snapshot_poller(void *cb_arg) {
 	spdk_poller_unregister(&req->poller);
 
 	if (!lvs->leader) {
+		SPDK_ERRLOG("Cannot create snapshot; poller activated after delay, leadership lost.\n");
+		
 		lvol_create_cb(req, 0, -1);
 		return -1;
 	}
@@ -2623,6 +2611,7 @@ void
 spdk_lvs_change_leader_state(uint64_t groupid)
 {
 	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
 	uint64_t timeout_ticks;
 
 	SPDK_NOTICELOG("Attempting to change leadership state internally.\n");
@@ -2631,10 +2620,17 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
 		if (lvs->groupid != groupid) {
 			if (lvs->leader) {
+
 				lvs->leader = false;
 				lvs->update_in_progress = false;
-				lvs->leadership_timeout = spdk_get_ticks();
+
+				lvs->leadership_timeout = spdk_get_ticks();				
 				timeout_ticks = spdk_get_ticks_hz() * 10;
+
+				TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+					lvol->leader = false;
+					lvol->update_in_progress = false;
+				}
 				SPDK_NOTICELOG("Leadership state changed internally to false. Timeout set to %" PRIu64 " "
 								"and current time is %" PRIu64 " seconds.\n",
 								timeout_ticks, lvs->leadership_timeout);
@@ -2642,6 +2638,16 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 		}
 	}
 
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	return;
+}
+
+void
+spdk_lvs_set_groupid(struct spdk_lvol_store *lvs, uint64_t groupid)
+{
+	SPDK_NOTICELOG("Set groupid to the lvolstore.\n");
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	lvs->groupid = groupid;
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 	return;
 }

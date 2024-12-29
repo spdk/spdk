@@ -466,6 +466,27 @@ def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
         params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_get_lvstores', params)
 
+def bdev_lvol_set_lvs_groupid(client, groupid, uuid=None, lvs_name=None):
+    """Set group id for lvolstore.
+
+    Args:
+        uuid: UUID of logical volume store to retrieve information about (optional)
+        lvs_name: name of logical volume store to retrieve information about (optional)
+        groupid: number of group id
+        
+    Either uuid or lvs_name may be specified, but not both.
+    If both uuid and lvs_name are omitted, information about all logical volume stores is returned.
+    """
+    if (uuid and lvs_name):
+        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    if (groupid):
+        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    params = {'groupid': groupid}
+    if uuid:
+        params['uuid'] = uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name
+    return client.call('bdev_lvol_set_lvs_groupid', params)
 
 def bdev_lvol_get_lvols(client, lvs_uuid=None, lvs_name=None):
     """List logical volumes
