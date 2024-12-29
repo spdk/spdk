@@ -507,7 +507,7 @@ blob_execute_queued_io(struct spdk_io_channel_iter *i)
 				bs_user_op_execute(op);
 			} else {
 				bs_user_op_abort(op, -EIO);
-			}			
+			}		
 		}
 	}
 
@@ -653,14 +653,14 @@ blob_deserialize_xattr(struct spdk_blob *blob,
 	}
 
 
-	// remember 
+	// remember no need bcs we always create new blob
 	// TODO maybe its better to clear the xatters so that we did not need this check
-	TAILQ_FOREACH(xattr_tmp, internal ? &blob->xattrs_internal : &blob->xattrs, link) {
-		if (!strcmp(desc_xattr->name, xattr_tmp->name)) {
-			// TODO check if the value is same too.
-			return 0;
-		}
-	}
+	// TAILQ_FOREACH(xattr_tmp, internal ? &blob->xattrs_internal : &blob->xattrs, link) {
+	// 	if (!strcmp(desc_xattr->name, xattr_tmp->name)) {
+	// 		// TODO check if the value is same too.
+	// 		return 0;
+	// 	}
+	// }
 
 	xattr = calloc(1, sizeof(*xattr));
 	if (xattr == NULL) {

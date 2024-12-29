@@ -1404,7 +1404,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	req->cb_arg = cb_arg;
 
 	blob_freeze_on_failover(origblob);
-	//TODO take the delay from rpc maybe its better
+	// TODO: Consider taking the delay value from RPC; it might be better.
 	req->poller = spdk_poller_register(spdk_lvol_create_snapshot_poller, req, 50000); // Delay of 50ms	
 }
 
@@ -1416,8 +1416,9 @@ snapshot_clone_update_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		// TODO on failover
-		assert(false);
-		lvol_free(lvol);
+		SPDK_ERRLOG("Cannot update clone and snapshot on secondary.\n");
+		// assert(false);
+		// lvol_free(lvol);
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		free(req);
 		return;
