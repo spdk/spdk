@@ -466,7 +466,7 @@ def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
         params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_get_lvstores', params)
 
-def bdev_lvol_set_lvs_groupid(client, groupid, uuid=None, lvs_name=None):
+def bdev_lvol_set_lvs_groupid(client, uuid=None, lvs_name=None, groupid=0):
     """Set group id for lvolstore.
 
     Args:
@@ -479,8 +479,8 @@ def bdev_lvol_set_lvs_groupid(client, groupid, uuid=None, lvs_name=None):
     """
     if (uuid and lvs_name):
         raise ValueError("Exactly one of uuid or lvs_name may be specified")
-    if (groupid):
-        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    if (not groupid):
+        raise ValueError("groupid must be specified")
     params = {'groupid': groupid}
     if uuid:
         params['uuid'] = uuid
