@@ -5577,7 +5577,68 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 /* END spdk_bs_load */
 
 /* START spdk_bs_dump */
+static void
+bs_dump_blob_from_mem(struct spdk_blob *blob, FILE *t_fp, bool file_opened, const char *path)
+{
+    FILE *fp = t_fp;
 
+    // Open the file if it's not already opened
+    if (!file_opened) {
+        // Construct the file path by concatenating `path` and the blob ID
+        char file_path[1024];
+        snprintf(file_path, sizeof(file_path), "%s%" PRIu64, path, blob->id);
+
+        fp = fopen(file_path, "w");  // Open the file in write mode
+
+        // Check if the file opened successfully
+        if (fp == NULL) {
+            SPDK_ERRLOG("Error opening file for writing: %s\n", file_path);
+            return;
+        }
+    }
+
+    // Write blob information if the blob is not NULL
+    if (blob) {
+        fprintf(fp, "Blob ID: %" PRIu64 "\n", blob->id);
+        fprintf(fp, "========= Clusters =========\n");
+        fprintf(fp, "Blob cluster count: %" PRIu64 "\n", blob->active.num_clusters);
+
+        for (uint64_t i = 0; i < blob->active.num_clusters; i++) {
+            if (blob->active.clusters[i] != 0) {
+                fprintf(fp, "Cluster LBA [%" PRIu64 "]: %" PRIu64 "\n", i, blob->active.clusters[i]);
+            }
+        }
+
+        fprintf(fp, "========= Extent Pages =========\n");
+        fprintf(fp, "Blob extent pages count: %" PRIu64 "\n", blob->active.num_extent_pages);
+
+        for (uint64_t i = 0; i < blob->active.num_extent_pages; i++) {
+            if (blob->active.extent_pages[i] != 0) {
+                fprintf(fp, "Extent LBA [%" PRIu64 "]: %" PRIu32 "\n", i, blob->active.extent_pages[i]);
+            }
+        }
+    }
+
+	    // Close the file if it was opened in this function
+    if (!file_opened) {
+        fclose(fp);
+    }
+}
+
+static void
+bs_dump_itr_opened_blob(struct spdk_bs_load_ctx *ctx)
+{
+	struct spdk_blob_store	*bs = ctx->bs;
+	struct spdk_blob *blob;
+
+	fprintf(ctx->fp, "=========\n");
+	fprintf(ctx->fp, "dump blobs md from memory.\n");
+    // RB_FOREACH macro iterates over all entries in the Red-Black tree
+    RB_FOREACH(blob, spdk_blob_tree, &bs->open_blobs) {
+        // Access each blob here
+		bs_dump_blob_from_mem(blob, ctx->fp, true, NULL);
+    }
+}
 static void
 bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
 {
@@ -5587,6 +5648,10 @@ bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrn
 	 * We need to defer calling bs_call_cpl() until after
 	 * dev destruction, so tuck these away for later use.
 	 */
+	if (ctx->dump_type) {
+		bs_dump_itr_opened_blob(ctx);
+	}
+
 	if (!ctx->dump_type) {
 		ctx->bs->unload_err = bserrno;
 		memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
@@ -8933,6 +8998,7 @@ bs_update_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 	//copy the newblob to origblob
 	bs_swap_blobs(origblob, newblob);
+	// bs_dump_blob_from_mem(origblob, NULL, false, "/root/");
 	bs_sequence_finish(seq, bserrno);
 }
 
