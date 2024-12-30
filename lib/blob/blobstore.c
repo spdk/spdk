@@ -8998,7 +8998,7 @@ bs_update_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 	//copy the newblob to origblob
 	bs_swap_blobs(origblob, newblob);
-	bs_dump_blob_from_mem(origblob, NULL, false, "/root/");
+	bs_dump_blob_from_mem(origblob, NULL, false, "/etc/simplyblock/");
 	bs_sequence_finish(seq, bserrno);
 }
 
