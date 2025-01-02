@@ -582,6 +582,7 @@ rpc_bdev_lvs_dump_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	if (lvolerrno == 0) {
 		w = spdk_jsonrpc_begin_result(request);
 		spdk_json_write_string(w, "done");
+		SPDK_NOTICELOG("Lvs dumping completed successfully, and the RPC response has been sent.\n");
 		spdk_jsonrpc_end_result(request, w);
 		return;
 	}

@@ -1412,7 +1412,7 @@ static void
 snapshot_clone_update_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;
-	struct spdk_lvol *lvol = req->lvol;
+	// struct spdk_lvol *lvol = req->lvol;
 
 	if (lvolerrno < 0) {
 		// TODO on failover
@@ -2618,8 +2618,28 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 	SPDK_NOTICELOG("Attempting to change leadership state internally.\n");
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
+	if (groupid == 0) {
+		TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+			if (lvs->leader) {
+				lvs->leader = false;
+				lvs->update_in_progress = false;
+
+				lvs->leadership_timeout = spdk_get_ticks();				
+				timeout_ticks = spdk_get_ticks_hz() * 10;
+
+				TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+					lvol->leader = false;
+					lvol->update_in_progress = false;
+				}
+			}
+		}
+		SPDK_NOTICELOG("Leadership state changed internally to false for all lvs. \n");
+		pthread_mutex_unlock(&g_lvol_stores_mutex);
+		return;
+	}
+
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
-		if (lvs->groupid != groupid) {
+		if (lvs->groupid == groupid) {
 			if (lvs->leader) {
 
 				lvs->leader = false;
