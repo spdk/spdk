@@ -10,6 +10,6 @@ class mask PRIORITY_CLASS_MASK to get the priority class as an integer
 #define MASK_OUT_PRIORITY_CLASS (0xFFFFFFFFFFFFFFFF >> NBITS_PRIORITY_CLASS)
 #define MIN_PRIORITY_CLASS 0
 // #define MAX_PRIORITY_CLASS ((1 << NBITS_PRIORITY_CLASS) - 1)
-#define MAX_PRIORITY_CLASS 7
+#define MAX_PRIORITY_CLASS 1
 
 #endif
