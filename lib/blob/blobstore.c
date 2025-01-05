@@ -960,6 +960,7 @@ blob_parse_extent_page(struct spdk_blob_md_page *extent_page, struct spdk_blob *
 	assert(blob->state == SPDK_BLOB_STATE_LOADING);
 
 	if (bs_load_cur_extent_page_valid(extent_page) == false) {
+		SPDK_ERRLOG("Extenet metadata page not vaild for blobid 0x%" PRIx64 "\n", blob->id);
 		return -ENOENT;
 	}
 
@@ -1643,6 +1644,7 @@ blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->pages = spdk_zmalloc(SPDK_BS_PAGE_SIZE, 0,
 					  NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		if (!ctx->pages) {
+			SPDK_ERRLOG("Cannot alloc memory for extent page open blob 5.\n");
 			blob_load_final(ctx, -ENOMEM);
 			return;
 		}
@@ -1659,12 +1661,16 @@ blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		}
 
 		if (page->next != SPDK_INVALID_MD_PAGE) {
+			SPDK_ERRLOG("Extenet metadata page %d refer to INVALID MD PAGE for blobid 0x%" PRIx64 "\n",
+			    ctx->next_extent_page, blob->id);
 			blob_load_final(ctx, -EINVAL);
 			return;
 		}
 
 		bserrno = blob_parse_extent_page(page, blob);
 		if (bserrno) {
+			SPDK_ERRLOG("Parse extenet metadata page %d failed for blobid 0x%" PRIx64 "\n",
+			    ctx->next_extent_page, blob->id);
 			blob_load_final(ctx, bserrno);
 			return;
 		}
@@ -1693,6 +1699,7 @@ blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 			tmp = realloc(blob->active.clusters, blob->active.num_clusters * sizeof(*blob->active.clusters));
 			if (tmp == NULL) {
+				SPDK_ERRLOG("Cannot alloc memory for cluster array open blob.\n");
 				blob_load_final(ctx, -ENOMEM);
 				return;
 			}
@@ -5227,6 +5234,7 @@ bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob_md_page *page;
 
 	if (bserrno != 0) {
+		SPDK_ERRLOG("Read md page failed.\n");
 		bs_load_ctx_fail(ctx, bserrno);
 		return;
 	}
@@ -5282,6 +5290,7 @@ bs_load_replay_md(struct spdk_bs_load_ctx *ctx)
 	ctx->page = spdk_zmalloc(SPDK_BS_PAGE_SIZE, 0,
 				 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->page) {
+		SPDK_ERRLOG("Cannot alloc memory for page.\n");
 		bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
