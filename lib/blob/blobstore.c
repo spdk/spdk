@@ -992,6 +992,7 @@ blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 
 	tmp = realloc(blob->active.pages, page_count * sizeof(*blob->active.pages));
 	if (!tmp) {
+		SPDK_ERRLOG("Cannot alloc memory for request open blob 4.\n");
 		return -ENOMEM;
 	}
 	blob->active.pages = tmp;
@@ -1012,6 +1013,7 @@ blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 
 		rc = blob_parse_page(page, blob);
 		if (rc != 0) {
+			SPDK_ERRLOG("Parse blob chain pages failed.\n");
 			return rc;
 		}
 	}
@@ -1650,6 +1652,8 @@ blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		page = &ctx->pages[0];
 		crc = blob_md_page_calc_crc(page);
 		if (crc != page->crc) {
+			SPDK_ERRLOG("Extenet metadata page %d crc mismatch for blobid 0x%" PRIx64 "\n",
+			    ctx->next_extent_page, blob->id);
 			blob_load_final(ctx, -EINVAL);
 			return;
 		}
@@ -1744,6 +1748,7 @@ blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		/* Read the next page */
 		tmp_pages = spdk_realloc(ctx->pages, (sizeof(*page) * (ctx->num_pages + 1)), 0);
 		if (tmp_pages == NULL) {
+			SPDK_ERRLOG("Cannot alloc memory for request open blob 3.\n");
 			blob_load_final(ctx, -ENOMEM);
 			return;
 		}
@@ -1807,6 +1812,7 @@ blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_ERRLOG("Cannot alloc memory for request open blob.\n");
 		cb_fn(seq, cb_arg, -ENOMEM);
 		return;
 	}
@@ -1815,6 +1821,7 @@ blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->status = status;
 	ctx->pages = spdk_realloc(ctx->pages, SPDK_BS_PAGE_SIZE, 0);
 	if (!ctx->pages) {
+		SPDK_ERRLOG("Cannot alloc memory for request open blob 2.\n");
 		free(ctx);
 		cb_fn(seq, cb_arg, -ENOMEM);
 		return;
@@ -5047,7 +5054,7 @@ bs_load_cur_extent_page_valid(struct spdk_blob_md_page *page)
 	size_t desc_len;
 
 	crc = blob_md_page_calc_crc(page);
-	if (crc != page->crc) {
+	if (crc != page->crc) {		
 		return false;
 	}
 
@@ -5086,6 +5093,8 @@ bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
 
 	crc = blob_md_page_calc_crc(page);
 	if (crc != page->crc) {
+		SPDK_ERRLOG("Metadata page %d crc mismatch for blob.\n",
+			    ctx->cur_page);
 		return false;
 	}
 
@@ -5149,6 +5158,7 @@ bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 
 	if (bserrno != 0) {
 		spdk_free(ctx->extent_pages);
+		SPDK_NOTICELOG("Recover failed 2. \n");
 		bs_load_ctx_fail(ctx, bserrno);
 		return;
 	}
@@ -5166,6 +5176,7 @@ bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
 		if (bs_load_replay_md_parse_page(ctx, &ctx->extent_pages[i])) {
 			spdk_free(ctx->extent_pages);
+			SPDK_NOTICELOG("Recover failed 3. \n");
 			bs_load_ctx_fail(ctx, -EILSEQ);
 			return;
 		}
@@ -5190,6 +5201,7 @@ bs_load_replay_extent_pages(struct spdk_bs_load_ctx *ctx)
 	ctx->extent_pages = spdk_zmalloc(SPDK_BS_PAGE_SIZE * ctx->num_extent_pages, 0,
 					 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->extent_pages) {
+		SPDK_NOTICELOG("Recover failed 1. \n");
 		bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
@@ -10121,6 +10133,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 	page_num = bs_blobid_to_page(blobid);
 	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
 		/* Invalid blobid */
+		SPDK_ERRLOG("Invalid blobid according to used_blobids.\n");
 		cb_fn(cb_arg, NULL, -ENOENT);
 		return;
 	}
@@ -10135,6 +10148,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 
 	blob = blob_alloc(bs, blobid);
 	if (!blob) {
+		SPDK_ERRLOG("Cannot alloc blob to open blob.\n");
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -10154,6 +10168,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 
 	seq = bs_sequence_start_bs(bs->md_channel, &cpl);
 	if (!seq) {
+		SPDK_ERRLOG("Cannot alloc seq to open blob.\n");
 		blob_free(blob);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
@@ -10905,8 +10920,8 @@ bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	ctx->page_num++;
 	ctx->page_num = spdk_bit_array_find_first_set(bs->used_blobids, ctx->page_num);
 	if (ctx->page_num >= spdk_bit_array_capacity(bs->used_blobids)) {
-		ctx->cb_fn(ctx->cb_arg, NULL, -ENOENT);
 		SPDK_INFOLOG(blob, "OPENNING BLOBS DONE....\n");
+		ctx->cb_fn(ctx->cb_arg, NULL, -ENOENT);		
 		free(ctx);
 		return;
 	}
