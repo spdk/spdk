@@ -496,14 +496,14 @@ blob_execute_queued_io(struct spdk_io_channel_iter *i)
 	struct spdk_bs_request_set	*set;
 	struct spdk_bs_user_op_args	*args;
 	spdk_bs_user_op_t *op, *tmp;
-
+	struct spdk_blob_store *bs = ctx->blob->bs;
 	TAILQ_FOREACH_SAFE(op, &ch->queued_io, link, tmp) {
 		set = (struct spdk_bs_request_set *)op;
 		args = &set->u.user_op;
 
 		if (args->blob == ctx->blob) {
 			TAILQ_REMOVE(&ch->queued_io, op, link);
-			if (!ctx->blob->failed_on_update) {
+			if (!ctx->blob->failed_on_update && bs->is_leader) {
 				bs_user_op_execute(op);
 			} else {
 				bs_user_op_abort(op, -EIO);
@@ -1874,11 +1874,15 @@ bs_batch_clear_dev(struct spdk_blob *blob, spdk_bs_batch_t *batch, uint64_t lba,
 	switch (blob->clear_method) {
 	case BLOB_CLEAR_WITH_DEFAULT:
 	case BLOB_CLEAR_WITH_UNMAP:	
-		batch->u.batch.is_unmap = true;	
-		bs_batch_unmap_dev(batch, lba, lba_count);
+		if (spdk_likely(blob->bs->is_leader)) {
+			batch->u.batch.is_unmap = true;	
+			bs_batch_unmap_dev(batch, lba, lba_count);
+		}
 		break;
 	case BLOB_CLEAR_WITH_WRITE_ZEROES:
-		bs_batch_write_zeroes_dev(batch, lba, lba_count);
+		if (spdk_likely(blob->bs->is_leader)) {
+			bs_batch_write_zeroes_dev(batch, lba, lba_count);
+		}
 		break;
 	case BLOB_CLEAR_WITH_NONE:
 	default:
@@ -4369,7 +4373,7 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	assert(bs->md_thread != NULL);
 
 	bs->priority_class = 0;
-
+	bs->is_leader = true;
 	/*
 	 * Do not use bs_lba_to_cluster() here since blockcnt may not be an
 	 *  even multiple of the cluster size.
@@ -6884,6 +6888,12 @@ spdk_bs_get_super(struct spdk_blob_store *bs,
 	}
 }
 
+void
+spdk_bs_set_leader(struct spdk_blob_store *bs, bool state)
+{
+	bs->is_leader = state;	
+}
+
 uint64_t
 spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 {
@@ -7770,6 +7780,21 @@ spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	spdk_bs_open_blob(bs, ctx->original.id, bs_snapshot_origblob_open_cpl, ctx);
 }
+
+int
+blob_freeze(struct spdk_blob *blob)
+{
+	/* Freeze I/O on blob */	
+	return blob->frozen_refcnt++;
+}
+
+int
+spdk_blob_get_freeze_cnt(struct spdk_blob *blob)
+{
+	/* Freeze I/O on blob */	
+	return blob->frozen_refcnt++;
+}
+
 /* END spdk_bs_create_snapshot */
 
 /* START spdk_bs_create_clone */
@@ -8793,6 +8818,13 @@ struct spdk_blob_update_ctx {
 	int rc;
 };
 
+struct spdk_blob_unfreeze_ctx {
+	spdk_blob_op_with_id_complete   cb_fn;
+	void *cb_arg;
+	struct spdk_blob *blob;
+	int rc;
+};
+
 struct spdk_update_ctx {
 	spdk_blob_op_complete cb_fn;
 	void *cb_arg;
@@ -8845,6 +8877,53 @@ blob_failover_unfreeze_cpl(void *cb_arg, int rc)
 
 	ctx->cb_fn(ctx->cb_arg, rc);
 	free(ctx);
+}
+
+static void
+blob_unfreeze_cpl(void *cb_arg, int rc)
+{
+	struct spdk_blob_unfreeze_ctx *ctx = (struct spdk_blob_unfreeze_ctx *)cb_arg;
+
+	if (rc != 0) {
+		SPDK_ERRLOG("Unfreeze failed, rc=%d\n", rc);
+	}
+
+	if (ctx->rc != 0) {
+		SPDK_ERRLOG("Unfreeze failed, ctx->rc=%d\n", ctx->rc);
+		rc = ctx->rc;
+	}
+
+	ctx->blob->locked_operation_in_progress = false;
+
+	ctx->cb_fn(ctx->cb_arg, ctx->blob->id, rc);
+	free(ctx);
+}
+
+void
+spdk_blob_unfreeze_cleanup(struct spdk_blob *blob, spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_unfreeze_ctx *ctx;
+
+	blob_verify_md_op(blob);
+
+	SPDK_NOTICELOG("Unfreezing IOs in blob 0x%" PRIx64 " due to losing leadership.\n", blob->id);
+
+	if (blob->locked_operation_in_progress) {
+		cb_fn(cb_arg, 0, -EBUSY);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, 0, -ENOMEM);
+		return;
+	}
+
+	blob->locked_operation_in_progress = true;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->blob = blob;
+	blob_unfreeze_io(ctx->blob, blob_unfreeze_cpl, ctx);
 }
 
 static void
@@ -9246,8 +9325,9 @@ spdk_blob_update_on_failover(struct spdk_blob *blob, spdk_blob_op_complete cb_fn
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
-	// ctx->thread = spdk_get_thread();
+
 	blob->locked_operation_in_progress = true;
+	blob->failed_on_update = false;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	ctx->blob = blob;

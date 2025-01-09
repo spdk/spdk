@@ -1101,8 +1101,29 @@ lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	struct spdk_lvol_with_handle_req *req = cb_arg;
 	struct spdk_blob_store *bs;
 	struct spdk_blob_open_opts opts;
-
+	struct spdk_blob *origblob;
+	
 	if (lvolerrno < 0) {
+		if (req->origlvol != NULL) {
+			origblob = req->origlvol->blob;
+			if (req->frozen_refcnt > 0 && 
+				req->frozen_refcnt == spdk_blob_get_freeze_cnt(origblob)) {
+				SPDK_ERRLOG("Leader change occurred while creating a new lvol; blob will be unfrozen.\n");
+				req->frozen_refcnt = 0;
+				req->force_failure = -1;
+				spdk_blob_unfreeze_cleanup(origblob, lvol_create_cb, req);
+				return;
+			}
+		}
+		TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
+		lvol_free(req->lvol);
+		assert(req->cb_fn != NULL);
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		free(req);
+		return;
+	}
+
+	if (req->force_failure < 0) {
 		TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
 		lvol_free(req->lvol);
 		assert(req->cb_fn != NULL);
@@ -1338,8 +1359,9 @@ spdk_lvol_create_snapshot_poller(void *cb_arg) {
 
 	if (!lvs->leader) {
 		SPDK_ERRLOG("Cannot create snapshot; poller activated after delay, leadership lost.\n");
-		
-		lvol_create_cb(req, 0, -1);
+		req->frozen_refcnt = 0;
+		req->force_failure = -1;
+		spdk_blob_unfreeze_cleanup(origblob, lvol_create_cb, req);
 		return -1;
 	}
 
@@ -1403,7 +1425,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	blob_freeze_on_failover(origblob);
+	req->frozen_refcnt = blob_freeze(origblob);
 	// TODO: Consider taking the delay value from RPC; it might be better.
 	req->poller = spdk_poller_register(spdk_lvol_create_snapshot_poller, req, 50000); // Delay of 50ms	
 }
@@ -2015,8 +2037,7 @@ static void
 lvol_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_update_on_failover_req *req = cb_arg;
-	struct spdk_lvol *lvol = req->lvol;
-	spdk_lvol_set_leader_by_uuid(&lvol->uuid, true);
+	struct spdk_lvol *lvol = req->lvol;	
 	// spdk_blob_failover_unfreaze(lvol->blob, NULL, NULL);
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Cannot update lvol on failover blob 0x%" PRIx64 "\n", lvol->blob_id);
@@ -2024,8 +2045,9 @@ lvol_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 		//change the state to drop;
 		lvol->failed_on_update = true;
 		free(req);
-		return;
+		return;		
 	}
+	spdk_lvol_set_leader(lvol);
 	SPDK_NOTICELOG("Update done: blob 0x%" PRIx64 "\n", lvol->blob_id);
 	
 	free(req);
@@ -2035,7 +2057,7 @@ static void
 lvol_update_failed_cpl(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol *lvol = cb_arg;
-	spdk_lvol_set_leader_by_uuid(&lvol->uuid, true);
+	spdk_lvol_set_leader_failed_on_update(lvol);
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Cannot unfreeze on filed update on failover blob 0x%" PRIx64 "\n", lvol->blob_id);
 		return;
@@ -2077,7 +2099,7 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	struct spdk_lvol_store *lvs = req->lvol_store;
 	struct spdk_lvol *lvol, *tmp;
 	if (lvolerrno == 0) {
-		spdk_lvs_set_leader_by_uuid(lvs, true);
+		spdk_lvs_set_leader(lvs, true);
 		SPDK_NOTICELOG("Update lvolstore done.\n");	
 		free(req);
 		TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
@@ -2125,11 +2147,22 @@ spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol
 	if (!lvol->update_in_progress) {
 		assert(lvol->leader == false);
 		lvol->update_in_progress = true;
-		if (lvs->failed_on_update) {
+		if (lvs->retry_on_update > 5) {
+			SPDK_ERRLOG("Update lvolstore reached its limite.\n");
+			assert(false);
 			lvol->failed_on_update = true;
 			pthread_mutex_unlock(&g_lvol_stores_mutex);
 			return;
 		}
+
+		if (lvs->failed_on_update) {
+			lvol->failed_on_update = true;
+			pthread_mutex_unlock(&g_lvol_stores_mutex);
+			return;
+		} else {
+			lvol->failed_on_update = false;
+		}
+
 		blob_freeze_on_failover(lvol->blob);
 		if (lvs->leader) {
 			update = true;
@@ -2596,7 +2629,7 @@ spdk_lvs_nonleader_timeout(struct spdk_lvol_store *lvs)
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
-	if (!lvs->leader) {
+	if (!lvs->leader && !lvs->update_in_progress) {
 		uint64_t timeout_ticks = spdk_get_ticks_hz() * 10;
 		uint64_t current_time = spdk_get_ticks();
 		if (current_time - lvs->leadership_timeout < timeout_ticks)	{
@@ -2623,10 +2656,10 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 			if (lvs->leader) {
 				lvs->leader = false;
 				lvs->update_in_progress = false;
-
-				lvs->leadership_timeout = spdk_get_ticks();				
+				lvs->failed_on_update = false;
+				lvs->leadership_timeout = spdk_get_ticks();
 				timeout_ticks = spdk_get_ticks_hz() * 10;
-
+				spdk_bs_set_leader(lvs->blobstore, false);
 				TAILQ_FOREACH(lvol, &lvs->lvols, link) {
 					lvol->leader = false;
 					lvol->update_in_progress = false;
@@ -2641,13 +2674,12 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
 		if (lvs->groupid == groupid) {
 			if (lvs->leader) {
-
 				lvs->leader = false;
 				lvs->update_in_progress = false;
-
-				lvs->leadership_timeout = spdk_get_ticks();				
+				lvs->failed_on_update = false;
+				lvs->leadership_timeout = spdk_get_ticks();
 				timeout_ticks = spdk_get_ticks_hz() * 10;
-
+				spdk_bs_set_leader(lvs->blobstore, false);
 				TAILQ_FOREACH(lvol, &lvs->lvols, link) {
 					lvol->leader = false;
 					lvol->update_in_progress = false;
@@ -2666,7 +2698,7 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 void
 spdk_lvs_set_groupid(struct spdk_lvol_store *lvs, uint64_t groupid)
 {
-	SPDK_NOTICELOG("Set groupid to the lvolstore.\n");
+	SPDK_NOTICELOG("Set groupid %" PRIu64 " to the lvolstore .\n", groupid);
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 	lvs->groupid = groupid;
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
@@ -2692,6 +2724,9 @@ spdk_lvs_check_active_process(struct spdk_lvol_store *lvs)
 		req->cb_arg = NULL;
 		req->lvol_store = lvs;
 		lvs->update_in_progress = true;
+		lvs->failed_on_update = false;
+		lvs->retry_on_update++;
+		spdk_bs_set_leader(lvs->blobstore, true);
 		SPDK_NOTICELOG("Lvolstore failover set poller.\n");
 		req->poller = spdk_poller_register(spdk_lvs_update_on_failover_poller, req, 250000); // Delay of 250ms
 	}
@@ -2701,13 +2736,14 @@ spdk_lvs_check_active_process(struct spdk_lvol_store *lvs)
 }
 
 void
-spdk_lvs_set_leader_by_uuid(struct spdk_lvol_store *lvs, bool leader)
+spdk_lvs_set_leader(struct spdk_lvol_store *lvs, bool leader)
 {
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
 	lvs->leader = leader;
-	lvs->update_in_progress = !leader;
+	lvs->update_in_progress = false;
+	lvs->retry_on_update = 0;
 
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 }
@@ -2717,6 +2753,7 @@ spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state)
 {
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
+	lvs->leadership_timeout = spdk_get_ticks();
 	lvs->failed_on_update = state;
 	lvs->update_in_progress = false;
 
@@ -2724,22 +2761,35 @@ spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state)
 }
 
 void
-spdk_lvol_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader)
+spdk_lvol_set_leader(struct spdk_lvol *lvol)
 {
-	struct spdk_lvol_store *lvs;
-	struct spdk_lvol *lvol;
+	// struct spdk_lvol_store *lvs;
+	// struct spdk_lvol *lvol;
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
+	lvol->leader = true;
+	lvol->failed_on_update = false;
+	lvol->update_in_progress = false;
+	// TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+	// 	TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+	// 		if (spdk_uuid_compare(uuid, &lvol->uuid) == 0) {
+	// 			lvol->leader = leader;
+	// 			lvol->failed_on_update = false;
+	// 			lvol->update_in_progress = false;
+	// 		}
+	// 	}
+	// }
 
-	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
-		TAILQ_FOREACH(lvol, &lvs->lvols, link) {
-			if (spdk_uuid_compare(uuid, &lvol->uuid) == 0) {
-				lvol->leader = leader;
-				lvol->update_in_progress = false;
-			}
-		}
-	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+}
 
+void
+spdk_lvol_set_leader_failed_on_update(struct spdk_lvol *lvol)
+{
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	lvol->leader = false;
+	lvol->failed_on_update = true;
+	lvol->update_in_progress = false;
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 }
 
@@ -2754,10 +2804,15 @@ spdk_set_leader_all(struct spdk_lvol_store *t_lvs, bool leader)
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
 		if (t_lvs == lvs) {
 			lvs->leader = leader;
-			lvs->update_in_progress = leader;
+			lvs->update_in_progress = false;
+
+			if (leader) {
+				spdk_bs_set_leader(lvs->blobstore, true);
+			}
+
 			TAILQ_FOREACH(lvol, &lvs->lvols, link) {			
 				lvol->leader = leader;
-				lvol->update_in_progress = leader;			
+				lvol->update_in_progress = false;			
 			}
 		}
 	}

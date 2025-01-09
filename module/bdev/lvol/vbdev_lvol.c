@@ -1218,15 +1218,15 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		}
 	}
 
-	if (!lvol->leader && !lvol->update_in_progress) {
-		spdk_lvol_update_on_failover(lvs, lvol, true);
-	}
-
 	if (lvol->failed_on_update || lvs->failed_on_update) {
 		SPDK_NOTICELOG("FAILED IO - update failed blob: %" PRIu64 "  Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
 		 				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
+	}
+
+	if (!lvol->leader && !lvol->update_in_progress) {
+		spdk_lvol_update_on_failover(lvs, lvol, true);
 	}
 
 	switch (bdev_io->type) {
