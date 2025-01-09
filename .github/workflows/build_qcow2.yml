@@ -1,0 +1,124 @@
+---
+name: build_qcow2
+
+on:
+  workflow_dispatch:
+    inputs:
+      spdk_repos_ref:
+        description: 'Branch, tag, or ref of SPDK repository'
+        required: true
+        default: 'master'
+
+jobs:
+
+  source-archive:
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: build_qcow2
+      cancel-in-progress: false
+
+    steps:
+    - name: Checkout SPDK repository
+      uses: actions/checkout@v4.1.7
+      with:
+        repository: ${{ github.repository_owner }}/${{ vars.SPDK_REPOS_NAME }}
+        ref: ${{ github.event.inputs.spdk_repos_ref }}
+        token: ${{ secrets.GHPA_TOKEN }}
+        submodules: 'recursive'
+        fetch-depth: 0
+        path: spdk
+
+    - name: Add Information on the SPDK repository state
+      run: |
+        cd spdk
+        CURRENT_REF=$(git rev-parse --short HEAD)  # Gets the short commit hash as the ref
+        REPO_URL="https://github.com/${{ github.repository_owner }}/${{ vars.SPDK_REPOS_NAME }}/commit/$CURRENT_REF"
+        echo "### Change Information" >> $GITHUB_STEP_SUMMARY
+        echo "- Using pkgdeb.sh and autotest_setup.sh from [SPDK Repository]($REPO_URL)" >> $GITHUB_STEP_SUMMARY
+        echo "- Ref: $CURRENT_REF" >> $GITHUB_STEP_SUMMARY
+
+    - name: Create a tarball, of the repository, to preserve file permissions
+      run: |
+        cd spdk
+        tar -czf ../repository.tar.gz .
+
+    - name: Upload the repository as an artifact
+      uses: actions/upload-artifact@v4.4.0
+      with:
+        name: repository
+        path: repository.tar.gz
+
+  build-qcow:
+    needs: source-archive
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/spdk-community-ci/spdk-community-ci:poc
+      options: --privileged
+
+    env:
+      REPOSITORY_TARBALL_PATH: ${{ github.workspace }}/repository.tar.gz
+
+    concurrency:
+      group: build_qcow2
+      cancel-in-progress: false
+  
+    steps:
+    - name: Download the repository
+      uses: actions/download-artifact@v4.1.8
+      with:
+        name: repository
+      
+    - name: Checkout CI repository
+      uses: actions/checkout@v4.1.7
+      with:
+        path: ci
+
+    - name: Setup CIJOE and pipx
+      run: |
+        pipx install cijoe==0.9.45 -f
+        pipx ensurepath
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Build
+      run: |
+        cd ci/cijoe
+        cijoe \
+        --monitor \
+        --config configs/qemuhost-with-guest-fedora-40.toml \
+        --workflow workflows/build_qcow2_using_qemu.yaml
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4.4.0
+      if: always()
+      with:
+        path: ci/cijoe/cijoe-output
+        name: cloudinit-report
+
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_STORAGE_PRIVATE_KEY }}" > $HOME/.ssh/id_storage
+        echo "${{ secrets.SSH_STORAGE_KNOWN_HOSTS }}" >> $HOME/.ssh/known_hosts
+        chmod 600 ~/.ssh/id_storage
+
+    - name: Change image format and compress
+      run: |
+        ls -lha $HOME/guests/fedora_40_x86_64/
+        for i in $(seq 1 60); do test -f "$HOME/guests/fedora_40_x86_64/guest.pid" || break; sleep 1; done
+        ls -lha $HOME/guests/fedora_40_x86_64/
+        qemu-img convert $HOME/guests/fedora_40_x86_64/boot.img fedora_40_x86_64.qcow2 -O qcow2 -c
+        ls -lha fedora_40_x86_64.qcow2
+
+    # This relies on the following secrets: S3_KEY, S3_SECRET, S3_ENDPOINT_URL
+    - name: Transfer to S3 Compatible Storage
+      env:
+        S3_KEY: ${{ secrets.S3_KEY }}
+        S3_SECRET: ${{ secrets.S3_SECRET }}
+        S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
+        S3_BUCKET: spdk-community-ci
+      run : |
+        ./ci/s3_file_upload.py fedora_40_x86_64.qcow2 \
+        --bucket "$S3_BUCKET" \
+        --endpoint-url "$S3_ENDPOINT_URL" \
+        --object-key "system/fedora_40_x86_64.qcow2"

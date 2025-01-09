@@ -1,0 +1,40 @@
+---
+name: build_container
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-container:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      IMAGE_ID: ghcr.io/${{ github.repository_owner }}/spdk-community-ci:poc
+
+    concurrency:
+      group: build_container
+      cancel-in-progress: false
+
+    steps:
+    - name: Checkout CI repository
+      uses: actions/checkout@v4.1.7
+      with:
+        path: ci
+
+    - name: Build
+      run: |
+        docker build \
+        -t $IMAGE_ID \
+        -f ci/dockerfiles/fedora/Dockerfile \
+        .
+
+    - name: Log into GitHub Container Registry
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Push to ghcr.io
+      run: |
+        docker push ${IMAGE_ID}

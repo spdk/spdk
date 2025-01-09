@@ -1,0 +1,63 @@
+---
+doc: |
+  Create qemu guest, transfer SPDK .tgz source and invoke autorun
+
+  * Create qemu guest using a system/bootimg
+  * Transfer and unpack SPDK source to/in qemu guest
+  * Create auto.conf
+  * Invoke autorun.sh
+  * Shut down qemu guest
+
+steps:
+- name: guest_kill
+  uses: qemu.guest_kill
+
+- name: guest_bootimg
+  uses: qemu.guest_init_using_bootimage
+
+- name: guest_start
+  uses: qemu_guest_start_custom_nvme
+
+- name: guest_misc
+  run: |
+    hostname
+    uname -a
+
+- name: tgz_transfer
+  uses: core.put
+  with:
+    src: "{{ local.env.REPOSITORY_TARBALL_PATH }}"
+    dst: /tmp/repository.tar.gz
+
+- name: tgz_unpack
+  run: |
+    mkdir /opt/spdk
+    tar xzf /tmp/repository.tar.gz -C /opt/spdk
+    
+- name: autorun_unittest
+  run: |
+    mkdir -p /opt/output/unittest
+    echo "SPDK_TEST_UNITTEST=1" > /tmp/auto.conf
+    output_dir=/opt/output/unittest /opt/spdk/autorun.sh /tmp/auto.conf
+
+- name: autorun_nvme
+  run: |
+    mkdir -p /opt/output/nvme
+    echo "SPDK_RUN_FUNCTIONAL_TEST=1" > /tmp/auto.conf
+    echo "SPDK_TEST_NVME=1" >> /tmp/auto.conf
+    output_dir=/opt/output/nvme /opt/spdk/autorun.sh /tmp/auto.conf
+
+- name: output_listing
+  run: |
+    ls /opt
+    ls /opt/output
+
+- name: retrieve_autorun_output
+  uses: core.get
+  with:
+    src: /opt/output
+    dst: /tmp/autorun_output
+     
+- name: guest_shutdown
+  run: |
+    systemctl poweroff

@@ -1,0 +1,59 @@
+---
+doc: |
+  Create a Qemu Machine using a cloud-init image
+
+  * Cloud-init and shutdown
+  * Start the guest again -- check hostname, update and install git + pipx
+  * Transfer SPDK source to guest and unpack it
+  * Run pkgdep.sh and autotest_setup.sh to install dependencies
+
+  Then do the following (manually)
+  
+  * Convert the image (with compression)
+    - qemu-img convert boot.img /tmp/debian-bullseye-amd64.qcow2 -O qcow2 -c
+  * Upload it to publically available storage
+
+steps:
+- name: guest_kill
+  uses: qemu.guest_kill
+
+- name: guest_cloudinit
+  uses: qemu.guest_init_using_cloudinit
+
+- name: guest_firstboot
+  uses: qemu_guest_start_custom_nvme
+
+- name: guest_check
+  run: |
+    hostname
+    uname -a
+
+- name: guest_update
+  run: |
+    dnf update -y
+    dnf install -y git perl-JSON-PP
+    dnf autoremove -y
+
+- name: guest_info
+  uses: linux.sysinfo
+
+- name: tgz_transfer
+  uses: core.put
+  with:
+    src: "{{ local.env.REPOSITORY_TARBALL_PATH }}"
+    dst: /tmp/repository.tar.gz
+
+- name: tgz_unpack
+  run: |
+    mkdir /tmp/spdk
+    tar xzf /tmp/repository.tar.gz -C /tmp/spdk
+    
+- name: pkgdep_and_autotest_setup
+  run: |
+    /tmp/spdk/scripts/pkgdep.sh -a
+    INSTALL_FLAMEGRAPH=true INSTALL_FIO=true INSTALL_NVMECLI=true /tmp/spdk/test/common/config/autotest_setup.sh --install-deps --upgrade --test-conf="lcov"
+    
+- name: guest_shutdown
+  run: |
+    sync
+    systemctl poweroff

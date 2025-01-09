@@ -1,0 +1,49 @@
+##
+## qemu-guest
+##
+
+# The SSH options are passed verbatim to paramiko; see https://www.paramiko.org/
+[cijoe.transport.ssh]
+username = "root"
+password = "root"
+hostname = "localhost"
+port = 4200
+
+[os]
+name = "fedora"
+version = "40"
+
+##
+## qemu-host
+## 
+
+[qemu]
+system_bin = "qemu-system-x86_64"
+img_bin = "qemu-img"
+default_guest = "fedora_40_x86_64"
+
+# Used by: qemu.guest_start.py and qemu.guest_kill.py
+[qemu.guests.fedora_40_x86_64]
+path = "{{ local.env.HOME }}/guests/fedora_40_x86_64"
+
+# Keyword arguments: joined onto the form: "-cpu host -smp 4 -m 4" etc.
+system_args.kwa = {cpu = "host", smp = 12, m = "12G", accel = "kvm"}
+
+# Raw arguments: passed without modification to qemu-system-{arch}
+system_args.raw = """\
+-M "type=q35,kernel_irqchip=split" \
+-device "intel-iommu,pt=on,intremap=on" \
+"""
+
+# Managed arguments: expands into longer incantations
+system_args.tcp_forward = {host = 4200, guest = 22}
+
+# Used by: qemu.guest_init_using_bootimage.py
+init_using_bootimage.url = "https://spdk-community-ci.s3.eu-central-003.backblazeb2.com/system/fedora_40_x86_64.qcow2"
+init_using_bootimage.img = "{{ local.env.HOME }}/images/system/fedora-40-x86_64.qcow2"
+
+# Used by: qemu.guest_init_using_cloudinit
+init_using_cloudinit.url = "https://download.fedoraproject.org/pub/fedora/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2"
+init_using_cloudinit.img = "{{ local.env.HOME }}/images/cloudinit/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2"
+init_using_cloudinit.meta = "{{ resources.auxiliary['qemu.cloudinit-debian-meta'] }}"
+init_using_cloudinit.user = "{{ resources.auxiliary['qemu.cloudinit-debian-user-amd64'] }}"

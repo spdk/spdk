@@ -1,0 +1,34 @@
+name: maintenance_selfhosted
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  maintenance:
+    strategy:
+      matrix:
+        runner:
+        - eqnx_qemuhost00
+        - eqnx_qemuhost01
+        - eqnx_qemuhost02
+        - eqnx_qemuhost03
+        - eqnx_qemuhost04
+
+    runs-on: ${{ matrix.runner }}
+
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/spdk-community-ci:poc
+      options: --privileged
+
+    steps:
+      - name: Get Runner Name
+        run: |
+          echo "This is running on runner ${{ runner.name }}"
+
+      - name: Remove qcow images
+        run: |
+          ls $HOME
+          ls $HOME/images
+          ls $HOME/
+          rm -rf $HOME/images
