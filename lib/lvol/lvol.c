@@ -2763,9 +2763,6 @@ spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state)
 void
 spdk_lvol_set_leader(struct spdk_lvol *lvol)
 {
-	// struct spdk_lvol_store *lvs;
-	// struct spdk_lvol *lvol;
-
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 	lvol->leader = true;
 	lvol->failed_on_update = false;
