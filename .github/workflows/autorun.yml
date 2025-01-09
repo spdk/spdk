@@ -1,0 +1,107 @@
+name: autorun
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch with changes e.g. "changes/xx/yyyyyy/zz"'
+        required: true
+        default: 'master'
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+    branches: [master]
+
+jobs:
+  source-archive:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/refenv/cijoe-docker:v0.9.47
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.7
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Create a tarball of the repository
+        run: |
+          tar -czf /tmp/repository.tar.gz .
+
+      - name: Upload the repository as an artifact
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: repository
+          path: /tmp/repository.tar.gz
+
+  autorun:
+    runs-on: ubuntu-latest
+    needs: source-archive
+    timeout-minutes: 35
+    env:
+      REPOSITORY_TARBALL_PATH: ${{ github.workspace }}/repository.tar.gz
+    strategy:
+      matrix:
+        workflow: [autorun_unittest, autorun_nvme]
+    container:
+      image: ghcr.io/refenv/cijoe-docker:v0.9.47
+      options: --privileged
+
+    steps:
+      - name: Setup PATH
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Download the SPDK repository
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: repository
+
+      - name: Extract the SPDK repository
+        run: |
+          tar xzf repository.tar.gz --strip 1
+
+      - name: qemu-guest, provision
+        run: |
+          cd scripts/cijoe
+          cijoe guest_initialize guest_start guest_check tgz_transfer tgz_unpack \
+          --monitor \
+          --config configs/qemuhost-with-guest-fedora-40.toml \
+          --workflow workflows/autorun_in_qemu.yaml \
+          --output report_${{ matrix.workflow }}_prep_guest
+
+      - name: qemu-guest, ${{ matrix.workflow }}
+        run: |
+          cd scripts/cijoe
+          cijoe ${{ matrix.workflow }} \
+          --monitor \
+          --config configs/qemuhost-with-guest-fedora-40.toml \
+          --workflow workflows/autorun_in_qemu.yaml \
+          --output report_${{ matrix.workflow }}
+
+      - name: qemu-guest, cleanup
+        if: always()
+        run: |
+          cd scripts/cijoe
+          cijoe output_listing retrieve_autorun_output guest_shutdown \
+          --monitor \
+          --config configs/qemuhost-with-guest-fedora-40.toml \
+          --workflow workflows/autorun_in_qemu.yaml \
+          --output report_${{ matrix.workflow }}_cleanup
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.0
+        if: always()
+        with:
+          path: /tmp/autorun_output
+          name: ${{ matrix.workflow }}_artifacts
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4.4.0
+        if: always()
+        with:
+          path: |
+            scripts/cijoe/report_${{ matrix.workflow }}
+            scripts/cijoe/report_${{ matrix.workflow }}_cleanup
+            scripts/cijoe/report_${{ matrix.workflow }}_prep_guest
+          name: report-${{ matrix.workflow }}-in-qemu

@@ -1,0 +1,78 @@
+##
+## qemu-guest
+##
+
+# The SSH options are passed verbatim to paramiko; see https://www.paramiko.org/
+[cijoe.transport.ssh]
+username = "root"
+password = "root"
+hostname = "localhost"
+port = 4200
+
+[os]
+name = "fedora"
+version = "40"
+
+##
+## qemu-host
+## 
+
+[qemu]
+img_bin = "qemu-img"
+
+[qemu.systems.x86_64]
+bin = "qemu-system-x86_64"
+
+[qemu.systems.aarch64]
+bin = "qemu-system-aarch64"
+
+# Used by: qemu.guest_initialize.py, qemu.guest_start.py, and qemu.guest_kill.py
+[qemu.guests.generic-bios-kvm-x86_64]
+path = "{{ local.env.HOME }}/guests/generic-bios-kvm-x86_64"
+
+# Label of the qemu-system emulerator to use; see "qemu.systems"
+system_label = "x86_64"
+
+# Name of the system_image to use; see "system_imaging.images"
+# Uncomment here, or set as workflow-argument when using "qemu.guest_initialize"
+system_image_name = "fedora-40-x86_64"
+
+# Keyword arguments: joined onto the form: "-cpu host -smp 4 -m 4" etc.
+system_args.kwa = {cpu = "host", smp = 8, m = "12G", accel = "kvm"}
+
+# Raw arguments: passed without modification to qemu-system-{arch}
+system_args.raw = """\
+-M "type=q35,kernel_irqchip=split" \
+-device "intel-iommu,pt=on,intremap=on" \
+"""
+
+# TCP_FORWARD: Setup ssh forward from host to guest
+#
+# This is is a "special" argument, managed by the cijoe qemu-wrapper,
+# specifically by 'guest.start_guest()'
+system_args.tcp_forward = {host = 4200, guest = 22}
+
+# HOST_SHARE: Sares the given folder with the guest via 9p
+#
+# The configuration example, below shares your home folder, if you do not want
+# this, then comment it out
+#
+# This is is a "special" argument, managed by the cijoe qemu-wrapper,
+# specifically by 'guest.start_guest()'
+#system_args.host_share = "{{ local.env.HOME }}"
+
+# for system_imaging
+[system-imaging.images.fedora-40-x86_64]
+system_label = "x86_64"
+
+cloud.url ="https://mirrors.dotsrc.org/fedora-enchilada/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2"
+cloud.path = "{{ local.env.HOME }}/system_imaging/cloud/Fedora-Cloud-Base-Generic-40-1.14.x86_64.qcow2"
+cloud.metadata_path = "{{ resources.auxiliary['system_imaging.cloudinit-linux-common-metadata'] }}"
+cloud.userdata_path = "{{ resources.auxiliary['system_imaging.cloudinit-linux-common-userdata'] }}"
+
+disk.url = "https://spdk-community-ci.s3.eu-central-003.backblazeb2.com/system/fedora_40_x86_64.qcow2"
+disk.path = "{{ local.env.HOME }}/system_imaging/disk/fedora_40_x86_64.qcow2"
+
+docker.url = "ghcr.io/safl/fedora-40-x86_64:poc"
+docker.name = "spdk-ci-fedora-40-x86_64"
+docker.tag = "poc"

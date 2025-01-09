@@ -1,0 +1,41 @@
+---
+default_language_version:
+  python: python3
+
+repos:
+
+- repo: https://github.com/psf/black
+  rev: 24.10.0
+  hooks:
+  - id: black
+    name: Python-format-black
+    args: ["--line-length=88"]
+
+- repo: https://github.com/pycqa/isort
+  rev: 5.13.2
+  hooks:
+  - id: isort
+    name: Python-format-isort
+    args:
+    - '--profile=black'
+    - '--line-length=88'
+
+- repo: https://github.com/pycqa/flake8
+  rev: 7.1.1
+  hooks:
+  - id: flake8
+    name: Python-lint-flake8
+    # Max-line-length matching black
+    # ignore "whitespace before ':'"; ignore line length
+    # F401 = F811; This happens for fixtures for indirect parametrize
+    args:
+    - --max-line-length=88
+    - --extend-ignore=E203,F401,F811,E231,F541,E702
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.11.2
+  hooks:
+  - id: mypy
+    args: ["--ignore-missing-imports"]
+    additional_dependencies:
+    - types-requests
