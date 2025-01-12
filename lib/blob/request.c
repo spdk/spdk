@@ -335,7 +335,7 @@ bs_batch_completion(struct spdk_io_channel *_channel,
 			assert(ctx != NULL);
 			TAILQ_REMOVE(&set->u.batch.unmap_queue, ctx, entries); // Remove it from the queue.			
 			channel->dev->priority_class = set->priority_class;
-			if (spdk_likely(!channel->bs->is_leader)) {
+			if (spdk_likely(channel->bs->is_leader)) {
 				channel->dev->unmap(channel->dev, channel->dev_channel, ctx->lba, ctx->lba_count,
 						&set->cb_args);
 			} else {
@@ -465,8 +465,12 @@ bs_batch_unmap_dev(spdk_bs_batch_t *batch,
 out:
 	set->u.batch.outstanding_ops++;	
 	channel->dev->priority_class = batch->priority_class;
-	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
-			    &set->cb_args);
+	if (spdk_likely(channel->bs->is_leader)) {
+		channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
+					&set->cb_args);
+	} else {
+		bs_batch_completion(set->cb_args.channel, set->cb_args.cb_arg, 0);
+	}
 }
 
 void
@@ -480,9 +484,11 @@ bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->priority_class = batch->priority_class;
-	if (spdk_likely(!channel->bs->is_leader)) {
+	if (spdk_likely(channel->bs->is_leader)) {
 		channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,
 				   	&set->cb_args);
+	} else {
+		bs_batch_completion(set->cb_args.channel, set->cb_args.cb_arg, 0);
 	}
 }
 

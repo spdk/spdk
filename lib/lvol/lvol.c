@@ -2112,11 +2112,18 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	}
 	// no idea what to do it should never come here	
 	SPDK_ERRLOG("Cannot update lvolstore on failover ...\n");
+	if (lvolerrno == -ENOTCONN) {
+    	SPDK_ERRLOG("Failed to update lvolstore during failover due to distrib-level functionality.\n");
+    	SPDK_ERRLOG("Forcing application shutdown via abort.\n");
+		// Ensure all log messages are flushed
+    	fflush(stderr);
+		abort();
+	}
 	spdk_lvs_set_failed_on_update(lvs, true);
 	//remember call function to drop the IO for this lvol
 	TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
 		TAILQ_REMOVE(&lvs->pending_update_lvols, lvol, entry_to_update);
-		assert(lvol->update_in_progress == true);		
+		assert(lvol->update_in_progress == true);
 		// still in md thread so we can call spdk_blob_update_failed_cleanup.
 		// 1.first set lvol to failed on update state.
 		// 2.set the blob on failed on update.
@@ -2147,9 +2154,8 @@ spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol
 	if (!lvol->update_in_progress) {
 		assert(lvol->leader == false);
 		lvol->update_in_progress = true;
-		if (lvs->retry_on_update > 5) {
+		if (lvs->retry_on_update > 3) {
 			SPDK_ERRLOG("Update lvolstore reached its limite.\n");
-			assert(false);
 			lvol->failed_on_update = true;
 			pthread_mutex_unlock(&g_lvol_stores_mutex);
 			return;
@@ -2157,6 +2163,7 @@ spdk_lvol_update_on_failover(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol
 
 		if (lvs->failed_on_update) {
 			lvol->failed_on_update = true;
+			lvol->update_in_progress = false;
 			pthread_mutex_unlock(&g_lvol_stores_mutex);
 			return;
 		} else {
@@ -2629,11 +2636,13 @@ spdk_lvs_nonleader_timeout(struct spdk_lvol_store *lvs)
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
-	if (!lvs->leader && !lvs->update_in_progress) {
+	if (!lvs->leader) {
 		uint64_t timeout_ticks = spdk_get_ticks_hz() * 10;
 		uint64_t current_time = spdk_get_ticks();
 		if (current_time - lvs->leadership_timeout < timeout_ticks)	{
 			state = true;
+		} else {
+			spdk_bs_set_leader(lvs->blobstore, true);
 		}
 	}
 
@@ -2653,12 +2662,12 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 
 	if (groupid == 0) {
 		TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
-			if (lvs->leader) {
-				lvs->leader = false;
+			if (lvs->leader) {				
 				lvs->update_in_progress = false;
 				lvs->failed_on_update = false;
 				lvs->leadership_timeout = spdk_get_ticks();
 				timeout_ticks = spdk_get_ticks_hz() * 10;
+				lvs->leader = false;
 				spdk_bs_set_leader(lvs->blobstore, false);
 				TAILQ_FOREACH(lvol, &lvs->lvols, link) {
 					lvol->leader = false;
@@ -2673,20 +2682,20 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
 		if (lvs->groupid == groupid) {
-			if (lvs->leader) {
-				lvs->leader = false;
+			if (lvs->leader) {				
 				lvs->update_in_progress = false;
 				lvs->failed_on_update = false;
 				lvs->leadership_timeout = spdk_get_ticks();
 				timeout_ticks = spdk_get_ticks_hz() * 10;
-				spdk_bs_set_leader(lvs->blobstore, false);
+				lvs->leader = false;
+				spdk_bs_set_leader(lvs->blobstore, false);				
 				TAILQ_FOREACH(lvol, &lvs->lvols, link) {
 					lvol->leader = false;
 					lvol->update_in_progress = false;
 				}
 				SPDK_NOTICELOG("Leadership state changed internally to false. Timeout set to %" PRIu64 " "
 								"and current time is %" PRIu64 " seconds.\n",
-								timeout_ticks, lvs->leadership_timeout);
+								timeout_ticks, lvs->leadership_timeout);				
 			}
 		}
 	}
@@ -2712,7 +2721,7 @@ spdk_lvs_check_active_process(struct spdk_lvol_store *lvs)
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
-	if (!lvs->update_in_progress) {		
+	if (!lvs->update_in_progress && lvs->retry_on_update <= 3) {
 		req = calloc(1, sizeof(*req));
 		if (req == NULL) {
 			SPDK_ERRLOG("Cannot alloc memory for request structure\n");
@@ -2753,7 +2762,6 @@ spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state)
 {
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
-	lvs->leadership_timeout = spdk_get_ticks();
 	lvs->failed_on_update = state;
 	lvs->update_in_progress = false;
 
@@ -2799,8 +2807,7 @@ spdk_set_leader_all(struct spdk_lvol_store *t_lvs, bool leader)
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 
 	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
-		if (t_lvs == lvs) {
-			lvs->leader = leader;
+		if (t_lvs == lvs) {			
 			lvs->update_in_progress = false;
 
 			if (leader) {
@@ -2811,6 +2818,7 @@ spdk_set_leader_all(struct spdk_lvol_store *t_lvs, bool leader)
 				lvol->leader = leader;
 				lvol->update_in_progress = false;			
 			}
+			lvs->leader = leader;
 		}
 	}
 

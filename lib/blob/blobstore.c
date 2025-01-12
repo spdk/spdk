@@ -9099,6 +9099,7 @@ bs_update_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	//copy the newblob to origblob
 	bs_swap_blobs(origblob, newblob);
 	bs_dump_blob_from_mem(origblob, NULL, false, "/etc/simplyblock/");
+	// bs_dump_blob_from_mem(origblob, NULL, false, "/root/");
 	bs_sequence_finish(seq, bserrno);
 }
 
@@ -9307,18 +9308,6 @@ spdk_blob_update_on_failover(struct spdk_blob *blob, spdk_blob_op_complete cb_fn
 
 	SPDK_NOTICELOG("Updating blob 0x%" PRIx64 " on failover.\n", blob->id);
 
-	if (blob->md_ro) {
-		// blob->failed_on_update = true;
-		cb_fn(cb_arg, -EPERM);
-		return;
-	}
-
-	if (blob->locked_operation_in_progress) {
-		blob->failed_on_update = true;
-		cb_fn(cb_arg, -EBUSY);
-		return;
-	}
-
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		blob->failed_on_update = true;
@@ -9326,11 +9315,21 @@ spdk_blob_update_on_failover(struct spdk_blob *blob, spdk_blob_op_complete cb_fn
 		return;
 	}
 
-	blob->locked_operation_in_progress = true;
 	blob->failed_on_update = false;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	ctx->blob = blob;
+
+	if (blob->md_ro) {
+		bs_update_blob_on_failover_cpl(ctx , blob, -EPERM);
+		return;
+	}
+
+	if (blob->locked_operation_in_progress) {		
+		bs_update_blob_on_failover_cpl(ctx, blob, -EBUSY);
+		return;
+	}
+	blob->locked_operation_in_progress = true;
 
 	bs_update_blob_on_failover(blob->bs, blob, bs_update_blob_on_failover_cpl, ctx);
 }
@@ -9393,6 +9392,7 @@ blob_freeze_on_failover(struct spdk_blob *blob)
 {
 	/* Freeze I/O on blob */
 	assert(blob->frozen_refcnt == 0);
+	blob->failed_on_update = false;
 	// blob->active.num_clusters_on_update = blob->active.num_clusters;
 	blob->frozen_refcnt++;
 }
@@ -12401,6 +12401,12 @@ bs_update_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_update_ctx *ctx = cb_arg;
 	int rc;
+
+	if (bserrno < 0) {
+		// read superblock failed
+		bs_update_live_done(ctx, -ENOTCONN);
+		return;
+	}
 
 	rc = bs_super_validate(ctx->super, ctx->bs);
 	if (rc != 0) {		
