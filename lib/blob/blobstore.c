@@ -12182,7 +12182,7 @@ bs_update_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bser
 	uint64_t i;
 
 	if (bserrno != 0) {		
-		bs_update_live_done(ctx, bserrno);
+		bs_update_live_done(ctx, -ENOTCONN);
 		return;
 	}
 
@@ -12247,7 +12247,7 @@ bs_update_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob_md_page *page;
 
 	if (bserrno != 0) {
-		bs_update_live_done(ctx, bserrno);
+		bs_update_live_done(ctx, -ENOTCONN);
 		return;
 	}
 
@@ -12347,7 +12347,8 @@ bs_update_only_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	int			rc;
 
 	if (bserrno != 0) {
-		bs_update_live_done(ctx, bserrno);
+		// read failed
+		bs_update_live_done(ctx, -ENOTCONN);
 		return;
 	}
 
