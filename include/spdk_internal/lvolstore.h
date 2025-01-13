@@ -86,6 +86,8 @@ struct spdk_lvol_with_handle_req {
 	FILE *fp;
 	int lvol_priority_class;
 	struct spdk_poller *poller;
+	int force_failure;
+	int frozen_refcnt;
 	struct spdk_lvol		*lvol;
 	struct spdk_lvol		*origlvol;
 };
@@ -122,6 +124,7 @@ struct spdk_lvol_store {
 	bool				leader;
 	bool				update_in_progress;
 	bool				failed_on_update;
+	int  retry_on_update;
 	uint64_t			groupid;
 	uint64_t			leadership_timeout;
 };

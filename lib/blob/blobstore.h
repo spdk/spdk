@@ -208,6 +208,10 @@ struct spdk_blob_store {
 	TAILQ_HEAD(, spdk_blob_list)	snapshots;
 
 	bool				clean;
+	/* True if the node is a leader, false otherwise.
+	 * Only when the distrib internal force state changes, it will be set to false.
+	 */
+	bool				is_leader;
 
 	spdk_bs_esnap_dev_create	esnap_bs_dev_create;
 	void				*esnap_ctx;

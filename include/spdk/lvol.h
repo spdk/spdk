@@ -318,7 +318,8 @@ void spdk_lvs_set_failed_on_update(struct spdk_lvol_store *lvs, bool state);
  * \param leader The lvs's flag to set as leader or non leader.
  * \return A pointer to the requested lvol on success, else NULL.
  */
-void spdk_lvs_set_leader_by_uuid(struct spdk_lvol_store *lvs, bool leader);
+void spdk_lvs_set_leader(struct spdk_lvol_store *lvs, bool leader);
+void spdk_lvol_set_leader_failed_on_update(struct spdk_lvol *lvol);
 
 /**
  * Get the lvol that has a particular UUID.
@@ -327,7 +328,7 @@ void spdk_lvs_set_leader_by_uuid(struct spdk_lvol_store *lvs, bool leader);
  * \param leader The lvs's flag to set as leader or non leader.
  * \return A pointer to the requested lvol on success, else NULL.
  */
-void spdk_lvol_set_leader_by_uuid(const struct spdk_uuid *uuid, bool leader);
+void spdk_lvol_set_leader(struct spdk_lvol *lvol);
 
 /**
  * set the leadership for all lvs and lvol.

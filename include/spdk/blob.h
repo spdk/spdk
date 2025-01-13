@@ -376,12 +376,18 @@ void spdk_bs_update_live(struct spdk_blob_store *bs, bool failover,
 void spdk_blob_failover_unfreaze(struct spdk_blob *blob, 
 				spdk_blob_op_complete cb_fn, void *cb_arg);
 
-void
-blob_freeze_on_failover(struct spdk_blob *blob);
+int blob_freeze(struct spdk_blob *blob);
+int spdk_blob_get_freeze_cnt(struct spdk_blob *blob);
 
-void
-spdk_blob_update_failed_cleanup(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_unfreeze_cleanup(struct spdk_blob *blob,
+				 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+void blob_freeze_on_failover(struct spdk_blob *blob);
+
+void spdk_blob_update_failed_cleanup(struct spdk_blob *blob,
+				 spdk_blob_op_complete cb_fn, void *cb_arg);
+
+void spdk_bs_set_leader(struct spdk_blob_store *bs, bool state);
 /**
  * update a blobstore according to bit array synced.
  * Can be used on loaded blobstore, even with opened blobs.
