@@ -2113,12 +2113,12 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	// no idea what to do it should never come here	
 	SPDK_ERRLOG("Cannot update lvolstore on failover ...\n");
 	if (lvolerrno == -ENOTCONN) {
-    	// SPDK_ERRLOG("Failed to update lvolstore during failover due to distrib-level functionality.\n");
+    	SPDK_ERRLOG("Failed to update lvolstore during failover due to distrib-level functionality.\n");
     	SPDK_ERRLOG("Forcing application shutdown via abort.\n");
 		// Ensure all log messages are flushed
-    	// fflush(stderr);
-		// abort();
-		assert(false);
+    	fflush(stderr);
+		abort();
+		// assert(false);
 	}
 	spdk_lvs_set_failed_on_update(lvs, true);
 	//remember call function to drop the IO for this lvol
