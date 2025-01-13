@@ -1,4 +1,4 @@
-FROM fedora:37
+FROM fedora:41
 
 # push to "simplyblock/spdk-core:$TAG"
 
