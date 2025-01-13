@@ -16,7 +16,7 @@ RUN cd spdk && scripts/pkgdep.sh --rdma --pmem --idxd
 
 RUN mkdir /tmp/pmem
 
-RUN pip3 install grpcio-tools==1.51.3 protobuf==4.22.1
+RUN #pip3 install grpcio-tools==1.51.3 protobuf==4.22.1
 
 RUN sed -i "s/^#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC.*/#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC\t200/" /root/spdk/lib/bdev/bdev.c
 
