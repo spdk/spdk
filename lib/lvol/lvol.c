@@ -2100,6 +2100,7 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	struct spdk_lvol *lvol, *tmp;
 	if (lvolerrno == 0) {
 		spdk_lvs_set_leader(lvs, true);
+		lvs->timeout_trigger = 0;
 		SPDK_NOTICELOG("Update lvolstore done.\n");	
 		free(req);
 		TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
@@ -2112,14 +2113,14 @@ lvs_update_on_failover_cpl(void *cb_arg, int lvolerrno)
 	}
 	// no idea what to do it should never come here	
 	SPDK_ERRLOG("Cannot update lvolstore on failover ...\n");
-	if (lvolerrno == -ENOTCONN) {
+	if (lvolerrno == -ENOTCONN || (lvolerrno < 0 && lvs->timeout_trigger == 1)) {
     	SPDK_ERRLOG("Failed to update lvolstore during failover due to distrib-level functionality.\n");
     	SPDK_ERRLOG("Forcing application shutdown via abort.\n");
 		// Ensure all log messages are flushed
     	fflush(stderr);
 		abort();
 		// assert(false);
-	}
+	}	
 	spdk_lvs_set_failed_on_update(lvs, true);
 	//remember call function to drop the IO for this lvol
 	TAILQ_FOREACH_SAFE(lvol, &lvs->pending_update_lvols, entry_to_update, tmp) {
@@ -2667,6 +2668,7 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 				lvs->update_in_progress = false;
 				lvs->failed_on_update = false;
 				lvs->leadership_timeout = spdk_get_ticks();
+				lvs->timeout_trigger = 1;
 				timeout_ticks = spdk_get_ticks_hz() * 10;
 				lvs->leader = false;
 				spdk_bs_set_leader(lvs->blobstore, false);
@@ -2687,6 +2689,7 @@ spdk_lvs_change_leader_state(uint64_t groupid)
 				lvs->update_in_progress = false;
 				lvs->failed_on_update = false;
 				lvs->leadership_timeout = spdk_get_ticks();
+				lvs->timeout_trigger = 1;
 				timeout_ticks = spdk_get_ticks_hz() * 10;
 				lvs->leader = false;
 				spdk_bs_set_leader(lvs->blobstore, false);				

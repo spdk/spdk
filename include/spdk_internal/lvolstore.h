@@ -127,6 +127,7 @@ struct spdk_lvol_store {
 	int  retry_on_update;
 	uint64_t			groupid;
 	uint64_t			leadership_timeout;
+	uint64_t			timeout_trigger;
 };
 
 struct spdk_lvol {
