@@ -99,6 +99,7 @@
 	spdk_bdev_flush;
 	spdk_bdev_flush_blocks;
 	spdk_bdev_reset;
+	spdk_bdev_nvme_nssr;
 	spdk_bdev_abort;
 	spdk_bdev_nvme_admin_passthru;
 	spdk_bdev_nvme_io_passthru;

@@ -401,3 +401,36 @@ The NVMe specification describes the method for using in-band authentication in 
 establishing a secure channel (e.g. TLS).  However, that isn't supported currently, so in order to
 perform in-band authentication, hosts must connect over regular listeners (i.e. those that weren't
 created with the `--secure-channel` option).
+
+## NVMe Subsystem Reset (NSSR)
+
+NVM Subsystem Reset (NSSR) is optionally supported. When an NSSR occurs the entire NVM subsystem is
+reset including Controller Level Reset (CLR) on each controller in the subsystem and disabling of
+the Persistent Memory Regions (PMR) associated with those controllers.
+This feature is currently limited to namespaces (bdevs) with PCIe transport.
+
+NSSR support is disabled by default and can be enabled during creation of the subsystem.
+Please see `nvmf_create_subsystem` RPC's call parameters.
+
+During an NSSR each namespace (bdev) will additionally be reset. For bdev_nvme-backed namespaces
+an NSSR will prefer to trigger an NSSR on the underlying controller.
+If not supported, a CLR will be performed instead.
+For other bdev types a standard bdev reset operation is performed.
+
+NSSR resets the PCIe link and so NVMe devices appear to be hot-removed and then hot-inserted.
+The same configuration steps to support PCIe hotplug of NVMe devices is required to
+re-discover NVMe devices during an NSSR.
+
+Those steps might contain:
+
+* Unbinding the NVMe device from kernel's NVMe driver
+* Binding it to vfio driver
+* Attaching controller to SPDK via `bdev_nvme_attach_controller` RPC call (unless hotplug is not enabled via `bdev_nvme_set_hotplug`)
+* Adding namespace to the nvmf subsystem
+
+If bdev has multiple namespaces connected to multiple subsystems - executing NSSR on one namespace
+affects the other, since the whole bdev would be removed from and added back to the system.
+
+If a bdev is of type bdev_nvme and this underlying NVMe namespace is part of an NVM subsystem containing multiple namespaces,
+then all bdevs associated with that underlying subsystem will be destroyed and re-added,
+even if they are in a separate NVMe-oF subsystem that wasn't being reset. Beware of side effects.

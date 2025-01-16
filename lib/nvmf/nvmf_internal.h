@@ -271,6 +271,7 @@ struct spdk_nvmf_ctrlr {
 	bool				disconnect_in_progress;
 	/* valid only when disconnect_in_progress is true */
 	bool				disconnect_is_shn;
+	bool				executing_nssr;
 	bool				acre_enabled;
 	bool				dynamic_ctrlr;
 	/* LBA Format Extension Enabled (LBAFEE) */
@@ -366,6 +367,7 @@ struct spdk_nvmf_subsystem {
 	/* In-band authentication sequence number, protected by ->mutex */
 	uint32_t					auth_seqnum;
 	bool						passthrough;
+	bool						nssr_enabled;
 };
 
 static int

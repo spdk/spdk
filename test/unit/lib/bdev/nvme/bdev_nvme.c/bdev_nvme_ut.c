@@ -91,6 +91,8 @@ DEFINE_STUB(spdk_nvme_poll_group_set_interrupt_callback, int,
 	    (struct spdk_nvme_poll_group *group,
 	     spdk_nvme_poll_group_interrupt_cb cb_fn, void *ctx), 0);
 DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
+DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_is_nssr_supported, bool, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,

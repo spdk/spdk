@@ -3365,6 +3365,11 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 		bdev_nvme_reset_io(bdev->ctxt, nbdev_io);
 		return;
 
+	case SPDK_BDEV_IO_TYPE_NVME_NSSR:
+		spdk_nvme_ctrlr_reset_subsystem(nbdev_io->io_path->qpair->ctrlr->ctrlr);
+		bdev_nvme_io_complete(nbdev_io, 0);
+		return;
+
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		/* No need to send flush if Volatile Write Cache is disabled */
 		if (!bdev->write_cache || !g_opts.enable_flush) {
@@ -3550,6 +3555,9 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
 	case SPDK_BDEV_IO_TYPE_ABORT:
 		return true;
+
+	case SPDK_BDEV_IO_TYPE_NVME_NSSR:
+		return spdk_nvme_ctrlr_is_nssr_supported(ctrlr);
 
 	case SPDK_BDEV_IO_TYPE_COMPARE:
 		return spdk_nvme_ns_supports_compare(ns);

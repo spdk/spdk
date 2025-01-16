@@ -204,6 +204,8 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_admin,
 	    0);
 DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_nvme_nssr, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				       spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 DEFINE_STUB(spdk_bdev_get_max_active_zones, uint32_t, (const struct spdk_bdev *bdev),
@@ -3228,6 +3230,83 @@ test_nvmf_property_set(void)
 }
 
 static void
+test_nvmf_property_nssr(void)
+{
+	int rc;
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlrA = {};
+	struct spdk_nvmf_ctrlr ctrlrB = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	struct spdk_nvmf_poll_group group;
+	struct spdk_nvmf_qpair admin_qpair;
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_subsystem subsystem;
+	struct spdk_nvmf_ns *ns_arr[1] = { NULL };
+
+	req.qpair = &qpair;
+	qpair.ctrlr = &ctrlrA;
+	memset(&admin_qpair, 0, sizeof(admin_qpair));
+	memset(&group, 0, sizeof(group));
+	admin_qpair.group = &group;
+	ctrlrA.admin_qpair = &admin_qpair;
+	group.sgroups = &sgroups;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	ctrlrA.subsys = &subsystem;
+	ctrlrB.subsys = &subsystem;
+	subsystem.ns = ns_arr;
+	TAILQ_INIT(&subsystem.ctrlrs);
+	TAILQ_INSERT_HEAD(&subsystem.ctrlrs, &ctrlrA, link);
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlrB, link);
+
+	ctrlrA.vcprop.cap.bits.nssrs = 1;
+	ctrlrB.vcprop.cap.bits.nssrs = 1;
+
+	/* Check setting NSSR */
+	memset(req.rsp, 0, sizeof(union nvmf_c2h_msg));
+	cmd.prop_set_cmd.ofst = offsetof(struct spdk_nvme_registers, nssr);
+	cmd.prop_set_cmd.value.u64 = SPDK_NVME_NSSR_VALUE;
+	cmd.prop_set_cmd.attrib.size = SPDK_NVMF_PROP_SIZE_4;
+
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(ctrlrA.executing_nssr == 1);
+	CU_ASSERT(ctrlrB.executing_nssr == 1);
+
+	/* Check NSSR not supported */
+	ctrlrA.executing_nssr = 0;
+	ctrlrB.executing_nssr = 0;
+	ctrlrA.vcprop.cap.bits.nssrs = 0;
+
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
+	CU_ASSERT(ctrlrA.executing_nssr == 0);
+	ctrlrA.vcprop.cap.bits.nssrs = 1;
+
+	/* Check setting NSSR with wrong code */
+	ctrlrA.executing_nssr = 0;
+	memset(req.rsp, 0, sizeof(union nvmf_c2h_msg));
+	cmd.prop_set_cmd.value.u64 = 0xDEADBEEF;
+
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(ctrlrA.executing_nssr == 0);
+
+	/* Check clearing NSSRO */
+	ctrlrA.vcprop.csts.bits.nssro = 1;
+	cmd.prop_set_cmd.ofst = offsetof(struct spdk_nvme_registers, csts);
+	cmd.prop_set_cmd.value.u32.low = ctrlrA.vcprop.csts.raw;
+	memset(req.rsp, 0, sizeof(union nvmf_c2h_msg));
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(ctrlrA.vcprop.csts.bits.nssro == 0);
+}
+
+static void
 test_nvmf_ctrlr_get_features_host_behavior_support(void)
 {
 	int rc;
@@ -3574,6 +3653,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_zcopy_read);
 	CU_ADD_TEST(suite, test_zcopy_write);
 	CU_ADD_TEST(suite, test_nvmf_property_set);
+	CU_ADD_TEST(suite, test_nvmf_property_nssr);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_get_features_host_behavior_support);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_set_features_host_behavior_support);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_ns_attachment);

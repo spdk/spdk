@@ -8356,6 +8356,7 @@ Construct an NVMe over Fabrics target subsystem.
  max_discard_size_kib      | Optional   | number  | Maximum discard size (Kib). Default: 0
  max_write_zeroes_size_kib | Optional   | number  | Maximum write_zeroes size (Kib). Default: 0
  passthrough               | Optional   | boolean | Use NVMe passthrough for I/O commands and namespace-directed admin commands. Default: `false`
+ enable_nssr               | Optional   | boolean | Enable NSSR (NVMe subsystem reset). Default: `false`
 
 #### Example
 

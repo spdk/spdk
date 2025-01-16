@@ -122,6 +122,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_SEEK_DATA,
 	SPDK_BDEV_IO_TYPE_COPY,
 	SPDK_BDEV_IO_TYPE_NVME_IOV_MD,
+	SPDK_BDEV_IO_TYPE_NVME_NSSR,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -1949,6 +1950,24 @@ int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  */
 int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a NVMe Subsystem Reset request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_nvme_nssr(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit abort requests to abort all I/Os which has bio_cb_arg as its callback

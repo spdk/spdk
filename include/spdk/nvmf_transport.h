@@ -536,8 +536,10 @@ struct spdk_nvmf_registers {
 	union spdk_nvme_aqa_register	aqa;
 	uint64_t			asq;
 	uint64_t			acq;
+	uint32_t			nssr;
+	uint32_t			reserved;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_registers) == 40, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_registers) == 48, "Incorrect size");
 
 const struct spdk_nvmf_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
 
@@ -622,7 +624,7 @@ struct spdk_nvmf_ctrlr_migr_data {
 	uint32_t reserved;
 
 	struct spdk_nvmf_registers regs;
-	uint8_t regs_reserved[216];
+	uint8_t regs_reserved[208];
 
 	struct spdk_nvmf_ctrlr_feat feat;
 	uint8_t feat_reserved[216];

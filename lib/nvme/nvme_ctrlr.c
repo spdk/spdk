@@ -4577,6 +4577,17 @@ nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
+bool
+spdk_nvme_ctrlr_is_nssr_supported(struct spdk_nvme_ctrlr *ctrlr)
+{
+	/* NSSR is done via write to the NVMe register.
+	 * SPDK is handling it synchronously, so in nvmf connected to another nvmf
+	 * it might cause delays and possible deadlocks.
+	 * Limit NSSR to be done only for PCIe transport.
+	 */
+	return ctrlr->cap.bits.nssrs == 1 && ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE;
+}
+
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {

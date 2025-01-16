@@ -235,6 +235,8 @@ DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
 DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
 DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_nvme_nssr, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				       spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 DEFINE_STUB(spdk_bdev_get_max_active_zones, uint32_t,

@@ -41,6 +41,7 @@
 	spdk_nvme_ctrlr_get_opts;
 	spdk_nvme_ctrlr_set_trid;
 	spdk_nvme_ctrlr_reset_subsystem;
+	spdk_nvme_ctrlr_is_nssr_supported;
 	spdk_nvme_ctrlr_reset;
 	spdk_nvme_ctrlr_disconnect;
 	spdk_nvme_ctrlr_reconnect_async;

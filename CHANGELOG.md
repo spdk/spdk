@@ -23,6 +23,12 @@ implementations.
 Changed the return behavior of `spdk_sock_flush`. The function now returns 0 on success, as relying
 on the number of bytes returned was not recommended.
 
+### nvmf
+
+Add NSSR support (NVMe Subsytem Reset) to NVMe-oF target. Once NSSR is issued - it is passed to all
+underlying namespaces (bdevs). Currenly only bdevs with PCIe transport would handle NSSR.
+See the NVMe Subsystem Reset (NSSR) section of nvmf.md for more information.
+
 ## v25.05
 
 ### accel_mlx5

@@ -2274,6 +2274,15 @@ int spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 				  spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Check if the controller supports NSSR
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return true if the controller supports NSSR, false otherwise
+ */
+bool spdk_nvme_ctrlr_is_nssr_supported(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Process any outstanding completions for admin commands.
  *
  * This will process completions for admin commands submitted on any thread.

@@ -457,6 +457,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->subsys = subsystem;
 	ctrlr->thread = req->qpair->group->thread;
 	ctrlr->disconnect_in_progress = false;
+	ctrlr->executing_nssr = false;
 
 	ctrlr->qpair_mask = spdk_bit_array_create(transport->opts.max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
@@ -555,6 +556,10 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
 	ctrlr->vcprop.cap.bits.mpsmax = 0; /* 2 ^ (12 + mpsmax) == 4k */
+
+	if (subsystem->nssr_enabled == 1) {
+		ctrlr->vcprop.cap.bits.nssrs = 1;
+	}
 
 	/* Version Supported: 1.3 */
 	ctrlr->vcprop.vs.bits.mjr = 1;
@@ -1128,6 +1133,11 @@ _nvmf_ctrlr_cc_reset_shn_done(void *ctx)
 		ctrlr->vcprop.csts.raw = 0;
 	}
 
+	if (ctrlr->executing_nssr) {
+		ctrlr->executing_nssr = false;
+		ctrlr->vcprop.csts.bits.nssro = 1;
+	}
+
 	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
 	 * between the host and controller shall be preserved for at least 2 minutes */
 	if (ctrlr->association_timer) {
@@ -1224,6 +1234,12 @@ static uint64_t
 nvmf_prop_get_cc(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return ctrlr->vcprop.cc.raw;
+}
+
+static uint64_t
+nvmf_prop_get_nssr(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return 0;
 }
 
 static bool
@@ -1353,6 +1369,75 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 	return true;
 }
 
+static bool
+nvmf_prop_set_nssr(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+	struct spdk_nvmf_ctrlr *ctrlr_iter;
+	union spdk_nvme_cc_register cc_new;
+	int rc = 0;
+
+	if (ctrlr->vcprop.cap.bits.nssrs != 1) {
+		return false;
+	}
+
+	/* A write of the value 4E564D65h ("NVMe")
+	 * to this field initiates an NVM Subsystem Reset.
+	 * A write of any other value has no
+	 * functional effect on the operation of the NVM subsystem. */
+	if (value != SPDK_NVME_NSSR_VALUE) {
+		return true;
+	}
+
+	group = ctrlr->admin_qpair->group;
+	assert(group != NULL && group->sgroups != NULL);
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+		if (ns->bdev == NULL) {
+			continue;
+		}
+
+		ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[ns->opts.nsid - 1];
+
+		SPDK_DEBUGLOG(nvmf, "Ctrlr %p setting NSSR to NSID %u\n", ctrlr, ns->opts.nsid);
+		rc = spdk_bdev_nvme_nssr(ns->desc, ns_info->channel, nvmf_bdev_complete_reset, NULL);
+		if (rc == -ENOTSUP) {
+			SPDK_DEBUGLOG(nvmf, "Ctrlr %p NSSR not supported, performing reset\n", ctrlr);
+			spdk_bdev_reset(ns->desc, ns_info->channel, nvmf_bdev_complete_reset, NULL);
+		}
+	}
+
+	TAILQ_FOREACH(ctrlr_iter, &ctrlr->subsys->ctrlrs, link) {
+		cc_new = ctrlr_iter->vcprop.cc;
+		cc_new.bits.en = 0;
+		ctrlr_iter->executing_nssr = true;
+		nvmf_prop_set_cc(ctrlr_iter, cc_new.raw);
+	}
+
+	return true;
+}
+
+static bool
+nvmf_prop_set_csts(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
+{
+	union spdk_nvme_csts_register csts;
+	csts.raw = value;
+
+	SPDK_DEBUGLOG(nvmf, "cur CSTS: 0x%08x\n", ctrlr->vcprop.csts.raw);
+	SPDK_DEBUGLOG(nvmf, "new CSTS: 0x%08x\n", csts.raw);
+
+	/* only NSSRO bit is RWC (Read/Write ‘1’ to clear),
+	 * rest of CSTS is RO, so ignore it */
+	if (csts.bits.nssro == 1) {
+		ctrlr->vcprop.csts.bits.nssro = 0;
+	}
+
+	return true;
+}
+
 static uint64_t
 nvmf_prop_get_csts(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -1452,7 +1537,8 @@ static const struct nvmf_prop nvmf_props[] = {
 	PROP(cap,  8, nvmf_prop_get_cap,  NULL,                    NULL),
 	PROP(vs,   4, nvmf_prop_get_vs,   NULL,                    NULL),
 	PROP(cc,   4, nvmf_prop_get_cc,   nvmf_prop_set_cc,        NULL),
-	PROP(csts, 4, nvmf_prop_get_csts, NULL,                    NULL),
+	PROP(csts, 4, nvmf_prop_get_csts, nvmf_prop_set_csts,      NULL),
+	PROP(nssr, 4, nvmf_prop_get_nssr, nvmf_prop_set_nssr,      NULL),
 	PROP(aqa,  4, nvmf_prop_get_aqa,  nvmf_prop_set_aqa,       NULL),
 	PROP(asq,  8, nvmf_prop_get_asq,  nvmf_prop_set_asq_lower, nvmf_prop_set_asq_upper),
 	PROP(acq,  8, nvmf_prop_get_acq,  nvmf_prop_set_acq_lower, nvmf_prop_set_acq_upper),
@@ -2083,7 +2169,7 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 4928,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 4936,
 		   "Please check migration fields that need to be added or not");
 
 static void
