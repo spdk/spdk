@@ -1,10 +1,11 @@
 # Storage Performance Development Kit
 
 [![License](https://img.shields.io/github/license/spdk/spdk?style=flat-square&color=blue&label=License)](https://github.com/spdk/spdk/blob/master/LICENSE)
-[![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/spdk/spdk/go/rpc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/spdk/spdk/go/rpc)](https://goreportcard.com/report/github.com/spdk/spdk/go/rpc)
 [![codecov](https://codecov.io/gh/glimchb/spdk/graph/badge.svg?token=2U9NXR71T0)](https://codecov.io/gh/glimchb/spdk)
+[![Build](https://github.com/glimchb/spdk/actions/workflows/build.yml/badge.svg)](https://github.com/glimchb/spdk/actions/workflows/build.yml)
+[![Test](https://github.com/glimchb/spdk/actions/workflows/test.yml/badge.svg)](https://github.com/glimchb/spdk/actions/workflows/test.yml)
 
 NOTE: The SPDK mailing list has moved to a new location. Please visit
 [this URL](https://lists.linuxfoundation.org/mailman/listinfo/spdk) to subscribe
