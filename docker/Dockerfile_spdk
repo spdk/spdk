@@ -12,6 +12,8 @@ RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cma
 
 RUN yum install -y dosfstools ntfsprogs e2fsprogs ntfs-* gdb parted fio xfsprogs libasan libubsan
 
+RUN pip install requests
+
 RUN cd spdk && git submodule update --init --depth 1
 
 RUN cd spdk && scripts/pkgdep.sh --rdma --pmem --idxd

@@ -15,6 +15,8 @@ RUN yum install -y /root/spdk/docker/accel-config-libs-4.1.8.git4405db70-2.el9.a
 
 RUN yum install -y dosfstools ntfsprogs e2fsprogs ntfs-* gdb parted fio xfsprogs libasan libubsan
 
+RUN pip install requests
+
 RUN cd spdk && git submodule update --init --depth 1
 
 RUN cd spdk && scripts/pkgdep.sh --rdma --pmem --idxd
