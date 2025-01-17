@@ -70,6 +70,8 @@ void vbdev_lvol_create_bdev_clone(const char *esnap_uuid,
  */
 void vbdev_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn,
 		       void *cb_arg);
+void vbdev_lvol_resize_register(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn,
+ 					void *cb_arg);
 
 /**
  * \brief Mark lvol as read only

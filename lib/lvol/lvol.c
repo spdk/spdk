@@ -1633,6 +1633,19 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	spdk_blob_resize(blob, new_clusters, lvol_blob_resize_cb, req);
 }
 
+void
+spdk_lvol_resize_register(struct spdk_lvol *lvol, uint64_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob *blob = lvol->blob;
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
+
+	uint64_t new_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(lvs->blobstore));
+
+	int bserrno = spdk_blob_resize_register(blob, new_clusters);
+	cb_fn(cb_arg,  bserrno);
+}
+
 int
 spdk_lvol_register_live(struct spdk_lvol_store *lvs, const char *name, const char *uuid_str, uint64_t blobid,
 		 bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
