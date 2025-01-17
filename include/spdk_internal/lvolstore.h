@@ -160,6 +160,8 @@ struct lvol_store_bdev *vbdev_lvol_store_next(struct lvol_store_bdev *prev);
 
 void spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn,
 		      void *cb_arg);
+void spdk_lvol_resize_register(struct spdk_lvol *lvol, uint64_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 int spdk_lvol_register_live(struct spdk_lvol_store *lvs, const char *name, const char *uuid_str, uint64_t blobid,
 		 bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,

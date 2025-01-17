@@ -998,6 +998,8 @@ void spdk_bs_open_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
  */
 void spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_fn,
 		      void *cb_arg);
+			  
+int spdk_blob_resize_register(struct spdk_blob *blob, uint64_t sz);
 
 /**
  * Set blob as read only.

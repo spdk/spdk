@@ -1443,8 +1443,13 @@ rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-
-	vbdev_lvol_resize(lvol, req.size_in_mib * 1024 * 1024, rpc_bdev_lvol_resize_cb, request);
+	if (lvol->lvol_store->leader) {
+		SPDK_NOTICELOG("Resizing lvol on primary.\n");
+		vbdev_lvol_resize(lvol, req.size_in_mib * 1024 * 1024, rpc_bdev_lvol_resize_cb, request);
+	} else {
+		SPDK_NOTICELOG("Resizing lvol on secondary.\n");
+		vbdev_lvol_resize_register(lvol, req.size_in_mib * 1024 * 1024, rpc_bdev_lvol_resize_cb, request);
+	}
 
 cleanup:
 	free_rpc_bdev_lvol_resize(&req);

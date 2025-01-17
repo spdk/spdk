@@ -870,12 +870,15 @@ blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 
 			if (desc_extent->length <= sizeof(desc_extent->start_cluster_idx) ||
 			    (cluster_idx_length % sizeof(desc_extent->cluster_idx[0]) != 0)) {
+				SPDK_ERRLOG("Extenet metadata page not correct length. \n");	
 				return -EINVAL;
 			}
 
 			for (i = 0; i < cluster_idx_length / sizeof(desc_extent->cluster_idx[0]); i++) {
 				if (desc_extent->cluster_idx[i] != 0) {
 					if (!spdk_bit_pool_is_allocated(blob->bs->used_clusters, desc_extent->cluster_idx[i])) {
+						SPDK_ERRLOG("Extenet metadata page not vaild for cluster %" PRIx32 "\n",
+						 		desc_extent->cluster_idx[i]);
 						return -EINVAL;
 					}
 				}
@@ -883,6 +886,7 @@ blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 			}
 
 			if (cluster_count == 0) {
+				SPDK_ERRLOG("Extenet metadata page zero cluster count. \n");
 				return -EINVAL;
 			}
 
@@ -890,6 +894,7 @@ blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 			 * current size of a blob.
 			 * If changed to batch reading, this check shall be removed. */
 			if (desc_extent->start_cluster_idx != blob->active.num_clusters) {
+				SPDK_ERRLOG("Extenet metadata page not match cluster count. \n");
 				return -EINVAL;
 			}
 
@@ -2633,6 +2638,84 @@ blob_persist_write_page_chain(spdk_bs_sequence_t *seq, struct spdk_blob_persist_
 
 	bs_batch_close(batch);
 }
+
+static int
+blob_resize_secondary(struct spdk_blob *blob, uint64_t sz)
+{
+	uint64_t	i;
+	uint64_t	*tmp;
+	uint64_t	num_clusters;
+	uint32_t	*ep_tmp;
+	uint64_t	new_num_ep = 0, current_num_ep = 0;
+
+	blob_verify_md_op(blob);
+
+	if (blob->active.num_clusters == sz) {
+		return 0;
+	}
+
+	if (blob->active.num_clusters < blob->active.cluster_array_size) {
+		/* If this blob was resized to be larger, then smaller, then
+		 * larger without syncing, then the cluster array already
+		 * contains spare assigned clusters we can use.
+		 */
+		num_clusters = spdk_min(blob->active.cluster_array_size,
+					sz);
+	} else {
+		num_clusters = blob->active.num_clusters;
+	}
+
+	if (blob->use_extent_table) {
+		/* Round up since every cluster beyond current Extent Table size,
+		 * requires new extent page. */
+		new_num_ep = spdk_divide_round_up(sz, SPDK_EXTENTS_PER_EP);
+		current_num_ep = spdk_divide_round_up(num_clusters, SPDK_EXTENTS_PER_EP);
+	}
+
+
+	if (sz > num_clusters) {
+		/* Expand the cluster array if necessary.
+		 * We only shrink the array when persisting.
+		 */
+		tmp = realloc(blob->active.clusters, sizeof(*blob->active.clusters) * sz);
+		if (sz > 0 && tmp == NULL) {
+			SPDK_ERRLOG("Cannot alloc memory for blob resize 1.\n");
+			return -ENOMEM;
+		}
+		memset(tmp + blob->active.cluster_array_size, 0,
+		       sizeof(*blob->active.clusters) * (sz - blob->active.cluster_array_size));
+		blob->active.clusters = tmp;
+		blob->active.cluster_array_size = sz;
+
+		/* Expand the extents table, only if enough clusters were added */
+		if (new_num_ep > current_num_ep && blob->use_extent_table) {
+			ep_tmp = realloc(blob->active.extent_pages, sizeof(*blob->active.extent_pages) * new_num_ep);
+			if (new_num_ep > 0 && ep_tmp == NULL) {
+				SPDK_ERRLOG("Cannot alloc memory for blob resize 2.\n");
+				return -ENOMEM;
+			}
+			memset(ep_tmp + blob->active.extent_pages_array_size, 0,
+			       sizeof(*blob->active.extent_pages) * (new_num_ep - blob->active.extent_pages_array_size));
+			blob->active.extent_pages = ep_tmp;
+			blob->active.extent_pages_array_size = new_num_ep;
+		}
+	}
+
+	/* If we are shrinking the blob, we must adjust num_allocated_clusters */
+	for (i = sz; i < num_clusters; i++) {
+		if (blob->active.clusters[i] != 0) {
+			if (blob->active.num_allocated_clusters > 0) {
+				blob->active.num_allocated_clusters--;
+			}
+		}
+	}
+
+	blob->active.num_clusters = sz;
+	blob->active.num_extent_pages = new_num_ep;
+	
+	return 0;
+}
+
 
 static int
 blob_resize(struct spdk_blob *blob, uint64_t sz)
@@ -8979,6 +9062,25 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 	ctx->blob = blob;
 	ctx->sz = sz;
 	blob_freeze_io(blob, bs_resize_freeze_cpl, ctx);
+}
+
+int
+spdk_blob_resize_register(struct spdk_blob *blob, uint64_t sz)
+{	
+	blob_verify_md_op(blob);
+
+	SPDK_NOTICELOG("Resizing blob 0x%" PRIx64 " to %" PRIu64 " clusters on secondary.\n", blob->id, sz);
+
+	if (blob->md_ro) {
+		SPDK_ERRLOG("Cannot resize blob in read only mode.\n");
+		return -EPERM;
+	}
+
+	if (sz == blob->active.num_clusters) {
+		return 0;
+	}
+
+	return blob_resize_secondary(blob, sz);
 }
 
 /* END spdk_blob_resize */
