@@ -10,13 +10,15 @@ COPY ./ /root/spdk/
 
 RUN dnf install -y git diffutils procps-ng pip kmod hostname wget pkg-config cmake nano systemd-udev
 
+RUN yum install -y dosfstools ntfsprogs e2fsprogs ntfs-* gdb parted fio xfsprogs libasan libubsan
+
+RUN pip install requests
+
 RUN cd spdk && git submodule update --init --depth 1
 
 RUN cd spdk && scripts/pkgdep.sh --rdma --pmem --idxd
 
 RUN mkdir /tmp/pmem
-
-RUN #pip3 install grpcio-tools==1.51.3 protobuf==4.22.1
 
 RUN sed -i "s/^#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC.*/#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC\t200/" /root/spdk/lib/bdev/bdev.c
 
