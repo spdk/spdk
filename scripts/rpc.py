@@ -2138,6 +2138,34 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('snapshot_name', help='lvol snapshot name')
     p.add_argument('clone_name', help='lvol clone name')
     p.set_defaults(func=bdev_lvol_clone)
+    
+    def bdev_lvol_snapshot_register(args):
+        print_json(rpc.lvol.bdev_lvol_snapshot_register(args.client,
+                                               lvol_name=args.lvol_name,
+                                               snapshot_name=args.snapshot_name,
+                                               registered_uuid=args.registered_uuid,
+                                               blobid=args.blobid))
+
+    p = subparsers.add_parser('bdev_lvol_snapshot_register', help='Register a snapshot of an lvol bdev')
+    p.add_argument('lvol_name', help='lvol bdev name')
+    p.add_argument('snapshot_name', help='lvol snapshot name')
+    p.add_argument('-r', '--registered-uuid', help='registered lvol UUID')
+    p.add_argument('-b', '--blobid', help='blob id page for registered lvol', type=int)    
+    p.set_defaults(func=bdev_lvol_snapshot_register)
+
+    def bdev_lvol_clone_register(args):
+        print_json(rpc.lvol.bdev_lvol_clone_register(args.client,
+                                            snapshot_name=args.snapshot_name,
+                                            clone_name=args.clone_name,
+                                            registered_uuid=args.registered_uuid,
+                                            blobid=args.blobid))
+
+    p = subparsers.add_parser('bdev_lvol_clone_register', help='Register a clone of an lvol snapshot')
+    p.add_argument('snapshot_name', help='lvol snapshot name')
+    p.add_argument('clone_name', help='lvol clone name')
+    p.add_argument('-r', '--registered-uuid', help='registered lvol UUID')
+    p.add_argument('-b', '--blobid', help='blob id page for registered lvol', type=int)    
+    p.set_defaults(func=bdev_lvol_clone_register)
 
     def bdev_lvol_clone_bdev(args):
         print_json(rpc.lvol.bdev_lvol_clone_bdev(args.client,
@@ -2263,6 +2291,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-u', '--uuid', help='lvol store UUID')
     p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.set_defaults(func=bdev_lvol_get_lvstores)
+    
+    def bdev_lvol_set_lvs_groupid(args):
+        print_dict(rpc.lvol.bdev_lvol_set_lvs_groupid(args.client,
+                                                   uuid=args.uuid,
+                                                   lvs_name=args.lvs_name,
+                                                   groupid=args.groupid))
+
+    p = subparsers.add_parser('bdev_lvol_set_lvs_groupid', help='Set group id for lvolstore')
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
+    p.add_argument('-i', '--groupid', help='lvol store group id', type=int)
+    p.set_defaults(func=bdev_lvol_set_lvs_groupid)
 
     def bdev_lvol_get_lvols(args):
         print_dict(rpc.lvol.bdev_lvol_get_lvols(args.client,

@@ -41,7 +41,6 @@ struct spdk_xattr {
 struct spdk_blob_mut_data {
 	/* Number of data clusters in the blob */
 	uint64_t	num_clusters;
-	uint64_t	num_clusters_on_update;
 
 	/* Array LBAs that are the beginning of a cluster, in
 	 * the order they appear in the blob.
@@ -91,6 +90,12 @@ enum spdk_blob_state {
 	/* The in-memory state being synchronized with the on-disk
 	 * blob state. */
 	SPDK_BLOB_STATE_LOADING,
+};
+
+enum spdk_blob_load_status {
+	SPDK_BLOB_UPDATE_NORMAL,
+	SPDK_BLOB_UPDATE_LIVE,
+	SPDK_BLOB_UPDATE_FAILOVER,
 };
 
 TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr);
@@ -203,6 +208,10 @@ struct spdk_blob_store {
 	TAILQ_HEAD(, spdk_blob_list)	snapshots;
 
 	bool				clean;
+	/* True if the node is a leader, false otherwise.
+	 * Only when the distrib internal force state changes, it will be set to false.
+	 */
+	bool				is_leader;
 
 	spdk_bs_esnap_dev_create	esnap_bs_dev_create;
 	void				*esnap_ctx;

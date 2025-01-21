@@ -31,6 +31,8 @@
 
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), NULL);
 DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *, (const char *name), NULL);
+DEFINE_STUB(spdk_blob_get_freeze_cnt, int, (struct spdk_blob *blob), 0);
+DEFINE_STUB(blob_freeze, int, (struct spdk_blob *blob), 0);
 DEFINE_STUB(spdk_bdev_create_bs_dev_ro, int,
 	    (const char *bdev_name, spdk_bdev_event_cb_t event_cb, void *event_ctx,
 	     struct spdk_bs_dev **bs_dev), -ENOTSUP);
@@ -38,6 +40,9 @@ DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), fals
 DEFINE_STUB(spdk_blob_is_degraded, bool, (const struct spdk_blob *blob), false);
 DEFINE_STUB_V(spdk_bs_grow_live,
 	      (struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg));
+DEFINE_STUB_V(spdk_blob_unfreeze_cleanup,
+	      (struct spdk_blob *blob, spdk_blob_op_with_id_complete cb_fn, void *cb_arg));
+DEFINE_STUB_V(blob_freeze_on_failover, (struct spdk_blob *blob));
 DEFINE_STUB(spdk_bs_delete_blob_non_leader, int ,(struct spdk_blob_store *bs, struct spdk_blob *blob), 0);		  
 
 

@@ -875,9 +875,10 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 		return;
 	}
 
-	if (!lvol->leader) {
+	if (!lvol->lvol_store->leader) {
 		// check blob state it must be CLEAN
 		// copy the blob
+		SPDK_NOTICELOG("Deleting blob 0x%" PRIx64 " in secondary mode.\n", lvol->blob_id);
 		if (spdk_lvol_copy_blob(lvol)) {
 			cb_fn(cb_arg, -ENODEV);
 			return;
@@ -976,6 +977,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "lvol_leadership", lvol->leader);
 	spdk_json_write_named_bool(w, "lvs_leadership", lvol->lvol_store->leader);
 	spdk_json_write_named_uint64(w, "blobid", spdk_blob_get_id(blob));
+	spdk_json_write_named_uint32(w, "open_ref", spdk_blob_get_open_ref(blob));
 	spdk_json_write_named_uint8(w, "lvol_priority_class", lvol->priority_class);
 
 	if (spdk_blob_is_clone(blob)) {
@@ -1199,19 +1201,28 @@ static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
-	bool allow_active = false;
-	if (!lvol->lvol_store->leader && !lvol->lvol_store->update_in_progress) {
-		allow_active = spdk_lvs_check_active_process(lvol->lvol_store);
-		if (allow_active) {
-			spdk_lvs_update_on_failover(lvol->lvol_store);			
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
+
+	if (!lvs->leader) {
+		if (spdk_lvs_nonleader_timeout(lvs)) {
+			SPDK_NOTICELOG("FAILED IO-TO change leader - blob: %" PRIu64 "  "
+							"Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
+		 					lvol->blob_id, bdev_io->u.bdev.offset_blocks,
+							bdev_io->u.bdev.num_blocks, bdev_io->type);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+
+		if (!lvs->update_in_progress) {
+			spdk_lvs_check_active_process(lvs);			
 		}
 	}
 
 	if (!lvol->leader && !lvol->update_in_progress) {
-		spdk_lvol_update_on_failover(lvol->lvol_store, lvol);
+		spdk_lvol_update_on_failover(lvs, lvol, true);
 	}
 
-	if (lvol->failed_on_update || lvol->lvol_store->failed_on_update) {
+	if (lvol->failed_on_update || lvs->failed_on_update) {
 		SPDK_NOTICELOG("FAILED IO - update failed blob: %" PRIu64 "  Lba: %" PRIu64 "  Cnt %" PRIu64 "  t %d \n",
 		 				lvol->blob_id, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -1585,6 +1596,48 @@ vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 	spdk_lvol_create_snapshot(lvol, snapshot_name, _vbdev_lvol_create_cb, req);
 }
 
+
+static void
+vbdev_lvol_update_snapshot_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+	free(req);
+	// if (lvolerrno < 0) {
+	// 	goto end;
+	// }
+
+	// lvol->priority_class = req->lvol_priority_class;
+	// vbdev_lvol_set_io_priority_class(lvol);
+
+	// lvolerrno = _create_lvol_disk(lvol, true);
+
+// end:
+// 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+// 	free(req);
+}
+
+void
+vbdev_lvol_update_snapshot_clone(struct spdk_lvol *lvol, struct spdk_lvol *origlvol,
+			   bool clone, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	if (clone) {
+		spdk_lvol_update_clone(lvol, vbdev_lvol_update_snapshot_clone_cb, req);
+		return;
+	}
+	spdk_lvol_update_snapshot_clone(lvol, origlvol, vbdev_lvol_update_snapshot_clone_cb, req);
+}
+
 void
 vbdev_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
 			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
@@ -1754,6 +1807,33 @@ vbdev_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_
 	req->lvol = lvol;
 
 	spdk_lvol_resize(req->lvol, req->sz, _vbdev_lvol_resize_cb, req);
+}
+
+void
+vbdev_lvol_resize_register(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_req *req;
+
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol does not exist\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	assert(lvol->bdev != NULL);
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->sz = sz;
+	req->lvol = lvol;
+
+	spdk_lvol_resize_register(req->lvol, req->sz, _vbdev_lvol_resize_cb, req);
 }
 
 static void

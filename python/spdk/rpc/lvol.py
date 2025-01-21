@@ -227,6 +227,50 @@ def bdev_lvol_clone(client, snapshot_name, clone_name):
     }
     return client.call('bdev_lvol_clone', params)
 
+def bdev_lvol_snapshot_register(client, lvol_name, snapshot_name, registered_uuid, blobid):
+    """Register a snapshot of the current state of a logical volume.
+
+    Args:
+        lvol_name: logical volume to create a snapshot from
+        snapshot_name: name for the newly created snapshot
+
+    Returns:
+        Name of registered logical volume snapshot.
+    """
+    if not registered_uuid:
+        raise ValueError("registered_uuid must be specified")
+    if not blobid:
+        raise ValueError("blobid must be specified")
+    
+    params = {
+        'lvol_name': lvol_name,
+        'snapshot_name': snapshot_name,
+        'registered_uuid': registered_uuid,
+        'blobid': blobid
+    }
+    return client.call('bdev_lvol_snapshot_register', params)
+
+def bdev_lvol_clone_register(client, snapshot_name, clone_name, registered_uuid, blobid):
+    """Register a logical volume based on a snapshot.
+
+    Args:
+        snapshot_name: snapshot to clone
+        clone_name: name of logical volume to create
+
+    Returns:
+        Name of registered logical volume clone.
+    """
+    if not registered_uuid:
+        raise ValueError("registered_uuid must be specified")
+    if not blobid:
+        raise ValueError("blobid must be specified")
+    params = {
+        'snapshot_name': snapshot_name,
+        'clone_name': clone_name,
+        'registered_uuid': registered_uuid,
+        'blobid': blobid
+    }
+    return client.call('bdev_lvol_clone_register', params)
 
 def bdev_lvol_clone_bdev(client, bdev, lvs_name, clone_name):
     """Create a logical volume based on a snapshot.
@@ -422,6 +466,27 @@ def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
         params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_get_lvstores', params)
 
+def bdev_lvol_set_lvs_groupid(client, uuid=None, lvs_name=None, groupid=0):
+    """Set group id for lvolstore.
+
+    Args:
+        uuid: UUID of logical volume store to retrieve information about (optional)
+        lvs_name: name of logical volume store to retrieve information about (optional)
+        groupid: number of group id
+        
+    Either uuid or lvs_name may be specified, but not both.
+    If both uuid and lvs_name are omitted, information about all logical volume stores is returned.
+    """
+    if (uuid and lvs_name):
+        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    if (not groupid):
+        raise ValueError("groupid must be specified")
+    params = {'groupid': groupid}
+    if uuid:
+        params['uuid'] = uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name
+    return client.call('bdev_lvol_set_lvs_groupid', params)
 
 def bdev_lvol_get_lvols(client, lvs_uuid=None, lvs_name=None):
     """List logical volumes
