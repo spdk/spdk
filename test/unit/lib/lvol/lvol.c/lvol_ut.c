@@ -461,6 +461,13 @@ spdk_bs_open_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
 }
 
 void
+spdk_bs_open_blob_without_reference(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		      struct spdk_blob_open_opts *opts, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	spdk_bs_open_blob(bs, blobid, cb_fn, cb_arg);
+}
+
+void
 spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {

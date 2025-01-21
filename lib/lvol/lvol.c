@@ -201,7 +201,8 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	spdk_blob_open_opts_init(&opts, sizeof(opts));
 	opts.clear_method = lvol->clear_method;
 
-	spdk_bs_open_blob_ext(lvol->lvol_store->blobstore, lvol->blob_id, &opts, lvol_open_cb, req);
+	// spdk_bs_open_blob_ext(lvol->lvol_store->blobstore, lvol->blob_id, &opts, lvol_open_cb, req);
+	spdk_bs_open_blob_without_reference(lvol->lvol_store->blobstore, lvol->blob_id, &opts, lvol_open_cb, req);
 }
 
 static void
