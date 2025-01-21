@@ -4835,6 +4835,30 @@ bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 }
 
 static void
+bs_update_corrupted_blob_without_close(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to close clone of a corrupted blob\n");
+		spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
+		return;
+	}
+
+	ctx->blob->md_ro = false;
+	blob_remove_xattr(ctx->blob, SNAPSHOT_PENDING_REMOVAL, true);
+	blob_remove_xattr(ctx->blob, SNAPSHOT_IN_PROGRESS, true);
+	spdk_blob_set_read_only(ctx->blob);
+
+	if (ctx->iter_cb_fn) {
+		ctx->iter_cb_fn(ctx->iter_cb_arg, ctx->blob, 0);
+	}
+	bs_blob_list_add(ctx->blob);
+	
+	spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
+}
+
+static void
 bs_examine_clone_without_close(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
@@ -4848,7 +4872,7 @@ bs_examine_clone_without_close(void *cb_arg, struct spdk_blob *blob, int bserrno
 	if (blob->parent_id == ctx->blob->id) {
 		/* Power failure occurred before updating clone (snapshot delete case)
 		 * or after updating clone (creating snapshot case) - keep snapshot */
-		spdk_blob_close(blob, bs_update_corrupted_blob, ctx);
+		spdk_blob_close(blob, bs_update_corrupted_blob_without_close, ctx);
 	} else {
 		/* Power failure occurred after updating clone (snapshot delete case)
 		 * or before updating clone (creating snapshot case) - remove snapshot */
@@ -4926,7 +4950,7 @@ bs_load_complete(struct spdk_bs_load_ctx *ctx)
 		return;
 	}
 	SPDK_INFOLOG(blob, "Starting to open the blobs found on the metadata pages.\n");
-	spdk_bs_iter_first(ctx->bs, bs_load_iter, ctx);	
+	spdk_bs_iter_first(ctx->bs, bs_load_iter, ctx); 
 }
 
 static void
@@ -11380,13 +11404,13 @@ spdk_bs_iter_first_without_close(struct spdk_blob_store *bs,
 	bs_iter_cpl_without_close(ctx, NULL, -1);
 }
 
-static void
-bs_iter_without_close_cpl(void *cb_arg, int bserrno)
-{
-	struct spdk_bs_iter_ctx *ctx = cb_arg;
+// static void
+// bs_iter_without_close_cpl(void *cb_arg, int bserrno)
+// {
+// 	struct spdk_bs_iter_ctx *ctx = cb_arg;
 
-	bs_iter_cpl_without_close(ctx, NULL, -1);
-}
+// 	bs_iter_cpl_without_close(ctx, NULL, -1);
+// }
 
 void
 spdk_bs_iter_next_without_close(struct spdk_blob_store *bs, struct spdk_blob *blob,
@@ -11407,12 +11431,12 @@ spdk_bs_iter_next_without_close(struct spdk_blob_store *bs, struct spdk_blob *bl
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;	
 
-	if (ctx->page_num == 0 && blob->id == 0) {
-		/* Close the existing blob */
-		spdk_blob_close(blob, bs_iter_without_close_cpl, ctx);
-	} else {
-		bs_iter_cpl_without_close(ctx, NULL, -1);
-	}
+	// if (ctx->page_num == 0) {
+	// 	/* Close the existing blob */
+	// 	spdk_blob_close(blob, bs_iter_without_close_cpl, ctx);
+	// } else {
+	bs_iter_cpl_without_close(ctx, NULL, -1);
+	// }
 }
 
 static int
