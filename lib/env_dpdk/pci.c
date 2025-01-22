@@ -226,15 +226,17 @@ pci_device_rte_dev_event(const char *device_name,
 		TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 			struct rte_pci_device *rte_dev = dev->dev_handle;
 
-			if (strcmp(dpdk_pci_device_get_name(rte_dev), device_name)) {
+			if (dev->internal.removed) {
+				/* DPDK already removed this device, we are still pending
+				 * removal of the device from the SPDK device list. Since
+				 * DPDK freed the device handle, we must not try to
+				 * get its device name.
+				 */
 				continue;
 			}
 
-			/* Note: these ERRLOGs are useful for triaging issue #2983. */
-			if (dev->internal.pending_removal || dev->internal.removed) {
-				SPDK_ERRLOG("Received event for device SPDK already tried to remove\n");
-				SPDK_ERRLOG("pending_removal=%d removed=%d\n", dev->internal.pending_removal,
-					    dev->internal.removed);
+			if (strcmp(dpdk_pci_device_get_name(rte_dev), device_name)) {
+				continue;
 			}
 
 			if (!dev->internal.pending_removal) {
