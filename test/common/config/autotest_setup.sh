@@ -84,7 +84,6 @@ rootdir=$(readlink -f "$vmsetupdir/../../../")
 source "$rootdir/scripts/common.sh"
 
 set_os_id_version
-source "$vmsetupdir/pkgdep/git"
 detect_package_manager
 
 if [[ -e $vmsetupdir/pkgdep/os/$OSID ]]; then
@@ -146,4 +145,7 @@ if $INSTALL; then
 	install "${packages[@]}"
 fi
 
-install_sources
+if [[ -n $CONF ]]; then
+	source "$vmsetupdir/pkgdep/git"
+	install_sources
+fi
