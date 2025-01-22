@@ -128,7 +128,7 @@ function _install_qemu() {
 	declare -a extra_cflags=()
 
 	opt_params+=("--disable-docs")
-	if ((gcc_version >= 9)); then
+	if [[ $CC == *gcc* ]] && ((cc_version >= 9)); then
 		opt_params+=("--disable-glusterfs")
 	fi
 
@@ -625,13 +625,14 @@ export GIT_REPO_DOXYGEN
 export GIT_REPO_LIBBPF
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
+CC=${CC:-gcc}
 
-if ! gcc_version=$(gcc -dumpversion 2> /dev/null); then
-	echo "gcc version could not be determined, aborting" >&2
+if ! cc_version=$($CC -dumpversion 2> /dev/null); then
+	echo "'$CC' version could not be determined, aborting" >&2
 	return 1
 fi
 
-gcc_version=${gcc_version%%.*}
+cc_version=${cc_version%%.*}
 if [[ -e /proc/sys/kernel/osrelease ]]; then
 	kernel_ver=$(< /proc/sys/kernel/osrelease)
 fi
