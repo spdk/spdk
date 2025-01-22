@@ -626,7 +626,12 @@ export GIT_REPO_LIBBPF
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
-gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
+if ! gcc_version=$(gcc -dumpversion 2> /dev/null); then
+	echo "gcc version could not be determined, aborting" >&2
+	return 1
+fi
+
+gcc_version=${gcc_version%%.*}
 if [[ -e /proc/sys/kernel/osrelease ]]; then
 	kernel_ver=$(< /proc/sys/kernel/osrelease)
 fi
