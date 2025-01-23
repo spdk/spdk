@@ -46,9 +46,10 @@ static void blob_freeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, 
 
 static void bs_shallow_copy_cluster_find_next(void *cb_arg);
 
-void
-spdk_bs_iter_next_without_close(struct spdk_blob_store *bs, struct spdk_blob *blob,
+void spdk_bs_iter_next_without_close(struct spdk_blob_store *bs, struct spdk_blob *blob,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+
+static void bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno);
 
 /*
  * External snapshots require a channel per thread per esnap bdev.  The tree
@@ -4835,6 +4836,94 @@ bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 }
 
 static void
+bs_delete_corrupted_blob_examine_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	spdk_blob_id id;
+	int64_t page_num;
+
+	/* Iterate to next blob (we can't use spdk_bs_iter_next function as our
+	 * last blob has been removed */
+	page_num = bs_blobid_to_page(ctx->blobid);
+	page_num++;
+	page_num = spdk_bit_array_find_first_set(ctx->bs->used_blobids, page_num);
+	if (page_num >= spdk_bit_array_capacity(ctx->bs->used_blobids)) {
+		bs_load_iter_without_close(ctx, NULL, -ENOENT);
+		return;
+	}
+
+	id = bs_page_to_blobid(page_num);
+
+	spdk_bs_open_blob(ctx->bs, id, bs_load_iter_without_close, ctx);
+}
+
+static void
+bs_delete_corrupted_blob_examine_cb(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to sync corrupted snapblob on examine.\n");
+		spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
+		return;
+	}
+		
+	SPDK_INFOLOG(blob, "Delete corrupted snapblob 0x%" PRIx64 "\n", ctx->blobid);
+
+	assert(spdk_get_thread() == ctx->bs->md_thread);
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = bs_delete_corrupted_blob_examine_cpl;
+	cpl.u.blob_basic.cb_arg = ctx;
+
+	seq = bs_sequence_start_bs(ctx->bs->md_channel, &cpl);
+	if (!seq) {
+		bs_delete_corrupted_blob_examine_cpl(ctx, -ENOMEM);
+		return;
+	}
+	bs_delete_open_cpl(seq, ctx->blob, 0);
+}
+
+static void
+bs_delete_corrupted_blob_without_close(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t i;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to close clone of a corrupted blob\n");		
+		spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
+		return;
+	}
+
+	/* Snapshot and clone have the same copy of cluster map and extent pages
+	 * at this point. Let's clear both for snapshot now,
+	 * so that it won't be cleared for clone later when we remove snapshot.
+	 * Also set thin provision to pass data corruption check */
+	for (i = 0; i < ctx->blob->active.num_clusters; i++) {
+		ctx->blob->active.clusters[i] = 0;
+	}
+	for (i = 0; i < ctx->blob->active.num_extent_pages; i++) {
+		ctx->blob->active.extent_pages[i] = 0;
+	}
+
+	ctx->blob->active.num_allocated_clusters = 0;
+
+	ctx->blob->md_ro = false;
+
+	blob_set_thin_provision(ctx->blob);
+
+	ctx->blobid = ctx->blob->id;
+
+	// spdk_blob_close(ctx->blob, bs_delete_corrupted_close_cb, ctx);
+	// here I need to sync the blob md pages
+	SPDK_INFOLOG(blob, "Sync md corrupted snapblob 0x%" PRIx64 "\n", ctx->blobid);
+	spdk_blob_sync_md(ctx->blob, bs_delete_corrupted_blob_examine_cb, ctx);
+}
+
+static void
 blob_op_update_corrupted_cb(void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
@@ -4865,6 +4954,7 @@ bs_update_corrupted_blob_without_close(void *cb_arg, int bserrno)
 	}
 	bs_blob_list_add(ctx->blob);
 	// here I need to sync the blob md pages
+	SPDK_INFOLOG(blob, "Sync md corrupted snapblob 0x%" PRIx64 "\n", ctx->blob->id);
 	spdk_blob_sync_md(ctx->blob, blob_op_update_corrupted_cb, ctx);
 }
 
@@ -4887,7 +4977,7 @@ bs_examine_clone_without_close(void *cb_arg, struct spdk_blob *blob, int bserrno
 		SPDK_INFOLOG(blob, "Cannot examine corrupted snapblob 0x%" PRIx64 ".\n", blob->id);
 		/* Power failure occurred after updating clone (snapshot delete case)
 		 * or before updating clone (creating snapshot case) - remove snapshot */
-		spdk_blob_close(blob, bs_delete_corrupted_blob, ctx);
+		spdk_blob_close(blob, bs_delete_corrupted_blob_without_close, ctx);
 	}
 }
 
@@ -11390,7 +11480,7 @@ bs_iter_cpl_without_close(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 
 	id = bs_page_to_blobid(ctx->page_num);
 	SPDK_INFOLOG(blob, "===  Starting to open blob 0x%" PRIx64 " and page 0x%" PRIx64 ".\n", id, ctx->page_num);
-	spdk_bs_open_blob(bs, id, bs_iter_cpl, ctx);
+	spdk_bs_open_blob(bs, id, bs_iter_cpl_without_close, ctx);
 }
 
 void
