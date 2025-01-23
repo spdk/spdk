@@ -4835,6 +4835,16 @@ bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 }
 
 static void
+blob_op_update_corrupted_cb(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to update corrupted blob\n");		
+	}
+	spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
+}
+
+static void
 bs_update_corrupted_blob_without_close(void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
@@ -4854,15 +4864,14 @@ bs_update_corrupted_blob_without_close(void *cb_arg, int bserrno)
 		ctx->iter_cb_fn(ctx->iter_cb_arg, ctx->blob, 0);
 	}
 	bs_blob_list_add(ctx->blob);
-	
-	spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
+	// here I need to sync the blob md pages
+	spdk_blob_sync_md(ctx->blob, blob_op_update_corrupted_cb, ctx);
 }
 
 static void
 bs_examine_clone_without_close(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-
 	if (bserrno != 0) {
 		SPDK_ERRLOG("Failed to open clone of a corrupted blob\n");
 		spdk_bs_iter_next_without_close(ctx->bs, ctx->blob, bs_load_iter_without_close, ctx);
@@ -4870,10 +4879,12 @@ bs_examine_clone_without_close(void *cb_arg, struct spdk_blob *blob, int bserrno
 	}
 
 	if (blob->parent_id == ctx->blob->id) {
+		SPDK_INFOLOG(blob, "Updatable corrupted snapblob 0x%" PRIx64 ".\n", blob->id);
 		/* Power failure occurred before updating clone (snapshot delete case)
 		 * or after updating clone (creating snapshot case) - keep snapshot */
 		spdk_blob_close(blob, bs_update_corrupted_blob_without_close, ctx);
 	} else {
+		SPDK_INFOLOG(blob, "Cannot examine corrupted snapblob 0x%" PRIx64 ".\n", blob->id);
 		/* Power failure occurred after updating clone (snapshot delete case)
 		 * or before updating clone (creating snapshot case) - remove snapshot */
 		spdk_blob_close(blob, bs_delete_corrupted_blob, ctx);
@@ -4910,7 +4921,7 @@ bs_load_iter_without_close(void *arg, struct spdk_blob *blob, int bserrno)
 		assert(len == sizeof(spdk_blob_id));
 
 		ctx->blob = blob;
-
+		SPDK_INFOLOG(blob, "Trying to examine corrupted snapblob 0x%" PRIx64 ".\n", blob->id);
 		/* Open clone to check if we are able to fix this blob or should we remove it */
 		spdk_bs_open_blob(ctx->bs, *(spdk_blob_id *)value, bs_examine_clone_without_close, ctx);
 		return;
@@ -5349,7 +5360,6 @@ bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 		// bs_load_complete(ctx);
 		ctx->bs->used_clusters = spdk_bit_pool_create_from_array(ctx->used_clusters);
 
-		SPDK_INFOLOG(blob, "Starting to open the blobs found on the metadata pages.\n");
 		spdk_bs_iter_first_without_close(ctx->bs, bs_load_iter_without_close, ctx);
 	}
 }
@@ -11363,7 +11373,7 @@ bs_iter_cpl_without_close(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	spdk_blob_id id;
 
 	if (bserrno == 0) {
-		SPDK_INFOLOG(blob, "====  blob id 0x%" PRIx64 " opened successfully\n", _blob->id);
+		SPDK_INFOLOG(blob, "====  blob 0x%" PRIx64 " opened successfully.\n", _blob->id);
 		ctx->cb_fn(ctx->cb_arg, _blob, bserrno);		
 		free(ctx);
 		return;
@@ -11379,7 +11389,7 @@ bs_iter_cpl_without_close(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	}
 
 	id = bs_page_to_blobid(ctx->page_num);
-	SPDK_INFOLOG(blob, "====  Starting to reopen blob id 0x%" PRIx64 " and page is 0x%" PRIx64 "\n", id, ctx->page_num);
+	SPDK_INFOLOG(blob, "===  Starting to open blob 0x%" PRIx64 " and page 0x%" PRIx64 ".\n", id, ctx->page_num);
 	spdk_bs_open_blob(bs, id, bs_iter_cpl, ctx);
 }
 
@@ -11387,7 +11397,7 @@ void
 spdk_bs_iter_first_without_close(struct spdk_blob_store *bs,
 		   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	SPDK_INFOLOG(blob, "Starting to open the blobs that we opened before....\n");
+	SPDK_INFOLOG(blob, "Starting to open the blobs.\n");
 	struct spdk_bs_iter_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
