@@ -1,0 +1,16 @@
+name: Handle gerrit webhook
+
+on:
+  repository_dispatch:
+    types:
+      - gerrit-webhook
+
+jobs:
+  # "print-stuff" is only an example job entry, which is reusing "gerrint-change-printer" workflow.
+  # Ultimately it should be replaced by other workflows and actions running SPDK tests
+  print-stuff:
+    uses: karlatec/spdk/.github/workflows/gerrit-change-printer.yml@master
+    with:
+      # "Client payload" is all of the information Gerrit webhooks sends out.
+      patchset_ref: ${{ github.event.client_payload.patchSet.ref }}
+      patchset_rev: ${{ github.event.client_payload.patchSet.revision }}

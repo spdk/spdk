@@ -1,0 +1,23 @@
+name: Print Gerrit patchset data
+
+on:
+  workflow_call:
+    inputs:
+      patchset_ref:
+        required: false
+        default: ''
+        type: string
+      patchset_rev:
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  print-patchset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print patchset ref & revision
+        run: |
+          echo "Webhook Payload - patch set ref & hash:"
+          echo "${{ inputs.patchset_ref }}"
+          echo "${{ inputs.patchset_rev }}"
