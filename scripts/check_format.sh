@@ -931,7 +931,20 @@ function check_extern_c() {
 	printf 'OK\n'
 }
 
+check_list() { compgen -A function | grep "^check_" | sort; }
+
+user_checkers() {
+	eval "$(comm -12 \
+		<(printf '%s\n' "$@" | sort) \
+		<(check_list))" || return 1
+}
+
 rc=0
+
+if (($#)); then
+	user_checkers "$@" || rc=1
+	exit $rc
+fi
 
 check_permissions || rc=1
 check_c_style || rc=1
