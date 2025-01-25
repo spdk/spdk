@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 
 import spdk.cli as cli  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array, JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
-from spdk.rpc.helpers import deprecated_aliases  # noqa
+from spdk.rpc.helpers import deprecated_aliases, hint_rpc_name  # noqa
 from spdk.rpc.cmd_parser import remove_null  # noqa
 
 
@@ -165,6 +165,7 @@ def main():
 
     replace_arg_underscores(sys.argv)
 
+    parser = hint_rpc_name(parser)
     args = parser.parse_args()
 
     try:

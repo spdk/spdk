@@ -29,3 +29,33 @@ def deprecated_method(method):
             method.deprecated_warning = True
         return method(*args, **kwargs)
     return wrap
+
+
+def hint_rpc_name(parser):
+    try:
+        from CommandNotFound.CommandNotFound import similar_words as similar_rpcs
+    except (ImportError, ModuleNotFoundError):
+        return parser
+
+    def error(msg):
+        srpcs = set()
+        e = msg
+
+        if "choose from " in msg:
+            fmsg = msg.split("choose from ")
+
+            bad_arg = fmsg[0].split("'")[1]
+            rpcs = fmsg[1].strip().strip(")").replace("'", "").split(", ")
+
+            for similar_rpc in similar_rpcs(bad_arg):
+                if similar_rpc in rpcs:
+                    srpcs.add(similar_rpc)
+
+            if srpcs:
+                e = f"'{bad_arg}' not recognized, did you mean: {', '.join(srpcs)}?"
+
+        print(e, file=sys.stderr)
+        sys.exit(2)
+
+    parser.error = error
+    return parser
