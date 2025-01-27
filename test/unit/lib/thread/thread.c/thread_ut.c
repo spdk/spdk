@@ -2169,6 +2169,40 @@ poller_get_stats(void)
 	free_threads();
 }
 
+static bool g_unregistered;
+
+static void
+confirm_unregistered_cb(void *io_device)
+{
+	g_unregistered = true;
+}
+
+static int
+failing_create_cb(void *io_device, void *ctx_buf)
+{
+	spdk_io_device_unregister(io_device, &confirm_unregistered_cb);
+	return -1;
+}
+
+static void
+channel_create_cb_failed(void)
+{
+	uint64_t device;
+	struct spdk_io_channel *ch;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	g_unregistered = false;
+	spdk_io_device_register(&device, failing_create_cb, destroy_cb, sizeof(uint64_t), NULL);
+	ch = spdk_get_io_channel(&device);
+
+	poll_threads();
+	CU_ASSERT(ch == NULL);
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
+	CU_ASSERT(g_unregistered);
+	free_threads();
+}
 
 int
 main(int argc, char **argv)
@@ -2205,6 +2239,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, poller_get_state_str);
 	CU_ADD_TEST(suite, poller_get_period_ticks);
 	CU_ADD_TEST(suite, poller_get_stats);
+	CU_ADD_TEST(suite, channel_create_cb_failed);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

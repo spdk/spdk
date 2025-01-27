@@ -2349,6 +2349,7 @@ spdk_get_io_channel(void *io_device)
 	struct spdk_thread *thread;
 	struct io_device *dev;
 	int rc;
+	bool do_remove_dev = false;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	dev = io_device_get(io_device);
@@ -2417,7 +2418,14 @@ spdk_get_io_channel(void *io_device)
 		free(ch);
 		SPDK_ERRLOG("could not create io_channel for io_device %s (%p): %s (rc=%d)\n",
 			    dev->name, io_device, spdk_strerror(-rc), rc);
+		if (dev->unregistered && dev->refcnt == 0) {
+			/* During invokation of create_cb dev was unregistered, but was not removed due to refcnt */
+			do_remove_dev = true;
+		}
 		pthread_mutex_unlock(&g_devlist_mutex);
+		if (do_remove_dev) {
+			io_device_free(dev);
+		}
 		return NULL;
 	}
 
