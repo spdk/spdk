@@ -985,6 +985,9 @@ void spdk_bs_open_blob_on_failover(struct spdk_blob_store *bs, spdk_blob_id blob
 void spdk_bs_open_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			   struct spdk_blob_open_opts *opts, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
+void spdk_bs_open_blob_without_reference(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		  struct spdk_blob_open_opts *opts, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+
 /**
  * Resize a blob to 'sz' clusters. These changes are not persisted to disk until
  * spdk_bs_md_sync_blob() is called.
@@ -1192,6 +1195,12 @@ void spdk_blob_io_write_zeroes(struct spdk_blob *blob, struct spdk_io_channel *c
  */
 void spdk_bs_iter_first(struct spdk_blob_store *bs,
 			spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+
+void spdk_bs_iter_first_without_close(struct spdk_blob_store *bs,
+		   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+
+void spdk_bs_iter_next_without_close(struct spdk_blob_store *bs, struct spdk_blob *blob,
+		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
  * Get the next blob by using the current blob. The obtained blob will be passed

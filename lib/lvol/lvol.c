@@ -201,7 +201,8 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	spdk_blob_open_opts_init(&opts, sizeof(opts));
 	opts.clear_method = lvol->clear_method;
 
-	spdk_bs_open_blob_ext(lvol->lvol_store->blobstore, lvol->blob_id, &opts, lvol_open_cb, req);
+	// spdk_bs_open_blob_ext(lvol->lvol_store->blobstore, lvol->blob_id, &opts, lvol_open_cb, req);
+	spdk_bs_open_blob_without_reference(lvol->lvol_store->blobstore, lvol->blob_id, &opts, lvol_open_cb, req);
 }
 
 static void
@@ -306,6 +307,23 @@ invalid:
 }
 
 static void
+lvs_get_super_blobid_on_examine(void *cb_arg, spdk_blob_id blobid, int lvolerrno) {
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob_store *bs = lvs->blobstore;
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(lvol, "Could not close super blob2.\n");
+		lvs_free(lvs);
+		req->lvserrno = -ENODEV;
+		spdk_bs_unload(bs, bs_unload_with_error_cb, req);
+		return;
+	}
+
+	spdk_bs_open_blob_without_reference(bs, blobid, NULL, load_next_lvol, req);
+}
+
+static void
 close_super_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
@@ -321,6 +339,10 @@ close_super_cb(void *cb_arg, int lvolerrno)
 	}
 
 	/* Start loading lvols */
+	if (req->examine) {
+		spdk_bs_get_super(bs, lvs_get_super_blobid_on_examine, req);
+		return;
+	}
 	spdk_bs_iter_first(lvs->blobstore, load_next_lvol, req);
 }
 
@@ -388,7 +410,10 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 
 	lvs->super_blob_id = spdk_blob_get_id(blob);
-
+	if (req->examine) {
+		close_super_cb(req, 0);
+		return;
+	}
 	spdk_blob_close(blob, close_super_cb, req);
 }
 
@@ -407,6 +432,10 @@ lvs_open_super(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 		return;
 	}
 
+	if (req->examine) {
+		spdk_bs_open_blob_without_reference(bs, blobid, NULL, lvs_read_uuid, req);
+		return;
+	}
 	spdk_bs_open_blob(bs, blobid, lvs_read_uuid, req);
 }
 
@@ -438,7 +467,7 @@ lvs_bs_opts_init(struct spdk_bs_opts *opts)
 
 static void
 lvs_load(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *_lvs_opts,
-	 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+	 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg, bool examine)
 {
 	struct spdk_lvs_with_handle_req *req;
 	struct spdk_bs_opts bs_opts = {};
@@ -478,6 +507,7 @@ lvs_load(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *_lvs_opts,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->bs_dev = bs_dev;
+	req->examine = examine;
 
 	lvs_bs_opts_init(&bs_opts);
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
@@ -494,14 +524,14 @@ lvs_load(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *_lvs_opts,
 void
 spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	lvs_load(bs_dev, NULL, cb_fn, cb_arg);
+	lvs_load(bs_dev, NULL, cb_fn, cb_arg, false);
 }
 
 void
 spdk_lvs_load_ext(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *opts,
 		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	lvs_load(bs_dev, opts, cb_fn, cb_arg);
+	lvs_load(bs_dev, opts, cb_fn, cb_arg, true);
 }
 
 static void

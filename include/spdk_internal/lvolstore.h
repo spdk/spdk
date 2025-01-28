@@ -72,6 +72,7 @@ struct spdk_lvs_with_handle_req {
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_bdev		*base_bdev;
 	int				lvserrno;
+	bool 			examine;
 };
 
 struct spdk_lvs_destroy_req {
