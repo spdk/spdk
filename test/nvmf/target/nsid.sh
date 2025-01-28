@@ -37,10 +37,17 @@ nvme_connect() {
 }
 
 nvme_get_nguid() {
-	local ctrlr=$1 nsid=$2 nguid
+	local ctrlr=$1 nsid=$2 nguid ctrlr_id
+	ctrlr_id=$(echo $ctrlr | grep -o '[0-9]')
 
-	nguid=$(nvme id-ns "/dev/${ctrlr}n${nsid}" -o json | jq -r '.nguid')
-	echo "${nguid^^}"
+	for ns in "/sys/class/nvme/${ctrlr}/${ctrlr}c${ctrlr_id}n"*; do
+		[[ -e $ns/nsid && $(< "$ns/nsid") == "$nsid" ]] || continue
+		nguid=$(cat $ns/nguid)
+		uuid2nguid ${nguid^^}
+		return 0
+	done
+
+	return 1
 }
 
 nvmftestinit
