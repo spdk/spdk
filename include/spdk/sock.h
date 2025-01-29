@@ -15,7 +15,6 @@
 #include "spdk/queue.h"
 #include "spdk/json.h"
 #include "spdk/assert.h"
-#include "spdk/thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -819,40 +818,15 @@ const char *spdk_sock_get_default_impl(void);
 void spdk_sock_write_config_json(struct spdk_json_write_ctx *w);
 
 /**
- * Register an spdk_interrupt with specific event types on the current thread for the given socket group.
+ * Obtain an fd that becomes ready when one of the sockets in this group is ready. This fd
+ * is suitable for use in APIs such as spdk_interrupt_register_for_events().
  *
- * Returning non-zero is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
- * The provided function will be called any time one of specified event types triggers on
- * the associated file descriptor.
- * Event types argument is a bit mask composed by ORing together
- * enum spdk_interrupt_event_types values.
  *
  * \param group Socket group.
- * \param events Event notification types.
- * \param fn Called each time there are events in spdk_interrupt.
- * \param arg Function argument for fn.
- * \param name Human readable name for the spdk_interrupt.
  *
- * \return 0 on success or non-zero on failure.
+ * \return fd (>0) on success or negated errno on failure.
  */
-int spdk_sock_group_register_interrupt(struct spdk_sock_group *group, uint32_t events,
-				       spdk_interrupt_fn fn, void *arg, const char *name);
-
-/*
- * \brief Register an spdk_interrupt on the current thread for the given socket group
- * and with setting its name to the string of the spdk_interrupt function name.
- */
-#define SPDK_SOCK_GROUP_REGISTER_INTERRUPT(sock, events, fn, arg)	\
-	spdk_sock_group_register_interrupt(sock, events, fn, arg, #fn)
-
-/**
- * Unregister an spdk_interrupt for the given socket group from the current thread.
- *
- * \param group Socket group.
- */
-void spdk_sock_group_unregister_interrupt(struct spdk_sock_group *group);
+int spdk_sock_group_get_interruptfd(struct spdk_sock_group *group);
 
 #ifdef __cplusplus
 }

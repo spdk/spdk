@@ -42,8 +42,7 @@
 	spdk_sock_get_default_impl;
 	spdk_sock_write_config_json;
 	spdk_sock_get_impl_name;
-	spdk_sock_group_register_interrupt;
-	spdk_sock_group_unregister_interrupt;
+	spdk_sock_group_get_interruptfd;
 
 	# internal function in spdk_internal/sock_module.h
 	spdk_net_impl_register;

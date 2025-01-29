@@ -1946,20 +1946,6 @@ uring_sock_flush(struct spdk_sock *_sock)
 }
 
 static int
-uring_sock_group_impl_register_interrupt(struct spdk_sock_group_impl *_group, uint32_t events,
-		spdk_interrupt_fn fn, void *arg, const char *name)
-{
-	SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.");
-
-	return -ENOTSUP;
-}
-
-static void
-uring_sock_group_impl_unregister_interrupt(struct spdk_sock_group_impl *_group)
-{
-}
-
-static int
 uring_net_impl_init(struct spdk_sock_initialize_opts *opts)
 {
 	if (opts->enable_interrupt_mode) {
@@ -1997,8 +1983,6 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.group_impl_add_sock	= uring_sock_group_impl_add_sock,
 	.group_impl_remove_sock	= uring_sock_group_impl_remove_sock,
 	.group_impl_poll	= uring_sock_group_impl_poll,
-	.group_impl_register_interrupt    = uring_sock_group_impl_register_interrupt,
-	.group_impl_unregister_interrupt  = uring_sock_group_impl_unregister_interrupt,
 	.group_impl_close	= uring_sock_group_impl_close,
 	.get_opts		= uring_sock_impl_get_opts,
 	.set_opts		= uring_sock_impl_set_opts,

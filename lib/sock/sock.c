@@ -12,8 +12,7 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
-#include "spdk/thread.h"
-#include "spdk/string.h"
+#include "spdk/fd_group.h"
 #include "spdk_internal/trace_defs.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
@@ -28,7 +27,10 @@
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 static struct spdk_net_impl *g_default_impl;
-static struct spdk_sock_initialize_opts g_init_opts;
+static struct spdk_sock_initialize_opts g_init_opts = {
+	.opts_size = sizeof(g_init_opts),
+	.enable_interrupt_mode = true
+};
 
 struct spdk_sock_placement_id_entry {
 	int placement_id;
@@ -279,7 +281,7 @@ spdk_sock_get_default_initialize_opts(struct spdk_sock_initialize_opts *opts, si
 		opts->field = value; \
 	}
 
-	SET_FIELD(enable_interrupt_mode, false);
+	SET_FIELD(enable_interrupt_mode, true);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -924,12 +926,20 @@ spdk_sock_is_connected(struct spdk_sock *sock)
 	return sock->net_impl->is_connected(sock);
 }
 
+static int
+_sock_fd_group_fn(void *ctx)
+{
+	/* Do nothing. The fd group is only used to get the fd. */
+	return 0;
+}
+
 struct spdk_sock_group *
 spdk_sock_group_create(void *ctx)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock_group *group;
 	struct spdk_sock_group_impl *group_impl;
+	int rc, fd;
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
@@ -939,6 +949,14 @@ spdk_sock_group_create(void *ctx)
 	STAILQ_INIT(&group->group_impls);
 	STAILQ_INIT(&group->pool);
 
+	if (g_init_opts.enable_interrupt_mode) {
+		rc = spdk_fd_group_create(&group->fgrp);
+		if (rc != 0) {
+			free(group);
+			return NULL;
+		}
+	}
+
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		group_impl = impl->group_impl_create();
 		if (group_impl != NULL) {
@@ -946,6 +964,22 @@ spdk_sock_group_create(void *ctx)
 			TAILQ_INIT(&group_impl->socks);
 			group_impl->net_impl = impl;
 			group_impl->group = group;
+
+			if (g_init_opts.enable_interrupt_mode && impl->group_impl_get_interruptfd != NULL) {
+				fd = impl->group_impl_get_interruptfd(group_impl);
+				if (fd <= 0) {
+					assert(false);
+					spdk_sock_group_close(&group);
+					return NULL;
+				}
+
+				rc = spdk_fd_group_add(group->fgrp, fd, _sock_fd_group_fn, NULL, impl->name);
+				if (rc != 0) {
+					assert(false);
+					spdk_sock_group_close(&group);
+					return NULL;
+				}
+			}
 		}
 	}
 
@@ -1129,7 +1163,7 @@ spdk_sock_group_close(struct spdk_sock_group **_group)
 {
 	struct spdk_sock_group_impl *group_impl = NULL, *tmp;
 	struct spdk_sock_group *group;
-	int rc;
+	int rc, fd;
 
 	if (_group == NULL || (*_group) == NULL) {
 		errno = EBADF;
@@ -1146,10 +1180,21 @@ spdk_sock_group_close(struct spdk_sock_group **_group)
 	}
 
 	STAILQ_FOREACH_SAFE(group_impl, &group->group_impls, link, tmp) {
+		if (g_init_opts.enable_interrupt_mode && group_impl->net_impl->group_impl_get_interruptfd != NULL) {
+			fd = group_impl->net_impl->group_impl_get_interruptfd(group_impl);
+			if (fd > 0) {
+				spdk_fd_group_remove(group->fgrp, fd);
+			}
+		}
+
 		rc = group_impl->net_impl->group_impl_close(group_impl);
 		if (rc != 0) {
 			SPDK_ERRLOG("group_impl_close for net failed\n");
 		}
+	}
+
+	if (group->fgrp != NULL) {
+		spdk_fd_group_destroy(group->fgrp);
 	}
 
 	free(group);
@@ -1394,36 +1439,19 @@ spdk_sock_get_default_impl(void)
 }
 
 int
-spdk_sock_group_register_interrupt(struct spdk_sock_group *group, uint32_t events,
-				   spdk_interrupt_fn fn,
-				   void *arg, const char *name)
+spdk_sock_group_get_interruptfd(struct spdk_sock_group *group)
 {
-	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc;
-
-	assert(group != NULL);
-	assert(fn != NULL);
-
-	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
-		rc = group_impl->net_impl->group_impl_register_interrupt(group_impl, events, fn, arg, name);
-		if (rc != 0) {
-			return rc;
-		}
-	}
-
-	return 0;
-}
-
-void
-spdk_sock_group_unregister_interrupt(struct spdk_sock_group *group)
-{
-	struct spdk_sock_group_impl *group_impl = NULL;
-
 	assert(group != NULL);
 
-	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
-		group_impl->net_impl->group_impl_unregister_interrupt(group_impl);
+	if (!g_init_opts.enable_interrupt_mode) {
+		return -ENOTSUP;
 	}
+
+	if (group->fgrp == NULL) {
+		return -ENOTSUP;
+	}
+
+	return spdk_fd_group_get_fd(group->fgrp);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(sock)

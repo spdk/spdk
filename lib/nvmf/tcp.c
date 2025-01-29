@@ -344,6 +344,7 @@ struct spdk_nvmf_tcp_control_msg_list {
 struct spdk_nvmf_tcp_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
 	struct spdk_sock_group			*sock_group;
+	struct spdk_interrupt			*intr;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
 
@@ -386,6 +387,7 @@ struct spdk_nvmf_tcp_transport {
 
 	struct spdk_poller			*accept_poller;
 	struct spdk_sock_group			*listen_sock_group;
+	struct spdk_interrupt			*intr;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_tcp_poll_group)	poll_groups;
@@ -713,7 +715,7 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	}
 
 	spdk_poller_unregister(&ttransport->accept_poller);
-	spdk_sock_group_unregister_interrupt(ttransport->listen_sock_group);
+	spdk_interrupt_unregister(&ttransport->intr);
 	spdk_sock_group_close(&ttransport->listen_sock_group);
 	free(ttransport);
 
@@ -733,7 +735,6 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	struct spdk_nvmf_tcp_transport *ttransport;
 	uint32_t sge_count;
 	uint32_t min_shared_buffers;
-	int rc;
 	uint64_t period;
 
 	ttransport = calloc(1, sizeof(*ttransport));
@@ -868,9 +869,11 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	if (spdk_interrupt_mode_is_enabled()) {
-		rc = SPDK_SOCK_GROUP_REGISTER_INTERRUPT(ttransport->listen_sock_group,
-							SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT, nvmf_tcp_accept, &ttransport->transport);
-		if (rc != 0) {
+		ttransport->intr = SPDK_INTERRUPT_REGISTER_FOR_EVENTS(spdk_sock_group_get_interruptfd(
+					   ttransport->listen_sock_group),
+				   SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT, nvmf_tcp_accept,
+				   &ttransport->transport);
+		if (ttransport->intr == NULL) {
 			SPDK_ERRLOG("Failed to register interrupt for listen socker sock group\n");
 			spdk_sock_group_close(&ttransport->listen_sock_group);
 			spdk_poller_unregister(&ttransport->accept_poller);
@@ -1657,7 +1660,6 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
 	struct spdk_nvmf_tcp_poll_group *tgroup;
-	int rc;
 
 	tgroup = calloc(1, sizeof(*tgroup));
 	if (!tgroup) {
@@ -1695,9 +1697,11 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 	}
 
 	if (spdk_interrupt_mode_is_enabled()) {
-		rc = SPDK_SOCK_GROUP_REGISTER_INTERRUPT(tgroup->sock_group,
-							SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT, nvmf_tcp_poll_group_intr, &tgroup->group);
-		if (rc != 0) {
+		tgroup->intr = SPDK_INTERRUPT_REGISTER_FOR_EVENTS(spdk_sock_group_get_interruptfd(
+					tgroup->sock_group),
+				SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT,
+				nvmf_tcp_poll_group_intr, &tgroup->group);
+		if (tgroup->intr == NULL) {
 			SPDK_ERRLOG("Failed to register interrupt for sock group\n");
 			goto cleanup;
 		}
@@ -1754,7 +1758,7 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_tcp_transport *ttransport;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
-	spdk_sock_group_unregister_interrupt(tgroup->sock_group);
+	spdk_interrupt_unregister(&tgroup->intr);
 	spdk_sock_group_close(&tgroup->sock_group);
 	if (tgroup->control_msg_list) {
 		nvmf_tcp_control_msg_list_free(tgroup->control_msg_list);
