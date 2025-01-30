@@ -9308,7 +9308,8 @@ bs_swap_blobs(struct spdk_blob *destblob, struct spdk_blob *srcblob)
 	uint32_t *active_extent_pages = NULL, *clean_extent_pages = NULL;
 	uint64_t *active_clusters = NULL, *clean_clusters = NULL;
 	uint32_t *active_pages = NULL, *clean_pages = NULL;
-	struct spdk_xattr	*xattr;
+	// struct spdk_xattr	*xattr;	
+	// struct spdk_xattr *new_xattr;
 	assert(destblob != NULL);
 	assert(srcblob != NULL);
 
@@ -9325,16 +9326,66 @@ bs_swap_blobs(struct spdk_blob *destblob, struct spdk_blob *srcblob)
 
 	destblob->back_bs_dev = srcblob->back_bs_dev;
 
+	// Free any existing xattrs in the destination blob
 	xattrs_free(&destblob->xattrs);
 	xattrs_free(&destblob->xattrs_internal);
 
-	TAILQ_FOREACH(xattr, &srcblob->xattrs, link) {
-		TAILQ_INSERT_TAIL(&destblob->xattrs, xattr, link);
-	}
+	// Swap the xattrs between the source and destination blobs
+	TAILQ_SWAP(&destblob->xattrs, &srcblob->xattrs, spdk_xattr, link);
+	TAILQ_SWAP(&destblob->xattrs_internal, &srcblob->xattrs_internal, spdk_xattr, link);
 
-	TAILQ_FOREACH(xattr, &srcblob->xattrs_internal, link) {
-		TAILQ_INSERT_TAIL(&destblob->xattrs_internal, xattr, link);
-	}
+	// Free the xattrs in the source blob after the swap
+	xattrs_free(&srcblob->xattrs);
+	xattrs_free(&srcblob->xattrs_internal);
+
+	// TAILQ_FOREACH(xattr, &srcblob->xattrs, link) {
+	// 	new_xattr = calloc(1, sizeof(*new_xattr));
+	// 	// if (xattr == NULL) {
+	// 	// 	return -ENOMEM;
+	// 	// }
+	// 	new_xattr->name = malloc(strlen(xattr->name) + 1);
+	// 	// if (xattr->name == NULL) {
+	// 	// 	free(xattr);
+	// 	// 	return -ENOMEM;
+	// 	// }
+
+	// 	new_xattr->value = malloc(xattr->value_len);
+	// 	// if (xattr->value == NULL) {
+	// 	// 	free(xattr->name);
+	// 	// 	free(xattr);
+	// 	// 	return -ENOMEM;
+	// 	// }
+	// 	new_xattr->value_len = xattr->value_len;
+	// 	memcpy(new_xattr->name, xattr->name, strlen(xattr->name));
+	// 	new_xattr->name[strlen(xattr->name)] = '\0';
+	// 	memcpy(new_xattr->value, xattr->value, xattr->value_len);
+	// 	TAILQ_INSERT_TAIL(&destblob->xattrs, new_xattr, link);
+	// }
+
+	// TAILQ_FOREACH(xattr, &srcblob->xattrs_internal, link) {
+	// 	new_xattr = calloc(1, sizeof(*new_xattr));
+	// 	// if (xattr == NULL) {
+	// 	// 	return -ENOMEM;
+	// 	// }
+	// 	new_xattr->name = malloc(strlen(xattr->name) + 1);
+	// 	// if (xattr->name == NULL) {
+	// 	// 	free(xattr);
+	// 	// 	return -ENOMEM;
+	// 	// }
+
+	// 	new_xattr->value = malloc(xattr->value_len);
+	// 	// if (xattr->value == NULL) {
+	// 	// 	free(xattr->name);
+	// 	// 	free(xattr);
+	// 	// 	return -ENOMEM;
+	// 	// }
+
+	// 	new_xattr->value_len = xattr->value_len;
+	// 	memcpy(new_xattr->name, xattr->name, strlen(xattr->name));
+	// 	new_xattr->name[strlen(xattr->name)] = '\0';
+	// 	memcpy(new_xattr->value, xattr->value, xattr->value_len);
+	// 	TAILQ_INSERT_TAIL(&destblob->xattrs_internal, new_xattr, link);
+	// }
 
 	destblob->state = srcblob->state;
 
@@ -9407,13 +9458,15 @@ bs_update_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		}
 		blob_free(newblob);
 		bs_sequence_finish(seq, bserrno);
+		free(ctx);
 		return;
 	}
 	//copy the newblob to origblob
 	bs_swap_blobs(origblob, newblob);
 	bs_dump_blob_from_mem(origblob, NULL, false, "/etc/simplyblock/");
-	// bs_dump_blob_from_mem(origblob, NULL, false, "/root/");
+	// bs_dump_blob_from_mem(origblob, NULL, false, "/root/");	
 	bs_sequence_finish(seq, bserrno);
+	free(ctx);
 }
 
 static void
@@ -9482,6 +9535,7 @@ bs_update_blob_on_failover(struct spdk_blob_store *bs,
 	seq = bs_sequence_start_bs(bs->md_channel, &cpl);
 	if (!seq) {
 		blob_free(newblob);
+		free(ctx);
 		cb_fn(cb_arg, origblob, -ENOMEM);
 		return;
 	}
