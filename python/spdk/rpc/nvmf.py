@@ -202,17 +202,17 @@ def nvmf_create_subsystem(client,
 
     Args:
         nqn: Subsystem NQN.
-        tgt_name: name of the parent NVMe-oF target (optional).
-        serial_number: Serial number of virtual controller.
-        model_number: Model number of virtual controller.
-        allow_any_host: Allow any host (True) or enforce allowed host list (False). Default: False.
-        max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
-        ana_reporting: Enable ANA reporting feature. Default: False.
+        tgt_name: Parent NVMe-oF target name. (Optional)
+        serial_number: Serial number of virtual controller. (Optional)
+        model_number: Model number of virtual controller. (Optional)
+        max_namespaces: Maximum number of namespaces that can be attached to the subsystem. Default: 32 (also used if user specifies 0)
+        allow_any_host: Allow any host (`true`) or enforce allowed host list (`false`). Default: `false`
+        ana_reporting: Enable ANA reporting feature. Default: `false`
         min_cntlid: Minimum controller ID. Default: 1
         max_cntlid: Maximum controller ID. Default: 0xffef
-        max_discard_size: Maximum discard size (Kib). Default: 0
-        max_write_zeroes_size: Maximum write_zeroes size (Kib). Default: 0
-        passthrough: for all I/O commands and namespace-directed admin commands. Default: False.
+        max_discard_size_kib: Maximum discard size (Kib). Default: 0
+        max_write_zeroes_size_kib: Maximum write_zeroes size (Kib). Default: 0
+        passthrough: Use NVMe passthrough for I/O commands and namespace-directed admin commands. Default: `false`
 
 
     Returns:
