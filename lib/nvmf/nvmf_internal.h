@@ -261,6 +261,7 @@ struct spdk_nvmf_ctrlr {
 	bool				dynamic_ctrlr;
 	/* LBA Format Extension Enabled (LBAFEE) */
 	bool				lbafee_enabled;
+	bool				vvols_mode_enabled;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
@@ -293,7 +294,8 @@ struct spdk_nvmf_subsystem {
 	struct {
 		uint8_t					allow_any_listener : 1;
 		uint8_t					ana_reporting : 1;
-		uint8_t					reserved : 6;
+		uint8_t					uuid_reporting : 1;
+		uint8_t					reserved : 5;
 	} flags;
 
 	/* Protected against concurrent access by ->mutex */

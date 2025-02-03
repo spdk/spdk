@@ -922,6 +922,21 @@ int spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 		bool ana_reporting);
 
 /**
+ * Set whether a subsystem supports UUID reporting
+ * reporting.
+ *
+ * May only be performed on subsystems in the INACTIVE state.
+ *
+ * \param subsystem Subsystem to modify.
+ * \param ana_reporting true to support or false not to support UUID reporting.
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_set_uuid_reporting(struct spdk_nvmf_subsystem *subsystem,
+		bool uuid_reporting);
+
+
+/**
  * Get whether a subsystem supports Asymmetric Namespace Access (ANA)
  * reporting.
  *

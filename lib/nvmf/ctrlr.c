@@ -1960,6 +1960,38 @@ nvmf_ctrlr_get_features_host_behavior_support(struct spdk_nvmf_request *req)
 }
 
 static int
+nvmf_ctrlr_get_features_vvol_support(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	SPDK_DEBUGLOG(nvmf, "Get Features - VVOL Support  %d\n", ctrlr->vvols_mode_enabled);
+	response->cdw0 = ctrlr->vvols_mode_enabled;
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+nvmf_ctrlr_set_features_vvol_enable_disable(struct spdk_nvmf_request *req)
+{	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	if (cmd->cdw11_bits.vvols_set.vvol_set != 1) {
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	else {
+		ctrlr->vvols_mode_enabled = true;
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_SUCCESS;
+	}
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -2980,6 +3012,9 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.bits.host_id_exhid_supported = 1;
 		cdata->ctratt.bits.fdps = ctrlr->subsys->fdp_supported;
+		if (subsystem->flags.uuid_reporting) {
+			cdata->ctratt.bits.uuid_list = 1;
+		}
 		cdata->cntrltype = SPDK_NVME_CTRLR_IO;
 		/* We do not have any actual limitation to the number of abort commands.
 		 * We follow the recommendation by the NVMe specification.
@@ -3225,6 +3260,28 @@ nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_ctrlr *ctrlr,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ctrlr_identify_ns_uuid_list(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvme_cmd *cmd,
+		struct spdk_nvme_cpl *rsp,
+		struct spdk_uuid_list *uuid_list,
+		size_t cdata_size)
+{
+	uint8_t VVOL_UUID[16] = {0xFF, 0x56, 0x4D, 0x57, 0xFF, 0xFF,0x44, 0x43,0x56, 0x56, 0x4F, 0x4C, 0xFF, 0xFF, 0xFF, 0xFF};
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+
+	if (subsystem->flags.uuid_reporting == 0) {
+			SPDK_ERRLOG("Identify UUID List command is not supported for subsystem %s\n", subsystem->subnqn);
+			rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	memset(uuid_list, 0, cdata_size);
+	memcpy(uuid_list->uuid[0].uuid, VVOL_UUID, sizeof(struct spdk_uuid));
+	uuid_list->uuid[0].id_assoc = 0;
+	SPDK_ERRLOG("Identify UUID buffer size %lu, number reported uuids 1\n", cdata_size);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 static void
 _add_ns_id_desc(void **buf_ptr, size_t *buf_remain,
 		enum spdk_nvme_nidt type,
@@ -3397,6 +3454,9 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	case SPDK_NVME_IDENTIFY_IOCS:
 		ret = nvmf_ctrlr_identify_iocs(ctrlr, cmd, rsp, (void *)&tmpbuf, req->length);
 		break;
+	case SPDK_NVME_UUID_LIST:
+		ret = nvmf_ctrlr_identify_ns_uuid_list(ctrlr, cmd, rsp, (void *)&tmpbuf, req->length);
+		break;
 	default:
 		goto invalid_cns;
 	}
@@ -3408,10 +3468,10 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	return ret;
 
 invalid_cns:
-	SPDK_DEBUGLOG(nvmf, "Identify command with unsupported CNS 0x%02x\n", cns);
-	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-	return ret;
+    SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
+    rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+    rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+    return ret;
 }
 
 static bool
@@ -3678,6 +3738,8 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		return nvmf_ctrlr_get_features_reservation_persistence(req);
 	case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
 		return nvmf_ctrlr_get_features_host_behavior_support(req);
+	case SPDK_NVME_VVOL_CONFIG:
+		return nvmf_ctrlr_get_features_vvol_support(req);
 	default:
 		SPDK_INFOLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -3785,6 +3847,8 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		return nvmf_ctrlr_set_features_reservation_persistence(req);
 	case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
 		return nvmf_ctrlr_set_features_host_behavior_support(req);
+	case SPDK_NVME_VVOL_CONFIG:
+		return nvmf_ctrlr_set_features_vvol_enable_disable(req);
 	default:
 		SPDK_INFOLOG(nvmf, "Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
