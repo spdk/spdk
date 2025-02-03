@@ -1295,6 +1295,11 @@ union spdk_nvme_cmd_cdw11 {
 		uint32_t ad       : 1;
 		uint32_t reserved : 29;
 	} dsm;
+
+	struct {
+		uint32_t vvol_set   : 8;
+		uint32_t reserved    : 24;
+	} vvols_set;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
 
@@ -1953,6 +1958,7 @@ enum spdk_nvme_feat {
 	/* 0x85-0xBF - command set specific (reserved) */
 
 	/* 0xC0-0xFF - vendor specific */
+	SPDK_NVME_VVOL_CONFIG			= 0xC0
 };
 
 /** Bit set of attributes for DATASET MANAGEMENT commands. */
@@ -2043,6 +2049,9 @@ enum spdk_nvme_identify_cns {
 
 	/** Get secondary controller list */
 	SPDK_NVME_IDENTIFY_SECONDARY_CTRLR_LIST		= 0x15,
+
+	/** Get UUID list */
+	SPDK_NVME_UUID_LIST				= 0x17,
 
 	/** List allocated NSIDs greater than CDW1.NSID, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST_IOCS	= 0x1a,
@@ -4024,6 +4033,16 @@ struct spdk_nvme_ns_list {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_list) == 4096, "Incorrect size");
 
+struct spdk_ns_uuid {
+	uint8_t id_assoc:2;
+	uint8_t res1:6;
+	uint8_t res2[15];
+	uint8_t uuid[16];
+};
+struct spdk_uuid_list {
+	uint8_t res[32];
+	struct spdk_ns_uuid uuid[];
+};
 /**
  * Namespace identification descriptor type
  *

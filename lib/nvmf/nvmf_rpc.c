@@ -430,6 +430,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 
 	spdk_nvmf_subsystem_set_ana_reporting(subsystem, req->ana_reporting);
 
+	spdk_nvmf_subsystem_set_uuid_reporting(subsystem, true);
+
 	if (spdk_nvmf_subsystem_set_cntlid_range(subsystem, req->min_cntlid, req->max_cntlid)) {
 		SPDK_ERRLOG("Subsystem %s: invalid cntlid range [%u-%u]\n", req->nqn, req->min_cntlid,
 			    req->max_cntlid);

@@ -3805,6 +3805,19 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
+int
+spdk_nvmf_subsystem_set_uuid_reporting(struct spdk_nvmf_subsystem *subsystem,
+				      bool uuid_reporting)
+{
+	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
+		return -EAGAIN;
+	}
+
+	subsystem->flags.uuid_reporting = uuid_reporting;
+
+	return 0;
+}
+
 bool
 spdk_nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
 {
