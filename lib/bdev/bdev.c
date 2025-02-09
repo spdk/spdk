@@ -3991,7 +3991,7 @@ bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 		if (qos->ch == NULL) {
 			struct spdk_io_channel *io_ch;
 
-			SPDK_DEBUGLOG(bdev, "Selecting channel %p as QoS channel for bdev %s on thread %p\n", ch,
+			SPDK_ERRLOG("Selecting channel %p as QoS channel for bdev %s on thread %p\n", ch,
 				      bdev->name, spdk_get_thread());
 
 			/* No qos channel has been selected, so set one up */
@@ -9384,11 +9384,13 @@ bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		    struct spdk_io_channel *ch, void *_ctx)
 {
 	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
-
+        SPDK_ERRLOG("Enabling qos for bdev %s \n", bdev->name);
 	spdk_spin_lock(&bdev->internal.spinlock);
 	bdev_enable_qos(bdev, bdev_ch);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 	spdk_bdev_for_each_channel_continue(i, 0);
+	SPDK_ERRLOG("Enabled qos for bdev %s \n", bdev->name);
+
 }
 
 static void
