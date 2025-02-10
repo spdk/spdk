@@ -1449,9 +1449,10 @@ nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 static int
 nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-	char saddr[32], caddr[32];
+	char saddr[SPDK_NVMF_TRADDR_MAX_LEN], caddr[SPDK_NVMF_TRADDR_MAX_LEN];
 	uint16_t sport, cport;
-	char owner[256];
+	/* 1 for colon, up to 5 for port number, 1 for null terminator */
+	char owner[sizeof(caddr) + 1 + 5 + 1];
 	int rc;
 
 	rc = spdk_sock_getaddr(tqpair->sock, saddr, sizeof(saddr), &sport,
@@ -1460,6 +1461,7 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
 		return rc;
 	}
+	/* update buffer size for owner when changing format or arguments here */
 	snprintf(owner, sizeof(owner), "%s:%d", caddr, cport);
 	tqpair->qpair.trace_id = spdk_trace_register_owner(OWNER_TYPE_NVMF_TCP, owner);
 	spdk_trace_record(TRACE_TCP_QP_SOCK_INIT, tqpair->qpair.trace_id, 0, 0);
