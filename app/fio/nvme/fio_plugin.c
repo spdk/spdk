@@ -19,6 +19,7 @@
 
 #include "config-host.h"
 #include "fio.h"
+#include "parse.h"
 #include "optgroup.h"
 
 #ifdef for_each_rw_ddir
@@ -53,6 +54,7 @@ static uint16_t g_spdk_apptag_mask;
 struct spdk_fio_options {
 	void	*pad;	/* off1 used in option descriptions may not be 0 */
 	int	enable_wrr;
+	int	enable_interrupts;
 	int	arbitration_burst;
 	int	low_weight;
 	int	medium_weight;
@@ -204,6 +206,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		opts->low_priority_weight	= fio_options->low_weight;
 		opts->medium_priority_weight	= fio_options->medium_weight;
 		opts->high_priority_weight	= fio_options->high_weight;
+	}
+
+	if (fio_options->enable_interrupts) {
+		opts->enable_interrupts = true;
 	}
 
 	if (fio_options->digest_enable) {
@@ -752,7 +758,8 @@ spdk_fio_open(struct thread_data *td, struct fio_file *f)
 
 	assert(fio_qpair->qpair == NULL);
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
-	qpopts.delay_cmd_submit = true;
+	/* Interrupt mode and delay_cmd_submit are incompatible */
+	qpopts.delay_cmd_submit = !fio_options->enable_interrupts;
 	if (fio_options->enable_wrr) {
 		qpopts.qprio = fio_options->wrr_priority;
 	}
@@ -1719,6 +1726,16 @@ static struct fio_option options[] = {
 		.off1           = offsetof(struct spdk_fio_options, enable_wrr),
 		.def            = "0",
 		.help           = "Enable weighted round robin (WRR) for IO submission queues",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "enable_interrupts",
+		.lname          = "Enable interrupts mode",
+		.type           = FIO_OPT_BOOL,
+		.off1           = offsetof(struct spdk_fio_options, enable_interrupts),
+		.def            = "0",
+		.help           = "Enable interrupt mode, event FD and blocking poll",
 		.category       = FIO_OPT_C_ENGINE,
 		.group          = FIO_OPT_G_INVALID,
 	},
