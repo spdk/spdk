@@ -180,7 +180,8 @@ spdk_sock_request_complete(struct spdk_sock *sock, struct spdk_sock_request *req
 
 	spdk_trace_record(TRACE_SOCK_REQ_COMPLETE, 0, 0, (uintptr_t)req, (uintptr_t)req->cb_arg);
 	req->internal.offset = 0;
-	req->internal.is_zcopy = 0;
+	req->internal.zcopy_idx = 0;
+	req->internal.pending_zcopy = false;
 
 	closed = sock->flags.closed;
 	sock->cb_cnt++;

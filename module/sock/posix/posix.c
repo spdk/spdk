@@ -1172,13 +1172,14 @@ _sock_check_zcopy(struct spdk_sock *sock)
 		while (true) {
 			found = false;
 			TAILQ_FOREACH_SAFE(req, &sock->pending_reqs, internal.link, treq) {
-				if (!req->internal.is_zcopy) {
-					/* This wasn't a zcopy request. It was just waiting in line to complete */
+				if (!req->internal.pending_zcopy) {
+					/* This wasn't a zcopy request. It was just waiting in line
+					 * to complete. */
 					rc = spdk_sock_request_put(sock, req, 0);
 					if (rc < 0) {
 						return rc;
 					}
-				} else if (req->internal.offset == idx) {
+				} else if (req->internal.zcopy_idx == idx) {
 					found = true;
 					rc = spdk_sock_request_put(sock, req, 0);
 					if (rc < 0) {
@@ -1194,6 +1195,17 @@ _sock_check_zcopy(struct spdk_sock *sock)
 			}
 
 			idx++;
+		}
+
+		/* If the req is sent partially (still queued) and we just received its zcopy
+		 * notification, next chunk may be sent without zcopy and should result in the req
+		 * completion if it is the last chunk. Clear the pending flag to allow it.
+		 * Checking the first queued req and the last index is enough, because only one req
+		 * can be partially sent and it is the last one we can get notification for. */
+		req = TAILQ_FIRST(&sock->queued_reqs);
+		if (req && req->internal.pending_zcopy &&
+		    req->internal.zcopy_idx == serr->ee_data) {
+			req->internal.pending_zcopy = false;
 		}
 	}
 
@@ -1268,8 +1280,12 @@ _sock_flush(struct spdk_sock *sock)
 	while (req) {
 		offset = req->internal.offset;
 
-		/* req->internal.is_zcopy is true when the whole req or part of it is sent with zerocopy */
-		req->internal.is_zcopy = is_zcopy;
+		if (is_zcopy) {
+			/* Cache sendmsg_idx because full request might not be handled and next
+			 * chunk may be sent without zero copy. */
+			req->internal.pending_zcopy = true;
+			req->internal.zcopy_idx = psock->sendmsg_idx;
+		}
 
 		for (i = 0; i < req->iovcnt; i++) {
 			/* Advance by the offset first */
@@ -1295,16 +1311,15 @@ _sock_flush(struct spdk_sock *sock)
 		/* Handled a full request. */
 		spdk_sock_request_pend(sock, req);
 
-		if (!req->internal.is_zcopy && req == TAILQ_FIRST(&sock->pending_reqs)) {
+		/* We can't put the req if zero-copy is not completed or it is not first
+		 * in the line. */
+		if (!req->internal.pending_zcopy && req == TAILQ_FIRST(&sock->pending_reqs)) {
 			/* The sendmsg syscall above isn't currently asynchronous,
 			* so it's already done. */
 			retval = spdk_sock_request_put(sock, req, 0);
 			if (retval) {
 				break;
 			}
-		} else {
-			/* Re-use the offset field to hold the sendmsg call index. */
-			req->internal.offset = psock->sendmsg_idx;
 		}
 
 		if (rc == 0) {

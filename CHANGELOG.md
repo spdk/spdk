@@ -67,6 +67,11 @@ in milliseconds.
 
 Add `spdk_reduce_vol_get_info()` to get the information for the compressed volume.
 
+### sock
+
+A new internal field was added to `spdk_sock_request`, increasing its size and moving `iovcnt` and
+user provided `iov[]` offsets by 8 bytes, which breaks ABI.
+
 ### thread
 
 Added `spdk_interrupt_register_ext()` API which can receive `spdk_event_handler_opts` structure.

@@ -969,8 +969,12 @@ sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 	/* Consume the requests that were actually written */
 	req = TAILQ_FIRST(&_sock->queued_reqs);
 	while (req) {
-		/* req->internal.is_zcopy is true when the whole req or part of it is sent with zerocopy */
-		req->internal.is_zcopy = is_zcopy;
+		if (is_zcopy) {
+			/* Cache sendmsg_idx because full request might not be handled and next
+			 * chunk may be sent without zero copy. */
+			req->internal.pending_zcopy = true;
+			req->internal.zcopy_idx = sock->sendmsg_idx;
+		}
 
 		rc = sock_request_advance_offset(req, rc);
 		if (rc < 0) {
@@ -981,14 +985,12 @@ sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 		/* Handled a full request. */
 		spdk_sock_request_pend(_sock, req);
 
-		if (!req->internal.is_zcopy && req == TAILQ_FIRST(&_sock->pending_reqs)) {
+		if (!req->internal.pending_zcopy &&
+		    req == TAILQ_FIRST(&_sock->pending_reqs)) {
 			retval = spdk_sock_request_put(_sock, req, 0);
 			if (retval) {
 				return retval;
 			}
-		} else {
-			/* Re-use the offset field to hold the sendmsg call index. */
-			req->internal.offset = sock->sendmsg_idx;
 		}
 
 		if (rc == 0) {
@@ -1048,13 +1050,14 @@ _sock_check_zcopy(struct spdk_sock *_sock, int status)
 	while (true) {
 		found = false;
 		TAILQ_FOREACH_SAFE(req, &_sock->pending_reqs, internal.link, treq) {
-			if (!req->internal.is_zcopy) {
-				/* This wasn't a zcopy request. It was just waiting in line to complete */
+			if (!req->internal.pending_zcopy) {
+				/* This wasn't a zcopy request. It was just waiting in line
+				 * to complete. */
 				rc = spdk_sock_request_put(_sock, req, 0);
 				if (rc < 0) {
 					return rc;
 				}
-			} else if (req->internal.offset == idx) {
+			} else if (req->internal.zcopy_idx == idx) {
 				found = true;
 				rc = spdk_sock_request_put(_sock, req, 0);
 				if (rc < 0) {
@@ -1070,6 +1073,17 @@ _sock_check_zcopy(struct spdk_sock *_sock, int status)
 		}
 
 		idx++;
+	}
+
+	/* If the req is sent partially (still queued) and we just received its zcopy
+	 * notification, next chunk may be sent without zcopy and should result in the req
+	 * completion if it is the last chunk. Clear the pending flag to allow it.
+	 * Checking the first queued req and the last index is enough, because only one req
+	 * can be partially sent and it is the last one we can get notification for. */
+	req = TAILQ_FIRST(&_sock->queued_reqs);
+	if (req && req->internal.pending_zcopy &&
+	    req->internal.zcopy_idx == serr->ee_data) {
+		req->internal.pending_zcopy = false;
 	}
 
 	return 0;
