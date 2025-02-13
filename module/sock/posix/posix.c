@@ -1401,13 +1401,7 @@ _sock_flush(struct spdk_sock *sock)
 	sent = rc;
 
 	if (is_zcopy) {
-		/* Handling overflow case, because we use psock->sendmsg_idx - 1 for the
-		 * req->internal.offset, so sendmsg_idx should not be zero  */
-		if (spdk_unlikely(psock->sendmsg_idx == UINT32_MAX)) {
-			psock->sendmsg_idx = 1;
-		} else {
-			psock->sendmsg_idx++;
-		}
+		psock->sendmsg_idx++;
 	}
 
 	/* Consume the requests that were actually written */

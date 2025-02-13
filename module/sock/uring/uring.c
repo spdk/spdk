@@ -1091,13 +1091,7 @@ sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 	int retval;
 
 	if (is_zcopy) {
-		/* Handling overflow case, because we use psock->sendmsg_idx - 1 for the
-		 * req->internal.offset, so sendmsg_idx should not be zero */
-		if (spdk_unlikely(sock->sendmsg_idx == UINT32_MAX)) {
-			sock->sendmsg_idx = 1;
-		} else {
-			sock->sendmsg_idx++;
-		}
+		sock->sendmsg_idx++;
 	}
 
 	/* Consume the requests that were actually written */
