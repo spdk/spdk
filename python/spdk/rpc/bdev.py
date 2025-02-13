@@ -1669,7 +1669,8 @@ def bdev_set_qos_limit(
         rw_ios_per_sec=None,
         rw_mbytes_per_sec=None,
         r_mbytes_per_sec=None,
-        w_mbytes_per_sec=None):
+        w_mbytes_per_sec=None,
+        timeslice_in_usecs=None):
     """Set QoS rate limit on a block device.
     Args:
         name: name of block device
@@ -1677,6 +1678,7 @@ def bdev_set_qos_limit(
         rw_mbytes_per_sec: R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.
         r_mbytes_per_sec: Read megabytes per second limit (>=10, example: 100). 0 means unlimited.
         w_mbytes_per_sec: Write megabytes per second limit (>=10, example: 100). 0 means unlimited.
+        timeslice_in_usecs: QOS time slice, in micro seconds.
     """
     params = dict()
     params['name'] = name
@@ -1688,6 +1690,8 @@ def bdev_set_qos_limit(
         params['r_mbytes_per_sec'] = r_mbytes_per_sec
     if w_mbytes_per_sec is not None:
         params['w_mbytes_per_sec'] = w_mbytes_per_sec
+    if timeslice_in_usecs is not None:
+        params['timeslice_in_usecs'] = timeslice_in_usecs
     return client.call('bdev_set_qos_limit', params)
 
 
