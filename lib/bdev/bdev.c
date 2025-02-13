@@ -204,6 +204,12 @@ struct spdk_bdev_qos {
 
 	/** Poller that processes queued I/O commands each time slice. */
 	struct spdk_poller *poller;
+
+	/** QOS timeslice in usecs. */
+	uint64_t timeslice_in_usecs;
+
+	/** Does the poller have a message queued already */
+	bool busy;
 };
 
 struct spdk_bdev_mgmt_channel {
@@ -4115,7 +4121,7 @@ bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 		}
 
 		max_per_timeslice = qos->rate_limits[i].limit *
-				    SPDK_BDEV_QOS_TIMESLICE_IN_USEC / SPDK_SEC_TO_USEC;
+				    qos->timeslice_in_usecs / SPDK_SEC_TO_USEC;
 
 		qos->rate_limits[i].max_per_timeslice = spdk_max(max_per_timeslice,
 							qos->rate_limits[i].min_per_timeslice);
@@ -4147,7 +4153,9 @@ bdev_channel_submit_qos_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev *b
 static void
 bdev_channel_submit_qos_io_done(struct spdk_bdev *bdev, void *ctx, int status)
 {
-
+	if (bdev && bdev->internal.qos) {
+		bdev->internal.qos->busy = false;
+	}
 }
 
 static int
@@ -4200,8 +4208,11 @@ bdev_channel_poll_qos(void *arg)
 		}
 	}
 
-	spdk_bdev_for_each_channel(bdev, bdev_channel_submit_qos_io, qos,
-				   bdev_channel_submit_qos_io_done);
+	if (!qos->busy) {
+		qos->busy = true;
+		spdk_bdev_for_each_channel(bdev, bdev_channel_submit_qos_io, qos,
+				   	bdev_channel_submit_qos_io_done);
+	}
 
 	return SPDK_POLLER_BUSY;
 }
@@ -4254,6 +4265,7 @@ bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 
 	/* Rate limiting on this bdev enabled */
 	if (qos) {
+		SPDK_DEBUGLOG(bdev, "QoS timeslice is %lu\n", qos->timeslice_in_usecs);
 		if (qos->ch == NULL) {
 			struct spdk_io_channel *io_ch;
 
@@ -4284,11 +4296,12 @@ bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			}
 			bdev_qos_update_max_quota_per_timeslice(qos);
 			qos->timeslice_size =
-				SPDK_BDEV_QOS_TIMESLICE_IN_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+				qos->timeslice_in_usecs * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 			qos->last_timeslice = spdk_get_ticks();
+			qos->busy = false;
 			qos->poller = SPDK_POLLER_REGISTER(bdev_channel_poll_qos,
 							   bdev,
-							   SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
+							   qos->timeslice_in_usecs);
 		}
 
 		ch->flags |= BDEV_CH_QOS_ENABLED;
@@ -9862,7 +9875,7 @@ bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits)
 }
 
 void
-spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
+spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits, uint64_t timeslice_in_usecs,
 			      void (*cb_fn)(void *cb_arg, int status), void *cb_arg)
 {
 	struct set_qos_limit_ctx	*ctx;
@@ -9944,6 +9957,9 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			}
 		}
 
+		bdev->internal.qos->timeslice_in_usecs = timeslice_in_usecs > 0 ?
+						timeslice_in_usecs :
+						SPDK_BDEV_QOS_TIMESLICE_IN_USEC;
 		if (bdev->internal.qos->thread == NULL) {
 			/* Enabling */
 			bdev_set_qos_rate_limits(bdev, limits);

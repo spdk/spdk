@@ -838,7 +838,7 @@ void spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits);
  *
  * The limits are ordered based on the @ref spdk_bdev_qos_rate_limit_type enum.
  */
-void spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
+void spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits, uint64_t timeslice_in_usecs,
 				   void (*cb_fn)(void *cb_arg, int status), void *cb_arg);
 
 /**
