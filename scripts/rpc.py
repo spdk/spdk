@@ -1346,6 +1346,9 @@ if __name__ == "__main__":
     p.add_argument('--w-mbytes-per-sec',
                    help="Write megabytes per second limit (>=1, example: 100). 0 means unlimited.",
                    type=int)
+    p.add_argument('--timeslice-in-usecs',
+                   help="QOS time slice, in micro seconds. 0 means use default.",
+                   type=int)
     p.set_defaults(func=bdev_set_qos_limit)
 
     def bdev_error_inject_error(args):

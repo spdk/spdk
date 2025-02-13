@@ -877,6 +877,7 @@ SPDK_RPC_REGISTER("bdev_set_qd_sampling_period",
 struct rpc_bdev_set_qos_limit {
 	char		*name;
 	uint64_t	limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
+	uint64_t	timeslice_in_usecs;
 };
 
 static void
@@ -907,6 +908,11 @@ static const struct spdk_json_object_decoder rpc_bdev_set_qos_limit_decoders[] =
 					     limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT]),
 		spdk_json_decode_uint64, true
 	},
+	{
+		"timeslice_in_usecs", offsetof(struct rpc_bdev_set_qos_limit,
+					     timeslice_in_usecs),
+		spdk_json_decode_uint64, true
+	},
 };
 
 static void
@@ -928,7 +934,7 @@ static void
 rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_set_qos_limit req = {NULL, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
+	struct rpc_bdev_set_qos_limit req = {NULL, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}, 0};
 	struct spdk_bdev_desc *desc;
 	int i, rc;
 
@@ -960,7 +966,7 @@ rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_bdev_set_qos_rate_limits(spdk_bdev_desc_get_bdev(desc), req.limits,
+	spdk_bdev_set_qos_rate_limits(spdk_bdev_desc_get_bdev(desc), req.limits, req.timeslice_in_usecs,
 				      rpc_bdev_set_qos_limit_complete, request);
 
 	spdk_bdev_close(desc);

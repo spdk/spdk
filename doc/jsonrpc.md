@@ -2901,6 +2901,7 @@ rw_ios_per_sec          | Optional | number      | Number of R/W I/Os per second
 rw_mbytes_per_sec       | Optional | number      | Number of R/W megabytes per second to allow. 0 means unlimited.
 r_mbytes_per_sec        | Optional | number      | Number of Read megabytes per second to allow. 0 means unlimited.
 w_mbytes_per_sec        | Optional | number      | Number of Write megabytes per second to allow. 0 means unlimited.
+timeslice_in_usecs      | Optional | number      | QOS time slice in micro seconds. 0 means default.
 
 #### Example
 
@@ -2917,6 +2918,7 @@ Example request:
     "rw_mbytes_per_sec": 100
     "r_mbytes_per_sec": 50
     "w_mbytes_per_sec": 50
+    "timeslice_in_usecs": 2000
   }
 }
 ~~~
