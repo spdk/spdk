@@ -8277,6 +8277,8 @@ bdev_destroy_cb(void *io_device)
 		return;
 	}
 
+	assert(TAILQ_EMPTY(&bdev->internal.locked_ranges));
+
 	cb_fn = bdev->internal.unregister_cb;
 	cb_arg = bdev->internal.unregister_ctx;
 
@@ -8384,6 +8386,12 @@ bdev_unregister(struct spdk_bdev *bdev, void *_ctx, int status)
 
 	spdk_spin_lock(&g_bdev_mgr.spinlock);
 	spdk_spin_lock(&bdev->internal.spinlock);
+	if (!TAILQ_EMPTY(&bdev->internal.locked_ranges)) {
+		/* Unregister will be continued after all ranges are unlocked. */
+		spdk_spin_unlock(&bdev->internal.spinlock);
+		spdk_spin_unlock(&g_bdev_mgr.spinlock);
+		return;
+	}
 	/*
 	 * Set the status to REMOVING after completing to abort channels. Otherwise,
 	 * the last spdk_bdev_close() may call spdk_io_device_unregister() while
@@ -8398,6 +8406,14 @@ bdev_unregister(struct spdk_bdev *bdev, void *_ctx, int status)
 	if (rc == 0) {
 		spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 	}
+}
+
+static void
+_bdev_unregister(void *ctx)
+{
+	struct spdk_bdev *bdev = ctx;
+
+	bdev_unregister(bdev, NULL, 0);
 }
 
 void
@@ -10597,6 +10613,11 @@ bdev_unlock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 			spdk_thread_send_msg(pending_ctx->range.owner_thread,
 					     bdev_lock_lba_range_ctx_msg, pending_ctx);
 		}
+	}
+
+	if (bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING &&
+	    TAILQ_EMPTY(&bdev->internal.locked_ranges)) {
+		spdk_thread_send_msg(bdev->internal.unregister_td, _bdev_unregister, bdev);
 	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
