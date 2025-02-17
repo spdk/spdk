@@ -600,6 +600,34 @@ vbdev_crypto_delete_name(struct bdev_names *name)
 	free(name);
 }
 
+/* For the named crypto vbdev and the named base bdev, create the crypto opts */
+struct vbdev_crypto_opts *
+create_crypto_opts_by_name(char *name, char *base_bdev_name, struct spdk_accel_crypto_key *key,
+			   bool key_owner)
+{
+	struct vbdev_crypto_opts *opts = calloc(1, sizeof(*opts));
+
+	if (!opts) {
+		return NULL;
+	}
+
+	opts->bdev_name = strdup(base_bdev_name);
+	if (!opts->bdev_name) {
+		free_crypto_opts(opts);
+		return NULL;
+	}
+	opts->vbdev_name = strdup(name);
+	if (!opts->vbdev_name) {
+		free_crypto_opts(opts);
+		return NULL;
+	}
+
+	opts->key = key;
+	opts->key_owner = key_owner;
+
+	return opts;
+}
+
 /* RPC entry point for crypto creation. */
 int
 create_crypto_disk(struct vbdev_crypto_opts *opts)

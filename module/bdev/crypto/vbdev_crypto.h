@@ -48,6 +48,19 @@ void delete_crypto_disk(const char *bdev_name, spdk_delete_crypto_complete cb_fn
 			void *cb_arg);
 
 /**
+ * Create crypto opts for the given crypto vbdev name and base bdev name.
+ *
+ * \param name Name of crypto vbdev.
+ * \param base_bdev_name Name of base bdev for crypto vbdev.
+ * \param key crypto key for the vbdev.
+ * \param key_owner Is key created by application/RPC.
+ * \return Handle to created vbdev_crypto_opts or NULL if failed to create.
+ */
+struct vbdev_crypto_opts *
+create_crypto_opts_by_name(char *name, char *base_bdev_name, struct spdk_accel_crypto_key *key,
+			   bool key_owner);
+
+/**
  * Release crypto opts created with create_crypto_opts()
  *
  * \param opts Crypto opts to release
