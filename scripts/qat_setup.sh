@@ -7,7 +7,7 @@ shopt -s nullglob
 set -e
 
 rootdir=$(readlink -f $(dirname $0))/..
-allowed_drivers=("igb_uio" "uio_pci_generic" "vfio_pci")
+allowed_drivers=("igb_uio" "uio_pci_generic" "vfio-pci")
 
 reload_intel_qat() {
 	# We need to make sure the out-of-tree intel_qat driver, provided via autotest_setup.sh,
@@ -137,7 +137,7 @@ if [ $driver_to_bind == "igb_uio" ]; then
 elif [ "$driver_to_bind" == "uio_pci_generic" ]; then
 	modprobe uio
 	modprobe uio_pci_generic
-elif [ "$driver_to_bind" == "vfio_pci" ]; then
+elif [ "$driver_to_bind" == "vfio-pci" ]; then
 	modprobe vfio
 	modprobe vfio_pci
 else
@@ -156,7 +156,7 @@ for vf in "${qat_vf_bdfs[@]}"; do
 		fi
 	fi
 	# Bind new driver
-	if [ "$driver_to_bind" == "vfio_pci" ]; then
+	if [ "$driver_to_bind" == "vfio-pci" ]; then
 		"$rootdir/dpdk/usertools/dpdk-devbind.py" -b vfio-pci $vf
 	else
 		echo "$driver_to_bind" > "$vf/driver_override"
