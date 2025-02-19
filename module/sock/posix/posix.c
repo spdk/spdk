@@ -432,6 +432,9 @@ posix_sock_init(struct spdk_posix_sock *sock, bool enable_zero_copy)
 		rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
 		if (rc == 0) {
 			sock->zcopy = true;
+			/* Zcopy notification index from the kernel for first sendmsg is 0, so we need to start
+			 * incrementing internal counter from UINT32_MAX. */
+			sock->sendmsg_idx = UINT32_MAX;
 		}
 	}
 #endif
@@ -1440,10 +1443,8 @@ _sock_flush(struct spdk_sock *sock)
 				break;
 			}
 		} else {
-			/* Re-use the offset field to hold the sendmsg call index. The
-			 * index is 0 based, so subtract one here because we've already
-			 * incremented above. */
-			req->internal.offset = psock->sendmsg_idx - 1;
+			/* Re-use the offset field to hold the sendmsg call index. */
+			req->internal.offset = psock->sendmsg_idx;
 		}
 
 		if (rc == 0) {

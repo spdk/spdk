@@ -457,6 +457,9 @@ uring_sock_alloc(int fd, struct spdk_sock_impl_opts *impl_opts, bool enable_zero
 		if (rc == 0) {
 			sock->zcopy = true;
 			sock->zcopy_send_flags = MSG_ZEROCOPY;
+			/* Zcopy notification index from the kernel for first sendmsg is 0, so we need to start
+			 * incrementing internal counter from UINT32_MAX. */
+			sock->sendmsg_idx = UINT32_MAX;
 		}
 	}
 #endif
@@ -1115,10 +1118,8 @@ sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 				return retval;
 			}
 		} else {
-			/* Re-use the offset field to hold the sendmsg call index. The
-			 * index is 0 based, so subtract one here because we've already
-			 * incremented above. */
-			req->internal.offset = sock->sendmsg_idx - 1;
+			/* Re-use the offset field to hold the sendmsg call index. */
+			req->internal.offset = sock->sendmsg_idx;
 		}
 
 		if (rc == 0) {
