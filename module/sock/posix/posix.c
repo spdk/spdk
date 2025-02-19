@@ -1330,11 +1330,7 @@ _sock_check_zcopy(struct spdk_sock *sock)
 				break;
 			}
 
-			if (idx == UINT32_MAX) {
-				idx = 0;
-			} else {
-				idx++;
-			}
+			idx++;
 		}
 	}
 
