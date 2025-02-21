@@ -1462,13 +1462,17 @@ posix_sock_flush(struct spdk_sock *sock)
 {
 #ifdef SPDK_ZEROCOPY
 	struct spdk_posix_sock *psock = __posix_sock(sock);
+	int rc;
 
+	rc = _sock_flush(sock);
 	if (psock->zcopy && !TAILQ_EMPTY(&sock->pending_reqs)) {
 		_sock_check_zcopy(sock);
 	}
-#endif
 
+	return rc;
+#else
 	return _sock_flush(sock);
+#endif
 }
 
 static ssize_t
