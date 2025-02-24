@@ -60,6 +60,7 @@ packages=(
 	valgrind
 	wget
 	xfsprogs
+	xxd
 )
 
 if [[ $OSID != centos && $OSID != rocky && $OSID != rhel ]]; then

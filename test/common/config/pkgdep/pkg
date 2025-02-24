@@ -26,4 +26,5 @@ packages=(
 	wget
 	llvm-devel
 	avahi
+	xxd
 )
