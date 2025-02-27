@@ -3024,7 +3024,7 @@ rpc_nvmf_get_qpairs(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(ch);
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
-		if (qpair->ctrlr->subsys == ctx->subsystem) {
+		if (qpair->ctrlr && qpair->ctrlr->subsys == ctx->subsystem) {
 			dump_nvmf_qpair(ctx->w, qpair);
 		}
 	}
