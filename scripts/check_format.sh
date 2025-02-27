@@ -535,7 +535,7 @@ function check_bash_style() {
 	local rc=0 supported_shfmt_version=v3.8.0
 
 	# find compatible shfmt binary
-	shfmt_bins=($(compgen -c | grep '^shfmt' | uniq || true))
+	shfmt_bins=($(compgen -c shfmt | uniq || true))
 	for bin in "${shfmt_bins[@]}"; do
 		shfmt_version=$("$bin" --version)
 		if [[ $shfmt_version == "$supported_shfmt_version" ]]; then
