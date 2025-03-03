@@ -8181,15 +8181,15 @@ bdev_register(struct spdk_bdev *bdev)
 		}
 	}
 
-	spdk_iobuf_get_opts(&iobuf_opts, sizeof(iobuf_opts));
-	if (spdk_bdev_get_buf_align(bdev) > 1) {
-		bdev->max_rw_size = spdk_min(bdev->max_rw_size ? bdev->max_rw_size : UINT32_MAX,
-					     iobuf_opts.large_bufsize / bdev->blocklen);
-	}
-
 	/* If the user didn't specify a write unit size, set it to one. */
 	if (bdev->write_unit_size == 0) {
 		bdev->write_unit_size = 1;
+	}
+
+	spdk_iobuf_get_opts(&iobuf_opts, sizeof(iobuf_opts));
+	if (spdk_bdev_get_buf_align(bdev) > 1) {
+		bdev->max_rw_size = spdk_min(bdev->max_rw_size ? bdev->max_rw_size : UINT32_MAX,
+					     bdev_get_max_write(bdev, iobuf_opts.large_bufsize));
 	}
 
 	/* Set ACWU value to the write unit size if bdev module did not set it (does not support it natively) */
