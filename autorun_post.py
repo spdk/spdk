@@ -128,8 +128,8 @@ def getCompletions(completionFile, test_list, test_completion_table):
     with open(completionFile, 'r') as completionList:
         completions = completionList.read()
 
-    asan_enabled = "asan" in completions
-    ubsan_enabled = "ubsan" in completions
+    asan_enabled = "using asan" in completions
+    ubsan_enabled = "using ubsan" in completions
 
     for line in completions.splitlines():
         try:
