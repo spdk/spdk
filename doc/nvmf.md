@@ -388,13 +388,13 @@ and the algorithms used for a given DH-HMAC-CHAP transaction are negotiated at t
 SPDK NVMe-oF target selects the strongest available hash/group depending on its configuration and
 the capabilities of a peer.  Users can limit the allowed hash functions and/or Diffie-Hellman groups
 via RPCs.  For example, the following limits the target (`nvmf_set_config`) and the driver
-(`bdev_nvme_set_options`) to use sha384, sha512 and ffdhe6114, ffdhe8192:
+(`bdev_nvme_set_options`) to use sha384, sha512 and ffdhe6144, ffdhe8192:
 
 ```{.sh}
 $ scripts/rpc.py nvmf_set_config --dhchap-digests sha384,sha512 \
-    --dhchap-dhgroups ffdhe6114,ffdhe8192
+    --dhchap-dhgroups ffdhe6144,ffdhe8192
 $ scripts/rpc.py bdev_nvme_set_options --dhchap-digests sha384,sha512 \
-    --dhchap-dhgroups ffdhe6114,ffdhe8192
+    --dhchap-dhgroups ffdhe6144,ffdhe8192
 ```
 
 The NVMe specification describes the method for using in-band authentication in conjunction with
