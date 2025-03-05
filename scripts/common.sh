@@ -160,7 +160,7 @@ cache_pci_bus_lspci() {
 		if [[ ${dev[*]} =~ -p([0-9]+) ]]; then
 			dev[1]+=${BASH_REMATCH[1]}
 		else
-			dev[1]+=00
+			dev[1]+="00"
 		fi
 		# pci class vendor device driver
 		# lspci supports driver listing only under Linux, however, it's not
