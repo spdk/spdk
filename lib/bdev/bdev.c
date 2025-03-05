@@ -8422,6 +8422,15 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	bdev->internal.unregister_cb = cb_fn;
 	bdev->internal.unregister_ctx = cb_arg;
 	bdev->internal.unregister_td = thread;
+
+	/* kill QoS, if it's still running */
+	if (bdev->internal.qos && bdev->internal.qos->poller && TAILQ_EMPTY(&bdev->internal.open_descs)) {
+		SPDK_DEBUGLOG(bdev, "Data race detected - QoS poller still present on closed bdev name: %s",
+			      bdev->name);
+		if (bdev_qos_destroy(bdev)) {
+			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
+		}
+	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 
@@ -9827,11 +9836,24 @@ bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		    struct spdk_io_channel *ch, void *_ctx)
 {
 	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
+	int rc = 0;
 
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_enable_qos(bdev, bdev_ch);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_READY) {
+		bdev_enable_qos(bdev, bdev_ch);
+	} else {
+		SPDK_DEBUGLOG(bdev,
+			      "Data race detected - requested to enable QoS on wrong bdev state bdev name: %s, bdev state: %d",
+			      bdev->name, bdev->internal.status);
+		if (bdev->internal.qos &&
+		    bdev->internal.qos->ch == NULL) { /* QoS has not been fully created yet, shall clean up */
+			free(bdev->internal.qos);
+			bdev->internal.qos = NULL;
+			rc = -EAGAIN;
+		}
+	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
-	spdk_bdev_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, rc);
 }
 
 static void

@@ -2863,6 +2863,64 @@ reset_start_complete_race(void)
 	teardown_test();
 }
 
+static void
+qos_bdev_open_close_data_race(void)
+{
+	bool done;
+	struct spdk_bdev_desc *desc = NULL, *desc2 = NULL;
+	struct spdk_io_channel *io_ch;
+
+	int rc;
+	uint64_t limits[4] = { 1000, 10000, 1000, 1000 };
+
+	setup_test();
+	set_thread(0);
+
+	/* setup_test() automatically opens the bdev, * but this test needs to do that in a different way. */
+	spdk_bdev_close(g_desc);
+	poll_threads();
+
+	set_thread(0);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &desc);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	done = false;
+
+	spdk_bdev_set_qos_rate_limits(&g_bdev.bdev, limits, qos_dynamic_enable_done, &rc);
+	poll_threads();
+
+	set_thread(1);
+	/* bdev_create_channel - start qos on channel 1, channel ref = 2 */
+	io_ch = spdk_bdev_get_io_channel(desc);
+	poll_threads();
+
+	set_thread(0);
+	/* close bdev - kill qos - send put channel 1, channel ref = 1 */
+	spdk_bdev_close(desc);
+	set_thread(1);
+	/* send put channel 1, channel ref = 0, destroy ref = 1, send destroy channel */
+	spdk_put_io_channel(io_ch);
+	set_thread(1);
+	/* start qos - get channel 1, channel ref = 1, destruction is cancelled */
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &desc2);
+	/* no qos poller present, no put_channel call */
+	spdk_bdev_close(desc2);
+	poll_threads();
+	set_thread(0);
+	/* remove bdev rpc, qos poller is created and prevents bdev destruction */
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done);
+
+	SPDK_CU_ASSERT_FATAL(g_bdev.bdev.internal.qos->poller == NULL);
+
+	/* Poll the threads to allow all events to be processed */
+	poll_threads();
+
+	/* Restore the original g_bdev so that we can use teardown_test(). */
+	set_thread(0);
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2901,6 +2959,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, event_notify_and_close);
 	CU_ADD_TEST(suite, unregister_and_qos_poller);
 	CU_ADD_TEST(suite, reset_start_complete_race);
+	CU_ADD_TEST(suite, qos_bdev_open_close_data_race);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
