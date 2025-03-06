@@ -813,7 +813,7 @@ static void
 spdk_fio_cleanup(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
-
+	while (spdk_fio_poll_thread(fio_thread) > 0) {};
 	spdk_fio_cleanup_thread(fio_thread);
 	td->io_ops_data = NULL;
 }
