@@ -22,6 +22,17 @@ lib/rdma_provider/rdma_provider_mlx5_dv
 # Not configured for kernel idxd
 lib/idxd/idxd_kernel
 
+# spdk-ci on GH runners is not configured for IDXD
+examples/idxd/perf/perf
+lib/idxd/idxd
+lib/idxd/idxd_user
+module/accel/dsa/accel_dsa
+module/accel/dsa/accel_dsa_rpc
+module/accel/iaa/accel_iaa
+module/accel/iaa/accel_iaa_rpc
+test/unit/lib/idxd/idxd.c/idxd_ut
+test/unit/lib/idxd/idxd_user.c/idxd_user_ut
+
 # These files all represent c files that are only compiled by direct inclusion in other files.
 test/common/lib/test_env
 test/common/lib/test_iobuf
