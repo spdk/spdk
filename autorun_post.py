@@ -59,6 +59,7 @@ def generateCoverageReport(output_dir, repo_dir):
     covfiles = [os.path.abspath(p) for p in glob.glob(coveragePath, recursive=True)]
     for f in covfiles:
         print(f)
+        normalizePaths(f, repo_dir)
     if len(covfiles) == 0:
         return
     lcov_opts = [
@@ -67,7 +68,7 @@ def generateCoverageReport(output_dir, repo_dir):
         '--rc', 'genhtml_branch_coverage=1',
         '--rc', 'genhtml_function_coverage=1',
         '--rc', 'genhtml_legend=1',
-        '--rc', 'geninfo_all_blocks=1',
+        '--rc', 'geninfo_all_blocks=1'
     ]
 
     # HACK: This is a workaround for some odd CI assumptions
@@ -84,15 +85,6 @@ def generateCoverageReport(output_dir, repo_dir):
         print(e)
         return
 
-    with open(cov_total, 'r') as cov_total_file:
-        file_contents = cov_total_file.readlines()
-
-    replacement = "SF:" + repo_dir
-    os.remove(cov_total)
-    with open(cov_total, 'w+') as file:
-        for Line in file_contents:
-            Line = re.sub("^SF:.*/repo", replacement, Line)
-            file.write(Line + '\n')
     try:
         subprocess.check_call(genhtml)
     except subprocess.CalledProcessError as e:
@@ -100,6 +92,19 @@ def generateCoverageReport(output_dir, repo_dir):
         print(e)
     for f in covfiles:
         os.remove(f)
+
+
+def normalizePaths(cov_file, repo_dir):
+    with open(cov_file, 'r') as fh:
+        replaced = None
+        file_contents = fh.read()
+        replacement = "SF:" + os.path.abspath(repo_dir) + "/"
+        if not re.search(rf'{replacement}', file_contents):
+            replaced = re.sub(r'SF:/[^/]+/spdk/', replacement, file_contents)
+
+    if replaced:
+        with open(cov_file, 'w') as fh:
+            fh.write(replaced)
 
 
 def collectOne(output_dir, dir_name):
