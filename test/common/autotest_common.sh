@@ -315,9 +315,6 @@ for i in "$@"; do
 		--transport=*)
 			TEST_TRANSPORT="${i#*=}"
 			;;
-		--sock=*)
-			TEST_SOCK="${i#*=}"
-			;;
 		--no-hugepages)
 			NO_HUGE=(--no-huge -s 1024)
 			;;
