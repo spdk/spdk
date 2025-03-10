@@ -83,13 +83,14 @@ def generateCoverageReport(output_dir, repo_dir):
     except subprocess.CalledProcessError as e:
         print("lcov failed")
         print(e)
-        return
+        sys.exit(1)
 
     try:
         subprocess.check_call(genhtml)
     except subprocess.CalledProcessError as e:
         print("genhtml failed")
         print(e)
+        sys.exit(1)
     for f in covfiles:
         os.remove(f)
 
