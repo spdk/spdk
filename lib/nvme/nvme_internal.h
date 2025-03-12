@@ -1127,7 +1127,14 @@ struct spdk_nvme_ctrlr {
 	uint16_t				auth_tid;
 	/* Authentication sequence number */
 	uint32_t				auth_seqnum;
+
+	uint64_t prev_ns_size[SPDK_NVME_MAX_CHANGED_NAMESPACES];// new feild to track the namespaces.
 };
+
+/*new function declarations to track namespace ssize and cntrl reset  */
+bool spdk_nvme_ctrlr_is_namespace_resized(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+void nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
+
 
 struct spdk_nvme_detach_ctx {
 	TAILQ_HEAD(, nvme_ctrlr_detach_ctx)	head;
@@ -1144,6 +1151,7 @@ struct spdk_nvme_probe_ctx {
 	TAILQ_HEAD(, spdk_nvme_ctrlr)		init_ctrlrs;
 	/* detach contexts allocated for controllers that failed to initialize */
 	struct spdk_nvme_detach_ctx		failed_ctxs;
+      
 };
 
 typedef void (*nvme_ctrlr_detach_cb)(struct spdk_nvme_ctrlr *ctrlr);

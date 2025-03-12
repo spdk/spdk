@@ -3202,6 +3202,7 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 	char		*buffer = NULL;
 	uint32_t	nsid;
 	size_t		buf_size = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
+	bool need_reset = false; // Flag to track if reset is needed
 
 	if (ctrlr->opts.disable_read_changed_ns_list_log_page) {
 		return 0;
@@ -3244,14 +3245,65 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* only check the case of overflow. */
-	nsid = from_le32(buffer);
-	if (nsid == 0xffffffffu) {
-		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
-	}
+      //	nsid = from_le32(buffer);
+     //	if (nsid == 0xffffffffu) {
+//		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
+//	}
+	for (size_t i = 0; i < SPDK_NVME_MAX_CHANGED_NAMESPACES; i++) {
+    nsid = from_le32(buffer + i * sizeof(uint32_t));
+
+    if (nsid == 0) {
+        break;
+    }
+
+    if (nsid == 0xFFFFFFFF) { // Overflow case
+        NVME_CTRLR_WARNLOG(ctrlr, "Changed NS log overflow detected.\n");
+        need_reset = true;
+        break;
+    }
+
+    // Check if namespace was resized
+    if (spdk_nvme_ctrlr_is_namespace_resized(ctrlr, nsid)) {
+        NVME_CTRLR_WARNLOG(ctrlr, "Namespace %u was resized. Reset needed.\n", nsid);
+        need_reset = true;
+    }
+}
+
+// Trigger reset if needed
+if (need_reset) {
+    NVME_CTRLR_WARNLOG(ctrlr, "Triggering NVMe controller reset due to namespace change.\n");
+    nvme_ctrlr_reset(ctrlr);
+}
+
 
 free_buffer:
 	spdk_dma_free(buffer);
 	return rc;
+}
+
+//new function  
+
+bool spdk_nvme_ctrlr_is_namespace_resized(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+    struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+
+    if (!ns) {
+        return false;
+    }
+
+    uint64_t old_size = ctrlr->prev_ns_size[nsid];
+    uint64_t new_size = spdk_nvme_ns_get_size(ns);
+
+    if (old_size != new_size) {
+        ctrlr->prev_ns_size[nsid] = new_size;
+        return true;
+    }
+
+    return false;
+}
+
+void nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr) {
+    NVME_CTRLR_WARNLOG(ctrlr, "Controller reset triggered.\n");
 }
 
 static void
