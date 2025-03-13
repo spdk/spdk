@@ -4188,6 +4188,7 @@ test_sequence_dix_generate_verify(void)
 	poll_threads();
 }
 
+#ifdef SPDK_CONFIG_ISAL_CRYPTO
 static void
 test_sequence_dix(void)
 {
@@ -4335,6 +4336,7 @@ test_sequence_dix(void)
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
+#endif
 
 static int
 test_sequence_setup(void)
@@ -4427,7 +4429,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_same_iovs);
 	CU_ADD_TEST(seq_suite, test_sequence_crc32);
 	CU_ADD_TEST(seq_suite, test_sequence_dix_generate_verify);
+#ifdef SPDK_CONFIG_ISAL_CRYPTO /* accel_sw requires isa-l-crypto for crypto operations */
 	CU_ADD_TEST(seq_suite, test_sequence_dix);
+#endif
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
