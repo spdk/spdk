@@ -1212,6 +1212,7 @@ raid5f_submit_process_request(struct raid_bdev_process_request *process_req,
 	struct raid_bdev_io *raid_io = &process_req->raid_io;
 	uint8_t chunk_idx = raid_bdev_base_bdev_slot(process_req->target);
 	uint64_t stripe_index = process_req->offset_blocks / r5f_info->stripe_blocks;
+	struct iovec *iov;
 	int ret;
 
 	assert((process_req->offset_blocks % r5f_info->stripe_blocks) == 0);
@@ -1220,9 +1221,11 @@ raid5f_submit_process_request(struct raid_bdev_process_request *process_req,
 		return 0;
 	}
 
+	iov = &process_req->iov;
+	iov->iov_len = raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 	raid_bdev_io_init(raid_io, raid_ch, SPDK_BDEV_IO_TYPE_READ,
 			  process_req->offset_blocks, raid_bdev->strip_size,
-			  &process_req->iov, 1, process_req->md_buf, NULL, NULL);
+			  iov, 1, process_req->md_buf, NULL, NULL);
 
 	ret = raid5f_submit_reconstruct_read(raid_io, stripe_index, chunk_idx, 0,
 					     raid5f_process_stripe_request_reconstruct_xor_done);
