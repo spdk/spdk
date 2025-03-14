@@ -1,0 +1,32 @@
+name: Greetings
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Hello! Thank you for filing an issue.
+
+            If this is a bug report, please include relevant logs to help us debug the problem.
+          pr-message: |
+            Hello! Thank you for your contribution.
+ 
+            SPDK’s source code is hosted by [GitHub](https://github.com/spdk/spdk) and patch submission and review is done through [Gerrit](https://review.spdk.io/q/projects:spdk+status:open).
+
+            Design pre-work and general discussion occurs via one of the communications channels described on the [Community](https://spdk.io/community/) page.
+
+            More information on [SPDK Development](https://spdk.io/development/) page
