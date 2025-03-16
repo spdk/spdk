@@ -1708,6 +1708,8 @@ io_opc_name(uint8_t opc)
 		return "Reservation Release";
 	case SPDK_NVME_OPC_COPY:
 		return "Copy";
+	case SPDK_NVME_OPC_IO_CANCEL:
+		return "IO cancel";
 	default:
 		if (opc >= 0x80) {
 			return "Vendor specific";

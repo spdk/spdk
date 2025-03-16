@@ -805,6 +805,7 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+//	case SPDK_BDEV_IO_TYPE_IO_CANCEL:
 #ifdef LIBRBD_SUPPORTS_COMPARE_AND_WRITE_IOVEC
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 #endif

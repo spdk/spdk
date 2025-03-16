@@ -1114,6 +1114,12 @@ union spdk_nvme_cmd_cdw10 {
 		/* Command Identifier */
 		uint32_t cid       : 16;
 	} abort;
+	struct {
+		/* Submission Queue Identifier */
+		uint32_t sqid      : 16;
+		/* Command Identifier */
+		uint32_t cid       : 16;
+	} io_cancel;
 
 	struct {
 		/* NVMe Security Specific Field */
@@ -1300,9 +1306,14 @@ union spdk_nvme_cmd_cdw11 {
 		uint32_t vvol_set   : 8;
 		uint32_t reserved    : 24;
 	} vvols_set;
+
+        struct {  
+		uint32_t action    :8;
+		uint32_t wildcard_ns_id:1;
+		uint32_t reserved  :23;
+	}io_cancel;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
-
 union spdk_nvme_cmd_cdw12 {
 	uint32_t raw;
 
@@ -1467,6 +1478,12 @@ struct spdk_nvme_cpl {
 		struct spdk_nvme_status	status;
 	};
 };
+
+struct dw0_io_cancel_cpl {
+	uint32_t 	num_aborted  : 16;
+	uint32_t 	num_deferred : 16;
+};
+
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cpl) == 16, "Incorrect size");
 
 /**
@@ -1743,6 +1760,7 @@ enum spdk_nvme_nvm_opcode {
 	SPDK_NVME_OPC_RESERVATION_ACQUIRE		= 0x11,
 	SPDK_NVME_OPC_IO_MANAGEMENT_RECEIVE		= 0x12,
 	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
+	SPDK_NVME_OPC_IO_CANCEL				= 0x18,
 
 	SPDK_NVME_OPC_COPY				= 0x19,
 	SPDK_NVME_OPC_IO_MANAGEMENT_SEND		= 0x1D,
