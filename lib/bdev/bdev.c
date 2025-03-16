@@ -4060,6 +4060,7 @@ static const char *g_io_type_strings[] = {
 	[SPDK_BDEV_IO_TYPE_SEEK_DATA] = "seek_data",
 	[SPDK_BDEV_IO_TYPE_COPY] = "copy",
 	[SPDK_BDEV_IO_TYPE_NVME_IOV_MD] = "nvme_iov_md",
+	[SPDK_BDEV_IO_TYPE_IO_CANCEL] = "io_cancel",
 };
 
 const char *

@@ -3618,8 +3618,13 @@ nvmf_tcp_req_set_abort_status(struct spdk_nvmf_request *req,
 {
 	nvmf_tcp_req_set_cpl(tcp_req_to_abort, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_BY_REQUEST);
 	nvmf_tcp_req_set_state(tcp_req_to_abort, TCP_REQUEST_STATE_READY_TO_COMPLETE);
-
-	req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command was successfully aborted. */
+	if (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_IO_CANCEL) {
+		struct dw0_io_cancel_cpl *cpl = (struct dw0_io_cancel_cpl *)&req->rsp->nvme_cpl.cdw0;
+		cpl->num_aborted ++;
+		SPDK_ERRLOG("IO cancel :IO command aborted immediately: num-aborted %d\n", cpl->num_aborted);
+	} else {
+		req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command was successfully aborted. */
+	}
 }
 
 static int
@@ -3640,13 +3645,18 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 	case TCP_REQUEST_STATE_EXECUTING:
 	case TCP_REQUEST_STATE_AWAITING_ZCOPY_START:
 	case TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT:
-		rc = nvmf_ctrlr_abort_request(req);
+		if (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_IO_CANCEL) {
+			rc = nvmf_ctrlr_io_cancel_request(req);
+		} else {
+			rc = nvmf_ctrlr_abort_request(req);
+		}
 		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
 			return SPDK_POLLER_BUSY;
 		}
 		break;
 
 	case TCP_REQUEST_STATE_NEED_BUFFER:
+		/* IO aborted/cancelled immediately from internal spdk buffers */
 		nvmf_tcp_request_get_buffers_abort(tcp_req_to_abort);
 		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
 		nvmf_tcp_req_process(ttransport, tcp_req_to_abort);
@@ -3655,7 +3665,9 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 	case TCP_REQUEST_STATE_AWAITING_R2T_ACK:
 	case TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
 		if (spdk_get_ticks() < req->timeout_tsc) {
-			req->poller = SPDK_POLLER_REGISTER(_nvmf_tcp_qpair_abort_request, req, 0);
+			if (req->cmd->nvme_cmd.opc != SPDK_NVME_OPC_IO_CANCEL) {
+				req->poller = SPDK_POLLER_REGISTER(_nvmf_tcp_qpair_abort_request, req, 0);
+			}
 			return SPDK_POLLER_BUSY;
 		}
 		break;
@@ -3669,9 +3681,77 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 		 */
 		break;
 	}
-
-	spdk_nvmf_request_complete(req);
+	if (req->cmd->nvme_cmd.opc != SPDK_NVME_OPC_IO_CANCEL) {
+		spdk_nvmf_request_complete(req);
+	}
 	return SPDK_POLLER_BUSY;
+}
+
+static void
+nvmf_tcp_qpair_io_cancel_request(struct spdk_nvmf_qpair *qpair,
+				 struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair;
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_transport *transport;
+	uint16_t cid;
+	uint32_t i;
+	struct spdk_nvmf_tcp_req *tcp_req_to_abort = NULL;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint8_t action = cmd->cdw11_bits.io_cancel.action;
+	struct dw0_io_cancel_cpl *cpl = (struct dw0_io_cancel_cpl *)&req->rsp->nvme_cpl.cdw0;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	ttransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_tcp_transport, transport);
+	transport = &ttransport->transport;
+
+	if (action == 0) {
+		/* Cancel the single IO */
+		cid = req->cmd->nvme_cmd.cdw10_bits.io_cancel.cid;
+
+		for (i = 0; i < tqpair->resource_count; i++) {
+			if (tqpair->reqs[i].state != TCP_REQUEST_STATE_FREE &&
+			    tqpair->reqs[i].req.cmd->nvme_cmd.cid == cid) {
+				tcp_req_to_abort = &tqpair->reqs[i];
+				break;
+			}
+		}
+		spdk_trace_record(TRACE_TCP_QP_ABORT_REQ, tqpair->qpair.trace_id, 0, (uintptr_t)req);
+
+		if (tcp_req_to_abort == NULL) {
+			/* Set status */
+			response->status.sct = SPDK_NVME_SCT_GENERIC;
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			SPDK_INFOLOG(io_cancel, "IO cancel completed: action %d, bad status %d\n",
+				     action, response->status.sc);
+			return;
+		}
+
+		req->req_to_abort = &tcp_req_to_abort->req;
+		req->timeout_tsc = spdk_get_ticks() + transport->opts.abort_timeout_sec * spdk_get_ticks_hz();
+		req->poller = NULL;
+		_nvmf_tcp_qpair_abort_request(req);
+	} else {
+		/* Cancel multiple IOs */
+		for (i = 0; i < tqpair->resource_count; i++) {
+			if (tqpair->reqs[i].state != TCP_REQUEST_STATE_FREE) {
+				tcp_req_to_abort = &tqpair->reqs[i];
+				if (tcp_req_to_abort == NULL) {
+					response->status.sct = SPDK_NVME_SCT_GENERIC;
+					response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+					SPDK_INFOLOG(io_cancel, "IO cancel completed: action %d, bad status %d\n",
+						     action, response->status.sc);
+					return;
+				}
+				req->req_to_abort = &tcp_req_to_abort->req;
+				req->timeout_tsc = spdk_get_ticks() + transport->opts.abort_timeout_sec * spdk_get_ticks_hz();
+				req->poller = NULL;
+				_nvmf_tcp_qpair_abort_request(req);
+			}
+		}
+	}
+	SPDK_INFOLOG(io_cancel, "IO cancel completed: action %d, num aborted %d, num deferred %d\n",
+		     action, cpl->num_aborted, cpl->num_deferred);
 }
 
 static void
@@ -3951,6 +4031,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_get_peer_trid = nvmf_tcp_qpair_get_peer_trid,
 	.qpair_get_listen_trid = nvmf_tcp_qpair_get_listen_trid,
 	.qpair_abort_request = nvmf_tcp_qpair_abort_request,
+	.qpair_io_cancel_request = nvmf_tcp_qpair_io_cancel_request,
 	.subsystem_add_host = nvmf_tcp_subsystem_add_host,
 	.subsystem_remove_host = nvmf_tcp_subsystem_remove_host,
 	.subsystem_dump_host = nvmf_tcp_subsystem_dump_host,
