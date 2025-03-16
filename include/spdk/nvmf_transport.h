@@ -465,6 +465,16 @@ struct spdk_nvmf_transport_ops {
 				    struct spdk_nvmf_request *req);
 
 	/*
+	 * TP4097 IO cancel request
+	 * This function can complete synchronously or asynchronously, but
+	 * is expected to call spdk_nvmf_request_complete() in the end
+	 * for both cases.
+	 */
+	void (*qpair_io_cancel_request)(struct spdk_nvmf_qpair *qpair,
+					struct spdk_nvmf_request *req);
+
+
+	/*
 	 * Dump transport poll group statistics into JSON.
 	 */
 	void (*poll_group_dump_stat)(struct spdk_nvmf_transport_poll_group *group,

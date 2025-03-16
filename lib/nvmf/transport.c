@@ -823,6 +823,15 @@ nvmf_transport_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	}
 }
 
+void
+nvmf_transport_qpair_io_cancel_request(struct spdk_nvmf_qpair *qpair,
+				       struct spdk_nvmf_request *req)
+{
+	if (qpair->transport->ops->qpair_io_cancel_request) {
+		qpair->transport->ops->qpair_io_cancel_request(qpair, req);
+	}
+}
+
 bool
 spdk_nvmf_transport_opts_init(const char *transport_name,
 			      struct spdk_nvmf_transport_opts *opts, size_t opts_size)

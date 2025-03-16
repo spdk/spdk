@@ -413,6 +413,7 @@ int nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc
 			     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			      struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int nvmf_bdev_ctrlr_io_cancel_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
@@ -503,6 +504,8 @@ void nvmf_qpair_abort_pending_zcopy_reqs(struct spdk_nvmf_qpair *qpair);
 void nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair);
 
 int nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req);
+
+int nvmf_ctrlr_io_cancel_request(struct spdk_nvmf_request *req);
 
 void nvmf_ctrlr_set_fatal_status(struct spdk_nvmf_ctrlr *ctrlr);
 

@@ -1715,6 +1715,8 @@ io_opc_name(uint8_t opc)
 		return "Copy";
 	case SPDK_NVME_OPC_IO_MANAGEMENT_SEND:
 		return "IO Management Send";
+	case SPDK_NVME_OPC_IO_CANCEL:
+		return "IO cancel";
 	default:
 		if (opc >= 0x80) {
 			return "Vendor specific";

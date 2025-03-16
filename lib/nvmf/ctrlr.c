@@ -2695,6 +2695,8 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 		[SPDK_NVME_OPC_ZONE_APPEND]		= {1, 1, 0, 0, 0, 0, 0, 0},
 		/* COPY */
 		[SPDK_NVME_OPC_COPY]			= {1, 1, 0, 0, 0, 0, 0, 0},
+		/* IO Cancel */
+		[SPDK_NVME_OPC_IO_CANCEL]		= {1, 1, 0, 0, 0, 0, 0, 0},
 	},
 };
 
@@ -3791,6 +3793,61 @@ nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req)
 	return spdk_nvmf_bdev_ctrlr_abort_cmd(bdev, desc, ch, req, req_to_abort);
 }
 
+int
+nvmf_ctrlr_io_cancel_request(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_request *req_to_abort = req->req_to_abort;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	int rc = 0;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint8_t action = cmd->cdw11_bits.io_cancel.action;
+	uint8_t wildcard_ns =  cmd->cdw11_bits.io_cancel.wildcard_ns_id;
+	uint16_t cid = req->cmd->nvme_cmd.cdw10_bits.io_cancel.cid;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	SPDK_INFOLOG(io_cancel,
+		     "nvmf_ctrlr_io_cancel_request. IO cancel: action %d, cid %d, wildcard-ns-id %d\n", action, cid,
+		     wildcard_ns);
+	assert(req_to_abort != NULL);
+	if (action == 0) {
+		/* Cancel single IO. cid of IO equal to req->cid */
+		if ((cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG) || wildcard_ns == 0) {
+			if (cmd->nsid == req_to_abort->cmd->nvme_cmd.nsid) {
+				rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
+								&bdev, &desc, &ch);
+			} else {
+				rc = -1;
+			}
+		} else if ((cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) || wildcard_ns == 1) {
+			rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
+							&bdev, &desc, &ch);
+		}
+	} else if (action == 1) {
+		/* Cancel multiple IOs */
+		if (((cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG) || (wildcard_ns == 0))
+		    && cmd->nsid == req_to_abort->cmd->nvme_cmd.nsid) {
+			rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
+							&bdev, &desc, &ch);
+		} else if ((cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) || wildcard_ns == 1) {
+			/* fetch  bdev with any ns and cid only belong to the same submission queue */
+			rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
+							&bdev, &desc, &ch);
+		}
+	} else {
+		rc = -1;
+	}
+	if (rc == 0) {
+		return spdk_nvmf_bdev_ctrlr_io_cancel_cmd(bdev, desc, ch, req, req_to_abort);
+	} else {
+		/* IO was found in the transport code but bdev was not found */
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	}
+	return 0;
+}
+
 static int
 get_features_generic(struct spdk_nvmf_request *req, uint32_t cdw0)
 {
@@ -4797,7 +4854,10 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
-
+	if (cmd->opc == SPDK_NVME_OPC_IO_CANCEL && req->cmd->nvme_cmd.nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		SPDK_INFOLOG(io_cancel, "IO cancel command arrived with wild-card NS:\n");
+		return nvmf_bdev_ctrlr_io_cancel_cmd(NULL, req);
+	}
 	ns = nvmf_ctrlr_get_ns(ctrlr, nsid);
 	if (spdk_unlikely(ns == NULL || ns->bdev == NULL)) {
 		SPDK_DEBUGLOG(nvmf, "Unsuccessful query for nsid %u\n", cmd->nsid);
@@ -4899,6 +4959,9 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 				goto invalid_opcode;
 			}
 			return nvmf_bdev_ctrlr_copy_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_IO_CANCEL:
+			SPDK_INFOLOG(io_cancel, "IO cancel command arrived with single NS\n");
+			return nvmf_bdev_ctrlr_io_cancel_cmd(bdev, req);
 		default:
 			if (spdk_unlikely(qpair->transport->opts.disable_command_passthru)) {
 				goto invalid_opcode;
@@ -5214,14 +5277,19 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	enum spdk_nvmf_request_exec_status status;
-
-	if (spdk_unlikely(!nvmf_check_subsystem_active(req))) {
-		return;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	if ((!(cmd->opc == SPDK_NVME_OPC_IO_CANCEL &&
+	       req->cmd->nvme_cmd.nsid == SPDK_NVME_GLOBAL_NS_TAG)) ||
+	    nvmf_qpair_is_admin_queue(qpair)) {
+		if (spdk_unlikely(!nvmf_check_subsystem_active(req))) {
+			/* Need to avoid this  check for io-cancel with ns_id == 0xffffffff
+				because it expects that ns-id is real not a wildcard */
+			return;
+		}
 	}
 	if (spdk_unlikely(!nvmf_check_qpair_active(req))) {
 		return;
 	}
-
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
 		spdk_nvme_print_command(qpair->qid, &req->cmd->nvme_cmd);
 	}
