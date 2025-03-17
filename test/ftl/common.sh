@@ -61,10 +61,11 @@ function create_base_bdev() {
 
 	local base_size
 	base_size=$(get_bdev_size $base_bdev)
+	clear_lvols
+
 	if [[ $size -le $base_size ]]; then
 		$rpc_py bdev_split_create $base_bdev -s $size 1
 	else
-		clear_lvols
 		lvs=$($rpc_py bdev_lvol_create_lvstore $base_bdev lvs)
 		$rpc_py bdev_lvol_create ${base_bdev}p0 $size -t -u $lvs
 	fi
