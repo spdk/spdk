@@ -3210,8 +3210,13 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 		struct spdk_blob_free_cluster_ctx *ctx = NULL;
 		spdk_bs_batch_t *batch;
 
-		/* if aligned with cluster release cluster */
+		/* if aligned with cluster release cluster,
+		 * but if blob locked_operation_in_progress has been set
+		 * because of some specical cases, such as doing inflate,
+		 * we should skip the operation of release cluster.
+		 */
 		if (spdk_blob_is_thin_provisioned(blob) && is_allocated &&
+		    (!blob->locked_operation_in_progress) &&
 		    blob_backed_with_zeroes_dev(blob) &&
 		    bs_io_units_per_cluster(blob) == length) {
 			struct spdk_bs_channel *bs_channel = spdk_io_channel_get_ctx(_ch);
