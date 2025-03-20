@@ -1,1 +1,1 @@
-debian.sh
+./scripts/pkgdep/debian.sh
