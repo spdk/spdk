@@ -2226,7 +2226,7 @@ accel_task_push_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *ta
 					  accel_task_push_data_cb, seq);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to push data to memory domain: %s, rc: %d\n",
-			    spdk_memory_domain_get_dma_device_id(task->aux->bounce.s.orig_domain), rc);
+			    spdk_memory_domain_get_dma_device_id(task->aux->bounce.d.orig_domain), rc);
 		accel_sequence_set_fail(seq, rc);
 	}
 }
