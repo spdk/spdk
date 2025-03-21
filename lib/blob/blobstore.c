@@ -9026,6 +9026,9 @@ blob_free_cluster_msg(void *arg)
 
 	start_cluster_idx = (ctx->cluster_num / SPDK_EXTENTS_PER_EP) * SPDK_EXTENTS_PER_EP;
 	for (i = 0; i < SPDK_EXTENTS_PER_EP; ++i) {
+		if (spdk_unlikely(start_cluster_idx + i >= ctx->blob->active.num_clusters)) {
+			break;
+		}
 		if (ctx->blob->active.clusters[start_cluster_idx + i] != 0) {
 			free_extent_page = false;
 			break;

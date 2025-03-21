@@ -4814,6 +4814,20 @@ blob_thin_prov_unmap_cluster(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == CLUSTER_COUNT);
 
+	/* Triggers a potential out-of-bounds access on blob->active.clusters,
+	 * when checking whether a extPage could be freed */
+	g_bserrno = -1;
+	spdk_blob_io_write(blob, ch, payload_write, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(CLUSTER_COUNT - 1 == spdk_bs_free_cluster_count(bs));
+
+	g_bserrno = -1;
+	spdk_blob_io_unmap(blob, ch, 0, io_units_per_cluster, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(CLUSTER_COUNT == spdk_bs_free_cluster_count(bs));
+
 	/* Fill all clusters */
 	for (i = 0; i < CLUSTER_COUNT; i++) {
 		memset(payload_write, i + 1, sizeof(payload_write));
