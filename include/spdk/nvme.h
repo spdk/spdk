@@ -3353,6 +3353,18 @@ uint32_t spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata);
 bool spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns);
 
 /**
+ * Check whether if the namespace supports write uncorrectable operation
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return true if the namespace supports write uncorrectable operation, or false otherwise.
+ */
+bool spdk_nvme_ns_supports_write_uncorrectable(struct spdk_nvme_ns *ns);
+
+/**
  * Check whether if the namespace supports compare operation
  *
  * This function is thread safe and can be called at any point while the controller

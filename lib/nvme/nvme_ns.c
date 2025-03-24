@@ -372,6 +372,12 @@ spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns)
 }
 
 bool
+spdk_nvme_ns_supports_write_uncorrectable(struct spdk_nvme_ns *ns)
+{
+	return (ns->flags & SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED) ? true : false;
+}
+
+bool
 spdk_nvme_ns_supports_compare(struct spdk_nvme_ns *ns)
 {
 	return (ns->flags & SPDK_NVME_NS_COMPARE_SUPPORTED) ? true : false;
