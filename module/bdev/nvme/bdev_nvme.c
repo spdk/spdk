@@ -334,6 +334,8 @@ static int bdev_nvme_comparev_and_writev(struct nvme_bdev_io *bio,
 		struct iovec *cmp_iov, int cmp_iovcnt, struct iovec *write_iov,
 		int write_iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 		uint32_t flags);
+static int bdev_nvme_write_uncorrectable(struct nvme_bdev_io *bio, uint64_t lba_count,
+		uint64_t lba);
 static int bdev_nvme_get_zone_info(struct nvme_bdev_io *bio, uint64_t zone_id,
 				   uint32_t num_zones, struct spdk_bdev_zone_info *info);
 static int bdev_nvme_zone_management(struct nvme_bdev_io *bio, uint64_t zone_id,
@@ -3493,6 +3495,11 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 				    bdev_io->u.bdev.copy.src_offset_blocks,
 				    bdev_io->u.bdev.num_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE:
+		rc = bdev_nvme_write_uncorrectable(nbdev_io,
+						   bdev_io->u.bdev.num_blocks,
+						   bdev_io->u.bdev.offset_blocks);
+		break;
 	default:
 		rc = -EINVAL;
 		break;
@@ -3638,6 +3645,9 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_COPY:
 		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 		return cdata->oncs.nvmcpys;
+
+	case SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE:
+		return spdk_nvme_ns_supports_write_uncorrectable(ns);
 
 	default:
 		return false;
@@ -8139,6 +8149,23 @@ fill_zone_from_report(struct spdk_bdev_zone_info *info, struct spdk_nvme_zns_zon
 	info->capacity = desc->zcap;
 
 	return 0;
+}
+
+static int
+bdev_nvme_write_uncorrectable(struct nvme_bdev_io *bio, uint64_t lba_count, uint64_t lba)
+{
+	int rc;
+
+	SPDK_DEBUGLOG(bdev_nvme, "write uncorrectable %" PRIu64 " blocks with offset %#" PRIx64 "\n",
+		      lba_count, lba);
+
+	rc = spdk_nvme_ns_cmd_write_uncorrectable(bio->io_path->nvme_ns->ns, bio->io_path->qpair->qpair,
+			lba, lba_count, bdev_nvme_queued_done, bio);
+	if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
+		SPDK_ERRLOG("write uncorrectable failed: rc = %d\n", rc);
+	}
+
+	return rc;
 }
 
 static void
