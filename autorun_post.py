@@ -93,6 +93,8 @@ def generateCoverageReport(output_dir, repo_dir):
         sys.exit(1)
     for f in covfiles:
         os.remove(f)
+    if os.path.exists(cov_total):
+        os.remove(cov_total)
 
 
 def normalizePaths(cov_file, repo_dir):
