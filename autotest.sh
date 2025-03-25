@@ -405,5 +405,5 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 	$LCOV -q -r $out/cov_total.info '*/examples/vmd/*' -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info '*/app/spdk_lspci/*' -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info '*/app/spdk_top/*' -o $out/cov_total.info
-	rm -f cov_base.info cov_test.info OLD_STDOUT OLD_STDERR
+	rm -f $out/cov_base.info $out/cov_test.info OLD_STDOUT OLD_STDERR
 fi
