@@ -1,0 +1,80 @@
+name: Go
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  golangci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [ '1.21', '1.22', '1.23' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install additional packages
+        run: sudo apt-get install build-essential
+
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          working-directory: go/rpc
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [ '1.21', '1.22', '1.23' ]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Install additional packages
+      run: sudo ./scripts/pkgdep.sh --golang
+    - name: Configure
+      run: |
+        ./configure \
+            --with-golang \
+            --without-uring \
+            --without-fio \
+            --without-rbd \
+            --without-rdma \
+            --without-shared \
+            --with-iscsi-initiator \
+            --without-vtune \
+            --with-vfio-user
+
+    - name: Build
+      run: make
+      working-directory: go/rpc
+
+    # - name: Build
+    #   run: go build -v ./...
+    #   working-directory: cmd
+
+    # - name: Test
+    #   run: go test -race -coverprofile=coverage.out -covermode=atomic -v ./...
+    #   working-directory: .
+
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v3
