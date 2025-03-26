@@ -1848,6 +1848,15 @@ raid_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void 
 }
 
 static void
+raid_bdev_configure_done(struct raid_bdev *raid_bdev, int status)
+{
+	if (raid_bdev->configure_cb != NULL) {
+		raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, status);
+		raid_bdev->configure_cb = NULL;
+	}
+}
+
+static void
 raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 {
 	struct spdk_bdev *raid_bdev_gen = &raid_bdev->bdev;
@@ -1896,10 +1905,7 @@ out:
 		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	}
 
-	if (raid_bdev->configure_cb != NULL) {
-		raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, rc);
-		raid_bdev->configure_cb = NULL;
-	}
+	raid_bdev_configure_done(raid_bdev, rc);
 }
 
 static void
@@ -1913,10 +1919,7 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
 		if (raid_bdev->module->stop != NULL) {
 			raid_bdev->module->stop(raid_bdev);
 		}
-		if (raid_bdev->configure_cb != NULL) {
-			raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, status);
-			raid_bdev->configure_cb = NULL;
-		}
+		raid_bdev_configure_done(raid_bdev, status);
 	}
 }
 
