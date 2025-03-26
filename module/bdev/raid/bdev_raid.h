@@ -239,6 +239,7 @@ struct raid_bdev {
 	/* Callback and context for raid_bdev configuration */
 	raid_bdev_action_cb		configure_cb;
 	void				*configure_cb_ctx;
+	int				configure_cb_status;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \

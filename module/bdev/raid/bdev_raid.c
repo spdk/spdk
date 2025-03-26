@@ -265,7 +265,6 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_create_cb, %p\n", raid_ch);
 
 	assert(raid_bdev != NULL);
-	assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
 
 	raid_ch->base_channel = calloc(raid_bdev->num_base_bdevs, sizeof(struct spdk_io_channel *));
 	if (!raid_ch->base_channel) {
@@ -1680,6 +1679,7 @@ raid_bdev_create_configure_base_bdev_cb(void *_ctx, int status)
 	}
 
 	if (ctx->status != 0) {
+		assert(ctx->raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 		raid_bdev_delete(ctx->raid_bdev, NULL, NULL);
 	}
 
@@ -1851,9 +1851,29 @@ static void
 raid_bdev_configure_done(struct raid_bdev *raid_bdev, int status)
 {
 	if (raid_bdev->configure_cb != NULL) {
-		raid_bdev->configure_cb(raid_bdev->configure_cb_ctx, status);
+		raid_bdev_action_cb configure_cb = raid_bdev->configure_cb;
+
+		/* raid_bdev can be freed by configure_cb, don't touch it after the callback */
 		raid_bdev->configure_cb = NULL;
+		configure_cb(raid_bdev->configure_cb_ctx, status);
 	}
+}
+
+static void
+raid_bdev_configure_unregister_io_device_cb(void *io_device)
+{
+	struct raid_bdev *raid_bdev = io_device;
+
+	raid_bdev_configure_done(raid_bdev, raid_bdev->configure_cb_status);
+}
+
+static void
+raid_bdev_configure_unregister_bdev_cb(void *cb_arg, int rc)
+{
+	struct raid_bdev *raid_bdev = cb_arg;
+
+	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+	raid_bdev_configure_done(raid_bdev, raid_bdev->configure_cb_status);
 }
 
 static void
@@ -1862,7 +1882,6 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 	struct spdk_bdev *raid_bdev_gen = &raid_bdev->bdev;
 	int rc;
 
-	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
 	SPDK_DEBUGLOG(bdev_raid, "io device register %p\n", raid_bdev);
 	SPDK_DEBUGLOG(bdev_raid, "blockcnt %" PRIu64 ", blocklen %u\n",
 		      raid_bdev_gen->blockcnt, raid_bdev_gen->blocklen);
@@ -1873,8 +1892,15 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to register raid bdev '%s': %s\n",
 			    raid_bdev_gen->name, spdk_strerror(-rc));
-		goto out;
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
+		raid_bdev->configure_cb_status = rc;
+		spdk_io_device_unregister(raid_bdev, raid_bdev_configure_unregister_io_device_cb);
+		return;
 	}
+
+	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
 
 	/*
 	 * Open the bdev internally to delay unregistering if we need to stop a background process
@@ -1889,21 +1915,15 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to open raid bdev '%s': %s\n",
 			    raid_bdev_gen->name, spdk_strerror(-rc));
-		spdk_bdev_unregister(raid_bdev_gen, NULL, NULL);
-		goto out;
+		raid_bdev->configure_cb_status = rc;
+		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+		spdk_bdev_unregister(raid_bdev_gen, raid_bdev_configure_unregister_bdev_cb, raid_bdev);
+		return;
 	}
 
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
 		      raid_bdev_gen->name, raid_bdev);
-out:
-	if (rc != 0) {
-		if (raid_bdev->module->stop != NULL) {
-			raid_bdev->module->stop(raid_bdev);
-		}
-		spdk_io_device_unregister(raid_bdev, NULL);
-		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-	}
 
 	raid_bdev_configure_done(raid_bdev, rc);
 }
