@@ -123,6 +123,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_COPY,
 	SPDK_BDEV_IO_TYPE_NVME_IOV_MD,
 	SPDK_BDEV_IO_TYPE_NVME_NSSR,
+	SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -1855,6 +1856,30 @@ int spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				  uint64_t offset_blocks, uint64_t num_blocks,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a write uncorrectable request to the bdev on the given channel. This command writes logical
+ * bad block to the device.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write bad block.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ *   * -ENOTSUP - the bdev does not support the command.
+ */
+int spdk_bdev_write_uncorrectable_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or

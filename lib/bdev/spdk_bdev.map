@@ -95,6 +95,7 @@
 	spdk_bdev_zcopy_end;
 	spdk_bdev_write_zeroes;
 	spdk_bdev_write_zeroes_blocks;
+	spdk_bdev_write_uncorrectable_blocks;
 	spdk_bdev_unmap;
 	spdk_bdev_unmap_blocks;
 	spdk_bdev_flush;

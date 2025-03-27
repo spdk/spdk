@@ -405,6 +405,7 @@ static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
 	[SPDK_BDEV_IO_TYPE_SEEK_HOLE]		= true,
 	[SPDK_BDEV_IO_TYPE_SEEK_DATA]		= true,
 	[SPDK_BDEV_IO_TYPE_COPY]		= true,
+	[SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE]	= true,
 };
 
 static void
@@ -4279,6 +4280,63 @@ bdev_write_zeroes(void)
 	CU_ASSERT_EQUAL(num_completed, num_requests);
 
 	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
+static void
+bdev_write_uncorrectable(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t offset, num_blocks;
+	uint32_t num_completed;
+	int rc;
+
+	ut_init_bdev(NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	fn_table.submit_request = stub_submit_request;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE, 0, 0, 0);
+
+	num_blocks = -1;
+	offset = 10;
+
+	rc = spdk_bdev_write_uncorrectable_blocks(desc, ioch, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	num_completed = stub_complete_io(0);
+	CU_ASSERT_EQUAL(num_completed, 0);
+
+	num_blocks = 5;
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE, false);
+
+	rc = spdk_bdev_write_uncorrectable_blocks(desc, ioch, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, -ENOTSUP);
+	num_completed = stub_complete_io(0);
+	CU_ASSERT_EQUAL(num_completed, 0);
+
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE, true);
+	expected_io->offset = offset;
+	expected_io->length = num_blocks;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_write_uncorrectable_blocks(desc, ioch, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
@@ -8168,6 +8226,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_io_alignment);
 	CU_ADD_TEST(suite, bdev_histograms);
 	CU_ADD_TEST(suite, bdev_write_zeroes);
+	CU_ADD_TEST(suite, bdev_write_uncorrectable);
 	CU_ADD_TEST(suite, bdev_compare_and_write);
 	CU_ADD_TEST(suite, bdev_compare);
 	CU_ADD_TEST(suite, bdev_compare_emulated);

@@ -2787,6 +2787,7 @@ bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 		return bdev_io->u.nvme_passthru.nbytes;
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE:
 		return bdev_io->u.bdev.num_blocks * blocklen;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		/* Track the data in the start phase only */
@@ -3768,6 +3769,7 @@ bdev_io_range_is_locked(struct spdk_bdev_io *bdev_io, struct lba_range *range)
 		}
 	/* fallthrough */
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
@@ -4111,6 +4113,7 @@ static const char *g_io_type_strings[] = {
 	[SPDK_BDEV_IO_TYPE_COPY] = "copy",
 	[SPDK_BDEV_IO_TYPE_NVME_IOV_MD] = "nvme_iov_md",
 	[SPDK_BDEV_IO_TYPE_NVME_NSSR] = "nvme_nssr",
+	[SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE] = "write_uncorrectable",
 };
 
 const char *
@@ -6853,6 +6856,47 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	assert(_bdev_get_block_size_with_md(bdev) <= ZERO_BUFFER_SIZE);
 
 	bdev_write_zero_buffer(bdev_io);
+	return 0;
+}
+
+int
+spdk_bdev_write_uncorrectable_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				     uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	if (!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE)) {
+		return -ENOTSUP;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE;
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->u.bdev.iovs = NULL;
+	bdev_io->u.bdev.iovcnt = 0;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+	bdev_io->u.bdev.memory_domain = NULL;
+	bdev_io->u.bdev.memory_domain_ctx = NULL;
+	bdev_io->u.bdev.accel_sequence = NULL;
+
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
