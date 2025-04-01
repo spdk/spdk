@@ -1,0 +1,340 @@
+SPDK Component Maintainers
+==========================
+
+This file lists the component maintainers for supported components in SPDK.
+It also provides status for orphaned and/or obsolete components which may
+be removed from SPDK in future releases. Please see deprecation.md for
+the schedule of such removals.
+
+Component maintainer does not equal core maintainer. All core maintainers
+will likely maintain several components, but not all component maintainers
+are necessarily core maintainers.
+
+Core maintainers should wait for votes from component maintainers before
+merging patches affecting that component. -1 votes from component maintainers
+are effectively blocking votes. Core maintainers remain as final arbiter on
+patch merges, and will only override component maintainers under
+exceptional circumstances. Core maintainers may also merge patches without
+component maintainer votes if the component maintainers have not
+reviewed and voted on patches within a reasonable amount of time.
+
+Component maintainers are responsible for the overall design, support
+and maintenance for the component. This includes resolving GitHub issues,
+responding to questions on Slack and e-mail, and maintaining tests and
+CI infrastructure for running those tests. This infrastructure may just
+be public GitHub runners but may also require self-hosted runners depending
+on the hardware requirements.
+
+Do not use this list for purposes of sending private messages to
+component maintainers via Slack or e-mail. Keep discussion on public
+communication channels and tag component maintainers in those messages as
+necessary.
+
+Descriptions of section entries:
+
+M: Maintainer's Full Name <address@domain>
+   Multiple maintainers per component are acceptable.
+S: Status of the component. Valid values are "Supported", "Orphaned", and
+   "Obsolete".
+F: Files and directories with wildcard patterns.
+   A trailing slash includes all files and subdirectory files.
+   Wildcards may be used to specify multiple files or multiple directories.
+   One pattern per line. Multiple F: lines acceptable.
+X: Files and directories exclusion, same rules as F:
+
+ACCELERATION (ACCEL) LAYER
+M:	Alexey Marchuk <alexeymar@nvidia.com>
+S:	Supported
+F:	examples/accel/
+F:	include/spdk/accel*.h
+F:	lib/accel/
+F:	module/event/subsystems/accel/
+F:	test/accel/
+X:	test/accel/mlx5/
+F:	test/external_code/accel/
+F:	test/unit/lib/accel/
+X:	test/unit/lib/accel/dpdk_*dev.c/
+
+BDEV (BLOCK DEVICE) LAYER
+F:	lib/bdev/
+F:	module/event/subsystems/bdev/
+
+BDEV FIO PLUGIN
+F:	app/fio/bdev/
+
+BLOB FILESYSTEM
+F:	lib/blobfs/
+F:	lib/rocksdb/
+F:	module/blobfs/
+S:	Obsolete
+
+BLOBSTORE LIBRARY
+F:	lib/blob/
+F:	module/blob/
+
+CEPH RBD BDEV MODULE
+F:	module/bdev/rbd/
+
+CONF FILE LIBRARY
+F:	lib/conf/
+
+CRYPTO BDEV MODULE
+F:	module/bdev/crypto/
+
+CSAL FLASH TRANSLATION LAYER
+F:	lib/ftl/
+F:	module/bdev/ftl/
+
+DAOS BDEV MODULE
+F:	module/bdev/daos/
+
+DD APPLICATION
+F:	app/spdk_dd/
+
+DELAY BDEV MODULE
+F:	module/bdev/delay/
+
+DMA LIBRARY
+M:	Alexey Marchuk <alexeymar@nvidia.com>
+F:	include/spdk/dma.h
+F:	lib/dma/
+F:	test/dma/
+F:	test/unit/lib/dma/
+S:	Supported
+
+DPDK ACCEL MODULES
+F:	module/accel/dpdk_cryptodev/
+F:	module/accel/dpdk_compressdev/
+S:	Orphaned
+
+DPDK ENVIRONMENT LIBRARY
+F:	lib/env_dpdk/
+F:	module/env_dpdk/
+F:	dpdkbuild/
+
+ERROR INJECTION ACCEL MODULE
+F:	module/accel/error/
+
+ERROR INJECTION BDEV MODULE
+F:	module/bdev/error/
+
+EVENT FRAMEWORK
+F:	lib/event/
+
+FILESYSTEM DEVICE (FSDEV) LAYER
+F:	lib/fsdev/
+F:	lib/fuse_dispatcher/
+F:	module/fsdev/
+F:	module/event/subsystems/fsdev/
+
+INTEL ACCEL MODULES
+F:	module/accel/iaa/
+F:	module/accel/ioat/
+F:	module/accel/dsa/
+S:	Orphaned
+
+INTEL IDXD DRIVER
+F:	lib/idxd/
+S:	Orphaned
+
+INTEL IOAT DRIVER
+F:	lib/ioat/
+S:	Orphaned
+
+INTEL VMD SUPPORT
+F:	lib/vmd/
+F:	module/event/subsystems/vmd/
+F:	app/spdk_lspci
+S:	Orphaned
+
+IO_URING BDEV MODULE
+F:	module/bdev/uring/
+
+IO_URING SOCK MODULE
+F:	module/sock/uring/
+
+IOBUF SUPPORT
+F:	lib/thread/iobuf.c
+F:	module/event/subsystems/iobuf/
+
+ISCSI INITIATOR BDEV MODULE
+F:	module/bdev/iscsi/
+
+ISCSI LIBRARY
+F:	lib/iscsi/
+F:	app/iscsi_tgt/
+F:	module/event/subsystems/iscsi/
+
+JSON AND RPC LIBRARIES
+F:	lib/json/
+F:	lib/jsonrpc/
+F:	lib/rpc/
+
+KEYRING LIBRARIES
+F:	lib/keyring/
+F:	module/keyring/
+F:	module/event/subsystems/keyring/
+
+LINUX AIO BDEV MODULE
+F:	module/bdev/aio/
+
+LOGGING LIBRARY
+F:	lib/log/
+
+LOGICAL VOLUMES
+F:	lib/lvol/
+F:	module/bdev/lvol/
+
+MISCELLANEOUS BDEV MODULES
+F:	module/bdev/null/
+F:	module/bdev/passthru/
+F:	module/bdev/gpt/
+F:	module/bdev/split/
+F:	module/bdev/malloc/
+
+MLX5 ACCEL MODULE
+M:	Alexey Marchuk <alexeymar@nvidia.com>
+S:	Supported
+F:	module/accel/mlx5/
+
+MLX5 DRIVERS
+F:	lib/mlx5/
+
+NETWORK BLOCK DEVICE (NBD) TARGET
+F:	lib/nbd/
+F:	module/event/subsystems/nbd/
+
+NOTIFICATION LIBRARY
+F:	lib/notify/
+
+NVME BDEV MODULE
+F:	module/bdev/nvme/
+
+NVME DRIVER (CORE)
+F:	lib/nvme/
+
+NVME DRIVER (PCIE)
+F:	lib/nvme/*pcie*
+
+NVME DRIVER (RDMA)
+F:	lib/nvme/nvme_rdma.c
+
+NVME DRIVER (TCP)
+F:	lib/nvme/nvme_tcp.c
+
+NVME DRIVER (VFIO USER)
+F:	lib/nvme/nvme_vfio_user.c
+
+NVME DISCOVERY APPLICATION
+F:	app/spdk_nvme_discover/
+
+NVME FIO PLUGIN
+F:	app/fio/nvme/
+
+NVME IDENTIFY APPLICATION
+F:	app/spdk_nvme_identify/
+
+NVME PERF APPLICATION
+F:	app/spdk_nvme_perf/
+
+NVMF TARGET (CORE)
+F:	lib/nvmf/
+F:	app/nvmf_tgt/
+F:	module/event/subsystems/nvmf/
+
+NVMF TARGET (FC)
+F:	lib/nvmf/fc*.c
+
+NVMF TARGET (RDMA)
+F:	lib/nvmf/rdma.c
+
+NVMF TARGET (TCP)
+F:	lib/nvmf/tcp.c
+
+NVMF TARGET (VFIO USER)
+F:	lib/nvmf/vfio_user.c
+
+OPEN CAS FRAMEWORK
+F:	lib/env_ocf/
+F:	module/bdev/ocf/
+
+POSIX SOCK MODULE
+F:	module/sock/posix/
+
+RAID BDEV MODULE
+F:	module/bdev/raid/
+
+RDMA SUPPORT LIBRARIES
+F:	lib/rdma*/
+
+REDUCE COMPRESSION LIBRARY
+F:	lib/reduce/
+F:	module/bdev/compress/
+S:	Obsolete
+
+SCHEDULERS
+F:	module/scheduler/
+F:	module/event/subsystems/scheduler/
+
+SCSI LIBRARY
+F:	lib/scsi/
+F:	module/event/subsystems/scsi/
+
+SOCKET LAYER
+F:	lib/sock/
+F:	module/event/subsystems/sock/
+
+SPDK COMBINED TARGET APPLICATION
+F:	app/spdk_tgt/
+
+SPDK TOP APPLICATION
+F:	app/spdk_top/
+
+SUBSYSTEM INIITALIZATION LIBRARY
+F:	lib/init/
+
+THREAD LIBRARY
+F:	lib/thread/
+
+TRACING SUPPORT
+F:	lib/trace*/
+F:	app/trace*/
+M:	Jim Harris <jim.harris@nvidia.com>
+S:	Supported
+
+UBLK TARGET
+F:	lib/ublk/
+F:	module/event/subsystems/ublk/
+
+UNIT TEST SUPPORT LIBRARIES
+F:	lib/ut/
+F:	lib/ut_mock/
+
+UTIL LIBRARY
+F:	lib/util/
+
+VFIO USER HOST LIBRARY
+F:	lib/vfio_user/
+
+VHOST TARGET LIBRARY
+F:	lib/vhost/
+F:	app/vhost/
+F:	module/event/subsystems/vhost_blk/
+F:	module/event/subsystems/vhost_scsi/
+
+VIRTIO BDEV MODULES
+F:	module/bdev/virtio/
+
+VIRTIO DRIVERS
+F:	lib/virtio/
+
+VIRTIO VFIO USER TARGET LIBRARY
+F:	lib/vfu_tgt/
+F:	module/vfu_device/
+F:	module/event/subsystems/vfu_tgt/
+
+XNVME BDEV MODULE
+F:	module/bdev/xnvme/
+
+ZONE BLOCK BDEV MODULE
+F:	module/bdev/zone_block/
