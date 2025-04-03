@@ -68,6 +68,7 @@ TEST_TAG_FILE=${TEST_TAG_FILE:-"$_pmrootdir/.run_test_name"}
 # autotest's $output_dir has a prio
 PM_OUTPUTDIR=${output_dir:-/tmp}/power
 PM_OS=$(uname -s)
+PM_HW=true
 
 declare -A MONITOR_RESOURCES_SUDO=()
 MONITOR_RESOURCES_SUDO["collect-bmc-pm"]=1
@@ -78,11 +79,17 @@ MONITOR_RESOURCES_SUDO["collect-vmstat"]=0
 SUDO[0]="" SUDO[1]="sudo -E"
 
 MONITOR_RESOURCES=(collect-cpu-load collect-vmstat)
+
+# PM_HW monitors  are dedicated for the PHY platforms. Skip VMs and systems which identifies as
+# a docker containers (latter is specific to our CI's use-case).
+if [[ ! -e /sys/class/dmi/id/chassis_vendor || $(< /sys/class/dmi/id/chassis_vendor) == QEMU ||
+$(< /proc/sys/kernel/osrelease) == *microsoft*WSL* || -e /.dockerenv ]]; then
+	PM_HW=false
+fi
+
 if [[ $PM_OS == FreeBSD ]]; then
 	MONITOR_RESOURCES=(collect-vmstat)
-elif [[ $PM_OS == Linux && $(< /sys/class/dmi/id/chassis_vendor) != QEMU && ! -e /.dockerenv ]]; then
-	# These are dedicated for the PHY platforms. Skip VMs and systems which identifies as
-	# a docker containers (latter is specific to our CI's use-case).
+elif [[ $PM_OS == Linux && $PM_HW == true ]]; then
 	MONITOR_RESOURCES+=(collect-cpu-temp)
 	MONITOR_RESOURCES+=(collect-bmc-pm)
 fi
