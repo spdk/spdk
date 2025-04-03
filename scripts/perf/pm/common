@@ -16,6 +16,8 @@ retag() {
 start_monitor_resources() {
 	local monitor
 
+	[[ -z $DISABLE_POWER_MONITOR ]] || return 0
+
 	for monitor in "${MONITOR_RESOURCES[@]}"; do
 		${SUDO[MONITOR_RESOURCES_SUDO["$monitor"]]} \
 			"$_pmdir/$monitor" -d "$PM_OUTPUTDIR" \
