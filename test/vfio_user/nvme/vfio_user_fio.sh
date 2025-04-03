@@ -13,7 +13,8 @@ source $rootdir/test/vfio_user/autotest.config
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 fio_bin="--fio-bin=$FIO_BIN"
-vm_no="2"
+vm_no=${VM_NO:-2} skip_nvme=${SKIP_NVME:-false}
+vm_no=$((vm_no == 0 ? 1 : vm_no))
 
 trap 'clean_vfio_user' EXIT
 vhosttestinit
@@ -21,16 +22,14 @@ vhosttestinit
 timing_enter start_vfio_user
 vfio_user_run 0
 
-#
-# Create multiple malloc bdevs for multiple VMs, last VM uses nvme bdev.
-#
-for i in $(seq 0 $vm_no); do
+# Create multiple malloc bdevs for multiple VMs. If not disabled, last VM uses nvme bdev.
+for ((i = 0; i < vm_no; i++)); do
 	vm_muser_dir="$VM_DIR/$i/muser"
 	rm -rf $vm_muser_dir
 	mkdir -p $vm_muser_dir/domain/muser${i}/$i
 
 	$rpc_py nvmf_create_subsystem nqn.2019-07.io.spdk:cnode${i} -s SPDK00${i} -a
-	if ((i == vm_no)); then
+	if ((i == vm_no)) && [[ $skip_nvme == false ]]; then
 		$rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
 		$rpc_py nvmf_subsystem_add_ns nqn.2019-07.io.spdk:cnode${i} Nvme0n1
 	else
@@ -44,7 +43,7 @@ timing_exit start_vfio_user
 
 used_vms=""
 timing_enter launch_vms
-for i in $(seq 0 $vm_no); do
+for ((i = 0; i < vm_no; i++)); do
 	vm_setup --disk-type=vfio_user --force=$i --os=$VM_IMAGE --memory=768 --disks="$i"
 	used_vms+=" $i"
 done
@@ -78,11 +77,11 @@ vm_shutdown_all
 
 timing_enter clean_vfio_user
 
-for i in $(seq 0 $vm_no); do
+for ((i = 0; i < vm_no; i++)); do
 	vm_muser_dir="$VM_DIR/$i/muser"
 	$rpc_py nvmf_subsystem_remove_listener nqn.2019-07.io.spdk:cnode${i} -t vfiouser -a $vm_muser_dir/domain/muser${i}/$i -s 0
 	$rpc_py nvmf_delete_subsystem nqn.2019-07.io.spdk:cnode${i}
-	if ((i == vm_no)); then
+	if ((i == vm_no)) && [[ $skip_nvme == false ]]; then
 		$rpc_py bdev_nvme_detach_controller Nvme0
 	else
 		$rpc_py bdev_malloc_delete Malloc${i}
