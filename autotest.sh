@@ -394,17 +394,4 @@ chmod a+r $output_dir/timing.txt
 
 [[ -f "$output_dir/udev.log" ]] && rm -f "$output_dir/udev.log"
 
-if [[ $CONFIG_COVERAGE == y ]]; then
-	# generate coverage data and combine with baseline
-	$LCOV -q -c --no-external -d $src -t "$(hostname)" -o $out/cov_test.info
-	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '*/dpdk/*' -o $out/cov_total.info
-	# C++ headers in /usr can sometimes generate data even when specifying
-	# --no-external, so remove them. But we need to add an ignore-errors
-	# flag to squash warnings on systems where they don't generate data.
-	$LCOV -q -r $out/cov_total.info --ignore-errors unused,unused '/usr/*' -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '*/examples/vmd/*' -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '*/app/spdk_lspci/*' -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '*/app/spdk_top/*' -o $out/cov_total.info
-	rm -f $out/cov_base.info $out/cov_test.info OLD_STDOUT OLD_STDERR
-fi
+gather_coverage

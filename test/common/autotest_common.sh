@@ -1689,22 +1689,8 @@ function is_pid_child() {
 	return 1
 }
 
-# Define temp storage for all the tests. Look for 2GB at minimum
-set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
-
-set -o errtrace
-shopt -s extdebug
-trap "trap - ERR; print_backtrace >&2" ERR
-
-PS4=' \t ${test_domain:-} -- ${BASH_SOURCE#${BASH_SOURCE%/*/*}/}@${LINENO} -- \$ '
-if $SPDK_AUTOTEST_X; then
-	# explicitly enable xtraces, overriding any tracking information.
-	xtrace_fd
-else
-	xtrace_disable
-fi
-
-if [[ $CONFIG_COVERAGE == y ]]; then
+function enable_coverage() {
+	[[ $CONFIG_COVERAGE == y ]] || return 0
 	if lt "$(lcov --version | awk '{print $NF}')" 2; then
 		lcov_rc_opt="--rc lcov_branch_coverage=1 --rc lcov_function_coverage=1"
 	else
@@ -1720,4 +1706,37 @@ if [[ $CONFIG_COVERAGE == y ]]; then
 		$lcov_opt
 		"
 	export LCOV="lcov $LCOV_OPTS"
+}
+
+function gather_coverage() {
+	[[ $CONFIG_COVERAGE == y ]] || return 0
+	# generate coverage data and combine with baseline
+	$LCOV -q -c --no-external -d "$rootdir" -t "$(hostname)" -o "$output_dir/cov_test.info"
+	$LCOV -q -a "$output_dir/cov_base.info" -a "$output_dir/cov_test.info" -o "$output_dir/cov_total.info"
+	$LCOV -q -r "$output_dir/cov_total.info" '*/dpdk/*' -o "$output_dir/cov_total.info"
+	# C++ headers in /usr can sometimes generate data even when specifying
+	# --no-external, so remove them. But we need to add an ignore-errors
+	# flag to squash warnings on systems where they don't generate data.
+	$LCOV -q -r "$output_dir/cov_total.info" --ignore-errors unused,unused '/usr/*' -o "$output_dir/cov_total.info"
+	$LCOV -q -r "$output_dir/cov_total.info" '*/examples/vmd/*' -o "$output_dir/cov_total.info"
+	$LCOV -q -r "$output_dir/cov_total.info" '*/app/spdk_lspci/*' -o "$output_dir/cov_total.info"
+	$LCOV -q -r "$output_dir/cov_total.info" '*/app/spdk_top/*' -o "$output_dir/cov_total.info"
+	rm -f "$output_dir/cov_base.info" "$output_dir/cov_test.info"
+}
+
+# Define temp storage for all the tests. Look for 2GB at minimum
+set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
+
+set -o errtrace
+shopt -s extdebug
+trap "trap - ERR; print_backtrace >&2" ERR
+
+PS4=' \t ${test_domain:-} -- ${BASH_SOURCE#${BASH_SOURCE%/*/*}/}@${LINENO} -- \$ '
+if $SPDK_AUTOTEST_X; then
+	# explicitly enable xtraces, overriding any tracking information.
+	xtrace_fd
+else
+	xtrace_disable
 fi
+
+enable_coverage
