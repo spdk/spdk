@@ -45,6 +45,8 @@ extern "C" {
 #define SPDK_SEC_TO_USEC 1000000ULL
 #define SPDK_SEC_TO_NSEC 1000000000ULL
 
+#define SPDK_MSEC_TO_USEC 1000ULL
+
 /* Ceiling division of unsigned integers */
 #define SPDK_CEIL_DIV(x,y) (((x)+(y)-1)/(y))
 

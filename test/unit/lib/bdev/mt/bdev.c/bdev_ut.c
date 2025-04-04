@@ -942,7 +942,7 @@ reset_completions(void)
 	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
-	spdk_delay_us(BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
+	spdk_delay_us(BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD_IN_USEC);
 	poll_threads();
 	poll_threads();
 	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -969,7 +969,7 @@ reset_completions(void)
 	/* Let the poller wait for reset_io_drain_timeout seconds. */
 	for (iter = 0; iter < bdev->reset_io_drain_timeout; iter++) {
 		CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
-		spdk_delay_us(BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
+		spdk_delay_us(BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD_IN_USEC);
 		poll_threads();
 		poll_threads();
 	}
