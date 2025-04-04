@@ -30,14 +30,12 @@ jobs:
           make -C python spdk/version.py
           python -m pip install build
           python -m build python/
-          # for debug, remove later
-          find .
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
           name: release-dists
-          path: dist/
+          path: python/dist/
 
   pypi-publish:
     runs-on: ubuntu-latest
