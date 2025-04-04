@@ -1698,20 +1698,17 @@ bdev_no_mem_poller(void *ctx)
 {
 	struct spdk_bdev_shared_resource *shared_resource = ctx;
 
-	spdk_poller_unregister(&shared_resource->nomem_poller);
-
 	if (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
 		bdev_shared_ch_retry_io(shared_resource);
 	}
-	/* the retry cb may re-register the poller so double check */
-	if (!TAILQ_EMPTY(&shared_resource->nomem_io) &&
-	    shared_resource->io_outstanding == 0 && shared_resource->nomem_poller == NULL) {
-		/* No IOs were submitted, try again */
-		shared_resource->nomem_poller = SPDK_POLLER_REGISTER(bdev_no_mem_poller, shared_resource,
-						SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC * 10);
+
+	/* Keep poller registered if list is not empty and there are no io outstanding. */
+	if (!TAILQ_EMPTY(&shared_resource->nomem_io) && shared_resource->io_outstanding == 0) {
+		return SPDK_POLLER_BUSY;
 	}
 
-	return SPDK_POLLER_BUSY;
+	spdk_poller_unregister(&shared_resource->nomem_poller);
+	return SPDK_POLLER_IDLE;
 }
 
 static inline bool
