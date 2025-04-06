@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright (C) 2025 Huawei Technologies
  *   All rights reserved.
  */
 
@@ -7,10 +8,10 @@
 #include "spdk/bdev.h"
 #include "data.h"
 
-struct bdev_ocf_data *
+struct vbdev_ocf_data *
 vbdev_ocf_data_alloc(uint32_t iovcnt)
 {
-	struct bdev_ocf_data *data;
+	struct vbdev_ocf_data *data;
 
 	data = env_malloc(sizeof(*data), ENV_MEM_NOIO);
 	if (!data) {
@@ -34,7 +35,7 @@ vbdev_ocf_data_alloc(uint32_t iovcnt)
 }
 
 void
-vbdev_ocf_data_free(struct bdev_ocf_data *data)
+vbdev_ocf_data_free(struct vbdev_ocf_data *data)
 {
 	if (!data) {
 		return;
@@ -48,7 +49,7 @@ vbdev_ocf_data_free(struct bdev_ocf_data *data)
 }
 
 void
-vbdev_ocf_iovs_add(struct bdev_ocf_data *data, void *base, size_t len)
+vbdev_ocf_iovs_add(struct vbdev_ocf_data *data, void *base, size_t len)
 {
 	assert(NULL != data);
 	assert(data->iovalloc != -1);
@@ -61,34 +62,4 @@ vbdev_ocf_iovs_add(struct bdev_ocf_data *data, void *base, size_t len)
 	data->iovs[data->iovcnt].iov_base = base;
 	data->iovs[data->iovcnt].iov_len = len;
 	data->iovcnt++;
-}
-
-struct bdev_ocf_data *
-vbdev_ocf_data_from_spdk_io(struct spdk_bdev_io *bdev_io)
-{
-	struct bdev_ocf_data *data;
-
-	if (bdev_io == NULL) {
-		return NULL;
-	}
-
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_READ:
-		assert(bdev_io->u.bdev.iovs);
-		break;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-		break;
-	default:
-		SPDK_ERRLOG("Unsupported IO type %d\n", bdev_io->type);
-		return NULL;
-	}
-
-	data = (struct bdev_ocf_data *)bdev_io->driver_ctx;
-	data->iovs = bdev_io->u.bdev.iovs;
-	data->iovcnt = bdev_io->u.bdev.iovcnt;
-	data->size = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-
-	return data;
 }

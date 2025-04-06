@@ -132,35 +132,165 @@ def bdev_crypto_delete(client, name):
     return client.call('bdev_crypto_delete', params)
 
 
-def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name, cache_line_size=None):
-    """Add an OCF block device
+def bdev_ocf_start_cache(client, cache_name, bdev_name, cache_mode=None, cache_line_size=None):
+    """Start OCF cache instance.
     Args:
-        name: name of constructed OCF bdev
-        mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
-        cache_bdev_name: name of underlying cache bdev
-        core_bdev_name: name of underlying core bdev
-        cache_line_size: OCF cache line size. The unit is KiB: {4, 8, 16, 32, 64}
+        cache_name: name for the new OCF cache vbdev
+        bdev_name: name of the bdev to use as cache
+        cache_mode: choose between {wt|wb|wa|wo|wi|pt}; default wt (Write-Through)
+        cache_line_size: choose between {4|8|16|32|64}; default 4 [KiB]
     Returns:
-        Name of created block device
+        Name of created OCF cache vbdev.
     """
     params = dict()
-    params['name'] = name
-    params['mode'] = mode
-    params['cache_bdev_name'] = cache_bdev_name
-    params['core_bdev_name'] = core_bdev_name
+    params['cache_name'] = cache_name
+    params['bdev_name'] = bdev_name
+    if cache_mode is not None:
+        params['cache_mode'] = cache_mode
     if cache_line_size is not None:
         params['cache_line_size'] = cache_line_size
-    return client.call('bdev_ocf_create', params)
+    return client.call('bdev_ocf_start_cache', params)
 
 
-def bdev_ocf_delete(client, name):
-    """Delete an OCF device
+def bdev_ocf_stop_cache(client, cache_name):
+    """Stop OCF cache instance.
     Args:
-        name: name of OCF bdev
+        cache_name: name of the cache vbdev to stop
+    """
+    params = dict()
+    params['cache_name'] = cache_name
+    return client.call('bdev_ocf_stop_cache', params)
+
+
+def bdev_ocf_add_core(client, core_name, bdev_name, cache_name):
+    """Add core device to OCF cache.
+    Args:
+        core_name: name for the new OCF core vbdev
+        bdev_name: name of the bdev to use as core
+        cache_name: name of already started OCF cache vbdev
+    Returns:
+        Name of created OCF core vbdev.
+    """
+    params = dict()
+    params['core_name'] = core_name
+    params['bdev_name'] = bdev_name
+    params['cache_name'] = cache_name
+    return client.call('bdev_ocf_add_core', params)
+
+
+def bdev_ocf_remove_core(client, core_name):
+    """Remove core device from OCF cache.
+    Args:
+        core_name: name of the core vbdev to remove from OCF cache instance
+    """
+    params = dict()
+    params['core_name'] = core_name
+    return client.call('bdev_ocf_remove_core', params)
+
+
+def bdev_ocf_get_bdevs(client, name=None):
+    """Get info about OCF devices.
+    Args:
+        name: optional name of specific OCF vbdev; shows all by default
+    Returns:
+        List of OCF vbdev details.
+    """
+    params = dict()
+    if name is not None:
+        params['name'] = name
+    return client.call('bdev_ocf_get_bdevs', params)
+
+
+def bdev_ocf_set_cachemode(client, cache_name, cache_mode):
+    """Set cache mode of OCF cache.
+    Args:
+        cache_name: name of the cache vbdev
+        cache_mode: choose between {wt|wb|wa|wo|wi|pt} (Write-Through, Write-Back, Write-Around, Write-Only, Write-Invalidate, Pass-Through)
+    """
+    params = dict()
+    params['cache_name'] = cache_name
+    params['cache_mode'] = cache_mode
+    return client.call('bdev_ocf_set_cachemode', params)
+
+
+def bdev_ocf_set_cleaning(client,
+                          cache_name,
+                          policy,
+                          acp_wake_up,
+                          acp_flush_max_buffers,
+                          alru_wake_up,
+                          alru_flush_max_buffers,
+                          alru_staleness_time,
+                          alru_activity_threshold):
+    """Set cleaning parameters for OCF cache device.
+    Args:
+        cache_name: name of the cache vbdev
+        policy: cleaning policy; choose between {acp|alru|nop}
+        acp_wake_up: time between ACP cleaning thread iterations: <0-10000> [ms]; default 10
+        acp_flush_max_buffers: number of dirty cache lines to be flushed in a single ACP cleaning thread iteration: <1-10000>; default 128
+        alru_wake_up: cleaning thread sleep time after an idle wake up: <0-3600> [s]; default 20
+        alru_flush_max_buffers: number of dirty cache lines to be flushed in one cleaning cycle: <1-10000>; default 100
+        alru_staleness_time: time that has to pass from the last write operation before a dirty cache line can be scheduled to be flushed: <1-3600> [s]; default 120
+        alru_activity_threshold: cache idle time before flushing thread can start <0-1000000> [ms]; default 10000
+    """
+    params = dict()
+    params['cache_name'] = cache_name
+    if policy is not None:
+        params['policy'] = policy
+    if acp_wake_up is not None:
+        params['acp_wake_up'] = acp_wake_up
+    if acp_flush_max_buffers is not None:
+        params['acp_flush_max_buffers'] = acp_flush_max_buffers
+    if alru_wake_up is not None:
+        params['alru_wake_up'] = alru_wake_up
+    if alru_flush_max_buffers is not None:
+        params['alru_flush_max_buffers'] = alru_flush_max_buffers
+    if alru_staleness_time is not None:
+        params['alru_staleness_time'] = alru_staleness_time
+    if alru_activity_threshold is not None:
+        params['alru_activity_threshold'] = alru_activity_threshold
+    return client.call('bdev_ocf_set_cleaning', params)
+
+
+def bdev_ocf_set_seqcutoff(client, core_name, policy, threshold, promotion_count):
+    """Set sequential cut-off parameters for OCF core device.
+    Args:
+        core_name: name of the core vbdev
+        policy: sequential cut-off policy; choose between {always|full|never}
+        threshold: activation threshold [KiB]
+        promotion_count: request count threshold for cutting off the sequential stream
+    """
+    params = dict()
+    params['core_name'] = core_name
+    if policy is not None:
+        params['policy'] = policy
+    if threshold is not None:
+        params['threshold'] = threshold
+    if promotion_count is not None:
+        params['promotion_count'] = promotion_count
+    return client.call('bdev_ocf_set_seqcutoff', params)
+
+
+def bdev_ocf_flush_start(client, name):
+    """Flush all dirty data from the OCF cache device to core devices.
+    Args:
+        ??? name: name of the OCF vbdev to flush
     """
     params = dict()
     params['name'] = name
-    return client.call('bdev_ocf_delete', params)
+    return client.call('bdev_ocf_flush_start', params)
+
+
+def bdev_ocf_flush_status(client, name):
+    """Get flush status of OCF vbdev
+    Args:
+        name: name of the OCF vbdev
+    Returns:
+        ??? Flush status.
+    """
+    params = dict()
+    params['name'] = name
+    return client.call('bdev_ocf_flush_status', params)
 
 
 def bdev_ocf_get_stats(client, name):
@@ -185,73 +315,6 @@ def bdev_ocf_reset_stats(client, name):
     params = dict()
     params['name'] = name
     return client.call('bdev_ocf_reset_stats', params)
-
-
-def bdev_ocf_get_bdevs(client, name=None):
-    """Get list of OCF devices including unregistered ones
-    Args:
-        name: name of OCF vbdev or name of cache device or name of core device (optional)
-    Returns:
-        Array of OCF devices with their current status
-    """
-    params = dict()
-    if name is not None:
-        params['name'] = name
-    return client.call('bdev_ocf_get_bdevs', params)
-
-
-def bdev_ocf_set_cache_mode(client, name, mode):
-    """Set cache mode of OCF block device
-    Args:
-        name: name of OCF bdev
-        mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
-    Returns:
-        New cache mode name
-    """
-    params = dict()
-    params['name'] = name
-    params['mode'] = mode
-    return client.call('bdev_ocf_set_cache_mode', params)
-
-
-def bdev_ocf_set_seqcutoff(client, name, policy, threshold=None, promotion_count=None):
-    """Set sequential cutoff parameters on all cores for the given OCF cache device
-    Args:
-        name: Name of OCF cache bdev
-        policy: Sequential cutoff policy
-        threshold: Activation threshold [KiB] (optional)
-        promotion_count: Promotion request count (optional)
-    """
-    params = dict()
-    params['name'] = name
-    params['policy'] = policy
-    if threshold is not None:
-        params['threshold'] = threshold
-    if promotion_count is not None:
-        params['promotion_count'] = promotion_count
-    return client.call('bdev_ocf_set_seqcutoff', params)
-
-
-def bdev_ocf_flush_start(client, name):
-    """Start flushing OCF cache device
-    Args:
-        name: name of OCF bdev
-    """
-    params = dict()
-    params['name'] = name
-    return client.call('bdev_ocf_flush_start', params)
-
-
-def bdev_ocf_flush_status(client, name):
-    """Get flush status of OCF cache device
-    Args:
-        name: name of OCF bdev
-    Returns:
-        Flush status
-    """
-    params = dict()
-    params['name'] = name
-    return client.call('bdev_ocf_flush_status', params)
 
 
 def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None, name=None, uuid=None, optimal_io_boundary=None,

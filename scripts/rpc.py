@@ -322,33 +322,129 @@ if __name__ == "__main__":
     p.add_argument('name', help='crypto bdev name')
     p.set_defaults(func=bdev_crypto_delete)
 
-    def bdev_ocf_create(args):
-        print_json(rpc.bdev.bdev_ocf_create(args.client,
-                                            name=args.name,
-                                            mode=args.mode,
-                                            cache_line_size=args.cache_line_size,
-                                            cache_bdev_name=args.cache_bdev_name,
-                                            core_bdev_name=args.core_bdev_name))
-    p = subparsers.add_parser('bdev_ocf_create', help='Add an OCF block device')
-    p.add_argument('name', help='Name of resulting OCF bdev')
-    p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
-    p.add_argument(
-        '--cache-line-size',
-        help='OCF cache line size. The unit is KiB',
-        type=int,
-        choices=[4, 8, 16, 32, 64]
-    )
-    p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
-    p.add_argument('core_bdev_name', help='Name of underlying core bdev')
-    p.set_defaults(func=bdev_ocf_create)
+    def bdev_ocf_start_cache(args):
+        print_json(rpc.bdev.bdev_ocf_start_cache(args.client,
+                                                 cache_name=args.cache_name,
+                                                 bdev_name=args.bdev_name,
+                                                 cache_mode=args.cache_mode,
+                                                 cache_line_size=args.cache_line_size))
+    p = subparsers.add_parser('bdev_ocf_start_cache', help='Start OCF cache instance')
+    p.add_argument('cache_name', help='name for the new OCF cache vbdev')
+    p.add_argument('bdev_name', help='name of the bdev to use as cache')
+    p.add_argument('--cache-mode',
+                   help='choose between {wt|wb|wa|wo|wi|pt}; default wt (Write-Through)',
+                   choices=['wt', 'wb', 'wa', 'wo', 'wi', 'pt'])
+    p.add_argument('--cache-line-size',
+                   help='choose between {4|8|16|32|64}; default 4 [KiB]',
+                   type=int,
+                   choices=[4, 8, 16, 32, 64])
+    p.set_defaults(func=bdev_ocf_start_cache)
 
-    def bdev_ocf_delete(args):
-        rpc.bdev.bdev_ocf_delete(args.client,
-                                 name=args.name)
+    def bdev_ocf_stop_cache(args):
+        rpc.bdev.bdev_ocf_stop_cache(args.client, cache_name=args.cache_name)
+    p = subparsers.add_parser('bdev_ocf_stop_cache', help='Stop OCF cache instance')
+    p.add_argument('cache_name', help='name of the cache vbdev to stop')
+    p.set_defaults(func=bdev_ocf_stop_cache)
 
-    p = subparsers.add_parser('bdev_ocf_delete', help='Delete an OCF block device')
-    p.add_argument('name', help='Name of OCF bdev')
-    p.set_defaults(func=bdev_ocf_delete)
+    def bdev_ocf_add_core(args):
+        print_json(rpc.bdev.bdev_ocf_add_core(args.client,
+                                              core_name=args.core_name,
+                                              bdev_name=args.bdev_name,
+                                              cache_name=args.cache_name))
+    p = subparsers.add_parser('bdev_ocf_add_core', help='Add core device to OCF cache')
+    p.add_argument('core_name', help='name for the new OCF core vbdev')
+    p.add_argument('bdev_name', help='name of the bdev to use as core')
+    p.add_argument('cache_name', help='name of already started OCF cache vbdev')
+    p.set_defaults(func=bdev_ocf_add_core)
+
+    def bdev_ocf_remove_core(args):
+        rpc.bdev.bdev_ocf_remove_core(args.client, core_name=args.core_name)
+    p = subparsers.add_parser('bdev_ocf_remove_core', help='Remove core device from OCF cache')
+    p.add_argument('core_name', help='name of the core vbdev to remove from OCF cache instance')
+    p.set_defaults(func=bdev_ocf_remove_core)
+
+    def bdev_ocf_get_bdevs(args):
+        print_dict(rpc.bdev.bdev_ocf_get_bdevs(args.client, name=args.name))
+    p = subparsers.add_parser('bdev_ocf_get_bdevs', help='Get info about OCF devices')
+    p.add_argument('name', nargs='?', help='optional name of specific OCF vbdev; shows all by default')
+    p.set_defaults(func=bdev_ocf_get_bdevs)
+
+    def bdev_ocf_set_cachemode(args):
+        rpc.bdev.bdev_ocf_set_cachemode(args.client,
+                                        cache_name=args.cache_name,
+                                        cache_mode=args.cache_mode)
+    p = subparsers.add_parser('bdev_ocf_set_cachemode', help='Set cache mode of OCF cache')
+    p.add_argument('cache_name', help='name of the cache vbdev')
+    p.add_argument('cache_mode',
+                   help='choose between {wt|wb|wa|wo|wi|pt} (Write-Through, Write-Back, Write-Around, Write-Only, Write-Invalidate, Pass-Through)',
+                   choices=['wt', 'wb', 'wa', 'wo', 'wi', 'pt'])
+    p.set_defaults(func=bdev_ocf_set_cachemode)
+
+    def bdev_ocf_set_cleaning(args):
+        rpc.bdev.bdev_ocf_set_cleaning(args.client,
+                                       cache_name=args.cache_name,
+                                       policy=args.policy,
+                                       acp_wake_up=args.acp_wake_up,
+                                       acp_flush_max_buffers=args.acp_flush_max_buffers,
+                                       alru_wake_up=args.alru_wake_up,
+                                       alru_flush_max_buffers=args.alru_flush_max_buffers,
+                                       alru_staleness_time=args.alru_staleness_time,
+                                       alru_activity_threshold=args.alru_activity_threshold)
+    p = subparsers.add_parser('bdev_ocf_set_cleaning', help='Set cleaning parameters for OCF cache device')
+    p.add_argument('cache_name', help='name of the cache vbdev')
+    p.add_argument('-p', '--policy',
+                   help='cleaning policy; choose between {acp|alru|nop}',
+                   choices=['acp', 'alru', 'nop'])
+    p.add_argument('-u', '--acp-wake-up',
+                   help='time between ACP cleaning thread iterations: <0-10000> [ms]; default 10',
+                   type=int)
+    p.add_argument('-m', '--acp-flush-max-buffers',
+                   help='number of dirty cache lines to be flushed in a single ACP cleaning thread iteration: <1-10000>; default 128',
+                   type=int)
+    p.add_argument('-v', '--alru-wake-up',
+                   help='cleaning thread sleep time after an idle wake up: <0-3600> [s]; default 20',
+                   type=int)
+    p.add_argument('-n', '--alru-flush-max-buffers',
+                   help='number of dirty cache lines to be flushed in one cleaning cycle: <1-10000>; default 100',
+                   type=int)
+    p.add_argument('-s', '--alru-staleness-time',
+                   help='time that has to pass from the last write operation before a dirty cache line can be scheduled to be flushed: <1-3600> [s]; default 120',
+                   type=int)
+    p.add_argument('-t', '--alru-activity-threshold',
+                   help='cache idle time before flushing thread can start <0-1000000> [ms]; default 10000',
+                   type=int)
+    p.set_defaults(func=bdev_ocf_set_cleaning)
+
+    def bdev_ocf_set_seqcutoff(args):
+        rpc.bdev.bdev_ocf_set_seqcutoff(args.client,
+                                        core_name=args.core_name,
+                                        policy=args.policy,
+                                        threshold=args.threshold,
+                                        promotion_count=args.promotion_count)
+    p = subparsers.add_parser('bdev_ocf_set_seqcutoff', help='Set sequential cut-off parameters for OCF core device')
+    p.add_argument('core_name', help='name of the core vbdev')
+    p.add_argument('-p', '--policy',
+                   help='sequential cut-off policy; choose between {always|full|never}',
+                   choices=['always', 'full', 'never'])
+    p.add_argument('-t', '--threshold',
+                   help='activation threshold [KiB]',
+                   type=int)
+    p.add_argument('-c', '--promotion_count',
+                   help='request count threshold for cutting off the sequential stream',
+                   type=int)
+    p.set_defaults(func=bdev_ocf_set_seqcutoff)
+
+    def bdev_ocf_flush_start(args):
+        rpc.bdev.bdev_ocf_flush_start(args.client, name=args.name)
+    p = subparsers.add_parser('bdev_ocf_flush_start', help='Flush all dirty data from the OCF cache device to core devices')
+    p.add_argument('name', help='name of the OCF vbdev to flush')
+    p.set_defaults(func=bdev_ocf_flush_start)
+
+    def bdev_ocf_flush_status(args):
+        print_json(rpc.bdev.bdev_ocf_flush_status(args.client, name=args.name))
+    p = subparsers.add_parser('bdev_ocf_flush_status', help='Get flush status of OCF vbdev')
+    p.add_argument('name', help='name of the OCF vbdev')
+    p.set_defaults(func=bdev_ocf_flush_status)
 
     def bdev_ocf_get_stats(args):
         print_dict(rpc.bdev.bdev_ocf_get_stats(args.client,
@@ -363,54 +459,6 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_ocf_reset_stats', help='Reset statistics of chosen OCF block device')
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_reset_stats)
-
-    def bdev_ocf_get_bdevs(args):
-        print_dict(rpc.bdev.bdev_ocf_get_bdevs(args.client,
-                                               name=args.name))
-    p = subparsers.add_parser('bdev_ocf_get_bdevs', help='Get list of OCF devices including unregistered ones')
-    p.add_argument('name', nargs='?', help='name of OCF vbdev or name of cache device or name of core device (optional)')
-    p.set_defaults(func=bdev_ocf_get_bdevs)
-
-    def bdev_ocf_set_cache_mode(args):
-        print_json(rpc.bdev.bdev_ocf_set_cache_mode(args.client,
-                                                    name=args.name,
-                                                    mode=args.mode))
-    p = subparsers.add_parser('bdev_ocf_set_cache_mode',
-                              help='Set cache mode of OCF block device')
-    p.add_argument('name', help='Name of OCF bdev')
-    p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
-    p.set_defaults(func=bdev_ocf_set_cache_mode)
-
-    def bdev_ocf_set_seqcutoff(args):
-        rpc.bdev.bdev_ocf_set_seqcutoff(args.client,
-                                        name=args.name,
-                                        policy=args.policy,
-                                        threshold=args.threshold,
-                                        promotion_count=args.promotion_count)
-    p = subparsers.add_parser('bdev_ocf_set_seqcutoff',
-                              help='Set sequential cutoff parameters on all cores for the given OCF cache device')
-    p.add_argument('name', help='Name of OCF cache bdev')
-    p.add_argument('-t', '--threshold', type=int,
-                   help='Activation threshold [KiB]')
-    p.add_argument('-c', '--promotion-count', type=int,
-                   help='Promotion request count')
-    p.add_argument('-p', '--policy', choices=['always', 'full', 'never'], required=True,
-                   help='Sequential cutoff policy')
-    p.set_defaults(func=bdev_ocf_set_seqcutoff)
-
-    def bdev_ocf_flush_start(args):
-        rpc.bdev.bdev_ocf_flush_start(args.client, name=args.name)
-    p = subparsers.add_parser('bdev_ocf_flush_start',
-                              help='Start flushing OCF cache device')
-    p.add_argument('name', help='Name of OCF bdev')
-    p.set_defaults(func=bdev_ocf_flush_start)
-
-    def bdev_ocf_flush_status(args):
-        print_json(rpc.bdev.bdev_ocf_flush_status(args.client, name=args.name))
-    p = subparsers.add_parser('bdev_ocf_flush_status',
-                              help='Get flush status of OCF cache device')
-    p.add_argument('name', help='Name of OCF bdev')
-    p.set_defaults(func=bdev_ocf_flush_status)
 
     def bdev_malloc_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size

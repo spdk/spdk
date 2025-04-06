@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright (C) 2025 Huawei Technologies
  *   All rights reserved.
  */
 
@@ -7,8 +8,6 @@
 #define VBDEV_OCF_CTX_H
 
 #include <ocf/ocf.h>
-#include "ocf_env.h"
-#include "spdk/thread.h"
 
 extern ocf_ctx_t vbdev_ocf_ctx;
 
@@ -16,14 +15,8 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 
 #define SPDK_OBJECT 1
 
-/* Context of cache instance */
-struct vbdev_ocf_cache_ctx {
-	ocf_queue_t                  mngt_queue;
-	env_atomic                   refcnt;
-};
-
-void vbdev_ocf_cache_ctx_put(struct vbdev_ocf_cache_ctx *ctx);
-void vbdev_ocf_cache_ctx_get(struct vbdev_ocf_cache_ctx *ctx);
+// why?
+#define VBDEV_OCF_QUEUE_RUN_MAX 32
 
 int vbdev_ocf_ctx_init(void);
 void vbdev_ocf_ctx_cleanup(void);
@@ -34,5 +27,6 @@ int vbdev_ocf_queue_create(ocf_cache_t cache, ocf_queue_t *queue, const struct o
 int vbdev_ocf_queue_create_mngt(ocf_cache_t cache, ocf_queue_t *queue,
 				const struct ocf_queue_ops *ops);
 void vbdev_ocf_queue_put(ocf_queue_t queue);
+int vbdev_ocf_queue_poller(void *ctx);
 
 #endif

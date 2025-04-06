@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright (C) 2025 Huawei Technologies
  *   All rights reserved.
  */
 
@@ -13,13 +14,14 @@
 
 #include "ctx.h"
 #include "data.h"
+#include "vbdev_ocf_cache.h"
 
 ocf_ctx_t vbdev_ocf_ctx;
 
 static ctx_data_t *
 vbdev_ocf_ctx_data_alloc(uint32_t pages)
 {
-	struct bdev_ocf_data *data;
+	struct vbdev_ocf_data *data;
 	void *buf;
 	uint32_t sz;
 
@@ -46,7 +48,7 @@ vbdev_ocf_ctx_data_alloc(uint32_t pages)
 static void
 vbdev_ocf_ctx_data_free(ctx_data_t *ctx_data)
 {
-	struct bdev_ocf_data *data = ctx_data;
+	struct vbdev_ocf_data *data = ctx_data;
 	int i;
 
 	if (!data) {
@@ -105,7 +107,7 @@ iovec_flatten(struct iovec *iov, size_t iovcnt, void *buf, size_t size, size_t o
 static uint32_t
 vbdev_ocf_ctx_data_rd(void *dst, ctx_data_t *src, uint32_t size)
 {
-	struct bdev_ocf_data *s = src;
+	struct vbdev_ocf_data *s = src;
 	uint32_t size_local;
 
 	size_local = iovec_flatten(s->iovs, s->iovcnt, dst, size, s->seek);
@@ -146,7 +148,7 @@ buf_to_iovec(const void *buf, size_t size, struct iovec *iov, size_t iovcnt, siz
 static uint32_t
 vbdev_ocf_ctx_data_wr(ctx_data_t *dst, const void *src, uint32_t size)
 {
-	struct bdev_ocf_data *d = dst;
+	struct vbdev_ocf_data *d = dst;
 	uint32_t size_local;
 
 	size_local = buf_to_iovec(src, size, d->iovs, d->iovcnt, d->seek);
@@ -186,7 +188,7 @@ iovset(struct iovec *iov, size_t iovcnt, int byte, size_t size, size_t offset)
 static uint32_t
 vbdev_ocf_ctx_data_zero(ctx_data_t *dst, uint32_t size)
 {
-	struct bdev_ocf_data *d = dst;
+	struct vbdev_ocf_data *d = dst;
 	uint32_t size_local;
 
 	size_local = iovset(d->iovs, d->iovcnt, 0, size, d->seek);
@@ -198,7 +200,7 @@ vbdev_ocf_ctx_data_zero(ctx_data_t *dst, uint32_t size)
 static uint32_t
 vbdev_ocf_ctx_data_seek(ctx_data_t *dst, ctx_data_seek_t seek, uint32_t offset)
 {
-	struct bdev_ocf_data *d = dst;
+	struct vbdev_ocf_data *d = dst;
 	uint32_t off = 0;
 
 	switch (seek) {
@@ -219,8 +221,8 @@ static uint64_t
 vbdev_ocf_ctx_data_cpy(ctx_data_t *dst, ctx_data_t *src, uint64_t to,
 		       uint64_t from, uint64_t bytes)
 {
-	struct bdev_ocf_data *s = src;
-	struct bdev_ocf_data *d = dst;
+	struct vbdev_ocf_data *s = src;
+	struct vbdev_ocf_data *d = dst;
 	uint32_t it_iov = 0;
 	uint32_t it_off = 0;
 	uint32_t n, sz;
@@ -255,7 +257,7 @@ vbdev_ocf_ctx_data_cpy(ctx_data_t *dst, ctx_data_t *src, uint64_t to,
 static void
 vbdev_ocf_ctx_data_secure_erase(ctx_data_t *ctx_data)
 {
-	struct bdev_ocf_data *data = ctx_data;
+	struct vbdev_ocf_data *data = ctx_data;
 	struct iovec *iovs = data->iovs;
 	int i;
 
@@ -285,18 +287,19 @@ vbdev_ocf_queue_put(ocf_queue_t queue)
 	ocf_queue_put(queue);
 }
 
-void
-vbdev_ocf_cache_ctx_put(struct vbdev_ocf_cache_ctx *ctx)
+int
+vbdev_ocf_queue_poller(void *ctx)
 {
-	if (env_atomic_dec_return(&ctx->refcnt) == 0) {
-		free(ctx);
-	}
-}
+	ocf_queue_t queue = ctx;
+	int i, queue_runs;
 
-void
-vbdev_ocf_cache_ctx_get(struct vbdev_ocf_cache_ctx *ctx)
-{
-	env_atomic_inc(&ctx->refcnt);
+	queue_runs = spdk_min(ocf_queue_pending_io(queue), VBDEV_OCF_QUEUE_RUN_MAX);
+
+	for (i = 0; i < queue_runs; i++) {
+		ocf_queue_run_single(queue);
+	}
+
+	return queue_runs ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 struct cleaner_priv {
@@ -332,13 +335,13 @@ vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t c)
 {
 	struct cleaner_priv        *priv  = calloc(1, sizeof(*priv));
 	ocf_cache_t                 cache = ocf_cleaner_get_cache(c);
-	struct vbdev_ocf_cache_ctx *cctx  = ocf_cache_get_priv(cache);
+	struct vbdev_ocf_cache *vbdev_ocf_cache = ocf_cache_get_priv(cache);
 
 	if (priv == NULL) {
 		return -ENOMEM;
 	}
 
-	priv->mngt_queue = cctx->mngt_queue;
+	priv->mngt_queue = vbdev_ocf_cache->ocf_cache_mngt_q;
 
 	ocf_cleaner_set_cmpl(c, cleaner_cmpl);
 	ocf_cleaner_set_priv(c, priv);
@@ -353,10 +356,12 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
 
 	if (priv) {
 		spdk_poller_unregister(&priv->poller);
+		vbdev_ocf_queue_put(priv->mngt_queue);
 		free(priv);
 	}
 }
 
+// this one should only set next_run to "now" and poller registration should be move to _init with saved thread
 static void
 vbdev_ocf_ctx_cleaner_kick(ocf_cleaner_t cleaner)
 {
@@ -408,7 +413,7 @@ vbdev_ocf_ctx_log_printf(ocf_logger_t logger, ocf_logger_lvl_t lvl,
 }
 
 static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
-	.name = "OCF SPDK",
+	.name = "SPDK_OCF",
 
 	.ops = {
 		.data = {
