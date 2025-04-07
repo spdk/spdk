@@ -10,7 +10,7 @@ SO_VER := 20
 SO_MINOR := 0
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
-	 subsystem.c nvmf.c nvmf_rpc.c transport.c tcp.c \
+	 subsystem.c subsystem_rbd_resrv.c nvmf.c nvmf_rpc.c transport.c tcp.c \
 	 stubs.c mdns_server.c
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c

@@ -17,9 +17,9 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
-
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
+SPDK_LOG_REGISTER_COMPONENT(reservation)
 
 static int bdev_rbd_count = 0;
 
@@ -61,6 +61,10 @@ struct bdev_rbd {
 
 	uint64_t rbd_watch_handle;
 	bool rbd_read_only;
+	uint64_t reservation_version;
+	uint64_t reservation_epoch;
+	void *reservation_ns_context;
+	int (*reservation_fn_cbk)(void *ns);
 };
 
 struct bdev_rbd_io_channel {
@@ -94,6 +98,8 @@ static pthread_mutex_t g_map_bdev_rbd_cluster_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_io_channel *bdev_rbd_get_io_channel(void *ctx);
 
+static int rbd_bdev_notify_ns_reservation_changed(struct bdev_rbd *rbd);
+
 static void
 _rbd_update_callback(void *arg)
 {
@@ -107,17 +113,21 @@ _rbd_update_callback(void *arg)
 	rc = rbd_metadata_get(rbd->image, "NVME_GATEWAY_AUTO_RESIZE", value, &value_len);
 	if (rc == 0 && strncasecmp(value, "no", 2) == 0) {
 		SPDK_NOTICELOG("Wll not notify about size change as NVME_GATEWAY_AUTO_RESIZE is set to \"no\"\n");
-		return;
+		goto check_reservation;
 	}
 	rc = rbd_get_size(rbd->image, &current_size_in_bytes);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed getting size %d\n", rc);
-		return;
+		SPDK_ERRLOG("Failed getting size\n");
+	} else {
+		rc = spdk_bdev_notify_blockcnt_change(&rbd->disk, current_size_in_bytes / rbd->disk.blocklen);
+		if (rc != 0) {
+			SPDK_ERRLOG("failed to notify block cnt change.\n");
+		}
 	}
-
-	rc = spdk_bdev_notify_blockcnt_change(&rbd->disk, current_size_in_bytes / rbd->disk.blocklen);
+  check_reservation:
+	rc = rbd_bdev_notify_ns_reservation_changed(rbd);
 	if (rc != 0) {
-		SPDK_ERRLOG("failed to notify block cnt change.\n");
+		SPDK_ERRLOG("failed to notify reservation change.\n");
 	}
 }
 
@@ -742,6 +752,12 @@ _bdev_rbd_destruct(void *ctx)
 	spdk_io_device_unregister(rbd, bdev_rbd_free_cb);
 }
 
+enum spdk_bdev_type
+bdev_rbd_get_module_type(void *)
+{
+	return SPDK_BDEV_RDB;
+}
+
 static int
 bdev_rbd_destruct(void *ctx)
 {
@@ -1123,6 +1139,11 @@ bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request, const char *nam
 	return 0;
 }
 
+int  bdev_rbd_ns_reservation_update_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx **ctx);
+int  bdev_rbd_ns_reservation_load_json(struct spdk_bdev *bdev, void **json, int *json_size);
+bool bdev_rbd_ns_is_ptpl_enabled(struct spdk_bdev *bdev, void *ns, int (*cbk)(void *ns));
+void bdev_rbd_ns_increment_epoch(struct spdk_bdev *bdev);
+
 static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.destruct		= bdev_rbd_destruct,
 	.submit_request		= bdev_rbd_submit_request,
@@ -1130,6 +1151,11 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.get_io_channel		= bdev_rbd_get_io_channel,
 	.dump_info_json		= bdev_rbd_dump_info_json,
 	.write_config_json	= bdev_rbd_write_config_json,
+	.get_module_type	= bdev_rbd_get_module_type,
+	.ns_reservation_update_json = bdev_rbd_ns_reservation_update_json,
+	.ns_reservation_load_json  = bdev_rbd_ns_reservation_load_json,
+	.ns_reservation_is_ptpl_enabled = bdev_rbd_ns_is_ptpl_enabled,
+	.ns_reservation_increment_epoch = bdev_rbd_ns_increment_epoch
 };
 
 static int
@@ -1453,7 +1479,10 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 	rbd->disk.ctxt = rbd;
 	rbd->disk.fn_table = &rbd_fn_table;
 	rbd->disk.module = &rbd_if;
-
+	rbd->reservation_version = 1;
+	rbd->reservation_epoch = 0;
+	rbd->reservation_ns_context = NULL;
+	rbd->reservation_fn_cbk = NULL;
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
 
 	spdk_io_device_register(rbd, bdev_rbd_create_cb,
@@ -1557,6 +1586,173 @@ static void
 bdev_rbd_group_destroy_cb(void *io_device, void *ctx_buf)
 {
 }
+#define RESERVATION_KEY   "reservation_key"
+#define MAX_RESERV_FILE_SIZE  4096
+
+bool
+bdev_rbd_ns_is_ptpl_enabled(struct spdk_bdev *bdev, void *ns, int (*cbk)(void *ns))
+{
+	struct bdev_rbd *rbd = (struct bdev_rbd *)bdev;
+	if (rbd->reservation_ns_context == NULL) {
+		rbd->reservation_ns_context = (void *)ns;
+		rbd->reservation_fn_cbk = cbk;
+	}
+	return true;
+}
+
+void
+bdev_rbd_ns_increment_epoch(struct spdk_bdev *bdev)
+{
+	struct bdev_rbd *rbd = (struct bdev_rbd *)bdev;
+	rbd->reservation_epoch ++;
+}
+
+static int
+metadata_json_write_cbk(void *cb_ctx, const void *data, size_t size)
+{
+	struct bdev_rbd *rbd = (struct bdev_rbd *)cb_ctx;
+	if (size == 0) {
+		SPDK_ERRLOG("Failed to set metadata  size = 0\n");
+		return -ENOENT;
+	}
+	int rc = rbd_metadata_set(rbd->image, RESERVATION_KEY, (const char *)data);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to set metadata  key = reservation_key\n");
+		return -ENOENT;
+	}
+	SPDK_INFOLOG(reservation, "updated metadata by reservation_key %s\n", (const char *)data);
+	return rc;
+}
+
+int
+bdev_rbd_ns_reservation_update_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx **ctx)
+{
+	struct bdev_rbd *rbd = (struct bdev_rbd *)bdev;
+	*ctx = spdk_json_write_begin(metadata_json_write_cbk, (void *)rbd, 0);
+	if (*ctx == NULL) {
+		return -ENOMEM;
+	}
+	rbd->reservation_epoch ++;
+	spdk_json_write_object_begin(*ctx);
+	spdk_json_write_named_uint64(*ctx, "version", rbd->reservation_version);
+	spdk_json_write_named_uint64(*ctx, "epoch", rbd->reservation_epoch);
+	SPDK_INFOLOG(reservation, "updated metadata epoch %lu  for bdev %s\n", rbd->reservation_epoch,
+		     bdev->name);
+	return 0;
+}
+
+int
+bdev_rbd_ns_reservation_load_json(struct spdk_bdev *bdev, void **json, int *json_size)
+{
+	ssize_t  rc = 0;
+	struct bdev_rbd *rbd = (struct bdev_rbd *)bdev;
+
+	*json = calloc(MAX_RESERV_FILE_SIZE, 1);
+	if (*json == NULL) {
+		return -ENOMEM;
+	}
+	*json_size = MAX_RESERV_FILE_SIZE;
+	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, *json, json_size);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to get metadata  key = %s rbd-name %s\n", RESERVATION_KEY, rbd->rbd_name);
+		return rc;
+	}
+	SPDK_INFOLOG(reservation,
+		     "loaded from the image metadata: current epoch %lu for rbd-name %s, bdev %s\n",
+		     rbd->reservation_epoch, rbd->rbd_name, bdev->name);
+	return 0;
+}
+
+static int
+rbd_bdev_check_epoch(struct bdev_rbd *rbd)
+{
+	size_t json_size;
+	ssize_t values_cnt, rc;
+	void *json = NULL, *end;
+	struct spdk_json_val *values = NULL;
+
+	json = calloc(MAX_RESERV_FILE_SIZE, 1);
+	if (json == NULL) {
+		rc = -ENOMEM;
+		goto exit;
+	}
+	size_t size = MAX_RESERV_FILE_SIZE;
+	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, json, &size);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to get metadata  key = %s\n", RESERVATION_KEY);
+		rc = -ENOKEY;
+		goto exit;
+	}
+
+	rc = spdk_json_parse(json, json_size, NULL, 0, &end, 0);
+	if (rc < 0) {
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
+		goto exit;
+	}
+
+	values_cnt = rc;
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	if (values == NULL) {
+		goto exit;
+	}
+
+	rc = spdk_json_parse(json, json_size, values, values_cnt, &end, 0);
+	if (rc != values_cnt) {
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
+		goto exit;
+	}
+	struct spdk_json_val *key = NULL, *val = NULL;
+	uint64_t parsed_val;
+
+	rc = spdk_json_find(values, "epoch", &key, &val, SPDK_JSON_VAL_NUMBER);
+	if (rc != 0 || val == NULL) {
+		SPDK_ERRLOG("Key not found or not a number.\n");
+		goto exit;
+	}
+
+	rc = spdk_json_number_to_uint64(val, &parsed_val);
+	if (rc == 0) {
+		SPDK_INFOLOG(reservation, "Found uint64_t value: %lu, rbd->epoch %lu\n", parsed_val,
+			     rbd->reservation_epoch);
+		rc = rbd->reservation_epoch == parsed_val ? 0 : -EFAULT;
+	} else {
+		SPDK_ERRLOG("Failed to parse number as integer\n");
+	}
+exit:
+	free(json);
+	free(values);
+	return rc;
+}
+
+static int
+rbd_bdev_notify_ns_reservation_changed(struct bdev_rbd *rbd)
+{
+	int rc = 0;
+	if (rbd->reservation_ns_context == NULL) {
+		SPDK_ERRLOG("Ns context  not set\n");
+		rc = -1;
+		goto err;
+	} else {
+		/* first need to check whether  rbd->version < metadata version  and only in this case */
+		rc = rbd_bdev_check_epoch(rbd);
+		if (rc == 0) {
+			SPDK_INFOLOG(reservation, "reservation epoch %ld is already loaded\n", rbd->reservation_epoch);
+			goto err;
+		} else if (rc == -ENOKEY || rc == -ENOMEM) {
+			SPDK_INFOLOG(reservation, "no metadata found \n");
+			goto err;
+		}
+		if (rbd->reservation_fn_cbk) {
+			rc = rbd->reservation_fn_cbk(rbd->reservation_ns_context);
+		}
+		if (rc != 0) {
+			SPDK_ERRLOG("reservation metadata update was not loaded\n");
+		}
+	}
+err:
+	return rc;
+}
+
 
 static int
 bdev_rbd_library_init(void)
