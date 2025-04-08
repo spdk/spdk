@@ -33,7 +33,7 @@ jobs:
           python -m pip install build
           echo "__version__ = '25.4'" > python/spdk/version.py
           cp README.md python/
-          cp scripts/rpc.py python/spdk_rpc
+          cp scripts/rpc.py python/spdk/spdk_rpc.py
           python -m build python/
 
       - name: Upload distributions
