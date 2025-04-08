@@ -26,9 +26,12 @@ jobs:
 
       - name: Build release distributions
         run: |
+          set -x
           ./configure --without-nvme-cuse 
           make -C python spdk/version.py
+          cat spdk/version.py
           python -m pip install build
+          echo '21.04' > spdk/version.py
           python -m build python/
 
       - name: Upload distributions
