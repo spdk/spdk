@@ -2036,30 +2036,30 @@ nvme_tcp_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr_process *active_proc;
 
 	/* Don't check timeouts during controller initialization. */
-	if (ctrlr->state != NVME_CTRLR_STATE_READY) {
+	if (spdk_unlikely(ctrlr->state != NVME_CTRLR_STATE_READY)) {
 		return;
 	}
 
-	if (nvme_qpair_is_admin_queue(qpair)) {
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	} else {
 		active_proc = qpair->active_proc;
 	}
 
 	/* Only check timeouts if the current process has a timeout callback. */
-	if (active_proc == NULL || active_proc->timeout_cb_fn == NULL) {
+	if (spdk_unlikely(active_proc == NULL || active_proc->timeout_cb_fn == NULL)) {
 		return;
 	}
 
 	t02 = spdk_get_ticks();
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
-		if (ctrlr->is_failed) {
+		if (spdk_unlikely(ctrlr->is_failed)) {
 			/* The controller state may be changed to failed in one of the nvme_request_check_timeout callbacks. */
 			return;
 		}
 		assert(tcp_req->req != NULL);
 
-		if (nvme_request_check_timeout(tcp_req->req, tcp_req->cid, active_proc, t02)) {
+		if (spdk_likely(nvme_request_check_timeout(tcp_req->req, tcp_req->cid, active_proc, t02))) {
 			/*
 			 * The requests are in order, so as soon as one has not timed out,
 			 * stop iterating.
@@ -2084,7 +2084,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		if (rc < 0 && errno != EAGAIN) {
 			SPDK_ERRLOG("Failed to flush tqpair=%p (%d): %s\n", tqpair,
 				    errno, spdk_strerror(errno));
-			if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
+			if (tqpair->qpair.ctrlr->timeout_enabled) {
 				nvme_tcp_qpair_check_timeout(qpair);
 			}
 
@@ -2115,7 +2115,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		goto fail;
 	}
 
-	if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
+	if (tqpair->qpair.ctrlr->timeout_enabled) {
 		nvme_tcp_qpair_check_timeout(qpair);
 	}
 

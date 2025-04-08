@@ -484,20 +484,20 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 
 	assert(active_proc->timeout_cb_fn != NULL);
 
-	if (req->timed_out || req->submit_tick == 0) {
+	if (spdk_unlikely(req->timed_out || req->submit_tick == 0)) {
 		return 0;
 	}
 
-	if (req->pid != g_spdk_nvme_pid) {
+	if (spdk_unlikely(req->pid != g_spdk_nvme_pid)) {
 		return 0;
 	}
 
-	if (nvme_qpair_is_admin_queue(qpair) &&
-	    req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair) &&
+			  req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
 		return 0;
 	}
 
-	if (req->submit_tick + timeout_ticks > now_tick) {
+	if (spdk_likely(req->submit_tick + timeout_ticks > now_tick)) {
 		return 1;
 	}
 
