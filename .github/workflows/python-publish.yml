@@ -31,7 +31,7 @@ jobs:
           make -C python spdk/version.py
           cat python/spdk/version.py
           python -m pip install build
-          echo "__version__ = '25.6'" > python/spdk/version.py
+          echo "__version__ = '25.7'" > python/spdk/version.py
           cp README.md python/
           python -m build python/
 
