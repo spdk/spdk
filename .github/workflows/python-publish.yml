@@ -31,7 +31,7 @@ jobs:
           make -C python spdk/version.py
           cat python/spdk/version.py
           python -m pip install build
-          echo '21.04' > python/spdk/version.py
+          echo "__version__ = '25.1'" > python/spdk/version.py
           python -m build python/
 
       - name: Upload distributions
