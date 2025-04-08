@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) 2025 Dell Inc, or its subsidiaries.  All rights reserved.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spdk"
+dynamic = ["version"]
+description = "Python bindings for the Storage Performance Development Kit (SPDK)"
+requires-python = ">=3.8"
+license = { text = "BSD-3-Clause" }
+
+authors = [
+    { name = "SPDK Authors", email = "spdk@lists.linux.dev" }
+]
+
+keywords = ["spdk", "storage", "nvme", "performance", "bindings"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Hardware",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://spdk.io"
+"Source" = "https://github.com/spdk/spdk"
+"Bug Tracker" = "https://github.com/spdk/spdk/issues"
+
+[project.optional-dependencies]
+sma = [
+    "grpcio",
+    "protobuf"
+]
+cli = [
+    "configshell_fb"
+]
+
+[tool.hatch.version]
+path = "spdk/version.py"
