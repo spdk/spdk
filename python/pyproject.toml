@@ -47,6 +47,9 @@ sma = [
     "grpcio",
     "protobuf"
 ]
+cli = [
+    "configshell_fb"
+]
 
 [tool.hatch.version]
 path = "spdk/version.py"
@@ -55,7 +58,7 @@ path = "spdk/version.py"
 # allow-direct-references = true
 
 # [tool.hatch.build.targets.wheel]
-# packages = ["spdk", "spdk.rpc", "spdk.sma"]
+# packages = ["spdk", "spdk.rpc", "spdk.sma", "spdk.spdkcli"]
 
 # [tool.hatch.build]
 # include = [
@@ -63,4 +66,5 @@ path = "spdk/version.py"
 #     "spdk/__init__.py",
 #     "spdk/rpc/**"
 #     "spdk/sma/**"
+#     "spdk/spdkcli/**"
 # ]
