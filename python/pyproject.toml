@@ -38,7 +38,9 @@ dependencies = []
 "Bug Tracker" = "https://github.com/spdk/spdk/issues"
 
 [project.scripts]
+# See https://review.spdk.io/c/spdk/spdk/+/25759
 spdk-rpc = "spdk.spdk_rpc:main"
+spdk-sma = "spdk.spdk_sma:main"
 
 [project.optional-dependencies]
 dev = [
