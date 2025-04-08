@@ -47,7 +47,7 @@ dev = [
 sma = []  # Add real deps if spdk.sma uses any
 
 [tool.hatch.version]
-path = "version"
+path = "spdk/version.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
