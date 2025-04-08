@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spdk-python"
+dynamic = ["version"]
+description = "Python bindings for the Storage Performance Development Kit (SPDK)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "BSD-3-Clause" }
+
+authors = [
+    { name = "SPDK Authors", email = "spdk@lists.01.org" }
+]
+
+keywords = ["SPDK", "storage", "nvme", "performance", "bindings"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Hardware",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://spdk.io"
+"Source" = "https://github.com/spdk/spdk"
+"Bug Tracker" = "https://github.com/spdk/spdk/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "flake8",
+    "mypy"
+]
+
+sma = []  # Add real deps if spdk.sma uses any
+
+[tool.hatch.version]
+path = "version"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["spdk", "spdk.sma"]
+
+[tool.hatch.build]
+include = [
+    "spdk/*.so",
+    "spdk/__init__.py",
+    "spdk/sma/**"
+]
