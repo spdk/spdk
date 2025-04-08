@@ -44,7 +44,10 @@ dev = [
     "mypy"
 ]
 
-sma = []  # Add real deps if spdk.sma uses any
+sma = [
+    "grpcio",
+    "protobuf"
+]
 
 [tool.hatch.version]
 path = "spdk/version.py"
