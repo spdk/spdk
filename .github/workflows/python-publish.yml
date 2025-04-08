@@ -32,6 +32,7 @@ jobs:
           cat python/spdk/version.py
           python -m pip install build
           echo "__version__ = '25.1'" > python/spdk/version.py
+          cp README.md python/
           python -m build python/
 
       - name: Upload distributions
