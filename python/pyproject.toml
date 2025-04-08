@@ -59,6 +59,10 @@ cli = [
 [tool.hatch.version]
 path = "spdk/version.py"
 
+[tool.hatch.build.targets.wheel.force-include]
+"../scripts/rpc.py" = "spdk/spdk_rpc.py"
+"../scripts/sma.py" = "spdk/spdk_sma.py"
+
 # [tool.hatch.metadata]
 # allow-direct-references = true
 
