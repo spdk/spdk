@@ -33,9 +33,6 @@ jobs:
           python -m pip install build
           echo "__version__ = '25.6'" > python/spdk/version.py
           cp README.md python/
-          # see https://review.spdk.io/c/spdk/spdk/+/25759
-          cp scripts/rpc.py python/spdk/spdk_rpc.py
-          cp scripts/sma.py python/spdk/spdk_sma.py
           python -m build python/
 
       - name: Upload distributions
