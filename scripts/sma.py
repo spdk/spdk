@@ -133,7 +133,7 @@ def run(agent):
     agent.stop()
 
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(level=os.environ.get('SMA_LOGLEVEL', 'WARNING').upper())
 
     config = parse_argv()
@@ -152,3 +152,7 @@ if __name__ == '__main__':
     init_crypto(config, client)
     register_devices(agent, devices, config)
     run(agent)
+
+
+if __name__ == '__main__':
+    main()

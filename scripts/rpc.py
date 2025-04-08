@@ -30,7 +30,7 @@ def print_array(a):
     print(" ".join((quote(v) for v in a)))
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description='SPDK RPC command line interface', usage='%(prog)s [options]')
     parser.add_argument('-s', dest='server_addr',
@@ -4069,6 +4069,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         exit(0)
     elif args.dry_run:
         args.client = dry_run_client()
+        global print_dict, print_json, print_array
         print_dict = null_print
         print_json = null_print
         print_array = null_print
@@ -4096,3 +4097,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             exit(1)
     else:
         execute_script(parser, args.client, args.timeout, sys.stdin)
+
+
+if __name__ == "__main__":
+    main()
