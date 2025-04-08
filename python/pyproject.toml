@@ -64,7 +64,7 @@ path = "spdk/version.py"
 # include = [
 #     "spdk/*.so",
 #     "spdk/__init__.py",
-#     "spdk/rpc/**"
-#     "spdk/sma/**"
+#     "spdk/rpc/**",
+#     "spdk/sma/**",
 #     "spdk/spdkcli/**"
 # ]
