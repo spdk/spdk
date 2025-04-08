@@ -37,6 +37,9 @@ dependencies = []
 "Source" = "https://github.com/spdk/spdk"
 "Bug Tracker" = "https://github.com/spdk/spdk/issues"
 
+[project.scripts]
+spdk-rpc = "spdk.spdk_rpc:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest",
