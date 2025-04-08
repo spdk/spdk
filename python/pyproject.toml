@@ -43,7 +43,6 @@ dev = [
     "flake8",
     "mypy"
 ]
-
 sma = [
     "grpcio",
     "protobuf"
@@ -52,15 +51,16 @@ sma = [
 [tool.hatch.version]
 path = "spdk/version.py"
 
-[tool.hatch.metadata]
-allow-direct-references = true
+# [tool.hatch.metadata]
+# allow-direct-references = true
 
-[tool.hatch.build.targets.wheel]
-packages = ["spdk", "spdk.sma"]
+# [tool.hatch.build.targets.wheel]
+# packages = ["spdk", "spdk.rpc", "spdk.sma"]
 
-[tool.hatch.build]
-include = [
-    "spdk/*.so",
-    "spdk/__init__.py",
-    "spdk/sma/**"
-]
+# [tool.hatch.build]
+# include = [
+#     "spdk/*.so",
+#     "spdk/__init__.py",
+#     "spdk/rpc/**"
+#     "spdk/sma/**"
+# ]
