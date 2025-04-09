@@ -552,11 +552,9 @@ static inline void
 nvmf_tcp_request_get_buffers_abort(struct spdk_nvmf_tcp_req *tcp_req)
 {
 	/* Request can wait either for the iobuf or control_msg */
-	struct spdk_nvmf_poll_group *group = tcp_req->req.qpair->group;
-	struct spdk_nvmf_transport *transport = tcp_req->req.qpair->transport;
-	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(group, transport);
-	struct spdk_nvmf_tcp_poll_group *tcp_group = SPDK_CONTAINEROF(tgroup,
-			struct spdk_nvmf_tcp_poll_group, group);
+	struct spdk_nvmf_qpair *qpair = tcp_req->req.qpair;
+	struct spdk_nvmf_tcp_qpair *tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	struct spdk_nvmf_tcp_poll_group *tcp_group = tqpair->group;
 	struct spdk_nvmf_tcp_req *tmp_req, *abort_req;
 
 	assert(tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER);
