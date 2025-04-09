@@ -1745,11 +1745,13 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		uparams.types |= UBLK_PARAM_TYPE_DISCARD;
 		uparams.discard.discard_alignment = sectors_per_block;
-		uparams.discard.max_discard_sectors = num_blocks * sectors_per_block;
+		/* 32768 sectors for 16MiB */
+		uparams.discard.max_discard_sectors = 32768;
 		uparams.discard.max_discard_segments = 1;
 		uparams.discard.discard_granularity = blk_size;
 		if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
-			uparams.discard.max_write_zeroes_sectors = num_blocks * sectors_per_block;
+			/* 32768 sectors for 16MiB */
+			uparams.discard.max_write_zeroes_sectors = 32768;
 		}
 	}
 
