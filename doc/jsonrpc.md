@@ -2913,10 +2913,10 @@ Example request:
   "id": 1,
   "method": "bdev_set_qos_limit",
   "params": {
-    "name": "Malloc0"
-    "rw_ios_per_sec": 20000
-    "rw_mbytes_per_sec": 100
-    "r_mbytes_per_sec": 50
+    "name": "Malloc0",
+    "rw_ios_per_sec": 20000,
+    "rw_mbytes_per_sec": 100,
+    "r_mbytes_per_sec": 50,
     "w_mbytes_per_sec": 50
   }
 }
