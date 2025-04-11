@@ -879,6 +879,7 @@ nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t lengt
 	req->iov[req->iovcnt].iov_len  = spdk_min(length, io_unit_size);
 	length -= req->iov[req->iovcnt].iov_len;
 	req->iovcnt++;
+	req->data_from_pool = true;
 
 	return length;
 }
@@ -893,6 +894,7 @@ nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint3
 	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
 	length -= data->iov[data->iovcnt].iov_len;
 	data->iovcnt++;
+	req->data_from_pool = true;
 
 	return length;
 }
@@ -940,7 +942,6 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	}
 
 	assert(length == 0);
-	req->data_from_pool = true;
 
 	return 0;
 }
