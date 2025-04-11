@@ -9,6 +9,18 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+FLOW=$1
+CLEAN_FLOW=-1
+
+if [ "$FLOW" = "clean_flow" ]; then
+	CLEAN_FLOW=1
+elif [ "$FLOW" = "dirty_flow" ]; then
+	CLEAN_FLOW=0
+else
+	echo "Usage: $0 clean_flow|dirty_flow"
+	exit 1
+fi
+
 nvmftestinit
 nvmfappstart --wait-for-rpc
 
@@ -29,11 +41,20 @@ $rpc_py nvmf_subsystem_add_listener "$subnqn" -t "$TEST_TRANSPORT" -a "$NVMF_FIR
 
 # 131072 (io size) = 16*8192 (io_unit_size). We have 24 buffers available, so only the very first request can allocate
 # all required buffers at once, following requests must wait and go through the iobuf queuing scenario.
-$perf "${perf_opt[@]}" -t 1
 
-retry_count=$($rpc_py iobuf_get_stats | jq -r '.[] | select(.module == "nvmf_TCP") | .small_pool.retry')
-if [[ $retry_count -eq 0 ]]; then
-	return 1
+if [ "$CLEAN_FLOW" -eq 1 ]; then
+	# Clean flow tests if everything works fine with regular traffic scenario.
+	$perf "${perf_opt[@]}" -t 1
+	retry_count=$($rpc_py iobuf_get_stats | jq -r '.[] | select(.module == "nvmf_TCP") | .small_pool.retry')
+	if [[ $retry_count -eq 0 ]]; then
+		return 1
+	fi
+else
+	# Dirty flow tests if target can correctly clean up awaiting requests when initiator is suddenly gone.
+	$perf "${perf_opt[@]}" -t 10 &
+	perf_pid=$!
+	sleep 4
+	kill -9 $perfpid || true
 fi
 
 trap - SIGINT SIGTERM EXIT
