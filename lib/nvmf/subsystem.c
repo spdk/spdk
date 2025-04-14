@@ -2052,7 +2052,7 @@ static int nvmf_ns_reservation_update(const struct spdk_nvmf_ns *ns,
 				      const struct spdk_nvmf_reservation_info *info);
 static int nvmf_ns_reservation_load(const struct spdk_nvmf_ns *ns,
 				    struct spdk_nvmf_reservation_info *info);
-static int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
+int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
 				       struct spdk_nvmf_reservation_info *info);
 
 bool
@@ -2250,6 +2250,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	ns->anagrpid = opts.anagrpid;
 	subsystem->ana_group[ns->anagrpid - 1]++;
 	TAILQ_INIT(&ns->registrants);
+	ptpl_file = "PTPL";
 	if (ptpl_file) {
 		ns->ptpl_file = strdup(ptpl_file);
 		if (!ns->ptpl_file) {
@@ -2802,7 +2803,7 @@ exit:
 
 static bool nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
 
-static int
+int
 nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
 {
 	uint32_t i;
