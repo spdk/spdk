@@ -112,6 +112,27 @@ static struct spdk_bdev_module aio_if = {
 SPDK_BDEV_MODULE_REGISTER(aio, &aio_if)
 
 static int
+bdev_aio_close(struct file_disk *disk)
+{
+	int rc;
+
+	if (disk->fd == -1) {
+		return 0;
+	}
+
+	rc = close(disk->fd);
+	if (rc < 0) {
+		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
+			    disk->fd, errno, spdk_strerror(errno));
+		return -1;
+	}
+
+	disk->fd = -1;
+
+	return 0;
+}
+
+static int
 bdev_aio_open(struct file_disk *disk)
 {
 	int fd;
@@ -141,27 +162,6 @@ bdev_aio_open(struct file_disk *disk)
 	 */
 	disk->use_nowait = fstat(fd, &st) == 0 && S_ISBLK(st.st_mode);
 #endif
-
-	return 0;
-}
-
-static int
-bdev_aio_close(struct file_disk *disk)
-{
-	int rc;
-
-	if (disk->fd == -1) {
-		return 0;
-	}
-
-	rc = close(disk->fd);
-	if (rc < 0) {
-		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
-			    disk->fd, errno, spdk_strerror(errno));
-		return -1;
-	}
-
-	disk->fd = -1;
 
 	return 0;
 }
