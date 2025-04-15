@@ -920,6 +920,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	}
 	fdisk->readonly = readonly;
 	fdisk->fallocate = fallocate;
+	fdisk->fd = -1;
 
 	fdisk->filename = strdup(filename);
 	if (!fdisk->filename) {
