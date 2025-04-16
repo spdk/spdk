@@ -21,7 +21,7 @@ DEPDIRS-env_dpdk := log util
 
 DEPDIRS-ioat := log
 DEPDIRS-idxd := log util
-DEPDIRS-sock := log $(JSON_LIBS) trace
+DEPDIRS-sock := log $(JSON_LIBS) trace util
 DEPDIRS-util := log
 DEPDIRS-vmd := log util
 DEPDIRS-dma := log
