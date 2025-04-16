@@ -60,7 +60,7 @@ function cleanup() {
 	rm -rf "$tmp_dir"
 }
 
-function raid_function_test() {
+function raid_unmap_function_test() {
 	local raid_level=$1
 	local nbd=/dev/nbd0
 	local raid_bdev
@@ -72,7 +72,12 @@ function raid_function_test() {
 
 	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_1
 	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_2
-	$rpc_py bdev_raid_create -z 64 -r $raid_level -b "'Base_1 Base_2'" -n raid
+
+	if [ "$raid_level" = "raid1" ]; then
+		$rpc_py bdev_raid_create -r $raid_level -b "'Base_1 Base_2'" -n raid
+	else
+		$rpc_py bdev_raid_create -z 64 -r $raid_level -b "'Base_1 Base_2'" -n raid
+	fi
 
 	raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"] | select(.)')
 	if [ $raid_bdev = "" ]; then
@@ -956,8 +961,9 @@ run_test "raid1_resize_superblock_test" raid_resize_superblock_test 1
 if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 	has_nbd=true
 	modprobe nbd
-	run_test "raid_function_test_raid0" raid_function_test raid0
-	run_test "raid_function_test_concat" raid_function_test concat
+	run_test "raid_unmap_function_test_raid0" raid_unmap_function_test raid0
+	run_test "raid_unmap_function_test_concat" raid_unmap_function_test concat
+	run_test "raid_unmap_function_test_raid1" raid_unmap_function_test raid1
 fi
 
 run_test "raid0_resize_test" raid_resize_test 0

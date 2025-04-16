@@ -31,6 +31,12 @@ DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
 DEFINE_STUB(raid_bdev_remap_dix_reftag, int, (void *md_buf, uint64_t num_blocks,
 		struct spdk_bdev *bdev, uint32_t remapped_offset), -1);
 DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
+DEFINE_STUB(spdk_bdev_flush_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+		void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_unmap_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+		void *cb_arg), 0);
 
 int
 spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc,

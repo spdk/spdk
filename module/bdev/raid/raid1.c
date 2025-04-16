@@ -349,6 +349,89 @@ raid1_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 }
 
+static void raid1_submit_null_payload_request(struct raid_bdev_io *raid_io);
+
+static void
+_raid1_submit_null_payload_request(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+
+	raid1_submit_null_payload_request(raid_io);
+}
+
+static inline void
+raid1_null_payload_request_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	raid1_write_bdev_io_completion(bdev_io, success, cb_arg);
+}
+
+static void
+raid1_submit_null_payload_request(struct raid_bdev_io *raid_io)
+{
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct spdk_bdev_ext_io_opts io_opts;
+	struct raid_base_bdev_info *base_info;
+	struct spdk_io_channel *base_ch;
+	uint8_t idx;
+	uint64_t base_bdev_io_not_submitted;
+	int ret = 0;
+
+	if (raid_io->base_bdev_io_submitted == 0) {
+		raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
+		raid_bdev_io_set_default_status(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+
+	raid1_init_ext_io_opts(&io_opts, raid_io);
+	for (idx = raid_io->base_bdev_io_submitted; idx < raid_bdev->num_base_bdevs; idx++) {
+		base_info = &raid_bdev->base_bdev_info[idx];
+		base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, idx);
+
+		if (base_ch == NULL) {
+			/* skip a missing base bdev's slot */
+			raid_io->base_bdev_io_submitted++;
+			raid_bdev_io_complete_part(raid_io, 1, SPDK_BDEV_IO_STATUS_FAILED);
+			continue;
+		}
+
+		switch (raid_io->type) {
+		case SPDK_BDEV_IO_TYPE_UNMAP:
+			ret = raid_bdev_unmap_blocks(base_info, base_ch,
+						     raid_io->offset_blocks, raid_io->num_blocks,
+						     raid1_null_payload_request_io_completion, raid_io);
+			break;
+
+		case SPDK_BDEV_IO_TYPE_FLUSH:
+			ret = raid_bdev_flush_blocks(base_info, base_ch,
+						     raid_io->offset_blocks, raid_io->num_blocks,
+						     raid1_null_payload_request_io_completion, raid_io);
+			break;
+
+		default:
+			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", raid_io->type);
+			assert(false);
+			ret = -EIO;
+		}
+
+		if (spdk_unlikely(ret != 0)) {
+			if (spdk_unlikely(ret == -ENOMEM)) {
+				raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+							base_ch, _raid1_submit_null_payload_request);
+				return;
+			}
+
+			base_bdev_io_not_submitted = raid_bdev->num_base_bdevs -
+						     raid_io->base_bdev_io_submitted;
+			raid_bdev_io_complete_part(raid_io, base_bdev_io_not_submitted,
+						   SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+
+		raid_io->base_bdev_io_submitted++;
+	}
+
+	assert(raid_io->base_bdev_io_submitted != 0);
+}
+
 static void
 raid1_ioch_destroy(void *io_device, void *ctx_buf)
 {
@@ -541,6 +624,7 @@ static struct raid_bdev_module g_raid1_module = {
 	.start = raid1_start,
 	.stop = raid1_stop,
 	.submit_rw_request = raid1_submit_rw_request,
+	.submit_null_payload_request = raid1_submit_null_payload_request,
 	.get_io_channel = raid1_get_io_channel,
 	.submit_process_request = raid1_submit_process_request,
 	.resize = raid1_resize,
