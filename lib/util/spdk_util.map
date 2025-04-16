@@ -94,6 +94,8 @@
 	# public functions in fd.h
 	spdk_fd_get_size;
 	spdk_fd_get_blocklen;
+	spdk_fd_set_nonblock;
+	spdk_fd_clear_nonblock;
 
 	# public functions in file.h
 	spdk_posix_file_load;

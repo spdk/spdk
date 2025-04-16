@@ -182,7 +182,7 @@ static int
 jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
-	int rc, flag;
+	int rc;
 
 	rc = accept(server->sockfd, NULL, NULL);
 	if (rc >= 0) {
@@ -204,10 +204,7 @@ jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 			return -1;
 		}
 
-		flag = fcntl(conn->sockfd, F_GETFL);
-		if (fcntl(conn->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-				    conn->sockfd, spdk_strerror(errno));
+		if (spdk_fd_set_nonblock(conn->sockfd) < 0) {
 			close(conn->sockfd);
 			pthread_spin_destroy(&conn->queue_lock);
 			return -1;

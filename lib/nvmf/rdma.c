@@ -2545,7 +2545,6 @@ create_ib_device(struct spdk_nvmf_rdma_transport *rtransport, struct ibv_context
 		 struct spdk_nvmf_rdma_device **new_device)
 {
 	struct spdk_nvmf_rdma_device	*device;
-	int				flag = 0;
 	int				rc = 0;
 
 	device = calloc(1, sizeof(*device));
@@ -2581,11 +2580,8 @@ create_ib_device(struct spdk_nvmf_rdma_transport *rtransport, struct ibv_context
 	}
 #endif
 
-	/* set up device context async ev fd as NON_BLOCKING */
-	flag = fcntl(device->context->async_fd, F_GETFL);
-	rc = fcntl(device->context->async_fd, F_SETFL, flag | O_NONBLOCK);
+	rc = spdk_fd_set_nonblock(device->context->async_fd);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to set context async fd to NONBLOCK.\n");
 		free(device);
 		return rc;
 	}
@@ -2678,7 +2674,6 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	struct ibv_context		**contexts;
 	size_t				data_wr_pool_size;
 	uint32_t			i;
-	int				flag;
 	uint32_t			sge_count;
 	uint32_t			min_shared_buffers;
 	uint32_t			min_in_capsule_data_size;
@@ -2782,10 +2777,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	flag = fcntl(rtransport->event_channel->fd, F_GETFL);
-	if (fcntl(rtransport->event_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-			    rtransport->event_channel->fd, spdk_strerror(errno));
+	if (spdk_fd_set_nonblock(rtransport->event_channel->fd) < 0) {
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}

@@ -318,14 +318,7 @@ hello_sock_connect(struct hello_context_t *ctx)
 
 	SPDK_NOTICELOG("Connection accepted from (%s, %hu) to (%s, %hu)\n", caddr, cport, saddr, sport);
 
-	rc = fcntl(STDIN_FILENO, F_GETFL);
-	if (rc == -1) {
-		SPDK_ERRLOG("Getting file status flag failed: %s\n", strerror(errno));
-		goto err;
-	}
-
-	if (fcntl(STDIN_FILENO, F_SETFL, rc | O_NONBLOCK) == -1) {
-		SPDK_ERRLOG("Setting file status flag failed: %s\n", strerror(errno));
+	if (spdk_fd_set_nonblock(STDIN_FILENO) < 0) {
 		goto err;
 	}
 

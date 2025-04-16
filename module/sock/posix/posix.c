@@ -943,7 +943,7 @@ posix_sock_create(const char *ip, int port,
 	const char *src_addr;
 	uint16_t src_port;
 	struct addrinfo hints, *res, *res0, *src_ai;
-	int fd, flag;
+	int fd;
 	int rc;
 	bool enable_zcopy_user_opts = true;
 	bool enable_zcopy_impl_opts = true;
@@ -1080,9 +1080,7 @@ retry:
 			}
 		}
 
-		flag = fcntl(fd, F_GETFL);
-		if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+		if (spdk_fd_set_nonblock(fd)) {
 			SSL_free(ssl);
 			SSL_CTX_free(ctx);
 			close(fd);
@@ -1142,7 +1140,6 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 	socklen_t			salen;
 	int				rc, fd;
 	struct spdk_posix_sock		*new_sock;
-	int				flag;
 	SSL_CTX *ctx = 0;
 	SSL *ssl = 0;
 
@@ -1165,9 +1162,7 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 
 	fd = rc;
 
-	flag = fcntl(fd, F_GETFL);
-	if ((!(flag & O_NONBLOCK)) && (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0)) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+	if (spdk_fd_set_nonblock(fd)) {
 		close(fd);
 		return NULL;
 	}

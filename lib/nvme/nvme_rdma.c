@@ -2362,7 +2362,7 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct ibv_context **contexts;
 	struct ibv_device_attr dev_attr;
-	int i, flag, rc;
+	int i, rc;
 
 	rctrlr = spdk_zmalloc(sizeof(struct nvme_rdma_ctrlr), 0, NULL, SPDK_ENV_NUMA_ID_ANY,
 			      SPDK_MALLOC_DMA);
@@ -2435,9 +2435,7 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		goto destruct_ctrlr;
 	}
 
-	flag = fcntl(rctrlr->cm_channel->fd, F_GETFL);
-	if (fcntl(rctrlr->cm_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		SPDK_ERRLOG("Cannot set event channel to non blocking\n");
+	if (spdk_fd_set_nonblock(rctrlr->cm_channel->fd) < 0) {
 		goto destruct_ctrlr;
 	}
 

@@ -8,6 +8,7 @@
 
 #include "spdk/log.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #ifdef __linux__
 
@@ -24,7 +25,7 @@ spdk_pci_event_listen(void)
 	int size = SPDK_UEVENT_RECVBUF_SIZE;
 	int buf_size;
 	socklen_t opt_size;
-	int flag, rc;
+	int rc;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.nl_family = AF_NETLINK;
@@ -58,16 +59,8 @@ spdk_pci_event_listen(void)
 		}
 	}
 
-	flag = fcntl(netlink_fd, F_GETFL);
-	if (flag < 0) {
+	if (spdk_fd_set_nonblock(netlink_fd) < 0) {
 		rc = errno;
-		SPDK_ERRLOG("Failed to get socket flag, fd: %d\n", netlink_fd);
-		goto error;
-	}
-
-	if (fcntl(netlink_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		rc = errno;
-		SPDK_ERRLOG("Fcntl can't set nonblocking mode for socket, fd: %d\n", netlink_fd);
 		goto error;
 	}
 

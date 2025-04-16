@@ -481,7 +481,7 @@ uring_sock_create(const char *ip, int port,
 	const char *src_addr;
 	uint16_t src_port;
 	struct addrinfo hints, *res, *res0, *src_ai;
-	int fd, flag;
+	int fd;
 	int val = 1;
 	int rc;
 	bool enable_zcopy_impl_opts = false;
@@ -621,9 +621,7 @@ retry:
 				break;
 			}
 
-			flag = fcntl(fd, F_GETFL);
-			if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-				SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+			if (spdk_fd_set_nonblock(fd) < 0) {
 				close(fd);
 				fd = -1;
 				break;
@@ -671,9 +669,7 @@ retry:
 				continue;
 			}
 
-			flag = fcntl(fd, F_GETFL);
-			if (fcntl(fd, F_SETFL, flag & ~O_NONBLOCK) < 0) {
-				SPDK_ERRLOG("fcntl can't set blocking mode for socket, fd: %d (%d)\n", fd, errno);
+			if (spdk_fd_clear_nonblock(fd) < 0) {
 				close(fd);
 				fd = -1;
 				break;
@@ -730,7 +726,6 @@ uring_sock_accept(struct spdk_sock *_sock)
 	socklen_t			salen;
 	int				rc, fd;
 	struct spdk_uring_sock		*new_sock;
-	int				flag;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
@@ -745,9 +740,7 @@ uring_sock_accept(struct spdk_sock *_sock)
 
 	fd = rc;
 
-	flag = fcntl(fd, F_GETFL);
-	if ((flag & O_NONBLOCK) && (fcntl(fd, F_SETFL, flag & ~O_NONBLOCK) < 0)) {
-		SPDK_ERRLOG("fcntl can't set blocking mode for socket, fd: %d (%d)\n", fd, errno);
+	if (spdk_fd_clear_nonblock(fd) < 0) {
 		close(fd);
 		return NULL;
 	}
