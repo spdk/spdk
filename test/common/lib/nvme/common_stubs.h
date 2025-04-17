@@ -111,7 +111,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->qprio = qprio;
 	qpair->async = async;
 	qpair->trtype = SPDK_NVME_TRANSPORT_TCP;
-	qpair->poll_group = (void *)0xDEADBEEF;
+	qpair->poll_group = NULL;
 
 	return 0;
 }
