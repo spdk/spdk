@@ -1010,8 +1010,8 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 
 	SPDK_DEBUGLOG(nvme, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 
-	if (!tcp_req->tqpair->qpair.in_completion_context) {
-		tcp_req->tqpair->async_complete++;
+	if (!qpair->in_completion_context) {
+		tqpair->async_complete++;
 	}
 
 	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
@@ -1029,10 +1029,10 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		}
 	}
 
-	tqpair->qpair.queue_depth--;
+	qpair->queue_depth--;
 	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)tcp_req->pdu, req->cb_arg,
-			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw, tqpair->qpair.queue_depth);
-	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
+			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw, qpair->queue_depth);
+	TAILQ_REMOVE(&tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, &cpl);
 }
