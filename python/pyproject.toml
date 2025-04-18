@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spdk"
+dynamic = ["version"]
+description = "Python bindings for the Storage Performance Development Kit (SPDK)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "BSD-3-Clause" }
+
+authors = [
+    { name = "SPDK Authors", email = "spdk@lists.01.org" }
+]
+
+keywords = ["SPDK", "storage", "nvme", "performance", "bindings"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Hardware",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://spdk.io"
+"Source" = "https://github.com/spdk/spdk"
+"Bug Tracker" = "https://github.com/spdk/spdk/issues"
+
+[project.scripts]
+# See https://review.spdk.io/c/spdk/spdk/+/25759
+spdk-rpc = "spdk.spdk_rpc:main"
+spdk-sma = "spdk.spdk_sma:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "flake8",
+    "mypy"
+]
+sma = [
+    "grpcio",
+    "protobuf"
+]
+cli = [
+    "configshell_fb"
+]
+
+[tool.hatch.version]
+path = "spdk/version.py"
+
+[tool.hatch.build.targets.wheel.force-include]
+"../scripts/rpc.py" = "spdk/spdk_rpc.py"
+"../scripts/sma.py" = "spdk/spdk_sma.py"
+
+# [tool.hatch.metadata]
+# allow-direct-references = true
+
+# [tool.hatch.build.targets.wheel]
+# packages = ["spdk", "spdk.rpc", "spdk.sma", "spdk.spdkcli"]
+
+# [tool.hatch.build]
+# include = [
+#     "spdk/*.so",
+#     "spdk/__init__.py",
+#     "spdk/rpc/**",
+#     "spdk/sma/**",
+#     "spdk/spdkcli/**"
+# ]
