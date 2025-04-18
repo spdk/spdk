@@ -19,6 +19,7 @@
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
 #define SPDK_SOCK_DEFAULT_ACK_TIMEOUT 0
+#define SPDK_SOCK_DEFAULT_CONNECT_TIMEOUT 0
 
 #define PORTNUMLEN 32
 #define MAX_TMPBUF 1024
@@ -294,6 +295,10 @@ spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, src_port)) {
 		opts->src_port = 0;
 	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, connect_timeout)) {
+		opts->connect_timeout = SPDK_SOCK_DEFAULT_CONNECT_TIMEOUT;
+	}
 }
 
 /*
@@ -337,6 +342,10 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, src_port)) {
 		opts->src_port = opts_user->src_port;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, connect_timeout)) {
+		opts->connect_timeout = opts_user->connect_timeout;
 	}
 }
 
@@ -504,14 +513,15 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		return 1;
 	}
 
-	rc = poll(&pfd, 1, SPDK_SOCK_DEFAULT_CONNECT_TIMEOUT);
+	assert(opts->connect_timeout <= INT_MAX);
+	rc = poll(&pfd, 1, opts->connect_timeout ? (int)opts->connect_timeout : -1);
 	if (rc < 0) {
 		SPDK_ERRLOG("poll() failed, errno = %d\n", errno);
 		return -1;
 	}
 
 	if (rc == 0) {
-		SPDK_ERRLOG("poll() timeout after %d ms\n", SPDK_SOCK_DEFAULT_CONNECT_TIMEOUT);
+		SPDK_ERRLOG("poll() timeout after %d ms\n", opts->connect_timeout);
 		return -1;
 	}
 
@@ -574,6 +584,11 @@ spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct s
 
 		SPDK_DEBUGLOG(sock, "Creating a client socket using impl %s\n", impl->name);
 		sock_init_opts(&opts_local, opts);
+		if (opts_local.connect_timeout > INT_MAX) {
+			SPDK_ERRLOG("connect_timeout opt cannot exceed INT_MAX\n");
+			return NULL;
+		}
+
 		sock = impl->connect(ip, port, &opts_local);
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */

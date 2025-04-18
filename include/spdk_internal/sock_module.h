@@ -31,8 +31,6 @@ extern "C" {
 #define MIN_SO_SNDBUF_SIZE (4 * 1024)
 #define IOV_BATCH_SIZE 64
 
-#define SPDK_SOCK_DEFAULT_CONNECT_TIMEOUT -1
-
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
 	struct spdk_sock_opts		opts;

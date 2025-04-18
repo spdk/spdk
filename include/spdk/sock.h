@@ -247,6 +247,14 @@ struct spdk_sock_opts {
 	 * Source port.  If zero, a random ephemeral port will be used.  Only valid for connect().
 	 */
 	uint16_t src_port;
+
+	/* Hole at bytes 50-51. */
+	uint8_t reserved50[2];
+
+	/**
+	 * Time in msec to wait until connection is done (0 = no timeout).
+	 */
+	uint32_t connect_timeout;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 56, "Incorrect size");
 
