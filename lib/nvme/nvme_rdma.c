@@ -240,7 +240,6 @@ struct nvme_rdma_qpair {
 
 	uint8_t					stale_conn_retry_count;
 	bool					need_destroy;
-	bool					connected;
 	TAILQ_ENTRY(nvme_rdma_qpair)		link_connecting;
 };
 
@@ -453,7 +452,6 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			rc = spdk_rdma_provider_qp_complete_connect(rqpair->rdma_qp);
 		/* fall through */
 		case RDMA_CM_EVENT_ESTABLISHED:
-			rqpair->connected = true;
 			accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
 			if (accept_data == NULL) {
 				rc = -1;
@@ -463,7 +461,6 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			}
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
-			rqpair->connected = false;
 			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_REMOTE;
 			break;
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
@@ -2191,7 +2188,7 @@ _nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITING;
 
 	if (rqpair->cm_id) {
-		if (rqpair->rdma_qp && rqpair->connected) {
+		if (rqpair->rdma_qp) {
 			rc = spdk_rdma_provider_qp_disconnect(rqpair->rdma_qp);
 			if ((qpair->ctrlr != NULL) && (rc == 0)) {
 				rc = nvme_rdma_process_event_start(rqpair, RDMA_CM_EVENT_DISCONNECTED,
