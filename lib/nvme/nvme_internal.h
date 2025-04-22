@@ -1503,6 +1503,7 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 	struct nvme_error_cmd           *cmd;
 
 	if (spdk_unlikely(req->accel_sequence != NULL)) {
+		assert(qpair->poll_group != NULL);
 		struct spdk_nvme_poll_group *pg = qpair->poll_group->group;
 
 		/* Transports are required to execute the sequence and clear req->accel_sequence.
