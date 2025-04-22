@@ -3037,6 +3037,22 @@ bdev_queue_io_wait_with_cb(struct spdk_bdev_io *bdev_io, spdk_bdev_io_wait_cb cb
 	}
 }
 
+static inline uint32_t
+bdev_rw_get_io_boundary(struct spdk_bdev *bdev, uint8_t io_type)
+{
+	uint32_t io_boundary;
+
+	if (io_type == SPDK_BDEV_IO_TYPE_WRITE && bdev->split_on_write_unit) {
+		io_boundary = bdev->write_unit_size;
+	} else if (bdev->split_on_optimal_io_boundary) {
+		io_boundary = bdev->optimal_io_boundary;
+	} else {
+		io_boundary = 0;
+	}
+
+	return io_boundary;
+}
+
 static bool
 bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 {
@@ -3046,13 +3062,7 @@ bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 	uint32_t max_size = bdev->max_rw_size;
 	int max_segs = bdev->max_num_segments;
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && bdev->split_on_write_unit) {
-		io_boundary = bdev->write_unit_size;
-	} else if (bdev->split_on_optimal_io_boundary) {
-		io_boundary = bdev->optimal_io_boundary;
-	} else {
-		io_boundary = 0;
-	}
+	io_boundary = bdev_rw_get_io_boundary(bdev, bdev_io->type);
 
 	if (spdk_likely(!io_boundary && !max_segs && !max_segment_size && !max_size)) {
 		return false;
