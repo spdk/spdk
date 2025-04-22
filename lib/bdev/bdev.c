@@ -8216,7 +8216,14 @@ bdev_register(struct spdk_bdev *bdev)
 	}
 
 	if (!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
-		bdev->max_write_zeroes = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
+		/* If WRITE_ZEROES is not supported, set max_write_zeroes based on write capability */
+		uint32_t zero_buffer_num_blocks = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
+		uint32_t write_boundary = bdev_rw_get_io_boundary(bdev, SPDK_BDEV_IO_TYPE_WRITE);
+
+		bdev->max_write_zeroes = spdk_min(write_boundary, zero_buffer_num_blocks);
+		if (bdev->max_write_zeroes == 0) {
+			bdev->max_write_zeroes = zero_buffer_num_blocks;
+		}
 	}
 
 	bdev->internal.reset_in_progress = NULL;
