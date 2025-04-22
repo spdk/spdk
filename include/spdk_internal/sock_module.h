@@ -30,6 +30,7 @@ extern "C" {
 #define MIN_SO_RCVBUF_SIZE (4 * 1024)
 #define MIN_SO_SNDBUF_SIZE (4 * 1024)
 #define IOV_BATCH_SIZE 64
+#define PORTNUMLEN 32
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
@@ -393,6 +394,13 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
  */
 int spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 			      struct spdk_sock_impl_opts *impl_opts);
+
+/**
+ * Connects the socket to the address.
+ *
+ * \return 0 on success, -1 on failure, 1 to retry with different address if available.
+ */
+int spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts);
 
 /**
  * Insert a group into the placement map.

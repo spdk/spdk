@@ -24,7 +24,6 @@
 #include "spdk/net.h"
 
 #define MAX_TMPBUF 1024
-#define PORTNUMLEN 32
 #define SPDK_SOCK_GROUP_QUEUE_DEPTH 4096
 #define SPDK_SOCK_CMG_INFO_SIZE (sizeof(struct cmsghdr) + sizeof(struct sock_extended_err))
 
@@ -478,9 +477,7 @@ uring_sock_create(const char *ip, int port,
 	char buf[MAX_TMPBUF];
 	char portnum[PORTNUMLEN];
 	char *p;
-	const char *src_addr;
-	uint16_t src_port;
-	struct addrinfo hints, *res, *res0, *src_ai;
+	struct addrinfo hints, *res, *res0;
 	int fd;
 	int rc;
 	bool enable_zcopy_impl_opts = false;
@@ -562,44 +559,15 @@ retry:
 
 			enable_zcopy_impl_opts = impl_opts.enable_zerocopy_send_server;
 		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-			src_addr = SPDK_GET_FIELD(opts, src_addr, NULL, opts->opts_size);
-			src_port = SPDK_GET_FIELD(opts, src_port, 0, opts->opts_size);
-			if (src_addr != NULL || src_port != 0) {
-				snprintf(portnum, sizeof(portnum), "%"PRIu16, src_port);
-				memset(&hints, 0, sizeof hints);
-				hints.ai_family = AF_UNSPEC;
-				hints.ai_socktype = SOCK_STREAM;
-				hints.ai_flags = AI_NUMERICSERV | AI_NUMERICHOST | AI_PASSIVE;
-				rc = getaddrinfo(src_addr, src_port > 0 ? portnum : NULL,
-						 &hints, &src_ai);
-				if (rc != 0 || src_ai == NULL) {
-					SPDK_ERRLOG("getaddrinfo() failed %s (%d)\n",
-						    rc != 0 ? gai_strerror(rc) : "", rc);
-					close(fd);
-					fd = -1;
-					break;
-				}
-				rc = bind(fd, src_ai->ai_addr, src_ai->ai_addrlen);
-				if (rc != 0) {
-					SPDK_ERRLOG("bind() failed errno %d (%s:%s)\n", errno,
-						    src_addr ? src_addr : "", portnum);
-					close(fd);
-					fd = -1;
-					freeaddrinfo(src_ai);
-					src_ai = NULL;
-					break;
-				}
-				freeaddrinfo(src_ai);
-				src_ai = NULL;
-			}
-
-			rc = connect(fd, res->ai_addr, res->ai_addrlen);
+			rc = spdk_sock_posix_fd_connect(fd, res, opts);
 			if (rc != 0) {
-				SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
-				/* try next family */
 				close(fd);
 				fd = -1;
-				continue;
+				if (rc == 1) {
+					continue;
+				} else {
+					break;
+				}
 			}
 
 			if (spdk_fd_clear_nonblock(fd) < 0) {

@@ -409,6 +409,48 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	return fd;
 }
 
+int
+spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts)
+{
+	char portnum[PORTNUMLEN];
+	const char *src_addr;
+	uint16_t src_port;
+	struct addrinfo hints, *src_ai;
+	int rc;
+
+	src_addr = SPDK_GET_FIELD(opts, src_addr, NULL, opts->opts_size);
+	src_port = SPDK_GET_FIELD(opts, src_port, 0, opts->opts_size);
+	if (src_addr != NULL || src_port != 0) {
+		snprintf(portnum, sizeof(portnum), "%"PRIu16, src_port);
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_NUMERICSERV | AI_NUMERICHOST | AI_PASSIVE;
+		rc = getaddrinfo(src_addr, src_port > 0 ? portnum : NULL, &hints, &src_ai);
+		if (rc != 0 || src_ai == NULL) {
+			SPDK_ERRLOG("getaddrinfo() failed %s (%d)\n", rc != 0 ? gai_strerror(rc) : "", rc);
+			return -1;
+		}
+
+		rc = bind(fd, src_ai->ai_addr, src_ai->ai_addrlen);
+		if (rc != 0) {
+			SPDK_ERRLOG("bind() failed errno %d (%s:%s)\n", errno, src_addr ? src_addr : "", portnum);
+			freeaddrinfo(src_ai);
+			return -1;
+		}
+
+		freeaddrinfo(src_ai);
+	}
+
+	rc = connect(fd, res->ai_addr, res->ai_addrlen);
+	if (rc != 0) {
+		SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
+		return 1;
+	}
+
+	return 0;
+}
+
 struct spdk_sock *
 spdk_sock_connect(const char *ip, int port, const char *impl_name)
 {

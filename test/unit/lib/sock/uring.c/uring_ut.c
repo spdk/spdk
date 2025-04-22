@@ -33,6 +33,8 @@ DEFINE_STUB(spdk_sock_group_get_buf, size_t, (struct spdk_sock_group *group, voi
 		void **ctx), 0);
 DEFINE_STUB(spdk_sock_posix_fd_create, int, (struct addrinfo *res, struct spdk_sock_opts *opts,
 		struct spdk_sock_impl_opts *impl_opts), 0);
+DEFINE_STUB(spdk_sock_posix_fd_connect, int, (int fd, struct addrinfo *res,
+		struct spdk_sock_opts *opts), 0);
 
 static void
 _req_cb(void *cb_arg, int len)
