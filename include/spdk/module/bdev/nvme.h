@@ -97,11 +97,14 @@ struct spdk_bdev_nvme_opts {
 	uint32_t rdma_srq_size;
 	uint32_t rdma_max_cq_size;
 	uint16_t rdma_cm_event_timeout_ms;
-	/* Hole at byte 110-111. */
+	/* Hole at bytes 110-111. */
 	uint8_t reserved110[2];
 	uint32_t dhchap_digests;
 	uint32_t dhchap_dhgroups;
 	bool rdma_umr_per_io;
+	/* Hole at bytes 121-123. */
+	uint8_t reserved121[3];
+	uint32_t tcp_connect_timeout_ms;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_nvme_opts) == 128, "Incorrect size");
 

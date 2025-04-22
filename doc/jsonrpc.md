@@ -4098,6 +4098,7 @@ rdma_cm_event_timeout_ms   | Optional | number      | Time to wait for RDMA CM e
 dhchap_digests             | Optional | list        | List of allowed DH-HMAC-CHAP digests.
 dhchap_dhgroups            | Optional | list        | List of allowed DH-HMAC-CHAP DH groups.
 rdma_umr_per_io            | Optional | boolean     | Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system
+tcp_connect_timeout_ms     | Optional | number      | Time to wait until TCP connection is done. Default: 0 (no timeout).
 
 #### Example
 

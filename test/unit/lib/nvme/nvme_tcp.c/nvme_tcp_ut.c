@@ -13,6 +13,8 @@
 #include "nvme/nvme_internal.h"
 #include "common/lib/nvme/common_stubs.h"
 
+struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {};
+
 /* nvme_transport_ctrlr_disconnect_qpair_done() stub is defined in common_stubs.h, but we need to
  * override it here */
 static void nvme_transport_ctrlr_disconnect_qpair_done_mocked(struct spdk_nvme_qpair *qpair);

@@ -690,6 +690,8 @@ def main():
     p.add_argument('--disable-rdma-umr-per-io',
                    help='''Disable scatter-gather RDMA Memory Region per IO.''',
                    action='store_false', dest='rdma_umr_per_io')
+    p.add_argument('--tcp-connect-timeout-ms',
+                   help='Time to wait until TCP connection is done. Default: 0 (no timeout).', type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 
