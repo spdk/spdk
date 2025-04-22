@@ -385,6 +385,16 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 }
 
 /**
+ * Creates sock file descriptor.
+ *
+ * Use close() when returned fd is no longer needed.
+ *
+ * \return fd on success, -1 on failure.
+ */
+int spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
+			      struct spdk_sock_impl_opts *impl_opts);
+
+/**
  * Insert a group into the placement map.
  * If the group is already in the map, take a reference.
  */

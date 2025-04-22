@@ -336,6 +336,79 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 	}
 }
 
+int
+spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
+			  struct spdk_sock_impl_opts *impl_opts)
+{
+	int fd;
+	int val = 1;
+	int rc, sz;
+#if defined(__linux__)
+	int to;
+#endif
+
+	fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (fd < 0) {
+		return -1;
+	}
+
+	sz = impl_opts->recv_buf_size;
+	rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+	if (rc) {
+		/* Not fatal */
+	}
+
+	sz = impl_opts->send_buf_size;
+	rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
+	if (rc) {
+		/* Not fatal */
+	}
+
+	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
+	if (rc != 0) {
+		close(fd);
+		return -1;
+	}
+	rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
+	if (rc != 0) {
+		close(fd);
+		return -1;
+	}
+
+#if defined(SO_PRIORITY)
+	if (opts->priority) {
+		rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
+		if (rc != 0) {
+			close(fd);
+			return -1;
+		}
+	}
+#endif
+
+	if (res->ai_family == AF_INET6) {
+		rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
+		if (rc != 0) {
+			close(fd);
+			return -1;
+		}
+	}
+
+	if (opts->ack_timeout) {
+#if defined(__linux__)
+		to = opts->ack_timeout;
+		rc = setsockopt(fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &to, sizeof(to));
+		if (rc != 0) {
+			close(fd);
+			return -1;
+		}
+#else
+		SPDK_WARNLOG("TCP_USER_TIMEOUT is not supported.\n");
+#endif
+	}
+
+	return fd;
+}
+
 struct spdk_sock *
 spdk_sock_connect(const char *ip, int port, const char *impl_name)
 {

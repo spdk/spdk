@@ -482,7 +482,6 @@ uring_sock_create(const char *ip, int port,
 	uint16_t src_port;
 	struct addrinfo hints, *res, *res0, *src_ai;
 	int fd;
-	int val = 1;
 	int rc;
 	bool enable_zcopy_impl_opts = false;
 	bool enable_zcopy_user_opts = true;
@@ -519,75 +518,9 @@ uring_sock_create(const char *ip, int port,
 	fd = -1;
 	for (res = res0; res != NULL; res = res->ai_next) {
 retry:
-		fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		fd = spdk_sock_posix_fd_create(res, opts, &impl_opts);
 		if (fd < 0) {
-			/* error */
 			continue;
-		}
-
-		val = impl_opts.recv_buf_size;
-		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, sizeof val);
-		if (rc) {
-			/* Not fatal */
-		}
-
-		val = impl_opts.send_buf_size;
-		rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, sizeof val);
-		if (rc) {
-			/* Not fatal */
-		}
-
-		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			fd = -1;
-			/* error */
-			continue;
-		}
-		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			fd = -1;
-			/* error */
-			continue;
-		}
-
-		if (opts->ack_timeout) {
-#if defined(__linux__)
-			val = opts->ack_timeout;
-			rc = setsockopt(fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &val, sizeof val);
-			if (rc != 0) {
-				close(fd);
-				fd = -1;
-				/* error */
-				continue;
-			}
-#else
-			SPDK_WARNLOG("TCP_USER_TIMEOUT is not supported.\n");
-#endif
-		}
-
-
-
-#if defined(SO_PRIORITY)
-		if (opts != NULL && opts->priority) {
-			rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
-			if (rc != 0) {
-				close(fd);
-				fd = -1;
-				/* error */
-				continue;
-			}
-		}
-#endif
-		if (res->ai_family == AF_INET6) {
-			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
-			if (rc != 0) {
-				close(fd);
-				fd = -1;
-				/* error */
-				continue;
-			}
 		}
 
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
