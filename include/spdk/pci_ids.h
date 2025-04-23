@@ -28,6 +28,7 @@ extern "C" {
 #define SPDK_PCI_VID_NUTANIX		0x4e58
 #define SPDK_PCI_VID_HUAWEI		0x19e5
 #define SPDK_PCI_VID_MICROSOFT		0x1414
+#define SPDK_PCI_VID_MICRON		0x1344
 
 #define SPDK_PCI_CLASS_ANY_ID		0xffffff
 /**

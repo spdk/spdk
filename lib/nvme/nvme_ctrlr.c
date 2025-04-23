@@ -2974,6 +2974,13 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->opts.num_io_queues = spdk_min(min_allocated, ctrlr->opts.num_io_queues);
 
 		if (ctrlr->opts.enable_interrupts) {
+			if (ctrlr->quirks & NVME_QUIRK_MSIX_VECTOR_COUNT) {
+				/* This controller does not allocate enough vectors for
+				 * each IO queue plus the admin queue. So decrement the number
+				 * of IO queues we will allow by one.
+				 */
+				ctrlr->opts.num_io_queues--;
+			}
 			ctrlr->opts.num_io_queues = spdk_min(MAX_IO_QUEUES_WITH_INTERRUPTS,
 							     ctrlr->opts.num_io_queues);
 			if (nvme_transport_ctrlr_enable_interrupts(ctrlr) < 0) {
