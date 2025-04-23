@@ -19,6 +19,9 @@
 #define SPDK_SOCK_DEFAULT_ZCOPY true
 #define SPDK_SOCK_DEFAULT_ACK_TIMEOUT 0
 
+#define PORTNUMLEN 32
+#define MAX_TMPBUF 1024
+
 #define SPDK_SOCK_OPTS_FIELD_OK(opts, field) (offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= (opts->opts_size))
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
@@ -334,6 +337,44 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, src_port)) {
 		opts->src_port = opts_user->src_port;
 	}
+}
+
+struct addrinfo *
+spdk_sock_posix_getaddrinfo(const char *ip, int port)
+{
+	struct addrinfo *res, hints = {};
+	char portnum[PORTNUMLEN];
+	char buf[MAX_TMPBUF];
+	char *p;
+	int rc;
+
+	if (ip == NULL) {
+		return NULL;
+	}
+
+	if (ip[0] == '[') {
+		snprintf(buf, sizeof(buf), "%s", ip + 1);
+		p = strchr(buf, ']');
+		if (p != NULL) {
+			*p = '\0';
+		}
+
+		ip = (const char *) &buf[0];
+	}
+
+	snprintf(portnum, sizeof portnum, "%d", port);
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_NUMERICSERV;
+	hints.ai_flags |= AI_PASSIVE;
+	hints.ai_flags |= AI_NUMERICHOST;
+	rc = getaddrinfo(ip, portnum, &hints, &res);
+	if (rc != 0) {
+		SPDK_ERRLOG("getaddrinfo() failed %s (%d)\n", gai_strerror(rc), rc);
+		return NULL;
+	}
+
+	return res;
 }
 
 int

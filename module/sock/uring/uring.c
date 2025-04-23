@@ -23,7 +23,6 @@
 #include "spdk_internal/assert.h"
 #include "spdk/net.h"
 
-#define MAX_TMPBUF 1024
 #define SPDK_SOCK_GROUP_QUEUE_DEPTH 4096
 #define SPDK_SOCK_CMG_INFO_SIZE (sizeof(struct cmsghdr) + sizeof(struct sock_extended_err))
 
@@ -474,40 +473,16 @@ uring_sock_create(const char *ip, int port,
 {
 	struct spdk_uring_sock *sock;
 	struct spdk_sock_impl_opts impl_opts;
-	char buf[MAX_TMPBUF];
-	char portnum[PORTNUMLEN];
-	char *p;
-	struct addrinfo hints, *res, *res0;
-	int fd;
-	int rc;
+	struct addrinfo *res, *res0;
+	int fd, rc;
 	bool enable_zcopy_impl_opts = false;
 	bool enable_zcopy_user_opts = true;
 
 	assert(opts != NULL);
 	uring_opts_get_impl_opts(opts, &impl_opts);
 
-	if (ip == NULL) {
-		return NULL;
-	}
-	if (ip[0] == '[') {
-		snprintf(buf, sizeof(buf), "%s", ip + 1);
-		p = strchr(buf, ']');
-		if (p != NULL) {
-			*p = '\0';
-		}
-		ip = (const char *) &buf[0];
-	}
-
-	snprintf(portnum, sizeof portnum, "%d", port);
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_NUMERICSERV;
-	hints.ai_flags |= AI_PASSIVE;
-	hints.ai_flags |= AI_NUMERICHOST;
-	rc = getaddrinfo(ip, portnum, &hints, &res0);
-	if (rc != 0) {
-		SPDK_ERRLOG("getaddrinfo() failed %s (%d)\n", gai_strerror(rc), rc);
+	res0 = spdk_sock_posix_getaddrinfo(ip, port);
+	if (!res0) {
 		return NULL;
 	}
 

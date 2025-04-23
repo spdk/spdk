@@ -30,7 +30,6 @@ extern "C" {
 #define MIN_SO_RCVBUF_SIZE (4 * 1024)
 #define MIN_SO_SNDBUF_SIZE (4 * 1024)
 #define IOV_BATCH_SIZE 64
-#define PORTNUMLEN 32
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
@@ -384,6 +383,15 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 		break;
 	}
 }
+
+/**
+ * Converts ip and port into address.
+ *
+ * Use freeaddrinfo() when returned object is no longer needed.
+ *
+ * \return addrinfo object or NULL in case of any failures.
+ */
+struct addrinfo *spdk_sock_posix_getaddrinfo(const char *ip, int port);
 
 /**
  * Creates sock file descriptor.

@@ -46,6 +46,7 @@
 	spdk_net_impl_register;
 	spdk_sock_posix_fd_create;
 	spdk_sock_posix_fd_connect;
+	spdk_sock_posix_getaddrinfo;
 	spdk_sock_group_get_buf;
 	spdk_sock_map_insert;
 	spdk_sock_map_release;

@@ -32,6 +32,7 @@ DEFINE_STUB(spdk_sock_posix_fd_create, int, (struct addrinfo *res, struct spdk_s
 		struct spdk_sock_impl_opts *impl_opts), 0);
 DEFINE_STUB(spdk_sock_posix_fd_connect, int, (int fd, struct addrinfo *res,
 		struct spdk_sock_opts *opts), 0);
+DEFINE_STUB(spdk_sock_posix_getaddrinfo, struct addrinfo *, (const char *ip, int port), 0);
 
 static void
 _req_cb(void *cb_arg, int len)
