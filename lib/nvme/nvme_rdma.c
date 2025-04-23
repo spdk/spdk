@@ -1280,7 +1280,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_INITIALIZING;
 
-	if (qpair->poll_group != NULL && rqpair->link_connecting.tqe_prev == NULL) {
+	if (qpair->poll_group != NULL && TAILQ_ENTRY_NOT_ENQUEUED(rqpair, link_connecting)) {
 		group = nvme_rdma_poll_group(qpair->poll_group);
 		TAILQ_INSERT_TAIL(&group->connecting_qpairs, rqpair, link_connecting);
 	}
@@ -2504,7 +2504,7 @@ _nvme_rdma_qpair_submit_request(struct nvme_rdma_qpair *rqpair,
 	struct ibv_send_wr *wr;
 	struct nvme_rdma_poll_group *group;
 
-	if (!rqpair->link_active.tqe_prev && qpair->poll_group) {
+	if (TAILQ_ENTRY_NOT_ENQUEUED(rqpair, link_active) && qpair->poll_group) {
 		group = nvme_rdma_poll_group(qpair->poll_group);
 		TAILQ_INSERT_TAIL(&group->active_qpairs, rqpair, link_active);
 	}
@@ -3357,12 +3357,8 @@ nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(qpair->poll_group);
 
-	if (rqpair->link_connecting.tqe_prev) {
-		TAILQ_REMOVE(&group->connecting_qpairs, rqpair, link_connecting);
-		/* We use prev pointer to check if qpair is in connecting list or not .
-		 * TAILQ_REMOVE doesn't do it. So, we do it manually.
-		 */
-		rqpair->link_connecting.tqe_prev = NULL;
+	if (TAILQ_ENTRY_ENQUEUED(rqpair, link_connecting)) {
+		TAILQ_REMOVE_CLEAR(&group->connecting_qpairs, rqpair, link_connecting);
 	}
 
 	return 0;
@@ -3391,9 +3387,8 @@ nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 		nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
 	}
 
-	if (rqpair->link_active.tqe_prev) {
-		TAILQ_REMOVE(&group->active_qpairs, rqpair, link_active);
-		rqpair->link_active.tqe_prev = NULL;
+	if (TAILQ_ENTRY_ENQUEUED(rqpair, link_active)) {
+		TAILQ_REMOVE_CLEAR(&group->active_qpairs, rqpair, link_active);
 	}
 
 	return 0;
@@ -3405,7 +3400,7 @@ nvme_rdma_qpair_process_submits(struct nvme_rdma_poll_group *group,
 {
 	struct spdk_nvme_qpair	*qpair = &rqpair->qpair;
 
-	assert(rqpair->link_active.tqe_prev != NULL);
+	assert(TAILQ_ENTRY_ENQUEUED(rqpair, link_active));
 
 	if (spdk_unlikely(rqpair->state <= NVME_RDMA_QPAIR_STATE_INITIALIZING ||
 			  rqpair->state >= NVME_RDMA_QPAIR_STATE_EXITING)) {
@@ -3426,11 +3421,7 @@ nvme_rdma_qpair_process_submits(struct nvme_rdma_poll_group *group,
 	}
 
 	if (rqpair->num_outstanding_reqs == 0 && STAILQ_EMPTY(&qpair->queued_req)) {
-		TAILQ_REMOVE(&group->active_qpairs, rqpair, link_active);
-		/* We use prev pointer to check if qpair is in active list or not.
-		 * TAILQ_REMOVE doesn't do it. So, we do it manually.
-		 */
-		rqpair->link_active.tqe_prev = NULL;
+		TAILQ_REMOVE_CLEAR(&group->active_qpairs, rqpair, link_active);
 	}
 }
 
@@ -3467,11 +3458,7 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 
 		rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
 		if (rc == 0 || rc != -EAGAIN) {
-			TAILQ_REMOVE(&group->connecting_qpairs, rqpair, link_connecting);
-			/* We use prev pointer to check if qpair is in connecting list or not.
-			 * TAILQ_REMOVE does not do it. So, we do it manually.
-			 */
-			rqpair->link_connecting.tqe_prev = NULL;
+			TAILQ_REMOVE_CLEAR(&group->connecting_qpairs, rqpair, link_connecting);
 
 			if (rc == 0) {
 				/* Once the connection is completed, we can submit queued requests */
