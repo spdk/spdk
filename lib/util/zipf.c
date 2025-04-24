@@ -14,7 +14,7 @@ struct spdk_zipf {
 	double		theta;
 	double		zetan;
 	double		val1_limit;
-	uint32_t	seed;
+	uint64_t	seed;
 };
 
 static double
@@ -71,7 +71,7 @@ spdk_zipf_create(uint64_t range, double theta, uint32_t seed)
 	}
 
 	zipf->range = range;
-	zipf->seed = seed;
+	zipf->seed = spdk_rand_xorshift64_seed();
 
 	zipf->theta = theta;
 	zipf->alpha = 1.0 / (1.0 - zipf->theta);
@@ -97,7 +97,7 @@ spdk_zipf_generate(struct spdk_zipf *zipf)
 	double randu, randz;
 	uint64_t val;
 
-	randu = (double)rand_r(&zipf->seed) / RAND_MAX;
+	randu = (double)spdk_rand_xorshift64(&zipf->seed) / (double)UINT64_MAX;
 	randz = randu * zipf->zetan;
 
 	if (randz < 1.0) {

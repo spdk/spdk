@@ -154,7 +154,7 @@ struct bdevperf_job {
 	bool				flush;
 	bool				abort;
 	int				queue_depth;
-	unsigned int			seed;
+	uint64_t			seed;
 
 	uint64_t			io_completed;
 	uint64_t			io_failed;
@@ -1328,11 +1328,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	if (job->zipf) {
 		offset_in_ios = spdk_zipf_generate(job->zipf);
 	} else if (job->is_random) {
-		/* RAND_MAX is only INT32_MAX, so use 2 calls to rand_r to
-		 * get a large enough value to ensure we are issuing I/O
-		 * uniformly across the whole bdev.
-		 */
-		rand_value = (uint64_t)rand_r(&job->seed) * RAND_MAX + rand_r(&job->seed);
+		rand_value = spdk_rand_xorshift64(&job->seed);
 		offset_in_ios = rand_value % job->size_in_ios;
 
 		if (g_random_map) {
@@ -1395,7 +1391,8 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	} else if (job->write_zeroes) {
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 	} else if ((job->rw_percentage == 100) ||
-		   (job->rw_percentage != 0 && ((rand_r(&job->seed) % 100) < job->rw_percentage))) {
+		   (job->rw_percentage != 0 &&
+		    ((spdk_rand_xorshift64(&job->seed) % 100) < (uint64_t)job->rw_percentage))) {
 		assert(!job->verify);
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 		if (!g_zcopy) {
@@ -1823,19 +1820,19 @@ job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 	case JOB_CONFIG_RW_RANDREAD:
 		job->is_random = true;
 		job->rw_percentage = 100;
-		job->seed = rand();
+		job->seed = spdk_rand_xorshift64_seed();
 		break;
 	case JOB_CONFIG_RW_RANDWRITE:
 		job->is_random = true;
 		job->rw_percentage = 0;
-		job->seed = rand();
+		job->seed = spdk_rand_xorshift64_seed();
 		break;
 	case JOB_CONFIG_RW_RW:
 		job->is_random = false;
 		break;
 	case JOB_CONFIG_RW_RANDRW:
 		job->is_random = true;
-		job->seed = rand();
+		job->seed =  spdk_rand_xorshift64_seed();
 		break;
 	case JOB_CONFIG_RW_RESET:
 		/* Reset shares the flow with verify. */

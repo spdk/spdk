@@ -93,6 +93,43 @@ extern "C" {
 
 uint32_t spdk_u32log2(uint32_t x);
 
+/**
+ * Generate a 64-bit pseudo-random number using xorshift algorithm.
+ *
+ * \param state the current seed value.
+ * \return a new pseudo-random 64-bit number.
+ */
+static inline uint64_t
+spdk_rand_xorshift64(uint64_t *state)
+{
+	uint64_t x = *state;
+
+	x ^= x << 13;
+	x ^= x >> 7;
+	x ^= x << 17;
+
+	*state = x;
+	return x;
+}
+
+/**
+ * Generate a non-zero initial seed for xorshift64.
+ *
+ * \return a random 64-bit seed value(non-zero).
+ */
+static inline uint64_t
+spdk_rand_xorshift64_seed(void)
+{
+	uint64_t seed = ((uint64_t)rand() << 32) | rand();
+
+	/* Avoid zero seed */
+	if (seed == 0) {
+		seed = 1;
+	}
+
+	return seed;
+}
+
 static inline uint32_t
 spdk_align32pow2(uint32_t x)
 {
