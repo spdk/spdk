@@ -56,8 +56,10 @@ F:	test/unit/lib/accel/
 X:	test/unit/lib/accel/dpdk_*dev.c/
 
 BDEV (BLOCK DEVICE) LAYER
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	lib/bdev/
 F:	module/event/subsystems/bdev/
+S:	Supported
 
 BDEV FIO PLUGIN
 F:	app/fio/bdev/
@@ -122,10 +124,12 @@ EVENT FRAMEWORK
 F:	lib/event/
 
 FILESYSTEM DEVICE (FSDEV) LAYER
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	lib/fsdev/
 F:	lib/fuse_dispatcher/
 F:	module/fsdev/
 F:	module/event/subsystems/fsdev/
+S:	Supported
 
 INTEL ACCEL MODULES
 F:	module/accel/iaa/
@@ -211,7 +215,9 @@ NVME BDEV MODULE
 F:	module/bdev/nvme/
 
 NVME DRIVER (CORE)
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	lib/nvme/
+S:	Supported
 
 NVME DRIVER (PCIE)
 F:	lib/nvme/*pcie*
@@ -238,9 +244,11 @@ NVME PERF APPLICATION
 F:	app/spdk_nvme_perf/
 
 NVMF TARGET (CORE)
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	lib/nvmf/
 F:	app/nvmf_tgt/
 F:	module/event/subsystems/nvmf/
+S:	Supported
 
 NVMF TARGET (FC)
 F:	lib/nvmf/fc*.c
@@ -273,6 +281,7 @@ F:	module/bdev/compress/
 S:	Obsolete
 
 SCHEDULERS
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	module/scheduler/
 F:	module/event/subsystems/scheduler/
 
@@ -291,15 +300,17 @@ SPDK TOP APPLICATION
 F:	app/spdk_top/
 
 SUBSYSTEM INIITALIZATION LIBRARY
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	lib/init/
+S:	Supported
 
 THREAD LIBRARY
 F:	lib/thread/
 
 TRACING SUPPORT
+M:	Jim Harris <jim.harris@nvidia.com>
 F:	lib/trace*/
 F:	app/trace*/
-M:	Jim Harris <jim.harris@nvidia.com>
 S:	Supported
 
 UBLK TARGET
