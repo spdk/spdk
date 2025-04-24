@@ -4585,6 +4585,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	if (ctrlr->subsys->passthrough) {
 		assert(ns->passthru_nsid > 0);
+		req->orig_nsid = req->cmd->nvme_cmd.nsid;
 		req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
 
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
@@ -4635,6 +4636,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 				goto invalid_opcode;
 			}
 			if (ns->passthru_nsid) {
+				req->orig_nsid = req->cmd->nvme_cmd.nsid;
 				req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
 			}
 			return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
@@ -4691,16 +4693,22 @@ _nvmf_request_complete(void *ctx)
 	rsp->sqid = 0;
 	rsp->status.p = 0;
 	rsp->cid = req->cmd->nvme_cmd.cid;
-	nsid = req->cmd->nvme_cmd.nsid;
 	opcode = req->cmd->nvmf_cmd.opcode;
-
 	qpair = req->qpair;
+
 	if (spdk_likely(qpair->ctrlr)) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
 		assert(sgroup != NULL);
 		is_aer = req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 		if (spdk_likely(qpair->qid != 0)) {
 			qpair->group->stat.completed_nvme_io++;
+		}
+
+		/* If we changed nvme_cmd.nsid to match the passthrough nsid, we need to
+		 * restore it here for accounting purposes.
+		 */
+		if (qpair->ctrlr->subsys->passthrough && req->orig_nsid) {
+			req->cmd->nvme_cmd.nsid = req->orig_nsid;
 		}
 
 		/*
@@ -4716,6 +4724,8 @@ _nvmf_request_complete(void *ctx)
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
+
+	nsid = req->cmd->nvme_cmd.nsid;
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
 		spdk_nvme_print_completion(qpair->qid, rsp);
@@ -4762,6 +4772,7 @@ _nvmf_request_complete(void *ctx)
 
 				/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
 				if (spdk_likely(nsid - 1 < sgroup->num_ns)) {
+					assert(sgroup->ns_info[nsid - 1].io_outstanding != 0);
 					sgroup->ns_info[nsid - 1].io_outstanding--;
 				}
 			}
