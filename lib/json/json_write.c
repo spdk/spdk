@@ -591,6 +591,7 @@ int
 spdk_json_write_object_end(struct spdk_json_write_ctx *w)
 {
 	w->first_value = false;
+	if (w->indent == 0) { return fail(w); }
 	w->indent--;
 	if (!w->new_indent) {
 		if (emit_fmt(w, "\n", 1)) { return fail(w); }

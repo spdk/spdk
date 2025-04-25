@@ -863,6 +863,17 @@ test_write_val(void)
 	END("{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}");
 }
 
+static void
+test_object_end_fail(void)
+{
+	struct spdk_json_write_ctx *w;
+	BEGIN();
+	VAL_OBJECT_BEGIN();
+	VAL_OBJECT_END();
+	CU_ASSERT(spdk_json_write_object_end(w) < 0);
+	END_FAIL();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -889,6 +900,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_write_object);
 	CU_ADD_TEST(suite, test_write_nesting);
 	CU_ADD_TEST(suite, test_write_val);
+	CU_ADD_TEST(suite, test_object_end_fail);
 
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
