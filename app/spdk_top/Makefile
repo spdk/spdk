@@ -11,7 +11,7 @@ APP = spdk_top
 C_SRCS := spdk_top.c
 
 SPDK_LIB_LIST = rpc
-LIBS=-lpanel -lmenu -lncurses
+LIBS=-lpanel -lmenu $(shell pkg-config --libs ncurses)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
