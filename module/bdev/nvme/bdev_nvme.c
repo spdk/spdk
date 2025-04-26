@@ -2098,15 +2098,16 @@ bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove, bool start)
 static bool
 bdev_nvme_check_ctrlr_loss_timeout(struct nvme_ctrlr *nvme_ctrlr)
 {
-	int32_t elapsed;
+	uint32_t elapsed;
 
 	if (nvme_ctrlr->opts.ctrlr_loss_timeout_sec == 0 ||
 	    nvme_ctrlr->opts.ctrlr_loss_timeout_sec == -1) {
 		return false;
 	}
 
+	assert(nvme_ctrlr->opts.ctrlr_loss_timeout_sec >= 0);
 	elapsed = (spdk_get_ticks() - nvme_ctrlr->reset_start_tsc) / spdk_get_ticks_hz();
-	if (elapsed >= nvme_ctrlr->opts.ctrlr_loss_timeout_sec) {
+	if (elapsed >= (uint32_t)nvme_ctrlr->opts.ctrlr_loss_timeout_sec) {
 		return true;
 	} else {
 		return false;
