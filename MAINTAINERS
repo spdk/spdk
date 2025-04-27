@@ -352,8 +352,10 @@ F:	app/trace*/
 S:	Supported
 
 UBLK TARGET
+M:	Changpeng Liu <changpeliu@tencent.com>
 F:	lib/ublk/
 F:	module/event/subsystems/ublk/
+S:	Supported
 
 UNIT TEST SUPPORT LIBRARIES
 F:	lib/ut/
@@ -369,21 +371,29 @@ VFIO USER HOST LIBRARY
 F:	lib/vfio_user/
 
 VHOST TARGET LIBRARY
+M:	Changpeng Liu <changpeliu@tencent.com>
 F:	lib/vhost/
 F:	app/vhost/
 F:	module/event/subsystems/vhost_blk/
 F:	module/event/subsystems/vhost_scsi/
+S:	Supported
 
 VIRTIO BDEV MODULES
+M:	Changpeng Liu <changpeliu@tencent.com>
 F:	module/bdev/virtio/
+S:	Supported
 
 VIRTIO DRIVERS
+M:	Changpeng Liu <changpeliu@tencent.com>
 F:	lib/virtio/
+S:	Supported
 
 VIRTIO VFIO USER TARGET LIBRARY
+M:	Changpeng Liu <changpeliu@tencent.com>
 F:	lib/vfu_tgt/
 F:	module/vfu_device/
 F:	module/event/subsystems/vfu_tgt/
+S:	Supported
 
 XNVME BDEV MODULE
 M:	Simon A. F. Lund <simon.lund@samsung.com>
