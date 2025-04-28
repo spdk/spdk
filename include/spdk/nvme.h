@@ -3048,15 +3048,6 @@ int spdk_nvme_poll_group_wait(struct spdk_nvme_poll_group *group,
 			      spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 
 /**
- * Return the internal epoll file descriptor of this poll group.
- *
- * \param group The poll group for which epoll fd is requested.
- *
- * \return epoll fd for the poll group, -EINVAL if there is no fd group for this poll group.
- */
-int spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group);
-
-/**
  * Return the fd_group associated with this poll group.
  *
  * \param group Poll group.

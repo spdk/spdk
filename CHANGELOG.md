@@ -22,6 +22,8 @@ Deprecate some boolean python cli arguments to use new modern argparse format in
 ### nvme
 
 Removed the spdk_nvme_qpair_get_optimal_poll_group API. It was unused.
+Removed the spdk_nvme_poll_group_get_fd API. It was unused. An fd can still be obtained by
+calling spdk_nvme_poll_group_get_fd_group() and then asking the fd_group for its fd.
 
 ### nvmf
 

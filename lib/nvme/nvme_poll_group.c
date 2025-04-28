@@ -77,18 +77,6 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 	return group;
 }
 
-int
-spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group)
-{
-	if (!group->fgrp) {
-		SPDK_ERRLOG("No fd group present for the nvme poll group.\n");
-		assert(false);
-		return -EINVAL;
-	}
-
-	return spdk_fd_group_get_fd(group->fgrp);
-}
-
 struct spdk_fd_group *
 spdk_nvme_poll_group_get_fd_group(struct spdk_nvme_poll_group *group)
 {
