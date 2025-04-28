@@ -291,7 +291,7 @@ function collect_devices() {
 			if [[ $PCI_ALLOWED != *"$bdf"* ]]; then
 				pci_dev_echo "$bdf" "Skipping not allowed VMD controller at $bdf"
 				in_use=1
-			elif ((vmd_nvme_count["$bdf"] > 0)) && [[ $DRIVER_OVERRLDE != none && $mode == config ]]; then
+			elif ((vmd_nvme_count["$bdf"] > 0)) && [[ $DRIVER_OVERRIDE != none && $mode == config ]]; then
 				cat <<- MESSAGE
 					Binding new driver to VMD device with NVMe SSDs attached to the kernel:
 					  ${!vmd_nvme_d["$bdf"]}
