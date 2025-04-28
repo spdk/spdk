@@ -2375,6 +2375,22 @@ nvme_rdma_finish_outstanding_accel_transfers(struct nvme_rdma_qpair *rqpair)
 	}
 }
 
+static void
+nvme_rdma_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+
+	if (qpair->poll_group) {
+		struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(qpair->poll_group);
+
+		if (TAILQ_ENTRY_ENQUEUED(rqpair, link_active)) {
+			TAILQ_REMOVE_CLEAR(&group->active_qpairs, rqpair, link_active);
+		}
+	}
+
+	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+}
+
 static int
 nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 {
@@ -2423,7 +2439,7 @@ quiet:
 	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, rqpair->qpair.abort_dnr);
 	assert(TAILQ_EMPTY(&rqpair->outstanding_reqs));
 	nvme_rdma_qpair_destroy(rqpair);
-	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
+	nvme_rdma_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
 	return 0;
 }
@@ -2455,7 +2471,8 @@ nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 	if (!nvme_qpair_is_admin_queue(qpair)) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
-	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
+
+	nvme_rdma_ctrlr_disconnect_qpair_done(qpair);
 
 	return 0;
 }
@@ -3570,22 +3587,6 @@ static int
 nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			    struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
-	struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(qpair->poll_group);
-
-	if (rqpair->poller) {
-		/* A qpair may skip transport disconnect part if it was already disconnecting. But on RDMA level a qpair
-		 * may still have a poller reference. In that case we should continue transport disconnect here
-		 * because a poller depends on the poll group reference which is going to be removed */
-		NVME_RQPAIR_INFOLOG(rqpair, "nvme state %d, rdma state %d, force disconnect\n", qpair->state,
-				    rqpair->state);
-		nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
-	}
-
-	if (TAILQ_ENTRY_ENQUEUED(rqpair, link_active)) {
-		TAILQ_REMOVE_CLEAR(&group->active_qpairs, rqpair, link_active);
-	}
-
 	return 0;
 }
 

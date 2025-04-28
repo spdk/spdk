@@ -611,6 +611,13 @@ nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 void
 nvme_pcie_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+	if (qpair->poll_group) {
+		assert(pqpair->shared_stats == true);
+		pqpair->stat = &g_dummy_stat;
+	}
+
 	if (!nvme_qpair_is_admin_queue(qpair) || !ctrlr->is_disconnecting) {
 		nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 	} else {
@@ -1998,9 +2005,6 @@ int
 nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			    struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-
-	pqpair->stat = &g_dummy_stat;
 	return 0;
 }
 

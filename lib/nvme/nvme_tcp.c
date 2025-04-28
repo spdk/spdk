@@ -402,6 +402,27 @@ static int nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair);
 
 static void
+nvme_tcp_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	if (qpair->poll_group) {
+		struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
+
+		assert(tqpair->shared_stats == true);
+		tqpair->stats = &g_dummy_stats;
+		if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
+			TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
+		}
+		if (TAILQ_ENTRY_ENQUEUED(tqpair, link_timeout)) {
+			TAILQ_REMOVE_CLEAR(&group->timeout_enabled, tqpair, link_timeout);
+		}
+	}
+
+	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+}
+
+static void
 nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
@@ -451,7 +472,7 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	} else {
 		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
-		nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+		nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
 	}
 }
 
@@ -2219,7 +2240,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 		case NVME_TCP_PDU_RECV_STATE_QUIESCING:
 			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
 				if (nvme_qpair_get_state(&tqpair->qpair) == NVME_QPAIR_DISCONNECTING) {
-					nvme_transport_ctrlr_disconnect_qpair_done(&tqpair->qpair);
+					nvme_tcp_ctrlr_disconnect_qpair_done(&tqpair->qpair);
 				}
 
 				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
@@ -2293,7 +2314,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 			if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
 				if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
-					nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+					nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
 				}
 
 				/* Don't return errors until the qpair gets disconnected */
@@ -2941,24 +2962,6 @@ static int
 nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			   struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_tcp_qpair *tqpair;
-	struct nvme_tcp_poll_group *group;
-
-	assert(qpair->poll_group_tailq_head == &tgroup->disconnected_qpairs);
-
-	tqpair = nvme_tcp_qpair(qpair);
-	group = nvme_tcp_poll_group(tgroup);
-
-	assert(tqpair->shared_stats == true);
-	tqpair->stats = &g_dummy_stats;
-
-	if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
-		TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
-	}
-	if (TAILQ_ENTRY_ENQUEUED(tqpair, link_timeout)) {
-		TAILQ_REMOVE_CLEAR(&group->timeout_enabled, tqpair, link_timeout);
-	}
-
 	return 0;
 }
 
@@ -2981,7 +2984,7 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 		tqpair = nvme_tcp_qpair(qpair);
 		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
 			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
-				nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+				nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
 			}
 		}
 		/* Wait until the qpair transitions to the DISCONNECTED state, otherwise user might

@@ -1586,6 +1586,7 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	SPDK_CU_ASSERT_FATAL(tgroup.sock_group != NULL);
 
 	qpair = &tqpair.qpair;
+	tqpair.shared_stats = true;
 	qpair->poll_group = &tgroup.group;
 	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	TAILQ_INIT(&tgroup.needs_poll);
