@@ -7,22 +7,10 @@
 
 #include "spdk/endian.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
-
-#define MAX_DEVS 64
-
-struct dev {
-	struct spdk_pci_addr			pci_addr;
-	struct spdk_nvme_ctrlr			*ctrlr;
-	char					name[100];
-};
-
-static struct dev g_devs[MAX_DEVS];
-static int g_num_devs = 0;
-
-#define foreach_dev(iter) \
-	for (iter = g_devs; iter - g_devs < g_num_devs; iter++)
+#include "spdk/string.h"
 
 static int g_outstanding_commands;
 static int g_reserve_command_result;
@@ -33,6 +21,182 @@ static bool g_feat_host_id_successful;
 				     0x99, 0x0f, 0x65, 0xc4, 0xf0, 0x39, 0x24, 0x20})
 
 #define CR_KEY		0xDEADBEAF5A5A5A5B
+
+#define HELP_RETURN_CODE UINT16_MAX
+
+struct ctrlr_entry {
+	struct spdk_nvme_ctrlr			*ctrlr;
+	enum spdk_nvme_transport_type		trtype;
+
+	TAILQ_ENTRY(ctrlr_entry)		link;
+	char					name[1024];
+};
+
+struct _trid_entry {
+	struct spdk_nvme_trid_entry entry;
+	TAILQ_ENTRY(_trid_entry) tailq;
+};
+
+#define MAX_TRID_ENTRY 256
+static struct _trid_entry g_trids[MAX_TRID_ENTRY];
+static TAILQ_HEAD(, _trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
+static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
+
+static void
+usage(char *program_name)
+{
+	printf("%s options\n", program_name);
+	spdk_nvme_transport_id_usage(stdout,
+				     SPDK_NVME_TRID_USAGE_OPT_LONGOPT | SPDK_NVME_TRID_USAGE_OPT_MULTI |
+				     SPDK_NVME_TRID_USAGE_OPT_HOSTNQN);
+	printf("\n");
+}
+
+#define PERF_GETOPT_SHORT "hr:"
+
+static const struct option g_cmdline_opts[] = {
+#define PERF_HELP 'h'
+	{"help", no_argument, NULL, PERF_HELP},
+#define PERF_TRANSPORT 'r'
+	{"transport", required_argument, NULL, PERF_TRANSPORT},
+	/* Should be the last element */
+	{0, 0, 0, 0}
+};
+
+static int
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
+{
+	int op, long_idx, rc;
+	uint32_t trid_count = 0;
+
+	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_cmdline_opts, &long_idx)) != -1) {
+		switch (op) {
+		case PERF_TRANSPORT:
+			if (trid_count == MAX_TRID_ENTRY) {
+				fprintf(stderr, "Number of Transport ID specified with -r is limited to %u\n", MAX_TRID_ENTRY);
+				return 1;
+			}
+
+			rc = spdk_nvme_trid_entry_parse(&g_trids[trid_count].entry, optarg);
+			if (rc < 0) {
+				usage(argv[0]);
+				return 1;
+			}
+
+			TAILQ_INSERT_TAIL(&g_trid_list, &g_trids[trid_count], tailq);
+			++trid_count;
+			break;
+		case PERF_HELP:
+			usage(argv[0]);
+			return HELP_RETURN_CODE;
+		default:
+			usage(argv[0]);
+			return 1;
+		}
+	}
+
+	if (TAILQ_EMPTY(&g_trid_list)) {
+		/* If no transport IDs specified, default to enumerating all local PCIe devices */
+		rc = spdk_nvme_trid_entry_parse(&g_trids[trid_count].entry, "trtype:PCIe");
+		if (rc < 0) {
+			return 1;
+		}
+
+		TAILQ_INSERT_TAIL(&g_trid_list, &g_trids[trid_count], tailq);
+	} else {
+		struct _trid_entry *trid_entry;
+
+		env_opts->no_pci = true;
+		/* check whether there is local PCIe type */
+		TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
+			if (trid_entry->entry.trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+				env_opts->no_pci = false;
+				break;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static void
+register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_entry)
+{
+	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
+
+	if (entry == NULL) {
+		perror("ctrlr_entry malloc");
+		exit(1);
+	}
+
+	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, NULL);
+	printf("Attached to NVMe%s Controller at %s\n",
+	       trid_entry->trid.trtype != SPDK_NVME_TRANSPORT_PCIE ? "oF" : "", entry->name);
+
+	entry->ctrlr = ctrlr;
+	entry->trtype = trid_entry->trid.trtype;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
+}
+
+static bool
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	 struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct spdk_nvme_trid_entry *trid_entry = cb_ctx;
+
+	if (trid->trtype != trid_entry->trid.trtype &&
+	    strcasecmp(trid->trstring, trid_entry->trid.trstring)) {
+		return false;
+	}
+
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		memcpy(opts->extended_host_id, EXT_HOST_ID, sizeof(opts->extended_host_id));
+	}
+
+	return true;
+}
+
+static void
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	register_ctrlr(ctrlr, cb_ctx);
+}
+
+static int
+register_controllers(void)
+{
+	struct _trid_entry *trid_entry;
+
+	printf("Initializing NVMe Controllers\n");
+
+	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
+		if (spdk_nvme_probe(&trid_entry->entry.trid, &trid_entry->entry, probe_cb, attach_cb, NULL) != 0) {
+			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
+				trid_entry->entry.trid.traddr);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static void
+unregister_controllers(void)
+{
+	struct ctrlr_entry *entry, *tmp;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
+
+	TAILQ_FOREACH_SAFE(entry, &g_controllers, link, tmp) {
+		TAILQ_REMOVE(&g_controllers, entry, link);
+		spdk_nvme_detach_async(entry->ctrlr, &detach_ctx);
+		free(entry);
+	}
+
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
+	}
+}
 
 static void
 feat_host_id_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
@@ -322,17 +486,18 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 }
 
 static int
-reserve_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
+reserve_controller(struct ctrlr_entry *entry)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
+	struct spdk_nvme_ctrlr			*ctrlr;
 	struct spdk_nvme_qpair			*qpair;
 	int ret;
 
+	ctrlr = entry->ctrlr;
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       pci_addr->bus, pci_addr->dev, pci_addr->func);
+	printf("NVMe Controller %s\n", entry->name);
 	printf("=====================================================\n");
 
 	printf("Reservations:                %s\n",
@@ -348,9 +513,11 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pc
 		return -EIO;
 	}
 
-	ret = set_host_identifier(ctrlr);
-	if (ret) {
-		goto out;
+	if (entry->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		ret = set_host_identifier(ctrlr);
+		if (ret) {
+			goto out;
+		}
 	}
 
 	ret = get_host_identifier(ctrlr);
@@ -370,64 +537,49 @@ out:
 	return ret;
 }
 
-static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	 struct spdk_nvme_ctrlr_opts *opts)
-{
-	return true;
-}
-
-static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
-{
-	struct dev *dev;
-
-	/* add to dev list */
-	dev = &g_devs[g_num_devs++];
-	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
-	dev->ctrlr = ctrlr;
-}
-
 int
 main(int argc, char **argv)
 {
-	struct dev		*iter;
-	struct spdk_env_opts	opts;
-	int			ret = 0;
-	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
+	struct ctrlr_entry *entry;
+	struct spdk_env_opts opts;
+	int rc;
 
 	opts.opts_size = sizeof(opts);
 	spdk_env_opts_init(&opts);
 	opts.name = "reserve";
 	opts.core_mask = "0x1";
 	opts.shm_id = 0;
+
+	rc = parse_args(argc, argv, &opts);
+	if (rc != 0) {
+		return rc == HELP_RETURN_CODE ? 0 : rc;
+	}
+
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
 	}
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
-		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		return 1;
+	if (register_controllers() != 0) {
+		rc = -1;
+		goto cleanup;
 	}
 
-	foreach_dev(iter) {
-		ret = reserve_controller(iter->ctrlr, &iter->pci_addr);
-		if (ret) {
-			break;
-		}
+	TAILQ_FOREACH(entry, &g_controllers, link) {
+		if (reserve_controller(entry) < 0) {
+			rc = -1;
+			goto cleanup;
+		};
 	}
 
-	printf("Reservation test %s\n", ret ? "failed" : "passed");
+cleanup:
+	fflush(stdout);
 
-	foreach_dev(iter) {
-		spdk_nvme_detach_async(iter->ctrlr, &detach_ctx);
+	unregister_controllers();
+	spdk_env_fini();
+	if (rc != 0) {
+		fprintf(stderr, "%s: errors occurred\n", argv[0]);
 	}
 
-	if (detach_ctx) {
-		spdk_nvme_detach_poll(detach_ctx);
-	}
-
-	return ret;
+	return rc;
 }
