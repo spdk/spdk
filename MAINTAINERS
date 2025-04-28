@@ -125,10 +125,12 @@ ERROR INJECTION BDEV MODULE
 F:	module/bdev/error/
 
 EVENT FRAMEWORK
+M:	Ben Walker <ben@nvidia.com>
 F:	lib/event/
 
 FILESYSTEM DEVICE (FSDEV) LAYER
 M:	Jim Harris <jim.harris@nvidia.com>
+M:	Ben Walker <ben@nvidia.com>
 F:	lib/fsdev/
 F:	lib/fuse_dispatcher/
 F:	module/fsdev/
@@ -221,6 +223,7 @@ F:	lib/notify/
 
 NVME BDEV MODULE
 M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
+M:	Ben Walker <ben@nvidia.com>
 F:	module/bdev/nvme/
 S:	Supported
 
@@ -241,6 +244,7 @@ S:	Supported
 
 NVME DRIVER (TCP)
 M:	Konrad Sztyber <ksztyber@nvidia.com>
+M:	Ben Walker <ben@nvidia.com>
 F:	lib/nvme/nvme_tcp.c
 S:	Supported
 
@@ -278,6 +282,7 @@ F:	lib/nvmf/rdma.c
 S:	Supported
 
 NVMF TARGET (TCP)
+M:	Ben Walker <ben@nvidia.com>
 M:	Konrad Sztyber <ksztyber@nvidia.com>
 F:	lib/nvmf/tcp.c
 S:	Supported
@@ -315,6 +320,7 @@ F:	lib/scsi/
 F:	module/event/subsystems/scsi/
 
 SOCKET LAYER
+M:	Ben Walker <ben@nvidia.com>
 F:	lib/sock/
 F:	module/event/subsystems/sock/
 
@@ -330,6 +336,7 @@ F:	lib/init/
 S:	Supported
 
 THREAD LIBRARY
+M:	Ben Walker <ben@nvidia.com>
 M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
 F:	lib/thread/
 S:	Supported
@@ -351,6 +358,7 @@ F:	lib/ut_mock/
 
 UTIL LIBRARY
 M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
+M:	Ben Walker <ben@nvidia.com>
 F:	lib/util/
 S:	Supported
 
