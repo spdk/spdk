@@ -9,8 +9,6 @@
 
 #include "spdk_internal/cunit.h"
 
-#include "spdk_internal/sock.h"
-
 #include "sock/sock.c"
 #include "sock/posix/posix.c"
 

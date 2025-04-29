@@ -16,16 +16,17 @@
 #include "spdk/util.h"
 #include "spdk/log.h"
 #include "spdk/keyring.h"
+#include "spdk/sock.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/nvme_tcp.h"
-#include "spdk_internal/sock.h"
 
 #include "nvmf_internal.h"
 #include "transport.h"
 
 #include "spdk_internal/trace_defs.h"
 
+#define MIN_SOCK_PIPE_SIZE 1024
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 16
 #define SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY 0

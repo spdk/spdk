@@ -5,7 +5,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/sock.h"
+#include "spdk_internal/sock_module.h"
 #include "spdk_internal/mock.h"
 
 DEFINE_STUB(spdk_sock_getaddr, int, (struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,

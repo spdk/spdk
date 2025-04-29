@@ -7,7 +7,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/sock.h"
-#include "spdk_internal/sock.h"
+#include "spdk_internal/sock_module.h"
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/util.h"

@@ -19,7 +19,7 @@
 #include "spdk/net.h"
 #include "spdk/file.h"
 
-#include "spdk_internal/sock.h"
+#include "spdk_internal/sock_module.h"
 #include "spdk_internal/assert.h"
 #include "spdk/net.h"
 
