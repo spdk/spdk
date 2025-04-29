@@ -1771,6 +1771,7 @@ test_nvme_tcp_ctrlr_construct(void)
 		.src_addr = "192.168.1.77",
 		.src_svcid = "23",
 	};
+	int rc;
 
 	/* Transmit ACK timeout value exceeds max, expected to pass and using max */
 	opts.transport_ack_timeout = NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT + 1;
@@ -1809,13 +1810,17 @@ test_nvme_tcp_ctrlr_construct(void)
 	opts.admin_queue_size = 2;
 	trid.adrfam = SPDK_NVMF_ADRFAM_INTRA_HOST;
 	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
-	CU_ASSERT(ctrlr == NULL);
+	rc = nvme_tcp_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+	CU_ASSERT(rc == -1);
+	nvme_tcp_ctrlr_destruct(ctrlr);
 
 	/* Error connecting socket, expected to create Admin qpair failed */
 	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	MOCK_SET(spdk_sock_connect_async, NULL);
 	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
-	CU_ASSERT(ctrlr == NULL);
+	rc = nvme_tcp_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+	CU_ASSERT(rc == -1);
+	nvme_tcp_ctrlr_destruct(ctrlr);
 
 	MOCK_CLEAR(spdk_sock_connect_async);
 }

@@ -2461,6 +2461,11 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		if (rc < 0) {
 			return rc;
 		}
+
+		if (nvme_qpair_is_admin_queue(qpair)) {
+			ctrlr->numa.id_valid = 1;
+			ctrlr->numa.id = spdk_sock_get_numa_id(tqpair->sock);
+		}
 	}
 
 	if (qpair->poll_group) {
@@ -2533,12 +2538,6 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	rc = nvme_tcp_alloc_reqs(tqpair);
-	if (rc) {
-		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
-		return NULL;
-	}
-
-	rc = nvme_tcp_qpair_connect_sock(ctrlr, qpair);
 	if (rc) {
 		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
 		return NULL;
@@ -2644,7 +2643,6 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 			 void *devhandle)
 {
 	struct nvme_tcp_ctrlr *tctrlr;
-	struct nvme_tcp_qpair *tqpair;
 	int rc;
 
 	tctrlr = calloc(1, sizeof(*tctrlr));
@@ -2687,10 +2685,6 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
 		return NULL;
 	}
-
-	tqpair = nvme_tcp_qpair(tctrlr->ctrlr.adminq);
-	tctrlr->ctrlr.numa.id_valid = 1;
-	tctrlr->ctrlr.numa.id = spdk_sock_get_numa_id(tqpair->sock);
 
 	if (nvme_ctrlr_add_process(&tctrlr->ctrlr, 0) != 0) {
 		NVME_CTRLR_ERRLOG(&tctrlr->ctrlr, "nvme_ctrlr_add_process() failed\n");
