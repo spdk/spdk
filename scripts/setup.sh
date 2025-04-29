@@ -64,6 +64,7 @@ function usage() {
 	echo "                  allocated."
 	echo "CLEAR_HUGE        If set to 'yes', the attempt to remove hugepages from all nodes will"
 	echo "                  be made prior to allocation".
+	echo "SKIP_HUGE         If set to 'yes', the attempt to allocate hugepages will be skipped."
 	echo "PCI_ALLOWED"
 	echo "PCI_BLOCKED       Whitespace separated list of PCI devices (NVMe, I/OAT, VMD, Virtio)."
 	echo "                  Each device must be specified as a full PCI address."
@@ -515,6 +516,11 @@ configure_linux_hugepages() {
 	local node system_nodes
 	local nodes_to_use nodes_hp
 
+	if [[ $SKIP_HUGE == yes ]]; then
+		# Do nothing as requested
+		return 0
+	fi
+
 	if [[ $CLEAR_HUGE == yes ]]; then
 		clear_hugepages
 	fi
@@ -812,6 +818,10 @@ function _configure_freebsd() {
 		return 1
 	fi
 	configure_freebsd_pci "$@"
+	if [[ $SKIP_HUGE == yes ]]; then
+		# Do nothing as requested
+		return 0
+	fi
 	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
 	#  previous value, unload contigmem so that we can reload with the new value.
 	if kldstat -q -m contigmem; then
