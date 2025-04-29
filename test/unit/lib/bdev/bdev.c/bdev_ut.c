@@ -1165,17 +1165,6 @@ io_wait_cb(void *arg)
 }
 
 static void
-write_zeros_io_wait_cb(void *arg)
-{
-	struct bdev_ut_io_wait_entry *entry = arg;
-	int rc;
-
-	rc = spdk_bdev_write_zeroes_blocks(entry->desc, entry->io_ch, 0, 1, io_done, NULL);
-	CU_ASSERT(rc == 0);
-	entry->submitted = true;
-}
-
-static void
 bdev_io_types_test(void)
 {
 	struct spdk_bdev *bdev;
@@ -1236,7 +1225,6 @@ bdev_io_wait_test(void)
 	struct spdk_bdev_opts bdev_opts = {};
 	struct bdev_ut_io_wait_entry io_wait_entry;
 	struct bdev_ut_io_wait_entry io_wait_entry2;
-	struct bdev_ut_io_wait_entry io_wait_entry3;
 	int rc;
 
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
@@ -1277,11 +1265,6 @@ bdev_io_wait_test(void)
 	memcpy(&io_wait_entry2, &io_wait_entry, sizeof(io_wait_entry));
 	io_wait_entry2.entry.cb_arg = &io_wait_entry2;
 
-	/* a case about write_zero in wait queue */
-	memcpy(&io_wait_entry3, &io_wait_entry, sizeof(io_wait_entry));
-	io_wait_entry3.entry.cb_fn = write_zeros_io_wait_cb;
-	io_wait_entry3.entry.cb_arg = &io_wait_entry3;
-
 	/* Queue two I/O waits. */
 	rc = spdk_bdev_queue_io_wait(bdev, io_ch, &io_wait_entry.entry);
 	CU_ASSERT(rc == 0);
@@ -1298,18 +1281,6 @@ bdev_io_wait_test(void)
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
 	CU_ASSERT(io_wait_entry2.submitted == true);
-
-	/* Queue a write_zero I/O wait. */
-	rc = spdk_bdev_queue_io_wait(bdev, io_ch, &io_wait_entry3.entry);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(io_wait_entry3.submitted == false);
-
-	/* make writezero would be convert to write */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
-	stub_complete_io(1);
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
-	CU_ASSERT(io_wait_entry3.submitted == true);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
 
 	stub_complete_io(4);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);

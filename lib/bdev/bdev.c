@@ -408,6 +408,9 @@ static void bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io);
 static void bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io);
 static void _bdev_io_get_accel_buf(struct spdk_bdev_io *bdev_io);
 
+static void bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+static int bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io);
+
 static void bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 				struct spdk_io_channel *ch, void *_ctx);
 static void bdev_enable_qos_done(struct spdk_bdev *bdev, void *_ctx, int status);
@@ -6684,7 +6687,6 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
-	void *md_buf = NULL;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -6727,25 +6729,9 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return 0;
 	}
 
-	/* We are now doing an emulated write zeroes, using a write command with a
-	 * zeroed buffer. So just change the bdev_io that has already been allocated,
-	 * instead of using bdev_write_blocks_with_md() that will allocate a new one.
-	 */
 	assert(_bdev_get_block_size_with_md(bdev) <= ZERO_BUFFER_SIZE);
-	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
-		md_buf = (char *)g_bdev_mgr.zero_buffer +
-			 spdk_bdev_get_block_size(bdev_io->bdev) * num_blocks;
-	}
-	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
-	bdev_io->u.bdev.iovs = &bdev_io->iov;
-	bdev_io->u.bdev.iovs[0].iov_base = g_bdev_mgr.zero_buffer;
-	bdev_io->u.bdev.iovs[0].iov_len = num_blocks * bdev_desc_get_block_size(desc);
-	bdev_io->u.bdev.iovcnt = 1;
-	bdev_io->u.bdev.md_buf = md_buf;
-	bdev_io->u.bdev.dif_check_flags = bdev->dif_check_flags;
-	bdev_io_submit(bdev_io);
 
-	return 0;
+	return bdev_write_zero_buffer(bdev_io);
 }
 
 int
@@ -9726,6 +9712,37 @@ spdk_bdev_module_list_find(const char *name)
 	}
 
 	return bdev_module;
+}
+
+static int
+bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io)
+{
+	uint64_t num_blocks;
+	void *md_buf = NULL;
+
+	num_blocks = bdev_io->u.bdev.num_blocks;
+
+	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
+		md_buf = (char *)g_bdev_mgr.zero_buffer +
+			 spdk_bdev_get_block_size(bdev_io->bdev) * num_blocks;
+	}
+
+	return bdev_write_blocks_with_md(bdev_io->internal.desc,
+					 spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					 g_bdev_mgr.zero_buffer, md_buf,
+					 bdev_io->u.bdev.offset_blocks, num_blocks,
+					 bdev_write_zero_buffer_done, bdev_io);
+}
+
+static void
+bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	parent_io->internal.status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	parent_io->internal.cb(parent_io, success, parent_io->internal.caller_ctx);
 }
 
 static void
