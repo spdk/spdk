@@ -140,7 +140,7 @@ else
 	yum install -y python python3-devel
 fi
 pip3 install ninja
-pip3 install meson
+pip3 install meson==1.7.2
 pip3 install pyelftools
 pip3 install ijson
 pip3 install python-magic
