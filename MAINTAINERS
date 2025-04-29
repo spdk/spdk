@@ -88,8 +88,10 @@ F:	module/bdev/crypto/
 S:	Supported
 
 CSAL FLASH TRANSLATION LAYER
+M:	Mateusz Kozlowski <mateusz.kozlowski@solidigm.com>
 F:	lib/ftl/
 F:	module/bdev/ftl/
+S:	Supported
 
 DAOS BDEV MODULE
 F:	module/bdev/daos/
