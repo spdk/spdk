@@ -339,6 +339,8 @@ POSIX SOCK MODULE
 F:	module/sock/posix/
 
 RAID BDEV MODULE
+M:	Artur Paszkiewicz <artur.paszkiewicz@solidigm.com>
+S:	Supported
 F:	module/bdev/raid/
 
 RDMA SUPPORT LIBRARIES
