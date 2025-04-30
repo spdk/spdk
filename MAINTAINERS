@@ -253,7 +253,11 @@ F:	lib/nvme/
 S:	Supported
 
 NVME DRIVER (PCIE)
+M:	Ankit Kumar <ankit.kumar@samsung.com>
 F:	lib/nvme/*pcie*
+F:	include/spdk/nvme_*
+F:	test/unit/lib/nvme/nvme_pcie*
+S:	Supported
 
 NVME DRIVER (RDMA)
 M:	Alexey Marchuk <alexeymar@nvidia.com>
@@ -279,13 +283,18 @@ NVME DISCOVERY APPLICATION
 F:	app/spdk_nvme_discover/
 
 NVME FIO PLUGIN
+M:	Ankit Kumar <ankit.kumar@samsung.com>
 F:	app/fio/nvme/
+S:	Supported
 
 NVME IDENTIFY APPLICATION
+M:	Ankit Kumar <ankit.kumar@samsung.com>
 F:	app/spdk_nvme_identify/
+S:	Supported
 
 NVME PERF APPLICATION
 M:	Alexey Marchuk <alexeymar@nvidia.com>
+M:	Ankit Kumar <ankit.kumar@samsung.com>
 F:	app/spdk_nvme_perf/
 S:	Supported
 
