@@ -45,7 +45,6 @@ X: Files and directories exclusion, same rules as F:
 ACCELERATION (ACCEL) LAYER
 M:	Alexey Marchuk <alexeymar@nvidia.com>
 M:	Konrad Sztyber <ksztyber@nvidia.com>
-S:	Supported
 F:	examples/accel/
 F:	include/spdk/accel*.h
 F:	lib/accel/
@@ -55,6 +54,7 @@ X:	test/accel/mlx5/
 F:	test/external_code/accel/
 F:	test/unit/lib/accel/
 X:	test/unit/lib/accel/dpdk_*dev.c/
+S:	Supported
 
 BDEV (BLOCK DEVICE) LAYER
 M:	Jim Harris <jim.harris@nvidia.com>
@@ -83,7 +83,9 @@ CONF FILE LIBRARY
 F:	lib/conf/
 
 CRYPTO BDEV MODULE
+M:	Alexey Marchuk <alexeymar@nvidia.com>
 F:	module/bdev/crypto/
+S:	Supported
 
 CSAL FLASH TRANSLATION LAYER
 F:	lib/ftl/
@@ -202,11 +204,13 @@ F:	module/bdev/malloc/
 
 MLX5 ACCEL MODULE
 M:	Alexey Marchuk <alexeymar@nvidia.com>
-S:	Supported
 F:	module/accel/mlx5/
+S:	Supported
 
 MLX5 DRIVERS
+M:	Alexey Marchuk <alexeymar@nvidia.com>
 F:	lib/mlx5/
+S:	Supported
 
 NETWORK BLOCK DEVICE (NBD) TARGET
 F:	lib/nbd/
@@ -230,6 +234,7 @@ NVME DRIVER (PCIE)
 F:	lib/nvme/*pcie*
 
 NVME DRIVER (RDMA)
+M:	Alexey Marchuk <alexeymar@nvidia.com>
 M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
 F:	lib/nvme/nvme_rdma.c
 S:	Supported
@@ -252,7 +257,9 @@ NVME IDENTIFY APPLICATION
 F:	app/spdk_nvme_identify/
 
 NVME PERF APPLICATION
+M:	Alexey Marchuk <alexeymar@nvidia.com>
 F:	app/spdk_nvme_perf/
+S:	Supported
 
 NVMF TARGET (CORE)
 M:	Jim Harris <jim.harris@nvidia.com>
@@ -266,7 +273,9 @@ NVMF TARGET (FC)
 F:	lib/nvmf/fc*.c
 
 NVMF TARGET (RDMA)
+M:	Alexey Marchuk <alexeymar@nvidia.com>
 F:	lib/nvmf/rdma.c
+S:	Supported
 
 NVMF TARGET (TCP)
 M:	Konrad Sztyber <ksztyber@nvidia.com>
@@ -287,7 +296,9 @@ RAID BDEV MODULE
 F:	module/bdev/raid/
 
 RDMA SUPPORT LIBRARIES
+M:	Alexey Marchuk <alexeymar@nvidia.com>
 F:	lib/rdma*/
+S:	Supported
 
 REDUCE COMPRESSION LIBRARY
 F:	lib/reduce/
