@@ -216,7 +216,9 @@ NOTIFICATION LIBRARY
 F:	lib/notify/
 
 NVME BDEV MODULE
+M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
 F:	module/bdev/nvme/
+S:	Supported
 
 NVME DRIVER (CORE)
 M:	Jim Harris <jim.harris@nvidia.com>
@@ -228,7 +230,9 @@ NVME DRIVER (PCIE)
 F:	lib/nvme/*pcie*
 
 NVME DRIVER (RDMA)
+M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
 F:	lib/nvme/nvme_rdma.c
+S:	Supported
 
 NVME DRIVER (TCP)
 M:	Konrad Sztyber <ksztyber@nvidia.com>
@@ -315,7 +319,9 @@ F:	lib/init/
 S:	Supported
 
 THREAD LIBRARY
+M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
 F:	lib/thread/
+S:	Supported
 
 TRACING SUPPORT
 M:	Jim Harris <jim.harris@nvidia.com>
@@ -333,7 +339,9 @@ F:	lib/ut/
 F:	lib/ut_mock/
 
 UTIL LIBRARY
+M:	Shuhei Matsumoto <smatsumoto@nvidia.com>
 F:	lib/util/
+S:	Supported
 
 VFIO USER HOST LIBRARY
 F:	lib/vfio_user/
