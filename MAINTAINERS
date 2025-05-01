@@ -386,7 +386,9 @@ F:	module/vfu_device/
 F:	module/event/subsystems/vfu_tgt/
 
 XNVME BDEV MODULE
+M:	Simon A. F. Lund <simon.lund@samsung.com>
 F:	module/bdev/xnvme/
+S:	Supported
 
 ZONE BLOCK BDEV MODULE
 F:	module/bdev/zone_block/
