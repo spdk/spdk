@@ -18,6 +18,13 @@ enum spdk_nvme_trid_usage_opt {
 	SPDK_NVME_TRID_USAGE_OPT_ALT_TRADDR = 1 << 8,
 };
 
+struct spdk_nvme_trid_entry {
+	struct spdk_nvme_transport_id trid;
+	uint16_t nsid;
+	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	struct spdk_nvme_transport_id	failover_trid;
+};
+
 /**
  * Prints Transport ID format and its description.
  *
@@ -25,5 +32,24 @@ enum spdk_nvme_trid_usage_opt {
  * \param opts Include options specified in the mask; \ref enum spdk_nvme_trid_usage_opt to decode.
  */
 void spdk_nvme_transport_id_usage(FILE *f, uint32_t opts);
+
+/**
+ * Parses the string representation of a transport ID with extra key:value pairs.
+ *
+ * See \ref spdk_nvme_transport_id_parse for more details and base key:value pairs.
+ *
+ * Key          | Value
+ * ------------ | -----
+ * ns           | NVMe namespace ID (all active namespaces are used by default)
+ * hostnqn      | Host NQN
+ * alt_traddr   | Alternative Transport address for failover
+ *
+ * \param str Input string representation of a transport ID to parse.
+ * \param trid_entry Output transport ID structure (must be allocated and initialized by caller).
+ *
+ * \return 0 if parsing was successful and trid is filled out, or negated errno
+ * values on failure.
+ */
+int spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *str);
 
 #endif /* SPDK_INTERNAL_NVME_UTIL_H */

@@ -94,7 +94,7 @@ static int g_main_core = 0;
 
 static char g_core_mask[20] = "0x1";
 
-static struct spdk_nvme_transport_id g_trid;
+static struct spdk_nvme_trid_entry g_trid;
 static char g_hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 static int g_controllers_found = 0;
@@ -2749,10 +2749,11 @@ static int
 parse_args(int argc, char **argv)
 {
 	int op, rc;
-	char *hostnqn;
 
-	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
-	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	rc = spdk_nvme_trid_entry_parse(&g_trid, "trtype:PCIe");
+	if (rc < 0) {
+		return 1;
+	}
 
 	while ((op = getopt(argc, argv, "d:gi:op:r:v:xz::HL:S:V")) != -1) {
 		switch (op) {
@@ -2785,26 +2786,10 @@ parse_args(int argc, char **argv)
 			snprintf(g_core_mask, sizeof(g_core_mask), "0x%llx", 1ULL << g_main_core);
 			break;
 		case 'r':
-			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
-				fprintf(stderr, "Error parsing transport address\n");
+			rc = spdk_nvme_trid_entry_parse(&g_trid, optarg);
+			if (rc < 0) {
+				usage(argv[0]);
 				return 1;
-			}
-
-			assert(optarg != NULL);
-			hostnqn = strcasestr(optarg, "hostnqn:");
-			if (hostnqn) {
-				size_t len;
-
-				hostnqn += strlen("hostnqn:");
-
-				len = strcspn(hostnqn, " \t\n");
-				if (len > (sizeof(g_hostnqn) - 1)) {
-					fprintf(stderr, "Host NQN is too long\n");
-					return 1;
-				}
-
-				memcpy(g_hostnqn, hostnqn, len);
-				g_hostnqn[len] = '\0';
 			}
 			break;
 		case 'v':
@@ -2899,7 +2884,7 @@ main(int argc, char **argv)
 	opts.core_mask = g_core_mask;
 	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	opts.iova_mode = g_iova_mode;
-	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+	if (g_trid.trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		opts.no_pci = true;
 	}
 	if (spdk_env_init(&opts) < 0) {
@@ -2913,14 +2898,14 @@ main(int argc, char **argv)
 	}
 
 	/* A specific trid is required. */
-	if (strlen(g_trid.traddr) != 0) {
+	if (strlen(g_trid.trid.traddr) != 0) {
 		struct spdk_nvme_ctrlr_opts opts;
 
 		spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
 		if (g_hostnqn[0] != '\0') {
 			memcpy(opts.hostnqn, g_hostnqn, sizeof(opts.hostnqn));
 		}
-		ctrlr = spdk_nvme_connect(&g_trid, &opts, sizeof(opts));
+		ctrlr = spdk_nvme_connect(&g_trid.trid, &opts, sizeof(opts));
 		if (!ctrlr) {
 			fprintf(stderr, "spdk_nvme_connect() failed\n");
 			rc = 1;
@@ -2928,9 +2913,9 @@ main(int argc, char **argv)
 		}
 
 		g_controllers_found++;
-		print_controller(ctrlr, &g_trid, spdk_nvme_ctrlr_get_opts(ctrlr));
+		print_controller(ctrlr, &g_trid.trid, spdk_nvme_ctrlr_get_opts(ctrlr));
 		spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
-	} else if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+	} else if (spdk_nvme_probe(&g_trid.trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 		goto exit;

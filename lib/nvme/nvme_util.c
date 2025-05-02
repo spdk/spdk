@@ -59,3 +59,73 @@ spdk_nvme_transport_id_usage(FILE *f, uint32_t opts)
 		fprintf(f, "\t\tNote: can be specified multiple times to test multiple disks/targets.\n");
 	}
 }
+
+int
+spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *str)
+{
+	struct spdk_nvme_transport_id *trid;
+	char *ns, *hostnqn, *alt_traddr;
+	size_t len;
+
+	trid = &trid_entry->trid;
+	trid->trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	if (spdk_nvme_transport_id_parse(trid, str) != 0) {
+		SPDK_ERRLOG("Invalid transport ID format '%s'\n", str);
+		return -EINVAL;
+	}
+
+	if ((ns = strcasestr(str, "ns:")) ||
+	    (ns = strcasestr(str, "ns="))) {
+		char nsid_str[6]; /* 5 digits maximum in an nsid */
+		int nsid;
+
+		ns += 3;
+
+		len = strcspn(ns, " \t\n");
+		if (len > 5) {
+			SPDK_ERRLOG("NVMe namespace IDs must be 5 digits or less\n");
+			return -EINVAL;
+		}
+
+		memcpy(nsid_str, ns, len);
+		nsid_str[len] = '\0';
+
+		nsid = spdk_strtol(nsid_str, 10);
+		if (nsid <= 0 || nsid > 65535) {
+			SPDK_ERRLOG("NVMe namespace IDs must be less than 65536 and greater than 0\n");
+			return -EINVAL;
+		}
+
+		trid_entry->nsid = (uint16_t)nsid;
+	}
+
+	if ((hostnqn = strcasestr(str, "hostnqn:")) ||
+	    (hostnqn = strcasestr(str, "hostnqn="))) {
+		hostnqn += strlen("hostnqn:");
+		len = strcspn(hostnqn, " \t\n");
+		if (len > (sizeof(trid_entry->hostnqn) - 1)) {
+			SPDK_ERRLOG("Host NQN is too long\n");
+			return -EINVAL;
+		}
+
+		memcpy(trid_entry->hostnqn, hostnqn, len);
+		trid_entry->hostnqn[len] = '\0';
+	}
+
+	trid_entry->failover_trid = trid_entry->trid;
+	if ((alt_traddr = strcasestr(str, "alt_traddr:")) ||
+	    (alt_traddr = strcasestr(str, "alt_traddr="))) {
+		alt_traddr += strlen("alt_traddr:");
+		len = strcspn(alt_traddr, " \t\n");
+		if (len > SPDK_NVMF_TRADDR_MAX_LEN) {
+			SPDK_ERRLOG("The failover traddr %s is too long.\n", alt_traddr);
+			return -EINVAL;
+		}
+
+		snprintf(trid_entry->failover_trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1, "%s", alt_traddr);
+	}
+
+	return 0;
+}

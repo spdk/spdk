@@ -16,7 +16,7 @@
 
 static int g_time_in_sec;
 
-static struct spdk_nvme_transport_id g_trid;
+static struct spdk_nvme_trid_entry g_trid;
 
 static void
 usage(char *program_name)
@@ -41,23 +41,6 @@ usage(char *program_name)
 	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
 	printf("\t[--no-huge, SPDK is run without hugepages\n");
 #endif
-}
-
-static int
-add_trid(const char *trid_str)
-{
-	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
-
-	if (spdk_nvme_transport_id_parse(&g_trid, trid_str) != 0) {
-		fprintf(stderr, "Invalid transport ID format '%s'\n", trid_str);
-		return 1;
-	}
-
-	spdk_nvme_transport_id_populate_trstring(&g_trid,
-			spdk_nvme_transport_id_trtype_str(g_trid.trtype));
-
-	return 0;
 }
 
 #define PERF_GETOPT_SHORT "c:i:r:s:t:GS:T:"
@@ -127,10 +110,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				return 1;
 			}
 			trid_set = true;
-			if (add_trid(optarg)) {
+
+			rc = spdk_nvme_trid_entry_parse(&g_trid, optarg);
+			if (rc < 0) {
 				usage(argv[0]);
 				return 1;
 			}
+
 			break;
 		case PERF_ENABLE_DEBUG:
 #ifndef DEBUG
@@ -186,7 +172,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	}
 
 	env_opts->no_pci = true;
-	if (g_trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+	if (g_trid.trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		env_opts->no_pci = false;
 	}
 
@@ -201,10 +187,10 @@ test_controller(void)
 	union spdk_nvme_csts_register csts;
 	struct spdk_nvme_ctrlr *ctrlr;
 
-	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	ctrlr = spdk_nvme_connect(&g_trid.trid, NULL, 0);
 	if (ctrlr == NULL) {
 		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
-			g_trid.traddr);
+			g_trid.trid.traddr);
 		return -1;
 	}
 	if (spdk_nvme_ctrlr_is_discovery(ctrlr)) {
@@ -255,12 +241,12 @@ main(int argc, char **argv)
 		return -1;
 	}
 
-	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+	if (g_trid.trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Testing NVMe over Fabrics controller at %s:%s: %s\n",
-		       g_trid.traddr, g_trid.trsvcid,
-		       g_trid.subnqn);
+		       g_trid.trid.traddr, g_trid.trid.trsvcid,
+		       g_trid.trid.subnqn);
 	} else {
-		printf("Testing NVMe PCI controller at %s\n", g_trid.traddr);
+		printf("Testing NVMe PCI controller at %s\n", g_trid.trid.traddr);
 	}
 
 	tsc_end = spdk_get_ticks() + g_time_in_sec * spdk_get_ticks_hz();

@@ -301,14 +301,14 @@ static pthread_mutex_t g_stats_mutex;
 #define MAX_ALLOWED_PCI_DEVICE_NUM 128
 static struct spdk_pci_addr g_allowed_pci_addr[MAX_ALLOWED_PCI_DEVICE_NUM];
 
-struct trid_entry {
-	struct spdk_nvme_transport_id	trid;
-	uint16_t			nsid;
-	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	TAILQ_ENTRY(trid_entry)		tailq;
+struct _trid_entry {
+	struct spdk_nvme_trid_entry entry;
+	TAILQ_ENTRY(_trid_entry) tailq;
 };
 
-static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
+#define MAX_TRID_ENTRY 256
+static struct _trid_entry g_trids[MAX_TRID_ENTRY];
+static TAILQ_HEAD(, _trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
 static int g_file_optind; /* Index of first filename in argv */
 
@@ -1425,7 +1425,7 @@ set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
 }
 
 static void
-register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
+register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_entry)
 {
 	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
@@ -2194,89 +2194,6 @@ print_stats(void)
 	}
 }
 
-static void
-unregister_trids(void)
-{
-	struct trid_entry *trid_entry, *tmp;
-
-	TAILQ_FOREACH_SAFE(trid_entry, &g_trid_list, tailq, tmp) {
-		TAILQ_REMOVE(&g_trid_list, trid_entry, tailq);
-		free(trid_entry);
-	}
-}
-
-static int
-add_trid(const char *trid_str)
-{
-	struct trid_entry *trid_entry;
-	struct spdk_nvme_transport_id *trid;
-	char *ns;
-	char *hostnqn;
-
-	trid_entry = calloc(1, sizeof(*trid_entry));
-	if (trid_entry == NULL) {
-		return -1;
-	}
-
-	trid = &trid_entry->trid;
-	trid->trtype = SPDK_NVME_TRANSPORT_PCIE;
-	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
-
-	if (spdk_nvme_transport_id_parse(trid, trid_str) != 0) {
-		fprintf(stderr, "Invalid transport ID format '%s'\n", trid_str);
-		free(trid_entry);
-		return 1;
-	}
-
-	if ((ns = strcasestr(trid_str, "ns:")) ||
-	    (ns = strcasestr(trid_str, "ns="))) {
-		char nsid_str[6]; /* 5 digits maximum in an nsid */
-		int len;
-		int nsid;
-
-		ns += 3;
-
-		len = strcspn(ns, " \t\n");
-		if (len > 5) {
-			fprintf(stderr, "NVMe namespace IDs must be 5 digits or less\n");
-			free(trid_entry);
-			return 1;
-		}
-
-		memcpy(nsid_str, ns, len);
-		nsid_str[len] = '\0';
-
-		nsid = spdk_strtol(nsid_str, 10);
-		if (nsid <= 0 || nsid > 65535) {
-			fprintf(stderr, "NVMe namespace IDs must be less than 65536 and greater than 0\n");
-			free(trid_entry);
-			return 1;
-		}
-
-		trid_entry->nsid = (uint16_t)nsid;
-	}
-
-	if ((hostnqn = strcasestr(trid_str, "hostnqn:")) ||
-	    (hostnqn = strcasestr(trid_str, "hostnqn="))) {
-		size_t len;
-
-		hostnqn += strlen("hostnqn:");
-
-		len = strcspn(hostnqn, " \t\n");
-		if (len > (sizeof(trid_entry->hostnqn) - 1)) {
-			fprintf(stderr, "Host NQN is too long\n");
-			free(trid_entry);
-			return 1;
-		}
-
-		memcpy(trid_entry->hostnqn, hostnqn, len);
-		trid_entry->hostnqn[len] = '\0';
-	}
-
-	TAILQ_INSERT_TAIL(&g_trid_list, trid_entry, tailq);
-	return 0;
-}
-
 static int
 add_allowed_pci_device(const char *bdf_str, struct spdk_env_opts *env_opts)
 {
@@ -2540,6 +2457,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	char *endptr;
 	bool ssl_used = false;
 	char *sock_impl = "posix";
+	uint32_t trid_count = 0;
 
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
@@ -2673,10 +2591,19 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			g_monitor_perf_cores = true;
 			break;
 		case PERF_TRANSPORT:
-			if (add_trid(optarg)) {
+			if (trid_count == MAX_TRID_ENTRY) {
+				fprintf(stderr, "Number of Transport ID specified with -r is limited to %u\n", MAX_TRID_ENTRY);
+				return 1;
+			}
+
+			rc = spdk_nvme_trid_entry_parse(&g_trids[trid_count].entry, optarg);
+			if (rc < 0) {
 				usage(argv[0]);
 				return 1;
 			}
+
+			TAILQ_INSERT_TAIL(&g_trid_list, &g_trids[trid_count], tailq);
+			++trid_count;
 			break;
 		case PERF_IO_PATTERN:
 			g_workload_type = optarg;
@@ -2911,14 +2838,19 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
 		/* If no transport IDs specified, default to enumerating all local PCIe devices */
-		add_trid("trtype:PCIe");
+		rc = spdk_nvme_trid_entry_parse(&g_trids[trid_count].entry, "trtype:PCIe");
+		if (rc < 0) {
+			return 1;
+		}
+
+		TAILQ_INSERT_TAIL(&g_trid_list, &g_trids[trid_count], tailq);
 	} else {
-		struct trid_entry *trid_entry, *trid_entry_tmp;
+		struct _trid_entry *trid_entry;
 
 		env_opts->no_pci = true;
 		/* check whether there is local PCIe type */
-		TAILQ_FOREACH_SAFE(trid_entry, &g_trid_list, tailq, trid_entry_tmp) {
-			if (trid_entry->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
+			if (trid_entry->entry.trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 				env_opts->no_pci = false;
 				break;
 			}
@@ -2976,7 +2908,7 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct trid_entry *trid_entry = cb_ctx;
+	struct spdk_nvme_trid_entry *trid_entry = cb_ctx;
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		if (g_disable_sq_cmb) {
@@ -3016,7 +2948,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct trid_entry	*trid_entry = cb_ctx;
+	struct spdk_nvme_trid_entry	*trid_entry = cb_ctx;
 	struct spdk_pci_addr	pci_addr;
 	struct spdk_pci_device	*pci_dev;
 	struct spdk_pci_id	pci_id;
@@ -3055,7 +2987,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static int
 register_controllers(void)
 {
-	struct trid_entry *trid_entry;
+	struct _trid_entry *trid_entry;
 
 	printf("Initializing NVMe Controllers\n");
 
@@ -3065,9 +2997,9 @@ register_controllers(void)
 	}
 
 	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
-		if (spdk_nvme_probe(&trid_entry->trid, trid_entry, probe_cb, attach_cb, NULL) != 0) {
+		if (spdk_nvme_probe(&trid_entry->entry.trid, &trid_entry->entry, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
-				trid_entry->trid.traddr);
+				trid_entry->entry.trid.traddr);
 			return -1;
 		}
 	}
@@ -3277,7 +3209,6 @@ main(int argc, char **argv)
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
-		unregister_trids();
 		pthread_mutex_destroy(&g_stats_mutex);
 		free_key(&g_psk);
 		return -1;
@@ -3286,7 +3217,6 @@ main(int argc, char **argv)
 	rc = spdk_keyring_init();
 	if (rc != 0) {
 		fprintf(stderr, "Unable to initialize keyring: %s\n", spdk_strerror(-rc));
-		unregister_trids();
 		pthread_mutex_destroy(&g_stats_mutex);
 		free_key(&g_psk);
 		spdk_env_fini();
@@ -3393,7 +3323,6 @@ cleanup:
 		}
 	}
 
-	unregister_trids();
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
