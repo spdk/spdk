@@ -252,25 +252,23 @@ usage(const char *program_name)
 	AER_PRINTF("%s [options]", program_name);
 	AER_PRINTF("\n");
 	AER_PRINTF("options:\n");
-	AER_PRINTF(" -g         use single file descriptor for DPDK memory segments]\n");
-	AER_PRINTF(" -T         enable temperature tests\n");
-	AER_PRINTF(" -n         expected Namespace attribute notice ID\n");
-	AER_PRINTF(" -t <file>  touch specified file when ready to receive AER\n");
-	AER_PRINTF(" -r trid    remote NVMe over Fabrics target address\n");
-	AER_PRINTF("    Format: 'key:value [key:value] ...'\n");
-	AER_PRINTF("    Keys:\n");
-	AER_PRINTF("     trtype      Transport type (e.g. RDMA)\n");
-	AER_PRINTF("     adrfam      Address family (e.g. IPv4, IPv6)\n");
-	AER_PRINTF("     traddr      Transport address (e.g. 192.168.100.8)\n");
-	AER_PRINTF("     trsvcid     Transport service identifier (e.g. 4420)\n");
-	AER_PRINTF("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
-	AER_PRINTF("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
-
+	AER_PRINTF("\t-g         use single file descriptor for DPDK memory segments]\n");
+	AER_PRINTF("\t-T         enable temperature tests\n");
+	AER_PRINTF("\t-n         expected Namespace attribute notice ID\n");
+	AER_PRINTF("\t-t <file>  touch specified file when ready to receive AER\n");
+	AER_PRINTF("\t[-r trid    Transport ID for local PCIe NVMe or NVMeoF]\n");
+	AER_PRINTF("\t   Format: 'key:value [key:value] ...'\n");
+	AER_PRINTF("\t   Keys:\n");
+	AER_PRINTF("\t    trtype      Transport type (e.g. RDMA)\n");
+	AER_PRINTF("\t    adrfam      Address family (e.g. IPv4, IPv6)\n");
+	AER_PRINTF("\t    traddr      Transport address (e.g. 192.168.100.8)\n");
+	AER_PRINTF("\t    trsvcid     Transport service identifier (e.g. 4420)\n");
+	AER_PRINTF("\t    subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	AER_PRINTF("\t   Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 	spdk_log_usage(stdout, "-L");
-
-	AER_PRINTF(" -i <id>    shared memory group ID\n");
-	AER_PRINTF(" -m         Multi-Process AER Test (only with Temp Test)\n");
-	AER_PRINTF(" -H         show this usage\n");
+	AER_PRINTF("\t-i <id>    shared memory group ID\n");
+	AER_PRINTF("\t-m         Multi-Process AER Test (only with Temp Test)\n");
+	AER_PRINTF("\t-H         show this usage\n");
 }
 
 static int

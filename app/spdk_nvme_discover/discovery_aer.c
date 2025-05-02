@@ -108,7 +108,7 @@ usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
-	printf("\t[-r, --transport <fmt> Transport ID for NVMeoF discovery subsystem]\n");
+	printf("\t-r, --transport <fmt> Transport ID for NVMeoF discovery subsystem\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
 	printf("\t  trtype      Transport type (e.g. TCP, RDMA)\n");

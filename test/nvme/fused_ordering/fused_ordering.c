@@ -220,7 +220,7 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\t\n");
 	printf("options:\n");
-	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t-r Transport ID for local PCIe NVMe or NVMeoF\n");
 #ifdef DEBUG
 	printf("\t[-L enable debug logging]\n");
 #else

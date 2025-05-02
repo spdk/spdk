@@ -564,7 +564,7 @@ usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t[-r Transport ID for NVMeoF]\n");
+	printf("\t-r Transport ID for NVMeoF\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
 	printf("\t  trtype      Transport type (e.g. RDMA)\n");

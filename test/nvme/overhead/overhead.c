@@ -466,7 +466,7 @@ usage(char *program_name)
 	printf("\t[-H enable histograms]\n");
 	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 	printf("\t[-i shared memory group ID]\n");
-	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 #ifdef DEBUG
 	printf("\t[-L enable debug logging]\n");
 #else

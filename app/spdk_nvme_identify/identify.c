@@ -2730,29 +2730,27 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\n");
 	printf("options:\n");
-	printf(" -r trid    remote NVMe over Fabrics target address\n");
-	printf("    Format: 'key:value [key:value] ...'\n");
-	printf("    Keys:\n");
-	printf("     trtype      Transport type (e.g. RDMA)\n");
-	printf("     adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("     traddr      Transport address (e.g. 192.168.100.8)\n");
-	printf("     trsvcid     Transport service identifier (e.g. 4420)\n");
-	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
-	printf("     hostnqn     Host NQN\n");
-	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
-
+	printf("\t[-r trid    Transport ID for local PCIe NVMe or NVMeoF]\n");
+	printf("\t   Format: 'key:value [key:value] ...'\n");
+	printf("\t   Keys:\n");
+	printf("\t    trtype      Transport type (e.g. RDMA)\n");
+	printf("\t    adrfam      Address family (e.g. IPv4, IPv6)\n");
+	printf("\t    traddr      Transport address (e.g. 192.168.100.8)\n");
+	printf("\t    trsvcid     Transport service identifier (e.g. 4420)\n");
+	printf("\t    subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("\t    hostnqn     Host NQN\n");
+	printf("\t   Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 	spdk_log_usage(stdout, "-L");
-
-	printf(" -i         shared memory group ID\n");
-	printf(" -p         core number in decimal to run this application which started from 0\n");
-	printf(" -d         DPDK huge memory size in MB\n");
-	printf(" -g         use single file descriptor for DPDK memory segments\n");
-	printf(" -v         IOVA mode ('pa' or 'va')\n");
-	printf(" -x         print hex dump of raw data\n");
-	printf(" -z         For NVMe Zoned Namespaces, dump the full zone report (-z) or the first N entries (-z N)\n");
-	printf(" -V         enumerate VMD\n");
-	printf(" -S         socket implementation, e.g. -S uring (default is posix)\n");
-	printf(" -H         show this usage\n");
+	printf("\t-i         shared memory group ID\n");
+	printf("\t-p         core number in decimal to run this application which started from 0\n");
+	printf("\t-d         DPDK huge memory size in MB\n");
+	printf("\t-g         use single file descriptor for DPDK memory segments\n");
+	printf("\t-v         IOVA mode ('pa' or 'va')\n");
+	printf("\t-x         print hex dump of raw data\n");
+	printf("\t-z         For NVMe Zoned Namespaces, dump the full zone report (-z) or the first N entries (-z N)\n");
+	printf("\t-V         enumerate VMD\n");
+	printf("\t-S         socket implementation, e.g. -S uring (default is posix)\n");
+	printf("\t-H         show this usage\n");
 }
 
 static int

@@ -560,8 +560,10 @@ usage(char *program_name)
 	printf("\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
 	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
 	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("\t  ns          NVMe namespace ID (all active namespaces are used by default)");
 	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
 	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
+	printf("\t\t Note: can be specified multiple times to test multiple disks/targets.\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-i shared memory group ID]\n");
 	printf("\t[-a abort interval.]\n");

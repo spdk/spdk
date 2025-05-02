@@ -31,7 +31,7 @@ usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
-	printf("\t[-r <fmt> Transport ID for PCIe NVMe device]\n");
+	printf("\t-r <fmt> Transport ID for PCIe NVMe device\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
 	printf("\t  trtype      Transport type (PCIe)\n");

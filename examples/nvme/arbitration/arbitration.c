@@ -482,7 +482,7 @@ usage(char *program_name)
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
 	printf("\t[-n subjected IOs for performance comparison]\n");
 	printf("\t[-i shared memory group ID]\n");
-	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 }
 

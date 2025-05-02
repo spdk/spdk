@@ -1895,7 +1895,7 @@ usage(char *program_name)
 	printf("\t-a, --warmup-time <sec> warmup time in seconds\n");
 	printf("\t-c, --core-mask <mask> core mask for I/O submission/completion.\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF\n");
+	printf("\t[-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t\t Format: 'key:value [key:value] ...'\n");
 	printf("\t\t Keys:\n");
 	printf("\t\t  trtype      Transport type (e.g. PCIe, RDMA)\n");

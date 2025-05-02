@@ -381,7 +381,7 @@ usage(const char *program_name)
 	printf("\t[-d DPDK huge memory size in MB]\n");
 	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 	printf("\t[-i shared memory group ID]\n");
-	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t[-V enumerate VMD]\n");
 #ifdef DEBUG
 	printf("\t[-L enable debug logging]\n");
