@@ -826,12 +826,18 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct spdk_nvme_transport_id trid = {};
 	struct nvme_pcie_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct spdk_pci_addr pci_addr;
+	struct spdk_pci_addr pci_addr, _pci_addr;
 
 	pci_addr = spdk_pci_device_get_addr(pci_dev);
 
 	spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_PCIE);
 	spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
+
+	if (spdk_pci_addr_parse(&_pci_addr, trid.traddr)) {
+		SPDK_ERRLOG("spdk_pci_addr_parse failed; likely internal environment layer issue.\n");
+		assert(false);
+		return -1;
+	}
 
 	ctrlr = nvme_get_ctrlr_by_trid_unsafe(&trid, NULL);
 	if (!spdk_process_is_primary()) {

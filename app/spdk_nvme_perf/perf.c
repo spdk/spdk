@@ -2906,21 +2906,14 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct spdk_nvme_trid_entry	*trid_entry = cb_ctx;
-	struct spdk_pci_addr	pci_addr;
-
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-			return;
-		}
-
 		if (g_enable_interrupt && !opts->enable_interrupts) {
 			fprintf(stderr, "Couldn't enable interrupts on NVMe controller at %s\n", trid->traddr);
 			return;
 		}
 	}
 
-	register_ctrlr(ctrlr, trid_entry);
+	register_ctrlr(ctrlr, cb_ctx);
 }
 
 static int
