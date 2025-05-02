@@ -1727,9 +1727,6 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	uint8_t					str[512];
 	uint32_t				i, j;
 	struct spdk_nvme_error_information_entry *error_entry;
-	struct spdk_pci_addr			pci_addr;
-	struct spdk_pci_device			*pci_dev;
-	struct spdk_pci_id			pci_id;
 	uint32_t				nsid;
 	uint8_t					*orig_desc;
 	struct spdk_nvme_ana_group_descriptor	*copied_desc;
@@ -1753,26 +1750,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		printf("NVMe over Fabrics controller at %s:%s: %s\n",
-		       trid->traddr, trid->trsvcid, trid->subnqn);
-	} else {
-		if (spdk_pci_addr_parse(&pci_addr, trid->traddr) != 0) {
-			return;
-		}
-
-		pci_dev = spdk_nvme_ctrlr_get_pci_device(ctrlr);
-		if (!pci_dev) {
-			return;
-		}
-
-		pci_id = spdk_pci_device_get_id(pci_dev);
-
-		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       pci_addr.domain, pci_addr.bus,
-		       pci_addr.dev, pci_addr.func,
-		       pci_id.vendor_id, pci_id.device_id);
-	}
+	spdk_nvme_build_name(str, sizeof(str), ctrlr, NULL);
+	printf("NVMe%s Controller at %s\n", trid->trtype != SPDK_NVME_TRANSPORT_PCIE ? "oF" : "", str);
 	printf("=====================================================\n");
 
 	if (g_hex_dump) {

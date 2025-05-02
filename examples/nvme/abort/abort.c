@@ -217,6 +217,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_
 	}
 
 	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, NULL);
+	printf("Attached to NVMe%s Controller at %s\n",
+	       trid_entry->trid.trtype != SPDK_NVME_TRANSPORT_PCIE ? "oF" : "", entry->name);
 
 	entry->ctrlr = ctrlr;
 	entry->trtype = trid_entry->trid.trtype;
@@ -798,28 +800,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct spdk_nvme_trid_entry       *trid_entry = cb_ctx;
 	struct spdk_pci_addr    pci_addr;
-	struct spdk_pci_device  *pci_dev;
-	struct spdk_pci_id      pci_id;
 
-	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
-		       trid->traddr, trid->trsvcid,
-		       trid->subnqn);
-	} else {
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 			return;
 		}
-
-		pci_dev = spdk_nvme_ctrlr_get_pci_device(ctrlr);
-		if (!pci_dev) {
-			return;
-		}
-
-		pci_id = spdk_pci_device_get_id(pci_dev);
-
-		printf("Attached to NVMe Controller at %s [%04x:%04x]\n",
-		       trid->traddr,
-		       pci_id.vendor_id, pci_id.device_id);
 	}
 
 	register_ctrlr(ctrlr, trid_entry);

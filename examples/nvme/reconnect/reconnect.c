@@ -340,8 +340,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_
 	 */
 	snprintf(entry->failover_trid.subnqn, SPDK_NVMF_NQN_MAX_LEN + 1, "%s", ctrlr_trid->subnqn);
 
-
 	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, NULL);
+	printf("Attached to NVMeoF Controller at %s\n", entry->name);
 
 	entry->ctrlr = ctrlr;
 	entry->trtype = trid_entry->trid.trtype;
@@ -831,13 +831,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct spdk_nvme_trid_entry	*trid_entry = cb_ctx;
-
-	printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
-	       trid->traddr, trid->trsvcid,
-	       trid->subnqn);
-
-	register_ctrlr(ctrlr, trid_entry);
+	register_ctrlr(ctrlr, cb_ctx);
 }
 
 static int
