@@ -129,3 +129,48 @@ spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *
 
 	return 0;
 }
+
+int
+spdk_nvme_build_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr,
+		     struct spdk_nvme_ns *ns)
+{
+	const struct spdk_nvme_transport_id *trid;
+	int res, res2 = 0;
+
+	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
+
+	switch (trid->trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		res = snprintf(name, length, "PCIE (%s)", trid->traddr);
+		break;
+	case SPDK_NVME_TRANSPORT_RDMA:
+		res = snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		break;
+	case SPDK_NVME_TRANSPORT_TCP:
+		res = snprintf(name, length, "TCP (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		break;
+	case SPDK_NVME_TRANSPORT_VFIOUSER:
+		res = snprintf(name, length, "VFIOUSER (%s)", trid->traddr);
+		break;
+	case SPDK_NVME_TRANSPORT_CUSTOM:
+		res = snprintf(name, length, "CUSTOM (%s)", trid->traddr);
+		break;
+	default:
+		fprintf(stderr, "Unknown transport type %d\n", trid->trtype);
+		res = -EINVAL;
+	}
+
+	if (res < 0) {
+		return res;
+	}
+
+	if (ns) {
+		res2 = snprintf(name + res, length - res, " NSID %u", spdk_nvme_ns_get_id(ns));
+	}
+
+	if (res2 < 0) {
+		return res2;
+	}
+
+	return res + res2;
+}

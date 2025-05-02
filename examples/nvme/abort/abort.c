@@ -119,47 +119,6 @@ static TAILQ_HEAD(, _trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_lis
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 
-static int
-build_nvme_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr)
-{
-	const struct spdk_nvme_transport_id *trid;
-	int res = 0;
-
-	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
-
-	switch (trid->trtype) {
-	case SPDK_NVME_TRANSPORT_PCIE:
-		res = snprintf(name, length, "PCIE (%s)", trid->traddr);
-		break;
-	case SPDK_NVME_TRANSPORT_RDMA:
-		res = snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
-		break;
-	case SPDK_NVME_TRANSPORT_TCP:
-		res = snprintf(name, length, "TCP (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
-		break;
-	case SPDK_NVME_TRANSPORT_CUSTOM:
-		res = snprintf(name, length, "CUSTOM (%s)", trid->traddr);
-		break;
-
-	default:
-		fprintf(stderr, "Unknown transport type %d\n", trid->trtype);
-		break;
-	}
-	return res;
-}
-
-static void
-build_nvme_ns_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
-{
-	int res = 0;
-
-	res = build_nvme_name(name, length, ctrlr);
-	if (res > 0) {
-		snprintf(name + res, length - res, " NSID %u", nsid);
-	}
-
-}
-
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
@@ -228,7 +187,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		g_max_io_size_blocks = entry->io_size_blocks;
 	}
 
-	build_nvme_ns_name(entry->name, sizeof(entry->name), ctrlr, spdk_nvme_ns_get_id(ns));
+	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, ns);
 
 	g_num_namespaces++;
 	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
@@ -257,7 +216,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_
 		exit(1);
 	}
 
-	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
+	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, NULL);
 
 	entry->ctrlr = ctrlr;
 	entry->trtype = trid_entry->trid.trtype;

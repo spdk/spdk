@@ -290,6 +290,7 @@
 	# internal function in spdk_internal/nvme_util.h
 	spdk_nvme_transport_id_usage;
 	spdk_nvme_trid_entry_parse;
+	spdk_nvme_build_name;
 
 	local: *;
 };

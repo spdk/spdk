@@ -226,32 +226,6 @@ nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-build_nvme_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr)
-{
-	const struct spdk_nvme_transport_id *trid;
-
-	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
-
-	switch (trid->trtype) {
-	case SPDK_NVME_TRANSPORT_RDMA:
-		snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
-		break;
-	case SPDK_NVME_TRANSPORT_TCP:
-		snprintf(name, length, "TCP (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
-		break;
-	case SPDK_NVME_TRANSPORT_VFIOUSER:
-		snprintf(name, length, "VFIOUSER (%s)", trid->traddr);
-		break;
-	case SPDK_NVME_TRANSPORT_CUSTOM:
-		snprintf(name, length, "CUSTOM (%s)", trid->traddr);
-		break;
-	default:
-		fprintf(stderr, "Unknown transport type %d\n", trid->trtype);
-		break;
-	}
-}
-
-static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
@@ -321,7 +295,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		g_max_io_size_blocks = entry->io_size_blocks;
 	}
 
-	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
+	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, ns);
 
 	g_num_namespaces++;
 	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
@@ -367,7 +341,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_
 	snprintf(entry->failover_trid.subnqn, SPDK_NVMF_NQN_MAX_LEN + 1, "%s", ctrlr_trid->subnqn);
 
 
-	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
+	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, NULL);
 
 	entry->ctrlr = ctrlr;
 	entry->trtype = trid_entry->trid.trtype;
