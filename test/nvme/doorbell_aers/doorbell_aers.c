@@ -7,6 +7,7 @@
 
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/mmio.h"
 
 #define IO_QUEUE_SIZE 32
@@ -31,13 +32,8 @@ usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
-	printf("\t-r <fmt> Transport ID for PCIe NVMe device\n");
-	printf("\t Format: 'key:value [key:value] ...'\n");
-	printf("\t Keys:\n");
-	printf("\t  trtype      Transport type (PCIe)\n");
-	printf("\t  traddr      Transport address (e.g. 0000:db:00.0)\n");
-	printf("\t Example: -r 'trtype:PCIe traddr:0000:db:00.0'\n");
-	printf("\t");
+	spdk_nvme_transport_id_usage(stdout,
+				     SPDK_NVME_TRID_USAGE_OPT_MANDATORY | SPDK_NVME_TRID_USAGE_OPT_NO_FABRIC);
 }
 
 static int

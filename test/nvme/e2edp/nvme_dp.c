@@ -10,6 +10,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/env.h"
 #include "spdk/crc16.h"
 #include "spdk/endian.h"
@@ -609,7 +610,8 @@ parse_args(int argc, char **argv)
 			}
 			break;
 		default:
-			fprintf(stderr, "Usage: %s [-r trid]\n", argv[0]);
+			fprintf(stderr, "Usage: %s\n", argv[0]);
+			spdk_nvme_transport_id_usage(stdout, 0);
 			return -EINVAL;
 		}
 	}

@@ -12,6 +12,7 @@
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/vmd.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
@@ -1895,19 +1896,9 @@ usage(char *program_name)
 	printf("\t-a, --warmup-time <sec> warmup time in seconds\n");
 	printf("\t-c, --core-mask <mask> core mask for I/O submission/completion.\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t[-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF]\n");
-	printf("\t\t Format: 'key:value [key:value] ...'\n");
-	printf("\t\t Keys:\n");
-	printf("\t\t  trtype      Transport type (e.g. PCIe, RDMA)\n");
-	printf("\t\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("\t\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
-	printf("\t\t  trsvcid     Transport service identifier (e.g. 4420)\n");
-	printf("\t\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
-	printf("\t\t  ns          NVMe namespace ID (all active namespaces are used by default)\n");
-	printf("\t\t  hostnqn     Host NQN\n");
-	printf("\t\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
-	printf("\t\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
-	printf("\t\t Note: can be specified multiple times to test multiple disks/targets.\n");
+	spdk_nvme_transport_id_usage(stdout,
+				     SPDK_NVME_TRID_USAGE_OPT_LONGOPT | SPDK_NVME_TRID_USAGE_OPT_MULTI | SPDK_NVME_TRID_USAGE_OPT_NS |
+				     SPDK_NVME_TRID_USAGE_OPT_HOSTNQN);
 	printf("\n");
 
 	printf("==== ADVANCED OPTIONS ====\n\n");

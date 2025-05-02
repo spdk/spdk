@@ -6,6 +6,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/vmd.h"
 #include "spdk/nvme_zns.h"
 #include "spdk/env.h"
@@ -381,7 +382,7 @@ usage(const char *program_name)
 	printf("\t[-d DPDK huge memory size in MB]\n");
 	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 	printf("\t[-i shared memory group ID]\n");
-	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
+	spdk_nvme_transport_id_usage(stdout, 0);
 	printf("\t[-V enumerate VMD]\n");
 #ifdef DEBUG
 	printf("\t[-L enable debug logging]\n");

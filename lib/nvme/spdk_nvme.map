@@ -287,5 +287,8 @@
 	spdk_opal_get_locking_range_info;
 	spdk_opal_free_locking_range_info;
 
+	# internal function in spdk_internal/nvme_util.h
+	spdk_nvme_transport_id_usage;
+
 	local: *;
 };

@@ -7,6 +7,7 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/string.h"
 
 static struct spdk_nvme_transport_id g_trid;
@@ -1474,7 +1475,7 @@ init(void *cb_arg)
 static void
 usage(void *cb_arg)
 {
-	printf("  -r, --trid                       transport ID\n");
+	spdk_nvme_transport_id_usage(stdout, SPDK_NVME_TRID_USAGE_OPT_MANDATORY);
 	printf("  -g, --single-file-segments       force creating just one hugetlbfs file\n");
 }
 

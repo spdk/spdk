@@ -6,6 +6,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
@@ -220,7 +221,7 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\t\n");
 	printf("options:\n");
-	printf("\t-r Transport ID for local PCIe NVMe or NVMeoF\n");
+	spdk_nvme_transport_id_usage(stdout, SPDK_NVME_TRID_USAGE_OPT_MANDATORY);
 #ifdef DEBUG
 	printf("\t[-L enable debug logging]\n");
 #else

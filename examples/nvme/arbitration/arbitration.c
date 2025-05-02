@@ -7,6 +7,7 @@
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
@@ -482,7 +483,7 @@ usage(char *program_name)
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
 	printf("\t[-n subjected IOs for performance comparison]\n");
 	printf("\t[-i shared memory group ID]\n");
-	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
+	spdk_nvme_transport_id_usage(stdout, 0);
 	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 }
 

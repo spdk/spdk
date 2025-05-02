@@ -9,6 +9,7 @@
 
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
@@ -564,16 +565,9 @@ usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t-r Transport ID for NVMeoF\n");
-	printf("\t Format: 'key:value [key:value] ...'\n");
-	printf("\t Keys:\n");
-	printf("\t  trtype      Transport type (e.g. RDMA)\n");
-	printf("\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("\t  traddr      Transport address (e.g. 192.168.100.8 for RDMA)\n");
-	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
-	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
-	printf("\t  alt_traddr  (Optional) Alternative Transport address for failover.\n");
-	printf("\t Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
+	spdk_nvme_transport_id_usage(stdout,
+				     SPDK_NVME_TRID_USAGE_OPT_MANDATORY | SPDK_NVME_TRID_USAGE_OPT_NO_PCIE |
+				     SPDK_NVME_TRID_USAGE_OPT_ALT_TRADDR);
 	printf("\t[-k keep alive timeout period in millisecond]\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");

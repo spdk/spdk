@@ -7,6 +7,7 @@
 
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/log.h"
@@ -25,16 +26,8 @@ usage(char *program_name)
 	printf("\t[-t, --time <sec> time in seconds]\n");
 	printf("\t[-c, --core-mask <mask>]\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF\n");
-	printf("\t Format: 'key:value [key:value] ...'\n");
-	printf("\t Keys:\n");
-	printf("\t  trtype      Transport type (e.g. PCIe, RDMA)\n");
-	printf("\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
-	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
-	printf("\t  subnqn      Subsystem NQN\n");
-	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
-	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
+	spdk_nvme_transport_id_usage(stdout,
+				     SPDK_NVME_TRID_USAGE_OPT_MANDATORY | SPDK_NVME_TRID_USAGE_OPT_LONGOPT);
 	printf("\t[-s, --hugemem-size <MB> DPDK huge memory size in MB.]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i, --shmem-grp-id <id> shared memory group ID]\n");

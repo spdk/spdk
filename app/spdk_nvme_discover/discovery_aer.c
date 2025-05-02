@@ -7,6 +7,7 @@
 
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/nvme_util.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
@@ -108,14 +109,10 @@ usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
-	printf("\t-r, --transport <fmt> Transport ID for NVMeoF discovery subsystem\n");
-	printf("\t Format: 'key:value [key:value] ...'\n");
-	printf("\t Keys:\n");
-	printf("\t  trtype      Transport type (e.g. TCP, RDMA)\n");
-	printf("\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("\t  traddr      Transport address (e.g. 192.168.100.8)\n");
-	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
-	printf("\t Example: -r 'trtype:TCP adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
+	spdk_nvme_transport_id_usage(stdout,
+				     SPDK_NVME_TRID_USAGE_OPT_MANDATORY | SPDK_NVME_TRID_USAGE_OPT_LONGOPT |
+				     SPDK_NVME_TRID_USAGE_OPT_NO_PCIE);
+	printf("\t\tNote: Transport ID can be specified for NVMeoF discovery subsystem only.\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 #ifdef DEBUG
