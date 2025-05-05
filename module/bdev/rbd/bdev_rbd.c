@@ -99,7 +99,15 @@ _rbd_update_callback(void *arg)
 	struct bdev_rbd *rbd = arg;
 	uint64_t current_size_in_bytes = 0;
 	int rc;
+	char value[100];
+	size_t value_len = sizeof(value);
 
+	memset(value, 0, value_len);
+	rc = rbd_metadata_get(rbd->image, "NVME_GATEWAY_AUTO_RESIZE", value, &value_len);
+	if (rc == 0 && strncasecmp(value, "no", 2) == 0) {
+		SPDK_NOTICELOG("Wll not notify about size change as NVME_GATEWAY_AUTO_RESIZE is set to \"no\"\n");
+		return;
+	}
 	rc = rbd_get_size(rbd->image, &current_size_in_bytes);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed getting size %d\n", rc);
@@ -1480,6 +1488,7 @@ bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb)
 	int rc = 0;
 	uint64_t new_size_in_byte;
 	uint64_t current_size_in_mb;
+	uint64_t current_size_in_bytes = 0;
 
 	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
 	if (rc != 0) {
@@ -1493,19 +1502,30 @@ bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb)
 		goto exit;
 	}
 
-	current_size_in_mb = bdev->blocklen * bdev->blockcnt / (1024 * 1024);
-	if (current_size_in_mb > new_size_in_mb) {
+	rbd = SPDK_CONTAINEROF(bdev, struct bdev_rbd, disk);
+	rc = rbd_get_size(rbd->image, &current_size_in_bytes);
+	if (rc < 0) {
+		/* might not be accurate if we disabled auto resize, but it's the best we can do */
+		SPDK_ERRLOG("Failed getting size %d, will use bdev settings\n", rc);
+		current_size_in_bytes = bdev->blocklen * bdev->blockcnt;
+	}
+	current_size_in_mb = current_size_in_bytes / (1024 * 1024);
+	if (current_size_in_mb > new_size_in_mb && new_size_in_mb > 0) {
 		SPDK_ERRLOG("The new bdev size must be larger than current bdev size.\n");
 		rc = -EINVAL;
 		goto exit;
 	}
 
-	rbd = SPDK_CONTAINEROF(bdev, struct bdev_rbd, disk);
 	new_size_in_byte = new_size_in_mb * 1024 * 1024;
-	rc = rbd_resize(rbd->image, new_size_in_byte);
-	if (rc != 0) {
-		SPDK_ERRLOG("failed to resize the ceph bdev.\n");
-		goto exit;
+	if (new_size_in_byte > 0) {
+		rc = rbd_resize(rbd->image, new_size_in_byte);
+		if (rc != 0) {
+			SPDK_ERRLOG("failed to resize the ceph bdev.\n");
+			goto exit;
+		}
+	}
+	else {
+		new_size_in_byte = current_size_in_bytes;
 	}
 
 	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_byte / bdev->blocklen);
