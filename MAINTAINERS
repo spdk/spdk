@@ -252,7 +252,12 @@ F:	lib/nvme/nvme_tcp.c
 S:	Supported
 
 NVME DRIVER (VFIO USER)
+M:	John Levon <john.levon@nutanix.com>
+M:	Thanos Makatos <thanos.makatos@nutanix.com>
+M:	Tomasz Zawadzki <tomasz.zawadzki@nutanix.com>
 F:	lib/nvme/nvme_vfio_user.c
+F:	include/spdk/vfio_user_*.h
+S:	Supported
 
 NVME DISCOVERY APPLICATION
 F:	app/spdk_nvme_discover/
@@ -291,7 +296,15 @@ F:	lib/nvmf/tcp.c
 S:	Supported
 
 NVMF TARGET (VFIO USER)
+M:	John Levon <john.levon@nutanix.com>
+M:	Thanos Makatos <thanos.makatos@nutanix.com>
+M:	Tomasz Zawadzki <tomasz.zawadzki@nutanix.com>
 F:	lib/nvmf/vfio_user.c
+F:	test/nvmf/target/nvmf_vfio_user.sh
+F:	test/vfio_user/
+X:	test/vfio_user/virtio/
+F:	test/unit/lib/nvmf/vfio_user.c/
+S:	Supported
 
 OPEN CAS FRAMEWORK
 F:	lib/env_ocf/
@@ -368,7 +381,13 @@ F:	lib/util/
 S:	Supported
 
 VFIO USER HOST LIBRARY
+M:	John Levon <john.levon@nutanix.com>
+M:	Thanos Makatos <thanos.makatos@nutanix.com>
+M:	Tomasz Zawadzki <tomasz.zawadzki@nutanix.com>
 F:	lib/vfio_user/
+F:	libvfio-user
+F:	vfiouserbuild/
+S:	Supported
 
 VHOST TARGET LIBRARY
 M:	Changpeng Liu <changpeliu@tencent.com>
