@@ -10811,6 +10811,13 @@ _spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 		return -EINVAL;
 	}
 
+	spdk_spin_lock(&bdev->internal.spinlock);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
+		spdk_spin_unlock(&bdev->internal.spinlock);
+		return -ENODEV;
+	}
+	spdk_spin_unlock(&bdev->internal.spinlock);
+
 	if (unquiesce) {
 		struct lba_range *range;
 
