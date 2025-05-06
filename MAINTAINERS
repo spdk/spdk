@@ -73,8 +73,15 @@ F:	module/blobfs/
 S:	Obsolete
 
 BLOBSTORE LIBRARY
+M:	Tomasz Zawadzki <tomasz.zawadzki@nutanix.com>
 F:	lib/blob/
 F:	module/blob/
+F:	examples/blob/
+F:	include/spdk/blob.h
+F:	include/spdk/blob_bdev.h
+F:	test/blobstore/
+F:	test/unit/lib/blob/
+S:	Supported
 
 CEPH RBD BDEV MODULE
 F:	module/bdev/rbd/
@@ -197,8 +204,17 @@ LOGGING LIBRARY
 F:	lib/log/
 
 LOGICAL VOLUMES
+M:	Tomasz Zawadzki <tomasz.zawadzki@nutanix.com>
 F:	lib/lvol/
 F:	module/bdev/lvol/
+F:	include/spdk/lvol.h
+F:	include/spdk_internal/lvolstore.h
+F:	test/iscsi_tgt/lvol/
+F:	test/lvol/
+F:	test/nvmf/target/nvmf_lvol.sh
+F:	test/unit/lib/bdev/vbdev_lvol.c/
+F:	test/unit/lib/lvol/
+S:	Supported
 
 MISCELLANEOUS BDEV MODULES
 F:	module/bdev/null/
