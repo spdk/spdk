@@ -26,6 +26,7 @@ static struct spdk_trace_parser *g_parser;
 static const struct spdk_trace_file *g_file;
 static struct spdk_json_write_ctx *g_json;
 static bool g_print_tsc = false;
+static bool g_time_diff;
 
 /* This is a bit ugly, but we don't want to include env_dpdk in the app, while spdk_util, which we
  * do need, uses some of the functions implemented there.  We're not actually using the functions
@@ -328,7 +329,7 @@ trace_print(int lcore)
 {
 	struct spdk_trace_parser_entry	entry;
 	int		i;
-	uint64_t	tsc_offset, entry_count;
+	uint64_t	tsc_offset, entry_count, tsc_base_offset;
 	uint64_t	tsc_rate = g_file->tsc_rate;
 
 	printf("TSC Rate: %ju\n", tsc_rate);
@@ -341,12 +342,15 @@ trace_print(int lcore)
 		}
 	}
 
-	tsc_offset = spdk_trace_parser_get_tsc_offset(g_parser);
+	tsc_base_offset = tsc_offset = spdk_trace_parser_get_tsc_offset(g_parser);
 	while (spdk_trace_parser_next_entry(g_parser, &entry)) {
-		if (entry.entry->tsc < tsc_offset) {
+		if (entry.entry->tsc < tsc_base_offset) {
 			continue;
 		}
 		print_event(&entry, tsc_rate, tsc_offset);
+		if (g_time_diff) {
+			tsc_offset = entry.entry->tsc;
+		}
 	}
 
 	return 0;
@@ -356,7 +360,7 @@ static int
 trace_print_json(void)
 {
 	struct spdk_trace_parser_entry	entry;
-	uint64_t	tsc_offset;
+	uint64_t	tsc_offset, tsc_base_offset;
 	uint64_t	tsc_rate = g_file->tsc_rate;
 
 	g_json = spdk_json_write_begin(print_json, NULL, 0);
@@ -369,12 +373,15 @@ trace_print_json(void)
 	print_tpoint_definitions();
 	spdk_json_write_named_array_begin(g_json, "entries");
 
-	tsc_offset = spdk_trace_parser_get_tsc_offset(g_parser);
+	tsc_base_offset = tsc_offset = spdk_trace_parser_get_tsc_offset(g_parser);
 	while (spdk_trace_parser_next_entry(g_parser, &entry)) {
-		if (entry.entry->tsc < tsc_offset) {
+		if (entry.entry->tsc < tsc_base_offset) {
 			continue;
 		}
 		print_event_json(&entry, tsc_rate, tsc_offset);
+		if (g_time_diff) {
+			tsc_offset = entry.entry->tsc;
+		}
 	}
 
 	spdk_json_write_array_end(g_json);
@@ -399,6 +406,7 @@ usage(void)
 	fprintf(stderr, "                       -i or -p must be specified)\n");
 	fprintf(stderr, "                 '-f' to specify a tracepoint file name\n");
 	fprintf(stderr, "                      (-s and -f are mutually exclusive)\n");
+	fprintf(stderr, "                 '-T' to show time as delta between current and previous event\n");
 #if defined(__linux__)
 	fprintf(stderr, "                 Without -s or -f, %s will look for\n", g_exe_name);
 	fprintf(stderr, "                      newest trace file in /dev/shm\n");
@@ -436,7 +444,7 @@ main(int argc, char **argv)
 	int				shm_id = -1, shm_pid = -1;
 
 	g_exe_name = argv[0];
-	while ((op = getopt(argc, argv, "c:f:i:jp:s:t")) != -1) {
+	while ((op = getopt(argc, argv, "c:f:i:jp:s:tT")) != -1) {
 		switch (op) {
 		case 'c':
 			lcore = atoi(optarg);
@@ -461,6 +469,9 @@ main(int argc, char **argv)
 			break;
 		case 't':
 			g_print_tsc = true;
+			break;
+		case 'T':
+			g_time_diff = true;
 			break;
 		case 'j':
 			print_format = PRINT_FMT_JSON;
