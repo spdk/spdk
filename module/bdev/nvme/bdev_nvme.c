@@ -2178,10 +2178,21 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
 	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
 		/* Complete pending destruct after reset completes. */
 		return OP_COMPLETE_PENDING_DESTRUCT;
-	} else if (pending_failover) {
-		return OP_FAILOVER;
 	} else if (success || nvme_ctrlr->opts.reconnect_delay_sec == 0) {
-		return OP_NONE;
+		if (pending_failover) {
+			/* This is a fix for a race condition that failover was lost
+			 * if fabric connect command got timeout while ctrlr was being
+			 * reset and reset succeeded. We check connection establishment
+			 * sequentially now but any network error can happen during reset.
+			 * We have to keep this fix.
+			 *
+			 * On the other hand, if reset failed, delayed reconnect will be
+			 * executed. In this case, we do not have to failover immediately.
+			 */
+			return OP_FAILOVER;
+		} else {
+			return OP_NONE;
+		}
 	} else if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
 		return OP_DESTRUCT;
 	} else {

@@ -8177,6 +8177,113 @@ test_race_between_clear_pending_resets_and_reset_ctrlr_complete(void)
 	free(bdev_io);
 }
 
+static void
+test_race_between_ctrlr_loss_timeout_and_pending_failover(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_ctrlr *nvme_ctrlr;
+	uint64_t reset_start_tsc;
+	int rc;
+
+	ut_init_trid(&trid);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+
+	set_thread(0);
+
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
+	CU_ASSERT(rc == 0);
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
+
+	nvme_ctrlr->opts.ctrlr_loss_timeout_sec = 2;
+	nvme_ctrlr->opts.reconnect_delay_sec = 1;
+
+	/* Reset starts but it should fail. */
+	ctrlr.fail_reset = true;
+
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->reset_start_tsc != 0);
+
+	reset_start_tsc = nvme_ctrlr->reset_start_tsc;
+
+	/* Failover is requested but reset is in progress. Failover should be
+	 * deferred until reset completes.
+	 */
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
+	CU_ASSERT(rc == -EINPROGRESS);
+	CU_ASSERT(nvme_ctrlr->pending_failover == true);
+
+	poll_threads();
+
+	/* Reset failed. Hence, failover should be handled as delayed reconnect. */
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+	CU_ASSERT(nvme_ctrlr->pending_failover == false);
+	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
+	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
+
+	/* Reset should fail again. */
+	ctrlr.fail_reset = true;
+
+	spdk_delay_us(SPDK_SEC_TO_USEC);
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer == NULL);
+	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
+
+	/* Failover is requested again. */
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
+	CU_ASSERT(rc == -EINPROGRESS);
+	CU_ASSERT(nvme_ctrlr->pending_failover == true);
+
+	poll_threads();
+
+	/* Reset failed. Hence, failover should be handled as delayed reconnect. */
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+	CU_ASSERT(nvme_ctrlr->pending_failover == false);
+	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
+	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
+
+	/* Reset should fail again. */
+	ctrlr.fail_reset = true;
+
+	spdk_delay_us(SPDK_SEC_TO_USEC);
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer == NULL);
+	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
+
+	/* Failover is requested again. */
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
+	CU_ASSERT(rc == -EINPROGRESS);
+	CU_ASSERT(nvme_ctrlr->pending_failover == true);
+
+	poll_threads();
+
+	/* Controller loss timeout is expired. failover should be ignored and
+	 * controller should be deleted.
+	 */
+	CU_ASSERT(nvme_ctrlr == nvme_ctrlr_get_by_name("nvme0"));
+	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
+	CU_ASSERT(bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr) == true);
+	CU_ASSERT(nvme_ctrlr->destruct == true);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8238,6 +8345,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_io_path_is_current);
 	CU_ADD_TEST(suite, test_bdev_reset_abort_io);
 	CU_ADD_TEST(suite, test_race_between_clear_pending_resets_and_reset_ctrlr_complete);
+	CU_ADD_TEST(suite, test_race_between_ctrlr_loss_timeout_and_pending_failover);
 
 	allocate_threads(3);
 	set_thread(0);
