@@ -2187,9 +2187,6 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	} else if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
 		return OP_DESTRUCT;
 	} else {
-		if (bdev_nvme_check_fast_io_fail_timeout(nvme_ctrlr)) {
-			nvme_ctrlr->fast_io_fail_timedout = true;
-		}
 		return OP_DELAYED_RECONNECT;
 	}
 }
@@ -2290,6 +2287,9 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 
 	if (!success) {
 		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Resetting controller failed.\n");
+		if (bdev_nvme_check_fast_io_fail_timeout(nvme_ctrlr)) {
+			nvme_ctrlr->fast_io_fail_timedout = true;
+		}
 	} else {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Resetting controller successful.\n");
 	}
