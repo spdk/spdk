@@ -2172,13 +2172,13 @@ enum bdev_nvme_op_after_reset {
 typedef enum bdev_nvme_op_after_reset _bdev_nvme_op_after_reset;
 
 static _bdev_nvme_op_after_reset
-bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
+bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
+			       bool pending_failover)
 {
 	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
 		/* Complete pending destruct after reset completes. */
 		return OP_COMPLETE_PENDING_DESTRUCT;
-	} else if (nvme_ctrlr->pending_failover) {
-		nvme_ctrlr->pending_failover = false;
+	} else if (pending_failover) {
 		nvme_ctrlr->reset_start_tsc = 0;
 		return OP_FAILOVER;
 	} else if (success || nvme_ctrlr->opts.reconnect_delay_sec == 0) {
@@ -2248,11 +2248,16 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 {
 	bdev_nvme_ctrlr_op_cb ctrlr_op_cb_fn = nvme_ctrlr->ctrlr_op_cb_fn;
 	void *ctrlr_op_cb_arg = nvme_ctrlr->ctrlr_op_cb_arg;
+	bool pending_failover;
 	enum bdev_nvme_op_after_reset op_after_reset;
 
 	assert(nvme_ctrlr->thread == spdk_get_thread());
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
+
+	pending_failover = nvme_ctrlr->pending_failover;
+	nvme_ctrlr->pending_failover = false;
+
 	if (!success) {
 		/* Connecting the active trid failed. Set the next alternate trid to the
 		 * active trid if it exists.
@@ -2301,7 +2306,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
 	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
 
-	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success);
+	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success, pending_failover);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	/* Delay callbacks when the next operation is a failover. */
@@ -2689,8 +2694,9 @@ bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
 
 	nvme_ctrlr->resetting = false;
 	nvme_ctrlr->dont_retry = false;
+	nvme_ctrlr->pending_failover = false;
 
-	op_after_disable = bdev_nvme_check_op_after_reset(nvme_ctrlr, true);
+	op_after_disable = bdev_nvme_check_op_after_reset(nvme_ctrlr, true, false);
 
 	nvme_ctrlr->disabled = true;
 	spdk_poller_pause(nvme_ctrlr->adminq_timer_poller);
