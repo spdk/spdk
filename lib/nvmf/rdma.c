@@ -5033,6 +5033,10 @@ nvmf_rdma_request_set_abort_status(struct spdk_nvmf_request *req,
 {
 	rdma_req_to_abort->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	rdma_req_to_abort->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+	/* Ensure cid is correct in case abort was requested before IO is being executed */
+	rdma_req_to_abort->req.rsp->nvme_cpl.sqid = 0;
+	rdma_req_to_abort->req.rsp->nvme_cpl.status.p = 0;
+	rdma_req_to_abort->req.rsp->nvme_cpl.cid = rdma_req_to_abort->req.cmd->nvme_cmd.cid;
 
 	STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req_to_abort, state_link);
 	rdma_req_to_abort->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
