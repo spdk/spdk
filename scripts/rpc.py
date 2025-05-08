@@ -597,37 +597,7 @@ def main():
     p.set_defaults(func=bdev_xnvme_delete)
 
     def bdev_nvme_set_options(args):
-        rpc.bdev.bdev_nvme_set_options(args.client,
-                                       action_on_timeout=args.action_on_timeout,
-                                       timeout_us=args.timeout_us,
-                                       timeout_admin_us=args.timeout_admin_us,
-                                       keep_alive_timeout_ms=args.keep_alive_timeout_ms,
-                                       arbitration_burst=args.arbitration_burst,
-                                       low_priority_weight=args.low_priority_weight,
-                                       medium_priority_weight=args.medium_priority_weight,
-                                       high_priority_weight=args.high_priority_weight,
-                                       nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us,
-                                       nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us,
-                                       io_queue_requests=args.io_queue_requests,
-                                       delay_cmd_submit=args.delay_cmd_submit,
-                                       transport_retry_count=args.transport_retry_count,
-                                       bdev_retry_count=args.bdev_retry_count,
-                                       transport_ack_timeout=args.transport_ack_timeout,
-                                       ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
-                                       reconnect_delay_sec=args.reconnect_delay_sec,
-                                       fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
-                                       disable_auto_failback=args.disable_auto_failback,
-                                       generate_uuids=args.generate_uuids,
-                                       transport_tos=args.transport_tos,
-                                       nvme_error_stat=args.nvme_error_stat,
-                                       rdma_srq_size=args.rdma_srq_size,
-                                       io_path_stat=args.io_path_stat,
-                                       allow_accel_sequence=args.allow_accel_sequence,
-                                       rdma_max_cq_size=args.rdma_max_cq_size,
-                                       rdma_cm_event_timeout_ms=args.rdma_cm_event_timeout_ms,
-                                       dhchap_digests=args.dhchap_digests,
-                                       dhchap_dhgroups=args.dhchap_dhgroups,
-                                       rdma_umr_per_io=args.rdma_umr_per_io)
+        rpc.bdev.bdev_nvme_set_options(**vars(args))
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')

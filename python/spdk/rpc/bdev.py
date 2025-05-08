@@ -4,6 +4,8 @@
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
+from .cmd_parser import *
+
 
 def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
                      bdev_auto_examine=None, iobuf_small_cache_size=None,
@@ -569,16 +571,7 @@ def bdev_xnvme_delete(client, name):
     return client.call('bdev_xnvme_delete', params)
 
 
-def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeout_admin_us=None,
-                          keep_alive_timeout_ms=None, arbitration_burst=None,
-                          low_priority_weight=None, medium_priority_weight=None, high_priority_weight=None,
-                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
-                          delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None,
-                          transport_ack_timeout=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
-                          fast_io_fail_timeout_sec=None, disable_auto_failback=None, generate_uuids=None,
-                          transport_tos=None, nvme_error_stat=None, rdma_srq_size=None, io_path_stat=None,
-                          allow_accel_sequence=None, rdma_max_cq_size=None, rdma_cm_event_timeout_ms=None,
-                          dhchap_digests=None, dhchap_dhgroups=None, rdma_umr_per_io=None):
+def bdev_nvme_set_options(client, **params):
     """Set options for the bdev nvme. This is startup command.
     Args:
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
@@ -629,67 +622,10 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         dhchap_dhgroups: List of allowed DH-HMAC-CHAP DH groups. (optional)
         rdma_umr_per_io: Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system (optional).
     """
-    params = dict()
-    if action_on_timeout is not None:
-        params['action_on_timeout'] = action_on_timeout
-    if timeout_us is not None:
-        params['timeout_us'] = timeout_us
-    if timeout_admin_us is not None:
-        params['timeout_admin_us'] = timeout_admin_us
-    if keep_alive_timeout_ms is not None:
-        params['keep_alive_timeout_ms'] = keep_alive_timeout_ms
-    if arbitration_burst is not None:
-        params['arbitration_burst'] = arbitration_burst
-    if low_priority_weight is not None:
-        params['low_priority_weight'] = low_priority_weight
-    if medium_priority_weight is not None:
-        params['medium_priority_weight'] = medium_priority_weight
-    if high_priority_weight is not None:
-        params['high_priority_weight'] = high_priority_weight
-    if nvme_adminq_poll_period_us is not None:
-        params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
-    if nvme_ioq_poll_period_us is not None:
-        params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
-    if io_queue_requests is not None:
-        params['io_queue_requests'] = io_queue_requests
-    if delay_cmd_submit is not None:
-        params['delay_cmd_submit'] = delay_cmd_submit
-    if transport_retry_count is not None:
-        params['transport_retry_count'] = transport_retry_count
-    if bdev_retry_count is not None:
-        params['bdev_retry_count'] = bdev_retry_count
-    if transport_ack_timeout is not None:
-        params['transport_ack_timeout'] = transport_ack_timeout
-    if ctrlr_loss_timeout_sec is not None:
-        params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
-    if reconnect_delay_sec is not None:
-        params['reconnect_delay_sec'] = reconnect_delay_sec
-    if fast_io_fail_timeout_sec is not None:
-        params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
-    if disable_auto_failback is not None:
-        params['disable_auto_failback'] = disable_auto_failback
-    if generate_uuids is not None:
-        params['generate_uuids'] = generate_uuids
-    if transport_tos is not None:
-        params['transport_tos'] = transport_tos
-    if nvme_error_stat is not None:
-        params['nvme_error_stat'] = nvme_error_stat
-    if rdma_srq_size is not None:
-        params['rdma_srq_size'] = rdma_srq_size
-    if io_path_stat is not None:
-        params['io_path_stat'] = io_path_stat
-    if allow_accel_sequence is not None:
-        params['allow_accel_sequence'] = allow_accel_sequence
-    if rdma_max_cq_size is not None:
-        params['rdma_max_cq_size'] = rdma_max_cq_size
-    if rdma_cm_event_timeout_ms is not None:
-        params['rdma_cm_event_timeout_ms'] = rdma_cm_event_timeout_ms
-    if dhchap_digests is not None:
-        params['dhchap_digests'] = dhchap_digests
-    if dhchap_dhgroups is not None:
-        params['dhchap_dhgroups'] = dhchap_dhgroups
-    if rdma_umr_per_io is not None:
-        params['rdma_umr_per_io'] = rdma_umr_per_io
+
+    strip_globals(params)
+    remove_null(params)
+
     return client.call('bdev_nvme_set_options', params)
 
 
