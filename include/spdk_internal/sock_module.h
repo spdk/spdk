@@ -406,6 +406,8 @@ int spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 /**
  * Connects the socket to the address.
  *
+ * On success O_NONBLOCK is cleared otherwise property value is undefined.
+ *
  * \return 0 on success, -1 on failure, 1 to retry with different address if available.
  */
 int spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts);

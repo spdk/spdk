@@ -467,18 +467,16 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 	const char *src_addr;
 	uint16_t src_port;
 	struct addrinfo hints, *src_ai;
-	int rc, err, flag;
+	int rc, err;
 	struct pollfd pfd = {.fd = fd, .events = POLLOUT};
 	socklen_t len = sizeof(err);
-	bool nonblock;
 
-	flag = fcntl(fd, F_GETFL);
-	if (flag < 0) {
-		SPDK_ERRLOG("fcntl can't get file status flag, fd: %d (%s)\n", fd, spdk_strerror(errno));
+	/* Socket address may be not assigned immediately during bind() and
+	 * can return EINPROGRESS if function is invoked with O_NONBLOCK set. */
+	if (spdk_fd_clear_nonblock(fd)) {
 		return -1;
 	}
 
-	nonblock = flag & O_NONBLOCK;
 	src_addr = SPDK_GET_FIELD(opts, src_addr, NULL, opts->opts_size);
 	src_port = SPDK_GET_FIELD(opts, src_port, 0, opts->opts_size);
 	if (src_addr != NULL || src_port != 0) {
@@ -503,7 +501,7 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		freeaddrinfo(src_ai);
 	}
 
-	if (!nonblock && spdk_fd_set_nonblock(fd)) {
+	if (spdk_fd_set_nonblock(fd)) {
 		return -1;
 	}
 
@@ -541,7 +539,7 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		return 1;
 	}
 
-	if (!nonblock && spdk_fd_clear_nonblock(fd)) {
+	if (spdk_fd_clear_nonblock(fd)) {
 		return -1;
 	}
 
