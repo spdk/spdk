@@ -456,7 +456,7 @@ posix_sock_init(struct spdk_posix_sock *sock, bool enable_zero_copy)
 }
 
 static struct spdk_posix_sock *
-posix_sock_alloc(int fd, struct spdk_sock_impl_opts *impl_opts, bool enable_zero_copy)
+posix_sock_alloc(int fd, struct spdk_sock_impl_opts *impl_opts)
 {
 	struct spdk_posix_sock *sock;
 
@@ -468,8 +468,6 @@ posix_sock_alloc(int fd, struct spdk_sock_impl_opts *impl_opts, bool enable_zero
 
 	sock->fd = fd;
 	memcpy(&sock->base.impl_opts, impl_opts, sizeof(*impl_opts));
-	posix_sock_init(sock, enable_zero_copy);
-
 	return sock;
 }
 
@@ -959,10 +957,7 @@ retry:
 		return NULL;
 	}
 
-	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	enable_zcopy_user_opts = opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl;
-
-	sock = posix_sock_alloc(fd, &impl_opts, enable_zcopy_user_opts && enable_zcopy_impl_opts);
+	sock = posix_sock_alloc(fd, &impl_opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		SSL_free(ssl);
@@ -980,6 +975,9 @@ retry:
 		SSL_set_app_data(ssl, &sock->base.impl_opts);
 	}
 
+	/* Only enable zero copy for non-loopback and non-ssl sockets. */
+	enable_zcopy_user_opts = opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl;
+	posix_sock_init(sock, enable_zcopy_user_opts && enable_zcopy_impl_opts);
 	return &sock->base;
 }
 
@@ -1059,8 +1057,7 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 		}
 	}
 
-	/* Inherit the zero copy feature from the listen socket */
-	new_sock = posix_sock_alloc(fd, &sock->base.impl_opts, sock->zcopy);
+	new_sock = posix_sock_alloc(fd, &sock->base.impl_opts);
 	if (new_sock == NULL) {
 		close(fd);
 		SSL_free(ssl);
@@ -1077,6 +1074,8 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 		SSL_set_app_data(ssl, &new_sock->base.impl_opts);
 	}
 
+	/* Inherit the zero copy feature from the listen socket */
+	posix_sock_init(new_sock, sock->zcopy);
 	return &new_sock->base;
 }
 
