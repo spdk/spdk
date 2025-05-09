@@ -7834,9 +7834,9 @@ test_io_path_is_current(void)
 
 	CU_ASSERT(nvme_io_path_is_current(&io_path2) == true);
 
-	/* active/passive: current is true if it is the first one when there is no optimized path. */
+	/* active/passive: current is true if it is available. We do not care even if it is not ANA optimized. */
 	nbdev_ch.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
-	nbdev_ch.current_io_path = NULL;
+	nbdev_ch.current_io_path = &io_path1;
 
 	CU_ASSERT(nvme_io_path_is_current(&io_path1) == true);
 	CU_ASSERT(nvme_io_path_is_current(&io_path2) == false);

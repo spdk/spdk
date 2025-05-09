@@ -1175,12 +1175,11 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 		io_path = nvme_io_path_get_next(nbdev_ch, io_path);
 	} while (io_path != start);
 
-	if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
-		/* We come here only if there is no optimized path. Cache even non_optimized
-		 * path for load balance across multiple non_optimized paths.
-		 */
-		nbdev_ch->current_io_path = non_optimized;
-	}
+	/* We come here only if there is no optimized path. Cache even non_optimized
+	 * path. If any path becomes optimized, ANA event will be received and
+	 * cache will be cleared.
+	 */
+	nbdev_ch->current_io_path = non_optimized;
 
 	return non_optimized;
 }
@@ -9152,22 +9151,7 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 		current = (io_path->nvme_ns->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE) ||
 			  (optimized_io_path == NULL);
 	} else {
-		if (nbdev_ch->current_io_path) {
-			current = (io_path == nbdev_ch->current_io_path);
-		} else {
-			struct nvme_io_path *first_path;
-
-			/* We arrived here as there are no optimized paths for active-passive
-			 * mode. Check if this io_path is the first one available on the list.
-			 */
-			current = false;
-			STAILQ_FOREACH(first_path, &nbdev_ch->io_path_list, stailq) {
-				if (nvme_io_path_is_available(first_path)) {
-					current = (io_path == first_path);
-					break;
-				}
-			}
-		}
+		current = (io_path == nbdev_ch->current_io_path);
 	}
 
 	return current;
