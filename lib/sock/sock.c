@@ -460,9 +460,6 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	return fd;
 }
 
-
-/* Returns 0 on success, -1 on failure, 1 to retry with different address if available.
- * If block set to false it can return -EAGAIN to retry later. */
 static int
 sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts, bool block)
 {
@@ -515,7 +512,13 @@ sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts, bool block)
 }
 
 int
-spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts)
+spdk_sock_posix_fd_connect_poll_async(int fd)
+{
+	return sock_posix_fd_connect_poll(fd, NULL, false);
+}
+
+static int
+sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts, bool block)
 {
 	char portnum[PORTNUMLEN];
 	const char *src_addr;
@@ -563,7 +566,11 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		return 1;
 	}
 
-	rc = sock_posix_fd_connect_poll(fd, opts, true);
+	if (!block) {
+		return 0;
+	}
+
+	rc = sock_posix_fd_connect_poll(fd, opts, block);
 	if (rc) {
 		return rc;
 	}
@@ -573,6 +580,18 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 	}
 
 	return 0;
+}
+
+int
+spdk_sock_posix_fd_connect_async(int fd, struct addrinfo *res, struct spdk_sock_opts *opts)
+{
+	return sock_posix_fd_connect(fd, res, opts, false);
+}
+
+int
+spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts)
+{
+	return sock_posix_fd_connect(fd, res, opts, true);
 }
 
 struct spdk_sock *
