@@ -273,11 +273,6 @@ posix_sock_get_numa_id(struct spdk_sock *sock)
 	}
 }
 
-enum posix_sock_create_type {
-	SPDK_SOCK_CREATE_LISTEN,
-	SPDK_SOCK_CREATE_CONNECT,
-};
-
 static int
 posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 {
@@ -845,17 +840,95 @@ SSL_writev(SSL *ssl, struct iovec *iov, int iovcnt)
 }
 
 static struct spdk_sock *
-posix_sock_create(const char *ip, int port,
-		  enum posix_sock_create_type type,
-		  struct spdk_sock_opts *opts,
-		  bool enable_ssl)
+_posix_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts, bool enable_ssl)
 {
-	struct spdk_posix_sock *sock;
 	struct spdk_sock_impl_opts impl_opts;
-	struct addrinfo *res, *res0;
-	int fd, rc;
-	bool enable_zcopy_user_opts = true;
-	bool enable_zcopy_impl_opts = true;
+	struct spdk_posix_sock *sock;
+	struct addrinfo *res0;
+	int rc, fd = -1;
+
+	assert(opts != NULL);
+	if (enable_ssl) {
+		_opts_get_impl_opts(opts, &impl_opts, &g_ssl_impl_opts);
+	} else {
+		_opts_get_impl_opts(opts, &impl_opts, &g_posix_impl_opts);
+	}
+
+	res0 = spdk_sock_posix_getaddrinfo(ip, port);
+	if (!res0) {
+		return NULL;
+	}
+
+	for (struct addrinfo *res = res0; res != NULL; res = res->ai_next) {
+retry:
+		fd = spdk_sock_posix_fd_create(res, opts, &impl_opts);
+		if (fd < 0) {
+			continue;
+		}
+
+		rc = bind(fd, res->ai_addr, res->ai_addrlen);
+		if (rc != 0) {
+			SPDK_ERRLOG("bind() failed at port %d, errno = %d\n", port, errno);
+			switch (errno) {
+			case EINTR:
+				/* interrupted? */
+				close(fd);
+				goto retry;
+			case EADDRNOTAVAIL:
+				SPDK_ERRLOG("IP address %s not available. "
+					    "Verify IP address in config file "
+					    "and make sure setup script is "
+					    "run before starting spdk app.\n", ip);
+			/* FALLTHROUGH */
+			default:
+				/* try next family */
+				close(fd);
+				fd = -1;
+				continue;
+			}
+		}
+
+		rc = listen(fd, 512);
+		if (rc != 0) {
+			SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
+			close(fd);
+			fd = -1;
+			break;
+		}
+
+		if (spdk_fd_set_nonblock(fd)) {
+			close(fd);
+			fd = -1;
+			break;
+		}
+
+		break;
+	}
+
+	freeaddrinfo(res0);
+	if (fd < 0) {
+		return NULL;
+	}
+
+	sock = posix_sock_alloc(fd, &impl_opts);
+	if (sock == NULL) {
+		close(fd);
+		return NULL;
+	}
+
+	/* Only enable zero copy for non-loopback and non-ssl sockets. */
+	posix_sock_init(sock, opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl &&
+			impl_opts.enable_zerocopy_send_server);
+	return &sock->base;
+}
+
+static struct spdk_sock *
+_posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool enable_ssl)
+{
+	struct spdk_sock_impl_opts impl_opts;
+	struct spdk_posix_sock *sock;
+	struct addrinfo *res0;
+	int rc, fd = -1;
 	SSL_CTX *ctx = 0;
 	SSL *ssl = 0;
 
@@ -871,74 +944,39 @@ posix_sock_create(const char *ip, int port,
 		return NULL;
 	}
 
-	/* try listen */
-	fd = -1;
-	for (res = res0; res != NULL; res = res->ai_next) {
-retry:
+	for (struct addrinfo *res = res0; res != NULL; res = res->ai_next) {
 		fd = spdk_sock_posix_fd_create(res, opts, &impl_opts);
 		if (fd < 0) {
 			continue;
 		}
-		if (type == SPDK_SOCK_CREATE_LISTEN) {
-			rc = bind(fd, res->ai_addr, res->ai_addrlen);
-			if (rc != 0) {
-				SPDK_ERRLOG("bind() failed at port %d, errno = %d\n", port, errno);
-				switch (errno) {
-				case EINTR:
-					/* interrupted? */
-					close(fd);
-					goto retry;
-				case EADDRNOTAVAIL:
-					SPDK_ERRLOG("IP address %s not available. "
-						    "Verify IP address in config file "
-						    "and make sure setup script is "
-						    "run before starting spdk app.\n", ip);
-				/* FALLTHROUGH */
-				default:
-					/* try next family */
-					close(fd);
-					fd = -1;
-					continue;
-				}
+
+		rc = spdk_sock_posix_fd_connect(fd, res, opts);
+		if (rc != 0) {
+			close(fd);
+			fd = -1;
+			if (rc == 1) {
+				continue;
+			} else {
+				break;
 			}
-			/* bind OK */
-			rc = listen(fd, 512);
-			if (rc != 0) {
-				SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
+		}
+
+		if (enable_ssl) {
+			ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
+			if (!ctx) {
+				SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
 				close(fd);
 				fd = -1;
 				break;
 			}
-			enable_zcopy_impl_opts = impl_opts.enable_zerocopy_send_server;
-		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-			rc = spdk_sock_posix_fd_connect(fd, res, opts);
-			if (rc != 0) {
+
+			ssl = ssl_sock_setup_connect(ctx, fd);
+			if (!ssl) {
+				SPDK_ERRLOG("ssl_sock_setup_connect() failed, errno = %d\n", errno);
+				SSL_CTX_free(ctx);
 				close(fd);
 				fd = -1;
-				if (rc == 1) {
-					continue;
-				} else {
-					break;
-				}
-			}
-
-			enable_zcopy_impl_opts = impl_opts.enable_zerocopy_send_client;
-			if (enable_ssl) {
-				ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
-				if (!ctx) {
-					SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
-					close(fd);
-					fd = -1;
-					break;
-				}
-				ssl = ssl_sock_setup_connect(ctx, fd);
-				if (!ssl) {
-					SPDK_ERRLOG("ssl_sock_setup_connect() failed, errno = %d\n", errno);
-					close(fd);
-					fd = -1;
-					SSL_CTX_free(ctx);
-					break;
-				}
+				break;
 			}
 		}
 
@@ -949,17 +987,17 @@ retry:
 			fd = -1;
 			break;
 		}
+
 		break;
 	}
-	freeaddrinfo(res0);
 
+	freeaddrinfo(res0);
 	if (fd < 0) {
 		return NULL;
 	}
 
 	sock = posix_sock_alloc(fd, &impl_opts);
 	if (sock == NULL) {
-		SPDK_ERRLOG("sock allocation failed\n");
 		SSL_free(ssl);
 		SSL_CTX_free(ctx);
 		close(fd);
@@ -976,21 +1014,21 @@ retry:
 	}
 
 	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	enable_zcopy_user_opts = opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl;
-	posix_sock_init(sock, enable_zcopy_user_opts && enable_zcopy_impl_opts);
+	posix_sock_init(sock, opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl &&
+			impl_opts.enable_zerocopy_send_client);
 	return &sock->base;
 }
 
 static struct spdk_sock *
 posix_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return posix_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts, false);
+	return _posix_sock_listen(ip, port, opts, false);
 }
 
 static struct spdk_sock *
 posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return posix_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts, false);
+	return _posix_sock_connect(ip, port, opts, false);
 }
 
 static struct spdk_sock *
@@ -2138,13 +2176,13 @@ SPDK_NET_IMPL_REGISTER_DEFAULT(posix, &g_posix_net_impl);
 static struct spdk_sock *
 ssl_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return posix_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts, true);
+	return _posix_sock_listen(ip, port, opts, true);
 }
 
 static struct spdk_sock *
 ssl_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return posix_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts, true);
+	return _posix_sock_connect(ip, port, opts, true);
 }
 
 static struct spdk_sock *
