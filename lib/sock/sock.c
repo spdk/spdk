@@ -461,15 +461,16 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 }
 
 
-/* Returns 0 on success, -1 on failure, 1 to retry with different address if available. */
+/* Returns 0 on success, -1 on failure, 1 to retry with different address if available.
+ * If block set to false it can return -EAGAIN to retry later. */
 static int
-sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts)
+sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts, bool block)
 {
 	int rc, err, timeout = 0;
 	struct pollfd pfd = {.fd = fd, .events = POLLOUT};
 	socklen_t len = sizeof(err);
 
-	if (opts) {
+	if (opts && block) {
 		assert(opts->connect_timeout <= INT_MAX);
 		timeout = opts->connect_timeout ? (int)opts->connect_timeout : -1;
 	}
@@ -481,8 +482,12 @@ sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts)
 	}
 
 	if (rc == 0) {
-		SPDK_ERRLOG("poll() timeout after %d ms\n", timeout);
-		return -1;
+		if (block) {
+			SPDK_ERRLOG("poll() timeout after %d ms\n", timeout);
+			return -1;
+		}
+
+		return -EAGAIN;
 	}
 
 	rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
@@ -558,7 +563,7 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		return 1;
 	}
 
-	rc = sock_posix_fd_connect_poll(fd, opts);
+	rc = sock_posix_fd_connect_poll(fd, opts, true);
 	if (rc) {
 		return rc;
 	}
