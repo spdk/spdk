@@ -460,6 +460,55 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	return fd;
 }
 
+
+/* Returns 0 on success, -1 on failure, 1 to retry with different address if available. */
+static int
+sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts)
+{
+	int rc, err, timeout = 0;
+	struct pollfd pfd = {.fd = fd, .events = POLLOUT};
+	socklen_t len = sizeof(err);
+
+	if (opts) {
+		assert(opts->connect_timeout <= INT_MAX);
+		timeout = opts->connect_timeout ? (int)opts->connect_timeout : -1;
+	}
+
+	rc = poll(&pfd, 1, timeout);
+	if (rc < 0) {
+		SPDK_ERRLOG("poll() failed, errno = %d\n", errno);
+		return -1;
+	}
+
+	if (rc == 0) {
+		SPDK_ERRLOG("poll() timeout after %d ms\n", timeout);
+		return -1;
+	}
+
+	rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
+	if (rc != 0) {
+		SPDK_ERRLOG("getsockopt() failed, errno = %d\n", errno);
+		return -1;
+	}
+
+	if (err) {
+		SPDK_ERRLOG("connect() failed, err = %d\n", err);
+		return 1;
+	}
+
+	if (!(pfd.revents & POLLOUT)) {
+		SPDK_ERRLOG("poll() returned %d event(s) %s%s%sbut not POLLOUT\n", rc,
+			    pfd.revents & POLLERR ? "POLLERR, " : "", pfd.revents & POLLHUP ? "POLLHUP, " : "",
+			    pfd.revents & POLLNVAL ? "POLLNVAL, " : "");
+	}
+
+	if (!(pfd.revents & POLLOUT)) {
+		return -1;
+	}
+
+	return 0;
+}
+
 int
 spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts)
 {
@@ -467,9 +516,7 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 	const char *src_addr;
 	uint16_t src_port;
 	struct addrinfo hints, *src_ai;
-	int rc, err;
-	struct pollfd pfd = {.fd = fd, .events = POLLOUT};
-	socklen_t len = sizeof(err);
+	int rc;
 
 	/* Socket address may be not assigned immediately during bind() and
 	 * can return EINPROGRESS if function is invoked with O_NONBLOCK set. */
@@ -511,34 +558,9 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		return 1;
 	}
 
-	assert(opts->connect_timeout <= INT_MAX);
-	rc = poll(&pfd, 1, opts->connect_timeout ? (int)opts->connect_timeout : -1);
-	if (rc < 0) {
-		SPDK_ERRLOG("poll() failed, errno = %d\n", errno);
-		return -1;
-	}
-
-	if (rc == 0) {
-		SPDK_ERRLOG("poll() timeout after %d ms\n", opts->connect_timeout);
-		return -1;
-	}
-
-	rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
-	if (rc != 0) {
-		SPDK_ERRLOG("getsockopt() failed, errno = %d\n", errno);
-		return -1;
-	}
-
-	if (err) {
-		SPDK_ERRLOG("connect() failed, err = %d\n", err);
-		return 1;
-	}
-
-	if (!(pfd.revents & POLLOUT)) {
-		SPDK_ERRLOG("poll() returned %d event(s) %s%s%sbut not POLLOUT\n", rc,
-			    pfd.revents & POLLERR ? "POLLERR, " : "", pfd.revents & POLLHUP ? "POLLHUP, " : "",
-			    pfd.revents & POLLNVAL ? "POLLNVAL, " : "");
-		return -1;
+	rc = sock_posix_fd_connect_poll(fd, opts);
+	if (rc) {
+		return rc;
 	}
 
 	if (spdk_fd_clear_nonblock(fd)) {
