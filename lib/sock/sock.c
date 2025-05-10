@@ -607,13 +607,16 @@ spdk_sock_connect(const char *ip, int port, const char *impl_name)
 	return spdk_sock_connect_ext(ip, port, impl_name, &opts);
 }
 
-struct spdk_sock *
-spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
+static struct spdk_sock *
+sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts,
+		 bool async, spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
 	const char *impl_name = NULL;
+
+	assert(async || (!cb_fn && !cb_arg));
 
 	if (opts == NULL) {
 		SPDK_ERRLOG("the opts should not be NULL pointer\n");
@@ -644,7 +647,12 @@ spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct s
 		return NULL;
 	}
 
-	sock = impl->connect(ip, port, &opts_local);
+	if (async && impl->connect_async) {
+		sock = impl->connect_async(ip, port, &opts_local, cb_fn, cb_arg);
+	} else {
+		sock = impl->connect(ip, port, &opts_local);
+	}
+
 	if (!sock) {
 		return NULL;
 	}
@@ -657,7 +665,26 @@ spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct s
 	sock->net_impl = impl;
 	TAILQ_INIT(&sock->queued_reqs);
 	TAILQ_INIT(&sock->pending_reqs);
+
+	/* Invoke cb_fn only in case of fallback to sync version. */
+	if (cb_fn && async && !impl->connect_async) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return sock;
+}
+
+struct spdk_sock *
+spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
+{
+	return sock_connect_ext(ip, port, _impl_name, opts, false, NULL, NULL);
+}
+
+struct spdk_sock *
+spdk_sock_connect_async(const char *ip, int port, const char *_impl_name,
+			struct spdk_sock_opts *opts, spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
+{
+	return sock_connect_ext(ip, port, _impl_name, opts, true, cb_fn, cb_arg);
 }
 
 struct spdk_sock *

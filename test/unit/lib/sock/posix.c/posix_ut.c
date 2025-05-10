@@ -48,7 +48,7 @@ static void
 flush(void)
 {
 	struct spdk_posix_sock_group_impl group = {};
-	struct spdk_posix_sock psock = {};
+	struct spdk_posix_sock psock = {.ready = true};
 	struct spdk_sock *sock = &psock.base;
 	struct spdk_sock_request *req1, *req2;
 	bool cb_arg1, cb_arg2;
@@ -179,7 +179,7 @@ flush_req_chunks_with_zero_copy_threshold(void)
 	struct spdk_sock_impl_opts impl_opts = { .zerocopy_threshold = 50 };
 	struct spdk_posix_sock_group_impl group = {};
 	struct spdk_sock_request *req;
-	struct spdk_posix_sock psock = {};
+	struct spdk_posix_sock psock = {.ready = true};
 	struct spdk_sock *sock;
 	bool req_completed;
 	int rc;
@@ -240,7 +240,7 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	struct spdk_sock_impl_opts impl_opts = { .zerocopy_threshold = 50 };
 	struct spdk_posix_sock_group_impl group = {};
 	struct spdk_sock_request *req1, *req2;
-	struct spdk_posix_sock psock = {};
+	struct spdk_posix_sock psock = {.ready = true};
 	struct spdk_sock *sock;
 	bool req1_completed, req2_completed;
 	int rc;

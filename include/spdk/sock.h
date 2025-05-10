@@ -275,6 +275,8 @@ void spdk_sock_get_default_opts(struct spdk_sock_opts *opts);
 /**
  * Get client and server addresses of the given socket.
  *
+ * This function is allowed only when connection is established.
+ *
  * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
  * This function will return negative errno values instead.
  *
@@ -327,6 +329,41 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port, const char *impl_n
  */
 struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, const char *impl_name,
 					struct spdk_sock_opts *opts);
+
+/**
+ * Signature for callback function invoked when a connection is completed.
+ *
+ * \param cb_arg Context specified by \ref spdk_sock_connect_async.
+ * \param status 0 on success, negative errno value on failure.
+ */
+typedef void (*spdk_sock_connect_cb_fn)(void *cb_arg, int status);
+
+/**
+ * Create a socket using the specific sock implementation, initiate the socket connection
+ * to the specified address and port (of the server), and then return the socket.
+ * This function is used by client.
+ *
+ * Not every function with sock object on the interface is allowed if the conncection is not
+ * established. In order to determine connection status use \p cb_fn. Functions taking sock
+ * object as an input may return EAGAIN to indicate connection is in progress or other
+ * errno values if connection failed.
+ *
+ * Callback function \p cb_fn is invoked only if this function returns a non-NULL value.
+ * However, if async connect is not supported by the \p impl_name it fallbacks to the sync
+ * version and \p cb_fn will be invoked only if sync connect is successful and before
+ * returning control to the the user.
+ *
+ * \param ip IP address of the server.
+ * \param port Port number of the server.
+ * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
+ * \param opts The sock option pointer provided by the user which should not be NULL pointer.
+ * \param cb_fn Callback function invoked when the connection attempt is completed. (optional)
+ * \param cb_arg Argument passed to callback function. (optional)
+ *
+ * \return a pointer to the socket on success, or NULL on failure.
+ */
+struct spdk_sock *spdk_sock_connect_async(const char *ip, int port, const char *impl_name,
+		struct spdk_sock_opts *opts, spdk_sock_connect_cb_fn cb_fn, void *cb_arg);
 
 /**
  * Create a socket using the specific sock implementation, bind the socket to
@@ -539,6 +576,8 @@ int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
 /**
  * Check whether the address of socket is ipv6.
  *
+ * This function is allowed only when connection is established.
+ *
  * \param sock Socket to check.
  *
  * \return true if the address of socket is ipv6, or false otherwise.
@@ -547,6 +586,8 @@ bool spdk_sock_is_ipv6(struct spdk_sock *sock);
 
 /**
  * Check whether the address of socket is ipv4.
+ *
+ * This function is allowed only when connection is established.
  *
  * \param sock Socket to check.
  *
@@ -670,6 +711,8 @@ int spdk_sock_group_close(struct spdk_sock_group **group);
 
 /**
  * Get the optimal sock group for this sock.
+ *
+ * This function is allowed only when connection is established.
  *
  * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
  * This function will return negative errno values instead.
