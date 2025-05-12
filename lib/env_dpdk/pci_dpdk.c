@@ -66,8 +66,9 @@ dpdk_pci_init(void)
 		/* There were no changes between 22.11 and 23.11, so use the 22.11 implementation. */
 		g_dpdk_fn_table = &fn_table_2211;
 	} else if (year == 24) {
-		/* Only 24.03.0 and 24.07.0 are supported. */
-		if ((month != 7 || minor != 0) &&
+		/* Only 24.11.0-2, 24.07.0 and 24.03.0 are supported. */
+		if ((month != 11 || minor > 2) &&
+		    (month != 7 || minor != 0) &&
 		    (month != 3 || minor != 0)) {
 			goto not_supported;
 		}
