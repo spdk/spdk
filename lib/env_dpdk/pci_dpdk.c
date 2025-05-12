@@ -32,7 +32,7 @@ dpdk_pci_init(void)
 	 * Only DPDK in development has additional suffix past minor version.
 	 */
 	if (strlen(release) != 0) {
-		if (year == 24 && month == 11 && minor == 0) {
+		if (year == 25 && month == 7 && minor == 0) {
 			g_dpdk_fn_table = &fn_table_2211;
 			SPDK_NOTICELOG("In-development %s is used. There is no support for it in SPDK. "
 				       "Enabled only for validation.\n", rte_version());
