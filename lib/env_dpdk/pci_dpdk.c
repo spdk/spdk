@@ -40,8 +40,8 @@ dpdk_pci_init(void)
 		}
 	}
 
-	/* Anything 25.x or higher is not supported. */
-	if (year >= 25) {
+	/* Anything 26.x or higher is not supported. */
+	if (year >= 26) {
 		goto not_supported;
 	}
 
@@ -72,6 +72,13 @@ dpdk_pci_init(void)
 			goto not_supported;
 		}
 		/* There were no changes between 22.11 and 24.*, so use the 22.11 implementation. */
+		g_dpdk_fn_table = &fn_table_2211;
+	} else if (year == 25) {
+		/* Only 25.03.0 is supported. */
+		if (month != 3 || minor != 0) {
+			goto not_supported;
+		}
+		/* There were no changes between 22.11 and 25.*, so use the 22.11 implementation. */
 		g_dpdk_fn_table = &fn_table_2211;
 	} else if (year < 21 || (year == 21 && month < 11)) {
 		goto not_supported;
