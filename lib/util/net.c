@@ -174,12 +174,14 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		return 0;
 	}
 
-	memset(&sa, 0, sizeof(sa));
-	len = sizeof(sa);
-	rc = getpeername(fd, (struct sockaddr *)&sa, &len);
-	if (rc != 0) {
-		SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
-		return -1;
+	if (paddr || pport) {
+		memset(&sa, 0, sizeof(sa));
+		len = sizeof(sa);
+		rc = getpeername(fd, (struct sockaddr *)&sa, &len);
+		if (rc != 0) {
+			SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
+			return -1;
+		}
 	}
 
 	if (paddr) {
