@@ -14,6 +14,8 @@ nvmfappstart --wait-for-rpc
 
 subnqn="nqn.2024-07.io.spdk:cnode0"
 perf="$SPDK_BIN_DIR/spdk_nvme_perf"
+perf_transport_opt="trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}"
+perf_opt=(-q 4 -o 131072 -w randread -r "$perf_transport_opt")
 
 # set the number of available small iobuf entries low enough to trigger buffer allocation retry scenario
 $rpc_py accel_set_options --small-cache-size 0 --large-cache-size 0
@@ -27,7 +29,7 @@ $rpc_py nvmf_subsystem_add_listener "$subnqn" -t "$TEST_TRANSPORT" -a "$NVMF_FIR
 
 # 131072 (io size) = 16*8192 (io_unit_size). We have 24 buffers available, so only the very first request can allocate
 # all required buffers at once, following requests must wait and go through the iobuf queuing scenario.
-$perf -q 4 -o 131072 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}"
+$perf "${perf_opt[@]}" -t 1
 
 retry_count=$($rpc_py iobuf_get_stats | jq -r '.[] | select(.module == "nvmf_TCP") | .small_pool.retry')
 if [[ $retry_count -eq 0 ]]; then
