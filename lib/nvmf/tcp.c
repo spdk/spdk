@@ -575,12 +575,9 @@ nvmf_tcp_request_get_buffers_abort(struct spdk_nvmf_tcp_req *tcp_req)
 }
 
 static void
-nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
+nvmf_tcp_abort_await_buffer_reqs(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
-
-	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
-	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
 	/* Wipe the requests waiting for buffer from the waiting list */
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->tcp_req_working_queue, state_link, req_tmp) {
@@ -588,7 +585,14 @@ nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 			nvmf_tcp_request_get_buffers_abort(tcp_req);
 		}
 	}
+}
 
+static void
+nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
+{
+	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
+	nvmf_tcp_abort_await_buffer_reqs(tqpair);
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_EXECUTING);
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
