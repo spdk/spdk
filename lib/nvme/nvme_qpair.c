@@ -765,9 +765,11 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	int32_t ret;
 	struct nvme_request *req, *tmp;
 
-	/* Complete any pending register operations */
 	if (nvme_qpair_is_admin_queue(qpair)) {
+		/* Complete any pending register operations */
 		nvme_complete_register_operations(qpair);
+		/* Process transport-specific events */
+		nvme_transport_ctrlr_process_transport_events(qpair->ctrlr);
 	}
 
 	if (spdk_unlikely(qpair->ctrlr->is_failed &&

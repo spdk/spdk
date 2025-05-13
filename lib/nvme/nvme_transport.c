@@ -614,6 +614,22 @@ nvme_transport_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+int
+nvme_transport_ctrlr_process_transport_events(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	int rc = 0;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_process_transport_events) {
+		nvme_ctrlr_lock(ctrlr);
+		rc = transport->ops.ctrlr_process_transport_events(ctrlr);
+		nvme_ctrlr_unlock(ctrlr);
+	}
+
+	return rc;
+}
+
 void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair)
 {

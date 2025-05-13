@@ -1715,6 +1715,7 @@ void nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr,
 void nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair);
 int nvme_transport_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_memory_domain **domains, int array_size);
+int nvme_transport_ctrlr_process_transport_events(struct spdk_nvme_ctrlr *ctrlr);
 void nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair);
 int nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair);
 int nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);

@@ -4699,6 +4699,9 @@ struct spdk_nvme_transport_ops {
 
 	/* Optional callback for transports to process removal events of attached controllers. */
 	int (*ctrlr_scan_attached)(struct spdk_nvme_probe_ctx *probe_ctx);
+
+	/* Optional callback for transports to process transport-specific events. E.g. poll RDMA_CM event channel */
+	int (*ctrlr_process_transport_events)(struct spdk_nvme_ctrlr *ctrlr);
 };
 
 /**
