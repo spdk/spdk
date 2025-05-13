@@ -252,9 +252,12 @@ uninstall:
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_socket.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_vt100.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_rdline.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_bool.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_string.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_etheraddr.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_ipaddr.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_num.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse.h
 	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/power_cpufreq.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/power_uncore_ops.h
