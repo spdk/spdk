@@ -210,7 +210,7 @@ nvme_auth_get_seqnum(struct spdk_nvme_qpair *qpair)
 }
 
 static int
-nvme_auth_transform_key(struct spdk_key *key, int hash, const char *nqn,
+nvme_auth_transform_key(struct spdk_key *key, uint32_t hash, const char *nqn,
 			const void *keyin, size_t keylen, void *out, size_t outlen)
 {
 	EVP_MAC *hmac = NULL;
@@ -279,7 +279,8 @@ nvme_auth_get_key(struct spdk_key *key, const char *nqn, void *buf, size_t bufle
 	char keystr[NVME_AUTH_CHAP_KEY_MAX_SIZE + 1] = {};
 	char keyb64[NVME_AUTH_CHAP_KEY_MAX_SIZE] = {};
 	char *tmp, *secret;
-	int rc, hash;
+	uint32_t hash;
+	int rc;
 	size_t keylen;
 
 	rc = spdk_key_get_key(key, keystr, NVME_AUTH_CHAP_KEY_MAX_SIZE);
