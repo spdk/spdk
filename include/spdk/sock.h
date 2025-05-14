@@ -426,11 +426,13 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 /**
  * Write message to the given socket from the I/O vector array.
  *
+ * On failure check errno matching EAGAIN to determine failure is retryable.
+ *
  * \param sock Socket to write to.
  * \param iov I/O vector.
  * \param iovcnt Number of I/O vectors in the array.
  *
- * \return the length of written message on success, -1 on failure.
+ * \return the length of written message on success, -1 on failure with errno set.
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
