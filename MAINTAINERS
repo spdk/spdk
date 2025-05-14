@@ -198,7 +198,9 @@ F:	module/event/subsystems/keyring/
 S:	Supported
 
 LINUX AIO BDEV MODULE
+M:	Jacek Kalwas <jacek.kalwas@nutanix.com>
 F:	module/bdev/aio/
+S:	Supported
 
 LOGGING LIBRARY
 F:	lib/log/
@@ -301,6 +303,7 @@ S:	Supported
 NVMF TARGET (CORE)
 M:	Jim Harris <jim.harris@nvidia.com>
 M:	Konrad Sztyber <ksztyber@nvidia.com>
+M:	Jacek Kalwas <jacek.kalwas@nutanix.com>
 F:	lib/nvmf/
 F:	app/nvmf_tgt/
 F:	module/event/subsystems/nvmf/
@@ -336,7 +339,9 @@ F:	lib/env_ocf/
 F:	module/bdev/ocf/
 
 POSIX SOCK MODULE
+M:	Jacek Kalwas <jacek.kalwas@nutanix.com>
 F:	module/sock/posix/
+S:	Supported
 
 RAID BDEV MODULE
 M:	Artur Paszkiewicz <artur.paszkiewicz@solidigm.com>
@@ -364,8 +369,15 @@ F:	module/event/subsystems/scsi/
 
 SOCKET LAYER
 M:	Ben Walker <ben@nvidia.com>
+M:	Jacek Kalwas <jacek.kalwas@nutanix.com>
 F:	lib/sock/
 F:	module/event/subsystems/sock/
+F:	include/spdk/sock.h
+F:	include/spdk_internal/sock.h
+F:	examples/sock/
+F:	test/iscsi_tgt/sock/
+F:	test/unit/lib/sock/
+S:	Supported
 
 SPDK COMBINED TARGET APPLICATION
 F:	app/spdk_tgt/
