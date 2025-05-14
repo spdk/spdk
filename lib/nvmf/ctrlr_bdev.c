@@ -348,11 +348,11 @@ nvmf_bdev_ctrlr_io_cancel_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *des
 	cpl->num_deferred = 0;
 	bool qp_found = false;
 	int rc = 0;
-	/*if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_IO_CANCEL)) {
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_IO_CANCEL)) {
 			response->status.sct = SPDK_NVME_SCT_GENERIC;
 			response->status.sc = SPDK_NVME_SC_SUCCESS;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}*/
+	}
 	SPDK_ERRLOG("IO cancel command started: action %d cid %d , qid %d\n",action, cid, sqid);
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
 		SPDK_ERRLOG("IO cancel command found : qid %d, ctrl %p, req->ctrl %p\n", qpair->qid, qpair->ctrlr, req->qpair->ctrlr);
