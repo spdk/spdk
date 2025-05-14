@@ -1322,13 +1322,17 @@ posix_sock_flush(struct spdk_sock *sock)
 {
 #ifdef SPDK_ZEROCOPY
 	struct spdk_posix_sock *psock = __posix_sock(sock);
-	int rc;
+	int rc, _errno;
 
 	rc = _sock_flush(sock);
+	_errno = errno;
+
 	if (psock->zcopy && !TAILQ_EMPTY(&sock->pending_reqs)) {
 		_sock_check_zcopy(sock);
 	}
 
+	/* Restore errno to prevent potential change when executing zcopy check. */
+	errno = _errno;
 	return rc;
 #else
 	return _sock_flush(sock);
