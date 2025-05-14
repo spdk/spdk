@@ -11,6 +11,7 @@ DEFINE_STUB(spdk_json_write_begin, struct spdk_json_write_ctx *, (spdk_json_writ
 		void *cb_ctx, uint32_t flags), NULL);
 
 DEFINE_STUB(spdk_json_write_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB_V(spdk_json_write_reset, (struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
 DEFINE_STUB(spdk_json_write_uint8, int, (struct spdk_json_write_ctx *w, uint8_t val), 0);

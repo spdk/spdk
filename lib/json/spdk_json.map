@@ -29,6 +29,7 @@
 
 	spdk_json_write_begin;
 	spdk_json_write_end;
+	spdk_json_write_reset;
 	spdk_json_write_null;
 	spdk_json_write_bool;
 	spdk_json_write_uint8;

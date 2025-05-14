@@ -87,6 +87,20 @@ spdk_json_write_end(struct spdk_json_write_ctx *w)
 	return failed ? -1 : 0;
 }
 
+void
+spdk_json_write_reset(struct spdk_json_write_ctx *w)
+{
+	if (w == NULL) {
+		return;
+	}
+
+	w->buf_filled = 0;
+	w->failed = false;
+	w->first_value = true;
+	w->new_indent = false;
+	w->indent = 0;
+}
+
 static inline int
 emit(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {

@@ -12,6 +12,8 @@
 
 #include "spdk/util.h"
 
+#define UT_UUID "e524acae-8c26-43e4-882a-461b8690583b"
+
 static uint8_t g_buf[1000];
 static uint8_t *g_write_pos;
 
@@ -55,6 +57,9 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 
 #define END_FAIL() \
 	CU_ASSERT(spdk_json_write_end(w) < 0)
+
+#define RESET() \
+	spdk_json_write_reset(w)
 
 #define VAL_STRING(str) \
 	CU_ASSERT(spdk_json_write_string_raw(w, str, sizeof(str) - 1) == 0)
@@ -555,7 +560,6 @@ test_write_number_double(void)
 static void
 test_write_uuid(void)
 {
-#define UT_UUID "e524acae-8c26-43e4-882a-461b8690583b"
 	struct spdk_json_write_ctx *w;
 	struct spdk_uuid uuid;
 	int rc;
@@ -863,6 +867,35 @@ test_write_val(void)
 	END("{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}");
 }
 
+/* Write reset test */
+static void
+test_write_reset(void)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_uuid uuid;
+	int rc;
+
+	rc = spdk_uuid_parse(&uuid, UT_UUID);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	BEGIN();
+	RESET();
+	VAL_INT32(1234);
+	END_SIZE("1234", 4);
+
+	BEGIN();
+	VAL_STRING("http://www.example.com/image/481989943");
+	RESET();
+	VAL_INT32(2345);
+	END_SIZE("2345", 4);
+
+	BEGIN();
+	VAL_UUID(&uuid);
+	RESET();
+	VAL_INT64(34567890);
+	END_SIZE("34567890", 8);
+}
+
 static void
 test_object_end_fail(void)
 {
@@ -900,6 +933,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_write_object);
 	CU_ADD_TEST(suite, test_write_nesting);
 	CU_ADD_TEST(suite, test_write_val);
+	CU_ADD_TEST(suite, test_write_reset);
 	CU_ADD_TEST(suite, test_object_end_fail);
 
 
