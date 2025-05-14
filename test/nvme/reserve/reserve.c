@@ -398,14 +398,40 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	fprintf(stdout, "Reservation type                                %u\n", status->rtype);
 	fprintf(stdout, "Reservation Number of Registered Controllers    %u\n", status->regctl);
 	fprintf(stdout, "Reservation Persist Through Power Loss State    %u\n", status->ptpls);
-	for (i = 0; i < status->regctl; i++) {
-		cdata = (struct spdk_nvme_registered_ctrlr_data *)(payload +
-				sizeof(struct spdk_nvme_reservation_status_data) +
-				sizeof(struct spdk_nvme_registered_ctrlr_data) * i);
-		fprintf(stdout, "Controller ID                           %u\n", cdata->cntlid);
-		fprintf(stdout, "Controller Reservation Status           %u\n", cdata->rcsts.status);
-		fprintf(stdout, "Controller Host ID                      0x%"PRIx64"\n", cdata->hostid);
-		fprintf(stdout, "Controller Reservation Key              0x%"PRIx64"\n", cdata->rkey);
+
+	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.bits.host_id_exhid_supported) {
+		struct spdk_nvme_reservation_status_extended_data *ext_status;
+
+		ext_status = (struct spdk_nvme_reservation_status_extended_data *)payload;
+		for (i = 0; i < ext_status->data.regctl; i++) {
+			struct spdk_nvme_registered_ctrlr_extended_data *ext_cdata;
+
+			ext_cdata = (struct spdk_nvme_registered_ctrlr_extended_data *)(payload +
+					sizeof(struct spdk_nvme_reservation_status_extended_data) +
+					sizeof(struct spdk_nvme_registered_ctrlr_extended_data) * i);
+			fprintf(stdout, "Controller ID                           %u\n",
+				ext_cdata->cntlid);
+			fprintf(stdout, "Controller Reservation Status           %u\n",
+				ext_cdata->rcsts.status);
+			fprintf(stdout, "Controller Reservation Key              0x%"PRIx64"\n",
+				ext_cdata->rkey);
+			spdk_log_dump(stdout, "Controller Host ID                     ",
+				      ext_cdata->hostid, 16);
+		}
+	} else {
+		for (i = 0; i < status->regctl; i++) {
+			cdata = (struct spdk_nvme_registered_ctrlr_data *)(payload +
+					sizeof(struct spdk_nvme_reservation_status_data) +
+					sizeof(struct spdk_nvme_registered_ctrlr_data) * i);
+			fprintf(stdout, "Controller ID                           %u\n",
+				cdata->cntlid);
+			fprintf(stdout, "Controller Reservation Status           %u\n",
+				cdata->rcsts.status);
+			fprintf(stdout, "Controller Host ID                      0x%"PRIx64"\n",
+				cdata->hostid);
+			fprintf(stdout, "Controller Reservation Key              0x%"PRIx64"\n",
+				cdata->rkey);
+		}
 	}
 
 	spdk_dma_free(payload);
