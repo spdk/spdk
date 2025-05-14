@@ -3489,7 +3489,7 @@ nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	}
 	TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
 
-	/* Try to force out any pending writes */
+	/* Try to force out any pending writes, intentionally do not check rc as it is best effort try. */
 	spdk_sock_flush(tqpair->sock);
 
 	rc = spdk_sock_group_remove_sock(tgroup->sock_group, tqpair->sock);
