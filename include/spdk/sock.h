@@ -413,11 +413,13 @@ int spdk_sock_flush(struct spdk_sock *sock);
 /**
  * Receive a message from the given socket.
  *
+ * On failure check errno matching EAGAIN to determine failure is retryable.
+ *
  * \param sock Socket to receive message.
  * \param buf Pointer to a buffer to hold the data.
  * \param len Length of the buffer.
  *
- * \return the length of the received message on success, -1 on failure.
+ * \return the length of the received message on success, -1 on failure with errno set.
  */
 ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 
@@ -468,6 +470,8 @@ ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
  *
  * This code path will only work if the recvbuf is disabled. To disable
  * the recvbuf, call spdk_sock_set_recvbuf with a size of 0.
+ *
+ * On failure check errno matching EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to receive from.
  * \param buf Populated with the next portion of the stream
