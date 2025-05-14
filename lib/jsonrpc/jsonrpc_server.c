@@ -391,11 +391,22 @@ spdk_jsonrpc_send_bool_response(struct spdk_jsonrpc_request *request, bool value
 	spdk_jsonrpc_end_result(request, w);
 }
 
+static void
+jsonrpc_reset_response(struct spdk_jsonrpc_request *request)
+{
+	spdk_json_write_reset(request->response);
+	request->send_len = 0; /* to skip all previous data previously written by jsonrpc_server_write_cb */
+}
+
 void
 spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
-	struct spdk_json_write_ctx *w = begin_response(request);
+	struct spdk_json_write_ctx *w;
+
+	jsonrpc_reset_response(request);
+
+	w = begin_response(request);
 
 	spdk_json_write_named_object_begin(w, "error");
 	spdk_json_write_named_int32(w, "code", error_code);
@@ -409,8 +420,12 @@ void
 spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 				     int error_code, const char *fmt, ...)
 {
-	struct spdk_json_write_ctx *w = begin_response(request);
+	struct spdk_json_write_ctx *w;
 	va_list args;
+
+	jsonrpc_reset_response(request);
+
+	w = begin_response(request);
 
 	spdk_json_write_named_object_begin(w, "error");
 	spdk_json_write_named_int32(w, "code", error_code);

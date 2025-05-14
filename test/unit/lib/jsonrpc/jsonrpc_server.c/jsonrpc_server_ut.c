@@ -13,6 +13,8 @@ static struct spdk_jsonrpc_request *g_request;
 static int g_parse_error;
 const struct spdk_json_val *g_method;
 const struct spdk_json_val *g_params;
+static char g_response_data[1024];
+static size_t g_response_data_len;
 
 const struct spdk_json_val *g_cur_param;
 
@@ -112,6 +114,15 @@ const struct spdk_json_val *g_cur_param;
 	g_method = NULL; \
 	g_cur_param = g_params = NULL
 
+#define FREE_RESPONDED_TO_REQUEST() \
+	jsonrpc_free_request(g_request); \
+	g_request = NULL; \
+	g_cur_param = NULL; \
+	g_parse_error = 0; \
+	g_method = NULL; \
+	g_cur_param = g_params = NULL
+
+
 static void
 ut_jsonrpc_free_request(struct spdk_jsonrpc_request *request, int err)
 {
@@ -160,6 +171,8 @@ jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 void
 jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
+	memcpy(g_response_data, request->send_buf, request->send_len);
+	g_response_data_len = request->send_len;
 }
 
 static void
@@ -360,6 +373,90 @@ test_parse_request_streaming(void)
 	free(server);
 }
 
+static void
+test_error_response(void)
+{
+	struct spdk_jsonrpc_server *server;
+	struct spdk_jsonrpc_server_conn *conn;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	server = calloc(1, sizeof(*server));
+	SPDK_CU_ASSERT_FATAL(server != NULL);
+
+	conn = calloc(1, sizeof(*conn));
+	SPDK_CU_ASSERT_FATAL(conn != NULL);
+	pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE);
+	STAILQ_INIT(&conn->outstanding_queue);
+
+	conn->server = server;
+
+	PARSE_PASS("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"subtrahend\": 23, \"minuend\": 42}, \"id\": 3}",
+		   "");
+
+	g_response_data_len = 0;
+	/* Start formatting response */
+	w = spdk_jsonrpc_begin_result(g_request);
+	/* Write first part of response */
+	spdk_json_write_named_string(w, "part1", "UT partial response");
+	/* Then override it with error response */
+	spdk_jsonrpc_send_error_response(g_request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	/* Check that response is not empty */
+	CU_ASSERT(g_response_data_len != 0);
+	/* Parse response JSON */
+	rc = spdk_json_parse(g_response_data, g_response_data_len, NULL, 0, NULL, 0);
+	/* Check that response is valid JSON */
+	CU_ASSERT(rc > 0);
+
+	FREE_RESPONDED_TO_REQUEST();
+
+	free(server);
+	free(conn);
+}
+
+static void
+test_error_response_fmt(void)
+{
+	struct spdk_jsonrpc_server *server;
+	struct spdk_jsonrpc_server_conn *conn;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	server = calloc(1, sizeof(*server));
+	SPDK_CU_ASSERT_FATAL(server != NULL);
+
+	conn = calloc(1, sizeof(*conn));
+	SPDK_CU_ASSERT_FATAL(conn != NULL);
+	pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE);
+	STAILQ_INIT(&conn->outstanding_queue);
+
+	conn->server = server;
+
+	PARSE_PASS("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"subtrahend\": 23, \"minuend\": 42}, \"id\": 3}",
+		   "");
+
+	g_response_data_len = 0;
+	/* Start formatting response */
+	w = spdk_jsonrpc_begin_result(g_request);
+	/* Write first part of response */
+	spdk_json_write_named_string(w, "part1", "UT partial response");
+	/* Then override it with formattederror response */
+	spdk_jsonrpc_send_error_response_fmt(g_request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					     "Invalid parameters (%p)", g_request);
+	/* Check that response is not empty */
+	CU_ASSERT(g_response_data_len != 0);
+	/* Parse response JSON */
+	rc = spdk_json_parse(g_response_data, g_response_data_len, NULL, 0, NULL, 0);
+	/* Check that response is valid JSON */
+	CU_ASSERT(rc > 0);
+
+	FREE_RESPONDED_TO_REQUEST();
+
+	free(server);
+	free(conn);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -372,6 +469,8 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_parse_request);
 	CU_ADD_TEST(suite, test_parse_request_streaming);
+	CU_ADD_TEST(suite, test_error_response);
+	CU_ADD_TEST(suite, test_error_response_fmt);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
