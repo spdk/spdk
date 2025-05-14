@@ -523,13 +523,6 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 		return -1;
 	}
 
-	if (!(pfd.revents & POLLOUT)) {
-		SPDK_ERRLOG("poll() returned %d event(s) %s%s%sbut not POLLOUT\n", rc,
-			    pfd.revents & POLLERR ? "POLLERR, " : "", pfd.revents & POLLHUP ? "POLLHUP, " : "",
-			    pfd.revents & POLLNVAL ? "POLLNVAL, " : "");
-		return -1;
-	}
-
 	rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockopt() failed, errno = %d\n", errno);
@@ -539,6 +532,13 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 	if (err) {
 		SPDK_ERRLOG("connect() failed, err = %d\n", err);
 		return 1;
+	}
+
+	if (!(pfd.revents & POLLOUT)) {
+		SPDK_ERRLOG("poll() returned %d event(s) %s%s%sbut not POLLOUT\n", rc,
+			    pfd.revents & POLLERR ? "POLLERR, " : "", pfd.revents & POLLHUP ? "POLLHUP, " : "",
+			    pfd.revents & POLLNVAL ? "POLLNVAL, " : "");
+		return -1;
 	}
 
 	if (spdk_fd_clear_nonblock(fd)) {
