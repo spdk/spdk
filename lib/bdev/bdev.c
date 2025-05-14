@@ -3180,7 +3180,7 @@ static void bdev_unmap_split(struct spdk_bdev_io *bdev_io);
 static void
 _bdev_unmap_split(void *_bdev_io)
 {
-	return bdev_unmap_split((struct spdk_bdev_io *)_bdev_io);
+	bdev_unmap_split((struct spdk_bdev_io *)_bdev_io);
 }
 
 static void bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io);
@@ -3188,7 +3188,7 @@ static void bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io);
 static void
 _bdev_write_zeroes_split(void *_bdev_io)
 {
-	return bdev_write_zeroes_split((struct spdk_bdev_io *)_bdev_io);
+	bdev_write_zeroes_split((struct spdk_bdev_io *)_bdev_io);
 }
 
 static void bdev_copy_split(struct spdk_bdev_io *bdev_io);
@@ -3196,7 +3196,7 @@ static void bdev_copy_split(struct spdk_bdev_io *bdev_io);
 static void
 _bdev_copy_split(void *_bdev_io)
 {
-	return bdev_copy_split((struct spdk_bdev_io *)_bdev_io);
+	bdev_copy_split((struct spdk_bdev_io *)_bdev_io);
 }
 
 static int
