@@ -524,7 +524,9 @@ spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *
 	}
 
 	if (!(pfd.revents & POLLOUT)) {
-		SPDK_ERRLOG("poll() returned %hx events without POLLOUT\n", pfd.revents);
+		SPDK_ERRLOG("poll() returned %d event(s) %s%s%sbut not POLLOUT\n", rc,
+			    pfd.revents & POLLERR ? "POLLERR, " : "", pfd.revents & POLLHUP ? "POLLHUP, " : "",
+			    pfd.revents & POLLNVAL ? "POLLNVAL, " : "");
 		return -1;
 	}
 
