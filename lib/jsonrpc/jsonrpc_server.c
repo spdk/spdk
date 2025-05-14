@@ -284,6 +284,11 @@ begin_response(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_json_write_ctx *w = request->response;
 
+	/* The assertion below ensures that no response data has been written yet.
+	 * Otherwise, it would result in malformed JSON.
+	 */
+	assert(request->send_len == 0);
+
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "jsonrpc", "2.0");
 
