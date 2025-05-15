@@ -627,6 +627,9 @@ int spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events);
 /**
  * Close all registered sockets of the group and then remove the group.
  *
+ * If any sockets were added to the group by \ref spdk_sock_group_add_sock
+ * these must be removed first by using \ref spdk_sock_group_remove_sock.
+ *
  * \param group Group to close.
  *
  * \return 0 on success, -1 on failure.
