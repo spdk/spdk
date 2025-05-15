@@ -3053,7 +3053,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	}
 
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
-		if (device->context == port->id->verbs && device->is_ready) {
+		if (device->context == port->id->verbs && device->is_ready && !device->need_destroy) {
 			port->device = device;
 			break;
 		}
