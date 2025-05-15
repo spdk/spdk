@@ -40,3 +40,11 @@ a bdev of the correct size.
 
 These functions are deprecated and will be removed in 25.09 release. Please use
 `spdk_env_get_numa_id` and `spdk_pci_device_get_numa_id` instead.
+
+### reduce
+
+#### 'spdk_reduce_vol_init', 'spdk_reduce_vol_load'
+
+The entire reduce library is deprecated and will be removed in 25.09 release.
+All functions in this library are effectively deprecated, but only these two
+are officially marked as such to ensure the library's deprecation is noticed.

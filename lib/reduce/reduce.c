@@ -618,6 +618,7 @@ overlap_cmp(struct spdk_reduce_vol_request *req1, struct spdk_reduce_vol_request
 }
 RB_GENERATE_STATIC(executing_req_tree, spdk_reduce_vol_request, rbnode, overlap_cmp);
 
+SPDK_LOG_DEPRECATION_REGISTER(reduce_library, "reduce library", "v25.09", 0);
 
 void
 spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
@@ -631,6 +632,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	uint64_t backing_dev_size;
 	size_t mapped_len;
 	int dir_len, max_dir_len, rc;
+
+	SPDK_LOG_DEPRECATED(reduce_library);
 
 	/* We need to append a path separator and the UUID to the supplied
 	 * path.
@@ -913,6 +916,8 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	struct spdk_reduce_vol *vol;
 	struct reduce_init_load_ctx *load_ctx;
 	struct spdk_reduce_backing_io *backing_io;
+
+	SPDK_LOG_DEPRECATED(reduce_library);
 
 	if (backing_dev->submit_backing_io == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
