@@ -64,3 +64,9 @@ the module will emit deprecation warnings when usage is detected.
 This entire blobfs library is deprecated and will be removed in 25.09 release.
 All functions in this library are effectively deprecated, but only these two
 are officially marked as such to ensure the library's deprecation is noticed.
+
+### rocksdb
+
+The SPDK rocksdb plugin is deprecated and will be removed in 25.09 release.
+This C++ plugin exports no public APIs, so none are listed here, but
+the pluging will emit deprecation warnings when usage is detected.

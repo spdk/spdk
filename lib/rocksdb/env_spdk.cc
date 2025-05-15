@@ -683,11 +683,15 @@ initialize_spdk(void *arg)
 
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(rocksdb_plugin, "rocksdb plugin", "v25.09", 0)
+
 SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 		 const std::string &bdev, uint64_t cache_size_in_mb)
 	: EnvWrapper(base_env), mDirectory(dir), mConfig(conf), mBdev(bdev)
 {
 	struct spdk_app_opts *opts = new struct spdk_app_opts;
+
+	SPDK_LOG_DEPRECATED(rocksdb_plugin);
 
 	spdk_app_opts_init(opts, sizeof(*opts));
 	opts->name = "rocksdb";
