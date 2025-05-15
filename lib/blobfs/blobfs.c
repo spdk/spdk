@@ -575,6 +575,8 @@ __wake_caller(void *arg, int fserrno)
 	sem_post(args->sem);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(blobfs_library, "blobfs library", "v25.09", 0)
+
 void
 spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 	     fs_send_request_fn send_request_fn,
@@ -585,6 +587,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 	struct spdk_fs_cb_args *args;
 	struct spdk_bs_opts opts = {};
 
+	SPDK_LOG_DEPRECATED(blobfs_library);
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -826,6 +829,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	struct spdk_fs_request *req;
 	struct spdk_bs_opts	bs_opts;
 
+	SPDK_LOG_DEPRECATED(blobfs_library);
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
