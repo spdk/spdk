@@ -48,3 +48,11 @@ These functions are deprecated and will be removed in 25.09 release. Please use
 The entire reduce library is deprecated and will be removed in 25.09 release.
 All functions in this library are effectively deprecated, but only these two
 are officially marked as such to ensure the library's deprecation is noticed.
+
+### bdev_compress
+
+#### 'bdev_compress_create', 'bdev_compress_delete', 'bdev_compress_get_orphans' RPCs
+
+The entire bdev compress module is deprecated and will be removed in 25.09
+release. The C module exports no public APIs, so none are listed here, but
+the module will emit deprecation warnings when usage is detected.

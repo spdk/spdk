@@ -260,6 +260,7 @@ def main():
     p.set_defaults(func=bdev_wait_for_examine)
 
     def bdev_compress_create(args):
+        print("bdev_compress_create RPC is deprecated", file=sys.stderr)
         print_json(rpc.bdev.bdev_compress_create(args.client,
                                                  base_bdev_name=args.base_bdev_name,
                                                  pm_path=args.pm_path,
@@ -280,6 +281,7 @@ def main():
     p.set_defaults(func=bdev_compress_create)
 
     def bdev_compress_delete(args):
+        print("bdev_compress_delete RPC is deprecated", file=sys.stderr)
         rpc.bdev.bdev_compress_delete(args.client,
                                       name=args.name)
 
@@ -288,6 +290,7 @@ def main():
     p.set_defaults(func=bdev_compress_delete)
 
     def bdev_compress_get_orphans(args):
+        print("bdev_compress_get_orphans RPC is deprecated", file=sys.stderr)
         print_dict(rpc.bdev.bdev_compress_get_orphans(args.client,
                                                       name=args.name))
     p = subparsers.add_parser(

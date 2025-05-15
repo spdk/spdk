@@ -1279,6 +1279,8 @@ static int _set_compbdev_name(struct vbdev_compress *comp_bdev)
 	return 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_compress_module, "bdev compress module", "v25.09", 0)
+
 static int
 vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 {
@@ -1338,6 +1340,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		goto error_claim;
 	}
 
+	SPDK_LOG_DEPRECATED(bdev_compress_module);
 	rc = spdk_bdev_register(&comp_bdev->comp_bdev);
 	if (rc < 0) {
 		SPDK_ERRLOG("trying to register bdev, error %s\n", spdk_strerror(-rc));
