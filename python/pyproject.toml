@@ -8,6 +8,7 @@ build-backend = "hatchling.build"
 [project]
 name = "spdk"
 dynamic = ["version"]
+readme = "README.md"
 description = "Python bindings for the Storage Performance Development Kit (SPDK)"
 requires-python = ">=3.8"
 license = { text = "BSD-3-Clause" }
@@ -39,10 +40,16 @@ dependencies = []
 "Source" = "https://github.com/spdk/spdk"
 "Bug Tracker" = "https://github.com/spdk/spdk/issues"
 
+[project.scripts]
+spdk-rpc = "spdk.spdk_rpc:main"
+spdk-sma = "spdk.spdk_sma:main"
+spdk-cli = "spdk.spdk_cli:main"
+
 [project.optional-dependencies]
 sma = [
     "grpcio",
-    "protobuf"
+    "protobuf",
+    "pyyaml"
 ]
 cli = [
     "configshell_fb"
@@ -50,3 +57,14 @@ cli = [
 
 [tool.hatch.version]
 path = "spdk/version.py"
+
+# TODO: this is not ideal, better move pyproject file to the top
+[tool.hatch.build.targets.sdist.force-include]
+"../scripts/rpc.py" = "../scripts/rpc.py"
+"../scripts/sma.py" = "../scripts/sma.py"
+"../scripts/spdkcli.py" = "../scripts/spdkcli.py"
+
+[tool.hatch.build.targets.wheel.force-include]
+"../scripts/rpc.py" = "spdk/spdk_rpc.py"
+"../scripts/sma.py" = "spdk/spdk_sma.py"
+"../scripts/spdkcli.py" = "spdk/spdk_cli.py"
