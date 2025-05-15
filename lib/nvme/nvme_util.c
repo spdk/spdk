@@ -140,7 +140,7 @@ spdk_nvme_build_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr,
 	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
 
 	switch (trid->trtype) {
-	case SPDK_NVME_TRANSPORT_PCIE:
+	case SPDK_NVME_TRANSPORT_PCIE: {
 		struct spdk_pci_device *dev;
 
 		res = snprintf(name, length, "PCIE (%s)", trid->traddr);
@@ -156,8 +156,8 @@ spdk_nvme_build_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr,
 				res = res + _res;
 			}
 		}
-
 		break;
+	}
 	case SPDK_NVME_TRANSPORT_RDMA:
 		res = snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
 		break;
