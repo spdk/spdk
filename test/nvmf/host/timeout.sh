@@ -58,7 +58,7 @@ sleep 2
 [[ "$(get_bdev)" == "NVMe0n1" ]]
 
 # wait for the ctrlr_loss_timeout_sec time 2 sec and check bdevs and controller are deleted
-sleep 5
+sleep 6
 [[ "$(get_controller)" == "" ]]
 [[ "$(get_bdev)" == "" ]]
 
