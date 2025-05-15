@@ -76,7 +76,7 @@ spdk_env_get_numa_id(uint32_t core)
 	return rte_lcore_to_socket_id(core);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(env_socket_id, "spdk_env_get_socket_id", "v25.05", 0);
+SPDK_LOG_DEPRECATION_REGISTER(env_socket_id, "spdk_env_get_socket_id", "v25.09", 0);
 
 uint32_t
 spdk_env_get_socket_id(uint32_t core)

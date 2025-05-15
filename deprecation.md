@@ -38,5 +38,5 @@ a bdev of the correct size.
 
 #### `spdk_env_get_socket_id`, `spdk_pci_device_get_socket_id`
 
-These functions are deprecated and will be removed in 25.05 release. Please use
+These functions are deprecated and will be removed in 25.09 release. Please use
 `spdk_env_get_numa_id` and `spdk_pci_device_get_numa_id` instead.
