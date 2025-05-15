@@ -27,8 +27,6 @@ struct spdk_rpc_server {
 	struct spdk_jsonrpc_server *jsonrpc_server;
 };
 
-static struct spdk_rpc_server g_rpc_server;
-
 struct spdk_rpc_method {
 	const char *name;
 	spdk_rpc_method_handler func;
@@ -145,10 +143,18 @@ jsonrpc_handler(struct spdk_jsonrpc_request *request,
 	}
 }
 
-static int
-_spdk_rpc_listen(const char *listen_addr, struct spdk_rpc_server *server)
+struct spdk_rpc_server *
+spdk_rpc_server_listen(const char *listen_addr)
 {
+	struct spdk_rpc_server *server;
 	int rc;
+
+	server = calloc(1, sizeof(struct spdk_rpc_server));
+	if (!server) {
+		SPDK_ERRLOG("Could not allocate new RPC server\n");
+		return NULL;
+	}
+
 
 	assert(listen_addr != NULL);
 
@@ -158,28 +164,28 @@ _spdk_rpc_listen(const char *listen_addr, struct spdk_rpc_server *server)
 		      "%s", listen_addr);
 	if (rc < 0 || (size_t)rc >= sizeof(server->listen_addr_unix.sun_path)) {
 		SPDK_ERRLOG("RPC Listen address Unix socket path too long\n");
-		return -1;
+		goto ret;
 	}
 
 	rc = snprintf(server->lock_path, sizeof(server->lock_path), "%s.lock",
 		      server->listen_addr_unix.sun_path);
 	if (rc < 0 || (size_t)rc >= sizeof(server->lock_path)) {
 		SPDK_ERRLOG("RPC lock path too long\n");
-		return -1;
+		goto ret;
 	}
 
 	server->lock_fd = open(server->lock_path, O_RDWR | O_CREAT, 0600);
 	if (server->lock_fd == -1) {
 		SPDK_ERRLOG("Cannot open lock file %s: %s\n",
 			    server->lock_path, spdk_strerror(errno));
-		return -1;
+		goto ret;
 	}
 
 	rc = flock(server->lock_fd, LOCK_EX | LOCK_NB);
 	if (rc != 0) {
 		SPDK_ERRLOG("RPC Unix domain socket path %s in use. Specify another.\n",
 			    server->listen_addr_unix.sun_path);
-		return -1;
+		goto ret;
 	}
 
 	/*
@@ -196,59 +202,14 @@ _spdk_rpc_listen(const char *listen_addr, struct spdk_rpc_server *server)
 		SPDK_ERRLOG("spdk_jsonrpc_server_listen() failed\n");
 		close(server->lock_fd);
 		unlink(server->lock_path);
-		return -1;
-	}
-
-	return 0;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_rpc_listen, "spdk_rpc_listen is deprecated", "v24.09", 0);
-
-int
-spdk_rpc_listen(const char *listen_addr)
-{
-	struct spdk_rpc_server *server;
-	int rc;
-
-	SPDK_LOG_DEPRECATED(spdk_rpc_listen);
-
-	memset(&g_rpc_server.listen_addr_unix, 0, sizeof(g_rpc_server.listen_addr_unix));
-	server = &g_rpc_server;
-
-	rc = _spdk_rpc_listen(listen_addr, server);
-	if (rc) {
-		server->listen_addr_unix.sun_path[0] = '\0';
-		server->lock_path[0] = '\0';
-	}
-
-	return rc;
-}
-
-struct spdk_rpc_server *
-spdk_rpc_server_listen(const char *listen_addr)
-{
-	struct spdk_rpc_server *server;
-	int rc;
-
-	server = calloc(1, sizeof(struct spdk_rpc_server));
-	if (!server) {
-		SPDK_ERRLOG("Could not allocate new RPC server\n");
-		return NULL;
-	}
-
-	rc = _spdk_rpc_listen(listen_addr, server);
-	if (rc) {
-		free(server);
-		return NULL;
+		goto ret;
 	}
 
 	return server;
-}
 
-void
-spdk_rpc_accept(void)
-{
-	spdk_jsonrpc_server_poll(g_rpc_server.jsonrpc_server);
+ret:
+	free(server);
+	return NULL;
 }
 
 void
@@ -375,8 +336,8 @@ spdk_rpc_set_allowlist(const char **rpc_allowlist)
 	assert(g_rpcs_allowlist != NULL);
 }
 
-static void
-_spdk_rpc_close(struct spdk_rpc_server *server)
+void
+spdk_rpc_server_close(struct spdk_rpc_server *server)
 {
 	assert(server != NULL);
 	assert(server->jsonrpc_server != NULL);
@@ -399,26 +360,6 @@ _spdk_rpc_close(struct spdk_rpc_server *server)
 		unlink(server->lock_path);
 		server->lock_path[0] = '\0';
 	}
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_rpc_close, "spdk_rpc_close is deprecated", "v24.09", 0);
-
-void
-spdk_rpc_close(void)
-{
-	SPDK_LOG_DEPRECATED(spdk_rpc_close);
-
-	if (g_rpc_server.jsonrpc_server) {
-		_spdk_rpc_close(&g_rpc_server);
-	}
-}
-
-void
-spdk_rpc_server_close(struct spdk_rpc_server *server)
-{
-	assert(server != NULL);
-
-	_spdk_rpc_close(server);
 
 	free(server);
 }

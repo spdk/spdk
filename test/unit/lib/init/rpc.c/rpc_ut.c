@@ -10,12 +10,9 @@
 #include "init/rpc.c"
 #include "common/lib/test_env.c"
 
-DEFINE_STUB(spdk_rpc_listen, int, (const char *listen_addr), 0);
 DEFINE_STUB(spdk_rpc_server_listen, struct spdk_rpc_server *, (const char *listen_addr),
 	    (struct spdk_rpc_server *)0xdeadbeef);
 DEFINE_STUB(spdk_rpc_verify_methods, bool, (void), true);
-DEFINE_STUB_V(spdk_rpc_accept, (void));
-DEFINE_STUB_V(spdk_rpc_close, (void));
 DEFINE_STUB_V(spdk_rpc_server_accept, (struct spdk_rpc_server *server));
 DEFINE_STUB_V(spdk_rpc_server_close, (struct spdk_rpc_server *server));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));

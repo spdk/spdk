@@ -34,13 +34,6 @@ See GitHub issue [2801](https://github.com/spdk/spdk/issues/2801) for additional
 New SPDK partition types should use GUID `6527994e-2c5a-4eec-9613-8f5944074e8b` which will create
 a bdev of the correct size.
 
-### rpc
-
-#### `spdk_rpc_listen` `spdk_rpc_accept` `spdk_rpc_close`
-
-These functions are deprecated and will be removed in 24.09 release. Please use
-`spdk_rpc_server_listen`, `spdk_rpc_server_accept` and `spdk_rpc_server_close` instead.
-
 ### env
 
 #### `spdk_env_get_socket_id`, `spdk_pci_device_get_socket_id`

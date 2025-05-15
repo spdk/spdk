@@ -3,9 +3,6 @@
 
 	# public functions
 	spdk_rpc_verify_methods;
-	spdk_rpc_listen;
-	spdk_rpc_accept;
-	spdk_rpc_close;
 	spdk_rpc_server_listen;
 	spdk_rpc_server_accept;
 	spdk_rpc_server_close;

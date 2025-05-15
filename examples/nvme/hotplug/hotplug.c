@@ -13,6 +13,7 @@
 #include "spdk/rpc.h"
 
 static const char *g_rpc_addr = "/var/tmp/spdk.sock";
+static struct spdk_rpc_server *g_rpc_server;
 
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
@@ -541,15 +542,15 @@ wait_for_rpc_call(void)
 {
 	fprintf(stderr,
 		"Listening for perform_tests to start the application...\n");
-	spdk_rpc_listen(g_rpc_addr);
+	g_rpc_server = spdk_rpc_server_listen(g_rpc_addr);
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 
 	while (!g_rpc_received) {
-		spdk_rpc_accept();
+		spdk_rpc_server_accept(g_rpc_server);
 	}
-	/* Run spdk_rpc_accept() one more time to trigger
-	 * spdk_jsonrpv_server_poll() and send the RPC response. */
-	spdk_rpc_accept();
+	/* Run spdk_rpc_server_accept() one more time to trigger
+	 * spdk_jsonrpc_server_poll() and send the RPC response. */
+	spdk_rpc_server_accept(g_rpc_server);
 }
 
 int
@@ -607,7 +608,9 @@ main(int argc, char **argv)
 	}
 
 cleanup:
-	spdk_rpc_close();
+	if (g_rpc_server != NULL) {
+		spdk_rpc_server_close(g_rpc_server);
+	}
 	spdk_env_fini();
 	return rc;
 }

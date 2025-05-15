@@ -214,6 +214,7 @@ test_rpc_spdk_get_version(void)
 static void
 test_spdk_rpc_listen_close(void)
 {
+	struct spdk_rpc_server *server;
 	const char listen_addr[128] = "/var/tmp/spdk-rpc-ut.sock";
 	char rpc_lock_path[128] = {};
 
@@ -221,21 +222,18 @@ test_spdk_rpc_listen_close(void)
 	MOCK_SET(close, 0);
 	MOCK_SET(flock, 0);
 
-	spdk_rpc_listen(listen_addr);
-	snprintf(rpc_lock_path, sizeof(g_rpc_server.lock_path), "%s.lock",
-		 g_rpc_server.listen_addr_unix.sun_path);
+	server = spdk_rpc_server_listen(listen_addr);
+	SPDK_CU_ASSERT_FATAL(server != NULL);
 
-	CU_ASSERT(g_rpc_server.listen_addr_unix.sun_family == AF_UNIX);
-	CU_ASSERT(strcmp(g_rpc_server.listen_addr_unix.sun_path, listen_addr) == 0);
-	CU_ASSERT(strcmp(g_rpc_server.lock_path, rpc_lock_path) == 0);
-	CU_ASSERT(g_rpc_server.jsonrpc_server == (struct spdk_jsonrpc_server *)0Xdeaddead);
+	snprintf(rpc_lock_path, sizeof(server->lock_path), "%s.lock",
+		 server->listen_addr_unix.sun_path);
 
-	spdk_rpc_close();
+	CU_ASSERT(server->listen_addr_unix.sun_family == AF_UNIX);
+	CU_ASSERT(strcmp(server->listen_addr_unix.sun_path, listen_addr) == 0);
+	CU_ASSERT(strcmp(server->lock_path, rpc_lock_path) == 0);
+	CU_ASSERT(server->jsonrpc_server == (struct spdk_jsonrpc_server *)0Xdeaddead);
 
-	CU_ASSERT(g_rpc_server.listen_addr_unix.sun_path[0] == '\0');
-	CU_ASSERT(g_rpc_server.jsonrpc_server == NULL);
-	CU_ASSERT(g_rpc_server.lock_fd == -1);
-	CU_ASSERT(g_rpc_server.lock_path[0] == '\0');
+	spdk_rpc_server_close(server);
 
 	MOCK_CLEAR(open);
 	MOCK_CLEAR(close);

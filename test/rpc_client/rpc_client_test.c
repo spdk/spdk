@@ -297,23 +297,25 @@ static sem_t g_rpc_server_th_listening;
 static void *
 rpc_server_th(void *arg)
 {
-	int rc;
+	struct spdk_rpc_server *server;
+	int rc = 0;
 
-	rc = spdk_rpc_listen(g_rpcsock_addr);
-	if (rc) {
-		fprintf(stderr, "spdk_rpc_listen() failed: %d\n", rc);
+	server = spdk_rpc_server_listen(g_rpcsock_addr);
+	if (server == NULL) {
+		fprintf(stderr, "spdk_rpc_server_listen() failed\n");
 		sem_post(&g_rpc_server_th_listening);
+		rc = -1;
 		goto out;
 	}
 
 	sem_post(&g_rpc_server_th_listening);
 
 	while (!g_rpc_server_th_stop) {
-		spdk_rpc_accept();
+		spdk_rpc_server_accept(server);
 		usleep(50);
 	}
 
-	spdk_rpc_close();
+	spdk_rpc_server_close(server);
 out:
 	return (void *)(intptr_t)rc;
 }
