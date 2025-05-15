@@ -2,6 +2,8 @@
 
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/spdk/spdk/go/rpc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/spdk/spdk/go/rpc)](https://goreportcard.com/report/github.com/spdk/spdk/go/rpc)
+[![PyPI Latest Release](https://img.shields.io/pypi/v/spdk.svg)](https://pypi.org/project/spdk/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/spdk.svg?label=PyPI%20downloads)](https://pypi.org/project/spdk/)
 
 NOTE: The SPDK mailing list has moved to a new location. Please visit
 [this URL](https://lists.linuxfoundation.org/mailman/listinfo/spdk) to subscribe
@@ -266,6 +268,14 @@ with no arguments to see the help output. You'll likely need to run the examples
 as a privileged user (root) unless you've done additional configuration
 to grant your user permission to allocate huge pages and map devices through
 vfio.
+
+<a id="python"></a>
+## Python bindings
+
+SPDK python bindings and scripts are located in [python](./python) folder. Python code is
+automatically built as part of the build process. Python package is also published
+to <https://pypi.org/project/spdk/> every release for ease of consumption. For more
+details, check the [README](./python/README.md).
 
 <a id="contributing"></a>
 ## Contributing

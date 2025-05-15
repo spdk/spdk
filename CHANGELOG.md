@@ -2,6 +2,12 @@
 
 ## v25.05: (Upcoming Release)
 
+### python
+
+Renamed python binaries with "-" instead of "_"
+spdk-rpc, spdk-sma and spdk-cli to be more platform
+independent for linux/windows according to pypi and hatch suggestions
+
 ### bdev_nvme
 
 Added controller configuration consistency check, so all controllers created with the same name will
