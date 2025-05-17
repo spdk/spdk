@@ -54,6 +54,13 @@ queue pair creation.
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page
 change notice to client.
 
+Added `kas` in `spdk_nvmf_transport_opts` struct. This field indicates the granularity of the
+KATO (Keep Alive Timeout) in 100 millisecond units, and this field cannot be set to 0 to disable
+the Keep Alive Timer feature.
+
+Added `min_kato` in `spdk_nvmf_transport_opts` struct to set the minimum keep alive timeout value
+in milliseconds.
+
 ### reduce
 
 Add `spdk_reduce_vol_get_info()` to get the information for the compressed volume.

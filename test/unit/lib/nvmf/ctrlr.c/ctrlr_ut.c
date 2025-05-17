@@ -491,6 +491,8 @@ test_connect(void)
 	transport.opts.max_aq_depth = 32;
 	transport.opts.max_queue_depth = 64;
 	transport.opts.max_qpairs_per_ctrlr = 3;
+	transport.opts.kas = NVMF_DEFAULT_KAS;
+	transport.opts.min_kato = NVMF_DEFAULT_MIN_KATO;
 	transport.tgt = &tgt;
 
 	memset(&qpair, 0, sizeof(qpair));
@@ -550,6 +552,7 @@ test_connect(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 	CU_ASSERT(qpair.ctrlr != NULL);
+	CU_ASSERT(qpair.ctrlr->keep_alive_poller != NULL);
 	CU_ASSERT(qpair.state == SPDK_NVMF_QPAIR_ENABLED);
 	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
 	nvmf_ctrlr_stop_keep_alive_timer(qpair.ctrlr);
@@ -572,6 +575,29 @@ test_connect(void)
 	CU_ASSERT(qpair.ctrlr != NULL && qpair.ctrlr->keep_alive_poller == NULL);
 	CU_ASSERT(qpair.state == SPDK_NVMF_QPAIR_ENABLED);
 	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
+	spdk_bit_array_free(&qpair.ctrlr->qpair_mask);
+	free(qpair.ctrlr->visible_ns);
+	free(qpair.ctrlr);
+	qpair.state = SPDK_NVMF_QPAIR_CONNECTING;
+	qpair.ctrlr = NULL;
+	cmd.connect_cmd.kato = 120000;
+
+	/* Valid admin connect command with kato which is smaller than transport->opts.min_kato */
+	cmd.connect_cmd.kato = 1000;
+	memset(&rsp, 0, sizeof(rsp));
+	sgroups[subsystem.id].mgmt_io_outstanding++;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	group.current_unassociated_qpairs = 1;
+	rc = nvmf_ctrlr_cmd_connect(&req);
+	poll_threads();
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
+	CU_ASSERT(qpair.ctrlr != NULL);
+	CU_ASSERT(qpair.ctrlr->keep_alive_poller != NULL);
+	CU_ASSERT(qpair.ctrlr->feat.keep_alive_timer.bits.kato == NVMF_DEFAULT_MIN_KATO);
+	CU_ASSERT(qpair.state == SPDK_NVMF_QPAIR_ENABLED);
+	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
+	nvmf_ctrlr_stop_keep_alive_timer(qpair.ctrlr);
 	spdk_bit_array_free(&qpair.ctrlr->qpair_mask);
 	free(qpair.ctrlr->visible_ns);
 	free(qpair.ctrlr);
@@ -2598,6 +2624,8 @@ test_nvmf_ctrlr_create_destruct(void)
 	transport.opts.max_queue_depth = 64;
 	transport.opts.max_qpairs_per_ctrlr = 3;
 	transport.opts.dif_insert_or_strip = true;
+	transport.opts.kas = NVMF_DEFAULT_KAS;
+	transport.opts.min_kato = NVMF_DEFAULT_MIN_KATO;
 	transport.tgt = &tgt;
 	qpair.transport = &transport;
 	qpair.group = &group;

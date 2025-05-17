@@ -8324,6 +8324,8 @@ zcopy                       | Optional | boolean | Use zero-copy operations if t
 ack_timeout                 | Optional | number  | ACK timeout in milliseconds
 data_wr_pool_size           | Optional | number  | RDMA data WR pool size (RDMA only)
 disable_command_passthru    | Optional | boolean | Disallow command passthru.
+kas                         | Optional | number  | The granularity of the KATO (Keep Alive Timeout) in 100 millisecond units
+min_kato                    | Optional | number  | The minimum Keep Alive Timeout value in milliseconds
 
 #### Example
 

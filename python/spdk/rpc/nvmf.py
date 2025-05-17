@@ -132,6 +132,8 @@ def nvmf_create_transport(client, **params):
         ack_timeout: ACK timeout in milliseconds (optional)
         data_wr_pool_size: RDMA data WR pool size. RDMA specific (optional)
         disable_command_passthru: Disallow command passthru.
+        kas: The granularity of the KATO (Keep Alive Timeout) in 100 millisecond units (optional)
+        min_kato: The minimum keep alive timeout value in milliseconds (optional)
     Returns:
         True or False
     """

@@ -23,11 +23,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/usdt.h"
 
-#define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000
-#define NVMF_DISC_KATO_IN_MS 120000
-#define KAS_TIME_UNIT_IN_MS 100
-#define KAS_DEFAULT_VALUE (MIN_KEEP_ALIVE_TIMEOUT_IN_MS / KAS_TIME_UNIT_IN_MS)
-
 #define NVMF_CC_RESET_SHN_TIMEOUT_IN_MS	10000
 
 #define NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS	(NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + 5000)
@@ -374,7 +369,7 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 		      struct spdk_nvmf_ctrlr_data *cdata)
 {
 	cdata->aerl = SPDK_NVMF_MAX_ASYNC_EVENTS - 1;
-	cdata->kas = KAS_DEFAULT_VALUE;
+	cdata->kas = transport->opts.kas;
 	cdata->vid = SPDK_PCI_VID_INTEL;
 	cdata->ssvid = SPDK_PCI_VID_INTEL;
 	/* INTEL OUI */
@@ -476,9 +471,15 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	 * If this field is cleared to 0h, then Keep Alive is not supported.
 	 */
 	if (ctrlr->cdata.kas) {
-		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato,
-				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS) *
-				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS;
+		if (connect_cmd->kato == 0) {
+			ctrlr->feat.keep_alive_timer.bits.kato = 0;
+		} else if (connect_cmd->kato <= transport->opts.min_kato) {
+			ctrlr->feat.keep_alive_timer.bits.kato = transport->opts.min_kato;
+		} else {
+			ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato,
+					ctrlr->cdata.kas * NVMF_KAS_TIME_UNIT_IN_MS) *
+					ctrlr->cdata.kas * NVMF_KAS_TIME_UNIT_IN_MS;
+		}
 	}
 
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
@@ -2011,6 +2012,7 @@ static int
 nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
@@ -2022,14 +2024,14 @@ nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	 */
 	if (cmd->cdw11_bits.feat_keep_alive_timer.bits.kato == 0) {
 		rsp->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
-	} else if (cmd->cdw11_bits.feat_keep_alive_timer.bits.kato < MIN_KEEP_ALIVE_TIMEOUT_IN_MS) {
-		ctrlr->feat.keep_alive_timer.bits.kato = MIN_KEEP_ALIVE_TIMEOUT_IN_MS;
+	} else if (cmd->cdw11_bits.feat_keep_alive_timer.bits.kato <= transport->opts.min_kato) {
+		ctrlr->feat.keep_alive_timer.bits.kato = transport->opts.min_kato;
 	} else {
 		/* round up to milliseconds */
 		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(
 					cmd->cdw11_bits.feat_keep_alive_timer.bits.kato,
-					KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS) *
-				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS;
+					transport->opts.kas * NVMF_KAS_TIME_UNIT_IN_MS) *
+				transport->opts.kas * NVMF_KAS_TIME_UNIT_IN_MS;
 	}
 
 	/*

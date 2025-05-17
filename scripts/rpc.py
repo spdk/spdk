@@ -2627,6 +2627,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--ack-timeout', help='ACK timeout in milliseconds', type=int)
     p.add_argument('--data-wr-pool-size', help='RDMA data WR pool size. Relevant only for RDMA transport', type=int)
     p.add_argument('--disable-command-passthru', help='Disallow command passthru', action='store_true')
+    p.add_argument('--kas', help="Keep alive support", type=int)
+    p.add_argument('--min-kato', help="The minimum keep alive timeout in milliseconds", type=int)
     p.set_defaults(func=nvmf_create_transport)
 
     def nvmf_get_transports(args):

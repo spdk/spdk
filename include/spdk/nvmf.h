@@ -110,8 +110,12 @@ struct spdk_nvmf_transport_opts {
 	uint32_t ack_timeout;
 	/* Size of RDMA data WR pool */
 	uint32_t data_wr_pool_size;
+	/* The minimum Keep Alive Timeout value in milliseconds */
+	uint32_t min_kato;
+	/* kas indicates the granularity of the Keep Alive Timer in 100ms units. */
+	uint16_t kas;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 72, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 78, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**

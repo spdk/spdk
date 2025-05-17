@@ -169,6 +169,39 @@ test_spdk_nvmf_transport_create(void)
 
 	g_rdma_ut_transport_opts.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
 
+	/* Ensure kas cannot be set to 0 */
+	g_rdma_ut_transport_opts.kas = 0;
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(transport == NULL);
+
+	g_rdma_ut_transport_opts.kas = NVMF_DEFAULT_KAS;
+
+	/* Ensure min_kato cannot be set to 0 */
+	g_rdma_ut_transport_opts.min_kato = 0;
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(transport == NULL);
+
+	g_rdma_ut_transport_opts.min_kato = NVMF_DEFAULT_MIN_KATO;
+
+	/* min_kato should be rounded up to a multiple of kas * NVMF_KAS_TIME_UNIT_IN_MS */
+	g_rdma_ut_transport_opts.kas = NVMF_DEFAULT_KAS;
+	g_rdma_ut_transport_opts.min_kato = 1000;
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(transport == &ut_transport);
+	CU_ASSERT(transport->opts.min_kato == NVMF_DEFAULT_KAS * NVMF_KAS_TIME_UNIT_IN_MS);
+
+	rc = spdk_nvmf_transport_destroy(transport, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	g_rdma_ut_transport_opts.kas = NVMF_DEFAULT_KAS;
+	g_rdma_ut_transport_opts.min_kato = NVMF_DEFAULT_MIN_KATO;
+
 	/* Create transport successfully */
 	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
 					      test_nvmf_create_transport_done, &transport);
