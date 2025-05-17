@@ -4895,14 +4895,28 @@ static void
 _nvmf_rdma_remove_poller_in_group(void *c)
 {
 	struct poller_manage_ctx		*ctx = c;
+	struct spdk_nvmf_rdma_poller            *rpoller;
 
-	ctx->rpoller->need_destroy = true;
-	ctx->rpoller->destroy_cb_ctx = ctx;
-	ctx->rpoller->destroy_cb = _nvmf_rdma_remove_poller_in_group_cb;
+	/* Check if the poller referred to by this context was already removed.
+	 * If it was already removed, simply call the usual destroy_cb function
+	 * directly.
+	 */
+	TAILQ_FOREACH(rpoller, &ctx->rgroup->pollers, link) {
+		if (rpoller == ctx->rpoller) {
+			break;
+		}
+	}
 
-	/* qp will be disconnected after receiving a RDMA_CM_EVENT_DEVICE_REMOVAL event. */
-	if (RB_EMPTY(&ctx->rpoller->qpairs)) {
-		nvmf_rdma_poller_destroy(ctx->rpoller);
+	if (rpoller != NULL) {
+		rpoller->need_destroy = true;
+		rpoller->destroy_cb_ctx = ctx;
+		rpoller->destroy_cb = _nvmf_rdma_remove_poller_in_group_cb;
+		/* qp will be disconnected after receiving a RDMA_CM_EVENT_DEVICE_REMOVAL event. */
+		if (RB_EMPTY(&ctx->rpoller->qpairs)) {
+			nvmf_rdma_poller_destroy(ctx->rpoller);
+		}
+	} else {
+		_nvmf_rdma_remove_poller_in_group_cb(ctx);
 	}
 }
 
