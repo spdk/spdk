@@ -44,7 +44,7 @@ superblock_region_size(struct spdk_ftl_dev *dev)
 	if (wus > FTL_SUPERBLOCK_SIZE) {
 		return wus;
 	} else {
-		return wus * spdk_divide_round_up(FTL_SUPERBLOCK_SIZE, wus);
+		return spdk_round_up(FTL_SUPERBLOCK_SIZE, wus);
 	}
 }
 
@@ -60,8 +60,7 @@ ftl_md_region_blocks(struct spdk_ftl_dev *dev, uint64_t bytes)
 	const uint64_t alignment = superblock_region_size(dev);
 	uint64_t result;
 
-	result = spdk_divide_round_up(bytes, alignment);
-	result *= alignment;
+	result = spdk_round_up(bytes, alignment);
 	result /= FTL_BLOCK_SIZE;
 
 	return result;
@@ -73,8 +72,7 @@ ftl_md_region_align_blocks(struct spdk_ftl_dev *dev, uint64_t blocks)
 	const uint64_t alignment = superblock_region_blocks(dev);
 	uint64_t result;
 
-	result = spdk_divide_round_up(blocks, alignment);
-	result *= alignment;
+	result = spdk_round_up(blocks, alignment);
 
 	return result;
 }

@@ -26,7 +26,7 @@ ftl_bitmap_bits_to_size(uint64_t bits)
 	}
 
 	size = spdk_divide_round_up(bits, 8);
-	size = spdk_divide_round_up(size, ftl_bitmap_buffer_alignment) * ftl_bitmap_buffer_alignment;
+	size = spdk_round_up(size, ftl_bitmap_buffer_alignment);
 
 	return size;
 }

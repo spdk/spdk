@@ -280,7 +280,7 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 	}
 
 	kas_in_ms = ctx->opts.kas * NVMF_KAS_TIME_UNIT_IN_MS;
-	ctx->opts.min_kato = kas_in_ms * spdk_divide_round_up(ctx->opts.min_kato, kas_in_ms);
+	ctx->opts.min_kato = spdk_round_up(ctx->opts.min_kato, kas_in_ms);
 
 	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
 	if (ctx->opts.io_unit_size == 0) {

@@ -3347,8 +3347,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		}
 
 		if (bdev->optimal_io_boundary != 0) {
-			data_offset = spdk_divide_round_up(data_offset,
-							   bdev->optimal_io_boundary) * bdev->optimal_io_boundary;
+			data_offset = spdk_round_up(data_offset, bdev->optimal_io_boundary);
 			if (base_info->data_offset != 0 && base_info->data_offset != data_offset) {
 				SPDK_WARNLOG("Data offset %lu on bdev '%s' is different than optimal value %lu\n",
 					     base_info->data_offset, base_info->name, data_offset);

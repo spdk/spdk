@@ -100,8 +100,7 @@ ftl_mngt_recovery_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 	/* Below values are in byte unit */
 	mem_limit = dev->conf.l2p_dram_limit * MiB;
-	mem_limit = spdk_min(mem_limit, spdk_divide_round_up(dev->num_lbas * dev->layout.l2p.addr_size,
-			     MiB) * MiB);
+	mem_limit = spdk_min(mem_limit, spdk_round_up(dev->num_lbas * dev->layout.l2p.addr_size, MiB));
 
 	lba_limit = mem_limit / (sizeof(uint64_t) + dev->layout.l2p.addr_size);
 	l2p_limit = lba_limit * dev->layout.l2p.addr_size;

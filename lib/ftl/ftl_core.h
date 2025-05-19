@@ -317,9 +317,7 @@ ftl_p2l_map_num_blocks(const struct spdk_ftl_dev *dev)
 static inline size_t
 ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
 {
-	return spdk_divide_round_up(
-		       ftl_p2l_map_num_blocks(dev),
-		       dev->xfer_size) * dev->xfer_size;
+	return spdk_round_up(ftl_p2l_map_num_blocks(dev), dev->xfer_size);
 }
 
 /*

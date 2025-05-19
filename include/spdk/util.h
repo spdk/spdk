@@ -176,6 +176,12 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 	return (num + divisor - 1) / divisor;
 }
 
+static inline uint64_t
+spdk_round_up(uint64_t num, uint64_t divisor)
+{
+	return divisor * spdk_divide_round_up(num, divisor);
+}
+
 struct spdk_single_ioviter {
 	struct iovec	*iov;
 	size_t		iovcnt;

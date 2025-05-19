@@ -476,9 +476,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		} else if (connect_cmd->kato <= transport->opts.min_kato) {
 			ctrlr->feat.keep_alive_timer.bits.kato = transport->opts.min_kato;
 		} else {
-			ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato,
-					ctrlr->cdata.kas * NVMF_KAS_TIME_UNIT_IN_MS) *
-					ctrlr->cdata.kas * NVMF_KAS_TIME_UNIT_IN_MS;
+			ctrlr->feat.keep_alive_timer.bits.kato = spdk_round_up(connect_cmd->kato,
+					ctrlr->cdata.kas * NVMF_KAS_TIME_UNIT_IN_MS);
 		}
 	}
 
@@ -2028,10 +2027,9 @@ nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 		ctrlr->feat.keep_alive_timer.bits.kato = transport->opts.min_kato;
 	} else {
 		/* round up to milliseconds */
-		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(
+		ctrlr->feat.keep_alive_timer.bits.kato = spdk_round_up(
 					cmd->cdw11_bits.feat_keep_alive_timer.bits.kato,
-					transport->opts.kas * NVMF_KAS_TIME_UNIT_IN_MS) *
-				transport->opts.kas * NVMF_KAS_TIME_UNIT_IN_MS;
+					transport->opts.kas * NVMF_KAS_TIME_UNIT_IN_MS);
 	}
 
 	/*

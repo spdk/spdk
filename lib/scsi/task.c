@@ -78,7 +78,7 @@ scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 	 * up to next 4 byte boundary, so they don't have to worry
 	 * about handling out-of-bounds errors.
 	 */
-	zmalloc_len = 4 * spdk_divide_round_up(alloc_len, 4);
+	zmalloc_len = spdk_round_up(alloc_len, 4);
 	task->iov.iov_base = spdk_dma_zmalloc(zmalloc_len, 0, NULL);
 	task->iov.iov_len = alloc_len;
 	task->alloc_len = alloc_len;

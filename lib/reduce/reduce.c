@@ -186,8 +186,7 @@ _get_pm_logical_map_size(uint64_t vol_size, uint64_t chunk_size)
 	logical_map_size = chunks_in_logical_map * sizeof(uint64_t);
 
 	/* Round up to next cacheline. */
-	return spdk_divide_round_up(logical_map_size, REDUCE_PM_SIZE_ALIGNMENT) *
-	       REDUCE_PM_SIZE_ALIGNMENT;
+	return spdk_round_up(logical_map_size, REDUCE_PM_SIZE_ALIGNMENT);
 }
 
 static uint64_t
@@ -217,8 +216,7 @@ _get_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backi
 
 	total_chunks_size = num_chunks * _reduce_vol_get_chunk_struct_size(io_units_per_chunk);
 
-	return spdk_divide_round_up(total_chunks_size, REDUCE_PM_SIZE_ALIGNMENT) *
-	       REDUCE_PM_SIZE_ALIGNMENT;
+	return spdk_round_up(total_chunks_size, REDUCE_PM_SIZE_ALIGNMENT);
 }
 
 static struct spdk_reduce_chunk_map *
