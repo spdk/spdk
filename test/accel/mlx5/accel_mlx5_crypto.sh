@@ -88,7 +88,7 @@ function gen_accel_mlx5_crypto_json() {
 
 # Test lack of resources
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 16 2047) -b "Crypto0" -f -x translate
-"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 256 32) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 32 32) -b "Crypto0" -f -x translate
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 16 32) -b "Crypto0" -f -x translate
 
 # Test different modes, qdepth and IO size values

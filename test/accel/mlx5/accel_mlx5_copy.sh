@@ -59,7 +59,7 @@ function gen_accel_mlx5_malloc_json() {
 
 # Test lack of resources
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 16 2047) -b "Malloc0" -f -x translate
-"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 256 64) -b "Malloc0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 64 64) -b "Malloc0" -f -x translate
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xf --json <(gen_accel_mlx5_malloc_json 16 64) -b "Malloc0" -f -x translate
 
 # Test copy operation with fragmented payload and platform driver enabled

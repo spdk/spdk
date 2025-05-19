@@ -2730,6 +2730,11 @@ accel_mlx5_enable(struct accel_mlx5_attr *attr)
 				    ACCEL_MLX5_MAX_MKEYS_IN_TASK, attr->num_requests / spdk_env_get_core_count());
 			return -EINVAL;
 		}
+		if (attr->num_requests < attr->qp_size) {
+			SPDK_ERRLOG("num requests (%u) must be at least qp_size (%u)\n",
+				    attr->num_requests, attr->qp_size);
+			return -EINVAL;
+		}
 		if (attr->qp_size < 8) {
 			SPDK_ERRLOG("qp_size must be at least 8\n");
 			return -EINVAL;

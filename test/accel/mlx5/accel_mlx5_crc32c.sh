@@ -51,11 +51,11 @@ $accelperf -c <(gen_accel_mlx5_json) -w copy_crc32c -t 5 -m 0x3 -y -C 77 -o 5242
 
 # Test with small amount of resources
 $accelperf -c <(gen_accel_mlx5_json 16 2047) -w crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
-$accelperf -c <(gen_accel_mlx5_json 256 32) -w crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
+$accelperf -c <(gen_accel_mlx5_json 32 32) -w crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 $accelperf -c <(gen_accel_mlx5_json 16 32) -w crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 
 $accelperf -c <(gen_accel_mlx5_json 16 2047) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
-$accelperf -c <(gen_accel_mlx5_json 256 32) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
+$accelperf -c <(gen_accel_mlx5_json 32 32) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 $accelperf -c <(gen_accel_mlx5_json 16 32) -w copy_crc32c -t 5 -m 0x3 -y -C 17 -o 131072 -q 128
 
 # Test copy operation with fragmented payload and platform driver enabled
