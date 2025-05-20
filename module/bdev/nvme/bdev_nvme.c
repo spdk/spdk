@@ -9061,6 +9061,32 @@ bdev_nvme_hotplug_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 }
 
+static void
+bdev_nvme_multipath_config_json(struct nvme_bdev *nbdev, struct spdk_json_write_ctx *w)
+{
+	/* Skip dump if it is matching the default conf. */
+	if (nbdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE &&
+	    nbdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN && nbdev->rr_min_io == UINT32_MAX) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "bdev_nvme_set_multipath_policy");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", nbdev->disk.name);
+	spdk_json_write_named_string(w, "policy", nvme_bdev_get_mp_policy_str(nbdev));
+	if (nbdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nbdev));
+		if (nbdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
+		}
+	}
+
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+}
+
 static int
 bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 {
@@ -9074,6 +9100,8 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		struct nvme_bdev *nbdev;
+
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			path_id = nvme_ctrlr->active_path_id;
 			assert(path_id == TAILQ_FIRST(&nvme_ctrlr->trids));
@@ -9088,6 +9116,10 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 #ifdef SPDK_CONFIG_NVME_CUSE
 			nvme_ctrlr_cuse_config_json(w, nvme_ctrlr);
 #endif
+		}
+
+		TAILQ_FOREACH(nbdev, &nbdev_ctrlr->bdevs, tailq) {
+			bdev_nvme_multipath_config_json(nbdev, w);
 		}
 	}
 
