@@ -60,6 +60,7 @@ static struct spdk_governor *g_governor = NULL;
 
 static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);
+static void end_reactor(void *arg1, void *arg2);
 
 static pthread_mutex_t g_stopping_reactors_mtx = PTHREAD_MUTEX_INITIALIZER;
 static bool g_stopping_reactors = false;
@@ -1403,8 +1404,7 @@ on_reactor(void *arg1, void *arg2)
 	if (cr->cur_core >= g_reactor_count) {
 		SPDK_DEBUGLOG(reactor, "Completed reactor iteration\n");
 
-		evt = spdk_event_allocate(cr->orig_core, cr->cpl, cr->arg1, cr->arg2);
-		free(cr);
+		evt = spdk_event_allocate(cr->orig_core, end_reactor, cr, NULL);
 	} else {
 		SPDK_DEBUGLOG(reactor, "Continuing reactor iteration to %d\n",
 			      cr->cur_core);
@@ -1413,6 +1413,17 @@ on_reactor(void *arg1, void *arg2)
 	}
 	assert(evt != NULL);
 	spdk_event_call(evt);
+}
+
+static void
+end_reactor(void *arg1, void *arg2)
+{
+	struct call_reactor *cr = arg1;
+	(void)arg2;
+
+	cr->cpl(cr->arg1, cr->arg2);
+
+	free(cr);
 }
 
 void
