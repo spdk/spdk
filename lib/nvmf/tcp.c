@@ -1221,27 +1221,15 @@ tcp_sock_flush_cb(void *arg)
 static void
 _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 {
-	int rc;
-	uint32_t mapped_length;
 	struct spdk_nvmf_tcp_qpair *tqpair = pdu->qpair;
 
 	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, SPDK_COUNTOF(pdu->iov), pdu,
-			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable, &mapped_length);
+			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable, NULL);
 	spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
 
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ||
-	    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ) {
-		/* Try to force the send immediately. */
-		rc = spdk_sock_flush(tqpair->sock);
-		if (rc > 0 && (uint32_t)rc == mapped_length) {
-			_pdu_write_done(pdu, 0);
-		} else {
-			SPDK_ERRLOG("Could not write %s to socket: rc=%d, errno=%d\n",
-				    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ?
-				    "IC_RESP" : "TERM_REQ", rc, errno);
-			_pdu_write_done(pdu, rc >= 0 ? -EAGAIN : -errno);
-		}
-	} else if (spdk_interrupt_mode_is_enabled()) {
+	    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ ||
+	    spdk_interrupt_mode_is_enabled()) {
 		/* Async writes must be flushed */
 		if (!tqpair->pending_flush) {
 			tqpair->pending_flush = true;
