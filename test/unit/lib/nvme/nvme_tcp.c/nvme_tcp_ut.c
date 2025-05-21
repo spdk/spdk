@@ -1489,7 +1489,6 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	qpair = &tqpair.qpair;
 	qpair->poll_group = &tgroup.group;
 	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
-	tqpair.needs_poll = true;
 	TAILQ_INIT(&tgroup.needs_poll);
 	STAILQ_INIT(&tgroup.group.disconnected_qpairs);
 	TAILQ_INIT(&tqpair.send_queue);
@@ -1500,7 +1499,7 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 
 	nvme_tcp_ctrlr_disconnect_qpair(&ctrlr, qpair);
 
-	CU_ASSERT(tqpair.needs_poll == false);
+	CU_ASSERT(TAILQ_ENTRY_NOT_ENQUEUED(&tqpair, link));
 	CU_ASSERT(tqpair.sock == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&tqpair.send_queue) == true);
 

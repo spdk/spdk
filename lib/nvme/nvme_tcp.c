@@ -109,7 +109,6 @@ struct nvme_tcp_qpair {
 	enum nvme_tcp_qpair_state		state;
 
 	TAILQ_ENTRY(nvme_tcp_qpair)		link;
-	bool					needs_poll;
 
 	uint64_t				icreq_timeout_tsc;
 
@@ -345,10 +344,9 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	int rc;
 	struct nvme_tcp_poll_group *group;
 
-	if (tqpair->needs_poll) {
+	if (TAILQ_ENTRY_ENQUEUED(tqpair, link)) {
 		group = nvme_tcp_poll_group(qpair->poll_group);
-		TAILQ_REMOVE(&group->needs_poll, tqpair, link);
-		tqpair->needs_poll = false;
+		TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link);
 	}
 
 	rc = spdk_sock_close(&tqpair->sock);
@@ -439,7 +437,7 @@ nvme_tcp_cond_schedule_qpair_polling(struct nvme_tcp_qpair *tqpair)
 {
 	struct nvme_tcp_poll_group *pgroup;
 
-	if (tqpair->needs_poll || !tqpair->qpair.poll_group) {
+	if (TAILQ_ENTRY_ENQUEUED(tqpair, link) || !tqpair->qpair.poll_group) {
 		return;
 	}
 
@@ -451,7 +449,6 @@ nvme_tcp_cond_schedule_qpair_polling(struct nvme_tcp_qpair *tqpair)
 
 	pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 	TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
-	tqpair->needs_poll = true;
 }
 
 static void
@@ -2163,9 +2160,8 @@ nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_soc
 	int32_t num_completions;
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
-	if (tqpair->needs_poll) {
-		TAILQ_REMOVE(&pgroup->needs_poll, tqpair, link);
-		tqpair->needs_poll = false;
+	if (TAILQ_ENTRY_ENQUEUED(tqpair, link)) {
+		TAILQ_REMOVE_CLEAR(&pgroup->needs_poll, tqpair, link);
 	}
 
 	num_completions = spdk_nvme_qpair_process_completions(qpair, pgroup->completions_per_qpair);
@@ -2763,9 +2759,8 @@ nvme_tcp_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
-	if (tqpair->needs_poll) {
-		TAILQ_REMOVE(&group->needs_poll, tqpair, link);
-		tqpair->needs_poll = false;
+	if (TAILQ_ENTRY_ENQUEUED(tqpair, link)) {
+		TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link);
 	}
 
 	if (tqpair->sock && group->sock_group) {
@@ -2808,9 +2803,8 @@ nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 	assert(tqpair->shared_stats == true);
 	tqpair->stats = &g_dummy_stats;
 
-	if (tqpair->needs_poll) {
-		TAILQ_REMOVE(&group->needs_poll, tqpair, link);
-		tqpair->needs_poll = false;
+	if (TAILQ_ENTRY_ENQUEUED(tqpair, link)) {
+		TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link);
 	}
 
 	return 0;
