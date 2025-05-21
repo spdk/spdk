@@ -928,9 +928,7 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 	struct spdk_sock_impl_opts impl_opts;
 	struct spdk_posix_sock *sock;
 	struct addrinfo *res0;
-	int rc, fd = -1;
-	SSL_CTX *ctx = 0;
-	SSL *ssl = 0;
+	int rc;
 
 	assert(opts != NULL);
 	if (enable_ssl) {
@@ -944,16 +942,21 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 		return NULL;
 	}
 
+	sock = posix_sock_alloc(-1, &impl_opts);
+	if (!sock) {
+		return NULL;
+	}
+
 	for (struct addrinfo *res = res0; res != NULL; res = res->ai_next) {
-		fd = spdk_sock_posix_fd_create(res, opts, &impl_opts);
-		if (fd < 0) {
+		sock->fd = spdk_sock_posix_fd_create(res, opts, &impl_opts);
+		if (sock->fd < 0) {
 			continue;
 		}
 
-		rc = spdk_sock_posix_fd_connect(fd, res, opts);
+		rc = spdk_sock_posix_fd_connect(sock->fd, res, opts);
 		if (rc != 0) {
-			close(fd);
-			fd = -1;
+			close(sock->fd);
+			sock->fd = -1;
 			if (rc == 1) {
 				continue;
 			} else {
@@ -965,55 +968,45 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 	}
 
 	freeaddrinfo(res0);
-	if (fd < 0) {
-		return NULL;
+	if (sock->fd < 0) {
+		goto err;
 	}
 
 	if (enable_ssl) {
-		ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
-		if (!ctx) {
+		sock->ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
+		if (!sock->ctx) {
 			SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
-			close(fd);
-			return NULL;
+			goto err;
 		}
 
-		ssl = ssl_sock_setup_connect(ctx, fd);
-		if (!ssl) {
+		sock->ssl = ssl_sock_setup_connect(sock->ctx, sock->fd);
+		if (!sock->ssl) {
 			SPDK_ERRLOG("ssl_sock_setup_connect() failed, errno = %d\n", errno);
-			SSL_CTX_free(ctx);
-			close(fd);
-			return NULL;
+			goto err;
 		}
+
+		SSL_set_app_data(sock->ssl, &sock->base.impl_opts);
 	}
 
-	if (spdk_fd_set_nonblock(fd)) {
-		SSL_free(ssl);
-		SSL_CTX_free(ctx);
-		close(fd);
-		return NULL;
-	}
-
-	sock = posix_sock_alloc(fd, &impl_opts);
-	if (sock == NULL) {
-		SSL_free(ssl);
-		SSL_CTX_free(ctx);
-		close(fd);
-		return NULL;
-	}
-
-	if (ctx) {
-		sock->ctx = ctx;
-	}
-
-	if (ssl) {
-		sock->ssl = ssl;
-		SSL_set_app_data(ssl, &sock->base.impl_opts);
+	if (spdk_fd_set_nonblock(sock->fd)) {
+		goto err;
 	}
 
 	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	posix_sock_init(sock, opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl &&
+	posix_sock_init(sock, opts->zcopy && !spdk_net_is_loopback(sock->fd) && !enable_ssl &&
 			impl_opts.enable_zerocopy_send_client);
 	return &sock->base;
+
+err:
+	/* It is safe to pass NULL to SSL free functions. */
+	SSL_free(sock->ssl);
+	SSL_CTX_free(sock->ctx);
+	if (sock->fd != -1) {
+		close(sock->fd);
+	}
+
+	free(sock);
+	return NULL;
 }
 
 static struct spdk_sock *
