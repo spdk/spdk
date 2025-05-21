@@ -1494,12 +1494,12 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	TAILQ_INIT(&tqpair.send_queue);
 	TAILQ_INIT(&tqpair.free_reqs);
 	TAILQ_INIT(&tqpair.outstanding_reqs);
-	TAILQ_INSERT_TAIL(&tgroup.needs_poll, &tqpair, link);
+	TAILQ_INSERT_TAIL(&tgroup.needs_poll, &tqpair, link_poll);
 	TAILQ_INSERT_TAIL(&tqpair.send_queue, &pdu, tailq);
 
 	nvme_tcp_ctrlr_disconnect_qpair(&ctrlr, qpair);
 
-	CU_ASSERT(TAILQ_ENTRY_NOT_ENQUEUED(&tqpair, link));
+	CU_ASSERT(TAILQ_ENTRY_NOT_ENQUEUED(&tqpair, link_poll));
 	CU_ASSERT(tqpair.sock == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&tqpair.send_queue) == true);
 
