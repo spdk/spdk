@@ -50,7 +50,7 @@ struct spdk_posix_sock {
 
 	int			placement_id;
 
-	SSL_CTX			*ctx;
+	SSL_CTX			*ssl_ctx;
 	SSL			*ssl;
 
 	TAILQ_ENTRY(spdk_posix_sock)	link;
@@ -755,18 +755,18 @@ posix_sock_configure_ssl(struct spdk_posix_sock *sock, bool client)
 {
 	SSL* (*setup_fn)(SSL_CTX *, int) = client ? ssl_sock_setup_connect : ssl_sock_setup_accept;
 
-	sock->ctx = posix_sock_create_ssl_context(client ? TLS_client_method() : TLS_server_method(),
+	sock->ssl_ctx = posix_sock_create_ssl_context(client ? TLS_client_method() : TLS_server_method(),
 			&sock->base.impl_opts);
-	if (!sock->ctx) {
+	if (!sock->ssl_ctx) {
 		SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
 		return -1;
 	}
 
-	sock->ssl = setup_fn(sock->ctx, sock->fd);
+	sock->ssl = setup_fn(sock->ssl_ctx, sock->fd);
 	if (!sock->ssl) {
 		SPDK_ERRLOG("ssl_sock_setup_%s() failed, errno = %d\n", client ? "connect" : "accept", errno);
-		SSL_CTX_free(sock->ctx);
-		sock->ctx = NULL;
+		SSL_CTX_free(sock->ssl_ctx);
+		sock->ssl_ctx = NULL;
 		return -1;
 	}
 
@@ -1014,7 +1014,7 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 err:
 	/* It is safe to pass NULL to SSL free functions. */
 	SSL_free(sock->ssl);
-	SSL_CTX_free(sock->ctx);
+	SSL_CTX_free(sock->ssl_ctx);
 	if (sock->fd != -1) {
 		close(sock->fd);
 	}
@@ -1124,7 +1124,7 @@ posix_sock_close(struct spdk_sock *_sock)
 	close(sock->fd);
 
 	SSL_free(sock->ssl);
-	SSL_CTX_free(sock->ctx);
+	SSL_CTX_free(sock->ssl_ctx);
 
 	pipe_buf = spdk_pipe_destroy(sock->recv_pipe);
 	free(pipe_buf);
