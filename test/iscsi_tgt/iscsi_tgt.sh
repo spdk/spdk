@@ -22,7 +22,6 @@ create_veth_interfaces
 
 trap 'cleanup_veth_interfaces; exit 1' SIGINT SIGTERM EXIT
 
-run_test "iscsi_tgt_sock" $rootdir/test/iscsi_tgt/sock/sock.sh
 if [[ -d /usr/local/calsoft ]]; then
 	run_test "iscsi_tgt_calsoft" $rootdir/test/iscsi_tgt/calsoft/calsoft.sh
 else

@@ -6,7 +6,11 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+source $rootdir/test/nvmf/common.sh
+
+if [[ $TEST_TRANSPORT != tcp ]]; then
+	exit 0
+fi
 
 tcp_sock() {
 	local ap=$1 pid=$2 addr port proc
@@ -45,9 +49,9 @@ waitfortcp() {
 	return 1
 }
 
-iscsitestinit
+nvmftestinit
 
-HELLO_SOCK_APP="${TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock"
+HELLO_SOCK_APP="${NVMF_TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock"
 SOCAT_APP="socat"
 OPENSSL_APP="openssl"
 PSK="-N ssl -E 1234567890ABCDEF -I psk.spdk.io"
@@ -59,15 +63,15 @@ timing_enter sock_client
 echo "Testing client path"
 
 # start echo server using socat
-$SOCAT_APP tcp-l:$ISCSI_PORT,fork,bind=$INITIATOR_IP exec:'/bin/cat' &
+$SOCAT_APP tcp-l:$NVMF_PORT,fork,bind=$NVMF_INITIATOR_IP exec:'/bin/cat' &
 server_pid=$!
-trap 'killprocess $server_pid;iscsitestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid;nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
-waitfortcp $server_pid $INITIATOR_IP:$ISCSI_PORT
+waitfortcp $server_pid $NVMF_INITIATOR_IP:$NVMF_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the client**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N "posix")
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N "posix")
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -75,7 +79,7 @@ fi
 
 # send message using hello_sock client with zero copy disabled
 message="**MESSAGE:This is a test message from the client with zero copy disabled**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N "posix" -z)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N "posix" -z)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -83,7 +87,7 @@ fi
 
 # send message using hello_sock client with zero copy enabled
 message="**MESSAGE:This is a test message from the client with zero copy enabled**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N "posix" -Z)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N "posix" -Z)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -102,32 +106,32 @@ timing_enter sock_ssl_server
 echo "Testing SSL server path"
 
 # start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S $PSK -m 0x1 &
+$HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT -S $PSK -m 0x1 &
 server_pid=$!
-trap 'killprocess $server_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
-waitfortcp $server_pid $TARGET_IP:$ISCSI_PORT
+trap 'killprocess $server_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+waitfortcp $server_pid $NVMF_FIRST_TARGET_IP:$NVMF_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the hello_sock client with ssl**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -m 0x2)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -m 0x2)
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
 
 # send message using hello_sock client using TLS 1.3
 message="**MESSAGE:This is a test message from the hello_sock client with ssl using TLS 1.3**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -T 13 -m 0x2)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -T 13 -m 0x2)
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
 
 # send message using hello_sock client using incorrect TLS 7
 message="**MESSAGE:This is a test message from the hello_sock client with ssl using incorrect TLS 7**"
-echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -T 7 -m 0x2 && exit 1
+echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -T 7 -m 0x2 && exit 1
 
 # send message using hello_sock client with KTLS disabled
 message="**MESSAGE:This is a test message from the hello_sock client with KTLS disabled**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -k -m 0x2)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -k -m 0x2)
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
@@ -139,25 +143,25 @@ fi
 # See GH issue #2687
 
 # message="**MESSAGE:This is a test message from the hello_sock client with KTLS enabled**"
-# echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -K
+# echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -K
 
 # send message using openssl client using TLS 1.3
 message="**MESSAGE:This is a test message from the openssl client using TLS 1.3**"
 response=$( (
 	echo -ne "$message"
 	sleep 2
-) | $OPENSSL_APP s_client -debug -state -tlsextdebug -tls1_3 -psk_identity psk.spdk.io -psk "1234567890ABCDEF" -connect $TARGET_IP:$ISCSI_PORT)
+) | $OPENSSL_APP s_client -debug -state -tlsextdebug -tls1_3 -psk_identity psk.spdk.io -psk "1234567890ABCDEF" -connect $NVMF_FIRST_TARGET_IP:$NVMF_PORT)
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
 
 # send message using hello_sock client with unmatching PSK KEY, expect a failure
 message="**MESSAGE:This is a test message from the hello_sock client with unmatching psk_key**"
-echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -E 4321DEADBEEF1234 -m 0x2 && exit 1
+echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -E 4321DEADBEEF1234 -m 0x2 && exit 1
 
 # send message using hello_sock client with unmatching PSK IDENTITY, expect a failure
 message="**MESSAGE:This is a test message from the hello_sock client with unmatching psk_key**"
-echo "$message" | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -I WRONG_PSK_ID -m 0x2 && exit 1
+echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -I WRONG_PSK_ID -m 0x2 && exit 1
 
 trap '-' SIGINT SIGTERM EXIT
 # NOTE: socat returns code 143 on SIGINT
@@ -172,14 +176,14 @@ timing_exit sock_ssl_server
 timing_enter sock_server
 
 # start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N "posix" -m 0x1 &
+$HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT -S -N "posix" -m 0x1 &
 server_pid=$!
-trap 'killprocess $server_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
-waitfortcp $server_pid $TARGET_IP:$ISCSI_PORT
+trap 'killprocess $server_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+waitfortcp $server_pid $NVMF_FIRST_TARGET_IP:$NVMF_PORT
 
 # send message to server using socat
 message="**MESSAGE:This is a test message to the server**"
-response=$(echo "$message" | $SOCAT_APP - tcp:$TARGET_IP:$ISCSI_PORT 2> /dev/null)
+response=$(echo "$message" | $SOCAT_APP - tcp:$NVMF_FIRST_TARGET_IP:$NVMF_PORT 2> /dev/null)
 
 if [ "$message" != "$response" ]; then
 	exit 1
@@ -189,5 +193,5 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $server_pid
 
-iscsitestfini
+nvmftestfini
 timing_exit sock_server
