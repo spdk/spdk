@@ -36,6 +36,13 @@
 #define SPDK_ZEROCOPY
 #endif
 
+struct posix_connect_ctx {
+	struct addrinfo *first_res;
+	struct addrinfo *next_res;
+	struct spdk_sock_opts opts;
+	struct spdk_sock_impl_opts impl_opts;
+};
+
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
@@ -945,6 +952,59 @@ retry:
 	return &sock->base;
 }
 
+static int
+_sock_posix_connect(struct posix_connect_ctx *ctx)
+{
+	int rc, fd = -1;
+
+	for (; ctx->next_res != NULL; ctx->next_res = ctx->next_res->ai_next) {
+		fd = spdk_sock_posix_fd_create(ctx->next_res, &ctx->opts, &ctx->impl_opts);
+		if (fd < 0) {
+			continue;
+		}
+
+		rc = spdk_sock_posix_fd_connect(fd, ctx->next_res, &ctx->opts);
+		if (rc) {
+			close(fd);
+			fd = -1;
+			if (rc == 1) {
+				continue;
+			}
+		}
+
+		break;
+	}
+
+	freeaddrinfo(ctx->first_res);
+	return fd;
+}
+
+static int
+sock_posix_connect(struct addrinfo *res, struct spdk_sock_opts *opts,
+		   struct spdk_sock_impl_opts *impl_opts)
+{
+	struct posix_connect_ctx *ctx;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -1;
+	}
+
+	ctx->first_res = ctx->next_res = res;
+	ctx->opts = *opts;
+	ctx->impl_opts = *impl_opts;
+
+	rc = _sock_posix_connect(ctx);
+	if (rc < 0) {
+		free(ctx);
+		return -1;
+	}
+
+	free(ctx);
+	return rc;
+}
+
 static struct spdk_sock *
 _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool enable_ssl)
 {
@@ -970,27 +1030,7 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 		return NULL;
 	}
 
-	for (struct addrinfo *res = res0; res != NULL; res = res->ai_next) {
-		sock->fd = spdk_sock_posix_fd_create(res, opts, &impl_opts);
-		if (sock->fd < 0) {
-			continue;
-		}
-
-		rc = spdk_sock_posix_fd_connect(sock->fd, res, opts);
-		if (rc != 0) {
-			close(sock->fd);
-			sock->fd = -1;
-			if (rc == 1) {
-				continue;
-			} else {
-				break;
-			}
-		}
-
-		break;
-	}
-
-	freeaddrinfo(res0);
+	sock->fd = sock_posix_connect(res0, opts, &impl_opts);
 	if (sock->fd < 0) {
 		goto err;
 	}
