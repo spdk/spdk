@@ -961,38 +961,35 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 			}
 		}
 
-		if (enable_ssl) {
-			ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
-			if (!ctx) {
-				SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
-				close(fd);
-				fd = -1;
-				break;
-			}
-
-			ssl = ssl_sock_setup_connect(ctx, fd);
-			if (!ssl) {
-				SPDK_ERRLOG("ssl_sock_setup_connect() failed, errno = %d\n", errno);
-				SSL_CTX_free(ctx);
-				close(fd);
-				fd = -1;
-				break;
-			}
-		}
-
-		if (spdk_fd_set_nonblock(fd)) {
-			SSL_free(ssl);
-			SSL_CTX_free(ctx);
-			close(fd);
-			fd = -1;
-			break;
-		}
-
 		break;
 	}
 
 	freeaddrinfo(res0);
 	if (fd < 0) {
+		return NULL;
+	}
+
+	if (enable_ssl) {
+		ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
+		if (!ctx) {
+			SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
+			close(fd);
+			return NULL;
+		}
+
+		ssl = ssl_sock_setup_connect(ctx, fd);
+		if (!ssl) {
+			SPDK_ERRLOG("ssl_sock_setup_connect() failed, errno = %d\n", errno);
+			SSL_CTX_free(ctx);
+			close(fd);
+			return NULL;
+		}
+	}
+
+	if (spdk_fd_set_nonblock(fd)) {
+		SSL_free(ssl);
+		SSL_CTX_free(ctx);
+		close(fd);
 		return NULL;
 	}
 
