@@ -40,7 +40,7 @@ waitfortcp() {
 			return 1
 		fi
 
-		tcp_sock "$addr" "$1" && return 0
+		tcp_sock "$addr" "$1" && xtrace_restore && return 0
 		sleep 0.5
 	done
 	xtrace_restore
