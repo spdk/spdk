@@ -635,8 +635,7 @@ err:
 }
 
 static SSL_CTX *
-posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *opts,
-			      struct spdk_sock_impl_opts *impl_opts)
+posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_impl_opts *impl_opts)
 {
 	SSL_CTX *ctx;
 	int tls_version = 0;
@@ -749,6 +748,30 @@ ssl_sock_setup_accept(SSL_CTX *ctx, int fd)
 	SPDK_DEBUGLOG(sock_posix, "Negotiated Cipher suite:%s\n",
 		      SSL_CIPHER_get_name(SSL_get_current_cipher(ssl)));
 	return ssl;
+}
+
+static int
+posix_sock_configure_ssl(struct spdk_posix_sock *sock, bool client)
+{
+	SSL* (*setup_fn)(SSL_CTX *, int) = client ? ssl_sock_setup_connect : ssl_sock_setup_accept;
+
+	sock->ctx = posix_sock_create_ssl_context(client ? TLS_client_method() : TLS_server_method(),
+			&sock->base.impl_opts);
+	if (!sock->ctx) {
+		SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
+		return -1;
+	}
+
+	sock->ssl = setup_fn(sock->ctx, sock->fd);
+	if (!sock->ssl) {
+		SPDK_ERRLOG("ssl_sock_setup_%s() failed, errno = %d\n", client ? "connect" : "accept", errno);
+		SSL_CTX_free(sock->ctx);
+		sock->ctx = NULL;
+		return -1;
+	}
+
+	SSL_set_app_data(sock->ssl, &sock->base.impl_opts);
+	return 0;
 }
 
 static ssize_t
@@ -973,19 +996,10 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 	}
 
 	if (enable_ssl) {
-		sock->ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
-		if (!sock->ctx) {
-			SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
+		rc = posix_sock_configure_ssl(sock, true);
+		if (rc < 0) {
 			goto err;
 		}
-
-		sock->ssl = ssl_sock_setup_connect(sock->ctx, sock->fd);
-		if (!sock->ssl) {
-			SPDK_ERRLOG("ssl_sock_setup_connect() failed, errno = %d\n", errno);
-			goto err;
-		}
-
-		SSL_set_app_data(sock->ssl, &sock->base.impl_opts);
 	}
 
 	if (spdk_fd_set_nonblock(sock->fd)) {
@@ -1030,8 +1044,6 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 	socklen_t			salen;
 	int				rc, fd;
 	struct spdk_posix_sock		*new_sock;
-	SSL_CTX *ctx = 0;
-	SSL *ssl = 0;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
@@ -1068,38 +1080,19 @@ _posix_sock_accept(struct spdk_sock *_sock, bool enable_ssl)
 	}
 #endif
 
-	/* Establish SSL connection */
-	if (enable_ssl) {
-		ctx = posix_sock_create_ssl_context(TLS_server_method(), &sock->base.opts, &sock->base.impl_opts);
-		if (!ctx) {
-			SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
-			close(fd);
-			return NULL;
-		}
-		ssl = ssl_sock_setup_accept(ctx, fd);
-		if (!ssl) {
-			SPDK_ERRLOG("ssl_sock_setup_accept() failed, errno = %d\n", errno);
-			close(fd);
-			SSL_CTX_free(ctx);
-			return NULL;
-		}
-	}
-
 	new_sock = posix_sock_alloc(fd, &sock->base.impl_opts);
 	if (new_sock == NULL) {
 		close(fd);
-		SSL_free(ssl);
-		SSL_CTX_free(ctx);
 		return NULL;
 	}
 
-	if (ctx) {
-		new_sock->ctx = ctx;
-	}
-
-	if (ssl) {
-		new_sock->ssl = ssl;
-		SSL_set_app_data(ssl, &new_sock->base.impl_opts);
+	if (enable_ssl) {
+		rc = posix_sock_configure_ssl(new_sock, false);
+		if (rc < 0) {
+			free(new_sock);
+			close(fd);
+			return NULL;
+		}
 	}
 
 	/* Inherit the zero copy feature from the listen socket */
