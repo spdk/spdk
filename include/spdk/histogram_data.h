@@ -22,7 +22,7 @@ extern "C" {
 #define SPDK_HISTOGRAM_BUCKET_LSB(h)		(64 - SPDK_HISTOGRAM_GRANULARITY(h))
 #define SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h)	(1ULL << SPDK_HISTOGRAM_GRANULARITY(h))
 #define SPDK_HISTOGRAM_BUCKET_MASK(h)		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h) - 1)
-#define SPDK_HISTOGRAM_NUM_BUCKET_RANGES(h)	(SPDK_HISTOGRAM_BUCKET_LSB(h) + 1)
+#define SPDK_HISTOGRAM_NUM_BUCKET_RANGES(h)	(h->max_range - h->min_range + 1)
 #define SPDK_HISTOGRAM_NUM_BUCKETS(h)		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h) * \
 						 SPDK_HISTOGRAM_NUM_BUCKET_RANGES(h))
 
@@ -54,13 +54,16 @@ extern "C" {
  *
  * Buckets can be made more granular by increasing SPDK_HISTOGRAM_GRANULARITY.  This
  * comes at the cost of additional storage per namespace context to store the bucket data.
+ * In order to lower number of ranges to shrink unnecessary low and high datapoints
+ * min_val and max_val can be specified with spdk_histogram_data_alloc_sized_ext().
+ * It will limit the values in histogram to a range [min_val, max_val).
  */
 
 struct spdk_histogram_data {
-
 	uint32_t	granularity;
+	uint32_t	min_range;
+	uint32_t	max_range;
 	uint64_t	*bucket;
-
 };
 
 static inline void
@@ -68,20 +71,20 @@ __spdk_histogram_increment(struct spdk_histogram_data *h, uint32_t range, uint32
 {
 	uint64_t *count;
 
-	count = &h->bucket[(range << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
+	count = &h->bucket[((range - h->min_range) << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
 	(*count)++;
 }
 
 static inline uint64_t
 __spdk_histogram_get_count(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
 {
-	return h->bucket[(range << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
+	return h->bucket[((range - h->min_range) << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
 }
 
 static inline uint64_t *
 __spdk_histogram_get_bucket(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
 {
-	return &h->bucket[(range << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
+	return &h->bucket[((range - h->min_range) << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
 }
 
 static inline void
@@ -124,8 +127,19 @@ __spdk_histogram_data_get_bucket_index(struct spdk_histogram_data *h, uint64_t d
 static inline void
 spdk_histogram_data_tally(struct spdk_histogram_data *histogram, uint64_t datapoint)
 {
-	uint32_t range = __spdk_histogram_data_get_bucket_range(histogram, datapoint);
-	uint32_t index = __spdk_histogram_data_get_bucket_index(histogram, datapoint, range);
+	uint32_t range, index;
+
+	range = __spdk_histogram_data_get_bucket_range(histogram, datapoint);
+
+	if (range < histogram->min_range) {
+		range = histogram->min_range;
+		index = 0;
+	} else if (range > histogram->max_range) {
+		range = histogram->max_range;
+		index = SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(histogram) - 1;
+	} else {
+		index = __spdk_histogram_data_get_bucket_index(histogram, datapoint, range);
+	}
 
 	__spdk_histogram_increment(histogram, range, index);
 }
@@ -159,7 +173,7 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 
 	total = 0;
 
-	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKET_RANGES(histogram); i++) {
+	for (i = histogram->min_range; i <= histogram->max_range; i++) {
 		for (j = 0; j < SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(histogram); j++) {
 			total += __spdk_histogram_get_count(histogram, i, j);
 		}
@@ -168,7 +182,7 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 	so_far = 0;
 	bucket = 0;
 
-	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKET_RANGES(histogram); i++) {
+	for (i = histogram->min_range; i <= histogram->max_range; i++) {
 		for (j = 0; j < SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(histogram); j++) {
 			count = __spdk_histogram_get_count(histogram, i, j);
 			so_far += count;
@@ -193,6 +207,11 @@ spdk_histogram_data_merge(const struct spdk_histogram_data *dst,
 		return -EINVAL;
 	}
 
+	/* Histogram with different size cannot be simply merged. */
+	if (dst->min_range != src->min_range || dst->max_range != src->max_range) {
+		return -EINVAL;
+	}
+
 	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKETS(dst); i++) {
 		dst->bucket[i] += src->bucket[i];
 	}
@@ -200,10 +219,25 @@ spdk_histogram_data_merge(const struct spdk_histogram_data *dst,
 	return 0;
 }
 
+/**
+ * Allocate a histogram data structure with specified granularity. It tracks datapoints
+ * from min_val (inclusive) to max_val (exclusive).
+ *
+ * \param granularity Granularity of the histogram buckets. Each power-of-2 range is
+ *                    split into (1 << granularity) buckets.
+ * \param min_val The minimum value to be tracked, inclusive.
+ * \param max_val The maximum value to be tracked, exclusive.
+ *
+ * \return A histogram data structure.
+ */
 static inline struct spdk_histogram_data *
-spdk_histogram_data_alloc_sized(uint32_t granularity)
+spdk_histogram_data_alloc_sized_ext(uint32_t granularity, uint64_t min_val, uint64_t max_val)
 {
 	struct spdk_histogram_data *h;
+
+	if (min_val >= max_val) {
+		return NULL;
+	}
 
 	h = (struct spdk_histogram_data *)calloc(1, sizeof(*h));
 	if (h == NULL) {
@@ -211,6 +245,8 @@ spdk_histogram_data_alloc_sized(uint32_t granularity)
 	}
 
 	h->granularity = granularity;
+	h->min_range = __spdk_histogram_data_get_bucket_range(h, min_val);
+	h->max_range = __spdk_histogram_data_get_bucket_range(h, max_val - 1);
 	h->bucket = (uint64_t *)calloc(SPDK_HISTOGRAM_NUM_BUCKETS(h), sizeof(uint64_t));
 	if (h->bucket == NULL) {
 		free(h);
@@ -218,6 +254,12 @@ spdk_histogram_data_alloc_sized(uint32_t granularity)
 	}
 
 	return h;
+}
+
+static inline struct spdk_histogram_data *
+spdk_histogram_data_alloc_sized(uint32_t granularity)
+{
+	return spdk_histogram_data_alloc_sized_ext(granularity, 0, UINT64_MAX);
 }
 
 static inline struct spdk_histogram_data *

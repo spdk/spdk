@@ -112,6 +112,81 @@ histogram_merge(void)
 	spdk_histogram_data_free(h2);
 }
 
+struct value_with_count {
+	uint64_t value;
+	uint64_t count;
+};
+
+static void
+check_values_with_count(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+			uint64_t total, uint64_t so_far)
+{
+	struct value_with_count **values = ctx;
+
+	if (count == 0) {
+		return;
+	}
+
+	CU_ASSERT((**values).count == count);
+
+	/*
+	 * The bucket for this iteration does not include end, but
+	 *  subtract one anyways to account for the last bucket
+	 *  which will have end = 0x0 (UINT64_MAX + 1).
+	 */
+	end--;
+
+	CU_ASSERT((**values).value >= start);
+	/*
+	 * We subtracted one from end above, so it's OK here for
+	 *  value to equal end.
+	 */
+	CU_ASSERT((*values)->value <= end);
+	(*values)++;
+}
+
+#define TEST_TALLY_COUNT 3
+#define TEST_MIN_VAL (1ULL << 9)
+#define TEST_MAX_VAL (1ULL << 30)
+#define TEST_BELOW_MIN_VAL (TEST_MIN_VAL >> 1)
+#define TEST_IN_MIDDLE_VAL ((TEST_MIN_VAL + TEST_MAX_VAL) >> 2)
+#define TEST_ABOVE_MAX_VAL (TEST_MAX_VAL << 1)
+
+struct value_with_count g_value_with_count[] = {
+	{.value = TEST_MIN_VAL, .count = 2 * TEST_TALLY_COUNT},
+	{.value = TEST_IN_MIDDLE_VAL, .count = TEST_TALLY_COUNT},
+	{.value = TEST_MAX_VAL - 1, .count = 2 * TEST_TALLY_COUNT},
+};
+
+static void
+histogram_min_max_range_test(void)
+{
+	struct spdk_histogram_data *h1, *h2;
+	struct value_with_count *values = g_value_with_count;
+	int i;
+
+	h1 = spdk_histogram_data_alloc();
+
+	CU_ASSERT(h1->min_range == 0);
+	CU_ASSERT(h1->max_range == SPDK_HISTOGRAM_BUCKET_LSB(h1));
+
+	h2 = spdk_histogram_data_alloc_sized_ext(SPDK_HISTOGRAM_GRANULARITY_DEFAULT, TEST_MIN_VAL,
+			TEST_MAX_VAL);
+
+	for (i = 0; i < TEST_TALLY_COUNT; i++) {
+		spdk_histogram_data_tally(h2, TEST_BELOW_MIN_VAL);
+		spdk_histogram_data_tally(h2, TEST_MIN_VAL);
+		spdk_histogram_data_tally(h2, TEST_IN_MIDDLE_VAL);
+		spdk_histogram_data_tally(h2, TEST_MAX_VAL);
+		spdk_histogram_data_tally(h2, TEST_ABOVE_MAX_VAL);
+	}
+
+	spdk_histogram_data_iterate(h2, check_values_with_count, &values);
+
+	spdk_histogram_data_free(h1);
+	spdk_histogram_data_free(h2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -130,7 +205,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "histogram_test", histogram_test) == NULL ||
-		CU_add_test(suite, "histogram_merge", histogram_merge) == NULL
+		CU_add_test(suite, "histogram_merge", histogram_merge) == NULL ||
+		CU_add_test(suite, "histogram_min_max_range_test", histogram_min_max_range_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
