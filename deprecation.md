@@ -19,6 +19,13 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
+### util/net
+
+#### `spdk_net_getaddr`
+
+Returning -1 and setting errno on this function is deprecated and will be changed in the 26.01
+release. This function will return negative errno values instead.
+
 ### sock
 
 #### `spdk_sock_\*`
