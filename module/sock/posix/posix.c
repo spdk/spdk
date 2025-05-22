@@ -364,7 +364,8 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	if (_sock->impl_opts.enable_recv_pipe) {
 		rc = posix_sock_alloc_pipe(sock, sz);
 		if (rc) {
-			return rc;
+			errno = rc;
+			return -1;
 		}
 	}
 
@@ -377,12 +378,11 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
-	if (rc < 0) {
+	if (rc) {
 		return rc;
 	}
 
 	_sock->impl_opts.recv_buf_size = sz;
-
 	return 0;
 }
 
@@ -404,12 +404,11 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
-	if (rc < 0) {
+	if (rc) {
 		return rc;
 	}
 
 	_sock->impl_opts.send_buf_size = sz;
-
 	return 0;
 }
 
@@ -1583,16 +1582,11 @@ posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int val;
-	int rc;
 
 	assert(sock != NULL);
 
 	val = nbytes;
-	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
-	if (rc != 0) {
-		return -1;
-	}
-	return 0;
+	return setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
 }
 
 static bool
