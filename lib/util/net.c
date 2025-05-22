@@ -45,7 +45,7 @@ spdk_net_get_address_string(struct sockaddr *sa, char *addr, size_t len)
 	const char *result = NULL;
 
 	if (sa == NULL || addr == NULL) {
-		return -1;
+		return -EINVAL;
 	}
 
 	switch (sa->sa_family) {
@@ -61,11 +61,11 @@ spdk_net_get_address_string(struct sockaddr *sa, char *addr, size_t len)
 		break;
 	}
 
-	if (result != NULL) {
-		return 0;
-	} else {
+	if (result == NULL) {
 		return -errno;
 	}
+
+	return 0;
 }
 
 bool

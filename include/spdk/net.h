@@ -36,7 +36,7 @@ int spdk_net_get_interface_name(const char *ip, char *ifc, size_t len);
  * \param addr string to put the address
  * \param len length of the the addr parameter
  *
- * \return 0 if successful, negative -errno otherwise
+ * \return 0 on success, negative errno otherwise
  */
 int spdk_net_get_address_string(struct sockaddr *sa, char *addr, size_t len);
 
