@@ -60,7 +60,7 @@ bool spdk_net_is_loopback(int fd);
  * \param plen Length of the buffer 'paddr'.
  * \param pport A pointer (may be NULL) to the buffer to hold the peer port info.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, -1 on failure with errno set.
  */
 int spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		     char *paddr, int plen, uint16_t *pport);

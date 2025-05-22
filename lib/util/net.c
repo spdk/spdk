@@ -144,13 +144,15 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		break;
 	default:
 		/* Unsupported socket family */
+		errno = EINVAL;
 		return -1;
 	}
 
 	if (laddr) {
 		rc = spdk_net_get_address_string((struct sockaddr *)&sa, laddr, llen);
 		if (rc != 0) {
-			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
+			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", abs(rc));
+			errno = abs(rc);
 			return -1;
 		}
 	}
@@ -169,6 +171,7 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		/* It is an error to getaddr for a peer address on a listen socket. */
 		if (paddr != NULL || pport != NULL) {
 			SPDK_ERRLOG("paddr, pport not valid on listen sockets\n");
+			errno = EINVAL;
 			return -1;
 		}
 		return 0;
@@ -187,7 +190,8 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 	if (paddr) {
 		rc = spdk_net_get_address_string((struct sockaddr *)&sa, paddr, plen);
 		if (rc != 0) {
-			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", rc);
+			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", abs(rc));
+			errno = abs(rc);
 			return -1;
 		}
 	}

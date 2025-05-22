@@ -283,7 +283,7 @@ void spdk_sock_get_default_opts(struct spdk_sock_opts *opts);
  * \param clen Length of the buffer 'caddr'.
  * \param cport A pointer(May be NULL) to the buffer to hold the port info of server.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, -1 on failure with errno set.
  */
 int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
 		      char *caddr, int clen, uint16_t *cport);
