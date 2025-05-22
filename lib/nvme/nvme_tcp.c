@@ -68,6 +68,7 @@ struct nvme_tcp_poll_group {
 	int64_t num_completions;
 
 	TAILQ_HEAD(, nvme_tcp_qpair) needs_poll;
+	TAILQ_HEAD(, nvme_tcp_qpair) timeout_enabled;
 	struct spdk_nvme_tcp_stat stats;
 };
 
@@ -109,6 +110,8 @@ struct nvme_tcp_qpair {
 	enum nvme_tcp_qpair_state		state;
 
 	TAILQ_ENTRY(nvme_tcp_qpair)		link_poll;
+
+	TAILQ_ENTRY(nvme_tcp_qpair)		link_timeout;
 
 	uint64_t				icreq_timeout_tsc;
 
@@ -981,6 +984,15 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 			  (uint32_t)req->cmd.cid, (uint32_t)req->cmd.opc,
 			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12, tqpair->qpair.queue_depth);
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
+
+	if (TAILQ_ENTRY_NOT_ENQUEUED(tqpair, link_timeout) && qpair->poll_group != NULL &&
+	    qpair->ctrlr->timeout_enabled) {
+		struct nvme_tcp_poll_group *tgroup;
+
+		tgroup = nvme_tcp_poll_group(qpair->poll_group);
+		TAILQ_INSERT_TAIL(&tgroup->timeout_enabled, tqpair, link_timeout);
+	}
+
 	return nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
 }
 
@@ -1030,6 +1042,17 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)tcp_req->pdu, req->cb_arg,
 			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw, qpair->queue_depth);
 	TAILQ_REMOVE(&tqpair->outstanding_reqs, tcp_req, link);
+
+	if (TAILQ_EMPTY(&tqpair->outstanding_reqs) && qpair->poll_group != NULL &&
+	    TAILQ_ENTRY_ENQUEUED(tqpair, link_timeout)) {
+		struct nvme_tcp_poll_group *tgroup;
+
+		assert(qpair->ctrlr->timeout_enabled);
+
+		tgroup = nvme_tcp_poll_group(qpair->poll_group);
+		TAILQ_REMOVE_CLEAR(&tgroup->timeout_enabled, tqpair, link_timeout);
+	}
+
 	nvme_tcp_req_put(tqpair, tcp_req);
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, &cpl);
 }
@@ -2715,6 +2738,7 @@ nvme_tcp_poll_group_create(void)
 	}
 
 	TAILQ_INIT(&group->needs_poll);
+	TAILQ_INIT(&group->timeout_enabled);
 
 	group->sock_group = spdk_sock_group_create(group);
 	if (group->sock_group == NULL) {
@@ -2806,6 +2830,9 @@ nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 	if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
 		TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
 	}
+	if (TAILQ_ENTRY_ENQUEUED(tqpair, link_timeout)) {
+		TAILQ_REMOVE_CLEAR(&group->timeout_enabled, tqpair, link_timeout);
+	}
 
 	return 0;
 }
@@ -2844,6 +2871,12 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	 * and they weren't polled as a consequence of calling spdk_sock_group_poll above, poll them now. */
 	TAILQ_FOREACH_SAFE(tqpair, &group->needs_poll, link_poll, tmp_tqpair) {
 		nvme_tcp_qpair_sock_cb(&tqpair->qpair, group->sock_group, tqpair->sock);
+	}
+
+	TAILQ_FOREACH_SAFE(tqpair, &group->timeout_enabled, link_timeout, tmp_tqpair) {
+		qpair = &tqpair->qpair;
+		assert(qpair->ctrlr->timeout_enabled);
+		nvme_tcp_qpair_check_timeout(qpair);
 	}
 
 	if (spdk_unlikely(num_events < 0)) {
