@@ -102,8 +102,8 @@ histogram_merge(void)
 	spdk_histogram_data_free(h1);
 	spdk_histogram_data_free(h2);
 
-	h1 = spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT);
-	h2 = spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT - 1);
+	h1 = spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_GRANULARITY_DEFAULT);
+	h2 = spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_GRANULARITY_DEFAULT - 1);
 
 	rc = spdk_histogram_data_merge(h1, h2);
 	CU_ASSERT(rc == -EINVAL);

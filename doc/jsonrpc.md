@@ -2856,7 +2856,7 @@ name                    | Required | string      | Block device name
 Name                    | Description
 ------------------------| -----------
 histogram               | Base64 encoded histogram
-bucket_shift            | Granularity of the histogram buckets
+granularity             | Granularity of the histogram buckets
 tsc_rate                | Ticks per second
 
 #### Example
@@ -2884,7 +2884,7 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
   "result": {
     "histogram": "AAAAAAAAAAAAAA...AAAAAAAAA==",
     "tsc_rate": 2300000000,
-    "bucket_shift": 7
+    "granularity": 7
   }
 }
 ~~~
@@ -8254,7 +8254,7 @@ name                    | Required | string      | Iscsi target node name
 Name                    | Description
 ------------------------| -----------
 histogram               | Base64 encoded histogram
-bucket_shift            | Granularity of the histogram buckets
+granularity             | Granularity of the histogram buckets
 tsc_rate                | Ticks per second
 
 #### Example
@@ -8282,7 +8282,7 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
   "result": {
     "histogram": "AAAAAAAAAAAAAA...AAAAAAAAA==",
     "tsc_rate": 2300000000,
-    "bucket_shift": 7
+    "granularity": 7
   }
 }
 ~~~

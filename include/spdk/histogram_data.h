@@ -17,10 +17,10 @@
 extern "C" {
 #endif
 
-#define SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT	7
-#define SPDK_HISTOGRAM_BUCKET_SHIFT(h)		h->bucket_shift
-#define SPDK_HISTOGRAM_BUCKET_LSB(h)		(64 - SPDK_HISTOGRAM_BUCKET_SHIFT(h))
-#define SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h)	(1ULL << SPDK_HISTOGRAM_BUCKET_SHIFT(h))
+#define SPDK_HISTOGRAM_GRANULARITY_DEFAULT	7
+#define SPDK_HISTOGRAM_GRANULARITY(h)		h->granularity
+#define SPDK_HISTOGRAM_BUCKET_LSB(h)		(64 - SPDK_HISTOGRAM_GRANULARITY(h))
+#define SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h)	(1ULL << SPDK_HISTOGRAM_GRANULARITY(h))
 #define SPDK_HISTOGRAM_BUCKET_MASK(h)		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h) - 1)
 #define SPDK_HISTOGRAM_NUM_BUCKET_RANGES(h)	(SPDK_HISTOGRAM_BUCKET_LSB(h) + 1)
 #define SPDK_HISTOGRAM_NUM_BUCKETS(h)		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h) * \
@@ -52,13 +52,13 @@ extern "C" {
  * On a 2.3GHz processor, this strategy results in 50ns buckets in the 7-14us range (sweet
  * spot for Intel Optane SSD latency testing).
  *
- * Buckets can be made more granular by increasing SPDK_HISTOGRAM_BUCKET_SHIFT.  This
+ * Buckets can be made more granular by increasing SPDK_HISTOGRAM_GRANULARITY.  This
  * comes at the cost of additional storage per namespace context to store the bucket data.
  */
 
 struct spdk_histogram_data {
 
-	uint32_t	bucket_shift;
+	uint32_t	granularity;
 	uint64_t	*bucket;
 
 };
@@ -68,20 +68,20 @@ __spdk_histogram_increment(struct spdk_histogram_data *h, uint32_t range, uint32
 {
 	uint64_t *count;
 
-	count = &h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
+	count = &h->bucket[(range << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
 	(*count)++;
 }
 
 static inline uint64_t
 __spdk_histogram_get_count(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
 {
-	return h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
+	return h->bucket[(range << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
 }
 
 static inline uint64_t *
 __spdk_histogram_get_bucket(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
 {
-	return &h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
+	return &h->bucket[(range << SPDK_HISTOGRAM_GRANULARITY(h)) + index];
 }
 
 static inline void
@@ -138,7 +138,7 @@ __spdk_histogram_data_get_bucket_start(const struct spdk_histogram_data *h, uint
 
 	index += 1;
 	if (range > 0) {
-		bucket = 1ULL << (range + SPDK_HISTOGRAM_BUCKET_SHIFT(h) - 1);
+		bucket = 1ULL << (range + SPDK_HISTOGRAM_GRANULARITY(h) - 1);
 		bucket += (uint64_t)index << (range - 1);
 	} else {
 		bucket = index;
@@ -185,11 +185,11 @@ spdk_histogram_data_merge(const struct spdk_histogram_data *dst,
 {
 	uint64_t i;
 
-	/* Histograms with different bucket_shift values cannot be simply
+	/* Histograms with different granularity values cannot be simply
 	 * merged, because the buckets represent different ranges of
 	 * values.
 	 */
-	if (dst->bucket_shift != src->bucket_shift) {
+	if (dst->granularity != src->granularity) {
 		return -EINVAL;
 	}
 
@@ -201,7 +201,7 @@ spdk_histogram_data_merge(const struct spdk_histogram_data *dst,
 }
 
 static inline struct spdk_histogram_data *
-spdk_histogram_data_alloc_sized(uint32_t bucket_shift)
+spdk_histogram_data_alloc_sized(uint32_t granularity)
 {
 	struct spdk_histogram_data *h;
 
@@ -210,7 +210,7 @@ spdk_histogram_data_alloc_sized(uint32_t bucket_shift)
 		return NULL;
 	}
 
-	h->bucket_shift = bucket_shift;
+	h->granularity = granularity;
 	h->bucket = (uint64_t *)calloc(SPDK_HISTOGRAM_NUM_BUCKETS(h), sizeof(uint64_t));
 	if (h->bucket == NULL) {
 		free(h);
@@ -223,7 +223,7 @@ spdk_histogram_data_alloc_sized(uint32_t bucket_shift)
 static inline struct spdk_histogram_data *
 spdk_histogram_data_alloc(void)
 {
-	return spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT);
+	return spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_GRANULARITY_DEFAULT);
 }
 
 static inline void
