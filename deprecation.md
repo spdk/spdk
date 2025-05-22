@@ -21,6 +21,18 @@ The tags can be matched with the level 4 headers below.
 
 ### sock
 
+#### `spdk_sock_\*`
+
+`spdk_sock_getaddr`, `spdk_sock_close`, `spdk_sock_flush`, `spdk_sock_recv`, `spdk_sock_writev`,
+`spdk_sock_readv`, `spdk_sock_recv_next`, `spdk_sock_set_recvlowat`, `spdk_sock_set_recvbuf`,
+`spdk_sock_set_sendbuf`, `spdk_sock_group_add_sock`, `spdk_sock_group_remove_sock`,
+`spdk_sock_group_provide_buf`, `spdk_sock_group_poll`, `spdk_sock_group_poll_count`,
+`spdk_sock_group_close`, `spdk_sock_impl_get_opts`, `spdk_sock_impl_set_opts`,
+`spdk_sock_set_default_impl`, `spdk_sock_group_register_interrupt`
+
+Returning -1 and setting errno on these functions is deprecated and will be changed in the 26.01
+release. These functions will return negative errno values instead.
+
 #### `spdk_sock_flush`
 
 This function returnes number of bytes sent on success, whereas this behavior is deprecated and
