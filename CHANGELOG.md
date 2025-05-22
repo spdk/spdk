@@ -1,6 +1,6 @@
 # Changelog
 
-## v25.01: (Upcoming Release)
+## v25.05: (Upcoming Release)
 
 ### bdev_nvme
 
