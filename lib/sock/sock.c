@@ -624,33 +624,37 @@ spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct s
 	}
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
-		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1)) {
-			continue;
-		}
-
-		SPDK_DEBUGLOG(sock, "Creating a client socket using impl %s\n", impl->name);
-		sock_init_opts(&opts_local, opts);
-		if (opts_local.connect_timeout > INT_MAX) {
-			SPDK_ERRLOG("connect_timeout opt cannot exceed INT_MAX\n");
-			return NULL;
-		}
-
-		sock = impl->connect(ip, port, &opts_local);
-		if (sock != NULL) {
-			/* Copy the contents, both the two structures are the same ABI version */
-			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
-			/* Clear out impl_opts to make sure we don't keep reference to a dangling
-			 * pointer */
-			sock->opts.impl_opts = NULL;
-			sock->net_impl = impl;
-			TAILQ_INIT(&sock->queued_reqs);
-			TAILQ_INIT(&sock->pending_reqs);
-
-			return sock;
+		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1) == 0) {
+			break;
 		}
 	}
 
-	return NULL;
+	if (!impl) {
+		SPDK_ERRLOG("Cannot find %s sock implementation\n", impl_name ? impl_name : "any");
+		return NULL;
+	}
+
+	SPDK_DEBUGLOG(sock, "Creating a client socket using impl %s\n", impl->name);
+	sock_init_opts(&opts_local, opts);
+	if (opts_local.connect_timeout > INT_MAX) {
+		SPDK_ERRLOG("connect_timeout opt cannot exceed INT_MAX\n");
+		return NULL;
+	}
+
+	sock = impl->connect(ip, port, &opts_local);
+	if (!sock) {
+		return NULL;
+	}
+
+	/* Copy the contents, both the two structures are the same ABI version */
+	memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
+	/* Clear out impl_opts to make sure we don't keep reference to a dangling
+	 * pointer */
+	sock->opts.impl_opts = NULL;
+	sock->net_impl = impl;
+	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
+	return sock;
 }
 
 struct spdk_sock *
@@ -683,27 +687,32 @@ spdk_sock_listen_ext(const char *ip, int port, const char *_impl_name, struct sp
 	}
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
-		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1)) {
-			continue;
-		}
-
-		SPDK_DEBUGLOG(sock, "Creating a listening socket using impl %s\n", impl->name);
-		sock_init_opts(&opts_local, opts);
-		sock = impl->listen(ip, port, &opts_local);
-		if (sock != NULL) {
-			/* Copy the contents, both the two structures are the same ABI version */
-			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
-			/* Clear out impl_opts to make sure we don't keep reference to a dangling
-			 * pointer */
-			sock->opts.impl_opts = NULL;
-			sock->net_impl = impl;
-			/* Don't need to initialize the request queues for listen
-			 * sockets. */
-			return sock;
+		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1) == 0) {
+			break;
 		}
 	}
 
-	return NULL;
+	if (!impl) {
+		SPDK_ERRLOG("Cannot find %s sock implementation\n", impl_name ? impl_name : "any");
+		return NULL;
+	}
+
+	SPDK_DEBUGLOG(sock, "Creating a listening socket using impl %s\n", impl->name);
+	sock_init_opts(&opts_local, opts);
+	sock = impl->listen(ip, port, &opts_local);
+	if (!sock) {
+		return NULL;
+	}
+
+	/* Copy the contents, both the two structures are the same ABI version */
+	memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
+	/* Clear out impl_opts to make sure we don't keep reference to a dangling
+	 * pointer */
+	sock->opts.impl_opts = NULL;
+	sock->net_impl = impl;
+	/* Don't need to initialize the request queues for listen
+	 * sockets. */
+	return sock;
 }
 
 struct spdk_sock *

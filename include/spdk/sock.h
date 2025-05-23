@@ -307,10 +307,7 @@ const char *spdk_sock_get_impl_name(struct spdk_sock *sock);
  *
  * \param ip IP address of the server.
  * \param port Port number of the server.
- * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
- * specified, it will *only* try to connect on that impl. If it is NULL, it will try
- * all the sock implementations in order and uses the first sock implementation which
- * can connect.
+ * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
  */
@@ -323,10 +320,7 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port, const char *impl_n
  *
  * \param ip IP address of the server.
  * \param port Port number of the server.
- * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
- * specified, it will *only* try to connect on that impl. If it is NULL, it will try
- * all the sock implementations in order and uses the first sock implementation which
- * can connect.
+ * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
  * \param opts The sock option pointer provided by the user which should not be NULL pointer.
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
@@ -341,10 +335,7 @@ struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, const char *im
  *
  * \param ip IP address to listen on.
  * \param port Port number.
- * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
- * specified, it will *only* try to listen on that impl. If it is NULL, it will try
- * all the sock implementations in order and uses the first sock implementation which
- * can listen.
+ * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
@@ -357,10 +348,7 @@ struct spdk_sock *spdk_sock_listen(const char *ip, int port, const char *impl_na
  *
  * \param ip IP address to listen on.
  * \param port Port number.
- * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
- * specified, it will *only* try to listen on that impl. If it is NULL, it will try
- * all the sock implementations in order and uses the first sock implementation which
- * can listen.
+ * \param impl_name The sock implementation to use, such as "posix", or NULL for default.
  * \param opts The sock option pointer provided by the user, which should not be NULL pointer.
  *
  * \return a pointer to the listened socket on success, or NULL on failure.

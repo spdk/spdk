@@ -4,6 +4,15 @@
 
 ### sock
 
+Simplified spdk_sock_[listen|connect] impl_name handling. Previously, if NULL was provided and the
+connection or listen operation failed the code would continue checking other sock implementations.
+This behavior is no longer necessary, as VPP sock module was removed. The remaining uring and posix
+implementations both rely on network kernel stack and upcoming XLIO support shares the same
+addressing. This legacy behavior complicates the implementation of asynchronous connect,
+particularly when the socket object is returned immediately. Now, when NULL is provided, the default
+implementation is selected and terminates on failure without iterating over other sock
+implementations.
+
 Changed the return behavior of `spdk_sock_flush`. The function now returns 0 on success, as relying
 on the number of bytes returned was not recommended.
 
