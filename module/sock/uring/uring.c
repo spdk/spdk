@@ -1285,7 +1285,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				tracker = &group->trackers[bid];
 
 				assert(tracker->buf != NULL);
-				assert(tracker->len != 0);
+				assert(tracker->buflen != 0);
 
 				/* Append this data to the stream */
 				tracker->len = status;
