@@ -2,6 +2,11 @@
 
 ## v25.09: (Upcoming Release)
 
+### sock
+
+Changed the return behavior of `spdk_sock_flush`. The function now returns 0 on success, as relying
+on the number of bytes returned was not recommended.
+
 ## v25.05
 
 ### accel_mlx5
