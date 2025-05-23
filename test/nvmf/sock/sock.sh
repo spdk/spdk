@@ -8,6 +8,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+SOCK_IMPL="${SPDK_SOCK_IMPL_DEFAULT:-posix}"
+
 if [[ $TEST_TRANSPORT != tcp ]]; then
 	exit 0
 fi
@@ -71,7 +73,7 @@ waitfortcp $server_pid $NVMF_INITIATOR_IP:$NVMF_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the client**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N "posix")
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N $SOCK_IMPL)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -79,7 +81,7 @@ fi
 
 # send message using hello_sock client with zero copy disabled
 message="**MESSAGE:This is a test message from the client with zero copy disabled**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N "posix" -z)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N $SOCK_IMPL -z)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -87,7 +89,7 @@ fi
 
 # send message using hello_sock client with zero copy enabled
 message="**MESSAGE:This is a test message from the client with zero copy enabled**"
-response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N "posix" -Z)
+response=$(echo "$message" | $HELLO_SOCK_APP -H $NVMF_INITIATOR_IP -P $NVMF_PORT -N $SOCK_IMPL -Z)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -176,7 +178,7 @@ timing_exit sock_ssl_server
 timing_enter sock_server
 
 # start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT -S -N "posix" -m 0x1 &
+$HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT -S -N $SOCK_IMPL -m 0x1 &
 server_pid=$!
 trap 'killprocess $server_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitfortcp $server_pid $NVMF_FIRST_TARGET_IP:$NVMF_PORT
