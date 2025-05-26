@@ -9,12 +9,6 @@ utilizes UMR (User Memory Region) registration, which allows changing properties
 which are then used by the NIC to perform the offload (e.g. encrypt/decrypt) while doing
 RDMA_READ/RDMA_WRITE operations.
 
-### python
-
-Renamed python binaries with "-" instead of "_"
-spdk-rpc, spdk-sma and spdk-cli to be more platform
-independent for linux/windows according to pypi and hatch suggestions
-
 ### bdev
 
 Added capability to insert/strip DIF from IOs in the bdev layer.  This allows users to to rely on
@@ -39,15 +33,15 @@ Added support for UNMAP.
 ### bdev_nvme
 
 Added controller configuration consistency check, so all controllers created with the same name will
-be forced to have consistent setting, either multipath or failover. No mixing of different '-x'
+be forced to have consistent setting, either multipath or failover. No mixing of different `-x`
 options will be allowed.
 
-Changed default mode: if no '-x' option is specified in bdev_nvme_attach_controller RPC call,
+Changed default mode: if no `-x` option is specified in `bdev_nvme_attach_controller` RPC call,
 the multipath mode will be assigned as a default.
 
-Changed `spdk_bdev_nvme_create` API function, the `multipath` parameter was removed as it is redundant
-to `multipath` field in spdk_bdev_nvme_ctrlr_opts structure passed as a parameter to this function.
-If multipathing shall be enabled for nvme bdev, `bdev_opts.multipath` shall be set to `true`. When
+Changed `spdk_bdev_nvme_create` API function, the `multipath` parameter was removed as it is
+redundant to `multipath` field in `spdk_bdev_nvme_ctrlr_opts` structure passed as a parameter to
+this function.  To enable multipath, `bdev_opts.multipath` must be set to `true`.  When
 `bdev_opts.multipath` is set to `false`, failover mode is enabled.
 
 Added public APIs `spdk_bdev_nvme_get_opts` and `spdk_bdev_nvme_set_opts` to get default bdev nvme
@@ -103,9 +97,9 @@ Two new APIs have been added to manage interrupt events in poll group.
 `spdk_nvme_poll_group_get_fd()` retrieves the internal epoll file descriptor of the poll group.
 
 `spdk_nvme_poll_group_wait()` waits for interrupt events on all the I/O queue pair file descriptors
-in a poll group. When an interrupt event gets generated, it processes any outstanding completions
-on the I/O queue pair with interrupts. These interrupt events are registered at the the time of I/O
-queue pair creation.
+in a poll group. When an interrupt event gets generated, it processes any outstanding completions on
+the I/O queue pair with interrupts. These interrupt events are registered at the time of I/O queue
+pair creation.
 
 Added `spdk_nvme_ctrlr_get_id` function returning the ID of the NVMe controller.
 
@@ -130,9 +124,14 @@ in milliseconds.
 Added `hide_metadata` option to `nvmf_subsystem_add_ns` RPC controlling the corresponding bdev's
 `hide_metadata` option.
 
+### python
+
+Renamed python binaries with `-` instead of `_` spdk-rpc, spdk-sma and spdk-cli to be more platform
+independent for Linux/Windows according to PyPI and hatch suggestions.
+
 ### reduce
 
-Add `spdk_reduce_vol_get_info()` to get the information for the compressed volume.
+Added `spdk_reduce_vol_get_info()` to get the information for the compressed volume.
 
 ### sock
 
