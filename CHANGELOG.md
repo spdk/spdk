@@ -2,11 +2,39 @@
 
 ## v25.05: (Upcoming Release)
 
+### accel_mlx5
+
+Added mlx5 platform driver capable of executing sequences of RDMA + crypto operations in one go.  It
+utilizes UMR (User Memory Region) registration, which allows changing properties of memory keys,
+which are then used by the NIC to perform the offload (e.g. encrypt/decrypt) while doing
+RDMA_READ/RDMA_WRITE operations.
+
 ### python
 
 Renamed python binaries with "-" instead of "_"
 spdk-rpc, spdk-sma and spdk-cli to be more platform
 independent for linux/windows according to pypi and hatch suggestions
+
+### bdev
+
+Added capability to insert/strip DIF from IOs in the bdev layer.  This allows users to to rely on
+the bdev layer to generate and verify the integrity of the data.
+
+Added support for inserting or overwriting metadata buffers depending on the NVMe PRACT bits set in
+`spdk_bdev_ext_io_opts`.
+
+Added `spdk_bdev_open_ext_v2()` API allowing for more flexible additions of per-open options.
+
+Added APIs to retrieve metadata configuration depending on the `hide_metadata` option.
+
+Added option to reset stats in `bdev_get_iostat` RPC.
+
+Added option to specify the granularity and min/max values when enabling histogram for a bdev.  It
+allows users to reduce the size of the histogram.
+
+### bdev_compress
+
+Added support for UNMAP.
 
 ### bdev_nvme
 
@@ -27,10 +55,32 @@ options and set them respectively.
 
 Added public API `spdk_bdev_nvme_delete` to delete the specified NVMe controller or one of its paths.
 
+### blobstore
+
+Added support for variable metadata page size.
+
 ### env
 
 Added 3 APIs to handle multiple interrupts for PCI device `spdk_pci_device_enable_interrupts()`,
 `spdk_pci_device_disable_interrupts()`, and `spdk_pci_device_get_interrupt_efd_by_index()`.
+
+Added `spdk_mem_get_numa_id()` API returning the NUMA node ID for the specified memory buffer.
+
+### fsdev
+
+Added `spdk_fsdev_mount()` and `spdk_fsdev_umount()` APIs, fsdev's equivalent of `FUSE_INIT` and
+`FUSE_DESTROY`.  Removed `open_opts` parameter from `spdk_fsdev_open()`, as these options are part
+of `spdk_fsdev_mount_opts`.
+
+### fsdev_aio
+
+Added option to skip read/write operations.  When enabled, `fsdev_aio` works similarly to
+`bdev_null` and immediately completes IOs without actually executing them.  This option only changes
+the behavior of READ and WRITE operations.
+
+### log
+
+Added `spdk_log_open_ext` API allowing users to set custom open and close callbacks.
 
 ### nvme
 
@@ -57,6 +107,14 @@ in a poll group. When an interrupt event gets generated, it processes any outsta
 on the I/O queue pair with interrupts. These interrupt events are registered at the the time of I/O
 queue pair creation.
 
+Added `spdk_nvme_ctrlr_get_id` function returning the ID of the NVMe controller.
+
+Added `spdk_nvme_poll_group_get_fd_group()` API returning `fd_group` associated with an NVMe poll
+group.
+
+Added `spdk_nvme_poll_group_set_interrupt_callback()` API allowing users to register a callback to
+be executed to handle events associated with qpair connection status.
+
 ### nvmf
 
 Added public API `spdk_nvmf_send_discovery_log_notice` to send discovery log page
@@ -68,6 +126,9 @@ the Keep Alive Timer feature.
 
 Added `min_kato` in `spdk_nvmf_transport_opts` struct to set the minimum keep alive timeout value
 in milliseconds.
+
+Added `hide_metadata` option to `nvmf_subsystem_add_ns` RPC controlling the corresponding bdev's
+`hide_metadata` option.
 
 ### reduce
 
@@ -83,10 +144,20 @@ user provided `iov[]` offsets by 8 bytes, which breaks ABI.
 Added `spdk_interrupt_register_ext()` API which can receive `spdk_event_handler_opts` structure.
 This is to prevent any further expansion of `spdk_interrupt_register()` API.
 
+Added `spdk_thread_register_post_poller_handler()` API to register a post poller handler.  It aims
+at improving doorbell management by ensuring that a doorbell is rang after submitting all requests,
+without waiting for the next poll cycle.
+
+Added support for `fd_group`-based interrupts.  `spdk_interrupt_register_fd_group()` can be used to
+register an interrupt listening on events from an `fd_group`.
+
 ### util
 
 Added `spdk_fd_group_add_ext()` API which can receive `spdk_event_handler_opts` structure. This is
 to prevent any further expansion of `spdk_fd_group_add()` API.
+
+Added `spdk_fd_group_set_wrapper()` API allowing users to set a callback to be executed when an
+event is triggered prior to executing a callback associated with that event.
 
 ## v24.09
 
