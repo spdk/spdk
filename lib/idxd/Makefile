@@ -6,8 +6,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 12
-SO_MINOR := 1
+SO_VER := 13
+SO_MINOR := 0
 
 C_SRCS = idxd.c idxd_user.c
 ifeq ($(CONFIG_IDXD_KERNEL),y)
