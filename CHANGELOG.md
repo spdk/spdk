@@ -1,5 +1,7 @@
 # Changelog
 
+## v25.05.1: (Upcoming Release)
+
 ## v25.05: NVMe PCIe interrupt mode, DIF insert/strip, mlx5 accel platform driver
 
 ### accel_mlx5
