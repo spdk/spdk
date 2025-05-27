@@ -150,8 +150,8 @@ if [[ ! -f $CHERRY_PICK_TEMP ]]; then
 
 	# List of patches already submitted to the backporting branch
 	ssh -p 29418 $GERRIT_USER@review.spdk.io gerrit query --format json \
-		--current-patch-set project:spdk/spdk branch:"$FROM_BRANCH" > "$TMP_DIR/branch_list"
-	jq -r 'select(.id != null)|.id' "$TMP_DIR/branch_list" | sort > "$TMP_DIR/branch_id"
+		--current-patch-set project:spdk/spdk branch:"$FROM_BRANCH" \
+		| jq -r 'select(.id != null)|.id' | sort > "$TMP_DIR/branch_id"
 
 	comm -13 "$TMP_DIR/branch_id" "$TMP_DIR/hash_id" > "$TMP_DIR/id_to_port"
 
