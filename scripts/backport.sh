@@ -4,7 +4,6 @@
 #  Copyright (C) 2023 Intel Corporation
 #  All rights reserved.
 
-GERRIT_USER=""
 HASHTAG=""
 BACKPORT_DIR=""
 SPDK_DIR=""
@@ -23,10 +22,8 @@ function display_help() {
 
 	  -d    Path for SPDK repository and temporary files used for backporting.
 	  -t	Hashtag on patches to be backported and destination SPDK version (e.g. 23.05).
-	  -u	Gerrit username.
 	  -h	Show this help message.
 
-	SHH authentication for provided Gerrit user is required.
 	Merged commits from 'master' branch with provided hashtag (eg. 23.05) are cherry-picked
 	to release branch (v23.05.x) in order they were merged. Skipping commits already present
 	on the release branch.
@@ -35,7 +32,7 @@ function display_help() {
 	Then calling this script again will resume further cherry-picks.
 
 	Example:
-	./scripts/backport.sh -u gerrit_user -t 23.05 -d ./backports"
+	./scripts/backport.sh -t 23.05 -d ./backports"
 }
 
 # Reorder commits in their merge order, filter the list starting after *-rc1 commit to latest
@@ -96,9 +93,6 @@ while getopts "d:ht:u:" opt; do
 			HASHTAG="$OPTARG"
 			FROM_BRANCH="v${HASHTAG}.x"
 			;;
-		u)
-			GERRIT_USER="$OPTARG"
-			;;
 		*)
 			display_help >&2
 			exit 1
@@ -106,16 +100,9 @@ while getopts "d:ht:u:" opt; do
 	esac
 done
 
-if [[ -z $HASHTAG || -z $GERRIT_USER || -z $BACKPORT_DIR ]]; then
-	echo "Gerrit user, hashtag and directory are required."
+if [[ -z $HASHTAG || -z $BACKPORT_DIR ]]; then
+	echo "Hashtag and directory are required."
 	display_help
-	exit 1
-fi
-
-# Gerrit interactive shells are disabled and attempts to connect with below
-# command will result in error code 127, so parse the response instead.
-if ! ssh -p 29418 $GERRIT_USER@review.spdk.io 2>&1 | grep -q "Welcome to Gerrit Code Review"; then
-	echo "Could not connect to Gerrit"
 	exit 1
 fi
 
@@ -143,21 +130,19 @@ if [[ ! -f $CHERRY_PICK_TEMP ]]; then
 	fi
 
 	# Get list of hash tagged patches on master branch
-	ssh -p 29418 $GERRIT_USER@review.spdk.io gerrit query --format json \
-		--current-patch-set project:spdk/spdk status:merged branch:"master" hashtag:"$HASHTAG" > "$TMP_DIR/master_${HASHTAG}_list"
+	curl -s -X GET "https://review.spdk.io/changes/?q=project:spdk/spdk+branch:master+hashtag:${HASHTAG}&o=CURRENT_REVISION" \
+		| tail -n +2 | jq -r '.[]' > "$TMP_DIR/master_${HASHTAG}_list"
 
-	jq -r 'select(.id != null)|.id' "$TMP_DIR/master_${HASHTAG}_list" | sort > "$TMP_DIR/hash_id"
+	jq -r '.change_id' "$TMP_DIR/master_${HASHTAG}_list" | sort > "$TMP_DIR/hash_id"
 
 	# List of patches already submitted to the backporting branch
-	ssh -p 29418 $GERRIT_USER@review.spdk.io gerrit query --format json \
-		--current-patch-set project:spdk/spdk branch:"$FROM_BRANCH" \
-		| jq -r 'select(.id != null)|.id' | sort > "$TMP_DIR/branch_id"
+	curl -s -X GET "https://review.spdk.io/changes/?q=project:spdk/spdk+branch:${FROM_BRANCH}&o=CURRENT_REVISION" \
+		| tail -n +2 | jq -r '.[].change_id' | sort > "$TMP_DIR/branch_id"
 
 	comm -13 "$TMP_DIR/branch_id" "$TMP_DIR/hash_id" > "$TMP_DIR/id_to_port"
 
 	while read -r line; do
-		jq -r ". | select(.id == "\"$line\"")" "$TMP_DIR/master_${HASHTAG}_list" \
-			| jq -r '.currentPatchSet.revision'
+		jq -r ". | select(.change_id == "\"$line\"") | .current_revision" "$TMP_DIR/master_${HASHTAG}_list"
 	done < "$TMP_DIR/id_to_port" > "$TMP_DIR/hashtagged"
 
 	reorder_commits "$TMP_DIR/hashtagged" > "$CHERRY_PICK_TEMP"
