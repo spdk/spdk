@@ -10380,6 +10380,7 @@ struct locked_lba_range_ctx {
 	struct lba_range		*current_range;
 	struct lba_range		*owner_range;
 	struct spdk_poller		*poller;
+	struct spdk_io_channel		*ch_ref;
 	lock_range_cb			cb_fn;
 	void				*cb_arg;
 };
@@ -10448,9 +10449,20 @@ bdev_lock_lba_range_check_io(void *_i)
 	 */
 	TAILQ_FOREACH(bdev_io, &ch->io_submitted, internal.ch_link) {
 		if (bdev_io_range_is_locked(bdev_io, range)) {
+			if (ctx->ch_ref == NULL) {
+				/* Take another reference to ch to prevent it getting freed while
+				 * the poller is running. */
+				ctx->ch_ref = spdk_get_io_channel(__bdev_to_io_dev(bdev_io->bdev));
+				assert(ctx->ch_ref != NULL);
+			}
 			ctx->poller = SPDK_POLLER_REGISTER(bdev_lock_lba_range_check_io, i, 100);
 			return SPDK_POLLER_BUSY;
 		}
+	}
+
+	if (ctx->ch_ref != NULL) {
+		spdk_put_io_channel(ctx->ch_ref);
+		ctx->ch_ref = NULL;
 	}
 
 	spdk_bdev_for_each_channel_continue(i, 0);
