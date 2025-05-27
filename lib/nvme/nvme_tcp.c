@@ -3007,6 +3007,10 @@ static struct spdk_nvme_transport_poll_group *
 nvme_tcp_poll_group_create(void)
 {
 	struct nvme_tcp_poll_group *group = calloc(1, sizeof(*group));
+	struct spdk_sock_group_opts opts = {
+		.size = sizeof(opts),
+		.ctx = group
+	};
 
 	if (group == NULL) {
 		SPDK_ERRLOG("Unable to allocate poll group.\n");
@@ -3016,7 +3020,7 @@ nvme_tcp_poll_group_create(void)
 	TAILQ_INIT(&group->needs_poll);
 	TAILQ_INIT(&group->timeout_enabled);
 
-	group->sock_group = spdk_sock_group_create(group);
+	group->sock_group = spdk_sock_group_create(&opts);
 	if (group->sock_group == NULL) {
 		free(group);
 		SPDK_ERRLOG("Unable to allocate sock group.\n");

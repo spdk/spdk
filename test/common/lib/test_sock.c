@@ -44,7 +44,7 @@ DEFINE_STUB(spdk_sock_is_connected, bool, (struct spdk_sock *sock), true);
 
 DEFINE_RETURN_MOCK(spdk_sock_group_create, struct spdk_sock_group *);
 struct spdk_sock_group *
-spdk_sock_group_create(void *ctx)
+spdk_sock_group_create(const struct spdk_sock_group_opts *opts)
 {
 	struct test_sock_group *group;
 

@@ -875,7 +875,7 @@ _sock_fd_group_fn(void *ctx)
 }
 
 struct spdk_sock_group *
-spdk_sock_group_create(void *ctx)
+spdk_sock_group_create(const struct spdk_sock_group_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock_group *group;
@@ -923,7 +923,9 @@ spdk_sock_group_create(void *ctx)
 		}
 	}
 
-	group->ctx = ctx;
+	if (opts) {
+		group->ctx = SPDK_GET_FIELD(opts, ctx, NULL);
+	}
 
 	return group;
 }

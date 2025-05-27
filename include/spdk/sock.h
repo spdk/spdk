@@ -556,13 +556,21 @@ bool spdk_sock_is_connected(struct spdk_sock *sock);
  */
 typedef void (*spdk_sock_cb)(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock);
 
+struct spdk_sock_group_opts {
+	/** Size of this structure */
+	size_t		size;
+	/** User context */
+	void		*ctx;
+};
+
 /**
- * Create a new socket group with user provided pointer
+ * Create a new socket group.
  *
- * \param ctx the context provided by user.
+ * \param opts Socket group options.
+ *
  * \return a pointer to the created group on success, or NULL on failure.
  */
-struct spdk_sock_group *spdk_sock_group_create(void *ctx);
+struct spdk_sock_group *spdk_sock_group_create(const struct spdk_sock_group_opts *opts);
 
 /**
  * Get the ctx of the sock group

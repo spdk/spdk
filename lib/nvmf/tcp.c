@@ -746,6 +746,10 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	struct spdk_nvmf_tcp_transport *ttransport;
 	uint32_t sge_count;
 	uint64_t period;
+	struct spdk_sock_group_opts sock_group_opts = {
+		.size = sizeof(sock_group_opts),
+		.ctx = NULL
+	};
 
 	ttransport = calloc(1, sizeof(*ttransport));
 	if (!ttransport) {
@@ -849,7 +853,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	spdk_poller_register_interrupt(ttransport->accept_poller, NULL, NULL);
 
-	ttransport->listen_sock_group = spdk_sock_group_create(NULL);
+	ttransport->listen_sock_group = spdk_sock_group_create(&sock_group_opts);
 	if (ttransport->listen_sock_group == NULL) {
 		SPDK_ERRLOG("Failed to create socket group for listen sockets\n");
 		spdk_poller_unregister(&ttransport->accept_poller);
@@ -1652,13 +1656,16 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
 	struct spdk_nvmf_tcp_poll_group *tgroup;
+	struct spdk_sock_group_opts sock_group_opts;
 
 	tgroup = calloc(1, sizeof(*tgroup));
 	if (!tgroup) {
 		return NULL;
 	}
 
-	tgroup->sock_group = spdk_sock_group_create(&tgroup->group);
+	sock_group_opts.size = sizeof(sock_group_opts);
+	sock_group_opts.ctx = &tgroup->group;
+	tgroup->sock_group = spdk_sock_group_create(&sock_group_opts);
 	if (!tgroup->sock_group) {
 		goto cleanup;
 	}

@@ -954,6 +954,10 @@ static void
 start_io(void *ctx)
 {
 	struct fuzz_iscsi_dev_ctx *dev_ctx = ctx;
+	struct spdk_sock_group_opts opts = {
+		.size = sizeof(opts),
+		.ctx = dev_ctx
+	};
 
 	dev_ctx->sess.ExpCmdSN = 0;
 	dev_ctx->sess.MaxCmdSN = 64;
@@ -962,7 +966,7 @@ start_io(void *ctx)
 	dev_ctx->sess.tag = 1;
 	dev_ctx->sess.tsih = 256;
 
-	dev_ctx->group = spdk_sock_group_create(dev_ctx);
+	dev_ctx->group = spdk_sock_group_create(&opts);
 	assert(dev_ctx->group != NULL);
 
 	dev_ctx->conn = calloc(1, sizeof(*dev_ctx->conn));
