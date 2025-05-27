@@ -38,13 +38,14 @@ function display_help() {
 	./scripts/backport.sh -u gerrit_user -t 23.05 -d ./backports"
 }
 
+# Reorder commits in their merge order, filter the list starting after *-rc1 commit to latest
 function reorder_commits() {
 	local unordered_list=$1
 	local from="v${HASHTAG}-rc1"
 
 	git -C "$SPDK_DIR" fetch origin
 	# Reorder commits to how they were merged to master
-	git -C "$SPDK_DIR" show -s --format="%H" "$from^..HEAD" | tac > "$TMP_DIR/ordered_commits"
+	git -C "$SPDK_DIR" show -s --format="%H" "$from..origin/master" | tac > "$TMP_DIR/ordered_commits"
 
 	mapfile -t u < "$unordered_list"
 	mapfile -t o < "$TMP_DIR/ordered_commits"
