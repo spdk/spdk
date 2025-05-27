@@ -11,6 +11,7 @@
 	spdk_sock_connect;
 	spdk_sock_listen;
 	spdk_sock_accept;
+	spdk_sock_set_user_ctx;
 	spdk_sock_close;
 	spdk_sock_flush;
 	spdk_sock_recv;

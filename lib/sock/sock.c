@@ -745,6 +745,12 @@ spdk_sock_accept(struct spdk_sock *sock)
 	return new_sock;
 }
 
+void
+spdk_sock_set_user_ctx(struct spdk_sock *sock, void *user_ctx)
+{
+	sock->cb_arg = user_ctx;
+}
+
 int
 spdk_sock_close(struct spdk_sock **_sock)
 {

@@ -399,6 +399,17 @@ struct spdk_sock *spdk_sock_listen(const char *ip, int port, struct spdk_sock_op
 struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
 
 /**
+ * Change the user context callback argument passed to spdk_sock_cb for this socket.
+ *
+ * This is intended for attaching per-connection state to a newly accepted socket. If the
+ * socket will be added to a socket group, set the user context before adding it.
+ *
+ * \param sock The socket to change the callback argument for.
+ * \param user_ctx The new callback argument to set.
+ */
+void spdk_sock_set_user_ctx(struct spdk_sock *sock, void *user_ctx);
+
+/**
  * Gets the name of the network interface of the local port for the socket.
  *
  * \param sock socket to find the interface name for
