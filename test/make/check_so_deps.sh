@@ -97,9 +97,13 @@ function get_release() {
 		version="v$major.$minor"
 		((patch > 0)) && version+=".$patch"
 		version+=${suffix:+-$suffix}
+		# When tag does not already exist, search for last tag on current branch
+		if ! git show-ref --tags "$version" --quiet; then
+			unset version
+		fi
 	fi
 
-	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude="*-pre" "$version")
+	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude="*-pre" $version)
 	echo "${tag:0:6}"
 }
 
