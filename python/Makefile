@@ -46,8 +46,9 @@ clean:
 	$(Q)rm -f spdk/version.py
 
 spdk/version.py: $(SPDK_ROOT_DIR)/VERSION
-	$(Q)printf "__version__ = '%d.%d%s'\n" \
+	$(Q)printf "__version__ = '%d.%d%s%s'\n" \
 		$(version_major) $(version_minor) \
+		$(shell [ $(version_patch) != 0 ] && echo -n ".$(version_patch)") \
 		$(shell echo -n \"$(version_suffix)\" | sed 's/-pre/rc0/g' | tr -d -) > spdk/version.py
 
 install:
