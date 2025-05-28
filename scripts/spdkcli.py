@@ -7,9 +7,9 @@
 import os
 import sys
 import argparse
-from configshell_fb import ConfigShell, shell, ExecutionError
+from configshell_fb import ConfigShell, ExecutionError
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
-                       removeQuotes, dblQuotedString, OneOrMore)
+                       removeQuotes, dblQuotedString, OneOrMore, locatedExpr)
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
@@ -18,18 +18,18 @@ from spdk.spdkcli import UIRoot  # noqa
 
 
 def add_quotes_to_shell(spdk_shell):
-    command = shell.locatedExpr(Word(alphanums + '_'))('command')
+    command = locatedExpr(Word(alphanums + '_'))('command')
     value = dblQuotedString.addParseAction(removeQuotes)
     value_word = Word(alphanums + r';,=_\+/.<>()~@:-%[]')
     keyword = Word(alphanums + r'_\-')
-    kparam = shell.locatedExpr(keyword + Suppress('=') +
-                               Optional(value | value_word, default=''))('kparams*')
-    pparam = shell.locatedExpr(value | value_word)('pparams*')
+    kparam = locatedExpr(keyword + Suppress('=') +
+                         Optional(value | value_word, default=''))('kparams*')
+    pparam = locatedExpr(value | value_word)('pparams*')
     parameters = OneOrMore(kparam | pparam)
     bookmark = Regex(r'@([A-Za-z0-9:_.]|-)+')
     pathstd = Regex(r'([A-Za-z0-9:_.\[\]]|-)*' + '/' + r'([A-Za-z0-9:_.\[\]/]|-)*') \
         | '..' | '.'
-    path = shell.locatedExpr(bookmark | pathstd | '*')('path')
+    path = locatedExpr(bookmark | pathstd | '*')('path')
     spdk_shell._parser = Optional(path) + Optional(command) + Optional(parameters)
 
 
