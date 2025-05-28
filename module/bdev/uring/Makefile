@@ -11,12 +11,6 @@ SO_MINOR := 0
 
 C_SRCS = bdev_uring.c bdev_uring_rpc.c
 LIBNAME = bdev_uring
-LOCAL_SYS_LIBS = -luring
-
-ifneq ($(strip $(CONFIG_URING_PATH)),)
-CFLAGS += -I$(CONFIG_URING_PATH)
-LDFLAGS += -L$(CONFIG_URING_PATH)
-endif
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 

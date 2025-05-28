@@ -78,11 +78,6 @@ endif
 
 ifeq ($(CONFIG_URING),y)
 BLOCKDEV_MODULES_LIST += bdev_uring
-BLOCKDEV_MODULES_PRIVATE_LIBS += -luring
-ifneq ($(strip $(CONFIG_URING_PATH)),)
-CFLAGS += -I$(CONFIG_URING_PATH)
-BLOCKDEV_MODULES_PRIVATE_LIBS += -L$(CONFIG_URING_PATH)
-endif
 endif
 
 ifeq ($(CONFIG_RBD),y)

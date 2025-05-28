@@ -168,8 +168,8 @@ endif
 ifeq ($(CONFIG_URING),y)
 SYS_LIBS += -luring
 ifneq ($(strip $(CONFIG_URING_PATH)),)
-CFLAGS += -I$(CONFIG_URING_PATH)
-LDFLAGS += -L$(CONFIG_URING_PATH)
+CFLAGS += -I$(CONFIG_URING_PATH)/include
+LDFLAGS += -L$(CONFIG_URING_PATH)/lib
 endif
 endif
 
