@@ -11,6 +11,7 @@
 #include "spdk/env_dpdk.h"
 #include "spdk/log.h"
 #include "spdk/config.h"
+#include "spdk/string.h"
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -159,6 +160,62 @@ push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
+static int
+get_cpu_vendor_name(char *vendor_name_buf, size_t buf_len)
+{
+	const char *file_path = "/proc/cpuinfo";
+	FILE *file;
+	char line[256];
+	char *target_substr = NULL;
+	char *vendor_name;
+	int ret;
+
+	file = fopen(file_path, "r");
+	if (file == NULL) {
+		SPDK_ERRLOG("open file (read_only) %s failed, errno=%d.\n", file_path, errno);
+		return -errno;
+	}
+
+	while (NULL != fgets(line, sizeof(line), file)) {
+		target_substr = strcasestr(line, "vendor_id");
+		if (target_substr != NULL) {
+			break;
+		}
+	}
+
+	if (target_substr == NULL) {
+		SPDK_ERRLOG("field %s not found in file %s.\n", "vendor_id", file_path);
+		return -ESRCH;
+	}
+
+	target_substr = strstr(line, ":");
+	if (target_substr == NULL) {
+		SPDK_ERRLOG("separator char ':' not found in field line: %s.\n", line);
+		return -EINVAL;
+	}
+
+	*target_substr = 0; /* eliminate the separator ':'. */
+	vendor_name = target_substr + 1; /* point to the field value. */
+	spdk_str_trim(vendor_name);
+
+	if (strlen(vendor_name) == 0) {
+		SPDK_ERRLOG("cpu vendor name not found in field line: %s.\n", line);
+		return -EINVAL;
+	}
+
+	ret = snprintf(vendor_name_buf, buf_len, "%s", vendor_name);
+	if (ret < 0) {
+		SPDK_ERRLOG("copy CPU vendor name to output buf failed, ret=%d, errno=%d.\n",
+			    ret, errno);
+		return -errno;
+	} else if ((size_t)ret >= buf_len) {
+		SPDK_WARNLOG("CPU vendor_name truncated from %s to %s\n",
+			     vendor_name, vendor_name_buf);
+	}
+
+	return 0;
+}
+
 #if defined(__linux__) && defined(__x86_64__)
 
 /* TODO: Can likely get this value from rlimits in the future */
@@ -169,14 +226,13 @@ push_arg(char *args[], int *argcount, char *arg)
 #define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
 
 static int
-get_iommu_width(void)
+get_intel_iommu_width(void)
 {
 	int width = 0;
 	glob_t glob_results = {};
 
 	/* Break * and / into separate strings to appease check_format.sh comment style check. */
 	glob("/sys/devices/virtual/iommu/dmar*" "/intel-iommu/cap", 0, NULL, &glob_results);
-	glob("/sys/class/iommu/ivhd*" "/amd-iommu/cap", GLOB_APPEND, NULL, &glob_results);
 
 	for (size_t i = 0; i < glob_results.gl_pathc; i++) {
 		const char *filename = glob_results.gl_pathv[0];
@@ -188,20 +244,10 @@ get_iommu_width(void)
 		}
 
 		if (fscanf(file, "%" PRIx64, &cap_reg) == 1) {
-			if (strstr(filename, "intel-iommu") != NULL) {
-				/* We have an Intel IOMMU */
-				int mgaw = ((cap_reg & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
+			int mgaw = ((cap_reg & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
 
-				if (width == 0 || (mgaw > 0 && mgaw < width)) {
-					width = mgaw;
-				}
-			} else if (strstr(filename, "amd-iommu") != NULL) {
-				/* We have an AMD IOMMU */
-				int mgaw = ((cap_reg & RD_AMD_CAP_VASIZE_MASK) >> RD_AMD_CAP_VASIZE_SHIFT) + 1;
-
-				if (width == 0 || (mgaw > 0 && mgaw < width)) {
-					width = mgaw;
-				}
+			if (width == 0 || (mgaw > 0 && mgaw < width)) {
+				width = mgaw;
 			}
 		}
 
@@ -215,7 +261,18 @@ get_iommu_width(void)
 static bool
 x86_cpu_support_iommu(void)
 {
-	return get_iommu_width() >= SPDK_IOMMU_VA_REQUIRED_WIDTH;
+	int rc;
+	char cpu_vendor_name[64];
+
+	rc = get_cpu_vendor_name(cpu_vendor_name, sizeof(cpu_vendor_name));
+	if (rc != 0) {
+		SPDK_ERRLOG("get_cpu_vendor_name failed, return value=%d.\n", rc);
+	} else if (strcasestr(cpu_vendor_name, "GenuineIntel") == NULL) {
+		/* An X86_64 CPU not from Intel, assume IOMMU supported */
+		return true;
+	}
+
+	return get_intel_iommu_width() >= SPDK_IOMMU_VA_REQUIRED_WIDTH;
 }
 
 #endif
