@@ -4,7 +4,7 @@
 #  All rights reserved.
 #
 # Minimal install
-pkg install -y gmake cunit openssl git bash python ncurses ninja meson
+pkg install -y pkgconf gmake cunit openssl git bash python ncurses ninja meson
 pkg install -g -y "py*-pyelftools-*" "py*-pandas" "py*-Jinja2" "py*-tabulate-*"
 # Additional dependencies for ISA-L used in compression
 pkg install -y autoconf automake libtool help2man
