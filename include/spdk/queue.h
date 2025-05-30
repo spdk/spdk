@@ -44,6 +44,44 @@ extern "C" {
 } while (0)
 #endif
 
+/*
+ * Check if an entry is on any TAILQ list.
+ *
+ * Should only be used on zero initalized entries or after
+ * calling TAILQ_REMOVE_CLEAR() or TAILQ_ENTRY_CLEAR().
+ */
+#define TAILQ_ENTRY_ENQUEUED(elm, field)				\
+    ((elm)->field.tqe_prev != NULL)
+
+/*
+ * Check if an entry is not on any TAILQ list.
+ *
+ * Should only be used on zero initalized entries or after
+ * calling TAILQ_REMOVE_CLEAR() or TAILQ_ENTRY_CLEAR().
+ */
+#define TAILQ_ENTRY_NOT_ENQUEUED(elm, field)				\
+    (!TAILQ_ENTRY_ENQUEUED(elm, field))
+
+/*
+ * Mark an entry as absent from any TAILQ list.
+ *
+ * Should be called once after TAILQ_REMOVE(), or on entries
+ * that were not initalized to zero.
+ */
+#define TAILQ_ENTRY_CLEAR(elm, field) do {				\
+	/* Ensure the entry was on a list before clearing */		\
+	assert(TAILQ_ENTRY_ENQUEUED(elm, field));			\
+	(elm)->field.tqe_prev = NULL;					\
+} while (0)
+
+/*
+ * Remove entry from TAILQ list and mark it as absent.
+ */
+#define TAILQ_REMOVE_CLEAR(head, elm, field) do {			\
+	TAILQ_REMOVE(head, elm, field);					\
+	TAILQ_ENTRY_CLEAR(elm, field);					\
+} while (0)
+
 #ifdef __cplusplus
 }
 #endif
