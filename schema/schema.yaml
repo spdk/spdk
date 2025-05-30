@@ -5266,7 +5266,7 @@ methods:
         description: Send buffer size in bytes
       - name: enable_recv_pipe
         type: boolean
-        description: Enable or disable receive pipe
+        description: Enable or disable receive pipe (posix/ssl only)
       - name: enable_quickack
         type: boolean
         description: Enable or disable quick ACK

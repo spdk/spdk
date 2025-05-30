@@ -115,7 +115,7 @@ struct spdk_sock_impl_opts {
 	uint32_t send_buf_size;
 
 	/**
-	 * Enable or disable receive pipe. Used by posix and uring socket modules.
+	 * Enable or disable receive pipe. Used only by posix and ssl socket modules.
 	 */
 	bool enable_recv_pipe;
 

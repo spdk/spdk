@@ -42,7 +42,7 @@ def add_parser(subparsers):
     p.add_argument('-p', '--enable-placement-id',
                    help='Placement ID source: 0=disable, 1=incoming_napi, 2=incoming_cpu', type=int)
     p.add_argument('--recv-pipe', dest='enable_recv_pipe', action=argparse.BooleanOptionalAction,
-                   help='Enable or disable receive pipe')
+                   help='Enable or disable receive pipe (posix/ssl only)')
     p.add_argument('--quickack', dest='enable_quickack', action=argparse.BooleanOptionalAction,
                    help='Enable or disable quick ACK')
     p.add_argument('--zerocopy-send-server', dest='enable_zerocopy_send_server', action=argparse.BooleanOptionalAction,
