@@ -777,16 +777,16 @@ function gdb_attach() {
 
 function process_core() {
 	# Note that this always was racy as we can't really sync with the kernel
-	# to see if there's any core queued up for writing. We could check if
-	# collector is running and wait for it explicitly, but it doesn't seem
-	# to be worth the effort. So assume that if we are being called via
-	# trap, as in, when some error has occurred, wait up to 10s for any
-	# potential cores. If we are called just for cleanup at the very end,
-	# don't wait since all the tests ended successfully, hence having any
-	# critical cores lying around is unlikely.
+	# to see if there's any core queued up for writing. Assume that if we are
+	# being called via trap, as in, when some error has occurred, wait up to
+	# 10s for any potential cores. If we are called just for cleanup at the
+	# very end, don't wait since all the tests ended successfully, hence
+	# having any critical cores lying around is unlikely.
 	((autotest_es != 0)) && sleep 10
 
 	local coredumps core
+
+	"$rootdir/scripts/core-collector.sh" "$output_dir/coredumps"
 
 	coredumps=("$output_dir/coredumps/"*.bt.txt)
 
