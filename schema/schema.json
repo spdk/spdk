@@ -1129,6 +1129,36 @@
           "type": "boolean",
           "required": false,
           "description": "Protection information is in the first 8 bytes of metadata. Default=false."
+        },
+        {
+          "name": "preferred_write_granularity",
+          "type": "number",
+          "required": false,
+          "description": "Preferred write granularity in blocks"
+        },
+        {
+          "name": "preferred_write_alignment",
+          "type": "number",
+          "required": false,
+          "description": "Preferred write alignment in blocks"
+        },
+        {
+          "name": "optimal_write_size",
+          "type": "number",
+          "required": false,
+          "description": "Optimal write size in blocks"
+        },
+        {
+          "name": "preferred_unmap_granularity",
+          "type": "number",
+          "required": false,
+          "description": "Preferred unmap granularity in blocks"
+        },
+        {
+          "name": "preferred_unmap_alignment",
+          "type": "number",
+          "required": false,
+          "description": "Preferred unmap alignment in blocks"
         }
       ]
     },
@@ -3634,6 +3664,12 @@
           "type": "boolean",
           "required": false,
           "description": "Use NVMe passthrough for I/O commands and namespace-directed admin commands. Default: `false`"
+        },
+        {
+          "name": "enable_nssr",
+          "type": "boolean",
+          "required": false,
+          "description": "Enable NSSR (NVMe subsystem reset). Default: `false`"
         }
       ]
     },
@@ -5600,13 +5636,7 @@
           "name": "zerocopy_threshold",
           "type": "number",
           "required": false,
-          "description": "Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs"
-        },
-        {
-          "name": "--",
-          "type": "--",
-          "required": false,
-          "description": "that fall below this threshold may be sent without zerocopy flag set"
+          "description": "Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs that fall below this threshold may be sent without zerocopy flag set"
         },
         {
           "name": "tls_version",
