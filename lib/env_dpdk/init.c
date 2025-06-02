@@ -160,6 +160,15 @@ push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
+#if defined(__linux__) && defined(__x86_64__)
+
+/* TODO: Can likely get this value from rlimits in the future */
+#define SPDK_IOMMU_VA_REQUIRED_WIDTH 48
+#define VTD_CAP_MGAW_SHIFT 16
+#define VTD_CAP_MGAW_MASK (0x3F << VTD_CAP_MGAW_SHIFT)
+#define RD_AMD_CAP_VASIZE_SHIFT 15
+#define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
+
 static int
 get_cpu_vendor_name(char *vendor_name_buf, size_t buf_len)
 {
@@ -215,15 +224,6 @@ get_cpu_vendor_name(char *vendor_name_buf, size_t buf_len)
 
 	return 0;
 }
-
-#if defined(__linux__) && defined(__x86_64__)
-
-/* TODO: Can likely get this value from rlimits in the future */
-#define SPDK_IOMMU_VA_REQUIRED_WIDTH 48
-#define VTD_CAP_MGAW_SHIFT 16
-#define VTD_CAP_MGAW_MASK (0x3F << VTD_CAP_MGAW_SHIFT)
-#define RD_AMD_CAP_VASIZE_SHIFT 15
-#define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
 
 static int
 get_intel_iommu_width(void)
