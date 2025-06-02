@@ -268,9 +268,9 @@ Query, enable, or disable the context switch monitoring functionality.
 
 #### Response
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-enabled                 | boolean     | The current state of context switch monitoring
+ Name    | Type    | Description
+-------- | ------- | -----------------------------------------------
+ enabled | boolean | The current state of context switch monitoring
 
 #### Example
 
@@ -786,13 +786,13 @@ This method has no parameters.
 
 #### Response
 
-Name                    | Description
-------------------------| -----------
-scheduler_name          | Current scheduler name
-scheduler_period        | Currently set scheduler period in microseconds
-governor_name           | Governor name
-scheduling_core         | Current scheduling core
-isolated_core_mask      | Current isolated core mask of scheduler
+ Name               | Type   | Description
+------------------- | ------ | -----------------------------------------------
+ scheduler_name     |        | Current scheduler name
+ scheduler_period   |        | Currently set scheduler period in microseconds
+ governor_name      |        | Governor name
+ scheduling_core    |        | Current scheduling core
+ isolated_core_mask |        | Current isolated core mask of scheduler
 
 #### Example
 
@@ -1024,7 +1024,7 @@ Example response:
       {
         "name": "app_thread",
         "id": 1,
-	"cpumask": "1",
+        "cpumask": "1",
         "busy": 139223208,
         "idle": 8641080608,
         "in_interrupt": false,
@@ -1260,29 +1260,29 @@ Example response:
   "id": 1,
   "result": {
     "tpoint_group_mask": "0x0",
-  "iscsi_conn": {
-    "enabled": false,
-    "mask": "0x2"
-  },
-  "scsi": {
-    "enabled": false,
-    "mask": "0x4"
-  },
-  "bdev": {
-    "enabled": false,
-    "mask": "0x8"
-  },
-  "nvmf_tcp": {
-    "enabled": false,
-    "mask": "0x20"
-  },
-  "ftl": {
-    "enabled": false,
-    "mask": "0x40"
-  },
-  "blobfs": {
-    "enabled": false,
-    "mask": "0x80"
+    "iscsi_conn": {
+      "enabled": false,
+      "mask": "0x2"
+    },
+    "scsi": {
+      "enabled": false,
+      "mask": "0x4"
+    },
+    "bdev": {
+      "enabled": false,
+      "mask": "0x8"
+    },
+    "nvmf_tcp": {
+      "enabled": false,
+      "mask": "0x20"
+    },
+    "ftl": {
+      "enabled": false,
+      "mask": "0x40"
+    },
+    "blobfs": {
+      "enabled": false,
+      "mask": "0x80"
     }
   }
 }
@@ -2752,7 +2752,7 @@ Example response:
   "id": 1,
   "result": {
     "tick_rate": 2200000000,
-    "bdevs" : [
+    "bdevs": [
       {
         "name": "Nvme0n1",
         "bytes_read": 36864,
@@ -2871,15 +2871,17 @@ Get latency histogram for specified bdev.
 
 #### Response
 
-Name                    | Description
-------------------------| -----------
-histogram               | Base64 encoded histogram
-granularity             | Granularity of the histogram buckets
-min_range               | Minimal range tracked in histogram
-max_range               | Maximal range tracked in histogram
-tsc_rate                | Ticks per second
+ Name        | Type   | Description
+------------ | ------ | -------------------------------------
+ histogram   |        | Base64 encoded histogram
+ granularity |        | Granularity of the histogram buckets
+ min_range   |        | Minimal range tracked in histogram
+ max_range   |        | Maximal range tracked in histogram
+ tsc_rate    |        | Ticks per second
 
 #### Example
+
+Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 Example request:
 
@@ -2895,7 +2897,6 @@ Example request:
 ~~~
 
 Example response:
-Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 ~~~json
 {
@@ -3104,6 +3105,9 @@ Create a new crypto bdev on a given base bdev.
 
 #### Parameters
 
+Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
+afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
+
  Name           | Optional   | Type   | Description
 --------------- | ---------- | ------ | --------------------------------------------------------------------------------------------
  base_bdev_name | Required   | string | Name of the base bdev
@@ -3113,9 +3117,6 @@ Create a new crypto bdev on a given base bdev.
  cipher         | Optional   | string | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create
  key2           | Optional   | string | 2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create
  key_name       | Optional   | string | Name of the key created with accel_crypto_key_create
-
-Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
-afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
 
 #### Response
 
@@ -3144,7 +3145,6 @@ Example response:
 
 ~~~json
 {
-
   "jsonrpc": "2.0",
   "id": 1,
   "result": "my_crypto_bdev"
@@ -3306,182 +3306,182 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": [
-  {
-  "usage": {
-    "clean": {
-      "count": 76033,
-      "units": "4KiB blocks",
-      "percentage": "100.0"
+    {
+      "usage": {
+        "clean": {
+          "count": 76033,
+          "units": "4KiB blocks",
+          "percentage": "100.0"
+        },
+        "free": {
+          "count": 767,
+          "units": "4KiB blocks",
+          "percentage": "0.9"
+        },
+        "occupancy": {
+          "count": 76033,
+          "units": "4KiB blocks",
+          "percentage": "99.0"
+        },
+        "dirty": {
+          "count": 0,
+          "units": "4KiB blocks",
+          "percentage": "0.0"
+        }
+      }
     },
-    "free": {
-      "count": 767,
-      "units": "4KiB blocks",
-      "percentage": "0.9"
+    {
+      "requests": {
+        "rd_total": {
+          "count": 2,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "wr_full_misses": {
+          "count": 76280,
+          "units": "Requests",
+          "percentage": "35.6"
+        },
+        "rd_full_misses": {
+          "count": 1,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "rd_partial_misses": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "wr_total": {
+          "count": 212416,
+          "units": "Requests",
+          "percentage": "99.2"
+        },
+        "wr_pt": {
+          "count": 1535,
+          "units": "Requests",
+          "percentage": "0.7"
+        },
+        "wr_partial_misses": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "serviced": {
+          "count": 212418,
+          "units": "Requests",
+          "percentage": "99.2"
+        },
+        "rd_pt": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "total": {
+          "count": 213953,
+          "units": "Requests",
+          "percentage": "100.0"
+        },
+        "rd_hits": {
+          "count": 1,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "wr_hits": {
+          "count": 136136,
+          "units": "Requests",
+          "percentage": "63.6"
+        }
+      }
     },
-    "occupancy": {
-      "count": 76033,
-      "units": "4KiB blocks",
-      "percentage": "99.0"
+    {
+      "errors": {
+        "total": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "cache_obj_total": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "core_obj_total": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "cache_obj_rd": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "core_obj_wr": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "core_obj_rd": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        },
+        "cache_obj_wr": {
+          "count": 0,
+          "units": "Requests",
+          "percentage": "0.0"
+        }
+      }
     },
-    "dirty": {
-      "count": 0,
-      "units": "4KiB blocks",
-      "percentage": "0.0"
+    {
+      "blocks": {
+        "volume_rd": {
+          "count": 9,
+          "units": "4KiB blocks",
+          "percentage": "0.0"
+        },
+        "volume_wr": {
+          "count": 213951,
+          "units": "4KiB blocks",
+          "percentage": "99.9"
+        },
+        "cache_obj_total": {
+          "count": 212425,
+          "units": "4KiB blocks",
+          "percentage": "100.0"
+        },
+        "core_obj_total": {
+          "count": 213959,
+          "units": "4KiB blocks",
+          "percentage": "100.0"
+        },
+        "cache_obj_rd": {
+          "count": 1,
+          "units": "4KiB blocks",
+          "percentage": "0.0"
+        },
+        "core_obj_wr": {
+          "count": 213951,
+          "units": "4KiB blocks",
+          "percentage": "99.9"
+        },
+        "volume_total": {
+          "count": 213960,
+          "units": "4KiB blocks",
+          "percentage": "100.0"
+        },
+        "core_obj_rd": {
+          "count": 8,
+          "units": "4KiB blocks",
+          "percentage": "0.0"
+        },
+        "cache_obj_wr": {
+          "count": 212424,
+          "units": "4KiB blocks",
+          "percentage": "99.9"
+        }
+      }
     }
-  }
-  },
-  {
-  "requests": {
-    "rd_total": {
-      "count": 2,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "wr_full_misses": {
-      "count": 76280,
-      "units": "Requests",
-      "percentage": "35.6"
-    },
-    "rd_full_misses": {
-      "count": 1,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "rd_partial_misses": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "wr_total": {
-      "count": 212416,
-      "units": "Requests",
-      "percentage": "99.2"
-    },
-    "wr_pt": {
-      "count": 1535,
-      "units": "Requests",
-      "percentage": "0.7"
-    },
-    "wr_partial_misses": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "serviced": {
-      "count": 212418,
-      "units": "Requests",
-      "percentage": "99.2"
-    },
-    "rd_pt": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "total": {
-      "count": 213953,
-      "units": "Requests",
-      "percentage": "100.0"
-    },
-    "rd_hits": {
-      "count": 1,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "wr_hits": {
-      "count": 136136,
-      "units": "Requests",
-      "percentage": "63.6"
-    }
-  }
-  },
-  {
-  "errors": {
-    "total": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "cache_obj_total": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "core_obj_total": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "cache_obj_rd": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "core_obj_wr": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "core_obj_rd": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    },
-    "cache_obj_wr": {
-      "count": 0,
-      "units": "Requests",
-      "percentage": "0.0"
-    }
-  }
-  },
-  {
-  "blocks": {
-    "volume_rd": {
-      "count": 9,
-      "units": "4KiB blocks",
-      "percentage": "0.0"
-    },
-    "volume_wr": {
-      "count": 213951,
-      "units": "4KiB blocks",
-      "percentage": "99.9"
-    },
-    "cache_obj_total": {
-      "count": 212425,
-      "units": "4KiB blocks",
-      "percentage": "100.0"
-    },
-    "core_obj_total": {
-      "count": 213959,
-      "units": "4KiB blocks",
-      "percentage": "100.0"
-    },
-    "cache_obj_rd": {
-      "count": 1,
-      "units": "4KiB blocks",
-      "percentage": "0.0"
-    },
-    "core_obj_wr": {
-      "count": 213951,
-      "units": "4KiB blocks",
-      "percentage": "99.9"
-    },
-    "volume_total": {
-      "count": 213960,
-      "units": "4KiB blocks",
-      "percentage": "100.0"
-    },
-    "core_obj_rd": {
-      "count": 8,
-      "units": "4KiB blocks",
-      "percentage": "0.0"
-    },
-    "cache_obj_wr": {
-      "count": 212424,
-      "units": "4KiB blocks",
-      "percentage": "99.9"
-    }
-  }
-  }
   ]
 }
 ~~~
@@ -4141,14 +4141,14 @@ Example request:
     "transport_retry_count": 5,
     "arbitration_burst": 3,
     "low_priority_weight": 8,
-    "medium_priority_weight":8,
+    "medium_priority_weight": 8,
     "high_priority_weight": 8,
     "nvme_adminq_poll_period_us": 2000,
     "timeout_us": 10000000,
     "timeout_admin_us": 20000000,
     "keep_alive_timeout_ms": 600000,
     "action_on_timeout": "reset",
-    "io_queue_requests" : 2048,
+    "io_queue_requests": 2048,
     "delay_cmd_submit": true,
     "dhchap_digests": [
       "sha384",
@@ -4366,7 +4366,7 @@ or the address was properly removed, false otherwise.
 
 #### Example
 
-Example requests:
+Example request:
 
 ~~~json
 {
@@ -4628,6 +4628,7 @@ This method has no parameters.
 #### Example
 
 Example request:
+
 ~~~json
 {
   "jsonrpc": "2.0",
@@ -5133,94 +5134,94 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-	"result": {
-	  "poll_groups": [
-		{
-		  "thread": "nvmf_tgt_poll_group_000",
-		  "transports": [
-			{
-			  "trname": "RDMA",
-			  "devices": [
-				{
-				  "dev_name": "mlx5_1",
-				  "polls": 137492169,
-				  "idle_polls": 137492169,
-				  "completions": 0,
-				  "queued_requests": 0,
-				  "total_send_wrs": 0,
-				  "send_sq_doorbell_updates": 0,
-				  "total_recv_wrs": 0,
-				  "recv_sq_doorbell_updates": 0
-				},
-				{
-				  "dev_name": "mlx5_0",
-				  "polls": 137985185,
-				  "idle_polls": 137492169,
-				  "completions": 1474593,
-				  "queued_requests": 0,
-				  "total_send_wrs": 1474593,
-				  "send_sq_doorbell_updates": 426147,
-				  "total_recv_wrs": 1474721,
-				  "recv_sq_doorbell_updates": 348445
-				}
-			  ]
-			},
-			{
-			  "trname": "PCIE",
-			  "polls": 435419831,
-			  "idle_polls": 434901004,
-			  "completions": 1485543,
-			  "cq_doorbell_updates": 518827,
-			  "queued_requests": 0,
-			  "submitted_requests": 1485543,
-			  "sq_doorbell_updates": 516081
-			}
-		  ]
-		},
-		{
-		  "thread": "nvmf_tgt_poll_group_001",
-		  "transports": [
-			{
-			  "trname": "RDMA",
-			  "devices": [
-				{
-				  "dev_name": "mlx5_1",
-				  "polls": 140245630,
-				  "idle_polls": 140245630,
-				  "completions": 0,
-				  "queued_requests": 0,
-				  "total_send_wrs": 0,
-				  "send_sq_doorbell_updates": 0,
-				  "total_recv_wrs": 0,
-				  "recv_sq_doorbell_updates": 0
-				},
-				{
-				  "dev_name": "mlx5_0",
-				  "polls": 140751844,
-				  "idle_polls": 140245630,
-				  "completions": 1489298,
-				  "queued_requests": 0,
-				  "total_send_wrs": 1489298,
-				  "send_sq_doorbell_updates": 433510,
-				  "total_recv_wrs": 1489426,
-				  "recv_sq_doorbell_updates": 357956
-				}
-			  ]
-			},
-			{
-			  "trname": "PCIE",
-			  "polls": 429044294,
-			  "idle_polls": 428525658,
-			  "completions": 1478730,
-			  "cq_doorbell_updates": 518636,
-			  "queued_requests": 0,
-			  "submitted_requests": 1478730,
-			  "sq_doorbell_updates": 511658
-			}
-		  ]
-		}
-	  ]
-	}
+  "result": {
+    "poll_groups": [
+      {
+        "thread": "nvmf_tgt_poll_group_000",
+        "transports": [
+          {
+            "trname": "RDMA",
+            "devices": [
+              {
+                "dev_name": "mlx5_1",
+                "polls": 137492169,
+                "idle_polls": 137492169,
+                "completions": 0,
+                "queued_requests": 0,
+                "total_send_wrs": 0,
+                "send_sq_doorbell_updates": 0,
+                "total_recv_wrs": 0,
+                "recv_sq_doorbell_updates": 0
+              },
+              {
+                "dev_name": "mlx5_0",
+                "polls": 137985185,
+                "idle_polls": 137492169,
+                "completions": 1474593,
+                "queued_requests": 0,
+                "total_send_wrs": 1474593,
+                "send_sq_doorbell_updates": 426147,
+                "total_recv_wrs": 1474721,
+                "recv_sq_doorbell_updates": 348445
+              }
+            ]
+          },
+          {
+            "trname": "PCIE",
+            "polls": 435419831,
+            "idle_polls": 434901004,
+            "completions": 1485543,
+            "cq_doorbell_updates": 518827,
+            "queued_requests": 0,
+            "submitted_requests": 1485543,
+            "sq_doorbell_updates": 516081
+          }
+        ]
+      },
+      {
+        "thread": "nvmf_tgt_poll_group_001",
+        "transports": [
+          {
+            "trname": "RDMA",
+            "devices": [
+              {
+                "dev_name": "mlx5_1",
+                "polls": 140245630,
+                "idle_polls": 140245630,
+                "completions": 0,
+                "queued_requests": 0,
+                "total_send_wrs": 0,
+                "send_sq_doorbell_updates": 0,
+                "total_recv_wrs": 0,
+                "recv_sq_doorbell_updates": 0
+              },
+              {
+                "dev_name": "mlx5_0",
+                "polls": 140751844,
+                "idle_polls": 140245630,
+                "completions": 1489298,
+                "queued_requests": 0,
+                "total_send_wrs": 1489298,
+                "send_sq_doorbell_updates": 433510,
+                "total_recv_wrs": 1489426,
+                "recv_sq_doorbell_updates": 357956
+              }
+            ]
+          },
+          {
+            "trname": "PCIE",
+            "polls": 429044294,
+            "idle_polls": 428525658,
+            "completions": 1478730,
+            "cq_doorbell_updates": 518636,
+            "queued_requests": 0,
+            "submitted_requests": 1478730,
+            "sq_doorbell_updates": 511658
+          }
+        ]
+      }
+    ]
+  }
 }
 ~~~
 
@@ -5286,15 +5287,6 @@ This method is available only if SPDK was build with Ceph RBD support.
 
 #### Parameters
 
- Name         | Optional   | Type       | Description
-------------- | ---------- | ---------- | ------------------------------------------
- name         | Optional   | string     | Registered Rados cluster object name
- user_id      | Optional   | string     | Ceph ID (i.e. admin, not client.admin)
- config_param | Optional   | string map | Explicit librados configuration
- config_file  | Optional   | string     | File path of librados configuration file
- key_file     | Optional   | string     | File path of librados key file
- core_mask    | Optional   | string     | Core mask for librados IO context threads
-
 This RPC registers a Rados Cluster object handle which is only known
 to rbd module, it uses user_id + config_param or user_id + config_file +
 key_file or user_id + config_param + config_file + key_file to identify
@@ -5313,6 +5305,15 @@ and key_file are specified, get the key/value pairs from config_file first and s
 rados_conf_set function, then set pairs in config_param and keyring in key_file. If nothing
 is specified, it will get configuration file and key file from the default location
 /etc/ceph/ceph.conf and /etc/ceph/ceph.client.user_id.keyring.
+
+ Name         | Optional   | Type       | Description
+------------- | ---------- | ---------- | ------------------------------------------
+ name         | Optional   | string     | Registered Rados cluster object name
+ user_id      | Optional   | string     | Ceph ID (i.e. admin, not client.admin)
+ config_param | Optional   | string map | Explicit librados configuration
+ config_file  | Optional   | string     | File path of librados configuration file
+ key_file     | Optional   | string     | File path of librados key file
+ core_mask    | Optional   | string     | Core mask for librados IO context threads
 
 #### Response
 
@@ -5434,17 +5435,6 @@ This method is available only if SPDK was build with Ceph RBD support.
 
 #### Parameters
 
- Name         | Optional   | Type       | Description
-------------- | ---------- | ---------- | --------------------------------------------------
- name         | Optional   | string     | Bdev name
- user_id      | Optional   | string     | Ceph ID (i.e. admin, not client.admin)
- pool_name    | Required   | string     | Pool name
- rbd_name     | Required   | string     | Image name
- block_size   | Required   | number     | Block size
- config       | Optional   | string map | Explicit librados configuration
- cluster_name | Optional   | string     | Rados cluster object name created in this module.
- uuid         | Optional   | string     | UUID of new bdev
-
 If no config is specified, Ceph configuration files must exist with
 all relevant settings for accessing the pool. If a config map is
 passed, the configuration files are ignored and instead all key/value
@@ -5462,6 +5452,17 @@ all the bdevs will share the same cluster with one connection of Ceph in librbd 
 Performance tuning on the I/O workload could be done by estimating how many io_contxt
 threads and messager threads in Ceph side and how many cores would be reasonable to provide
 for SPDK to get up to your projections.
+
+ Name         | Optional   | Type       | Description
+------------- | ---------- | ---------- | --------------------------------------------------
+ name         | Optional   | string     | Bdev name
+ user_id      | Optional   | string     | Ceph ID (i.e. admin, not client.admin)
+ pool_name    | Required   | string     | Pool name
+ rbd_name     | Required   | string     | Image name
+ block_size   | Required   | number     | Block size
+ config       | Optional   | string map | Explicit librados configuration
+ cluster_name | Optional   | string     | Rados cluster object name created in this module.
+ uuid         | Optional   | string     | UUID of new bdev
 
 #### Response
 
@@ -5683,7 +5684,6 @@ Example request:
   "method": "bdev_delay_delete",
   "id": 1
 }
-
 ~~~
 
 Example response:
@@ -6025,8 +6025,8 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-      "name" : "ftl0",
-      "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
+    "name": "ftl0",
+    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
   }
 }
 ~~~
@@ -6081,8 +6081,8 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-      "name" : "ftl0",
-      "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
+    "name": "ftl0",
+    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
   }
 }
 ~~~
@@ -6258,122 +6258,122 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-      "name": "ftl0",
-      "user": {
-        "read": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "crc": 0,
-            "other": 0
-          }
-        },
-        "write": {
-          "ios": 318707,
-          "blocks": 318707,
-          "errors": {
-            "media": 0,
-            "other": 0
-          }
+    "name": "ftl0",
+    "user": {
+      "read": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "crc": 0,
+          "other": 0
         }
       },
-      "cmp": {
-        "read": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "crc": 0,
-            "other": 0
-          }
-        },
-        "write": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "other": 0
-          }
+      "write": {
+        "ios": 318707,
+        "blocks": 318707,
+        "errors": {
+          "media": 0,
+          "other": 0
+        }
+      }
+    },
+    "cmp": {
+      "read": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "crc": 0,
+          "other": 0
         }
       },
-      "gc": {
-        "read": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "crc": 0,
-            "other": 0
-          }
-        },
-        "write": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "other": 0
-          }
+      "write": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "other": 0
+        }
+      }
+    },
+    "gc": {
+      "read": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "crc": 0,
+          "other": 0
         }
       },
-      "md_base": {
-        "read": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "crc": 0,
-            "other": 0
-          }
-        },
-        "write": {
-          "ios": 1,
-          "blocks": 32,
-          "errors": {
-            "media": 0,
-            "other": 0
-          }
+      "write": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "other": 0
+        }
+      }
+    },
+    "md_base": {
+      "read": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "crc": 0,
+          "other": 0
         }
       },
-      "md_nv_cache": {
-        "read": {
-          "ios": 0,
-          "blocks": 0,
-          "errors": {
-            "media": 0,
-            "crc": 0,
-            "other": 0
-          }
-        },
-        "write": {
-          "ios": 1064,
-          "blocks": 1073896,
-          "errors": {
-            "media": 0,
-            "other": 0
-          }
+      "write": {
+        "ios": 1,
+        "blocks": 32,
+        "errors": {
+          "media": 0,
+          "other": 0
+        }
+      }
+    },
+    "md_nv_cache": {
+      "read": {
+        "ios": 0,
+        "blocks": 0,
+        "errors": {
+          "media": 0,
+          "crc": 0,
+          "other": 0
         }
       },
-      "l2p": {
-        "read": {
-          "ios": 240659,
-          "blocks": 240659,
-          "errors": {
-            "media": 0,
-            "crc": 0,
-            "other": 0
-          }
-        },
-        "write": {
-          "ios": 235745,
-          "blocks": 235745,
-          "errors": {
-            "media": 0,
-            "other": 0
-          }
+      "write": {
+        "ios": 1064,
+        "blocks": 1073896,
+        "errors": {
+          "media": 0,
+          "other": 0
+        }
+      }
+    },
+    "l2p": {
+      "read": {
+        "ios": 240659,
+        "blocks": 240659,
+        "errors": {
+          "media": 0,
+          "crc": 0,
+          "other": 0
+        }
+      },
+      "write": {
+        "ios": 235745,
+        "blocks": 235745,
+        "errors": {
+          "media": 0,
+          "other": 0
         }
       }
     }
+  }
 }
 ~~~
 
@@ -6540,7 +6540,6 @@ Example request:
   "method": "bdev_passthru_delete",
   "id": 1
 }
-
 ~~~
 
 Example response:
@@ -6621,7 +6620,6 @@ Example request:
   "method": "bdev_xnvme_delete",
   "id": 1
 }
-
 ~~~
 
 Example response:
@@ -6640,6 +6638,11 @@ Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk
 
 #### Parameters
 
+In case of Virtio SCSI the `name` parameter will be base name for new created bdevs. For Virtio Blk `name` will be the
+name of created bdev.
+
+`vq_count` and `vq_size` parameters are valid only if `trtype` is `user`.
+
  Name     | Optional   | Type   | Description
 --------- | ---------- | ------ | -----------------------------------------------------------
  name     | Required   | string | Virtio SCSI base bdev name or Virtio Blk bdev name
@@ -6648,11 +6651,6 @@ Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk
  dev_type | Required   | string | Virtio device type: blk or scsi
  vq_count | Optional   | number | Number of queues this controller will utilize (default: 1)
  vq_size  | Optional   | number | Size of each queue. Must be power of 2. (default: 512)
-
-In case of Virtio SCSI the `name` parameter will be base name for new created bdevs. For Virtio Blk `name` will be the
-name of created bdev.
-
-`vq_count` and `vq_size` parameters are valid only if `trtype` is `user`.
 
 #### Response
 
@@ -6684,7 +6682,10 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": ["VirtioScsi0t2", "VirtioScsi0t4"]
+  "result": [
+    "VirtioScsi0t2",
+    "VirtioScsi0t4"
+  ]
 }
 ~~~
 
@@ -6722,10 +6723,10 @@ Example response:
     {
       "name": "VirtioScsi0",
       "virtio": {
-          "vq_size": 128,
-          "vq_count": 4,
-          "type": "user",
-          "socket": "/tmp/VhostScsi0"
+        "vq_size": 128,
+        "vq_count": 4,
+        "type": "user",
+        "socket": "/tmp/VhostScsi0"
       }
     }
   ]
@@ -6755,7 +6756,6 @@ Example request:
   "method": "bdev_virtio_detach_controller",
   "id": 1
 }
-
 ~~~
 
 Example response:
@@ -6774,13 +6774,13 @@ Enable/Disable the virtio blk hotplug monitor or change the monitor period time
 
 #### Parameters
 
+When the enable is true then the period-us is optional. If user don't set the period time then use the default
+value. When the enable is false then the period-us is not required.
+
  Name      | Optional   | Type   | Description
 ---------- | ---------- | ------ | -------------------------------------------------
  enable    | Required   | bool   | Enable or disable the virtio blk hotplug monitor
  period-us | Optional   | number | The period time of the monitor
-
-When the enable is true then the period-us is optional. If user don't set the period time then use the default
-value. When the enable is false then the period-us is not required.
 
 #### Response
 
@@ -6814,13 +6814,19 @@ Example response:
 
 ## iSCSI Target {#jsonrpc_components_iscsi_tgt}
 
-### iscsi_set_options method {#rpc_iscsi_set_options}
+### iscsi_set_options {#rpc_iscsi_set_options}
 
 Set global parameters for iSCSI targets.
 
 This RPC may only be called before SPDK subsystems have been initialized. This RPC can be called only once.
 
 #### Parameters
+
+To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters `no_discovery_auth`, `req_discovery_auth`,
+`req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`,
+`mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
 
  Name                            | Optional   | Type    | Description
 -------------------------------- | ---------- | ------- | -----------------------------------------------------------------------------------------------------------------------
@@ -6846,12 +6852,6 @@ This RPC may only be called before SPDK subsystems have been initialized. This R
  pdu_pool_size                   | Optional   | number  | Number of PDUs in the pool (default: approximately 2 * max_sessions * (max_queue_depth + max_connections_per_session))
  immediate_data_pool_size        | Optional   | number  | Number of immediate data buffers in the pool (default: 128 * max_sessions)
  data_out_pool_size              | Optional   | number  | Number of data out buffers in the pool (default: 16 * max_sessions)
-
-To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
-
-Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters `no_discovery_auth`, `req_discovery_auth`,
-`req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`,
-`mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
 
 #### Example
 
@@ -6888,7 +6888,7 @@ Example response:
 }
 ~~~
 
-### iscsi_get_options method {#rpc_iscsi_get_options}
+### iscsi_get_options {#rpc_iscsi_get_options}
 
 Show global parameters of iSCSI targets.
 
@@ -6973,11 +6973,13 @@ Example response:
 }
 ~~~
 
-### iscsi_set_discovery_auth method {#rpc_iscsi_set_discovery_auth}
+### iscsi_set_discovery_auth {#rpc_iscsi_set_discovery_auth}
 
 Set CHAP authentication for sessions dynamically.
 
 #### Parameters
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
  Name         | Optional   | Type    | Description
 ------------- | ---------- | ------- | -----------------------------------------------------------------------------------------------------------
@@ -6985,8 +6987,6 @@ Set CHAP authentication for sessions dynamically.
  require_chap | Optional   | boolean | CHAP for discovery session should be required (default: `false`)
  mutual_chap  | Optional   | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
  chap_group   | Optional   | number  | CHAP group ID for discovery session (default: 0)
-
-Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 #### Example
 
@@ -7015,7 +7015,7 @@ Example response:
 }
 ~~~
 
-### iscsi_create_auth_group method {#rpc_iscsi_create_auth_group}
+### iscsi_create_auth_group {#rpc_iscsi_create_auth_group}
 
 Create an authentication group for CHAP authentication.
 
@@ -7026,7 +7026,7 @@ Create an authentication group for CHAP authentication.
  tag     | Required   | number | Authentication group tag (unique, integer > 0)
  secrets | Optional   | array  | Array of @ref rpc_iscsi_create_auth_group_secret objects
 
-#### secret {#rpc_iscsi_create_auth_group_secret}
+##### secret {#rpc_iscsi_create_auth_group_secret}
 
  Name    | Optional   | Type   | Description
 -------- | ---------- | ------ | ---------------------------
@@ -7068,7 +7068,7 @@ Example response:
 }
 ~~~
 
-### iscsi_delete_auth_group method {#rpc_iscsi_delete_auth_group}
+### iscsi_delete_auth_group {#rpc_iscsi_delete_auth_group}
 
 Delete an existing authentication group for CHAP authentication.
 
@@ -7115,10 +7115,10 @@ This method has no parameters.
 
 Array of objects describing authentication group.
 
-Name                        | Type    | Description
---------------------------- | --------| -----------
-tag                         | number  | Authentication group tag
-secrets                     | array   | Array of @ref rpc_iscsi_create_auth_group_secret objects
+ Name    | Type   | Description
+-------- | ------ | ---------------------------------------------------------
+ tag     | number | Authentication group tag
+ secrets | array  | Array of @ref rpc_iscsi_create_auth_group_secret objects
 
 #### Example
 
@@ -7243,7 +7243,7 @@ Example response:
 }
 ~~~
 
-### iscsi_get_initiator_groups method {#rpc_iscsi_get_initiator_groups}
+### iscsi_get_initiator_groups {#rpc_iscsi_get_initiator_groups}
 
 Show information about all available initiator groups.
 
@@ -7255,11 +7255,11 @@ This method has no parameters.
 
 Array of objects describing initiator groups.
 
-Name                        | Type    | Description
---------------------------- | --------| -----------
-tag                         | number  | Initiator group tag
-initiators                  | array   | Array of initiator hostnames or IP addresses
-netmasks                    | array   | Array of initiator netmasks
+ Name       | Type   | Description
+----------- | ------ | ---------------------------------------------
+ tag        | number | Initiator group tag
+ initiators | array  | Array of initiator hostnames or IP addresses
+ netmasks   | array  | Array of initiator netmasks
 
 #### Example
 
@@ -7294,7 +7294,7 @@ Example response:
 }
 ~~~
 
-### iscsi_create_initiator_group method {#rpc_iscsi_create_initiator_group}
+### iscsi_create_initiator_group {#rpc_iscsi_create_initiator_group}
 
 Add an initiator group.
 
@@ -7338,7 +7338,7 @@ Example response:
 }
 ~~~
 
-### iscsi_delete_initiator_group method {#rpc_iscsi_delete_initiator_group}
+### iscsi_delete_initiator_group {#rpc_iscsi_delete_initiator_group}
 
 Delete an existing initiator group.
 
@@ -7373,7 +7373,7 @@ Example response:
 }
 ~~~
 
-### iscsi_initiator_group_add_initiators method {#rpc_iscsi_initiator_group_add_initiators}
+### iscsi_initiator_group_add_initiators {#rpc_iscsi_initiator_group_add_initiators}
 
 Add initiators to an existing initiator group.
 
@@ -7416,7 +7416,7 @@ Example response:
 }
 ~~~
 
-### iscsi_initiator_group_remove_initiators method {#rpc_iscsi_initiator_group_remove_initiators}
+### iscsi_initiator_group_remove_initiators {#rpc_iscsi_initiator_group_remove_initiators}
 
 Remove initiators from an initiator group.
 
@@ -7459,7 +7459,7 @@ Example response:
 }
 ~~~
 
-### iscsi_get_target_nodes method {#rpc_iscsi_get_target_nodes}
+### iscsi_get_target_nodes {#rpc_iscsi_get_target_nodes}
 
 Show information about all available iSCSI target nodes.
 
@@ -7471,19 +7471,19 @@ This method has no parameters.
 
 Array of objects describing target node.
 
-Name                        | Type    | Description
---------------------------- | --------| -----------
-name                        | string  | Target node name (ASCII)
-alias_name                  | string  | Target node alias name (ASCII)
-pg_ig_maps                  | array   | Array of Portal_Group_Tag:Initiator_Group_Tag mappings
-luns                        | array   | Array of Bdev names to LUN ID mappings
-queue_depth                 | number  | Target queue depth
-disable_chap                | boolean | CHAP authentication should be disabled for this target
-require_chap                | boolean | CHAP authentication should be required for this target
-mutual_chap                 | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
-chap_group                  | number  | Authentication group ID for this target node
-header_digest               | boolean | Header Digest should be required for this target node
-data_digest                 | boolean | Data Digest should be required for this target node
+ Name          | Type    | Description
+-------------- | ------- | ---------------------------------------------------------------------------------
+ name          | string  | Target node name (ASCII)
+ alias_name    | string  | Target node alias name (ASCII)
+ pg_ig_maps    | array   | Array of Portal_Group_Tag:Initiator_Group_Tag mappings
+ luns          | array   | Array of Bdev names to LUN ID mappings
+ queue_depth   | number  | Target queue depth
+ disable_chap  | boolean | CHAP authentication should be disabled for this target
+ require_chap  | boolean | CHAP authentication should be required for this target
+ mutual_chap   | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
+ chap_group    | number  | Authentication group ID for this target node
+ header_digest | boolean | Header Digest should be required for this target node
+ data_digest   | boolean | Data Digest should be required for this target node
 
 #### Example
 
@@ -7531,11 +7531,13 @@ Example response:
 }
 ~~~
 
-### iscsi_create_target_node method {#rpc_iscsi_create_target_node}
+### iscsi_create_target_node {#rpc_iscsi_create_target_node}
 
 Add an iSCSI target node.
 
 #### Parameters
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
  Name          | Optional   | Type    | Description
 -------------- | ---------- | ------- | ---------------------------------------------------------------------------------
@@ -7550,8 +7552,6 @@ Add an iSCSI target node.
  chap_group    | Optional   | number  | Authentication group ID for this target node
  header_digest | Optional   | boolean | Header Digest should be required for this target node
  data_digest   | Optional   | boolean | Data Digest should be required for this target node
-
-Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 #### Example
 
@@ -7600,11 +7600,13 @@ Example response:
 }
 ~~~
 
-### iscsi_target_node_set_auth method {#rpc_iscsi_target_node_set_auth}
+### iscsi_target_node_set_auth {#rpc_iscsi_target_node_set_auth}
 
 Set CHAP authentication to an existing iSCSI target node.
 
 #### Parameters
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
  Name         | Optional   | Type    | Description
 ------------- | ---------- | ------- | ---------------------------------------------------------------------------------
@@ -7613,8 +7615,6 @@ Set CHAP authentication to an existing iSCSI target node.
  require_chap | Optional   | boolean | CHAP authentication should be required for this target
  mutual_chap  | Optional   | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
  chap_group   | Optional   | number  | Authentication group ID for this target node
-
-Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 #### Example
 
@@ -7644,7 +7644,7 @@ Example response:
 }
 ~~~
 
-### iscsi_target_node_add_pg_ig_maps method {#rpc_iscsi_target_node_add_pg_ig_maps}
+### iscsi_target_node_add_pg_ig_maps {#rpc_iscsi_target_node_add_pg_ig_maps}
 
 Add initiator group to portal group mappings to an existing iSCSI target node.
 
@@ -7655,7 +7655,7 @@ Add initiator group to portal group mappings to an existing iSCSI target node.
  name       | Required   | string | Target node name (ASCII)
  pg_ig_maps | Required   | array  | Not empty array of initiator to portal group mappings objects
 
-Portal to Initiator group mappings object:
+##### Portal to Initiator group mappings object
 
  Name   | Optional   | Type   | Description
 ------- | ---------- | ------ | -----------------------------
@@ -7701,7 +7701,7 @@ Example response:
 }
 ~~~
 
-### iscsi_target_node_remove_pg_ig_maps method {#rpc_iscsi_target_node_remove_pg_ig_maps}
+### iscsi_target_node_remove_pg_ig_maps {#rpc_iscsi_target_node_remove_pg_ig_maps}
 
 Delete initiator group to portal group mappings from an existing iSCSI target node.
 
@@ -7712,7 +7712,7 @@ Delete initiator group to portal group mappings from an existing iSCSI target no
  name       | Required   | string | Target node name (ASCII)
  pg_ig_maps | Required   | array  | Not empty array of Portal to Initiator group mappings objects
 
-Portal to Initiator group mappings object:
+##### Portal to Initiator group mappings object
 
  Name   | Optional   | Type   | Description
 ------- | ---------- | ------ | -----------------------------
@@ -7758,7 +7758,7 @@ Example response:
 }
 ~~~
 
-### iscsi_delete_target_node method {#rpc_iscsi_delete_target_node}
+### iscsi_delete_target_node {#rpc_iscsi_delete_target_node}
 
 Delete an iSCSI target node.
 
@@ -7793,7 +7793,7 @@ Example response:
 }
 ~~~
 
-### iscsi_get_portal_groups method {#rpc_iscsi_get_portal_groups}
+### iscsi_get_portal_groups {#rpc_iscsi_get_portal_groups}
 
 Show information about all available portal groups.
 
@@ -7834,7 +7834,7 @@ Example response:
 }
 ~~~
 
-### iscsi_create_portal_group method {#rpc_iscsi_create_portal_group}
+### iscsi_create_portal_group {#rpc_iscsi_create_portal_group}
 
 Add a portal group.
 
@@ -7847,7 +7847,7 @@ Add a portal group.
  private | Optional   | boolean | When true, portals in this group are not returned by a discovery session. Used for login redirection. (default: `false`)
  wait    | Optional   | boolean | When true, do not listen on portals until it is started explicitly. (default: `false`)
 
-Portal object
+##### Portal object
 
  Name   | Optional   | Type   | Description
 ------- | ---------- | ------ | -----------------------
@@ -7885,7 +7885,7 @@ Example response:
 }
 ~~~
 
-### iscsi_start_portal_group method {#rpc_iscsi_start_portal_group}
+### iscsi_start_portal_group {#rpc_iscsi_start_portal_group}
 
 Start listening on portals if the portal group is not started yet, or do nothing
 if the portal group already started. Return a success response for both cases.
@@ -7921,7 +7921,7 @@ Example response:
 }
 ~~~
 
-### iscsi_delete_portal_group method {#rpc_iscsi_delete_portal_group}
+### iscsi_delete_portal_group {#rpc_iscsi_delete_portal_group}
 
 Delete an existing portal group.
 
@@ -7956,12 +7956,14 @@ Example response:
 }
 ~~~
 
-### iscsi_portal_group_set_auth method {#rpc_iscsi_portal_group_set_auth}
+### iscsi_portal_group_set_auth {#rpc_iscsi_portal_group_set_auth}
 
 Set CHAP authentication for discovery sessions specific for the existing iSCSI portal group.
 This RPC overwrites the setting by the global parameters for the iSCSI portal group.
 
 #### Parameters
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
  Name         | Optional   | Type    | Description
 ------------- | ---------- | ------- | -----------------------------------------------------------------------------------------------------------
@@ -7969,8 +7971,6 @@ This RPC overwrites the setting by the global parameters for the iSCSI portal gr
  require_chap | Optional   | boolean | CHAP for discovery session should be required (default: `false`)
  mutual_chap  | Optional   | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
  chap_group   | Optional   | number  | CHAP group ID for discovery session (default: 0)
-
-Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 #### Example
 
@@ -8000,7 +8000,7 @@ Example response:
 }
 ~~~
 
-### iscsi_get_connections method {#rpc_iscsi_get_connections}
+### iscsi_get_connections {#rpc_iscsi_get_connections}
 
 Show information about all active connections.
 
@@ -8012,15 +8012,15 @@ This method has no parameters.
 
 Array of objects describing iSCSI connection.
 
-Name                        | Type    | Description
---------------------------- | --------| -----------
-id                          | number  | Index (used for TTT - Target Transfer Tag)
-cid                         | number  | CID (Connection ID)
-tsih                        | number  | TSIH (Target Session Identifying Handle)
-lcore_id                    | number  | Core number on which the iSCSI connection runs
-initiator_addr              | string  | Initiator address
-target_addr                 | string  | Target address
-target_node_name            | string  | Target node name (ASCII) without prefix
+ Name             | Type   | Description
+----------------- | ------ | -----------------------------------------------
+ id               | number | Index (used for TTT - Target Transfer Tag)
+ cid              | number | CID (Connection ID)
+ tsih             | number | TSIH (Target Session Identifying Handle)
+ lcore_id         | number | Core number on which the iSCSI connection runs
+ initiator_addr   | string | Initiator address
+ target_addr      | string | Target address
+ target_node_name | string | Target node name (ASCII) without prefix
 
 #### Example
 
@@ -8054,7 +8054,7 @@ Example response:
 }
 ~~~
 
-### iscsi_get_stats method {#rpc_iscsi_get_stats}
+### iscsi_get_stats {#rpc_iscsi_get_stats}
 
 Show stat information of iSCSI connections.
 
@@ -8066,12 +8066,12 @@ This method has no parameters.
 
 Stat information of iSCSI connections.
 
-Name                        | Type    | Description
---------------------------- | --------| -----------
-invalid                     | number  | The number of invalid connections
-running                     | number  | The number of running connections
-exiting                     | number  | The number of exiting connections
-exited                      | number  | The number of exited connections
+ Name    | Type   | Description
+-------- | ------ | ----------------------------------
+ invalid | number | The number of invalid connections
+ running | number | The number of running connections
+ exiting | number | The number of exiting connections
+ exited  | number | The number of exited connections
 
 #### Example
 
@@ -8091,18 +8091,16 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result":
-    {
-      "invalid": 0,
-      "running": 5,
-      "exiting": 0,
-      "exited": 0
-    }
-
+  "result": {
+    "invalid": 0,
+    "running": 5,
+    "exiting": 0,
+    "exited": 0
+  }
 }
 ~~~
 
-### iscsi_target_node_add_lun method {#rpc_iscsi_target_node_add_lun}
+### iscsi_target_node_add_lun {#rpc_iscsi_target_node_add_lun}
 
 Add an LUN to an existing iSCSI target node.
 
@@ -8141,11 +8139,13 @@ Example response:
 }
 ~~~
 
-### iscsi_target_node_set_redirect method {#rpc_iscsi_target_node_set_redirect}
+### iscsi_target_node_set_redirect {#rpc_iscsi_target_node_set_redirect}
 
 Update redirect portal of the primary portal group for the target node,
 
 #### Parameters
+
+If both redirect_host and redirect_port are omitted, clear the redirect portal.
 
  Name          | Optional   | Type   | Description
 -------------- | ---------- | ------ | ----------------------------------------------------------
@@ -8153,8 +8153,6 @@ Update redirect portal of the primary portal group for the target node,
  pg_tag        | Required   | number | Existing portal group tag
  redirect_host | Optional   | string | Numeric IP address to which the target node is redirected
  redirect_port | Optional   | string | Numeric TCP port to which the target node is redirected
-
-If both redirect_host and redirect_port are omitted, clear the redirect portal.
 
 #### Example
 
@@ -8184,7 +8182,7 @@ Example response:
 }
 ~~~
 
-### iscsi_target_node_request_logout method {#rpc_iscsi_target_node_request_logout}
+### iscsi_target_node_request_logout {#rpc_iscsi_target_node_request_logout}
 
 For the target node, request connections whose portal group tag match to logout,
 or request all connections to logout if portal group tag is omitted.
@@ -8271,13 +8269,15 @@ Get latency histogram for specified iscsi target node.
 
 #### Response
 
-Name                    | Description
-------------------------| -----------
-histogram               | Base64 encoded histogram
-granularity             | Granularity of the histogram buckets
-tsc_rate                | Ticks per second
+ Name        | Type   | Description
+------------ | ------ | -------------------------------------
+ histogram   |        | Base64 encoded histogram
+ granularity |        | Granularity of the histogram buckets
+ tsc_rate    |        | Ticks per second
 
 #### Example
+
+Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 Example request:
 
@@ -8293,7 +8293,6 @@ Example request:
 ~~~
 
 Example response:
-Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 ~~~json
 {
@@ -8309,7 +8308,7 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 ## NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
-### nvmf_create_transport method {#rpc_nvmf_create_transport}
+### nvmf_create_transport {#rpc_nvmf_create_transport}
 
 Initialize an NVMe-oF transport with the given options.
 
@@ -8373,7 +8372,7 @@ Example response:
 }
 ~~~
 
-### nvmf_get_subsystems method {#rpc_nvmf_get_subsystems}
+### nvmf_get_subsystems {#rpc_nvmf_get_subsystems}
 
 #### Parameters
 
@@ -8419,21 +8418,29 @@ Example response:
         }
       ],
       "hosts": [
-        {"nqn": "nqn.2016-06.io.spdk:host1"}
+        {
+          "nqn": "nqn.2016-06.io.spdk:host1"
+        }
       ],
       "allow_any_host": false,
       "serial_number": "abcdef",
       "model_number": "ghijklmnop",
       "namespaces": [
-        {"nsid": 1, "name": "Malloc2"},
-        {"nsid": 2, "name": "Nvme0n1"}
+        {
+          "nsid": 1,
+          "name": "Malloc2"
+        },
+        {
+          "nsid": 2,
+          "name": "Nvme0n1"
+        }
       ]
     }
   ]
 }
 ~~~
 
-### nvmf_create_subsystem method {#rpc_nvmf_create_subsystem}
+### nvmf_create_subsystem {#rpc_nvmf_create_subsystem}
 
 Construct an NVMe over Fabrics target subsystem.
 
@@ -8482,16 +8489,16 @@ Example response:
 }
 ~~~
 
-### nvmf_delete_subsystem method {#rpc_nvmf_delete_subsystem}
+### nvmf_delete_subsystem {#rpc_nvmf_delete_subsystem}
 
 Delete an existing NVMe-oF subsystem.
 
 #### Parameters
 
-Parameter              | Optional | Type        | Description
----------------------- | -------- | ----------- | -----------
-nqn                    | Required | string      | Subsystem NQN to delete.
-tgt_name               | Optional | string      | Parent NVMe-oF target name.
+ Name     | Optional   | Type   | Description
+--------- | ---------- | ------ | ----------------------------
+ nqn      | Required   | string | Subsystem NQN to delete.
+ tgt_name | Optional   | string | Parent NVMe-oF target name.
 
 #### Example
 
@@ -8518,7 +8525,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_add_listener  method {#rpc_nvmf_subsystem_add_listener}
+### nvmf_subsystem_add_listener {#rpc_nvmf_subsystem_add_listener}
 
 Add a new listen address to an NVMe-oF subsystem.
 
@@ -8534,7 +8541,7 @@ This method will fail if listener with given address already exists.
  secure_channel | Optional   | bool   | Whether all connections immediately attempt to establish a secure channel
  sock_impl      | Optional   | string | The socket implementation to use for the listener
 
-#### listen_address {#rpc_nvmf_listen_address}
+##### listen_address {#rpc_nvmf_listen_address}
 
 The listen_address is used for adding the listeners to the NVMe-oF target
 and for referring to discovery services on other targets.
@@ -8577,7 +8584,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_remove_listener  method {#rpc_nvmf_subsystem_remove_listener}
+### nvmf_subsystem_remove_listener {#rpc_nvmf_subsystem_remove_listener}
 
 Remove a listen address from an NVMe-oF subsystem.
 
@@ -8620,7 +8627,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_listener_set_ana_state  method {#rpc_nvmf_subsystem_listener_set_ana_state}
+### nvmf_subsystem_listener_set_ana_state {#rpc_nvmf_subsystem_listener_set_ana_state}
 
 Set ANA state of a listener for an NVMe-oF subsystem. Only the ANA state of the specified ANA
 group is updated, or ANA states of all ANA groups if ANA group is not specified.
@@ -8667,7 +8674,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_add_ns method {#rpc_nvmf_subsystem_add_ns}
+### nvmf_subsystem_add_ns {#rpc_nvmf_subsystem_add_ns}
 
 Add a namespace to a subsystem. The namespace ID is returned as the result.
 
@@ -8723,7 +8730,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_remove_ns method {#rpc_nvmf_subsystem_remove_ns}
+### nvmf_subsystem_remove_ns {#rpc_nvmf_subsystem_remove_ns}
 
 Remove a namespace from a subsystem.
 
@@ -8761,7 +8768,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_set_ns_ana_group method {#rpc_nvmf_subsystem_set_ns_ana_group}
+### nvmf_subsystem_set_ns_ana_group {#rpc_nvmf_subsystem_set_ns_ana_group}
 
 Change ANA group ID of a namespace in a subsystem.
 
@@ -8801,7 +8808,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
+### nvmf_subsystem_add_host {#rpc_nvmf_subsystem_add_host}
 
 Add a host NQN to the list of allowed hosts.  Adding an already allowed host will result in an
 error.
@@ -8844,7 +8851,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_remove_host method {#rpc_nvmf_subsystem_remove_host}
+### nvmf_subsystem_remove_host {#rpc_nvmf_subsystem_remove_host}
 
 Remove a host NQN from the list of allowed hosts.
 
@@ -8882,7 +8889,7 @@ Example response:
 }
 ~~~
 
-### nvmf_subsystem_allow_any_host method {#rpc_nvmf_subsystem_allow_any_host}
+### nvmf_subsystem_allow_any_host {#rpc_nvmf_subsystem_allow_any_host}
 
 Configure a subsystem to allow any host to connect or to enforce the host NQN list.
 
@@ -9228,7 +9235,7 @@ Example response:
 }
 ~~~
 
-### nvmf_discovery_add_referral  method {#rpc_nvmf_discovery_add_referral}
+### nvmf_discovery_add_referral {#rpc_nvmf_discovery_add_referral}
 
 Add a discovery service referral to an NVMe-oF target. If a referral with the given
 parameters already exists, no action will be taken.
@@ -9271,7 +9278,7 @@ Example response:
 }
 ~~~
 
-### nvmf_discovery_remove_referral  method {#rpc_nvmf_discovery_remove_referral}
+### nvmf_discovery_remove_referral {#rpc_nvmf_discovery_remove_referral}
 
 Remove a discovery service referral from an NVMe-oF target.
 
@@ -9367,7 +9374,7 @@ have been initialized.
  dhchap_digests     | Optional   | list   | List of allowed DH-HMAC-CHAP digests.
  dhchap_dhgroups    | Optional   | list   | List of allowed DH-HMAC-CHAP DH groups.
 
-#### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
+##### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
 
  Name           | Optional   | Type   | Description
 --------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------
@@ -9398,7 +9405,7 @@ Example response:
 }
 ~~~
 
-### nvmf_get_transports method {#rpc_nvmf_get_transports}
+### nvmf_get_transports {#rpc_nvmf_get_transports}
 
 #### Parameters
 
@@ -9442,7 +9449,7 @@ Example response:
 }
 ~~~
 
-### nvmf_get_stats method {#rpc_nvmf_get_stats}
+### nvmf_get_stats {#rpc_nvmf_get_stats}
 
 Retrieve current statistics of the NVMf subsystem.
 
@@ -10164,51 +10171,51 @@ specified by name.
 
 Response is an array of objects describing requested controller(s). Common fields are:
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-ctrlr                   | string      | Controller name
-cpumask                 | string      | @ref cpu_mask of this controller
-delay_base_us           | number      | Base (minimum) coalescing time in microseconds (0 if disabled)
-iops_threshold          | number      | Coalescing activation level
-backend_specific        | object      | Backend specific information
+ Name             | Type   | Description
+----------------- | ------ | ---------------------------------------------------------------
+ ctrlr            | string | Controller name
+ cpumask          | string | @ref cpu_mask of this controller
+ delay_base_us    | number | Base (minimum) coalescing time in microseconds (0 if disabled)
+ iops_threshold   | number | Coalescing activation level
+ backend_specific | object | Backend specific information
 
 ##### Vhost block {#rpc_vhost_get_controllers_blk}
 
 `backend_specific` contains one `block` object  of type:
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-bdev                    | string      | Backing bdev name or Null if bdev is hot-removed
-readonly                | boolean     | True if controllers is readonly, false otherwise
+ Name                    | Type        | Description
+------------------------ | ----------- | -----------
+ bdev                    | string      | Backing bdev name or Null if bdev is hot-removed
+ readonly                | boolean     | True if controllers is readonly, false otherwise
 
 ##### Vhost SCSI {#rpc_vhost_get_controllers_scsi}
 
 `backend_specific` contains `scsi` array of following objects:
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-target_name             | string      | Name of this SCSI target
-id                      | number      | Unique SPDK global SCSI target ID
-scsi_dev_num            | number      | SCSI target ID initiator will see when scanning this controller
-luns                    | array       | array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
+ Name                    | Type        | Description
+------------------------ | ----------- | -----------
+ target_name             | string      | Name of this SCSI target
+ id                      | number      | Unique SPDK global SCSI target ID
+ scsi_dev_num            | number      | SCSI target ID initiator will see when scanning this controller
+ luns                    | array       | array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
 
 ##### Vhost SCSI LUN {#rpc_vhost_get_controllers_scsi_luns}
 
 Object of type:
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-id                      | number      | SCSI LUN ID
-bdev_name               | string      | Backing bdev name
+ Name                    | Type        | Description
+------------------------ | ----------- | -----------
+ id                      | number      | SCSI LUN ID
+ bdev_name               | string      | Backing bdev name
 
 ##### Vhost NVMe {#rpc_vhost_get_controllers_nvme}
 
 `backend_specific` contains `namespaces` array of following objects:
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-nsid                    | number      | Namespace ID
-bdev                    | string      | Backing bdev name
+ Name                    | Type        | Description
+------------------------ | ----------- | -----------
+ nsid                    | number      | Namespace ID
+ bdev                    | string      | Backing bdev name
 
 #### Example
 
@@ -10355,15 +10362,6 @@ Construct a logical volume store.
 
 #### Parameters
 
- Name                           | Optional   | Type   | Description
-------------------------------- | ---------- | ------ | -----------------------------------------------------------------------------------------------
- bdev_name                      | Required   | string | Bdev on which to construct logical volume store
- lvs_name                       | Required   | string | Name of the logical volume store to create
- cluster_sz                     | Optional   | number | Cluster size of the logical volume store in bytes (Default: 4MiB)
- clear_method                   | Optional   | string | Change clear method for data region. Available: none, unmap (default), write_zeroes
- num_md_pages_per_cluster_ratio | Optional   | number | Reserved metadata pages per cluster (Default: 100)
- md_page_size                   | Optional   | number | Metadata page size of the logical volume store in bytes (Default: max(4KB, bdev phys blocklen)
-
 The num_md_pages_per_cluster_ratio defines the amount of metadata to
 allocate when the logical volume store is created. The default value
 is '100', which translates to 1 4KiB per cluster. For the default 4MiB
@@ -10377,6 +10375,15 @@ num_md_pages_per_cluster_ratio = 200 would support future 2x growth of
 the logical volume store, and would result in 0.2% of the underlying
 block device allocated for metadata (with a default 4MiB cluster
 size).
+
+ Name                           | Optional   | Type   | Description
+------------------------------- | ---------- | ------ | -----------------------------------------------------------------------------------------------
+ bdev_name                      | Required   | string | Bdev on which to construct logical volume store
+ lvs_name                       | Required   | string | Name of the logical volume store to create
+ cluster_sz                     | Optional   | number | Cluster size of the logical volume store in bytes (Default: 4MiB)
+ clear_method                   | Optional   | string | Change clear method for data region. Available: none, unmap (default), write_zeroes
+ num_md_pages_per_cluster_ratio | Optional   | number | Reserved metadata pages per cluster (Default: 100)
+ md_page_size                   | Optional   | number | Metadata page size of the logical volume store in bytes (Default: max(4KB, bdev phys blocklen)
 
 #### Response
 
@@ -10416,12 +10423,12 @@ Destroy a logical volume store.
 
 #### Parameters
 
+Either uuid or lvs_name must be specified, but not both.
+
  Name     | Optional   | Type   | Description
 --------- | ---------- | ------ | --------------------------------------------
  uuid     | Optional   | string | UUID of the logical volume store to destroy
  lvs_name | Optional   | string | Name of the logical volume store to destroy
-
-Either uuid or lvs_name must be specified, but not both.
 
 #### Example
 
@@ -10454,13 +10461,13 @@ Get a list of logical volume stores.
 
 #### Parameters
 
+Either uuid or lvs_name may be specified, but not both.
+If both uuid and lvs_name are omitted, information about all logical volume stores is returned.
+
  Name     | Optional   | Type   | Description
 --------- | ---------- | ------ | ---------------------------------------------------------------
  uuid     | Optional   | string | UUID of the logical volume store to retrieve information about
  lvs_name | Optional   | string | Name of the logical volume store to retrieve information about
-
-Either uuid or lvs_name may be specified, but not both.
-If both uuid and lvs_name are omitted, information about all logical volume stores is returned.
 
 #### Example
 
@@ -10540,12 +10547,12 @@ Grow the logical volume store to fill the underlying bdev
 
 #### Parameters
 
+Either uuid or lvs_name must be specified, but not both.
+
  Name     | Optional   | Type   | Description
 --------- | ---------- | ------ | -----------------------------------------
  uuid     | Optional   | string | UUID of the logical volume store to grow
  lvs_name | Optional   | string | Name of the logical volume store to grow
-
-Either uuid or lvs_name must be specified, but not both.
 
 #### Example
 
@@ -10578,6 +10585,9 @@ Create a logical volume on a logical volume store.
 
 #### Parameters
 
+Size will be rounded up to a multiple of cluster size. Either uuid or lvs_name must be specified, but not both.
+lvol_name will be used in the alias of the created logical volume.
+
  Name           | Optional   | Type    | Description
 --------------- | ---------- | ------- | --------------------------------------------------------------------------------
  lvol_name      | Required   | string  | Name of logical volume to create
@@ -10586,9 +10596,6 @@ Create a logical volume on a logical volume store.
  uuid           | Optional   | string  | UUID of logical volume store to create logical volume on
  lvs_name       | Optional   | string  | Name of logical volume store to create logical volume on
  clear_method   | Optional   | string  | Change default data clusters clear method. Available: none, unmap, write_zeroes
-
-Size will be rounded up to a multiple of cluster size. Either uuid or lvs_name must be specified, but not both.
-lvol_name will be used in the alias of the created logical volume.
 
 #### Response
 
@@ -10979,13 +10986,13 @@ not returned by `bdev_get_bdevs`.
 
 #### Parameters
 
+Either lvs_uuid or lvs_name may be specified, but not both.
+If both lvs_uuid and lvs_name are omitted, information about lvols in all logical volume stores is returned.
+
  Name     | Optional   | Type   | Description
 --------- | ---------- | ------ | -------------------------------------------------------------
  lvs_uuid | Optional   | string | Only show volumes in the logical volume store with this UUID
  lvs_name | Optional   | string | Only show volumes in the logical volume store with this name
-
-Either lvs_uuid or lvs_name may be specified, but not both.
-If both lvs_uuid and lvs_name are omitted, information about lvols in all logical volume stores is returned.
 
 #### Example
 
@@ -11464,6 +11471,7 @@ Example response:
   "result": true
 }
 ~~~
+
 ### bdev_raid_remove_base_bdev {#rpc_bdev_raid_remove_base_bdev}
 
 Remove base bdev from existing raid bdev.
@@ -11854,14 +11862,14 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-      "name": "nvme0n1r1",
-      "range_start": 0,
-      "range_length": 4096,
-      "read_lock_enabled": true,
-      "write_lock_enabled": true,
-      "read_locked": false,
-      "write_locked": false
-    }
+    "name": "nvme0n1r1",
+    "range_start": 0,
+    "range_length": 4096,
+    "read_lock_enabled": true,
+    "write_lock_enabled": true,
+    "read_locked": false,
+    "write_locked": false
+  }
 }
 ~~~
 
@@ -12042,11 +12050,11 @@ due to being overwritten by new ones.
 
 Response is an array of event objects.
 
- Name   | Optional   | Type   | Description
-------- | ---------- | ------ | -------------------
- id     | Optional   | number | Event ID.
- type   | Optional   | number | Type of the event.
- ctx    | Optional   | string | Event context.
+ Name   | Type   | Description
+------- | ------ | -------------------
+ id     | number | Event ID.
+ type   | number | Type of the event.
+ ctx    | string | Event context.
 
 #### Example
 
@@ -12062,7 +12070,6 @@ Example request:
     "max": 10
   }
 }
-
 ~~~
 
 Example response:
@@ -12191,7 +12198,7 @@ Example request:
 
 ~~~json
 {
- "params": {
+  "params": {
     "ublk_id": "1",
     "bdev_name": "Malloc1"
   },
@@ -12232,7 +12239,7 @@ Example request:
 
 ~~~json
 {
- "params": {
+  "params": {
     "ublk_id": "1",
     "bdev_name": "Malloc1"
   },
@@ -12272,7 +12279,7 @@ Example request:
 
 ~~~json
 {
- "params": {
+  "params": {
     "ublk_id": "1"
   },
   "jsonrpc": "2.0",
@@ -12323,7 +12330,7 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result":  [
+  "result": [
     {
       "ublk_device": "/dev/ublkb1",
       "id": 1,
@@ -12363,7 +12370,7 @@ Example request:
 
 ~~~json
 {
- "params": {
+  "params": {
     "nbd_device": "/dev/nbd1",
     "bdev_name": "Malloc1"
   },
@@ -12399,7 +12406,7 @@ Example request:
 
 ~~~json
 {
- "params": {
+  "params": {
     "nbd_device": "/dev/nbd1"
   },
   "jsonrpc": "2.0",
@@ -12450,7 +12457,7 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result":  [
+  "result": [
     {
       "bdev_name": "Malloc0",
       "nbd_device": "/dev/nbd0"
@@ -12777,7 +12784,7 @@ Get the name of the default sock implementation.
 
 #### Parameters
 
-This function has no parameters.
+This method has no parameters.
 
 #### Response
 
@@ -12832,11 +12839,11 @@ Illegal command contents or mismatching buffer size may result in unpredictable 
 
 #### Response
 
-Name                    | Type        | Description
------------------------ | ----------- | -----------
-cpl                     | string      | NVMe completion queue entry, encoded by base64 urlsafe
-data                    | string      | Data transferred from controller to host, encoded by base64 urlsafe
-metadata                | string      | Metadata transferred from controller to host, encoded by base64 urlsafe
+ Name     | Type   | Description
+--------- | ------ | ------------------------------------------------------------------------
+ cpl      | string | NVMe completion queue entry, encoded by base64 urlsafe
+ data     | string | Data transferred from controller to host, encoded by base64 urlsafe
+ metadata | string | Metadata transferred from controller to host, encoded by base64 urlsafe
 
 #### Example
 
@@ -12863,11 +12870,10 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result":  {
+  "result": {
     "cpl": "AAAAAAAAAAARAAAAWrmwABAA==",
     "data": "sIjg6AAAAACwiODoAAAAALCI4OgAAAAAAAYAAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
   }
-
 }
 ~~~
 
@@ -12917,6 +12923,8 @@ Remove a device behind a VMD.
 
 #### Example
 
+Example request:
+
 ~~~json
 {
   "jsonrpc": "2.0",
@@ -12951,6 +12959,8 @@ This method has no parameters.
 The response is the number of new devices found.
 
 #### Example
+
+Example request:
 
 ~~~json
 {
@@ -13002,9 +13012,9 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result":  {
+  "result": {
     "version": "19.04-pre",
-    "fields" : {
+    "fields": {
       "major": 19,
       "minor": 4,
       "patch": 0,
@@ -13028,6 +13038,8 @@ The response is an array of attached PCIe devices.
 
 #### Example
 
+Note that the config space buffer was trimmed.
+
 Example request:
 
 ~~~json
@@ -13039,23 +13051,21 @@ Example request:
 ~~~
 
 Example response:
-Note that the config space buffer was trimmed.
 
 ~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result":
-    [
-      {
-        "address": "0000:00:04.0",
-        "config_space": "8680455807051000...0000000000000000"
-      },
-      {
-        "address": "0000:00:03.0",
-        "config_space": "8680455807051000...0000000000000000"
-      }
-    ]
+  "result": [
+    {
+      "address": "0000:00:04.0",
+      "config_space": "8680455807051000...0000000000000000"
+    },
+    {
+      "address": "0000:00:03.0",
+      "config_space": "8680455807051000...0000000000000000"
+    }
+  ]
 }
 ~~~
 
@@ -13098,7 +13108,6 @@ Example request:
     "sc": 33
   }
 }
-
 ~~~
 
 Example response:
@@ -13109,7 +13118,6 @@ Example response:
   "id": 1,
   "result": true
 }
-
 ~~~
 
 ### bdev_nvme_remove_error_injection {#rpc_bdev_nvme_remove_error_injection}
@@ -13143,8 +13151,6 @@ Example request:
     "cmd_type": "io"
   }
 }
-
-
 ~~~
 
 Example response:
@@ -13155,7 +13161,6 @@ Example response:
   "id": 1,
   "result": true
 }
-
 ~~~
 
 ### bdev_daos_create {#rpc_bdev_daos_create}
@@ -13163,6 +13168,10 @@ Example response:
 Construct @ref bdev_config_daos
 
 #### Parameters
+
+To find more about various object classes please visit [DAOS documentation](https://github.com/daos-stack/daos/blob/master/src/object/README.md).
+Please note, that DAOS bdev module uses the same CLI flag notation as `dmg` and `daos` commands,
+for instance, `SX` or `EC_4P2G2` rather than in DAOS header file `OC_SX` or `OC_EC_4P2G2`.
 
  Name       | Optional   | Type   | Description
 ----------- | ---------- | ------ | ---------------------------------------------
@@ -13173,10 +13182,6 @@ Construct @ref bdev_config_daos
  num_blocks | Required   | number | Number of blocks
  uuid       | Optional   | string | UUID of new bdev
  oclass     | Optional   | string | DAOS object class (default SX)
-
-To find more about various object classes please visit [DAOS documentation](https://github.com/daos-stack/daos/blob/master/src/object/README.md).
-Please note, that DAOS bdev module uses the same CLI flag notation as `dmg` and `daos` commands,
-for instance, `SX` or `EC_4P2G2` rather than in DAOS header file `OC_SX` or `OC_EC_4P2G2`.
 
 #### Response
 
@@ -13497,6 +13502,7 @@ This method has no parameters.
 #### Example
 
 Example request:
+
 ~~~json
 {
   "jsonrpc": "2.0",
@@ -13623,6 +13629,7 @@ This method has no parameters.
 #### Example
 
 Example request:
+
 ~~~json
 {
   "jsonrpc": "2.0",
@@ -13671,6 +13678,7 @@ Set options of the keyring_linux module.
 #### Example
 
 Example request:
+
 ~~~json
 {
   "jsonrpc": "2.0",
@@ -13891,6 +13899,7 @@ Delete an AIO fsdev.
 #### Example
 
 Example request:
+
 ~~~json
 {
   "jsonrpc": "2.0",
