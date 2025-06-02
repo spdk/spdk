@@ -744,7 +744,7 @@ function check_json_rpc() {
 
 	echo -n "Checking that all RPCs are documented..."
 	while IFS='"' read -r _ rpc _; do
-		if ! grep -q "^### $rpc" doc/jsonrpc.md; then
+		if ! grep -q "^### $rpc" doc/jsonrpc.md.jinja2; then
 			echo "Missing JSON-RPC documentation for ${rpc}"
 			rc=1
 		fi

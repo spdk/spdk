@@ -38,6 +38,7 @@ mk/config.mk
 mk/cc.flags.mk
 PYTHON_COMMAND
 python/spdk/version.py
+doc/jsonrpc.md
 test_completions.txt
 timing.txt
 test/common/build_config.sh
