@@ -577,22 +577,12 @@ retry:
 static struct spdk_sock *
 uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	if (spdk_interrupt_mode_is_enabled()) {
-		SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.");
-		return NULL;
-	}
-
 	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
 }
 
 static struct spdk_sock *
 uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	if (spdk_interrupt_mode_is_enabled()) {
-		SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.");
-		return NULL;
-	}
-
 	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 }
 
