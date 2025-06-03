@@ -116,6 +116,8 @@ function usage() {
 	echo "                           be searched."
 	echo " --with-fuse               Build FUSE components for mounting a blobfs filesystem."
 	echo " --without-fuse            No path required."
+	echo " --with-fsdev              Build fsdev and fuse_dispatcher library components"
+	echo " --without-fsdev           No path required"
 	echo " --with-nvme-cuse          Build NVMe driver with support for CUSE-based character devices."
 	echo " --without-nvme-cuse       No path required."
 	echo " --with-raid5f             Build with bdev_raid module RAID5f support."
@@ -629,6 +631,12 @@ for i in "$@"; do
 			;;
 		--without-fuse)
 			CONFIG[FUSE]=n
+			;;
+		--with-fsdev)
+			CONFIG[FSDEV]=y
+			;;
+		--without-fsdev)
+			CONFIG[FSDEV]=n
 			;;
 		--with-nvme-cuse)
 			CONFIG[NVME_CUSE]=y
