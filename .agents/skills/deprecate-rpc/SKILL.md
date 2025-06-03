@@ -24,7 +24,7 @@ Deprecating a parameter or RPC touches **eight areas** that must all stay in syn
 
 Work through each file group in order. Every step is mandatory unless marked otherwise.
 
-### 1. `schema/schema.json` -- mark the parameter deprecated
+### 1. `schema/schema.yaml` -- mark the parameter deprecated
 
 Add `"deprecated": true` to the parameter object in the schema.
 
@@ -179,7 +179,7 @@ This checks:
 
 Once the target release arrives, remove **all** compat/shim code.
 
-### 1. `schema/schema.json` -- delete the deprecated parameter entry
+### 1. `schema/schema.yaml` -- delete the deprecated parameter entry
 
 Remove the entire parameter object from the `params` array. Clean up any
 descriptions on the replacement param that reference the old name.
@@ -243,7 +243,7 @@ The same two-phase approach applies, but with broader scope:
 
 1. `SPDK_LOG_DEPRECATION_REGISTER` at the top of the RPC handler.
 2. Call `SPDK_LOG_DEPRECATED(tag)` at the start of the handler function.
-3. Add `"deprecated": true` to the **method** object in `schema/schema.json`
+3. Add `"deprecated": true` to the **method** object in `schema/schema.yaml`
    (at the method level, not param level).
 4. Update the config writer/dump function to call the replacement RPC.
 5. Add `[Deprecated]` to the CLI `help=` and/or subparser description.
@@ -256,7 +256,7 @@ The same two-phase approach applies, but with broader scope:
 1. Delete the entire RPC handler, decoder table, and context struct.
 2. Remove the `SPDK_RPC_REGISTER(...)` call.
 3. Delete the CLI subparser (the `add_parser` block).
-4. Remove from `schema/schema.json`.
+4. Remove from `schema/schema.yaml`.
 5. Remove any remaining test references to the old RPC.
 6. Remove `deprecation.md` entry; add `CHANGELOG.md` entry.
 
@@ -266,7 +266,7 @@ The same two-phase approach applies, but with broader scope:
 
 ```text
 Deprecate:
-  [ ] schema/schema.json    -- "deprecated": true (+ new param if replacing)
+  [ ] schema/schema.yaml    -- "deprecated": true (+ new param if replacing)
   [ ] lib/*/*.c              -- SPDK_LOG_DEPRECATION_REGISTER + custom decoder
   [ ] config writer          -- emit new param name in dump/save function
   [ ] python/spdk/cli/*.py   -- "Deprecated" in help text
@@ -275,7 +275,7 @@ Deprecate:
   [ ] genrpc lint passes     -- python3 scripts/genrpc.py --lint
 
 Remove:
-  [ ] schema/schema.json    -- delete deprecated param entry
+  [ ] schema/schema.yaml    -- delete deprecated param entry
   [ ] lib/*/*.c              -- delete register, decoder, compat logic
   [ ] python/spdk/cli/*.py   -- delete old arg, dissolve exclusive groups
   [ ] test/                  -- remove remaining compat test references

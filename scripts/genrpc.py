@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import rpc
+import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 from tabulate import tabulate
 
@@ -286,7 +287,7 @@ if __name__ == "__main__":
         "-s",
         "--schema",
         dest="schema",
-        help="path to rpc json schema",
+        help="path to rpc yaml schema",
         required=True,
     )
     parser.add_argument(
@@ -318,7 +319,7 @@ if __name__ == "__main__":
         raise FileNotFoundError(f'Cannot access {args.schema}: No such file or directory')
 
     with open(args.schema, "r") as file:
-        schema = json.load(file)
+        schema = yaml.safe_load(file)
 
     try:
         lint_py_cli(schema)

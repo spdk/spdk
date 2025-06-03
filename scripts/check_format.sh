@@ -817,7 +817,7 @@ function check_rpc_schema() {
 	local rc=0
 
 	echo -n "Linting Schema RPCs and documentation..."
-	if ! python "$rootdir"/scripts/genrpc.py --schema "$rootdir"/schema/schema.json > badargs.log 2>&1; then
+	if ! python "$rootdir"/scripts/genrpc.py --schema "$rootdir"/schema/schema.yaml > badargs.log 2>&1; then
 		echo "Found bogus JSON in doc/jsonrpc.md.jinja2"
 		cat badargs.log
 		rc=1

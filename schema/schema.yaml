@@ -1,0 +1,3916 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (c) 2025 Dell Inc, or its subsidiaries.
+#  All rights reserved.
+enums:
+  - name: bdev_nvme_cmd_type
+    fields:
+      - name: admin
+        value: 1
+      - name: io
+        value: 2
+  - name: bdev_nvme_data_direction
+    fields:
+      - name: h2c
+        value: SPDK_NVME_DATA_HOST_TO_CONTROLLER
+      - name: c2h
+        value: SPDK_NVME_DATA_CONTROLLER_TO_HOST
+  - name: bdev_nvme_multipath_policy
+    fields:
+      - name: active_passive
+        value: SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE
+      - name: active_active
+        value: SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE
+  - name: bdev_nvme_multipath_selector
+    fields:
+      - name: round_robin
+        value: SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN
+      - name: queue_depth
+        value: SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH
+  - name: bdev_nvme_multipath_mode
+    fields:
+      - name: failover
+        value: 0
+      - name: multipath
+        value: 1
+      - name: disable
+        value: 2
+  - name: bdev_nvme_timeout_action
+    fields:
+      - name: none
+        value: SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE
+      - name: reset
+        value: SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET
+      - name: abort
+        value: SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT
+  - name: bdev_error_inject_io_type
+    fields:
+      - name: clear
+        value: 0
+      - name: read
+        value: SPDK_BDEV_IO_TYPE_READ
+      - name: write
+        value: SPDK_BDEV_IO_TYPE_WRITE
+      - name: unmap
+        value: SPDK_BDEV_IO_TYPE_UNMAP
+      - name: flush
+        value: SPDK_BDEV_IO_TYPE_FLUSH
+      - name: all
+        value: UINT32_MAX
+  - name: bdev_error_inject_error_type
+    fields:
+      - name: failure
+        value: SPDK_BDEV_ERROR_TYPE_FAILURE
+      - name: pending
+        value: SPDK_BDEV_ERROR_TYPE_PENDING
+      - name: corrupt_data
+        value: SPDK_BDEV_ERROR_TYPE_CORRUPT_DATA
+      - name: nomem
+        value: SPDK_BDEV_ERROR_TYPE_NOMEM
+      - name: nvme_failure
+        value: SPDK_BDEV_ERROR_TYPE_NVME_FAILURE
+  - name: bdev_reset_stat_mode
+    fields:
+      - name: all
+        value: SPDK_BDEV_RESET_STAT_ALL
+      - name: maxmin
+        value: SPDK_BDEV_RESET_STAT_MAXMIN
+      - name: error
+        value: SPDK_BDEV_RESET_STAT_ERROR
+      - name: none
+        value: SPDK_BDEV_RESET_STAT_NONE
+  - name: nvme_ana_state
+    fields:
+      - name: optimized
+        value: SPDK_NVME_ANA_OPTIMIZED_STATE
+      - name: non_optimized
+        value: SPDK_NVME_ANA_NON_OPTIMIZED_STATE
+      - name: inaccessible
+        value: SPDK_NVME_ANA_INACCESSIBLE_STATE
+  - name: accel_error_opcode
+    fields:
+      - name: copy
+        value: SPDK_ACCEL_OPC_COPY
+      - name: fill
+        value: SPDK_ACCEL_OPC_FILL
+      - name: dualcast
+        value: SPDK_ACCEL_OPC_DUALCAST
+      - name: compare
+        value: SPDK_ACCEL_OPC_COMPARE
+      - name: crc32c
+        value: SPDK_ACCEL_OPC_CRC32C
+      - name: copy_crc32c
+        value: SPDK_ACCEL_OPC_COPY_CRC32C
+      - name: compress
+        value: SPDK_ACCEL_OPC_COMPRESS
+      - name: decompress
+        value: SPDK_ACCEL_OPC_DECOMPRESS
+      - name: encrypt
+        value: SPDK_ACCEL_OPC_ENCRYPT
+      - name: decrypt
+        value: SPDK_ACCEL_OPC_DECRYPT
+      - name: xor
+        value: SPDK_ACCEL_OPC_XOR
+      - name: dif_verify
+        value: SPDK_ACCEL_OPC_DIF_VERIFY
+      - name: dif_verify_copy
+        value: SPDK_ACCEL_OPC_DIF_VERIFY_COPY
+      - name: dif_generate
+        value: SPDK_ACCEL_OPC_DIF_GENERATE
+      - name: dif_generate_copy
+        value: SPDK_ACCEL_OPC_DIF_GENERATE_COPY
+      - name: dix_generate
+        value: SPDK_ACCEL_OPC_DIX_GENERATE
+      - name: dix_verify
+        value: SPDK_ACCEL_OPC_DIX_VERIFY
+  - name: accel_error_inject_type
+    fields:
+      - name: disable
+        value: 0
+      - name: corrupt
+        value: 1
+      - name: failure
+        value: 2
+  - name: bdev_raid_level
+    fields:
+      - name: raid0
+        value: SPDK_BDEV_RAID_LEVEL_RAID0
+      - name: "0"
+        value: SPDK_BDEV_RAID_LEVEL_RAID0
+      - name: raid1
+        value: SPDK_BDEV_RAID_LEVEL_RAID1
+      - name: "1"
+        value: SPDK_BDEV_RAID_LEVEL_RAID1
+      - name: raid5f
+        value: SPDK_BDEV_RAID_LEVEL_RAID5F
+      - name: 5f
+        value: SPDK_BDEV_RAID_LEVEL_RAID5F
+      - name: concat
+        value: SPDK_BDEV_RAID_LEVEL_CONCAT
+  - name: bdev_raid_state
+    fields:
+      - name: online
+        value: SPDK_BDEV_RAID_STATE_ONLINE
+      - name: configuring
+        value: SPDK_BDEV_RAID_STATE_CONFIGURING
+      - name: offline
+        value: SPDK_BDEV_RAID_STATE_OFFLINE
+      - name: all
+        value: SPDK_BDEV_RAID_STATE_MAX
+  - name: dhchap_digest
+    fields:
+      - name: sha256
+        value: SPDK_NVMF_DHCHAP_HASH_SHA256
+      - name: sha384
+        value: SPDK_NVMF_DHCHAP_HASH_SHA384
+      - name: sha512
+        value: SPDK_NVMF_DHCHAP_HASH_SHA512
+  - name: dhchap_dhgroup
+    fields:
+      - name: "null"
+        value: SPDK_NVMF_DHCHAP_DHGROUP_NULL
+      - name: ffdhe2048
+        value: SPDK_NVMF_DHCHAP_DHGROUP_2048
+      - name: ffdhe3072
+        value: SPDK_NVMF_DHCHAP_DHGROUP_3072
+      - name: ffdhe4096
+        value: SPDK_NVMF_DHCHAP_DHGROUP_4096
+      - name: ffdhe6144
+        value: SPDK_NVMF_DHCHAP_DHGROUP_6144
+      - name: ffdhe8192
+        value: SPDK_NVMF_DHCHAP_DHGROUP_8192
+  - name: nvmf_dup_host_policy
+    fields:
+      - name: allow
+        value: SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW
+      - name: restrict_per_listener
+        value: SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER
+  - name: oncs_feature
+    fields:
+      - name: nvmcmps
+        value: 0
+      - name: nvmdsmsv
+        value: 2
+      - name: nvmwzsv
+        value: 3
+      - name: reservs
+        value: 5
+      - name: nvmcpys
+        value: 8
+  - name: fuses_feature
+    fields:
+      - name: fcws
+        value: 0
+  - name: bdev_delay_latency_type
+    fields:
+      - name: avg_read
+        value: SPDK_BDEV_DELAY_IO_TYPE_AVG_READ
+      - name: p99_read
+        value: SPDK_BDEV_DELAY_IO_TYPE_P99_READ
+      - name: avg_write
+        value: SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE
+      - name: p99_write
+        value: SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE
+  - name: accel_crypto_tweak_mode
+    fields:
+      - name: SIMPLE_LBA
+        value: SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA
+      - name: JOIN_NEG_LBA_WITH_LBA
+        value: SPDK_ACCEL_CRYPTO_TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA
+      - name: INCR_512_FULL_LBA
+        value: SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_FULL_LBA
+      - name: INCR_512_UPPER_LBA
+        value: SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA
+  - name: accel_crypto_cipher
+    fields:
+      - name: AES_CBC
+        value: SPDK_ACCEL_CIPHER_AES_CBC
+      - name: AES_XTS
+        value: SPDK_ACCEL_CIPHER_AES_XTS
+  - name: bdev_virtio_trtype
+    fields:
+      - name: pci
+        value: 0
+      - name: user
+        value: 1
+      - name: vfio-user
+        value: 2
+  - name: bdev_virtio_dev_type
+    fields:
+      - name: blk
+        value: 0
+      - name: scsi
+        value: 1
+  - name: accel_mlx5_dump_state_level
+    fields:
+      - name: total
+        value: SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL
+      - name: channel
+        value: SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_CHANNEL
+      - name: device
+        value: SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_DEVICE
+  - name: log_level
+    fields:
+      - name: ERROR
+        value: SPDK_LOG_ERROR
+      - name: WARNING
+        value: SPDK_LOG_WARN
+      - name: NOTICE
+        value: SPDK_LOG_NOTICE
+      - name: INFO
+        value: SPDK_LOG_INFO
+      - name: DEBUG
+        value: SPDK_LOG_DEBUG
+  - name: nvmf_discovery_filter
+    fields:
+      - name: transport
+        value: SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE
+      - name: address
+        value: SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS
+      - name: svcid
+        value: SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID
+  - name: kill_signal
+    fields:
+      - name: SIGINT
+        value: SIGINT
+      - name: SIGTERM
+        value: SIGTERM
+      - name: SIGQUIT
+        value: SIGQUIT
+      - name: SIGHUP
+        value: SIGHUP
+      - name: SIGKILL
+        value: SIGKILL
+      - name: SIGUSR1
+        value: SIGUSR1
+  - name: lvs_clear_method
+    fields:
+      - name: unmap
+        value: LVS_CLEAR_WITH_UNMAP
+      - name: write_zeroes
+        value: LVS_CLEAR_WITH_WRITE_ZEROES
+      - name: none
+        value: LVS_CLEAR_WITH_NONE
+  - name: lvol_clear_method
+    fields:
+      - name: default
+        value: LVOL_CLEAR_WITH_DEFAULT
+      - name: none
+        value: LVOL_CLEAR_WITH_NONE
+      - name: unmap
+        value: LVOL_CLEAR_WITH_UNMAP
+      - name: write_zeroes
+        value: LVOL_CLEAR_WITH_WRITE_ZEROES
+  - name: dpdk_cryptodev_driver
+    fields:
+      - name: crypto_aesni_mb
+        value: SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB
+      - name: crypto_qat
+        value: SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT
+      - name: mlx5_pci
+        value: SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI
+      - name: crypto_uadk
+        value: SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK
+objects:
+  - name: bdev_nvme_multipath_opts
+    fields:
+      - name: policy
+        type: enum
+        class: bdev_nvme_multipath_policy
+        description: Multipath policy
+      - name: selector
+        type: enum
+        class: bdev_nvme_multipath_selector
+        description: Multipath selector
+      - name: min_io
+        type: uint32
+        description: Number of IO to route to a path before switching (round_robin selector only).
+  - name: iscsi_auth_secret
+    fields:
+      - name: user
+        type: string
+        required: true
+        description: Unidirectional CHAP name
+      - name: secret
+        type: string
+        required: true
+        description: Unidirectional CHAP secret
+      - name: muser
+        type: string
+        description: Bidirectional CHAP name
+      - name: msecret
+        type: string
+        description: Bidirectional CHAP secret
+  - name: iscsi_pg_ig_map
+    fields:
+      - name: ig_tag
+        type: int32
+        required: true
+        description: Existing initiator group tag
+      - name: pg_tag
+        type: int32
+        required: true
+        description: Existing portal group tag
+  - name: iscsi_portal
+    fields:
+      - name: host
+        type: string
+        required: true
+        description: Hostname or IP address
+      - name: port
+        type: string
+        required: true
+        description: Port number
+  - name: scsi_lun
+    fields:
+      - name: lun_id
+        type: int32
+        description: SCSI LUN ID
+      - name: bdev_name
+        type: string
+        description: Backing bdev name
+  - name: nvmf_listen_address
+    fields:
+      - name: trtype
+        type: string
+        required: true
+        description: 'NVMe-oF transport type: e.g., rdma'
+      - name: adrfam
+        type: string
+        description: 'NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host'
+      - name: traddr
+        type: string
+        required: true
+        description: 'NVMe-oF transport address: e.g., an ip address'
+      - name: trsvcid
+        type: string
+        description: 'NVMe-oF transport service id: e.g., a port number (required for TCP and RDMA transport types)'
+  - name: nvmf_namespace
+    fields:
+      - name: nsid
+        type: uint32
+        description: Namespace ID between 1 and 4294967294
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the bdev to expose as a namespace
+      - name: nguid
+        type: string
+        description: 16-byte namespace globally unique identifier in hexadecimal
+      - name: eui64
+        type: string
+        description: 8-byte namespace EUI-64 in hexadecimal
+      - name: uuid
+        type: uuid
+        description: RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
+      - name: ptpl_file
+        type: string
+        description: File path to save/restore persistent reservation information
+      - name: anagrpid
+        type: uint32
+        description: ANA group ID
+      - name: no_auto_visible
+        type: boolean
+        description: Do not auto make namespace visible to controllers
+      - name: hide_metadata
+        type: boolean
+        deprecated: true
+        description: '[Deprecated] Enable hide_metadata option to the bdev'
+  - name: nvmf_admin_cmd_passthru
+    fields:
+      - name: identify_ctrlr
+        type: boolean
+        description: If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
+      - name: identify_uuid_list
+        type: boolean
+        description: If true, enables passthru identify UUID list (0x17 CNS) admin cmds for underlying NVMe device
+      - name: get_log_page
+        type: boolean
+        description: If true, enables passthru get log page command handlers for underlying NVMe drive (for non-fabrics related log pages)
+      - name: get_set_features
+        type: boolean
+        description: If true, enables passthru get/set_feature OPC handlers for underlying NVMe drive
+      - name: sanitize
+        type: boolean
+        description: If true, enables passthru sanitize OPC handlers for underlying NVMe drive
+      - name: security_send_recv
+        type: boolean
+        description: If true, enables passthru security send/recieve OPC handlers for underlying NVMe drive
+      - name: fw_update
+        type: boolean
+        description: If true, enables passthru firmware download/commit OPC handlers for underlying NVMe drive
+      - name: nvme_mi
+        type: boolean
+        description: If true, enables passthru NVMe-MI send/recieve OPC handlers for underlying NVMe drive
+      - name: vendor_specific
+        type: boolean
+        description: 'If true, enables passthru command handlers for underlying NVMe drive for vendor specific cmds (OPCs: 0xC0-0xFF)'
+  - name: vhost_blk_controller_params
+    fields:
+      - name: bdev
+        type: string
+        description: Backing bdev name or Null if bdev is hot-removed
+      - name: readonly
+        type: boolean
+        description: True if controllers is readonly, false otherwise
+  - name: vhost_scsi_controller_params
+    fields:
+      - name: target_name
+        type: string
+        description: Name of this SCSI target
+      - name: id
+        type: uint32
+        description: Unique SPDK global SCSI target ID
+      - name: scsi_dev_num
+        type: uint32
+        description: SCSI target ID initiator will see when scanning this controller
+      - name: luns
+        type: array
+        class: scsi_luns
+        description: array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
+arrays:
+  - name: bdev_histogram_borders
+    item_type: uint64
+    max_count: 256
+  - name: bdev_iostat_names
+    item_type: string
+    max_count: 1024
+  - name: iscsi_initiators
+    item_type: string
+    max_count: 256
+  - name: iscsi_netmasks
+    item_type: string
+    max_count: 256
+  - name: iscsi_pg_ig_maps
+    item_type: object
+    class: iscsi_pg_ig_map
+    max_count: 256
+  - name: scsi_luns
+    item_type: object
+    class: scsi_lun
+    max_count: 64
+  - name: iscsi_portals
+    item_type: object
+    class: iscsi_portal
+    max_count: 1024
+  - name: iscsi_auth_secrets
+    item_type: object
+    class: iscsi_auth_secret
+    max_count: 64
+  - name: raid_base_bdevs
+    item_type: string
+    max_count: 255
+bitmasks:
+  - name: dhchap_digests
+    enum: dhchap_digest
+    mode: set
+    width: 32
+  - name: dhchap_dhgroups
+    enum: dhchap_dhgroup
+    mode: set
+    width: 32
+  - name: oncs_features
+    enum: oncs_feature
+    mode: clear
+    width: 16
+  - name: fuses_features
+    enum: fuses_feature
+    mode: clear
+    width: 16
+  - name: nvmf_discovery_filters
+    enum: nvmf_discovery_filter
+    mode: set
+    width: 32
+methods:
+  - name: spdk_kill_instance
+    params:
+      - name: sig_name
+        type: enum
+        class: kill_signal
+        required: true
+        description: Signal to send
+  - name: framework_monitor_context_switch
+    params:
+      - name: enabled
+        type: boolean
+        description: Enable or disable context switch monitoring; omit to query the current state
+  - name: framework_start_init
+    params: []
+  - name: framework_wait_init
+    params: []
+  - name: rpc_get_methods
+    params:
+      - name: current
+        type: boolean
+        description: 'Return only RPC methods callable in the current state. Default: false'
+      - name: include_aliases
+        type: boolean
+        description: 'Include deprecated method aliases in the result. Default: false'
+  - name: framework_get_subsystems
+    params: []
+  - name: framework_get_config
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the SPDK subsystem to query
+      - name: with_batches
+        type: boolean
+        required: false
+        description: 'Keep batch arrays in output. Default: false (flatten into individual entries)'
+  - name: framework_get_reactors
+    params: []
+  - name: framework_set_scheduler
+    params:
+      - name: name
+        type: string
+        required: true
+        description: 'Scheduler name: `static` (fixed core pinning) or `dynamic` (load-based thread migration across cores)'
+      - name: period
+        type: uint64
+        description: 'Scheduler period in microseconds. Default: 1000000 (1 second) on first set'
+      - name: load_limit
+        type: uint8
+        description: 'Thread load percentage above which threads may move (dynamic only). Default: 20'
+      - name: core_limit
+        type: uint8
+        description: 'Core busy percentage at which the core is considered full (dynamic only). Default: 80'
+      - name: core_busy
+        type: uint8
+        description: 'Core busy percentage at which the scheduler starts moving threads to other cores (dynamic only). Default: 95'
+      - name: mappings
+        type: string
+        description: Comma-separated list of thread:core mappings (static only)
+  - name: framework_get_scheduler
+    params: []
+  - name: framework_get_governor
+    params: []
+  - name: scheduler_set_options
+    params:
+      - name: scheduling_core
+        type: uint32
+        description: 'Core that the scheduler runs on; idle threads are moved here. Default: current scheduling core'
+      - name: isolated_core_mask
+        type: string
+        description: CPU mask of cores excluded from scheduling decisions; must not include scheduling_core
+  - name: framework_enable_cpumask_locks
+    params: []
+  - name: framework_disable_cpumask_locks
+    params: []
+  - name: thread_get_stats
+    params: []
+  - name: thread_set_cpumask
+    params:
+      - name: id
+        type: uint64
+        required: true
+        description: ID of the SPDK thread to move
+      - name: cpumask
+        type: string
+        required: true
+        description: CPU mask of cores the thread is allowed to run on
+  - name: trace_enable_tpoint_group
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of a registered trace group, or "all" to enable every group
+  - name: trace_disable_tpoint_group
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of a registered trace group, or "all" to disable every group
+  - name: trace_set_tpoint_mask
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of a registered trace group (e.g. "bdev", "nvmf_rdma", "nvmf_tcp")
+      - name: tpoint_mask
+        type: uint64
+        required: true
+        description: Bitmask of tracepoints to enable within the group (e.g. 0x3 enables the first two)
+  - name: trace_clear_tpoint_mask
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of a registered trace group (e.g. "bdev", "nvmf_rdma", "nvmf_tcp")
+      - name: tpoint_mask
+        type: uint64
+        required: true
+        description: Bitmask of tracepoints to disable within the group (e.g. 0x3 disables the first two)
+  - name: trace_get_tpoint_group_mask
+    params: []
+  - name: trace_clear
+    params: []
+  - name: trace_get_info
+    params: []
+  - name: log_set_print_level
+    params:
+      - name: level
+        type: enum
+        class: log_level
+        required: true
+        description: Log print level
+  - name: log_get_print_level
+    params: []
+  - name: log_set_level
+    params:
+      - name: level
+        type: enum
+        class: log_level
+        required: true
+        description: Log level
+  - name: log_get_level
+    params: []
+  - name: log_set_flag
+    params:
+      - name: flag
+        type: string
+        required: true
+        description: Log flag name (e.g. "nvme") or "all" to set all flags
+  - name: log_clear_flag
+    params:
+      - name: flag
+        type: string
+        required: true
+        description: Log flag name (e.g. "nvme") or "all" to clear all flags
+  - name: log_get_flags
+    params: []
+  - name: log_enable_timestamps
+    params:
+      - name: enabled
+        type: boolean
+        required: true
+        description: Enable (true) or disable (false) timestamps in log output
+  - name: thread_get_pollers
+    params: []
+  - name: thread_get_io_channels
+    params: []
+  - name: env_dpdk_get_mem_stats
+    params: []
+  - name: accel_get_module_info
+    params: []
+  - name: accel_get_opc_assignments
+    params: []
+  - name: accel_assign_opc
+    params:
+      - name: opname
+        type: string
+        required: true
+        description: Name of the accel operation; see accel_get_opc_assignments for the list
+      - name: module
+        type: string
+        required: true
+        description: Name of the accel module to assign the operation to
+  - name: accel_crypto_key_create
+    params:
+      - name: cipher
+        type: enum
+        class: accel_crypto_cipher
+        required: true
+        description: Crypto cipher
+      - name: key
+        type: string
+        required: true
+        description: Key in hex form
+      - name: key2
+        type: string
+        description: Second part of the key (or tweak) in hex form, required for AES_XTS
+      - name: tweak_mode
+        type: enum
+        class: accel_crypto_tweak_mode
+        description: Tweak mode
+      - name: name
+        type: string
+        required: true
+        description: Name of the key
+  - name: accel_crypto_key_destroy
+    params:
+      - name: key_name
+        type: string
+        required: true
+        description: Name of the key to destroy
+  - name: accel_crypto_keys_get
+    params:
+      - name: key_name
+        type: string
+        description: 'Name of a specific key to query. Default: list all'
+  - name: accel_set_driver
+    params:
+      - name: name
+        type: string
+        description: Name of the platform driver, or empty string to disable
+  - name: accel_set_options
+    params:
+      - name: small_cache_size
+        type: uint32
+        description: Size of the small iobuf cache
+      - name: large_cache_size
+        type: uint32
+        description: Size of the large iobuf cache
+      - name: task_count
+        type: uint32
+        description: Maximum number of tasks per IO channel
+      - name: sequence_count
+        type: uint32
+        description: Maximum number of sequences per IO channel
+      - name: buf_count
+        type: uint32
+        description: Maximum number of accel buffers per IO channel
+  - name: accel_get_stats
+    params: []
+  - name: accel_error_inject_error
+    params:
+      - name: opcode
+        type: enum
+        class: accel_error_opcode
+        required: true
+        description: Accel operation to inject errors into
+      - name: type
+        type: enum
+        class: accel_error_inject_type
+        required: true
+        description: Injection type
+      - name: count
+        type: uint64
+        description: 'Number of errors to inject on each IO channel; 0 disables injection. Default: UINT64_MAX (no limit)'
+      - name: interval
+        type: uint64
+        description: Inject every Nth operation
+      - name: errcode
+        type: int32
+        description: Error code to return; only relevant for type=failure
+  - name: compressdev_scan_accel_module
+    params:
+      - name: pmd
+        type: uint32
+        required: true
+        description: 'PMD selection: 0=auto, 1=QAT only, 2=mlx5_pci only, 3=uadk only'
+  - name: dsa_scan_accel_module
+    params:
+      - name: config_kernel_mode
+        type: boolean
+        description: 'Use the kernel idxd driver instead of user-mode. Default: false'
+  - name: iaa_scan_accel_module
+    params: []
+  - name: ioat_scan_accel_module
+    params: []
+  - name: ae4dma_scan_accel_module
+    params: []
+  - name: dpdk_cryptodev_scan_accel_module
+    params: []
+  - name: dpdk_cryptodev_set_driver
+    params:
+      - name: driver_name
+        type: enum
+        class: dpdk_cryptodev_driver
+        required: true
+        description: DPDK crypto driver
+  - name: dpdk_cryptodev_get_driver
+    params: []
+  - name: mlx5_scan_accel_module
+    params:
+      - name: qp_size
+        type: uint16
+        description: Queue pair size
+      - name: num_requests
+        type: uint32
+        description: Size of the shared requests pool
+      - name: allowed_devs
+        type: string
+        description: Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1
+      - name: crypto_split_blocks
+        type: uint16
+        description: Number of data blocks to be processed in 1 crypto UMR. [0-65535], 0 means no limit
+      - name: enable_driver
+        type: boolean
+        description: 'Enable mlx5 platform driver. Note: the driver supports reduced scope of operations, enable with care'
+  - name: accel_mlx5_dump_stats
+    params:
+      - name: level
+        type: enum
+        class: accel_mlx5_dump_state_level
+        description: Verbosity level
+  - name: cuda_scan_accel_module
+    params: []
+  - name: bdev_set_options
+    params:
+      - name: bdev_io_pool_size
+        type: uint32
+        description: Number of spdk_bdev_io structures in shared buffer pool
+      - name: bdev_io_cache_size
+        type: uint32
+        description: Maximum number of spdk_bdev_io structures cached per thread
+      - name: bdev_auto_examine
+        type: boolean
+        description: If set to false, the bdev layer will not examine every disks automatically
+      - name: iobuf_small_cache_size
+        type: uint32
+        description: Size of the small iobuf per thread cache
+      - name: iobuf_large_cache_size
+        type: uint32
+        description: Size of the large iobuf per thread cache
+  - name: bdev_get_bdevs
+    params:
+      - name: name
+        type: string
+        description: Block device name
+      - name: timeout
+        type: uint64
+        description: Time (ms) to wait for a bdev with specified name to appear
+  - name: bdev_examine
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+  - name: bdev_wait_for_examine
+    params: []
+  - name: bdev_get_iostat
+    params:
+      - name: names
+        type: array
+        class: bdev_iostat_names
+        description: Array of block device names to obtain statistics from
+      - name: per_channel
+        type: boolean
+        description: Display per channel data for specified block device.
+      - name: reset_mode
+        type: enum
+        class: bdev_reset_stat_mode
+        description: 'Mode to reset I/O statistics after obtaining it: all, maxmin, error, none (default: none)'
+  - name: bdev_reset_iostat
+    params:
+      - name: name
+        type: string
+        description: Block device name
+      - name: mode
+        type: enum
+        class: bdev_reset_stat_mode
+        description: 'Mode to reset I/O statistics: all, maxmin, error, none (default: all)'
+  - name: bdev_enable_histogram
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+      - name: enable
+        type: boolean
+        required: true
+        description: Enable or disable histogram on specified device
+      - name: opc
+        type: string
+        description: IO type name
+      - name: granularity
+        type: uint8
+        description: 'Histogram bucket granularity. Default: 7'
+      - name: min_nsec
+        type: uint64
+        description: 'Min value in nanoseconds to track. Default: 1000 (1us)'
+      - name: max_nsec
+        type: uint64
+        description: 'Max value in nanoseconds to track. Default: 120000000000 (120 seconds)'
+  - name: bdev_get_histogram
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+  - name: bdev_get_histogram_borders
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+      - name: borders
+        type: array
+        class: bdev_histogram_borders
+        required: true
+        description: Array of buckets in microseconds to dump histogram into
+  - name: bdev_set_qos_limit
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+      - name: rw_ios_per_sec
+        type: uint64
+        description: Number of R/W I/Os per second to allow. 0 means unlimited.
+      - name: rw_mbytes_per_sec
+        type: uint64
+        description: Number of R/W megabytes per second to allow. 0 means unlimited.
+      - name: r_mbytes_per_sec
+        type: uint64
+        description: Number of Read megabytes per second to allow. 0 means unlimited.
+      - name: w_mbytes_per_sec
+        type: uint64
+        description: Number of Write megabytes per second to allow. 0 means unlimited.
+  - name: bdev_set_qd_sampling_period
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+      - name: period
+        type: uint64
+        required: true
+        description: period (in microseconds).If set to 0, polling will be disabled.
+  - name: bdev_crypto_create
+    params:
+      - name: base_bdev_name
+        type: string
+        required: true
+        description: Name of the base bdev
+      - name: name
+        type: string
+        required: true
+        description: Name of the crypto vbdev to create
+      - name: crypto_pmd
+        type: string
+        description: Name of the crypto device driver. Obsolete, see accel_crypto_key_create
+      - name: key
+        type: string
+        description: Key in hex form. Obsolete, see accel_crypto_key_create
+      - name: cipher
+        type: string
+        description: Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create
+      - name: key2
+        type: string
+        description: 2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create
+      - name: key_name
+        type: string
+        description: Name of the key created with accel_crypto_key_create
+  - name: bdev_crypto_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the crypto bdev
+  - name: bdev_ocf_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name to use
+      - name: mode
+        type: string
+        required: true
+        description: 'OCF cache mode: wb, wt, pt, wa, wi, wo'
+      - name: cache_line_size
+        type: uint64
+        description: 'OCF cache line size in KiB: 4, 8, 16, 32, 64'
+      - name: cache_bdev_name
+        type: string
+        required: true
+        description: Name of underlying cache bdev
+      - name: core_bdev_name
+        type: string
+        required: true
+        description: Name of underlying core bdev
+  - name: bdev_ocf_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_ocf_get_stats
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+  - name: bdev_ocf_reset_stats
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Block device name
+  - name: bdev_ocf_get_bdevs
+    params:
+      - name: name
+        type: string
+        description: Name of OCF vbdev or name of cache device or name of core device
+  - name: bdev_ocf_set_cache_mode
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: mode
+        type: string
+        required: true
+        description: 'OCF cache mode: wb, wt, pt, wa, wi, wo'
+  - name: bdev_ocf_set_seqcutoff
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: policy
+        type: string
+        required: true
+        description: 'Sequential cutoff policy: always, full, never'
+      - name: threshold
+        type: uint32
+        description: Activation threshold in KiB
+      - name: promotion_count
+        type: uint32
+        description: Promotion request count
+  - name: bdev_ocf_flush_start
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_ocf_flush_status
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_malloc_create
+    params:
+      - name: name
+        type: string
+        description: Bdev name to use
+      - name: block_size
+        type: uint32
+        required: true
+        description: Data block size in bytes -must be multiple of 512
+      - name: num_blocks
+        type: uint64
+        required: true
+        description: Number of blocks
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+      - name: optimal_io_boundary
+        type: uint32
+        description: Split on optimal IO boundary, in number of blocks, default 0
+      - name: md_size
+        type: uint32
+        description: Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.
+      - name: md_interleave
+        type: boolean
+        description: Metadata location, interleaved if true, and separated if false. Default is false.
+      - name: dif_type
+        type: int32
+        description: Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+      - name: dif_is_head_of_md
+        type: boolean
+        description: Protection information is in the first 8 bytes of metadata. Default=false.
+      - name: physical_block_size
+        type: uint32
+        description: Physical block size of device; must be a power of 2 and at least 512
+      - name: dif_pi_format
+        type: uint32
+        description: protection information format
+      - name: numa_id
+        type: int32
+        required: false
+        description: NUMA node ID where memory is allocated, if -1 then any NUMA node ID can be used. Default is -1.
+  - name: bdev_malloc_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_null_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name to use
+      - name: block_size
+        type: uint32
+        required: true
+        description: Block size in bytes
+      - name: num_blocks
+        type: uint64
+        required: true
+        description: Number of blocks
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+      - name: physical_block_size
+        type: uint32
+        description: Physical block size for this bdev.
+      - name: md_size
+        type: uint32
+        description: Metadata size for this bdev. Default=0.
+      - name: dif_type
+        type: int32
+        description: Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+      - name: dif_pi_format
+        type: uint32
+        description: protection information format
+      - name: dif_is_head_of_md
+        type: boolean
+        description: Protection information is in the first 8 bytes of metadata. Default=false.
+      - name: preferred_write_granularity
+        type: uint32
+        description: Preferred write granularity in blocks
+      - name: preferred_write_alignment
+        type: uint32
+        description: Preferred write alignment in blocks
+      - name: optimal_write_size
+        type: uint32
+        description: Optimal write size in blocks
+      - name: preferred_unmap_granularity
+        type: uint32
+        description: Preferred unmap granularity in blocks
+      - name: preferred_unmap_alignment
+        type: uint32
+        description: Preferred unmap alignment in blocks
+  - name: bdev_null_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_null_resize
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: new_size
+        type: uint64
+        required: true
+        description: Bdev new capacity in MiB
+  - name: bdev_aio_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name to use
+      - name: filename
+        type: string
+        required: true
+        description: Path to device or file
+      - name: block_size
+        type: uint32
+        description: Block size in bytes
+      - name: readonly
+        type: boolean
+        description: set aio bdev as read-only
+      - name: fallocate
+        type: boolean
+        description: Enable UNMAP and WRITE ZEROES support. Intended only for testing purposes due to synchronous syscall.
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+      - name: nowait
+        type: boolean
+        description: Enable the RWF_NOWAIT flag for block devices. If the flag is not defined, or if the specified device is not a block device, creation will fail. Note that this feature is not advertised by the kernel to userspace. Use with caution, and only if the device is known to work correctly with your kernel.
+  - name: bdev_aio_rescan
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_aio_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_nvme_set_options
+    params:
+      - name: action_on_timeout
+        type: enum
+        class: bdev_nvme_timeout_action
+        description: 'Action to take on command time out: none, reset or abort'
+      - name: timeout_us
+        type: uint64
+        description: Timeout for each command, in microseconds. If 0, don't track timeouts
+      - name: timeout_admin_us
+        type: uint64
+        description: Timeout for each admin command, in microseconds. If 0, treat same as io timeouts ('timeout_us')
+      - name: keep_alive_timeout_ms
+        type: uint32
+        description: Keep alive timeout period in milliseconds, default is 10s
+      - name: arbitration_burst
+        type: uint32
+        description: The value is expressed as a power of two, a value of 111b indicates no limit
+      - name: low_priority_weight
+        type: uint32
+        description: The maximum number of commands that the controller may launch at one time from a low priority queue
+      - name: medium_priority_weight
+        type: uint32
+        description: The maximum number of commands that the controller may launch at one time from a medium priority queue
+      - name: high_priority_weight
+        type: uint32
+        description: The maximum number of commands that the controller may launch at one time from a high priority queue
+      - name: nvme_adminq_poll_period_us
+        type: uint64
+        description: How often the admin queue is polled for asynchronous events in microseconds
+      - name: nvme_ioq_poll_period_us
+        type: uint64
+        description: 'How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).'
+      - name: io_queue_requests
+        type: uint32
+        description: 'The number of requests allocated for each NVMe I/O queue. Default: 512.'
+      - name: delay_cmd_submit
+        type: boolean
+        description: 'Enable delaying NVMe command submission to allow batching of multiple commands. Default: `true`.'
+      - name: transport_retry_count
+        type: uint32
+        description: The number of attempts per I/O in the transport layer before an I/O fails.
+      - name: bdev_retry_count
+        type: int32
+        description: The number of attempts per I/O in the bdev layer before an I/O fails. -1 means infinite retries.
+      - name: transport_ack_timeout
+        type: uint8
+        description: Time to wait ack until retransmission for RDMA or connection close for TCP. Range 0-31 where 0 means use default.
+      - name: ctrlr_loss_timeout_sec
+        type: int32
+        description: Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+      - name: reconnect_delay_sec
+        type: uint32
+        description: Time to delay a reconnect trial. 0 means no reconnect.
+      - name: fast_io_fail_timeout_sec
+        type: uint32
+        description: Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+      - name: disable_auto_failback
+        type: boolean
+        description: Disable automatic failback. The RPC bdev_nvme_set_preferred_path can be used to do manual failback.
+      - name: generate_uuids
+        type: boolean
+        description: Enable generation of UUIDs for NVMe bdevs that do not provide this value themselves.
+      - name: transport_tos
+        type: uint8
+        description: 'IPv4 Type of Service value. Only applicable for RDMA transport. Default: 0 (no TOS is applied).'
+      - name: nvme_error_stat
+        type: boolean
+        description: Enable collecting NVMe error counts.
+      - name: rdma_srq_size
+        type: uint32
+        description: 'Set the size of a shared rdma receive queue. Default: 0 (disabled).'
+      - name: io_path_stat
+        type: boolean
+        description: 'Enable collecting I/O stat of each nvme bdev io path. Default: `false`.'
+      - name: allow_accel_sequence
+        type: boolean
+        description: 'Allow NVMe bdevs to advertise support for accel sequences if the controller also supports them.  Default: `false`.'
+      - name: rdma_max_cq_size
+        type: uint32
+        description: 'Set the maximum size of a rdma completion queue. Default: 0 (unlimited)'
+      - name: rdma_cm_event_timeout_ms
+        type: uint16
+        description: 'Time to wait for RDMA CM events. Default: 0 (0 means using default value of driver).'
+      - name: dhchap_digests
+        type: bitmask
+        class: dhchap_digests
+        description: List of allowed DH-HMAC-CHAP digests.
+      - name: dhchap_dhgroups
+        type: bitmask
+        class: dhchap_dhgroups
+        description: List of allowed DH-HMAC-CHAP DH groups.
+      - name: rdma_umr_per_io
+        type: boolean
+        description: Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system
+      - name: tcp_connect_timeout_ms
+        type: uint32
+        description: 'Time to wait until TCP connection is done. Default: 0 (no timeout).'
+      - name: enable_flush
+        type: boolean
+        description: 'If true, pass flush to nvme devices when volatile write cache is present. Default : `false`.'
+      - name: multipath_opts
+        type: object
+        class: bdev_nvme_multipath_opts
+        description: Default multipath options.
+  - name: bdev_nvme_set_hotplug
+    params:
+      - name: enable
+        type: boolean
+        required: true
+        description: True to enable, false to disable
+      - name: period_us
+        type: uint64
+        description: 'How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000.'
+  - name: bdev_nvme_attach_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe controller, prefix for each bdev name
+      - name: trtype
+        type: string
+        required: true
+        description: 'NVMe-oF target trtype: rdma or pcie'
+      - name: traddr
+        type: string
+        required: true
+        description: 'NVMe-oF target address: ip or BDF'
+      - name: adrfam
+        type: string
+        description: 'NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host'
+      - name: trsvcid
+        type: string
+        description: 'NVMe-oF target trsvcid: port number'
+      - name: priority
+        type: string
+        description: Transport connection priority. Supported by TCP transport with POSIX sock module (see socket(7) man page).
+      - name: subnqn
+        type: string
+        description: NVMe-oF target subnqn
+      - name: hostnqn
+        type: string
+        description: NVMe-oF target hostnqn
+      - name: hostaddr
+        type: string
+        description: 'NVMe-oF host address: ip address'
+      - name: hostsvcid
+        type: string
+        description: 'NVMe-oF host trsvcid: port number'
+      - name: prchk_reftag
+        type: boolean
+        description: Enable checking of PI reference tag for I/O processing
+      - name: prchk_guard
+        type: boolean
+        description: Enable checking of PI guard for I/O processing
+      - name: hdgst
+        type: boolean
+        description: Enable TCP header digest
+      - name: ddgst
+        type: boolean
+        description: Enable TCP data digest
+      - name: fabrics_connect_timeout_us
+        type: uint64
+        description: Timeout for fabrics connect (in microseconds)
+      - name: multipath
+        type: enum
+        class: bdev_nvme_multipath_mode
+        description: 'Multipathing behavior: disable, failover, multipath. Default is failover.'
+      - name: num_io_queues
+        type: uint32
+        description: 'The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024.'
+      - name: ctrlr_loss_timeout_sec
+        type: int32
+        description: Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+      - name: reconnect_delay_sec
+        type: uint32
+        description: Time to delay a reconnect trial. 0 means no reconnect.
+      - name: fast_io_fail_timeout_sec
+        type: uint32
+        description: Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+      - name: psk
+        type: string
+        description: Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)
+      - name: max_bdevs
+        type: uint32
+        description: The size of the name array for newly created bdevs. Default is 128.
+      - name: dhchap_key
+        type: string
+        description: DH-HMAC-CHAP key name (required if controller key is specified)
+      - name: dhchap_ctrlr_key
+        type: string
+        description: DH-HMAC-CHAP controller key name.
+      - name: allow_unrecognized_csi
+        type: boolean
+        description: Allow attaching namespaces with unrecognized command set identifiers. These will only support NVMe passthrough.
+      - name: multipath_opts
+        type: object
+        class: bdev_nvme_multipath_opts
+        description: Multipath options.
+      - name: disable_sq_flow_control
+        type: boolean
+        description: Disable SQ flow control (set bit 2 of cattr in Fabrics Connect command).
+  - name: bdev_nvme_get_controllers
+    params:
+      - name: name
+        type: string
+        description: NVMe controller name
+  - name: bdev_nvme_detach_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Controller name
+      - name: trtype
+        type: string
+        description: 'NVMe-oF target trtype: rdma or tcp'
+      - name: traddr
+        type: string
+        description: 'NVMe-oF target address: ip or BDF'
+      - name: adrfam
+        type: string
+        description: 'NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host'
+      - name: trsvcid
+        type: string
+        description: 'NVMe-oF target trsvcid: port number'
+      - name: subnqn
+        type: string
+        description: NVMe-oF target subnqn
+      - name: hostaddr
+        type: string
+        description: 'NVMe-oF host address: ip'
+      - name: hostsvcid
+        type: string
+        description: 'NVMe-oF host svcid: port number'
+  - name: bdev_nvme_reset_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: NVMe controller name (or NVMe bdev controller name for multipath)
+      - name: cntlid
+        type: uint16
+        description: NVMe controller ID (used as NVMe controller name for multipath)
+  - name: bdev_nvme_enable_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: NVMe controller name (or NVMe bdev controller name for multipath)
+      - name: cntlid
+        type: uint16
+        description: NVMe controller ID (used as NVMe controller name for multipath)
+  - name: bdev_nvme_disable_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: NVMe controller name (or NVMe bdev controller name for multipath)
+      - name: cntlid
+        type: uint16
+        description: NVMe controller ID (used as NVMe controller name for multipath)
+  - name: bdev_nvme_start_discovery
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Prefix for NVMe controllers
+      - name: trtype
+        type: string
+        required: true
+        description: 'NVMe-oF target trtype: rdma or tcp'
+      - name: traddr
+        type: string
+        required: true
+        description: 'NVMe-oF target address: ip'
+      - name: adrfam
+        type: string
+        description: 'NVMe-oF target adrfam: ipv4, ipv6'
+      - name: trsvcid
+        type: string
+        description: 'NVMe-oF target trsvcid: port number'
+      - name: hostnqn
+        type: string
+        description: NVMe-oF target hostnqn
+      - name: wait_for_attach
+        type: boolean
+        description: Wait to complete until all discovered NVM subsystems are attached
+      - name: attach_timeout_ms
+        type: uint64
+        description: Time to wait until the discovery and all discovered NVM subsystems are attached
+      - name: ctrlr_loss_timeout_sec
+        type: int32
+        description: Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+      - name: reconnect_delay_sec
+        type: uint32
+        description: Time to delay a reconnect trial. 0 means no reconnect.
+      - name: fast_io_fail_timeout_sec
+        type: uint32
+        description: Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+  - name: bdev_nvme_stop_discovery
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of service to stop
+  - name: bdev_nvme_get_discovery_info
+    params: []
+  - name: bdev_nvme_get_io_paths
+    params:
+      - name: name
+        type: string
+        description: Name of the NVMe bdev
+  - name: bdev_nvme_set_preferred_path
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe bdev
+      - name: cntlid
+        type: uint16
+        required: true
+        description: NVMe-oF controller ID
+  - name: bdev_nvme_set_multipath_policy
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe bdev
+      - name: policy
+        type: enum
+        class: bdev_nvme_multipath_policy
+        required: true
+        description: 'Multipath policy: active_active or active_passive'
+      - name: selector
+        type: enum
+        class: bdev_nvme_multipath_selector
+        description: 'Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin'
+      - name: rr_min_io
+        type: uint32
+        description: Number of I/Os routed to current io path before switching to another for round-robin selector. The min value is 1.
+  - name: bdev_nvme_get_path_iostat
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe bdev
+  - name: bdev_nvme_cuse_register
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe controller
+  - name: bdev_nvme_cuse_unregister
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe controller
+  - name: bdev_nvme_set_keys
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe controller
+      - name: dhchap_key
+        type: string
+        description: DH-HMAC-CHAP key name (required if controller key is specified)
+      - name: dhchap_ctrlr_key
+        type: string
+        description: DH-HMAC-CHAP controller key name
+  - name: bdev_zone_block_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the Zone device
+      - name: base_bdev
+        type: string
+        required: true
+        description: Name of the Base bdev
+      - name: zone_capacity
+        type: uint64
+        required: true
+        description: Zone capacity in blocks
+      - name: optimal_open_zones
+        type: uint64
+        required: true
+        description: Number of zones required to reach optimal write speed
+  - name: bdev_zone_block_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the Zone device
+  - name: bdev_nvme_apply_firmware
+    params:
+      - name: filename
+        type: string
+        required: true
+        description: filename of the firmware to download
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the NVMe block device
+  - name: bdev_nvme_get_transport_statistics
+    params: []
+  - name: bdev_nvme_get_controller_health_info
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the NVMe bdev controller
+  - name: bdev_rbd_register_cluster
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Registered Rados cluster object name
+      - name: user_id
+        type: string
+        description: Ceph ID (i.e. admin, not client.admin)
+      - name: config_param
+        type: string
+        description: Explicit librados configuration
+      - name: config_file
+        type: string
+        description: File path of librados configuration file
+      - name: key_file
+        type: string
+        description: File path of librados key file
+      - name: core_mask
+        type: string
+        description: Core mask for librados IO context threads
+  - name: bdev_rbd_unregister_cluster
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Rados cluster object name
+  - name: bdev_rbd_get_clusters_info
+    params:
+      - name: name
+        type: string
+        description: Rados cluster object name
+  - name: bdev_rbd_create
+    params:
+      - name: name
+        type: string
+        description: Bdev name
+      - name: user_id
+        type: string
+        description: Ceph ID (i.e. admin, not client.admin)
+      - name: pool_name
+        type: string
+        required: true
+        description: Pool name
+      - name: rbd_name
+        type: string
+        required: true
+        description: Image name
+      - name: block_size
+        type: uint32
+        required: true
+        description: Block size
+      - name: config
+        type: string
+        description: Explicit librados configuration
+      - name: cluster_name
+        type: string
+        description: Rados cluster object name created in this module.
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+      - name: read_only
+        type: boolean
+        description: set rbd bdev as read-only
+  - name: bdev_rbd_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_rbd_resize
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: new_size
+        type: uint64
+        required: true
+        description: New bdev size for resize operation in MiB
+  - name: bdev_delay_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: base_bdev_name
+        type: string
+        required: true
+        description: Base bdev name
+      - name: avg_read_latency
+        type: uint64
+        required: true
+        description: average read latency (us)
+      - name: p99_read_latency
+        type: uint64
+        required: true
+        description: p99 read latency (us)
+      - name: avg_write_latency
+        type: uint64
+        required: true
+        description: average write latency (us)
+      - name: p99_write_latency
+        type: uint64
+        required: true
+        description: p99 write latency (us)
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+  - name: bdev_delay_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_delay_update_latency
+    params:
+      - name: delay_bdev_name
+        type: string
+        required: true
+        description: Name of the delay bdev
+      - name: latency_type
+        type: enum
+        class: bdev_delay_latency_type
+        required: true
+        description: Latency bucket to update
+      - name: latency_us
+        type: uint64
+        required: true
+        description: The new latency value in microseconds
+  - name: bdev_error_create
+    params:
+      - name: base_name
+        type: string
+        required: true
+        description: Base bdev name
+      - name: uuid
+        type: uuid
+        description: UUID for this bdev
+  - name: bdev_error_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Error bdev name
+  - name: bdev_error_inject_error
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the error injection bdev
+      - name: io_type
+        type: enum
+        class: bdev_error_inject_io_type
+        required: true
+        description: io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'
+      - name: error_type
+        type: enum
+        class: bdev_error_inject_error_type
+        required: true
+        description: error type 'failure' 'nvme_failure' 'pending' 'corrupt_data' 'nomem'
+      - name: nvme_sct
+        type: uint32
+        required: false
+        description: the NVMe SCT error for 'nvme_failure' type (default:0)
+      - name: nvme_sc
+        type: uint32
+        required: false
+        description: the NVMe SC error for 'nvme_failure' type (default:0)
+      - name: num
+        type: uint32
+        description: the number of commands you want to fail.(default:1)
+      - name: queue_depth
+        type: uint64
+        description: the queue depth at which to trigger the error
+      - name: corrupt_offset
+        type: uint64
+        description: the offset in bytes to xor with corrupt_value
+      - name: corrupt_value
+        type: uint8
+        description: the value for xor (1-255, 0 is invalid)
+  - name: bdev_error_resume_pending
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the error injection bdev
+  - name: bdev_iscsi_set_options
+    params:
+      - name: timeout_sec
+        type: uint64
+        description: Timeout for command, in seconds, if 0, don't track timeout
+  - name: bdev_iscsi_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: initiator_iqn
+        type: string
+        required: true
+        description: IQN name used during connection
+      - name: url
+        type: string
+        required: true
+        description: iSCSI resource URI
+  - name: bdev_iscsi_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_ftl_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: base_bdev
+        type: string
+        required: true
+        description: Name of the base device
+      - name: cache
+        type: string
+        required: true
+        description: Name of the cache device
+      - name: uuid
+        type: uuid
+        description: UUID of restored bdev (not applicable when creating new instance)
+      - name: core_mask
+        type: string
+        description: CPU core(s) possible for placement of the ftl core thread, application main thread by default
+      - name: overprovisioning
+        type: uint64
+        description: Percentage of base device used for relocation, 20% by default
+      - name: fast_shutdown
+        type: boolean
+        description: When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
+      - name: l2p_dram_limit
+        type: uint64
+        description: DRAM limit for most recent L2P addresses (default 2048 MiB)
+  - name: bdev_ftl_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: fast_shutdown
+        type: boolean
+        description: When set FTL will minimize persisted data during deletion and rely on shared memory during next load
+  - name: bdev_ftl_unmap
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: lba
+        type: uint64
+        required: true
+        description: start lba, aligned to 1024
+      - name: num_blocks
+        type: uint64
+        required: true
+        description: number of blocks, aligned to 1024
+  - name: bdev_ftl_get_stats
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_ftl_get_properties
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_ftl_set_property
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: ftl_property
+        type: string
+        required: true
+        description: Name of the property to modify
+      - name: value
+        type: string
+        required: true
+        description: New value of the property to be set
+  - name: bdev_passthru_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: base_bdev_name
+        type: string
+        required: true
+        description: Base bdev name
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+  - name: bdev_passthru_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_xnvme_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: name of xNVMe bdev to create
+      - name: filename
+        type: string
+        required: true
+        description: 'path to device or file (ex: /dev/nvme0n1)'
+      - name: io_mechanism
+        type: string
+        required: true
+        description: 'IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)'
+      - name: conserve_cpu
+        type: boolean
+        description: 'Whether or not to conserve CPU when polling (default: false)'
+  - name: bdev_xnvme_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: name of xnvme bdev to delete
+  - name: bdev_virtio_attach_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Prefix used to name the resulting bdev(s)
+      - name: trtype
+        type: enum
+        class: bdev_virtio_trtype
+        required: true
+        description: Virtio transport type
+      - name: traddr
+        type: string
+        required: true
+        description: Transport-specific address (PCI BDF for pci; UNIX socket path for user and vfio-user)
+      - name: dev_type
+        type: enum
+        class: bdev_virtio_dev_type
+        required: true
+        description: Virtio device type
+      - name: vq_count
+        type: uint32
+        description: 'Number of virtqueues (user transport only). Default: 1'
+      - name: vq_size
+        type: uint32
+        description: 'Entries per virtqueue, must be a power of 2 (user transport only). Default: 512'
+  - name: bdev_virtio_scsi_get_devices
+    params: []
+  - name: bdev_virtio_detach_controller
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the virtio bdev (e.g. "VirtioUser0")
+  - name: bdev_virtio_blk_set_hotplug
+    params:
+      - name: enable
+        type: boolean
+        required: true
+        description: Enable the virtio-blk hotplug monitor
+      - name: period_us
+        type: uint64
+        description: Hotplug polling period in microseconds
+  - name: iscsi_set_options
+    params:
+      - name: auth_file
+        type: string
+        description: Path to CHAP shared secret file
+      - name: node_base
+        type: string
+        description: Prefix of the name of iSCSI target node
+      - name: nop_timeout
+        type: int32
+        description: NOP-In request timeout to the initiator in seconds
+      - name: nop_in_interval
+        type: int32
+        description: Interval between NOP-In requests from the target in seconds
+      - name: disable_chap
+        type: boolean
+        description: Disable CHAP for discovery session
+      - name: require_chap
+        type: boolean
+        description: Require CHAP for discovery session
+      - name: mutual_chap
+        type: boolean
+        description: Enable bidirectional CHAP for discovery session
+      - name: chap_group
+        type: int32
+        description: CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)
+      - name: max_sessions
+        type: uint32
+        description: Maximum number of sessions in the host
+      - name: max_queue_depth
+        type: uint32
+        description: Maximum number of outstanding I/Os per queue
+      - name: max_connections_per_session
+        type: uint32
+        description: Negotiated MaxConnections value per session
+      - name: default_time2wait
+        type: uint32
+        description: Negotiated DefaultTime2Wait value in seconds
+      - name: default_time2retain
+        type: uint32
+        description: Negotiated DefaultTime2Retain value in seconds
+      - name: first_burst_length
+        type: uint32
+        description: Negotiated FirstBurstLength value in bytes
+      - name: immediate_data
+        type: boolean
+        description: Negotiated ImmediateData value
+      - name: error_recovery_level
+        type: uint32
+        description: Negotiated ErrorRecoveryLevel value
+      - name: allow_duplicated_isid
+        type: boolean
+        description: Allow duplicated initiator session ID
+      - name: max_large_datain_per_connection
+        type: uint32
+        description: Maximum number of outstanding split read I/Os per connection
+      - name: max_r2t_per_connection
+        type: uint32
+        description: Maximum number of outstanding R2Ts per connection
+      - name: pdu_pool_size
+        type: uint32
+        description: Number of PDUs in the pool
+      - name: immediate_data_pool_size
+        type: uint32
+        description: Number of immediate data buffers in the pool
+      - name: data_out_pool_size
+        type: uint32
+        description: Number of data out buffers in the pool
+  - name: iscsi_get_options
+    params: []
+  - name: scsi_get_devices
+    params: []
+  - name: iscsi_set_discovery_auth
+    params:
+      - name: disable_chap
+        type: boolean
+        description: Disable CHAP for discovery session
+      - name: require_chap
+        type: boolean
+        description: Require CHAP for discovery session
+      - name: mutual_chap
+        type: boolean
+        description: Enable bidirectional CHAP for discovery session
+      - name: chap_group
+        type: int32
+        description: CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)
+  - name: iscsi_create_auth_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Authentication group tag (unique, integer > 0)
+      - name: secrets
+        type: array
+        class: iscsi_auth_secrets
+        description: List of CHAP secrets for this authentication group
+  - name: iscsi_delete_auth_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Authentication group tag (unique, integer > 0)
+  - name: iscsi_get_auth_groups
+    params: []
+  - name: iscsi_auth_group_add_secret
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Authentication group tag (unique, integer > 0)
+      - name: user
+        type: string
+        required: true
+        description: User name for one-way (unidirectional) CHAP authentication
+      - name: secret
+        type: string
+        required: true
+        description: Secret for one-way (unidirectional) CHAP authentication
+      - name: muser
+        type: string
+        description: User name for mutual (bidirectional) CHAP authentication
+      - name: msecret
+        type: string
+        description: Secret for mutual (bidirectional) CHAP authentication
+  - name: iscsi_auth_group_remove_secret
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Authentication group tag (unique, integer > 0)
+      - name: user
+        type: string
+        required: true
+        description: User name for one-way (unidirectional) CHAP authentication
+  - name: iscsi_get_initiator_groups
+    params: []
+  - name: iscsi_create_initiator_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Initiator group tag (unique, integer > 0)
+      - name: initiators
+        type: array
+        class: iscsi_initiators
+        required: true
+        description: List of initiator hostnames or IP addresses
+      - name: netmasks
+        type: array
+        class: iscsi_netmasks
+        required: true
+        description: List of initiator netmasks
+  - name: iscsi_delete_initiator_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Initiator group tag (unique, integer > 0)
+  - name: iscsi_initiator_group_add_initiators
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Initiator group tag (unique, integer > 0)
+      - name: initiators
+        type: array
+        class: iscsi_initiators
+        description: List of initiator hostnames or IP addresses
+      - name: netmasks
+        type: array
+        class: iscsi_netmasks
+        description: List of initiator netmasks
+  - name: iscsi_initiator_group_remove_initiators
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Initiator group tag (unique, integer > 0)
+      - name: initiators
+        type: array
+        class: iscsi_initiators
+        description: List of initiator hostnames or IP addresses
+      - name: netmasks
+        type: array
+        class: iscsi_netmasks
+        description: List of initiator netmasks
+  - name: iscsi_get_target_nodes
+    params: []
+  - name: iscsi_create_target_node
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: alias_name
+        type: string
+        required: true
+        description: Target node alias name (ASCII)
+      - name: pg_ig_maps
+        type: array
+        class: iscsi_pg_ig_maps
+        required: true
+        description: List of portal-group-tag to initiator-group-tag mappings
+      - name: luns
+        type: array
+        class: scsi_luns
+        required: true
+        description: List of bdev-name to LUN-ID mappings
+      - name: queue_depth
+        type: int32
+        required: true
+        description: Target queue depth
+      - name: disable_chap
+        type: boolean
+        description: Disable CHAP authentication for this target node
+      - name: require_chap
+        type: boolean
+        description: Require CHAP authentication for this target node
+      - name: mutual_chap
+        type: boolean
+        description: Enable bidirectional CHAP authentication for this target node
+      - name: chap_group
+        type: int32
+        description: Authentication group ID for this target node (non-zero values must reference a precreated group)
+      - name: header_digest
+        type: boolean
+        description: Require Header Digest for this target node
+      - name: data_digest
+        type: boolean
+        description: Require Data Digest for this target node
+  - name: iscsi_target_node_set_auth
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: disable_chap
+        type: boolean
+        description: Disable CHAP authentication for this target node
+      - name: require_chap
+        type: boolean
+        description: Require CHAP authentication for this target node
+      - name: mutual_chap
+        type: boolean
+        description: Enable bidirectional CHAP authentication for this target node
+      - name: chap_group
+        type: int32
+        description: Authentication group ID for this target node (non-zero values must reference a precreated group)
+  - name: iscsi_target_node_add_pg_ig_maps
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: pg_ig_maps
+        type: array
+        class: iscsi_pg_ig_maps
+        required: true
+        description: List of portal-group-tag to initiator-group-tag mappings
+  - name: iscsi_target_node_remove_pg_ig_maps
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: pg_ig_maps
+        type: array
+        class: iscsi_pg_ig_maps
+        required: true
+        description: List of portal-group-tag to initiator-group-tag mappings
+  - name: iscsi_delete_target_node
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+  - name: iscsi_get_portal_groups
+    params: []
+  - name: iscsi_create_portal_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Portal group tag (unique, integer > 0)
+      - name: portals
+        type: array
+        class: iscsi_portals
+        required: true
+        description: List of portals in host:port format
+      - name: private
+        type: boolean
+        description: Private portal group (portals are not returned by a discovery session; used for login redirection)
+      - name: wait
+        type: boolean
+        description: Do not listen on portals until started explicitly
+  - name: iscsi_start_portal_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Portal group tag (unique, integer > 0)
+  - name: iscsi_delete_portal_group
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Portal group tag (unique, integer > 0)
+  - name: iscsi_portal_group_set_auth
+    params:
+      - name: tag
+        type: int32
+        required: true
+        description: Portal group tag (unique, integer > 0)
+      - name: disable_chap
+        type: boolean
+        description: Disable CHAP authentication for this portal group
+      - name: require_chap
+        type: boolean
+        description: Require CHAP authentication for this portal group
+      - name: mutual_chap
+        type: boolean
+        description: Enable bidirectional CHAP authentication for this portal group
+      - name: chap_group
+        type: int32
+        description: CHAP authentication group ID for this portal group (non-zero values must reference a precreated group)
+  - name: iscsi_get_connections
+    params: []
+  - name: iscsi_get_stats
+    params: []
+  - name: iscsi_target_node_add_lun
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: bdev_name
+        type: string
+        required: true
+        description: bdev name to be added as a LUN (must not contain spaces or colons)
+      - name: lun_id
+        type: int32
+        description: LUN ID. -1 or omitted assigns the lowest free ID
+  - name: iscsi_target_node_set_redirect
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: pg_tag
+        type: int32
+        required: true
+        description: Portal group tag (unique, integer > 0)
+      - name: redirect_host
+        type: string
+        description: Numeric IP address of the redirect portal
+      - name: redirect_port
+        type: string
+        description: Numeric TCP port of the redirect portal
+  - name: iscsi_target_node_request_logout
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target node name (ASCII)
+      - name: pg_tag
+        type: int32
+        description: Portal group tag (unique, integer > 0)
+  - name: iscsi_enable_histogram
+    params:
+      - name: name
+        type: string
+        required: true
+        description: iSCSI target node name
+      - name: enable
+        type: boolean
+        required: true
+        description: Enable or disable histogram for the specified iSCSI target node
+  - name: iscsi_get_histogram
+    params:
+      - name: name
+        type: string
+        required: true
+        description: iSCSI target node name
+  - name: nvmf_create_target
+    private: true
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target name (unique to application)
+      - name: max_subsystems
+        type: uint32
+        description: 'Max number of NVMf subsystems (default: SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS)'
+      - name: discovery_filter
+        type: bitmask
+        class: nvmf_discovery_filters
+        description: 'Comma-separated list of discovery filters: transport, address, svcid'
+      - name: dup_host_policy
+        type: enum
+        class: nvmf_dup_host_policy
+        description: Duplicate host policy
+  - name: nvmf_delete_target
+    private: true
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Target name
+  - name: nvmf_get_targets
+    private: true
+    params: []
+  - name: nvmf_create_transport
+    params:
+      - name: trtype
+        type: string
+        required: true
+        description: Transport type (ex. RDMA)
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: max_queue_depth
+        type: uint16
+        description: Max number of outstanding I/O per queue
+      - name: max_io_qpairs_per_ctrlr
+        type: uint16
+        description: Max number of IO qpairs per controller
+      - name: in_capsule_data_size
+        type: uint32
+        description: Max number of in-capsule data size
+      - name: max_io_size
+        type: uint32
+        description: Max I/O size (bytes)
+      - name: io_unit_size
+        type: uint32
+        deprecated: true
+        description: I/O unit size (bytes). Deprecated, use iobuf_set_options instead.
+      - name: max_aq_depth
+        type: uint32
+        description: Max number of admin cmds per AQ
+      - name: num_shared_buffers
+        type: uint32
+        deprecated: true
+        description: Number of pooled data buffers available to the transport. Deprecated, use iobuf_set_options instead
+      - name: buf_cache_size
+        type: uint32
+        deprecated: true
+        description: The number of shared buffers to reserve for each poll group
+      - name: iobuf_small_cache_size
+        type: uint32
+        description: The number of shared buffers from a small iobuf pool to reserve for each poll group
+      - name: iobuf_large_cache_size
+        type: uint32
+        description: Number of shared buffers from the large iobuf pool to reserve for each poll group
+      - name: zcopy
+        type: boolean
+        description: Use zero-copy operations if the underlying bdev supports them
+      - name: num_cqe
+        type: int32
+        description: Number of CQ entries, only used when no_srq=true (RDMA only)
+      - name: max_srq_depth
+        type: uint32
+        description: Number of elements in the per-thread shared receive queue (RDMA only)
+      - name: no_srq
+        type: boolean
+        description: Disable shared receive queue even for devices that support it (RDMA only)
+      - name: c2h_success
+        type: boolean
+        description: Disable C2H success optimization (TCP only)
+      - name: dif_insert_or_strip
+        type: boolean
+        description: Enable DIF insert for write I/O and DIF strip for read I/O (TCP only)
+      - name: sock_priority
+        type: uint32
+        description: Socket priority of connections owned by this transport (TCP only)
+      - name: acceptor_backlog
+        type: int32
+        description: Number of pending connections allowed in the backlog before failing new connection attempts (RDMA only)
+      - name: abort_timeout_sec
+        type: uint32
+        description: Abort execution timeout value, in seconds
+      - name: no_wr_batching
+        type: boolean
+        description: Disable work requests batching (RDMA only)
+      - name: control_msg_num
+        type: uint16
+        description: Number of control messages per poll group (TCP only)
+      - name: disable_mappable_bar0
+        type: boolean
+        description: Disable client mmap() of BAR0 (VFIO-USER only)
+      - name: disable_adaptive_irq
+        type: boolean
+        description: Disable adaptive interrupt feature (VFIO-USER only)
+      - name: disable_shadow_doorbells
+        type: boolean
+        description: Disable shadow doorbell support (VFIO-USER only)
+      - name: acceptor_poll_rate
+        type: uint32
+        description: Polling interval of the acceptor for incoming connections (microseconds)
+      - name: ack_timeout
+        type: uint32
+        description: ACK timeout in milliseconds
+      - name: data_wr_pool_size
+        type: uint32
+        description: RDMA data WR pool size (RDMA only)
+      - name: disable_command_passthru
+        type: boolean
+        description: Disallow forwarding unrecognized I/O opcodes and the Identify Namespace admin command to the underlying bdev. Passthrough subsystems and admin_cmd_passthru are unaffected
+      - name: kas
+        type: uint16
+        description: KATO (Keep Alive Timeout) granularity in units of 100 milliseconds
+      - name: min_kato
+        type: uint32
+        description: Minimum Keep Alive Timeout value in milliseconds
+      - name: masked_oncs
+        type: bitmask
+        class: oncs_features
+        required: false
+        description: 'Comma-separated list of ONCS features to mask (disable). Available options: all, nvmcmps, nvmdsmsv, nvmwzsv, reservs, nvmcpys'
+      - name: masked_fuses
+        type: bitmask
+        class: fuses_features
+        required: false
+        description: 'Comma-separated list of FUSES features to mask (disable). Available options: all, fcws'
+  - name: nvmf_get_subsystems
+    params:
+      - name: nqn
+        type: string
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_create_subsystem
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: serial_number
+        type: string
+        description: Serial number of the virtual NVMe controller
+      - name: model_number
+        type: string
+        description: Model number of the virtual NVMe controller
+      - name: max_namespaces
+        type: uint32
+        description: Maximum number of namespaces that can be attached to the subsystem
+      - name: allow_any_host
+        type: boolean
+        description: 'Allow any host to connect (default: enforce allowed host NQN list)'
+      - name: ana_reporting
+        type: boolean
+        description: Enable ANA reporting feature
+      - name: min_cntlid
+        type: uint16
+        description: Minimum controller ID
+      - name: max_cntlid
+        type: uint16
+        description: Maximum controller ID
+      - name: dmrsl
+        type: uint32
+        description: Dataset Management Range Size Limit in logical block units
+      - name: wzsl
+        type: uint8
+        description: Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size
+      - name: passthrough
+        type: boolean
+        description: Use NVMe passthrough for all I/O commands and namespace-directed admin commands
+      - name: enable_nssr
+        type: boolean
+        description: Enable NSSR (NVMe subsystem reset)
+  - name: nvmf_delete_subsystem
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_add_listener
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN ('discovery' can be used as shortcut for discovery NQN)
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: listen_address
+        type: object
+        required: true
+        class: nvmf_listen_address
+        description: '@ref rpc_nvmf_listen_address object'
+      - name: secure_channel
+        type: boolean
+        description: Require all connections to immediately establish a secure channel
+      - name: ana_state
+        type: enum
+        class: nvme_ana_state
+        description: ANA state to set
+      - name: sock_impl
+        type: string
+        description: Socket implementation to use for the listener
+      - name: numa_id
+        type: int32
+        required: false
+        description: Required NUMA node ID for all namespaces, if -1 then any namespace can be used. Default is -1. Relevant only for VFIOUSER transport.
+  - name: nvmf_subsystem_remove_listener
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN ('discovery' can be used as shortcut for discovery NQN)
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: listen_address
+        type: object
+        required: true
+        class: nvmf_listen_address
+        description: '@ref rpc_nvmf_listen_address object'
+  - name: nvmf_subsystem_listener_set_ana_state
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: listen_address
+        type: object
+        required: true
+        class: nvmf_listen_address
+        description: '@ref rpc_nvmf_listen_address object'
+      - name: ana_state
+        type: enum
+        class: nvme_ana_state
+        required: true
+        description: ANA state to set
+      - name: anagrpid
+        type: uint32
+        description: ANA group ID
+  - name: nvmf_subsystem_add_ns
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: namespace
+        type: object
+        required: true
+        class: nvmf_namespace
+        description: '@ref rpc_nvmf_namespace object'
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_remove_ns
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: nsid
+        type: uint32
+        required: true
+        description: Namespace ID
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_set_ns_ana_group
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: nsid
+        type: uint32
+        required: true
+        description: Namespace ID
+      - name: anagrpid
+        type: uint32
+        required: true
+        description: ANA group ID
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_add_host
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: host
+        type: string
+        required: true
+        description: Host NQN to add to the allowed host list
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: psk
+        type: string
+        description: Pre-shared key name for TLS authentication (TCP only)
+      - name: dhchap_key
+        type: string
+        description: DH-HMAC-CHAP key name, required if a controller key is specified
+      - name: dhchap_ctrlr_key
+        type: string
+        description: DH-HMAC-CHAP controller key name
+  - name: nvmf_subsystem_remove_host
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: host
+        type: string
+        required: true
+        description: Host NQN to remove from the allowed host list
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: timeout_ms
+        type: uint64
+        description: Timeout in ms to wait for I/Os to complete (optional). Default value is derived from the controller CAP.TO.
+  - name: nvmf_subsystem_allow_any_host
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: allow_any_host
+        type: boolean
+        required: true
+        description: Allow any host to connect (`true`) or enforce allowed host NQN list (`false`)
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_set_keys
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: host
+        type: string
+        required: true
+        description: Host NQN
+      - name: tgt_name
+        type: string
+        description: NVMe-oF target name
+      - name: dhchap_key
+        type: string
+        description: DH-HMAC-CHAP key name, required if a controller key is specified
+      - name: dhchap_ctrlr_key
+        type: string
+        description: DH-HMAC-CHAP controller key name
+  - name: nvmf_subsystem_get_controllers
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_get_qpairs
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_subsystem_get_listeners
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_ns_add_host
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: nsid
+        type: uint32
+        required: true
+        description: Namespace ID
+      - name: host
+        type: string
+        required: true
+        description: Host NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_ns_remove_host
+    params:
+      - name: nqn
+        type: string
+        required: true
+        description: Subsystem NQN
+      - name: nsid
+        type: uint32
+        required: true
+        description: Namespace ID
+      - name: host
+        type: string
+        required: true
+        description: Host NQN
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_set_max_subsystems
+    params:
+      - name: max_subsystems
+        type: uint32
+        required: true
+        description: Maximum number of NVMe-oF subsystems
+  - name: nvmf_discovery_add_referral
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: address
+        type: object
+        required: true
+        class: nvmf_listen_address
+        description: '@ref rpc_nvmf_listen_address object'
+      - name: secure_channel
+        type: boolean
+        description: The connection to that discovery subsystem requires a secure channel
+      - name: subnqn
+        type: string
+        description: Subsystem NQN
+  - name: nvmf_discovery_remove_referral
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: address
+        type: object
+        required: true
+        class: nvmf_listen_address
+        description: '@ref rpc_nvmf_listen_address object'
+      - name: subnqn
+        type: string
+        description: Subsystem NQN
+  - name: nvmf_discovery_get_referrals
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_set_config
+    params:
+      - name: admin_cmd_passthru
+        type: object
+        class: nvmf_admin_cmd_passthru
+        description: Admin command passthru configuration
+      - name: poll_groups_mask
+        type: string
+        description: CPU mask for NVMe-oF poll groups
+      - name: discovery_filter
+        type: string
+        deprecated: true
+        description: Deprecated, use discovery_filters instead
+      - name: discovery_filters
+        type: bitmask
+        class: nvmf_discovery_filters
+        description: Comma-separated list of discovery filters
+      - name: dhchap_digests
+        type: bitmask
+        class: dhchap_digests
+        description: Comma-separated list of allowed DH-HMAC-CHAP digests
+      - name: dhchap_dhgroups
+        type: bitmask
+        class: dhchap_dhgroups
+        description: Comma-separated list of allowed DH-HMAC-CHAP DH groups
+      - name: dup_host_policy
+        type: enum
+        class: nvmf_dup_host_policy
+        description: Duplicate host policy
+  - name: nvmf_get_transports
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+      - name: trtype
+        type: string
+        description: Transport type
+  - name: nvmf_get_stats
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_set_crdt
+    params:
+      - name: crdt1
+        type: uint16
+        description: Command Retry Delay Time 1 in units of 100 milliseconds
+      - name: crdt2
+        type: uint16
+        description: Command Retry Delay Time 2 in units of 100 milliseconds
+      - name: crdt3
+        type: uint16
+        description: Command Retry Delay Time 3 in units of 100 milliseconds
+  - name: vfu_tgt_set_base_path
+    params:
+      - name: path
+        type: string
+        required: true
+        description: Base path for the vfio-user UNIX sockets
+  - name: vfu_virtio_delete_endpoint
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the endpoint
+  - name: vfu_virtio_create_blk_endpoint
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the endpoint
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the backing block device
+      - name: cpumask
+        type: string
+        description: CPU mask for the endpoint's I/O threads
+      - name: num_queues
+        type: uint16
+        description: 'Number of virtqueues. Default: 64'
+      - name: qsize
+        type: uint16
+        description: 'Number of entries per virtqueue. Default: 128'
+      - name: packed_ring
+        type: boolean
+        description: 'Enable packed virtqueue layout. Default: false'
+  - name: vfu_virtio_scsi_add_target
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the endpoint
+      - name: scsi_target_num
+        type: uint8
+        required: true
+        description: 'SCSI target number: 0-7'
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the backing block device
+  - name: vfu_virtio_scsi_remove_target
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the endpoint
+      - name: scsi_target_num
+        type: uint8
+        required: true
+        description: 'SCSI target number: 0-7'
+  - name: vfu_virtio_create_scsi_endpoint
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the endpoint
+      - name: cpumask
+        type: string
+        description: CPU mask for the endpoint's I/O threads
+      - name: num_io_queues
+        type: uint16
+        description: 'Number of I/O virtqueues (control + event virtqueues added automatically). Default: 62'
+      - name: qsize
+        type: uint16
+        description: 'Number of entries per virtqueue. Default: 128'
+      - name: packed_ring
+        type: boolean
+        description: 'Enable packed virtqueue layout. Default: false'
+  - name: vfu_virtio_create_fs_endpoint
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the endpoint
+      - name: fsdev_name
+        type: string
+        required: true
+        description: Name of the backing fsdev
+      - name: tag
+        type: string
+        required: true
+        description: virtiofs mount tag (per virtio specification)
+      - name: cpumask
+        type: string
+        description: CPU mask for the endpoint's I/O threads
+      - name: num_queues
+        type: uint16
+        description: 'Number of virtqueues. Default: 64'
+      - name: qsize
+        type: uint16
+        description: 'Number of entries per virtqueue. Default: 128'
+      - name: packed_ring
+        type: boolean
+        description: 'Enable packed virtqueue layout. Default: false'
+  - name: vhost_controller_set_coalescing
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+      - name: delay_base_us
+        type: uint32
+        required: true
+        description: Base coalescing delay in microseconds
+      - name: iops_threshold
+        type: uint32
+        required: true
+        description: IOPS threshold above which coalescing kicks in (must be > 0)
+  - name: vhost_create_scsi_controller
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+      - name: cpumask
+        type: string
+        description: CPU mask for the controller's threads
+      - name: delay
+        type: boolean
+        description: 'Delay controller startup. Default: false'
+  - name: vhost_start_scsi_controller
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+  - name: vhost_scsi_controller_add_target
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+      - name: scsi_target_num
+        type: int32
+        required: true
+        description: SCSI target number (0-7), or -1 to pick the first free slot
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the bdev to expose as LUN 0 of the target
+  - name: vhost_scsi_controller_remove_target
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+      - name: scsi_target_num
+        type: uint32
+        required: true
+        description: SCSI target number (0-7)
+  - name: virtio_blk_create_transport
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the virtio-blk transport to create
+  - name: virtio_blk_get_transports
+    params:
+      - name: name
+        type: string
+        description: 'Name of a specific transport to query. Default: list all'
+  - name: vhost_create_blk_controller
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+      - name: dev_name
+        type: string
+        required: true
+        description: Name of the bdev to expose as the block device
+      - name: readonly
+        type: boolean
+        description: 'Expose the block device as read-only. Default: false'
+      - name: packed_ring
+        type: boolean
+        description: Set controller as packed ring supported
+      - name: cpumask
+        type: string
+        description: CPU mask for the controller's threads
+      - name: transport
+        type: string
+        description: 'virtio blk transport name (default: vhost_user_blk)'
+  - name: vhost_get_controllers
+    params:
+      - name: name
+        type: string
+        description: 'Name of a specific vhost controller to query. Default: list all'
+  - name: vhost_delete_controller
+    params:
+      - name: ctrlr
+        type: string
+        required: true
+        description: Name of the vhost controller
+  - name: bdev_lvol_create_lvstore
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: Bdev on which to construct the logical volume store
+      - name: lvs_name
+        type: string
+        required: true
+        description: Name of the logical volume store to create
+      - name: cluster_sz
+        type: uint32
+        description: Cluster size of the logical volume store in bytes
+      - name: clear_method
+        type: enum
+        class: lvs_clear_method
+        description: Clear method for the data region
+      - name: num_md_pages_per_cluster_ratio
+        type: uint32
+        description: Reserved metadata pages per cluster, as a percentage
+      - name: md_page_size
+        type: uint32
+        description: Metadata page size in bytes
+  - name: bdev_lvol_delete_lvstore
+    params:
+      - name: uuid
+        type: string
+        description: UUID of the logical volume store to destroy
+      - name: lvs_name
+        type: string
+        description: Name of the logical volume store to destroy
+  - name: bdev_lvol_get_lvstores
+    params:
+      - name: uuid
+        type: string
+        description: UUID of the logical volume store to retrieve information about
+      - name: lvs_name
+        type: string
+        description: Name of the logical volume store to retrieve information about
+  - name: bdev_lvol_rename_lvstore
+    params:
+      - name: old_name
+        type: string
+        required: true
+        description: Existing logical volume store name
+      - name: new_name
+        type: string
+        required: true
+        description: New logical volume store name
+  - name: bdev_lvol_grow_lvstore
+    params:
+      - name: uuid
+        type: string
+        description: UUID of the logical volume store to grow
+      - name: lvs_name
+        type: string
+        description: Name of the logical volume store to grow
+  - name: bdev_lvol_create
+    params:
+      - name: lvol_name
+        type: string
+        required: true
+        description: Name of the logical volume to create
+      - name: size_in_mib
+        type: uint64
+        required: true
+        description: Desired size of the logical volume in MiB
+      - name: thin_provision
+        type: boolean
+        description: Enable thin provisioning
+      - name: uuid
+        type: string
+        description: UUID of the logical volume store
+      - name: lvs_name
+        type: string
+        description: Name of the logical volume store
+      - name: clear_method
+        type: enum
+        class: lvol_clear_method
+        description: Per-cluster clear method
+  - name: bdev_lvol_snapshot
+    params:
+      - name: lvol_name
+        type: string
+        required: true
+        description: UUID or alias of the logical volume to create a snapshot from
+      - name: snapshot_name
+        type: string
+        required: true
+        description: Name for the newly created snapshot
+  - name: bdev_lvol_clone
+    params:
+      - name: snapshot_name
+        type: string
+        required: true
+        description: UUID or alias of the snapshot to clone
+      - name: clone_name
+        type: string
+        required: true
+        description: Name for the logical volume to create
+  - name: bdev_lvol_clone_bdev
+    params:
+      - name: bdev
+        type: string
+        required: true
+        description: Name or UUID for bdev that acts as the external snapshot
+      - name: lvs_name
+        type: string
+        required: true
+        description: Name of the logical volume store
+      - name: clone_name
+        type: string
+        required: true
+        description: Name for the logical volume to create
+  - name: bdev_lvol_rename
+    params:
+      - name: old_name
+        type: string
+        required: true
+        description: UUID or alias of the existing logical volume
+      - name: new_name
+        type: string
+        required: true
+        description: New logical volume name
+  - name: bdev_lvol_resize
+    params:
+      - name: name
+        type: string
+        required: true
+        description: UUID or alias of the logical volume to resize
+      - name: size_in_mib
+        type: uint64
+        required: true
+        description: Desired size of the logical volume in MiB
+  - name: bdev_lvol_set_read_only
+    params:
+      - name: name
+        type: string
+        required: true
+        description: UUID or alias of the logical volume to set as read only
+  - name: bdev_lvol_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: UUID or alias of the logical volume to destroy
+  - name: bdev_lvol_inflate
+    params:
+      - name: name
+        type: string
+        required: true
+        description: UUID or alias of the logical volume to inflate
+  - name: bdev_lvol_decouple_parent
+    params:
+      - name: name
+        type: string
+        required: true
+        description: UUID or alias of the logical volume to decouple from its parent
+  - name: bdev_lvol_get_lvols
+    params:
+      - name: lvs_uuid
+        type: string
+        description: Only show volumes in the logical volume store with this UUID
+      - name: lvs_name
+        type: string
+        description: Only show volumes in the logical volume store with this name
+  - name: bdev_lvol_set_parent
+    params:
+      - name: lvol_name
+        type: string
+        required: true
+        description: UUID or alias of the lvol to set parent of
+      - name: parent_name
+        type: string
+        required: true
+        description: UUID or alias of the snapshot to become parent of lvol
+  - name: bdev_lvol_set_parent_bdev
+    params:
+      - name: lvol_name
+        type: string
+        required: true
+        description: UUID or alias of the lvol to set external parent of
+      - name: parent_name
+        type: string
+        required: true
+        description: UUID or name of the external snapshot to become parent of lvol
+  - name: bdev_lvol_start_shallow_copy
+    params:
+      - name: src_lvol_name
+        type: string
+        required: true
+        description: UUID or alias of lvol to create a copy from
+      - name: dst_bdev_name
+        type: string
+        required: true
+        description: Name of the bdev that acts as destination for the copy
+  - name: bdev_lvol_check_shallow_copy
+    params:
+      - name: operation_id
+        type: uint32
+        required: true
+        description: operation identifier
+  - name: bdev_raid_set_options
+    params:
+      - name: process_window_size_kb
+        type: uint32
+        description: Background process (e.g. rebuild) window size in KiB
+      - name: process_max_bandwidth_mb_sec
+        type: uint32
+        description: Background process (e.g. rebuild) maximum bandwidth in MiB/Sec
+  - name: bdev_raid_get_bdevs
+    params:
+      - name: category
+        type: enum
+        class: bdev_raid_state
+        required: true
+        description: all or online or configuring or offline
+  - name: bdev_raid_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: RAID bdev name
+      - name: strip_size_kb
+        type: uint32
+        description: Strip size in KB
+      - name: raid_level
+        type: enum
+        class: bdev_raid_level
+        required: true
+        description: RAID level
+      - name: base_bdevs
+        type: array
+        class: raid_base_bdevs
+        required: true
+        description: Base bdevs name, whitespace separated list in quotes
+      - name: uuid
+        type: uuid
+        description: UUID for this RAID bdev
+      - name: superblock
+        type: boolean
+        description: 'If set, information about raid bdev will be stored in superblock on each base bdev (default: `false`)'
+  - name: bdev_raid_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: RAID bdev name
+      - name: clear_sb
+        type: boolean
+        description: If set, clear the superblock from all base bdevs
+  - name: bdev_raid_add_base_bdev
+    params:
+      - name: raid_bdev
+        type: string
+        required: true
+        description: Raid bdev name
+      - name: base_bdev
+        type: string
+        required: true
+        description: Base bdev name
+  - name: bdev_raid_remove_base_bdev
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Base bdev name in RAID
+  - name: bdev_split_create
+    params:
+      - name: base_bdev
+        type: string
+        required: true
+        description: base bdev name
+      - name: split_count
+        type: uint32
+        required: true
+        description: number of splits
+      - name: split_size_mb
+        type: uint64
+        description: size in MB to restrict the size
+  - name: bdev_split_delete
+    params:
+      - name: base_bdev
+        type: string
+        required: true
+        description: base bdev name
+  - name: bdev_uring_create
+    params:
+      - name: filename
+        type: string
+        required: true
+        description: 'path to device or file (ex: /dev/nvme0n1)'
+      - name: name
+        type: string
+        required: true
+        description: name of bdev
+      - name: block_size
+        type: uint32
+        description: block size of device (If omitted, get the block size from the file)
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+  - name: bdev_uring_rescan
+    params:
+      - name: name
+        type: string
+        required: true
+        description: name of uring bdev to rescan
+  - name: bdev_uring_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: name of uring bdev to delete
+  - name: bdev_nvme_opal_init
+    params:
+      - name: nvme_ctrlr_name
+        type: string
+        required: true
+        description: name of nvme ctrlr
+      - name: password
+        type: string
+        required: true
+        description: admin password of OPAL
+  - name: bdev_nvme_opal_revert
+    params:
+      - name: nvme_ctrlr_name
+        type: string
+        required: true
+        description: name of nvme ctrlr
+      - name: password
+        type: string
+        required: true
+        description: admin password of OPAL
+  - name: bdev_opal_create
+    params:
+      - name: nvme_ctrlr_name
+        type: string
+        required: true
+        description: name of nvme ctrlr that supports OPAL
+      - name: nsid
+        type: uint32
+        required: true
+        description: namespace ID
+      - name: locking_range_id
+        type: uint16
+        required: true
+        description: OPAL locking range ID
+      - name: range_start
+        type: uint64
+        required: true
+        description: locking range start LBA
+      - name: range_length
+        type: uint64
+        required: true
+        description: locking range length
+      - name: password
+        type: string
+        required: true
+        description: admin password of OPAL
+  - name: bdev_opal_get_info
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: name of OPAL vbdev
+      - name: password
+        type: string
+        required: true
+        description: admin password
+  - name: bdev_opal_delete
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: name of OPAL vbdev
+      - name: password
+        type: string
+        required: true
+        description: admin password
+  - name: bdev_opal_new_user
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: name of OPAL vbdev
+      - name: admin_password
+        type: string
+        required: true
+        description: admin password
+      - name: user_id
+        type: uint16
+        required: true
+        description: user ID
+      - name: user_password
+        type: string
+        required: true
+        description: user password
+  - name: bdev_opal_set_lock_state
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: name of OPAL vbdev
+      - name: user_id
+        type: uint16
+        required: true
+        description: user ID
+      - name: password
+        type: string
+        required: true
+        description: user password
+      - name: lock_state
+        type: string
+        required: true
+        description: lock state
+  - name: notify_get_types
+    params: []
+  - name: notify_get_notifications
+    params:
+      - name: id
+        type: uint64
+        description: 'Index of the first event to return. Default: 0 (oldest available)'
+      - name: max
+        type: uint64
+        description: 'Maximum number of events to return. Default: no limit'
+  - name: keyring_file_add_key
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the key
+      - name: path
+        type: string
+        required: true
+        description: Path to the file containing the key
+  - name: keyring_file_remove_key
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the key
+  - name: keyring_get_keys
+    params: []
+  - name: keyring_linux_set_options
+    params:
+      - name: enable
+        type: boolean
+        description: 'Enable the Linux keyring module. Default: false'
+  - name: ublk_create_target
+    params:
+      - name: cpumask
+        type: string
+        description: CPU mask for the ublk target's I/O threads
+      - name: disable_user_copy
+        type: boolean
+        description: 'Disable the ublk user-copy feature. Default: false'
+  - name: ublk_destroy_target
+    params: []
+  - name: ublk_start_disk
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the bdev to export
+      - name: ublk_id
+        type: uint32
+        required: true
+        description: ublk device ID, used as the suffix in /dev/ublkb[id]
+      - name: queue_depth
+        type: uint32
+        description: 'Per-queue depth. Default: 128'
+      - name: num_queues
+        type: uint32
+        description: 'Number of queues to create on the device. Default: 1'
+  - name: ublk_recover_disk
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the bdev backing the recovering ublk device
+      - name: ublk_id
+        type: uint32
+        required: true
+        description: ID of the ublk device to recover
+  - name: ublk_stop_disk
+    params:
+      - name: ublk_id
+        type: uint32
+        required: true
+        description: ID of the ublk device to stop
+  - name: ublk_get_disks
+    params:
+      - name: ublk_id
+        type: uint32
+        description: 'ID of a ublk device to query. Default: list all'
+  - name: nbd_start_disk
+    params:
+      - name: bdev_name
+        type: string
+        required: true
+        description: Name of the bdev to export
+      - name: nbd_device
+        type: string
+        description: 'Path to the NBD device, e.g. "/dev/nbd0". Default: first available device'
+  - name: nbd_stop_disk
+    params:
+      - name: nbd_device
+        type: string
+        required: true
+        description: Path to the NBD device, e.g. "/dev/nbd0"
+  - name: nbd_get_disks
+    params:
+      - name: nbd_device
+        type: string
+        description: 'Path to the NBD device, e.g. "/dev/nbd0". Default: list all'
+  - name: sock_impl_get_options
+    params:
+      - name: impl_name
+        type: string
+        required: true
+        description: Socket implementation name (e.g. "posix", "ssl", "uring")
+  - name: sock_impl_set_options
+    params:
+      - name: impl_name
+        type: string
+        required: true
+        description: Socket implementation name (e.g. "posix", "ssl", "uring")
+      - name: recv_buf_size
+        type: uint32
+        description: Receive buffer size in bytes
+      - name: send_buf_size
+        type: uint32
+        description: Send buffer size in bytes
+      - name: enable_recv_pipe
+        type: boolean
+        description: Enable or disable receive pipe
+      - name: enable_quickack
+        type: boolean
+        description: Enable or disable quick ACK
+      - name: enable_placement_id
+        type: uint32
+        description: 'Placement ID source: 0=disable, 1=incoming_napi, 2=incoming_cpu'
+      - name: enable_zerocopy_send_server
+        type: boolean
+        description: Enable zero-copy on send for server sockets
+      - name: enable_zerocopy_send_client
+        type: boolean
+        description: Enable zero-copy on send for client sockets
+      - name: zerocopy_threshold
+        type: uint32
+        description: Send size threshold in bytes below which the zerocopy flag is omitted
+      - name: tls_version
+        type: uint32
+        description: TLS protocol version (e.g. 13 for TLS 1.3) (ssl only)
+      - name: enable_ktls
+        type: boolean
+        description: 'Enable Kernel TLS (ssl only). Default: false'
+  - name: sock_set_default_impl
+    params:
+      - name: impl_name
+        type: string
+        required: true
+        description: Socket implementation name (e.g. "posix", "ssl", "uring")
+  - name: sock_get_default_impl
+    params: []
+  - name: bdev_nvme_send_cmd
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the operating NVMe controller
+      - name: cmd_type
+        type: enum
+        class: bdev_nvme_cmd_type
+        required: true
+        description: Type of NVMe command
+      - name: data_direction
+        type: enum
+        class: bdev_nvme_data_direction
+        required: true
+        description: Direction of data transfer
+      - name: cmdbuf
+        type: string
+        required: true
+        description: NVMe command encoded by base64 urlsafe
+      - name: data
+        type: string
+        description: Data transferring to controller from host, encoded by base64 urlsafe
+      - name: metadata
+        type: string
+        description: Metadata transferring to controller from host, encoded by base64 urlsafe
+      - name: data_len
+        type: uint32
+        description: Data length required to transfer from controller to host
+      - name: metadata_len
+        type: uint32
+        description: Metadata length required to transfer from controller to host
+      - name: timeout_ms
+        type: uint32
+        description: Command execution timeout value, in milliseconds
+  - name: vmd_enable
+    params: []
+  - name: vmd_remove_device
+    params:
+      - name: addr
+        type: string
+        required: true
+        description: PCI address of the device to remove
+  - name: vmd_rescan
+    params: []
+  - name: spdk_get_version
+    params: []
+  - name: framework_get_pci_devices
+    params: []
+  - name: bdev_nvme_add_error_injection
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the operating NVMe controller
+      - name: cmd_type
+        type: enum
+        class: bdev_nvme_cmd_type
+        required: true
+        description: Type of NVMe command
+      - name: opc
+        type: uint8
+        required: true
+        description: Opcode for which the error injection is applied
+      - name: do_not_submit
+        type: boolean
+        description: Set to true if request should not be submitted to the controller (default false)
+      - name: timeout_in_us
+        type: uint64
+        description: Wait specified microseconds when do_not_submit is true
+      - name: err_count
+        type: uint32
+        description: Number of matching NVMe commands to inject errors
+      - name: sct
+        type: uint8
+        description: Status code type (default 0)
+      - name: sc
+        type: uint8
+        description: Status code (default 0)
+  - name: bdev_nvme_remove_error_injection
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the operating NVMe controller
+      - name: cmd_type
+        type: enum
+        class: bdev_nvme_cmd_type
+        required: true
+        description: Type of NVMe command
+      - name: opc
+        type: uint8
+        required: true
+        description: Opcode for which the error injection is applied
+  - name: bdev_daos_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name to use
+      - name: pool
+        type: string
+        required: true
+        description: DAOS pool label or its uuid
+      - name: cont
+        type: string
+        required: true
+        description: DAOS cont label or its uuid
+      - name: block_size
+        type: uint32
+        required: true
+        description: Block size in bytes -must be multiple of 512
+      - name: num_blocks
+        type: uint64
+        required: true
+        description: Number of blocks
+      - name: uuid
+        type: uuid
+        description: UUID of new bdev
+      - name: oclass
+        type: string
+        description: DAOS object class (default SX)
+  - name: bdev_daos_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+  - name: bdev_daos_resize
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Bdev name
+      - name: new_size
+        type: uint64
+        required: true
+        description: Bdev new capacity in MiB
+  - name: iobuf_set_options
+    params:
+      - name: small_pool_count
+        type: uint64
+        description: 'Number of small buffers in the global pool. Default: 8192'
+      - name: large_pool_count
+        type: uint64
+        description: 'Number of large buffers in the global pool. Default: 1024'
+      - name: small_bufsize
+        type: uint32
+        description: 'Size of a small buffer in bytes. Default: 8192'
+      - name: large_bufsize
+        type: uint32
+        description: 'Size of a large buffer in bytes. Default: 135168'
+      - name: enable_numa
+        type: boolean
+        description: 'Enable per-NUMA node buffer pools, each sized by small_pool_count and large_pool_count. Default: false'
+  - name: iobuf_get_stats
+    params: []
+  - name: bdev_nvme_start_mdns_discovery
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Prefix for NVMe discovery services found
+      - name: svcname
+        type: string
+        required: true
+        description: 'Service to discover: e.g. _nvme-disc._tcp'
+      - name: hostnqn
+        type: string
+        description: NVMe-oF hostnqn
+  - name: bdev_nvme_stop_mdns_discovery
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of mDNS discovery instance to stop
+  - name: bdev_nvme_get_mdns_discovery_info
+    params: []
+  - name: nvmf_publish_mdns_prr
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: nvmf_stop_mdns_prr
+    params:
+      - name: tgt_name
+        type: string
+        description: Parent NVMe-oF target name
+  - name: fsdev_get_opts
+    params: []
+  - name: fsdev_set_opts
+    params:
+      - name: fsdev_io_pool_size
+        type: uint32
+        required: true
+        description: Size of the fsdev IO objects pool
+      - name: fsdev_io_cache_size
+        type: uint32
+        required: true
+        description: Size of the per-thread fsdev IO objects cache
+  - name: fsdev_aio_create
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the AIO fsdev
+      - name: root_path
+        type: string
+        required: true
+        description: Host directory to expose as the SPDK filesystem root
+      - name: enable_xattr
+        type: boolean
+        description: 'Enable extended attributes. Default: false'
+      - name: enable_writeback_cache
+        type: boolean
+        description: 'Enable the writeback cache. Default: true'
+      - name: max_write
+        type: uint32
+        description: 'Maximum write size in bytes. Default: 131072'
+      - name: skip_rw
+        type: boolean
+        description: 'Skip read and write operations and complete them immediately (for benchmarking). Default: false'
+  - name: fsdev_aio_delete
+    params:
+      - name: name
+        type: string
+        required: true
+        description: Name of the AIO fsdev to delete

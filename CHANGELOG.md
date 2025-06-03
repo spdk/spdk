@@ -2,6 +2,10 @@
 
 ## v26.09: (Upcoming Release)
 
+### schema
+
+The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (`schema/schema.yaml`).
+
 ### nvme
 
 Added initiator-side interrupt mode support for the RDMA transport. Applications can now enable

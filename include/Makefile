@@ -27,8 +27,8 @@ clean:
 
 jsonrpc: $(SPDK_ROOT_DIR)/include/spdk_internal/rpc_autogen.h
 
-$(SPDK_ROOT_DIR)/include/spdk_internal/rpc_autogen.h: $(SPDK_ROOT_DIR)/scripts/genrpc.py $(SPDK_ROOT_DIR)/schema/schema.json $(SPDK_ROOT_DIR)/include/spdk_internal/rpc_autogen.h.jinja2
-	$(Q)$(SPDK_ROOT_DIR)/scripts/genrpc.py --schema $(SPDK_ROOT_DIR)/schema/schema.json --rpcs > $@.tmp && \
+$(SPDK_ROOT_DIR)/include/spdk_internal/rpc_autogen.h: $(SPDK_ROOT_DIR)/scripts/genrpc.py $(SPDK_ROOT_DIR)/schema/schema.yaml $(SPDK_ROOT_DIR)/include/spdk_internal/rpc_autogen.h.jinja2
+	$(Q)$(SPDK_ROOT_DIR)/scripts/genrpc.py --schema $(SPDK_ROOT_DIR)/schema/schema.yaml --rpcs > $@.tmp && \
 		{ cmp -s $@.tmp $@ && rm -f $@.tmp || mv $@.tmp $@; } || \
 		{ rm -f $@.tmp; echo "ERROR: scripts/genrpc.py failed to generate $@. Run scripts/pkgdep.sh to install dependencies."; exit 1; }
 
