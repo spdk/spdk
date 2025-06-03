@@ -20,6 +20,7 @@ function usage() {
 	err " -h, --help                Display this help and exit"
 	err " --cc=path                 C compiler to use"
 	err " --cxx=path                C++ compiler to use"
+	err " --ar=path                 Archiver to use"
 	err " --ld=path                 Linker to use"
 	err " --lto=[y|n]               Attempt to configure for LTO"
 	err " --cross-prefix=prefix     Use the given prefix for the cross compiler toolchain"
@@ -39,6 +40,11 @@ for i in "$@"; do
 		--cxx=*)
 			if [[ -n "${i#*=}" ]]; then
 				CXX="${i#*=}"
+			fi
+			;;
+		--ar=*)
+			if [[ -n "${i#*=}" ]]; then
+				AR="${i#*=}"
 			fi
 			;;
 		--lto=*)
@@ -108,18 +114,19 @@ case "$LD_TYPE" in
 		;;
 esac
 
-CCAR="ar"
-if [ "$LTO" = "y" ]; then
+if [[ "$LTO" = "y" && -z "$AR" ]]; then
 	if [ "$CC_TYPE" = "clang" ]; then
 		if [[ "$LD_TYPE" != "gold" && "$LD_TYPE" != "lld" ]]; then
 			err "Using LTO with clang requires the gold or lld linker."
 			exit 1
 		fi
-		CCAR="llvm-ar"
-	else
-		CCAR="gcc-ar"
+		AR="llvm-ar"
+	elif [ "$CC_TYPE" = "gcc" ]; then
+		AR="gcc-ar"
 	fi
 fi
+
+: ${AR="ar"}
 
 if [ -n "$CROSS_PREFIX" ]; then
 	expected_prefix=$($CC -dumpmachine)
@@ -176,11 +183,11 @@ function set_default() {
 	echo ""
 }
 
+set_default AR "$AR"
 set_default CC "$CC"
 set_default CXX "$CXX"
 set_default LD "$LD"
 
-echo "CCAR=$CCAR"
 echo "CC_TYPE=$CC_TYPE"
 echo "LD_TYPE=$LD_TYPE"
 

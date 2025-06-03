@@ -438,7 +438,7 @@ LIB_C=\
 	$(Q)echo "  LIB $(notdir $@)"; \
 	rm -f $@; \
 	mkdir -p $(dir $@); \
-	$(CCAR) crDs $@ $(OBJS)
+	$(AR) crDs $@ $(OBJS)
 
 # Clean up generated files listed as arguments plus a default list
 CLEAN_C=\

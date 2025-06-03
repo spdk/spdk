@@ -145,6 +145,7 @@ function usage() {
 	echo "CFLAGS                     C compiler flags"
 	echo "CXX                        C++ compiler"
 	echo "CXXFLAGS                   C++ compiler flags"
+	echo "AR                         Archiver to use"
 	echo "LD                         Linker"
 	echo "LDFLAGS                    Linker flags"
 	echo "DESTDIR                    Destination for 'make install'"
@@ -176,7 +177,7 @@ for i in "$@"; do
 done
 
 # Detect the compiler toolchain
-$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}" > $rootdir/mk/cc.mk
+$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ar="$AR" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}" > $rootdir/mk/cc.mk
 
 mapfile -t cc < <(grep "=" "$rootdir/mk/cc.mk")
 source <(printf '%q\n' "${cc[@]}")

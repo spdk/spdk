@@ -27,7 +27,7 @@ DIRS-$(CONFIG_GOLANG) += go/rpc
 DIRS-y += python
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk \
-	cc_version cxx_version .libs_only_other .ldflags ldflags install \
+	cc_version cxx_version ar_version .libs_only_other .ldflags ldflags install \
 	uninstall
 
 # Workaround for ninja. See dpdkbuild/Makefile
@@ -142,6 +142,9 @@ cc_version: mk/cc.mk
 
 cxx_version: mk/cc.mk
 	$(Q)echo "SPDK using CXX=$(CXX)"; $(CXX) -v
+
+ar_version: mk/cc.mk
+	$(Q)echo "SPDK using AR=$(AR)"; $(AR) -v
 
 .libs_only_other:
 	$(Q)echo -n '$(SYS_LIBS) '
