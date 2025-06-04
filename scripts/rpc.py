@@ -1743,7 +1743,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('portal_list', help="""List of portals in host:port format, separated by whitespace
-    Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262""")
+    Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262'""")
     p.add_argument('-p', '--private', help="""Public (false) or private (true) portal group.
     Private portal groups do not have their portals returned by a discovery session. A public
     portal group may optionally specify a redirect portal for non-discovery logins. This redirect
