@@ -1475,7 +1475,7 @@ listener_opts_copy(struct spdk_nvmf_listener_opts *src, struct spdk_nvmf_listene
 
 static void
 _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-			     struct spdk_nvme_transport_id *trid,
+			     const struct spdk_nvme_transport_id *trid,
 			     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 			     void *cb_arg, struct spdk_nvmf_listener_opts *opts)
 {
@@ -1574,7 +1574,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 void
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvme_transport_id *trid,
+				 const struct spdk_nvme_transport_id *trid,
 				 spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 				 void *cb_arg)
 {
@@ -1583,7 +1583,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 void
 spdk_nvmf_subsystem_add_listener_ext(struct spdk_nvmf_subsystem *subsystem,
-				     struct spdk_nvme_transport_id *trid,
+				     const struct spdk_nvme_transport_id *trid,
 				     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 				     void *cb_arg, struct spdk_nvmf_listener_opts *opts)
 {

@@ -319,7 +319,7 @@ int spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_t
  * \return int. 0 on success or a negated errno on failure.
  */
 int spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
-			      struct spdk_nvme_transport_id *trid);
+			      const struct spdk_nvme_transport_id *trid);
 
 /**
  * Create a poll group.
@@ -769,7 +769,7 @@ const char *spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host);
  * \param cb_arg Argument passed to cb_fn.
  */
 void spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				      struct spdk_nvme_transport_id *trid,
+				      const struct spdk_nvme_transport_id *trid,
 				      spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 				      void *cb_arg);
 
@@ -821,7 +821,7 @@ void spdk_nvmf_subsystem_listener_opts_init(struct spdk_nvmf_listener_opts *opts
  * \param opts NULL or options requested for listener creation.
  */
 void spdk_nvmf_subsystem_add_listener_ext(struct spdk_nvmf_subsystem *subsystem,
-		struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_transport_id *trid,
 		spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 		void *cb_arg, struct spdk_nvmf_listener_opts *opts);
 

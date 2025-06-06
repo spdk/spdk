@@ -831,7 +831,7 @@ spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_trans
 
 int
 spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
-			  struct spdk_nvme_transport_id *trid)
+			  const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_transport *transport;
 	int rc;
