@@ -1096,7 +1096,8 @@ def main():
                                             rbd_name=args.rbd_name,
                                             block_size=args.block_size,
                                             cluster_name=args.cluster_name,
-                                            uuid=args.uuid))
+                                            uuid=args.uuid,
+                                            read_only=args.read_only))
 
     p = subparsers.add_parser('bdev_rbd_create', help='Add a bdev with ceph rbd backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
@@ -1108,6 +1109,7 @@ def main():
     p.add_argument('block_size', help='rbd block size', type=int)
     p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
+    p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
     p.set_defaults(func=bdev_rbd_create)
 
     def bdev_rbd_delete(args):

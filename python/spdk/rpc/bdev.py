@@ -1066,7 +1066,8 @@ def bdev_rbd_get_clusters_info(client, name=None):
     return client.call('bdev_rbd_get_clusters_info', params)
 
 
-def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=None, config=None, cluster_name=None, uuid=None):
+def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=None, config=None, cluster_name=None,
+                    uuid=None, read_only=None):
     """Create a Ceph RBD block device.
     Args:
         pool_name: Ceph RBD pool name
@@ -1077,6 +1078,7 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=
         config: map of config keys to values (optional)
         cluster_name: Name to identify Rados cluster (optional)
         uuid: UUID of block device (optional)
+        read_only: set block device to read-only (optional)
     Returns:
         Name of created block device.
     """
@@ -1096,6 +1098,8 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=
         print("WARNING:bdev_rbd_create should be used with specifying -c to have a cluster name after bdev_rbd_register_cluster.")
     if uuid is not None:
         params['uuid'] = uuid
+    if read_only is not None:
+        params['read_only'] = read_only
     return client.call('bdev_rbd_create', params)
 
 
