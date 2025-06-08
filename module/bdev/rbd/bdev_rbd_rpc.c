@@ -18,6 +18,7 @@ struct rpc_create_rbd {
 	char **config;
 	char *cluster_name;
 	struct spdk_uuid uuid;
+	bool read_only;
 };
 
 static void
@@ -81,7 +82,8 @@ static const struct spdk_json_object_decoder rpc_create_rbd_decoders[] = {
 	{"block_size", offsetof(struct rpc_create_rbd, block_size), spdk_json_decode_uint32},
 	{"config", offsetof(struct rpc_create_rbd, config), bdev_rbd_decode_config, true},
 	{"cluster_name", offsetof(struct rpc_create_rbd, cluster_name), spdk_json_decode_string, true},
-	{"uuid", offsetof(struct rpc_create_rbd, uuid), spdk_json_decode_uuid, true}
+	{"uuid", offsetof(struct rpc_create_rbd, uuid), spdk_json_decode_uuid, true},
+	{"read_only", offsetof(struct rpc_create_rbd, read_only), spdk_json_decode_bool, true}
 };
 
 static void
@@ -105,7 +107,7 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 	rc = bdev_rbd_create(&bdev, req.name, req.user_id, req.pool_name,
 			     (const char *const *)req.config,
 			     req.rbd_name,
-			     req.block_size, req.cluster_name, &req.uuid);
+			     req.block_size, req.cluster_name, &req.uuid, req.read_only);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

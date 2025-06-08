@@ -60,6 +60,7 @@ struct bdev_rbd {
 	struct spdk_bdev_io *reset_bdev_io;
 
 	uint64_t rbd_watch_handle;
+	bool rbd_read_only;
 };
 
 struct bdev_rbd_io_channel {
@@ -426,7 +427,12 @@ bdev_rbd_init_context(void *arg)
 	}
 
 	assert(io_ctx != NULL);
-	rc = rbd_open(*io_ctx, rbd->rbd_name, &rbd->image, NULL);
+	if (rbd->rbd_read_only) {
+		SPDK_DEBUGLOG(bdev_rbd, "Will open RBD image %s/%s as read-only\n", rbd->pool_name, rbd->rbd_name);
+		rc = rbd_open_read_only(*io_ctx, rbd->rbd_name, &rbd->image, NULL);
+	} else {
+		rc = rbd_open(*io_ctx, rbd->rbd_name, &rbd->image, NULL);
+	}
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to open specified rbd device\n");
 		return NULL;
@@ -794,18 +800,20 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 static bool
 bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct bdev_rbd *rbd = (struct bdev_rbd *)ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
+		return true;
+	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 #ifdef LIBRBD_SUPPORTS_COMPARE_AND_WRITE_IOVEC
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 #endif
-		return true;
-
+		return !rbd->rbd_read_only;
 	default:
 		return false;
 	}
@@ -1282,7 +1290,8 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		const char *rbd_name,
 		uint32_t block_size,
 		const char *cluster_name,
-		const struct spdk_uuid *uuid)
+		const struct spdk_uuid *uuid,
+		bool read_only)
 {
 	struct bdev_rbd *rbd;
 	int ret;
@@ -1329,6 +1338,7 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		return -ENOMEM;
 	}
 
+	rbd->rbd_read_only = read_only;
 	ret = bdev_rbd_init(rbd);
 	if (ret < 0) {
 		bdev_rbd_free(rbd);

@@ -5463,6 +5463,7 @@ for SPDK to get up to your projections.
  config       | Optional   | string map | Explicit librados configuration
  cluster_name | Optional   | string     | Rados cluster object name created in this module.
  uuid         | Optional   | string     | UUID of new bdev
+ read_only    | Optional   | boolean    | set rbd bdev as read-only
 
 #### Response
 
