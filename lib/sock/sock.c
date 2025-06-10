@@ -400,7 +400,7 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 
 	fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (fd < 0) {
-		return -1;
+		return -errno;
 	}
 
 	sz = impl_opts->recv_buf_size;
@@ -416,31 +416,28 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	}
 
 	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
-	if (rc != 0) {
-		close(fd);
-		return -1;
+	if (rc < 0) {
+		goto err;
 	}
+
 	rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
-	if (rc != 0) {
-		close(fd);
-		return -1;
+	if (rc < 0) {
+		goto err;
 	}
 
 #if defined(SO_PRIORITY)
 	if (opts->priority) {
 		rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			return -1;
+		if (rc < 0) {
+			goto err;
 		}
 	}
 #endif
 
 	if (res->ai_family == AF_INET6) {
 		rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			return -1;
+		if (rc < 0) {
+			goto err;
 		}
 	}
 
@@ -448,9 +445,8 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 #if defined(__linux__)
 		to = opts->ack_timeout;
 		rc = setsockopt(fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &to, sizeof(to));
-		if (rc != 0) {
-			close(fd);
-			return -1;
+		if (rc < 0) {
+			goto err;
 		}
 #else
 		SPDK_WARNLOG("TCP_USER_TIMEOUT is not supported.\n");
@@ -458,6 +454,10 @@ spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	}
 
 	return fd;
+
+err:
+	close(fd);
+	return -errno;
 }
 
 static int
@@ -475,27 +475,27 @@ sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts, bool block)
 	rc = poll(&pfd, 1, timeout);
 	if (rc < 0) {
 		SPDK_ERRLOG("poll() failed, errno = %d\n", errno);
-		return -1;
+		return -errno;
 	}
 
 	if (rc == 0) {
 		if (block) {
 			SPDK_ERRLOG("poll() timeout after %d ms\n", timeout);
-			return -1;
+			return -ETIMEDOUT;
 		}
 
 		return -EAGAIN;
 	}
 
 	rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
-	if (rc != 0) {
+	if (rc < 0) {
 		SPDK_ERRLOG("getsockopt() failed, errno = %d\n", errno);
-		return -1;
+		return -errno;
 	}
 
 	if (err) {
 		SPDK_ERRLOG("connect() failed, err = %d\n", err);
-		return -1;
+		return -err;
 	}
 
 	if (!(pfd.revents & POLLOUT)) {
@@ -505,7 +505,7 @@ sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts, bool block)
 	}
 
 	if (!(pfd.revents & POLLOUT)) {
-		return -1;
+		return -EIO;
 	}
 
 	return 0;
@@ -528,8 +528,9 @@ sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts,
 
 	/* Socket address may be not assigned immediately during bind() and
 	 * can return EINPROGRESS if function is invoked with O_NONBLOCK set. */
-	if (spdk_fd_clear_nonblock(fd)) {
-		return -1;
+	rc = spdk_fd_clear_nonblock(fd);
+	if (rc < 0) {
+		return rc;
 	}
 
 	src_addr = SPDK_GET_FIELD(opts, src_addr, NULL, opts->opts_size);
@@ -543,27 +544,28 @@ sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts,
 		rc = getaddrinfo(src_addr, src_port > 0 ? portnum : NULL, &hints, &src_ai);
 		if (rc != 0 || src_ai == NULL) {
 			SPDK_ERRLOG("getaddrinfo() failed %s (%d)\n", rc != 0 ? gai_strerror(rc) : "", rc);
-			return -1;
+			return -EINVAL;
 		}
 
 		rc = bind(fd, src_ai->ai_addr, src_ai->ai_addrlen);
-		if (rc != 0) {
+		if (rc < 0) {
 			SPDK_ERRLOG("bind() failed errno %d (%s:%s)\n", errno, src_addr ? src_addr : "", portnum);
 			freeaddrinfo(src_ai);
-			return -1;
+			return -errno;
 		}
 
 		freeaddrinfo(src_ai);
 	}
 
-	if (spdk_fd_set_nonblock(fd)) {
-		return -1;
+	rc = spdk_fd_set_nonblock(fd);
+	if (rc < 0) {
+		return rc;
 	}
 
 	rc = connect(fd, res->ai_addr, res->ai_addrlen);
-	if (rc != 0 && errno != EINPROGRESS) {
+	if (rc < 0 && errno != EINPROGRESS) {
 		SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
-		return -1;
+		return -errno;
 	}
 
 	if (!block) {
@@ -571,12 +573,13 @@ sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts,
 	}
 
 	rc = sock_posix_fd_connect_poll(fd, opts, block);
-	if (rc) {
+	if (rc < 0) {
 		return rc;
 	}
 
-	if (spdk_fd_clear_nonblock(fd)) {
-		return -1;
+	rc = spdk_fd_clear_nonblock(fd);
+	if (rc < 0) {
+		return rc;
 	}
 
 	return 0;
