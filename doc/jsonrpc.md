@@ -4130,6 +4130,7 @@ They can be overridden if they are given by the RPC bdev_nvme_attach_controller.
  dhchap_dhgroups            | Optional   | list    | List of allowed DH-HMAC-CHAP DH groups.
  rdma_umr_per_io            | Optional   | boolean | Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system
  tcp_connect_timeout_ms     | Optional   | number  | Time to wait until TCP connection is done. Default: 0 (no timeout).
+ enable_flush               | Optional   | boolean | If true, pass flush to nvme devices when volatile write cache is present. Default : `false`.
 
 #### Example
 

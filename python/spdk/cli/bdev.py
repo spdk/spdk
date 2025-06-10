@@ -509,6 +509,8 @@ def add_parser(subparsers):
                    action='store_false', dest='rdma_umr_per_io')
     p.add_argument('--tcp-connect-timeout-ms',
                    help='Time to wait until TCP connection is done. Default: 0 (no timeout).', type=int)
+    p.add_argument('--enable-flush', help='Pass flush to NVMe when volatile write cache is present',
+                   action='store_true')
 
     p.set_defaults(func=bdev_nvme_set_options)
 
