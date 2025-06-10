@@ -22,7 +22,7 @@ struct spdk_notify_type;
 typedef int (*spdk_notify_foreach_type_cb)(const struct spdk_notify_type *type, void *ctx);
 
 #define SPDK_NOTIFY_MAX_NAME_SIZE 128
-#define SPDK_NOTIFY_MAX_CTX_SIZE 128
+#define SPDK_NOTIFY_MAX_CTX_SIZE 512
 
 struct spdk_notify_event {
 	char type[SPDK_NOTIFY_MAX_NAME_SIZE];
