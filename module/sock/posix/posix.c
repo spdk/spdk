@@ -958,18 +958,17 @@ _sock_posix_connect(struct posix_connect_ctx *ctx)
 	int rc, fd = -1;
 
 	for (; ctx->next_res != NULL; ctx->next_res = ctx->next_res->ai_next) {
-		fd = spdk_sock_posix_fd_create(ctx->next_res, &ctx->opts, &ctx->impl_opts);
-		if (fd < 0) {
+		rc = spdk_sock_posix_fd_create(ctx->next_res, &ctx->opts, &ctx->impl_opts);
+		if (rc < 0) {
 			continue;
 		}
 
+		fd = rc;
 		rc = spdk_sock_posix_fd_connect(fd, ctx->next_res, &ctx->opts);
-		if (rc) {
+		if (rc < 0) {
 			close(fd);
 			fd = -1;
-			if (rc == 1) {
-				continue;
-			}
+			continue;
 		}
 
 		break;

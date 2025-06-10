@@ -409,7 +409,7 @@ int spdk_sock_posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
  *
  * On success O_NONBLOCK is cleared otherwise property value is undefined.
  *
- * \return 0 on success, -1 on failure, 1 to retry with different address if available.
+ * \return 0 on success, -1 on failure.
  */
 int spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts);
 
@@ -420,14 +420,14 @@ int spdk_sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_op
  *
  * User must use \ref spdk_sock_posix_fd_connect_poll_async to determine connection status.
  *
- * \return 0 on success, -1 on failure, 1 to retry with different address if available.
+ * \return 0 on success, -1 on failure.
  */
 int spdk_sock_posix_fd_connect_async(int fd, struct addrinfo *res, struct spdk_sock_opts *opts);
 
 /**
  * Polls the socket connection status.
  *
- * \return 0 on connect success, -1 on failure, 1 to retry with different address if available and -EAGAIN to retry later.
+ * \return 0 on connect success, -1 on failure and -EAGAIN to retry later.
  */
 int spdk_sock_posix_fd_connect_poll_async(int fd);
 

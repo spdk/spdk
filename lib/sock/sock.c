@@ -495,7 +495,7 @@ sock_posix_fd_connect_poll(int fd, struct spdk_sock_opts *opts, bool block)
 
 	if (err) {
 		SPDK_ERRLOG("connect() failed, err = %d\n", err);
-		return 1;
+		return -1;
 	}
 
 	if (!(pfd.revents & POLLOUT)) {
@@ -563,7 +563,7 @@ sock_posix_fd_connect(int fd, struct addrinfo *res, struct spdk_sock_opts *opts,
 	rc = connect(fd, res->ai_addr, res->ai_addrlen);
 	if (rc != 0 && errno != EINPROGRESS) {
 		SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
-		return 1;
+		return -1;
 	}
 
 	if (!block) {
