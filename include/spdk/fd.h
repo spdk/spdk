@@ -39,7 +39,7 @@ uint32_t spdk_fd_get_blocklen(int fd);
  *
  * \param fd  File descriptor.
  *
- * \return    0 on success, negative on failure.
+ * \return    0 on success, negative errno value on failure.
  */
 int spdk_fd_set_nonblock(int fd);
 
@@ -48,7 +48,7 @@ int spdk_fd_set_nonblock(int fd);
  *
  * \param fd  File descriptor.
  *
- * \return    0 on success, negative on failure.
+ * \return    0 on success, negative errno value on failure.
  */
 int spdk_fd_clear_nonblock(int fd);
 

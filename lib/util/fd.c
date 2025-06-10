@@ -95,7 +95,7 @@ fd_update_nonblock(int fd, bool set)
 	flag = fcntl(fd, F_GETFL);
 	if (flag < 0) {
 		SPDK_ERRLOG("fcntl can't get file status flag, fd: %d (%s)\n", fd, spdk_strerror(errno));
-		return -1;
+		return -errno;
 	}
 
 	if (set) {
@@ -115,7 +115,7 @@ fd_update_nonblock(int fd, bool set)
 	if (fcntl(fd, F_SETFL, flag) < 0) {
 		SPDK_ERRLOG("fcntl can't set %sblocking mode, fd: %d (%s)\n", set ? "non" : "", fd,
 			    spdk_strerror(errno));
-		return -1;
+		return -errno;
 	}
 
 	return 0;
