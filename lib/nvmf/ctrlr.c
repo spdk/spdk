@@ -22,12 +22,14 @@
 #include "spdk/version.h"
 #include "spdk/log.h"
 #include "spdk_internal/usdt.h"
+#include "spdk/notify.h"
 
 #define NVMF_CC_RESET_SHN_TIMEOUT_IN_MS	10000
 
 #define NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS	(NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + 5000)
 
 #define DUPLICATE_QID_RETRY_US 1000
+#define KATO_NOTIFICATION_NAME "host_keepalive_timeout"
 
 /*
  * Report the SPDK version as the firmware revision.
@@ -160,6 +162,7 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 	uint64_t keep_alive_timeout_tick;
 	uint64_t now = spdk_get_ticks();
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_notify_event kato_event;
 
 	if (ctrlr->in_destruct) {
 		nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
@@ -187,6 +190,11 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 					      nvmf_ctrlr_disconnect_qpairs_on_pg,
 					      ctrlr,
 					      nvmf_ctrlr_disconnect_qpairs_done);
+			assert(sizeof(kato_event.ctx) >= sizeof(ctrlr->hostnqn) + sizeof(ctrlr->subsys->subnqn) + 15);
+			snprintf(kato_event.ctx, sizeof(kato_event.ctx), "%s_%s_%u",
+				ctrlr->hostnqn, ctrlr->subsys->subnqn,
+				ctrlr->feat.keep_alive_timer.bits.kato);
+			spdk_notify_send(KATO_NOTIFICATION_NAME, kato_event.ctx);
 			return SPDK_POLLER_BUSY;
 		}
 	}
@@ -341,6 +349,7 @@ _nvmf_ctrlr_add_admin_qpair(void *ctx)
 	ctrlr->association_timeout = qpair->transport->opts.association_timeout;
 	nvmf_ctrlr_start_keep_alive_timer(ctrlr);
 	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
+	spdk_notify_type_register(KATO_NOTIFICATION_NAME);
 }
 
 static void
