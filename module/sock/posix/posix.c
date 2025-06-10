@@ -765,16 +765,16 @@ posix_sock_configure_ssl(struct spdk_posix_sock *sock, bool client)
 	sock->ssl_ctx = posix_sock_create_ssl_context(client ? TLS_client_method() : TLS_server_method(),
 			&sock->base.impl_opts);
 	if (!sock->ssl_ctx) {
-		SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
-		return -1;
+		SPDK_ERRLOG("posix_sock_create_ssl_context() failed\n");
+		return -EPROTO;
 	}
 
 	sock->ssl = setup_fn(sock->ssl_ctx, sock->fd);
 	if (!sock->ssl) {
-		SPDK_ERRLOG("ssl_sock_setup_%s() failed, errno = %d\n", client ? "connect" : "accept", errno);
+		SPDK_ERRLOG("ssl_sock_setup_%s() failed\n", client ? "connect" : "accept");
 		SSL_CTX_free(sock->ssl_ctx);
 		sock->ssl_ctx = NULL;
-		return -1;
+		return -EPROTO;
 	}
 
 	SSL_set_app_data(sock->ssl, &sock->base.impl_opts);
