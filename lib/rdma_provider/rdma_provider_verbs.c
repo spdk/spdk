@@ -55,6 +55,9 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 	rc = rdma_create_qp(cm_id, qp_attr->pd, &attr);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create qp, rc %d, errno %s (%d)\n", rc, spdk_strerror(errno), errno);
+		if (!spdk_rdma_qp->shared_stats) {
+			free(spdk_rdma_qp->stats);
+		}
 		free(spdk_rdma_qp);
 		return NULL;
 	}
