@@ -87,7 +87,7 @@ flush_client(void)
 	MOCK_SET(sendmsg, 192);
 	cb_arg1 = false;
 	rc = uring_sock_flush(sock);
-	CU_ASSERT(rc == 192);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(TAILQ_EMPTY(&sock->queued_reqs));
 
@@ -98,7 +98,7 @@ flush_client(void)
 	cb_arg1 = false;
 	cb_arg2 = false;
 	rc = uring_sock_flush(sock);
-	CU_ASSERT(rc == 256);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(cb_arg2 == true);
 	CU_ASSERT(TAILQ_EMPTY(&sock->queued_reqs));
@@ -110,7 +110,7 @@ flush_client(void)
 	cb_arg1 = false;
 	cb_arg2 = false;
 	rc = uring_sock_flush(sock);
-	CU_ASSERT(rc == 192);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(cb_arg2 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req2);
@@ -122,7 +122,7 @@ flush_client(void)
 	MOCK_SET(sendmsg, 10);
 	cb_arg1 = false;
 	rc = uring_sock_flush(sock);
-	CU_ASSERT(rc == 10);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
@@ -130,7 +130,7 @@ flush_client(void)
 	MOCK_SET(sendmsg, 52);
 	cb_arg1 = false;
 	rc = uring_sock_flush(sock);
-	CU_ASSERT(rc == 52);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
@@ -138,7 +138,7 @@ flush_client(void)
 	MOCK_SET(sendmsg, 130);
 	cb_arg1 = false;
 	rc = uring_sock_flush(sock);
-	CU_ASSERT(rc == 130);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(TAILQ_EMPTY(&sock->queued_reqs));
 

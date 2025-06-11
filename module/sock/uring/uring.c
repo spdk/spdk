@@ -1910,14 +1910,14 @@ uring_sock_flush(struct spdk_sock *_sock)
 		retval = recvmsg(sock->fd, &task->msg, MSG_ERRQUEUE);
 		if (retval < 0) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return rc;
+				return 0;
 			}
 		}
 		_sock_check_zcopy(_sock, retval);;
 	}
 #endif
 
-	return rc;
+	return 0;
 }
 
 static int
