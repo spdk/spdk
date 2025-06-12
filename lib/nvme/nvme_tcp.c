@@ -43,13 +43,14 @@
 
 enum nvme_tcp_qpair_state {
 	NVME_TCP_QPAIR_STATE_INVALID = 0,
-	NVME_TCP_QPAIR_STATE_INITIALIZING = 1,
-	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND = 2,
-	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL = 3,
-	NVME_TCP_QPAIR_STATE_AUTHENTICATING = 4,
-	NVME_TCP_QPAIR_STATE_RUNNING = 5,
-	NVME_TCP_QPAIR_STATE_EXITING = 6,
-	NVME_TCP_QPAIR_STATE_EXITED = 7,
+	NVME_TCP_QPAIR_STATE_SOCK_CONNECTING = 1,
+	NVME_TCP_QPAIR_STATE_INITIALIZING = 2,
+	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND = 3,
+	NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL = 4,
+	NVME_TCP_QPAIR_STATE_AUTHENTICATING = 5,
+	NVME_TCP_QPAIR_STATE_RUNNING = 6,
+	NVME_TCP_QPAIR_STATE_EXITING = 7,
+	NVME_TCP_QPAIR_STATE_EXITED = 8,
 };
 
 /* NVMe TCP transport extensions for spdk_nvme_ctrlr */
@@ -95,8 +96,9 @@ struct nvme_tcp_qpair {
 		uint16_t host_hdgst_enable: 1;
 		uint16_t host_ddgst_enable: 1;
 		uint16_t icreq_send_ack: 1;
+		uint16_t icresp_received: 1;
 		uint16_t in_connect_poll: 1;
-		uint16_t reserved: 12;
+		uint16_t reserved: 11;
 	} flags;
 
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
@@ -1149,7 +1151,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 
 	SPDK_DEBUGLOG(nvme, "pdu type = %d\n", pdu->hdr.common.pdu_type);
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP) {
-		if (tqpair->state != NVME_TCP_QPAIR_STATE_INVALID) {
+		if (tqpair->flags.icresp_received) {
 			SPDK_ERRLOG("Already received IC_RESP PDU, and we should reject this pdu=%p\n", pdu);
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
 			goto err;
@@ -1475,8 +1477,7 @@ nvme_tcp_send_icreq_complete(void *cb_arg)
 	SPDK_DEBUGLOG(nvme, "Complete the icreq send for tqpair=%p %u\n", tqpair, tqpair->qpair.id);
 
 	tqpair->flags.icreq_send_ack = true;
-
-	if (tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING) {
+	if (tqpair->flags.icresp_received) {
 		SPDK_DEBUGLOG(nvme, "tqpair %p %u, finalize icresp\n", tqpair, tqpair->qpair.id);
 		tqpair->state = NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND;
 	}
@@ -1543,8 +1544,8 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
+	tqpair->flags.icresp_received = true;
 	if (!tqpair->flags.icreq_send_ack) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_INITIALIZING;
 		SPDK_DEBUGLOG(nvme, "tqpair %p %u, waiting icreq ack\n", tqpair, tqpair->qpair.id);
 		return;
 	}
@@ -2217,7 +2218,11 @@ nvme_tcp_sock_connect_cb_fn(void *cb_arg, int status)
 	if (status < 0) {
 		SPDK_ERRLOG("sock connection error of tqpair=%p with %d (%s)\n", tqpair, status,
 			    spdk_strerror(abs(status)));
+		return;
 	}
+
+	tqpair->state = NVME_TCP_QPAIR_STATE_INITIALIZING;
+	nvme_tcp_qpair_icreq_send(tqpair);
 }
 
 static int
@@ -2302,6 +2307,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 		opts.impl_opts_size = sizeof(impl_opts);
 	}
 
+	tqpair->state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair->sock = spdk_sock_connect_async(ctrlr->trid.traddr, port, sock_impl_name, &opts,
 					       nvme_tcp_sock_connect_cb_fn, tqpair);
 	if (!tqpair->sock) {
@@ -2333,7 +2339,9 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 	tqpair->flags.in_connect_poll = 1;
 
 	switch (tqpair->state) {
-	case NVME_TCP_QPAIR_STATE_INVALID:
+	case NVME_TCP_QPAIR_STATE_SOCK_CONNECTING:
+		rc = -EAGAIN;
+		break;
 	case NVME_TCP_QPAIR_STATE_INITIALIZING:
 		if (spdk_get_ticks() > tqpair->icreq_timeout_tsc) {
 			SPDK_ERRLOG("Failed to construct the tqpair=%p via correct icresp\n", tqpair);
@@ -2429,13 +2437,11 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	}
 
 	tqpair->maxr2t = NVME_TCP_MAX_R2T_DEFAULT;
-	/* Explicitly set the state and recv_state of tqpair */
-	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
+	/* Explicitly set recv_state of tqpair */
 	if (tqpair->recv_state != NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	}
 
-	nvme_tcp_qpair_icreq_send(tqpair);
 	return rc;
 }
 

@@ -923,7 +923,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 
 	/* case 2: Expected PDU header length and received are different. Expect: fail */
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	tqpair.recv_pdu->hdr.common.hlen = 0;
 	nvme_tcp_pdu_ch_handle(&tqpair);
@@ -935,7 +935,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 
 	/* case 3: The TCP/IP tqpair connection is not negotiated. Expect: fail */
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	tqpair.recv_pdu->hdr.common.hlen = 0;
 	nvme_tcp_pdu_ch_handle(&tqpair);
@@ -958,7 +958,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 
 	/* case 5: plen error. Expect: fail */
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair.recv_pdu->hdr.common.plen = 0;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	nvme_tcp_pdu_ch_handle(&tqpair);
@@ -1022,7 +1022,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 
 	/* case 6: Expect:  PASS */
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
-	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair.state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	nvme_tcp_pdu_ch_handle(&tqpair);
@@ -1103,7 +1103,7 @@ test_nvme_tcp_qpair_icreq_send(void)
 	tqpair.stats = &stats;
 	ic_req = &pdu.hdr.ic_req;
 
-	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair.qpair.ctrlr->opts.header_digest = true;
 	tqpair.qpair.ctrlr->opts.data_digest = true;
 	TAILQ_INIT(&tqpair.send_queue);
@@ -1224,6 +1224,7 @@ test_nvme_tcp_icresp_handle(void)
 	tqpair.send_pdu = &send_pdu;
 	tqpair.recv_pdu = &recv_pdu;
 	tqpair.stats = &stats;
+	tqpair.state = NVME_TCP_QPAIR_STATE_INITIALIZING;
 	TAILQ_INIT(&tqpair.send_queue);
 
 	/* case 1: Expected ICResp PFV and got are different. */
@@ -1406,6 +1407,7 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	tqpair->send_pdu = &pdu;
 	tqpair->qpair.ctrlr = &ctrlr;
 	tqpair->qpair.state = NVME_QPAIR_CONNECTING;
+	tqpair->state = NVME_TCP_QPAIR_STATE_SOCK_CONNECTING;
 	tqpair->num_entries = 128;
 	ic_req = &pdu.hdr.ic_req;
 
@@ -1424,6 +1426,8 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
 	CU_ASSERT(rc == 0);
 
+	/* assume sock connection established */
+	nvme_tcp_sock_connect_cb_fn(tqpair, 0);
 	tqpair->flags.icreq_send_ack = 1;
 
 	/* skip NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY state */
