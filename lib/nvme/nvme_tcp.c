@@ -2096,6 +2096,7 @@ static int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	enum nvme_qpair_state state_prev;
 	uint32_t reaped;
 	int rc;
 
@@ -2148,26 +2149,15 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 
 	return reaped;
 fail:
-
-	/*
-	 * Since admin queues take the ctrlr_lock before entering this function,
-	 * we can call nvme_transport_ctrlr_disconnect_qpair. For other qpairs we need
-	 * to call the generic function which will take the lock for us.
-	 */
+	state_prev = nvme_qpair_get_state(qpair);
 	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+	nvme_ctrlr_disconnect_qpair(qpair);
 
-	if (nvme_qpair_is_admin_queue(qpair)) {
-		enum nvme_qpair_state state_prev = nvme_qpair_get_state(qpair);
-
-		nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
-
-		if (state_prev == NVME_QPAIR_CONNECTING && qpair->poll_status != NULL) {
-			/* Needed to free the poll_status */
-			nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
-		}
-	} else {
-		nvme_ctrlr_disconnect_qpair(qpair);
+	/* Needed to free the poll_status */
+	if (state_prev == NVME_QPAIR_CONNECTING && qpair->poll_status != NULL) {
+		nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
 	}
+
 	return -ENXIO;
 }
 
