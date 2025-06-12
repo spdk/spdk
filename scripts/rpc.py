@@ -30,7 +30,7 @@ def print_array(a):
     print(" ".join((quote(v) for v in a)))
 
 
-def main():
+def create_parser():
     parser = argparse.ArgumentParser(
         description='SPDK RPC command line interface', usage='%(prog)s [options]')
     parser.add_argument('-s', dest='server_addr',
@@ -3943,78 +3943,92 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-e', '--enable', help='Enable keyring_linux module', action='store_true')
     p.set_defaults(func=keyring_linux_set_options)
 
-    def check_called_name(name):
-        if name in deprecated_aliases:
-            print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
+    return parser, subparsers
 
-    class dry_run_client:
-        def call(self, method, params=None):
-            print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
 
-    def null_print(arg):
-        pass
+def check_called_name(name):
+    if name in deprecated_aliases:
+        print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
-    def call_rpc_func(args):
-        args.func(args)
-        check_called_name(args.called_rpc_name)
 
-    def execute_script(parser, client, timeout, fd):
-        executed_rpc = ""
-        for rpc_call in map(str.rstrip, fd):
-            if not rpc_call.strip():
-                continue
-            executed_rpc = "\n".join([executed_rpc, rpc_call])
-            rpc_args = shlex.split(rpc_call)
-            if rpc_args[0][0] == '#':
-                # Ignore lines starting with # - treat them as comments
-                continue
-            args = parser.parse_args(rpc_args)
-            args.client = client
-            args.timeout = timeout
+class dry_run_client:
+    def call(self, method, params=None):
+        print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
+
+
+def null_print(arg):
+    pass
+
+
+def call_rpc_func(args):
+    args.func(args)
+    check_called_name(args.called_rpc_name)
+
+
+def execute_script(parser, client, timeout, fd):
+    executed_rpc = ""
+    for rpc_call in map(str.rstrip, fd):
+        if not rpc_call.strip():
+            continue
+        executed_rpc = "\n".join([executed_rpc, rpc_call])
+        rpc_args = shlex.split(rpc_call)
+        if rpc_args[0][0] == '#':
+            # Ignore lines starting with # - treat them as comments
+            continue
+        args = parser.parse_args(rpc_args)
+        args.client = client
+        args.timeout = timeout
+        try:
+            call_rpc_func(args)
+        except JSONRPCException as ex:
+            print("Exception:")
+            print(executed_rpc.strip() + " <<<")
+            print(ex.message)
+            exit(1)
+
+
+def load_plugin(args, subparsers, plugins):
+    # Create temporary parser, pull out the plugin parameter, load the module, and then run the real argument parser
+    plugin_parser = argparse.ArgumentParser(add_help=False)
+    plugin_parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
+
+    rpc_module = plugin_parser.parse_known_args()[0].rpc_plugin
+    if args is not None:
+        rpc_module = plugin_parser.parse_known_args(args)[0].rpc_plugin
+
+    if rpc_module in plugins:
+        return
+
+    if rpc_module is not None:
+        try:
+            rpc_plugin = importlib.import_module(rpc_module)
             try:
-                call_rpc_func(args)
-            except JSONRPCException as ex:
-                print("Exception:")
-                print(executed_rpc.strip() + " <<<")
-                print(ex.message)
-                exit(1)
+                rpc_plugin.spdk_rpc_plugin_initialize(subparsers)
+                plugins.append(rpc_module)
+            except AttributeError:
+                print("Module %s does not contain 'spdk_rpc_plugin_initialize' function" % rpc_module)
+        except ModuleNotFoundError:
+            print("Module %s not found" % rpc_module)
 
-    def load_plugin(args):
-        # Create temporary parser, pull out the plugin parameter, load the module, and then run the real argument parser
-        plugin_parser = argparse.ArgumentParser(add_help=False)
-        plugin_parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
 
-        rpc_module = plugin_parser.parse_known_args()[0].rpc_plugin
-        if args is not None:
-            rpc_module = plugin_parser.parse_known_args(args)[0].rpc_plugin
+def replace_arg_underscores(args):
+    # All option names are defined with dashes only - for example: --tgt-name
+    # But if user used underscores, convert them to dashes (--tgt_name => --tgt-name)
+    # SPDK was inconsistent previously and had some options with underscores, so
+    # doing this conversion ensures backward compatibility with older scripts.
+    for i in range(len(args)):
+        arg = args[i]
+        if arg.startswith('--') and "_" in arg:
+            opt, *vals = arg.split('=')
+            args[i] = '='.join([opt.replace('_', '-'), *vals])
 
-        if rpc_module in plugins:
-            return
 
-        if rpc_module is not None:
-            try:
-                rpc_plugin = importlib.import_module(rpc_module)
-                try:
-                    rpc_plugin.spdk_rpc_plugin_initialize(subparsers)
-                    plugins.append(rpc_module)
-                except AttributeError:
-                    print("Module %s does not contain 'spdk_rpc_plugin_initialize' function" % rpc_module)
-            except ModuleNotFoundError:
-                print("Module %s not found" % rpc_module)
+def main():
 
-    def replace_arg_underscores(args):
-        # All option names are defined with dashes only - for example: --tgt-name
-        # But if user used underscores, convert them to dashes (--tgt_name => --tgt-name)
-        # SPDK was inconsistent previously and had some options with underscores, so
-        # doing this conversion ensures backward compatibility with older scripts.
-        for i in range(len(args)):
-            arg = args[i]
-            if arg.startswith('--') and "_" in arg:
-                opt, *vals = arg.split('=')
-                args[i] = '='.join([opt.replace('_', '-'), *vals])
+    parser, subparsers = create_parser()
 
     plugins = []
-    load_plugin(None)
+    load_plugin(None, subparsers, plugins)
 
     replace_arg_underscores(sys.argv)
 
@@ -4034,7 +4048,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             cmd = shlex.split(input)
             replace_arg_underscores(cmd)
             try:
-                load_plugin(cmd)
+                load_plugin(cmd, subparsers, plugins)
                 tmp_args = parser.parse_args(cmd)
             except SystemExit as ex:
                 print("**STATUS=1", flush=True)
