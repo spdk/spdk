@@ -271,7 +271,7 @@ static char *g_sock_threshold_impl;
 static uint8_t g_transport_tos = 0;
 
 static uint32_t g_rdma_srq_size;
-static struct spdk_key *g_psk = NULL;
+static struct spdk_key *g_psk = NULL, *g_dhchap = NULL, *g_dhchap_ctrlr = NULL;
 
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
@@ -1898,6 +1898,8 @@ usage(char *program_name)
 	printf("\t--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)\n");
 	printf("\t--psk-path <val> Path to PSK file (only applies when sock_impl == ssl)\n");
 	printf("\t--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)\n");
+	printf("\t--dhchap-key <val> Path to DH-HMAC-CHAP key file (required if controller key is specified)\n");
+	printf("\t--dhchap-ctrlr-key <val> Path to DH-HMAC-CHAP controller key file\n");
 	printf("\t--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it\n");
 	printf("\t--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold\n");
 	printf("\t-z, --disable-zcopy <impl> disable zero copy send for the given sock implementation. Default for posix impl\n");
@@ -2396,6 +2398,10 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"use-every-core", no_argument, NULL, PERF_USE_EVERY_CORE},
 #define PERF_NO_HUGE		270
 	{"no-huge", no_argument, NULL, PERF_NO_HUGE},
+#define PERF_DHCHAP_PATH		271
+	{"dhchap-key", required_argument, NULL, PERF_DHCHAP_PATH},
+#define PERF_DHCHAP_CTRLR_PATH		272
+	{"dhchap-ctrlr-key", required_argument, NULL, PERF_DHCHAP_CTRLR_PATH},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2643,6 +2649,22 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			ssl_used = true;
 			perf_set_sock_opts("ssl", "psk_identity", 0, optarg);
 			break;
+		case PERF_DHCHAP_PATH:
+			free_key(&g_dhchap);
+			g_dhchap = alloc_key("perf-dhchap", optarg);
+			if (g_dhchap == NULL) {
+				fprintf(stderr, "Unable to set dhchap at %s\n", optarg);
+				return 1;
+			}
+			break;
+		case PERF_DHCHAP_CTRLR_PATH:
+			free_key(&g_dhchap_ctrlr);
+			g_dhchap_ctrlr = alloc_key("perf-dhchap-ctrlr", optarg);
+			if (g_dhchap_ctrlr == NULL) {
+				fprintf(stderr, "Unable to set dhchap-ctrl at %s\n", optarg);
+				return 1;
+			}
+			break;
 		case PERF_DISABLE_ZCOPY:
 			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 0, NULL);
 			break;
@@ -2887,6 +2909,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->data_digest = g_data_digest;
 	opts->keep_alive_timeout_ms = g_keep_alive_timeout_in_ms;
 	opts->tls_psk = g_psk;
+	opts->dhchap_key = g_dhchap;
+	opts->dhchap_ctrlr_key = g_dhchap_ctrlr;
 	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
 
 	opts->transport_tos = g_transport_tos;
@@ -3120,6 +3144,8 @@ main(int argc, char **argv)
 	rc = parse_args(argc, argv, &opts);
 	if (rc != 0 || rc == HELP_RETURN_CODE) {
 		free_key(&g_psk);
+		free_key(&g_dhchap);
+		free_key(&g_dhchap_ctrlr);
 		if (rc == HELP_RETURN_CODE) {
 			return 0;
 		}
@@ -3132,12 +3158,16 @@ main(int argc, char **argv)
 	if (rc != 0) {
 		fprintf(stderr, "Failed to init mutex\n");
 		free_key(&g_psk);
+		free_key(&g_dhchap);
+		free_key(&g_dhchap_ctrlr);
 		return -1;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		pthread_mutex_destroy(&g_stats_mutex);
 		free_key(&g_psk);
+		free_key(&g_dhchap);
+		free_key(&g_dhchap_ctrlr);
 		return -1;
 	}
 
@@ -3146,6 +3176,8 @@ main(int argc, char **argv)
 		fprintf(stderr, "Unable to initialize keyring: %s\n", spdk_strerror(-rc));
 		pthread_mutex_destroy(&g_stats_mutex);
 		free_key(&g_psk);
+		free_key(&g_dhchap);
+		free_key(&g_dhchap_ctrlr);
 		spdk_env_fini();
 		return -1;
 	}
@@ -3255,6 +3287,8 @@ cleanup:
 	unregister_workers();
 
 	free_key(&g_psk);
+	free_key(&g_dhchap);
+	free_key(&g_dhchap_ctrlr);
 	spdk_keyring_cleanup();
 	spdk_env_fini();
 
