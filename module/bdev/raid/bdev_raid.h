@@ -219,6 +219,10 @@ struct raid_bdev {
 	raid_bdev_action_cb		configure_cb;
 	void				*configure_cb_ctx;
 	int				configure_cb_status;
+
+	/* Callback and context for raid_bdev destruction */
+	raid_bdev_action_cb		destroy_cb;
+	void				*destroy_cb_ctx;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
@@ -234,7 +238,8 @@ extern struct raid_all_tailq		g_raid_bdev_list;
 int raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		     char **base_bdev_names, enum spdk_bdev_raid_level level, bool superblock_enabled,
 		     const struct spdk_uuid *uuid, raid_bdev_action_cb cb_fn, void *cb_ctx);
-void raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb_fn, void *cb_ctx);
+void raid_bdev_delete(struct raid_bdev *raid_bdev, bool clear_sb, raid_bdev_action_cb cb_fn,
+		      void *cb_ctx);
 int raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 			    raid_bdev_action_cb cb_fn, void *cb_ctx);
 struct raid_bdev *raid_bdev_find_by_name(const char *name);

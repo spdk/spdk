@@ -1665,7 +1665,7 @@ raid_bdev_create_configure_base_bdev_cb(void *_ctx, int status)
 
 	if (ctx->status != 0) {
 		assert(ctx->raid_bdev->state != SPDK_BDEV_RAID_STATE_ONLINE);
-		raid_bdev_delete(ctx->raid_bdev, NULL, NULL);
+		raid_bdev_delete(ctx->raid_bdev, true, NULL, NULL);
 	}
 
 	ctx->create_done_fn(ctx->create_done_ctx, ctx->status);
@@ -1725,14 +1725,14 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 
 		base_info->name = strdup(base_bdev_names[i]);
 		if (base_info->name == NULL) {
-			raid_bdev_delete(raid_bdev, NULL, NULL);
+			raid_bdev_delete(raid_bdev, false, NULL, NULL);
 			return -ENOMEM;
 		}
 	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
-		raid_bdev_delete(raid_bdev, NULL, NULL);
+		raid_bdev_delete(raid_bdev, false, NULL, NULL);
 		return -ENOMEM;
 	}
 
@@ -2550,31 +2550,12 @@ raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
 	}
 }
 
-/*
- * brief:
- * Deletes the specified raid bdev
- * params:
- * raid_bdev - pointer to raid bdev
- * cb_fn - callback function
- * cb_arg - argument to callback function
- */
-void
-raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb_fn, void *cb_arg)
+static void
+_raid_bdev_delete(struct raid_bdev *raid_bdev)
 {
+	raid_bdev_action_cb cb_fn = raid_bdev->destroy_cb;
+	void *cb_arg = raid_bdev->destroy_cb_ctx;
 	struct raid_base_bdev_info *base_info;
-
-	SPDK_DEBUGLOG(bdev_raid, "delete raid bdev: %s\n", raid_bdev->bdev.name);
-
-	if (raid_bdev->destroy_started) {
-		SPDK_DEBUGLOG(bdev_raid, "destroying raid bdev %s is already started\n",
-			      raid_bdev->bdev.name);
-		if (cb_fn) {
-			cb_fn(cb_arg, -EALREADY);
-		}
-		return;
-	}
-
-	raid_bdev->destroy_started = true;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		base_info->remove_scheduled = true;
@@ -2597,6 +2578,53 @@ raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb_fn, void *c
 	} else {
 		raid_bdev_deconfigure(raid_bdev, cb_fn, cb_arg);
 	}
+}
+
+static void
+raid_bdev_delete_clear_sb_cb(int status, struct raid_bdev *raid_bdev, void *ctx)
+{
+	if (status != 0) {
+		SPDK_ERRLOG("Failed to clear raid bdev '%s' superblock: %s\n",
+			    raid_bdev->bdev.name, spdk_strerror(-status));
+	}
+
+	_raid_bdev_delete(raid_bdev);
+}
+
+/*
+ * brief:
+ * Deletes the specified raid bdev
+ * params:
+ * raid_bdev - pointer to raid bdev
+ * clear_sb - if true, clear the superblock from base bdevs
+ * cb_fn - callback function
+ * cb_arg - argument to callback function
+ */
+void
+raid_bdev_delete(struct raid_bdev *raid_bdev, bool clear_sb, raid_bdev_action_cb cb_fn,
+		 void *cb_arg)
+{
+	SPDK_DEBUGLOG(bdev_raid, "delete raid bdev: %s\n", raid_bdev->bdev.name);
+
+	if (raid_bdev->destroy_started) {
+		SPDK_DEBUGLOG(bdev_raid, "destroying raid bdev %s is already started\n",
+			      raid_bdev->bdev.name);
+		if (cb_fn) {
+			cb_fn(cb_arg, -EALREADY);
+		}
+		return;
+	}
+
+	raid_bdev->destroy_started = true;
+	raid_bdev->destroy_cb = cb_fn;
+	raid_bdev->destroy_cb_ctx = cb_arg;
+
+	if (raid_bdev->sb != NULL && clear_sb) {
+		raid_bdev_clear_superblock(raid_bdev, raid_bdev_delete_clear_sb_cb, NULL);
+		return;
+	}
+
+	_raid_bdev_delete(raid_bdev);
 }
 
 static void
@@ -3865,7 +3893,7 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 			}
 
 			/* remove and then recreate the raid bdev using the newer superblock */
-			raid_bdev_delete(raid_bdev, NULL, NULL);
+			raid_bdev_delete(raid_bdev, false, NULL, NULL);
 			raid_bdev = NULL;
 		} else if (sb->seq_number < raid_bdev->sb->seq_number) {
 			SPDK_DEBUGLOG(bdev_raid,

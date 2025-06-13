@@ -241,7 +241,7 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	raid_bdev_delete(raid_bdev, bdev_raid_delete_done, ctx);
+	raid_bdev_delete(raid_bdev, false, bdev_raid_delete_done, ctx);
 
 	return;
 
