@@ -6,6 +6,8 @@
 #include "spdk_internal/cunit.h"
 #include "spdk/stdinc.h"
 #include "bdev/raid/bdev_raid.h"
+DEFINE_STUB_V(raid_bdev_clear_superblock, (struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb,
+		void *cb_ctx));
 
 struct spdk_bdev_desc {
 	struct spdk_bdev *bdev;

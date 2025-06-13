@@ -230,6 +230,12 @@ raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb
 	cb(0, raid_bdev, cb_ctx);
 }
 
+void
+raid_bdev_clear_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb, void *cb_ctx)
+{
+	cb(0, raid_bdev, cb_ctx);
+}
+
 const struct spdk_uuid *
 spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 {

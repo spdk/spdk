@@ -210,6 +210,7 @@ struct raid_bdev {
 	void				*sb_io_buf;
 	uint32_t			sb_io_buf_size;
 	void				*sb_io_md_buf;
+	uint32_t			sb_io_md_buf_size;
 
 	/* Raid bdev background process, e.g. rebuild */
 	struct raid_bdev_process	*process;
@@ -520,6 +521,8 @@ int raid_bdev_alloc_superblock(struct raid_bdev *raid_bdev, uint32_t block_size)
 void raid_bdev_free_superblock(struct raid_bdev *raid_bdev);
 void raid_bdev_init_superblock(struct raid_bdev *raid_bdev);
 void raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb,
+				void *cb_ctx);
+void raid_bdev_clear_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb,
 				void *cb_ctx);
 int raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 					raid_bdev_load_sb_cb cb, void *cb_ctx);
