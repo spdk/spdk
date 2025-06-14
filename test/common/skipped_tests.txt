@@ -195,16 +195,11 @@ nvme_pmr
 nvme_pmr_persistence
 nvme_smartctl_cuse
 nvme_xnvme
-nvmf_bdevperf
 nvmf_llvm_fuzz
 nvmf_perf_adq
 nvmf_rdma
 nvmf_shutdown_tc4
 nvmf_srq_overwhelm
-nvmf_target_disconnect
-nvmf_target_disconnect_tc1
-nvmf_target_disconnect_tc2
-nvmf_target_disconnect_tc3
 nvmf_vhost
 ocf
 ocf_bdevperf_iotypes

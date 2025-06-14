@@ -43,9 +43,7 @@ if [[ $SPDK_TEST_USDT -eq 1 ]]; then
 	run_test "nvmf_timeout" $rootdir/test/nvmf/host/timeout.sh "${TEST_ARGS[@]}"
 fi
 
-if [[ $NET_TYPE == phy ]]; then
-	run_test "nvmf_bdevperf" $rootdir/test/nvmf/host/bdevperf.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_target_disconnect" $rootdir/test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
-fi
+run_test "nvmf_bdevperf" $rootdir/test/nvmf/host/bdevperf.sh "${TEST_ARGS[@]}"
+run_test "nvmf_target_disconnect" $rootdir/test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
 
 trap - SIGINT SIGTERM EXIT
