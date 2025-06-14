@@ -199,10 +199,6 @@ nvmf_bdevperf
 nvmf_llvm_fuzz
 nvmf_perf_adq
 nvmf_rdma
-nvmf_shutdown
-nvmf_shutdown_tc1
-nvmf_shutdown_tc2
-nvmf_shutdown_tc3
 nvmf_shutdown_tc4
 nvmf_srq_overwhelm
 nvmf_target_disconnect

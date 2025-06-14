@@ -63,8 +63,9 @@ if [[ $NET_TYPE == phy ]]; then
 		# run_test "nvmf_device_removal" test/nvmf/target/device_removal.sh "${TEST_ARGS[@]}"
 		run_test "nvmf_srq_overwhelm" "$rootdir/test/nvmf/target/srq_overwhelm.sh" "${TEST_ARGS[@]}"
 	fi
-	run_test "nvmf_shutdown" $rootdir/test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 fi
+
+run_test "nvmf_shutdown" "$rootdir/test/nvmf/target/shutdown.sh" "${TEST_ARGS[@]}"
 run_test "nvmf_nsid" "$rootdir/test/nvmf/target/nsid.sh" "${TEST_ARGS[@]}"
 
 trap - SIGINT SIGTERM EXIT
