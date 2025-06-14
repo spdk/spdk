@@ -194,7 +194,7 @@ spdk_sock_request_complete(struct spdk_sock *sock, struct spdk_sock_request *req
 
 	if (sock->cb_cnt == 0 && !closed && sock->flags.closed) {
 		/* The user closed the socket in response to a callback above. */
-		rc = -1;
+		rc = -EBADF;
 		spdk_sock_close(&sock);
 	}
 
@@ -264,7 +264,7 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 
 	if (sock->cb_cnt == 0 && !closed && sock->flags.closed) {
 		/* The user closed the socket in response to a callback above. */
-		rc = -1;
+		rc = -EBADF;
 		spdk_sock_close(&sock);
 	}
 

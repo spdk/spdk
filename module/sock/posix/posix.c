@@ -1481,9 +1481,8 @@ _sock_flush(struct spdk_sock *sock)
 			/* The sendmsg syscall above isn't currently asynchronous,
 			* so it's already done. */
 			retval = spdk_sock_request_put(sock, req, 0);
-			if (retval) {
-				/* The user closed the socket. */
-				return 0;
+			if (retval < 0) {
+				return retval;
 			}
 		}
 
@@ -1508,6 +1507,9 @@ posix_sock_flush(struct spdk_sock *sock)
 	int rc;
 
 	rc = _sock_flush(sock);
+	if (rc == -EBADF) {
+		return rc;
+	}
 
 	if (psock->zcopy && !TAILQ_EMPTY(&sock->pending_reqs)) {
 		_sock_check_zcopy(sock);
@@ -1719,7 +1721,7 @@ posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	/* If there are a sufficient number queued, just flush them out immediately. */
 	if (sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 		rc = _sock_flush(sock);
-		if (rc < 0 && rc != -EAGAIN) {
+		if (rc < 0 && rc != -EAGAIN && rc != -EBADF) {
 			spdk_sock_abort_requests(sock);
 		}
 	}
@@ -2141,7 +2143,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	 * group. */
 	TAILQ_FOREACH_SAFE(sock, &_group->socks, link, tmp) {
 		rc = _sock_flush(sock);
-		if (rc < 0 && rc != -EAGAIN) {
+		if (rc < 0 && rc != -EAGAIN && rc != -EBADF) {
 			spdk_sock_abort_requests(sock);
 		}
 	}
