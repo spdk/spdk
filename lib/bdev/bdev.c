@@ -408,7 +408,7 @@ static void bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io);
 static void _bdev_io_get_accel_buf(struct spdk_bdev_io *bdev_io);
 
 static void bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
-static int bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io);
+static void bdev_write_zero_buffer(void *bdev_io);
 
 static void bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 				struct spdk_io_channel *ch, void *_ctx);
@@ -6724,7 +6724,8 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 
 	assert(_bdev_get_block_size_with_md(bdev) <= ZERO_BUFFER_SIZE);
 
-	return bdev_write_zero_buffer(bdev_io);
+	bdev_write_zero_buffer(bdev_io);
+	return 0;
 }
 
 int
@@ -9716,11 +9717,13 @@ spdk_bdev_module_list_find(const char *name)
 	return bdev_module;
 }
 
-static int
-bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io)
+static void
+bdev_write_zero_buffer(void *ctx)
 {
+	struct spdk_bdev_io *bdev_io = ctx;
 	uint64_t num_blocks;
 	void *md_buf = NULL;
+	int rc;
 
 	num_blocks = bdev_io->u.bdev.num_blocks;
 
@@ -9729,11 +9732,22 @@ bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io)
 			 spdk_bdev_get_block_size(bdev_io->bdev) * num_blocks;
 	}
 
-	return bdev_write_blocks_with_md(bdev_io->internal.desc,
-					 spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					 g_bdev_mgr.zero_buffer, md_buf,
-					 bdev_io->u.bdev.offset_blocks, num_blocks,
-					 bdev_write_zero_buffer_done, bdev_io);
+	rc = bdev_write_blocks_with_md(bdev_io->internal.desc,
+				       spdk_io_channel_from_ctx(bdev_io->internal.ch),
+				       g_bdev_mgr.zero_buffer, md_buf,
+				       bdev_io->u.bdev.offset_blocks, num_blocks,
+				       bdev_write_zero_buffer_done, bdev_io);
+	if (spdk_likely(rc == 0)) {
+		return;
+	} else {
+		if (spdk_unlikely(rc == -ENOMEM)) {
+			bdev_queue_io_wait_with_cb(bdev_io, bdev_write_zero_buffer);
+			return;
+		}
+
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+	}
 }
 
 static void
