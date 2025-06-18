@@ -3571,7 +3571,8 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	assert(parent_io->internal.f.split);
 
 	if (!success) {
-		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		parent_io->internal.status = bdev_io->internal.status;
+		parent_io->internal.error = bdev_io->internal.error;
 		/* If any child I/O failed, stop further splitting process. */
 		parent_io->internal.split.current_offset_blocks += parent_io->internal.split.remaining_num_blocks;
 		parent_io->internal.split.remaining_num_blocks = 0;
