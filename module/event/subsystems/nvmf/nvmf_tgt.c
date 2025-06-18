@@ -400,18 +400,14 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
+nvmf_admin_passthru_generic_hdlr(struct spdk_nvmf_request *req,
+				 spdk_nvmf_nvme_passthru_cmd_cb cb_fn)
 {
-	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem *subsys;
 	int rc;
-
-	if (cmd->cdw10_bits.identify.cns != SPDK_NVME_IDENTIFY_CTRLR) {
-		return -1; /* continue */
-	}
 
 	subsys = spdk_nvmf_request_get_subsystem(req);
 	if (subsys == NULL) {
@@ -426,7 +422,7 @@ nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
 	/* Forward to first namespace if it supports NVME admin commands */
 	rc = spdk_nvmf_request_get_bdev(1, req, &bdev, &desc, &ch);
 	if (rc) {
-		/* No bdev found for this namespace. Continue. */
+		/* No bdev found for this namespace */
 		return -1;
 	}
 
@@ -434,7 +430,19 @@ nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
 		return -1;
 	}
 
-	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, fixup_identify_ctrlr);
+	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, cb_fn);
+}
+
+static int
+nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+
+	if (cmd->cdw10_bits.identify.cns != SPDK_NVME_IDENTIFY_CTRLR) {
+		return -1; /* Only support Identify Controller */
+	}
+
+	return nvmf_admin_passthru_generic_hdlr(req, fixup_identify_ctrlr);
 }
 
 static void
