@@ -119,6 +119,24 @@ static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_legacy_mem;
 static bool g_huge_pages = true;
 
+static inline uint64_t
+mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
+{
+	const struct map_1gb *map_1gb;
+	uint64_t vfn_2mb, idx_1gb, idx_256tb;
+
+	vfn_2mb = vaddr >> SHIFT_2MB;
+	idx_256tb = MAP_256TB_IDX(vfn_2mb);
+
+	map_1gb = map->map_256tb.map[idx_256tb];
+	if (spdk_unlikely(!map_1gb)) {
+		return map->default_translation;
+	}
+
+	idx_1gb = MAP_1GB_IDX(vfn_2mb);
+	return map_1gb->map[idx_1gb].translation_2mb;
+}
+
 /*
  * Walk the currently registered memory via the main memory registration map
  * and call the new map's notify callback for each virtually contiguous region.
@@ -161,12 +179,12 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 		}
 
 		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
-			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REGISTERED) &&
-			    (contig_start == UINT64_MAX ||
-			     (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
-				/* Rebuild the virtual address from the indexes */
-				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
+			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
+			if ((mem_map_translate(g_mem_reg_map, vaddr) & REG_MAP_REGISTERED) &&
+			    (contig_start == UINT64_MAX ||
+			     (mem_map_translate(g_mem_reg_map, vaddr) & REG_MAP_NOTIFY_START) == 0)) {
+				/* Rebuild the virtual address from the indexes */
 				if (contig_start == UINT64_MAX) {
 					contig_start = vaddr;
 				}
@@ -224,8 +242,9 @@ err_unregister:
 		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
 			/* Rebuild the virtual address from the indexes */
 			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
-			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REGISTERED) &&
-			    (contig_end == UINT64_MAX || (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
+			if ((mem_map_translate(g_mem_reg_map, vaddr) & REG_MAP_REGISTERED) &&
+			    (contig_end == UINT64_MAX ||
+			     (mem_map_translate(g_mem_reg_map, vaddr) & REG_MAP_NOTIFY_START) == 0)) {
 
 				if (contig_end == UINT64_MAX) {
 					contig_end = vaddr;
@@ -233,7 +252,7 @@ err_unregister:
 				contig_start = vaddr;
 			} else {
 				if (contig_end != UINT64_MAX) {
-					if (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) {
+					if (mem_map_translate(g_mem_reg_map, vaddr) & REG_MAP_NOTIFY_START) {
 						contig_start = vaddr;
 					}
 					/* End of of a virtually contiguous range */
@@ -626,14 +645,11 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 inline uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
-	const struct map_1gb *map_1gb;
-	const struct map_2mb *map_2mb;
-	uint64_t idx_256tb;
-	uint64_t idx_1gb;
 	uint64_t vfn_2mb;
 	uint64_t cur_size;
 	uint64_t prev_translation;
 	uint64_t orig_translation;
+	uint64_t curr_translation;
 
 	if (spdk_unlikely(vaddr & ~MASK_256TB)) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", (void *)vaddr);
@@ -641,43 +657,27 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	}
 
 	vfn_2mb = vaddr >> SHIFT_2MB;
-	idx_256tb = MAP_256TB_IDX(vfn_2mb);
-	idx_1gb = MAP_1GB_IDX(vfn_2mb);
-
-	map_1gb = map->map_256tb.map[idx_256tb];
-	if (spdk_unlikely(!map_1gb)) {
-		return map->default_translation;
-	}
-
 	cur_size = VALUE_2MB - _2MB_OFFSET(vaddr);
-	map_2mb = &map_1gb->map[idx_1gb];
+	curr_translation = mem_map_translate(map, vaddr);
+
 	if (size == NULL || map->ops.are_contiguous == NULL ||
-	    map_2mb->translation_2mb == map->default_translation) {
+	    curr_translation == map->default_translation) {
 		if (size != NULL) {
 			*size = spdk_min(*size, cur_size);
 		}
-		return map_2mb->translation_2mb;
+		return curr_translation;
 	}
 
-	orig_translation = map_2mb->translation_2mb;
-	prev_translation = orig_translation;
+	prev_translation = orig_translation = curr_translation;
 	while (cur_size < *size) {
 		vfn_2mb++;
-		idx_256tb = MAP_256TB_IDX(vfn_2mb);
-		idx_1gb = MAP_1GB_IDX(vfn_2mb);
-
-		map_1gb = map->map_256tb.map[idx_256tb];
-		if (spdk_unlikely(!map_1gb)) {
-			break;
-		}
-
-		map_2mb = &map_1gb->map[idx_1gb];
-		if (!map->ops.are_contiguous(prev_translation, map_2mb->translation_2mb)) {
+		curr_translation = mem_map_translate(map, vfn_2mb << SHIFT_2MB);
+		if (!map->ops.are_contiguous(prev_translation, curr_translation)) {
 			break;
 		}
 
 		cur_size += VALUE_2MB;
-		prev_translation = map_2mb->translation_2mb;
+		prev_translation = curr_translation;
 	}
 
 	*size = spdk_min(*size, cur_size);
