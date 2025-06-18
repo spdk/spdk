@@ -60,5 +60,6 @@ uninstall:
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-rpc
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-sma
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-cli
+	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-mcp
 
 .PHONY: all clean install uninstall

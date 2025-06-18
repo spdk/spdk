@@ -44,6 +44,7 @@ dependencies = []
 spdk-rpc = "spdk.spdk_rpc:main"
 spdk-sma = "spdk.spdk_sma:main"
 spdk-cli = "spdk.spdk_cli:main"
+spdk-mcp = "spdk.mcp:server"
 
 [project.optional-dependencies]
 sma = [
@@ -53,6 +54,9 @@ sma = [
 ]
 cli = [
     "configshell_fb"
+]
+mcp = [
+    "mcp[cli]>=1.9.2"
 ]
 
 [tool.hatch.version]

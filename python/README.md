@@ -52,3 +52,39 @@ From a Python interpreter:
 ```
 
 For more information, see <https://spdk.io/doc/jsonrpc.html>
+
+## Model Context Protocol (MCP)
+
+The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) lets you build servers that expose
+data and functionality to LLM applications in a secure, standardized way.
+Think of it like a web API, but specifically designed for LLM interactions.
+
+MCP servers can:
+
+- Expose data through Resources (think of these sort of like GET endpoints; they are used to load information into the LLM's context)
+- Provide functionality through Tools (sort of like POST endpoints; they are used to execute code or otherwise produce a side effect)
+- Define interaction patterns through Prompts (reusable templates for LLM interactions)
+- And more!
+
+The SPDK MCP Server is a Model Context Protocol (MCP) server that provides seamless integration with SPDK APIs,
+enabling advanced automation and interaction capabilities for developers and tools.
+
+```bash
+$ uv venv
+$ source .venv/bin/activate
+$ uv pip install spdk[mcp]
+or locally
+$ uv pip install python/[mcp]
+```
+
+You can install this server in [Claude Desktop](https://claude.ai/download) and interact with it right away by running:
+
+```bash
+mcp install server.py
+```
+
+Alternatively, you can test it with the MCP Inspector:
+
+```bash
+mcp dev server.py
+```
