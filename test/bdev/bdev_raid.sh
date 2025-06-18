@@ -1147,6 +1147,57 @@ function raid_resize_data_offset_test() {
 	return 0
 }
 
+function raid_delete_clear_sb_test() {
+	local raid_level=$1
+	local num_base_bdevs=$2
+	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
+	local raid_bdev_name="raid_bdev"
+	local strip_size
+	local create_arg
+
+	if [ $raid_level != "raid1" ]; then
+		strip_size=64
+		create_arg+=" -z $strip_size"
+	else
+		strip_size=0
+	fi
+
+	"$rootdir/test/app/bdev_svc/bdev_svc" -L bdev_raid &
+	raid_pid=$!
+	waitforlisten $raid_pid
+
+	# Create base bdevs
+	for bdev in "${base_bdevs[@]}"; do
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${bdev}_malloc
+		$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
+	done
+
+	# Create RAID bdev with superblock
+	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name -s
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+
+	# Delete RAID bdev with clear_sb=true (should clear superblock)
+	$rpc_py bdev_raid_delete $raid_bdev_name --clear-sb
+
+	# Recreate the base bdevs - raid bdev should NOT start from superblock
+	for bdev in "${base_bdevs[@]}"; do
+		$rpc_py bdev_passthru_delete $bdev
+		$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
+	done
+	$rpc_py bdev_wait_for_examine
+	[ -z $($rpc_py bdev_raid_get_bdevs all | jq '.[]') ]
+
+	# Try to create the RAID with an invalid name
+	NOT $rpc_py bdev_raid_create $create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n "${base_bdevs[0]}" -s
+	[ -z $($rpc_py bdev_raid_get_bdevs all | jq '.[]') ]
+
+	# Create RAID bdev again
+	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "'${base_bdevs[*]}'" -n $raid_bdev_name -s
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+
+	killprocess $raid_pid
+}
+
 mkdir -p "$tmp_dir"
 trap 'cleanup; exit 1' EXIT
 
@@ -1197,6 +1248,9 @@ for n in {3..4}; do
 		run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false true
 	fi
 done
+
+run_test "raid1_delete_clear_sb_test" raid_delete_clear_sb_test raid1 2
+run_test "raid5f_delete_clear_sb_test" raid_delete_clear_sb_test raid5f 3
 
 base_blocklen=4096
 

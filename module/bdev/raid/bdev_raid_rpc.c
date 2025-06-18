@@ -170,6 +170,7 @@ SPDK_RPC_REGISTER("bdev_raid_create", rpc_bdev_raid_create, SPDK_RPC_RUNTIME)
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_raid_delete_ctx, name), spdk_json_decode_string},
+	{"clear_sb", offsetof(struct rpc_bdev_raid_delete_ctx, clear_sb), spdk_json_decode_bool, true},
 };
 
 /*
@@ -241,7 +242,7 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	raid_bdev_delete(raid_bdev, false, bdev_raid_delete_done, ctx);
+	raid_bdev_delete(raid_bdev, ctx->clear_sb, bdev_raid_delete_done, ctx);
 
 	return;
 

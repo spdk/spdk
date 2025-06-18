@@ -5470,6 +5470,11 @@
           "type": "string",
           "required": true,
           "description": "RAID bdev name"
+        },
+        {
+          "name": "clear_sb",
+          "type": "boolean",
+          "description": "If set, clear the superblock from all base bdevs"
         }
       ]
     },

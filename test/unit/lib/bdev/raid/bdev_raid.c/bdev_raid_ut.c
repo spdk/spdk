@@ -894,6 +894,7 @@ create_raid_bdev_delete_req(struct rpc_bdev_raid_delete_ctx *r, const char *raid
 			    uint8_t json_decode_obj_err)
 {
 	r->name = strdup(raid_name);
+	r->clear_sb = false;
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
 
 	g_rpc_req = r;

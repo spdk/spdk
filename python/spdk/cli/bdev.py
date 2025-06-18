@@ -1227,9 +1227,12 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_raid_create)
 
     def bdev_raid_delete(args):
-        args.client.bdev_raid_delete(name=args.name)
+        args.client.bdev_raid_delete(
+                                  name=args.name,
+                                  clear_sb=args.clear_sb)
     p = subparsers.add_parser('bdev_raid_delete', help='Delete existing raid bdev')
     p.add_argument('name', help='raid bdev name')
+    p.add_argument('-c', '--clear-sb', help='If set, clear the superblock from all base bdevs', action='store_true')
     p.set_defaults(func=bdev_raid_delete)
 
     def bdev_raid_add_base_bdev(args):
