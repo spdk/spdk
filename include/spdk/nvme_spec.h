@@ -1715,6 +1715,7 @@ enum spdk_nvme_admin_opcode {
 	SPDK_NVME_OPC_SANITIZE				= 0x84,
 
 	SPDK_NVME_OPC_GET_LBA_STATUS			= 0x86,
+	SPDK_NVME_OPC_VENDOR_SPECIFIC_START		= 0xC0,
 };
 
 /**

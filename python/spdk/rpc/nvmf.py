@@ -36,7 +36,7 @@ def nvmf_set_config(client,
         True or False
     """
     params = {}
-    all_admin_cmd_passthru = ('identify_ctrlr')
+    all_admin_cmd_passthru = ('identify_ctrlr', 'vendor_specific')
 
     if passthru_admin_cmds:
         if 'all' in passthru_admin_cmds:

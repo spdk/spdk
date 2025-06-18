@@ -39,7 +39,7 @@ def add_parser(subparsers):
     when the controller has a single namespace that is an NVMe bdev (deprecated)""", action='store_true')
     p.add_argument('-p', '--passthru-admin-cmds', help="""Comma-separated list of admin commands to be passthru
                    when the controller has a single namespace that is an NVMe bdev.
-                   Available options are: all, identify_ctrlr""", type=lambda d: d.split(','))
+                   Available options are: all, identify_ctrlr, vendor_specific""", type=lambda d: d.split(','))
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.add_argument('-d', '--discovery-filter', help="""Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`""", type=str)

@@ -45,7 +45,8 @@ SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 
 static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
-	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool}
+	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool, true},
+	{"vendor_specific", offsetof(struct spdk_nvmf_admin_passthru_conf, vendor_specific), spdk_json_decode_bool, true}
 };
 
 static int

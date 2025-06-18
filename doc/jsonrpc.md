@@ -9380,7 +9380,8 @@ have been initialized.
 
  Name           | Optional   | Type   | Description
 --------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------
- identify_ctrlr | Required   | bool   | If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
+ identify_ctrlr | Optional   | bool   | If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
+ vendor_specific| Optional   | bool   | If true, enables passthru command handlers for underlying NVMe drive for vendor specific cmds (OPCs: 0xC0-0xFF)
 
 #### Example
 

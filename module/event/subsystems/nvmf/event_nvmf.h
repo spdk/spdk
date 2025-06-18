@@ -17,6 +17,7 @@
 
 struct spdk_nvmf_admin_passthru_conf {
 	bool identify_ctrlr;
+	bool vendor_specific;
 };
 
 struct spdk_nvmf_tgt_conf {
