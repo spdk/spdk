@@ -2397,6 +2397,7 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	struct nvme_tcp_poll_group *tgroup;
 
 	tqpair = nvme_tcp_qpair(qpair);
+	memset(&tqpair->flags, 0, sizeof(tqpair->flags));
 
 	if (!tqpair->sock) {
 		rc = nvme_tcp_qpair_connect_sock(ctrlr, qpair);

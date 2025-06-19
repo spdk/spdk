@@ -1419,13 +1419,14 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 					    sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - 1;
 	tqpair->recv_pdu->hdr.ic_resp.maxh2cdata = 4096;
 	tqpair->recv_pdu->hdr.ic_resp.cpda = 1;
-	tqpair->flags.icreq_send_ack = 1;
 	tqpair->qpair.ctrlr->opts.header_digest = true;
 	tqpair->qpair.ctrlr->opts.data_digest = true;
 	TAILQ_INIT(&tqpair->send_queue);
 
 	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
 	CU_ASSERT(rc == 0);
+
+	tqpair->flags.icreq_send_ack = 1;
 
 	/* skip NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY state */
 	/* assume already received the icresp */
