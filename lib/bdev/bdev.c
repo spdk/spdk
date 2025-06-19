@@ -8332,6 +8332,11 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 		event_notify(desc, _remove_notify);
 	}
 
+	if (bdev->internal.qos_mod_in_progress) {
+		/* QoS setup is in progress, can't unregister for now. */
+		rc = -EBUSY;
+	}
+
 	/* If there are no descriptors, proceed removing the bdev */
 	if (rc == 0) {
 		bdev_examine_allowlist_remove(bdev->name);
@@ -8484,6 +8489,7 @@ bdev_start_qos(struct spdk_bdev *bdev)
 			return -ENOMEM;
 		}
 		ctx->bdev = bdev;
+		ctx->bdev->internal.qos_mod_in_progress = true;
 		spdk_bdev_for_each_channel(bdev, bdev_enable_qos_msg, ctx, bdev_enable_qos_done);
 	}
 
@@ -9764,6 +9770,9 @@ bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb
 static void
 bdev_set_qos_limit_done(struct set_qos_limit_ctx *ctx, int status)
 {
+	struct spdk_bdev *bdev;
+	int rc;
+
 	spdk_spin_lock(&ctx->bdev->internal.spinlock);
 	ctx->bdev->internal.qos_mod_in_progress = false;
 	spdk_spin_unlock(&ctx->bdev->internal.spinlock);
@@ -9771,7 +9780,24 @@ bdev_set_qos_limit_done(struct set_qos_limit_ctx *ctx, int status)
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, status);
 	}
+	bdev = ctx->bdev;
 	free(ctx);
+
+	spdk_spin_lock(&g_bdev_mgr.spinlock);
+	spdk_spin_lock(&bdev->internal.spinlock);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
+		SPDK_DEBUGLOG(bdev, "Data race detected - trying to enable QoS on unregistered bdev %s",
+			      bdev->name);
+		rc = bdev_unregister_unsafe(bdev);
+		spdk_spin_unlock(&bdev->internal.spinlock);
+
+		if (rc == 0) {
+			spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
+		}
+	} else {
+		spdk_spin_unlock(&bdev->internal.spinlock);
+	}
+	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 }
 
 static void
