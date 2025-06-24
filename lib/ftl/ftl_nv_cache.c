@@ -802,9 +802,9 @@ compaction_process_read_entry(void *arg)
 	struct spdk_ftl_dev *dev = rq->dev;
 	int rc;
 
-	rc = spdk_bdev_read_blocks(dev->nv_cache.bdev_desc, dev->nv_cache.cache_ioch,
-				   entry->io_payload, entry->bdev_io.offset_blocks, entry->bdev_io.num_blocks,
-				   compaction_process_read_entry_cb, entry);
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(dev->nv_cache.bdev_desc, dev->nv_cache.cache_ioch,
+			entry->io_payload, NULL, entry->bdev_io.offset_blocks, entry->bdev_io.num_blocks,
+			compaction_process_read_entry_cb, entry);
 
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
