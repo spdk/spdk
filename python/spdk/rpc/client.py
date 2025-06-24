@@ -10,6 +10,15 @@ import logging
 import copy
 import ctypes
 
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
+
+
+def print_array(a):
+    print(" ".join((quote(v) for v in a)))
+
 
 def print_dict(d):
     print(json.dumps(d, indent=2))

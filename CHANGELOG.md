@@ -2,6 +2,10 @@
 
 ## v25.09: (Upcoming Release)
 
+### python
+
+Moved all cli code inside the python package for easier genration and packaging.
+
 ### sock
 
 Simplified spdk_sock_[listen|connect] impl_name handling. Previously, if NULL was provided and the
