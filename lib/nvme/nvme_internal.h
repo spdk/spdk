@@ -916,6 +916,7 @@ enum nvme_ctrlr_state {
 #define NVME_TIMEOUT_KEEP_EXISTING	UINT64_MAX
 
 struct spdk_nvme_ctrlr_aer_completion {
+	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_cpl	cpl;
 	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion) link;
 };

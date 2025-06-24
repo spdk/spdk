@@ -3262,9 +3262,10 @@ free_buffer:
 }
 
 static void
-nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
-			       const struct spdk_nvme_cpl *cpl)
+nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
+	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
+	struct spdk_nvme_cpl *cpl = &async_event->cpl;
 	union spdk_nvme_async_event_completion event;
 	struct spdk_nvme_ctrlr_process *active_proc;
 	int rc;
@@ -3316,6 +3317,7 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
 			return;
 		}
+		async_event->ctrlr = ctrlr;
 		async_event->cpl = *cpl;
 
 		STAILQ_INSERT_TAIL(&proc->async_events, async_event, link);
@@ -3333,7 +3335,7 @@ nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 	STAILQ_FOREACH_SAFE(async_event, &active_proc->async_events, link, async_event_tmp) {
 		STAILQ_REMOVE(&active_proc->async_events, async_event,
 			      spdk_nvme_ctrlr_aer_completion, link);
-		nvme_ctrlr_process_async_event(ctrlr, &async_event->cpl);
+		nvme_ctrlr_process_async_event(async_event);
 		spdk_free(async_event);
 	}
 }
