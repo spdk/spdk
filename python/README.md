@@ -55,6 +55,8 @@ For more information, see <https://spdk.io/doc/jsonrpc.html>
 
 ## Model Context Protocol (MCP)
 
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_SPDK-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=spdk&config=%7B%22name%22%3A%22spdk%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22spdk-mcp%22%5D%2C%22env%22%3A%7B%22SPDK_RPC_ADDRESS%22%3A%22%2Fvar%2Ftmp%2Fspdk.sock%22%7D%7D)
+
 The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) lets you build servers that expose
 data and functionality to LLM applications in a secure, standardized way.
 Think of it like a web API, but specifically designed for LLM interactions.
