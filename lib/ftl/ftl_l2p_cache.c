@@ -585,7 +585,7 @@ process_page_in(struct ftl_l2p_page *page, spdk_bdev_io_completion_cb cb)
 
 	assert(page->page_buffer);
 
-	rc = ftl_nv_cache_bdev_read_blocks_with_md(cache->dev, ftl_l2p_cache_get_bdev_desc(cache),
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(ftl_l2p_cache_get_bdev_desc(cache),
 			ftl_l2p_cache_get_bdev_iochannel(cache),
 			page->page_buffer, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
 			1, cb, page);
@@ -630,12 +630,11 @@ process_page_out(struct ftl_l2p_page *page, spdk_bdev_io_completion_cb cb)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_io_wait_entry *bdev_io_wait;
 	struct ftl_l2p_cache *cache = page->ctx.cache;
-	struct spdk_ftl_dev *dev = cache->dev;
 	int rc;
 
 	assert(page->page_buffer);
 
-	rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, ftl_l2p_cache_get_bdev_desc(cache),
+	rc = ftl_nv_cache_bdev_write_blocks_with_md(ftl_l2p_cache_get_bdev_desc(cache),
 			ftl_l2p_cache_get_bdev_iochannel(cache),
 			page->page_buffer, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
 			1, cb, page);
@@ -1253,7 +1252,7 @@ page_in_io(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache, struct ftl_l2p
 	int rc;
 	page->ctx.cache = cache;
 
-	rc = ftl_nv_cache_bdev_read_blocks_with_md(cache->dev, ftl_l2p_cache_get_bdev_desc(cache),
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(ftl_l2p_cache_get_bdev_desc(cache),
 			ftl_l2p_cache_get_bdev_iochannel(cache),
 			page->page_buffer, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
 			1, page_in_io_cb, page);
@@ -1438,7 +1437,7 @@ page_out_io(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
 
 	page->ctx.cache = cache;
 
-	rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, ftl_l2p_cache_get_bdev_desc(cache),
+	rc = ftl_nv_cache_bdev_write_blocks_with_md(ftl_l2p_cache_get_bdev_desc(cache),
 			ftl_l2p_cache_get_bdev_iochannel(cache),
 			page->page_buffer, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
 			1, page_out_io_cb, page);

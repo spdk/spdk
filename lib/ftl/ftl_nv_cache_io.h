@@ -11,8 +11,7 @@
 #include "ftl_core.h"
 
 static inline int
-ftl_nv_cache_bdev_read_blocks_with_md(struct spdk_ftl_dev *dev,
-				      struct spdk_bdev_desc *desc,
+ftl_nv_cache_bdev_read_blocks_with_md(struct spdk_bdev_desc *desc,
 				      struct spdk_io_channel *ch,
 				      void *buf, void *md,
 				      uint64_t offset_blocks, uint64_t num_blocks,
@@ -28,8 +27,7 @@ ftl_nv_cache_bdev_read_blocks_with_md(struct spdk_ftl_dev *dev,
 }
 
 static inline int
-ftl_nv_cache_bdev_write_blocks_with_md(struct spdk_ftl_dev *dev,
-				       struct spdk_bdev_desc *desc,
+ftl_nv_cache_bdev_write_blocks_with_md(struct spdk_bdev_desc *desc,
 				       struct spdk_io_channel *ch,
 				       void *buf, void *md,
 				       uint64_t offset_blocks, uint64_t num_blocks,

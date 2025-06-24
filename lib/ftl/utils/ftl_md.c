@@ -495,7 +495,7 @@ read_blocks(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *desc,
 	    spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	if (desc == dev->nv_cache.bdev_desc) {
-		return ftl_nv_cache_bdev_read_blocks_with_md(dev, desc, ch, buf, md_buf,
+		return ftl_nv_cache_bdev_read_blocks_with_md(desc, ch, buf, md_buf,
 				offset_blocks, num_blocks,
 				cb, cb_arg);
 	} else if (md_buf) {
@@ -517,7 +517,7 @@ write_blocks(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *desc,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	if (desc == dev->nv_cache.bdev_desc) {
-		return ftl_nv_cache_bdev_write_blocks_with_md(dev, desc, ch, buf, md_buf,
+		return ftl_nv_cache_bdev_write_blocks_with_md(desc, ch, buf, md_buf,
 				offset_blocks, num_blocks,
 				cb, cb_arg);
 	} else if (md_buf) {

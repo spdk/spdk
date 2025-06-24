@@ -1334,7 +1334,7 @@ ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
 
 	assert(ftl_addr_in_nvc(io->dev, addr));
 
-	rc = ftl_nv_cache_bdev_read_blocks_with_md(io->dev, nv_cache->bdev_desc, nv_cache->cache_ioch,
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(nv_cache->bdev_desc, nv_cache->cache_ioch,
 			ftl_io_iovec_addr(io), NULL, ftl_addr_to_nvc_offset(io->dev, addr),
 			num_blocks, cb, cb_arg);
 
@@ -1830,10 +1830,9 @@ _ftl_chunk_basic_rq_write(void *_brq)
 {
 	struct ftl_basic_rq *brq = _brq;
 	struct ftl_nv_cache *nv_cache = brq->io.chunk->nv_cache;
-	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	int rc;
 
-	rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, nv_cache->bdev_desc, nv_cache->cache_ioch,
+	rc = ftl_nv_cache_bdev_write_blocks_with_md(nv_cache->bdev_desc, nv_cache->cache_ioch,
 			brq->io_payload, NULL, brq->io.addr,
 			brq->num_blocks, write_brq_end, brq);
 	if (spdk_unlikely(rc)) {
@@ -1887,7 +1886,7 @@ ftl_chunk_basic_rq_read(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *b
 	brq->io.chunk = chunk;
 	brq->success = false;
 
-	rc = ftl_nv_cache_bdev_read_blocks_with_md(dev, nv_cache->bdev_desc, nv_cache->cache_ioch,
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(nv_cache->bdev_desc, nv_cache->cache_ioch,
 			brq->io_payload, NULL, brq->io.addr, brq->num_blocks, read_brq_end, brq);
 
 	if (spdk_likely(!rc)) {
