@@ -17,9 +17,9 @@ import json
 sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 
 import spdk.rpc as rpc  # noqa
+import spdk.cli as cli  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array, JSONRPCException  # noqa
 from spdk.rpc.helpers import deprecated_aliases  # noqa
-from spdk.cli import parser as rpc_parser  # noqa
 
 
 def create_parser():
@@ -54,7 +54,26 @@ def create_parser():
     parser.set_defaults(is_server=False)
     parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name', metavar='')
-    rpc_parser.add_parser(subparsers)
+    cli.accel.add_parser(subparsers)
+    cli.app.add_parser(subparsers)
+    cli.bdev.add_parser(subparsers)
+    cli.blobfs.add_parser(subparsers)
+    cli.fsdev.add_parser(subparsers)
+    cli.iscsi.add_parser(subparsers)
+    cli.keyring.add_parser(subparsers)
+    cli.log.add_parser(subparsers)
+    cli.lvol.add_parser(subparsers)
+    cli.nbd.add_parser(subparsers)
+    cli.ublk.add_parser(subparsers)
+    cli.notify.add_parser(subparsers)
+    cli.nvmf.add_parser(subparsers)
+    cli.trace.add_parser(subparsers)
+    cli.vhost.add_parser(subparsers)
+    cli.vmd.add_parser(subparsers)
+    cli.sock.add_parser(subparsers)
+    cli.vfio_user.add_parser(subparsers)
+    cli.iobuf.add_parser(subparsers)
+    cli.parser.add_parser(subparsers)
     return parser, subparsers
 
 

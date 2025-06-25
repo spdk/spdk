@@ -4,7 +4,8 @@
 
 ### python
 
-Moved all cli code inside the python package for easier genration and packaging.
+Moved all cli code inside the python package for easier generation and packaging.
+Split large rpc python file into modules.
 
 ### sock
 
