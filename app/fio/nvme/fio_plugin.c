@@ -769,7 +769,6 @@ spdk_fio_open(struct thread_data *td, struct fio_file *f)
 	if (!fio_qpair->qpair) {
 		SPDK_ERRLOG("Cannot allocate nvme io_qpair any more\n");
 		g_error = true;
-		free(fio_qpair);
 		return -1;
 	}
 
