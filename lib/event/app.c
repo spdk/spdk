@@ -1503,6 +1503,9 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 	assert(spdk_thread_is_app_thread(NULL));
 
 	if (rc) {
+		if (g_spdk_app.rpc_addr) {
+			spdk_rpc_server_resume(g_spdk_app.rpc_addr);
+		}
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "framework_initialization failed");
 		return;
