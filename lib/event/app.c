@@ -1508,6 +1508,8 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 		}
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "framework_initialization failed");
+
+		app_subsystem_init_done(rc, NULL);
 		return;
 	}
 
