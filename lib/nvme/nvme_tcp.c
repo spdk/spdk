@@ -897,7 +897,7 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 	}
 }
 
-static int
+static void
 nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 				struct nvme_tcp_req *tcp_req)
 {
@@ -952,7 +952,6 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 end:
 	capsule_cmd->common.plen = plen;
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_qpair_cmd_send_complete, tcp_req);
-	return 0;
 }
 
 static int
@@ -993,7 +992,8 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		TAILQ_INSERT_TAIL(&tgroup->timeout_enabled, tqpair, link_timeout);
 	}
 
-	return nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
+	nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
+	return 0;
 }
 
 static int
