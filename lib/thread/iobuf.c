@@ -23,6 +23,7 @@
  * for the default. */
 #define IOBUF_DEFAULT_LARGE_BUFSIZE	(132 * 1024)
 #define IOBUF_MAX_CHANNELS		64
+#define IOBUF_POPULATE_BATCH_SIZE	64
 
 SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_buffer) <= IOBUF_MIN_SMALL_BUFSIZE,
 		   "Invalid data offset");
@@ -407,34 +408,51 @@ iobuf_channel_node_populate(struct spdk_iobuf_channel *ch, const char *name, int
 	struct spdk_iobuf_node_cache *cache = &ch->cache[numa_id];
 	uint32_t small_cache_size = cache->small.cache_size;
 	uint32_t large_cache_size = cache->large.cache_size;
-	struct spdk_iobuf_buffer *buf;
-	uint32_t i;
+	void *bufs[IOBUF_POPULATE_BATCH_SIZE];
+	uint32_t i, remaining, count, dequeued;
 
-	for (i = 0; i < small_cache_size; ++i) {
-		if (spdk_ring_dequeue(node->small_pool, (void **)&buf, 1) == 0) {
+	remaining = small_cache_size;
+	while (remaining > 0) {
+		count = spdk_min(remaining, IOBUF_POPULATE_BATCH_SIZE);
+		dequeued = spdk_ring_dequeue(node->small_pool, bufs, count);
+		for (i = 0; i < dequeued; ++i) {
+			STAILQ_INSERT_TAIL(&cache->small.cache, (struct spdk_iobuf_buffer *)bufs[i], stailq);
+		}
+
+		cache->small.cache_count += dequeued;
+		remaining -= dequeued;
+		if (dequeued != count) {
 			SPDK_ERRLOG("Failed to populate '%s' iobuf small buffer cache at %d/%d entries. "
 				    "You may need to increase spdk_iobuf_opts.small_pool_count (%"PRIu64")\n",
-				    name, i, small_cache_size, g_iobuf.opts.small_pool_count);
+				    name, cache->small.cache_count, small_cache_size, g_iobuf.opts.small_pool_count);
 			SPDK_ERRLOG("See scripts/calc-iobuf.py for guidance on how to calculate "
 				    "this value.\n");
 			return -ENOMEM;
 		}
-		STAILQ_INSERT_TAIL(&cache->small.cache, buf, stailq);
-		cache->small.cache_count++;
-	}
-	for (i = 0; i < large_cache_size; ++i) {
-		if (spdk_ring_dequeue(node->large_pool, (void **)&buf, 1) == 0) {
-			SPDK_ERRLOG("Failed to populate '%s' iobuf large buffer cache at %d/%d entries. "
-				    "You may need to increase spdk_iobuf_opts.large_pool_count (%"PRIu64")\n",
-				    name, i, large_cache_size, g_iobuf.opts.large_pool_count);
-			SPDK_ERRLOG("See scripts/calc-iobuf.py for guidance on how to calculate "
-				    "this value.\n");
-			return -ENOMEM;
-		}
-		STAILQ_INSERT_TAIL(&cache->large.cache, buf, stailq);
-		cache->large.cache_count++;
 	}
 
+	assert(remaining == 0);
+	remaining = large_cache_size;
+	while (remaining > 0) {
+		count = spdk_min(remaining, IOBUF_POPULATE_BATCH_SIZE);
+		dequeued = spdk_ring_dequeue(node->large_pool, bufs, count);
+		for (i = 0; i < dequeued; ++i) {
+			STAILQ_INSERT_TAIL(&cache->large.cache, (struct spdk_iobuf_buffer *)bufs[i], stailq);
+		}
+
+		cache->large.cache_count += dequeued;
+		remaining -= dequeued;
+		if (dequeued != count) {
+			SPDK_ERRLOG("Failed to populate '%s' iobuf large buffer cache at %d/%d entries. "
+				    "You may need to increase spdk_iobuf_opts.large_pool_count (%"PRIu64")\n",
+				    name, cache->large.cache_count, large_cache_size, g_iobuf.opts.large_pool_count);
+			SPDK_ERRLOG("See scripts/calc-iobuf.py for guidance on how to calculate "
+				    "this value.\n");
+			return -ENOMEM;
+		}
+	}
+
+	assert(remaining == 0);
 	return 0;
 }
 
