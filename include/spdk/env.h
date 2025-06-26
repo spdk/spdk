@@ -705,7 +705,7 @@ size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count,
  * \param objs A pointer to the array to be dequeued.
  * \param count Maximum number of elements to be dequeued.
  *
- * \return the number of objects dequeued which is less than 'count'.
+ * \return the number of objects dequeued, which is less than or equal to count.
  */
 size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 
