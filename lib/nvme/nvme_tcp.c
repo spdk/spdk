@@ -2183,7 +2183,7 @@ nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_soc
 	}
 }
 
-static int
+static void
 nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
 	struct spdk_nvme_tcp_ic_req *ic_req;
@@ -2207,7 +2207,6 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	timeout_in_sec = tqpair->qpair.async ? ICREQ_TIMEOUT_ASYNC : ICREQ_TIMEOUT_SYNC;
 	tqpair->icreq_timeout_tsc = spdk_get_ticks() + (timeout_in_sec * spdk_get_ticks_hz());
-	return 0;
 }
 
 static void
@@ -2435,12 +2434,8 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	if (tqpair->recv_state != NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	}
-	rc = nvme_tcp_qpair_icreq_send(tqpair);
-	if (rc != 0) {
-		SPDK_ERRLOG("Unable to connect the tqpair\n");
-		return rc;
-	}
 
+	nvme_tcp_qpair_icreq_send(tqpair);
 	return rc;
 }
 
