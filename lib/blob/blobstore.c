@@ -3265,8 +3265,14 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 
 		batch = bs_batch_open(_ch, &cpl, blob);
 		if (!batch) {
+			if (ctx != NULL) {
+				assert(ctx->seq != NULL);
+				/* Finish the sequence allocated for metadata update */
+				bs_sequence_finish(ctx->seq, -ENOMEM);
+			} else {
+				cb_fn(cb_arg, -ENOMEM);
+			}
 			free(ctx);
-			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}
 
