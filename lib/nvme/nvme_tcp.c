@@ -665,7 +665,7 @@ pdu_compute_crc32(struct nvme_tcp_pdu *pdu)
 	tcp_write_pdu(pdu);
 }
 
-static int
+static void
 nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 			 struct nvme_tcp_pdu *pdu,
 			 nvme_tcp_qpair_xfer_complete_cb cb_fn,
@@ -686,8 +686,6 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	}
 
 	pdu_compute_crc32(pdu);
-
-	return 0;
 }
 
 static int
@@ -953,8 +951,8 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 				  0, tcp_req->req->payload_size);
 end:
 	capsule_cmd->common.plen = plen;
-	return nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_qpair_cmd_send_complete, tcp_req);
-
+	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_qpair_cmd_send_complete, tcp_req);
+	return 0;
 }
 
 static int
