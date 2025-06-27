@@ -575,6 +575,7 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 	part->internal.offset_blocks = offset_blocks;
 
 	part->internal.bdev.write_cache = base->bdev->write_cache;
+	part->internal.bdev.write_unit_size = base->bdev->write_unit_size;
 	part->internal.bdev.required_alignment = base->bdev->required_alignment;
 	part->internal.bdev.ctxt = part;
 	part->internal.bdev.module = base->module;
