@@ -90,6 +90,8 @@ struct spdk_uring_sock {
 	uint8_t					buf[SPDK_SOCK_CMG_INFO_SIZE];
 	TAILQ_ENTRY(spdk_uring_sock)		link;
 	char					interface_name[IFNAMSIZ];
+	spdk_sock_connect_cb_fn			connect_cb_fn;
+	void					*connect_cb_arg;
 };
 /* 'struct cmsghdr' is mapped to the buffer 'buf', and while first element
  * of this control message header has a size of 8 bytes, 'buf'
@@ -592,6 +594,27 @@ uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 	}
 
 	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
+}
+
+/* This is a dummy implementation of async connect, but it is required to simplify
+ * the spdk_sock_connect_async contract — i.e., to remove the need for a synchronous fallback
+ * and avoid the problematic case where the callback is invoked before this function returns. */
+static struct spdk_sock *
+uring_sock_connect_async(const char *ip, int port, struct spdk_sock_opts *opts,
+			 spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
+{
+	static struct spdk_sock *_sock;
+	struct spdk_uring_sock *sock;
+
+	_sock = uring_sock_connect(ip, port, opts);
+	if (!_sock) {
+		return NULL;
+	}
+
+	sock = __uring_sock(_sock);
+	sock->connect_cb_fn = cb_fn;
+	sock->connect_cb_arg = cb_arg;
+	return _sock;
 }
 
 static struct spdk_sock *
@@ -1123,6 +1146,12 @@ _sock_flush(struct spdk_sock *_sock)
 	uint32_t iovcnt;
 	struct io_uring_sqe *sqe;
 	int flags;
+
+	if (sock->connect_cb_fn) {
+		spdk_sock_connect_cb_fn cb_fn = sock->connect_cb_fn;
+		sock->connect_cb_fn = NULL;
+		cb_fn(sock->connect_cb_arg, 0);
+	}
 
 	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS) {
 		return;
@@ -1870,6 +1899,12 @@ uring_sock_flush(struct spdk_sock *_sock)
 		return -1;
 	}
 
+	if (sock->connect_cb_fn) {
+		spdk_sock_connect_cb_fn cb_fn = sock->connect_cb_fn;
+		sock->connect_cb_fn = NULL;
+		cb_fn(sock->connect_cb_arg, 0);
+	}
+
 	/* Can't flush while a write is already outstanding */
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
 		errno = EAGAIN;
@@ -1940,6 +1975,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.get_interface_name = uring_sock_get_interface_name,
 	.get_numa_id	= uring_sock_get_numa_id,
 	.connect	= uring_sock_connect,
+	.connect_async	= uring_sock_connect_async,
 	.listen		= uring_sock_listen,
 	.accept		= uring_sock_accept,
 	.close		= uring_sock_close,
