@@ -349,9 +349,7 @@ typedef void (*spdk_sock_connect_cb_fn)(void *cb_arg, int status);
  * errno values if connection failed.
  *
  * Callback function \p cb_fn is invoked only if this function returns a non-NULL value.
- * However, if async connect is not supported by the \p impl_name it fallbacks to the sync
- * version and \p cb_fn will be invoked only if sync connect is successful and before
- * returning control to the the user.
+ * If async connect is not supported by the \p impl_name specified then NULL is returned.
  *
  * \param ip IP address of the server.
  * \param port Port number of the server.
