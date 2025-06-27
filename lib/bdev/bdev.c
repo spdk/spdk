@@ -3784,7 +3784,9 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	if (!TAILQ_EMPTY(&ch->locked_ranges)) {
+	/* Child I/Os are not checked against locked ranges because their parent I/O was already
+	 * checked before splitting, so they must be allowed to proceed. */
+	if (!bdev_io->internal.f.child_io && !TAILQ_EMPTY(&ch->locked_ranges)) {
 		struct lba_range *range;
 
 		TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
@@ -4011,7 +4013,13 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.get_aux_buf_cb = NULL;
 	bdev_io->internal.data_transfer_cpl = NULL;
 	bdev_io->internal.waitq_entry.dep_unblock = false;
-	bdev_io->internal.f.split = bdev_io_should_split(bdev_io);
+	if (cb == bdev_io_split_done) {
+		bdev_io->internal.f.child_io = true;
+		bdev_io->internal.f.split = false;
+	} else {
+		bdev_io->internal.f.child_io = false;
+		bdev_io->internal.f.split = bdev_io_should_split(bdev_io);
+	}
 }
 
 static bool

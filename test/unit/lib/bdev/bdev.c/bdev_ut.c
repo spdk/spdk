@@ -5176,6 +5176,88 @@ lock_lba_range_overlapped(void)
 }
 
 static void
+lock_lba_range_with_split_io(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct spdk_bdev_opts bdev_opts = {};
+	struct lba_range *range;
+	char buf[4096];
+	int ctx1;
+	int rc;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 2;
+	bdev_opts.bdev_io_cache_size = 0;
+
+	ut_init_bdev(&bdev_opts);
+	bdev = allocate_bdev("bdev0");
+
+	/* Force the write I/O to be split based on write_unit_size. There are only two bdev_io in
+	 * the pool to make the second part of the split I/O submitted after the first is completed.
+	 */
+	bdev->write_unit_size = 2;
+	bdev->split_on_write_unit = true;
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	g_io_done = false;
+	rc = spdk_bdev_write_blocks(desc, io_ch, buf, 20, 4, io_done, &ctx1);
+	CU_ASSERT(rc == 0);
+
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	/* The lock should not be fully valid yet, since a write I/O is outstanding.
+	 * But note that the range should be on the channel's locked_list, to make sure no
+	 * new write I/O are started.
+	 */
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_lock_lba_range_done == false);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+
+	/* Complete the first part of the split I/O */
+	stub_complete_io(1);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_lock_lba_range_done == false);
+
+	/* Complete the write I/O.  This should make the lock valid (checked by confirming
+	 * our callback was invoked).
+	 */
+	stub_complete_io(1);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_lock_lba_range_done == true);
+
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
+static void
 bdev_quiesce_done(void *ctx, int status)
 {
 	g_lock_lba_range_done = true;
@@ -7800,6 +7882,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_check_ranges);
 	CU_ADD_TEST(suite, lock_lba_range_with_io_outstanding);
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
+	CU_ADD_TEST(suite, lock_lba_range_with_split_io);
 	CU_ADD_TEST(suite, bdev_quiesce);
 	CU_ADD_TEST(suite, bdev_io_abort);
 	CU_ADD_TEST(suite, bdev_unmap);

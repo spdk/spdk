@@ -986,7 +986,10 @@ struct spdk_bdev_io_internal_fields {
 			/** Whether we are currently inside the submit request call */
 			uint8_t in_submit_request		: 1;
 
-			uint8_t reserved			: 2;
+			/** Whether the I/O is a sub-I/O of a split parent I/O */
+			uint8_t child_io		: 1;
+
+			uint8_t reserved			: 1;
 		};
 		uint8_t raw;
 	} f;
