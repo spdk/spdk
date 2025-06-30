@@ -147,7 +147,6 @@ static void
 _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
 
 	/* We setup this value in the submission routine, just showing here that it is
@@ -161,7 +160,8 @@ _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	/* Complete the original IO and then free the one that we created here
 	 * as a result of issuing an IO via submit_request.
 	 */
-	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_io_complete_base_io_status(orig_io, bdev_io);
+
 	spdk_bdev_free_io(bdev_io);
 }
 
