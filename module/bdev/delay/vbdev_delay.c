@@ -194,7 +194,7 @@ _delay_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct delay_bdev_io *io_ctx = (struct delay_bdev_io *)orig_io->driver_ctx;
 	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 
-	io_ctx->status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	io_ctx->status = spdk_bdev_io_set_base_io_status(orig_io, bdev_io);
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ZCOPY && bdev_io->u.bdev.zcopy.start && success) {
 		io_ctx->zcopy_bdev_io = bdev_io;
