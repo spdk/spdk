@@ -174,6 +174,7 @@ bdev_aio_submit_io(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 {
 	struct aiocb *aiocb = &aio_task->aiocb;
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
 
 	memset(aiocb, 0, sizeof(struct aiocb));
 	aiocb->aio_fildes = fdisk->fd;
@@ -188,10 +189,16 @@ bdev_aio_submit_io(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	aio_task->ch = aio_ch;
 
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
-		return aio_readv(aiocb);
+		rc = aio_readv(aiocb);
+	} else {
+		rc = aio_writev(aiocb);
 	}
 
-	return aio_writev(aiocb);
+	if (spdk_unlikely(rc < 0)) {
+		return -errno;
+	}
+
+	return rc;
 }
 #else
 static int
