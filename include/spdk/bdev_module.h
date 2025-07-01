@@ -400,6 +400,9 @@ enum spdk_bdev_io_status {
 	SPDK_MIN_BDEV_IO_STATUS = SPDK_BDEV_IO_STATUS_AIO_ERROR,
 };
 
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_bdev_io_status spdk_bdev_io_status_t;
+
 struct spdk_bdev_name {
 	char *name;
 	struct spdk_bdev *bdev;
@@ -1349,7 +1352,19 @@ void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 
 /**
- * Complete a bdev_io with an NVMe status code and DW0 completion queue entry
+ * Set a bdev_io with an NVMe status code and DW0 completion queue entry
+ *
+ * \param bdev_io I/O to set status.
+ * \param cdw0 NVMe Completion Queue DW0 value (set to 0 if not applicable)
+ * \param sct NVMe Status Code Type.
+ * \param sc NVMe Status Code.
+ * \return IO status corresponding to the NVMe status
+ */
+enum spdk_bdev_io_status spdk_bdev_io_set_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0,
+		int sct, int sc);
+
+/**
+ * Set and complete a bdev_io with an NVMe status code and DW0 completion queue entry
  *
  * \param bdev_io I/O to complete.
  * \param cdw0 NVMe Completion Queue DW0 value (set to 0 if not applicable)
@@ -1360,7 +1375,20 @@ void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cd
 				       int sc);
 
 /**
- * Complete a bdev_io with a SCSI status code.
+ * Set a bdev_io with a SCSI status code.
+ *
+ * \param bdev_io I/O to set status.
+ * \param sc SCSI Status Code.
+ * \param sk SCSI Sense Key.
+ * \param asc SCSI Additional Sense Code.
+ * \param ascq SCSI Additional Sense Code Qualifier.
+ * \return IO status corresponding to the SCSI status
+ */
+enum spdk_bdev_io_status spdk_bdev_io_set_scsi_status(struct spdk_bdev_io *bdev_io,
+		enum spdk_scsi_status sc, enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
+
+/**
+ * Set and complete a bdev_io with a SCSI status code.
  *
  * \param bdev_io I/O to complete.
  * \param sc SCSI Status Code.
@@ -1372,12 +1400,31 @@ void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_s
 				       enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
 
 /**
- * Complete a bdev_io with AIO errno.
+ * Set a bdev_io with AIO errno.
+ *
+ * \param bdev_io I/O to set status.
+ * \param aio_result Negative errno returned from AIO.
+ * \return IO status corresponding to the AIO result
+ */
+enum spdk_bdev_io_status spdk_bdev_io_set_aio_status(struct spdk_bdev_io *bdev_io, int aio_result);
+
+/**
+ * Set and complete a bdev_io with AIO errno.
  *
  * \param bdev_io I/O to complete.
  * \param aio_result Negative errno returned from AIO.
  */
 void spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result);
+
+/**
+ * Copy a bdev_io status from another bdev_io.
+ *
+ * \param bdev_io I/O to set status.
+ * \param base_io I/O from which to copy the status.
+ * \return IO status corresponding to the base_io status
+ */
+enum spdk_bdev_io_status spdk_bdev_io_set_base_io_status(struct spdk_bdev_io *bdev_io,
+		const struct spdk_bdev_io *base_io);
 
 /**
  * Complete a bdev_io copying a status from another bdev_io.

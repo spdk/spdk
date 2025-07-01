@@ -153,9 +153,13 @@
 	spdk_bdev_io_set_buf;
 	spdk_bdev_io_set_md_buf;
 	spdk_bdev_io_complete;
+	spdk_bdev_io_set_nvme_status;
 	spdk_bdev_io_complete_nvme_status;
+	spdk_bdev_io_set_scsi_status;
 	spdk_bdev_io_complete_scsi_status;
+	spdk_bdev_io_set_aio_status;
 	spdk_bdev_io_complete_aio_status;
+	spdk_bdev_io_set_base_io_status;
 	spdk_bdev_io_complete_base_io_status;
 	spdk_bdev_io_get_thread;
 	spdk_bdev_io_get_io_channel;

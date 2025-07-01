@@ -7883,9 +7883,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io_complete(bdev_io);
 }
 
-void
-spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
-				  enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
+spdk_bdev_io_status_t
+spdk_bdev_io_set_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+			     enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
 {
 	enum spdk_bdev_io_status status;
 
@@ -7898,6 +7898,15 @@ spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_s
 		bdev_io->internal.error.scsi.asc = asc;
 		bdev_io->internal.error.scsi.ascq = ascq;
 	}
+
+	return status;
+}
+
+void
+spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+				  enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
+{
+	enum spdk_bdev_io_status status = spdk_bdev_io_set_scsi_status(bdev_io, sc, sk, asc, ascq);
 
 	spdk_bdev_io_complete(bdev_io, status);
 }
@@ -7942,8 +7951,8 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 	}
 }
 
-void
-spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result)
+spdk_bdev_io_status_t
+spdk_bdev_io_set_aio_status(struct spdk_bdev_io *bdev_io, int aio_result)
 {
 	enum spdk_bdev_io_status status;
 
@@ -7954,6 +7963,14 @@ spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result)
 	}
 
 	bdev_io->internal.error.aio_result = aio_result;
+
+	return status;
+}
+
+void
+spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result)
+{
+	enum spdk_bdev_io_status status = spdk_bdev_io_set_aio_status(bdev_io, aio_result);
 
 	spdk_bdev_io_complete(bdev_io, status);
 }
@@ -7972,8 +7989,8 @@ spdk_bdev_io_get_aio_status(const struct spdk_bdev_io *bdev_io, int *aio_result)
 	}
 }
 
-void
-spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
+spdk_bdev_io_status_t
+spdk_bdev_io_set_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
 {
 	enum spdk_bdev_io_status status;
 
@@ -7988,6 +8005,14 @@ spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, i
 	bdev_io->internal.error.nvme.cdw0 = cdw0;
 	bdev_io->internal.error.nvme.sct = sct;
 	bdev_io->internal.error.nvme.sc = sc;
+
+	return status;
+}
+
+void
+spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
+{
+	enum spdk_bdev_io_status status = spdk_bdev_io_set_nvme_status(bdev_io, cdw0, sct, sc);
 
 	spdk_bdev_io_complete(bdev_io, status);
 }
@@ -8080,31 +8105,44 @@ spdk_bdev_io_get_nvme_fused_status(const struct spdk_bdev_io *bdev_io, uint32_t 
 	*cdw0 = bdev_io->internal.error.nvme.cdw0;
 }
 
+spdk_bdev_io_status_t
+spdk_bdev_io_set_base_io_status(struct spdk_bdev_io *bdev_io,
+				const struct spdk_bdev_io *base_io)
+{
+	enum spdk_bdev_io_status status;
+
+	switch (base_io->internal.status) {
+	case SPDK_BDEV_IO_STATUS_NVME_ERROR:
+		status = spdk_bdev_io_set_nvme_status(bdev_io,
+						      base_io->internal.error.nvme.cdw0,
+						      base_io->internal.error.nvme.sct,
+						      base_io->internal.error.nvme.sc);
+		break;
+	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
+		status = spdk_bdev_io_set_scsi_status(bdev_io,
+						      base_io->internal.error.scsi.sc,
+						      base_io->internal.error.scsi.sk,
+						      base_io->internal.error.scsi.asc,
+						      base_io->internal.error.scsi.ascq);
+		break;
+	case SPDK_BDEV_IO_STATUS_AIO_ERROR:
+		status = spdk_bdev_io_set_aio_status(bdev_io, base_io->internal.error.aio_result);
+		break;
+	default:
+		status = base_io->internal.status;
+		break;
+	}
+
+	return status;
+}
+
 void
 spdk_bdev_io_complete_base_io_status(struct spdk_bdev_io *bdev_io,
 				     const struct spdk_bdev_io *base_io)
 {
-	switch (base_io->internal.status) {
-	case SPDK_BDEV_IO_STATUS_NVME_ERROR:
-		spdk_bdev_io_complete_nvme_status(bdev_io,
-						  base_io->internal.error.nvme.cdw0,
-						  base_io->internal.error.nvme.sct,
-						  base_io->internal.error.nvme.sc);
-		break;
-	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
-		spdk_bdev_io_complete_scsi_status(bdev_io,
-						  base_io->internal.error.scsi.sc,
-						  base_io->internal.error.scsi.sk,
-						  base_io->internal.error.scsi.asc,
-						  base_io->internal.error.scsi.ascq);
-		break;
-	case SPDK_BDEV_IO_STATUS_AIO_ERROR:
-		spdk_bdev_io_complete_aio_status(bdev_io, base_io->internal.error.aio_result);
-		break;
-	default:
-		spdk_bdev_io_complete(bdev_io, base_io->internal.status);
-		break;
-	}
+	enum spdk_bdev_io_status status = spdk_bdev_io_set_base_io_status(bdev_io, base_io);
+
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 struct spdk_thread *
