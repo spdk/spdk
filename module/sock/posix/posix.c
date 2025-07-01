@@ -493,6 +493,9 @@ posix_sock_init(struct spdk_posix_sock *sock, bool enable_zero_copy)
 		/* Save placement_id */
 		spdk_sock_map_insert(&g_map, sock->placement_id, NULL);
 	}
+#elif defined(__FreeBSD__)
+	spdk_sock_get_placement_id(sock->fd, sock->base.impl_opts.enable_placement_id,
+				   &sock->placement_id);
 #endif
 	sock->ready = true;
 }
