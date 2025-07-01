@@ -366,7 +366,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 	/* set no huge pages */
-	if (opts->no_huge) {
+	if (no_huge) {
 		mem_disable_huge_pages();
 	}
 
