@@ -147,8 +147,6 @@ flush(void)
 ssize_t
 recvmsg(int sockfd, struct msghdr *msg, int flags)
 {
-	struct sock_extended_err *serr;
-	struct cmsghdr *cm;
 	int rc;
 
 	rc = MOCK_GET(recvmsg);
@@ -156,6 +154,10 @@ recvmsg(int sockfd, struct msghdr *msg, int flags)
 		errno = -rc;
 		return -1;
 	}
+
+#if defined(__linux__)
+	struct sock_extended_err *serr;
+	struct cmsghdr *cm;
 
 	cm = CMSG_FIRSTHDR(msg);
 	cm->cmsg_level = SOL_IP;
@@ -167,6 +169,7 @@ recvmsg(int sockfd, struct msghdr *msg, int flags)
 	/* Use the mock queue to get the notification range. */
 	serr->ee_info = MOCK_GET(recvmsg);
 	serr->ee_data = MOCK_GET(recvmsg);
+#endif
 
 	return rc;
 }
