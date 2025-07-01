@@ -91,7 +91,11 @@ spdk_net_is_loopback(int fd)
 		return is_loopback;
 	}
 
-	getifaddrs(&addrs);
+	rc = getifaddrs(&addrs);
+	if (rc != 0) {
+		return is_loopback;
+	}
+
 	for (tmp = addrs; tmp != NULL; tmp = tmp->ifa_next) {
 		if (tmp->ifa_addr && (tmp->ifa_flags & IFF_UP) &&
 		    (tmp->ifa_addr->sa_family == sa.ss_family)) {
