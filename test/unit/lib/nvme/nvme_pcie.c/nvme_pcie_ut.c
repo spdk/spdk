@@ -785,6 +785,7 @@ test_nvme_pcie_ctrlr_map_unmap_cmb(void)
 	volatile struct spdk_nvme_registers regs = {};
 	union spdk_nvme_cmbsz_register cmbsz = {};
 	union spdk_nvme_cmbloc_register cmbloc = {};
+	union spdk_nvme_cap_register cap = {};
 	struct dev_mem_resource cmd_res = {};
 	int rc;
 
@@ -799,11 +800,14 @@ test_nvme_pcie_ctrlr_map_unmap_cmb(void)
 	cmbsz.bits.sqs = 0;
 	cmbloc.bits.bir = 0;
 	cmbloc.bits.ofst = 100;
+	cap.bits.cmbs = 1;
 
 	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
 				  cmbsz.raw);
 	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
 				  cmbloc.raw);
+	nvme_pcie_ctrlr_set_reg_8(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cap.raw),
+				  cap.raw);
 
 	nvme_pcie_ctrlr_map_cmb(&pctrlr);
 	CU_ASSERT(pctrlr.cmb.bar_va == (void *)0x7f7c0080d000);

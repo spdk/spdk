@@ -326,6 +326,10 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	union spdk_nvme_cmbloc_register cmbloc;
 	uint64_t size, unit_size, offset, bar_size = 0, bar_phys_addr = 0;
 
+	if (!pctrlr->regs->cap.bits.cmbs) {
+		goto exit;
+	}
+
 	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
 	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
 		SPDK_ERRLOG("get registers failed\n");
