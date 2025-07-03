@@ -495,10 +495,10 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "alloc and free memory map", test_mem_map_alloc_free) == NULL ||
-		CU_add_test(suite, "mem map translation", test_mem_map_translation) == NULL ||
-		CU_add_test(suite, "mem map registration", test_mem_map_registration) == NULL ||
-		CU_add_test(suite, "mem map adjacent registrations", test_mem_map_registration_adjacent) == NULL
+		CU_add_test(suite, "alloc_free_mem_map", test_mem_map_alloc_free) == NULL ||
+		CU_add_test(suite, "mem_map_translation", test_mem_map_translation) == NULL ||
+		CU_add_test(suite, "mem_map_registration", test_mem_map_registration) == NULL ||
+		CU_add_test(suite, "mem_map_adjacent_registrations", test_mem_map_registration_adjacent) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
