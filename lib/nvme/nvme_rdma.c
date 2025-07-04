@@ -469,6 +469,11 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			}
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
+			/* Disconnect qp, which will be moved to error state, so all outstanding
+			 * work requests in the send qp will be flushed, otherwise, the outstanding
+			 * wrs may not be completed forever.
+			 */
+			spdk_rdma_provider_qp_disconnect(rqpair->rdma_qp);
 			rqpair->connected = false;
 			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_REMOTE;
 			break;
