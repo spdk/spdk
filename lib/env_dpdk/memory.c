@@ -84,6 +84,10 @@ static struct vfio_cfg g_vfio = {
  */
 #define REG_MAP_NOTIFY_START	(1ULL << 63)
 
+/* 4KB vtophys mapping */
+#define VTOPHYS_4KB		(1ULL << 63)
+#define VTOPHYS_ADDR(paddr)	((paddr) & ~VTOPHYS_4KB)
+
 /* Third-level map for 4KB translations */
 struct map_2mb4kb {
 	uint64_t translation_4kb[MAP_2MB_SIZE];
@@ -1342,7 +1346,7 @@ vtophys_unmap_iommu_paddr(struct spdk_mem_map *map, uint64_t vaddr, size_t len, 
 	uint64_t paddr;
 	int rc;
 
-	paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
+	paddr = spdk_vtophys((void *)vaddr, NULL);
 	if (paddr == SPDK_VTOPHYS_ERROR) {
 		DEBUG_PRINT("could not get phys addr for 0x%" PRIx64 "\n", vaddr);
 		return -EFAULT;
@@ -1359,6 +1363,17 @@ vtophys_unmap_iommu_paddr(struct spdk_mem_map *map, uint64_t vaddr, size_t len, 
 #endif
 
 static int
+vtophys_set_translation(struct spdk_mem_map *map, uint64_t vaddr, size_t len, uint64_t paddr)
+{
+	if (len == VALUE_4KB) {
+		assert(!(paddr & VTOPHYS_4KB));
+		paddr |= VTOPHYS_4KB;
+	}
+
+	return spdk_mem_map_set_translation(map, vaddr, len, paddr);
+}
+
+static int
 vtophys_map_pci(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
 	uint64_t paddr;
@@ -1369,13 +1384,13 @@ vtophys_map_pci(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 		return -EFAULT;
 	}
 
-	return spdk_mem_map_set_translation(map, vaddr, len, paddr);
+	return vtophys_set_translation(map, vaddr, len, paddr);
 }
 
 static int
 vtophys_map_vaddr(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
-	return spdk_mem_map_set_translation(map, vaddr, len, vaddr);
+	return vtophys_set_translation(map, vaddr, len, vaddr);
 }
 
 static int
@@ -1383,6 +1398,17 @@ vtophys_map_pagemap(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *
 {
 	uint64_t paddr;
 	int rc;
+
+	/* In iova=pa mode we can only reliably map hugepages, because we cannot guarantee that a
+	 * 4KB page is pinned and isn't swapped or doesn't point to a zero page (which is likely if
+	 * the memory was just mmap()-ed and hasn't been written yet).  To be totally safe, we'd
+	 * have to check /proc/kpageflags, but checking the length and paddr's alignment should be
+	 * enough to catch most cases.
+	 */
+	if (len < VALUE_2MB) {
+		DEBUG_PRINT("page size 4KB is unsupported in iova=pa mode\n");
+		return -EINVAL;
+	}
 
 	paddr = vtophys_get_paddr_pagemap(vaddr);
 	if (paddr == SPDK_VTOPHYS_ERROR) {
@@ -1406,21 +1432,28 @@ vtophys_map_pagemap(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *
 		}
 	}
 #endif
-	return spdk_mem_map_set_translation(map, vaddr, len, paddr);
+	return vtophys_set_translation(map, vaddr, len, paddr);
 }
 
 static int
 vtophys_map_memseg(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
 	uint64_t paddr;
+	size_t seglen;
 
-	paddr = vtophys_get_paddr_memseg(vaddr, NULL);
+	paddr = vtophys_get_paddr_memseg(vaddr, &seglen);
 	if (paddr == SPDK_VTOPHYS_ERROR) {
 		DEBUG_PRINT("could not get phys addr for 0x%"PRIx64"\n", vaddr);
 		return -EFAULT;
 	}
 
-	return spdk_mem_map_set_translation(map, vaddr, len, paddr);
+	if (rte_eal_iova_mode() == RTE_IOVA_PA && seglen < len) {
+		DEBUG_PRINT("unexpected paddr=0x%"PRIx64" len=%zu for vaddr=0x%"PRIx64", "
+			    "wanted=%zu\n", paddr, seglen, vaddr, len);
+		return -EFAULT;
+	}
+
+	return vtophys_set_translation(map, vaddr, len, paddr);
 }
 
 static int
@@ -1443,7 +1476,7 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+	if (((uintptr_t)vaddr & MASK_4KB) || (len & MASK_4KB)) {
 		DEBUG_PRINT("invalid parameters, vaddr=%p len=%ju\n",
 			    vaddr, len);
 		return -EINVAL;
@@ -1523,7 +1556,7 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 * one unmap.
 				 */
 				if (iova_mode == RTE_IOVA_VA) {
-					paddr = spdk_mem_map_translate(map, (uint64_t)va, &buffer_len);
+					paddr = spdk_vtophys(va, &buffer_len);
 					if (buffer_len != len || paddr != (uintptr_t)va) {
 						DEBUG_PRINT("Unmapping %p with length %lu failed because "
 							    "translation had address 0x%" PRIx64 " and length %lu\n",
@@ -1591,12 +1624,14 @@ numa_notify(void *cb_ctx, struct spdk_mem_map *map,
 static int
 vtophys_check_contiguous_entries(uint64_t paddr1, uint64_t paddr2)
 {
+	uint64_t page_size = (paddr1 & VTOPHYS_4KB) ? VALUE_4KB : VALUE_2MB;
+
 	/* This function is always called with paddrs for two subsequent
-	 * 2MB chunks in virtual address space, so those chunks will be only
-	 * physically contiguous if the physical addresses are 2MB apart
+	 * 4KB/2MB chunks in virtual address space, so those chunks will be only
+	 * physically contiguous if the physical addresses are 4KB/2MB apart
 	 * from each other as well.
 	 */
-	return (paddr2 - paddr1 == VALUE_2MB);
+	return (paddr2 - paddr1 == page_size);
 }
 
 #if VFIO_ENABLED
@@ -1845,19 +1880,20 @@ vtophys_fini(void)
 uint64_t
 spdk_vtophys(const void *buf, uint64_t *size)
 {
-	uint64_t vaddr, paddr_2mb;
+	uint64_t vaddr, paddr, mask;
 
 	if (!g_huge_pages) {
 		return SPDK_VTOPHYS_ERROR;
 	}
 
 	vaddr = (uint64_t)buf;
-	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
-	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
+	paddr = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
+	if (paddr == SPDK_VTOPHYS_ERROR) {
 		return SPDK_VTOPHYS_ERROR;
-	} else {
-		return paddr_2mb + (vaddr & MASK_2MB);
 	}
+
+	mask = (paddr & VTOPHYS_4KB) ? MASK_4KB : MASK_2MB;
+	return VTOPHYS_ADDR(paddr) + (vaddr & mask);
 }
 
 int32_t
