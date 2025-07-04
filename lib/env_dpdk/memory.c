@@ -174,6 +174,54 @@ mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, int *page_size
 	return map->default_translation;
 }
 
+static int
+mem_map_walk_region(struct spdk_mem_map *map, uint64_t vaddr, size_t size,
+		    int (*callback)(struct spdk_mem_map *map, uint64_t addr, size_t sz, void *ctx),
+		    void *ctx)
+{
+	uint64_t vfn_4kb, vfn_2mb;
+	uint64_t vfn_4kb_end, vfn_2mb_end;
+	int rc;
+
+	vfn_4kb = VFN_4KB(vaddr);
+	vfn_4kb_end = spdk_min(FN_2MB_TO_4KB(VFN_2MB(vaddr + MASK_2MB)), VFN_4KB(vaddr + size));
+	while (vfn_4kb < vfn_4kb_end) {
+		rc = callback(map, vaddr, VALUE_4KB, ctx);
+		if (rc != 0) {
+			return rc;
+		}
+		vaddr += VALUE_4KB;
+		size -= VALUE_4KB;
+		vfn_4kb++;
+	}
+
+	vfn_2mb = VFN_2MB(vaddr);
+	vfn_2mb_end = VFN_2MB(vaddr + size);
+	while (vfn_2mb < vfn_2mb_end) {
+		rc = callback(map, vaddr, VALUE_2MB, ctx);
+		if (rc != 0) {
+			return rc;
+		}
+		vaddr += VALUE_2MB;
+		size -= VALUE_2MB;
+		vfn_2mb++;
+	}
+
+	vfn_4kb = VFN_4KB(vaddr);
+	vfn_4kb_end = VFN_4KB(vaddr + size);
+	while (vfn_4kb < vfn_4kb_end) {
+		rc = callback(map, vaddr, VALUE_4KB, ctx);
+		if (rc != 0) {
+			return rc;
+		}
+		vaddr += VALUE_4KB;
+		size -= VALUE_4KB;
+		vfn_4kb++;
+	}
+
+	return 0;
+}
+
 /*
  * Walk the currently registered memory via the main memory registration map
  * and call the new map's notify callback for each virtually contiguous region.
@@ -705,16 +753,84 @@ mem_map_get_map_2mb4kb(struct spdk_mem_map *map, uint64_t vfn_4kb, bool alloc)
 	return map_2mb4kb;
 }
 
+static int
+mem_map_set_4kb_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t translation)
+{
+	struct map_2mb4kb *map_2mb4kb;
+	struct map_1gb2mb *map_1gb2mb;
+	uint64_t vfn_4kb, vfn_2mb;
+	uint64_t idx_2mb, idx_1gb;
+
+	vfn_4kb = VFN_4KB(vaddr);
+	map_2mb4kb = mem_map_get_map_2mb4kb(map, vfn_4kb, true);
+	if (!map_2mb4kb) {
+		DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
+		return -ENOMEM;
+	}
+
+	idx_2mb = MAP_2MB_IDX(vfn_4kb);
+	map_2mb4kb->translation_4kb[idx_2mb] = translation;
+
+	/* Set 2MB map to the default translation to indicate this region has 4KB mapping */
+	vfn_2mb = FN_4KB_TO_2MB(vfn_4kb);
+	map_1gb2mb = mem_map_get_map_1gb2mb(map, vfn_2mb, false);
+	if (map_1gb2mb != NULL) {
+		idx_1gb = MAP_1GB_IDX(vfn_2mb);
+		map_1gb2mb->translation_2mb[idx_1gb] = map->default_translation;
+	}
+
+	return 0;
+}
+
+static int
+mem_map_set_2mb_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t translation)
+{
+	struct map_2mb4kb *map_2mb4kb;
+	struct map_1gb2mb *map_1gb2mb;
+	uint64_t i, vfn_2mb, idx_1gb;
+
+	vfn_2mb = VFN_2MB(vaddr);
+	map_1gb2mb = mem_map_get_map_1gb2mb(map, vfn_2mb, true);
+	if (!map_1gb2mb) {
+		DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
+		return -ENOMEM;
+	}
+
+	idx_1gb = MAP_1GB_IDX(vfn_2mb);
+	map_1gb2mb->translation_2mb[idx_1gb] = translation;
+
+	/* Set up 4KB translations too in case this region later uses 4KB mapping or we're
+	 * setting the default translation (which is also used to indicate a 4KB mapping).
+	 */
+	map_2mb4kb = mem_map_get_map_2mb4kb(map, FN_2MB_TO_4KB(vfn_2mb), false);
+	if (map_2mb4kb != NULL) {
+		for (i = 0; i < SPDK_COUNTOF(map_2mb4kb->translation_4kb); i++) {
+			map_2mb4kb->translation_4kb[i] = translation;
+		}
+	}
+
+	return 0;
+}
+
+static int
+mem_map_set_page_translation(struct spdk_mem_map *map, uint64_t vaddr, size_t page_size,
+			     void *translation)
+{
+	switch (page_size) {
+	case VALUE_4KB:
+		return mem_map_set_4kb_translation(map, vaddr, (uint64_t)translation);
+	case VALUE_2MB:
+		return mem_map_set_2mb_translation(map, vaddr, (uint64_t)translation);
+	default:
+		assert(0 && "should never happan");
+		return -EINVAL;
+	}
+}
+
 int
 spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size,
 			     uint64_t translation)
 {
-	uint64_t vfn_4kb, vfn_2mb;
-	uint64_t vfn_4kb_end, vfn_2mb_end;
-	uint64_t i, idx_2mb, idx_1gb;
-	struct map_1gb2mb *map_1gb2mb;
-	struct map_2mb4kb *map_2mb4kb;
-
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %" PRIu64 "\n", vaddr);
 		return -EINVAL;
@@ -726,87 +842,8 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return -EINVAL;
 	}
 
-	/* Map the initial portion of the 4kb pages */
-	vfn_4kb = VFN_4KB(vaddr);
-	vfn_4kb_end = spdk_min(FN_2MB_TO_4KB(VFN_2MB(vaddr + MASK_2MB)), VFN_4KB(vaddr + size));
-	while (vfn_4kb < vfn_4kb_end) {
-		map_2mb4kb = mem_map_get_map_2mb4kb(map, vfn_4kb, true);
-		if (!map_2mb4kb) {
-			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
-			return -ENOMEM;
-		}
-
-		idx_2mb = MAP_2MB_IDX(vfn_4kb);
-		map_2mb4kb->translation_4kb[idx_2mb] = translation;
-
-		/* Set 2MB map to the default translation to indicate this region has 4KB mapping */
-		vfn_2mb = FN_4KB_TO_2MB(vfn_4kb);
-		map_1gb2mb = mem_map_get_map_1gb2mb(map, vfn_2mb, false);
-		if (map_1gb2mb != NULL) {
-			idx_1gb = MAP_1GB_IDX(vfn_2mb);
-			map_1gb2mb->translation_2mb[idx_1gb] = map->default_translation;
-		}
-
-		vaddr += VALUE_4KB;
-		size -= VALUE_4KB;
-		vfn_4kb++;
-	}
-
-	/* Map the 2mb pages */
-	vfn_2mb = VFN_2MB(vaddr);
-	vfn_2mb_end = VFN_2MB(vaddr + size);
-	while (vfn_2mb < vfn_2mb_end) {
-		map_1gb2mb = mem_map_get_map_1gb2mb(map, vfn_2mb, true);
-		if (!map_1gb2mb) {
-			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
-			return -ENOMEM;
-		}
-
-		idx_1gb = MAP_1GB_IDX(vfn_2mb);
-		map_1gb2mb->translation_2mb[idx_1gb] = translation;
-
-		/* Set up 4KB translations too in case this region later uses 4KB mapping or we're
-		 * setting the default translation (which is also used to indicate a 4KB mapping).
-		 */
-		map_2mb4kb = mem_map_get_map_2mb4kb(map, FN_2MB_TO_4KB(vfn_2mb), false);
-		if (map_2mb4kb != NULL) {
-			for (i = 0; i < SPDK_COUNTOF(map_2mb4kb->translation_4kb); i++) {
-				map_2mb4kb->translation_4kb[i] = translation;
-			}
-		}
-
-		vaddr += VALUE_2MB;
-		size -= VALUE_2MB;
-		vfn_2mb++;
-	}
-
-	/* Finally, map the trailing 4kb pages */
-	vfn_4kb = VFN_4KB(vaddr);
-	vfn_4kb_end = VFN_4KB(vaddr + size);
-	while (vfn_4kb < vfn_4kb_end) {
-		map_2mb4kb = mem_map_get_map_2mb4kb(map, vfn_4kb, true);
-		if (!map_2mb4kb) {
-			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
-			return -ENOMEM;
-		}
-
-		idx_2mb = MAP_2MB_IDX(vfn_4kb);
-		map_2mb4kb->translation_4kb[idx_2mb] = translation;
-
-		/* Set 2MB map to the default translation to indicate this region has 4KB mapping */
-		vfn_2mb = FN_4KB_TO_2MB(vfn_4kb);
-		map_1gb2mb = mem_map_get_map_1gb2mb(map, vfn_2mb, false);
-		if (map_1gb2mb != NULL) {
-			idx_1gb = MAP_1GB_IDX(vfn_2mb);
-			map_1gb2mb->translation_2mb[idx_1gb] = map->default_translation;
-		}
-
-		vaddr += VALUE_4KB;
-		size -= VALUE_4KB;
-		vfn_4kb++;
-	}
-
-	return 0;
+	return mem_map_walk_region(map, vaddr, size, mem_map_set_page_translation,
+				   (void *)translation);
 }
 
 int
