@@ -1384,13 +1384,6 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			} else
 #endif
 			{
-				/* Get the physical address from /proc/self/pagemap. */
-				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
-				if (paddr == SPDK_VTOPHYS_ERROR) {
-					DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-					return -EFAULT;
-				}
-
 				/* Get paddr for each 2MB chunk in this address range */
 				while (len > 0) {
 					/* Get the physical address from /proc/self/pagemap. */
