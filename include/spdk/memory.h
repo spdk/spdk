@@ -31,6 +31,7 @@ extern "C" {
 #define VALUE_4KB		(1ULL << SHIFT_4KB)
 #define MASK_4KB		(VALUE_4KB - 1)
 
+#define _4KB_OFFSET(ptr)	(((uintptr_t)(ptr)) & MASK_4KB)
 #define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) & MASK_2MB)
 #define _2MB_PAGE(ptr)		FLOOR_2MB((uintptr_t)(ptr))
 #define FLOOR_2MB(x)		(((uintptr_t)(x)) & ~MASK_2MB)

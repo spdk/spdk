@@ -130,6 +130,13 @@ test_mem_map_notify_checklen(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 static int
+test_mem_map_notify_nop(void *cb_ctx, struct spdk_mem_map *map,
+			enum spdk_mem_map_notify_action action, void *vaddr, size_t size)
+{
+	return 0;
+}
+
+static int
 test_check_regions_contiguous(uint64_t addr1, uint64_t addr2)
 {
 	return addr1 == addr2;
@@ -152,6 +159,11 @@ struct spdk_mem_map_ops test_map_ops_notify_fail = {
 
 struct spdk_mem_map_ops test_map_ops_notify_checklen = {
 	.notify_cb = test_mem_map_notify_checklen,
+	.are_contiguous = NULL
+};
+
+struct spdk_mem_map_ops test_map_ops_notify_nop = {
+	.notify_cb = test_mem_map_notify_nop,
 	.are_contiguous = NULL
 };
 
@@ -466,6 +478,269 @@ test_mem_map_registration_adjacent(void)
 	CU_ASSERT(map == NULL);
 }
 
+static void
+test_mem_map_4kb(void)
+{
+	struct spdk_mem_map *map;
+	const uint64_t default_translation = 0xDEADBEEF0BADF00D;
+	uint64_t i, addr, traddr, size;
+	int rc;
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_nop, NULL);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+
+	/* Check single 4KB page translation */
+	addr = 0;
+	rc = spdk_mem_map_set_translation(map, addr, VALUE_4KB, 0xfeedbeeff00d0);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d0);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Set the next 4KB page */
+	addr = VALUE_4KB;
+	rc = spdk_mem_map_set_translation(map, addr, VALUE_4KB, 0xfeedbeeff00d1);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, 0, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d0);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d1);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Clear the second page */
+	rc = spdk_mem_map_clear_translation(map, addr, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, 0, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d0);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Check two 4KB pages spanning across 2MB boundary */
+	addr = VALUE_2MB - VALUE_4KB;
+	rc = spdk_mem_map_set_translation(map, addr, 2 * VALUE_4KB, 0xfeedbeeff00d2);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	traddr = spdk_mem_map_translate(map, addr - VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d2);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d2);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr + 2 * VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Check one 4KB page + full 2MB page */
+	addr = 3 * VALUE_2MB - VALUE_4KB;
+	rc = spdk_mem_map_set_translation(map, addr, VALUE_4KB + VALUE_2MB, 0xfeedbeeff00d3);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	traddr = spdk_mem_map_translate(map, addr - VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d3);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d3);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB - VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d3);
+	CU_ASSERT_EQUAL(size, 2 * VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d3);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB + VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Check the same, but switch the order (i.e. 4KB + 2MB -> 2MB + 4KB) */
+	addr = 5 * VALUE_2MB;
+	rc = spdk_mem_map_set_translation(map, addr, VALUE_2MB + VALUE_4KB, 0xfeedbeeff00d4);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	traddr = spdk_mem_map_translate(map, addr - VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d4);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d4);
+	CU_ASSERT_EQUAL(size, VALUE_2MB - VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB - VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d4);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d4);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB + VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Check 2 4KB pages with one full 2MB page in the middle  */
+	addr = 7 * VALUE_2MB - VALUE_4KB;
+	rc = spdk_mem_map_set_translation(map, addr, 2 * VALUE_4KB + VALUE_2MB, 0xfeedbeeff00d5);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	traddr = spdk_mem_map_translate(map, addr - VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d5);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d5);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB - VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d5);
+	CU_ASSERT_EQUAL(size, 2 * VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d5);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d5);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB + 2 * VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Check multiple pages (2x4KB + 2x2MB + 2x4KB) */
+	addr = 9 * VALUE_2MB - 2 * VALUE_4KB;
+	rc = spdk_mem_map_set_translation(map, addr, 4 * VALUE_4KB + 2 * VALUE_2MB, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	traddr = spdk_mem_map_translate(map, addr - VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + 2 * VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, 2 * VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB + 2 * VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + 2 * VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, 2 * VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + 2 * VALUE_2MB + 2 * VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + 2 * VALUE_2MB + 3 * VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d6);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	traddr = spdk_mem_map_translate(map, addr + 2 * VALUE_2MB + 4 * VALUE_4KB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Set 4KB translation in the middle of an already translated 2MB page */
+	addr = 13 * VALUE_2MB;
+	rc = spdk_mem_map_set_translation(map, addr, VALUE_2MB, 0xfeedbeeff00d7);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_map_set_translation(map, addr + VALUE_4KB, VALUE_4KB, 0xfeedbeeff00d8);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d7);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d8);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+
+	for (i = 2 * VALUE_4KB; i < VALUE_2MB; i += VALUE_4KB) {
+		size = VALUE_1GB;
+		traddr = spdk_mem_map_translate(map, addr + i, &size);
+		CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00d7);
+		CU_ASSERT_EQUAL(size, VALUE_4KB);
+	}
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, NULL);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+
+	/* Set 2MB translation on an area with existing 4KB translation */
+	addr = 14 * VALUE_2MB;
+	rc = spdk_mem_map_set_translation(map, addr + VALUE_4KB, VALUE_4KB, 0xfeedbeeff00d9);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_map_set_translation(map, addr, VALUE_2MB, 0xfeedbeeff00da);
+	CU_ASSERT_EQUAL(rc, 0);
+	for (i = 0; i < VALUE_2MB; i += VALUE_4KB) {
+		size = VALUE_1GB;
+		traddr = spdk_mem_map_translate(map, addr + i, &size);
+		CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00da);
+		CU_ASSERT_EQUAL(size, VALUE_2MB - i);
+	}
+
+	/* Set 4KB + 2MB translation and then clear the 2MB containing the 4KB */
+	addr = 16 * VALUE_2MB;
+	rc = spdk_mem_map_set_translation(map, addr + VALUE_2MB - VALUE_4KB, VALUE_2MB + VALUE_4KB,
+					  0xfeedbeeff00da);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB - 2 * VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB - VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00da);
+	CU_ASSERT_EQUAL(size, VALUE_4KB);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00da);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+
+	rc = spdk_mem_map_clear_translation(map, addr, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB - VALUE_4KB, &size);
+	CU_ASSERT_EQUAL(traddr, default_translation);
+	size = VALUE_1GB;
+	traddr = spdk_mem_map_translate(map, addr + VALUE_2MB, &size);
+	CU_ASSERT_EQUAL(traddr, 0xfeedbeeff00da);
+	CU_ASSERT_EQUAL(size, VALUE_2MB);
+
+	spdk_mem_map_free(&map);
+	CU_ASSERT(map == NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -498,7 +773,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "alloc_free_mem_map", test_mem_map_alloc_free) == NULL ||
 		CU_add_test(suite, "mem_map_translation", test_mem_map_translation) == NULL ||
 		CU_add_test(suite, "mem_map_registration", test_mem_map_registration) == NULL ||
-		CU_add_test(suite, "mem_map_adjacent_registrations", test_mem_map_registration_adjacent) == NULL
+		CU_add_test(suite, "mem_map_adjacent_registrations", test_mem_map_registration_adjacent) == NULL ||
+		CU_add_test(suite, "mem_map_4kb", test_mem_map_4kb) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

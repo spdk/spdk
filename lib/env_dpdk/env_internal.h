@@ -25,6 +25,7 @@
 #define MASK_256TB	((1ULL << SHIFT_256TB) - 1)
 
 #define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
+#define VALUE_1GB	(1ULL << SHIFT_1GB)
 #define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
 
 int pci_env_init(void);
