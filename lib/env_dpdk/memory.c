@@ -61,6 +61,8 @@ static struct vfio_cfg g_vfio = {
 #define DEBUG_PRINT(...)
 #endif
 
+#define VFN_2MB(vaddr)		((vaddr) >> SHIFT_2MB)
+
 #define FN_2MB_TO_4KB(fn)	(fn << (SHIFT_2MB - SHIFT_4KB))
 #define FN_4KB_TO_2MB(fn)	(fn >> (SHIFT_2MB - SHIFT_4KB))
 
@@ -125,7 +127,7 @@ mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	const struct map_1gb *map_1gb;
 	uint64_t vfn_2mb, idx_1gb, idx_256tb;
 
-	vfn_2mb = vaddr >> SHIFT_2MB;
+	vfn_2mb = VFN_2MB(vaddr);
 	idx_256tb = MAP_256TB_IDX(vfn_2mb);
 
 	map_1gb = map->map_256tb.map[idx_256tb];
@@ -218,8 +220,8 @@ err_unregister:
 	/* Unwind to the first empty translation so we don't unregister
 	 * a region that just failed to register.
 	 */
-	idx_256tb = MAP_256TB_IDX((contig_start >> SHIFT_2MB) - 1);
-	idx_1gb = MAP_1GB_IDX((contig_start >> SHIFT_2MB) - 1);
+	idx_256tb = MAP_256TB_IDX(VFN_2MB(contig_start) - 1);
+	idx_1gb = MAP_1GB_IDX(VFN_2MB(contig_start) - 1);
 	contig_start = UINT64_MAX;
 	contig_end = UINT64_MAX;
 
@@ -616,7 +618,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return -EINVAL;
 	}
 
-	vfn_2mb = vaddr >> SHIFT_2MB;
+	vfn_2mb = VFN_2MB(vaddr);
 
 	while (size) {
 		map_1gb = mem_map_get_map_1gb(map, vfn_2mb);
@@ -656,7 +658,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return map->default_translation;
 	}
 
-	vfn_2mb = vaddr >> SHIFT_2MB;
+	vfn_2mb = VFN_2MB(vaddr);
 	cur_size = VALUE_2MB - _2MB_OFFSET(vaddr);
 	curr_translation = mem_map_translate(map, vaddr);
 
