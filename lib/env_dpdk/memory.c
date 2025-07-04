@@ -271,12 +271,23 @@ err_unregister:
 	return rc;
 }
 
+static void
+mem_map_free(struct spdk_mem_map *map)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(map->map_256tb.map); i++) {
+		free(map->map_256tb.map[i]);
+	}
+	pthread_mutex_destroy(&map->mutex);
+	free(map);
+}
+
 struct spdk_mem_map *
 spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx)
 {
 	struct spdk_mem_map *map;
 	int rc;
-	size_t i;
 
 	map = calloc(1, sizeof(*map));
 	if (map == NULL) {
@@ -300,11 +311,7 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 		if (rc != 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			DEBUG_PRINT("Initial mem_map notify failed\n");
-			pthread_mutex_destroy(&map->mutex);
-			for (i = 0; i < sizeof(map->map_256tb.map) / sizeof(map->map_256tb.map[0]); i++) {
-				free(map->map_256tb.map[i]);
-			}
-			free(map);
+			mem_map_free(map);
 			return NULL;
 		}
 		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
@@ -318,7 +325,6 @@ void
 spdk_mem_map_free(struct spdk_mem_map **pmap)
 {
 	struct spdk_mem_map *map;
-	size_t i;
 
 	if (!pmap) {
 		return;
@@ -337,13 +343,7 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 	}
 
-	for (i = 0; i < sizeof(map->map_256tb.map) / sizeof(map->map_256tb.map[0]); i++) {
-		free(map->map_256tb.map[i]);
-	}
-
-	pthread_mutex_destroy(&map->mutex);
-
-	free(map);
+	mem_map_free(map);
 	*pmap = NULL;
 }
 
