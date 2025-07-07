@@ -267,10 +267,10 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 
 		for (idx_1gb = 0; idx_1gb < MAP_1GB_SIZE; idx_1gb++) {
 			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
+			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
 
-			if ((mem_map_translate(g_mem_reg_map, vaddr, &page_size) & REG_MAP_REGISTERED) &&
-			    (contig_start == UINT64_MAX ||
-			     (mem_map_translate(g_mem_reg_map, vaddr, &page_size) & REG_MAP_NOTIFY_START) == 0)) {
+			if ((reg & REG_MAP_REGISTERED) &&
+			    (contig_start == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
 				/* Rebuild the virtual address from the indexes */
 				if (contig_start == UINT64_MAX) {
 					contig_start = vaddr;
@@ -329,17 +329,17 @@ err_unregister:
 		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
 			/* Rebuild the virtual address from the indexes */
 			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
-			if ((mem_map_translate(g_mem_reg_map, vaddr, &page_size) & REG_MAP_REGISTERED) &&
-			    (contig_end == UINT64_MAX ||
-			     (mem_map_translate(g_mem_reg_map, vaddr, &page_size) & REG_MAP_NOTIFY_START) == 0)) {
+			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
 
+			if ((reg & REG_MAP_REGISTERED) &&
+			    (contig_end == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
 				if (contig_end == UINT64_MAX) {
 					contig_end = vaddr;
 				}
 				contig_start = vaddr;
 			} else {
 				if (contig_end != UINT64_MAX) {
-					if (mem_map_translate(g_mem_reg_map, vaddr, &page_size) & REG_MAP_NOTIFY_START) {
+					if (reg & REG_MAP_NOTIFY_START) {
 						contig_start = vaddr;
 					}
 					/* End of of a virtually contiguous range */
