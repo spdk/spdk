@@ -1093,10 +1093,6 @@ mem_map_init(bool legacy_mem)
 		return -ENOMEM;
 	}
 
-	if (!g_huge_pages) {
-		return 0;
-	}
-
 	if (!g_legacy_mem) {
 		/**
 		 * To prevent DPDK complaining, only register the callback when
@@ -1976,15 +1972,14 @@ vtophys_init(void)
 		return -ENOMEM;
 	}
 
-	if (g_huge_pages) {
-		g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
-		if (g_vtophys_map == NULL) {
-			DEBUG_PRINT("vtophys map allocation failed\n");
-			spdk_mem_map_free(&g_numa_map);
-			spdk_mem_map_free(&g_phys_ref_map);
-			return -ENOMEM;
-		}
+	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
+	if (g_vtophys_map == NULL) {
+		DEBUG_PRINT("vtophys map allocation failed\n");
+		spdk_mem_map_free(&g_numa_map);
+		spdk_mem_map_free(&g_phys_ref_map);
+		return -ENOMEM;
 	}
+
 	return 0;
 }
 
@@ -2000,10 +1995,6 @@ uint64_t
 spdk_vtophys(const void *buf, uint64_t *size)
 {
 	uint64_t vaddr, paddr, mask;
-
-	if (!g_huge_pages) {
-		return SPDK_VTOPHYS_ERROR;
-	}
 
 	vaddr = (uint64_t)buf;
 	paddr = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
