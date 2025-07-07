@@ -255,7 +255,7 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 				/* End of of a virtually contiguous range */
 				rc = map->ops.notify_cb(map->cb_ctx, map, action,
 							(void *)contig_start,
-							contig_end - contig_start + VALUE_2MB);
+							contig_end - contig_start);
 				/* Don't bother handling unregister failures. It can't be any worse */
 				if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
 					goto err_unregister;
@@ -276,13 +276,13 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 					contig_start = vaddr;
 				}
 
-				contig_end = vaddr;
+				contig_end = vaddr + VALUE_2MB;
 			} else {
 				if (contig_start != UINT64_MAX) {
 					/* End of of a virtually contiguous range */
 					rc = map->ops.notify_cb(map->cb_ctx, map, action,
 								(void *)contig_start,
-								contig_end - contig_start + VALUE_2MB);
+								contig_end - contig_start);
 					/* Don't bother handling unregister failures. It can't be any worse */
 					if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
 						goto err_unregister;
@@ -320,7 +320,7 @@ err_unregister:
 				map->ops.notify_cb(map->cb_ctx, map,
 						   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 						   (void *)contig_start,
-						   contig_end - contig_start + VALUE_2MB);
+						   contig_end - contig_start);
 			}
 			contig_end = UINT64_MAX;
 			continue;
@@ -334,7 +334,7 @@ err_unregister:
 			if ((reg & REG_MAP_REGISTERED) &&
 			    (contig_end == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
 				if (contig_end == UINT64_MAX) {
-					contig_end = vaddr;
+					contig_end = vaddr + VALUE_2MB;
 				}
 				contig_start = vaddr;
 			} else {
@@ -346,7 +346,7 @@ err_unregister:
 					map->ops.notify_cb(map->cb_ctx, map,
 							   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 							   (void *)contig_start,
-							   contig_end - contig_start + VALUE_2MB);
+							   contig_end - contig_start);
 				}
 				contig_end = UINT64_MAX;
 			}
