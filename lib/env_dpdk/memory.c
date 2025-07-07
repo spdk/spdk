@@ -178,6 +178,15 @@ mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, int *page_size
 	return map->default_translation;
 }
 
+static bool
+mem_map_is_4kb_mapping(struct spdk_mem_map *map, uint64_t vaddr)
+{
+	int page_size;
+
+	mem_map_translate(map, vaddr, &page_size);
+	return page_size == VALUE_4KB;
+}
+
 static int
 mem_map_walk_region(struct spdk_mem_map *map, uint64_t vaddr, size_t size,
 		    int (*callback)(struct spdk_mem_map *map, uint64_t addr, size_t sz, void *ctx),
@@ -234,10 +243,9 @@ static int
 mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action action)
 {
 	size_t idx_256tb;
-	uint64_t idx_1gb;
+	uint64_t idx_1gb, idx_2mb;
 	uint64_t contig_start = UINT64_MAX;
 	uint64_t contig_end = UINT64_MAX;
-	struct map_1gb2mb *map_1gb2mb;
 	int rc, page_size;
 
 	if (!g_mem_reg_map) {
@@ -248,9 +256,8 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 	pthread_mutex_lock(&g_mem_reg_map->mutex);
 
 	for (idx_256tb = 0; idx_256tb < MAP_256TB_SIZE; idx_256tb++) {
-		map_1gb2mb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb;
-
-		if (!map_1gb2mb) {
+		if (!g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb &&
+		    !g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb4kb) {
 			if (contig_start != UINT64_MAX) {
 				/* End of of a virtually contiguous range */
 				rc = map->ops.notify_cb(map->cb_ctx, map, action,
@@ -268,6 +275,40 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 		for (idx_1gb = 0; idx_1gb < MAP_1GB_SIZE; idx_1gb++) {
 			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
+
+			if (page_size == VALUE_4KB) {
+				for (idx_2mb = 0; idx_2mb < MAP_2MB_SIZE; idx_2mb++) {
+					vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB) |
+						(idx_2mb << SHIFT_4KB);
+					reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
+
+					if ((reg & REG_MAP_REGISTERED) &&
+					    (contig_start == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
+						if (contig_start == UINT64_MAX) {
+							contig_start = vaddr;
+						}
+						contig_end = vaddr + VALUE_4KB;
+					} else {
+						if (contig_start != UINT64_MAX) {
+							/* End of of a virtually contiguous range */
+							rc = map->ops.notify_cb(map->cb_ctx, map, action,
+										(void *)contig_start,
+										contig_end - contig_start);
+							/* Don't bother handling unregister failures. It can't be any worse */
+							if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
+								goto err_unregister;
+							}
+							/* This page might be a part of a neighbour
+							 * region, so process it again
+							 */
+							idx_2mb--;
+						}
+						contig_start = UINT64_MAX;
+					}
+				}
+
+				continue;
+			}
 
 			if ((reg & REG_MAP_REGISTERED) &&
 			    (contig_start == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
@@ -307,14 +348,14 @@ err_unregister:
 	 */
 	idx_256tb = MAP_256TB_IDX(VFN_2MB(contig_start) - 1);
 	idx_1gb = MAP_1GB_IDX(VFN_2MB(contig_start) - 1);
+	idx_2mb = MAP_2MB_IDX(VFN_4KB(contig_start) - 1);
 	contig_start = UINT64_MAX;
 	contig_end = UINT64_MAX;
 
 	/* Unregister any memory we managed to register before the failure */
 	for (; idx_256tb < SIZE_MAX; idx_256tb--) {
-		map_1gb2mb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb;
-
-		if (!map_1gb2mb) {
+		if (!g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb &&
+		    !g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb4kb) {
 			if (contig_end != UINT64_MAX) {
 				/* End of of a virtually contiguous range */
 				map->ops.notify_cb(map->cb_ctx, map,
@@ -330,6 +371,36 @@ err_unregister:
 			/* Rebuild the virtual address from the indexes */
 			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
+
+			if (page_size == VALUE_4KB) {
+				for (; idx_2mb < UINT64_MAX; idx_2mb--) {
+					vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB) |
+						(idx_2mb << SHIFT_4KB);
+					reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
+
+					if ((reg & REG_MAP_REGISTERED) &&
+					    (contig_end == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
+						if (contig_end == UINT64_MAX) {
+							contig_end = vaddr + VALUE_4KB;
+						}
+						contig_start = vaddr;
+					} else {
+						if (contig_end != UINT64_MAX) {
+							if (reg & REG_MAP_NOTIFY_START) {
+								contig_start = vaddr;
+							}
+							/* End of of a virtually contiguous range */
+							map->ops.notify_cb(map->cb_ctx, map,
+									   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+									   (void *)contig_start,
+									   contig_end - contig_start);
+						}
+						contig_end = UINT64_MAX;
+					}
+				}
+				idx_2mb = MAP_2MB_SIZE - 1;
+				continue;
+			}
 
 			if ((reg & REG_MAP_REGISTERED) &&
 			    (contig_end == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
@@ -502,7 +573,7 @@ spdk_mem_register(void *vaddr, size_t len)
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+	if (((uintptr_t)vaddr & MASK_4KB) || (len & MASK_4KB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
@@ -543,8 +614,26 @@ static int
 mem_unregister_page(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
 	struct iovec *region = ctx;
-	uint64_t reg;
+	uint64_t off, reg;
 	int rc;
+
+	/* We've already checked that the whole region we're trying to unregister was actually
+	 * registered at this point.  But if we're trying to unregister a 2MB region that uses 4KB
+	 * translations, we need to check each 4KB page individually, because that 2MB region could
+	 * consist of multiple smaller registrations, so we might need to send multiple
+	 * notifications.
+	 */
+	if (len > VALUE_4KB && mem_map_is_4kb_mapping(map, vaddr)) {
+		assert(len == VALUE_2MB);
+		for (off = 0; off < len; off += VALUE_4KB) {
+			rc = mem_unregister_page(map, vaddr + off, VALUE_4KB, ctx);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+		/* Set translation for the whole 2MB page to free the 4KB map */
+		return spdk_mem_map_set_translation(map, vaddr, len, 0);
+	}
 
 	reg = spdk_mem_map_translate(map, vaddr, NULL);
 	spdk_mem_map_set_translation(map, vaddr, len, 0);
@@ -579,7 +668,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+	if (((uintptr_t)vaddr & MASK_4KB) || (len & MASK_4KB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
@@ -648,7 +737,7 @@ spdk_mem_reserve(void *vaddr, size_t len)
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+	if (((uintptr_t)vaddr & MASK_4KB) || (len & MASK_4KB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;

@@ -136,6 +136,81 @@ test_mem_map_notify_nop(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+struct ut_memreg {
+	uint64_t		start;
+	size_t			len;
+	TAILQ_ENTRY(ut_memreg)	tailq;
+};
+
+TAILQ_HEAD(ut_memreg_tailq, ut_memreg);
+
+static int
+ut_memreg_count(struct ut_memreg_tailq *regions)
+{
+	struct ut_memreg *memreg;
+	int count = 0;
+
+	TAILQ_FOREACH(memreg, regions, tailq) {
+		count++;
+	}
+
+	return count;
+}
+
+static struct ut_memreg *
+ut_memreg_find(struct ut_memreg_tailq *regions, uint64_t vaddr, size_t len)
+{
+	struct ut_memreg *memreg;
+
+	TAILQ_FOREACH(memreg, regions, tailq) {
+		if (memreg->start == vaddr && memreg->len == len) {
+			return memreg;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+test_mem_map_notify_memreg(void *cb_ctx, struct spdk_mem_map *map,
+			   enum spdk_mem_map_notify_action action,
+			   void *vaddr, size_t len)
+{
+	struct ut_memreg_tailq *tailq = cb_ctx;
+	struct ut_memreg *memreg;
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		if (vaddr == g_vaddr_to_fail) {
+			return -1;
+		}
+		TAILQ_FOREACH(memreg, tailq, tailq) {
+			CU_ASSERT((uint64_t)vaddr + len <= memreg->start ||
+				  (uint64_t)vaddr >= memreg->start + memreg->len);
+		}
+
+		memreg = calloc(1, sizeof(*memreg));
+		SPDK_CU_ASSERT_FATAL(memreg != NULL);
+
+		memreg->start = (uint64_t)vaddr;
+		memreg->len = len;
+		TAILQ_INSERT_TAIL(tailq, memreg, tailq);
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		TAILQ_FOREACH(memreg, tailq, tailq) {
+			if (memreg->start == (uint64_t)vaddr && memreg->len == len) {
+				break;
+			}
+		}
+		SPDK_CU_ASSERT_FATAL(memreg != NULL);
+		TAILQ_REMOVE(tailq, memreg, tailq);
+		free(memreg);
+		break;
+	}
+
+	return 0;
+}
+
 static int
 test_check_regions_contiguous(uint64_t addr1, uint64_t addr2)
 {
@@ -169,6 +244,11 @@ struct spdk_mem_map_ops test_map_ops_notify_nop = {
 
 struct spdk_mem_map_ops test_map_ops_notify_nop_no_contig = {
 	.notify_cb = test_mem_map_notify_nop,
+	.are_contiguous = NULL
+};
+
+struct spdk_mem_map_ops test_map_ops_notify_memreg = {
+	.notify_cb = test_mem_map_notify_memreg,
 	.are_contiguous = NULL
 };
 
@@ -215,6 +295,7 @@ test_mem_map_alloc_free(void)
 
 	spdk_mem_map_free(&map);
 	CU_ASSERT(map == NULL);
+	g_vaddr_to_fail = (void *)UINT64_MAX;
 }
 
 static void
@@ -857,6 +938,306 @@ test_mem_map_4kb_contig_pages(void)
 	spdk_mem_map_free(&map);
 }
 
+static void
+test_mem_4kb_register_notify(void)
+{
+	struct spdk_mem_map *map;
+	uint64_t off, default_translation = 0xDEADBEEF0BADF00D;
+	struct ut_memreg_tailq regions = TAILQ_HEAD_INITIALIZER(regions);
+	int rc;
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+
+	/* Register a single 4KB page */
+	rc = spdk_mem_register((void *)0, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, 0, VALUE_4KB));
+	rc = spdk_mem_unregister((void *)0, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Register two 4KB pages spanning across 2MB boundary */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, VALUE_2MB - VALUE_4KB, 2 * VALUE_4KB));
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Register a region consisting of one 4KB page and one 2MB page */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, VALUE_2MB - VALUE_4KB, VALUE_2MB + VALUE_4KB));
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), VALUE_2MB +  VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Register a region consisting of: 4KB page, 2MB page, 4KB page */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), VALUE_2MB + 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, VALUE_2MB - VALUE_4KB, VALUE_2MB + 2 * VALUE_4KB));
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), VALUE_2MB +  2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Check that registration fails when it includes a registered 4KB page */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	/* Try to register a range consisting of two 4KB pages including the already registered one */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, -EBUSY);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	/* Try to register a 2MB page including the registered 4KB page */
+	rc = spdk_mem_register((void *)0, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, -EBUSY);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	/* Try to register a range consisting of a 4KB page and 2MB page including the already
+	 * registered 4KB page
+	 */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, -EBUSY);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Try to unregister a region including unregistered pages */
+	rc = spdk_mem_register((void *)0, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+
+	rc = spdk_mem_unregister((void *)0, 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	rc = spdk_mem_unregister((void *)0, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	rc = spdk_mem_unregister((void *)0, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+
+	rc = spdk_mem_unregister((void *)0, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Do the same but change the 4KB page's offset to the end of the 2MB page */
+	rc = spdk_mem_register((void *)(VALUE_2MB - VALUE_4KB), VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	rc = spdk_mem_unregister((void *)0, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+
+	rc = spdk_mem_unregister((void *)(VALUE_2MB - VALUE_4KB), VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Register two 4KB pages indivdually and unregister them both at once */
+	rc = spdk_mem_register((void *)0, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)VALUE_4KB, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_unregister((void *)0, 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Register a full 2MB page via multiple 4KB registrations and unregister it all at once */
+	for (off = 0; off < VALUE_2MB; off += VALUE_4KB) {
+		rc = spdk_mem_register((void *)off, VALUE_4KB);
+		CU_ASSERT_EQUAL(rc, 0);
+	}
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), VALUE_2MB / VALUE_4KB);
+	rc = spdk_mem_unregister((void *)0, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	spdk_mem_map_free(&map);
+}
+
+static void
+test_mem_4kb_register_create(void)
+{
+	struct spdk_mem_map *map;
+	uint64_t offset, default_translation = 0xDEADBEEF0BADF00D;
+	struct ut_memreg_tailq regions = TAILQ_HEAD_INITIALIZER(regions);
+	int rc;
+
+	/* Register a single 4KB page, create a map, and verify the map is correctly notified  */
+	offset = 0 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset, VALUE_4KB));
+
+	rc = spdk_mem_unregister((void *)offset, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Register a page at the end of a 2MB region */
+	offset = 1 * VALUE_2MB;
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)offset - VALUE_4KB, VALUE_4KB);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset - VALUE_4KB, VALUE_4KB));
+
+	rc = spdk_mem_unregister((void *)offset - VALUE_4KB, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Register two 4KB pages spanning across 2MB boundary */
+	offset = 1 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset - VALUE_4KB, 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset - VALUE_4KB, 2 * VALUE_4KB));
+
+	rc = spdk_mem_unregister((void *)offset - VALUE_4KB, 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Register the same region (4KB + 4KB), but register the pages separately */
+	offset = 1 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset - VALUE_4KB, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)offset, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 2);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset - VALUE_4KB, VALUE_4KB));
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset, VALUE_4KB));
+
+	rc = spdk_mem_unregister((void *)offset - VALUE_4KB, 2 * VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Check a region of 2MB + 4KB */
+	offset = 3 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset, VALUE_2MB + VALUE_4KB));
+
+	rc = spdk_mem_unregister((void *)offset, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Check the same region (2MB + 4KB), but register the pages separately */
+	offset = 5 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)(offset + VALUE_2MB), VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 2);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset, VALUE_2MB));
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset + VALUE_2MB, VALUE_4KB));
+
+	rc = spdk_mem_unregister((void *)offset, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Do the same as above, but change the order of the pages (i.e. 2MB + 4KB -> 4KB + 2MB) */
+	offset = 8 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset - VALUE_4KB, VALUE_4KB + VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 1);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset - VALUE_4KB, VALUE_4KB + VALUE_2MB));
+
+	rc = spdk_mem_unregister((void *)offset - VALUE_4KB, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	offset = 10 * VALUE_2MB;
+	rc = spdk_mem_register((void *)offset - VALUE_4KB, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)offset, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 2);
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset - VALUE_4KB, VALUE_4KB));
+	CU_ASSERT_PTR_NOT_NULL(ut_memreg_find(&regions, offset, VALUE_2MB));
+
+	rc = spdk_mem_unregister((void *)offset - VALUE_4KB, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+	spdk_mem_map_free(&map);
+
+	/* Check failure from notify_cb() */
+	offset = 11 * VALUE_2MB;
+	g_vaddr_to_fail = (void *)offset;
+
+	rc = spdk_mem_register((void *)offset - VALUE_4KB, VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)offset, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map == NULL);
+
+	rc = spdk_mem_unregister((void *)offset - VALUE_4KB, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	/* Check the same, but choose a different region (4K + 2MB -> 2MB + 4KB) */
+	offset = 13 * VALUE_2MB;
+	g_vaddr_to_fail = (void *)(offset + VALUE_2MB);
+
+	rc = spdk_mem_register((void *)offset, VALUE_2MB);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_mem_register((void *)(offset + VALUE_2MB), VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_memreg, &regions);
+	SPDK_CU_ASSERT_FATAL(map == NULL);
+
+	rc = spdk_mem_unregister((void *)offset, VALUE_2MB + VALUE_4KB);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(ut_memreg_count(&regions), 0);
+
+	g_vaddr_to_fail = (void *)UINT64_MAX;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -891,7 +1272,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "mem_map_registration", test_mem_map_registration) == NULL ||
 		CU_add_test(suite, "mem_map_adjacent_registrations", test_mem_map_registration_adjacent) == NULL ||
 		CU_add_test(suite, "mem_map_4kb", test_mem_map_4kb) == NULL ||
-		CU_add_test(suite, "mem_map_4kb_contig_pages", test_mem_map_4kb_contig_pages) == NULL
+		CU_add_test(suite, "mem_map_4kb_contig_pages", test_mem_map_4kb_contig_pages) == NULL ||
+		CU_add_test(suite, "mem_4kb_register_notify", test_mem_4kb_register_notify) == NULL ||
+		CU_add_test(suite, "mem_4kb_register_create", test_mem_4kb_register_create) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
