@@ -1592,8 +1592,6 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	}
 
 complete:
-	bio->retry_count = 0;
-	bio->submit_tsc = 0;
 	bdev_io->u.bdev.accel_sequence = NULL;
 	__bdev_nvme_io_complete(bdev_io, 0, cpl);
 }
@@ -1635,8 +1633,6 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 		break;
 	}
 
-	bio->retry_count = 0;
-	bio->submit_tsc = 0;
 	__bdev_nvme_io_complete(bdev_io, io_status, NULL);
 }
 
@@ -3474,6 +3470,20 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	_bdev_nvme_submit_request(nbdev_ch, bdev_io);
 }
 
+static void
+bdev_nvme_submit_request_initial(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+
+	/* Initialize our values of submit tsc and retry count here
+	 * so that it doesn't interfere with the retry process
+	 */
+	nbdev_io->submit_tsc = 0;
+	nbdev_io->retry_count = 0;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+}
+
 static bool
 bdev_nvme_is_supported_csi(enum spdk_nvme_csi csi)
 {
@@ -4312,7 +4322,7 @@ bdev_nvme_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct			= bdev_nvme_destruct,
-	.submit_request			= bdev_nvme_submit_request,
+	.submit_request			= bdev_nvme_submit_request_initial,
 	.io_type_supported		= bdev_nvme_io_type_supported,
 	.get_io_channel			= bdev_nvme_get_io_channel,
 	.dump_info_json			= bdev_nvme_dump_info_json,
