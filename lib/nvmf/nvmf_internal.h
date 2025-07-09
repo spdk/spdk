@@ -32,6 +32,12 @@
 #define NVMF_DEFAULT_KAS 100
 #define NVMF_DEFAULT_MIN_KATO 10000
 
+#if __has_attribute(nonstring)
+#define __spdk_nonstring __attribute__((nonstring))
+#else
+#define __spdk_nonstring
+#endif
+
 enum spdk_nvmf_tgt_state {
 	NVMF_TGT_IDLE = 0,
 	NVMF_TGT_RUNNING,

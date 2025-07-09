@@ -24,7 +24,7 @@ static int rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_st
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
-	static const char __attribute__((nonstring)) hex_char[16] = "0123456789ABCDEF";
+	static const char __spdk_nonstring hex_char[16] = "0123456789ABCDEF";
 	const uint8_t *buf = data;
 	char *str, *out;
 	int rc;

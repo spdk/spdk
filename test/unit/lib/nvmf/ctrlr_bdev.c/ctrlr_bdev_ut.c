@@ -554,7 +554,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	struct spdk_bdev bdev = {};
 	struct spdk_bdev_desc desc = {};
 	uint8_t ns_g_id[16] = "abcdefgh";
-	uint8_t __attribute__((nonstring)) eui64[8] = "12345678";
+	uint8_t __spdk_nonstring eui64[8] = "12345678";
 
 	desc.bdev = &bdev;
 	ns.desc = &desc;
