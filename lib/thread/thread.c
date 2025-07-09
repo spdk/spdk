@@ -2670,8 +2670,8 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			ch->dev->for_each_count++;
 			i->cur_thread = thread;
 			i->ch = ch;
-			pthread_mutex_unlock(&g_devlist_mutex);
 			rc = spdk_thread_send_msg(thread, _call_channel, i);
+			pthread_mutex_unlock(&g_devlist_mutex);
 			assert(rc == 0);
 			return;
 		}
@@ -2718,8 +2718,8 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 		if (ch != NULL) {
 			i->cur_thread = thread;
 			i->ch = ch;
-			pthread_mutex_unlock(&g_devlist_mutex);
 			rc = spdk_thread_send_msg(thread, _call_channel, i);
+			pthread_mutex_unlock(&g_devlist_mutex);
 			assert(rc == 0);
 			return;
 		}
