@@ -167,6 +167,7 @@ struct bdevperf_job {
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
 	uint64_t			buf_size;
+	uint64_t			md_buf_size;
 	uint32_t			dif_check_flags;
 	bool				is_draining;
 	bool				md_check;
@@ -1905,6 +1906,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	job->bdev = bdev;
 	job->io_size_blocks = job->io_size / data_block_size;
 	job->buf_size = job->io_size_blocks * block_size;
+	job->md_buf_size = spdk_bdev_get_md_size(bdev) * job->io_size_blocks;
 	job->abort = g_abort;
 	job_init_rw(job, config->rw);
 	job->md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
@@ -2032,7 +2034,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			}
 
 			if (spdk_bdev_is_md_separate(job->bdev)) {
-				task->verify_md_buf = spdk_zmalloc(spdk_bdev_get_md_size(bdev) * job->io_size_blocks,
+				task->verify_md_buf = spdk_zmalloc(job->md_buf_size,
 								   spdk_bdev_get_buf_align(job->bdev), NULL, numa_id, SPDK_MALLOC_DMA);
 				if (!task->verify_md_buf) {
 					fprintf(stderr, "Cannot allocate verify_md_buf for task=%p\n", task);
@@ -2046,9 +2048,8 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		}
 
 		if (spdk_bdev_desc_is_md_separate(job->bdev_desc)) {
-			task->md_buf = spdk_zmalloc(job->io_size_blocks *
-						    spdk_bdev_desc_get_md_size(job->bdev_desc), 0, NULL,
-						    numa_id, SPDK_MALLOC_DMA);
+			task->md_buf = spdk_zmalloc(job->md_buf_size, 0, NULL, numa_id,
+						    SPDK_MALLOC_DMA);
 			if (!task->md_buf) {
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
 				spdk_zipf_free(&job->zipf);
