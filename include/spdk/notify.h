@@ -51,6 +51,16 @@ typedef int (*spdk_notify_foreach_event_cb)(uint64_t idx, const struct spdk_noti
 struct spdk_notify_type *spdk_notify_type_register(const char *type);
 
 /**
+ * Register \c type as new notification type if it's not registered yet.
+ *
+ * \note This function is thread safe.
+ *
+ * \param type New notification type to register.
+ * \return registered notification type or NULL on failure.
+ */
+struct spdk_notify_type *spdk_notify_type_register_once(const char *type);
+
+/**
  * Return name of the notification type.
  *
  * \param type Notification type we are talking about.

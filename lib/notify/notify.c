@@ -60,6 +60,33 @@ out:
 	return it;
 }
 
+struct spdk_notify_type *
+spdk_notify_type_register_once(const char *type)
+{
+	struct spdk_notify_type *it = NULL;
+	struct spdk_notify_type *ret = NULL;
+
+	if (!type) {
+		SPDK_ERRLOG("Invalid notification type %p\n", type);
+		return NULL;
+	}
+
+	pthread_mutex_lock(&g_events_lock);
+	TAILQ_FOREACH(it, &g_notify_types, tailq) {
+		if (strcmp(type, it->name) == 0) {
+			ret = it;
+			goto out;
+		}
+	}
+
+out:
+	pthread_mutex_unlock(&g_events_lock);
+	if (ret) {
+		return ret;
+	}
+	return spdk_notify_type_register(type);
+}
+
 const char *
 spdk_notify_type_get_name(const struct spdk_notify_type *type)
 {
