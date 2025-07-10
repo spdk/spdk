@@ -11990,6 +11990,164 @@ Example response:
 }
 ~~~
 
+## Keyring {#jsonrpc_components_keyring}
+
+### keyring_file_add_key {#rpc_keyring_file_add_key}
+
+Add a file-based key to a keyring.
+
+#### Parameters
+
+ Name   | Optional   | Type   | Description
+------- | ---------- | ------ | -----------------------------------
+ name   | Required   | string | Name of the key to add.
+ path   | Required   | string | Path to a file containing the key.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "keyring_file_add_key",
+  "id": 1,
+  "params": {
+    "name": "key0",
+    "path": "/path/to/key0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### keyring_file_remove_key {#rpc_keyring_file_remove_key}
+
+Remove a file-based key from a keyring.
+
+#### Parameters
+
+ Name   | Optional   | Type   | Description
+------- | ---------- | ------ | ---------------------------
+ name   | Required   | string | Name of the key to remove.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "keyring_file_remove_key",
+  "id": 1,
+  "params": {
+    "name": "key0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### keyring_get_keys {#rpc_keyring_get_keys}
+
+Get a list of available keys.  This RPC will only list keys that are currently attached to a
+keyring.  Dynamically loaded keys (via the `probe_key()` callback) will only be included if they're
+currently in-use (i.e. with active references obtained via `spdk_keyring_get_key()`).
+
+#### Parameters
+
+This method has no parameters.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "keyring_get_keys",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "key0",
+      "module": "keyring_file",
+      "removed": false,
+      "probed": false,
+      "refcnt": 1,
+      "path": "/path/to/key0"
+    },
+    {
+      "name": "key1",
+      "module": "keyring_file",
+      "removed": false,
+      "probed": false,
+      "refcnt": 1,
+      "path": "/path/to/key1"
+    }
+  ]
+}
+~~~
+
+### keyring_linux_set_options {#rpc_keyring_linux_set_options}
+
+Set options of the keyring_linux module.
+
+#### Parameters
+
+ Name   | Optional   | Type    | Description
+------- | ---------- | ------- | -------------------
+ enable | Optional   | boolean | Enable the module.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "keyring_linux_set_options",
+  "id": 1,
+  "params": {
+    "enable": true
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Linux Userspace Block Device (UBLK) {#jsonrpc_components_ublk}
 
 SPDK supports exporting bdevs though Linux ublk. The motivation behind it is to back a Linux kernel block device
@@ -13298,162 +13456,6 @@ Example response:
     ]
   }
 ]
-~~~
-
-### keyring_file_add_key {#rpc_keyring_file_add_key}
-
-Add a file-based key to a keyring.
-
-#### Parameters
-
- Name   | Optional   | Type   | Description
-------- | ---------- | ------ | -----------------------------------
- name   | Required   | string | Name of the key to add.
- path   | Required   | string | Path to a file containing the key.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_file_add_key",
-  "id": 1,
-  "params": {
-    "name": "key0",
-    "path": "/path/to/key0"
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
-### keyring_file_remove_key {#rpc_keyring_file_remove_key}
-
-Remove a file-based key from a keyring.
-
-#### Parameters
-
- Name   | Optional   | Type   | Description
-------- | ---------- | ------ | ---------------------------
- name   | Required   | string | Name of the key to remove.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_file_remove_key",
-  "id": 1,
-  "params": {
-    "name": "key0"
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
-### keyring_get_keys {#rpc_keyring_get_keys}
-
-Get a list of available keys.  This RPC will only list keys that are currently attached to a
-keyring.  Dynamically loaded keys (via the `probe_key()` callback) will only be included if they're
-currently in-use (i.e. with active references obtained via `spdk_keyring_get_key()`).
-
-#### Parameters
-
-This method has no parameters.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_get_keys",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": [
-    {
-      "name": "key0",
-      "module": "keyring_file",
-      "removed": false,
-      "probed": false,
-      "refcnt": 1,
-      "path": "/path/to/key0"
-    },
-    {
-      "name": "key1",
-      "module": "keyring_file",
-      "removed": false,
-      "probed": false,
-      "refcnt": 1,
-      "path": "/path/to/key1"
-    }
-  ]
-}
-~~~
-
-### keyring_linux_set_options {#rpc_keyring_linux_set_options}
-
-Set options of the keyring_linux module.
-
-#### Parameters
-
- Name   | Optional   | Type    | Description
-------- | ---------- | ------- | -------------------
- enable | Optional   | boolean | Enable the module.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_linux_set_options",
-  "id": 1,
-  "params": {
-    "enable": true
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
 ~~~
 
 ### nvmf_publish_mdns_prr {#rpc_nvmf_publish_mdns_prr}
