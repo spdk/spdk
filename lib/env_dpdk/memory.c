@@ -1853,14 +1853,6 @@ spdk_vtophys(const void *buf, uint64_t *size)
 
 	vaddr = (uint64_t)buf;
 	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
-
-	/*
-	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
-	 * we will still bitwise-or it with the buf offset below, but the result will still be
-	 * SPDK_VTOPHYS_ERROR. However now that we do + rather than | (due to PCI vtophys being
-	 * unaligned) we must now check the return value before addition.
-	 */
-	SPDK_STATIC_ASSERT(SPDK_VTOPHYS_ERROR == UINT64_C(-1), "SPDK_VTOPHYS_ERROR should be all 1s");
 	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
 		return SPDK_VTOPHYS_ERROR;
 	} else {
