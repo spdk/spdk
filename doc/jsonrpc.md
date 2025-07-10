@@ -12487,7 +12487,9 @@ Detect whether a blobfs exists on bdev.
 
 #### Response
 
-True if a blobfs exists on the bdev; False otherwise.
+ Name   | Type    | Description
+------- | ------- | ------------------------------------------------------
+ result | boolean | True if a blobfs exists on the bdev; False otherwise.
 
 #### Example
 
@@ -12603,7 +12605,9 @@ initialized or loaded filesystems are unloaded.
 
 #### Response
 
-True if cache size is set successfully; False if failed to set.
+ Name   | Type    | Description
+------- | ------- | ----------------------------------------------------------------
+ result | boolean | True if cache size is set successfully; False if failed to set.
 
 #### Example
 
