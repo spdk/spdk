@@ -12007,11 +12007,13 @@ ublk_destroy_target in between. It will use current cpumask in SPDK when user do
  Name              | Optional   | Type    | Description
 ------------------ | ---------- | ------- | --------------------------
  cpumask           | Optional   | string  | Cpumask for ublk target
- disable-user-copy | Optional   | boolean | Disable user copy feature
+ disable_user_copy | Optional   | boolean | Disable user copy feature
 
 #### Response
 
-True if ublk target initialization is successful; False if failed.
+ Name   | Type    | Description
+------- | ------- | -------------------------------------------------------------------
+ result | boolean | True if ublk target initialization is successful; False if failed.
 
 #### Example
 
@@ -12048,7 +12050,9 @@ This method has no parameters.
 
 #### Response
 
-True if ublk target destruction is successful; False if failed.
+ Name   | Type    | Description
+------- | ------- | ----------------------------------------------------------------
+ result | boolean | True if ublk target destruction is successful; False if failed.
 
 #### Example
 
@@ -12087,7 +12091,9 @@ Start to export one SPDK bdev as a UBLK device
 
 #### Response
 
-UBLK device ID
+ Name   | Type   | Description
+------- | ------ | ---------------
+ result | int    | UBLK device ID
 
 #### Example
 
@@ -12128,7 +12134,9 @@ Recover original UBLK device with ID and block device
 
 #### Response
 
-UBLK device ID
+ Name   | Type   | Description
+------- | ------ | ---------------
+ result | int    | UBLK device ID
 
 #### Example
 
@@ -12168,7 +12176,9 @@ Delete a UBLK device
 
 #### Response
 
-True if UBLK device is deleted successfully; False if failed.
+ Name   | Type    | Description
+------- | ------- | --------------------------------------------------------------
+ result | boolean | True if UBLK device is deleted successfully; False if failed.
 
 #### Example
 
@@ -12207,7 +12217,13 @@ Display full or specified ublk device list
 
 #### Response
 
-Display ublk device list
+ Name        | Type   | Description
+------------ | ------ | --------------
+ ublk_device | string | path to the ublk device node
+ id          | int    | device id
+ queue_depth | int    | queue depth supported for each queue
+ num_queues  | int    | number of queues supported by the ublk device
+ bdev_name   | string | name of the bdev backing the ublk device
 
 #### Example
 
