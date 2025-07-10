@@ -12606,7 +12606,7 @@ Set parameters for the socket layer implementation.
  recv_buf_size               | Optional   | number  | Size of socket receive buffer in bytes
  send_buf_size               | Optional   | number  | Size of socket send buffer in bytes
  enable_recv_pipe            | Optional   | boolean | Enable or disable receive pipe
- enable_quick_ack            | Optional   | boolean | Enable or disable quick ACK
+ enable_quickack             | Optional   | boolean | Enable or disable quick ACK
  enable_placement_id         | Optional   | number  | Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu
  enable_zerocopy_send_server | Optional   | boolean | Enable or disable zero copy on send for server sockets
  enable_zerocopy_send_client | Optional   | boolean | Enable or disable zero copy on send for client sockets
@@ -12617,7 +12617,9 @@ Set parameters for the socket layer implementation.
 
 #### Response
 
-True if socket layer options were set successfully.
+ Name   | Type    | Description
+------- | ------- | ----------------------------------------------------
+ result | boolean | True if socket layer options were set successfully.
 
 #### Example
 
@@ -12633,7 +12635,7 @@ Example request:
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
     "enable_recv_pipe": false,
-    "enable_quick_ack": false,
+    "enable_quickack": false,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
     "enable_zerocopy_send_client": false,
@@ -12666,7 +12668,9 @@ Set the default sock implementation.
 
 #### Response
 
-True if the default socket layer configuration was set successfully.
+ Name   | Type    | Description
+------- | ------- | ---------------------------------------------------------------------
+ result | boolean | True if the default socket layer configuration was set successfully.
 
 #### Example
 
@@ -12703,7 +12707,9 @@ This method has no parameters.
 
 #### Response
 
-The name of the current default socket implementation.
+ Name      | Type   | Description
+---------- | ------ | -------------------------------------------------------
+ impl_name | string | The name of the current default socket implementation.
 
 #### Example
 
