@@ -349,7 +349,7 @@ _nvmf_ctrlr_add_admin_qpair(void *ctx)
 	ctrlr->association_timeout = qpair->transport->opts.association_timeout;
 	nvmf_ctrlr_start_keep_alive_timer(ctrlr);
 	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
-	spdk_notify_type_register(KATO_NOTIFICATION_NAME);
+	spdk_notify_type_register_once(KATO_NOTIFICATION_NAME);
 }
 
 static void
