@@ -818,7 +818,6 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 inline uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
-	uint64_t vfn_2mb;
 	uint64_t cur_size;
 	uint64_t prev_translation;
 	uint64_t orig_translation;
@@ -830,13 +829,10 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return map->default_translation;
 	}
 
-	vfn_2mb = VFN_2MB(vaddr);
 	curr_translation = mem_map_translate(map, vaddr, &page_size);
 	cur_size = page_size - (page_size == VALUE_4KB ? _4KB_OFFSET(vaddr) : _2MB_OFFSET(vaddr));
-
-	/* For now, we only support mappings spanning across multiple pages if they're 2MB */
 	if (size == NULL || map->ops.are_contiguous == NULL ||
-	    curr_translation == map->default_translation || page_size == VALUE_4KB) {
+	    curr_translation == map->default_translation) {
 		if (size != NULL) {
 			*size = spdk_min(*size, cur_size);
 		}
@@ -844,15 +840,15 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	}
 
 	prev_translation = orig_translation = curr_translation;
+	vaddr += cur_size;
 	while (cur_size < *size) {
-		vfn_2mb++;
-		curr_translation = mem_map_translate(map, vfn_2mb << SHIFT_2MB, &page_size);
-		if (page_size == VALUE_4KB ||
-		    !map->ops.are_contiguous(prev_translation, curr_translation)) {
+		curr_translation = mem_map_translate(map, vaddr, &page_size);
+		if (!map->ops.are_contiguous(prev_translation, curr_translation)) {
 			break;
 		}
 
-		cur_size += VALUE_2MB;
+		cur_size += page_size;
+		vaddr += page_size;
 		prev_translation = curr_translation;
 	}
 
