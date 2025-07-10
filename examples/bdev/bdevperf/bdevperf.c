@@ -11,6 +11,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/memory.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
@@ -76,6 +77,7 @@ static double g_zipf_theta;
 static bool g_random_map = false;
 static bool g_unique_writes = false;
 static bool g_hide_metadata = false;
+static bool g_nohuge_alloc = false;
 
 static struct spdk_cpuset g_all_cpuset;
 static struct spdk_poller *g_perf_timer = NULL;
@@ -282,13 +284,51 @@ parse_workload_type(enum job_config_rw ret)
 static void *
 bdevperf_alloc(size_t size, size_t alignment, uint32_t node_id)
 {
-	return spdk_zmalloc(size, alignment, NULL, node_id, SPDK_MALLOC_DMA);
+	void *buf;
+	int rc;
+
+	if (!g_nohuge_alloc) {
+		return spdk_zmalloc(size, alignment, NULL, node_id, SPDK_MALLOC_DMA);
+	}
+
+	size = spdk_divide_round_up(size, VALUE_4KB) * VALUE_4KB;
+	buf = aligned_alloc(alignment > VALUE_4KB ? alignment : VALUE_4KB, size);
+	if (buf == NULL) {
+		return buf;
+	}
+
+	rc = spdk_mem_register(buf, size);
+	if (rc != 0) {
+		fprintf(stderr, "Failed to register region: %p-%p: %s\n", buf, (char *)buf + size,
+			spdk_strerror(-rc));
+		free(buf);
+		return NULL;
+	}
+
+	return buf;
 }
 
 static void
 bdevperf_free(void *buf, size_t size)
 {
-	spdk_free(buf);
+	int rc;
+
+	if (buf == NULL) {
+		return;
+	}
+
+	if (!g_nohuge_alloc) {
+		spdk_free(buf);
+		return;
+	}
+
+	rc = spdk_mem_unregister(buf, spdk_divide_round_up(size, VALUE_4KB) * VALUE_4KB);
+	if (rc != 0) {
+		fprintf(stderr, "Failed to unregister region: %p-%p: %s\n", buf, (char *)buf + size,
+			spdk_strerror(-rc));
+	}
+
+	free(buf);
 }
 
 /*
@@ -2806,6 +2846,8 @@ bdevperf_parse_arg(int ch, char *arg)
 			fprintf(stderr, "Illegal zipf theta value %s\n", arg);
 			return -EINVAL;
 		}
+	} else if (ch == 'H') {
+		g_nohuge_alloc = true;
 	} else if (ch == 'l') {
 		g_latency_display_level++;
 	} else if (ch == 'D') {
@@ -2893,6 +2935,7 @@ bdevperf_usage(void)
 	printf(" -J                        File name to open with append mode and log JSON RPC calls.\n");
 	printf(" -U                        generate unique data for each write I/O, has no effect on non-write I/O\n");
 	printf(" -N                        Enable hide_metadata option to each bdev\n");
+	printf(" -H                        allocate non-huge data buffers\n");
 }
 
 static void
@@ -3016,7 +3059,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:J:M:P:S:T:Xlj:DUN", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:HJ:M:P:S:T:Xlj:DUN", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
