@@ -1212,9 +1212,9 @@ vtophys_iommu_unmap_dma_bar(uint64_t vaddr)
 #endif
 
 static uint64_t
-vtophys_get_paddr_memseg(uint64_t vaddr)
+vtophys_get_paddr_memseg(uint64_t vaddr, size_t *len)
 {
-	uintptr_t paddr;
+	uintptr_t paddr, offset;
 	struct rte_memseg *seg;
 
 	seg = rte_mem_virt2memseg((void *)(uintptr_t)vaddr, NULL);
@@ -1223,7 +1223,12 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 		if (paddr == RTE_BAD_IOVA) {
 			return SPDK_VTOPHYS_ERROR;
 		}
-		paddr += (vaddr - (uintptr_t)seg->addr);
+		offset = vaddr - (uintptr_t)seg->addr;
+		if (len != NULL) {
+			assert(seg->len > offset);
+			*len = seg->len - offset;
+		}
+		paddr += offset;
 		return paddr;
 	}
 
@@ -1330,7 +1335,7 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	}
 
 	/* Get the physical address from the DPDK memsegs */
-	paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
+	paddr = vtophys_get_paddr_memseg((uint64_t)vaddr, NULL);
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
@@ -1422,7 +1427,7 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		} else {
 			/* This is an address managed by DPDK. Just setup the translations. */
 			while (len > 0) {
-				paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
+				paddr = vtophys_get_paddr_memseg((uint64_t)vaddr, NULL);
 				if (paddr == SPDK_VTOPHYS_ERROR) {
 					DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
 					return -EFAULT;
