@@ -10,26 +10,18 @@ function reactor_is_busy_or_idle() {
 	local pid=$1
 	local idx=$2
 	local state=$3
-	local busy_threshold=${BUSY_THRESHOLD:-65}
-	local idle_threshold=${IDLE_THRESHOLD:-30}
+	local reactor_state
 
-	if [[ $state != "busy" ]] && [[ $state != "idle" ]]; then
-		return 1
-	fi
-
-	if ! hash top; then
-		# Fail this test if top is missing from system.
+	if [[ $state != "busy" && $state != "idle" ]]; then
 		return 1
 	fi
 
 	for ((j = 10; j != 0; j--)); do
-		top_reactor=$(top -bHn 1 -p $pid -w 256 | grep reactor_$idx)
-		cpu_rate=$(echo $top_reactor | sed -e 's/^\s*//g' | awk '{print $9}')
-		cpu_rate=${cpu_rate%.*}
+		reactor_state=($(ps -L -p"$pid" -ostate=,pid=,comm= | grep "reactor_$idx" | awk '{print $1}'))
 
-		if [[ $state = "busy" ]] && ((cpu_rate < busy_threshold)); then
+		if [[ $state = "busy" && $reactor_state != "R" ]]; then
 			sleep 1
-		elif [[ $state = "idle" ]] && ((cpu_rate > idle_threshold)); then
+		elif [[ $state = "idle" && $reactor_state != "S" ]]; then
 			sleep 1
 		else
 			return 0
@@ -37,9 +29,9 @@ function reactor_is_busy_or_idle() {
 	done
 
 	if [[ $state = "busy" ]]; then
-		echo "cpu rate ${cpu_rate} of reactor $i probably is not busy polling"
+		echo "reactor $i probably is not busy polling"
 	else
-		echo "cpu rate ${cpu_rate} of reactor $i probably is not idle interrupt"
+		echo "reactor $i probably is not idle interrupt"
 	fi
 
 	return 1

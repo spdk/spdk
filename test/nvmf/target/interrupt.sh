@@ -20,7 +20,7 @@ $rpc_py nvmf_create_subsystem $NQN -a -s $NVMF_SERIAL
 $rpc_py nvmf_subsystem_add_ns $NQN AIO0
 $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-# Confirm that with no traffic all cpu cores are idle
+# Confirm that with no traffic reactors are idle
 for i in {0..1}; do
 	reactor_is_idle $nvmfpid $i
 done
@@ -34,19 +34,19 @@ subnqn:${NQN}" "${NO_HUGE[@]}" &
 
 perf_pid=$!
 
-# confirm that during load all cpu cores are busy
+# confirm that during load all reactors are busy
 for i in {0..1}; do
-	BUSY_THRESHOLD=30 reactor_is_busy $nvmfpid $i
+	reactor_is_busy $nvmfpid $i
 done
 
 wait $perf_pid
 
-# with no load all cpu cores should be idle again
+# with no traffic all reactors should be idle again
 for i in {0..1}; do
 	reactor_is_idle $nvmfpid $i
 done
 
-# connecting initiator should not cause cores to be busy
+# connecting initiator should not cause reactors to be busy
 $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "$NQN" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 waitforserial "$NVMF_SERIAL"
 for i in {0..1}; do
