@@ -3035,6 +3035,7 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	uint32_t active_ns_list[] = { 1, 2, 100, 1024 };
 	uint32_t active_ns_list2[] = { 1, 2, 1024 };
 	uint32_t active_ns_list3[] = { 1, 2, 101, 1024 };
+	uint32_t active_ns_list4[] = { 1, 2, 102, 1024 };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
 		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
@@ -3085,6 +3086,16 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
 	check_active_ns(&ctrlr, active_ns_list3, SPDK_COUNTOF(active_ns_list3));
+
+	/* Add NS 102, remove NS 101 */
+	g_aer_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
+	setup_aer_for_ns_change(active_ns_list4, SPDK_COUNTOF(active_ns_list4));
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 1);
+	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
+	check_active_ns(&ctrlr, active_ns_list4, SPDK_COUNTOF(active_ns_list4));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 101));
 
 	g_active_ns_list = NULL;
 	g_active_ns_list_length = 0;
