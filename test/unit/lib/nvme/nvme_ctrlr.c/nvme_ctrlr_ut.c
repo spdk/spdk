@@ -516,6 +516,8 @@ setup_aer_for_ns_change(uint32_t *active_ns_list, uint32_t active_ns_list_length
 	nvme_ctrlr_async_event_cb(g_aer_ns_change.aer, g_aer_ns_change.aer_cpl);
 }
 
+bool g_needs_setup_aer_for_ns_change = false;
+
 struct spdk_nvme_ana_page *g_ana_hdr;
 struct spdk_nvme_ana_group_descriptor **g_ana_descs;
 
@@ -544,6 +546,11 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 		log_page_directory->temperature_statistics_log_len = true;
 		log_page_directory->smart_log_len = true;
 		log_page_directory->marketing_description_log_len =  true;
+	} else if (log_page == SPDK_NVME_LOG_CHANGED_NS_LIST) {
+		if (g_needs_setup_aer_for_ns_change) {
+			setup_aer_for_ns_change(g_aer_ns_change.active_ns_list, g_aer_ns_change.active_ns_list_length);
+			g_needs_setup_aer_for_ns_change = false;
+		}
 	}
 
 	fake_cpl_sc(cb_fn, cb_arg);
@@ -3036,6 +3043,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	uint32_t active_ns_list2[] = { 1, 2, 1024 };
 	uint32_t active_ns_list3[] = { 1, 2, 101, 1024 };
 	uint32_t active_ns_list4[] = { 1, 2, 102, 1024 };
+	uint32_t active_ns_list5_aer1[] = { 1, 2, 102, 103, 1024 };
+	uint32_t active_ns_list5_aer2[] = { 1, 2, 103, 1024 };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
 		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
@@ -3097,10 +3106,33 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	check_active_ns(&ctrlr, active_ns_list4, SPDK_COUNTOF(active_ns_list4));
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 101));
 
+	/* Send first AER due to adding NS 103. Right after reading
+	 * the namespace log remove NS 102, which generates the second AER.
+	 */
+	g_aer_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
+	setup_aer_for_ns_change(active_ns_list5_aer1, SPDK_COUNTOF(active_ns_list5_aer1));
+	/* Next setup_aer_for_ns_change() will be called after log page was read. */
+	g_needs_setup_aer_for_ns_change = true;
+	g_aer_ns_change.active_ns_list = active_ns_list5_aer2;
+	g_aer_ns_change.active_ns_list_length = SPDK_COUNTOF(active_ns_list5_aer2);
+	/* List of AERs is processed once in every loop, do it once for each AER */
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 2);
+	/*
+	 * Note: Identify sent to the controller after reading the log
+	 * page will already get the current list of namespaces.
+	 */
+	CU_ASSERT(g_nvme_ns_constructed == (SPDK_COUNTOF(active_ns_list5_aer2) * 2));
+	check_active_ns(&ctrlr, active_ns_list5_aer2, SPDK_COUNTOF(active_ns_list5_aer2));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 102));
+
 	g_active_ns_list = NULL;
 	g_active_ns_list_length = 0;
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
+	g_needs_setup_aer_for_ns_change = false;
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
 }
