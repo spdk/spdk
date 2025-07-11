@@ -3062,17 +3062,20 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 100));
 
 	/* Add NS 101 */
+	g_aer_cb_counter = 0;
 	g_active_ns_list = active_ns_list3;
 	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list3);
 	g_nvme_ns_constructed = 0;
 	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
-	CU_ASSERT(g_aer_cb_counter == 2);
+	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
 	check_active_ns(&ctrlr, active_ns_list3, SPDK_COUNTOF(active_ns_list3));
 
 	g_active_ns_list = NULL;
 	g_active_ns_list_length = 0;
+	g_aer_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
 }
