@@ -500,6 +500,22 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 	return 0;
 }
 
+struct aer_ns_change {
+	struct nvme_async_event_request *aer;
+	struct spdk_nvme_cpl *aer_cpl;
+	uint32_t *active_ns_list;
+	uint32_t active_ns_list_length;
+} g_aer_ns_change;
+
+static void
+setup_aer_for_ns_change(uint32_t *active_ns_list, uint32_t active_ns_list_length)
+{
+	g_active_ns_list = active_ns_list;
+	g_active_ns_list_length = active_ns_list_length;
+
+	nvme_ctrlr_async_event_cb(g_aer_ns_change.aer, g_aer_ns_change.aer_cpl);
+}
+
 struct spdk_nvme_ana_page *g_ana_hdr;
 struct spdk_nvme_ana_group_descriptor **g_ana_descs;
 
@@ -3015,6 +3031,7 @@ static void
 test_nvme_ctrlr_ns_attr_changed(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	g_aer_ns_change.aer = &ctrlr.aer[0];
 	uint32_t active_ns_list[] = { 1, 2, 100, 1024 };
 	uint32_t active_ns_list2[] = { 1, 2, 1024 };
 	uint32_t active_ns_list3[] = { 1, 2, 101, 1024 };
@@ -3027,6 +3044,7 @@ test_nvme_ctrlr_ns_attr_changed(void)
 		.status.sc = SPDK_NVME_SC_SUCCESS,
 		.cdw0 = aer_event.raw
 	};
+	g_aer_ns_change.aer_cpl = &aer_cpl;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 
@@ -3051,10 +3069,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 
 	/* Remove NS 100 */
 	g_aer_cb_counter = 0;
-	g_active_ns_list = active_ns_list2;
-	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list2);
 	g_nvme_ns_constructed = 0;
-	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	setup_aer_for_ns_change(active_ns_list2, SPDK_COUNTOF(active_ns_list2));
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
@@ -3063,10 +3079,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 
 	/* Add NS 101 */
 	g_aer_cb_counter = 0;
-	g_active_ns_list = active_ns_list3;
-	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list3);
 	g_nvme_ns_constructed = 0;
-	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	setup_aer_for_ns_change(active_ns_list3, SPDK_COUNTOF(active_ns_list3));
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
