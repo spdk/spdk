@@ -505,13 +505,21 @@ struct aer_ns_change {
 	struct spdk_nvme_cpl *aer_cpl;
 	uint32_t *active_ns_list;
 	uint32_t active_ns_list_length;
+	uint32_t *changed_ns_list;
+	uint32_t changed_ns_list_length;
 } g_aer_ns_change;
 
+uint32_t *g_changed_ns_list;
+uint32_t g_changed_ns_list_length;
+
 static void
-setup_aer_for_ns_change(uint32_t *active_ns_list, uint32_t active_ns_list_length)
+setup_aer_for_ns_change(uint32_t *active_ns_list, uint32_t active_ns_list_length,
+			uint32_t *changed_ns_list, uint32_t changed_ns_list_length)
 {
 	g_active_ns_list = active_ns_list;
 	g_active_ns_list_length = active_ns_list_length;
+	g_changed_ns_list = changed_ns_list;
+	g_changed_ns_list_length = changed_ns_list_length;
 
 	nvme_ctrlr_async_event_cb(g_aer_ns_change.aer, g_aer_ns_change.aer_cpl);
 }
@@ -547,8 +555,19 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 		log_page_directory->smart_log_len = true;
 		log_page_directory->marketing_description_log_len =  true;
 	} else if (log_page == SPDK_NVME_LOG_CHANGED_NS_LIST) {
+		if (g_changed_ns_list) {
+			/*
+			 * Zero-terminated array of increasing NSID.
+			 * If overflowed - first element set to 0xFFFFFFFFh, followed by zeros.
+			 */
+			memset(payload, 0, payload_size);
+			memcpy(payload, g_changed_ns_list, sizeof(uint32_t) * g_changed_ns_list_length);
+			g_changed_ns_list = NULL;
+			g_changed_ns_list_length = 0;
+		}
 		if (g_needs_setup_aer_for_ns_change) {
-			setup_aer_for_ns_change(g_aer_ns_change.active_ns_list, g_aer_ns_change.active_ns_list_length);
+			setup_aer_for_ns_change(g_aer_ns_change.active_ns_list, g_aer_ns_change.active_ns_list_length,
+						g_aer_ns_change.changed_ns_list, g_aer_ns_change.changed_ns_list_length);
 			g_needs_setup_aer_for_ns_change = false;
 		}
 	}
@@ -3041,10 +3060,15 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	g_aer_ns_change.aer = &ctrlr.aer[0];
 	uint32_t active_ns_list[] = { 1, 2, 100, 1024 };
 	uint32_t active_ns_list2[] = { 1, 2, 1024 };
+	uint32_t changed_ns_list2[] = { 100 };
 	uint32_t active_ns_list3[] = { 1, 2, 101, 1024 };
+	uint32_t changed_ns_list3[] = { 101 };
 	uint32_t active_ns_list4[] = { 1, 2, 102, 1024 };
+	uint32_t changed_ns_list4[] = { 101, 102 };
 	uint32_t active_ns_list5_aer1[] = { 1, 2, 102, 103, 1024 };
+	uint32_t changed_ns_list5_aer1[] = { 103 };
 	uint32_t active_ns_list5_aer2[] = { 1, 2, 103, 1024 };
+	uint32_t changed_ns_list5_aer2[] = { 102 };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
 		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
@@ -3080,7 +3104,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	/* Remove NS 100 */
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
-	setup_aer_for_ns_change(active_ns_list2, SPDK_COUNTOF(active_ns_list2));
+	setup_aer_for_ns_change(active_ns_list2, SPDK_COUNTOF(active_ns_list2),
+				changed_ns_list2, SPDK_COUNTOF(changed_ns_list2));
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
@@ -3090,7 +3115,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	/* Add NS 101 */
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
-	setup_aer_for_ns_change(active_ns_list3, SPDK_COUNTOF(active_ns_list3));
+	setup_aer_for_ns_change(active_ns_list3, SPDK_COUNTOF(active_ns_list3),
+				changed_ns_list3, SPDK_COUNTOF(changed_ns_list3));
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
@@ -3099,7 +3125,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	/* Add NS 102, remove NS 101 */
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
-	setup_aer_for_ns_change(active_ns_list4, SPDK_COUNTOF(active_ns_list4));
+	setup_aer_for_ns_change(active_ns_list4, SPDK_COUNTOF(active_ns_list4),
+				changed_ns_list4, SPDK_COUNTOF(changed_ns_list4));
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
@@ -3111,11 +3138,14 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	 */
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
-	setup_aer_for_ns_change(active_ns_list5_aer1, SPDK_COUNTOF(active_ns_list5_aer1));
+	setup_aer_for_ns_change(active_ns_list5_aer1, SPDK_COUNTOF(active_ns_list5_aer1),
+				changed_ns_list5_aer1, SPDK_COUNTOF(changed_ns_list5_aer1));
 	/* Next setup_aer_for_ns_change() will be called after log page was read. */
 	g_needs_setup_aer_for_ns_change = true;
 	g_aer_ns_change.active_ns_list = active_ns_list5_aer2;
 	g_aer_ns_change.active_ns_list_length = SPDK_COUNTOF(active_ns_list5_aer2);
+	g_aer_ns_change.changed_ns_list = changed_ns_list5_aer2;
+	g_aer_ns_change.changed_ns_list_length = SPDK_COUNTOF(changed_ns_list5_aer2);
 	/* List of AERs is processed once in every loop, do it once for each AER */
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
@@ -3130,6 +3160,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 
 	g_active_ns_list = NULL;
 	g_active_ns_list_length = 0;
+	g_changed_ns_list = NULL;
+	g_changed_ns_list_length = 0;
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
 	g_needs_setup_aer_for_ns_change = false;
