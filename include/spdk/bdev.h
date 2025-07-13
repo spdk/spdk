@@ -950,6 +950,46 @@ uint32_t spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev);
 uint32_t spdk_bdev_get_physical_block_size(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device preferred write alignment.
+ *
+ * \param bdev Block device to query.
+ * \return preferred write alignment for this bdev in blocks. Value 0 means there is no preferred write alignment.
+ */
+uint32_t spdk_bdev_get_preferred_write_alignment(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device preferred write granularity.
+ *
+ * \param bdev Block device to query.
+ * \return preferred write granularity for this bdev in blocks. Value 0 means there is no preferred write granularity.
+ */
+uint32_t spdk_bdev_get_preferred_write_granularity(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device optimal write size.
+ *
+ * \param bdev Block device to query.
+ * \return preferred write size for this bdev in blocks. Value 0 means there is no preferred write size.
+ */
+uint32_t spdk_bdev_get_optimal_write_size(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device preferred unmap alignment.
+ *
+ * \param bdev Block device to query.
+ * \return preferred unmap alignment for this bdev in blocks. Value 0 means there is no preferred unmap alignment.
+ */
+uint32_t spdk_bdev_get_preferred_unmap_alignment(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device preferred unmap granularity.
+ *
+ * \param bdev Block device to query.
+ * \return preferred unmap granularity for this bdev in blocks. Value 0 means there is no preferred unmap granularity.
+ */
+uint32_t spdk_bdev_get_preferred_unmap_granularity(const struct spdk_bdev *bdev);
+
+/**
  * Get DIF type of the block device.
  *
  * \param bdev Block device to query.

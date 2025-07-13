@@ -5213,6 +5213,36 @@ spdk_bdev_get_physical_block_size(const struct spdk_bdev *bdev)
 	return bdev->phys_blocklen;
 }
 
+uint32_t
+spdk_bdev_get_preferred_write_alignment(const struct spdk_bdev *bdev)
+{
+	return bdev->preferred_write_alignment;
+}
+
+uint32_t
+spdk_bdev_get_preferred_write_granularity(const struct spdk_bdev *bdev)
+{
+	return bdev->preferred_write_granularity;
+}
+
+uint32_t
+spdk_bdev_get_optimal_write_size(const struct spdk_bdev *bdev)
+{
+	return bdev->optimal_write_size;
+}
+
+uint32_t
+spdk_bdev_get_preferred_unmap_alignment(const struct spdk_bdev *bdev)
+{
+	return bdev->preferred_unmap_alignment;
+}
+
+uint32_t
+spdk_bdev_get_preferred_unmap_granularity(const struct spdk_bdev *bdev)
+{
+	return bdev->preferred_unmap_granularity;
+}
+
 static uint32_t
 _bdev_get_block_size_with_md(const struct spdk_bdev *bdev)
 {

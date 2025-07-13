@@ -495,6 +495,21 @@ struct spdk_bdev {
 	 */
 	uint32_t optimal_io_boundary;
 
+	/** Size in blocks of the preferred write alignment for the backend */
+	uint32_t preferred_write_alignment;
+
+	/** Size in blocks of the preferred write granularity for the backend */
+	uint32_t preferred_write_granularity;
+
+	/** Size in blocks of the optimal write size for the backend */
+	uint32_t optimal_write_size;
+
+	/** Size in blocks of the preferred unmap alignment for the backend */
+	uint32_t preferred_unmap_alignment;
+
+	/** Size in blocks of the preferred unmap granularity for the backend */
+	uint32_t preferred_unmap_granularity;
+
 	/**
 	 * Max io size in bytes of a single segment
 	 *

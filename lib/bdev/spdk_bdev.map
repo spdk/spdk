@@ -46,6 +46,11 @@
 	spdk_bdev_is_zoned;
 	spdk_bdev_get_data_block_size;
 	spdk_bdev_get_physical_block_size;
+	spdk_bdev_get_preferred_write_alignment;
+	spdk_bdev_get_preferred_write_granularity;
+	spdk_bdev_get_optimal_write_size;
+	spdk_bdev_get_preferred_unmap_alignment;
+	spdk_bdev_get_preferred_unmap_granularity;
 	spdk_bdev_get_dif_type;
 	spdk_bdev_get_dif_pi_format;
 	spdk_bdev_is_dif_head_of_md;

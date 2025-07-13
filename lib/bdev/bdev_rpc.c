@@ -669,6 +669,15 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	spdk_json_write_named_string(w, "product_name", spdk_bdev_get_product_name(bdev));
 	spdk_json_write_named_uint32(w, "block_size", spdk_bdev_get_block_size(bdev));
 	spdk_json_write_named_uint64(w, "num_blocks", spdk_bdev_get_num_blocks(bdev));
+	spdk_json_write_named_uint32(w, "preferred_write_alignment",
+				     spdk_bdev_get_preferred_write_alignment(bdev));
+	spdk_json_write_named_uint32(w, "preferred_write_granularity",
+				     spdk_bdev_get_preferred_write_granularity(bdev));
+	spdk_json_write_named_uint32(w, "optimal_write_size", spdk_bdev_get_optimal_write_size(bdev));
+	spdk_json_write_named_uint32(w, "preferred_unmap_alignment",
+				     spdk_bdev_get_preferred_unmap_alignment(bdev));
+	spdk_json_write_named_uint32(w, "preferred_unmap_granularity",
+				     spdk_bdev_get_preferred_unmap_granularity(bdev));
 	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
 	if (bdev->numa.id_valid) {
 		spdk_json_write_named_int32(w, "numa_id", bdev->numa.id);
