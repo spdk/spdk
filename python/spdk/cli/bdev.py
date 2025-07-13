@@ -242,7 +242,12 @@ def add_parser(subparsers):
                                              md_size=args.md_size,
                                              dif_type=args.dif_type,
                                              dif_is_head_of_md=args.dif_is_head_of_md,
-                                             dif_pi_format=args.dif_pi_format))
+                                             dif_pi_format=args.dif_pi_format,
+                                             preferred_write_alignment=args.preferred_write_alignment,
+                                             preferred_write_granularity=args.preferred_write_granularity,
+                                             optimal_write_size=args.optimal_write_size,
+                                             preferred_unmap_alignment=args.preferred_unmap_alignment,
+                                             preferred_unmap_granularity=args.preferred_unmap_granularity))
 
     p = subparsers.add_parser('bdev_null_create', help='Add a bdev with null backend')
     p.add_argument('name', help='Block device name')
@@ -260,6 +265,11 @@ def add_parser(subparsers):
     p.add_argument('-f', '--dif-pi-format', type=int, choices=[0, 1, 2],
                    help='Protection infromation format. Parameter --dif-type needs to be set together.'
                         '0=16b Guard PI, 1=32b Guard PI, 2=64b Guard PI. Default=0.')
+    p.add_argument('-a', '--preferred-write-alignment', help='Preferred write alignment in blocks.', type=int)
+    p.add_argument('-g', '--preferred-write-granularity', help='Preferred write granularity in blocks.', type=int)
+    p.add_argument('-s', '--optimal-write-size', help='Optimal write size in blocks.', type=int)
+    p.add_argument('-c', '--preferred-unmap-alignment', help='Preferred unmap granularity in blocks.', type=int)
+    p.add_argument('-r', '--preferred-unmap-granularity', help='Preferred unmap granularity in blocks.', type=int)
     p.set_defaults(func=bdev_null_create)
 
     def bdev_null_delete(args):

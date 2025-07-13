@@ -27,6 +27,11 @@ static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"dif_type", offsetof(struct null_bdev_opts, dif_type), spdk_json_decode_int32, true},
 	{"dif_is_head_of_md", offsetof(struct null_bdev_opts, dif_is_head_of_md), spdk_json_decode_bool, true},
 	{"dif_pi_format", offsetof(struct null_bdev_opts, dif_pi_format), spdk_json_decode_uint32, true},
+	{"preferred_write_alignment", offsetof(struct null_bdev_opts, preferred_write_alignment), spdk_json_decode_uint32, true},
+	{"preferred_write_granularity", offsetof(struct null_bdev_opts, preferred_write_granularity), spdk_json_decode_uint32, true},
+	{"optimal_write_size", offsetof(struct null_bdev_opts, optimal_write_size), spdk_json_decode_uint32, true},
+	{"preferred_unmap_alignment", offsetof(struct null_bdev_opts, preferred_unmap_alignment), spdk_json_decode_uint32, true},
+	{"preferred_unmap_granularity", offsetof(struct null_bdev_opts, preferred_unmap_granularity), spdk_json_decode_uint32, true},
 };
 
 static void

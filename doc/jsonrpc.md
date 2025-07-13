@@ -3738,15 +3738,20 @@ Construct @ref bdev_config_null
 
 #### Parameters
 
- Name              | Optional   | Type    | Description
------------------- | ---------- | ------- | --------------------------------------------------------------------------------------------------------------
- name              | Required   | string  | Bdev name to use
- block_size        | Required   | number  | Block size in bytes
- num_blocks        | Required   | number  | Number of blocks
- uuid              | Optional   | string  | UUID of new bdev
- md_size           | Optional   | number  | Metadata size for this bdev. Default=0.
- dif_type          | Optional   | number  | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
- dif_is_head_of_md | Optional   | boolean | Protection information is in the first 8 bytes of metadata. Default=false.
+ Name                        | Optional   | Type    | Description
+---------------------------- | ---------- | ------- | --------------------------------------------------------------------------------------------------------------
+ name                        | Required   | string  | Bdev name to use
+ block_size                  | Required   | number  | Block size in bytes
+ num_blocks                  | Required   | number  | Number of blocks
+ uuid                        | Optional   | string  | UUID of new bdev
+ md_size                     | Optional   | number  | Metadata size for this bdev. Default=0.
+ dif_type                    | Optional   | number  | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+ dif_is_head_of_md           | Optional   | boolean | Protection information is in the first 8 bytes of metadata. Default=false.
+ preferred_write_granularity | Optional   | number  | Preferred write granularity in blocks
+ preferred_write_alignment   | Optional   | number  | Preferred write alignment in blocks
+ optimal_write_size          | Optional   | number  | Optimal write size in blocks
+ preferred_unmap_granularity | Optional   | number  | Preferred unmap granularity in blocks
+ preferred_unmap_alignment   | Optional   | number  | Preferred unmap alignment in blocks
 
 #### Response
 
@@ -3765,7 +3770,12 @@ Example request:
     "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90",
     "md_size": 8,
     "dif_type": 1,
-    "dif_is_head_of_md": true
+    "dif_is_head_of_md": true,
+    "preferred_write_granularity": 64,
+    "preferred_write_alignment": 64,
+    "optimal_write_size": 4,
+    "preferred_unmap_granularity": 16,
+    "preferred_unmap_alignment": 16,
   },
   "jsonrpc": "2.0",
   "method": "bdev_null_create",

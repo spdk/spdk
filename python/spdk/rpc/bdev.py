@@ -281,7 +281,10 @@ def bdev_malloc_delete(client, name):
 
 @deprecated_method
 def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=None, uuid=None, md_size=None,
-                     dif_type=None, dif_is_head_of_md=None, dif_pi_format=None):
+                     dif_type=None, dif_is_head_of_md=None, dif_pi_format=None,
+                     preferred_write_alignment=None, preferred_write_granularity=None, optimal_write_size=None,
+                     preferred_unmap_alignment=None, preferred_unmap_granularity=None):
+
     """Construct a null block device.
     Args:
         num_blocks: size of block device in blocks
@@ -293,6 +296,11 @@ def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=N
         dif_type: protection information type (optional)
         dif_is_head_of_md: protection information is in the first 8 bytes of metadata (optional)
         dif_pi_format: protection information format (optional)
+        preferred_write_alignment: preferred write alignment in blocks (optional)
+        preferred_write_granularity: preferred write granularity in blocks (optional)
+        optimal_write_size: optimal write size in blocks (optional)
+        preferred_unmap_alignment: preferred unmap alignment in blocks (optional)
+        preferred_unmap_granularity: preferred unmap granularity in blocks (optional)
     Returns:
         Name of created block device.
     """
@@ -312,6 +320,16 @@ def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=N
         params['dif_is_head_of_md'] = dif_is_head_of_md
     if dif_pi_format is not None:
         params['dif_pi_format'] = dif_pi_format
+    if preferred_write_alignment is not None:
+        params['preferred_write_alignment'] = preferred_write_alignment
+    if preferred_write_granularity is not None:
+        params['preferred_write_granularity'] = preferred_write_granularity
+    if optimal_write_size is not None:
+        params['optimal_write_size'] = optimal_write_size
+    if preferred_unmap_alignment is not None:
+        params['preferred_unmap_alignment'] = preferred_unmap_alignment
+    if preferred_unmap_granularity is not None:
+        params['preferred_unmap_granularity'] = preferred_unmap_granularity
     return client.call('bdev_null_create', params)
 
 

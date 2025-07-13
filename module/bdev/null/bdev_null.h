@@ -20,6 +20,11 @@ struct null_bdev_opts {
 	uint32_t block_size;
 	uint32_t physical_block_size;
 	uint32_t md_size;
+	uint32_t preferred_write_alignment;
+	uint32_t preferred_write_granularity;
+	uint32_t optimal_write_size;
+	uint32_t preferred_unmap_alignment;
+	uint32_t preferred_unmap_granularity;
 	enum spdk_dif_type dif_type;
 	bool dif_is_head_of_md;
 	enum spdk_dif_pi_format dif_pi_format;

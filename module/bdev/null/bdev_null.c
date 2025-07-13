@@ -223,6 +223,11 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
 	spdk_json_write_named_uint32(w, "dif_pi_format", bdev->dif_pi_format);
 	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
+	spdk_json_write_named_uint32(w, "preferred_write_granularity", bdev->preferred_write_granularity);
+	spdk_json_write_named_uint32(w, "preferred_write_alignment", bdev->preferred_write_alignment);
+	spdk_json_write_named_uint32(w, "optimal_write_size", bdev->optimal_write_size);
+	spdk_json_write_named_uint32(w, "preferred_unmap_granularity", bdev->preferred_unmap_granularity);
+	spdk_json_write_named_uint32(w, "preferred_unmap_alignment", bdev->preferred_unmap_alignment);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -317,6 +322,11 @@ bdev_null_create(struct spdk_bdev **bdev, const struct null_bdev_opts *opts)
 
 	null_disk->bdev.write_cache = 0;
 	null_disk->bdev.blocklen = block_size;
+	null_disk->bdev.preferred_write_alignment = opts->preferred_write_alignment;
+	null_disk->bdev.preferred_write_granularity = opts->preferred_write_granularity;
+	null_disk->bdev.optimal_write_size = opts->optimal_write_size;
+	null_disk->bdev.preferred_unmap_alignment = opts->preferred_unmap_alignment;
+	null_disk->bdev.preferred_unmap_granularity = opts->preferred_unmap_granularity;
 	null_disk->bdev.phys_blocklen = opts->physical_block_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
 	null_disk->bdev.md_len = opts->md_size;
