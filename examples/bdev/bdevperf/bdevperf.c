@@ -52,7 +52,7 @@ static bool g_reset = false;
 static bool g_continue_on_failure = false;
 static bool g_abort = false;
 static bool g_error_to_exit = false;
-static int g_queue_depth = 0;
+static uint32_t g_queue_depth = 0;
 static uint64_t g_time_in_usec;
 static bool g_summarize_performance = true;
 static uint64_t g_show_performance_period_in_usec = SPDK_SEC_TO_USEC;
@@ -155,7 +155,7 @@ struct bdevperf_job {
 	bool				write_zeroes;
 	bool				flush;
 	bool				abort;
-	int				queue_depth;
+	uint32_t			queue_depth;
 	uint64_t			seed;
 
 	uint64_t			io_completed;
@@ -1541,7 +1541,7 @@ bdevperf_job_run(void *ctx)
 {
 	struct bdevperf_job *job = ctx;
 	struct bdevperf_task *task;
-	int i;
+	uint32_t i;
 
 	/* Submit initial I/O for this job. Each time one
 	 * completes, another will be submitted. */
@@ -2012,12 +2012,12 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			bdevperf_job_free(job);
 			return -ENOMEM;
 		}
-		if (job->queue_depth > (int)job->size_in_ios) {
-			SPDK_WARNLOG("Due to constraints of verify job, queue depth (-q, %d) can't exceed the number of IO "
+		if (job->queue_depth > job->size_in_ios) {
+			SPDK_WARNLOG("Due to constraints of verify job, queue depth (-q, %"PRIu32") can't exceed the number of IO "
 				     "requests which can be submitted to the bdev %s simultaneously (%"PRIu64"). "
 				     "Queue depth is limited to %"PRIu64"\n",
 				     job->queue_depth, job->name, job->size_in_ios, job->size_in_ios);
-			job->queue_depth = (int)job->size_in_ios;
+			job->queue_depth = job->size_in_ios;
 		}
 	}
 
@@ -2695,17 +2695,17 @@ rpc_perform_tests_cb(void)
 }
 
 struct rpc_bdevperf_params {
-	int	time_in_sec;
-	char	*workload_type;
-	int	queue_depth;
-	char	*io_size;
-	int	rw_percentage;
+	int		time_in_sec;
+	char		*workload_type;
+	uint32_t	queue_depth;
+	char		*io_size;
+	int		rw_percentage;
 };
 
 static const struct spdk_json_object_decoder rpc_bdevperf_params_decoders[] = {
 	{"time_in_sec", offsetof(struct rpc_bdevperf_params, time_in_sec), spdk_json_decode_int32, true},
 	{"workload_type", offsetof(struct rpc_bdevperf_params, workload_type), spdk_json_decode_string, true},
-	{"queue_depth", offsetof(struct rpc_bdevperf_params, queue_depth), spdk_json_decode_int32, true},
+	{"queue_depth", offsetof(struct rpc_bdevperf_params, queue_depth), spdk_json_decode_uint32, true},
 	{"io_size", offsetof(struct rpc_bdevperf_params, io_size), spdk_json_decode_string, true},
 	{"rw_percentage", offsetof(struct rpc_bdevperf_params, rw_percentage), spdk_json_decode_int32, true},
 };
@@ -2953,7 +2953,7 @@ bdevperf_fini(void)
 static int
 verify_test_params(void)
 {
-	if (!g_bdevperf_conf_file && g_queue_depth <= 0) {
+	if (!g_bdevperf_conf_file && g_queue_depth == 0) {
 		goto out;
 	}
 	if (!g_bdevperf_conf_file && g_io_size <= 0) {
