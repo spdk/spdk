@@ -348,50 +348,6 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	return 0;
 }
 
-struct spdk_nvme_ana_page *g_ana_hdr;
-struct spdk_nvme_ana_group_descriptor **g_ana_descs;
-
-int
-spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
-				 uint32_t nsid, void *payload, uint32_t payload_size,
-				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	if ((log_page == SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS) && g_ana_hdr) {
-		uint32_t i;
-		uint8_t *ptr = payload;
-
-		memset(payload, 0, payload_size);
-		memcpy(ptr, g_ana_hdr, sizeof(*g_ana_hdr));
-		ptr += sizeof(*g_ana_hdr);
-		for (i = 0; i < g_ana_hdr->num_ana_group_desc; ++i) {
-			uint32_t desc_size = sizeof(**g_ana_descs) +
-					     g_ana_descs[i]->num_of_nsid * sizeof(uint32_t);
-			memcpy(ptr, g_ana_descs[i], desc_size);
-			ptr += desc_size;
-		}
-	} else if (log_page == SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY) {
-		struct spdk_nvme_intel_log_page_directory *log_page_directory = payload;
-		log_page_directory->read_latency_log_len = true;
-		log_page_directory->write_latency_log_len = true;
-		log_page_directory->temperature_statistics_log_len = true;
-		log_page_directory->smart_log_len = true;
-		log_page_directory->marketing_description_log_len =  true;
-	}
-
-	fake_cpl_sc(cb_fn, cb_arg);
-	return 0;
-}
-
-int
-spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
-				     uint32_t nsid, void *payload, uint32_t payload_size,
-				     uint64_t offset, uint32_t cdw10, uint32_t cdw11,
-				     uint32_t cdw14, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	fake_cpl_sc(cb_fn, cb_arg);
-	return 0;
-}
-
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
@@ -540,6 +496,50 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		return 0;
 	}
 
+	fake_cpl_sc(cb_fn, cb_arg);
+	return 0;
+}
+
+struct spdk_nvme_ana_page *g_ana_hdr;
+struct spdk_nvme_ana_group_descriptor **g_ana_descs;
+
+int
+spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+				 uint32_t nsid, void *payload, uint32_t payload_size,
+				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	if ((log_page == SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS) && g_ana_hdr) {
+		uint32_t i;
+		uint8_t *ptr = payload;
+
+		memset(payload, 0, payload_size);
+		memcpy(ptr, g_ana_hdr, sizeof(*g_ana_hdr));
+		ptr += sizeof(*g_ana_hdr);
+		for (i = 0; i < g_ana_hdr->num_ana_group_desc; ++i) {
+			uint32_t desc_size = sizeof(**g_ana_descs) +
+					     g_ana_descs[i]->num_of_nsid * sizeof(uint32_t);
+			memcpy(ptr, g_ana_descs[i], desc_size);
+			ptr += desc_size;
+		}
+	} else if (log_page == SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY) {
+		struct spdk_nvme_intel_log_page_directory *log_page_directory = payload;
+		log_page_directory->read_latency_log_len = true;
+		log_page_directory->write_latency_log_len = true;
+		log_page_directory->temperature_statistics_log_len = true;
+		log_page_directory->smart_log_len = true;
+		log_page_directory->marketing_description_log_len =  true;
+	}
+
+	fake_cpl_sc(cb_fn, cb_arg);
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+				     uint32_t nsid, void *payload, uint32_t payload_size,
+				     uint64_t offset, uint32_t cdw10, uint32_t cdw11,
+				     uint32_t cdw14, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
 	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
