@@ -10104,7 +10104,9 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
-		cb_fn(cb_arg, -ENOMEM);
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOMEM);
+		}
 		return;
 	}
 
@@ -10116,7 +10118,9 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 	if (bdev->internal.qos_mod_in_progress) {
 		spdk_spin_unlock(&bdev->internal.spinlock);
 		free(ctx);
-		cb_fn(cb_arg, -EAGAIN);
+		if (cb_fn) {
+			cb_fn(cb_arg, -EAGAIN);
+		}
 		return;
 	}
 	bdev->internal.qos_mod_in_progress = true;
