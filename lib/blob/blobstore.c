@@ -3267,7 +3267,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 			ctx->blob = blob;
 			ctx->page = cluster_start_page;
 			ctx->cluster_num = cluster_number;
-			ctx->md_page = bs_channel->new_cluster_page;
+			ctx->md_page = bs_channel->release_cluster_page;
 			ctx->seq = bs_sequence_start_bs(_ch, &cpl);
 			if (!ctx->seq) {
 				free(ctx);
@@ -3655,6 +3655,16 @@ bs_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
+	channel->release_cluster_page = spdk_zmalloc(bs->md_page_size, 0, NULL, SPDK_ENV_NUMA_ID_ANY,
+					SPDK_MALLOC_DMA);
+	if (!channel->release_cluster_page) {
+		SPDK_ERRLOG("Failed to allocate release cluster page\n");
+		spdk_free(channel->new_cluster_page);
+		free(channel->req_mem);
+		channel->dev->destroy_channel(channel->dev, channel->dev_channel);
+		return -1;
+	}
+
 	TAILQ_INIT(&channel->need_cluster_alloc);
 	TAILQ_INIT(&channel->queued_io);
 	RB_INIT(&channel->esnap_channels);
@@ -3684,6 +3694,7 @@ bs_channel_destroy(void *io_device, void *ctx_buf)
 
 	free(channel->req_mem);
 	spdk_free(channel->new_cluster_page);
+	spdk_free(channel->release_cluster_page);
 	channel->dev->destroy_channel(channel->dev, channel->dev_channel);
 }
 

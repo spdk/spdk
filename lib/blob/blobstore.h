@@ -220,6 +220,9 @@ struct spdk_bs_channel {
 	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
 	TAILQ_HEAD(, spdk_bs_request_set) queued_io;
 
+	/* This page is only used during release of an existing cluster. */
+	struct spdk_blob_md_page        *release_cluster_page;
+
 	RB_HEAD(blob_esnap_channel_tree, blob_esnap_channel) esnap_channels;
 };
 
