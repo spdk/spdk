@@ -17,6 +17,7 @@
 
 struct spdk_nvmf_admin_passthru_conf {
 	bool identify_ctrlr;
+	bool get_log_page;
 	bool vendor_specific;
 };
 

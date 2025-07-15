@@ -56,6 +56,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 		.dhchap_dhgroups = NVMF_TGT_DEFAULT_DHGROUPS,
 	},
 	.admin_passthru.identify_ctrlr = false,
+	.admin_passthru.get_log_page = false,
 	.admin_passthru.vendor_specific = false
 };
 
@@ -363,6 +364,63 @@ nvmf_tgt_create_target(void)
 }
 
 static void
+get_log_page_offset_and_len(struct spdk_nvmf_request *req, size_t page_size, uint64_t *offset,
+			    size_t *copy_len)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	uint64_t len;
+	uint32_t numdl, numdu;
+
+	*offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
+	numdl = cmd->cdw10_bits.get_log_page.numdl;
+	numdu = cmd->cdw11_bits.get_log_page.numdu;
+	len = ((numdu << 16) + numdl + (uint64_t)1) * 4;
+
+	if (*offset > page_size) {
+		return;
+	}
+
+	*copy_len = spdk_min(page_size - *offset, len);
+}
+
+static void
+fixup_get_supported_log_pages(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_supported_log_pages nvme_log_data = {};
+	struct spdk_nvme_supported_log_pages nvmf_log_data = {};
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	uint32_t page_size = sizeof(struct spdk_nvme_supported_log_pages);
+	uint64_t offset;
+	size_t datalen, copy_len = 0;
+
+	get_log_page_offset_and_len(req, page_size, &offset, &copy_len);
+
+	if (copy_len == 0) {
+		return;
+	}
+
+	/* Those are supported log pages from the NVMe drive */
+	datalen = spdk_nvmf_request_copy_to_buf(req, (uint8_t *) &nvme_log_data + offset,
+						copy_len);
+
+	/* Those are supported log pages from SPDK */
+	spdk_nvmf_get_supported_log_pages(ctrlr, &nvmf_log_data);
+
+	/* Make sure that logs handled by SPDK are added as well */
+	nvme_log_data.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] =
+		nvmf_log_data.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS];
+	nvme_log_data.lids[SPDK_NVME_LOG_CHANGED_NS_LIST] =
+		nvmf_log_data.lids[SPDK_NVME_LOG_CHANGED_NS_LIST];
+	nvme_log_data.lids[SPDK_NVME_LOG_FEATURE_IDS_EFFECTS] =
+		nvmf_log_data.lids[SPDK_NVME_LOG_FEATURE_IDS_EFFECTS];
+	nvme_log_data.lids[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] =
+		nvmf_log_data.lids[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG];
+
+	/* Copy the data back to the request */
+	spdk_nvmf_request_copy_from_buf(req, (uint8_t *) &nvme_log_data + offset, datalen);
+}
+
+static void
 fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_ctrlr_data nvme_cdata = {};
@@ -395,6 +453,12 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 	/* IEEE OUI Identifier (IEEE) */
 	memcpy(&nvmf_cdata.ieee[0], &nvme_cdata.ieee[0], sizeof(nvmf_cdata.ieee));
 	/* FRU Globally Unique Identifier (FGUID) */
+
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.get_log_page) {
+		nvmf_cdata.lpa = nvme_cdata.lpa;
+		nvmf_cdata.elpe = nvme_cdata.elpe;
+		nvmf_cdata.pels = nvme_cdata.pels;
+	}
 
 	/* Copy the fixed up data back to the response */
 	spdk_nvmf_request_copy_from_buf(req, &nvmf_cdata, datalen);
@@ -452,6 +516,28 @@ nvmf_custom_admin_no_cb_hdlr(struct spdk_nvmf_request *req)
 	return nvmf_admin_passthru_generic_hdlr(req, NULL);
 }
 
+static int
+nvmf_custom_get_log_page_hdlr(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+
+	switch (cmd->cdw10_bits.get_log_page.lid) {
+	/* ANA log and Changed NS List have to be handled by SPDK.
+	 * Do not passthru them to the drive.
+	 */
+	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
+	case SPDK_NVME_LOG_CHANGED_NS_LIST:
+	/* SPDK is not supporting get/set_feature passthru, so disable log page with drive supported features */
+	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
+	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
+		return -1;
+	case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
+		return nvmf_admin_passthru_generic_hdlr(req, fixup_get_supported_log_pages);
+	default:
+		return nvmf_admin_passthru_generic_hdlr(req, NULL);
+	}
+}
+
 static void
 nvmf_tgt_advance_state(void)
 {
@@ -476,6 +562,10 @@ nvmf_tgt_advance_state(void)
 			if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr) {
 				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, nvmf_custom_identify_hdlr);
+			}
+			if (g_spdk_nvmf_tgt_conf.admin_passthru.get_log_page) {
+				SPDK_NOTICELOG("Custom get log page handler enabled\n");
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_GET_LOG_PAGE, nvmf_custom_get_log_page_hdlr);
 			}
 			if (g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific) {
 				int i;
@@ -597,6 +687,8 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "admin_cmd_passthru");
 	spdk_json_write_named_bool(w, "identify_ctrlr",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr);
+	spdk_json_write_named_bool(w, "get_log_page",
+				   g_spdk_nvmf_tgt_conf.admin_passthru.get_log_page);
 	spdk_json_write_named_bool(w, "vendor_specific",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific);
 	spdk_json_write_object_end(w);
