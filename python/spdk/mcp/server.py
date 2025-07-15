@@ -3,6 +3,7 @@
 
 import os
 from spdk import rpc
+from functools import partial
 from spdk.rpc.client import JSONRPCClient
 from mcp.server.fastmcp import FastMCP
 
@@ -19,17 +20,15 @@ def spdk_get_version() -> dict:
     return rpc.spdk_get_version(client)
 
 
-@mcp.tool()
-def bdev_get_bdevs() -> list:
-    """Get a list of block devices"""
-    return rpc.bdev.bdev_get_bdevs(client)
+# TODO: make this a loop over all rpc.*, not just bdev
+bdev_functions = [y for x, y in rpc.bdev.__dict__.items() if x.startswith('bdev')]
 
-
-@mcp.tool()
-def bdev_malloc_create(name: str, num_blocks: int = 1024, block_size: int = 512) -> dict:
-    """Create a malloc block device"""
-    return rpc.bdev.bdev_malloc_create(client, num_blocks, block_size, name=name)
-
+# add all functions as tools to MCP server
+for func in bdev_functions:
+    newfunc = partial(func, client)
+    newfunc.__name__ = func.__name__
+    newfunc.__doc__ = func.__doc__
+    mcp.add_tool(newfunc)
 
 if __name__ == "__main__":
     mcp.run()
