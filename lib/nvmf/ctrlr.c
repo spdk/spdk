@@ -4827,6 +4827,13 @@ spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 	nvmf_bdev_ctrlr_zcopy_end(req, commit);
 }
 
+void
+spdk_nvmf_request_set_crc32c(struct spdk_nvmf_request *req, uint32_t crc32c)
+{
+	req->precomputed_crc32c = crc32c;
+	req->has_crc32c = true;
+}
+
 int
 nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {

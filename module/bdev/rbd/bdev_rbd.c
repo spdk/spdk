@@ -19,9 +19,15 @@
 #include "spdk/likely.h"
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
+
 SPDK_LOG_REGISTER_COMPONENT(reservation)
 
 static int bdev_rbd_count = 0;
+
+/*
+ * global parameter to control CRC32C usage in RBD write operations.
+ */
+static bool g_rbd_with_crc32c = false;
 
 struct bdev_rbd_pool_ctx {
 	rados_t *cluster_p;
@@ -81,6 +87,8 @@ struct bdev_rbd_io {
 	enum			spdk_bdev_io_status status;
 	rbd_completion_t	comp;
 	size_t			total_len;
+	uint32_t		precomputed_crc32c;  /* CRC32C checksum from NVMf layer */
+	bool			has_crc32c;          /* Whether CRC32C is available */
 };
 
 struct bdev_rbd_cluster {
@@ -614,7 +622,11 @@ _bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (spdk_likely(iovcnt == 1)) {
+		if (rbd_io->has_crc32c && spdk_likely(iovcnt == 1)) {
+			ret = rbd_aio_write_with_crc32c(image, offset, iov[0].iov_len,
+							iov[0].iov_base, rbd_io->precomputed_crc32c,
+							rbd_io->comp, /* op_flags */ 0);
+		} else if (spdk_likely(iovcnt == 1)) {
 			ret = rbd_aio_write(image, offset, iov[0].iov_len, iov[0].iov_base,
 					    rbd_io->comp);
 		} else {
@@ -830,6 +842,14 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 
 	rbd_io->submit_td = submit_td;
+	rbd_io->has_crc32c = false;  /* Initialize CRC32C fields */
+	rbd_io->precomputed_crc32c = 0;
+
+	/* check if CRC32C is available from the I/O options */
+	if (g_rbd_with_crc32c && bdev_io->u.bdev.has_crc32c) {
+		rbd_io->precomputed_crc32c = bdev_io->u.bdev.crc32c;
+		rbd_io->has_crc32c = true;
+	}
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_rbd_get_buf_cb,
@@ -1884,3 +1904,16 @@ bdev_rbd_library_fini(void)
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_rbd)
+
+bool
+bdev_rbd_get_with_crc32c(void)
+{
+	return g_rbd_with_crc32c;
+}
+
+/** enable or disable CRC32C optimization for RBD write operations */
+void
+bdev_rbd_set_with_crc32c(bool enable)
+{
+	g_rbd_with_crc32c = enable;
+}

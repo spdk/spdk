@@ -1157,6 +1157,17 @@ def bdev_rbd_resize(client, name, new_size):
 
 
 @deprecated_method
+def bdev_rbd_set_with_crc32c(client, enable):
+    """Set CRC32C usage in RBD write operations.
+    Args:
+        enable: enable or disable CRC32C usage
+    """
+    params = dict()
+    params['enable'] = enable
+    return client.call('bdev_rbd_set_with_crc32c', params)
+
+
+@deprecated_method
 def bdev_error_create(client, base_name, uuid=None):
     """Construct an error injection block device.
     Args:

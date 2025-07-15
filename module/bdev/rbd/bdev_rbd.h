@@ -81,4 +81,19 @@ int bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request, const char 
  */
 int bdev_rbd_wait_for_latest_osdmap(const char *name);
 
+/**
+ * Get the current rbd_with_crc32c setting.
+ *
+ * \return true if CRC32C optimization is enabled, false otherwise
+ */
+bool bdev_rbd_get_with_crc32c(void);
+
+/**
+ * Set the rbd_with_crc32c parameter to enable/disable CRC32C optimization
+ * for RBD write operations.
+ *
+ * \param enable true to enable CRC32C optimization, false to disable
+ */
+void bdev_rbd_set_with_crc32c(bool enable);
+
 #endif /* SPDK_BDEV_RBD_H */

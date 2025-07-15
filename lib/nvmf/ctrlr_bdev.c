@@ -494,10 +494,12 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	struct spdk_bdev_ext_io_opts opts = {
-		.size = SPDK_SIZEOF(&opts, nvme_cdw13),
+		.size = SPDK_SIZEOF(&opts, has_crc32c),
 		.memory_domain = req->memory_domain,
 		.memory_domain_ctx = req->memory_domain_ctx,
 		.accel_sequence = req->accel_sequence,
+		.crc32c = req->precomputed_crc32c,
+		.has_crc32c = req->has_crc32c,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);

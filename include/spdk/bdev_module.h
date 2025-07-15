@@ -881,6 +881,12 @@ struct spdk_bdev_io_block_params {
 	/** defined by \ref spdk_bdev_nvme_cdw13 */
 	union spdk_bdev_nvme_cdw13 nvme_cdw13;
 
+	/** Precomputed CRC32C checksum from transport layer */
+	uint32_t crc32c;
+
+	/** Whether crc32c field is valid */
+	bool has_crc32c;
+
 	struct {
 		/** Whether the buffer should be populated with the real data */
 		uint8_t populate : 1;

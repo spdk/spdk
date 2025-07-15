@@ -304,8 +304,12 @@ struct spdk_bdev_ext_io_opts {
 	union spdk_bdev_nvme_cdw12 nvme_cdw12;
 	/** defined by \ref spdk_bdev_nvme_cdw13 */
 	union spdk_bdev_nvme_cdw13 nvme_cdw13;
+	/** precomputed CRC32C checksum for write operations */
+	uint32_t crc32c;
+	/** indicates whether the crc32c field contains a valid checksum */
+	bool has_crc32c;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 52, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 57, "Incorrect size");
 
 /**
  * Get the options for the bdev module.
