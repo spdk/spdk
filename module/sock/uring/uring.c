@@ -99,6 +99,7 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_uring_sock, buf) % 8 == 0,
 TAILQ_HEAD(pending_recv_list, spdk_uring_sock);
 
 struct spdk_uring_buf_tracker {
+	struct spdk_sock_buf_token		token;
 	void					*buf;
 	size_t					len;
 	int					id;
@@ -492,11 +493,11 @@ static int uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 		struct spdk_sock *_sock);
 static int uring_sock_group_impl_attach_sock(struct spdk_sock_group_impl *_group,
 		struct spdk_sock *_sock);
+static void uring_sock_release_tracker(struct spdk_uring_sock_group_impl *group,
+				       struct spdk_uring_buf_tracker *tracker);
 static int uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 		struct spdk_sock *_sock);
 static int uring_sock_close(struct spdk_sock_group_impl *group, struct spdk_sock *_sock);
-static void uring_sock_release_tracker(struct spdk_uring_sock_group_impl *group,
-				       struct spdk_uring_buf_tracker *tracker);
 static struct spdk_net_impl g_uring_net_impl;
 
 static struct spdk_sock *
@@ -742,6 +743,15 @@ sock_readv(int fd, struct iovec *iov, int iovcnt)
 
 static int uring_sock_complete_connect(struct spdk_uring_sock *sock);
 
+static void
+uring_sock_clear_pending_recv(struct spdk_uring_sock_group_impl *group,
+			      struct spdk_uring_sock *sock)
+{
+	assert(sock->pending_recv == true);
+	sock->pending_recv = false;
+	TAILQ_REMOVE(&group->pending_recv, sock, link);
+}
+
 static ssize_t
 uring_sock_readv(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt)
 {
@@ -756,7 +766,7 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt)
 		return rc;
 	}
 
-	if (sock->connection_status < 0) {
+	if (spdk_unlikely(sock->connection_status < 0)) {
 		return sock->connection_status;
 	}
 
@@ -770,8 +780,7 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt)
 			 * directly. */
 
 			if (sock->pending_recv) {
-				sock->pending_recv = false;
-				TAILQ_REMOVE(&(__uring_group_impl(_sock->group_impl))->pending_recv, sock, link);
+				uring_sock_clear_pending_recv(__uring_group_impl(_sock->group_impl), sock);
 			}
 
 			return sock_readv(sock->fd, iovs, iovcnt);
@@ -812,8 +821,7 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt)
 		struct spdk_uring_sock_group_impl *group;
 
 		group = __uring_group_impl(_sock->group_impl);
-		sock->pending_recv = false;
-		TAILQ_REMOVE(&group->pending_recv, sock, link);
+		uring_sock_clear_pending_recv(group, sock);
 	}
 
 	assert(total > 0);
@@ -859,6 +867,60 @@ uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	}
 
 	return uring_writev(sock, iov, iovcnt, 0);
+}
+
+static int
+uring_sock_group_impl_release_buf(struct spdk_sock_group_impl *_group, void *buf,
+				  struct spdk_sock_buf_token *token)
+{
+	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
+	struct spdk_uring_buf_tracker *tracker;
+
+	tracker = SPDK_CONTAINEROF(token, struct spdk_uring_buf_tracker, token);
+	uring_sock_release_tracker(group, tracker);
+
+	return 0;
+}
+
+static int
+uring_sock_recv_next(struct spdk_sock *_sock, void **buf, struct spdk_sock_buf_token **token)
+{
+	struct spdk_uring_sock *sock = __uring_sock(_sock);
+	struct spdk_uring_buf_tracker *tr;
+
+	if (spdk_unlikely(sock->connection_status < 0)) {
+		return sock->connection_status;
+	}
+
+	tr = STAILQ_FIRST(&sock->recv_stream);
+	if (tr == NULL) {
+		/* A zero return means no buffer is available right now, so the end of the
+		 * stream has to be reported as an error here. readv() reports it as a zero
+		 * length read instead, which is what the POSIX API does. */
+		if (spdk_unlikely(sock->eof)) {
+			return -ENOTCONN;
+		}
+
+		*buf = NULL;
+		return 0;
+	}
+
+	STAILQ_REMOVE_HEAD(&sock->recv_stream, link);
+	if (STAILQ_EMPTY(&sock->recv_stream)) {
+		struct spdk_uring_sock_group_impl *group;
+
+		group = __uring_group_impl(_sock->group_impl);
+		uring_sock_clear_pending_recv(group, sock);
+	}
+
+	/* Some of the stream may have already been consumed by readv/recv. Return only the
+	 * unread suffix and keep the original tracker as the release token.
+	 */
+	*buf = tr->buf + sock->recv_offset;
+	tr->token.group_impl = _sock->group_impl;
+	*token = &tr->token;
+
+	return tr->len - sock->recv_offset;
 }
 
 static ssize_t
@@ -1344,9 +1406,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 		/* If the socket was removed from the group, do not add it to socks array */
 		if (spdk_unlikely(sock->group == NULL)) {
-			assert(sock->pending_recv == true);
-			sock->pending_recv = false;
-			TAILQ_REMOVE(&group->pending_recv, sock, link);
+			uring_sock_clear_pending_recv(group, sock);
 			continue;
 		}
 
@@ -1873,8 +1933,7 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	assert(sock->errqueue_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
 
 	if (sock->pending_recv) {
-		TAILQ_REMOVE(&group->pending_recv, sock, link);
-		sock->pending_recv = false;
+		uring_sock_clear_pending_recv(group, sock);
 	}
 	assert(sock->pending_recv == false);
 
@@ -2003,6 +2062,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.recv		= uring_sock_recv,
 	.readv		= uring_sock_readv,
 	.writev		= uring_sock_writev,
+	.recv_next	= uring_sock_recv_next,
 	.writev_async	= uring_sock_writev_async,
 	.flush          = uring_sock_flush,
 	.set_recvlowat	= uring_sock_set_recvlowat,
@@ -2017,6 +2077,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.group_impl_remove_sock	= uring_sock_group_impl_remove_sock,
 	.group_impl_poll	= uring_sock_group_impl_poll,
 	.group_impl_close	= uring_sock_group_impl_close,
+	.group_impl_release_buf = uring_sock_group_impl_release_buf,
 	.get_opts		= uring_sock_impl_get_opts,
 	.set_opts		= uring_sock_impl_set_opts,
 };

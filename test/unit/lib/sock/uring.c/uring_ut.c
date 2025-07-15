@@ -403,6 +403,41 @@ test_uring_sock_connect_cb_readv(void)
 	CU_ASSERT(g_ut_sock_destroy_cnt == 1);
 }
 
+static void
+test_recv_next_token_owner(void)
+{
+	struct spdk_uring_sock_group_impl group = {};
+	struct spdk_uring_sock sock = {};
+	char data[16] = {};
+	struct spdk_uring_buf_tracker tracker = {.buf = data, .len = sizeof(data)};
+	struct spdk_sock_buf_token *token = NULL;
+	void *buf = NULL;
+	int rc;
+
+	TAILQ_INIT(&group.pending_recv);
+	STAILQ_INIT(&group.free_trackers);
+	STAILQ_INIT(&sock.recv_stream);
+	STAILQ_INSERT_TAIL(&sock.recv_stream, &tracker, link);
+	TAILQ_INSERT_TAIL(&group.pending_recv, &sock, link);
+	sock.pending_recv = true;
+	sock.base.group_impl = &group.base;
+	sock.recv_offset = 3;
+
+	rc = uring_sock_recv_next(&sock.base, &buf, &token);
+	CU_ASSERT_EQUAL(rc, sizeof(data) - 3);
+	CU_ASSERT(buf == data + 3);
+	SPDK_CU_ASSERT_FATAL(token == &tracker.token);
+	CU_ASSERT(token->group_impl == &group.base);
+	CU_ASSERT(STAILQ_EMPTY(&sock.recv_stream));
+	CU_ASSERT(!sock.pending_recv);
+
+	sock.base.group_impl = NULL;
+	rc = uring_sock_group_impl_release_buf(&group.base, buf, token);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(STAILQ_FIRST(&group.free_trackers) == &tracker);
+	CU_ASSERT_EQUAL(tracker.len, 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -419,6 +454,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_uring_sock_connect_cb);
 	CU_ADD_TEST(suite, test_uring_sock_connect_cb_is_connected);
 	CU_ADD_TEST(suite, test_uring_sock_connect_cb_readv);
+	CU_ADD_TEST(suite, test_recv_next_token_owner);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 

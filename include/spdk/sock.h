@@ -562,7 +562,10 @@ struct spdk_sock_buf_token;
  * \param token Populated with the token for the buffer
  *
  * \return On success, the length of the buffer placed into buf. Zero means no buffer is
- * available now. On failure, returns a negative errno value.
+ * available now. -EAGAIN and -ENOBUFS are retriable failures; other negative errno values
+ * indicate socket errors. A peer that closed the connection is reported as -ENOTCONN,
+ * because zero already means the stream has no data right now. spdk_sock_recv() and
+ * spdk_sock_readv() report the same condition as a zero length read.
  */
 int spdk_sock_recv_next(struct spdk_sock *sock, void **buf, struct spdk_sock_buf_token **token);
 
