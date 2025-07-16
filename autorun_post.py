@@ -103,7 +103,7 @@ def normalizePaths(cov_file, repo_dir):
         file_contents = fh.read()
         replacement = "SF:" + os.path.abspath(repo_dir) + "/"
         if not re.search(rf'{replacement}', file_contents):
-            replaced = re.sub(r'SF:/[^/]+/spdk/', replacement, file_contents)
+            replaced = re.sub(r'SF:/.*?/spdk/', replacement, file_contents)
 
     if replaced:
         with open(cov_file, 'w') as fh:
