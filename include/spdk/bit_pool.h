@@ -104,6 +104,17 @@ bool spdk_bit_pool_is_allocated(const struct spdk_bit_pool *pool, uint32_t bit_i
 uint32_t spdk_bit_pool_allocate_bit(struct spdk_bit_pool *pool);
 
 /**
+ * Set the specified bit as allocated in the bit pool.
+ *
+ * \param pool Bit pool to set the bit in
+ * \param bit_index Index of the bit to set
+ *
+ * \return 0 if the bit is set successfully, -EBUSY if the bit was already set,
+ * -EINVAL if bit_index is out of range.
+ */
+int spdk_bit_pool_set_bit_allocated(struct spdk_bit_pool *pool, uint32_t bit_index);
+
+/**
  * Free a bit back to the bit pool.
  *
  * Callers must not try to free a bit that has not been allocated, otherwise the

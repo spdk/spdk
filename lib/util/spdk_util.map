@@ -31,6 +31,7 @@
 	spdk_bit_pool_resize;
 	spdk_bit_pool_is_allocated;
 	spdk_bit_pool_allocate_bit;
+	spdk_bit_pool_set_bit_allocated;
 	spdk_bit_pool_free_bit;
 	spdk_bit_pool_count_allocated;
 	spdk_bit_pool_count_free;
