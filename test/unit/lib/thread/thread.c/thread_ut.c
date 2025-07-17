@@ -505,6 +505,12 @@ static void
 channel_msg(struct spdk_io_channel_iter *i)
 {
 	int *msg_count = spdk_io_channel_iter_get_ctx(i);
+	int *ch_ctx = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+
+	/**
+	 * Touch ch_ctx to trigger use-after-free if it was freed.
+	 */
+	*ch_ctx = 0;
 
 	(*msg_count)++;
 	spdk_for_each_channel_continue(i, 0);
@@ -519,11 +525,18 @@ channel_cpl(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+_get_channel(void *ctx)
+{
+	(void)spdk_get_io_channel(ctx);
+}
+
+static void
 for_each_channel_remove(void)
 {
-	struct spdk_io_channel *ch0, *ch1, *ch2;
+	struct spdk_io_channel *ch0, *ch1, *ch2, *new_ch0;
 	int ch_count = 0;
 	int msg_count = 0;
+	int rc;
 
 	allocate_threads(3);
 	set_thread(0);
@@ -569,6 +582,50 @@ for_each_channel_remove(void)
 	poll_threads();
 	CU_ASSERT(ch_count == 2);
 	CU_ASSERT(msg_count == 4);
+
+	msg_count = 0;
+
+	/*
+	 * Case #3: Put the I/O channel, call spdk_for_each_channel, and then poll threads.
+	 */
+	ch0 = spdk_get_io_channel(&ch_count);
+	CU_ASSERT(ch_count == 3);
+	spdk_put_io_channel(ch0);
+	CU_ASSERT(ch_count == 3);
+	spdk_for_each_channel(&ch_count, channel_msg, &msg_count, channel_cpl);
+	poll_threads();
+	CU_ASSERT(ch_count == 2);
+	CU_ASSERT(msg_count == 3);
+
+	msg_count = 0;
+
+	/*
+	 * Case #4: Recreate the I/O channel right before channel_msg is called.
+	 */
+	ch0 = spdk_get_io_channel(&ch_count);
+	CU_ASSERT(ch_count == 3);
+	spdk_put_io_channel(ch0);
+	CU_ASSERT(ch_count == 3);
+	rc = spdk_thread_send_msg(spdk_get_thread(), _get_channel, &ch_count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ch_count == 3);
+	spdk_for_each_channel(&ch_count, channel_msg, &msg_count, channel_cpl);
+	poll_threads();
+	new_ch0 = spdk_get_io_channel(&ch_count);
+	CU_ASSERT(ch_count == 3);
+	CU_ASSERT(msg_count == 4);
+
+	/**
+	 * Put new_ch0 twice to also release the ref got in _get_channel.
+	 */
+	spdk_put_io_channel(new_ch0);
+	spdk_put_io_channel(new_ch0);
+	poll_threads();
+	CU_ASSERT(ch_count == 2);
+
+	/*
+	 * Cleanups.
+	 */
 	set_thread(1);
 	spdk_put_io_channel(ch1);
 	CU_ASSERT(ch_count == 2);

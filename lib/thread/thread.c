@@ -2645,7 +2645,6 @@ static void
 _call_channel(void *ctx)
 {
 	struct spdk_io_channel_iter *i = ctx;
-	struct spdk_io_channel *ch;
 
 	/*
 	 * It is possible that the channel was deleted before this
@@ -2653,10 +2652,10 @@ _call_channel(void *ctx)
 	 *  the fn() on this thread.
 	 */
 	pthread_mutex_lock(&g_devlist_mutex);
-	ch = thread_get_io_channel(i->cur_thread, i->dev);
+	i->ch = thread_get_io_channel(i->cur_thread, i->dev);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	if (ch) {
+	if (i->ch) {
 		i->fn(i);
 	} else {
 		spdk_for_each_channel_continue(i, 0);
@@ -2708,7 +2707,6 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	if (thr_link != NULL) {
 		i->dev->for_each_count++;
 		i->cur_thread = thr_link->thread;
-		i->ch = thread_get_io_channel(thr_link->thread, i->dev); /* must exist, thread is in tail queue */
 		rc = spdk_thread_send_msg(i->cur_thread, _call_channel, i);
 		if (rc == 0) {
 			pthread_mutex_unlock(&g_devlist_mutex);
@@ -2766,7 +2764,6 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	thread = io_dev_get_next_thread(i->dev, i->cur_thread);
 	if (thread != NULL) {
 		i->cur_thread = thread;
-		i->ch = thread_get_io_channel(thread, dev);
 		rc = spdk_thread_send_msg(i->cur_thread, _call_channel, i);
 		if (rc == 0) {
 			pthread_mutex_unlock(&g_devlist_mutex);
