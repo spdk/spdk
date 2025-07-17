@@ -1965,11 +1965,13 @@ vtophys_init(void)
 		return -ENOMEM;
 	}
 
-	g_numa_map = spdk_mem_map_alloc(SPDK_ENV_NUMA_ID_ANY, &numa_map_ops, NULL);
-	if (g_numa_map == NULL) {
-		DEBUG_PRINT("numa map allocation failed.\n");
-		spdk_mem_map_free(&g_phys_ref_map);
-		return -ENOMEM;
+	if (g_huge_pages) {
+		g_numa_map = spdk_mem_map_alloc(SPDK_ENV_NUMA_ID_ANY, &numa_map_ops, NULL);
+		if (g_numa_map == NULL) {
+			DEBUG_PRINT("numa map allocation failed.\n");
+			spdk_mem_map_free(&g_phys_ref_map);
+			return -ENOMEM;
+		}
 	}
 
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
@@ -2009,6 +2011,10 @@ spdk_vtophys(const void *buf, uint64_t *size)
 int32_t
 spdk_mem_get_numa_id(const void *buf, uint64_t *size)
 {
+	if (!g_numa_map) {
+		return SPDK_ENV_NUMA_ID_ANY;
+	}
+
 	return spdk_mem_map_translate(g_numa_map, (uint64_t)buf, size);
 }
 
