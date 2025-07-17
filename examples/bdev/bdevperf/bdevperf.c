@@ -279,6 +279,18 @@ parse_workload_type(enum job_config_rw ret)
 	return NULL;
 }
 
+static void *
+bdevperf_alloc(size_t size, size_t alignment, uint32_t node_id)
+{
+	return spdk_zmalloc(size, alignment, NULL, node_id, SPDK_MALLOC_DMA);
+}
+
+static void
+bdevperf_free(void *buf, size_t size)
+{
+	spdk_free(buf);
+}
+
 /*
  * Cumulative Moving Average (CMA): average of all data up to current
  * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
@@ -799,10 +811,10 @@ clean:
 
 		TAILQ_FOREACH_SAFE(task, &job->task_list, link, ttmp) {
 			TAILQ_REMOVE(&job->task_list, task, link);
-			spdk_free(task->buf);
-			spdk_free(task->verify_buf);
-			spdk_free(task->md_buf);
-			spdk_free(task->verify_md_buf);
+			bdevperf_free(task->buf, job->buf_size);
+			bdevperf_free(task->verify_buf, job->buf_size);
+			bdevperf_free(task->md_buf, job->md_buf_size);
+			bdevperf_free(task->verify_md_buf, job->md_buf_size);
 			free(task);
 		}
 
@@ -2013,8 +2025,8 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			return -ENOMEM;
 		}
 
-		task->buf = spdk_zmalloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev), NULL,
-					 numa_id, SPDK_MALLOC_DMA);
+		task->buf = bdevperf_alloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev),
+					   numa_id);
 		if (!task->buf) {
 			fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 			spdk_zipf_free(&job->zipf);
@@ -2023,23 +2035,23 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		}
 
 		if (job->verify && job->buf_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-			task->verify_buf = spdk_zmalloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev), NULL,
-							numa_id, SPDK_MALLOC_DMA);
+			task->verify_buf = bdevperf_alloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev),
+							  numa_id);
 			if (!task->verify_buf) {
 				fprintf(stderr, "Cannot allocate buf_verify for task=%p\n", task);
-				spdk_free(task->buf);
+				bdevperf_free(task->buf, job->buf_size);
 				spdk_zipf_free(&job->zipf);
 				free(task);
 				return -ENOMEM;
 			}
 
 			if (spdk_bdev_is_md_separate(job->bdev)) {
-				task->verify_md_buf = spdk_zmalloc(job->md_buf_size,
-								   spdk_bdev_get_buf_align(job->bdev), NULL, numa_id, SPDK_MALLOC_DMA);
+				task->verify_md_buf = bdevperf_alloc(job->md_buf_size,
+								     spdk_bdev_get_buf_align(job->bdev), numa_id);
 				if (!task->verify_md_buf) {
 					fprintf(stderr, "Cannot allocate verify_md_buf for task=%p\n", task);
-					spdk_free(task->buf);
-					spdk_free(task->verify_buf);
+					bdevperf_free(task->buf, job->buf_size);
+					bdevperf_free(task->verify_buf, job->buf_size);
 					spdk_zipf_free(&job->zipf);
 					free(task);
 					return -ENOMEM;
@@ -2048,14 +2060,13 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		}
 
 		if (spdk_bdev_desc_is_md_separate(job->bdev_desc)) {
-			task->md_buf = spdk_zmalloc(job->md_buf_size, 0, NULL, numa_id,
-						    SPDK_MALLOC_DMA);
+			task->md_buf = bdevperf_alloc(job->md_buf_size, 0, numa_id);
 			if (!task->md_buf) {
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
 				spdk_zipf_free(&job->zipf);
-				spdk_free(task->verify_buf);
-				spdk_free(task->verify_md_buf);
-				spdk_free(task->buf);
+				bdevperf_free(task->verify_buf, job->buf_size);
+				bdevperf_free(task->verify_md_buf, job->md_buf_size);
+				bdevperf_free(task->buf, job->buf_size);
 				free(task);
 				return -ENOMEM;
 			}
