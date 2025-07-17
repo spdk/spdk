@@ -4124,6 +4124,7 @@ nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrl
 	spdk_json_write_named_string(w, "nqn", opts->hostnqn);
 	spdk_json_write_named_string(w, "addr", opts->src_addr);
 	spdk_json_write_named_string(w, "svcid", opts->src_svcid);
+	spdk_json_write_named_bool(w, "no_shn_notification", opts->no_shn_notification);
 	spdk_json_write_object_end(w);
 
 	numa_id = spdk_nvme_ctrlr_get_numa_id(nvme_ctrlr->ctrlr);
