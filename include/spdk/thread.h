@@ -727,6 +727,20 @@ struct spdk_io_channel *spdk_get_io_channel(void *io_device);
 void spdk_put_io_channel(struct spdk_io_channel *ch);
 
 /**
+ * Take a reference to an existing I/O channel.
+ *
+ * This can be called on an existing io_channel that was previously returned from
+ * spdk_get_io_channel(). This must be called on the same thread that called
+ * spdk_get_io_channel() for the specified I/O channel. spdk_put_io_channel() must
+ * be called to release the reference when it is no longer needed.
+ *
+ * \param ch The existing I/O channel to reference.
+ *
+ * \return The same I/O channel pointer that was passed in.
+ */
+struct spdk_io_channel *spdk_io_channel_ref(struct spdk_io_channel *ch);
+
+/**
  * Get the context buffer associated with an I/O channel.
  *
  * \param ch I/O channel.

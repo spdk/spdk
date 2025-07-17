@@ -803,7 +803,7 @@ destroy_cb_2(void *io_device, void *ctx_buf)
 static void
 channel(void)
 {
-	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_io_channel *ch1, *ch2, *ch1_ref;
 	void *ctx;
 
 	allocate_threads(1);
@@ -825,6 +825,13 @@ channel(void)
 	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
 	CU_ASSERT(spdk_io_channel_get_io_device(ch2) == &g_device1);
 
+	g_create_cb_calls = 0;
+	ch1_ref = spdk_io_channel_ref(ch1);
+	CU_ASSERT(g_create_cb_calls == 0);
+	CU_ASSERT(ch1_ref == ch1);
+	SPDK_CU_ASSERT_FATAL(ch1_ref != NULL);
+	CU_ASSERT(spdk_io_channel_get_io_device(ch1_ref) == &g_device1);
+
 	g_destroy_cb_calls = 0;
 	spdk_put_io_channel(ch2);
 	poll_threads();
@@ -842,6 +849,11 @@ channel(void)
 
 	g_destroy_cb_calls = 0;
 	spdk_put_io_channel(ch1);
+	poll_threads();
+	CU_ASSERT(g_destroy_cb_calls == 0);
+
+	g_destroy_cb_calls = 0;
+	spdk_put_io_channel(ch1_ref);
 	poll_threads();
 	CU_ASSERT(g_destroy_cb_calls == 1);
 

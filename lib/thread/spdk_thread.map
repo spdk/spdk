@@ -47,6 +47,7 @@
 	spdk_io_device_unregister;
 	spdk_get_io_channel;
 	spdk_put_io_channel;
+	spdk_io_channel_ref;
 	spdk_io_channel_get_ctx;
 	spdk_io_channel_from_ctx;
 	spdk_io_channel_get_thread;

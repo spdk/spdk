@@ -2566,6 +2566,21 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 }
 
 struct spdk_io_channel *
+spdk_io_channel_ref(struct spdk_io_channel *ch)
+{
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	if (spdk_unlikely(ch->thread != thread)) {
+		wrong_thread(__func__, "ch", ch->thread, thread);
+		return NULL;
+	}
+
+	ch->ref++;
+	return ch;
+}
+
+struct spdk_io_channel *
 spdk_io_channel_from_ctx(void *ctx)
 {
 	return (struct spdk_io_channel *)((uint8_t *)ctx - sizeof(struct spdk_io_channel));
