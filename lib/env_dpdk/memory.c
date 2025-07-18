@@ -69,6 +69,9 @@ static struct vfio_cfg g_vfio = {
 #define MAP_256TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB)) - 1))
 
+#define MAP_256TB_SIZE		(1ULL << (SHIFT_256TB - SHIFT_1GB))
+#define MAP_1GB_SIZE		(1ULL << (SHIFT_1GB - SHIFT_2MB))
+
 /* Page is registered */
 #define REG_MAP_REGISTERED	(1ULL << 62)
 
@@ -88,14 +91,14 @@ struct map_2mb {
  * been retrieved yet.
  */
 struct map_1gb {
-	struct map_2mb map[1ULL << (SHIFT_1GB - SHIFT_2MB)];
+	struct map_2mb map[MAP_1GB_SIZE];
 };
 
 /* Top-level map table indexed by bits [30..47] of the virtual address.
  * Each entry points to a second-level map table or NULL.
  */
 struct map_256tb {
-	struct map_1gb *map[1ULL << (SHIFT_256TB - SHIFT_1GB)];
+	struct map_1gb *map[MAP_256TB_SIZE];
 };
 
 /* Page-granularity memory address translation */
@@ -160,9 +163,7 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 	/* Hold the memory registration map mutex so no new registrations can be added while we are looping. */
 	pthread_mutex_lock(&g_mem_reg_map->mutex);
 
-	for (idx_256tb = 0;
-	     idx_256tb < sizeof(g_mem_reg_map->map_256tb.map) / sizeof(g_mem_reg_map->map_256tb.map[0]);
-	     idx_256tb++) {
+	for (idx_256tb = 0; idx_256tb < MAP_256TB_SIZE; idx_256tb++) {
 		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
 
 		if (!map_1gb) {
@@ -180,7 +181,7 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 			continue;
 		}
 
-		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
+		for (idx_1gb = 0; idx_1gb < MAP_1GB_SIZE; idx_1gb++) {
 			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
 			if ((mem_map_translate(g_mem_reg_map, vaddr) & REG_MAP_REGISTERED) &&
@@ -266,7 +267,7 @@ err_unregister:
 				contig_end = UINT64_MAX;
 			}
 		}
-		idx_1gb = sizeof(map_1gb->map) / sizeof(map_1gb->map[0]) - 1;
+		idx_1gb = MAP_1GB_SIZE - 1;
 	}
 
 	pthread_mutex_unlock(&g_mem_reg_map->mutex);
