@@ -36,9 +36,13 @@ def nvmf_set_config(client,
         True or False
     """
     params = {}
+    all_admin_cmd_passthru = ('identify_ctrlr')
 
     if passthru_admin_cmds:
-        params['admin_cmd_passthru'] = {cmd: True for cmd in passthru_admin_cmds}
+        if 'all' in passthru_admin_cmds:
+            params['admin_cmd_passthru'] = {cmd: True for cmd in all_admin_cmd_passthru}
+        else:
+            params['admin_cmd_passthru'] = {cmd: True for cmd in passthru_admin_cmds}
     if poll_groups_mask:
         params['poll_groups_mask'] = poll_groups_mask
     if discovery_filter:
