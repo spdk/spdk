@@ -22,8 +22,13 @@ def add_parser(subparsers):
     p.set_defaults(func=nvmf_set_max_subsystems)
 
     def nvmf_set_config(args):
+        args.passthru_admin_cmds = args.passthru_admin_cmds or []
+        if args.passthru_identify_ctrlr:
+            print('WARNING: -i|--passthru-identify-ctrlr is deprecated, please use -p|--passthru-admin-cmds identify_ctrlr.',
+                  file=sys.stderr)
+            args.passthru_admin_cmds.append('identify_ctrlr')
         rpc.nvmf.nvmf_set_config(args.client,
-                                 passthru_identify_ctrlr=args.passthru_identify_ctrlr,
+                                 passthru_admin_cmds=args.passthru_admin_cmds,
                                  poll_groups_mask=args.poll_groups_mask,
                                  discovery_filter=args.discovery_filter,
                                  dhchap_digests=args.dhchap_digests,
@@ -31,7 +36,10 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('nvmf_set_config', help='Set NVMf target config')
     p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
-    when the controller has a single namespace that is an NVMe bdev""", action='store_true')
+    when the controller has a single namespace that is an NVMe bdev (deprecated)""", action='store_true')
+    p.add_argument('-p', '--passthru-admin-cmds', help="""Comma-separated list of admin commands to be passthru
+                   when the controller has a single namespace that is an NVMe bdev.
+                   Available options are: identify_ctrlr""", type=lambda d: d.split(','))
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.add_argument('-d', '--discovery-filter', help="""Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`""", type=str)

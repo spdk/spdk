@@ -33,7 +33,7 @@ nvmfpid=$!
 trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
-$rpc_py -v nvmf_set_config --passthru-identify-ctrlr
+$rpc_py -v nvmf_set_config -p identify_ctrlr
 $rpc_py -v framework_start_init
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 timing_exit start_nvmf_tgt
