@@ -90,7 +90,7 @@ struct map_2mb {
  * Each entry contains the address translation or error for entries that haven't
  * been retrieved yet.
  */
-struct map_1gb {
+struct map_1gb2mb {
 	struct map_2mb map[MAP_1GB_SIZE];
 };
 
@@ -99,7 +99,7 @@ struct map_1gb {
  */
 struct map_256tb {
 	struct {
-		struct map_1gb *map_1gb;
+		struct map_1gb2mb *map_1gb2mb;
 	} map[MAP_256TB_SIZE];
 };
 
@@ -129,19 +129,19 @@ static bool g_huge_pages = true;
 static inline uint64_t
 mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 {
-	const struct map_1gb *map_1gb;
+	const struct map_1gb2mb *map_1gb2mb;
 	uint64_t vfn_2mb, idx_1gb, idx_256tb;
 
 	vfn_2mb = VFN_2MB(vaddr);
 	idx_256tb = MAP_256TB_IDX(vfn_2mb);
 
-	map_1gb = map->map_256tb.map[idx_256tb].map_1gb;
-	if (spdk_unlikely(!map_1gb)) {
+	map_1gb2mb = map->map_256tb.map[idx_256tb].map_1gb2mb;
+	if (spdk_unlikely(!map_1gb2mb)) {
 		return map->default_translation;
 	}
 
 	idx_1gb = MAP_1GB_IDX(vfn_2mb);
-	return map_1gb->map[idx_1gb].translation_2mb;
+	return map_1gb2mb->map[idx_1gb].translation_2mb;
 }
 
 /*
@@ -155,7 +155,7 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 	uint64_t idx_1gb;
 	uint64_t contig_start = UINT64_MAX;
 	uint64_t contig_end = UINT64_MAX;
-	struct map_1gb *map_1gb;
+	struct map_1gb2mb *map_1gb2mb;
 	int rc;
 
 	if (!g_mem_reg_map) {
@@ -166,9 +166,9 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 	pthread_mutex_lock(&g_mem_reg_map->mutex);
 
 	for (idx_256tb = 0; idx_256tb < MAP_256TB_SIZE; idx_256tb++) {
-		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb;
+		map_1gb2mb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb;
 
-		if (!map_1gb) {
+		if (!map_1gb2mb) {
 			if (contig_start != UINT64_MAX) {
 				/* End of of a virtually contiguous range */
 				rc = map->ops.notify_cb(map->cb_ctx, map, action,
@@ -230,9 +230,9 @@ err_unregister:
 
 	/* Unregister any memory we managed to register before the failure */
 	for (; idx_256tb < SIZE_MAX; idx_256tb--) {
-		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb;
+		map_1gb2mb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb;
 
-		if (!map_1gb) {
+		if (!map_1gb2mb) {
 			if (contig_end != UINT64_MAX) {
 				/* End of of a virtually contiguous range */
 				map->ops.notify_cb(map->cb_ctx, map,
@@ -282,7 +282,7 @@ mem_map_free(struct spdk_mem_map *map)
 	size_t i;
 
 	for (i = 0; i < SPDK_COUNTOF(map->map_256tb.map); i++) {
-		free(map->map_256tb.map[i].map_1gb);
+		free(map->map_256tb.map[i].map_1gb2mb);
 	}
 	pthread_mutex_destroy(&map->mutex);
 	free(map);
@@ -560,10 +560,10 @@ spdk_mem_reserve(void *vaddr, size_t len)
 	return 0;
 }
 
-static struct map_1gb *
-mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
+static struct map_1gb2mb *
+mem_map_get_map_1gb2mb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 {
-	struct map_1gb *map_1gb;
+	struct map_1gb2mb *map_1gb2mb;
 	uint64_t idx_256tb = MAP_256TB_IDX(vfn_2mb);
 	size_t i;
 
@@ -571,33 +571,33 @@ mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 		return NULL;
 	}
 
-	map_1gb = map->map_256tb.map[idx_256tb].map_1gb;
+	map_1gb2mb = map->map_256tb.map[idx_256tb].map_1gb2mb;
 
-	if (!map_1gb) {
+	if (!map_1gb2mb) {
 		pthread_mutex_lock(&map->mutex);
 
 		/* Recheck to make sure nobody else got the mutex first. */
-		map_1gb = map->map_256tb.map[idx_256tb].map_1gb;
-		if (!map_1gb) {
-			map_1gb = malloc(sizeof(struct map_1gb));
-			if (map_1gb) {
+		map_1gb2mb = map->map_256tb.map[idx_256tb].map_1gb2mb;
+		if (!map_1gb2mb) {
+			map_1gb2mb = malloc(sizeof(struct map_1gb2mb));
+			if (map_1gb2mb) {
 				/* initialize all entries to default translation */
-				for (i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {
-					map_1gb->map[i].translation_2mb = map->default_translation;
+				for (i = 0; i < SPDK_COUNTOF(map_1gb2mb->map); i++) {
+					map_1gb2mb->map[i].translation_2mb = map->default_translation;
 				}
-				map->map_256tb.map[idx_256tb].map_1gb = map_1gb;
+				map->map_256tb.map[idx_256tb].map_1gb2mb = map_1gb2mb;
 			}
 		}
 
 		pthread_mutex_unlock(&map->mutex);
 
-		if (!map_1gb) {
+		if (!map_1gb2mb) {
 			DEBUG_PRINT("allocation failed\n");
 			return NULL;
 		}
 	}
 
-	return map_1gb;
+	return map_1gb2mb;
 }
 
 int
@@ -605,7 +605,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 			     uint64_t translation)
 {
 	uint64_t vfn_2mb;
-	struct map_1gb *map_1gb;
+	struct map_1gb2mb *map_1gb2mb;
 	uint64_t idx_1gb;
 	struct map_2mb *map_2mb;
 
@@ -624,14 +624,14 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	vfn_2mb = VFN_2MB(vaddr);
 
 	while (size) {
-		map_1gb = mem_map_get_map_1gb(map, vfn_2mb);
-		if (!map_1gb) {
+		map_1gb2mb = mem_map_get_map_1gb2mb(map, vfn_2mb);
+		if (!map_1gb2mb) {
 			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
 			return -ENOMEM;
 		}
 
 		idx_1gb = MAP_1GB_IDX(vfn_2mb);
-		map_2mb = &map_1gb->map[idx_1gb];
+		map_2mb = &map_1gb2mb->map[idx_1gb];
 		map_2mb->translation_2mb = translation;
 
 		size -= VALUE_2MB;
