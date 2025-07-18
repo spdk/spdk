@@ -98,7 +98,9 @@ struct map_1gb {
  * Each entry points to a second-level map table or NULL.
  */
 struct map_256tb {
-	struct map_1gb *map[MAP_256TB_SIZE];
+	struct {
+		struct map_1gb *map_1gb;
+	} map[MAP_256TB_SIZE];
 };
 
 /* Page-granularity memory address translation */
@@ -133,7 +135,7 @@ mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	vfn_2mb = VFN_2MB(vaddr);
 	idx_256tb = MAP_256TB_IDX(vfn_2mb);
 
-	map_1gb = map->map_256tb.map[idx_256tb];
+	map_1gb = map->map_256tb.map[idx_256tb].map_1gb;
 	if (spdk_unlikely(!map_1gb)) {
 		return map->default_translation;
 	}
@@ -164,7 +166,7 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 	pthread_mutex_lock(&g_mem_reg_map->mutex);
 
 	for (idx_256tb = 0; idx_256tb < MAP_256TB_SIZE; idx_256tb++) {
-		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
+		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb;
 
 		if (!map_1gb) {
 			if (contig_start != UINT64_MAX) {
@@ -228,7 +230,7 @@ err_unregister:
 
 	/* Unregister any memory we managed to register before the failure */
 	for (; idx_256tb < SIZE_MAX; idx_256tb--) {
-		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
+		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb;
 
 		if (!map_1gb) {
 			if (contig_end != UINT64_MAX) {
@@ -280,7 +282,7 @@ mem_map_free(struct spdk_mem_map *map)
 	size_t i;
 
 	for (i = 0; i < SPDK_COUNTOF(map->map_256tb.map); i++) {
-		free(map->map_256tb.map[i]);
+		free(map->map_256tb.map[i].map_1gb);
 	}
 	pthread_mutex_destroy(&map->mutex);
 	free(map);
@@ -569,13 +571,13 @@ mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 		return NULL;
 	}
 
-	map_1gb = map->map_256tb.map[idx_256tb];
+	map_1gb = map->map_256tb.map[idx_256tb].map_1gb;
 
 	if (!map_1gb) {
 		pthread_mutex_lock(&map->mutex);
 
 		/* Recheck to make sure nobody else got the mutex first. */
-		map_1gb = map->map_256tb.map[idx_256tb];
+		map_1gb = map->map_256tb.map[idx_256tb].map_1gb;
 		if (!map_1gb) {
 			map_1gb = malloc(sizeof(struct map_1gb));
 			if (map_1gb) {
@@ -583,7 +585,7 @@ mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 				for (i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {
 					map_1gb->map[i].translation_2mb = map->default_translation;
 				}
-				map->map_256tb.map[idx_256tb] = map_1gb;
+				map->map_256tb.map[idx_256tb].map_1gb = map_1gb;
 			}
 		}
 
