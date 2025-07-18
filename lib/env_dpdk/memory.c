@@ -81,17 +81,12 @@ static struct vfio_cfg g_vfio = {
  */
 #define REG_MAP_NOTIFY_START	(1ULL << 63)
 
-/* Translation of a single 2MB page. */
-struct map_2mb {
-	uint64_t translation_2mb;
-};
-
 /* Second-level map table indexed by bits [21..29] of the virtual address.
- * Each entry contains the address translation or error for entries that haven't
- * been retrieved yet.
+ * Each entry contains the address translation for a 2MB page or an error
+ * for entries that haven't been retrieved yet.
  */
 struct map_1gb2mb {
-	struct map_2mb map[MAP_1GB_SIZE];
+	uint64_t translation_2mb[MAP_1GB_SIZE];
 };
 
 /* Top-level map table indexed by bits [30..47] of the virtual address.
@@ -141,7 +136,7 @@ mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	}
 
 	idx_1gb = MAP_1GB_IDX(vfn_2mb);
-	return map_1gb2mb->map[idx_1gb].translation_2mb;
+	return map_1gb2mb->translation_2mb[idx_1gb];
 }
 
 /*
@@ -582,8 +577,8 @@ mem_map_get_map_1gb2mb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 			map_1gb2mb = malloc(sizeof(struct map_1gb2mb));
 			if (map_1gb2mb) {
 				/* initialize all entries to default translation */
-				for (i = 0; i < SPDK_COUNTOF(map_1gb2mb->map); i++) {
-					map_1gb2mb->map[i].translation_2mb = map->default_translation;
+				for (i = 0; i < SPDK_COUNTOF(map_1gb2mb->translation_2mb); i++) {
+					map_1gb2mb->translation_2mb[i] = map->default_translation;
 				}
 				map->map_256tb.map[idx_256tb].map_1gb2mb = map_1gb2mb;
 			}
@@ -607,7 +602,6 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	uint64_t vfn_2mb;
 	struct map_1gb2mb *map_1gb2mb;
 	uint64_t idx_1gb;
-	struct map_2mb *map_2mb;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %" PRIu64 "\n", vaddr);
@@ -631,8 +625,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		}
 
 		idx_1gb = MAP_1GB_IDX(vfn_2mb);
-		map_2mb = &map_1gb2mb->map[idx_1gb];
-		map_2mb->translation_2mb = translation;
+		map_1gb2mb->translation_2mb[idx_1gb] = translation;
 
 		size -= VALUE_2MB;
 		vfn_2mb++;
