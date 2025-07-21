@@ -1851,6 +1851,8 @@ nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
 	uint64_t offset = sgl->address;
 	uint32_t max_len = rtransport->transport.opts.in_capsule_data_size;
 
+	assert(sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
+	       sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
 	SPDK_DEBUGLOG(nvmf, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 		      offset, sgl->unkeyed.length);
 
@@ -1933,9 +1935,6 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			      req->iovcnt);
 
 		return 0;
-	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
-		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
-		return nvmf_rdma_request_parse_icd(rtransport, rdma_req);
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 
@@ -1953,6 +1952,11 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			      req->iovcnt);
 
 		return 0;
+	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
+		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
+		SPDK_ERRLOG("Request %p with ICD called in wrong place\n", rdma_req);
+		assert(0);
+		return -EINVAL;
 	}
 
 	SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
@@ -2105,6 +2109,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvme_cpl		*rsp = &rdma_req->req.rsp->nvme_cpl;
 	int				rc;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
+	struct spdk_nvme_sgl_descriptor *sgl;
 	enum spdk_nvmf_rdma_request_state prev_state;
 	bool				progress = false;
 	int				data_posted;
@@ -2201,6 +2206,19 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
+			sgl = &rdma_req->req.cmd->nvme_cmd.dptr.sgl1;
+			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
+			    sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
+				/* In-capsule data, no need to get a buffer */
+				rc = nvmf_rdma_request_parse_icd(rtransport, rdma_req);
+				if (spdk_unlikely(rc < 0)) {
+					STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+					break;
+				}
+				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+				break;
+			}
 			rdma_req->state = RDMA_REQUEST_STATE_NEED_BUFFER;
 			nvmf_rdma_poll_group_insert_need_buffer_req(rgroup, rdma_req);
 			break;

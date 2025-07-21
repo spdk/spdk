@@ -269,7 +269,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->address = 0;
 	sgl->unkeyed.length = rtransport.transport.opts.in_capsule_data_size;
-	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = nvmf_rdma_request_parse_icd(&rtransport, &rdma_req);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.iovcnt == 1);
@@ -281,7 +281,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->address = rtransport.transport.opts.in_capsule_data_size;
 	sgl->unkeyed.length = rtransport.transport.opts.in_capsule_data_size;
-	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = nvmf_rdma_request_parse_icd(&rtransport, &rdma_req);
 
 	CU_ASSERT(rc == -1);
 
@@ -289,7 +289,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->address = 0;
 	sgl->unkeyed.length = rtransport.transport.opts.in_capsule_data_size * 2;
-	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = nvmf_rdma_request_parse_icd(&rtransport, &rdma_req);
 
 	CU_ASSERT(rc == -1);
 
@@ -526,6 +526,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	struct spdk_nvmf_rdma_qpair rqpair = {};
 	struct spdk_nvmf_rdma_recv *rdma_recv;
 	struct spdk_nvmf_rdma_request *rdma_req;
+	union nvmf_h2c_msg *cmd;
 	struct spdk_iobuf_channel ch = {};
 	bool progress;
 
@@ -571,11 +572,22 @@ test_spdk_nvmf_rdma_request_process(void)
 	poller_reset(&poller, &group);
 	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 
-	/* Test 2: single SGL WRITE request */
+	/* Test 2.1: single SGL WRITE request */
 	rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
 	rdma_req = create_req(&rqpair, rdma_recv);
 	rqpair.current_recv_depth = 1;
-	/* NEW -> TRANSFERRING_H2C */
+	MOCK_SET(spdk_iobuf_get, NULL);
+	/* NEW -> NEED_BUFFER */
+	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER);
+	CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
+	/* NEED_BUFFER -> NEED_BUFFER */
+	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == false);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER);
+	MOCK_CLEAR(spdk_iobuf_get);
+	/* NEED_BUFFER -> TRANSFERRING_H2C */
 	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
 	CU_ASSERT(progress == true);
 	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
@@ -602,6 +614,42 @@ test_spdk_nvmf_rdma_request_process(void)
 	free_req(rdma_req);
 	poller_reset(&poller, &group);
 	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
+
+	/* Test 2.2: single ICD WRITE request */
+	rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
+	rdma_req = create_req(&rqpair, rdma_recv);
+	cmd = (union nvmf_h2c_msg *)rdma_recv->sgl[0].addr;
+	cmd->nvme_cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	cmd->nvme_cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+	cmd->nvme_cmd.dptr.sgl1.unkeyed.length = 1024;
+	cmd->nvme_cmd.dptr.sgl1.address = 0;
+
+	rqpair.current_recv_depth = 1;
+	/* A request with ICD must bypass NEED_BUFFER state */
+	MOCK_SET(spdk_iobuf_get, NULL);
+	/* NEW -> RDMA_REQUEST_STATE_EXECUTING */
+	STAILQ_INIT(&poller.qpairs_pending_send);
+	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_EXECUTING);
+	/* EXECUTED -> COMPLETING */
+	rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
+	MOCK_CLEAR(spdk_iobuf_get);
+	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_COMPLETING);
+	CU_ASSERT(rdma_req->recv == NULL);
+	/* COMPLETED -> FREE */
+	rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_FREE);
+
+	free_recv(rdma_recv);
+	free_req(rdma_req);
+	poller_reset(&poller, &group);
+	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
+
 
 	/* Test 3: WRITE+WRITE ibv_send batching */
 	{
