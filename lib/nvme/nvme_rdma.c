@@ -696,6 +696,23 @@ nvme_rdma_qpair_set_poller(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+static void
+nvme_rdma_qpair_release_poller(struct nvme_rdma_qpair *rqpair)
+{
+	struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(rqpair->qpair.poll_group);
+	struct nvme_rdma_poller *poller = rqpair->poller;
+
+	assert(poller);
+
+	if (!poller->srq) {
+		assert(rqpair->poller->required_num_wc >= WC_PER_QPAIR(rqpair->num_entries));
+		poller->required_num_wc -= WC_PER_QPAIR(rqpair->num_entries);
+	}
+
+	nvme_rdma_poll_group_put_poller(group, poller);
+	rqpair->poller = NULL;
+}
+
 static int
 nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
@@ -2067,12 +2084,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->poller) {
-		struct nvme_rdma_poll_group     *group;
-
-		assert(qpair->poll_group);
-		group = nvme_rdma_poll_group(qpair->poll_group);
-
-		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+		nvme_rdma_qpair_release_poller(rqpair);
 
 		rqpair->poller = NULL;
 		rqpair->cq = NULL;
@@ -3321,6 +3333,7 @@ static void
 nvme_rdma_poll_group_put_poller(struct nvme_rdma_poll_group *group, struct nvme_rdma_poller *poller)
 {
 	assert(poller->refcnt > 0);
+
 	if (--poller->refcnt == 0) {
 		STAILQ_REMOVE(&group->pollers, poller, nvme_rdma_poller, link);
 		group->num_pollers--;
