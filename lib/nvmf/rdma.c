@@ -3436,18 +3436,20 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
-static void
-nvmf_rdma_poller_process_pending_buf_queue(struct spdk_nvmf_rdma_transport *rtransport,
-		struct spdk_nvmf_rdma_poller *rpoller)
+static inline void
+nvmf_rdma_poller_process_pending_qpairs(struct spdk_nvmf_rdma_transport *rtransport,
+					struct spdk_nvmf_rdma_poller *rpoller)
 {
-	struct spdk_nvmf_request *req, *tmp;
-	struct spdk_nvmf_rdma_request *rdma_req;
+	struct spdk_nvmf_rdma_qpair *rqpair, *tmp;
 
-	STAILQ_FOREACH_SAFE(req, &rpoller->group->group.pending_buf_queue, buf_link, tmp) {
-		rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
-		if (nvmf_rdma_request_process(rtransport, rdma_req) == false) {
-			break;
+	/* TODO: Here we iterate all qpairs, active and not active and touch at least 2 cache lines per
+	 * qpair. On high scale with small number of active qpairs we may observe higher rate of L2 cache
+	 * misses. To solve this problem we need to maintain a dedicated list of active qpairs */
+	RB_FOREACH_SAFE(rqpair, qpairs_tree, &rpoller->qpairs, tmp) {
+		if (rqpair->qpair.queue_depth == 0) {
+			continue;
 		}
+		nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 	}
 }
 
@@ -4763,7 +4765,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair->current_recv_depth++;
 			rdma_recv->receive_tsc = poll_tsc;
 			rpoller->stat.requests++;
-			STAILQ_INSERT_HEAD(&rqpair->resources->incoming_queue, rdma_recv, link);
+			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
 			rqpair->qpair.queue_depth++;
 			break;
 		case RDMA_WR_TYPE_DATA:
@@ -4830,22 +4832,15 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			continue;
 		}
 
-		nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
-
 		if (spdk_unlikely(!spdk_nvmf_qpair_is_active(&rqpair->qpair))) {
 			nvmf_rdma_destroy_drained_qpair(rqpair);
 		}
 	}
 
+	nvmf_rdma_poller_process_pending_qpairs(rtransport, rpoller);
+
 	if (spdk_unlikely(error == true)) {
 		return -1;
-	}
-
-	if (reaped == 0) {
-		/* In some cases we may not receive any CQE but we still may have pending IO requests waiting for
-		 * a resource (e.g. a WR from the data_wr_pool).
-		 * We need to start processing of such requests if no CQE reaped */
-		nvmf_rdma_poller_process_pending_buf_queue(rtransport, rpoller);
 	}
 
 	/* submit outstanding work requests. */
