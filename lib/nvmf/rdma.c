@@ -1841,6 +1841,45 @@ err_exit:
 	return rc;
 }
 
+static inline int
+nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
+			    struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct spdk_nvmf_request *req = &rdma_req->req;
+	struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint64_t offset = sgl->address;
+	uint32_t max_len = rtransport->transport.opts.in_capsule_data_size;
+
+	SPDK_DEBUGLOG(nvmf, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+		      offset, sgl->unkeyed.length);
+
+	if (spdk_unlikely(offset > max_len)) {
+		SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
+			    offset, max_len);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
+		return -1;
+	}
+	max_len -= (uint32_t)offset;
+
+	if (spdk_unlikely(sgl->unkeyed.length > max_len)) {
+		SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
+			    sgl->unkeyed.length, max_len);
+		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return -1;
+	}
+
+	rdma_req->num_outstanding_data_wr = 0;
+	req->data_from_pool = false;
+	req->length = sgl->unkeyed.length;
+
+	req->iov[0].iov_base = rdma_req->recv->buf + offset;
+	req->iov[0].iov_len = req->length;
+	req->iovcnt = 1;
+
+	return 0;
+}
+
 static int
 nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			    struct spdk_nvmf_rdma_device *device,
@@ -1896,36 +1935,7 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
-		uint64_t offset = sgl->address;
-		uint32_t max_len = rtransport->transport.opts.in_capsule_data_size;
-
-		SPDK_DEBUGLOG(nvmf, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
-			      offset, sgl->unkeyed.length);
-
-		if (spdk_unlikely(offset > max_len)) {
-			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
-				    offset, max_len);
-			rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
-			return -1;
-		}
-		max_len -= (uint32_t)offset;
-
-		if (spdk_unlikely(sgl->unkeyed.length > max_len)) {
-			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-				    sgl->unkeyed.length, max_len);
-			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return -1;
-		}
-
-		rdma_req->num_outstanding_data_wr = 0;
-		req->data_from_pool = false;
-		req->length = sgl->unkeyed.length;
-
-		req->iov[0].iov_base = rdma_req->recv->buf + offset;
-		req->iov[0].iov_len = req->length;
-		req->iovcnt = 1;
-
-		return 0;
+		return nvmf_rdma_request_parse_icd(rtransport, rdma_req);
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 
