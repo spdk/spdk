@@ -111,6 +111,8 @@ struct spdk_net_impl {
 	int (*get_opts)(struct spdk_sock_impl_opts *opts, size_t *len);
 	int (*set_opts)(const struct spdk_sock_impl_opts *opts, size_t len);
 
+	struct spdk_memory_domain *(*get_memory_domain)(struct spdk_sock *);
+
 	STAILQ_ENTRY(spdk_net_impl) link;
 };
 

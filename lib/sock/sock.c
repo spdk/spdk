@@ -1404,6 +1404,16 @@ spdk_sock_group_get_interruptfd(struct spdk_sock_group *group)
 	return spdk_fd_group_get_fd(group->fgrp);
 }
 
+struct spdk_memory_domain *
+spdk_sock_get_memory_domain(struct spdk_sock *sock)
+{
+	if (sock->net_impl->get_memory_domain) {
+		return sock->net_impl->get_memory_domain(sock);
+	}
+
+	return NULL;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(sock)
 
 static void

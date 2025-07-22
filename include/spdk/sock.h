@@ -12,6 +12,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/dma.h"
 #include "spdk/queue.h"
 #include "spdk/json.h"
 #include "spdk/assert.h"
@@ -732,6 +733,20 @@ void spdk_sock_write_config_json(struct spdk_json_write_ctx *w);
  * \return fd (>0) on success or negated errno on failure.
  */
 int spdk_sock_group_get_interruptfd(struct spdk_sock_group *group);
+
+/**
+ * Get memory domain associated with the socket, or NULL if the socket module doesn't support memory
+ * domains.
+ *
+ * A socket exposes at most one memory domain because the domain is tied to the socket
+ * implementation and connection. Callers that need to choose among multiple device domain types
+ * should perform that selection at the higher layer that owns those devices.
+ *
+ * \param sock Socket.
+ *
+ * \return Memory domain or NULL.
+ */
+struct spdk_memory_domain *spdk_sock_get_memory_domain(struct spdk_sock *sock);
 
 #ifdef __cplusplus
 }
