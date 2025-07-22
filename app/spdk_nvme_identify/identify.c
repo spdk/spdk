@@ -2721,20 +2721,31 @@ usage(const char *program_name)
 	printf("\t-z         For NVMe Zoned Namespaces, dump the full zone report (-z) or the first N entries (-z N)\n");
 	printf("\t-V         enumerate VMD\n");
 	printf("\t-S         socket implementation, e.g. -S uring (default is posix)\n");
+	printf("\t-s         memory size in MB for DPDK\n");
+	printf("\t--no-huge  SPDK is run without hugepages\n");
 	printf("\t-H         show this usage\n");
 }
 
+#define IDENTIFY_GETOPT_STRING "d:gi:op:r:v:xz::HL:S:Vs:"
+static const struct option g_identify_cmdline_opts[] = {
+#define IDENTIFY_NO_HUGE        257
+	{"no-huge", no_argument, NULL, IDENTIFY_NO_HUGE},
+	{0, 0, 0, 0}
+};
+
 static int
-parse_args(int argc, char **argv)
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
-	int op, rc;
+	int op, rc, opt_index;
+	long int value;
 
 	rc = spdk_nvme_trid_entry_parse(&g_trid, "trtype:PCIe");
 	if (rc < 0) {
 		return 1;
 	}
 
-	while ((op = getopt(argc, argv, "d:gi:op:r:v:xz::HL:S:V")) != -1) {
+	while ((op = getopt_long(argc, argv, IDENTIFY_GETOPT_STRING, g_identify_cmdline_opts,
+				 &opt_index)) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -2815,6 +2826,17 @@ parse_args(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 			break;
+		case 's':
+			value = spdk_strtol(optarg, 10);
+			if (value < 0) {
+				fprintf(stderr, "converting a string to integer failed\n");
+				return -EINVAL;
+			}
+			env_opts->mem_size = value;
+			break;
+		case IDENTIFY_NO_HUGE:
+			env_opts->no_huge = true;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
@@ -2848,13 +2870,13 @@ main(int argc, char **argv)
 	struct spdk_env_opts		opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
 
-	rc = parse_args(argc, argv);
+	opts.opts_size = sizeof(opts);
+	spdk_env_opts_init(&opts);
+	rc = parse_args(argc, argv, &opts);
 	if (rc != 0) {
 		return rc;
 	}
 
-	opts.opts_size = sizeof(opts);
-	spdk_env_opts_init(&opts);
 	opts.name = "identify";
 	opts.shm_id = g_shm_id;
 	opts.mem_size = g_dpdk_mem;

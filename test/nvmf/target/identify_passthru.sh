@@ -20,8 +20,8 @@ if [ -z "${bdf}" ]; then
 fi
 
 # Expected values
-nvme_serial_number=$($SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:PCIe traddr:${bdf}" -i 0 | grep "Serial Number:" | awk '{print $3}')
-nvme_model_number=$($SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:PCIe traddr:${bdf}" -i 0 | grep "Model Number:" | awk '{print $3}')
+nvme_serial_number=$($SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:PCIe traddr:${bdf}" -i 0 "${NO_HUGE[@]}" | grep "Serial Number:" | awk '{print $3}')
+nvme_model_number=$($SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:PCIe traddr:${bdf}" -i 0 "${NO_HUGE[@]}" | grep "Model Number:" | awk '{print $3}')
 
 timing_exit nvme_identify
 
@@ -51,14 +51,16 @@ nvmf_serial_number=$($SPDK_BIN_DIR/spdk_nvme_identify -r "\
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Serial Number:" | awk '{print $3}')
+        subnqn:nqn.2016-06.io.spdk:cnode1" \
+	"${NO_HUGE[@]}" | grep "Serial Number:" | awk '{print $3}')
 
 nvmf_model_number=$($SPDK_BIN_DIR/spdk_nvme_identify -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Model Number:" | awk '{print $3}')
+        subnqn:nqn.2016-06.io.spdk:cnode1" \
+	"${NO_HUGE[@]}" | grep "Model Number:" | awk '{print $3}')
 
 if [ ${nvme_serial_number} != ${nvmf_serial_number} ]; then
 	echo "Serial number doesn't match"
