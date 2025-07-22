@@ -261,19 +261,28 @@ usage(const char *program_name)
 	spdk_log_usage(stdout, "-L");
 	AER_PRINTF("\t-i <id>    shared memory group ID\n");
 	AER_PRINTF("\t-m         Multi-Process AER Test (only with Temp Test)\n");
+	AER_PRINTF("\t-s         memory size in MB for DPDK\n");
+	AER_PRINTF("\t--no-huge  SPDK is run without hugepages\n");
 	AER_PRINTF("\t-H         show this usage\n");
 }
 
+#define AER_GETOPT_STRING "gi:mn:r:t:HL:Ts:"
+static const struct option g_aer_cmdline_opts[] = {
+#define AER_NO_HUGE        257
+	{"no-huge", no_argument, NULL, AER_NO_HUGE},
+	{0, 0, 0, 0}
+};
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
-	int op, rc;
+	int op, rc, opt_index;
 	long int val;
 
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "gi:mn:r:t:HL:T")) != -1) {
+	while ((op = getopt_long(argc, argv, AER_GETOPT_STRING, g_aer_cmdline_opts,
+				 &opt_index)) != -1) {
 		switch (op) {
 		case 'n':
 			val = spdk_strtol(optarg, 10);
@@ -321,6 +330,17 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case 'm':
 			g_multi_process_test = 1;
+			break;
+		case 's':
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "converting a string to integer failed\n");
+				return -EINVAL;
+			}
+			env_opts->mem_size = val;
+			break;
+		case AER_NO_HUGE:
+			env_opts->no_huge = true;
 			break;
 		default:
 			usage(argv[0]);

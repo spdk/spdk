@@ -30,7 +30,7 @@ function aer_vfio_user() {
 	$rootdir/test/nvme/aer/aer -r "\
 		trtype:$TEST_TRANSPORT \
 		traddr:$traddr \
-		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE &
+		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE "${NO_HUGE[@]}" &
 	aerpid=$!
 
 	# Waiting for aer start to work
