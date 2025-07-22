@@ -176,6 +176,8 @@ export SPDK_JSONRPC_GO_CLIENT
 export SPDK_TEST_SETUP
 : ${SPDK_TEST_NVME_INTERRUPT=0}
 export SPDK_TEST_NVME_INTERRUPT
+: ${SPDK_TEST_SKIP_NVMF_KERNEL_TESTS=0}
+export SPDK_TEST_SKIP_NVMF_KERNEL_TESTS
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"

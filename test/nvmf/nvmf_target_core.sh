@@ -28,10 +28,13 @@ run_test "nvmf_lvol" $rootdir/test/nvmf/target/nvmf_lvol.sh "${TEST_ARGS[@]}"
 run_test "nvmf_lvs_grow" $rootdir/test/nvmf/target/nvmf_lvs_grow.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdev_io_wait" $rootdir/test/nvmf/target/bdev_io_wait.sh "${TEST_ARGS[@]}"
 run_test "nvmf_queue_depth" $rootdir/test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
-run_test "nvmf_target_multipath" $rootdir/test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
 run_test "nvmf_zcopy" $rootdir/test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
-run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
-run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
+
+if [[ "$SPDK_TEST_SKIP_NVMF_KERNEL_TESTS" -eq 0 ]]; then
+	run_test "nvmf_target_multipath" $rootdir/test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
+fi
 
 trap - SIGINT SIGTERM EXIT
