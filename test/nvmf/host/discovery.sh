@@ -41,7 +41,7 @@ $rpc_py bdev_wait_for_examine
 # and then check if the discovery service has detected the changes and constructed the correct
 # subsystem, ctrlr and bdev objects.
 
-$SPDK_BIN_DIR/nvmf_tgt -m 0x1 -r $HOST_SOCK &
+$SPDK_BIN_DIR/nvmf_tgt -m 0x1 -r $HOST_SOCK "${NO_HUGE[@]}" &
 hostpid=$!
 waitforlisten $hostpid $HOST_SOCK
 

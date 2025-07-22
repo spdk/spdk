@@ -53,7 +53,7 @@ waitfortcp() {
 
 nvmftestinit
 
-HELLO_SOCK_APP="${NVMF_TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock"
+HELLO_SOCK_APP="${NVMF_TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock ${NO_HUGE[*]}"
 SOCAT_APP="socat"
 OPENSSL_APP="openssl"
 PSK="-N ssl -E 1234567890ABCDEF -I psk.spdk.io"

@@ -44,7 +44,7 @@ lvs_grow() {
 	$rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 	# Start random writes in the background
-	$SPDK_EXAMPLE_DIR/bdevperf -r $bdevperf_rpc_sock -m 0x2 -o 4096 -q 128 -w randwrite -t 10 -S 1 -z &
+	$SPDK_EXAMPLE_DIR/bdevperf -r $bdevperf_rpc_sock -m 0x2 -o 4096 -q 128 -w randwrite -t 10 -S 1 -z "${NO_HUGE[@]}" &
 	bdevperf_pid=$!
 	trap 'killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid $bdevperf_rpc_sock

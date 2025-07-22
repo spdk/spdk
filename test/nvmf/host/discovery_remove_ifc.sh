@@ -55,7 +55,7 @@ $rpc_py << CFG
 	nvmf_subsystem_add_host ${nqn}0 $host_nqn
 CFG
 
-$SPDK_BIN_DIR/nvmf_tgt -m 0x1 -r $host_sock --wait-for-rpc -L bdev_nvme &
+$SPDK_BIN_DIR/nvmf_tgt -m 0x1 -r $host_sock --wait-for-rpc -L bdev_nvme "${NO_HUGE[@]}" &
 hostpid=$!
 waitforlisten $hostpid $host_sock
 

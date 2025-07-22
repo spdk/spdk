@@ -44,14 +44,14 @@ $rpc_py nvmf_subsystem_add_listener "$subnqn" -t "$TEST_TRANSPORT" -a "$NVMF_FIR
 
 if [ "$CLEAN_FLOW" -eq 1 ]; then
 	# Clean flow tests if everything works fine with regular traffic scenario.
-	$perf "${perf_opt[@]}" -t 1
+	$perf "${perf_opt[@]}" -t 1 "${NO_HUGE[@]}"
 	retry_count=$($rpc_py iobuf_get_stats | jq -r '.[] | select(.module == "nvmf_TCP") | .small_pool.retry')
 	if [[ $retry_count -eq 0 ]]; then
 		return 1
 	fi
 else
 	# Dirty flow tests if target can correctly clean up awaiting requests when initiator is suddenly gone.
-	$perf "${perf_opt[@]}" -t 10 &
+	$perf "${perf_opt[@]}" -t 10 "${NO_HUGE[@]}" &
 	perf_pid=$!
 	sleep 4
 	kill -9 $perfpid || true

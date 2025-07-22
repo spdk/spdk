@@ -23,11 +23,11 @@ $rpc_py nvmf_subsystem_add_ns "$subnqn" Malloc0
 $rpc_py nvmf_subsystem_add_listener "$subnqn" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 # run multiple instanced at once to trigger shortage of the control_msg_list buffers
-"$perf" -c 0x2 -q 1 -o 4096 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}" &
+"$perf" -c 0x2 -q 1 -o 4096 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}" "${NO_HUGE[@]}" &
 perf_pid1=$!
-"$perf" -c 0x4 -q 1 -o 4096 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}" &
+"$perf" -c 0x4 -q 1 -o 4096 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}" "${NO_HUGE[@]}" &
 perf_pid2=$!
-"$perf" -c 0x8 -q 1 -o 4096 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}" &
+"$perf" -c 0x8 -q 1 -o 4096 -w randread -t 1 -r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT}" "${NO_HUGE[@]}" &
 perf_pid3=$!
 
 wait $perf_pid1

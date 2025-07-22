@@ -55,7 +55,7 @@ nvmfappstart -m 1
 
 trap cleanup SIGINT SIGTERM EXIT
 
-"$rootdir/build/bin/spdk_tgt" -m 2 -r "$tgt2sock" &
+"$rootdir/build/bin/spdk_tgt" -m 2 -r "$tgt2sock" "${NO_HUGE[@]}" &
 tgt2pid=$!
 
 tgt1addr="$NVMF_FIRST_TARGET_IP"

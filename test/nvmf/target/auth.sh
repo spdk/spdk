@@ -85,7 +85,7 @@ connect_authenticate() {
 
 nvmftestinit
 nvmfappstart -L nvmf_auth &> "$output_dir/nvmf-auth.log"
-"$rootdir/build/bin/spdk_tgt" -m 2 -r "$hostsock" -L nvme_auth &> "$output_dir/nvme-auth.log" &
+"$rootdir/build/bin/spdk_tgt" -m 2 -r "$hostsock" -L nvme_auth "${NO_HUGE[@]}" &> "$output_dir/nvme-auth.log" &
 hostpid=$!
 
 trap "dumplogs; cleanup" SIGINT SIGTERM EXIT
