@@ -671,7 +671,7 @@ scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
 			break;
 		}
 		add_len += sizeof(*desc);
-		desc->rkey = reg->rkey;
+		to_be64(&desc->rkey, reg->rkey);
 		if (all_regs || lun->reservation.holder == reg) {
 			desc->r_holder = true;
 			desc->type = lun->reservation.rtype;
