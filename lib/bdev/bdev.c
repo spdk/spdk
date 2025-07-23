@@ -9281,7 +9281,7 @@ spdk_bdev_claim_get_name(enum spdk_bdev_claim_type type)
 	case SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE:
 		return "read_many_write_none";
 	case SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED:
-		return "read_many_write_many";
+		return "read_many_write_shared";
 	default:
 		break;
 	}

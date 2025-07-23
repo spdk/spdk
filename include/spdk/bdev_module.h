@@ -220,16 +220,8 @@ struct spdk_bdev_claim_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_claim_opts) == 48, "Incorrect size");
 
 /**
- * Retrieve the name of the bdev module claim type. The mapping between claim types and their names
- * is:
- *
- *   SPDK_BDEV_CLAIM_NONE			"not_claimed"
- *   SPDK_BDEV_CLAIM_EXCL_WRITE			"exclusive_write"
- *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE	"read_many_write_one"
- *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE	"read_many_write_none"
- *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED	"read_many_write_shared"
- *
- * Any other value will return "invalid_claim".
+ * Retrieve the name of the bdev module claim type.
+ * See function definition for mapping claims types to name.
  *
  * \param claim_type The claim type.
  * \return A string that describes the claim type.
