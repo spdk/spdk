@@ -3305,37 +3305,36 @@ static void
 nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			     const struct spdk_nvme_cpl *cpl)
 {
-	struct  spdk_nvme_ctrlr_aer_completion *nvme_event;
+	struct spdk_nvme_ctrlr_aer_completion *async_event;
 	struct spdk_nvme_ctrlr_process *proc;
 
 	/* Add async event to each process objects event list */
 	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
 		/* Must be shared memory so other processes can access */
-		nvme_event = spdk_zmalloc(sizeof(*nvme_event), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
-		if (!nvme_event) {
+		async_event = spdk_zmalloc(sizeof(*async_event), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+		if (!async_event) {
 			NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
 			return;
 		}
-		nvme_event->cpl = *cpl;
+		async_event->cpl = *cpl;
 
-		STAILQ_INSERT_TAIL(&proc->async_events, nvme_event, link);
+		STAILQ_INSERT_TAIL(&proc->async_events, async_event, link);
 	}
 }
 
 static void
 nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct  spdk_nvme_ctrlr_aer_completion  *nvme_event, *nvme_event_tmp;
-	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr_aer_completion *async_event, *async_event_tmp;
+	struct spdk_nvme_ctrlr_process *active_proc;
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 
-	STAILQ_FOREACH_SAFE(nvme_event, &active_proc->async_events, link, nvme_event_tmp) {
-		STAILQ_REMOVE(&active_proc->async_events, nvme_event,
+	STAILQ_FOREACH_SAFE(async_event, &active_proc->async_events, link, async_event_tmp) {
+		STAILQ_REMOVE(&active_proc->async_events, async_event,
 			      spdk_nvme_ctrlr_aer_completion, link);
-		nvme_ctrlr_process_async_event(ctrlr, &nvme_event->cpl);
-		spdk_free(nvme_event);
-
+		nvme_ctrlr_process_async_event(ctrlr, &async_event->cpl);
+		spdk_free(async_event);
 	}
 }
 
