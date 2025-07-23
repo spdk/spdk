@@ -3188,6 +3188,19 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static void
+nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+
+	active_proc = nvme_ctrlr_get_current_process(async_event->ctrlr);
+	if (active_proc && active_proc->aer_cb_fn) {
+		active_proc->aer_cb_fn(active_proc->aer_cb_arg, &async_event->cpl);
+	}
+
+	spdk_free(async_event);
+}
+
 void
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -3267,7 +3280,6 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
 	struct spdk_nvme_cpl *cpl = &async_event->cpl;
 	union spdk_nvme_async_event_completion event;
-	struct spdk_nvme_ctrlr_process *active_proc;
 	int rc;
 
 	event.raw = cpl->cdw0;
@@ -3296,10 +3308,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 		}
 	}
 
-	active_proc = nvme_ctrlr_get_current_process(ctrlr);
-	if (active_proc && active_proc->aer_cb_fn) {
-		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
-	}
+	nvme_ctrlr_process_async_event_finish(async_event);
 }
 
 static void
@@ -3336,7 +3345,6 @@ nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 		STAILQ_REMOVE(&active_proc->async_events, async_event,
 			      spdk_nvme_ctrlr_aer_completion, link);
 		nvme_ctrlr_process_async_event(async_event);
-		spdk_free(async_event);
 	}
 }
 
