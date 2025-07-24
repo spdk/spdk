@@ -3205,11 +3205,36 @@ static void
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
-	uint32_t nsid;
+	uint32_t nsid, i;
 	struct spdk_nvme_ns *ns;
 
-	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+	/* Log page is not used, go over all active namespaces.
+	 * Either the log page overflowed or disable_read_changed_ns_list_log_page is used. */
+	if (async_event->log_page.changed_ns_list == NULL) {
+		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			nvme_ns_construct(ns, nsid, ctrlr);
+		}
+
+		return;
+	}
+
+	/* Iterate over NSID from the log page. */
+	for (i = 0; i < SPDK_NVME_MAX_CHANGED_NAMESPACES; i++) {
+		nsid = async_event->log_page.changed_ns_list[i];
+
+		/* End of the list */
+		if (nsid == 0) {
+			break;
+		}
+
+		/* Log page contains NSID for namespaces that were marked
+		 * as inactive, no need to identify them. */
+		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+			continue;
+		}
+
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		nvme_ns_construct(ns, nsid, ctrlr);
 	}
