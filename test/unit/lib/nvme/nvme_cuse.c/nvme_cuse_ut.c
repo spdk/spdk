@@ -55,7 +55,8 @@ DEFINE_STUB(spdk_nvme_ctrlr_is_active_ns, bool,
 DEFINE_STUB(fuse_reply_err, int, (fuse_req_t req, int err), 0);
 DEFINE_STUB(pthread_join, int, (pthread_t tid, void **val), 0);
 
-DEFINE_STUB_V(nvme_ctrlr_update_namespaces, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(nvme_ns_construct, int,
+	    (struct spdk_nvme_ns *ns, uint32_t id, struct spdk_nvme_ctrlr *ctrlr), 0);
 
 DEFINE_STUB_V(fuse_session_reset, (struct fuse_session *session));
 

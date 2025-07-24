@@ -369,11 +369,22 @@ cuse_nvme_reset(fuse_req_t req, int cmd, void *arg,
 }
 
 static void
-cuse_nvme_rescan_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
+cuse_nvme_rescan_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t unused_nsid, void *arg)
 {
 	fuse_req_t req = arg;
+	struct spdk_nvme_ns *ns;
+	uint32_t nsid;
 
-	nvme_ctrlr_update_namespaces(ctrlr);
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (ns == NULL) {
+			continue;
+		}
+		/* Identify to namespace can fail, do not check return. */
+		nvme_ns_construct(ns, nsid, ctrlr);
+	}
+
 	fuse_reply_ioctl_iov(req, 0, NULL, 0);
 }
 

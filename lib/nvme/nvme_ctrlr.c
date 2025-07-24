@@ -3201,7 +3201,7 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 	spdk_free(async_event);
 }
 
-void
+static void
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t nsid;
