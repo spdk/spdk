@@ -164,6 +164,9 @@ scsi_pr_replace_registrant_key(struct spdk_scsi_lun *lun,
 {
 	SPDK_DEBUGLOG(scsi, "REGISTER: replace with new "
 		      "reservation key 0x%"PRIx64"\n", sa_rkey);
+	if (lun->reservation.holder == reg) {
+		lun->reservation.crkey = sa_rkey;
+	}
 	reg->rkey = sa_rkey;
 	lun->pr_generation++;
 }
