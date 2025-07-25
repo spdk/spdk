@@ -52,6 +52,7 @@ static uint64_t g_for_each_thread_poller_counter;
 static uint64_t g_for_each_channel_poller_counter;
 static uint64_t g_thread_poll_cnt;
 static uint64_t g_io_channel_cnt;
+static struct spdk_io_channel *g_io_channel = NULL;
 static struct spdk_poller *g_active_poller = NULL, *g_timed_poller = NULL;
 static struct spdk_poller *g_timed_for_each_thread = NULL, *g_timed_for_each_channel = NULL;
 
@@ -289,17 +290,13 @@ destroy_cb(void *io_device, void *ctx_buf)
 static void
 app_thread_register_io_device(void *arg)
 {
-	struct spdk_io_channel *ch0 = NULL;
-
 	printf("Registering a new IO device.\n");
 	spdk_io_device_register(&g_io_channel_cnt, create_cb, destroy_cb,
 				sizeof(int), NULL);
 
 	/* Get a reference pointer to IO channel. */
-	ch0 = spdk_get_io_channel(&g_io_channel_cnt);
-	assert(ch0 != NULL);
-	/* Put (away) the reference pointer. */
-	spdk_put_io_channel(ch0);
+	g_io_channel = spdk_get_io_channel(&g_io_channel_cnt);
+	assert(g_io_channel != NULL);
 }
 
 static void
@@ -317,6 +314,8 @@ static void
 app_thread_unregister_io_device(void *arg)
 {
 	printf("Unregistering IO device...\n");
+
+	spdk_put_io_channel(g_io_channel);
 
 	spdk_io_device_unregister(&g_io_channel_cnt, unregister_cb);
 }
