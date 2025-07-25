@@ -759,6 +759,7 @@ spdk_vfu_init(spdk_vfu_init_cb init_cb)
 	if (g_endpoint_path_dirname[0] == '\0') {
 		if (getcwd(g_endpoint_path_dirname, sizeof(g_endpoint_path_dirname) - 2) == NULL) {
 			SPDK_ERRLOG("getcwd failed\n");
+			init_cb(-errno);
 			return;
 		}
 
