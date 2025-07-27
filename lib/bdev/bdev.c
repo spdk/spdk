@@ -2373,6 +2373,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	spdk_notify_type_register("bdev_register");
 	spdk_notify_type_register("bdev_unregister");
+	spdk_notify_type_register("bdev_shrink");
 
 	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
 
@@ -5609,6 +5610,17 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	/* bdev has open descriptors */
 	if (!TAILQ_EMPTY(&bdev->internal.open_descs) &&
 	    bdev->blockcnt > size) {
+		if (bdev->fn_table->get_module_type && bdev->fn_table->get_module_type(NULL) == SPDK_BDEV_RDB) {
+			struct spdk_notify_event shrink_event;
+
+			SPDK_WARNLOG("RBD bdev %s size was shrunk from %" PRIu64 " to %" PRIu64 " bytes\n",
+					spdk_bdev_get_name(bdev),
+					bdev->blockcnt * bdev->blocklen, size * bdev->blocklen);
+			snprintf(shrink_event.ctx, sizeof(shrink_event.ctx), "%s,%" PRIu64 ",%" PRIu64,
+				spdk_bdev_get_name(bdev),
+				bdev->blockcnt * bdev->blocklen, size * bdev->blocklen);
+			spdk_notify_send("bdev_shrink", shrink_event.ctx);
+		}
 		ret = -EBUSY;
 	} else {
 		bdev->blockcnt = size;
