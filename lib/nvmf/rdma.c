@@ -1657,34 +1657,18 @@ nvmf_rdma_calc_num_wrs(uint32_t length, uint32_t io_unit_size, uint32_t block_si
 static int
 nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 			    struct spdk_nvmf_rdma_device *device,
-			    struct spdk_nvmf_rdma_request *rdma_req)
+			    struct spdk_nvmf_rdma_request *rdma_req,
+			    uint32_t length)
 {
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct ibv_send_wr			*wr = &rdma_req->data.wr;
-	int					rc;
+	int					rc = 0;
 	uint32_t				num_wrs = 1;
-	uint32_t				length;
 
 	rqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rgroup = rqpair->poller->group;
-
-	/* rdma wr specifics */
-	nvmf_rdma_setup_request(rdma_req);
-
-	length = req->length;
-	if (spdk_unlikely(req->dif_enabled)) {
-		req->dif.orig_length = length;
-		length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
-		req->dif.elba_length = length;
-	}
-
-	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
-					   length);
-	if (spdk_unlikely(rc != 0)) {
-		return rc;
-	}
 
 	assert(req->iovcnt <= rqpair->max_send_sge);
 
@@ -1909,11 +1893,13 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			    struct spdk_nvmf_rdma_request *rdma_req)
 {
 	struct spdk_nvmf_request		*req = &rdma_req->req;
+	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 	int					rc;
 	uint32_t				length;
 
+	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rsp = &req->rsp->nvme_cpl;
 	sgl = &req->cmd->nvme_cmd.dptr.sgl1;
 
@@ -1939,17 +1925,27 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* fill request length and populate iovs */
 		req->length = length;
+		/* rdma wr specifics */
+		nvmf_rdma_setup_request(rdma_req);
+		if (spdk_unlikely(req->dif_enabled)) {
+			req->dif.orig_length = length;
+			length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
+			req->dif.elba_length = length;
+		}
 
-		rc = nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req);
-		if (spdk_unlikely(rc < 0)) {
-			if (rc == -EINVAL) {
-				SPDK_ERRLOG("SGL length exceeds the max I/O size\n");
-				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-				return -1;
-			}
+		rc = spdk_nvmf_request_get_buffers(req, &rqpair->poller->group->group, &rtransport->transport,
+						   length);
+		if (spdk_unlikely(rc != 0)) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(rdma, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
+		}
+
+		rc = nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length);
+		if (spdk_unlikely(rc < 0)) {
+			SPDK_ERRLOG("SGL length exceeds the max I/O size\n");
+			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+			return -1;
 		}
 
 		SPDK_DEBUGLOG(rdma, "Request %p took %d buffer/s from central pool\n", rdma_req,
