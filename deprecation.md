@@ -88,6 +88,10 @@ removed in v26.09. Use `wzsl` instead.
 The `autorun_post.py` symlink in the repository root is deprecated. The script has been moved to
 `scripts/autorun_post.py`. The symlink will be removed in the v26.09 release.
 
+#### `nvmf_create_transport`
+
+buf-cache-size parameter is deprecated in favor of iobuf-small-cache-size and will be removed in 26.09 release.
+
 ### app/spdk_nvme_perf
 
 #### perf_g_option

@@ -89,7 +89,11 @@ def add_parser(subparsers):
     p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('-n', '--num-shared-buffers', help='The number of pooled data buffers available to the transport', type=int)
-    p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to reserve for each poll group', type=int)
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('-b', '--buf-cache-size', help="""The number of shared buffers to reserve for each poll group.
+    Deprecated, use iobuf-small-cache-size instead""", type=int)
+    group.add_argument('--iobuf-small-cache-size', help="""The number of shared buffers from a small iobuf pool to reserve
+    for each poll group (optional)""", type=int)
     p.add_argument('-z', '--zcopy', action='store_true', help='''Use zero-copy operations if the
     underlying bdev supports them''')
     p.add_argument('-d', '--num-cqe', help="""The number of CQ entries. Only used when no_srq=true.

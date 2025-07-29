@@ -824,7 +824,7 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 	CU_ASSERT(transport.opts.io_unit_size == SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE);
 	CU_ASSERT(transport.opts.max_aq_depth == SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH);
 	CU_ASSERT(transport.opts.num_shared_buffers == SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS);
-	CU_ASSERT(transport.opts.buf_cache_size == SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE);
+	CU_ASSERT(transport.opts.buf_cache_size == SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE);
 	CU_ASSERT(transport.opts.dif_insert_or_strip ==	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP);
 	CU_ASSERT(transport.opts.abort_timeout_sec == SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC);
 	CU_ASSERT(transport.opts.transport_specific == NULL);

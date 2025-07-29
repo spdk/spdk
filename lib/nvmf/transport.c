@@ -84,7 +84,7 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
 	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
-	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
+	spdk_json_write_named_uint32(w, "iobuf_small_cache_size", opts->iobuf_small_cache_size);
 	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
 	spdk_json_write_named_bool(w, "zcopy", opts->zcopy);
 
@@ -146,7 +146,7 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(max_io_size);
 	SET_FIELD(io_unit_size);
 	SET_FIELD(max_aq_depth);
-	SET_FIELD(buf_cache_size);
+	SET_FIELD(iobuf_small_cache_size);
 	SET_FIELD(num_shared_buffers);
 	SET_FIELD(dif_insert_or_strip);
 	SET_FIELD(abort_timeout_sec);
@@ -179,7 +179,7 @@ struct nvmf_transport_create_ctx {
 static bool
 nvmf_transport_use_iobuf(struct spdk_nvmf_transport *transport)
 {
-	return transport->opts.num_shared_buffers || transport->opts.buf_cache_size;
+	return transport->opts.num_shared_buffers || transport->opts.iobuf_small_cache_size;
 }
 
 static void
@@ -612,7 +612,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_transport_poll_group *tgroup;
 	struct spdk_iobuf_opts opts_iobuf = {};
-	uint32_t buf_cache_size, small_cache_size, large_cache_size;
+	uint32_t small_cache_size, large_cache_size;
 	int rc;
 
 	pthread_mutex_lock(&transport->mutex);
@@ -631,15 +631,15 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		return tgroup;
 	}
 
-	buf_cache_size = transport->opts.buf_cache_size;
+	small_cache_size = transport->opts.iobuf_small_cache_size;
 
-	/* buf_cache_size of UINT32_MAX means the value should be calculated dynamically
+	/* iobuf_small_cache_size of UINT32_MAX means the value should be calculated dynamically
 	 * based on the number of buffers in the shared pool and the number of poll groups
 	 * that are sharing them.  We allocate 75% of the pool for the cache, and then
 	 * divide that by number of poll groups to determine the buf_cache_size for this
 	 * poll group.
 	 */
-	if (buf_cache_size == UINT32_MAX) {
+	if (small_cache_size == UINT32_MAX) {
 		uint32_t num_shared_buffers = transport->opts.num_shared_buffers;
 
 		/* Theoretically the nvmf library can dynamically add poll groups to
@@ -649,15 +649,14 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		 */
 		uint16_t num_poll_groups = group->tgt->num_poll_groups ? : spdk_env_get_core_count();
 
-		buf_cache_size = (num_shared_buffers * 3 / 4) / num_poll_groups;
+		small_cache_size = (num_shared_buffers * 3 / 4) / num_poll_groups;
 	}
 
 	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
-	small_cache_size = buf_cache_size;
 	if (transport->opts.io_unit_size <= opts_iobuf.small_bufsize) {
 		large_cache_size = 0;
 	} else {
-		large_cache_size = buf_cache_size;
+		large_cache_size = small_cache_size;
 	}
 
 	tgroup->buf_cache = calloc(1, sizeof(*tgroup->buf_cache));

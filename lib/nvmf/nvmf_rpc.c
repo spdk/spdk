@@ -2503,6 +2503,16 @@ decode_masked_fuses_array(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_array(val, decode_masked_fuses, out, 16, &count, 0);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_buf_cache_size,
+			      "buf_cache_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
+
+static int
+decode_buf_cache_size(const struct spdk_json_val *val, void *out)
+{
+	SPDK_LOG_DEPRECATED(nvmf_create_transport_buf_cache_size);
+	return spdk_json_decode_uint32(val, out);
+}
+
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
 	{"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
 	{"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth), spdk_json_decode_uint16, true},
@@ -2512,7 +2522,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size), spdk_json_decode_uint32, true},
 	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth), spdk_json_decode_uint32, true},
 	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers), spdk_json_decode_uint32, true},
-	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size), spdk_json_decode_uint32, true},
+	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size), decode_buf_cache_size, true},
+	{"iobuf_small_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.iobuf_small_cache_size), spdk_json_decode_uint32, true},
 	{"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_insert_or_strip), spdk_json_decode_bool, true},
 	{"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, opts.abort_timeout_sec), spdk_json_decode_uint32, true},
 	{"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, opts.zcopy), spdk_json_decode_bool, true},
