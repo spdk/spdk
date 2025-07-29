@@ -375,7 +375,7 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			      uint32_t length)
 {
 	/* length more than 1 io unit length will fail. */
-	if (length >= transport->opts.io_unit_size) {
+	if (length >= transport->large_bufsize) {
 		return -EINVAL;
 	}
 
@@ -433,7 +433,6 @@ test_nvmf_tcp_create(void)
 	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
 	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
 	opts.max_io_size = UT_MAX_IO_SIZE;
-	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	/* expect success */
 	transport = nvmf_tcp_create(&opts);
@@ -444,7 +443,6 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.max_queue_depth == UT_MAX_QUEUE_DEPTH);
 	CU_ASSERT(transport->opts.max_io_size == UT_MAX_IO_SIZE);
 	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
-	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
 	nvmf_tcp_destroy(transport, NULL, NULL);
 
@@ -454,7 +452,6 @@ test_nvmf_tcp_create(void)
 	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
 	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
 	opts.max_io_size = UT_MAX_IO_SIZE;
-	opts.io_unit_size = UT_MAX_IO_SIZE + 1;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	/* expect success */
 	transport = nvmf_tcp_create(&opts);
@@ -465,21 +462,9 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.max_queue_depth == UT_MAX_QUEUE_DEPTH);
 	CU_ASSERT(transport->opts.max_io_size == UT_MAX_IO_SIZE);
 	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
-	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
 	nvmf_tcp_destroy(transport, NULL, NULL);
 
-	/* case 3 */
-	memset(&opts, 0, sizeof(opts));
-	opts.max_queue_depth = UT_MAX_QUEUE_DEPTH;
-	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
-	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
-	opts.max_io_size = UT_MAX_IO_SIZE;
-	opts.io_unit_size = 16;
-	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	/* expect fails */
-	transport = nvmf_tcp_create(&opts);
-	CU_ASSERT_PTR_NULL(transport);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
@@ -505,7 +490,6 @@ test_nvmf_tcp_destroy(void)
 	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
 	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
 	opts.max_io_size = UT_MAX_IO_SIZE;
-	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
@@ -553,7 +537,6 @@ test_nvmf_tcp_poll_group_create(void)
 	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
 	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
 	opts.max_io_size = UT_MAX_IO_SIZE;
-	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
@@ -726,7 +709,8 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 
 	tqpair.pdu_in_progress = &pdu_in_progress;
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
-	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
+	ttransport.transport.large_bufsize = UT_MAX_IO_SIZE;
+	ttransport.transport.small_bufsize = UT_IO_UNIT_SIZE;
 	ttransport.transport.ops = &ops;
 	ops.req_get_buffers_done = nvmf_tcp_req_get_buffers_done;
 
@@ -816,7 +800,6 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 	CU_ASSERT(transport.opts.max_qpairs_per_ctrlr == SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR);
 	CU_ASSERT(transport.opts.in_capsule_data_size == SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE);
 	CU_ASSERT(transport.opts.max_io_size ==	SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE);
-	CU_ASSERT(transport.opts.io_unit_size == SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE);
 	CU_ASSERT(transport.opts.max_aq_depth == SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH);
 	CU_ASSERT(transport.opts.buf_cache_size == SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE);
 	CU_ASSERT(transport.opts.dif_insert_or_strip ==	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP);
@@ -1050,7 +1033,6 @@ test_nvmf_tcp_check_xfer_type(void)
 
 	tqpair.pdu_in_progress = &pdu_in_progress;
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
-	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
 
 	tcp_group.sock_group = &grp;
 	TAILQ_INIT(&tcp_group.qpairs);
@@ -1129,7 +1111,6 @@ test_nvmf_tcp_invalid_sgl(void)
 
 	tqpair.pdu_in_progress = &pdu_in_progress;
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
-	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
 
 	tcp_group.sock_group = &grp;
 	TAILQ_INIT(&tcp_group.qpairs);
@@ -1398,7 +1379,6 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
 	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
 	opts.max_io_size = UT_MAX_IO_SIZE;
-	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	transport = nvmf_tcp_create(&opts);
 

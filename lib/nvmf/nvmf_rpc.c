@@ -2410,13 +2410,23 @@ decode_buf_cache_size(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_uint32(val, out);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
+			      "io_unit_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
+
+static int
+decode_io_unit_size(const struct spdk_json_val *val, void *out)
+{
+	SPDK_LOG_DEPRECATED(nvmf_create_transport_io_unit_size);
+	return spdk_json_decode_uint32(val, out);
+}
+
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
 	{"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
 	{"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth), spdk_json_decode_uint16, true},
 	{"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
 	{"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.in_capsule_data_size), spdk_json_decode_uint32, true},
 	{"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_io_size), spdk_json_decode_uint32, true},
-	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size), spdk_json_decode_uint32, true},
+	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size), decode_io_unit_size, true},
 	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth), spdk_json_decode_uint32, true},
 	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers), decode_num_shared_buffers, true},
 	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size), decode_buf_cache_size, true},

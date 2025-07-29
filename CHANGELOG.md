@@ -19,6 +19,11 @@ Added the spdk_nvmf_subsystem_create_ext API. It is meant to replace some API se
 getters. By using creation time options, the design is improved - it becomes clear that
 certain settings are not meant to be modified dynamically.
 
+Parameters of `nvmf_create_transport` and buffers caching logic has been updated. The following parameters
+are deprecated and will be removed: `buf-cache-size`, `num-shared-buffers`. New parameters to set the exact
+number of small or large buffers were added: `iobuf-small-cache-size` and `iobuf-large-cache-size`.
+The transport now selects a buffer from a pool based on IO size.
+
 ### nvme
 
 Removed the transport APIs poll_group_connect_qpair and poll_group_disconnet_qpair. None of the

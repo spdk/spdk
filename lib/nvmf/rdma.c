@@ -1589,6 +1589,7 @@ nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_device *device,
 	uint32_t remaining_data_block, data_block_size, md_size;
 	uint32_t sge_len;
 	uint32_t num_extra_wrs;
+	uint32_t consumed_iov_len;
 	int rc;
 
 	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
@@ -1607,7 +1608,7 @@ nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_device *device,
 	}
 
 	wr->num_sge = 0;
-
+	consumed_iov_len = 0;
 	while (total_length && (num_extra_wrs || wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES)) {
 		iov = rdma_iov + rdma_req->iovpos;
 		rc = spdk_rdma_utils_get_translation(device->map, iov->iov_base, iov->iov_len, &mem_translation);
@@ -1638,6 +1639,7 @@ nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_device *device,
 				      sg_ele->addr, sg_ele->length);
 			remaining -= sge_len;
 			remaining_data_block -= sge_len;
+			consumed_iov_len += sge_len;
 			rdma_req->offset += sge_len;
 			total_length -= sge_len;
 
@@ -1657,8 +1659,11 @@ nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_device *device,
 				/* By subtracting the size of the last IOV from the offset, we ensure that we skip
 				   the remaining metadata bits at the beginning of the next buffer */
 				rdma_req->offset -= spdk_min(iov->iov_len, rdma_req->offset);
-				rdma_req->iovpos++;
 			}
+		}
+		if (consumed_iov_len == iov->iov_len) {
+			rdma_req->iovpos++;
+			consumed_iov_len = 0;
 		}
 	}
 
@@ -2240,8 +2245,16 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 						 sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 						 (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 						  sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY))) {
-				rdma_req->num_wrs = nvmf_rdma_calc_num_wrs(spdk_dif_get_length_with_md(sgl->keyed.length,
-						    &rdma_req->req.dif.dif_ctx), rtransport->transport.opts.io_unit_size,
+				uint32_t length = spdk_dif_get_length_with_md(sgl->keyed.length,
+						  &rdma_req->req.dif.dif_ctx);
+				uint32_t io_unit_size;
+
+				if (length > rtransport->transport.small_bufsize) {
+					io_unit_size = rtransport->transport.large_bufsize;
+				} else {
+					io_unit_size = rtransport->transport.small_bufsize;
+				}
+				rdma_req->num_wrs = nvmf_rdma_calc_num_wrs(length, io_unit_size,
 						    rdma_req->req.dif.dif_ctx.block_size);
 				if (rdma_req->num_wrs > 1) {
 					rdma_req->state = RDMA_REQUEST_STATE_NEED_DATA_WR;
@@ -2574,7 +2587,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / SPDK_NVMF_MAX_SGL_ENTRIES)
 #define SPDK_NVMF_RDMA_DEFAULT_SMALL_BUFFER_CACHE_SIZE UINT32_MAX
-#define SPDK_NVMF_RDMA_DEFAULT_LARGE_BUFFER_CACHE_SIZE 0
+#define SPDK_NVMF_RDMA_DEFAULT_LARGE_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_RDMA_DEFAULT_NO_SRQ false
 #define SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG 100
@@ -2589,7 +2602,6 @@ nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_qpairs_per_ctrlr =	SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size =	SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size =		SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
-	opts->io_unit_size =		SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
 	opts->max_aq_depth =		SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH;
 	opts->iobuf_small_cache_size =	SPDK_NVMF_RDMA_DEFAULT_SMALL_BUFFER_CACHE_SIZE;
 	opts->iobuf_large_cache_size =	SPDK_NVMF_RDMA_DEFAULT_LARGE_BUFFER_CACHE_SIZE;
@@ -2754,6 +2766,7 @@ generate_poll_fds(struct spdk_nvmf_rdma_transport *rtransport)
 static struct spdk_nvmf_transport *
 nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 {
+	struct spdk_iobuf_opts opts_iobuf = {};
 	int rc;
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device	*device;
@@ -2792,14 +2805,13 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_INFOLOG(rdma, "*** RDMA Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
-		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
+		     "  max_io_qpairs_per_ctrlr=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
 		     "  num_cqe=%d, max_srq_depth=%d, no_srq=%d,"
 		     "  acceptor_backlog=%d, no_wr_batching=%d abort_timeout_sec=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
-		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
 		     rtransport->rdma_opts.num_cqe,
@@ -2809,20 +2821,16 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     rtransport->rdma_opts.no_wr_batching,
 		     opts->abort_timeout_sec);
 
-	/* I/O unit size cannot be larger than max I/O size */
-	if (opts->io_unit_size > opts->max_io_size) {
-		opts->io_unit_size = opts->max_io_size;
-	}
-
 	if (rtransport->rdma_opts.acceptor_backlog <= 0) {
 		SPDK_ERRLOG("The acceptor backlog cannot be less than 1, setting to the default value of (%d).\n",
 			    SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG);
 		rtransport->rdma_opts.acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 	}
 
-	sge_count = opts->max_io_size / opts->io_unit_size;
+	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
+	sge_count = opts->max_io_size / opts_iobuf.large_bufsize;
 	if (sge_count > NVMF_DEFAULT_TX_SGE) {
-		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
+		SPDK_ERRLOG("Unsupported max_io_size specified, %d bytes\n", opts->max_io_size);
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
@@ -2886,18 +2894,6 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		device->is_ready = true;
 	}
 	rdma_free_devices(contexts);
-
-	if (opts->io_unit_size * max_device_sge < opts->max_io_size) {
-		/* divide and round up. */
-		opts->io_unit_size = (opts->max_io_size + max_device_sge - 1) / max_device_sge;
-
-		/* round up to the nearest 4k. */
-		opts->io_unit_size = (opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT - 1) & ~NVMF_DATA_BUFFER_MASK;
-
-		opts->io_unit_size = spdk_max(opts->io_unit_size, SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE);
-		SPDK_NOTICELOG("Adjusting the io unit size to fit the device's maximum I/O size. New I/O unit size %u\n",
-			       opts->io_unit_size);
-	}
 
 	if (rc < 0) {
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);

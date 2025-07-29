@@ -45,7 +45,7 @@
 #define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_LARGE_BUFFER_CACHE_SIZE UINT32_MAX
-#define SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE 0
+#define SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
@@ -741,6 +741,7 @@ static void nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct 
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 {
+	struct spdk_iobuf_opts opts_iobuf = {};
 	struct spdk_nvmf_tcp_transport *ttransport;
 	uint32_t sge_count;
 	uint64_t period;
@@ -772,7 +773,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_INFOLOG(nvmf_tcp, "*** TCP Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
-		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
+		     "  max_io_qpairs_per_ctrlr=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
 		     "  c2h_success=%d,\n"
 		     "  dif_insert_or_strip=%d, sock_priority=%d\n"
@@ -781,7 +782,6 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
-		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
 		     ttransport->tcp_opts.c2h_success,
@@ -804,13 +804,6 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		SPDK_WARNLOG("TCP param control_msg_num can't be 0 if ICD is less than %u bytes. Using default value %u\n",
 			     SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE, SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM);
 		ttransport->tcp_opts.control_msg_num = SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM;
-	}
-
-	/* I/O unit size cannot be larger than max I/O size */
-	if (opts->io_unit_size > opts->max_io_size) {
-		SPDK_WARNLOG("TCP param io_unit_size %u can't be larger than max_io_size %u. Using max_io_size as io_unit_size\n",
-			     opts->io_unit_size, opts->max_io_size);
-		opts->io_unit_size = opts->max_io_size;
 	}
 
 	/* In capsule data size cannot be larger than max I/O size */
@@ -838,9 +831,10 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		opts->max_aq_depth = SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH;
 	}
 
-	sge_count = opts->max_io_size / opts->io_unit_size;
+	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
+	sge_count = opts->max_io_size / opts_iobuf.large_bufsize;
 	if (sge_count > SPDK_NVMF_MAX_SGL_ENTRIES) {
-		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
+		SPDK_ERRLOG("Unsupported max_io_size specified, %d bytes\n", opts->max_io_size);
 		free(ttransport);
 		return NULL;
 	}
@@ -3938,7 +3932,6 @@ nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_qpairs_per_ctrlr =	SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size =	SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size =		SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE;
-	opts->io_unit_size =		SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH;
 	opts->iobuf_small_cache_size =	SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE;
 	opts->iobuf_large_cache_size =	SPDK_NVMF_TCP_DEFAULT_LARGE_BUFFER_CACHE_SIZE;

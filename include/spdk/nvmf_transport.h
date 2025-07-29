@@ -263,15 +263,12 @@ struct spdk_nvmf_ctrlr_data {
 
 #define MAX_MEMPOOL_NAME_LENGTH 40
 
-/* abidiff has a problem with changes in spdk_nvmf_transport_opts, so spdk_nvmf_transport had to be
- * added to the suppression list, so if spdk_nvmf_transport is changed, we need to remove the
- * suppression and bump up the major version.
- */
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
 	struct spdk_nvmf_transport_opts		opts;
-
+	uint32_t				large_bufsize;
+	uint32_t				small_bufsize;
 	char					iobuf_name[MAX_MEMPOOL_NAME_LENGTH];
 
 	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;

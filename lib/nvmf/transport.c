@@ -81,7 +81,6 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "max_io_qpairs_per_ctrlr", opts->max_qpairs_per_ctrlr - 1);
 	spdk_json_write_named_uint32(w, "in_capsule_data_size", opts->in_capsule_data_size);
 	spdk_json_write_named_uint32(w, "max_io_size", opts->max_io_size);
-	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
 	spdk_json_write_named_uint32(w, "iobuf_small_cache_size", opts->iobuf_small_cache_size);
 	spdk_json_write_named_uint32(w, "iobuf_large_cache_size", opts->iobuf_large_cache_size);
@@ -144,7 +143,6 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(max_qpairs_per_ctrlr);
 	SET_FIELD(in_capsule_data_size);
 	SET_FIELD(max_io_size);
-	SET_FIELD(io_unit_size);
 	SET_FIELD(max_aq_depth);
 	SET_FIELD(iobuf_small_cache_size);
 	SET_FIELD(iobuf_large_cache_size);
@@ -205,6 +203,11 @@ nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *trans
 	}
 
 	if (nvmf_transport_use_iobuf(transport)) {
+		struct spdk_iobuf_opts opts_iobuf = {};
+
+		spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
+		transport->large_bufsize = opts_iobuf.large_bufsize;
+		transport->small_bufsize = opts_iobuf.small_bufsize;
 		spdk_iobuf_register_module(transport->iobuf_name);
 	}
 
@@ -287,15 +290,6 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 	ctx->opts.min_kato = spdk_round_up(ctx->opts.min_kato, kas_in_ms);
 
 	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
-	if (ctx->opts.io_unit_size == 0) {
-		SPDK_ERRLOG("io_unit_size cannot be 0\n");
-		goto err;
-	}
-	if (ctx->opts.io_unit_size > opts_iobuf.large_bufsize) {
-		SPDK_ERRLOG("io_unit_size %u is larger than iobuf pool large buffer size %d\n",
-			    ctx->opts.io_unit_size, opts_iobuf.large_bufsize);
-		goto err;
-	}
 	if (ctx->opts.iobuf_small_cache_size != UINT32_MAX && ctx->opts.iobuf_small_cache_size != 0) {
 		if (ctx->opts.iobuf_small_cache_size * spdk_env_get_core_count() > opts_iobuf.small_pool_count) {
 			SPDK_WARNLOG("per core iobuf_small_cache_size %u is larger than iobuf small buffer count %" PRIu64
@@ -890,47 +884,46 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 	req->data_from_pool = false;
 }
 
-static int
-nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
-			uint32_t io_unit_size)
+static inline void
+nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length)
 {
 	req->iov[req->iovcnt].iov_base = buf;
-	req->iov[req->iovcnt].iov_len  = spdk_min(length, io_unit_size);
-	length -= req->iov[req->iovcnt].iov_len;
+	req->iov[req->iovcnt].iov_len  = length;
 	req->iovcnt++;
 	req->data_from_pool = true;
-
-	return length;
 }
 
-static int
-nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
-				 uint32_t io_unit_size)
+static inline void
+nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length)
 {
 	struct spdk_nvmf_stripped_data *data = req->stripped_data;
 
 	data->iov[data->iovcnt].iov_base = buf;
-	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
-	length -= data->iov[data->iovcnt].iov_len;
+	data->iov[data->iovcnt].iov_len  = length;
 	data->iovcnt++;
 	req->data_from_pool = true;
-
-	return length;
 }
 
 static void nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf);
 
-static int
+static inline int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
-			 uint32_t length, uint32_t io_unit_size,
-			 bool stripped_buffers)
+			 uint32_t length, bool stripped_buffers)
 {
 	struct spdk_iobuf_entry *entry = NULL;
+	uint32_t io_unit_size;
 	uint32_t num_buffers;
+	uint32_t iov_len;
 	uint32_t i = 0;
 	void *buffer;
+
+	if (length > transport->small_bufsize) {
+		io_unit_size = transport->large_bufsize;
+	} else {
+		io_unit_size = transport->small_bufsize;
+	}
 
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed.
 	 *  Fail it.
@@ -946,17 +939,20 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	}
 
 	while (i < num_buffers) {
-		buffer = spdk_iobuf_get(group->buf_cache, spdk_min(io_unit_size, length), entry,
+		iov_len = spdk_min(io_unit_size, length);
+		buffer = spdk_iobuf_get(group->buf_cache, iov_len, entry,
 					nvmf_request_iobuf_get_cb);
 		if (spdk_unlikely(buffer == NULL)) {
 			req->iobuf.remaining_length = length;
 			return -ENOMEM;
 		}
 		if (stripped_buffers) {
-			length = nvmf_request_set_stripped_buffer(req, buffer, length, io_unit_size);
+			nvmf_request_set_stripped_buffer(req, buffer, iov_len);
 		} else {
-			length = nvmf_request_set_buffer(req, buffer, length, io_unit_size);
+			nvmf_request_set_buffer(req, buffer, iov_len);
 		}
+		assert(iov_len <= length);
+		length -= iov_len;
 		i++;
 	}
 
@@ -973,13 +969,25 @@ nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf)
 	struct spdk_nvmf_poll_group *group = req->qpair->group;
 	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(group, transport);
 	uint32_t length = req->iobuf.remaining_length;
-	uint32_t io_unit_size = transport->opts.io_unit_size;
+	uint32_t io_unit_size = transport->small_bufsize;
+	uint32_t iov_len;
 	int rc;
 
 	assert(tgroup != NULL);
 
-	length = nvmf_request_set_buffer(req, buf, length, io_unit_size);
-	rc = nvmf_request_get_buffers(req, tgroup, transport, length, io_unit_size, false);
+	if (length > transport->small_bufsize) {
+		io_unit_size = transport->large_bufsize;
+	}
+	iov_len = spdk_min(io_unit_size, length);
+	nvmf_request_set_buffer(req, buf, iov_len);
+
+	assert(iov_len <= length);
+	length -= iov_len;
+	if (length == 0) {
+		transport->ops->req_get_buffers_done(req);
+		return;
+	}
+	rc = nvmf_request_get_buffers(req, tgroup, transport, length, false);
 	if (rc == 0) {
 		transport->ops->req_get_buffers_done(req);
 	}
@@ -996,7 +1004,7 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	assert(nvmf_transport_use_iobuf(transport));
 
 	req->iovcnt = 0;
-	rc = nvmf_request_get_buffers(req, group, transport, length, transport->opts.io_unit_size, false);
+	rc = nvmf_request_get_buffers(req, group, transport, length, false);
 	if (spdk_unlikely(rc == -ENOMEM && transport->ops->req_get_buffers_done == NULL)) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
 	}
@@ -1009,14 +1017,23 @@ nvmf_request_get_buffers_abort_cb(struct spdk_iobuf_channel *ch, struct spdk_iob
 				  void *cb_ctx)
 {
 	struct spdk_nvmf_request *req, *req_to_abort = cb_ctx;
+	struct spdk_nvmf_transport *transport;
+	uint32_t io_unit_size;
 
 	req = SPDK_CONTAINEROF(entry, struct spdk_nvmf_request, iobuf.entry);
 	if (req != req_to_abort) {
 		return 0;
 	}
 
-	spdk_iobuf_entry_abort(ch, entry, spdk_min(req->iobuf.remaining_length,
-			       req->qpair->transport->opts.io_unit_size));
+	transport = req->qpair->transport;
+
+	if (req->iobuf.remaining_length > transport->small_bufsize) {
+		io_unit_size = transport->large_bufsize;
+	} else {
+		io_unit_size = transport->small_bufsize;
+	}
+
+	spdk_iobuf_entry_abort(ch, entry, spdk_min(req->iobuf.remaining_length, io_unit_size));
 	return 1;
 }
 
@@ -1054,8 +1071,6 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 				  uint32_t length)
 {
 	uint32_t block_size = req->dif.dif_ctx.block_size;
-	uint32_t data_block_size = block_size - req->dif.dif_ctx.md_size;
-	uint32_t io_unit_size = transport->opts.io_unit_size / block_size * data_block_size;
 	struct spdk_nvmf_stripped_data *data;
 	uint32_t i;
 	int rc;
@@ -1075,7 +1090,7 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 	req->stripped_data = data;
 	req->stripped_data->iovcnt = 0;
 
-	rc = nvmf_request_get_buffers(req, group, transport, length, io_unit_size, true);
+	rc = nvmf_request_get_buffers(req, group, transport, length, true);
 	if (rc == -ENOMEM) {
 		nvmf_request_free_stripped_buffers(req, group, transport);
 		return rc;
