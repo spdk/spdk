@@ -103,6 +103,7 @@
 
 	# public functions in nvmf_cmd.h
 	spdk_nvmf_ctrlr_identify_ctrlr;
+	spdk_nvmf_get_supported_log_pages;
 	spdk_nvmf_ctrlr_identify_iocs_specific;
 	spdk_nvmf_ctrlr_identify_ns;
 	spdk_nvmf_ctrlr_identify_ns_ext;

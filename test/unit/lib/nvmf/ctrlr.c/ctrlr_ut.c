@@ -391,7 +391,7 @@ test_get_log_page(void)
 	memset(&cmd, 0, sizeof(cmd));
 	memset(&rsp, 0, sizeof(rsp));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	cmd.nvme_cmd.cdw10 = 0;
+	cmd.nvme_cmd.cdw10 = -1;
 	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
@@ -1766,6 +1766,37 @@ num_pending_async_events(struct spdk_nvmf_ctrlr *ctrlr)
 		num++;
 	}
 	return num;
+}
+
+static void
+test_get_supported_log_pages(void)
+{
+	struct spdk_nvmf_ctrlr ctrlr;
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvme_supported_log_pages supported_log_pages = {};
+	ctrlr.subsys = &subsystem;
+
+	/* get_supported log pages are supported for IO and Discovery controllers */
+	/* check IO controller */
+	spdk_nvmf_get_supported_log_pages(&ctrlr, &supported_log_pages);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp == 0);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ERROR].lsupp == 1);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_DISCOVERY].lsupp == 0);
+
+	/* check IO controller with ANA support */
+	subsystem.flags.ana_reporting = 1;
+	spdk_nvmf_get_supported_log_pages(&ctrlr, &supported_log_pages);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp == 1);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ERROR].lsupp == 1);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_DISCOVERY].lsupp == 0);
+
+	/* check Discovery controller */
+	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
+	spdk_nvmf_get_supported_log_pages(&ctrlr, &supported_log_pages);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp == 0);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ERROR].lsupp == 0);
+	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_DISCOVERY].lsupp == 1);
+	MOCK_SET(spdk_nvmf_subsystem_is_discovery, false);
 }
 
 static void
@@ -3705,6 +3736,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_exclusive_access);
 	CU_ADD_TEST(suite, test_reservation_write_exclusive_regs_only_and_all_regs);
 	CU_ADD_TEST(suite, test_reservation_exclusive_access_regs_only_and_all_regs);
+	CU_ADD_TEST(suite, test_get_supported_log_pages);
 	CU_ADD_TEST(suite, test_reservation_notification_log_page);
 	CU_ADD_TEST(suite, test_get_dif_ctx);
 	CU_ADD_TEST(suite, test_set_get_features);

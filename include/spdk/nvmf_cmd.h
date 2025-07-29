@@ -30,6 +30,15 @@ int spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr,
 				   struct spdk_nvme_ctrlr_data *cdata);
 
 /**
+ * Fill the log page struct with supported log pages for specified controller
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param log_page target struct to be filled with log pages supported by the controller
+ */
+void spdk_nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr,
+				       struct spdk_nvme_supported_log_pages *log_page);
+
+/**
  * Fills the I/O Command Set specific Identify Namespace data structure (CNS
  * 05h)
  *

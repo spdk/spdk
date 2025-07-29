@@ -2796,6 +2796,64 @@ is_log_page_ctrlr_nvm_scope(uint8_t lid)
 	}
 }
 
+static const struct spdk_nvme_supported_log_pages g_supported_log_pages_discover = {
+	.lids = {
+		[SPDK_NVME_LOG_SUPPORTED_LOG_PAGES] = { .lsupp = 1 },
+		[SPDK_NVME_LOG_DISCOVERY] =	      { .lsupp = 1 },
+	}
+};
+
+static const struct spdk_nvme_supported_log_pages g_supported_log_pages = {
+	.lids = {
+		[SPDK_NVME_LOG_SUPPORTED_LOG_PAGES] =	      { .lsupp = 1 },
+		[SPDK_NVME_LOG_ERROR] =			      { .lsupp = 1 },
+		[SPDK_NVME_LOG_HEALTH_INFORMATION] =	      { .lsupp = 1 },
+		[SPDK_NVME_LOG_FIRMWARE_SLOT] =		      { .lsupp = 1 },
+		[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = { .lsupp = 1 },
+		[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] =	      { .lsupp = 1 },
+		[SPDK_NVME_LOG_CHANGED_NS_LIST] =	      { .lsupp = 1 },
+		[SPDK_NVME_LOG_RESERVATION_NOTIFICATION] =    { .lsupp = 1 },
+	}
+};
+
+void
+spdk_nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr,
+				  struct spdk_nvme_supported_log_pages *log_page)
+{
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
+		*log_page = g_supported_log_pages_discover;
+	} else {
+		*log_page = g_supported_log_pages;
+		if (ctrlr->subsys->flags.ana_reporting != 1) {
+			log_page->lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp = 0;
+		}
+	}
+}
+
+static int
+nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
+			     uint64_t offset, uint32_t length)
+{
+	uint32_t page_size = sizeof(struct spdk_nvme_supported_log_pages);
+	size_t copy_len = 0;
+	struct spdk_iov_xfer ix;
+	struct spdk_nvme_supported_log_pages supported_log_pages = {};
+
+	spdk_nvmf_get_supported_log_pages(ctrlr, &supported_log_pages);
+
+	spdk_iov_xfer_init(&ix, iovs, iovcnt);
+	if (offset < page_size) {
+		copy_len = spdk_min(page_size - offset, length);
+		spdk_iov_xfer_from_buf(&ix, (char *)(&supported_log_pages) + offset, copy_len);
+	} else {
+		SPDK_ERRLOG("Invalid Get supported log pages offset: (%" PRIu64 "), log page size (%" PRIu32")\n",
+			    offset, page_size);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int
 nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
@@ -2844,6 +2902,10 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 
 	if (spdk_nvmf_subsystem_is_discovery(subsystem)) {
 		switch (lid) {
+		/* If you are adding support for new log pages, please update g_supported_log_pages_discover[] to reflect it. */
+		case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
+			rc = nvmf_get_supported_log_pages(ctrlr, req->iov, req->iovcnt, offset, len);
+			break;
 		case SPDK_NVME_LOG_DISCOVERY:
 			if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &cmd_source_trid)) {
 				SPDK_ERRLOG("Failed to get LOG_DISCOVERY source trid\n");
@@ -2853,21 +2915,27 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			}
 			rc = nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt,
 							 offset, len, &cmd_source_trid);
-			if (rc) {
-				goto invalid_field_log_page;
-			}
 
-			if (!rae) {
+			if (!rc && !rae) {
 				nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
 			}
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			break;
 		default:
 			SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier for discovery subsystem 0x%02X\n", lid);
 			goto invalid_field_log_page;
 		}
+
+		if (rc) {
+			goto invalid_field_log_page;
+		}
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	switch (lid) {
+	/* If you are adding support for new log pages, please update g_supported_log_pages[] to reflect it. */
+	case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
+		rc = nvmf_get_supported_log_pages(ctrlr, req->iov, req->iovcnt, offset, len);
+		break;
 	case SPDK_NVME_LOG_ERROR:
 		nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
 		break;

@@ -3455,6 +3455,21 @@ enum spdk_nvme_log_page {
 
 #define spdk_nvme_log_page_is_vendor_specific(lid) ((lid) >= SPDK_NVME_LOG_VENDOR_SPECIFIC_START)
 
+struct spdk_nvme_supported_log_pages {
+	/* Log Page Identifier Supported 0-255 */
+	struct {
+		/* LID Supported - 0 */
+		uint32_t lsupp		: 1;
+		/* Index Offset Supported - 1 */
+		uint32_t ios		: 1;
+		/* Reserved - 2:15 */
+		uint32_t reserved	: 14;
+		/* LID Specific Parameter - 16:31 */
+		uint32_t lidsp		: 16;
+	} lids[256];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_supported_log_pages) == 1024, "Incorrect size");
+
 /**
  * Error information log page (\ref SPDK_NVME_LOG_ERROR)
  */
