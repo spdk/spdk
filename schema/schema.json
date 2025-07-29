@@ -3637,6 +3637,11 @@
           "description": "The number of shared buffers from a small iobuf pool to reserve for each poll group"
         },
         {
+          "name": "iobuf_large_cache_size",
+          "type": "uint32",
+          "description": "The number of shared buffers from a large iobuf pool to reserve for each poll group"
+        },
+        {
           "name": "zcopy",
           "type": "boolean",
           "description": "Use zero-copy operations if the underlying bdev supports them"

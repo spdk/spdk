@@ -94,6 +94,8 @@ def add_parser(subparsers):
     Deprecated, use iobuf-small-cache-size instead""", type=int)
     group.add_argument('--iobuf-small-cache-size', help="""The number of shared buffers from a small iobuf pool to reserve
     for each poll group (optional)""", type=int)
+    p.add_argument('--iobuf-large-cache-size', help="""The number of shared buffers from a large iobuf pool to reserve
+    for each poll group (optional)""", type=int)
     p.add_argument('-z', '--zcopy', action='store_true', help='''Use zero-copy operations if the
     underlying bdev supports them''')
     p.add_argument('-d', '--num-cqe', help="""The number of CQ entries. Only used when no_srq=true.

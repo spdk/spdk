@@ -85,6 +85,7 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
 	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
 	spdk_json_write_named_uint32(w, "iobuf_small_cache_size", opts->iobuf_small_cache_size);
+	spdk_json_write_named_uint32(w, "iobuf_large_cache_size", opts->iobuf_large_cache_size);
 	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
 	spdk_json_write_named_bool(w, "zcopy", opts->zcopy);
 
@@ -147,6 +148,7 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(io_unit_size);
 	SET_FIELD(max_aq_depth);
 	SET_FIELD(iobuf_small_cache_size);
+	SET_FIELD(iobuf_large_cache_size);
 	SET_FIELD(num_shared_buffers);
 	SET_FIELD(dif_insert_or_strip);
 	SET_FIELD(abort_timeout_sec);
@@ -163,7 +165,7 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 82, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 88, "Incorrect size");
 
 #undef SET_FIELD
 #undef FILED_CHECK
@@ -179,7 +181,8 @@ struct nvmf_transport_create_ctx {
 static bool
 nvmf_transport_use_iobuf(struct spdk_nvmf_transport *transport)
 {
-	return transport->opts.num_shared_buffers || transport->opts.iobuf_small_cache_size;
+	return transport->opts.num_shared_buffers || transport->opts.iobuf_small_cache_size ||
+	       transport->opts.iobuf_large_cache_size;
 }
 
 static void
@@ -296,6 +299,14 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 		SPDK_ERRLOG("io_unit_size %u is larger than iobuf pool large buffer size %d\n",
 			    ctx->opts.io_unit_size, opts_iobuf.large_bufsize);
 		goto err;
+	}
+	if (ctx->opts.iobuf_large_cache_size != UINT32_MAX && ctx->opts.iobuf_large_cache_size != 0) {
+		if (ctx->opts.iobuf_large_cache_size * spdk_env_get_core_count() > opts_iobuf.large_pool_count) {
+			SPDK_WARNLOG("per core iobuf_large_cache_size %u is larger than iobuf large buffer count %" PRIu64
+				     ", limiting to 50%% of the pool\n",
+				     ctx->opts.iobuf_large_cache_size * spdk_env_get_core_count(), opts_iobuf.large_pool_count);
+			ctx->opts.iobuf_large_cache_size = opts_iobuf.large_pool_count / spdk_env_get_core_count() / 2;
+		}
 	}
 
 	if (ctx->opts.io_unit_size <= opts_iobuf.small_bufsize) {
@@ -630,6 +641,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		/* We aren't going to allocate any shared buffers or cache, so just return now. */
 		return tgroup;
 	}
+	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
 
 	small_cache_size = transport->opts.iobuf_small_cache_size;
 
@@ -652,11 +664,11 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		small_cache_size = (num_shared_buffers * 3 / 4) / num_poll_groups;
 	}
 
-	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
-	if (transport->opts.io_unit_size <= opts_iobuf.small_bufsize) {
-		large_cache_size = 0;
-	} else {
-		large_cache_size = small_cache_size;
+	large_cache_size = transport->opts.iobuf_large_cache_size;
+	if (large_cache_size == UINT32_MAX) {
+		uint16_t num_poll_groups = group->tgt->num_poll_groups ? : spdk_env_get_core_count();
+
+		large_cache_size = (opts_iobuf.large_pool_count / 2) / num_poll_groups;
 	}
 
 	tgroup->buf_cache = calloc(1, sizeof(*tgroup->buf_cache));

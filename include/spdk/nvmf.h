@@ -129,8 +129,11 @@ struct spdk_nvmf_transport_opts {
 	struct spdk_nvme_cdata_oncs oncs;
 	/* Enable or disable FUSES features. By default, all supported features are enabled. */
 	struct spdk_nvme_cdata_fuses fuses;
+	uint8_t reserved82[2];
+	/* The number of shared buffers from a large iobuf pool to reserve for each poll group. If set to UINT32_MAX then 50% of the large buffers will be used. */
+	uint32_t iobuf_large_cache_size;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 82, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 88, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**
