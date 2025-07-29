@@ -882,11 +882,13 @@ iobuf_get_channel_stats(struct spdk_io_channel_iter *iter)
 					it->small_pool.cache += cache->stats.cache;
 					it->small_pool.main += cache->stats.main;
 					it->small_pool.retry += cache->stats.retry;
+					it->small_pool.cache_size += cache->cache_size;
 
 					cache = &channel->cache[i].large;
 					it->large_pool.cache += cache->stats.cache;
 					it->large_pool.main += cache->stats.main;
 					it->large_pool.retry += cache->stats.retry;
+					it->large_pool.cache_size += cache->cache_size;
 				}
 				break;
 			}

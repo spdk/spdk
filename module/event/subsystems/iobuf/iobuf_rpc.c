@@ -64,12 +64,14 @@ rpc_iobuf_get_stats_done(struct spdk_iobuf_module_stats *modules, uint32_t num_m
 		spdk_json_write_named_uint64(w, "cache", it->small_pool.cache);
 		spdk_json_write_named_uint64(w, "main", it->small_pool.main);
 		spdk_json_write_named_uint64(w, "retry", it->small_pool.retry);
+		spdk_json_write_named_uint32(w, "cache_size", it->small_pool.cache_size);
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_named_object_begin(w, "large_pool");
 		spdk_json_write_named_uint64(w, "cache", it->large_pool.cache);
 		spdk_json_write_named_uint64(w, "main", it->large_pool.main);
 		spdk_json_write_named_uint64(w, "retry", it->large_pool.retry);
+		spdk_json_write_named_uint32(w, "cache_size", it->large_pool.cache_size);
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);

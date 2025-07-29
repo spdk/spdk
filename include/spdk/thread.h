@@ -1108,6 +1108,8 @@ struct spdk_iobuf_opts {
 };
 
 struct spdk_iobuf_pool_stats {
+	/* Number of buffers cached by the module */
+	uint32_t	cache_size;
 	/** Buffer got from local per-thread cache */
 	uint64_t	cache;
 	/** Buffer got from the main shared pool */
