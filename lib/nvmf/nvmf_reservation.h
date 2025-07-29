@@ -18,8 +18,6 @@ struct _nvmf_ns_registrants {
 };
 
 struct _nvmf_ns_reservation {
-	uint64_t				version;
-	uint64_t				epoch;
 	bool					ptpl_activated;
 	enum spdk_nvme_reservation_type		rtype;
 	uint64_t				crkey;
