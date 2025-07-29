@@ -2681,40 +2681,56 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 	},
 };
 
+void
+spdk_nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+					struct spdk_nvme_cmds_and_effect_log_page *log_page)
+{
+	struct spdk_nvme_cmds_and_effect_entry *entry;
+
+	*log_page = g_cmds_and_effect_log_page;
+	if (!ctrlr->cdata.oncs.write_zeroes || !nvmf_ctrlr_write_zeroes_supported(ctrlr)) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_WRITE_ZEROES];
+		memset(entry, 0, sizeof(*entry));
+	}
+	if (!ctrlr->cdata.oncs.dsm || !nvmf_ctrlr_dsm_supported(ctrlr)) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_DATASET_MANAGEMENT];
+		memset(entry, 0, sizeof(*entry));
+	}
+	if (!ctrlr->cdata.oncs.compare) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_COMPARE];
+		memset(entry, 0, sizeof(*entry));
+	}
+	if (!nvmf_subsystem_has_zns_iocs(ctrlr->subsys)) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_ZONE_MGMT_SEND];
+		memset(entry, 0, sizeof(*entry));
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_ZONE_MGMT_RECV];
+		memset(entry, 0, sizeof(*entry));
+	}
+	if (!nvmf_subsystem_zone_append_supported(ctrlr->subsys)) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_ZONE_APPEND];
+		memset(entry, 0, sizeof(*entry));
+	}
+	if (!ctrlr->cdata.oncs.copy) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_COPY];
+		memset(entry, 0, sizeof(*entry));
+	}
+}
+
 static int
 nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
 				   uint64_t offset, uint32_t length)
 {
 	uint32_t page_size = sizeof(struct spdk_nvme_cmds_and_effect_log_page);
 	size_t copy_len = 0;
-	struct spdk_nvme_cmds_and_effect_log_page cmds_and_effect_log_page = g_cmds_and_effect_log_page;
-	struct spdk_nvme_cmds_and_effect_entry zero = {};
 	struct spdk_iov_xfer ix;
+	struct spdk_nvme_cmds_and_effect_log_page cmds_and_effects_log_page = {};
 
-	if (!ctrlr->cdata.oncs.write_zeroes || !nvmf_ctrlr_write_zeroes_supported(ctrlr)) {
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_WRITE_ZEROES] = zero;
-	}
-	if (!ctrlr->cdata.oncs.dsm || !nvmf_ctrlr_dsm_supported(ctrlr)) {
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_DATASET_MANAGEMENT] = zero;
-	}
-	if (!ctrlr->cdata.oncs.compare) {
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_COMPARE] = zero;
-	}
-	if (!nvmf_subsystem_has_zns_iocs(ctrlr->subsys)) {
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_MGMT_SEND] = zero;
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_MGMT_RECV] = zero;
-	}
-	if (!nvmf_subsystem_zone_append_supported(ctrlr->subsys)) {
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_ZONE_APPEND] = zero;
-	}
-	if (!ctrlr->cdata.oncs.copy) {
-		cmds_and_effect_log_page.io_cmds_supported[SPDK_NVME_OPC_COPY] = zero;
-	}
+	spdk_nvmf_get_cmds_and_effects_log_page(ctrlr, &cmds_and_effects_log_page);
 
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
 	if (offset < page_size) {
 		copy_len = spdk_min(page_size - offset, length);
-		spdk_iov_xfer_from_buf(&ix, (char *)(&cmds_and_effect_log_page) + offset, copy_len);
+		spdk_iov_xfer_from_buf(&ix, (char *)(&cmds_and_effects_log_page) + offset, copy_len);
 	} else {
 		SPDK_ERRLOG("Invalid Get log page cmds effects offset: (%" PRIu64 "), log page size (%" PRIu32")\n",
 			    offset, page_size);
