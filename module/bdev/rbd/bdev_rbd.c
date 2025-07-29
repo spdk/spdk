@@ -754,7 +754,7 @@ _bdev_rbd_destruct(void *ctx)
 	spdk_io_device_unregister(rbd, bdev_rbd_free_cb);
 }
 
-enum spdk_bdev_type
+static enum spdk_bdev_type
 bdev_rbd_get_module_type(void *)
 {
 	return SPDK_BDEV_RDB;
@@ -1660,17 +1660,17 @@ bdev_rbd_ns_reservation_load_json(struct spdk_bdev *bdev, void **json, int *json
 	void  *end;
 	struct spdk_json_val *values = NULL;
 
+	size_t size = MAX_RESERV_FILE_SIZE;
 	*json = calloc(MAX_RESERV_FILE_SIZE, 1);
 	if (*json == NULL) {
 		return -ENOMEM;
 	}
-	*json_size = MAX_RESERV_FILE_SIZE;
-	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, *json, (size_t *)json_size);
+	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, *json, &size);
 	if (rc < 0) {
 		SPDK_NOTICELOG("Failed to get metadata  key = %s rbd-name %s\n", RESERVATION_KEY, rbd->rbd_name);
 		return rc;
 	}
-	size_t size  = *json_size;
+	*json_size = (int)size;
 	rc = spdk_json_parse(*json, size, NULL, 0, &end, 0);
 	if (rc < 0) {
 		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
