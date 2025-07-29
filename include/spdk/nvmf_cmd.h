@@ -30,6 +30,16 @@ int spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr,
 				   struct spdk_nvme_ctrlr_data *cdata);
 
 /**
+ * Fills log page struct with feature identifiers effects log page for specified controller
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param log_page target struct to be filled with log page data
+ */
+
+void spdk_nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvme_feature_ids_effects_log_page *log_page);
+
+/**
  * Fill the log page struct with supported log pages for specified controller
  *
  * \param ctrlr The NVMe-oF controller

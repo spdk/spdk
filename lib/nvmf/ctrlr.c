@@ -2796,10 +2796,74 @@ is_log_page_ctrlr_nvm_scope(uint8_t lid)
 	}
 }
 
+static const struct spdk_nvme_feature_ids_effects_log_page
+	g_supported_feat_id_effects_log_pages_discovery = {
+	.fis = {
+		[SPDK_NVME_FEAT_KEEP_ALIVE_TIMER] =	     { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION] = { .fsupp = 1, .cscpe = 1},
+	}
+};
+
+static const struct spdk_nvme_feature_ids_effects_log_page g_supported_feat_id_effects_log_pages = {
+	.fis = {
+		[SPDK_NVME_FEAT_KEEP_ALIVE_TIMER] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION] =	  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_ARBITRATION] =			  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_POWER_MANAGEMENT] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD] =	  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_ERROR_RECOVERY] =		  { .fsupp = 1, .nscpe = 1},
+		[SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_NUMBER_OF_QUEUES] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_INTERRUPT_COALESCING] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION] = { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_WRITE_ATOMICITY] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_HOST_IDENTIFIER] =		  { .fsupp = 1, .cscpe = 1},
+		[SPDK_NVME_FEAT_HOST_RESERVE_MASK] =		  { .fsupp = 1, .nscpe = 1},
+		[SPDK_NVME_FEAT_HOST_RESERVE_PERSIST] =		  { .fsupp = 1, .nscpe = 1},
+		[SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT] =	  { .fsupp = 1, .cscpe = 1},
+	}
+};
+
+void
+spdk_nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvme_feature_ids_effects_log_page *log_page)
+{
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
+		*log_page = g_supported_feat_id_effects_log_pages_discovery;
+	} else {
+		*log_page = g_supported_feat_id_effects_log_pages;
+	}
+}
+
+static int
+nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
+				      uint64_t offset, uint32_t length)
+{
+	uint32_t page_size = sizeof(struct spdk_nvme_feature_ids_effects_log_page);
+	size_t copy_len = 0;
+	struct spdk_iov_xfer ix;
+	struct spdk_nvme_feature_ids_effects_log_page supported_feature_ids_effects_log_page = {};
+
+	spdk_nvmf_get_feature_ids_effects_log_page(ctrlr, &supported_feature_ids_effects_log_page);
+
+	spdk_iov_xfer_init(&ix, iovs, iovcnt);
+	if (offset < page_size) {
+		copy_len = spdk_min(page_size - offset, length);
+		spdk_iov_xfer_from_buf(&ix, (char *)(&supported_feature_ids_effects_log_page) + offset, copy_len);
+	} else {
+		SPDK_ERRLOG("Invalid Get feat id effects log page offset: (%" PRIu64 "),"
+			    " log page size (%" PRIu32")\n", offset, page_size);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static const struct spdk_nvme_supported_log_pages g_supported_log_pages_discover = {
 	.lids = {
 		[SPDK_NVME_LOG_SUPPORTED_LOG_PAGES] = { .lsupp = 1 },
 		[SPDK_NVME_LOG_DISCOVERY] =	      { .lsupp = 1 },
+		[SPDK_NVME_LOG_FEATURE_IDS_EFFECTS] = { .lsupp = 1 },
 	}
 };
 
@@ -2813,6 +2877,7 @@ static const struct spdk_nvme_supported_log_pages g_supported_log_pages = {
 		[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] =	      { .lsupp = 1 },
 		[SPDK_NVME_LOG_CHANGED_NS_LIST] =	      { .lsupp = 1 },
 		[SPDK_NVME_LOG_RESERVATION_NOTIFICATION] =    { .lsupp = 1 },
+		[SPDK_NVME_LOG_FEATURE_IDS_EFFECTS] =	      { .lsupp = 1 },
 	}
 };
 
@@ -2920,6 +2985,9 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 				nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
 			}
 			break;
+		case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
+			rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
+			break;
 		default:
 			SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier for discovery subsystem 0x%02X\n", lid);
 			goto invalid_field_log_page;
@@ -2962,6 +3030,9 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		break;
 	case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
 		rc = nvmf_get_reservation_notification_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		break;
+	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
+		rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
 		break;
 	default:
 		SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier 0x%02X\n", lid);
