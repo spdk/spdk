@@ -1732,60 +1732,53 @@ err_exit:
 }
 
 static int
-nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtransport,
-				      struct spdk_nvmf_rdma_device *device,
-				      struct spdk_nvmf_rdma_request *rdma_req)
+nvmf_rdma_request_alloc_buffers_multi_sgl(struct spdk_nvmf_rdma_transport *rtransport,
+		struct spdk_nvmf_rdma_device *device,
+		struct spdk_nvmf_rdma_request *rdma_req,
+		uint32_t num_sgl_descriptors,
+		uint32_t length)
 {
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct ibv_send_wr			*current_wr;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
-	struct spdk_nvme_sgl_descriptor		*inline_segment, *desc;
-	uint32_t				num_sgl_descriptors;
-	uint32_t				lengths[SPDK_NVMF_MAX_SGL_ENTRIES], total_length = 0;
-	uint32_t				i;
 	int					rc;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rgroup = rqpair->poller->group;
-
-	inline_segment = &req->cmd->nvme_cmd.dptr.sgl1;
-	assert(inline_segment->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
-	assert(inline_segment->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
-
-	num_sgl_descriptors = inline_segment->unkeyed.length / sizeof(struct spdk_nvme_sgl_descriptor);
-	assert(num_sgl_descriptors <= SPDK_NVMF_MAX_SGL_ENTRIES);
-
-	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
-	for (i = 0; i < num_sgl_descriptors; i++) {
-		if (spdk_likely(!req->dif_enabled)) {
-			lengths[i] = desc->keyed.length;
-		} else {
-			req->dif.orig_length += desc->keyed.length;
-			lengths[i] = spdk_dif_get_length_with_md(desc->keyed.length, &req->dif.dif_ctx);
-			req->dif.elba_length += lengths[i];
-		}
-		total_length += lengths[i];
-		desc++;
-	}
-
-	if (spdk_unlikely(total_length > rtransport->transport.opts.max_io_size)) {
-		SPDK_ERRLOG("Multi SGL length 0x%x exceeds max io size 0x%x\n",
-			    total_length, rtransport->transport.opts.max_io_size);
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-		return -EINVAL;
-	}
 
 	rc = nvmf_request_alloc_wrs(rtransport, rdma_req, num_sgl_descriptors - 1);
 	if (spdk_unlikely(rc != 0)) {
 		return -ENOMEM;
 	}
 
-	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport, total_length);
+	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport, length);
 	if (spdk_unlikely(rc != 0)) {
 		nvmf_rdma_request_free_data(rdma_req, rtransport);
 		return rc;
 	}
+
+	return 0;
+}
+
+static int
+nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtransport,
+				      struct spdk_nvmf_rdma_device *device,
+				      struct spdk_nvmf_rdma_request *rdma_req,
+				      uint32_t *lengths,
+				      uint32_t num_sgl_descriptors)
+{
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct ibv_send_wr			*current_wr;
+	struct spdk_nvmf_request		*req = &rdma_req->req;
+	struct spdk_nvme_sgl_descriptor		*inline_segment, *desc;
+	uint32_t				i;
+	int					rc = 0;
+
+	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rgroup = rqpair->poller->group;
+
+	rdma_req->iovpos = 0;
 
 	/* When dif_insert_or_strip is true and the I/O data length is greater than one block,
 	 * the stripped_buffers are got for DIF stripping. */
@@ -1802,8 +1795,10 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	current_wr = &rdma_req->data.wr;
 	assert(current_wr != NULL);
 
-	req->length = 0;
-	rdma_req->iovpos = 0;
+	inline_segment = &req->cmd->nvme_cmd.dptr.sgl1;
+	assert(inline_segment->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	assert(inline_segment->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 	for (i = 0; i < num_sgl_descriptors; i++) {
 		/* The descriptors must be keyed data block descriptors with an address, not an offset. */
@@ -1824,7 +1819,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			goto err_exit;
 		}
 
-		req->length += desc->keyed.length;
 		current_wr->wr.rdma.rkey = desc->keyed.key;
 		current_wr->wr.rdma.remote_addr = desc->address;
 		current_wr = current_wr->next;
@@ -1963,12 +1957,45 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
+		struct spdk_nvme_sgl_descriptor		*desc;
+		uint32_t				num_sgl_descriptors;
+		uint32_t				lengths[SPDK_NVMF_MAX_SGL_ENTRIES];
+		uint32_t				i;
 
-		rc = nvmf_rdma_request_fill_iovs_multi_sgl(rtransport, device, rdma_req);
-		if (spdk_unlikely(rc == -ENOMEM)) {
-			SPDK_DEBUGLOG(rdma, "No available large data buffers. Queueing request %p\n", rdma_req);
+		length = 0;
+		num_sgl_descriptors = sgl->unkeyed.length / sizeof(struct spdk_nvme_sgl_descriptor);
+		assert(num_sgl_descriptors <= SPDK_NVMF_MAX_SGL_ENTRIES);
+
+		req->length = 0;
+		desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + sgl->address;
+		for (i = 0; i < num_sgl_descriptors; i++) {
+			if (spdk_likely(!req->dif_enabled)) {
+				lengths[i] = desc->keyed.length;
+			} else {
+				req->dif.orig_length += desc->keyed.length;
+				lengths[i] = spdk_dif_get_length_with_md(desc->keyed.length, &req->dif.dif_ctx);
+				req->dif.elba_length += lengths[i];
+			}
+			length += lengths[i];
+			req->length += desc->keyed.length;
+			desc++;
+		}
+		if (spdk_unlikely(length > rtransport->transport.opts.max_io_size)) {
+			SPDK_ERRLOG("Multi SGL length 0x%x exceeds max io size 0x%x\n",
+				    length, rtransport->transport.opts.max_io_size);
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+			return -EINVAL;
+		}
+
+		rc = nvmf_rdma_request_alloc_buffers_multi_sgl(rtransport, device, rdma_req, num_sgl_descriptors,
+				length);
+		if (spdk_unlikely(rc != 0)) {
 			return 0;
-		} else if (spdk_unlikely(rc == -EINVAL)) {
+		}
+
+		rc = nvmf_rdma_request_fill_iovs_multi_sgl(rtransport, device, rdma_req, lengths,
+				num_sgl_descriptors);
+		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Multi SGL element request length exceeds the max I/O size\n");
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
