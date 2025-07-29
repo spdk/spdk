@@ -255,7 +255,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	sgl->keyed.length = rtransport.transport.opts.io_unit_size * RDMA_UT_UNITS_IN_MAX_IO;
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ENOMEM);
 	CU_ASSERT(rdma_req.req.data_from_pool == false);
 	CU_ASSERT(rdma_req.req.iovcnt == 0);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 0);
@@ -510,6 +510,7 @@ qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	    struct spdk_nvmf_transport *transport)
 {
 	memset(rqpair, 0, sizeof(*rqpair));
+	STAILQ_INIT(&rqpair->pending_iobuf_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_send_queue);
