@@ -65,6 +65,8 @@ struct bdev_rbd {
 	uint64_t reservation_epoch;
 	void *reservation_ns_context;
 	int (*reservation_fn_cbk)(void *ns);
+	char cluster_fsid[37];
+
 };
 
 struct bdev_rbd_io_channel {
@@ -127,7 +129,7 @@ _rbd_update_callback(void *arg)
   check_reservation:
 	rc = rbd_bdev_notify_ns_reservation_changed(rbd);
 	if (rc != 0) {
-		SPDK_ERRLOG("failed to notify reservation change.\n");
+		SPDK_NOTICELOG("failed to notify reservation change.\n");
 	}
 }
 
@@ -1484,7 +1486,13 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 	rbd->reservation_epoch = 0;
 	rbd->reservation_ns_context = NULL;
 	rbd->reservation_fn_cbk = NULL;
-	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
+	ret = rados_cluster_fsid(*(rbd->cluster_p), rbd->cluster_fsid, sizeof(rbd->cluster_fsid));
+	if(ret < 0) {
+		bdev_rbd_free(rbd);
+		SPDK_ERRLOG("Failed to get cluster-id, ret %d \n", ret);
+		return ret;
+	}
+	SPDK_NOTICELOG("Add %s rbd disk to lun , cluster-id %s\n", rbd->disk.name, rbd->cluster_fsid);
 
 	spdk_io_device_register(rbd, bdev_rbd_create_cb,
 				bdev_rbd_destroy_cb,
@@ -1637,6 +1645,7 @@ bdev_rbd_ns_reservation_update_json(struct spdk_bdev *bdev, struct spdk_json_wri
 	spdk_json_write_object_begin(*ctx);
 	spdk_json_write_named_uint64(*ctx, "version", rbd->reservation_version);
 	spdk_json_write_named_uint64(*ctx, "epoch", rbd->reservation_epoch);
+	spdk_json_write_named_string(*ctx, "cluster_id", rbd->cluster_fsid);
 	SPDK_INFOLOG(reservation, "updated metadata epoch %lu  for bdev %s\n", rbd->reservation_epoch,
 		     bdev->name);
 	return 0;
@@ -1647,21 +1656,77 @@ bdev_rbd_ns_reservation_load_json(struct spdk_bdev *bdev, void **json, int *json
 {
 	ssize_t  rc = 0;
 	struct bdev_rbd *rbd = (struct bdev_rbd *)bdev;
+	ssize_t values_cnt;
+	void  *end;
+	struct spdk_json_val *values = NULL;
 
 	*json = calloc(MAX_RESERV_FILE_SIZE, 1);
 	if (*json == NULL) {
 		return -ENOMEM;
 	}
 	*json_size = MAX_RESERV_FILE_SIZE;
-	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, *json, json_size);
+	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, *json, (size_t *)json_size);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to get metadata  key = %s rbd-name %s\n", RESERVATION_KEY, rbd->rbd_name);
+		SPDK_NOTICELOG("Failed to get metadata  key = %s rbd-name %s\n", RESERVATION_KEY, rbd->rbd_name);
 		return rc;
 	}
+	size_t size  = *json_size;
+	rc = spdk_json_parse(*json, size, NULL, 0, &end, 0);
+	if (rc < 0) {
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
+		goto exit;
+	}
+	values_cnt = rc;
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	if (values == NULL) {
+		goto exit;
+	}
+	rc = spdk_json_parse(*json, size, values, values_cnt, &end, 0);
+	if (rc != values_cnt) {
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
+		rc = -EFAULT;
+		goto exit;
+	}
+	struct spdk_json_val *key = NULL, *val = NULL;
+	char *parsed_val = NULL; ;
+
+	rc = spdk_json_find(values, "cluster_id", &key, &val, SPDK_JSON_VAL_STRING);
+	if (rc != 0 || val == NULL) {
+		SPDK_NOTICELOG("cluster-id json value not found. Removing key %s!\n",RESERVATION_KEY);
+		rc = rbd_metadata_remove(rbd->image, RESERVATION_KEY);
+		if (rc < 0) {
+			SPDK_ERRLOG("cannot remove key %s\n",RESERVATION_KEY);
+		}
+		rc = -EFAULT;
+		goto exit;
+	}
+	rc = spdk_json_decode_string(val, &parsed_val);
+	if (rc == 0) {
+		SPDK_INFOLOG(reservation, "Found string value: %s, rbd->cluster-id %s\n", parsed_val,
+			rbd->cluster_fsid);
+		rc = (memcmp(rbd->cluster_fsid, parsed_val, sizeof(rbd->cluster_fsid)) == 0) ? 0 : -EFAULT;
+		if (rc != 0) {
+			SPDK_NOTICELOG("cluster-id json value found but is not valid %s. Removing key %s!\n",
+					parsed_val, RESERVATION_KEY);
+			rc = rbd_metadata_remove(rbd->image, RESERVATION_KEY);
+			if (rc < 0) {
+				SPDK_ERRLOG("cannot remove key %s\n",RESERVATION_KEY);
+			}
+			rc = -EFAULT;
+			goto exit;
+		}
+	} else {
+		SPDK_ERRLOG("Failed to parse number as string\n");
+		rc = -1;
+		goto exit;
+	}
+
 	SPDK_INFOLOG(reservation,
-		     "loaded from the image metadata: current epoch %lu for rbd-name %s, bdev %s\n",
-		     rbd->reservation_epoch, rbd->rbd_name, bdev->name);
-	return 0;
+			"loaded from the image metadata: current epoch %lu for rbd-name %s, bdev %s\n",
+			rbd->reservation_epoch, rbd->rbd_name, bdev->name);
+exit:
+	free(values);
+	return rc;
 }
 
 static int
@@ -1680,7 +1745,7 @@ rbd_bdev_check_epoch(struct bdev_rbd *rbd)
 	size_t size = MAX_RESERV_FILE_SIZE;
 	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, json, &size);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to get metadata  key = %s\n", RESERVATION_KEY);
+		SPDK_NOTICELOG("Failed to get metadata  key = %s\n", RESERVATION_KEY);
 		rc = -ENOKEY;
 		goto exit;
 	}
@@ -1747,7 +1812,7 @@ rbd_bdev_notify_ns_reservation_changed(struct bdev_rbd *rbd)
 			rc = rbd->reservation_fn_cbk(rbd->reservation_ns_context);
 		}
 		if (rc != 0) {
-			SPDK_ERRLOG("reservation metadata update was not loaded\n");
+			SPDK_NOTICELOG("reservation metadata update was not loaded\n");
 		}
 	}
 err:

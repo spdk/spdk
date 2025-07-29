@@ -49,7 +49,7 @@ spdk_try_rbd_reservation_ops_set(struct spdk_bdev *bdev)
 		if (bdev->fn_table->get_module_type(NULL) == SPDK_BDEV_RDB) {
 			if (rbd_ops_set == false) {
 				spdk_nvmf_set_custom_ns_reservation_ops(&g_rbd_ops);
-				SPDK_ERRLOG("reservation custom ops set for for bdev_rbd \n");
+				SPDK_NOTICELOG("reservation custom ops set for for bdev_rbd \n");
 				rbd_ops_set = true;
 			}
 		}
@@ -133,8 +133,6 @@ nvmf_decode_ns_pr_regs(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder nvmf_ns_pr_decoders[] = {
-	{"version", offsetof(struct _nvmf_ns_reservation, version), spdk_json_decode_uint64, true},
-	{"epoch", offsetof(struct _nvmf_ns_reservation, epoch), spdk_json_decode_uint64, true},
 	{"ptpl", offsetof(struct _nvmf_ns_reservation, ptpl_activated), spdk_json_decode_bool, true},
 	{"rtype", offsetof(struct _nvmf_ns_reservation, rtype), spdk_json_decode_uint32, true},
 	{"crkey", offsetof(struct _nvmf_ns_reservation, crkey), spdk_json_decode_uint64, true},
@@ -155,10 +153,12 @@ ns_rdb_load(const struct spdk_nvmf_ns *ns,
 	uint32_t i;
 
 	struct spdk_bdev *bdev = ns->bdev;
-
+	info->ptpl_activated = 0;
+	info->num_regs = 0;
 	rc = bdev->fn_table->ns_reservation_load_json(bdev, &json, &json_size);
 	if (rc != 0) {
-		rc = 0;
+		SPDK_NOTICELOG("Subsystem load reservation failed, rc %d, ns %d\n", rc,  ns->nsid);
+		rc = 0;// this is not a fatal error so we cannot fail on creating NS
 		goto exit;
 	}
 	SPDK_INFOLOG(reservation, "Loaded Json string for NS %d  %s, size %u\n", ns->nsid,
@@ -183,9 +183,8 @@ ns_rdb_load(const struct spdk_nvmf_ns *ns,
 	}
 
 	/* Decode json */
-	if (spdk_json_decode_object(values, nvmf_ns_pr_decoders,
-				    SPDK_COUNTOF(nvmf_ns_pr_decoders),
-				    &res)) {
+	if (spdk_json_decode_object_relaxed(values, nvmf_ns_pr_decoders,
+				    SPDK_COUNTOF(nvmf_ns_pr_decoders), &res)) {
 		SPDK_ERRLOG("Invalid objects in the persist file\n");
 		rc = -EINVAL;
 		goto exit;
@@ -230,8 +229,8 @@ ns_rbd_metadata_updated(void *ns_p)
 
 	pthread_mutex_lock(&ns->subsystem->mutex);
 	int rc = g_rbd_ops.load(ns, &info);
-	if (rc) {
-		SPDK_ERRLOG("Subsystem load reservation failed\n");
+	if (rc != 0) {
+		SPDK_NOTICELOG("Subsystem load reservation failed, rc %d\n", rc);
 		goto exit;
 	}
 	nvmf_ns_reservation_clear_all_registrants(ns);
