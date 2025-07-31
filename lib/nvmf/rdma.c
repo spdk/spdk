@@ -362,6 +362,8 @@ struct spdk_nvmf_rdma_qpair {
 
 	RB_ENTRY(spdk_nvmf_rdma_qpair)		node;
 
+	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	active_link;
+
 	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	recv_link;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	send_link;
@@ -422,6 +424,8 @@ struct spdk_nvmf_rdma_poller {
 	void					*destroy_cb_ctx;
 
 	RB_HEAD(qpairs_tree, spdk_nvmf_rdma_qpair) qpairs;
+
+	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	active_qpairs;
 
 	STAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs_pending_recv;
 
@@ -882,6 +886,7 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	if (rqpair->poller) {
 		RB_REMOVE(qpairs_tree, &rqpair->poller->qpairs, rqpair);
+		assert(TAILQ_ENTRY_NOT_ENQUEUED(rqpair, active_link));
 
 		if (rqpair->srq != NULL && rqpair->resources != NULL) {
 			/* Drop all received but unprocessed commands for this queue and return them to SRQ */
@@ -2004,6 +2009,10 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	STAILQ_INSERT_HEAD(&rqpair->resources->free_queue, rdma_req, state_link);
 	rqpair->qpair.queue_depth--;
 	rdma_req->state = RDMA_REQUEST_STATE_FREE;
+	if (rqpair->qpair.queue_depth == 0) {
+		assert(TAILQ_ENTRY_ENQUEUED(rqpair, active_link));
+		TAILQ_REMOVE_CLEAR(&rqpair->poller->active_qpairs, rqpair, active_link);
+	}
 }
 
 static void
@@ -3463,13 +3472,7 @@ nvmf_rdma_poller_process_pending_qpairs(struct spdk_nvmf_rdma_transport *rtransp
 {
 	struct spdk_nvmf_rdma_qpair *rqpair, *tmp;
 
-	/* TODO: Here we iterate all qpairs, active and not active and touch at least 2 cache lines per
-	 * qpair. On high scale with small number of active qpairs we may observe higher rate of L2 cache
-	 * misses. To solve this problem we need to maintain a dedicated list of active qpairs */
-	RB_FOREACH_SAFE(rqpair, qpairs_tree, &rpoller->qpairs, tmp) {
-		if (rqpair->qpair.queue_depth == 0) {
-			continue;
-		}
+	TAILQ_FOREACH_SAFE(rqpair, &rpoller->active_qpairs, active_link, tmp) {
 		nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 	}
 }
@@ -4070,6 +4073,7 @@ nvmf_rdma_poller_create(struct spdk_nvmf_rdma_transport *rtransport,
 	RB_INIT(&poller->qpairs);
 	STAILQ_INIT(&poller->qpairs_pending_send);
 	STAILQ_INIT(&poller->qpairs_pending_recv);
+	TAILQ_INIT(&poller->active_qpairs);
 
 	TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 	SPDK_DEBUGLOG(rdma, "Create poller %p on device %p in poll group %p.\n", poller, device, rgroup);
@@ -4787,6 +4791,10 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_recv->receive_tsc = poll_tsc;
 			rpoller->stat.requests++;
 			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
+			if (rqpair->qpair.queue_depth == 0) {
+				assert(TAILQ_ENTRY_NOT_ENQUEUED(rqpair, active_link));
+				TAILQ_INSERT_TAIL(&rpoller->active_qpairs, rqpair, active_link);
+			}
 			rqpair->qpair.queue_depth++;
 			break;
 		case RDMA_WR_TYPE_DATA:
