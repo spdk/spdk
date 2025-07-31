@@ -15,7 +15,7 @@ source /etc/os-release
 id_ok=no
 
 for id in $ID $ID_LIKE; do
-	[[ "$id" =~ ^(fedora|centos|rhel) ]] && id_ok=yes
+	[[ "$id" =~ ^(fedora|centos|rhel|sles) ]] && id_ok=yes
 done
 
 if [[ "$id_ok" != "yes" ]]; then
