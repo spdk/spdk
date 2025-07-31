@@ -3570,8 +3570,7 @@ exit:
 }
 
 static void
-nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
-			   struct spdk_nvmf_ctrlr *ctrlr,
+nvmf_ns_reservation_report(const struct spdk_nvmf_ns *ns,
 			   struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -3687,7 +3686,7 @@ nvmf_ns_reservation_request(void *ctx)
 		update_sgroup = nvmf_ns_reservation_release(ns, ctrlr, req);
 		break;
 	case SPDK_NVME_OPC_RESERVATION_REPORT:
-		nvmf_ns_reservation_report(ns, ctrlr, req);
+		nvmf_ns_reservation_report(ns, req);
 		break;
 	default:
 		break;

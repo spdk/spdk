@@ -1830,7 +1830,6 @@ static void
 test_nvmf_ns_reservation_report(void)
 {
 	struct spdk_nvmf_ns ns = {};
-	struct spdk_nvmf_ctrlr ctrlr = {};
 	struct spdk_nvmf_request req = {};
 	union nvmf_h2c_msg cmd = {};
 	union nvmf_c2h_msg rsp = {};
@@ -1861,7 +1860,7 @@ test_nvmf_ns_reservation_report(void)
 	TAILQ_INSERT_TAIL(&ns.registrants, &reg[0], link);
 	TAILQ_INSERT_TAIL(&ns.registrants, &reg[1], link);
 
-	nvmf_ns_reservation_report(&ns, &ctrlr, &req);
+	nvmf_ns_reservation_report(&ns, &req);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	/* Get ctrlr data and status data pointers */
@@ -1888,7 +1887,7 @@ test_nvmf_ns_reservation_report(void)
 	memset(req.rsp, 0, sizeof(*req.rsp));
 	cmd.nvme_cmd.cdw11_bits.resv_report.eds = false;
 
-	nvmf_ns_reservation_report(&ns, &ctrlr, &req);
+	nvmf_ns_reservation_report(&ns, &req);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_HOSTID_INCONSISTENT_FORMAT);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 
@@ -1898,7 +1897,7 @@ test_nvmf_ns_reservation_report(void)
 	cmd.nvme_cmd.cdw11_bits.resv_report.eds = true;
 	cmd.nvme_cmd.cdw10 = 0;
 
-	nvmf_ns_reservation_report(&ns, &ctrlr, &req);
+	nvmf_ns_reservation_report(&ns, &req);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 
