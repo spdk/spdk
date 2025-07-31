@@ -1205,14 +1205,15 @@ static void
 tcp_sock_flush_cb(void *arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair = arg;
-	int rc = spdk_sock_flush(tqpair->sock);
+	int rc;
 
+	tqpair->pending_flush = false;
+	rc = spdk_sock_flush(tqpair->sock);
 	if (rc < 0 && errno == EAGAIN) {
 		spdk_thread_send_msg(spdk_get_thread(), tcp_sock_flush_cb, tqpair);
 		return;
 	}
 
-	tqpair->pending_flush = false;
 	if (rc < 0) {
 		SPDK_ERRLOG("Could not write to socket: rc=%d, errno=%d\n", rc, errno);
 	}
