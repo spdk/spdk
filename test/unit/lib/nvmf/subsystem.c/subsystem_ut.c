@@ -1575,6 +1575,45 @@ test_reservation_preempt_notification(void)
 	ut_reservation_deinit();
 }
 
+static void
+test_reservation_invalid_request(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	bool update_sgroup;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->length = 1; /* make invalid */
+	rsp = &req->rsp->nvme_cpl;
+
+	/* TEST CASE: register with invalid req */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+					      0, 0, 0, 0xa1);
+	update_sgroup = nvmf_ns_reservation_register(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(update_sgroup == false);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* TEST CASE: acquire with invalid req */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xa1, 0x0);
+	update_sgroup = nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(update_sgroup == false);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* TEST CASE: create invalid req */
+	ut_reservation_build_release_request(req, SPDK_NVME_RESERVE_CLEAR, 0,
+					     0, 0xa1);
+	update_sgroup = nvmf_ns_reservation_release(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(update_sgroup == false);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
 static int
 nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 {
@@ -2242,6 +2281,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_release_notification_write_exclusive);
 	CU_ADD_TEST(suite, test_reservation_clear_notification);
 	CU_ADD_TEST(suite, test_reservation_preempt_notification);
+	CU_ADD_TEST(suite, test_reservation_invalid_request);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);

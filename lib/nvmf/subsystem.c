@@ -3333,6 +3333,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
+		update_sgroup = false;
 		goto exit;
 	}
 
@@ -3492,6 +3493,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
+		update_sgroup = false;
 		goto exit;
 	}
 
