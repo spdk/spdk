@@ -17,7 +17,7 @@ function reactor_is_busy_or_idle() {
 	fi
 
 	for ((j = 10; j != 0; j--)); do
-		reactor_state=($(ps -L -p"$pid" -ostate=,pid=,comm= | grep "reactor_$idx" | awk '{print $1}'))
+		reactor_state=$(ps -L -p"$pid" -ostate=,pid=,comm= | grep "reactor_$idx" | awk '{print $1}')
 
 		if [[ $state = "busy" && $reactor_state != "R" ]]; then
 			sleep 1
