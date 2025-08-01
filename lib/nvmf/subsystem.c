@@ -3662,22 +3662,16 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 	spdk_thread_send_msg(group->thread, nvmf_ns_reservation_complete, req);
 }
 
-void
-nvmf_ns_reservation_request(void *ctx)
+static void
+nvmf_ns_reservation_update_state(struct spdk_nvmf_ns *ns,
+				 struct spdk_nvmf_ctrlr *ctrlr,
+				 struct spdk_nvmf_request *req,
+				 enum spdk_nvme_nvm_opcode opc)
 {
-	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	uint32_t nsid;
-	struct spdk_nvmf_ns *ns;
 	bool update_sgroup = false;
 	int status = 0;
 
-	nsid = cmd->nsid;
-	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
-	assert(ns != NULL);
-
-	switch (cmd->opc) {
+	switch (opc) {
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
 		update_sgroup = nvmf_ns_reservation_register(ns, ctrlr, req);
 		break;
@@ -3687,16 +3681,13 @@ nvmf_ns_reservation_request(void *ctx)
 	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		update_sgroup = nvmf_ns_reservation_release(ns, ctrlr, req);
 		break;
-	case SPDK_NVME_OPC_RESERVATION_REPORT:
-		nvmf_ns_reservation_report(ns, req);
-		break;
 	default:
 		break;
 	}
 
 	/* update reservation information to subsystem's poll group */
 	if (update_sgroup) {
-		if (ns->ptpl_activated || cmd->opc == SPDK_NVME_OPC_RESERVATION_REGISTER) {
+		if (ns->ptpl_activated || opc == SPDK_NVME_OPC_RESERVATION_REGISTER) {
 			if (nvmf_ns_update_reservation_info(ns) != 0) {
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			}
@@ -3708,6 +3699,31 @@ nvmf_ns_reservation_request(void *ctx)
 	}
 
 	_nvmf_ns_reservation_update_done(ctrlr->subsys, req, status);
+}
+
+void
+nvmf_ns_reservation_request(void *ctx)
+{
+	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
+
+	nsid = cmd->nsid;
+	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	assert(ns != NULL);
+
+	/* Report is a read-only command and can always be executed */
+	if (cmd->opc == SPDK_NVME_OPC_RESERVATION_REPORT) {
+		nvmf_ns_reservation_report(ns, req);
+		_nvmf_ns_reservation_update_done(ctrlr->subsys, req, 0);
+	} else {
+		/* Remaining commands modify reservation state and must be serialized.
+		 * These complete asynchronously after state propagates to poll groups
+		 */
+		nvmf_ns_reservation_update_state(ns, ctrlr, req, cmd->opc);
+	}
 }
 
 static bool
