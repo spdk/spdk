@@ -529,11 +529,14 @@ bool g_needs_setup_aer_for_ns_change = false;
 struct spdk_nvme_ana_page *g_ana_hdr;
 struct spdk_nvme_ana_group_descriptor **g_ana_descs;
 
+static uint32_t g_get_log_page_sent_counter = 0;
+
 int
 spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
 				 uint32_t nsid, void *payload, uint32_t payload_size,
 				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	g_get_log_page_sent_counter++;
 	if ((log_page == SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS) && g_ana_hdr) {
 		uint32_t i;
 		uint8_t *ptr = payload;
@@ -3136,8 +3139,10 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	ctrlr.opts.disable_read_changed_ns_list_log_page = true;
 	g_aer_cb_counter = 0;
 	g_nvme_ns_constructed = 0;
+	g_get_log_page_sent_counter = 0;
 	setup_aer_for_ns_change(active_ns_list7, SPDK_COUNTOF(active_ns_list7), NULL, 0);
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_get_log_page_sent_counter == 0);
 	CU_ASSERT(g_aer_cb_counter == 1);
 	CU_ASSERT(g_nvme_ns_constructed == SPDK_COUNTOF(active_ns_list7));
 	check_active_ns(&ctrlr, active_ns_list7, SPDK_COUNTOF(active_ns_list7));
@@ -3569,6 +3574,8 @@ ut_setup(void)
 
 	g_ana_hdr = NULL;
 	g_ana_descs = NULL;
+
+	g_get_log_page_sent_counter = 0;
 
 	g_nvme_ns_constructed = 0;
 	g_aer_cb_counter = 0;
