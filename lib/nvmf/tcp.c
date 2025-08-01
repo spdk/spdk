@@ -3564,7 +3564,7 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return num_events;
 }
 
-static int
+static void
 nvmf_tcp_qpair_get_trid(struct spdk_nvmf_qpair *qpair,
 			struct spdk_nvme_transport_id *trid, bool peer)
 {
@@ -3587,32 +3587,38 @@ nvmf_tcp_qpair_get_trid(struct spdk_nvmf_qpair *qpair,
 	} else if (spdk_sock_is_ipv6(tqpair->sock)) {
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV6;
 	} else {
-		return -1;
+		SPDK_ERRLOG("Unsupported socket type for qpair: %p\n", qpair);
+		assert(false);
 	}
 
 	snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%d", port);
-	return 0;
 }
 
 static int
 nvmf_tcp_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
 			      struct spdk_nvme_transport_id *trid)
 {
-	return nvmf_tcp_qpair_get_trid(qpair, trid, 0);
+	nvmf_tcp_qpair_get_trid(qpair, trid, 0);
+
+	return 0;
 }
 
 static int
 nvmf_tcp_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvme_transport_id *trid)
 {
-	return nvmf_tcp_qpair_get_trid(qpair, trid, 1);
+	nvmf_tcp_qpair_get_trid(qpair, trid, 1);
+
+	return 0;
 }
 
 static int
 nvmf_tcp_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 			       struct spdk_nvme_transport_id *trid)
 {
-	return nvmf_tcp_qpair_get_trid(qpair, trid, 0);
+	nvmf_tcp_qpair_get_trid(qpair, trid, 0);
+
+	return 0;
 }
 
 static void
