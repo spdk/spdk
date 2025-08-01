@@ -771,8 +771,6 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
 
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
-
 	/*
 	 * Initial state: CC.EN = 1, CSTS.RDY = 0
 	 */
@@ -834,7 +832,6 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -842,8 +839,6 @@ static void
 test_nvme_ctrlr_init_en_1_rdy_1(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
 	 * Initial state: CC.EN = 1, CSTS.RDY = 1
@@ -897,7 +892,6 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -905,8 +899,6 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
 	 * Initial state: CC.EN = 0, CSTS.RDY = 0
@@ -948,7 +940,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -981,7 +972,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1014,7 +1004,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1047,7 +1036,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1094,7 +1082,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -1102,8 +1089,6 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
 	 * Initial state: CC.EN = 0, CSTS.RDY = 0
@@ -1145,7 +1130,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1181,7 +1165,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1214,7 +1197,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1247,7 +1229,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1294,15 +1275,12 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 static void
 test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
 	 * Initial state: CC.EN = 0, CSTS.RDY = 0
@@ -1344,7 +1322,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1377,7 +1354,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1413,7 +1389,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1446,7 +1421,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	/*
 	 * Complete and destroy the controller
 	 */
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
 	/*
@@ -1493,7 +1467,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -1501,8 +1474,6 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
 	 * Initial state: CC.EN = 0, CSTS.RDY = 0
@@ -1545,7 +1516,6 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -1553,8 +1523,6 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_1(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
 	 * Initial state: CC.EN = 0, CSTS.RDY = 1
@@ -1606,7 +1574,6 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -2345,8 +2312,6 @@ test_nvme_ctrlr_init_delay(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
 
-	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
-
 	/*
 	 * Initial state: CC.EN = 0, CSTS.RDY = 0
 	 * init() should set CC.EN = 1.
@@ -2405,7 +2370,6 @@ test_nvme_ctrlr_init_delay(void)
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -2968,7 +2932,6 @@ test_nvme_ctrlr_reset(void)
 	CU_ASSERT(spdk_nvme_ctrlr_get_ns(&ctrlr, 2) != NULL);
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 2));
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -3552,7 +3515,6 @@ test_nvme_ctrlr_disable(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 
-	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
@@ -3575,6 +3537,12 @@ test_nvme_numa_id(void)
 static void
 ut_setup(void)
 {
+	/* Registers are set as needed during UT, clear them. */
+	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
+	/* This is checked during every nvme_ctrlr_destruct(),
+	 * just mark it as complete always. */
+	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+
 	g_set_reg_cb = NULL;
 
 	set_size = 1;
