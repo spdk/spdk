@@ -240,7 +240,7 @@ mem_map_walk_region(struct spdk_mem_map *map, uint64_t vaddr, size_t size,
 	return 0;
 }
 
-static inline uint64_t
+static uint64_t
 mem_reg_map_next_region(uint64_t addr)
 {
 	uint64_t idx_256tb, idx_1gb, idx_2mb;
@@ -295,11 +295,8 @@ next_256tb:
 static int
 mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action action)
 {
-	size_t idx_256tb;
-	uint64_t idx_1gb, idx_2mb;
-	uint64_t contig_start = UINT64_MAX;
-	uint64_t contig_end = UINT64_MAX;
-	int rc, page_size;
+	uint64_t addr, fail_addr, size;
+	int rc;
 
 	if (!g_mem_reg_map) {
 		return -EINVAL;
@@ -307,173 +304,34 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 
 	/* Hold the memory registration map mutex so no new registrations can be added while we are looping. */
 	pthread_mutex_lock(&g_mem_reg_map->mutex);
-
-	for (idx_256tb = 0; idx_256tb < MAP_256TB_SIZE; idx_256tb++) {
-		if (!g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb &&
-		    !g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb4kb) {
-			if (contig_start != UINT64_MAX) {
-				/* End of of a virtually contiguous range */
-				rc = map->ops.notify_cb(map->cb_ctx, map, action,
-							(void *)contig_start,
-							contig_end - contig_start);
-				/* Don't bother handling unregister failures. It can't be any worse */
-				if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
-					goto err_unregister;
-				}
-			}
-			contig_start = UINT64_MAX;
-			continue;
+	for (addr = mem_reg_map_next_region(0);
+	     addr != ADDR_INVALID;
+	     addr = mem_reg_map_next_region(addr)) {
+		size = UINT64_MAX;
+		spdk_mem_map_translate(g_mem_reg_map, addr, &size);
+		rc = map->ops.notify_cb(map->cb_ctx, map, action,
+					(void *)addr, size);
+		/* Don't bother handling unregister failures. It can't be any worse */
+		if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
+			goto err_unregister;
 		}
-
-		for (idx_1gb = 0; idx_1gb < MAP_1GB_SIZE; idx_1gb++) {
-			uint64_t vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, 0);
-			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
-
-			if (page_size == VALUE_4KB) {
-				for (idx_2mb = 0; idx_2mb < MAP_2MB_SIZE; idx_2mb++) {
-					vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb);
-					reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
-
-					if ((reg & REG_MAP_REGISTERED) &&
-					    (contig_start == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
-						if (contig_start == UINT64_MAX) {
-							contig_start = vaddr;
-						}
-						contig_end = vaddr + VALUE_4KB;
-					} else {
-						if (contig_start != UINT64_MAX) {
-							/* End of of a virtually contiguous range */
-							rc = map->ops.notify_cb(map->cb_ctx, map, action,
-										(void *)contig_start,
-										contig_end - contig_start);
-							/* Don't bother handling unregister failures. It can't be any worse */
-							if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
-								goto err_unregister;
-							}
-							/* This page might be a part of a neighbour
-							 * region, so process it again
-							 */
-							idx_2mb--;
-						}
-						contig_start = UINT64_MAX;
-					}
-				}
-
-				continue;
-			}
-
-			if ((reg & REG_MAP_REGISTERED) &&
-			    (contig_start == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
-				/* Rebuild the virtual address from the indexes */
-				if (contig_start == UINT64_MAX) {
-					contig_start = vaddr;
-				}
-
-				contig_end = vaddr + VALUE_2MB;
-			} else {
-				if (contig_start != UINT64_MAX) {
-					/* End of of a virtually contiguous range */
-					rc = map->ops.notify_cb(map->cb_ctx, map, action,
-								(void *)contig_start,
-								contig_end - contig_start);
-					/* Don't bother handling unregister failures. It can't be any worse */
-					if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
-						goto err_unregister;
-					}
-
-					/* This page might be a part of a neighbour region, so process
-					 * it again. The idx_1gb will be incremented immediately.
-					 */
-					idx_1gb--;
-				}
-				contig_start = UINT64_MAX;
-			}
-		}
+		addr += size;
 	}
 
 	pthread_mutex_unlock(&g_mem_reg_map->mutex);
 	return 0;
 
 err_unregister:
-	/* Unwind to the first empty translation so we don't unregister
-	 * a region that just failed to register.
-	 */
-	idx_256tb = MAP_256TB_IDX(VFN_2MB(contig_start) - 1);
-	idx_1gb = MAP_1GB_IDX(VFN_2MB(contig_start) - 1);
-	idx_2mb = MAP_2MB_IDX(VFN_4KB(contig_start) - 1);
-	contig_start = UINT64_MAX;
-	contig_end = UINT64_MAX;
-
-	/* Unregister any memory we managed to register before the failure */
-	for (; idx_256tb < SIZE_MAX; idx_256tb--) {
-		if (!g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb &&
-		    !g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb4kb) {
-			if (contig_end != UINT64_MAX) {
-				/* End of of a virtually contiguous range */
-				map->ops.notify_cb(map->cb_ctx, map,
-						   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
-						   (void *)contig_start,
-						   contig_end - contig_start);
-			}
-			contig_end = UINT64_MAX;
-			continue;
-		}
-
-		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
-			/* Rebuild the virtual address from the indexes */
-			uint64_t vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, 0);
-			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
-
-			if (page_size == VALUE_4KB) {
-				for (; idx_2mb < UINT64_MAX; idx_2mb--) {
-					vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb);
-					reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
-
-					if ((reg & REG_MAP_REGISTERED) &&
-					    (contig_end == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
-						if (contig_end == UINT64_MAX) {
-							contig_end = vaddr + VALUE_4KB;
-						}
-						contig_start = vaddr;
-					} else {
-						if (contig_end != UINT64_MAX) {
-							if (reg & REG_MAP_NOTIFY_START) {
-								contig_start = vaddr;
-							}
-							/* End of of a virtually contiguous range */
-							map->ops.notify_cb(map->cb_ctx, map,
-									   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
-									   (void *)contig_start,
-									   contig_end - contig_start);
-						}
-						contig_end = UINT64_MAX;
-					}
-				}
-				idx_2mb = MAP_2MB_SIZE - 1;
-				continue;
-			}
-
-			if ((reg & REG_MAP_REGISTERED) &&
-			    (contig_end == UINT64_MAX || (reg & REG_MAP_NOTIFY_START) == 0)) {
-				if (contig_end == UINT64_MAX) {
-					contig_end = vaddr + VALUE_2MB;
-				}
-				contig_start = vaddr;
-			} else {
-				if (contig_end != UINT64_MAX) {
-					if (reg & REG_MAP_NOTIFY_START) {
-						contig_start = vaddr;
-					}
-					/* End of of a virtually contiguous range */
-					map->ops.notify_cb(map->cb_ctx, map,
-							   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
-							   (void *)contig_start,
-							   contig_end - contig_start);
-				}
-				contig_end = UINT64_MAX;
-			}
-		}
-		idx_1gb = MAP_1GB_SIZE - 1;
+	fail_addr = addr;
+	for (addr = mem_reg_map_next_region(0);
+	     addr != ADDR_INVALID && addr != fail_addr;
+	     addr = mem_reg_map_next_region(addr)) {
+		size = UINT64_MAX;
+		spdk_mem_map_translate(g_mem_reg_map, addr, &size);
+		map->ops.notify_cb(map->cb_ctx, map,
+				   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+				   (void *)addr, size);
+		addr += size;
 	}
 
 	pthread_mutex_unlock(&g_mem_reg_map->mutex);
@@ -1131,14 +989,30 @@ mem_map_mem_event_callback_unregister(void)
 	}
 }
 
+static int
+mem_reg_map_check_contiguous(uint64_t addr1, uint64_t addr2)
+{
+	assert(addr1 & REG_MAP_REGISTERED);
+	if (!(addr2 & REG_MAP_REGISTERED)) {
+		return 0;
+	}
+
+	/* addr2 is the start of a new registration */
+	return !(addr2 & REG_MAP_NOTIFY_START);
+}
+
 int
 mem_map_init(bool legacy_mem)
 {
+	const struct spdk_mem_map_ops reg_map_ops = {
+		.notify_cb = NULL,
+		.are_contiguous = mem_reg_map_check_contiguous,
+	};
 	int rc;
 
 	g_legacy_mem = legacy_mem;
 
-	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
+	g_mem_reg_map = spdk_mem_map_alloc(0, &reg_map_ops, NULL);
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");
 		return -ENOMEM;
