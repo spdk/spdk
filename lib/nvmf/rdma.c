@@ -2970,9 +2970,9 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-static int nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
-				     struct spdk_nvme_transport_id *trid,
-				     bool peer);
+static void nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
+				      struct spdk_nvme_transport_id *trid,
+				      bool peer);
 
 static bool nvmf_rdma_rescan_devices(struct spdk_nvmf_rdma_transport *rtransport);
 
@@ -4969,7 +4969,7 @@ nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return rc2 ? rc2 : count;
 }
 
-static int
+static void
 nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 			  struct spdk_nvme_transport_id *trid,
 			  bool peer)
@@ -5013,11 +5013,9 @@ nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 		break;
 	}
 	default:
-		return -1;
-
+		SPDK_ERRLOG("Unsupported address family %d\n", saddr->sa_family);
+		assert(false);
 	}
-
-	return 0;
 }
 
 static int
@@ -5033,7 +5031,9 @@ nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 		return -1;
 	}
 
-	return nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, true);
+	nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, true);
+
+	return 0;
 }
 
 static int
@@ -5049,7 +5049,9 @@ nvmf_rdma_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
 		return -1;
 	}
 
-	return nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, false);
+	nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, false);
+
+	return 0;
 }
 
 static int
@@ -5065,7 +5067,9 @@ nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 		assert(false);
 	}
 
-	return nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
+	nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
+
+	return 0;
 }
 
 void
