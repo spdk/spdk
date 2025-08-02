@@ -14,7 +14,7 @@ C_SRCS = base64.c bit_array.c cpuset.c crc16.c crc32.c crc32c.c crc32_ieee.c crc
 	 pipe.c strerror_tls.c string.c uuid.c xor.c zipf.c md5.c
 LIBNAME = util
 
-ifneq ($(OS),FreeBSD)
+ifeq ($(CONFIG_HAVE_LIBUUID),y)
 LOCAL_SYS_LIBS = -luuid
 endif
 

@@ -339,7 +339,7 @@ CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-d
 CXXFLAGS += $(COMMON_CFLAGS) -std=c++11
 
 SYS_LIBS += -lrt
-ifneq ($(OS),FreeBSD)
+ifeq ($(CONFIG_HAVE_LIBUUID),y)
 SYS_LIBS += -luuid
 endif
 SYS_LIBS += -lssl

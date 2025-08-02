@@ -11,7 +11,7 @@
 #include <openssl/evp.h>
 #endif /* SPDK_CONFIG_HAVE_UUID_GENERATE_SHA1 */
 
-#ifndef __FreeBSD__
+#if defined(SPDK_CONFIG_HAVE_LIBUUID)
 
 #include <uuid/uuid.h>
 
@@ -64,7 +64,7 @@ spdk_uuid_set_null(struct spdk_uuid *uuid)
 	uuid_clear((void *)uuid);
 }
 
-#else
+#elif defined(__FreeBSD__)
 
 #include <uuid.h>
 
@@ -141,6 +141,8 @@ spdk_uuid_set_null(struct spdk_uuid *uuid)
 	uuid_create_nil((uuid_t *)uuid, NULL);
 }
 
+#else
+#error System must either have libuuid available or be FreeBSD.
 #endif
 
 int
