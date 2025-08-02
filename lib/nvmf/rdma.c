@@ -5028,6 +5028,11 @@ nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
+	if (rqpair->cm_id == NULL) {
+		SPDK_WARNLOG("cm_id is NULL for qpair %p\n", qpair);
+		return -1;
+	}
+
 	return nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, true);
 }
 
@@ -5039,6 +5044,11 @@ nvmf_rdma_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
+	if (rqpair->cm_id == NULL) {
+		SPDK_WARNLOG("cm_id is NULL for qpair %p\n", qpair);
+		return -1;
+	}
+
 	return nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, false);
 }
 
@@ -5049,6 +5059,11 @@ nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	if (rqpair->listen_id == NULL) {
+		SPDK_ERRLOG("listen_id is NULL for qpair %p\n", qpair);
+		assert(false);
+	}
 
 	return nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
 }
