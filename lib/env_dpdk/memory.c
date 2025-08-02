@@ -443,23 +443,67 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 	*pmap = NULL;
 }
 
+static int
+mem_check_region_unregistered(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
+{
+	uint64_t reg, curlen;
+
+	while (len > 0) {
+		curlen = len;
+		reg = spdk_mem_map_translate(map, vaddr, &curlen);
+		if (reg & REG_MAP_REGISTERED) {
+			return -EBUSY;
+		}
+
+		vaddr += curlen;
+		len -= curlen;
+	}
+
+	return 0;
+}
+
+static int
+mem_check_region_registered(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
+{
+	uint64_t reg, curlen;
+
+	while (len > 0) {
+		curlen = len;
+		reg = spdk_mem_map_translate(map, vaddr, &curlen);
+		if (!(reg & REG_MAP_REGISTERED)) {
+			return -EINVAL;
+		}
+
+		vaddr += curlen;
+		len -= curlen;
+	}
+
+	return 0;
+}
+
+static int
+mem_register_page(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
+{
+	int *page = ctx;
+
+	return spdk_mem_map_set_translation(map, vaddr, len, (*page)++ == 0 ?
+					    REG_MAP_REGISTERED | REG_MAP_NOTIFY_START :
+					    REG_MAP_REGISTERED);
+}
+
 int
-spdk_mem_register(void *_vaddr, size_t len)
+spdk_mem_register(void *vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
-	int rc;
-	uint64_t vaddr = (uintptr_t)_vaddr;
-	uint64_t seg_vaddr;
-	size_t seg_len;
-	uint64_t reg;
+	int rc, page = 0;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
-		DEBUG_PRINT("invalid usermode virtual address %jx\n", vaddr);
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
 		return -EINVAL;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%jx len=%ju\n",
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
 	}
@@ -469,32 +513,22 @@ spdk_mem_register(void *_vaddr, size_t len)
 	}
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
-
-	seg_vaddr = vaddr;
-	seg_len = len;
-	while (seg_len > 0) {
-		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
-		if (reg & REG_MAP_REGISTERED) {
-			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-			return -EBUSY;
-		}
-		seg_vaddr += VALUE_2MB;
-		seg_len -= VALUE_2MB;
+	rc = mem_map_walk_region(g_mem_reg_map, (uint64_t)vaddr, len,
+				 mem_check_region_unregistered, NULL);
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return rc;
 	}
 
-	seg_vaddr = vaddr;
-	seg_len = 0;
-	while (len > 0) {
-		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB,
-					     seg_len == 0 ? REG_MAP_REGISTERED | REG_MAP_NOTIFY_START : REG_MAP_REGISTERED);
-		seg_len += VALUE_2MB;
-		vaddr += VALUE_2MB;
-		len -= VALUE_2MB;
+	rc = mem_map_walk_region(g_mem_reg_map, (uint64_t)vaddr, len,
+				 mem_register_page, &page);
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return rc;
 	}
 
 	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-		rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER,
-					(void *)seg_vaddr, seg_len);
+		rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, vaddr, len);
 		if (rc != 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return rc;
@@ -505,23 +539,48 @@ spdk_mem_register(void *_vaddr, size_t len)
 	return 0;
 }
 
+static int
+mem_unregister_page(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
+{
+	struct iovec *region = ctx;
+	uint64_t reg;
+	int rc;
+
+	reg = spdk_mem_map_translate(map, vaddr, NULL);
+	spdk_mem_map_set_translation(map, vaddr, len, 0);
+	if (region->iov_len > 0 && (reg & REG_MAP_NOTIFY_START)) {
+		TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
+			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+						region->iov_base, region->iov_len);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+
+		region->iov_base = (void *)vaddr;
+		region->iov_len = len;
+	} else {
+		region->iov_len += len;
+	}
+
+	return 0;
+}
+
 int
-spdk_mem_unregister(void *_vaddr, size_t len)
+spdk_mem_unregister(void *vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
+	struct iovec region;
 	int rc;
-	uint64_t vaddr = (uintptr_t)_vaddr;
-	uint64_t seg_vaddr;
-	size_t seg_len;
 	uint64_t reg, newreg;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
-		DEBUG_PRINT("invalid usermode virtual address %jx\n", vaddr);
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
 		return -EINVAL;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%jx len=%ju\n",
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
 	}
@@ -538,19 +597,14 @@ spdk_mem_unregister(void *_vaddr, size_t len)
 		return -ERANGE;
 	}
 
-	seg_vaddr = vaddr;
-	seg_len = len;
-	while (seg_len > 0) {
-		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
-		if ((reg & REG_MAP_REGISTERED) == 0) {
-			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-			return -EINVAL;
-		}
-		seg_vaddr += VALUE_2MB;
-		seg_len -= VALUE_2MB;
+	rc = mem_map_walk_region(g_mem_reg_map, (uint64_t)vaddr, len,
+				 mem_check_region_registered, NULL);
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return rc;
 	}
 
-	newreg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
+	newreg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr + len, NULL);
 	/* If the next page is registered, it must be a start of a region as well,
 	 * otherwise we'd be unregistering only a part of a region.
 	 */
@@ -558,37 +612,20 @@ spdk_mem_unregister(void *_vaddr, size_t len)
 		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 		return -ERANGE;
 	}
-	seg_vaddr = vaddr;
-	seg_len = 0;
 
-	while (len > 0) {
-		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, NULL);
-		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, 0);
-
-		if (seg_len > 0 && (reg & REG_MAP_NOTIFY_START)) {
-			TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
-				rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
-							(void *)seg_vaddr, seg_len);
-				if (rc != 0) {
-					pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-					return rc;
-				}
-			}
-
-			seg_vaddr = vaddr;
-			seg_len = VALUE_2MB;
-		} else {
-			seg_len += VALUE_2MB;
-		}
-
-		vaddr += VALUE_2MB;
-		len -= VALUE_2MB;
+	region.iov_base = vaddr;
+	region.iov_len = 0;
+	rc = mem_map_walk_region(g_mem_reg_map, (uint64_t)vaddr, len,
+				 mem_unregister_page, &region);
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return rc;
 	}
 
-	if (seg_len > 0) {
+	if (region.iov_len > 0) {
 		TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
 			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
-						(void *)seg_vaddr, seg_len);
+						region.iov_base, region.iov_len);
 			if (rc != 0) {
 				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 				return rc;
@@ -604,9 +641,7 @@ int
 spdk_mem_reserve(void *vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
-	void *seg_vaddr;
-	size_t seg_len;
-	uint64_t reg;
+	int rc;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -626,16 +661,11 @@ spdk_mem_reserve(void *vaddr, size_t len)
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
 	/* Check if any part of this range is already registered */
-	seg_vaddr = vaddr;
-	seg_len = len;
-	while (seg_len > 0) {
-		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
-		if (reg & REG_MAP_REGISTERED) {
-			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-			return -EBUSY;
-		}
-		seg_vaddr += VALUE_2MB;
-		seg_len -= VALUE_2MB;
+	rc = mem_map_walk_region(g_mem_reg_map, (uint64_t)vaddr, len,
+				 mem_check_region_unregistered, NULL);
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return rc;
 	}
 
 	/* Simply set the translation to the memory map's default. This allocates the space in the
