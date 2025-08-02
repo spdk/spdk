@@ -61,6 +61,8 @@ static struct vfio_cfg g_vfio = {
 #define DEBUG_PRINT(...)
 #endif
 
+#define ADDR_INVALID		((uint64_t)-1)
+
 #define VFN_2MB(vaddr)		((vaddr) >> SHIFT_2MB)
 #define VFN_4KB(vaddr)		((vaddr) >> SHIFT_4KB)
 
@@ -236,6 +238,54 @@ mem_map_walk_region(struct spdk_mem_map *map, uint64_t vaddr, size_t size,
 	}
 
 	return 0;
+}
+
+static inline uint64_t
+mem_reg_map_next_region(uint64_t addr)
+{
+	uint64_t idx_256tb, idx_1gb, idx_2mb;
+	uint64_t reg, vfn_2mb, vfn_4kb;
+	int page_size;
+
+	vfn_2mb = VFN_2MB(addr);
+	vfn_4kb = VFN_4KB(addr);
+	idx_256tb = MAP_256TB_IDX(vfn_2mb);
+	idx_1gb = MAP_1GB_IDX(vfn_2mb);
+	idx_2mb = MAP_2MB_IDX(vfn_4kb);
+	for (; idx_256tb < MAP_256TB_SIZE; idx_256tb++) {
+		if (!g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb2mb &&
+		    !g_mem_reg_map->map_256tb.map[idx_256tb].map_1gb4kb) {
+			goto next_256tb;
+		}
+
+		for (; idx_1gb < MAP_1GB_SIZE; idx_1gb++) {
+			addr = ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb);
+			reg = mem_map_translate(g_mem_reg_map, addr, &page_size);
+
+			if (reg & REG_MAP_NOTIFY_START) {
+				assert(reg & REG_MAP_REGISTERED);
+				return addr;
+			}
+
+			if (page_size == VALUE_4KB) {
+				for (; idx_2mb < MAP_2MB_SIZE; idx_2mb++) {
+					addr = ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb);
+					reg = mem_map_translate(g_mem_reg_map, addr, &page_size);
+
+					if (reg & REG_MAP_NOTIFY_START) {
+						assert(reg & REG_MAP_REGISTERED);
+						return addr;
+					}
+				}
+			}
+
+			idx_2mb = 0;
+		}
+next_256tb:
+		idx_1gb = 0;
+	}
+
+	return ADDR_INVALID;
 }
 
 /*
