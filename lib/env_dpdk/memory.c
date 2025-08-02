@@ -75,6 +75,9 @@ static struct vfio_cfg g_vfio = {
 #define MAP_1GB_SIZE		(1ULL << (SHIFT_1GB - SHIFT_2MB))
 #define MAP_2MB_SIZE		(1ULL << (SHIFT_2MB - SHIFT_4KB))
 
+#define ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb) \
+	(((idx_256tb) << SHIFT_1GB) | ((idx_1gb) << SHIFT_2MB) | ((idx_2mb) << SHIFT_4KB))
+
 /* Page is registered */
 #define REG_MAP_REGISTERED	(1ULL << 62)
 
@@ -273,13 +276,12 @@ mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action ac
 		}
 
 		for (idx_1gb = 0; idx_1gb < MAP_1GB_SIZE; idx_1gb++) {
-			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
+			uint64_t vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, 0);
 			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
 
 			if (page_size == VALUE_4KB) {
 				for (idx_2mb = 0; idx_2mb < MAP_2MB_SIZE; idx_2mb++) {
-					vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB) |
-						(idx_2mb << SHIFT_4KB);
+					vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb);
 					reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
 
 					if ((reg & REG_MAP_REGISTERED) &&
@@ -369,13 +371,12 @@ err_unregister:
 
 		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
 			/* Rebuild the virtual address from the indexes */
-			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
+			uint64_t vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, 0);
 			uint64_t reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
 
 			if (page_size == VALUE_4KB) {
 				for (; idx_2mb < UINT64_MAX; idx_2mb--) {
-					vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB) |
-						(idx_2mb << SHIFT_4KB);
+					vaddr = ADDR_FROM_IDX(idx_256tb, idx_1gb, idx_2mb);
 					reg = mem_map_translate(g_mem_reg_map, vaddr, &page_size);
 
 					if ((reg & REG_MAP_REGISTERED) &&
