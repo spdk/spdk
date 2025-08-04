@@ -387,6 +387,10 @@ struct spdk_nvmf_rdma_qpair {
 
 	/* Indicate that nvmf_rdma_close_qpair is called */
 	bool					to_close;
+
+	/* Save the listen_trid by rqpair itself instead of get it from listen_id
+	 * everytime, because the listen_id may be freed before the qpair is destroyed */
+	struct spdk_nvme_transport_id		listen_trid;
 };
 
 struct spdk_nvmf_rdma_poller_stat {
@@ -1272,6 +1276,10 @@ nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport_erro
 	rdma_reject(id, &rej_data, sizeof(rej_data));
 }
 
+static void nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
+				      struct spdk_nvme_transport_id *trid,
+				      bool peer);
+
 static int
 nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event)
 {
@@ -1389,6 +1397,8 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	event->id->context = &rqpair->qpair;
 
 	spdk_nvmf_tgt_new_qpair(transport->tgt, &rqpair->qpair);
+
+	nvmf_rdma_trid_from_cm_id(rqpair->listen_id, &rqpair->listen_trid, false);
 
 	return 0;
 }
@@ -5062,12 +5072,7 @@ nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	if (rqpair->listen_id == NULL) {
-		SPDK_ERRLOG("listen_id is NULL for qpair %p\n", qpair);
-		assert(false);
-	}
-
-	nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
+	memcpy(trid, &rqpair->listen_trid, sizeof(struct spdk_nvme_transport_id));
 
 	return 0;
 }
