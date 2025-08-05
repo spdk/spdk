@@ -763,9 +763,7 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 			continue; /* region has not been registered */
 		}
 
-		if (spdk_mem_unregister((void *)start, len) != 0) {
-			assert(false);
-		}
+		spdk_mem_unregister((void *)start, len);
 	}
 }
 
