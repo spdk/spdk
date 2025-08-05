@@ -88,7 +88,6 @@ struct ns_entry {
 	uint32_t		block_size;
 	uint32_t		md_size;
 	bool			md_interleave;
-	uint64_t		seed;
 	struct spdk_zipf	*zipf;
 	bool			pi_loc;
 	enum spdk_nvme_pi_type	pi_type;
@@ -775,7 +774,6 @@ register_file(const char *path)
 	entry->io_size_blocks = g_io_size_bytes / blklen;
 
 	if (g_is_random) {
-		entry->seed = rand();
 		if (g_zipf_theta > 0) {
 			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
 		}
@@ -1282,7 +1280,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->io_size_blocks = g_io_size_bytes / sector_size;
 
 	if (g_is_random) {
-		entry->seed = spdk_rand_xorshift64_seed();
 		if (g_zipf_theta > 0) {
 			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
 		}
@@ -1437,6 +1434,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_trid_entry *trid_
 	}
 }
 
+static __thread uint64_t seed = 0;
+
 static inline void
 submit_single_io(struct perf_task *task)
 {
@@ -1450,7 +1449,7 @@ submit_single_io(struct perf_task *task)
 	if (entry->zipf) {
 		offset_in_ios = spdk_zipf_generate(entry->zipf);
 	} else if (g_is_random) {
-		rand_value = spdk_rand_xorshift64(&entry->seed);
+		rand_value = spdk_rand_xorshift64(&seed);
 		offset_in_ios = rand_value % entry->size_in_ios;
 	} else {
 		offset_in_ios = ns_ctx->offset_in_ios++;
@@ -1463,7 +1462,7 @@ submit_single_io(struct perf_task *task)
 
 	if ((g_rw_percentage == 100) ||
 	    (g_rw_percentage != 0 &&
-	     ((spdk_rand_xorshift64(&entry->seed) % 100) < (uint64_t)g_rw_percentage))) {
+	     ((spdk_rand_xorshift64(&seed) % 100) < (uint64_t)g_rw_percentage))) {
 		task->is_read = true;
 	} else {
 		task->is_read = false;
@@ -3117,6 +3116,7 @@ nvme_poll_ctrlrs(void *arg)
 	int rc;
 
 	spdk_unaffinitize_thread();
+	seed = spdk_rand_xorshift64_seed();
 
 	if (g_tpoint_group_mask) {
 		spdk_trace_register_user_thread();
