@@ -83,3 +83,88 @@ Available rw types:
 - flush
 - rw
 - randrw
+
+## JSON Output
+
+`bdevperf` supports delivering test results in JSON format via the `bdevperf.py perform_tests`
+RPC command. This feature allows users to programmatically parse and analyze test results.
+
+### Enabling JSON Output
+
+To enable JSON output, use the `bdevperf.py perform_tests` RPC command. The JSON response
+includes detailed test results for each job and a summary of the test execution.
+Below is an example of how to trigger a test and retrieve results in JSON format:
+
+~~~{.sh}
+sudo ./build/examples/bdevperf -c ./test/bdev/bdevperf/conf.json -m 0xFF -z
+sudo PYTHONPATH=python ./examples/bdev/bdevperf/bdevperf.py perform_tests -q 16 -o 4096 -t 5 -w write
+~~~
+
+### Example JSON Output
+
+The JSON response consists of two main sections:
+
+1. **Results**: An array of objects, each representing a test job. Each object contains the following fields:
+
+- `job`: The name of the job (e.g., `Malloc0`).
+- `core_mask`: The CPU core mask used for the job.
+- `workload`: The type of workload (e.g., `write`).
+- `status`: The status of the test.
+  * `finished` - the test completed successfully.
+  * `failed`  - the test encountered an error.
+  * `terminated` - the test was interrupted (e.g., via `SIGINT` or `Ctrl-C`).
+- `queue_depth`: The queue depth used for the test.
+- `io_size`: The I/O size in bytes.
+- `runtime`: The test runtime in seconds.
+- `iops`: The I/O operations per second achieved.
+- `mibps`: The throughput in MiB/s.
+- `io_failed`: The number of failed I/O operations.
+- `io_timeout`: The number of timed-out I/O operations.
+- `avg_latency_us`: The average latency in microseconds.
+- `min_latency_us`: The minimum latency in microseconds.
+- `max_latency_us`: The maximum latency in microseconds.
+
+2. **Core Count**: The actual number of CPUs used during the test (note that `bdevperf` was run with `0xFF`
+    mask, but only 2 cores were used).
+
+#### Example
+
+~~~{.json}
+{
+  "results": [
+    {
+      "job": "Malloc0",
+      "core_mask": "0x1",
+      "workload": "write",
+      "status": "finished",
+      "queue_depth": 16,
+      "io_size": 4096,
+      "runtime": 5.000048,
+      "iops": 1200455.675625514,
+      "mibps": 4689.279982912164,
+      "io_failed": 0,
+      "io_timeout": 0,
+      "avg_latency_us": 13.252784244696382,
+      "min_latency_us": 11.130434782608695,
+      "max_latency_us": 222.6086956521739
+    },
+    {
+      "job": "Malloc1",
+      "core_mask": "0x2",
+      "workload": "write",
+      "status": "finished",
+      "queue_depth": 16,
+      "io_size": 4096,
+      "runtime": 5.000024,
+      "iops": 1216432.5611237066,
+      "mibps": 4751.689691889479,
+      "io_failed": 0,
+      "io_timeout": 0,
+      "avg_latency_us": 13.082916284986958,
+      "min_latency_us": 5.7043478260869565,
+      "max_latency_us": 90.82434782608695
+    }
+  ],
+  "core_count": 2
+}
+~~~
