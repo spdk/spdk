@@ -1187,6 +1187,14 @@ if echo -e '#include <lz4.h>\nint main(void) { return 0; }\n' \
 	CONFIG[HAVE_LZ4]="y"
 fi
 
+if [[ $sys_name == "Linux" ]]; then
+	# iocb.aio_rw_flags and io_prep_preadv2 are part of the same feature in libaio: http://pagure.io/libaio/c/a6f40
+	if echo -e '#include <libaio.h>\n#include <stddef.h>\nint main(void) { io_prep_preadv2(NULL, 0, NULL, 0, 0, 0); return 0; }' \
+		| "${BUILD_CMD[@]}" -laio - 2> /dev/null; then
+		CONFIG[AIO_HAVE_RW_FLAGS]="y"
+	fi
+fi
+
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
 	if [ -f ${CONFIG[OCF_PATH]} ]; then

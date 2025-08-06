@@ -219,7 +219,7 @@ bdev_aio_submit_io(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 		io_set_eventfd(iocb, aio_ch->group_ch->efd);
 	}
 	iocb->data = aio_task;
-#ifdef RWF_NOWAIT
+#if defined(RWF_NOWAIT) && defined(SPDK_CONFIG_AIO_HAVE_RW_FLAGS)
 	if (fdisk->use_nowait) {
 		iocb->aio_rw_flags = RWF_NOWAIT;
 	}
