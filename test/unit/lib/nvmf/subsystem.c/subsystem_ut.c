@@ -96,10 +96,12 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_nam
 	return NULL;
 }
 
+static int g_ns_pg_update = 0;
 int
 nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				 struct spdk_nvmf_subsystem *subsystem)
 {
+	g_ns_pg_update++;
 	return 0;
 }
 
@@ -751,6 +753,7 @@ test_spdk_nvmf_ns_visible(void)
 static struct spdk_nvmf_subsystem g_subsystem;
 static struct spdk_nvmf_ctrlr g_ctrlr1_A, g_ctrlr2_A, g_ctrlr_B, g_ctrlr_C;
 static struct spdk_nvmf_ns g_ns;
+static struct spdk_nvmf_ns *g_ns_ptr = &g_ns;
 struct spdk_nvmf_subsystem_pg_ns_info g_ns_info;
 
 void
@@ -763,9 +766,12 @@ ut_reservation_init(void)
 {
 
 	TAILQ_INIT(&g_subsystem.ctrlrs);
+	g_subsystem.ns = &g_ns_ptr;
+	g_subsystem.max_nsid = 1;
 
 	memset(&g_ns, 0, sizeof(g_ns));
 	TAILQ_INIT(&g_ns.registrants);
+	g_ns.nsid = 1;
 	g_ns.subsystem = &g_subsystem;
 	g_ns.ptpl_file = NULL;
 	g_ns.ptpl_activated = false;
@@ -881,6 +887,7 @@ ut_reservation_build_register_request(struct spdk_nvmf_request *req,
 	cmd->cdw10_bits.resv_register.rrega = rrega;
 	cmd->cdw10_bits.resv_register.iekey = iekey;
 	cmd->cdw10_bits.resv_register.cptpl = cptpl;
+	cmd->opc = SPDK_NVME_OPC_RESERVATION_REGISTER;
 	memcpy(req->iov[0].iov_base, &key, sizeof(key));
 }
 
@@ -899,7 +906,18 @@ ut_reservation_build_acquire_request(struct spdk_nvmf_request *req,
 	cmd->cdw10_bits.resv_acquire.racqa = racqa;
 	cmd->cdw10_bits.resv_acquire.iekey = iekey;
 	cmd->cdw10_bits.resv_acquire.rtype = rtype;
+	cmd->opc = SPDK_NVME_OPC_RESERVATION_ACQUIRE;
 	memcpy(req->iov[0].iov_base, &key, sizeof(key));
+}
+
+static void
+ut_reservation_build_report_request(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	cmd->cdw11_bits.resv_report.eds = true;
+	cmd->cdw10 = 100;
+	cmd->opc = SPDK_NVME_OPC_RESERVATION_REPORT;
 }
 
 static void
@@ -913,6 +931,7 @@ ut_reservation_build_release_request(struct spdk_nvmf_request *req,
 	cmd->cdw10_bits.resv_release.rrela = rrela;
 	cmd->cdw10_bits.resv_release.iekey = iekey;
 	cmd->cdw10_bits.resv_release.rtype = rtype;
+	cmd->opc = SPDK_NVME_OPC_RESERVATION_RELEASE;
 	memcpy(req->iov[0].iov_base, &crkey, sizeof(crkey));
 }
 
@@ -1626,6 +1645,126 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 }
 
 static void
+test_reservation_request(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvmf_request *report_req;
+	struct spdk_nvme_cpl *rsp;
+	struct spdk_nvme_cpl *report_rsp;
+	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
+	struct spdk_nvme_reservation_status_extended_data *status_data;
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_poll_group *pg;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
+	const uint64_t rkey = 0xa1;
+
+	/* This test requires a thread */
+	thread = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+
+	ut_reservation_init();
+	g_subsystem.tgt = &tgt;
+
+	spdk_io_device_register(&tgt,
+				nvmf_tgt_create_poll_group,
+				nvmf_tgt_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group),
+				NULL);
+
+	/* Create a pg */
+	ch = spdk_get_io_channel(&tgt);
+	SPDK_CU_ASSERT_FATAL(ch);
+	pg = spdk_io_channel_get_ctx(ch);
+	pg->thread = thread;
+	qpair.group = pg;
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->qpair = &qpair;
+	req->qpair->ctrlr = &g_ctrlr1_A;
+	req->cmd->nvme_cmd.nsid = g_ns.nsid;
+	rsp = &req->rsp->nvme_cpl;
+
+	/* Register */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+					      0, 0, 0, rkey);
+	g_ns_pg_update = 0;
+	nvmf_ns_reservation_request(req);
+
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_ns.registrants));
+	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1);
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 1);
+
+	/* Acquire */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, rkey, 0x0);
+	nvmf_ns_reservation_request(req);
+
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&g_ns.holder->hostid,
+					       &g_ctrlr1_A.hostid) == 0);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(g_ns.crkey == rkey);
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 2);
+
+	/* Report */
+	report_req = ut_reservation_build_req(
+			     sizeof(struct spdk_nvme_reservation_status_extended_data) +
+			     sizeof(struct spdk_nvme_registered_ctrlr_extended_data));
+	SPDK_CU_ASSERT_FATAL(report_req != NULL);
+	report_req->qpair = &qpair;
+	report_req->qpair->ctrlr = &g_ctrlr1_A;
+	report_req->cmd->nvme_cmd.nsid = g_ns.nsid;
+	report_rsp = &report_req->rsp->nvme_cpl;
+	ut_reservation_build_report_request(report_req);
+	nvmf_ns_reservation_request(report_req);
+
+	SPDK_CU_ASSERT_FATAL(report_rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	ctrlr_data = (void *)((char *)report_req->iov[0].iov_base + sizeof(*status_data));
+	status_data = report_req->iov[0].iov_base;
+	SPDK_CU_ASSERT_FATAL(status_data != NULL && ctrlr_data != NULL);
+	SPDK_CU_ASSERT_FATAL(status_data->data.gen == 1);
+	SPDK_CU_ASSERT_FATAL(status_data->data.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(status_data->data.ptpls == false);
+	SPDK_CU_ASSERT_FATAL(status_data->data.regctl == 1);
+	SPDK_CU_ASSERT_FATAL(ctrlr_data->cntlid == 0xffff);
+	SPDK_CU_ASSERT_FATAL(ctrlr_data->rcsts.status == 1);
+	SPDK_CU_ASSERT_FATAL(ctrlr_data->rkey ==  rkey);
+	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(
+				     (struct spdk_uuid *)ctrlr_data->hostid, &g_ctrlr1_A.hostid));
+	/* Report is read-only, should be no pg updates */
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 2);
+
+	/* Release */
+	ut_reservation_build_release_request(req, SPDK_NVME_RESERVE_RELEASE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, 0xa1);
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	nvmf_ns_reservation_request(req);
+
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.holder == NULL);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == 0);
+	SPDK_CU_ASSERT_FATAL(g_ns.crkey == 0);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1); /* registration is not removed */
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 3);
+
+	spdk_put_io_channel(ch);
+	spdk_io_device_unregister(&tgt, NULL);
+	g_subsystem.tgt = NULL;
+
+	ut_reservation_free_req(req);
+	ut_reservation_free_req(report_req);
+	ut_reservation_deinit();
+}
+
+static void
 test_spdk_nvmf_ns_event(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -2282,6 +2421,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_clear_notification);
 	CU_ADD_TEST(suite, test_reservation_preempt_notification);
 	CU_ADD_TEST(suite, test_reservation_invalid_request);
+	CU_ADD_TEST(suite, test_reservation_request);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
