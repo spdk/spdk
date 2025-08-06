@@ -384,6 +384,41 @@ get_log_page_offset_and_len(struct spdk_nvmf_request *req, size_t page_size, uin
 }
 
 static void
+fixup_get_cmds_and_effects_log_page(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmds_and_effect_log_page nvme_log_data = {};
+	struct spdk_nvme_cmds_and_effect_log_page nvmf_log_data = {};
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	uint32_t page_size = sizeof(struct spdk_nvme_cmds_and_effect_log_page);
+	uint64_t offset;
+	size_t datalen, copy_len = 0;
+
+	get_log_page_offset_and_len(req, page_size, &offset, &copy_len);
+
+	if (copy_len == 0) {
+		return;
+	}
+
+	/* This is cmds_and_effects log page from the NVMe drive */
+	datalen = spdk_nvmf_request_copy_to_buf(req, (uint8_t *) &nvme_log_data + offset,
+						copy_len);
+
+	/* Those are cmds_and_effects log page from SPDK */
+	spdk_nvmf_get_cmds_and_effects_log_page(ctrlr, &nvmf_log_data);
+
+	/* if vendor specific commands are supported, mark it as supported in result stuct */
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific) {
+		int i;
+		for (i = SPDK_NVME_OPC_VENDOR_SPECIFIC_START; i <= SPDK_NVME_MAX_OPC; i++) {
+			nvmf_log_data.admin_cmds_supported[i] = nvme_log_data.admin_cmds_supported[i];
+		}
+	}
+
+	/* Copy the fixed SPDK struct to the request */
+	spdk_nvmf_request_copy_from_buf(req, (uint8_t *) &nvmf_log_data + offset, datalen);
+}
+
+static void
 fixup_get_supported_log_pages(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_supported_log_pages nvme_log_data = {};
@@ -529,8 +564,9 @@ nvmf_custom_get_log_page_hdlr(struct spdk_nvmf_request *req)
 	case SPDK_NVME_LOG_CHANGED_NS_LIST:
 	/* SPDK is not supporting get/set_feature passthru, so disable log page with drive supported features */
 	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
-	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
 		return -1;
+	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
+		return nvmf_admin_passthru_generic_hdlr(req, fixup_get_cmds_and_effects_log_page);
 	case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
 		return nvmf_admin_passthru_generic_hdlr(req, fixup_get_supported_log_pages);
 	default:
