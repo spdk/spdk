@@ -160,7 +160,7 @@ def setup_nvme_disk(libvirt, disk, index)
   if !nvme_fdp[index].nil? && nvme_fdp[index] != ""
     fdp_subsys_id = "fdp-subsys#{index}"
     fdp = nvme_fdp[index].split(':')[0..3]
-    fdp_ruhs = (nvme_fdp[index].split(':')[4..]) # fdp.ruhs per ns
+    fdp_ruhs = (nvme_fdp[index].split(':')[4..-1]) # fdp.ruhs per ns
 
     # Put some defaults in place if needed
     fdp_enable = "#{fdp[0] != nil && fdp[0] != '' ? fdp[0] : 'off'}"
