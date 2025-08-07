@@ -51,6 +51,10 @@ function usage() {
 	echo "HUGEMEM           Size of hugepage memory to allocate (in MB). 2048 by default."
 	echo "                  For NUMA systems, the hugepages will be distributed on node0 by"
 	echo "                  default."
+	echo "FREEBSD_BUFSZ     Value (in MB) used to determine how many buffers of FREEBSD_BUFSZ to"
+	echo "                  allocate. This value can be used to either increase or decrease the"
+	echo "                  the final amount of contigmem buffers relative to HUGEMEM. Used only"
+	echo "                  under FreeBSD. 256 by default."
 	echo "NRHUGE            Number of hugepages to allocate. This variable overwrites HUGEMEM."
 	echo "HUGENODE          Specific NUMA node to allocate hugepages on. Multiple nodes can be"
 	echo "                  separated with comas. By default, NRHUGE will be applied on each node."
@@ -813,6 +817,8 @@ function configure_freebsd() {
 }
 
 function _configure_freebsd() {
+	local freebsd_bufsz=${FREEBSD_BUFSZ:-256}
+
 	if ! check_for_driver_freebsd; then
 		echo "DPDK drivers (contigmem and/or nic_uio) are missing, aborting" >&2
 		return 1
@@ -831,13 +837,13 @@ function _configure_freebsd() {
 		if ! contigmem_num_buffers=$(kenv hw.contigmem.num_buffers); then
 			contigmem_num_buffers=-1
 		fi 2> /dev/null
-		if ((contigmem_num_buffers != HUGEMEM / 256)); then
+		if ((contigmem_num_buffers != HUGEMEM / freebsd_bufsz)); then
 			kldunload contigmem.ko
 		fi
 	fi
 	if ! kldstat -q -m contigmem; then
-		kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
-		kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
+		kenv hw.contigmem.num_buffers=$((HUGEMEM / freebsd_bufsz))
+		kenv hw.contigmem.buffer_size=$((freebsd_bufsz * 1024 * 1024))
 		kldload contigmem.ko
 	fi
 }
