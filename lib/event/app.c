@@ -151,6 +151,44 @@ static const struct option g_cmdline_options[] = {
 	{"enforce-numa",		no_argument,		NULL, ENFORCE_NUMA_OPT_IDX},
 };
 
+#if defined(__FreeBSD__)
+static int
+parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
+{
+	size_t len, ncpu = 0;
+	long *cp_times;
+
+	len = sizeof(ncpu);
+	if (sysctlbyname("hw.ncpu", &ncpu, &len, NULL, 0) < 0) {
+		return -1;
+	}
+	if (core >= ncpu) {
+		return -1;
+	}
+	/*
+	 * kern.cp_times returns 5 (CPUSTATES) values per cpu in a single line. E.g. for 4 cpus
+	 *   kern.cp_times: 37924 0 2593 961 9270910 19400 0 1341 4 9291643 868 0 1338 2 9310180 938 0 1382 9 9309979
+	 * Values in order are:
+	 *   user nice system interrupt idle
+	 */
+	len = ncpu * CPUSTATES * sizeof(long);
+	cp_times = malloc(len);
+	if (cp_times == NULL) {
+		return -1;
+	}
+	if (sysctlbyname("kern.cp_times", cp_times, &len, NULL, 0) < 0) {
+		free(cp_times);
+		return -1;
+	}
+
+	*user = (uint64_t)cp_times[core * CPUSTATES + 0];
+	*sys = (uint64_t)cp_times[core * CPUSTATES + 2];
+	*irq = (uint64_t)cp_times[core * CPUSTATES + 3];
+
+	free(cp_times);
+	return 0;
+}
+#elif defined(__linux__)
 static int
 parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
 {
@@ -184,6 +222,13 @@ parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
 	fclose(f);
 	return found ? 0 : -1;
 }
+#else
+static int
+parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
+{
+	return -1;
+}
+#endif
 
 static int
 init_proc_stat(unsigned int core)
@@ -949,7 +994,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	SPDK_ENV_FOREACH_CORE(core) {
 		rc = init_proc_stat(core);
 		if (rc) {
-			SPDK_NOTICELOG("Unable to parse /proc/stat [core: %d].\n", core);
+			SPDK_NOTICELOG("Unable to parse CPU statistics [core: %d].\n", core);
 		}
 	}
 

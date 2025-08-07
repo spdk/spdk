@@ -80,6 +80,11 @@ extern "C" {
 #include <sched.h>
 #endif
 
+/* FreeBSD */
+#if defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#endif
+
 /* FreeBSD or Linux */
 #if defined(__FreeBSD__) || defined(__linux__)
 #include <aio.h>
