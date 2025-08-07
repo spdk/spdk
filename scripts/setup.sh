@@ -849,7 +849,8 @@ function reset_freebsd() {
 		return 1
 	fi
 
-	kldunload contigmem.ko || true
+	# Don't touch contigmem if requested
+	[[ $SKIP_HUGE == yes ]] || kldunload contigmem.ko || true
 	kldunload nic_uio.ko || true
 
 	if ((${#unsupported_nic_uio_hw[@]} > 0)); then

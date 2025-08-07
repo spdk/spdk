@@ -204,7 +204,7 @@ _build_native_dpdk() {
 		sudo -E ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
 		# Sanitize ownership of the target directory post sudo above
 		sudo chown -R "$USER" "$external_dpdk_base_dir"
-		# Make sure kernel modules are available for freebsd_update_contigmem_mod() to fetch
+		# Make sure kernel modules are available for freebsd_update_mods() to fetch
 		mapfile -t drivers < <(find "$external_dpdk_base_dir/build-tmp" -name '*.ko')
 		if ((${#drivers[@]} > 0)); then
 			mkdir -p "$external_dpdk_dir/kmod"

@@ -63,7 +63,7 @@ src=$(readlink -f $(dirname $0))
 out=$output_dir
 cd $src
 
-freebsd_update_contigmem_mod
+freebsd_update_mods
 freebsd_set_maxsock_buf
 
 if [[ $CONFIG_COVERAGE == y ]]; then

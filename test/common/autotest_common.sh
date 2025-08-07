@@ -1451,20 +1451,36 @@ function autotest_cleanup() {
 }
 
 function freebsd_update_contigmem_mod() {
-	if [ $(uname) = FreeBSD ]; then
-		kldunload contigmem.ko || true
-		if [ -n "${SPDK_RUN_EXTERNAL_DPDK:-}" ]; then
-			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/contigmem.ko" /boot/modules/
-			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/contigmem.ko" /boot/kernel/
-			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/nic_uio.ko" /boot/modules/
-			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/nic_uio.ko" /boot/kernel/
-		else
-			cp -f "$rootdir/dpdk/build/kmod/contigmem.ko" /boot/modules/
-			cp -f "$rootdir/dpdk/build/kmod/contigmem.ko" /boot/kernel/
-			cp -f "$rootdir/dpdk/build/kmod/nic_uio.ko" /boot/modules/
-			cp -f "$rootdir/dpdk/build/kmod/nic_uio.ko" /boot/kernel/
+	local srcdir=${SPDK_RUN_EXTERNAL_DPDK:-"$rootdir/dpdk/build"}
+
+	# Skip update if requested
+	if [[ -n $USE_INSTALLED_CONTIGMEM ]]; then
+		# If the driver is unloaded (for whatever reason) load it back in -
+		# if it fails it means that driver is likely not around and/or the
+		# sysctl setup is not available. In such a case, this is a hard fail.
+		if ! kldstat -qm contigmem; then
+			kldload contigmem || return 1
 		fi
+		echo "Skipping update of contigmem driver"
+		return 0
 	fi
+
+	kldunload contigmem.ko || true
+	cp -f "$srcdir/kmod/contigmem.ko" /boot/modules/
+	cp -f "$srcdir/kmod/contigmem.ko" /boot/kernel/
+}
+
+function freebsd_update_nic_uio_mod() {
+	local srcdir=${SPDK_RUN_EXTERNAL_DPDK:-"$rootdir/dpdk/build"}
+	cp -f "$srcdir/kmod/nic_uio.ko" /boot/modules/
+	cp -f "$srcdir/kmod/nic_uio.ko" /boot/kernel/
+}
+
+function freebsd_update_mods() {
+	[[ $(uname) == FreeBSD ]] || return 0
+
+	freebsd_update_contigmem_mod
+	freebsd_update_nic_uio_mod
 }
 
 function freebsd_set_maxsock_buf() {

@@ -308,6 +308,50 @@ function install_igb_uio() {
 	sudo depmod
 }
 
+function install_contigmem() {
+	# Dedicated solely for freebsd
+	[[ $OSID == freebsd ]] || return 0
+
+	rm -rf "$GIT_REPOS/dpdk-stable"
+
+	git clone \
+		--branch "$DPDK_STABLE_BRANCH" \
+		--depth 1 "$DPDK_STABLE_REPO" \
+		"$GIT_REPOS/dpdk-stable"
+
+	# We skip most of the stuff to not waste time during setup but at the very end it won't
+	# matter much as we want to build a single, specific target anyway. Note that DPDK considers
+	# enable_kmods to be deprecated and as such, for freebsd kernel modules are always enabled,
+	# so we don't need to set it in.
+	meson setup \
+		-Ddisable_apps="*" \
+		-Ddisable_libs="*" \
+		-Ddisable_drivers="*/*" \
+		-Dtests=false \
+		"$GIT_REPOS/dpdk-stable/build" \
+		"$GIT_REPOS/dpdk-stable"
+
+	# The thing we are after
+	ninja -C "$GIT_REPOS/dpdk-stable/build" \
+		kernel/freebsd/contigmem.ko
+
+	[[ -e $GIT_REPOS/dpdk-stable/build/kernel/freebsd/contigmem.ko ]] || return 1
+
+	# Put it into one of the default search paths
+	cp -p \
+		"$GIT_REPOS/dpdk-stable/build/kernel/freebsd/contigmem.ko" \
+		"/boot/modules"
+
+	# Make sure kernel loads it early on. Don't put it into the main loader file though, define
+	# custom one. Also, provide a default setup of 2 * 1GB buffers - this should match default
+	# hugepages requirement that autotest enforces under freebsd.
+	cat <<-LOADER >/boot/loader.conf.d/spdk.conf
+		contigmem_load="YES"
+		hw.contigmem.num_buffers="2"
+		hw.contigmem.buffer_size="$((1 << 30))"
+	LOADER
+}
+
 function install_irdma() {
 	local RDMA_CORE_VERSION=51.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
@@ -548,6 +592,7 @@ function install_sources() {
 
 	if [[ $OSID == freebsd ]]; then
 		jobs=$(($(sysctl -n hw.ncpu) * 2))
+		sources+=(install_contigmem)
 	else
 		jobs=$(($(nproc) * 2))
 		sources+=(
@@ -588,6 +633,7 @@ ICE_VERSION=1.14.9
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-f7bdfb44}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v8.0.0}
+DPDK_STABLE_BRANCH=${DPDK_STABLE_BRANCH:-24.11}
 
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
 export GIT_REPO_ROCKSDB
@@ -623,6 +669,7 @@ export GIT_REPO_ITTAPI
 export GIT_REPO_DOXYGEN
 : ${GIT_REPO_LIBBPF="https://github.com/libbpf/libbpf"}
 export GIT_REPO_LIBBPF
+: ${DPDK_STABLE_REPO="http://dpdk.org/git/dpdk-stable"}
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
 CC=${CC:-gcc}
