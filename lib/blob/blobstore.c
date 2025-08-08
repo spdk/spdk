@@ -2022,6 +2022,21 @@ blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	blob_persist_clear_extents(seq, ctx);
 }
 
+static int
+lba_cmp(const void *a, const void *b)
+{
+	uint64_t ua = *(const uint64_t *)a;
+	uint64_t ub = *(const uint64_t *)b;
+
+	if (ua < ub) {
+		return -1;
+	}
+	if (ua > ub) {
+		return 1;
+	}
+	return 0;
+}
+
 static void
 blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx)
 {
@@ -2041,6 +2056,11 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 	/* Clear all clusters that were truncated */
 	lba = 0;
 	lba_count = 0;
+
+	if (blob->active.cluster_array_size > blob->active.num_clusters) {
+		qsort(&blob->active.clusters[blob->active.num_clusters],
+		      blob->active.cluster_array_size - blob->active.num_clusters, sizeof(uint64_t), lba_cmp);
+	}
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint64_t next_lba = blob->active.clusters[i];
 		uint64_t next_lba_count = bs_cluster_to_lba(bs, 1);
