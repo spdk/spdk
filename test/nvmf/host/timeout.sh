@@ -12,8 +12,6 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
-bpf_sh="$rootdir/scripts/bpftrace.sh"
-
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 
 nvmftestinit
@@ -112,7 +110,7 @@ bdevperf_pid=$!
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 #start_trace
-$bpf_sh $bdevperf_pid $rootdir/scripts/bpf/nvmf_timeout.bt &> $testdir/trace.txt &
+bpftrace_setup $bdevperf_pid "$rootdir/scripts/bpf/nvmf_timeout.bt" &> "$testdir/trace.txt"
 dtrace_pid=$!
 
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1 -e 9

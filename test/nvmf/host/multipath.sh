@@ -12,8 +12,6 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
-bpf_sh="$rootdir/scripts/bpftrace.sh"
-
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 
 # NQN prefix to use for subsystem NQNs
@@ -61,9 +59,14 @@ function set_ANA_state() {
 
 # check for io on the expected ANA state port
 function confirm_io_on_port() {
-	$bpf_sh $nvmfapp_pid "$rootdir/scripts/bpf/nvmf_path.bt" &> "$testdir/trace.txt" &
+	bpftrace_setup $nvmfapp_pid "$rootdir/scripts/bpf/nvmf_path.bt" &> "$testdir/trace.txt"
 	dtrace_pid=$!
+
+	# FIXME: This is awfully flaky. It's quite likely we should busy loop through the trace.txt until
+	# we find a match or time out. Or at least check trace.txt for hints that bpftrace finally attached
+	# itself to a PID before continuing.
 	sleep 6
+
 	active_port=$($rpc_py nvmf_subsystem_get_listeners $NQN | jq -r '.[] | select (.ana_states[0].ana_state=="'$1'") | .address.trsvcid')
 	cat "$testdir/trace.txt"
 	port=$(cut < "$testdir/trace.txt" -d ']' -f1 | awk '$1=="@path['$NVMF_FIRST_TARGET_IP'," {print $2}' | sed -n '1p')

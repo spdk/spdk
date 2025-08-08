@@ -13,8 +13,6 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
-bpf_sh="$rootdir/scripts/bpftrace.sh"
-
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 
 # NQN prefix to use for subsystem NQNs

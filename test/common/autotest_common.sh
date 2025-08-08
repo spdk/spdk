@@ -1726,6 +1726,13 @@ function gather_coverage() {
 	rm -f "$output_dir/cov_base.info" "$output_dir/cov_test.info"
 }
 
+function bpftrace_setup() {
+	local pid=$1 scripts=("${@:2}") bpf_program
+
+	bpf_program=$("$rootdir/scripts/bpf/gen_program.sh" "$pid" "${scripts[@]}") || return 1
+	USE_CMDLINE_BPF_PROGRAM=yes "$rootdir/scripts/bpftrace.sh" "$pid" "$bpf_program" &
+}
+
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 
