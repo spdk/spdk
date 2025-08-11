@@ -4811,7 +4811,8 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	if (nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.bits.cfs) {
-			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Controller Fatal Status, reset required\n");
+			NVME_CTRLR_ERRLOG(nvme_ctrlr, "%s, reset required\n",
+					  csts.raw == 0xFFFFFFFF ? "Could not read csts register" : "Controller Fatal Status");
 			bdev_nvme_reset_ctrlr(nvme_ctrlr);
 			return;
 		}
