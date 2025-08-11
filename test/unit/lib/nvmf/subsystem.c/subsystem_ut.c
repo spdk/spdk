@@ -96,7 +96,7 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_nam
 	return NULL;
 }
 
-static int g_ns_pg_update = 0;
+static size_t g_ns_pg_update = 0;
 int
 nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				 struct spdk_nvmf_subsystem *subsystem)
@@ -1807,6 +1807,101 @@ test_reservation_request(void)
 }
 
 static void
+test_reservation_request_multi_pending(void)
+{
+	enum {
+		MAX_REQS = 3,
+	};
+	struct spdk_nvmf_request *reqs[MAX_REQS];
+	struct spdk_nvmf_qpair qpairs[MAX_REQS];
+	struct spdk_nvmf_ctrlr *const ctrlrs[MAX_REQS] = { &g_ctrlr1_A, &g_ctrlr_B, &g_ctrlr_C };
+	struct spdk_nvme_cpl *rsp;
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_poll_group *pg;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
+	const uint64_t key_base = 0xDEADBEEF;
+
+	/* This test requires a thread */
+	thread = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	g_subsystem.thread = thread;
+
+	ut_reservation_init();
+	g_subsystem.tgt = &tgt;
+	g_ns_pg_update = 0;
+
+	spdk_io_device_register(&tgt,
+				nvmf_tgt_create_poll_group,
+				nvmf_tgt_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group),
+				NULL);
+
+	/* Create a pg */
+	ch = spdk_get_io_channel(&tgt);
+	SPDK_CU_ASSERT_FATAL(ch);
+	pg = spdk_io_channel_get_ctx(ch);
+	pg->thread = thread;
+
+	memset(&qpairs[0], 0, sizeof(qpairs));
+	/* Build registrations for each controller on the same nsid */
+	for (size_t i = 0; i < MAX_REQS; i++) {
+		struct spdk_nvmf_request *req;
+		struct spdk_nvmf_qpair *qpair = &qpairs[i];
+		qpair->group = pg;
+		qpair->ctrlr = ctrlrs[i];
+		req = ut_reservation_build_req(16);
+		SPDK_CU_ASSERT_FATAL(req != NULL);
+		req->qpair = qpair;
+		req->cmd->nvme_cmd.nsid = g_ns.nsid;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+						      0, 0, 0, key_base + i);
+		reqs[i] = req;
+	}
+
+	/* Multiple registrations from separate hosts all on the same ns
+	   are received all at the same time */
+	for (size_t i = 0; i < MAX_REQS; i++) {
+		nvmf_ns_reservation_request(reqs[i]);
+	}
+
+	/* Each registration should be inprogress one-at-a-time since PGs
+	 * have not updated yet
+	 */
+	for (size_t i = 0; i < MAX_REQS; i++) {
+		SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == i + 1);
+		SPDK_CU_ASSERT_FATAL(g_ns.gen == (uint32_t)(i + 1));
+		SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == MAX_REQS -  i);
+		for (size_t j = 0; j < MAX_REQS; j++) {
+			struct spdk_nvmf_registrant *reg =
+				nvmf_ns_reservation_get_registrant(&g_ns, &ctrlrs[j]->hostid);
+			if (j <= i) {
+				SPDK_CU_ASSERT_FATAL(reg != NULL);
+			} else {
+				SPDK_CU_ASSERT_FATAL(reg == NULL);
+			}
+		}
+		poll_thread_times(0, 4); /* enough polls to complete a req and process the next */
+		SPDK_CU_ASSERT_FATAL(g_ns_pg_update == i + 1);
+	}
+
+	/* All requests should be complete */
+	for (size_t i = 0; i < MAX_REQS; i++) {
+		rsp = &reqs[i]->rsp->nvme_cpl;
+		SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+		ut_reservation_free_req(reqs[i]);
+	}
+
+	spdk_put_io_channel(ch);
+	spdk_io_device_unregister(&tgt, NULL);
+	g_subsystem.tgt = NULL;
+	g_subsystem.thread = NULL;
+
+	ut_reservation_deinit();
+}
+
+static void
 test_spdk_nvmf_ns_event(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -2466,6 +2561,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_preempt_notification);
 	CU_ADD_TEST(suite, test_reservation_invalid_request);
 	CU_ADD_TEST(suite, test_reservation_request);
+	CU_ADD_TEST(suite, test_reservation_request_multi_pending);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
