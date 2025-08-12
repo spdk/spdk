@@ -1814,6 +1814,7 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	}
 
 	free(ns->ptpl_file);
+	free(ns->preempt_abort);
 	nvmf_ns_reservation_clear_all_registrants(ns);
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
@@ -3355,6 +3356,8 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	struct spdk_uuid new_hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 	uint32_t new_num_hostid = 0;
 	bool reservation_released = false;
+	bool is_preempt = false;
+	bool is_abort = false;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 
 	racqa = cmd->cdw10_bits.resv_acquire.racqa;
@@ -3412,15 +3415,33 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 		}
 		break;
 	case SPDK_NVME_RESERVE_PREEMPT:
+	case SPDK_NVME_RESERVE_PREEMPT_ABORT:
+		is_preempt = true;
+		is_abort = (racqa == SPDK_NVME_RESERVE_PREEMPT_ABORT);
+
+		/* Allocate memory for performing preempt-and-abort on first abort received */
+		if (is_abort && !ns->preempt_abort) {
+			ns->preempt_abort = calloc(1, sizeof(*ns->preempt_abort));
+			if (!ns->preempt_abort) {
+				status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+				update_sgroup = false;
+				goto exit;
+			}
+		}
+
+		/* Build copy of current other hosts so we can generate a delta
+		 * of registrants removed due to the prempt.
+		 */
+		num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, hostid_list,
+				SPDK_NVMF_MAX_NUM_REGISTRANTS,
+				&ctrlr->hostid);
+
 		/* no reservation holder */
 		if (!ns->holder) {
 			/* unregister with PRKEY */
 			nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
 			break;
 		}
-		num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, hostid_list,
-				SPDK_NVMF_MAX_NUM_REGISTRANTS,
-				&ctrlr->hostid);
 
 		/* only 1 reservation holder and reservation key is valid */
 		if (!all_regs) {
@@ -3468,7 +3489,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	}
 
 exit:
-	if (update_sgroup && racqa == SPDK_NVME_RESERVE_PREEMPT) {
+	if (update_sgroup && is_preempt) {
 		new_num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, new_hostid_list,
 				 SPDK_NVMF_MAX_NUM_REGISTRANTS,
 				 &ctrlr->hostid);
@@ -3496,6 +3517,17 @@ exit:
 							      new_num_hostid,
 							      SPDK_NVME_RESERVATION_RELEASED);
 
+		}
+
+		/* For Preempt-and-abort copy the hostids for evaluation
+		 * of outstanding IO on those controllers on each poll group */
+		if (is_abort) {
+			struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+			assert(num_hostid <= SPDK_NVMF_MAX_NUM_REGISTRANTS);
+			memcpy(p_info->hostids, hostid_list,
+			       sizeof(struct spdk_uuid) * num_hostid);
+			p_info->hostids_cnt = (uint8_t)num_hostid;
+			p_info->hostids_gen++;
 		}
 	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;

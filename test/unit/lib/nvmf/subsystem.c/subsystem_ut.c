@@ -862,6 +862,9 @@ ut_reservation_deinit(void)
 	TAILQ_FOREACH_SAFE(ctrlr, &g_subsystem.ctrlrs, link, ctrlr_tmp) {
 		TAILQ_REMOVE(&g_subsystem.ctrlrs, ctrlr, link);
 	}
+
+	free(g_ns.preempt_abort);
+	g_ns.preempt_abort = NULL;
 }
 
 static struct spdk_nvmf_request *

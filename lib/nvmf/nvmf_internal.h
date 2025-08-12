@@ -167,6 +167,14 @@ struct spdk_nvmf_registrant {
 	uint16_t cntlid;
 };
 
+struct spdk_nvmf_reservation_preempt_abort_info {
+	/* preempted controllers */
+	struct spdk_uuid hostids[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint8_t hostids_cnt;
+	uint32_t hostids_gen; /* Generational counter every time the list changes */
+};
+SPDK_STATIC_ASSERT(SPDK_NVMF_MAX_NUM_REGISTRANTS <= UINT8_MAX, "hostids_cnt storage type");
+
 struct spdk_nvmf_ns {
 	uint32_t nsid;
 	uint32_t anagrpid;
@@ -188,6 +196,7 @@ struct spdk_nvmf_ns {
 	enum spdk_nvme_reservation_type rtype;
 	/* current reservation holder, only valid if reservation type can only have one holder */
 	struct spdk_nvmf_registrant *holder;
+	struct spdk_nvmf_reservation_preempt_abort_info *preempt_abort;
 	/* Persist Through Power Loss file which contains the persistent reservation */
 	char *ptpl_file;
 	/* Persist Through Power Loss feature is enabled */
