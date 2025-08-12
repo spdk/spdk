@@ -11,6 +11,12 @@ rpc_py="$rootdir/scripts/rpc.py"
 tgt_sock="/var/tmp/tgt.sock"
 tgt_rpc="$rpc_py -s $tgt_sock"
 
+function attach_controller() {
+	for ((i = 0; i < io_paths_nr; i++)); do
+		$rpc_py bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -f IPv4 -s "$((NVMF_PORT + i))" -n "$NVME_SUBNQN" -b nvme0
+	done
+}
+
 function get_resize_count() {
 	# Always use id zero to get notifications from the begining of time
 	local notify_id=0
@@ -47,9 +53,13 @@ add_remove() {
 nvmftestinit
 DEFAULT_RPC_ADDR="$tgt_sock" nvmfappstart -r "$tgt_sock" -m 0x1
 
+io_paths_nr=10
+
 $tgt_rpc nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $tgt_rpc nvmf_create_subsystem "$NVME_SUBNQN" -a -s SPDK00000000000001 -m 512
-$tgt_rpc nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+for ((i = 0; i < io_paths_nr; i++)); do
+	$tgt_rpc nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$((NVMF_PORT + i))"
+done
 
 "${SPDK_APP[@]}" -m 0x2 "${NO_HUGE[@]}" &
 spdk_app_pid=$!
@@ -66,8 +76,7 @@ blk_size=4096
 
 # Instead of default 10ms, use 1 second timeout
 $rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us 1000000
-
-$rpc_py bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -f IPv4 -s "$NVMF_PORT" -n "$NVME_SUBNQN" -b nvme0
+attach_controller
 
 for ((i = 0; i < nthreads; ++i)); do
 	# Every thread can use ns_per_thread NSIDs starting at specific offset.
@@ -80,7 +89,7 @@ wait "${pids[@]}"
 # Reattach controller with restored admin queue poll period to 10ms
 $rpc_py bdev_nvme_detach_controller nvme0
 $rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us 10000
-$rpc_py bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -f IPv4 -s "$NVMF_PORT" -n "$NVME_SUBNQN" -b nvme0
+attach_controller
 
 # Test case 2 - add/remove ns constantly
 
