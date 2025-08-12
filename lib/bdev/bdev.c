@@ -8245,6 +8245,9 @@ bdev_register(struct spdk_bdev *bdev)
 	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
 	if (ret != 0) {
 		spdk_io_device_unregister(__bdev_to_io_dev(bdev), NULL);
+		if (strcmp(bdev->name, uuid) != 0) {
+			spdk_bdev_alias_del(bdev, uuid);
+		}
 		bdev_free_io_stat(bdev->internal.stat);
 		spdk_spin_destroy(&bdev->internal.spinlock);
 		free(bdev_name);
