@@ -1178,12 +1178,15 @@ test_reservation_register_with_ptpl(void)
 }
 
 static void
-test_reservation_acquire_preempt_1(void)
+test_reservation_acquire_preempt_basic(enum spdk_nvme_reservation_acquire_action preempt_type)
 {
 	struct spdk_nvmf_request *req;
 	struct spdk_nvme_cpl *rsp;
 	struct spdk_nvmf_registrant *reg;
 	uint32_t gen;
+	bool is_abort = (preempt_type == SPDK_NVME_RESERVE_PREEMPT_ABORT);
+
+	printf("Executing test: %s with acquire type: %d\n", __func__, preempt_type);
 
 	ut_reservation_init();
 
@@ -1206,12 +1209,13 @@ test_reservation_acquire_preempt_1(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.crkey == 0xa1);
 	SPDK_CU_ASSERT_FATAL(g_ns.holder == reg);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == gen);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
 
 	/* TEST CASE: g_ctrlr1_A holds the reservation, g_ctrlr_B preempt g_ctrl1_A,
 	 * g_ctrl1_A registrant is unregistered.
 	 */
 	gen = g_ns.gen;
-	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_PREEMPT, 0,
+	ut_reservation_build_acquire_request(req, preempt_type, 0,
 					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS, 0xb1, 0xa1);
 	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
@@ -1224,13 +1228,22 @@ test_reservation_acquire_preempt_1(void)
 	SPDK_CU_ASSERT_FATAL(reg != NULL);
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen > gen);
+	if (is_abort) {
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_cnt == 1);
+		SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&g_ctrlr1_A.hostid,
+						       &g_ns.preempt_abort->hostids[0]) == 0);
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_gen == 1);
+	} else {
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
+	}
 
 	/* TEST CASE: g_ctrlr_B holds the reservation, g_ctrlr_C preempt g_ctrlr_B
 	 * with valid key and PRKEY set to 0, all registrants other the host that issued
 	 * the command are unregistered.
 	 */
 	gen = g_ns.gen;
-	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_PREEMPT, 0,
+	ut_reservation_build_acquire_request(req, preempt_type, 0,
 					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS, 0xc1, 0x0);
 	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_C, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
@@ -1243,9 +1256,28 @@ test_reservation_acquire_preempt_1(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.holder == reg);
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen > gen);
+	if (is_abort) {
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_cnt == 1);
+		SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&g_ctrlr_B.hostid,
+						       &g_ns.preempt_abort->hostids[0]) == 0);
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_gen == 2);
+	} else {
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
+	}
 
 	ut_reservation_free_req(req);
 	ut_reservation_deinit();
+}
+
+static void
+test_reservation_acquire_preempt(void)
+{
+	/* Preempt versus preempt-and-abort only have minor functionality differences, so
+	 * the same test can be executed with both preemption types.
+	 */
+	test_reservation_acquire_preempt_basic(SPDK_NVME_RESERVE_PREEMPT);
+	test_reservation_acquire_preempt_basic(SPDK_NVME_RESERVE_PREEMPT_ABORT);
 }
 
 static void
@@ -2755,7 +2787,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_visible);
 	CU_ADD_TEST(suite, test_reservation_register);
 	CU_ADD_TEST(suite, test_reservation_register_with_ptpl);
-	CU_ADD_TEST(suite, test_reservation_acquire_preempt_1);
+	CU_ADD_TEST(suite, test_reservation_acquire_preempt);
 	CU_ADD_TEST(suite, test_reservation_acquire_release_with_ptpl);
 	CU_ADD_TEST(suite, test_reservation_release);
 	CU_ADD_TEST(suite, test_reservation_unregister_notification);
