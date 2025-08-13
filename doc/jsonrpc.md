@@ -13524,6 +13524,8 @@ Example response:
 }
 ~~~
 
+## fsdev {#jsonrpc_components_fsdev}
+
 ### fsdev_get_opts {#rpc_fsdev_get_opts}
 
 Get fsdev module options.
