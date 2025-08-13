@@ -26,7 +26,7 @@ def add_parser(subparsers):
             print('WARNING: -i|--passthru-identify-ctrlr is deprecated, please use -p|--passthru-admin-cmds identify_ctrlr.',
                   file=sys.stderr)
             admin_cmd_passthru.append('identify_ctrlr')
-        all_admin_cmd_passthru = ('identify_ctrlr', 'get_log_page', 'get_set_features', 'vendor_specific')
+        all_admin_cmd_passthru = ('identify_ctrlr', 'get_log_page', 'get_set_features', 'sanitize', 'vendor_specific')
         if 'all' in admin_cmd_passthru:
             admin_cmd_passthru = {cmd: True for cmd in all_admin_cmd_passthru}
         else:
@@ -42,7 +42,7 @@ def add_parser(subparsers):
     when the controller has a single namespace that is an NVMe bdev (deprecated)""", action='store_true')
     p.add_argument('-p', '--passthru-admin-cmds', help="""Comma-separated list of admin commands to be passthru
                    when the controller has a single namespace that is an NVMe bdev.
-                   Available options are: all, identify_ctrlr, get_log_page, get_set_features, vendor_specific""",
+                   Available options are: all, identify_ctrlr, get_log_page, get_set_features, sanitize, vendor_specific""",
                    type=lambda d: d.split(','))
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.add_argument('-d', '--discovery-filter', help="""Set discovery filter (optional), possible values are: `match_any` (default) or
