@@ -20,6 +20,7 @@ struct spdk_nvmf_admin_passthru_conf {
 	bool get_log_page;
 	bool get_set_features;
 	bool sanitize;
+	bool security_send_recv;
 	bool vendor_specific;
 };
 
