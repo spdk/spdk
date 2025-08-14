@@ -560,7 +560,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	} else if (log_page == SPDK_NVME_LOG_CHANGED_NS_LIST) {
 		if (g_changed_ns_list) {
 			/*
-			 * Zero-terminated array of increasing NSID.
+			 * Zero-terminated array of NSIDs.
 			 * If overflowed - first element set to 0xFFFFFFFFh, followed by zeros.
 			 */
 			memset(payload, 0, payload_size);
@@ -3020,6 +3020,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	uint32_t changed_ns_list6_aer2[] = { 104, 105 };
 	uint32_t active_ns_list7[] = { 1, 2, 105, 106, 1024 };
 	uint32_t changed_ns_list7_aer[] = { 0xFFFFFFFF };
+	uint32_t active_ns_list8[] = { 1, 2, 107, 109, 110, 1024 };
+	uint32_t changed_ns_list8[] = { 110, 105, 107, 108, 106, 109 };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
 		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
@@ -3160,6 +3162,21 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	/* Log page overflowed, issued identify to all active NS. */
 	CU_ASSERT(g_nvme_ns_constructed == SPDK_COUNTOF(active_ns_list7));
 	check_active_ns(&ctrlr, active_ns_list7, SPDK_COUNTOF(active_ns_list7));
+
+	/* The log page should be ordered list of namespace ID, but in practice
+	 * SPDK and kernel NVMe-oF target return the list in order of changes instead.
+	 * Imitate scenario where NSID are unordered, but without duplicates. */
+	g_aer_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
+	setup_aer_for_ns_change(active_ns_list8, SPDK_COUNTOF(active_ns_list8),
+				changed_ns_list8, SPDK_COUNTOF(changed_ns_list8));
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 1);
+	CU_ASSERT(g_nvme_ns_constructed == g_active_ns_list_length);
+	check_active_ns(&ctrlr, active_ns_list8, SPDK_COUNTOF(active_ns_list8));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 105));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 106));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 108));
 
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
