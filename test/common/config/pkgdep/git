@@ -219,6 +219,16 @@ function install_libiscsi() {
 	sudo make -C "$GIT_REPOS/libiscsi" install
 }
 
+function install_libblkio() {
+	rm -rf "$GIT_REPOS/libblkio"
+	git clone "${GIT_REPO_LIBBLKIO}" "$GIT_REPOS/libblkio"
+	meson setup "$GIT_REPOS/libblkio/.build" "$GIT_REPOS/libblkio"
+	meson compile -C "$GIT_REPOS/libblkio/.build"
+	meson install -C "$GIT_REPOS/libblkio/.build"
+	echo "/usr/local/lib64" > /etc/ld.so.conf.d/spdk-libblkio.conf
+	ldconfig -X
+}
+
 function install_git() {
 	if type -P git; then
 		if ge "$(git --version | awk '{print $3}')" "$GIT_VERSION"; then
@@ -586,6 +596,7 @@ function install_sources() {
 		sources+=(
 			install_irdma
 			install_libiscsi
+			install_libblkio
 			install_nvmecli
 			install_nvmecli_plugin
 			install_qat
@@ -632,6 +643,8 @@ export GIT_REPO_QEMU
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
+: ${GIT_REPO_LIBBLKIO=https://gitlab.com/libblkio/libblkio}
+export GIT_REPO_LIBBLKIO
 : ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/828487/QAT.L.4.26.0-00008.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
