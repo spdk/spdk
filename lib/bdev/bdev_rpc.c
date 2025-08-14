@@ -18,6 +18,9 @@
 
 #include "bdev_internal.h"
 
+#define SPDK_BDEV_HISTOGRAM_DEFAULT_MIN_VALUE_NS (1000)
+#define SPDK_BDEV_HISTOGRAM_DEFAULT_MAX_VALUE_NS (120000000000)
+
 static void
 dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
@@ -1029,8 +1032,8 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_enable_histogram_request req = {.granularity = SPDK_HISTOGRAM_GRANULARITY_DEFAULT,
-		       .min_nsec = 0,
-		       .max_nsec = UINT64_MAX
+		       .min_nsec = SPDK_BDEV_HISTOGRAM_DEFAULT_MIN_VALUE_NS,
+		       .max_nsec = SPDK_BDEV_HISTOGRAM_DEFAULT_MAX_VALUE_NS
 	};
 	struct spdk_bdev_desc *desc;
 	int rc;

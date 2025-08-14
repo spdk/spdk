@@ -2817,8 +2817,8 @@ Control whether collecting data for histogram is enabled for specified bdev.
  enable      | Required   | boolean | Enable or disable histogram on specified device
  opc         | Optional   | string  | IO type name
  granularity | Optional   | number  | Histogram bucket granularity. Default: 7
- min_nsec    | Optional   | number  | Min value in nanoseconds to track. Default: 0
- max_nsec    | Optional   | number  | Max value in nanoseconds to track. Default: UINT64_T (max possible value)
+ min_nsec    | Optional   | number  | Min value in nanoseconds to track. Default: 1000 (1us)
+ max_nsec    | Optional   | number  | Max value in nanoseconds to track. Default: 120000000000 (120 seconds)
 
 #### Example
 
