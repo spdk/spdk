@@ -52,7 +52,7 @@ trap 'killprocess $spdk_app_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten "$spdk_app_pid"
 
 # Run several subsystem_{add,remove}_ns RPCs in parallel to ensure they'll get queued
-nthreads=1 pids=()
+nthreads=8 pids=()
 ns_per_thread=20
 bdev_size=100
 blk_size=4096

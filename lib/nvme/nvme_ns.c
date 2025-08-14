@@ -96,6 +96,8 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 			ns->pi_format = SPDK_NVME_16B_GUARD_PI;
 		}
 	}
+
+	ns->active = spdk_nvme_ns_is_active(ns);
 }
 
 static int
