@@ -9519,7 +9519,8 @@ wanting to support future growth. For example,
 num_md_pages_per_cluster_ratio = 200 would support future 2x growth of
 the logical volume store, and would result in 0.2% of the underlying
 block device allocated for metadata (with a default 4MiB cluster
-size).
+size). The amount of future growth can be determined with the `max_growable_size`
+parameter from the bdev_lvol_get_lvstores RPC.
 
 {{ bdev_lvol_create_lvstore_params }}
 
@@ -9630,8 +9631,9 @@ Example response:
       "cluster_size": 4194304,
       "total_data_clusters": 31,
       "block_size": 4096,
-      "name": "LVS0"
-    }
+      "name": "LVS0",
+      "max_growable_size": 137271181312
+   }
   ]
 }
 ~~~
@@ -9673,6 +9675,12 @@ Example response:
 ### bdev_lvol_grow_lvstore {#rpc_bdev_lvol_grow_lvstore}
 
 Grow the logical volume store to fill the underlying bdev
+
+Growth is limited by the number of metadata pages allocated when the lvstore was created,
+and its specific max size can be found using the `max_growable_size` parameter from the
+bdev_lvol_get_lvstores RPC.
+
+This RPC can be called to grow an lvolstore when the underlying bdev has increased in size.
 
 #### Parameters
 

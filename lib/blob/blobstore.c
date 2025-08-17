@@ -6130,6 +6130,24 @@ spdk_bs_get_page_size(struct spdk_blob_store *bs)
 }
 
 uint64_t
+spdk_bs_get_max_growable_size(struct spdk_blob_store *bs)
+{
+	uint64_t max_used_cluster_mask, max_number_of_clusters;
+
+	/* Calculate maximum number of pages reserved for used_cluster_mask,
+	 * This is immutable.
+	 */
+	max_used_cluster_mask = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+				spdk_divide_round_up(bs->md_len, 8),
+				spdk_bs_get_page_size(bs));
+	/* In used_cluster_mask, It takes 1 bit to track a cluster. */
+	max_number_of_clusters = ((max_used_cluster_mask * spdk_bs_get_page_size(bs))
+				  - sizeof(struct spdk_bs_md_mask)) * 8;
+
+	return max_number_of_clusters * bs->cluster_sz;
+}
+
+uint64_t
 spdk_bs_get_io_unit_size(struct spdk_blob_store *bs)
 {
 	return bs->io_unit_size;
