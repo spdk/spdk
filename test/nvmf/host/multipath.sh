@@ -21,6 +21,10 @@ cleanup() {
 	process_shm --id $NVMF_APP_SHM_ID || true
 	cat "$testdir/try.txt"
 	rm -f "$testdir/try.txt"
+	if [[ -f $testdir/trace.txt ]]; then
+		cat "$testdir/trace.txt"
+		rm -f "$testdir/trace.txt"
+	fi
 	killprocess $bdevperf_pid
 	nvmftestfini
 }
@@ -57,21 +61,37 @@ function set_ANA_state() {
 	$rpc_py nvmf_subsystem_listener_set_ana_state $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT -n $2
 }
 
+function _confirm_io_on_port() {
+	local port trace
+
+	mapfile -t trace < "$testdir/trace.txt"
+	# Drop the Attaching probes ... prefix
+	trace=("${trace[@]:1}")
+
+	for port; do
+		[[ ${trace[*]} == *"@path[$NVMF_FIRST_TARGET_IP, $port]:"* ]] || return 1
+	done
+
+	# Special handling of the "inaccessible inaccessible" setup
+	if (($# == 0)); then
+		# no io on any port
+		((${#trace[@]} == 0)) || return 1
+	fi
+
+	return 0
+}
+
 # check for io on the expected ANA state port
 function confirm_io_on_port() {
+	local state=$1 actual_port=$2
+
 	bpftrace_setup $nvmfapp_pid "$rootdir/scripts/bpf/nvmf_path.bt" &> "$testdir/trace.txt"
 	dtrace_pid=$!
 
-	# FIXME: This is awfully flaky. It's quite likely we should busy loop through the trace.txt until
-	# we find a match or time out. Or at least check trace.txt for hints that bpftrace finally attached
-	# itself to a PID before continuing.
-	sleep 6
+	active_port=$($rpc_py nvmf_subsystem_get_listeners $NQN | jq -r '.[] | select (.ana_states[0].ana_state=="'$state'") | .address.trsvcid')
 
-	active_port=$($rpc_py nvmf_subsystem_get_listeners $NQN | jq -r '.[] | select (.ana_states[0].ana_state=="'$1'") | .address.trsvcid')
-	cat "$testdir/trace.txt"
-	port=$(cut < "$testdir/trace.txt" -d ']' -f1 | awk '$1=="@path['$NVMF_FIRST_TARGET_IP'," {print $2}' | sed -n '1p')
-	[[ "$active_port" == "$port" ]]
-	[[ "$port" == "$2" ]]
+	waitforcondition "_confirm_io_on_port $active_port $actual_port"
+
 	kill $dtrace_pid
 	rm -f "$testdir/trace.txt"
 }
