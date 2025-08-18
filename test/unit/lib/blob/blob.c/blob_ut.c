@@ -3184,7 +3184,8 @@ bs_grow_live_no_space(void)
 	struct spdk_bs_opts opts;
 	struct spdk_bs_md_mask mask;
 	uint64_t bdev_size_init;
-	uint64_t total_data_clusters, max_clusters;
+	uint64_t total_data_clusters;
+	uint64_t beyond_max_growable_size;
 
 	/*
 	 * Further down the test the dev size will be larger than the g_dev_buffer size,
@@ -3219,12 +3220,12 @@ bs_grow_live_no_space(void)
 	 * Blobstore in this test has only space for single md_page for used_clusters,
 	 * which fits 1 bit per cluster minus the md header.
 	 *
-	 * Dev size is increased to exceed the reserved space for the used_cluster_mask
-	 * in the metadata, expecting ENOSPC and no change in blobstore.
+	 * Device size is set to one cluster beyond max_growable_size.
+	 * The grow operation must fail with -ENOSPC, since the used_cluster_mask
+	 * cannot track any additional clusters beyond the limit.
 	 */
-	max_clusters = (spdk_bs_get_page_size(bs) - sizeof(struct spdk_bs_md_mask)) * 8;
-	max_clusters += 1;
-	dev->blockcnt = (max_clusters * spdk_bs_get_cluster_size(bs)) / dev->blocklen;
+	beyond_max_growable_size = spdk_bs_get_max_growable_size(bs) + spdk_bs_get_cluster_size(bs);
+	dev->blockcnt = beyond_max_growable_size / dev->blocklen;
 	spdk_bs_grow_live(bs, bs_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == -ENOSPC);

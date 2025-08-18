@@ -311,6 +311,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
 		run_test "blobstore" $rootdir/test/blobstore/blobstore.sh
 		run_test "blobstore_grow" $rootdir/test/blobstore/blobstore_grow/blobstore_grow.sh
+		run_test "max_growable" $rootdir/test/blobstore/blobstore_grow/max_growable.sh
 		run_test "hello_blob" $SPDK_EXAMPLE_DIR/hello_blob \
 			examples/blob/hello_world/hello_blob.json
 		run_test "lvol" $rootdir/test/lvol/lvol.sh
