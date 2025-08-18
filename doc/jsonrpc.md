@@ -57,8 +57,7 @@ This type of error is most common one. It mean that there is an error while proc
 ## rpc.py {#rpc_py}
 
 SPDK provides a set of Python scripts which can invoke the JSON-RPC methods described in this document.  'rpc.py' in the scripts
-directory is the main script that users will invoke to execute a JSON-RPC method. The scripts/rpc directory contains modules
-that 'rpc.py' imports for definitions of each SPDK library's or module's methods.
+directory is the main script that users will invoke to execute a JSON-RPC method.
 
 Example:
 
