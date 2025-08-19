@@ -2,7 +2,10 @@
 #  Copyright (C) 2019 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def env_dpdk_get_mem_stats(client):
     """Dump the applications memory stats to a file.
 

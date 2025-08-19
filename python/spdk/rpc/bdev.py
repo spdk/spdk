@@ -5,8 +5,10 @@
 #  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 from .cmd_parser import *
+from spdk.rpc.helpers import deprecated_method
 
 
+@deprecated_method
 def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
                      bdev_auto_examine=None, iobuf_small_cache_size=None,
                      iobuf_large_cache_size=None):
@@ -32,6 +34,7 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
     return client.call('bdev_set_options', params)
 
 
+@deprecated_method
 def bdev_examine(client, name):
     """Examine a bdev manually. If the bdev does not exist yet when this RPC is called,
     it will be examined when it is created
@@ -43,12 +46,14 @@ def bdev_examine(client, name):
     return client.call('bdev_examine', params)
 
 
+@deprecated_method
 def bdev_wait_for_examine(client):
     """Report when all bdevs have been examined
     """
     return client.call('bdev_wait_for_examine')
 
 
+@deprecated_method
 def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, cipher=None, key2=None, key_name=None):
     """Construct a crypto virtual block device.
     Args:
@@ -78,6 +83,7 @@ def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, 
     return client.call('bdev_crypto_create', params)
 
 
+@deprecated_method
 def bdev_crypto_delete(client, name):
     """Delete crypto virtual block device.
     Args:
@@ -88,6 +94,7 @@ def bdev_crypto_delete(client, name):
     return client.call('bdev_crypto_delete', params)
 
 
+@deprecated_method
 def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name, cache_line_size=None):
     """Add an OCF block device
     Args:
@@ -109,6 +116,7 @@ def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name, cache_l
     return client.call('bdev_ocf_create', params)
 
 
+@deprecated_method
 def bdev_ocf_delete(client, name):
     """Delete an OCF device
     Args:
@@ -119,6 +127,7 @@ def bdev_ocf_delete(client, name):
     return client.call('bdev_ocf_delete', params)
 
 
+@deprecated_method
 def bdev_ocf_get_stats(client, name):
     """Get statistics of chosen OCF block device
     Args:
@@ -131,6 +140,7 @@ def bdev_ocf_get_stats(client, name):
     return client.call('bdev_ocf_get_stats', params)
 
 
+@deprecated_method
 def bdev_ocf_reset_stats(client, name):
     """Reset statistics of chosen OCF block device
     Args:
@@ -143,6 +153,7 @@ def bdev_ocf_reset_stats(client, name):
     return client.call('bdev_ocf_reset_stats', params)
 
 
+@deprecated_method
 def bdev_ocf_get_bdevs(client, name=None):
     """Get list of OCF devices including unregistered ones
     Args:
@@ -156,6 +167,7 @@ def bdev_ocf_get_bdevs(client, name=None):
     return client.call('bdev_ocf_get_bdevs', params)
 
 
+@deprecated_method
 def bdev_ocf_set_cache_mode(client, name, mode):
     """Set cache mode of OCF block device
     Args:
@@ -170,6 +182,7 @@ def bdev_ocf_set_cache_mode(client, name, mode):
     return client.call('bdev_ocf_set_cache_mode', params)
 
 
+@deprecated_method
 def bdev_ocf_set_seqcutoff(client, name, policy, threshold=None, promotion_count=None):
     """Set sequential cutoff parameters on all cores for the given OCF cache device
     Args:
@@ -188,6 +201,7 @@ def bdev_ocf_set_seqcutoff(client, name, policy, threshold=None, promotion_count
     return client.call('bdev_ocf_set_seqcutoff', params)
 
 
+@deprecated_method
 def bdev_ocf_flush_start(client, name):
     """Start flushing OCF cache device
     Args:
@@ -198,6 +212,7 @@ def bdev_ocf_flush_start(client, name):
     return client.call('bdev_ocf_flush_start', params)
 
 
+@deprecated_method
 def bdev_ocf_flush_status(client, name):
     """Get flush status of OCF cache device
     Args:
@@ -210,6 +225,7 @@ def bdev_ocf_flush_status(client, name):
     return client.call('bdev_ocf_flush_status', params)
 
 
+@deprecated_method
 def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None, name=None, uuid=None, optimal_io_boundary=None,
                        md_size=None, md_interleave=None, dif_type=None, dif_is_head_of_md=None, dif_pi_format=None):
     """Construct a malloc block device.
@@ -252,6 +268,7 @@ def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None,
     return client.call('bdev_malloc_create', params)
 
 
+@deprecated_method
 def bdev_malloc_delete(client, name):
     """Delete malloc block device.
     Args:
@@ -262,6 +279,7 @@ def bdev_malloc_delete(client, name):
     return client.call('bdev_malloc_delete', params)
 
 
+@deprecated_method
 def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=None, uuid=None, md_size=None,
                      dif_type=None, dif_is_head_of_md=None, dif_pi_format=None):
     """Construct a null block device.
@@ -297,6 +315,7 @@ def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=N
     return client.call('bdev_null_create', params)
 
 
+@deprecated_method
 def bdev_null_delete(client, name):
     """Remove null bdev from the system.
     Args:
@@ -307,6 +326,7 @@ def bdev_null_delete(client, name):
     return client.call('bdev_null_delete', params)
 
 
+@deprecated_method
 def bdev_null_resize(client, name, new_size):
     """Resize null bdev in the system.
     Args:
@@ -319,6 +339,7 @@ def bdev_null_resize(client, name, new_size):
     return client.call('bdev_null_resize', params)
 
 
+@deprecated_method
 def bdev_raid_set_options(client, process_window_size_kb=None, process_max_bandwidth_mb_sec=None):
     """Set options for bdev raid.
     Args:
@@ -335,6 +356,7 @@ def bdev_raid_set_options(client, process_window_size_kb=None, process_max_bandw
     return client.call('bdev_raid_set_options', params)
 
 
+@deprecated_method
 def bdev_raid_get_bdevs(client, category):
     """Get list of raid bdevs based on category
     Args:
@@ -347,6 +369,7 @@ def bdev_raid_get_bdevs(client, category):
     return client.call('bdev_raid_get_bdevs', params)
 
 
+@deprecated_method
 def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size_kb=None, uuid=None, superblock=None):
     """Create raid bdev. Either strip size arg will work but one is required.
     Args:
@@ -373,6 +396,7 @@ def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size_kb=None, u
     return client.call('bdev_raid_create', params)
 
 
+@deprecated_method
 def bdev_raid_delete(client, name):
     """Delete raid bdev
     Args:
@@ -385,6 +409,7 @@ def bdev_raid_delete(client, name):
     return client.call('bdev_raid_delete', params)
 
 
+@deprecated_method
 def bdev_raid_add_base_bdev(client, base_bdev, raid_bdev):
     """Add base bdev to existing raid bdev
     Args:
@@ -399,6 +424,7 @@ def bdev_raid_add_base_bdev(client, base_bdev, raid_bdev):
     return client.call('bdev_raid_add_base_bdev', params)
 
 
+@deprecated_method
 def bdev_raid_remove_base_bdev(client, name):
     """Remove base bdev from existing raid bdev
     Args:
@@ -411,6 +437,7 @@ def bdev_raid_remove_base_bdev(client, name):
     return client.call('bdev_raid_remove_base_bdev', params)
 
 
+@deprecated_method
 def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fallocate=None, uuid=None):
     """Construct a Linux AIO block device.
     Args:
@@ -437,6 +464,7 @@ def bdev_aio_create(client, filename, name, block_size=None, readonly=None, fall
     return client.call('bdev_aio_create', params)
 
 
+@deprecated_method
 def bdev_aio_rescan(client, name):
     """Rescan a Linux AIO block device.
     Args:
@@ -447,6 +475,7 @@ def bdev_aio_rescan(client, name):
     return client.call('bdev_aio_rescan', params)
 
 
+@deprecated_method
 def bdev_aio_delete(client, name):
     """Remove aio bdev from the system.
     Args:
@@ -457,6 +486,7 @@ def bdev_aio_delete(client, name):
     return client.call('bdev_aio_delete', params)
 
 
+@deprecated_method
 def bdev_uring_create(client, filename, name, block_size=None, uuid=None):
     """Create a bdev with Linux io_uring backend.
     Args:
@@ -477,6 +507,7 @@ def bdev_uring_create(client, filename, name, block_size=None, uuid=None):
     return client.call('bdev_uring_create', params)
 
 
+@deprecated_method
 def bdev_uring_rescan(client, name):
     """Rescan a Linux URING block device.
     Args:
@@ -487,6 +518,7 @@ def bdev_uring_rescan(client, name):
     return client.call('bdev_uring_rescan', params)
 
 
+@deprecated_method
 def bdev_uring_delete(client, name):
     """Delete a uring bdev.
     Args:
@@ -497,6 +529,7 @@ def bdev_uring_delete(client, name):
     return client.call('bdev_uring_delete', params)
 
 
+@deprecated_method
 def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu):
     """Create a bdev with xNVMe backend.
     Args:
@@ -515,6 +548,7 @@ def bdev_xnvme_create(client, filename, name, io_mechanism, conserve_cpu):
     return client.call('bdev_xnvme_create', params)
 
 
+@deprecated_method
 def bdev_xnvme_delete(client, name):
     """Delete a xNVMe bdev.
     Args:
@@ -525,6 +559,7 @@ def bdev_xnvme_delete(client, name):
     return client.call('bdev_xnvme_delete', params)
 
 
+@deprecated_method
 def bdev_nvme_set_options(client, **params):
     """Set options for the bdev nvme. This is startup command.
     Args:
@@ -581,6 +616,7 @@ def bdev_nvme_set_options(client, **params):
     return client.call('bdev_nvme_set_options', remove_null(strip_globals(params)))
 
 
+@deprecated_method
 def bdev_nvme_set_hotplug(client, enable, period_us=None):
     """Set options for the bdev nvme. This is startup command.
     Args:
@@ -594,6 +630,7 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
     return client.call('bdev_nvme_set_hotplug', params)
 
 
+@deprecated_method
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                                 priority=None, subnqn=None, hostnqn=None, hostaddr=None,
                                 hostsvcid=None, prchk_reftag=None, prchk_guard=None,
@@ -695,6 +732,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
     return client.call('bdev_nvme_attach_controller', params)
 
 
+@deprecated_method
 def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
                                 adrfam=None, trsvcid=None, subnqn=None,
                                 hostaddr=None, hostsvcid=None):
@@ -732,6 +770,7 @@ def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
     return client.call('bdev_nvme_detach_controller', params)
 
 
+@deprecated_method
 def bdev_nvme_reset_controller(client, name, cntlid=None):
     """Reset an NVMe controller or all NVMe controllers in an NVMe bdev controller.
     Args:
@@ -745,6 +784,7 @@ def bdev_nvme_reset_controller(client, name, cntlid=None):
     return client.call('bdev_nvme_reset_controller', params)
 
 
+@deprecated_method
 def bdev_nvme_enable_controller(client, name, cntlid=None):
     """Enable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
     Args:
@@ -758,6 +798,7 @@ def bdev_nvme_enable_controller(client, name, cntlid=None):
     return client.call('bdev_nvme_enable_controller', params)
 
 
+@deprecated_method
 def bdev_nvme_disable_controller(client, name, cntlid=None):
     """Disable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
     Args:
@@ -771,6 +812,7 @@ def bdev_nvme_disable_controller(client, name, cntlid=None):
     return client.call('bdev_nvme_disable_controller', params)
 
 
+@deprecated_method
 def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                               hostnqn=None, wait_for_attach=None, ctrlr_loss_timeout_sec=None,
                               reconnect_delay_sec=None, fast_io_fail_timeout_sec=None,
@@ -823,6 +865,7 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
     return client.call('bdev_nvme_start_discovery', params)
 
 
+@deprecated_method
 def bdev_nvme_stop_discovery(client, name):
     """Stop a previously started discovery service
     Args:
@@ -833,12 +876,14 @@ def bdev_nvme_stop_discovery(client, name):
     return client.call('bdev_nvme_stop_discovery', params)
 
 
+@deprecated_method
 def bdev_nvme_get_discovery_info(client):
     """Get information about the automatic discovery
     """
     return client.call('bdev_nvme_get_discovery_info')
 
 
+@deprecated_method
 def bdev_nvme_get_io_paths(client, name=None):
     """Display all or the specified NVMe bdev's active I/O paths
     Args:
@@ -852,6 +897,7 @@ def bdev_nvme_get_io_paths(client, name=None):
     return client.call('bdev_nvme_get_io_paths', params)
 
 
+@deprecated_method
 def bdev_nvme_set_preferred_path(client, name, cntlid):
     """Set the preferred I/O path for an NVMe bdev when in multipath mode
     Args:
@@ -864,6 +910,7 @@ def bdev_nvme_set_preferred_path(client, name, cntlid):
     return client.call('bdev_nvme_set_preferred_path', params)
 
 
+@deprecated_method
 def bdev_nvme_set_multipath_policy(client, name, policy, selector=None, rr_min_io=None):
     """Set multipath policy of the NVMe bdev
     Args:
@@ -882,6 +929,7 @@ def bdev_nvme_set_multipath_policy(client, name, policy, selector=None, rr_min_i
     return client.call('bdev_nvme_set_multipath_policy', params)
 
 
+@deprecated_method
 def bdev_nvme_get_path_iostat(client, name):
     """Get I/O statistics for IO paths of the block device.
     Args:
@@ -894,6 +942,7 @@ def bdev_nvme_get_path_iostat(client, name):
     return client.call('bdev_nvme_get_path_iostat', params)
 
 
+@deprecated_method
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
     Args:
@@ -904,6 +953,7 @@ def bdev_nvme_cuse_register(client, name):
     return client.call('bdev_nvme_cuse_register', params)
 
 
+@deprecated_method
 def bdev_nvme_cuse_unregister(client, name):
     """Unregister CUSE devices on NVMe controller.
     Args:
@@ -914,6 +964,7 @@ def bdev_nvme_cuse_unregister(client, name):
     return client.call('bdev_nvme_cuse_unregister', params)
 
 
+@deprecated_method
 def bdev_nvme_set_keys(client, name, dhchap_key=None, dhchap_ctrlr_key=None):
     """Set DH-HMAC-CHAP keys and force (re)authentication on all connected qpairs.
     Args:
@@ -929,6 +980,7 @@ def bdev_nvme_set_keys(client, name, dhchap_key=None, dhchap_ctrlr_key=None):
     return client.call('bdev_nvme_set_keys', params)
 
 
+@deprecated_method
 def bdev_zone_block_create(client, name, base_bdev, zone_capacity, optimal_open_zones):
     """Creates a virtual zone device on top of existing non-zoned bdev.
     Args:
@@ -947,6 +999,7 @@ def bdev_zone_block_create(client, name, base_bdev, zone_capacity, optimal_open_
     return client.call('bdev_zone_block_create', params)
 
 
+@deprecated_method
 def bdev_zone_block_delete(client, name):
     """Remove block zone bdev from the system.
     Args:
@@ -957,6 +1010,7 @@ def bdev_zone_block_delete(client, name):
     return client.call('bdev_zone_block_delete', params)
 
 
+@deprecated_method
 def bdev_rbd_register_cluster(client, name=None, user_id=None, config_param=None, config_file=None, key_file=None, core_mask=None):
     """Create a Rados Cluster object of the Ceph RBD backend.
     Args:
@@ -985,6 +1039,7 @@ def bdev_rbd_register_cluster(client, name=None, user_id=None, config_param=None
     return client.call('bdev_rbd_register_cluster', params)
 
 
+@deprecated_method
 def bdev_rbd_unregister_cluster(client, name):
     """Remove Rados cluster object from the system.
     Args:
@@ -995,6 +1050,7 @@ def bdev_rbd_unregister_cluster(client, name):
     return client.call('bdev_rbd_unregister_cluster', params)
 
 
+@deprecated_method
 def bdev_rbd_get_clusters_info(client, name=None):
     """Get the cluster(s) info
     Args:
@@ -1008,6 +1064,7 @@ def bdev_rbd_get_clusters_info(client, name=None):
     return client.call('bdev_rbd_get_clusters_info', params)
 
 
+@deprecated_method
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=None, config=None, cluster_name=None,
                     uuid=None, read_only=None):
     """Create a Ceph RBD block device.
@@ -1045,6 +1102,7 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=
     return client.call('bdev_rbd_create', params)
 
 
+@deprecated_method
 def bdev_rbd_delete(client, name):
     """Remove rbd bdev from the system.
     Args:
@@ -1055,6 +1113,7 @@ def bdev_rbd_delete(client, name):
     return client.call('bdev_rbd_delete', params)
 
 
+@deprecated_method
 def bdev_rbd_resize(client, name, new_size):
     """Resize rbd bdev in the system.
     Args:
@@ -1067,6 +1126,7 @@ def bdev_rbd_resize(client, name, new_size):
     return client.call('bdev_rbd_resize', params)
 
 
+@deprecated_method
 def bdev_error_create(client, base_name, uuid=None):
     """Construct an error injection block device.
     Args:
@@ -1080,6 +1140,7 @@ def bdev_error_create(client, base_name, uuid=None):
     return client.call('bdev_error_create', params)
 
 
+@deprecated_method
 def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency, uuid=None):
     """Construct a delay block device.
     Args:
@@ -1105,6 +1166,7 @@ def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_l
     return client.call('bdev_delay_create', params)
 
 
+@deprecated_method
 def bdev_delay_delete(client, name):
     """Remove delay bdev from the system.
     Args:
@@ -1115,6 +1177,7 @@ def bdev_delay_delete(client, name):
     return client.call('bdev_delay_delete', params)
 
 
+@deprecated_method
 def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us):
     """Update the latency value for a delay block device
     Args:
@@ -1131,6 +1194,7 @@ def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us)
     return client.call('bdev_delay_update_latency', params)
 
 
+@deprecated_method
 def bdev_error_delete(client, name):
     """Remove error bdev from the system.
     Args:
@@ -1141,6 +1205,7 @@ def bdev_error_delete(client, name):
     return client.call('bdev_error_delete', params)
 
 
+@deprecated_method
 def bdev_iscsi_set_options(client, timeout_sec=None):
     """Set options for the bdev iscsi.
     Args:
@@ -1152,6 +1217,7 @@ def bdev_iscsi_set_options(client, timeout_sec=None):
     return client.call('bdev_iscsi_set_options', params)
 
 
+@deprecated_method
 def bdev_iscsi_create(client, name, url, initiator_iqn):
     """Construct an iSCSI block device.
     Args:
@@ -1168,6 +1234,7 @@ def bdev_iscsi_create(client, name, url, initiator_iqn):
     return client.call('bdev_iscsi_create', params)
 
 
+@deprecated_method
 def bdev_iscsi_delete(client, name):
     """Remove iSCSI bdev from the system.
     Args:
@@ -1178,6 +1245,7 @@ def bdev_iscsi_delete(client, name):
     return client.call('bdev_iscsi_delete', params)
 
 
+@deprecated_method
 def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
     """Construct a pass-through block device.
     Args:
@@ -1195,6 +1263,7 @@ def bdev_passthru_create(client, base_bdev_name, name, uuid=None):
     return client.call('bdev_passthru_create', params)
 
 
+@deprecated_method
 def bdev_passthru_delete(client, name):
     """Remove pass through bdev from the system.
     Args:
@@ -1205,6 +1274,7 @@ def bdev_passthru_delete(client, name):
     return client.call('bdev_passthru_delete', params)
 
 
+@deprecated_method
 def bdev_opal_create(client, nvme_ctrlr_name, nsid, locking_range_id, range_start, range_length, password):
     """Create opal virtual block devices from a base nvme bdev.
     Args:
@@ -1227,6 +1297,7 @@ def bdev_opal_create(client, nvme_ctrlr_name, nsid, locking_range_id, range_star
     return client.call('bdev_opal_create', params)
 
 
+@deprecated_method
 def bdev_opal_get_info(client, bdev_name, password):
     """Get opal locking range info.
     Args:
@@ -1241,6 +1312,7 @@ def bdev_opal_get_info(client, bdev_name, password):
     return client.call('bdev_opal_get_info', params)
 
 
+@deprecated_method
 def bdev_opal_delete(client, bdev_name, password):
     """Delete opal virtual bdev from the system.
     Args:
@@ -1253,6 +1325,7 @@ def bdev_opal_delete(client, bdev_name, password):
     return client.call('bdev_opal_delete', params)
 
 
+@deprecated_method
 def bdev_opal_new_user(client, bdev_name, admin_password, user_id, user_password):
     """Add a user to opal bdev who can set lock state for this bdev.
     Args:
@@ -1269,6 +1342,7 @@ def bdev_opal_new_user(client, bdev_name, admin_password, user_id, user_password
     return client.call('bdev_opal_new_user', params)
 
 
+@deprecated_method
 def bdev_opal_set_lock_state(client, bdev_name, user_id, password, lock_state):
     """set lock state for an opal bdev.
     Args:
@@ -1285,6 +1359,7 @@ def bdev_opal_set_lock_state(client, bdev_name, user_id, password, lock_state):
     return client.call('bdev_opal_set_lock_state', params)
 
 
+@deprecated_method
 def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     """Create split block devices from a base bdev.
     Args:
@@ -1302,6 +1377,7 @@ def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     return client.call('bdev_split_create', params)
 
 
+@deprecated_method
 def bdev_split_delete(client, base_bdev):
     """Delete split block devices.
     Args:
@@ -1312,6 +1388,7 @@ def bdev_split_delete(client, base_bdev):
     return client.call('bdev_split_delete', params)
 
 
+@deprecated_method
 def bdev_ftl_create(client, name, base_bdev, cache, **kwargs):
     """Construct FTL bdev
     Args:
@@ -1330,6 +1407,7 @@ def bdev_ftl_create(client, name, base_bdev, cache, **kwargs):
     return client.call('bdev_ftl_create', params)
 
 
+@deprecated_method
 def bdev_ftl_load(client, name, base_bdev, cache, **kwargs):
     """Load FTL bdev
     Args:
@@ -1348,6 +1426,7 @@ def bdev_ftl_load(client, name, base_bdev, cache, **kwargs):
     return client.call('bdev_ftl_load', params)
 
 
+@deprecated_method
 def bdev_ftl_unload(client, name, fast_shutdown=None):
     """Unload FTL bdev
     Args:
@@ -1361,6 +1440,7 @@ def bdev_ftl_unload(client, name, fast_shutdown=None):
     return client.call('bdev_ftl_unload', params)
 
 
+@deprecated_method
 def bdev_ftl_delete(client, name, fast_shutdown=None):
     """Delete FTL bdev
     Args:
@@ -1374,6 +1454,7 @@ def bdev_ftl_delete(client, name, fast_shutdown=None):
     return client.call('bdev_ftl_delete', params)
 
 
+@deprecated_method
 def bdev_ftl_unmap(client, name, lba, num_blocks):
     """FTL unmap
     Args:
@@ -1388,6 +1469,7 @@ def bdev_ftl_unmap(client, name, lba, num_blocks):
     return client.call('bdev_ftl_unmap', params)
 
 
+@deprecated_method
 def bdev_ftl_get_stats(client, name):
     """get FTL stats
     Args:
@@ -1398,6 +1480,7 @@ def bdev_ftl_get_stats(client, name):
     return client.call('bdev_ftl_get_stats', params)
 
 
+@deprecated_method
 def bdev_ftl_get_properties(client, name):
     """Get FTL properties
     Args:
@@ -1408,6 +1491,7 @@ def bdev_ftl_get_properties(client, name):
     return client.call('bdev_ftl_get_properties', params)
 
 
+@deprecated_method
 def bdev_ftl_set_property(client, name, ftl_property, value):
     """Set FTL property
     Args:
@@ -1422,6 +1506,7 @@ def bdev_ftl_set_property(client, name, ftl_property, value):
     return client.call('bdev_ftl_set_property', params)
 
 
+@deprecated_method
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
     Args:
@@ -1438,6 +1523,7 @@ def bdev_get_bdevs(client, name=None, timeout=None):
     return client.call('bdev_get_bdevs', params)
 
 
+@deprecated_method
 def bdev_get_iostat(client, name=None, per_channel=None, reset_mode=None):
     """Get I/O statistics for block devices.
     Args:
@@ -1457,6 +1543,7 @@ def bdev_get_iostat(client, name=None, per_channel=None, reset_mode=None):
     return client.call('bdev_get_iostat', params)
 
 
+@deprecated_method
 def bdev_reset_iostat(client, name=None, mode=None):
     """Reset I/O statistics for block devices.
     Args:
@@ -1471,6 +1558,7 @@ def bdev_reset_iostat(client, name=None, mode=None):
     return client.call('bdev_reset_iostat', params)
 
 
+@deprecated_method
 def bdev_enable_histogram(client, name, enable, opc, granularity, min_nsec, max_nsec):
     """Control whether histogram is enabled for specified bdev.
     Args:
@@ -1495,6 +1583,7 @@ def bdev_enable_histogram(client, name, enable, opc, granularity, min_nsec, max_
     return client.call('bdev_enable_histogram', params)
 
 
+@deprecated_method
 def bdev_get_histogram(client, name):
     """Get histogram for specified bdev.
     Args:
@@ -1505,6 +1594,7 @@ def bdev_get_histogram(client, name):
     return client.call('bdev_get_histogram', params)
 
 
+@deprecated_method
 def bdev_error_inject_error(client, name, io_type, error_type, num=None,
                             queue_depth=None, corrupt_offset=None, corrupt_value=None):
     """Inject an error via an error bdev.
@@ -1532,6 +1622,7 @@ def bdev_error_inject_error(client, name, io_type, error_type, num=None,
     return client.call('bdev_error_inject_error', params)
 
 
+@deprecated_method
 def bdev_set_qd_sampling_period(client, name, period):
     """Enable queue depth tracking on a specified bdev.
     Args:
@@ -1544,6 +1635,7 @@ def bdev_set_qd_sampling_period(client, name, period):
     return client.call('bdev_set_qd_sampling_period', params)
 
 
+@deprecated_method
 def bdev_set_qos_limit(
         client,
         name,
@@ -1572,6 +1664,7 @@ def bdev_set_qos_limit(
     return client.call('bdev_set_qos_limit', params)
 
 
+@deprecated_method
 def bdev_nvme_apply_firmware(client, bdev_name, filename):
     """Download and commit firmware to NVMe device.
     Args:
@@ -1584,11 +1677,13 @@ def bdev_nvme_apply_firmware(client, bdev_name, filename):
     return client.call('bdev_nvme_apply_firmware', params)
 
 
+@deprecated_method
 def bdev_nvme_get_transport_statistics(client):
     """Get bdev_nvme poll group transport statistics"""
     return client.call('bdev_nvme_get_transport_statistics')
 
 
+@deprecated_method
 def bdev_nvme_get_controller_health_info(client, name):
     """Display health log of the required NVMe bdev controller.
     Args:
@@ -1601,6 +1696,7 @@ def bdev_nvme_get_controller_health_info(client, name):
     return client.call('bdev_nvme_get_controller_health_info', params)
 
 
+@deprecated_method
 def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=None, uuid=None):
     """Construct DAOS block device.
     Args:
@@ -1627,6 +1723,7 @@ def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=No
     return client.call('bdev_daos_create', params)
 
 
+@deprecated_method
 def bdev_daos_delete(client, name):
     """Delete DAOS block device.
     Args:
@@ -1637,6 +1734,7 @@ def bdev_daos_delete(client, name):
     return client.call('bdev_daos_delete', params)
 
 
+@deprecated_method
 def bdev_daos_resize(client, name, new_size):
     """Resize DAOS bdev in the system.
     Args:
@@ -1649,6 +1747,7 @@ def bdev_daos_resize(client, name, new_size):
     return client.call('bdev_daos_resize', params)
 
 
+@deprecated_method
 def bdev_nvme_start_mdns_discovery(client, name, svcname, hostnqn=None):
     """Start discovery with mDNS
     Args:
@@ -1664,6 +1763,7 @@ def bdev_nvme_start_mdns_discovery(client, name, svcname, hostnqn=None):
     return client.call('bdev_nvme_start_mdns_discovery', params)
 
 
+@deprecated_method
 def bdev_nvme_stop_mdns_discovery(client, name):
     """Stop a previously started mdns discovery service
     Args:
@@ -1674,6 +1774,7 @@ def bdev_nvme_stop_mdns_discovery(client, name):
     return client.call('bdev_nvme_stop_mdns_discovery', params)
 
 
+@deprecated_method
 def bdev_nvme_get_mdns_discovery_info(client):
     """Get information about the automatic mdns discovery
     """

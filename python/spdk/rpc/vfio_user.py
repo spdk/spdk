@@ -2,7 +2,10 @@
 #  Copyright (C) 2022 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def vfu_tgt_set_base_path(client, path):
     """Set socket base path.
 
@@ -16,6 +19,7 @@ def vfu_tgt_set_base_path(client, path):
     return client.call('vfu_tgt_set_base_path', params)
 
 
+@deprecated_method
 def vfu_virtio_delete_endpoint(client, name):
     """Delete specified endpoint name.
 
@@ -29,6 +33,7 @@ def vfu_virtio_delete_endpoint(client, name):
     return client.call('vfu_virtio_delete_endpoint', params)
 
 
+@deprecated_method
 def vfu_virtio_create_blk_endpoint(client, name, bdev_name, cpumask, num_queues, qsize, packed_ring):
     """Create virtio-blk endpoint.
 
@@ -56,6 +61,7 @@ def vfu_virtio_create_blk_endpoint(client, name, bdev_name, cpumask, num_queues,
     return client.call('vfu_virtio_create_blk_endpoint', params)
 
 
+@deprecated_method
 def vfu_virtio_scsi_add_target(client, name, scsi_target_num, bdev_name):
     """Attach a block device to the specified SCSI target.
 
@@ -73,6 +79,7 @@ def vfu_virtio_scsi_add_target(client, name, scsi_target_num, bdev_name):
     return client.call('vfu_virtio_scsi_add_target', params)
 
 
+@deprecated_method
 def vfu_virtio_scsi_remove_target(client, name, scsi_target_num):
     """Remove specified SCSI target of socket endpoint.
 
@@ -88,6 +95,7 @@ def vfu_virtio_scsi_remove_target(client, name, scsi_target_num):
     return client.call('vfu_virtio_scsi_remove_target', params)
 
 
+@deprecated_method
 def vfu_virtio_create_scsi_endpoint(client, name, cpumask, num_io_queues, qsize, packed_ring):
     """Create virtio-scsi endpoint.
 
@@ -113,6 +121,7 @@ def vfu_virtio_create_scsi_endpoint(client, name, cpumask, num_io_queues, qsize,
     return client.call('vfu_virtio_create_scsi_endpoint', params)
 
 
+@deprecated_method
 def vfu_virtio_create_fs_endpoint(client, name, fsdev_name, tag, cpumask, num_queues, qsize, packed_ring):
     """Create virtio-fs endpoint.
 

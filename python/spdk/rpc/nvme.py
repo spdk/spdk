@@ -2,7 +2,10 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def bdev_nvme_send_cmd(client, name, cmd_type, data_direction, cmdbuf,
                        data=None, metadata=None,
                        data_len=None, metadata_len=None,
@@ -42,6 +45,7 @@ def bdev_nvme_send_cmd(client, name, cmd_type, data_direction, cmdbuf,
     return client.call('bdev_nvme_send_cmd', params)
 
 
+@deprecated_method
 def bdev_nvme_get_controllers(client, name=None):
     """Get information about NVMe controllers.
 
@@ -57,6 +61,7 @@ def bdev_nvme_get_controllers(client, name=None):
     return client.call('bdev_nvme_get_controllers', params)
 
 
+@deprecated_method
 def bdev_nvme_opal_init(client, nvme_ctrlr_name, password):
     """Init nvme opal. Take ownership and activate
 
@@ -72,6 +77,7 @@ def bdev_nvme_opal_init(client, nvme_ctrlr_name, password):
     return client.call('bdev_nvme_opal_init', params)
 
 
+@deprecated_method
 def bdev_nvme_opal_revert(client, nvme_ctrlr_name, password):
     """Revert opal to default factory settings. Erase all data.
 
@@ -87,6 +93,7 @@ def bdev_nvme_opal_revert(client, nvme_ctrlr_name, password):
     return client.call('bdev_nvme_opal_revert', params)
 
 
+@deprecated_method
 def bdev_nvme_add_error_injection(client, name, opc, cmd_type, do_not_submit, timeout_in_us,
                                   err_count, sct, sc):
     """Add error injection
@@ -122,6 +129,7 @@ def bdev_nvme_add_error_injection(client, name, opc, cmd_type, do_not_submit, ti
     return client.call('bdev_nvme_add_error_injection', params)
 
 
+@deprecated_method
 def bdev_nvme_remove_error_injection(client, name, opc, cmd_type):
     """Remove error injection
 

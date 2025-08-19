@@ -2,7 +2,10 @@
 #  Copyright (C) 2022 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize, large_bufsize, enable_numa=None):
     """Set iobuf pool options.
 
@@ -29,6 +32,7 @@ def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize,
     return client.call('iobuf_set_options', params)
 
 
+@deprecated_method
 def iobuf_get_stats(client):
     """Get iobuf statistics"""
 

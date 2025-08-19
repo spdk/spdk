@@ -2,9 +2,10 @@
 #  Copyright (C) 2022 Intel Corporation.
 #  All rights reserved.
 
-from spdk.rpc.helpers import deprecated_alias
+from spdk.rpc.helpers import deprecated_alias, deprecated_method
 
 
+@deprecated_method
 @deprecated_alias('dsa_scan_accel_engine')
 def dsa_scan_accel_module(client, config_kernel_mode=None):
     """Scan and enable DSA accel module.

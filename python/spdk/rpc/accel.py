@@ -3,9 +3,10 @@
 #  All rights reserved.
 #
 
-from spdk.rpc.helpers import deprecated_alias
+from spdk.rpc.helpers import deprecated_alias, deprecated_method
 
 
+@deprecated_method
 def accel_get_opc_assignments(client):
     """Get list of opcode name to module assignments.
     """
@@ -13,12 +14,14 @@ def accel_get_opc_assignments(client):
 
 
 @deprecated_alias('accel_get_engine_info')
+@deprecated_method
 def accel_get_module_info(client):
     """Get list of valid module names and their operations.
     """
     return client.call('accel_get_module_info')
 
 
+@deprecated_method
 def accel_assign_opc(client, opname, module):
     """Manually assign an operation to a module.
 
@@ -34,6 +37,7 @@ def accel_assign_opc(client, opname, module):
     return client.call('accel_assign_opc', params)
 
 
+@deprecated_method
 def accel_crypto_key_create(client, cipher, key, key2, tweak_mode, name):
     """Create Data Encryption Key Identifier.
 
@@ -57,6 +61,7 @@ def accel_crypto_key_create(client, cipher, key, key2, tweak_mode, name):
     return client.call('accel_crypto_key_create', params)
 
 
+@deprecated_method
 def accel_crypto_key_destroy(client, key_name):
     """Destroy Data Encryption Key.
 
@@ -70,6 +75,7 @@ def accel_crypto_key_destroy(client, key_name):
     return client.call('accel_crypto_key_destroy', params)
 
 
+@deprecated_method
 def accel_crypto_keys_get(client, key_name):
     """Get a list of the crypto keys.
 
@@ -84,6 +90,7 @@ def accel_crypto_keys_get(client, key_name):
     return client.call('accel_crypto_keys_get', params)
 
 
+@deprecated_method
 def accel_set_driver(client, name):
     """Select accel platform driver to execute operation chains.
 
@@ -93,6 +100,7 @@ def accel_set_driver(client, name):
     return client.call('accel_set_driver', {'name': name})
 
 
+@deprecated_method
 def accel_set_options(client, small_cache_size, large_cache_size,
                       task_count, sequence_count, buf_count):
     """Set accel framework's options."""
@@ -112,12 +120,14 @@ def accel_set_options(client, small_cache_size, large_cache_size,
     return client.call('accel_set_options', params)
 
 
+@deprecated_method
 def accel_get_stats(client):
     """Get accel framework's statistics"""
 
     return client.call('accel_get_stats')
 
 
+@deprecated_method
 def accel_error_inject_error(client, opcode, type, count=None, interval=None, errcode=None):
     """Inject an error to processing accel operation"""
     params = {}

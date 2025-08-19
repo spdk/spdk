@@ -3,7 +3,10 @@
 #   All rights reserved.
 #
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def compressdev_scan_accel_module(client, pmd):
     """Scan and enable compressdev module and set pmd option.
 

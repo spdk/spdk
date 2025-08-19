@@ -2,11 +2,15 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def notify_get_types(client):
     return client.call("notify_get_types")
 
 
+@deprecated_method
 def notify_get_notifications(client,
                              id=None,
                              max=None):

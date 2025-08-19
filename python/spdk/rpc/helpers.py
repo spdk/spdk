@@ -18,3 +18,14 @@ def deprecated_alias(old_name):
         setattr(sys.modules[f.__module__], old_name, old_f)
         return f
     return wrap
+
+
+def deprecated_method(method):
+    method.deprecated_warning = False
+
+    def wrap(*args, **kwargs):
+        if not method.deprecated_warning:
+            print(f'{method.__name__} is deprecated, use JSONRPCClient directly', file=sys.stderr)
+            method.deprecated_warning = True
+        return method(*args, **kwargs)
+    return wrap

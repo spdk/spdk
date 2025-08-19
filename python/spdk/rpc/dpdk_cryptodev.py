@@ -2,13 +2,17 @@
 #  Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def dpdk_cryptodev_scan_accel_module(client):
     """Enable dpdk_cryptodev accel module.
     """
     return client.call('dpdk_cryptodev_scan_accel_module')
 
 
+@deprecated_method
 def dpdk_cryptodev_set_driver(client, driver_name):
     """Set the DPDK cryptodev driver.
 
@@ -20,6 +24,7 @@ def dpdk_cryptodev_set_driver(client, driver_name):
     return client.call('dpdk_cryptodev_set_driver', params)
 
 
+@deprecated_method
 def dpdk_cryptodev_get_driver(client):
     """Get the DPDK cryptodev driver.
     """

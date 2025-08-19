@@ -2,7 +2,10 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def spdk_kill_instance(client, sig_name):
     """Send a signal to the SPDK process.
 
@@ -13,6 +16,7 @@ def spdk_kill_instance(client, sig_name):
     return client.call('spdk_kill_instance', params)
 
 
+@deprecated_method
 def framework_monitor_context_switch(client, enabled=None):
     """Query or set state of context switch monitoring.
 
@@ -28,6 +32,7 @@ def framework_monitor_context_switch(client, enabled=None):
     return client.call('framework_monitor_context_switch', params)
 
 
+@deprecated_method
 def framework_get_reactors(client):
     """Query list of all reactors.
 
@@ -37,6 +42,7 @@ def framework_get_reactors(client):
     return client.call('framework_get_reactors')
 
 
+@deprecated_method
 def framework_set_scheduler(client, name, period=None, load_limit=None, core_limit=None,
                             core_busy=None, mappings=None):
     """Select threads scheduler that will be activated and its period.
@@ -61,6 +67,7 @@ def framework_set_scheduler(client, name, period=None, load_limit=None, core_lim
     return client.call('framework_set_scheduler', params)
 
 
+@deprecated_method
 def framework_get_scheduler(client):
     """Query currently set scheduler.
 
@@ -70,6 +77,7 @@ def framework_get_scheduler(client):
     return client.call('framework_get_scheduler')
 
 
+@deprecated_method
 def framework_get_governor(client):
     """Query current governor data.
 
@@ -79,6 +87,7 @@ def framework_get_governor(client):
     return client.call('framework_get_governor')
 
 
+@deprecated_method
 def scheduler_set_options(client, scheduling_core=None, isolated_core_mask=None):
     params = {}
     if isolated_core_mask is not None:
@@ -88,6 +97,7 @@ def scheduler_set_options(client, scheduling_core=None, isolated_core_mask=None)
     return client.call('scheduler_set_options', params)
 
 
+@deprecated_method
 def thread_get_stats(client):
     """Query threads statistics.
 
@@ -97,6 +107,7 @@ def thread_get_stats(client):
     return client.call('thread_get_stats')
 
 
+@deprecated_method
 def thread_set_cpumask(client, id, cpumask):
     """Set the cpumask of the thread whose ID matches to the specified value.
 
@@ -111,6 +122,7 @@ def thread_set_cpumask(client, id, cpumask):
     return client.call('thread_set_cpumask', params)
 
 
+@deprecated_method
 def log_enable_timestamps(client, enabled):
     """Enable or disable timestamps.
 
@@ -124,6 +136,7 @@ def log_enable_timestamps(client, enabled):
     return client.call('log_enable_timestamps', params)
 
 
+@deprecated_method
 def thread_get_pollers(client):
     """Query current pollers.
 
@@ -133,6 +146,7 @@ def thread_get_pollers(client):
     return client.call('thread_get_pollers')
 
 
+@deprecated_method
 def thread_get_io_channels(client):
     """Query current IO channels.
 

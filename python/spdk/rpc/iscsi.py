@@ -2,7 +2,10 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def iscsi_set_options(
         client,
         auth_file=None,
@@ -106,6 +109,7 @@ def iscsi_set_options(
     return client.call('iscsi_set_options', params)
 
 
+@deprecated_method
 def iscsi_set_discovery_auth(
         client,
         disable_chap=None,
@@ -137,6 +141,7 @@ def iscsi_set_discovery_auth(
     return client.call('iscsi_set_discovery_auth', params)
 
 
+@deprecated_method
 def iscsi_get_auth_groups(client):
     """Display current authentication group configuration.
 
@@ -146,6 +151,7 @@ def iscsi_get_auth_groups(client):
     return client.call('iscsi_get_auth_groups')
 
 
+@deprecated_method
 def iscsi_get_portal_groups(client):
     """Display current portal group configuration.
 
@@ -155,6 +161,7 @@ def iscsi_get_portal_groups(client):
     return client.call('iscsi_get_portal_groups')
 
 
+@deprecated_method
 def iscsi_get_initiator_groups(client):
     """Display current initiator group configuration.
 
@@ -164,6 +171,7 @@ def iscsi_get_initiator_groups(client):
     return client.call('iscsi_get_initiator_groups')
 
 
+@deprecated_method
 def iscsi_get_target_nodes(client):
     """Display target nodes.
 
@@ -173,6 +181,7 @@ def iscsi_get_target_nodes(client):
     return client.call('iscsi_get_target_nodes')
 
 
+@deprecated_method
 def iscsi_enable_histogram(client, name, enable):
     """Enable/disable histogram dynamically for the specified iscsi target node.
 
@@ -183,6 +192,7 @@ def iscsi_enable_histogram(client, name, enable):
     return client.call('iscsi_enable_histogram', params)
 
 
+@deprecated_method
 def iscsi_get_histogram(client, name):
     """Get histogram for specified iscsi target.
 
@@ -193,6 +203,7 @@ def iscsi_get_histogram(client, name):
     return client.call('iscsi_get_histogram', params)
 
 
+@deprecated_method
 def iscsi_create_target_node(
         client,
         luns,
@@ -247,6 +258,7 @@ def iscsi_create_target_node(
     return client.call('iscsi_create_target_node', params)
 
 
+@deprecated_method
 def iscsi_target_node_add_lun(client, name, bdev_name, lun_id=None):
     """Add LUN to the target node.
 
@@ -267,6 +279,7 @@ def iscsi_target_node_add_lun(client, name, bdev_name, lun_id=None):
     return client.call('iscsi_target_node_add_lun', params)
 
 
+@deprecated_method
 def iscsi_target_node_set_auth(
         client,
         name,
@@ -301,6 +314,7 @@ def iscsi_target_node_set_auth(
     return client.call('iscsi_target_node_set_auth', params)
 
 
+@deprecated_method
 def iscsi_create_auth_group(client, tag, secrets=None):
     """Create authentication group for CHAP authentication.
 
@@ -318,6 +332,7 @@ def iscsi_create_auth_group(client, tag, secrets=None):
     return client.call('iscsi_create_auth_group', params)
 
 
+@deprecated_method
 def iscsi_delete_auth_group(client, tag):
     """Delete an authentication group.
 
@@ -331,6 +346,7 @@ def iscsi_delete_auth_group(client, tag):
     return client.call('iscsi_delete_auth_group', params)
 
 
+@deprecated_method
 def iscsi_auth_group_add_secret(client, tag, user, secret, muser=None, msecret=None):
     """Add a secret to an authentication group.
 
@@ -353,6 +369,7 @@ def iscsi_auth_group_add_secret(client, tag, user, secret, muser=None, msecret=N
     return client.call('iscsi_auth_group_add_secret', params)
 
 
+@deprecated_method
 def iscsi_auth_group_remove_secret(client, tag, user):
     """Remove a secret from an authentication group.
 
@@ -367,6 +384,7 @@ def iscsi_auth_group_remove_secret(client, tag, user):
     return client.call('iscsi_auth_group_remove_secret', params)
 
 
+@deprecated_method
 def iscsi_target_node_remove_pg_ig_maps(client, pg_ig_maps, name):
     """Delete PG-IG maps from the target node.
 
@@ -384,6 +402,7 @@ def iscsi_target_node_remove_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('iscsi_target_node_remove_pg_ig_maps', params)
 
 
+@deprecated_method
 def iscsi_target_node_add_pg_ig_maps(client, pg_ig_maps, name):
     """Add PG-IG maps to the target node.
 
@@ -401,6 +420,7 @@ def iscsi_target_node_add_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('iscsi_target_node_add_pg_ig_maps', params)
 
 
+@deprecated_method
 def iscsi_target_node_set_redirect(client, name, pg_tag, redirect_host, redirect_port):
     """Update redirect portal of the public portal group for the target node.
 
@@ -425,6 +445,7 @@ def iscsi_target_node_set_redirect(client, name, pg_tag, redirect_host, redirect
     return client.call('iscsi_target_node_set_redirect', params)
 
 
+@deprecated_method
 def iscsi_target_node_request_logout(client, name, pg_tag):
     """Request connections to the target node to logout.
 
@@ -442,6 +463,7 @@ def iscsi_target_node_request_logout(client, name, pg_tag):
     return client.call('iscsi_target_node_request_logout', params)
 
 
+@deprecated_method
 def iscsi_create_portal_group(client, portals, tag, private, wait):
     """Add a portal group.
 
@@ -463,6 +485,7 @@ def iscsi_create_portal_group(client, portals, tag, private, wait):
     return client.call('iscsi_create_portal_group', params)
 
 
+@deprecated_method
 def iscsi_start_portal_group(client, tag):
     """Start listening on portals if it is not started yet.
 
@@ -476,6 +499,7 @@ def iscsi_start_portal_group(client, tag):
     return client.call('iscsi_start_portal_group', params)
 
 
+@deprecated_method
 def iscsi_create_initiator_group(client, tag, initiators, netmasks):
     """Add an initiator group.
 
@@ -492,6 +516,7 @@ def iscsi_create_initiator_group(client, tag, initiators, netmasks):
     return client.call('iscsi_create_initiator_group', params)
 
 
+@deprecated_method
 def iscsi_initiator_group_add_initiators(
         client,
         tag,
@@ -517,6 +542,7 @@ def iscsi_initiator_group_add_initiators(
     return client.call('iscsi_initiator_group_add_initiators', params)
 
 
+@deprecated_method
 def iscsi_initiator_group_remove_initiators(
         client, tag, initiators=None, netmasks=None):
     """Delete initiators from an existing initiator group.
@@ -538,6 +564,7 @@ def iscsi_initiator_group_remove_initiators(
     return client.call('iscsi_initiator_group_remove_initiators', params)
 
 
+@deprecated_method
 def iscsi_delete_target_node(client, target_node_name):
     """Delete a target node.
 
@@ -551,6 +578,7 @@ def iscsi_delete_target_node(client, target_node_name):
     return client.call('iscsi_delete_target_node', params)
 
 
+@deprecated_method
 def iscsi_delete_portal_group(client, tag):
     """Delete a portal group.
 
@@ -564,6 +592,7 @@ def iscsi_delete_portal_group(client, tag):
     return client.call('iscsi_delete_portal_group', params)
 
 
+@deprecated_method
 def iscsi_delete_initiator_group(client, tag):
     """Delete an initiator group.
 
@@ -577,6 +606,7 @@ def iscsi_delete_initiator_group(client, tag):
     return client.call('iscsi_delete_initiator_group', params)
 
 
+@deprecated_method
 def iscsi_portal_group_set_auth(
         client,
         tag,
@@ -611,6 +641,7 @@ def iscsi_portal_group_set_auth(
     return client.call('iscsi_portal_group_set_auth', params)
 
 
+@deprecated_method
 def iscsi_get_connections(client):
     """Display iSCSI connections.
 
@@ -620,6 +651,7 @@ def iscsi_get_connections(client):
     return client.call('iscsi_get_connections')
 
 
+@deprecated_method
 def iscsi_get_stats(client):
     """Display stat information of iSCSI connections.
 
@@ -629,6 +661,7 @@ def iscsi_get_stats(client):
     return client.call('iscsi_get_stats')
 
 
+@deprecated_method
 def iscsi_get_options(client):
     """Display iSCSI global parameters.
 
@@ -638,6 +671,7 @@ def iscsi_get_options(client):
     return client.call('iscsi_get_options')
 
 
+@deprecated_method
 def scsi_get_devices(client):
     """Display SCSI devices.
 

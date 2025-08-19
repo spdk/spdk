@@ -2,9 +2,10 @@
 #  Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 
-from spdk.rpc.helpers import deprecated_alias
+from spdk.rpc.helpers import deprecated_alias, deprecated_method
 
 
+@deprecated_method
 def mlx5_scan_accel_module(client, qp_size=None, num_requests=None, allowed_devs=None, crypto_split_blocks=None,
                            enable_driver=None):
     """Enable mlx5 accel module. Scans all mlx5 devices which can perform needed operations
@@ -31,6 +32,7 @@ def mlx5_scan_accel_module(client, qp_size=None, num_requests=None, allowed_devs
     return client.call('mlx5_scan_accel_module', params)
 
 
+@deprecated_method
 def accel_mlx5_dump_stats(client, level=None):
 
     params = {}

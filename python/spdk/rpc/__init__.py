@@ -36,28 +36,34 @@ from . import iobuf
 from . import dpdk_cryptodev
 from . import mlx5
 from . import client as rpc_client
+from .helpers import deprecated_method
 
 
+@deprecated_method
 def framework_start_init(client):
     """Start initialization of subsystems"""
     return client.call('framework_start_init')
 
 
+@deprecated_method
 def framework_wait_init(client):
     """Block until subsystems have been initialized"""
     return client.call('framework_wait_init')
 
 
+@deprecated_method
 def framework_disable_cpumask_locks(client):
     """ Disable CPU core lock files."""
     return client.call('framework_disable_cpumask_locks')
 
 
+@deprecated_method
 def framework_enable_cpumask_locks(client):
     """ Enable CPU core lock files."""
     return client.call('framework_enable_cpumask_locks')
 
 
+@deprecated_method
 def rpc_get_methods(client, current=None, include_aliases=None):
     """Get list of supported RPC methods.
     Args:
@@ -74,6 +80,7 @@ def rpc_get_methods(client, current=None, include_aliases=None):
     return client.call('rpc_get_methods', params)
 
 
+@deprecated_method
 def spdk_get_version(client):
     """Get SPDK version"""
     return client.call('spdk_get_version')

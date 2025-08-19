@@ -3,8 +3,10 @@
 #  All rights reserved.
 
 from .cmd_parser import *
+from spdk.rpc.helpers import deprecated_method
 
 
+@deprecated_method
 def nvmf_set_max_subsystems(client,
                             max_subsystems=None):
     """Set NVMe-oF target options.
@@ -21,6 +23,7 @@ def nvmf_set_max_subsystems(client,
     return client.call('nvmf_set_max_subsystems', params)
 
 
+@deprecated_method
 def nvmf_set_config(client,
                     passthru_admin_cmds=None,
                     poll_groups_mask=None,
@@ -55,6 +58,7 @@ def nvmf_set_config(client,
     return client.call('nvmf_set_config', params)
 
 
+@deprecated_method
 def nvmf_create_target(client,
                        name,
                        max_subsystems=0,
@@ -78,6 +82,7 @@ def nvmf_create_target(client,
     return client.call("nvmf_create_target", params)
 
 
+@deprecated_method
 def nvmf_delete_target(client,
                        name):
     """Destroy an NVMe-oF Target.
@@ -94,6 +99,7 @@ def nvmf_delete_target(client,
     return client.call("nvmf_delete_target", params)
 
 
+@deprecated_method
 def nvmf_get_targets(client):
     """Get a list of all the NVMe-oF targets in this application
 
@@ -104,6 +110,7 @@ def nvmf_get_targets(client):
     return client.call("nvmf_get_targets")
 
 
+@deprecated_method
 def nvmf_create_transport(client, **params):
     """NVMf Transport Create options.
 
@@ -147,6 +154,7 @@ def nvmf_create_transport(client, **params):
     return client.call('nvmf_create_transport', params)
 
 
+@deprecated_method
 def nvmf_get_transports(client, trtype=None, tgt_name=None):
     """Get list of NVMe-oF transports.
     Args:
@@ -168,6 +176,7 @@ def nvmf_get_transports(client, trtype=None, tgt_name=None):
     return client.call('nvmf_get_transports', params)
 
 
+@deprecated_method
 def nvmf_get_subsystems(client, nqn=None, tgt_name=None):
     """Get list of NVMe-oF subsystems.
     Args:
@@ -189,6 +198,7 @@ def nvmf_get_subsystems(client, nqn=None, tgt_name=None):
     return client.call('nvmf_get_subsystems', params)
 
 
+@deprecated_method
 def nvmf_create_subsystem(client,
                           nqn,
                           serial_number,
@@ -262,6 +272,7 @@ def nvmf_create_subsystem(client,
     return client.call('nvmf_create_subsystem', params)
 
 
+@deprecated_method
 def nvmf_subsystem_add_listener(client, **params):
 
     """Add a new listen address to an NVMe-oF subsystem.
@@ -290,6 +301,7 @@ def nvmf_subsystem_add_listener(client, **params):
     return client.call('nvmf_subsystem_add_listener', params)
 
 
+@deprecated_method
 def nvmf_subsystem_remove_listener(
         client,
         nqn,
@@ -333,6 +345,7 @@ def nvmf_subsystem_remove_listener(
     return client.call('nvmf_subsystem_remove_listener', params)
 
 
+@deprecated_method
 def nvmf_subsystem_listener_set_ana_state(
         client,
         nqn,
@@ -379,6 +392,7 @@ def nvmf_subsystem_listener_set_ana_state(
     return client.call('nvmf_subsystem_listener_set_ana_state', params)
 
 
+@deprecated_method
 def nvmf_discovery_add_referral(client, **params):
 
     """Add a discovery service referral
@@ -408,6 +422,7 @@ def nvmf_discovery_add_referral(client, **params):
     return client.call('nvmf_discovery_add_referral', params)
 
 
+@deprecated_method
 def nvmf_discovery_remove_referral(
         client,
         trtype,
@@ -451,6 +466,7 @@ def nvmf_discovery_remove_referral(
     return client.call('nvmf_discovery_remove_referral', params)
 
 
+@deprecated_method
 def nvmf_discovery_get_referrals(client, tgt_name=None):
     """Get list of referrals of an NVMe-oF target.
 
@@ -468,6 +484,7 @@ def nvmf_discovery_get_referrals(client, tgt_name=None):
     return client.call('nvmf_discovery_get_referrals', params)
 
 
+@deprecated_method
 def nvmf_subsystem_add_ns(client, **params):
     """Add a namespace to a subsystem.
 
@@ -498,6 +515,7 @@ def nvmf_subsystem_add_ns(client, **params):
     return client.call('nvmf_subsystem_add_ns', params)
 
 
+@deprecated_method
 def nvmf_subsystem_set_ns_ana_group(client, nqn, nsid, anagrpid, tgt_name=None):
     """Change ANA group ID of a namespace.
 
@@ -520,6 +538,7 @@ def nvmf_subsystem_set_ns_ana_group(client, nqn, nsid, anagrpid, tgt_name=None):
     return client.call('nvmf_subsystem_set_ns_ana_group', params)
 
 
+@deprecated_method
 def nvmf_subsystem_remove_ns(client, nqn, nsid, tgt_name=None):
     """Remove a existing namespace from a subsystem.
 
@@ -540,6 +559,7 @@ def nvmf_subsystem_remove_ns(client, nqn, nsid, tgt_name=None):
     return client.call('nvmf_subsystem_remove_ns', params)
 
 
+@deprecated_method
 def nvmf_ns_visible(visible, client, nqn, nsid, host, tgt_name=None):
     """Set visibility of namespace for a host's controllers
 
@@ -565,6 +585,7 @@ def nvmf_ns_visible(visible, client, nqn, nsid, host, tgt_name=None):
         return client.call('nvmf_ns_remove_host', params)
 
 
+@deprecated_method
 def nvmf_subsystem_add_host(client, nqn, host, tgt_name=None, psk=None, dhchap_key=None,
                             dhchap_ctrlr_key=None):
     """Add a host NQN to the list of allowed hosts.
@@ -595,6 +616,7 @@ def nvmf_subsystem_add_host(client, nqn, host, tgt_name=None, psk=None, dhchap_k
     return client.call('nvmf_subsystem_add_host', params)
 
 
+@deprecated_method
 def nvmf_subsystem_remove_host(client, nqn, host, tgt_name=None):
     """Remove a host NQN from the list of allowed hosts.
 
@@ -615,6 +637,7 @@ def nvmf_subsystem_remove_host(client, nqn, host, tgt_name=None):
     return client.call('nvmf_subsystem_remove_host', params)
 
 
+@deprecated_method
 def nvmf_subsystem_set_keys(client, nqn, host, tgt_name=None,
                             dhchap_key=None, dhchap_ctrlr_key=None):
     """Set keys required for a host to connect to a given subsystem.
@@ -640,6 +663,7 @@ def nvmf_subsystem_set_keys(client, nqn, host, tgt_name=None,
     return client.call('nvmf_subsystem_set_keys', params)
 
 
+@deprecated_method
 def nvmf_subsystem_allow_any_host(client, nqn, disable, tgt_name=None):
     """Configure a subsystem to allow any host to connect or to enforce the host NQN list.
 
@@ -659,6 +683,7 @@ def nvmf_subsystem_allow_any_host(client, nqn, disable, tgt_name=None):
     return client.call('nvmf_subsystem_allow_any_host', params)
 
 
+@deprecated_method
 def nvmf_delete_subsystem(client, nqn, tgt_name=None):
     """Delete an existing NVMe-oF subsystem.
 
@@ -677,6 +702,7 @@ def nvmf_delete_subsystem(client, nqn, tgt_name=None):
     return client.call('nvmf_delete_subsystem', params)
 
 
+@deprecated_method
 def nvmf_subsystem_get_controllers(client, nqn, tgt_name=None):
     """Get list of controllers of an NVMe-oF subsystem.
 
@@ -695,6 +721,7 @@ def nvmf_subsystem_get_controllers(client, nqn, tgt_name=None):
     return client.call('nvmf_subsystem_get_controllers', params)
 
 
+@deprecated_method
 def nvmf_subsystem_get_qpairs(client, nqn, tgt_name=None):
     """Get list of queue pairs of an NVMe-oF subsystem.
 
@@ -713,6 +740,7 @@ def nvmf_subsystem_get_qpairs(client, nqn, tgt_name=None):
     return client.call('nvmf_subsystem_get_qpairs', params)
 
 
+@deprecated_method
 def nvmf_subsystem_get_listeners(client, nqn, tgt_name=None):
     """Get list of listeners of an NVMe-oF subsystem.
 
@@ -731,6 +759,7 @@ def nvmf_subsystem_get_listeners(client, nqn, tgt_name=None):
     return client.call('nvmf_subsystem_get_listeners', params)
 
 
+@deprecated_method
 def nvmf_get_stats(client, tgt_name=None):
     """Query NVMf statistics.
 
@@ -751,6 +780,7 @@ def nvmf_get_stats(client, tgt_name=None):
     return client.call('nvmf_get_stats', params)
 
 
+@deprecated_method
 def nvmf_set_crdt(client, crdt1=None, crdt2=None, crdt3=None):
     """Set the 3 crdt (Command Retry Delay Time) values
 
@@ -773,6 +803,7 @@ def nvmf_set_crdt(client, crdt1=None, crdt2=None, crdt3=None):
     return client.call('nvmf_set_crdt', params)
 
 
+@deprecated_method
 def nvmf_publish_mdns_prr(client, tgt_name=None):
     """Publish mdns pull registration request
 
@@ -789,6 +820,7 @@ def nvmf_publish_mdns_prr(client, tgt_name=None):
     return client.call('nvmf_publish_mdns_prr', params)
 
 
+@deprecated_method
 def nvmf_stop_mdns_prr(client, tgt_name=None):
     """Stop publishing mdns pull registration request
 

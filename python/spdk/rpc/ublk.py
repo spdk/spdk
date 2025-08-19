@@ -2,7 +2,10 @@
 #  Copyright (C) 2022 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def ublk_create_target(client, cpumask=None, disable_user_copy=None):
     params = {}
     if cpumask:
@@ -12,10 +15,12 @@ def ublk_create_target(client, cpumask=None, disable_user_copy=None):
     return client.call('ublk_create_target', params)
 
 
+@deprecated_method
 def ublk_destroy_target(client):
     return client.call('ublk_destroy_target')
 
 
+@deprecated_method
 def ublk_start_disk(client, bdev_name, ublk_id=1, num_queues=1, queue_depth=128):
     params = {
         'bdev_name': bdev_name,
@@ -28,11 +33,13 @@ def ublk_start_disk(client, bdev_name, ublk_id=1, num_queues=1, queue_depth=128)
     return client.call('ublk_start_disk', params)
 
 
+@deprecated_method
 def ublk_stop_disk(client, ublk_id=1):
     params = {'ublk_id': ublk_id}
     return client.call('ublk_stop_disk', params)
 
 
+@deprecated_method
 def ublk_recover_disk(client, bdev_name, ublk_id):
     params = {
         'bdev_name': bdev_name,
@@ -41,6 +48,7 @@ def ublk_recover_disk(client, bdev_name, ublk_id):
     return client.call('ublk_recover_disk', params)
 
 
+@deprecated_method
 def ublk_get_disks(client, ublk_id=1):
     params = {}
     if ublk_id is not None:

@@ -2,7 +2,10 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def trace_enable_tpoint_group(client, name):
     """Enable trace on a specific tpoint group.
 
@@ -13,6 +16,7 @@ def trace_enable_tpoint_group(client, name):
     return client.call('trace_enable_tpoint_group', params)
 
 
+@deprecated_method
 def trace_disable_tpoint_group(client, name):
     """Disable trace on a specific tpoint group.
 
@@ -23,6 +27,7 @@ def trace_disable_tpoint_group(client, name):
     return client.call('trace_disable_tpoint_group', params)
 
 
+@deprecated_method
 def trace_set_tpoint_mask(client, name, tpoint_mask):
     """Enable tracepoint mask on a specific tpoint group.
 
@@ -35,6 +40,7 @@ def trace_set_tpoint_mask(client, name, tpoint_mask):
     return client.call('trace_set_tpoint_mask', params)
 
 
+@deprecated_method
 def trace_clear_tpoint_mask(client, name, tpoint_mask):
     """Disable tracepoint mask on a specific tpoint group.
 
@@ -47,6 +53,7 @@ def trace_clear_tpoint_mask(client, name, tpoint_mask):
     return client.call('trace_clear_tpoint_mask', params)
 
 
+@deprecated_method
 def trace_get_tpoint_group_mask(client):
     """Get trace point group mask
 
@@ -56,6 +63,7 @@ def trace_get_tpoint_group_mask(client):
     return client.call('trace_get_tpoint_group_mask')
 
 
+@deprecated_method
 def trace_get_info(client):
     """Get name of shared memory file and list of the available trace point groups
 

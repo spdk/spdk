@@ -2,7 +2,10 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def sock_impl_get_options(client, impl_name=None):
     """Get parameters for the socket layer implementation.
 
@@ -16,6 +19,7 @@ def sock_impl_get_options(client, impl_name=None):
     return client.call('sock_impl_get_options', params)
 
 
+@deprecated_method
 def sock_impl_set_options(client,
                           impl_name=None,
                           recv_buf_size=None,
@@ -70,6 +74,7 @@ def sock_impl_set_options(client,
     return client.call('sock_impl_set_options', params)
 
 
+@deprecated_method
 def sock_set_default_impl(client, impl_name=None):
     """Set the default socket implementation.
 
@@ -83,6 +88,7 @@ def sock_set_default_impl(client, impl_name=None):
     return client.call('sock_set_default_impl', params)
 
 
+@deprecated_method
 def sock_get_default_impl(client):
     "Get the default socket implementation name."
 

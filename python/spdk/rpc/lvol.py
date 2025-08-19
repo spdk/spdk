@@ -3,7 +3,10 @@
 #  All rights reserved.
 #  Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
+from spdk.rpc.helpers import deprecated_method
 
+
+@deprecated_method
 def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None,
                              clear_method=None, num_md_pages_per_cluster_ratio=None,
                              md_page_size=None):
@@ -32,6 +35,7 @@ def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None,
     return client.call('bdev_lvol_create_lvstore', params)
 
 
+@deprecated_method
 def bdev_lvol_rename_lvstore(client, old_name, new_name):
     """Rename a logical volume store.
 
@@ -46,6 +50,7 @@ def bdev_lvol_rename_lvstore(client, old_name, new_name):
     return client.call('bdev_lvol_rename_lvstore', params)
 
 
+@deprecated_method
 def bdev_lvol_grow_lvstore(client, uuid=None, lvs_name=None):
     """Grow the logical volume store to fill the underlying bdev
 
@@ -63,6 +68,7 @@ def bdev_lvol_grow_lvstore(client, uuid=None, lvs_name=None):
     return client.call('bdev_lvol_grow_lvstore', params)
 
 
+@deprecated_method
 def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
     """Create a logical volume on a logical volume store.
 
@@ -93,6 +99,7 @@ def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=
     return client.call('bdev_lvol_create', params)
 
 
+@deprecated_method
 def bdev_lvol_snapshot(client, lvol_name, snapshot_name):
     """Capture a snapshot of the current state of a logical volume.
 
@@ -110,6 +117,7 @@ def bdev_lvol_snapshot(client, lvol_name, snapshot_name):
     return client.call('bdev_lvol_snapshot', params)
 
 
+@deprecated_method
 def bdev_lvol_clone(client, snapshot_name, clone_name):
     """Create a logical volume based on a snapshot.
 
@@ -127,6 +135,7 @@ def bdev_lvol_clone(client, snapshot_name, clone_name):
     return client.call('bdev_lvol_clone', params)
 
 
+@deprecated_method
 def bdev_lvol_clone_bdev(client, bdev, lvs_name, clone_name):
     """Create a logical volume based on a snapshot.
 
@@ -151,6 +160,7 @@ def bdev_lvol_clone_bdev(client, bdev, lvs_name, clone_name):
     return client.call('bdev_lvol_clone_bdev', params)
 
 
+@deprecated_method
 def bdev_lvol_rename(client, old_name, new_name):
     """Rename a logical volume.
 
@@ -165,6 +175,7 @@ def bdev_lvol_rename(client, old_name, new_name):
     return client.call('bdev_lvol_rename', params)
 
 
+@deprecated_method
 def bdev_lvol_resize(client, name, size_in_mib):
     """Resize a logical volume.
 
@@ -179,6 +190,7 @@ def bdev_lvol_resize(client, name, size_in_mib):
     return client.call('bdev_lvol_resize', params)
 
 
+@deprecated_method
 def bdev_lvol_set_read_only(client, name):
     """Mark logical volume as read only.
 
@@ -191,6 +203,7 @@ def bdev_lvol_set_read_only(client, name):
     return client.call('bdev_lvol_set_read_only', params)
 
 
+@deprecated_method
 def bdev_lvol_delete(client, name):
     """Destroy a logical volume.
 
@@ -203,6 +216,7 @@ def bdev_lvol_delete(client, name):
     return client.call('bdev_lvol_delete', params)
 
 
+@deprecated_method
 def bdev_lvol_inflate(client, name):
     """Inflate a logical volume.
 
@@ -215,6 +229,7 @@ def bdev_lvol_inflate(client, name):
     return client.call('bdev_lvol_inflate', params)
 
 
+@deprecated_method
 def bdev_lvol_decouple_parent(client, name):
     """Decouple parent of a logical volume.
 
@@ -227,6 +242,7 @@ def bdev_lvol_decouple_parent(client, name):
     return client.call('bdev_lvol_decouple_parent', params)
 
 
+@deprecated_method
 def bdev_lvol_start_shallow_copy(client, src_lvol_name, dst_bdev_name):
     """Start a shallow copy of an lvol over a given bdev. The status of the operation
     can be obtained with bdev_lvol_check_shallow_copy
@@ -242,6 +258,7 @@ def bdev_lvol_start_shallow_copy(client, src_lvol_name, dst_bdev_name):
     return client.call('bdev_lvol_start_shallow_copy', params)
 
 
+@deprecated_method
 def bdev_lvol_check_shallow_copy(client, operation_id):
     """Get shallow copy status
 
@@ -254,6 +271,7 @@ def bdev_lvol_check_shallow_copy(client, operation_id):
     return client.call('bdev_lvol_check_shallow_copy', params)
 
 
+@deprecated_method
 def bdev_lvol_set_parent(client, lvol_name, parent_name):
     """Set the parent snapshot of a lvol
 
@@ -268,6 +286,7 @@ def bdev_lvol_set_parent(client, lvol_name, parent_name):
     return client.call('bdev_lvol_set_parent', params)
 
 
+@deprecated_method
 def bdev_lvol_set_parent_bdev(client, lvol_name, parent_name):
     """Set the parent external snapshot of a lvol
 
@@ -282,6 +301,7 @@ def bdev_lvol_set_parent_bdev(client, lvol_name, parent_name):
     return client.call('bdev_lvol_set_parent_bdev', params)
 
 
+@deprecated_method
 def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 
@@ -302,6 +322,7 @@ def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     return client.call('bdev_lvol_delete_lvstore', params)
 
 
+@deprecated_method
 def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
     """List logical volume stores.
 
@@ -322,6 +343,7 @@ def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
     return client.call('bdev_lvol_get_lvstores', params)
 
 
+@deprecated_method
 def bdev_lvol_get_lvols(client, lvs_uuid=None, lvs_name=None):
     """List logical volumes
 

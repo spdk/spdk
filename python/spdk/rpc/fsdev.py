@@ -3,8 +3,10 @@
 #  All rights reserved.
 
 import json
+from spdk.rpc.helpers import deprecated_method
 
 
+@deprecated_method
 def fsdev_get_opts(client):
     """Get fsdev subsystem opts.
 
@@ -14,6 +16,7 @@ def fsdev_get_opts(client):
     return client.call('fsdev_get_opts')
 
 
+@deprecated_method
 def fsdev_set_opts(client, fsdev_io_pool_size: int = None, fsdev_io_cache_size: int = None):
     """Set fsdev subsystem opts.
 
@@ -32,6 +35,7 @@ def fsdev_set_opts(client, fsdev_io_pool_size: int = None, fsdev_io_cache_size: 
     return client.call('fsdev_set_opts', params)
 
 
+@deprecated_method
 def fsdev_aio_create(client, name, root_path, enable_xattr: bool = None,
                      enable_writeback_cache: bool = None, max_write: int = None, skip_rw: bool = None):
     """Create a aio filesystem.
@@ -59,6 +63,7 @@ def fsdev_aio_create(client, name, root_path, enable_xattr: bool = None,
     return client.call('fsdev_aio_create', params)
 
 
+@deprecated_method
 def fsdev_aio_delete(client, name):
     """Delete a aio filesystem.
 

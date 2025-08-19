@@ -2,10 +2,11 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
-from spdk.rpc.helpers import deprecated_alias
+from spdk.rpc.helpers import deprecated_alias, deprecated_method
 
 
 @deprecated_alias('ioat_scan_accel_engine')
+@deprecated_method
 def ioat_scan_accel_module(client):
     """Enable IOAT accel module.
     """
