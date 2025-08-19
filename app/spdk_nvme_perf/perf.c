@@ -243,6 +243,7 @@ static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
 static int g_time_in_sec;
 static uint64_t g_number_ios;
+static int g_number_ios_percent;
 static uint64_t g_elapsed_time_in_usec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
@@ -1870,6 +1871,7 @@ usage(char *program_name)
 	printf("\t-i, --shmem-grp-id <id> shared memory group ID\n");
 	printf("\t-d, --number-ios <val> number of I/O to perform per thread on each namespace. Note: this is additional exit criteria.\n");
 	printf("\t\t(default: 0 - unlimited)\n");
+	printf("\t\tYou may also specify an integer percent of the namespace size as <N>%% (e.g. -d 50%% for 50%% of the namespace size)\n");
 	printf("\t-e, --metadata <fmt> metadata configuration\n");
 	printf("\t\t Keys:\n");
 	printf("\t\t  PRACT      Protection Information Action bit (PRACT=1 or PRACT=0)\n");
@@ -2408,6 +2410,20 @@ static const struct option g_perf_cmdline_opts[] = {
 };
 
 static int
+parse_percent(const char *arg)
+{
+	char *endptr;
+	int percent = strtol(arg, &endptr, 10);
+
+	/* Allow percent values greater than 100 for preconditioning and extended testing */
+	if (endptr == arg || percent < 1 || *endptr != '%') {
+		return -1;
+	}
+
+	return percent;
+}
+
+static int
 parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
@@ -2479,6 +2495,15 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_NUMBER_IOS:
 		case PERF_IO_DEPTH:
 		case PERF_IO_QUEUE_SIZE:
+			if (op == PERF_NUMBER_IOS && strchr(optarg, '%')) {
+				/* Handle percent input for number-ios */
+				g_number_ios_percent = parse_percent(optarg);
+				if (g_number_ios_percent < 0) {
+					fprintf(stderr, "Invalid percent value for --number-ios: %s\n", optarg);
+					return 1;
+				}
+				break;
+			}
 			rc = spdk_parse_capacity(optarg, &val_u64, NULL);
 			if (rc != 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -2789,8 +2814,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		perf_set_sock_opts(g_sock_threshold_impl, "zerocopy_threshold", g_sock_zcopy_threshold, NULL);
 	}
 
-	if (g_number_ios && g_warmup_time_in_sec) {
-		fprintf(stderr, "-d (--number-ios) with -a (--warmup-time) is not supported\n");
+	if ((g_number_ios || g_number_ios_percent) && g_warmup_time_in_sec) {
+		fprintf(stderr,
+			"-d (--number-ios) with -a (--warmup-time) is not supported\n");
 		return 1;
 	}
 
@@ -3011,7 +3037,13 @@ allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
 	ns_ctx->stats.min_tsc = UINT64_MAX;
 	ns_ctx->entry = entry;
 	ns_ctx->histogram = spdk_histogram_data_alloc();
-	ns_ctx->number_ios = g_number_ios;
+	if (g_number_ios_percent > 0) {
+		ns_ctx->number_ios = entry->size_in_ios * g_number_ios_percent / 100;
+		printf("number_ios for namespace %s set to %lu (%d%% of namespace size)\n",
+		       entry->name, ns_ctx->number_ios, g_number_ios_percent);
+	} else {
+		ns_ctx->number_ios = g_number_ios;
+	}
 	TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
 
 	return 0;
