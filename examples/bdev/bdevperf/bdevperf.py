@@ -17,8 +17,7 @@ except ImportError:
 
 try:
     sys.path.append(os.path.dirname(__file__) + '/../../../python')
-    from spdk.rpc.client import print_dict, JSONRPCException  # noqa
-    import spdk.rpc as rpc  # noqa
+    from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException  # noqa
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
     print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
@@ -102,7 +101,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.time_in_sec is not None:
         args.timeout = max(float(args.time_in_sec + 5), args.timeout)
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+    args.client = JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
         call_rpc_func(args)
     elif sys.stdin.isatty():

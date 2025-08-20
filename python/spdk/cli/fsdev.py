@@ -6,21 +6,20 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def fsdev_get_opts(args):
-        print_json(rpc.fsdev.fsdev_get_opts(args.client))
+        print_json(args.client.fsdev_get_opts())
 
     p = subparsers.add_parser('fsdev_get_opts', help='Get the fsdev subsystem options')
     p.set_defaults(func=fsdev_get_opts)
 
     def fsdev_set_opts(args):
-        print(rpc.fsdev.fsdev_set_opts(args.client, fsdev_io_pool_size=args.fsdev_io_pool_size,
-                                       fsdev_io_cache_size=args.fsdev_io_cache_size))
+        print(args.client.fsdev_set_opts(fsdev_io_pool_size=args.fsdev_io_pool_size,
+                                         fsdev_io_cache_size=args.fsdev_io_cache_size))
 
     p = subparsers.add_parser('fsdev_set_opts', help='Set the fsdev subsystem options')
     p.add_argument('fsdev-io-pool-size', help='Size of fsdev IO objects pool', type=int)
@@ -28,9 +27,9 @@ def add_parser(subparsers):
     p.set_defaults(func=fsdev_set_opts)
 
     def fsdev_aio_create(args):
-        print(rpc.fsdev.fsdev_aio_create(args.client, name=args.name, root_path=args.root_path,
-                                         enable_xattr=args.enable_xattr, enable_writeback_cache=args.enable_writeback_cache,
-                                         max_write=args.max_write, skip_rw=args.skip_rw))
+        print(args.client.fsdev_aio_create(name=args.name, root_path=args.root_path,
+                                           enable_xattr=args.enable_xattr, enable_writeback_cache=args.enable_writeback_cache,
+                                           max_write=args.max_write, skip_rw=args.skip_rw))
 
     p = subparsers.add_parser('fsdev_aio_create', help='Create a aio filesystem')
     p.add_argument('name', help='Filesystem name. Example: aio0.')
@@ -53,7 +52,7 @@ def add_parser(subparsers):
     p.set_defaults(func=fsdev_aio_create)
 
     def fsdev_aio_delete(args):
-        print(rpc.fsdev.fsdev_aio_delete(args.client, name=args.name))
+        print(args.client.fsdev_aio_delete(name=args.name))
 
     p = subparsers.add_parser('fsdev_aio_delete', help='Delete a aio filesystem')
     p.add_argument('name', help='Filesystem name. Example: aio0.')

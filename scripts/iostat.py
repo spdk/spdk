@@ -12,7 +12,7 @@ import time
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
-import spdk.rpc as rpc  # noqa
+from spdk.rpc.client import JSONRPCClient  # noqa
 
 
 SPDK_CPU_STAT = "/proc/stat"
@@ -340,10 +340,6 @@ def read_bdev_stat(last_stat, stat, mb, use_upt, ext_info):
     return bdev_stats
 
 
-def get_bdev_stat(client, name):
-    return rpc.bdev.bdev_get_iostat(client, name=name)
-
-
 def io_stat_display(args, cpu_info, stat):
     if args.cpu_stat and not args.bdev_stat:
         _cpu_info = get_cpu_stat()
@@ -351,7 +347,7 @@ def io_stat_display(args, cpu_info, stat):
         return _cpu_info, None
 
     if args.bdev_stat and not args.cpu_stat:
-        _stat = get_bdev_stat(args.client, args.name)
+        _stat = args.client.bdev_get_iostat(name=args.name)
         bdev_stats = read_bdev_stat(
             stat, _stat, args.mb_display, args.use_uptime, args.extended_display)
         return None, bdev_stats
@@ -359,7 +355,7 @@ def io_stat_display(args, cpu_info, stat):
     _cpu_info = get_cpu_stat()
     read_cpu_stat(cpu_info, _cpu_info)
 
-    _stat = get_bdev_stat(args.client, args.name)
+    _stat = args.client.bdev_get_iostat(name=args.name)
     bdev_stats = read_bdev_stat(stat, _stat, args.mb_display, args.use_uptime, args.extended_display)
     return _cpu_info, bdev_stats
 
@@ -367,7 +363,7 @@ def io_stat_display(args, cpu_info, stat):
 def io_stat_display_loop(args):
     interval = args.interval
     time_in_second = args.time_in_second
-    args.client = rpc.client.JSONRPCClient(
+    args.client = JSONRPCClient(
         args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
 
     last_cpu_stat = None

@@ -6,14 +6,13 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def trace_enable_tpoint_group(args):
-        rpc.trace.trace_enable_tpoint_group(args.client, name=args.name)
+        args.client.trace_enable_tpoint_group(name=args.name)
 
     p = subparsers.add_parser('trace_enable_tpoint_group',
                               help='enable trace on a specific tpoint group')
@@ -23,7 +22,7 @@ def add_parser(subparsers):
     p.set_defaults(func=trace_enable_tpoint_group)
 
     def trace_disable_tpoint_group(args):
-        rpc.trace.trace_disable_tpoint_group(args.client, name=args.name)
+        args.client.trace_disable_tpoint_group(name=args.name)
 
     p = subparsers.add_parser('trace_disable_tpoint_group',
                               help='disable trace on a specific tpoint group')
@@ -33,7 +32,7 @@ def add_parser(subparsers):
     p.set_defaults(func=trace_disable_tpoint_group)
 
     def trace_set_tpoint_mask(args):
-        rpc.trace.trace_set_tpoint_mask(args.client, name=args.name, tpoint_mask=args.tpoint_mask)
+        args.client.trace_set_tpoint_mask(name=args.name, tpoint_mask=args.tpoint_mask)
 
     p = subparsers.add_parser('trace_set_tpoint_mask',
                               help='enable tracepoint mask on a specific tpoint group')
@@ -47,7 +46,7 @@ def add_parser(subparsers):
     p.set_defaults(func=trace_set_tpoint_mask)
 
     def trace_clear_tpoint_mask(args):
-        rpc.trace.trace_clear_tpoint_mask(args.client, name=args.name, tpoint_mask=args.tpoint_mask)
+        args.client.trace_clear_tpoint_mask(name=args.name, tpoint_mask=args.tpoint_mask)
 
     p = subparsers.add_parser('trace_clear_tpoint_mask',
                               help='disable tracepoint mask on a specific tpoint group')
@@ -61,13 +60,13 @@ def add_parser(subparsers):
     p.set_defaults(func=trace_clear_tpoint_mask)
 
     def trace_get_tpoint_group_mask(args):
-        print_dict(rpc.trace.trace_get_tpoint_group_mask(args.client))
+        print_dict(args.client.trace_get_tpoint_group_mask())
 
     p = subparsers.add_parser('trace_get_tpoint_group_mask', help='get trace point group mask')
     p.set_defaults(func=trace_get_tpoint_group_mask)
 
     def trace_get_info(args):
-        print_dict(rpc.trace.trace_get_info(args.client))
+        print_dict(args.client.trace_get_info())
 
     p = subparsers.add_parser('trace_get_info',
                               help='get name of shared memory file and list of the available trace point groups')

@@ -10,8 +10,7 @@ import sys
 import shlex
 
 try:
-    from spdk.rpc.client import print_dict, JSONRPCException
-    import spdk.rpc as rpc
+    from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
     print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
@@ -82,7 +81,7 @@ if __name__ == "__main__":
             call_rpc_func(args)
 
     args = parser.parse_args()
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+    args.client = JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
         call_rpc_func(args)
     elif sys.stdin.isatty():

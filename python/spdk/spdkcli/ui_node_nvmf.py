@@ -150,7 +150,7 @@ class UINVMfSubsystem(UINode):
         """
         disable = self.ui_eval_param(disable, "bool", None)
         self.get_root().nvmf_subsystem_allow_any_host(
-            nqn=self.subsystem.nqn, disable=disable)
+            nqn=self.subsystem.nqn, allow_any_host=False if disable else True)
 
     def summary(self):
         sn = None

@@ -16,9 +16,8 @@ import json
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 
-import spdk.rpc as rpc  # noqa
 import spdk.cli as cli  # noqa
-from spdk.rpc.client import print_dict, print_json, print_array, JSONRPCException  # noqa
+from spdk.rpc.client import print_dict, print_json, print_array, JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
 from spdk.rpc.helpers import deprecated_aliases  # noqa
 
 
@@ -186,10 +185,10 @@ def main():
 
             try:
                 if use_go_client:
-                    tmp_args.client = rpc.client.JSONRPCGoClient(tmp_args.server_addr,
-                                                                 log_level=getattr(logging, tmp_args.verbose.upper()))
+                    tmp_args.client = JSONRPCGoClient(tmp_args.server_addr,
+                                                      log_level=getattr(logging, tmp_args.verbose.upper()))
                 else:
-                    tmp_args.client = rpc.client.JSONRPCClient(
+                    tmp_args.client = JSONRPCClient(
                         tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
                         log_level=getattr(logging, tmp_args.verbose.upper()), conn_retries=tmp_args.conn_retries)
                 call_rpc_func(tmp_args)
@@ -206,16 +205,16 @@ def main():
         print_array = null_print
     elif args.go_client or use_go_client:
         try:
-            args.client = rpc.client.JSONRPCGoClient(args.server_addr,
-                                                     log_level=getattr(logging, args.verbose.upper()))
+            args.client = JSONRPCGoClient(args.server_addr,
+                                          log_level=getattr(logging, args.verbose.upper()))
         except JSONRPCException as ex:
             print(ex.message)
             exit(1)
     else:
         try:
-            args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout,
-                                                   log_level=getattr(logging, args.verbose.upper()),
-                                                   conn_retries=args.conn_retries)
+            args.client = JSONRPCClient(args.server_addr, args.port, args.timeout,
+                                        log_level=getattr(logging, args.verbose.upper()),
+                                        conn_retries=args.conn_retries)
         except JSONRPCException as ex:
             print(ex.message)
             exit(1)

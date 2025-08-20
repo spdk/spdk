@@ -4,11 +4,10 @@
 #  All rights reserved.
 #
 
-from spdk.rpc.client import print_dict, JSONRPCException
+from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
 
 import logging
 import argparse
-import spdk.rpc as rpc
 import sys
 import shlex
 
@@ -99,7 +98,7 @@ if __name__ == "__main__":
             call_rpc_func(args)
 
     args = parser.parse_args()
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+    args.client = JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
         call_rpc_func(args)
     elif sys.stdin.isatty():

@@ -6,15 +6,13 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def iscsi_set_options(args):
-        rpc.iscsi.iscsi_set_options(
-            args.client,
+        args.client.iscsi_set_options(
             auth_file=args.auth_file,
             node_base=args.node_base,
             nop_timeout=args.nop_timeout,
@@ -68,8 +66,7 @@ def add_parser(subparsers):
     p.set_defaults(func=iscsi_set_options)
 
     def iscsi_set_discovery_auth(args):
-        rpc.iscsi.iscsi_set_discovery_auth(
-            args.client,
+        args.client.iscsi_set_discovery_auth(
             disable_chap=args.disable_chap,
             require_chap=args.require_chap,
             mutual_chap=args.mutual_chap,
@@ -91,7 +88,7 @@ def add_parser(subparsers):
         if args.secrets:
             secrets = [dict(u.split(":") for u in a.split(" ")) for a in args.secrets.split(",")]
 
-        rpc.iscsi.iscsi_create_auth_group(args.client, tag=args.tag, secrets=secrets)
+        args.client.iscsi_create_auth_group(tag=args.tag, secrets=secrets)
 
     p = subparsers.add_parser('iscsi_create_auth_group',
                               help='Create authentication group for CHAP authentication.')
@@ -102,7 +99,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_create_auth_group)
 
     def iscsi_delete_auth_group(args):
-        rpc.iscsi.iscsi_delete_auth_group(args.client, tag=args.tag)
+        args.client.iscsi_delete_auth_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_auth_group',
                               help='Delete an authentication group.')
@@ -110,8 +107,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_delete_auth_group)
 
     def iscsi_auth_group_add_secret(args):
-        rpc.iscsi.iscsi_auth_group_add_secret(
-            args.client,
+        args.client.iscsi_auth_group_add_secret(
             tag=args.tag,
             user=args.user,
             secret=args.secret,
@@ -128,7 +124,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_auth_group_add_secret)
 
     def iscsi_auth_group_remove_secret(args):
-        rpc.iscsi.iscsi_auth_group_remove_secret(args.client, tag=args.tag, user=args.user)
+        args.client.iscsi_auth_group_remove_secret(tag=args.tag, user=args.user)
 
     p = subparsers.add_parser('iscsi_auth_group_remove_secret',
                               help='Remove a secret from an authentication group.')
@@ -137,33 +133,33 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_auth_group_remove_secret)
 
     def iscsi_get_auth_groups(args):
-        print_dict(rpc.iscsi.iscsi_get_auth_groups(args.client))
+        print_dict(args.client.iscsi_get_auth_groups())
 
     p = subparsers.add_parser('iscsi_get_auth_groups',
                               help='Display current authentication group configuration')
     p.set_defaults(func=iscsi_get_auth_groups)
 
     def iscsi_get_portal_groups(args):
-        print_dict(rpc.iscsi.iscsi_get_portal_groups(args.client))
+        print_dict(args.client.iscsi_get_portal_groups())
 
     p = subparsers.add_parser('iscsi_get_portal_groups', help='Display current portal group configuration')
     p.set_defaults(func=iscsi_get_portal_groups)
 
     def iscsi_get_initiator_groups(args):
-        print_dict(rpc.iscsi.iscsi_get_initiator_groups(args.client))
+        print_dict(args.client.iscsi_get_initiator_groups())
 
     p = subparsers.add_parser('iscsi_get_initiator_groups',
                               help='Display current initiator group configuration')
     p.set_defaults(func=iscsi_get_initiator_groups)
 
     def iscsi_get_target_nodes(args):
-        print_dict(rpc.iscsi.iscsi_get_target_nodes(args.client))
+        print_dict(args.client.iscsi_get_target_nodes())
 
     p = subparsers.add_parser('iscsi_get_target_nodes', help='Display target nodes')
     p.set_defaults(func=iscsi_get_target_nodes)
 
     def iscsi_enable_histogram(args):
-        rpc.iscsi.iscsi_enable_histogram(args.client, name=args.name, enable=args.enable)
+        args.client.iscsi_enable_histogram(name=args.name, enable=args.enable)
 
     p = subparsers.add_parser('iscsi_enable_histogram',
                               help='Enable or disable histogram for specified iscsi target')
@@ -173,7 +169,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_enable_histogram)
 
     def iscsi_get_histogram(args):
-        print_dict(rpc.iscsi.iscsi_get_histogram(args.client, name=args.name))
+        print_dict(args.client.iscsi_get_histogram(name=args.name))
 
     p = subparsers.add_parser('iscsi_get_histogram',
                               help='Get histogram for specified iscsi target')
@@ -191,8 +187,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
 
-        rpc.iscsi.iscsi_create_target_node(
-            args.client,
+        args.client.iscsi_create_target_node(
             luns=luns,
             pg_ig_maps=pg_ig_maps,
             name=args.name,
@@ -235,8 +230,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_create_target_node)
 
     def iscsi_target_node_add_lun(args):
-        rpc.iscsi.iscsi_target_node_add_lun(
-            args.client,
+        args.client.iscsi_target_node_add_lun(
             name=args.name,
             bdev_name=args.bdev_name,
             lun_id=args.lun_id)
@@ -251,8 +245,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_target_node_add_lun)
 
     def iscsi_target_node_set_auth(args):
-        rpc.iscsi.iscsi_target_node_set_auth(
-            args.client,
+        args.client.iscsi_target_node_set_auth(
             name=args.name,
             chap_group=args.chap_group,
             disable_chap=args.disable_chap,
@@ -277,8 +270,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         for u in args.pg_ig_mappings.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
-        rpc.iscsi.iscsi_target_node_add_pg_ig_maps(
-            args.client,
+        args.client.iscsi_target_node_add_pg_ig_maps(
             pg_ig_maps=pg_ig_maps,
             name=args.name)
 
@@ -297,8 +289,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         for u in args.pg_ig_mappings.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
-        rpc.iscsi.iscsi_target_node_remove_pg_ig_maps(
-            args.client, pg_ig_maps=pg_ig_maps, name=args.name)
+        args.client.iscsi_target_node_remove_pg_ig_maps(
+             pg_ig_maps=pg_ig_maps, name=args.name)
 
     p = subparsers.add_parser('iscsi_target_node_remove_pg_ig_maps',
                               help='Delete PG-IG maps from the target node')
@@ -311,8 +303,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_target_node_remove_pg_ig_maps)
 
     def iscsi_target_node_set_redirect(args):
-        rpc.iscsi.iscsi_target_node_set_redirect(
-            args.client,
+        args.client.iscsi_target_node_set_redirect(
             name=args.name,
             pg_tag=args.pg_tag,
             redirect_host=args.redirect_host,
@@ -328,8 +319,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_target_node_set_redirect)
 
     def iscsi_target_node_request_logout(args):
-        rpc.iscsi.iscsi_target_node_request_logout(
-            args.client,
+        args.client.iscsi_target_node_request_logout(
             name=args.name,
             pg_tag=args.pg_tag)
 
@@ -353,8 +343,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 cpumask = split_port_cpumask[1]
                 portals.append({'host': ip, 'port': port})
                 print("WARNING: Specifying a portal group with a CPU mask is no longer supported. Ignoring it.")
-        rpc.iscsi.iscsi_create_portal_group(
-            args.client,
+        args.client.iscsi_create_portal_group(
             portals=portals,
             tag=args.tag,
             private=args.private,
@@ -376,7 +365,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_create_portal_group)
 
     def iscsi_start_portal_group(args):
-        rpc.iscsi.iscsi_start_portal_group(args.client, tag=args.tag)
+        args.client.iscsi_start_portal_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_start_portal_group',
                               help='Start listening on portals if it is not started yet.')
@@ -391,8 +380,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             initiators.append(i)
         for n in args.netmask_list.strip().split(' '):
             netmasks.append(n)
-        rpc.iscsi.iscsi_create_initiator_group(
-            args.client,
+        args.client.iscsi_create_initiator_group(
             tag=args.tag,
             initiators=initiators,
             netmasks=netmasks)
@@ -418,8 +406,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             netmasks = []
             for n in args.netmask_list.strip().split(' '):
                 netmasks.append(n)
-        rpc.iscsi.iscsi_initiator_group_add_initiators(
-            args.client,
+        args.client.iscsi_initiator_group_add_initiators(
             tag=args.tag,
             initiators=initiators,
             netmasks=netmasks)
@@ -446,8 +433,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             netmasks = []
             for n in args.netmask_list.strip().split(' '):
                 netmasks.append(n)
-        rpc.iscsi.iscsi_initiator_group_remove_initiators(
-            args.client,
+        args.client.iscsi_initiator_group_remove_initiators(
             tag=args.tag,
             initiators=initiators,
             netmasks=netmasks)
@@ -464,8 +450,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
 
     def iscsi_delete_target_node(args):
-        rpc.iscsi.iscsi_delete_target_node(
-            args.client, target_node_name=args.target_node_name)
+        args.client.iscsi_delete_target_node(
+             target_node_name=args.target_node_name)
 
     p = subparsers.add_parser('iscsi_delete_target_node',
                               help='Delete a target node')
@@ -474,7 +460,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_delete_target_node)
 
     def iscsi_delete_portal_group(args):
-        rpc.iscsi.iscsi_delete_portal_group(args.client, tag=args.tag)
+        args.client.iscsi_delete_portal_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_portal_group',
                               help='Delete a portal group')
@@ -483,7 +469,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_delete_portal_group)
 
     def iscsi_delete_initiator_group(args):
-        rpc.iscsi.iscsi_delete_initiator_group(args.client, tag=args.tag)
+        args.client.iscsi_delete_initiator_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_initiator_group',
                               help='Delete an initiator group')
@@ -492,8 +478,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_delete_initiator_group)
 
     def iscsi_portal_group_set_auth(args):
-        rpc.iscsi.iscsi_portal_group_set_auth(
-            args.client,
+        args.client.iscsi_portal_group_set_auth(
             tag=args.tag,
             chap_group=args.chap_group,
             disable_chap=args.disable_chap,
@@ -514,28 +499,28 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_portal_group_set_auth)
 
     def iscsi_get_connections(args):
-        print_dict(rpc.iscsi.iscsi_get_connections(args.client))
+        print_dict(args.client.iscsi_get_connections())
 
     p = subparsers.add_parser('iscsi_get_connections',
                               help='Display iSCSI connections')
     p.set_defaults(func=iscsi_get_connections)
 
     def iscsi_get_stats(args):
-        print_dict(rpc.iscsi.iscsi_get_stats(args.client))
+        print_dict(args.client.iscsi_get_stats())
 
     p = subparsers.add_parser('iscsi_get_stats',
                               help='Display stat information of iSCSI connections.')
     p.set_defaults(func=iscsi_get_stats)
 
     def iscsi_get_options(args):
-        print_dict(rpc.iscsi.iscsi_get_options(args.client))
+        print_dict(args.client.iscsi_get_options())
 
     p = subparsers.add_parser('iscsi_get_options',
                               help='Display iSCSI global parameters')
     p.set_defaults(func=iscsi_get_options)
 
     def scsi_get_devices(args):
-        print_dict(rpc.iscsi.scsi_get_devices(args.client))
+        print_dict(args.client.scsi_get_devices())
 
     p = subparsers.add_parser('scsi_get_devices', help='Display SCSI devices')
     p.set_defaults(func=scsi_get_devices)

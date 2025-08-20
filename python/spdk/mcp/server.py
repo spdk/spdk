@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Dell Inc, or its subsidiaries.  All rights reserved.
 
 import os
-from spdk import rpc
+from spdk.rpc import bdev
 from functools import partial
 from spdk.rpc.client import JSONRPCClient
 from mcp.server.fastmcp import FastMCP
@@ -17,11 +17,11 @@ client = JSONRPCClient(addr=os.getenv("SPDK_RPC_ADDRESS", default="/var/tmp/spdk
 @mcp.tool()
 def spdk_get_version() -> dict:
     """Get the SPDK version"""
-    return rpc.spdk_get_version(client)
+    return client.spdk_get_version()
 
 
 # TODO: make this a loop over all rpc.*, not just bdev
-bdev_functions = [y for x, y in rpc.bdev.__dict__.items() if x.startswith('bdev')]
+bdev_functions = [y for x, y in bdev.__dict__.items() if x.startswith('bdev')]
 
 # add all functions as tools to MCP server
 for func in bdev_functions:

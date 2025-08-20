@@ -6,11 +6,10 @@
 
 # Not for use in production. Please see the changelog for v19.10.
 
-from spdk.rpc.client import print_dict, JSONRPCException
+from spdk.rpc.client import print_dict, JSONRPCException, JSONRPCClient
 
 import logging
 import argparse
-import spdk.rpc as rpc
 import sys
 import shlex
 
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def nvmf_create_target(args):
-        print_dict(rpc.nvmf.nvmf_create_target(args.client,
+        print_dict(args.client.nvmf_create_target(
                                                name=args.name,
                                                max_subsystems=args.max_subsystems))
 
@@ -48,15 +47,14 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_create_target)
 
     def nvmf_delete_target(args):
-        print_dict(rpc.nvmf.nvmf_delete_target(args.client,
-                                               name=args.name))
+        print_dict(args.client.nvmf_delete_target(name=args.name))
 
     p = subparsers.add_parser('nvmf_delete_target', help='Destroy the given NVMe-oF Target')
     p.add_argument('-n', '--name', help='Target name (unique to application)', type=str, required=True)
     p.set_defaults(func=nvmf_delete_target)
 
     def nvmf_get_targets(args):
-        print_dict(rpc.nvmf.nvmf_get_targets(args.client))
+        print_dict(args.client.nvmf_get_targets())
 
     p = subparsers.add_parser('nvmf_get_targets', help='Get the list of NVMe-oF Targets')
     p.set_defaults(func=nvmf_get_targets)
@@ -77,7 +75,7 @@ if __name__ == "__main__":
             call_rpc_func(args)
 
     args = parser.parse_args()
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+    args.client = JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
         call_rpc_func(args)
     elif sys.stdin.isatty():

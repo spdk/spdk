@@ -6,15 +6,13 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def spdk_kill_instance(args):
-        rpc.app.spdk_kill_instance(args.client,
-                                   sig_name=args.sig_name)
+        args.client.spdk_kill_instance(sig_name=args.sig_name)
 
     p = subparsers.add_parser('spdk_kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
@@ -26,8 +24,7 @@ def add_parser(subparsers):
             enabled = True
         if args.disable:
             enabled = False
-        print_dict(rpc.app.framework_monitor_context_switch(args.client,
-                                                            enabled=enabled))
+        print_dict(args.client.framework_monitor_context_switch(enabled=enabled))
 
     p = subparsers.add_parser('framework_monitor_context_switch',
                               help='Control whether the context switch monitor is enabled')
@@ -36,14 +33,14 @@ def add_parser(subparsers):
     p.set_defaults(func=framework_monitor_context_switch)
 
     def framework_get_reactors(args):
-        print_dict(rpc.app.framework_get_reactors(args.client))
+        print_dict(args.client.framework_get_reactors())
 
     p = subparsers.add_parser(
         'framework_get_reactors', help='Display list of all reactors')
     p.set_defaults(func=framework_get_reactors)
 
     def framework_set_scheduler(args):
-        rpc.app.framework_set_scheduler(args.client,
+        args.client.framework_set_scheduler(
                                         name=args.name,
                                         period=args.period,
                                         load_limit=args.load_limit,
@@ -62,21 +59,21 @@ def add_parser(subparsers):
     p.set_defaults(func=framework_set_scheduler)
 
     def framework_get_scheduler(args):
-        print_dict(rpc.app.framework_get_scheduler(args.client))
+        print_dict(args.client.framework_get_scheduler())
 
     p = subparsers.add_parser(
         'framework_get_scheduler', help='Display currently set scheduler and its properties.')
     p.set_defaults(func=framework_get_scheduler)
 
     def framework_get_governor(args):
-        print_dict(rpc.app.framework_get_governor(args.client))
+        print_dict(args.client.framework_get_governor())
 
     p = subparsers.add_parser(
         'framework_get_governor', help='Display currently set governor and the available, set CPU frequencies.')
     p.set_defaults(func=framework_get_governor)
 
     def scheduler_set_options(args):
-        rpc.app.scheduler_set_options(args.client,
+        args.client.scheduler_set_options(
                                       isolated_core_mask=args.isolated_core_mask,
                                       scheduling_core=args.scheduling_core)
     p = subparsers.add_parser('scheduler_set_options', help='Set scheduler options')
@@ -86,14 +83,14 @@ def add_parser(subparsers):
     p.set_defaults(func=scheduler_set_options)
 
     def framework_disable_cpumask_locks(args):
-        rpc.framework_disable_cpumask_locks(args.client)
+        args.client.framework_disable_cpumask_locks()
 
     p = subparsers.add_parser('framework_disable_cpumask_locks',
                               help='Disable CPU core lock files.')
     p.set_defaults(func=framework_disable_cpumask_locks)
 
     def framework_enable_cpumask_locks(args):
-        rpc.framework_enable_cpumask_locks(args.client)
+        args.client.framework_enable_cpumask_locks()
 
     p = subparsers.add_parser('framework_enable_cpumask_locks',
                               help='Enable CPU core lock files.')

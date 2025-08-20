@@ -13,19 +13,19 @@ from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 def add_parser(subparsers):
 
     def framework_start_init(args):
-        rpc.framework_start_init(args.client)
+        args.client.framework_start_init()
 
     p = subparsers.add_parser('framework_start_init', help='Start initialization of subsystems')
     p.set_defaults(func=framework_start_init)
 
     def framework_wait_init(args):
-        rpc.framework_wait_init(args.client)
+        args.client.framework_wait_init()
 
     p = subparsers.add_parser('framework_wait_init', help='Block until subsystems have been initialized')
     p.set_defaults(func=framework_wait_init)
 
     def rpc_get_methods(args):
-        print_dict(rpc.rpc_get_methods(args.client,
+        print_dict(args.client.rpc_get_methods(
                                        current=args.current,
                                        include_aliases=args.include_aliases))
 
@@ -35,14 +35,14 @@ def add_parser(subparsers):
     p.set_defaults(func=rpc_get_methods)
 
     def spdk_get_version(args):
-        print_json(rpc.spdk_get_version(args.client))
+        print_json(args.client.spdk_get_version())
 
     p = subparsers.add_parser('spdk_get_version', help='Get SPDK version')
     p.set_defaults(func=spdk_get_version)
 
     def save_config(args):
         rpc.save_config(args.client,
-                        sys.stdout,
+                        fd=sys.stdout,
                         indent=args.indent,
                         subsystems=args.subsystems)
 
@@ -54,7 +54,8 @@ def add_parser(subparsers):
     p.set_defaults(func=save_config)
 
     def load_config(args):
-        rpc.load_config(args.client, args.json_conf,
+        rpc.load_config(args.client,
+                        fd=args.json_conf,
                         include_aliases=args.include_aliases)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC.""")
@@ -64,7 +65,7 @@ def add_parser(subparsers):
 
     def save_subsystem_config(args):
         rpc.save_subsystem_config(args.client,
-                                  sys.stdout,
+                                  fd=sys.stdout,
                                   indent=args.indent,
                                   name=args.name)
 
@@ -77,14 +78,14 @@ def add_parser(subparsers):
 
     def load_subsystem_config(args):
         rpc.load_subsystem_config(args.client,
-                                  args.json_conf)
+                                  fd=args.json_conf)
 
     p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC.""")
     p.add_argument('-j', '--json-conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_subsystem_config)
 
     def bdev_raid_set_options(args):
-        rpc.bdev.bdev_raid_set_options(args.client,
+        args.client.bdev_raid_set_options(
                                        process_window_size_kb=args.process_window_size_kb,
                                        process_max_bandwidth_mb_sec=args.process_max_bandwidth_mb_sec)
 
@@ -98,7 +99,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_raid_set_options)
 
     def bdev_raid_get_bdevs(args):
-        print_json(rpc.bdev.bdev_raid_get_bdevs(args.client,
+        print_json(args.client.bdev_raid_get_bdevs(
                                                 category=args.category))
 
     p = subparsers.add_parser('bdev_raid_get_bdevs',
@@ -115,7 +116,7 @@ def add_parser(subparsers):
         for u in args.base_bdevs.strip().split():
             base_bdevs.append(u)
 
-        rpc.bdev.bdev_raid_create(args.client,
+        args.client.bdev_raid_create(
                                   name=args.name,
                                   strip_size_kb=args.strip_size_kb,
                                   raid_level=args.raid_level,
@@ -133,14 +134,13 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_raid_create)
 
     def bdev_raid_delete(args):
-        rpc.bdev.bdev_raid_delete(args.client,
-                                  name=args.name)
+        args.client.bdev_raid_delete(name=args.name)
     p = subparsers.add_parser('bdev_raid_delete', help='Delete existing raid bdev')
     p.add_argument('name', help='raid bdev name')
     p.set_defaults(func=bdev_raid_delete)
 
     def bdev_raid_add_base_bdev(args):
-        rpc.bdev.bdev_raid_add_base_bdev(args.client,
+        args.client.bdev_raid_add_base_bdev(
                                          raid_bdev=args.raid_bdev,
                                          base_bdev=args.base_bdev)
     p = subparsers.add_parser('bdev_raid_add_base_bdev', help='Add base bdev to existing raid bdev')
@@ -149,15 +149,14 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_raid_add_base_bdev)
 
     def bdev_raid_remove_base_bdev(args):
-        rpc.bdev.bdev_raid_remove_base_bdev(args.client,
-                                            name=args.name)
+        args.client.bdev_raid_remove_base_bdev(name=args.name)
     p = subparsers.add_parser('bdev_raid_remove_base_bdev', help='Remove base bdev from existing raid bdev')
     p.add_argument('name', help='base bdev name')
     p.set_defaults(func=bdev_raid_remove_base_bdev)
 
     # split
     def bdev_split_create(args):
-        print_array(rpc.bdev.bdev_split_create(args.client,
+        print_array(args.client.bdev_split_create(
                                                base_bdev=args.base_bdev,
                                                split_count=args.split_count,
                                                split_size_mb=args.split_size_mb))
@@ -173,8 +172,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_split_create)
 
     def bdev_split_delete(args):
-        rpc.bdev.bdev_split_delete(args.client,
-                                   base_bdev=args.base_bdev)
+        args.client.bdev_split_delete(base_bdev=args.base_bdev)
 
     p = subparsers.add_parser('bdev_split_delete', help="""Delete split config with all created splits.""")
     p.add_argument('base_bdev', help='base bdev name')
@@ -182,7 +180,7 @@ def add_parser(subparsers):
 
     # ftl
     def bdev_ftl_create(args):
-        print_dict(rpc.bdev.bdev_ftl_create(args.client,
+        print_dict(args.client.bdev_ftl_create(
                                             name=args.name,
                                             base_bdev=args.base_bdev,
                                             uuid=args.uuid,
@@ -210,7 +208,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_create)
 
     def bdev_ftl_load(args):
-        print_dict(rpc.bdev.bdev_ftl_load(args.client,
+        print_dict(args.client.bdev_ftl_load(
                                           name=args.name,
                                           base_bdev=args.base_bdev,
                                           uuid=args.uuid,
@@ -237,7 +235,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_load)
 
     def bdev_ftl_unload(args):
-        print_dict(rpc.bdev.bdev_ftl_unload(args.client, name=args.name, fast_shutdown=args.fast_shutdown))
+        print_dict(args.client.bdev_ftl_unload(name=args.name, fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_unload', help='Unload FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
@@ -245,7 +243,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_unload)
 
     def bdev_ftl_delete(args):
-        print_dict(rpc.bdev.bdev_ftl_delete(args.client, name=args.name, fast_shutdown=args.fast_shutdown))
+        print_dict(args.client.bdev_ftl_delete(name=args.name, fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_delete', help='Delete FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
@@ -253,9 +251,9 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_delete)
 
     def bdev_ftl_unmap(args):
-        print_dict(rpc.bdev.bdev_ftl_unmap(args.client, name=args.name,
-                                           lba=args.lba,
-                                           num_blocks=args.num_blocks))
+        print_dict(args.client.bdev_ftl_unmap(name=args.name,
+                                              lba=args.lba,
+                                              num_blocks=args.num_blocks))
 
     p = subparsers.add_parser('bdev_ftl_unmap', help='FTL unmap')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
@@ -264,21 +262,21 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_unmap)
 
     def bdev_ftl_get_stats(args):
-        print_dict(rpc.bdev.bdev_ftl_get_stats(args.client, name=args.name))
+        print_dict(args.client.bdev_ftl_get_stats(name=args.name))
 
     p = subparsers.add_parser('bdev_ftl_get_stats', help='print ftl stats')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.set_defaults(func=bdev_ftl_get_stats)
 
     def bdev_ftl_get_properties(args):
-        print_dict(rpc.bdev.bdev_ftl_get_properties(args.client, name=args.name))
+        print_dict(args.client.bdev_ftl_get_properties(name=args.name))
 
     p = subparsers.add_parser('bdev_ftl_get_properties', help='Print FTL properties')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.set_defaults(func=bdev_ftl_get_properties)
 
     def bdev_ftl_set_property(args):
-        print_dict(rpc.bdev.bdev_ftl_set_property(args.client, name=args.name,
+        print_dict(args.client.bdev_ftl_set_property(name=args.name,
                    ftl_property=args.property,
                    value=args.value))
 
@@ -290,7 +288,7 @@ def add_parser(subparsers):
 
     # subsystem
     def framework_get_subsystems(args):
-        print_dict(rpc.subsystem.framework_get_subsystems(args.client))
+        print_dict(args.client.framework_get_subsystems())
 
     p = subparsers.add_parser('framework_get_subsystems',
                               help="""Print subsystems array in initialization order. Each subsystem
@@ -298,7 +296,7 @@ def add_parser(subparsers):
     p.set_defaults(func=framework_get_subsystems)
 
     def framework_get_config(args):
-        print_dict(rpc.subsystem.framework_get_config(args.client, args.name))
+        print_dict(args.client.framework_get_config(name=args.name))
 
     p = subparsers.add_parser('framework_get_config', help="""Print subsystem configuration""")
     p.add_argument('name', help='Name of subsystem to query')
@@ -306,7 +304,7 @@ def add_parser(subparsers):
 
     # ioat
     def ioat_scan_accel_module(args):
-        rpc.ioat.ioat_scan_accel_module(args.client)
+        args.client.ioat_scan_accel_module()
 
     p = subparsers.add_parser('ioat_scan_accel_module', aliases=['ioat_scan_accel_engine'],
                               help='Enable IOAT accel module offload.')
@@ -314,7 +312,7 @@ def add_parser(subparsers):
 
     # dpdk compressdev
     def compressdev_scan_accel_module(args):
-        rpc.compressdev.compressdev_scan_accel_module(args.client, pmd=args.pmd)
+        args.client.compressdev_scan_accel_module(pmd=args.pmd)
 
     p = subparsers.add_parser('compressdev_scan_accel_module', help='Scan and enable compressdev module and set pmd option.')
     p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only')
@@ -322,7 +320,7 @@ def add_parser(subparsers):
 
     # dsa
     def dsa_scan_accel_module(args):
-        rpc.dsa.dsa_scan_accel_module(args.client, config_kernel_mode=args.config_kernel_mode)
+        args.client.dsa_scan_accel_module(config_kernel_mode=args.config_kernel_mode)
 
     p = subparsers.add_parser('dsa_scan_accel_module', aliases=['dsa_scan_accel_engine'],
                               help='Set config and enable dsa accel module offload.')
@@ -332,22 +330,21 @@ def add_parser(subparsers):
 
     # iaa
     def iaa_scan_accel_module(args):
-        rpc.iaa.iaa_scan_accel_module(args.client)
+        args.client.iaa_scan_accel_module()
 
     p = subparsers.add_parser('iaa_scan_accel_module', aliases=['iaa_scan_accel_engine'],
                               help='Set config and enable iaa accel module offload.')
     p.set_defaults(func=iaa_scan_accel_module)
 
     def dpdk_cryptodev_scan_accel_module(args):
-        rpc.dpdk_cryptodev.dpdk_cryptodev_scan_accel_module(args.client)
+        args.client.dpdk_cryptodev_scan_accel_module()
 
     p = subparsers.add_parser('dpdk_cryptodev_scan_accel_module',
                               help='Enable dpdk_cryptodev accel module offload.')
     p.set_defaults(func=dpdk_cryptodev_scan_accel_module)
 
     def dpdk_cryptodev_set_driver(args):
-        rpc.dpdk_cryptodev.dpdk_cryptodev_set_driver(args.client,
-                                                     driver_name=args.driver_name)
+        args.client.dpdk_cryptodev_set_driver(driver_name=args.driver_name)
 
     p = subparsers.add_parser('dpdk_cryptodev_set_driver',
                               help='Set the DPDK cryptodev driver.')
@@ -355,14 +352,14 @@ def add_parser(subparsers):
     p.set_defaults(func=dpdk_cryptodev_set_driver)
 
     def dpdk_cryptodev_get_driver(args):
-        print_dict(rpc.dpdk_cryptodev.dpdk_cryptodev_get_driver(args.client))
+        print_dict(args.client.dpdk_cryptodev_get_driver())
 
     p = subparsers.add_parser('dpdk_cryptodev_get_driver', help='Get the DPDK cryptodev driver')
     p.set_defaults(func=dpdk_cryptodev_get_driver)
 
     # mlx5
     def mlx5_scan_accel_module(args):
-        rpc.mlx5.mlx5_scan_accel_module(args.client,
+        args.client.mlx5_scan_accel_module(
                                         qp_size=args.qp_size,
                                         num_requests=args.num_requests,
                                         allowed_devs=args.allowed_devs,
@@ -380,7 +377,7 @@ def add_parser(subparsers):
     p.set_defaults(func=mlx5_scan_accel_module)
 
     def accel_mlx5_dump_stats(args):
-        print_dict(rpc.mlx5.accel_mlx5_dump_stats(args.client, level=args.level))
+        print_dict(args.client.accel_mlx5_dump_stats(level=args.level))
 
     p = subparsers.add_parser('accel_mlx5_dump_stats', help='Dump accel mlx5 module statistics.')
     p.add_argument('-l', '--level', type=str, help='Verbose level, one of \"total\", \"channel\" or \"device\"')
@@ -388,9 +385,9 @@ def add_parser(subparsers):
 
     # accel_error
     def accel_error_inject_error(args):
-        rpc.accel.accel_error_inject_error(args.client, opcode=args.opcode,
-                                           type=args.type, count=args.count,
-                                           interval=args.interval, errcode=args.errcode)
+        args.client.accel_error_inject_error(opcode=args.opcode,
+                                             type=args.type, count=args.count,
+                                             interval=args.interval, errcode=args.errcode)
 
     p = subparsers.add_parser('accel_error_inject_error',
                               help='Inject an error to processing accel operation')
@@ -405,7 +402,7 @@ def add_parser(subparsers):
 
     # opal
     def bdev_nvme_opal_init(args):
-        rpc.nvme.bdev_nvme_opal_init(args.client,
+        args.client.bdev_nvme_opal_init(
                                      nvme_ctrlr_name=args.nvme_ctrlr_name,
                                      password=args.password)
 
@@ -415,7 +412,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_nvme_opal_init)
 
     def bdev_nvme_opal_revert(args):
-        rpc.nvme.bdev_nvme_opal_revert(args.client,
+        args.client.bdev_nvme_opal_revert(
                                        nvme_ctrlr_name=args.nvme_ctrlr_name,
                                        password=args.password)
     p = subparsers.add_parser('bdev_nvme_opal_revert', help='Revert to default factory settings')
@@ -424,7 +421,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_nvme_opal_revert)
 
     def bdev_opal_create(args):
-        print_json(rpc.bdev.bdev_opal_create(args.client,
+        print_json(args.client.bdev_opal_create(
                                              nvme_ctrlr_name=args.nvme_ctrlr_name,
                                              nsid=args.nsid,
                                              locking_range_id=args.locking_range_id,
@@ -442,7 +439,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_opal_create)
 
     def bdev_opal_get_info(args):
-        print_dict(rpc.bdev.bdev_opal_get_info(args.client,
+        print_dict(args.client.bdev_opal_get_info(
                                                bdev_name=args.bdev_name,
                                                password=args.password))
 
@@ -452,7 +449,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_opal_get_info)
 
     def bdev_opal_delete(args):
-        rpc.bdev.bdev_opal_delete(args.client,
+        args.client.bdev_opal_delete(
                                   bdev_name=args.bdev_name,
                                   password=args.password)
 
@@ -462,7 +459,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_opal_delete)
 
     def bdev_opal_new_user(args):
-        rpc.bdev.bdev_opal_new_user(args.client,
+        args.client.bdev_opal_new_user(
                                     bdev_name=args.bdev_name,
                                     admin_password=args.admin_password,
                                     user_id=args.user_id,
@@ -476,7 +473,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_opal_new_user)
 
     def bdev_opal_set_lock_state(args):
-        rpc.bdev.bdev_opal_set_lock_state(args.client,
+        args.client.bdev_opal_set_lock_state(
                                           bdev_name=args.bdev_name,
                                           user_id=args.user_id,
                                           password=args.password,
@@ -492,7 +489,7 @@ def add_parser(subparsers):
 
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):
-        print_dict(rpc.nvme.bdev_nvme_send_cmd(args.client,
+        print_dict(args.client.bdev_nvme_send_cmd(
                                                name=args.nvme_name,
                                                cmd_type=args.cmd_type,
                                                data_direction=args.data_direction,
@@ -517,14 +514,14 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_nvme_send_cmd)
 
     def thread_get_stats(args):
-        print_dict(rpc.app.thread_get_stats(args.client))
+        print_dict(args.client.thread_get_stats())
 
     p = subparsers.add_parser(
         'thread_get_stats', help='Display current statistics of all the threads')
     p.set_defaults(func=thread_get_stats)
 
     def thread_set_cpumask(args):
-        ret = rpc.app.thread_set_cpumask(args.client,
+        ret = args.client.thread_set_cpumask(
                                          id=args.id,
                                          cpumask=args.cpumask)
     p = subparsers.add_parser('thread_set_cpumask',
@@ -535,8 +532,7 @@ def add_parser(subparsers):
     p.set_defaults(func=thread_set_cpumask)
 
     def log_enable_timestamps(args):
-        ret = rpc.app.log_enable_timestamps(args.client,
-                                            enabled=args.enabled)
+        ret = args.client.log_enable_timestamps(enabled=args.enabled)
     p = subparsers.add_parser('log_enable_timestamps',
                               help='Enable or disable timestamps.')
     p.add_argument('-d', '--disable', dest='enabled', default=False, action='store_false', help="Disable timestamps")
@@ -544,21 +540,21 @@ def add_parser(subparsers):
     p.set_defaults(func=log_enable_timestamps)
 
     def thread_get_pollers(args):
-        print_dict(rpc.app.thread_get_pollers(args.client))
+        print_dict(args.client.thread_get_pollers())
 
     p = subparsers.add_parser(
         'thread_get_pollers', help='Display current pollers of all the threads')
     p.set_defaults(func=thread_get_pollers)
 
     def thread_get_io_channels(args):
-        print_dict(rpc.app.thread_get_io_channels(args.client))
+        print_dict(args.client.thread_get_io_channels())
 
     p = subparsers.add_parser(
         'thread_get_io_channels', help='Display current IO channels of all the threads')
     p.set_defaults(func=thread_get_io_channels)
 
     def env_dpdk_get_mem_stats(args):
-        print_dict(rpc.env_dpdk.env_dpdk_get_mem_stats(args.client))
+        print_dict(args.client.env_dpdk_get_mem_stats())
 
     p = subparsers.add_parser(
         'env_dpdk_get_mem_stats', help='write the dpdk memory stats to a file.')
@@ -568,7 +564,7 @@ def add_parser(subparsers):
         def splitbuf(buf, step):
             return [buf[i:i+step] for i in range(0, len(buf), step)]
 
-        devices = rpc.subsystem.framework_get_pci_devices(args.client)
+        devices = args.client.framework_get_pci_devices()
         if not args.format_lspci:
             print_json(devices)
         else:
@@ -585,7 +581,7 @@ def add_parser(subparsers):
 
     # bdev_nvme_add_error_injection
     def bdev_nvme_add_error_injection(args):
-        print_dict(rpc.nvme.bdev_nvme_add_error_injection(args.client,
+        print_dict(args.client.bdev_nvme_add_error_injection(
                                                           name=args.nvme_name,
                                                           cmd_type=args.cmd_type,
                                                           opc=args.opc,
@@ -610,7 +606,7 @@ def add_parser(subparsers):
 
     # bdev_nvme_remove_error_injection
     def bdev_nvme_remove_error_injection(args):
-        print_dict(rpc.nvme.bdev_nvme_remove_error_injection(args.client,
+        print_dict(args.client.bdev_nvme_remove_error_injection(
                                                              name=args.nvme_name,
                                                              cmd_type=args.cmd_type,
                                                              opc=args.opc))
@@ -623,7 +619,7 @@ def add_parser(subparsers):
 
     def bdev_daos_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
-        print_json(rpc.bdev.bdev_daos_create(args.client,
+        print_json(args.client.bdev_daos_create(
                                              num_blocks=int(num_blocks),
                                              block_size=args.block_size,
                                              name=args.name,
@@ -644,8 +640,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_daos_create)
 
     def bdev_daos_delete(args):
-        rpc.bdev.bdev_daos_delete(args.client,
-                                  name=args.name)
+        args.client.bdev_daos_delete(name=args.name)
 
     p = subparsers.add_parser('bdev_daos_delete',
                               help='Delete a DAOS disk')
@@ -653,7 +648,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_daos_delete)
 
     def bdev_daos_resize(args):
-        print_json(rpc.bdev.bdev_daos_resize(args.client,
+        print_json(args.client.bdev_daos_resize(
                                              name=args.name,
                                              new_size=int(args.new_size)))
 

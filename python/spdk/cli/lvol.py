@@ -6,7 +6,6 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
@@ -16,7 +15,7 @@ def add_parser(subparsers):
         # The default unmap clear method may take over 60.0 sec.
         if args.timeout is None:
             args.client.timeout = 90.0
-        print_json(rpc.lvol.bdev_lvol_create_lvstore(args.client,
+        print_json(args.client.bdev_lvol_create_lvstore(
                                                      bdev_name=args.bdev_name,
                                                      lvs_name=args.lvs_name,
                                                      cluster_sz=args.cluster_sz,
@@ -35,7 +34,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_create_lvstore)
 
     def bdev_lvol_rename_lvstore(args):
-        rpc.lvol.bdev_lvol_rename_lvstore(args.client,
+        args.client.bdev_lvol_rename_lvstore(
                                           old_name=args.old_name,
                                           new_name=args.new_name)
 
@@ -45,7 +44,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_rename_lvstore)
 
     def bdev_lvol_grow_lvstore(args):
-        print_dict(rpc.lvol.bdev_lvol_grow_lvstore(args.client,
+        print_dict(args.client.bdev_lvol_grow_lvstore(
                                                    uuid=args.uuid,
                                                    lvs_name=args.lvs_name))
 
@@ -56,7 +55,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_grow_lvstore)
 
     def bdev_lvol_create(args):
-        print_json(rpc.lvol.bdev_lvol_create(args.client,
+        print_json(args.client.bdev_lvol_create(
                                              lvol_name=args.lvol_name,
                                              size_in_mib=args.size_in_mib,
                                              thin_provision=args.thin_provision,
@@ -75,7 +74,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_create)
 
     def bdev_lvol_snapshot(args):
-        print_json(rpc.lvol.bdev_lvol_snapshot(args.client,
+        print_json(args.client.bdev_lvol_snapshot(
                                                lvol_name=args.lvol_name,
                                                snapshot_name=args.snapshot_name))
 
@@ -85,7 +84,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_snapshot)
 
     def bdev_lvol_clone(args):
-        print_json(rpc.lvol.bdev_lvol_clone(args.client,
+        print_json(args.client.bdev_lvol_clone(
                                             snapshot_name=args.snapshot_name,
                                             clone_name=args.clone_name))
 
@@ -95,7 +94,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_clone)
 
     def bdev_lvol_clone_bdev(args):
-        print_json(rpc.lvol.bdev_lvol_clone_bdev(args.client,
+        print_json(args.client.bdev_lvol_clone_bdev(
                                                  bdev=args.bdev,
                                                  lvs_name=args.lvs_name,
                                                  clone_name=args.clone_name))
@@ -108,7 +107,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_clone_bdev)
 
     def bdev_lvol_rename(args):
-        rpc.lvol.bdev_lvol_rename(args.client,
+        args.client.bdev_lvol_rename(
                                   old_name=args.old_name,
                                   new_name=args.new_name)
 
@@ -118,23 +117,21 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_rename)
 
     def bdev_lvol_inflate(args):
-        rpc.lvol.bdev_lvol_inflate(args.client,
-                                   name=args.name)
+        args.client.bdev_lvol_inflate(name=args.name)
 
     p = subparsers.add_parser('bdev_lvol_inflate', help='Make thin provisioned lvol a thick provisioned lvol')
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=bdev_lvol_inflate)
 
     def bdev_lvol_decouple_parent(args):
-        rpc.lvol.bdev_lvol_decouple_parent(args.client,
-                                           name=args.name)
+        args.client.bdev_lvol_decouple_parent(name=args.name)
 
     p = subparsers.add_parser('bdev_lvol_decouple_parent', help='Decouple parent of lvol')
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=bdev_lvol_decouple_parent)
 
     def bdev_lvol_resize(args):
-        rpc.lvol.bdev_lvol_resize(args.client,
+        args.client.bdev_lvol_resize(
                                   name=args.name,
                                   size_in_mib=args.size_in_mib)
 
@@ -144,23 +141,21 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_resize)
 
     def bdev_lvol_set_read_only(args):
-        rpc.lvol.bdev_lvol_set_read_only(args.client,
-                                         name=args.name)
+        args.client.bdev_lvol_set_read_only(name=args.name)
 
     p = subparsers.add_parser('bdev_lvol_set_read_only', help='Mark lvol bdev as read only')
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=bdev_lvol_set_read_only)
 
     def bdev_lvol_delete(args):
-        rpc.lvol.bdev_lvol_delete(args.client,
-                                  name=args.name)
+        args.client.bdev_lvol_delete(name=args.name)
 
     p = subparsers.add_parser('bdev_lvol_delete', help='Destroy a logical volume')
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=bdev_lvol_delete)
 
     def bdev_lvol_start_shallow_copy(args):
-        print_json(rpc.lvol.bdev_lvol_start_shallow_copy(args.client,
+        print_json(args.client.bdev_lvol_start_shallow_copy(
                                                          src_lvol_name=args.src_lvol_name,
                                                          dst_bdev_name=args.dst_bdev_name))
 
@@ -172,15 +167,14 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_start_shallow_copy)
 
     def bdev_lvol_check_shallow_copy(args):
-        print_json(rpc.lvol.bdev_lvol_check_shallow_copy(args.client,
-                                                         operation_id=args.operation_id))
+        print_json(args.client.bdev_lvol_check_shallow_copy(operation_id=args.operation_id))
 
     p = subparsers.add_parser('bdev_lvol_check_shallow_copy', help='Get shallow copy status')
     p.add_argument('operation_id', help='operation identifier', type=int)
     p.set_defaults(func=bdev_lvol_check_shallow_copy)
 
     def bdev_lvol_set_parent(args):
-        rpc.lvol.bdev_lvol_set_parent(args.client,
+        args.client.bdev_lvol_set_parent(
                                       lvol_name=args.lvol_name,
                                       parent_name=args.parent_name)
 
@@ -190,7 +184,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_set_parent)
 
     def bdev_lvol_set_parent_bdev(args):
-        rpc.lvol.bdev_lvol_set_parent_bdev(args.client,
+        args.client.bdev_lvol_set_parent_bdev(
                                            lvol_name=args.lvol_name,
                                            parent_name=args.parent_name)
 
@@ -200,7 +194,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_set_parent_bdev)
 
     def bdev_lvol_delete_lvstore(args):
-        rpc.lvol.bdev_lvol_delete_lvstore(args.client,
+        args.client.bdev_lvol_delete_lvstore(
                                           uuid=args.uuid,
                                           lvs_name=args.lvs_name)
 
@@ -210,7 +204,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_delete_lvstore)
 
     def bdev_lvol_get_lvstores(args):
-        print_dict(rpc.lvol.bdev_lvol_get_lvstores(args.client,
+        print_dict(args.client.bdev_lvol_get_lvstores(
                                                    uuid=args.uuid,
                                                    lvs_name=args.lvs_name))
 
@@ -220,7 +214,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_lvol_get_lvstores)
 
     def bdev_lvol_get_lvols(args):
-        print_dict(rpc.lvol.bdev_lvol_get_lvols(args.client,
+        print_dict(args.client.bdev_lvol_get_lvols(
                                                 lvs_uuid=args.lvs_uuid,
                                                 lvs_name=args.lvs_name))
 

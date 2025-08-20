@@ -7,6 +7,8 @@
 Moved all cli code inside the python package for easier generation and packaging.
 Split large rpc python file into modules.
 
+Deprecate python.spdk.rpc modules and use JSONRPCClient object directly.
+
 ### sock
 
 Simplified spdk_sock_[listen|connect] impl_name handling. Previously, if NULL was provided and the

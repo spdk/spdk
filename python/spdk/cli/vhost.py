@@ -6,14 +6,14 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
+from spdk.rpc.cmd_parser import strip_globals
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def vhost_controller_set_coalescing(args):
-        rpc.vhost.vhost_controller_set_coalescing(args.client,
+        args.client.vhost_controller_set_coalescing(
                                                   ctrlr=args.ctrlr,
                                                   delay_base_us=args.delay_base_us,
                                                   iops_threshold=args.iops_threshold)
@@ -25,7 +25,8 @@ def add_parser(subparsers):
     p.set_defaults(func=vhost_controller_set_coalescing)
 
     def virtio_blk_create_transport(args):
-        rpc.vhost.virtio_blk_create_transport(**vars(args))
+        params = strip_globals(vars(args))
+        args.client.virtio_blk_create_transport(**params)
 
     p = subparsers.add_parser('virtio_blk_create_transport',
                               help='Create virtio blk transport')
@@ -33,14 +34,14 @@ def add_parser(subparsers):
     p.set_defaults(func=virtio_blk_create_transport)
 
     def virtio_blk_get_transports(args):
-        print_dict(rpc.vhost.virtio_blk_get_transports(args.client, name=args.name))
+        print_dict(args.client.virtio_blk_get_transports(name=args.name))
 
     p = subparsers.add_parser('virtio_blk_get_transports', help='Display virtio-blk transports or requested transport')
     p.add_argument('--name', help='Transport name (optional)', type=str)
     p.set_defaults(func=virtio_blk_get_transports)
 
     def vhost_create_scsi_controller(args):
-        rpc.vhost.vhost_create_scsi_controller(args.client,
+        args.client.vhost_create_scsi_controller(
                                                ctrlr=args.ctrlr,
                                                cpumask=args.cpumask,
                                                delay=args.delay)
@@ -52,15 +53,14 @@ def add_parser(subparsers):
     p.set_defaults(func=vhost_create_scsi_controller)
 
     def vhost_start_scsi_controller(args):
-        rpc.vhost.vhost_start_scsi_controller(args.client,
-                                              ctrlr=args.ctrlr)
+        args.client.vhost_start_scsi_controller(ctrlr=args.ctrlr)
 
     p = subparsers.add_parser('vhost_start_scsi_controller', help='Start vhost scsi controller')
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=vhost_start_scsi_controller)
 
     def vhost_scsi_controller_add_target(args):
-        print_json(rpc.vhost.vhost_scsi_controller_add_target(args.client,
+        print_json(args.client.vhost_scsi_controller_add_target(
                                                               ctrlr=args.ctrlr,
                                                               scsi_target_num=args.scsi_target_num,
                                                               bdev_name=args.bdev_name))
@@ -72,7 +72,7 @@ def add_parser(subparsers):
     p.set_defaults(func=vhost_scsi_controller_add_target)
 
     def vhost_scsi_controller_remove_target(args):
-        rpc.vhost.vhost_scsi_controller_remove_target(args.client,
+        args.client.vhost_scsi_controller_remove_target(
                                                       ctrlr=args.ctrlr,
                                                       scsi_target_num=args.scsi_target_num)
 
@@ -83,7 +83,8 @@ def add_parser(subparsers):
     p.set_defaults(func=vhost_scsi_controller_remove_target)
 
     def vhost_create_blk_controller(args):
-        rpc.vhost.vhost_create_blk_controller(**vars(args))
+        params = strip_globals(vars(args))
+        args.client.vhost_create_blk_controller(**params)
 
     p = subparsers.add_parser('vhost_create_blk_controller', help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
@@ -95,22 +96,21 @@ def add_parser(subparsers):
     p.set_defaults(func=vhost_create_blk_controller)
 
     def vhost_get_controllers(args):
-        print_dict(rpc.vhost.vhost_get_controllers(args.client, args.name))
+        print_dict(args.client.vhost_get_controllers(name=args.name))
 
     p = subparsers.add_parser('vhost_get_controllers', help='List all or specific vhost controller(s)')
     p.add_argument('-n', '--name', help="Name of vhost controller")
     p.set_defaults(func=vhost_get_controllers)
 
     def vhost_delete_controller(args):
-        rpc.vhost.vhost_delete_controller(args.client,
-                                          ctrlr=args.ctrlr)
+        args.client.vhost_delete_controller(ctrlr=args.ctrlr)
 
     p = subparsers.add_parser('vhost_delete_controller', help='Delete a vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=vhost_delete_controller)
 
     def bdev_virtio_attach_controller(args):
-        print_array(rpc.vhost.bdev_virtio_attach_controller(args.client,
+        print_array(args.client.bdev_virtio_attach_controller(
                                                             name=args.name,
                                                             trtype=args.trtype,
                                                             traddr=args.traddr,
@@ -135,14 +135,13 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_virtio_attach_controller)
 
     def bdev_virtio_scsi_get_devices(args):
-        print_dict(rpc.vhost.bdev_virtio_scsi_get_devices(args.client))
+        print_dict(args.client.bdev_virtio_scsi_get_devices())
 
     p = subparsers.add_parser('bdev_virtio_scsi_get_devices', help='List all Virtio-SCSI devices.')
     p.set_defaults(func=bdev_virtio_scsi_get_devices)
 
     def bdev_virtio_detach_controller(args):
-        rpc.vhost.bdev_virtio_detach_controller(args.client,
-                                                name=args.name)
+        args.client.bdev_virtio_detach_controller(name=args.name)
 
     p = subparsers.add_parser('bdev_virtio_detach_controller', help="""Remove a Virtio device
     This will delete all bdevs exposed by this device""")
@@ -150,7 +149,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_virtio_detach_controller)
 
     def bdev_virtio_blk_set_hotplug(args):
-        rpc.vhost.bdev_virtio_blk_set_hotplug(args.client, enable=args.enable, period_us=args.period_us)
+        args.client.bdev_virtio_blk_set_hotplug(enable=args.enable, period_us=args.period_us)
 
     p = subparsers.add_parser('bdev_virtio_blk_set_hotplug', help='Set hotplug options for bdev virtio_blk type.')
     p.add_argument('-d', '--disable', dest='enable', default=False, action='store_false', help="Disable hotplug (default)")

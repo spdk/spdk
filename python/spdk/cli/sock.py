@@ -6,22 +6,20 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def sock_impl_get_options(args):
-        print_json(rpc.sock.sock_impl_get_options(args.client,
-                                                  impl_name=args.impl))
+        print_json(args.client.sock_impl_get_options(impl_name=args.impl))
 
     p = subparsers.add_parser('sock_impl_get_options', help="""Get options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
     p.set_defaults(func=sock_impl_get_options)
 
     def sock_impl_set_options(args):
-        rpc.sock.sock_impl_set_options(args.client,
+        args.client.sock_impl_set_options(
                                        impl_name=args.impl,
                                        recv_buf_size=args.recv_buf_size,
                                        send_buf_size=args.send_buf_size,
@@ -66,15 +64,14 @@ def add_parser(subparsers):
                    zerocopy_threshold=None, tls_version=None, enable_ktls=None)
 
     def sock_set_default_impl(args):
-        print_json(rpc.sock.sock_set_default_impl(args.client,
-                                                  impl_name=args.impl))
+        print_json(args.client.sock_set_default_impl(impl_name=args.impl))
 
     p = subparsers.add_parser('sock_set_default_impl', help="""Set the default sock implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
     p.set_defaults(func=sock_set_default_impl)
 
     def sock_get_default_impl(args):
-        print_json(rpc.sock.sock_get_default_impl(args.client))
+        print_json(args.client.sock_get_default_impl())
 
     p = subparsers.add_parser('sock_get_default_impl', help="Get the default sock implementation name")
     p.set_defaults(func=sock_get_default_impl)

@@ -6,14 +6,13 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def iobuf_set_options(args):
-        rpc.iobuf.iobuf_set_options(args.client,
+        args.client.iobuf_set_options(
                                     small_pool_count=args.small_pool_count,
                                     large_pool_count=args.large_pool_count,
                                     small_bufsize=args.small_bufsize,
@@ -28,7 +27,7 @@ def add_parser(subparsers):
     p.set_defaults(func=iobuf_set_options)
 
     def iobuf_get_stats(args):
-        print_dict(rpc.iobuf.iobuf_get_stats(args.client))
+        print_dict(args.client.iobuf_get_stats())
 
     p = subparsers.add_parser('iobuf_get_stats', help='Display iobuf statistics')
     p.set_defaults(func=iobuf_get_stats)

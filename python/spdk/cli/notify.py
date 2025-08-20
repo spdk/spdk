@@ -6,20 +6,19 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def notify_get_types(args):
-        print_dict(rpc.notify.notify_get_types(args.client))
+        print_dict(args.client.notify_get_types())
 
     p = subparsers.add_parser('notify_get_types', help='List available notifications that user can subscribe to.')
     p.set_defaults(func=notify_get_types)
 
     def notify_get_notifications(args):
-        ret = rpc.notify.notify_get_notifications(args.client,
+        ret = args.client.notify_get_notifications(
                                                   id=args.id,
                                                   max=args.max)
         print_dict(ret)

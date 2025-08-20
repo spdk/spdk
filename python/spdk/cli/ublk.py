@@ -6,14 +6,13 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def ublk_create_target(args):
-        rpc.ublk.ublk_create_target(args.client,
+        args.client.ublk_create_target(
                                     cpumask=args.cpumask,
                                     disable_user_copy=args.disable_user_copy)
     p = subparsers.add_parser('ublk_create_target',
@@ -23,13 +22,13 @@ def add_parser(subparsers):
     p.set_defaults(func=ublk_create_target)
 
     def ublk_destroy_target(args):
-        rpc.ublk.ublk_destroy_target(args.client)
+        args.client.ublk_destroy_target()
     p = subparsers.add_parser('ublk_destroy_target',
                               help='Destroy spdk ublk target for ublk dev')
     p.set_defaults(func=ublk_destroy_target)
 
     def ublk_start_disk(args):
-        print(rpc.ublk.ublk_start_disk(args.client,
+        print(args.client.ublk_start_disk(
                                        bdev_name=args.bdev_name,
                                        ublk_id=args.ublk_id,
                                        num_queues=args.num_queues,
@@ -44,8 +43,7 @@ def add_parser(subparsers):
     p.set_defaults(func=ublk_start_disk)
 
     def ublk_stop_disk(args):
-        rpc.ublk.ublk_stop_disk(args.client,
-                                ublk_id=args.ublk_id)
+        args.client.ublk_stop_disk(ublk_id=args.ublk_id)
 
     p = subparsers.add_parser('ublk_stop_disk',
                               help='Stop a ublk device')
@@ -53,7 +51,7 @@ def add_parser(subparsers):
     p.set_defaults(func=ublk_stop_disk)
 
     def ublk_recover_disk(args):
-        print(rpc.ublk.ublk_recover_disk(args.client,
+        print(args.client.ublk_recover_disk(
                                          bdev_name=args.bdev_name,
                                          ublk_id=args.ublk_id))
 
@@ -64,8 +62,7 @@ def add_parser(subparsers):
     p.set_defaults(func=ublk_recover_disk)
 
     def ublk_get_disks(args):
-        print_dict(rpc.ublk.ublk_get_disks(args.client,
-                                           ublk_id=args.ublk_id))
+        print_dict(args.client.ublk_get_disks(ublk_id=args.ublk_id))
 
     p = subparsers.add_parser('ublk_get_disks',
                               help='Display full or specified ublk device list')

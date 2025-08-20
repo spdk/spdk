@@ -6,14 +6,13 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
 
     def nbd_start_disk(args):
-        print(rpc.nbd.nbd_start_disk(args.client,
+        print(args.client.nbd_start_disk(
                                      bdev_name=args.bdev_name,
                                      nbd_device=args.nbd_device))
 
@@ -24,8 +23,7 @@ def add_parser(subparsers):
     p.set_defaults(func=nbd_start_disk)
 
     def nbd_stop_disk(args):
-        rpc.nbd.nbd_stop_disk(args.client,
-                              nbd_device=args.nbd_device)
+        args.client.nbd_stop_disk(nbd_device=args.nbd_device)
 
     p = subparsers.add_parser('nbd_stop_disk',
                               help='Stop an nbd disk')
@@ -33,8 +31,7 @@ def add_parser(subparsers):
     p.set_defaults(func=nbd_stop_disk)
 
     def nbd_get_disks(args):
-        print_dict(rpc.nbd.nbd_get_disks(args.client,
-                                         nbd_device=args.nbd_device))
+        print_dict(args.client.nbd_get_disks(nbd_device=args.nbd_device))
 
     p = subparsers.add_parser('nbd_get_disks',
                               help='Display full or specified nbd device list')

@@ -8,8 +8,7 @@ import os
 import sys
 import argparse
 import logging
-import spdk.rpc as rpc
-from spdk.rpc.client import print_dict, JSONRPCException
+from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
 
 
 def get_bdev_name_key(bdev):
@@ -68,7 +67,7 @@ def clear_bdev_subsystem(args, bdev_config):
         args.client.call('bdev_nvme_detach_controller', {'name': ctrlr['name']})
 
     ''' Disable and reset hotplug '''
-    rpc.bdev.bdev_nvme_set_hotplug(args.client, False)
+    args.client.bdev_nvme_set_hotplug(enable=False)
 
 
 def get_nvmf_destroy_method(nvmf):
@@ -208,7 +207,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
+    with JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
         try:
             args.client = client
             args.func(args)

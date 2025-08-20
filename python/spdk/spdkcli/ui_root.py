@@ -6,6 +6,7 @@ from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI
 from .. import rpc
+from ..rpc.cmd_parser import strip_globals, apply_defaults, group_as, remove_null
 from functools import wraps
 
 
@@ -79,7 +80,7 @@ class UIRoot(UINode):
         return w
 
     def ui_command_framework_start_init(self):
-        if rpc.framework_start_init(self.client):
+        if self.client.framework_start_init():
             self.is_init = True
             self.refresh()
 
@@ -100,14 +101,14 @@ class UIRoot(UINode):
             rpc.save_subsystem_config(self.client, fd, indent, subsystem)
 
     def rpc_get_methods(self, current=False):
-        return rpc.rpc_get_methods(self.client, current=current)
+        return self.client.rpc_get_methods(current=current)
 
     def check_init(self):
         return "framework_start_init" not in self.rpc_get_methods(current=True)
 
     def bdev_get_bdevs(self, bdev_type):
         if self.is_init:
-            self.current_bdevs = rpc.bdev.bdev_get_bdevs(self.client)
+            self.current_bdevs = self.client.bdev_get_bdevs()
             # Following replace needs to be done in order for some of the bdev
             # listings to work: logical volumes, split disk.
             # For example logical volumes: listing in menu is "Logical_Volume"
@@ -118,145 +119,145 @@ class UIRoot(UINode):
                 yield test
 
     def bdev_get_iostat(self, **kwargs):
-        return rpc.bdev.bdev_get_iostat(self.client, **kwargs)
+        return self.client.bdev_get_iostat(**kwargs)
 
     @verbose
     def bdev_split_create(self, **kwargs):
-        response = rpc.bdev.bdev_split_create(self.client, **kwargs)
+        response = self.client.bdev_split_create(**kwargs)
         return self.print_array(response)
 
     @verbose
     def bdev_split_delete(self, **kwargs):
-        rpc.bdev.bdev_split_delete(self.client, **kwargs)
+        self.client.bdev_split_delete(**kwargs)
 
     @verbose
     def create_malloc_bdev(self, **kwargs):
-        response = rpc.bdev.bdev_malloc_create(self.client, **kwargs)
+        response = self.client.bdev_malloc_create(**kwargs)
         return response
 
     @verbose
     def bdev_malloc_delete(self, **kwargs):
-        rpc.bdev.bdev_malloc_delete(self.client, **kwargs)
+        self.client.bdev_malloc_delete(**kwargs)
 
     @verbose
     def create_iscsi_bdev(self, **kwargs):
-        response = rpc.bdev.bdev_iscsi_create(self.client, **kwargs)
+        response = self.client.bdev_iscsi_create(**kwargs)
         return response
 
     @verbose
     def bdev_iscsi_delete(self, **kwargs):
-        rpc.bdev.bdev_iscsi_delete(self.client, **kwargs)
+        self.client.bdev_iscsi_delete(**kwargs)
 
     @verbose
     def bdev_aio_create(self, **kwargs):
-        response = rpc.bdev.bdev_aio_create(self.client, **kwargs)
+        response = self.client.bdev_aio_create(**kwargs)
         return response
 
     @verbose
     def bdev_aio_delete(self, **kwargs):
-        rpc.bdev.bdev_aio_delete(self.client, **kwargs)
+        self.client.bdev_aio_delete(**kwargs)
 
     @verbose
     def create_lvol_bdev(self, **kwargs):
-        response = rpc.lvol.bdev_lvol_create(self.client, **kwargs)
+        response = self.client.bdev_lvol_create(**kwargs)
         return response
 
     @verbose
     def bdev_lvol_delete(self, **kwargs):
-        response = rpc.lvol.bdev_lvol_delete(self.client, **kwargs)
+        response = self.client.bdev_lvol_delete(**kwargs)
         return response
 
     @verbose
     def create_nvme_bdev(self, **kwargs):
-        response = rpc.bdev.bdev_nvme_attach_controller(self.client, **kwargs)
+        response = self.client.bdev_nvme_attach_controller(**kwargs)
         return response
 
     @verbose
     def bdev_nvme_detach_controller(self, **kwargs):
-        rpc.bdev.bdev_nvme_detach_controller(self.client, **kwargs)
+        self.client.bdev_nvme_detach_controller(**kwargs)
 
     @verbose
     def bdev_null_create(self, **kwargs):
-        response = rpc.bdev.bdev_null_create(self.client, **kwargs)
+        response = self.client.bdev_null_create(**kwargs)
         return response
 
     @verbose
     def bdev_null_delete(self, **kwargs):
-        rpc.bdev.bdev_null_delete(self.client, **kwargs)
+        self.client.bdev_null_delete(**kwargs)
 
     @verbose
     def create_error_bdev(self, **kwargs):
-        response = rpc.bdev.bdev_error_create(self.client, **kwargs)
+        response = self.client.bdev_error_create(**kwargs)
 
     @verbose
     def bdev_error_delete(self, **kwargs):
-        rpc.bdev.bdev_error_delete(self.client, **kwargs)
+        self.client.bdev_error_delete(**kwargs)
 
     @verbose
     @is_method_available
     def bdev_lvol_get_lvstores(self):
         if self.is_init:
-            self.current_lvol_stores = rpc.lvol.bdev_lvol_get_lvstores(self.client)
+            self.current_lvol_stores = self.client.bdev_lvol_get_lvstores()
             for lvs in self.current_lvol_stores:
                 yield LvolStore(lvs)
 
     @verbose
     def bdev_lvol_create_lvstore(self, **kwargs):
-        response = rpc.lvol.bdev_lvol_create_lvstore(self.client, **kwargs)
+        response = self.client.bdev_lvol_create_lvstore(**kwargs)
         return response
 
     @verbose
     def bdev_lvol_delete_lvstore(self, **kwargs):
-        rpc.lvol.bdev_lvol_delete_lvstore(self.client, **kwargs)
+        self.client.bdev_lvol_delete_lvstore(**kwargs)
 
     @verbose
     def create_rbd_bdev(self, **kwargs):
-        response = rpc.bdev.bdev_rbd_create(self.client, **kwargs)
+        response = self.client.bdev_rbd_create(**kwargs)
         return response
 
     @verbose
     def bdev_rbd_delete(self, **kwargs):
-        response = rpc.bdev.bdev_rbd_delete(self.client, **kwargs)
+        response = self.client.bdev_rbd_delete(**kwargs)
         return response
 
     @verbose
     def create_virtio_dev(self, **kwargs):
-        response = rpc.vhost.bdev_virtio_attach_controller(self.client, **kwargs)
+        response = self.client.bdev_virtio_attach_controller(**kwargs)
         return self.print_array(response)
 
     @verbose
     def bdev_virtio_detach_controller(self, **kwargs):
-        response = rpc.vhost.bdev_virtio_detach_controller(self.client, **kwargs)
+        response = self.client.bdev_virtio_detach_controller(**kwargs)
         return response
 
     @verbose
     def bdev_raid_create(self, **kwargs):
-        rpc.bdev.bdev_raid_create(self.client, **kwargs)
+        self.client.bdev_raid_create(**kwargs)
 
     @verbose
     def bdev_raid_delete(self, **kwargs):
-        rpc.bdev.bdev_raid_delete(self.client, **kwargs)
+        self.client.bdev_raid_delete(**kwargs)
 
     @verbose
     def bdev_uring_create(self, **kwargs):
-        response = rpc.bdev.bdev_uring_create(self.client, **kwargs)
+        response = self.client.bdev_uring_create(**kwargs)
         return response
 
     @verbose
     def bdev_uring_delete(self, **kwargs):
-        rpc.bdev.bdev_uring_delete(self.client, **kwargs)
+        self.client.bdev_uring_delete(**kwargs)
 
     @verbose
     @is_method_available
     def bdev_virtio_scsi_get_devices(self):
         if self.is_init:
-            for bdev in rpc.vhost.bdev_virtio_scsi_get_devices(self.client):
+            for bdev in self.client.bdev_virtio_scsi_get_devices():
                 test = Bdev(bdev)
                 yield test
 
     def list_vhost_ctrls(self):
         if self.is_init:
-            self.current_vhost_ctrls = rpc.vhost.vhost_get_controllers(self.client)
+            self.current_vhost_ctrls = self.client.vhost_get_controllers()
 
     @verbose
     @is_method_available
@@ -268,38 +269,41 @@ class UIRoot(UINode):
 
     @verbose
     def vhost_delete_controller(self, **kwargs):
-        rpc.vhost.vhost_delete_controller(self.client, **kwargs)
+        self.client.vhost_delete_controller(**kwargs)
 
     @verbose
     def vhost_create_scsi_controller(self, **kwargs):
-        rpc.vhost.vhost_create_scsi_controller(self.client, **kwargs)
+        self.client.vhost_create_scsi_controller(**kwargs)
 
     @verbose
     def vhost_start_scsi_controller(self, **kwargs):
-        rpc.vhost.vhost_start_scsi_controller(self.client, **kwargs)
+        self.client.vhost_start_scsi_controller(**kwargs)
 
     @verbose
     def vhost_create_blk_controller(self, **kwargs):
-        rpc.vhost.vhost_create_blk_controller(self.client, **kwargs)
+        self.client.vhost_create_blk_controller(**kwargs)
 
     @verbose
     def vhost_scsi_controller_remove_target(self, **kwargs):
-        rpc.vhost.vhost_scsi_controller_remove_target(self.client, **kwargs)
+        self.client.vhost_scsi_controller_remove_target(**kwargs)
 
     @verbose
     def vhost_scsi_controller_add_target(self, **kwargs):
-        rpc.vhost.vhost_scsi_controller_add_target(self.client, **kwargs)
+        self.client.vhost_scsi_controller_add_target(**kwargs)
 
     def vhost_controller_set_coalescing(self, **kwargs):
-        rpc.vhost.vhost_controller_set_coalescing(self.client, **kwargs)
+        self.client.vhost_controller_set_coalescing(**kwargs)
 
     @verbose
     def create_nvmf_transport(self, **kwargs):
-        rpc.nvmf.nvmf_create_transport(self.client, **kwargs)
+        params = strip_globals(kwargs)
+        params = apply_defaults(params, no_srq=False, c2h_success=True)
+        params = remove_null(params)
+        self.client.nvmf_create_transport(**params)
 
     def list_nvmf_transports(self):
         if self.is_init:
-            self.current_nvmf_transports = rpc.nvmf.nvmf_get_transports(self.client)
+            self.current_nvmf_transports = self.client.nvmf_get_transports()
 
     @verbose
     @is_method_available
@@ -311,7 +315,7 @@ class UIRoot(UINode):
 
     def list_nvmf_subsystems(self):
         if self.is_init:
-            self.current_nvmf_subsystems = rpc.nvmf.nvmf_get_subsystems(self.client)
+            self.current_nvmf_subsystems = self.client.nvmf_get_subsystems()
 
     @verbose
     @is_method_available
@@ -323,7 +327,7 @@ class UIRoot(UINode):
 
     def list_nvmf_referrals(self):
         if self.is_init:
-            self.current_nvmf_referrals = rpc.nvmf.nvmf_discovery_get_referrals(self.client)
+            self.current_nvmf_referrals = self.client.nvmf_discovery_get_referrals()
 
     @verbose
     @is_method_available
@@ -335,167 +339,186 @@ class UIRoot(UINode):
 
     @verbose
     def nvmf_discovery_add_referral(self, **kwargs):
-        rpc.nvmf.nvmf_discovery_add_referral(self.client, **kwargs)
+        params = strip_globals(kwargs)
+        params = apply_defaults(params, tgt_name=None)
+        params = group_as(params, 'address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+        if params.get('subnqn') == 'discovery':
+            params['subnqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
+        self.client.nvmf_discovery_add_referral(**params)
 
     @verbose
     def nvmf_discovery_remove_referral(self, **kwargs):
-        rpc.nvmf.nvmf_discovery_remove_referral(self.client, **kwargs)
+        params = strip_globals(kwargs)
+        params = group_as(params, 'address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+        if params.get('subnqn') == 'discovery':
+            params['subnqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
+        self.client.nvmf_discovery_remove_referral(**params)
 
     @verbose
     def create_nvmf_subsystem(self, **kwargs):
-        rpc.nvmf.nvmf_create_subsystem(self.client, **kwargs)
+        self.client.nvmf_create_subsystem(**kwargs)
 
     @verbose
     def nvmf_delete_subsystem(self, **kwargs):
-        rpc.nvmf.nvmf_delete_subsystem(self.client, **kwargs)
+        self.client.nvmf_delete_subsystem(**kwargs)
 
     @verbose
     def nvmf_subsystem_add_listener(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_add_listener(self.client, **kwargs)
+        params = strip_globals(kwargs)
+        params = apply_defaults(params, tgt_name=None)
+        params = group_as(params, 'listen_address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+        if params.get('nqn') == 'discovery':
+            params['nqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
+        self.client.nvmf_subsystem_add_listener(**params)
 
     @verbose
     def nvmf_subsystem_remove_listener(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_remove_listener(self.client, **kwargs)
+        params = strip_globals(kwargs)
+        params = group_as(params, 'listen_address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+        if params.get('nqn') == 'discovery':
+            params['nqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
+        self.client.nvmf_subsystem_remove_listener(**params)
 
     @verbose
     def nvmf_subsystem_add_host(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_add_host(self.client, **kwargs)
+        self.client.nvmf_subsystem_add_host(**kwargs)
 
     @verbose
     def nvmf_subsystem_remove_host(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_remove_host(self.client, **kwargs)
+        self.client.nvmf_subsystem_remove_host(**kwargs)
 
     @verbose
     def nvmf_subsystem_allow_any_host(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_allow_any_host(self.client, **kwargs)
+        self.client.nvmf_subsystem_allow_any_host(**kwargs)
 
     @verbose
     def nvmf_subsystem_add_ns(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_add_ns(self.client, **kwargs)
+        params = strip_globals(kwargs)
+        params = apply_defaults(params, tgt_name=None)
+        params = group_as(params, 'namespace', ['bdev_name', 'ptpl_file', 'nsid',
+                          'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible', 'hide_metadata'])
+        params = remove_null(params)
+        self.client.nvmf_subsystem_add_ns(**params)
 
     @verbose
     def nvmf_subsystem_remove_ns(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_remove_ns(self.client, **kwargs)
-
-    @verbose
-    def nvmf_subsystem_allow_any_host(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_allow_any_host(self.client, **kwargs)
+        self.client.nvmf_subsystem_remove_ns(**kwargs)
 
     @verbose
     @is_method_available
     def scsi_get_devices(self):
         if self.is_init:
-            for device in rpc.iscsi.scsi_get_devices(self.client):
+            for device in self.client.scsi_get_devices():
                 yield ScsiObj(device)
 
     @verbose
     @is_method_available
     def iscsi_get_target_nodes(self):
         if self.is_init:
-            for tg in rpc.iscsi.iscsi_get_target_nodes(self.client):
+            for tg in self.client.iscsi_get_target_nodes():
                 yield tg
 
     @verbose
     def iscsi_create_target_node(self, **kwargs):
-        rpc.iscsi.iscsi_create_target_node(self.client, **kwargs)
+        self.client.iscsi_create_target_node(**kwargs)
 
     @verbose
     def iscsi_delete_target_node(self, **kwargs):
-        rpc.iscsi.iscsi_delete_target_node(self.client, **kwargs)
+        self.client.iscsi_delete_target_node(**kwargs)
 
     @verbose
     @is_method_available
     def iscsi_get_portal_groups(self):
         if self.is_init:
-            for pg in rpc.iscsi.iscsi_get_portal_groups(self.client):
+            for pg in self.client.iscsi_get_portal_groups():
                 yield ScsiObj(pg)
 
     @verbose
     @is_method_available
     def iscsi_get_initiator_groups(self):
         if self.is_init:
-            for ig in rpc.iscsi.iscsi_get_initiator_groups(self.client):
+            for ig in self.client.iscsi_get_initiator_groups():
                 yield ScsiObj(ig)
 
     @verbose
     def construct_portal_group(self, **kwargs):
-        rpc.iscsi.iscsi_create_portal_group(self.client, **kwargs)
+        self.client.iscsi_create_portal_group(**kwargs)
 
     @verbose
     def iscsi_delete_portal_group(self, **kwargs):
-        rpc.iscsi.iscsi_delete_portal_group(self.client, **kwargs)
+        self.client.iscsi_delete_portal_group(**kwargs)
 
     @verbose
     def construct_initiator_group(self, **kwargs):
-        rpc.iscsi.iscsi_create_initiator_group(self.client, **kwargs)
+        self.client.iscsi_create_initiator_group(**kwargs)
 
     @verbose
     def iscsi_delete_initiator_group(self, **kwargs):
-        rpc.iscsi.iscsi_delete_initiator_group(self.client, **kwargs)
+        self.client.iscsi_delete_initiator_group(**kwargs)
 
     @verbose
     @is_method_available
     def iscsi_get_connections(self, **kwargs):
         if self.is_init:
-            for ic in rpc.iscsi.iscsi_get_connections(self.client, **kwargs):
+            for ic in self.client.iscsi_get_connections(**kwargs):
                 yield ic
 
     @verbose
     def iscsi_initiator_group_add_initiators(self, **kwargs):
-        rpc.iscsi.iscsi_initiator_group_add_initiators(self.client, **kwargs)
+        self.client.iscsi_initiator_group_add_initiators(**kwargs)
 
     @verbose
     def iscsi_initiator_group_remove_initiators(self, **kwargs):
-        rpc.iscsi.iscsi_initiator_group_remove_initiators(self.client, **kwargs)
+        self.client.iscsi_initiator_group_remove_initiators(**kwargs)
 
     @verbose
     def iscsi_target_node_add_pg_ig_maps(self, **kwargs):
-        rpc.iscsi.iscsi_target_node_add_pg_ig_maps(self.client, **kwargs)
+        self.client.iscsi_target_node_add_pg_ig_maps(**kwargs)
 
     @verbose
     def iscsi_target_node_remove_pg_ig_maps(self, **kwargs):
-        rpc.iscsi.iscsi_target_node_remove_pg_ig_maps(self.client, **kwargs)
+        self.client.iscsi_target_node_remove_pg_ig_maps(**kwargs)
 
     @verbose
     def iscsi_auth_group_add_secret(self, **kwargs):
-        rpc.iscsi.iscsi_auth_group_add_secret(self.client, **kwargs)
+        self.client.iscsi_auth_group_add_secret(**kwargs)
 
     @verbose
     def iscsi_auth_group_remove_secret(self, **kwargs):
-        rpc.iscsi.iscsi_auth_group_remove_secret(self.client, **kwargs)
+        self.client.iscsi_auth_group_remove_secret(**kwargs)
 
     @verbose
     @is_method_available
     def iscsi_get_auth_groups(self, **kwargs):
-        return rpc.iscsi.iscsi_get_auth_groups(self.client, **kwargs)
+        return self.client.iscsi_get_auth_groups(**kwargs)
 
     @verbose
     def iscsi_create_auth_group(self, **kwargs):
-        rpc.iscsi.iscsi_create_auth_group(self.client, **kwargs)
+        self.client.iscsi_create_auth_group(**kwargs)
 
     @verbose
     def iscsi_delete_auth_group(self, **kwargs):
-        rpc.iscsi.iscsi_delete_auth_group(self.client, **kwargs)
+        self.client.iscsi_delete_auth_group(**kwargs)
 
     @verbose
     def iscsi_target_node_set_auth(self, **kwargs):
-        rpc.iscsi.iscsi_target_node_set_auth(self.client, **kwargs)
+        self.client.iscsi_target_node_set_auth(**kwargs)
 
     @verbose
     def iscsi_target_node_add_lun(self, **kwargs):
-        rpc.iscsi.iscsi_target_node_add_lun(self.client, **kwargs)
+        self.client.iscsi_target_node_add_lun(**kwargs)
 
     @verbose
     def iscsi_set_discovery_auth(self, **kwargs):
-        rpc.iscsi.iscsi_set_discovery_auth(self.client, **kwargs)
+        self.client.iscsi_set_discovery_auth(**kwargs)
 
     @verbose
     @is_method_available
     def iscsi_get_options(self, **kwargs):
-        return rpc.iscsi.iscsi_get_options(self.client, **kwargs)
+        return self.client.iscsi_get_options(**kwargs)
 
     def has_subsystem(self, subsystem):
-        for system in rpc.subsystem.framework_get_subsystems(self.client):
+        for system in self.client.framework_get_subsystems():
             if subsystem.lower() == system["subsystem"].lower():
                 return True
         return False
