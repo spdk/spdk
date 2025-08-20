@@ -1464,9 +1464,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			    struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	uint32_t i, j;
+	uint32_t i;
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_registrant *reg, *tmp;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 	struct spdk_nvmf_ctrlr *ctrlr;
@@ -1553,21 +1552,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			ns_info->uuid = *spdk_bdev_get_uuid(ns->bdev);
 			ns_info->num_blocks = spdk_bdev_get_num_blocks(ns->bdev);
 			ns_info->anagrpid = ns->anagrpid;
-			ns_info->crkey = ns->crkey;
-			ns_info->rtype = ns->rtype;
-			if (ns->holder) {
-				ns_info->holder_id = ns->holder->hostid;
-			}
-
-			memset(&ns_info->reg_hostid, 0, SPDK_NVMF_MAX_NUM_REGISTRANTS * sizeof(struct spdk_uuid));
-			j = 0;
-			TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
-				if (j >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
-					SPDK_ERRLOG("Maximum %u registrants can support.\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
-					return -EINVAL;
-				}
-				ns_info->reg_hostid[j++] = reg->hostid;
-			}
+			nvmf_subsystem_poll_group_update_ns_reservation(ns, ns_info);
 		}
 	}
 

@@ -1681,6 +1681,33 @@ spdk_nvmf_subsystem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->flags.allow_any_listener;
 }
 
+int
+nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
+{
+	uint32_t j;
+	struct spdk_nvmf_registrant *reg;
+
+	pg_ns->crkey = ns->crkey;
+	pg_ns->rtype = ns->rtype;
+	if (ns->holder) {
+		pg_ns->holder_id = ns->holder->hostid;
+	} else {
+		memset(&pg_ns->holder_id, 0, sizeof(pg_ns->holder_id));
+	}
+
+	memset(&pg_ns->reg_hostid, 0, SPDK_NVMF_MAX_NUM_REGISTRANTS * sizeof(struct spdk_uuid));
+	j = 0;
+	TAILQ_FOREACH(reg, &ns->registrants, link) {
+		if (j >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+			SPDK_ERRLOG("Maximum %u registrants can support.\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
+			return -EINVAL;
+		}
+		pg_ns->reg_hostid[j++] = reg->hostid;
+	}
+	return 0;
+}
+
 struct subsystem_update_ns_ctx {
 	struct spdk_nvmf_subsystem *subsystem;
 

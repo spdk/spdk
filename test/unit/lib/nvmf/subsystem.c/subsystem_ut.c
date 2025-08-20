@@ -101,7 +101,21 @@ int
 nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				 struct spdk_nvmf_subsystem *subsystem)
 {
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
+	struct spdk_nvmf_ns *ns;
+
 	g_ns_pg_update++;
+	/* If test setup pg subsystem, update it */
+	if (group->sgroups) {
+		SPDK_CU_ASSERT_FATAL(group->num_sgroups);
+		sgroup = &group->sgroups[subsystem->id];
+		SPDK_CU_ASSERT_FATAL(subsystem->max_nsid >= 1);
+		SPDK_CU_ASSERT_FATAL(subsystem->ns[0]);
+		ns = subsystem->ns[0];
+		pg_ns = &sgroup->ns_info[ns->nsid - 1];
+		return nvmf_subsystem_poll_group_update_ns_reservation(ns, pg_ns);
+	}
 	return 0;
 }
 
@@ -1649,6 +1663,33 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 }
 
+static int
+nvmf_tgt_reservation_create_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *pg = ctx_buf;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	pg->thread = spdk_get_thread();
+	pg->num_sgroups = 1;
+	pg->sgroups = calloc(pg->num_sgroups, sizeof(struct spdk_nvmf_subsystem_poll_group));
+	SPDK_CU_ASSERT_FATAL(pg->sgroups);
+	SPDK_CU_ASSERT_FATAL(g_subsystem.id < pg->num_sgroups);
+	sgroup = &pg->sgroups[g_subsystem.id];
+	sgroup->ns_info = calloc(g_subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
+	SPDK_CU_ASSERT_FATAL(sgroup->ns_info);
+	sgroup->num_ns = g_subsystem.max_nsid;
+	return 0;
+}
+
+static void
+nvmf_tgt_reservation_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *pg = ctx_buf;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	sgroup = &pg->sgroups[g_subsystem.id];
+	free(sgroup->ns_info);
+	free(pg->sgroups);
+}
+
 static size_t
 registrants_get_count(const struct spdk_nvmf_ns *ns)
 {
@@ -1685,6 +1726,8 @@ test_reservation_request(void)
 	struct spdk_nvmf_qpair qpair = {};
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_poll_group *pg;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
 	struct spdk_io_channel *ch;
 	struct spdk_thread *thread;
 	const uint64_t rkey = 0xa1;
@@ -1698,17 +1741,18 @@ test_reservation_request(void)
 	g_subsystem.tgt = &tgt;
 
 	spdk_io_device_register(&tgt,
-				nvmf_tgt_create_poll_group,
-				nvmf_tgt_destroy_poll_group,
+				nvmf_tgt_reservation_create_poll_group,
+				nvmf_tgt_reservation_destroy_poll_group,
 				sizeof(struct spdk_nvmf_poll_group),
 				NULL);
 
-	/* Create a pg */
+	/* Get the poll group */
 	ch = spdk_get_io_channel(&tgt);
 	SPDK_CU_ASSERT_FATAL(ch);
 	pg = spdk_io_channel_get_ctx(ch);
-	pg->thread = thread;
 	qpair.group = pg;
+	sgroup = &pg->sgroups[g_subsystem.id];
+	pg_ns = &sgroup->ns_info[g_ns.nsid - 1];
 
 	req = ut_reservation_build_req(16);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -1731,6 +1775,12 @@ test_reservation_request(void)
 	poll_threads(); /* drive poll group update */
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 1);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+	/* Validate poll group ns state */
+	SPDK_CU_ASSERT_FATAL(pg_ns->crkey == 0);
+	SPDK_CU_ASSERT_FATAL(pg_ns->rtype == 0);
+	SPDK_CU_ASSERT_FATAL(spdk_uuid_is_null(&pg_ns->holder_id));
+	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->reg_hostid[0],
+					       &g_ctrlr1_A.hostid) == 0);
 
 	/* Acquire */
 	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
@@ -1747,6 +1797,11 @@ test_reservation_request(void)
 	poll_threads(); /* drive poll group update */
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 2);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+	/* Validate poll group ns state */
+	SPDK_CU_ASSERT_FATAL(pg_ns->crkey == rkey);
+	SPDK_CU_ASSERT_FATAL(pg_ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->holder_id,
+					       &g_ctrlr1_A.hostid) == 0);
 
 	/* Report */
 	report_req = ut_reservation_build_req(
@@ -1795,6 +1850,12 @@ test_reservation_request(void)
 	poll_threads(); /* drive poll group update */
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 3);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+	/* Validate poll group ns state */
+	SPDK_CU_ASSERT_FATAL(pg_ns->crkey == 0);
+	SPDK_CU_ASSERT_FATAL(pg_ns->rtype == 0);
+	SPDK_CU_ASSERT_FATAL(spdk_uuid_is_null(&pg_ns->holder_id));
+	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->reg_hostid[0],
+					       &g_ctrlr1_A.hostid) == 0);
 
 	spdk_put_io_channel(ch);
 	spdk_io_device_unregister(&tgt, NULL);
@@ -1818,6 +1879,8 @@ test_reservation_request_multi_pending(void)
 	struct spdk_nvme_cpl *rsp;
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_poll_group *pg;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
 	struct spdk_io_channel *ch;
 	struct spdk_thread *thread;
 	const uint64_t key_base = 0xDEADBEEF;
@@ -1832,16 +1895,17 @@ test_reservation_request_multi_pending(void)
 	g_ns_pg_update = 0;
 
 	spdk_io_device_register(&tgt,
-				nvmf_tgt_create_poll_group,
-				nvmf_tgt_destroy_poll_group,
+				nvmf_tgt_reservation_create_poll_group,
+				nvmf_tgt_reservation_destroy_poll_group,
 				sizeof(struct spdk_nvmf_poll_group),
 				NULL);
 
-	/* Create a pg */
+	/* Get the poll group */
 	ch = spdk_get_io_channel(&tgt);
 	SPDK_CU_ASSERT_FATAL(ch);
 	pg = spdk_io_channel_get_ctx(ch);
-	pg->thread = thread;
+	sgroup = &pg->sgroups[g_subsystem.id];
+	pg_ns = &sgroup->ns_info[g_ns.nsid - 1];
 
 	memset(&qpairs[0], 0, sizeof(qpairs));
 	/* Build registrations for each controller on the same nsid */
@@ -1884,6 +1948,11 @@ test_reservation_request_multi_pending(void)
 		}
 		poll_thread_times(0, 4); /* enough polls to complete a req and process the next */
 		SPDK_CU_ASSERT_FATAL(g_ns_pg_update == i + 1);
+		SPDK_CU_ASSERT_FATAL(pg_ns->crkey == 0);
+		SPDK_CU_ASSERT_FATAL(pg_ns->rtype == 0);
+		SPDK_CU_ASSERT_FATAL(spdk_uuid_is_null(&pg_ns->holder_id));
+		SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->reg_hostid[i],
+						       &ctrlrs[i]->hostid) == 0);
 	}
 
 	/* All requests should be complete */

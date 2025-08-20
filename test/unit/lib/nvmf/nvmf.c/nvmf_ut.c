@@ -30,6 +30,8 @@ DEFINE_STUB(nvmf_transport_req_free, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(nvmf_transport_poll_group_poll, int, (struct spdk_nvmf_transport_poll_group *group), 0);
 DEFINE_STUB_V(nvmf_subsystem_remove_all_listeners, (struct spdk_nvmf_subsystem *subsystem,
 		bool stop));
+DEFINE_STUB(nvmf_subsystem_poll_group_update_ns_reservation, int, (const struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_destroy, int, (struct spdk_nvmf_subsystem *subsystem,
 		nvmf_subsystem_destroy_cb cpl_cb, void *cpl_cb_arg), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_listener, struct spdk_nvmf_subsystem_listener *,
@@ -179,8 +181,6 @@ test_nvmf_tgt_create_poll_group(void)
 	MOCK_SET(spdk_nvmf_subsystem_get_first, &subsystem);
 
 	subsystem.ns[0] = &ns;
-	ns.crkey = 0xaa;
-	ns.rtype = 0xbb;
 	TAILQ_INIT(&ns.registrants);
 	ns.bdev = &bdev;
 	spdk_uuid_generate(&bdev.uuid);
@@ -203,8 +203,6 @@ test_nvmf_tgt_create_poll_group(void)
 	CU_ASSERT(group.sgroups[0].ns_info[0].channel == &ch);
 	CU_ASSERT(!memcmp(&group.sgroups[0].ns_info[0].uuid, &bdev.uuid, 16));
 	CU_ASSERT(group.sgroups[0].ns_info[0].num_blocks == 512);
-	CU_ASSERT(group.sgroups[0].ns_info[0].crkey == 0xaa);
-	CU_ASSERT(group.sgroups[0].ns_info[0].rtype == 0xbb);
 	CU_ASSERT(TAILQ_FIRST(&tgt.poll_groups) == &group);
 	CU_ASSERT(tgt.num_poll_groups == 1);
 	CU_ASSERT(group.thread == thread);
