@@ -15,6 +15,8 @@ try:
 except ImportError:
     from pipes import quote
 
+from .cmd_parser import remove_null
+
 
 def print_array(a):
     print(" ".join((quote(v) for v in a)))
@@ -189,6 +191,12 @@ class JSONRPCClient(object):
 
         self._logger.info("response:\n%s\n", json.dumps(response, indent=2))
         return response
+
+    def __getattr__(self, name):
+        """Dynamically handle unknown attributes as JSON-RPC methods"""
+        def rpc_method(**kwargs):
+            return self.call(name, remove_null(kwargs))
+        return rpc_method
 
     def call(self, method, params=None):
         self._logger.debug("call('%s')" % method)
