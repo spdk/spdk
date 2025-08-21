@@ -137,6 +137,12 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_uuid		reg_hostid[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 	uint64_t			num_blocks;
 	uint32_t			anagrpid;
+	struct {
+		/* Generational counter for preempted hostids list */
+		uint32_t			hostids_gen;
+		/* Count of IOs preempt-and-abort is waiting on */
+		uint64_t			io_waiting;
+	} preempt_abort;
 
 	/* I/O outstanding to this namespace */
 	uint64_t			io_outstanding;

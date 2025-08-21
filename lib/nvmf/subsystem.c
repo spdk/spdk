@@ -1708,6 +1708,146 @@ nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 	return 0;
 }
 
+static bool
+ns_reservation_hostid_list_contains_id(const struct spdk_uuid *hostid_list, uint32_t num_hostid,
+				       const struct spdk_uuid *id)
+{
+	size_t i;
+
+	for (i = 0; i < num_hostid; i++) {
+		if (!spdk_uuid_compare(&hostid_list[i], id)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool
+ns_reservation_io_should_wait(const struct spdk_nvme_cmd *cmd)
+{
+	switch (cmd->opc) {
+	/* We don't wait on reservation commands that modify state because
+	 * those are serialized and will cause a deadlock.
+	 */
+	case SPDK_NVME_OPC_RESERVATION_REGISTER:
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		return false;
+	default:
+		return true;
+	}
+}
+
+static bool
+ns_reservation_req_is_preempt_abort(const struct spdk_nvmf_request *req)
+{
+	const struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	return cmd->opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE &&
+	       cmd->cdw10_bits.resv_acquire.racqa == SPDK_NVME_RESERVE_PREEMPT_ABORT;
+}
+
+static void
+poll_group_reservation_build_io_waiting(const struct spdk_nvmf_poll_group *group,
+					const struct spdk_nvmf_subsystem *subsystem, const struct spdk_nvmf_ns *ns,
+					const struct spdk_nvmf_request *req, struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
+{
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_request *q_req;
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+	const struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	bool hostid_match;
+
+	pg_ns->preempt_abort.io_waiting = 0;
+	if (!p_info->hostids_cnt) {
+		/* no preempted hostids */
+		return;
+	}
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (!qpair->ctrlr || qpair->ctrlr->subsys != subsystem) {
+			continue;
+		}
+		hostid_match = ns_reservation_hostid_list_contains_id(p_info->hostids,
+				p_info->hostids_cnt, &qpair->ctrlr->hostid);
+		if (!hostid_match) {
+			continue;
+		}
+
+		/* This is a preempted controller, check for IOs on the same namespace */
+		TAILQ_FOREACH(q_req, &qpair->outstanding, link) {
+			struct spdk_nvme_cmd *req_cmd = &q_req->cmd->nvme_cmd;
+			if (req_cmd->nsid == cmd->nsid && ns_reservation_io_should_wait(req_cmd)) {
+				pg_ns->preempt_abort.io_waiting++;
+				q_req->reservation_waiting = 1;
+			}
+		}
+	}
+}
+
+static int
+poll_group_reservation_preempt_abort_process(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
+	struct spdk_nvmf_request *req;
+	uint32_t i;
+
+	/* Make sure our poll group has memory for this subsystem allocated */
+	if (subsystem->id >= group->num_sgroups) {
+		return -ENOMEM;
+	}
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	/* No namespaces on the subsystem, nothing to do! */
+	if (sgroup->num_ns == 0) {
+		assert(subsystem->max_nsid == 0);
+		return 0;
+	}
+
+	for (i = 0; i < sgroup->num_ns; i++) {
+		ns = subsystem->ns[i];
+		pg_ns = &sgroup->ns_info[i];
+
+		/* Skip empty namespace slot */
+		if (!ns) {
+			continue;
+		}
+		/* Check for in-progress reservations to process */
+		if (STAILQ_EMPTY(&ns->reservations)) {
+			continue;
+		}
+		req = STAILQ_FIRST(&ns->reservations);
+		/* Check if this is a preempt-and-abort cmd */
+		if (!ns_reservation_req_is_preempt_abort(req)) {
+			continue;
+		}
+
+		/* Ensure we have not already processed this */
+		if (ns->preempt_abort->hostids_gen == pg_ns->preempt_abort.hostids_gen) {
+			SPDK_ERRLOG("Poll group: %p already processed preempt hostids: %u\n",
+				    group, ns->preempt_abort->hostids_gen);
+			return -EINVAL;
+		}
+
+		if (pg_ns->preempt_abort.io_waiting) {
+			/* This could happen if a previous preempt-and-abort failed before
+			 * completing the IO waiting. Don't let this block the next abort
+			 */
+			SPDK_ERRLOG("Poll group: %p has incomplete preempted io waiting: %lu\n",
+				    group, pg_ns->preempt_abort.io_waiting);
+		}
+
+		poll_group_reservation_build_io_waiting(group, subsystem, ns, req, pg_ns);
+		/* Commit gen as processed */
+		pg_ns->preempt_abort.hostids_gen = ns->preempt_abort->hostids_gen;
+	}
+
+	return 0;
+}
+
 struct subsystem_update_ns_ctx {
 	struct spdk_nvmf_subsystem *subsystem;
 
@@ -1739,6 +1879,14 @@ subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
 	subsystem = ctx->subsystem;
 
 	rc = nvmf_poll_group_update_subsystem(group, subsystem);
+	/* Process any preempt-and-abort state on pg.
+	 * NOTE: this is separated from the above function because
+	 * there are multiple callsites not related to reservations
+	 * for nvmf_poll_group_update_subsystem()
+	 */
+	if (!rc) {
+		rc = poll_group_reservation_preempt_abort_process(group, subsystem);
+	}
 	spdk_for_each_channel_continue(i, rc);
 }
 

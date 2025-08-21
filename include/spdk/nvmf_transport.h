@@ -90,7 +90,8 @@ struct spdk_nvmf_request {
 			uint8_t dif_enabled		: 1;
 			uint8_t first_fused		: 1;
 			uint8_t reservation_queued	: 1;
-			uint8_t rsvd			: 4;
+			uint8_t reservation_waiting	: 1; /* a reservation is waiting on this request */
+			uint8_t rsvd			: 3;
 		};
 	};
 	uint8_t				zcopy_phase; /* type enum spdk_nvmf_zcopy_phase */
