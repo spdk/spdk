@@ -42,10 +42,7 @@ def virtio_blk_create_transport(client, **params):
     Args:
         name: transport name
     """
-    strip_globals(params)
-    remove_null(params)
-
-    return client.call('virtio_blk_create_transport', params)
+    return client.call('virtio_blk_create_transport', remove_null(strip_globals(params)))
 
 
 def vhost_create_scsi_controller(client, ctrlr, delay=False, cpumask=None):
@@ -111,10 +108,7 @@ def vhost_create_blk_controller(client, **params):
         readonly: set controller as read-only
         packed_ring: support controller packed_ring
     """
-    strip_globals(params)
-    remove_null(params)
-
-    return client.call('vhost_create_blk_controller', params)
+    return client.call('vhost_create_blk_controller', remove_null(strip_globals(params)))
 
 
 def vhost_get_controllers(client, name=None):

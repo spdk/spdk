@@ -7,29 +7,18 @@ args_global = ['server_addr', 'port', 'timeout', 'verbose', 'dry_run', 'conn_ret
 
 
 def strip_globals(kwargs):
-    for arg in args_global:
-        kwargs.pop(arg, None)
+    return {k: v for k, v in kwargs.items() if k not in args_global}
 
 
 def remove_null(kwargs):
-    keys = []
-    for key, value in kwargs.items():
-        if value is None:
-            keys.append(key)
-
-    for key in keys:
-        kwargs.pop(key, None)
+    return {k: v for k, v in kwargs.items() if v is not None}
 
 
 def apply_defaults(kwargs, **defaults):
-    for key, value in defaults.items():
-        if key not in kwargs:
-            kwargs[key] = value
+    return {**defaults, **kwargs}
 
 
 def group_as(kwargs, name, values):
-    group = {}
-    for arg in values:
-        if arg in kwargs and kwargs[arg] is not None:
-            group[arg] = kwargs.pop(arg, None)
-    kwargs[name] = group
+    group = {k: v for k, v in kwargs.items() if k in values and v is not None}
+    rest = {k: v for k, v in kwargs.items() if k not in values}
+    return {**rest, name: group}

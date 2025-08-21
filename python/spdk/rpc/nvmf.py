@@ -140,9 +140,9 @@ def nvmf_create_transport(client, **params):
         True or False
     """
 
-    strip_globals(params)
-    apply_defaults(params, no_srq=False, c2h_success=True)
-    remove_null(params)
+    params = strip_globals(params)
+    params = apply_defaults(params, no_srq=False, c2h_success=True)
+    params = remove_null(params)
 
     return client.call('nvmf_create_transport', params)
 
@@ -279,10 +279,10 @@ def nvmf_subsystem_add_listener(client, **params):
         True or False
     """
 
-    strip_globals(params)
-    apply_defaults(params, tgt_name=None)
-    group_as(params, 'listen_address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
-    remove_null(params)
+    params = strip_globals(params)
+    params = apply_defaults(params, tgt_name=None)
+    params = group_as(params, 'listen_address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+    params = remove_null(params)
 
     if params['nqn'] == 'discovery':
         params['nqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
@@ -395,10 +395,10 @@ def nvmf_discovery_add_referral(client, **params):
         True or False
     """
 
-    strip_globals(params)
-    apply_defaults(params, tgt_name=None)
-    group_as(params, 'address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
-    remove_null(params)
+    params = strip_globals(params)
+    params = apply_defaults(params, tgt_name=None)
+    params = group_as(params, 'address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+    params = remove_null(params)
 
     if params.get('subnqn') == 'discovery':
         params['subnqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
@@ -484,12 +484,13 @@ def nvmf_subsystem_add_ns(client, **params):
         The namespace ID
     """
 
-    strip_globals(params)
-    apply_defaults(params, tgt_name=None)
-    group_as(params, 'namespace', ['bdev_name', 'ptpl_file', 'nsid',
-                                   'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible',
-                                   'hide_metadata'])
-    remove_null(params)
+    params = strip_globals(params)
+    params = apply_defaults(params, tgt_name=None)
+    params = group_as(params, 'namespace',
+                      ['bdev_name', 'ptpl_file', 'nsid',
+                       'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible',
+                       'hide_metadata'])
+    params = remove_null(params)
 
     return client.call('nvmf_subsystem_add_ns', params)
 

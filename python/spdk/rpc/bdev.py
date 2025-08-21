@@ -624,11 +624,7 @@ def bdev_nvme_set_options(client, **params):
         tcp_connect_timeout_ms: Time to wait until TCP connection is done. Default: 0 (no timeout).
         enable_flush: Pass flush to nvme devices when volatile write cache is present. Default: false
     """
-
-    strip_globals(params)
-    remove_null(params)
-
-    return client.call('bdev_nvme_set_options', params)
+    return client.call('bdev_nvme_set_options', remove_null(strip_globals(params)))
 
 
 def bdev_nvme_set_hotplug(client, enable, period_us=None):
