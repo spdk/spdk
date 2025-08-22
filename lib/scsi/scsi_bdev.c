@@ -1145,6 +1145,8 @@ bdev_scsi_task_complete_reset(struct spdk_bdev_io *bdev_io, bool success,
 
 	if (success) {
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
+	} else {
+		task->response = SPDK_SCSI_TASK_MGMT_RESP_COMPLETE;
 	}
 
 	scsi_lun_complete_reset_task(task->lun, task);

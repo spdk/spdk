@@ -78,7 +78,7 @@ scsi_lun_reset_check_outstanding_tasks(void *arg)
 void
 scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	if (task->status == SPDK_SCSI_STATUS_GOOD) {
+	if (task->response == SPDK_SCSI_TASK_MGMT_RESP_SUCCESS) {
 		if (scsi_lun_has_outstanding_tasks(lun)) {
 			lun->reset_poller =
 				SPDK_POLLER_REGISTER(scsi_lun_reset_check_outstanding_tasks,
