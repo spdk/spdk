@@ -1917,7 +1917,10 @@ bdev_nvme_destruct(void *ctx)
 
 		assert(nvme_ns->id > 0);
 
-		if (nvme_ctrlr_get_ns(nvme_ns->ctrlr, nvme_ns->id) == NULL) {
+		/* A new namespace object with the same NSID may have been created after reconnect.
+		 * In that case, ignore the new one and continue destroying the original namespace.
+		 */
+		if (nvme_ctrlr_get_ns(nvme_ns->ctrlr, nvme_ns->id) != nvme_ns) {
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 			nvme_ctrlr_put_ref(nvme_ns->ctrlr);
