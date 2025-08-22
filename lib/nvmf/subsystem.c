@@ -3692,6 +3692,23 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 
 	assert(subsystem->thread == spdk_get_thread());
 
+	if (status != 0) {
+		switch (status) {
+		case -EINVAL:
+			SPDK_ERRLOG("ns_reservation failed invalid field\n");
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			break;
+		case -ENOMEM:
+			SPDK_ERRLOG("ns_reservation failed internal device error\n");
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			break;
+		default:
+			SPDK_ERRLOG("ns_reservation failed unknown error\n");
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_UNRECOVERED_ERROR;
+			break;
+		}
+
+	}
 	/* Get namespace */
 	ns = _nvmf_subsystem_get_ns(subsystem, cmd->nsid);
 	assert(ns != NULL);

@@ -80,6 +80,8 @@ DEFINE_STUB(spdk_bdev_get_nvme_nsid, uint32_t, (struct spdk_bdev *bdev), 0);
 
 static struct spdk_nvmf_transport g_transport = {};
 
+static int g_nvmf_poll_group_udpate_subsystem_rc = 0;
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
@@ -116,7 +118,8 @@ nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		pg_ns = &sgroup->ns_info[ns->nsid - 1];
 		return nvmf_subsystem_poll_group_update_ns_reservation(ns, pg_ns);
 	}
-	return 0;
+	/* can be overridden by tests to force error */
+	return g_nvmf_poll_group_udpate_subsystem_rc;
 }
 
 int
@@ -1868,6 +1871,102 @@ test_reservation_request(void)
 }
 
 static void
+test_reservation_request_failure(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_poll_group *pg;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
+	struct spdk_nvmf_registrant *reg;
+	const uint64_t rkey = 0xa1;
+
+	/* This test requires a thread */
+	thread = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	g_subsystem.thread = thread;
+
+	ut_reservation_init();
+	g_subsystem.tgt = &tgt;
+
+	spdk_io_device_register(&tgt,
+				nvmf_tgt_create_poll_group,
+				nvmf_tgt_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group),
+				NULL);
+
+	/* Create a pg */
+	ch = spdk_get_io_channel(&tgt);
+	SPDK_CU_ASSERT_FATAL(ch);
+	pg = spdk_io_channel_get_ctx(ch);
+	pg->thread = thread;
+	qpair.group = pg;
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->qpair = &qpair;
+	req->qpair->ctrlr = &g_ctrlr1_A;
+	req->cmd->nvme_cmd.nsid = g_ns.nsid;
+
+	/* Force invalid field error */
+	g_nvmf_poll_group_udpate_subsystem_rc = -EINVAL;
+	/* Register */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+					      0, 0, 0, rkey);
+	g_ns_pg_update = 0;
+	nvmf_ns_reservation_request(req);
+
+	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1);
+	/* reservation command is outstanding until pg updates */
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(req->rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+	/* failed req should still move off the queue */
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 1);
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+
+	/* Force ENOMEM error */
+	g_nvmf_poll_group_udpate_subsystem_rc = -ENOMEM;
+	req->qpair->ctrlr = &g_ctrlr_B;
+	nvmf_ns_reservation_request(req);
+	/* reservation command is outstanding until pg updates */
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(req->rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	/* failed req should still move off the queue */
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 2);
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+
+	/* Force Unknown error */
+	g_nvmf_poll_group_udpate_subsystem_rc = -EFAULT;
+	req->qpair->ctrlr = &g_ctrlr_C;
+	nvmf_ns_reservation_request(req);
+	/* reservation command is outstanding until pg updates */
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(req->rsp->nvme_cpl.status.sc == SPDK_NVME_SC_UNRECOVERED_ERROR);
+	/* failed req should still move off the queue */
+	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 3);
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+
+	/* re run without inject, should pass */
+	g_nvmf_poll_group_udpate_subsystem_rc = 0;
+	nvmf_ns_reservation_request(req);
+	poll_threads(); /* drive poll group update */
+	SPDK_CU_ASSERT_FATAL(req->rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_ns.registrants));
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_C.hostid);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == rkey);
+
+	spdk_put_io_channel(ch);
+	spdk_io_device_unregister(&tgt, NULL);
+	g_subsystem.tgt = NULL;
+	g_subsystem.thread = NULL;
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
 test_reservation_request_multi_pending(void)
 {
 	enum {
@@ -2630,6 +2729,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_preempt_notification);
 	CU_ADD_TEST(suite, test_reservation_invalid_request);
 	CU_ADD_TEST(suite, test_reservation_request);
+	CU_ADD_TEST(suite, test_reservation_request_failure);
 	CU_ADD_TEST(suite, test_reservation_request_multi_pending);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
