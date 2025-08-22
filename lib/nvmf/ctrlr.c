@@ -385,6 +385,8 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
+	cdata->cntrltype = spdk_nvmf_subsystem_is_discovery(subsystem) ?
+			   SPDK_NVME_CTRLR_DISCOVERY : SPDK_NVME_CTRLR_IO;
 	cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 	cdata->nvmf_specific.ioccsz += transport->opts.in_capsule_data_size / 16;
 	cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;

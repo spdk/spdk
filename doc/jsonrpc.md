@@ -8901,6 +8901,7 @@ Example response:
   "result": [
     {
       "cntlid": 1,
+      "cntrltype: "io",
       "hostnqn": "nqn.2016-06.io.spdk:host1",
       "hostid": "27dad528-6368-41c3-82d3-0b956b49025d",
       "num_io_qpairs": 5

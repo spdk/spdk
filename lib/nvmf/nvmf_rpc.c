@@ -2834,6 +2834,21 @@ rpc_nvmf_get_stats(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("nvmf_get_stats", rpc_nvmf_get_stats, SPDK_RPC_RUNTIME)
 
+static const char *
+nvmf_cntrltype_str(enum spdk_nvme_ctrlr_type type)
+{
+	switch (type) {
+	case SPDK_NVME_CTRLR_IO:
+		return "io";
+	case SPDK_NVME_CTRLR_DISCOVERY:
+		return "discovery";
+	case SPDK_NVME_CTRLR_ADMINISTRATIVE:
+		return "administrative";
+	default:
+		return "unknown";
+	}
+}
+
 static void
 dump_nvmf_ctrlr(struct spdk_json_write_ctx *w, struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -2842,6 +2857,7 @@ dump_nvmf_ctrlr(struct spdk_json_write_ctx *w, struct spdk_nvmf_ctrlr *ctrlr)
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_uint32(w, "cntlid", ctrlr->cntlid);
+	spdk_json_write_named_string(w, "cntrltype", nvmf_cntrltype_str(ctrlr->cdata.cntrltype));
 	spdk_json_write_named_string(w, "hostnqn", ctrlr->hostnqn);
 	spdk_json_write_named_uuid(w, "hostid", &ctrlr->hostid);
 
