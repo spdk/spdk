@@ -60,6 +60,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 	.admin_passthru.get_set_features = false,
 	.admin_passthru.sanitize = false,
 	.admin_passthru.security_send_recv = false,
+	.admin_passthru.fw_update = false,
 	.admin_passthru.vendor_specific = false
 };
 
@@ -426,6 +427,12 @@ fixup_get_cmds_and_effects_log_page(struct spdk_nvmf_request *req)
 		nvmf_log_data.admin_cmds_supported[SPDK_NVME_OPC_SECURITY_RECEIVE] =
 			nvme_log_data.admin_cmds_supported[SPDK_NVME_OPC_SECURITY_RECEIVE];
 	}
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.fw_update) {
+		nvmf_log_data.admin_cmds_supported[SPDK_NVME_OPC_FIRMWARE_COMMIT] =
+			nvme_log_data.admin_cmds_supported[SPDK_NVME_OPC_FIRMWARE_COMMIT];
+		nvmf_log_data.admin_cmds_supported[SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD] =
+			nvme_log_data.admin_cmds_supported[SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD];
+	}
 
 	/* Copy the fixed SPDK struct to the request */
 	spdk_nvmf_request_copy_from_buf(req, (uint8_t *) &nvmf_log_data + offset, datalen);
@@ -559,6 +566,12 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.security_send_recv) {
 		nvmf_cdata.oacs.security = nvme_cdata.oacs.security;
+	}
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.fw_update) {
+		nvmf_cdata.oacs.firmware = nvme_cdata.oacs.firmware;
+		nvmf_cdata.frmw = nvme_cdata.frmw;
+		nvmf_cdata.fwug = nvme_cdata.fwug;
+		nvmf_cdata.mtfa = nvme_cdata.mtfa;
 	}
 
 	/* Copy the fixed up data back to the response */
@@ -718,6 +731,12 @@ nvmf_tgt_advance_state(void)
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_SECURITY_SEND, nvmf_custom_admin_no_cb_hdlr);
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_SECURITY_RECEIVE, nvmf_custom_admin_no_cb_hdlr);
 			}
+			if (g_spdk_nvmf_tgt_conf.admin_passthru.fw_update) {
+				SPDK_NOTICELOG("Custom firmware update commands handlers enabled\n");
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_FIRMWARE_COMMIT, nvmf_custom_admin_no_cb_hdlr);
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD,
+								    nvmf_custom_admin_no_cb_hdlr);
+			}
 			if (g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific) {
 				int i;
 				SPDK_NOTICELOG("Custom vendor specific commands handlers enabled\n");
@@ -846,6 +865,8 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 				   g_spdk_nvmf_tgt_conf.admin_passthru.sanitize);
 	spdk_json_write_named_bool(w, "security_send_recv",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.security_send_recv);
+	spdk_json_write_named_bool(w, "fw_update",
+				   g_spdk_nvmf_tgt_conf.admin_passthru.fw_update);
 	spdk_json_write_named_bool(w, "vendor_specific",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific);
 	spdk_json_write_object_end(w);

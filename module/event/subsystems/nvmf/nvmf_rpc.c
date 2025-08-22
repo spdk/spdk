@@ -50,6 +50,7 @@ static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
 	{"get_set_features", offsetof(struct spdk_nvmf_admin_passthru_conf, get_set_features), spdk_json_decode_bool, true},
 	{"sanitize", offsetof(struct spdk_nvmf_admin_passthru_conf, sanitize), spdk_json_decode_bool, true},
 	{"security_send_recv", offsetof(struct spdk_nvmf_admin_passthru_conf, security_send_recv), spdk_json_decode_bool, true},
+	{"fw_update", offsetof(struct spdk_nvmf_admin_passthru_conf, fw_update), spdk_json_decode_bool, true},
 	{"vendor_specific", offsetof(struct spdk_nvmf_admin_passthru_conf, vendor_specific), spdk_json_decode_bool, true},
 };
 

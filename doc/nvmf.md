@@ -434,3 +434,16 @@ affects the other, since the whole bdev would be removed from and added back to 
 If a bdev is of type bdev_nvme and this underlying NVMe namespace is part of an NVM subsystem containing multiple namespaces,
 then all bdevs associated with that underlying subsystem will be destroyed and re-added,
 even if they are in a separate NVMe-oF subsystem that wasn't being reset. Beware of side effects.
+
+## NVMe firmware update
+
+NVMe firmware update process involves use of two admin commands: firmware download and firmware commit.
+FW download is used only to get the FW image to the drive, then FW commit is used to tell the drive to:
+
+1. store the FW image in particular firmware slot
+2. store and activate the image after controller reset (or NSSR)
+3. store and activate immediately without any reset (if NVMe drive supports that)
+
+Drive is never unregistered from the system after FW commit.
+User needs to trigger Reset/NSSR separately (in case of second option).
+Please refer to firmware commit/firmware download admin command section of NVMe spec for further details.
