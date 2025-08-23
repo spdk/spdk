@@ -2095,7 +2095,6 @@ static int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
-	enum nvme_qpair_state state_prev;
 	uint32_t reaped;
 	int rc;
 
@@ -2148,12 +2147,11 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 
 	return reaped;
 fail:
-	state_prev = nvme_qpair_get_state(qpair);
 	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 	nvme_ctrlr_disconnect_qpair(qpair);
 
 	/* Needed to free the poll_status */
-	if (state_prev == NVME_QPAIR_CONNECTING && qpair->fabric_poll_status != NULL) {
+	if (qpair->fabric_poll_status != NULL) {
 		nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
 	}
 
