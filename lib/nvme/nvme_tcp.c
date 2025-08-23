@@ -2153,7 +2153,7 @@ fail:
 	nvme_ctrlr_disconnect_qpair(qpair);
 
 	/* Needed to free the poll_status */
-	if (state_prev == NVME_QPAIR_CONNECTING && qpair->poll_status != NULL) {
+	if (state_prev == NVME_QPAIR_CONNECTING && qpair->fabric_poll_status != NULL) {
 		nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
 	}
 

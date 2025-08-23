@@ -179,7 +179,7 @@ nvme_auth_set_failure(struct spdk_nvme_qpair *qpair, int status, bool failure2)
 static void
 nvme_auth_print_cpl(struct spdk_nvme_qpair *qpair, const char *msg)
 {
-	struct nvme_completion_poll_status *status = qpair->poll_status;
+	struct nvme_completion_poll_status *status = qpair->fabric_poll_status;
 
 	AUTH_ERRLOG(qpair, "%s failed: sc=%d, sct=%d (timed out: %s)\n", msg, status->cpl.status.sc,
 		    status->cpl.status.sct, status->timed_out ? "true" : "false");
@@ -666,7 +666,7 @@ nvme_auth_submit_request(struct spdk_nvme_qpair *qpair,
 {
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct nvme_request *req = qpair->reserved_req;
-	struct nvme_completion_poll_status *status = qpair->poll_status;
+	struct nvme_completion_poll_status *status = qpair->fabric_poll_status;
 	struct spdk_nvmf_fabric_auth_recv_cmd rcmd = {};
 	struct spdk_nvmf_fabric_auth_send_cmd scmd = {};
 
@@ -707,7 +707,7 @@ nvme_auth_submit_request(struct spdk_nvme_qpair *qpair,
 static int
 nvme_auth_recv_message(struct spdk_nvme_qpair *qpair)
 {
-	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	memset(qpair->fabric_poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	return nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_RECV,
 					NVME_AUTH_DATA_SIZE);
 }
@@ -715,10 +715,10 @@ nvme_auth_recv_message(struct spdk_nvme_qpair *qpair)
 static bool
 nvme_auth_send_failure2(struct spdk_nvme_qpair *qpair, enum spdk_nvmf_auth_failure_reason reason)
 {
-	struct spdk_nvmf_auth_failure *msg = qpair->poll_status->dma_data;
+	struct spdk_nvmf_auth_failure *msg = qpair->fabric_poll_status->dma_data;
 	struct nvme_auth *auth = &qpair->auth;
 
-	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	memset(qpair->fabric_poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	msg->auth_type = SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE;
 	msg->auth_id = SPDK_NVMF_AUTH_ID_FAILURE2;
 	msg->t_id = auth->tid;
@@ -732,7 +732,7 @@ nvme_auth_send_failure2(struct spdk_nvme_qpair *qpair, enum spdk_nvmf_auth_failu
 static int
 nvme_auth_check_message(struct spdk_nvme_qpair *qpair, enum spdk_nvmf_auth_id auth_id)
 {
-	struct spdk_nvmf_auth_failure *msg = qpair->poll_status->dma_data;
+	struct spdk_nvmf_auth_failure *msg = qpair->fabric_poll_status->dma_data;
 	const char *reason = NULL;
 	const char *reasons[] = {
 		[SPDK_NVMF_AUTH_FAILED] = "authentication failed",
@@ -781,11 +781,11 @@ static int
 nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_auth *auth = &qpair->auth;
-	struct spdk_nvmf_auth_negotiate *msg = qpair->poll_status->dma_data;
+	struct spdk_nvmf_auth_negotiate *msg = qpair->fabric_poll_status->dma_data;
 	struct spdk_nvmf_auth_descriptor *desc = msg->descriptors;
 	size_t i;
 
-	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	memset(qpair->fabric_poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	desc->auth_id = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	assert(SPDK_COUNTOF(g_digests) <= sizeof(desc->hash_id_list));
 	assert(SPDK_COUNTOF(g_dhgroups) <= sizeof(desc->dhg_id_list));
@@ -820,7 +820,7 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 static int
 nvme_auth_check_challenge(struct spdk_nvme_qpair *qpair)
 {
-	struct spdk_nvmf_dhchap_challenge *challenge = qpair->poll_status->dma_data;
+	struct spdk_nvmf_dhchap_challenge *challenge = qpair->fabric_poll_status->dma_data;
 	struct nvme_auth *auth = &qpair->auth;
 	uint8_t hl;
 	int rc;
@@ -900,7 +900,7 @@ error:
 static int
 nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_completion_poll_status *status = qpair->poll_status;
+	struct nvme_completion_poll_status *status = qpair->fabric_poll_status;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_dhchap_challenge *challenge = status->dma_data;
 	struct spdk_nvmf_dhchap_reply *reply = status->dma_data;
@@ -989,7 +989,7 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	}
 
 	/* Now that the response has been calculated, send the reply */
-	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	memset(qpair->fabric_poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	assert(sizeof(*reply) + 2 * hl + publen <= NVME_AUTH_DATA_SIZE);
 	memcpy(reply->rval, response, hl);
 	memcpy(&reply->rval[1 * hl], ctrlr_challenge, hl);
@@ -1018,7 +1018,7 @@ out:
 static int
 nvme_auth_check_success1(struct spdk_nvme_qpair *qpair)
 {
-	struct spdk_nvmf_dhchap_success1 *msg = qpair->poll_status->dma_data;
+	struct spdk_nvmf_dhchap_success1 *msg = qpair->fabric_poll_status->dma_data;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct nvme_auth *auth = &qpair->auth;
 	uint8_t hl;
@@ -1069,10 +1069,10 @@ error:
 static int
 nvme_auth_send_success2(struct spdk_nvme_qpair *qpair)
 {
-	struct spdk_nvmf_dhchap_success2 *msg = qpair->poll_status->dma_data;
+	struct spdk_nvmf_dhchap_success2 *msg = qpair->fabric_poll_status->dma_data;
 	struct nvme_auth *auth = &qpair->auth;
 
-	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	memset(qpair->fabric_poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	msg->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	msg->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS2;
 	msg->t_id = auth->tid;
@@ -1086,7 +1086,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct nvme_auth *auth = &qpair->auth;
-	struct nvme_completion_poll_status *status = qpair->poll_status;
+	struct nvme_completion_poll_status *status = qpair->fabric_poll_status;
 	enum nvme_qpair_auth_state prev_state;
 	int rc;
 
@@ -1200,8 +1200,8 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_DONE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_DONE:
-			if (qpair->poll_status != NULL && !status->timed_out) {
-				qpair->poll_status = NULL;
+			if (qpair->fabric_poll_status != NULL && !status->timed_out) {
+				qpair->fabric_poll_status = NULL;
 				spdk_free(status->dma_data);
 				free(status);
 			}
@@ -1237,7 +1237,7 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 		return -EINVAL;
 	}
 
-	status = calloc(1, sizeof(*qpair->poll_status));
+	status = calloc(1, sizeof(*qpair->fabric_poll_status));
 	if (!status) {
 		AUTH_ERRLOG(qpair, "failed to allocate poll status\n");
 		return -ENOMEM;
@@ -1251,8 +1251,8 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 		return -ENOMEM;
 	}
 
-	assert(qpair->poll_status == NULL);
-	qpair->poll_status = status;
+	assert(qpair->fabric_poll_status == NULL);
+	qpair->fabric_poll_status = status;
 
 	nvme_ctrlr_lock(ctrlr);
 	auth->tid = ctrlr->auth_tid++;

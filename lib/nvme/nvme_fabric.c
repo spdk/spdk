@@ -576,7 +576,7 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	}
 
 	qpair->auth.flags = 0;
-	qpair->poll_status = status;
+	qpair->fabric_poll_status = status;
 	return 0;
 }
 
@@ -589,7 +589,7 @@ nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 	int rc = 0;
 
 	ctrlr = qpair->ctrlr;
-	status = qpair->poll_status;
+	status = qpair->fabric_poll_status;
 
 	if (nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL) == -EAGAIN) {
 		return -EAGAIN;
@@ -627,7 +627,7 @@ nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 		qpair->auth.flags |= NVME_QPAIR_AUTH_FLAG_ASCR;
 	}
 finish:
-	qpair->poll_status = NULL;
+	qpair->fabric_poll_status = NULL;
 	if (!status->timed_out) {
 		spdk_free(status->dma_data);
 		free(status);

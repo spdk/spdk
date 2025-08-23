@@ -881,7 +881,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->trtype = ctrlr->trid.trtype;
 	qpair->is_new_qpair = true;
 	qpair->async = async;
-	qpair->poll_status = NULL;
+	qpair->fabric_poll_status = NULL;
 	qpair->num_outstanding_reqs = 0;
 
 	qpair->poll_group = NULL;
