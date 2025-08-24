@@ -28,6 +28,8 @@
 #include "spdk/nvmf.h"
 #include "spdk/keyring.h"
 #include "spdk/module/keyring/file.h"
+#include "spdk/event.h"
+#include "spdk/trace.h"
 
 #ifdef SPDK_CONFIG_URING
 #include <liburing.h>
@@ -255,6 +257,7 @@ static bool g_header_digest;
 static bool g_data_digest;
 static bool g_no_shn_notification;
 static bool g_mix_specified;
+static char *g_tpoint_group_mask = NULL;
 /* The flag is used to exit the program while keep alive fails on the transport */
 static bool g_exit;
 /* Default to 10 seconds for the keep alive value. This value is arbitrary. */
@@ -1884,6 +1887,7 @@ usage(char *program_name)
 #endif
 	printf("\t--iova-mode <mode> specify DPDK IOVA mode: va|pa\n");
 	printf("\t--no-huge, SPDK is run without hugepages\n");
+	spdk_trace_mask_usage(stdout, "-y");
 	printf("\n");
 
 	printf("==== PCIe OPTIONS ====\n\n");
@@ -2294,7 +2298,7 @@ alloc_key(const char *name, const char *path)
 	return key;
 }
 
-#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:z:A:C:DEF:GHILM:NO:P:Q:RS:T:U:VZ:"
+#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:y:z:A:C:DEF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2373,6 +2377,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"enable-vmd", no_argument, NULL, PERF_ENABLE_VMD},
 #define PERF_ENABLE_ZCOPY	'Z'
 	{"enable-zcopy",			required_argument,	NULL, PERF_ENABLE_ZCOPY},
+#define PERF_TRACING_MASK 'y'
+	{ "tpoint-group-mask", required_argument, NULL, PERF_TRACING_MASK},
 #define PERF_TRANSPORT_STATISTICS	257
 	{"transport-stats", no_argument, NULL, PERF_TRANSPORT_STATISTICS},
 #define PERF_IOVA_MODE		258
@@ -2727,6 +2733,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_NO_HUGE:
 			env_opts->no_huge = true;
+			break;
+		case PERF_TRACING_MASK:
+			g_tpoint_group_mask = strdup(optarg);
 			break;
 		case PERF_HELP:
 			usage(argv[0]);
@@ -3109,6 +3118,10 @@ nvme_poll_ctrlrs(void *arg)
 
 	spdk_unaffinitize_thread();
 
+	if (g_tpoint_group_mask) {
+		spdk_trace_register_user_thread();
+	}
+
 	while (true) {
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
 
@@ -3157,6 +3170,23 @@ setup_sig_handlers(void)
 	}
 
 	return 0;
+}
+
+static int
+setup_spdk_tracing(const char *app_name, const char *tpoint_group_mask, int num_threads)
+{
+	struct spdk_app_opts app_opts;
+
+	if (!tpoint_group_mask) {
+		return 0;
+	}
+
+	spdk_app_opts_init(&app_opts, sizeof(app_opts));
+	app_opts.name = app_name;
+	app_opts.num_trace_threads = num_threads;
+	app_opts.tpoint_group_mask = tpoint_group_mask;
+
+	return spdk_app_setup_trace(&app_opts);
 }
 
 int
@@ -3255,6 +3285,10 @@ main(int argc, char **argv)
 		fprintf(stderr, "Error suppression count may not be exact.\n");
 	}
 
+	if (setup_spdk_tracing("spdk_nvme_perf", g_tpoint_group_mask, g_num_workers) != 0) {
+		return 1;
+	}
+
 	rc = pthread_create(&thread_id, NULL, &nvme_poll_ctrlrs, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "Unable to spawn a thread to poll admin queues.\n");
@@ -3319,6 +3353,8 @@ cleanup:
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
+
+	free(g_tpoint_group_mask);
 
 	free_key(&g_psk);
 	free_key(&g_dhchap);
