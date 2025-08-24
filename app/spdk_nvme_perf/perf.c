@@ -131,6 +131,7 @@ struct ns_worker_ctx {
 	struct ns_entry		*entry;
 	struct ns_worker_stats	stats;
 	uint64_t		current_queue_depth;
+	uint64_t		number_ios;
 	uint64_t		offset_in_ios;
 	bool			is_draining;
 
@@ -1484,7 +1485,7 @@ submit_single_io(struct perf_task *task)
 		ns_ctx->stats.io_submitted++;
 	}
 
-	if (spdk_unlikely(g_number_ios && ns_ctx->stats.io_submitted >= g_number_ios)) {
+	if (spdk_unlikely(ns_ctx->number_ios && ns_ctx->stats.io_submitted >= ns_ctx->number_ios)) {
 		ns_ctx->is_draining = true;
 	}
 }
@@ -3010,6 +3011,7 @@ allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
 	ns_ctx->stats.min_tsc = UINT64_MAX;
 	ns_ctx->entry = entry;
 	ns_ctx->histogram = spdk_histogram_data_alloc();
+	ns_ctx->number_ios = g_number_ios;
 	TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
 
 	return 0;
