@@ -564,8 +564,8 @@ app_setup_env(struct spdk_app_opts *opts)
 	return rc;
 }
 
-static int
-app_setup_trace(struct spdk_app_opts *opts)
+int
+spdk_app_setup_trace(struct spdk_app_opts *opts)
 {
 	char		shm_name[64];
 	uint64_t	tpoint_group_mask, tpoint_mask = -1ULL;
@@ -976,13 +976,13 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	 * Disable and ignore trace setup if setting num_entries
 	 * to be 0.
 	 *
-	 * Note the call to app_setup_trace() is located here
+	 * Note the call to spdk_app_setup_trace() is located here
 	 * ahead of app_setup_signal_handlers().
 	 * That's because there is not an easy/direct clean
 	 * way of unwinding alloc'd resources that can occur
 	 * in app_setup_signal_handlers().
 	 */
-	if (opts->num_entries != 0 && app_setup_trace(opts) != 0) {
+	if (opts->num_entries != 0 && spdk_app_setup_trace(opts) != 0) {
 		return 1;
 	}
 

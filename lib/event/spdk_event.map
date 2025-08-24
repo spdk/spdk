@@ -12,6 +12,7 @@
 	spdk_app_get_core_mask;
 	spdk_app_parse_args;
 	spdk_app_usage;
+	spdk_app_setup_trace;
 	spdk_event_allocate;
 	spdk_event_call;
 	spdk_framework_enable_context_switch_monitor;

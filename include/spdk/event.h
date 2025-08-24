@@ -366,6 +366,17 @@ void spdk_framework_enable_context_switch_monitor(bool enabled);
  */
 bool spdk_framework_context_switch_monitor_enabled(void);
 
+/**
+ * Set up SPDK tracing for the application.
+ *
+ * Initializes the trace shared memory region and enables tracepoint groups or
+ * individual tracepoints as specified in the spdk_app_opts structure.
+ *
+ * \param opts Application options structure, must be initialized.
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_app_setup_trace(struct spdk_app_opts *opts);
+
 #ifdef __cplusplus
 }
 #endif

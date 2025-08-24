@@ -2,6 +2,10 @@
 
 ## v26.01: (Upcoming Release)
 
+### event
+
+Added new public API: `spdk_app_setup_trace()` to set up SPDK tracing for applications.
+
 ## v25.09
 
 ### bdev
