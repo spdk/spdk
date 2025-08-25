@@ -938,15 +938,6 @@ spdk_pci_device_get_numa_id(struct spdk_pci_device *dev)
 	return dev->numa_id;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(pci_device_socket_id, "spdk_pci_device_get_socket_id", "v25.09", 0);
-
-int
-spdk_pci_device_get_socket_id(struct spdk_pci_device *dev)
-{
-	SPDK_LOG_DEPRECATED(pci_device_socket_id);
-	return spdk_pci_device_get_numa_id(dev);
-}
-
 int
 spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {

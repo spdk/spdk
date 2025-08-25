@@ -519,17 +519,6 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
 int32_t spdk_env_get_numa_id(uint32_t core);
 
 /**
- * Get the NUMA node ID for the given core.
- *
- * Deprecated, use \ref spdk_env_get_numa_id() instead.
- *
- * \param core CPU core to query.
- *
- * \return the NUMA node ID for the given core.
- */
-uint32_t spdk_env_get_socket_id(uint32_t core);
-
-/**
  * Get the ID of the first NUMA node on this system.
  *
  * \return the ID of the first NUMA node
@@ -1075,17 +1064,6 @@ struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
  * \return NUMA node index (>= 0).
  */
 int spdk_pci_device_get_numa_id(struct spdk_pci_device *dev);
-
-/**
- * Get the NUMA node the PCI device is on.
- *
- * Deprecated. Use `ref spdk_pci_device_get_numa_id()` instead.
- *
- * \param dev PCI device.
- *
- * \return NUMA node index (>= 0).
- */
-int spdk_pci_device_get_socket_id(struct spdk_pci_device *dev);
 
 /**
  * Serialize the PCIe Device Serial Number into the provided buffer.

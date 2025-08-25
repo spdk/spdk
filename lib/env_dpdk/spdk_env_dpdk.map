@@ -38,7 +38,6 @@
 	spdk_env_get_first_core;
 	spdk_env_get_last_core;
 	spdk_env_get_next_core;
-	spdk_env_get_socket_id;
 	spdk_env_get_numa_id;
 	spdk_env_get_first_numa_id;
 	spdk_env_get_last_numa_id;
@@ -86,7 +85,6 @@
 	spdk_pci_device_get_subvendor_id;
 	spdk_pci_device_get_subdevice_id;
 	spdk_pci_device_get_id;
-	spdk_pci_device_get_socket_id;
 	spdk_pci_device_get_numa_id;
 	spdk_pci_device_get_serial_number;
 	spdk_pci_device_claim;
