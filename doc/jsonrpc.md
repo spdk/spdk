@@ -1087,7 +1087,7 @@ Enable trace on a specific tpoint group. For example "bdev" for bdev trace group
 
  Name   | Optional   | Type   | Description
 ------- | ---------- | ------ | --------------------------------------------------------------
- name   | Required   | string | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl, all
+ name   | Required   | string | bdev, nvmf_rdma, nvmf_tcp, scsi, iscsi_conn, ftl, all
 
 #### Example
 
@@ -1123,7 +1123,7 @@ Disable trace on a specific tpoint group. For example "bdev" for bdev trace grou
 
  Name   | Optional   | Type   | Description
 ------- | ---------- | ------ | ---------------------------------------
- name   | Required   | string | bdev, nvmf_rdma, nvmf_tcp, blobfs, all
+ name   | Required   | string | bdev, nvmf_rdma, nvmf_tcp, all
 
 #### Example
 
@@ -1162,7 +1162,7 @@ of all available trace groups, see
 
  Name        | Optional   | Type   | Description
 ------------ | ---------- | ------ | ---------------------------------------------------------
- name        | Required   | string | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl
+ name        | Required   | string | bdev, nvmf_rdma, nvmf_tcp, scsi, iscsi_conn, ftl
  tpoint_mask | Required   | number | mask to enable tracepoints inside a group
 
 #### Example
@@ -1202,7 +1202,7 @@ of all available trace groups, see
 
  Name        | Optional   | Type   | Description
 ------------ | ---------- | ------ | ---------------------------------------------------------
- name        | Required   | string | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl
+ name        | Required   | string | bdev, nvmf_rdma, nvmf_tcp, scsi, iscsi_conn, ftl
  tpoint_mask | Required   | number | mask to diesable tracepoints inside a group
 
 #### Example
@@ -1278,10 +1278,6 @@ Example response:
     "ftl": {
       "enabled": false,
       "mask": "0x40"
-    },
-    "blobfs": {
-      "enabled": false,
-      "mask": "0x80"
     }
   }
 }
@@ -1331,10 +1327,6 @@ Example response:
     },
     "nvmf_tcp": {
       "mask": "0x20",
-      "tpoint_mask": "0x0"
-    },
-    "blobfs": {
-      "mask": "0x80",
       "tpoint_mask": "0x0"
     },
     "thread": {
@@ -12362,167 +12354,6 @@ Example response:
       "nbd_device": "/dev/nbd1"
     }
   ]
-}
-~~~
-
-## Blobfs {#jsonrpc_components_blobfs}
-
-### blobfs_detect {#rpc_blobfs_detect}
-
-Detect whether a blobfs exists on bdev.
-
-#### Parameters
-
- Name      | Optional   | Type   | Description
----------- | ---------- | ------ | -----------------------------------
- bdev_name | Required   | string | Block device name to detect blobfs
-
-#### Response
-
- Name   | Type    | Description
-------- | ------- | ------------------------------------------------------
- result | boolean | True if a blobfs exists on the bdev; False otherwise.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "blobfs_detect",
-  "params": {
-    "bdev_name": "Malloc0"
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": "true"
-}
-~~~
-
-### blobfs_create {#rpc_blobfs_create}
-
-Build blobfs on bdev.
-
-#### Parameters
-
- Name       | Optional   | Type   | Description
------------ | ---------- | ------ | -----------------------------------------------------------------------------------------------
- bdev_name  | Required   | string | Block device name to create blobfs
- cluster_sz | Optional   | number | Size of cluster in bytes. Must be multiple of 4KiB page size, default and minimal value is 1M.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "blobfs_create",
-  "params": {
-    "bdev_name": "Malloc0",
-    "cluster_sz": "1M"
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": "true"
-}
-~~~
-
-### blobfs_mount {#rpc_blobfs_mount}
-
-Mount a blobfs on bdev to one host path through FUSE
-
-#### Parameters
-
- Name       | Optional   | Type   | Description
------------ | ---------- | ------ | ----------------------------------------
- bdev_name  | Required   | string | Block device name where the blobfs is
- mountpoint | Required   | string | Mountpoint path in host to mount blobfs
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "blobfs_mount",
-  "params": {
-    "bdev_name": "Malloc0",
-    "mountpoint": "/mnt/"
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": "true"
-}
-~~~
-
-### blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
-
-Set cache pool size for blobfs filesystems.  This RPC is only permitted when the cache pool is not already initialized.
-
-The cache pool is initialized when the first blobfs filesystem is initialized or loaded.  It is freed when the all
-initialized or loaded filesystems are unloaded.
-
-#### Parameters
-
- Name       | Optional   | Type   | Description
------------ | ---------- | ------ | ------------------------
- size_in_mb | Required   | number | Cache size in megabytes
-
-#### Response
-
- Name   | Type    | Description
-------- | ------- | ----------------------------------------------------------------
- result | boolean | True if cache size is set successfully; False if failed to set.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "blobfs_set_cache_size",
-  "params": {
-    "size_in_mb": 512
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
 }
 ~~~
 

@@ -28,9 +28,8 @@ The libraries in the `lib` directory can be readily divided into four categories
   `spdk_nvmf` and `spdk_vhost` each define the storage protocols after which they are named.
 - Storage Service Libraries: These libraries provide a specific abstraction that can be mapped to somewhere
   between the physical drive and the filesystem level of your typical storage stack. For example `spdk_bdev`
-  provides a general block device abstraction layer, `spdk_lvol` provides a logical volume abstraction,
-  `spdk_blobfs` provides a filesystem abstraction, and `spdk_ftl` provides a flash translation layer
-  abstraction.
+  provides a general block device abstraction layer, `spdk_lvol` provides a logical volume abstraction
+  and `spdk_ftl` provides a flash translation layer abstraction.
 - System Libraries: These libraries provide system level services such as a JSON based RPC service
   (see `spdk_jsonrpc`) and thread abstractions (see `spdk_thread`). The most notable library in this category
   is the `spdk_env_dpdk` library which provides a shim for the underlying Data Plane Development Kit (DPDK)
@@ -73,7 +72,7 @@ sub-directories can be divided into two types.
 </center>
 
 - Free libraries: These libraries are highly dependent upon a library in the `lib` directory but are not
-  explicitly registered to that library via a constructor. The libraries in the `blob`, `blobfs`, and `env_dpdk`
+  explicitly registered to that library via a constructor. The libraries in the `blob` and `env_dpdk`
   directories fall into this category. None of the libraries in this category depend explicitly on the
   `spdk_event` library.
 

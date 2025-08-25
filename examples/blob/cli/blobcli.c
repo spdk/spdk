@@ -1012,18 +1012,7 @@ static void
 bsdump_print_xattr(FILE *fp, const char *bstype, const char *name, const void *value,
 		   size_t value_len)
 {
-	if (strncmp(bstype, "BLOBFS", SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		if (strcmp(name, "name") == 0) {
-			fprintf(fp, "%.*s", (int)value_len, (char *)value);
-		} else if (strcmp(name, "length") == 0 && value_len == sizeof(uint64_t)) {
-			uint64_t length;
-
-			memcpy(&length, value, sizeof(length));
-			fprintf(fp, "%" PRIu64, length);
-		} else {
-			fprintf(fp, "?");
-		}
-	} else if (strncmp(bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+	if (strncmp(bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
 		if (strcmp(name, "name") == 0) {
 			fprintf(fp, "%s", (char *)value);
 		} else if (strcmp(name, "uuid") == 0) {

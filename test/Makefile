@@ -8,7 +8,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 # These directories contain tests.
-TESTDIRS = accel app bdev blobfs cpp_headers dma env event lvol nvme rpc_client thread
+TESTDIRS = accel app bdev cpp_headers dma env event lvol nvme rpc_client thread
 
 DIRS-$(CONFIG_TESTS) += $(TESTDIRS)
 DIRS-$(CONFIG_UNIT_TESTS) += unit

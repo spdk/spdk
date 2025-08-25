@@ -66,11 +66,6 @@ S:	Supported
 BDEV FIO PLUGIN
 F:	app/fio/bdev/
 
-BLOB FILESYSTEM
-F:	lib/blobfs/
-F:	module/blobfs/
-S:	Obsolete
-
 BLOBSTORE LIBRARY
 M:	Tomasz Zawadzki <tomasz.zawadzki@nutanix.com>
 F:	lib/blob/

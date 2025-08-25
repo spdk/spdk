@@ -465,12 +465,6 @@ function get_config_params() {
 
 	config_params+=' --enable-coverage'
 
-	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-		if [[ -d /usr/include/fuse3 ]] || [[ -d /usr/local/include/fuse3 ]]; then
-			config_params+=' --with-fuse'
-		fi
-	fi
-
 	if [[ -f /usr/include/liburing/io_uring.h && -f /usr/include/linux/ublk_cmd.h ]]; then
 		config_params+=' --with-ublk'
 	fi

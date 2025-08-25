@@ -57,7 +57,6 @@ def create_parser():
     cli.accel.add_parser(subparsers)
     cli.app.add_parser(subparsers)
     cli.bdev.add_parser(subparsers)
-    cli.blobfs.add_parser(subparsers)
     cli.fsdev.add_parser(subparsers)
     cli.iscsi.add_parser(subparsers)
     cli.keyring.add_parser(subparsers)

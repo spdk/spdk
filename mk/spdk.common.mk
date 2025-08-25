@@ -371,7 +371,7 @@ LDFLAGS += $(shell $(PKGCONF) --libs libwd)
 endif
 endif
 
-ifneq ($(CONFIG_NVME_CUSE)$(CONFIG_FUSE),nn)
+ifeq ($(CONFIG_NVME_CUSE),y)
 SYS_LIBS += -lfuse3
 endif
 

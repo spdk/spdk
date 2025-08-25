@@ -97,8 +97,6 @@ autobuild
 autobuild_external_code
 autobuild_llvm_precompile
 bdev_crypto_enomem
-blobfs
-blobfs_mkfs
 blobstore
 blobstore_grow
 blockdev_crypto_aesni
