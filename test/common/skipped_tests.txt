@@ -215,12 +215,6 @@ ocf_remove
 ocf_stats
 odd_alloc
 packaging
-rocksdb
-rocksdb_insert
-rocksdb_overwrite
-rocksdb_randread
-rocksdb_readwrite
-rocksdb_writesync
 rpm_packaging
 scheduler
 scheduler_opts

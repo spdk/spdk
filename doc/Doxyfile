@@ -809,7 +809,6 @@ INPUT                  += \
                          bdev_module.md \
                          bdev_pg.md \
                          blob.md \
-                         blobfs.md \
                          changelog.md \
                          concurrency.md \
                          containers.md \

@@ -1,9 +1,6 @@
 # Not configured to test vtune.
 lib/bdev/vtune
 
-# Not configured to test rocksdb env file
-lib/rocksdb/env_spdk.cc
-
 # Not configured to test FC
 lib/nvmf/fc
 lib/nvmf/fc_ls

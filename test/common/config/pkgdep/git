@@ -41,18 +41,6 @@ function install_qat() {
 	fi
 }
 
-function install_rocksdb() {
-	# Rocksdb is installed for use with the blobfs tests.
-	if [ ! -d /usr/src/rocksdb ]; then
-		git clone "${GIT_REPO_ROCKSDB}" "$GIT_REPOS/rocksdb"
-		git -C "$GIT_REPOS/rocksdb" checkout 6.15.fb
-		sudo mv "$GIT_REPOS/rocksdb" /usr/src/
-	else
-		sudo git -C /usr/src/rocksdb checkout spdk-v8.1.1
-		echo "rocksdb already in /usr/src. Not checking out again"
-	fi
-}
-
 function install_ittapi() {
 	# Install Intel Instrumentation and Trace API
 	local ittapi_version=v3.24.5 ittapi_dir=/usr/src/ittapi
@@ -601,7 +589,6 @@ function install_sources() {
 			install_nvmecli
 			install_nvmecli_plugin
 			install_qat
-			install_rocksdb
 			install_qemu
 			install_igb_uio
 			install_ice
@@ -635,8 +622,6 @@ VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v8.0.0}
 DPDK_STABLE_BRANCH=${DPDK_STABLE_BRANCH:-24.11}
 
-: ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
-export GIT_REPO_ROCKSDB
 : ${GIT_REPO_FIO=https://github.com/axboe/fio.git}
 export GIT_REPO_FIO
 : ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}

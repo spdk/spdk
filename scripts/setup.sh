@@ -442,7 +442,7 @@ function configure_linux_pci() {
 
 function cleanup_linux() {
 	local dirs_to_clean=() files_to_clean=() opened_files=() file_locks=()
-	local match_spdk="spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz|accel_perf|bdev_svc"
+	local match_spdk="spdk_tgt|iscsi|vhost|nvmf|bdevio|bdevperf|vhost_fuzz|nvme_fuzz|accel_perf|bdev_svc"
 
 	dirs_to_clean=({/var/run,/tmp}/dpdk/spdk{,_pid}+([0-9]))
 	if [[ -d $XDG_RUNTIME_DIR ]]; then

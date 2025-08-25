@@ -68,7 +68,6 @@ F:	app/fio/bdev/
 
 BLOB FILESYSTEM
 F:	lib/blobfs/
-F:	lib/rocksdb/
 F:	module/blobfs/
 S:	Obsolete
 

@@ -42,7 +42,7 @@ block storage stack is no longer involved. Instead, SPDK provides re-imagined
 implementations of most of the layers in a typical operating system storage
 stack all as C libraries that can be directly embedded into your application.
 This includes a [block device abstraction layer](@ref bdev) primarily, but
-also [block allocators](@ref blob) and [filesystem-like components](@ref blobfs).
+also [block allocators](@ref blob).
 
 User space drivers utilize features in uio or vfio to map the
 [PCI BAR](https://en.wikipedia.org/wiki/PCI_configuration_space) for the device
