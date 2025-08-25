@@ -40,7 +40,6 @@ DEPDIRS-rdma_provider := log util rdma_utils
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 DEPDIRS-rdma_provider += dma mlx5
 endif
-DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
 DEPDIRS-keyring := log util $(JSON_LIBS)
 

@@ -21,10 +21,6 @@ additional_dependencies() {
 		devtool_pkgs+=(gcovr python3-pycodestyle)
 		tdnf install -y "${devtool_pkgs[@]}"
 	fi
-	if [[ $INSTALL_PMEM == "true" ]]; then
-		# Additional dependencies for building pmem based backends
-		tdnf install -y libpmemobj-devel || true
-	fi
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		tdnf install -y fuse3-devel

@@ -353,10 +353,6 @@ M:	Alexey Marchuk <alexeymar@nvidia.com>
 F:	lib/rdma*/
 S:	Supported
 
-REDUCE COMPRESSION LIBRARY
-F:	lib/reduce/
-S:	Obsolete
-
 SCHEDULERS
 M:	Jim Harris <jim.harris@nvidia.com>
 F:	module/scheduler/

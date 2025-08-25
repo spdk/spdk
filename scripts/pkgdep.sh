@@ -17,7 +17,6 @@ function usage() {
 	echo "  -h --help"
 	echo "  -a --all"
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
-	echo "  -p --pmem                   Additional dependencies for reduce"
 	echo "  -R --rbd                    Additional dependencies for RBD"
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo "  -b --docs                   Additional dependencies for building docs"
@@ -34,7 +33,6 @@ function usage() {
 
 function install_all_dependencies() {
 	INSTALL_DEV_TOOLS=true
-	INSTALL_PMEM=true
 	INSTALL_RBD=true
 	INSTALL_RDMA=true
 	INSTALL_DOCS=true
@@ -48,7 +46,6 @@ function install_all_dependencies() {
 
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
-INSTALL_PMEM=false
 INSTALL_RBD=false
 INSTALL_RDMA=false
 INSTALL_DOCS=false
@@ -67,7 +64,6 @@ while getopts 'abdfhilpruADGIR-:' optchar; do
 				help) usage ;;
 				all) install_all_dependencies ;;
 				developer-tools) INSTALL_DEV_TOOLS=true ;;
-				pmem) INSTALL_PMEM=true ;;
 				rbd) INSTALL_RBD=true ;;
 				rdma) INSTALL_RDMA=true ;;
 				docs) INSTALL_DOCS=true ;;
@@ -87,7 +83,6 @@ while getopts 'abdfhilpruADGIR-:' optchar; do
 		h) usage ;;
 		a) install_all_dependencies ;;
 		d) INSTALL_DEV_TOOLS=true ;;
-		p) INSTALL_PMEM=true ;;
 		R) INSTALL_RBD=true ;;
 		r) INSTALL_RDMA=true ;;
 		b) INSTALL_DOCS=true ;;

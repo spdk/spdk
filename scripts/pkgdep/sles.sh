@@ -17,10 +17,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	zypper install -y git-core lcov python3-pycodestyle sg3_utils \
 		pciutils ShellCheck bash-completion
 fi
-if [[ $INSTALL_PMEM == "true" ]]; then
-	# Additional dependencies for building pmem based backends
-	zypper install -y libpmemobj-devel
-fi
 if [[ $INSTALL_RBD == "true" ]]; then
 	# Additional dependencies for RBD bdev in NVMe over Fabrics
 	zypper install -y librados-devel librbd-devel

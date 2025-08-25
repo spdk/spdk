@@ -59,10 +59,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Additional dependencies for nvmf performance test script
 	apt-get install -y python3-paramiko
 fi
-if [[ $INSTALL_PMEM == "true" ]]; then
-	# Additional dependencies for building pmem based backends
-	apt-get install -y libpmem-dev libpmemblk-dev libpmemobj-dev
-fi
 if [[ $INSTALL_RBD == "true" ]]; then
 	# Additional dependencies for RBD bdev in NVMe over Fabrics
 	apt-get install -y librados-dev librbd-dev

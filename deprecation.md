@@ -55,14 +55,6 @@ See GitHub issue [2801](https://github.com/spdk/spdk/issues/2801) for additional
 New SPDK partition types should use GUID `6527994e-2c5a-4eec-9613-8f5944074e8b` which will create
 a bdev of the correct size.
 
-### reduce
-
-#### 'spdk_reduce_vol_init', 'spdk_reduce_vol_load'
-
-The entire reduce library is deprecated and will be removed in 25.09 release.
-All functions in this library are effectively deprecated, but only these two
-are officially marked as such to ensure the library's deprecation is noticed.
-
 ### blobfs
 
 #### 'spdk_fs_init', 'spdk_fs_load', 'blobfs_\*' RPCs

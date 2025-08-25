@@ -184,10 +184,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 
 	yum install -y "${devtool_pkgs[@]}"
 fi
-if [[ $INSTALL_PMEM == "true" ]]; then
-	# Additional dependencies for building pmem based backends
-	yum install -y libpmemobj-devel || true
-fi
 if [[ $INSTALL_RBD == "true" ]]; then
 	# Additional dependencies for RBD bdev in NVMe over Fabrics
 	yum install -y librados-devel librbd-devel
