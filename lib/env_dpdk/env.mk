@@ -61,7 +61,7 @@ endif
 # ones after that.
 DPDK_FRAMEWORK=n
 
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_VBDEV_COMPRESS_MLX5)),y)
+ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)),y)
 DPDK_LIB_LIST += rte_common_mlx5
 # Introduced in DPDK 21.08
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
@@ -94,13 +94,10 @@ endif
 endif
 endif
 
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_VBDEV_COMPRESS)),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
-endif
-ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
-DPDK_LIB_LIST += rte_compress_mlx5
 endif
 ifeq ($(CONFIG_DPDK_UADK),y)
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_uadk.*))
@@ -171,13 +168,6 @@ endif
 
 ifeq ($(CONFIG_CRYPTO),y)
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_PRIVATE_LINKER_ARGS += -lmlx5 -libverbs
-endif
-endif
-
-ifeq ($(CONFIG_VBDEV_COMPRESS),y)
-DPDK_PRIVATE_LINKER_ARGS += -lisal -L$(ISAL_DIR)/.libs
-ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
 DPDK_PRIVATE_LINKER_ARGS += -lmlx5 -libverbs
 endif
 endif

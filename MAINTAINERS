@@ -355,7 +355,6 @@ S:	Supported
 
 REDUCE COMPRESSION LIBRARY
 F:	lib/reduce/
-F:	module/bdev/compress/
 S:	Obsolete
 
 SCHEDULERS

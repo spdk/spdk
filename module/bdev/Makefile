@@ -14,8 +14,6 @@ DIRS-$(CONFIG_CRYPTO) += crypto
 
 DIRS-$(CONFIG_OCF) += ocf
 
-DIRS-$(CONFIG_VBDEV_COMPRESS) += compress
-
 DIRS-$(CONFIG_URING) += uring
 
 ifeq ($(OS),Linux)

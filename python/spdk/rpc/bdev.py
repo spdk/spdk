@@ -49,52 +49,6 @@ def bdev_wait_for_examine(client):
     return client.call('bdev_wait_for_examine')
 
 
-def bdev_compress_create(client, base_bdev_name, pm_path, lb_size=None, comp_algo=None, comp_level=None):
-    """Construct a compress virtual block device.
-    Args:
-        base_bdev_name: name of the underlying base bdev
-        pm_path: path to persistent memory
-        lb_size: logical block size for the compressed vol in bytes.  Must be 4K or 512.
-        comp_algo: compression algorithm for the compressed vol. Default is deflate.
-        comp_level: compression algorithm level for the compressed vol. Default is 1.
-    Returns:
-        Name of created virtual block device.
-    """
-    params = dict()
-    params['base_bdev_name'] = base_bdev_name
-    params['pm_path'] = pm_path
-    if lb_size is not None:
-        params['lb_size'] = lb_size
-    if comp_algo is not None:
-        params['comp_algo'] = comp_algo
-    if comp_level is not None:
-        params['comp_level'] = comp_level
-    return client.call('bdev_compress_create', params)
-
-
-def bdev_compress_delete(client, name):
-    """Delete compress virtual block device.
-    Args:
-        name: name of compress vbdev to delete
-    """
-    params = dict()
-    params['name'] = name
-    return client.call('bdev_compress_delete', params)
-
-
-def bdev_compress_get_orphans(client, name=None):
-    """Get a list of comp bdevs that do not have a pmem file (aka orphaned).
-    Args:
-        name: comp bdev name to query (optional; if omitted, query all comp bdevs)
-    Returns:
-        List of comp bdev names.
-    """
-    params = dict()
-    if name is not None:
-        params['name'] = name
-    return client.call('bdev_compress_get_orphans', params)
-
-
 def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd=None, key=None, cipher=None, key2=None, key_name=None):
     """Construct a crypto virtual block device.
     Args:

@@ -9,7 +9,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 DIRS-y =  accel bdev blob blobfs dma event ioat iscsi json jsonrpc log lvol
 DIRS-y += notify nvme nvmf scsi sock thread util env_dpdk init rpc keyring
 DIRS-$(CONFIG_IDXD) += idxd
-DIRS-$(CONFIG_VBDEV_COMPRESS) += reduce
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_RDMA) += rdma
 DIRS-$(CONFIG_FSDEV) += fsdev

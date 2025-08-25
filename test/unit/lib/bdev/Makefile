@@ -10,9 +10,6 @@ DIRS-y = bdev.c part.c scsi_nvme.c gpt vbdev_lvol.c mt raid bdev_zone.c vbdev_zo
 
 DIRS-$(CONFIG_CRYPTO) += crypto.c
 
-# enable once new mocks are added for compressdev
-DIRS-$(CONFIG_VBDEV_COMPRESS) += compress.c
-
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)

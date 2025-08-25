@@ -41,14 +41,6 @@ BLOCKDEV_MODULES_LIST += bdev_ocf
 BLOCKDEV_MODULES_LIST += ocfenv
 endif
 
-ifeq ($(CONFIG_VBDEV_COMPRESS),y)
-BLOCKDEV_MODULES_LIST += bdev_compress reduce
-BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmem
-ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
-BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5 -libverbs
-endif
-endif
-
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_LIST += rdma_provider rdma_utils
 BLOCKDEV_MODULES_PRIVATE_LIBS += -libverbs -lrdmacm

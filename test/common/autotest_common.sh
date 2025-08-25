@@ -117,8 +117,6 @@ export SPDK_TEST_BLOBFS
 export SPDK_TEST_VHOST_INIT
 : ${SPDK_TEST_LVOL=0}
 export SPDK_TEST_LVOL
-: ${SPDK_TEST_VBDEV_COMPRESS=0}
-export SPDK_TEST_VBDEV_COMPRESS
 : ${SPDK_RUN_ASAN=0}
 export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}
@@ -442,12 +440,6 @@ function get_config_params() {
 	if [[ $SPDK_TEST_UNITTEST -eq 0 &&
 		$SPDK_TEST_SCANBUILD -eq 0 && -z ${SPDK_TEST_AUTOBUILD:-} ]]; then
 		config_params+=' --disable-unit-tests'
-	fi
-
-	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]; then
-		if ge "$(nasm --version | awk '{print $3}')" 2.14 && [[ $SPDK_TEST_ISAL -eq 1 ]]; then
-			config_params+=' --with-vbdev-compress --with-dpdk-compressdev'
-		fi
 	fi
 
 	if [ -d /usr/include/rbd ] && [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq 1 ]; then

@@ -95,53 +95,6 @@ To resize a bdev use the bdev_rbd_resize command.
 
 This command will resize the Rbd0 bdev to 4096 MiB.
 
-## Compression Virtual Bdev Module {#bdev_config_compress}
-
-The compression bdev module can be configured to provide compression/decompression
-services for an underlying thinly provisioned logical volume. Although the underlying
-module can be anything (i.e. NVME bdev) the overall compression benefits will not be realized
-unless the data stored on disk is placed appropriately. The compression vbdev module
-relies on an internal SPDK library called `reduce` to accomplish this, see @ref reduce
-for detailed information.
-
-The compression bdev module leverages the [Acceleration Framework](https://spdk.io/doc/accel_fw.html) to
-carry out the actual compression and decompression. The acceleration framework can be configured to use
-ISA-L software optimized compression or the DPDK Compressdev module for hardware acceleration. To configure
-the Compressdev module please see the `compressdev_scan_accel_module` documentation [here](https://spdk.io/doc/jsonrpc.html)
-
-Persistent memory is used to store metadata associated with the layout of the data on the
-backing device. SPDK relies on [PMDK](http://pmem.io/pmdk/) to interface persistent memory so any hardware
-supported by PMDK should work. If the directory for PMEM supplied upon vbdev creation does
-not point to persistent memory (i.e. a regular filesystem) performance will be severely
-impacted.  The vbdev module and reduce libraries were designed to use persistent memory for
-any production use.
-
-Example command
-
-`rpc.py bdev_compress_create -p /pmem_files -b myLvol`
-
-In this example, a compression vbdev is created using persistent memory that is mapped to
-the directory `pmem_files` on top of the existing thinly provisioned logical volume `myLvol`.
-The resulting compression bdev will be named `COMP_LVS/myLvol` where LVS is the name of the
-logical volume store that `myLvol` resides on.
-
-The logical volume is referred to as the backing device and once the compression vbdev is
-created it cannot be separated from the persistent memory file that will be created in
-the specified directory.  If the persistent memory file is not available, the compression
-vbdev will also not be available.
-
-To remove a compression vbdev, use the following command which will also delete the PMEM
-file.  If the logical volume is deleted the PMEM file will not be removed and the
-compression vbdev will not be available.
-
-`rpc.py bdev_compress_delete COMP_LVS/myLvol`
-
-To list compression volumes that are only available for deletion because their PMEM file
-was missing use the following. The name parameter is optional and if not included will list
-all volumes, if used it will return the name or an error that the device does not exist.
-
-`rpc.py bdev_compress_get_orphans --name COMP_Nvme0n1`
-
 ## Crypto Virtual Bdev Module {#bdev_config_crypto}
 
 The crypto virtual bdev module can be configured to provide at rest data encryption

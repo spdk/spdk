@@ -72,12 +72,12 @@ DPDK_LIBS += power timer ethdev net
 DPDK_DRIVERS += power/acpi power/amd_pstate power/cppc power/intel_pstate power/intel_uncore \
 		power/kvm_vm
 # common crypto/compress drivers
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_CRYPTO)$(CONFIG_VBDEV_COMPRESS)),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_CRYPTO)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
 # common mlx5 libs
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_VBDEV_COMPRESS_MLX5)),y)
+ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)),y)
 DPDK_DRIVERS += common/mlx5 bus/auxiliary
 endif
 
@@ -105,11 +105,8 @@ DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
 endif
 
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_VBDEV_COMPRESS)),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)),y)
 DPDK_DRIVERS += compress compress/isal
-ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
-DPDK_DRIVERS += compress/mlx5
-endif
 DPDK_CFLAGS += -I$(ISAL_DIR) -I$(ISAL_BUILD_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif

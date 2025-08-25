@@ -143,34 +143,6 @@ _build_native_dpdk() {
 		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
 	fi
 
-	if [[ "$SPDK_TEST_VBDEV_COMPRESS" -eq 1 ]]; then
-		isal_dir="$external_dpdk_base_dir/isa-l"
-		git clone --branch v2.29.0 --depth 1 https://github.com/intel/isa-l.git "$isal_dir"
-
-		cd $isal_dir
-		./autogen.sh
-		./configure CFLAGS="-fPIC -g -O2" --enable-shared=yes --prefix="$isal_dir/build"
-		ln -s $PWD/include $PWD/isa-l
-		$MAKE $MAKEFLAGS all
-		$MAKE install
-		DPDK_DRIVERS+=("compress")
-		DPDK_DRIVERS+=("compress/isal")
-		DPDK_DRIVERS+=("compress/qat")
-		DPDK_DRIVERS+=("common/qat")
-		if ge "$dpdk_ver" 21.02.0; then
-			# SPDK enables REDUCE_MLX in case supported version of DPDK is detected
-			# so make sure proper libs are built.
-			if test $mlx5_libs_added = "n"; then
-				DPDK_DRIVERS+=("bus/auxiliary")
-				DPDK_DRIVERS+=("common/mlx5")
-				DPDK_DRIVERS+=("common/mlx5/linux")
-			fi
-			DPDK_DRIVERS+=("compress/mlx5")
-		fi
-		export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$isal_dir/build/lib/pkgconfig"
-		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$isal_dir/build/lib"
-	fi
-
 	cd $external_dpdk_base_dir
 	if [ "$(uname -s)" = "Linux" ]; then
 		if lt $dpdk_ver 21.11.0; then

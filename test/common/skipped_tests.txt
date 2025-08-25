@@ -80,6 +80,9 @@ accel_mlx5_crypto
 accel_mlx5_copy
 accel_mlx5_crc32c
 
+# Disabled due to compression related deprecations and removals
+unittest_dpdk_compressdev
+
 # Disabled after move to spdk-ci
 accel_cdev_comp
 accel_cdev_decomp

@@ -86,3 +86,10 @@ module/keyring/linux/keyring_rpc
 
 # fsdev/aio: Linux compilation uses linux_aio_mgr
 module/fsdev/aio/aio_mgr
+
+# Skipped items related to compression deprecation and removal
+lib/reduce/reduce
+module/accel/dpdk_compressdev/accel_dpdk_compressdev
+module/accel/dpdk_compressdev/accel_dpdk_compressdev_rpc
+test/unit/lib/accel/dpdk_compressdev.c/accel_dpdk_compressdev_ut
+test/unit/lib/reduce/reduce.c/reduce_ut
