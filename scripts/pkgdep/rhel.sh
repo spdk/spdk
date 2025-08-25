@@ -67,6 +67,12 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 		[[ $ID != rhel ]] && enable+=("crb")
 	fi
 
+	if [[ $VERSION_ID == 10* ]]; then
+		repos+=("https://www.elrepo.org/elrepo-release-10.el10.elrepo.noarch.rpm")
+		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm")
+		[[ $ID != rhel ]] && enable+=("crb")
+	fi
+
 	# Add PowerTools needed for install CUnit-devel
 	if [[ ($ID == centos || $ID == rocky) && $VERSION_ID =~ ^[89].* ]]; then
 		is_repo "PowerTools" && enable+=("PowerTools")
@@ -101,9 +107,11 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 fi
 
 yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel \
+	libuuid-devel ncurses-devel json-c-devel libcmocka-devel \
 	clang clang-devel python3-pip unzip keyutils keyutils-libs-devel fuse3-devel patchelf \
 	pkgconfig
+
+[[ $VERSION_ID != 10* ]] && yum install -y libiscsi-devel
 
 # Minimal install
 # workaround for arm: ninja fails with dep on skbuild python module
@@ -170,7 +178,9 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rocky 8'; then
 		devtool_pkgs+=(python3-pycodestyle astyle)
-		echo "Centos 8 and Rocky 8 do not have lcov and ShellCheck dependencies"
+	elif echo "$ID $VERSION_ID" | grep -E -q 'rocky 10'; then
+		echo "Rocky 10 do not have python3-pycodestyle and lcov dependencies"
+		devtool_pkgs+=(astyle ShellCheck)
 	elif [[ $ID == openeuler ]]; then
 		devtool_pkgs+=(python3-pycodestyle)
 		echo "openEuler does not have astyle, lcov and ShellCheck dependencies"
