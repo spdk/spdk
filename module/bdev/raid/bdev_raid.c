@@ -2000,12 +2000,37 @@ raid_bdev_channels_remove_base_bdev_done(struct spdk_io_channel_iter *i, int sta
 }
 
 static void
-raid_bdev_remove_base_bdev_cont(struct raid_base_bdev_info *base_info)
+raid_bdev_remove_base_bdev_do_remove(struct raid_base_bdev_info *base_info)
 {
 	raid_bdev_deconfigure_base_bdev(base_info);
 
 	spdk_for_each_channel(base_info->raid_bdev, raid_bdev_channel_remove_base_bdev, base_info,
 			      raid_bdev_channels_remove_base_bdev_done);
+}
+
+static void
+raid_bdev_remove_base_bdev_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_base_bdev_info *base_info = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	raid_bdev_remove_base_bdev_do_remove(base_info);
+}
+
+static void
+raid_bdev_remove_base_bdev_cont(struct raid_base_bdev_info *base_info)
+{
+	int rc;
+
+	rc = spdk_bdev_reset(base_info->desc, base_info->app_thread_ch,
+			     raid_bdev_remove_base_bdev_reset_done, base_info);
+	if (rc != 0) {
+		SPDK_WARNLOG("Reset base bdev '%s' before removal failed: %s\n",
+			     base_info->name, spdk_strerror(-rc));
+		/* Proceed with removal even if reset submission failed */
+		raid_bdev_remove_base_bdev_do_remove(base_info);
+	}
 }
 
 static void
