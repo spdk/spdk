@@ -723,6 +723,8 @@ raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 	raid_io->waitq_entry.bdev = bdev;
 	raid_io->waitq_entry.cb_fn = cb_fn;
 	raid_io->waitq_entry.cb_arg = raid_io;
+	raid_io->waitq_entry.dep_unblock = true;
+
 	spdk_bdev_queue_io_wait(bdev, ch, &raid_io->waitq_entry);
 }
 

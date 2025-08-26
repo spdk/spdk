@@ -104,6 +104,67 @@ function raid_unmap_function_test() {
 	return 0
 }
 
+function raid_io_resource_dependence() {
+	rm -rf $testdir/aio1.bdev
+	rm -rf $testdir/aio2.bdev
+	truncate -s 2048MB $testdir/aio1.bdev
+	truncate -s 2048MB $testdir/aio2.bdev
+
+	local nbd=/dev/nbd0
+	local raid_bdev
+
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -L bdev_raid &
+	raid_pid=$!
+	echo "Process raid pid: $raid_pid"
+	waitforlisten $raid_pid
+
+	$rpc_py bdev_aio_create $testdir/aio1.bdev Base_1 4096 --fallocate
+	$rpc_py bdev_aio_create $testdir/aio2.bdev Base_2 4096 --fallocate
+
+	$rpc_py bdev_raid_create -r raid1 -b "'Base_1 Base_2'" -n raid
+
+	$rpc_py bdev_lvol_create_lvstore raid lvs -c 8192
+
+	for lv_size in 256 768; do
+		echo "==== Testing LV size: ${lv_size} ===="
+
+		$rpc_py bdev_lvol_create -l lvs lv0 ${lv_size} -t
+
+		lvol_bdev=$($rpc_py bdev_lvol_get_lvols | jq -r '.[0]["alias"] | select(.)')
+		if [ -z "$lvol_bdev" ]; then
+			echo "lvol create failed"
+			exit 1
+		fi
+
+		nbd_start_disks $DEFAULT_RPC_ADDR $lvol_bdev $nbd
+		count=$(nbd_get_count $DEFAULT_RPC_ADDR)
+		if [ $count -ne 1 ]; then
+			exit 1
+		fi
+
+		fio --name=test --filename=$nbd --rw=randwrite --bs=8k --iodepth=128 --ioengine=aio --numjobs=1 --direct=1
+		sleep 1
+
+		nbd_stop_disks $DEFAULT_RPC_ADDR $nbd
+		count=$(nbd_get_count $DEFAULT_RPC_ADDR)
+		if [ $count -ne 0 ]; then
+			exit 1
+		fi
+
+		time $rpc_py bdev_lvol_delete $lvol_bdev
+
+		echo "==== Done LV size: ${lv_size} ===="
+		echo
+	done
+
+	killprocess $raid_pid
+
+	rm -rf $testdir/aio1.bdev
+	rm -rf $testdir/aio2.bdev
+
+	return 0
+}
+
 function verify_raid_bdev_state() {
 	local raid_bdev_name=$1
 	local expected_state=$2
@@ -952,6 +1013,8 @@ mkdir -p "$tmp_dir"
 trap 'cleanup; exit 1' EXIT
 
 base_blocklen=512
+
+run_test "raid_io_resource_dependence" raid_io_resource_dependence
 
 run_test "raid1_resize_data_offset_test" raid_resize_data_offset_test
 
