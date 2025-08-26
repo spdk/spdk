@@ -22,6 +22,16 @@ Summary:        Storage Performance Development Kit
 # can be defined through a comma-separated list passed via $requirements when building
 # the spec.
 Requires: glibc
+
+%if 0%{?suse_version}
+Requires: libaio1
+Requires: libgcc_s1
+Requires: libstdc++6
+Requires: libuuid1
+Requires: libncurses6
+Requires: libnuma1
+Requires: libopenssl1_1
+%else
 Requires: libaio
 Requires: libgcc
 Requires: libstdc++
@@ -29,6 +39,8 @@ Requires: libuuid
 Requires: ncurses-libs
 Requires: numactl-libs
 Requires: openssl-libs
+%endif
+
 Requires: zlib
 
 %if %{requirements}
