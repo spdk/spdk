@@ -7,7 +7,7 @@
 # Minimal install
 zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 	libuuid-devel python3-base ncurses-devel libjson-c-devel libcmocka-devel \
-	ninja meson python3-pyelftools fuse3-devel
+	ninja meson python3-devel python3-pyelftools fuse3-devel
 # Additional dependencies for DPDK
 zypper install -y libnuma-devel nasm
 # Additional dependencies for ISA-L used in compression
