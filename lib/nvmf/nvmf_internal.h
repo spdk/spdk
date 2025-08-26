@@ -180,6 +180,8 @@ struct spdk_nvmf_ns {
 	uint32_t gen;
 	/* registrants head */
 	TAILQ_HEAD(, spdk_nvmf_registrant) registrants;
+	/* Queued reservation requests: head is in-progress, rest are pending */
+	STAILQ_HEAD(, spdk_nvmf_request) reservations;
 	/* current reservation key */
 	uint64_t crkey;
 	/* reservation type */

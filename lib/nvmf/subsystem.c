@@ -1778,6 +1778,7 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 
 	assert(ns->anagrpid - 1 < subsystem->max_nsid);
 	assert(subsystem->ana_group[ns->anagrpid - 1] > 0);
+	assert(STAILQ_EMPTY(&ns->reservations));
 
 	subsystem->ana_group[ns->anagrpid - 1]--;
 
@@ -2251,6 +2252,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	ns->anagrpid = opts.anagrpid;
 	subsystem->ana_group[ns->anagrpid - 1]++;
 	TAILQ_INIT(&ns->registrants);
+	STAILQ_INIT(&ns->reservations);
 	if (ptpl_file) {
 		ns->ptpl_file = strdup(ptpl_file);
 		if (!ns->ptpl_file) {
@@ -3658,7 +3660,32 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)cb_arg;
 	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_ns *ns;
 
+	assert(subsystem->thread == spdk_get_thread());
+
+	/* Get namespace */
+	ns = _nvmf_subsystem_get_ns(subsystem, cmd->nsid);
+	assert(ns != NULL);
+
+	/* sanity check: this req should be head of outstanding */
+	assert(req->reservation_queued == true);
+	assert(req == STAILQ_FIRST(&ns->reservations));
+
+	/* req is complete, remove from queue and continue if there's others */
+	STAILQ_REMOVE_HEAD(&ns->reservations, reservation_link);
+	req->reservation_queued = false;
+	if (!STAILQ_EMPTY(&ns->reservations)) {
+		/* NOTE: we leave the next on the queue to prevent any in-flight
+		 * requests moving from pg->thread to subsystem->thread from
+		 * executing before the next one
+		 */
+		spdk_thread_send_msg(subsystem->thread, nvmf_ns_reservation_request,
+				     STAILQ_FIRST(&ns->reservations));
+	}
+
+	/* Complete the request on the original pg */
 	spdk_thread_send_msg(group->thread, nvmf_ns_reservation_complete, req);
 }
 
@@ -3670,6 +3697,16 @@ nvmf_ns_reservation_update_state(struct spdk_nvmf_ns *ns,
 {
 	bool update_sgroup = false;
 	int status = 0;
+
+	/* All reservation state modifications must be queued to serialize them */
+	if (!req->reservation_queued) {
+		STAILQ_INSERT_TAIL(&ns->reservations, req, reservation_link);
+		req->reservation_queued = true;
+	}
+	/* The head is in-progress, others must wait */
+	if (req != STAILQ_FIRST(&ns->reservations)) {
+		return;
+	}
 
 	switch (opc) {
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
@@ -3717,7 +3754,8 @@ nvmf_ns_reservation_request(void *ctx)
 	/* Report is a read-only command and can always be executed */
 	if (cmd->opc == SPDK_NVME_OPC_RESERVATION_REPORT) {
 		nvmf_ns_reservation_report(ns, req);
-		_nvmf_ns_reservation_update_done(ctrlr->subsys, req, 0);
+		/* Complete the request on the original pg */
+		spdk_thread_send_msg(req->qpair->group->thread, nvmf_ns_reservation_complete, req);
 	} else {
 		/* Remaining commands modify reservation state and must be serialized.
 		 * These complete asynchronously after state propagates to poll groups

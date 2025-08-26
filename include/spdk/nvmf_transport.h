@@ -89,7 +89,8 @@ struct spdk_nvmf_request {
 			uint8_t data_from_pool		: 1;
 			uint8_t dif_enabled		: 1;
 			uint8_t first_fused		: 1;
-			uint8_t rsvd			: 5;
+			uint8_t reservation_queued	: 1;
+			uint8_t rsvd			: 4;
 		};
 	};
 	uint8_t				zcopy_phase; /* type enum spdk_nvmf_zcopy_phase */
@@ -128,8 +129,9 @@ struct spdk_nvmf_request {
 	/* Timeout tracked for connect and abort flows. */
 	uint64_t timeout_tsc;
 	uint32_t			orig_nsid;
+	STAILQ_ENTRY(spdk_nvmf_request)	reservation_link;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 824, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 832, "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
