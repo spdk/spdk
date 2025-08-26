@@ -43,7 +43,7 @@ function tgt_check_notification_types() {
 	timing_enter "${FUNCNAME[0]}"
 
 	local ret=0
-	local enabled_types=("bdev_register" "bdev_unregister")
+	local enabled_types=("bdev_register" "bdev_unregister" "bdev_resize")
 	if [[ $CONFIG_FSDEV == y ]]; then
 		enabled_types+=("fsdev_register" "fsdev_unregister")
 	fi

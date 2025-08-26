@@ -11,6 +11,15 @@ rpc_py="$rootdir/scripts/rpc.py"
 tgt_sock="/var/tmp/tgt.sock"
 tgt_rpc="$rpc_py -s $tgt_sock"
 
+function get_resize_count() {
+	# Always use id zero to get notifications from the begining of time
+	local notify_id=0
+
+	event_count="$($rpc_py notify_get_notifications -i $notify_id | jq '. | map(select(.type == "bdev_resize")) | length')"
+
+	echo $event_count
+}
+
 add_remove() {
 	local nsid=$1 thread=$2
 	local current
@@ -23,6 +32,11 @@ add_remove() {
 		# Check if intiator is still alive, otherwise we'd wait until all threads finish
 		kill -s 0 "$spdk_app_pid"
 	done
+
+	# No resizes are expected here. Should catch cases where nsdata
+	# was zeroed out for inactive namespace, that incorrectly was assigned
+	# to bdev_nvme.
+	[[ "$(get_resize_count)" == 0 ]]
 }
 
 nvmftestinit

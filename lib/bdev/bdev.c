@@ -2367,6 +2367,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	spdk_notify_type_register("bdev_register");
 	spdk_notify_type_register("bdev_unregister");
+	spdk_notify_type_register("bdev_resize");
 
 	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
 
@@ -5598,6 +5599,7 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	    bdev->blockcnt > size) {
 		ret = -EBUSY;
 	} else {
+		spdk_notify_send("bdev_resize", spdk_bdev_get_name(bdev));
 		bdev->blockcnt = size;
 		TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
 			event_notify(desc, _resize_notify);
