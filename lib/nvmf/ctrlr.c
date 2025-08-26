@@ -4204,6 +4204,10 @@ _nvmf_ctrlr_add_reservation_log(void *ctx)
 	struct spdk_nvmf_reservation_log *log = (struct spdk_nvmf_reservation_log *)ctx;
 	struct spdk_nvmf_ctrlr *ctrlr = log->ctrlr;
 
+	if (spdk_unlikely(ctrlr->log_page_count == UINT64_MAX)) {
+		ctrlr->log_page_count = 0;
+	}
+
 	ctrlr->log_page_count++;
 
 	/* Maximum number of queued log pages is 255 */

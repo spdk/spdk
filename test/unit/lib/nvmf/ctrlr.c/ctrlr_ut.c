@@ -1780,6 +1780,16 @@ test_reservation_notification_log_page(void)
 	nvmf_get_reservation_notification_log_page(&ctrlr, &iov, 1, 0, sizeof(logs), 0);
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 0);
 
+	/* Test Case: log page count rollover */
+	ctrlr.log_page_count = UINT64_MAX;
+	nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					  SPDK_NVME_REGISTRATION_PREEMPTED);
+	poll_threads();
+	iov.iov_base = &logs[1];
+	iov.iov_len = sizeof(logs);
+	nvmf_get_reservation_notification_log_page(&ctrlr, &iov, 1, 0, sizeof(logs), 0);
+	SPDK_CU_ASSERT_FATAL(logs[1].log_page_count == 1);
+
 	cleanup_pending_async_events(&ctrlr);
 }
 
