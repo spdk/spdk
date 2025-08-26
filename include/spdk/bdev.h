@@ -2117,6 +2117,14 @@ struct spdk_bdev_io_wait_entry {
 	struct spdk_bdev			*bdev;
 	spdk_bdev_io_wait_cb			cb_fn;
 	void					*cb_arg;
+	/**
+	 * When true, this I/O is critical to unblock other I/Os that
+	 * holding resource and depend on the completion of this IO.
+	 * If resource allocation fails such as ENOMEM,
+	 * this entry should be queued at the head to avoid deadlock.
+	 */
+	bool					dep_unblock;
+	uint8_t					pad[7];
 	TAILQ_ENTRY(spdk_bdev_io_wait_entry)	link;
 };
 

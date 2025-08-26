@@ -4003,6 +4003,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.get_buf_cb = NULL;
 	bdev_io->internal.get_aux_buf_cb = NULL;
 	bdev_io->internal.data_transfer_cpl = NULL;
+	bdev_io->internal.waitq_entry.dep_unblock = false;
 	bdev_io->internal.f.split = bdev_io_should_split(bdev_io);
 }
 
@@ -7574,7 +7575,11 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	TAILQ_INSERT_TAIL(&mgmt_ch->io_wait_queue, entry, link);
+	if (entry->dep_unblock) {
+		TAILQ_INSERT_HEAD(&mgmt_ch->io_wait_queue, entry, link);
+	} else {
+		TAILQ_INSERT_TAIL(&mgmt_ch->io_wait_queue, entry, link);
+	}
 	return 0;
 }
 

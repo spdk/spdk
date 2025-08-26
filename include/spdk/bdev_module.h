@@ -1129,6 +1129,7 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct spdk_bdev_io_internal_fields internal;
+	uint8_t reserved4[56];
 
 	/**
 	 * Per I/O context for use by the bdev module.
