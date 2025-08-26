@@ -1359,6 +1359,7 @@ vtophys_get_paddr_pci(uint64_t vaddr, size_t len)
 	return SPDK_VTOPHYS_ERROR;
 }
 
+#if VFIO_ENABLED
 static int
 vtophys_unmap_pci(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
@@ -1373,13 +1374,6 @@ vtophys_unmap_pci(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ct
 	return spdk_mem_map_clear_translation(map, vaddr, len);
 }
 
-static int
-vtophys_unmap_page(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
-{
-	return spdk_mem_map_clear_translation(map, vaddr, len);
-}
-
-#if VFIO_ENABLED
 static int
 vtophys_unmap_iommu_paddr(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
@@ -1401,6 +1395,12 @@ vtophys_unmap_iommu_paddr(struct spdk_mem_map *map, uint64_t vaddr, size_t len, 
 	return 0;
 }
 #endif
+
+static int
+vtophys_unmap_page(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
+{
+	return spdk_mem_map_clear_translation(map, vaddr, len);
+}
 
 static int
 vtophys_set_translation(struct spdk_mem_map *map, uint64_t vaddr, size_t len, uint64_t paddr)
@@ -1427,17 +1427,18 @@ vtophys_map_pci(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 	return vtophys_set_translation(map, vaddr, len, paddr);
 }
 
+#if VFIO_ENABLED
 static int
 vtophys_map_vaddr(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
 	return vtophys_set_translation(map, vaddr, len, vaddr);
 }
+#endif
 
 static int
 vtophys_map_pagemap(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *ctx)
 {
 	uint64_t paddr;
-	int rc;
 
 	/* In iova=pa mode we can only reliably map hugepages, because we cannot guarantee that a
 	 * 4KB page is pinned and isn't swapped or doesn't point to a zero page (which is likely if
@@ -1464,7 +1465,7 @@ vtophys_map_pagemap(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *
 	/* If the IOMMU is on, but DPDK is using iova-mode=pa, we want to register this memory
 	 * with the IOMMU using the physical address to match. */
 	if (spdk_iommu_is_enabled()) {
-		rc = vtophys_iommu_map_dma(vaddr, paddr, len);
+		int rc = vtophys_iommu_map_dma(vaddr, paddr, len);
 		if (rc) {
 			DEBUG_PRINT("Unable to assign vaddr 0x%" PRIx64" to paddr 0x%" PRIx64 "\n",
 				    vaddr, paddr);
