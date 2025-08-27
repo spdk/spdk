@@ -2,10 +2,9 @@
 #  Copyright (C) 2019 Intel Corporation.
 #  All rights reserved.
 
-from spdk.rpc.helpers import deprecated_alias, deprecated_method
+from spdk.rpc.helpers import deprecated_method
 
 
-@deprecated_alias('enable_vmd')
 @deprecated_method
 def vmd_enable(client):
     """Enable VMD enumeration."""

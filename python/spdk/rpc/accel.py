@@ -3,7 +3,7 @@
 #  All rights reserved.
 #
 
-from spdk.rpc.helpers import deprecated_alias, deprecated_method
+from spdk.rpc.helpers import deprecated_method
 
 
 @deprecated_method
@@ -13,7 +13,6 @@ def accel_get_opc_assignments(client):
     return client.call('accel_get_opc_assignments')
 
 
-@deprecated_alias('accel_get_engine_info')
 @deprecated_method
 def accel_get_module_info(client):
     """Get list of valid module names and their operations.

@@ -2,7 +2,7 @@
 #  Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 
-from spdk.rpc.helpers import deprecated_alias, deprecated_method
+from spdk.rpc.helpers import deprecated_method
 
 
 @deprecated_method
