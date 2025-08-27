@@ -3689,6 +3689,7 @@ exit:
 			       sizeof(struct spdk_uuid) * num_hostid);
 			p_info->hostids_cnt = (uint8_t)num_hostid;
 			p_info->hostids_gen++;
+			p_info->io_waiting_done = false;
 		}
 	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3880,6 +3881,81 @@ nvmf_ns_reservation_complete(void *ctx)
 }
 
 static void
+ns_reservation_pg_io_wait_check(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
+
+	ns = spdk_io_channel_iter_get_ctx(i);
+	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	sgroup = &group->sgroups[ns->subsystem->id];
+	pg_ns = &sgroup->ns_info[ns->nsid - 1];
+
+	/* Pass io_waiting count as result, this will provide the following:
+	 *	1) If non-zero, this will immedately end the channel walk
+	 *	2) If zero, this will continue to next pg to check their io_waiting.
+	 *	3) If last pg reports 0, all IO waiting is done and completion is
+	 *	called with 0
+	 */
+	spdk_for_each_channel_continue(i, pg_ns->preempt_abort.io_waiting);
+}
+
+static void ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns);
+
+static void _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
+		void *cb_arg, int status);
+
+static void
+ns_reservation_pg_io_wait_check_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
+
+	if (!status) {
+		SPDK_DEBUGLOG(nvmf, "subsystem: %p, nsid: %u done waiting on IOs\n",
+			      ns->subsystem, ns->nsid);
+		ns->preempt_abort->io_waiting_done = true;
+		_nvmf_ns_reservation_update_done(ns->subsystem,
+						 STAILQ_FIRST(&ns->reservations), 0);
+	} else {
+		SPDK_DEBUGLOG(nvmf, "subsystem: %p, nsid: %u still waiting on %i IOs\n",
+			      ns->subsystem, ns->nsid, status);
+		ns_reservation_sched_next_io_wait_check(ns);
+	}
+}
+
+static int
+ns_reservation_next_io_wait_check(void *ctx)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)ctx;
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+
+	/* this should not be running if io_waiting is complete */
+	assert(!p_info->io_waiting_done);
+
+	/* Start a poll group check */
+	spdk_for_each_channel(ns->subsystem->tgt,
+			      ns_reservation_pg_io_wait_check,
+			      ns,
+			      ns_reservation_pg_io_wait_check_done);
+	spdk_poller_unregister(&p_info->io_waiting_timer);
+	return SPDK_POLLER_BUSY;
+}
+
+#define NS_RESERVATION_IO_WAIT_CHECK_INTERVAL 100
+static void
+ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+	assert(p_info);
+	assert(p_info->io_waiting_timer == NULL);
+
+	p_info->io_waiting_timer =
+		SPDK_POLLER_REGISTER(ns_reservation_next_io_wait_check, ns, NS_RESERVATION_IO_WAIT_CHECK_INTERVAL);
+}
+
+static void
 _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 				 void *cb_arg, int status)
 {
@@ -3914,6 +3990,15 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 	/* sanity check: this req should be head of outstanding */
 	assert(req->reservation_queued == true);
 	assert(req == STAILQ_FIRST(&ns->reservations));
+
+	if (!status && ns_reservation_req_is_preempt_abort(req) && !ns->preempt_abort->io_waiting_done) {
+		/* Check for io_waiting completion */
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_io_wait_check,
+				      ns,
+				      ns_reservation_pg_io_wait_check_done);
+		return;
+	}
 
 	/* req is complete, remove from queue and continue if there's others */
 	STAILQ_REMOVE_HEAD(&ns->reservations, reservation_link);

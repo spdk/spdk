@@ -5136,6 +5136,26 @@ _nvmf_request_complete(void *ctx)
 
 	nsid = req->cmd->nvme_cmd.nsid;
 
+	/* Check if this IO is being waited on by a reservation commnd */
+	if (spdk_unlikely(req->reservation_waiting)) {
+		if (sgroup && (nsid - 1 < sgroup->num_ns)) {
+			ns_info = &sgroup->ns_info[nsid - 1];
+			if (ns_info->preempt_abort.io_waiting > 0) {
+				ns_info->preempt_abort.io_waiting--;
+			} else {
+				SPDK_ERRLOG(
+					"Request on reservation IO waiting but pg ns_info (%p) is not waiting\n",
+					ns_info);
+			}
+		} else if (!sgroup) {
+			SPDK_ERRLOG(
+				"Request on reservation IO waiting but qpair (%p) detached from controller\n",
+				qpair);
+		} else {
+			SPDK_ERRLOG("Request on reservation IO waiting but invalid nsid: %u\n", nsid);
+		}
+	}
+
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
 		spdk_nvme_print_completion(qpair->qid, rsp);
 	}

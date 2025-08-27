@@ -864,8 +864,13 @@ ut_reservation_deinit(void)
 		TAILQ_REMOVE(&g_subsystem.ctrlrs, ctrlr, link);
 	}
 
-	free(g_ns.preempt_abort);
-	g_ns.preempt_abort = NULL;
+	if (g_ns.preempt_abort) {
+		if (g_ns.preempt_abort->io_waiting_timer) {
+			spdk_poller_unregister(&g_ns.preempt_abort->io_waiting_timer);
+		}
+		free(g_ns.preempt_abort);
+		g_ns.preempt_abort = NULL;
+	}
 }
 
 static struct spdk_nvmf_request *
@@ -2676,19 +2681,25 @@ test_reservation_request_preempt_abort_basic(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_cnt == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_gen == 1);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer == NULL);
 	SPDK_CU_ASSERT_FATAL(ns_reservation_hostid_list_contains_id(&g_ns.preempt_abort->hostids[0],
 			     g_ns.preempt_abort->hostids_cnt, &g_ctrlr1_A.hostid));
-	poll_threads(); /* drive poll group update which will process preempted hostids list */
+	poll_thread_times(0, 2); /* drive poll group update which will process preempted hostids list */
 	SPDK_CU_ASSERT_FATAL(rsp_b->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 4);
-	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(pg_ns->crkey == b_key);
 	SPDK_CU_ASSERT_FATAL(pg_ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer == NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->holder_id,
 					       &g_ctrlr_B.hostid) == 0);
-	/* io_waiting should be empty, but we processed the list */
+	/* io_waiting should be empty, but we processed the list and will do a pg check */
 	SPDK_CU_ASSERT_FATAL(pg_ns->preempt_abort.hostids_gen == 1);
 	SPDK_CU_ASSERT_FATAL(pg_ns->preempt_abort.io_waiting == 0);
+	poll_thread_times(0, 2); /* one step for pg check, one step for done clbk */
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_done == true);
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+	SPDK_CU_ASSERT_FATAL(rsp_b->status.sc == SPDK_NVME_SC_SUCCESS);
 
 	/* Send some IOs on B and then have A preempt the reservation back */
 	for (i = 0; i < NUM_IOS_B; i++) {
@@ -2764,10 +2775,10 @@ test_reservation_request_preempt_abort_basic(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_cnt == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_gen == 2);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer == NULL);
 	SPDK_CU_ASSERT_FATAL(ns_reservation_hostid_list_contains_id(&g_ns.preempt_abort->hostids[0],
 			     g_ns.preempt_abort->hostids_cnt, &g_ctrlr_B.hostid));
-	poll_threads(); /* drive poll group update which will process preempted hostids list */
-	SPDK_CU_ASSERT_FATAL(rsp_b->status.sc == SPDK_NVME_SC_SUCCESS);
+	poll_thread_times(0, 2); /* drive poll group update which will process preempted hostids list */
 	SPDK_CU_ASSERT_FATAL(pg_ns->crkey == a_key);
 	SPDK_CU_ASSERT_FATAL(pg_ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
 	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->holder_id,
@@ -2775,6 +2786,8 @@ test_reservation_request_preempt_abort_basic(void)
 	/* io_waiting should be NUM_IOS_B */
 	SPDK_CU_ASSERT_FATAL(pg_ns->preempt_abort.hostids_gen == 2);
 	SPDK_CU_ASSERT_FATAL(pg_ns->preempt_abort.io_waiting == NUM_IOS_B);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer == NULL);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_done == false);
 	/* Check the IOs are marked as reservation waiting */
 	for (i = 0; i < NUM_IOS_B; i++) {
 		SPDK_CU_ASSERT_FATAL(io_reqs[i].reservation_waiting);
@@ -2783,11 +2796,34 @@ test_reservation_request_preempt_abort_basic(void)
 	for (; i < NUM_IOS_B_OTHER_NS + NUM_IOS_A; i++) {
 		SPDK_CU_ASSERT_FATAL(!io_reqs[i].reservation_waiting);
 	}
-	/* preempt-and-abort request will be completed
-	 * JMC TODO: need to hold preempt-and-abort until IO waiting
-	 * polling is complete
-	 */
+	/* preempt-and-abort request will be outstanding until IOs have completed */
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
+
+	/* Perform the first io waiting check, poller will be started */
+	poll_thread_times(0, 2);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer != NULL);
+	for (i = 0; i < NUM_IOS_B; i++) {
+		/* Advance ticks so the poller is ready to run */
+		spdk_delay_us(NS_RESERVATION_IO_WAIT_CHECK_INTERVAL);
+		poll_thread_times(0, 1); /* one step to only run poller */
+		/* Poller should have unregistered itself */
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer == NULL);
+		poll_thread_times(0, 2); /* one step for pg check, one step for done clbk */
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_done == false);
+		/* poller should re-register since waiting is not complete */
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer != NULL);
+		/* simulate completing an IO */
+		pg_ns->preempt_abort.io_waiting--;
+	}
+	/* Now all IOs should be complete */
+	spdk_delay_us(NS_RESERVATION_IO_WAIT_CHECK_INTERVAL);
+	/* Run poller and checker */
+	poll_thread_times(0, 3);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_timer == NULL);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->io_waiting_done == true);
+	/* Request should be complete */
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
+	SPDK_CU_ASSERT_FATAL(rsp_a->status.sc == SPDK_NVME_SC_SUCCESS);
 
 	spdk_put_io_channel(ch);
 	spdk_io_device_unregister(&tgt, NULL);

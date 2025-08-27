@@ -176,8 +176,14 @@ struct spdk_nvmf_registrant {
 struct spdk_nvmf_reservation_preempt_abort_info {
 	/* preempted controllers */
 	struct spdk_uuid hostids[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	struct {
+		uint8_t io_waiting_done:	1; /* IO waiting is complete */
+		uint8_t rsvd_1:			7;
+	};
+	uint8_t rsvd_2[2];
 	uint8_t hostids_cnt;
 	uint32_t hostids_gen; /* Generational counter every time the list changes */
+	struct spdk_poller *io_waiting_timer;
 };
 SPDK_STATIC_ASSERT(SPDK_NVMF_MAX_NUM_REGISTRANTS <= UINT8_MAX, "hostids_cnt storage type");
 
