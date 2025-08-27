@@ -85,6 +85,21 @@ def generate_docs(schema):
             if params
             else "This method has no parameters."
         )
+    for obj in schema['objects']:
+        fields = [
+            dict(
+                Name=el["name"],
+                Optional="Required" if el["required"] else "Optional",
+                Type=el["type"],
+                Description=el["description"],
+            )
+            for el in obj["fields"]
+        ]
+        transformation[f"{obj['name']}_object"] = (
+            tabulate(fields, headers="keys", tablefmt="presto").replace("-+-", " | ")
+            if fields
+            else "This method has no parameters."
+        )
     result = schema_template.render(transformation)
     print(result)
 

@@ -1,4 +1,290 @@
 {
+  "objects": [
+    {
+      "name": "iscsi_auth_secret",
+      "fields": [
+        {
+          "name": "user",
+          "type": "string",
+          "required": true,
+          "description": "Unidirectional CHAP name"
+        },
+        {
+          "name": "secret",
+          "type": "string",
+          "required": true,
+          "description": "Unidirectional CHAP secret"
+        },
+        {
+          "name": "muser",
+          "type": "string",
+          "required": false,
+          "description": "Bidirectional CHAP name"
+        },
+        {
+          "name": "msecret",
+          "type": "string",
+          "required": false,
+          "description": "Bidirectional CHAP secret"
+        }
+      ]
+    },
+    {
+      "name": "iscsi_tgt_pg_ig_map",
+      "fields": [
+        {
+          "name": "ig_tag",
+          "type": "number",
+          "required": true,
+          "description": "Existing initiator group tag"
+        },
+        {
+          "name": "pg_tag",
+          "type": "number",
+          "required": true,
+          "description": "Existing portal group tag"
+        }
+      ]
+    },
+    {
+      "name": "iscsi_portal",
+      "fields": [
+        {
+          "name": "host",
+          "type": "string",
+          "required": true,
+          "description": "Hostname or IP address"
+        },
+        {
+          "name": "port",
+          "type": "string",
+          "required": true,
+          "description": "Port number"
+        }
+      ]
+    },
+    {
+      "name": "nvmf_listen_address",
+      "fields": [
+        {
+          "name": "trtype",
+          "type": "string",
+          "required": true,
+          "description": "Transport type (\"RDMA\")"
+        },
+        {
+          "name": "adrfam",
+          "type": "string",
+          "required": false,
+          "description": "Address family (\"IPv4\", \"IPv6\", \"IB\", or \"FC\")"
+        },
+        {
+          "name": "traddr",
+          "type": "string",
+          "required": true,
+          "description": "Transport address"
+        },
+        {
+          "name": "trsvcid",
+          "type": "string",
+          "required": false,
+          "description": "Transport service ID (required for RDMA or TCP)"
+        }
+      ]
+    },
+    {
+      "name": "nvmf_namespace",
+      "fields": [
+        {
+          "name": "nsid",
+          "type": "number",
+          "required": false,
+          "description": "Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID."
+        },
+        {
+          "name": "bdev_name",
+          "type": "string",
+          "required": true,
+          "description": "Name of bdev to expose as a namespace."
+        },
+        {
+          "name": "nguid",
+          "type": "string",
+          "required": false,
+          "description": "16-byte namespace globally unique identifier in hexadecimal (e.g. \"ABCDEF0123456789ABCDEF0123456789\")"
+        },
+        {
+          "name": "eui64",
+          "type": "string",
+          "required": false,
+          "description": "8-byte namespace EUI-64 in hexadecimal (e.g. \"ABCDEF0123456789\")"
+        },
+        {
+          "name": "uuid",
+          "type": "string",
+          "required": false,
+          "description": "RFC 4122 UUID (e.g. \"ceccf520-691e-4b46-9546-34af789907c5\")"
+        },
+        {
+          "name": "ptpl_file",
+          "type": "string",
+          "required": false,
+          "description": "File path to save/restore persistent reservation information"
+        },
+        {
+          "name": "anagrpid",
+          "type": "number",
+          "required": false,
+          "description": "ANA group ID. Default: Namespace ID."
+        },
+        {
+          "name": "hide_metadata",
+          "type": "bool",
+          "required": false,
+          "description": "Enable hide_metadata option to the bdev. Default: false"
+        }
+      ]
+    },
+    {
+      "name": "nvmf_admin_cmd_passthru",
+      "fields": [
+        {
+          "name": "identify_ctrlr",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive"
+        },
+        {
+          "name": "identify_uuid_list",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru identify UUID list (0x17 CNS) admin cmds for underlying NVMe device"
+        },
+        {
+          "name": "get_log_page",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru get log page command handlers for underlying NVMe drive (for non-fabrics related log pages)"
+        },
+        {
+          "name": "get_set_features",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru get/set_feature OPC handlers for underlying NVMe drive"
+        },
+        {
+          "name": "sanitize",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru sanitize OPC handlers for underlying NVMe drive"
+        },
+        {
+          "name": "security_send_recv",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru security send/recieve OPC handlers for underlying NVMe drive"
+        },
+        {
+          "name": "fw_update",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru firmware download/commit OPC handlers for underlying NVMe drive"
+        },
+        {
+          "name": "nvme_mi",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru NVMe-MI send/recieve OPC handlers for underlying NVMe drive"
+        },
+        {
+          "name": "vendor_specific",
+          "type": "bool",
+          "required": false,
+          "description": "If true, enables passthru command handlers for underlying NVMe drive for vendor specific cmds (OPCs: 0xC0-0xFF)"
+        }
+      ]
+    },
+    {
+      "name": "vhost_blk_controller_params",
+      "fields": [
+        {
+          "name": "bdev",
+          "type": "string",
+          "required": false,
+          "description": "Backing bdev name or Null if bdev is hot-removed"
+        },
+        {
+          "name": "readonly",
+          "type": "boolean",
+          "required": false,
+          "description": "True if controllers is readonly, false otherwise"
+        }
+      ]
+    },
+    {
+      "name": "vhost_scsi_controller_params",
+      "fields": [
+        {
+          "name": "target_name",
+          "type": "string",
+          "required": false,
+          "description": "Name of this SCSI target"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "required": false,
+          "description": "Unique SPDK global SCSI target ID"
+        },
+        {
+          "name": "scsi_dev_num",
+          "type": "number",
+          "required": false,
+          "description": "SCSI target ID initiator will see when scanning this controller"
+        },
+        {
+          "name": "luns",
+          "type": "array",
+          "required": false,
+          "description": "array of objects describing @ref rpc_vhost_get_controllers_scsi_luns"
+        }
+      ]
+    },
+    {
+      "name": "vhost_scsi_luns_controller_params",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "required": false,
+          "description": "SCSI LUN ID"
+        },
+        {
+          "name": "bdev_name",
+          "type": "string",
+          "required": false,
+          "description": "Backing bdev name"
+        }
+      ]
+    },
+    {
+      "name": "vhost_nvme_controller_params",
+      "fields": [
+        {
+          "name": "nsid",
+          "type": "number",
+          "required": false,
+          "description": "Namespace ID"
+        },
+        {
+          "name": "bdev",
+          "type": "string",
+          "required": false,
+          "description": "Backing bdev name"
+        }
+      ]
+    }
+  ],
   "methods": [
     {
       "name": "spdk_kill_instance",
@@ -3652,6 +3938,7 @@
           "name": "listen_address",
           "type": "object",
           "required": true,
+          "class": "nvmf_listen_address",
           "description": "@ref rpc_nvmf_listen_address object"
         },
         {
@@ -3687,6 +3974,7 @@
           "name": "listen_address",
           "type": "object",
           "required": true,
+          "class": "nvmf_listen_address",
           "description": "@ref rpc_nvmf_listen_address object"
         }
       ]
@@ -3710,6 +3998,7 @@
           "name": "listen_address",
           "type": "object",
           "required": true,
+          "class": "nvmf_listen_address",
           "description": "@ref rpc_nvmf_listen_address object"
         },
         {
@@ -4050,6 +4339,7 @@
           "name": "address",
           "type": "object",
           "required": true,
+          "class": "nvmf_listen_address",
           "description": "@ref rpc_nvmf_listen_address object"
         },
         {
@@ -4073,6 +4363,7 @@
           "name": "address",
           "type": "object",
           "required": true,
+          "class": "nvmf_listen_address",
           "description": "@ref rpc_nvmf_listen_address object"
         }
       ]

@@ -6451,12 +6451,7 @@ Create an authentication group for CHAP authentication.
 
 ##### secret {#rpc_iscsi_create_auth_group_secret}
 
- Name    | Optional   | Type   | Description
--------- | ---------- | ------ | ---------------------------
- user    | Required   | string | Unidirectional CHAP name
- secret  | Required   | string | Unidirectional CHAP secret
- muser   | Optional   | string | Bidirectional CHAP name
- msecret | Optional   | string | Bidirectional CHAP secret
+{{ iscsi_auth_secret_object }}
 
 #### Example
 
@@ -7034,10 +7029,7 @@ Add initiator group to portal group mappings to an existing iSCSI target node.
 
 ##### Portal to Initiator group mappings object
 
- Name   | Optional   | Type   | Description
-------- | ---------- | ------ | -----------------------------
- ig_tag | Required   | number | Existing initiator group tag
- pg_tag | Required   | number | Existing portal group tag
+{{ iscsi_tgt_pg_ig_map_object }}
 
 #### Example
 
@@ -7088,10 +7080,7 @@ Delete initiator group to portal group mappings from an existing iSCSI target no
 
 ##### Portal to Initiator group mappings object
 
- Name   | Optional   | Type   | Description
-------- | ---------- | ------ | -----------------------------
- ig_tag | Required   | number | Existing initiator group tag
- pg_tag | Required   | number | Existing portal group tag
+{{ iscsi_tgt_pg_ig_map_object }}
 
 #### Example
 
@@ -7216,10 +7205,7 @@ Add a portal group.
 
 ##### Portal object
 
- Name   | Optional   | Type   | Description
-------- | ---------- | ------ | -----------------------
- host   | Required   | string | Hostname or IP address
- port   | Required   | string | Port number
+{{ iscsi_portal_object }}
 
 #### Example
 
@@ -7834,12 +7820,7 @@ This method will fail if listener with given address already exists.
 The listen_address is used for adding the listeners to the NVMe-oF target
 and for referring to discovery services on other targets.
 
- Name    | Optional   | Type   | Description
--------- | ---------- | ------ | ------------------------------------------------
- trtype  | Required   | string | Transport type ("RDMA")
- adrfam  | Optional   | string | Address family ("IPv4", "IPv6", "IB", or "FC")
- traddr  | Required   | string | Transport address
- trsvcid | Optional   | string | Transport service ID (required for RDMA or TCP)
+{{ nvmf_listen_address_object }}
 
 #### Example
 
@@ -7962,16 +7943,7 @@ Add a namespace to a subsystem. The namespace ID is returned as the result.
 
 ##### namespace {#rpc_nvmf_namespace}
 
- Name          | Optional   | Type   | Description
--------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------
- nsid          | Optional   | number | Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID.
- bdev_name     | Required   | string | Name of bdev to expose as a namespace.
- nguid         | Optional   | string | 16-byte namespace globally unique identifier in hexadecimal (e.g. "ABCDEF0123456789ABCDEF0123456789")
- eui64         | Optional   | string | 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789")
- uuid          | Optional   | string | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
- ptpl_file     | Optional   | string | File path to save/restore persistent reservation information
- anagrpid      | Optional   | number | ANA group ID. Default: Namespace ID.
- hide_metadata | Optional   | bool   | Enable hide_metadata option to the bdev. Default: false
+{{ nvmf_namespace_object }}
 
 #### Example
 
@@ -8585,17 +8557,7 @@ have been initialized.
 
 ##### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
 
- Name               | Optional   | Type   | Description
-------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------
- identify_ctrlr     | Optional   | bool   | If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
- identify_uuid_list | Optional   | bool   | If true, enables passthru identify UUID list (0x17 CNS) admin cmds for underlying NVMe device
- get_log_page       | Optional   | bool   | If true, enables passthru get log page command handlers for underlying NVMe drive (for non-fabrics related log pages)
- get_set_features   | Optional   | bool   | If true, enables passthru get/set_feature OPC handlers for underlying NVMe drive
- sanitize           | Optional   | bool   | If true, enables passthru sanitize OPC handlers for underlying NVMe drive
- security_send_recv | Optional   | bool   | If true, enables passthru security send/recieve OPC handlers for underlying NVMe drive
- fw_update          | Optional   | bool   | If true, enables passthru firmware download/commit OPC handlers for underlying NVMe drive
- nvme_mi            | Optional   | bool   | If true, enables passthru NVMe-MI send/recieve OPC handlers for underlying NVMe drive
- vendor_specific    | Optional   | bool   | If true, enables passthru command handlers for underlying NVMe drive for vendor specific cmds (OPCs: 0xC0-0xFF)
+{{ nvmf_admin_cmd_passthru_object }}
 
 #### Example
 
@@ -9330,39 +9292,25 @@ Response is an array of objects describing requested controller(s). Common field
 
 `backend_specific` contains one `block` object  of type:
 
- Name                    | Type        | Description
------------------------- | ----------- | -----------
- bdev                    | string      | Backing bdev name or Null if bdev is hot-removed
- readonly                | boolean     | True if controllers is readonly, false otherwise
+{{ vhost_blk_controller_params_object }}
 
 ##### Vhost SCSI {#rpc_vhost_get_controllers_scsi}
 
 `backend_specific` contains `scsi` array of following objects:
 
- Name                    | Type        | Description
------------------------- | ----------- | -----------
- target_name             | string      | Name of this SCSI target
- id                      | number      | Unique SPDK global SCSI target ID
- scsi_dev_num            | number      | SCSI target ID initiator will see when scanning this controller
- luns                    | array       | array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
+{{ vhost_scsi_controller_params_object }}
 
 ##### Vhost SCSI LUN {#rpc_vhost_get_controllers_scsi_luns}
 
 Object of type:
 
- Name                    | Type        | Description
------------------------- | ----------- | -----------
- id                      | number      | SCSI LUN ID
- bdev_name               | string      | Backing bdev name
+{{ vhost_scsi_luns_controller_params_object }}
 
 ##### Vhost NVMe {#rpc_vhost_get_controllers_nvme}
 
 `backend_specific` contains `namespaces` array of following objects:
 
- Name                    | Type        | Description
------------------------- | ----------- | -----------
- nsid                    | number      | Namespace ID
- bdev                    | string      | Backing bdev name
+{{ vhost_nvme_controller_params_object }}
 
 #### Example
 
