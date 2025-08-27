@@ -3051,6 +3051,7 @@ nvmf_ns_reservation_add_registrant(struct spdk_nvmf_ns *ns,
 	}
 
 	reg->rkey = nrkey;
+	reg->cntlid = ctrlr->cntlid;
 	/* set hostid for the registrant */
 	spdk_uuid_copy(&reg->hostid, &ctrlr->hostid);
 	TAILQ_INSERT_TAIL(&ns->registrants, reg, link);
@@ -3629,8 +3630,7 @@ nvmf_ns_reservation_report(const struct spdk_nvmf_ns *ns,
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
 		struct spdk_nvme_registered_ctrlr_extended_data ctrlr_data = { 0 };
 
-		/* Set to 0xffffh for dynamic controller */
-		ctrlr_data.cntlid = 0xffff;
+		ctrlr_data.cntlid = reg->cntlid ? reg->cntlid : 0xffff;
 		ctrlr_data.rcsts.status = (ns->holder == reg) ? true : false;
 		ctrlr_data.rkey = reg->rkey;
 		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data.hostid, &reg->hostid);

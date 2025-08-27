@@ -164,6 +164,7 @@ struct spdk_nvmf_registrant {
 	struct spdk_uuid hostid;
 	/* Registration key */
 	uint64_t rkey;
+	uint16_t cntlid;
 };
 
 struct spdk_nvmf_ns {

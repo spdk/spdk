@@ -2031,7 +2031,9 @@ test_nvmf_ns_reservation_report(void)
 	cmd.nvme_cmd.cdw11_bits.resv_report.eds = true;
 	cmd.nvme_cmd.cdw10 = 100;
 	reg[0].rkey = 0xa;
+	reg[0].cntlid = 11;
 	reg[1].rkey = 0xb;
+	reg[1].cntlid = 12;
 	spdk_uuid_generate(&reg[0].hostid);
 	spdk_uuid_generate(&reg[1].hostid);
 	TAILQ_INIT(&ns.registrants);
@@ -2049,13 +2051,13 @@ test_nvmf_ns_reservation_report(void)
 	CU_ASSERT(status_data->data.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
 	CU_ASSERT(status_data->data.ptpls == true);
 	CU_ASSERT(status_data->data.regctl == 2);
-	CU_ASSERT(ctrlr_data->cntlid == 0xffff);
+	CU_ASSERT(ctrlr_data->cntlid == 11);
 	CU_ASSERT(ctrlr_data->rcsts.status == false);
 	CU_ASSERT(ctrlr_data->rkey ==  0xa);
 	CU_ASSERT(!spdk_uuid_compare((struct spdk_uuid *)ctrlr_data->hostid, &reg[0].hostid));
 	/* Check second ctrlr data */
 	ctrlr_data++;
-	CU_ASSERT(ctrlr_data->cntlid == 0xffff);
+	CU_ASSERT(ctrlr_data->cntlid == 12);
 	CU_ASSERT(ctrlr_data->rcsts.status == false);
 	CU_ASSERT(ctrlr_data->rkey ==  0xb);
 	CU_ASSERT(!spdk_uuid_compare((struct spdk_uuid *)ctrlr_data->hostid, &reg[1].hostid));
