@@ -1699,16 +1699,22 @@ io_opc_name(uint8_t opc)
 		return "Write Zeroes";
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
 		return "Dataset Management";
+	case SPDK_NVME_OPC_VERIFY:
+		return "Verify";
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
 		return "Reservation Register";
 	case SPDK_NVME_OPC_RESERVATION_REPORT:
 		return "Reservation Report";
 	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
 		return "Reservation Acquire";
+	case SPDK_NVME_OPC_IO_MANAGEMENT_RECEIVE:
+		return "IO Management Receive";
 	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		return "Reservation Release";
 	case SPDK_NVME_OPC_COPY:
 		return "Copy";
+	case SPDK_NVME_OPC_IO_MANAGEMENT_SEND:
+		return "IO Management Send";
 	default:
 		if (opc >= 0x80) {
 			return "Vendor specific";
