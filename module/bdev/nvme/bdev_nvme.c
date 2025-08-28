@@ -5174,6 +5174,13 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 
 		/* Found a new one */
 
+		ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
+		if (ns == NULL || !spdk_nvme_ns_is_active(ns)) {
+			/* Namespace was present during identify controller,
+			 * but identify ns was not yet sent. */
+			continue;
+		}
+
 		nvme_ns = nvme_ns_alloc();
 		if (nvme_ns == NULL) {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
