@@ -2306,6 +2306,7 @@ struct nvme_active_ns_ctx {
 	uint32_t next_nsid;
 	uint32_t *new_ns_list;
 	nvme_active_ns_ctx_deleter deleter;
+	struct nvme_completion_poll_status status;
 
 	enum nvme_active_ns_state state;
 };
@@ -2443,6 +2444,12 @@ nvme_ctrlr_identify_active_ns_async_done(void *arg, const struct spdk_nvme_cpl *
 	struct nvme_active_ns_ctx *ctx = arg;
 	uint32_t *new_ns_list = NULL;
 
+	if (ctx->status.timed_out) {
+		nvme_active_ns_ctx_destroy(ctx);
+		return;
+	}
+
+	memcpy(&ctx->status.cpl, cpl, sizeof(*cpl));
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
 		goto out;
@@ -2465,10 +2472,13 @@ nvme_ctrlr_identify_active_ns_async_done(void *arg, const struct spdk_nvme_cpl *
 	}
 
 	ctx->new_ns_list = new_ns_list;
+	ctx->status.timeout_tsc = spdk_get_ticks() + ctx->ctrlr->opts.admin_timeout_ms * 1000 *
+				  spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	nvme_ctrlr_identify_active_ns_async(ctx);
 	return;
 
 out:
+	ctx->status.done = true;
 	if (ctx->deleter) {
 		ctx->deleter(ctx);
 	}
@@ -2588,24 +2598,21 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	nvme_ctrlr_identify_active_ns_async(ctx);
-	while (ctx->state == NVME_ACTIVE_NS_STATE_PROCESSING) {
-		rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-		if (rc < 0) {
-			ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
-			break;
+	rc = nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, &ctx->status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000);
+	if (rc || ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
+		if (!ctx->status.timed_out) {
+			nvme_active_ns_ctx_destroy(ctx);
 		}
-	}
 
-	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
-		nvme_active_ns_ctx_destroy(ctx);
+		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_identify_active_ns_async failed: rc=%d\n", rc);
 		return -ENXIO;
 	}
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
 	nvme_ctrlr_identify_active_ns_swap(ctrlr, ctx->new_ns_list, ctx->page_count * 1024);
 	nvme_active_ns_ctx_destroy(ctx);
-
-	return 0;
+	return rc;
 }
 
 static void
