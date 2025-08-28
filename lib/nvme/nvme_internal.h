@@ -1299,11 +1299,6 @@ int	nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				struct spdk_nvme_sanitize *sanitize, uint32_t cdw11,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
-int	nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-				 struct nvme_completion_poll_status *status);
-int	nvme_wait_for_completion_robust_lock(struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status,
-		pthread_mutex_t *robust_mutex);
 int	nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 		struct nvme_completion_poll_status *status,
 		uint64_t timeout_in_usecs);

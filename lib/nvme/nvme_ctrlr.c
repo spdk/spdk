@@ -4933,7 +4933,8 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		free(status);
 		return res;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_attach_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -4979,7 +4980,8 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		free(status);
 		return res;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_detach_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -5009,7 +5011,8 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 		free(status);
 		return 0;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_create_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -5047,7 +5050,8 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		free(status);
 		return res;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_delete_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -5078,7 +5082,8 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		free(status);
 		return res;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_format failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -5143,7 +5148,8 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 			return res;
 		}
 
-		if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+		if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+				ctrlr->opts.admin_timeout_ms * 1000)) {
 			NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_fw_image_download failed!\n");
 			if (!status->timed_out) {
 				free(status);
@@ -5168,7 +5174,8 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		return res;
 	}
 
-	res = nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock);
+	res = nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000);
 
 	memcpy(completion_status, &status->cpl.status, sizeof(struct spdk_nvme_status));
 
@@ -5513,7 +5520,8 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 		free(status);
 		return res;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_cmd_security_receive failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -5545,7 +5553,8 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 		free(status);
 		return res;
 	}
-	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_cmd_security_send failed!\n");
 		if (!status->timed_out) {
 			free(status);

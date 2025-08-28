@@ -20,9 +20,9 @@ DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 
 DEFINE_STUB(nvme_get_quirks, uint64_t, (const struct spdk_pci_id *id), 0);
 
-DEFINE_STUB(nvme_wait_for_completion, int,
+DEFINE_STUB(nvme_wait_for_completion_timeout, int,
 	    (struct spdk_nvme_qpair *qpair,
-	     struct nvme_completion_poll_status *status), 0);
+	     struct nvme_completion_poll_status *status, uint64_t timeout_in_usec), 0);
 DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
 
 DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr,

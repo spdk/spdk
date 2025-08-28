@@ -1365,25 +1365,6 @@ test_nvme_wait_for_completion(void)
 	CU_ASSERT(g_status.done == true);
 	CU_ASSERT(rc == 0);
 
-	/* nvme_wait_for_completion */
-	/* spdk_nvme_qpair_process_completions returns error */
-	memset(&g_status, 0, sizeof(g_status));
-	g_process_comp_result = -1;
-	rc = nvme_wait_for_completion(&qpair, &g_status);
-	CU_ASSERT(rc == -ECANCELED);
-	CU_ASSERT(g_status.timed_out == true);
-	CU_ASSERT(g_status.done == false);
-	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
-
-	/* successful completion */
-	memset(&g_status, 0, sizeof(g_status));
-	g_process_comp_result = 0;
-	rc = nvme_wait_for_completion(&qpair, &g_status);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_status.timed_out == false);
-	CU_ASSERT(g_status.done == true);
-
 	/* completion  timeout */
 	memset(&g_status, 0, sizeof(g_status));
 	completion_delay_us = 2000000;
@@ -1418,25 +1399,6 @@ test_nvme_wait_for_completion(void)
 	CU_ASSERT(g_status.timed_out == false);
 	CU_ASSERT(g_status.done == true);
 	CU_ASSERT(rc == 0);
-
-	/* nvme_wait_for_completion */
-	/* spdk_nvme_qpair_process_completions returns error */
-	memset(&g_status, 0, sizeof(g_status));
-	g_process_comp_result = -1;
-	rc = nvme_wait_for_completion_robust_lock(&qpair, &g_status, &g_robust_lock);
-	CU_ASSERT(rc == -ECANCELED);
-	CU_ASSERT(g_status.timed_out == true);
-	CU_ASSERT(g_status.done == false);
-	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
-
-	/* successful completion */
-	memset(&g_status, 0, sizeof(g_status));
-	g_process_comp_result = 0;
-	rc = nvme_wait_for_completion_robust_lock(&qpair, &g_status, &g_robust_lock);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_status.timed_out == false);
-	CU_ASSERT(g_status.done == true);
 }
 
 static void

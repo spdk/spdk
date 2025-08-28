@@ -411,22 +411,6 @@ nvme_wait_for_completion_robust_lock_timeout(
 }
 
 int
-nvme_wait_for_completion_robust_lock(
-	struct spdk_nvme_qpair *qpair,
-	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex)
-{
-	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, robust_mutex, 0);
-}
-
-int
-nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			 struct nvme_completion_poll_status *status)
-{
-	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, NULL, 0);
-}
-
-int
 nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 				 struct nvme_completion_poll_status *status,
 				 uint64_t timeout_in_usecs)

@@ -342,37 +342,6 @@ nvme_wait_for_completion_robust_lock_timeout(
  * \param qpair queue to poll
  * \param status completion status. The user must fill this structure with zeroes before calling
  * this function
- * \param robust_mutex optional robust mutex to lock while polling qpair
- *
- * \return 0 if command completed without error,
- * -EIO if command completed with error,
- * -ECANCELED if command is not completed due to transport/device error
- *
- * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
- * and status as the callback argument.
- */
-int
-nvme_wait_for_completion_robust_lock(
-	struct spdk_nvme_qpair *qpair,
-	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex)
-{
-	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, robust_mutex, 0);
-}
-
-int
-nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			 struct nvme_completion_poll_status *status)
-{
-	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, NULL, 0);
-}
-
-/**
- * Poll qpair for completions until a command completes.
- *
- * \param qpair queue to poll
- * \param status completion status. The user must fill this structure with zeroes before calling
- * this function
  * \param timeout_in_usecs optional timeout
  *
  * \return 0 if command completed without error,
