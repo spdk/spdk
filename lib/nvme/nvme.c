@@ -336,29 +336,6 @@ nvme_wait_for_completion_robust_lock_timeout(
 	return rc;
 }
 
-/**
- * Poll qpair for completions until a command completes.
- *
- * \param qpair queue to poll
- * \param status completion status. The user must fill this structure with zeroes before calling
- * this function
- * \param timeout_in_usecs optional timeout
- *
- * \return 0 if command completed without error,
- * -EIO if command completed with error,
- * -ECANCELED if command is not completed due to transport/device error or time expired
- *
- * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
- * and status as the callback argument.
- */
-int
-nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
-				 struct nvme_completion_poll_status *status,
-				 uint64_t timeout_in_usecs)
-{
-	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, NULL, timeout_in_usecs);
-}
-
 static void
 nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 {

@@ -366,7 +366,8 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status, ctrlr->opts.admin_timeout_ms * 1000)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -427,8 +428,8 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return rc;
 	}
 
-	if (nvme_wait_for_completion_timeout(discovery_ctrlr->adminq, status,
-					     discovery_ctrlr->opts.admin_timeout_ms * 1000)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(discovery_ctrlr->adminq, status,
+			&discovery_ctrlr->ctrlr_lock, discovery_ctrlr->opts.admin_timeout_ms * 1000)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		nvme_ctrlr_destruct(discovery_ctrlr);
 		if (!status->timed_out) {

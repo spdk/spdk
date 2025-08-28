@@ -411,14 +411,6 @@ nvme_wait_for_completion_robust_lock_timeout(
 }
 
 int
-nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
-				 struct nvme_completion_poll_status *status,
-				 uint64_t timeout_in_usecs)
-{
-	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, NULL, timeout_in_usecs);
-}
-
-int
 nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 				      union spdk_nvme_feat_async_event_configuration config, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg)

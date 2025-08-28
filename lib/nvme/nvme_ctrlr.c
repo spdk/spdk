@@ -968,8 +968,8 @@ nvme_ctrlr_set_arbitration_feature(struct spdk_nvme_ctrlr *ctrlr)
 		return;
 	}
 
-	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-					     ctrlr->opts.admin_timeout_ms * 1000)) {
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Timeout to set arbitration feature\n");
 	}
 
@@ -3290,8 +3290,8 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr_aer_completion *async_eve
 		goto free_buffer;
 	}
 
-	rc = nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-					      ctrlr->opts.admin_timeout_ms * 1000);
+	rc = nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000);
 	if (!status->timed_out) {
 		free(status);
 	}
