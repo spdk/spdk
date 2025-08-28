@@ -11,12 +11,34 @@ from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 def add_parser(subparsers):
 
+    def rpc_get_methods(args):
+        print_dict(args.client.rpc_get_methods(
+                                       current=args.current,
+                                       include_aliases=args.include_aliases))
+
+    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods')
+    p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
+    p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
+    p.set_defaults(func=rpc_get_methods)
+
     def spdk_kill_instance(args):
         args.client.spdk_kill_instance(sig_name=args.sig_name)
 
     p = subparsers.add_parser('spdk_kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
     p.set_defaults(func=spdk_kill_instance)
+
+    def framework_start_init(args):
+        args.client.framework_start_init()
+
+    p = subparsers.add_parser('framework_start_init', help='Start initialization of subsystems')
+    p.set_defaults(func=framework_start_init)
+
+    def framework_wait_init(args):
+        args.client.framework_wait_init()
+
+    p = subparsers.add_parser('framework_wait_init', help='Block until subsystems have been initialized')
+    p.set_defaults(func=framework_wait_init)
 
     def framework_monitor_context_switch(args):
         enabled = None
@@ -95,3 +117,35 @@ def add_parser(subparsers):
     p = subparsers.add_parser('framework_enable_cpumask_locks',
                               help='Enable CPU core lock files.')
     p.set_defaults(func=framework_enable_cpumask_locks)
+
+    def thread_get_stats(args):
+        print_dict(args.client.thread_get_stats())
+
+    p = subparsers.add_parser(
+        'thread_get_stats', help='Display current statistics of all the threads')
+    p.set_defaults(func=thread_get_stats)
+
+    def thread_set_cpumask(args):
+        ret = args.client.thread_set_cpumask(
+                                         id=args.id,
+                                         cpumask=args.cpumask)
+    p = subparsers.add_parser('thread_set_cpumask',
+                              help="""set the cpumask of the thread whose ID matches to the
+    specified value. The thread may be migrated to one of the specified CPUs.""")
+    p.add_argument('-i', '--id', type=int, help='thread ID')
+    p.add_argument('-m', '--cpumask', help='cpumask for this thread')
+    p.set_defaults(func=thread_set_cpumask)
+
+    def thread_get_pollers(args):
+        print_dict(args.client.thread_get_pollers())
+
+    p = subparsers.add_parser(
+        'thread_get_pollers', help='Display current pollers of all the threads')
+    p.set_defaults(func=thread_get_pollers)
+
+    def thread_get_io_channels(args):
+        print_dict(args.client.thread_get_io_channels())
+
+    p = subparsers.add_parser(
+        'thread_get_io_channels', help='Display current IO channels of all the threads')
+    p.set_defaults(func=thread_get_io_channels)
