@@ -391,13 +391,10 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 static struct nvme_completion_poll_status *g_failed_status;
 
 int
-nvme_wait_for_completion_robust_lock_timeout(
-	struct spdk_nvme_qpair *qpair,
-	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex,
-	uint64_t timeout_in_usecs)
+nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
+				struct nvme_completion_poll_status *status)
 {
-	if (spdk_nvme_qpair_process_completions(qpair, 0) < 0) {
+	if (spdk_nvme_qpair_process_completions(ctrlr->adminq, 0) < 0) {
 		g_failed_status = status;
 		status->timed_out = true;
 		return -1;

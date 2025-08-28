@@ -297,13 +297,11 @@ error:
 }
 
 /**
- * Poll qpair for completions until a command completes.
+ * Poll admin qpair for completions until a command completes.
  *
- * \param qpair queue to poll
+ * \param ctrlr ctrlr with adminq to poll
  * \param status completion status. The user must fill this structure with zeroes before calling
  * this function
- * \param robust_mutex optional robust mutex to lock while polling qpair
- * \param timeout_in_usecs optional timeout
  *
  * \return 0 if command completed without error,
  * -EIO if command completed with error,
@@ -313,12 +311,10 @@ error:
  *  and status as the callback argument.
  */
 int
-nvme_wait_for_completion_robust_lock_timeout(
-	struct spdk_nvme_qpair *qpair,
-	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex,
-	uint64_t timeout_in_usecs)
+nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
+				struct nvme_completion_poll_status *status)
 {
+	uint64_t timeout_in_usecs = ctrlr->opts.admin_timeout_ms * 1000;
 	int rc;
 
 	if (timeout_in_usecs) {
@@ -330,7 +326,7 @@ nvme_wait_for_completion_robust_lock_timeout(
 
 	status->cpl.status_raw = 0;
 	do {
-		rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, robust_mutex);
+		rc = nvme_wait_for_completion_robust_lock_timeout_poll(ctrlr->adminq, status, &ctrlr->ctrlr_lock);
 	} while (rc == -EAGAIN);
 
 	return rc;

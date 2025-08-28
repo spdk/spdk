@@ -122,8 +122,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	if (nvme_wait_for_completion_robust_lock_timeout(ns->ctrlr->adminq, status, &ns->ctrlr->ctrlr_lock,
-			ns->ctrlr->opts.admin_timeout_ms * 1000)) {
+	if (nvme_wait_for_adminq_completion(ns->ctrlr, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -171,8 +170,7 @@ nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
-			ctrlr->opts.admin_timeout_ms * 1000)) {
+	if (nvme_wait_for_adminq_completion(ctrlr, status)) {
 		SPDK_ERRLOG("Failed to retrieve Identify IOCS Specific Namespace Data Structure\n");
 		spdk_free(nsdata_zns);
 		if (!status->timed_out) {
@@ -218,8 +216,7 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
-			ctrlr->opts.admin_timeout_ms * 1000)) {
+	if (nvme_wait_for_adminq_completion(ctrlr, status)) {
 		SPDK_ERRLOG("Failed to retrieve Identify IOCS Specific Namespace Data Structure\n");
 		spdk_free(nsdata_nvm);
 		if (!status->timed_out) {
@@ -286,8 +283,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_completion_robust_lock_timeout(ns->ctrlr->adminq, status, &ns->ctrlr->ctrlr_lock,
-			ns->ctrlr->opts.admin_timeout_ms * 1000);
+	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status);
 	if (rc != 0) {
 		SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
 		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));

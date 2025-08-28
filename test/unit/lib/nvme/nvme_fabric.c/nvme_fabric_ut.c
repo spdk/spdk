@@ -159,14 +159,13 @@ spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 	}
 }
 
-DEFINE_RETURN_MOCK(nvme_wait_for_completion_robust_lock_timeout, int);
+DEFINE_RETURN_MOCK(nvme_wait_for_adminq_completion, int);
 int
-nvme_wait_for_completion_robust_lock_timeout(struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status,
-		pthread_mutex_t *robust_mutex, uint64_t timeout_in_usec)
+nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
+				struct nvme_completion_poll_status *status)
 {
 	status->timed_out = false;
-	HANDLE_RETURN_MOCK(nvme_wait_for_completion_robust_lock_timeout);
+	HANDLE_RETURN_MOCK(nvme_wait_for_adminq_completion);
 	return 0;
 }
 
@@ -278,11 +277,11 @@ test_nvme_fabric_get_discovery_log_page(void)
 	MOCK_CLEAR(spdk_nvme_ctrlr_cmd_get_log_page);
 
 	/* Completion time out */
-	MOCK_SET(nvme_wait_for_completion_robust_lock_timeout, -1);
+	MOCK_SET(nvme_wait_for_adminq_completion, -1);
 
 	rc = nvme_fabric_get_discovery_log_page(&ctrlr, buffer, sizeof(buffer), offset);
 	CU_ASSERT(rc == -1);
-	MOCK_CLEAR(nvme_wait_for_completion_robust_lock_timeout);
+	MOCK_CLEAR(nvme_wait_for_adminq_completion);
 }
 
 static void

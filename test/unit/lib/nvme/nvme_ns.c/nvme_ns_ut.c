@@ -13,10 +13,8 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
-DEFINE_STUB(nvme_wait_for_completion_robust_lock_timeout, int,
-	    (struct spdk_nvme_qpair *qpair,
-	     struct nvme_completion_poll_status *status,
-	     pthread_mutex_t *robust_mutex, uint64_t timeout_in_usecs), 0);
+DEFINE_STUB(nvme_wait_for_adminq_completion, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct nvme_completion_poll_status *status), 0);
 DEFINE_STUB(nvme_ctrlr_multi_iocs_enabled, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
 
 static struct spdk_nvme_cpl fake_cpl = {};
