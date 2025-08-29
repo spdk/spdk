@@ -41,19 +41,12 @@ disclaimer
 if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	repos=() enable=("epel" "elrepo" "elrepo-testing") add=()
 	[[ $ID == centos || $ID == rocky ]] && enable+=("extras")
+
 	if [[ $VERSION_ID == 7* ]]; then
-		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
-		repos+=("https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm")
-		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
-		[[ $ID == centos ]] && repos+=("centos-release-scl-rh")
-		# Disable liburing, see https://github.com/spdk/spdk/issues/1564
-		if [[ $INSTALL_LIBURING == true ]]; then
-			echo "Liburing not supported on ${ID}$VERSION_ID, disabling"
-			INSTALL_LIBURING=false
-		fi
-		add+=("https://packages.daos.io/v2.0/CentOS7/packages/x86_64/daos_packages.repo")
-		enable+=("daos-packages")
+		printf 'Not supported distribution detected (%s):(%s), aborting\n' "$ID" "$VERSION_ID" >&2
+		exit 1
 	fi
+
 	if [[ $VERSION_ID == 8* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
@@ -100,7 +93,6 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	fi
 	# Potential dependencies can be needed from other RHEL repos, enable them
 	if [[ $ID == rhel ]]; then
-		[[ $VERSION_ID == 7* ]] && sub repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
 		[[ $VERSION_ID == 8* ]] && sub repos --enable codeready-builder-for-rhel-8-x86_64-rpms
 		[[ $VERSION_ID == 9* ]] && sub repos --enable codeready-builder-for-rhel-9-x86_64-rpms
 	fi
@@ -128,10 +120,6 @@ if [ "$(uname -m)" = "aarch64" ]; then
 	fi
 fi
 
-# for rhel and centos7 OpenSSL 1.1 should be installed via EPEL
-if echo "$ID $VERSION_ID" | grep -E -q 'centos 7|rhel 7'; then
-	yum install -y openssl11-devel
-fi
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then
 	yum install -y python36 python36-devel
 	#Create hard link to use in SPDK as python
@@ -155,17 +143,12 @@ pip3 install python-magic
 pip3 install Jinja2
 pip3 install pandas
 pip3 install tabulate
-if ! [[ $ID == centos && $VERSION_ID == 7 ]]; then
-	# Problem with modules compilation on Centos7
-	pip3 install grpcio
-	pip3 install grpcio-tools
-fi
+pip3 install grpcio
+pip3 install grpcio-tools
 pip3 install pyyaml
 
-# Additional dependencies for SPDK CLI - not available in rhel and centos
-if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
-	yum install -y python3-configshell python3-pexpect
-fi
+# Additional dependencies for SPDK CLI
+yum install -y python3-configshell python3-pexpect
 # Additional dependencies for ISA-L used in compression
 yum install -y autoconf automake libtool help2man
 # Additional dependencies for DPDK
@@ -220,12 +203,7 @@ if [[ $INSTALL_AVAHI == "true" ]]; then
 	yum install -y avahi-devel
 fi
 if [[ $INSTALL_IDXD == "true" ]]; then
-	# accel-config-devel is required for kernel IDXD implementation used in DSA accel module
-	if [[ $ID == centos && $VERSION_ID == 7* ]]; then
-		echo "Installation of IDXD dependencies not supported under ${ID}${VERSION_ID}"
-	else
-		yum install -y accel-config-devel
-	fi
+	yum install -y accel-config-devel
 fi
 if [[ $INSTALL_LZ4 == "true" ]]; then
 	yum install -y lz4-devel
