@@ -23,6 +23,16 @@ DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "t
 
 DEFINE_STUB(spdk_bdev_get_physical_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 4096);
+DEFINE_STUB(spdk_bdev_get_preferred_write_granularity, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_preferred_write_alignment, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_optimal_write_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_preferred_unmap_granularity, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_preferred_unmap_alignment, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
 
 DEFINE_STUB(nvmf_ctrlr_process_admin_cmd, int, (struct spdk_nvmf_request *req), 0);
 

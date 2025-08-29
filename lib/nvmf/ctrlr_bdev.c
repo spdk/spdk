@@ -125,6 +125,7 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	uint32_t phys_blocklen;
 	uint32_t max_num_blocks;
 	uint32_t max_copy;
+	uint32_t npwa, npwg, npda, npdg;
 
 	num_blocks = spdk_bdev_get_num_blocks(bdev);
 
@@ -175,15 +176,42 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	/* Linux driver uses min(nawupf, npwg) to set physical_block_size */
 	nsdata->nsfeat.optperf = 1;
 	nsdata->nsfeat.ns_atomic_write_unit = 1;
-	nsdata->npwg = (phys_blocklen >> nsdata->lbaf[0].lbads) - 1;
+	/* Note that all of these preferred and optimal sizes are 0-based. */
+	npwg = spdk_bdev_get_preferred_write_granularity(bdev);
+	if (npwg == 0) {
+		nsdata->npwg = (phys_blocklen >> nsdata->lbaf[0].lbads) - 1;
+	} else {
+		nsdata->npwg = npwg - 1;
+	}
 	nsdata->nawupf = nsdata->npwg;
-	nsdata->npwa = nsdata->npwg;
-	nsdata->npdg = nsdata->npwg;
-	nsdata->npda = nsdata->npwg;
-	/* Set NOWS equal to controller MDTS if the namespace did not set one
-	 * explicitly.
-	 */
-	nsdata->nows = max_num_blocks - 1;
+	npwa = spdk_bdev_get_preferred_write_alignment(bdev);
+	if (npwa == 0) {
+		nsdata->npwa = nsdata->npwg;
+	} else {
+		nsdata->npwa = npwa - 1;
+	}
+	npdg = spdk_bdev_get_preferred_unmap_granularity(bdev);
+	if (npdg == 0) {
+		nsdata->npdg = nsdata->npwg;
+	} else {
+		nsdata->npdg = npdg - 1;
+	}
+	npda = spdk_bdev_get_preferred_unmap_alignment(bdev);
+	if (npda == 0) {
+		nsdata->npda = nsdata->npwg;
+	} else {
+		nsdata->npda = npda - 1;
+	}
+	nsdata->nows = spdk_bdev_get_optimal_write_size(bdev);
+	if (nsdata->nows > 0) {
+		nsdata->nows -= 1;
+	} else {
+		/* Set NOWS equal to controller MDTS if the namespace did
+		 * not set one explicitly.
+		 */
+		nsdata->nows = max_num_blocks - 1;
+	}
+
 	if (spdk_bdev_get_write_unit_size(bdev) == 1) {
 		/* Due to bug in the Linux kernel NVMe driver, we have to set noiob no larger
 		 * than mdts.
