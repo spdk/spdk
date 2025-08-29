@@ -4602,6 +4602,12 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	}
 	if (nsdata->nsfeat.optperf) {
 		phys_bs = bs * (1 + nsdata->npwg);
+
+		disk->preferred_write_granularity = nsdata->npwg + 1;
+		disk->preferred_write_alignment = nsdata->npwa + 1;
+		disk->optimal_write_size = nsdata->nows + 1;
+		disk->preferred_unmap_granularity = nsdata->npdg + 1;
+		disk->preferred_unmap_alignment = nsdata->npda + 1;
 	}
 	disk->phys_blocklen = spdk_min(phys_bs, atomic_bs);
 
