@@ -82,6 +82,7 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	fi
 
 	if ((${#add[@]} > 0)); then
+		yum install -y yum-utils
 		for _repo in "${add[@]}"; do
 			yum-config-manager --add-repo "$_repo"
 		done
