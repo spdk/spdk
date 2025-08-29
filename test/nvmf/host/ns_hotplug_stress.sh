@@ -62,7 +62,27 @@ ns_per_thread=20
 bdev_size=100
 blk_size=4096
 
+# Test case 1 - add/remove ns with delay for processing admin queue
+
+# Instead of default 10ms, use 1 second timeout
+$rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us 1000000
+
 $rpc_py bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -f IPv4 -s "$NVMF_PORT" -n "$NVME_SUBNQN" -b nvme0
+
+for ((i = 0; i < nthreads; ++i)); do
+	# Every thread can use ns_per_thread NSIDs starting at specific offset.
+	start_nsid="$((1 + (ns_per_thread * i)))"
+	add_remove "$start_nsid" "$i" &
+	pids+=($!)
+done
+wait "${pids[@]}"
+
+# Reattach controller with restored admin queue poll period to 10ms
+$rpc_py bdev_nvme_detach_controller nvme0
+$rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us 10000
+$rpc_py bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -f IPv4 -s "$NVMF_PORT" -n "$NVME_SUBNQN" -b nvme0
+
+# Test case 2 - add/remove ns constantly
 
 for ((i = 0; i < nthreads; ++i)); do
 	# Every thread can use ns_per_thread NSIDs starting at specific offset.
