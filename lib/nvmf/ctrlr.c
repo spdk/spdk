@@ -2780,7 +2780,6 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
-	uint32_t max_num_blocks, format_index;
 	enum spdk_nvme_ana_state ana_state;
 
 	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, nsid, rsp);
@@ -2788,23 +2787,10 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		return;
 	}
 
-	nvmf_bdev_ctrlr_identify_ns(ns, nsdata, ctrlr->dif_insert_or_strip);
+	nvmf_bdev_ctrlr_identify_ns(ns, nsdata, ctrlr->dif_insert_or_strip,
+				    ctrlr->admin_qpair->transport->opts.max_io_size);
 
 	assert(ctrlr->admin_qpair);
-
-	format_index = spdk_nvme_ns_get_format_index(nsdata);
-
-	/* Due to bug in the Linux kernel NVMe driver we have to set noiob no larger than mdts */
-	max_num_blocks = ctrlr->admin_qpair->transport->opts.max_io_size /
-			 (1U << nsdata->lbaf[format_index].lbads);
-	if (nsdata->noiob > max_num_blocks) {
-		nsdata->noiob = max_num_blocks;
-	}
-
-	/* Set NOWS equal to Controller MDTS */
-	if (nsdata->nsfeat.optperf) {
-		nsdata->nows = max_num_blocks - 1;
-	}
 
 	if (subsystem->flags.ana_reporting) {
 		assert(ns->anagrpid - 1 < subsystem->max_nsid);

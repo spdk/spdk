@@ -117,12 +117,13 @@ nvmf_bdev_ctrlr_complete_admin_cmd(struct spdk_bdev_io *bdev_io, bool success,
 
 void
 nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
-			    bool dif_insert_or_strip)
+			    bool dif_insert_or_strip, uint32_t transport_max_io_size)
 {
 	struct spdk_bdev *bdev = ns->bdev;
 	struct spdk_bdev_desc *desc = ns->desc;
 	uint64_t num_blocks;
 	uint32_t phys_blocklen;
+	uint32_t max_num_blocks;
 	uint32_t max_copy;
 
 	num_blocks = spdk_bdev_get_num_blocks(bdev);
@@ -167,6 +168,8 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_data_block_size(bdev));
 	}
 
+	max_num_blocks = transport_max_io_size / (1U << nsdata->lbaf[0].lbads);
+
 	phys_blocklen = spdk_bdev_get_physical_block_size(bdev);
 	assert(phys_blocklen > 0);
 	/* Linux driver uses min(nawupf, npwg) to set physical_block_size */
@@ -177,9 +180,15 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->npwa = nsdata->npwg;
 	nsdata->npdg = nsdata->npwg;
 	nsdata->npda = nsdata->npwg;
-
+	/* Set NOWS equal to controller MDTS if the namespace did not set one
+	 * explicitly.
+	 */
+	nsdata->nows = max_num_blocks - 1;
 	if (spdk_bdev_get_write_unit_size(bdev) == 1) {
-		nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
+		/* Due to bug in the Linux kernel NVMe driver, we have to set noiob no larger
+		 * than mdts.
+		 */
+		nsdata->noiob = spdk_min(spdk_bdev_get_optimal_io_boundary(bdev), max_num_blocks);
 	}
 	nsdata->nmic.can_share = 1;
 	if (nvmf_ns_is_ptpl_capable(ns)) {
