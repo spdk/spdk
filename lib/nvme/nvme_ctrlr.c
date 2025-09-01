@@ -3243,7 +3243,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 		nvme_ns_construct(ns, nsid, ctrlr);
 	}
 
-	spdk_dma_free(async_event->log_page.changed_ns_list);
+	free(async_event->log_page.changed_ns_list);
 }
 
 static int
@@ -3252,27 +3252,23 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr_aer_completion *async_eve
 	struct spdk_nvme_ctrlr			*ctrlr = async_event->ctrlr;
 	struct nvme_completion_poll_status	*status;
 	int		rc = -ENOMEM;
-	uint32_t	*changed_ns_list = NULL;
-	uint32_t	nsid;
-	size_t		changed_ns_list_length = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
+	uint32_t	*changed_ns_list;
+	size_t		changed_ns_list_length = SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t);
 
 	if (ctrlr->opts.disable_read_changed_ns_list_log_page) {
 		return 0;
 	}
 
-	changed_ns_list = spdk_dma_zmalloc(changed_ns_list_length, 4096, NULL);
+	changed_ns_list = calloc(1, changed_ns_list_length);
 	if (!changed_ns_list) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate buffer for getting "
-				  "changed ns log.\n");
-		return rc;
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate buffer for getting changed ns log.\n");
+		goto out;
 	}
-
-	async_event->log_page.changed_ns_list = changed_ns_list;
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		goto free_buffer;
+		goto out;
 	}
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
@@ -3280,11 +3276,10 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr_aer_completion *async_eve
 					      SPDK_NVME_GLOBAL_NS_TAG,
 					      changed_ns_list, changed_ns_list_length, 0,
 					      nvme_completion_poll_cb, status);
-
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_cmd_get_log_page() failed: rc=%d\n", rc);
 		free(status);
-		goto free_buffer;
+		goto out;
 	}
 
 	rc = nvme_wait_for_adminq_completion(ctrlr, status);
@@ -3294,21 +3289,20 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr_aer_completion *async_eve
 
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for spdk_nvme_ctrlr_cmd_get_log_page failed: rc=%d\n", rc);
-		goto free_buffer;
+		goto out;
 	}
 
 	/* only check the case of overflow. */
-	nsid = from_le32(changed_ns_list);
-	if (nsid == 0xffffffffu) {
+	if (changed_ns_list[0] == UINT32_MAX) {
 		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
-		goto free_buffer;
+		goto out;
 	}
 
-	return rc;
+	async_event->log_page.changed_ns_list = changed_ns_list;
+	return 0;
 
-free_buffer:
-	spdk_dma_free(changed_ns_list);
-	async_event->log_page.changed_ns_list = NULL;
+out:
+	free(changed_ns_list);
 	return rc;
 }
 
