@@ -1101,7 +1101,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE:
-			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			rc = nvme_wait_for_completion_poll(qpair, status);
 			if (rc != 0) {
 				if (rc != -EAGAIN) {
 					nvme_auth_print_cpl(qpair, "AUTH_negotiate");
@@ -1120,7 +1120,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE:
-			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			rc = nvme_wait_for_completion_poll(qpair, status);
 			if (rc != 0) {
 				if (rc != -EAGAIN) {
 					nvme_auth_print_cpl(qpair, "DH-HMAC-CHAP_challenge");
@@ -1142,7 +1142,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_REPLY);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_REPLY:
-			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			rc = nvme_wait_for_completion_poll(qpair, status);
 			if (rc != 0) {
 				if (rc != -EAGAIN) {
 					nvme_auth_print_cpl(qpair, "DH-HMAC-CHAP_reply");
@@ -1161,7 +1161,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1:
-			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			rc = nvme_wait_for_completion_poll(qpair, status);
 			if (rc != 0) {
 				if (rc != -EAGAIN) {
 					nvme_auth_print_cpl(qpair, "DH-HMAC-CHAP_success1");
@@ -1189,7 +1189,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS2:
 		case NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2:
-			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			rc = nvme_wait_for_completion_poll(qpair, status);
 			if (rc == -EAGAIN) {
 				break;
 			}

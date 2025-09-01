@@ -85,9 +85,8 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 static bool g_nvme_wait_for_completion_timeout;
 
 int
-nvme_wait_for_completion_robust_lock_timeout_poll(struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status,
-		pthread_mutex_t *robust_mutex)
+nvme_wait_for_completion_poll(struct spdk_nvme_qpair *qpair,
+			      struct nvme_completion_poll_status *status)
 {
 	struct spdk_nvmf_fabric_connect_rsp *rsp = (void *)&status->cpl;
 

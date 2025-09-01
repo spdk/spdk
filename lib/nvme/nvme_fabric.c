@@ -591,7 +591,7 @@ nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 	ctrlr = qpair->ctrlr;
 	status = qpair->fabric_poll_status;
 
-	if (nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL) == -EAGAIN) {
+	if (nvme_wait_for_completion_poll(qpair, status) == -EAGAIN) {
 		return -EAGAIN;
 	}
 

@@ -237,14 +237,13 @@ dummy_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 }
 
 int
-nvme_wait_for_completion_robust_lock_timeout_poll(struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status,
-		pthread_mutex_t *robust_mutex)
+nvme_wait_for_completion_poll(struct spdk_nvme_qpair *qpair,
+			      struct nvme_completion_poll_status *status)
 {
 	int rc;
 
-	if (robust_mutex) {
-		nvme_robust_mutex_lock(robust_mutex);
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_ctrlr_lock(qpair->ctrlr);
 	}
 
 	if (qpair->poll_group) {
@@ -254,8 +253,8 @@ nvme_wait_for_completion_robust_lock_timeout_poll(struct spdk_nvme_qpair *qpair,
 		rc = spdk_nvme_qpair_process_completions(qpair, 0);
 	}
 
-	if (robust_mutex) {
-		nvme_robust_mutex_unlock(robust_mutex);
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_ctrlr_unlock(qpair->ctrlr);
 	}
 
 	if (rc < 0) {
@@ -326,7 +325,7 @@ nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
 
 	status->cpl.status_raw = 0;
 	do {
-		rc = nvme_wait_for_completion_robust_lock_timeout_poll(ctrlr->adminq, status, &ctrlr->ctrlr_lock);
+		rc = nvme_wait_for_completion_poll(ctrlr->adminq, status);
 	} while (rc == -EAGAIN);
 
 	return rc;
