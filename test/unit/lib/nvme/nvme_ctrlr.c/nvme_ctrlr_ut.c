@@ -2264,6 +2264,7 @@ test_nvme_ctrlr_test_active_ns(void)
 
 		nvme_ctrlr_destruct(&ctrlr);
 	}
+	g_active_ns_list = NULL;
 }
 
 static void
