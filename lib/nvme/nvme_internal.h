@@ -609,7 +609,7 @@ struct spdk_nvme_ns {
 
 #define NVME_CTRLR_LOG(type, ctrlr, format, ...) do { \
 	if ((ctrlr)) { \
-		SPDK_##type##LOG("[%s,%u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
+		SPDK_##type##LOG("[%s,%s,%u] " format, (ctrlr)->opts.hostnqn, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
 	} else { \
 		SPDK_##type##LOG("[null ctrlr] " format, ##__VA_ARGS__); \
 	} \
@@ -617,7 +617,7 @@ struct spdk_nvme_ns {
 
 #define NVME_CTRLR_LOG2(type, component, ctrlr, format, ...) do { \
 	if ((ctrlr)) { \
-		SPDK_##type##LOG(component, "[%s,%u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
+		SPDK_##type##LOG(component, "[%s,%s,%u] " format, (ctrlr)->opts.hostnqn, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
 	} else { \
 		SPDK_##type##LOG(component, "[null ctrlr] " format, ##__VA_ARGS__); \
 	} \
@@ -635,7 +635,7 @@ struct spdk_nvme_ns {
 	} else if (!(qpair)->ctrlr) { \
 		SPDK_##type##LOG("[null ctrlr,%u,%p] " format, (qpair)->id, (qpair), ##__VA_ARGS__); \
 	} else { \
-		SPDK_##type##LOG("[%s,%u,%u,%p] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), ##__VA_ARGS__); \
+		SPDK_##type##LOG("[%s,%s,%u,%u,%p] " format, (qpair)->ctrlr->opts.hostnqn, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), ##__VA_ARGS__); \
 	} \
 } while (0)
 
@@ -645,7 +645,7 @@ struct spdk_nvme_ns {
 	} else if (!(qpair)->ctrlr) { \
 		SPDK_##type##LOG(component, "[null ctrlr,%u,%p] " format, (qpair)->id, (qpair), ##__VA_ARGS__); \
 	} else { \
-		SPDK_##type##LOG(component, "[%s,%u,%u,%p] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), ##__VA_ARGS__); \
+		SPDK_##type##LOG(component, "[%s,%s,%u,%u,%p] " format, (qpair)->ctrlr->opts.hostnqn, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), ##__VA_ARGS__); \
 	} \
 } while (0)
 
