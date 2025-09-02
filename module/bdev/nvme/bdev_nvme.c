@@ -5165,38 +5165,37 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 	}
 
 	/* Loop through all of the namespaces at the nvme level and see if any of them are new */
-	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	while (nsid != 0) {
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
+	     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
 		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
-
-		if (nvme_ns == NULL) {
-			/* Found a new one */
-			nvme_ns = nvme_ns_alloc();
-			if (nvme_ns == NULL) {
-				NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
-				/* This just fails to attach the namespace. It may work on a future attempt. */
-				nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid);
-				continue;
-			}
-
-			nvme_ns->id = nsid;
-			nvme_ns->ctrlr = nvme_ctrlr;
-
-			nvme_ns->bdev = NULL;
-
-			if (ctx) {
-				ctx->populates_in_progress++;
-			}
-			nvme_ns->probe_ctx = ctx;
-
-			pthread_mutex_lock(&nvme_ctrlr->mutex);
-			RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-			nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
+		if (nvme_ns != NULL) {
+			continue;
 		}
 
-		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid);
+		/* Found a new one */
+
+		nvme_ns = nvme_ns_alloc();
+		if (nvme_ns == NULL) {
+			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
+			/* This just fails to attach the namespace. It may work on a future attempt. */
+			continue;
+		}
+
+		nvme_ns->id = nsid;
+		nvme_ns->ctrlr = nvme_ctrlr;
+
+		nvme_ns->bdev = NULL;
+
+		if (ctx) {
+			ctx->populates_in_progress++;
+		}
+		nvme_ns->probe_ctx = ctx;
+
+		pthread_mutex_lock(&nvme_ctrlr->mutex);
+		RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+		nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
 	}
 
 	if (ctx) {
