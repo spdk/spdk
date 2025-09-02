@@ -604,24 +604,22 @@ struct spdk_nvme_ns {
 };
 
 #define CTRLR_STRING(ctrlr) \
-	(spdk_nvme_trtype_is_fabrics(ctrlr->trid.trtype) ? \
-	ctrlr->trid.subnqn : ctrlr->trid.traddr)
+	(spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? \
+	(ctrlr)->trid.subnqn : (ctrlr)->trid.traddr)
 
-#define NVME_CTRLR_ERRLOG(ctrlr, format, ...) \
-	SPDK_ERRLOG("[%s, %u] " format, CTRLR_STRING(ctrlr), ctrlr->cntlid, ##__VA_ARGS__);
+#define NVME_CTRLR_LOG(type, ctrlr, format, ...) \
+	SPDK_##type##LOG("[%s, %u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__)
 
-#define NVME_CTRLR_WARNLOG(ctrlr, format, ...) \
-	SPDK_WARNLOG("[%s, %u] " format, CTRLR_STRING(ctrlr), ctrlr->cntlid, ##__VA_ARGS__);
+#define NVME_CTRLR_LOG2(type, component, ctrlr, format, ...) \
+	SPDK_##type##LOG(component, "[%s, %u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__)
 
-#define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) \
-	SPDK_NOTICELOG("[%s, %u] " format, CTRLR_STRING(ctrlr), ctrlr->cntlid, ##__VA_ARGS__);
-
-#define NVME_CTRLR_INFOLOG(ctrlr, format, ...) \
-	SPDK_INFOLOG(nvme, "[%s, %u] " format, CTRLR_STRING(ctrlr), ctrlr->cntlid, ##__VA_ARGS__);
+#define NVME_CTRLR_ERRLOG(ctrlr, format, ...) NVME_CTRLR_LOG(ERR, ctrlr, format, ##__VA_ARGS__)
+#define NVME_CTRLR_WARNLOG(ctrlr, format, ...) NVME_CTRLR_LOG(WARN, ctrlr, format, ##__VA_ARGS__)
+#define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) NVME_CTRLR_LOG(NOTICE, ctrlr, format, ##__VA_ARGS__)
+#define NVME_CTRLR_INFOLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(INFO, nvme, ctrlr, format, ##__VA_ARGS__)
 
 #ifdef DEBUG
-#define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) \
-	SPDK_DEBUGLOG(nvme, "[%s, %u] " format, CTRLR_STRING(ctrlr), ctrlr->cntlid, ##__VA_ARGS__);
+#define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, nvme, ctrlr, format, ##__VA_ARGS__)
 #else
 #define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
 #endif
