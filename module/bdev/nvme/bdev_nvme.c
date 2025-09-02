@@ -5175,6 +5175,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			if (nvme_ns == NULL) {
 				NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
 				/* This just fails to attach the namespace. It may work on a future attempt. */
+				nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid);
 				continue;
 			}
 
