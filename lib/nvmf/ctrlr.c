@@ -2939,6 +2939,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->sgls = ctrlr->cdata.sgls;
 	cdata->fuses = ctrlr->cdata.fuses;
 	cdata->acwu = 0; /* ACWU is 0-based. */
+	cdata->wctemp = 0x0157; /* Recommended value from NVMe 1.3d spec. */
+	cdata->cctemp = 0x0175;
 	if (subsystem->flags.ana_reporting) {
 		cdata->mnan = subsystem->max_nsid;
 	}
