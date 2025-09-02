@@ -33,12 +33,8 @@ struct nvme_auth_dhgroup {
 #define NVME_AUTH_DH_KEY_MAX_SIZE		1024
 #define NVME_AUTH_CHAP_KEY_MAX_SIZE		256
 
-#define AUTH_DEBUGLOG(q, fmt, ...) \
-	SPDK_DEBUGLOG(nvme_auth, "[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, \
-		      (q)->ctrlr->opts.hostnqn, (q)->id, ## __VA_ARGS__)
-#define AUTH_ERRLOG(q, fmt, ...) \
-	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, (q)->ctrlr->opts.hostnqn, \
-		    (q)->id, ## __VA_ARGS__)
+#define AUTH_DEBUGLOG(q, fmt, ...) NVME_QPAIR_LOG2(DEBUG, nvme_auth, q, fmt, ##__VA_ARGS__)
+#define AUTH_ERRLOG(q, fmt, ...) NVME_QPAIR_LOG(ERR, q, fmt, ##__VA_ARGS__)
 #define AUTH_LOGDUMP(msg, buf, len) \
 	SPDK_LOGDUMP(nvme_auth, msg, buf, len)
 
