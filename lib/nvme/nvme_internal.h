@@ -619,6 +619,18 @@ struct spdk_nvme_ns {
 #define NVME_CTRLR_INFOLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(INFO, nvme, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, nvme, ctrlr, format, ##__VA_ARGS__)
 
+#define NVME_QPAIR_LOG(type, qpair, format, ...) \
+	SPDK_##type##LOG("[%s, %u, %u] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, ##__VA_ARGS__)
+
+#define NVME_QPAIR_LOG2(type, component, qpair, format, ...) \
+	SPDK_##type##LOG(component, "[%s, %u, %u] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, ##__VA_ARGS__)
+
+#define NVME_QPAIR_ERRLOG(qpair, format, ...) NVME_QPAIR_LOG(ERR, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_WARNLOG(qpair, format, ...) NVME_QPAIR_LOG(WARN, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_NOTICELOG(qpair, format, ...) NVME_QPAIR_LOG(NOTICE, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_INFOLOG(qpair, format, ...) NVME_QPAIR_LOG2(INFO, nvme, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_DEBUGLOG(qpair, format, ...) NVME_QPAIR_LOG2(DEBUG, nvme, qpair, format, ##__VA_ARGS__)
+
 /**
  * State of struct spdk_nvme_ctrlr (in particular, during initialization).
  */
