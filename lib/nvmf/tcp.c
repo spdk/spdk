@@ -2992,7 +2992,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
-	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS && req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+	if (spdk_nvme_cpl_is_success(rsp) && req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		nvmf_tcp_send_c2h_data(tqpair, tcp_req);
 	} else {
 		nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);

@@ -1200,7 +1200,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	 */
 	first = &rdma_req->rsp.wr;
 
-	if (spdk_unlikely(rsp->status.sc != SPDK_NVME_SC_SUCCESS)) {
+	if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp))) {
 		/* On failure, data was not read from the controller. So clear the
 		 * number of outstanding data WRs to zero.
 		 */
@@ -2400,7 +2400,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_EXECUTED:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_EXECUTED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair);
-			if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
+			if (spdk_nvme_cpl_is_success(rsp) &&
 			    rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_write_queue, rdma_req, state_link);
 				rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING;
