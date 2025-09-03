@@ -607,11 +607,21 @@ struct spdk_nvme_ns {
 	(spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? \
 	(ctrlr)->trid.subnqn : (ctrlr)->trid.traddr)
 
-#define NVME_CTRLR_LOG(type, ctrlr, format, ...) \
-	SPDK_##type##LOG("[%s, %u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__)
+#define NVME_CTRLR_LOG(type, ctrlr, format, ...) do { \
+	if ((ctrlr)) { \
+		SPDK_##type##LOG("[%s,%u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG("[null ctrlr] " format, ##__VA_ARGS__); \
+	} \
+} while (0)
 
-#define NVME_CTRLR_LOG2(type, component, ctrlr, format, ...) \
-	SPDK_##type##LOG(component, "[%s, %u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__)
+#define NVME_CTRLR_LOG2(type, component, ctrlr, format, ...) do { \
+	if ((ctrlr)) { \
+		SPDK_##type##LOG(component, "[%s,%u] " format, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "[null ctrlr] " format, ##__VA_ARGS__); \
+	} \
+} while (0)
 
 #define NVME_CTRLR_ERRLOG(ctrlr, format, ...) NVME_CTRLR_LOG(ERR, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_WARNLOG(ctrlr, format, ...) NVME_CTRLR_LOG(WARN, ctrlr, format, ##__VA_ARGS__)
@@ -619,11 +629,25 @@ struct spdk_nvme_ns {
 #define NVME_CTRLR_INFOLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(INFO, nvme, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, nvme, ctrlr, format, ##__VA_ARGS__)
 
-#define NVME_QPAIR_LOG(type, qpair, format, ...) \
-	SPDK_##type##LOG("[%s, %u, %u] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, ##__VA_ARGS__)
+#define NVME_QPAIR_LOG(type, qpair, format, ...) do { \
+	if (!(qpair)) { \
+		SPDK_##type##LOG("[null qpair] " format, ##__VA_ARGS__); \
+	} else if (!(qpair)->ctrlr) { \
+		SPDK_##type##LOG("[null ctrlr,%u] " format, (qpair)->id, ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG("[%s,%u,%u] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, ##__VA_ARGS__); \
+	} \
+} while (0)
 
-#define NVME_QPAIR_LOG2(type, component, qpair, format, ...) \
-	SPDK_##type##LOG(component, "[%s, %u, %u] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, ##__VA_ARGS__)
+#define NVME_QPAIR_LOG2(type, component, qpair, format, ...) do { \
+	if (!(qpair)) { \
+		SPDK_##type##LOG(component, "[null qpair] " format, ##__VA_ARGS__); \
+	} else if (!(qpair)->ctrlr) { \
+		SPDK_##type##LOG(component, "[null ctrlr,%u] " format, (qpair)->id, ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "[%s,%u,%u] " format, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, ##__VA_ARGS__); \
+	} \
+} while (0)
 
 #define NVME_QPAIR_ERRLOG(qpair, format, ...) NVME_QPAIR_LOG(ERR, qpair, format, ##__VA_ARGS__)
 #define NVME_QPAIR_WARNLOG(qpair, format, ...) NVME_QPAIR_LOG(WARN, qpair, format, ##__VA_ARGS__)
