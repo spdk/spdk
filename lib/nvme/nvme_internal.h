@@ -617,12 +617,7 @@ struct spdk_nvme_ns {
 #define NVME_CTRLR_WARNLOG(ctrlr, format, ...) NVME_CTRLR_LOG(WARN, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) NVME_CTRLR_LOG(NOTICE, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_INFOLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(INFO, nvme, ctrlr, format, ##__VA_ARGS__)
-
-#ifdef DEBUG
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, nvme, ctrlr, format, ##__VA_ARGS__)
-#else
-#define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
-#endif
 
 /**
  * State of struct spdk_nvme_ctrlr (in particular, during initialization).
