@@ -40,8 +40,6 @@ disclaimer
 # on the enterprise systems, like RHEL.
 if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	repos=() enable=("epel" "elrepo" "elrepo-testing") add=()
-	[[ $ID == centos || $ID == rocky ]] && enable+=("extras")
-
 	if [[ $VERSION_ID == 7* ]]; then
 		printf 'Not supported distribution detected (%s):(%s), aborting\n' "$ID" "$VERSION_ID" >&2
 		exit 1
@@ -52,18 +50,21 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
 		add+=("https://packages.daos.io/v2.0/EL8/packages/x86_64/daos_packages.repo")
 		enable+=("daos-packages")
+		[[ $ID == centos ]] && enable+=("extras")
 	fi
 
 	if [[ $VERSION_ID == 9* ]]; then
 		repos+=("https://www.elrepo.org/elrepo-release-9.el9.elrepo.noarch.rpm")
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm")
 		[[ $ID != rhel ]] && enable+=("crb")
+		[[ $ID == centos ]] && enable+=("extras-common")
 	fi
 
 	if [[ $VERSION_ID == 10* ]]; then
 		repos+=("https://www.elrepo.org/elrepo-release-10.el10.elrepo.noarch.rpm")
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm")
 		[[ $ID != rhel ]] && enable+=("crb")
+		[[ $ID == centos ]] && enable+=("extras-common")
 	fi
 
 	# Add PowerTools needed for install CUnit-devel
@@ -78,7 +79,7 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	[[ $ID == rhel && $VERSION_ID == 9* ]] && repos+=("https://download.ceph.com/rpm-reef/el9/noarch/ceph-release-1-1.el9.noarch.rpm")
 
 	if [[ $ID == rocky ]]; then
-		enable+=("devel")
+		enable+=("devel" "extras")
 	fi
 
 	if ((${#add[@]} > 0)); then
