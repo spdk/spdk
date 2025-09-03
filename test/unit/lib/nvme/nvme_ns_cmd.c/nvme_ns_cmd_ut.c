@@ -61,6 +61,7 @@ DEFINE_STUB(nvme_transport_ctrlr_scan_attached,
 	    int,
 	    (struct spdk_nvme_probe_ctx *probe_ctx),
 	    0);
+DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
 
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)

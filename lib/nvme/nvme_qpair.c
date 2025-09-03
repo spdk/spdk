@@ -483,6 +483,29 @@ spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 	spdk_nvme_print_completion(qpair->id, cpl);
 }
 
+const char *
+nvme_qpair_state_string(enum nvme_qpair_state state)
+{
+	switch (state) {
+	case NVME_QPAIR_DISCONNECTED:
+		return "DISCONNECTED";
+	case NVME_QPAIR_DISCONNECTING:
+		return "DISCONNECTING";
+	case NVME_QPAIR_CONNECTING:
+		return "CONNECTING";
+	case NVME_QPAIR_CONNECTED:
+		return "CONNECTED";
+	case NVME_QPAIR_ENABLING:
+		return "ENABLING";
+	case NVME_QPAIR_ENABLED:
+		return "ENABLED";
+	case NVME_QPAIR_DESTROYING:
+		return "DESTROYING";
+	default:
+		return "UNKNOWN";
+	}
+}
+
 bool
 nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 {

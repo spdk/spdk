@@ -61,6 +61,8 @@ DEFINE_STUB(spdk_nvme_qpair_get_fd, int, (struct spdk_nvme_qpair *qpair,
 DEFINE_STUB(spdk_nvme_ctrlr_get_transport_id,
 	    const struct spdk_nvme_transport_id *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
+
 int
 nvme_transport_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 				    struct spdk_nvme_transport_poll_group_stat **stats)

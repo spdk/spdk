@@ -39,6 +39,7 @@ DEFINE_STUB(spdk_pci_event_listen, int, (void), 0);
 DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
 DEFINE_STUB(nvme_transport_ctrlr_scan_attached, int, (struct spdk_nvme_probe_ctx *probe_ctx), 0);
+DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
 
 static bool ut_destruct_called = false;
 void

@@ -634,7 +634,7 @@ struct spdk_nvme_ns {
 	} else if (!(qpair)->ctrlr) { \
 		SPDK_##type##LOG("[null ctrlr,%u,%p] " format, (qpair)->id, (qpair), ##__VA_ARGS__); \
 	} else { \
-		SPDK_##type##LOG("[%s,%s,%u,%u,%p] " format, (qpair)->ctrlr->opts.hostnqn, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), ##__VA_ARGS__); \
+		SPDK_##type##LOG("[%s,%s,%u,%u,%p,%s] " format, (qpair)->ctrlr->opts.hostnqn, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), nvme_qpair_state_string((qpair)->state), ##__VA_ARGS__); \
 	} \
 } while (0)
 
@@ -1601,7 +1601,10 @@ nvme_request_abort_match(struct nvme_request *req, void *cmd_cb_arg)
 	       (req->parent != NULL && req->parent->cb_arg == cmd_cb_arg);
 }
 
+const char *nvme_qpair_state_string(enum nvme_qpair_state state);
+
 #define nvme_qpair_set_state(_qpair, _state) do { \
+	NVME_QPAIR_DEBUGLOG((_qpair), "setting qpair state to %s\n", nvme_qpair_state_string((_state))); \
 	(_qpair)->state = (_state); \
 	if ((_state) == NVME_QPAIR_ENABLED) { \
 		(_qpair)->is_new_qpair = false; \
