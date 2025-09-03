@@ -22,6 +22,7 @@ struct spdk_nvmf_admin_passthru_conf {
 	bool sanitize;
 	bool security_send_recv;
 	bool fw_update;
+	bool nvme_mi;
 	bool vendor_specific;
 };
 

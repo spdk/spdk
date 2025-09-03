@@ -61,6 +61,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 	.admin_passthru.sanitize = false,
 	.admin_passthru.security_send_recv = false,
 	.admin_passthru.fw_update = false,
+	.admin_passthru.nvme_mi = false,
 	.admin_passthru.vendor_specific = false
 };
 
@@ -433,6 +434,12 @@ fixup_get_cmds_and_effects_log_page(struct spdk_nvmf_request *req)
 		nvmf_log_data.admin_cmds_supported[SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD] =
 			nvme_log_data.admin_cmds_supported[SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD];
 	}
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi) {
+		nvmf_log_data.admin_cmds_supported[SPDK_NVME_OPC_NVME_MI_RECEIVE] =
+			nvme_log_data.admin_cmds_supported[SPDK_NVME_OPC_NVME_MI_RECEIVE];
+		nvmf_log_data.admin_cmds_supported[SPDK_NVME_OPC_NVME_MI_SEND] =
+			nvme_log_data.admin_cmds_supported[SPDK_NVME_OPC_NVME_MI_SEND];
+	}
 
 	/* Copy the fixed SPDK struct to the request */
 	spdk_nvmf_request_copy_from_buf(req, (uint8_t *) &nvmf_log_data + offset, datalen);
@@ -737,6 +744,11 @@ nvmf_tgt_advance_state(void)
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD,
 								    nvmf_custom_admin_no_cb_hdlr);
 			}
+			if (g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi) {
+				SPDK_NOTICELOG("Custom NVMe-MI send/recv commands handlers enabled\n");
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_NVME_MI_RECEIVE, nvmf_custom_admin_no_cb_hdlr);
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_NVME_MI_SEND, nvmf_custom_admin_no_cb_hdlr);
+			}
 			if (g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific) {
 				int i;
 				SPDK_NOTICELOG("Custom vendor specific commands handlers enabled\n");
@@ -867,6 +879,8 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 				   g_spdk_nvmf_tgt_conf.admin_passthru.security_send_recv);
 	spdk_json_write_named_bool(w, "fw_update",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.fw_update);
+	spdk_json_write_named_bool(w, "nvme_mi",
+				   g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi);
 	spdk_json_write_named_bool(w, "vendor_specific",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.vendor_specific);
 	spdk_json_write_object_end(w);
