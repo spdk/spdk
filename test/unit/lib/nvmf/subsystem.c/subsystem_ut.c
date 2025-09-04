@@ -1649,6 +1649,30 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 }
 
+static size_t
+registrants_get_count(const struct spdk_nvmf_ns *ns)
+{
+	size_t count = 0;
+	struct spdk_nvmf_registrant *reg;
+
+	TAILQ_FOREACH(reg, &ns->registrants, link) {
+		count++;
+	}
+	return count;
+}
+
+static size_t
+reservations_get_count(const struct spdk_nvmf_ns *ns)
+{
+	size_t count = 0;
+	struct spdk_nvmf_request *req;
+
+	STAILQ_FOREACH(req, &ns->reservations, reservation_link) {
+		count++;
+	}
+	return count;
+}
+
 static void
 test_reservation_request(void)
 {
@@ -1700,13 +1724,13 @@ test_reservation_request(void)
 	nvmf_ns_reservation_request(req);
 
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_ns.registrants));
+	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1);
 	/* reservation command is outstanding until pg updates */
-	SPDK_CU_ASSERT_FATAL(!STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	poll_threads(); /* drive poll group update */
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 1);
-	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
 
 	/* Acquire */
 	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
@@ -1719,10 +1743,10 @@ test_reservation_request(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
 	SPDK_CU_ASSERT_FATAL(g_ns.crkey == rkey);
 	/* reservation command is outstanding until pg updates */
-	SPDK_CU_ASSERT_FATAL(!STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	poll_threads(); /* drive poll group update */
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 2);
-	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
 
 	/* Report */
 	report_req = ut_reservation_build_req(
@@ -1750,7 +1774,7 @@ test_reservation_request(void)
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(
 				     (struct spdk_uuid *)ctrlr_data->hostid, &g_ctrlr1_A.hostid));
 	/* Report is read-only, reservation should be complete */
-	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
 	/* Report is read-only, should be no pg updates */
 	poll_threads();
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 2);
@@ -1767,10 +1791,10 @@ test_reservation_request(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.crkey == 0);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1); /* registration is not removed */
 	/* reservation command is outstanding until pg updates */
-	SPDK_CU_ASSERT_FATAL(!STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	poll_threads(); /* drive poll group update */
 	SPDK_CU_ASSERT_FATAL(g_ns_pg_update == 3);
-	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&g_ns.reservations));
+	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
 
 	spdk_put_io_channel(ch);
 	spdk_io_device_unregister(&tgt, NULL);
