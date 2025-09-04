@@ -3019,6 +3019,7 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	uint32_t active_ns_list6_aer2[] = { 1, 2, 105, 1024 };
 	uint32_t changed_ns_list6_aer2[] = { 104, 105 };
 	uint32_t active_ns_list7[] = { 1, 2, 105, 106, 1024 };
+	uint32_t changed_ns_list7_aer[] = { 0xFFFFFFFF };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
 		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
@@ -3147,6 +3148,18 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	CU_ASSERT(g_nvme_ns_constructed == SPDK_COUNTOF(active_ns_list7));
 	check_active_ns(&ctrlr, active_ns_list7, SPDK_COUNTOF(active_ns_list7));
 	ctrlr.opts.disable_read_changed_ns_list_log_page = false;
+
+	/* Log page overflowed - there were more than 1024 changes since last read.
+	 * Yet the active namespaces remain as they were. */
+	g_aer_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
+	setup_aer_for_ns_change(active_ns_list7, SPDK_COUNTOF(active_ns_list7),
+				changed_ns_list7_aer, SPDK_COUNTOF(changed_ns_list7_aer));
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 1);
+	/* Log page overflowed, issued identify to all active NS. */
+	CU_ASSERT(g_nvme_ns_constructed == SPDK_COUNTOF(active_ns_list7));
+	check_active_ns(&ctrlr, active_ns_list7, SPDK_COUNTOF(active_ns_list7));
 
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);

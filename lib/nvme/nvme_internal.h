@@ -923,6 +923,12 @@ enum nvme_ctrlr_state {
 struct spdk_nvme_ctrlr_aer_completion {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_cpl	cpl;
+
+	union {
+		/* Contains payload of Changed Attached Namespace List log page. */
+		uint32_t		*changed_ns_list;
+	} log_page;
+
 	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion) link;
 };
 

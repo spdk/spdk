@@ -3202,8 +3202,9 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 }
 
 static void
-nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
+	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
 	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 
@@ -3212,27 +3213,32 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		nvme_ns_construct(ns, nsid, ctrlr);
 	}
+
+	spdk_dma_free(async_event->log_page.changed_ns_list);
 }
 
 static int
-nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
+	struct spdk_nvme_ctrlr			*ctrlr = async_event->ctrlr;
 	struct nvme_completion_poll_status	*status;
 	int		rc = -ENOMEM;
-	char		*buffer = NULL;
+	uint32_t	*changed_ns_list = NULL;
 	uint32_t	nsid;
-	size_t		buf_size = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
+	size_t		changed_ns_list_length = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
 
 	if (ctrlr->opts.disable_read_changed_ns_list_log_page) {
 		return 0;
 	}
 
-	buffer = spdk_dma_zmalloc(buf_size, 4096, NULL);
-	if (!buffer) {
+	changed_ns_list = spdk_dma_zmalloc(changed_ns_list_length, 4096, NULL);
+	if (!changed_ns_list) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate buffer for getting "
 				  "changed ns log.\n");
 		return rc;
 	}
+
+	async_event->log_page.changed_ns_list = changed_ns_list;
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
@@ -3243,7 +3249,7 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
 					      SPDK_NVME_LOG_CHANGED_NS_LIST,
 					      SPDK_NVME_GLOBAL_NS_TAG,
-					      buffer, buf_size, 0,
+					      changed_ns_list, changed_ns_list_length, 0,
 					      nvme_completion_poll_cb, status);
 
 	if (rc) {
@@ -3264,13 +3270,17 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* only check the case of overflow. */
-	nsid = from_le32(buffer);
+	nsid = from_le32(changed_ns_list);
 	if (nsid == 0xffffffffu) {
 		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
+		goto free_buffer;
 	}
 
+	return rc;
+
 free_buffer:
-	spdk_dma_free(buffer);
+	spdk_dma_free(changed_ns_list);
+	async_event->log_page.changed_ns_list = NULL;
 	return rc;
 }
 
@@ -3286,13 +3296,13 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		nvme_ctrlr_clear_changed_ns_log(ctrlr);
+		nvme_ctrlr_clear_changed_ns_log(async_event);
 
 		rc = nvme_ctrlr_identify_active_ns(ctrlr);
 		if (rc) {
 			return;
 		}
-		nvme_ctrlr_update_namespaces(ctrlr);
+		nvme_ctrlr_update_namespaces(async_event);
 		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 
