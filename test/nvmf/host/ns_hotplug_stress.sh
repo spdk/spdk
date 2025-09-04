@@ -23,10 +23,13 @@ function get_resize_count() {
 add_remove() {
 	local nsid=$1 thread=$2
 	local current
+	local bdev_name="null${thread}"
 
-	for ((i = 1; i <= ns_per_thread; i++)); do
+	$tgt_rpc bdev_null_create "${bdev_name}" "$bdev_size" "$blk_size"
+
+	for ((i = 0; i < ns_per_thread; i++)); do
 		current=$((nsid + i))
-		$tgt_rpc nvmf_subsystem_add_ns -n "$current" "$NVME_SUBNQN" "null${thread}"
+		$tgt_rpc nvmf_subsystem_add_ns -n "$current" "$NVME_SUBNQN" "${bdev_name}"
 		$tgt_rpc nvmf_subsystem_remove_ns "$NVME_SUBNQN" "$current"
 
 		# Check if intiator is still alive, otherwise we'd wait until all threads finish
@@ -37,6 +40,8 @@ add_remove() {
 	# was zeroed out for inactive namespace, that incorrectly was assigned
 	# to bdev_nvme.
 	[[ "$(get_resize_count)" == 0 ]]
+
+	$tgt_rpc bdev_null_delete "${bdev_name}"
 }
 
 nvmftestinit
@@ -57,15 +62,12 @@ ns_per_thread=20
 bdev_size=100
 blk_size=4096
 
-for ((i = 1; i <= nthreads; ++i)); do
-	$tgt_rpc bdev_null_create "null${i}" "$bdev_size" "$blk_size"
-done
-
 $rpc_py bdev_nvme_attach_controller -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -f IPv4 -s "$NVMF_PORT" -n "$NVME_SUBNQN" -b nvme0
 
-for ((i = 1; i <= nthreads; ++i)); do
-	# Allocate enough nsids for each thread to not overlap
-	add_remove "$((((i - 1) * ns_per_thread) + nthreads + 1))" "$i" &
+for ((i = 0; i < nthreads; ++i)); do
+	# Every thread can use ns_per_thread NSIDs starting at specific offset.
+	start_nsid="$((1 + (ns_per_thread * i)))"
+	add_remove "$start_nsid" "$i" &
 	pids+=($!)
 done
 wait "${pids[@]}"
