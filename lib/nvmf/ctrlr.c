@@ -3602,6 +3602,12 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10_bits.get_features.fid;
 
+	if ((cmd->nsid > ctrlr->subsys->max_nsid) && (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG)) {
+		SPDK_ERRLOG("Get Features command with invalid NSID %u, feature ID 0x%02x\n", cmd->nsid, feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		/*
 		 * Features supported by Discovery controller
@@ -3679,6 +3685,36 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	}
 }
 
+static bool
+is_feature_ctrlr_scope(uint8_t feature)
+{
+	switch (feature) {
+	case SPDK_NVME_FEAT_ARBITRATION:
+	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
+	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
+	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+	case SPDK_NVME_FEAT_INTERRUPT_COALESCING:
+	case SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION:
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+	case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
+	case SPDK_NVME_FEAT_HOST_MEM_BUFFER:
+	case SPDK_NVME_FEAT_TIMESTAMP:
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+	case SPDK_NVME_FEAT_HOST_CONTROLLED_THERMAL_MANAGEMENT:
+	case SPDK_NVME_FEAT_NON_OPERATIONAL_POWER_STATE_CONFIG:
+	case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
+	case SPDK_NVME_FEAT_IO_COMMAND_SET_PROFILE:
+	case SPDK_NVME_FEAT_ENHANCED_CONTROLLER_METADATA:
+	case SPDK_NVME_FEAT_CONTROLLER_METADATA:
+	case SPDK_NVME_FEAT_SOFTWARE_PROGRESS_MARKER:
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static int
 nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
@@ -3699,6 +3735,12 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	}
 
 	feature = cmd->cdw10_bits.set_features.fid;
+
+	if ((cmd->nsid > ctrlr->subsys->max_nsid) && (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG)) {
+		SPDK_ERRLOG("Set Features command with invalid NSID %u, feature ID 0x%02x\n", cmd->nsid, feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		/*
@@ -3746,6 +3788,15 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
 		break;
+	}
+
+	if ((cmd->nsid < ctrlr->subsys->max_nsid) && (cmd->nsid != 0)) {
+		if (is_feature_ctrlr_scope(feature)) {
+			SPDK_ERRLOG("Set Feature Controller scope with valid NSID. feature ID 0x%02x, NSID %u\n",
+				    feature, cmd->nsid);
+			response->status.sc = SPDK_NVME_SC_FEATURE_NOT_NAMESPACE_SPECIFIC;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
 	}
 
 	switch (feature) {

@@ -1410,6 +1410,15 @@ test_set_get_features(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
 
+	/* Get SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - invalid NSID */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+	cmd.nvme_cmd.nsid = SPDK_COUNTOF(ns_arr) + 1;
+
+	rc = nvmf_ctrlr_get_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+
 	/* Set SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - valid TMPSEL */
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd.nvme_cmd.cdw11 = 0x42;
@@ -1422,6 +1431,7 @@ test_set_get_features(void)
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd.nvme_cmd.cdw11 = 0x42 | 1 << 16 | 1 << 19; /* Set reserved value */
 	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+	cmd.nvme_cmd.nsid = 0;
 
 	rc = nvmf_ctrlr_set_features(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
@@ -1466,6 +1476,24 @@ test_set_get_features(void)
 
 	rc = nvmf_ctrlr_set_features(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Set SPDK_NVME_FEAT_ERROR_RECOVERY - invalid NSID */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_ARBITRATION;
+	cmd.nvme_cmd.nsid = SPDK_COUNTOF(ns_arr) + 1;
+
+	rc = nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+
+	/* Set SPDK_NVME_FEAT_ARBITRATION - valid NSID for controller scoped feature */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_ARBITRATION;
+	cmd.nvme_cmd.nsid = 1;
+
+	rc = nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_FEATURE_NOT_NAMESPACE_SPECIFIC);
 
 	spdk_bit_array_free(&ctrlr.visible_ns);
 }
