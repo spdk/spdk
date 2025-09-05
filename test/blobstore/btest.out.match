@@ -55,7 +55,7 @@ Blob Public Info:
 blob ID: $(XX)
 # of clusters: 1
 # of bytes: 1048576
-# of io units: 2048
+# of io units: $(N)
 # of xattrs: 1
 xattrs:
 
