@@ -64,9 +64,6 @@ busy
 balanced
 core_load
 
-# TODO: remove this once CI is updated with libkeyutils
-keyring_linux
-
 # Disabled due to https://github.com/spdk/spdk/issues/3345
 nvmf_device_removal
 nvmf_device_removal_pci_remove_no_srq
@@ -104,8 +101,6 @@ blockdev_xnvme
 build_rpm_from_gen_spec
 build_shared_rpm
 chaining
-chap_during_discovery
-chap_mutual_auth
 cmb_copy
 core_isolating
 custom_alloc
@@ -174,9 +169,6 @@ nvme_smartctl_cuse
 nvme_xnvme
 nvmf_llvm_fuzz
 nvmf_perf_adq
-nvmf_rdma
-nvmf_shutdown_tc4
-nvmf_srq_overwhelm
 nvmf_vhost
 ocf
 ocf_bdevperf_iotypes
@@ -203,8 +195,6 @@ sma_plugins
 sma_qos
 sma_vfiouser_qemu
 sma_vhost
-spdkcli_iscsi
-spdkcli_nvmf_rdma
 spdkcli_rbd
 spdkcli_vhost
 spdkcli_virtio
@@ -212,10 +202,8 @@ static_as_default
 test_create_multi_ublk
 test_create_ublk
 test_save_ublk_config
-thread_spdk_lock
 ublk
 ublk_recovery
-unittest
 unittest_idxd_user
 valgrind
 vfio_llvm_fuzz
