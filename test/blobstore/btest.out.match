@@ -1,15 +1,13 @@
-Starting SPDK v19.10.1 / DPDK 19.08.0 initialization...
-[ DPDK EAL parameters: blobcli --no-shconf -c 0x1 --log-level=lib.eal:6 --log-level=lib.cryptodev:5 --log-level=user1:6 --iova-mode=pa --base-virtaddr=0x200000000000 --match-allocations --file-prefix=spdk_pid1641656 ]
 
 SCRIPT NOW PROCESSING: -i
-Init blobstore using bdev Name: Nvme0n1
+Init blobstore using bdev Name: Malloc0
 blobstore init'd: ($(XX))
 
 SCRIPT NOW PROCESSING: -l bdevs
 
 List bdevs:
-	bdev Name: Nvme0n1
-	bdev Product Name: NVMe disk
+	bdev Name: Malloc0
+	bdev Product Name: Malloc disk
 
 
 SCRIPT NOW PROCESSING: -n 1
@@ -36,7 +34,7 @@ Xattr has been set.
 
 SCRIPT NOW PROCESSING: -s bs
 Blobstore Public Info:
-	Using bdev Product Name: NVMe disk
+	Using bdev Product Name: Malloc disk
 	API Version: $(N)
 	super blob ID: $(XX)
 	md page size: $(N)
@@ -73,7 +71,7 @@ Xattr has been removed.
 
 SCRIPT NOW PROCESSING: -s bs
 Blobstore Public Info:
-	Using bdev Product Name: NVMe disk
+	Using bdev Product Name: Malloc disk
 	API Version: 3
 	super blob ID: $(XX)
 	md page size: $(N)
