@@ -450,12 +450,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
 
     def iscsi_delete_target_node(args):
-        args.client.iscsi_delete_target_node(
-             target_node_name=args.target_node_name)
+        args.client.iscsi_delete_target_node(name=args.name)
 
     p = subparsers.add_parser('iscsi_delete_target_node',
                               help='Delete a target node')
-    p.add_argument('target_node_name',
+    p.add_argument('name',
                    help='Target node name to be deleted. Example: iqn.2016-06.io.spdk:disk1.')
     p.set_defaults(func=iscsi_delete_target_node)
 
