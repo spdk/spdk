@@ -2,9 +2,6 @@
 
 # cases
 ftl_restore_fast
-ftl_write_after_write
-ftl_fio_extended
-ftl_fio_nightly
 
 # Waiting on Boot Partition support in CI
 nvme_bp
@@ -110,8 +107,6 @@ chaining
 chap_during_discovery
 chap_mutual_auth
 cmb_copy
-compress_compdev
-compress_isal
 core_isolating
 custom_alloc
 denied
