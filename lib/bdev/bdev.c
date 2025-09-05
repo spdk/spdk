@@ -3565,8 +3565,8 @@ static void
 bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
-
-	spdk_bdev_free_io(bdev_io);
+	bool use_accel_sequence;
+	void *caller_ctx;
 
 	assert(parent_io->internal.f.split);
 
@@ -3576,6 +3576,11 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		parent_io->internal.split.current_offset_blocks += parent_io->internal.split.remaining_num_blocks;
 		parent_io->internal.split.remaining_num_blocks = 0;
 	}
+
+	use_accel_sequence = bdev_io_use_accel_sequence(bdev_io);
+	caller_ctx = bdev_io->internal.caller_ctx;
+	spdk_bdev_free_io(bdev_io);
+
 	parent_io->internal.split.outstanding--;
 	if (parent_io->internal.split.outstanding != 0) {
 		return;
@@ -3588,7 +3593,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		assert(parent_io->internal.cb != bdev_io_split_done);
 		bdev_ch_remove_from_io_submitted(parent_io);
 		spdk_trace_record(TRACE_BDEV_IO_DONE, parent_io->internal.ch->trace_id,
-				  0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx,
+				  0, (uintptr_t)parent_io, caller_ctx,
 				  parent_io->internal.ch->queue_depth);
 
 		if (spdk_likely(parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
@@ -3596,7 +3601,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
 				return;
 			} else if (parent_io->internal.f.has_bounce_buf &&
-				   !bdev_io_use_accel_sequence(bdev_io)) {
+				   !use_accel_sequence) {
 				/* bdev IO will be completed in the callback */
 				_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
 				return;
