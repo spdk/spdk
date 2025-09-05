@@ -36,6 +36,16 @@ function rpc_plugins() {
 	[ "$(jq length <<< "$bdevs")" == "0" ]
 }
 
+function rpc_dry_run() {
+	local rpc_py="$rootdir/scripts/rpc.py"
+
+	# Remove first line with 'Request:'
+	# Remove last line with 'null'
+	json=$($rpc_py --dry-run bdev_get_bdevs -b bdev_name | sed '1d;$d')
+	[ "$(jq -r '.method' <<< "$json")" == "bdev_get_bdevs" ]
+	[ "$(jq -r '.params.name' <<< "$json")" == "bdev_name" ]
+}
+
 function rpc_trace_cmd_test() {
 	local info
 
@@ -72,6 +82,7 @@ export PYTHONPATH=$PYTHONPATH:$testdir
 rpc=rpc_cmd
 run_test "rpc_integrity" rpc_integrity
 run_test "rpc_plugins" rpc_plugins
+run_test "rpc_dry_run" rpc_dry_run
 run_test "rpc_trace_cmd_test" rpc_trace_cmd_test
 if [[ $SPDK_JSONRPC_GO_CLIENT -eq 1 ]]; then
 	run_test "go_rpc" go_rpc
