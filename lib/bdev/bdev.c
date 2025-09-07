@@ -7015,6 +7015,7 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 static void
 bdev_start_reset(struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_io_channel *io_ch = spdk_io_channel_from_ctx(bdev_io->internal.ch);
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	bool freeze_channel = false;
 
@@ -7026,7 +7027,7 @@ bdev_start_reset(struct spdk_bdev_io *bdev_io)
 	 *  the reset is completed.  We will release the reference when this
 	 *  reset is completed.
 	 */
-	bdev_io->u.reset.ch_ref = spdk_get_io_channel(__bdev_to_io_dev(bdev));
+	bdev_io->u.reset.ch_ref = spdk_io_channel_ref(io_ch);
 
 	spdk_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.reset_in_progress == NULL) {
