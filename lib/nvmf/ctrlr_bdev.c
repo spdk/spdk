@@ -7,6 +7,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvmf_internal.h"
+#include "transport.h"
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
@@ -1049,7 +1050,6 @@ spdk_nvmf_bdev_ctrlr_io_cancel_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc
 {
 	int rc;
 	struct dw0_io_cancel_cpl *cpl = (struct dw0_io_cancel_cpl *)&req->rsp->nvme_cpl.cdw0;
-	struct spdk_bdev *bdev1 = spdk_bdev_desc_get_bdev(desc);
 
 	rc = spdk_bdev_abort(desc, ch, req_to_abort, nvmf_bdev_ctrlr_complete_io_cancel_cmd, req);
 	if (spdk_likely(rc == 0)) {

@@ -1742,8 +1742,8 @@ rbd_bdev_check_epoch(struct bdev_rbd *rbd)
 		rc = -ENOMEM;
 		goto exit;
 	}
-	size_t size = MAX_RESERV_FILE_SIZE;
-	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, json, &size);
+	json_size = MAX_RESERV_FILE_SIZE;
+	rc = rbd_metadata_get(rbd->image, RESERVATION_KEY, json, &json_size);
 	if (rc < 0) {
 		SPDK_NOTICELOG("Failed to get metadata  key = %s\n", RESERVATION_KEY);
 		rc = -ENOKEY;
