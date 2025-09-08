@@ -8588,6 +8588,7 @@ have been initialized.
  Name               | Optional   | Type   | Description
 ------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------
  identify_ctrlr     | Optional   | bool   | If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
+ identify_uuid_list | Optional   | bool   | If true, enables passthru identify UUID list (0x17 CNS) admin cmds for underlying NVMe device
  get_log_page       | Optional   | bool   | If true, enables passthru get log page command handlers for underlying NVMe drive (for non-fabrics related log pages)
  get_set_features   | Optional   | bool   | If true, enables passthru get/set_feature OPC handlers for underlying NVMe drive
  sanitize           | Optional   | bool   | If true, enables passthru sanitize OPC handlers for underlying NVMe drive

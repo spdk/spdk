@@ -2045,6 +2045,9 @@ enum spdk_nvme_identify_cns {
 	/** Get secondary controller list */
 	SPDK_NVME_IDENTIFY_SECONDARY_CTRLR_LIST		= 0x15,
 
+	/** Get UUID List */
+	SPDK_NVME_IDENTIFY_UUID_LIST			= 0x17,
+
 	/** List allocated NSIDs greater than CDW1.NSID, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST_IOCS	= 0x1a,
 

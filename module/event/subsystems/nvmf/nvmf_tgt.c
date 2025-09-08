@@ -56,6 +56,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 		.dhchap_dhgroups = NVMF_TGT_DEFAULT_DHGROUPS,
 	},
 	.admin_passthru.identify_ctrlr = false,
+	.admin_passthru.identify_uuid_list = false,
 	.admin_passthru.get_log_page = false,
 	.admin_passthru.get_set_features = false,
 	.admin_passthru.sanitize = false,
@@ -580,6 +581,9 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 		nvmf_cdata.fwug = nvme_cdata.fwug;
 		nvmf_cdata.mtfa = nvme_cdata.mtfa;
 	}
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list) {
+		nvmf_cdata.ctratt.bits.uuid_list = nvme_cdata.ctratt.bits.uuid_list;
+	}
 
 	/* Copy the fixed up data back to the response */
 	spdk_nvmf_request_copy_from_buf(req, &nvmf_cdata, datalen);
@@ -624,11 +628,17 @@ nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
 
-	if (cmd->cdw10_bits.identify.cns != SPDK_NVME_IDENTIFY_CTRLR) {
-		return -1; /* Only support Identify Controller */
+	if (cmd->cdw10_bits.identify.cns == SPDK_NVME_IDENTIFY_CTRLR &&
+	    g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr) {
+		return nvmf_admin_passthru_generic_hdlr(req, fixup_identify_ctrlr);
 	}
 
-	return nvmf_admin_passthru_generic_hdlr(req, fixup_identify_ctrlr);
+	if (cmd->cdw10_bits.identify.cns == SPDK_NVME_IDENTIFY_UUID_LIST &&
+	    g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list) {
+		return nvmf_admin_passthru_generic_hdlr(req, NULL);
+	}
+
+	return -1;
 }
 
 static int
@@ -715,8 +725,9 @@ nvmf_tgt_advance_state(void)
 			g_tgt_state = (ret == 0) ? NVMF_TGT_INIT_CREATE_POLL_GROUPS : NVMF_TGT_ERROR;
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
-			if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr) {
-				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
+			if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr ||
+			    g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list) {
+				SPDK_NOTICELOG("Custom identify OPC handler enabled\n");
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, nvmf_custom_identify_hdlr);
 			}
 			if (g_spdk_nvmf_tgt_conf.admin_passthru.get_log_page) {
@@ -869,6 +880,8 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "admin_cmd_passthru");
 	spdk_json_write_named_bool(w, "identify_ctrlr",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr);
+	spdk_json_write_named_bool(w, "identify_uuid_list",
+				   g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list);
 	spdk_json_write_named_bool(w, "get_log_page",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.get_log_page);
 	spdk_json_write_named_bool(w, "get_set_features",
