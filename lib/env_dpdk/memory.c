@@ -510,8 +510,7 @@ spdk_mem_register(void *vaddr, size_t len)
 	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
 		rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, vaddr, len);
 		if (rc != 0) {
-			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-			return rc;
+			DEBUG_PRINT("failed to register vaddr %p to map %p, rc = %d\n", vaddr, map, rc);
 		}
 	}
 
@@ -551,7 +550,8 @@ mem_unregister_page(struct spdk_mem_map *map, uint64_t vaddr, size_t len, void *
 			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 						region->iov_base, region->iov_len);
 			if (rc != 0) {
-				return rc;
+				DEBUG_PRINT("failed to unregister vaddr %p from map %p, rc = %d\n",
+					    region->iov_base, map, rc);
 			}
 		}
 
@@ -625,8 +625,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 						region.iov_base, region.iov_len);
 			if (rc != 0) {
-				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-				return rc;
+				DEBUG_PRINT("failed to unregister vaddr %p from map %p, rc = %d\n",
+					    region.iov_base, map, rc);
 			}
 		}
 	}
