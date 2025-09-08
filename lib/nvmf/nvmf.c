@@ -94,6 +94,7 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 		return -ENOMEM;
 	}
 
+	referral->tgt = tgt;
 	referral->entry.subtype = nvmf_nqn_is_discovery(trid->subnqn) ?
 				  SPDK_NVMF_SUBTYPE_DISCOVERY :
 				  SPDK_NVMF_SUBTYPE_NVME;
@@ -108,10 +109,22 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 	spdk_strcpy_pad(referral->entry.trsvcid, trid->trsvcid, sizeof(referral->entry.trsvcid), ' ');
 	spdk_strcpy_pad(referral->entry.traddr, trid->traddr, sizeof(referral->entry.traddr), ' ');
 
+	referral->allow_any_host = opts.allow_any_host;
+	TAILQ_INIT(&referral->hosts);
+
 	TAILQ_INSERT_HEAD(&tgt->referrals, referral, link);
 	spdk_nvmf_send_discovery_log_notice(tgt, NULL);
 
 	return 0;
+}
+
+static void
+nvmf_referral_remove_host(struct spdk_nvmf_referral *referral, struct spdk_nvmf_host *host)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+
+	TAILQ_REMOVE(&referral->hosts, host, link);
+	free(host);
 }
 
 int
@@ -121,6 +134,7 @@ spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvmf_referral *referral;
 	struct spdk_nvmf_referral_opts opts = {};
 	struct spdk_nvme_transport_id *trid = &opts.trid;
+	struct spdk_nvmf_host *host, *host_tmp;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -134,12 +148,164 @@ spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 		return -ENOENT;
 	}
 
+	TAILQ_FOREACH_SAFE(host, &referral->hosts, link, host_tmp) {
+		nvmf_referral_remove_host(referral, host);
+	}
+
 	TAILQ_REMOVE(&tgt->referrals, referral, link);
 	spdk_nvmf_send_discovery_log_notice(tgt, NULL);
 
 	free(referral);
 
 	return 0;
+}
+
+static struct spdk_nvmf_host *
+nvmf_referral_find_host(struct spdk_nvmf_referral *referral, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	TAILQ_FOREACH(host, &referral->hosts, link) {
+		if (strcmp(hostnqn, host->nqn) == 0) {
+			return host;
+		}
+	}
+
+	return NULL;
+}
+
+int
+spdk_nvmf_referral_add_host(struct spdk_nvmf_referral *referral,
+			    const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (referral == NULL) {
+		return -EINVAL;
+	}
+
+	if (!nvmf_nqn_is_valid(hostnqn)) {
+		return -EINVAL;
+	}
+
+	if (nvmf_referral_find_host(referral, hostnqn)) {
+		return -EEXIST;
+	}
+
+	host = calloc(1, sizeof(*host));
+	if (!host) {
+		return -ENOMEM;
+	}
+
+	snprintf(host->nqn, sizeof(host->nqn), "%s", hostnqn);
+	TAILQ_INSERT_HEAD(&referral->hosts, host, link);
+
+	spdk_nvmf_send_discovery_log_notice(referral->tgt, hostnqn);
+	return 0;
+}
+
+int
+spdk_nvmf_referral_remove_host(struct spdk_nvmf_referral *referral,
+			       const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (referral == NULL) {
+		return -EINVAL;
+	}
+
+	if (!nvmf_nqn_is_valid(hostnqn)) {
+		return -EINVAL;
+	}
+
+	host = nvmf_referral_find_host(referral, hostnqn);
+	if (!host) {
+		return -ENOENT;
+	}
+
+	nvmf_referral_remove_host(referral, host);
+
+	spdk_nvmf_send_discovery_log_notice(referral->tgt, hostnqn);
+	return 0;
+}
+
+int
+spdk_nvmf_referral_set_allow_any_host(struct spdk_nvmf_referral *referral,
+				      bool allow_any_host)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (referral->allow_any_host == allow_any_host) {
+		return 0;
+	}
+
+	referral->allow_any_host = allow_any_host;
+
+	spdk_nvmf_send_discovery_log_notice(referral->tgt, NULL);
+	return 0;
+}
+
+bool
+spdk_nvmf_referral_get_allow_any_host(struct spdk_nvmf_referral *referral)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return referral->allow_any_host;
+}
+
+bool
+spdk_nvmf_referral_host_allowed(struct spdk_nvmf_referral *referral,
+				const char *hostnqn)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (!nvmf_nqn_is_valid(hostnqn)) {
+		return false;
+	}
+
+	return referral->allow_any_host || nvmf_referral_find_host(referral, hostnqn);
+}
+
+
+struct spdk_nvmf_host *
+spdk_nvmf_referral_get_first_host(struct spdk_nvmf_referral *referral)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return TAILQ_FIRST(&referral->hosts);
+}
+
+struct spdk_nvmf_host *
+spdk_nvmf_referral_get_next_host(struct spdk_nvmf_referral *referral,
+				 struct spdk_nvmf_host *prev_host)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return TAILQ_NEXT(prev_host, link);
+}
+
+
+struct spdk_nvmf_referral *
+spdk_nvmf_tgt_get_first_referral(struct spdk_nvmf_tgt *tgt)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return TAILQ_FIRST(&tgt->referrals);
+}
+
+struct spdk_nvmf_referral *
+spdk_nvmf_tgt_referral_get_next(struct spdk_nvmf_tgt *tgt,
+				struct spdk_nvmf_referral *prev_referral)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return TAILQ_NEXT(prev_referral, link);
+}
+
+const struct spdk_nvme_transport_id *
+spdk_nvmf_referral_get_trid(struct spdk_nvmf_referral *referral)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return &referral->trid;
 }
 
 void

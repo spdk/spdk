@@ -140,10 +140,16 @@ struct spdk_nvmf_subsystem_listener {
 };
 
 struct spdk_nvmf_referral {
+	/* Target to which the referral belongs */
+	struct spdk_nvmf_tgt *tgt;
 	/* Discovery Log Page Entry for this referral */
 	struct spdk_nvmf_discovery_log_page_entry entry;
 	/* Transport ID */
 	struct spdk_nvme_transport_id trid;
+	/* Visible to these hosts */
+	TAILQ_HEAD(, spdk_nvmf_host) hosts;
+	/* Visible to all hosts or not */
+	bool allow_any_host;
 	TAILQ_ENTRY(spdk_nvmf_referral) link;
 };
 

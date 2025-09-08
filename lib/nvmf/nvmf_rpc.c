@@ -1100,9 +1100,10 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	opts.size = SPDK_SIZEOF(&opts, secure_channel);
+	opts.size = SPDK_SIZEOF(&opts, allow_any_host);
 	opts.trid = trid;
 	opts.secure_channel = ctx.secure_channel;
+	opts.allow_any_host = true;
 
 	rc = spdk_nvmf_tgt_add_referral(tgt, &opts);
 	if (rc != 0) {

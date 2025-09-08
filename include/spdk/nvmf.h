@@ -37,6 +37,7 @@ struct spdk_bdev;
 struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_subsystem_listener;
+struct spdk_nvmf_referral;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_json_val;
@@ -202,6 +203,8 @@ struct spdk_nvmf_referral_opts {
 	struct spdk_nvme_transport_id trid;
 	/** The referral describes a referral to a subsystem which requires a secure channel */
 	bool secure_channel;
+	/** Whether this will be visible to all hosts */
+	bool allow_any_host;
 };
 
 /**
@@ -229,6 +232,110 @@ int spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
  */
 int spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 				  const struct spdk_nvmf_referral_opts *opts);
+
+/**
+ * Get the first referral in a target.
+ *
+ * \param tgt Target to query
+ *
+ * \return First referral in this target, or NULL if none exist
+ */
+struct spdk_nvmf_referral *spdk_nvmf_tgt_get_first_referral(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Get the next referral in a target.
+ *
+ * \param tgt Target to query
+ * \param prev_referral Previous referral returned from this function
+ *
+ * \return next referral in this target, or NULL if prev_referral was the last referral
+ */
+struct spdk_nvmf_referral *spdk_nvmf_tgt_referral_get_next(struct spdk_nvmf_tgt *tgt,
+		struct spdk_nvmf_referral *prev_referral);
+
+/*
+ * Add a host to a discovery service referral. This makes the
+ * referral visible to the host.
+ *
+ * \param referral The referral to which host is to be added
+ * \param hostnqn NQN of the host which is to be added
+ *
+ * \return 0 on success or a negated errno on failure
+ */
+int spdk_nvmf_referral_add_host(struct spdk_nvmf_referral *referral,
+				const char *hostnqn);
+
+/**
+ * Remove a host from a discovery service referral.
+ *
+ * \param referral The referral from which host is to be removed
+ * \param hostnqn NQN of the host which is to be removed
+ *
+ * \return 0 on success or a negated errno on failure
+ */
+int spdk_nvmf_referral_remove_host(struct spdk_nvmf_referral *referral,
+				   const char *hostnqn);
+
+/**
+ * Set whether a referral should allow any host or only hosts in the allowed list.
+ *
+ * \param referral Referral to modify.
+ * \param allow_any_host true to allow any host to see this referral in discovery
+ * log, or false to enforce the list configured with spdk_nvmf_referral_add_host().
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_referral_set_allow_any_host(struct spdk_nvmf_referral *referral,
+		bool allow_any_host);
+
+/**
+ * Get whether a referral allows any host or only hosts in the allowed list.
+ *
+ * \param referral Referral to query.
+ *
+ * \return true if any host is allowed, false if only hosts in the allowed list are allowed.
+ */
+bool spdk_nvmf_referral_get_allow_any_host(struct spdk_nvmf_referral *referral);
+
+/**
+ * Check whether a host is allowed to see a referral.
+ *
+ * \param referral Referral to query.
+ * \param hostnqn NQN of the host to check.
+ *
+ * \return true if the host is allowed, false if not.
+ */
+bool spdk_nvmf_referral_host_allowed(struct spdk_nvmf_referral *referral, const char *hostnqn);
+
+/**
+ * Get the first allowed host in a referral.
+ *
+ * \param referral Referral to query
+ *
+ * \return First allowed host in this referral, or NULL if none allowed
+ */
+struct spdk_nvmf_host *spdk_nvmf_referral_get_first_host(struct spdk_nvmf_referral *referral);
+
+/**
+ * Get the next allowed host in a referral.
+ *
+ * \param referral Referral to query
+ * \param prev_host Previous host returned from this function
+ *
+ * \return next allowed host in this referral, or NULL if prev_host was the last host
+ */
+struct spdk_nvmf_host *spdk_nvmf_referral_get_next_host(struct spdk_nvmf_referral *referral,
+		struct spdk_nvmf_host *prev_host);
+
+/**
+ * Get the transport ID of a referral.
+ *
+ * \param referral Referral to query
+ *
+ * \return Transport ID of the referral
+ */
+const struct spdk_nvme_transport_id *spdk_nvmf_referral_get_trid(struct spdk_nvmf_referral
+		*referral);
 
 /**
  * Set a custom discovery filter.

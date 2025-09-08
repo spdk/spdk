@@ -187,6 +187,10 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 		SPDK_DEBUGLOG(nvmf, "referral %s:%s trtype %s\n", referral->trid.traddr, referral->trid.trsvcid,
 			      referral->trid.trstring);
 
+		if (!spdk_nvmf_referral_host_allowed(referral, hostnqn)) {
+			continue;
+		}
+
 		size_t new_size = cur_size + sizeof(*entry);
 		void *new_log_page = realloc(disc_log, new_size);
 

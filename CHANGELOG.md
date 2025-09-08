@@ -17,6 +17,8 @@ filter.
 
 Add support for preempt-and-abort mode of persistent reservations acquire command.
 
+Added support for adding and deleting hosts from a discovery referral.
+
 ## v25.09
 
 ### bdev

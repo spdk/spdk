@@ -87,6 +87,8 @@ DEFINE_STUB(nvmf_auth_is_supported, bool, (void), false);
 DEFINE_STUB(spdk_bdev_get_nvme_ctratt, union spdk_bdev_nvme_ctratt,
 	    (struct spdk_bdev *bdev), {});
 DEFINE_STUB(nvmf_tgt_update_mdns_prr, int, (struct spdk_nvmf_tgt *tgt), 0);
+DEFINE_STUB(spdk_nvmf_referral_host_allowed, bool,
+	    (struct spdk_nvmf_referral *referral, const char *hostnqn), true);
 
 static bool g_async_discovery_complete = false;
 
@@ -524,6 +526,7 @@ test_discovery_log_with_filters(void)
 	ref1.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
 	ref1.entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
 	ref1.entry.cntlid = 0xffff;
+	ref1.allow_any_host = true;
 	memcpy(ref1.entry.trsvcid, rdma_trid_4.trsvcid, sizeof(ref1.entry.trsvcid));
 	memcpy(ref1.entry.traddr, rdma_trid_4.traddr, sizeof(ref1.entry.traddr));
 	snprintf(ref1.entry.subnqn, sizeof(ref1.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
@@ -535,6 +538,7 @@ test_discovery_log_with_filters(void)
 	ref2.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
 	ref2.entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
 	ref2.entry.cntlid = 0xffff;
+	ref2.allow_any_host = true;
 	memcpy(ref2.entry.trsvcid, tcp_trid_4.trsvcid, sizeof(ref2.entry.trsvcid));
 	memcpy(ref2.entry.traddr, tcp_trid_4.traddr, sizeof(ref2.entry.traddr));
 	snprintf(ref2.entry.subnqn, sizeof(ref2.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
