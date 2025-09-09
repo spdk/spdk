@@ -30,6 +30,7 @@ extern "C" {
 #define MIN_SO_RCVBUF_SIZE (4 * 1024)
 #define MIN_SO_SNDBUF_SIZE (4 * 1024)
 #define IOV_BATCH_SIZE 64
+#define DEFAULT_NUM_SSL_TICKETS 2
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;

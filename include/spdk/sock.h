@@ -192,6 +192,11 @@ struct spdk_sock_impl_opts {
 	 * example: "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256"
 	 */
 	const char *tls_cipher_suites;
+
+	/**
+	 * SSL tickets number. Used by ssl socket module.
+	 */
+	uint32_t num_ssl_tickets;
 };
 
 /**

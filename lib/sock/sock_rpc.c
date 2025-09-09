@@ -55,6 +55,7 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 	spdk_json_write_named_uint32(w, "zerocopy_threshold", sock_opts.zerocopy_threshold);
 	spdk_json_write_named_uint32(w, "tls_version", sock_opts.tls_version);
 	spdk_json_write_named_bool(w, "enable_ktls", sock_opts.enable_ktls);
+	spdk_json_write_named_uint32(w, "num_ssl_tickets", sock_opts.num_ssl_tickets);
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	free(impl_name);
@@ -111,7 +112,11 @@ static const struct spdk_json_object_decoder rpc_sock_impl_set_opts_decoders[] =
 	{
 		"enable_ktls", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_ktls),
 		spdk_json_decode_bool, true
-	}
+	},
+	{
+		"num_ssl_tickets", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.num_ssl_tickets),
+		spdk_json_decode_uint32, true
+	},
 };
 
 static void

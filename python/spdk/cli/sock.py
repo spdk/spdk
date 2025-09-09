@@ -30,7 +30,8 @@ def add_parser(subparsers):
                                        enable_zerocopy_send_client=args.enable_zerocopy_send_client,
                                        zerocopy_threshold=args.zerocopy_threshold,
                                        tls_version=args.tls_version,
-                                       enable_ktls=args.enable_ktls)
+                                       enable_ktls=args.enable_ktls,
+                                       num_ssl_tickets=args.num_ssl_tickets)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
@@ -59,9 +60,10 @@ def add_parser(subparsers):
                    action='store_true', dest='enable_ktls')
     p.add_argument('--disable-ktls', help='Disable Kernel TLS',
                    action='store_false', dest='enable_ktls')
+    p.add_argument('--ssl-tickets-number', help='SSL tickets number', type=int)
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_quickack=None,
                    enable_placement_id=None, enable_zerocopy_send_server=None, enable_zerocopy_send_client=None,
-                   zerocopy_threshold=None, tls_version=None, enable_ktls=None)
+                   zerocopy_threshold=None, tls_version=None, enable_ktls=None, num_ssl_tickets=None)
 
     def sock_set_default_impl(args):
         print_json(args.client.sock_set_default_impl(impl_name=args.impl))

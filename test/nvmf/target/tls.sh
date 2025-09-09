@@ -116,6 +116,21 @@ if [[ "$ktls" != "false" ]]; then
 	exit 1
 fi
 
+# Check SSL tickets number default value
+tkts=$($rpc_py sock_impl_get_options -i ssl | jq -r .num_ssl_tickets)
+if [[ "$tkts" != "2" ]]; then
+	echo "SSL tickets number default value was not set correctly $tkts != 2"
+	exit 1
+fi
+
+# Check SSL tickets number set to 5
+$rpc_py sock_impl_set_options -i ssl --ssl-tickets-number 5
+tkts=$($rpc_py sock_impl_get_options -i ssl | jq -r .num_ssl_tickets)
+if [[ "$tkts" != "5" ]]; then
+	echo "SSL tickets number was not set correctly $tkts != 5"
+	exit 1
+fi
+
 key=$(format_interchange_psk 00112233445566778899aabbccddeeff 1)
 key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100 1)
 
