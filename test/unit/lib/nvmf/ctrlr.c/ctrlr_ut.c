@@ -428,6 +428,17 @@ test_get_log_page(void)
 	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Get Log Page with controller scope using an NSID other than 0 or 0xFFFFFFFF */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.nsid = 1;
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = spdk_nvme_bytes_to_numd(req.length);
+	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
 }
 
 static void

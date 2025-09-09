@@ -2770,6 +2770,30 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	return 0;
 }
 
+static bool
+is_log_page_ctrlr_nvm_scope(uint8_t lid)
+{
+	switch (lid) {
+	case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
+	case SPDK_NVME_LOG_ERROR:
+	case SPDK_NVME_LOG_FIRMWARE_SLOT:
+	case SPDK_NVME_LOG_CHANGED_NS_LIST:
+	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
+	case SPDK_NVME_LOG_DEVICE_SELF_TEST:
+	case SPDK_NVME_LOG_TELEMETRY_HOST_INITIATED:
+	case SPDK_NVME_LOG_TELEMETRY_CTRLR_INITIATED:
+	case SPDK_NVME_LOG_ENDURANCE_GROUP_INFORMATION:
+	case SPDK_NVME_LOG_PREDICATBLE_LATENCY:
+	case SPDK_NVME_LOG_PREDICTABLE_LATENCY_EVENT:
+	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
+	case SPDK_NVME_LOG_PERSISTENT_EVENT_LOG:
+	case SPDK_NVME_LOG_ENDURANCE_GROUP_EVENT:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static int
 nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
@@ -2780,13 +2804,21 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	struct spdk_nvme_transport_id cmd_source_trid;
 	uint64_t offset, len;
 	uint32_t rae, numdl, numdu;
-	uint8_t lid;
+	uint8_t lid = cmd->cdw10_bits.get_log_page.lid;
 	int rc = 0;
 
 	if (req->iovcnt < 1) {
 		SPDK_DEBUGLOG(nvmf, "get log command with no buffer\n");
 		goto invalid_field_log_page;
 	}
+
+	if (is_log_page_ctrlr_nvm_scope(lid) &&
+	    ((cmd->nsid != 0) && (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG))) {
+		SPDK_ERRLOG("Invalid NSID: %u for log pages with a scope of NVM subsystem or controller: LID=0x%02X\n",
+			    cmd->nsid, lid);
+		goto invalid_field_log_page;
+	}
+
 
 	offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
 	if (offset & 3) {
