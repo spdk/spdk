@@ -3345,11 +3345,20 @@ nvmf_ctrlr_identify_ns_id_descriptor_list(
 	struct spdk_nvmf_ns *ns;
 	size_t buf_remain = id_desc_list_size;
 	void *buf_ptr = id_desc_list;
+	uint32_t nsid = cmd->nsid;
 
-	ns = nvmf_ctrlr_get_ns(ctrlr, cmd->nsid);
-	if (ns == NULL || ns->bdev == NULL) {
+	if (nsid == 0 || nsid > ctrlr->subsys->max_nsid) {
+		SPDK_ERRLOG("Identify Namespace Identification Descriptor list with invalid NSID %u\n", nsid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = nvmf_ctrlr_get_ns(ctrlr, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_ERRLOG("Identify Namespace Identification Descriptor list with inactive NSID %u\n", nsid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 

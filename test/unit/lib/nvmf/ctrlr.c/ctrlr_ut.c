@@ -1062,7 +1062,7 @@ test_get_ns_id_desc_list(void)
 	memset(&rsp, 0, sizeof(rsp));
 	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
 
 	/* Valid NSID, but ns has no IDs defined */
 	spdk_bit_array_set(ctrlr.visible_ns, 0);
