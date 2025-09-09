@@ -215,6 +215,13 @@ nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, stru
 
 	discovery_log_page = nvmf_generate_discovery_log(tgt, hostnqn, &log_page_size, cmd_source_trid);
 
+	if (offset >= log_page_size) {
+		SPDK_ERRLOG("Invalid Get log page discovery offset: (%" PRIu64 "), log page size (%zu)\n",
+			    offset, log_page_size);
+		free(discovery_log_page);
+		return -EINVAL;
+	}
+
 	/* Copy the valid part of the discovery log page, if any */
 	if (discovery_log_page) {
 		for (tmp = iov; tmp < iov + iovcnt; tmp++) {

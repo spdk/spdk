@@ -407,6 +407,17 @@ test_get_log_page(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
 
+	/* Get Log Page with invalid offset (offset exceeds requested log page size) */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_FIRMWARE_SLOT;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = spdk_nvme_bytes_to_numd(req.length);
+	cmd.nvme_cmd.cdw12 = sizeof(struct spdk_nvme_firmware_page) + 16;
+	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
 	/* Get Log Page without data buffer */
 	memset(&cmd, 0, sizeof(cmd));
 	memset(&rsp, 0, sizeof(rsp));

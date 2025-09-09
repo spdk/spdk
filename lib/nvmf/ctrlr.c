@@ -2346,6 +2346,10 @@ nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset,
 		if (copy_len > 0) {
 			spdk_iov_xfer_from_buf(&ix, (const char *)&fw_page + offset, copy_len);
 		}
+	} else {
+		SPDK_ERRLOG("Invalid Get log page firmware slot offset: (%" PRIu64 "), log page size (%zu)\n",
+			    offset, sizeof(fw_page));
+		return -EINVAL;
 	}
 
 	return 0;
@@ -2441,6 +2445,7 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 	struct spdk_nvme_ana_group_descriptor ana_desc;
 	size_t copy_len, copied_len;
 	uint32_t num_anagrp = 0, anagrpid;
+	size_t total_page_size = sizeof(ana_hdr);
 	struct spdk_nvmf_ns *ns;
 	struct spdk_iov_xfer ix;
 
@@ -2448,6 +2453,31 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 
 	if (length == 0) {
 		goto done;
+	}
+
+	for (anagrpid = 1; anagrpid <= ctrlr->subsys->max_nsid; anagrpid++) {
+		if (ctrlr->subsys->ana_group[anagrpid - 1] == 0) {
+			continue;
+		}
+
+		total_page_size += sizeof(ana_desc);
+
+		if (rgo) {
+			continue;
+		}
+
+		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+			if (ns->anagrpid == anagrpid) {
+				total_page_size += sizeof(uint32_t);
+			}
+		}
+	}
+
+	if (offset >= total_page_size) {
+		SPDK_ERRLOG("Invalid Get log page ana offset: (%" PRIu64 "), log page size (%zu)\n",
+			    offset, total_page_size);
+		return -EINVAL;
 	}
 
 	if (offset >= sizeof(ana_hdr)) {
@@ -2579,19 +2609,25 @@ nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 {
 	size_t copy_length;
 	struct spdk_iov_xfer ix;
+	size_t page_size = sizeof(ctrlr->changed_ns_list);
+
 
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
 
-	if (offset < sizeof(ctrlr->changed_ns_list)) {
-		copy_length = spdk_min(length, sizeof(ctrlr->changed_ns_list) - offset);
+	if (offset < page_size) {
+		copy_length = spdk_min(length, page_size - offset);
 		if (copy_length) {
 			spdk_iov_xfer_from_buf(&ix, (char *)&ctrlr->changed_ns_list + offset, copy_length);
 		}
+	} else {
+		SPDK_ERRLOG("Invalid Get log page changed ns list offset: (%" PRIu64 "), log page size (%zu)\n",
+			    offset, page_size);
+		return -EINVAL;
 	}
 
 	/* Clear log page each time it is read */
 	ctrlr->changed_ns_list_count = 0;
-	memset(&ctrlr->changed_ns_list, 0, sizeof(ctrlr->changed_ns_list));
+	memset(&ctrlr->changed_ns_list, 0, page_size);
 
 	if (!rae) {
 		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT);
@@ -2677,6 +2713,10 @@ nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *
 	if (offset < page_size) {
 		copy_len = spdk_min(page_size - offset, length);
 		spdk_iov_xfer_from_buf(&ix, (char *)(&cmds_and_effect_log_page) + offset, copy_len);
+	} else {
+		SPDK_ERRLOG("Invalid Get log page cmds effects offset: (%" PRIu64 "), log page size (%" PRIu32")\n",
+			    offset, page_size);
+		return -EINVAL;
 	}
 
 	return 0;
@@ -2700,7 +2740,9 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 
 	avail_log_len = ctrlr->num_avail_log_pages * unit_log_len;
 	if (offset >= avail_log_len) {
-		return 0;
+		SPDK_ERRLOG("Invalid Get log page reservation notification offset: (%" PRIu64"), log page size (%"
+			    PRIu32")\n", offset, avail_log_len);
+		return -EINVAL;
 	}
 
 	next_pos = 0;
@@ -2788,14 +2830,6 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		default:
 			SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier for discovery subsystem 0x%02X\n", lid);
 			goto invalid_field_log_page;
-		}
-	} else {
-		if (offset > len) {
-			SPDK_ERRLOG("Get log page: offset (%" PRIu64 ") > len (%" PRIu64 ")\n",
-				    offset, len);
-			response->status.sct = SPDK_NVME_SCT_GENERIC;
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	}
 
