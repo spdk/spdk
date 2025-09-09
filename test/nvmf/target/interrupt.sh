@@ -25,12 +25,9 @@ for i in {0..1}; do
 	reactor_is_idle $nvmfpid $i
 done
 
-perf="$SPDK_BIN_DIR/spdk_nvme_perf"
-
 # run traffic
-$perf -q 256 -o 4096 -w randrw -M 30 -t 10 -c 0xC \
-	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
-subnqn:${NQN}" "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_BIN_DIR/spdk_nvme_perf" -q 256 -o 4096 -w randrw -M 30 -t 10 -c 0xC \
+	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} subnqn:${NQN}"
 
 perf_pid=$!
 

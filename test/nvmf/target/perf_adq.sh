@@ -15,8 +15,6 @@ if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
 	exit 1
 fi
 
-perf="$SPDK_BIN_DIR/spdk_nvme_perf"
-
 function adq_configure_driver() {
 	# Enable adding flows to hardware
 	"${NVMF_TARGET_NS_CMD[@]}" ethtool --offload $NVMF_TARGET_INTERFACE hw-tc-offload on
@@ -76,9 +74,9 @@ adq_reload_driver
 nvmftestinit
 nvmfappstart -m 0xF --wait-for-rpc
 adq_configure_nvmf_target 0
-$perf -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
+run_app_bg "$SPDK_BIN_DIR/spdk_nvme_perf" -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
-	subnqn:nqn.2016-06.io.spdk:cnode1" &
+	subnqn:nqn.2016-06.io.spdk:cnode1"
 perfpid=$!
 sleep 2
 
@@ -98,9 +96,9 @@ nvmftestinit
 adq_configure_driver
 nvmfappstart -m 0xF --wait-for-rpc
 adq_configure_nvmf_target 1
-$perf -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
+run_app_bg "$SPDK_BIN_DIR/spdk_nvme_perf" -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
-	subnqn:nqn.2016-06.io.spdk:cnode1" &
+	subnqn:nqn.2016-06.io.spdk:cnode1"
 perfpid=$!
 sleep 2
 

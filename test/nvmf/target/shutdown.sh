@@ -144,7 +144,7 @@ function nvmf_shutdown_tc4() {
 	starttarget
 
 	# Run nvme_perf with highly fragmented payload
-	$rootdir/build/bin/spdk_nvme_perf -q 128 -o 45056 -O 4096 -w randwrite -t 20 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -P 4 &
+	run_app_bg "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 45056 -O 4096 -w randwrite -t 20 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -P 4
 	perfpid=$!
 	sleep 5
 	# Expand the trap to clean up bdevperf if something goes wrong

@@ -110,7 +110,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$subsystem -t $TEST
 "$rootdir/test/dma/test_dma/test_dma" -q 16 -o 4096 -w randread -M 70 -t 5 -m 0xc --json <(gen_lvol_nvme_json $subsystem) -b "lvs${subsystem}/lvol${subsystem}" -f -x memzero
 
 # clear blob metadata
-$rootdir/build/bin/spdk_nvme_perf -q 16 -o 4096 -w write -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 16 -o 4096 -w write -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 
 # test memory translation with logical volumes
 "$rootdir/test/dma/test_dma/test_dma" -q 16 -o 4096 -w randrw -M 70 -t 5 -m 0xc --json <(gen_lvol_nvme_json $subsystem) -b "lvs${subsystem}/lvol${subsystem}" -f -x translate
