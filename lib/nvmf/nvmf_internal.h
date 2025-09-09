@@ -392,9 +392,9 @@ void nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 void nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 
-void nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-				 uint32_t iovcnt, uint64_t offset, uint32_t length,
-				 struct spdk_nvme_transport_id *cmd_source_trid);
+int nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
+				uint32_t iovcnt, uint64_t offset, uint32_t length,
+				struct spdk_nvme_transport_id *cmd_source_trid);
 
 void nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);

@@ -202,7 +202,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 	return disc_log;
 }
 
-void
+int
 nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
 			    uint32_t iovcnt, uint64_t offset, uint32_t length,
 			    struct spdk_nvme_transport_id *cmd_source_trid)
@@ -241,4 +241,6 @@ nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, stru
 
 		free(discovery_log_page);
 	}
+
+	return 0;
 }

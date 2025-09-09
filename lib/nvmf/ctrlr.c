@@ -2327,7 +2327,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
-static void
+static int
 nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length)
 {
 	struct spdk_nvme_firmware_page fw_page;
@@ -2347,6 +2347,8 @@ nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset,
 			spdk_iov_xfer_from_buf(&ix, (const char *)&fw_page + offset, copy_len);
 		}
 	}
+
+	return 0;
 }
 
 /*
@@ -2431,7 +2433,7 @@ nvmf_get_error_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int i
 	/* TODO: actually fill out log page data */
 }
 
-static void
+static int
 nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
 		      uint64_t offset, uint32_t length, uint32_t rae, uint32_t rgo)
 {
@@ -2539,6 +2541,8 @@ done:
 	if (!rae) {
 		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT);
 	}
+
+	return 0;
 }
 
 void
@@ -2569,7 +2573,7 @@ nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 	}
 }
 
-static void
+static int
 nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 				  struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length, uint32_t rae)
 {
@@ -2592,6 +2596,8 @@ nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	if (!rae) {
 		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT);
 	}
+
+	return 0;
 }
 
 /* The structure can be modified if we provide support for other commands in future */
@@ -2637,7 +2643,7 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 	},
 };
 
-static void
+static int
 nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
 				   uint64_t offset, uint32_t length)
 {
@@ -2672,9 +2678,11 @@ nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *
 		copy_len = spdk_min(page_size - offset, length);
 		spdk_iov_xfer_from_buf(&ix, (char *)(&cmds_and_effect_log_page) + offset, copy_len);
 	}
+
+	return 0;
 }
 
-static void
+static int
 nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length, uint32_t rae)
 {
@@ -2687,12 +2695,12 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	unit_log_len = sizeof(struct spdk_nvme_reservation_notification_log);
 	/* No available log, return zeroed log pages */
 	if (!ctrlr->num_avail_log_pages) {
-		return;
+		return 0;
 	}
 
 	avail_log_len = ctrlr->num_avail_log_pages * unit_log_len;
 	if (offset >= avail_log_len) {
-		return;
+		return 0;
 	}
 
 	next_pos = 0;
@@ -2717,7 +2725,7 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	if (!rae) {
 		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT);
 	}
-	return;
+	return 0;
 }
 
 static int
@@ -2731,20 +2739,17 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	uint64_t offset, len;
 	uint32_t rae, numdl, numdu;
 	uint8_t lid;
+	int rc = 0;
 
 	if (req->iovcnt < 1) {
 		SPDK_DEBUGLOG(nvmf, "get log command with no buffer\n");
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		goto invalid_field_log_page;
 	}
 
 	offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
 	if (offset & 3) {
-		SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", offset);
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 ", Offset must be 4-byte aligned\n", offset);
+		goto invalid_field_log_page;
 	}
 
 	rae = cmd->cdw10_bits.get_log_page.rae;
@@ -2754,9 +2759,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	if (len > req->length) {
 		SPDK_ERRLOG("Get log page: len (%" PRIu64 ") > buf size (%u)\n",
 			    len, req->length);
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		goto invalid_field_log_page;
 	}
 
 	lid = cmd->cdw10_bits.get_log_page.lid;
@@ -2772,14 +2775,19 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 				response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			}
-			nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt,
-						    offset, len, &cmd_source_trid);
+			rc = nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt,
+							 offset, len, &cmd_source_trid);
+			if (rc) {
+				goto invalid_field_log_page;
+			}
+
 			if (!rae) {
 				nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
 			}
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
-			goto invalid_log_page;
+			SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier for discovery subsystem 0x%02X\n", lid);
+			goto invalid_field_log_page;
 		}
 	} else {
 		if (offset > len) {
@@ -2789,41 +2797,46 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-
-		switch (lid) {
-		case SPDK_NVME_LOG_ERROR:
-			nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		case SPDK_NVME_LOG_HEALTH_INFORMATION:
-			/* TODO: actually fill out log page data */
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		case SPDK_NVME_LOG_FIRMWARE_SLOT:
-			nvmf_get_firmware_slot_log_page(req->iov, req->iovcnt, offset, len);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
-			if (subsystem->flags.ana_reporting) {
-				uint32_t rgo = cmd->cdw10_bits.get_log_page.lsp & 1;
-				nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae, rgo);
-				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-			} else {
-				goto invalid_log_page;
-			}
-		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
-			nvmf_get_cmds_and_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		case SPDK_NVME_LOG_CHANGED_NS_LIST:
-			nvmf_get_changed_ns_list_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
-			nvmf_get_reservation_notification_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		default:
-			goto invalid_log_page;
-		}
 	}
 
-invalid_log_page:
-	SPDK_INFOLOG(nvmf, "Unsupported Get Log Page 0x%02X\n", lid);
+	switch (lid) {
+	case SPDK_NVME_LOG_ERROR:
+		nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		break;
+	case SPDK_NVME_LOG_HEALTH_INFORMATION:
+		/* TODO: actually fill out log page data */
+		break;
+	case SPDK_NVME_LOG_FIRMWARE_SLOT:
+		rc = nvmf_get_firmware_slot_log_page(req->iov, req->iovcnt, offset, len);
+		break;
+	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
+		if (subsystem->flags.ana_reporting) {
+			uint32_t rgo = cmd->cdw10_bits.get_log_page.lsp & 1;
+			rc = nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae, rgo);
+			break;
+		} else {
+			SPDK_INFOLOG(nvmf, "Get Log Page for Asymmetric Namespace Access is not supported\n");
+			goto invalid_field_log_page;
+		}
+	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
+		rc = nvmf_get_cmds_and_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
+		break;
+	case SPDK_NVME_LOG_CHANGED_NS_LIST:
+		rc = nvmf_get_changed_ns_list_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		break;
+	case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
+		rc = nvmf_get_reservation_notification_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		break;
+	default:
+		SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier 0x%02X\n", lid);
+		goto invalid_field_log_page;
+	}
+
+	if (!rc) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+invalid_field_log_page:
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
