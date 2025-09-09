@@ -36,13 +36,14 @@
 #define NVME_TCP_MAX_R2T_DEFAULT		1
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
 
-#define NVME_TQPAIR_ERRLOG(tqpair, format, ...) NVME_QPAIR_ERRLOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
+#define NVME_TQPAIR_ERRLOG(tqpair, format, ...) NVME_QPAIR_ERRLOG((tqpair) ? &(tqpair)->qpair : NULL, "[%s] " format, (tqpair) ? nvme_tcp_qpair_state_string((tqpair)->state) : "", ##__VA_ARGS__)
 #define NVME_TQPAIR_WARNLOG(tqpair, format, ...) NVME_QPAIR_WARNLOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
 #define NVME_TQPAIR_NOTICELOG(tqpair, format, ...) NVME_QPAIR_NOTICELOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
 #define NVME_TQPAIR_INFOLOG(tqpair, format, ...) NVME_QPAIR_INFOLOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
 #define NVME_TQPAIR_DEBUGLOG(tqpair, format, ...) NVME_QPAIR_DEBUGLOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
 
 #define nvme_tcp_qpair_set_state(_qpair, _state) do { \
+	NVME_TQPAIR_DEBUGLOG((_qpair), "setting tqpair state to %s\n", nvme_tcp_qpair_state_string((_state))); \
 	(_qpair)->state = (_state); \
 } while (0)
 
@@ -191,6 +192,33 @@ static int64_t nvme_tcp_poll_group_process_completions(struct spdk_nvme_transpor
 static void nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu);
 static void nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req, struct nvme_tcp_qpair *tqpair,
 				  struct spdk_nvme_cpl *rsp, bool print_on_error);
+
+static inline const char *
+nvme_tcp_qpair_state_string(enum nvme_tcp_qpair_state state)
+{
+	switch (state) {
+	case NVME_TCP_QPAIR_STATE_INVALID:
+		return "INVALID";
+	case NVME_TCP_QPAIR_STATE_SOCK_CONNECTING:
+		return "SOCK_CONNECTING";
+	case NVME_TCP_QPAIR_STATE_INITIALIZING:
+		return "INITIALIZING";
+	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND:
+		return "FABRIC_CONNECT_SEND";
+	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL:
+		return "FABRIC_CONNECT_POLL";
+	case NVME_TCP_QPAIR_STATE_AUTHENTICATING:
+		return "AUTHENTICATING";
+	case NVME_TCP_QPAIR_STATE_RUNNING:
+		return "RUNNING";
+	case NVME_TCP_QPAIR_STATE_EXITING:
+		return "EXITING";
+	case NVME_TCP_QPAIR_STATE_EXITED:
+		return "EXITED";
+	default:
+		return "UNKNOWN";
+	}
+}
 
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
