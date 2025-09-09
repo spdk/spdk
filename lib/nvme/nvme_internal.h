@@ -1601,14 +1601,12 @@ nvme_request_abort_match(struct nvme_request *req, void *cmd_cb_arg)
 	       (req->parent != NULL && req->parent->cb_arg == cmd_cb_arg);
 }
 
-static inline void
-nvme_qpair_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
-{
-	qpair->state = state;
-	if (state == NVME_QPAIR_ENABLED) {
-		qpair->is_new_qpair = false;
-	}
-}
+#define nvme_qpair_set_state(_qpair, _state) do { \
+	(_qpair)->state = (_state); \
+	if ((_state) == NVME_QPAIR_ENABLED) { \
+		(_qpair)->is_new_qpair = false; \
+	} \
+} while (0)
 
 static inline enum nvme_qpair_state
 nvme_qpair_get_state(struct spdk_nvme_qpair *qpair) {
