@@ -30,7 +30,7 @@ rabort() {
 	done
 
 	for qd in "${qds[@]}"; do
-		"$SPDK_EXAMPLE_DIR/abort" \
+		run_app "$SPDK_EXAMPLE_DIR/abort" \
 			-q "$qd" \
 			-w rw \
 			-M 50 \
