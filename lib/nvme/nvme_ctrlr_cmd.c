@@ -505,7 +505,7 @@ nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_
 		/* 64-bit host identifier */
 		feat_host_identifier.bits.exhid = 0;
 	} else {
-		SPDK_ERRLOG("Invalid host ID size %u\n", host_id_size);
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid host ID size %u\n", host_id_size);
 		return -EINVAL;
 	}
 
@@ -605,7 +605,7 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->outstanding_aborts++;
 		rc = nvme_ctrlr_submit_admin_request(ctrlr, next);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to submit queued abort.\n");
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to submit queued abort.\n");
 			memset(&next->cpl, 0, sizeof(next->cpl));
 			next->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			next->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;

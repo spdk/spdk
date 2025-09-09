@@ -213,8 +213,8 @@ spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qp
 			}
 		}
 	} else if (qpair->ctrlr->opts.enable_interrupts != group->enable_interrupts) {
-		SPDK_ERRLOG("Queue pair %s interrupts cannot be added to poll group\n",
-			    qpair->ctrlr->opts.enable_interrupts ? "without" : "with");
+		NVME_QPAIR_ERRLOG(qpair, "Queue pair %s interrupts cannot be added to poll group\n",
+				  qpair->ctrlr->opts.enable_interrupts ? "without" : "with");
 		return -EINVAL;
 	}
 
@@ -282,7 +282,7 @@ nvme_poll_group_add_qpair_fd(struct spdk_nvme_qpair *qpair)
 
 	fd = spdk_nvme_qpair_get_fd(qpair, &opts);
 	if (fd < 0) {
-		SPDK_ERRLOG("Cannot get fd for the qpair: %d\n", fd);
+		NVME_QPAIR_ERRLOG(qpair, "Cannot get fd for the qpair: %d\n", fd);
 		return -EINVAL;
 	}
 
@@ -303,7 +303,7 @@ nvme_poll_group_remove_qpair_fd(struct spdk_nvme_qpair *qpair)
 
 	fd = spdk_nvme_qpair_get_fd(qpair, NULL);
 	if (fd < 0) {
-		SPDK_ERRLOG("Cannot get fd for the qpair: %d\n", fd);
+		NVME_QPAIR_ERRLOG(qpair, "Cannot get fd for the qpair: %d\n", fd);
 		assert(false);
 		return;
 	}

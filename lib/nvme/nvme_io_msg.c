@@ -23,7 +23,7 @@ nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_msg_
 
 	io = (struct spdk_nvme_io_msg *)calloc(1, sizeof(struct spdk_nvme_io_msg));
 	if (!io) {
-		SPDK_ERRLOG("IO msg allocation failed.");
+		NVME_CTRLR_ERRLOG(ctrlr, "IO msg allocation failed.");
 		pthread_mutex_unlock(&ctrlr->external_io_msgs_lock);
 		return -ENOMEM;
 	}
@@ -107,7 +107,7 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 			   struct nvme_io_msg_producer *io_msg_producer)
 {
 	if (io_msg_producer == NULL) {
-		SPDK_ERRLOG("io_msg_producer cannot be NULL\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "io_msg_producer cannot be NULL\n");
 		return -EINVAL;
 	}
 
@@ -131,14 +131,14 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_NUMA_ID_ANY);
 	if (!ctrlr->external_io_msgs) {
-		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "Unable to allocate memory for message ring\n");
 		nvme_ctrlr_unlock(ctrlr);
 		return -ENOMEM;
 	}
 
 	ctrlr->external_io_msgs_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	if (ctrlr->external_io_msgs_qpair == NULL) {
-		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		spdk_ring_free(ctrlr->external_io_msgs);
 		ctrlr->external_io_msgs = NULL;
 		nvme_ctrlr_unlock(ctrlr);

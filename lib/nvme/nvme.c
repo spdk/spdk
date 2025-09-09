@@ -601,8 +601,8 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 
 			if (ctrlr->is_destructed) {
 				/* This ctrlr is being destructed asynchronously. */
-				SPDK_ERRLOG("NVMe controller for SSD: %s is being destructed\n",
-					    trid->traddr);
+				NVME_CTRLR_ERRLOG(ctrlr, "NVMe controller for SSD: %s is being destructed\n",
+						  trid->traddr);
 				probe_ctx->attach_fail_cb(probe_ctx->cb_ctx, trid, -EBUSY);
 				return -EBUSY;
 			}
@@ -648,7 +648,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 	if (rc) {
 		/* Controller failed to initialize. */
 		TAILQ_REMOVE(&probe_ctx->init_ctrlrs, ctrlr, tailq);
-		SPDK_ERRLOG("Failed to initialize SSD: %s\n", ctrlr->trid.traddr);
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to initialize SSD: %s\n", ctrlr->trid.traddr);
 		probe_ctx->attach_fail_cb(probe_ctx->cb_ctx, &ctrlr->trid, rc);
 		nvme_ctrlr_lock(ctrlr);
 		nvme_ctrlr_fail(ctrlr, false);
@@ -657,7 +657,8 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		/* allocate a context to detach this controller asynchronously */
 		detach_ctx = calloc(1, sizeof(*detach_ctx));
 		if (detach_ctx == NULL) {
-			SPDK_WARNLOG("Failed to allocate asynchronous detach context. Performing synchronous destruct.\n");
+			NVME_CTRLR_WARNLOG(ctrlr,
+					   "Failed to allocate asynchronous detach context. Performing synchronous destruct.\n");
 			nvme_ctrlr_destruct(ctrlr);
 			return;
 		}

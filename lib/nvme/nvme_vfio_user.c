@@ -46,7 +46,7 @@ nvme_vfio_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32
 	struct nvme_vfio_ctrlr *vctrlr = nvme_vfio_ctrlr(ctrlr);
 
 	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
-	SPDK_DEBUGLOG(nvme_vfio, "ctrlr %s: offset 0x%x, value 0x%x\n", ctrlr->trid.traddr, offset, value);
+	NVME_CTRLR_LOG2(DEBUG, nvme_vfio, ctrlr, "offset 0x%x, value 0x%x\n", offset, value);
 
 	return spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_BAR0_REGION_INDEX,
 					     offset, 4, &value, true);
@@ -58,8 +58,7 @@ nvme_vfio_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 	struct nvme_vfio_ctrlr *vctrlr = nvme_vfio_ctrlr(ctrlr);
 
 	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
-	SPDK_DEBUGLOG(nvme_vfio, "ctrlr %s: offset 0x%x, value 0x%"PRIx64"\n", ctrlr->trid.traddr, offset,
-		      value);
+	NVME_CTRLR_LOG2(DEBUG, nvme_vfio, ctrlr, "offset 0x%x, value 0x%"PRIx64"\n", offset, value);
 
 	return spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_BAR0_REGION_INDEX,
 					     offset, 8, &value, true);
@@ -76,11 +75,11 @@ nvme_vfio_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_BAR0_REGION_INDEX,
 					    offset, 4, value, false);
 	if (ret != 0) {
-		SPDK_ERRLOG("ctrlr %p, offset %x\n", ctrlr, offset);
+		NVME_CTRLR_ERRLOG(ctrlr, "offset %x\n", offset);
 		return ret;
 	}
 
-	SPDK_DEBUGLOG(nvme_vfio, "ctrlr %s: offset 0x%x, value 0x%x\n", ctrlr->trid.traddr, offset, *value);
+	NVME_CTRLR_LOG2(DEBUG, nvme_vfio, ctrlr, "offset 0x%x, value 0x%x\n", offset, *value);
 
 	return 0;
 }
@@ -96,12 +95,11 @@ nvme_vfio_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_BAR0_REGION_INDEX,
 					    offset, 8, value, false);
 	if (ret != 0) {
-		SPDK_ERRLOG("ctrlr %p, offset %x\n", ctrlr, offset);
+		NVME_CTRLR_ERRLOG(ctrlr, "offset %x\n", offset);
 		return ret;
 	}
 
-	SPDK_DEBUGLOG(nvme_vfio, "ctrlr %s: offset 0x%x, value 0x%"PRIx64"\n", ctrlr->trid.traddr, offset,
-		      *value);
+	NVME_CTRLR_LOG2(DEBUG, nvme_vfio, ctrlr, "offset 0x%x, value 0x%"PRIx64"\n", offset, *value);
 
 	return 0;
 }
@@ -196,22 +194,22 @@ static struct spdk_nvme_ctrlr *
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
 					    &cmd_reg, false);
 	if (ret != 0) {
+		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "Read PCI CMD REG failed\n");
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		SPDK_ERRLOG("Read PCI CMD REG failed\n");
 		goto exit;
 	}
 	cmd_reg |= 0x404;
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
 					    &cmd_reg, true);
 	if (ret != 0) {
+		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "Write PCI CMD REG failed\n");
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		SPDK_ERRLOG("Write PCI CMD REG failed\n");
 		goto exit;
 	}
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
+		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "get_cap() failed\n");
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		SPDK_ERRLOG("get_cap() failed\n");
 		goto exit;
 	}
 
@@ -268,12 +266,12 @@ nvme_vfio_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_aqa_register aqa;
 
 	if (nvme_vfio_ctrlr_set_asq(ctrlr, vadminq->cmd_bus_addr)) {
-		SPDK_ERRLOG("set_asq() failed\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "set_asq() failed\n");
 		return -EIO;
 	}
 
 	if (nvme_vfio_ctrlr_set_acq(ctrlr, vadminq->cpl_bus_addr)) {
-		SPDK_ERRLOG("set_acq() failed\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "set_acq() failed\n");
 		return -EIO;
 	}
 
@@ -283,7 +281,7 @@ nvme_vfio_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	aqa.bits.asqs = nvme_pcie_qpair(ctrlr->adminq)->num_entries - 1;
 
 	if (nvme_vfio_ctrlr_set_aqa(ctrlr, &aqa)) {
-		SPDK_ERRLOG("set_aqa() failed\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "set_aqa() failed\n");
 		return -EIO;
 	}
 

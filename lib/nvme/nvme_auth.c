@@ -1269,12 +1269,12 @@ spdk_nvme_qpair_authenticate(struct spdk_nvme_qpair *qpair,
 	int rc;
 
 	if (qpair->auth.cb_fn != NULL) {
-		SPDK_ERRLOG("authentication already in-progress\n");
+		AUTH_ERRLOG(qpair, "authentication already in-progress\n");
 		return -EALREADY;
 	}
 
 	if (ctrlr->opts.dhchap_key == NULL) {
-		SPDK_ERRLOG("missing DH-HMAC-CHAP key\n");
+		AUTH_ERRLOG(qpair, "missing DH-HMAC-CHAP key\n");
 		return -ENOKEY;
 	}
 

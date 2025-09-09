@@ -477,8 +477,8 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	 */
 	rc = transport->ops.ctrlr_delete_io_qpair(ctrlr, qpair);
 	if (rc != 0) {
-		SPDK_ERRLOG("transport %s returned non-zero for ctrlr_delete_io_qpair op\n",
-			    transport->ops.name);
+		NVME_CTRLR_ERRLOG(ctrlr, "transport %s returned non-zero for ctrlr_delete_io_qpair op\n",
+				  transport->ops.name);
 		assert(false);
 	}
 }

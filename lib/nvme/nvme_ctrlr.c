@@ -2464,7 +2464,7 @@ nvme_ctrlr_identify_active_ns_async_done(void *arg, const struct spdk_nvme_cpl *
 				   ctx->page_count * sizeof(struct spdk_nvme_ns_list),
 				   ctx->ctrlr->page_size);
 	if (!new_ns_list) {
-		SPDK_ERRLOG("Failed to reallocate active_ns_list!\n");
+		NVME_CTRLR_ERRLOG(ctx->ctrlr, "Failed to reallocate active_ns_list!\n");
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
 		goto out;
 	}
@@ -2513,7 +2513,7 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 					   ctx->page_count * sizeof(struct spdk_nvme_ns_list),
 					   ctx->ctrlr->page_size);
 		if (!new_ns_list) {
-			SPDK_ERRLOG("Failed to reallocate active_ns_list!\n");
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to reallocate active_ns_list!\n");
 			ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
 			goto out;
 		}
@@ -4431,13 +4431,13 @@ nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 	int rc;
 
 	if (ctrlr->lock_depth > 0) {
-		SPDK_ERRLOG("lock currently held (depth=%d)!\n", ctrlr->lock_depth);
+		NVME_CTRLR_ERRLOG(ctrlr, "lock currently held (depth=%d)!\n", ctrlr->lock_depth);
 		assert(false);
 	}
 
 	rc = pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 	if (rc) {
-		SPDK_ERRLOG("could not destroy ctrlr_lock: %s\n", spdk_strerror(rc));
+		NVME_CTRLR_ERRLOG(ctrlr, "could not destroy ctrlr_lock: %s\n", spdk_strerror(rc));
 		assert(false);
 	}
 

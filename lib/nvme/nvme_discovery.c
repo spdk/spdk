@@ -85,7 +85,7 @@ discovery_log_header_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	/* Got the first 4K of the discovery log page */
 	recfmt = from_le16(&ctx->log_page->recfmt);
 	if (recfmt != 0) {
-		SPDK_ERRLOG("Unrecognized discovery log record format %" PRIu16 "\n", recfmt);
+		NVME_CTRLR_ERRLOG(ctx->ctrlr, "Unrecognized discovery log record format %" PRIu16 "\n", recfmt);
 		ctx->cb_fn(ctx->cb_arg, -EINVAL, NULL, NULL);
 		free(ctx->log_page);
 		free(ctx);
@@ -112,8 +112,8 @@ discovery_log_header_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	page_size += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
 	new_page = realloc(ctx->log_page, page_size);
 	if (new_page == NULL) {
-		SPDK_ERRLOG("Could not allocate buffer for log page (%" PRIu64 " entries)\n",
-			    numrec);
+		NVME_CTRLR_ERRLOG(ctx->ctrlr, "Could not allocate buffer for log page (%" PRIu64 " entries)\n",
+				  numrec);
 		ctx->cb_fn(ctx->cb_arg, -ENOMEM, NULL, NULL);
 		free(ctx->log_page);
 		free(ctx);

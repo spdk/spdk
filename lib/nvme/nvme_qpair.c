@@ -578,7 +578,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	error = spdk_nvme_cpl_is_error(&cpl);
 
 	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
-		SPDK_NOTICELOG("Command completed manually:\n");
+		NVME_QPAIR_NOTICELOG(qpair, "Command completed manually:\n");
 		spdk_nvme_qpair_print_command(qpair, &req->cmd);
 		spdk_nvme_qpair_print_completion(qpair, &cpl);
 	}
@@ -599,7 +599,7 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair)
 		req = STAILQ_FIRST(&tmp);
 		STAILQ_REMOVE_HEAD(&tmp, stailq);
 		if (!qpair->ctrlr->opts.disable_error_logging) {
-			SPDK_ERRLOG("aborting queued i/o\n");
+			NVME_QPAIR_ERRLOG(qpair, "aborting queued i/o\n");
 		}
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_SQ_DELETION, qpair->abort_dnr, true);
@@ -646,7 +646,7 @@ nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd
 		STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
 		STAILQ_INSERT_TAIL(&qpair->aborting_queued_req, req, stailq);
 		if (!qpair->ctrlr->opts.disable_error_logging) {
-			SPDK_ERRLOG("aborting queued i/o\n");
+			NVME_QPAIR_ERRLOG(qpair, "aborting queued i/o\n");
 		}
 		aborting++;
 	}
@@ -735,7 +735,7 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
 		if (spdk_unlikely(resubmit_rc != 0)) {
-			SPDK_DEBUGLOG(nvme, "Unable to resubmit as many requests as we completed.\n");
+			NVME_QPAIR_DEBUGLOG(qpair, "Unable to resubmit as many requests as we completed.\n");
 			break;
 		}
 	}
@@ -834,8 +834,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		if (ret == -ENXIO && nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
 			ret = 0;
 		} else {
-			NVME_CTRLR_ERRLOG(qpair->ctrlr, "CQ transport error %d (%s) on qpair id %hu\n",
-					  ret, spdk_strerror(-ret), qpair->id);
+			NVME_QPAIR_ERRLOG(qpair, "CQ transport error %d (%s)\n", ret, spdk_strerror(-ret));
 			if (nvme_qpair_is_admin_queue(qpair)) {
 				nvme_ctrlr_fail(qpair->ctrlr, false);
 			}
@@ -923,8 +922,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->req_buf = spdk_zmalloc(req_size_padded * num_requests, 64, NULL,
 				      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 	if (qpair->req_buf == NULL) {
-		SPDK_ERRLOG("no memory to allocate qpair(cntlid:0x%x sqid:%d) req_buf with %d request\n",
-			    ctrlr->cntlid, qpair->id, num_requests);
+		NVME_QPAIR_ERRLOG(qpair, "no memory to allocate qpair req_buf with %d request\n", num_requests);
 		return -ENOMEM;
 	}
 
