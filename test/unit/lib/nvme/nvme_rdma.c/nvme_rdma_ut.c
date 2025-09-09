@@ -447,7 +447,8 @@ test_nvme_rdma_build_contig_inline_request(void)
 static void
 test_nvme_rdma_create_reqs(void)
 {
-	struct nvme_rdma_qpair rqpair = {};
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {.qpair = {.ctrlr = &rctrlr.ctrlr}};
 	int rc;
 
 	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
@@ -646,7 +647,8 @@ test_nvme_rdma_poller_create(void)
 static void
 test_nvme_rdma_qpair_process_cm_event(void)
 {
-	struct nvme_rdma_qpair rqpair = {};
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {.qpair = {.ctrlr = &rctrlr.ctrlr}};
 	struct rdma_cm_event	 event = {};
 	struct spdk_nvmf_rdma_accept_private_data	accept_data = {};
 	int rc = 0;
@@ -1058,7 +1060,8 @@ test_rdma_get_memory_translation(void)
 	struct spdk_memory_domain *domain = (struct spdk_memory_domain *) 0xfeedbeef;
 	struct ibv_qp qp = {.pd = (struct ibv_pd *) 0xfeedbeef};
 	struct spdk_rdma_provider_qp rdma_qp = {.qp = &qp, .domain = domain};
-	struct nvme_rdma_qpair rqpair = {.rdma_qp = &rdma_qp};
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {.rdma_qp = &rdma_qp, .qpair = {.ctrlr = &rctrlr.ctrlr}};
 	struct spdk_nvme_ns_cmd_ext_io_opts io_opts = {.memory_domain = domain};
 	struct nvme_request req = {.payload = {.opts = &io_opts}};
 	struct nvme_rdma_memory_translation_ctx ctx = {
@@ -1268,7 +1271,8 @@ test_nvme_rdma_qpair_set_poller(void)
 	struct nvme_rdma_poll_group *group;
 	struct spdk_nvme_transport_poll_group *tgroup;
 	struct nvme_rdma_poller *poller;
-	struct nvme_rdma_qpair rqpair = {}, rqpair_2 = {};
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {.qpair = {.ctrlr = &rctrlr.ctrlr}}, rqpair_2 = {.qpair = {.ctrlr = &rctrlr.ctrlr}};
 	struct rdma_cm_id cm_id = {};
 
 	/* Case1: Test function nvme_rdma_poll_group_create */
