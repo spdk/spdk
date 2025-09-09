@@ -54,7 +54,7 @@ run_bperf_err() {
 	local rw bs qd
 
 	rw=$1 bs=$2 qd=$3
-	"$rootdir/build/examples/bdevperf" -m 2 -r "$bperfsock" -w $rw -o $bs -t $runtime -q $qd -z "${NO_HUGE[@]}" &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 2 -r "$bperfsock" -w $rw -o $bs -t $runtime -q $qd -z
 	bperfpid=$!
 
 	waitforlisten "$bperfpid" "$bperfsock"
@@ -79,7 +79,7 @@ run_bperf() {
 
 	rw=$1 bs=$2 qd=$3 scan_dsa=$4
 
-	"$rootdir/build/examples/bdevperf" -m 2 -r "$bperfsock" -w $rw -o $bs -t $runtime -q $qd -z --wait-for-rpc "${NO_HUGE[@]}" &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 2 -r "$bperfsock" -w $rw -o $bs -t $runtime -q $qd -z --wait-for-rpc
 	bperfpid=$!
 	waitforlisten "$bperfpid" "$bperfsock"
 

@@ -77,7 +77,7 @@ function generate_io_traffic_with_bdevperf() {
 	local dev_names=("$@")
 
 	mkdir -p $testdir
-	$rootdir/build/examples/bdevperf -m $bdevperf_core_mask -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m $bdevperf_core_mask -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt
 	bdevperf_pid=$!
 
 	trap 'process_shm --id $NVMF_APP_SHM_ID; cat $testdir/try.txt; rm -f $testdir/try.txt; kill -9 $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT

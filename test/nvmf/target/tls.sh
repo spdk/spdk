@@ -24,7 +24,7 @@ function run_bdevperf() {
 
 	bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 	# use bdevperf to test "bdev_nvme_attach_controller"
-	$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 "${NO_HUGE[@]}" &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10
 	bdevperf_pid=$!
 
 	trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
@@ -185,7 +185,7 @@ chmod 0600 $key_long_path
 nvmfappstart -m 0x2
 setup_nvmf_tgt $key_long_path
 
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10
 bdevperf_pid=$!
 
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
@@ -203,8 +203,7 @@ killprocess $nvmfpid
 
 # Launch apps with configs
 nvmfappstart -m 0x2 -c <(echo "$tgtconf")
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 \
-	-c <(echo "$bdevperfconf") "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 -c <(echo "$bdevperfconf")
 
 bdevperf_pid=$!
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -219,8 +218,7 @@ killprocess $nvmfpid
 # Load the keys using keyring
 nvmfappstart
 setup_nvmf_tgt "$key_long_path"
-"$rootdir/build/examples/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" \
-	-q 128 -o 4k -w verify -t 1 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" -q 128 -o 4k -w verify -t 1
 bdevperf_pid=$!
 
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
@@ -251,8 +249,7 @@ rpc_cmd << CONFIG
 	nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 --psk key0
 CONFIG
 
-"$rootdir/build/examples/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" \
-	-q 128 -o 4k -w verify -t 1 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" -q 128 -o 4k -w verify -t 1
 bdevperf_pid=$!
 
 waitforlisten "$bdevperf_pid" "$bdevperf_rpc_sock"
@@ -271,8 +268,7 @@ killprocess $bdevperf_pid
 killprocess $nvmfpid
 
 nvmfappstart -c <(echo "$tgtcfg")
-"$rootdir/build/examples/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" \
-	-q 128 -o 4k -w verify -t 1 "${NO_HUGE[@]}" -c <(echo "$bperfcfg") &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" -q 128 -o 4k -w verify -t 1 -c <(echo "$bperfcfg")
 bdevperf_pid=$!
 waitforlisten "$bdevperf_pid" "$bdevperf_rpc_sock"
 

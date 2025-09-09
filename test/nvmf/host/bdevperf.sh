@@ -24,9 +24,9 @@ function tgt_init() {
 nvmftestinit
 tgt_init
 
-"$rootdir/build/examples/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 1
+run_app "$SPDK_EXAMPLE_DIR/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 1
 
-"$rootdir/build/examples/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 15 -f &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 15 -f
 bdevperfpid=$!
 
 sleep 3

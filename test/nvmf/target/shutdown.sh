@@ -89,8 +89,7 @@ function nvmf_shutdown_tc1() {
 	kill -0 $nvmfpid
 
 	# Connect with bdevperf and confirm it works
-	$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json "${num_subsystems[@]}") \
-		-q 64 -o 65536 -w verify -t 1
+	run_app "$SPDK_EXAMPLE_DIR/bdevperf" --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 1
 
 	stoptarget
 }
@@ -100,7 +99,7 @@ function nvmf_shutdown_tc2() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10 &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -122,7 +121,7 @@ function nvmf_shutdown_tc3() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10 &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
