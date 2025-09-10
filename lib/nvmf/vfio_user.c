@@ -101,117 +101,6 @@ enum nvmf_vfio_user_req_state {
 	VFIO_USER_REQUEST_STATE_EXECUTING,
 };
 
-/*
- * Support for live migration in NVMf/vfio-user: live migration is implemented
- * by stopping the NVMf subsystem when the device is instructed to enter the
- * stop-and-copy state and then trivially, and most importantly safely,
- * collecting migration state and providing it to the vfio-user client. We
- * don't provide any migration state at the pre-copy state as that's too
- * complicated to do, we might support this in the future.
- */
-
-
-/* NVMe device state representation */
-struct nvme_migr_sq_state {
-	uint16_t	sqid;
-	uint16_t	cqid;
-	uint32_t	head;
-	uint32_t	size;
-	uint32_t	reserved;
-	uint64_t	dma_addr;
-};
-SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_sq_state) == 0x18, "Incorrect size");
-
-struct nvme_migr_cq_state {
-	uint16_t	cqid;
-	uint16_t	phase;
-	uint32_t	tail;
-	uint32_t	size;
-	uint32_t	iv;
-	uint32_t	ien;
-	uint32_t	reserved;
-	uint64_t	dma_addr;
-};
-SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_cq_state) == 0x20, "Incorrect size");
-
-#define VFIO_USER_MIGR_CALLBACK_VERS	1
-#define VFIO_USER_NVME_MIGR_MAGIC	0xAFEDBC23
-
-/* The device state is in VFIO MIGRATION BAR(9) region, keep the device state page aligned.
- *
- * NVMe device migration region is defined as below:
- * -------------------------------------------------------------------------
- * | vfio_user_nvme_migr_header | nvmf controller data | queue pairs | BARs |
- * -------------------------------------------------------------------------
- *
- * Keep vfio_user_nvme_migr_header as a fixed 0x1000 length, all new added fields
- * can use the reserved space at the end of the data structure.
- */
-struct vfio_user_nvme_migr_header {
-	/* Magic value to validate migration data */
-	uint32_t	magic;
-	/* Version to check the data is same from source to destination */
-	uint32_t	version;
-
-	/* The library uses this field to know how many fields in this
-	 * structure are valid, starting at the beginning of this data
-	 * structure.  New added fields in future use `unused` memory
-	 * spaces.
-	 */
-	uint32_t	opts_size;
-	uint32_t	reserved0;
-
-	/* BARs information */
-	uint64_t	bar_offset[VFU_PCI_DEV_NUM_REGIONS];
-	uint64_t	bar_len[VFU_PCI_DEV_NUM_REGIONS];
-
-	/* Queue pair start offset, starting at the beginning of this
-	 * data structure.
-	 */
-	uint64_t	qp_offset;
-	uint64_t	qp_len;
-
-	/* Controller data structure */
-	uint32_t	num_io_queues;
-	uint32_t	reserved1;
-
-	/* NVMf controller data offset and length if exist, starting at
-	 * the beginning of this data structure.
-	 */
-	uint64_t	nvmf_data_offset;
-	uint64_t	nvmf_data_len;
-
-	/*
-	 * Whether or not shadow doorbells are used in the source. 0 is a valid DMA
-	 * address.
-	 */
-	uint32_t	sdbl;
-
-	/* Shadow doorbell DMA addresses. */
-	uint64_t	shadow_doorbell_buffer;
-	uint64_t	eventidx_buffer;
-
-	/* Reserved memory space for new added fields, the
-	 * field is always at the end of this data structure.
-	 */
-	uint8_t		unused[3856];
-};
-SPDK_STATIC_ASSERT(sizeof(struct vfio_user_nvme_migr_header) == 0x1000, "Incorrect size");
-
-struct vfio_user_nvme_migr_qp {
-	struct nvme_migr_sq_state	sq;
-	struct nvme_migr_cq_state	cq;
-};
-
-/* NVMe state definition used to load/restore from/to NVMe migration BAR region */
-struct vfio_user_nvme_migr_state {
-	struct vfio_user_nvme_migr_header	ctrlr_header;
-	struct spdk_nvmf_ctrlr_migr_data	nvmf_data;
-	struct vfio_user_nvme_migr_qp		qps[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR];
-	uint8_t					doorbells[NVMF_VFIO_USER_DOORBELLS_SIZE];
-	uint8_t					cfg[NVME_REG_CFG_SIZE];
-};
-
 struct nvmf_vfio_user_req  {
 	struct spdk_nvmf_request		req;
 	struct spdk_nvme_cpl			rsp;
@@ -275,7 +164,7 @@ enum nvmf_vfio_user_ctrlr_state {
 	/* Quiesce requested by libvfio-user */
 	VFIO_USER_CTRLR_PAUSING,
 	/* NVMf subsystem is paused, it's safe to do PCI reset, memory register,
-	 * memory unergister, and vfio migration state transition in this state.
+	 * memory unregister, etc in this state.
 	 */
 	VFIO_USER_CTRLR_PAUSED,
 	/*
@@ -284,11 +173,6 @@ enum nvmf_vfio_user_ctrlr_state {
 	 * been restored).  NVMf subsystem resume has been requested.
 	 */
 	VFIO_USER_CTRLR_RESUMING,
-	/*
-	 * Implies that the NVMf subsystem is paused. Both controller in source VM and
-	 * destinatiom VM is in this state when doing live migration.
-	 */
-	VFIO_USER_CTRLR_MIGRATING
 };
 
 struct nvmf_vfio_user_sq {
@@ -447,16 +331,6 @@ struct nvmf_vfio_user_ctrlr {
 	TAILQ_HEAD(, nvmf_vfio_user_sq)		connected_sqs;
 	enum nvmf_vfio_user_ctrlr_state		state;
 
-	/*
-	 * Tells whether live migration data have been prepared. This is used
-	 * by the get_pending_bytes callback to tell whether or not the
-	 * previous iteration finished.
-	 */
-	bool migr_data_prepared;
-
-	/* Controller is in source VM when doing live migration */
-	bool					in_source_vm;
-
 	struct spdk_thread			*thread;
 	struct spdk_poller			*vfu_ctx_poller;
 	struct spdk_interrupt			*intr;
@@ -504,9 +378,6 @@ struct nvmf_vfio_user_endpoint {
 	volatile uint32_t			*bar0;
 	volatile uint32_t			*bar0_doorbells;
 
-	int					migr_fd;
-	void					*migr_data;
-
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_nvmf_subsystem		*subsystem;
 
@@ -520,11 +391,6 @@ struct nvmf_vfio_user_endpoint {
 	pthread_mutex_t				lock;
 
 	bool					need_async_destroy;
-	/* The subsystem is in PAUSED state and need to be resumed, TRUE
-	 * only when migration is done successfully and the controller is
-	 * in source VM.
-	 */
-	bool					need_resume;
 	/* Start the accept poller again after destroying the controller */
 	bool					need_relisten;
 
@@ -696,12 +562,6 @@ static dma_sg_t *
 index_to_sg_t(void *arr, size_t i)
 {
 	return (dma_sg_t *)((uintptr_t)arr + i * dma_sg_size());
-}
-
-static inline size_t
-vfio_user_migr_data_len(void)
-{
-	return SPDK_ALIGN_CEIL(sizeof(struct vfio_user_nvme_migr_state), PAGE_SIZE);
 }
 
 static inline bool
@@ -1207,14 +1067,6 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 
 	if (endpoint->devmem_fd > 0) {
 		close(endpoint->devmem_fd);
-	}
-
-	if (endpoint->migr_data) {
-		munmap(endpoint->migr_data, vfio_user_migr_data_len());
-	}
-
-	if (endpoint->migr_fd > 0) {
-		close(endpoint->migr_fd);
 	}
 
 	if (endpoint->vfu_ctx) {
@@ -3195,8 +3047,6 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 	struct nvmf_vfio_user_endpoint *endpoint = ctx;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 
-	endpoint->need_resume = false;
-
 	if (!vu_ctrlr) {
 		return;
 	}
@@ -3266,14 +3116,6 @@ vfio_user_quiesce_done(void *ctx)
 	vfu_device_quiesced(endpoint->vfu_ctx, quiesce_ctx->status);
 	vu_ctrlr->queued_quiesce = false;
 	free(quiesce_ctx);
-
-	/* `vfu_device_quiesced` can change the migration state,
-	 * so we need to re-check `vu_ctrlr->state`.
-	 */
-	if (vu_ctrlr->state == VFIO_USER_CTRLR_MIGRATING) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s is in MIGRATION state\n", ctrlr_id(vu_ctrlr));
-		return;
-	}
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s start to resume\n", ctrlr_id(vu_ctrlr));
 	vu_ctrlr->state = VFIO_USER_CTRLR_RESUMING;
@@ -3406,7 +3248,6 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 
 	switch (vu_ctrlr->state) {
 	case VFIO_USER_CTRLR_PAUSED:
-	case VFIO_USER_CTRLR_MIGRATING:
 		return 0;
 	case VFIO_USER_CTRLR_RUNNING:
 		ctrlr_quiesce(vu_ctrlr);
@@ -3423,218 +3264,6 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 
 	errno = EBUSY;
 	return -1;
-}
-
-static void
-vfio_user_ctrlr_dump_migr_data(const char *name,
-			       struct vfio_user_nvme_migr_state *migr_data,
-			       struct nvmf_vfio_user_shadow_doorbells *sdbl)
-{
-	struct spdk_nvmf_registers *regs;
-	struct nvme_migr_sq_state *sq;
-	struct nvme_migr_cq_state *cq;
-	uint32_t *doorbell_base;
-	uint32_t i;
-
-	SPDK_NOTICELOG("Dump %s\n", name);
-
-	regs = &migr_data->nvmf_data.regs;
-	doorbell_base = (uint32_t *)&migr_data->doorbells;
-
-	SPDK_NOTICELOG("Registers\n");
-	SPDK_NOTICELOG("CSTS 0x%x\n", regs->csts.raw);
-	SPDK_NOTICELOG("CAP  0x%"PRIx64"\n", regs->cap.raw);
-	SPDK_NOTICELOG("VS   0x%x\n", regs->vs.raw);
-	SPDK_NOTICELOG("CC   0x%x\n", regs->cc.raw);
-	SPDK_NOTICELOG("AQA  0x%x\n", regs->aqa.raw);
-	SPDK_NOTICELOG("ASQ  0x%"PRIx64"\n", regs->asq);
-	SPDK_NOTICELOG("ACQ  0x%"PRIx64"\n", regs->acq);
-
-	SPDK_NOTICELOG("Number of IO Queues %u\n", migr_data->ctrlr_header.num_io_queues);
-
-	if (sdbl != NULL) {
-		SPDK_NOTICELOG("shadow doorbell buffer=%#lx\n",
-			       migr_data->ctrlr_header.shadow_doorbell_buffer);
-		SPDK_NOTICELOG("eventidx buffer=%#lx\n",
-			       migr_data->ctrlr_header.eventidx_buffer);
-	}
-
-	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
-		sq = &migr_data->qps[i].sq;
-		cq = &migr_data->qps[i].cq;
-
-		if (sq->size) {
-			SPDK_NOTICELOG("sqid:%u, bar0_doorbell:%u\n", sq->sqid, doorbell_base[i * 2]);
-			if (i > 0 && sdbl != NULL) {
-				SPDK_NOTICELOG("sqid:%u, shadow_doorbell:%u, eventidx:%u\n",
-					       sq->sqid,
-					       sdbl->shadow_doorbells[queue_index(i, false)],
-					       sdbl->eventidxs[queue_index(i, false)]);
-			}
-			SPDK_NOTICELOG("SQ sqid:%u, cqid:%u, sqhead:%u, size:%u, dma_addr:0x%"PRIx64"\n",
-				       sq->sqid, sq->cqid, sq->head, sq->size, sq->dma_addr);
-		}
-
-		if (cq->size) {
-			SPDK_NOTICELOG("cqid:%u, bar0_doorbell:%u\n", cq->cqid, doorbell_base[i * 2 + 1]);
-			if (i > 0 && sdbl != NULL) {
-				SPDK_NOTICELOG("cqid:%u, shadow_doorbell:%u, eventidx:%u\n",
-					       cq->cqid,
-					       sdbl->shadow_doorbells[queue_index(i, true)],
-					       sdbl->eventidxs[queue_index(i, true)]);
-			}
-			SPDK_NOTICELOG("CQ cqid:%u, phase:%u, cqtail:%u, size:%u, iv:%u, ien:%u, dma_addr:0x%"PRIx64"\n",
-				       cq->cqid, cq->phase, cq->tail, cq->size, cq->iv, cq->ien, cq->dma_addr);
-		}
-	}
-
-	SPDK_NOTICELOG("%s Dump Done\n", name);
-}
-
-/* Read region 9 content and restore it to migration data structures */
-static int
-vfio_user_migr_stream_to_data(struct nvmf_vfio_user_endpoint *endpoint,
-			      struct vfio_user_nvme_migr_state *migr_state)
-{
-	void *data_ptr = endpoint->migr_data;
-
-	/* Load vfio_user_nvme_migr_header first */
-	memcpy(&migr_state->ctrlr_header, data_ptr, sizeof(struct vfio_user_nvme_migr_header));
-	/* TODO: version check */
-	if (migr_state->ctrlr_header.magic != VFIO_USER_NVME_MIGR_MAGIC) {
-		SPDK_ERRLOG("%s: bad magic number %x\n", endpoint_id(endpoint), migr_state->ctrlr_header.magic);
-		return -EINVAL;
-	}
-
-	/* Load nvmf controller data */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.nvmf_data_offset;
-	memcpy(&migr_state->nvmf_data, data_ptr, migr_state->ctrlr_header.nvmf_data_len);
-
-	/* Load queue pairs */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.qp_offset;
-	memcpy(&migr_state->qps, data_ptr, migr_state->ctrlr_header.qp_len);
-
-	/* Load doorbells */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX];
-	memcpy(&migr_state->doorbells, data_ptr,
-	       migr_state->ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX]);
-
-	/* Load CFG */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX];
-	memcpy(&migr_state->cfg, data_ptr, migr_state->ctrlr_header.bar_len[VFU_PCI_DEV_CFG_REGION_IDX]);
-
-	return 0;
-}
-
-
-static void
-vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = vu_ctrlr->ctrlr;
-	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
-	struct nvmf_vfio_user_sq *sq;
-	struct nvmf_vfio_user_cq *cq;
-	uint64_t data_offset;
-	void *data_ptr;
-	uint32_t *doorbell_base;
-	uint32_t i = 0;
-	uint16_t sqid, cqid;
-	struct vfio_user_nvme_migr_state migr_state = {
-		.nvmf_data = {
-			.data_size = offsetof(struct spdk_nvmf_ctrlr_migr_data, unused),
-			.regs_size = sizeof(struct spdk_nvmf_registers),
-			.feat_size = sizeof(struct spdk_nvmf_ctrlr_feat)
-		}
-	};
-
-	/* Save all data to vfio_user_nvme_migr_state first, then we will
-	 * copy it to device migration region at last.
-	 */
-
-	/* save magic number */
-	migr_state.ctrlr_header.magic = VFIO_USER_NVME_MIGR_MAGIC;
-
-	/* save controller data */
-	spdk_nvmf_ctrlr_save_migr_data(ctrlr, &migr_state.nvmf_data);
-
-	/* save connected queue pairs */
-	TAILQ_FOREACH(sq, &vu_ctrlr->connected_sqs, tailq) {
-		/* save sq */
-		sqid = sq->qid;
-		migr_state.qps[sqid].sq.sqid = sq->qid;
-		migr_state.qps[sqid].sq.cqid = sq->cqid;
-		migr_state.qps[sqid].sq.head = *sq_headp(sq);
-		migr_state.qps[sqid].sq.size = sq->size;
-		migr_state.qps[sqid].sq.dma_addr = sq->mapping.prp1;
-
-		/* save cq, for shared cq case, cq may be saved multiple times */
-		cqid = sq->cqid;
-		cq = vu_ctrlr->cqs[cqid];
-		migr_state.qps[cqid].cq.cqid = cqid;
-		migr_state.qps[cqid].cq.tail = *cq_tailp(cq);
-		migr_state.qps[cqid].cq.ien = cq->ien;
-		migr_state.qps[cqid].cq.iv = cq->iv;
-		migr_state.qps[cqid].cq.size = cq->size;
-		migr_state.qps[cqid].cq.phase = cq->phase;
-		migr_state.qps[cqid].cq.dma_addr = cq->mapping.prp1;
-		i++;
-	}
-
-	assert(i > 0);
-	migr_state.ctrlr_header.num_io_queues = i - 1;
-
-	/* Save doorbells */
-	doorbell_base = (uint32_t *)&migr_state.doorbells;
-	memcpy(doorbell_base, (void *)vu_ctrlr->bar0_doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
-
-	/* Save PCI configuration space */
-	memcpy(&migr_state.cfg, (void *)endpoint->pci_config_space, NVME_REG_CFG_SIZE);
-
-	/* Save all data to device migration region */
-	data_ptr = endpoint->migr_data;
-
-	/* Copy nvmf controller data */
-	data_offset = sizeof(struct vfio_user_nvme_migr_header);
-	data_ptr += data_offset;
-	migr_state.ctrlr_header.nvmf_data_offset = data_offset;
-	migr_state.ctrlr_header.nvmf_data_len = sizeof(struct spdk_nvmf_ctrlr_migr_data);
-	memcpy(data_ptr, &migr_state.nvmf_data, sizeof(struct spdk_nvmf_ctrlr_migr_data));
-
-	/* Copy queue pairs */
-	data_offset += sizeof(struct spdk_nvmf_ctrlr_migr_data);
-	data_ptr += sizeof(struct spdk_nvmf_ctrlr_migr_data);
-	migr_state.ctrlr_header.qp_offset = data_offset;
-	migr_state.ctrlr_header.qp_len = i * (sizeof(struct nvme_migr_sq_state) + sizeof(
-			struct nvme_migr_cq_state));
-	memcpy(data_ptr, &migr_state.qps, migr_state.ctrlr_header.qp_len);
-
-	/* Copy doorbells */
-	data_offset += migr_state.ctrlr_header.qp_len;
-	data_ptr += migr_state.ctrlr_header.qp_len;
-	migr_state.ctrlr_header.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX] = data_offset;
-	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX] = NVMF_VFIO_USER_DOORBELLS_SIZE;
-	memcpy(data_ptr, &migr_state.doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
-
-	/* Copy CFG */
-	data_offset += NVMF_VFIO_USER_DOORBELLS_SIZE;
-	data_ptr += NVMF_VFIO_USER_DOORBELLS_SIZE;
-	migr_state.ctrlr_header.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX] = data_offset;
-	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_CFG_REGION_IDX] = NVME_REG_CFG_SIZE;
-	memcpy(data_ptr, &migr_state.cfg, NVME_REG_CFG_SIZE);
-
-	/* copy shadow doorbells */
-	if (vu_ctrlr->sdbl != NULL) {
-		migr_state.ctrlr_header.sdbl = true;
-		migr_state.ctrlr_header.shadow_doorbell_buffer = vu_ctrlr->shadow_doorbell_buffer;
-		migr_state.ctrlr_header.eventidx_buffer = vu_ctrlr->eventidx_buffer;
-	}
-
-	/* Copy nvme migration header finally */
-	memcpy(endpoint->migr_data, &migr_state.ctrlr_header, sizeof(struct vfio_user_nvme_migr_header));
-
-	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
-		vfio_user_ctrlr_dump_migr_data("SAVE", &migr_state, vu_ctrlr->sdbl);
-	}
 }
 
 /*
@@ -3670,472 +3299,12 @@ vfio_user_device_reset(vfu_ctx_t *vfu_ctx, vfu_reset_type_t type)
 }
 
 static int
-vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
-				   struct vfio_user_nvme_migr_state *migr_state)
-{
-	uint32_t i, qsize = 0;
-	uint16_t sqid, cqid;
-	struct vfio_user_nvme_migr_qp migr_qp;
-	void *addr;
-	uint32_t cqs_ref[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR] = {};
-	int ret;
-
-	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
-		vfio_user_ctrlr_dump_migr_data("RESUME", migr_state, vu_ctrlr->sdbl);
-	}
-
-	/* restore submission queues */
-	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
-		migr_qp =  migr_state->qps[i];
-
-		qsize = migr_qp.sq.size;
-		if (qsize) {
-			struct nvmf_vfio_user_sq *sq;
-
-			sqid = migr_qp.sq.sqid;
-			if (sqid != i) {
-				SPDK_ERRLOG("Expected sqid %u while got %u", i, sqid);
-				return -EINVAL;
-			}
-
-			/* allocate sq if necessary */
-			if (vu_ctrlr->sqs[sqid] == NULL) {
-				ret = init_sq(vu_ctrlr, &vu_ctrlr->transport->transport, sqid);
-				if (ret) {
-					SPDK_ERRLOG("Construct qpair with qid %u failed\n", sqid);
-					return -EFAULT;
-				}
-			}
-
-			sq = vu_ctrlr->sqs[sqid];
-			sq->size = qsize;
-
-			ret = alloc_sq_reqs(vu_ctrlr, sq);
-			if (ret) {
-				SPDK_ERRLOG("Construct sq with qid %u failed\n", sqid);
-				return -EFAULT;
-			}
-
-			/* restore sq */
-			sq->sq_state = VFIO_USER_SQ_CREATED;
-			sq->cqid = migr_qp.sq.cqid;
-			*sq_headp(sq) = migr_qp.sq.head;
-			sq->mapping.prp1 = migr_qp.sq.dma_addr;
-			sq->mapping.len = sq->size * sizeof(struct spdk_nvme_cmd);
-			addr = map_one(vu_ctrlr->endpoint->vfu_ctx,
-				       sq->mapping.prp1, sq->mapping.len,
-				       sq->mapping.sg, &sq->mapping.iov,
-				       PROT_READ);
-			if (addr == NULL) {
-				SPDK_ERRLOG("Restore sq with qid %u PRP1 0x%"PRIx64" with size %u failed\n",
-					    sqid, sq->mapping.prp1, sq->size);
-				return -EFAULT;
-			}
-			cqs_ref[sq->cqid]++;
-		}
-	}
-
-	/* restore completion queues */
-	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
-		migr_qp =  migr_state->qps[i];
-
-		qsize = migr_qp.cq.size;
-		if (qsize) {
-			struct nvmf_vfio_user_cq *cq;
-
-			/* restore cq */
-			cqid = migr_qp.sq.cqid;
-			assert(cqid == i);
-
-			/* allocate cq if necessary */
-			if (vu_ctrlr->cqs[cqid] == NULL) {
-				ret = init_cq(vu_ctrlr, cqid);
-				if (ret) {
-					SPDK_ERRLOG("Construct qpair with qid %u failed\n", cqid);
-					return -EFAULT;
-				}
-			}
-
-			cq = vu_ctrlr->cqs[cqid];
-
-			cq->size = qsize;
-
-			cq->cq_state = VFIO_USER_CQ_CREATED;
-			cq->cq_ref = cqs_ref[cqid];
-			*cq_tailp(cq) = migr_qp.cq.tail;
-			cq->mapping.prp1 = migr_qp.cq.dma_addr;
-			cq->mapping.len = cq->size * sizeof(struct spdk_nvme_cpl);
-			cq->ien = migr_qp.cq.ien;
-			cq->iv = migr_qp.cq.iv;
-			cq->phase = migr_qp.cq.phase;
-			addr = map_one(vu_ctrlr->endpoint->vfu_ctx,
-				       cq->mapping.prp1, cq->mapping.len,
-				       cq->mapping.sg, &cq->mapping.iov,
-				       PROT_READ | PROT_WRITE);
-			if (addr == NULL) {
-				SPDK_ERRLOG("Restore cq with qid %u PRP1 0x%"PRIx64" with size %u failed\n",
-					    cqid, cq->mapping.prp1, cq->size);
-				return -EFAULT;
-			}
-		}
-	}
-
-	return 0;
-}
-
-static int
-vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
-	struct spdk_nvmf_ctrlr *ctrlr = vu_ctrlr->ctrlr;
-	uint32_t *doorbell_base;
-	struct spdk_nvme_cmd cmd;
-	uint16_t i;
-	int rc = 0;
-	struct vfio_user_nvme_migr_state migr_state = {
-		.nvmf_data = {
-			.data_size = offsetof(struct spdk_nvmf_ctrlr_migr_data, unused),
-			.regs_size = sizeof(struct spdk_nvmf_registers),
-			.feat_size = sizeof(struct spdk_nvmf_ctrlr_feat)
-		}
-	};
-
-	assert(endpoint->migr_data != NULL);
-	assert(ctrlr != NULL);
-	rc = vfio_user_migr_stream_to_data(endpoint, &migr_state);
-	if (rc) {
-		return rc;
-	}
-
-	/* restore shadow doorbells */
-	if (migr_state.ctrlr_header.sdbl) {
-		struct nvmf_vfio_user_shadow_doorbells *sdbl;
-		sdbl = map_sdbl(vu_ctrlr->endpoint->vfu_ctx,
-				migr_state.ctrlr_header.shadow_doorbell_buffer,
-				migr_state.ctrlr_header.eventidx_buffer,
-				memory_page_size(vu_ctrlr));
-		if (sdbl == NULL) {
-			SPDK_ERRLOG("%s: failed to re-map shadow doorbell buffers\n",
-				    ctrlr_id(vu_ctrlr));
-			return -1;
-		}
-
-		vu_ctrlr->shadow_doorbell_buffer = migr_state.ctrlr_header.shadow_doorbell_buffer;
-		vu_ctrlr->eventidx_buffer = migr_state.ctrlr_header.eventidx_buffer;
-
-		SWAP(vu_ctrlr->sdbl, sdbl);
-	}
-
-	rc = vfio_user_migr_ctrlr_construct_qps(vu_ctrlr, &migr_state);
-	if (rc) {
-		return rc;
-	}
-
-	/* restore PCI configuration space */
-	memcpy((void *)endpoint->pci_config_space, &migr_state.cfg, NVME_REG_CFG_SIZE);
-
-	doorbell_base = (uint32_t *)&migr_state.doorbells;
-	/* restore doorbells from saved registers */
-	memcpy((void *)vu_ctrlr->bar0_doorbells, doorbell_base, NVMF_VFIO_USER_DOORBELLS_SIZE);
-
-	/* restore nvmf controller data */
-	rc = spdk_nvmf_ctrlr_restore_migr_data(ctrlr, &migr_state.nvmf_data);
-	if (rc) {
-		return rc;
-	}
-
-	/* resubmit pending AERs */
-	for (i = 0; i < migr_state.nvmf_data.num_aer_cids; i++) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s AER resubmit, CID %u\n", ctrlr_id(vu_ctrlr),
-			      migr_state.nvmf_data.aer_cids[i]);
-		memset(&cmd, 0, sizeof(cmd));
-		cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-		cmd.cid = migr_state.nvmf_data.aer_cids[i];
-		rc = handle_cmd_req(vu_ctrlr, &cmd, vu_ctrlr->sqs[0]);
-		if (spdk_unlikely(rc)) {
-			break;
-		}
-	}
-
-	return rc;
-}
-
-static void
-vfio_user_migr_ctrlr_enable_sqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
-{
-	uint32_t i;
-	struct nvmf_vfio_user_sq *sq;
-
-	/* The Admin queue (qid: 0) does not ever use shadow doorbells. */
-
-	if (vu_ctrlr->sqs[0] != NULL) {
-		vu_ctrlr->sqs[0]->dbl_tailp = vu_ctrlr->bar0_doorbells +
-					      queue_index(0, false);
-	}
-
-	if (vu_ctrlr->cqs[0] != NULL) {
-		vu_ctrlr->cqs[0]->dbl_headp = vu_ctrlr->bar0_doorbells +
-					      queue_index(0, true);
-	}
-
-	vfio_user_ctrlr_switch_doorbells(vu_ctrlr, vu_ctrlr->sdbl != NULL);
-
-	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
-		sq = vu_ctrlr->sqs[i];
-		if (!sq || !sq->size) {
-			continue;
-		}
-
-		if (nvmf_qpair_is_admin_queue(&sq->qpair)) {
-			/* ADMIN queue pair is always in the poll group, just enable it */
-			sq->sq_state = VFIO_USER_SQ_ACTIVE;
-		} else {
-			spdk_nvmf_tgt_new_qpair(vu_ctrlr->transport->transport.tgt, &sq->qpair);
-		}
-	}
-}
-
-/*
- * We are in stop-and-copy state, but still potentially have some current dirty
- * sgls: while we're quiesced and thus should have no active requests, we still
- * have potentially dirty maps of the shadow doorbells and the CQs (SQs are
- * mapped read only).
- *
- * Since we won't be calling vfu_sgl_put() for them, we need to explicitly
- * mark them dirty now.
- */
-static void
-vfio_user_migr_ctrlr_mark_dirty(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
-
-	assert(vu_ctrlr->state == VFIO_USER_CTRLR_MIGRATING);
-
-	for (size_t i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
-		struct nvmf_vfio_user_cq *cq = vu_ctrlr->cqs[i];
-
-		if (cq == NULL || q_addr(&cq->mapping) == NULL) {
-			continue;
-		}
-
-		vfu_sgl_mark_dirty(endpoint->vfu_ctx, cq->mapping.sg, 1);
-	}
-
-	if (vu_ctrlr->sdbl != NULL) {
-		dma_sg_t *sg;
-		size_t i;
-
-		for (i = 0; i < NVMF_VFIO_USER_SHADOW_DOORBELLS_BUFFER_COUNT;
-		     ++i) {
-
-			if (!vu_ctrlr->sdbl->iovs[i].iov_len) {
-				continue;
-			}
-
-			sg = index_to_sg_t(vu_ctrlr->sdbl->sgs, i);
-
-			vfu_sgl_mark_dirty(endpoint->vfu_ctx, sg, 1);
-		}
-	}
-}
-
-static int
-vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t state)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
-	struct nvmf_vfio_user_sq *sq;
-	int ret = 0;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s controller state %u, migration state %u\n", endpoint_id(endpoint),
-		      vu_ctrlr->state, state);
-
-	switch (state) {
-	case VFU_MIGR_STATE_STOP_AND_COPY:
-		vu_ctrlr->in_source_vm = true;
-		vu_ctrlr->state = VFIO_USER_CTRLR_MIGRATING;
-		vfio_user_migr_ctrlr_mark_dirty(vu_ctrlr);
-		vfio_user_migr_ctrlr_save_data(vu_ctrlr);
-		break;
-	case VFU_MIGR_STATE_STOP:
-		vu_ctrlr->state = VFIO_USER_CTRLR_MIGRATING;
-		/* The controller associates with source VM is dead now, we will resume
-		 * the subsystem after destroying the controller data structure, then the
-		 * subsystem can be re-used for another new client.
-		 */
-		if (vu_ctrlr->in_source_vm) {
-			endpoint->need_resume = true;
-		}
-		break;
-	case VFU_MIGR_STATE_PRE_COPY:
-		assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSED);
-		break;
-	case VFU_MIGR_STATE_RESUME:
-		/*
-		 * Destination ADMIN queue pair is connected when starting the VM,
-		 * but the ADMIN queue pair isn't enabled in destination VM, the poll
-		 * group will do nothing to ADMIN queue pair for now.
-		 */
-		if (vu_ctrlr->state != VFIO_USER_CTRLR_RUNNING) {
-			break;
-		}
-
-		assert(!vu_ctrlr->in_source_vm);
-		vu_ctrlr->state = VFIO_USER_CTRLR_MIGRATING;
-
-		sq = TAILQ_FIRST(&vu_ctrlr->connected_sqs);
-		assert(sq != NULL);
-		assert(sq->qpair.qid == 0);
-		sq->sq_state = VFIO_USER_SQ_INACTIVE;
-
-		/* Free ADMIN SQ resources first, SQ resources will be
-		 * allocated based on queue size from source VM.
-		 */
-		free_sq_reqs(sq);
-		sq->size = 0;
-		break;
-	case VFU_MIGR_STATE_RUNNING:
-
-		if (vu_ctrlr->state != VFIO_USER_CTRLR_MIGRATING) {
-			break;
-		}
-
-		if (!vu_ctrlr->in_source_vm) {
-			/* Restore destination VM from BAR9 */
-			ret = vfio_user_migr_ctrlr_restore(vu_ctrlr);
-			if (ret) {
-				break;
-			}
-
-			vfio_user_ctrlr_switch_doorbells(vu_ctrlr, false);
-			vfio_user_migr_ctrlr_enable_sqs(vu_ctrlr);
-			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-			/* FIXME where do we resume nvmf? */
-		} else {
-			/* Rollback source VM */
-			vu_ctrlr->state = VFIO_USER_CTRLR_RESUMING;
-			ret = spdk_nvmf_subsystem_resume((struct spdk_nvmf_subsystem *)endpoint->subsystem,
-							 vfio_user_endpoint_resume_done, endpoint);
-			if (ret < 0) {
-				/* TODO: fail controller with CFS bit set */
-				vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
-				SPDK_ERRLOG("%s: failed to resume, ret=%d\n", endpoint_id(endpoint), ret);
-			}
-		}
-		vu_ctrlr->migr_data_prepared = false;
-		vu_ctrlr->in_source_vm = false;
-		break;
-
-	default:
-		return -EINVAL;
-	}
-
-	return ret;
-}
-
-static uint64_t
-vfio_user_migration_get_pending_bytes(vfu_ctx_t *vfu_ctx)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-	struct nvmf_vfio_user_ctrlr *ctrlr = endpoint->ctrlr;
-	uint64_t pending_bytes;
-
-	if (ctrlr->migr_data_prepared) {
-		assert(ctrlr->state == VFIO_USER_CTRLR_MIGRATING);
-		pending_bytes = 0;
-	} else {
-		pending_bytes = vfio_user_migr_data_len();
-	}
-
-	SPDK_DEBUGLOG(nvmf_vfio,
-		      "%s current state %u, pending bytes 0x%"PRIx64"\n",
-		      endpoint_id(endpoint), ctrlr->state, pending_bytes);
-
-	return pending_bytes;
-}
-
-static int
-vfio_user_migration_prepare_data(vfu_ctx_t *vfu_ctx, uint64_t *offset, uint64_t *size)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-	struct nvmf_vfio_user_ctrlr *ctrlr = endpoint->ctrlr;
-
-	/*
-	 * When transitioning to pre-copy state we set pending_bytes to 0,
-	 * so the vfio-user client shouldn't attempt to read any migration
-	 * data. This is not yet guaranteed by libvfio-user.
-	 */
-	if (ctrlr->state != VFIO_USER_CTRLR_MIGRATING) {
-		assert(size != NULL);
-		*offset = 0;
-		*size = 0;
-		return 0;
-	}
-
-	if (ctrlr->in_source_vm) { /* migration source */
-		assert(size != NULL);
-		*size = vfio_user_migr_data_len();
-		vfio_user_migr_ctrlr_save_data(ctrlr);
-	} else { /* migration destination */
-		assert(size == NULL);
-		assert(!ctrlr->migr_data_prepared);
-	}
-	*offset = 0;
-	ctrlr->migr_data_prepared = true;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s current state %u\n", endpoint_id(endpoint), ctrlr->state);
-
-	return 0;
-}
-
-static ssize_t
-vfio_user_migration_read_data(vfu_ctx_t *vfu_ctx __attribute__((unused)),
-			      void *buf __attribute__((unused)),
-			      uint64_t count __attribute__((unused)),
-			      uint64_t offset __attribute__((unused)))
-{
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: migration read data not supported\n",
-		      endpoint_id(vfu_get_private(vfu_ctx)));
-	errno = ENOTSUP;
-	return -1;
-}
-
-static ssize_t
-vfio_user_migration_write_data(vfu_ctx_t *vfu_ctx __attribute__((unused)),
-			       void *buf __attribute__((unused)),
-			       uint64_t count __attribute__((unused)),
-			       uint64_t offset __attribute__((unused)))
-{
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: migration write data not supported\n",
-		      endpoint_id(vfu_get_private(vfu_ctx)));
-	errno = ENOTSUP;
-	return -1;
-}
-
-static int
-vfio_user_migration_data_written(vfu_ctx_t *vfu_ctx __attribute__((unused)),
-				 uint64_t count)
-{
-	SPDK_DEBUGLOG(nvmf_vfio, "write 0x%"PRIx64"\n", (uint64_t)count);
-
-	if (count != vfio_user_migr_data_len()) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s bad count %#lx\n",
-			      endpoint_id(vfu_get_private(vfu_ctx)), count);
-		errno = EINVAL;
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 			struct nvmf_vfio_user_endpoint *endpoint)
 {
 	int ret;
 	ssize_t cap_offset;
 	vfu_ctx_t *vfu_ctx = endpoint->vfu_ctx;
-	struct iovec migr_sparse_mmap = {};
 
 	struct pmcap pmcap = { .hdr.id = PCI_CAP_ID_PM, .pmcs.nsfrst = 0x1 };
 	struct pxcap pxcap = {
@@ -4157,16 +3326,6 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 			.iov_base = (void *)NVME_DOORBELLS_OFFSET,
 			.iov_len = NVMF_VFIO_USER_DOORBELLS_SIZE,
 		},
-	};
-
-	const vfu_migration_callbacks_t migr_callbacks = {
-		.version = VFIO_USER_MIGR_CALLBACK_VERS,
-		.transition = &vfio_user_migration_device_state_transition,
-		.get_pending_bytes = &vfio_user_migration_get_pending_bytes,
-		.prepare_data = &vfio_user_migration_prepare_data,
-		.read_data = &vfio_user_migration_read_data,
-		.data_written = &vfio_user_migration_data_written,
-		.write_data = &vfio_user_migration_write_data
 	};
 
 	ret = vfu_pci_init(vfu_ctx, VFU_PCI_TYPE_EXPRESS, PCI_HEADER_TYPE_NORMAL, 0);
@@ -4261,24 +3420,6 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 	}
 
 	vfu_setup_device_quiesce_cb(vfu_ctx, vfio_user_dev_quiesce_cb);
-
-	migr_sparse_mmap.iov_base = (void *)PAGE_SIZE;
-	migr_sparse_mmap.iov_len = vfio_user_migr_data_len();
-	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_MIGR_REGION_IDX,
-			       vfu_get_migr_register_area_size() + vfio_user_migr_data_len(),
-			       NULL, VFU_REGION_FLAG_RW | VFU_REGION_FLAG_MEM, &migr_sparse_mmap,
-			       1, endpoint->migr_fd, 0);
-	if (ret < 0) {
-		SPDK_ERRLOG("vfu_ctx %p failed to setup migration region\n", vfu_ctx);
-		return ret;
-	}
-
-	ret = vfu_setup_device_migration_callbacks(vfu_ctx, &migr_callbacks,
-			vfu_get_migr_register_area_size());
-	if (ret < 0) {
-		SPDK_ERRLOG("vfu_ctx %p failed to setup migration callbacks\n", vfu_ctx);
-		return ret;
-	}
 
 	ret = vfu_realize_ctx(vfu_ctx);
 	if (ret < 0) {
@@ -4524,39 +3665,6 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 	endpoint->bar0_doorbells = (uint32_t *)(((unsigned long)endpoint->bar0) + NVME_DOORBELLS_OFFSET);
 
-	ret = snprintf(path, PATH_MAX, "%s/migr", endpoint_id(endpoint));
-	if (ret < 0 || ret >= PATH_MAX) {
-		SPDK_ERRLOG("%s: error to get migration file path: %s.\n", endpoint_id(endpoint),
-			    spdk_strerror(errno));
-		ret = -1;
-		goto out;
-	}
-	ret = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-	if (ret == -1) {
-		SPDK_ERRLOG("%s: failed to open device memory at %s: %s.\n",
-			    endpoint_id(endpoint), path, spdk_strerror(errno));
-		goto out;
-	}
-	unlink(path);
-
-	endpoint->migr_fd = ret;
-	ret = ftruncate(endpoint->migr_fd,
-			vfu_get_migr_register_area_size() + vfio_user_migr_data_len());
-	if (ret != 0) {
-		SPDK_ERRLOG("%s: error to ftruncate migration file %s: %s.\n", endpoint_id(endpoint), path,
-			    spdk_strerror(errno));
-		goto out;
-	}
-
-	endpoint->migr_data = mmap(NULL, vfio_user_migr_data_len(),
-				   PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->migr_fd, vfu_get_migr_register_area_size());
-	if (endpoint->migr_data == MAP_FAILED) {
-		SPDK_ERRLOG("%s: error to mmap file %s: %s.\n", endpoint_id(endpoint), path, spdk_strerror(errno));
-		endpoint->migr_data = NULL;
-		ret = -1;
-		goto out;
-	}
-
 	ret = snprintf(uuid, PATH_MAX, "%s/cntrl", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
 		SPDK_ERRLOG("%s: error to get ctrlr file path: %s\n", endpoint_id(endpoint), spdk_strerror(errno));
@@ -4714,14 +3822,6 @@ nvmf_vfio_user_accept(void *ctx)
 	vu_transport = endpoint->transport;
 
 	if (endpoint->ctrlr != NULL) {
-		return SPDK_POLLER_IDLE;
-	}
-
-	/* While we're here, the controller is already destroyed,
-	 * subsystem may still be in RESUMING state, we will wait
-	 * until the subsystem is in RUNNING state.
-	 */
-	if (endpoint->need_resume) {
 		return SPDK_POLLER_IDLE;
 	}
 
@@ -5413,14 +4513,6 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 	delete_sq_done(vu_ctrlr, sq);
 	if (TAILQ_EMPTY(&vu_ctrlr->connected_sqs)) {
 		endpoint->ctrlr = NULL;
-		if (vu_ctrlr->in_source_vm && endpoint->need_resume) {
-			/* The controller will be freed, we can resume the subsystem
-			 * now so that the endpoint can be ready to accept another
-			 * new connection.
-			 */
-			spdk_nvmf_subsystem_resume((struct spdk_nvmf_subsystem *)endpoint->subsystem,
-						   vfio_user_endpoint_resume_done, endpoint);
-		}
 		free_ctrlr(vu_ctrlr);
 	}
 	pthread_mutex_unlock(&endpoint->lock);
