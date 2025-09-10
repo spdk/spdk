@@ -3153,6 +3153,19 @@ nvmf_ns_reservation_remove_registrants_by_key(struct spdk_nvmf_ns *ns,
 	return count;
 }
 
+static void
+nvmf_ns_reservation_remove_other_registrants_by_key(struct spdk_nvmf_ns *ns,
+		uint64_t rkey, const struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *reg_tmp, *reg_tmp2;
+
+	TAILQ_FOREACH_SAFE(reg_tmp, &ns->registrants, link, reg_tmp2) {
+		if (reg_tmp->rkey == rkey && reg != reg_tmp) {
+			nvmf_ns_reservation_remove_registrant(ns, reg_tmp);
+		}
+	}
+}
+
 static uint32_t
 nvmf_ns_reservation_remove_all_other_registrants(struct spdk_nvmf_ns *ns,
 		struct spdk_nvmf_registrant *reg)
@@ -3454,7 +3467,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			}
 
 			if (ns->crkey == key.prkey) {
-				nvmf_ns_reservation_remove_registrant(ns, ns->holder);
+				nvmf_ns_reservation_remove_other_registrants_by_key(ns, key.prkey, reg);
 				nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
 				reservation_released = true;
 			} else if (key.prkey != 0) {

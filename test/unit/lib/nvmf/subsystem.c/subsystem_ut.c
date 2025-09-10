@@ -1020,6 +1020,18 @@ ut_reservation_build_registrants(void)
 	ut_reservation_free_req(req);
 }
 
+static size_t
+registrants_get_count(const struct spdk_nvmf_ns *ns)
+{
+	size_t count = 0;
+	struct spdk_nvmf_registrant *reg;
+
+	TAILQ_FOREACH(reg, &ns->registrants, link) {
+		count++;
+	}
+	return count;
+}
+
 static void
 test_reservation_register(void)
 {
@@ -1412,6 +1424,189 @@ test_reservation_acquire_preempt_unregister_others(enum spdk_nvme_reservation_ac
 }
 
 static void
+test_reservation_acquire_preempt_unregister_multi_same_key(enum spdk_nvme_reservation_acquire_action
+		preempt_type)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	struct spdk_nvmf_registrant *reg;
+	uint32_t gen;
+	bool is_abort = (preempt_type == SPDK_NVME_RESERVE_PREEMPT_ABORT);
+	uint64_t a_rkey = 0xDEADBEEF;
+	uint64_t b_rkey = 0xCAFEBEEF;
+
+	printf("Executing test: %s with acquire type: %d\n", __func__, preempt_type);
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	rsp = &req->rsp->nvme_cpl;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	/* Register 3 hosts, two sharing rkey but with separate hostids */
+	gen = g_ns.gen;
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+					      0, 0, 0, a_rkey);
+	/* ctrlr1_A */
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == a_rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 1);
+	/* ctrlr_B */
+	gen = g_ns.gen;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == a_rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 1);
+	/* ctrlr_C */
+	gen = g_ns.gen;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+					      0, 0, 0, b_rkey);
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_C, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_C.hostid);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == b_rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 1);
+
+	/* ctrlr1_A Acquire */
+	gen = g_ns.gen;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, a_rkey, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(g_ns.crkey == a_rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.holder == reg);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen == gen);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
+
+	/* ctrlr_C preempts A and removes all registrants (A & B) with a_key */
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	ut_reservation_build_acquire_request(req, preempt_type, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, b_rkey, a_rkey);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_C, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	/* Registration for C is maintained, A and B are unregistered */
+	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_C.hostid);
+	SPDK_CU_ASSERT_FATAL(reg != NULL);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(reg == NULL);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
+	SPDK_CU_ASSERT_FATAL(reg == NULL);
+	SPDK_CU_ASSERT_FATAL(g_ns.crkey == b_rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 2);
+	if (is_abort) {
+		/* A & B were preempeted */
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_cnt == 2);
+		SPDK_CU_ASSERT_FATAL(hostid_list_contains_id(g_ns.preempt_abort->hostids,
+				     g_ns.preempt_abort->hostids_cnt, &g_ctrlr1_A.hostid));
+		SPDK_CU_ASSERT_FATAL(hostid_list_contains_id(g_ns.preempt_abort->hostids,
+				     g_ns.preempt_abort->hostids_cnt, &g_ctrlr_B.hostid));
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_gen == 1);
+	} else {
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
+	}
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
+test_reservation_acquire_preempt_other_same_key(enum spdk_nvme_reservation_acquire_action
+		preempt_type)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	struct spdk_nvmf_registrant *reg;
+	uint32_t gen;
+	bool is_abort = (preempt_type == SPDK_NVME_RESERVE_PREEMPT_ABORT);
+	uint64_t rkey = 0xDEADBEEF;
+
+	printf("Executing test: %s with acquire type: %d\n", __func__, preempt_type);
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	rsp = &req->rsp->nvme_cpl;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	/* Register 2 hosts sharing rkey but with separate hostids */
+	gen = g_ns.gen;
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
+					      0, 0, 0, rkey);
+	/* ctrlr1_A */
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 1);
+	/* ctrlr_B */
+	gen = g_ns.gen;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 1);
+
+	/* ctrlr1_A Acquire */
+	gen = g_ns.gen;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, rkey, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(g_ns.crkey == rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.holder == reg);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen == gen);
+	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
+
+	/* ctrlr_B preempts A (crkey == prkey) and removes A */
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	ut_reservation_build_acquire_request(req, preempt_type, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, rkey, rkey);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	/* Registration for B is maintained, A is unregistered */
+	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
+	SPDK_CU_ASSERT_FATAL(reg != NULL);
+	/* B is now reservation holder */
+	SPDK_CU_ASSERT_FATAL(g_ns.holder == reg);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(reg == NULL);
+	SPDK_CU_ASSERT_FATAL(g_ns.crkey == rkey);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	SPDK_CU_ASSERT_FATAL(g_ns.gen - gen == 1);
+	if (is_abort) {
+		/* A was preempeted */
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_cnt == 1);
+		SPDK_CU_ASSERT_FATAL(hostid_list_contains_id(g_ns.preempt_abort->hostids,
+				     g_ns.preempt_abort->hostids_cnt, &g_ctrlr1_A.hostid));
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort->hostids_gen == 1);
+	} else {
+		SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort == NULL);
+	}
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
 test_reservation_acquire_preempt_self(enum spdk_nvme_reservation_acquire_action preempt_type)
 {
 	struct spdk_nvmf_request *req;
@@ -1532,6 +1727,10 @@ test_reservation_acquire_preempt(void)
 	test_reservation_acquire_preempt_self(SPDK_NVME_RESERVE_PREEMPT_ABORT);
 	test_reservation_acquire_preempt_unregister_others(SPDK_NVME_RESERVE_PREEMPT);
 	test_reservation_acquire_preempt_unregister_others(SPDK_NVME_RESERVE_PREEMPT_ABORT);
+	test_reservation_acquire_preempt_unregister_multi_same_key(SPDK_NVME_RESERVE_PREEMPT);
+	test_reservation_acquire_preempt_unregister_multi_same_key(SPDK_NVME_RESERVE_PREEMPT_ABORT);
+	test_reservation_acquire_preempt_other_same_key(SPDK_NVME_RESERVE_PREEMPT);
+	test_reservation_acquire_preempt_other_same_key(SPDK_NVME_RESERVE_PREEMPT_ABORT);
 }
 
 static void
@@ -1980,18 +2179,6 @@ nvmf_tgt_reservation_destroy_poll_group(void *io_device, void *ctx_buf)
 	sgroup = &pg->sgroups[g_subsystem.id];
 	free(sgroup->ns_info);
 	free(pg->sgroups);
-}
-
-static size_t
-registrants_get_count(const struct spdk_nvmf_ns *ns)
-{
-	size_t count = 0;
-	struct spdk_nvmf_registrant *reg;
-
-	TAILQ_FOREACH(reg, &ns->registrants, link) {
-		count++;
-	}
-	return count;
 }
 
 static size_t
