@@ -126,7 +126,7 @@ for ((i = 0; i < io_paths_nr; i++)); do
 	$tgt_rpc nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$((NVMF_PORT + i))"
 done
 
-"${SPDK_APP[@]}" -m 0x2 "${NO_HUGE[@]}" &
+"${SPDK_APP[@]}" -m 0x2 &
 spdk_app_pid=$!
 trap 'killprocess $spdk_app_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten "$spdk_app_pid"
