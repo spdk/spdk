@@ -1347,6 +1347,20 @@ function fio_nvme() {
 	fio_plugin "$rootdir/build/fio/spdk_nvme" "$@"
 }
 
+function run_app() {
+	local app="$1"
+	valid_exec_arg "$app" || return 1
+	shift
+	"$app" "${NO_HUGE[@]}" "$@"
+}
+
+function run_app_bg() {
+	local app="$1"
+	valid_exec_arg "$app" || return 1
+	shift
+	"$app" "${NO_HUGE[@]}" "$@" &
+}
+
 function get_lvs_free_mb() {
 	local lvs_uuid=$1
 	local lvs_info
