@@ -3644,6 +3644,31 @@ nvmf_qpair_abort_pending_zcopy_reqs(struct spdk_nvmf_qpair *qpair)
 	}
 }
 
+static bool
+nvmf_qpair_cid_is_reservation(const struct spdk_nvmf_qpair *qpair, uint16_t cid)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	TAILQ_FOREACH(req, &qpair->outstanding, link) {
+		cmd = &req->cmd->nvme_cmd;
+
+		if (cmd->cid != cid) {
+			continue;
+		}
+		switch (cmd->opc) {
+		case SPDK_NVME_OPC_RESERVATION_REGISTER:
+		case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		case SPDK_NVME_OPC_RESERVATION_REPORT:
+			return true;
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
 static void
 nvmf_qpair_abort_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req)
 {
@@ -3654,6 +3679,13 @@ nvmf_qpair_abort_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request
 			      qpair->ctrlr, qpair->qid, cid);
 		req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command successfully aborted */
 
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+	if (nvmf_qpair_cid_is_reservation(qpair, cid)) {
+		/* We don't support aborting reservation requests, leave completion as not-aborted */
+		SPDK_DEBUGLOG(nvmf, "abort ctrlr=%p sqid=%u cid=%u for reservation not supported\n",
+			      qpair->ctrlr, qpair->qid, cid);
 		spdk_nvmf_request_complete(req);
 		return;
 	}

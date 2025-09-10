@@ -3640,6 +3640,52 @@ test_nvmf_check_qpair_active(void)
 	}
 }
 
+static void
+test_nvmf_qpair_cid_is_reservation(void)
+{
+	struct spdk_nvmf_qpair qpair = { .outstanding = TAILQ_HEAD_INITIALIZER(qpair.outstanding) };
+	enum {
+		NUM_REQS_READS = 2,
+		NUM_REQS_RESERVATIONS = 4,
+		TOTAL_REQS = NUM_REQS_READS + NUM_REQS_RESERVATIONS,
+	};
+	struct spdk_nvmf_request reqs[TOTAL_REQS] = {};
+	union nvmf_h2c_msg cmd[TOTAL_REQS] = {};
+	enum spdk_nvme_nvm_opcode reservation_ops[NUM_REQS_RESERVATIONS] = {
+		SPDK_NVME_OPC_RESERVATION_REGISTER,
+		SPDK_NVME_OPC_RESERVATION_REPORT,
+		SPDK_NVME_OPC_RESERVATION_ACQUIRE,
+		SPDK_NVME_OPC_RESERVATION_RELEASE
+	};
+	size_t i;
+	for (i = 0; i < NUM_REQS_READS; i++) {
+		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_READ;
+		cmd[i].nvme_cmd.cid = i;
+
+		reqs[i].qpair = &qpair;
+		reqs[i].cmd = &cmd[i];
+		TAILQ_INSERT_TAIL(&qpair.outstanding, &reqs[i], link);
+	}
+	for (; i < TOTAL_REQS; i++) {
+		cmd[i].nvme_cmd.opc = reservation_ops[i - NUM_REQS_READS];
+		cmd[i].nvme_cmd.cid = i;
+
+		reqs[i].qpair = &qpair;
+		reqs[i].cmd = &cmd[i];
+		TAILQ_INSERT_TAIL(&qpair.outstanding, &reqs[i], link);
+	}
+	/* None of the reads should be considered reservation */
+	for (i = 0; i < NUM_REQS_READS; i++) {
+		SPDK_CU_ASSERT_FATAL(nvmf_qpair_cid_is_reservation(&qpair, i) == false);
+	}
+	/* Validate each reservation type is flagged */
+	for (; i < TOTAL_REQS; i++) {
+		SPDK_CU_ASSERT_FATAL(nvmf_qpair_cid_is_reservation(&qpair, i) == true);
+	}
+	/* Non-existent cid */
+	SPDK_CU_ASSERT_FATAL(nvmf_qpair_cid_is_reservation(&qpair, i * 2) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3682,6 +3728,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_set_features_host_behavior_support);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_ns_attachment);
 	CU_ADD_TEST(suite, test_nvmf_check_qpair_active);
+	CU_ADD_TEST(suite, test_nvmf_qpair_cid_is_reservation);
 
 	allocate_threads(1);
 	set_thread(0);
