@@ -823,17 +823,18 @@ static void
 test_nvme_tcp_qpair_set_recv_state(void)
 {
 	struct nvme_tcp_ctrlr tctrlr = {};
-	struct nvme_tcp_qpair tqpair = {.qpair = {.ctrlr = &tctrlr.ctrlr}};
+	struct nvme_tcp_qpair _tqpair = {.qpair = {.ctrlr = &tctrlr.ctrlr}};
+	struct nvme_tcp_qpair *tqpair = &_tqpair;
 
 	/* case1: The recv state of tqpair is same with the state to be set */
-	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
-	nvme_tcp_qpair_set_recv_state(&tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	tqpair->recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
 
 	/* Different state will be set accordingly */
-	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY;
-	nvme_tcp_qpair_set_recv_state(&tqpair, 0xff);
-	CU_ASSERT(tqpair.recv_state == 0xff);
+	tqpair->recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY;
+	nvme_tcp_qpair_set_recv_state(tqpair, 0xff);
+	CU_ASSERT(tqpair->recv_state == 0xff);
 }
 
 static void

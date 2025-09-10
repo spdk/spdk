@@ -36,7 +36,7 @@
 #define NVME_TCP_MAX_R2T_DEFAULT		1
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
 
-#define NVME_TQPAIR_ERRLOG(tqpair, format, ...) NVME_QPAIR_ERRLOG((tqpair) ? &(tqpair)->qpair : NULL, "[%s] " format, (tqpair) ? nvme_tcp_qpair_state_string((tqpair)->state) : "", ##__VA_ARGS__)
+#define NVME_TQPAIR_ERRLOG(tqpair, format, ...) NVME_QPAIR_ERRLOG((tqpair) ? &(tqpair)->qpair : NULL, "[%s,%s] " format, (tqpair) ? nvme_tcp_qpair_state_string((tqpair)->state) : "", (tqpair) ? nvme_tcp_pdu_recv_state_string((tqpair)->recv_state) : "", ##__VA_ARGS__)
 #define NVME_TQPAIR_WARNLOG(tqpair, format, ...) NVME_QPAIR_WARNLOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
 #define NVME_TQPAIR_NOTICELOG(tqpair, format, ...) NVME_QPAIR_NOTICELOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
 #define NVME_TQPAIR_INFOLOG(tqpair, format, ...) NVME_QPAIR_INFOLOG((tqpair) ? &(tqpair)->qpair : NULL, format, ##__VA_ARGS__)
@@ -220,6 +220,31 @@ nvme_tcp_qpair_state_string(enum nvme_tcp_qpair_state state)
 	}
 }
 
+static inline const char *
+nvme_tcp_pdu_recv_state_string(enum nvme_tcp_pdu_recv_state state)
+{
+	switch (state) {
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
+		return "AWAIT_PDU_READY";
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
+		return "AWAIT_PDU_CH";
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
+		return "AWAIT_PDU_PSH";
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_REQ:
+		return "AWAIT_REQ";
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_BUF:
+		return "AWAIT_PDU_BUF";
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
+		return "AWAIT_PDU_PAYLOAD";
+	case NVME_TCP_PDU_RECV_STATE_QUIESCING:
+		return "QUIESCING";
+	case NVME_TCP_PDU_RECV_STATE_ERROR:
+		return "ERROR";
+	default:
+		return "UNKNOWN";
+	}
+}
+
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
 {
@@ -360,21 +385,18 @@ fail:
 	return -ENOMEM;
 }
 
-static inline void
-nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
-			      enum nvme_tcp_pdu_recv_state state)
-{
-	if (tqpair->recv_state == state) {
-		NVME_TQPAIR_ERRLOG(tqpair, "The recv state is same with the state(%d) to be set\n", state);
-		return;
-	}
 
-	if (state == NVME_TCP_PDU_RECV_STATE_ERROR) {
-		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
-	}
-
-	tqpair->recv_state = state;
-}
+#define nvme_tcp_qpair_set_recv_state(qpair, state) do { \
+	if ((qpair)->recv_state == (state)) { \
+		NVME_TQPAIR_ERRLOG(qpair, "The recv state %s is same with the state to be set\n", nvme_tcp_pdu_recv_state_string((state))); \
+	} else { \
+		if ((state) == NVME_TCP_PDU_RECV_STATE_ERROR) { \
+			assert(TAILQ_EMPTY(&(qpair)->outstanding_reqs)); \
+		} \
+		NVME_TQPAIR_DEBUGLOG((qpair), "setting pdu recv state to %s\n", nvme_tcp_pdu_recv_state_string((state))); \
+		(qpair)->recv_state = (state); \
+	} \
+} while (0)
 
 static void nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 static int nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
