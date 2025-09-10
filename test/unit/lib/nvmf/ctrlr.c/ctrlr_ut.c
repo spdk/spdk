@@ -2754,7 +2754,7 @@ test_nvmf_ctrlr_create_destruct(void)
 	CU_ASSERT(ctrlr->vcprop.cap.bits.mpsmin == 0);
 	CU_ASSERT(ctrlr->vcprop.cap.bits.mpsmax == 0);
 	CU_ASSERT(ctrlr->vcprop.vs.bits.mjr == 1);
-	CU_ASSERT(ctrlr->vcprop.vs.bits.mnr == 3);
+	CU_ASSERT(ctrlr->vcprop.vs.bits.mnr == 4);
 	CU_ASSERT(ctrlr->vcprop.vs.bits.ter == 0);
 	CU_ASSERT(ctrlr->vcprop.cc.raw == 0);
 	CU_ASSERT(ctrlr->vcprop.cc.bits.en == 0);
