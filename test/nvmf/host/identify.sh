@@ -36,20 +36,18 @@ $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_
 
 $rpc_py nvmf_get_subsystems
 
-$SPDK_BIN_DIR/spdk_nvme_identify -r "\
+run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2014-08.org.nvmexpress.discovery" -L all \
-	"${NO_HUGE[@]}"
-$SPDK_BIN_DIR/spdk_nvme_identify -r "\
+        subnqn:nqn.2014-08.org.nvmexpress.discovery" -L all
+run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" -L all \
-	"${NO_HUGE[@]}"
+        subnqn:nqn.2016-06.io.spdk:cnode1" -L all
 sync
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
