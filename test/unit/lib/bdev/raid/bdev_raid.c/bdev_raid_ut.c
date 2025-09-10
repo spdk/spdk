@@ -75,20 +75,20 @@ ut_raid_start(struct raid_bdev *raid_bdev)
 }
 
 static void
-ut_raid_submit_rw_request_defered_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+ut_raid_submit_request_defered_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct raid_bdev_io *raid_io = cb_arg;
 
 	raid_bdev_io_complete(raid_io, success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
 }
 
-static void
-ut_raid_submit_rw_request(struct raid_bdev_io *raid_io)
+static inline void
+ut_raid_submit_request(struct raid_bdev_io *raid_io)
 {
 	if (g_bdev_io_defer_completion) {
 		struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 
-		bdev_io->internal.cb = ut_raid_submit_rw_request_defered_cb;
+		bdev_io->internal.cb = ut_raid_submit_request_defered_cb;
 		bdev_io->internal.caller_ctx = raid_io;
 		TAILQ_INSERT_TAIL(&g_deferred_ios, bdev_io, internal.link);
 		return;
@@ -98,10 +98,15 @@ ut_raid_submit_rw_request(struct raid_bdev_io *raid_io)
 }
 
 static void
+ut_raid_submit_rw_request(struct raid_bdev_io *raid_io)
+{
+	ut_raid_submit_request(raid_io);
+}
+
+static void
 ut_raid_submit_null_payload_request(struct raid_bdev_io *raid_io)
 {
-	raid_bdev_io_complete(raid_io,
-			      g_child_io_status_flag ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	ut_raid_submit_request(raid_io);
 }
 
 static void
@@ -1734,6 +1739,31 @@ test_raid_io_split(void)
 	    !spdk_bdev_is_md_interleaved(&pbdev->bdev)) {
 		CU_ASSERT(raid_io->md_buf == bdev_io->u.bdev.md_buf);
 	}
+
+	CU_ASSERT(g_io_comp_status == g_child_io_status_flag);
+
+	bdev_io_cleanup(bdev_io);
+
+	/* test split of unmap io */
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	_bdev_io_initialize(bdev_io, ch, &pbdev->bdev, 0, g_strip_size, SPDK_BDEV_IO_TYPE_UNMAP, 0,
+			    0);
+
+	split_offset = 1;
+	raid_ch->process.offset = split_offset;
+	raid_bdev_submit_request(ch, bdev_io);
+	CU_ASSERT(raid_io->num_blocks == g_strip_size - split_offset);
+	CU_ASSERT(raid_io->offset_blocks == split_offset);
+
+	complete_deferred_ios();
+	CU_ASSERT(raid_io->num_blocks == split_offset);
+	CU_ASSERT(raid_io->offset_blocks == 0);
+
+	complete_deferred_ios();
+	CU_ASSERT(raid_io->num_blocks == g_strip_size);
+	CU_ASSERT(raid_io->offset_blocks == 0);
 
 	CU_ASSERT(g_io_comp_status == g_child_io_status_flag);
 

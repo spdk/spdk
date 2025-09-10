@@ -636,7 +636,21 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 				raid_io->base_bdev_io_submitted = 0;
 				raid_io->raid_ch = raid_io->raid_ch->process.ch_processed;
 
-				raid_io->raid_bdev->module->submit_rw_request(raid_io);
+				switch (bdev_io->type) {
+				case SPDK_BDEV_IO_TYPE_READ:
+				case SPDK_BDEV_IO_TYPE_WRITE:
+					raid_io->raid_bdev->module->submit_rw_request(raid_io);
+					break;
+
+				case SPDK_BDEV_IO_TYPE_FLUSH:
+				case SPDK_BDEV_IO_TYPE_UNMAP:
+					raid_io->raid_bdev->module->submit_null_payload_request(raid_io);
+					break;
+				default:
+					SPDK_ERRLOG("io type %u should not happen split\n", bdev_io->type);
+					raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+					break;
+				}
 				return;
 			}
 		}
@@ -838,8 +852,8 @@ raid_bdev_io_split(struct raid_bdev_io *raid_io, uint64_t split_offset)
 	}
 }
 
-static void
-raid_bdev_submit_rw_request(struct raid_bdev_io *raid_io)
+static inline void
+_raid_bdev_request_split(struct raid_bdev_io *raid_io)
 {
 	struct raid_bdev_io_channel *raid_ch = raid_io->raid_ch;
 
@@ -867,8 +881,20 @@ raid_bdev_submit_rw_request(struct raid_bdev_io *raid_io)
 			raid_io->raid_ch = raid_ch->process.ch_processed;
 		}
 	}
+}
 
+static void
+raid_bdev_submit_rw_request(struct raid_bdev_io *raid_io)
+{
+	_raid_bdev_request_split(raid_io);
 	raid_io->raid_bdev->module->submit_rw_request(raid_io);
+}
+
+static void
+raid_bdev_submit_null_payload_request(struct raid_bdev_io *raid_io)
+{
+	_raid_bdev_request_split(raid_io);
+	raid_io->raid_bdev->module->submit_null_payload_request(raid_io);
 }
 
 /*
@@ -965,12 +991,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		if (raid_io->raid_bdev->process != NULL) {
-			/* TODO: rebuild support */
-			raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
-			return;
-		}
-		raid_io->raid_bdev->module->submit_null_payload_request(raid_io);
+		raid_bdev_submit_null_payload_request(raid_io);
 		break;
 
 	default:
