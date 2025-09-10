@@ -27,10 +27,10 @@ function aer_vfio_user() {
 	AER_TOUCH_FILE=/tmp/aer_touch_file
 
 	# Namespace Attribute Notice Tests
-	$rootdir/test/nvme/aer/aer -r "\
+	run_app_bg "$rootdir/test/nvme/aer/aer" -r "\
 		trtype:$TEST_TRANSPORT \
 		traddr:$traddr \
-		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE "${NO_HUGE[@]}" &
+		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE
 	aerpid=$!
 
 	# Waiting for aer start to work

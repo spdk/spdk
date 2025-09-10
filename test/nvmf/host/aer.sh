@@ -24,13 +24,12 @@ AER_TOUCH_FILE=/tmp/aer_touch_file
 rm -f $AER_TOUCH_FILE
 
 # Namespace Attribute Notice Tests
-$rootdir/test/nvme/aer/aer -r "\
+run_app_bg "$rootdir/test/nvme/aer/aer" -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 -t $AER_TOUCH_FILE \
-	"${NO_HUGE[@]}" &
+        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 -t $AER_TOUCH_FILE
 aerpid=$!
 
 # Waiting for aer start to work
