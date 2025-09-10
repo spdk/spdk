@@ -75,7 +75,7 @@ hello_sock_usage(void)
 	printf(" -H host_addr  host address\n");
 	printf(" -I psk_id     Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)\n");
 	printf(" -P port       port number\n");
-	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N uring\n");
+	printf(" -N sock_impl  socket implementation: posix, ssl, uring (default: posix)\n");
 	printf(" -S            start in server mode\n");
 	printf(" -T tls_ver    TLS version, e.g., -T 12 or -T 13. If omitted, auto-negotiation will take place\n");
 	printf(" -k            disable KTLS for the given sock implementation (default)\n");
