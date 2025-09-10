@@ -220,6 +220,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 			spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
 		}
 
+		spdk_json_write_named_bool(w, "passthrough", subsystem->passthrough);
+
 		spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
 		spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
 
