@@ -435,6 +435,7 @@ create_recv(struct spdk_nvmf_rdma_qpair *rqpair, enum spdk_nvme_nvm_opcode opc)
 
 	rdma_recv = calloc(1, sizeof(*rdma_recv));
 	rdma_recv->qpair = rqpair;
+	rdma_recv->buf = (void *)0xDDDD;
 	cmd = calloc(1, sizeof(*cmd));
 	rdma_recv->sgl[0].addr = (uintptr_t)cmd;
 	cmd->nvme_cmd.opc = opc;
@@ -464,6 +465,7 @@ create_req(struct spdk_nvmf_rdma_qpair *rqpair,
 
 	rdma_req = calloc(1, sizeof(*rdma_req));
 	rdma_req->recv = rdma_recv;
+	rdma_req->recv->buf = (void *)0xDDDD;
 	rdma_req->req.qpair = &rqpair->qpair;
 	rdma_req->state = RDMA_REQUEST_STATE_NEW;
 	rdma_req->data.wr.wr_id = (uintptr_t)&rdma_req->data_wr;

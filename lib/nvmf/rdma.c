@@ -1887,6 +1887,9 @@ nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
 	req->data_from_pool = false;
 	req->length = sgl->unkeyed.length;
 
+	assert(rdma_req->recv != NULL);
+	assert(rdma_req->recv->buf != NULL);
+
 	req->iov[0].iov_base = rdma_req->recv->buf + offset;
 	req->iov[0].iov_len = req->length;
 	req->iovcnt = 1;
