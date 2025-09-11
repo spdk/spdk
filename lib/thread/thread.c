@@ -1546,7 +1546,8 @@ period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool 
 		if (poller->next_run_tick == 0) {
 			poller->next_run_tick = now_tick + poller->period_ticks;
 		} else if (poller->next_run_tick < now_tick) {
-			poller->next_run_tick = now_tick;
+			/* Set next_run_tick to now + 1us to make sure new_tv.it_value is never zeroed */
+			poller->next_run_tick = now_tick + ticks / SPDK_SEC_TO_USEC;
 		}
 
 		new_tv.it_value.tv_sec = (poller->next_run_tick - now_tick) / ticks;
