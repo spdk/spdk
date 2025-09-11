@@ -8,6 +8,13 @@ pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
 	libutil-linux libiscsi python ncurses json-c cmocka ninja meson fuse3
 # Additional dependencies for SPDK CLI
 pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
+
+# per PEP668 work inside virtual env
+virtdir=${PIP_VIRTDIR:-/var/spdk/dependencies/pip}
+python3 -m venv --upgrade-deps --system-site-packages "$virtdir"
+source "$virtdir/bin/activate"
+
+# install python packages
 pip install configshell_fb
 pip install pyelftools
 pip install ijson
