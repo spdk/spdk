@@ -59,14 +59,16 @@ nvme_fabric_prop_set_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	if (nvme_wait_for_adminq_completion(ctrlr, status)) {
-		if (!status->timed_out) {
-			free(status);
-		}
-		NVME_CTRLR_ERRLOG(ctrlr, "Property Set failed\n");
+	rc = nvme_wait_for_adminq_completion(ctrlr, status);
+	if (!status->timed_out) {
+		free(status);
+	}
+
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_fabric_prop_set_cmd offset=%x, size=%u failed: rc=%s\n",
+				  offset, size, spdk_strerror(abs(rc)));
 		return -1;
 	}
-	free(status);
 
 	return 0;
 }
@@ -130,7 +132,7 @@ nvme_fabric_prop_get_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t offset, uint8_t size, uint64_t *value)
 {
 	struct nvme_completion_poll_status *status;
-	struct spdk_nvmf_fabric_prop_get_rsp *response;
+	struct spdk_nvmf_fabric_prop_get_rsp response;
 	int rc;
 
 	status = calloc(1, sizeof(*status));
@@ -145,23 +147,23 @@ nvme_fabric_prop_get_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	if (nvme_wait_for_adminq_completion(ctrlr, status)) {
-		if (!status->timed_out) {
-			free(status);
-		}
-		NVME_CTRLR_ERRLOG(ctrlr, "Property Get failed, offset %x, size %u\n", offset, size);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status);
+	response = *(struct spdk_nvmf_fabric_prop_get_rsp *)&status->cpl;
+	if (!status->timed_out) {
+		free(status);
+	}
+
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_fabric_prop_get_cmd offset=%x, size=%u failed: rc=%s\n",
+				  offset, size, spdk_strerror(abs(rc)));
 		return -1;
 	}
 
-	response = (struct spdk_nvmf_fabric_prop_get_rsp *)&status->cpl;
-
 	if (size == SPDK_NVMF_PROP_SIZE_4) {
-		*value = response->value.u32.low;
+		*value = response.value.u32.low;
 	} else {
-		*value = response->value.u64;
+		*value = response.value.u64;
 	}
-
-	free(status);
 
 	return 0;
 }
@@ -364,13 +366,15 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	if (nvme_wait_for_adminq_completion(ctrlr, status)) {
-		if (!status->timed_out) {
-			free(status);
-		}
+	rc = nvme_wait_for_adminq_completion(ctrlr, status);
+	if (!status->timed_out) {
+		free(status);
+	}
+
+	if (rc) {
+		SPDK_ERRLOG("wait for spdk_nvme_ctrlr_cmd_get_log_page failed: rc=%s\n", spdk_strerror(abs(rc)));
 		return -1;
 	}
-	free(status);
 
 	return 0;
 }
@@ -425,16 +429,17 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return rc;
 	}
 
-	if (nvme_wait_for_adminq_completion(discovery_ctrlr, status)) {
-		NVME_CTRLR_ERRLOG(discovery_ctrlr, "nvme_identify_controller failed!\n");
-		nvme_ctrlr_destruct(discovery_ctrlr);
-		if (!status->timed_out) {
-			free(status);
-		}
-		return -ENXIO;
+	rc = nvme_wait_for_adminq_completion(discovery_ctrlr, status);
+	if (!status->timed_out) {
+		free(status);
 	}
 
-	free(status);
+	if (rc) {
+		NVME_CTRLR_ERRLOG(discovery_ctrlr, "wait for nvme_identify_controller failed: rc=%s\n",
+				  spdk_strerror(abs(rc)));
+		nvme_ctrlr_destruct(discovery_ctrlr);
+		return rc;
+	}
 
 	/* Direct attach through spdk_nvme_connect() API */
 	if (direct_connect == true) {

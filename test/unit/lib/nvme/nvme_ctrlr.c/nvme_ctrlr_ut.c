@@ -2107,7 +2107,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	ctrlr.min_page_size = 5;
 	payload = &point_payload;
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
-	CU_ASSERT(ret == -ENXIO);
+	CU_ASSERT(ret == -EIO);
 
 	/* Check firmware image download and set status.cpl value is 0 */
 	set_status_cpl = 0;
@@ -2125,7 +2125,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	ctrlr.min_page_size = 5;
 	payload = &point_payload;
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
-	CU_ASSERT(ret == -ENXIO);
+	CU_ASSERT(ret == -EIO);
 
 	/* Set size check firmware download and firmware commit */
 	ctrlr.is_resetting = true;
@@ -2140,7 +2140,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	/* nvme_wait_for_completion returns an error */
 	g_wait_for_completion_return_val = -1;
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
-	CU_ASSERT(ret == -ENXIO);
+	CU_ASSERT(ret == -EPERM);
 	CU_ASSERT(g_failed_status != NULL);
 	CU_ASSERT(g_failed_status->timed_out == true);
 	/* status should be freed by callback, which is not triggered in test env.

@@ -29,6 +29,7 @@
 #include "spdk/tree.h"
 #include "spdk/uuid.h"
 #include "spdk/fd_group.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk/log.h"
