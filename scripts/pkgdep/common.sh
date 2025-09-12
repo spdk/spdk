@@ -260,6 +260,8 @@ if [[ $INSTALL_DEV_TOOLS == true ]]; then
 	install_shfmt
 	install_spdk_bash_completion
 	if [[ $ID != centos && $ID != rocky && $ID != sles ]]; then
+		# The gem mdl 0.11.0 depends on mixlib-shellout, which requires Ruby ≥ 3.0. While 20.04.6 LTS (Focal Fossa) has Ruby 2.7.0.
+		[[ $ID == ubuntu && $VERSION_CODENAME == focal ]] && gem install mixlib-shellout -v 3.3.8
 		install_markdownlint
 	else
 		echo "mdl not supported on $ID, disabling"
