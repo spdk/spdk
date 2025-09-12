@@ -52,8 +52,14 @@ enum spdk_nvmf_tgt_discovery_filter {
 	/** Only log listeners with the same transport address on which the DISCOVERY command was received */
 	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS = 1u << 1u,
 	/** Only log listeners with the same transport svcid on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID = 1u << 2u
+	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID = 1u << 2u,
+	/** Check with custom discovery filter */
+	SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM = 1u << 3u
 };
+
+typedef bool (*spdk_nvmf_custom_discovery_filter)(
+	const struct spdk_nvme_transport_id *listener_trid,
+	const struct spdk_nvme_transport_id *discovery_cmd_source_trid);
 
 struct spdk_nvmf_target_opts {
 	size_t		size;
@@ -219,6 +225,15 @@ int spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 int spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 				  const struct spdk_nvmf_referral_opts *opts);
 
+/**
+ * Set a custom discovery filter.
+ *
+ * For this to take effect, the target must be created with the
+ * SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM flag set in the discovery_filter field.
+ *
+ * \param filter The custom discovery filter to set.
+ */
+void spdk_nvmf_set_custom_discovery_filter(spdk_nvmf_custom_discovery_filter filter);
 
 /**
  * Construct an NVMe-oF target.

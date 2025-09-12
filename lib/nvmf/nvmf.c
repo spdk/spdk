@@ -24,6 +24,8 @@ SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 static TAILQ_HEAD(, spdk_nvmf_tgt) g_nvmf_tgts = TAILQ_HEAD_INITIALIZER(g_nvmf_tgts);
 
+static spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
+
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
 
 /* supplied to a single call to nvmf_qpair_disconnect */
@@ -328,6 +330,12 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 	_nvmf_tgt_disconnect_qpairs(ctx);
 }
 
+void
+spdk_nvmf_set_custom_discovery_filter(spdk_nvmf_custom_discovery_filter filter)
+{
+	g_custom_discovery_filter = filter;
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 {
@@ -348,6 +356,12 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 			SPDK_ERRLOG("Provided target name must be unique.\n");
 			return NULL;
 		}
+	}
+
+	if ((opts.discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM) &&
+	    !g_custom_discovery_filter) {
+		SPDK_ERRLOG("Custom discovery filter callback is NULL.\n");
+		return NULL;
 	}
 
 	tgt = calloc(1, sizeof(*tgt));

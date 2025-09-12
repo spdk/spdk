@@ -10,6 +10,11 @@ Added new public API: `spdk_app_setup_trace()` to set up SPDK tracing for applic
 
 Deprecate some boolean python cli arguments to use new modern argparse format instead.
 
+### nvmf
+
+Introduced the API 'spdk_nvmf_set_custom_discovery_filter' to set up custom discovery
+filter.
+
 ## v25.09
 
 ### bdev
