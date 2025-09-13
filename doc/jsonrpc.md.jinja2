@@ -445,6 +445,7 @@ Example response:
     "accel_error_inject_error",
     "ioat_scan_accel_module",
     "dsa_scan_accel_module",
+    "cuda_scan_accel_module",
     "dpdk_cryptodev_scan_accel_module",
     "dpdk_cryptodev_set_driver",
     "dpdk_cryptodev_get_driver",
@@ -2236,6 +2237,36 @@ Example request:
 {
   "jsonrpc": "2.0",
   "method": "ioat_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### cuda_scan_accel_module {#rpc_cuda_scan_accel_module}
+
+Enable cuda accel module offload.
+
+#### Parameters
+
+{{ cuda_scan_accel_module_params }}
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "cuda_scan_accel_module",
   "id": 1
 }
 ~~~

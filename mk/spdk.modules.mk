@@ -105,6 +105,10 @@ ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 ACCEL_MODULES_LIST += accel_mlx5
 endif
 
+ifeq ($(CONFIG_CUDA),y)
+ACCEL_MODULES_LIST += accel_cuda
+endif
+
 SCHEDULER_MODULES_LIST = scheduler_dynamic
 ifeq (y,$(DPDK_POWER))
 SCHEDULER_MODULES_LIST += env_dpdk scheduler_dpdk_governor scheduler_gscheduler

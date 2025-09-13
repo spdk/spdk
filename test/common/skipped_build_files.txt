@@ -30,6 +30,12 @@ module/accel/iaa/accel_iaa_rpc
 test/unit/lib/idxd/idxd.c/idxd_ut
 test/unit/lib/idxd/idxd_user.c/idxd_user_ut
 
+# spdk-ci on GH runners is not configured for cuda
+module/accel/cuda/accel_cuda
+module/accel/cuda/accel_cuda_kern.cu
+module/accel/cuda/accel_cuda_rpc
+module/accel/cuda/cuda_utils
+
 # These files all represent c files that are only compiled by direct inclusion in other files.
 test/common/lib/test_env
 test/common/lib/test_iobuf

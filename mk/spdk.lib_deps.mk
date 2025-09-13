@@ -116,6 +116,10 @@ ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma_utils util
 endif
 
+ifeq ($(CONFIG_CUDA),y)
+DEPDIRS-accel_cuda := accel thread log jsonrpc rpc
+endif
+
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := $(JSON_LIBS)
 
