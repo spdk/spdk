@@ -3249,6 +3249,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		if (rc == -ENOMEM) {
 			if (bdev_io->internal.split.outstanding == 0) {
 				/* No I/O is outstanding. Hence we should wait here. */
+				bdev_io->internal.waitq_entry.dep_unblock = true;
 				bdev_queue_io_wait_with_cb(bdev_io, io_wait_fn);
 			}
 		} else {
