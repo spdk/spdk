@@ -66,6 +66,7 @@ function usage() {
 	echo " --without-crypto          Disable isa-l-crypto and vbdev crypto module."
 	echo " --with-fio[=DIR]          Build fio_plugin."
 	echo " --without-fio             default: /usr/src/fio"
+	echo " --with-cuda               Enable the CUDA accel module."
 	echo " --with-xnvme              Build xNVMe bdev module."
 	echo " --without-xnvme           No path required."
 	echo " --with-vhost              Build vhost target. Enabled by default."
@@ -563,6 +564,12 @@ for i in "$@"; do
 			;;
 		--without-xnvme)
 			CONFIG[XNVME]=n
+			;;
+		--with-cuda)
+			CONFIG[CUDA]=y
+			;;
+		--without-cuda)
+			CONFIG[CUDA]=n
 			;;
 		--with-fio) ;&
 		--with-fio=*)
@@ -1380,6 +1387,17 @@ if [[ "${CONFIG[DEBUG]}" = "y" && $arch = aarch64* && "$CC_TYPE" = "gcc" ]]; the
 			echo "         Will work around this by using armv8.2-a+crypto as target architecture for now."
 			CONFIG[ARCH]=armv8.2-a+crypto
 		fi
+	fi
+fi
+
+if [[ "${CONFIG[CUDA]}" = "y" ]]; then
+	if [[ $sys_name != "Linux" ]]; then
+		echo "--with-cuda is supported only in Linux!"
+		exit 1
+	fi
+	if [[ $(command -v nvcc) = "" ]]; then
+		echo "--with-cuda requires cuda build tools!"
+		exit 1
 	fi
 fi
 

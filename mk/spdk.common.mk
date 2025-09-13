@@ -404,6 +404,25 @@ COMPILE_CXX=\
 	$(CXX) -o $@ $(DEPFLAGS) $(CXXFLAGS) -c $< && \
 	mv -f $*.d.tmp $*.d && touch -c $@
 
+ifeq ($(CONFIG_CUDA),y)
+CU_SRCS += $(CU_SRCS-y)
+
+OBJS += $(CU_SRCS:.cu=.o)
+
+CUDA_ARCH ?= 60
+
+CUFLAGS = -O2 -DNODEBUG -Xcompiler -fno-exceptions -restrict --gpu-architecture=sm_$(CUDA_ARCH) \
+	-cudart shared -I$(SPDK_ROOT_DIR)/include $(CU_CFLAGS)
+
+SYS_LIBS += -ldl -lcudart -lcuda -lrt -lstdc++
+
+COMPILE_CU=\
+	$(Q)echo "  NVCC $(CUFLAGS) $S/$@"; \
+	nvcc -c -o $@ $(CUFLAGS) $< && \
+	nvcc -c -MM -MF $*.d.tmp $(CUFLAGS) $< && \
+	mv -f $*.d.tmp $*.d && touch -c $@
+endif
+
 ENV_LDFLAGS = $(if $(SPDK_NO_LINK_ENV),,$(ENV_LINKER_ARGS))
 
 # LTO build results in lots of false positive maybe-uninitialized warnings during linking
@@ -541,6 +560,11 @@ UNINSTALL_HEADER=\
 
 %.o: %.cpp %.d $(MAKEFILE_LIST)
 	$(COMPILE_CXX)
+
+ifeq ($(CONFIG_CUDA),y)
+%.o: %.cu %.d $(MAKEFILE_LIST)
+	$(COMPILE_CU)
+endif
 
 %.d: ;
 

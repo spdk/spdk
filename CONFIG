@@ -256,3 +256,6 @@ CONFIG_HAVE_LZ4=n
 
 # libaio has the RW flags (version >= 0.3.111)
 CONFIG_AIO_HAVE_RW_FLAGS=n
+
+# Build with cuda and related modules
+CONFIG_CUDA=n
