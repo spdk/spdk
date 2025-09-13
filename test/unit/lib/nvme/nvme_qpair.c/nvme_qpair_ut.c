@@ -717,13 +717,13 @@ test_nvme_get_sgl_print_info(void)
 	cmd.dptr.sgl1.keyed.length = 0x1000;
 	cmd.dptr.sgl1.keyed.key = 0xababccdd;
 
-	nvme_get_sgl_keyed(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	nvme_get_sgl_keyed_string(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
 	CU_ASSERT(!strncmp(buf, " len:0x1000 key:0xababccdd", NVME_CMD_DPTR_STR_SIZE));
 
 	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
 	cmd.dptr.sgl1.unkeyed.length = 0x1000;
 
-	nvme_get_sgl_unkeyed(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	nvme_get_sgl_unkeyed_string(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
 	CU_ASSERT(!strncmp(buf, " len:0x1000", NVME_CMD_DPTR_STR_SIZE));
 
 	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
@@ -732,7 +732,7 @@ test_nvme_get_sgl_print_info(void)
 	cmd.dptr.sgl1.address = 0xdeadbeef;
 	cmd.dptr.sgl1.unkeyed.length = 0x1000;
 
-	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	nvme_get_sgl_string(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
 	CU_ASSERT(!strncmp(buf, "SGL DATA BLOCK ADDRESS 0xdeadbeef len:0x1000",
 			   NVME_CMD_DPTR_STR_SIZE));
 
@@ -743,7 +743,7 @@ test_nvme_get_sgl_print_info(void)
 	cmd.dptr.sgl1.keyed.length = 0x1000;
 	cmd.dptr.sgl1.keyed.key = 0xababccdd;
 
-	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	nvme_get_sgl_string(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
 	CU_ASSERT(!strncmp(buf, "SGL KEYED DATA BLOCK ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
 			   NVME_CMD_DPTR_STR_SIZE));
 }

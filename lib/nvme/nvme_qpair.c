@@ -140,7 +140,7 @@ nvme_get_string(const struct nvme_string *strings, uint16_t value)
 }
 
 static void
-nvme_get_sgl_unkeyed(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+nvme_get_sgl_unkeyed_string(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 {
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
 
@@ -148,7 +148,7 @@ nvme_get_sgl_unkeyed(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 }
 
 static void
-nvme_get_sgl_keyed(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+nvme_get_sgl_keyed_string(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 {
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
 
@@ -156,7 +156,7 @@ nvme_get_sgl_keyed(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 }
 
 static void
-nvme_get_sgl(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+nvme_get_sgl_string(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 {
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
 	int c;
@@ -166,31 +166,31 @@ nvme_get_sgl(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 	assert(c >= 0 && (size_t)c < size);
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
-		nvme_get_sgl_unkeyed(buf + c, size - c, cmd);
+		nvme_get_sgl_unkeyed_string(buf + c, size - c, cmd);
 	}
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
-		nvme_get_sgl_keyed(buf + c, size - c, cmd);
+		nvme_get_sgl_keyed_string(buf + c, size - c, cmd);
 	}
 }
 
 static void
-nvme_get_prp(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+nvme_get_prp_string(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 {
 	snprintf(buf, size, "PRP1 0x%" PRIx64 " PRP2 0x%" PRIx64, cmd->dptr.prp.prp1, cmd->dptr.prp.prp2);
 }
 
 static void
-nvme_get_dptr(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+nvme_get_dptr_string(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 {
 	if (spdk_nvme_opc_get_data_transfer(cmd->opc) != SPDK_NVME_DATA_NONE) {
 		switch (cmd->psdt) {
 		case SPDK_NVME_PSDT_PRP:
-			nvme_get_prp(buf, size, cmd);
+			nvme_get_prp_string(buf, size, cmd);
 			break;
 		case SPDK_NVME_PSDT_SGL_MPTR_CONTIG:
 		case SPDK_NVME_PSDT_SGL_MPTR_SGL:
-			nvme_get_sgl(buf, size, cmd);
+			nvme_get_sgl_string(buf, size, cmd);
 			break;
 		default:
 			;
@@ -199,14 +199,14 @@ nvme_get_dptr(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 }
 
 static void
-nvme_get_admin_qpair_command(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cmd *cmd)
+nvme_get_admin_qpair_command_string(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
 	struct spdk_nvmf_capsule_cmd *fcmd = (void *)cmd;
 	char dptr[NVME_CMD_DPTR_STR_SIZE] = {'\0'};
 
 	assert(cmd != NULL);
 
-	nvme_get_dptr(dptr, sizeof(dptr), cmd);
+	nvme_get_dptr_string(dptr, sizeof(dptr), cmd);
 
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_SET_FEATURES:
@@ -236,18 +236,18 @@ nvme_admin_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
 
-	nvme_get_admin_qpair_command(buf, sizeof(buf), qid, cmd);
+	nvme_get_admin_qpair_command_string(buf, sizeof(buf), qid, cmd);
 	SPDK_NOTICELOG("%s\n", buf);
 }
 
 static void
-nvme_get_io_qpair_command(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cmd *cmd)
+nvme_get_io_qpair_command_string(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
 	char dptr[NVME_CMD_DPTR_STR_SIZE] = {'\0'};
 
 	assert(cmd != NULL);
 
-	nvme_get_dptr(dptr, sizeof(dptr), cmd);
+	nvme_get_dptr_string(dptr, sizeof(dptr), cmd);
 
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_WRITE:
@@ -278,7 +278,7 @@ nvme_io_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
 
-	nvme_get_io_qpair_command(buf, sizeof(buf), qid, cmd);
+	nvme_get_io_qpair_command_string(buf, sizeof(buf), qid, cmd);
 	SPDK_NOTICELOG("%s\n", buf);
 }
 
@@ -302,9 +302,9 @@ spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cm
 	assert(qpair != NULL);
 
 	if (qpair->id == 0 || cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		nvme_get_admin_qpair_command(buf, sizeof(buf), qpair->id, cmd);
+		nvme_get_admin_qpair_command_string(buf, sizeof(buf), qpair->id, cmd);
 	} else {
-		nvme_get_io_qpair_command(buf, sizeof(buf), qpair->id, cmd);
+		nvme_get_io_qpair_command_string(buf, sizeof(buf), qpair->id, cmd);
 	}
 
 	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
@@ -492,7 +492,7 @@ spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status)
 }
 
 static void
-nvme_get_completion(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cpl *cpl)
+nvme_get_completion_string(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cpl *cpl)
 {
 	assert(cpl != NULL);
 
@@ -514,7 +514,7 @@ spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
 		SPDK_ERRLOG("sqid %u doesn't match qid\n", cpl->sqid);
 	}
 
-	nvme_get_completion(buf, sizeof(buf), qid, cpl);
+	nvme_get_completion_string(buf, sizeof(buf), qid, cpl);
 	SPDK_NOTICELOG("%s\n", buf);
 }
 
@@ -527,7 +527,7 @@ spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 		NVME_QPAIR_ERRLOG(qpair, "sqid %u doesn't match qid\n", cpl->sqid);
 	}
 
-	nvme_get_completion(buf, sizeof(buf), qpair->id, cpl);
+	nvme_get_completion_string(buf, sizeof(buf), qpair->id, cpl);
 	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
 }
 
