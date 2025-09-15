@@ -925,7 +925,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	}
 
 	/* Use iobuf queuing only if transport supports it */
-	if (transport->ops->req_get_buffers_done != NULL) {
+	if (transport->ops->req_get_buffers_done != NULL && !stripped_buffers) {
 		entry = &req->iobuf.entry;
 	}
 
@@ -1044,9 +1044,6 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 	struct spdk_nvmf_stripped_data *data;
 	uint32_t i;
 	int rc;
-
-	/* We don't support iobuf queueing with stripped buffers yet */
-	assert(transport->ops->req_get_buffers_done == NULL);
 
 	/* Data blocks must be block aligned */
 	for (i = 0; i < req->iovcnt; i++) {
