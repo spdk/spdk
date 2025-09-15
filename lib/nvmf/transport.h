@@ -62,6 +62,7 @@ int nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 				      struct spdk_nvmf_transport *transport,
 				      uint32_t length);
 
-bool nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req);
+bool nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req,
+				    struct spdk_nvmf_transport_poll_group *group);
 
 #endif /* SPDK_NVMF_TRANSPORT_H */

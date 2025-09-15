@@ -571,7 +571,7 @@ nvmf_tcp_request_get_buffers_abort(struct spdk_nvmf_tcp_req *tcp_req)
 		}
 	}
 
-	if (!nvmf_request_get_buffers_abort(&tcp_req->req)) {
+	if (!nvmf_request_get_buffers_abort(&tcp_req->req, &tcp_group->group)) {
 		SPDK_ERRLOG("Failed to abort tcp_req=%p\n", tcp_req);
 		assert(0 && "Should never happen");
 	}

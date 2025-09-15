@@ -262,7 +262,8 @@ DEFINE_STUB(nvmf_subsystem_host_auth_required, bool, (struct spdk_nvmf_subsystem
 DEFINE_STUB(nvmf_qpair_auth_init, int, (struct spdk_nvmf_qpair *q), 0);
 DEFINE_STUB(nvmf_auth_request_exec, int, (struct spdk_nvmf_request *r),
 	    SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
-DEFINE_STUB(nvmf_request_get_buffers_abort, bool, (struct spdk_nvmf_request *r), false);
+DEFINE_STUB(nvmf_request_get_buffers_abort, bool, (struct spdk_nvmf_request *r,
+		struct spdk_nvmf_transport_poll_group *g), false);
 DEFINE_STUB(spdk_bdev_io_type_supported, bool,
 	    (struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type), false);
 DEFINE_STUB(nvmf_ns_get_rescap, struct spdk_nvme_rescap,

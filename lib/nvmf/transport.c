@@ -1021,15 +1021,14 @@ nvmf_request_get_buffers_abort_cb(struct spdk_iobuf_channel *ch, struct spdk_iob
 }
 
 bool
-nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req)
+nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req,
+			       struct spdk_nvmf_transport_poll_group *group)
 {
-	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(req->qpair->group,
-			req->qpair->transport);
 	int rc;
 
-	assert(tgroup != NULL);
+	assert(group != NULL);
 
-	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, nvmf_request_get_buffers_abort_cb, req);
+	rc = spdk_iobuf_for_each_entry(group->buf_cache, nvmf_request_get_buffers_abort_cb, req);
 	return rc == 1;
 }
 
