@@ -8,82 +8,7 @@ import sys
 
 from io import IOBase as io
 
-from . import accel
-from . import app
-from . import bdev
-from . import compressdev
-from . import fsdev
-from . import env_dpdk
-from . import dsa
-from . import iaa
-from . import ioat
-from . import iscsi
-from . import keyring
-from . import log
-from . import lvol
-from . import nbd
-from . import ublk
-from . import notify
-from . import nvme
-from . import nvmf
-from . import subsystem
-from . import trace
-from . import vhost
-from . import vmd
-from . import sock
-from . import vfio_user
-from . import iobuf
-from . import dpdk_cryptodev
-from . import mlx5
 from . import client as rpc_client
-from .helpers import deprecated_method
-
-
-@deprecated_method
-def framework_start_init(client):
-    """Start initialization of subsystems"""
-    return client.call('framework_start_init')
-
-
-@deprecated_method
-def framework_wait_init(client):
-    """Block until subsystems have been initialized"""
-    return client.call('framework_wait_init')
-
-
-@deprecated_method
-def framework_disable_cpumask_locks(client):
-    """ Disable CPU core lock files."""
-    return client.call('framework_disable_cpumask_locks')
-
-
-@deprecated_method
-def framework_enable_cpumask_locks(client):
-    """ Enable CPU core lock files."""
-    return client.call('framework_enable_cpumask_locks')
-
-
-@deprecated_method
-def rpc_get_methods(client, current=None, include_aliases=None):
-    """Get list of supported RPC methods.
-    Args:
-        current: Get list of RPC methods only callable in the current state.
-        include_aliases: Include aliases in the list with RPC methods.
-    """
-    params = {}
-
-    if current:
-        params['current'] = current
-    if include_aliases:
-        params['include_aliases'] = include_aliases
-
-    return client.call('rpc_get_methods', params)
-
-
-@deprecated_method
-def spdk_get_version(client):
-    """Get SPDK version"""
-    return client.call('spdk_get_version')
 
 
 def _json_dump(config, fd, indent):
@@ -165,7 +90,7 @@ def load_config(client, fd, include_aliases=False):
     # check if methods in the config file are known
     allowed_methods = client.call('rpc_get_methods', {'include_aliases': include_aliases})
     if not subsystems and 'framework_start_init' in allowed_methods:
-        framework_start_init(client)
+        client.framework_start_init()
         return
 
     for subsystem in list(subsystems):
@@ -193,7 +118,7 @@ def load_config(client, fd, include_aliases=False):
                 subsystems.remove(subsystem)
 
         if 'framework_start_init' in allowed_methods:
-            framework_start_init(client)
+            client.framework_start_init()
             allowed_found = True
 
         if not allowed_found:

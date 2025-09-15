@@ -19,18 +19,6 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### python
-
-#### `rpc`
-
-Deprecated all modules under python/spdk/rpc providing wrappers around RPC methods.
-
-Will be removed in the 26.01 release.
-
-Individual rpc modules provides very simple wrappers around existing client functions.
-There is no translations or useful abstractions happen inside those RPC modules.
-This can be easily replaced by setattr based dynamic functions on the JSONRPCClient.
-
 ### util/net
 
 #### `spdk_net_getaddr`
