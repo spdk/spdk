@@ -27,7 +27,6 @@
 #define UT_IO_UNIT_SIZE 1024
 #define UT_MAX_AQ_DEPTH 64
 #define UT_SQ_HEAD_MAX 128
-#define UT_NUM_SHARED_BUFFERS 128
 
 static void *g_accel_p = (void *)0xdeadbeaf;
 
@@ -436,7 +435,6 @@ test_nvmf_tcp_create(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	/* expect success */
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
@@ -458,7 +456,6 @@ test_nvmf_tcp_create(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_MAX_IO_SIZE + 1;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	/* expect success */
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
@@ -510,7 +507,6 @@ test_nvmf_tcp_destroy(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
@@ -559,7 +555,6 @@ test_nvmf_tcp_poll_group_create(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
@@ -823,7 +818,6 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 	CU_ASSERT(transport.opts.max_io_size ==	SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE);
 	CU_ASSERT(transport.opts.io_unit_size == SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE);
 	CU_ASSERT(transport.opts.max_aq_depth == SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH);
-	CU_ASSERT(transport.opts.num_shared_buffers == SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS);
 	CU_ASSERT(transport.opts.buf_cache_size == SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE);
 	CU_ASSERT(transport.opts.dif_insert_or_strip ==	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP);
 	CU_ASSERT(transport.opts.abort_timeout_sec == SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC);
@@ -1406,7 +1400,6 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	transport = nvmf_tcp_create(&opts);
 
 	memset(&subsystem, 0, sizeof(subsystem));

@@ -2503,6 +2503,17 @@ decode_masked_fuses_array(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_array(val, decode_masked_fuses, out, 16, &count, 0);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_num_shared_buffers,
+			      "Use iobuf_large_cache_size and iobuf_small_cache_size instead", "v26.09",
+			      SPDK_LOG_DEPRECATION_ALWAYS);
+
+static int
+decode_num_shared_buffers(const struct spdk_json_val *val, void *out)
+{
+	SPDK_LOG_DEPRECATED(nvmf_create_transport_num_shared_buffers);
+	return spdk_json_decode_uint32(val, out);
+}
+
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_buf_cache_size,
 			      "buf_cache_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
 
@@ -2521,7 +2532,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_io_size), spdk_json_decode_uint32, true},
 	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size), spdk_json_decode_uint32, true},
 	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth), spdk_json_decode_uint32, true},
-	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers), spdk_json_decode_uint32, true},
+	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers), decode_num_shared_buffers, true},
 	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size), decode_buf_cache_size, true},
 	{"iobuf_small_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.iobuf_small_cache_size), spdk_json_decode_uint32, true},
 	{"iobuf_large_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.iobuf_large_cache_size), spdk_json_decode_uint32, true},

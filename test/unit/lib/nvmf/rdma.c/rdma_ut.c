@@ -22,7 +22,6 @@ struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE,
 	.max_aq_depth = SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH,
 	.iobuf_small_cache_size = SPDK_NVMF_RDMA_DEFAULT_SMALL_BUFFER_CACHE_SIZE,
-	.num_shared_buffers = SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS,
 	.kas = NVMF_DEFAULT_KAS,
 	.min_kato = NVMF_DEFAULT_MIN_KATO,
 };
@@ -1312,7 +1311,6 @@ test_nvmf_rdma_opts_init(void)
 	CU_ASSERT(opts.max_io_size == SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE);
 	CU_ASSERT(opts.io_unit_size == SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE);
 	CU_ASSERT(opts.max_aq_depth == SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH);
-	CU_ASSERT(opts.num_shared_buffers == SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS);
 	CU_ASSERT(opts.iobuf_small_cache_size == SPDK_NVMF_RDMA_DEFAULT_SMALL_BUFFER_CACHE_SIZE);
 	CU_ASSERT(opts.dif_insert_or_strip == SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP);
 	CU_ASSERT(opts.abort_timeout_sec == SPDK_NVMF_RDMA_DEFAULT_ABORT_TIMEOUT_SEC);

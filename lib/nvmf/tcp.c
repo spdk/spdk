@@ -44,7 +44,6 @@
 #define SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
-#define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
 #define SPDK_NVMF_TCP_DEFAULT_LARGE_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE 0
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
@@ -775,7 +774,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
-		     "  num_shared_buffers=%d, c2h_success=%d,\n"
+		     "  c2h_success=%d,\n"
 		     "  dif_insert_or_strip=%d, sock_priority=%d\n"
 		     "  abort_timeout_sec=%d, control_msg_num=%hu\n"
 		     "  ack_timeout=%d\n",
@@ -785,7 +784,6 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
-		     opts->num_shared_buffers,
 		     ttransport->tcp_opts.c2h_success,
 		     opts->dif_insert_or_strip,
 		     ttransport->tcp_opts.sock_priority,
@@ -3942,7 +3940,6 @@ nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_io_size =		SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE;
 	opts->io_unit_size =		SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH;
-	opts->num_shared_buffers =	SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS;
 	opts->iobuf_small_cache_size =	SPDK_NVMF_TCP_DEFAULT_SMALL_BUFFER_CACHE_SIZE;
 	opts->iobuf_large_cache_size =	SPDK_NVMF_TCP_DEFAULT_LARGE_BUFFER_CACHE_SIZE;
 	opts->dif_insert_or_strip =	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP;

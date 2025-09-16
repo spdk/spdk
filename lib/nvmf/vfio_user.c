@@ -5213,7 +5213,6 @@ nvmf_vfio_user_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_io_size =		NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE;
 	opts->io_unit_size =		NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =		NVMF_VFIO_USER_DEFAULT_AQ_DEPTH;
-	opts->num_shared_buffers =	0;
 	opts->buf_cache_size =		0;
 	opts->association_timeout =	0;
 	opts->transport_specific =      NULL;
