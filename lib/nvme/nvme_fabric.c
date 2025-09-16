@@ -59,11 +59,7 @@ nvme_fabric_prop_set_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_fabric_prop_set_cmd offset=%x, size=%u failed: rc=%s\n",
 				  offset, size, spdk_strerror(abs(rc)));
@@ -147,7 +143,7 @@ nvme_fabric_prop_get_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
 	response = *(struct spdk_nvmf_fabric_prop_get_rsp *)&status->cpl;
 	if (!status->timed_out) {
 		free(status);
@@ -366,11 +362,7 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		SPDK_ERRLOG("wait for spdk_nvme_ctrlr_cmd_get_log_page failed: rc=%s\n", spdk_strerror(abs(rc)));
 		return -1;
@@ -429,11 +421,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(discovery_ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(discovery_ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_ERRLOG(discovery_ctrlr, "wait for nvme_identify_controller failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));

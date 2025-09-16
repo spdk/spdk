@@ -122,11 +122,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status, true);
 	if (rc) {
 		/* This can occur if the namespace is not active. Simply zero the
 		 * namespace data and continue. */
@@ -171,11 +167,7 @@ nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: %s\n", spdk_strerror(abs(rc)));
 		spdk_free(nsdata_zns);
@@ -218,11 +210,7 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));
@@ -287,11 +275,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_WARNLOG(ns->ctrlr, "Failed to retrieve NS ID Descriptor List\n");
 		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));

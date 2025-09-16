@@ -20,7 +20,7 @@ DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr
 
 DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
 DEFINE_STUB(nvme_wait_for_adminq_completion, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct nvme_completion_poll_status *status), 0);
+		struct nvme_completion_poll_status *status, bool release), 0);
 
 DEFINE_STUB(nvme_completion_is_retry, bool, (const struct spdk_nvme_cpl *cpl), false);
 

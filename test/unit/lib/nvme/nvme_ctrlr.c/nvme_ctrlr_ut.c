@@ -393,8 +393,10 @@ static struct nvme_completion_poll_status *g_failed_status;
 
 int
 nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
-				struct nvme_completion_poll_status *status)
+				struct nvme_completion_poll_status *status, bool release)
 {
+	int rc;
+
 	if (spdk_nvme_qpair_process_completions(ctrlr->adminq, 0) < 0) {
 		g_failed_status = status;
 		status->timed_out = true;
@@ -405,7 +407,13 @@ nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
 	if (set_status_cpl == 1) {
 		status->cpl.status.sc = 1;
 	}
-	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+
+	rc = spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+	if (release && !status->timed_out) {
+		free(status);
+	}
+
+	return rc;
 }
 
 int

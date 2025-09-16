@@ -1330,8 +1330,26 @@ int	nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				struct spdk_nvme_sanitize *sanitize, uint32_t cdw11,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
+
+/**
+ * Poll admin qpair for completions until a command completes.
+ *
+ * \param ctrlr ctrlr with adminq to poll
+ * \param status completion status. The user must fill this structure with zeroes before calling
+ * this function
+ * \param release When set to true, releases the status before exit (if the timeout is not hit).
+ * Otherwise, it is the caller's responsibility.
+ *
+ * \return 0 if command completed without error,
+ * -EIO if command completed with error,
+ * -ECANCELED if command is not completed due to transport/device error or time expired
+ *
+ *  The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
+ *  and status as the callback argument.
+ */
 int	nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
-					struct nvme_completion_poll_status *status);
+					struct nvme_completion_poll_status *status, bool release);
+
 int	nvme_wait_for_completion_poll(struct spdk_nvme_qpair *qpair,
 				      struct nvme_completion_poll_status *status);
 

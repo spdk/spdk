@@ -295,23 +295,9 @@ error:
 	return -ECANCELED;
 }
 
-/**
- * Poll admin qpair for completions until a command completes.
- *
- * \param ctrlr ctrlr with adminq to poll
- * \param status completion status. The user must fill this structure with zeroes before calling
- * this function
- *
- * \return 0 if command completed without error,
- * -EIO if command completed with error,
- * -ECANCELED if command is not completed due to transport/device error or time expired
- *
- *  The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
- *  and status as the callback argument.
- */
 int
 nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
-				struct nvme_completion_poll_status *status)
+				struct nvme_completion_poll_status *status, bool release)
 {
 	uint64_t timeout_in_usecs = ctrlr->opts.admin_timeout_ms * 1000;
 	int rc;
@@ -327,6 +313,10 @@ nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
 	do {
 		rc = nvme_wait_for_completion_poll(ctrlr->adminq, status);
 	} while (rc == -EAGAIN);
+
+	if (release && !status->timed_out) {
+		free(status);
+	}
 
 	return rc;
 }

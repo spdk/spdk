@@ -162,9 +162,14 @@ spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 DEFINE_RETURN_MOCK(nvme_wait_for_adminq_completion, int);
 int
 nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
-				struct nvme_completion_poll_status *status)
+				struct nvme_completion_poll_status *status, bool release)
 {
 	status->timed_out = false;
+
+	if (release) {
+		free(status);
+	}
+
 	HANDLE_RETURN_MOCK(nvme_wait_for_adminq_completion);
 	return 0;
 }

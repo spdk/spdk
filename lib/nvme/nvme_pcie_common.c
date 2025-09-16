@@ -1151,7 +1151,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
 	if (rc) {
 		if (!status->timed_out) {
 			free(status);
@@ -1178,11 +1178,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status);
-	if (!status->timed_out) {
-		free(status);
-	}
-
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_pcie_ctrlr_cmd_delete_io_cq failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));

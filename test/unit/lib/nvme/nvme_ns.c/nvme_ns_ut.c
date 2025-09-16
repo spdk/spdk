@@ -13,10 +13,19 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
-DEFINE_STUB(nvme_wait_for_adminq_completion, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct nvme_completion_poll_status *status), 0);
 DEFINE_STUB(nvme_ctrlr_multi_iocs_enabled, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
+
+int
+nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
+				struct nvme_completion_poll_status *status, bool release)
+{
+	if (release && !status->timed_out) {
+		free(status);
+	}
+
+	return 0;
+}
 
 static struct spdk_nvme_cpl fake_cpl = {};
 static enum spdk_nvme_generic_command_status_code set_status_code = SPDK_NVME_SC_SUCCESS;
