@@ -1223,8 +1223,8 @@ bdev_io_wait_test(void)
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_opts bdev_opts = {};
-	struct bdev_ut_io_wait_entry io_wait_entry;
-	struct bdev_ut_io_wait_entry io_wait_entry2;
+	struct bdev_ut_io_wait_entry io_wait_entry = {};
+	struct bdev_ut_io_wait_entry io_wait_entry2 = {};
 	int rc;
 
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
