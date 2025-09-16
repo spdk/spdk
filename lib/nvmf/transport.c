@@ -300,6 +300,14 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 			    ctx->opts.io_unit_size, opts_iobuf.large_bufsize);
 		goto err;
 	}
+	if (ctx->opts.iobuf_small_cache_size != UINT32_MAX && ctx->opts.iobuf_small_cache_size != 0) {
+		if (ctx->opts.iobuf_small_cache_size * spdk_env_get_core_count() > opts_iobuf.small_pool_count) {
+			SPDK_WARNLOG("per core iobuf_small_cache_size %u is larger than iobuf small buffer count %" PRIu64
+				     ", limiting to 50%% of the pool\n",
+				     ctx->opts.iobuf_small_cache_size * spdk_env_get_core_count(), opts_iobuf.small_pool_count);
+			ctx->opts.iobuf_small_cache_size = opts_iobuf.small_pool_count / spdk_env_get_core_count() / 2;
+		}
+	}
 	if (ctx->opts.iobuf_large_cache_size != UINT32_MAX && ctx->opts.iobuf_large_cache_size != 0) {
 		if (ctx->opts.iobuf_large_cache_size * spdk_env_get_core_count() > opts_iobuf.large_pool_count) {
 			SPDK_WARNLOG("per core iobuf_large_cache_size %u is larger than iobuf large buffer count %" PRIu64
