@@ -47,12 +47,12 @@ if [ "$CLEAN_FLOW" -eq 1 ]; then
 	# Clean flow tests if everything works fine with regular traffic scenario.
 	run_app "$perf" "${perf_opt[@]}" -t 1
 	iobuf_stats=$($rpc_py iobuf_get_stats)
-	retry_count=$(echo "$iobuf_stats" | jq -r '.[] | select(.module == "nvmf_TCP") | .large_pool.retry')
+	retry_count=$(echo "$iobuf_stats" | jq -r '.[] | select(.module == "'nvmf_${TEST_TRANSPORT^^}'") | .large_pool.retry')
 	if [[ $retry_count -eq 0 ]]; then
 		exit 1
 	fi
 	# small pool should not be used
-	retry_count=$(echo "$iobuf_stats" | jq -r '.[] | select(.module == "nvmf_TCP") | .small_pool.retry')
+	retry_count=$(echo "$iobuf_stats" | jq -r '.[] | select(.module == "'nvmf_${TEST_TRANSPORT^^}'") | .small_pool.retry')
 	if [[ $retry_count -gt 0 ]]; then
 		exit 1
 	fi
