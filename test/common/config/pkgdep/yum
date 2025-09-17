@@ -55,7 +55,6 @@ packages=(
 	smartmontools
 	socat
 	sshfs
-	sshpass
 	systemd-devel
 	targetcli
 	valgrind
@@ -77,12 +76,18 @@ elif [[ $OSID == rocky ]]; then
 	packages+=(avahi-tools) # from the devel repo
 elif [[ $OSID == centos ]]; then
 	packages+=(avahi)
+	# 8 comes with a kernel which does not support btrfs.
+	# 8 does not come with any common repos that include avahi-tools.
+	if [[ $OSVERSION == 7* ]]; then
+		packages+=(avahi-tools)
+		packages+=(btrfs-progs)
+	fi
 elif [[ $OSID == rhel ]]; then
 	packages+=(avahi)
 	if [[ $OSVERSION == 9* ]]; then
 		packages+=("https://dl.rockylinux.org/pub/rocky/9/devel/x86_64/os/Packages/i/isns-utils-devel-0.101-4.el9.x86_64.rpm")
-	elif [[ $OSVERSION == 10* ]]; then
-		packages+=("https://dl.rockylinux.org/pub/rocky/10/devel/x86_64/os/Packages/i/isns-utils-devel-0.103-1.el10.x86_64.rpm")
+	elif [[ $OSVERSION == 8* ]]; then
+		packages+=("https://dl.rockylinux.org/pub/rocky/8/BaseOS/x86_64/os/Packages/isns-utils-devel-0.99-1.el8.x86_64.rpm")
 	fi
 	# FIXME: This does not fit here, but there's no sane alternative. Using RPMs from other sources will fail to meet
 	# dependencies anyway.
@@ -92,6 +97,12 @@ fi
 if [[ $OSID != rhel ]]; then
 	packages+=(isns-utils-devel)
 	packages+=(python3-pandas)
+fi
+
+if [[ $OSID == centos && $OSVERSION == 8* ]]; then
+	packages+=("https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/sshpass-1.09-4.el8.x86_64.rpm")
+else
+	packages+=(sshpass)
 fi
 
 if [[ $OSID == fedora ]] && ((OSVERSION == 34)); then
