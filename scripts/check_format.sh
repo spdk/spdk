@@ -25,11 +25,18 @@ if [[ $(uname -s) == Darwin ]]; then
 		echo "Please install GNU grep"
 		exit 1
 	fi
+	if ! hash gpatch 2> /dev/null; then
+		# We need GNU patch for --merge option
+		echo "Please install GNU patch"
+		exit 1
+	fi
 	GNU_READLINK="greadlink"
 	GNU_GREP="ggrep"
+	GNU_PATCH="gpatch"
 else
 	GNU_READLINK="readlink"
 	GNU_GREP="grep"
+	GNU_PATCH="patch"
 fi
 
 rootdir=$($GNU_READLINK -f "$(dirname "$0")")/..
@@ -566,7 +573,7 @@ function check_bash_style() {
 				# its stderr, hence the diff file should remain empty.
 				rc=1
 				if [[ -s $diff ]]; then
-					if patch --merge -p0 < "$diff"; then
+					if $GNU_PATCH --merge -p0 < "$diff"; then
 						diff_out=$(git diff)
 
 						if [[ -n $diff_out ]]; then
