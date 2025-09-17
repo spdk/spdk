@@ -111,15 +111,6 @@ yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 # workaround for arm: ninja fails with dep on skbuild python module
 if [ "$(uname -m)" = "aarch64" ]; then
 	pip3 install scikit-build
-	if echo "$ID $VERSION_ID" | grep -E -q 'centos 7'; then
-		# by default centos 7.x uses cmake 2.8 while ninja requires 3.6 or higher
-		yum install -y cmake3
-		# cmake3 is installed as /usr/bin/cmake3 while ninja directly calls `cmake`. Create a soft link
-		# as a workaround
-		mkdir -p /tmp/bin/
-		ln -s /usr/bin/cmake3 /tmp/bin/cmake > /dev/null 2>&1 || true
-		export PATH=/tmp/bin:$PATH
-	fi
 fi
 
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then

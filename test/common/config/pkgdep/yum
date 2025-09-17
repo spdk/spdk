@@ -78,10 +78,6 @@ elif [[ $OSID == centos ]]; then
 	packages+=(avahi)
 	# 8 comes with a kernel which does not support btrfs.
 	# 8 does not come with any common repos that include avahi-tools.
-	if [[ $OSVERSION == 7* ]]; then
-		packages+=(avahi-tools)
-		packages+=(btrfs-progs)
-	fi
 elif [[ $OSID == rhel ]]; then
 	packages+=(avahi)
 	if [[ $OSVERSION == 9* ]]; then
