@@ -5,7 +5,7 @@ pre_install() {
 		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
 	fi
 
-	if [[ $ID == centos || $ID == rocky ]] && [[ $VERSION_ID == 8* ]]; then
+	if [[ $ID == rocky && $VERSION_ID == 8* ]]; then
 		sudo "$package_manager" update -y --refresh
 	fi
 }

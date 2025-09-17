@@ -36,21 +36,21 @@ is_repo() { yum repolist --all | grep -q "^$1"; }
 
 disclaimer
 
+if [[ $ID == centos && $VERSION_ID =~ ^[78].* ]]; then
+	printf 'Not supported distribution detected (%s):(%s), aborting\n' "$ID" "$VERSION_ID" >&2
+	exit 1
+fi
+
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
 if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	repos=() enable=("epel" "elrepo" "elrepo-testing") add=()
-	if [[ $VERSION_ID == 7* ]]; then
-		printf 'Not supported distribution detected (%s):(%s), aborting\n' "$ID" "$VERSION_ID" >&2
-		exit 1
-	fi
 
 	if [[ $VERSION_ID == 8* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
 		add+=("https://packages.daos.io/v2.0/EL8/packages/x86_64/daos_packages.repo")
 		enable+=("daos-packages")
-		[[ $ID == centos ]] && enable+=("extras")
 	fi
 
 	if [[ $VERSION_ID == 9* ]]; then
@@ -68,7 +68,7 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	fi
 
 	# Add PowerTools needed for install CUnit-devel
-	if [[ ($ID == centos || $ID == rocky) && $VERSION_ID =~ ^[89].* ]]; then
+	if [[ $ID == rocky && $VERSION_ID =~ ^[89].* ]]; then
 		is_repo "PowerTools" && enable+=("PowerTools")
 		is_repo "powertools" && enable+=("powertools")
 		repos+=("centos-release-ceph-pacific.noarch")
@@ -113,7 +113,7 @@ if [ "$(uname -m)" = "aarch64" ]; then
 	pip3 install scikit-build
 fi
 
-if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then
+if echo "$ID $VERSION_ID" | grep -E -q 'rhel 8|rocky 8'; then
 	yum install -y python36 python36-devel
 	#Create hard link to use in SPDK as python
 	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
@@ -143,7 +143,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	devtool_pkgs=(git sg3_utils pciutils libabigail bash-completion ruby-devel)
 
-	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rocky 8'; then
+	if echo "$ID $VERSION_ID" | grep -E -q 'rocky 8'; then
 		devtool_pkgs+=(python3-pycodestyle astyle)
 	elif echo "$ID $VERSION_ID" | grep -E -q 'rocky 10'; then
 		echo "Rocky 10 do not have python3-pycodestyle and lcov dependencies"
@@ -175,10 +175,11 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	yum install -y doxygen graphviz
 fi
 if [[ $INSTALL_DAOS == "true" ]]; then
-	if [[ ($ID == centos || $ID == rocky) && $VERSION_ID =~ ^[78].* ]]; then
+	if [[ $ID == rocky && $VERSION_ID == 8* ]]; then
 		yum install -y daos-devel
 	else
-		echo "Skipping installation of DAOS bdev dependencies. Supported only under centos, rocky (variants 7-8)."
+		echo "Skipping installation of DAOS bdev dependencies."
+		echo "DAOS is supported only under Centos and Rocky (variants 7-8)."
 	fi
 fi
 # Additional dependencies for Avahi

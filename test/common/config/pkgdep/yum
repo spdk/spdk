@@ -64,6 +64,7 @@ packages=(
 	rust
 	cargo
 	python3-docutils
+	sshpass
 )
 
 if [[ $OSID != centos && $OSID != rocky && $OSID != rhel ]]; then
@@ -95,12 +96,6 @@ fi
 if [[ $OSID != rhel ]]; then
 	packages+=(isns-utils-devel)
 	packages+=(python3-pandas)
-fi
-
-if [[ $OSID == centos && $OSVERSION == 8* ]]; then
-	packages+=("https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/sshpass-1.09-4.el8.x86_64.rpm")
-else
-	packages+=(sshpass)
 fi
 
 if [[ $OSID == fedora ]] && ((OSVERSION == 34)); then
