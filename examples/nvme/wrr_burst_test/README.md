@@ -38,6 +38,15 @@ Useful options:
 - `--burst <0-7>` Arbitration burst value (default 7).
 - `-W` Issue writes instead of reads.
 
+To pin the test to a specific PCIe device, supply the BDF in the transport ID. For example:
+
+```bash
+sudo build/examples/nvme/wrr_burst_test/wrr_burst_test \
+  -r "trtype:PCIe traddr:0000:81:00.0"
+```
+
+SPDK parses the `traddr` string and matches it against the controller's bus:device.function address during `spdk_nvme_probe()`, so only the selected device is attached.
+
 At runtime the tool allocates nine qpairs (3 high, 3 medium, 3 low), primes each with 255 commands, rings all doorbells, then polls completions while recording timing metadata.
 
 ## Trace Support
