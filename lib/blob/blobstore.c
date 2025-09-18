@@ -8877,19 +8877,6 @@ blob_free_cluster_update_ep_cb(void *arg, int bserrno)
 }
 
 static void
-blob_free_cluster_free_ep_cb(void *arg, int bserrno)
-{
-	struct spdk_blob_cluster_op_ctx *ctx = arg;
-
-	spdk_spin_lock(&ctx->blob->bs->used_lock);
-	assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
-	bs_release_md_page(ctx->blob->bs, ctx->extent_page);
-	spdk_spin_unlock(&ctx->blob->bs->used_lock);
-	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
-	blob_sync_md(ctx->blob, blob_free_cluster_msg_cb, ctx);
-}
-
-static void
 blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_write_extent_page_ctx *ctx = cb_arg;
@@ -9029,9 +9016,6 @@ blob_free_cluster_msg(void *arg)
 {
 	struct spdk_blob_cluster_op_ctx *ctx = arg;
 	uint32_t *extent_page;
-	uint32_t start_cluster_idx;
-	bool free_extent_page = true;
-	size_t i;
 
 	ctx->cluster = bs_lba_to_cluster(ctx->blob->bs, ctx->blob->active.clusters[ctx->cluster_num]);
 
@@ -9061,27 +9045,8 @@ blob_free_cluster_msg(void *arg)
 	/* There shouldn't be parallel release operations on same cluster */
 	assert(*extent_page == ctx->extent_page);
 
-	start_cluster_idx = (ctx->cluster_num / SPDK_EXTENTS_PER_EP) * SPDK_EXTENTS_PER_EP;
-	for (i = 0; i < SPDK_EXTENTS_PER_EP; ++i) {
-		if (spdk_unlikely(start_cluster_idx + i >= ctx->blob->active.num_clusters)) {
-			break;
-		}
-		if (ctx->blob->active.clusters[start_cluster_idx + i] != 0) {
-			free_extent_page = false;
-			break;
-		}
-	}
-
-	if (free_extent_page) {
-		assert(ctx->extent_page != 0);
-		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
-		ctx->blob->active.extent_pages[bs_cluster_to_extent_table_id(ctx->cluster_num)] = 0;
-		blob_write_extent_page(ctx->blob, ctx->extent_page, ctx->cluster_num, ctx->page,
-				       blob_free_cluster_free_ep_cb, ctx);
-	} else {
-		blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num, ctx->page,
-				       blob_free_cluster_update_ep_cb, ctx);
-	}
+	blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num, ctx->page,
+			       blob_free_cluster_update_ep_cb, ctx);
 }
 
 
