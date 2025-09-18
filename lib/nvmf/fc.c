@@ -1583,6 +1583,7 @@ _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 					       group->transport);
 	}
 	fc_req->req.iovcnt = 0;
+	fc_req->req.raw = 0; /* clear all flags */
 
 	/* Free Fc request */
 	nvmf_fc_conn_free_fc_request(fc_req->fc_conn, fc_req);

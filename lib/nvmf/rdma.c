@@ -2001,8 +2001,8 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
+	rdma_req->req.raw = 0; /* clear all flags */
 	rdma_req->offset = 0;
-	rdma_req->req.dif_enabled = false;
 	rdma_req->fused_failed = false;
 	rdma_req->transfer_wr = NULL;
 	if (rdma_req->fused_pair) {
