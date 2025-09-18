@@ -50,6 +50,12 @@
   spdk_nvme_qpair_get_id((nvme_qpair)->qpair), \
   (nvme_qpair)->qpair
 
+#define NVME_NS_LOG_FMT "nsid:%u,ns:%p,nbdev:%p"
+#define NVME_NS_LOG_ARGS(ns) \
+  (ns)->id, \
+  (ns), \
+  (ns)->bdev
+
 #define NVME_CTRLR_LOG(type, ctrlr, format, ...) do { \
 	if ((ctrlr)) { \
 		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), ##__VA_ARGS__); \
@@ -96,6 +102,31 @@
 #define NVME_QPAIR_NOTICELOG(qpair, format, ...) NVME_QPAIR_LOG(NOTICE, qpair, format, ##__VA_ARGS__)
 #define NVME_QPAIR_INFOLOG(qpair, format, ...) NVME_QPAIR_LOG2(INFO, bdev_nvme, qpair, format, ##__VA_ARGS__)
 
+#define NVME_NS_LOG(type, ns, format, ...) do { \
+	if (!(ns)) { \
+		SPDK_##type##LOG("[null ns] " format, ##__VA_ARGS__); \
+	} else if (!(ns)->ctrlr) { \
+		SPDK_##type##LOG("[null ctrlr,"NVME_NS_LOG_FMT"] " format, NVME_NS_LOG_ARGS(ns), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT","NVME_NS_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS((ns)->ctrlr), NVME_NS_LOG_ARGS(ns), ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_NS_LOG2(type, component, ns, format, ...) do { \
+	if (!(ns)) { \
+		SPDK_##type##LOG(component, "[null ns] " format, ##__VA_ARGS__); \
+	} else if (!(ns)->ctrlr) { \
+		SPDK_##type##LOG(component, "[null ctrlr,"NVME_NS_LOG_FMT"] " format, NVME_NS_LOG_ARGS(ns), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "["NVME_CTRLR_LOG_FMT","NVME_NS_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS((ns)->ctrlr), NVME_NS_LOG_ARGS(ns), ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_NS_ERRLOG(ns, format, ...) NVME_NS_LOG(ERR, ns, format, ##__VA_ARGS__)
+#define NVME_NS_WARNLOG(ns, format, ...) NVME_NS_LOG(WARN, ns, format, ##__VA_ARGS__)
+#define NVME_NS_NOTICELOG(ns, format, ...) NVME_NS_LOG(NOTICE, ns, format, ##__VA_ARGS__)
+#define NVME_NS_INFOLOG(ns, format, ...) NVME_NS_LOG2(INFO, bdev_nvme, ns, format, ##__VA_ARGS__)
+
 #define NVME_BDEV_LOG(type, nbdev, ctrlr, format, ...) do { \
 	if (!(nbdev)) { \
 		SPDK_##type##LOG("[null nbdev] " format, ##__VA_ARGS__); \
@@ -124,10 +155,12 @@
 #ifdef DEBUG
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, bdev_nvme, ctrlr, format, ##__VA_ARGS__)
 #define NVME_QPAIR_DEBUGLOG(qpair, format, ...) NVME_QPAIR_LOG2(DEBUG, bdev_nvme, qpair, format, ##__VA_ARGS__)
+#define NVME_NS_DEBUGLOG(ns, format, ...) NVME_NS_LOG2(DEBUG, bdev_nvme, ns, format, ##__VA_ARGS__)
 #define NVME_BDEV_DEBUGLOG(nbdev, ctrlr, format, ...) NVME_BDEV_LOG2(DEBUG, bdev_nvme, nbdev, ctrlr, format, ##__VA_ARGS__)
 #else
 #define NVME_CTRLR_DEBUGLOG(...) do { } while (0)
 #define NVME_QPAIR_DEBUGLOG(...) do { } while (0)
+#define NVME_NS_DEBUGLOG(...) do { } while (0)
 #define NVME_BDEV_DEBUGLOG(...) do { } while (0)
 #endif
 
@@ -4729,7 +4762,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 
 	nbdev = nvme_bdev_alloc();
 	if (nbdev == NULL) {
-		SPDK_ERRLOG("Failed to allocate NVMe bdev\n");
+		NVME_NS_ERRLOG(nvme_ns, "Failed to allocate NVMe bdev\n");
 		return -ENOMEM;
 	}
 
@@ -4738,7 +4771,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	rc = nbdev_create(&nbdev->disk, nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
 			  nvme_ns->ns, &nvme_ctrlr->opts, nbdev);
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to create NVMe disk\n");
+		NVME_NS_ERRLOG(nvme_ns, "Failed to create NVMe disk\n");
 		nvme_bdev_free(nbdev);
 		return rc;
 	}
@@ -4760,7 +4793,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 
 	rc = spdk_bdev_register(&nbdev->disk);
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_bdev_register() failed\n");
+		NVME_NS_ERRLOG(nvme_ns, "spdk_bdev_register() failed\n");
 		spdk_io_device_unregister(nbdev, NULL);
 		nvme_ns->bdev = NULL;
 
@@ -5014,7 +5047,7 @@ nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 
 	nsdata = spdk_nvme_ns_get_data(nvme_ns->ns);
 	if (!nsdata->nmic.can_share) {
-		SPDK_ERRLOG("Namespace cannot be shared.\n");
+		NVME_NS_ERRLOG(nvme_ns, "Namespace cannot be shared.\n");
 		return -EINVAL;
 	}
 
@@ -5025,7 +5058,7 @@ nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 
 	if (tmp_ns->ns != NULL && !bdev_nvme_compare_ns(nvme_ns->ns, tmp_ns->ns)) {
 		pthread_mutex_unlock(&nbdev->mutex);
-		SPDK_ERRLOG("Namespaces are not identical.\n");
+		NVME_NS_ERRLOG(nvme_ns, "Namespaces are not identical.\n");
 		return -EINVAL;
 	}
 
@@ -5053,7 +5086,7 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 
 	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nvme_ns->id);
 	if (!ns) {
-		NVME_CTRLR_DEBUGLOG(nvme_ctrlr, "Invalid NS %d\n", nvme_ns->id);
+		NVME_NS_DEBUGLOG(nvme_ns, "Invalid NS\n");
 		rc = -EINVAL;
 		goto done;
 	}
@@ -5189,24 +5222,18 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			if (nvme_ns->ns != ns) {
 				assert(nvme_ns->ns == NULL);
 				nvme_ns->ns = ns;
-				NVME_CTRLR_DEBUGLOG(nvme_ctrlr, "NSID %u was added\n", nvme_ns->id);
+				NVME_NS_DEBUGLOG(nvme_ns, "NSID was added\n");
 			}
 
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
 			nbdev = nvme_ns->bdev;
 			assert(nbdev != NULL);
 			if (nbdev->disk.blockcnt != num_sectors) {
-				NVME_CTRLR_NOTICELOG(nvme_ctrlr,
-						     "NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
-						     nvme_ns->id,
-						     nbdev->disk.name,
-						     nbdev->disk.blockcnt,
-						     num_sectors);
+				NVME_NS_NOTICELOG(nvme_ns, "NSID is resized: old size %" PRIu64 ", new size %" PRIu64 "\n",
+						  nbdev->disk.blockcnt, num_sectors);
 				rc = spdk_bdev_notify_blockcnt_change(&nbdev->disk, num_sectors);
 				if (rc != 0) {
-					NVME_CTRLR_ERRLOG(nvme_ctrlr,
-							  "Could not change num blocks for nvme bdev: name %s, errno: %d.\n",
-							  nbdev->disk.name, rc);
+					NVME_NS_ERRLOG(nvme_ns, "Could not change num blocks for nvme bdev, errno: %d.\n", rc);
 				}
 			}
 		} else {
