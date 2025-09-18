@@ -181,7 +181,7 @@ nvme_rdma_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
 static void
 test_nvme_rdma_build_sgl_request(void)
 {
-	struct nvme_rdma_qpair rqpair;
+	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_nvme_ctrlr ctrlr = {0};
 	struct spdk_nvmf_cmd cmd = {{0}};
 	struct spdk_nvme_rdma_req rdma_req = {0};
@@ -290,7 +290,7 @@ test_nvme_rdma_build_sgl_request(void)
 static void
 test_nvme_rdma_build_sgl_inline_request(void)
 {
-	struct nvme_rdma_qpair rqpair;
+	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_nvme_ctrlr ctrlr = {0};
 	struct spdk_nvmf_cmd cmd = {{0}};
 	struct spdk_nvme_rdma_req rdma_req = {0};
@@ -351,7 +351,7 @@ test_nvme_rdma_build_sgl_inline_request(void)
 static void
 test_nvme_rdma_build_contig_request(void)
 {
-	struct nvme_rdma_qpair rqpair;
+	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_nvme_ctrlr ctrlr = {0};
 	struct spdk_nvmf_cmd cmd = {{0}};
 	struct spdk_nvme_rdma_req rdma_req = {0};
@@ -394,7 +394,7 @@ test_nvme_rdma_build_contig_request(void)
 static void
 test_nvme_rdma_build_contig_inline_request(void)
 {
-	struct nvme_rdma_qpair rqpair;
+	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_nvme_ctrlr ctrlr = {0};
 	struct spdk_nvmf_cmd cmd = {{0}};
 	struct spdk_nvme_rdma_req rdma_req = {0};
