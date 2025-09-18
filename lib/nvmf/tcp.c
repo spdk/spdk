@@ -457,7 +457,7 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
 	tcp_req->h2c_offset = 0;
 	tcp_req->has_in_capsule_data = false;
-	tcp_req->req.dif_enabled = false;
+	tcp_req->req.raw = 0; /* clear all flags */
 	tcp_req->req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
 
 	TAILQ_REMOVE(&tqpair->tcp_req_free_queue, tcp_req, state_link);
