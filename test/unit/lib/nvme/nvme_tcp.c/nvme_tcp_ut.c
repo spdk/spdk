@@ -240,7 +240,7 @@ nvme_tcp_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
 static void
 test_nvme_tcp_build_sgl_request(void)
 {
-	struct nvme_tcp_qpair tqpair;
+	struct nvme_tcp_qpair tqpair = {{0}};
 	struct spdk_nvme_ctrlr ctrlr = {{0}};
 	struct nvme_tcp_req tcp_req = {0};
 	struct nvme_request req = {{0}};
