@@ -50,6 +50,11 @@
 #define NVME_BDEV_LOG_ARGS(nbdev) \
   (nbdev)->disk.name
 
+#define NVME_QPAIR_LOG_FMT "qid:%u,qpair:%p"
+#define NVME_QPAIR_LOG_ARGS(nvme_qpair) \
+  spdk_nvme_qpair_get_id((nvme_qpair)->qpair), \
+  (nvme_qpair)->qpair
+
 #define NVME_CTRLR_LOG(type, ctrlr, format, ...) do { \
 	if ((ctrlr)) { \
 		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), ##__VA_ARGS__); \
@@ -70,6 +75,31 @@
 #define NVME_CTRLR_WARNLOG(ctrlr, format, ...) NVME_CTRLR_LOG(WARN, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) NVME_CTRLR_LOG(NOTICE, ctrlr, format, ##__VA_ARGS__)
 #define NVME_CTRLR_INFOLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(INFO, bdev_nvme, ctrlr, format, ##__VA_ARGS__)
+
+#define NVME_QPAIR_LOG(type, qpair, format, ...) do { \
+	if (!(qpair)) { \
+		SPDK_##type##LOG("[null qpair] " format, ##__VA_ARGS__); \
+	} else if (!(qpair)->ctrlr) { \
+		SPDK_##type##LOG("[null ctrlr,"NVME_QPAIR_LOG_FMT"] " format, NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT","NVME_QPAIR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS((qpair)->ctrlr), NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_QPAIR_LOG2(type, component, qpair, format, ...) do { \
+	if (!(qpair)) { \
+		SPDK_##type##LOG(component, "[null qpair] " format, ##__VA_ARGS__); \
+	} else if (!(qpair)->ctrlr) { \
+		SPDK_##type##LOG(component, "[null ctrlr,"NVME_QPAIR_LOG_FMT"] " format, NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "["NVME_CTRLR_LOG_FMT","NVME_QPAIR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS((qpair)->ctrlr), NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_QPAIR_ERRLOG(qpair, format, ...) NVME_QPAIR_LOG(ERR, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_WARNLOG(qpair, format, ...) NVME_QPAIR_LOG(WARN, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_NOTICELOG(qpair, format, ...) NVME_QPAIR_LOG(NOTICE, qpair, format, ##__VA_ARGS__)
+#define NVME_QPAIR_INFOLOG(qpair, format, ...) NVME_QPAIR_LOG2(INFO, bdev_nvme, qpair, format, ##__VA_ARGS__)
 
 #define NVME_BDEV_LOG(type, nbdev, format, ...) do { \
 	if ((nbdev)) { \
@@ -94,9 +124,11 @@
 
 #ifdef DEBUG
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, bdev_nvme, ctrlr, format, ##__VA_ARGS__)
+#define NVME_QPAIR_DEBUGLOG(qpair, format, ...) NVME_QPAIR_LOG2(DEBUG, bdev_nvme, qpair, format, ##__VA_ARGS__)
 #define NVME_BDEV_DEBUGLOG(ctrlr, format, ...) NVME_BDEV_LOG2(DEBUG, bdev_nvme, nbdev, format, ##__VA_ARGS__)
 #else
 #define NVME_CTRLR_DEBUGLOG(...) do { } while (0)
+#define NVME_QPAIR_DEBUGLOG(...) do { } while (0)
 #define NVME_BDEV_DEBUGLOG(...) do { } while (0)
 #endif
 
@@ -1776,6 +1808,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_ctrlr_channel *ctrlr_ch;
+	uint16_t qid;
 	int status;
 
 	nvme_qpair = nvme_poll_group_get_qpair(group, qpair);
@@ -1783,6 +1816,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 		return;
 	}
 
+	qid = spdk_nvme_qpair_get_id(qpair);
 	if (nvme_qpair->qpair != NULL) {
 		spdk_nvme_ctrlr_free_io_qpair(nvme_qpair->qpair);
 		nvme_qpair->qpair = NULL;
@@ -1799,29 +1833,27 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 			if (ctrlr_ch->connect_poller != NULL) {
 				/* qpair was failed to connect. Abort the reset sequence. */
 				NVME_CTRLR_INFOLOG(nvme_ctrlr,
-						   "qpair %p was failed to connect. abort the reset ctrlr sequence.\n",
-						   qpair);
+						   NVME_QPAIR_LOG_FMT" failed to connect. abort the reset ctrlr sequence.\n", qid, qpair);
 				spdk_poller_unregister(&ctrlr_ch->connect_poller);
 				status = -1;
 			} else {
 				/* qpair was completed to disconnect. Just move to the next ctrlr_channel. */
 				NVME_CTRLR_INFOLOG(nvme_ctrlr,
-						   "qpair %p was disconnected and freed in a reset ctrlr sequence.\n",
-						   qpair);
+						   NVME_QPAIR_LOG_FMT" was disconnected and freed in a reset ctrlr sequence.\n", qid, qpair);
 				status = 0;
 			}
 			nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, status);
 			ctrlr_ch->reset_iter = NULL;
 		} else {
 			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
-			NVME_CTRLR_INFOLOG(nvme_ctrlr, "qpair %p was disconnected and freed. reset controller.\n",
-					   qpair);
+			NVME_CTRLR_INFOLOG(nvme_ctrlr,
+					   NVME_QPAIR_LOG_FMT" was disconnected and freed. reset controller.\n", qid, qpair);
 			bdev_nvme_failover_ctrlr(nvme_ctrlr);
 		}
 	} else {
 		/* In this case, ctrlr_channel is already deleted. */
-		NVME_CTRLR_INFOLOG(nvme_ctrlr, "qpair %p was disconnected and freed. delete nvme_qpair.\n",
-				   qpair);
+		NVME_CTRLR_INFOLOG(nvme_ctrlr,
+				   NVME_QPAIR_LOG_FMT" was disconnected and freed. delete nvme_qpair.\n", qid, qpair);
 		nvme_qpair_delete(nvme_qpair);
 	}
 }
@@ -2005,13 +2037,13 @@ bdev_nvme_create_qpair(struct nvme_qpair *nvme_qpair)
 
 	rc = spdk_nvme_poll_group_add(nvme_qpair->group->group, qpair);
 	if (rc != 0) {
-		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Unable to begin polling on NVMe Channel.\n");
+		NVME_QPAIR_ERRLOG(nvme_qpair, "Unable to begin polling on NVMe Channel.\n");
 		goto err;
 	}
 
 	rc = spdk_nvme_ctrlr_connect_io_qpair(nvme_ctrlr->ctrlr, qpair);
 	if (rc != 0) {
-		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Unable to connect I/O qpair.\n");
+		NVME_QPAIR_ERRLOG(nvme_qpair, "Unable to connect I/O qpair.\n");
 		goto err;
 	}
 
@@ -2021,9 +2053,7 @@ bdev_nvme_create_qpair(struct nvme_qpair *nvme_qpair)
 		_bdev_nvme_clear_io_path_cache(nvme_qpair);
 	}
 
-	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Connecting qpair %p:%u started.\n",
-			   qpair, spdk_nvme_qpair_get_id(qpair));
-
+	NVME_QPAIR_INFOLOG(nvme_qpair, "Connecting qpair started.\n");
 	return 0;
 
 err:
@@ -2389,8 +2419,7 @@ bdev_nvme_reset_destroy_qpair(struct nvme_ctrlr_channel_iter *i,
 
 	qpair = nvme_qpair->qpair;
 	if (qpair != NULL) {
-		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Start disconnecting qpair %p:%u.\n",
-				   qpair, spdk_nvme_qpair_get_id(qpair));
+		NVME_QPAIR_INFOLOG(nvme_qpair, "Start disconnecting qpair.\n");
 
 		if (nvme_qpair->ctrlr->dont_retry) {
 			spdk_nvme_qpair_set_abort_dnr(qpair, true);
@@ -2449,8 +2478,7 @@ bdev_nvme_reset_check_qpair_connected(void *ctx)
 		return SPDK_POLLER_BUSY;
 	}
 
-	NVME_CTRLR_INFOLOG(nvme_qpair->ctrlr, "qpair %p:%u was connected.\n",
-			   qpair, spdk_nvme_qpair_get_id(qpair));
+	NVME_QPAIR_INFOLOG(nvme_qpair, "qpair was connected.\n");
 
 	spdk_poller_unregister(&ctrlr_ch->connect_poller);
 
@@ -2472,7 +2500,6 @@ bdev_nvme_reset_create_qpair(struct nvme_ctrlr_channel_iter *i,
 			     void *ctx)
 {
 	struct nvme_qpair *nvme_qpair = ctrlr_ch->qpair;
-	struct spdk_nvme_qpair *qpair;
 	int rc = 0;
 
 	if (nvme_qpair->qpair == NULL) {
@@ -2482,10 +2509,7 @@ bdev_nvme_reset_create_qpair(struct nvme_ctrlr_channel_iter *i,
 		ctrlr_ch->connect_poller = SPDK_POLLER_REGISTER(bdev_nvme_reset_check_qpair_connected,
 					   ctrlr_ch, 0);
 
-		qpair = nvme_qpair->qpair;
-
-		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Start checking qpair %p:%u to be connected.\n",
-				   qpair, spdk_nvme_qpair_get_id(qpair));
+		NVME_QPAIR_INFOLOG(nvme_qpair, "Start checking qpair to be connected.\n");
 
 		/* The current full reset sequence will move to the next
 		 * ctrlr_channel after the qpair is actually connected.
@@ -4821,8 +4845,8 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	assert(nvme_ctrlr->ctrlr == ctrlr);
 
-	NVME_CTRLR_WARNLOG(nvme_ctrlr, "Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n",
-			   ctrlr, qpair, cid);
+	NVME_CTRLR_WARNLOG(nvme_ctrlr, "Warning: Detected a timeout. ctrlr:%p,qpair:%p,cid:%u\n", ctrlr,
+			   qpair, cid);
 
 	/* Only try to read CSTS if it's a PCIe controller or we have a timeout on an I/O
 	 * queue.  (Note: qpair == NULL when there's an admin cmd timeout.)  Otherwise we
@@ -4832,8 +4856,8 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	if (nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.bits.cfs) {
-			NVME_CTRLR_ERRLOG(nvme_ctrlr, "%s, reset required\n",
-					  csts.raw == 0xFFFFFFFF ? "Could not read csts register" : "Controller Fatal Status");
+			NVME_CTRLR_ERRLOG(nvme_ctrlr, "%s on qpair:%p, reset required\n",
+					  csts.raw == 0xFFFFFFFF ? "Could not read csts register" : "Controller Fatal Status", qpair);
 			bdev_nvme_reset_ctrlr(nvme_ctrlr);
 			return;
 		}
@@ -4846,7 +4870,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 			pthread_mutex_lock(&nvme_ctrlr->mutex);
 			if (!nvme_ctrlr_is_available(nvme_ctrlr)) {
 				pthread_mutex_unlock(&nvme_ctrlr->mutex);
-				NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Quit abort. Ctrlr is not available.\n");
+				NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Quit abort on qpair:%p. Ctrlr is not available.\n", qpair);
 				return;
 			}
 			pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -4857,7 +4881,8 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 				return;
 			}
 
-			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Unable to send abort. Resetting, rc is %d.\n", rc);
+			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Unable to send abort on qpair:%p. Resetting, rc is %d.\n", qpair,
+					  rc);
 		}
 
 	/* FALLTHROUGH */
