@@ -4577,10 +4577,6 @@ bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx, struct spdk_blob_md_p
 				 * in the used cluster map.
 				 */
 				if (cluster_idx != 0) {
-					if (cluster_idx < desc_extent->start_cluster_idx &&
-					    cluster_idx >= desc_extent->start_cluster_idx + cluster_count) {
-						return -EINVAL;
-					}
 					spdk_bit_array_set(ctx->used_clusters, cluster_idx);
 					if (bs->num_free_clusters == 0) {
 						return -ENOSPC;
