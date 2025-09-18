@@ -2809,6 +2809,7 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct ibv_wc
 			 * However, for the SRQ, this is not any error. Hence, just re-post the
 			 * receive request to the SRQ to reuse for other QPs, and return 0.
 			 */
+			rdma_rsp->recv_wr->next = NULL;
 			spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
 			return 0;
 		}
@@ -2863,6 +2864,7 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct ibv_wc
 err_wc:
 	nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 	if (poller && poller->srq) {
+		rdma_rsp->recv_wr->next = NULL;
 		spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
 	}
 	rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
@@ -2901,6 +2903,7 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 		nvme_rdma_log_wc_status(rqpair, wc);
 		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 		if (rdma_req->rdma_rsp && poller && poller->srq) {
+			rdma_req->rdma_rsp->recv_wr->next = NULL;
 			spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_req->rdma_rsp->recv_wr);
 		}
 		if (rdma_req->transfer_cpl_cb) {
