@@ -40,9 +40,10 @@
   (nvme_ctrlr)->active_path_id->trid.trsvcid, \
   spdk_nvme_ctrlr_get_id((nvme_ctrlr)->ctrlr)
 
-#define NVME_BDEV_LOG_FMT "%s"
+#define NVME_BDEV_LOG_FMT "%s,nbdev:%p"
 #define NVME_BDEV_LOG_ARGS(nbdev) \
-  (nbdev)->disk.name
+  (nbdev)->disk.name, \
+  (nbdev)
 
 #define NVME_QPAIR_LOG_FMT "qid:%u,qpair:%p"
 #define NVME_QPAIR_LOG_ARGS(nvme_qpair) \
