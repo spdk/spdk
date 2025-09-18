@@ -2136,6 +2136,18 @@ nvme_rdma_qpair_flush_send_wrs(struct nvme_rdma_qpair *rqpair)
 	}
 }
 
+static inline void
+nvme_rdma_finish_outstanding_accel_transfers(struct nvme_rdma_qpair *rqpair)
+{
+	struct spdk_nvme_rdma_req *req, *tmp;
+
+	TAILQ_FOREACH_SAFE(req, &rqpair->outstanding_reqs, link, tmp) {
+		if (req->in_progress_accel && req->transfer_cpl_cb) {
+			nvme_rdma_finish_data_transfer(req, -ENXIO);
+		}
+	}
+}
+
 static int
 nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 {
@@ -2145,6 +2157,7 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 
 	if (rqpair->num_active_accel_reqs != 0) {
 		SPDK_DEBUGLOG(nvme, "qp %p has %u accel requests\n", rqpair, rqpair->num_active_accel_reqs);
+		nvme_rdma_finish_outstanding_accel_transfers(rqpair);
 		goto lingering;
 	}
 
@@ -2195,6 +2208,7 @@ nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
 	if (rqpair->num_active_accel_reqs != 0) {
+		nvme_rdma_finish_outstanding_accel_transfers(rqpair);
 		return -EAGAIN;
 	}
 
