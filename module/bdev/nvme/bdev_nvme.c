@@ -2004,6 +2004,7 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns, *tmp_nvme_ns;
 
+	NVME_BDEV_DEBUGLOG(nbdev, null_ctrlr, "destructing bdev\n");
 	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nbdev->nbdev_ctrlr->name, nbdev->nsid);
 
 	pthread_mutex_lock(&nbdev->mutex);
@@ -2020,10 +2021,11 @@ bdev_nvme_destruct(void *ctx)
 		 */
 		if (nvme_ctrlr_get_ns(nvme_ns->ctrlr, nvme_ns->id) != nvme_ns) {
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
-
+			NVME_NS_DEBUGLOG(nvme_ns, "ns free with the last reference to nbdev\n");
 			nvme_ctrlr_put_ref(nvme_ns->ctrlr);
 			nvme_ns_free(nvme_ns);
 		} else {
+			NVME_NS_DEBUGLOG(nvme_ns, "defer ns free until depopulate is done\n");
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 		}
 	}
@@ -4805,6 +4807,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		return rc;
 	}
 
+	NVME_NS_DEBUGLOG(nvme_ns, "nbdev created\n");
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	return 0;
@@ -5729,6 +5732,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
+	NVME_CTRLR_DEBUGLOG(nvme_ctrlr, "executing AER\n");
 	event.raw = cpl->cdw0;
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
@@ -6170,6 +6174,7 @@ _nvme_ctrlr_destruct(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
+	NVME_CTRLR_INFOLOG(nvme_ctrlr, "destructing ctrlr\n");
 	nvme_ctrlr_depopulate_namespaces(nvme_ctrlr);
 	nvme_ctrlr_put_ref(nvme_ctrlr);
 }
