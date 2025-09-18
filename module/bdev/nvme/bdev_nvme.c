@@ -32,19 +32,13 @@
 #include "spdk_internal/usdt.h"
 #include "spdk_internal/trace_defs.h"
 
-#define CTRLR_STRING(nvme_ctrlr) \
-	(spdk_nvme_trtype_is_fabrics(nvme_ctrlr->active_path_id->trid.trtype) ? \
-	nvme_ctrlr->active_path_id->trid.subnqn : nvme_ctrlr->active_path_id->trid.traddr)
-
-#define CTRLR_ID(nvme_ctrlr)   (spdk_nvme_ctrlr_get_id(nvme_ctrlr->ctrlr))
-
 #define NVME_CTRLR_LOG_FMT "%s%s%s:%s,%u"
-#define NVME_CTRLR_LOG_ARGS(ctrlr) \
-  spdk_nvme_trtype_is_fabrics((ctrlr)->active_path_id->trid.trtype) ? (ctrlr)->active_path_id->trid.subnqn : "", \
-  spdk_nvme_trtype_is_fabrics((ctrlr)->active_path_id->trid.trtype) ? "," : "", \
-  (ctrlr)->active_path_id->trid.traddr, \
-  (ctrlr)->active_path_id->trid.trsvcid, \
-  CTRLR_ID(ctrlr)
+#define NVME_CTRLR_LOG_ARGS(nvme_ctrlr) \
+  spdk_nvme_trtype_is_fabrics((nvme_ctrlr)->active_path_id->trid.trtype) ? (nvme_ctrlr)->active_path_id->trid.subnqn : "", \
+  spdk_nvme_trtype_is_fabrics((nvme_ctrlr)->active_path_id->trid.trtype) ? "," : "", \
+  (nvme_ctrlr)->active_path_id->trid.traddr, \
+  (nvme_ctrlr)->active_path_id->trid.trsvcid, \
+  spdk_nvme_ctrlr_get_id((nvme_ctrlr)->ctrlr)
 
 #define NVME_BDEV_LOG_FMT "%s"
 #define NVME_BDEV_LOG_ARGS(nbdev) \
@@ -101,31 +95,35 @@
 #define NVME_QPAIR_NOTICELOG(qpair, format, ...) NVME_QPAIR_LOG(NOTICE, qpair, format, ##__VA_ARGS__)
 #define NVME_QPAIR_INFOLOG(qpair, format, ...) NVME_QPAIR_LOG2(INFO, bdev_nvme, qpair, format, ##__VA_ARGS__)
 
-#define NVME_BDEV_LOG(type, nbdev, format, ...) do { \
-	if ((nbdev)) { \
-		SPDK_##type##LOG("["NVME_BDEV_LOG_FMT"] " format, NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
-	} else { \
+#define NVME_BDEV_LOG(type, nbdev, ctrlr, format, ...) do { \
+	if (!(nbdev)) { \
 		SPDK_##type##LOG("[null nbdev] " format, ##__VA_ARGS__); \
-	} \
-} while (0)
-
-#define NVME_BDEV_LOG2(type, component, nbdev, format, ...) do { \
-	if ((nbdev)) { \
-		SPDK_##type##LOG(component, "["NVME_BDEV_LOG_FMT"] " format, NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
+	} else if (!(ctrlr)) { \
+		SPDK_##type##LOG("[null ctrlr,"NVME_BDEV_LOG_FMT"] " format, NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
 	} else { \
-		SPDK_##type##LOG(component, "[null nbdev] " format, ##__VA_ARGS__); \
+		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT","NVME_BDEV_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
 	} \
 } while (0)
 
-#define NVME_BDEV_ERRLOG(nbdev, format, ...) NVME_BDEV_LOG(ERR, nbdev, format, ##__VA_ARGS__)
-#define NVME_BDEV_WARNLOG(nbdev, format, ...) NVME_BDEV_LOG(WARN, nbdev, format, ##__VA_ARGS__)
-#define NVME_BDEV_NOTICELOG(nbdev, format, ...) NVME_BDEV_LOG(NOTICE, nbdev, format, ##__VA_ARGS__)
-#define NVME_BDEV_INFOLOG(nbdev, format, ...) NVME_BDEV_LOG2(INFO, bdev_nvme, nbdev, format, ##__VA_ARGS__)
+#define NVME_BDEV_LOG2(type, component, nbdev, ctrlr, format, ...) do { \
+	if (!(nbdev)) { \
+		SPDK_##type##LOG(component, "[null nbdev] " format, ##__VA_ARGS__); \
+	} else if (!(ctrlr)) { \
+		SPDK_##type##LOG(component, "[null ctrlr,"NVME_BDEV_LOG_FMT"] " format, NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "["NVME_CTRLR_LOG_FMT","NVME_BDEV_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_BDEV_ERRLOG(nbdev, ctrlr, format, ...) NVME_BDEV_LOG(ERR, nbdev, ctrlr, format, ##__VA_ARGS__)
+#define NVME_BDEV_WARNLOG(nbdev, ctrlr, format, ...) NVME_BDEV_LOG(WARN, nbdev, ctrlr, format, ##__VA_ARGS__)
+#define NVME_BDEV_NOTICELOG(nbdev, ctrlr, format, ...) NVME_BDEV_LOG(NOTICE, nbdev, ctrlr, format, ##__VA_ARGS__)
+#define NVME_BDEV_INFOLOG(nbdev, ctrlr, format, ...) NVME_BDEV_LOG2(INFO, bdev_nvme, nbdev, ctrlr, format, ##__VA_ARGS__)
 
 #ifdef DEBUG
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, bdev_nvme, ctrlr, format, ##__VA_ARGS__)
 #define NVME_QPAIR_DEBUGLOG(qpair, format, ...) NVME_QPAIR_LOG2(DEBUG, bdev_nvme, qpair, format, ##__VA_ARGS__)
-#define NVME_BDEV_DEBUGLOG(ctrlr, format, ...) NVME_BDEV_LOG2(DEBUG, bdev_nvme, nbdev, format, ##__VA_ARGS__)
+#define NVME_BDEV_DEBUGLOG(nbdev, ctrlr, format, ...) NVME_BDEV_LOG2(DEBUG, bdev_nvme, nbdev, ctrlr, format, ##__VA_ARGS__)
 #else
 #define NVME_CTRLR_DEBUGLOG(...) do { } while (0)
 #define NVME_QPAIR_DEBUGLOG(...) do { } while (0)
@@ -138,6 +136,11 @@
 #define NSID_STR_LEN 10
 
 #define SPDK_CONTROLLER_NAME_MAX 512
+
+/* A NULL pointer is used for NVME_ log macros when the ctrlr object is not available by design.
+ * Since we use macros, we cannot pass NULL directly - we need a pointer of the specific type to
+ * suppress compiler warnings. */
+static struct nvme_ctrlr *null_ctrlr;
 
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
@@ -3046,8 +3049,7 @@ bdev_nvme_unfreeze_bdev_channel_done(struct nvme_bdev *nbdev, void *ctx, int sta
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	NVME_BDEV_INFOLOG(nbdev, "reset_io %p completed, status:%d\n", bio, io_status);
-
+	NVME_BDEV_INFOLOG(nbdev, null_ctrlr, "reset_io %p completed, status:%d\n", bio, io_status);
 	__bdev_nvme_io_complete(spdk_bdev_io_from_ctx(bio), io_status, NULL);
 }
 
@@ -3106,7 +3108,7 @@ bdev_nvme_reset_io_continue(void *cb_arg, int rc)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
 
-	NVME_BDEV_INFOLOG(nbdev, "continue reset_io %p, rc:%d\n", bio, rc);
+	NVME_BDEV_INFOLOG(nbdev, null_ctrlr, "continue reset_io %p, rc:%d\n", bio, rc);
 
 	/* Reset status is initialized as "failed". Set to "success" once we have at least one
 	 * successfully reset nvme_ctrlr.
@@ -3150,16 +3152,12 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 
 		spdk_thread_send_msg(nvme_ctrlr->thread, msg_fn, nvme_ctrlr);
 
-		NVME_BDEV_INFOLOG(nbdev, "reset_io %p started resetting ctrlr [%s, %u].\n",
-				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr));
+		NVME_BDEV_INFOLOG(nbdev, nvme_ctrlr, "reset_io %p started resetting ctrlr.\n", bio);
 	} else if (rc == -EBUSY) {
 		rc = 0;
-
-		NVME_BDEV_INFOLOG(nbdev, "reset_io %p was queued to ctrlr [%s, %u].\n",
-				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr));
+		NVME_BDEV_INFOLOG(nbdev, nvme_ctrlr, "reset_io %p was queued to ctrlr.\n", bio);
 	} else {
-		NVME_BDEV_INFOLOG(nbdev, "reset_io %p could not reset ctrlr [%s, %u], rc:%d\n",
-				  bio, CTRLR_STRING(nvme_ctrlr), CTRLR_ID(nvme_ctrlr), rc);
+		NVME_BDEV_INFOLOG(nbdev, nvme_ctrlr, "reset_io %p could not reset ctrlr, rc:%d\n", bio, rc);
 	}
 
 	return rc;
@@ -3207,8 +3205,7 @@ bdev_nvme_freeze_bdev_channel(struct nvme_bdev_channel_iter *i,
 static void
 bdev_nvme_reset_io(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio)
 {
-	NVME_BDEV_INFOLOG(nbdev, "reset_io %p started.\n", bio);
-
+	NVME_BDEV_INFOLOG(nbdev, null_ctrlr, "reset_io %p started.\n", bio);
 	nvme_bdev_for_each_channel(nbdev,
 				   bdev_nvme_freeze_bdev_channel,
 				   bio,
