@@ -587,7 +587,7 @@ nvme_ctrlr_for_each_channel(struct nvme_ctrlr *nvme_ctrlr,
 
 	iter = calloc(1, sizeof(struct nvme_ctrlr_channel_iter));
 	if (iter == NULL) {
-		SPDK_ERRLOG("Unable to allocate iterator\n");
+		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Unable to allocate iterator\n");
 		assert(false);
 		return;
 	}
@@ -648,7 +648,7 @@ nvme_bdev_for_each_channel(struct nvme_bdev *nbdev,
 
 	iter = calloc(1, sizeof(struct nvme_bdev_channel_iter));
 	if (iter == NULL) {
-		SPDK_ERRLOG("Unable to allocate iterator\n");
+		NVME_BDEV_ERRLOG(nbdev, null_ctrlr, "Unable to allocate iterator\n");
 		assert(false);
 		return;
 	}
@@ -949,7 +949,7 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	ch = spdk_get_io_channel(nvme_ns->ctrlr);
 	if (ch == NULL) {
 		nvme_io_path_free(io_path);
-		SPDK_ERRLOG("Failed to alloc io_channel.\n");
+		NVME_NS_ERRLOG(nvme_ns, "Failed to alloc io_channel.\n");
 		return -ENOMEM;
 	}
 
@@ -2568,7 +2568,7 @@ nvme_ctrlr_check_namespaces(struct nvme_ctrlr *nvme_ctrlr)
 	     nvme_ns != NULL;
 	     nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns)) {
 		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
-			SPDK_DEBUGLOG(bdev_nvme, "NSID %u was removed during reset.\n", nvme_ns->id);
+			NVME_NS_DEBUGLOG(nvme_ns, "NSID was removed during reset.\n");
 			/* NS can be added again. Just nullify nvme_ns->ns. */
 			nvme_ns->ns = NULL;
 		}
@@ -4993,7 +4993,7 @@ bdev_nvme_add_io_path(struct nvme_bdev_channel_iter *i,
 
 	rc = _bdev_nvme_add_io_path(nbdev_ch, nvme_ns);
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to add I/O path to bdev_channel dynamically.\n");
+		NVME_NS_ERRLOG(nvme_ns, "Failed to add I/O path to bdev_channel dynamically.\n");
 	}
 
 	nvme_bdev_for_each_channel_continue(i, rc);
@@ -5580,7 +5580,7 @@ bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
 	if (ctx->nvme_ns == NULL) {
 		pthread_mutex_unlock(&nbdev->mutex);
 
-		SPDK_ERRLOG("bdev %s does not have namespace to controller %u.\n", name, cntlid);
+		NVME_BDEV_ERRLOG(nbdev, null_ctrlr, "bdev does not have namespace to controller %u.\n", cntlid);
 		rc = -ENODEV;
 		goto err_bdev;
 	}
@@ -5725,7 +5725,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	union spdk_nvme_async_event_completion	event;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_WARNLOG("AER request execute failed\n");
+		NVME_CTRLR_WARNLOG(nvme_ctrlr, "AER request execute failed\n");
 		return;
 	}
 
@@ -8812,7 +8812,7 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 		max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ctrlr->ctrlr);
 
 		if (nbytes > max_xfer_size) {
-			SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
+			NVME_CTRLR_ERRLOG(nvme_ctrlr, "nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
 			rc = -EINVAL;
 			goto err;
 		}
@@ -8838,7 +8838,7 @@ bdev_nvme_io_passthru(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	if (nbytes > max_xfer_size) {
-		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
+		NVME_QPAIR_ERRLOG(bio->io_path->qpair, "nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
 		return -EINVAL;
 	}
 
@@ -8863,12 +8863,12 @@ bdev_nvme_io_passthru_md(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	if (nbytes > max_xfer_size) {
-		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
+		NVME_QPAIR_ERRLOG(bio->io_path->qpair, "nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
 		return -EINVAL;
 	}
 
 	if (md_len != nr_sectors * spdk_nvme_ns_get_md_size(ns)) {
-		SPDK_ERRLOG("invalid meta data buffer size\n");
+		NVME_QPAIR_ERRLOG(bio->io_path->qpair, "invalid meta data buffer size\n");
 		return -EINVAL;
 	}
 
@@ -8899,12 +8899,12 @@ bdev_nvme_iov_passthru_md(struct nvme_bdev_io *bio,
 	bio->iov_offset = 0;
 
 	if (nbytes > max_xfer_size) {
-		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
+		NVME_QPAIR_ERRLOG(bio->io_path->qpair, "nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
 		return -EINVAL;
 	}
 
 	if (md_len != nr_sectors * spdk_nvme_ns_get_md_size(ns)) {
-		SPDK_ERRLOG("invalid meta data buffer size\n");
+		NVME_QPAIR_ERRLOG(bio->io_path->qpair, "invalid meta data buffer size\n");
 		return -EINVAL;
 	}
 
