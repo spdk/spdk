@@ -36,40 +36,66 @@
 	(spdk_nvme_trtype_is_fabrics(nvme_ctrlr->active_path_id->trid.trtype) ? \
 	nvme_ctrlr->active_path_id->trid.subnqn : nvme_ctrlr->active_path_id->trid.traddr)
 
-#define CTRLR_ID(nvme_ctrlr)	(spdk_nvme_ctrlr_get_id(nvme_ctrlr->ctrlr))
+#define CTRLR_ID(nvme_ctrlr)   (spdk_nvme_ctrlr_get_id(nvme_ctrlr->ctrlr))
 
-#define NVME_CTRLR_ERRLOG(ctrlr, format, ...) \
-	SPDK_ERRLOG("[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
+#define NVME_CTRLR_LOG_FMT "%s,%u"
+#define NVME_CTRLR_LOG_ARGS(ctrlr) \
+  CTRLR_STRING(ctrlr), \
+  CTRLR_ID(ctrlr)
 
-#define NVME_CTRLR_WARNLOG(ctrlr, format, ...) \
-	SPDK_WARNLOG("[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
+#define NVME_BDEV_LOG_FMT "%s"
+#define NVME_BDEV_LOG_ARGS(nbdev) \
+  (nbdev)->disk.name
 
-#define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) \
-	SPDK_NOTICELOG("[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
+#define NVME_CTRLR_LOG(type, ctrlr, format, ...) do { \
+	if ((ctrlr)) { \
+		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG("[null ctrlr] " format, ##__VA_ARGS__); \
+	} \
+} while (0)
 
-#define NVME_CTRLR_INFOLOG(ctrlr, format, ...) \
-	SPDK_INFOLOG(bdev_nvme, "[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
+#define NVME_CTRLR_LOG2(type, component, ctrlr, format, ...) do { \
+	if ((ctrlr)) { \
+		SPDK_##type##LOG(component, "["NVME_CTRLR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "[null ctrlr] " format, ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_CTRLR_ERRLOG(ctrlr, format, ...) NVME_CTRLR_LOG(ERR, ctrlr, format, ##__VA_ARGS__)
+#define NVME_CTRLR_WARNLOG(ctrlr, format, ...) NVME_CTRLR_LOG(WARN, ctrlr, format, ##__VA_ARGS__)
+#define NVME_CTRLR_NOTICELOG(ctrlr, format, ...) NVME_CTRLR_LOG(NOTICE, ctrlr, format, ##__VA_ARGS__)
+#define NVME_CTRLR_INFOLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(INFO, bdev_nvme, ctrlr, format, ##__VA_ARGS__)
+
+#define NVME_BDEV_LOG(type, nbdev, format, ...) do { \
+	if ((nbdev)) { \
+		SPDK_##type##LOG("["NVME_BDEV_LOG_FMT"] " format, NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG("[null nbdev] " format, ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_BDEV_LOG2(type, component, nbdev, format, ...) do { \
+	if ((nbdev)) { \
+		SPDK_##type##LOG(component, "["NVME_BDEV_LOG_FMT"] " format, NVME_BDEV_LOG_ARGS(nbdev), ##__VA_ARGS__); \
+	} else { \
+		SPDK_##type##LOG(component, "[null nbdev] " format, ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define NVME_BDEV_ERRLOG(nbdev, format, ...) NVME_BDEV_LOG(ERR, nbdev, format, ##__VA_ARGS__)
+#define NVME_BDEV_WARNLOG(nbdev, format, ...) NVME_BDEV_LOG(WARN, nbdev, format, ##__VA_ARGS__)
+#define NVME_BDEV_NOTICELOG(nbdev, format, ...) NVME_BDEV_LOG(NOTICE, nbdev, format, ##__VA_ARGS__)
+#define NVME_BDEV_INFOLOG(nbdev, format, ...) NVME_BDEV_LOG2(INFO, bdev_nvme, nbdev, format, ##__VA_ARGS__)
 
 #ifdef DEBUG
-#define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) \
-	SPDK_DEBUGLOG(bdev_nvme, "[%s, %u] " format, CTRLR_STRING(ctrlr), CTRLR_ID(ctrlr), ##__VA_ARGS__);
+#define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, bdev_nvme, ctrlr, format, ##__VA_ARGS__)
+#define NVME_BDEV_DEBUGLOG(ctrlr, format, ...) NVME_BDEV_LOG2(DEBUG, bdev_nvme, nbdev, format, ##__VA_ARGS__)
 #else
-#define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
+#define NVME_CTRLR_DEBUGLOG(...) do { } while (0)
+#define NVME_BDEV_DEBUGLOG(...) do { } while (0)
 #endif
-
-#define BDEV_STRING(nbdev) (nbdev->disk.name)
-
-#define NVME_BDEV_ERRLOG(nbdev, format, ...) \
-	SPDK_ERRLOG("[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
-
-#define NVME_BDEV_WARNLOG(nbdev, format, ...) \
-	SPDK_WARNLOG("[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
-
-#define NVME_BDEV_NOTICELOG(nbdev, format, ...) \
-	SPDK_NOTICELOG("[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
-
-#define NVME_BDEV_INFOLOG(nbdev, format, ...) \
-	SPDK_INFOLOG(bdev_nvme, "[%s] " format, BDEV_STRING(nbdev), ##__VA_ARGS__);
 
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 #define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
