@@ -32,7 +32,7 @@
 #include "spdk_internal/usdt.h"
 #include "spdk_internal/trace_defs.h"
 
-#define NVME_CTRLR_LOG_FMT "%s%s%s:%s,%u"
+#define NVME_CTRLR_LOG_FMT "%s%s%s:%s,cntlid:%u"
 #define NVME_CTRLR_LOG_ARGS(nvme_ctrlr) \
   spdk_nvme_trtype_is_fabrics((nvme_ctrlr)->active_path_id->trid.trtype) ? (nvme_ctrlr)->active_path_id->trid.subnqn : "", \
   spdk_nvme_trtype_is_fabrics((nvme_ctrlr)->active_path_id->trid.trtype) ? "," : "", \

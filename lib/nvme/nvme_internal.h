@@ -611,7 +611,7 @@ struct spdk_nvme_ns {
 	RB_ENTRY(spdk_nvme_ns)		node;
 };
 
-#define NVME_CTRLR_LOG_FMT "%s%s%s%s%s,%u"
+#define NVME_CTRLR_LOG_FMT "%s%s%s%s%s,cntlid:%u"
 #define NVME_CTRLR_LOG_ARGS(ctrlr) \
   spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? (ctrlr)->opts.hostnqn : "", \
   spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? "," : "", \
@@ -620,7 +620,7 @@ struct spdk_nvme_ns {
   (ctrlr)->trid.traddr, \
   (ctrlr)->cntlid
 
-#define NVME_QPAIR_LOG_FMT "%u,%p"
+#define NVME_QPAIR_LOG_FMT "qid:%u,qpair:%p"
 #define NVME_QPAIR_LOG_ARGS(qpair) \
   (qpair)->id, \
   (qpair)
