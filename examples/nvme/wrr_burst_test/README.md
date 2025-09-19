@@ -84,3 +84,27 @@ The CSV contains one row per command with:
 - command ID, opcode, SLBA, NLB
 - submit / complete timestamps (µs) and latency
 - completion status string
+
+## Error
+root@PAE-system:~/spdk# ./build/examples/wrr_burst_test -r "trtype:PCIe traddr:0000:1:00.0" nvme_pcie --hpw 5 --mpw 3 --lpw 1 --burst 1
+EAL: '-c <coremask>' option is deprecated, and will be removed in a future release
+EAL:    Use '-l <corelist>' or '--lcores=<corelist>' option instead
+Probing 0000:01:00.0
+Attached to 0000:01:00.0
+Controller: MO001600KWZQP        (S50KNE0MB00502      )
+  Namespace 1: size 1490 GiB
+
+Running WRR burst test on namespace 1
+
+Config:
+  Commands/qpair      : 255
+  LBAs/command        : 8
+  Arbitration weights : HPW=5 MPW=3 LPW=1
+  Arbitration burst   : 1
+  Queue depth         : 511
+  LBA stride/queue    : 0x2000
+  Mode                : read
+  Qpair 0 mapped to priority high (QID 1, base LBA 0)
+malloc(): corrupted top size
+Aborted (core dumped)
+root@PAE-system:~/spdk# 

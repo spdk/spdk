@@ -571,7 +571,8 @@ submit_burst(struct qpair_ctx *ctx, struct spdk_nvme_ns *ns)
 	uint32_t i;
 	int rc = 0;
 
-	for (i = 0; i < g_cfg.cmds_per_queue; ++i) {
+	// for (i = 0; i < g_cfg.cmds_per_queue; ++i) {
+	for (i = g_cfg.cmds_per_queue; i > 0; --i) {
 		struct cmd_entry *entry = &ctx->entries[i];
 		uint64_t lba = ctx->base_lba + (uint64_t)i * g_cfg.lba_count;
 		void *buffer = (uint8_t *)ctx->data_pool + (size_t)i * ctx->payload_size;
