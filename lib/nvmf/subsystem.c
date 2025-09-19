@@ -3690,6 +3690,7 @@ exit:
 			p_info->hostids_cnt = (uint8_t)num_hostid;
 			p_info->hostids_gen++;
 			p_info->io_waiting_done = false;
+			p_info->io_waiting_timeout_ticks = 0;
 		}
 	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3925,6 +3926,44 @@ ns_reservation_pg_io_wait_check_done(struct spdk_io_channel_iter *i, int status)
 	}
 }
 
+static void
+ns_reservation_pg_io_wait_clear_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)spdk_io_channel_iter_get_ctx(i);
+	/* If we entered this function we are always timed out */
+	_nvmf_ns_reservation_update_done(ns->subsystem,
+					 STAILQ_FIRST(&ns->reservations), -ETIMEDOUT);
+}
+
+static void
+ns_reservation_pg_io_wait_clear(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	struct spdk_nvmf_request *q_req;
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+	bool hostid_match;
+
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (!qpair->ctrlr || qpair->ctrlr->subsys != ns->subsystem) {
+			continue;
+		}
+		hostid_match = ns_reservation_hostid_list_contains_id(p_info->hostids,
+				p_info->hostids_cnt, &qpair->ctrlr->hostid);
+		if (!hostid_match) {
+			continue;
+		}
+		TAILQ_FOREACH(q_req, &qpair->outstanding, link) {
+			struct spdk_nvme_cmd *req_cmd = &q_req->cmd->nvme_cmd;
+			if (req_cmd->nsid == ns->nsid && q_req->reservation_waiting) {
+				q_req->reservation_waiting = 0;
+			}
+		}
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
 static int
 ns_reservation_next_io_wait_check(void *ctx)
 {
@@ -3934,16 +3973,26 @@ ns_reservation_next_io_wait_check(void *ctx)
 	/* this should not be running if io_waiting is complete */
 	assert(!p_info->io_waiting_done);
 
-	/* Start a poll group check */
-	spdk_for_each_channel(ns->subsystem->tgt,
-			      ns_reservation_pg_io_wait_check,
-			      ns,
-			      ns_reservation_pg_io_wait_check_done);
+	if (spdk_get_ticks() < p_info->io_waiting_timeout_ticks) {
+		/* Start a poll group check */
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_io_wait_check,
+				      ns,
+				      ns_reservation_pg_io_wait_check_done);
+	} else {
+		/* If the cmd timed out we call update_done during cleanup */
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_io_wait_clear,
+				      ns,
+				      ns_reservation_pg_io_wait_clear_done);
+	}
+
 	spdk_poller_unregister(&p_info->io_waiting_timer);
 	return SPDK_POLLER_BUSY;
 }
 
 #define NS_RESERVATION_IO_WAIT_CHECK_INTERVAL 100
+#define NS_RESERVATION_IO_WAIT_TIMEOUT_S 10
 static void
 ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns)
 {
@@ -3951,6 +4000,12 @@ ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns)
 	assert(p_info);
 	assert(p_info->io_waiting_timer == NULL);
 
+	/* First time scheduling, calculate a total timeout */
+	if (!p_info->io_waiting_timeout_ticks) {
+		p_info->io_waiting_timeout_ticks = spdk_get_ticks() +
+						   NS_RESERVATION_IO_WAIT_TIMEOUT_S * spdk_get_ticks_hz();
+	}
+	/* We use a poller as a one-shot timer for next check */
 	p_info->io_waiting_timer =
 		SPDK_POLLER_REGISTER(ns_reservation_next_io_wait_check, ns, NS_RESERVATION_IO_WAIT_CHECK_INTERVAL);
 }
@@ -3976,8 +4031,12 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 			SPDK_ERRLOG("ns_reservation failed internal device error\n");
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			break;
+		case -ETIMEDOUT:
+			SPDK_ERRLOG("ns_reservation failed due to time out: %i\n", status);
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_INTERRUPTED;
+			break;
 		default:
-			SPDK_ERRLOG("ns_reservation failed unknown error\n");
+			SPDK_ERRLOG("ns_reservation failed unknown error: %i\n", status);
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_UNRECOVERED_ERROR;
 			break;
 		}
