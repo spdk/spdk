@@ -780,7 +780,8 @@ run_wrr_burst_test(struct ns_entry *target)
 			goto cleanup;
 		}
 
-		memset(ctx->data_pool, (int)(i + 1), ctx->payload_size * g_cfg.cmds_per_queue);
+		memset(ctx->data_pool, (uint8_t)(i + 1),
+		       ctx->payload_size * g_cfg.cmds_per_queue);
 
 		ctx->entries = calloc(g_cfg.cmds_per_queue, sizeof(struct cmd_entry));
 		if (ctx->entries == NULL) {
