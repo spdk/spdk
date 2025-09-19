@@ -22,6 +22,20 @@ The resulting binary lives at `build/examples/nvme/wrr_burst_test/wrr_burst_test
 
 ## Run
 
+Before running, ensure the SPDK environment has access to hugepages. Allocate them via the provided script:
+
+```bash
+sudo HUGEMEM=8192 scripts/setup.sh
+```
+
+or manually reserve 2 MB pages and mount hugetlbfs. Without hugepages DPDK initialization fails with:
+
+```
+EAL: No free 2048 kB hugepages reported on node 0
+[...]
+Failed to initialize DPDK
+```
+
 Minimal command (local PCIe controller, defaults):
 
 ```bash
@@ -70,14 +84,3 @@ The CSV contains one row per command with:
 - command ID, opcode, SLBA, NLB
 - submit / complete timestamps (µs) and latency
 - completion status string
-
-
-
-##########
-root@PAE-system:~/spdk# ./build/examples/wrr_burst_test -r "trtype:PCIe traddr:0000:1:00.0"
-EAL: '-c <coremask>' option is deprecated, and will be removed in a future release
-EAL:    Use '-l <corelist>' or '--lcores=<corelist>' option instead
-EAL: No free 2048 kB hugepages reported on node 0
-EAL: Cannot get hugepage information.
-[2025-09-18 17:43:37.849540] init.c: 798:spdk_env_init: *ERROR*: Failed to initialize DPDK
-Unable to initialize SPDK env
