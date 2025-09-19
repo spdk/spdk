@@ -4,17 +4,19 @@ This example exercises NVMe Weighted Round Robin (WRR) arbitration by submitting
 
 ## Build
 
-From the repository root run either build system:
+From the repository root run either build system (after a standard `./configure`):
 
 ```bash
 ninja -C build examples/nvme/wrr_burst_test
 ```
 
-or
+or simply build everything:
 
 ```bash
-make -C examples/nvme wrr_burst_test
+make
 ```
+
+> **Note**: Do not call `make -C examples/nvme wrr_burst_test`; that shortcut only compiles the object file in this directory and fails at link time because the SPDK libraries are not linked in. Let the top-level build drive the link step.
 
 The resulting binary lives at `build/examples/nvme/wrr_burst_test/wrr_burst_test` (path may differ if you use a different build directory).
 
@@ -69,15 +71,6 @@ The CSV contains one row per command with:
 - submit / complete timestamps (µs) and latency
 - completion status string
 
-Use this data to verify that completion shares track the configured WRR weights.
-
-##################
-root@PAE-system:~/spdk# make -C examples/nvme wrr_burst_test
-make: Entering directory '/root/spdk/examples/nvme'
-cc -fno-lto -Wl,-z,relro,-z,now -Wl,-z,noexecstack -fuse-ld=bfd  wrr_burst_test.o   -o wrr_burst_test
-/usr/bin/ld.bfd: wrr_burst_test.o: in function `cleanup':
-/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:471: undefined reference to `spdk_nvme_detach_async'
-/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:471: undefined reference to `spdk_nvme_detach_async'
 /usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:475: undefined reference to `spdk_nvme_detach_poll_async'
 /usr/bin/ld.bfd: wrr_burst_test.o: in function `register_ctrlr':
 /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:442: undefined reference to `spdk_nvme_ctrlr_get_data'
