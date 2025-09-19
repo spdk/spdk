@@ -72,19 +72,70 @@ The CSV contains one row per command with:
 Use this data to verify that completion shares track the configured WRR weights.
 
 ##################
-root@PAE-system:~/spdk# make
-ninja: Entering directory `/root/spdk/dpdk/build-tmp'
-ninja: no work to do.
-  CC examples/nvme/wrr_burst_test/wrr_burst_test.o
-wrr_burst_test.c: In function ‘probe_cb’:
-wrr_burst_test.c:484:9: warning: implicit declaration of function ‘SPDK_UNUSED’ [-Wimplicit-function-declaration]
-  484 |         SPDK_UNUSED(cb_ctx);
-      |         ^~~~~~~~~~~
-wrr_burst_test.c: In function ‘dump_completion_log’:
-wrr_burst_test.c:633:53: error: ‘struct spdk_nvme_status’ has no member named ‘raw’
-  633 |                 struct spdk_nvme_status status = { .raw = entry->status_raw };
-      |                                                     ^~~
-make[3]: *** [/root/spdk/mk/spdk.common.mk:540: wrr_burst_test.o] Error 1
-make[2]: *** [/root/spdk/mk/spdk.subdirs.mk:16: wrr_burst_test] Error 2
-make[1]: *** [/root/spdk/mk/spdk.subdirs.mk:16: nvme] Error 2
-make: *** [/root/spdk/mk/spdk.subdirs.mk:16: examples] Error 2
+root@PAE-system:~/spdk# make -C examples/nvme wrr_burst_test
+make: Entering directory '/root/spdk/examples/nvme'
+cc -fno-lto -Wl,-z,relro,-z,now -Wl,-z,noexecstack -fuse-ld=bfd  wrr_burst_test.o   -o wrr_burst_test
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `cleanup':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:471: undefined reference to `spdk_nvme_detach_async'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:471: undefined reference to `spdk_nvme_detach_async'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:475: undefined reference to `spdk_nvme_detach_poll_async'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `register_ctrlr':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:442: undefined reference to `spdk_nvme_ctrlr_get_data'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:448: undefined reference to `spdk_nvme_ctrlr_get_first_active_ns'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:450: undefined reference to `spdk_nvme_ctrlr_get_ns'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `register_ns':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:410: undefined reference to `spdk_nvme_ns_is_active'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:425: undefined reference to `spdk_nvme_ns_get_size'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:424: undefined reference to `spdk_nvme_ns_get_id'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `register_ctrlr':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:449: undefined reference to `spdk_nvme_ctrlr_get_next_active_ns'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `io_complete':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:519: undefined reference to `spdk_get_ticks'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `main':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:811: undefined reference to `spdk_env_opts_init'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `parse_args':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:306: undefined reference to `spdk_nvme_transport_id_parse'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:312: undefined reference to `spdk_log_set_flag'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `main':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:827: undefined reference to `spdk_env_init'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:832: undefined reference to `spdk_nvme_probe'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:848: undefined reference to `spdk_nvme_ns_get_id'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `run_wrr_burst_test':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:685: undefined reference to `spdk_nvme_ns_get_sector_size'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:686: undefined reference to `spdk_nvme_ns_get_num_sectors'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:725: undefined reference to `spdk_nvme_ctrlr_get_default_io_qpair_opts'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:732: undefined reference to `spdk_zmalloc'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:749: undefined reference to `spdk_nvme_ctrlr_alloc_io_qpair'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:758: undefined reference to `spdk_nvme_qpair_get_id'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `submit_burst':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:560: undefined reference to `spdk_nvme_ns_cmd_read'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:550: undefined reference to `spdk_get_ticks'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:557: undefined reference to `spdk_nvme_ns_cmd_write'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:565: undefined reference to `spdk_log'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `flush_submissions':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:588: undefined reference to `spdk_nvme_qpair_process_completions'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `run_wrr_burst_test':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:776: undefined reference to `spdk_nvme_qpair_process_completions'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:778: undefined reference to `spdk_log'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:791: undefined reference to `spdk_nvme_ctrlr_free_io_qpair'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:795: undefined reference to `spdk_free'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `main':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:852: undefined reference to `spdk_env_fini'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `run_wrr_burst_test':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:707: undefined reference to `spdk_strerror'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `main':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:852: undefined reference to `spdk_env_fini'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:860: undefined reference to `spdk_strerror'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:834: undefined reference to `spdk_strerror'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:836: undefined reference to `spdk_env_fini'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:843: undefined reference to `spdk_env_fini'
+/usr/bin/ld.bfd: wrr_burst_test.o: in function `dump_completion_log':
+/root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:609: undefined reference to `spdk_get_ticks_hz'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:633: undefined reference to `spdk_nvme_cpl_get_status_string'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:609: undefined reference to `spdk_get_ticks_hz'
+/usr/bin/ld.bfd: /root/spdk/examples/nvme/wrr_burst_test/wrr_burst_test.c:669: undefined reference to `spdk_strerror'
+collect2: error: ld returned 1 exit status
+make[1]: *** [<builtin>: wrr_burst_test] Error 1
+make: *** [/root/spdk/mk/spdk.subdirs.mk:16: wrr_burst_test] Error 2
+make: Leaving directory '/root/spdk/examples/nvme'
+root@PAE-system:~/spdk# 
