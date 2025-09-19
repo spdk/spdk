@@ -70,3 +70,21 @@ The CSV contains one row per command with:
 - completion status string
 
 Use this data to verify that completion shares track the configured WRR weights.
+
+##################
+root@PAE-system:~/spdk# make
+ninja: Entering directory `/root/spdk/dpdk/build-tmp'
+ninja: no work to do.
+  CC examples/nvme/wrr_burst_test/wrr_burst_test.o
+wrr_burst_test.c: In function ‘probe_cb’:
+wrr_burst_test.c:484:9: warning: implicit declaration of function ‘SPDK_UNUSED’ [-Wimplicit-function-declaration]
+  484 |         SPDK_UNUSED(cb_ctx);
+      |         ^~~~~~~~~~~
+wrr_burst_test.c: In function ‘dump_completion_log’:
+wrr_burst_test.c:633:53: error: ‘struct spdk_nvme_status’ has no member named ‘raw’
+  633 |                 struct spdk_nvme_status status = { .raw = entry->status_raw };
+      |                                                     ^~~
+make[3]: *** [/root/spdk/mk/spdk.common.mk:540: wrr_burst_test.o] Error 1
+make[2]: *** [/root/spdk/mk/spdk.subdirs.mk:16: wrr_burst_test] Error 2
+make[1]: *** [/root/spdk/mk/spdk.subdirs.mk:16: nvme] Error 2
+make: *** [/root/spdk/mk/spdk.subdirs.mk:16: examples] Error 2

@@ -821,8 +821,8 @@ main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (g_trid.trtype == SPDK_NVME_TRANSPORT_UNKNOWN) {
-		snprintf(g_trid.trstring, sizeof(g_trid.trstring), "%s", SPDK_NVME_TRANSPORT_PCIE);
+	if (g_trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
+		snprintf(g_trid.trstring, sizeof(g_trid.trstring), "%d", SPDK_NVME_TRANSPORT_PCIE);
 	}
 
 	if (spdk_env_init(&opts) != 0) {
