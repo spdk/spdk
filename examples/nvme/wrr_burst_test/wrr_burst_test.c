@@ -83,15 +83,12 @@ struct completion_vector {
 	size_t capacity;
 };
 
-static const uint32_t g_max_queue_depth = 511;
-static const uint64_t g_queue_lba_stride = 0x2000;
-
 static struct app_config g_cfg = {
 	.cmds_per_queue = 255,
 	.lba_count = 8,
 	.start_lba = 0,
-	.queue_size = 511,
-	.queue_requests = 511,
+	.queue_size = 512,
+	.queue_requests = 512,
 	.hpw = 32,
 	.mpw = 16,
 	.lpw = 4,
@@ -243,21 +240,6 @@ parse_positive_u64(const char *arg, uint64_t *value)
 }
 
 static int
-parse_non_negative_u32(const char *arg, uint32_t *value)
-{
-	char *endptr = NULL;
-	uint64_t tmp;
-
-	tmp = strtoull(arg, &endptr, 10);
-	if (endptr == NULL || *endptr != '\0' || tmp > UINT32_MAX) {
-		return -EINVAL;
-	}
-
-	*value = (uint32_t)tmp;
-	return 0;
-}
-
-static int
 parse_weight(const char *arg, uint16_t *weight)
 {
 	uint32_t parsed;
@@ -345,10 +327,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				fprintf(stderr, "Invalid command count '%s'\n", optarg);
 				return rc;
 			}
-			if (u32 > g_max_queue_depth) {
-				fprintf(stderr, "Commands per queue cannot exceed %u\n", g_max_queue_depth);
-				return -ERANGE;
-			}
 			g_cfg.cmds_per_queue = u32;
 			break;
 		case 'N':
@@ -372,11 +350,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			if (rc != 0) {
 				fprintf(stderr, "Invalid queue size '%s'\n", optarg);
 				return rc;
-			}
-			if (u32 > g_max_queue_depth) {
-				fprintf(stderr, "Queue depth capped at %u (requested %u)\n",
-				       g_max_queue_depth, u32);
-				u32 = g_max_queue_depth;
 			}
 			g_cfg.queue_size = u32;
 			g_cfg.queue_requests = u32;
@@ -406,7 +379,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			}
 			break;
 		case 0x103:
-			rc = parse_non_negative_u32(optarg, &u32);
+			rc = parse_positive_u32(optarg, &u32);
 			if (rc != 0 || u32 > 7U) {
 				fprintf(stderr, "Invalid arbitration burst '%s'\n", optarg);
 				return -ERANGE;
@@ -424,13 +397,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	}
 	if (g_cfg.queue_requests < g_cfg.queue_size) {
 		g_cfg.queue_requests = g_cfg.queue_size;
-	}
-	if (g_cfg.queue_size > g_max_queue_depth) {
-		fprintf(stderr, "Queue depth exceeds maximum %u\n", g_max_queue_depth);
-		return -ERANGE;
-	}
-	if (g_cfg.queue_requests > g_max_queue_depth) {
-		g_cfg.queue_requests = g_max_queue_depth;
 	}
 
 	return 0;
@@ -720,17 +686,10 @@ run_wrr_burst_test(struct ns_entry *target)
 	uint32_t block_size = spdk_nvme_ns_get_sector_size(target->ns);
 	uint64_t ns_size = spdk_nvme_ns_get_num_sectors(target->ns);
 	uint64_t lbas_per_qpair = (uint64_t)g_cfg.cmds_per_queue * g_cfg.lba_count;
-	uint64_t stride_coverage = g_queue_lba_stride * (NUM_TEST_QPAIRS - 1);
-	uint64_t max_lba = g_cfg.start_lba + stride_coverage + lbas_per_qpair;
+	uint64_t total_lbas = lbas_per_qpair * NUM_TEST_QPAIRS;
+	uint64_t max_lba = g_cfg.start_lba + total_lbas;
 	uint32_t i;
 	int rc = 0;
-
-	if (lbas_per_qpair > g_queue_lba_stride) {
-		fprintf(stderr,
-			"Commands cover %" PRIu64 " LBAs, exceeding per-queue stride 0x%" PRIx64 "\n",
-			lbas_per_qpair, g_queue_lba_stride);
-		return -ERANGE;
-	}
 
 	if (max_lba > ns_size) {
 		fprintf(stderr,
@@ -757,7 +716,6 @@ run_wrr_burst_test(struct ns_entry *target)
 	       g_cfg.hpw, g_cfg.mpw, g_cfg.lpw);
 	printf("  Arbitration burst   : %u\n", g_cfg.arbitration_burst);
 	printf("  Queue depth         : %u\n", g_cfg.queue_size);
-	printf("  LBA stride/queue    : 0x%" PRIx64 "\n", g_queue_lba_stride);
 	printf("  Mode                : %s\n",
 	       (g_cfg.mode == IO_MODE_WRITE) ? "write" : "read");
 
@@ -801,7 +759,7 @@ run_wrr_burst_test(struct ns_entry *target)
 		ctx->qprio = priorities[i];
 		ctx->qid = spdk_nvme_qpair_get_id(ctx->qpair);
 		ctx->index = i;
-		ctx->base_lba = g_cfg.start_lba + g_queue_lba_stride * i;
+		ctx->base_lba = g_cfg.start_lba + lbas_per_qpair * i;
 
 		printf("  Qpair %u mapped to priority %s (QID %u, base LBA %" PRIu64 ")\n",
 		       i, qprio_to_string(ctx->qprio), ctx->qid, ctx->base_lba);

@@ -48,10 +48,10 @@ Useful options:
 - `-C <num>` Commands per qpair (default 255).
 - `-N <num>` Logical blocks per command (default 8).
 - `-S <lba>` Starting LBA offset (default 0).
-- `-Q <entries>` Queue depth / request pool size (default 511, capped at 511).
+- `-Q <entries>` Queue depth / request pool size (default 512).
 - `-O <path>` CSV output path (default `wrr_burst_log.csv`; use `-` for stdout).
 - `--hpw`, `--mpw`, `--lpw` High/medium/low WRR weights (defaults 32/16/4).
-- `--burst <0-7>` Arbitration burst value (default 7, 0 is valid and results in a burst of 1 command).
+- `--burst <0-7>` Arbitration burst value (default 7).
 - `-W` Issue writes instead of reads.
 
 To pin the test to a specific PCIe device, supply the BDF in the transport ID. For example:
@@ -63,7 +63,7 @@ sudo build/examples/nvme/wrr_burst_test/wrr_burst_test \
 
 SPDK parses the `traddr` string and matches it against the controller's bus:device.function address during `spdk_nvme_probe()`, so only the selected device is attached.
 
-At runtime the tool allocates nine qpairs (3 high, 3 medium, 3 low), primes each with 255 commands, rings all doorbells, then polls completions while recording timing metadata. Queue depth is limited to 511 entries per qpair and each qpair operates on its own 0x2000-LBA region to avoid overlap between queues.
+At runtime the tool allocates nine qpairs (3 high, 3 medium, 3 low), primes each with 255 commands, rings all doorbells, then polls completions while recording timing metadata.
 
 ## Trace Support
 
@@ -86,3 +86,6 @@ The CSV contains one row per command with:
 - completion status string
 
 ## Error
+
+## 1. max queue deepth is 511, then the base LBA between two queues is 0x2000
+## 2. arbitration burst can be 0, which means 2^ab(e.g.0) = 1
