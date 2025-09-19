@@ -45,3 +45,4 @@ test/common/build_config.sh
 .run_test_name
 .spdk-isal.log
 .spdk-isal-crypto.log
+wrr_burst_log.csv

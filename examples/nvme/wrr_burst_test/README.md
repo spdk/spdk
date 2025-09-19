@@ -84,3 +84,6 @@ The CSV contains one row per command with:
 - command ID, opcode, SLBA, NLB
 - submit / complete timestamps (µs) and latency
 - completion status string
+
+## 1. max queue deepth is 511, then the base LBA between two queues is 0x2000
+## 2. arbitration burst can be 0, which means 2^ab(e.g.0) = 1
