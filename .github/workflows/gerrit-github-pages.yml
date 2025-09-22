@@ -44,7 +44,7 @@ jobs:
             git config user.email "spdkbot@gmail.com"
             git remote set-url origin https://$GERRIT_BOT_USER:$GERRIT_BOT_PASSWORD@review.spdk.io/spdk/spdk.github.io
             git commit --signoff --message "doc: update to ${{ steps.vars.outputs.spdk_sha }}"
-            git push HEAD:master
+            git push origin HEAD:master
         else
             echo "No changes staged, skipping commit/push."
         fi
