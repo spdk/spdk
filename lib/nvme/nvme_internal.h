@@ -604,14 +604,13 @@ struct spdk_nvme_ns {
 	RB_ENTRY(spdk_nvme_ns)		node;
 };
 
-#define CTRLR_STRING(ctrlr) \
-	(spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? \
-	(ctrlr)->trid.subnqn : (ctrlr)->trid.traddr)
-
-#define NVME_CTRLR_LOG_FMT "%s,%s,%u"
+#define NVME_CTRLR_LOG_FMT "%s%s%s%s%s,%u"
 #define NVME_CTRLR_LOG_ARGS(ctrlr) \
-  (ctrlr)->opts.hostnqn, \
-  CTRLR_STRING(ctrlr), \
+  spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? (ctrlr)->opts.hostnqn : "", \
+  spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? "," : "", \
+  spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? (ctrlr)->trid.subnqn : "", \
+  spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? "," : "", \
+  (ctrlr)->trid.traddr, \
   (ctrlr)->cntlid
 
 #define NVME_QPAIR_LOG_FMT "%u,%p"
