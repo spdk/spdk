@@ -194,7 +194,7 @@ write_sb_cb(int status, struct raid_bdev *raid_bdev, void *ctx)
 static void
 test_raid_bdev_write_superblock(void)
 {
-	struct raid_base_bdev_info base_info[3] = {{0}};
+	struct raid_base_bdev_info base_info[3] = {};
 	struct raid_bdev raid_bdev = {
 		.num_base_bdevs = SPDK_COUNTOF(base_info),
 		.base_bdev_info = base_info,

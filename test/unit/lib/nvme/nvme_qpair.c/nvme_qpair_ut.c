@@ -156,11 +156,11 @@ dummy_cb_fn(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 static void
 test_nvme_qpair_process_completions(void)
 {
-	struct spdk_nvme_qpair		admin_qp = {0};
-	struct spdk_nvme_qpair		qpair = {0};
-	struct spdk_nvme_ctrlr		ctrlr = {{0}};
-	struct nvme_request		dummy_1 = {{0}};
-	struct nvme_request		dummy_2 = {{0}};
+	struct spdk_nvme_qpair		admin_qp = {};
+	struct spdk_nvme_qpair		qpair = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
+	struct nvme_request		dummy_1 = {};
+	struct nvme_request		dummy_2 = {};
 	int				rc;
 
 	dummy_1.cb_fn = dummy_cb_fn;

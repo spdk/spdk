@@ -168,7 +168,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	union nvmf_c2h_msg cpl;
 	union nvmf_h2c_msg cmd;
 	struct spdk_nvme_sgl_descriptor *sgl;
-	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
+	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {};
 	struct spdk_nvmf_rdma_request_data data;
 	int rc, i;
 	uint32_t sgl_length;
@@ -890,7 +890,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	union nvmf_c2h_msg cpl;
 	union nvmf_h2c_msg cmd;
 	struct spdk_nvme_sgl_descriptor *sgl;
-	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
+	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {};
 	char data_buffer[8192];
 	struct spdk_nvmf_rdma_request_data *data = (struct spdk_nvmf_rdma_request_data *)data_buffer;
 	char data2_buffer[8192];

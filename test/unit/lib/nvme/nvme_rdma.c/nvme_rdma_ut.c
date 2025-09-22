@@ -182,10 +182,10 @@ static void
 test_nvme_rdma_build_sgl_request(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_nvme_ctrlr ctrlr = {0};
-	struct spdk_nvmf_cmd cmd = {{0}};
-	struct spdk_nvme_rdma_req rdma_req = {0};
-	struct nvme_request req = {{0}};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
 	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
 	uint64_t i;
 	int rc;
@@ -291,10 +291,10 @@ static void
 test_nvme_rdma_build_sgl_inline_request(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_nvme_ctrlr ctrlr = {0};
-	struct spdk_nvmf_cmd cmd = {{0}};
-	struct spdk_nvme_rdma_req rdma_req = {0};
-	struct nvme_request req = {{0}};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
 	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
 	int rc;
 
@@ -352,10 +352,10 @@ static void
 test_nvme_rdma_build_contig_request(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_nvme_ctrlr ctrlr = {0};
-	struct spdk_nvmf_cmd cmd = {{0}};
-	struct spdk_nvme_rdma_req rdma_req = {0};
-	struct nvme_request req = {{0}};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
 	int rc;
 
 	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
@@ -395,10 +395,10 @@ static void
 test_nvme_rdma_build_contig_inline_request(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_nvme_ctrlr ctrlr = {0};
-	struct spdk_nvmf_cmd cmd = {{0}};
-	struct spdk_nvme_rdma_req rdma_req = {0};
-	struct nvme_request req = {{0}};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
 	int rc;
 
 	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
