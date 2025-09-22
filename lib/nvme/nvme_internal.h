@@ -608,9 +608,20 @@ struct spdk_nvme_ns {
 	(spdk_nvme_trtype_is_fabrics((ctrlr)->trid.trtype) ? \
 	(ctrlr)->trid.subnqn : (ctrlr)->trid.traddr)
 
+#define NVME_CTRLR_LOG_FMT "%s,%s,%u"
+#define NVME_CTRLR_LOG_ARGS(ctrlr) \
+  (ctrlr)->opts.hostnqn, \
+  CTRLR_STRING(ctrlr), \
+  (ctrlr)->cntlid
+
+#define NVME_QPAIR_LOG_FMT "%u,%p"
+#define NVME_QPAIR_LOG_ARGS(qpair) \
+  (qpair)->id, \
+  (qpair)
+
 #define NVME_CTRLR_LOG(type, ctrlr, format, ...) do { \
 	if ((ctrlr)) { \
-		SPDK_##type##LOG("[%s,%s,%u] " format, (ctrlr)->opts.hostnqn, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
+		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), ##__VA_ARGS__); \
 	} else { \
 		SPDK_##type##LOG("[null ctrlr] " format, ##__VA_ARGS__); \
 	} \
@@ -618,7 +629,7 @@ struct spdk_nvme_ns {
 
 #define NVME_CTRLR_LOG2(type, component, ctrlr, format, ...) do { \
 	if ((ctrlr)) { \
-		SPDK_##type##LOG(component, "[%s,%s,%u] " format, (ctrlr)->opts.hostnqn, CTRLR_STRING(ctrlr), (ctrlr)->cntlid, ##__VA_ARGS__); \
+		SPDK_##type##LOG(component, "["NVME_CTRLR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS(ctrlr), ##__VA_ARGS__); \
 	} else { \
 		SPDK_##type##LOG(component, "[null ctrlr] " format, ##__VA_ARGS__); \
 	} \
@@ -633,9 +644,9 @@ struct spdk_nvme_ns {
 	if (!(qpair)) { \
 		SPDK_##type##LOG("[null qpair] " format, ##__VA_ARGS__); \
 	} else if (!(qpair)->ctrlr) { \
-		SPDK_##type##LOG("[null ctrlr,%u,%p] " format, (qpair)->id, (qpair), ##__VA_ARGS__); \
+		SPDK_##type##LOG("[null ctrlr,"NVME_QPAIR_LOG_FMT"] " format, NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
 	} else { \
-		SPDK_##type##LOG("[%s,%s,%u,%u,%p,%s] " format, (qpair)->ctrlr->opts.hostnqn, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), nvme_qpair_state_string((qpair)->state), ##__VA_ARGS__); \
+		SPDK_##type##LOG("["NVME_CTRLR_LOG_FMT","NVME_QPAIR_LOG_FMT",%s] " format, NVME_CTRLR_LOG_ARGS((qpair)->ctrlr), NVME_QPAIR_LOG_ARGS(qpair), nvme_qpair_state_string((qpair)->state), ##__VA_ARGS__); \
 	} \
 } while (0)
 
@@ -643,9 +654,9 @@ struct spdk_nvme_ns {
 	if (!(qpair)) { \
 		SPDK_##type##LOG(component, "[null qpair] " format, ##__VA_ARGS__); \
 	} else if (!(qpair)->ctrlr) { \
-		SPDK_##type##LOG(component, "[null ctrlr,%u,%p] " format, (qpair)->id, (qpair), ##__VA_ARGS__); \
+		SPDK_##type##LOG(component, "[null ctrlr,"NVME_QPAIR_LOG_FMT"] " format, NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
 	} else { \
-		SPDK_##type##LOG(component, "[%s,%s,%u,%u,%p] " format, (qpair)->ctrlr->opts.hostnqn, CTRLR_STRING((qpair)->ctrlr), (qpair)->ctrlr->cntlid, (qpair)->id, (qpair), ##__VA_ARGS__); \
+		SPDK_##type##LOG(component, "["NVME_CTRLR_LOG_FMT","NVME_QPAIR_LOG_FMT"] " format, NVME_CTRLR_LOG_ARGS((qpair)->ctrlr), NVME_QPAIR_LOG_ARGS(qpair), ##__VA_ARGS__); \
 	} \
 } while (0)
 
@@ -658,8 +669,8 @@ struct spdk_nvme_ns {
 #define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) NVME_CTRLR_LOG2(DEBUG, nvme, ctrlr, format, ##__VA_ARGS__)
 #define NVME_QPAIR_DEBUGLOG(qpair, format, ...) NVME_QPAIR_LOG2(DEBUG, nvme, qpair, format, ##__VA_ARGS__)
 #else
-#define NVME_CTRLR_DEBUGLOG(ctrlr, format, ...) do { } while (0)
-#define NVME_QPAIR_DEBUGLOG(qpair, format, ...) do { } while (0)
+#define NVME_CTRLR_DEBUGLOG(...) do { } while (0)
+#define NVME_QPAIR_DEBUGLOG(...) do { } while (0)
 #endif
 
 /**
