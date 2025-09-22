@@ -57,40 +57,29 @@ function install_fio() {
 	# This version of fio is installed in /usr/src/fio to enable
 	# building the spdk fio plugin.
 	local fio_version="fio-3.35"
+	local fio_dir=/usr/src/fio
 
-	if [ ! -d /usr/src/fio ]; then
-		if [ ! -d fio ]; then
-			git clone "${GIT_REPO_FIO}" "$GIT_REPOS/fio"
-			sudo mv "$GIT_REPOS/fio" /usr/src/
-		else
-			sudo mv "$GIT_REPOS/fio" /usr/src/
-		fi
-		(
-			git -C /usr/src/fio checkout master \
-				&& git -C /usr/src/fio pull \
-				&& git -C /usr/src/fio checkout $fio_version \
-				&& if [ $OSID == 'freebsd' ]; then
-					gmake -C /usr/src/fio -j${jobs} \
-						&& sudo gmake -C /usr/src/fio install
-				else
-					make -C /usr/src/fio -j${jobs} \
-						&& sudo make -C /usr/src/fio install
-				fi
-		)
+	rm -rf "$fio_dir"
+	git clone "${GIT_REPO_FIO}" --branch "${fio_version}" "$GIT_REPOS/fio"
+	mv "$GIT_REPOS/fio" "${fio_dir}"
+
+	if [ $OSID == 'freebsd' ]; then
+		gmake -C "${fio_dir}" -j${jobs} \
+			&& sudo gmake -C "${fio_dir}" install
 	else
-		echo "fio already in /usr/src/fio. Not installing"
+		make -C "${fio_dir}" -j${jobs} \
+			&& sudo make -C "${fio_dir}" install
 	fi
 }
 
 function install_flamegraph() {
 	# Flamegraph is used when printing out timing graphs for the tests.
-	if [ ! -d /usr/local/FlameGraph ]; then
-		git clone "${GIT_REPO_FLAMEGRAPH}" "$GIT_REPOS/FlameGraph"
-		mkdir -p /usr/local
-		sudo mv "$GIT_REPOS/FlameGraph" /usr/local/FlameGraph
-	else
-		echo "flamegraph already installed. Skipping"
-	fi
+	local flamegraph_dir=/usr/local/FlameGraph
+
+	rm -rf "$flamegraph_dir"
+	git clone "${GIT_REPO_FLAMEGRAPH}" "$GIT_REPOS/FlameGraph"
+	mkdir -p /usr/local
+	mv "$GIT_REPOS/FlameGraph" "$flamegraph_dir"
 }
 
 function _install_qemu() {
@@ -165,21 +154,23 @@ function install_qemu() {
 
 function install_nvmecli() {
 	# nvme-cli >1.11.1 should be used.
+	local nvmecli_version="v2.5"
+	local nvmecli_dir=/usr/local/src/nvme-cli
+
 	rm -rf "$GIT_REPOS/nvme-cli-cuse"
-	git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
-	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.5
+	git clone "${GIT_REPO_NVME_CLI_GITHUB}" --branch "${nvmecli_version}" "$GIT_REPOS/nvme-cli-cuse"
 
 	meson setup --force-fallback-for=libnvme \
 		"$GIT_REPOS/nvme-cli-cuse/.build" \
 		"$GIT_REPOS/nvme-cli-cuse"
 	meson compile -C "$GIT_REPOS/nvme-cli-cuse/.build"
 
-	rm -rf /usr/local/src/nvme-cli
-	mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+	rm -rf "${nvmecli_dir}"
+	mv "$GIT_REPOS/nvme-cli-cuse" "${nvmecli_dir}"
 
 	# Make sure binary is available for the cuse tests
-	if [[ -e /usr/local/src/nvme-cli/.build/nvme ]]; then
-		sudo ln -s .build/nvme /usr/local/src/nvme-cli/
+	if [[ -e "${nvmecli_dir}"/.build/nvme ]]; then
+		sudo ln -s .build/nvme "${nvmecli_dir}"
 	fi
 }
 
@@ -209,11 +200,8 @@ function install_nvmecli_plugin() {
 function install_libiscsi() {
 	# We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
 	# to later. Cloning from git is just future proofing the machines.
-	if [[ ! -d $GIT_REPOS/libiscsi ]]; then
-		git clone "${GIT_REPO_LIBISCSI}" "$GIT_REPOS/libiscsi"
-	else
-		echo "libiscsi already checked out. Skipping"
-	fi
+	rm -rf "$GIT_REPOS/libiscsi"
+	git clone "${GIT_REPO_LIBISCSI}" "$GIT_REPOS/libiscsi"
 	(cd "$GIT_REPOS/libiscsi" && ./autogen.sh && ./configure --prefix=/usr/local/libiscsi)
 	make -C "$GIT_REPOS/libiscsi" -j${jobs} WARN_CFLAGS=
 	sudo make -C "$GIT_REPOS/libiscsi" install
@@ -298,6 +286,7 @@ function install_vagrant() {
 }
 
 function install_igb_uio() {
+	rm -rf "$GIT_REPOS/dpdk-kmods"
 	git clone "${GIT_REPO_DPDK_KMODS}" "$GIT_REPOS/dpdk-kmods"
 
 	(cd "$GIT_REPOS/dpdk-kmods/linux/igb_uio" && make -j ${jobs})
@@ -661,6 +650,8 @@ export GIT_REPO_BCC
 export GIT_REPO_BPFTRACE
 : ${GIT_REPO_NVME_CLI=https://review.spdk.io/gerrit/spdk/nvme-cli}
 export GIT_REPO_NVME_CLI
+: ${GIT_REPO_NVME_CLI_GITHUB=https://github.com/linux-nvme/nvme-cli.git}
+export GIT_REPO_NVME_CLI_GITHUB
 : ${GIT_REPO_ITTAPI=https://github.com/intel/ittapi.git}
 export GIT_REPO_ITTAPI
 : ${GIT_REPO_DOXYGEN="https://github.com/doxygen/doxygen"}
