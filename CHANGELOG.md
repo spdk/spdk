@@ -4,12 +4,97 @@
 
 ## v25.09
 
+### bdev
+
+`spdk_bdev_get_preferred_write_alignment`, `spdk_bdev_get_preferred_write_granularity`,
+`spdk_bdev_get_optimal_write_size`, `spdk_bdev_get_preferred_unmap_alignment` and
+`spdk_bdev_get_preferred_unmap_granularity` APIs were added.
+
+### bdev_compress
+
+The deprecated bdev_compress module was removed.
+
+### bdev_null
+
+Support was added to set the bdev's preferred write alignment, preferred write
+granularity, optimal write size, preferred unmap alignment and preferred unmap
+granularity. These can be set by users using new parameters to the `bdev_null_create`
+RPC.
+
+### bdev_nvme
+
+Add NVMe flush support to the bdev_nvme module. This support is optional and can be
+enabled using the new `enable_flush` parameter to the `bdev_nvme_set_options` RPC.
+The flush command is only sent to the namespace if the namespace reported that it
+had a volatile write cache.
+
+Support was added to set the bdev's preferred write alignment, preferred write
+granularity, optimal write size, preferred unmap alignment and preferred unmap
+granularity, if the NVMe namespace reports the associated values in its
+IDENTIFY data.
+
+### bdev_rbd
+
+Support was added for read-only RBD bdevs. Users can make an RBD bdev read-only
+by using the `-r` or `--readonly` flag with the `bdev_rbd_create` RPC.
+
+### blobfs
+
+The deprecated blobfs library was removed.
+
+### env_dpdk
+
+The DPDK submodule was updated to DPDK 25.07.
+
+Support was added for memory registration at a 4KB granularity.
+
+The deprecated `spdk_env_get_socket_id()` and `spdk_pci_device_get_socket_id()`
+APIs were removed. Users should use `spdk_env_get_numa_id()` and
+`spdk_pci_device_get_numa_id()` instead.
+
+### nvme
+
+Logging was significantly enhanced as part of this release. Transport address
+is now shown for fabrics controllers. QP related log messages now include
+information about the QP and its controller.
+
+### nvmf
+
+Add NSSR support (NVMe Subsytem Reset) to NVMe-oF target. Once NSSR is issued - it is passed to all
+underlying namespaces (bdevs). Currenly only bdevs with PCIe transport would handle NSSR.
+See the NVMe Subsystem Reset (NSSR) section of nvmf.md for more information.
+
+Passthrough handlers for vendor-specific admin commands were added to the NVMe-oF target.
+They can be enabled using the optional `vendor_specific` parameter to the `nvmf_set_config`
+RPC.
+
+Vfio-user migration code was removed. This code was in a non-working state, and upstream
+libvfio-user has moved to a new v2-style interface which is significantly different.
+QEMU 10.1 has no live migration support currently, and when it does it will be v2-style
+based. This allows SPDK to use latest vfio-user and its vfio-user migration support
+is planned to be re-added at a later time.
+
+A namespace's IDENTIFY data is now populated with the preferred write alignment,
+preferred write granularity, optimal write size, preferred unmap alignment and
+preferred unmap granularity if they were specified by the underlying bdev.
+
+The nvmf target now reports support for NVMe version 1.4. To enable this upgrade,
+improved NSID and log page offset validation was added to the target.
+
 ### python
 
 Moved all cli code inside the python package for easier generation and packaging.
 Split large rpc python file into modules.
 
 Deprecate python.spdk.rpc modules and use JSONRPCClient object directly.
+
+### reduce
+
+The deprecated reduce library was removed.
+
+### rocksdb
+
+The deprecated RocksDB plugin was removed.
 
 ### sock
 
@@ -25,11 +110,17 @@ implementations.
 Changed the return behavior of `spdk_sock_flush`. The function now returns 0 on success, as relying
 on the number of bytes returned was not recommended.
 
-### nvmf
+Added `spdk_sock_connect_async` to enable asynchronous connect operations.
 
-Add NSSR support (NVMe Subsytem Reset) to NVMe-oF target. Once NSSR is issued - it is passed to all
-underlying namespaces (bdevs). Currenly only bdevs with PCIe transport would handle NSSR.
-See the NVMe Subsystem Reset (NSSR) section of nvmf.md for more information.
+### thread
+
+The `spdk_io_channel_ref` API was added to more efficiently take a reference to an
+existing and known I/O channel.
+
+### util
+
+The `spdk_bit_pool_set_bit_allocated` API was added to enable setting an `spdk_bit_pool`
+to a previously known state.
 
 ## v25.05
 
