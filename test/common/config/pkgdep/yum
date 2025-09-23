@@ -86,6 +86,8 @@ elif [[ $OSID == rhel ]]; then
 	packages+=(avahi)
 	if [[ $OSVERSION == 9* ]]; then
 		packages+=("https://dl.rockylinux.org/pub/rocky/9/devel/x86_64/os/Packages/i/isns-utils-devel-0.101-4.el9.x86_64.rpm")
+	elif [[ $OSVERSION == 10* ]]; then
+		packages+=("https://dl.rockylinux.org/pub/rocky/10/devel/x86_64/os/Packages/i/isns-utils-devel-0.103-1.el10.x86_64.rpm")
 	elif [[ $OSVERSION == 8* ]]; then
 		packages+=("https://dl.rockylinux.org/pub/rocky/8/BaseOS/x86_64/os/Packages/isns-utils-devel-0.99-1.el8.x86_64.rpm")
 	fi
