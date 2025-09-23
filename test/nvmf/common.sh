@@ -518,7 +518,9 @@ function nvmfappstart() {
 }
 
 function nvmftestfini() {
-	nvmfcleanup || :
+	if [[ "$SPDK_TEST_SKIP_NVMF_KERNEL_TESTS" -eq 0 ]]; then
+		nvmfcleanup || :
+	fi
 	if [ -n "$nvmfpid" ]; then
 		killprocess $nvmfpid
 	fi
