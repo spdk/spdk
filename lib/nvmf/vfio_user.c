@@ -4449,6 +4449,8 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_sq *sq, struct nvmf_vfio_user_req
 	vu_req->iovcnt = 0;
 	vu_req->req.iovcnt = 0;
 	vu_req->req.length = 0;
+	vu_req->req.raw = 0; /* clear all flags */
+	vu_req->req.cmd_cb_fn = NULL;
 	vu_req->state = VFIO_USER_REQUEST_STATE_FREE;
 
 	TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
