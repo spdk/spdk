@@ -60,7 +60,7 @@ struct cmd_entry {
 	uint16_t cid;
 	uint64_t submit_tick;
 	uint64_t completion_tick;
-	uint32_t status_raw;
+	struct spdk_nvme_status status;
 	bool success;
 };
 
@@ -481,7 +481,7 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	SPDK_UNUSED(cb_ctx);
+	(void)cb_ctx;
 
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_WRR;
 	opts->arbitration_burst = g_cfg.arbitration_burst;
@@ -503,8 +503,8 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	SPDK_UNUSED(cb_ctx);
-	SPDK_UNUSED(opts);
+	(void)cb_ctx;
+	(void)opts;
 
 	printf("Attached to %s\n", trid->traddr[0] ? trid->traddr : "(local PCIe)");
 	register_ctrlr(ctrlr);
@@ -518,7 +518,7 @@ io_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	entry->completion_tick = spdk_get_ticks();
 	entry->cid = cpl->cid;
-	entry->status_raw = cpl->status_raw;
+	entry->status = cpl->status;
 	entry->success = !spdk_nvme_cpl_is_error(cpl);
 
 	completion_vector_append(entry);
@@ -537,8 +537,7 @@ submit_burst(struct qpair_ctx *ctx, struct spdk_nvme_ns *ns)
 	uint32_t i;
 	int rc = 0;
 
-	// for (i = 0; i < g_cfg.cmds_per_queue; ++i) {
-	for (i = g_cfg.cmds_per_queue; i > 0; --i) {
+	for (i = 0; i < g_cfg.cmds_per_queue; ++i) {
 		struct cmd_entry *entry = &ctx->entries[i];
 		uint64_t lba = ctx->base_lba + (uint64_t)i * g_cfg.lba_count;
 		void *buffer = (uint8_t *)ctx->data_pool + (size_t)i * ctx->payload_size;
@@ -551,7 +550,7 @@ submit_burst(struct qpair_ctx *ctx, struct spdk_nvme_ns *ns)
 		entry->submit_tick = spdk_get_ticks();
 		entry->completion_tick = 0;
 		entry->cid = UINT16_MAX;
-		entry->status_raw = 0;
+		memset(&entry->status, 0, sizeof(entry->status));
 		entry->success = false;
 
 		if (g_cfg.mode == IO_MODE_WRITE) {
@@ -631,8 +630,7 @@ dump_completion_log(struct qpair_ctx *qpairs, uint32_t num_qpairs)
 		double submit_us = entry->submit_tick * ticks_to_us;
 		double complete_us = entry->completion_tick * ticks_to_us;
 		double latency_us = (entry->completion_tick - entry->submit_tick) * ticks_to_us;
-		struct spdk_nvme_status status = { .raw = entry->status_raw };
-		const char *status_str = spdk_nvme_cpl_get_status_string(&status);
+		const char *status_str = spdk_nvme_cpl_get_status_string(&entry->status);
 
 		fprintf(out,
 			"%zu,%u,%s,%zu,%u,%s,%" PRIu64 ",%u,%.3f,%.3f,%.3f,%s\n",
@@ -739,8 +737,7 @@ run_wrr_burst_test(struct ns_entry *target)
 			goto cleanup;
 		}
 
-		memset(ctx->data_pool, (uint8_t)(i + 1),
-		       ctx->payload_size * g_cfg.cmds_per_queue);
+		memset(ctx->data_pool, (int)(i + 1), ctx->payload_size * g_cfg.cmds_per_queue);
 
 		ctx->entries = calloc(g_cfg.cmds_per_queue, sizeof(struct cmd_entry));
 		if (ctx->entries == NULL) {

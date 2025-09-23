@@ -4,37 +4,21 @@ This example exercises NVMe Weighted Round Robin (WRR) arbitration by submitting
 
 ## Build
 
-From the repository root run either build system (after a standard `./configure`):
+From the repository root run either build system:
 
 ```bash
 ninja -C build examples/nvme/wrr_burst_test
 ```
 
-or simply build everything:
+or
 
 ```bash
-make
+make -C examples/nvme wrr_burst_test
 ```
-
-> **Note**: Do not call `make -C examples/nvme wrr_burst_test`; that shortcut only compiles the object file in this directory and fails at link time because the SPDK libraries are not linked in. Let the top-level build drive the link step.
 
 The resulting binary lives at `build/examples/nvme/wrr_burst_test/wrr_burst_test` (path may differ if you use a different build directory).
 
 ## Run
-
-Before running, ensure the SPDK environment has access to hugepages. Allocate them via the provided script:
-
-```bash
-sudo HUGEMEM=8192 scripts/setup.sh
-```
-
-or manually reserve 2 MB pages and mount hugetlbfs. Without hugepages DPDK initialization fails with:
-
-```
-EAL: No free 2048 kB hugepages reported on node 0
-[...]
-Failed to initialize DPDK
-```
 
 Minimal command (local PCIe controller, defaults):
 
@@ -85,7 +69,22 @@ The CSV contains one row per command with:
 - submit / complete timestamps (µs) and latency
 - completion status string
 
-## Error
+Use this data to verify that completion shares track the configured WRR weights.
 
-## 1. max queue deepth is 511, then the base LBA between two queues is 0x2000
-## 2. arbitration burst can be 0, which means 2^ab(e.g.0) = 1
+##################
+root@PAE-system:~/spdk# make
+ninja: Entering directory `/root/spdk/dpdk/build-tmp'
+ninja: no work to do.
+  CC examples/nvme/wrr_burst_test/wrr_burst_test.o
+wrr_burst_test.c: In function ‘probe_cb’:
+wrr_burst_test.c:484:9: warning: implicit declaration of function ‘SPDK_UNUSED’ [-Wimplicit-function-declaration]
+  484 |         SPDK_UNUSED(cb_ctx);
+      |         ^~~~~~~~~~~
+wrr_burst_test.c: In function ‘dump_completion_log’:
+wrr_burst_test.c:633:53: error: ‘struct spdk_nvme_status’ has no member named ‘raw’
+  633 |                 struct spdk_nvme_status status = { .raw = entry->status_raw };
+      |                                                     ^~~
+make[3]: *** [/root/spdk/mk/spdk.common.mk:540: wrr_burst_test.o] Error 1
+make[2]: *** [/root/spdk/mk/spdk.subdirs.mk:16: wrr_burst_test] Error 2
+make[1]: *** [/root/spdk/mk/spdk.subdirs.mk:16: nvme] Error 2
+make: *** [/root/spdk/mk/spdk.subdirs.mk:16: examples] Error 2
