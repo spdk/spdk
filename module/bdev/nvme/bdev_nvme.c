@@ -4970,13 +4970,12 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 
 	if (rc == 0) {
 		nvme_ns->probe_ctx = NULL;
-		nvme_ctrlr_get_ref(nvme_ctrlr);
 	} else {
 		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 		nvme_ns_free(nvme_ns);
+		nvme_ctrlr_put_ref(nvme_ctrlr);
 	}
 
 	if (ctx) {
@@ -5087,6 +5086,8 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev	*bdev;
 	int			rc = 0;
+
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 
 	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nvme_ns->id);
 	if (!ns) {
