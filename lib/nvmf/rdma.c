@@ -2002,6 +2002,7 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
 	rdma_req->req.raw = 0; /* clear all flags */
+	rdma_req->req.cmd_cb_fn = NULL;
 	rdma_req->offset = 0;
 	rdma_req->fused_failed = false;
 	rdma_req->transfer_wr = NULL;
