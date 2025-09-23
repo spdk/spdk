@@ -1614,6 +1614,10 @@ test_nvmf_tcp_get_request_resuse_flags(void)
 	SPDK_CU_ASSERT_FATAL(tcp_req1.req.first_fused);
 	SPDK_CU_ASSERT_FATAL(tcp_req1.req.reservation_queued);
 
+	/* Enable admin passthrough */
+	tcp_req1.req.cmd_cb_fn = (spdk_nvmf_nvme_passthru_cmd_cb)(0xDEADBEEF);
+	SPDK_CU_ASSERT_FATAL(tcp_req1.req.cmd_cb_fn != NULL);
+
 	TAILQ_INSERT_TAIL(&tqpair.tcp_req_free_queue, &tcp_req1, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_FREE]++;
 	tqpair.state = NVMF_TCP_QPAIR_STATE_RUNNING;
@@ -1629,6 +1633,8 @@ test_nvmf_tcp_get_request_resuse_flags(void)
 	/* Validate additional fields */
 	SPDK_CU_ASSERT_FATAL(tcp_req->req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
 	SPDK_CU_ASSERT_FATAL(tcp_req->state == TCP_REQUEST_STATE_NEW);
+	/* Valiate admin passthrough is not enabled */
+	SPDK_CU_ASSERT_FATAL(tcp_req->req.cmd_cb_fn == NULL);
 }
 
 int
