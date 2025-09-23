@@ -875,6 +875,7 @@ static void
 nvme_ctrlr_get_ref(struct nvme_ctrlr *nvme_ctrlr)
 {
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	assert(nvme_ctrlr->ref > 0);
 	nvme_ctrlr->ref++;
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 }
