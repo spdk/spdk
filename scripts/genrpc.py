@@ -5,6 +5,8 @@
 #
 
 import os
+import re
+import sys
 import json
 import argparse
 from pathlib import Path
@@ -13,6 +15,19 @@ from jinja2 import Environment, FileSystemLoader
 
 # Get directory of this script
 base_dir = Path(__file__).resolve().parent.parent
+
+
+def lint_json_examples():
+    with open(base_dir / "doc" / "jsonrpc.md.jinja2", "r") as file:
+        data = file.read()
+        examples = re.findall("~~~json(.+?)~~~", data, re.MULTILINE | re.DOTALL)
+        for example in examples:
+            try:
+                json.loads(example)
+            except json.decoder.JSONDecodeError:
+                for i, x in enumerate(example.splitlines()):
+                    print(i+1, x, file=sys.stderr)
+                raise
 
 
 def generate_docs(schema):
@@ -76,14 +91,17 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    try:
+        lint_json_examples()
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     if not os.path.exists(args.schema):
         raise FileNotFoundError(f'Cannot access {args.schema}: No such file or directory')
 
     with open(args.schema, "r") as file:
         schema = json.load(file)
-
-    if not (args.doc or args.rpc):
-        parser.error("No action requested, add -d for doc or -r for rpcs generation")
 
     if args.doc:
         generate_docs(schema)

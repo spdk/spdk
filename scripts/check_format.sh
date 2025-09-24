@@ -802,6 +802,21 @@ function check_rpc_args() {
 	return $rc
 }
 
+function check_rpc_schema() {
+	local rc=0
+
+	echo -n "Linting Schema RPCs and documentation..."
+	if ! python "$rootdir"/scripts/genrpc.py --schema "$rootdir"/schema/schema.json > badargs.log 2>&1; then
+		echo "Found bogus JSON in doc/jsonrpc.md.jinja2"
+		cat badargs.log
+		rc=1
+	else
+		echo " OK"
+	fi
+	rm -f badargs.log
+	return $rc
+}
+
 function get_files_for_lic() {
 	local f_shebang="" f_suffix=() f_type=() f_all=() exceptions=""
 
@@ -947,6 +962,7 @@ check_bash_static_analysis || rc=1
 check_changelog || rc=1
 check_json_rpc || rc=1
 check_rpc_args || rc=1
+check_rpc_schema || rc=1
 check_spdx_lic || rc=1
 check_golang_style || rc=1
 check_extern_c || rc=1
