@@ -50,4 +50,4 @@ jobs:
         fi
       env:
         GERRIT_BOT_USER: ${{ secrets.GERRIT_BOT_USER }}
-        GERRIT_BOT_HTTP_PASSWD: ${{ secrets.GERRIT_BOT_HTTP_PASSWD }}
+        GERRIT_BOT_PASSWORD: ${{ secrets.GERRIT_BOT_HTTP_PASSWD }}
