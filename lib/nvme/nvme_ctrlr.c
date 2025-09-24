@@ -2593,6 +2593,11 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	nvme_ctrlr_identify_active_ns_async(ctx);
+	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
+		nvme_active_ns_ctx_destroy(ctx);
+		return -ENXIO;
+	}
+
 	rc = nvme_wait_for_adminq_completion(ctrlr, &ctx->status, false);
 	if (rc || ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
 		if (!ctx->status.timed_out) {
