@@ -13,6 +13,8 @@ from pathlib import Path
 from tabulate import tabulate
 from jinja2 import Environment, FileSystemLoader
 
+import rpc
+
 # Get directory of this script
 base_dir = Path(__file__).resolve().parent.parent
 
@@ -28,6 +30,13 @@ def lint_json_examples():
                 for i, x in enumerate(example.splitlines()):
                     print(i+1, x, file=sys.stderr)
                 raise
+
+
+def lint_py_cli(schema):
+    parser, subparsers = rpc.create_parser()
+    for method in schema['methods']:
+        if method['name'] not in subparsers.choices:
+            raise ValueError(f"{method['name']} defined in schema, was not found in python cli")
 
 
 def generate_docs(schema):
@@ -102,6 +111,12 @@ if __name__ == "__main__":
 
     with open(args.schema, "r") as file:
         schema = json.load(file)
+
+    try:
+        lint_py_cli(schema)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     if args.doc:
         generate_docs(schema)

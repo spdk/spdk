@@ -748,63 +748,6 @@
       ]
     },
     {
-      "name": "bdev_compress_create",
-      "params": [
-        {
-          "name": "base_bdev_name",
-          "type": "string",
-          "required": true,
-          "description": "Name of the base bdev"
-        },
-        {
-          "name": "pm_path",
-          "type": "string",
-          "required": true,
-          "description": "Path to persistent memory"
-        },
-        {
-          "name": "lb_size",
-          "type": "int",
-          "required": false,
-          "description": "Compressed vol logical block size (512 or 4096)"
-        },
-        {
-          "name": "comp_algo",
-          "type": "string",
-          "required": false,
-          "description": "Compression algorithm for the compressed vol. Default is deflate"
-        },
-        {
-          "name": "comp_level",
-          "type": "int",
-          "required": false,
-          "description": "Compression algorithm level for the compressed vol. Default is 1"
-        }
-      ]
-    },
-    {
-      "name": "bdev_compress_delete",
-      "params": [
-        {
-          "name": "name",
-          "type": "string",
-          "required": true,
-          "description": "Name of the compress bdev"
-        }
-      ]
-    },
-    {
-      "name": "bdev_compress_get_orphans",
-      "params": [
-        {
-          "name": "name",
-          "type": "string",
-          "required": false,
-          "description": "Name of the compress bdev"
-        }
-      ]
-    },
-    {
       "name": "bdev_crypto_create",
       "params": [
         {
@@ -5511,62 +5454,6 @@
           "type": "string",
           "required": false,
           "description": "NBD device name to display"
-        }
-      ]
-    },
-    {
-      "name": "blobfs_detect",
-      "params": [
-        {
-          "name": "bdev_name",
-          "type": "string",
-          "required": true,
-          "description": "Block device name to detect blobfs"
-        }
-      ]
-    },
-    {
-      "name": "blobfs_create",
-      "params": [
-        {
-          "name": "bdev_name",
-          "type": "string",
-          "required": true,
-          "description": "Block device name to create blobfs"
-        },
-        {
-          "name": "cluster_sz",
-          "type": "number",
-          "required": false,
-          "description": "Size of cluster in bytes. Must be multiple of 4KiB page size, default and minimal value is 1M."
-        }
-      ]
-    },
-    {
-      "name": "blobfs_mount",
-      "params": [
-        {
-          "name": "bdev_name",
-          "type": "string",
-          "required": true,
-          "description": "Block device name where the blobfs is"
-        },
-        {
-          "name": "mountpoint",
-          "type": "string",
-          "required": true,
-          "description": "Mountpoint path in host to mount blobfs"
-        }
-      ]
-    },
-    {
-      "name": "blobfs_set_cache_size",
-      "params": [
-        {
-          "name": "size_in_mb",
-          "type": "number",
-          "required": true,
-          "description": "Cache size in megabytes"
         }
       ]
     },
