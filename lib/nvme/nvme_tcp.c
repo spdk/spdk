@@ -446,16 +446,14 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 	}
 
-	/* A non-NULL fabric poll status indicates that a fabric command was outstanding
-	 * and the qpair state was CONNECTING before the disconnect was invoked. That
-	 * command was aborted by the socket close. To avoid leaking this status and dma_data,
-	 * nvme_tcp_ctrlr_connect_qpair_poll is used to releases them. */
+	/* A Fabric command may be outstanding before a disconnect is invoked. */
 	if (qpair->fabric_poll_status &&
 	    !(qpair->auth.flags.in_auth_poll || tqpair->flags.in_connect_poll)) {
-		assert(qpair->fabric_poll_status->done);
-		rc = nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
-		assert(rc != -EAGAIN);
-		assert(!qpair->fabric_poll_status);
+		nvme_fabric_qpair_poll_cleanup(qpair);
+		if (qpair->auth.cb_fn != NULL) {
+			qpair->auth.cb_fn(qpair->auth.cb_ctx, -ECANCELED);
+			qpair->auth.cb_fn = NULL;
+		}
 	}
 }
 
@@ -468,6 +466,7 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	nvme_tcp_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
 
+	assert(!qpair->fabric_poll_status);
 	nvme_qpair_deinit(qpair);
 	nvme_tcp_free_reqs(tqpair);
 	if (!tqpair->shared_stats) {

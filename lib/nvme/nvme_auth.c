@@ -1205,11 +1205,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_DONE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_DONE:
-			qpair->fabric_poll_status = NULL;
-			if (!status->timed_out) {
-				spdk_free(status->dma_data);
-				free(status);
-			}
+			nvme_fabric_qpair_poll_cleanup(qpair);
 			if (auth->cb_fn != NULL) {
 				auth->cb_fn(auth->cb_ctx, auth->status);
 				auth->cb_fn = NULL;

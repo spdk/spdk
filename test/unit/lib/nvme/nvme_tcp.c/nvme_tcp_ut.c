@@ -62,6 +62,8 @@ DEFINE_STUB(spdk_memory_domain_translate_data, int,
 DEFINE_STUB_V(spdk_memory_domain_invalidate_data, (struct spdk_memory_domain *domain,
 		void *domain_ctx, struct iovec *iov, uint32_t iovcnt));
 
+DEFINE_STUB_V(nvme_fabric_qpair_poll_cleanup, (struct spdk_nvme_qpair *qpair));
+
 static void
 nvme_transport_ctrlr_disconnect_qpair_done_mocked(struct spdk_nvme_qpair *qpair)
 {

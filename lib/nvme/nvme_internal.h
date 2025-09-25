@@ -1458,6 +1458,7 @@ int	nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair);
 bool	nvme_fabric_qpair_auth_required(struct spdk_nvme_qpair *qpair);
 int	nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair);
 int	nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair);
+void	nvme_fabric_qpair_poll_cleanup(struct spdk_nvme_qpair *qpair);
 
 typedef int (*spdk_nvme_parse_ana_log_page_cb)(
 	const struct spdk_nvme_ana_group_descriptor *desc, void *cb_arg);
