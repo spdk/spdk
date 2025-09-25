@@ -137,7 +137,7 @@
       "params": [
         {
           "name": "id",
-          "type": "string",
+          "type": "number",
           "required": true,
           "description": "Thread ID"
         },
@@ -464,7 +464,7 @@
       "params": [
         {
           "name": "pmd",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "pmd selection"
         }
@@ -741,7 +741,7 @@
         },
         {
           "name": "period",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "period (in microseconds).If set to 0, polling will be disabled."
         }
@@ -822,7 +822,7 @@
         },
         {
           "name": "cache_line_size",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "OCF cache line size in KiB: 4, 8, 16, 32, 64"
         },
@@ -918,13 +918,13 @@
         },
         {
           "name": "threshold",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Activation threshold in KiB"
         },
         {
           "name": "promotion_count",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Promotion request count"
         }
@@ -1144,7 +1144,7 @@
         },
         {
           "name": "filename",
-          "type": "number",
+          "type": "string",
           "required": true,
           "description": "Path to device or file"
         },
@@ -2095,7 +2095,7 @@
         },
         {
           "name": "new_size",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "New bdev size for resize operation in MiB"
         }
@@ -2233,25 +2233,25 @@
         },
         {
           "name": "num",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "the number of commands you want to fail.(default:1)"
         },
         {
           "name": "queue_depth",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "the queue depth at which to trigger the error"
         },
         {
           "name": "corrupt_offset",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "the offset in bytes to xor with corrupt_value"
         },
         {
           "name": "corrupt_value",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "the value for xor (1-255, 0 is invalid)"
         }
@@ -2337,7 +2337,7 @@
         },
         {
           "name": "overprovisioning",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Percentage of base device used for relocation, 20% by default"
         },
@@ -2349,7 +2349,7 @@
         },
         {
           "name": "l2p_dram_limit",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "DRAM limit for most recent L2P addresses (default 2048 MiB)"
         }
@@ -2390,7 +2390,7 @@
         },
         {
           "name": "overprovisioning",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Percentage of base device used for relocation, 20% by default"
         },
@@ -2402,7 +2402,7 @@
         },
         {
           "name": "l2p_dram_limit",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "DRAM limit for most recent L2P addresses (default 2048 MiB)"
         }
@@ -5361,19 +5361,19 @@
         },
         {
           "name": "ublk_id",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "Device id"
         },
         {
           "name": "queue_depth",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Device queue depth"
         },
         {
           "name": "num_queues",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Total number of device queues"
         }
@@ -5390,7 +5390,7 @@
         },
         {
           "name": "ublk_id",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "Device id"
         }
@@ -5401,7 +5401,7 @@
       "params": [
         {
           "name": "ublk_id",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "Device id to delete"
         }
@@ -5412,7 +5412,7 @@
       "params": [
         {
           "name": "ublk_id",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "ublk device id to display"
         }
@@ -5899,13 +5899,13 @@
       "params": [
         {
           "name": "fsdev_io_pool_size",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "Size of fsdev IO objects pool."
         },
         {
           "name": "fsdev_io_cache_size",
-          "type": "int",
+          "type": "number",
           "required": true,
           "description": "Size of fsdev IO objects cache per thread."
         }
@@ -5940,7 +5940,7 @@
         },
         {
           "name": "max_write",
-          "type": "int",
+          "type": "number",
           "required": false,
           "description": "Max write size in bytes"
         },

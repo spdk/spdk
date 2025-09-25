@@ -282,12 +282,12 @@ def add_parser(subparsers):
     def bdev_null_resize(args):
         print_json(args.client.bdev_null_resize(
                                              name=args.name,
-                                             new_size=int(args.new_size)))
+                                             new_size=args.new_size))
 
     p = subparsers.add_parser('bdev_null_resize',
                               help='Resize a null bdev')
     p.add_argument('name', help='null bdev name')
-    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
+    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB', type=int)
     p.set_defaults(func=bdev_null_resize)
 
     def bdev_aio_create(args):
@@ -895,12 +895,12 @@ def add_parser(subparsers):
     def bdev_rbd_resize(args):
         print_json(args.client.bdev_rbd_resize(
                                             name=args.name,
-                                            new_size=int(args.new_size)))
+                                            new_size=args.new_size))
 
     p = subparsers.add_parser('bdev_rbd_resize',
                               help='Resize a rbd bdev')
     p.add_argument('name', help='rbd bdev name')
-    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
+    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB', type=int)
     p.set_defaults(func=bdev_rbd_resize)
 
     def bdev_delay_create(args):
@@ -1545,10 +1545,10 @@ def add_parser(subparsers):
     def bdev_daos_resize(args):
         print_json(args.client.bdev_daos_resize(
                                              name=args.name,
-                                             new_size=int(args.new_size)))
+                                             new_size=args.new_size))
 
     p = subparsers.add_parser('bdev_daos_resize',
                               help='Resize a DAOS bdev')
     p.add_argument('name', help='DAOS bdev name')
-    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
+    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB', type=int)
     p.set_defaults(func=bdev_daos_resize)

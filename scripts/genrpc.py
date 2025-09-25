@@ -33,6 +33,7 @@ def lint_json_examples():
 
 
 def lint_py_cli(schema):
+    types = {str: 'string', None: 'string', int: 'number', bool: 'boolean'}
     parser, subparsers = rpc.create_parser()
     for method in schema['methods']:
         if method['name'] not in subparsers.choices:
@@ -46,6 +47,12 @@ def lint_py_cli(schema):
                 continue
             if param['required'] != action.required:
                 raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
+            newtype = types.get(action.type)
+            if not newtype:
+                # TODO: handle this case later and fix issues raised by it
+                continue
+            if param['type'] != newtype and action.metavar is None and param['type'] != "array":
+                raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
 
 
 def generate_docs(schema):
