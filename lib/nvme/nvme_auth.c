@@ -1086,6 +1086,12 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 	enum nvme_qpair_auth_state prev_state;
 	int rc;
 
+	if (auth->flags.in_auth_poll) {
+		return -EAGAIN;
+	}
+
+	auth->flags.in_auth_poll = true;
+
 	do {
 		prev_state = auth->state;
 
@@ -1101,6 +1107,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE);
 			/* Intentionally return here to prevent the state machine entering the DONE
 			 * state on the initial kick from nvme_fabric_qpair_authenticate_async. */
+			auth->flags.in_auth_poll = false;
 			return -EAGAIN;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE:
 			rc = nvme_wait_for_completion_poll(qpair, status);
@@ -1207,13 +1214,16 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 				auth->cb_fn(auth->cb_ctx, auth->status);
 				auth->cb_fn = NULL;
 			}
+			auth->flags.in_auth_poll = false;
 			return auth->status;
 		default:
 			assert(0 && "invalid state");
+			auth->flags.in_auth_poll = false;
 			return -EINVAL;
 		}
 	} while (auth->state != prev_state);
 
+	auth->flags.in_auth_poll = false;
 	return -EAGAIN;
 }
 

@@ -446,7 +446,9 @@ struct nvme_auth {
 			uint32_t        atr : 1;
 			/* Authentication and secure channel required (authreq.ascr) */
 			uint32_t        ascr : 1;
-			uint32_t        reserved : 30;
+			/* In authenticate poll context flag */
+			uint8_t		in_auth_poll : 1;
+			uint32_t        reserved : 29;
 		};
 		uint32_t                raw;
 	} flags;
