@@ -41,24 +41,28 @@ def add_parser(subparsers):
                    action='store_true', dest='enable_recv_pipe')
     p.add_argument('--disable-recv-pipe', help='Disable receive pipe',
                    action='store_false', dest='enable_recv_pipe')
-    p.add_argument('--enable-quickack', help='Enable quick ACK',
-                   action='store_true', dest='enable_quickack')
-    p.add_argument('--disable-quickack', help='Disable quick ACK',
-                   action='store_false', dest='enable_quickack')
-    p.add_argument('--enable-zerocopy-send-server', help='Enable zerocopy on send for server sockets',
-                   action='store_true', dest='enable_zerocopy_send_server')
-    p.add_argument('--disable-zerocopy-send-server', help='Disable zerocopy on send for server sockets',
-                   action='store_false', dest='enable_zerocopy_send_server')
-    p.add_argument('--enable-zerocopy-send-client', help='Enable zerocopy on send for client sockets',
-                   action='store_true', dest='enable_zerocopy_send_client')
-    p.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
-                   action='store_false', dest='enable_zerocopy_send_client')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-quickack', help='Enable quick ACK',
+                       action='store_true', dest='enable_quickack')
+    group.add_argument('--disable-quickack', help='Disable quick ACK',
+                       action='store_false', dest='enable_quickack')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-zerocopy-send-server', help='Enable zerocopy on send for server sockets',
+                       action='store_true', dest='enable_zerocopy_send_server')
+    group.add_argument('--disable-zerocopy-send-server', help='Disable zerocopy on send for server sockets',
+                       action='store_false', dest='enable_zerocopy_send_server')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-zerocopy-send-client', help='Enable zerocopy on send for client sockets',
+                       action='store_true', dest='enable_zerocopy_send_client')
+    group.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
+                       action='store_false', dest='enable_zerocopy_send_client')
     p.add_argument('--zerocopy-threshold', help='Set zerocopy_threshold in bytes', type=int)
     p.add_argument('--tls-version', help='TLS protocol version', type=int)
-    p.add_argument('--enable-ktls', help='Enable Kernel TLS',
-                   action='store_true', dest='enable_ktls')
-    p.add_argument('--disable-ktls', help='Disable Kernel TLS',
-                   action='store_false', dest='enable_ktls')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-ktls', help='Enable Kernel TLS',
+                       action='store_true', dest='enable_ktls')
+    group.add_argument('--disable-ktls', help='Disable Kernel TLS',
+                       action='store_false', dest='enable_ktls')
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_quickack=None,
                    enable_placement_id=None, enable_zerocopy_send_server=None, enable_zerocopy_send_client=None,
                    zerocopy_threshold=None, tls_version=None, enable_ktls=None)

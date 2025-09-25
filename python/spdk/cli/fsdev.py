@@ -36,13 +36,16 @@ def add_parser(subparsers):
     p.add_argument('root_path', help='Path on the system fs to expose as SPDK filesystem')
 
     group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-xattr', help='Enable extended attributes', action='store_true', default=None)
-    group.add_argument('--disable-xattr', help='Disable extended attributes', dest='enable_xattr', action='store_false', default=None)
+    group.add_argument('--enable-xattr',  help='Enable extended attributes', dest='enable_xattr',
+                       action='store_true', default=None)
+    group.add_argument('--disable-xattr', help='Disable extended attributes', dest='enable_xattr',
+                       action='store_false', default=None)
 
     group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-writeback-cache', help='Enable writeback cache', action='store_true', default=None)
-    group.add_argument('--disable-writeback-cache', help='Disable writeback cache', dest='enable_writeback_cache', action='store_false',
-                       default=None)
+    group.add_argument('--enable-writeback-cache',  help='Enable writeback cache', dest='enable_writeback_cache',
+                       action='store_true', default=None)
+    group.add_argument('--disable-writeback-cache', help='Disable writeback cache', dest='enable_writeback_cache',
+                       action='store_false', default=None)
 
     p.add_argument('-w', '--max-write', help='Max write size in bytes', type=int)
 

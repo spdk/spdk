@@ -477,8 +477,9 @@ def add_parser(subparsers):
         args.client.bdev_nvme_set_hotplug(enable=args.enable, period_us=args.period_us)
 
     p = subparsers.add_parser('bdev_nvme_set_hotplug', help='Set hotplug options for bdev nvme type.')
-    p.add_argument('-d', '--disable', dest='enable', default=False, action='store_false', help="Disable hotplug (default)")
-    p.add_argument('-e', '--enable', dest='enable', action='store_true', help="Enable hotplug")
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('-d', '--disable', dest='enable', action='store_false', help="Disable hotplug (default)", default=False)
+    group.add_argument('-e', '--enable',  dest='enable', action='store_true', help="Enable hotplug")
     p.add_argument('-r', '--period-us',
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=bdev_nvme_set_hotplug)
@@ -1050,8 +1051,9 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_enable_histogram',
                               help='Enable or disable histogram for specified bdev')
-    p.add_argument('-e', '--enable', default=True, dest='enable', action='store_true', help='Enable histograms on specified device')
-    p.add_argument('-d', '--disable', dest='enable', action='store_false', help='Disable histograms on specified device')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('-e', '--enable',  dest='enable', action='store_true', help='Enable histograms on specified device', default=True)
+    group.add_argument('-d', '--disable', dest='enable', action='store_false', help='Disable histograms on specified device')
     p.add_argument('-o', '--opc', help='Enable histogram for specified io type. Defaults to all io types if not specified.'
                    ' Refer to bdev_get_bdevs RPC for the list of io types.')
     p.add_argument('--granularity', help='Histogram bucket granularity.', type=int)
