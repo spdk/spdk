@@ -2,6 +2,13 @@
 
 ## v25.05.1: (Upcoming Release)
 
+(CVE-2025-57275) Fixed (8981ddb1) an array-out-of-bounds access during update of registrants
+for a namespace when PTPL (Persist through power loss) was enabled.
+If number of registrants exceeded 16 (SPDK_NVMF_MAX_NUM_REGISTRANTS) memory after
+the array ended could have been written with data provided in Reservation Register
+command by the initiator. PTPL needed to be enabled explicitly, as it is disabled by default.
+Affected NVMe-oF transports include TCP and RDMA NVMe-oF in SPDK NVMe-oF target.
+
 ## v25.05: NVMe PCIe interrupt mode, DIF insert/strip, mlx5 accel platform driver
 
 ### accel_mlx5
