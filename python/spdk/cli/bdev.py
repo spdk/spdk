@@ -62,7 +62,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_examine',
                               help="""examine a bdev if it exists, or will examine it after it is created""")
-    p.add_argument('-b', '--name', help='Name or alias of the bdev')
+    p.add_argument('-b', '--name', help='Name or alias of the bdev', required=True)
     p.set_defaults(func=bdev_examine)
 
     def bdev_wait_for_examine(args):
@@ -1367,8 +1367,8 @@ def add_parser(subparsers):
                                      password=args.password)
 
     p = subparsers.add_parser('bdev_nvme_opal_init', help='take ownership and activate')
-    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name')
-    p.add_argument('-p', '--password', help='password for admin')
+    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
+    p.add_argument('-p', '--password', help='password for admin', required=True)
     p.set_defaults(func=bdev_nvme_opal_init)
 
     def bdev_nvme_opal_revert(args):
@@ -1376,8 +1376,8 @@ def add_parser(subparsers):
                                        nvme_ctrlr_name=args.nvme_ctrlr_name,
                                        password=args.password)
     p = subparsers.add_parser('bdev_nvme_opal_revert', help='Revert to default factory settings')
-    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name')
-    p.add_argument('-p', '--password', help='password')
+    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
+    p.add_argument('-p', '--password', help='password', required=True)
     p.set_defaults(func=bdev_nvme_opal_revert)
 
     def bdev_opal_create(args):
@@ -1404,8 +1404,8 @@ def add_parser(subparsers):
                                                password=args.password))
 
     p = subparsers.add_parser('bdev_opal_get_info', help='get opal locking range info for this bdev')
-    p.add_argument('-b', '--bdev-name', help='opal bdev')
-    p.add_argument('-p', '--password', help='password')
+    p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
+    p.add_argument('-p', '--password', help='password', required=True)
     p.set_defaults(func=bdev_opal_get_info)
 
     def bdev_opal_delete(args):
@@ -1461,10 +1461,10 @@ def add_parser(subparsers):
                                                timeout_ms=args.timeout_ms))
 
     p = subparsers.add_parser('bdev_nvme_send_cmd', help='NVMe passthrough cmd.')
-    p.add_argument('-n', '--nvme-name', help="""Name of the operating NVMe controller""")
-    p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""")
-    p.add_argument('-r', '--data-direction', help="""Direction of data transfer. Valid values are: c2h, h2c""")
-    p.add_argument('-c', '--cmdbuf', help="""NVMe command encoded by base64 urlsafe""")
+    p.add_argument('-n', '--nvme-name', help="""Name of the operating NVMe controller""", required=True)
+    p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""", required=True)
+    p.add_argument('-r', '--data-direction', help="""Direction of data transfer. Valid values are: c2h, h2c""", required=True)
+    p.add_argument('-c', '--cmdbuf', help="""NVMe command encoded by base64 urlsafe""", required=True)
     p.add_argument('-d', '--data', help="""Data transferring to controller from host, encoded by base64 urlsafe""")
     p.add_argument('-m', '--metadata', help="""Metadata transferring to controller from host, encoded by base64 urlsafe""")
     p.add_argument('-D', '--data-length', help="""Data length required to transfer from controller to host""", type=int)

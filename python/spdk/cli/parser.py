@@ -91,7 +91,7 @@ def add_parser(subparsers):
         args.client.compressdev_scan_accel_module(pmd=args.pmd)
 
     p = subparsers.add_parser('compressdev_scan_accel_module', help='Scan and enable compressdev module and set pmd option.')
-    p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only')
+    p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only', required=True)
     p.set_defaults(func=compressdev_scan_accel_module)
 
     # dsa
@@ -167,8 +167,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('accel_error_inject_error',
                               help='Inject an error to processing accel operation')
-    p.add_argument('-o', '--opcode', help='Opcode')
-    p.add_argument('-t', '--type',
+    p.add_argument('-o', '--opcode', help='Opcode', required=True)
+    p.add_argument('-t', '--type', required=True,
                    help='Error type ("corrupt": corrupt the data, "failure": fail the operation, "disable": disable error injection)')
     p.add_argument('-c', '--count', type=int,
                    help='Number of errors to inject on each IO channel (0 to disable error injection)')

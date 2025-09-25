@@ -28,8 +28,8 @@ def add_parser(subparsers):
         args.client.accel_assign_opc(opname=args.opname, module=args.module)
 
     p = subparsers.add_parser('accel_assign_opc', help='Manually assign an operation to a module.')
-    p.add_argument('-o', '--opname', help='opname')
-    p.add_argument('-m', '--module', help='name of module')
+    p.add_argument('-o', '--opname', help='opname', required=True)
+    p.add_argument('-m', '--module', help='name of module', required=True)
     p.set_defaults(func=accel_assign_opc)
 
     def accel_crypto_key_create(args):

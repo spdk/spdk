@@ -37,6 +37,15 @@ def lint_py_cli(schema):
     for method in schema['methods']:
         if method['name'] not in subparsers.choices:
             raise ValueError(f"{method['name']} defined in schema, was not found in python cli")
+        subparser = subparsers.choices[method['name']]
+        actions = {a.dest: a for a in subparser._actions}
+        for param in method['params']:
+            action = actions.get(param['name'])
+            if action is None or type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction]:
+                # TODO: handle this case later and fix issues raised by it
+                continue
+            if param['required'] != action.required:
+                raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
 
 
 def generate_docs(schema):

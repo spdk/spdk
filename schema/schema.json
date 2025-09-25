@@ -1957,7 +1957,7 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
+          "required": true,
           "description": "Registered Rados cluster object name"
         },
         {
@@ -4330,13 +4330,13 @@
         {
           "name": "fsdev_name",
           "type": "string",
-          "required": false,
+          "required": true,
           "description": "Name of an underlying fsdev"
         },
         {
           "name": "tag",
           "type": "string",
-          "required": false,
+          "required": true,
           "description": "Virtio FS tag according to the virtio specification"
         },
         {
@@ -4945,7 +4945,7 @@
         {
           "name": "strip_size_kb",
           "type": "number",
-          "required": true,
+          "required": false,
           "description": "Strip size in KB"
         },
         {

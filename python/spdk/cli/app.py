@@ -132,8 +132,8 @@ def add_parser(subparsers):
     p = subparsers.add_parser('thread_set_cpumask',
                               help="""set the cpumask of the thread whose ID matches to the
     specified value. The thread may be migrated to one of the specified CPUs.""")
-    p.add_argument('-i', '--id', type=int, help='thread ID')
-    p.add_argument('-m', '--cpumask', help='cpumask for this thread')
+    p.add_argument('-i', '--id', type=int, help='thread ID', required=True)
+    p.add_argument('-m', '--cpumask', help='cpumask for this thread', required=True)
     p.set_defaults(func=thread_set_cpumask)
 
     def thread_get_pollers(args):
