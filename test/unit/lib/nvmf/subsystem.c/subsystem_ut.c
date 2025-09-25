@@ -2702,6 +2702,39 @@ test_nvmf_reservation_custom_ops(void)
 	ut_reservation_deinit();
 }
 
+static void
+test_nvmf_ns_reservation_add_max_registrants(void)
+{
+	struct spdk_nvmf_ns_reservation_ops ops = {
+		.is_ptpl_capable = ut_is_ptpl_capable,
+		.update = ut_update_reservation,
+		.load = ut_load_reservation,
+	};
+	spdk_nvmf_set_custom_ns_reservation_ops(&ops);
+	ut_reservation_init();
+
+	struct spdk_nvmf_reservation_info info = {};
+	int rc;
+
+	/* Register 1 past the max */
+	uint32_t i = 0;
+	for (i = 0; i < SPDK_NVMF_MAX_NUM_REGISTRANTS + 1; i++) {
+		spdk_uuid_generate(&g_ctrlr1_A.hostid);
+		rc = nvmf_ns_reservation_add_registrant(&g_ns, &g_ctrlr1_A, 0xa11 + i);
+		CU_ASSERT(rc == 0);
+	}
+	/* Update the reservation info */
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	CU_ASSERT(rc == 0);
+	/* Validate that info is capped at max */
+	rc = nvmf_ns_reservation_load(&g_ns, &info);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_EQUAL(info.num_regs, SPDK_NVMF_MAX_NUM_REGISTRANTS);
+	/* Clear should return max + 1 */
+	uint32_t cleared = nvmf_ns_reservation_clear_all_registrants(&g_ns);
+	CU_ASSERT_EQUAL(cleared, SPDK_NVMF_MAX_NUM_REGISTRANTS + 1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2740,6 +2773,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_restore);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_state_change);
 	CU_ADD_TEST(suite, test_nvmf_reservation_custom_ops);
+	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_max_registrants);
 
 	allocate_threads(1);
 	set_thread(0);

@@ -2936,9 +2936,14 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 	}
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
-		spdk_uuid_fmt_lower(info.registrants[i].host_uuid, sizeof(info.registrants[i].host_uuid),
-				    &reg->hostid);
-		info.registrants[i++].rkey = reg->rkey;
+		if (i < SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+			spdk_uuid_fmt_lower(info.registrants[i].host_uuid, sizeof(info.registrants[i].host_uuid),
+					    &reg->hostid);
+			info.registrants[i++].rkey = reg->rkey;
+		} else {
+			SPDK_ERRLOG("More registrants that can fit into reservation info, truncating\n");
+			break;
+		}
 	}
 
 	info.num_regs = i;
