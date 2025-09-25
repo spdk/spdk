@@ -560,12 +560,14 @@ nvmf_tcp_request_get_buffers_abort(struct spdk_nvmf_tcp_req *tcp_req)
 
 	assert(tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER);
 
-	STAILQ_FOREACH_SAFE(abort_req, &tcp_group->control_msg_list->waiting_for_msg_reqs, control_msg_link,
-			    tmp_req) {
-		if (abort_req == tcp_req) {
-			STAILQ_REMOVE(&tcp_group->control_msg_list->waiting_for_msg_reqs, abort_req, spdk_nvmf_tcp_req,
-				      control_msg_link);
-			return;
+	if (tcp_group->control_msg_list != NULL) {
+		STAILQ_FOREACH_SAFE(abort_req, &tcp_group->control_msg_list->waiting_for_msg_reqs,
+				    control_msg_link, tmp_req) {
+			if (abort_req == tcp_req) {
+				STAILQ_REMOVE(&tcp_group->control_msg_list->waiting_for_msg_reqs,
+					      abort_req, spdk_nvmf_tcp_req, control_msg_link);
+				return;
+			}
 		}
 	}
 
