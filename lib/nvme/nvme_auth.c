@@ -1099,7 +1099,9 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 				break;
 			}
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE);
-			break;
+			/* Intentionally return here to prevent the state machine entering the DONE
+			 * state on the initial kick from nvme_fabric_qpair_authenticate_async. */
+			return -EAGAIN;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE:
 			rc = nvme_wait_for_completion_poll(qpair, status);
 			if (rc != 0) {
