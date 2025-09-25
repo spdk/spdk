@@ -497,7 +497,7 @@
       "name": "dpdk_cryptodev_set_driver",
       "params": [
         {
-          "name": "crypto_pmd",
+          "name": "driver_name",
           "type": "string",
           "required": true,
           "description": "The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci"

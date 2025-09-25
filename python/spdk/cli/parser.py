@@ -124,7 +124,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('dpdk_cryptodev_set_driver',
                               help='Set the DPDK cryptodev driver.')
-    p.add_argument('-d', '--driver-name', help='The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci', type=str)
+    p.add_argument('-d', '--driver-name', help='The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci', type=str, required=True)
     p.set_defaults(func=dpdk_cryptodev_set_driver)
 
     def dpdk_cryptodev_get_driver(args):
