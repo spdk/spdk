@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 import spdk.cli as cli  # noqa
 from spdk.rpc.client import print_dict, print_json, print_array, JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
 from spdk.rpc.helpers import deprecated_aliases  # noqa
+from spdk.rpc.cmd_parser import remove_null  # noqa
 
 
 def create_parser():
@@ -81,6 +82,9 @@ def check_called_name(name):
 
 
 class dry_run_client:
+    def __getattr__(self, name):
+        return lambda **kwargs: self.call(name, remove_null(kwargs))
+
     def call(self, method, params=None):
         print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
 
@@ -199,6 +203,7 @@ def main():
         exit(0)
     elif args.dry_run:
         args.client = dry_run_client()
+        # TODO: this is no longer working and pretty ugly, fix it
         global print_dict, print_json, print_array
         print_dict = null_print
         print_json = null_print
