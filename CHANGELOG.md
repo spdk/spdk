@@ -1,6 +1,6 @@
 # Changelog
 
-## v25.09: (Upcoming Release)
+## v25.09
 
 ### bdev
 
