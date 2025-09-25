@@ -450,7 +450,8 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	 * and the qpair state was CONNECTING before the disconnect was invoked. That
 	 * command was aborted by the socket close. To avoid leaking this status and dma_data,
 	 * nvme_tcp_ctrlr_connect_qpair_poll is used to releases them. */
-	if (qpair->fabric_poll_status != NULL) {
+	if (qpair->fabric_poll_status &&
+	    !(qpair->auth.flags.in_auth_poll || tqpair->flags.in_connect_poll)) {
 		assert(qpair->fabric_poll_status->done);
 		rc = nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
 		assert(rc != -EAGAIN);
