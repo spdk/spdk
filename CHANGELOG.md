@@ -60,6 +60,13 @@ information about the QP and its controller.
 
 ### nvmf
 
+(CVE-2025-57275) Fixed (8981ddb1) an array-out-of-bounds access during update of registrants
+for a namespace when PTPL (Persist through power loss) was enabled.
+If number of registrants exceeded 16 (SPDK_NVMF_MAX_NUM_REGISTRANTS) memory after
+the array ended could have been written with data provided in Reservation Register
+command by the initiator. PTPL needed to be enabled explicitly, as it is disabled by default.
+Affected NVMe-oF transports include TCP and RDMA NVMe-oF in SPDK NVMe-oF target.
+
 Add NSSR support (NVMe Subsytem Reset) to NVMe-oF target. Once NSSR is issued - it is passed to all
 underlying namespaces (bdevs). Currenly only bdevs with PCIe transport would handle NSSR.
 See the NVMe Subsystem Reset (NSSR) section of nvmf.md for more information.
