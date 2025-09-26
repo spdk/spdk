@@ -1230,7 +1230,7 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 		return -ENOKEY;
 	}
 
-	if (qpair->auth.flags & NVME_QPAIR_AUTH_FLAG_ASCR) {
+	if (qpair->auth.flags.ascr) {
 		AUTH_ERRLOG(qpair, "secure channel concatenation is not supported\n");
 		return -EINVAL;
 	}

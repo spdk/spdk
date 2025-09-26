@@ -430,11 +430,6 @@ enum nvme_qpair_auth_state {
 	NVME_QPAIR_AUTH_STATE_DONE,
 };
 
-/* Authentication transaction required (authreq.atr) */
-#define NVME_QPAIR_AUTH_FLAG_ATR	(1 << 0)
-/* Authentication and secure channel required (authreq.ascr) */
-#define NVME_QPAIR_AUTH_FLAG_ASCR	(1 << 1)
-
 /* Maximum size of a digest */
 #define NVME_AUTH_DIGEST_MAX_SIZE	64
 
@@ -445,8 +440,16 @@ struct nvme_auth {
 	int				status;
 	/* Transaction ID */
 	uint16_t			tid;
-	/* Flags */
-	uint32_t			flags;
+	union {
+		struct {
+			/* Authentication transaction required (authreq.atr) */
+			uint32_t        atr : 1;
+			/* Authentication and secure channel required (authreq.ascr) */
+			uint32_t        ascr : 1;
+			uint32_t        reserved : 30;
+		};
+		uint32_t                raw;
+	} flags;
 	/* Selected hash function */
 	uint8_t				hash;
 	/* Buffer used for controller challenge */
