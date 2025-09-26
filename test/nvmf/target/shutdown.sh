@@ -75,7 +75,7 @@ function nvmf_shutdown_tc1() {
 	starttarget
 
 	# Run bdev_svc, which connects but does not issue I/O
-	$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") &
+	run_app_bg "$rootdir/test/app/bdev_svc/bdev_svc" -m 0x1 -i 1 -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}")
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
