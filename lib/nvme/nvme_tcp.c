@@ -108,8 +108,7 @@ struct nvme_tcp_qpair {
 		uint16_t host_ddgst_enable: 1;
 		uint16_t icreq_send_ack: 1;
 		uint16_t icresp_received: 1;
-		uint16_t in_connect_poll: 1;
-		uint16_t reserved: 11;
+		uint16_t reserved: 12;
 	} flags;
 
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
@@ -447,8 +446,7 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	/* A Fabric command may be outstanding before a disconnect is invoked. */
-	if (qpair->fabric_poll_status &&
-	    !(qpair->auth.flags.in_auth_poll || tqpair->flags.in_connect_poll)) {
+	if (qpair->fabric_poll_status && !(qpair->auth.flags.in_auth_poll || qpair->in_connect_poll)) {
 		nvme_fabric_qpair_poll_cleanup(qpair);
 		if (qpair->auth.cb_fn != NULL) {
 			qpair->auth.cb_fn(qpair->auth.cb_ctx, -ECANCELED);
@@ -2394,11 +2392,11 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 	 * nvme_fabric_qpair_connect_poll() if the connect response is received in the recursive
 	 * call.
 	 */
-	if (tqpair->flags.in_connect_poll) {
+	if (qpair->in_connect_poll) {
 		return -EAGAIN;
 	}
 
-	tqpair->flags.in_connect_poll = 1;
+	qpair->in_connect_poll = true;
 
 	switch (tqpair->state) {
 	case NVME_TCP_QPAIR_STATE_SOCK_CONNECTING:
@@ -2455,7 +2453,7 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 		break;
 	}
 
-	tqpair->flags.in_connect_poll = 0;
+	qpair->in_connect_poll = false;
 	return rc;
 }
 

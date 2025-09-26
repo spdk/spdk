@@ -242,8 +242,6 @@ struct nvme_rdma_qpair {
 
 	enum nvme_rdma_qpair_state		state;
 
-	bool					in_connect_poll;
-
 	uint8_t					stale_conn_retry_count;
 	bool					need_destroy;
 	bool					connected;
@@ -1330,11 +1328,11 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 	int rc;
 
-	if (rqpair->in_connect_poll) {
+	if (qpair->in_connect_poll) {
 		return -EAGAIN;
 	}
 
-	rqpair->in_connect_poll = true;
+	qpair->in_connect_poll = true;
 
 	switch (rqpair->state) {
 	case NVME_RDMA_QPAIR_STATE_INVALID:
@@ -1356,7 +1354,7 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 		if (rc == 0) {
 			rc = -EAGAIN;
 		}
-		rqpair->in_connect_poll = false;
+		qpair->in_connect_poll = false;
 
 		return rc;
 
@@ -1408,8 +1406,7 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 		break;
 	}
 
-	rqpair->in_connect_poll = false;
-
+	qpair->in_connect_poll = false;
 	return rc;
 }
 

@@ -497,6 +497,8 @@ struct spdk_nvme_qpair {
 	/* The user is destroying qpair */
 	uint8_t					destroy_in_progress: 1;
 
+	uint8_t					in_connect_poll : 1;
+
 	/* Number of IO outstanding at transport level */
 	uint16_t				queue_depth;
 
