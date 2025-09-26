@@ -448,10 +448,7 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	/* A Fabric command may be outstanding before a disconnect is invoked. */
 	if (qpair->fabric_poll_status && !(qpair->auth.flags.in_auth_poll || qpair->in_connect_poll)) {
 		nvme_fabric_qpair_poll_cleanup(qpair);
-		if (qpair->auth.cb_fn != NULL) {
-			qpair->auth.cb_fn(qpair->auth.cb_ctx, -ECANCELED);
-			qpair->auth.cb_fn = NULL;
-		}
+		nvme_fabric_qpair_auth_cleanup(qpair, -ECANCELED);
 	}
 }
 

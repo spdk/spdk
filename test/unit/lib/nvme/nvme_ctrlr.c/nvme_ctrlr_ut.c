@@ -60,6 +60,7 @@ DEFINE_STUB(spdk_nvme_qpair_authenticate, int, (struct spdk_nvme_qpair *qpair,
 		spdk_nvme_authenticate_cb cb_fn, void *cb_ctx), 0);
 DEFINE_STUB(nvme_transport_ctrlr_enable_interrupts, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
+DEFINE_STUB_V(nvme_fabric_qpair_auth_cleanup, (struct spdk_nvme_qpair *qpair, int status));
 
 int
 nvme_get_default_hostnqn(char *buf, int len)

@@ -585,6 +585,15 @@ nvme_fabric_qpair_poll_cleanup(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+void
+nvme_fabric_qpair_auth_cleanup(struct spdk_nvme_qpair *qpair, int status)
+{
+	if (qpair->auth.cb_fn != NULL) {
+		qpair->auth.cb_fn(qpair->auth.cb_ctx, status);
+		qpair->auth.cb_fn = NULL;
+	}
+}
+
 int
 nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 {

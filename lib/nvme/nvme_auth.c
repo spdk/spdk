@@ -1206,10 +1206,7 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 			break;
 		case NVME_QPAIR_AUTH_STATE_DONE:
 			nvme_fabric_qpair_poll_cleanup(qpair);
-			if (auth->cb_fn != NULL) {
-				auth->cb_fn(auth->cb_ctx, auth->status);
-				auth->cb_fn = NULL;
-			}
+			nvme_fabric_qpair_auth_cleanup(qpair, auth->status);
 			auth->flags.in_auth_poll = false;
 			return auth->status;
 		default:
