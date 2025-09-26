@@ -1,6 +1,6 @@
 # Changelog
 
-## v25.05.1: (Upcoming Release)
+## v25.05.1
 
 (CVE-2025-57275) Fixed (8981ddb1) an array-out-of-bounds access during update of registrants
 for a namespace when PTPL (Persist through power loss) was enabled.
