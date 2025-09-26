@@ -1008,6 +1008,8 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_error_cmd *cmd, *entry;
 
+	assert(!qpair->fabric_poll_status);
+
 	nvme_qpair_abort_queued_reqs(qpair);
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
 	nvme_qpair_complete_error_reqs(qpair);

@@ -444,12 +444,6 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
 		nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 	}
-
-	/* A Fabric command may be outstanding before a disconnect is invoked. */
-	if (qpair->fabric_poll_status && !(qpair->auth.flags.in_auth_poll || qpair->in_connect_poll)) {
-		nvme_fabric_qpair_poll_cleanup(qpair);
-		nvme_fabric_qpair_auth_cleanup(qpair, -ECANCELED);
-	}
 }
 
 static int
@@ -461,7 +455,6 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	nvme_tcp_qpair_abort_reqs(qpair, qpair->abort_dnr);
 	assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
 
-	assert(!qpair->fabric_poll_status);
 	nvme_qpair_deinit(qpair);
 	nvme_tcp_free_reqs(tqpair);
 	if (!tqpair->shared_stats) {

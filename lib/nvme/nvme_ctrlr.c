@@ -608,8 +608,6 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		return 0;
 	}
 
-	nvme_fabric_qpair_auth_cleanup(qpair, -ECANCELED);
-
 	qpair->destroy_in_progress = 1;
 
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
