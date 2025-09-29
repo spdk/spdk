@@ -24,13 +24,18 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-"$rootdir/build/examples/bdevperf" -m 0x10 -i 1 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w write -t 1 -s 256 "${NO_HUGE[@]}" &
+BDEV_SIZE_LIMIT="-s 256"
+if ((${#NO_HUGE[@]})); then
+	BDEV_SIZE_LIMIT=""
+fi
+
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x10 -i 1 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w write -t 1 "${BDEV_SIZE_LIMIT}"
 WRITE_PID=$!
-"$rootdir/build/examples/bdevperf" -m 0x20 -i 2 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w read -t 1 -s 256 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x20 -i 2 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w read -t 1 "${BDEV_SIZE_LIMIT}"
 READ_PID=$!
-"$rootdir/build/examples/bdevperf" -m 0x40 -i 3 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w flush -t 1 -s 256 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x40 -i 3 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w flush -t 1 "${BDEV_SIZE_LIMIT}"
 FLUSH_PID=$!
-"$rootdir/build/examples/bdevperf" -m 0x80 -i 4 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w unmap -t 1 -s 256 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x80 -i 4 --json <(gen_nvmf_target_json) -q 128 -o 4096 -w unmap -t 1 "${BDEV_SIZE_LIMIT}"
 UNMAP_PID=$!
 sync
 
