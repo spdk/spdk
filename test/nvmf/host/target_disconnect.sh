@@ -29,7 +29,7 @@ function disconnect_init() {
 # Test to make sure we don't segfault or access null pointers when we try to connect to
 # a discovery controller that doesn't exist yet.
 function nvmf_target_disconnect_tc1() {
-	NOT "$SPDK_EXAMPLE_DIR/reconnect" -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+	NOT run_app "$SPDK_EXAMPLE_DIR/reconnect" -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
 		-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 }
 
@@ -37,8 +37,8 @@ function nvmf_target_disconnect_tc2() {
 	disconnect_init $NVMF_FIRST_TARGET_IP
 
 	# If perf doesn't shut down, this test will time out.
-	$SPDK_EXAMPLE_DIR/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
-		-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" &
+	run_app_bg "$SPDK_EXAMPLE_DIR/reconnect" -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+		-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 	reconnectpid=$!
 
 	sleep 2
@@ -52,8 +52,8 @@ function nvmf_target_disconnect_tc2() {
 }
 
 function nvmf_target_disconnect_tc3() {
-	$SPDK_EXAMPLE_DIR/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
-		-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT alt_traddr:$NVMF_SECOND_TARGET_IP" &
+	run_app_bg "$SPDK_EXAMPLE_DIR/reconnect" -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+		-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT alt_traddr:$NVMF_SECOND_TARGET_IP"
 	reconnectpid=$!
 
 	sleep 2
