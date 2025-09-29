@@ -26,6 +26,54 @@ The tags can be matched with the level 4 headers below.
 `--name` option will be removed in the 26.05 release. `--names` option should be used instead,
 it allows providing array of devices names to obtain statistics from.
 
+### python/cli
+
+#### `framework_monitor_context_switch`
+
+deprecate `--enable` and `--disable` in favor of single `--monitor/--no-monitor` option
+
+#### `bdev_set_options`
+
+deprecate `--enable-auto-examine` and `--disable-auto-examine` in favor of single `--auto-examine/--no-auto-examine` option
+deprecate `--enable-rdma-umr-per-io` and `--disable-rdma-umr-per-io` in favor of single `--rdma-umr-per-io/--no-rdma-umr-per-io` option
+
+#### `bdev_nvme_set_hotplug`
+
+deprecate `--enable` and `--disable` in favor of single `--hotplug/--no-hotplug` option
+
+#### `bdev_enable_histogram`
+
+deprecate `--enable` and `--disable` in favor of single `--histogram/--no-histogram` option
+
+#### `fsdev_aio_create`
+
+deprecate `--enable-xattr` and `--disable-xattr` in favor of single `--xattr/--no-xattr` option
+deprecate `--enable-writeback-cache` and `--disable-writeback-cache` in favor of single `--writeback-cache/--no-writeback-cache` option
+
+#### `iscsi_enable_histogram`
+
+deprecate `--enable` and `--disable` in favor of single `--histogram/--no-histogram` option
+
+#### `log_enable_timestamps`
+
+deprecate `--enable` and `--disable` in favor of single `--timestamps/--no-timestamps` option
+
+#### `nvmf_subsystem_allow_any_host`
+
+deprecate `--enable` and `--disable` in favor of single `--allow-any-host/--no-allow-any-host` option
+
+#### `sock_impl_set_options`
+
+deprecate `--enable-recv-pipe` and `--disable-recv-pipe` in favor of single `--recv-pipe/--no-recv-pipe` option
+deprecate `--enable-quickack` and `--disable-quickack` in favor of single `--quickack/--no-quickack` option
+deprecate `--enable-zerocopy-send-server` and `--disable-zerocopy-send-server` in favor of single `--zerocopy-send-server/--no-zerocopy-send-server` option
+deprecate `--enable-zerocopy-send-client` and `--disable-zerocopy-send-client` in favor of single `--zerocopy-send-client/--no-zerocopy-send-client` option
+deprecate `--enable-ktls` and `--disable-ktls` in favor of single `--ktls/--no-ktls` option
+
+#### `bdev_virtio_blk_set_hotplug`
+
+deprecate `--enable` and `--disable` in favor of single `--hotplug/--no-hotplug` option
+
 ### util/net
 
 #### `spdk_net_getaddr`

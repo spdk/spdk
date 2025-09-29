@@ -10,7 +10,7 @@ name = "spdk"
 dynamic = ["version"]
 readme = "README.md"
 description = "Python bindings for the Storage Performance Development Kit (SPDK)"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { text = "BSD-3-Clause" }
 
 authors = [

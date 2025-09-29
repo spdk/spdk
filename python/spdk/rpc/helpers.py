@@ -3,6 +3,7 @@
 #  All rights reserved.
 
 import sys
+import argparse
 import functools
 
 deprecated_aliases = {}
@@ -31,6 +32,25 @@ def deprecated_method(method):
             method.deprecated_warning = True
         return method(*args, **kwargs)
     return wrap
+
+
+class DeprecateConstAction(argparse._StoreConstAction):
+    def __init__(self, option_strings, dest, default=False, required=False, help=None):
+        super().__init__(option_strings, dest, default, required, help+' (deprecated)')
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        groups = parser._mutually_exclusive_groups
+        instead = next((a.option_strings for g in groups for a in g._group_actions if isinstance(a, argparse.BooleanOptionalAction)), None)
+        print(f'WARNING: {self.option_strings} is deprecated, please use {instead}', file=sys.stderr)
+        super().__call__(parser, namespace, values, option_string)
+
+
+class DeprecateTrueAction(DeprecateConstAction, argparse._StoreTrueAction):
+    pass
+
+
+class DeprecateFalseAction(DeprecateConstAction, argparse._StoreFalseAction):
+    pass
 
 
 def hint_rpc_name(parser):

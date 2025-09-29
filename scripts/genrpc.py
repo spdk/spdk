@@ -64,7 +64,10 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                                 action.required)
                 if param['required'] != required:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
-                newtype = 'boolean' if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction] else types.get(action.type)
+                if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction, argparse.BooleanOptionalAction]:
+                    newtype = 'boolean'
+                else:
+                    newtype = types.get(action.type)
                 if not newtype:
                     # TODO: handle this case later and fix issues raised by it
                     continue

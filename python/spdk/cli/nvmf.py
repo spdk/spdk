@@ -6,8 +6,10 @@
 #
 
 import sys
+import argparse
 from spdk.rpc.cmd_parser import strip_globals, apply_defaults, group_as
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
 
 
 def add_parser(subparsers):
@@ -389,9 +391,11 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('nvmf_subsystem_allow_any_host', help='Allow any host to connect to the subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    # TODO: this group is deprecated, remove in next version
     group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-e', '--enable', dest='allow_any_host', action='store_true', help='Enable allowing any host')
-    group.add_argument('-d', '--disable', dest='allow_any_host', action='store_false', help='Disable allowing any host')
+    group.add_argument('-e', '--enable', dest='allow_any_host', action=DeprecateTrueAction, help='Enable allowing any host')
+    group.add_argument('-d', '--disable', dest='allow_any_host', action=DeprecateFalseAction, help='Disable allowing any host')
+    group.add_argument('--allow-any-host', action=argparse.BooleanOptionalAction, help='Enable or disable allowing any host')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_allow_any_host)
 

@@ -6,6 +6,10 @@
 
 Added new public API: `spdk_app_setup_trace()` to set up SPDK tracing for applications.
 
+### python
+
+Deprecate some boolean python cli arguments to use new modern argparse format instead.
+
 ## v25.09
 
 ### bdev

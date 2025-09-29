@@ -6,7 +6,9 @@
 #
 
 import sys
+import argparse
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
 
 
 def add_parser(subparsers):
@@ -35,17 +37,23 @@ def add_parser(subparsers):
     p.add_argument('name', help='Filesystem name. Example: aio0.')
     p.add_argument('root_path', help='Path on the system fs to expose as SPDK filesystem')
 
+    # TODO: this group is deprecated, remove in next version
     group = p.add_mutually_exclusive_group()
     group.add_argument('--enable-xattr',  help='Enable extended attributes', dest='enable_xattr',
-                       action='store_true', default=None)
+                       action=DeprecateTrueAction, default=None)
     group.add_argument('--disable-xattr', help='Disable extended attributes', dest='enable_xattr',
-                       action='store_false', default=None)
+                       action=DeprecateFalseAction, default=None)
+    group.add_argument('--xattr', dest='enable_xattr', action=argparse.BooleanOptionalAction,
+                       help='Enable or disable extended attributes')
 
+    # TODO: this group is deprecated, remove in next version
     group = p.add_mutually_exclusive_group()
     group.add_argument('--enable-writeback-cache',  help='Enable writeback cache', dest='enable_writeback_cache',
-                       action='store_true', default=None)
+                       action=DeprecateTrueAction, default=None)
     group.add_argument('--disable-writeback-cache', help='Disable writeback cache', dest='enable_writeback_cache',
-                       action='store_false', default=None)
+                       action=DeprecateFalseAction, default=None)
+    group.add_argument('--writeback-cache', dest='enable_writeback_cache', action=argparse.BooleanOptionalAction,
+                       help='Enable or disable writeback cache')
 
     p.add_argument('-w', '--max-write', help='Max write size in bytes', type=int)
 
