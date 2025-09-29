@@ -315,7 +315,8 @@ nvmf_bdev_ctrlr_get_rw_params(const struct spdk_nvme_cmd *cmd, uint64_t *start_l
 
 static void
 nvmf_bdev_ctrlr_get_rw_ext_params(const struct spdk_nvme_cmd *cmd,
-				  struct spdk_bdev_ext_io_opts *opts)
+				  struct spdk_bdev_ext_io_opts *opts,
+				  bool set_dif_mask)
 {
 	/* Get CDW12 values */
 	opts->nvme_cdw12.raw = from_le32(&cmd->cdw12);
@@ -327,7 +328,9 @@ nvmf_bdev_ctrlr_get_rw_ext_params(const struct spdk_nvme_cmd *cmd,
 	 * it does not check DIF check flags in CDW because DIF is not NVMe
 	 * specific. Hence, copy DIF check flags from CDW12 to dif_check_flags_exclude_mask.
 	 */
-	opts->dif_check_flags_exclude_mask = (~opts->nvme_cdw12.raw) & SPDK_NVME_IO_FLAGS_PRCHK_MASK;
+	if (set_dif_mask) {
+		opts->dif_check_flags_exclude_mask = (~opts->nvme_cdw12.raw) & SPDK_NVME_IO_FLAGS_PRCHK_MASK;
+	}
 }
 
 static bool
@@ -394,7 +397,7 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	struct spdk_bdev_ext_io_opts opts = {
-		.size = SPDK_SIZEOF(&opts, accel_sequence),
+		.size = SPDK_SIZEOF(&opts, nvme_cdw13),
 		.memory_domain = req->memory_domain,
 		.memory_domain_ctx = req->memory_domain_ctx,
 		.accel_sequence = req->accel_sequence,
@@ -408,7 +411,7 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
-	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts);
+	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts, !req->dif_enabled);
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");
@@ -461,7 +464,7 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
-	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts);
+	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts, !req->dif_enabled);
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");
