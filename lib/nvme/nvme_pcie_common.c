@@ -988,7 +988,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 	}
 
-	if (spdk_unlikely(ctrlr->timeout_enabled)) {
+	if (ctrlr->timeout_enabled) {
 		/*
 		 * User registered for timeout callback
 		 */

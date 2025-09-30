@@ -3096,7 +3096,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		goto failed;
 	}
 
-	if (spdk_unlikely(qpair->ctrlr->timeout_enabled)) {
+	if (qpair->ctrlr->timeout_enabled) {
 		nvme_rdma_qpair_check_timeout(qpair);
 	}
 
@@ -3466,7 +3466,7 @@ nvme_rdma_qpair_process_submits(struct nvme_rdma_poll_group *group,
 		return;
 	}
 
-	if (spdk_unlikely(qpair->ctrlr->timeout_enabled)) {
+	if (qpair->ctrlr->timeout_enabled) {
 		nvme_rdma_qpair_check_timeout(qpair);
 	}
 

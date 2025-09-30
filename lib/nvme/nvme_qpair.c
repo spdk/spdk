@@ -1106,7 +1106,7 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 	/* assign submit_tick before submitting req to specific transport */
-	if (spdk_unlikely(ctrlr->timeout_enabled)) {
+	if (ctrlr->timeout_enabled) {
 		if (req->submit_tick == 0) { /* req submitted for the first time */
 			req->submit_tick = spdk_get_ticks();
 			req->timed_out = false;
