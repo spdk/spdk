@@ -82,7 +82,7 @@ def add_parser(subparsers):
     def ioat_scan_accel_module(args):
         args.client.ioat_scan_accel_module()
 
-    p = subparsers.add_parser('ioat_scan_accel_module', aliases=['ioat_scan_accel_engine'],
+    p = subparsers.add_parser('ioat_scan_accel_module',
                               help='Enable IOAT accel module offload.')
     p.set_defaults(func=ioat_scan_accel_module)
 
@@ -98,7 +98,7 @@ def add_parser(subparsers):
     def dsa_scan_accel_module(args):
         args.client.dsa_scan_accel_module(config_kernel_mode=args.config_kernel_mode)
 
-    p = subparsers.add_parser('dsa_scan_accel_module', aliases=['dsa_scan_accel_engine'],
+    p = subparsers.add_parser('dsa_scan_accel_module',
                               help='Set config and enable dsa accel module offload.')
     p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode dsa',
                    action='store_true', dest='config_kernel_mode')
@@ -108,7 +108,7 @@ def add_parser(subparsers):
     def iaa_scan_accel_module(args):
         args.client.iaa_scan_accel_module()
 
-    p = subparsers.add_parser('iaa_scan_accel_module', aliases=['iaa_scan_accel_engine'],
+    p = subparsers.add_parser('iaa_scan_accel_module',
                               help='Set config and enable iaa accel module offload.')
     p.set_defaults(func=iaa_scan_accel_module)
 

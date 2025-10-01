@@ -103,7 +103,6 @@ rpc_accel_get_module_info(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, info.w);
 }
 SPDK_RPC_REGISTER("accel_get_module_info", rpc_accel_get_module_info, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(accel_get_module_info, accel_get_engine_info)
 
 struct rpc_accel_assign_opc {
 	char *opname;

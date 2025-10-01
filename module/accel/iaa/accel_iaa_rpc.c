@@ -34,4 +34,3 @@ rpc_iaa_scan_accel_module(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iaa_scan_accel_module", rpc_iaa_scan_accel_module, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iaa_scan_accel_module, iaa_scan_accel_engine)

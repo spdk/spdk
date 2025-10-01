@@ -20,7 +20,7 @@ def add_parser(subparsers):
     def accel_get_module_info(args):
         print_dict(args.client.accel_get_module_info())
 
-    p = subparsers.add_parser('accel_get_module_info', aliases=['accel_get_engine_info'],
+    p = subparsers.add_parser('accel_get_module_info',
                               help='Get list of valid module names and their operations.')
     p.set_defaults(func=accel_get_module_info)
 

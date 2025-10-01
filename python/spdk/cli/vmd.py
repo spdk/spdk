@@ -14,7 +14,7 @@ def add_parser(subparsers):
     def vmd_enable(args):
         print_dict(args.client.vmd_enable())
 
-    p = subparsers.add_parser('vmd_enable', aliases=['enable_vmd'], help='Enable VMD enumeration')
+    p = subparsers.add_parser('vmd_enable', help='Enable VMD enumeration')
     p.set_defaults(func=vmd_enable)
 
     def vmd_remove_device(args):

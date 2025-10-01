@@ -1144,7 +1144,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_get_lvstores", rpc_bdev_lvol_get_lvstores, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_get_lvstores, get_lvol_stores)
 
 struct rpc_bdev_lvol_get_lvols {
 	char *lvs_uuid;

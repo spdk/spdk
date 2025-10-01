@@ -76,7 +76,6 @@ cleanup:
 	free_rpc_construct_daos(&req);
 }
 SPDK_RPC_REGISTER("bdev_daos_create", rpc_bdev_daos_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_daos_create, construct_daos_bdev)
 
 struct rpc_delete_daos {
 	char *name;
@@ -126,7 +125,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_daos_delete", rpc_bdev_daos_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_daos_delete, delete_daos_bdev)
 
 struct rpc_bdev_daos_resize {
 	char *name;
