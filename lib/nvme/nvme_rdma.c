@@ -710,10 +710,10 @@ nvme_rdma_qpair_set_poller(struct spdk_nvme_qpair *qpair)
 static void
 nvme_rdma_qpair_release_poller(struct nvme_rdma_qpair *rqpair)
 {
-	struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(rqpair->qpair.poll_group);
 	struct nvme_rdma_poller *poller = rqpair->poller;
+	struct nvme_rdma_poll_group *group = poller->group;
 
-	assert(poller);
+	assert(group);
 
 	if (!poller->srq) {
 		assert(rqpair->poller->required_num_wc >= WC_PER_QPAIR(rqpair->num_entries));
@@ -722,6 +722,7 @@ nvme_rdma_qpair_release_poller(struct nvme_rdma_qpair *rqpair)
 
 	nvme_rdma_poll_group_put_poller(group, poller);
 	rqpair->poller = NULL;
+	rqpair->cq = NULL;
 }
 
 static int
@@ -2100,8 +2101,6 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	if (rqpair->poller) {
 		nvme_rdma_qpair_release_poller(rqpair);
 
-		rqpair->poller = NULL;
-		rqpair->cq = NULL;
 		if (rqpair->srq) {
 			rqpair->srq = NULL;
 			rqpair->rsps = NULL;
