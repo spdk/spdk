@@ -3240,6 +3240,11 @@ nvmf_ns_reservation_add_registrant(struct spdk_nvmf_ns *ns,
 {
 	struct spdk_nvmf_registrant *reg;
 
+	if (nvmf_ns_registrants_get_count(ns) >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+		SPDK_ERRLOG("Registrant list full on subsystem: %p, nsid: %u\n", ns->subsystem, ns->nsid);
+		return -ENOMEM;
+	}
+
 	reg = calloc(1, sizeof(*reg));
 	if (!reg) {
 		return -ENOMEM;

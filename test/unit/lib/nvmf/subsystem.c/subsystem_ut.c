@@ -3715,7 +3715,11 @@ test_nvmf_ns_reservation_add_max_registrants(void)
 	for (i = 0; i < SPDK_NVMF_MAX_NUM_REGISTRANTS + 1; i++) {
 		spdk_uuid_generate(&g_ctrlr1_A.hostid);
 		rc = nvmf_ns_reservation_add_registrant(&g_ns, &g_ctrlr1_A, 0xa11 + i);
-		CU_ASSERT(rc == 0);
+		if (i < SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+			CU_ASSERT(rc == 0);
+		} else {
+			CU_ASSERT(rc == -ENOMEM);
+		}
 	}
 	/* Update the reservation info */
 	rc = nvmf_ns_update_reservation_info(&g_ns);
@@ -3724,9 +3728,9 @@ test_nvmf_ns_reservation_add_max_registrants(void)
 	rc = nvmf_ns_reservation_load(&g_ns, &info);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT_EQUAL(info.num_regs, SPDK_NVMF_MAX_NUM_REGISTRANTS);
-	/* Clear should return max + 1 */
+	/* Clear should return max */
 	uint32_t cleared = nvmf_ns_reservation_clear_all_registrants(&g_ns);
-	CU_ASSERT_EQUAL(cleared, SPDK_NVMF_MAX_NUM_REGISTRANTS + 1);
+	CU_ASSERT_EQUAL(cleared, SPDK_NVMF_MAX_NUM_REGISTRANTS);
 }
 
 int
