@@ -1026,18 +1026,6 @@ ut_reservation_build_registrants(void)
 	ut_reservation_free_req(req);
 }
 
-static size_t
-registrants_get_count(const struct spdk_nvmf_ns *ns)
-{
-	size_t count = 0;
-	struct spdk_nvmf_registrant *reg;
-
-	TAILQ_FOREACH(reg, &ns->registrants, link) {
-		count++;
-	}
-	return count;
-}
-
 static void
 test_reservation_register(void)
 {
@@ -1488,7 +1476,7 @@ test_reservation_acquire_preempt_unregister_multi_same_key(enum spdk_nvme_reserv
 	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_C, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	/* Registration for C is maintained, A and B are unregistered */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_C.hostid);
 	SPDK_CU_ASSERT_FATAL(reg != NULL);
 	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
@@ -1575,7 +1563,7 @@ test_reservation_acquire_preempt_other_same_key(enum spdk_nvme_reservation_acqui
 	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	/* Registration for B is maintained, A is unregistered */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
 	SPDK_CU_ASSERT_FATAL(reg != NULL);
 	/* B is now reservation holder */
@@ -2242,7 +2230,7 @@ test_reservation_request(void)
 	nvmf_ns_reservation_request(req);
 
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1);
 	/* reservation command is outstanding until pg updates */
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
@@ -2504,7 +2492,7 @@ test_reservation_request_multi_pending(void)
 	 * have not updated yet
 	 */
 	for (size_t i = 0; i < MAX_REQS; i++) {
-		SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == i + 1);
+		SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == i + 1);
 		SPDK_CU_ASSERT_FATAL(g_ns.gen == (uint32_t)(i + 1));
 		SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == MAX_REQS -  i);
 		for (size_t j = 0; j < MAX_REQS; j++) {
@@ -2622,12 +2610,12 @@ test_reservation_request_preempt_abort_basic(void)
 	nvmf_ns_reservation_request(req_b);
 
 	/* First registration is in-progress */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1);
 	/* reservation command is outstanding until pg updates */
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 2);
 	poll_threads(); /* drive poll group update */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 2);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 2);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 2);
 	SPDK_CU_ASSERT_FATAL(rsp_a->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(rsp_b->status.sc == SPDK_NVME_SC_SUCCESS);
@@ -2675,7 +2663,7 @@ test_reservation_request_preempt_abort_basic(void)
 					       &g_ctrlr_B.hostid) == 0);
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
 	SPDK_CU_ASSERT_FATAL(g_ns.crkey == b_key);
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	/* hostid for A should be on preempt list */
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
@@ -2756,7 +2744,7 @@ test_reservation_request_preempt_abort_basic(void)
 	rsp_a->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	nvmf_ns_reservation_request(req_a);
 	poll_threads(); /* drive poll group update */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 2);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 2);
 	SPDK_CU_ASSERT_FATAL(rsp_a->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 0);
 	/* A preempt B */
@@ -2769,7 +2757,7 @@ test_reservation_request_preempt_abort_basic(void)
 					       &g_ctrlr1_A.hostid) == 0);
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
 	SPDK_CU_ASSERT_FATAL(g_ns.crkey == a_key);
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	/* hostid for B should be on preempt list */
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
@@ -2915,12 +2903,12 @@ test_reservation_request_preempt_abort_timeout(void)
 	nvmf_ns_reservation_request(req_b);
 
 	/* First registration is in-progress */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 1);
 	/* reservation command is outstanding until pg updates */
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 2);
 	poll_threads(); /* drive poll group update */
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 2);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 2);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 2);
 	SPDK_CU_ASSERT_FATAL(rsp_a->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(rsp_b->status.sc == SPDK_NVME_SC_SUCCESS);
@@ -2984,7 +2972,7 @@ test_reservation_request_preempt_abort_timeout(void)
 					       &g_ctrlr_B.hostid) == 0);
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
 	SPDK_CU_ASSERT_FATAL(g_ns.crkey == b_key);
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(reservations_get_count(&g_ns) == 1);
 	/* hostid for A should be on preempt list */
 	SPDK_CU_ASSERT_FATAL(g_ns.preempt_abort);
@@ -3053,7 +3041,7 @@ test_reservation_request_preempt_abort_timeout(void)
 	spdk_delay_us(NS_RESERVATION_IO_WAIT_CHECK_INTERVAL);
 	poll_thread_times(0, 3);
 
-	SPDK_CU_ASSERT_FATAL(registrants_get_count(&g_ns) == 1);
+	SPDK_CU_ASSERT_FATAL(nvmf_ns_registrants_get_count(&g_ns) == 1);
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == 3);
 	SPDK_CU_ASSERT_FATAL(spdk_uuid_compare(&pg_ns->holder_id,
 					       &g_ctrlr_B.hostid) == 0);

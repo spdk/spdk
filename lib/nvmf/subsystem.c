@@ -3101,6 +3101,18 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 	return nvmf_ns_reservation_update(ns, &info);
 }
 
+size_t
+nvmf_ns_registrants_get_count(const struct spdk_nvmf_ns *ns)
+{
+	size_t count = 0;
+	struct spdk_nvmf_registrant *reg;
+
+	TAILQ_FOREACH(reg, &ns->registrants, link) {
+		count++;
+	}
+	return count;
+}
+
 static struct spdk_nvmf_registrant *
 nvmf_ns_reservation_get_registrant(struct spdk_nvmf_ns *ns,
 				   struct spdk_uuid *uuid)

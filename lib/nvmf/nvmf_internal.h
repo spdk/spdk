@@ -493,6 +493,7 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 				       enum spdk_nvme_reservation_notification_log_page_type type);
 
 bool nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns);
+size_t nvmf_ns_registrants_get_count(const struct spdk_nvmf_ns *ns);
 
 static inline struct spdk_nvmf_host *
 nvmf_ns_find_host(struct spdk_nvmf_ns *ns, const char *hostnqn)
