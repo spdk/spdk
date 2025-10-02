@@ -13,31 +13,22 @@ jobs:
   sync-gh-pages:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/actions/jekyll-build-pages:v1.0.13
+      image: ghcr.io/spdk/spdk-ci:fedora_40
     steps:
     - name: Checkout Pages repository
       uses: actions/checkout@v4.1.7
       with:
         repository: spdk/spdk.github.io
         path: pages
-    - name: Checkout SPDK repository
-      uses: actions/checkout@v4.1.7
-      with:
-        repository: spdk/spdk
-        path: spdk
     - name: Install dependencies
       run: |
         set -x
-        apt-get update
-        ./spdk/scripts/pkgdep.sh --docs
+        dnf -y install jekyll
     - name: Run doc generation script
       id: vars
       working-directory: pages
-      env:
-        PIP_VIRTDIR: /var/spdk/dependencies/pip
       run: |
         set -x
-        . "$PIP_VIRTDIR/bin/activate"
         ./update-doc.sh
         echo "spdk_sha=$(cat _doc_version.txt)" >> $GITHUB_OUTPUT
     - name: Commit and Push changes
