@@ -764,19 +764,23 @@ function check_json_rpc() {
 }
 
 function check_markdown_format() {
-	local rc=0
+	local rc=0 md_files=()
+
+	mapfile -t md_files < <(git ls-files '*.md')
+	mapfile -t md_files < <(get_diffed_dups "${md_files[@]}")
+
+	((${#md_files[@]} > 0)) || return 0
 
 	if hash mdl 2> /dev/null; then
 		echo -n "Checking markdown files format..."
-		mdl -g -s $rootdir/mdl_rules.rb . > mdl.log || true
-		if [ -s mdl.log ]; then
+		local mdl_log
+		if ! mdl_log=$(mdl -s "$rootdir/mdl_rules.rb" "${md_files[@]}" 2>&1); then
 			echo " Errors in .md files detected:"
-			cat mdl.log
+			echo "$mdl_log"
 			rc=1
 		else
 			echo " OK"
 		fi
-		rm -f mdl.log
 	else
 		echo "You do not have markdownlint installed so .md files not being checked!"
 	fi
