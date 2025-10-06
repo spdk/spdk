@@ -9,6 +9,7 @@ import re
 import sys
 import json
 import argparse
+from typing import Any, Dict, NoReturn
 from pathlib import Path
 from tabulate import tabulate
 from jinja2 import Environment, FileSystemLoader
@@ -19,7 +20,7 @@ import rpc
 base_dir = Path(__file__).resolve().parent.parent
 
 
-def lint_json_examples():
+def lint_json_examples() -> None:
     with open(base_dir / "doc" / "jsonrpc.md.jinja2", "r") as file:
         data = file.read()
         examples = re.findall("~~~json(.+?)~~~", data, re.MULTILINE | re.DOTALL)
@@ -32,7 +33,7 @@ def lint_json_examples():
                 raise
 
 
-def lint_py_cli(schema):
+def lint_py_cli(schema: Dict[str, Any]) -> None:
     types = {str: 'string', None: 'string', int: 'number', bool: 'boolean'}
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     parser, subparsers = rpc.create_parser()
@@ -66,7 +67,7 @@ def lint_py_cli(schema):
                 raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
 
 
-def generate_docs(schema):
+def generate_docs(schema: Dict[str, Any]) -> str:
     env = Environment(loader=FileSystemLoader(base_dir / "doc"),
                       keep_trailing_newline=True,
                       comment_start_string='<!--',
@@ -104,11 +105,10 @@ def generate_docs(schema):
             if fields
             else "This method has no parameters."
         )
-    result = schema_template.render(transformation)
-    print(result)
+    return str(schema_template.render(transformation))
 
 
-def generate_rpcs(schema):
+def generate_rpcs(schema: Dict[str, Any]) -> NoReturn:
     raise NotImplementedError("Auto generating python/c code for rpc is not yet implemented")
 
 
@@ -161,6 +161,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.doc:
-        generate_docs(schema)
+        print(generate_docs(schema))
     if args.rpc:
         generate_rpcs(schema)
