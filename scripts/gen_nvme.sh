@@ -21,9 +21,9 @@ function usage() {
 	echo "-h, --help                     Print help and exit"
 	echo "    --mode                     Generate 'local' or 'remote' NVMe JSON configuration. Default is 'local'."
 	echo "                               Remote needs --trid option to be present."
-	echo "    --trid                     Comma separated list target subsystem information containing transport type,"
-	echo "                               IP addresses, port numbers and NQN names."
-	echo "                               Example: tcp:127.0.0.1:4420:nqn.2016-06.io.spdk:cnode1,tcp:127.0.0.1:4421:nqn.2016-06.io.spdk:cnode2"
+	echo "    --trid                     Comma separated list target subsystem information containing"
+	echo "                               transport type, IP addresses, port numbers and NQN names. Example:"
+	echo "                               --trid=\"transport=tcp ip_addr=127.0.0.1 svc_port=4420 nqn=nqn.2016-06.io.spdk:cnode1,[...]\""
 	echo "    --json-with-subsystems     Wrap bdev subsystem JSON configuration with higher level 'subsystems' dictionary."
 	echo "-n, --bdev-count               Defines number of nvme bdevs to use in the configuration."
 	exit 0
@@ -69,12 +69,12 @@ function create_remote_json_config() {
 
 	IFS="," read -r -a trids <<< $1
 	for ((i = 0; i < ${#trids[@]}; i++)); do
-		local transport
-		local ip_addr
-		local svc_port
-		local nqn
+		local transport=""
+		local ip_addr=""
+		local svc_port=""
+		local nqn=""
 
-		IFS=":" read -r transport ip_addr svc_port nqn <<< ${trids[i]}
+		source <(echo "${trids[i]}")
 		bdev_json_cfg+=("$(
 			cat <<- JSON
 				{

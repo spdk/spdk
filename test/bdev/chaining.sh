@@ -26,7 +26,7 @@ spdk_dd() {
 
 	# Disable auto-examine to avoid seeing the examine callbacks' reads in accel stats
 	config=$("$rootdir/scripts/gen_nvme.sh" --mode=remote --json-with-subsystems \
-		--trid="$TEST_TRANSPORT:$NVMF_FIRST_TARGET_IP:$NVMF_PORT:$nqn" \
+		--trid="transport=$TEST_TRANSPORT ip_addr=$NVMF_FIRST_TARGET_IP svc_port=$NVMF_PORT nqn=$nqn" \
 		| jq '.subsystems[0].config[.subsystems[0].config | length] |=
 			{"method": "bdev_set_options", "params": {"bdev_auto_examine": false}}')
 

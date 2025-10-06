@@ -183,7 +183,7 @@ These examples assume you have built fio and SPDK with `--with-fio` option enabl
 
     ```bash
     scripts/gen_nvme.sh --json-with-subsystems --mode=remote \
-    --trid=tcp:10.0.0.1:4420:nqn.2018-09.io.spdk:cnode1 > /tmp/bdev.json
+    --trid="transport=tcp ip_addr=10.0.0.1 svc_port=4420 nqn=nqn.2018-09.io.spdk:cnode1" > /tmp/bdev.json
 
     cat /tmp/bdev.json | jq
     {
