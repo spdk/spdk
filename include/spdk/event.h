@@ -151,8 +151,11 @@ struct spdk_app_opts {
 
 	bool enforce_numa;
 
-	/* Hole at bytes 187-191. */
-	uint8_t reserved187[5];
+	/* Hole at byte 187. */
+	uint8_t reserved187[1];
+
+	/* Number of threads for SPDK tracing */
+	uint32_t num_trace_threads;
 
 	/**
 	 * The allocated size for the message pool used by the threading library.

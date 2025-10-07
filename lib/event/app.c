@@ -363,6 +363,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(print_level, SPDK_APP_DEFAULT_LOG_PRINT_LEVEL);
 	SET_FIELD(rpc_addr, SPDK_DEFAULT_RPC_ADDR);
 	SET_FIELD(num_entries, SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
+	SET_FIELD(num_trace_threads, 0);
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
 	SET_FIELD(interrupt_mode, false);
@@ -581,7 +582,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 			 SPDK_TRACE_SHM_NAME_BASE, (int)getpid());
 	}
 
-	if (spdk_trace_init(shm_name, opts->num_entries, 0) != 0) {
+	if (spdk_trace_init(shm_name, opts->num_entries, opts->num_trace_threads) != 0) {
 		return -1;
 	}
 
@@ -722,6 +723,7 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(iova_mode);
 	SET_FIELD(delay_subsystem_init);
 	SET_FIELD(num_entries);
+	SET_FIELD(num_trace_threads);
 	SET_FIELD(env_context);
 	SET_FIELD(log);
 	SET_FIELD(base_virtaddr);

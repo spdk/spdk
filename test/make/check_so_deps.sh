@@ -158,6 +158,11 @@ function confirm_abi_deps() {
 			soname_regexp = ^libspdk_nvme\\.so\\.14\\.*$
 			has_data_member_regexp = ^submit_accel_crc32c$
 			has_data_member_inserted_between = {64, 128}
+		[suppress_type]
+			label = Added num_trace_threads field using reserved space with padding reorganization
+			name = spdk_app_opts
+			soname_regexp = ^libspdk_event\\.so\\.15\\.*$
+			has_data_member_regexp = ^(reserved191|reserved187|num_trace_threads)$
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do
