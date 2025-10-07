@@ -34,10 +34,17 @@ def lint_json_examples():
 
 def lint_py_cli(schema):
     types = {str: 'string', None: 'string', int: 'number', bool: 'boolean'}
+    exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     parser, subparsers = rpc.create_parser()
+    schema_methods = set(method["name"] for method in schema['methods'])
+    cli_methods = set(subparsers.choices.keys())
+    missing_in_cli = schema_methods - cli_methods
+    missing_in_schema = cli_methods - schema_methods - exceptions
+    if missing_in_cli:
+        raise ValueError(f"Methods defined in schema but missing in CLI: {sorted(missing_in_cli)}")
+    if missing_in_schema:
+        raise ValueError(f"Commands found in CLI but not defined in schema: {sorted(missing_in_schema)}")
     for method in schema['methods']:
-        if method['name'] not in subparsers.choices:
-            raise ValueError(f"{method['name']} defined in schema, was not found in python cli")
         subparser = subparsers.choices[method['name']]
         actions = {a.dest: a for a in subparser._actions}
         for param in method['params']:
