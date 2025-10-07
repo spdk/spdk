@@ -3552,21 +3552,21 @@ nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 }
 
 static struct nvme_rdma_qpair *
-get_rdma_qpair_from_wc(struct nvme_rdma_poll_group *group, struct ibv_wc *wc)
+nvme_rdma_poll_group_find_qpair(struct nvme_rdma_poll_group *group, uint32_t qp_num)
 {
 	struct spdk_nvme_qpair *qpair;
 	struct nvme_rdma_qpair *rqpair;
 
 	STAILQ_FOREACH(qpair, &group->group.connected_qpairs, poll_group_stailq) {
 		rqpair = nvme_rdma_qpair(qpair);
-		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair, wc->qp_num)) {
+		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair, qp_num)) {
 			return rqpair;
 		}
 	}
 
 	STAILQ_FOREACH(qpair, &group->group.disconnected_qpairs, poll_group_stailq) {
 		rqpair = nvme_rdma_qpair(qpair);
-		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair, wc->qp_num)) {
+		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair, qp_num)) {
 			return rqpair;
 		}
 	}
@@ -3603,7 +3603,7 @@ nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_
 		case RDMA_WR_TYPE_RECV:
 			rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
 			if (poller->srq) {
-				rqpair = get_rdma_qpair_from_wc(poller->group, &wc[i]);
+				rqpair = nvme_rdma_poll_group_find_qpair(poller->group, wc[i].qp_num);
 			} else {
 				rqpair = rdma_rsp->rqpair;
 			}
@@ -3631,7 +3631,7 @@ nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_req, rdma_wr);
 			rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
 			if (spdk_unlikely(!rqpair)) {
-				rqpair = get_rdma_qpair_from_wc(poller->group, &wc[i]);
+				rqpair = nvme_rdma_poll_group_find_qpair(poller->group, wc[i].qp_num);
 				if (!rqpair) {
 					/* When poll_group is used, several qpairs share the same CQ and it is possible to
 					 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
