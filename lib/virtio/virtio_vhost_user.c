@@ -21,6 +21,12 @@
 	((1ULL << VHOST_USER_PROTOCOL_F_MQ) | \
 	(1ULL << VHOST_USER_PROTOCOL_F_CONFIG))
 
+struct virtio_user_queue {
+        uint16_t used_idx;
+        bool avail_wrap_counter;
+        bool used_wrap_counter;
+};
+
 struct virtio_user_dev {
 	int		vhostfd;
 
@@ -32,7 +38,14 @@ struct virtio_user_dev {
 	bool		is_stopping;
 	char		path[PATH_MAX];
 	uint64_t	protocol_features;
-	struct vring	vrings[SPDK_VIRTIO_MAX_VIRTQUEUES];
+
+	union {
+		struct vring    split[SPDK_VIRTIO_MAX_VIRTQUEUES];
+		struct vring_packed packed[SPDK_VIRTIO_MAX_VIRTQUEUES];
+	} vrings;
+
+	struct virtio_user_queue packed_queues[SPDK_VIRTIO_MAX_VIRTQUEUES];
+
 	struct spdk_mem_map *mem_map;
 };
 
@@ -497,10 +510,10 @@ virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 }
 
 static int
-virtio_user_set_vring_addr(struct virtio_dev *vdev, uint32_t queue_sel)
+virtio_user_set_vring_addr_split(struct virtio_dev *vdev, uint32_t queue_sel)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
-	struct vring *vring = &dev->vrings[queue_sel];
+	struct vring *vring = &dev->vrings.split[queue_sel];
 	struct vhost_vring_addr addr = {
 		.index = queue_sel,
 		.desc_user_addr = (uint64_t)(uintptr_t)vring->desc,
@@ -514,16 +527,44 @@ virtio_user_set_vring_addr(struct virtio_dev *vdev, uint32_t queue_sel)
 }
 
 static int
+virtio_user_set_vring_addr_packed(struct virtio_dev *vdev, uint32_t queue_sel)
+{
+        struct virtio_user_dev *dev = vdev->ctx;
+        struct vring_packed *vring = &dev->vrings.packed[queue_sel];
+        struct vhost_vring_addr addr = {
+                .index = queue_sel,
+                .desc_user_addr = (uint64_t)(uintptr_t)vring->desc,
+                .avail_user_addr = (uint64_t)(uintptr_t)vring->driver,
+                .used_user_addr = (uint64_t)(uintptr_t)vring->device,
+                .log_guest_addr = 0,
+                .flags = 0, /* disable log */
+        };
+
+        return vhost_user_sock(dev, VHOST_USER_SET_VRING_ADDR, &addr);
+}
+
+static int
 virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 	struct vhost_vring_file file;
 	struct vhost_vring_state state;
-	struct vring *vring = &dev->vrings[queue_sel];
+	struct vring *vring = &dev->vrings.split[queue_sel];
+	struct vring_packed *pq_vring = &dev->vrings.packed[queue_sel];
 	int rc;
 
 	state.index = queue_sel;
-	state.num = vring->num;
+
+	if (virtio_with_packed_queue(vdev))
+	{
+		state.num = pq_vring->num;
+		SPDK_WARNLOG("%s === 1ULL << VIRTIO_F_RING_PACKED, state.num:%d\n",__func__,state.num);
+	}
+	else
+	{
+		state.num = vring->num;
+	}
+
 	rc = vhost_user_sock(dev, VHOST_USER_SET_VRING_NUM, &state);
 	if (rc < 0) {
 		return rc;
@@ -531,12 +572,22 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 
 	state.index = queue_sel;
 	state.num = 0; /* no reservation */
+
 	rc = vhost_user_sock(dev, VHOST_USER_SET_VRING_BASE, &state);
 	if (rc < 0) {
 		return rc;
 	}
 
-	virtio_user_set_vring_addr(vdev, queue_sel);
+        if (virtio_with_packed_queue(vdev))
+        {
+
+		virtio_user_set_vring_addr_packed(vdev, queue_sel);
+	}
+	else
+	{
+		virtio_user_set_vring_addr_split(vdev, queue_sel);
+
+	}
 
 	/* Of all per virtqueue MSGs, make sure VHOST_USER_SET_VRING_KICK comes
 	 * lastly because vhost depends on this msg to judge if
@@ -858,6 +909,55 @@ virtio_user_get_queue_size(struct virtio_dev *vdev, uint16_t queue_id)
 	return dev->queue_size;
 }
 
+static void
+virtio_user_setup_queue_packed(struct virtqueue *vq,
+                               struct virtio_user_dev *dev)
+{
+        uint16_t queue_idx = vq->vq_queue_index;
+        struct vring_packed *vring;
+        uint64_t desc_addr;
+        uint64_t avail_addr;
+        uint64_t used_addr;
+        uint16_t i;
+
+        vring  = &dev->vrings.packed[queue_idx];
+        desc_addr = (uintptr_t)vq->vq_ring_virt_mem;
+        avail_addr = desc_addr + vq->vq_nentries *
+                sizeof(struct vring_packed_desc);
+        used_addr = SPDK_ALIGN_CEIL(avail_addr +
+                           sizeof(struct vring_packed_desc_event),
+                           VIRTIO_PCI_VRING_ALIGN);
+        vring->num = vq->vq_nentries;
+        vring->desc_iova = vq->vq_ring_mem;
+        vring->desc = (void *)(uintptr_t)desc_addr;
+        vring->driver = (void *)(uintptr_t)avail_addr;
+        vring->device = (void *)(uintptr_t)used_addr;
+        dev->packed_queues[queue_idx].avail_wrap_counter = true;
+        dev->packed_queues[queue_idx].used_wrap_counter = true;
+        dev->packed_queues[queue_idx].used_idx = 0;
+
+        for (i = 0; i < vring->num; i++)
+                vring->desc[i].flags = 0;
+}
+
+static void
+virtio_user_setup_queue_split(struct virtqueue *vq, struct virtio_user_dev *dev)
+{
+        uint16_t queue_idx = vq->vq_queue_index;
+        uint64_t desc_addr, avail_addr, used_addr;
+
+        desc_addr = (uintptr_t)vq->vq_ring_virt_mem;
+        avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
+        used_addr = SPDK_ALIGN_CEIL(avail_addr + offsetof(struct vring_avail,
+                                                         ring[vq->vq_nentries]),
+                                   VIRTIO_PCI_VRING_ALIGN);
+
+        dev->vrings.split[queue_idx].num = vq->vq_nentries;
+        dev->vrings.split[queue_idx].desc = (void *)(uintptr_t)desc_addr;
+        dev->vrings.split[queue_idx].avail = (void *)(uintptr_t)avail_addr;
+        dev->vrings.split[queue_idx].used = (void *)(uintptr_t)used_addr;
+}
+
 static int
 virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
@@ -865,7 +965,6 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	struct vhost_vring_state state;
 	uint16_t queue_idx = vq->vq_queue_index;
 	void *queue_mem;
-	uint64_t desc_addr, avail_addr, used_addr;
 	int callfd, kickfd, rc;
 
 	if (dev->callfds[queue_idx] != -1 || dev->kickfds[queue_idx] != -1) {
@@ -919,16 +1018,10 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	dev->callfds[queue_idx] = callfd;
 	dev->kickfds[queue_idx] = kickfd;
 
-	desc_addr = (uintptr_t)vq->vq_ring_virt_mem;
-	avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
-	used_addr = SPDK_ALIGN_CEIL(avail_addr + offsetof(struct vring_avail,
-				    ring[vq->vq_nentries]),
-				    VIRTIO_PCI_VRING_ALIGN);
-
-	dev->vrings[queue_idx].num = vq->vq_nentries;
-	dev->vrings[queue_idx].desc = (void *)(uintptr_t)desc_addr;
-	dev->vrings[queue_idx].avail = (void *)(uintptr_t)avail_addr;
-	dev->vrings[queue_idx].used = (void *)(uintptr_t)used_addr;
+        if (virtio_with_packed_queue(vdev))
+                virtio_user_setup_queue_packed(vq, dev);
+        else
+                virtio_user_setup_queue_split(vq, dev);
 
 	return 0;
 }

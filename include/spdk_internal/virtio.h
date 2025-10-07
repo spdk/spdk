@@ -33,7 +33,31 @@
 /* Extra status define for readability */
 #define VIRTIO_CONFIG_S_RESET 0
 
+/* This flag means the descriptor was made available by the driver */
+#define SPDK_VRING_PACKED_DESC_F_AVAIL       (1 << 7)
+/* This flag means the descriptor was used by the device */
+#define SPDK_VRING_PACKED_DESC_F_USED        (1 << 15)
+
+#define VRING_PACKED_DESC_F_AVAIL_USED  (SPDK_VRING_PACKED_DESC_F_AVAIL | \
+                                         SPDK_VRING_PACKED_DESC_F_USED)
 struct virtio_dev_ops;
+
+
+/* For support of packed virtqueues in Virtio 1.1 the format of descriptors
+ * looks like this.
+ */
+
+#define RING_EVENT_FLAGS_ENABLE 0x0
+#define RING_EVENT_FLAGS_DISABLE 0x1
+#define RING_EVENT_FLAGS_DESC 0x2
+
+struct vring_packed {
+        unsigned int num;
+        uint64_t desc_iova;
+        struct vring_packed_desc *desc;
+        struct vring_packed_desc_event *driver;
+        struct vring_packed_desc_event *device;
+};
 
 struct virtio_dev {
 	struct virtqueue **vqs;
@@ -101,11 +125,29 @@ struct virtio_dev_ops {
 struct vq_desc_extra {
 	void *cookie;
 	uint16_t ndescs;
+	bool wrapped;
+	uint16_t head_idx;
+	uint16_t  last_idx;
+	uint16_t next;
 };
 
 struct virtqueue {
 	struct virtio_dev *vdev; /**< owner of this virtqueue */
-	struct vring vq_ring;  /**< vring keeping desc, used and avail */
+	union {
+		struct {
+			/**< vring keeping desc, used and avail */
+			struct vring ring;
+		} vq_split;
+
+		struct {
+			/**< vring keeping descs and events */
+			struct vring_packed ring;
+			bool used_wrap_counter;
+			uint16_t cached_flags; /**< cached flags for descs */
+			uint16_t event_flags_shadow;
+		} vq_packed;
+
+	};
 	/**
 	 * Last consumed descriptor in the used table,
 	 * trails vq_ring.used->idx.
@@ -156,6 +198,93 @@ enum spdk_virtio_desc_type {
 struct virtio_pci_ctx;
 
 /**
+ * Check if the device has negotiated given feature bit.
+ *
+ * \param vdev virtio device
+ * \param bit feature bit
+ */
+static inline bool
+virtio_dev_has_feature(struct virtio_dev *vdev, uint64_t bit)
+{
+        return !!(vdev->negotiated_features & (1ULL << bit));
+}
+
+static inline int
+virtio_with_packed_queue(struct virtio_dev *vdev)
+{
+        return virtio_dev_has_feature(vdev, VIRTIO_F_RING_PACKED);
+}
+
+static inline size_t
+vring_size_packed(unsigned int num, unsigned long align)
+{
+	size_t size;
+
+	size = num * sizeof(struct vring_packed_desc);
+	size += sizeof(struct vring_packed_desc_event);
+	size = SPDK_ALIGN_CEIL(size, align);
+	size += sizeof(struct vring_packed_desc_event);
+	return size;
+}
+
+static inline void
+vring_init_packed(struct vring_packed *vr, uint8_t *p, uint64_t iova,
+                  unsigned long align, unsigned int num)
+{
+        vr->num = num;
+        vr->desc = (struct vring_packed_desc *)p;
+        vr->desc_iova = iova;
+        vr->driver = (struct vring_packed_desc_event *)(p +
+                        vr->num * sizeof(struct vring_packed_desc));
+        vr->device = (struct vring_packed_desc_event *)
+                SPDK_ALIGN_CEIL(((uintptr_t)vr->driver +
+                                sizeof(struct vring_packed_desc_event)), align);
+}
+
+static inline void
+vring_desc_init_packed(struct virtqueue *vq, int n)
+{
+        int i;
+        for (i = 0; i < n - 1; i++) {
+                vq->vq_packed.ring.desc[i].id = i;
+                vq->vq_descx[i].next = i + 1;
+        }
+        vq->vq_packed.ring.desc[i].id = i;
+        vq->vq_descx[i].next = VQ_RING_DESC_CHAIN_END;
+}
+
+static inline void
+virtqueue_disable_intr_packed(struct virtqueue *vq)
+{
+        /*
+         * Set RING_EVENT_FLAGS_DISABLE to hint host
+         * not to interrupt when it consumes packets
+         * Note: this is only considered a hint to the host
+         */
+        if (vq->vq_packed.event_flags_shadow != RING_EVENT_FLAGS_DISABLE) {
+                vq->vq_packed.event_flags_shadow = RING_EVENT_FLAGS_DISABLE;
+                vq->vq_packed.ring.driver->flags =
+                        vq->vq_packed.event_flags_shadow;
+        }
+}
+
+static inline void
+virtqueue_disable_intr_split(struct virtqueue *vq)
+{
+        /* Tell the backend not to interrupt us.
+         * If F_EVENT_IDX is negotiated, we will always set incredibly high
+         * used event idx, so that we will practically never receive an
+         * interrupt. See virtqueue_req_flush()
+         */
+        if (vq->vdev->negotiated_features & (1ULL << VIRTIO_RING_F_EVENT_IDX)) {
+                vring_used_event(&vq->vq_split.ring) = UINT16_MAX;
+        } else {
+                vq->vq_split.ring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
+        }
+}
+
+/*
+ * *
  * Callback for creating virtio_dev from a PCI device.
  * \param pci_ctx PCI context to be associated with a virtio_dev
  * \param ctx context provided by the user
@@ -382,18 +511,6 @@ int virtio_dev_read_dev_config(struct virtio_dev *vdev, size_t offset, void *dst
  * \param vdev virtio device
  */
 const struct virtio_dev_ops *virtio_dev_backend_ops(struct virtio_dev *vdev);
-
-/**
- * Check if the device has negotiated given feature bit.
- *
- * \param vdev virtio device
- * \param bit feature bit
- */
-static inline bool
-virtio_dev_has_feature(struct virtio_dev *vdev, uint64_t bit)
-{
-	return !!(vdev->negotiated_features & (1ULL << bit));
-}
 
 /**
  * Dump all device specific information into given json stream.

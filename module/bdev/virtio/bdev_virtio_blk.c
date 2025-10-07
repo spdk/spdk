@@ -61,7 +61,8 @@ struct bdev_virtio_blk_io_channel {
 	 1ULL << VIRTIO_BLK_F_RO		|	\
 	 1ULL << VIRTIO_BLK_F_DISCARD		|	\
 	 1ULL << VIRTIO_BLK_F_FLUSH		|	\
-	 1ULL << VIRTIO_RING_F_EVENT_IDX)
+	 1ULL << VIRTIO_RING_F_EVENT_IDX        |       \
+	 1ULL << VIRTIO_F_RING_PACKED)
 
 /* 10 sec for max poll period */
 #define VIRTIO_BLK_HOTPLUG_POLL_PERIOD_MAX		10000000ULL
