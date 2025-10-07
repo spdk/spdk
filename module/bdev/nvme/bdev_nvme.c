@@ -3777,6 +3777,12 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 		 * The qpair may have been created after the reset process started.
 		 */
 		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
+
+		/* Since the channel is being destroyed, unregister any connect_poller
+		 * that might be active for the channel.
+		 */
+		spdk_poller_unregister(&ctrlr_ch->connect_poller);
+
 		if (ctrlr_ch->reset_iter) {
 			/* Skip current ctrlr_channel in a full reset sequence because
 			 * it is being deleted now.
