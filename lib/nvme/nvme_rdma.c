@@ -265,6 +265,8 @@ struct spdk_nvme_rdma_req {
 	 * received in RDMA_RECV, so store it in this field */
 	struct spdk_nvme_rdma_rsp		*rdma_rsp;
 
+	struct spdk_nvme_cpl			cpl;
+
 	struct nvme_rdma_wr			rdma_wr;
 
 	struct ibv_send_wr			send_wr;
@@ -1829,7 +1831,7 @@ nvme_rdma_accel_completion_cb(void *cb_arg, int status)
 		goto fail_req;
 	}
 
-	nvme_rdma_req_complete(rdma_req, &rdma_req->rdma_rsp->cpl, true);
+	nvme_rdma_req_complete(rdma_req, &rdma_req->cpl, true);
 	return;
 
 fail_req:
@@ -2714,20 +2716,19 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 static inline void
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
-	struct spdk_nvme_rdma_rsp *rdma_rsp = rdma_req->rdma_rsp;
-	struct ibv_recv_wr *recv_wr = rdma_rsp->recv_wr;
+	struct ibv_recv_wr *recv_wr = rdma_req->rdma_rsp->recv_wr;
 
 	if (rdma_req->transfer_cpl_cb) {
 		int rc = 0;
 
-		if (spdk_unlikely(spdk_nvme_cpl_is_error(&rdma_rsp->cpl))) {
-			NVME_RQPAIR_WARNLOG(rqpair, "req %p, error cpl sct %d, sc %d\n", rdma_req, rdma_rsp->cpl.status.sct,
-					    rdma_rsp->cpl.status.sc);
+		if (spdk_unlikely(spdk_nvme_cpl_is_error(&rdma_req->cpl))) {
+			NVME_RQPAIR_WARNLOG(rqpair, "req %p, error cpl sct %d, sc %d\n", rdma_req, rdma_req->cpl.status.sct,
+					    rdma_req->cpl.status.sc);
 			rc = -EIO;
 		}
 		nvme_rdma_finish_data_transfer(rdma_req, rc);
 	} else {
-		nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
+		nvme_rdma_req_complete(rdma_req, &rdma_req->cpl, true);
 	}
 
 	if (spdk_unlikely(rqpair->state >= NVME_RDMA_QPAIR_STATE_EXITING && !rqpair->srq)) {
@@ -2855,6 +2856,7 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct ibv_wc
 	rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
 	rdma_req->completion_flags |= NVME_RDMA_RECV_COMPLETED;
 	rdma_req->rdma_rsp = rdma_rsp;
+	rdma_req->cpl = rdma_rsp->cpl;
 
 	if ((rdma_req->completion_flags & NVME_RDMA_SEND_COMPLETED) == 0) {
 		return 0;
