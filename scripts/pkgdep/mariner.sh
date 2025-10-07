@@ -74,19 +74,6 @@ if [[ ! -e /usr/bin/python ]]; then
 	ln -s /usr/bin/python3 /usr/bin/python
 fi
 
-pips=(
-	meson
-	ninja
-	pyelftools
-	ijson
-	python-magic
-	pyyaml
-	grpcio
-	grpcio-tools
-	Jinja2
-	tabulate
-)
-
 if ((EUID == 0)); then
 	cat <<- WARNING
 		Warning: Running as root. You may want to install the pip packages
@@ -98,6 +85,6 @@ if ((EUID == 0)); then
 	WARNING
 fi
 
-pip3 install "${pips[@]}"
+pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
 
 additional_dependencies

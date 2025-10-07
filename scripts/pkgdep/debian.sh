@@ -21,18 +21,8 @@ else
 fi
 pkgdep_toolpath pip "$virtdir/bin"
 source "$virtdir/bin/activate"
+pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
 
-# install python packages
-pip3 install ninja
-pip3 install meson
-pip3 install pyelftools
-pip3 install ijson
-pip3 install python-magic
-pip3 install grpcio
-pip3 install grpcio-tools
-pip3 install pyyaml
-pip3 install Jinja2
-pip3 install tabulate
 # Additional dependencies for SPDK CLI
 apt-get install -y python3-configshell-fb python3-pexpect
 

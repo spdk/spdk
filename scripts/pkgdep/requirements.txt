@@ -1,15 +1,11 @@
-paramiko
-pexpect
 pandas
 tabulate
-configshell-fb
-pyparsing
 ninja
 meson
-scikit-build
 grpcio
 grpcio-tools
 pyelftools
+ijson
 python-magic
 pyyaml
 Jinja2

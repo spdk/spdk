@@ -128,17 +128,8 @@ if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then
 else
 	yum install -y python python3-devel
 fi
-pip3 install ninja
-pip3 install meson
-pip3 install pyelftools
-pip3 install ijson
-pip3 install python-magic
-pip3 install Jinja2
-pip3 install pandas
-pip3 install tabulate
-pip3 install grpcio
-pip3 install grpcio-tools
-pip3 install pyyaml
+
+pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
 
 # Additional dependencies for SPDK CLI
 yum install -y python3-configshell python3-pexpect
