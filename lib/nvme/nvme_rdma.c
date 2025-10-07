@@ -263,13 +263,7 @@ struct spdk_nvme_rdma_req {
 	uint16_t				completion_flags: 2;
 	uint16_t				in_progress_accel: 1;
 	uint16_t				reserved: 13;
-	/* if completion of RDMA_RECV received before RDMA_SEND, we will complete nvme request
-	 * during processing of RDMA_SEND. To complete the request we must know the response
-	 * received in RDMA_RECV, so store it in this field */
-	struct spdk_nvme_rdma_rsp		*rdma_rsp;
-
 	struct spdk_nvme_cpl			cpl;
-
 	struct nvme_rdma_wr			rdma_wr;
 
 	struct ibv_send_wr			send_wr;
@@ -377,7 +371,6 @@ nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdm
 {
 	rdma_req->completion_flags = 0;
 	rdma_req->req = NULL;
-	rdma_req->rdma_rsp = NULL;
 	assert(rdma_req->transfer_cpl_cb == NULL);
 	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
 }
@@ -2919,7 +2912,7 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 static inline void
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
-	struct ibv_recv_wr *recv_wr = rdma_req->rdma_rsp->recv_wr;
+	rqpair->num_completions++;
 
 	if (rdma_req->transfer_cpl_cb) {
 		int rc = 0;
@@ -2932,24 +2925,6 @@ nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_re
 		nvme_rdma_finish_data_transfer(rdma_req, rc);
 	} else {
 		nvme_rdma_req_complete(rdma_req, &rdma_req->cpl, true);
-	}
-
-	if (spdk_unlikely(rqpair->state >= NVME_RDMA_QPAIR_STATE_EXITING && !rqpair->srq)) {
-		/* Skip posting back recv wr if we are in a disconnection process. We may never get
-		 * a WC and we may end up stuck in LINGERING state until the timeout. */
-		return;
-	}
-
-	assert(rqpair->rsps->current_num_recvs < rqpair->rsps->num_entries);
-	rqpair->rsps->current_num_recvs++;
-
-	recv_wr->next = NULL;
-	nvme_rdma_trace_ibv_sge(recv_wr->sg_list);
-
-	if (!rqpair->srq) {
-		spdk_rdma_provider_qp_queue_recv_wrs(rqpair->rdma_qp, recv_wr);
-	} else {
-		spdk_rdma_provider_srq_queue_recv_wrs(rqpair->srq, recv_wr);
 	}
 }
 
@@ -2990,6 +2965,7 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct nvme_r
 {
 	struct spdk_nvme_rdma_req	*rdma_req;
 	struct spdk_nvme_rdma_rsp	*rdma_rsp;
+	struct ibv_recv_wr		*recv_wr;
 
 	rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
 
@@ -3009,16 +2985,26 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct nvme_r
 	}
 	rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
 	rdma_req->completion_flags |= NVME_RDMA_RECV_COMPLETED;
-	rdma_req->rdma_rsp = rdma_rsp;
 	rdma_req->cpl = rdma_rsp->cpl;
 
-	if ((rdma_req->completion_flags & NVME_RDMA_SEND_COMPLETED) == 0) {
-		return 0;
+	recv_wr = rdma_rsp->recv_wr;
+	recv_wr->next = NULL;
+	nvme_rdma_trace_ibv_sge(recv_wr->sg_list);
+
+	if (rqpair->srq) {
+		assert(rqpair->rsps->current_num_recvs < rqpair->rsps->num_entries);
+		rqpair->rsps->current_num_recvs++;
+		spdk_rdma_provider_srq_queue_recv_wrs(rqpair->srq, recv_wr);
+	} else {
+		if (spdk_likely(rqpair->state < NVME_RDMA_QPAIR_STATE_EXITING)) {
+			/* Post recv WR back to RQ if the qpair is not in a disconnection process.
+			 * Otherwise we may never get a WC and we may end up stuck in LINGERING
+			 * state until the timeout. */
+			assert(rqpair->rsps->current_num_recvs < rqpair->rsps->num_entries);
+			rqpair->rsps->current_num_recvs++;
+			spdk_rdma_provider_qp_queue_recv_wrs(rqpair->rdma_qp, recv_wr);
+		}
 	}
-
-	rqpair->num_completions++;
-
-	nvme_rdma_request_ready(rqpair, rdma_req);
 
 	if (!rqpair->delay_cmd_submit) {
 		if (spdk_unlikely(nvme_rdma_qpair_submit_recvs(rqpair))) {
@@ -3026,6 +3012,12 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct nvme_r
 			return -ENXIO;
 		}
 	}
+
+	if ((rdma_req->completion_flags & NVME_RDMA_SEND_COMPLETED) == 0) {
+		return 0;
+	}
+
+	nvme_rdma_request_ready(rqpair, rdma_req);
 
 	return 1;
 
@@ -3055,10 +3047,6 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 		assert(rqpair->current_num_sends > 0);
 		rqpair->current_num_sends--;
 		nvme_rdma_log_wc_status(rqpair, wc);
-		if (rdma_req->rdma_rsp && poller && poller->srq) {
-			rdma_req->rdma_rsp->recv_wr->next = NULL;
-			spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_req->rdma_rsp->recv_wr);
-		}
 		if (rdma_req->transfer_cpl_cb) {
 			nvme_rdma_finish_data_transfer(rdma_req, -ENXIO);
 		}
@@ -3088,8 +3076,6 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 	if ((rdma_req->completion_flags & NVME_RDMA_RECV_COMPLETED) == 0) {
 		return 0;
 	}
-
-	rqpair->num_completions++;
 
 	nvme_rdma_request_ready(rqpair, rdma_req);
 
