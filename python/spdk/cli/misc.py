@@ -6,7 +6,7 @@
 #
 
 import sys
-import spdk.rpc as rpc  # noqa
+from spdk.rpc import config
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
@@ -19,10 +19,10 @@ def add_parser(subparsers):
     p.set_defaults(func=spdk_get_version)
 
     def save_config(args):
-        rpc.save_config(args.client,
-                        fd=sys.stdout,
-                        indent=args.indent,
-                        subsystems=args.subsystems)
+        config.save_config(args.client,
+                           fd=sys.stdout,
+                           indent=args.indent,
+                           subsystems=args.subsystems)
 
     p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets to stdout.
     """)
@@ -32,9 +32,9 @@ def add_parser(subparsers):
     p.set_defaults(func=save_config)
 
     def load_config(args):
-        rpc.load_config(args.client,
-                        fd=args.json_conf,
-                        include_aliases=args.include_aliases)
+        config.load_config(args.client,
+                           fd=args.json_conf,
+                           include_aliases=args.include_aliases)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC.""")
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
@@ -42,10 +42,10 @@ def add_parser(subparsers):
     p.set_defaults(func=load_config)
 
     def save_subsystem_config(args):
-        rpc.save_subsystem_config(args.client,
-                                  fd=sys.stdout,
-                                  indent=args.indent,
-                                  name=args.name)
+        config.save_subsystem_config(args.client,
+                                     fd=sys.stdout,
+                                     indent=args.indent,
+                                     name=args.name)
 
     p = subparsers.add_parser('save_subsystem_config', help="""Write current (live) configuration of SPDK subsystem to stdout.
     """)
@@ -55,8 +55,7 @@ def add_parser(subparsers):
     p.set_defaults(func=save_subsystem_config)
 
     def load_subsystem_config(args):
-        rpc.load_subsystem_config(args.client,
-                                  fd=args.json_conf)
+        config.load_subsystem_config(args.client, fd=args.json_conf)
 
     p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC.""")
     p.add_argument('-j', '--json-conf', help='Valid JSON configuration', default=sys.stdin)

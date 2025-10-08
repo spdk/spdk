@@ -5,7 +5,7 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI
-from .. import rpc
+from ..rpc import config
 from ..rpc.cmd_parser import strip_globals, apply_defaults, group_as, remove_null
 from functools import wraps
 
@@ -86,19 +86,19 @@ class UIRoot(UINode):
 
     def ui_command_load_config(self, filename):
         with open(filename, "r") as fd:
-            rpc.load_config(self.client, fd)
+            config.load_config(self.client, fd)
 
     def ui_command_load_subsystem_config(self, filename):
         with open(filename, "r") as fd:
-            rpc.load_subsystem_config(self.client, fd)
+            config.load_subsystem_config(self.client, fd)
 
     def ui_command_save_config(self, filename, indent=2):
         with open(filename, "w") as fd:
-            rpc.save_config(self.client, fd, indent)
+            config.save_config(self.client, fd, indent)
 
     def ui_command_save_subsystem_config(self, filename, subsystem, indent=2):
         with open(filename, "w") as fd:
-            rpc.save_subsystem_config(self.client, fd, indent, subsystem)
+            config.save_subsystem_config(self.client, fd, indent, subsystem)
 
     def rpc_get_methods(self, current=False):
         return self.client.rpc_get_methods(current=current)
