@@ -243,6 +243,9 @@ struct nvme_probe_skip_entry {
 	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
 };
+
+typedef void (*nvme_ctrlr_put_ref_cb)(struct nvme_ctrlr *nvme_ctrlr);
+
 /* All the controllers deleted by users via RPC are skipped by hotplug monitor */
 static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_skipped_nvme_ctrlrs);
@@ -841,19 +844,15 @@ nvme_ctrlr_can_be_unregistered(struct nvme_ctrlr *nvme_ctrlr)
 		return false;
 	}
 
-	if (nvme_ctrlr->ana_log_page_updating) {
-		return false;
-	}
-
-	if (nvme_ctrlr->io_path_cache_clearing) {
-		return false;
-	}
-
+	/* Flags are set after ref get and cleared before ref put, so the above check is sufficient. */
+	assert(!nvme_ctrlr->ana_log_page_updating);
+	assert(!nvme_ctrlr->io_path_cache_clearing);
 	return true;
 }
 
+/* Invokes cb_fn under the ctrlr’s lock but only if not scheduled to unregister. */
 static void
-nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
+nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_fn)
 {
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	SPDK_DTRACE_PROBE2(bdev_nvme_ctrlr_release, nvme_ctrlr->nbdev_ctrlr->name, nvme_ctrlr->ref);
@@ -862,13 +861,22 @@ nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->ref--;
 
 	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
+		if (cb_fn) {
+			cb_fn(nvme_ctrlr);
+		}
+
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	spdk_thread_exec_msg(nvme_ctrlr->thread, nvme_ctrlr_unregister, nvme_ctrlr);
+}
+
+static void
+nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
+{
+	nvme_ctrlr_put_ref_ext(nvme_ctrlr, NULL);
 }
 
 static void
@@ -1764,18 +1772,10 @@ bdev_nvme_clear_io_path_caches_done(struct nvme_ctrlr *nvme_ctrlr,
 				    void *ctx, int status)
 {
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	assert(nvme_ctrlr->io_path_cache_clearing == true);
 	nvme_ctrlr->io_path_cache_clearing = false;
-
-	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return;
-	}
-
+	nvme_ctrlr_put_ref(nvme_ctrlr);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-	nvme_ctrlr_unregister(nvme_ctrlr);
 }
 
 static void
@@ -1815,6 +1815,7 @@ bdev_nvme_clear_io_path_caches(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	nvme_ctrlr->io_path_cache_clearing = true;
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	nvme_ctrlr_for_each_channel(nvme_ctrlr,
@@ -2771,7 +2772,6 @@ bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	bdev_nvme_ctrlr_op_cb ctrlr_op_cb_fn = nvme_ctrlr->ctrlr_op_cb_fn;
 	void *ctrlr_op_cb_arg = nvme_ctrlr->ctrlr_op_cb_arg;
-	enum bdev_nvme_op_after_reset op_after_disable;
 
 	assert(nvme_ctrlr->thread == spdk_get_thread());
 
@@ -2783,8 +2783,6 @@ bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->resetting = false;
 	nvme_ctrlr->dont_retry = false;
 	nvme_ctrlr->pending_failover = false;
-
-	op_after_disable = bdev_nvme_check_op_after_reset(nvme_ctrlr, true, false);
 
 	nvme_ctrlr->disabled = true;
 	spdk_poller_pause(nvme_ctrlr->adminq_timer_poller);
@@ -2798,13 +2796,7 @@ bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
 		ctrlr_op_cb_fn(ctrlr_op_cb_arg, 0);
 	}
 
-	switch (op_after_disable) {
-	case OP_COMPLETE_PENDING_DESTRUCT:
-		nvme_ctrlr_unregister(nvme_ctrlr);
-		break;
-	default:
-		break;
-	}
+	nvme_ctrlr_put_ref(nvme_ctrlr);
 }
 
 static void
@@ -2889,6 +2881,7 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	spdk_thread_send_msg(nvme_ctrlr->thread, msg_fn, nvme_ctrlr);
@@ -5394,19 +5387,10 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 	}
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	assert(nvme_ctrlr->ana_log_page_updating == true);
 	nvme_ctrlr->ana_log_page_updating = false;
-
-	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-		nvme_ctrlr_unregister(nvme_ctrlr);
-	} else {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-		bdev_nvme_clear_io_path_caches(nvme_ctrlr);
-	}
+	nvme_ctrlr_put_ref_ext(nvme_ctrlr, bdev_nvme_clear_io_path_caches);
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 }
 
 static int
@@ -5436,6 +5420,7 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	nvme_ctrlr->ana_log_page_updating = true;
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_ctrlr->ctrlr,
