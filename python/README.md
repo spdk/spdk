@@ -48,7 +48,7 @@ From a Python interpreter:
 >>> from spdk.rpc.client import JSONRPCClient
 
 >>> client = JSONRPCClient(server_addr, port)
->>> client.call("rpc_get_methods")
+>>> client.rpc_get_methods()
 ```
 
 For more information, see <https://spdk.io/doc/jsonrpc.html>
