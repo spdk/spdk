@@ -72,7 +72,7 @@ def create_parser():
     cli.sock.add_parser(subparsers)
     cli.vfio_user.add_parser(subparsers)
     cli.iobuf.add_parser(subparsers)
-    cli.parser.add_parser(subparsers)
+    cli.misc.add_parser(subparsers)
     return parser, subparsers
 
 

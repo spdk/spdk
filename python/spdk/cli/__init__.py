@@ -19,4 +19,4 @@ from . import vmd
 from . import sock
 from . import vfio_user
 from . import iobuf
-from . import parser
+from . import misc
