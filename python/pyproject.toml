@@ -58,6 +58,25 @@ cli = [
 mcp = [
     "mcp[cli]>=1.9.2"
 ]
+dev = [
+    "grpcio",
+    "grpcio-tools",
+    "ijson",
+    "jinja2",
+    "meson",
+    "ninja",
+    "pandas",
+    "pyelftools",
+    "python-magic",
+    "pyyaml",
+    "tabulate",
+    "ruff",
+    "mypy",
+    "build",
+    "twine",
+    "uv",
+    "scikit-build; platform_machine == 'aarch64'"
+]
 
 [tool.hatch.version]
 path = "spdk/version.py"

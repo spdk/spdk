@@ -13,6 +13,8 @@ pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
 virtdir=${PIP_VIRTDIR:-/var/spdk/dependencies/pip}
 python3 -m venv --upgrade-deps --system-site-packages "$virtdir"
 source "$virtdir/bin/activate"
+python -m pip install pip-tools
+pip-compile --extra dev --strip-extras -o "$rootdir/scripts/pkgdep/requirements.txt" "${rootdir}/python/pyproject.toml"
 pip install -r "$rootdir/scripts/pkgdep/requirements.txt"
 
 # Additional dependencies for DPDK

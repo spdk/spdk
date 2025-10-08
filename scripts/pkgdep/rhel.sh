@@ -131,12 +131,9 @@ else
 	"$virtdir"/bin/pip install --upgrade pip setuptools
 fi
 source "$virtdir/bin/activate"
+python -m pip install pip-tools
+pip-compile --extra dev --strip-extras -o "$rootdir/scripts/pkgdep/requirements.txt" "${rootdir}/python/pyproject.toml"
 python -m pip install -r "$rootdir/scripts/pkgdep/requirements.txt"
-
-# workaround for arm: ninja fails with dep on skbuild python module
-if [[ "$(uname -m)" == "aarch64" ]]; then
-	python -m pip install --upgrade scikit-build
-fi
 
 # Fixes issue: #3721
 pkgdep_toolpath meson "${virtdir}/bin"

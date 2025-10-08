@@ -42,6 +42,7 @@ doc/jsonrpc.md
 test_completions.txt
 timing.txt
 test/common/build_config.sh
+scripts/pkgdep/requirements.txt
 .coredump_path
 .run_test_name
 .spdk-isal.log
