@@ -15,6 +15,11 @@ number of requests, allowed devices, crypto split blocks, and driver mode for UM
 Removed `spdk_bdev_nvme_set_multipath_policy()` and the matching `bdev_nvme_set_multipath_policy`
 RPC. Use `spdk_bdev_nvme_create()` / `bdev_nvme_attach_controller` with multipath options instead.
 
+NVMe namespaces are now rescanned after a successful controller reconnect. This allows namespace
+attribute changes made while the controller was disconnected to be reflected in the corresponding
+bdev after reconnection. Inactive namespaces are retained during this rescan and are not
+depopulated, to avoid unexpected changes in upper layers.
+
 ### schema
 
 The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (`schema/schema.yaml`).

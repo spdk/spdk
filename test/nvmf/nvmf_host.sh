@@ -56,6 +56,7 @@ fi
 
 run_test "nvmf_bdevperf" $rootdir/test/nvmf/host/bdevperf.sh "${TEST_ARGS[@]}"
 run_test "nvmf_target_disconnect" $rootdir/test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
+run_test "nvmf_host_ns_rescan_reconnect" $rootdir/test/nvmf/host/ns_rescan_reconnect.sh "${TEST_ARGS[@]}"
 run_test "nvmf_host_ns_hotplug_stress" $rootdir/test/nvmf/host/ns_hotplug_stress.sh "${TEST_ARGS[@]}"
 
 trap - SIGINT SIGTERM EXIT

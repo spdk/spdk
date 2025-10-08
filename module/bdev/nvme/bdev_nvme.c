@@ -316,6 +316,7 @@ static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 static void nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		const uint32_t *changed_ns_list, uint32_t ns_count,
 		struct nvme_async_probe_ctx *ctx);
+static void nvme_ctrlr_rescan_namespaces(struct nvme_ctrlr *nvme_ctrlr);
 static void nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
 static int bdev_nvme_init(void);
@@ -2582,24 +2583,6 @@ bdev_nvme_reset_create_qpair(struct nvme_ctrlr_channel_iter *i,
 	}
 }
 
-static void
-nvme_ctrlr_check_namespaces(struct nvme_ctrlr *nvme_ctrlr)
-{
-	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
-	struct nvme_ns *nvme_ns;
-
-	assert(spdk_thread_is_app_thread(NULL));
-
-	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
-		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
-			NVME_NS_DEBUGLOG(nvme_ns, "NSID was removed during reset.\n");
-			/* NS can be added again. Just nullify nvme_ns->ns. */
-			nvme_ns->ns = NULL;
-		}
-	}
-}
-
-
 static int
 bdev_nvme_reconnect_ctrlr_poll(void *arg)
 {
@@ -2622,7 +2605,7 @@ bdev_nvme_reconnect_ctrlr_poll(void *arg)
 	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
 	if (rc == 0) {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was connected. Create qpairs.\n");
-		nvme_ctrlr_check_namespaces(nvme_ctrlr);
+		nvme_ctrlr_rescan_namespaces(nvme_ctrlr);
 
 		/* Recreate all of the I/O queue pairs */
 		nvme_ctrlr_for_each_channel(nvme_ctrlr,
@@ -5314,7 +5297,8 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 
 /* Check if existing bdev namespace has been changed or removed. */
 static void
-nvme_ctrlr_update_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+nvme_ctrlr_update_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns,
+		     bool depopulate_inactive)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct spdk_nvme_ns	*ns;
@@ -5342,9 +5326,13 @@ nvme_ctrlr_update_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 				NVME_NS_ERRLOG(nvme_ns, "Could not change num blocks for nvme bdev, errno: %d.\n", rc);
 			}
 		}
-	} else {
+	} else if (depopulate_inactive) {
 		/* Namespace was removed */
 		nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
+	} else {
+		NVME_NS_DEBUGLOG(nvme_ns, "NSID was removed during reset.\n");
+		/* NS can be added again. Just nullify nvme_ns->ns. */
+		nvme_ns->ns = NULL;
 	}
 }
 
@@ -5379,10 +5367,11 @@ nvme_ctrlr_add_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid,
 }
 
 static void
-nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
-			       const uint32_t *changed_ns_list,
-			       uint32_t ns_count,
-			       struct nvme_async_probe_ctx *ctx)
+_nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
+				const uint32_t *changed_ns_list,
+				uint32_t ns_count,
+				struct nvme_async_probe_ctx *ctx,
+				bool depopulate_inactive)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ns	*nvme_ns, *tmp;
@@ -5400,7 +5389,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 	if (!changed_ns_list) {
 		/* Full scan: check all existing namespaces and look for new ones. */
 		RB_FOREACH_SAFE(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp) {
-			nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns);
+			nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns, depopulate_inactive);
 		}
 
 		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
@@ -5416,7 +5405,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			nsid = changed_ns_list[i];
 			nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
 			if (nvme_ns) {
-				nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns);
+				nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns, depopulate_inactive);
 			} else {
 				nvme_ctrlr_add_ns(nvme_ctrlr, nsid, ctx);
 			}
@@ -5425,6 +5414,26 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 
 	/* Populate might complete immediately. */
 	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &ctx);
+}
+
+static void
+nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
+			       const uint32_t *changed_ns_list,
+			       uint32_t ns_count,
+			       struct nvme_async_probe_ctx *ctx)
+{
+	_nvme_ctrlr_populate_namespaces(nvme_ctrlr, changed_ns_list, ns_count, ctx, true);
+}
+
+static void
+nvme_ctrlr_rescan_namespaces(struct nvme_ctrlr *nvme_ctrlr)
+{
+	/* After a controller reconnect, inactive namespaces may soon become
+	 * active again. Do not depopulate inactive namespaces during this
+	 * phase, as doing so triggers a bdev unregistration that disrupts
+	 * upper layers.
+	 */
+	_nvme_ctrlr_populate_namespaces(nvme_ctrlr, NULL, 0, NULL, false);
 }
 
 static void
