@@ -6,8 +6,7 @@
 import json
 import os
 import sys
-
-from io import IOBase as io
+import io
 
 from . import client as rpc_client
 
@@ -22,14 +21,12 @@ def _json_dump(config, fd, indent):
 
 
 def _json_load(j):
-    if j == sys.stdin or isinstance(j, io):
-        json_conf = json.load(j)
-    elif os.path.exists(j):
+    if j == sys.stdin or isinstance(j, io.IOBase):
+        return json.load(j)
+    if os.path.exists(j):
         with open(j, "r") as j:
-            json_conf = json.load(j)
-    else:
-        json_conf = json.loads(j)
-    return json_conf
+            return json.load(j)
+    return json.loads(j)
 
 
 def save_config(client, fd, indent=2, subsystems=None):
