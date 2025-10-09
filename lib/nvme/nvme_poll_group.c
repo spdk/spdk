@@ -363,7 +363,7 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
-	int64_t local_completions = 0, error_reason = 0, num_completions = 0;
+	int64_t error_reason = 0, num_completions = 0;
 
 	if (disconnected_qpair_cb == NULL) {
 		return -EINVAL;
@@ -375,10 +375,14 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 	group->in_process_completions = true;
 
 	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		int64_t local_completions;
+
 		local_completions = nvme_transport_poll_group_process_completions(tgroup, completions_per_qpair,
 				    disconnected_qpair_cb);
-		if (local_completions < 0 && error_reason == 0) {
-			error_reason = local_completions;
+		if (local_completions < 0) {
+			if (!error_reason) {
+				error_reason = local_completions;
+			}
 		} else {
 			num_completions += local_completions;
 			/* Just to be safe */
