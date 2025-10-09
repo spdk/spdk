@@ -543,6 +543,11 @@ posix_sock_psk_find_session_server_cb(SSL *ssl, const unsigned char *identity,
 			return 0;
 		}
 
+		if (impl_opts->psk_identity == NULL) {
+			SPDK_ERRLOG("PSK identity is not set\n");
+			return 0;
+		}
+
 		SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(impl_opts->psk_identity));
 		if (strcmp(impl_opts->psk_identity, identity) != 0) {
 			SPDK_ERRLOG("Unknown Client's PSK ID\n");
@@ -628,6 +633,11 @@ posix_sock_psk_use_session_client_cb(SSL *ssl, const EVP_MD *md, const unsigned 
 		return 0;
 	}
 	keylen = impl_opts->psk_key_size;
+
+	if (impl_opts->psk_identity == NULL) {
+		SPDK_ERRLOG("PSK identity is not set\n");
+		return 0;
+	}
 
 	if (impl_opts->tls_cipher_suites == NULL) {
 		SPDK_ERRLOG("Cipher suite not set\n");
