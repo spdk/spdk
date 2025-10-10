@@ -9311,10 +9311,16 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 static struct nvme_ctrlr *
 bdev_nvme_next_ctrlr_unsafe(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct nvme_ctrlr *prev)
 {
-	struct nvme_ctrlr *next;
+	struct nvme_ctrlr *next = NULL;
+
+	assert((!!nbdev_ctrlr) != (!!prev));
 
 	/* Must be called under g_bdev_nvme_mutex */
-	next = prev != NULL ? TAILQ_NEXT(prev, tailq) : TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+	if (prev) {
+		next = TAILQ_NEXT(prev, tailq);
+	} else if (nbdev_ctrlr) {
+		next = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+	}
 	while (next != NULL) {
 		/* ref can be 0 when the ctrlr was released, but hasn't been detached yet */
 		pthread_mutex_lock(&next->mutex);
