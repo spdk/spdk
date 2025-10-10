@@ -99,11 +99,11 @@ function _install_qemu() {
 function install_qemu() {
 	# Two versions of QEMU are installed directly from the source.
 	# Each QEMU is dedicated for different use-case:
-	#  - vfio-user QEMU: A special fork to test libvfio-user components.
+	#  - vfio-user QEMU: version used to test libvfio-user components.
 	#  - vhost QEMU: Used to boot VMs from within vhost tests.
 
-	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_VERSION "" vfio-user
-	_install_qemu "$GIT_REPO_QEMU_VHOST" "$VHOST_QEMU_VERSION" vhost vhost
+	_install_qemu $GIT_REPO_QEMU $VFIO_QEMU_VERSION "" vfio-user
+	_install_qemu "$GIT_REPO_QEMU" "$VHOST_QEMU_VERSION" vhost vhost
 }
 
 function install_nvmecli() {
@@ -421,7 +421,7 @@ function install_sources() {
 
 GIT_VERSION=2.25.1
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-v0.24.1}
-VFIO_QEMU_VERSION=${VFIO_QEMU_VERSION:-vfio-user-p3.0}
+VFIO_QEMU_VERSION=${VFIO_QEMU_VERSION:-v10.1.1}
 VHOST_QEMU_VERSION=${VHOST_QEMU_VERSION:-v8.0.0}
 DPDK_STABLE_BRANCH=${DPDK_STABLE_BRANCH:-24.11}
 
@@ -429,10 +429,8 @@ DPDK_STABLE_BRANCH=${DPDK_STABLE_BRANCH:-24.11}
 export GIT_REPO_FIO
 : ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}
 export GIT_REPO_FLAMEGRAPH
-: ${GIT_REPO_QEMU_VHOST=https://github.com/qemu/qemu}
-export GIT_REPO_QEMU_VHOST
-: ${GIT_REPO_QEMU_VFIO=https://github.com/oracle/qemu}
-export GIT_REPO_QEMU_VFIO
+: ${GIT_REPO_QEMU=https://github.com/qemu/qemu}
+export GIT_REPO_QEMU
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
 : ${GIT_REPO_LIBBLKIO=https://gitlab.com/libblkio/libblkio}
