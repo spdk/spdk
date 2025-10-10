@@ -662,6 +662,8 @@ static void
 dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	struct cli_context_t *cli_context = cb_arg;
+	long filesize;
+	int rc;
 
 	if (bserrno) {
 		unload_bs(cli_context, "Error in blob open callback",
@@ -711,12 +713,37 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		}
 
 		/* get the filesize then rewind read a io_unit of data from file */
-		fseek(cli_context->fp, 0L, SEEK_END);
-		cli_context->filesize = ftell(cli_context->fp);
+		rc = fseek(cli_context->fp, 0L, SEEK_END);
+		if (rc != 0) {
+			printf("Error in fseek: errno %d\n", errno);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
+			return;
+		}
+
+		filesize = ftell(cli_context->fp);
+		if (filesize == -1) {
+			printf("Error in ftell: errno %d\n", errno);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
+			return;
+		}
+		cli_context->filesize = filesize;
+
+		errno = 0;
 		rewind(cli_context->fp);
+		if (errno != 0) {
+			printf("Error in rewind: errno %d\n", errno);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
+			return;
+		}
+
 		cli_context->bytes_so_far = fread(cli_context->buff, NUM_IO_UNITS,
 						  cli_context->io_unit_size,
 						  cli_context->fp);
+		if (cli_context->bytes_so_far < cli_context->filesize && ferror(cli_context->fp)) {
+			printf("Error in fread: errno %d\n", errno);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
+			return;
+		}
 
 		/* if the file is < a io_unit, fill the rest with 0s */
 		if (cli_context->filesize < cli_context->io_unit_size) {
