@@ -193,7 +193,7 @@ static int
 parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
 {
 	FILE *f;
-	uint64_t i, soft_irq, cpu = 0;
+	uint64_t i, soft_irq = 0, cpu = 0;
 	int rc, found = 0;
 
 	f = fopen("/proc/stat", "r");
@@ -206,6 +206,10 @@ parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
 		 * cpu;user;nice;system;idle;iowait;irq;softirq;steal;guest;guest_nice */
 		rc = fscanf(f, "cpu%li %li %*i %li %*i %*i %li %li %*i %*i %*i\n",
 			    &cpu, user, sys, irq, &soft_irq);
+		if (rc == EOF) {
+			fclose(f);
+			return -1;
+		}
 		if (rc != 5) {
 			continue;
 		}
