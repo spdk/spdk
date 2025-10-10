@@ -1377,7 +1377,7 @@ bdev_scsi_split(struct spdk_bdev_scsi_split_ctx *ctx)
 {
 	struct spdk_scsi_task *task = ctx->task;
 	uint8_t opcode = task->cdb[0];
-	int rc;
+	int rc = 0;
 
 	while (ctx->remaining_count != 0) {
 		rc = ctx->fn(ctx);
