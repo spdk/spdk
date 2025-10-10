@@ -194,13 +194,15 @@ get_cpu_vendor_name(char *vendor_name_buf, size_t buf_len)
 
 	if (target_substr == NULL) {
 		SPDK_ERRLOG("field %s not found in file %s.\n", "vendor_id", file_path);
-		return -ESRCH;
+		ret = -ESRCH;
+		goto out;
 	}
 
 	target_substr = strstr(line, ":");
 	if (target_substr == NULL) {
 		SPDK_ERRLOG("separator char ':' not found in field line: %s.\n", line);
-		return -EINVAL;
+		ret = -EINVAL;
+		goto out;
 	}
 
 	*target_substr = 0; /* eliminate the separator ':'. */
@@ -209,20 +211,26 @@ get_cpu_vendor_name(char *vendor_name_buf, size_t buf_len)
 
 	if (strlen(vendor_name) == 0) {
 		SPDK_ERRLOG("cpu vendor name not found in field line: %s.\n", line);
-		return -EINVAL;
+		ret = -EINVAL;
+		goto out;
 	}
 
 	ret = snprintf(vendor_name_buf, buf_len, "%s", vendor_name);
 	if (ret < 0) {
 		SPDK_ERRLOG("copy CPU vendor name to output buf failed, ret=%d, errno=%d.\n",
 			    ret, errno);
-		return -errno;
+		ret = -errno;
+		goto out;
 	} else if ((size_t)ret >= buf_len) {
 		SPDK_WARNLOG("CPU vendor_name truncated from %s to %s\n",
 			     vendor_name, vendor_name_buf);
 	}
+	ret = 0;
 
-	return 0;
+out:
+	fclose(file);
+
+	return ret;
 }
 
 static int
