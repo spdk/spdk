@@ -172,7 +172,7 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 {
 	struct virtio_blk_endpoint *blk_endpoint = to_blk_endpoint(virtio_endpoint);
 	struct virtio_blk_req *blk_req = to_blk_request(req);
-	const struct virtio_blk_outhdr *hdr;
+	struct virtio_blk_outhdr hdr;
 	struct virtio_blk_discard_write_zeroes *desc;
 	struct iovec *iov;
 	uint16_t iovcnt;
@@ -184,12 +184,17 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 	blk_req->endpoint = blk_endpoint;
 
 	iov = &req->iovs[0];
-	if (spdk_unlikely(iov->iov_len != sizeof(*hdr))) {
+	if (spdk_unlikely(iov->iov_len != sizeof(hdr))) {
 		SPDK_ERRLOG("Invalid virtio_blk header length %lu\n", iov->iov_len);
 		virtio_blk_req_finish(blk_req, VIRTIO_BLK_S_UNSUPP);
 		return -EINVAL;
 	}
-	hdr = iov->iov_base;
+
+	/* Some SeaBIOS versions don't align the virtio_blk_outhdr on an 8-byte boundary, which
+	 * triggers ubsan errors.  So copy this small 16-byte structure to the stack to workaround
+	 * this problem.
+	 */
+	memcpy(&hdr, iov->iov_base, sizeof(hdr));
 
 	iov = &req->iovs[req->iovcnt - 1];
 	if (spdk_unlikely(iov->iov_len != 1)) {
@@ -200,10 +205,10 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 	blk_req->status = iov->iov_base;
 
 	payload_len = req->payload_size;
-	payload_len -= sizeof(*hdr) + 1;
+	payload_len -= sizeof(hdr) + 1;
 	iovcnt = req->iovcnt - 2;
 
-	type = hdr->type;
+	type = hdr.type;
 	/* Legacy type isn't supported */
 	type &= ~VIRTIO_BLK_T_BARRIER;
 
@@ -228,12 +233,12 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 		if (type == VIRTIO_BLK_T_IN) {
 			req->used_len = payload_len + 1;
 			ret = spdk_bdev_readv(blk_endpoint->bdev_desc, blk_endpoint->io_channel,
-					      &req->iovs[1], iovcnt, hdr->sector * 512,
+					      &req->iovs[1], iovcnt, hdr.sector * 512,
 					      payload_len, blk_request_complete_cb, blk_req);
 		} else {
 			req->used_len = 1;
 			ret = spdk_bdev_writev(blk_endpoint->bdev_desc, blk_endpoint->io_channel,
-					       &req->iovs[1], iovcnt, hdr->sector * 512,
+					       &req->iovs[1], iovcnt, hdr.sector * 512,
 					       payload_len, blk_request_complete_cb, blk_req);
 		}
 		if (ret) {
@@ -294,7 +299,7 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 	case VIRTIO_BLK_T_FLUSH:
 		flush_bytes = spdk_bdev_get_num_blocks(blk_endpoint->bdev) * spdk_bdev_get_block_size(
 				      blk_endpoint->bdev);
-		if (hdr->sector != 0) {
+		if (hdr.sector != 0) {
 			SPDK_NOTICELOG("sector must be zero for flush command\n");
 			virtio_blk_req_finish(blk_req, VIRTIO_BLK_S_IOERR);
 			return -EINVAL;
