@@ -757,7 +757,7 @@ function vm_setup() {
 				;;
 			vfio_user)
 				notice "using socket $VM_DIR/$vm_num/domain/muser$disk/$disk/cntrl"
-				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
+				cmd+=(-device "vfio-user-pci,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true
@@ -765,7 +765,7 @@ function vm_setup() {
 				;;
 			vfio_user_virtio)
 				notice "using socket $VM_DIR/vfu_tgt/virtio.$disk"
-				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/vfu_tgt/virtio.$disk")
+				cmd+=(-device "vfio-user-pci,socket=$VM_DIR/vfu_tgt/virtio.$disk")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true
