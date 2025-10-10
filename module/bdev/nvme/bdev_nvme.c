@@ -477,22 +477,6 @@ nvme_ctrlr_get_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	return RB_FIND(nvme_ns_tree, &nvme_ctrlr->namespaces, &ns);
 }
 
-struct nvme_ns *
-nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr)
-{
-	return RB_MIN(nvme_ns_tree, &nvme_ctrlr->namespaces);
-}
-
-struct nvme_ns *
-nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns)
-{
-	if (ns == NULL) {
-		return NULL;
-	}
-
-	return RB_NEXT(nvme_ns_tree, &nvme_ctrlr->namespaces, ns);
-}
-
 static struct nvme_ctrlr *
 nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid, const char *hostnqn)
 {
@@ -2552,9 +2536,7 @@ nvme_ctrlr_check_namespaces(struct nvme_ctrlr *nvme_ctrlr)
 	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ns *nvme_ns;
 
-	for (nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
-	     nvme_ns != NULL;
-	     nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns)) {
+	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
 		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
 			NVME_NS_DEBUGLOG(nvme_ns, "NSID was removed during reset.\n");
 			/* NS can be added again. Just nullify nvme_ns->ns. */
@@ -5173,7 +5155,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			       struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
-	struct nvme_ns	*nvme_ns, *next;
+	struct nvme_ns	*nvme_ns, *tmp;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev	*nbdev;
 	uint32_t		nsid;
@@ -5188,11 +5170,8 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 	}
 
 	/* First loop over our existing namespaces and see if they have been
-	 * removed. */
-	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
-	while (nvme_ns != NULL) {
-		next = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
-
+	 * changed or removed. */
+	RB_FOREACH_SAFE(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp) {
 		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
 			/* NS is still there or added again. Its attributes may have changed. */
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
@@ -5217,8 +5196,6 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			/* Namespace was removed */
 			nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
 		}
-
-		nvme_ns = next;
 	}
 
 	/* Loop through all of the namespaces at the nvme level and see if any of them are new */
@@ -5324,9 +5301,7 @@ bdev_nvme_disable_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 	spdk_free(nvme_ctrlr->ana_log_page);
 	nvme_ctrlr->ana_log_page = NULL;
 
-	for (nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
-	     nvme_ns != NULL;
-	     nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns)) {
+	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
 		nvme_ns->ana_state_updating = false;
 		nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	}
@@ -6475,8 +6450,7 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
-	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
-	while (nvme_ns != NULL) {
+	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
 		nvme_bdev = nvme_ns->bdev;
 		if (j < ctx->max_bdevs) {
 			ctx->names[j] = nvme_bdev->disk.name;
@@ -6492,8 +6466,6 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 			populate_namespaces_cb(ctx, -ERANGE);
 			return;
 		}
-
-		nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -6549,16 +6521,13 @@ bdev_nvme_check_secondary_namespace(struct nvme_ctrlr *nvme_ctrlr,
 	struct nvme_ns *nvme_ns;
 	struct spdk_nvme_ns *new_ns;
 
-	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
-	while (nvme_ns != NULL) {
+	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
 		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, nvme_ns->id);
 		assert(new_ns != NULL);
 
 		if (!bdev_nvme_compare_ns(nvme_ns->ns, new_ns)) {
 			return -EINVAL;
 		}
-
-		nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
 	}
 
 	return 0;
