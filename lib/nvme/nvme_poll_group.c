@@ -365,7 +365,7 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 	struct spdk_nvme_transport_poll_group *tgroup;
 	int64_t error_reason = 0, num_completions = 0;
 
-	if (disconnected_qpair_cb == NULL) {
+	if (spdk_unlikely(disconnected_qpair_cb == NULL)) {
 		return -EINVAL;
 	}
 
@@ -379,7 +379,7 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 
 		local_completions = nvme_transport_poll_group_process_completions(tgroup, completions_per_qpair,
 				    disconnected_qpair_cb);
-		if (local_completions < 0) {
+		if (spdk_unlikely(local_completions < 0)) {
 			if (!error_reason) {
 				error_reason = local_completions;
 			}
