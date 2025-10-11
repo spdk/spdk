@@ -4936,6 +4936,7 @@ static struct nvme_ns *
 nvme_ns_alloc(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_ns *nvme_ns;
+	struct spdk_nvme_ns *ns;
 
 	nvme_ns = calloc(1, sizeof(struct nvme_ns));
 	if (nvme_ns == NULL) {
@@ -4951,9 +4952,18 @@ nvme_ns_alloc(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_pr
 		spdk_bdev_reset_io_stat(nvme_ns->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
 	}
 
+	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
+	if (!ns) {
+		NVME_NS_DEBUGLOG(nvme_ns, "Invalid NS\n");
+		nvme_ns_free(nvme_ns);
+		return NULL;
+	}
+
 	nvme_ns->id = nsid;
 	nvme_ns->ctrlr = nvme_ctrlr;
 	nvme_ns->probe_ctx = ctx;
+	nvme_ns->ns = ns;
+	nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	return nvme_ns;
 }
@@ -5086,21 +5096,10 @@ nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 static void
 nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
-	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev	*bdev;
 	int			rc = 0;
 
 	nvme_ctrlr_get_ref(nvme_ctrlr);
-
-	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nvme_ns->id);
-	if (!ns) {
-		NVME_NS_DEBUGLOG(nvme_ns, "Invalid NS\n");
-		rc = -EINVAL;
-		goto done;
-	}
-
-	nvme_ns->ns = ns;
-	nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	if (nvme_ctrlr->ana_log_page != NULL) {
 		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ns_set_ana_state, nvme_ns);
@@ -5115,7 +5114,7 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 			return;
 		}
 	}
-done:
+
 	nvme_ctrlr_populate_namespace_done(nvme_ns, rc);
 }
 
