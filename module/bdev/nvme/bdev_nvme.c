@@ -354,6 +354,7 @@ static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 static int nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 
 static void nvme_ns_free(struct nvme_ns *ns);
+static void nvme_ns_delete(struct nvme_ns *ns);
 
 static int
 nvme_ns_cmp(struct nvme_ns *ns1, struct nvme_ns *ns2)
@@ -2022,8 +2023,7 @@ bdev_nvme_destruct(void *ctx)
 		if (nvme_ctrlr_get_ns(nvme_ns->ctrlr, nvme_ns->id) != nvme_ns) {
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 			NVME_NS_DEBUGLOG(nvme_ns, "ns free with the last reference to nbdev\n");
-			nvme_ctrlr_put_ref(nvme_ns->ctrlr);
-			nvme_ns_free(nvme_ns);
+			nvme_ns_delete(nvme_ns);
 		} else {
 			NVME_NS_DEBUGLOG(nvme_ns, "defer ns free until depopulate is done\n");
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
@@ -4933,7 +4933,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static struct nvme_ns *
-nvme_ns_alloc(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_probe_ctx *ctx)
+nvme_ns_create(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_ns *nvme_ns;
 	struct spdk_nvme_ns *ns;
@@ -4965,6 +4965,7 @@ nvme_ns_alloc(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_pr
 	nvme_ns->ns = ns;
 	nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	return nvme_ns;
 }
 
@@ -4973,6 +4974,13 @@ nvme_ns_free(struct nvme_ns *nvme_ns)
 {
 	free(nvme_ns->stat);
 	free(nvme_ns);
+}
+
+static void
+nvme_ns_delete(struct nvme_ns *nvme_ns)
+{
+	nvme_ctrlr_put_ref(nvme_ns->ctrlr);
+	nvme_ns_free(nvme_ns);
 }
 
 static void
@@ -4987,8 +4995,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		nvme_ns_free(nvme_ns);
-		nvme_ctrlr_put_ref(nvme_ctrlr);
+		nvme_ns_delete(nvme_ns);
 	}
 
 	if (ctx) {
@@ -5099,8 +5106,6 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 	struct nvme_bdev	*bdev;
 	int			rc = 0;
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
-
 	if (nvme_ctrlr->ana_log_page != NULL) {
 		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ns_set_ana_state, nvme_ns);
 	}
@@ -5134,10 +5139,8 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 		return;
 	}
 
-	nvme_ns_free(nvme_ns);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-	nvme_ctrlr_put_ref(nvme_ctrlr);
+	nvme_ns_delete(nvme_ns);
 }
 
 static void
@@ -5268,7 +5271,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			continue;
 		}
 
-		nvme_ns = nvme_ns_alloc(nvme_ctrlr, nsid, ctx);
+		nvme_ns = nvme_ns_create(nvme_ctrlr, nsid, ctx);
 		if (nvme_ns == NULL) {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
 			/* This just fails to attach the namespace. It may work on a future attempt. */
