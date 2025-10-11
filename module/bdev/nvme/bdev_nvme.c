@@ -353,7 +353,6 @@ static int bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 static int nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 
-static struct nvme_ns *nvme_ns_alloc(void);
 static void nvme_ns_free(struct nvme_ns *ns);
 
 static int
@@ -4934,7 +4933,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static struct nvme_ns *
-nvme_ns_alloc(void)
+nvme_ns_alloc(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_ns *nvme_ns;
 
@@ -4951,6 +4950,10 @@ nvme_ns_alloc(void)
 		}
 		spdk_bdev_reset_io_stat(nvme_ns->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
 	}
+
+	nvme_ns->id = nsid;
+	nvme_ns->ctrlr = nvme_ctrlr;
+	nvme_ns->probe_ctx = ctx;
 
 	return nvme_ns;
 }
@@ -5266,22 +5269,16 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			continue;
 		}
 
-		nvme_ns = nvme_ns_alloc();
+		nvme_ns = nvme_ns_alloc(nvme_ctrlr, nsid, ctx);
 		if (nvme_ns == NULL) {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
 			/* This just fails to attach the namespace. It may work on a future attempt. */
 			continue;
 		}
 
-		nvme_ns->id = nsid;
-		nvme_ns->ctrlr = nvme_ctrlr;
-
-		nvme_ns->bdev = NULL;
-
 		if (ctx) {
 			ctx->populates_in_progress++;
 		}
-		nvme_ns->probe_ctx = ctx;
 
 		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
