@@ -4973,6 +4973,8 @@ nvme_ns_delete(struct nvme_ns *nvme_ns)
 	nvme_ns_free(nvme_ns);
 }
 
+static void nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns);
+
 static void
 nvme_ctrlr_populate_namespaces_try_finish(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx **_ctx)
@@ -4996,19 +4998,13 @@ nvme_ctrlr_populate_namespaces_try_finish(struct nvme_ctrlr *nvme_ctrlr,
 static void
 nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 {
-	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
-	struct nvme_async_probe_ctx *ctx = nvme_ns->probe_ctx;
-
-	if (rc == 0) {
-		nvme_ns->probe_ctx = NULL;
-	} else {
-		pthread_mutex_lock(&nvme_ctrlr->mutex);
-		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		nvme_ns_delete(nvme_ns);
+	if (rc) {
+		/* Depopulate may be async (ns still on ctrlr list), so defer _try_finish until done. */
+		nvme_ctrlr_depopulate_namespace(nvme_ns->ctrlr, nvme_ns);
+		return;
 	}
 
-	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &ctx);
+	nvme_ctrlr_populate_namespaces_try_finish(nvme_ns->ctrlr, &nvme_ns->probe_ctx);
 }
 
 static void
@@ -5140,10 +5136,12 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 
 	if (nvme_ns->bdev != NULL) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &nvme_ns->probe_ctx);
 		return;
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &nvme_ns->probe_ctx);
 	nvme_ns_delete(nvme_ns);
 }
 
