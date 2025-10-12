@@ -5803,6 +5803,11 @@ nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 				sizeof(struct nvme_ctrlr_channel),
 				nvme_ctrlr->nbdev_ctrlr->name);
 
+	/* AER callback is registered late to prevent getting the I/O channel
+	 * on an unregistered controller during namespace population. */
+	spdk_nvme_ctrlr_register_aer_callback(nvme_ctrlr->ctrlr, aer_cb, nvme_ctrlr);
+
+	/* Populate namespaces for the first time. */
 	nvme_ctrlr_populate_namespaces(nvme_ctrlr, ctx);
 
 	if (g_hotplug_poller == NULL) {
@@ -6109,7 +6114,6 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 				adm_timeout_us, timeout_cb, nvme_ctrlr);
 	}
 
-	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_ctrlr);
 	spdk_nvme_ctrlr_set_remove_cb(ctrlr, remove_cb, nvme_ctrlr);
 
 	if (spdk_nvme_ctrlr_get_flags(ctrlr) &
