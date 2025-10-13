@@ -4974,6 +4974,26 @@ nvme_ns_delete(struct nvme_ns *nvme_ns)
 }
 
 static void
+nvme_ctrlr_populate_namespaces_try_finish(struct nvme_ctrlr *nvme_ctrlr,
+		struct nvme_async_probe_ctx **_ctx)
+{
+	struct nvme_async_probe_ctx *ctx;
+
+	ctx = *_ctx;
+	if (!ctx) {
+		return;
+	}
+
+	*_ctx = NULL;
+
+	assert(ctx->populates_in_progress > 0);
+	ctx->populates_in_progress--;
+	if (ctx->populates_in_progress == 0) {
+		nvme_ctrlr_populate_namespaces_done(nvme_ctrlr, ctx);
+	}
+}
+
+static void
 nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 {
 	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
@@ -4988,12 +5008,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 		nvme_ns_delete(nvme_ns);
 	}
 
-	if (ctx) {
-		ctx->populates_in_progress--;
-		if (ctx->populates_in_progress == 0) {
-			nvme_ctrlr_populate_namespaces_done(nvme_ctrlr, ctx);
-		}
-	}
+	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &ctx);
 }
 
 static void
@@ -5274,18 +5289,8 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
 	}
 
-	if (ctx) {
-		/* Decrement this count now that the loop is over to account
-		 * for the one we started with.  If the count is then 0, we
-		 * know any populate_namespace functions completed immediately,
-		 * so we'll kick the callback here.
-		 */
-		ctx->populates_in_progress--;
-		if (ctx->populates_in_progress == 0) {
-			nvme_ctrlr_populate_namespaces_done(nvme_ctrlr, ctx);
-		}
-	}
-
+	/* Populate might complete immediately. */
+	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &ctx);
 }
 
 static void
