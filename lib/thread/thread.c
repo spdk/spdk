@@ -1388,7 +1388,7 @@ spdk_thread_get_last_tsc(struct spdk_thread *thread)
 	return thread->tsc_last;
 }
 
-static inline int
+static inline void
 thread_send_msg_notification(const struct spdk_thread *target_thread)
 {
 	uint64_t notify = 1;
@@ -1396,7 +1396,7 @@ thread_send_msg_notification(const struct spdk_thread *target_thread)
 
 	/* Not necessary to do notification if interrupt facility is not enabled */
 	if (spdk_likely(!spdk_interrupt_mode_is_enabled())) {
-		return 0;
+		return;
 	}
 
 	/* When each spdk_thread can switch between poll and interrupt mode dynamically,
@@ -1407,11 +1407,9 @@ thread_send_msg_notification(const struct spdk_thread *target_thread)
 		rc = write(target_thread->msg_fd, &notify, sizeof(notify));
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
-			return -EIO;
+			abort();
 		}
 	}
-
-	return 0;
 }
 
 int
@@ -1457,9 +1455,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		abort();
 	}
 
-	if (thread_send_msg_notification(thread)) {
-		abort();
-	}
+	thread_send_msg_notification(thread);
 
 	return 0;
 }
@@ -1471,10 +1467,12 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 
 	if (!__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
 					 __ATOMIC_SEQ_CST)) {
-		return -EIO;
+		abort();
 	}
 
-	return thread_send_msg_notification(thread);
+	thread_send_msg_notification(thread);
+
+	return 0;
 }
 
 #ifdef __linux__

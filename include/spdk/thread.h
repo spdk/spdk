@@ -520,12 +520,13 @@ int spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void 
  * The message will be sent asynchronously - i.e. spdk_thread_send_critical_msg will always return
  * prior to `fn` being called.
  *
+ *  Errors are handled internally and are fatal. Calling code can skip checking the return
+ * value as it has been left only for compatibility.
+ *
  * \param thread The target thread.
  * \param fn This function will be called on the given thread.
  *
- * \return 0 on success
- * \return -EIO if the message could not be sent to the destination thread, due to an already
- * outstanding critical message
+ * \return 0 left for API compatibility
  */
 int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
 
