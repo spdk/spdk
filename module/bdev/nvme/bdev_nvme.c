@@ -5797,12 +5797,6 @@ nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 {
 	NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was created\n");
 
-	spdk_io_device_register(nvme_ctrlr,
-				bdev_nvme_create_ctrlr_channel_cb,
-				bdev_nvme_destroy_ctrlr_channel_cb,
-				sizeof(struct nvme_ctrlr_channel),
-				nvme_ctrlr->nbdev_ctrlr->name);
-
 	/* AER callback is registered late to prevent getting the I/O channel
 	 * on an unregistered controller during namespace population. */
 	spdk_nvme_ctrlr_register_aer_callback(nvme_ctrlr->ctrlr, nvme_ctrlr_aer_cb, nvme_ctrlr);
@@ -5825,7 +5819,7 @@ nvme_ctrlr_init_ana_log_page_done(void *_ctx, const struct spdk_nvme_cpl *cpl)
 	nvme_ctrlr->probe_ctx = NULL;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		nvme_ctrlr_delete(nvme_ctrlr);
+		bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
 
 		if (ctx != NULL) {
 			ctx->reported_bdevs = 0;
@@ -6127,16 +6121,28 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-
 	if (cdata->cmic.ana_reporting) {
 		rc = nvme_ctrlr_init_ana_log_page(nvme_ctrlr, ctx);
-		if (rc == 0) {
-			return 0;
+		if (rc != 0) {
+			goto err;
 		}
-	} else {
-		nvme_ctrlr_create_done(nvme_ctrlr, ctx);
-		return 0;
 	}
+
+	/* Register the I/O device early because, on the negative path handling of the admin qpair, many
+	 * flows iterate through nvme_ctrlr channels, and the same applies to some JSON-RPC methods. If
+	 * the device is not registered, this triggers assertions and returns a negative status. With
+	 * early registration, these flows simply iterate through zero channels and return success. */
+	spdk_io_device_register(nvme_ctrlr,
+				bdev_nvme_create_ctrlr_channel_cb,
+				bdev_nvme_destroy_ctrlr_channel_cb,
+				sizeof(struct nvme_ctrlr_channel),
+				nvme_ctrlr->nbdev_ctrlr->name);
+
+	if (!cdata->cmic.ana_reporting) {
+		nvme_ctrlr_create_done(nvme_ctrlr, ctx);
+	}
+
+	return 0;
 
 err:
 	nvme_ctrlr_delete(nvme_ctrlr);
