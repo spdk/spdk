@@ -1006,7 +1006,9 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 
 	fdisk->disk.blockcnt = disk_size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
-	spdk_uuid_copy(&fdisk->disk.uuid, uuid);
+	if (uuid) {
+		spdk_uuid_copy(&fdisk->disk.uuid, uuid);
+	}
 
 	fdisk->disk.fn_table = &aio_fn_table;
 
