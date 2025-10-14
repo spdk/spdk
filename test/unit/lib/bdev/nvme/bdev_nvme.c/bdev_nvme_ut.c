@@ -138,9 +138,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_max_xfer_size, uint32_t,
 DEFINE_STUB(spdk_nvme_ctrlr_get_transport_id, const struct spdk_nvme_transport_id *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 
-DEFINE_STUB_V(spdk_nvme_ctrlr_register_aer_callback, (struct spdk_nvme_ctrlr *ctrlr,
-		spdk_nvme_aer_cb aer_cb_fn, void *aer_cb_arg));
-
 DEFINE_STUB_V(spdk_nvme_ctrlr_register_timeout_callback, (struct spdk_nvme_ctrlr *ctrlr,
 		uint64_t timeout_io_us, uint64_t timeout_admin_us, spdk_nvme_timeout_cb cb_fn, void *cb_arg));
 
@@ -328,6 +325,7 @@ struct spdk_nvme_ctrlr {
 	bool				is_failed;
 	bool				fail_reset;
 	bool				is_removed;
+	spdk_nvme_aer_cb		aer_cb_fn;
 	struct spdk_nvme_transport_id	trid;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
@@ -347,6 +345,14 @@ struct spdk_nvme_probe_ctx {
 	spdk_nvme_attach_cb		attach_cb;
 	struct spdk_nvme_ctrlr		*init_ctrlr;
 };
+
+void
+spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
+				      spdk_nvme_aer_cb aer_cb_fn,
+				      void *aer_cb_arg)
+{
+	ctrlr->aer_cb_fn = aer_cb_fn;
+}
 
 uint32_t
 spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
@@ -3972,12 +3978,17 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
-
 	nvme_ctrlr3 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path3.trid, opts.hostnqn);
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr3 != NULL);
 
+	/* AER should not be triggered before ctrlr registered as an io_device. */
+	SPDK_CU_ASSERT_FATAL(ctrlr3->aer_cb_fn == NULL);
+
+	/* During this call spdk_nvme_ctrlr_process_admin_completions is invoked. */
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	/* Namespace should be populated after nvme_ctrlr_init_ana_log_page_done and ctrlr registered as an io_device. */
 	nvme_ns3 = _nvme_bdev_get_ns(nbdev, nvme_ctrlr3);
 	SPDK_CU_ASSERT_FATAL(nvme_ns3 != NULL);
 
