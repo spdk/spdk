@@ -769,7 +769,7 @@ int spdk_sock_set_default_impl(const char *impl_name);
  *
  * \return The name of the default implementation
  */
-const char *spdk_sock_get_default_impl(void);;
+const char *spdk_sock_get_default_impl(void);
 
 /**
  * Write socket subsystem configuration into provided JSON context.

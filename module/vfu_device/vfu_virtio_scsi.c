@@ -501,7 +501,7 @@ virtio_scsi_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_
 	}
 
 	/* SCSI command */
-	return virtio_scsi_cmd_req(scsi_endpoint, scsi_req);;
+	return virtio_scsi_cmd_req(scsi_endpoint, scsi_req);
 }
 
 static void

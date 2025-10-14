@@ -276,7 +276,7 @@ test_fd_group_multi_nest(void)
 	rc = spdk_fd_group_unnest(fgrp[0].fgrp, fgrp[2].fgrp);
 	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_PTR_EQUAL(fgrp[0].fgrp->parent, NULL);
-	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, NULL);;
+	CU_ASSERT_PTR_EQUAL(fgrp[2].fgrp->parent, NULL);
 	CU_ASSERT_EQUAL(fgrp[0].fgrp->num_fds, fgrp[0].num_fds);
 	CU_ASSERT_EQUAL(fgrp[2].fgrp->num_fds, fgrp[2].num_fds);
 

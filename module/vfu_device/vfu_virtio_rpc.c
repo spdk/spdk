@@ -160,7 +160,7 @@ rpc_vfu_virtio_scsi_add_target(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vfu_virtio_scsi_add_target(req.name, req.scsi_target_num, req.bdev_name);;
+	rc = vfu_virtio_scsi_add_target(req.name, req.scsi_target_num, req.bdev_name);
 	if (rc < 0) {
 		goto invalid;
 	}

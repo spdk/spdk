@@ -2401,7 +2401,7 @@ test_nvme_ns_cmd_io_mgmt_recv(void)
 	struct spdk_nvme_ns	ns;
 	struct spdk_nvme_ctrlr	ctrlr;
 	struct spdk_nvme_qpair	qpair;
-	struct spdk_nvme_fdp_ruhs *payload;;
+	struct spdk_nvme_fdp_ruhs *payload;
 	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	int			rc = 0;

@@ -166,7 +166,7 @@ fuzz_parse_args_into_array(const char *file, void **arr, size_t ele_size, const 
 {
 	ssize_t i, num_json_values;
 	struct spdk_json_val *values = NULL, *values_head = NULL, *obj_start;
-	void *file_data = NULL;;
+	void *file_data = NULL;
 	char *arr_idx_pointer;
 	size_t num_arr_elements, arr_elements_used, values_in_obj;
 	bool rc;

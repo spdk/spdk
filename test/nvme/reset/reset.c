@@ -563,7 +563,7 @@ associate_workers_with_ns(void)
 		ns_ctx->entry = entry;
 		TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
 
-		entry = TAILQ_NEXT(entry, link);;
+		entry = TAILQ_NEXT(entry, link);
 		if (entry == NULL) {
 			entry = TAILQ_FIRST(&g_namespaces);
 		}

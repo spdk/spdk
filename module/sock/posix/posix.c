@@ -2355,7 +2355,7 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 
 	rc = spdk_sock_posix_fd_connect_poll_async(ctx->fd);
 	if (rc == -EAGAIN) {
-		return -EAGAIN;;
+		return -EAGAIN;
 	}
 
 	if (rc < 0) {

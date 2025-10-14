@@ -673,7 +673,7 @@ test_scheduler(void)
 		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == current_time);
 		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
 		CU_ASSERT(stats.busy_tsc == thread_busy_tsc[i] + busy_time);
-		CU_ASSERT(stats.idle_tsc == thread_idle_tsc[i] + idle_time);;
+		CU_ASSERT(stats.idle_tsc == thread_idle_tsc[i] + idle_time);
 	}
 	CU_ASSERT(reactor->busy_tsc == reactor_busy_tsc[0] + 3 * busy_time);
 	CU_ASSERT(reactor->idle_tsc == reactor_idle_tsc[0] + 3 * idle_time);

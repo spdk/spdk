@@ -1948,7 +1948,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 				return 0;
 			}
 		}
-		_sock_check_zcopy(_sock, retval);;
+		_sock_check_zcopy(_sock, retval);
 	}
 #endif
 

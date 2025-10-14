@@ -1338,7 +1338,7 @@ ublksrv_queue_io_cmd(struct ublk_queue *q,
 {
 	struct ublksrv_io_cmd *cmd;
 	struct io_uring_sqe *sqe;
-	unsigned int cmd_op = 0;;
+	unsigned int cmd_op = 0;
 	uint64_t user_data;
 
 	/* each io should have operation of fetching or committing */
