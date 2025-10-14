@@ -5723,7 +5723,7 @@ exit:
 }
 
 static void
-aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+nvme_ctrlr_aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_ctrlr *nvme_ctrlr		= arg;
 	union spdk_nvme_async_event_completion	event;
@@ -5805,7 +5805,7 @@ nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 
 	/* AER callback is registered late to prevent getting the I/O channel
 	 * on an unregistered controller during namespace population. */
-	spdk_nvme_ctrlr_register_aer_callback(nvme_ctrlr->ctrlr, aer_cb, nvme_ctrlr);
+	spdk_nvme_ctrlr_register_aer_callback(nvme_ctrlr->ctrlr, nvme_ctrlr_aer_cb, nvme_ctrlr);
 
 	/* Populate namespaces for the first time. */
 	nvme_ctrlr_populate_namespaces(nvme_ctrlr, ctx);

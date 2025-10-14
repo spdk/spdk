@@ -2296,7 +2296,7 @@ test_aer_cb(void)
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
 	cpl.cdw0 = event.raw;
 
-	aer_cb(nvme_ctrlr, &cpl);
+	nvme_ctrlr_aer_cb(nvme_ctrlr, &cpl);
 
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
@@ -2313,7 +2313,7 @@ test_aer_cb(void)
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_ANA_CHANGE;
 	cpl.cdw0 = event.raw;
 
-	aer_cb(nvme_ctrlr, &cpl);
+	nvme_ctrlr_aer_cb(nvme_ctrlr, &cpl);
 
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
@@ -7746,7 +7746,7 @@ test_ns_remove_during_reset(void)
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
 	cpl.cdw0 = event.raw;
 
-	aer_cb(nvme_ctrlr, &cpl);
+	nvme_ctrlr_aer_cb(nvme_ctrlr, &cpl);
 
 	CU_ASSERT(nvme_ns == nvme_ctrlr_get_first_active_ns(nvme_ctrlr));
 	CU_ASSERT(nbdev == nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1));
