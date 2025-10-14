@@ -395,6 +395,7 @@ static int g_ut_register_bdev_status;
 static struct spdk_bdev *g_ut_registered_bdev;
 static uint16_t g_ut_cntlid;
 static struct spdk_nvme_path_id g_any_path = {};
+static int g_ut_pause_process_adminq;
 
 static void
 ut_init_trid(struct spdk_nvme_transport_id *trid)
@@ -1019,6 +1020,10 @@ spdk_nvme_ctrlr_cmd_abort_ext(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
+	if (g_ut_pause_process_adminq && g_ut_pause_process_adminq--) {
+		return 0;
+	}
+
 	return spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 }
 
@@ -2233,6 +2238,62 @@ test_attach_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
 	g_ut_register_bdev_status = 0;
+}
+
+static void
+test_attach_ctrlr_race_process_adminq_failure(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	int rc;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = false;
+
+	set_thread(0);
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&trid);
+
+	ctrlr = ut_attach_ctrlr(&trid, 0, true, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
+				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	/* Such a failure is not considered fatal; hence, the nvme0 controller should still be found
+	 * afterwards. Need to pause adminq process so err handling can happen before outstanding
+	 * requests (init ANA log page) are completed. */
+	ctrlr->adminq.failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+	g_ut_pause_process_adminq = 1;
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	g_ut_pause_process_adminq = 0;
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
+
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	g_ut_attach_ctrlr_status = 0;
 }
 
 static void
@@ -8324,6 +8385,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_race_between_failover_and_add_secondary_trid);
 	CU_ADD_TEST(suite, test_pending_reset);
 	CU_ADD_TEST(suite, test_attach_ctrlr);
+	CU_ADD_TEST(suite, test_attach_ctrlr_race_process_adminq_failure);
 	CU_ADD_TEST(suite, test_aer_cb);
 	CU_ADD_TEST(suite, test_submit_nvme_cmd);
 	CU_ADD_TEST(suite, test_add_remove_trid);
