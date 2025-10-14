@@ -3,30 +3,9 @@
 #  Copyright (C) 2025 Dell Inc, or its subsidiaries.
 #  All rights reserved.
 
-import json
-import os
-import sys
-import io
-
 from . import client as rpc_client
-
-
-def _json_dump(config, fd, indent):
-    if indent is None:
-        indent = 2
-    elif indent < 0:
-        indent = None
-    json.dump(config, fd, indent=indent)
-    fd.write('\n')
-
-
-def _json_load(j):
-    if j == sys.stdin or isinstance(j, io.IOBase):
-        return json.load(j)
-    if os.path.exists(j):
-        with open(j, "r") as j:
-            return json.load(j)
-    return json.loads(j)
+from .cmd_parser import json_dump as _json_dump
+from .cmd_parser import json_load as _json_load
 
 
 def save_config(client, fd, indent=2, subsystems=None):

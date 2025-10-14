@@ -10,24 +10,7 @@ import logging
 import copy
 import ctypes
 
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-
-from .cmd_parser import remove_null
-
-
-def print_array(a):
-    print(" ".join((quote(v) for v in a)))
-
-
-def print_dict(d):
-    print(json.dumps(d, indent=2))
-
-
-def print_json(s):
-    print(json.dumps(s, indent=2).strip('"'))
+from .cmd_parser import remove_null, print_array, print_dict, print_json
 
 
 def get_addr_type(addr):
