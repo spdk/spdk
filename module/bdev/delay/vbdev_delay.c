@@ -823,6 +823,8 @@ vbdev_delay_register(const char *bdev_name)
 		delay_node->delay_bdev.fn_table = &vbdev_delay_fn_table;
 		delay_node->delay_bdev.module = &delay_if;
 
+		delay_node->delay_bdev.numa = bdev->numa;
+
 		/* Store the number of ticks you need to add to get the I/O expiration time. */
 		delay_node->average_read_latency_ticks = ticks_mhz * assoc->avg_read_latency;
 		delay_node->p99_read_latency_ticks = ticks_mhz * assoc->p99_read_latency;

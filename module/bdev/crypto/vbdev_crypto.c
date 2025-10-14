@@ -865,6 +865,8 @@ vbdev_crypto_claim(const char *bdev_name)
 		vbdev->crypto_bdev.fn_table = &vbdev_crypto_fn_table;
 		vbdev->crypto_bdev.module = &crypto_if;
 
+		vbdev->crypto_bdev.numa = bdev->numa;
+
 		/* Assign crypto opts from the name. The pointer is valid up to the point
 		 * the module is unloaded and all names removed from the list. */
 		vbdev->opts = name->opts;

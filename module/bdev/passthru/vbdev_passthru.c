@@ -668,6 +668,8 @@ vbdev_passthru_register(const char *bdev_name)
 		pt_node->pt_bdev.dif_check_flags = bdev->dif_check_flags;
 		pt_node->pt_bdev.dif_pi_format = bdev->dif_pi_format;
 
+		pt_node->pt_bdev.numa = bdev->numa;
+
 		/* This is the context that is passed to us when the bdev
 		 * layer calls in so we'll save our pt_bdev node here.
 		 */

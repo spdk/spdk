@@ -939,6 +939,8 @@ finish_register(struct vbdev_ocf *vbdev)
 	vbdev->exp_bdev.fn_table = &cache_dev_fn_table;
 	vbdev->exp_bdev.module = &ocf_if;
 
+	vbdev->exp_bdev.numa = vbdev->core.bdev->numa;
+
 	/* Generate UUID based on namespace UUID + base bdev UUID. */
 	spdk_uuid_parse(&ns_uuid, BDEV_OCF_NAMESPACE_UUID);
 	result = spdk_uuid_generate_sha1(&vbdev->exp_bdev.uuid, &ns_uuid,

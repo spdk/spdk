@@ -1177,6 +1177,8 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	bdev->module = &g_lvol_if;
 	bdev->phys_blocklen = lvol->lvol_store->bs_dev->phys_blocklen;
 
+	bdev->numa = lvs_bdev->bdev->numa;
+
 	/* Set default bdev reset waiting time. This value indicates how much
 	 * time a reset should wait before forcing a reset down to the underlying
 	 * bdev module.
