@@ -757,7 +757,10 @@ function vm_setup() {
 				;;
 			vfio_user)
 				notice "using socket $VM_DIR/$vm_num/domain/muser$disk/$disk/cntrl"
-				cmd+=(-device "vfio-user-pci,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
+				printf -v vfio_user_pci \
+					\''{"driver":"vfio-user-pci","socket":{"path":"%s","type":"unix"}}'\' \
+					"$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl"
+				cmd+=(-device "$vfio_user_pci")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true
@@ -765,7 +768,10 @@ function vm_setup() {
 				;;
 			vfio_user_virtio)
 				notice "using socket $VM_DIR/vfu_tgt/virtio.$disk"
-				cmd+=(-device "vfio-user-pci,socket=$VM_DIR/vfu_tgt/virtio.$disk")
+				printf -v vfio_user_pci \
+					\''{"driver":"vfio-user-pci","socket":{"path":"%s","type":"unix"}}'\' \
+					"$VM_DIR/vfu_tgt/virtio.$disk"
+				cmd+=(-device "$vfio_user_pci")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true
