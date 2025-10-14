@@ -875,7 +875,7 @@ nvme_rdma_free_rsps(struct nvme_rdma_rsps *rsps)
 	spdk_free(rsps->rsps);
 	spdk_free(rsps->rsp_sgls);
 	spdk_free(rsps->rsp_recv_wrs);
-	spdk_free(rsps);
+	free(rsps);
 }
 
 static struct nvme_rdma_rsps *
@@ -886,7 +886,7 @@ nvme_rdma_create_rsps(struct nvme_rdma_rsp_opts *opts)
 	uint16_t i;
 	int rc;
 
-	rsps = spdk_zmalloc(sizeof(*rsps), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
+	rsps = calloc(1, sizeof(*rsps));
 	if (!rsps) {
 		SPDK_ERRLOG("Failed to allocate rsps object\n");
 		return NULL;
