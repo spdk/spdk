@@ -5,7 +5,7 @@
 
 : ${SPDK_VHOST_VERBOSE=false}
 : ${VHOST_DIR="$HOME/vhost_test"}
-: ${QEMU_BIN:="qemu-system-x86_64"}
+: ${QEMU_BIN:="/usr/local/qemu/vhost-latest/bin/qemu-system-x86_64"}
 : ${QEMU_IMG_BIN="qemu-img"}
 
 TEST_DIR=$(readlink -f $rootdir/..)
