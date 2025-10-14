@@ -1796,7 +1796,7 @@ posix_sock_is_ipv6(struct spdk_sock *_sock)
 	if (!sock->ready) {
 		SPDK_ERRLOG("Connection %s.\n", sock->connect_ctx ? "in progress" : "failed");
 		errno = sock->connect_ctx ? EAGAIN : ENOTCONN;
-		return -1;
+		return false;
 	}
 
 	memset(&sa, 0, sizeof sa);
@@ -1823,7 +1823,7 @@ posix_sock_is_ipv4(struct spdk_sock *_sock)
 	if (!sock->ready) {
 		SPDK_ERRLOG("Connection %s.\n", sock->connect_ctx ? "in progress" : "failed");
 		errno = sock->connect_ctx ? EAGAIN : ENOTCONN;
-		return -1;
+		return false;
 	}
 
 	memset(&sa, 0, sizeof sa);
