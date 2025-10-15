@@ -478,7 +478,7 @@ def add_parser(subparsers):
         args.client.bdev_nvme_set_hotplug(enable=args.enable, period_us=args.period_us)
 
     p = subparsers.add_parser('bdev_nvme_set_hotplug', help='Set hotplug options for bdev nvme type.')
-    group = p.add_mutually_exclusive_group()
+    group = p.add_mutually_exclusive_group(required=True)
     group.add_argument('-d', '--disable', dest='enable', action='store_false', help="Disable hotplug (default)", default=False)
     group.add_argument('-e', '--enable',  dest='enable', action='store_true', help="Enable hotplug")
     p.add_argument('-r', '--period-us',
@@ -1052,7 +1052,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_enable_histogram',
                               help='Enable or disable histogram for specified bdev')
-    group = p.add_mutually_exclusive_group()
+    group = p.add_mutually_exclusive_group(required=True)
     group.add_argument('-e', '--enable',  dest='enable', action='store_true', help='Enable histograms on specified device', default=True)
     group.add_argument('-d', '--disable', dest='enable', action='store_false', help='Disable histograms on specified device')
     p.add_argument('-o', '--opc', help='Enable histogram for specified io type. Defaults to all io types if not specified.'

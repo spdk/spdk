@@ -46,15 +46,19 @@ def lint_py_cli(schema):
         raise ValueError(f"Commands found in CLI but not defined in schema: {sorted(missing_in_schema)}")
     for method in schema['methods']:
         subparser = subparsers.choices[method['name']]
+        groups = subparser._mutually_exclusive_groups
         actions = {a.dest: a for a in subparser._actions}
         for param in method['params']:
             action = actions.get(param['name'])
-            if action is None or type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction]:
+            if action is None:
                 # TODO: handle this case later and fix issues raised by it
                 continue
-            if param['required'] != action.required:
+            required = next((g.required for g in groups
+                             if any(a.dest == action.dest for a in g._group_actions)),
+                            action.required)
+            if param['required'] != required:
                 raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
-            newtype = types.get(action.type)
+            newtype = 'boolean' if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction] else types.get(action.type)
             if not newtype:
                 # TODO: handle this case later and fix issues raised by it
                 continue

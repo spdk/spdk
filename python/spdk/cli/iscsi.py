@@ -163,7 +163,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_enable_histogram',
                               help='Enable or disable histogram for specified iscsi target')
-    group = p.add_mutually_exclusive_group()
+    group = p.add_mutually_exclusive_group(required=True)
     group.add_argument('-e', '--enable', dest='enable', action='store_true',
                        help='Enable histograms on specified iscsi target', default=True)
     group.add_argument('-d', '--disable', dest='enable', action='store_false',

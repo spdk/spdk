@@ -63,7 +63,7 @@ def add_parser(subparsers):
         ret = args.client.log_enable_timestamps(enabled=args.enabled)
     p = subparsers.add_parser('log_enable_timestamps',
                               help='Enable or disable timestamps.')
-    group = p.add_mutually_exclusive_group()
+    group = p.add_mutually_exclusive_group(required=True)
     group.add_argument('-d', '--disable', dest='enabled', action='store_false', help="Disable timestamps", default=False)
     group.add_argument('-e', '--enable',  dest='enabled', action='store_true', help="Enable timestamps")
     p.set_defaults(func=log_enable_timestamps)

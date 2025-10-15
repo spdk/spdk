@@ -139,7 +139,7 @@
         },
         {
           "name": "hide_metadata",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Enable hide_metadata option to the bdev. Default: false"
         }
@@ -150,55 +150,55 @@
       "fields": [
         {
           "name": "identify_ctrlr",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive"
         },
         {
           "name": "identify_uuid_list",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru identify UUID list (0x17 CNS) admin cmds for underlying NVMe device"
         },
         {
           "name": "get_log_page",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru get log page command handlers for underlying NVMe drive (for non-fabrics related log pages)"
         },
         {
           "name": "get_set_features",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru get/set_feature OPC handlers for underlying NVMe drive"
         },
         {
           "name": "sanitize",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru sanitize OPC handlers for underlying NVMe drive"
         },
         {
           "name": "security_send_recv",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru security send/recieve OPC handlers for underlying NVMe drive"
         },
         {
           "name": "fw_update",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru firmware download/commit OPC handlers for underlying NVMe drive"
         },
         {
           "name": "nvme_mi",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru NVMe-MI send/recieve OPC handlers for underlying NVMe drive"
         },
         {
           "name": "vendor_specific",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "If true, enables passthru command handlers for underlying NVMe drive for vendor specific cmds (OPCs: 0xC0-0xFF)"
         }
@@ -761,7 +761,7 @@
       "params": [
         {
           "name": "config_kernel_mode",
-          "type": "Boolean",
+          "type": "boolean",
           "required": false,
           "description": "If set, will use kernel idxd driver."
         }
@@ -900,7 +900,7 @@
         },
         {
           "name": "per_channel",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Display per channel data for specified block device."
         },
@@ -1684,7 +1684,7 @@
       "params": [
         {
           "name": "enable",
-          "type": "string",
+          "type": "boolean",
           "required": true,
           "description": "True to enable, false to disable"
         },
@@ -1761,25 +1761,25 @@
         },
         {
           "name": "prchk_reftag",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Enable checking of PI reference tag for I/O processing"
         },
         {
           "name": "prchk_guard",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Enable checking of PI guard for I/O processing"
         },
         {
           "name": "hdgst",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Enable TCP header digest"
         },
         {
           "name": "ddgst",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Enable TCP data digest"
         },
@@ -1845,7 +1845,7 @@
         },
         {
           "name": "allow_unrecognized_csi",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Allow attaching namespaces with unrecognized command set identifiers. These will only support NVMe passthrough."
         }
@@ -2007,7 +2007,7 @@
         },
         {
           "name": "wait_for_attach",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Wait to complete until all discovered NVM subsystems are attached"
         },
@@ -2629,7 +2629,7 @@
         },
         {
           "name": "fast_shutdown",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load"
         },
@@ -2682,7 +2682,7 @@
         },
         {
           "name": "fast_shutdown",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load"
         },
@@ -2705,7 +2705,7 @@
         },
         {
           "name": "fast_shutdown",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "When set FTL will minimize persisted data during deletion and rely on shared memory during next load"
         }
@@ -2722,7 +2722,7 @@
         },
         {
           "name": "fast_shutdown",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "When set FTL will minimize persisted data during deletion and rely on shared memory during next load"
         }
@@ -2931,7 +2931,7 @@
       "params": [
         {
           "name": "enable",
-          "type": "bool",
+          "type": "boolean",
           "required": true,
           "description": "Enable or disable the virtio blk hotplug monitor"
         },
@@ -3943,7 +3943,7 @@
         },
         {
           "name": "secure_channel",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Whether all connections immediately attempt to establish a secure channel"
         },
@@ -4038,7 +4038,7 @@
         },
         {
           "name": "no_auto_visible",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Namespace is not automatically visible to controllers (default: false)"
         }
@@ -4344,7 +4344,7 @@
         },
         {
           "name": "secure_channel",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "The connection to that discovery subsystem requires a secure channel"
         }
@@ -6219,13 +6219,13 @@
         },
         {
           "name": "enable_xattr",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "true to enable the extended attributes, false otherwise"
         },
         {
           "name": "enable_writeback_cache",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "true to enable the writeback cache, false otherwise"
         },
@@ -6237,7 +6237,7 @@
         },
         {
           "name": "skip_rw",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "description": "Skip processing read and write requests and complete them successfully immediately. This is useful for benchmarking."
         }
