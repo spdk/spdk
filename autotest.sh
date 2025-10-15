@@ -29,27 +29,7 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
-if [ $(uname -s) = Linux ]; then
-	old_core_pattern=$(< /proc/sys/kernel/core_pattern)
-	mkdir -p "$output_dir/coredumps"
-	# Set core_pattern to a known value to avoid looking for cores handled by different
-	# entities, like apport, systemd-coredump, etc. We also don't want to pipe core to our
-	# own collector as under SELINUX it won't be able to execute due to limitation
-	# kernel_generic_help_t|kernel_t domains may impose. Stick to a simple pattern
-	# pointing at $output_dir/coredumps - when autotest finishes, process_core() will
-	# pick any core from that location.
-	echo "$output_dir/coredumps/%s-%p-%i-%t-%E.core" > /proc/sys/kernel/core_pattern
-
-	# make sure nbd (network block device) driver is loaded if it is available
-	# this ensures that when tests need to use nbd, it will be fully initialized
-	modprobe nbd || true
-
-	if udevadm=$(type -P udevadm); then
-		"$udevadm" monitor --property &> "$output_dir/udev.log" &
-		udevadm_pid=$!
-	fi
-
-fi
+init_linux_env
 
 start_monitor_resources
 

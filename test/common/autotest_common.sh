@@ -1733,6 +1733,32 @@ function bpftrace_setup() {
 	USE_CMDLINE_BPF_PROGRAM=yes "$rootdir/scripts/bpftrace.sh" "$pid" "$bpf_program" &
 }
 
+function setup_core_pattern() {
+	old_core_pattern=$(< /proc/sys/kernel/core_pattern)
+	mkdir -p "$output_dir/coredumps"
+	# Set core_pattern to a known value to avoid looking for cores handled by different
+	# entities, like apport, systemd-coredump, etc. We also don't want to pipe core to our
+	# own collector as under SELINUX it won't be able to execute due to limitation
+	# kernel_generic_help_t|kernel_t domains may impose. Stick to a simple pattern
+	# pointing at $output_dir/coredumps - when autotest finishes, process_core() will
+	# pick any core from that location.
+	echo "$output_dir/coredumps/%s-%p-%i-%t-%E.core" > /proc/sys/kernel/core_pattern
+}
+
+function init_linux_env() {
+	[[ $(uname -s) == Linux ]] || return 0
+	setup_core_pattern
+
+	# make sure nbd (network block device) driver is loaded if it is available
+	# this ensures that when tests need to use nbd, it will be fully initialized
+	modprobe nbd || true
+
+	if udevadm=$(type -P udevadm); then
+		"$udevadm" monitor --property &> "$output_dir/udev.log" &
+		udevadm_pid=$!
+	fi
+}
+
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 
