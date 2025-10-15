@@ -820,7 +820,7 @@ def add_parser(subparsers):
                 config_param[parts[0]] = parts[1]
         print_json(args.client.bdev_rbd_register_cluster(
                                                       name=args.name,
-                                                      user_id=args.user,
+                                                      user_id=args.user_id,
                                                       config_param=config_param,
                                                       config_file=args.config_file,
                                                       key_file=args.key_file,
@@ -829,7 +829,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_rbd_register_cluster',
                               help='Add a Rados cluster with ceph rbd backend')
     p.add_argument('name', help="Name of the Rados cluster only known to rbd bdev")
-    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)")
+    p.add_argument('--user', dest='user_id', help="Ceph user name (i.e. admin, not client.admin)")
     p.add_argument('--config-param', action='append', metavar='key=value',
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
     p.add_argument('--config-file', help="The file path of the Rados configuration file")
@@ -864,7 +864,7 @@ def add_parser(subparsers):
                 config[parts[0]] = parts[1]
         print_json(args.client.bdev_rbd_create(
                                             name=args.name,
-                                            user_id=args.user,
+                                            user_id=args.user_id,
                                             config=config,
                                             pool_name=args.pool_name,
                                             rbd_name=args.rbd_name,
@@ -875,7 +875,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_rbd_create', help='Add a bdev with ceph rbd backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
-    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)")
+    p.add_argument('--user', dest='user_id', help="Ceph user name (i.e. admin, not client.admin)")
     p.add_argument('--config', action='append', metavar='key=value',
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
     p.add_argument('pool_name', help='rbd pool name')
@@ -883,7 +883,7 @@ def add_parser(subparsers):
     p.add_argument('block_size', help='rbd block size', type=int)
     p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
-    p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
+    p.add_argument('-r', '--readonly', dest='read_only', action='store_true', help='Set this bdev as read-only')
     p.set_defaults(func=bdev_rbd_create)
 
     def bdev_rbd_delete(args):
@@ -910,9 +910,9 @@ def add_parser(subparsers):
                                               name=args.name,
                                               uuid=args.uuid,
                                               avg_read_latency=args.avg_read_latency,
-                                              p99_read_latency=args.nine_nine_read_latency,
+                                              p99_read_latency=args.p99_read_latency,
                                               avg_write_latency=args.avg_write_latency,
-                                              p99_write_latency=args.nine_nine_write_latency))
+                                              p99_write_latency=args.p99_write_latency))
 
     p = subparsers.add_parser('bdev_delay_create',
                               help='Add a delay bdev on existing bdev')
@@ -921,11 +921,11 @@ def add_parser(subparsers):
     p.add_argument('-u', '--uuid', help='UUID of the bdev (optional)')
     p.add_argument('-r', '--avg-read-latency',
                    help="Average latency to apply before completing read ops (in microseconds)", required=True, type=int)
-    p.add_argument('-t', '--nine-nine-read-latency',
+    p.add_argument('-t', '--nine-nine-read-latency', dest='p99_read_latency',
                    help="latency to apply to 1 in 100 read ops (in microseconds)", required=True, type=int)
     p.add_argument('-w', '--avg-write-latency',
                    help="Average latency to apply before completing write ops (in microseconds)", required=True, type=int)
-    p.add_argument('-n', '--nine-nine-write-latency',
+    p.add_argument('-n', '--nine-nine-write-latency', dest='p99_write_latency',
                    help="latency to apply to 1 in 100 write ops (in microseconds)", required=True, type=int)
     p.set_defaults(func=bdev_delay_create)
 
@@ -1012,12 +1012,12 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_passthru_delete)
 
     def bdev_get_bdevs(args):
-        print_dict(args.client.bdev_get_bdevs(name=args.name, timeout=args.timeout_ms))
+        print_dict(args.client.bdev_get_bdevs(name=args.name, timeout=args.timeout))
 
     p = subparsers.add_parser('bdev_get_bdevs',
                               help='Display current blockdev list or required blockdev')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
-    p.add_argument('-t', '--timeout-ms', help="""Time in ms to wait for the bdev to appear (only used
+    p.add_argument('-t', '--timeout-ms', dest='timeout', help="""Time in ms to wait for the bdev to appear (only used
     with the -b|--name option). The default timeout is 0, meaning the RPC returns immediately
     whether the bdev exists or not.""",
                    type=int)
@@ -1451,25 +1451,26 @@ def add_parser(subparsers):
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):
         print_dict(args.client.bdev_nvme_send_cmd(
-                                               name=args.nvme_name,
+                                               name=args.name,
                                                cmd_type=args.cmd_type,
                                                data_direction=args.data_direction,
                                                cmdbuf=args.cmdbuf,
                                                data=args.data,
                                                metadata=args.metadata,
-                                               data_len=args.data_length,
-                                               metadata_len=args.metadata_length,
+                                               data_len=args.data_len,
+                                               metadata_len=args.metadata_len,
                                                timeout_ms=args.timeout_ms))
 
     p = subparsers.add_parser('bdev_nvme_send_cmd', help='NVMe passthrough cmd.')
-    p.add_argument('-n', '--nvme-name', help="""Name of the operating NVMe controller""", required=True)
+    p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
     p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""", required=True)
     p.add_argument('-r', '--data-direction', help="""Direction of data transfer. Valid values are: c2h, h2c""", required=True)
     p.add_argument('-c', '--cmdbuf', help="""NVMe command encoded by base64 urlsafe""", required=True)
     p.add_argument('-d', '--data', help="""Data transferring to controller from host, encoded by base64 urlsafe""")
     p.add_argument('-m', '--metadata', help="""Metadata transferring to controller from host, encoded by base64 urlsafe""")
-    p.add_argument('-D', '--data-length', help="""Data length required to transfer from controller to host""", type=int)
-    p.add_argument('-M', '--metadata-length', help="""Metadata length required to transfer from controller to host""", type=int)
+    p.add_argument('-D', '--data-length', dest='data_len', help="""Data length required to transfer from controller to host""", type=int)
+    p.add_argument('-M', '--metadata-length', dest='metadata_len',
+                   help="""Metadata length required to transfer from controller to host""", type=int)
     p.add_argument('-T', '--timeout-ms',
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int)
     p.set_defaults(func=bdev_nvme_send_cmd)
@@ -1477,7 +1478,7 @@ def add_parser(subparsers):
     # bdev_nvme_add_error_injection
     def bdev_nvme_add_error_injection(args):
         print_dict(args.client.bdev_nvme_add_error_injection(
-                                                          name=args.nvme_name,
+                                                          name=args.name,
                                                           cmd_type=args.cmd_type,
                                                           opc=args.opc,
                                                           do_not_submit=args.do_not_submit,
@@ -1487,7 +1488,7 @@ def add_parser(subparsers):
                                                           sc=args.sc))
     p = subparsers.add_parser('bdev_nvme_add_error_injection',
                               help='Add a NVMe command error injection.')
-    p.add_argument('-n', '--nvme-name', help="""Name of the operating NVMe controller""", required=True)
+    p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
     p.add_argument('-t', '--cmd-type', help="""Type of NVMe command. Valid values are: admin, io""", required=True)
     p.add_argument('-o', '--opc', help="""Opcode of the NVMe command.""", required=True, type=int)
     p.add_argument('-s', '--do-not-submit',
@@ -1502,12 +1503,12 @@ def add_parser(subparsers):
     # bdev_nvme_remove_error_injection
     def bdev_nvme_remove_error_injection(args):
         print_dict(args.client.bdev_nvme_remove_error_injection(
-                                                             name=args.nvme_name,
+                                                             name=args.name,
                                                              cmd_type=args.cmd_type,
                                                              opc=args.opc))
     p = subparsers.add_parser('bdev_nvme_remove_error_injection',
                               help='Removes a NVMe command error injection.')
-    p.add_argument('-n', '--nvme-name', help="""Name of the operating NVMe controller""", required=True)
+    p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
     p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""", required=True)
     p.add_argument('-o', '--opc', help="""Opcode of the nvme cmd.""", required=True, type=int)
     p.set_defaults(func=bdev_nvme_remove_error_injection)

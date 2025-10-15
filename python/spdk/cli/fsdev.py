@@ -22,8 +22,8 @@ def add_parser(subparsers):
                                          fsdev_io_cache_size=args.fsdev_io_cache_size))
 
     p = subparsers.add_parser('fsdev_set_opts', help='Set the fsdev subsystem options')
-    p.add_argument('fsdev-io-pool-size', help='Size of fsdev IO objects pool', type=int)
-    p.add_argument('fsdev-io-cache-size', help='Size of fsdev IO objects cache per thread', type=int)
+    p.add_argument('fsdev_io_pool_size', help='Size of fsdev IO objects pool', type=int)
+    p.add_argument('fsdev_io_cache_size', help='Size of fsdev IO objects cache per thread', type=int)
     p.set_defaults(func=fsdev_set_opts)
 
     def fsdev_aio_create(args):

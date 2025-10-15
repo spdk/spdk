@@ -50,10 +50,12 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
         groups = subparser._mutually_exclusive_groups
         actions = {a.dest: a for a in subparser._actions}
         for param in method['params']:
-            action = actions.get(param['name'])
-            if action is None:
+            if 'class' in param or param['name'] in ['num_blocks', 'acceptor_poll_rate', 'namespace']:
                 # TODO: handle this case later and fix issues raised by it
                 continue
+            action = actions.get(param['name'])
+            if action is None:
+                raise ValueError(f"For method {method['name']}: parameter '{param['name']}': is defined in schema but not found in CLI")
             required = next((g.required for g in groups
                              if any(a.dest == action.dest for a in g._group_actions)),
                             action.required)

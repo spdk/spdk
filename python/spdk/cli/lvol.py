@@ -20,7 +20,7 @@ def add_parser(subparsers):
                                                      lvs_name=args.lvs_name,
                                                      cluster_sz=args.cluster_sz,
                                                      clear_method=args.clear_method,
-                                                     num_md_pages_per_cluster_ratio=args.md_pages_per_cluster_ratio,
+                                                     num_md_pages_per_cluster_ratio=args.num_md_pages_per_cluster_ratio,
                                                      md_page_size=args.md_page_size))
 
     p = subparsers.add_parser('bdev_lvol_create_lvstore', help='Add logical volume store on base bdev')
@@ -29,7 +29,8 @@ def add_parser(subparsers):
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int)
     p.add_argument('--clear-method', help="""Change clear method for data region.
         Available: none, unmap, write_zeroes""")
-    p.add_argument('-m', '--md-pages-per-cluster-ratio', help='reserved metadata pages for each cluster', type=int)
+    p.add_argument('-m', '--md-pages-per-cluster-ratio', dest='num_md_pages_per_cluster_ratio',
+                   help='reserved metadata pages for each cluster', type=int)
     p.add_argument('-s', '--md-page-size', help='size of metadata page (in bytes)', type=int)
     p.set_defaults(func=bdev_lvol_create_lvstore)
 

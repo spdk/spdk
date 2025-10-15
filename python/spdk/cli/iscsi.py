@@ -181,12 +181,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def iscsi_create_target_node(args):
         luns = []
-        for u in args.bdev_name_id_pairs.strip().split(" "):
+        for u in args.luns.strip().split(" "):
             bdev_name, lun_id = u.split(":")
             luns.append({"bdev_name": bdev_name, "lun_id": int(lun_id)})
 
         pg_ig_maps = []
-        for u in args.pg_ig_mappings.strip().split(" "):
+        for u in args.pg_ig_maps.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
 
@@ -206,13 +206,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_create_target_node', help='Add a target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('alias_name', help='Target node alias name (ASCII)')
-    p.add_argument('bdev_name_id_pairs', help="""Whitespace-separated list of <bdev name:LUN ID> pairs enclosed
+    p.add_argument('luns', help="""Whitespace-separated list of <bdev name:LUN ID> pairs enclosed
     in quotes.  Format:  'bdev_name0:id0 bdev_name1:id1' etc
     Example: 'Malloc0:0 Malloc1:1 Malloc5:2'
     *** The bdevs must pre-exist ***
     *** LUN0 (id = 0) is required ***
     *** bdevs names cannot contain space or colon characters ***""")
-    p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+    p.add_argument('pg_ig_maps', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
     Whitespace separated, quoted, mapping defined with colon
     separated list of "tags" (int > 0)
     Example: '1:1 2:2 2:1'
@@ -270,7 +270,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def iscsi_target_node_add_pg_ig_maps(args):
         pg_ig_maps = []
-        for u in args.pg_ig_mappings.strip().split(" "):
+        for u in args.pg_ig_maps.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
         args.client.iscsi_target_node_add_pg_ig_maps(
@@ -280,7 +280,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_target_node_add_pg_ig_maps',
                               help='Add PG-IG maps to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
-    p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+    p.add_argument('pg_ig_maps', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
     Whitespace separated, quoted, mapping defined with colon
     separated list of "tags" (int > 0)
     Example: '1:1 2:2 2:1'
@@ -289,7 +289,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def iscsi_target_node_remove_pg_ig_maps(args):
         pg_ig_maps = []
-        for u in args.pg_ig_mappings.strip().split(" "):
+        for u in args.pg_ig_maps.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
         args.client.iscsi_target_node_remove_pg_ig_maps(
@@ -298,7 +298,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_target_node_remove_pg_ig_maps',
                               help='Delete PG-IG maps from the target node')
     p.add_argument('name', help='Target node name (ASCII)')
-    p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+    p.add_argument('pg_ig_maps', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
     Whitespace separated, quoted, mapping defined with colon
     separated list of "tags" (int > 0)
     Example: '1:1 2:2 2:1'
@@ -335,7 +335,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def iscsi_create_portal_group(args):
         portals = []
-        for p in args.portal_list.strip().split(' '):
+        for p in args.portals.strip().split(' '):
             ip, separator, port_cpumask = p.rpartition(':')
             split_port_cpumask = port_cpumask.split('@')
             if len(split_port_cpumask) == 1:
@@ -356,7 +356,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Add a portal group')
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('portal_list', help="""List of portals in host:port format, separated by whitespace
+    p.add_argument('portals', help="""List of portals in host:port format, separated by whitespace
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262'""")
     p.add_argument('-p', '--private', help="""Public (false) or private (true) portal group.
     Private portal groups do not have their portals returned by a discovery session. A public
@@ -377,38 +377,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=iscsi_start_portal_group)
 
     def iscsi_create_initiator_group(args):
-        initiators = []
-        netmasks = []
-        for i in args.initiator_list.strip().split(' '):
-            initiators.append(i)
-        for n in args.netmask_list.strip().split(' '):
-            netmasks.append(n)
         args.client.iscsi_create_initiator_group(
             tag=args.tag,
-            initiators=initiators,
-            netmasks=netmasks)
+            initiators=args.initiators.strip().split(),
+            netmasks=args.netmasks.strip().split())
 
     p = subparsers.add_parser('iscsi_create_initiator_group',
                               help='Add an initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
-    p.add_argument('initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
+    p.add_argument('initiators', help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  Example: 'ANY' or 'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
-    p.add_argument('netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
+    p.add_argument('netmasks', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_create_initiator_group)
 
     def iscsi_initiator_group_add_initiators(args):
-        initiators = None
-        netmasks = None
-        if args.initiator_list:
-            initiators = []
-            for i in args.initiator_list.strip().split(' '):
-                initiators.append(i)
-        if args.netmask_list:
-            netmasks = []
-            for n in args.netmask_list.strip().split(' '):
-                netmasks.append(n)
+        initiators = args.initiators.strip().split() if args.initiators else None
+        netmasks = args.netmasks.strip().split() if args.netmasks else None
         args.client.iscsi_initiator_group_add_initiators(
             tag=args.tag,
             initiators=initiators,
@@ -418,24 +404,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Add initiators to an existing initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
-    p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
+    p.add_argument('-n', dest='initiators', help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
     'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
-    p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
+    p.add_argument('-m', dest='netmasks', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_initiator_group_add_initiators)
 
     def iscsi_initiator_group_remove_initiators(args):
-        initiators = None
-        netmasks = None
-        if args.initiator_list:
-            initiators = []
-            for i in args.initiator_list.strip().split(' '):
-                initiators.append(i)
-        if args.netmask_list:
-            netmasks = []
-            for n in args.netmask_list.strip().split(' '):
-                netmasks.append(n)
+        initiators = args.initiators.strip().split() if args.initiators else None
+        netmasks = args.netmasks.strip().split() if args.netmasks else None
         args.client.iscsi_initiator_group_remove_initiators(
             tag=args.tag,
             initiators=initiators,
@@ -445,10 +423,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Delete initiators from an existing initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
-    p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
+    p.add_argument('-n', dest='initiators', help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
     'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
-    p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
+    p.add_argument('-m', dest='netmasks', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
 

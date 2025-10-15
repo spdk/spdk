@@ -2940,7 +2940,7 @@
           "description": "Enable or disable the virtio blk hotplug monitor"
         },
         {
-          "name": "period-us",
+          "name": "period_us",
           "type": "number",
           "required": false,
           "description": "The period time of the monitor"
@@ -4789,7 +4789,7 @@
           "description": "Controller name"
         },
         {
-          "name": "bdev_name",
+          "name": "dev_name",
           "type": "string",
           "required": true,
           "description": "Name of bdev to expose block device"

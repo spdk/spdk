@@ -23,16 +23,16 @@ def add_parser(subparsers):
     def nvmf_set_config(args):
         all_admin_cmd_passthru = ('identify_ctrlr', 'identify_uuid_list', 'get_log_page', 'get_set_features', 'sanitize',
                                   'security_send_recv', 'fw_update', 'nvme_mi', 'vendor_specific')
-        invalid_admin_cmd_passthru = set(args.passthru_admin_cmds) - set(all_admin_cmd_passthru) - {'all'}
+        invalid_admin_cmd_passthru = set(args.admin_cmd_passthru) - set(all_admin_cmd_passthru) - {'all'}
         if invalid_admin_cmd_passthru:
             print(f"Invalid passthru-admin-cmds: '{', '.join(invalid_admin_cmd_passthru)}'. See help for valid options.", file=sys.stderr)
             exit(1)
-        if not args.passthru_admin_cmds:
+        if not args.admin_cmd_passthru:
             admin_cmd_passthru = None
-        elif 'all' in args.passthru_admin_cmds:
+        elif 'all' in args.admin_cmd_passthru:
             admin_cmd_passthru = {cmd: True for cmd in all_admin_cmd_passthru}
         else:
-            admin_cmd_passthru = {cmd: True for cmd in args.passthru_admin_cmds}
+            admin_cmd_passthru = {cmd: True for cmd in args.admin_cmd_passthru}
         args.client.nvmf_set_config(admin_cmd_passthru=admin_cmd_passthru,
                                     poll_groups_mask=args.poll_groups_mask,
                                     discovery_filter=args.discovery_filter,
@@ -40,7 +40,7 @@ def add_parser(subparsers):
                                     dhchap_dhgroups=args.dhchap_dhgroups)
 
     p = subparsers.add_parser('nvmf_set_config', help='Set NVMf target config')
-    p.add_argument('-p', '--passthru-admin-cmds', help="""Comma-separated list of admin commands to be passthru
+    p.add_argument('-p', '--passthru-admin-cmds', dest='admin_cmd_passthru', help="""Comma-separated list of admin commands to be passthru
                    when the controller has a single namespace that is an NVMe bdev.
                    Available options are: all, identify_ctrlr, identify_uuid_list, get_log_page, get_set_features, sanitize,
                    security_send_recv, fw_update, nvme_mi, vendor_specific""",
@@ -125,8 +125,8 @@ def add_parser(subparsers):
                                        ana_reporting=args.ana_reporting,
                                        min_cntlid=args.min_cntlid,
                                        max_cntlid=args.max_cntlid,
-                                       max_discard_size_kib=args.max_discard_size,
-                                       max_write_zeroes_size_kib=args.max_write_zeroes_size,
+                                       max_discard_size_kib=args.max_discard_size_kib,
+                                       max_write_zeroes_size_kib=args.max_write_zeroes_size_kib,
                                        passthrough=args.passthrough,
                                        enable_nssr=args.enable_nssr)
 
@@ -145,8 +145,8 @@ def add_parser(subparsers):
     p.add_argument("-r", "--ana-reporting", action='store_true', help="Enable ANA reporting feature")
     p.add_argument("-i", "--min_cntlid", help="Minimum controller ID", type=int)
     p.add_argument("-I", "--max_cntlid", help="Maximum controller ID", type=int)
-    p.add_argument("--max-discard-size", help="Maximum discard size (Kib)", type=int)
-    p.add_argument("--max-write-zeroes-size", help="Maximum write_zeroes size (Kib)", type=int)
+    p.add_argument("--max-discard-size", dest='max_discard_size_kib', help="Maximum discard size (Kib)", type=int)
+    p.add_argument("--max-write-zeroes-size", dest='max_write_zeroes_size_kib', help="Maximum write_zeroes size (Kib)", type=int)
     p.add_argument("-p", "--passthrough", action='store_true', help="""Use NVMe passthrough for all I/O commands and namespace-directed
                    admin commands""")
     p.add_argument("-n", "--enable_nssr", action='store_true', help="""Enable NSSR (NVMe subsystem reset) support""")
@@ -154,11 +154,11 @@ def add_parser(subparsers):
 
     def nvmf_delete_subsystem(args):
         args.client.nvmf_delete_subsystem(
-                                       nqn=args.subsystem_nqn,
+                                       nqn=args.nqn,
                                        tgt_name=args.tgt_name)
 
     p = subparsers.add_parser('nvmf_delete_subsystem', help='Delete a nvmf subsystem')
-    p.add_argument('subsystem_nqn',
+    p.add_argument('nqn',
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_delete_subsystem)

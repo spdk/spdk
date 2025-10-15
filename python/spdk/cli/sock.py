@@ -12,15 +12,15 @@ from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 def add_parser(subparsers):
 
     def sock_impl_get_options(args):
-        print_json(args.client.sock_impl_get_options(impl_name=args.impl))
+        print_json(args.client.sock_impl_get_options(impl_name=args.impl_name))
 
     p = subparsers.add_parser('sock_impl_get_options', help="""Get options of socket layer implementation""")
-    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.add_argument('-i', '--impl', dest='impl_name', help='Socket implementation name, e.g. posix', required=True)
     p.set_defaults(func=sock_impl_get_options)
 
     def sock_impl_set_options(args):
         args.client.sock_impl_set_options(
-                                       impl_name=args.impl,
+                                       impl_name=args.impl_name,
                                        recv_buf_size=args.recv_buf_size,
                                        send_buf_size=args.send_buf_size,
                                        enable_recv_pipe=args.enable_recv_pipe,
@@ -33,7 +33,7 @@ def add_parser(subparsers):
                                        enable_ktls=args.enable_ktls)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
-    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.add_argument('-i', '--impl', dest='impl_name', help='Socket implementation name, e.g. posix', required=True)
     p.add_argument('-r', '--recv-buf-size', help='Size of receive buffer on socket in bytes', type=int)
     p.add_argument('-s', '--send-buf-size', help='Size of send buffer on socket in bytes', type=int)
     p.add_argument('-p', '--enable-placement-id', help='Option for placement-id. 0:disable,1:incoming_napi,2:incoming_cpu', type=int)
@@ -69,10 +69,10 @@ def add_parser(subparsers):
                    zerocopy_threshold=None, tls_version=None, enable_ktls=None)
 
     def sock_set_default_impl(args):
-        print_json(args.client.sock_set_default_impl(impl_name=args.impl))
+        print_json(args.client.sock_set_default_impl(impl_name=args.impl_name))
 
     p = subparsers.add_parser('sock_set_default_impl', help="""Set the default sock implementation""")
-    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.add_argument('-i', '--impl', dest='impl_name', help='Socket implementation name, e.g. posix', required=True)
     p.set_defaults(func=sock_set_default_impl)
 
     def sock_get_default_impl(args):
