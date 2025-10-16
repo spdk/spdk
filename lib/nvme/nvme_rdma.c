@@ -229,6 +229,8 @@ struct nvme_rdma_qpair {
 
 	/* Count of outstanding send objects */
 	uint16_t				current_num_sends;
+	/* Number of requests submitted to accel framework */
+	uint16_t				num_active_accel_reqs;
 
 	TAILQ_ENTRY(nvme_rdma_qpair)		link_active;
 
@@ -1794,6 +1796,8 @@ nvme_rdma_accel_completion_cb(void *cb_arg, int status)
 	enum spdk_nvme_generic_command_status_code sc;
 	uint16_t dnr = 0;
 
+	assert(rqpair->num_active_accel_reqs);
+	rqpair->num_active_accel_reqs--;
 	rdma_req->in_progress_accel = 0;
 	rdma_req->req->accel_sequence = NULL;
 	NVME_RQPAIR_DEBUGLOG(rqpair, "rdma_req %p, accel completion rc %d\n", rdma_req, status);
@@ -1897,6 +1901,7 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 	rdma_req->in_progress_accel = 1;
 	TAILQ_INSERT_TAIL(&rqpair->outstanding_reqs, rdma_req, link);
 	rqpair->num_outstanding_reqs++;
+	rqpair->num_active_accel_reqs++;
 
 	NVME_RQPAIR_DEBUGLOG(rqpair, "req %p, finish accel seq %p\n", rdma_req, accel_seq);
 	nvme_rdma_accel_finish(pg, accel_seq, nvme_rdma_accel_completion_cb, rdma_req);
@@ -2129,6 +2134,11 @@ nvme_rdma_qpair_flush_send_wrs(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 {
+	if (rqpair->num_active_accel_reqs != 0) {
+		SPDK_DEBUGLOG(nvme, "qp %p has %u accel requests\n", rqpair, rqpair->num_active_accel_reqs);
+		goto lingering;
+	}
+
 	if (ret) {
 		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
 		goto quiet;
@@ -2152,6 +2162,7 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 	     (!rqpair->srq && rqpair->rsps->current_num_recvs != 0)) ||
 	    ((rqpair->qpair.ctrlr->flags & SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED) &&
 	     (!TAILQ_EMPTY(&rqpair->outstanding_reqs)))) {
+lingering:
 		rqpair->state = NVME_RDMA_QPAIR_STATE_LINGERING;
 		rqpair->evt_timeout_ticks = (NVME_RDMA_DISCONNECTED_QPAIR_TIMEOUT_US * spdk_get_ticks_hz()) /
 					    SPDK_SEC_TO_USEC + spdk_get_ticks();
