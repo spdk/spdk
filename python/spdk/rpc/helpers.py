@@ -3,6 +3,7 @@
 #  All rights reserved.
 
 import sys
+import functools
 
 deprecated_aliases = {}
 
@@ -23,6 +24,7 @@ def deprecated_alias(old_name):
 def deprecated_method(method):
     method.deprecated_warning = False
 
+    @functools.wraps(method)
     def wrap(*args, **kwargs):
         if not method.deprecated_warning:
             print(f'{method.__name__} is deprecated, use JSONRPCClient directly', file=sys.stderr)
