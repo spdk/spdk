@@ -1828,6 +1828,14 @@ nvme_poll_group_get_qpair(struct nvme_poll_group *group, struct spdk_nvme_qpair 
 static void nvme_qpair_delete(struct nvme_qpair *nvme_qpair);
 
 static void
+nvme_ctrlr_channel_reset_finish(struct nvme_ctrlr_channel *ctrlr_ch, int status)
+{
+	spdk_poller_unregister(&ctrlr_ch->connect_poller);
+	nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, status);
+	ctrlr_ch->reset_iter = NULL;
+}
+
+static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
 	struct nvme_poll_group *group = poll_group_ctx;
@@ -1871,19 +1879,16 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 
 	/* We are in a full reset sequence. */
 	if (ctrlr_ch->connect_poller != NULL) {
-		/* qpair was failed to connect. Abort the reset sequence. */
 		NVME_CTRLR_INFOLOG(nvme_ctrlr,
 				   NVME_QPAIR_LOG_FMT" failed to connect. abort the reset ctrlr sequence.\n", qid, qpair);
-		spdk_poller_unregister(&ctrlr_ch->connect_poller);
 		status = -1;
 	} else {
-		/* qpair was completed to disconnect. Just move to the next ctrlr_channel. */
 		NVME_CTRLR_INFOLOG(nvme_ctrlr,
 				   NVME_QPAIR_LOG_FMT" was disconnected and freed in a reset ctrlr sequence.\n", qid, qpair);
 		status = 0;
 	}
-	nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, status);
-	ctrlr_ch->reset_iter = NULL;
+
+	nvme_ctrlr_channel_reset_finish(ctrlr_ch, status);
 }
 
 static void
@@ -2504,12 +2509,7 @@ bdev_nvme_reset_check_qpair_connected(void *ctx)
 	}
 
 	NVME_QPAIR_INFOLOG(nvme_qpair, "qpair was connected.\n");
-
-	spdk_poller_unregister(&ctrlr_ch->connect_poller);
-
-	/* qpair was completed to connect. Move to the next ctrlr_channel */
-	nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
-	ctrlr_ch->reset_iter = NULL;
+	nvme_ctrlr_channel_reset_finish(ctrlr_ch, 0);
 
 	if (!g_opts.disable_auto_failback) {
 		_bdev_nvme_clear_io_path_cache(nvme_qpair);
@@ -3749,16 +3749,9 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 		 */
 		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
 
-		/* Since the channel is being destroyed, unregister any connect_poller
-		 * that might be active for the channel.
-		 */
-		spdk_poller_unregister(&ctrlr_ch->connect_poller);
-
+		/* Reset may still be in progress on this channel; finish it before deleting the channel. */
 		if (ctrlr_ch->reset_iter) {
-			/* Skip current ctrlr_channel in a full reset sequence because
-			 * it is being deleted now.
-			 */
-			nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
+			nvme_ctrlr_channel_reset_finish(ctrlr_ch, 0);
 		}
 
 		/* We cannot release a reference to the poll group now.
