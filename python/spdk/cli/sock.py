@@ -37,10 +37,11 @@ def add_parser(subparsers):
     p.add_argument('-r', '--recv-buf-size', help='Size of receive buffer on socket in bytes', type=int)
     p.add_argument('-s', '--send-buf-size', help='Size of send buffer on socket in bytes', type=int)
     p.add_argument('-p', '--enable-placement-id', help='Option for placement-id. 0:disable,1:incoming_napi,2:incoming_cpu', type=int)
-    p.add_argument('--enable-recv-pipe', help='Enable receive pipe',
-                   action='store_true', dest='enable_recv_pipe')
-    p.add_argument('--disable-recv-pipe', help='Disable receive pipe',
-                   action='store_false', dest='enable_recv_pipe')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-recv-pipe', help='Enable receive pipe',
+                       action='store_true', dest='enable_recv_pipe')
+    group.add_argument('--disable-recv-pipe', help='Disable receive pipe',
+                       action='store_false', dest='enable_recv_pipe')
     group = p.add_mutually_exclusive_group()
     group.add_argument('--enable-quickack', help='Enable quick ACK',
                        action='store_true', dest='enable_quickack')

@@ -460,12 +460,13 @@ def add_parser(subparsers):
                    type=lambda d: d.split(','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
                    type=lambda d: d.split(','))
-    p.add_argument('--enable-rdma-umr-per-io',
-                   help='''Enable scatter-gather RDMA Memory Region per IO if supported by the system.''',
-                   action='store_true', dest='rdma_umr_per_io')
-    p.add_argument('--disable-rdma-umr-per-io',
-                   help='''Disable scatter-gather RDMA Memory Region per IO.''',
-                   action='store_false', dest='rdma_umr_per_io')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--enable-rdma-umr-per-io',
+                       help='''Enable scatter-gather RDMA Memory Region per IO if supported by the system.''',
+                       action='store_true', dest='rdma_umr_per_io')
+    group.add_argument('--disable-rdma-umr-per-io',
+                       help='''Disable scatter-gather RDMA Memory Region per IO.''',
+                       action='store_false', dest='rdma_umr_per_io')
     p.add_argument('--tcp-connect-timeout-ms',
                    help='Time to wait until TCP connection is done. Default: 0 (no timeout).', type=int)
     p.add_argument('--enable-flush', help='Pass flush to NVMe when volatile write cache is present',

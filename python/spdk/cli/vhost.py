@@ -152,8 +152,9 @@ def add_parser(subparsers):
         args.client.bdev_virtio_blk_set_hotplug(enable=args.enable, period_us=args.period_us)
 
     p = subparsers.add_parser('bdev_virtio_blk_set_hotplug', help='Set hotplug options for bdev virtio_blk type.')
-    p.add_argument('-d', '--disable', dest='enable', default=False, action='store_false', help="Disable hotplug (default)")
-    p.add_argument('-e', '--enable', dest='enable', action='store_true', help="Enable hotplug")
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('-d', '--disable', dest='enable', default=False, action='store_false', help="Disable hotplug (default)")
+    group.add_argument('-e', '--enable', dest='enable', action='store_true', help="Enable hotplug")
     p.add_argument('-r', '--period-us',
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=bdev_virtio_blk_set_hotplug)
