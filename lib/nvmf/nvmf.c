@@ -1469,7 +1469,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 	struct spdk_nvmf_ctrlr *ctrlr;
-	bool ns_changed;
+	bool ns_changed, ana_changed;
 
 	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
@@ -1489,6 +1489,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 
 	ns_changed = false;
+	ana_changed = false;
 
 	/* Detect bdevs that were added or removed */
 	for (i = 0; i < sgroup->num_ns; i++) {
@@ -1543,7 +1544,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				      group,
 				      ns_info->anagrpid,
 				      ns->anagrpid);
-			ns_changed = true;
+			ana_changed = true;
 		}
 
 		if (ns == NULL) {
@@ -1556,7 +1557,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		}
 	}
 
-	if (ns_changed) {
+	if (ns_changed || ana_changed) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 			if (ctrlr->thread != spdk_get_thread()) {
 				continue;
@@ -1568,8 +1569,12 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				continue;
 			}
 			if (ctrlr->admin_qpair->group == group) {
-				nvmf_ctrlr_async_event_ns_notice(ctrlr);
-				nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
+				if (ns_changed) {
+					nvmf_ctrlr_async_event_ns_notice(ctrlr);
+				}
+				if (ana_changed) {
+					nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
+				}
 			}
 		}
 	}
