@@ -26,6 +26,7 @@ static int bdev_rbd_count = 0;
 struct bdev_rbd_pool_ctx {
 	rados_t *cluster_p;
 	char *name;
+	char *rados_namespace_name;
 	rados_ioctx_t io_ctx;
 	uint32_t ref;
 	STAILQ_ENTRY(bdev_rbd_pool_ctx) link;
@@ -39,6 +40,7 @@ struct bdev_rbd {
 	char *rbd_name;
 	char *user_id;
 	char *pool_name;
+	char *rados_namespace_name;
 	char **config;
 
 	rados_t cluster;
@@ -196,6 +198,7 @@ bdev_rbd_put_pool_ctx(struct bdev_rbd_pool_ctx *entry)
 		STAILQ_REMOVE(&g_map_bdev_rbd_pool_ctx, entry, bdev_rbd_pool_ctx, link);
 		rados_ioctx_destroy(entry->io_ctx);
 		free(entry->name);
+		free(entry->rados_namespace_name);
 		free(entry);
 	}
 }
@@ -217,6 +220,7 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 	free(rbd->rbd_name);
 	free(rbd->user_id);
 	free(rbd->pool_name);
+	free(rbd->rados_namespace_name);
 	bdev_rbd_free_config(rbd->config);
 
 	if (rbd->cluster_name) {
@@ -378,7 +382,7 @@ bdev_rbd_cluster_handle(void *arg)
 }
 
 static int
-bdev_rbd_get_pool_ctx(rados_t *cluster_p, const char *name,  struct bdev_rbd_pool_ctx **ctx)
+bdev_rbd_get_pool_ctx(rados_t *cluster_p, const char *name, const char *rados_namespace_name, struct bdev_rbd_pool_ctx **ctx)
 {
 	struct bdev_rbd_pool_ctx *entry;
 
@@ -389,7 +393,10 @@ bdev_rbd_get_pool_ctx(rados_t *cluster_p, const char *name,  struct bdev_rbd_poo
 	}
 
 	STAILQ_FOREACH(entry, &g_map_bdev_rbd_pool_ctx, link) {
-		if (strcmp(name, entry->name) == 0 && cluster_p == entry->cluster_p) {
+		if (strcmp(name, entry->name) == 0 && cluster_p == entry->cluster_p &&
+		    ((rados_namespace_name == NULL && entry->rados_namespace_name == NULL) ||
+		     (rados_namespace_name && entry->rados_namespace_name &&
+		      strcmp(rados_namespace_name, entry->rados_namespace_name) == 0))) {
 			entry->ref++;
 			*ctx = entry;
 			return 0;
@@ -408,9 +415,25 @@ bdev_rbd_get_pool_ctx(rados_t *cluster_p, const char *name,  struct bdev_rbd_poo
 		goto err_handle;
 	}
 
+	if (rados_namespace_name) {
+		entry->rados_namespace_name = strdup(rados_namespace_name);
+		if (entry->rados_namespace_name == NULL) {
+			SPDK_ERRLOG("Failed to allocate the rados_namespace_name =%s space on entry =%p\n",
+				    rados_namespace_name, entry);
+			goto err_handle1;
+		}
+	}
+
 	if (rados_ioctx_create(*cluster_p, name, &entry->io_ctx) < 0) {
 		goto err_handle1;
 	}
+
+	if (rados_namespace_name) {
+		rados_ioctx_set_namespace(entry->io_ctx, rados_namespace_name);
+		SPDK_DEBUGLOG(bdev_rbd, "Set RADOS namespace to '%s' for pool '%s'\n",
+					rados_namespace_name, name);
+	}
+
 
 	entry->cluster_p = cluster_p;
 	entry->ref = 1;
@@ -421,6 +444,7 @@ bdev_rbd_get_pool_ctx(rados_t *cluster_p, const char *name,  struct bdev_rbd_poo
 
 err_handle1:
 	free(entry->name);
+	free(entry->rados_namespace_name);
 err_handle:
 	free(entry);
 
@@ -435,7 +459,7 @@ bdev_rbd_init_context(void *arg)
 	rados_ioctx_t *io_ctx = NULL;
 
 	if (rbd->cluster_name) {
-		if (bdev_rbd_get_pool_ctx(rbd->cluster_p, rbd->pool_name, &rbd->rados_ctx.ctx) < 0) {
+		if (bdev_rbd_get_pool_ctx(rbd->cluster_p, rbd->pool_name, rbd->rados_namespace_name, &rbd->rados_ctx.ctx) < 0) {
 			SPDK_ERRLOG("Failed to create ioctx on rbd=%p with cluster_name=%s\n",
 				    rbd, rbd->cluster_name);
 			return NULL;
@@ -447,6 +471,12 @@ bdev_rbd_init_context(void *arg)
 			return NULL;
 		}
 		io_ctx = &rbd->rados_ctx.io_ctx;
+
+		if (rbd->rados_namespace_name != NULL) {
+			rados_ioctx_set_namespace(*io_ctx, rbd->rados_namespace_name);
+			SPDK_DEBUGLOG(bdev_rbd, "Set RADOS namespace to '%s' for pool '%s'\n",
+						rbd->rados_namespace_name, rbd->pool_name);
+		}
 	}
 
 	assert(io_ctx != NULL);
@@ -928,6 +958,10 @@ bdev_rbd_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_string(w, "pool_name", rbd_bdev->pool_name);
 
+	if (rbd_bdev->rados_namespace_name) {
+		spdk_json_write_named_string(w, "rados_namespace_name", rbd_bdev->rados_namespace_name);
+	}
+
 	spdk_json_write_named_string(w, "rbd_name", rbd_bdev->rbd_name);
 
 	if (rbd_bdev->cluster_name) {
@@ -968,6 +1002,9 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_string(w, "pool_name", rbd->pool_name);
+	if (rbd->rados_namespace_name) {
+    	spdk_json_write_named_string(w, "rados_namespace_name", rbd->rados_namespace_name);
+	}
 	spdk_json_write_named_string(w, "rbd_name", rbd->rbd_name);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
 	if (rbd->user_id) {
@@ -1403,6 +1440,7 @@ bdev_rbd_register_cluster(struct cluster_register_info *info)
 int
 bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		const char *pool_name,
+		const char *rados_namespace_name,
 		const char *const *config,
 		const char *rbd_name,
 		uint32_t block_size,
@@ -1448,6 +1486,14 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 	if (!rbd->pool_name) {
 		bdev_rbd_free(rbd);
 		return -ENOMEM;
+	}
+
+	if (rados_namespace_name) {
+		rbd->rados_namespace_name = strdup(rados_namespace_name);
+		if (!rbd->rados_namespace_name) {
+			bdev_rbd_free(rbd);
+			return -ENOMEM;
+		}
 	}
 
 	if (config && !(rbd->config = bdev_rbd_dup_config(config))) {

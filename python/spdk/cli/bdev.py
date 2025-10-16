@@ -868,6 +868,7 @@ def add_parser(subparsers):
                                             rbd_name=args.rbd_name,
                                             block_size=args.block_size,
                                             cluster_name=args.cluster_name,
+                                            rados_namespace_name=args.rados_namespace_name,
                                             uuid=args.uuid,
                                             read_only=args.read_only))
 
@@ -878,6 +879,7 @@ def add_parser(subparsers):
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
+    p.add_argument('rados_namespace_name', help='rados namespace name')
     p.add_argument('block_size', help='rbd block size', type=int)
     p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
