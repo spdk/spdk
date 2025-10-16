@@ -41,19 +41,19 @@ function install_flamegraph() {
 
 function _install_qemu() {
 	local repo=$1
-	local branch=$2
+	local version=$2
 	local prefix=${3:-}
 	local name=${4:-}
 
 	mkdir -p "$GIT_REPOS/qemu"
 
-	local repo_dir=$GIT_REPOS/qemu/$branch
+	local repo_dir=$GIT_REPOS/qemu/$version
 	if [[ -n $prefix ]]; then
-		repo_dir=$GIT_REPOS/qemu/$prefix-$branch
+		repo_dir=$GIT_REPOS/qemu/$prefix-$version
 	fi
 
 	if [[ ! -d $repo_dir ]]; then
-		git clone "$repo" -b "$branch" "$repo_dir"
+		git clone "$repo" -b "$version" "$repo_dir"
 	else
 		echo "qemu already checked out. Skipping"
 	fi
@@ -90,7 +90,7 @@ function _install_qemu() {
 	sudo make -C "$repo_dir" install
 
 	# Add a symlink to point at a latest build - this is useful to easily track QEMU flavors for which
-	# branches change quite often (e.g. vfio-user's).
+	# versions change quite often (e.g. vfio-user's).
 	[[ -n $name ]] || return 0
 	[[ -L /usr/local/qemu/$name-latest ]] && sudo rm "/usr/local/qemu/$name-latest"
 	sudo ln -s "/usr/local/qemu/${repo_dir##*/}" "/usr/local/qemu/$name-latest"
@@ -102,8 +102,8 @@ function install_qemu() {
 	#  - vfio-user QEMU: A special fork to test libvfio-user components.
 	#  - vhost QEMU: Used to boot VMs from within vhost tests.
 
-	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH "" vfio-user
-	_install_qemu "$GIT_REPO_QEMU_VHOST" "$VHOST_QEMU_BRANCH" vhost vhost
+	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_VERSION "" vfio-user
+	_install_qemu "$GIT_REPO_QEMU_VHOST" "$VHOST_QEMU_VERSION" vhost vhost
 }
 
 function install_nvmecli() {
@@ -421,8 +421,8 @@ function install_sources() {
 
 GIT_VERSION=2.25.1
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-v0.24.1}
-VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}
-VHOST_QEMU_BRANCH=${VHOST_QEMU_BRANCH:-v8.0.0}
+VFIO_QEMU_VERSION=${VFIO_QEMU_VERSION:-vfio-user-p3.0}
+VHOST_QEMU_VERSION=${VHOST_QEMU_VERSION:-v8.0.0}
 DPDK_STABLE_BRANCH=${DPDK_STABLE_BRANCH:-24.11}
 
 : ${GIT_REPO_FIO=https://github.com/axboe/fio.git}
