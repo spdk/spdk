@@ -1145,9 +1145,8 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 	}
 
 	ret = nvme_rdma_create_reqs(rqpair);
-	NVME_RQPAIR_DEBUGLOG(rqpair, "rc =%d\n", ret);
 	if (ret) {
-		NVME_RQPAIR_ERRLOG(rqpair, "Unable to create rqpair RDMA requests\n");
+		NVME_RQPAIR_ERRLOG(rqpair, "Unable to create rqpair RDMA requests: %d\n", ret);
 		return -1;
 	}
 	NVME_RQPAIR_DEBUGLOG(rqpair, "RDMA requests created\n");
@@ -1167,9 +1166,8 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		NVME_RQPAIR_DEBUGLOG(rqpair, "RDMA responses created\n");
 
 		ret = nvme_rdma_qpair_submit_recvs(rqpair);
-		NVME_RQPAIR_DEBUGLOG(rqpair, "rc =%d\n", ret);
 		if (ret) {
-			NVME_RQPAIR_ERRLOG(rqpair, "Unable to submit rqpair RDMA responses\n");
+			NVME_RQPAIR_ERRLOG(rqpair, "Unable to submit rqpair RDMA responses: %d\n", ret);
 			return -1;
 		}
 		NVME_RQPAIR_DEBUGLOG(rqpair, "RDMA responses submitted\n");
