@@ -679,7 +679,7 @@ vbdev_passthru_register(const char *bdev_name)
 		spdk_io_device_register(pt_node, pt_bdev_ch_create_cb, pt_bdev_ch_destroy_cb,
 					sizeof(struct pt_io_channel),
 					name->vbdev_name);
-		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
+		SPDK_NOTICELOG("io_device created at: %p\n", pt_node);
 
 		/* Save the thread where the base device is opened */
 		pt_node->thread = spdk_get_thread();
