@@ -823,6 +823,10 @@
       ]
     },
     {
+      "name": "cuda_scan_accel_module",
+      "params": []
+    },
+    {
       "name": "bdev_set_options",
       "params": [
         {

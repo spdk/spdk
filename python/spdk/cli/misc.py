@@ -158,6 +158,13 @@ def add_parser(subparsers):
     p.add_argument('-l', '--level', type=str, help='Verbose level, one of \"total\", \"channel\" or \"device\"')
     p.set_defaults(func=accel_mlx5_dump_stats)
 
+    # cuda
+    def cuda_scan_accel_module(args):
+        args.client.cuda_scan_accel_module()
+
+    p = subparsers.add_parser('cuda_scan_accel_module', help='Enable CUDA accel module offload.')
+    p.set_defaults(func=cuda_scan_accel_module)
+
     # accel_error
     def accel_error_inject_error(args):
         args.client.accel_error_inject_error(opcode=args.opcode,
