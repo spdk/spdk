@@ -1853,35 +1853,37 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	nvme_ctrlr = nvme_qpair->ctrlr;
 	ctrlr_ch = nvme_qpair->ctrlr_ch;
 
-	if (ctrlr_ch != NULL) {
-		if (ctrlr_ch->reset_iter != NULL) {
-			/* We are in a full reset sequence. */
-			if (ctrlr_ch->connect_poller != NULL) {
-				/* qpair was failed to connect. Abort the reset sequence. */
-				NVME_CTRLR_INFOLOG(nvme_ctrlr,
-						   NVME_QPAIR_LOG_FMT" failed to connect. abort the reset ctrlr sequence.\n", qid, qpair);
-				spdk_poller_unregister(&ctrlr_ch->connect_poller);
-				status = -1;
-			} else {
-				/* qpair was completed to disconnect. Just move to the next ctrlr_channel. */
-				NVME_CTRLR_INFOLOG(nvme_ctrlr,
-						   NVME_QPAIR_LOG_FMT" was disconnected and freed in a reset ctrlr sequence.\n", qid, qpair);
-				status = 0;
-			}
-			nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, status);
-			ctrlr_ch->reset_iter = NULL;
-		} else {
-			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
-			NVME_CTRLR_INFOLOG(nvme_ctrlr,
-					   NVME_QPAIR_LOG_FMT" was disconnected and freed. reset controller.\n", qid, qpair);
-			bdev_nvme_failover_ctrlr(nvme_ctrlr);
-		}
-	} else {
-		/* In this case, ctrlr_channel is already deleted. */
+	/* In this case, ctrlr_channel is already deleted. */
+	if (ctrlr_ch == NULL) {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr,
 				   NVME_QPAIR_LOG_FMT" was disconnected and freed. delete nvme_qpair.\n", qid, qpair);
 		nvme_qpair_delete(nvme_qpair);
+		return;
 	}
+
+	/* qpair was disconnected unexpectedly. Reset controller for recovery. */
+	if (ctrlr_ch->reset_iter == NULL) {
+		NVME_CTRLR_INFOLOG(nvme_ctrlr,
+				   NVME_QPAIR_LOG_FMT" was disconnected and freed. reset controller.\n", qid, qpair);
+		bdev_nvme_failover_ctrlr(nvme_ctrlr);
+		return;
+	}
+
+	/* We are in a full reset sequence. */
+	if (ctrlr_ch->connect_poller != NULL) {
+		/* qpair was failed to connect. Abort the reset sequence. */
+		NVME_CTRLR_INFOLOG(nvme_ctrlr,
+				   NVME_QPAIR_LOG_FMT" failed to connect. abort the reset ctrlr sequence.\n", qid, qpair);
+		spdk_poller_unregister(&ctrlr_ch->connect_poller);
+		status = -1;
+	} else {
+		/* qpair was completed to disconnect. Just move to the next ctrlr_channel. */
+		NVME_CTRLR_INFOLOG(nvme_ctrlr,
+				   NVME_QPAIR_LOG_FMT" was disconnected and freed in a reset ctrlr sequence.\n", qid, qpair);
+		status = 0;
+	}
+	nvme_ctrlr_for_each_channel_continue(ctrlr_ch->reset_iter, status);
+	ctrlr_ch->reset_iter = NULL;
 }
 
 static void
