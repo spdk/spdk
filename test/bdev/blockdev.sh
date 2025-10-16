@@ -665,34 +665,43 @@ function get_bdev_numa() {
 # Note that tests expect NUMA 0 to exist on the system.
 function numa_id_test_suite() {
 	NUMA_DEV="Malloc_numa"
+	NUMA_SPLIT="${NUMA_DEV}p0"
 
 	start_spdk_tgt
 	$rpc_py framework_start_init
 
+	# Malloc -> Split
+
 	# Default NUMA
 	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512
-	waitforbdev "$NUMA_DEV"
+	$rpc_py bdev_split_create "$NUMA_DEV" 1
+	waitforbdev "$NUMA_SPLIT"
 
 	[[ "$(get_bdev_numa $NUMA_DEV)" == "-1" ]]
 	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_bdev_numa $NUMA_SPLIT)" == "-1" ]]
 
 	$rpc_py bdev_malloc_delete "$NUMA_DEV"
 
 	# Explicitly any NUMA
 	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512 --numa-id -1
-	waitforbdev "$NUMA_DEV"
+	$rpc_py bdev_split_create "$NUMA_DEV" 1
+	waitforbdev "$NUMA_SPLIT"
 
 	[[ "$(get_bdev_numa $NUMA_DEV)" == "-1" ]]
 	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_bdev_numa $NUMA_SPLIT)" == "-1" ]]
 
 	$rpc_py bdev_malloc_delete "$NUMA_DEV"
 
 	# NUMA 0
 	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512 --numa-id 0
-	waitforbdev "$NUMA_DEV"
+	$rpc_py bdev_split_create "$NUMA_DEV" 1
+	waitforbdev "$NUMA_SPLIT"
 
 	[[ "$(get_bdev_numa $NUMA_DEV)" == "0" ]]
 	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "0" ]]
+	[[ "$(get_bdev_numa $NUMA_SPLIT)" == "0" ]]
 
 	$rpc_py bdev_malloc_delete "$NUMA_DEV"
 

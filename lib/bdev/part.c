@@ -585,6 +585,8 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 	part->internal.bdev.module = base->module;
 	part->internal.bdev.fn_table = base->fn_table;
 
+	part->internal.bdev.numa = base->bdev->numa;
+
 	part->internal.bdev.md_interleave = base->bdev->md_interleave;
 	part->internal.bdev.md_len = base->bdev->md_len;
 	part->internal.bdev.dif_type = base->bdev->dif_type;
