@@ -530,7 +530,7 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 				rdma_ack_cm_event(event);
 				return -ENOMEM;
 			}
-			STAILQ_REMOVE(&rctrlr->free_cm_events, entry, nvme_rdma_cm_event_entry, link);
+			STAILQ_REMOVE_HEAD(&rctrlr->free_cm_events, link);
 			entry->evt = event;
 			STAILQ_INSERT_TAIL(&rctrlr->pending_cm_events, entry, link);
 		}
