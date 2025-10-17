@@ -21,17 +21,12 @@ def add_parser(subparsers):
     p.set_defaults(func=nvmf_set_max_subsystems)
 
     def nvmf_set_config(args):
-        admin_cmd_passthru = args.passthru_admin_cmds or []
-        if args.passthru_identify_ctrlr:
-            print('WARNING: -i|--passthru-identify-ctrlr is deprecated, please use -p|--passthru-admin-cmds identify_ctrlr.',
-                  file=sys.stderr)
-            admin_cmd_passthru.append('identify_ctrlr')
         all_admin_cmd_passthru = ('identify_ctrlr', 'identify_uuid_list', 'get_log_page', 'get_set_features', 'sanitize',
                                   'security_send_recv', 'fw_update', 'nvme_mi', 'vendor_specific')
-        if 'all' in admin_cmd_passthru:
+        if 'all' in args.passthru_admin_cmds:
             admin_cmd_passthru = {cmd: True for cmd in all_admin_cmd_passthru}
         else:
-            admin_cmd_passthru = {cmd: True for cmd in admin_cmd_passthru}
+            admin_cmd_passthru = {cmd: True for cmd in args.passthru_admin_cmds}
         args.client.nvmf_set_config(admin_cmd_passthru=admin_cmd_passthru,
                                     poll_groups_mask=args.poll_groups_mask,
                                     discovery_filter=args.discovery_filter,
@@ -39,13 +34,11 @@ def add_parser(subparsers):
                                     dhchap_dhgroups=args.dhchap_dhgroups)
 
     p = subparsers.add_parser('nvmf_set_config', help='Set NVMf target config')
-    p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
-    when the controller has a single namespace that is an NVMe bdev (deprecated)""", action='store_true')
     p.add_argument('-p', '--passthru-admin-cmds', help="""Comma-separated list of admin commands to be passthru
                    when the controller has a single namespace that is an NVMe bdev.
                    Available options are: all, identify_ctrlr, identify_uuid_list, get_log_page, get_set_features, sanitize,
                    security_send_recv, fw_update, nvme_mi, vendor_specific""",
-                   type=lambda d: d.split(','))
+                   type=lambda d: d.split(','), default=[])
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.add_argument('-d', '--discovery-filter', help="""Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`""", type=str)
