@@ -4899,6 +4899,18 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
+		if (ctrlr->opts.keep_alive_timeout_ms * SPDK_MSEC_TO_USEC > timeout_io_us) {
+			NVME_CTRLR_WARNLOG(ctrlr,
+					   "opts.keep_alive_timeout_ms %u should be less than timeout_io_us %lu\n",
+					   ctrlr->opts.keep_alive_timeout_ms, timeout_io_us);
+		}
+
+		if (ctrlr->opts.keep_alive_timeout_ms * SPDK_MSEC_TO_USEC > timeout_admin_us) {
+			NVME_CTRLR_WARNLOG(ctrlr,
+					   "opts.keep_alive_timeout_ms %u should be less than timeout_admin_us %lu\n",
+					   ctrlr->opts.keep_alive_timeout_ms, timeout_admin_us);
+		}
+
 		active_proc->timeout_io_ticks = timeout_io_us * spdk_get_ticks_hz() / 1000000ULL;
 		active_proc->timeout_admin_ticks = timeout_admin_us * spdk_get_ticks_hz() / 1000000ULL;
 		active_proc->timeout_cb_fn = cb_fn;
