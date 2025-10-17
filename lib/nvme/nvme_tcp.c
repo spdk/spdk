@@ -2162,10 +2162,6 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	int rc;
 
 	if (qpair->poll_group == NULL) {
-		if (qpair->ctrlr->timeout_enabled) {
-			nvme_tcp_qpair_check_timeout(qpair);
-		}
-
 		rc = spdk_sock_flush(tqpair->sock);
 		if (rc < 0 && errno != EAGAIN) {
 			NVME_TQPAIR_ERRLOG(tqpair, "Failed to flush (%d): %s\n", errno, spdk_strerror(errno));
@@ -2179,6 +2175,10 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 			}
 
 			goto fail;
+		}
+
+		if (qpair->ctrlr->timeout_enabled) {
+			nvme_tcp_qpair_check_timeout(qpair);
 		}
 	}
 
