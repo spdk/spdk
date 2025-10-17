@@ -410,10 +410,16 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 {
 	struct spdk_nvme_qpair *qpair = req->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
-	uint64_t timeout_ticks = nvme_qpair_is_admin_queue(qpair) ?
-				 active_proc->timeout_admin_ticks : active_proc->timeout_io_ticks;
+	uint64_t timeout_ticks = active_proc->timeout_io_ticks;
 
 	assert(active_proc->timeout_cb_fn != NULL);
+
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
+		timeout_ticks = active_proc->timeout_admin_ticks;
+		if (req->cmd.opc == SPDK_NVME_OPC_KEEP_ALIVE && ctrlr->opts.keep_alive_timeout_ms) {
+			timeout_ticks = ctrlr->opts.keep_alive_timeout_ms * spdk_get_ticks_hz() / SPDK_SEC_TO_MSEC;
+		}
+	}
 
 	if (spdk_unlikely(req->timed_out || req->submit_tick == 0)) {
 		return 0;
