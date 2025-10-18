@@ -5,9 +5,10 @@ on:
   workflow_dispatch:
   # schedule:
   # - cron: "0 0 * * *"    # Every 24 hours at midnight UTC
-  # push:
-  #   paths:
-  #     - docs
+  push:
+    paths:
+      - doc
+      - schema
 
 jobs:
   sync-gh-pages:
