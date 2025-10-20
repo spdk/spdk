@@ -3267,7 +3267,7 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 
 	/* ana supported */
 	memset(&ctrlr, 0, sizeof(ctrlr));
-	ctrlr.cdata.cmic.ana_reporting = true;
+	ctrlr.cdata.cmic.anars = true;
 	ctrlr.cdata.lpa.cses = 1;
 	ctrlr.cdata.nanagrpid = 1;
 	ctrlr.active_ns_count = 1;
@@ -3432,7 +3432,7 @@ test_nvme_ctrlr_ana_resize(void)
 	ctrlr.vs.bits.mnr = 4;
 	ctrlr.vs.bits.ter = 0;
 	ctrlr.cdata.nn = 4096;
-	ctrlr.cdata.cmic.ana_reporting = true;
+	ctrlr.cdata.cmic.anars = true;
 	ctrlr.cdata.nanagrpid = 1;
 
 	ctrlr.state = NVME_CTRLR_STATE_CONFIGURE_AER;

@@ -523,8 +523,8 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
 	}
 
 	ctrlr->cdata.cntlid = ++g_ut_cntlid;
-	ctrlr->cdata.cmic.multi_ctrlr = multipath;
-	ctrlr->cdata.cmic.ana_reporting = ana_reporting;
+	ctrlr->cdata.cmic.mctrs = multipath;
+	ctrlr->cdata.cmic.anars = ana_reporting;
 	ctrlr->trid = *trid;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
@@ -7381,8 +7381,8 @@ test_bdev_ctrlr_op_rpc(void)
 	ut_init_trid2(&trid2);
 	TAILQ_INIT(&ctrlr1.active_io_qpairs);
 	TAILQ_INIT(&ctrlr2.active_io_qpairs);
-	ctrlr1.cdata.cmic.multi_ctrlr = 1;
-	ctrlr2.cdata.cmic.multi_ctrlr = 1;
+	ctrlr1.cdata.cmic.mctrs = 1;
+	ctrlr2.cdata.cmic.mctrs = 1;
 	ctrlr1.cdata.cntlid = 1;
 	ctrlr2.cdata.cntlid = 2;
 	ctrlr1.adminq.is_connected = true;

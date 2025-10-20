@@ -1538,7 +1538,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	printf("NGUID/EUI64 Never Reused:              %s\n",
 	       nsdata->nsfeat.guid_never_reused ? "Yes" : "No");
 
-	if (cdata->cmic.ana_reporting) {
+	if (cdata->cmic.anars) {
 		printf("ANA group ID:                          %u\n", nsdata->anagrpid);
 	}
 
@@ -1782,9 +1782,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
 	printf("Multi-path I/O\n");
-	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.multi_port ? "Yes" : "No");
-	printf("  May have multiple controllers:       %s\n", cdata->cmic.multi_ctrlr ? "Yes" : "No");
-	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
+	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.mports ? "Yes" : "No");
+	printf("  May have multiple controllers:       %s\n", cdata->cmic.mctrs ? "Yes" : "No");
+	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.ft ? "Yes" : "No");
 	printf("Max Data Transfer Size:                ");
 	if (cdata->mdts == 0) {
 		printf("Unlimited\n");
@@ -1996,7 +1996,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("Per-Namespace SMART Log:               %s\n",
 	       cdata->lpa.smarts ? "Yes" : "No");
-	if (cdata->cmic.ana_reporting == 0) {
+	if (cdata->cmic.anars == 0) {
 		printf("Asymmetric Namespace Access Log Page:  Not Supported\n");
 	} else {
 		printf("Asymmetric Namespace Access Log Page:  Supported\n");

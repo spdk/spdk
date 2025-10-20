@@ -3320,8 +3320,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->kas = ctrlr->cdata.kas;
 
 		cdata->rab = 6;
-		cdata->cmic.multi_port = 1;
-		cdata->cmic.multi_ctrlr = 1;
+		cdata->cmic.mports = 1;
+		cdata->cmic.mctrs = 1;
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.bits.host_id_exhid_supported = 1;
 		cdata->ctratt.bits.fdps = ctrlr->subsys->fdp_supported;
@@ -3355,7 +3355,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
 		if (subsystem->flags.ana_reporting) {
 			/* Asymmetric Namespace Access Reporting is supported. */
-			cdata->cmic.ana_reporting = 1;
+			cdata->cmic.anars = 1;
 			cdata->oaes.ana_change_notices = 1;
 
 			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;

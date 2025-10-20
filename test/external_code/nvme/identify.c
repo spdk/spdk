@@ -53,9 +53,9 @@ print_controller(struct nvme_ctrlr *ctrlr, const struct spdk_pci_addr *addr)
 	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
 	printf("Multi-path I/O\n");
-	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.multi_port ? "Yes" : "No");
-	printf("  May have multiple controllers:       %s\n", cdata->cmic.multi_ctrlr ? "Yes" : "No");
-	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
+	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.mports ? "Yes" : "No");
+	printf("  May have multiple controllers:       %s\n", cdata->cmic.mctrs ? "Yes" : "No");
+	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.ft ? "Yes" : "No");
 	printf("Max Number of Namespaces:              %d\n", cdata->nn);
 	if (cdata->ver.raw != 0) {
 		printf("NVMe Specification Version (Identify): %u.%u",

@@ -4174,8 +4174,8 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_named_bool(w, "multi_ctrlr", cdata->cmic.multi_ctrlr);
-	spdk_json_write_named_bool(w, "ana_reporting", cdata->cmic.ana_reporting);
+	spdk_json_write_named_bool(w, "multi_ctrlr", cdata->cmic.mctrs);
+	spdk_json_write_named_bool(w, "ana_reporting", cdata->cmic.anars);
 
 	spdk_json_write_object_end(w);
 
@@ -4196,7 +4196,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_named_uint32(w, "id", spdk_nvme_ns_get_id(ns));
 
-	if (cdata->cmic.ana_reporting) {
+	if (cdata->cmic.anars) {
 		spdk_json_write_named_string(w, "ana_state",
 					     _nvme_ana_state_str(nvme_ns->ana_state));
 	}
@@ -5877,7 +5877,7 @@ bdev_nvme_check_multipath(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct spdk_nvme_
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (!cdata->cmic.multi_ctrlr) {
+	if (!cdata->cmic.mctrs) {
 		SPDK_ERRLOG("Ctrlr%u does not support multipath.\n", cdata->cntlid);
 		return false;
 	}
@@ -5885,7 +5885,7 @@ bdev_nvme_check_multipath(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct spdk_nvme_
 	TAILQ_FOREACH(tmp, &nbdev_ctrlr->ctrlrs, tailq) {
 		tmp_cdata = spdk_nvme_ctrlr_get_data(tmp->ctrlr);
 
-		if (!tmp_cdata->cmic.multi_ctrlr) {
+		if (!tmp_cdata->cmic.mctrs) {
 			NVME_CTRLR_ERRLOG(tmp, "Ctrlr%u does not support multipath.\n", cdata->cntlid);
 			return false;
 		}
@@ -6113,7 +6113,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-	if (cdata->cmic.ana_reporting) {
+	if (cdata->cmic.anars) {
 		rc = nvme_ctrlr_init_ana_log_page(nvme_ctrlr, ctx);
 		if (rc != 0) {
 			goto err;
@@ -6130,7 +6130,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_ctrlr_channel),
 				nvme_ctrlr->nbdev_ctrlr->name);
 
-	if (!cdata->cmic.ana_reporting) {
+	if (!cdata->cmic.anars) {
 		nvme_ctrlr_create_done(nvme_ctrlr, ctx);
 	}
 

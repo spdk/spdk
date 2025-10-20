@@ -2474,11 +2474,31 @@ struct spdk_nvme_ctrlr_data {
 
 	/** controller multi-path I/O and namespace sharing capabilities */
 	struct {
-		uint8_t multi_port	: 1;
-		uint8_t multi_ctrlr	: 1;
-		uint8_t sr_iov		: 1;
-		uint8_t ana_reporting	: 1;
-		uint8_t reserved	: 4;
+		union {
+			struct {
+				/* Multiple Ports */
+				uint8_t mports : 1;
+
+				/* Multiple Controllers */
+				uint8_t mctrs: 1;
+
+				/* Function Type */
+				uint8_t ft : 1;
+
+				/* Asymmetric Namespace Access Reporting Support */
+				uint8_t anars : 1;
+				uint8_t rsvd : 4;
+			};
+
+			/** Old bit names are deprecated and will be removed in 26.05 release */
+			struct {
+				uint8_t multi_port	: 1;
+				uint8_t multi_ctrlr	: 1;
+				uint8_t sr_iov		: 1;
+				uint8_t ana_reporting	: 1;
+				uint8_t reserved	: 4;
+			};
+		};
 	} cmic;
 
 	/** maximum data transfer size */
