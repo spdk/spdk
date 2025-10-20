@@ -23,7 +23,7 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: 'This issue looks abandoned, if not refreshed, will be closed automatically.'
         stale-pr-message: 'SPDK manages code review in https://review.spdk.io. This PR will be closed automatically.'
-        only-issue-labels: "Intermittent Failure,Waiting on Submitter"
+        any-of-issue-labels: "Intermittent Failure,Waiting on Submitter"
         days-before-pr-stale: 1
         days-before-pr-close: 1
         days-before-issue-stale: 60
