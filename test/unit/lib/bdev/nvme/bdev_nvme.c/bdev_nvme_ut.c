@@ -1696,6 +1696,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
+	set_thread(0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
@@ -2501,7 +2502,7 @@ ut_test_submit_admin_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
 
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
 
 	CU_ASSERT(bdev_io->internal.f.in_submit_request == true);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
@@ -2532,7 +2533,7 @@ test_submit_nvme_cmd(void)
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
 
-	set_thread(1);
+	set_thread(0);
 
 	ctrlr = ut_attach_ctrlr(&trid, 1, false, false);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
@@ -2552,8 +2553,6 @@ test_submit_nvme_cmd(void)
 
 	nbdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
-
-	set_thread(0);
 
 	ch = spdk_get_io_channel(nbdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
@@ -2590,8 +2589,6 @@ test_submit_nvme_cmd(void)
 	spdk_put_io_channel(ch);
 
 	poll_threads();
-
-	set_thread(1);
 
 	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
@@ -2832,7 +2829,7 @@ test_abort(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
-	set_thread(1);
+	set_thread(0);
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
@@ -2848,6 +2845,7 @@ test_abort(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
+	set_thread(1);
 	nbdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
 
@@ -3038,7 +3036,7 @@ test_abort(void)
 	free(admin_io);
 	free(abort_io);
 
-	set_thread(1);
+	set_thread(0);
 
 	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
@@ -3962,7 +3960,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
-	set_thread(1);
+	set_thread(0);
 
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
@@ -4012,8 +4010,6 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	nvme_ns2 = _nvme_bdev_get_ns(nbdev, nvme_ctrlr2);
 	SPDK_CU_ASSERT_FATAL(nvme_ns2 != NULL);
 
-	set_thread(0);
-
 	ch = spdk_get_io_channel(nbdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 	nbdev_ch = spdk_io_channel_get_ctx(ch);
@@ -4023,8 +4019,6 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 
 	io_path2 = _bdev_nvme_get_io_path(nbdev_ch, nvme_ns2);
 	SPDK_CU_ASSERT_FATAL(io_path2 != NULL);
-
-	set_thread(1);
 
 	/* Check if I/O path is dynamically added to nvme_bdev_channel. */
 	ctrlr3 = ut_attach_ctrlr(&path3.trid, 1, true, true);
@@ -4072,13 +4066,9 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	CU_ASSERT(_bdev_nvme_get_io_path(nbdev_ch, nvme_ns2) == NULL);
 	CU_ASSERT(_bdev_nvme_get_io_path(nbdev_ch, nvme_ns3) == io_path3);
 
-	set_thread(0);
-
 	spdk_put_io_channel(ch);
 
 	poll_threads();
-
-	set_thread(1);
 
 	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
@@ -5890,13 +5880,13 @@ test_reconnect_ctrlr(void)
 	spdk_delay_us(SPDK_SEC_TO_USEC);
 	poll_threads();
 
-	CU_ASSERT(nvme_ctrlr == nvme_ctrlr_get_by_name("nvme0"));
 	CU_ASSERT(bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr) == true);
 	CU_ASSERT(nvme_ctrlr->destruct == true);
 
 	spdk_put_io_channel(ch2);
 
 	set_thread(0);
+	CU_ASSERT(nvme_ctrlr == nvme_ctrlr_get_by_name("nvme0"));
 
 	spdk_put_io_channel(ch1);
 
@@ -7955,7 +7945,7 @@ test_bdev_reset_abort_io(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
-	set_thread(1);
+	set_thread(0);
 
 	opts.ctrlr_loss_timeout_sec = -1;
 	opts.reconnect_delay_sec = 1;
@@ -7973,8 +7963,6 @@ test_bdev_reset_abort_io(void)
 
 	nbdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
-
-	set_thread(0);
 
 	ch1 = spdk_get_io_channel(nbdev);
 	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
@@ -8034,7 +8022,7 @@ test_bdev_reset_abort_io(void)
 
 	bdev_nvme_submit_request(ch2, reset_io);
 
-	poll_thread_times(0, 1);
+	poll_thread_times(0, 2);
 	poll_thread_times(1, 2);
 
 	CU_ASSERT(nbdev_ch1->resetting == true);

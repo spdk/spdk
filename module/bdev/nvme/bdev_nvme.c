@@ -397,7 +397,6 @@ static struct spdk_bdev_module nvme_if = {
 SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
-pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 bool g_bdev_nvme_module_finish;
 
 struct nvme_bdev_ctrlr *
@@ -454,13 +453,13 @@ nvme_bdev_ctrlr_get_bdev(struct nvme_bdev_ctrlr *nbdev_ctrlr, uint32_t nsid)
 {
 	struct nvme_bdev *nbdev;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	TAILQ_FOREACH(nbdev, &nbdev_ctrlr->bdevs, tailq) {
 		if (nbdev->nsid == nsid) {
 			break;
 		}
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	return nbdev;
 }
@@ -498,14 +497,14 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid, const char *hostnqn)
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr = NULL;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, trid, hostnqn);
 		if (nvme_ctrlr != NULL) {
 			break;
 		}
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	return nvme_ctrlr;
 }
@@ -516,16 +515,16 @@ nvme_ctrlr_get_by_name(const char *name)
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (name == NULL) {
 		return NULL;
 	}
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr != NULL) {
 		nvme_ctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	return nvme_ctrlr;
 }
@@ -535,11 +534,11 @@ nvme_bdev_ctrlr_for_each(nvme_bdev_ctrlr_for_each_fn fn, void *ctx)
 {
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		fn(nbdev_ctrlr, ctx);
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 struct nvme_ctrlr_channel_iter {
@@ -698,17 +697,14 @@ nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 		       struct nvme_ctrlr *nvme_ctrlr)
 {
 	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_delete, nvme_ctrlr->nbdev_ctrlr->name);
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	TAILQ_REMOVE(&nbdev_ctrlr->ctrlrs, nvme_ctrlr, tailq);
 	if (!TAILQ_EMPTY(&nbdev_ctrlr->ctrlrs)) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
 		return;
 	}
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nbdev_ctrlr, tailq);
-
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	assert(TAILQ_EMPTY(&nbdev_ctrlr->bdevs));
 
@@ -721,6 +717,8 @@ _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct spdk_nvme_path_id *path_id, *tmp_path;
 	struct nvme_ns *ns, *tmp_ns;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	free(nvme_ctrlr->copied_ana_desc);
 	spdk_free(nvme_ctrlr->ana_log_page);
@@ -750,14 +748,11 @@ _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 	spdk_keyring_put_key(nvme_ctrlr->dhchap_ctrlr_key);
 	free(nvme_ctrlr);
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	if (g_bdev_nvme_module_finish && TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(&g_nvme_bdev_ctrlrs, NULL);
 		spdk_bdev_module_fini_done();
 		return;
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 static int
@@ -2006,6 +2001,8 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns, *tmp_nvme_ns;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	NVME_BDEV_DEBUGLOG(nbdev, null_ctrlr, "destructing bdev\n");
 	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nbdev->nbdev_ctrlr->name, nbdev->nsid);
 
@@ -2033,10 +2030,7 @@ bdev_nvme_destruct(void *ctx)
 
 	pthread_mutex_unlock(&nbdev->mutex);
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&nbdev->nbdev_ctrlr->bdevs, nbdev, tailq);
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
 	spdk_io_device_unregister(nbdev, nvme_bdev_free);
 
 	return 0;
@@ -4761,6 +4755,8 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	struct nvme_bdev_ctrlr *nbdev_ctrlr = nvme_ctrlr->nbdev_ctrlr;
 	int rc;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	nbdev = nvme_bdev_alloc();
 	if (nbdev == NULL) {
 		NVME_NS_ERRLOG(nvme_ns, "Failed to allocate NVMe bdev\n");
@@ -4787,8 +4783,6 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	nbdev->nsid = nvme_ns->id;
 	TAILQ_INSERT_TAIL(&nbdev->nvme_ns_list, nvme_ns, tailq);
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-
 	nbdev->nbdev_ctrlr = nbdev_ctrlr;
 	TAILQ_INSERT_TAIL(&nbdev_ctrlr->bdevs, nbdev, tailq);
 
@@ -4799,16 +4793,11 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		nvme_ns->bdev = NULL;
 
 		TAILQ_REMOVE(&nbdev_ctrlr->bdevs, nbdev, tailq);
-
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
 		nvme_bdev_free(nbdev);
 		return rc;
 	}
 
 	NVME_NS_DEBUGLOG(nvme_ns, "nbdev created\n");
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
 	return 0;
 }
 
@@ -5917,15 +5906,13 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ctrlr      *nctrlr;
-	int rc = 0;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr != NULL) {
 		if (!bdev_nvme_check_multipath(nbdev_ctrlr, ctrlr)) {
-			rc = -EINVAL;
-			goto exit;
+			return -EINVAL;
 		}
 		TAILQ_FOREACH(nctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			if (nctrlr->opts.multipath != nvme_ctrlr->opts.multipath) {
@@ -5933,22 +5920,20 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 				 * way, either for multipath or failover. If the configuration doesn't
 				 * match - report error.
 				 */
-				rc = -EINVAL;
-				goto exit;
+				return -EINVAL;
 			}
 		}
 	} else {
 		nbdev_ctrlr = calloc(1, sizeof(*nbdev_ctrlr));
 		if (nbdev_ctrlr == NULL) {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate nvme_bdev_ctrlr.\n");
-			rc = -ENOMEM;
-			goto exit;
+			return -ENOMEM;
 		}
 		nbdev_ctrlr->name = strdup(name);
 		if (nbdev_ctrlr->name == NULL) {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate name of nvme_bdev_ctrlr.\n");
 			free(nbdev_ctrlr);
-			goto exit;
+			return -ENOMEM;
 		}
 		TAILQ_INIT(&nbdev_ctrlr->ctrlrs);
 		TAILQ_INIT(&nbdev_ctrlr->bdevs);
@@ -5956,9 +5941,7 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 	}
 	nvme_ctrlr->nbdev_ctrlr = nbdev_ctrlr;
 	TAILQ_INSERT_TAIL(&nbdev_ctrlr->ctrlrs, nvme_ctrlr, tailq);
-exit:
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	return rc;
+	return 0;
 }
 
 static int
@@ -7042,10 +7025,10 @@ nvme_path_id_exists(const char *name, const struct spdk_nvme_path_id *path_id)
 	struct nvme_ctrlr       *ctrlr;
 	struct spdk_nvme_path_id     *p;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (!nbdev_ctrlr) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		return false;
 	}
 
@@ -7054,13 +7037,11 @@ nvme_path_id_exists(const char *name, const struct spdk_nvme_path_id *path_id)
 		TAILQ_FOREACH(p, &ctrlr->trids, link) {
 			if (nvme_path_id_compare(p, path_id)) {
 				pthread_mutex_unlock(&ctrlr->mutex);
-				pthread_mutex_unlock(&g_bdev_nvme_mutex);
 				return true;
 			}
 		}
 		pthread_mutex_unlock(&ctrlr->mutex);
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	return false;
 }
@@ -7152,17 +7133,15 @@ spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path_id,
 	struct bdev_nvme_delete_ctx     *ctx = NULL;
 	int				rc = -ENXIO, _rc;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (name == NULL || path_id == NULL) {
 		rc = -EINVAL;
 		goto exit;
 	}
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr == NULL) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
 		SPDK_ERRLOG("Failed to find NVMe bdev controller\n");
 		rc = -ENODEV;
 		goto exit;
@@ -7171,7 +7150,6 @@ spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path_id,
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
 		_rc = _bdev_nvme_delete(nvme_ctrlr, path_id);
 		if (_rc < 0 && _rc != -ENXIO) {
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			rc = _rc;
 			goto exit;
 		} else if (_rc == 0) {
@@ -7182,8 +7160,6 @@ spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path_id,
 			rc = 0;
 		}
 	}
-
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	if (rc != 0 || delete_cb == NULL) {
 		goto exit;
@@ -7923,7 +7899,8 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			pthread_mutex_lock(&nvme_ctrlr->mutex);
@@ -7944,13 +7921,10 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 
 	g_bdev_nvme_module_finish = true;
 	if (TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(&g_nvme_bdev_ctrlrs, NULL);
 		spdk_bdev_module_fini_done();
 		return;
 	}
-
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 static void
@@ -9232,9 +9206,9 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	struct discovery_ctx	*ctx;
 	struct spdk_nvme_path_id	*path_id;
 
-	bdev_nvme_opts_config_json(w);
+	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	bdev_nvme_opts_config_json(w);
 
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		struct nvme_bdev *nbdev;
@@ -9272,8 +9246,6 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	 * before enabling hotplug poller.
 	 */
 	bdev_nvme_hotplug_config_json(w);
-
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	return 0;
 }
 
@@ -9327,13 +9299,13 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 }
 
 static struct nvme_ctrlr *
-bdev_nvme_next_ctrlr_unsafe(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct nvme_ctrlr *prev)
+bdev_nvme_next_ctrlr(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct nvme_ctrlr *prev)
 {
 	struct nvme_ctrlr *next = NULL;
 
 	assert((!!nbdev_ctrlr) != (!!prev));
+	assert(spdk_thread_is_app_thread(NULL));
 
-	/* Must be called under g_bdev_nvme_mutex */
 	if (prev) {
 		next = TAILQ_NEXT(prev, tailq);
 	} else if (nbdev_ctrlr) {
@@ -9404,10 +9376,9 @@ bdev_nvme_authenticate_ctrlr_continue(struct bdev_nvme_set_keys_ctx *ctx)
 {
 	struct nvme_ctrlr *next;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	next = bdev_nvme_next_ctrlr_unsafe(NULL, ctx->nctrlr);
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	assert(spdk_thread_is_app_thread(NULL));
 
+	next = bdev_nvme_next_ctrlr(NULL, ctx->nctrlr);
 	nvme_ctrlr_put_ref(ctx->nctrlr);
 	ctx->nctrlr = next;
 
@@ -9504,6 +9475,8 @@ bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhchap_
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nctrlr;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		return -ENOMEM;
@@ -9526,22 +9499,18 @@ bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhchap_
 		}
 	}
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr == NULL) {
 		SPDK_ERRLOG("Could not find bdev_ctrlr %s\n", name);
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		bdev_nvme_free_set_keys_ctx(ctx);
 		return -ENODEV;
 	}
-	nctrlr = bdev_nvme_next_ctrlr_unsafe(nbdev_ctrlr, NULL);
+	nctrlr = bdev_nvme_next_ctrlr(nbdev_ctrlr, NULL);
 	if (nctrlr == NULL) {
 		SPDK_ERRLOG("Could not find any nvme_ctrlrs on bdev_ctrlr %s\n", name);
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		bdev_nvme_free_set_keys_ctx(ctx);
 		return -ENODEV;
 	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	ctx->nctrlr = nctrlr;
 	ctx->cb_fn = cb_fn;
