@@ -614,6 +614,23 @@ int spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn);
 int spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn);
 
 /**
+ * Call the provided callback function on block devices with provided names.
+ *
+ * spdk_for_each_bdev_by_name() stops iteration if bdev with one of provided names does not exist,
+ * or if fn returns negated errno.
+ *
+ * \param ctx Context passed to the callback function.
+ * \param fn Callback function for each block device.
+ * \param names Array of bdev names to iterate, all of them should exist to finish iteration successfully.
+ * \param count Count of bdevs to iterate.
+ *
+ * \return 0 if operation is successful, or suitable errno value one of the
+ * callback returned or -ENODEV if bdev with passed name is not present.
+ */
+int spdk_for_each_bdev_by_name(void *ctx, spdk_for_each_bdev_fn fn, const char **names,
+			       size_t count);
+
+/**
  * Get the bdev associated with a bdev descriptor.
  *
  * \param desc Open block device descriptor

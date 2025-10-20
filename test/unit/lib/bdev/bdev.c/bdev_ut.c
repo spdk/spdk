@@ -6442,6 +6442,8 @@ static void
 for_each_bdev_test(void)
 {
 	struct spdk_bdev *bdev[8];
+	const char *not_existing_bdev_names[4] = {"bdev1", "bdev2", "bdev100", "bdev4"};
+	const char *existing_bdev_names[4] = {"bdev1", "bdev2", "bdev3", "bdev4"};
 	int rc, count;
 
 	bdev[0] = allocate_bdev("bdev0");
@@ -6474,6 +6476,15 @@ for_each_bdev_test(void)
 
 	count = 0;
 	rc = spdk_for_each_bdev_leaf(&count, count_bdevs);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 4);
+
+	count = 0;
+	rc = spdk_for_each_bdev_by_name(&count, count_bdevs, not_existing_bdev_names, 4);
+	CU_ASSERT(rc == -ENODEV);
+
+	count = 0;
+	rc = spdk_for_each_bdev_by_name(&count, count_bdevs, existing_bdev_names, 4);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(count == 4);
 

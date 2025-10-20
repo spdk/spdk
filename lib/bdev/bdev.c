@@ -9762,6 +9762,33 @@ spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn)
 	return rc;
 }
 
+int
+spdk_for_each_bdev_by_name(void *ctx, spdk_for_each_bdev_fn fn, const char **names, size_t count)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	int rc = 0;
+	size_t i = 0;
+
+	assert(fn != NULL);
+
+	for (i = 0; i < count; i++) {
+		rc = spdk_bdev_open_ext(names[i], false, _tmp_bdev_event_cb, NULL, &desc);
+		if (rc != 0) {
+			SPDK_DEBUGLOG(bdev, "Failed to open bdev '%s': %d\n", names[i], rc);
+			break;
+		}
+		bdev = spdk_bdev_desc_get_bdev(desc);
+		rc = fn(ctx, bdev);
+		spdk_bdev_close(desc);
+		if (rc != 0) {
+			break;
+		}
+	}
+
+	return rc;
+}
+
 void
 spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp)
 {
