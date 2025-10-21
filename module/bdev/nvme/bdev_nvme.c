@@ -2012,8 +2012,6 @@ bdev_nvme_destruct(void *ctx)
 	NVME_BDEV_DEBUGLOG(nbdev, null_ctrlr, "destructing bdev\n");
 	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nbdev->nbdev_ctrlr->name, nbdev->nsid);
 
-	pthread_mutex_lock(&nbdev->mutex);
-
 	TAILQ_FOREACH_SAFE(nvme_ns, &nbdev->nvme_ns_list, tailq, tmp_nvme_ns) {
 		pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
@@ -2033,8 +2031,6 @@ bdev_nvme_destruct(void *ctx)
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 		}
 	}
-
-	pthread_mutex_unlock(&nbdev->mutex);
 
 	TAILQ_REMOVE(&nbdev->nbdev_ctrlr->bdevs, nbdev, tailq);
 	spdk_io_device_unregister(nbdev, nvme_bdev_free);
