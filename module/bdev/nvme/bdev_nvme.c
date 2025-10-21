@@ -7078,7 +7078,7 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct spdk_nvme_path_id 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	if (rc == 0) {
-		spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
+		msg_fn(nvme_ctrlr);
 	} else if (rc == -EALREADY) {
 		rc = 0;
 	}
