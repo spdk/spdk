@@ -871,7 +871,7 @@ nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_f
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-	spdk_thread_exec_msg(spdk_thread_get_app_thread(), nvme_ctrlr_unregister, nvme_ctrlr);
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), nvme_ctrlr_unregister, nvme_ctrlr);
 }
 
 static void
@@ -9297,7 +9297,6 @@ struct bdev_nvme_set_keys_ctx {
 	struct spdk_key		*dhchap_ctrlr_key;
 	bdev_nvme_set_keys_cb	cb_fn;
 	void			*cb_ctx;
-	int			status;
 };
 
 static void
@@ -9313,23 +9312,14 @@ bdev_nvme_free_set_keys_ctx(struct bdev_nvme_set_keys_ctx *ctx)
 }
 
 static void
-_bdev_nvme_set_keys_done(void *_ctx)
+bdev_nvme_set_keys_done(struct bdev_nvme_set_keys_ctx *ctx, int status)
 {
-	struct bdev_nvme_set_keys_ctx *ctx = _ctx;
-
-	ctx->cb_fn(ctx->cb_ctx, ctx->status);
-
+	ctx->cb_fn(ctx->cb_ctx, status);
 	if (ctx->nctrlr != NULL) {
 		nvme_ctrlr_put_ref(ctx->nctrlr);
 	}
-	bdev_nvme_free_set_keys_ctx(ctx);
-}
 
-static void
-bdev_nvme_set_keys_done(struct bdev_nvme_set_keys_ctx *ctx, int status)
-{
-	ctx->status = status;
-	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _bdev_nvme_set_keys_done, ctx);
+	bdev_nvme_free_set_keys_ctx(ctx);
 }
 
 static void bdev_nvme_authenticate_ctrlr(struct bdev_nvme_set_keys_ctx *ctx);

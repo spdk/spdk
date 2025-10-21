@@ -883,7 +883,6 @@ struct firmware_update_info {
 	unsigned int			size_remaining;
 	unsigned int			offset;
 	unsigned int			transfer;
-	bool				success;
 
 	struct spdk_bdev_desc		*desc;
 	struct spdk_io_channel		*ch;
@@ -916,65 +915,44 @@ apply_firmware_cleanup(struct firmware_update_info *firm_ctx)
 }
 
 static void
-_apply_firmware_complete_reset(void *ctx)
+apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_json_write_ctx		*w;
-	struct firmware_update_info *firm_ctx = ctx;
+	struct firmware_update_info *firm_ctx = cb_arg;
+	struct spdk_json_write_ctx *w;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	if (!firm_ctx->success) {
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "firmware commit failed.");
-		apply_firmware_cleanup(firm_ctx);
-		return;
+		goto out;
 	}
 
 	if (spdk_nvme_ctrlr_reset(firm_ctx->ctrlr) != 0) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Controller reset failed.");
-		apply_firmware_cleanup(firm_ctx);
-		return;
+		goto out;
 	}
 
 	w = spdk_jsonrpc_begin_result(firm_ctx->request);
 	spdk_json_write_string(w, "firmware commit succeeded. Controller reset in progress.");
 	spdk_jsonrpc_end_result(firm_ctx->request, w);
+out:
 	apply_firmware_cleanup(firm_ctx);
-}
-
-static void
-apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct firmware_update_info *firm_ctx = cb_arg;
-
-	spdk_bdev_free_io(bdev_io);
-
-	firm_ctx->success = success;
-
-	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _apply_firmware_complete_reset, firm_ctx);
 }
 
 static void apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
-_apply_firmware_complete(void *ctx)
+_apply_firmware_complete(struct firmware_update_info *firm_ctx)
 {
 	struct spdk_nvme_cmd			cmd = {};
 	struct spdk_nvme_fw_commit		fw_commit;
 	int					slot = 0;
 	int					rc;
-	struct firmware_update_info *firm_ctx = ctx;
 	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
-
-	assert(spdk_thread_is_app_thread(NULL));
-
-	if (!firm_ctx->success) {
-		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "firmware download failed .");
-		apply_firmware_cleanup(firm_ctx);
-		return;
-	}
 
 	firm_ctx->p += firm_ctx->transfer;
 	firm_ctx->offset += firm_ctx->transfer;
@@ -1021,11 +999,18 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 {
 	struct firmware_update_info *firm_ctx = cb_arg;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	spdk_bdev_free_io(bdev_io);
 
-	firm_ctx->success = success;
+	if (!success) {
+		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "firmware download failed .");
+		apply_firmware_cleanup(firm_ctx);
+		return;
+	}
 
-	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _apply_firmware_complete, firm_ctx);
+	_apply_firmware_complete(firm_ctx);
 }
 
 static void
