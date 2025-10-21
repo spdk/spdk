@@ -186,14 +186,6 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_hotplug_decoders[] = 
 };
 
 static void
-rpc_bdev_nvme_set_hotplug_done(void *ctx)
-{
-	struct spdk_jsonrpc_request *request = ctx;
-
-	spdk_jsonrpc_send_bool_response(request, true);
-}
-
-static void
 rpc_bdev_nvme_set_hotplug(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
@@ -207,12 +199,12 @@ rpc_bdev_nvme_set_hotplug(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = bdev_nvme_set_hotplug(req.enabled, req.period_us, rpc_bdev_nvme_set_hotplug_done,
-				   request);
+	rc = bdev_nvme_set_hotplug(req.enabled, req.period_us);
 	if (rc) {
 		goto invalid;
 	}
 
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));

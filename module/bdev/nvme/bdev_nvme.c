@@ -298,7 +298,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 static int g_hot_insert_nvme_controller_index = 0;
 static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT;
 static bool g_nvme_hotplug_enabled = false;
-struct spdk_thread *g_bdev_nvme_init_thread;
+bool g_bdev_nvme_init_done;
 static struct spdk_poller *g_hotplug_poller;
 static struct spdk_poller *g_hotplug_probe_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
@@ -6382,10 +6382,8 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 		return ret;
 	}
 
-	if (g_bdev_nvme_init_thread != NULL) {
-		if (!TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-			return -EPERM;
-		}
+	if (g_bdev_nvme_init_done && !TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+		return -EPERM;
 	}
 
 	spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
@@ -6452,56 +6450,28 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 	return 0;
 }
 
-struct set_nvme_hotplug_ctx {
-	uint64_t period_us;
-	bool enabled;
-	spdk_msg_fn fn;
-	void *fn_ctx;
-};
-
-static void
-set_nvme_hotplug_period_cb(void *_ctx)
-{
-	struct set_nvme_hotplug_ctx *ctx = _ctx;
-
-	spdk_poller_unregister(&g_hotplug_poller);
-	if (ctx->enabled) {
-		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_hotplug, NULL, ctx->period_us);
-	} else {
-		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_remove_poller, NULL,
-							NVME_HOTPLUG_POLL_PERIOD_DEFAULT);
-	}
-
-	g_nvme_hotplug_poll_period_us = ctx->period_us;
-	g_nvme_hotplug_enabled = ctx->enabled;
-	if (ctx->fn) {
-		ctx->fn(ctx->fn_ctx);
-	}
-
-	free(ctx);
-}
-
 int
-bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx)
+bdev_nvme_set_hotplug(bool enabled, uint64_t period_us)
 {
-	struct set_nvme_hotplug_ctx *ctx;
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (enabled == true && !spdk_process_is_primary()) {
 		return -EPERM;
 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		return -ENOMEM;
+	period_us = period_us == 0 ? NVME_HOTPLUG_POLL_PERIOD_DEFAULT : period_us;
+	period_us = spdk_min(period_us, NVME_HOTPLUG_POLL_PERIOD_MAX);
+
+	spdk_poller_unregister(&g_hotplug_poller);
+	if (enabled) {
+		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_hotplug, NULL, period_us);
+	} else {
+		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_remove_poller, NULL,
+							NVME_HOTPLUG_POLL_PERIOD_DEFAULT);
 	}
 
-	period_us = period_us == 0 ? NVME_HOTPLUG_POLL_PERIOD_DEFAULT : period_us;
-	ctx->period_us = spdk_min(period_us, NVME_HOTPLUG_POLL_PERIOD_MAX);
-	ctx->enabled = enabled;
-	ctx->fn = cb;
-	ctx->fn_ctx = cb_ctx;
-
-	spdk_thread_send_msg(g_bdev_nvme_init_thread, set_nvme_hotplug_period_cb, ctx);
+	g_nvme_hotplug_poll_period_us = period_us;
+	g_nvme_hotplug_enabled = enabled;
 	return 0;
 }
 
@@ -7771,15 +7741,6 @@ discovery_poller(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-static void
-start_discovery_poller(void *arg)
-{
-	struct discovery_ctx *ctx = arg;
-
-	TAILQ_INSERT_TAIL(&g_discovery_ctxs, ctx, tailq);
-	ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000 * 1000);
-}
-
 int
 bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
@@ -7857,7 +7818,8 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	}
 
 	TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, discovery_entry_ctx, tailq);
-	spdk_thread_send_msg(g_bdev_nvme_init_thread, start_discovery_poller, ctx);
+	TAILQ_INSERT_TAIL(&g_discovery_ctxs, ctx, tailq);
+	ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000 * 1000);
 	return 0;
 }
 
@@ -7888,12 +7850,13 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 static int
 bdev_nvme_init(void)
 {
-	g_bdev_nvme_init_thread = spdk_get_thread();
+	assert(spdk_thread_is_app_thread(NULL));
 
 	spdk_io_device_register(&g_nvme_bdev_ctrlrs, bdev_nvme_create_poll_group_cb,
 				bdev_nvme_destroy_poll_group_cb,
 				sizeof(struct nvme_poll_group),  "nvme_poll_groups");
 
+	g_bdev_nvme_init_done = true;
 	return 0;
 }
 
@@ -7941,6 +7904,8 @@ bdev_nvme_fini(void)
 	struct nvme_probe_skip_entry *entry, *entry_tmp;
 	struct discovery_ctx *ctx;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	spdk_poller_unregister(&g_hotplug_poller);
 	free(g_hotplug_probe_ctx);
 	g_hotplug_probe_ctx = NULL;
@@ -7950,7 +7915,6 @@ bdev_nvme_fini(void)
 		free(entry);
 	}
 
-	assert(spdk_get_thread() == g_bdev_nvme_init_thread);
 	if (TAILQ_EMPTY(&g_discovery_ctxs)) {
 		bdev_nvme_fini_destruct_ctrlrs();
 	} else {
