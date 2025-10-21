@@ -895,7 +895,6 @@ struct firmware_update_info {
 
 	struct spdk_bdev_desc		*desc;
 	struct spdk_io_channel		*ch;
-	struct spdk_thread		*orig_thread;
 	struct spdk_jsonrpc_request	*request;
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct rpc_apply_firmware	req;
@@ -905,7 +904,7 @@ static void
 apply_firmware_cleanup(struct firmware_update_info *firm_ctx)
 {
 	assert(firm_ctx != NULL);
-	assert(firm_ctx->orig_thread == spdk_get_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (firm_ctx->fw_image) {
 		spdk_free(firm_ctx->fw_image);
@@ -930,7 +929,7 @@ _apply_firmware_complete_reset(void *ctx)
 	struct spdk_json_write_ctx		*w;
 	struct firmware_update_info *firm_ctx = ctx;
 
-	assert(firm_ctx->orig_thread == spdk_get_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (!firm_ctx->success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -961,7 +960,7 @@ apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *
 
 	firm_ctx->success = success;
 
-	spdk_thread_exec_msg(firm_ctx->orig_thread, _apply_firmware_complete_reset, firm_ctx);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _apply_firmware_complete_reset, firm_ctx);
 }
 
 static void apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
@@ -976,7 +975,7 @@ _apply_firmware_complete(void *ctx)
 	struct firmware_update_info *firm_ctx = ctx;
 	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
 
-	assert(firm_ctx->orig_thread == spdk_get_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (!firm_ctx->success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -1034,7 +1033,7 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 	firm_ctx->success = success;
 
-	spdk_thread_exec_msg(firm_ctx->orig_thread, _apply_firmware_complete, firm_ctx);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _apply_firmware_complete, firm_ctx);
 }
 
 static void
@@ -1061,7 +1060,6 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	}
 	firm_ctx->fw_image = NULL;
 	firm_ctx->request = request;
-	firm_ctx->orig_thread = spdk_get_thread();
 
 	if (spdk_json_decode_object(params, rpc_apply_firmware_decoders,
 				    SPDK_COUNTOF(rpc_apply_firmware_decoders), &firm_ctx->req)) {
