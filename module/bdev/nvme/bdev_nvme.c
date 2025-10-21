@@ -7263,7 +7263,6 @@ struct discovery_ctx {
 	 */
 	bool					stop;
 
-	struct spdk_thread			*calling_thread;
 	uint32_t				index;
 	uint32_t				attach_in_progress;
 	char					*hostnqn;
@@ -7795,6 +7794,8 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	struct discovery_ctx *ctx;
 	struct discovery_entry_ctx *discovery_entry_ctx;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
 		if (strcmp(ctx->name, base_name) == 0) {
@@ -7828,7 +7829,6 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
 	ctx->from_mdns_discovery_service = from_mdns;
 	ctx->bdev_opts.from_discovery_service = true;
-	ctx->calling_thread = spdk_get_thread();
 	ctx->start_cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
 	ctx->initializing = true;
