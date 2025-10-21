@@ -7868,7 +7868,7 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 			nvme_ctrlr->destruct = true;
 			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-			spdk_thread_send_msg(spdk_thread_get_app_thread(), _nvme_ctrlr_destruct, nvme_ctrlr);
+			_nvme_ctrlr_destruct(nvme_ctrlr);
 		}
 	}
 
