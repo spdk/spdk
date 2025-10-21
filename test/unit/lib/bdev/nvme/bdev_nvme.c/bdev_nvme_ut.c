@@ -7430,8 +7430,8 @@ test_bdev_ctrlr_op_rpc(void)
 	ctrlr_ch22 = spdk_io_channel_get_ctx(ch22);
 	CU_ASSERT(ctrlr_ch22->qpair != NULL);
 
-	/* Reset starts from thread 1. */
-	set_thread(1);
+	/* Reset starts from thread 0. */
+	set_thread(0);
 
 	nvme_ctrlr1->resetting = false;
 	nvme_ctrlr2->resetting = false;

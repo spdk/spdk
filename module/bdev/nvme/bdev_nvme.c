@@ -2920,7 +2920,6 @@ nvme_ctrlr_op(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 
 struct nvme_ctrlr_op_rpc_ctx {
 	struct nvme_ctrlr *nvme_ctrlr;
-	struct spdk_thread *orig_thread;
 	enum nvme_ctrlr_op op;
 	int rc;
 	bdev_nvme_ctrlr_op_cb cb_fn;
@@ -2947,7 +2946,7 @@ nvme_ctrlr_op_rpc_complete(void *cb_arg, int rc)
 
 	ctx->rc = rc;
 
-	spdk_thread_send_msg(ctx->orig_thread, _nvme_ctrlr_op_rpc_complete, ctx);
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), _nvme_ctrlr_op_rpc_complete, ctx);
 }
 
 void
@@ -2966,7 +2965,6 @@ nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 		return;
 	}
 
-	ctx->orig_thread = spdk_get_thread();
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
@@ -3024,7 +3022,7 @@ nvme_bdev_ctrlr_op_rpc_continue(void *cb_arg, int rc)
 
 	ctx->rc = rc;
 
-	spdk_thread_send_msg(ctx->orig_thread, _nvme_bdev_ctrlr_op_rpc_continue, ctx);
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), _nvme_bdev_ctrlr_op_rpc_continue, ctx);
 }
 
 void
@@ -3036,6 +3034,7 @@ nvme_bdev_ctrlr_op_rpc(struct nvme_bdev_ctrlr *nbdev_ctrlr, enum nvme_ctrlr_op o
 	int rc;
 
 	assert(cb_fn != NULL);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -3044,7 +3043,6 @@ nvme_bdev_ctrlr_op_rpc(struct nvme_bdev_ctrlr *nbdev_ctrlr, enum nvme_ctrlr_op o
 		return;
 	}
 
-	ctx->orig_thread = spdk_get_thread();
 	ctx->op = op;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
