@@ -713,6 +713,17 @@ nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 }
 
 static void
+bdev_nvme_fini_done(void)
+{
+	if (!g_bdev_nvme_module_finish || !TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+		return;
+	}
+
+	spdk_io_device_unregister(&g_nvme_bdev_ctrlrs, NULL);
+	spdk_bdev_module_fini_done();
+}
+
+static void
 _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct spdk_nvme_path_id *path_id, *tmp_path;
@@ -747,12 +758,7 @@ _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 	spdk_keyring_put_key(nvme_ctrlr->dhchap_key);
 	spdk_keyring_put_key(nvme_ctrlr->dhchap_ctrlr_key);
 	free(nvme_ctrlr);
-
-	if (g_bdev_nvme_module_finish && TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-		spdk_io_device_unregister(&g_nvme_bdev_ctrlrs, NULL);
-		spdk_bdev_module_fini_done();
-		return;
-	}
+	bdev_nvme_fini_done();
 }
 
 static int
@@ -7920,11 +7926,7 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 	}
 
 	g_bdev_nvme_module_finish = true;
-	if (TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-		spdk_io_device_unregister(&g_nvme_bdev_ctrlrs, NULL);
-		spdk_bdev_module_fini_done();
-		return;
-	}
+	bdev_nvme_fini_done();
 }
 
 static void
