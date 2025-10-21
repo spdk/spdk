@@ -110,7 +110,6 @@ struct nvme_ctrlr {
 	struct spdk_opal_dev			*opal_dev;
 
 	struct spdk_poller			*adminq_timer_poller;
-	struct spdk_thread			*thread;
 	struct spdk_interrupt			*intr;
 
 	bdev_nvme_ctrlr_op_cb			ctrlr_op_cb_fn;
