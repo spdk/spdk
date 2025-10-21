@@ -27,6 +27,7 @@ static const struct spdk_json_object_decoder rpc_bdev_malloc_create_decoders[] =
 	{"dif_type", offsetof(struct malloc_bdev_opts, dif_type), spdk_json_decode_int32, true},
 	{"dif_is_head_of_md", offsetof(struct malloc_bdev_opts, dif_is_head_of_md), spdk_json_decode_bool, true},
 	{"dif_pi_format", offsetof(struct malloc_bdev_opts, dif_pi_format), spdk_json_decode_uint32, true},
+	{"numa_id", offsetof(struct malloc_bdev_opts, numa_id), spdk_json_decode_int32, true},
 };
 
 static void
@@ -37,6 +38,8 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 	int rc = 0;
+
+	req.numa_id = SPDK_ENV_NUMA_ID_ANY;
 
 	if (spdk_json_decode_object(params, rpc_bdev_malloc_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_malloc_create_decoders),

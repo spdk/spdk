@@ -203,7 +203,8 @@ def add_parser(subparsers):
                                                md_interleave=args.md_interleave,
                                                dif_type=args.dif_type,
                                                dif_is_head_of_md=args.dif_is_head_of_md,
-                                               dif_pi_format=args.dif_pi_format))
+                                               dif_pi_format=args.dif_pi_format,
+                                               numa_id=args.numa_id))
     p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
@@ -225,6 +226,9 @@ def add_parser(subparsers):
     p.add_argument('-f', '--dif-pi-format', type=int, choices=[0, 1, 2],
                    help='Protection infromation format. Parameter --dif-type needs to be set together.'
                         '0=16b Guard PI, 1=32b Guard PI, 2=64b Guard PI. Default=0.')
+    p.add_argument('-n', '--numa-id', type=int,
+                   help='NUMA node ID where memory is allocated, if -1 then any NUMA node ID can be used. '
+                        'Default is -1.')
     p.set_defaults(func=bdev_malloc_create)
 
     def bdev_malloc_delete(args):

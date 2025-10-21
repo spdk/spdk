@@ -1281,6 +1281,12 @@
           "name": "dif_pi_format",
           "type": "number",
           "description": "protection information format"
+        },
+        {
+          "name": "numa_id",
+          "type": "number",
+          "required": false,
+          "description": "NUMA node ID where memory is allocated, if -1 then any NUMA node ID can be used. Default is -1."
         }
       ]
     },

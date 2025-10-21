@@ -647,6 +647,58 @@ function dif_insert_strip_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+# Verify persistent configuration
+function get_malloc_config_numa() {
+	bdev_config=$("$rpc_py" framework_get_config bdev)
+	jq_filter=".[] | select(.params.name == \"$1\") | .params.numa_id"
+	jq -r "$jq_filter" <<< "$bdev_config"
+}
+
+# Verify running info
+function get_bdev_numa() {
+	bdev=$("$rpc_py" bdev_get_bdevs)
+	jq_filter=".[] | select(.name == \"$1\") | .numa_id"
+	jq -r "$jq_filter" <<< "$bdev"
+}
+
+# Create bdevs with or without assigning specific NUMA.
+# Note that tests expect NUMA 0 to exist on the system.
+function numa_id_test_suite() {
+	NUMA_DEV="Malloc_numa"
+
+	start_spdk_tgt
+	$rpc_py framework_start_init
+
+	# Default NUMA
+	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512
+	waitforbdev "$NUMA_DEV"
+
+	[[ "$(get_bdev_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "-1" ]]
+
+	$rpc_py bdev_malloc_delete "$NUMA_DEV"
+
+	# Explicitly any NUMA
+	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512 --numa-id -1
+	waitforbdev "$NUMA_DEV"
+
+	[[ "$(get_bdev_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "-1" ]]
+
+	$rpc_py bdev_malloc_delete "$NUMA_DEV"
+
+	# NUMA 0
+	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512 --numa-id 0
+	waitforbdev "$NUMA_DEV"
+
+	[[ "$(get_bdev_numa $NUMA_DEV)" == "0" ]]
+	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "0" ]]
+
+	$rpc_py bdev_malloc_delete "$NUMA_DEV"
+
+	killprocess "$spdk_tgt_pid"
+}
+
 function bdev_gpt_uuid() {
 	local bdev
 
@@ -827,6 +879,7 @@ if [[ $test_type == bdev ]]; then
 	run_test "bdev_error" error_test_suite "$env_ctx"
 	run_test "bdev_stat" stat_test_suite "$env_ctx"
 	run_test "bdev_dif_insert_strip" dif_insert_strip_test_suite "$env_ctx"
+	run_test "bdev_numa_id" numa_id_test_suite "$env_ctx"
 fi
 
 if [[ $test_type == gpt ]]; then

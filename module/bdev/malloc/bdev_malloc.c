@@ -652,6 +652,7 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
 	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
 	spdk_json_write_named_uint32(w, "dif_pi_format", bdev->dif_pi_format);
+	spdk_json_write_named_int32(w, "numa_id", spdk_bdev_get_numa_id(bdev));
 
 	spdk_json_write_object_end(w);
 
@@ -757,6 +758,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 {
 	struct malloc_disk *mdisk;
 	uint32_t block_size;
+	int32_t numa_id;
 	int rc;
 
 	assert(opts != NULL);
@@ -774,6 +776,19 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	if (opts->physical_block_size % 512) {
 		SPDK_ERRLOG("Physical block must be 512 bytes aligned\n");
 		return -EINVAL;
+	}
+
+	if (opts->numa_id != SPDK_ENV_NUMA_ID_ANY) {
+		/* Verify if requested NUMA node ID is present on the system. */
+		SPDK_ENV_FOREACH_NUMA_ID(numa_id) {
+			if (numa_id == opts->numa_id) {
+				break;
+			}
+		}
+		if (numa_id == INT32_MAX) {
+			SPDK_ERRLOG("NUMA node ID %d not present on the system\n", opts->numa_id);
+			return -EINVAL;
+		}
 	}
 
 	switch (opts->md_size) {
@@ -803,12 +818,9 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 
 	/*
 	 * Allocate the large backend memory buffer from pinned memory.
-	 *
-	 * TODO: need to pass a hint so we know which socket to allocate
-	 *  from on multi-socket systems.
 	 */
 	mdisk->malloc_buf = spdk_zmalloc(opts->num_blocks * block_size, 2 * 1024 * 1024, NULL,
-					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+					 opts->numa_id, SPDK_MALLOC_DMA);
 	if (!mdisk->malloc_buf) {
 		SPDK_ERRLOG("malloc_buf spdk_zmalloc() failed\n");
 		malloc_disk_free(mdisk);
@@ -817,7 +829,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 
 	if (!opts->md_interleave && opts->md_size != 0) {
 		mdisk->malloc_md_buf = spdk_zmalloc(opts->num_blocks * opts->md_size, 2 * 1024 * 1024, NULL,
-						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+						    opts->numa_id, SPDK_MALLOC_DMA);
 		if (!mdisk->malloc_md_buf) {
 			SPDK_ERRLOG("malloc_md_buf spdk_zmalloc() failed\n");
 			malloc_disk_free(mdisk);
@@ -881,6 +893,9 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 		spdk_uuid_copy(&mdisk->disk.uuid, &opts->uuid);
 	}
 
+	mdisk->disk.numa.id_valid = 1;
+	mdisk->disk.numa.id = opts->numa_id;
+
 	mdisk->disk.max_copy = 0;
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
@@ -895,6 +910,8 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	*bdev = &(mdisk->disk);
 
 	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
+	SPDK_DEBUGLOG(bdev_malloc, "Bdev:%s created on NUMA node ID: %d\n",
+		      spdk_bdev_get_name(*bdev), spdk_bdev_get_numa_id(*bdev));
 
 	return rc;
 }
