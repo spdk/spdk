@@ -9295,7 +9295,6 @@ struct bdev_nvme_set_keys_ctx {
 	struct nvme_ctrlr	*nctrlr;
 	struct spdk_key		*dhchap_key;
 	struct spdk_key		*dhchap_ctrlr_key;
-	struct spdk_thread	*thread;
 	bdev_nvme_set_keys_cb	cb_fn;
 	void			*cb_ctx;
 	int			status;
@@ -9330,7 +9329,7 @@ static void
 bdev_nvme_set_keys_done(struct bdev_nvme_set_keys_ctx *ctx, int status)
 {
 	ctx->status = status;
-	spdk_thread_exec_msg(ctx->thread, _bdev_nvme_set_keys_done, ctx);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _bdev_nvme_set_keys_done, ctx);
 }
 
 static void bdev_nvme_authenticate_ctrlr(struct bdev_nvme_set_keys_ctx *ctx);
@@ -9479,7 +9478,6 @@ bdev_nvme_set_keys(const char *name, const char *dhchap_key, const char *dhchap_
 	ctx->nctrlr = nctrlr;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
-	ctx->thread = spdk_get_thread();
 
 	bdev_nvme_authenticate_ctrlr(ctx);
 
