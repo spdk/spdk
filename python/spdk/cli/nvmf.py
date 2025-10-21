@@ -23,7 +23,9 @@ def add_parser(subparsers):
     def nvmf_set_config(args):
         all_admin_cmd_passthru = ('identify_ctrlr', 'identify_uuid_list', 'get_log_page', 'get_set_features', 'sanitize',
                                   'security_send_recv', 'fw_update', 'nvme_mi', 'vendor_specific')
-        if 'all' in args.passthru_admin_cmds:
+        if not args.passthru_admin_cmds:
+            admin_cmd_passthru = None
+        elif 'all' in args.passthru_admin_cmds:
             admin_cmd_passthru = {cmd: True for cmd in all_admin_cmd_passthru}
         else:
             admin_cmd_passthru = {cmd: True for cmd in args.passthru_admin_cmds}
