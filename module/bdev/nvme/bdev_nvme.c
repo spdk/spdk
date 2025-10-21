@@ -7075,14 +7075,13 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct spdk_nvme_path_id 
 		rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, true);
 	}
 
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	if (rc == 0) {
 		msg_fn(nvme_ctrlr);
 	} else if (rc == -EALREADY) {
 		rc = 0;
 	}
 
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 	return rc;
 }
 
