@@ -2928,26 +2928,12 @@ struct nvme_ctrlr_op_rpc_ctx {
 };
 
 static void
-_nvme_ctrlr_op_rpc_complete(void *_ctx)
-{
-	struct nvme_ctrlr_op_rpc_ctx *ctx = _ctx;
-
-	assert(ctx != NULL);
-	assert(ctx->cb_fn != NULL);
-
-	ctx->cb_fn(ctx->cb_arg, ctx->rc);
-
-	free(ctx);
-}
-
-static void
 nvme_ctrlr_op_rpc_complete(void *cb_arg, int rc)
 {
 	struct nvme_ctrlr_op_rpc_ctx *ctx = cb_arg;
 
-	ctx->rc = rc;
-
-	spdk_thread_send_msg(spdk_thread_get_app_thread(), _nvme_ctrlr_op_rpc_complete, ctx);
+	ctx->cb_fn(ctx->cb_arg, rc);
+	free(ctx);
 }
 
 void
