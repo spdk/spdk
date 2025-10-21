@@ -7607,6 +7607,10 @@ test_disable_enable_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->disabled == true);
 
 	/* Case 5: enable completes successfully. */
+
+	/* Enable starts from thread 0. */
+	set_thread(0);
+
 	rc = bdev_nvme_enable_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 

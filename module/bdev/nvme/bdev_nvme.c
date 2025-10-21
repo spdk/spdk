@@ -2740,6 +2740,8 @@ bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 static int
 bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
+	assert(spdk_thread_is_app_thread(NULL));
+
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -2763,7 +2765,7 @@ bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	spdk_thread_send_msg(spdk_thread_get_app_thread(), bdev_nvme_reconnect_ctrlr_now, nvme_ctrlr);
+	bdev_nvme_reconnect_ctrlr_now(nvme_ctrlr);
 	return 0;
 }
 
