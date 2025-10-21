@@ -5522,6 +5522,7 @@ bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
 	int rc = 0;
 
 	assert(cb_fn != NULL);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -5622,6 +5623,7 @@ spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multip
 	int rc;
 
 	assert(cb_fn != NULL);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	switch (policy) {
 	case BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE:
