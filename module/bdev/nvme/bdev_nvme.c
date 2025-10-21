@@ -2763,9 +2763,8 @@ bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
 
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	bdev_nvme_reconnect_ctrlr_now(nvme_ctrlr);
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 	return 0;
 }
 
