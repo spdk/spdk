@@ -4239,7 +4239,8 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns;
 
-	pthread_mutex_lock(&nbdev->mutex);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	spdk_json_write_named_array_begin(w, "nvme");
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		nvme_namespace_info_json(w, nvme_ns);
@@ -4252,7 +4253,6 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
 		}
 	}
-	pthread_mutex_unlock(&nbdev->mutex);
 
 	return 0;
 }
