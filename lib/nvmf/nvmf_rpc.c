@@ -173,8 +173,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 
 	spdk_json_write_named_array_begin(w, "listen_addresses");
 
-	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
-	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		const struct spdk_nvme_transport_id *trid;
 
 		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
@@ -3081,9 +3080,7 @@ rpc_nvmf_get_listeners_paused(struct spdk_nvmf_subsystem *subsystem,
 
 	spdk_json_write_array_begin(w);
 
-	for (listener = spdk_nvmf_subsystem_get_first_listener(ctx->subsystem);
-	     listener != NULL;
-	     listener = spdk_nvmf_subsystem_get_next_listener(ctx->subsystem, listener)) {
+	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		dump_nvmf_subsystem_listener(w, listener);
 	}
 	spdk_json_write_array_end(w);

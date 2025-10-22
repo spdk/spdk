@@ -683,8 +683,7 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		nvmf_write_nvme_subsystem_config(w, subsystem);
 	}
 
-	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
-	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		transport = listener->transport;
 		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 

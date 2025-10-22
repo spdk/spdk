@@ -133,8 +133,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			continue;
 		}
 
-		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
-		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+		TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 
 			if (!nvmf_discovery_compare_trid(tgt->discovery_filter, listener->trid, cmd_source_trid)) {
 				continue;
