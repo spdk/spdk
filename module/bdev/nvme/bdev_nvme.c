@@ -5049,22 +5049,21 @@ nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&nbdev->mutex);
-
 	tmp_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
 	assert(tmp_ns != NULL);
 
 	if (tmp_ns->ns != NULL && !bdev_nvme_compare_ns(nvme_ns->ns, tmp_ns->ns)) {
-		pthread_mutex_unlock(&nbdev->mutex);
 		NVME_NS_ERRLOG(nvme_ns, "Namespaces are not identical.\n");
 		return -EINVAL;
 	}
 
 	nbdev->ref++;
-	TAILQ_INSERT_TAIL(&nbdev->nvme_ns_list, nvme_ns, tailq);
-	nvme_ns->bdev = nbdev;
 
+	pthread_mutex_lock(&nbdev->mutex);
+	TAILQ_INSERT_TAIL(&nbdev->nvme_ns_list, nvme_ns, tailq);
 	pthread_mutex_unlock(&nbdev->mutex);
+
+	nvme_ns->bdev = nbdev;
 
 	/* Add nvme_io_path to nvme_bdev_channels dynamically. */
 	nvme_bdev_for_each_channel(nbdev,
