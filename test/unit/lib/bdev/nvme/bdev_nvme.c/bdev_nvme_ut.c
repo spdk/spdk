@@ -2861,10 +2861,10 @@ test_abort(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	set_thread(1);
 	nbdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
 
+	set_thread(1);
 	write_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, nbdev, NULL);
 	ut_bdev_io_set_buf(write_io);
 
