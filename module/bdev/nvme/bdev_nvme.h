@@ -98,6 +98,7 @@ struct nvme_ctrlr {
 
 	struct spdk_bdev_nvme_ctrlr_opts	opts;
 
+	/* This list can only be accessed from the app thread. */
 	RB_HEAD(nvme_ns_tree, nvme_ns)		namespaces;
 
 	struct spdk_opal_dev			*opal_dev;

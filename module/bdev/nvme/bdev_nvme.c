@@ -1991,8 +1991,6 @@ bdev_nvme_destruct(void *ctx)
 	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nbdev->nbdev_ctrlr->name, nbdev->nsid);
 
 	TAILQ_FOREACH_SAFE(nvme_ns, &nbdev->nvme_ns_list, tailq, tmp_nvme_ns) {
-		pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
-
 		nvme_ns->bdev = NULL;
 
 		assert(nvme_ns->id > 0);
@@ -2001,13 +1999,11 @@ bdev_nvme_destruct(void *ctx)
 		 * In that case, ignore the new one and continue destroying the original namespace.
 		 */
 		if (nvme_ctrlr_get_ns(nvme_ns->ctrlr, nvme_ns->id) != nvme_ns) {
-			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 			NVME_NS_DEBUGLOG(nvme_ns, "ns free with the last reference to nbdev\n");
 			TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
 			nvme_ns_delete(nvme_ns);
 		} else {
 			NVME_NS_DEBUGLOG(nvme_ns, "defer ns free until depopulate is done\n");
-			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 		}
 	}
 
@@ -5087,17 +5083,13 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 	assert(nvme_ctrlr != NULL);
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
 
 	if (nvme_ns->bdev != NULL) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &nvme_ns->probe_ctx);
 		return;
 	}
 
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &nvme_ns->probe_ctx);
 	nvme_ns_delete(nvme_ns);
 }
@@ -5138,9 +5130,7 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 			TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
 			pthread_mutex_unlock(&nbdev->mutex);
 
-			pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 			nvme_ns->bdev = NULL;
-			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 			/* Delete nvme_io_paths from nvme_bdev_channels dynamically. After that,
 			 * we call depopulate_namespace_done() to avoid use-after-free.
@@ -5234,10 +5224,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			ctx->populates_in_progress++;
 		}
 
-		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 		nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
 	}
 
@@ -6463,15 +6450,12 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 	 */
 	j = 0;
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
 		nvme_bdev = nvme_ns->bdev;
 		if (j < ctx->max_bdevs) {
 			ctx->names[j] = nvme_bdev->disk.name;
 			j++;
 		} else {
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 			NVME_CTRLR_ERRLOG(nvme_ctrlr,
 					  "Maximum number of namespaces supported per NVMe controller is %du. "
@@ -6482,8 +6466,6 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 			return;
 		}
 	}
-
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	ctx->reported_bdevs = j;
 	populate_namespaces_cb(ctx, 0);
