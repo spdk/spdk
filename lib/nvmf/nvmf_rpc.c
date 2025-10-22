@@ -174,6 +174,10 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	spdk_json_write_named_array_begin(w, "listen_addresses");
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		spdk_json_write_object_begin(w);
 		nvmf_transport_listen_dump_trid(listener->trid, w);
 		spdk_json_write_object_end(w);
@@ -3076,6 +3080,10 @@ rpc_nvmf_get_listeners_paused(struct spdk_nvmf_subsystem *subsystem,
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		dump_nvmf_subsystem_listener(w, listener);
 	}
 	spdk_json_write_array_end(w);

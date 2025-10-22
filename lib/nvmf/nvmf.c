@@ -683,6 +683,10 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	}
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		transport = listener->transport;
 
 		spdk_json_write_object_begin(w);

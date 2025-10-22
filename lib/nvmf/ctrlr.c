@@ -2403,7 +2403,7 @@ nvmf_ctrlr_get_ana_state(struct spdk_nvmf_ctrlr *ctrlr, uint32_t anagrpid)
 		return SPDK_NVME_ANA_OPTIMIZED_STATE;
 	}
 
-	if (spdk_unlikely(ctrlr->listener == NULL)) {
+	if (spdk_unlikely(!nvmf_subsystem_listener_is_active(ctrlr->listener))) {
 		return SPDK_NVME_ANA_INACCESSIBLE_STATE;
 	}
 
@@ -4976,7 +4976,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (spdk_likely(ctrlr->listener != NULL)) {
+	if (spdk_likely(nvmf_subsystem_listener_is_active(ctrlr->listener))) {
 		SPDK_DTRACE_PROBE3_TICKS(nvmf_request_io_exec_path, req,
 					 ctrlr->listener->trid->traddr,
 					 ctrlr->listener->trid->trsvcid);

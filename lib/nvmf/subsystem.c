@@ -338,6 +338,8 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_ctrlr *ctrlr;
 
 	if (stop) {
+		assert(nvmf_subsystem_listener_is_active(listener));
+
 		transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid->trstring);
 		if (transport != NULL) {
 			spdk_nvmf_transport_stop_listen(transport, listener->trid);
@@ -1360,12 +1362,31 @@ nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_subsystem_listener *listener;
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return listener;
 		}
 	}
 
 	return NULL;
+}
+
+bool
+nvmf_subsystem_listener_is_active(const struct spdk_nvmf_subsystem_listener *listener)
+{
+	if (!listener) {
+		return false;
+	}
+
+	/* Listener was stopped. */
+	if (!listener->trid) {
+		return false;
+	}
+
+	return true;
 }
 
 /**
@@ -1626,6 +1647,10 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_subsystem_listener *listener;
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return true;
 		}

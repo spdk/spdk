@@ -123,6 +123,10 @@ avahi_entry_group_add_listeners(AvahiEntryGroup *avahi_entry_group,
 	uint16_t id = 0;
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		if (listener->trid->trtype == SPDK_NVME_TRANSPORT_TCP) {
 			protocol = "tcp";
 		} else if (listener->trid->trtype == SPDK_NVME_TRANSPORT_RDMA) {

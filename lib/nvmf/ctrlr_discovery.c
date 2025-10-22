@@ -134,6 +134,9 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 		}
 
 		TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+			if (!nvmf_subsystem_listener_is_active(listener)) {
+				continue;
+			}
 
 			if (!nvmf_discovery_compare_trid(tgt->discovery_filter, listener->trid, cmd_source_trid)) {
 				continue;

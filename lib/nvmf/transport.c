@@ -450,6 +450,8 @@ int
 spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvme_transport_id *trid)
 {
+	struct spdk_nvmf_subsystem_listener *subsystem_listener;
+	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listener *listener;
 
 	listener = nvmf_transport_find_listener(transport, trid);
@@ -462,6 +464,17 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 		pthread_mutex_lock(&transport->mutex);
 		transport->ops->stop_listen(transport, trid);
 		pthread_mutex_unlock(&transport->mutex);
+
+		/* The transport listener has stopped and we are about to free trid; clear dangling pointers. */
+		for (subsystem = spdk_nvmf_subsystem_get_first(transport->tgt); subsystem != NULL;
+		     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+			TAILQ_FOREACH(subsystem_listener, &subsystem->listeners, link) {
+				if (subsystem_listener->trid == &listener->trid) {
+					subsystem_listener->trid = NULL;
+				}
+			}
+		}
+
 		free(listener);
 	}
 
