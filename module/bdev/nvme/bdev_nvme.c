@@ -5507,8 +5507,10 @@ bdev_nvme_set_preferred_ns(struct nvme_bdev *nbdev, uint16_t cntlid)
 	}
 
 	if (nvme_ns != NULL && prev != NULL) {
+		pthread_mutex_lock(&nbdev->mutex);
 		TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
 		TAILQ_INSERT_HEAD(&nbdev->nvme_ns_list, nvme_ns, tailq);
+		pthread_mutex_unlock(&nbdev->mutex);
 	}
 
 	return nvme_ns;
@@ -5559,18 +5561,12 @@ bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
 
 	nbdev = SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk);
 
-	pthread_mutex_lock(&nbdev->mutex);
-
 	ctx->nvme_ns = bdev_nvme_set_preferred_ns(nbdev, cntlid);
 	if (ctx->nvme_ns == NULL) {
-		pthread_mutex_unlock(&nbdev->mutex);
-
 		NVME_BDEV_ERRLOG(nbdev, null_ctrlr, "bdev does not have namespace to controller %u.\n", cntlid);
 		rc = -ENODEV;
 		goto err_bdev;
 	}
-
-	pthread_mutex_unlock(&nbdev->mutex);
 
 	nvme_bdev_for_each_channel(nbdev,
 				   _bdev_nvme_set_preferred_path,
