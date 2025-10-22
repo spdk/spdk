@@ -2628,7 +2628,7 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	struct path_stat *path_stat;
 	struct rpc_bdev_nvme_path_stat_ctx *ctx;
 	struct spdk_bdev_nvme_opts opts;
-	uint32_t num_paths = 0, i = 0;
+	uint32_t num_paths, i = 0;
 	int rc;
 
 	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
@@ -2688,9 +2688,6 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 		assert(i < num_paths);
 		path_stat[i].ns = nvme_ns;
 		path_stat[i].trid = nvme_ns->ctrlr->active_path_id->trid;
-
-		assert(nvme_ns->stat != NULL);
-		memcpy(&path_stat[i].stat, nvme_ns->stat, sizeof(struct spdk_bdev_io_stat));
 		i++;
 	}
 

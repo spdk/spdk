@@ -1000,25 +1000,9 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	struct spdk_io_channel *ch;
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr_channel *ctrlr_ch;
-	struct nvme_bdev *nbdev;
-	struct nvme_ctrlr *nvme_ctrlr;
-	struct nvme_ns *nvme_ns;
-
-	nbdev = spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(nbdev_ch));
 
 	nvme_qpair = io_path->qpair;
 	assert(nvme_qpair != NULL);
-
-	nvme_ctrlr = nvme_qpair->ctrlr;
-	assert(nvme_ctrlr != NULL);
-
-	/* Add the statistics to nvme_ns before this path is destroyed. */
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nbdev->nsid);
-	if (nvme_ns != NULL && nvme_ns->stat != NULL && io_path->stat != NULL) {
-		spdk_bdev_add_io_stat(nvme_ns->stat, io_path->stat);
-	}
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	bdev_nvme_clear_current_io_path(nbdev_ch);
 	bdev_nvme_clear_retry_io_path(nbdev_ch, io_path);
@@ -4933,15 +4917,6 @@ nvme_ns_create(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_p
 		return NULL;
 	}
 
-	if (g_opts.io_path_stat) {
-		nvme_ns->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
-		if (nvme_ns->stat == NULL) {
-			free(nvme_ns);
-			return NULL;
-		}
-		spdk_bdev_reset_io_stat(nvme_ns->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
-	}
-
 	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
 	if (!ns) {
 		NVME_NS_DEBUGLOG(nvme_ns, "Invalid NS\n");
@@ -4962,7 +4937,6 @@ nvme_ns_create(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_p
 static void
 nvme_ns_free(struct nvme_ns *nvme_ns)
 {
-	free(nvme_ns->stat);
 	free(nvme_ns);
 }
 
