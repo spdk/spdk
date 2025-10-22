@@ -5140,26 +5140,22 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 
 	nbdev = nvme_ns->bdev;
 	if (nbdev != NULL) {
-		pthread_mutex_lock(&nbdev->mutex);
-
 		assert(nbdev->ref > 0);
 		nbdev->ref--;
 		if (nbdev->ref == 0) {
-			pthread_mutex_unlock(&nbdev->mutex);
-
 			spdk_bdev_unregister(&nbdev->disk, NULL, NULL);
 		} else {
 			/* spdk_bdev_unregister() is not called until the last nvme_ns is
 			 * depopulated. Hence we need to remove nvme_ns from bdev->nvme_ns_list
 			 * and clear nvme_ns->bdev here.
 			 */
+			pthread_mutex_lock(&nbdev->mutex);
 			TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
+			pthread_mutex_unlock(&nbdev->mutex);
 
 			pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 			nvme_ns->bdev = NULL;
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
-
-			pthread_mutex_unlock(&nbdev->mutex);
 
 			/* Delete nvme_io_paths from nvme_bdev_channels dynamically. After that,
 			 * we call depopulate_namespace_done() to avoid use-after-free.
