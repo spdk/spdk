@@ -2670,7 +2670,6 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	bdev = spdk_bdev_desc_get_bdev(desc);
 	nbdev = bdev->ctxt;
 
-	pthread_mutex_lock(&nbdev->mutex);
 	if (nbdev->ref == 0) {
 		rc = -ENOENT;
 		goto err;
@@ -2694,13 +2693,13 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 		memcpy(&path_stat[i].stat, nvme_ns->stat, sizeof(struct spdk_bdev_io_stat));
 		i++;
 	}
-	pthread_mutex_unlock(&nbdev->mutex);
 
 	ctx->request = request;
 	ctx->desc = desc;
 	ctx->path_stat = path_stat;
 	ctx->num_paths = num_paths;
 
+	/* TODO race is here, number of paths can change. */
 	nvme_bdev_for_each_channel(nbdev,
 				   rpc_bdev_nvme_path_stat_per_channel,
 				   ctx,
@@ -2708,7 +2707,6 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	return;
 
 err:
-	pthread_mutex_unlock(&nbdev->mutex);
 	spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 	spdk_bdev_close(desc);
 	free(ctx);
