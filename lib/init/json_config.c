@@ -650,6 +650,8 @@ spdk_subsystem_load_config(void *json, ssize_t json_size, spdk_subsystem_init_fn
 			   void *cb_arg, bool stop_on_error)
 {
 	assert(cb_fn);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	json_config_prepare_ctx(cb_fn, cb_arg, stop_on_error, json, json_size, false);
 }
 

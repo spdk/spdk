@@ -44,6 +44,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_rpc_opts) == 24, "Incorrect size");
 /**
  * Create SPDK JSON-RPC server listening at provided address and start polling it for connections.
  *
+ * This function should be called from the SPDK app thread.
+ *
  * The RPC server is optional and is independent of subsystem initialization.
  * The RPC server can be started and stopped at any time.
  *
@@ -57,11 +59,15 @@ int spdk_rpc_initialize(const char *listen_addr,
 
 /**
  * Stop SPDK JSON-RPC servers and stop polling for new connections on all addresses.
+ *
+ * This function should be called from the SPDK app thread.
  */
 void spdk_rpc_finish(void);
 
 /**
  * Stop SPDK JSON-RPC server and stop polling for new connections on provided address.
+ *
+ * This function should be called from the SPDK app thread.
  *
  * \param listen_addr Path to a unix domain socket.
  */
@@ -70,11 +76,14 @@ void spdk_rpc_server_finish(const char *listen_addr);
 typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
 
 /**
- * Begin the initialization process for all SPDK subsystems. SPDK is divided into subsystems at a macro-level
- * and each subsystem automatically registers itself with this library at start up using a C
- * constructor. Further, each subsystem can declare other subsystems that it depends on.
- * Calling this function will correctly initialize all subsystems that are present, in the
- * required order.
+ * Begin the initialization process for all SPDK subsystems.
+ *
+ * This function should be called from the SPDK app thread.
+ *
+ * SPDK is divided into subsystems at a macro-level and each subsystem automatically registers
+ * itself with this library at start up using a C constructor. Further, each subsystem can declare
+ * other subsystems that it depends on. Calling this function will correctly initialize all
+ * subsystems that are present, in the required order.
  *
  * \param cb_fn Function called when the process is complete.
  * \param cb_arg User context passed to cb_fn.
@@ -82,9 +91,12 @@ typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
 void spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg);
 
 /**
- * Loads RPC configuration from provided JSON for current RPC state. The function will
- * automatically start a JSON RPC server for configuration purposes and then stop it.
- * JSON data will be copied, so parsing will not disturb the original memory.
+ * Loads RPC configuration from provided JSON for current RPC state.
+ *
+ * This function should be called from the SPDK app thread.
+ *
+ * The function will automatically start a JSON RPC server for configuration purposes and then stop
+ * it. JSON data will be copied, so parsing will not disturb the original memory.
  *
  * \param json Raw JSON data.
  * \param json_size Size of JSON data.
@@ -100,6 +112,8 @@ typedef void (*spdk_subsystem_fini_fn)(void *ctx);
 /**
  * Tear down all of the subsystems in the correct order.
  *
+ * This function should be called from the SPDK app thread.
+ *
  * \param cb_fn Function called when the process is complete.
  * \param cb_arg User context passed to cb_fn
  */
@@ -107,6 +121,8 @@ void spdk_subsystem_fini(spdk_subsystem_fini_fn cb_fn, void *cb_arg);
 
 /**
  * Check if the specified subsystem exists in the application.
+ *
+ * This function should be called from the SPDK app thread.
  *
  * \param name Name of the subsystem to look for
  * \return true if it exists, false if not
@@ -116,12 +132,16 @@ bool spdk_subsystem_exists(const char *name);
 /**
  * Pause polling RPC server with given address.
  *
+ * This function should be called from the SPDK app thread.
+ *
  * \param listen_addr Address, on which RPC server listens for connections.
  */
 void spdk_rpc_server_pause(const char *listen_addr);
 
 /**
  * Resume polling RPC server with given address.
+ *
+ * This function should be called from the SPDK app thread.
  *
  * \param listen_addr Address, on which RPC server listens for connections.
  */

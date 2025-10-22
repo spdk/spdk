@@ -66,6 +66,8 @@ subsystem_find(const char *name)
 bool
 spdk_subsystem_exists(const char *name)
 {
+	assert(spdk_thread_is_app_thread(NULL));
+
 	return subsystem_find(name) != NULL;
 }
 
@@ -240,6 +242,8 @@ subsystem_fini_next(void *arg1)
 void
 spdk_subsystem_fini_next(void)
 {
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (g_fini_thread != spdk_get_thread()) {
 		spdk_thread_send_msg(g_fini_thread, subsystem_fini_next, NULL);
 	} else {
@@ -250,6 +254,8 @@ spdk_subsystem_fini_next(void)
 void
 spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 {
+	assert(spdk_thread_is_app_thread(NULL));
+
 	g_subsystem_stop_fn = cb_fn;
 	g_subsystem_stop_arg = cb_arg;
 
