@@ -404,9 +404,16 @@ static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
 };
 
 static void
-ut_enable_io_type(enum spdk_bdev_io_type io_type, bool enable)
+ut_enable_io_type(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type, bool enable)
 {
 	g_io_types_supported[io_type] = enable;
+
+	/* Update cache */
+	if (enable) {
+		bdev->io_type_supported |= (1u << (uint32_t)io_type);
+	} else {
+		bdev->io_type_supported &= ~(1u << (uint32_t)io_type);
+	}
 }
 
 static bool
@@ -1189,26 +1196,26 @@ bdev_io_types_test(void)
 	CU_ASSERT(io_ch != NULL);
 
 	/* WRITE and WRITE ZEROES are not supported */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE, false);
 	rc = spdk_bdev_write_zeroes_blocks(desc, io_ch, 0, 128, io_done, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE, true);
 
 	/* NVME_IO, NVME_IO_MD and NVME_ADMIN are not supported */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO, false);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO_MD, false);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_ADMIN, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_NVME_IO, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_NVME_IO_MD, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN, false);
 	rc = spdk_bdev_nvme_io_passthru(desc, io_ch, NULL, NULL, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
 	rc = spdk_bdev_nvme_io_passthru_md(desc, io_ch, NULL, NULL, 0, NULL, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
 	rc = spdk_bdev_nvme_admin_passthru(desc, io_ch, NULL, NULL, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO, true);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO_MD, true);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_ADMIN, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_NVME_IO, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_NVME_IO_MD, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN, true);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
@@ -4165,7 +4172,7 @@ bdev_write_zeroes(void)
 	CU_ASSERT_EQUAL(num_completed, 1);
 
 	/* Check that if write zeroes is not supported it'll be replaced by regular writes */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
 	bdev->max_write_zeroes = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
 	num_io_blocks = ZERO_BUFFER_SIZE / bdev->blocklen;
 	num_requests = 2;
@@ -4228,7 +4235,7 @@ bdev_write_zeroes(void)
 	num_completed = stub_complete_io(num_requests);
 	CU_ASSERT_EQUAL(num_completed, num_requests);
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
@@ -5490,12 +5497,12 @@ bdev_io_abort(void)
 
 	g_abort_done = false;
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_ABORT, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_ABORT, false);
 
 	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_ABORT, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_ABORT, true);
 
 	rc = spdk_bdev_abort(desc, io_ch, &io_ctx2, abort_done, NULL);
 	CU_ASSERT(rc == 0);
@@ -6547,7 +6554,7 @@ bdev_seek_test(void)
 	CU_ASSERT(io_ch != NULL);
 
 	/* Seek data not supported */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_DATA, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_SEEK_DATA, false);
 	rc = spdk_bdev_seek_data(desc, io_ch, 0, bdev_seek_cb, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
@@ -6555,7 +6562,7 @@ bdev_seek_test(void)
 	CU_ASSERT(g_seek_offset == 0);
 
 	/* Seek hole not supported */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_HOLE, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_SEEK_HOLE, false);
 	rc = spdk_bdev_seek_hole(desc, io_ch, 0, bdev_seek_cb, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
@@ -6564,7 +6571,7 @@ bdev_seek_test(void)
 
 	/* Seek data supported */
 	g_seek_data_offset = 12345;
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_DATA, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_SEEK_DATA, true);
 	rc = spdk_bdev_seek_data(desc, io_ch, 0, bdev_seek_cb, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
@@ -6574,7 +6581,7 @@ bdev_seek_test(void)
 
 	/* Seek hole supported */
 	g_seek_hole_offset = 67890;
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_HOLE, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_SEEK_HOLE, true);
 	rc = spdk_bdev_seek_hole(desc, io_ch, 0, bdev_seek_cb, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
@@ -6632,7 +6639,7 @@ bdev_copy(void)
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 0, num_blocks, 0);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_COPY, false);
 
 	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
@@ -6641,7 +6648,7 @@ bdev_copy(void)
 	num_completed = stub_complete_io(1);
 	CU_ASSERT_EQUAL(num_completed, 1);
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_COPY, true);
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
@@ -6750,7 +6757,7 @@ bdev_copy_split_test(void)
 	/* Case 4: Same test scenario as the case 2 but the configuration is different.
 	 * Copy is not supported.
 	 */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_COPY, false);
 
 	num_children = 2;
 	max_copy_blocks = spdk_bdev_get_max_copy(bdev);
@@ -6792,7 +6799,7 @@ bdev_copy_split_test(void)
 	}
 	CU_ASSERT(g_io_done == true);
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_COPY, true);
 
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);

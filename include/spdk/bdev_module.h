@@ -439,6 +439,9 @@ struct spdk_bdev {
 	/** Size in bytes of a physical block for the backend */
 	uint32_t phys_blocklen;
 
+	/** Bitmap of supported io types */
+	uint32_t io_type_supported;
+
 	/** Number of blocks */
 	uint64_t blockcnt;
 

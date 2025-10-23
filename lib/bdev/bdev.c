@@ -4068,9 +4068,23 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 }
 
 static bool
+bdev_module_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+
+	return bdev->fn_table->io_type_supported(bdev->ctxt, io_type);
+}
+
+static bool
 bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
-	return bdev->fn_table->io_type_supported(bdev->ctxt, io_type);
+	SPDK_STATIC_ASSERT(SPDK_BDEV_NUM_IO_TYPES <= 32, "io_type exceeds 32 bits, adjust bitmask type");
+
+	if (spdk_unlikely(io_type <= SPDK_BDEV_IO_TYPE_INVALID || io_type >= SPDK_BDEV_NUM_IO_TYPES)) {
+		return false;
+	}
+
+	return bdev->io_type_supported & (1u << (uint32_t)io_type);
 }
 
 bool
@@ -8289,6 +8303,7 @@ bdev_register(struct spdk_bdev *bdev)
 	char *bdev_name;
 	char uuid[SPDK_UUID_STRING_LEN];
 	struct spdk_iobuf_opts iobuf_opts;
+	enum spdk_bdev_io_type io_type;
 	int ret;
 
 	assert(bdev->module != NULL);
@@ -8346,6 +8361,12 @@ bdev_register(struct spdk_bdev *bdev)
 			bdev_free_io_stat(bdev->internal.stat);
 			free(bdev_name);
 			return ret;
+		}
+	}
+
+	for (io_type = SPDK_BDEV_IO_TYPE_READ; io_type < SPDK_BDEV_NUM_IO_TYPES; ++io_type) {
+		if (bdev_module_io_type_supported(bdev, io_type)) {
+			bdev->io_type_supported |= (1u << (uint32_t)io_type);
 		}
 	}
 
