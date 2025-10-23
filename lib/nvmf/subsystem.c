@@ -1400,6 +1400,7 @@ static void
 _nvmf_subsystem_add_listener_done(void *ctx, int status)
 {
 	struct spdk_nvmf_subsystem_listener *listener = ctx;
+	struct spdk_nvmf_subsystem *subsystem = listener->subsystem;
 
 	if (status) {
 		listener->cb_fn(listener->cb_arg, status);
@@ -1407,19 +1408,19 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 		return;
 	}
 
-	TAILQ_INSERT_HEAD(&listener->subsystem->listeners, listener, link);
+	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 
-	if (spdk_nvmf_subsystem_is_discovery(listener->subsystem)) {
-		status = nvmf_tgt_update_mdns_prr(listener->subsystem->tgt);
+	if (spdk_nvmf_subsystem_is_discovery(subsystem)) {
+		status = nvmf_tgt_update_mdns_prr(subsystem->tgt);
 		if (status) {
-			TAILQ_REMOVE(&listener->subsystem->listeners, listener, link);
+			TAILQ_REMOVE(&subsystem->listeners, listener, link);
 			listener->cb_fn(listener->cb_arg, status);
 			free(listener);
 			return;
 		}
 	}
 
-	spdk_nvmf_send_discovery_log_notice(listener->subsystem->tgt, NULL);
+	spdk_nvmf_send_discovery_log_notice(subsystem->tgt, NULL);
 	listener->cb_fn(listener->cb_arg, status);
 }
 
