@@ -677,7 +677,6 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 {
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct spdk_nvmf_transport *transport;
-	const struct spdk_nvme_transport_id *trid;
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		nvmf_write_nvme_subsystem_config(w, subsystem);
@@ -685,7 +684,6 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		transport = listener->transport;
-		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_listener");
@@ -696,10 +694,10 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 
 		spdk_json_write_named_object_begin(w, "listen_address");
-		nvmf_transport_listen_dump_trid(trid, w);
+		nvmf_transport_listen_dump_trid(listener->trid, w);
 		spdk_json_write_object_end(w);
 		if (transport->ops->listen_dump_opts) {
-			transport->ops->listen_dump_opts(transport, trid, w);
+			transport->ops->listen_dump_opts(transport, listener->trid, w);
 		}
 
 		spdk_json_write_named_bool(w, "secure_channel", listener->opts.secure_channel);

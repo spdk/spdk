@@ -174,12 +174,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	spdk_json_write_named_array_begin(w, "listen_addresses");
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
-		const struct spdk_nvme_transport_id *trid;
-
-		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
-
 		spdk_json_write_object_begin(w);
-		nvmf_transport_listen_dump_trid(trid, w);
+		nvmf_transport_listen_dump_trid(listener->trid, w);
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
@@ -2945,13 +2941,12 @@ static void
 dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 			     struct spdk_nvmf_subsystem_listener *listener)
 {
-	const struct spdk_nvme_transport_id *trid = listener->trid;
 	uint32_t i;
 
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_object_begin(w, "address");
-	nvmf_transport_listen_dump_trid(trid, w);
+	nvmf_transport_listen_dump_trid(listener->trid, w);
 	spdk_json_write_object_end(w);
 
 	if (spdk_nvmf_subsystem_get_ana_reporting(listener->subsystem)) {

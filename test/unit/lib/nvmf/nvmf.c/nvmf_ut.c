@@ -57,8 +57,6 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_min_cntlid, uint16_t,
 	    (const struct spdk_nvmf_subsystem *subsystem), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_max_cntlid, uint16_t,
 	    (const struct spdk_nvmf_subsystem *subsystem), 0);
-DEFINE_STUB(spdk_nvmf_subsystem_listener_get_trid, const struct spdk_nvme_transport_id *,
-	    (struct spdk_nvmf_subsystem_listener *listener), NULL);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_host, struct spdk_nvmf_host *,
 	    (struct spdk_nvmf_subsystem *subsystem), 0);
