@@ -21,6 +21,7 @@ import itertools
 import configparser
 import time
 import uuid
+import shutil
 
 import paramiko
 import pandas as pd
@@ -734,7 +735,7 @@ class Target(Server):
         time.sleep(ramp_time)
         self.log.info("INFO: generating DPDK memory usage")
         tmp_dump_file = self.client.env_dpdk_get_mem_stats()["filename"]
-        os.rename(tmp_dump_file, "%s/%s" % (results_dir, dump_file_name))
+        shutil.move(tmp_dump_file, os.path.join(results_dir, dump_file_name))
 
     def sys_config(self):
         self.log.info("====Kernel release:====")
