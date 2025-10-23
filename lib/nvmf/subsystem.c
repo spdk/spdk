@@ -1404,6 +1404,8 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 
 	if (status) {
 		listener->cb_fn(listener->cb_arg, status);
+		free(listener->ana_state);
+		free(listener->opts.sock_impl);
 		free(listener);
 		return;
 	}
@@ -1584,6 +1586,9 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	if (transport->ops->listen_associate != NULL) {
 		rc = transport->ops->listen_associate(transport, subsystem, trid);
+		if (rc) {
+			SPDK_ERRLOG("Associate listener for transport %s failed with rc:%d\n", trid->trstring, rc);
+		}
 	}
 
 	_nvmf_subsystem_add_listener_done(listener, rc);
