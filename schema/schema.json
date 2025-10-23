@@ -4032,6 +4032,7 @@
           "name": "namespace",
           "type": "object",
           "required": true,
+          "class": "nvmf_namespace",
           "description": "@ref rpc_nvmf_namespace object"
         },
         {

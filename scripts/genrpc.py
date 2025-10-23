@@ -45,28 +45,31 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
         raise ValueError(f"Methods defined in schema but missing in CLI: {sorted(missing_in_cli)}")
     if missing_in_schema:
         raise ValueError(f"Commands found in CLI but not defined in schema: {sorted(missing_in_schema)}")
+    schema_objects = {obj["name"]: obj for obj in schema['objects']}
     for method in schema['methods']:
         subparser = subparsers.choices[method['name']]
         groups = subparser._mutually_exclusive_groups
         actions = {a.dest: a for a in subparser._actions}
-        for param in method['params']:
-            if 'class' in param or param['name'] in ['num_blocks', 'acceptor_poll_rate', 'namespace']:
+        for parameter in method['params']:
+            if parameter['name'] in ['num_blocks', 'acceptor_poll_rate']:
                 # TODO: handle this case later and fix issues raised by it
                 continue
-            action = actions.get(param['name'])
-            if action is None:
-                raise ValueError(f"For method {method['name']}: parameter '{param['name']}': is defined in schema but not found in CLI")
-            required = next((g.required for g in groups
-                             if any(a.dest == action.dest for a in g._group_actions)),
-                            action.required)
-            if param['required'] != required:
-                raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
-            newtype = 'boolean' if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction] else types.get(action.type)
-            if not newtype:
-                # TODO: handle this case later and fix issues raised by it
-                continue
-            if param['type'] != newtype and action.metavar is None and param['type'] != "array":
-                raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
+            params = schema_objects[parameter['class']]['fields'] if 'class' in parameter else [parameter]
+            for param in params:
+                action = actions.get(param['name'])
+                if action is None:
+                    raise ValueError(f"For method {method['name']}: parameter '{param['name']}': is defined in schema but not found in CLI")
+                required = next((g.required for g in groups
+                                if any(a.dest == action.dest for a in g._group_actions)),
+                                action.required)
+                if param['required'] != required:
+                    raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
+                newtype = 'boolean' if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction] else types.get(action.type)
+                if not newtype:
+                    # TODO: handle this case later and fix issues raised by it
+                    continue
+                if param['type'] != newtype and action.metavar is None and param['type'] != "array":
+                    raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
 
 
 def generate_docs(schema: Dict[str, Any]) -> str:
