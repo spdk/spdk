@@ -1420,6 +1420,9 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 		}
 	}
 
+	SPDK_DTRACE_PROBE4(nvmf_subsystem_add_listener, subsystem->subnqn, listener->trid->trtype,
+			   listener->trid->traddr, listener->trid->trsvcid);
+
 	spdk_nvmf_send_discovery_log_notice(subsystem->tgt, NULL);
 	listener->cb_fn(listener->cb_arg, status);
 }
@@ -1582,9 +1585,6 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (transport->ops->listen_associate != NULL) {
 		rc = transport->ops->listen_associate(transport, subsystem, trid);
 	}
-
-	SPDK_DTRACE_PROBE4(nvmf_subsystem_add_listener, subsystem->subnqn, listener->trid->trtype,
-			   listener->trid->traddr, listener->trid->trsvcid);
 
 	_nvmf_subsystem_add_listener_done(listener, rc);
 }
