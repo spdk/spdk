@@ -553,7 +553,7 @@ class Server(ABC):
 
         issue_found = False
         try:
-            output = self.exec_cmd(["dmesg"])
+            output = self.exec_cmd(["sudo", "dmesg"])
 
             for line in output.split("\n"):
                 for pattern in patterns:
