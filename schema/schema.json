@@ -3697,6 +3697,12 @@
           "description": "The number of shared buffers to reserve for each poll group"
         },
         {
+          "name": "zcopy",
+          "type": "boolean",
+          "required": false,
+          "description": "Use zero-copy operations if the underlying bdev supports them"
+        },
+        {
           "name": "num_cqe",
           "type": "number",
           "required": false,
@@ -3775,10 +3781,10 @@
           "description": "disable shadow doorbell support (VFIO-USER only)"
         },
         {
-          "name": "zcopy",
-          "type": "boolean",
+          "name": "acceptor_poll_rate",
+          "type": "number",
           "required": false,
-          "description": "Use zero-copy operations if the underlying bdev supports them"
+          "description": "Polling interval of the acceptor for incoming connections (microseconds)"
         },
         {
           "name": "ack_timeout",
@@ -4387,12 +4393,6 @@
     {
       "name": "nvmf_set_config",
       "params": [
-        {
-          "name": "acceptor_poll_rate",
-          "type": "number",
-          "required": false,
-          "description": "Polling interval of the acceptor for incoming connections (microseconds)"
-        },
         {
           "name": "admin_cmd_passthru",
           "type": "object",

@@ -51,7 +51,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
         groups = subparser._mutually_exclusive_groups
         actions = {a.dest: a for a in subparser._actions}
         for parameter in method['params']:
-            if parameter['name'] in ['num_blocks', 'acceptor_poll_rate']:
+            if parameter['name'] in ['num_blocks']:
                 # TODO: handle this case later and fix issues raised by it
                 continue
             params = schema_objects[parameter['class']]['fields'] if 'class' in parameter else [parameter]
