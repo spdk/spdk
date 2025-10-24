@@ -341,7 +341,6 @@ struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	bool				write;
 	bool				memory_domains_supported;
-	bool				accel_sequence_supported[SPDK_BDEV_NUM_IO_TYPES];
 	struct spdk_bdev_open_opts	opts;
 	struct spdk_thread		*thread;
 	struct {
@@ -1095,7 +1094,8 @@ bdev_io_needs_sequence_exec(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bd
 
 	/* For now, we don't allow splitting IOs with an accel sequence and will treat them as if
 	 * bdev module didn't support accel sequences */
-	return !desc->accel_sequence_supported[bdev_io->type] || bdev_io->internal.f.split;
+	return !(bdev_io->bdev->accel_sequence_supported & (1u << bdev_io->type)) ||
+	       bdev_io->internal.f.split;
 }
 
 static inline void
@@ -4065,6 +4065,19 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 		bdev_io->internal.f.child_io = false;
 		bdev_io->internal.f.split = bdev_io_should_split(bdev_io);
 	}
+}
+
+static bool
+bdev_module_accel_sequence_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (!bdev->fn_table->accel_sequence_supported) {
+		return false;
+	}
+
+	return bdev->fn_table->accel_sequence_supported(bdev->ctxt, io_type);
 }
 
 static bool
@@ -8368,6 +8381,10 @@ bdev_register(struct spdk_bdev *bdev)
 		if (bdev_module_io_type_supported(bdev, io_type)) {
 			bdev->io_type_supported |= (1u << (uint32_t)io_type);
 		}
+
+		if (bdev_module_accel_sequence_supported(bdev, io_type)) {
+			bdev->accel_sequence_supported |= (1u << (uint32_t)io_type);
+		}
 	}
 
 	/* If the user didn't specify a write unit size, set it to one. */
@@ -8906,14 +8923,6 @@ bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *eve
 		for (i = 0; i < MEDIA_EVENT_POOL_SIZE; ++i) {
 			TAILQ_INSERT_TAIL(&desc->free_media_events,
 					  &desc->media_events_buffer[i], tailq);
-		}
-	}
-
-	if (bdev->fn_table->accel_sequence_supported != NULL) {
-		for (i = 0; i < SPDK_BDEV_NUM_IO_TYPES; ++i) {
-			desc->accel_sequence_supported[i] =
-				bdev->fn_table->accel_sequence_supported(bdev->ctxt,
-						(enum spdk_bdev_io_type)i);
 		}
 	}
 
