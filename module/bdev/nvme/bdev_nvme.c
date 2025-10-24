@@ -2025,6 +2025,7 @@ bdev_nvme_destruct(void *ctx)
 		if (nvme_ctrlr_get_ns(nvme_ns->ctrlr, nvme_ns->id) != nvme_ns) {
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 			NVME_NS_DEBUGLOG(nvme_ns, "ns free with the last reference to nbdev\n");
+			TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
 			nvme_ns_delete(nvme_ns);
 		} else {
 			NVME_NS_DEBUGLOG(nvme_ns, "defer ns free until depopulate is done\n");
