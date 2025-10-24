@@ -4296,9 +4296,13 @@ bdev_nvme_reset_device_stat(void *ctx)
 {
 	struct nvme_bdev *nbdev = ctx;
 
-	if (nbdev->err_stat != NULL) {
-		memset(nbdev->err_stat, 0, sizeof(struct nvme_error_stat));
+	if (nbdev->err_stat == NULL) {
+		return;
 	}
+
+	pthread_mutex_lock(&nbdev->mutex);
+	memset(nbdev->err_stat, 0, sizeof(struct nvme_error_stat));
+	pthread_mutex_unlock(&nbdev->mutex);
 }
 
 /* JSON string should be lowercases and underscore delimited string. */

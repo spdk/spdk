@@ -215,6 +215,8 @@ bdev_get_iostat_done(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
 	struct rpc_get_iostat_ctx *rpc_ctx = bdev_ctx->rpc_ctx;
 	struct spdk_json_write_ctx *w = rpc_ctx->w;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (rc != 0 || rpc_ctx->rc != 0) {
 		if (rpc_ctx->rc == 0) {
 			rpc_ctx->rc = rc;
@@ -541,6 +543,8 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 	struct rpc_reset_iostat_ctx *rpc_ctx = ctx;
 	struct bdev_reset_iostat_ctx *bdev_ctx;
 	int rc;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	bdev_ctx = calloc(1, sizeof(struct bdev_reset_iostat_ctx));
 	if (bdev_ctx == NULL) {
