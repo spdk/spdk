@@ -459,7 +459,47 @@ struct spdk_bdev {
 		 * UNMAP, WRITE_ZEROES or FLUSH I/O.
 		 */
 		uint32_t split_on_write_unit : 1;
-		uint32_t reserved : 31;
+
+		/**
+		 * Specifies whether the optimal_io_boundary is mandatory or
+		 * only advisory.  If set to true, the bdev layer will split
+		 * READ and WRITE I/O that span the optimal_io_boundary before
+		 * submitting them to the bdev module.
+		 *
+		 * Note that this field cannot be used to force splitting of
+		 * UNMAP, WRITE_ZEROES or FLUSH I/O.
+		 */
+		uint32_t split_on_optimal_io_boundary : 1;
+
+		/**
+		 * Specify metadata location and set to true if metadata is interleaved
+		 * with block data or false if metadata is separated with block data.
+		 *
+		 * Note that this field is valid only if there is metadata.
+		 */
+		uint32_t md_interleave : 1;
+
+		/*
+		 * DIF location.
+		 *
+		 * Set to true if DIF is set in the first 8/16 bytes of metadata or false
+		 * if DIF is set in the last 8/16 bytes of metadata.
+		 *
+		 * Note that this field is valid only if DIF is enabled.
+		 */
+		uint32_t dif_is_head_of_md : 1;
+
+		/**
+		 * Specify whether bdev is zoned device.
+		 */
+		uint32_t zoned : 1;
+
+		/**
+		 * Specifies whether bdev supports media management events.
+		 */
+		uint32_t media_events : 1;
+
+		uint32_t reserved : 26;
 	};
 
 	/** Number of blocks required for write */
@@ -477,16 +517,7 @@ struct spdk_bdev {
 	 */
 	uint8_t required_alignment;
 
-	/**
-	 * Specifies whether the optimal_io_boundary is mandatory or
-	 * only advisory.  If set to true, the bdev layer will split
-	 * READ and WRITE I/O that span the optimal_io_boundary before
-	 * submitting them to the bdev module.
-	 *
-	 * Note that this field cannot be used to force splitting of
-	 * UNMAP, WRITE_ZEROES or FLUSH I/O.
-	 */
-	bool split_on_optimal_io_boundary;
+	uint8_t reserved1;
 
 	/**
 	 * Optimal I/O boundary in blocks, or 0 for no value reported.
@@ -550,13 +581,7 @@ struct spdk_bdev {
 	/** Size in bytes of a metadata for the backend */
 	uint32_t md_len;
 
-	/**
-	 * Specify metadata location and set to true if metadata is interleaved
-	 * with block data or false if metadata is separated with block data.
-	 *
-	 * Note that this field is valid only if there is metadata.
-	 */
-	bool md_interleave;
+	uint8_t reserved2[4];
 
 	/**
 	 * DIF type for this bdev.
@@ -573,25 +598,14 @@ struct spdk_bdev {
 	 */
 	enum spdk_dif_pi_format dif_pi_format;
 
-	/*
-	 * DIF location.
-	 *
-	 * Set to true if DIF is set in the first 8/16 bytes of metadata or false
-	 * if DIF is set in the last 8/16 bytes of metadata.
-	 *
-	 * Note that this field is valid only if DIF is enabled.
-	 */
-	bool dif_is_head_of_md;
+	uint8_t reserved3[4];
 
 	/**
 	 * Specify whether each DIF check type is enabled.
 	 */
 	uint32_t dif_check_flags;
 
-	/**
-	 * Specify whether bdev is zoned device.
-	 */
-	bool zoned;
+	uint8_t reserved4[8];
 
 	/**
 	 * Default size of each zone (in blocks).
@@ -618,10 +632,7 @@ struct spdk_bdev {
 	 */
 	uint32_t optimal_open_zones;
 
-	/**
-	 * Specifies whether bdev supports media management events.
-	 */
-	bool media_events;
+	uint8_t reserved6[4];
 
 	/**
 	 * Specifies the bdev nvme controller attributes.
@@ -651,6 +662,8 @@ struct spdk_bdev {
 	 * If this parameter remains equal to zero, the bdev reset will be forcefully
 	 * sent down to the device, without any delays and waiting for outstanding IO. */
 	uint16_t reset_io_drain_timeout;
+
+	uint8_t reserved7[2];
 
 	struct {
 		/** Is numa.id valid? Needed to know whether numa.id == 0 was
