@@ -1368,7 +1368,7 @@ enomem(void)
 	struct ut_bdev_channel *ut_ch;
 	const uint32_t IO_ARRAY_SIZE = 64;
 	const uint32_t AVAIL = 20;
-	enum spdk_bdev_io_status status[IO_ARRAY_SIZE], status_reset;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE], status_abort, status_reset;
 	uint32_t nomem_cnt, i;
 	struct spdk_bdev_io *first_io;
 	int rc;
@@ -1393,6 +1393,27 @@ enomem(void)
 	/*
 	 * Next, submit one additional I/O.  This one should fail with ENOMEM and then go onto
 	 *  the enomem_io list.
+	 */
+	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&shared_resource->nomem_io));
+	first_io = TAILQ_FIRST(&shared_resource->nomem_io);
+
+	/*
+	 * Send an abort request to the queued I/O and confirmed that it is aborted.
+	 */
+	status_abort = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_abort(g_desc, io_ch, &status[AVAIL], enomem_done, &status_abort);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(bdev_io_tailq_cnt(&shared_resource->nomem_io) == 0);
+	CU_ASSERT(status[AVAIL] == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status_abort == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/*
+	 * The queued I/O was aborted. Hence, submit one additional I/O again. This one should
+	 *  fail with ENOMEM and then go onto the enomem_io list.
 	 */
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);

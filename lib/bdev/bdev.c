@@ -4718,10 +4718,15 @@ static bool
 bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *ch;
 
 	TAILQ_FOREACH(bdev_io, queue, internal.link) {
 		if (bdev_io == bio_to_abort) {
 			TAILQ_REMOVE(queue, bio_to_abort, internal.link);
+			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
+				ch = bdev_io->internal.ch;
+				bdev_io_increment_outstanding(ch, ch->shared_resource);
+			}
 			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
 			return true;
 		}
