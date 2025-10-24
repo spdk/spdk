@@ -41,17 +41,13 @@ def add_parser(subparsers):
     p.set_defaults(func=framework_wait_init)
 
     def framework_monitor_context_switch(args):
-        enabled = None
-        if args.enable:
-            enabled = True
-        if args.disable:
-            enabled = False
-        print_dict(args.client.framework_monitor_context_switch(enabled=enabled))
+        print_dict(args.client.framework_monitor_context_switch(enabled=args.enabled))
 
     p = subparsers.add_parser('framework_monitor_context_switch',
                               help='Control whether the context switch monitor is enabled')
-    p.add_argument('-e', '--enable', action='store_true', help='Enable context switch monitoring')
-    p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('-e', '--enable', dest='enabled', action='store_true', help='Enable context switch monitoring')
+    group.add_argument('-d', '--disable', dest='enabled', action='store_false', help='Disable context switch monitoring')
     p.set_defaults(func=framework_monitor_context_switch)
 
     def framework_get_reactors(args):

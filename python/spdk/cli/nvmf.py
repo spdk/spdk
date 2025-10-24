@@ -384,13 +384,14 @@ def add_parser(subparsers):
     def nvmf_subsystem_allow_any_host(args):
         args.client.nvmf_subsystem_allow_any_host(
                                                nqn=args.nqn,
-                                               allow_any_host=False if args.disable else True,
+                                               allow_any_host=args.allow_any_host,
                                                tgt_name=args.tgt_name)
 
     p = subparsers.add_parser('nvmf_subsystem_allow_any_host', help='Allow any host to connect to the subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
-    p.add_argument('-e', '--enable', action='store_true', help='Enable allowing any host')
-    p.add_argument('-d', '--disable', action='store_true', help='Disable allowing any host')
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument('-e', '--enable', dest='allow_any_host', action='store_true', help='Enable allowing any host')
+    group.add_argument('-d', '--disable', dest='allow_any_host', action='store_false', help='Disable allowing any host')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_allow_any_host)
 
