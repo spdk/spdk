@@ -1086,7 +1086,7 @@ bdev_io_needs_metadata(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io
 }
 
 static inline bool
-bdev_io_needs_sequence_exec(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
+bdev_io_needs_sequence_exec(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io_use_accel_sequence(bdev_io)) {
 		return false;
@@ -1157,7 +1157,7 @@ bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, void (*cb_fn)(void *ctx, int
 {
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
-	assert(bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
+	assert(bdev_io_needs_sequence_exec(bdev_io));
 	assert(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE || bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 	assert(bdev_io_use_accel_sequence(bdev_io));
 
@@ -1391,7 +1391,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 			SPDK_ERRLOG("Failed to append generate/verify_copy to accel sequence: %p\n",
 				    bdev_io->internal.accel_sequence);
 		}
-	} else if (bdev_io_needs_sequence_exec(desc, bdev_io) ||
+	} else if (bdev_io_needs_sequence_exec(bdev_io) ||
 		   (bdev_io_use_accel_sequence(bdev_io) && bdev_io_use_memory_domain(bdev_io))) {
 		/* If we need to exec an accel sequence or the IO uses a memory domain buffer and has a
 		 * sequence, append a copy operation making accel change the src/dst buffers of the previous
@@ -1598,7 +1598,7 @@ bdev_submit_request(struct spdk_bdev *bdev, struct spdk_io_channel *ioch,
 	 * sequence pointer to make sure we won't touch it anymore. */
 	if ((bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE ||
 	     bdev_io->type == SPDK_BDEV_IO_TYPE_READ) && bdev_io->u.bdev.accel_sequence != NULL) {
-		assert(!bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
+		assert(!bdev_io_needs_sequence_exec(bdev_io));
 		bdev_io->internal.f.has_accel_sequence = false;
 	}
 
@@ -3643,7 +3643,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				  parent_io->internal.ch->queue_depth);
 
 		if (spdk_likely(parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
-			if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io)) {
+			if (bdev_io_needs_sequence_exec(parent_io)) {
 				bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
 				return;
 			} else if (parent_io->internal.f.has_bounce_buf &&
@@ -3891,7 +3891,7 @@ _bdev_memory_domain_get_io_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		return;
 	}
 
-	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
+	if (bdev_io_needs_sequence_exec(bdev_io)) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
 			return;
@@ -3952,7 +3952,7 @@ bdev_io_needs_bounce_buffer(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bd
 {
 	if (bdev_io_use_memory_domain(bdev_io)) {
 		if (!desc->memory_domains_supported ||
-		    (bdev_io_needs_sequence_exec(desc, bdev_io) &&
+		    (bdev_io_needs_sequence_exec(bdev_io) &&
 		     (bdev_io->internal.memory_domain == spdk_accel_get_memory_domain() ||
 		      bdev_io_needs_metadata(desc, bdev_io)))) {
 			return true;
@@ -4013,7 +4013,7 @@ _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 		return;
 	}
 
-	if (bdev_io_needs_sequence_exec(desc, bdev_io)) {
+	if (bdev_io_needs_sequence_exec(bdev_io)) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
 			return;
@@ -8016,7 +8016,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	} else {
 		bdev_io_decrement_outstanding(bdev_ch, shared_resource);
 		if (spdk_likely(status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
-			if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
+			if (bdev_io_needs_sequence_exec(bdev_io)) {
 				bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
 				return;
 			} else if (spdk_unlikely(bdev_io->internal.f.has_bounce_buf &&
