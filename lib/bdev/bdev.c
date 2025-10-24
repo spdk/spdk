@@ -341,7 +341,6 @@ struct media_event_entry {
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	bool				write;
-	bool				memory_domains_supported;
 	struct spdk_bdev_open_opts	opts;
 	struct spdk_thread		*thread;
 	struct {
@@ -3959,7 +3958,7 @@ static inline bool
 bdev_io_needs_bounce_buffer(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
 	if (bdev_io_use_memory_domain(bdev_io)) {
-		if (!desc->memory_domains_supported ||
+		if (!bdev_io->bdev->memory_domains_supported ||
 		    (bdev_io_needs_sequence_exec(bdev_io) &&
 		     (bdev_io->internal.memory_domain == spdk_accel_get_memory_domain() ||
 		      bdev_io_needs_metadata(desc, bdev_io)))) {
@@ -8450,6 +8449,8 @@ bdev_register(struct spdk_bdev *bdev)
 		}
 	}
 
+	bdev->memory_domains_supported = spdk_bdev_get_memory_domains(bdev, NULL, 0) > 0;
+
 	/* If the user didn't specify a write unit size, set it to one. */
 	if (bdev->write_unit_size == 0) {
 		bdev->write_unit_size = 1;
@@ -8959,7 +8960,6 @@ bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *eve
 	TAILQ_INIT(&desc->pending_media_events);
 	TAILQ_INIT(&desc->free_media_events);
 
-	desc->memory_domains_supported = spdk_bdev_get_memory_domains(bdev, NULL, 0) > 0;
 	desc->callback.event_fn = event_cb;
 	desc->callback.ctx = event_ctx;
 	spdk_spin_init(&desc->spinlock);
