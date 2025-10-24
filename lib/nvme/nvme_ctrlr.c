@@ -2380,8 +2380,17 @@ static bool
 nvme_ctrlr_handle_identify_ns_completion(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
 		const struct spdk_nvme_cpl *cpl)
 {
+	/* A namespace becoming inactive during NVMe controller initialization should not be
+	 * considered a fatal error leading to controller state machine failure. */
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		return true;
+		if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
+		    (cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT ||
+		     cpl->status.sc == SPDK_NVME_SC_INVALID_FIELD)) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Destructing namespace due to identify completion error\n");
+			nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
+		} else {
+			return true;
+		}
 	}
 
 	return false;
