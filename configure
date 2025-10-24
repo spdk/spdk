@@ -959,6 +959,9 @@ function dpdk_version() {
 		dpdk_ver=$(< "$rootdir/dpdk/VERSION")
 	elif [[ -f "${CONFIG[DPDK_DIR]}"/../VERSION ]]; then
 		dpdk_ver=$(< "${CONFIG[DPDK_DIR]}"/../VERSION)
+	elif [[ "${CONFIG[DPDK_LIB_DIR]}" != "" && -e "${CONFIG[DPDK_LIB_DIR]}"/pkgconfig ]]; then
+		# Try pkg-config to figure out the module version
+		dpdk_ver=$(PKG_CONFIG_PATH="${CONFIG[DPDK_LIB_DIR]}"/pkgconfig pkg-config --modversion libdpdk)
 	fi
 	echo $dpdk_ver
 }
