@@ -47,7 +47,7 @@ trap cleanup EXIT
 prep_key "key0" "$key0" 0 "/tmp/:spdk-test:key0"
 prep_key "key1" "$key1" 0 "/tmp/:spdk-test:key1"
 
-"$rootdir/build/bin/spdk_tgt" &
+run_app_bg "$SPDK_BIN_DIR/spdk_tgt"
 tgtpid=$!
 
 waitforlisten $tgtpid
@@ -65,8 +65,8 @@ CMD
 # connection
 keyctl add user ":spdk-test:key0" "$(< /tmp/:spdk-test:key0)" @s
 keyctl add user ":spdk-test:key1" "$(< /tmp/:spdk-test:key1)" @s
-"$rootdir/build/examples/bdevperf" -q 128 -o 4k -w randread -t 1 -m 2 \
-	-r "$bperfsock" -z --wait-for-rpc &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -q 128 -o 4k -w randread -t 1 -m 2 \
+	-r "$bperfsock" -z --wait-for-rpc
 bperfpid=$!
 
 waitforlisten $bperfpid "$bperfsock"

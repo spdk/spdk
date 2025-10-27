@@ -12,7 +12,7 @@ CONFIG_PATH="$rootdir/test/rpc/config.json"
 LOG_PATH="$rootdir/test/rpc/log.txt"
 
 test_skip_rpc() {
-	$SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1 &
+	run_app_bg $SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1
 	local spdk_pid=$!
 
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
@@ -24,7 +24,7 @@ test_skip_rpc() {
 }
 
 gen_json_config() {
-	$SPDK_BIN_DIR/spdk_tgt -m 0x1 &
+	run_app_bg $SPDK_BIN_DIR/spdk_tgt -m 0x1
 	local spdk_pid=$!
 
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
@@ -43,7 +43,7 @@ gen_json_config() {
 test_skip_rpc_with_json() {
 	gen_json_config
 
-	$SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1 --json $CONFIG_PATH &> $LOG_PATH &
+	run_app_bg $SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1 --json $CONFIG_PATH &> $LOG_PATH
 	local spdk_pid=$!
 	sleep 5
 
@@ -54,11 +54,11 @@ test_skip_rpc_with_json() {
 
 test_skip_rpc_with_delay() {
 	# Skipping RPC init and adding a delay are exclusive
-	NOT $SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1 --wait-for-rpc
+	NOT run_app $SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1 --wait-for-rpc
 }
 
 test_exit_on_failed_rpc_init() {
-	$SPDK_BIN_DIR/spdk_tgt -m 0x1 &
+	run_app_bg $SPDK_BIN_DIR/spdk_tgt -m 0x1
 	local spdk_pid=$!
 	waitforlisten $spdk_pid
 

@@ -18,7 +18,7 @@ function json_config_test_start_app() {
 		app_extra_params='-S /var/tmp'
 	fi
 
-	$SPDK_BIN_DIR/spdk_tgt ${app_params[$app]} ${app_extra_params} -r ${app_socket[$app]} "$@" &
+	run_app_bg $SPDK_BIN_DIR/spdk_tgt ${app_params[$app]} ${app_extra_params} -r ${app_socket[$app]} "$@"
 	app_pid["$app"]=$!
 
 	echo "Waiting for $app to run..."

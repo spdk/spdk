@@ -9,7 +9,7 @@ source $rootdir/test/common/autotest_common.sh
 
 MEM_SCRIPT="$rootdir/scripts/dpdk_mem_info.py"
 
-"${SPDK_APP[@]}" &
+run_app_bg "${SPDK_APP[@]}"
 spdkpid=$!
 
 waitforlisten $spdkpid
