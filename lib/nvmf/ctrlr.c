@@ -2911,6 +2911,7 @@ static const struct spdk_nvme_supported_log_pages g_supported_log_pages = {
 		[SPDK_NVME_LOG_CHANGED_NS_LIST] =	      { .lsupp = 1 },
 		[SPDK_NVME_LOG_RESERVATION_NOTIFICATION] =    { .lsupp = 1 },
 		[SPDK_NVME_LOG_FEATURE_IDS_EFFECTS] =	      { .lsupp = 1 },
+		[SPDK_NVME_LOG_NVME_MI_COMMANDS_EFFECTS] =    { .lsupp = 1 },
 	}
 };
 
@@ -3067,6 +3068,9 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
 		rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
 		break;
+	case SPDK_NVME_LOG_NVME_MI_COMMANDS_EFFECTS:
+		/* To comply with id-ctrl LPA bit 5, don't fail this log but return zeroed buffer instead. */
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
 		SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier 0x%02X\n", lid);
 		goto invalid_field_log_page;
@@ -3324,6 +3328,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->frmw.num_slots = 1;
 
 		cdata->lpa.cses = 1; /* Command Effects log page supported */
+		cdata->lpa.mlps = 1;
 
 		cdata->sqes.min = 6;
 		cdata->sqes.max = 6;
