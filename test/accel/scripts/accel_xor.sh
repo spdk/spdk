@@ -10,7 +10,7 @@ rootdir=$(readlink -f $testdir/../../..)
 # default test parameters
 module=software
 size=262144
-mask=0x1
+mask="[0]"
 nbufs=2
 queue=64
 
@@ -26,7 +26,6 @@ echo "XOR with $module (block $size, core_mask $mask, nbufs $nbufs, queue $queue
 if [ $module = "cuda" ]; then
 	$rootdir/build/examples/accel_perf -m $mask -q $queue -w xor -x $nbufs -o $size $option -r /var/tmp/spdk.sock --wait-for-rpc &
 	spdk_pid=$!
-	waitforlisten $spdk_pid
 	sleep 1
 
 	$rootdir/scripts/rpc.py cuda_scan_accel_module
@@ -36,5 +35,5 @@ if [ $module = "cuda" ]; then
 	echo "Waiting for accel_perf PID" $spdk_pid
 	wait $spdk_pid
 else
-	$rootdir/build/examples/accel_perf -m $mask -q $queue -w fill -o $size -C $nbufs $option
+	$rootdir/build/examples/accel_perf -m $mask -q $queue -w xor -o $size -C $nbufs $option
 fi
