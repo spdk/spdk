@@ -581,6 +581,9 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 		nvmf_cdata.fwug = nvme_cdata.fwug;
 		nvmf_cdata.mtfa = nvme_cdata.mtfa;
 	}
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi) {
+		nvmf_cdata.oacs.nsrs = nvme_cdata.oacs.nsrs;
+	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list) {
 		nvmf_cdata.ctratt.bits.uuid_list = nvme_cdata.ctratt.bits.uuid_list;
 	}
@@ -658,6 +661,16 @@ nvmf_custom_get_log_page_hdlr(struct spdk_nvmf_request *req)
 	 */
 	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 	case SPDK_NVME_LOG_CHANGED_NS_LIST:
+		return -1;
+	/* SPDK reports zeroed buffer for NVMe MI Commands log
+	 * indicating that no NVMe MI commands are supported by SPDK.
+	 * If NVMe MI Send/Receive passthru is enabled let the drive
+	 * handle this log page.
+	 */
+	case SPDK_NVME_LOG_NVME_MI_COMMANDS_EFFECTS:
+		if (g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi) {
+			return nvmf_admin_passthru_generic_hdlr(req, NULL);
+		}
 		return -1;
 	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
 		return nvmf_admin_passthru_generic_hdlr(req, fixup_get_feature_ids_effects_log_page);
