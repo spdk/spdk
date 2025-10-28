@@ -3603,7 +3603,30 @@ struct spdk_nvme_cmds_and_effect_entry {
 	 */
 	uint16_t cse : 3;
 
-	uint16_t reserved2 : 13;
+	/** UUID Selection Supported */
+	uint16_t uss : 1;
+
+	/** Command Scope bits (CSP) */
+
+	/** Namespace Scope */
+	uint16_t nscpe		: 1;
+
+	/** Controller Scope */
+	uint16_t cscpe		: 1;
+
+	/** NVM Set Scope */
+	uint16_t nsetscpe	: 1;
+
+	/** Endurance Group Scope */
+	uint16_t egscpe		: 1;
+
+	/** Domain Scope */
+	uint16_t dscpe		: 1;
+
+	/** NVM Subsystem Scope */
+	uint16_t nsscpe		: 1;
+
+	uint16_t csp_reserved	: 6;
 };
 
 /* Commands Supported and Effects Log Page */

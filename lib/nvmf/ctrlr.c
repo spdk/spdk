@@ -2642,41 +2642,41 @@ nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_page = {
 	.admin_cmds_supported = {
 		/* Get Log Page */
-		[SPDK_NVME_OPC_GET_LOG_PAGE]		= { .csupp = 1 },
+		[SPDK_NVME_OPC_GET_LOG_PAGE]		= { .csupp = 1, .nscpe = 1, .cscpe = 1 },
 		/* Identify */
-		[SPDK_NVME_OPC_IDENTIFY]		= { .csupp = 1 },
+		[SPDK_NVME_OPC_IDENTIFY]		= { .csupp = 1, .nscpe = 1, .cscpe = 1 },
 		/* Abort */
-		[SPDK_NVME_OPC_ABORT]			= { .csupp = 1 },
+		[SPDK_NVME_OPC_ABORT]			= { .csupp = 1, .cscpe = 1 },
 		/* Set Features */
-		[SPDK_NVME_OPC_SET_FEATURES]		= { .csupp = 1 },
+		[SPDK_NVME_OPC_SET_FEATURES]		= { .csupp = 1, .nscpe = 1, .cscpe = 1 },
 		/* Get Features */
-		[SPDK_NVME_OPC_GET_FEATURES]		= { .csupp = 1 },
+		[SPDK_NVME_OPC_GET_FEATURES]		= { .csupp = 1, .nscpe = 1, .cscpe = 1 },
 		/* Async Event Request */
-		[SPDK_NVME_OPC_ASYNC_EVENT_REQUEST]	= { .csupp = 1 },
+		[SPDK_NVME_OPC_ASYNC_EVENT_REQUEST]	= { .csupp = 1, .cscpe = 1 },
 		/* Keep Alive */
-		[SPDK_NVME_OPC_KEEP_ALIVE]		= { .csupp = 1 },
+		[SPDK_NVME_OPC_KEEP_ALIVE]		= { .csupp = 1, .cscpe = 1 },
 	},
 	.io_cmds_supported = {
 		/* FLUSH */
-		[SPDK_NVME_OPC_FLUSH]			= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_FLUSH]			= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* WRITE */
-		[SPDK_NVME_OPC_WRITE]			= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_WRITE]			= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* READ */
-		[SPDK_NVME_OPC_READ]			= { .csupp = 1 },
+		[SPDK_NVME_OPC_READ]			= { .csupp = 1, .nscpe = 1 },
 		/* WRITE ZEROES */
-		[SPDK_NVME_OPC_WRITE_ZEROES]		= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_WRITE_ZEROES]		= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* DATASET MANAGEMENT */
-		[SPDK_NVME_OPC_DATASET_MANAGEMENT]	= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_DATASET_MANAGEMENT]	= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* COMPARE */
-		[SPDK_NVME_OPC_COMPARE]			= { .csupp = 1 },
+		[SPDK_NVME_OPC_COMPARE]			= { .csupp = 1, .nscpe = 1 },
 		/* ZONE MANAGEMENT SEND */
-		[SPDK_NVME_OPC_ZONE_MGMT_SEND]		= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_ZONE_MGMT_SEND]		= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* ZONE MANAGEMENT RECEIVE */
-		[SPDK_NVME_OPC_ZONE_MGMT_RECV]		= { .csupp = 1 },
+		[SPDK_NVME_OPC_ZONE_MGMT_RECV]		= { .csupp = 1, .nscpe = 1 },
 		/* ZONE APPEND */
-		[SPDK_NVME_OPC_ZONE_APPEND]		= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_ZONE_APPEND]		= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* COPY */
-		[SPDK_NVME_OPC_COPY]			= { .csupp = 1, .lbcc = 1 },
+		[SPDK_NVME_OPC_COPY]			= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 	},
 };
 
