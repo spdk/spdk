@@ -4155,7 +4155,7 @@ nvmf_rdma_poller_create(struct spdk_nvmf_rdma_transport *rtransport,
 static void
 _nvmf_rdma_register_poller_in_group(void *c)
 {
-	struct spdk_nvmf_rdma_poller	*poller;
+	struct spdk_nvmf_rdma_poller	*poller = NULL;
 	struct poller_manage_ctx	*ctx = c;
 	struct spdk_nvmf_rdma_device	*device;
 	int				rc;
