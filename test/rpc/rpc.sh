@@ -40,8 +40,7 @@ function rpc_dry_run() {
 	local rpc_py="$rootdir/scripts/rpc.py"
 
 	# Remove first line with 'Request:'
-	# Remove last line with 'null'
-	json=$($rpc_py --dry-run bdev_get_bdevs -b bdev_name | sed '1d;$d')
+	json=$($rpc_py --dry-run bdev_get_bdevs -b bdev_name | sed '1d')
 	[ "$(jq -r '.method' <<< "$json")" == "bdev_get_bdevs" ]
 	[ "$(jq -r '.params.name' <<< "$json")" == "bdev_name" ]
 }

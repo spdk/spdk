@@ -13,11 +13,12 @@ import os
 import sys
 import shlex
 import json
+import types
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 
 import spdk.cli as cli  # noqa
-from spdk.rpc.client import print_dict, print_json, print_array, JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
+from spdk.rpc.client import JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
 from spdk.rpc.helpers import deprecated_aliases, hint_rpc_name  # noqa
 from spdk.rpc.cmd_parser import remove_null  # noqa
 
@@ -54,25 +55,9 @@ def create_parser():
     parser.set_defaults(is_server=False)
     parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name', metavar='')
-    cli.accel.add_parser(subparsers)
-    cli.app.add_parser(subparsers)
-    cli.bdev.add_parser(subparsers)
-    cli.fsdev.add_parser(subparsers)
-    cli.iscsi.add_parser(subparsers)
-    cli.keyring.add_parser(subparsers)
-    cli.log.add_parser(subparsers)
-    cli.lvol.add_parser(subparsers)
-    cli.nbd.add_parser(subparsers)
-    cli.ublk.add_parser(subparsers)
-    cli.notify.add_parser(subparsers)
-    cli.nvmf.add_parser(subparsers)
-    cli.trace.add_parser(subparsers)
-    cli.vhost.add_parser(subparsers)
-    cli.vmd.add_parser(subparsers)
-    cli.sock.add_parser(subparsers)
-    cli.vfio_user.add_parser(subparsers)
-    cli.iobuf.add_parser(subparsers)
-    cli.misc.add_parser(subparsers)
+    for name, obj in vars(cli).items():
+        if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
+            obj.add_parser(subparsers)
     return parser, subparsers
 
 
@@ -204,11 +189,9 @@ def main():
         exit(0)
     elif args.dry_run:
         args.client = dry_run_client()
-        # TODO: this is no longer working and pretty ugly, fix it
-        global print_dict, print_json, print_array
-        print_dict = null_print
-        print_json = null_print
-        print_array = null_print
+        for name, obj in vars(cli).items():
+            if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
+                obj.print_dict = obj.print_json = obj.print_array = null_print
     elif args.go_client or use_go_client:
         try:
             args.client = JSONRPCGoClient(args.server_addr,
