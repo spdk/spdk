@@ -2669,6 +2669,14 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 		[SPDK_NVME_OPC_DATASET_MANAGEMENT]	= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* COMPARE */
 		[SPDK_NVME_OPC_COMPARE]			= { .csupp = 1, .nscpe = 1 },
+		/* RESERVATION REGISTER */
+		[SPDK_NVME_OPC_RESERVATION_REGISTER]	= { .csupp = 1, .nscpe = 1 },
+		/* RESERVATION REPORT */
+		[SPDK_NVME_OPC_RESERVATION_REPORT]	= { .csupp = 1, .nscpe = 1 },
+		/* RESERVATION ACQUIRE */
+		[SPDK_NVME_OPC_RESERVATION_ACQUIRE]	= { .csupp = 1, .nscpe = 1 },
+		/* RESERVATION RELEASE */
+		[SPDK_NVME_OPC_RESERVATION_RELEASE]	= { .csupp = 1, .nscpe = 1 },
 		/* ZONE MANAGEMENT SEND */
 		[SPDK_NVME_OPC_ZONE_MGMT_SEND]		= { .csupp = 1, .lbcc = 1, .nscpe = 1 },
 		/* ZONE MANAGEMENT RECEIVE */
@@ -2711,6 +2719,16 @@ spdk_nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	}
 	if (!ctrlr->cdata.oncs.copy) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_COPY];
+		memset(entry, 0, sizeof(*entry));
+	}
+	if (!ctrlr->cdata.oncs.reservations) {
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_RESERVATION_REGISTER];
+		memset(entry, 0, sizeof(*entry));
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_RESERVATION_REPORT];
+		memset(entry, 0, sizeof(*entry));
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_RESERVATION_ACQUIRE];
+		memset(entry, 0, sizeof(*entry));
+		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_RESERVATION_RELEASE];
 		memset(entry, 0, sizeof(*entry));
 	}
 }
