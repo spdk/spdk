@@ -1257,6 +1257,7 @@ bdev_io_wait_test(void)
 
 	io_wait_entry.entry.bdev = bdev;
 	io_wait_entry.entry.cb_fn = io_wait_cb;
+	io_wait_entry.entry.dep_unblock = false;
 	io_wait_entry.entry.cb_arg = &io_wait_entry;
 	io_wait_entry.io_ch = io_ch;
 	io_wait_entry.desc = desc;
