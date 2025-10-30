@@ -1939,49 +1939,49 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
 	printf("Security Send/Receive:                 %s\n",
-	       cdata->oacs.security ? "Supported" : "Not Supported");
+	       cdata->oacs.ssrs ? "Supported" : "Not Supported");
 	printf("Format NVM:                            %s\n",
-	       cdata->oacs.format ? "Supported" : "Not Supported");
+	       cdata->oacs.fnvms ? "Supported" : "Not Supported");
 	printf("Firmware Activate/Download:            %s\n",
-	       cdata->oacs.firmware ? "Supported" : "Not Supported");
+	       cdata->oacs.fwds ? "Supported" : "Not Supported");
 	printf("Namespace Management:                  %s\n",
-	       cdata->oacs.ns_manage ? "Supported" : "Not Supported");
+	       cdata->oacs.nms ? "Supported" : "Not Supported");
 	printf("Device Self-Test:                      %s\n",
-	       cdata->oacs.device_self_test ? "Supported" : "Not Supported");
+	       cdata->oacs.dsts ? "Supported" : "Not Supported");
 	printf("Directives:                            %s\n",
-	       cdata->oacs.directives ? "Supported" : "Not Supported");
+	       cdata->oacs.dirs ? "Supported" : "Not Supported");
 	printf("NVMe-MI:                               %s\n",
-	       cdata->oacs.nvme_mi ? "Supported" : "Not Supported");
+	       cdata->oacs.nsrs ? "Supported" : "Not Supported");
 	printf("Virtualization Management:             %s\n",
-	       cdata->oacs.virtualization_management ? "Supported" : "Not Supported");
+	       cdata->oacs.vms ? "Supported" : "Not Supported");
 	printf("Doorbell Buffer Config:                %s\n",
-	       cdata->oacs.doorbell_buffer_config ? "Supported" : "Not Supported");
+	       cdata->oacs.dbcs ? "Supported" : "Not Supported");
 	printf("Get LBA Status Capability:             %s\n",
-	       cdata->oacs.get_lba_status ? "Supported" : "Not Supported");
+	       cdata->oacs.glss ? "Supported" : "Not Supported");
 	printf("Command & Feature Lockdown Capability: %s\n",
-	       cdata->oacs.command_feature_lockdown ? "Supported" : "Not Supported");
+	       cdata->oacs.cfls ? "Supported" : "Not Supported");
 	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
 	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
 	printf("Number of Firmware Slots:              ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%d\n", cdata->frmw.num_slots);
 	} else {
 		printf("N/A\n");
 	}
 	printf("Firmware Slot 1 Read-Only:             ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%s\n", cdata->frmw.slot1_ro ? "Yes" : "No");
 	} else {
 		printf("N/A\n");
 	}
 	printf("Firmware Activation Without Reset:     ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%s\n", cdata->frmw.activation_without_reset ? "Yes" : "No");
 	} else {
 		printf("N/A\n");
 	}
 	printf("Multiple Update Detection Support:     ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%s\n", cdata->frmw.multiple_update_detection ? "Yes" : "No");
 	} else {
 		printf("N/A\n");

@@ -1621,7 +1621,7 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	int rc = 0;
 	uint64_t prp1, prp2, len;
 
-	if (!ctrlr->cdata.oacs.doorbell_buffer_config) {
+	if (!ctrlr->cdata.oacs.dbcs) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
@@ -2106,11 +2106,11 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_MPTR_SGL_SUPPORTED;
 	}
 
-	if (ctrlr->cdata.oacs.security && !(ctrlr->quirks & NVME_QUIRK_OACS_SECURITY)) {
+	if (ctrlr->cdata.oacs.ssrs && !(ctrlr->quirks & NVME_QUIRK_OACS_SECURITY)) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
 	}
 
-	if (ctrlr->cdata.oacs.directives) {
+	if (ctrlr->cdata.oacs.dirs) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED;
 	}
 

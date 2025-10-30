@@ -573,10 +573,10 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 		nvmf_cdata.sanicap = nvme_cdata.sanicap;
 	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.security_send_recv) {
-		nvmf_cdata.oacs.security = nvme_cdata.oacs.security;
+		nvmf_cdata.oacs.ssrs = nvme_cdata.oacs.ssrs;
 	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.fw_update) {
-		nvmf_cdata.oacs.firmware = nvme_cdata.oacs.firmware;
+		nvmf_cdata.oacs.fwds = nvme_cdata.oacs.fwds;
 		nvmf_cdata.frmw = nvme_cdata.frmw;
 		nvmf_cdata.fwug = nvme_cdata.fwug;
 		nvmf_cdata.mtfa = nvme_cdata.mtfa;

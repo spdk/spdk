@@ -59,5 +59,6 @@ a bdev of the correct size.
 
 #### nvme_spec.h
 
-`spdk_nvme_ctrlr_data` LPA bits are updated to NVMe 2.2 definitions.
-The old bit names will be removed in 26.05 release.
+`spdk_nvme_ctrlr_data`, `spdk_nvme_cdata_oacs`
+
+LPA and OACS bits are updated to NVMe 2.2 definitions. The old bit names will be removed in 26.05 release.

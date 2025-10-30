@@ -2161,40 +2161,63 @@ struct spdk_nvme_cdata_oncs {
 };
 
 struct spdk_nvme_cdata_oacs {
-	/* supports security send/receive commands */
-	uint16_t	security  : 1;
+	union {
+		struct {
+			/** Security Send Receive Supported */
+			uint16_t	ssrs  : 1;
 
-	/* supports format nvm command */
-	uint16_t	format    : 1;
+			/** Format NVM Supported */
+			uint16_t	fnvms    : 1;
 
-	/* supports firmware activate/download commands */
-	uint16_t	firmware  : 1;
+			/** Firmware Download Supported */
+			uint16_t	fwds  : 1;
 
-	/* supports ns manage/ns attach commands */
-	uint16_t	ns_manage  : 1;
+			/** Namespace Management Supported */
+			uint16_t	nms  : 1;
 
-	/** Supports device self-test command (SPDK_NVME_OPC_DEVICE_SELF_TEST) */
-	uint16_t	device_self_test : 1;
+			/** Device Self-test Supported */
+			uint16_t	dsts : 1;
 
-	/** Supports SPDK_NVME_OPC_DIRECTIVE_SEND and SPDK_NVME_OPC_DIRECTIVE_RECEIVE */
-	uint16_t	directives : 1;
+			/** Directives Supported */
+			uint16_t	dirs : 1;
 
-	/** Supports NVMe-MI (SPDK_NVME_OPC_NVME_MI_SEND, SPDK_NVME_OPC_NVME_MI_RECEIVE) */
-	uint16_t	nvme_mi : 1;
+			/** Supports NVMe-MI */
+			uint16_t	nsrs : 1;
 
-	/** Supports SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT */
-	uint16_t	virtualization_management : 1;
+			/** Virtualization Management Supported */
+			uint16_t	vms : 1;
 
-	/** Supports SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG */
-	uint16_t	doorbell_buffer_config : 1;
+			/** Doorbell Buffer Config Supported */
+			uint16_t	dbcs : 1;
 
-	/** Supports SPDK_NVME_OPC_GET_LBA_STATUS */
-	uint16_t	get_lba_status : 1;
+			/** Get LBA Status Supported */
+			uint16_t	glss : 1;
 
-	/** Supports command and feature lockdown capability */
-	uint16_t	command_feature_lockdown : 1;
+			/** Command and Feature Lockdown Supported */
+			uint16_t	cfls : 1;
 
-	uint16_t	oacs_rsvd : 5;
+			/** Host Managed Live Migration Support */
+			uint16_t	hmlms : 1;
+
+			uint16_t	rsvd : 4;
+		};
+
+		/** Old bit names are deprecated and will be removed in 26.05 release */
+		struct {
+			uint16_t	security  : 1;
+			uint16_t	format    : 1;
+			uint16_t	firmware  : 1;
+			uint16_t	ns_manage  : 1;
+			uint16_t	device_self_test : 1;
+			uint16_t	directives : 1;
+			uint16_t	nvme_mi : 1;
+			uint16_t	virtualization_management : 1;
+			uint16_t	doorbell_buffer_config : 1;
+			uint16_t	get_lba_status : 1;
+			uint16_t	command_feature_lockdown : 1;
+			uint16_t	oacs_rsvd : 5;
+		};
+	};
 };
 
 struct spdk_nvme_cdata_fuses {

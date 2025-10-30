@@ -4175,10 +4175,10 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_named_object_begin(w, "oacs");
 
-	spdk_json_write_named_uint32(w, "security", cdata->oacs.security);
-	spdk_json_write_named_uint32(w, "format", cdata->oacs.format);
-	spdk_json_write_named_uint32(w, "firmware", cdata->oacs.firmware);
-	spdk_json_write_named_uint32(w, "ns_manage", cdata->oacs.ns_manage);
+	spdk_json_write_named_uint32(w, "security", cdata->oacs.ssrs);
+	spdk_json_write_named_uint32(w, "format", cdata->oacs.fnvms);
+	spdk_json_write_named_uint32(w, "firmware", cdata->oacs.fwds);
+	spdk_json_write_named_uint32(w, "ns_manage", cdata->oacs.nms);
 
 	spdk_json_write_object_end(w);
 
@@ -4213,7 +4213,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_end(w);
 
-	if (cdata->oacs.security) {
+	if (cdata->oacs.ssrs) {
 		spdk_json_write_named_object_begin(w, "security");
 
 		spdk_json_write_named_bool(w, "opal", nvme_ns->bdev->opal);

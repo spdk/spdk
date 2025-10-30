@@ -3772,7 +3772,7 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 	cdata->oncs.compare = !vu_transport->transport_opts.disable_compare;
 	/* libvfio-user can only support 1 connection for now */
 	cdata->oncs.reservations = 0;
-	cdata->oacs.doorbell_buffer_config = !vu_transport->transport_opts.disable_shadow_doorbells;
+	cdata->oacs.dbcs = !vu_transport->transport_opts.disable_shadow_doorbells;
 	cdata->fuses.compare_and_write = !vu_transport->transport_opts.disable_compare;
 }
 

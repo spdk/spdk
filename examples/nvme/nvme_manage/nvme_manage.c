@@ -229,9 +229,9 @@ display_controller(struct dev *dev, int model)
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
 	printf("Namespace Manage And Attach:		%s\n",
-	       cdata->oacs.ns_manage ? "Supported" : "Not Supported");
+	       cdata->oacs.nms ? "Supported" : "Not Supported");
 	printf("Namespace Format:			%s\n",
-	       cdata->oacs.format ? "Supported" : "Not Supported");
+	       cdata->oacs.fnvms ? "Supported" : "Not Supported");
 	printf("\n");
 	printf("NVM Command Set Attributes\n");
 	printf("============================\n");
@@ -524,7 +524,7 @@ attach_and_detach_ns(int attachment_op)
 		return;
 	}
 
-	if (!ctrlr->cdata->oacs.ns_manage) {
+	if (!ctrlr->cdata->oacs.nms) {
 		printf("Controller does not support ns management\n");
 		return;
 	}
@@ -555,7 +555,7 @@ add_ns(void)
 		return;
 	}
 
-	if (!ctrlr->cdata->oacs.ns_manage) {
+	if (!ctrlr->cdata->oacs.nms) {
 		printf("Controller does not support ns management\n");
 		return;
 	}
@@ -624,7 +624,7 @@ delete_ns(void)
 		return;
 	}
 
-	if (!ctrlr->cdata->oacs.ns_manage) {
+	if (!ctrlr->cdata->oacs.nms) {
 		printf("Controller does not support ns management\n");
 		return;
 	}
@@ -662,7 +662,7 @@ format_nvm(void)
 
 	cdata = ctrlr->cdata;
 
-	if (!cdata->oacs.format) {
+	if (!cdata->oacs.fnvms) {
 		printf("Controller does not support Format NVM command\n");
 		return;
 	}
@@ -788,7 +788,7 @@ update_firmware_image(void)
 
 	cdata = ctrlr->cdata;
 
-	if (!cdata->oacs.firmware) {
+	if (!cdata->oacs.fwds) {
 		printf("Controller does not support firmware download and commit command\n");
 		return;
 	}
