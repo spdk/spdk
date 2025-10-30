@@ -874,7 +874,7 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->log_page_supported[SPDK_NVME_LOG_ERROR] = true;
 	ctrlr->log_page_supported[SPDK_NVME_LOG_HEALTH_INFORMATION] = true;
 	ctrlr->log_page_supported[SPDK_NVME_LOG_FIRMWARE_SLOT] = true;
-	if (ctrlr->cdata.lpa.celp) {
+	if (ctrlr->cdata.lpa.cses) {
 		ctrlr->log_page_supported[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] = true;
 	}
 
@@ -3498,7 +3498,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 				config.bits.ana_change_notice = 1;
 			}
 		}
-		if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) && ctrlr->cdata.lpa.telemetry) {
+		if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) && ctrlr->cdata.lpa.ts) {
 			config.bits.telemetry_log_notice = 1;
 		}
 	}

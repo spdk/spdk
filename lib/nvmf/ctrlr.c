@@ -3272,7 +3272,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->cntlid = ctrlr->cntlid;
 	cdata->ver = ctrlr->vcprop.vs;
 	cdata->aerl = ctrlr->cdata.aerl;
-	cdata->lpa.edlp = 1;
+	cdata->lpa.lpeds = 1;
 	cdata->elpe = 127;
 	cdata->maxcmd = transport->opts.max_queue_depth;
 	cdata->sgls = ctrlr->cdata.sgls;
@@ -3323,7 +3323,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->frmw.slot1_ro = 1;
 		cdata->frmw.num_slots = 1;
 
-		cdata->lpa.celp = 1; /* Command Effects log page supported */
+		cdata->lpa.cses = 1; /* Command Effects log page supported */
 
 		cdata->sqes.min = 6;
 		cdata->sqes.max = 6;

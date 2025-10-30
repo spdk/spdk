@@ -2431,21 +2431,36 @@ struct spdk_nvme_ctrlr_data {
 
 	/** log page attributes */
 	struct {
-		/* per namespace smart/health log page */
-		uint8_t		ns_smart : 1;
-		/* command effects log page */
-		uint8_t		celp : 1;
-		/* extended data for get log page */
-		uint8_t		edlp: 1;
-		/* telemetry log pages and notices */
-		uint8_t		telemetry : 1;
-		/* Persistent event log */
-		uint8_t		pelp : 1;
-		/* Log pages log page */
-		uint8_t		lplp : 1;
-		/* Data Area 4 for telemetry */
-		uint8_t		da4_telemetry : 1;
-		uint8_t		lpa_rsvd : 1;
+		union {
+			struct {
+				/* SMART Support */
+				uint8_t		smarts : 1;
+				/* Commands Supported and Effects Support */
+				uint8_t		cses : 1;
+				/* Log Page Extended Data Support */
+				uint8_t		lpeds: 1;
+				/* Telemetry Support */
+				uint8_t		ts : 1;
+				/* Persistent Event Support */
+				uint8_t		pes : 1;
+				/* Miscellaneous Log Page Support */
+				uint8_t		mlps : 1;
+				/* Data Area 4 Support */
+				uint8_t		da4s : 1;
+				uint8_t		rsvd : 1;
+			};
+			/** Old bit names are deprecated and will be removed in 26.05 release */
+			struct {
+				uint8_t		ns_smart : 1;
+				uint8_t		celp : 1;
+				uint8_t		edlp: 1;
+				uint8_t		telemetry : 1;
+				uint8_t		pelp : 1;
+				uint8_t		lplp : 1;
+				uint8_t		da4_telemetry : 1;
+				uint8_t		lpa_rsvd : 1;
+			};
+		};
 	} lpa;
 
 	/** error log page entries */

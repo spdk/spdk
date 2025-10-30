@@ -544,7 +544,7 @@ spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_
 
 	nvme_ctrlr_lock(ctrlr);
 
-	if (offset && !ctrlr->cdata.lpa.edlp) {
+	if (offset && !ctrlr->cdata.lpa.lpeds) {
 		nvme_ctrlr_unlock(ctrlr);
 		return -EINVAL;
 	}

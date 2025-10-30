@@ -474,7 +474,7 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 			printf("Get Log Page (Asymmetric Namespace Access) failed\n");
 		}
 	}
-	if (cdata->lpa.celp) {
+	if (cdata->lpa.cses) {
 		if (get_cmd_effects_log_page(ctrlr) == 0) {
 			outstanding_commands++;
 		} else {
@@ -1995,7 +1995,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		       cdata->fwug * 4);
 	}
 	printf("Per-Namespace SMART Log:               %s\n",
-	       cdata->lpa.ns_smart ? "Yes" : "No");
+	       cdata->lpa.smarts ? "Yes" : "No");
 	if (cdata->cmic.ana_reporting == 0) {
 		printf("Asymmetric Namespace Access Log Page:  Not Supported\n");
 	} else {
@@ -2024,23 +2024,23 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("Subsystem NQN:                         %s\n", cdata->subnqn);
 	printf("Command Effects Log Page:              %s\n",
-	       cdata->lpa.celp ? "Supported" : "Not Supported");
+	       cdata->lpa.cses ? "Supported" : "Not Supported");
 	printf("Get Log Page Extended Data:            %s\n",
-	       cdata->lpa.edlp ? "Supported" : "Not Supported");
+	       cdata->lpa.lpeds ? "Supported" : "Not Supported");
 	printf("Telemetry Log Pages:                   %s\n",
-	       cdata->lpa.telemetry ? "Supported" : "Not Supported");
+	       cdata->lpa.ts ? "Supported" : "Not Supported");
 	printf("Persistent Event Log Pages:            %s\n",
-	       cdata->lpa.pelp ? "Supported" : "Not Supported");
+	       cdata->lpa.pes ? "Supported" : "Not Supported");
 	printf("Supported Log Pages Log Page:          %s\n",
-	       cdata->lpa.lplp ? "Supported" : "May Support");
+	       cdata->lpa.mlps ? "Supported" : "May Support");
 	printf("Commands Supported & Effects Log Page: %s\n",
-	       cdata->lpa.lplp ? "Supported" : "Not Supported");
+	       cdata->lpa.mlps ? "Supported" : "Not Supported");
 	printf("Feature Identifiers & Effects Log Page:%s\n",
-	       cdata->lpa.lplp ? "Supported" : "May Support");
+	       cdata->lpa.mlps ? "Supported" : "May Support");
 	printf("NVMe-MI Commands & Effects Log Page:   %s\n",
-	       cdata->lpa.lplp ? "Supported" : "May Support");
+	       cdata->lpa.mlps ? "Supported" : "May Support");
 	printf("Data Area 4 for Telemetry Log:         %s\n",
-	       cdata->lpa.da4_telemetry ? "Supported" : "Not Supported");
+	       cdata->lpa.da4s ? "Supported" : "Not Supported");
 	printf("Error Log Page Entries Supported:      %d\n", cdata->elpe + 1);
 	if (cdata->kas == 0) {
 		printf("Keep Alive:                            Not Supported\n");
@@ -2180,7 +2180,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	printf("\n");
 
-	if (cdata->lpa.celp) {
+	if (cdata->lpa.cses) {
 		printf("Commands Supported and Effects\n");
 		printf("==============================\n");
 

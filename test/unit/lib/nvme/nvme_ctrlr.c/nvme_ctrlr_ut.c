@@ -3268,7 +3268,7 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 	/* ana supported */
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.cdata.cmic.ana_reporting = true;
-	ctrlr.cdata.lpa.celp = 1;
+	ctrlr.cdata.lpa.cses = 1;
 	ctrlr.cdata.nanagrpid = 1;
 	ctrlr.active_ns_count = 1;
 
