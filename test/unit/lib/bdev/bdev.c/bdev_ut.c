@@ -134,6 +134,8 @@ static uint32_t g_compare_write_buf_len;
 static void *g_compare_md_buf;
 static bool g_abort_done;
 static enum spdk_bdev_io_status g_abort_status;
+static bool g_reset_done;
+static enum spdk_bdev_io_status g_reset_status;
 static void *g_zcopy_read_buf;
 static uint32_t g_zcopy_read_buf_len;
 static void *g_zcopy_write_buf;
@@ -341,9 +343,11 @@ static void
 stub_submit_request_get_buf_cb(struct spdk_io_channel *_ch,
 			       struct spdk_bdev_io *bdev_io, bool success)
 {
-	CU_ASSERT(success == true);
-
-	stub_submit_request(_ch, bdev_io);
+	if (success) {
+		stub_submit_request(_ch, bdev_io);
+	} else {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 static void
@@ -7921,6 +7925,219 @@ bdev_io_init_dif_ctx_test(void)
 	free_bdev(bdev);
 }
 
+static void
+reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	g_reset_done = true;
+	g_reset_status = bdev_io->internal.status;
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+bdev_io_iobuf_wait_abort(void)
+{
+	struct spdk_bdev_opts bdev_opts = {};
+	struct spdk_iobuf_opts iobuf_opts = {};
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
+	void **buffers;
+	int64_t i;
+	uint64_t num_blocks, io_ctx;
+	struct spdk_bdev_ext_io_opts ext_io_opts = { .size = sizeof(ext_io_opts), };
+	struct iovec iov = {};
+	int rc;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 7;
+	bdev_opts.bdev_io_cache_size = 2;
+
+	ut_init_bdev(&bdev_opts);
+	fn_table.submit_request = stub_submit_request_get_buf;
+
+	spdk_iobuf_get_opts(&iobuf_opts, sizeof(iobuf_opts));
+
+	buffers = calloc(iobuf_opts.large_pool_count + 10, sizeof(void *));
+	SPDK_CU_ASSERT_FATAL(buffers != NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	num_blocks = SPDK_CEIL_DIV(iobuf_opts.large_bufsize, bdev->blocklen);
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	io_ch = spdk_bdev_get_io_channel(desc);
+
+	bdev_ch = __io_ch_to_bdev_ch(io_ch);
+	mgmt_ch = bdev_ch->shared_resource->mgmt_ch;
+
+	/* Exhaust large buffer pool. Allocate all available large buffers directly
+	 * using spdk_iobuf_get_() until it returns NULL.
+	 */
+	for (i = 0; i < (int64_t)iobuf_opts.large_pool_count + 10; i++) {
+		buffers[i] = spdk_iobuf_get(&mgmt_ch->iobuf, iobuf_opts.large_bufsize, NULL, NULL);
+		if (buffers[i] == NULL) {
+			break;
+		}
+	}
+	SPDK_CU_ASSERT_FATAL(i < (int64_t)iobuf_opts.large_pool_count + 10);
+
+	/*
+	 * Case 1: Abort a bdev_io when it is queued in the iobuf pool after submission.
+	 */
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_abort_done = false;
+	g_abort_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	/* bdev_io does not have buffer, so bdev_io tries allocating buffer
+	 * from iobuf pool. But, iobuf pool is empty and bdev_io is queued.
+	 */
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, num_blocks, io_done, &io_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_abort_done == false);
+
+	stub_complete_io(0);
+	poll_threads();
+
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/*
+	 * Case 2: Abort a bdev_io when it is queued in the iobuf pool before submission.
+	 */
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_abort_done = false;
+	g_abort_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	/* bdev does not support memory domain, so bdev_io tries allocating buffer
+	 * from iobuf pool to push/pull data. But, iobuf pool is empty and bdev_io
+	 * is queued.
+	 */
+	ext_io_opts.memory_domain = (struct spdk_memory_domain *)0xdeadbeef;
+
+	/* Use a dummy buffer because bdev_io will be queued and aborted before
+	 * pushing/pulling data.
+	 */
+	iov.iov_base = (void *)0xfeedbeef;
+	iov.iov_len = iobuf_opts.large_bufsize;
+
+	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 0, num_blocks,
+					io_done, &io_ctx, &ext_io_opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Bdev does not support copy, so fallback path tries allocating buffer
+	 * to emulate copy. But, iobuf pool is empty and bdev_io is queued.
+	 */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_abort_done = false;
+	g_abort_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	rc = spdk_bdev_copy_blocks(desc, io_ch, 0, 100, num_blocks, io_done, &io_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+
+	/*
+	 * Case 3: Reset aborts a bdev_io when it is queued in the iobuf pool after submission.
+	 */
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_reset_done = false;
+	g_reset_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, num_blocks, io_done, &io_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	rc = spdk_bdev_reset(desc, io_ch, reset_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	stub_complete_io(1);
+	poll_threads();
+
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_reset_done == true);
+	CU_ASSERT(g_reset_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/*
+	 * Case 4: Reset aborts a bdev_io when it is queued in the iobuf pool before submission.
+	 */
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_reset_done = false;
+	g_reset_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 0, num_blocks,
+					io_done, &io_ctx, &ext_io_opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	rc = spdk_bdev_reset(desc, io_ch, reset_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	stub_complete_io(1);
+	poll_threads();
+
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_reset_done == true);
+	CU_ASSERT(g_reset_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	for (--i; i >= 0; i--) {
+		spdk_iobuf_put(&mgmt_ch->iobuf, buffers[i], iobuf_opts.large_bufsize);
+	}
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+
+	free(buffers);
+
+	fn_table.submit_request = stub_submit_request_get_buf;
+	ut_fini_bdev();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7997,6 +8214,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, get_device_stat_with_reset);
 	CU_ADD_TEST(suite, open_ext_v2_test);
 	CU_ADD_TEST(suite, bdev_io_init_dif_ctx_test);
+	CU_ADD_TEST(suite, bdev_io_iobuf_wait_abort);
 
 	allocate_cores(1);
 	allocate_threads(1);

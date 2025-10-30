@@ -439,6 +439,7 @@ static int bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_cha
 
 static bool bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort);
 static bool bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *ch, struct spdk_bdev_io *bio_to_abort);
+static bool bdev_abort_unsubmitted_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, void *bio_cb_arg);
 
 static bool claim_type_is_v2(enum spdk_bdev_claim_type type);
 static void bdev_desc_release_claims(struct spdk_bdev_desc *desc);
@@ -4663,7 +4664,7 @@ bdev_abort_all_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry 
 	if (bdev_io->internal.ch == bdev_ch) {
 		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf.len);
 		spdk_iobuf_entry_abort(ch, entry, buf_len);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
+		bdev_io_get_buf_complete(bdev_io, false);
 	}
 
 	return 0;
@@ -4745,7 +4746,7 @@ bdev_abort_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *ent
 	if (bdev_io == bio_to_abort) {
 		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf.len);
 		spdk_iobuf_entry_abort(ch, entry, buf_len);
-		spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+		bdev_io_get_buf_complete(bdev_io, false);
 		return 1;
 	}
 
@@ -4758,6 +4759,35 @@ bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, struct spdk_bdev_io *b
 	int rc;
 
 	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, bdev_abort_buf_io_cb, bio_to_abort);
+	return rc == 1;
+}
+
+static int
+bdev_abort_unsubmitted_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
+				 void *cb_ctx)
+{
+	void *bio_cb_arg = cb_ctx;
+	struct spdk_bdev_io *bdev_io;
+	uint64_t buf_len;
+
+	bdev_io = SPDK_CONTAINEROF(entry, struct spdk_bdev_io, internal.iobuf);
+	if (bdev_io->internal.caller_ctx == bio_cb_arg) {
+		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf.len);
+		spdk_iobuf_entry_abort(ch, entry, buf_len);
+		bdev_io_get_buf_complete(bdev_io, false);
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+bdev_abort_unsubmitted_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, void *bio_cb_arg)
+{
+	int rc;
+
+	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, bdev_abort_unsubmitted_buf_io_cb,
+				       bio_cb_arg);
 	return rc == 1;
 }
 
@@ -7661,6 +7691,18 @@ bdev_abort_retry(void *ctx)
 	parent_io->internal.split.outstanding = matched_ios;
 }
 
+static bool
+bdev_abort_unsubmitted_io(struct spdk_bdev_io *parent_io)
+{
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
+	void *bio_cb_arg;
+
+	mgmt_ch = parent_io->internal.ch->shared_resource->mgmt_ch;
+	bio_cb_arg = parent_io->u.bdev.abort.bio_cb_arg;
+
+	return bdev_abort_unsubmitted_buf_io(mgmt_ch, bio_cb_arg);
+}
+
 static void
 bdev_abort(struct spdk_bdev_io *parent_io)
 {
@@ -7671,6 +7713,9 @@ bdev_abort(struct spdk_bdev_io *parent_io)
 	if (matched_ios == 0) {
 		if (parent_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			bdev_queue_io_wait_with_cb(parent_io, bdev_abort_retry);
+		} else if (bdev_abort_unsubmitted_io(parent_io)) {
+			parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+			bdev_io_complete(parent_io);
 		} else {
 			/* The case the no target I/O was found is failure. */
 			parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
