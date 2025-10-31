@@ -787,6 +787,8 @@ _free_task_buffers(struct ap_task *task)
 {
 	uint32_t i;
 
+	assert(task);
+
 	if (g_workload_selection == SPDK_ACCEL_OPC_DECOMPRESS ||
 	    g_workload_selection == SPDK_ACCEL_OPC_COMPRESS) {
 		free(task->dst_iovs);
@@ -798,28 +800,20 @@ _free_task_buffers(struct ap_task *task)
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY_COPY ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIX_VERIFY ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIX_GENERATE) {
-		if (task->crc_dst) {
-			spdk_dma_free(task->crc_dst);
-		}
+		spdk_dma_free(task->crc_dst);
 		if (task->src_iovs) {
 			for (i = 0; i < task->src_iovcnt; i++) {
-				if (task->src_iovs[i].iov_base) {
-					spdk_dma_free(task->src_iovs[i].iov_base);
-				}
+				spdk_dma_free(task->src_iovs[i].iov_base);
 			}
 			free(task->src_iovs);
 		}
 		if (task->dst_iovs) {
 			for (i = 0; i < task->dst_iovcnt; i++) {
-				if (task->dst_iovs[i].iov_base) {
-					spdk_dma_free(task->dst_iovs[i].iov_base);
-				}
+				spdk_dma_free(task->dst_iovs[i].iov_base);
 			}
 			free(task->dst_iovs);
 		}
-		if (task->md_iov.iov_base) {
-			spdk_dma_free(task->md_iov.iov_base);
-		}
+		spdk_dma_free(task->md_iov.iov_base);
 	} else if (g_workload_selection == SPDK_ACCEL_OPC_XOR) {
 		if (task->sources) {
 			for (i = 0; i < g_xor_src_count; i++) {
