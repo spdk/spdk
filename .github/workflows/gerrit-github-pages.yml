@@ -3,8 +3,8 @@ name: Sync docs to github pages
 
 on:
   workflow_dispatch:
-  # schedule:
-  # - cron: "0 0 * * *"    # Every 24 hours at midnight UTC
+  schedule:
+    - cron: "0 0 * * *"    # Every 24 hours at midnight UTC
   push:
     paths:
       - doc
