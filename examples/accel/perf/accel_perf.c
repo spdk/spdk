@@ -92,11 +92,15 @@ struct ap_task {
 	struct spdk_dif_ctx	dif_ctx;
 	struct spdk_dif_error	dif_err;
 	STAILQ_ENTRY(ap_task)	link;
+	uint64_t		start_ticks;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct worker_thread {
 	struct spdk_io_channel		*ch;
 	struct spdk_accel_opcode_stats	stats;
+	uint64_t			lat_total;
+	uint64_t			lat_min;
+	uint64_t			lat_max;
 	uint64_t			xfer_failed;
 	uint64_t			injected_miscompares;
 	uint64_t			current_queue_depth;
@@ -695,6 +699,8 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 
 	worker->current_queue_depth++;
 
+	task->start_ticks = spdk_get_ticks();
+
 	switch (worker->workload) {
 	case SPDK_ACCEL_OPC_COPY:
 		rc = spdk_accel_submit_copy(worker->ch, task->dst, task->src,
@@ -866,9 +872,14 @@ accel_done(void *arg1, int status)
 	struct worker_thread *worker = task->worker;
 	uint32_t sw_crc32c;
 	struct spdk_dif_error err_blk;
+	uint64_t time = spdk_get_ticks() - task->start_ticks;
 
 	assert(worker);
 	assert(worker->current_queue_depth > 0);
+
+	worker->lat_total += time;
+	worker->lat_max = spdk_max(worker->lat_max, time);
+	worker->lat_min = spdk_min(worker->lat_min, time);
 
 	if (g_verify && status == 0) {
 		switch (worker->workload) {
@@ -1008,19 +1019,31 @@ dump_result(void)
 	uint64_t total_failed = 0;
 	uint64_t total_miscompared = 0;
 	uint64_t total_xfer_per_sec = 0;
+	uint64_t total_executed  = 0;
 	double total_bw_in_MiBps = 0;
+	double total_lat_req_ms = 0;
+	double total_lat_min_ms = 1.0E10;
+	double total_lat_max_ms = 0;
 	struct worker_thread *worker = g_workers;
 	char tmp[64];
 
-	printf("\n%-12s %20s %16s %16s %16s\n",
-	       "Core,Thread", "Transfers", "Bandwidth", "Failed", "Miscompares");
-	printf("------------------------------------------------------------------------------------\n");
+	printf("\n%-12s %8s %14s %10s %10s %10s %7s %8s\n",
+	       "Core,Thread", "IOPS", "B/W,MiB/s", "Lat,ms", "MinLat", "MaxLat", "Failed", "Miscomp");
+	printf("--------------------------------------------------------------------------------------\n");
 
 	while (worker != NULL) {
 		assert(worker->stop_time >= worker->start_time);
 		double test_time = (double)(worker->stop_time - worker->start_time) / g_tsc_rate;
 		uint64_t xfer_per_sec = (uint64_t)(worker->stats.executed / test_time);
 		double bw_in_MiBps = (double)worker->stats.num_bytes / (test_time * 1024 * 1024);
+		double lat_req_ms = (double)worker->lat_total * 1000 / g_tsc_rate;
+		double lat_min_ms = (double)worker->lat_min * 1000 / g_tsc_rate;
+		double lat_max_ms = (double)worker->lat_max * 1000 / g_tsc_rate;
+
+		total_executed += worker->stats.executed;
+		total_lat_req_ms += lat_req_ms;
+		total_lat_min_ms = spdk_min(total_lat_min_ms, lat_min_ms);
+		total_lat_max_ms = spdk_max(total_lat_max_ms, lat_max_ms);
 
 		total_failed += worker->xfer_failed;
 		total_miscompared += worker->injected_miscompares;
@@ -1029,17 +1052,19 @@ dump_result(void)
 
 		snprintf(tmp, sizeof(tmp), "%u,%u", worker->display.core, worker->display.thread);
 		if (xfer_per_sec) {
-			printf("%-12s %8" PRIu64 "/s %10.3f MiB/s %16" PRIu64 " %16" PRIu64 "\n",
-			       tmp, xfer_per_sec, bw_in_MiBps, worker->xfer_failed,
-			       worker->injected_miscompares);
+			printf("%-12s %8" PRIu64 " %14.3f %10.3f %10.3f %10.3f %7" PRIu64 " %8" PRIu64 "\n",
+			       tmp, xfer_per_sec, bw_in_MiBps, lat_req_ms / worker->stats.executed,
+			       lat_min_ms, lat_max_ms, worker->xfer_failed, worker->injected_miscompares);
 		}
 
 		worker = worker->next;
 	}
 
-	printf("====================================================================================\n");
-	printf("%-12s %8" PRIu64 "/s %10.3f MiB/s %16" PRIu64 " %16" PRIu64 "\n",
-	       "Total", total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
+	printf("======================================================================================\n");
+	printf("%-12s %8" PRIu64 " %14.3f %10.3f %10.3f %10.3f %7" PRIu64 " %8" PRIu64 "\n\n",
+	       "Total", total_xfer_per_sec, total_bw_in_MiBps,
+	       total_lat_req_ms / total_executed, total_lat_min_ms, total_lat_max_ms,
+	       total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;
 }
@@ -1160,6 +1185,7 @@ _init_thread(void *arg1)
 		fprintf(stderr, "Unable to get an accel channel\n");
 		goto error;
 	}
+	worker->lat_min = UINT64_MAX;
 
 	STAILQ_INIT(&worker->tasks_pool);
 
