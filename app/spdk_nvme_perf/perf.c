@@ -1841,6 +1841,28 @@ work_fn(void *arg)
 }
 
 static void
+usage_basic(char *program_name)
+{
+	printf("%s - NVMe Performance Testing Tool\n\n", program_name);
+	printf("ESSENTIAL OPTIONS:\n");
+	printf("  -q, --io-depth <val>     Queue depth (required)\n");
+	printf("  -o, --io-size <val>      I/O size in bytes (required)\n");
+	printf("  -w, --io-pattern <type>  Workload: read, write, randread, randwrite, rw, randrw (required)\n");
+	printf("  -t, --time <sec>         Test duration in seconds (required)\n");
+	printf("  -r, --transport <fmt>    Target device/transport (required)\n");
+	printf("  -c, --core-mask <mask>   CPU core mask (default: 1)\n");
+	printf("\n");
+	printf("EXAMPLES:\n");
+	printf("  Local NVMe:  %s -q 64 -o 4k -w randread -t 60 -r 'trtype:PCIe traddr:0000:01:00.0'\n",
+	       program_name);
+	printf("  NVMe-oF TCP: %s -q 64 -o 4K -w randread -t 60 -r 'trtype:TCP adrfam:IPv4 traddr:192.168.1.100 trsvcid:4420'\n",
+	       program_name);
+	printf("\n");
+	printf("For complete options: %s --help-full or -v\n", program_name);
+	printf("For documentation: see app/spdk_nvme_perf/README.md\n");
+}
+
+static void
 usage(char *program_name)
 {
 	printf("%s options", program_name);
@@ -2302,7 +2324,7 @@ alloc_key(const char *name, const char *path)
 	return key;
 }
 
-#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:w:y:z:A:C:DEF:GHILM:NO:P:Q:RS:T:U:VZ:"
+#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:v:w:y:z:A:C:DEF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2415,6 +2437,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"dhchap-key", required_argument, NULL, PERF_DHCHAP_PATH},
 #define PERF_DHCHAP_CTRLR_PATH		272
 	{"dhchap-ctrlr-key", required_argument, NULL, PERF_DHCHAP_CTRLR_PATH},
+#define PERF_HELP_FULL 'v'
+	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2742,6 +2766,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			g_tpoint_group_mask = strdup(optarg);
 			break;
 		case PERF_HELP:
+			usage_basic(argv[0]);
+			return HELP_RETURN_CODE;
+		case PERF_HELP_FULL:
 			usage(argv[0]);
 			return HELP_RETURN_CODE;
 		default:
