@@ -256,35 +256,6 @@ done:
 	bdev_iostat_ctx_free(bdev_ctx);
 }
 
-static int
-bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
-{
-	struct rpc_get_iostat_ctx *rpc_ctx = ctx;
-	struct bdev_get_iostat_ctx *bdev_ctx;
-	int rc;
-
-	bdev_ctx = bdev_iostat_ctx_alloc(true);
-	if (bdev_ctx == NULL) {
-		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
-		return -ENOMEM;
-	}
-
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, dummy_bdev_event_cb, NULL,
-				&bdev_ctx->desc);
-	if (rc != 0) {
-		bdev_iostat_ctx_free(bdev_ctx);
-		SPDK_ERRLOG("Failed to open bdev\n");
-		return rc;
-	}
-
-	rpc_ctx->bdev_count++;
-	bdev_ctx->rpc_ctx = rpc_ctx;
-	spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode, bdev_get_iostat_done,
-				  bdev_ctx);
-
-	return 0;
-}
-
 static void
 bdev_get_per_channel_stat_done(struct spdk_bdev *bdev, void *ctx, int status)
 {
@@ -312,6 +283,35 @@ bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 	spdk_json_write_object_end(w);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
+}
+
+static int
+bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
+{
+	struct rpc_get_iostat_ctx *rpc_ctx = ctx;
+	struct bdev_get_iostat_ctx *bdev_ctx;
+	int rc;
+
+	bdev_ctx = bdev_iostat_ctx_alloc(true);
+	if (bdev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, dummy_bdev_event_cb, NULL,
+				&bdev_ctx->desc);
+	if (rc != 0) {
+		bdev_iostat_ctx_free(bdev_ctx);
+		SPDK_ERRLOG("Failed to open bdev\n");
+		return rc;
+	}
+
+	rpc_ctx->bdev_count++;
+	bdev_ctx->rpc_ctx = rpc_ctx;
+	spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode, bdev_get_iostat_done,
+				  bdev_ctx);
+
+	return 0;
 }
 
 struct rpc_bdev_get_iostat {
