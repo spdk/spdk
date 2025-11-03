@@ -24,7 +24,7 @@ SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 static TAILQ_HEAD(, spdk_nvmf_tgt) g_nvmf_tgts = TAILQ_HEAD_INITIALIZER(g_nvmf_tgts);
 
-static spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
+spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
 
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
 

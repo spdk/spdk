@@ -392,6 +392,8 @@ struct spdk_nvmf_subsystem {
 	bool						nssr_enabled;
 };
 
+extern spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
+
 static int
 subsystem_cmp(struct spdk_nvmf_subsystem *subsystem1, struct spdk_nvmf_subsystem *subsystem2)
 {

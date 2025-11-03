@@ -158,6 +158,8 @@ static struct spdk_nvmf_transport g_transport = {
 	.ops = &g_transport_ops
 };
 
+spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
+
 int
 spdk_nvmf_transport_create_async(const char *transport_name,
 				 struct spdk_nvmf_transport_opts *tprt_opts,

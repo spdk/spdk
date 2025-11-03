@@ -90,6 +90,12 @@ nvmf_discovery_compare_trid(uint32_t filter,
 		return false;
 	}
 
+	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM) != 0 &&
+	    g_custom_discovery_filter(trid1, trid2)) {
+		SPDK_DEBUGLOG(nvmf, "custom discovery filter mismatch\n");
+		return false;
+	}
+
 	return true;
 }
 
