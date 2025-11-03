@@ -139,6 +139,7 @@ reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 	rdma_req->data.wr.num_sge = 0;
 	rdma_req->data.wr.wr.rdma.remote_addr = 0;
 	rdma_req->data.wr.wr.rdma.rkey = 0;
+	rdma_req->num_wrs = 1;
 	rdma_req->offset = 0;
 	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 
@@ -313,6 +314,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 		sgl_desc[i].address = 0x4000 + i * rtransport.transport.opts.io_unit_size;
 		sgl_desc[i].keyed.key = 0x44;
 	}
+	rdma_req.num_wrs = 2;
 
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
@@ -338,6 +340,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 		sgl_desc[i].address = 0x4000 + i * 8 * rtransport.transport.opts.io_unit_size;
 		sgl_desc[i].keyed.key = 0x44;
 	}
+	rdma_req.num_wrs = 2;
 
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
@@ -369,6 +372,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	sgl_desc[1].address = 0x4000 + rtransport.transport.opts.io_unit_size * 15 +
 			      rtransport.transport.opts.io_unit_size / 2;
 
+	rdma_req.num_wrs = 2;
+
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
 	CU_ASSERT(rc == 0);
@@ -399,6 +404,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 		sgl_desc[i].keyed.length = sgl_length;
 		sgl_desc[i].address = 0x4000 + i * sgl_length;
 	}
+	rdma_req.num_wrs = 2;
 
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
@@ -1156,6 +1162,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	rtransport.transport.opts.io_unit_size = data_bs * 16;
 	sgl->keyed.length = data_bs * 16;
 
+	rdma_req.num_wrs = 2;
+
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
 	CU_ASSERT(rc == 0);
@@ -1247,6 +1255,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 		sgl_desc[i].address = 0x4000 + i * data_bs * 4;
 		sgl_desc[i].keyed.key = 0x44;
 	}
+
+	rdma_req.num_wrs = 2;
 
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
