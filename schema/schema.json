@@ -903,6 +903,12 @@
           "description": "Block device name"
         },
         {
+          "name": "names",
+          "type": "array",
+          "required": false,
+          "description": "Array of block device names to obtain statistics from"
+        },
+        {
           "name": "per_channel",
           "type": "boolean",
           "required": false,

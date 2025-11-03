@@ -2667,7 +2667,7 @@ Example request:
   "id": 1,
   "method": "bdev_get_iostat",
   "params": {
-    "name": "Nvme0n1",
+    "names": ["Nvme0n1", "Nvme0n2"],
     "per_channel": false
   }
 }
@@ -2684,6 +2684,22 @@ Example response:
     "bdevs": [
       {
         "name": "Nvme0n1",
+        "bytes_read": 36864,
+        "num_read_ops": 2,
+        "bytes_written": 0,
+        "num_write_ops": 0,
+        "bytes_unmapped": 0,
+        "num_unmap_ops": 0,
+        "read_latency_ticks": 178904,
+        "write_latency_ticks": 0,
+        "unmap_latency_ticks": 0,
+        "queue_depth_polling_period": 2,
+        "queue_depth": 0,
+        "io_time": 0,
+        "weighted_io_time": 0
+      },
+      {
+        "name": "Nvme0n2",
         "bytes_read": 36864,
         "num_read_ops": 2,
         "bytes_written": 0,
