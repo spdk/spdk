@@ -308,8 +308,22 @@ bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 
 	rpc_ctx->bdev_count++;
 	bdev_ctx->rpc_ctx = rpc_ctx;
-	spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode, bdev_get_iostat_done,
-				  bdev_ctx);
+
+	if (rpc_ctx->per_channel) {
+		/* bdev_count equals 2 because of initial increment */
+		assert(rpc_ctx->bdev_count == 2 && "we support per_channel only for single bdev");
+		rpc_get_iostat_started(rpc_ctx);
+		spdk_json_write_named_string(rpc_ctx->w, "name", spdk_bdev_get_name(bdev));
+		spdk_json_write_named_array_begin(rpc_ctx->w, "channels");
+
+		spdk_bdev_for_each_channel(bdev,
+					   bdev_get_per_channel_stat,
+					   bdev_ctx,
+					   bdev_get_per_channel_stat_done);
+	} else {
+		spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode, bdev_get_iostat_done,
+					  bdev_ctx);
+	}
 
 	return 0;
 }
@@ -358,7 +372,6 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_get_iostat req = { .reset_mode = SPDK_BDEV_RESET_STAT_NONE };
 	struct spdk_bdev_desc *desc = NULL;
 	struct rpc_get_iostat_ctx *rpc_ctx;
-	struct bdev_get_iostat_ctx *bdev_ctx;
 	struct spdk_bdev *bdev;
 	int rc;
 
@@ -411,39 +424,8 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 
 	if (desc != NULL) {
 		bdev = spdk_bdev_desc_get_bdev(desc);
-
-		bdev_ctx = bdev_iostat_ctx_alloc(req.per_channel == false);
-		if (bdev_ctx == NULL) {
-			SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
-			rpc_ctx->rc = -ENOMEM;
-
-			spdk_bdev_close(desc);
-		} else {
-			bdev_ctx->desc = desc;
-
-			rpc_ctx->bdev_count++;
-			bdev_ctx->rpc_ctx = rpc_ctx;
-			if (req.per_channel == false) {
-				spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode,
-							  bdev_get_iostat_done, bdev_ctx);
-			} else {
-				/* If per_channel is true, there is no failure after here and
-				 * we have to start RPC response before executing
-				 * spdk_bdev_for_each_channel().
-				 */
-				rpc_get_iostat_started(rpc_ctx);
-				spdk_json_write_named_string(rpc_ctx->w, "name", spdk_bdev_get_name(bdev));
-				spdk_json_write_named_array_begin(rpc_ctx->w, "channels");
-
-				spdk_bdev_for_each_channel(bdev,
-							   bdev_get_per_channel_stat,
-							   bdev_ctx,
-							   bdev_get_per_channel_stat_done);
-
-				rpc_get_iostat_done(rpc_ctx);
-				return;
-			}
-		}
+		rpc_ctx->rc = bdev_get_iostat(rpc_ctx, bdev);
+		spdk_bdev_close(desc);
 	} else {
 		rc = spdk_for_each_bdev(rpc_ctx, bdev_get_iostat);
 		if (rc != 0 && rpc_ctx->rc == 0) {
@@ -451,7 +433,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	if (rpc_ctx->rc == 0) {
+	if (rpc_ctx->rc == 0 && !req.per_channel) {
 		/* We want to fail the RPC for all failures. If per_channel is false,
 		 * it is enough to defer starting RPC response until it is ensured that
 		 * all spdk_bdev_for_each_channel() calls will succeed or there is no bdev.
