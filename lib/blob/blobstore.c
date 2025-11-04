@@ -327,6 +327,7 @@ blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	TAILQ_INIT(&blob->xattrs_internal);
 	TAILQ_INIT(&blob->pending_persists);
 	TAILQ_INIT(&blob->persists_to_complete);
+	TAILQ_INIT(&blob->cluster_op_queue);
 
 	return blob;
 }
@@ -357,6 +358,7 @@ blob_free(struct spdk_blob *blob)
 	assert(blob != NULL);
 	assert(TAILQ_EMPTY(&blob->pending_persists));
 	assert(TAILQ_EMPTY(&blob->persists_to_complete));
+	assert(TAILQ_EMPTY(&blob->cluster_op_queue));
 
 	free(blob->active.extent_pages);
 	free(blob->clean.extent_pages);
@@ -8837,6 +8839,10 @@ struct spdk_blob_cluster_op_ctx {
 	int			rc;
 	spdk_blob_op_complete	cb_fn;
 	void			*cb_arg;
+
+	/* for serializing concurrent cluster alloc/release operations on the same extent page */
+	spdk_msg_fn		msg_fn;
+	TAILQ_ENTRY(spdk_blob_cluster_op_ctx) link;
 };
 
 static void
@@ -8849,9 +8855,85 @@ blob_op_cluster_msg_cpl(void *arg)
 }
 
 static void
+_blob_cluster_op(void *arg)
+{
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
+	struct spdk_blob *blob = ctx->blob;
+	struct spdk_blob_cluster_op_ctx *tmp;
+	uint32_t table_id = bs_cluster_to_extent_table_id(ctx->cluster_num);
+	bool queued = false;
+
+	if (!blob->use_extent_table) {
+		ctx->msg_fn(ctx);
+		return;
+	}
+
+	TAILQ_FOREACH(tmp, &blob->cluster_op_queue, link) {
+		if (tmp == ctx) {
+			/* this cluster op already in the queue, means it is triggered by
+			 * previous cluster op on the same extent table id,
+			 * and it should be the first one about this extent table id
+			 * in the queue */
+			assert(bs_cluster_to_extent_table_id(tmp->cluster_num) == table_id);
+			assert(queued == false);
+			ctx->msg_fn(ctx);
+			return;
+		}
+		if (bs_cluster_to_extent_table_id(tmp->cluster_num) == table_id) {
+			/* there is another cluster op on the same extent table id, need queue.
+			 * We continue scanning the queue after set `queued` to ensure that
+			 * there is no duplicated cluster op on the same extent table id in the queue. */
+			queued = true;
+		}
+	}
+	TAILQ_INSERT_TAIL(&blob->cluster_op_queue, ctx, link);
+
+	if (!queued) {
+		ctx->msg_fn(ctx);
+	}
+}
+
+static void
+blob_op_cluster_rm_and_trigger(struct spdk_blob_cluster_op_ctx *ctx)
+{
+	struct spdk_blob *blob = ctx->blob;
+	struct spdk_blob_cluster_op_ctx *next, *tmp, *ctx_to_trigger = NULL;
+	uint32_t idx = 0;
+	uint32_t table_id = bs_cluster_to_extent_table_id(ctx->cluster_num);
+
+	assert(spdk_get_thread() == blob->bs->md_thread && blob->use_extent_table);
+
+	TAILQ_FOREACH_SAFE(tmp, &blob->cluster_op_queue, link, next) {
+		if (bs_cluster_to_extent_table_id(tmp->cluster_num) == table_id) {
+			if (idx == 0) {
+				/* first matching entry is the one being removed */
+				TAILQ_REMOVE(&blob->cluster_op_queue, tmp, link);
+				assert(tmp == ctx);
+				idx++;
+			} else {
+				/* second matching entry is the next to trigger
+				 * don't remove it from the queue yet
+				 * as it will be removed when its operation completes
+				 */
+				ctx_to_trigger = tmp;
+				break;
+			}
+		}
+	}
+
+	if (ctx_to_trigger) {
+		spdk_thread_send_msg(blob->bs->md_thread, _blob_cluster_op, ctx_to_trigger);
+	}
+}
+
+static void
 blob_op_cluster_msg_cb(void *arg, int bserrno)
 {
 	struct spdk_blob_cluster_op_ctx *ctx = arg;
+
+	if (ctx->blob->use_extent_table) {
+		blob_op_cluster_rm_and_trigger(ctx);
+	}
 
 	ctx->rc = bserrno;
 	spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
@@ -8884,6 +8966,10 @@ blob_free_cluster_msg_cb(void *arg, int bserrno)
 	spdk_spin_lock(&ctx->blob->bs->used_lock);
 	bs_release_cluster(ctx->blob->bs, ctx->cluster);
 	spdk_spin_unlock(&ctx->blob->bs->used_lock);
+
+	if (ctx->blob->use_extent_table) {
+		blob_op_cluster_rm_and_trigger(ctx);
+	}
 
 	ctx->rc = bserrno;
 	spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
@@ -8974,10 +9060,11 @@ blob_insert_cluster_msg(void *arg)
 {
 	struct spdk_blob_cluster_op_ctx *ctx = arg;
 	uint32_t *extent_page;
+	int rc;
 
-	ctx->rc = blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
-	if (ctx->rc != 0) {
-		spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
+	rc = blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
+	if (rc != 0) {
+		blob_op_cluster_msg_cb(ctx, rc);
 		return;
 	}
 
@@ -9035,8 +9122,9 @@ blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 	ctx->page = page;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->msg_fn = blob_insert_cluster_msg;
 
-	spdk_thread_send_msg(blob->bs->md_thread, blob_insert_cluster_msg, ctx);
+	spdk_thread_send_msg(blob->bs->md_thread, _blob_cluster_op, ctx);
 }
 
 static void
@@ -9097,8 +9185,9 @@ blob_free_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num, uin
 	ctx->page = page;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->msg_fn = blob_free_cluster_msg;
 
-	spdk_thread_send_msg(blob->bs->md_thread, blob_free_cluster_msg, ctx);
+	spdk_thread_send_msg(blob->bs->md_thread, _blob_cluster_op, ctx);
 }
 
 /* START spdk_blob_close */
