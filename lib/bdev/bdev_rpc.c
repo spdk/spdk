@@ -391,6 +391,9 @@ static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
 	{"names", offsetof(struct rpc_bdev_get_iostat, names), rpc_decode_iostat_bdev_names, true},
 };
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_get_iostat_with_name,
+			      "--name option for bdev_get_iostat is deprecated", "v26.05", 0);
+
 static void
 rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
@@ -398,6 +401,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_get_iostat req = { .reset_mode = SPDK_BDEV_RESET_STAT_NONE, .names.count = UINT32_MAX };
 	struct rpc_get_iostat_ctx *rpc_ctx;
 	int rc;
+	static bool deprecated_name_option_used = false;
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_bdev_get_iostat_decoders,
@@ -417,6 +421,10 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		}
 
 		if (req.name) {
+			if (!deprecated_name_option_used) {
+				SPDK_LOG_DEPRECATED(bdev_get_iostat_with_name);
+				deprecated_name_option_used = true;
+			}
 			req.names.names[0] = strdup(req.name);
 			if (!req.names.names[0]) {
 				rc = -ENOMEM;

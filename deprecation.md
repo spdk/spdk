@@ -19,6 +19,13 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
+### bdev
+
+#### `bdev_get_iostat`
+
+`--name` option will be removed in the 26.05 release. `--names` option should be used instead,
+it allows providing array of devices names to obtain statistics from.
+
 ### util/net
 
 #### `spdk_net_getaddr`
