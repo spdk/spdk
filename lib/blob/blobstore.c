@@ -2659,6 +2659,8 @@ struct spdk_blob_free_cluster_ctx {
 	uint64_t cluster_num;
 	uint32_t extent_page;
 	spdk_bs_sequence_t *seq;
+	TAILQ_ENTRY(spdk_blob_free_cluster_ctx) link;
+	struct spdk_bs_channel *bs_channel;
 };
 
 static void
@@ -2690,11 +2692,39 @@ static void
 blob_free_cluster_cpl(void *cb_arg, int bserrno)
 {
 	struct spdk_blob_free_cluster_ctx *ctx = cb_arg;
-	spdk_bs_sequence_t *seq = ctx->seq;
+	struct spdk_bs_channel *bs_channel = ctx->bs_channel;
+	struct spdk_blob_free_cluster_ctx *next;
 
-	bs_sequence_finish(seq, bserrno);
+	/* The head of pending_free_cluster is always the in-flight ctx. */
+	assert(TAILQ_FIRST(&bs_channel->pending_free_cluster) == ctx);
+	TAILQ_REMOVE(&bs_channel->pending_free_cluster, ctx, link);
+	next = TAILQ_FIRST(&bs_channel->pending_free_cluster);
 
+	bs_sequence_finish(ctx->seq, bserrno);
 	free(ctx);
+
+	if (next != NULL) {
+		blob_free_cluster_on_md_thread(next->blob, next->cluster_num,
+					       next->extent_page, next->md_page,
+					       blob_free_cluster_cpl, next);
+	}
+}
+
+static void
+blob_free_cluster_serially(struct spdk_blob_free_cluster_ctx *ctx)
+{
+	struct spdk_bs_channel *bs_channel = ctx->bs_channel;
+	bool was_empty = TAILQ_EMPTY(&bs_channel->pending_free_cluster);
+
+	TAILQ_INSERT_TAIL(&bs_channel->pending_free_cluster, ctx, link);
+	if (!was_empty) {
+		/* The in-flight head will pick us up from its completion. */
+		return;
+	}
+
+	blob_free_cluster_on_md_thread(ctx->blob, ctx->cluster_num,
+				       ctx->extent_page, ctx->md_page,
+				       blob_free_cluster_cpl, ctx);
 }
 
 static void
@@ -3130,8 +3160,7 @@ spdk_free_cluster_unmap_complete(void *cb_arg, int bserrno)
 		return;
 	}
 
-	blob_free_cluster_on_md_thread(ctx->blob, ctx->cluster_num,
-				       ctx->extent_page, ctx->md_page, blob_free_cluster_cpl, ctx);
+	blob_free_cluster_serially(ctx);
 }
 
 static void
@@ -3269,6 +3298,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 			ctx->page = cluster_start_page;
 			ctx->cluster_num = cluster_number;
 			ctx->md_page = bs_channel->release_cluster_page;
+			ctx->bs_channel = bs_channel;
 			ctx->seq = bs_sequence_start_bs(_ch, &cpl);
 			if (!ctx->seq) {
 				free(ctx);
@@ -3668,6 +3698,8 @@ bs_channel_create(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&channel->need_cluster_alloc);
 	TAILQ_INIT(&channel->queued_io);
+	TAILQ_INIT(&channel->pending_free_cluster);
+
 	RB_INIT(&channel->esnap_channels);
 
 	return 0;
@@ -3696,6 +3728,7 @@ bs_channel_destroy(void *io_device, void *ctx_buf)
 	free(channel->req_mem);
 	spdk_free(channel->new_cluster_page);
 	spdk_free(channel->release_cluster_page);
+	assert(TAILQ_EMPTY(&channel->pending_free_cluster));
 	channel->dev->destroy_channel(channel->dev, channel->dev_channel);
 }
 

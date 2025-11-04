@@ -5277,6 +5277,83 @@ blob_thin_prov_rw_iov(void)
 }
 
 static void
+blob_thin_prov_unmap_update_extpage_ordered(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	struct spdk_io_channel *channel;
+	struct spdk_bs_channel *bs_channel;
+	uint64_t io_units_per_cluster, free_clusters;
+	uint8_t payload[10 * BLOCKLEN];
+	struct spdk_blob_free_cluster_ctx *ctx_bak[2], *ctx[2], *tmp;
+	uint32_t tailq_len;
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+	io_units_per_cluster = bs->io_units_per_cluster;
+
+	/* Set blob as thin provisioned */
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = 4;
+	blob = ut_blob_create_and_open(bs, &opts);
+
+	/* Alloc io_ch */
+	set_thread(1);
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+	bs_channel = spdk_io_channel_get_ctx(channel);
+
+	/* Write to the blob to alloc 2 clusters */
+	spdk_blob_io_write(blob, channel, payload, 0, 1, blob_op_complete, NULL);
+	spdk_blob_io_write(blob, channel, payload, io_units_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(bs_io_unit_is_allocated(blob, 0));
+	CU_ASSERT(bs_io_unit_is_allocated(blob, io_units_per_cluster));
+	CU_ASSERT(free_clusters - 2 == spdk_bs_free_cluster_count(bs));
+
+	/* Unmap cluster by two reqs, the extpage updating should be executed by order */
+	CU_ASSERT(TAILQ_EMPTY(&bs_channel->pending_free_cluster));
+	spdk_blob_io_unmap(blob, channel, 0, io_units_per_cluster, blob_op_complete, NULL);
+	spdk_blob_io_unmap(blob, channel, io_units_per_cluster, io_units_per_cluster, blob_op_complete,
+			   NULL);
+	poll_thread(1);
+
+	tailq_len = 0;
+	TAILQ_FOREACH(tmp, &bs_channel->pending_free_cluster, link) {
+		ctx_bak[tailq_len++] = tmp;
+	}
+	CU_ASSERT(tailq_len == 2);
+
+	/* mdthread execute extpage updating for req0 */
+	poll_thread(0);
+	/* req0 callback execute on thread1, the queue len should be 1 */
+	poll_thread(1);
+	tailq_len = 0;
+	TAILQ_FOREACH(tmp, &bs_channel->pending_free_cluster, link) {
+		ctx[tailq_len++] = tmp;
+	}
+	CU_ASSERT(tailq_len == 1);
+	CU_ASSERT(ctx[0] == ctx_bak[1]);
+	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+
+	/* execute extpage updating for req1 and execute callback */
+	poll_thread(0);
+	poll_thread(1);
+	tailq_len = 0;
+	TAILQ_FOREACH(tmp, &bs_channel->pending_free_cluster, link) {
+		ctx[tailq_len++] = tmp;
+	}
+	CU_ASSERT(tailq_len == 0);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	spdk_bs_free_io_channel(channel);
+	set_thread(0);
+	ut_blob_close_and_delete(bs, blob);
+}
+
+static void
 blob_thin_prov_update_extpage_ordered(void)
 {
 	struct spdk_blob_store *bs = g_bs;
@@ -10546,6 +10623,7 @@ main(int argc, char **argv)
 		CU_ADD_TEST(suite_bs, blob_thin_prov_rw_iov);
 		CU_ADD_TEST(suite_bs, blob_thin_prov_update_extpage_ordered);
 		CU_ADD_TEST(suite_bs, blob_thin_prov_alloc_extpage_concurrently);
+		CU_ADD_TEST(suite_bs, blob_thin_prov_unmap_update_extpage_ordered);
 		CU_ADD_TEST(suite, bs_load_iter_test);
 		CU_ADD_TEST(suite_bs, blob_snapshot_rw);
 		CU_ADD_TEST(suite_bs, blob_snapshot_rw_iov);

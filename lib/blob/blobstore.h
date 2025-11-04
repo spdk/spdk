@@ -225,6 +225,8 @@ struct spdk_bs_channel {
 	/* This page is only used during release of an existing cluster. */
 	struct spdk_blob_md_page        *release_cluster_page;
 
+	TAILQ_HEAD(, spdk_blob_free_cluster_ctx) pending_free_cluster;
+
 	RB_HEAD(blob_esnap_channel_tree, blob_esnap_channel) esnap_channels;
 };
 
