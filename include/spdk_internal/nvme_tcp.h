@@ -342,32 +342,6 @@ end:
 	return iovcnt - sgl.iovcnt;
 }
 
-static int
-nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
-		   void *buf)
-{
-	int rc;
-
-	rc = spdk_sock_recv(sock, buf, bytes);
-	if (rc > 0) {
-		return rc;
-	}
-
-	if (rc < 0) {
-		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
-			return 0;
-		}
-
-		/* For connect reset issue, do not output error log */
-		if (rc != -ECONNRESET) {
-			SPDK_ERRLOG("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		}
-	}
-
-	/* connection closed */
-	return NVME_TCP_CONNECTION_FATAL;
-}
-
 static void
 nvme_tcp_pdu_set_data(struct nvme_tcp_pdu *pdu, void *data, uint32_t data_len)
 {

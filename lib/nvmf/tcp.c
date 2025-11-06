@@ -2521,6 +2521,33 @@ err:
 }
 
 static int
+nvmf_tcp_read_data(struct spdk_sock *sock, int bytes,
+		   void *buf)
+{
+	int rc;
+
+	rc = spdk_sock_recv(sock, buf, bytes);
+
+	if (rc > 0) {
+		return rc;
+	}
+
+	if (rc < 0) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
+			return 0;
+		}
+
+		/* For connect reset issue, do not output error log */
+		if (rc != -ECONNRESET) {
+			SPDK_ERRLOG("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+		}
+	}
+
+	/* connection closed */
+	return NVME_TCP_CONNECTION_FATAL;
+}
+
+static int
 nvmf_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 {
 	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
@@ -2549,7 +2576,7 @@ end:
 	assert(iovcnt > 0);
 
 	if (iovcnt == 1) {
-		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base);
+		return nvmf_tcp_read_data(sock, iov->iov_len, iov->iov_base);
 	}
 
 	rc = spdk_sock_readv(sock, iov, iovcnt);
@@ -2613,7 +2640,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				return rc;
 			}
 
-			rc = nvme_tcp_read_data(tqpair->sock,
+			rc = nvmf_tcp_read_data(tqpair->sock,
 						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
 						(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
 			if (rc < 0) {
@@ -2634,7 +2661,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-			rc = nvme_tcp_read_data(tqpair->sock,
+			rc = nvmf_tcp_read_data(tqpair->sock,
 						pdu->psh_len - pdu->psh_valid_bytes,
 						(void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
 			if (rc < 0) {

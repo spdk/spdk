@@ -2166,6 +2166,31 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 }
 
 static int
+nvme_tcp_read_data(struct spdk_sock *sock, int bytes, void *buf)
+{
+	int rc;
+
+	rc = spdk_sock_recv(sock, buf, bytes);
+	if (rc > 0) {
+		return rc;
+	}
+
+	if (rc < 0) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
+			return 0;
+		}
+
+		/* For connect reset issue, do not output error log */
+		if (rc != -ECONNRESET) {
+			SPDK_ERRLOG("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+		}
+	}
+
+	/* connection closed */
+	return NVME_TCP_CONNECTION_FATAL;
+}
+
+static int
 nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 {
 	int rc;
