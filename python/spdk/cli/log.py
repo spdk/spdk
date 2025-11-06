@@ -5,7 +5,6 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
 import argparse
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
@@ -62,7 +61,7 @@ def add_parser(subparsers):
     p.set_defaults(func=log_get_print_level)
 
     def log_enable_timestamps(args):
-        ret = args.client.log_enable_timestamps(enabled=args.enabled)
+        args.client.log_enable_timestamps(enabled=args.enabled)
     p = subparsers.add_parser('log_enable_timestamps',
                               help='Enable or disable timestamps.')
     # TODO: this group is deprecated, remove in next version

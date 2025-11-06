@@ -72,3 +72,17 @@ path = "spdk/version.py"
 "../scripts/rpc.py" = "spdk/spdk_rpc.py"
 "../scripts/sma.py" = "spdk/spdk_sma.py"
 "../scripts/spdkcli.py" = "spdk/spdk_cli.py"
+
+[tool.ruff]
+fix = false
+line-length = 140
+exclude = [
+    "xnvme",
+    "python/spdk/sma",
+    "ocf",
+    "libvfio-user",
+    "intel-ipsec-mb",
+    "dpdk",
+    "test",
+    "scripts",
+]

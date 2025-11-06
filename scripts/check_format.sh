@@ -478,7 +478,7 @@ function check_python_style() {
 	fi
 
 	if [ -n "${PEP8}" ]; then
-		echo -n "Checking Python style..."
+		echo -n "Checking Python ${PEP8} style..."
 
 		PEP8_ARGS=" --max-line-length=140"
 
@@ -494,6 +494,22 @@ function check_python_style() {
 		rm -f pep8.log
 	else
 		echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
+	fi
+
+	if hash ruff 2> /dev/null; then
+		echo -n "Checking Python ruff style..."
+		if out=$(ruff --config "$rootdir/python/pyproject.toml" check 2>&1); then
+			echo " OK"
+		else
+			cat <<- WARN
+				Python formatting errors detected.
+
+				$out
+			WARN
+			rc=1
+		fi
+	else
+		echo "You do not have ruff installed, so ruff style will not be checked!"
 	fi
 
 	return $rc

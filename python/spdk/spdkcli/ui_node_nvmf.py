@@ -2,6 +2,7 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
+import json
 from ..rpc.client import JSONRPCException
 from .ui_node import UINode
 

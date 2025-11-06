@@ -7,7 +7,6 @@ from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI
 from ..rpc import config
 from ..rpc.cmd_parser import strip_globals, apply_defaults, group_as, remove_null
-from functools import wraps
 
 
 class UIRoot(UINode):
@@ -188,6 +187,7 @@ class UIRoot(UINode):
     @verbose
     def create_error_bdev(self, **kwargs):
         response = self.client.bdev_error_create(**kwargs)
+        return response
 
     @verbose
     def bdev_error_delete(self, **kwargs):

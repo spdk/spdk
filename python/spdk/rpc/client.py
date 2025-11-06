@@ -10,19 +10,19 @@ import logging
 import copy
 import ctypes
 
-from .cmd_parser import remove_null, print_array, print_dict, print_json
+from .cmd_parser import remove_null, print_array, print_dict, print_json  # noqa
 
 
 def get_addr_type(addr):
     try:
         socket.inet_pton(socket.AF_INET, addr)
         return socket.AF_INET
-    except Exception as e:
+    except Exception:
         pass
     try:
         socket.inet_pton(socket.AF_INET6, addr)
         return socket.AF_INET6
-    except Exception as e:
+    except Exception:
         pass
     if os.path.exists(addr):
         return socket.AF_UNIX
@@ -62,7 +62,7 @@ class JSONRPCClient(object):
             try:
                 self._connect(addr, port)
                 return
-            except Exception as e:
+            except Exception:
                 # ignore and retry in 200ms
                 time.sleep(0.2)
 

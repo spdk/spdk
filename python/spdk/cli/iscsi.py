@@ -5,7 +5,6 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
 import argparse
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
@@ -348,7 +347,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 portals.append({'host': ip, 'port': port})
             else:
                 port = split_port_cpumask[0]
-                cpumask = split_port_cpumask[1]
                 portals.append({'host': ip, 'port': port})
                 print("WARNING: Specifying a portal group with a CPU mask is no longer supported. Ignoring it.")
         args.client.iscsi_create_portal_group(

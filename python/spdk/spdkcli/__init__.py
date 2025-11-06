@@ -2,4 +2,4 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
-from .ui_root import UIRoot
+from .ui_root import UIRoot as UIRoot

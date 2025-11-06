@@ -5,7 +5,6 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
 import argparse
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
@@ -127,7 +126,7 @@ def add_parser(subparsers):
     p.set_defaults(func=thread_get_stats)
 
     def thread_set_cpumask(args):
-        ret = args.client.thread_set_cpumask(
+        args.client.thread_set_cpumask(
                                          id=args.id,
                                          cpumask=args.cpumask)
     p = subparsers.add_parser('thread_set_cpumask',

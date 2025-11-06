@@ -5,7 +5,6 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
 import argparse
 from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
