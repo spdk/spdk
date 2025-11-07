@@ -9,3 +9,7 @@ ijson
 python-magic
 pyyaml
 Jinja2
+ruff
+mypy
+build
+twine
