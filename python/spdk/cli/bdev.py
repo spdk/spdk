@@ -6,9 +6,10 @@
 #
 
 import argparse
+
+from spdk.rpc.client import print_array, print_dict, print_json  # noqa  # noqa
 from spdk.rpc.cmd_parser import strip_globals
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
-from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
+from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):

@@ -87,6 +87,14 @@ exclude = [
     "scripts",
 ]
 
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "W",  # warnings
+    "I",  # isort (import sorting)
+]
+
 [tool.mypy]
 exclude = [
     "/spdk/sma",

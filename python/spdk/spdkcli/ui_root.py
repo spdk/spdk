@@ -2,11 +2,11 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
-from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
-from .ui_node_nvmf import UINVMf
-from .ui_node_iscsi import UIISCSI
 from ..rpc import config
-from ..rpc.cmd_parser import strip_globals, apply_defaults, group_as, remove_null
+from ..rpc.cmd_parser import apply_defaults, group_as, remove_null, strip_globals
+from .ui_node import UIBdevs, UILvolStores, UINode, UIVhosts
+from .ui_node_iscsi import UIISCSI
+from .ui_node_nvmf import UINVMf
 
 
 class UIRoot(UINode):

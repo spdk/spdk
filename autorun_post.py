@@ -4,14 +4,15 @@
 #  All rights reserved.
 
 
-import shutil
-import subprocess
 import argparse
+import glob
 import itertools
 import os
-import sys
-import glob
 import re
+import shutil
+import subprocess
+import sys
+
 import pandas as pd
 
 

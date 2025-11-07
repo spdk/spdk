@@ -4,11 +4,11 @@
 #  All rights reserved.
 #
 
-import logging
 import argparse
+import logging
 import os
-import sys
 import shlex
+import sys
 
 try:
     from shlex import quote

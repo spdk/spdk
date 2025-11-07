@@ -2,10 +2,12 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
-from configshell_fb import ConfigNode
-from uuid import UUID
-from ..rpc.client import JSONRPCException
 import json
+from uuid import UUID
+
+from configshell_fb import ConfigNode
+
+from ..rpc.client import JSONRPCException
 
 
 def convert_bytes_to_human(size):

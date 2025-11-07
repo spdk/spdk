@@ -5,11 +5,12 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
 import argparse
-from spdk.rpc.cmd_parser import strip_globals, apply_defaults, group_as
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
-from spdk.rpc.helpers import DeprecateTrueAction, DeprecateFalseAction
+import sys
+
+from spdk.rpc.client import print_array, print_dict, print_json  # noqa  # noqa
+from spdk.rpc.cmd_parser import apply_defaults, group_as, strip_globals
+from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):

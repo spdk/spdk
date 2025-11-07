@@ -2,11 +2,10 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
+import io
 import json
 import os
 import sys
-import io
-
 
 try:
     from shlex import quote

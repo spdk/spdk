@@ -2,9 +2,9 @@
 #  Copyright (C) 2019 Intel Corporation.
 #  All rights reserved.
 
-import sys
 import argparse
 import functools
+import sys
 
 deprecated_aliases: dict[str, str] = {}
 

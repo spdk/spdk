@@ -2,15 +2,15 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
-import json
-import socket
-import time
-import os
-import logging
 import copy
 import ctypes
+import json
+import logging
+import os
+import socket
+import time
 
-from .cmd_parser import remove_null, print_array, print_dict, print_json  # noqa
+from .cmd_parser import print_array, print_dict, print_json, remove_null  # noqa
 
 
 def get_addr_type(addr):
