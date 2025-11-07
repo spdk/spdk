@@ -61,7 +61,8 @@
         {"name": "failure", "value": 1},
         {"name": "pending", "value": 2},
         {"name": "corrupt_data", "value": 3},
-        {"name": "nomem", "value": 4}
+        {"name": "nomem", "value": 4},
+        {"name": "nvme_failure", "value": 5}
       ]
     },
     {
@@ -2677,7 +2678,19 @@
           "type": "enum",
           "class": "bdev_error_inject_error_type",
           "required": true,
-          "description": "error type 'failure' 'pending' 'corrupt_data' 'nomem'"
+          "description": "error type 'failure' 'nvme_failure' 'pending' 'corrupt_data' 'nomem'"
+        },
+        {
+          "name": "nvme_sct",
+          "type": "uint32",
+          "required": false,
+          "description": "the NVMe SCT error for 'nvme_failure' type (default:0)"
+        },
+        {
+          "name": "nvme_sc",
+          "type": "uint32",
+          "required": false,
+          "description": "the NVMe SC error for 'nvme_failure' type (default:0)"
         },
         {
           "name": "num",

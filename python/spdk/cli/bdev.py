@@ -1118,6 +1118,8 @@ def add_parser(subparsers):
                                          name=args.name,
                                          io_type=args.io_type,
                                          error_type=args.error_type,
+                                         nvme_sct=args.nvme_sct,
+                                         nvme_sc=args.nvme_sc,
                                          num=args.num,
                                          queue_depth=args.queue_depth,
                                          corrupt_offset=args.corrupt_offset,
@@ -1126,7 +1128,9 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_error_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
     p.add_argument('io_type', choices=['clear', 'read', 'write', 'unmap', 'flush', 'all'], help='IO type')
-    p.add_argument('error_type', choices=['failure', 'pending', 'corrupt_data', 'nomem'], help='Error type')
+    p.add_argument('error_type', choices=['failure', 'nvme_failure', 'pending', 'corrupt_data', 'nomem'], help='Error type')
+    p.add_argument('--nvme-sct', help="The NVMe SCT error for 'nvme_failure' type. Default is 0.", type=int)
+    p.add_argument('--nvme-sc', help="The NVMe SC error for 'nvme_failure' type. Default is 0.", type=int)
     p.add_argument(
         '-n', '--num', help='the number of commands you want to fail', type=int)
     p.add_argument(

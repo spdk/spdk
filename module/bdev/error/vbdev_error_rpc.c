@@ -111,6 +111,8 @@ static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoder
 	{"name", offsetof(struct rpc_bdev_error_inject_error_ctx, name), spdk_json_decode_string},
 	{"io_type", offsetof(struct rpc_bdev_error_inject_error_ctx, io_type), rpc_error_bdev_decode_io_type},
 	{"error_type", offsetof(struct rpc_bdev_error_inject_error_ctx, error_type), rpc_decode_bdev_error_inject_error_type},
+	{"nvme_sct", offsetof(struct rpc_bdev_error_inject_error_ctx, nvme_sct), spdk_json_decode_uint32, true},
+	{"nvme_sc", offsetof(struct rpc_bdev_error_inject_error_ctx, nvme_sc), spdk_json_decode_uint32, true},
 	{"num", offsetof(struct rpc_bdev_error_inject_error_ctx, num), spdk_json_decode_uint32, true},
 	{"queue_depth", offsetof(struct rpc_bdev_error_inject_error_ctx, queue_depth), spdk_json_decode_uint64, true},
 	{"corrupt_offset", offsetof(struct rpc_bdev_error_inject_error_ctx, corrupt_offset), spdk_json_decode_uint64, true},
@@ -134,12 +136,24 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if ((req.error_type == RPC_BDEV_ERROR_INJECT_ERROR_TYPE_NVME_FAILURE &&
+	     (req.nvme_sct == 0 && req.nvme_sc == 0)) ||
+	    (req.error_type != RPC_BDEV_ERROR_INJECT_ERROR_TYPE_NVME_FAILURE &&
+	     (req.nvme_sct != 0 || req.nvme_sc != 0))) {
+		SPDK_ERRLOG("nvme_sct or nvme_sc should be specified for NVMe error injection.\n");
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "nvme_sct or nvme_sc should be specified for NVMe error injection");
+		goto cleanup;
+	}
+
 	opts.io_type = req.io_type;
 	opts.error_type = req.error_type;
 	opts.error_num = req.num;
 	opts.error_qd = req.queue_depth;
 	opts.corrupt_offset = req.corrupt_offset;
 	opts.corrupt_value = req.corrupt_value;
+	opts.nvme_sct = req.nvme_sct;
+	opts.nvme_sc = req.nvme_sc;
 
 	rc = vbdev_error_inject_error(req.name, &opts);
 	if (rc) {

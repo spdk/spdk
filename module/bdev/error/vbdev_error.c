@@ -31,6 +31,8 @@ static TAILQ_HEAD(, spdk_vbdev_error_config) g_error_config
 struct vbdev_error_info {
 	uint32_t			error_type;
 	uint32_t			error_num;
+	uint32_t			nvme_sct;
+	uint32_t			nvme_sc;
 	uint64_t			error_qd;
 	uint64_t			corrupt_offset;
 	uint8_t				corrupt_value;
@@ -133,6 +135,8 @@ vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
 	if (0xffffffff == opts->io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
 			error_disk->error_vector[i].error_type = opts->error_type;
+			error_disk->error_vector[i].nvme_sct = opts->nvme_sct;
+			error_disk->error_vector[i].nvme_sc = opts->nvme_sc;
 			error_disk->error_vector[i].error_num = opts->error_num;
 			error_disk->error_vector[i].error_qd = opts->error_qd;
 			error_disk->error_vector[i].corrupt_offset = opts->corrupt_offset;
@@ -144,6 +148,8 @@ vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
 		}
 	} else {
 		error_disk->error_vector[opts->io_type].error_type = opts->error_type;
+		error_disk->error_vector[opts->io_type].nvme_sct = opts->nvme_sct;
+		error_disk->error_vector[opts->io_type].nvme_sc = opts->nvme_sc;
 		error_disk->error_vector[opts->io_type].error_num = opts->error_num;
 		error_disk->error_vector[opts->io_type].error_qd = opts->error_qd;
 		error_disk->error_vector[opts->io_type].corrupt_offset = opts->corrupt_offset;
@@ -289,6 +295,10 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	switch (error_io->error_type) {
 	case VBDEV_IO_FAILURE:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
+	case VBDEV_IO_NVME_FAILURE:
+		spdk_bdev_io_complete_nvme_status(bdev_io, 0, error_disk->error_vector[bdev_io->type].nvme_sct,
+						  error_disk->error_vector[bdev_io->type].nvme_sc);
 		break;
 	case VBDEV_IO_NOMEM:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);

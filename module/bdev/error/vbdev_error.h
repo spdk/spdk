@@ -16,6 +16,7 @@ enum vbdev_error_type {
 	VBDEV_IO_PENDING,
 	VBDEV_IO_CORRUPT_DATA,
 	VBDEV_IO_NOMEM,
+	VBDEV_IO_NVME_FAILURE,
 };
 
 typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);
@@ -42,6 +43,8 @@ void vbdev_error_delete(const char *error_vbdev_name, spdk_delete_error_complete
 struct vbdev_error_inject_opts {
 	uint32_t io_type;
 	uint32_t error_type;
+	uint32_t nvme_sct;
+	uint32_t nvme_sc;
 	uint32_t error_num;
 	uint64_t error_qd;
 	uint64_t corrupt_offset;
