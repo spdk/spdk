@@ -27,9 +27,8 @@ jobs:
         run: |
           # cuse is not needed for make version target and installing it just takes time and bring no value
           ./configure --without-nvme-cuse
-          make -C python spdk/version.py
           python -m pip install build
-          python -m build python/
+          make -C python build
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4

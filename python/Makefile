@@ -44,12 +44,16 @@ all: spdk/version.py
 
 clean:
 	$(Q)rm -f spdk/version.py
+	$(Q)rm -rf $(SPDK_ROOT_DIR)/python/dist
 
 spdk/version.py: $(SPDK_ROOT_DIR)/VERSION
 	$(Q)printf "__version__ = '%d.%d%s%s'\n" \
 		$(version_major) $(version_minor) \
 		$(shell [ $(version_patch) != 0 ] && echo -n ".$(version_patch)") \
 		$(shell echo -n \"$(version_suffix)\" | sed 's/-pre/rc0/g' | tr -d -) > spdk/version.py
+
+build: spdk/version.py
+	$(Q)python -m build $(SPDK_ROOT_DIR)/python/
 
 install:
 	$(Q)$(setup_cmd) $(SPDK_ROOT_DIR)/python
@@ -62,4 +66,4 @@ uninstall:
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-cli
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-mcp
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall build
