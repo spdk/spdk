@@ -471,33 +471,8 @@ function check_attr_packed() {
 function check_python_style() {
 	local rc=0
 
-	if hash pycodestyle 2> /dev/null; then
-		PEP8=pycodestyle
-	elif hash pep8 2> /dev/null; then
-		PEP8=pep8
-	fi
-
-	if [ -n "${PEP8}" ]; then
-		echo -n "Checking Python ${PEP8} style..."
-
-		PEP8_ARGS=" --max-line-length=140"
-
-		error=0
-		git ls-files '*.py' | xargs -P$(nproc) -n1 $PEP8 $PEP8_ARGS > pep8.log || error=1
-		if [ $error -ne 0 ]; then
-			echo " Python formatting errors detected"
-			cat pep8.log
-			rc=1
-		else
-			echo " OK"
-		fi
-		rm -f pep8.log
-	else
-		echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
-	fi
-
 	if hash ruff 2> /dev/null; then
-		echo -n "Checking Python ruff style..."
+		echo -n "Linting Python with ruff..."
 		if out=$(ruff --config "$rootdir/python/pyproject.toml" check 2>&1); then
 			echo " OK"
 		else
@@ -513,7 +488,7 @@ function check_python_style() {
 	fi
 
 	if hash mypy 2> /dev/null; then
-		echo -n "Checking Python mypy style..."
+		echo -n "Performing static type checking with mypy..."
 		if out=$(mypy --config-file "$rootdir/python/pyproject.toml" python 2>&1); then
 			echo " OK"
 		else
