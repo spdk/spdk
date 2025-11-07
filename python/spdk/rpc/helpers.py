@@ -6,7 +6,7 @@ import sys
 import argparse
 import functools
 
-deprecated_aliases = {}
+deprecated_aliases: dict[str, str] = {}
 
 
 def check_called_name(name):
@@ -60,7 +60,7 @@ class DeprecateFalseAction(DeprecateConstAction, argparse._StoreFalseAction):
 
 def hint_rpc_name(parser):
     try:
-        from CommandNotFound.CommandNotFound import similar_words as similar_rpcs
+        from CommandNotFound.CommandNotFound import similar_words as similar_rpcs  # type: ignore[import]
     except (ImportError, ModuleNotFoundError):
         return parser
 

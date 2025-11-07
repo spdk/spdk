@@ -512,6 +512,22 @@ function check_python_style() {
 		echo "You do not have ruff installed, so ruff style will not be checked!"
 	fi
 
+	if hash mypy 2> /dev/null; then
+		echo -n "Checking Python mypy style..."
+		if out=$(mypy --config-file "$rootdir/python/pyproject.toml" python 2>&1); then
+			echo " OK"
+		else
+			cat <<- WARN
+				Python formatting errors detected.
+
+				$out
+			WARN
+			rc=1
+		fi
+	else
+		echo "You do not have mypy installed, so mypy style will not be checked!"
+	fi
+
 	return $rc
 }
 

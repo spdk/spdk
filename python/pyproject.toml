@@ -86,3 +86,9 @@ exclude = [
     "test",
     "scripts",
 ]
+
+[tool.mypy]
+exclude = [
+    "/spdk/sma",
+    "/spdk/spdkcli",
+]
