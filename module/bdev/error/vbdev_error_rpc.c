@@ -153,3 +153,50 @@ cleanup:
 	free_rpc_bdev_error_inject_error(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_inject_error", rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)
+
+static void
+free_rpc_bdev_error_resume_pending_ctx(struct rpc_bdev_error_resume_pending_ctx *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_error_resume_pending_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_error_resume_pending_ctx, name), spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_error_resume_pending(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_bdev_error_resume_pending_ctx req = {NULL};
+	struct spdk_bdev *vbdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_error_resume_pending_decoders,
+				    SPDK_COUNTOF(rpc_bdev_error_resume_pending_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	vbdev = spdk_bdev_get_by_name(req.name);
+	if (vbdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	rc = vbdev_error_resume_pending(vbdev);
+
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+
+cleanup:
+	free_rpc_bdev_error_resume_pending_ctx(&req);
+}
+SPDK_RPC_REGISTER("bdev_error_resume_pending", rpc_bdev_error_resume_pending,
+		  SPDK_RPC_RUNTIME)

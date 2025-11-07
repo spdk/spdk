@@ -57,4 +57,11 @@ struct vbdev_error_inject_opts {
  */
 int vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts);
 
+/**
+ * Resume pending IOs.
+ *
+ * \param bdev Pointer to error vbdev.
+ */
+int vbdev_error_resume_pending(struct spdk_bdev *bdev);
+
 #endif /* SPDK_VBDEV_ERROR_H */

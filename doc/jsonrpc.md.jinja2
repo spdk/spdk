@@ -5455,6 +5455,39 @@ Example response:
 }
 ~~~
 
+### bdev_error_resume_pending {#rpc_bdev_error_resume_pending}
+
+Resume all error bdev pending requests.
+
+#### Parameters
+
+{{ bdev_error_resume_pending_params }}
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_error_resume_pending",
+  "id": 1,
+  "params": {
+    "name": "EE_Malloc0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_iscsi_set_options {#rpc_bdev_iscsi_set_options}
 
 This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.

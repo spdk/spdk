@@ -1137,6 +1137,13 @@ def add_parser(subparsers):
         '-v', '--corrupt-value', help='the value for xor (1-255, 0 is invalid)', type=int)
     p.set_defaults(func=bdev_error_inject_error)
 
+    def bdev_error_resume_pending(args):
+        args.client.bdev_error_resume_pending(name=args.name)
+
+    p = subparsers.add_parser('bdev_error_resume_pending', help='Resume pending IOs')
+    p.add_argument('name', help='the name of the error injection bdev')
+    p.set_defaults(func=bdev_error_resume_pending)
+
     def bdev_nvme_apply_firmware(args):
         print_dict(args.client.bdev_nvme_apply_firmware(
                                                      bdev_name=args.bdev_name,

@@ -2702,6 +2702,17 @@
       ]
     },
     {
+      "name": "bdev_error_resume_pending",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Name of the error injection bdev"
+        }
+      ]
+    },
+    {
       "name": "bdev_iscsi_set_options",
       "params": [
         {

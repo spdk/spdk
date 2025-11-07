@@ -605,3 +605,61 @@ vbdev_error_config_json(struct spdk_json_write_ctx *w)
 
 	return 0;
 }
+
+static void
+vbdev_error_resume_io(void *ctx)
+{
+	struct spdk_bdev_io *pending_io = ctx;
+	struct spdk_io_channel *_ch = spdk_bdev_io_get_io_channel(pending_io);
+
+	vbdev_error_submit_request(_ch, pending_io);
+}
+
+static void
+vbdev_error_ch_resume_ios(struct spdk_io_channel_iter *i)
+{
+	struct error_channel *ch = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	struct error_io *pending_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(pending_io, &ch->pending_ios, link, tmp) {
+		TAILQ_REMOVE(&ch->pending_ios, pending_io, link);
+		spdk_thread_send_msg(spdk_get_thread(), vbdev_error_resume_io, spdk_bdev_io_from_ctx(pending_io));
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+vbdev_error_resume_pending(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_part *part;
+	struct error_disk *error_disk = NULL;
+	uint32_t i;
+
+	pthread_mutex_lock(&g_vbdev_error_mutex);
+
+	TAILQ_FOREACH(part, &g_error_disks, tailq) {
+		if (bdev == spdk_bdev_part_get_bdev(part)) {
+			error_disk = (struct error_disk *)part;
+			break;
+		}
+	}
+
+	if (error_disk == NULL) {
+		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", bdev->name);
+		pthread_mutex_unlock(&g_vbdev_error_mutex);
+		return -ENODEV;
+	}
+
+	for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
+		if (error_disk->error_vector[i].error_type == VBDEV_IO_PENDING) {
+			error_disk->error_vector[i].error_num = 0;
+		}
+	}
+
+	pthread_mutex_unlock(&g_vbdev_error_mutex);
+
+	spdk_for_each_channel(&error_disk->part, vbdev_error_ch_resume_ios, NULL, NULL);
+
+	return 0;
+}
