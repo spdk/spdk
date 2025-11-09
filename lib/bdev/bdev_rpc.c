@@ -396,9 +396,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
 	struct rpc_bdev_get_iostat req = { .reset_mode = SPDK_BDEV_RESET_STAT_NONE, .names.count = UINT32_MAX };
-	struct spdk_bdev_desc *desc = NULL;
 	struct rpc_get_iostat_ctx *rpc_ctx;
-	struct spdk_bdev *bdev;
 	int rc;
 
 	if (params != NULL) {
@@ -412,13 +410,6 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 			return;
 		}
 
-		if (req.per_channel == true && !req.name) {
-			SPDK_ERRLOG("Bdev name is required for per channel IO statistics\n");
-			spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
-			free_rpc_bdev_get_iostat(&req);
-			return;
-		}
-
 		if (req.name && req.names.count != UINT32_MAX) {
 			SPDK_ERRLOG("Can't report statistics when both name and names provided\n");
 			spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
@@ -427,14 +418,21 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		}
 
 		if (req.name) {
-			rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
-			if (rc != 0) {
-				SPDK_ERRLOG("Failed to open bdev '%s': %d\n", req.name, rc);
-				spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+			req.names.names[0] = strdup(req.name);
+			if (!req.names.names[0]) {
+				spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 				free_rpc_bdev_get_iostat(&req);
 				return;
 			}
+			req.names.count = 1;
 		}
+	}
+
+	if (req.per_channel && req.names.count != 1) {
+		SPDK_ERRLOG("Can't use per_channel with multiple bdevs\n");
+		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
+		free_rpc_bdev_get_iostat(&req);
+		return;
 	}
 
 	rpc_ctx = calloc(1, sizeof(struct rpc_get_iostat_ctx));
@@ -454,11 +452,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	rpc_ctx->per_channel = req.per_channel;
 	rpc_ctx->reset_mode = req.reset_mode;
 
-	if (desc != NULL) {
-		bdev = spdk_bdev_desc_get_bdev(desc);
-		rpc_ctx->rc = bdev_get_iostat(rpc_ctx, bdev);
-		spdk_bdev_close(desc);
-	} else if (req.names.count != UINT32_MAX) {
+	if (req.names.count != UINT32_MAX) {
 		rc = spdk_for_each_bdev_by_name(rpc_ctx, bdev_get_iostat, (const char **)req.names.names,
 						req.names.count);
 		if (rc != 0 && rpc_ctx->rc == 0) {
