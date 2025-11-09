@@ -412,17 +412,15 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 
 		if (req.name && req.names.count != UINT32_MAX) {
 			SPDK_ERRLOG("Can't report statistics when both name and names provided\n");
-			spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
-			free_rpc_bdev_get_iostat(&req);
-			return;
+			rc = -EINVAL;
+			goto err;
 		}
 
 		if (req.name) {
 			req.names.names[0] = strdup(req.name);
 			if (!req.names.names[0]) {
-				spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-				free_rpc_bdev_get_iostat(&req);
-				return;
+				rc = -ENOMEM;
+				goto err;
 			}
 			req.names.count = 1;
 		}
@@ -430,17 +428,15 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 
 	if (req.per_channel && req.names.count != 1) {
 		SPDK_ERRLOG("Can't use per_channel with multiple bdevs\n");
-		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
-		free_rpc_bdev_get_iostat(&req);
-		return;
+		rc = -EINVAL;
+		goto err;
 	}
 
 	rpc_ctx = calloc(1, sizeof(struct rpc_get_iostat_ctx));
 	if (rpc_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate rpc_iostat_ctx struct\n");
-		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		free_rpc_bdev_get_iostat(&req);
-		return;
+		rc = -ENOMEM;
+		goto err;
 	}
 
 	/*
@@ -475,6 +471,10 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	}
 
 	rpc_get_iostat_done(rpc_ctx);
+	free_rpc_bdev_get_iostat(&req);
+	return;
+err:
+	spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 	free_rpc_bdev_get_iostat(&req);
 }
 SPDK_RPC_REGISTER("bdev_get_iostat", rpc_bdev_get_iostat, SPDK_RPC_RUNTIME)
