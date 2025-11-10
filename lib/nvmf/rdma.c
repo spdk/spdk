@@ -567,6 +567,8 @@ static void _poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
 
 static void _nvmf_rdma_remove_destroyed_device(void *c);
 
+static int nvmf_rdma_request_free(struct spdk_nvmf_request *req);
+
 static inline enum spdk_nvme_media_error_status_code
 nvmf_rdma_dif_error_to_compl_status(uint8_t err_type) {
 	enum spdk_nvme_media_error_status_code result;
@@ -2528,7 +2530,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair, rqpair->qpair.queue_depth);
 
 			rqpair->poller->stat.request_latency += spdk_get_ticks() - rdma_req->receive_tsc;
-			_nvmf_rdma_request_free(rdma_req, rtransport);
+			nvmf_rdma_request_free(&rdma_req->req);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
 		default:
