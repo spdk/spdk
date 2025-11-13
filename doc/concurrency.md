@@ -66,6 +66,8 @@ their documentation (e.g. @ref nvme). Most libraries, however, depend on SPDK's
 abstraction, located in `libspdk_thread.a`. The thread abstraction provides a
 basic message passing framework and defines a few key primitives.
 
+### Threads
+
 First, `spdk_thread` is an abstraction for a lightweight, stackless thread of
 execution. A lower level framework can execute an `spdk_thread` for a single
 timeslice by calling `spdk_thread_poll()`. A lower level framework is allowed to
@@ -76,11 +78,15 @@ time by calling `spdk_thread_create()` and destroyed by calling
 `spdk_thread_destroy()`. The lightweight thread is the foundational abstraction for
 threading in SPDK.
 
+### Pollers
+
 There are then a few additional abstractions layered on top of the
 `spdk_thread`. One is the `spdk_poller`, which is an abstraction for a
 function that should be repeatedly called on the given thread. Another is an
 `spdk_msg_fn`, which is a function pointer and a context pointer, that can
 be sent to a thread for execution via `spdk_thread_send_msg()`.
+
+### IO Devices and Channels
 
 The library also defines two additional abstractions: `spdk_io_device` and
 `spdk_io_channel`. In the course of implementing SPDK we noticed the same
@@ -109,6 +115,31 @@ loops, the threading abstraction simply requires the lower level framework to
 repeatedly call `spdk_thread_poll()` on each `spdk_thread()` that exists. This
 makes SPDK very portable to a wide variety of asynchronous, event-based
 frameworks such as [Seastar](https://www.seastar.io) or [libuv](https://libuv.org/).
+
+## Thread Lifetimes
+
+The `spdk_thread` abstraction itself does not impose any strict thread lifetime
+requirements, allowing an `spdk_thread` to be created or destroyed at runtime.
+
+When using other abstractions built on top of `spdk_thread` such as `spdk_poller` or
+`spdk_io_channel`, the underlying `spdk_thread` lifetime must surpass that of
+abstraction that is using it.
+
+Applications must adhere to proper de-init/finialize ordering that destroy the resources
+in the reverse order, so that the thread outlives what is using it.
+
+Simplified example:
+
+1. Application start
+1. `spdk_io_device_register()`
+1. `spdk_thread_create()`
+1. `spdk_get_io_channel()`
+1. Do work on each channel, receive termination signal
+1. `spdk_put_io_channel()`
+1. `spdk_thread_exit()`
+1. `spdk_thread_destroy()`
+1. `spdk_io_device_unregister()`
+1. Application exit
 
 ## SPDK Spinlocks
 
