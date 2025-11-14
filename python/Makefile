@@ -55,6 +55,9 @@ spdk/version.py: $(SPDK_ROOT_DIR)/VERSION
 build: spdk/version.py
 	$(Q)python -m build $(SPDK_ROOT_DIR)/python/
 
+check: build
+	$(Q)python -m twine check $(SPDK_ROOT_DIR)/python/dist/*
+
 install:
 	$(Q)$(setup_cmd) $(SPDK_ROOT_DIR)/python
 	rm -rf $(SPDK_ROOT_DIR)/python/spdk.egg-info
@@ -66,4 +69,4 @@ uninstall:
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-cli
 	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-mcp
 
-.PHONY: all clean install uninstall build
+.PHONY: all clean install uninstall build check
