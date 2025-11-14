@@ -794,15 +794,8 @@ uuid2nguid() {
 	tr -d - <<< "${1^^}"
 }
 
-get_pci_dir() {
-	dev_name=$1
-	readlink -f /sys/bus/pci/devices/*/net/${dev_name}/device
-}
-
-get_rdma_device_name() {
-	dev_name=$1
-	ls $(get_pci_dir $dev_name)/infiniband
-}
+get_pci_dir() { readlink -e "/sys/class/net/$1/device"; }
+get_rdma_device_name() { ls "$(get_pci_dir $1)/infiniband"; }
 
 ipts() { iptables "$@" -m comment --comment "SPDK_NVMF:$*"; }
 iptr() { iptables-save | grep -v SPDK_NVMF | iptables-restore; }
