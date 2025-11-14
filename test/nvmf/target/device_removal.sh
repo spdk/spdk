@@ -57,19 +57,9 @@ function rescan_pci() {
 	echo 1 > /sys/bus/pci/rescan
 }
 
-function get_pci_dir() {
-	dev_name=$1
-	readlink -f /sys/bus/pci/devices/*/net/${dev_name}/device
-}
-
 function remove_one_nic() {
 	dev_name=$1
 	echo 1 > $(get_pci_dir $dev_name)/remove
-}
-
-function get_rdma_device_name() {
-	dev_name=$1
-	ls $(get_pci_dir $dev_name)/infiniband
 }
 
 function check_rdma_dev_exists_in_nvmf_tgt() {
