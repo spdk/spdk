@@ -1681,7 +1681,7 @@ spdk_nvmf_subsystem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->flags.allow_any_listener;
 }
 
-int
+void
 nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
 {
@@ -1701,11 +1701,14 @@ nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 	TAILQ_FOREACH(reg, &ns->registrants, link) {
 		if (j >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
 			SPDK_ERRLOG("Maximum %u registrants can support.\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
-			return -EINVAL;
+			/* This should never happen as we enforce SPDK_NVMF_MAX_NUM_REGISTRANTS
+			 * on ns->registrants, but we don't want to continue with poll groups
+			 * missing registrants.
+			 */
+			abort();
 		}
 		pg_ns->reg_hostid[j++] = reg->hostid;
 	}
-	return 0;
 }
 
 static bool
@@ -3091,7 +3094,11 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 			info.registrants[i++].rkey = reg->rkey;
 		} else {
 			SPDK_ERRLOG("More registrants that can fit into reservation info, truncating\n");
-			break;
+			/* This should never happen as we enforce SPDK_NVMF_MAX_NUM_REGISTRANTS
+			 * on ns->registrants. We don't want to continue with missing registrants
+			 * from the ptpl state.
+			 */
+			abort();
 		}
 	}
 

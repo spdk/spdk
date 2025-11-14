@@ -472,7 +472,7 @@ struct spdk_nvmf_subsystem_listener *nvmf_subsystem_find_listener(
 	struct spdk_nvmf_subsystem *subsystem,
 	const struct spdk_nvme_transport_id *trid);
 bool nvmf_subsystem_zone_append_supported(struct spdk_nvmf_subsystem *subsystem);
-int nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
+void nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns);
 struct spdk_nvmf_listener *nvmf_transport_find_listener(
 	struct spdk_nvmf_transport *transport,

@@ -30,8 +30,8 @@ DEFINE_STUB(nvmf_transport_req_free, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(nvmf_transport_poll_group_poll, int, (struct spdk_nvmf_transport_poll_group *group), 0);
 DEFINE_STUB_V(nvmf_subsystem_remove_all_listeners, (struct spdk_nvmf_subsystem *subsystem,
 		bool stop));
-DEFINE_STUB(nvmf_subsystem_poll_group_update_ns_reservation, int, (const struct spdk_nvmf_ns *ns,
-		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns), 0);
+DEFINE_STUB_V(nvmf_subsystem_poll_group_update_ns_reservation, (const struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns));
 DEFINE_STUB(spdk_nvmf_subsystem_destroy, int, (struct spdk_nvmf_subsystem *subsystem,
 		nvmf_subsystem_destroy_cb cpl_cb, void *cpl_cb_arg), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_listener, struct spdk_nvmf_subsystem_listener *,

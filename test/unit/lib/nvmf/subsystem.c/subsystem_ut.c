@@ -116,7 +116,7 @@ nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		SPDK_CU_ASSERT_FATAL(subsystem->ns[0]);
 		ns = subsystem->ns[0];
 		pg_ns = &sgroup->ns_info[ns->nsid - 1];
-		return nvmf_subsystem_poll_group_update_ns_reservation(ns, pg_ns);
+		nvmf_subsystem_poll_group_update_ns_reservation(ns, pg_ns);
 	}
 	/* can be overridden by tests to force error */
 	return g_nvmf_poll_group_udpate_subsystem_rc;
