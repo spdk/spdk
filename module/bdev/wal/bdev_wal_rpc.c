@@ -36,8 +36,7 @@ static const struct spdk_json_object_decoder rpc_bdev_wal_create_decoders[] = {
 };
 
 /* Функция для очистки указателей-полей структуры rpc-запроса */
-static void free_rpc_bdev_wal_create(struct rpc_bdev_wal_create *req)
-{
+static void free_rpc_bdev_wal_create(struct rpc_bdev_wal_create *req) {
 	free(req->name);
 	free(req->journal_bdev_name);
 	free(req->main_bdev_name);
@@ -49,8 +48,7 @@ struct rpc_bdev_wal_delete {
 };
 
 /* Функция для очистки указателя-поля структуры для удаления журналируемого устройства */
-static void free_rpc_bdev_wal_delete(struct rpc_bdev_wal_delete *req)
-{
+static void free_rpc_bdev_wal_delete(struct rpc_bdev_wal_delete *req) {
 	free(req->name);
 }
 
@@ -61,8 +59,7 @@ static const struct spdk_json_object_decoder rpc_bdev_wal_delete_decoders[] = {
 	 spdk_json_decode_string}};
 
 static void rpc_journaling_bdev_create(struct spdk_jsonrpc_request *request,
-				       const struct spdk_json_val *params)
-{
+				       const struct spdk_json_val *params) {
 	struct rpc_bdev_wal_create req = {NULL};
 	struct spdk_json_write_ctx *w;
 	int rc;
@@ -106,8 +103,7 @@ SPDK_RPC_REGISTER("wal_bdev_create",
 		  SPDK_RPC_RUNTIME)
 
 /* Call-back завершения удаления */
-static void rpc_journaling_bdev_delete_cb(void *cb_arg, int bdeverrno)
-{
+static void rpc_journaling_bdev_delete_cb(void *cb_arg, int bdeverrno) {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (bdeverrno == 0) {
@@ -121,8 +117,7 @@ static void rpc_journaling_bdev_delete_cb(void *cb_arg, int bdeverrno)
 
 /* Удаление нашего устройства */
 static void rpc_wal_bdev_delete(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
-{
+				const struct spdk_json_val *params) {
 	struct rpc_bdev_wal_delete req = {NULL};
 
 	if (spdk_json_decode_object(params,
@@ -155,8 +150,7 @@ static const struct spdk_json_object_decoder rpc_wal_bdev_recover_decoders[] = {
 	 spdk_json_decode_string},
 };
 
-static void rpc_wal_bdev_recover_done(void *cb_arg, int bdeverrno)
-{
+static void rpc_wal_bdev_recover_done(void *cb_arg, int bdeverrno) {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	if (bdeverrno == 0) {
 		spdk_jsonrpc_send_bool_response(request, true);
@@ -171,8 +165,7 @@ static void rpc_wal_bdev_recover_done(void *cb_arg, int bdeverrno)
 
 /* Восстановления при сбое записи */
 static void rpc_wal_bdev_recover(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
-{
+				 const struct spdk_json_val *params) {
 	struct rpc_wal_bdev_recover req = {};
 	if (spdk_json_decode_object(params,
 				    rpc_wal_bdev_recover_decoders,

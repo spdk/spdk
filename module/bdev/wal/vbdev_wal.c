@@ -62,25 +62,21 @@ struct wal_bdev_io {
 };
 
 /* Инициализация модуля WAL */
-static int vbdev_wal_init(void)
-{
+static int vbdev_wal_init(void) {
 	return 0;
 }
 
 /* Завершение работы модуля WAL */
-static void vbdev_wal_fini(void)
-{
+static void vbdev_wal_fini(void) {
 }
 
 /* Examine-конфигурация для SPDK-модуля */
-static void vbdev_wal_examine(struct spdk_bdev *bdev)
-{
+static void vbdev_wal_examine(struct spdk_bdev *bdev) {
 	spdk_bdev_module_examine_done(&wal_bdev_if);
 }
 
 /* Возвращает размер приватного контекста на bdev_io */
-static int vbdev_wal_get_ctx_size(void)
-{
+static int vbdev_wal_get_ctx_size(void) {
 	return sizeof(struct wal_bdev_io);
 }
 
@@ -126,8 +122,7 @@ SPDK_BDEV_MODULE_REGISTER(wal, &wal_bdev_if)
 TAILQ_HEAD(wal_vbdev_list, wal_vbdev) g_wal = TAILQ_HEAD_INITIALIZER(g_wal);
 
 /* Создание io-канала для WAL-устройства */
-static int wal_io_channel_create_cb(void *io_device, void *ctx_buf)
-{
+static int wal_io_channel_create_cb(void *io_device, void *ctx_buf) {
 	struct wal_vbdev *vbdev = io_device;
 	struct wal_io_channel *ch = ctx_buf;
 	ch->main_ch = spdk_bdev_get_io_channel(vbdev->main_desc);
@@ -144,8 +139,7 @@ static int wal_io_channel_create_cb(void *io_device, void *ctx_buf)
 }
 
 /* Уничтожение io-канала WAL-устройства */
-static void wal_io_channel_destroy_cb(void *io_device, void *ctx_buf)
-{
+static void wal_io_channel_destroy_cb(void *io_device, void *ctx_buf) {
 	struct wal_io_channel *ch = ctx_buf;
 	if (ch->journal_ch) {
 		spdk_put_io_channel(ch->journal_ch);
@@ -158,8 +152,7 @@ static void wal_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 /* Завершение исходного io-запроса с заданным статусом */
-static void wal_complete(struct spdk_bdev_io *orig, bool success)
-{
+static void wal_complete(struct spdk_bdev_io *orig, bool success) {
 	spdk_bdev_io_complete(orig,
 			      success ? SPDK_BDEV_IO_STATUS_SUCCESS
 				      : SPDK_BDEV_IO_STATUS_FAILED);
@@ -168,8 +161,7 @@ static void wal_complete(struct spdk_bdev_io *orig, bool success)
 /* Callback завершения flush на основном устройстве */
 static void wal_main_flush_done(struct spdk_bdev_io *child_io,
 				bool success,
-				void *cb_arg)
-{
+				void *cb_arg) {
 	struct spdk_bdev_io *orig = cb_arg;
 	spdk_bdev_free_io(child_io);
 	wal_complete(orig, success);
@@ -178,8 +170,7 @@ static void wal_main_flush_done(struct spdk_bdev_io *child_io,
 /* Callback завершения записи в основное устройство */
 static void wal_main_write_done(struct spdk_bdev_io *child_io,
 				bool success,
-				void *cb_arg)
-{
+				void *cb_arg) {
 	struct spdk_bdev_io *orig = cb_arg;
 	struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
 	struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
@@ -202,8 +193,7 @@ static void wal_main_write_done(struct spdk_bdev_io *child_io,
 /* Callback завершения flush на журнале */
 static void wal_journal_flush_done(struct spdk_bdev_io *child_io,
 				   bool success,
-				   void *cb_arg)
-{
+				   void *cb_arg) {
 	struct spdk_bdev_io *orig = cb_arg;
 	struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
 	struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
@@ -239,8 +229,7 @@ static void wal_journal_flush_done(struct spdk_bdev_io *child_io,
 /* Callback завершения записи в журнал */
 static void wal_journal_write_done(struct spdk_bdev_io *child_io,
 				   bool success,
-				   void *cb_arg)
-{
+				   void *cb_arg) {
 	struct spdk_bdev_io *orig = cb_arg;
 	struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
 	struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
@@ -263,8 +252,7 @@ static void wal_journal_write_done(struct spdk_bdev_io *child_io,
 /* Общий Callback завершения для passthrough-операций */
 static void wal_passthru_done(struct spdk_bdev_io *child_io,
 			      bool success,
-			      void *cb_arg)
-{
+			      void *cb_arg) {
 	struct spdk_bdev_io *orig = cb_arg;
 	spdk_bdev_free_io(child_io);
 	wal_complete(orig, success);
@@ -272,8 +260,7 @@ static void wal_passthru_done(struct spdk_bdev_io *child_io,
 
 /* Обработка входящего запроса на WAL-устройство */
 static void wal_submit_request(struct spdk_io_channel *ch,
-			       struct spdk_bdev_io *bdev_io)
-{
+			       struct spdk_bdev_io *bdev_io) {
 	struct wal_vbdev *vb = (struct wal_vbdev *)bdev_io->bdev->ctxt;
 
 	struct wal_io_channel *wch = spdk_io_channel_get_ctx(ch);
@@ -348,8 +335,7 @@ static void wal_submit_request(struct spdk_io_channel *ch,
 }
 
 /* Проверка поддерживаемых типов операций bdev */
-static bool wal_io_type_supported(void *ctx, enum spdk_bdev_io_type t)
-{
+static bool wal_io_type_supported(void *ctx, enum spdk_bdev_io_type t) {
 	switch (t) {
 		case SPDK_BDEV_IO_TYPE_READ:
 		case SPDK_BDEV_IO_TYPE_WRITE:
@@ -362,15 +348,13 @@ static bool wal_io_type_supported(void *ctx, enum spdk_bdev_io_type t)
 }
 
 /* Получение io-канала для WAL bdev */
-static struct spdk_io_channel *wal_get_io_channel(void *ctx)
-{
+static struct spdk_io_channel *wal_get_io_channel(void *ctx) {
 	struct wal_vbdev *vbdev = ctx;
 	return spdk_get_io_channel(vbdev);
 }
 
 /* Деструктор WAL-устройства (закрытие и освобождение ресурсов) */
-static int wal_destruct(void *ctx)
-{
+static int wal_destruct(void *ctx) {
 	struct wal_vbdev *vb = ctx;
 
 	spdk_io_device_unregister(vb, NULL);
@@ -416,19 +400,16 @@ static const struct spdk_bdev_fn_table g_wal_fn_table = {
 /* Обработка событий базовых bdev (логирование) */
 static void wal_base_bdev_event_cb(enum spdk_bdev_event_type type,
 				   struct spdk_bdev *bdev,
-				   void *arg)
-{
+				   void *arg) {
 	SPDK_NOTICELOG("wal: base bdev event %d on %s\n",
 		       type,
 		       spdk_bdev_get_name(bdev));
 }
 
 /* Поиск экземпляра WAL по имени экспортируемого bdev */
-static struct wal_vbdev *wal_find_by_name(const char *name)
-{
+static struct wal_vbdev *wal_find_by_name(const char *name) {
 	struct wal_vbdev *vb;
-	TAILQ_FOREACH(vb, &g_wal, link)
-	{
+	TAILQ_FOREACH(vb, &g_wal, link) {
 		if (strcmp(vb->bdev.name, name) == 0) {
 			return vb;
 		}
@@ -441,8 +422,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
 			 char *journal_bdev_name,
 			 char *name,
 			 uint32_t *block_sz,
-			 uint64_t *size_mb)
-{
+			 uint64_t *size_mb) {
 	int rc;
 	struct spdk_bdev_desc *main_desc = NULL, *journal_desc = NULL;
 	struct spdk_bdev *main_bdev = NULL, *journal_bdev = NULL;
@@ -566,8 +546,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
 /* Удаление и дерегистрация WAL-диска по имени */
 int wal_bdev_delete_disk(char *name,
 			 spdk_bdev_unregister_cb cb_fn,
-			 void *cb_arg)
-{
+			 void *cb_arg) {
 	struct wal_vbdev *vb = wal_find_by_name(name);
 	if (!vb) {
 		return -ENODEV;
@@ -583,8 +562,7 @@ int wal_bdev_delete_disk(char *name,
 /* Запуск процесса восстановления данных из журнала в основное устройство */
 int wal_bdev_recover(const char *name,
 		     spdk_bdev_unregister_cb cb_fn,
-		     void *cb_arg)
-{
+		     void *cb_arg) {
 	struct wal_vbdev *vb = wal_find_by_name(name);
 	if (!vb)
 		return -ENODEV;
@@ -642,8 +620,7 @@ int wal_bdev_recover(const char *name,
 }
 
 /* Завершение процесса восстановления, освобождение ресурсов и уведомление RPC */
-static void wal_recover_finish(struct wal_vbdev *vb, bool ok)
-{
+static void wal_recover_finish(struct wal_vbdev *vb, bool ok) {
 	if (vb->rec.jch) {
 		spdk_put_io_channel(vb->rec.jch);
 		vb->rec.jch = NULL;
@@ -672,8 +649,7 @@ static void wal_recover_finish(struct wal_vbdev *vb, bool ok)
 }
 
 /* Шаг восстановления: читает данные из журнала для сравнения/копирования */
-static void wal_recover_step(struct wal_vbdev *vb)
-{
+static void wal_recover_step(struct wal_vbdev *vb) {
 	uint64_t total = vb->bdev.blockcnt;
 	if (vb->rec_off_blocks >= total) {
 		wal_recover_finish(vb, true);
@@ -697,8 +673,7 @@ static void wal_recover_step(struct wal_vbdev *vb)
 /* Callback: завершено чтение из журнала, переходим к чтению из основного устройства */
 static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
 				    bool success,
-				    void *cb_arg)
-{
+				    void *cb_arg) {
 	struct wal_vbdev *vb = cb_arg;
 	spdk_bdev_free_io(child_io);
 
@@ -725,8 +700,7 @@ static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
 /* Callback: завершено чтение из основного устройства, сравнение и при необходимости запись */
 static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
 				    bool success,
-				    void *cb_arg)
-{
+				    void *cb_arg) {
 	struct wal_vbdev *vb = cb_arg;
 	spdk_bdev_free_io(child_io);
 
@@ -762,8 +736,7 @@ static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
 /* Callback: завершена запись несоответствующих блоков в основное устройство */
 static void wal_recover_write_done(struct spdk_bdev_io *child_io,
 				   bool success,
-				   void *cb_arg)
-{
+				   void *cb_arg) {
 	struct wal_vbdev *vb = cb_arg;
 	spdk_bdev_free_io(child_io);
 	if (!success) {
@@ -789,8 +762,7 @@ static void wal_recover_write_done(struct spdk_bdev_io *child_io,
 /* Callback: завершён flush записанных блоков, продвижение оффсета и следующий шаг */
 static void wal_recover_flush_done(struct spdk_bdev_io *child_io,
 				   bool success,
-				   void *cb_arg)
-{
+				   void *cb_arg) {
 	struct wal_vbdev *vb = cb_arg;
 	spdk_bdev_free_io(child_io);
 	if (!success) {
