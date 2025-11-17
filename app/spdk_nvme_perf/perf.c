@@ -1029,7 +1029,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		opts.io_queue_requests = entry->num_io_requests;
 	}
 
-	opts.delay_cmd_submit = g_enable_interrupt ? false : true;
+	opts.delay_cmd_submit = !g_enable_interrupt;
 	opts.create_only = true;
 
 	ctrlr_opts = spdk_nvme_ctrlr_get_opts(entry->u.nvme.ctrlr);
