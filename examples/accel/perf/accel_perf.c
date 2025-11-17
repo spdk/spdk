@@ -690,6 +690,8 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 
 	assert(worker);
 
+	worker->current_queue_depth++;
+
 	switch (worker->workload) {
 	case SPDK_ACCEL_OPC_COPY:
 		rc = spdk_accel_submit_copy(worker->ch, task->dst, task->src,
@@ -776,7 +778,6 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 
 	}
 
-	worker->current_queue_depth++;
 	if (rc) {
 		accel_done(task, rc);
 	}
@@ -1130,12 +1131,12 @@ _init_thread(void *arg1)
 
 	task = worker->task_base;
 	for (i = 0; i < num_tasks; i++) {
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task->worker = worker;
 		if (_get_task_data_bufs(task)) {
 			fprintf(stderr, "Unable to get data bufs\n");
 			goto error;
 		}
+		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task++;
 	}
 
