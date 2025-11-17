@@ -101,7 +101,16 @@ union spdk_nvme_cap_register {
 		/** controller memory buffer supported */
 		uint32_t cmbs		: 1;
 
-		uint32_t reserved3	: 6;
+		/** NVM subsystem shutdown supported */
+		uint32_t nsss		: 1;
+
+		/** controller ready with media support */
+		uint32_t crwms		: 1;
+
+		/** controller ready independent of media support */
+		uint32_t crims		: 1;
+
+		uint32_t reserved3	: 3;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");
@@ -150,7 +159,10 @@ union spdk_nvme_cc_register {
 		/** i/o completion queue entry size */
 		uint32_t iocqes		: 4;
 
-		uint32_t reserved2	: 8;
+		/** controller ready independent of media enable */
+		uint32_t crime		: 1;
+
+		uint32_t reserved2	: 7;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cc_register) == 4, "Incorrect size");
@@ -290,6 +302,46 @@ union spdk_nvme_cmbsts_register {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbsts_register) == 4, "Incorrect size");
+
+union spdk_nvme_cmbebs_register {
+	uint32_t	raw;
+	struct {
+		/** CMB Elasticity Buffer Size Units */
+		uint32_t cmbszu		: 4;
+		/** CMB Read Bypass Behavior */
+		uint32_t cmbrbb		: 1;
+
+		uint32_t reserved	: 3;
+		/** CMB elasticity buffer size base */
+		uint32_t cmbwbz		: 24;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbebs_register) == 4, "Incorrect size");
+
+union spdk_nvme_cmbswtp_register {
+	uint32_t	raw;
+	struct {
+		/** CMB Sustained Write Throughput Units */
+		uint32_t cmbswtu	: 4;
+
+		uint32_t reserved	: 4;
+		/** CMB Sustained Write Throughput */
+		uint32_t cmbswtv	: 24;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbswtp_register) == 4, "Incorrect size");
+
+union spdk_nvme_crto_register {
+	uint32_t	raw;
+	struct {
+		/** Controller Ready With Media Timeout */
+		uint32_t crwmt	: 16;
+		/** Controller Ready Independent of Media Timeout */
+		uint32_t crimt	: 16;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_crto_register) == 4, "Incorrect size");
+
 
 union spdk_nvme_pmrcap_register {
 	uint32_t	raw;
@@ -520,7 +572,19 @@ struct spdk_nvme_registers {
 	/** controller memory buffer status */
 	union spdk_nvme_cmbsts_register	cmbsts;
 
-	uint32_t			reserved2[0x369];
+	/** controller memory buffer elasticity buffer size */
+	union spdk_nvme_cmbebs_register	cmbebs;
+
+	/** controller memory buffer sustained write throughput */
+	union spdk_nvme_cmbswtp_register cmbswtp;
+
+	/** NVM subsystem shutdown */
+	uint32_t			nssd;
+
+	/** controller ready timeouts */
+	union spdk_nvme_crto_register	crto;
+
+	uint32_t			reserved2[0x365];
 
 	/** persistent memory region capabilities */
 	union spdk_nvme_pmrcap_register	pmrcap;
@@ -577,6 +641,14 @@ SPDK_STATIC_ASSERT(0x48 == offsetof(struct spdk_nvme_registers, bpmbl),
 SPDK_STATIC_ASSERT(0x50 == offsetof(struct spdk_nvme_registers, cmbmsc),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x58 == offsetof(struct spdk_nvme_registers, cmbsts),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x5C == offsetof(struct spdk_nvme_registers, cmbebs),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x60 == offsetof(struct spdk_nvme_registers, cmbswtp),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x64 == offsetof(struct spdk_nvme_registers, nssd),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x68 == offsetof(struct spdk_nvme_registers, crto),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0xE00 == offsetof(struct spdk_nvme_registers, pmrcap),
 		   "Incorrect register offset");

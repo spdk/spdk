@@ -163,6 +163,21 @@ function confirm_abi_deps() {
 			name = spdk_app_opts
 			soname_regexp = ^libspdk_event\\.so\\.15\\.*$
 			has_data_member_regexp = ^(reserved191|reserved187|num_trace_threads)$
+		[suppress_type]
+			label = Added new registers from NVMe 2.0 using reserved space
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name = spdk_nvme_registers
+			has_data_member_inserted_between = {offset_after(cmbsts), offset_of(pmrcap)}
+		[suppress_type]
+			label = Added new bits from NVMe 2.0 to CAP register using reserved space
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name = spdk_nvme_cap_register
+			has_data_member_inserted_between = {offset_after(cmbs), offset_of(reserved3)}
+		[suppress_type]
+			label = Added new CRIME bit to CC register from NVMe 2.0 using reserved space
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name_regexp = spdk_nvme_cc_register
+			has_data_member_inserted_at = 24
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do
