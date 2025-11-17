@@ -92,7 +92,7 @@ struct ap_task {
 	struct spdk_dif_ctx	dif_ctx;
 	struct spdk_dif_error	dif_err;
 	TAILQ_ENTRY(ap_task)	link;
-};
+} __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct worker_thread {
 	struct spdk_io_channel		*ch;
