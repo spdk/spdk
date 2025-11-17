@@ -8,8 +8,6 @@
 shopt -s extglob nullglob
 
 declare -r rdma_rxe=/sys/module/rdma_rxe
-declare -r rdma_rxe_add=$rdma_rxe/parameters/add
-declare -r rdma_rxe_rm=$rdma_rxe/parameters/remove
 
 declare -r infiniband=/sys/class/infiniband
 declare -r infiniband_verbs=/sys/class/infiniband_verbs
@@ -87,12 +85,9 @@ start() {
 	done 2> /dev/null
 
 	modprobeq -a "${modules[@]}" || return 1
-	add_rxe all
 }
 
 stop() {
-	remove_rxe
-
 	if ! modprobeq -r rdma_rxe \
 		|| [[ -e $rdma_rxe ]]; then
 		printf 'unable to unload drivers, reboot required\n'
@@ -214,58 +209,6 @@ print_status() {
 	done
 }
 
-add_rxe() {
-	local dev net_devs
-
-	if [[ -z $1 || $1 == all ]]; then
-		net_devs=("${!net_devices[@]}")
-	elif [[ -n ${net_to_rxe["$1"]} ]]; then
-		printf '%s interface already in use (%s)\n' \
-			"$1" "${net_to_rxe["$1"]}"
-		return 0
-	elif [[ -n ${net_devices["$1"]} ]]; then
-		net_devs=("$1")
-	else
-		printf '%s interface does not exist\n' "$1"
-		return 1
-	fi
-
-	for dev in "${net_devs[@]}"; do
-		if [[ -z ${net_to_rxe["$dev"]} ]]; then
-			if [[ -e $rdma_rxe_add ]]; then
-				echo "${dev##*/}" > "$rdma_rxe_add"
-			else
-				rdma link add "rxe.$RANDOM" type rxe netdev "${dev##*/}"
-			fi
-		fi
-		link_up "${dev##*/}"
-	done 2> /dev/null
-}
-
-remove_rxe() {
-	local rxes rxe
-
-	[[ -e $rdma_rxe_rm ]] || return 0
-
-	rxes=("${!rxe_to_net[@]}")
-	if [[ -z $1 || $1 == all ]]; then
-		rxes=("${!rxe_to_net[@]}")
-	elif [[ -z ${rxe_to_net["$1"]} ]]; then
-		printf '%s rxe interface does not exist\n' "$1"
-		return 0
-	elif [[ -n ${rxe_to_net["$1"]} ]]; then
-		rxes=("$1")
-	fi
-
-	for rxe in "${rxes[@]}"; do
-		if [[ -e $rdma_rxe_rm ]]; then
-			echo "$rxe" > "$rdma_rxe_rm"
-		else
-			rdma link del "$rxe"
-		fi
-	done 2> /dev/null
-}
-
 link_up() {
 	[[ -e $net/$1 ]] || return 0
 
@@ -311,12 +254,6 @@ case "${1:-status}" in
 		;;
 	stop)
 		stop
-		;;
-	add)
-		add_rxe "${2:-all}"
-		;;
-	remove)
-		remove_rxe "${2:-all}"
 		;;
 	status)
 		IFS= read -r match < <(
