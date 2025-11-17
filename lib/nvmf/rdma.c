@@ -3843,7 +3843,6 @@ nvmf_rdma_send_qpair_last_wqe_event(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *ctx;
 	struct spdk_thread *thr = NULL;
-	int rc;
 
 	if (rqpair->qpair.group) {
 		thr = rqpair->qpair.group->thread;
@@ -3869,13 +3868,9 @@ nvmf_rdma_send_qpair_last_wqe_event(struct spdk_nvmf_rdma_qpair *rqpair)
 	ctx->rqpair = rqpair;
 	rqpair->last_wqe_reached_ctx = ctx;
 
-	rc = spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_last_wqe_event, ctx);
-	if (rc) {
-		rqpair->last_wqe_reached_ctx = NULL;
-		free(ctx);
-	}
+	spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_last_wqe_event, ctx);
 
-	return rc;
+	return 0;
 }
 
 static int

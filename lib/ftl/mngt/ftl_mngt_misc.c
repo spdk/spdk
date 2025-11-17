@@ -359,18 +359,15 @@ static void
 ftl_get_properties_msg(void *arg)
 {
 	struct ftl_mngt_property_caller_ctx *cctx = arg;
-	int rc;
 
 	ftl_property_dump(cctx->dev, cctx->request);
-	rc = spdk_thread_send_msg(cctx->cb_thread, ftl_get_properties_cb, cctx);
-	ftl_bug(rc);
+	spdk_thread_send_msg(cctx->cb_thread, ftl_get_properties_cb, cctx);
 }
 
 int
 spdk_ftl_get_properties(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request,
 			spdk_ftl_fn cb_fn, void *cb_arg)
 {
-	int rc;
 	struct ftl_mngt_property_caller_ctx *ctx = calloc(1, sizeof(*ctx));
 
 	if (ctx == NULL) {
@@ -382,11 +379,7 @@ spdk_ftl_get_properties(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *r
 	ctx->cb_arg = cb_arg;
 	ctx->cb_thread = spdk_get_thread();
 
-	rc = spdk_thread_send_msg(dev->core_thread, ftl_get_properties_msg, ctx);
-	if (rc) {
-		free(ctx);
-		return rc;
-	}
+	spdk_thread_send_msg(dev->core_thread, ftl_get_properties_msg, ctx);
 
 	return 0;
 }

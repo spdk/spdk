@@ -352,9 +352,7 @@ ftl_mngt_trim_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
 	struct ftl_trim_ctx *ctx = _ctx;
 	ctx->status = status;
 
-	if (spdk_thread_send_msg(ctx->thread, trim_user_cb, ctx)) {
-		ftl_abort();
-	}
+	spdk_thread_send_msg(ctx->thread, trim_user_cb, ctx);
 }
 
 int

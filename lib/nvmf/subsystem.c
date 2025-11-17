@@ -376,17 +376,11 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_nvmf_ns		*ns;
 	nvmf_subsystem_destroy_cb	async_destroy_cb = NULL;
 	void				*async_destroy_cb_arg = NULL;
-	int				rc;
 
 	if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
 		SPDK_DEBUGLOG(nvmf, "subsystem %p %s has active controllers\n", subsystem, subsystem->subnqn);
 		subsystem->async_destroy = true;
-		rc = spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_destroy_msg, subsystem);
-		if (rc) {
-			SPDK_ERRLOG("Failed to send thread msg, rc %d\n", rc);
-			assert(0);
-			return rc;
-		}
+		spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_destroy_msg, subsystem);
 		return -EINPROGRESS;
 	}
 

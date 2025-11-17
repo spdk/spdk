@@ -316,11 +316,7 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 			return 0;
 		}
 
-		rc = spdk_thread_send_msg(spdk_get_thread(), _nvmf_transport_create_done, ctx);
-		if (rc) {
-			goto err;
-		}
-
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_transport_create_done, ctx);
 		return 0;
 	}
 
