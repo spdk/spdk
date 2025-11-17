@@ -463,6 +463,31 @@ spdk_env_dpdk_dump_mem_stats(FILE *file)
 }
 
 int
+spdk_env_dpdk_get_mem_stats(struct spdk_env_dpdk_mem_stats *stats, uint32_t numa_id)
+{
+	struct rte_malloc_socket_stats socket_stats = {};
+	int rc;
+
+	if (stats == NULL) {
+		return -EINVAL;
+	}
+
+	rc = rte_malloc_get_socket_stats(numa_id, &socket_stats);
+	if (rc != 0) {
+		return rc;
+	}
+
+	stats->heap_totalsz_bytes = socket_stats.heap_totalsz_bytes;
+	stats->heap_freesz_bytes = socket_stats.heap_freesz_bytes;
+	stats->greatest_free_size = socket_stats.greatest_free_size;
+	stats->heap_allocsz_bytes = socket_stats.heap_allocsz_bytes;
+	stats->free_count = socket_stats.free_count;
+	stats->alloc_count = socket_stats.alloc_count;
+
+	return 0;
+}
+
+int
 spdk_get_tid(void)
 {
 	return rte_sys_gettid();

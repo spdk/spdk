@@ -17,6 +17,41 @@ extern "C" {
 #endif
 
 /**
+ * Memory allocation statistics.
+ */
+struct spdk_env_dpdk_mem_stats {
+	/**
+	 * Total bytes on heap
+	 */
+	uint64_t heap_totalsz_bytes;
+
+	/**
+	 * Total free bytes on heap
+	 */
+	uint64_t heap_freesz_bytes;
+
+	/**
+	 * Size in bytes of largest free block
+	 */
+	uint64_t greatest_free_size;
+
+	/**
+	 * Total allocated bytes on heap
+	 */
+	uint64_t heap_allocsz_bytes;
+
+	/**
+	 * Number of free elements on heap
+	 */
+	uint32_t free_count;
+
+	/**
+	 * Number of allocated elements on heap
+	 */
+	uint32_t alloc_count;
+};
+
+/**
  * Initialize the environment library after DPDK env is already initialized.
  * If DPDK's rte_eal_init is already called, this function must be called
  * instead of spdk_env_init, prior to using any other functions in SPDK
@@ -50,6 +85,16 @@ bool spdk_env_dpdk_external_init(void);
  * \param file The file object to write to.
  */
 void spdk_env_dpdk_dump_mem_stats(FILE *file);
+
+/**
+ * Retrieve memory allocation statistics.
+ *
+ * \param stats Pointer to structure to fill with statistics.
+ * \param numa_id NUMA node ID for which statistics are retrieved.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_env_dpdk_get_mem_stats(struct spdk_env_dpdk_mem_stats *stats, uint32_t numa_id);
 
 #ifdef __cplusplus
 }

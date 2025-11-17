@@ -131,6 +131,7 @@
 	spdk_env_dpdk_post_fini;
 	spdk_env_dpdk_external_init;
 	spdk_env_dpdk_dump_mem_stats;
+	spdk_env_dpdk_get_mem_stats;
 
 	local: *;
 };
