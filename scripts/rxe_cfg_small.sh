@@ -19,6 +19,13 @@ declare -A net_devices
 declare -A net_to_rxe
 declare -A rxe_to_net
 
+rdma() {
+	local rdma_bin
+	rdma_bin=$(type -P rdma) || return 1
+
+	"$rdma_bin" "$@"
+}
+
 uevent() (
 	[[ -e $1/uevent ]] || return 0
 
@@ -210,8 +217,6 @@ print_status() {
 add_rxe() {
 	local dev net_devs
 
-	[[ -e $rdma_rxe_add ]] || return 0
-
 	if [[ -z $1 || $1 == all ]]; then
 		net_devs=("${!net_devices[@]}")
 	elif [[ -n ${net_to_rxe["$1"]} ]]; then
@@ -227,7 +232,11 @@ add_rxe() {
 
 	for dev in "${net_devs[@]}"; do
 		if [[ -z ${net_to_rxe["$dev"]} ]]; then
-			echo "${dev##*/}" > "$rdma_rxe_add"
+			if [[ -e $rdma_rxe_add ]]; then
+				echo "${dev##*/}" > "$rdma_rxe_add"
+			else
+				rdma link add "rxe.$RANDOM" type rxe netdev "${dev##*/}"
+			fi
 		fi
 		link_up "${dev##*/}"
 	done 2> /dev/null
@@ -249,7 +258,11 @@ remove_rxe() {
 	fi
 
 	for rxe in "${rxes[@]}"; do
-		echo "$rxe" > "$rdma_rxe_rm"
+		if [[ -e $rdma_rxe_rm ]]; then
+			echo "$rxe" > "$rdma_rxe_rm"
+		else
+			rdma link del "$rxe"
+		fi
 	done 2> /dev/null
 }
 
