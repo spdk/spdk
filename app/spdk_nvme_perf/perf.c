@@ -219,7 +219,8 @@ static bool g_vmd;
 static const char *g_workload_type;
 static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
 static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces);
-static uint32_t g_num_namespaces;
+static uint32_t g_num_namespaces = 0;
+static uint32_t g_num_async_devs = 0;
 static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
 static uint32_t g_num_workers = 0;
 static bool g_use_every_core = false;
@@ -782,6 +783,7 @@ register_file(const char *path)
 	snprintf(entry->name, sizeof(entry->name), "%s", path);
 
 	g_num_namespaces++;
+	g_num_async_devs++;
 	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
 
 	return 0;
@@ -3277,8 +3279,18 @@ main(int argc, char **argv)
 		printf("WARNING: Some requested NVMe devices were skipped\n");
 	}
 
+	/* check controllers; no controllers is ok when running with AIO/URING devices only */
+	if ((g_num_async_devs == 0) && (TAILQ_EMPTY(&g_controllers))) {
+		fprintf(stderr, "No valid NVMe controllers found\n");
+		goto cleanup;
+	}
+
 	if (g_num_namespaces == 0) {
-		fprintf(stderr, "No valid NVMe controllers or AIO or URING devices found\n");
+		if (g_num_async_devs == 0) {
+			fprintf(stderr, "No valid AIO or URING devices found\n");
+		} else {
+			fprintf(stderr, "No active namespaces found\n");
+		}
 		goto cleanup;
 	}
 
