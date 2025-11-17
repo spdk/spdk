@@ -1687,6 +1687,9 @@ work_fn(void *arg)
 	TAILQ_HEAD(, perf_task)	swap;
 	struct perf_task *task;
 
+	/* Initialize thread local seed. */
+	seed = spdk_rand_xorshift64_seed();
+
 	/* Allocate queue pairs for each namespace. */
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		if (init_ns_worker_ctx(ns_ctx) != 0) {
@@ -3116,7 +3119,6 @@ nvme_poll_ctrlrs(void *arg)
 	int rc;
 
 	spdk_unaffinitize_thread();
-	seed = spdk_rand_xorshift64_seed();
 
 	if (g_tpoint_group_mask) {
 		spdk_trace_register_user_thread();
