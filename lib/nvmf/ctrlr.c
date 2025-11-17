@@ -564,6 +564,9 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		ctrlr->vcprop.cap.bits.nssrs = 1;
 	}
 
+	/* NVMe 2.0 specification required */
+	ctrlr->vcprop.cap.bits.crwms = 1;
+
 	/* Version Supported: 1.4 */
 	ctrlr->vcprop.vs.bits.mjr = 1;
 	ctrlr->vcprop.vs.bits.mnr = 4;
@@ -578,6 +581,9 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	ctrlr->vcprop.csts.raw = 0;
 	ctrlr->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
+
+	/* set controller ready with media timeout to CAP.TO value */
+	ctrlr->vcprop.crto.bits.crwmt = ctrlr->vcprop.cap.bits.to;
 
 	SPDK_DEBUGLOG(nvmf, "cap 0x%" PRIx64 "\n", ctrlr->vcprop.cap.raw);
 	SPDK_DEBUGLOG(nvmf, "vs 0x%x\n", ctrlr->vcprop.vs.raw);
@@ -1362,6 +1368,11 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 		diff.bits.css = 0;
 	}
 
+	if (diff.bits.crime) {
+		SPDK_WARNLOG("Property Set for read only property CC.CRIME\n");
+		diff.bits.crime = 0;
+	}
+
 	if (diff.raw != 0) {
 		/* Print an error message, but don't fail the command in this case.
 		 * If we did want to fail in this case, we'd need to ensure we acted
@@ -1519,6 +1530,12 @@ nvmf_prop_set_acq_upper(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 	return true;
 }
 
+static uint64_t
+nvmf_prop_get_crto(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return ctrlr->vcprop.crto.raw;
+}
+
 struct nvmf_prop {
 	uint32_t ofst;
 	uint8_t size;
@@ -1545,6 +1562,7 @@ static const struct nvmf_prop nvmf_props[] = {
 	PROP(aqa,  4, nvmf_prop_get_aqa,  nvmf_prop_set_aqa,       NULL),
 	PROP(asq,  8, nvmf_prop_get_asq,  nvmf_prop_set_asq_lower, nvmf_prop_set_asq_upper),
 	PROP(acq,  8, nvmf_prop_get_acq,  nvmf_prop_set_acq_lower, nvmf_prop_set_acq_upper),
+	PROP(crto, 4, nvmf_prop_get_crto, NULL,                    NULL)
 };
 
 static const struct nvmf_prop *

@@ -540,7 +540,7 @@ struct spdk_nvmf_registers {
 	uint64_t			asq;
 	uint64_t			acq;
 	uint32_t			nssr;
-	uint32_t			reserved;
+	union spdk_nvme_crto_register	crto;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_registers) == 48, "Incorrect size");
 
