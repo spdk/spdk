@@ -24,6 +24,7 @@
 	virtio_dev_backend_ops;
 	virtio_dev_has_feature;
 	virtio_dev_dump_json_info;
+	virtio_dev_enable_interrupts;
 	virtio_pci_dev_enumerate;
 	virtio_pci_dev_attach;
 	virtio_user_dev_init;
