@@ -23,13 +23,13 @@ queue=64
 
 echo "COPY with $module (block $size, core_mask $mask, nbufs $nbufs, queue $queue $option)..."
 
-if [ $module = "cuda" ]; then
+if [ $module != "software" ]; then
 	$rootdir/build/examples/accel_perf -m $mask -q $queue -w copy -o $size -C $nbufs $option -r /var/tmp/spdk.sock --wait-for-rpc &
 	spdk_pid=$!
 	sleep 1
 
-	$rootdir/scripts/rpc.py cuda_scan_accel_module
-	$rootdir/scripts/rpc.py accel_assign_opc -o copy -m accel_cuda
+	$rootdir/scripts/rpc.py $module"_scan_accel_module"
+	$rootdir/scripts/rpc.py accel_assign_opc -o copy -m accel_$module
 	$rootdir/scripts/rpc.py framework_start_init
 
 	echo "Waiting for accel_perf PID" $spdk_pid
