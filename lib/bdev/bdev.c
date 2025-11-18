@@ -3869,7 +3869,7 @@ _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 	 * Once read operation completes, we need to use memory_domain push functionality to
 	 * update data in original memory domain IO buffer.
 	 *
-	 * If this I/O request is not aware of metadata, buffers in thsi IO request can't be
+	 * If this I/O request is not aware of metadata, buffers in this IO request can't be
 	 * accessed directly too. It is needed to allocate buffers before issuing IO operation.
 	 * For write operation we need to insert metadata before submitting IO. Once read
 	 * operation completes, we need to strip metadata in original IO buffer.
