@@ -36,6 +36,11 @@ struct virtio_hw {
 	struct virtio_dev *vdev;
 	bool is_remapped;
 	bool is_removing;
+	struct {
+		uint8_t enabled : 1;
+		uint8_t per_vq : 1;
+		uint8_t reserved : 6;
+	} intr;
 	TAILQ_ENTRY(virtio_hw) tailq;
 };
 
@@ -350,14 +355,19 @@ modern_destruct_dev(struct virtio_dev *vdev)
 {
 	struct virtio_hw *hw = vdev->ctx;
 	struct spdk_pci_device *pci_dev;
+	bool intr;
 
 	if (hw != NULL) {
+		intr = hw->intr.enabled;
 		pthread_mutex_lock(&g_hw_mutex);
 		TAILQ_REMOVE(&g_virtio_hws, hw, tailq);
 		pthread_mutex_unlock(&g_hw_mutex);
 		pci_dev = hw->pci_dev;
 		free_virtio_hw(hw);
 		if (pci_dev) {
+			if (intr) {
+				spdk_pci_device_disable_interrupts(pci_dev);
+			}
 			spdk_pci_device_detach(pci_dev);
 		}
 	}
@@ -386,6 +396,28 @@ modern_set_status(struct virtio_dev *dev, uint8_t status)
 	g_thread_virtio_hw = NULL;
 }
 
+static int
+modern_enable_interrupts(struct virtio_dev *dev, uint16_t max_queues, bool intr_per_vq)
+{
+	struct virtio_hw *hw = dev->ctx;
+	int rc;
+
+	if (!hw->use_msix) {
+		return -ENOTSUP;
+	}
+
+	rc = spdk_pci_device_enable_interrupts(hw->pci_dev, intr_per_vq ? max_queues : 1);
+	if (rc) {
+		SPDK_ERRLOG("Failed to enable interrupts: %s\n", spdk_strerror(-rc));
+		return rc;
+	}
+
+	hw->intr.per_vq = intr_per_vq;
+	hw->intr.enabled = 1;
+
+	return 0;
+}
+
 static uint16_t
 modern_get_queue_size(struct virtio_dev *dev, uint16_t queue_id)
 {
@@ -405,7 +437,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	struct virtio_hw *hw = dev->ctx;
 	uint64_t desc_addr, avail_addr, used_addr;
-	uint16_t notify_off;
+	uint16_t notify_off, msix_vector;
 	void *queue_mem;
 	uint64_t queue_mem_phys_addr;
 
@@ -451,6 +483,12 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 			   &hw->common_cfg->queue_avail_hi);
 	io_write64_twopart(used_addr, &hw->common_cfg->queue_used_lo,
 			   &hw->common_cfg->queue_used_hi);
+	if (hw->intr.enabled) {
+		msix_vector = hw->intr.per_vq ? vq->vq_queue_index : 1;
+	} else {
+		msix_vector = VIRTIO_MSI_NO_VECTOR;
+	}
+	spdk_mmio_write_2(&hw->common_cfg->queue_msix_vector, msix_vector);
 
 	notify_off = spdk_mmio_read_2(&hw->common_cfg->queue_notify_off);
 	vq->notify_addr = (void *)((uint8_t *)hw->notify_base +
@@ -499,19 +537,20 @@ modern_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 }
 
 static const struct virtio_dev_ops modern_ops = {
-	.read_dev_cfg	= modern_read_dev_config,
-	.write_dev_cfg	= modern_write_dev_config,
-	.get_status	= modern_get_status,
-	.set_status	= modern_set_status,
-	.get_features	= modern_get_features,
-	.set_features	= modern_set_features,
-	.destruct_dev	= modern_destruct_dev,
-	.get_queue_size	= modern_get_queue_size,
-	.setup_queue	= modern_setup_queue,
-	.del_queue	= modern_del_queue,
-	.notify_queue	= modern_notify_queue,
-	.dump_json_info = pci_dump_json_info,
-	.write_json_config = pci_write_json_config,
+	.read_dev_cfg		= modern_read_dev_config,
+	.write_dev_cfg		= modern_write_dev_config,
+	.get_status		= modern_get_status,
+	.set_status		= modern_set_status,
+	.get_features		= modern_get_features,
+	.set_features		= modern_set_features,
+	.destruct_dev		= modern_destruct_dev,
+	.enable_interrupts	= modern_enable_interrupts,
+	.get_queue_size		= modern_get_queue_size,
+	.setup_queue		= modern_setup_queue,
+	.del_queue		= modern_del_queue,
+	.notify_queue		= modern_notify_queue,
+	.dump_json_info		= pci_dump_json_info,
+	.write_json_config	= pci_write_json_config,
 };
 
 static void *
