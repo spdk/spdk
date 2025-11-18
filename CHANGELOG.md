@@ -15,6 +15,8 @@ Deprecate some boolean python cli arguments to use new modern argparse format in
 Introduced the API 'spdk_nvmf_set_custom_discovery_filter' to set up custom discovery
 filter.
 
+Add support for preempt-and-abort mode of persistent reservations acquire command.
+
 ## v25.09
 
 ### bdev
