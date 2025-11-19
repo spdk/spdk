@@ -3720,6 +3720,79 @@ test_nvmf_qpair_cid_is_reservation(void)
 	SPDK_CU_ASSERT_FATAL(nvmf_qpair_cid_is_reservation(&qpair, i * 2) == false);
 }
 
+static void
+test_req_length(void)
+{
+	struct spdk_bdev bdev = {};
+	struct spdk_nvmf_ns ns = {
+		.nsid = 1,
+		.bdev = &bdev
+	};
+	struct spdk_nvmf_ns *ns_ptrs[1] = {&ns};
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.subtype = SPDK_NVMF_SUBTYPE_NVME,
+		.tgt = &tgt,
+		.ns = ns_ptrs,
+		.max_nsid = 1
+	};
+	struct spdk_nvmf_transport_ops tops = {};
+	struct spdk_nvmf_transport transport = {
+		.ops = &tops,
+		.opts = {
+			.max_io_size = 131072,
+		},
+	};
+	struct spdk_nvmf_qpair qpair = { .transport = &transport };
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.admin_qpair = &qpair,
+		.subsys = &subsystem,
+		.vcprop.cc.bits.en = 1,
+		.thread = spdk_get_thread()
+	};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	uint8_t buf[8192];
+	struct spdk_nvmf_request req = {
+		.qpair = &qpair,
+		.cmd = &cmd,
+		.rsp = &rsp,
+		.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST,
+		.length = sizeof(buf)
+	};
+
+	qpair.ctrlr = &ctrlr;
+	ctrlr.visible_ns = spdk_bit_array_create(1);
+
+	SPDK_IOV_ONE(req.iov, &req.iovcnt, &buf, req.length);
+
+	/* Verify that the SPDK handles a host data transfer where the buffer size (8 KB)
+	 * exceeds the requested data size. The goal is to ensure stability and confirm that
+	 * this scenario does not cause a crash. */
+	for (uint32_t i = 0; i <= UINT8_MAX; i++) {
+		cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+		cmd.nvme_cmd.nsid = 1;
+		cmd.nvme_cmd.cdw10_bits.identify.cns = i;
+		CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+		memset(&cmd, 0, sizeof(cmd));
+
+		cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+		cmd.nvme_cmd.nsid = 0;
+		cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = 4;
+		cmd.nvme_cmd.cdw11_bits.get_log_page.numdu = 0;
+		cmd.nvme_cmd.cdw10_bits.get_log_page.lid = i;
+		CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+		memset(&cmd, 0, sizeof(cmd));
+
+		cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+		cmd.nvme_cmd.cdw10_bits.get_features.fid = i;
+		CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+		memset(&cmd, 0, sizeof(cmd));
+	}
+
+	spdk_bit_array_free(&ctrlr.visible_ns);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3764,6 +3837,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_ns_attachment);
 	CU_ADD_TEST(suite, test_nvmf_check_qpair_active);
 	CU_ADD_TEST(suite, test_nvmf_qpair_cid_is_reservation);
+	CU_ADD_TEST(suite, test_req_length);
 
 	allocate_threads(1);
 	set_thread(0);
