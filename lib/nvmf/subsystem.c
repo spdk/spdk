@@ -1807,132 +1807,82 @@ poll_group_reservation_build_io_waiting(const struct spdk_nvmf_poll_group *group
 	}
 }
 
-static int
+static void
 poll_group_reservation_preempt_abort_process(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem)
+		struct spdk_nvmf_ns *ns, struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
 {
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
 	struct spdk_nvmf_request *req;
-	uint32_t i;
 
-	/* Make sure our poll group has memory for this subsystem allocated */
-	if (subsystem->id >= group->num_sgroups) {
-		return -ENOMEM;
+	/* Check for in-progress reservations to process */
+	if (STAILQ_EMPTY(&ns->reservations)) {
+		return;
+	}
+	req = STAILQ_FIRST(&ns->reservations);
+	/* Check if this is a preempt-and-abort cmd */
+	if (!ns_reservation_req_is_preempt_abort(req)) {
+		return;
 	}
 
-	sgroup = &group->sgroups[subsystem->id];
-
-	/* No namespaces on the subsystem, nothing to do! */
-	if (sgroup->num_ns == 0) {
-		assert(subsystem->max_nsid == 0);
-		return 0;
+	/* Ensure we have not already processed this */
+	if (ns->preempt_abort->hostids_gen == pg_ns->preempt_abort.hostids_gen) {
+		SPDK_ERRLOG("Poll group: %p already processed preempt hostids: %u\n",
+			    group, ns->preempt_abort->hostids_gen);
+		return;
 	}
 
-	for (i = 0; i < sgroup->num_ns; i++) {
-		ns = subsystem->ns[i];
-		pg_ns = &sgroup->ns_info[i];
-
-		/* Skip empty namespace slot */
-		if (!ns) {
-			continue;
-		}
-		/* Check for in-progress reservations to process */
-		if (STAILQ_EMPTY(&ns->reservations)) {
-			continue;
-		}
-		req = STAILQ_FIRST(&ns->reservations);
-		/* Check if this is a preempt-and-abort cmd */
-		if (!ns_reservation_req_is_preempt_abort(req)) {
-			continue;
-		}
-
-		/* Ensure we have not already processed this */
-		if (ns->preempt_abort->hostids_gen == pg_ns->preempt_abort.hostids_gen) {
-			SPDK_ERRLOG("Poll group: %p already processed preempt hostids: %u\n",
-				    group, ns->preempt_abort->hostids_gen);
-			return -EINVAL;
-		}
-
-		if (pg_ns->preempt_abort.io_waiting) {
-			/* This could happen if a previous preempt-and-abort failed before
-			 * completing the IO waiting. Don't let this block the next abort
-			 */
-			SPDK_ERRLOG("Poll group: %p has incomplete preempted io waiting: %lu\n",
-				    group, pg_ns->preempt_abort.io_waiting);
-		}
-
-		poll_group_reservation_build_io_waiting(group, subsystem, ns, req, pg_ns);
-		/* Commit gen as processed */
-		pg_ns->preempt_abort.hostids_gen = ns->preempt_abort->hostids_gen;
+	if (pg_ns->preempt_abort.io_waiting) {
+		/* This could happen if a previous preempt-and-abort failed before
+		 * completing the IO waiting. Don't let this block the next abort
+		 */
+		SPDK_ERRLOG("Poll group: %p has incomplete preempted io waiting: %lu\n",
+			    group, pg_ns->preempt_abort.io_waiting);
 	}
 
-	return 0;
+	poll_group_reservation_build_io_waiting(group, ns->subsystem, ns, req, pg_ns);
+	/* Commit gen as processed */
+	pg_ns->preempt_abort.hostids_gen = ns->preempt_abort->hostids_gen;
 }
 
-struct subsystem_update_ns_ctx {
-	struct spdk_nvmf_subsystem *subsystem;
-
-	spdk_nvmf_subsystem_state_change_done cb_fn;
-	void *cb_arg;
-};
+static void _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
+		void *cb_arg, int status);
 
 static void
-subsystem_update_ns_done(struct spdk_io_channel_iter *i, int status)
+ns_reservation_pg_update_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct subsystem_update_ns_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)spdk_io_channel_iter_get_ctx(i);
 
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
+	if (status) {
+		SPDK_ERRLOG("Poll group reservation updated failed on subsystem: %p, ns: %u\n",
+			    ns->subsystem, ns->nsid);
+		/*
+		 * Errors paths have been eliminated for this poll group update, so
+		 * this should never happen but if it does, that means the poll group
+		 * reservation state is inconsistent and it's not safe to continue!!
+		 */
+		abort();
 	}
-	free(ctx);
+
+	_nvmf_ns_reservation_update_done(ns->subsystem,
+					 STAILQ_FIRST(&ns->reservations), 0);
 }
 
 static void
-subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
+ns_reservation_pg_update(struct spdk_io_channel_iter *i)
 {
-	int rc;
-	struct subsystem_update_ns_ctx *ctx;
+	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
 
-	ctx = spdk_io_channel_iter_get_ctx(i);
+	ns = spdk_io_channel_iter_get_ctx(i);
 	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
-	subsystem = ctx->subsystem;
+	sgroup = &group->sgroups[ns->subsystem->id];
+	pg_ns = &sgroup->ns_info[ns->nsid - 1];
 
-	rc = nvmf_poll_group_update_subsystem(group, subsystem);
-	/* Process any preempt-and-abort state on pg.
-	 * NOTE: this is separated from the above function because
-	 * there are multiple callsites not related to reservations
-	 * for nvmf_poll_group_update_subsystem()
-	 */
-	if (!rc) {
-		rc = poll_group_reservation_preempt_abort_process(group, subsystem);
-	}
-	spdk_for_each_channel_continue(i, rc);
-}
+	nvmf_subsystem_poll_group_update_ns_reservation(ns, pg_ns);
+	poll_group_reservation_preempt_abort_process(group, ns, pg_ns);
 
-static int
-nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem,
-			 spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg)
-{
-	struct subsystem_update_ns_ctx *ctx;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		SPDK_ERRLOG("Can't alloc subsystem poll group update context\n");
-		return -ENOMEM;
-	}
-	ctx->subsystem = subsystem;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-
-	spdk_for_each_channel(subsystem->tgt,
-			      subsystem_update_ns_on_pg,
-			      ctx,
-			      subsystem_update_ns_done);
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -3949,9 +3899,6 @@ ns_reservation_pg_io_wait_check(struct spdk_io_channel_iter *i)
 
 static void ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns);
 
-static void _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
-		void *cb_arg, int status);
-
 static void
 ns_reservation_pg_io_wait_check_done(struct spdk_io_channel_iter *i, int status)
 {
@@ -4159,10 +4106,11 @@ nvmf_ns_reservation_update_state(struct spdk_nvmf_ns *ns,
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			}
 		}
-		status = nvmf_subsystem_update_ns(ctrlr->subsys, _nvmf_ns_reservation_update_done, req);
-		if (status == 0) {
-			return;
-		}
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_update,
+				      ns,
+				      ns_reservation_pg_update_done);
+		return;
 	}
 
 	_nvmf_ns_reservation_update_done(ctrlr->subsys, req, status);
