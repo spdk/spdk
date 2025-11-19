@@ -107,6 +107,8 @@ struct worker_thread {
 	bool				is_draining;
 	struct spdk_poller		*is_draining_poller;
 	struct spdk_poller		*stop_poller;
+	uint64_t			start_time;
+	uint64_t			stop_time;
 	struct spdk_poller		*start_poller;
 	void				*task_base;
 	struct display_info		display;
@@ -1004,26 +1006,27 @@ accel_done(void *arg1, int status)
 static int
 dump_result(void)
 {
-	uint64_t total_completed = 0;
 	uint64_t total_failed = 0;
 	uint64_t total_miscompared = 0;
-	uint64_t total_xfer_per_sec, total_bw_in_MiBps = 0;
+	uint64_t total_xfer_per_sec = 0;
+	uint64_t total_bw_in_MiBps = 0;
 	struct worker_thread *worker = g_workers;
 	char tmp[64];
 
 	printf("\n%-12s %20s %16s %16s %16s\n",
 	       "Core,Thread", "Transfers", "Bandwidth", "Failed", "Miscompares");
 	printf("------------------------------------------------------------------------------------\n");
+
 	while (worker != NULL) {
+		assert(worker->stop_time >= worker->start_time);
+		uint64_t test_time = (worker->stop_time - worker->start_time) / g_tsc_rate;
+		uint64_t xfer_per_sec = worker->stats.executed / test_time;
+		uint64_t bw_in_MiBps = worker->stats.num_bytes / (test_time * 1024 * 1024);
 
-		uint64_t xfer_per_sec = worker->stats.executed / g_time_in_sec;
-		uint64_t bw_in_MiBps = worker->stats.num_bytes /
-				       (g_time_in_sec * 1024 * 1024);
-
-		total_completed += worker->stats.executed;
 		total_failed += worker->xfer_failed;
 		total_miscompared += worker->injected_miscompares;
 		total_bw_in_MiBps += bw_in_MiBps;
+		total_xfer_per_sec += xfer_per_sec;
 
 		snprintf(tmp, sizeof(tmp), "%u,%u", worker->display.core, worker->display.thread);
 		if (xfer_per_sec) {
@@ -1034,8 +1037,6 @@ dump_result(void)
 
 		worker = worker->next;
 	}
-
-	total_xfer_per_sec = total_completed / g_time_in_sec;
 
 	printf("====================================================================================\n");
 	printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
@@ -1069,6 +1070,7 @@ _check_draining(void *arg)
 	assert(worker);
 
 	if (worker->current_queue_depth == 0) {
+		worker->stop_time = spdk_get_ticks();
 		_free_all_task_buffers(worker);
 		spdk_poller_unregister(&worker->is_draining_poller);
 		unregister_worker(worker);
@@ -1110,6 +1112,8 @@ _worker_start(void *arg)
 
 	/* Register a poller that will stop the worker at time elapsed */
 	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker, SPDK_SEC_TO_USEC * g_time_in_sec);
+
+	worker->start_time = spdk_get_ticks();
 
 	/* Load up queue depth worth of operations. */
 	for (i = 0; i < g_queue_depth; i++) {
