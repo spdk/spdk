@@ -110,10 +110,10 @@ io_channel_create_cb(void *io_device, void *ctx)
 	_ioch->ioch = ioch;
 	return 0;
 
-fail_cq:
-	spdk_ring_free(ioch->cq);
 fail_sq:
 	spdk_ring_free(ioch->sq);
+fail_cq:
+	spdk_ring_free(ioch->cq);
 fail_io_pool:
 	ftl_mempool_destroy(ioch->map_pool);
 	free(ioch);
