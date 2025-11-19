@@ -21,7 +21,6 @@
 #define COMP_BUF_PAD_PERCENTAGE 1.1L
 
 static uint64_t	g_tsc_rate;
-static uint64_t g_tsc_end;
 static int g_rc;
 static int g_xfer_size_bytes = 4096;
 static int g_block_size_bytes = 512;
@@ -44,6 +43,7 @@ static enum spdk_accel_opcode g_workload_selection = SPDK_ACCEL_OPC_LAST;
 static const char *g_module_name = NULL;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
+static int g_num_workers_total = 0;
 static char *g_cd_file_in_name = NULL;
 static pthread_mutex_t g_workers_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct spdk_app_opts g_opts = {};
@@ -107,6 +107,7 @@ struct worker_thread {
 	bool				is_draining;
 	struct spdk_poller		*is_draining_poller;
 	struct spdk_poller		*stop_poller;
+	struct spdk_poller		*start_poller;
 	void				*task_base;
 	struct display_info		display;
 	enum spdk_accel_opcode		workload;
@@ -1086,6 +1087,40 @@ _worker_stop(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
+static int
+_worker_start(void *arg)
+{
+	struct worker_thread *worker = arg;
+	int i;
+
+	assert(worker);
+
+	/* wait for all our workers are ready to start */
+	if (g_num_workers < g_num_workers_total) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	spdk_poller_unregister(&worker->start_poller);
+
+	/* Register a poller that will stop the worker at time elapsed */
+	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker, SPDK_SEC_TO_USEC * g_time_in_sec);
+
+	/* Load up queue depth worth of operations. */
+	for (i = 0; i < g_queue_depth; i++) {
+		struct ap_task *task;
+
+		task = _get_task(worker);
+		if (task == NULL) {
+			_worker_stop(worker);
+			break;
+		}
+
+		_submit_single(worker, task);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void shutdown_cb(void);
 
 static void
@@ -1140,19 +1175,9 @@ _init_thread(void *arg1)
 		task++;
 	}
 
-	/* Register a poller that will stop the worker at time elapsed */
-	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker,
-			      g_time_in_sec * 1000000ULL);
+	/* Register a poller that will start testing when all workers are ready */
+	worker->start_poller = SPDK_POLLER_REGISTER(_worker_start, worker, 10);
 
-	/* Load up queue depth worth of operations. */
-	for (i = 0; i < g_queue_depth; i++) {
-		task = _get_task(worker);
-		if (task == NULL) {
-			goto error;
-		}
-
-		_submit_single(worker, task);
-	}
 	return;
 error:
 
@@ -1160,6 +1185,10 @@ error:
 	free(worker->task_base);
 	worker->task_base = NULL;
 no_worker:
+	pthread_mutex_lock(&g_workers_lock);
+	g_num_workers_total--;
+	pthread_mutex_unlock(&g_workers_lock);
+
 	shutdown_cb();
 	g_rc = -1;
 }
@@ -1175,12 +1204,15 @@ accel_perf_start(void *arg1)
 	struct display_info *display;
 
 	g_tsc_rate = spdk_get_ticks_hz();
-	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	dump_user_config();
 
 	printf("Running for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		g_num_workers_total += g_threads_per_core;
+	}
 
 	/* Create worker threads for each core that was specified. */
 	SPDK_ENV_FOREACH_CORE(i) {
