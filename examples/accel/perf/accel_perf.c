@@ -91,7 +91,7 @@ struct ap_task {
 	uint32_t		num_blocks; /* used for the DIF related operations */
 	struct spdk_dif_ctx	dif_ctx;
 	struct spdk_dif_error	dif_err;
-	TAILQ_ENTRY(ap_task)	link;
+	STAILQ_ENTRY(ap_task)	link;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct worker_thread {
@@ -100,7 +100,7 @@ struct worker_thread {
 	uint64_t			xfer_failed;
 	uint64_t			injected_miscompares;
 	uint64_t			current_queue_depth;
-	TAILQ_HEAD(, ap_task)		tasks_pool;
+	STAILQ_HEAD(, ap_task)		tasks_pool;
 	struct worker_thread		*next;
 	unsigned			core;
 	struct spdk_thread		*thread;
@@ -674,9 +674,8 @@ _get_task(struct worker_thread *worker)
 {
 	struct ap_task *task;
 
-	if (!TAILQ_EMPTY(&worker->tasks_pool)) {
-		task = TAILQ_FIRST(&worker->tasks_pool);
-		TAILQ_REMOVE(&worker->tasks_pool, task, link);
+	if ((task = STAILQ_FIRST(&worker->tasks_pool)) != NULL) {
+		STAILQ_REMOVE_HEAD(&worker->tasks_pool, link);
 	} else {
 		fprintf(stderr, "Unable to get ap_task\n");
 		return NULL;
@@ -995,11 +994,11 @@ accel_done(void *arg1, int status)
 	worker->current_queue_depth--;
 
 	if (!worker->is_draining && status == 0) {
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		STAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task = _get_task(worker);
 		_submit_single(worker, task);
 	} else {
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		STAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 	}
 }
 
@@ -1162,7 +1161,7 @@ _init_thread(void *arg1)
 		goto error;
 	}
 
-	TAILQ_INIT(&worker->tasks_pool);
+	STAILQ_INIT(&worker->tasks_pool);
 
 	worker->task_base = calloc(num_tasks, sizeof(struct ap_task));
 	if (worker->task_base == NULL) {
@@ -1177,7 +1176,7 @@ _init_thread(void *arg1)
 			fprintf(stderr, "Unable to get data bufs\n");
 			goto error;
 		}
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		STAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task++;
 	}
 
