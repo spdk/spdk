@@ -318,8 +318,9 @@ unregister_worker(void *arg1)
 		spdk_put_io_channel(worker->ch);
 		worker->ch = NULL;
 	}
-	free(worker->task_base);
+
 	spdk_thread_exit(spdk_get_thread());
+
 	pthread_mutex_lock(&g_workers_lock);
 	assert(g_num_workers >= 1);
 	if (--g_num_workers == 0) {
@@ -1044,15 +1045,20 @@ dump_result(void)
 }
 
 static inline void
-_free_task_buffers_in_pool(struct worker_thread *worker)
+_free_all_task_buffers(struct worker_thread *worker)
 {
-	struct ap_task *task;
+	int i;
+	struct ap_task *task = worker->task_base;
 
-	assert(worker);
-	while ((task = TAILQ_FIRST(&worker->tasks_pool))) {
-		TAILQ_REMOVE(&worker->tasks_pool, task, link);
+	if (task == NULL) {
+		return;
+	}
+
+	for (i = 0; i < g_allocate_depth; i++, task++) {
 		_free_task_buffers(task);
 	}
+
+	free(worker->task_base);
 }
 
 static int
@@ -1063,7 +1069,7 @@ _check_draining(void *arg)
 	assert(worker);
 
 	if (worker->current_queue_depth == 0) {
-		_free_task_buffers_in_pool(worker);
+		_free_all_task_buffers(worker);
 		spdk_poller_unregister(&worker->is_draining_poller);
 		unregister_worker(worker);
 	}
@@ -1145,11 +1151,7 @@ _init_thread(void *arg1)
 	free(display);
 	worker->core = spdk_env_get_current_core();
 	worker->thread = spdk_get_thread();
-	pthread_mutex_lock(&g_workers_lock);
-	g_num_workers++;
-	worker->next = g_workers;
-	g_workers = worker;
-	pthread_mutex_unlock(&g_workers_lock);
+
 	worker->ch = spdk_accel_get_io_channel();
 	if (worker->ch == NULL) {
 		fprintf(stderr, "Unable to get an accel channel\n");
@@ -1175,15 +1177,24 @@ _init_thread(void *arg1)
 		task++;
 	}
 
+	pthread_mutex_lock(&g_workers_lock);
+	g_num_workers++;
+	worker->next = g_workers;
+	g_workers = worker;
+	pthread_mutex_unlock(&g_workers_lock);
+
 	/* Register a poller that will start testing when all workers are ready */
 	worker->start_poller = SPDK_POLLER_REGISTER(_worker_start, worker, 10);
 
 	return;
-error:
 
-	_free_task_buffers_in_pool(worker);
-	free(worker->task_base);
-	worker->task_base = NULL;
+error:
+	_free_all_task_buffers(worker);
+	if (worker->ch) {
+		spdk_put_io_channel(worker->ch);
+	}
+	free(worker);
+
 no_worker:
 	pthread_mutex_lock(&g_workers_lock);
 	g_num_workers_total--;
