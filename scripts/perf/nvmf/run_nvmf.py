@@ -7,35 +7,34 @@
 # Note: we use setattr
 # pylint: disable=no-member
 
+import argparse
+import configparser
+import inspect
+import itertools
+import json
+import logging
 import os
 import re
-import sys
-import argparse
-import json
-import inspect
-import logging
-import zipfile
-import threading
+import shutil
 import subprocess
-import itertools
-import configparser
+import sys
+import threading
 import time
 import uuid
-import shutil
-
-import paramiko
-import pandas as pd
-from common import *
-from subprocess import CalledProcessError
-from abc import abstractmethod, ABC
+import zipfile
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from subprocess import CalledProcessError
 from typing import Any
+
+import pandas as pd
+import paramiko
 
 sys.path.append(os.path.dirname(__file__) + '/../../../python')
 
 import spdk.rpc as rpc  # noqa
 import spdk.rpc.client as rpc_client  # noqa
-
+from common import parse_results
 
 @dataclass
 class ConfigField:
@@ -347,7 +346,6 @@ class Server(ABC):
             try:
                 self.exec_cmd(["sudo", "ethtool", "-K", nic,
                                "hw-tc-offload", "on"])  # Enable hardware TC offload
-                nic_bdf = self.exec_cmd(["bash", "-c", "source /sys/class/net/%s/device/uevent; echo $PCI_SLOT_NAME" % nic])
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "fw-lldp-agent", "off"])  # Disable LLDP
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "channel-pkt-inspect-optimize", "off"])
                 # Following are suggested in ADQ Configuration Guide to be enabled for large block sizes,
@@ -631,7 +629,7 @@ class Target(Server):
             os.chdir(change_dir)
             self.log.info("Changing directory to %s" % change_dir)
 
-        out = check_output(cmd, stderr=stderr_opt).decode(encoding="utf-8")
+        out = subprocess.check_output(cmd, stderr=stderr_opt).decode(encoding="utf-8")
 
         if change_dir:
             os.chdir(old_cwd)
@@ -1889,6 +1887,6 @@ if __name__ == "__main__":
             except CpuThrottlingError as err:
                 logging.error(err)
                 exit_code = 1
-            except Exception as err:
+            except Exception:
                 pass
         sys.exit(exit_code)

@@ -338,7 +338,7 @@ def parse_mem_stats(stat_path):
                     try:
                         field, value = line.strip().split('=')
                         mempool_info[field] = value
-                    except Exception as e:
+                    except Exception:
                         pass
                 line = stats.readline()
 

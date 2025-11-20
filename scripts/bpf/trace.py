@@ -5,18 +5,19 @@
 #
 
 
-from argparse import ArgumentParser
-from dataclasses import dataclass, field
-from itertools import islice
-from typing import Dict, List, TypeVar
 import ctypes as ct
-import ijson
-import magic
 import os
 import re
 import subprocess
 import sys
 import tempfile
+from argparse import ArgumentParser
+from dataclasses import dataclass, field
+from itertools import islice
+from typing import Dict, List, TypeVar
+
+import ijson
+import magic
 
 TSC_MAX = (1 << 64) - 1
 UCHAR_MAX = (1 << 8) - 1

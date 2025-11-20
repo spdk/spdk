@@ -6,13 +6,12 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import logging
 import argparse
 import importlib
+import logging
 import os
-import sys
 import shlex
-import json
+import sys
 import types
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../python')
@@ -152,7 +151,7 @@ def main():
             try:
                 load_plugin(cmd, subparsers, plugins)
                 tmp_args = parser.parse_args(cmd)
-            except SystemExit as ex:
+            except SystemExit:
                 print("**STATUS=1", flush=True)
                 continue
 

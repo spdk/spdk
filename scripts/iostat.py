@@ -4,10 +4,10 @@
 #  All rights reserved.
 #
 
+import argparse
 import logging
 import os
 import sys
-import argparse
 import time
 
 sys.path.append(os.path.dirname(__file__) + '/../python')

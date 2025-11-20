@@ -4,17 +4,17 @@
 #  All rights reserved.
 #
 
+import argparse
+import json
 import os
 import re
 import sys
-import json
-import argparse
-from typing import Any, Dict, NoReturn
 from pathlib import Path
-from tabulate import tabulate
-from jinja2 import Environment, FileSystemLoader, Template
+from typing import Any, Dict, NoReturn
 
 import rpc
+from jinja2 import Environment, FileSystemLoader, Template
+from tabulate import tabulate
 
 # Get directory of this script
 base_dir = Path(__file__).resolve().parent.parent

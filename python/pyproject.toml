@@ -84,7 +84,6 @@ exclude = [
     "intel-ipsec-mb",
     "dpdk",
     "test",
-    "scripts",
 ]
 
 [tool.ruff.lint]

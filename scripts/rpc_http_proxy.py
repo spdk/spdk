@@ -6,17 +6,16 @@
 
 import argparse
 import base64
-import errno
 import json
 import os
 import socket
 import ssl
 import sys
+
 try:
-    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 except ImportError:
-    from http.server import HTTPServer
-    from http.server import BaseHTTPRequestHandler
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 

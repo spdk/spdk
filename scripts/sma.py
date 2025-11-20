@@ -4,7 +4,6 @@
 #  All rights reserved.
 #
 
-from argparse import ArgumentParser
 import importlib
 import logging
 import os
@@ -12,6 +11,8 @@ import signal
 import sys
 import threading
 import time
+from argparse import ArgumentParser
+
 import yaml
 
 sys.path.append(os.path.dirname(__file__) + '/../python')

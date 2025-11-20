@@ -4,14 +4,15 @@
 #  All rights reserved.
 #
 
-from argparse import ArgumentParser
-import grpc
-import google.protobuf.json_format as json_format
 import importlib
 import json
 import logging
 import os
 import sys
+from argparse import ArgumentParser
+
+import google.protobuf.json_format as json_format
+import grpc
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
@@ -49,6 +50,7 @@ def load_plugins(plugins):
     for plugin in plugins:
         logging.debug(f'Loading external plugin: {plugin}')
         module = importlib.import_module(plugin)
+        logging.debug(f'Loaded external plugin: {module}')
 
 
 def parse_argv():
