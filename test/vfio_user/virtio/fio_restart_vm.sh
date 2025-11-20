@@ -11,7 +11,8 @@ source $rootdir/test/vfio_user/common.sh
 source $rootdir/test/vfio_user/virtio/common.sh
 source $rootdir/test/vfio_user/autotest.config
 
-bdfs=($(get_nvme_bdfs))
+aio_file=$SPDK_TEST_STORAGE/aio_file
+fallocate -l 1G $aio_file
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 virtio_type=$1
@@ -36,8 +37,7 @@ vfu_vm_dir="$VM_DIR/vfu_tgt"
 rm -rf $vfu_vm_dir
 mkdir -p $vfu_vm_dir
 
-$rpc_py bdev_nvme_attach_controller -b Nvme0 -t pcie -a ${bdfs[0]}
-
+$rpc_py bdev_aio_create $SPDK_TEST_STORAGE/aio_file Nvme0n1 4096
 # using socket $VM_DIR/vfu_tgt/virtio.$disk_no
 disk_no="1"
 vm_num="1"
@@ -96,7 +96,8 @@ fi
 notice "Shutting down virtual machine..."
 vm_shutdown_all
 
-$rpc_py bdev_nvme_detach_controller Nvme0
+$rpc_py bdev_aio_delete Nvme0n1
+rm -f $aio_file
 
 vhost_kill 0
 
