@@ -2260,7 +2260,7 @@ SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", rpc_nvmf_subsystem_allow_any_
 struct nvmf_rpc_target_ctx {
 	char *name;
 	uint32_t max_subsystems;
-	char *discovery_filter;
+	uint32_t discovery_filter;
 };
 
 static int
@@ -2340,6 +2340,7 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 
 	snprintf(opts.name, NVMF_TGT_NAME_MAX_LENGTH, "%s", ctx.name);
 	opts.max_subsystems = ctx.max_subsystems;
+	opts.discovery_filter = ctx.discovery_filter;
 	opts.size = SPDK_SIZEOF(&opts, discovery_filter);
 
 	if (spdk_nvmf_get_tgt(opts.name) != NULL) {
@@ -2361,7 +2362,6 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 out:
 	free(ctx.name);
-	free(ctx.discovery_filter);
 }
 /* private */ SPDK_RPC_REGISTER("nvmf_create_target", rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
 
