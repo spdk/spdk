@@ -6,7 +6,9 @@
 
 # Not for use in production. Please see the changelog for v19.10.
 
-from spdk.rpc.client import print_dict, JSONRPCException, JSONRPCClient
+from spdk.rpc.client import JSONRPCException, JSONRPCClient
+from spdk.rpc.cmd_parser import print_dict
+
 
 import logging
 import argparse

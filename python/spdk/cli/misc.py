@@ -8,7 +8,7 @@
 import sys
 
 from spdk.rpc import config
-from spdk.rpc.client import print_array, print_dict, print_json  # noqa
+from spdk.rpc.cmd_parser import print_dict, print_json
 
 
 def add_parser(subparsers):

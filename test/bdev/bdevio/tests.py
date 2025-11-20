@@ -10,20 +10,12 @@ import sys
 import shlex
 
 try:
-    from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
+    from spdk.rpc.client import JSONRPCException, JSONRPCClient
+    from spdk.rpc.cmd_parser import print_dict
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
     print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
     exit(1)
-
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-
-
-def print_array(a):
-    print(" ".join((quote(v) for v in a)))
 
 
 def perform_tests_func(client, name=None):

@@ -7,7 +7,7 @@
 
 import argparse
 
-from spdk.rpc.client import print_array, print_dict, print_json  # noqa
+from spdk.rpc.cmd_parser import print_dict
 from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 

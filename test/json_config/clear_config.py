@@ -8,7 +8,7 @@ import os
 import sys
 import argparse
 import logging
-from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
+from spdk.rpc.client import JSONRPCClient, JSONRPCException
 
 
 def get_bdev_name_key(bdev):

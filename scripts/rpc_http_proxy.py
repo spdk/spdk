@@ -19,7 +19,7 @@ except ImportError:
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
-from spdk.rpc.client import print_json  # noqa
+from spdk.rpc.cmd_parser import print_json
 
 rpc_sock = None
 

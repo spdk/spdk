@@ -33,8 +33,9 @@ import paramiko
 sys.path.append(os.path.dirname(__file__) + '/../../../python')
 
 import spdk.rpc as rpc  # noqa
-import spdk.rpc.client as rpc_client  # noqa
 from common import parse_results
+from spdk.rpc.client import JSONRPCClient
+from spdk.rpc.cmd_parser import print_dict
 
 @dataclass
 class ConfigField:
@@ -1246,7 +1247,7 @@ class SPDKTarget(Target):
 
         self.client.nvmf_create_transport(**nvmf_transport_params)
         self.log.info("SPDK NVMeOF transport layer:")
-        rpc_client.print_dict(self.client.nvmf_get_transports())
+        print_dict(self.client.nvmf_get_transports())
 
         if self.null_block:
             self.spdk_tgt_add_nullblock(self.null_block)
@@ -1273,7 +1274,7 @@ class SPDKTarget(Target):
                                          dif_type=self.null_block_dif_type, md_size=md_size)
 
         self.log.info("SPDK Bdevs configuration:")
-        rpc_client.print_dict(self.client.bdev_get_bdevs())
+        print_dict(self.client.bdev_get_bdevs())
 
     def spdk_tgt_add_nvme_conf(self, req_num_disks=None):
         self.log.info("Adding NVMe bdevs to config via RPC")
@@ -1292,7 +1293,7 @@ class SPDKTarget(Target):
             self.client.bdev_nvme_attach_controller(name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
 
         self.log.info("SPDK Bdevs configuration:")
-        rpc_client.print_dict(self.client.bdev_get_bdevs())
+        print_dict(self.client.bdev_get_bdevs())
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log.info("Adding subsystems to config")
@@ -1320,7 +1321,7 @@ class SPDKTarget(Target):
         self.subsys_no = len(self.subsystem_info_list)
 
         self.log.info("SPDK NVMeOF subsystem configuration:")
-        rpc_client.print_dict(self.client.nvmf_get_subsystems())
+        print_dict(self.client.nvmf_get_subsystems())
 
     def bpf_start(self):
         self.log.info("Starting BPF Trace scripts: %s" % self.bpf_scripts)
@@ -1354,7 +1355,7 @@ class SPDKTarget(Target):
             if os.path.exists("/var/tmp/spdk.sock"):
                 break
             time.sleep(1)
-        self.client = rpc_client.JSONRPCClient("/var/tmp/spdk.sock")
+        self.client = JSONRPCClient("/var/tmp/spdk.sock")
 
         self.client.sock_set_default_impl(impl_name=self.sock_impl)
         self.client.iobuf_set_options(small_pool_count=self.iobuf_small_pool_count,
@@ -1366,7 +1367,7 @@ class SPDKTarget(Target):
             self.client.sock_impl_set_options(impl_name=self.sock_impl,
                                               enable_zerocopy_send_server=True)
             self.log.info("Target socket options:")
-            rpc_client.print_dict(self.client.sock_impl_get_options(impl_name=self.sock_impl))
+            print_dict(self.client.sock_impl_get_options(impl_name=self.sock_impl))
 
         if self.enable_adq:
             self.client.sock_impl_set_options(impl_name=self.sock_impl, enable_placement_id=1)

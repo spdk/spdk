@@ -138,7 +138,7 @@ argument that adds new RPC calls (subparsers.add_parser()).  The new parsers sho
 functions registered within the external module using the SPDK_RPC_REGISTER() macro.  Example:
 
 ~~~python
-from spdk.rpc.client import print_json
+from spdk.rpc.cmd_parser import print_json
 
 
 def spdk_rpc_plugin_initialize(subparsers):

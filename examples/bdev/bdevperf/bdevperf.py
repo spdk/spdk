@@ -11,13 +11,9 @@ import shlex
 import sys
 
 try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-
-try:
     sys.path.append(os.path.dirname(__file__) + '/../../../python')
-    from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException  # noqa
+    from spdk.rpc.client import JSONRPCClient, JSONRPCException
+    from spdk.rpc.cmd_parser import print_dict
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
     print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
@@ -26,10 +22,6 @@ except ImportError:
 
 PATTERN_TYPES_STR = ("read", "write", "randread", "randwrite", "rw", "randrw", "verify", "reset",
                      "unmap", "flush", "write_zeroes")
-
-
-def print_array(a):
-    print(" ".join((quote(v) for v in a)))
 
 
 def perform_tests_func(args):

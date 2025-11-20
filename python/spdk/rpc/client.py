@@ -10,7 +10,7 @@ import os
 import socket
 import time
 
-from .cmd_parser import print_array, print_dict, print_json, remove_null  # noqa
+from .cmd_parser import remove_null
 
 
 def get_addr_type(addr):

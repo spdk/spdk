@@ -2,7 +2,7 @@
 #  Copyright (C) 2022 Intel Corporation.
 #  All rights reserved.
 
-from spdk.rpc.client import print_json
+from spdk.rpc.cmd_parser import print_json
 
 
 def perform_tests(args):
