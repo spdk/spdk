@@ -60,7 +60,6 @@ packages=(
 	valgrind
 	wget
 	xfsprogs
-	xxd
 	rust
 	cargo
 	python3-docutils
@@ -104,6 +103,11 @@ fi
 
 if [[ $OSID == fedora ]] && ((OSVERSION >= 37)); then
 	packages+=(iproute-tc)
+	packages+=(xxd)
+fi
+
+if [[ $OSID == centos || $OSID == rocky || $OSID == rhel ]] && ((OSVERSION >= 10)); then
+	packages+=(xxd)
 fi
 
 pre_install() { :; }
