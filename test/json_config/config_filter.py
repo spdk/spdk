@@ -4,9 +4,9 @@
 #  All rights reserved.
 #
 
-import sys
-import json
 import argparse
+import json
+import sys
 from collections import OrderedDict
 
 

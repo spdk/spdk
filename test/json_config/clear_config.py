@@ -4,10 +4,9 @@
 #  All rights reserved.
 #
 
-import os
-import sys
 import argparse
 import logging
+
 from spdk.rpc.client import JSONRPCClient, JSONRPCException
 
 
@@ -54,7 +53,6 @@ def get_bdev_delete_method(bdev):
 
 
 def clear_bdev_subsystem(args, bdev_config):
-    rpc_bdevs = args.client.call("bdev_get_bdevs")
     for bdev in bdev_config:
         bdev_name_key = get_bdev_name_key(bdev)
         bdev_name = get_bdev_name(bdev)

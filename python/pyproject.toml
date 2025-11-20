@@ -83,7 +83,6 @@ exclude = [
     "libvfio-user",
     "intel-ipsec-mb",
     "dpdk",
-    "test",
 ]
 
 [tool.ruff.lint]

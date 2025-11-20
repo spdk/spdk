@@ -4,13 +4,12 @@
 #  All rights reserved.
 #
 
-from spdk.rpc.client import JSONRPCException, JSONRPCClient
-
-
-import logging
 import argparse
-import sys
+import logging
 import shlex
+import sys
+
+from spdk.rpc.client import JSONRPCClient, JSONRPCException
 
 
 def _fuzz_vhost_create_dev(client, socket, is_blk, use_bogus_buffer, use_valid_buffer, test_scsi_tmf, valid_lun):

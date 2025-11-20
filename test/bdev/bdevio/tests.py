@@ -4,13 +4,13 @@
 #  All rights reserved.
 #
 
-import logging
 import argparse
-import sys
+import logging
 import shlex
+import sys
 
 try:
-    from spdk.rpc.client import JSONRPCException, JSONRPCClient
+    from spdk.rpc.client import JSONRPCClient, JSONRPCException
     from spdk.rpc.cmd_parser import print_dict
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")

@@ -4,12 +4,12 @@
 #  All rights reserved.
 #
 
-import os
-import time
-import sys
-import subprocess
-import threading
 import json
+import os
+import subprocess
+import sys
+import threading
+import time
 
 CALSOFT_BIN_PATH = "/usr/local/calsoft/iscsi-pcts-v1.5/bin"
 
