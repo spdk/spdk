@@ -27,8 +27,8 @@ mkdir -p $vfu_vm_dir
 disk_no="1"
 vm_num="1"
 job_file="default_fsdev.job"
-be_virtiofs_dir=/tmp/vfio-test.$disk_no
-vm_virtiofs_dir=/tmp/virtiofs.$disk_no
+be_virtiofs_dir="$SPDK_TEST_STORAGE/vfio-test.$disk_no"
+vm_virtiofs_dir="/tmp/virtiofs.$disk_no"
 
 $rpc_py vfu_tgt_set_base_path $vfu_vm_dir
 

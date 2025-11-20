@@ -8,7 +8,7 @@ source $rootdir/test/common/autotest_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-vfu_dir="/tmp/vfu_devices"
+vfu_dir="$SPDK_TEST_STORAGE/vfu_devices"
 rm -rf $vfu_dir
 mkdir -p $vfu_dir
 
