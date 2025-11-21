@@ -2,6 +2,10 @@
 
 ## v26.01: (Upcoming Release)
 
+### bdev
+
+All aliases are now removed from the block device names list upon unregistration.
+
 ### event
 
 Added new public API: `spdk_app_setup_trace()` to set up SPDK tracing for applications.

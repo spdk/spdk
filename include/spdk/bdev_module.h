@@ -1266,6 +1266,7 @@ void spdk_bdev_module_fini_start_done(void);
 /**
  * Add alias to block device names list.
  * Aliases can be add only to registered bdev.
+ * All aliases are removed when bdev is unregistered.
  *
  * \param bdev Block device to query.
  * \param alias Alias to be added to list.

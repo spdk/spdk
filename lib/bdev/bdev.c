@@ -5128,16 +5128,22 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 	return rc;
 }
 
-void
-spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
+static void
+bdev_alias_del_all(struct spdk_bdev *bdev, void (*alias_del_fn)(struct spdk_bdev_name *n))
 {
 	struct spdk_bdev_alias *p, *tmp;
 
 	TAILQ_FOREACH_SAFE(p, &bdev->aliases, tailq, tmp) {
 		TAILQ_REMOVE(&bdev->aliases, p, tailq);
-		bdev_name_del(&p->alias);
+		alias_del_fn(&p->alias);
 		free(p);
 	}
+}
+
+void
+spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
+{
+	bdev_alias_del_all(bdev, bdev_name_del);
 }
 
 struct spdk_io_channel *
@@ -8522,7 +8528,6 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	struct spdk_bdev_desc	*desc, *tmp;
 	struct spdk_bdev_alias	*alias;
 	int			rc = 0;
-	char			uuid[SPDK_UUID_STRING_LEN];
 
 	assert(spdk_spin_held(&g_bdev_mgr.spinlock));
 	assert(spdk_spin_held(&bdev->internal.spinlock));
@@ -8550,13 +8555,12 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 		TAILQ_FOREACH(alias, &bdev->aliases, tailq) {
 			bdev_examine_allowlist_remove(alias->alias.name);
 		}
+		bdev_alias_del_all(bdev, bdev_name_del_unsafe);
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
 		SPDK_DEBUGLOG(bdev, "Removing bdev %s from list done\n", bdev->name);
 
-		/* Delete the name and the UUID alias */
-		spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
+		/* Delete the name */
 		bdev_name_del_unsafe(&bdev->internal.bdev_name);
-		bdev_alias_del(bdev, uuid, bdev_name_del_unsafe);
 
 		spdk_notify_send("bdev_unregister", spdk_bdev_get_name(bdev));
 

@@ -1140,6 +1140,45 @@ alias_add_del_test(void)
 }
 
 static void
+alias_add_del_all_test(void)
+{
+	struct spdk_bdev *bdev;
+	char uuid[SPDK_UUID_STRING_LEN];
+	int rc;
+
+	ut_init_bdev(NULL);
+
+	bdev = allocate_bdev("bdev");
+	SPDK_CU_ASSERT_FATAL(bdev != 0);
+
+	poll_threads();
+
+	/* Check that an UUID alias was registered */
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
+	CU_ASSERT_EQUAL(spdk_bdev_get_by_name(uuid), bdev);
+
+	rc = spdk_bdev_alias_add(bdev, "custom-alias");
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT_PTR_NOT_NULL(spdk_bdev_get_by_name(uuid));
+	CU_ASSERT_PTR_NOT_NULL(spdk_bdev_get_by_name("bdev"));
+	CU_ASSERT_PTR_NOT_NULL(spdk_bdev_get_by_name("custom-alias"));
+
+	/* Unregister and free bdev */
+	spdk_bdev_unregister(bdev, NULL, NULL);
+
+	poll_threads();
+
+	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name(uuid));
+	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name("bdev"));
+	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name("custom-alias"));
+
+	free(bdev);
+
+	ut_fini_bdev();
+}
+
+static void
 io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	g_io_done = true;
@@ -7898,6 +7937,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, open_write_test);
 	CU_ADD_TEST(suite, claim_test);
 	CU_ADD_TEST(suite, alias_add_del_test);
+	CU_ADD_TEST(suite, alias_add_del_all_test);
 	CU_ADD_TEST(suite, get_device_stat_test);
 	CU_ADD_TEST(suite, bdev_io_types_test);
 	CU_ADD_TEST(suite, bdev_io_wait_test);
