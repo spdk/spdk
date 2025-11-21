@@ -2626,7 +2626,6 @@ spdk_bdev_examine_wt(void)
 	unregister_bdev(&g_bdev);
 	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
 
-	unregister_bdev(&g_bdev);
 	g_bdev_opts.bdev_auto_examine = save_auto_examine;
 }
 
