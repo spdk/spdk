@@ -2618,6 +2618,7 @@ spdk_bdev_examine_wt(void)
 	register_bdev(&g_bdev, "ut_bdev_wt", &g_io_device);
 	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") != NULL);
 	thread = NULL;
+	set_thread(1);
 	rc = spdk_bdev_wait_for_examine(wait_for_examine_cb, &thread);
 	CU_ASSERT(rc == 0);
 	poll_threads();
