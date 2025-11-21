@@ -26,7 +26,7 @@ The tags can be matched with the level 4 headers below.
 `--name` option will be removed in the 26.05 release. `--names` option should be used instead,
 it allows providing array of devices names to obtain statistics from.
 
-#### `spdk_bdev_initialize`, `spdk_bdev_finish`
+#### `spdk_bdev_initialize`, `spdk_bdev_finish`, `spdk_bdev_unregister`, `spdk_bdev_unregister_by_name`
 
 Calling these functions from any thread is deprecated and will be disallowed in v26.05.
 These functions should be called from the SPDK app thread.

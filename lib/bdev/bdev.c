@@ -8580,10 +8580,15 @@ _bdev_unregister(void *ctx)
 	bdev_unregister(bdev, NULL, 0);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_unregister,
+			      "calling spdk_bdev_unregister from any thread is deprecated",
+			      "v26.05", 0);
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_thread	*thread;
+	static bool		deprecate_any_thread;
 
 	SPDK_DEBUGLOG(bdev, "Removing bdev %s from list\n", bdev->name);
 
@@ -8594,6 +8599,11 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 			cb_fn(cb_arg, -ENOTSUP);
 		}
 		return;
+	}
+
+	if (!spdk_thread_is_app_thread(NULL) && !deprecate_any_thread) {
+		SPDK_LOG_DEPRECATED(spdk_bdev_unregister);
+		deprecate_any_thread = true;
 	}
 
 	spdk_spin_lock(&g_bdev_mgr.spinlock);

@@ -1170,6 +1170,9 @@ int spdk_bdev_register(struct spdk_bdev *bdev);
  * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
  *
+ * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
+ * This function should be called from the SPDK app thread.
+ *
  * The cb_fn will be called from the context of the same spdk_thread that called
  * spdk_bdev_unregister.
  *
@@ -1187,6 +1190,9 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
  * on this bdev of the hotremoval to request the upper layer to stop using this bdev
  * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
+ *
+ * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
+ * This function should be called from the SPDK app thread.
  *
  * The cb_fn will be called from the context of the same spdk_thread that called
  * spdk_bdev_unregister.
