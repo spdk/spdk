@@ -1008,7 +1008,7 @@ dump_result(void)
 	uint64_t total_failed = 0;
 	uint64_t total_miscompared = 0;
 	uint64_t total_xfer_per_sec = 0;
-	uint64_t total_bw_in_MiBps = 0;
+	double total_bw_in_MiBps = 0;
 	struct worker_thread *worker = g_workers;
 	char tmp[64];
 
@@ -1018,9 +1018,9 @@ dump_result(void)
 
 	while (worker != NULL) {
 		assert(worker->stop_time >= worker->start_time);
-		uint64_t test_time = (worker->stop_time - worker->start_time) / g_tsc_rate;
-		uint64_t xfer_per_sec = worker->stats.executed / test_time;
-		uint64_t bw_in_MiBps = worker->stats.num_bytes / (test_time * 1024 * 1024);
+		double test_time = (double)(worker->stop_time - worker->start_time) / g_tsc_rate;
+		uint64_t xfer_per_sec = (uint64_t)(worker->stats.executed / test_time);
+		double bw_in_MiBps = (double)worker->stats.num_bytes / (test_time * 1024 * 1024);
 
 		total_failed += worker->xfer_failed;
 		total_miscompared += worker->injected_miscompares;
@@ -1029,7 +1029,7 @@ dump_result(void)
 
 		snprintf(tmp, sizeof(tmp), "%u,%u", worker->display.core, worker->display.thread);
 		if (xfer_per_sec) {
-			printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
+			printf("%-12s %8" PRIu64 "/s %10.3f MiB/s %16" PRIu64 " %16" PRIu64 "\n",
 			       tmp, xfer_per_sec, bw_in_MiBps, worker->xfer_failed,
 			       worker->injected_miscompares);
 		}
@@ -1038,7 +1038,7 @@ dump_result(void)
 	}
 
 	printf("====================================================================================\n");
-	printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
+	printf("%-12s %8" PRIu64 "/s %10.3f MiB/s %16" PRIu64 " %16" PRIu64 "\n",
 	       "Total", total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;
