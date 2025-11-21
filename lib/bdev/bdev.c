@@ -2449,10 +2449,20 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 }
 
 static void
-bdev_finish_complete(void *not_used)
+_bdev_finish_complete(void *not_used)
 {
 	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
+	void *cb_arg = g_fini_cb_arg;
 
+	g_fini_cb_fn = NULL;
+	g_fini_cb_arg = NULL;
+
+	cb_fn(cb_arg);
+}
+
+static void
+bdev_finish_complete(void *not_used)
+{
 	if (g_bdev_mgr.bdev_io_pool) {
 		if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != g_bdev_opts.bdev_io_pool_size) {
 			SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
@@ -2467,9 +2477,7 @@ bdev_finish_complete(void *not_used)
 
 	bdev_examine_allowlist_free();
 
-	cb_fn(g_fini_cb_arg);
-	g_fini_cb_fn = NULL;
-	g_fini_cb_arg = NULL;
+	spdk_thread_exec_msg(g_fini_thread, _bdev_finish_complete, NULL);
 	g_bdev_mgr.init_complete = false;
 	g_bdev_mgr.module_init_complete = false;
 }
@@ -2526,7 +2534,7 @@ bdev_module_fini_iter(void *arg)
 void
 spdk_bdev_module_fini_done(void)
 {
-	spdk_thread_exec_msg(g_fini_thread, bdev_module_fini_iter, NULL);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_module_fini_iter, NULL);
 }
 
 static void
@@ -2634,7 +2642,7 @@ bdev_module_fini_start_iter(void *arg)
 void
 spdk_bdev_module_fini_start_done(void)
 {
-	spdk_thread_exec_msg(g_fini_thread, bdev_module_fini_start_iter, NULL);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_module_fini_start_iter, NULL);
 }
 
 static void
@@ -2645,25 +2653,40 @@ bdev_finish_wait_for_examine_done(void *cb_arg)
 
 static void bdev_open_async_fini(void);
 
-void
-spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
+static void
+bdev_finish_wait_for_examine(void *not_used)
 {
 	int rc;
-
-	assert(cb_fn != NULL);
-
-	g_fini_thread = spdk_get_thread();
-
-	g_fini_cb_fn = cb_fn;
-	g_fini_cb_arg = cb_arg;
-
-	bdev_open_async_fini();
 
 	rc = spdk_bdev_wait_for_examine(bdev_finish_wait_for_examine_done, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("wait_for_examine failed: %s\n", spdk_strerror(-rc));
 		bdev_finish_wait_for_examine_done(NULL);
 	}
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_finish,
+			      "calling spdk_bdev_finish from any thread is deprecated",
+			      "v26.05", 0);
+
+void
+spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
+{
+	static bool deprecate_any_thread;
+
+	assert(cb_fn != NULL);
+
+	if (!spdk_thread_is_app_thread(NULL) && !deprecate_any_thread) {
+		SPDK_LOG_DEPRECATED(spdk_bdev_finish);
+		deprecate_any_thread = true;
+	}
+
+	g_fini_cb_fn = cb_fn;
+	g_fini_cb_arg = cb_arg;
+	g_fini_thread = spdk_get_thread();
+
+	bdev_open_async_fini();
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_finish_wait_for_examine, NULL);
 }
 
 struct spdk_bdev_io *

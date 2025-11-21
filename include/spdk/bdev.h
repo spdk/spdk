@@ -388,6 +388,9 @@ void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg);
 /**
  * Perform cleanup work to remove the registered block device modules.
  *
+ * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
+ * This function should be called from the SPDK app thread.
+ *
  * \param cb_fn Called when the removal is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
