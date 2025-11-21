@@ -2449,7 +2449,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 }
 
 static void
-bdev_mgr_unregister_cb(void *io_device)
+bdev_finish_complete(void *not_used)
 {
 	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
 
@@ -2485,7 +2485,7 @@ bdev_module_fini_iter(void *arg)
 	 * just call spdk_bdev_mgr_unregister_cb
 	 */
 	if (!g_bdev_mgr.module_init_complete) {
-		bdev_mgr_unregister_cb(NULL);
+		bdev_finish_complete(NULL);
 		return;
 	}
 
@@ -2520,7 +2520,7 @@ bdev_module_fini_iter(void *arg)
 	}
 
 	g_resume_bdev_module = NULL;
-	spdk_io_device_unregister(&g_bdev_mgr, bdev_mgr_unregister_cb);
+	spdk_io_device_unregister(&g_bdev_mgr, bdev_finish_complete);
 }
 
 void
