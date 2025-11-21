@@ -2526,6 +2526,10 @@ _bdev_unregistered_wt(void *ctx, int rc)
 {
 	struct spdk_thread **threadp = ctx;
 
+	if (rc) {
+		return;
+	}
+
 	*threadp = spdk_get_thread();
 }
 
