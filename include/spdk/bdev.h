@@ -377,6 +377,9 @@ typedef void (*spdk_bdev_io_timeout_cb)(void *cb_arg, struct spdk_bdev_io *bdev_
 /**
  * Initialize block device modules.
  *
+ * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
+ * This function should be called from the SPDK app thread.
+ *
  * \param cb_fn Called when the initialization is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */

@@ -153,6 +153,7 @@ static struct spdk_bdev_opts	g_bdev_opts = {
 
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
 static void			*g_init_cb_arg = NULL;
+static struct spdk_thread	*g_init_thread = NULL;
 
 static spdk_bdev_fini_cb	g_fini_cb_fn = NULL;
 static void			*g_fini_cb_arg = NULL;
@@ -2220,15 +2221,24 @@ bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 }
 
 static void
-bdev_init_complete(int rc)
+_bdev_init_complete(void *ctx)
 {
 	spdk_bdev_init_cb cb_fn = g_init_cb_fn;
 	void *cb_arg = g_init_cb_arg;
+	int rc = (int)(uintptr_t)ctx;
+
+	g_init_cb_fn = NULL;
+	g_init_cb_arg = NULL;
+
+	cb_fn(cb_arg, rc);
+}
+
+static void
+bdev_init_complete(int rc)
+{
 	struct spdk_bdev_module *m;
 
 	g_bdev_mgr.init_complete = true;
-	g_init_cb_fn = NULL;
-	g_init_cb_arg = NULL;
 
 	/*
 	 * For modules that need to know when subsystem init is complete,
@@ -2242,7 +2252,7 @@ bdev_init_complete(int rc)
 		}
 	}
 
-	cb_fn(cb_arg, rc);
+	spdk_thread_exec_msg(g_init_thread, _bdev_init_complete, (void *)(uintptr_t)rc);
 }
 
 static bool
@@ -2288,8 +2298,10 @@ bdev_module_action_complete(void)
 }
 
 static void
-bdev_module_action_done(struct spdk_bdev_module *module)
+bdev_module_action_done(void *ctx)
 {
+	struct spdk_bdev_module *module = ctx;
+
 	spdk_spin_lock(&module->internal.spinlock);
 	assert(module->internal.action_in_progress > 0);
 	module->internal.action_in_progress--;
@@ -2301,13 +2313,13 @@ void
 spdk_bdev_module_init_done(struct spdk_bdev_module *module)
 {
 	assert(module->async_init);
-	bdev_module_action_done(module);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_module_action_done, module);
 }
 
 void
 spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 {
-	bdev_module_action_done(module);
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_module_action_done, module);
 }
 
 /** The last initialized bdev module */
@@ -2354,16 +2366,11 @@ bdev_modules_init(void)
 	return 0;
 }
 
-void
-spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
+static void
+bdev_initialize(void *not_used)
 {
 	int rc = 0;
 	char mempool_name[32];
-
-	assert(cb_fn != NULL);
-
-	g_init_cb_fn = cb_fn;
-	g_init_cb_arg = cb_arg;
 
 	spdk_notify_type_register("bdev_register");
 	spdk_notify_type_register("bdev_unregister");
@@ -2416,6 +2423,29 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	}
 
 	bdev_module_action_complete();
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_initialize,
+			      "calling spdk_bdev_initialize from any thread is deprecated",
+			      "v26.05", 0);
+
+void
+spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
+{
+	static bool deprecate_any_thread;
+
+	assert(cb_fn != NULL);
+
+	if (!spdk_thread_is_app_thread(NULL) && !deprecate_any_thread) {
+		SPDK_LOG_DEPRECATED(spdk_bdev_initialize);
+		deprecate_any_thread = true;
+	}
+
+	g_init_cb_fn = cb_fn;
+	g_init_cb_arg = cb_arg;
+	g_init_thread = spdk_get_thread();
+
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_initialize, NULL);
 }
 
 static void
