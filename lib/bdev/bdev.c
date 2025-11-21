@@ -2526,11 +2526,7 @@ bdev_module_fini_iter(void *arg)
 void
 spdk_bdev_module_fini_done(void)
 {
-	if (spdk_get_thread() != g_fini_thread) {
-		spdk_thread_send_msg(g_fini_thread, bdev_module_fini_iter, NULL);
-	} else {
-		bdev_module_fini_iter(NULL);
-	}
+	spdk_thread_exec_msg(g_fini_thread, bdev_module_fini_iter, NULL);
 }
 
 static void
@@ -2638,11 +2634,7 @@ bdev_module_fini_start_iter(void *arg)
 void
 spdk_bdev_module_fini_start_done(void)
 {
-	if (spdk_get_thread() != g_fini_thread) {
-		spdk_thread_send_msg(g_fini_thread, bdev_module_fini_start_iter, NULL);
-	} else {
-		bdev_module_fini_start_iter(NULL);
-	}
+	spdk_thread_exec_msg(g_fini_thread, bdev_module_fini_start_iter, NULL);
 }
 
 static void
