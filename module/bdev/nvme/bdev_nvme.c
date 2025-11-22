@@ -307,8 +307,8 @@ static void nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
 static void nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
-static int bdev_nvme_library_init(void);
-static void bdev_nvme_library_fini(void);
+static int bdev_nvme_init(void);
+static void bdev_nvme_fini(void);
 static void _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch,
 				      struct spdk_bdev_io *bdev_io);
 static void bdev_nvme_submit_request(struct spdk_io_channel *ch,
@@ -388,8 +388,8 @@ bdev_nvme_get_ctx_size(void)
 static struct spdk_bdev_module nvme_if = {
 	.name = "nvme",
 	.async_fini = true,
-	.module_init = bdev_nvme_library_init,
-	.module_fini = bdev_nvme_library_fini,
+	.module_init = bdev_nvme_init,
+	.module_fini = bdev_nvme_fini,
 	.config_json = bdev_nvme_config_json,
 	.get_ctx_size = bdev_nvme_get_ctx_size,
 
@@ -7882,7 +7882,7 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 }
 
 static int
-bdev_nvme_library_init(void)
+bdev_nvme_init(void)
 {
 	g_bdev_nvme_init_thread = spdk_get_thread();
 
@@ -7936,7 +7936,7 @@ check_discovery_fini(void *arg)
 }
 
 static void
-bdev_nvme_library_fini(void)
+bdev_nvme_fini(void)
 {
 	struct nvme_probe_skip_entry *entry, *entry_tmp;
 	struct discovery_ctx *ctx;

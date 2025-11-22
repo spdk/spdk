@@ -8422,13 +8422,13 @@ main(int argc, char **argv)
 
 	allocate_threads(3);
 	set_thread(0);
-	bdev_nvme_library_init();
+	bdev_nvme_init();
 	init_accel();
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
 	set_thread(0);
-	bdev_nvme_library_fini();
+	bdev_nvme_fini();
 	fini_accel();
 	free_threads();
 
