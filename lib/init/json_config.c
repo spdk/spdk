@@ -59,7 +59,6 @@ typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 
 struct load_json_config_ctx {
 	/* Thread used during configuration. */
-	struct spdk_thread *thread;
 	spdk_subsystem_init_fn cb_fn;
 	void *cb_arg;
 	bool stop_on_error;
@@ -163,7 +162,7 @@ rpc_client_poller(void *arg)
 	client_resp_handler cb;
 	int rc;
 
-	assert(spdk_get_thread() == ctx->thread);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	rc = spdk_jsonrpc_client_poll(ctx->client_conn, 0);
 	if (rc == 0) {
@@ -246,7 +245,7 @@ client_send_request(struct load_json_config_ctx *ctx, struct spdk_jsonrpc_client
 {
 	int rc;
 
-	assert(spdk_get_thread() == ctx->thread);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	ctx->client_resp_cb = client_resp_cb;
 	rpc_client_set_timeout(ctx, RPC_CLIENT_REQUEST_TIMEOUT_US);
@@ -340,7 +339,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 				   (char *)ctx->subsystem_name->start);
 		ctx->subsystems_it = spdk_json_next(ctx->subsystems_it);
 		/* Invoke later to avoid recursion */
-		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem, ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem, ctx);
 		return;
 	}
 
@@ -356,7 +355,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		if (!ctx->stop_on_error) {
 			/* Invoke later to avoid recursion */
 			ctx->config_it = spdk_json_next(ctx->config_it);
-			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+			spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+					     ctx);
 		} else if (!spdk_subsystem_exists(ctx->subsystem_name_str)) {
 			/* If the subsystem does not exist, just skip it, even
 			 * if we are supposed to stop_on_error. Users may generate
@@ -373,7 +373,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 				       cfg.method, ctx->subsystem_name_str);
 			/* Invoke later to avoid recursion */
 			ctx->config_it = spdk_json_next(ctx->config_it);
-			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+			spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+					     ctx);
 		} else {
 			SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
 			app_json_config_load_done(ctx, rc);
@@ -385,7 +386,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		SPDK_DEBUG_APP_CFG("Method '%s' not allowed -> skipping\n", cfg.method);
 		/* Invoke later to avoid recursion */
 		ctx->config_it = spdk_json_next(ctx->config_it);
-		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+				     ctx);
 		goto out;
 	}
 	if ((state_mask & startup_runtime) == startup_runtime && cur_state_mask == SPDK_RPC_RUNTIME) {
@@ -394,7 +396,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		SPDK_DEBUG_APP_CFG("Method '%s' has already been run in STARTUP state\n", cfg.method);
 		/* Invoke later to avoid recursion */
 		ctx->config_it = spdk_json_next(ctx->config_it);
-		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+				     ctx);
 		goto out;
 	}
 
@@ -586,7 +589,6 @@ json_config_prepare_ctx(spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	ctx->stop_on_error = stop_on_error;
-	ctx->thread = spdk_get_thread();
 	ctx->initalize_subsystems = initalize_subsystems;
 
 	rc = parse_json(json, json_size, ctx);
