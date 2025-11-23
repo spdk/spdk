@@ -4,6 +4,7 @@
 #include <spdk/log.h>
 #include <spdk/queue.h>
 #include <spdk/string.h>
+#include <spdk/thread.h>
 #include <spdk/util.h>
 #include <string.h>
 
@@ -25,6 +26,7 @@ struct wal_vbdev {
 	struct {
 		struct spdk_io_channel *jch;
 		struct spdk_io_channel *mch;
+		struct spdk_poller *poller;
 		void *buf_j;
 		void *buf_m;
 		size_t buf_bytes;
@@ -33,6 +35,11 @@ struct wal_vbdev {
 		uint32_t last_step;
 		spdk_bdev_unregister_cb done_cb;
 		void *done_arg;
+		spdk_bdev_unregister_cb delete_cb;
+		void *delete_arg;
+		bool delete_pending;
+		bool step_inflight;
+		bool stop;
 	} rec;
 };
 
@@ -82,6 +89,7 @@ static int vbdev_wal_get_ctx_size(void) {
 
 /* Один шаг процесса восстановления данных */
 static void wal_recover_step(struct wal_vbdev *vb);
+static int wal_recover_poll(void *cb_arg);
 
 /* Callback завершения чтения из журнала при восстановлении */
 static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
@@ -274,15 +282,22 @@ static void wal_submit_request(struct spdk_io_channel *ch,
 		case SPDK_BDEV_IO_TYPE_READ: {
 			struct iovec *iovs = bdev_io->u.bdev.iovs;
 			int iovcnt = bdev_io->u.bdev.iovcnt;
+			uint64_t end = wio->offset_blocks + wio->num_blocks;
+			bool use_journal = vb->rec_in_progress
+					&& end > vb->rec_off_blocks;
+			struct spdk_bdev_desc *target_desc =
+				use_journal ? vb->journal_desc : vb->main_desc;
+			struct spdk_io_channel *target_ch =
+				use_journal ? wch->journal_ch : wch->main_ch;
 
-			spdk_bdev_readv_blocks(vb->main_desc,
-					       wch->main_ch,
-					       iovs,
-					       iovcnt,
-					       wio->offset_blocks,
-					       wio->num_blocks,
-					       wal_passthru_done,
-					       bdev_io);
+			spdk_bdev_readv_blocks(target_desc,
+				       target_ch,
+				       iovs,
+				       iovcnt,
+				       wio->offset_blocks,
+				       wio->num_blocks,
+				       wal_passthru_done,
+				       bdev_io);
 			break;
 		}
 
@@ -367,6 +382,10 @@ static int wal_destruct(void *ctx) {
 		spdk_bdev_close(vb->journal_desc);
 		vb->journal_desc = NULL;
 	}
+	if (vb->rec.poller) {
+		spdk_poller_unregister(&vb->rec.poller);
+		vb->rec.poller = NULL;
+	}
 	if (vb->rec.jch) {
 		spdk_put_io_channel(vb->rec.jch);
 		vb->rec.jch = NULL;
@@ -417,13 +436,21 @@ static struct wal_vbdev *wal_find_by_name(const char *name) {
 	return NULL;
 }
 
+static void wal_unregister(struct wal_vbdev *vb,
+			   spdk_bdev_unregister_cb cb_fn,
+			   void *cb_arg) {
+	TAILQ_REMOVE(&g_wal, vb, link);
+	spdk_bdev_unregister(&vb->bdev, cb_fn, cb_arg);
+}
+
 /* Создание и регистрация нового WAL-диска на основе двух базовых bdev */
 int wal_bdev_create_disk(char *main_bdev_name,
 			 char *journal_bdev_name,
 			 char *name,
 			 uint32_t *block_sz,
 			 uint64_t *size_mb) {
-	int rc;
+	int rc = 0;
+	struct wal_vbdev *vb = NULL;
 	struct spdk_bdev_desc *main_desc = NULL, *journal_desc = NULL;
 	struct spdk_bdev *main_bdev = NULL, *journal_bdev = NULL;
 
@@ -444,7 +471,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
 		SPDK_ERRLOG("WAL: failed to open main bdev '%s': %d\n",
 			    main_bdev_name,
 			    rc);
-		return rc;
+		goto err;
 	}
 	main_bdev = spdk_bdev_desc_get_bdev(main_desc);
 
@@ -457,8 +484,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
 		SPDK_ERRLOG("WAL: failed to open journal bdev '%s': %d\n",
 			    journal_bdev_name,
 			    rc);
-		spdk_bdev_close(main_desc);
-		return rc;
+		goto err;
 	}
 	journal_bdev = spdk_bdev_desc_get_bdev(journal_desc);
 
@@ -467,16 +493,14 @@ int wal_bdev_create_disk(char *main_bdev_name,
 		SPDK_ERRLOG("WAL: block sizes mismatch: %u vs %u\n",
 			    spdk_bdev_get_block_size(main_bdev),
 			    spdk_bdev_get_block_size(journal_bdev));
-		spdk_bdev_close(journal_desc);
-		spdk_bdev_close(main_desc);
-		return -EINVAL;
+		rc = -EINVAL;
+		goto err;
 	}
 
-	struct wal_vbdev *vb = calloc(1, sizeof(*vb));
+	vb = calloc(1, sizeof(*vb));
 	if (!vb) {
-		spdk_bdev_close(journal_desc);
-		spdk_bdev_close(main_desc);
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err;
 	}
 
 	vb->main_desc = main_desc;
@@ -485,26 +509,18 @@ int wal_bdev_create_disk(char *main_bdev_name,
 	vb->journal_bdev = journal_bdev;
 
 	vb->bdev.name = strdup(name);
+	if (!vb->bdev.name) {
+		rc = -ENOMEM;
+		goto err;
+	}
 	vb->bdev.product_name = "WAL";
 	vb->bdev.module = &wal_bdev_if;
 	vb->bdev.fn_table = &g_wal_fn_table;
 	vb->bdev.ctxt = vb;
 
 	vb->bdev.blocklen = spdk_bdev_get_block_size(main_bdev);
-	uint64_t main_blocks = spdk_bdev_get_num_blocks(main_bdev);
-	uint64_t journal_blocks = spdk_bdev_get_num_blocks(journal_bdev);
-	vb->bdev.blockcnt =
-		(main_blocks < journal_blocks) ? main_blocks : journal_blocks;
-
-	vb->rec_in_progress = false;
-	vb->rec_off_blocks = 0;
+	vb->bdev.blockcnt = spdk_bdev_get_num_blocks(main_bdev);
 	vb->rec_chunk_blocks = 1024;
-
-	vb->rec.jch = vb->rec.mch = NULL;
-	vb->rec.buf_j = vb->rec.buf_m = NULL;
-	vb->rec.buf_bytes = 0;
-	vb->rec.done_cb = NULL;
-	vb->rec.done_arg = NULL;
 
 	size_t align = max(spdk_bdev_get_buf_align(main_bdev),
 			   spdk_bdev_get_buf_align(journal_bdev));
@@ -520,12 +536,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
 	rc = spdk_bdev_register(&vb->bdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("wal: spdk_bdev_register failed: %d\n", rc);
-		spdk_io_device_unregister(vb, NULL);
-		spdk_bdev_close(journal_desc);
-		spdk_bdev_close(main_desc);
-		free(vb->bdev.name);
-		free(vb);
-		return rc;
+		goto err_unregister_io_dev;
 	}
 
 	TAILQ_INSERT_TAIL(&g_wal, vb, link);
@@ -541,6 +552,21 @@ int wal_bdev_create_disk(char *main_bdev_name,
 		       main_bdev_name,
 		       journal_bdev_name);
 	return 0;
+
+err_unregister_io_dev:
+	spdk_io_device_unregister(vb, NULL);
+err:
+	if (vb) {
+		free(vb->bdev.name);
+		free(vb);
+	}
+	if (journal_desc) {
+		spdk_bdev_close(journal_desc);
+	}
+	if (main_desc) {
+		spdk_bdev_close(main_desc);
+	}
+	return rc;
 }
 
 /* Удаление и дерегистрация WAL-диска по имени */
@@ -552,10 +578,17 @@ int wal_bdev_delete_disk(char *name,
 		return -ENODEV;
 	}
 	if (vb->rec_in_progress) {
-		return -EBUSY;
+		if (vb->rec.delete_pending) {
+			return -EBUSY;
+		}
+		vb->rec.stop = true;
+		vb->rec.delete_pending = true;
+		vb->rec.delete_cb = cb_fn;
+		vb->rec.delete_arg = cb_arg;
+		return 0;
 	}
-	TAILQ_REMOVE(&g_wal, vb, link);
-	spdk_bdev_unregister(&vb->bdev, cb_fn, cb_arg);
+
+	wal_unregister(vb, cb_fn, cb_arg);
 	return 0;
 }
 
@@ -563,6 +596,7 @@ int wal_bdev_delete_disk(char *name,
 int wal_bdev_recover(const char *name,
 		     spdk_bdev_unregister_cb cb_fn,
 		     void *cb_arg) {
+	int rc = 0;
 	struct wal_vbdev *vb = wal_find_by_name(name);
 	if (!vb)
 		return -ENODEV;
@@ -573,20 +607,18 @@ int wal_bdev_recover(const char *name,
 	vb->rec_off_blocks = 0;
 	vb->rec.done_cb = cb_fn;
 	vb->rec.done_arg = cb_arg;
+	vb->rec.stop = false;
+	vb->rec.step_inflight = false;
+	vb->rec.last_step = 0;
+	vb->rec.delete_cb = NULL;
+	vb->rec.delete_arg = NULL;
+	vb->rec.delete_pending = false;
 
 	vb->rec.jch = spdk_bdev_get_io_channel(vb->journal_desc);
 	vb->rec.mch = spdk_bdev_get_io_channel(vb->main_desc);
 	if (!vb->rec.jch || !vb->rec.mch) {
-		if (vb->rec.jch) {
-			spdk_put_io_channel(vb->rec.jch);
-			vb->rec.jch = NULL;
-		}
-		if (vb->rec.mch) {
-			spdk_put_io_channel(vb->rec.mch);
-			vb->rec.mch = NULL;
-		}
-		vb->rec_in_progress = false;
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err_ch;
 	}
 
 	size_t bl = vb->bdev.blocklen;
@@ -598,29 +630,73 @@ int wal_bdev_recover(const char *name,
 	if (!vb->rec.buf_m)
 		vb->rec.buf_m = spdk_dma_zmalloc(need, align, NULL);
 	if (!vb->rec.buf_j || !vb->rec.buf_m) {
-		if (vb->rec.buf_j) {
-			spdk_dma_free(vb->rec.buf_j);
-			vb->rec.buf_j = NULL;
-		}
-		if (vb->rec.buf_m) {
-			spdk_dma_free(vb->rec.buf_m);
-			vb->rec.buf_m = NULL;
-		}
-		spdk_put_io_channel(vb->rec.jch);
-		vb->rec.jch = NULL;
-		spdk_put_io_channel(vb->rec.mch);
-		vb->rec.mch = NULL;
-		vb->rec_in_progress = false;
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err_buf;
 	}
 	vb->rec.buf_bytes = need;
 
-	wal_recover_step(vb);
+	vb->rec.poller = spdk_poller_register(wal_recover_poll, vb, 0);
+	if (!vb->rec.poller) {
+		rc = -ENOMEM;
+		goto err_buf;
+	}
 	return 0;
+
+err_buf:
+	if (vb->rec.buf_j) {
+		spdk_dma_free(vb->rec.buf_j);
+		vb->rec.buf_j = NULL;
+	}
+	if (vb->rec.buf_m) {
+		spdk_dma_free(vb->rec.buf_m);
+		vb->rec.buf_m = NULL;
+	}
+err_ch:
+	if (vb->rec.jch) {
+		spdk_put_io_channel(vb->rec.jch);
+		vb->rec.jch = NULL;
+	}
+	if (vb->rec.mch) {
+		spdk_put_io_channel(vb->rec.mch);
+		vb->rec.mch = NULL;
+	}
+	vb->rec_in_progress = false;
+	vb->rec.stop = false;
+	vb->rec.step_inflight = false;
+	vb->rec.done_cb = NULL;
+	vb->rec.done_arg = NULL;
+	vb->rec.delete_pending = false;
+	return rc;
+}
+
+static int wal_recover_poll(void *cb_arg) {
+	struct wal_vbdev *vb = cb_arg;
+
+	if (!vb->rec_in_progress) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	if (vb->rec.stop) {
+		wal_recover_finish(vb, false);
+		return SPDK_POLLER_IDLE;
+	}
+
+	if (vb->rec.step_inflight) {
+		return SPDK_POLLER_BUSY;
+	}
+
+	vb->rec.step_inflight = true;
+	wal_recover_step(vb);
+	return vb->rec_in_progress ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 /* Завершение процесса восстановления, освобождение ресурсов и уведомление RPC */
 static void wal_recover_finish(struct wal_vbdev *vb, bool ok) {
+	if (vb->rec.poller) {
+		spdk_poller_unregister(&vb->rec.poller);
+		vb->rec.poller = NULL;
+	}
+
 	if (vb->rec.jch) {
 		spdk_put_io_channel(vb->rec.jch);
 		vb->rec.jch = NULL;
@@ -630,6 +706,8 @@ static void wal_recover_finish(struct wal_vbdev *vb, bool ok) {
 		vb->rec.mch = NULL;
 	}
 
+	vb->rec.step_inflight = false;
+	vb->rec.stop = false;
 	vb->rec_in_progress = false;
 
 	if (vb->rec.done_cb) {
@@ -646,10 +724,22 @@ static void wal_recover_finish(struct wal_vbdev *vb, bool ok) {
 		spdk_dma_free(vb->rec.buf_m);
 		vb->rec.buf_m = NULL;
 	}
+
+	if (vb->rec.delete_pending) {
+		wal_unregister(vb, vb->rec.delete_cb, vb->rec.delete_arg);
+		vb->rec.delete_pending = false;
+		vb->rec.delete_cb = NULL;
+		vb->rec.delete_arg = NULL;
+	}
 }
 
 /* Шаг восстановления: читает данные из журнала для сравнения/копирования */
 static void wal_recover_step(struct wal_vbdev *vb) {
+	if (vb->rec.stop) {
+		wal_recover_finish(vb, false);
+		return;
+	}
+
 	uint64_t total = vb->bdev.blockcnt;
 	if (vb->rec_off_blocks >= total) {
 		wal_recover_finish(vb, true);
@@ -661,13 +751,17 @@ static void wal_recover_step(struct wal_vbdev *vb) {
 	if ((uint64_t)step > remain)
 		step = (uint32_t)remain;
 
-	spdk_bdev_read_blocks(vb->journal_desc,
-			      vb->rec.jch,
-			      vb->rec.buf_j,
-			      vb->rec_off_blocks,
-			      step,
-			      wal_recover_read_j_done,
-			      vb);
+	int rc = spdk_bdev_read_blocks(vb->journal_desc,
+				       vb->rec.jch,
+				       vb->rec.buf_j,
+				       vb->rec_off_blocks,
+				       step,
+				       wal_recover_read_j_done,
+				       vb);
+	if (rc != 0) {
+		SPDK_ERRLOG("wal: journal read submit failed: %d\n", rc);
+		wal_recover_finish(vb, false);
+	}
 }
 
 /* Callback: завершено чтение из журнала, переходим к чтению из основного устройства */
@@ -682,19 +776,24 @@ static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
 		return;
 	}
 
-	uint64_t total = vb->bdev.blockcnt;
-	uint64_t remain = total - vb->rec_off_blocks;
-	uint32_t step = vb->rec_chunk_blocks;
-	if ((uint64_t)step > remain)
-		step = (uint32_t)remain;
+	if (vb->rec.stop) {
+		wal_recover_finish(vb, false);
+		return;
+	}
 
-	spdk_bdev_read_blocks(vb->main_desc,
-			      vb->rec.mch,
-			      vb->rec.buf_m,
-			      vb->rec_off_blocks,
-			      step,
-			      wal_recover_read_m_done,
-			      vb);
+	uint32_t step = (uint32_t)child_io->u.bdev.num_blocks;
+
+	int rc = spdk_bdev_read_blocks(vb->main_desc,
+				       vb->rec.mch,
+				       vb->rec.buf_m,
+				       vb->rec_off_blocks,
+				       step,
+				       wal_recover_read_m_done,
+				       vb);
+	if (rc != 0) {
+		SPDK_ERRLOG("wal: main read submit failed: %d\n", rc);
+		wal_recover_finish(vb, false);
+	}
 }
 
 /* Callback: завершено чтение из основного устройства, сравнение и при необходимости запись */
@@ -709,28 +808,37 @@ static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
 		return;
 	}
 
-	uint64_t total = vb->bdev.blockcnt;
-	uint64_t remain = total - vb->rec_off_blocks;
-	uint32_t step = vb->rec_chunk_blocks;
-	if ((uint64_t)step > remain)
-		step = (uint32_t)remain;
+	if (vb->rec.stop) {
+		wal_recover_finish(vb, false);
+		return;
+	}
+
+	uint32_t step = (uint32_t)child_io->u.bdev.num_blocks;
 
 	if (memcmp(vb->rec.buf_j,
 		   vb->rec.buf_m,
 		   (size_t)step * vb->bdev.blocklen)
 	    == 0) {
 		vb->rec_off_blocks += step;
-		wal_recover_step(vb);
+		if (vb->rec_off_blocks >= vb->bdev.blockcnt) {
+			wal_recover_finish(vb, true);
+			return;
+		}
+		vb->rec.step_inflight = false;
 		return;
 	}
 
-	spdk_bdev_write_blocks(vb->main_desc,
-			       vb->rec.mch,
-			       vb->rec.buf_j,
-			       vb->rec_off_blocks,
-			       step,
-			       wal_recover_write_done,
-			       vb);
+	int rc = spdk_bdev_write_blocks(vb->main_desc,
+					vb->rec.mch,
+					vb->rec.buf_j,
+					vb->rec_off_blocks,
+					step,
+					wal_recover_write_done,
+					vb);
+	if (rc != 0) {
+		SPDK_ERRLOG("wal: main write submit failed: %d\n", rc);
+		wal_recover_finish(vb, false);
+	}
 }
 
 /* Callback: завершена запись несоответствующих блоков в основное устройство */
@@ -744,22 +852,27 @@ static void wal_recover_write_done(struct spdk_bdev_io *child_io,
 		return;
 	}
 
-	uint64_t total = vb->bdev.blockcnt;
-	uint64_t remain = total - vb->rec_off_blocks;
-	uint32_t step = vb->rec_chunk_blocks;
-	if ((uint64_t)step > remain)
-		step = (uint32_t)remain;
+	if (vb->rec.stop) {
+		wal_recover_finish(vb, false);
+		return;
+	}
+
+	uint32_t step = (uint32_t)child_io->u.bdev.num_blocks;
 
 	vb->rec.last_step = step;
-	spdk_bdev_flush_blocks(vb->main_desc,
-			       vb->rec.mch,
-			       vb->rec_off_blocks,
-			       step,
-			       wal_recover_flush_done,
-			       vb);
+	int rc = spdk_bdev_flush_blocks(vb->main_desc,
+				       vb->rec.mch,
+				       vb->rec_off_blocks,
+				       step,
+				       wal_recover_flush_done,
+				       vb);
+	if (rc != 0) {
+		SPDK_ERRLOG("wal: main flush submit failed: %d\n", rc);
+		wal_recover_finish(vb, false);
+	}
 }
 
-/* Callback: завершён flush записанных блоков, продвижение оффсета и следующий шаг */
+/* Callback завершён flush записанных блоков, двигаем оффсет и следующий шаг */
 static void wal_recover_flush_done(struct spdk_bdev_io *child_io,
 				   bool success,
 				   void *cb_arg) {
@@ -769,6 +882,17 @@ static void wal_recover_flush_done(struct spdk_bdev_io *child_io,
 		wal_recover_finish(vb, false);
 		return;
 	}
+
+	if (vb->rec.stop) {
+		wal_recover_finish(vb, false);
+		return;
+	}
+
 	vb->rec_off_blocks += vb->rec.last_step;
-	wal_recover_step(vb);
+	if (vb->rec_off_blocks >= vb->bdev.blockcnt) {
+		wal_recover_finish(vb, true);
+		return;
+	}
+
+	vb->rec.step_inflight = false;
 }
