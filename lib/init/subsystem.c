@@ -29,7 +29,6 @@ static spdk_subsystem_init_fn g_subsystem_start_fn = NULL;
 static void *g_subsystem_start_arg = NULL;
 static spdk_msg_fn g_subsystem_stop_fn = NULL;
 static void *g_subsystem_stop_arg = NULL;
-static struct spdk_thread *g_fini_thread = NULL;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -207,10 +206,10 @@ spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 	spdk_subsystem_init_next(0);
 }
 
-static void
-subsystem_fini_next(void *arg1)
+void
+spdk_subsystem_fini_next(void)
 {
-	assert(g_fini_thread == spdk_get_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (!g_next_subsystem) {
 		/* If the initialized flag is false, then we've failed to initialize
@@ -240,26 +239,12 @@ subsystem_fini_next(void *arg1)
 }
 
 void
-spdk_subsystem_fini_next(void)
-{
-	assert(spdk_thread_is_app_thread(NULL));
-
-	if (g_fini_thread != spdk_get_thread()) {
-		spdk_thread_send_msg(g_fini_thread, subsystem_fini_next, NULL);
-	} else {
-		subsystem_fini_next(NULL);
-	}
-}
-
-void
 spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
 	g_subsystem_stop_fn = cb_fn;
 	g_subsystem_stop_arg = cb_arg;
-
-	g_fini_thread = spdk_get_thread();
 
 	spdk_subsystem_fini_next();
 }
