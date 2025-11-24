@@ -2358,24 +2358,7 @@ nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset,
 	return 0;
 }
 
-/*
- * Asynchronous Event Mask Bit
- */
-enum spdk_nvme_async_event_mask_bit {
-	/* Mask Namespace Change Notification */
-	SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT		= 0,
-	/* Mask Asymmetric Namespace Access Change Notification */
-	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT		= 1,
-	/* Mask Discovery Log Change Notification */
-	SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT	= 2,
-	/* Mask Reservation Log Page Available Notification */
-	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT	= 3,
-	/* Mask Error Event */
-	SPDK_NVME_ASYNC_EVENT_ERROR_MASK_BIT			= 4,
-	/* 4 - 63 Reserved */
-};
-
-static inline void
+void
 nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 		      enum spdk_nvme_async_event_mask_bit mask)
 {

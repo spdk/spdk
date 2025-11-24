@@ -63,6 +63,23 @@ enum nvmf_auth_key_type {
 	NVMF_AUTH_KEY_CTRLR,
 };
 
+/*
+ * Asynchronous Event Mask Bit
+ */
+enum spdk_nvme_async_event_mask_bit {
+	/* Mask Namespace Change Notification */
+	SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT		= 0,
+	/* Mask Asymmetric Namespace Access Change Notification */
+	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT		= 1,
+	/* Mask Discovery Log Change Notification */
+	SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT	= 2,
+	/* Mask Reservation Log Page Available Notification */
+	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT	= 3,
+	/* Mask Error Event */
+	SPDK_NVME_ASYNC_EVENT_ERROR_MASK_BIT			= 4,
+	/* 4 - 63 Reserved */
+};
+
 RB_HEAD(subsystem_tree, spdk_nvmf_subsystem);
 
 struct spdk_nvmf_tgt {
@@ -426,6 +443,8 @@ int nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, 
 				uint32_t iovcnt, uint64_t offset, uint32_t length,
 				struct spdk_nvme_transport_id *cmd_source_trid);
 
+void nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
+			   enum spdk_nvme_async_event_mask_bit mask);
 void nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 int nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
