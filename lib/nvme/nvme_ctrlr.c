@@ -2375,6 +2375,18 @@ nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return 0;
 }
 
+/* Returns true if the identify flow should be terminated, false otherwise. */
+static bool
+nvme_ctrlr_handle_identify_ns_completion(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
+		const struct spdk_nvme_cpl *cpl)
+{
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		return true;
+	}
+
+	return false;
+}
+
 static void
 nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_ns_list,
 				   size_t max_entries)
@@ -2618,7 +2630,7 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	uint32_t nsid;
 	int rc;
 
-	if (spdk_nvme_cpl_is_error(cpl)) {
+	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
@@ -2732,7 +2744,7 @@ nvme_ctrlr_identify_ns_zns_specific_async_done(void *arg, const struct spdk_nvme
 	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	if (spdk_nvme_cpl_is_error(cpl)) {
+	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
 		nvme_ns_free_zns_specific_data(ns);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2772,7 +2784,7 @@ nvme_ctrlr_identify_ns_nvm_specific_async_done(void *arg, const struct spdk_nvme
 	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	if (spdk_nvme_cpl_is_error(cpl)) {
+	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
 		nvme_ns_free_nvm_specific_data(ns);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2850,7 +2862,7 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	uint32_t nsid;
 	int rc;
 
-	if (spdk_nvme_cpl_is_error(cpl)) {
+	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
 		/*
 		 * Many controllers claim to be compatible with NVMe 1.3, however,
 		 * they do not implement NS ID Desc List. Therefore, instead of setting
