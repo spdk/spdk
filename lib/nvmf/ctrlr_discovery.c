@@ -103,6 +103,8 @@ static struct spdk_nvmf_discovery_log_page *
 nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size_t *log_page_size,
 			    struct spdk_nvme_transport_id *cmd_source_trid)
 {
+	assert(spdk_thread_is_app_thread(NULL));
+
 	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_subsystem_listener *listener;
@@ -221,29 +223,36 @@ struct nvmf_discovery_log_ctx {
 	bool rae;
 };
 
-int
-nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-			    uint32_t iovcnt, uint64_t offset, uint32_t length,
-			    struct spdk_nvme_transport_id *cmd_source_trid)
+static void
+nvmf_get_discovery_log_page(void *arg)
 {
+	struct nvmf_discovery_log_ctx *ctx = arg;
+	struct spdk_nvmf_request *req = ctx->req;
+	struct spdk_nvmf_discovery_log_page *discovery_log_page;
+	size_t log_page_size = 0;
 	size_t copy_len = 0;
 	size_t zero_len = 0;
 	struct iovec *tmp;
-	size_t log_page_size = 0;
-	struct spdk_nvmf_discovery_log_page *discovery_log_page;
+	uint64_t offset = ctx->offset;
+	uint32_t length = ctx->length;
+	int rc = 0;
 
-	discovery_log_page = nvmf_generate_discovery_log(tgt, hostnqn, &log_page_size, cmd_source_trid);
+	assert(spdk_thread_is_app_thread(NULL));
+
+	discovery_log_page = nvmf_generate_discovery_log(ctx->tgt, ctx->hostnqn,
+			     &log_page_size, &ctx->cmd_source_trid);
 
 	if (offset >= log_page_size) {
 		SPDK_ERRLOG("Invalid Get log page discovery offset: (%" PRIu64 "), log page size (%zu)\n",
 			    offset, log_page_size);
+		rc = -EINVAL;
 		free(discovery_log_page);
-		return -EINVAL;
+		goto complete;
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
 	if (discovery_log_page) {
-		for (tmp = iov; tmp < iov + iovcnt; tmp++) {
+		for (tmp = req->iov; tmp < req->iov + req->iovcnt; tmp++) {
 			copy_len = spdk_min(tmp->iov_len, length);
 			copy_len = spdk_min(log_page_size - offset, copy_len);
 
@@ -261,12 +270,61 @@ nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, stru
 			memset((char *)tmp->iov_base + copy_len, 0, zero_len);
 		}
 
-		for (++tmp; tmp < iov + iovcnt; tmp++) {
+		for (++tmp; tmp < req->iov + req->iovcnt; tmp++) {
 			memset((char *)tmp->iov_base, 0, tmp->iov_len);
 		}
 
 		free(discovery_log_page);
 	}
 
-	return 0;
+complete:
+	if (rc == 0 && !ctx->rae) {
+		nvmf_ctrlr_unmask_aen(req->qpair->ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
+	}
+
+	if (rc != 0) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	}
+
+	free(ctx->hostnqn);
+	free(ctx);
+
+	spdk_nvmf_request_complete(req);
+}
+
+void
+nvmf_get_discovery_log_page_async(struct spdk_nvmf_request *req,
+				  uint64_t offset, uint32_t length,
+				  struct spdk_nvme_transport_id *cmd_source_trid,
+				  bool rae)
+{
+	struct nvmf_discovery_log_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Failed to allocate discovery log context\n");
+		goto error;
+	}
+
+	ctx->req = req;
+	ctx->tgt = req->qpair->ctrlr->subsys->tgt;
+	ctx->hostnqn = strdup(req->qpair->ctrlr->hostnqn);
+	if (!ctx->hostnqn) {
+		SPDK_ERRLOG("Failed to duplicate hostnqn\n");
+		free(ctx);
+		goto error;
+	}
+	ctx->offset = offset;
+	ctx->length = length;
+	ctx->cmd_source_trid = *cmd_source_trid;
+	ctx->rae = rae;
+
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), nvmf_get_discovery_log_page, ctx);
+	return;
+
+error:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	spdk_nvmf_request_complete(req);
 }

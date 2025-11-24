@@ -2996,13 +2996,9 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 				response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			}
-			rc = nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt,
-							 offset, len, &cmd_source_trid);
 
-			if (!rc && !rae) {
-				nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
-			}
-			break;
+			nvmf_get_discovery_log_page_async(req, offset, len, &cmd_source_trid, rae);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
 			rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
 			break;

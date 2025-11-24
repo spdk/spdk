@@ -92,11 +92,9 @@ DEFINE_STUB(nvmf_ctrlr_copy_supported,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
-DEFINE_STUB(nvmf_get_discovery_log_page,
-	    int,
-	    (struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-	     uint32_t iovcnt, uint64_t offset, uint32_t length, struct spdk_nvme_transport_id *cmd_src_trid),
-	    0);
+DEFINE_STUB_V(nvmf_get_discovery_log_page_async,
+	      (struct spdk_nvmf_request *req, uint64_t offset, uint32_t length,
+	       struct spdk_nvme_transport_id *cmd_src_trid, bool rae));
 
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,

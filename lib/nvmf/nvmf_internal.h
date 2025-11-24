@@ -439,9 +439,10 @@ void nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 void nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 
-int nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-				uint32_t iovcnt, uint64_t offset, uint32_t length,
-				struct spdk_nvme_transport_id *cmd_source_trid);
+void nvmf_get_discovery_log_page_async(struct spdk_nvmf_request *req,
+				       uint64_t offset, uint32_t length,
+				       struct spdk_nvme_transport_id *cmd_source_trid,
+				       bool rae);
 
 void nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 			   enum spdk_nvme_async_event_mask_bit mask);

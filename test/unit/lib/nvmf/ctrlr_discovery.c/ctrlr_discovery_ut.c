@@ -9,7 +9,7 @@
 #include "spdk_internal/cunit.h"
 #include "spdk_internal/mock.h"
 
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "spdk/bdev_module.h"
 #include "nvmf/ctrlr_discovery.c"
 #include "nvmf/subsystem.c"
@@ -38,6 +38,8 @@ DEFINE_STUB(spdk_nvmf_transport_get_next,
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
 DEFINE_STUB_V(nvmf_ctrlr_async_event_discovery_log_change_notice, (void *ctx));
+DEFINE_STUB_V(nvmf_ctrlr_unmask_aen, (struct spdk_nvmf_ctrlr *ctrlr,
+				      enum spdk_nvme_async_event_mask_bit mask));
 DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
 
 DEFINE_STUB(spdk_bdev_open_ext, int,
@@ -64,9 +66,6 @@ DEFINE_STUB_V(nvmf_ctrlr_reservation_notice_log,
 	      (struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_ns *ns,
 	       enum spdk_nvme_reservation_notification_log_page_type type));
 
-DEFINE_STUB(spdk_nvmf_request_complete, int,
-	    (struct spdk_nvmf_request *req), -1);
-
 DEFINE_STUB(nvmf_ctrlr_async_event_ana_change_notice, int,
 	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
 
@@ -89,13 +88,47 @@ DEFINE_STUB(spdk_bdev_get_nvme_ctratt, union spdk_bdev_nvme_ctratt,
 	    (struct spdk_bdev *bdev), {});
 DEFINE_STUB(nvmf_tgt_update_mdns_prr, int, (struct spdk_nvmf_tgt *tgt), 0);
 
+static bool g_async_discovery_complete = false;
+
+int
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
+{
+	CU_ASSERT_EQUAL(g_async_discovery_complete, false);
+	g_async_discovery_complete = true;
+	CU_ASSERT_EQUAL(req->rsp->nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(req->rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
+	return 0;
+}
+
 static void
 test_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
 				 struct iovec *iov, uint32_t iovcnt,
 				 uint64_t offset, uint32_t length,
 				 struct spdk_nvme_transport_id *cmd_source_trid)
 {
-	nvmf_get_discovery_log_page(tgt, hostnqn, iov, iovcnt, offset, length, cmd_source_trid);
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_subsystem subsys = { .tgt = tgt };
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsys };
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	struct spdk_nvmf_request req = { .qpair = &qpair, .rsp = &rsp, .iovcnt = iovcnt };
+
+	g_async_discovery_complete = false;
+
+	if (hostnqn) {
+		snprintf(ctrlr.hostnqn, sizeof(ctrlr.hostnqn), "%s", hostnqn);
+	}
+
+	if (iovcnt > 0 && iov) {
+		memcpy(req.iov, iov, iovcnt * sizeof(struct iovec));
+	}
+
+	nvmf_get_discovery_log_page_async(&req, offset, length, cmd_source_trid, false);
+
+	/* Process async messages */
+	poll_thread(0);
+
+	/* Verify completion occurred */
+	CU_ASSERT(g_async_discovery_complete);
 }
 
 const char *
@@ -815,7 +848,13 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_discovery_log);
 	CU_ADD_TEST(suite, test_discovery_log_with_filters);
 
+	allocate_threads(1);
+	set_thread(0);
+
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
+
+	free_threads();
+
 	return num_failures;
 }
