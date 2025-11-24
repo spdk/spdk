@@ -570,6 +570,14 @@ nvmf_ctrlr_init_visible_ns(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 }
 
+static uint16_t
+nvmf_subsystem_get_max_qpairs_per_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+					struct spdk_nvmf_transport *transport)
+{
+	/* Only one qpair for admin subsystem. */
+	return subsystem->opts.admin ? 1 : transport->opts.max_qpairs_per_ctrlr;
+}
+
 static struct spdk_nvmf_ctrlr *
 nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		  struct spdk_nvmf_request *req,
@@ -580,6 +588,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvme_transport_id listen_trid = {};
 	bool subsys_has_multi_iocs = false;
+	uint16_t max_qpairs_per_ctrlr;
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -603,7 +612,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->disconnect_in_progress = false;
 	ctrlr->executing_nssr = false;
 
-	ctrlr->qpair_mask = spdk_bit_array_create(transport->opts.max_qpairs_per_ctrlr);
+	max_qpairs_per_ctrlr = nvmf_subsystem_get_max_qpairs_per_ctrlr(subsystem, transport);
+	ctrlr->qpair_mask = spdk_bit_array_create(max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
 		SPDK_ERRLOG("Failed to allocate controller qpair mask\n");
 		goto err;
@@ -667,10 +677,10 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	/* Subtract 1 for admin queue, 1 for 0's based */
-	ctrlr->feat.number_of_queues.bits.ncqr = transport->opts.max_qpairs_per_ctrlr - 1 -
-			1;
-	ctrlr->feat.number_of_queues.bits.nsqr = transport->opts.max_qpairs_per_ctrlr - 1 -
-			1;
+	if (!subsystem->opts.admin) {
+		ctrlr->feat.number_of_queues.bits.ncqr = max_qpairs_per_ctrlr - 1 - 1;
+		ctrlr->feat.number_of_queues.bits.nsqr = max_qpairs_per_ctrlr - 1 - 1;
+	}
 
 	spdk_uuid_copy(&ctrlr->hostid, (struct spdk_uuid *)connect_data->hostid);
 	memcpy(ctrlr->hostnqn, connect_data->hostnqn, SPDK_NVMF_NQN_MAX_LEN);
@@ -2308,7 +2318,8 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 		      req->cmd->nvme_cmd.cdw11);
 
 	if (cmd->cdw11_bits.feat_num_of_queues.bits.ncqr == UINT16_MAX ||
-	    cmd->cdw11_bits.feat_num_of_queues.bits.nsqr == UINT16_MAX) {
+	    cmd->cdw11_bits.feat_num_of_queues.bits.nsqr == UINT16_MAX ||
+	    ctrlr->subsys->opts.admin) {
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}

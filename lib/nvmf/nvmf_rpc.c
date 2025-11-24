@@ -177,6 +177,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 		}
 
 		spdk_json_write_named_bool(w, "passthrough", subsystem->opts.passthrough);
+		spdk_json_write_named_bool(w, "admin", subsystem->opts.admin);
 
 		spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
 		spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
@@ -272,10 +273,11 @@ SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTI
 	X(dmrsl)                             \
 	X(wzsl)                              \
 	X(passthrough)                       \
-	X(enable_nssr)
+	X(enable_nssr)                       \
+	X(admin)
 
 /* Bump and audit NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS when this size changes. */
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 345,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 346,
 		   "opts grew -- update NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS");
 
 static void

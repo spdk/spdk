@@ -250,8 +250,11 @@ struct spdk_nvmf_subsystem_opts {
 	 * SPDK_NVMF_ADMIN_LABEL_MAX_LEN printable ASCII characters.
 	 */
 	char admin_label[SPDK_NVMF_ADMIN_LABEL_MAX_LEN + 1];
+
+	/* Limit subsystem to expose only admin controllers (no I/O queues). */
+	bool admin;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 345,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 346,
 		   "Incorrect size");
 
 void spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type,

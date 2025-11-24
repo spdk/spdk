@@ -186,6 +186,8 @@ def add_parser(subparsers):
                    help="Use NVMe passthrough for all I/O commands and namespace-directed admin commands")
     p.add_argument("-n", "--enable-nssr", action='store_true', help="Enable NSSR (NVMe subsystem reset)")
     p.add_argument("--admin-label", help="Admin label for extended discovery log page entry (4-256 ASCII characters)", type=str)
+    p.add_argument("-A", "--admin", action='store_true',
+                   help="""Limit subsystem to expose only admin controllers (no I/O queues)""")
     p.set_defaults(func=nvmf_create_subsystem)
 
     def nvmf_delete_subsystem(args):

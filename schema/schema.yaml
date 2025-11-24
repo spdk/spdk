@@ -3748,6 +3748,9 @@ methods:
       - name: enable_nssr
         type: boolean
         description: Enable NSSR (NVMe subsystem reset)
+      - name: admin
+        type: boolean
+        description: 'Limit subsystem to expose only admin controllers (no I/O queues)'
   - name: nvmf_delete_subsystem
     description: Delete an existing NVMe-oF subsystem.
     result:
