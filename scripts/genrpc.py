@@ -12,7 +12,7 @@ import argparse
 from typing import Any, Dict, NoReturn
 from pathlib import Path
 from tabulate import tabulate
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 
 import rpc
 
@@ -26,7 +26,9 @@ def lint_json_examples() -> None:
         examples = re.findall("~~~json(.+?)~~~", data, re.MULTILINE | re.DOTALL)
         for example in examples:
             try:
-                json.loads(example)
+                t = Template(example)
+                rendered = t.render(all_methods=["rpc_get_methods"])
+                json.loads(rendered)
             except json.decoder.JSONDecodeError:
                 for i, x in enumerate(example.splitlines()):
                     print(i+1, x, file=sys.stderr)
@@ -83,6 +85,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
                       )
     schema_template = env.get_template('jsonrpc.md.jinja2')
     transformation = dict()
+    transformation["all_methods"] = [method['name'] for method in schema['methods']]
     for method in schema['methods']:
         params = [
             dict(
