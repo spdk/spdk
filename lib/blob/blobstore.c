@@ -2871,7 +2871,6 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->blob = blob;
 	ctx->io_unit = cluster_start_io_unit;
 	ctx->new_cluster_page = ch->new_cluster_page;
-	memset(ctx->new_cluster_page, 0, blob->bs->md_page_size);
 
 	/* Check if the cluster that we intend to do CoW for is valid for
 	 * the backing dev. For zeroes backing dev, it'll be always valid.
@@ -8310,7 +8309,6 @@ delete_snapshot_update_extent_pages(void *cb_arg, int bserrno)
 		/* Clone and snapshot both contain partially filled matching extent pages.
 		 * Update the clone extent page in place with cluster map containing the mix of both. */
 		ctx->next_extent_page = i + 1;
-		memset(ctx->page, 0, SPDK_BS_PAGE_SIZE);
 
 		blob_write_extent_page(ctx->clone, *extent_page, i * SPDK_EXTENTS_PER_EP, ctx->page,
 				       delete_snapshot_update_extent_pages, ctx);
@@ -8935,6 +8933,7 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 	ctx->bs = blob->bs;
 	ctx->extent = extent;
 	ctx->page = page;
+	memset(ctx->page, 0, blob->bs->md_page_size);
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
