@@ -95,6 +95,8 @@ struct file_disk {
 	bool			readonly;
 	bool			fallocate;
 
+	bool			hot_remove_in_progress;
+
 	delete_aio_bdev_complete  delete_cb_fn;
 	void                     *delete_cb_arg;
 };
@@ -389,6 +391,35 @@ bdev_aio_destruct(void *ctx)
 	return 0;
 }
 
+static void
+bdev_aio_hot_remove(void *ctx)
+{
+	char *name = ctx;
+
+	bdev_aio_delete(name, NULL, NULL);
+
+	free(name);
+}
+
+static void
+bdev_aio_try_hot_remove(struct file_disk *fdisk)
+{
+	char	*name;
+
+	if (__atomic_test_and_set(&fdisk->hot_remove_in_progress, __ATOMIC_RELAXED)) {
+		return;
+	}
+
+	name = strdup(fdisk->disk.name);
+	if (!name) {
+		__atomic_clear(&fdisk->hot_remove_in_progress, __ATOMIC_RELAXED);
+		return;
+	}
+
+	AIO_FDISK_ERRLOG(fdisk, "hot-remove detected, unregistering bdev...\n");
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), bdev_aio_hot_remove, name);
+}
+
 #ifdef __FreeBSD__
 static int
 bdev_user_io_getevents(int kq, unsigned int max, struct kevent *events)
@@ -541,9 +572,25 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		res = (int)events[i].res;
 		fdisk = fdisk_from_bdev(bdev_io->bdev);
 
+		/* When the block device device is detached from the system, IOs fail with res of 0.
+		 * In this case the ioctl BLKGETSIZE64 yields a device size of 0.
+		 * Note that re-attaching the device will not correct this because the existing fd is
+		 * still invalid.
+		 * When the fd is a file and the mount backing the file is detached, IOs fail
+		 * with a res of -EIO and the ioctl BLKGETSIZE64 yields a device size of 0.
+		 */
+		if (res == -EIO || res >= 0) {
+			if (spdk_fd_get_size(fdisk->fd) == 0) {
+				res = -ENODEV;
+			}
+		}
+
 		if (res < 0) {
 			if (res == -EAGAIN) {
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+			} else if (res == -ENODEV) {
+				bdev_aio_try_hot_remove(fdisk);
+				spdk_bdev_io_complete_aio_status(bdev_io, res);
 			} else {
 				AIO_FDISK_ERRLOG(fdisk, "failed to complete: rc %"PRId64"\n", events[i].res);
 				spdk_bdev_io_complete_aio_status(bdev_io, res);
@@ -1117,6 +1164,11 @@ bdev_aio_rescan(const char *name)
 	fdisk = SPDK_CONTAINEROF(bdev, struct file_disk, disk);
 	disk_size = spdk_fd_get_size(fdisk->fd);
 	blockcnt = disk_size / bdev->blocklen;
+
+	if (disk_size == 0) {
+		bdev_aio_try_hot_remove(fdisk);
+		goto exit;
+	}
 
 	if (bdev->blockcnt != blockcnt) {
 		AIO_FDISK_NOTICELOG(fdisk, "device is resized: old block count %" PRIu64 ", new block count %"
