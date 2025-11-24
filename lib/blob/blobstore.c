@@ -5355,7 +5355,9 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent_page *)desc;
 
-			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
+			for (i = 0;
+			     i < (desc_extent->length - sizeof(desc_extent->start_cluster_idx)) / sizeof(
+				     desc_extent->cluster_idx[0]); i++) {
 				if (desc_extent->cluster_idx[i] != 0) {
 					fprintf(ctx->fp, "Allocated Extent - Start: %" PRIu32,
 						desc_extent->cluster_idx[i]);
