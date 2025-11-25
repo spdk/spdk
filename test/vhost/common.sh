@@ -671,6 +671,7 @@ function vm_setup() {
 	local node_num=${!qemu_numa_node_param}
 	local boot_disk_present=false
 	notice "NUMA NODE: $node_num"
+	cmd+=(-M "type=q35,kernel_irqchip=split" -device "intel-iommu,pt=on,intremap=on")
 	cmd+=(-m "$guest_memory" --enable-kvm -cpu host -smp "$cpu_num" -vga std -vnc ":$vnc_socket" -daemonize)
 	cmd+=(-object "memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind")
 	[[ $os_mode == snapshot ]] && cmd+=(-snapshot)
