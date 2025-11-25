@@ -36,6 +36,10 @@ def group_as(kwargs, name, values):
     return {**rest, name: group}
 
 
+def print_null(arg):
+    pass
+
+
 def print_array(a):
     print(" ".join((quote(v) for v in a)))
 

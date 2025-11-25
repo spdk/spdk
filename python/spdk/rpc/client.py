@@ -34,6 +34,14 @@ class JSONRPCException(Exception):
         self.message = message
 
 
+class JSONRPCDryRunClient:
+    def __getattr__(self, name):
+        return lambda **kwargs: self.call(name, remove_null(kwargs))
+
+    def call(self, method, params=None):
+        print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
+
+
 class JSONRPCClient(object):
     def __init__(self, addr, port=None, timeout=None, **kwargs):
         self.sock = None

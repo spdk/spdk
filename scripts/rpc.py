@@ -18,9 +18,9 @@ import types
 sys.path.insert(0, os.path.dirname(__file__) + '/../python')
 
 import spdk.cli as cli  # noqa
-from spdk.rpc.client import JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
-from spdk.rpc.helpers import deprecated_aliases, hint_rpc_name  # noqa
-from spdk.rpc.cmd_parser import remove_null  # noqa
+from spdk.rpc.client import JSONRPCDryRunClient, JSONRPCClient, JSONRPCGoClient, JSONRPCException  # noqa
+from spdk.rpc.helpers import check_called_name, hint_rpc_name  # noqa
+from spdk.rpc.cmd_parser import print_null  # noqa
 
 
 def create_parser():
@@ -59,23 +59,6 @@ def create_parser():
         if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
             obj.add_parser(subparsers)
     return parser, subparsers
-
-
-def check_called_name(name):
-    if name in deprecated_aliases:
-        print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
-
-
-class dry_run_client:
-    def __getattr__(self, name):
-        return lambda **kwargs: self.call(name, remove_null(kwargs))
-
-    def call(self, method, params=None):
-        print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
-
-
-def null_print(arg):
-    pass
 
 
 def call_rpc_func(args):
@@ -188,10 +171,10 @@ def main():
                 print("**STATUS=1", flush=True)
         exit(0)
     elif args.dry_run:
-        args.client = dry_run_client()
+        args.client = JSONRPCDryRunClient()
         for name, obj in vars(cli).items():
             if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
-                obj.print_dict = obj.print_json = obj.print_array = null_print
+                obj.print_dict = obj.print_json = obj.print_array = print_null
     elif args.go_client or use_go_client:
         try:
             args.client = JSONRPCGoClient(args.server_addr,

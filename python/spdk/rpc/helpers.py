@@ -9,6 +9,11 @@ import functools
 deprecated_aliases = {}
 
 
+def check_called_name(name):
+    if name in deprecated_aliases:
+        print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
+
+
 def deprecated_alias(old_name):
     def wrap(f):
         def old_f(*args, **kwargs):
