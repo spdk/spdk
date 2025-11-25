@@ -33,7 +33,7 @@ nvmfappstart -m 0x3 -p 0 -s 1024 --json $testdir/conf.json
 
 trap 'finish_test; process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
-$rpc_py bdev_nvme_set_hotplug -e
+$rpc_py bdev_nvme_set_hotplug --hotplug
 timing_enter run_rpc_proxy
 $rootdir/scripts/rpc_http_proxy.py 127.0.0.1 3333 secret secret &
 rpc_proxy_pid=$!

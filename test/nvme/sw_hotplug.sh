@@ -112,12 +112,12 @@ tgt_run_hotplug() {
 	trap 'killprocess ${spdk_tgt_pid}; echo 1 > /sys/bus/pci/rescan; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_tgt_pid
 
-	rpc_cmd bdev_nvme_set_hotplug -e
+	rpc_cmd bdev_nvme_set_hotplug --hotplug
 
 	debug_remove_attach_helper "$hotplug_events" "$hotplug_wait" true
 	# Verify reregistering hotplug poller
-	rpc_cmd bdev_nvme_set_hotplug -d
-	rpc_cmd bdev_nvme_set_hotplug -e
+	rpc_cmd bdev_nvme_set_hotplug --no-hotplug
+	rpc_cmd bdev_nvme_set_hotplug --hotplug
 
 	debug_remove_attach_helper "$hotplug_events" "$hotplug_wait" true
 

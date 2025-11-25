@@ -101,7 +101,7 @@ if [[ "$ktls" != "false" ]]; then
 fi
 
 # Check KTLS enable
-$rpc_py sock_impl_set_options -i ssl --enable-ktls
+$rpc_py sock_impl_set_options -i ssl --ktls
 ktls=$($rpc_py sock_impl_get_options -i ssl | jq -r .enable_ktls)
 if [[ "$ktls" != "true" ]]; then
 	echo "KTLS was not set correctly $ktls != true"
@@ -109,7 +109,7 @@ if [[ "$ktls" != "true" ]]; then
 fi
 
 # Check KTLS disable
-$rpc_py sock_impl_set_options -i ssl --disable-ktls
+$rpc_py sock_impl_set_options -i ssl --no-ktls
 ktls=$($rpc_py sock_impl_get_options -i ssl | jq -r .enable_ktls)
 if [[ "$ktls" != "false" ]]; then
 	echo "KTLS was not set correctly $ktls != false"

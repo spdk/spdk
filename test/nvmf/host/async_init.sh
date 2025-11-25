@@ -54,7 +54,7 @@ key_path=$(mktemp)
 echo -n "NVMeTLSkey-1:01:MDAxMTIyMzM0NDU1NjY3Nzg4OTlhYWJiY2NkZGVlZmZwJEiQ:" > $key_path
 chmod 0600 $key_path
 $rpc_py keyring_file_add_key key0 "$key_path"
-$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode0 --disable
+$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode0 --no-allow-any-host
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT \
 	-a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT --secure-channel
 $rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode0 nqn.2016-06.io.spdk:host1 \
