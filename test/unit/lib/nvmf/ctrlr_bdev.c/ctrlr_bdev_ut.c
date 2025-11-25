@@ -349,6 +349,22 @@ nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
 	return ns->ptpl_file != NULL;
 }
 
+struct spdk_nvme_rescap
+nvmf_ns_get_rescap(struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvme_rescap rescap = {
+		.ptpls = nvmf_ns_is_ptpl_capable(ns),
+		.wes = 1,
+		.eas = 1,
+		.weros = 1,
+		.earos = 1,
+		.wears = 1,
+		.eaars = 1,
+		.ieks = 1,
+	};
+	return rescap;
+}
+
 static void
 test_get_rw_params(void)
 {

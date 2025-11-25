@@ -3512,6 +3512,43 @@ spdk_nvmf_ctrlr_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+int
+spdk_nvmf_identify_ns_iocs_independent(struct spdk_nvmf_ctrlr *ctrlr,
+				       struct spdk_nvme_cmd *cmd,
+				       struct spdk_nvme_cpl *rsp,
+				       struct spdk_nvme_ns_iocs_independent_data *nsdata)
+{
+	struct spdk_nvmf_ns *ns;
+
+	memset(nsdata, 0, sizeof(*nsdata));
+
+	/** From NVMe 2.0d
+	 * If the controller supports the Namespace Management capability
+	 * (refer to section 8.11) and the NSID field is set to FFFFFFFFh,
+	 * then the controller returns an I/O Command Set Independent
+	 * Identify Namespace data structure that specifies capabilities
+	 * that are common for the controller.
+	 */
+	if (ctrlr->cdata.oacs.nms && cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		nsdata->nmic.shrns = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, cmd->nsid, rsp);
+
+	if (ns == NULL) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	nsdata->nmic.shrns = 1;
+	nsdata->rescap = nvmf_ns_get_rescap(ns);
+
+	nsdata->anagrpid = ns->anagrpid;
+	nsdata->nstat.nrdy = 1;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 static int
 nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_ctrlr *ctrlr,
 				   struct spdk_nvme_cmd *cmd,
@@ -3722,6 +3759,9 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		break;
 	case SPDK_NVME_IDENTIFY_CTRLR_IOCS:
 		ret = spdk_nvmf_ctrlr_identify_iocs_specific(ctrlr, cmd, rsp, (void *)&tmpbuf, sizeof(tmpbuf));
+		break;
+	case SPDK_NVME_IDENTIFY_NS_IOCS_INDEPENDENT:
+		ret = spdk_nvmf_identify_ns_iocs_independent(ctrlr, cmd, rsp, (void *)&tmpbuf);
 		break;
 	case SPDK_NVME_IDENTIFY_IOCS:
 		ret = nvmf_ctrlr_identify_iocs(ctrlr, cmd, rsp, (void *)&tmpbuf, sizeof(tmpbuf));

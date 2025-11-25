@@ -93,6 +93,22 @@ int spdk_nvmf_ctrlr_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 		void *cdata,
 		size_t cdata_size);
 
+
+/**
+ * Fills the I/O Command Set Independent Identify Namespace Data Structure
+ * (CNS 08h)
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param cmd The NVMe command
+ * \param rsp The NVMe command completion
+ * \param nsdata The filled in I/O Command Set Independent Identify Namespace Data
+ * \return \ref spdk_nvmf_request_exec_status
+ */
+int spdk_nvmf_identify_ns_iocs_independent(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvme_cmd *cmd,
+		struct spdk_nvme_cpl *rsp,
+		struct spdk_nvme_ns_iocs_independent_data *nsdata);
+
 /**
  * Fills the identify namespace attributes for the specified controller
  *

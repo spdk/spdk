@@ -118,6 +118,7 @@
 	spdk_nvmf_get_feature_ids_effects_log_page;
 	spdk_nvmf_get_supported_log_pages;
 	spdk_nvmf_ctrlr_identify_iocs_specific;
+	spdk_nvmf_identify_ns_iocs_independent;
 	spdk_nvmf_ctrlr_identify_ns;
 	spdk_nvmf_ctrlr_identify_ns_ext;
 	spdk_nvmf_set_custom_admin_cmd_hdlr;
