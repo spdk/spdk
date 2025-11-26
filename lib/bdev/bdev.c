@@ -1086,6 +1086,15 @@ bdev_io_needs_metadata(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io
 		(bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT));
 }
 
+static bool
+bdev_io_accel_sequence_supported(struct spdk_bdev_io *bdev_io)
+{
+	/* For now, we don't allow splitting IOs with an accel sequence and will treat them as if
+	 * bdev module didn't support accel sequences */
+	return !(bdev_io->bdev->accel_sequence_supported & (1u << bdev_io->type)) ||
+	       bdev_io->internal.f.split;
+}
+
 static inline bool
 bdev_io_needs_sequence_exec(struct spdk_bdev_io *bdev_io)
 {
@@ -1093,10 +1102,7 @@ bdev_io_needs_sequence_exec(struct spdk_bdev_io *bdev_io)
 		return false;
 	}
 
-	/* For now, we don't allow splitting IOs with an accel sequence and will treat them as if
-	 * bdev module didn't support accel sequences */
-	return !(bdev_io->bdev->accel_sequence_supported & (1u << bdev_io->type)) ||
-	       bdev_io->internal.f.split;
+	return !bdev_io_accel_sequence_supported(bdev_io);
 }
 
 static inline void
