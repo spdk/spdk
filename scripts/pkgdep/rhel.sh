@@ -128,12 +128,10 @@ yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 
 [[ $VERSION_ID != 10* ]] && yum install -y libiscsi-devel
 
-if echo "$ID $VERSION_ID" | grep -E -q 'rhel 8|rocky 8'; then
-	yum install -y python36 python36-devel
-	#Create hard link to use in SPDK as python
-	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
-		ln -s /etc/alternatives/python3 /usr/bin/python
-	fi
+if echo "$ID $VERSION_ID" | grep -E -q '(rhel|rocky|almalinux) (8|9)'; then
+	yum install -y python3.11 python3.11-devel python3.11-pip
+	alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+	alternatives --set python3 /usr/bin/python3.11
 else
 	yum install -y python python3-devel
 fi
