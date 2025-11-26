@@ -165,7 +165,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		devtool_pkgs+=(python-pycodestyle lcov ShellCheck)
 	fi
 
-	if [[ $ID == fedora ]]; then
+	if [[ $ID == fedora || $ID == rhel ]]; then
 		devtool_pkgs+=(rubygem-{bundler,rake})
 	fi
 
