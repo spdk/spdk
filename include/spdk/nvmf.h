@@ -207,6 +207,8 @@ struct spdk_nvmf_referral_opts {
 /**
  * Add a discovery service referral to an NVMe-oF target
  *
+ * This function must be called from the app thread.
+ *
  * \param tgt The target to which the referral will be added
  * \param opts Options describing the referral referral.
  *
@@ -217,6 +219,8 @@ int spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 
 /**
  * Remove a discovery service referral from an NVMeoF target
+ *
+ * This function must be called from the app thread.
  *
  * \param tgt The target from which the referral will be removed
  * \param opts Options describing the referral referral.

@@ -71,6 +71,8 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvmf_referral_opts opts = {};
 	struct spdk_nvme_transport_id *trid = &opts.trid;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	memcpy(&opts, uopts, spdk_min(uopts->size, sizeof(opts)));
 	if (trid->subnqn[0] == '\0') {
 		snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
@@ -119,6 +121,8 @@ spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvmf_referral *referral;
 	struct spdk_nvmf_referral_opts opts = {};
 	struct spdk_nvme_transport_id *trid = &opts.trid;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	memcpy(&opts, uopts, spdk_min(uopts->size, sizeof(opts)));
 	if (trid->subnqn[0] == '\0') {
