@@ -397,6 +397,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		if (args == NULL) {
 			return -1;
 		}
+		mem_disable_vtophys();
 	}
 
 	if (no_huge) {
