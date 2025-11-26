@@ -8,7 +8,6 @@
 import argparse
 
 from spdk.rpc.cmd_parser import print_dict
-from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):
@@ -163,14 +162,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_enable_histogram',
                               help='Enable or disable histogram for specified iscsi target')
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-e', '--enable', dest='enable', action=DeprecateTrueAction,
-                       help='Enable histograms on specified iscsi target', default=True)
-    group.add_argument('-d', '--disable', dest='enable', action=DeprecateFalseAction,
-                       help='Disable histograms on specified iscsi target')
-    group.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable histogram for specified iscsi target')
+    p.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
+                   required=True, help='Enable or disable histogram for specified iscsi target')
     p.add_argument('name', help='iscsi target name')
     p.set_defaults(func=iscsi_enable_histogram)
 

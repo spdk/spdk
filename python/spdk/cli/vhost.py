@@ -8,7 +8,6 @@
 import argparse
 
 from spdk.rpc.cmd_parser import print_array, print_dict, print_json, strip_globals
-from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):
@@ -153,11 +152,8 @@ def add_parser(subparsers):
         args.client.bdev_virtio_blk_set_hotplug(enable=args.enable, period_us=args.period_us)
 
     p = subparsers.add_parser('bdev_virtio_blk_set_hotplug', help='Set hotplug options for bdev virtio_blk type.')
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-d', '--disable', dest='enable', action=DeprecateFalseAction, help="Disable hotplug")
-    group.add_argument('-e', '--enable', dest='enable', action=DeprecateTrueAction, help="Enable hotplug")
-    group.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction, help='Enable or disable hotplug')
+    p.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction,
+                   required=True, help='Enable or disable hotplug')
     p.add_argument('-r', '--period-us',
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=bdev_virtio_blk_set_hotplug)

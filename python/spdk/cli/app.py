@@ -8,7 +8,6 @@
 import argparse
 
 from spdk.rpc.cmd_parser import print_dict
-from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):
@@ -47,12 +46,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('framework_monitor_context_switch',
                               help='Control whether the context switch monitor is enabled')
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('-e', '--enable', dest='enabled', action=DeprecateTrueAction, help='Enable context switch monitoring')
-    group.add_argument('-d', '--disable', dest='enabled', action=DeprecateFalseAction, help='Disable context switch monitoring')
-    group.add_argument('--monitor', dest='enabled', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable context switch monitoring')
+    p.add_argument('--monitor', dest='enabled', action=argparse.BooleanOptionalAction,
+                   help='Enable or disable context switch monitoring')
     p.set_defaults(func=framework_monitor_context_switch)
 
     def framework_get_reactors(args):

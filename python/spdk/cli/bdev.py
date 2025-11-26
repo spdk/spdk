@@ -9,7 +9,6 @@ import argparse
 from functools import partial
 
 from spdk.rpc.cmd_parser import print_array, print_dict, print_json, strip_globals
-from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):
@@ -51,14 +50,8 @@ def add_parser(subparsers):
                               help="""Set options of bdev subsystem""")
     p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('-e', '--enable-auto-examine', dest='bdev_auto_examine', action=DeprecateTrueAction,
-                       help='Allow to auto examine', default=True)
-    group.add_argument('-d', '--disable-auto-examine', dest='bdev_auto_examine', action=DeprecateFalseAction,
-                       help='Not allow to auto examine')
-    group.add_argument('--auto-examine', dest='bdev_auto_examine', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable auto examine')
+    p.add_argument('--auto-examine', dest='bdev_auto_examine', action=argparse.BooleanOptionalAction,
+                   help='Enable or disable auto examine')
     p.add_argument('--iobuf-small-cache-size', help='Size of the small iobuf per thread cache', type=int)
     p.add_argument('--iobuf-large-cache-size', help='Size of the large iobuf per thread cache', type=int)
     p.set_defaults(func=bdev_set_options)
@@ -476,16 +469,8 @@ def add_parser(subparsers):
                    type=partial(str.split, sep=','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
                    type=partial(str.split, sep=','))
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-rdma-umr-per-io',
-                       help='''Enable scatter-gather RDMA Memory Region per IO if supported by the system.''',
-                       action=DeprecateTrueAction, dest='rdma_umr_per_io')
-    group.add_argument('--disable-rdma-umr-per-io',
-                       help='''Disable scatter-gather RDMA Memory Region per IO.''',
-                       action=DeprecateFalseAction, dest='rdma_umr_per_io')
-    group.add_argument('--rdma-umr-per-io', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable scatter-gather RDMA Memory Region per IO if supported by the system.')
+    p.add_argument('--rdma-umr-per-io', action=argparse.BooleanOptionalAction,
+                   help='Enable or disable scatter-gather RDMA Memory Region per IO if supported by the system.')
     p.add_argument('--tcp-connect-timeout-ms',
                    help='Time to wait until TCP connection is done. Default: 0 (no timeout).', type=int)
     p.add_argument('--enable-flush', help='Pass flush to NVMe when volatile write cache is present',
@@ -497,11 +482,8 @@ def add_parser(subparsers):
         args.client.bdev_nvme_set_hotplug(enable=args.enable, period_us=args.period_us)
 
     p = subparsers.add_parser('bdev_nvme_set_hotplug', help='Set hotplug options for bdev nvme type.')
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-d', '--disable', dest='enable', action=DeprecateFalseAction, help="Disable hotplug (default)", default=False)
-    group.add_argument('-e', '--enable', dest='enable', action=DeprecateTrueAction, help="Enable hotplug")
-    group.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction, help='Enable or disable hotplug')
+    p.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction,
+                   required=True, help='Enable or disable hotplug')
     p.add_argument('-r', '--period-us',
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=bdev_nvme_set_hotplug)
@@ -1081,14 +1063,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_enable_histogram',
                               help='Enable or disable histogram for specified bdev')
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-e', '--enable',  dest='enable', action=DeprecateTrueAction,
-                       help='Enable histograms on specified device', default=True)
-    group.add_argument('-d', '--disable', dest='enable', action=DeprecateFalseAction,
-                       help='Disable histograms on specified device')
-    group.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable histograms on specified device')
+    p.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
+                   required=True, help='Enable or disable histograms on specified device')
     p.add_argument('-o', '--opc', help='Enable histogram for specified io type. Defaults to all io types if not specified.'
                    ' Refer to bdev_get_bdevs RPC for the list of io types.')
     p.add_argument('--granularity', help='Histogram bucket granularity.', type=int)

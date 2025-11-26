@@ -8,7 +8,6 @@
 import argparse
 
 from spdk.rpc.cmd_parser import print_json
-from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):
@@ -36,30 +35,13 @@ def add_parser(subparsers):
     p = subparsers.add_parser('fsdev_aio_create', help='Create a aio filesystem')
     p.add_argument('name', help='Filesystem name. Example: aio0.')
     p.add_argument('root_path', help='Path on the system fs to expose as SPDK filesystem')
-
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-xattr',  help='Enable extended attributes', dest='enable_xattr',
-                       action=DeprecateTrueAction, default=None)
-    group.add_argument('--disable-xattr', help='Disable extended attributes', dest='enable_xattr',
-                       action=DeprecateFalseAction, default=None)
-    group.add_argument('--xattr', dest='enable_xattr', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable extended attributes')
-
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-writeback-cache',  help='Enable writeback cache', dest='enable_writeback_cache',
-                       action=DeprecateTrueAction, default=None)
-    group.add_argument('--disable-writeback-cache', help='Disable writeback cache', dest='enable_writeback_cache',
-                       action=DeprecateFalseAction, default=None)
-    group.add_argument('--writeback-cache', dest='enable_writeback_cache', action=argparse.BooleanOptionalAction,
-                       help='Enable or disable writeback cache')
-
+    p.add_argument('--xattr', dest='enable_xattr', action=argparse.BooleanOptionalAction,
+                   help='Enable or disable extended attributes')
+    p.add_argument('--writeback-cache', dest='enable_writeback_cache', action=argparse.BooleanOptionalAction,
+                   help='Enable or disable writeback cache')
     p.add_argument('-w', '--max-write', help='Max write size in bytes', type=int)
-
     p.add_argument('--skip-rw', dest='skip_rw', help="Do not process read or write commands. This is used for testing.",
                    action='store_true', default=None)
-
     p.set_defaults(func=fsdev_aio_create)
 
     def fsdev_aio_delete(args):

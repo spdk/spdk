@@ -8,7 +8,6 @@
 import argparse
 
 from spdk.rpc.cmd_parser import print_dict
-from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
 
 
 def add_parser(subparsers):
@@ -65,9 +64,6 @@ def add_parser(subparsers):
         args.client.log_enable_timestamps(enabled=args.enabled)
     p = subparsers.add_parser('log_enable_timestamps',
                               help='Enable or disable timestamps.')
-    # TODO: this group is deprecated, remove in next version
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-d', '--disable', dest='enabled', action=DeprecateFalseAction, help="Disable timestamps", default=False)
-    group.add_argument('-e', '--enable',  dest='enabled', action=DeprecateTrueAction, help="Enable timestamps")
-    group.add_argument('--timestamps', dest='enabled', action=argparse.BooleanOptionalAction, help='Enable or disable timestamps')
+    p.add_argument('--timestamps', dest='enabled', action=argparse.BooleanOptionalAction,
+                   required=True, help='Enable or disable timestamps')
     p.set_defaults(func=log_enable_timestamps)
