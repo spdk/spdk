@@ -2886,6 +2886,52 @@ struct spdk_nvme_secondary_ctrl_list {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_secondary_ctrl_list) == 4096, "Incorrect size");
 #pragma pack(pop)
 
+struct spdk_nvme_rescap {
+	/** supports persist through power loss */
+	uint8_t		persist : 1;
+
+	/** supports write exclusive */
+	uint8_t		write_exclusive : 1;
+
+	/** supports exclusive access */
+	uint8_t		exclusive_access : 1;
+
+	/** supports write exclusive - registrants only */
+	uint8_t		write_exclusive_reg_only : 1;
+
+	/** supports exclusive access - registrants only */
+	uint8_t		exclusive_access_reg_only : 1;
+
+	/** supports write exclusive - all registrants */
+	uint8_t		write_exclusive_all_reg : 1;
+
+	/** supports exclusive access - all registrants */
+	uint8_t		exclusive_access_all_reg : 1;
+
+	/** supports ignore existing key */
+	uint8_t		ignore_existing_key : 1;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_rescap) == 1, "Incorrect size");
+
+struct spdk_nvme_fpi {
+	uint8_t percentage_remaining	: 7;
+	uint8_t	fpi_supported		: 1;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fpi) == 1, "Incorrect size");
+
+struct spdk_nvme_nmic {
+	uint8_t	can_share : 1;
+	uint8_t	reserved : 7;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_nmic) == 1, "Incorrect size");
+
+struct spdk_nvme_nsattr {
+	/** Namespace write protected */
+	uint8_t	write_protected	: 1;
+	uint8_t	reserved	: 7;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_nsattr) == 1, "Incorrect size");
+
 struct spdk_nvme_ns_data {
 	/** namespace size */
 	uint64_t		nsze;
@@ -2972,45 +3018,15 @@ struct spdk_nvme_ns_data {
 	} dps;
 
 	/** namespace multi-path I/O and namespace sharing capabilities */
-	struct {
-		uint8_t		can_share : 1;
-		uint8_t		reserved : 7;
-	} nmic;
+	struct spdk_nvme_nmic nmic;
 
 	/** reservation capabilities */
 	union {
-		struct {
-			/** supports persist through power loss */
-			uint8_t		persist : 1;
-
-			/** supports write exclusive */
-			uint8_t		write_exclusive : 1;
-
-			/** supports exclusive access */
-			uint8_t		exclusive_access : 1;
-
-			/** supports write exclusive - registrants only */
-			uint8_t		write_exclusive_reg_only : 1;
-
-			/** supports exclusive access - registrants only */
-			uint8_t		exclusive_access_reg_only : 1;
-
-			/** supports write exclusive - all registrants */
-			uint8_t		write_exclusive_all_reg : 1;
-
-			/** supports exclusive access - all registrants */
-			uint8_t		exclusive_access_all_reg : 1;
-
-			/** supports ignore existing key */
-			uint8_t		ignore_existing_key : 1;
-		} rescap;
-		uint8_t		raw;
+		struct spdk_nvme_rescap rescap;
+		uint8_t raw;
 	} nsrescap;
 	/** format progress indicator */
-	struct {
-		uint8_t		percentage_remaining : 7;
-		uint8_t		fpi_supported : 1;
-	} fpi;
+	struct spdk_nvme_fpi fpi;
 
 	/** deallocate logical features */
 	union {
@@ -3097,11 +3113,7 @@ struct spdk_nvme_ns_data {
 	uint8_t			reserved96[3];
 
 	/** namespace attributes */
-	struct {
-		/** Namespace write protected */
-		uint8_t	write_protected	: 1;
-		uint8_t	reserved	: 7;
-	} nsattr;
+	struct spdk_nvme_nsattr nsattr;
 
 	/** NVM Set Identifier */
 	uint16_t		nvmsetid;
