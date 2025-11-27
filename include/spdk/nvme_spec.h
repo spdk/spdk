@@ -2890,48 +2890,94 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_secondary_ctrl_list) == 4096, "Incorr
 #pragma pack(pop)
 
 struct spdk_nvme_rescap {
-	/** supports persist through power loss */
-	uint8_t		persist : 1;
+	union {
+		struct {
+			/** Persist Through Power Loss Support */
+			uint8_t ptpls	: 1;
+			/** Write Exclusive Support */
+			uint8_t wes	: 1;
+			/** Exclusive Access Support */
+			uint8_t eas	: 1;
+			/** Write Exclusive – Registrants Only Support */
+			uint8_t weros	: 1;
+			/** Exclusive Access – Registrants Only Support */
+			uint8_t	earos	: 1;
+			/** Write Exclusive – All Registrants Support */
+			uint8_t	wears	: 1;
+			/** Exclusive Access – All Registrants Support */
+			uint8_t	eaars	: 1;
+			/** Ignore Existing Key Support */
+			uint8_t	ieks	: 1;
+		};
 
-	/** supports write exclusive */
-	uint8_t		write_exclusive : 1;
-
-	/** supports exclusive access */
-	uint8_t		exclusive_access : 1;
-
-	/** supports write exclusive - registrants only */
-	uint8_t		write_exclusive_reg_only : 1;
-
-	/** supports exclusive access - registrants only */
-	uint8_t		exclusive_access_reg_only : 1;
-
-	/** supports write exclusive - all registrants */
-	uint8_t		write_exclusive_all_reg : 1;
-
-	/** supports exclusive access - all registrants */
-	uint8_t		exclusive_access_all_reg : 1;
-
-	/** supports ignore existing key */
-	uint8_t		ignore_existing_key : 1;
+		/** Old bit naming is deprecated and will be removed in 26.05 release */
+		struct {
+			uint8_t	persist : 1;
+			uint8_t	write_exclusive : 1;
+			uint8_t	exclusive_access : 1;
+			uint8_t	write_exclusive_reg_only : 1;
+			uint8_t	exclusive_access_reg_only : 1;
+			uint8_t	write_exclusive_all_reg : 1;
+			uint8_t	exclusive_access_all_reg : 1;
+			uint8_t	ignore_existing_key : 1;
+		};
+	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_rescap) == 1, "Incorrect size");
 
 struct spdk_nvme_fpi {
-	uint8_t percentage_remaining	: 7;
-	uint8_t	fpi_supported		: 1;
+	union {
+		struct {
+			/** Remaining Format NVM */
+			uint8_t rfnvm	: 7;
+			/** Format Progress Indicator Support */
+			uint8_t fpis	: 1;
+		};
+
+		/** Old bit naming is deprecated and will be removed in 26.05 release */
+		struct {
+			uint8_t percentage_remaining	: 7;
+			uint8_t	fpi_supported		: 1;
+		};
+	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fpi) == 1, "Incorrect size");
 
 struct spdk_nvme_nmic {
-	uint8_t	can_share : 1;
-	uint8_t	reserved : 7;
+	union {
+		struct {
+			/** Shared Namespace */
+			uint8_t shrns	: 1;
+			/** Dispersed Namespace */
+			uint8_t disns	: 1;
+			/** Reserved */
+			uint8_t	rsvd : 6;
+		};
+
+		/** Old bit naming is deprecated and will be removed in 26.05 release */
+		struct {
+			uint8_t	can_share : 1;
+			uint8_t	reserved : 7;
+		};
+	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_nmic) == 1, "Incorrect size");
 
 struct spdk_nvme_nsattr {
-	/** Namespace write protected */
-	uint8_t	write_protected	: 1;
-	uint8_t	reserved	: 7;
+	union {
+		struct {
+			/** Currently Write Protected */
+			uint8_t cwp	: 1;
+			/** Reserved */
+			uint8_t rsvd	: 7;
+		};
+
+		/** Old bit naming is deprecated and will be removed in 26.05 release */
+		struct {
+			uint8_t	write_protected	: 1;
+			uint8_t	reserved	: 7;
+		};
+	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_nsattr) == 1, "Incorrect size");
 

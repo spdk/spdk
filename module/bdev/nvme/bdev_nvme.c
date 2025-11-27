@@ -4190,7 +4190,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 					     _nvme_ana_state_str(nvme_ns->ana_state));
 	}
 
-	spdk_json_write_named_bool(w, "can_share", nsdata->nmic.can_share);
+	spdk_json_write_named_bool(w, "can_share", nsdata->nmic.shrns);
 
 	spdk_json_write_object_end(w);
 
@@ -5044,7 +5044,7 @@ nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 	const struct spdk_nvme_ns_data *nsdata;
 
 	nsdata = spdk_nvme_ns_get_data(nvme_ns->ns);
-	if (!nsdata->nmic.can_share) {
+	if (!nsdata->nmic.shrns) {
 		NVME_NS_ERRLOG(nvme_ns, "Namespace cannot be shared.\n");
 		return -EINVAL;
 	}

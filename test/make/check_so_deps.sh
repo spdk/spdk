@@ -178,6 +178,11 @@ function confirm_abi_deps() {
 			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
 			name_regexp = spdk_nvme_cc_register
 			has_data_member_inserted_at = 24
+		[suppress_type]
+			label = Change NMIC, FPI and NSATTR naming to conform to NVMe 2.2 specification
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name_regexp  = ^(spdk_nvme_ns_data|spdk_nvme_nmic|spdk_nvme_fpi|spdk_nvme_nsattr)$
+			has_size_change = no
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

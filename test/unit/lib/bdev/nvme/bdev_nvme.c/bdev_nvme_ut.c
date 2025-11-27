@@ -512,7 +512,7 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
 			ctrlr->ns[i].is_active = true;
 			ctrlr->ns[i].ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 			ctrlr->nsdata[i].nsze = 1024;
-			ctrlr->nsdata[i].nmic.can_share = multipath;
+			ctrlr->nsdata[i].nmic.shrns = multipath;
 		}
 
 		ctrlr->cdata.nn = num_ns;

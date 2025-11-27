@@ -1543,7 +1543,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	}
 
 	printf("Namespace Write Protected:             %s\n",
-	       nsdata->nsattr.write_protected ? "Yes" : "No");
+	       nsdata->nsattr.cwp ? "Yes" : "No");
 
 	if (cdata->ctratt.bits.nvm_sets) {
 		printf("NVM set ID:                            %u\n", nsdata->nvmsetid);

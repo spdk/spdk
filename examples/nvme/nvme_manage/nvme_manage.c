@@ -173,9 +173,9 @@ display_namespace(struct spdk_nvme_ns *ns)
 	       (long long)nsdata->nuse,
 	       (long long)nsdata->nuse / 1024 / 1024);
 	printf("Format Progress Indicator:   %s\n",
-	       nsdata->fpi.fpi_supported ? "Supported" : "Not Supported");
-	if (nsdata->fpi.fpi_supported && nsdata->fpi.percentage_remaining) {
-		printf("Formatted Percentage:	%d%%\n", 100 - nsdata->fpi.percentage_remaining);
+	       nsdata->fpi.fpis ? "Supported" : "Not Supported");
+	if (nsdata->fpi.fpis && nsdata->fpi.rfnvm) {
+		printf("Formatted Percentage:	%d%%\n", 100 - nsdata->fpi.rfnvm);
 	}
 	printf("Number of LBA Formats:       %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:          LBA Format #%02d\n",
@@ -192,7 +192,7 @@ display_namespace(struct spdk_nvme_ns *ns)
 		       nsdata->dps.pit, nsdata->dps.md_start ? "Head" : "Tail");
 	}
 	printf("Multipath IO and Sharing:    %s\n",
-	       nsdata->nmic.can_share ? "Supported" : "Not Supported");
+	       nsdata->nmic.shrns ? "Supported" : "Not Supported");
 	printf("\n");
 }
 
@@ -470,7 +470,7 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 		ndata->dps.pit = ns_dps_type;
 		ndata->dps.md_start = ns_dps_location;
 	}
-	ndata->nmic.can_share = ns_nmic;
+	ndata->nmic.shrns = ns_nmic;
 	nsid = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
 	if (nsid == 0) {
 		fprintf(stdout, "ns manage: Failed\n");
