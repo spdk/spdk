@@ -2099,6 +2099,9 @@ enum spdk_nvme_identify_cns {
 	/** List active NSIDs greater than CDW1.NSID, specific to CDW11.CSI */
 	SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST_IOCS		= 0x07,
 
+	/** I/O Command Set Independent Identify Namespace */
+	SPDK_NVME_IDENTIFY_NS_IOCS_INDEPENDENT		= 0x08,
+
 	/** List allocated NSIDs greater than CDW1.NSID */
 	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST		= 0x10,
 
@@ -3268,6 +3271,73 @@ struct spdk_nvme_zns_ns_data {
 	uint8_t			vendor_specific[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ns_data) == 4096, "Incorrect size");
+
+/** Identify – I/O Command Set Independent Identify Namespace Data Structure (CNS 08h) */
+struct spdk_nvme_ns_iocs_independent_data {
+	/** Common Namespace Features */
+	struct {
+		uint8_t reserved1	: 3;
+		/** UID Reuse */
+		uint8_t uidreuse	: 1;
+		/** Rotational Media */
+		uint8_t rmedia		: 1;
+		/** Volatile Write Cache Not Present */
+		uint8_t vwcnp		: 1;
+		uint8_t reserved2	: 2;
+	} nsfeat;
+
+	/** Namespace Multi-path I/O and Namespace Sharing Capabilities */
+	struct spdk_nvme_nmic nmic;
+
+	/** Reservation Capabilities */
+	struct spdk_nvme_rescap rescap;
+
+	/** Format Progress Indicator */
+	struct spdk_nvme_fpi fpi;
+
+	/** ANA Group Identifier */
+	uint32_t anagrpid;
+
+	/** Namespace Attributes */
+	struct spdk_nvme_nsattr nsattr;
+
+	uint8_t reserved1;
+
+	/** NVM Set Identifier */
+	uint16_t nvmsetid;
+
+	/** Endurance Group Identifier */
+	uint16_t endgid;
+
+	/** Namespace Status */
+	struct {
+		/** Namespace Ready */
+		uint8_t nrdy		: 1;
+		/** I/O Impacted */
+		uint8_t ioi		: 2;
+		uint8_t reserved	: 5;
+	} nstat;
+
+	/** Key Per I/O Status */
+	struct {
+		/** Key Per I/O Enabled in Namespace */
+		uint8_t kpioens		: 1;
+		/** Key Per I/O Supported in Namespace */
+		uint8_t kpiosns		: 1;
+		uint8_t reserved	: 6;
+	} kpios;
+
+	/** Maximum Key Tag */
+	uint16_t maxkt;
+
+	uint16_t reserved2;
+
+	/** Reachability Group Identifier */
+	uint32_t rgrpid;
+
+	uint8_t reserved3[4072];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_iocs_independent_data) == 4096, "Incorrect size");
 
 /**
  * IO command set vector for IDENTIFY_IOCS
