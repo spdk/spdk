@@ -145,13 +145,13 @@ def add_parser(subparsers):
     p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed",
                    type=int)
     p.add_argument("-r", "--ana-reporting", action='store_true', help="Enable ANA reporting feature")
-    p.add_argument("-i", "--min_cntlid", help="Minimum controller ID", type=int)
-    p.add_argument("-I", "--max_cntlid", help="Maximum controller ID", type=int)
+    p.add_argument("-i", "--min-cntlid", help="Minimum controller ID", type=int)
+    p.add_argument("-I", "--max-cntlid", help="Maximum controller ID", type=int)
     p.add_argument("--max-discard-size", dest='max_discard_size_kib', help="Maximum discard size (Kib)", type=int)
     p.add_argument("--max-write-zeroes-size", dest='max_write_zeroes_size_kib', help="Maximum write_zeroes size (Kib)", type=int)
     p.add_argument("-p", "--passthrough", action='store_true', help="""Use NVMe passthrough for all I/O commands and namespace-directed
                    admin commands""")
-    p.add_argument("-n", "--enable_nssr", action='store_true', help="""Enable NSSR (NVMe subsystem reset) support""")
+    p.add_argument("-n", "--enable-nssr", action='store_true', help="""Enable NSSR (NVMe subsystem reset) support""")
     p.set_defaults(func=nvmf_create_subsystem)
 
     def nvmf_delete_subsystem(args):
