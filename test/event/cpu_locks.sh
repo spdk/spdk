@@ -132,7 +132,7 @@ locking_overlapped_coremask() {
 	spdk_tgt_pid=$!
 	waitforlisten "$spdk_tgt_pid" "$rpc_sock1"
 
-	"${SPDK_APP[@]}" -m 0x1c -r "$rpc_sock2" &
+	"${SPDK_APP[@]}" -m 0xc -r "$rpc_sock2" &
 	spdk_tgt_pid2=$!
 	NOT waitforlisten "$spdk_tgt_pid2" "$rpc_sock2"
 
@@ -148,7 +148,7 @@ locking_overlapped_coremask_via_rpc() {
 	spdk_tgt_pid=$!
 	waitforlisten "$spdk_tgt_pid" "$rpc_sock1"
 
-	"${SPDK_APP[@]}" -m 0x1c -r "$rpc_sock2" --disable-cpumask-locks &
+	"${SPDK_APP[@]}" -m 0xc -r "$rpc_sock2" --disable-cpumask-locks &
 	spdk_tgt_pid2=$!
 	waitforlisten "$spdk_tgt_pid2" "$rpc_sock2"
 
