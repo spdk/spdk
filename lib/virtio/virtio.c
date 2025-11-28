@@ -508,6 +508,7 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 				desc->addr  = (uintptr_t)current_base;
 			} else {
 				desc->addr = spdk_vtophys(current_base, &current_length);
+				assert(desc->addr != SPDK_VTOPHYS_ERROR);
 			}
 
 			desc->len = current_length;
