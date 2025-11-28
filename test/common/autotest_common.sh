@@ -1396,7 +1396,7 @@ function autotest_cleanup() {
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup
 	if [ $(uname -s) = "Linux" ]; then
-		modprobe -r uio_pci_generic
+		modprobe -r uio_pci_generic || true
 	fi
 	rm -rf "$asan_suppression_file"
 	if [[ -n ${old_core_pattern:-} ]]; then
