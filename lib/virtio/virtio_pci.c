@@ -24,7 +24,7 @@ struct virtio_hw {
 		void        *vaddr;
 
 		/** Length of the address space */
-		uint32_t    len;
+		uint64_t    len;
 	} pci_bar[6];
 
 	struct virtio_pci_common_cfg *common_cfg;
@@ -560,8 +560,8 @@ static void *
 get_cfg_addr(struct virtio_hw *hw, struct virtio_pci_cap *cap)
 {
 	uint8_t  bar    = cap->bar;
-	uint32_t length = cap->length;
-	uint32_t offset = cap->offset;
+	uint64_t length = cap->length;
+	uint64_t offset = cap->offset;
 
 	if (bar > 5) {
 		SPDK_ERRLOG("invalid bar: %"PRIu8"\n", bar);
@@ -569,13 +569,13 @@ get_cfg_addr(struct virtio_hw *hw, struct virtio_pci_cap *cap)
 	}
 
 	if (offset + length < offset) {
-		SPDK_ERRLOG("offset(%"PRIu32") + length(%"PRIu32") overflows\n",
+		SPDK_ERRLOG("offset(%"PRIu64") + length(%"PRIu64") overflows\n",
 			    offset, length);
 		return NULL;
 	}
 
 	if (offset + length > hw->pci_bar[bar].len) {
-		SPDK_ERRLOG("invalid cap: overflows bar space: %"PRIu32" > %"PRIu32"\n",
+		SPDK_ERRLOG("invalid cap: overflows bar space: %"PRIu64" > %"PRIu64"\n",
 			    offset + length, hw->pci_bar[bar].len);
 		return NULL;
 	}
