@@ -556,15 +556,42 @@ static const struct virtio_dev_ops modern_ops = {
 	.write_json_config	= pci_write_json_config,
 };
 
+static int
+virtio_pci_map_bar(struct virtio_hw *hw, uint8_t bar)
+{
+	uint64_t paddr;
+	int rc;
+
+	assert(bar < SPDK_COUNTOF(hw->pci_bar));
+	if (hw->pci_bar[bar].vaddr != NULL) {
+		return 0;
+	}
+
+	rc = spdk_pci_device_map_bar(hw->pci_dev, bar, &hw->pci_bar[bar].vaddr, &paddr,
+				     &hw->pci_bar[bar].len);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to map PCI BAR %u\n", bar);
+		return rc;
+	}
+
+	return 0;
+}
+
 static void *
 get_cfg_addr(struct virtio_hw *hw, struct virtio_pci_cap *cap)
 {
 	uint8_t  bar    = cap->bar;
 	uint64_t length = cap->length;
 	uint64_t offset = cap->offset;
+	int rc;
 
 	if (bar > 5) {
 		SPDK_ERRLOG("invalid bar: %"PRIu8"\n", bar);
+		return NULL;
+	}
+
+	rc = virtio_pci_map_bar(hw, bar);
+	if (rc != 0) {
 		return NULL;
 	}
 
@@ -669,10 +696,7 @@ static int
 virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ctx *ctx)
 {
 	struct virtio_hw *hw;
-	uint8_t *bar_vaddr;
-	uint64_t bar_paddr, bar_len;
 	int rc;
-	unsigned i;
 	char bdf[32];
 	struct spdk_pci_addr addr;
 
@@ -691,19 +715,6 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 
 	hw->pci_dev = pci_dev;
 	hw->is_attaching = true;
-
-	for (i = 0; i < 6; ++i) {
-		rc = spdk_pci_device_map_bar(pci_dev, i, (void *) &bar_vaddr, &bar_paddr,
-					     &bar_len);
-		if (rc != 0) {
-			SPDK_ERRLOG("%s: failed to memmap PCI BAR %u\n", bdf, i);
-			free_virtio_hw(hw);
-			return -1;
-		}
-
-		hw->pci_bar[i].vaddr = bar_vaddr;
-		hw->pci_bar[i].len = bar_len;
-	}
 
 	/* Virtio PCI caps exist only on modern PCI devices.
 	 * Legacy devices are not supported.
