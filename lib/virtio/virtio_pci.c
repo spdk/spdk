@@ -36,6 +36,7 @@ struct virtio_hw {
 	struct virtio_dev *vdev;
 	bool is_remapped;
 	bool is_removing;
+	bool is_attaching;
 	struct {
 		uint8_t enabled : 1;
 		uint8_t per_vq : 1;
@@ -357,7 +358,7 @@ modern_destruct_dev(struct virtio_dev *vdev)
 	struct spdk_pci_device *pci_dev;
 	bool intr;
 
-	if (hw == NULL) {
+	if (hw == NULL || hw->is_attaching) {
 		return;
 	}
 
@@ -689,6 +690,7 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 	}
 
 	hw->pci_dev = pci_dev;
+	hw->is_attaching = true;
 
 	for (i = 0; i < 6; ++i) {
 		rc = spdk_pci_device_map_bar(pci_dev, i, (void *) &bar_vaddr, &bar_paddr,
@@ -724,6 +726,7 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 		g_sigset = true;
 	}
 
+	hw->is_attaching = false;
 	pthread_mutex_lock(&g_hw_mutex);
 	TAILQ_INSERT_TAIL(&g_virtio_hws, hw, tailq);
 	pthread_mutex_unlock(&g_hw_mutex);
