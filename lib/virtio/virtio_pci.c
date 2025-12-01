@@ -357,19 +357,21 @@ modern_destruct_dev(struct virtio_dev *vdev)
 	struct spdk_pci_device *pci_dev;
 	bool intr;
 
-	if (hw != NULL) {
-		intr = hw->intr.enabled;
-		pthread_mutex_lock(&g_hw_mutex);
-		TAILQ_REMOVE(&g_virtio_hws, hw, tailq);
-		pthread_mutex_unlock(&g_hw_mutex);
-		pci_dev = hw->pci_dev;
-		free_virtio_hw(hw);
-		if (pci_dev) {
-			if (intr) {
-				spdk_pci_device_disable_interrupts(pci_dev);
-			}
-			spdk_pci_device_detach(pci_dev);
+	if (hw == NULL) {
+		return;
+	}
+
+	intr = hw->intr.enabled;
+	pthread_mutex_lock(&g_hw_mutex);
+	TAILQ_REMOVE(&g_virtio_hws, hw, tailq);
+	pthread_mutex_unlock(&g_hw_mutex);
+	pci_dev = hw->pci_dev;
+	free_virtio_hw(hw);
+	if (pci_dev) {
+		if (intr) {
+			spdk_pci_device_disable_interrupts(pci_dev);
 		}
+		spdk_pci_device_detach(pci_dev);
 	}
 }
 
