@@ -3294,7 +3294,7 @@ _nvmf_ctrlr_get_ns_safe(struct spdk_nvmf_ctrlr *ctrlr,
 	return ns;
 }
 
-static void
+static struct spdk_nvmf_ns *
 nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvme_cmd *cmd,
 		       struct spdk_nvme_cpl *rsp,
@@ -3304,10 +3304,24 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
 	enum spdk_nvme_ana_state ana_state;
+	uint8_t cns = cmd->cdw10_bits.identify.cns;
 
 	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, nsid, rsp);
+	/* A NULL return relies on _nvmf_ctrlr_get_ns_safe() having already set
+	 * rsp->status for both of its failure cases.
+	 */
 	if (ns == NULL) {
-		return;
+		return NULL;
+	}
+
+	/* Administrative controllers have only allocated namespaces, no active ones.
+	 * For the identify active namespace only NSID validity check is needed with an empty
+	 * response.
+	 */
+	if (ctrlr->subsys->opts.admin && cns == SPDK_NVME_IDENTIFY_NS) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+		return NULL;
 	}
 
 	nvmf_bdev_ctrlr_identify_ns(ns, nsdata,
@@ -3325,6 +3339,7 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			nsdata->nuse = 0;
 		}
 	}
+	return ns;
 }
 
 int
@@ -3380,7 +3395,7 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
-	struct spdk_nvmf_ns *ns = nvmf_ctrlr_get_ns(ctrlr, cmd->nsid);
+	struct spdk_nvmf_ns *ns;
 	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
@@ -3388,7 +3403,10 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 	struct spdk_nvme_ns_data nsdata = {};
 	int rc;
 
-	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nsdata, cmd->nsid);
+	ns = nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nsdata, cmd->nsid);
+	if (!ns) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	rc = spdk_nvmf_request_get_bdev(cmd->nsid, req, &bdev, &desc, &ch);
 	if (rc) {
@@ -3634,6 +3652,7 @@ spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 				    size_t nsdata_size)
 {
 	uint8_t csi = cmd->cdw11_bits.identify.csi;
+	uint8_t cns = cmd->cdw10_bits.identify.cns;
 	struct spdk_nvmf_ns *ns = _nvmf_ctrlr_get_ns_safe(ctrlr, cmd->nsid, rsp);
 
 	memset(nsdata, 0, nsdata_size);
@@ -3641,6 +3660,14 @@ spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 	if (ns == NULL) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* Administrative controllers have only allocated namespaces, no active ones.
+	 * For the identify iocs for active namespace only NSID validity check is needed
+	 * with an empty response.
+	 */
+	if (ctrlr->subsys->opts.admin && cns == SPDK_NVME_IDENTIFY_NS_IOCS) {
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -3771,7 +3798,11 @@ spdk_nvmf_identify_ns_iocs_independent(struct spdk_nvmf_ctrlr *ctrlr,
 
 	ns = _nvmf_ctrlr_get_ns_safe(ctrlr, cmd->nsid, rsp);
 
-	if (ns == NULL) {
+	/* Administrative controllers have no active namespaces.
+	 * Return an empty response if the NSID check failed or the controller is administrative.
+	 * The response is already zero-filled by nvmf_ctrlr_process_admin_cmd().
+	 */
+	if (ns == NULL || ctrlr->subsys->opts.admin) {
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -3793,38 +3824,43 @@ nvmf_ctrlr_is_csi_supported(struct spdk_nvmf_ctrlr *ctrlr, uint8_t csi)
 }
 
 static int
-nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_ctrlr *ctrlr,
-				   struct spdk_nvme_cmd *cmd,
-				   struct spdk_nvme_cpl *rsp,
-				   struct spdk_nvme_ns_list *ns_list,
-				   bool iocs)
+nvmf_ctrlr_identify_ns_list(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
+			    struct spdk_nvme_cpl *rsp, struct spdk_nvme_ns_list *ns_list, bool iocs)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
 	uint32_t count = 0;
 	uint8_t csi = cmd->cdw11_bits.identify.csi;
+	uint8_t cns = cmd->cdw10_bits.identify.cns;
 
 	if (cmd->nsid >= 0xfffffffeUL) {
-		SPDK_ERRLOG("Identify Active Namespace List with invalid NSID %u\n", cmd->nsid);
+		SPDK_ERRLOG("Identify Namespace List (CNS 0x%02x) with invalid NSID %u\n", cns, cmd->nsid);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	if (iocs && !nvmf_ctrlr_is_csi_supported(ctrlr, csi)) {
-		SPDK_ERRLOG("Identify Active Namespace List with invalid CSI %u\n", csi);
+		SPDK_ERRLOG("Identify Namespace List with invalid CSI %u\n", csi);
 		rsp->status.sc  = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	memset(ns_list, 0, sizeof(*ns_list));
 
+	/* Administrative controllers have only allocated namespaces, no active ones.
+	 * For the identify active namespace list only NSID validity check is needed with
+	 * an empty response.
+	 */
+	if (ctrlr->subsys->opts.admin &&
+	    (cns == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST ||
+	     cns == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST_IOCS)) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		if (ns->opts.nsid <= cmd->nsid || !nvmf_ctrlr_ns_is_visible(ctrlr, ns->opts.nsid)) {
-			continue;
-		}
-
-		if (iocs && csi != ns->csi) {
+		if (ns->opts.nsid <= cmd->nsid || !nvmf_ctrlr_ns_is_visible(ctrlr, ns->opts.nsid) ||
+		    (iocs && csi != ns->csi)) {
 			continue;
 		}
 
@@ -3885,7 +3921,10 @@ nvmf_ctrlr_identify_ns_id_descriptor_list(
 	}
 
 	ns = nvmf_ctrlr_get_ns(ctrlr, nsid);
-	if (ns == NULL || ns->bdev == NULL) {
+	/* Administrative controllers have no active namespaces, so every NSID is inactive.
+	 * Inactive NSIDs fail with Invalid Field.
+	 */
+	if (ns == NULL || ns->bdev == NULL || ctrlr->subsys->opts.admin) {
 		SPDK_ERRLOG("Identify Namespace Identification Descriptor list with inactive NSID %u\n", nsid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -3999,6 +4038,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 
 	switch (cns) {
 	case SPDK_NVME_IDENTIFY_NS:
+	case SPDK_NVME_IDENTIFY_NS_ALLOCATED:
 		/* Function below can be asynchronous & we always need to have the data in request's buffer
 		 * So just return here */
 		return spdk_nvmf_ctrlr_identify_ns_ext(req);
@@ -4006,14 +4046,21 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		ret = spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, (void *)&tmpbuf);
 		break;
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
-		ret = nvmf_ctrlr_identify_active_ns_list(ctrlr, cmd, rsp, (void *)&tmpbuf, false);
+	case SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST:
+		ret = nvmf_ctrlr_identify_ns_list(ctrlr, cmd, rsp, (void *)&tmpbuf, false);
 		break;
 	case SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST:
 		ret = nvmf_ctrlr_identify_ns_id_descriptor_list(ctrlr, cmd, rsp,
 				tmpbuf, sizeof(tmpbuf));
 		break;
 	case SPDK_NVME_IDENTIFY_NS_IOCS:
-		if (cmd->cdw11_bits.identify.csi == SPDK_NVME_CSI_KV) {
+	case SPDK_NVME_IDENTIFY_NS_ALLOCATED_IOCS:
+		/* Retrieve KV Identify data through passthru, except for an active namespace query to
+		 * an administrative controller.  Administrative controllers have no active namespaces,
+		 * so let spdk_nvmf_ns_identify_iocs_specific() validate the NSID and return an empty response.
+		 */
+		if (cmd->cdw11_bits.identify.csi == SPDK_NVME_CSI_KV &&
+		    (cns == SPDK_NVME_IDENTIFY_NS_ALLOCATED_IOCS || !subsystem->opts.admin)) {
 			return nvmf_ns_identify_iocs_kv_passthru(req);
 		}
 		ret = spdk_nvmf_ns_identify_iocs_specific(ctrlr, cmd, rsp, (void *)&tmpbuf, sizeof(tmpbuf));
@@ -4025,7 +4072,8 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		ret = spdk_nvmf_identify_ns_iocs_independent(ctrlr, cmd, rsp, (void *)&tmpbuf);
 		break;
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST_IOCS:
-		ret = nvmf_ctrlr_identify_active_ns_list(ctrlr, cmd, rsp, (void *)&tmpbuf, true);
+	case SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST_IOCS:
+		ret = nvmf_ctrlr_identify_ns_list(ctrlr, cmd, rsp, (void *)&tmpbuf, true);
 		break;
 	case SPDK_NVME_IDENTIFY_IOCS:
 		ret = nvmf_ctrlr_identify_iocs(ctrlr, cmd, rsp, (void *)&tmpbuf, sizeof(tmpbuf));
