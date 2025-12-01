@@ -340,15 +340,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def iscsi_create_portal_group(args):
         portals = []
         for p in args.portals.strip().split(' '):
-            ip, separator, port_cpumask = p.rpartition(':')
-            split_port_cpumask = port_cpumask.split('@')
-            if len(split_port_cpumask) == 1:
-                port = port_cpumask
-                portals.append({'host': ip, 'port': port})
-            else:
-                port = split_port_cpumask[0]
-                portals.append({'host': ip, 'port': port})
-                print("WARNING: Specifying a portal group with a CPU mask is no longer supported. Ignoring it.")
+            ip, port = p.split(':')
+            portals.append({'host': ip, 'port': port})
         args.client.iscsi_create_portal_group(
             portals=portals,
             tag=args.tag,
