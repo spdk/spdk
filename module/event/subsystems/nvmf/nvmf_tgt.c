@@ -804,9 +804,6 @@ nvmf_tgt_advance_state(void)
 		case NVMF_TGT_RUNNING:
 			spdk_subsystem_init_next(0);
 			break;
-		case NVMF_TGT_FINI_STOP_LISTEN:
-			nvmf_tgt_stop_listen();
-			break;
 		case NVMF_TGT_FINI_STOP_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
 
@@ -822,6 +819,9 @@ nvmf_tgt_advance_state(void)
 			}
 			break;
 		}
+		case NVMF_TGT_FINI_STOP_LISTEN:
+			nvmf_tgt_stop_listen();
+			break;
 		case NVMF_TGT_FINI_DESTROY_SUBSYSTEMS:
 			_nvmf_tgt_subsystem_destroy(NULL);
 			/* Function above can be asynchronous, it will call nvmf_tgt_advance_state() once done.
