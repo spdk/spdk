@@ -1403,11 +1403,7 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 	struct spdk_nvmf_subsystem *subsystem = listener->subsystem;
 
 	if (status) {
-		listener->cb_fn(listener->cb_arg, status);
-		free(listener->ana_state);
-		free(listener->opts.sock_impl);
-		free(listener);
-		return;
+		goto done;
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
@@ -1416,9 +1412,7 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 		status = nvmf_tgt_update_mdns_prr(subsystem->tgt);
 		if (status) {
 			TAILQ_REMOVE(&subsystem->listeners, listener, link);
-			listener->cb_fn(listener->cb_arg, status);
-			free(listener);
-			return;
+			goto done;
 		}
 	}
 
@@ -1426,7 +1420,14 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 			   listener->trid->traddr, listener->trid->trsvcid);
 
 	spdk_nvmf_send_discovery_log_notice(subsystem->tgt, NULL);
+
+done:
 	listener->cb_fn(listener->cb_arg, status);
+	if (status) {
+		free(listener->ana_state);
+		free(listener->opts.sock_impl);
+		free(listener);
+	}
 }
 
 void
@@ -1550,8 +1551,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->subsystem = subsystem;
 	listener->ana_state = calloc(subsystem->max_nsid, sizeof(enum spdk_nvme_ana_state));
 	if (!listener->ana_state) {
-		free(listener);
-		cb_fn(cb_arg, -ENOMEM);
+		_nvmf_subsystem_add_listener_done(listener, -ENOMEM);
 		return;
 	}
 
@@ -1560,9 +1560,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		rc = listener_opts_copy(opts, &listener->opts);
 		if (rc) {
 			SPDK_ERRLOG("Unable to copy listener options\n");
-			free(listener->ana_state);
-			free(listener);
-			cb_fn(cb_arg, -EINVAL);
+			_nvmf_subsystem_add_listener_done(listener, -EINVAL);
 			return;
 		}
 	}
@@ -1570,10 +1568,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	id = spdk_bit_array_find_first_clear(subsystem->used_listener_ids, 0);
 	if (id == UINT32_MAX) {
 		SPDK_ERRLOG("Cannot add any more listeners\n");
-		free(listener->ana_state);
-		free(listener->opts.sock_impl);
-		free(listener);
-		cb_fn(cb_arg, -EINVAL);
+		_nvmf_subsystem_add_listener_done(listener, -EINVAL);
 		return;
 	}
 
