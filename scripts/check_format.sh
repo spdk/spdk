@@ -808,7 +808,7 @@ function check_rpc_args() {
 	local rc=0
 
 	echo -n "Checking rpc.py argument option names..."
-	grep add_argument scripts/rpc.py | $GNU_GREP -oP "(?<=--)[a-z0-9\-\_]*(?=\')" | grep "_" > badargs.log
+	grep add_argument scripts/rpc.py python/spdk/cli/*.py | $GNU_GREP -oP "(?<=--)[a-z0-9\-_]*(?=['\"])" | grep "_" > badargs.log
 
 	if [[ -s badargs.log ]]; then
 		echo "rpc.py arguments with underscores detected!"
