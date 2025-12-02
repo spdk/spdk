@@ -256,7 +256,22 @@ install_golangci_lint() {
 	pkgdep_toolpath golangci_lint "${golangcidir}"
 }
 
+install_astyle() {
+	local astyle_version=3.1
+	local astyle_dir=/usr/local/src/astyle
+	local GIT_REPO_ASTYLE=https://gitlab.com/saalen/astyle.git
+
+	rm -rf "$astyle_dir"
+	git clone --branch "${astyle_version}" "${GIT_REPO_ASTYLE}" "${astyle_dir}"
+	mkdir -p "$astyle_dir/AStyle/astyle"
+
+	# For 3.1 /usr/bin destination is hardcoded in CMakeLists.txt, so copy built binary
+	# so that we don't overwrite whatever may be installed in /usr/bin
+	(cd "$astyle_dir/AStyle/astyle" && cmake ../ && make -j && cp ./astyle /usr/local/bin)
+}
+
 if [[ $INSTALL_DEV_TOOLS == true ]]; then
+	install_astyle
 	install_shfmt
 	install_spdk_bash_completion
 	if [[ $ID != centos && $ID != rocky && $ID != sles ]]; then

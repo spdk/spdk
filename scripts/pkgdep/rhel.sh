@@ -141,18 +141,18 @@ yum install -y numactl-devel nasm
 yum install -y systemtap-sdt-devel
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	devtool_pkgs=(git sg3_utils pciutils libabigail bash-completion ruby-devel)
+	devtool_pkgs=(git cmake sg3_utils pciutils libabigail bash-completion ruby-devel)
 
 	if echo "$ID $VERSION_ID" | grep -E -q 'rocky 8'; then
-		devtool_pkgs+=(python3-pycodestyle astyle)
+		devtool_pkgs+=(python3-pycodestyle)
 	elif echo "$ID $VERSION_ID" | grep -E -q 'rocky 10'; then
 		echo "Rocky 10 do not have python3-pycodestyle and lcov dependencies"
-		devtool_pkgs+=(astyle ShellCheck)
+		devtool_pkgs+=(ShellCheck)
 	elif [[ $ID == openeuler ]]; then
 		devtool_pkgs+=(python3-pycodestyle)
-		echo "openEuler does not have astyle, lcov and ShellCheck dependencies"
+		echo "openEuler does not have lcov and ShellCheck dependencies"
 	else
-		devtool_pkgs+=(python-pycodestyle astyle lcov ShellCheck)
+		devtool_pkgs+=(python-pycodestyle lcov ShellCheck)
 	fi
 
 	if [[ $ID == fedora ]]; then
