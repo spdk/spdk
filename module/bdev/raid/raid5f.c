@@ -131,7 +131,6 @@ struct raid5f_io_channel {
 	TAILQ_HEAD(, stripe_request) xor_retry_queue;
 
 	/* For iterating over chunk iovecs during xor calculation */
-	void **chunk_xor_buffers;
 	struct iovec **chunk_xor_iovs;
 	size_t *chunk_xor_iovcnt;
 };
@@ -231,7 +230,7 @@ raid5f_xor_stripe_cb(void *_stripe_req, int status)
 
 	if (stripe_req->xor.remaining > 0) {
 		stripe_req->xor.len = spdk_ioviter_nextv(stripe_req->chunk_iov_iters,
-				      stripe_req->r5ch->chunk_xor_buffers);
+				      stripe_req->chunk_xor_buffers);
 		raid5f_xor_stripe_continue(stripe_req);
 	}
 
@@ -255,16 +254,11 @@ raid5f_xor_stripe_continue(struct stripe_request *stripe_req)
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 	uint8_t n_src = raid5f_stripe_data_chunks_num(raid_bdev);
-	uint8_t i;
 	int ret;
 
 	assert(stripe_req->xor.len > 0);
 
-	for (i = 0; i < n_src; i++) {
-		stripe_req->chunk_xor_buffers[i] = r5ch->chunk_xor_buffers[i];
-	}
-
-	ret = spdk_accel_submit_xor(r5ch->accel_ch, r5ch->chunk_xor_buffers[n_src],
+	ret = spdk_accel_submit_xor(r5ch->accel_ch, stripe_req->chunk_xor_buffers[n_src],
 				    stripe_req->chunk_xor_buffers, n_src, stripe_req->xor.len,
 				    raid5f_xor_stripe_cb, stripe_req);
 	if (spdk_unlikely(ret)) {
@@ -316,7 +310,7 @@ raid5f_xor_stripe(struct stripe_request *stripe_req, stripe_req_xor_cb cb)
 			      raid_bdev->num_base_bdevs,
 			      r5ch->chunk_xor_iovs,
 			      r5ch->chunk_xor_iovcnt,
-			      r5ch->chunk_xor_buffers);
+			      stripe_req->chunk_xor_buffers);
 	stripe_req->xor.remaining = num_blocks * raid_bdev->bdev.blocklen;
 	stripe_req->xor.status = 0;
 	stripe_req->xor.cb = cb;
@@ -956,7 +950,7 @@ raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch, enum stripe_request_
 		goto err;
 	}
 
-	stripe_req->chunk_xor_buffers = calloc(raid5f_stripe_data_chunks_num(raid_bdev),
+	stripe_req->chunk_xor_buffers = calloc(raid_bdev->num_base_bdevs,
 					       sizeof(stripe_req->chunk_xor_buffers[0]));
 	if (!stripe_req->chunk_xor_buffers) {
 		goto err;
@@ -996,7 +990,6 @@ raid5f_ioch_destroy(void *io_device, void *ctx_buf)
 		spdk_put_io_channel(r5ch->accel_ch);
 	}
 
-	free(r5ch->chunk_xor_buffers);
 	free(r5ch->chunk_xor_iovs);
 	free(r5ch->chunk_xor_iovcnt);
 }
@@ -1035,11 +1028,6 @@ raid5f_ioch_create(void *io_device, void *ctx_buf)
 	r5ch->accel_ch = spdk_accel_get_io_channel();
 	if (!r5ch->accel_ch) {
 		SPDK_ERRLOG("Failed to get accel framework's IO channel\n");
-		goto err;
-	}
-
-	r5ch->chunk_xor_buffers = calloc(raid_bdev->num_base_bdevs, sizeof(*r5ch->chunk_xor_buffers));
-	if (!r5ch->chunk_xor_buffers) {
 		goto err;
 	}
 
