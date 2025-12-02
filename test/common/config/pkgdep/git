@@ -154,7 +154,7 @@ function install_qemu() {
 
 function install_nvmecli() {
 	# nvme-cli >1.11.1 should be used.
-	local nvmecli_version="v2.5"
+	local nvmecli_version="v2.16"
 	local nvmecli_dir=/usr/local/src/nvme-cli
 
 	rm -rf "$GIT_REPOS/nvme-cli-cuse"
