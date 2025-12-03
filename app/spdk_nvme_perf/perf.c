@@ -270,6 +270,8 @@ static double g_zipf_theta;
  */
 static uint32_t g_io_queue_size = UINT16_MAX;
 
+static enum spdk_log_level g_log_level = SPDK_LOG_ERROR;
+
 static uint32_t g_sock_zcopy_threshold;
 static char *g_sock_threshold_impl;
 
@@ -1951,6 +1953,8 @@ usage(char *program_name)
 	printf("\n");
 
 	printf("==== LOGGING ====\n\n");
+	printf("\t--log-level <level>   set log level (error, warning, notice, info, debug)\n");
+	printf("\t                   (Note: use -T to enable component-specific logs)\n");
 	printf("\t-L, --enable-sw-latency-tracking enable latency tracking via sw, default: disabled\n");
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled\n");
@@ -2443,6 +2447,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{ "vfio-vf-token", required_argument, NULL, PERF_VFIO_VF_TOKEN},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
+#define PERF_LOG_LEVEL		273
+	{"log-level", required_argument, NULL, PERF_LOG_LEVEL},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2472,6 +2478,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	bool ssl_used = false;
 	char *sock_impl = "posix";
 	uint32_t trid_count = 0;
+	bool log_level_set = false;
+	bool debug_implied = false;
 
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
@@ -2645,7 +2653,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			return 1;
 #else
 			spdk_log_set_flag("nvme");
-			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			debug_implied = true;
 			break;
 #endif
 		case PERF_ENABLE_TCP_HDGST:
@@ -2677,7 +2685,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				exit(EXIT_FAILURE);
 			}
 #ifdef DEBUG
-			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			debug_implied = true;
 #endif
 			break;
 		case PERF_ENABLE_VMD:
@@ -2771,6 +2779,23 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_TRACING_MASK:
 			g_tpoint_group_mask = strdup(optarg);
+			break;
+		case PERF_LOG_LEVEL:
+			if (!strcmp(optarg, "error")) {
+				g_log_level = SPDK_LOG_ERROR;
+			} else if (!strcmp(optarg, "warning")) {
+				g_log_level = SPDK_LOG_WARN;
+			} else if (!strcmp(optarg, "notice")) {
+				g_log_level = SPDK_LOG_NOTICE;
+			} else if (!strcmp(optarg, "info")) {
+				g_log_level = SPDK_LOG_INFO;
+			} else if (!strcmp(optarg, "debug")) {
+				g_log_level = SPDK_LOG_DEBUG;
+			} else {
+				fprintf(stderr, "unknown log level %s\n", optarg);
+				return 1;
+			}
+			log_level_set = true;
 			break;
 		case PERF_HELP:
 			usage_basic(argv[0]);
@@ -2904,6 +2929,14 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				break;
 			}
 		}
+	}
+
+	/*
+	 * If the user didn't explicitly set a log level, but used -G or -T,
+	 * default to DEBUG to preserve legacy behavior.
+	 */
+	if (!log_level_set && debug_implied) {
+		g_log_level = SPDK_LOG_DEBUG;
 	}
 
 	g_file_optind = optind;
@@ -3291,6 +3324,10 @@ main(int argc, char **argv)
 		goto out;
 	}
 
+	spdk_log_open(NULL);
+	spdk_log_set_print_level(g_log_level);
+	spdk_log_set_level(g_log_level);
+
 	rc = setup_sig_handlers();
 	if (rc != 0) {
 		goto cleanup;
@@ -3413,6 +3450,7 @@ cleanup:
 	free_globals();
 
 	spdk_keyring_cleanup();
+	spdk_log_close();
 	spdk_env_fini();
 
 	pthread_mutex_destroy(&g_stats_mutex);
