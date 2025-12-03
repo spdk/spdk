@@ -1,46 +1,3 @@
-function install_qat() {
-	if ! hash yasm; then
-		install yasm
-	fi
-
-	install libnl3 libnl3-devel || install libnl-3-200 libnl-3-dev libnl-genl-3-dev
-
-	in_syms() {
-		local syms
-		if [[ -e /proc/kallsyms ]]; then
-			syms=/proc/kallsyms
-		elif [[ -e /boot/System.map-$kernel_ver ]]; then
-			syms=/boot/System.map-$kernel_ver
-		else
-			return 0
-		fi
-
-		grep -q "$1" "$syms"
-	}
-
-	if [[ -e /sys/module/qat_c62x ]]; then
-		sudo modprobe -r qat_c62x || :
-	fi
-	if [[ -d $GIT_REPOS/QAT ]]; then
-		sudo rm -rf "$GIT_REPOS/QAT"
-	fi
-
-	mkdir "$GIT_REPOS/QAT"
-
-	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
-
-	patch --dir="$GIT_REPOS/QAT" -p1 \
-		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-old-style-declaration.patch"
-	patch --dir="$GIT_REPOS/QAT" -p1 \
-		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-empty-body.patch"
-
-	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
-
-	if ! sudo service qat_service start; then
-		echo "failed to start the qat service. Something may be wrong with your device or package."
-	fi
-}
-
 function install_ittapi() {
 	# Install Intel Instrumentation and Trace API
 	local ittapi_version=v3.24.5 ittapi_dir=/usr/src/ittapi
@@ -442,7 +399,6 @@ function install_sources() {
 			install_libblkio
 			install_nvmecli
 			install_nvmecli_plugin
-			install_qat
 			install_qemu
 			install_igb_uio
 			install_bpftrace
