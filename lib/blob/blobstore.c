@@ -5838,7 +5838,11 @@ bs_unload_finish(struct spdk_bs_load_ctx *ctx, int bserrno)
 	spdk_free(ctx->super);
 	free(ctx);
 
-	if (bserrno != 0) {
+	/*
+	 * Exception for EIO is made for hot-remove cases where the underlying
+	 * block device is no longer available.
+	 */
+	if (bserrno != 0 && bserrno != -EIO) {
 		bs_sequence_finish(seq, bserrno);
 		return;
 	}

@@ -3434,13 +3434,10 @@ bs_unload_hotremove(void)
 	CU_ASSERT(g_bserrno == -EIO);
 
 	/*
-	 * Blobstore was not unloaded when the device was not present,
-	 * try again after enabling I/O.
+	 * Blobstore was unloaded when the device was not present,
+	 * clear the g_bs pointer as it is no longer valid.
 	 */
 	dev_reset_power_failure_event();
-	spdk_bs_unload(bs, bs_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
 }
 
