@@ -179,6 +179,15 @@ endif
 
 MAKE_NUMJOBS := $(shell ps T | sed -nE 's/[[:space:]]*$(MAKE_PID)[[:space:]].* (-j|--jobs=)( *[0-9]+).*/\1\2/p')
 
+ifeq ($(OS),Linux)
+# FIXME: set path to allow meson build in Linux environment
+virtdir=$(PIP_VIRTDIR)
+ifeq ($(virtdir),)
+virtdir=/var/spdk/dependencies/pip
+endif
+export PATH := $(virtdir)/bin:$(PATH)
+endif
+
 all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 	$(Q)# DPDK doesn't handle nested make calls, so unset MAKEFLAGS
 	$(Q)env -u MAKEFLAGS meson compile -C $(SPDK_ROOT_DIR)/dpdk/build-tmp $(MAKE_NUMJOBS)
