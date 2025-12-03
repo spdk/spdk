@@ -89,9 +89,7 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
-#ifdef RWF_NOWAIT
 	bool			use_nowait;
-#endif
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 	bool			readonly;
@@ -164,7 +162,7 @@ bdev_aio_close(struct file_disk *disk)
 }
 
 static int
-bdev_aio_open(struct file_disk *disk)
+bdev_aio_open(struct file_disk *disk, bool nowait)
 {
 	int fd;
 	int io_flag = disk->readonly ? O_RDONLY : O_RDWR;
@@ -186,15 +184,30 @@ bdev_aio_open(struct file_disk *disk)
 
 	disk->fd = fd;
 
+	if (nowait) {
 #ifdef RWF_NOWAIT
-	/* Some aio operations can block, for example if number outstanding
-	 * I/O exceeds number of block layer tags. But not all files can
-	 * support RWF_NOWAIT flag. So use RWF_NOWAIT on block devices only.
-	 */
-	disk->use_nowait = fstat(fd, &st) == 0 && S_ISBLK(st.st_mode);
+		/* Some aio operations can block, for example if number outstanding
+		 * I/O exceeds number of block layer tags. But not all files can
+		 * support RWF_NOWAIT flag. So use RWF_NOWAIT on block devices only.
+		 */
+		if (!(fstat(fd, &st) == 0 && S_ISBLK(st.st_mode))) {
+			AIO_FDISK_ERRLOG(disk, "Device is not block device; do not enable nowait usage.\n");
+			goto err;
+		}
+#else
+		AIO_FDISK_ERRLOG(disk,
+				 "RWF_NOWAIT not defined; do not enable nowait usage or update the kernel.\n");
+		goto err;
 #endif
+	}
 
+	disk->use_nowait = nowait;
 	return 0;
+
+err:
+	errno = ENOTSUP;
+	bdev_aio_close(disk);
+	return -1;
 }
 
 #ifdef __FreeBSD__
@@ -818,17 +831,12 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct file_disk *fdisk = ctx;
 
 	spdk_json_write_named_object_begin(w, "aio");
-
 	spdk_json_write_named_string(w, "filename", fdisk->filename);
-
 	spdk_json_write_named_bool(w, "block_size_override", fdisk->block_size_override);
-
 	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
-
 	spdk_json_write_named_bool(w, "fallocate", fdisk->fallocate);
-
+	spdk_json_write_named_bool(w, "nowait", fdisk->use_nowait);
 	spdk_json_write_object_end(w);
-
 	return 0;
 }
 
@@ -839,7 +847,6 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	const struct spdk_uuid *uuid = spdk_bdev_get_uuid(bdev);
 
 	spdk_json_write_object_begin(w);
-
 	spdk_json_write_named_string(w, "method", "bdev_aio_create");
 
 	spdk_json_write_named_object_begin(w, "params");
@@ -853,6 +860,7 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	if (!spdk_uuid_is_null(uuid)) {
 		spdk_json_write_named_uuid(w, "uuid", uuid);
 	}
+	spdk_json_write_named_bool(w, "nowait", fdisk->use_nowait);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -946,7 +954,7 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 
 int
 create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
-		bool fallocate, const struct spdk_uuid *uuid)
+		bool fallocate, const struct spdk_uuid *uuid, bool nowait)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -981,7 +989,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 		goto error_return;
 	}
 
-	if (bdev_aio_open(fdisk)) {
+	if (bdev_aio_open(fdisk, nowait)) {
 		AIO_FDISK_ERRLOG(fdisk, "Unable to open file, errno: %d\n", errno);
 		rc = -errno;
 		goto error_return;

@@ -302,7 +302,8 @@ def add_parser(subparsers):
                                             block_size=args.block_size,
                                             readonly=args.readonly,
                                             fallocate=args.fallocate,
-                                            uuid=args.uuid))
+                                            uuid=args.uuid,
+                                            nowait=args.nowait))
 
     p = subparsers.add_parser('bdev_aio_create', help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
@@ -311,6 +312,11 @@ def add_parser(subparsers):
     p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
     p.add_argument("--fallocate", action='store_true', help='Support unmap/writezeros by fallocate')
     p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
+    p.add_argument('--no-wait', dest='nowait', action='store_true',
+                   help="""Enable the RWF_NOWAIT flag for block devices.
+                        If the flag is not defined, or if the specified device is not a block device, creation
+                        will fail. Note that this feature is not advertised by the kernel to userspace. Use
+                        with caution, and only if the device is known to work correctly with your kernel.""")
     p.set_defaults(func=bdev_aio_create)
 
     def bdev_aio_rescan(args):

@@ -1507,6 +1507,12 @@
           "type": "string",
           "required": false,
           "description": "UUID of new bdev"
+        },
+        {
+          "name": "nowait",
+          "type": "boolean",
+          "required": false,
+          "description": "Enable the RWF_NOWAIT flag for block devices. If the flag is not defined, or if the specified device is not a block device, creation will fail. Note that this feature is not advertised by the kernel to userspace. Use with caution, and only if the device is known to work correctly with your kernel."
         }
       ]
     },

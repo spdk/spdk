@@ -2,6 +2,11 @@
 
 ## v26.01: (Upcoming Release)
 
+### bdev/aio
+
+Disable RWF_NOWAIT default flag usage; user needs to explicitly request to enable
+it using --no-wait (nowait) option.
+
 ### bdev
 
 All aliases are now removed from the block device names list upon unregistration.
