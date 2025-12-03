@@ -111,28 +111,12 @@ def load_plugin(args, subparsers, plugins):
             print("Module %s not found" % rpc_module)
 
 
-def replace_arg_underscores(args):
-    # All option names are defined with dashes only - for example: --tgt-name
-    # But if user used underscores, convert them to dashes (--tgt_name => --tgt-name)
-    # SPDK was inconsistent previously and had some options with underscores, so
-    # doing this conversion ensures backward compatibility with older scripts.
-    for i in range(len(args)):
-        arg = args[i]
-        if arg.startswith('--') and "_" in arg:
-            print(f"WARNING: use of underscores instead of dashes in {arg} is deprecated and will be removed in 26.05 release",
-                  file=sys.stderr)
-            opt, *vals = arg.split('=')
-            args[i] = '='.join([opt.replace('_', '-'), *vals])
-
-
 def main():
 
     parser, subparsers = create_parser()
 
     plugins = []
     load_plugin(None, subparsers, plugins)
-
-    replace_arg_underscores(sys.argv)
 
     parser = hint_rpc_name(parser)
     args = parser.parse_args()
@@ -149,7 +133,6 @@ def main():
     if args.is_server:
         for input in sys.stdin:
             cmd = shlex.split(input)
-            replace_arg_underscores(cmd)
             try:
                 load_plugin(cmd, subparsers, plugins)
                 tmp_args = parser.parse_args(cmd)
