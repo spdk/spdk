@@ -101,7 +101,7 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 fi
 
 yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	libuuid-devel ncurses-devel json-c-devel libcmocka-devel \
+	lld libuuid-devel ncurses-devel json-c-devel libcmocka-devel \
 	clang clang-devel python3-pip unzip keyutils keyutils-libs-devel fuse3-devel patchelf \
 	pkgconfig
 

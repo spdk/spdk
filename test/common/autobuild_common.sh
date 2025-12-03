@@ -436,9 +436,7 @@ _build_release() (
 		jobs=$(($(nproc) / 2))
 		case "$(uname -s)" in
 			Linux)
-				# ld.gold is shipped by default with binutils under most of the Linux distros.
-				# But just in case, look for ld.lld as it's still better suited for the LTO
-				# build under clang.
+				# Just in case, look for ld.lld as it's better suited for the LTO build under clang.
 				if ! LD=$(type -P ld.lld); then
 					LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs"
 				fi
