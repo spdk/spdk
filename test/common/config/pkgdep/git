@@ -339,151 +339,6 @@ function install_contigmem() {
 	LOADER
 }
 
-function install_irdma() {
-	local RDMA_CORE_VERSION=51.0
-	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
-	local packages=() hint=""
-
-	case "$ID" in
-		fedora)
-			install \
-				ninja-build \
-				pandoc \
-				perl-generators \
-				valgrind-devel \
-				python-docutils \
-				libnl3 \
-				libnl3-devel \
-				python3-Cython
-				;;
-		debian | ubuntu)
-			install \
-				debhelper \
-				dh-python \
-				python3-docutils
-			;;
-		*)
-			echo "irdma installation not supported under $ID" >&2
-			return 0
-			;;
-	esac
-
-	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
-	rm -rf "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
-
-	curl -L -o- "$IRDMA_DRIVER" | tar -C "$GIT_REPOS" -xzf -
-
-	if ge "$kernel_ver" 6.10; then
-		patch --dir="$GIT_REPOS/irdma-$IRDMA_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/irdma/0001-ip_route_output.patch"
-	fi
-
-	if ge "$kernel_ver" 6.11; then
-		patch --dir="$GIT_REPOS/irdma-$IRDMA_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/irdma/0001-uverbs_attr.patch"
-	fi
-
-	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/build.sh ]]
-
-	(
-		cd "$GIT_REPOS/irdma-$IRDMA_VERSION"
-		sed -i "s/IRDMA_FLUSH_DELAY_MS 1500/IRDMA_FLUSH_DELAY_MS 50/" \
-			"$GIT_REPOS/irdma-$IRDMA_VERSION/src/irdma/verbs.h"
-		"$GIT_REPOS/irdma-$IRDMA_VERSION/build.sh"
-	)
-
-	# Fetch and build the rdma-core irdma depends on
-	curl -L -o- "$RDMA_CORE" | tar -C "$GIT_REPOS" -xzf -
-	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch ]]
-
-	patch --dir="$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION" -p2 \
-		< "$GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch"
-
-	case "$ID" in
-		fedora)
-			[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec ]]
-			# Note that paths and the name of the package are hardcoded into .spec, hence they need
-			# to stay like this.
-			mkdir -p "$HOME/rpmbuild/"{SOURCES,SPECS}
-			cp "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec" "$HOME/rpmbuild/SPECS"
-
-			# Re-package the source
-			tar -czf "$HOME/rpmbuild/SOURCES/rdma-core-$RDMA_CORE_VERSION.tar.gz" \
-				-C "$GIT_REPOS" "rdma-core-$RDMA_CORE_VERSION"
-
-			# Build the rpms
-			(
-				cd "$HOME/rpmbuild/SPECS"
-				# Make sure stock ninja-build is used
-				PATH="/usr/bin:$PATH" rpmbuild -ba rdma-core.spec
-			)
-
-			packages=("$HOME/rpmbuild/RPMS/x86_64/"*.rpm)
-			hint="$package_manager install [--allowerasing] $HOME/rpmbuild/RPMS/x86_64/*.rpm"
-			;;
-		debian | ubuntu)
-			[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/debian/control ]]
-
-			# Build the debs
-			(
-				cd "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
-				dh clean --with python3,systemd --builddirectory=build-deb
-				dh build --with systemd --builddirectory=build-deb
-				dh binary --with systemd --builddirectory=build-deb
-			)
-
-			packages=("$GIT_REPOS/"*.deb)
-			hint="dpkg --install $GIT_REPOS/*.deb"
-			;;
-	esac
-
-	((${#packages[@]} > 0)) || return 1
-
-	cat <<-EOF
-
-		INFO: rdma-core-$RDMA_CORE_VERSION was successfully built, following packages are
-		available for installation:
-
-		$(printf '  - %s\n' "${packages[@]##*/}")
-
-		Note that installing the above packages may raise conflicts with their
-		potentially newer versions already installed on the system. Dependent
-		packages may be uninstalled during the process as well. Please, run the
-		following command to finish the installation:
-
-		  $hint
-	EOF
-}
-
-function install_ice() {
-	rm -rf "$GIT_REPOS/ice-$ICE_VERSION"
-
-	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
-
-	if ge "$kernel_ver" 6.10; then
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-__assign_str.patch"
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-napi_alloc_skb.patch"
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-devlink_param.patch"
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-xsk_buff_dma.patch"
-	fi
-
-	if ge "$kernel_ver" 6.11; then
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-kernel_ethtool_ts_info.patch"
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1  \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-ptp.patch"
-	fi
-
-	(
-		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
-		sudo make -j"$(nproc)" install
-	)
-}
-
 function install_libbpf() {
 	local libbpf_version=v1.4.5
 
@@ -583,7 +438,6 @@ function install_sources() {
 	else
 		jobs=$(($(nproc) * 2))
 		sources+=(
-			install_irdma
 			install_libiscsi
 			install_libblkio
 			install_nvmecli
@@ -591,7 +445,6 @@ function install_sources() {
 			install_qat
 			install_qemu
 			install_igb_uio
-			install_ice
 			install_bpftrace
 			install_doxygen
 		)
@@ -614,8 +467,6 @@ function install_sources() {
 }
 
 GIT_VERSION=2.25.1
-IRDMA_VERSION=1.14.31
-ICE_VERSION=1.14.9
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-v0.24.1}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v8.0.0}
@@ -639,10 +490,6 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/823677/irdma-$IRDMA_VERSION.tgz}
-export IRDMA_DRIVER
-: ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
-export ICE_DRIVER
 : ${GIT_REPO_BCC=https://github.com/iovisor/bcc.git}
 export GIT_REPO_BCC
 : ${GIT_REPO_BPFTRACE=https://github.com/iovisor/bpftrace.git}
