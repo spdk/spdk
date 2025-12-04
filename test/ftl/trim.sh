@@ -46,7 +46,7 @@ nv_cache=$(create_nv_cache_bdev nvc0 $cache_device $split_bdev)
 l2p_percentage=60
 l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * l2p_percentage / 100 / 1024))
 
-$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --core_mask 7 --l2p_dram_limit $l2p_dram_size_mb --overprovisioning 10
+$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --core-mask 7 --l2p-dram-limit $l2p_dram_size_mb --overprovisioning 10
 
 waitforbdev ftl0
 
@@ -75,8 +75,8 @@ waitforlisten $svcpid
 $rpc_py load_config < $FTL_JSON_CONF
 
 # Unmap first and last 4MiB
-$rpc_py bdev_ftl_unmap -b ftl0 --lba 0 --num_blocks $((unmap_size_in_blocks))
-$rpc_py bdev_ftl_unmap -b ftl0 --lba $((nb - unmap_size_in_blocks)) --num_blocks $((unmap_size_in_blocks))
+$rpc_py bdev_ftl_unmap -b ftl0 --lba 0 --num-blocks $((unmap_size_in_blocks))
+$rpc_py bdev_ftl_unmap -b ftl0 --lba $((nb - unmap_size_in_blocks)) --num-blocks $((unmap_size_in_blocks))
 
 killprocess $svcpid
 
@@ -96,8 +96,8 @@ waitforlisten $svcpid
 $rpc_py load_config < $FTL_JSON_CONF
 
 # Unmap first and last 4MiB
-$rpc_py bdev_ftl_unmap -b ftl0 --lba 0 --num_blocks $((unmap_size_in_blocks))
-$rpc_py bdev_ftl_unmap -b ftl0 --lba $((nb - unmap_size_in_blocks)) --num_blocks $((unmap_size_in_blocks))
+$rpc_py bdev_ftl_unmap -b ftl0 --lba 0 --num-blocks $((unmap_size_in_blocks))
+$rpc_py bdev_ftl_unmap -b ftl0 --lba $((nb - unmap_size_in_blocks)) --num-blocks $((unmap_size_in_blocks))
 
 killprocess $svcpid
 

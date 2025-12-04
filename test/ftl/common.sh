@@ -117,7 +117,7 @@ function tcp_target_setup() {
 		exit 1
 	fi
 
-	$rpc_py -t 60 bdev_ftl_create -b "$FTL_BDEV" -d "$base_bdev" -c "$cache_bdev" --l2p_dram_limit "$FTL_L2P_DRAM_LIMIT"
+	$rpc_py -t 60 bdev_ftl_create -b "$FTL_BDEV" -d "$base_bdev" -c "$cache_bdev" --l2p-dram-limit "$FTL_L2P_DRAM_LIMIT"
 
 	$rpc_py nvmf_create_transport --trtype TCP
 	$rpc_py nvmf_create_subsystem nqn.2018-09.io.spdk:cnode0 -a -m 1

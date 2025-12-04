@@ -41,7 +41,7 @@ $rpc_py bdev_nvme_attach_controller -b $ctrlr_name -t PCIe -a ${bdf}
 tmp_file=$(mktemp "/tmp/err_inj_XXXXX.txt")
 
 # Set error injection for SPDK_NVME_OPC_GET_FEATURES admin call
-$rpc_py bdev_nvme_add_error_injection -n $ctrlr_name --cmd-type admin --opc 10 --timeout-in-us $err_injection_timeout --err-count 1 --sct $err_injection_sct --sc $err_injection_sc --do_not_submit
+$rpc_py bdev_nvme_add_error_injection -n $ctrlr_name --cmd-type admin --opc 10 --timeout-in-us $err_injection_timeout --err-count 1 --sct $err_injection_sct --sc $err_injection_sc --do-not-submit
 start_time=$(date +%s)
 
 # The following RPC call generated based on C code taken from 'get_feature_test(...)'

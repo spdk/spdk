@@ -69,8 +69,8 @@ function setup_bdev_conf() {
 		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
 		bdev_raid_create -n concat0 -z 64 -r concat -b "Malloc6 Malloc7"
 		bdev_raid_create -n raid1 -r 1 -b "Malloc8 Malloc9"
-		bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
-		bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
+		bdev_set_qos_limit --rw-mbytes-per-sec 100 Malloc3
+		bdev_set_qos_limit --rw-ios-per-sec 20000 Malloc0
 	RPC
 
 	dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
@@ -418,7 +418,7 @@ function qos_function_test() {
 	if [ $iops_limit -gt $qos_lower_iops_limit ]; then
 
 		# Run bdevperf with IOPS rate limit on bdev 1
-		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV_1
+		$rpc_py bdev_set_qos_limit --rw-ios-per-sec $iops_limit $QOS_DEV_1
 		run_test "bdev_qos_iops" run_qos_test $iops_limit IOPS $QOS_DEV_1
 
 		# Run bdevperf with bandwidth rate limit on bdev 2
@@ -428,11 +428,11 @@ function qos_function_test() {
 		if [ $bw_limit -lt $qos_lower_bw_limit ]; then
 			bw_limit=$qos_lower_bw_limit
 		fi
-		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV_2
+		$rpc_py bdev_set_qos_limit --rw-mbytes-per-sec $bw_limit $QOS_DEV_2
 		run_test "bdev_qos_bw" run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
 
 		# Run bdevperf with additional read only bandwidth rate limit on bdev 1
-		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $qos_lower_bw_limit $QOS_DEV_1
+		$rpc_py bdev_set_qos_limit --r-mbytes-per-sec $qos_lower_bw_limit $QOS_DEV_1
 		run_test "bdev_qos_ro_bw" run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"

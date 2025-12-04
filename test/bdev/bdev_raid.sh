@@ -1037,7 +1037,7 @@ function raid_nvmf_uaf_test() {
 
 			# Connect back to own NVMe-oF target to create local controller
 			$rpc_py bdev_nvme_attach_controller -b $controller -t tcp -a $tcp_addr -n $nqn -s $port -f ipv4 \
-				--ctrlr_loss_timeout_sec=2 --fast_io_fail_timeout_sec=2 --reconnect_delay_sec=1
+				--ctrlr-loss-timeout-sec=2 --fast-io-fail-timeout-sec=2 --reconnect-delay-sec=1
 		done
 
 		# Build RAID1 array from attached NVMe controllers

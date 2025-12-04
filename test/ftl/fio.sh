@@ -57,9 +57,9 @@ l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * l2p_percentage / 100 / 1024))
 
 if [ -z "$uuid" ]; then
 	# First FTL creation takes longer due to scrubbing, so extending the timeout
-	$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
+	$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --l2p-dram-limit $l2p_dram_size_mb
 else
-	$rpc_py bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache -u $uuid --l2p_dram_limit $l2p_dram_size_mb
+	$rpc_py bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache -u $uuid --l2p-dram-limit $l2p_dram_size_mb
 fi
 
 waitforbdev ftl0
