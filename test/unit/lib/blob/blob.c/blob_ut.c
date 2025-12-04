@@ -3352,7 +3352,6 @@ bs_unload(void)
 {
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_blob *blob;
-	struct spdk_power_failure_thresholds thresholds = {};
 
 	/* Create a blob and open it. */
 	blob = ut_blob_create_and_open(bs, NULL);
@@ -3370,15 +3369,6 @@ bs_unload(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
-	/* Try to unload blobstore, should fail due to I/O error */
-	thresholds.general_threshold = 2;
-	dev_set_power_failure_thresholds(thresholds);
-	g_bserrno = -1;
-	spdk_bs_unload(bs, bs_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == -EIO);
-	dev_reset_power_failure_event();
-
 	/* Try to unload blobstore, should fail with spdk_zmalloc returning NULL */
 	g_bserrno = -1;
 	spdk_bs_unload(bs, bs_op_complete, NULL);
@@ -3386,6 +3376,72 @@ bs_unload(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == -ENOMEM);
 	MOCK_CLEAR(spdk_zmalloc);
+}
+
+/*
+ * Create a blobstore and then unload it.
+ */
+static void
+bs_unload_hotremove(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_opts opts;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_power_failure_thresholds thresholds = {};
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create a blob and open it. */
+	blob = ut_blob_create_and_open(bs, NULL);
+
+	/* Simulate hotremoval of the underlying device */
+	thresholds.general_threshold = 1;
+	dev_set_power_failure_thresholds(thresholds);
+
+	/* Try to unload blobstore, should fail with open blob */
+	g_bserrno = -1;
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EBUSY);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Resize the blob to mark it as dirty */
+	g_bserrno = -1;
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Close the blob, then successfully unload blobstore */
+	g_bserrno = -1;
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EIO);
+
+	/* Unload blobstore while I/O to underlying device will fail */
+	g_bserrno = -1;
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EIO);
+
+	/*
+	 * Blobstore was not unloaded when the device was not present,
+	 * try again after enabling I/O.
+	 */
+	dev_reset_power_failure_event();
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
 }
 
 /*
@@ -10289,6 +10345,7 @@ main(int argc, char **argv)
 		CU_ADD_TEST(suite, bs_load_after_failed_grow);
 		CU_ADD_TEST(suite, bs_load_error);
 		CU_ADD_TEST(suite_bs, bs_unload);
+		CU_ADD_TEST(suite, bs_unload_hotremove);
 		CU_ADD_TEST(suite, bs_cluster_sz);
 		CU_ADD_TEST(suite_bs, bs_usable_clusters);
 		CU_ADD_TEST(suite, bs_resize_md);

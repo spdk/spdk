@@ -400,7 +400,9 @@ void spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 /**
  * Unload the blobstore.
  *
- * It will flush all volatile data to disk.
+ * It will flush all volatile data to disk and clean up the blobstore from memory.
+ *
+ * On success the blobstore pointer is no longer valid.
  *
  * \param bs blobstore to unload.
  * \param cb_fn Called when the unloading is complete.
