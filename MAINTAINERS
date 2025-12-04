@@ -78,7 +78,9 @@ F:	test/unit/lib/blob/
 S:	Supported
 
 CEPH RBD BDEV MODULE
+M:	Gil Bregman <gbregman@il.ibm.com>
 F:	module/bdev/rbd/
+S:	Supported
 
 CONF FILE LIBRARY
 F:	lib/conf/
