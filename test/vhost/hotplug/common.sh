@@ -107,8 +107,8 @@ function vms_setup() {
 		used_vms+=" ${conf[0]}"
 
 		setup_cmd="vm_setup --disk-type=$test_type --force=${conf[0]}"
-		[[ x"${conf[1]}" != x"" ]] && setup_cmd+=" --os=${conf[1]}"
-		[[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disks=${conf[2]}"
+		[[ -n "${conf[1]}" ]] && setup_cmd+=" --os=${conf[1]}"
+		[[ -n "${conf[2]}" ]] && setup_cmd+=" --disks=${conf[2]}"
 		$setup_cmd
 	done
 }

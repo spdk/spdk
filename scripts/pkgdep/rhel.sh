@@ -123,6 +123,7 @@ if echo "$ID $VERSION_ID" | grep -E -q 'rhel 8|rocky 8'; then
 	# which segfaults at each run. To workaround it, upgrade pip itself and then use it for each
 	# package - new pip will provide ninja at the same version but with the actually working
 	# binary.
+	# shellcheck disable=SC2218
 	pip3 install --upgrade pip
 	pip3() { /usr/local/bin/pip "$@"; }
 else
