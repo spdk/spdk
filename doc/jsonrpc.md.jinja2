@@ -91,6 +91,14 @@ scripts/rpc.py save_config > config.json
 'config.json' can then be passed to a new SPDK application using the '-c' command line parameter
 to reproduce the same configuration.
 
+### JSON-RPC Remote access
+
+Visit this [link](https://spdk.io/doc/jsonrpc_proxy.html) for detailed information. Usage example:
+
+~~~bash
+spdk/scripts/rpc_http_proxy.py 192.168.0.2 8000 user password
+~~~
+
 ### JSON-RPC batching
 
 'rpc.py' also supports batching of multiple JSON-RPC methods with one invocation.  So instead of
