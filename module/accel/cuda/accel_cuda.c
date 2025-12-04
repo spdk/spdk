@@ -41,6 +41,7 @@ struct cuda_stream {
 
 struct cuda_io_channel {
 	STAILQ_HEAD(, cuda_task) waiting_tasks;
+	STAILQ_HEAD(, cuda_task) tasks_to_complete;
 	STAILQ_HEAD(, cuda_stream) idle_streams;
 
 	struct spdk_poller *poller;
@@ -171,48 +172,57 @@ static int
 accel_cuda_poller(void *arg)
 {
 	struct cuda_io_channel *cch = arg;
+	struct cuda_task *task;
+	STAILQ_HEAD(, cuda_task)	tasks_to_complete;
 	uint32_t num_completions = 0;
 	uint32_t num_started = 0;
 	uint32_t i;
 
-	if (!cch->num_running_tasks) {
-		return SPDK_POLLER_IDLE;
-	}
+	if (cch->num_running_tasks) {
+		for (i = 0; i < cch->num_streams; i++) {
+			int status;
+			struct cuda_stream *stream = &cch->streams[i];
 
-	for (i = 0; i < cch->num_streams; i++) {
-		int status;
-		struct cuda_stream *stream = &cch->streams[i];
-
-		if (stream->task && (status = *stream->status) == 0) {
-			struct cuda_task *task = stream->task;
-			stream->task = NULL;
-			STAILQ_INSERT_TAIL(&cch->idle_streams, stream, link);
-			cch->num_running_tasks--;
-			spdk_accel_task_complete(&task->base, status ? -EIO : 0);
-			num_completions++;
+			if (stream->task && (status = *stream->status) == 0) {
+				task = stream->task;
+				stream->task = NULL;
+				STAILQ_INSERT_TAIL(&cch->idle_streams, stream, link);
+				cch->num_running_tasks--;
+				task->base.status = status ? -EIO : 0;
+				STAILQ_INSERT_TAIL(&cch->tasks_to_complete, task, link);
+			}
 		}
 	}
 
-	if (!num_completions) {
+	if (STAILQ_EMPTY(&cch->tasks_to_complete)) {
 		SPDK_DEBUGLOG(accel_cuda, "tid %u ch %p idle\n", gettid(), cch);
 		return SPDK_POLLER_IDLE;
 	}
 
 	while (!STAILQ_EMPTY(&cch->waiting_tasks) && !STAILQ_EMPTY(&cch->idle_streams))	{
 		/* start a waiting task now */
-		struct cuda_task *task = STAILQ_FIRST(&cch->waiting_tasks);
+		task = STAILQ_FIRST(&cch->waiting_tasks);
 		STAILQ_REMOVE_HEAD(&cch->waiting_tasks, link);
-
 		if (_accel_cuda_submit_request(cch, &task->base) != 0) {
 			break;
 		}
 		num_started++;
 	}
 
+	STAILQ_INIT(&tasks_to_complete);
+	STAILQ_SWAP(&tasks_to_complete, &cch->tasks_to_complete, cuda_task);
+
+	/* complete tasks */
+	while ((task = STAILQ_FIRST(&tasks_to_complete))) {
+		STAILQ_REMOVE_HEAD(&tasks_to_complete, link);
+		spdk_accel_task_complete(&task->base, task->base.status);
+		num_completions++;
+	}
+
 	SPDK_DEBUGLOG(accel_cuda, "tid %u ch %p tasks: completed %u, started %u\n",
 		      gettid(), cch, num_completions, num_started);
 
-	return SPDK_POLLER_BUSY;
+	return (num_completions + num_started) ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static struct spdk_io_channel *accel_cuda_get_io_channel(void);
@@ -242,15 +252,22 @@ accel_cuda_submit_xor(struct cuda_io_channel *cch, struct spdk_accel_task *task)
 
 	if (task->d.iovs[0].iov_len < ACCEL_CUDA_XOR_MIN_BUF_LEN ||
 	    task->nsrcs.cnt > CUDA_XOR_MAX_SOURCES) {
+		int rc;
+
 		SPDK_INFOLOG(accel_cuda,
 			     "tid %u ch %p redirecting task %p (len 0x%lx, nsrcs %u) to generic handler\n",
 			     gettid(), cch, task, task->d.iovs[0].iov_len, task->nsrcs.cnt);
 
-		return spdk_xor_gen(
-			       task->d.iovs[0].iov_base,
-			       task->nsrcs.srcs,
-			       task->nsrcs.cnt,
-			       task->d.iovs[0].iov_len);
+		rc = spdk_xor_gen(task->d.iovs[0].iov_base,
+				  task->nsrcs.srcs,
+				  task->nsrcs.cnt,
+				  task->d.iovs[0].iov_len);
+		if (!rc) {
+			/* it will be completed in the poller to prevent recursion */
+			task->status = rc;
+			STAILQ_INSERT_TAIL(&cch->tasks_to_complete, (struct cuda_task *)task, link);
+		}
+		return rc;
 	}
 
 	if (spdk_unlikely(!task->d.iovs[0].iov_base || task->d.iovcnt != 1 || task->nsrcs.cnt < 2)) {
@@ -335,6 +352,7 @@ accel_cuda_create_cb(void *io_device, void *ctx_buf)
 
 	memset(cch, 0, sizeof(struct cuda_io_channel));
 	STAILQ_INIT(&cch->waiting_tasks);
+	STAILQ_INIT(&cch->tasks_to_complete);
 	STAILQ_INIT(&cch->idle_streams);
 	cch->num_streams = ACCEL_CUDA_STREAMS_PER_CHANNEL;
 	cch->num_running_tasks = 0;
