@@ -108,7 +108,8 @@ flush(void)
 	cb_arg1 = false;
 	cb_arg2 = false;
 	rc = _sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EAGAIN);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(cb_arg2 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req2);
@@ -120,7 +121,8 @@ flush(void)
 	MOCK_SET(sendmsg, 10);
 	cb_arg1 = false;
 	rc = _sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EAGAIN);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
@@ -128,7 +130,8 @@ flush(void)
 	MOCK_SET(sendmsg, 24);
 	cb_arg1 = false;
 	rc = _sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EAGAIN);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
@@ -209,7 +212,8 @@ flush_req_chunks_with_zero_copy_threshold(void)
 	/* Send first chunk above zcopy threshold. */
 	MOCK_SET(sendmsg, 75);
 	rc = posix_sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EAGAIN);
 	/* Sent partially, request is not completed. */
 	CU_ASSERT(req_completed == false);
 
@@ -282,7 +286,8 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	/* No zcopy notification for req1. */
 	MOCK_SET(recvmsg, -EAGAIN);
 	rc = posix_sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EAGAIN);
 	CU_ASSERT(req1_completed == false);
 	CU_ASSERT(req2_completed == false);
 
@@ -294,7 +299,8 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	MOCK_ENQUEUE(recvmsg, 0); /* Pass notification range high. */
 	MOCK_ENQUEUE(recvmsg, -EAGAIN); /* No more messages. */
 	rc = posix_sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EAGAIN);
 	CU_ASSERT(req1_completed == true);
 	CU_ASSERT(req2_completed == false);
 

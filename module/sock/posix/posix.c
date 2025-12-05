@@ -1468,11 +1468,8 @@ _sock_flush(struct spdk_sock *sock)
 				/* This element was partially sent. */
 				req->internal.offset += rc;
 				/* Caller in interrupt mode should retry for partial flush */
-				if (spdk_unlikely(spdk_interrupt_mode_is_enabled())) {
-					errno = EAGAIN;
-					return -1;
-				}
-				return 0;
+				errno = EAGAIN;
+				return -1;
 			}
 
 			offset = 0;
@@ -1490,19 +1487,20 @@ _sock_flush(struct spdk_sock *sock)
 			* so it's already done. */
 			retval = spdk_sock_request_put(sock, req, 0);
 			if (retval) {
-				break;
+				/* The user closed the socket. */
+				return 0;
 			}
 		}
 
 		req = TAILQ_FIRST(&sock->queued_reqs);
 		if (rc == 0) {
-			/* Caller in interrupt mode should retry for rest pending requests */
-			if (spdk_unlikely(spdk_interrupt_mode_is_enabled()) && req) {
-				errno = EAGAIN;
-				return -1;
-			}
 			break;
 		}
+	}
+
+	if (!TAILQ_EMPTY(&sock->queued_reqs)) {
+		errno = EAGAIN;
+		return -1;
 	}
 
 	return 0;

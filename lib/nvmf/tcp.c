@@ -1213,8 +1213,14 @@ tcp_sock_flush_cb(void *arg)
 	tqpair->pending_flush = false;
 	rc = spdk_sock_flush(tqpair->sock);
 	if (rc < 0 && errno == EAGAIN) {
-		spdk_thread_send_msg(spdk_get_thread(), tcp_sock_flush_cb, tqpair);
-		return;
+		if (spdk_interrupt_mode_is_enabled()) {
+			/* In interrupt mode we need to force a retry. In polling mode it will naturally
+			 * try again. */
+			spdk_thread_send_msg(spdk_get_thread(), tcp_sock_flush_cb, tqpair);
+			return;
+		}
+
+		rc = 0;
 	}
 
 	if (rc < 0) {
