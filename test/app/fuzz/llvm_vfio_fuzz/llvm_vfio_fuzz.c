@@ -39,7 +39,7 @@ static char					*g_corpus_dir;
 static uint8_t					*g_repro_data;
 static size_t					g_repro_size;
 static pthread_t				g_fuzz_td;
-static pthread_t				g_reactor_td;
+static bool					g_in_fuzzer;
 static struct fuzz_type				*g_fuzzer;
 
 enum IO_POLLER_STATE {
@@ -270,7 +270,9 @@ exit_handler(void)
 		spdk_app_stop(0);
 	}
 
-	pthread_join(g_reactor_td, NULL);
+	while (g_in_fuzzer) {
+		usleep(1);
+	};
 }
 
 static void *
@@ -300,6 +302,7 @@ start_fuzzer(void *ctx)
 	argv[argc - 2] = time_str;
 	argv[argc - 1] = g_corpus_dir;
 
+	g_in_fuzzer = true;
 	atexit(exit_handler);
 
 	free(g_artifact_prefix);
@@ -315,6 +318,7 @@ start_fuzzer(void *ctx)
 		 * anywhere by LLVM.
 		 */
 	}
+	g_in_fuzzer = false;
 
 	return NULL;
 }
@@ -538,8 +542,6 @@ begin_fuzz(void *ctx)
 {
 	int rc = 0;
 
-	g_reactor_td = pthread_self();
-
 	rc = pthread_create(&g_fuzz_td, NULL, start_fuzzer, NULL);
 	if (rc != 0) {
 		spdk_app_stop(-1);
@@ -691,5 +693,6 @@ main(int argc, char **argv)
 	rc = spdk_app_start(&opts, begin_fuzz, NULL);
 
 	spdk_app_fini();
+	g_in_fuzzer = false;
 	return rc;
 }
