@@ -277,6 +277,7 @@ static uint8_t g_transport_tos = 0;
 
 static uint32_t g_rdma_srq_size;
 static struct spdk_key *g_psk = NULL, *g_dhchap = NULL, *g_dhchap_ctrlr = NULL;
+static char *g_vf_token = NULL;
 
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
@@ -1913,6 +1914,7 @@ usage(char *program_name)
 #endif
 	printf("\t--iova-mode <mode> specify DPDK IOVA mode: va|pa\n");
 	printf("\t--no-huge, SPDK is run without hugepages\n");
+	printf("\t--vfio-vf-token <token> VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	spdk_trace_mask_usage(stdout, "-y");
 	printf("\n");
 
@@ -2437,6 +2439,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"dhchap-key", required_argument, NULL, PERF_DHCHAP_PATH},
 #define PERF_DHCHAP_CTRLR_PATH		272
 	{"dhchap-ctrlr-key", required_argument, NULL, PERF_DHCHAP_CTRLR_PATH},
+#define PERF_VFIO_VF_TOKEN  273
+	{ "vfio-vf-token", required_argument, NULL, PERF_VFIO_VF_TOKEN},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
@@ -2761,6 +2765,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_NO_HUGE:
 			env_opts->no_huge = true;
+			break;
+		case PERF_VFIO_VF_TOKEN:
+			g_vf_token = strdup(optarg);
 			break;
 		case PERF_TRACING_MASK:
 			g_tpoint_group_mask = strdup(optarg);
@@ -3223,6 +3230,7 @@ setup_spdk_tracing(const char *app_name, const char *tpoint_group_mask, int num_
 static void
 free_globals(void)
 {
+	free(g_vf_token);
 	free(g_tpoint_group_mask);
 
 	free_key(&g_psk);
@@ -3255,6 +3263,7 @@ main(int argc, char **argv)
 
 		return rc;
 	}
+
 	/* Transport statistics are printed from each thread.
 	 * To avoid mess in terminal, init and use mutex */
 	rc = pthread_mutex_init(&g_stats_mutex, NULL);
@@ -3263,6 +3272,8 @@ main(int argc, char **argv)
 		free_globals();
 		return -1;
 	}
+
+	opts.vf_token = g_vf_token;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		pthread_mutex_destroy(&g_stats_mutex);
