@@ -1046,8 +1046,8 @@ nvmf_rpc_referral_ctx_free(struct nvmf_rpc_referral_ctx *ctx)
 }
 
 static void
-rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
+rpc_nvmf_discovery_add_referral(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_referral_ctx ctx = {};
 	struct spdk_nvme_transport_id trid = {};
@@ -1118,12 +1118,11 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 
-SPDK_RPC_REGISTER("nvmf_discovery_add_referral", rpc_nvmf_add_referral,
-		  SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER("nvmf_discovery_add_referral", rpc_nvmf_discovery_add_referral, SPDK_RPC_RUNTIME);
 
 static void
-rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_nvmf_discovery_remove_referral(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_referral_ctx ctx = {};
 	struct spdk_nvme_transport_id trid = {};
@@ -1182,7 +1181,7 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 
-SPDK_RPC_REGISTER("nvmf_discovery_remove_referral", rpc_nvmf_remove_referral,
+SPDK_RPC_REGISTER("nvmf_discovery_remove_referral", rpc_nvmf_discovery_remove_referral,
 		  SPDK_RPC_RUNTIME);
 
 static void
@@ -1217,8 +1216,8 @@ free_rpc_get_referrals_ctx(struct rpc_get_referrals_ctx *ctx)
 }
 
 static void
-rpc_nvmf_get_referrals(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+rpc_nvmf_discovery_get_referrals(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_get_referrals_ctx *ctx;
 	struct spdk_nvmf_tgt *tgt;
@@ -1267,7 +1266,7 @@ rpc_nvmf_get_referrals(struct spdk_jsonrpc_request *request,
 
 	free_rpc_get_referrals_ctx(ctx);
 }
-SPDK_RPC_REGISTER("nvmf_discovery_get_referrals", rpc_nvmf_get_referrals,
+SPDK_RPC_REGISTER("nvmf_discovery_get_referrals", rpc_nvmf_discovery_get_referrals,
 		  SPDK_RPC_RUNTIME);
 
 static const struct spdk_json_object_decoder nvmf_rpc_set_ana_state_decoder[] = {

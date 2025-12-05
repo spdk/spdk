@@ -35,6 +35,16 @@ def lint_json_examples() -> None:
                 raise
 
 
+def lint_c_code(schema: Dict[str, Any]) -> None:
+    for folder in ("module", "lib"):
+        for path in (base_dir / folder).rglob("*_rpc.c"):
+            data = path.read_text()
+            methods = re.findall(r'SPDK_RPC_REGISTER\("([A-Za-z0-9_]+)"\s*,\s*rpc_([A-Za-z0-9_]+)\s*,', data, re.MULTILINE)
+            for name, func in methods:
+                if name != func:
+                    raise ValueError(f"In file {path}: RPC name '{name}' does not match function name 'rpc_{func}'")
+
+
 def lint_py_cli(schema: Dict[str, Any]) -> None:
     types = {str: 'string', None: 'string', int: 'number', bool: 'boolean'}
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
@@ -171,6 +181,7 @@ if __name__ == "__main__":
 
     try:
         lint_py_cli(schema)
+        lint_c_code(schema)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

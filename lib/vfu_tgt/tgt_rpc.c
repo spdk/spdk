@@ -28,8 +28,8 @@ free_rpc_set_vfu_path(struct rpc_set_vfu_path *req)
 }
 
 static void
-rpc_vfu_set_base_path(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
+rpc_vfu_tgt_set_base_path(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_set_vfu_path req = {0};
 	int rc;
@@ -56,5 +56,4 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("vfu_tgt_set_base_path", rpc_vfu_set_base_path,
-		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vfu_tgt_set_base_path", rpc_vfu_tgt_set_base_path, SPDK_RPC_RUNTIME)

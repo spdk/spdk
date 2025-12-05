@@ -106,8 +106,8 @@ static const struct spdk_json_object_decoder rpc_examine_bdev_decoders[] = {
 };
 
 static void
-rpc_bdev_examine_bdev(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
+rpc_bdev_examine(struct spdk_jsonrpc_request *request,
+		 const struct spdk_json_val *params)
 {
 	struct rpc_bdev_examine req = {NULL};
 	int rc;
@@ -132,7 +132,7 @@ rpc_bdev_examine_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_examine(&req);
 }
-SPDK_RPC_REGISTER("bdev_examine", rpc_bdev_examine_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_examine", rpc_bdev_examine, SPDK_RPC_RUNTIME)
 
 struct rpc_get_iostat_ctx {
 	int bdev_count;

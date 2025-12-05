@@ -596,7 +596,7 @@ send_create_vbdev(char *vdev_name, char *name, uint64_t zone_capacity, uint64_t 
 		  bool create_bdev, bool success)
 {
 	initialize_create_req(vdev_name, name, zone_capacity, optimal_open_zones, create_bdev);
-	rpc_zone_block_create(NULL, NULL);
+	rpc_bdev_zone_block_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err != success);
 	verify_zone_config(success);
 	verify_zone_bdev(success);
@@ -607,7 +607,7 @@ static void
 send_delete_vbdev(char *name, bool success)
 {
 	initialize_delete_req(name);
-	rpc_zone_block_delete(NULL, NULL);
+	rpc_bdev_zone_block_delete(NULL, NULL);
 	verify_config_present(name, false);
 	verify_bdev_present(name, false);
 	CU_ASSERT(g_rpc_err != success);
@@ -638,7 +638,7 @@ test_zone_block_create(void)
 	verify_config_present("zone_dev1", false);
 	verify_bdev_present("zone_dev1", false);
 	initialize_create_req("zone_dev1", name, zone_capacity, 1, false);
-	rpc_zone_block_create(NULL, NULL);
+	rpc_bdev_zone_block_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_zone_config(true);
 	verify_zone_bdev(false);

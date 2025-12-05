@@ -36,8 +36,8 @@ static const struct spdk_json_object_decoder rpc_construct_zone_block_decoders[]
 };
 
 static void
-rpc_zone_block_create(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
+rpc_bdev_zone_block_create(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_construct_zone_block req = {};
 	struct spdk_json_write_ctx *w;
@@ -69,7 +69,7 @@ rpc_zone_block_create(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_zone_block(&req);
 }
-SPDK_RPC_REGISTER("bdev_zone_block_create", rpc_zone_block_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_zone_block_create", rpc_bdev_zone_block_create, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_zone_block {
 	char *name;
@@ -98,8 +98,8 @@ _rpc_delete_zone_block_cb(void *cb_ctx, int rc)
 }
 
 static void
-rpc_zone_block_delete(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
+rpc_bdev_zone_block_delete(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_delete_zone_block attrs = {};
 
@@ -117,4 +117,4 @@ rpc_zone_block_delete(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_delete_zone_block(&attrs);
 }
-SPDK_RPC_REGISTER("bdev_zone_block_delete", rpc_zone_block_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_zone_block_delete", rpc_bdev_zone_block_delete, SPDK_RPC_RUNTIME)
