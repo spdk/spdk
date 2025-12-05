@@ -45,6 +45,13 @@ AE4DMA
 A new RPC ae4dma_scan_accel_module has been added to the accel framework
 to enable the AE4DMA module.
 
+### sock
+
+Introduced `spdk_sock_initialize`, which may optionally be called before any use of the sock
+API. It is automatically called by the SPDK app framework. `spdk_sock_initialize` is
+not thread safe and should be called only once. Subsequent calls with the same options
+will succeed, but with different options will return -EALREADY.
+
 ## v25.09
 
 ### bdev

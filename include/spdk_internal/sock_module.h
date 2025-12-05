@@ -77,6 +77,7 @@ struct spdk_sock_map {
 
 struct spdk_net_impl {
 	const char *name;
+	int (*init)(struct spdk_sock_initialize_opts *opts);
 
 	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport, char *caddr,
 		       int clen, uint16_t *cport);

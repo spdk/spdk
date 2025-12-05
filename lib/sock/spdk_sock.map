@@ -2,6 +2,8 @@
 	global:
 
 	# public functions in spdk/sock.h
+	spdk_sock_get_default_initialize_opts;
+	spdk_sock_initialize;
 	spdk_sock_get_default_opts;
 	spdk_sock_getaddr;
 	spdk_sock_get_interface_name;

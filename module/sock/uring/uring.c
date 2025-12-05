@@ -1959,8 +1959,19 @@ uring_sock_group_impl_unregister_interrupt(struct spdk_sock_group_impl *_group)
 {
 }
 
+static int
+uring_net_impl_init(struct spdk_sock_initialize_opts *opts)
+{
+	if (opts->enable_interrupt_mode) {
+		SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.\n");
+		return -ENOTSUP;
+	}
+	return 0;
+}
+
 static struct spdk_net_impl g_uring_net_impl = {
 	.name		= "uring",
+	.init		= uring_net_impl_init,
 	.getaddr	= uring_sock_getaddr,
 	.get_interface_name = uring_sock_get_interface_name,
 	.get_numa_id	= uring_sock_get_numa_id,

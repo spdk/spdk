@@ -2444,8 +2444,15 @@ out:
 	return rc;
 }
 
+static int
+posix_net_impl_init(struct spdk_sock_initialize_opts *opts)
+{
+	return 0;
+}
+
 static struct spdk_net_impl g_posix_net_impl = {
 	.name		= "posix",
+	.init		= posix_net_impl_init,
 	.getaddr	= posix_sock_getaddr,
 	.get_interface_name = posix_sock_get_interface_name,
 	.get_numa_id	= posix_sock_get_numa_id,
@@ -2505,8 +2512,15 @@ ssl_sock_accept(struct spdk_sock *_sock)
 	return _posix_sock_accept(_sock, true);
 }
 
+static int
+ssl_net_impl_init(struct spdk_sock_initialize_opts *opts)
+{
+	return 0;
+}
+
 static struct spdk_net_impl g_ssl_net_impl = {
 	.name		= "ssl",
+	.init		= ssl_net_impl_init,
 	.getaddr	= posix_sock_getaddr,
 	.get_interface_name = posix_sock_get_interface_name,
 	.get_numa_id	= posix_sock_get_numa_id,

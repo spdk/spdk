@@ -7,12 +7,25 @@
 #include "spdk/sock.h"
 #include "spdk_internal/init.h"
 #include "spdk/log.h"
+#include "spdk/thread.h"
+#include "spdk_internal/sock_module.h"
 
 static void
 sock_subsystem_init(void)
 {
 	const char *sock_impl_override = getenv("SPDK_SOCK_IMPL_DEFAULT");
+	struct spdk_sock_initialize_opts init_opts;
 	int rc = 0;
+
+	/* Initialize net implementations with interrupt mode status */
+	spdk_sock_get_default_initialize_opts(&init_opts, sizeof(init_opts));
+	init_opts.enable_interrupt_mode = spdk_interrupt_mode_is_enabled();
+	rc = spdk_sock_initialize(&init_opts);
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize sock net implementations: %d\n", rc);
+		spdk_subsystem_init_next(rc);
+		return;
+	}
 
 	if (sock_impl_override) {
 		rc = spdk_sock_set_default_impl(sock_impl_override);

@@ -28,6 +28,7 @@
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 static struct spdk_net_impl *g_default_impl;
+static struct spdk_sock_initialize_opts g_init_opts;
 
 struct spdk_sock_placement_id_entry {
 	int placement_id;
@@ -261,6 +262,27 @@ const char *
 spdk_sock_get_impl_name(struct spdk_sock *sock)
 {
 	return sock->net_impl->name;
+}
+
+void
+spdk_sock_get_default_initialize_opts(struct spdk_sock_initialize_opts *opts, size_t opts_size)
+{
+	assert(opts);
+
+	opts->opts_size = opts_size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_initialize_opts, field) + sizeof(opts->field) <= opts_size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		opts->field = value; \
+	}
+
+	SET_FIELD(enable_interrupt_mode, false);
+
+#undef FIELD_OK
+#undef SET_FIELD
 }
 
 void
@@ -1251,6 +1273,79 @@ void
 spdk_net_impl_register(struct spdk_net_impl *impl)
 {
 	STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
+}
+
+static bool
+sock_init_opts_match(struct spdk_sock_initialize_opts *opts1,
+		     struct spdk_sock_initialize_opts *opts2)
+{
+	if (opts1->opts_size != opts2->opts_size) {
+		return false;
+	}
+
+	if (opts1->enable_interrupt_mode != opts2->enable_interrupt_mode) {
+		return false;
+	}
+
+	return true;
+}
+
+int
+spdk_sock_initialize(struct spdk_sock_initialize_opts *user_opts)
+{
+	struct spdk_sock_initialize_opts opts_local;
+	struct spdk_net_impl *impl, *tmp;
+	static bool g_initialized = false;
+	int rc;
+
+	/* Initialize opts_local with defaults */
+	spdk_sock_get_default_initialize_opts(&opts_local, sizeof(opts_local));
+
+	/* If user_opts is provided, use ABI-safe field access based on opts_size */
+	if (user_opts != NULL) {
+		size_t opts_size;
+
+		/* Get the user's opts_size */
+		opts_size = user_opts->opts_size;
+
+		/* Copy fields that are within the user's opts_size */
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_initialize_opts, field) + sizeof(opts_local.field) <= opts_size
+
+		if (FIELD_OK(enable_interrupt_mode)) {
+			opts_local.enable_interrupt_mode = user_opts->enable_interrupt_mode;
+		}
+
+#undef FIELD_OK
+	}
+
+	if (g_initialized) {
+		/* If already initialized, check if the options match */
+		if (sock_init_opts_match(&opts_local, &g_init_opts)) {
+			return 0;
+		} else {
+			return -EALREADY;
+		}
+	}
+
+	/* Store the options for future comparison */
+	memcpy(&g_init_opts, &opts_local, sizeof(g_init_opts));
+
+	g_initialized = true;
+
+	STAILQ_FOREACH_SAFE(impl, &g_net_impls, link, tmp) {
+		if (impl->init) {
+			rc = impl->init(&opts_local);
+			if (rc != 0) {
+				SPDK_WARNLOG("Removing %s net impl - initialization failed: %d\n",
+					     impl->name, rc);
+				STAILQ_REMOVE(&g_net_impls, impl, spdk_net_impl, link);
+				continue;
+			}
+		}
+	}
+
+	return 0;
 }
 
 int

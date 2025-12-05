@@ -262,6 +262,46 @@ struct spdk_sock_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 56, "Incorrect size");
 
 /**
+ * Options for the socket library.
+ */
+struct spdk_sock_initialize_opts {
+	/**
+	 * The size of spdk_sock_initialize_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 */
+	size_t opts_size;
+
+	/*
+	 * Enable or disable interrupt mode.
+	 */
+	bool enable_interrupt_mode;
+};
+
+/**
+ * Initialize the default value of socket initialization opts.
+ *
+ * \param opts Data structure where SPDK will initialize the default socket initialization options.
+ * \param opts_size Size of the opts structure being passed.
+ */
+void spdk_sock_get_default_initialize_opts(struct spdk_sock_initialize_opts *opts,
+		size_t opts_size);
+
+/**
+ * Initialize the socket module.
+ *
+ * This is an optional call that may be called before any use of the socket library.
+ *
+ * This function is not thread safe and should be called only once. Subsequent calls will succeed
+ * if the options passed in are the same as the first invocation, otherwise it will return -EALREADY.
+ *
+ * \param opts Options for the socket library.
+ *
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_sock_initialize(struct spdk_sock_initialize_opts *opts);
+
+/**
  * Initialize the default value of opts.
  *
  * \param opts Data structure where SPDK will initialize the default sock options.
