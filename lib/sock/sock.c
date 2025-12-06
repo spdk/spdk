@@ -792,14 +792,12 @@ spdk_sock_close(struct spdk_sock **_sock)
 	struct spdk_sock *sock = *_sock;
 
 	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	if (sock->cb_fn != NULL) {
 		/* This sock is still part of a sock_group. */
-		errno = EBUSY;
-		return -1;
+		return -EBUSY;
 	}
 
 	/* Beyond this point the socket is considered closed. */

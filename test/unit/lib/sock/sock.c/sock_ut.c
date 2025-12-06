@@ -569,8 +569,7 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	/* Try to close sock while it is still part of a sock_group. */
 	rc = spdk_sock_close(&server_sock);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EBUSY);
+	CU_ASSERT(rc == -EBUSY);
 
 	rc = spdk_sock_group_remove_sock(group, server_sock);
 	CU_ASSERT(rc == 0);

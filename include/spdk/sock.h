@@ -460,12 +460,9 @@ int32_t spdk_sock_get_numa_id(struct spdk_sock *sock);
 /**
  * Close a socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to close.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_close(struct spdk_sock **sock);
 

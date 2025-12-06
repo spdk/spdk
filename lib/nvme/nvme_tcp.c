@@ -415,9 +415,8 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	rc = spdk_sock_close(&tqpair->sock);
-
-	if (tqpair->sock != NULL) {
-		NVME_TQPAIR_ERRLOG(tqpair, "errno=%d, rc=%d\n", errno, rc);
+	if (rc < 0 || tqpair->sock) {
+		NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_close() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		/* Set it to NULL manually */
 		tqpair->sock = NULL;
 	}

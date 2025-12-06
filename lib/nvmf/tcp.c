@@ -628,13 +628,19 @@ _nvmf_tcp_qpair_destroy(void *_tqpair)
 	struct spdk_nvmf_tcp_qpair *tqpair = _tqpair;
 	spdk_nvmf_transport_qpair_fini_cb cb_fn = tqpair->fini_cb_fn;
 	void *cb_arg = tqpair->fini_cb_arg;
-	int err = 0;
+	int rc, err = 0;
 
 	spdk_trace_record(TRACE_TCP_QP_DESTROY, tqpair->qpair.trace_id, 0, 0);
 
 	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
-	err = spdk_sock_close(&tqpair->sock);
+	rc = spdk_sock_close(&tqpair->sock);
+	if (rc < 0 || tqpair->sock) {
+		SPDK_ERRLOG("spdk_sock_close() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+		/* Set it to NULL manually */
+		tqpair->sock = NULL;
+	}
+
 	assert(err == 0);
 	nvmf_tcp_cleanup_all_states(tqpair);
 
