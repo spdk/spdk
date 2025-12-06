@@ -2681,7 +2681,7 @@ struct rpc_get_transport {
 	char *tgt_name;
 };
 
-static const struct spdk_json_object_decoder rpc_get_transport_decoders[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_get_transports_decoders[] = {
 	{"trtype", offsetof(struct rpc_get_transport, trtype), spdk_json_decode_string, true},
 	{"tgt_name", offsetof(struct rpc_get_transport, tgt_name), spdk_json_decode_string, true},
 };
@@ -2696,8 +2696,8 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 	struct spdk_nvmf_tgt *tgt;
 
 	if (params) {
-		if (spdk_json_decode_object(params, rpc_get_transport_decoders,
-					    SPDK_COUNTOF(rpc_get_transport_decoders),
+		if (spdk_json_decode_object(params, rpc_nvmf_get_transports_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_get_transports_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -2751,7 +2751,7 @@ struct rpc_nvmf_get_stats_ctx {
 	struct spdk_json_write_ctx *w;
 };
 
-static const struct spdk_json_object_decoder rpc_get_stats_decoders[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_get_stats_decoders[] = {
 	{"tgt_name", offsetof(struct rpc_nvmf_get_stats_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
@@ -2805,8 +2805,8 @@ rpc_nvmf_get_stats(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 
 	if (params) {
-		if (spdk_json_decode_object(params, rpc_get_stats_decoders,
-					    SPDK_COUNTOF(rpc_get_stats_decoders),
+		if (spdk_json_decode_object(params, rpc_nvmf_get_stats_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_get_stats_decoders),
 					    ctx)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");

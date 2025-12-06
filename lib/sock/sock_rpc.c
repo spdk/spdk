@@ -13,7 +13,7 @@
 #include "spdk/log.h"
 
 
-static const struct spdk_json_object_decoder rpc_sock_impl_get_opts_decoders[] = {
+static const struct spdk_json_object_decoder rpc_sock_impl_get_options_decoders[] = {
 	{ "impl_name", 0, spdk_json_decode_string, false },
 };
 
@@ -27,8 +27,8 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 	size_t len;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_sock_impl_get_opts_decoders,
-				    SPDK_COUNTOF(rpc_sock_impl_get_opts_decoders), &impl_name)) {
+	if (spdk_json_decode_object(params, rpc_sock_impl_get_options_decoders,
+				    SPDK_COUNTOF(rpc_sock_impl_get_options_decoders), &impl_name)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -67,7 +67,7 @@ struct spdk_rpc_sock_impl_set_opts {
 	struct spdk_sock_impl_opts sock_opts;
 };
 
-static const struct spdk_json_object_decoder rpc_sock_impl_set_opts_decoders[] = {
+static const struct spdk_json_object_decoder rpc_sock_impl_set_options_decoders[] = {
 	{
 		"impl_name", offsetof(struct spdk_rpc_sock_impl_set_opts, impl_name),
 		spdk_json_decode_string, false
@@ -123,8 +123,8 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	/* Get type */
-	if (spdk_json_decode_object(params, rpc_sock_impl_set_opts_decoders,
-				    SPDK_COUNTOF(rpc_sock_impl_set_opts_decoders), &opts)) {
+	if (spdk_json_decode_object(params, rpc_sock_impl_set_options_decoders,
+				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &opts)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -142,8 +142,8 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Decode opts */
-	if (spdk_json_decode_object(params, rpc_sock_impl_set_opts_decoders,
-				    SPDK_COUNTOF(rpc_sock_impl_set_opts_decoders), &opts)) {
+	if (spdk_json_decode_object(params, rpc_sock_impl_set_options_decoders,
+				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &opts)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -171,8 +171,8 @@ rpc_sock_set_default_impl(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	/* Reuse get_opts decoder */
-	if (spdk_json_decode_object(params, rpc_sock_impl_get_opts_decoders,
-				    SPDK_COUNTOF(rpc_sock_impl_get_opts_decoders), &impl_name)) {
+	if (spdk_json_decode_object(params, rpc_sock_impl_get_options_decoders,
+				    SPDK_COUNTOF(rpc_sock_impl_get_options_decoders), &impl_name)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
