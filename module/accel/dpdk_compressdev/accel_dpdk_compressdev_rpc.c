@@ -13,7 +13,7 @@ struct rpc_compressdev_scan_accel_module {
 	uint32_t pmd;
 };
 
-static const struct spdk_json_object_decoder rpc_compressdev_scan_accel_module_decoder[] = {
+static const struct spdk_json_object_decoder rpc_compressdev_scan_accel_module_decoders[] = {
 	{"pmd", offsetof(struct rpc_compressdev_scan_accel_module, pmd), spdk_json_decode_uint32},
 };
 
@@ -24,8 +24,8 @@ rpc_compressdev_scan_accel_module(struct spdk_jsonrpc_request *request,
 	struct rpc_compressdev_scan_accel_module req;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_compressdev_scan_accel_module_decoder,
-				    SPDK_COUNTOF(rpc_compressdev_scan_accel_module_decoder),
+	if (spdk_json_decode_object(params, rpc_compressdev_scan_accel_module_decoders,
+				    SPDK_COUNTOF(rpc_compressdev_scan_accel_module_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,

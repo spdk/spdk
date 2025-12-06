@@ -8,7 +8,7 @@
 
 #include "accel_mlx5.h"
 
-static const struct spdk_json_object_decoder rpc_mlx5_module_decoder[] = {
+static const struct spdk_json_object_decoder rpc_mlx5_scan_accel_module_decoders[] = {
 	{"qp_size", offsetof(struct accel_mlx5_attr, qp_size), spdk_json_decode_uint16, true},
 	{"num_requests", offsetof(struct accel_mlx5_attr, num_requests), spdk_json_decode_uint32, true},
 	{"allowed_devs", offsetof(struct accel_mlx5_attr, allowed_devs), spdk_json_decode_string, true},
@@ -26,8 +26,8 @@ rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 	accel_mlx5_get_default_attr(&attr);
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_mlx5_module_decoder,
-					    SPDK_COUNTOF(rpc_mlx5_module_decoder),
+		if (spdk_json_decode_object(params, rpc_mlx5_scan_accel_module_decoders,
+					    SPDK_COUNTOF(rpc_mlx5_scan_accel_module_decoders),
 					    &attr)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			free(attr.allowed_devs);
@@ -84,7 +84,7 @@ accel_mlx5_dump_stats_done(void *_ctx, int rc)
 	free(ctx);
 }
 
-static const struct spdk_json_object_decoder rpc_accel_mlx5_dump_stats_decoder[] = {
+static const struct spdk_json_object_decoder rpc_accel_mlx5_dump_stats_decoders[] = {
 	{"level", 0, rpc_decode_dump_stat_level, true},
 };
 
@@ -97,8 +97,8 @@ rpc_accel_mlx5_dump_stats(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_accel_mlx5_dump_stats_decoder,
-					    SPDK_COUNTOF(rpc_accel_mlx5_dump_stats_decoder),
+		if (spdk_json_decode_object(params, rpc_accel_mlx5_dump_stats_decoders,
+					    SPDK_COUNTOF(rpc_accel_mlx5_dump_stats_decoders),
 					    &level)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,

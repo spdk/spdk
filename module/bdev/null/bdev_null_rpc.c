@@ -17,7 +17,7 @@ free_rpc_construct_null(struct null_bdev_opts *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_null_create_decoders[] = {
 	{"name", offsetof(struct null_bdev_opts, name), spdk_json_decode_string},
 	{"uuid", offsetof(struct null_bdev_opts, uuid), spdk_json_decode_uuid, true},
 	{"num_blocks", offsetof(struct null_bdev_opts, num_blocks), spdk_json_decode_uint64},
@@ -43,8 +43,8 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
-				    SPDK_COUNTOF(rpc_construct_null_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_null_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_null_create_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_null, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -79,7 +79,7 @@ free_rpc_delete_null(struct rpc_delete_null *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_null_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_null_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_null, name), spdk_json_decode_string},
 };
 
@@ -101,8 +101,8 @@ rpc_bdev_null_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_null req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_null_decoders,
-				    SPDK_COUNTOF(rpc_delete_null_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_null_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_null_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -137,8 +137,8 @@ free_rpc_bdev_null_resize(struct rpc_bdev_null_resize *req)
 }
 
 static void
-spdk_rpc_bdev_null_resize(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_bdev_null_resize(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_null_resize req = {};
 	int rc;
@@ -161,4 +161,4 @@ spdk_rpc_bdev_null_resize(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_null_resize(&req);
 }
-SPDK_RPC_REGISTER("bdev_null_resize", spdk_rpc_bdev_null_resize, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_null_resize", rpc_bdev_null_resize, SPDK_RPC_RUNTIME)

@@ -31,7 +31,7 @@ free_rpc_construct_aio(struct rpc_construct_aio_ctx *ctx)
 	free(ctx);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_aio_create_decoders[] = {
 	{"name", offsetof(struct rpc_construct_aio, name), spdk_json_decode_string},
 	{"filename", offsetof(struct rpc_construct_aio, filename), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_construct_aio, block_size), spdk_json_decode_uint32, true},
@@ -66,8 +66,8 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
-				    SPDK_COUNTOF(rpc_construct_aio_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_aio_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_aio_create_decoders),
 				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -93,7 +93,7 @@ struct rpc_rescan_aio {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_rescan_aio_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_aio_rescan_decoders[] = {
 	{"name", offsetof(struct rpc_rescan_aio, name), spdk_json_decode_string},
 };
 
@@ -104,8 +104,8 @@ rpc_bdev_aio_rescan(struct spdk_jsonrpc_request *request,
 	struct rpc_rescan_aio req = {NULL};
 	int bdeverrno;
 
-	if (spdk_json_decode_object(params, rpc_rescan_aio_decoders,
-				    SPDK_COUNTOF(rpc_rescan_aio_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_aio_rescan_decoders,
+				    SPDK_COUNTOF(rpc_bdev_aio_rescan_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -135,7 +135,7 @@ free_rpc_delete_aio(struct rpc_delete_aio *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_aio_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_aio_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_aio, name), spdk_json_decode_string},
 };
 
@@ -157,8 +157,8 @@ rpc_bdev_aio_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_aio req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_aio_decoders,
-				    SPDK_COUNTOF(rpc_delete_aio_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_aio_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_aio_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

@@ -16,7 +16,7 @@ struct rpc_dsa_scan_accel_module {
 	bool config_kernel_mode;
 };
 
-static const struct spdk_json_object_decoder rpc_dsa_scan_accel_module_decoder[] = {
+static const struct spdk_json_object_decoder rpc_dsa_scan_accel_module_decoders[] = {
 	{"config_kernel_mode", offsetof(struct rpc_dsa_scan_accel_module, config_kernel_mode), spdk_json_decode_bool, true},
 };
 
@@ -28,8 +28,8 @@ rpc_dsa_scan_accel_module(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_dsa_scan_accel_module_decoder,
-					    SPDK_COUNTOF(rpc_dsa_scan_accel_module_decoder),
+		if (spdk_json_decode_object(params, rpc_dsa_scan_accel_module_decoders,
+					    SPDK_COUNTOF(rpc_dsa_scan_accel_module_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

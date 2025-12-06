@@ -26,7 +26,7 @@ free_rpc_create_uring(struct rpc_create_uring *r)
 }
 
 /* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_create_uring_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_uring_create_decoders[] = {
 	{"name", offsetof(struct rpc_create_uring, name), spdk_json_decode_string},
 	{"filename", offsetof(struct rpc_create_uring, filename), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_create_uring, block_size), spdk_json_decode_uint32, true},
@@ -45,8 +45,8 @@ rpc_bdev_uring_create(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	struct bdev_uring_opts opts = {};
 
-	if (spdk_json_decode_object(params, rpc_create_uring_decoders,
-				    SPDK_COUNTOF(rpc_create_uring_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_uring_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_uring_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -80,7 +80,7 @@ struct rpc_rescan_uring {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_rescan_uring_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_uring_rescan_decoders[] = {
 	{"name", offsetof(struct rpc_rescan_uring, name), spdk_json_decode_string},
 };
 
@@ -91,8 +91,8 @@ rpc_bdev_uring_rescan(struct spdk_jsonrpc_request *request,
 	struct rpc_rescan_uring req = {NULL};
 	int bdeverrno;
 
-	if (spdk_json_decode_object(params, rpc_rescan_uring_decoders,
-				    SPDK_COUNTOF(rpc_rescan_uring_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_uring_rescan_decoders,
+				    SPDK_COUNTOF(rpc_bdev_uring_rescan_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -122,7 +122,7 @@ free_rpc_delete_uring(struct rpc_delete_uring *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_uring_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_uring_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_uring, name), spdk_json_decode_string},
 };
 
@@ -145,8 +145,8 @@ rpc_bdev_uring_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_uring req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_uring_decoders,
-				    SPDK_COUNTOF(rpc_delete_uring_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_uring_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_uring_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

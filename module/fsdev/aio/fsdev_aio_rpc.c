@@ -22,7 +22,7 @@ free_rpc_aio_create(struct rpc_aio_create *req)
 	free(req->root_path);
 }
 
-static const struct spdk_json_object_decoder rpc_aio_create_decoders[] = {
+static const struct spdk_json_object_decoder rpc_fsdev_aio_create_decoders[] = {
 	{"name", offsetof(struct rpc_aio_create, name), spdk_json_decode_string},
 	{"root_path", offsetof(struct rpc_aio_create, root_path), spdk_json_decode_string},
 	{"enable_xattr", offsetof(struct rpc_aio_create, opts.xattr_enabled), spdk_json_decode_bool, true},
@@ -41,8 +41,8 @@ rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_jso
 
 	spdk_fsdev_aio_get_default_opts(&req.opts);
 
-	if (spdk_json_decode_object(params, rpc_aio_create_decoders,
-				    SPDK_COUNTOF(rpc_aio_create_decoders),
+	if (spdk_json_decode_object(params, rpc_fsdev_aio_create_decoders,
+				    SPDK_COUNTOF(rpc_fsdev_aio_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -73,7 +73,7 @@ struct rpc_aio_delete {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_aio_delete_decoders[] = {
+static const struct spdk_json_object_decoder rpc_fsdev_aio_delete_decoders[] = {
 	{"name", offsetof(struct rpc_aio_delete, name), spdk_json_decode_string},
 };
 
@@ -94,8 +94,8 @@ rpc_fsdev_aio_delete(struct spdk_jsonrpc_request *request, const struct spdk_jso
 {
 	struct rpc_aio_delete req = {};
 
-	if (spdk_json_decode_object(params, rpc_aio_delete_decoders,
-				    SPDK_COUNTOF(rpc_aio_delete_decoders),
+	if (spdk_json_decode_object(params, rpc_fsdev_aio_delete_decoders,
+				    SPDK_COUNTOF(rpc_fsdev_aio_delete_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

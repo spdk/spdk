@@ -28,7 +28,7 @@ free_rpc_vhost_scsi_ctrlr(struct rpc_vhost_scsi_ctrlr *req)
 	free(req->cpumask);
 }
 
-static const struct spdk_json_object_decoder rpc_vhost_create_scsi_ctrlr[] = {
+static const struct spdk_json_object_decoder rpc_vhost_create_scsi_controller_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_scsi_ctrlr, ctrlr), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_scsi_ctrlr, cpumask), spdk_json_decode_string, true},
 	{"delay", offsetof(struct rpc_vhost_scsi_ctrlr, delay), spdk_json_decode_bool, true},
@@ -41,8 +41,8 @@ rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_vhost_scsi_ctrlr req = {0};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_vhost_create_scsi_ctrlr,
-				    SPDK_COUNTOF(rpc_vhost_create_scsi_ctrlr),
+	if (spdk_json_decode_object(params, rpc_vhost_create_scsi_controller_decoders,
+				    SPDK_COUNTOF(rpc_vhost_create_scsi_controller_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -81,7 +81,7 @@ free_rpc_start_vhost_scsi_ctrlr(struct rpc_start_vhost_scsi_ctrlr *req)
 	free(req->ctrlr);
 }
 
-static const struct spdk_json_object_decoder rpc_start_vhost_scsi_ctrlr_decoder[] = {
+static const struct spdk_json_object_decoder rpc_vhost_start_scsi_controller_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_start_vhost_scsi_ctrlr, ctrlr), spdk_json_decode_string },
 };
 
@@ -92,8 +92,8 @@ rpc_vhost_start_scsi_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_start_vhost_scsi_ctrlr req = {0};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_start_vhost_scsi_ctrlr_decoder,
-				    SPDK_COUNTOF(rpc_start_vhost_scsi_ctrlr_decoder),
+	if (spdk_json_decode_object(params, rpc_vhost_start_scsi_controller_decoders,
+				    SPDK_COUNTOF(rpc_vhost_start_scsi_controller_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -131,7 +131,7 @@ free_rpc_vhost_scsi_ctrlr_add_target(struct rpc_vhost_scsi_ctrlr_add_target *req
 	free(req->bdev_name);
 }
 
-static const struct spdk_json_object_decoder rpc_vhost_scsi_ctrlr_add_target[] = {
+static const struct spdk_json_object_decoder rpc_vhost_scsi_controller_add_target_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_scsi_ctrlr_add_target, ctrlr), spdk_json_decode_string },
 	{"scsi_target_num", offsetof(struct rpc_vhost_scsi_ctrlr_add_target, scsi_target_num), spdk_json_decode_int32},
 	{"bdev_name", offsetof(struct rpc_vhost_scsi_ctrlr_add_target, bdev_name), spdk_json_decode_string },
@@ -146,8 +146,8 @@ rpc_vhost_scsi_controller_add_target(struct spdk_jsonrpc_request *request,
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_vhost_scsi_ctrlr_add_target,
-				    SPDK_COUNTOF(rpc_vhost_scsi_ctrlr_add_target),
+	if (spdk_json_decode_object(params, rpc_vhost_scsi_controller_add_target_decoders,
+				    SPDK_COUNTOF(rpc_vhost_scsi_controller_add_target_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -194,7 +194,7 @@ free_rpc_remove_vhost_scsi_ctrlr_target(struct rpc_remove_vhost_scsi_ctrlr_targe
 	free(req->ctrlr);
 }
 
-static const struct spdk_json_object_decoder rpc_vhost_remove_target[] = {
+static const struct spdk_json_object_decoder rpc_vhost_scsi_controller_remove_target_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_remove_vhost_scsi_ctrlr_target, ctrlr), spdk_json_decode_string },
 	{"scsi_target_num", offsetof(struct rpc_remove_vhost_scsi_ctrlr_target, scsi_target_num), spdk_json_decode_uint32},
 };
@@ -216,8 +216,8 @@ rpc_vhost_scsi_controller_remove_target(struct spdk_jsonrpc_request *request,
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_vhost_remove_target,
-				    SPDK_COUNTOF(rpc_vhost_remove_target),
+	if (spdk_json_decode_object(params, rpc_vhost_scsi_controller_remove_target_decoders,
+				    SPDK_COUNTOF(rpc_vhost_scsi_controller_remove_target_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -259,7 +259,7 @@ struct rpc_vhost_blk_ctrlr {
 	char *transport;
 };
 
-static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
+static const struct spdk_json_object_decoder rpc_vhost_create_blk_controller_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_blk_ctrlr, ctrlr), spdk_json_decode_string },
 	{"dev_name", offsetof(struct rpc_vhost_blk_ctrlr, dev_name), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_blk_ctrlr, cpumask), spdk_json_decode_string, true},
@@ -282,8 +282,8 @@ rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_vhost_blk_ctrlr req = {0};
 	int rc;
 
-	if (spdk_json_decode_object_relaxed(params, rpc_construct_vhost_blk_ctrlr,
-					    SPDK_COUNTOF(rpc_construct_vhost_blk_ctrlr),
+	if (spdk_json_decode_object_relaxed(params, rpc_vhost_create_blk_controller_decoders,
+					    SPDK_COUNTOF(rpc_vhost_create_blk_controller_decoders),
 					    &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -313,7 +313,7 @@ struct rpc_delete_vhost_ctrlr {
 	char *ctrlr;
 };
 
-static const struct spdk_json_object_decoder rpc_delete_vhost_ctrlr_decoder[] = {
+static const struct spdk_json_object_decoder rpc_vhost_delete_controller_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_delete_vhost_ctrlr, ctrlr), spdk_json_decode_string },
 };
 
@@ -338,8 +338,8 @@ rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_delete_vhost_ctrlr_decoder,
-				    SPDK_COUNTOF(rpc_delete_vhost_ctrlr_decoder), &req)) {
+	if (spdk_json_decode_object(params, rpc_vhost_delete_controller_decoders,
+				    SPDK_COUNTOF(rpc_vhost_delete_controller_decoders), &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
@@ -425,7 +425,7 @@ _rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *
 	spdk_json_write_object_end(w);
 }
 
-static const struct spdk_json_object_decoder rpc_get_vhost_ctrlrs_decoders[] = {
+static const struct spdk_json_object_decoder rpc_vhost_get_controllers_decoders[] = {
 	{"name", offsetof(struct rpc_get_vhost_ctrlrs, name), spdk_json_decode_string, true},
 };
 
@@ -444,8 +444,8 @@ rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (params && spdk_json_decode_object(params, rpc_get_vhost_ctrlrs_decoders,
-					      SPDK_COUNTOF(rpc_get_vhost_ctrlrs_decoders), &req)) {
+	if (params && spdk_json_decode_object(params, rpc_vhost_get_controllers_decoders,
+					      SPDK_COUNTOF(rpc_vhost_get_controllers_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
@@ -503,7 +503,7 @@ struct rpc_vhost_ctrlr_coalescing {
 	uint32_t iops_threshold;
 };
 
-static const struct spdk_json_object_decoder rpc_set_vhost_ctrlr_coalescing[] = {
+static const struct spdk_json_object_decoder rpc_vhost_controller_set_coalescing_decoders[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_ctrlr_coalescing, ctrlr), spdk_json_decode_string },
 	{"delay_base_us", offsetof(struct rpc_vhost_ctrlr_coalescing, delay_base_us), spdk_json_decode_uint32},
 	{"iops_threshold", offsetof(struct rpc_vhost_ctrlr_coalescing, iops_threshold), spdk_json_decode_uint32},
@@ -523,8 +523,8 @@ rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_set_vhost_ctrlr_coalescing,
-				    SPDK_COUNTOF(rpc_set_vhost_ctrlr_coalescing), &req)) {
+	if (spdk_json_decode_object(params, rpc_vhost_controller_set_coalescing_decoders,
+				    SPDK_COUNTOF(rpc_vhost_controller_set_coalescing_decoders), &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
@@ -561,7 +561,7 @@ struct rpc_get_transport {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_get_transport_decoders[] = {
+static const struct spdk_json_object_decoder rpc_virtio_blk_get_transports_decoders[] = {
 	{"name", offsetof(struct rpc_get_transport, name), spdk_json_decode_string, true},
 };
 
@@ -574,8 +574,8 @@ rpc_virtio_blk_get_transports(struct spdk_jsonrpc_request *request,
 	struct spdk_virtio_blk_transport *transport = NULL;
 
 	if (params) {
-		if (spdk_json_decode_object(params, rpc_get_transport_decoders,
-					    SPDK_COUNTOF(rpc_get_transport_decoders),
+		if (spdk_json_decode_object(params, rpc_virtio_blk_get_transports_decoders,
+					    SPDK_COUNTOF(rpc_virtio_blk_get_transports_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -615,7 +615,7 @@ struct rpc_virtio_blk_create_transport {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_create_virtio_blk_transport[] = {
+static const struct spdk_json_object_decoder rpc_virtio_blk_create_transport_decoders[] = {
 	{"name", offsetof(struct rpc_virtio_blk_create_transport, name), spdk_json_decode_string},
 };
 
@@ -632,8 +632,8 @@ rpc_virtio_blk_create_transport(struct spdk_jsonrpc_request *request,
 	struct rpc_virtio_blk_create_transport req = {0};
 	int rc;
 
-	if (spdk_json_decode_object_relaxed(params, rpc_create_virtio_blk_transport,
-					    SPDK_COUNTOF(rpc_create_virtio_blk_transport), &req)) {
+	if (spdk_json_decode_object_relaxed(params, rpc_virtio_blk_create_transport_decoders,
+					    SPDK_COUNTOF(rpc_virtio_blk_create_transport_decoders), &req)) {
 		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;

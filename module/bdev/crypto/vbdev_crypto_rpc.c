@@ -40,7 +40,7 @@ free_rpc_construct_crypto(struct rpc_construct_crypto *r)
 }
 
 /* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_construct_crypto_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_crypto_create_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_crypto, base_bdev_name), spdk_json_decode_string},
 	{"name", offsetof(struct rpc_construct_crypto, name), spdk_json_decode_string},
 	{"crypto_pmd", offsetof(struct rpc_construct_crypto, crypto_pmd), spdk_json_decode_string, true},
@@ -91,8 +91,8 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 	struct spdk_accel_crypto_key *created_key = NULL;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_construct_crypto_decoders,
-				    SPDK_COUNTOF(rpc_construct_crypto_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_crypto_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_crypto_create_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "Failed to decode crypto disk create parameters.");
@@ -202,7 +202,7 @@ free_rpc_delete_crypto(struct rpc_delete_crypto *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_crypto_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_crypto_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_crypto, name), spdk_json_decode_string},
 };
 
@@ -224,8 +224,8 @@ rpc_bdev_crypto_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_crypto req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_crypto_decoders,
-				    SPDK_COUNTOF(rpc_delete_crypto_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_crypto_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_crypto_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");

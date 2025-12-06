@@ -605,7 +605,7 @@ err:
 }
 SPDK_RPC_REGISTER("bdev_raid_remove_base_bdev", rpc_bdev_raid_remove_base_bdev, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_raid_options_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_raid_set_options_decoders[] = {
 	{"process_window_size_kb", offsetof(struct spdk_raid_bdev_opts, process_window_size_kb), spdk_json_decode_uint32, true},
 	{"process_max_bandwidth_mb_sec", offsetof(struct spdk_raid_bdev_opts, process_max_bandwidth_mb_sec), spdk_json_decode_uint32, true},
 };
@@ -617,8 +617,8 @@ rpc_bdev_raid_set_options(struct spdk_jsonrpc_request *request, const struct spd
 	int rc;
 
 	raid_bdev_get_opts(&opts);
-	if (params && spdk_json_decode_object(params, rpc_bdev_raid_options_decoders,
-					      SPDK_COUNTOF(rpc_bdev_raid_options_decoders),
+	if (params && spdk_json_decode_object(params, rpc_bdev_raid_set_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_raid_set_options_decoders),
 					      &opts)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");

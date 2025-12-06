@@ -30,7 +30,7 @@ free_rpc_construct_daos(struct rpc_construct_daos *r)
 	free(r->oclass);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_daos_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_daos_create_decoders[] = {
 	{"name", offsetof(struct rpc_construct_daos, name), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_daos, uuid), spdk_json_decode_uuid, true},
 	{"pool", offsetof(struct rpc_construct_daos, pool), spdk_json_decode_string},
@@ -49,8 +49,8 @@ rpc_bdev_daos_create(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_construct_daos_decoders,
-				    SPDK_COUNTOF(rpc_construct_daos_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_daos_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_daos_create_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_daos, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
@@ -87,7 +87,7 @@ free_rpc_delete_daos(struct rpc_delete_daos *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_daos_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_daos_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_daos, name), spdk_json_decode_string},
 };
 
@@ -109,8 +109,8 @@ rpc_bdev_daos_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_daos req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_daos_decoders,
-				    SPDK_COUNTOF(rpc_delete_daos_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_daos_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_daos_delete_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_daos, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,

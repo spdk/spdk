@@ -176,7 +176,7 @@ struct rpc_accel_crypto_key_create {
 	struct spdk_accel_crypto_key_create_param param;
 };
 
-static const struct spdk_json_object_decoder rpc_accel_dek_create_decoders[] = {
+static const struct spdk_json_object_decoder rpc_accel_crypto_key_create_decoders[] = {
 	{"cipher", offsetof(struct rpc_accel_crypto_key_create, param.cipher), spdk_json_decode_string},
 	{"key", offsetof(struct rpc_accel_crypto_key_create, param.hex_key),   spdk_json_decode_string},
 	{"key2", offsetof(struct rpc_accel_crypto_key_create, param.hex_key2), spdk_json_decode_string, true},
@@ -192,8 +192,8 @@ rpc_accel_crypto_key_create(struct spdk_jsonrpc_request *request,
 	size_t key_size;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_accel_dek_create_decoders,
-				    SPDK_COUNTOF(rpc_accel_dek_create_decoders),
+	if (spdk_json_decode_object(params, rpc_accel_crypto_key_create_decoders,
+				    SPDK_COUNTOF(rpc_accel_crypto_key_create_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");

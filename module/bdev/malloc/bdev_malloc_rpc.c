@@ -15,7 +15,7 @@ free_rpc_construct_malloc(struct malloc_bdev_opts *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_malloc_create_decoders[] = {
 	{"name", offsetof(struct malloc_bdev_opts, name), spdk_json_decode_string, true},
 	{"uuid", offsetof(struct malloc_bdev_opts, uuid), spdk_json_decode_uuid, true},
 	{"num_blocks", offsetof(struct malloc_bdev_opts, num_blocks), spdk_json_decode_uint64},
@@ -38,8 +38,8 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
-				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_malloc_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_malloc_create_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_malloc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -75,7 +75,7 @@ free_rpc_delete_malloc(struct rpc_delete_malloc *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_malloc_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_malloc_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_malloc, name), spdk_json_decode_string},
 };
 
@@ -97,8 +97,8 @@ rpc_bdev_malloc_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_malloc req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_malloc_decoders,
-				    SPDK_COUNTOF(rpc_delete_malloc_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_malloc_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_malloc_delete_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_malloc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

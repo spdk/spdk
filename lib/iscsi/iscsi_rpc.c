@@ -100,7 +100,7 @@ free_rpc_initiator_group(struct rpc_initiator_group *ig)
 	free_rpc_netmask_list(&ig->netmask_list);
 }
 
-static const struct spdk_json_object_decoder rpc_initiator_group_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_create_initiator_group_decoders[] = {
 	{"tag", offsetof(struct rpc_initiator_group, tag), spdk_json_decode_int32},
 	{"initiators", offsetof(struct rpc_initiator_group, initiator_list), decode_rpc_initiator_list},
 	{"netmasks", offsetof(struct rpc_initiator_group, netmask_list), decode_rpc_netmask_list},
@@ -112,8 +112,8 @@ rpc_iscsi_create_initiator_group(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_initiator_group req = {};
 
-	if (spdk_json_decode_object(params, rpc_initiator_group_decoders,
-				    SPDK_COUNTOF(rpc_initiator_group_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_iscsi_create_initiator_group_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_create_initiator_group_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -875,7 +875,7 @@ struct rpc_portal_group_auth {
 	int32_t chap_group;
 };
 
-static const struct spdk_json_object_decoder rpc_portal_group_auth_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_portal_group_set_auth_decoders[] = {
 	{"tag", offsetof(struct rpc_portal_group_auth, tag), spdk_json_decode_int32},
 	{"disable_chap", offsetof(struct rpc_portal_group_auth, disable_chap), spdk_json_decode_bool, true},
 	{"require_chap", offsetof(struct rpc_portal_group_auth, require_chap), spdk_json_decode_bool, true},
@@ -891,8 +891,8 @@ rpc_iscsi_portal_group_set_auth(struct spdk_jsonrpc_request *request,
 	struct spdk_iscsi_portal_grp *pg;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_portal_group_auth_decoders,
-				    SPDK_COUNTOF(rpc_portal_group_auth_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_iscsi_portal_group_set_auth_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_portal_group_set_auth_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -1523,7 +1523,7 @@ struct rpc_delete_auth_group {
 	int32_t tag;
 };
 
-static const struct spdk_json_object_decoder rpc_delete_auth_group_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_delete_auth_group_decoders[] = {
 	{"tag", offsetof(struct rpc_delete_auth_group, tag), spdk_json_decode_int32},
 };
 
@@ -1534,8 +1534,8 @@ rpc_iscsi_delete_auth_group(struct spdk_jsonrpc_request *request,
 	struct rpc_delete_auth_group req = {};
 	struct spdk_iscsi_auth_group *group;
 
-	if (spdk_json_decode_object(params, rpc_delete_auth_group_decoders,
-				    SPDK_COUNTOF(rpc_delete_auth_group_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_iscsi_delete_auth_group_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_delete_auth_group_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -1578,7 +1578,7 @@ free_rpc_add_auth_secret(struct rpc_add_auth_secret *_secret)
 	free(_secret->msecret);
 }
 
-static const struct spdk_json_object_decoder rpc_add_auth_secret_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_auth_group_add_secret_decoders[] = {
 	{"tag", offsetof(struct rpc_add_auth_secret, tag), spdk_json_decode_int32},
 	{"user", offsetof(struct rpc_add_auth_secret, user), spdk_json_decode_string},
 	{"secret", offsetof(struct rpc_add_auth_secret, secret), spdk_json_decode_string},
@@ -1594,8 +1594,8 @@ rpc_iscsi_auth_group_add_secret(struct spdk_jsonrpc_request *request,
 	struct spdk_iscsi_auth_group *group;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_add_auth_secret_decoders,
-				    SPDK_COUNTOF(rpc_add_auth_secret_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_iscsi_auth_group_add_secret_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_auth_group_add_secret_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -1647,7 +1647,7 @@ free_rpc_remove_auth_secret(struct rpc_remove_auth_secret *_secret)
 	free(_secret->user);
 }
 
-static const struct spdk_json_object_decoder rpc_remove_auth_secret_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_auth_group_remove_secret_decoders[] = {
 	{"tag", offsetof(struct rpc_remove_auth_secret, tag), spdk_json_decode_int32},
 	{"user", offsetof(struct rpc_remove_auth_secret, user), spdk_json_decode_string},
 };
@@ -1660,8 +1660,8 @@ rpc_iscsi_auth_group_remove_secret(struct spdk_jsonrpc_request *request,
 	struct spdk_iscsi_auth_group *group;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_remove_auth_secret_decoders,
-				    SPDK_COUNTOF(rpc_remove_auth_secret_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_iscsi_auth_group_remove_secret_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_auth_group_remove_secret_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -1922,7 +1922,7 @@ struct rpc_iscsi_get_histogram_request {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_iscsi_get_histogram_request_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_get_histogram_decoders[] = {
 	{"name", offsetof(struct rpc_iscsi_get_histogram_request, name), spdk_json_decode_string}
 };
 
@@ -1943,8 +1943,8 @@ rpc_iscsi_get_histogram(struct spdk_jsonrpc_request *request,
 	size_t src_len, dst_len;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_iscsi_get_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_iscsi_get_histogram_request_decoders),
+	if (spdk_json_decode_object(params, rpc_iscsi_get_histogram_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_get_histogram_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

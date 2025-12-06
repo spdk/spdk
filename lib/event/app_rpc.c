@@ -454,7 +454,7 @@ free_rpc_framework_set_scheduler(struct rpc_set_scheduler_ctx *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_set_scheduler_decoders[] = {
+static const struct spdk_json_object_decoder rpc_framework_set_scheduler_decoders[] = {
 	{"name", offsetof(struct rpc_set_scheduler_ctx, name), spdk_json_decode_string},
 	{"period", offsetof(struct rpc_set_scheduler_ctx, period), spdk_json_decode_uint64, true},
 };
@@ -468,13 +468,13 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 	bool has_custom_opts = false;
 	int ret;
 
-	ret = spdk_json_decode_object(params, rpc_set_scheduler_decoders,
-				      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+	ret = spdk_json_decode_object(params, rpc_framework_set_scheduler_decoders,
+				      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders),
 				      &req);
 	if (ret) {
 		has_custom_opts = true;
-		ret = spdk_json_decode_object_relaxed(params, rpc_set_scheduler_decoders,
-						      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+		ret = spdk_json_decode_object_relaxed(params, rpc_framework_set_scheduler_decoders,
+						      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders),
 						      &req);
 	}
 	if (ret) {
@@ -618,7 +618,7 @@ struct rpc_set_scheduler_opts_ctx {
 	uint32_t scheduling_core;
 };
 
-static const struct spdk_json_object_decoder rpc_set_scheduler_opts_decoders[] = {
+static const struct spdk_json_object_decoder rpc_scheduler_set_options_decoders[] = {
 	{"isolated_core_mask", offsetof(struct rpc_set_scheduler_opts_ctx, isolated_core_mask), spdk_json_decode_string, true},
 	{"scheduling_core", offsetof(struct rpc_set_scheduler_opts_ctx, scheduling_core), spdk_json_decode_uint32, true},
 };
@@ -638,8 +638,8 @@ rpc_scheduler_set_options(struct spdk_jsonrpc_request *request,
 
 	req.scheduling_core = spdk_scheduler_get_scheduling_lcore();
 
-	if (spdk_json_decode_object(params, rpc_set_scheduler_opts_decoders,
-				    SPDK_COUNTOF(rpc_set_scheduler_opts_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_scheduler_set_options_decoders,
+				    SPDK_COUNTOF(rpc_scheduler_set_options_decoders), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		goto end;

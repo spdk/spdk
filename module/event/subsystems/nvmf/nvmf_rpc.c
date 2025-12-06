@@ -10,7 +10,7 @@
 #include "spdk/util.h"
 #include "spdk/cpuset.h"
 
-static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_set_max_subsystems_decoders[] = {
 	{"max_subsystems", 0, spdk_json_decode_uint32, true}
 };
 
@@ -28,8 +28,8 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 	}
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_opts_decoder,
-					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_opts_decoder), &max_subsystems)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_max_subsystems_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_set_max_subsystems_decoders), &max_subsystems)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -234,7 +234,7 @@ decode_dhgroup_array(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_array(val, decode_dhgroup, out, 32, &count, 0);
 }
 
-static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
@@ -251,8 +251,8 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 	memcpy(&conf, &g_spdk_nvmf_tgt_conf, sizeof(conf));
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_conf_decoder,
-					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_conf_decoder), &conf)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_config_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_set_config_decoders), &conf)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -272,7 +272,7 @@ struct nvmf_rpc_set_crdt {
 	uint16_t crdt3;
 };
 
-static const struct spdk_json_object_decoder rpc_set_crdt_opts_decoders[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_set_crdt_decoders[] = {
 	{"crdt1", offsetof(struct nvmf_rpc_set_crdt, crdt1), spdk_json_decode_uint16, true},
 	{"crdt2", offsetof(struct nvmf_rpc_set_crdt, crdt2), spdk_json_decode_uint16, true},
 	{"crdt3", offsetof(struct nvmf_rpc_set_crdt, crdt3), spdk_json_decode_uint16, true},
@@ -289,8 +289,8 @@ rpc_nvmf_set_crdt(struct spdk_jsonrpc_request *request,
 	rpc_set_crdt.crdt3 = 0;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_set_crdt_opts_decoders,
-					    SPDK_COUNTOF(rpc_set_crdt_opts_decoders), &rpc_set_crdt)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_crdt_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_set_crdt_decoders), &rpc_set_crdt)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");

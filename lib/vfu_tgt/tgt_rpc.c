@@ -17,7 +17,7 @@ struct rpc_set_vfu_path {
 	char		*path;
 };
 
-static const struct spdk_json_object_decoder rpc_set_vfu_path_decode[] = {
+static const struct spdk_json_object_decoder rpc_vfu_tgt_set_base_path_decoders[] = {
 	{"path", offsetof(struct rpc_set_vfu_path, path), spdk_json_decode_string }
 };
 
@@ -34,8 +34,8 @@ rpc_vfu_tgt_set_base_path(struct spdk_jsonrpc_request *request,
 	struct rpc_set_vfu_path req = {0};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_set_vfu_path_decode,
-				    SPDK_COUNTOF(rpc_set_vfu_path_decode),
+	if (spdk_json_decode_object(params, rpc_vfu_tgt_set_base_path_decoders,
+				    SPDK_COUNTOF(rpc_vfu_tgt_set_base_path_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		rc = -EINVAL;

@@ -28,7 +28,7 @@ free_rpc_create_xnvme(struct rpc_create_xnvme *r)
 }
 
 /* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_create_xnvme_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_xnvme_create_decoders[] = {
 	{"name", offsetof(struct rpc_create_xnvme, name), spdk_json_decode_string},
 	{"filename", offsetof(struct rpc_create_xnvme, filename), spdk_json_decode_string},
 	{"io_mechanism", offsetof(struct rpc_create_xnvme, io_mechanism), spdk_json_decode_string},
@@ -46,8 +46,8 @@ rpc_bdev_xnvme_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_create_xnvme_decoders,
-				    SPDK_COUNTOF(rpc_create_xnvme_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_xnvme_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_xnvme_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -82,7 +82,7 @@ free_rpc_delete_xnvme(struct rpc_delete_xnvme *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_xnvme_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_xnvme_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_xnvme, name), spdk_json_decode_string},
 };
 
@@ -104,8 +104,8 @@ rpc_bdev_xnvme_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_xnvme req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_xnvme_decoders,
-				    SPDK_COUNTOF(rpc_delete_xnvme_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_xnvme_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_xnvme_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

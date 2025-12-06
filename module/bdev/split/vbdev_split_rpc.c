@@ -16,7 +16,7 @@ struct rpc_construct_split {
 	uint64_t split_size_mb;
 };
 
-static const struct spdk_json_object_decoder rpc_construct_split_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_split_create_decoders[] = {
 	{"base_bdev", offsetof(struct rpc_construct_split, base_bdev), spdk_json_decode_string},
 	{"split_count", offsetof(struct rpc_construct_split, split_count), spdk_json_decode_uint32},
 	{"split_size_mb", offsetof(struct rpc_construct_split, split_size_mb), spdk_json_decode_uint64, true},
@@ -37,8 +37,8 @@ rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *base_bdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_construct_split_decoders,
-				    SPDK_COUNTOF(rpc_construct_split_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_split_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_split_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -90,7 +90,7 @@ struct rpc_delete_split {
 	char *base_bdev;
 };
 
-static const struct spdk_json_object_decoder rpc_delete_split_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_split_delete_decoders[] = {
 	{"base_bdev", offsetof(struct rpc_delete_split, base_bdev), spdk_json_decode_string},
 };
 
@@ -101,8 +101,8 @@ rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
 	struct rpc_delete_split req = {};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_delete_split_decoders,
-				    SPDK_COUNTOF(rpc_delete_split_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_split_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_split_delete_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");

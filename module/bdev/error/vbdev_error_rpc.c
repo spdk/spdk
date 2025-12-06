@@ -111,7 +111,7 @@ free_rpc_delete_error(struct rpc_delete_error *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_error_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_error_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_error, name), spdk_json_decode_string},
 };
 
@@ -133,8 +133,8 @@ rpc_bdev_error_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_error req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_error_decoders,
-				    SPDK_COUNTOF(rpc_delete_error_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_error_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_error_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -153,7 +153,7 @@ struct rpc_error_information {
 	struct vbdev_error_inject_opts opts;
 };
 
-static const struct spdk_json_object_decoder rpc_error_information_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoders[] = {
 	{"name", offsetof(struct rpc_error_information, name), spdk_json_decode_string},
 	{"io_type", offsetof(struct rpc_error_information, opts.io_type), rpc_error_bdev_decode_io_type},
 	{"error_type", offsetof(struct rpc_error_information, opts.error_type), rpc_error_bdev_decode_error_type},
@@ -176,8 +176,8 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 	struct rpc_error_information req = {.opts.error_num = 1};
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_error_information_decoders,
-				    SPDK_COUNTOF(rpc_error_information_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_error_inject_error_decoders,
+				    SPDK_COUNTOF(rpc_bdev_error_inject_error_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

@@ -21,7 +21,7 @@ struct rpc_bdev_virtio_blk_hotplug {
 	uint64_t period_us;
 };
 
-static const struct spdk_json_object_decoder rpc_bdev_virtio_blk_hotplug_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_virtio_blk_set_hotplug_decoders[] = {
 	{"enable", offsetof(struct rpc_bdev_virtio_blk_hotplug, enabled), spdk_json_decode_bool, false},
 	{"period_us", offsetof(struct rpc_bdev_virtio_blk_hotplug, period_us), spdk_json_decode_uint64, true},
 };
@@ -33,8 +33,8 @@ rpc_bdev_virtio_blk_set_hotplug(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_virtio_blk_hotplug req = {false, 0};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_bdev_virtio_blk_hotplug_decoders,
-				    SPDK_COUNTOF(rpc_bdev_virtio_blk_hotplug_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_bdev_virtio_blk_set_hotplug_decoders,
+				    SPDK_COUNTOF(rpc_bdev_virtio_blk_set_hotplug_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
@@ -56,7 +56,7 @@ struct rpc_remove_virtio_dev {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_remove_virtio_dev[] = {
+static const struct spdk_json_object_decoder rpc_bdev_virtio_detach_controller_decoders[] = {
 	{"name", offsetof(struct rpc_remove_virtio_dev, name), spdk_json_decode_string },
 };
 
@@ -81,8 +81,8 @@ rpc_bdev_virtio_detach_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_remove_virtio_dev req = {NULL};
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_remove_virtio_dev,
-				    SPDK_COUNTOF(rpc_remove_virtio_dev),
+	if (spdk_json_decode_object(params, rpc_bdev_virtio_detach_controller_decoders,
+				    SPDK_COUNTOF(rpc_bdev_virtio_detach_controller_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -133,7 +133,7 @@ struct rpc_bdev_virtio_attach_controller_ctx {
 	struct spdk_jsonrpc_request *request;
 };
 
-static const struct spdk_json_object_decoder rpc_bdev_virtio_attach_controller_ctx[] = {
+static const struct spdk_json_object_decoder rpc_bdev_virtio_attach_controller_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, name), spdk_json_decode_string },
 	{"trtype", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, trtype), spdk_json_decode_string },
 	{"traddr", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, traddr), spdk_json_decode_string },
@@ -195,8 +195,8 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_bdev_virtio_attach_controller_ctx,
-				    SPDK_COUNTOF(rpc_bdev_virtio_attach_controller_ctx),
+	if (spdk_json_decode_object(params, rpc_bdev_virtio_attach_controller_decoders,
+				    SPDK_COUNTOF(rpc_bdev_virtio_attach_controller_decoders),
 				    req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

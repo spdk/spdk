@@ -10,7 +10,7 @@
 
 #include "spdk/log.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_iscsi_options_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_iscsi_set_options_decoders[] = {
 	{"timeout_sec", offsetof(struct spdk_bdev_iscsi_opts, timeout_sec), spdk_json_decode_uint64, true},
 };
 
@@ -22,8 +22,8 @@ rpc_bdev_iscsi_set_options(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	bdev_iscsi_get_opts(&opts);
-	if (params && spdk_json_decode_object(params, rpc_bdev_iscsi_options_decoders,
-					      SPDK_COUNTOF(rpc_bdev_iscsi_options_decoders),
+	if (params && spdk_json_decode_object(params, rpc_bdev_iscsi_set_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_iscsi_set_options_decoders),
 					      &opts)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -121,7 +121,7 @@ free_rpc_delete_iscsi(struct rpc_delete_iscsi *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_iscsi_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_iscsi_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_iscsi, name), spdk_json_decode_string},
 };
 
@@ -143,8 +143,8 @@ rpc_bdev_iscsi_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_iscsi req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_iscsi_decoders,
-				    SPDK_COUNTOF(rpc_delete_iscsi_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_iscsi_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_iscsi_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

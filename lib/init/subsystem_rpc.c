@@ -56,7 +56,7 @@ struct rpc_framework_get_config_ctx {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_framework_get_config_ctx[] = {
+static const struct spdk_json_object_decoder rpc_framework_get_config_decoders[] = {
 	{"name", offsetof(struct rpc_framework_get_config_ctx, name), spdk_json_decode_string},
 };
 
@@ -68,8 +68,8 @@ rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
 
-	if (spdk_json_decode_object(params, rpc_framework_get_config_ctx,
-				    SPDK_COUNTOF(rpc_framework_get_config_ctx), &req)) {
+	if (spdk_json_decode_object(params, rpc_framework_get_config_decoders,
+				    SPDK_COUNTOF(rpc_framework_get_config_decoders), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid arguments");
 		return;
 	}

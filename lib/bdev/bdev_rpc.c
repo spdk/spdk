@@ -27,7 +27,7 @@ dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void
 {
 }
 
-static const struct spdk_json_object_decoder rpc_set_bdev_opts_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_set_options_decoders[] = {
 	{"bdev_io_pool_size", offsetof(struct spdk_bdev_opts, bdev_io_pool_size), spdk_json_decode_uint32, true},
 	{"bdev_io_cache_size", offsetof(struct spdk_bdev_opts, bdev_io_cache_size), spdk_json_decode_uint32, true},
 	{"bdev_auto_examine", offsetof(struct spdk_bdev_opts, bdev_auto_examine), spdk_json_decode_bool, true},
@@ -43,8 +43,8 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 
 	spdk_bdev_get_opts(&opts, sizeof(opts));
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_set_bdev_opts_decoders,
-					    SPDK_COUNTOF(rpc_set_bdev_opts_decoders), &opts)) {
+		if (spdk_json_decode_object(params, rpc_bdev_set_options_decoders,
+					    SPDK_COUNTOF(rpc_bdev_set_options_decoders), &opts)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -101,7 +101,7 @@ free_rpc_bdev_examine(struct rpc_bdev_examine *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_examine_bdev_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_examine_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_examine, name), spdk_json_decode_string},
 };
 
@@ -112,8 +112,8 @@ rpc_bdev_examine(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_examine req = {NULL};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_examine_bdev_decoders,
-				    SPDK_COUNTOF(rpc_examine_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_examine_decoders,
+				    SPDK_COUNTOF(rpc_bdev_examine_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -1038,7 +1038,7 @@ free_rpc_bdev_enable_histogram_request(struct rpc_bdev_enable_histogram_request 
 	free(r->opc);
 }
 
-static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_request_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_enable_histogram_request, name), spdk_json_decode_string},
 	{"enable", offsetof(struct rpc_bdev_enable_histogram_request, enable), spdk_json_decode_bool},
 	{"opc", offsetof(struct rpc_bdev_enable_histogram_request, opc), spdk_json_decode_string, true},
@@ -1072,8 +1072,8 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev_enable_histogram_opts opts = {};
 	int io_type = 0;
 
-	if (spdk_json_decode_object(params, rpc_bdev_enable_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_bdev_enable_histogram_request_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_enable_histogram_decoders,
+				    SPDK_COUNTOF(rpc_bdev_enable_histogram_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -1121,7 +1121,7 @@ struct rpc_bdev_get_histogram_request {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_bdev_get_histogram_request_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_get_histogram_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_get_histogram_request, name), spdk_json_decode_string}
 };
 
@@ -1190,8 +1190,8 @@ rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_bdev_get_histogram_request_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_decoders,
+				    SPDK_COUNTOF(rpc_bdev_get_histogram_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

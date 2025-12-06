@@ -16,7 +16,7 @@ struct rpc_update_latency {
 	uint64_t latency_us;
 };
 
-static const struct spdk_json_object_decoder rpc_update_latency_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_delay_update_latency_decoders[] = {
 	{"delay_bdev_name", offsetof(struct rpc_update_latency, delay_bdev_name), spdk_json_decode_string},
 	{"latency_type", offsetof(struct rpc_update_latency, latency_type), spdk_json_decode_string},
 	{"latency_us", offsetof(struct rpc_update_latency, latency_us), spdk_json_decode_uint64}
@@ -37,8 +37,8 @@ rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 	enum delay_io_type latency_type;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_update_latency_decoders,
-				    SPDK_COUNTOF(rpc_update_latency_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_delay_update_latency_decoders,
+				    SPDK_COUNTOF(rpc_bdev_delay_update_latency_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(vbdev_delay, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -98,7 +98,7 @@ free_rpc_construct_delay(struct rpc_construct_delay *r)
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_delay_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_delay_create_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_delay, base_bdev_name), spdk_json_decode_string},
 	{"name", offsetof(struct rpc_construct_delay, name), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_delay, uuid), spdk_json_decode_uuid, true},
@@ -116,8 +116,8 @@ rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_construct_delay_decoders,
-				    SPDK_COUNTOF(rpc_construct_delay_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_delay_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_delay_create_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(vbdev_delay, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -152,7 +152,7 @@ free_rpc_delete_delay(struct rpc_delete_delay *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_delay_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_delay_delete_decoders[] = {
 	{"name", offsetof(struct rpc_delete_delay, name), spdk_json_decode_string},
 };
 
@@ -174,8 +174,8 @@ rpc_bdev_delay_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_delay req = {NULL};
 
-	if (spdk_json_decode_object(params, rpc_delete_delay_decoders,
-				    SPDK_COUNTOF(rpc_delete_delay_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_delay_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_delay_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

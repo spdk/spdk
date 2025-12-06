@@ -29,7 +29,7 @@ struct rpc_set_driver {
 	char *driver_name;
 };
 
-static const struct spdk_json_object_decoder rpc_set_driver_decoders[] = {
+static const struct spdk_json_object_decoder rpc_dpdk_cryptodev_set_driver_decoders[] = {
 	{"driver_name", offsetof(struct rpc_set_driver, driver_name), spdk_json_decode_string},
 };
 
@@ -40,8 +40,8 @@ rpc_dpdk_cryptodev_set_driver(struct spdk_jsonrpc_request *request,
 	struct rpc_set_driver req = {};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_set_driver_decoders,
-				    SPDK_COUNTOF(rpc_set_driver_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_dpdk_cryptodev_set_driver_decoders,
+				    SPDK_COUNTOF(rpc_dpdk_cryptodev_set_driver_decoders), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		return;
