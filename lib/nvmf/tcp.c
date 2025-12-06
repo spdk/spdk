@@ -1470,8 +1470,8 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	rc = spdk_sock_getaddr(tqpair->sock, saddr, sizeof(saddr), &sport,
 			       caddr, sizeof(caddr), &cport);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_getaddr() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		return rc;
 	}
 	/* update buffer size for owner when changing format or arguments here */
@@ -1517,7 +1517,7 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
 			       tqpair->initiator_addr, sizeof(tqpair->initiator_addr),
 			       &tqpair->initiator_port);
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_sock_getaddr() failed of tqpair=%p\n", tqpair);
+		SPDK_ERRLOG("spdk_sock_getaddr() failed, tqpair=%p, rc %d: %s\n", tqpair, rc, spdk_strerror(-rc));
 		nvmf_tcp_qpair_destroy(tqpair);
 		return;
 	}

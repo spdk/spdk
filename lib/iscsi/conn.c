@@ -226,7 +226,7 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	rc = spdk_sock_getaddr(sock, conn->target_addr, sizeof conn->target_addr, NULL,
 			       conn->initiator_addr, sizeof conn->initiator_addr, NULL);
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
+		SPDK_ERRLOG("spdk_sock_getaddr() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		goto error_return;
 	}
 

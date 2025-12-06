@@ -244,15 +244,20 @@ posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		   char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
 
 	if (!sock->ready) {
 		SPDK_ERRLOG("Connection %s.\n", sock->connect_ctx ? "in progress" : "failed");
-		errno = sock->connect_ctx ? EAGAIN : ENOTCONN;
-		return -1;
+		return sock->connect_ctx ? -EAGAIN : -ENOTCONN;
 	}
 
 	assert(sock != NULL);
-	return spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
+	rc = spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
+	if (rc < 0) {
+		return -errno;
+	}
+
+	return 0;
 }
 
 static const char *

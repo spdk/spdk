@@ -316,9 +316,6 @@ void spdk_sock_get_default_opts(struct spdk_sock_opts *opts);
  *
  * This function is allowed only when connection is established.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to get address.
  * \param saddr A pointer to the buffer to hold the address of server.
  * \param slen Length of the buffer 'saddr'.
@@ -327,7 +324,7 @@ void spdk_sock_get_default_opts(struct spdk_sock_opts *opts);
  * \param clen Length of the buffer 'caddr'.
  * \param cport A pointer(May be NULL) to the buffer to hold the port info of server.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
 		      char *caddr, int clen, uint16_t *cport);
