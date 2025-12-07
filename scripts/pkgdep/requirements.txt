@@ -13,3 +13,4 @@ ruff
 mypy
 build
 twine
+uv
