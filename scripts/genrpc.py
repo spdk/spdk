@@ -40,6 +40,10 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     parser, subparsers = rpc.create_parser()
     schema_methods = set(method["name"] for method in schema['methods'])
+    class_methods = set(dir(rpc.JSONRPCClient))
+    conflicts = schema_methods & class_methods
+    if conflicts:
+        raise Exception(f"JSONRPCClient methods already exist, so can't name RPC same: {conflicts}")
     cli_methods = set(subparsers.choices.keys())
     missing_in_cli = schema_methods - cli_methods
     missing_in_schema = cli_methods - schema_methods - exceptions

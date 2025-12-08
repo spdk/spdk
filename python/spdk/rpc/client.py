@@ -50,7 +50,7 @@ class JSONRPCClient(object):
         ch.setLevel(logging.DEBUG)
         self._logger = logging.getLogger("JSONRPCClient(%s)" % addr)
         self._logger.addHandler(ch)
-        self.log_set_level(kwargs.get('log_level', logging.ERROR))
+        self.set_log_level(kwargs.get('log_level', logging.ERROR))
         connect_retries = kwargs.get('conn_retries', 0)
 
         self.timeout = timeout if timeout is not None else 60.0
@@ -108,7 +108,7 @@ class JSONRPCClient(object):
     Args:
         lvl: Log level to set as accepted by logger.setLevel
     """
-    def log_set_level(self, lvl):
+    def set_log_level(self, lvl):
         self._logger.info("Setting log level to %s", lvl)
         self._logger.setLevel(lvl)
         self._logger.info("Log level set to %s", lvl)
