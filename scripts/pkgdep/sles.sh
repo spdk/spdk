@@ -31,7 +31,9 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	[[ $VERSION != "16.0" ]] && zypper install -y mscgen
 fi
 if [[ $INSTALL_DAOS == "true" ]]; then
-	zypper ar https://packages.daos.io/v2.0/Leap15/packages/x86_64/ daos_packages
+	if ! zypper lr daos_packages &> /dev/null; then
+		zypper ar https://packages.daos.io/v2.0/Leap15/packages/x86_64/ daos_packages
+	fi
 	rpm --import https://packages.daos.io/RPM-GPG-KEY
 	zypper --non-interactive refresh
 	zypper install -y daos-client daos-devel
