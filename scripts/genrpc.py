@@ -36,6 +36,8 @@ def lint_json_examples() -> None:
 
 
 def lint_c_code(schema: Dict[str, Any]) -> None:
+    schema_methods = set(method["name"] for method in schema['methods'])
+    exception_methods = {"nvmf_create_target", "nvmf_delete_target", "nvmf_get_targets"}
     for folder in ("module", "lib"):
         for path in (base_dir / folder).rglob("*_rpc.c"):
             data = path.read_text()
@@ -43,6 +45,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             for name, func in methods:
                 if name != func:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not match function name 'rpc_{func}'")
+                if name not in schema_methods | exception_methods:
+                    raise ValueError(f"In file {path}: RPC name '{name}' does not appear in schema. Update schema or exception list")
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
