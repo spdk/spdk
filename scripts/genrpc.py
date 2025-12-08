@@ -150,7 +150,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
     env = Environment(loader=FileSystemLoader(base_dir / "doc"),
                       keep_trailing_newline=True,
                       comment_start_string='<!--',
-                      comment_end_string='-->'
+                      comment_end_string='-->',
                       )
     schema_template = env.get_template('jsonrpc.md.jinja2')
     transformation = dict()
@@ -194,7 +194,7 @@ def generate_rpcs(schema: Dict[str, Any]) -> NoReturn:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="RPC functions and documentation generator"
+        description="RPC functions and documentation generator",
     )
     parser.add_argument(
         "-s",

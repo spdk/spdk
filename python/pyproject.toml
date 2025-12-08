@@ -110,6 +110,7 @@ select = [
     "F",  # pyflakes
     "W",  # warnings
     "I",  # isort (import sorting)
+    "COM",# flake8-commas
 ]
 
 [tool.mypy]

@@ -72,7 +72,7 @@ if __name__ == "__main__":
     p.add_argument('-M', dest="rw_percentage", help='rwmixread (100 for reads, 0 for writes)',
                    type=int, choices=range(0, 101), metavar="[0-100]")
     p.add_argument('-w', dest="workload_type", choices=PATTERN_TYPES_STR, type=str.lower,
-                   help=f'io pattern type, must be one of {PATTERN_TYPES_STR}',)
+                   help=f'io pattern type, must be one of {PATTERN_TYPES_STR}')
     p.set_defaults(func=perform_tests)
 
     def call_rpc_func(args):

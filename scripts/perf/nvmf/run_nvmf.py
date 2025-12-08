@@ -61,7 +61,7 @@ class Server(ABC):
             ConfigField(name='transport', required=True),
             ConfigField(name='skip_spdk_install', default=False),
             ConfigField(name='irdma_roce_enable', default=False),
-            ConfigField(name='pause_frames', default=None)
+            ConfigField(name='pause_frames', default=None),
         ]
 
         self.read_config(config_fields, general_config)
@@ -72,7 +72,7 @@ class Server(ABC):
             ConfigField(name='mode', required=True),
             ConfigField(name='irq_scripts_dir', default='/usr/src/local/mlnx-tools/ofed_scripts'),
             ConfigField(name='enable_arfs', default=False),
-            ConfigField(name='tuned_profile', default='')
+            ConfigField(name='tuned_profile', default=''),
         ]
         self.read_config(config_fields, server_config)
 
@@ -370,7 +370,7 @@ class Server(ABC):
             "firewalld": "inactive",
             "irqbalance": "inactive",
             "lldpad.service": "inactive",
-            "lldpad.socket": "inactive"
+            "lldpad.socket": "inactive",
         }
 
         for service in svc_target_state:
@@ -410,7 +410,7 @@ class Server(ABC):
             "net.ipv4.tcp_wmem": "8192 1048576 33554432",
             "net.ipv4.route.flush": 1,
             "vm.overcommit_memory": 1,
-            "net.core.rps_sock_flow_entries": 0
+            "net.core.rps_sock_flow_entries": 0,
         }
 
         if self.enable_adq:
@@ -444,7 +444,7 @@ class Server(ABC):
 
             self.tuned_restore_dict = {
                 "profile": profile,
-                "mode": profile_mode
+                "mode": profile_mode,
             }
 
         self.exec_cmd(["sudo", "systemctl", "start", service])
@@ -548,7 +548,7 @@ class Server(ABC):
             r"CPU\d+: Core temperature is above threshold, cpu clock is throttled",
             r"mlx5_core \S+: poll_health:\d+:\(pid \d+\): device's health compromised",
             r"mlx5_core \S+: print_health_info:\d+:\(pid \d+\): Health issue observed, High temperature",
-            r"mlx5_core \S+: temp_warn:\d+:\(pid \d+\): High temperature on sensors"
+            r"mlx5_core \S+: temp_warn:\d+:\(pid \d+\): High temperature on sensors",
         ]
 
         issue_found = False
@@ -588,7 +588,7 @@ class Target(Server):
             ConfigField(name='enable_pm', default=True),
             ConfigField(name='enable_sar', default=True),
             ConfigField(name='enable_pcm', default=True),
-            ConfigField(name='enable_dpdk_memory', default=True)
+            ConfigField(name='enable_dpdk_memory', default=True),
         ]
         self.read_config(config_fields, target_config)
 
@@ -770,7 +770,7 @@ class Initiator(Server):
             ConfigField(name='fio_bin', default='/usr/src/fio/fio'),
             ConfigField(name='nvmecli_bin', default='nvme'),
             ConfigField(name='cpu_frequency', default=None),
-            ConfigField(name='allow_cpu_sharing', default=True)
+            ConfigField(name='allow_cpu_sharing', default=True),
         ]
 
         self.read_config(config_fields, initiator_config)
@@ -1101,19 +1101,19 @@ class KernelTarget(Target):
                 "attr": {
                     "allow_any_host": "1",
                     "serial": serial,
-                    "version": "1.3"
+                    "version": "1.3",
                 },
                 "namespaces": [
                     {
                         "device": {
                             "path": bdev_name,
-                            "uuid": "%s" % uuid.uuid4()
+                            "uuid": "%s" % uuid.uuid4(),
                         },
                         "enable": 1,
-                        "nsid": port
-                    }
+                        "nsid": port,
+                    },
                 ],
-                "nqn": nqn
+                "nqn": nqn,
             })
 
             nvmet_cfg["ports"].append({
@@ -1121,11 +1121,11 @@ class KernelTarget(Target):
                     "adrfam": "ipv4",
                     "traddr": ip,
                     "trsvcid": port,
-                    "trtype": self.transport
+                    "trtype": self.transport,
                 },
                 "portid": bdev_num,
                 "referrals": [],
-                "subsystems": [nqn]
+                "subsystems": [nqn],
             })
 
             self.subsystem_info_list.append((port, nqn, ip))
@@ -1178,7 +1178,7 @@ class SPDKTarget(Target):
             ConfigField(name='iobuf_small_pool_count', default=32767),
             ConfigField(name='iobuf_large_pool_count', default=16383),
             ConfigField(name='num_cqe', default=4096),
-            ConfigField(name='sock_impl', default='posix')
+            ConfigField(name='sock_impl', default='posix'),
         ]
 
         self.read_config(config_fields, target_config)
@@ -1239,7 +1239,7 @@ class SPDKTarget(Target):
             "max_queue_depth": self.max_queue_depth,
             "dif_insert_or_strip": self.dif_insert_strip,
             "sock_priority": self.adq_priority,
-            "num_cqe": self.num_cqe
+            "num_cqe": self.num_cqe,
         }
 
         if self.enable_adq:
@@ -1463,7 +1463,7 @@ class KernelInitiator(Initiator):
             block_sysfs_settings = {
                 "iostats": "0",
                 "rq_affinity": "0",
-                "nomerges": "2"
+                "nomerges": "2",
             }
 
             for disk in self.get_connected_nvme_list():
@@ -1589,7 +1589,7 @@ class SPDKInitiator(Initiator):
             "subsystems": [
                 {
                     "subsystem": "bdev",
-                    "config": []
+                    "config": [],
                 },
                 {
                     "subsystem": "iobuf",
@@ -1598,10 +1598,10 @@ class SPDKInitiator(Initiator):
                             "method": "iobuf_set_options",
                             "params": {
                                 "small_pool_count": self.small_pool_count,
-                                "large_pool_count": self.large_pool_count
-                            }
-                        }
-                    ]
+                                "large_pool_count": self.large_pool_count,
+                            },
+                        },
+                    ],
                 },
                 {
                     "subsystem": "sock",
@@ -1609,12 +1609,12 @@ class SPDKInitiator(Initiator):
                         {
                             "method": "sock_set_default_impl",
                             "params": {
-                                "impl_name": self.sock_impl
-                            }
-                        }
-                    ]
-                }
-            ]
+                                "impl_name": self.sock_impl,
+                            },
+                        },
+                    ],
+                },
+            ],
         }
 
         for i, subsys in enumerate(remote_subsystem_list):
@@ -1627,8 +1627,8 @@ class SPDKInitiator(Initiator):
                     "traddr": sub_addr,
                     "trsvcid": sub_port,
                     "subnqn": sub_nqn,
-                    "adrfam": "IPv4"
-                }
+                    "adrfam": "IPv4",
+                },
             }
 
             if self.enable_adq:
@@ -1853,7 +1853,7 @@ if __name__ == "__main__":
                 "rate_iops": data[k].get("rate_iops", 0),
                 "offset": data[k].get("offset", False),
                 "offset_inc": data[k].get("offset_inc", 0),
-                "numa_align": data[k].get("numa_align", 1)
+                "numa_align": data[k].get("numa_align", 1),
             }
         else:
             continue
@@ -1865,7 +1865,7 @@ if __name__ == "__main__":
 
     for i in initiators:
         target_obj.initiator_info.append(
-            {"name": i.name, "target_nic_ips": i.target_nic_ips, "initiator_nic_ips": i.nic_ips}
+            {"name": i.name, "target_nic_ips": i.target_nic_ips, "initiator_nic_ips": i.nic_ips},
         )
 
     try:

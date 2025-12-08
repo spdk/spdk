@@ -54,7 +54,7 @@ def is_spdk_gpt(block, entry):
         readb(block_path, part_entry_lba + 4, 2, "H"),
         readb(block_path, part_entry_lba + 6, 2, "H"),
         readb(block_path, part_entry_lba + 8, 2, ">H"),
-        readb(block_path, part_entry_lba + 10, 8, ">Q") >> 16
+        readb(block_path, part_entry_lba + 10, 8, ">Q") >> 16,
     ]
 
     return guid == spdk_guid or guid == spdk_guid2

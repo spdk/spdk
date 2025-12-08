@@ -38,7 +38,7 @@ rpc_param = {
     'header_digest': False,
     'data_digest': False,
     'log_flag': 'rpc',
-    'cpumask': 0x1
+    'cpumask': 0x1,
 }
 
 

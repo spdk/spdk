@@ -118,7 +118,7 @@ def add_parser(subparsers):
         '--cache-line-size',
         help='OCF cache line size. The unit is KiB',
         type=int,
-        choices=[4, 8, 16, 32, 64]
+        choices=[4, 8, 16, 32, 64],
     )
     p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
     p.add_argument('core_bdev_name', help='Name of underlying core bdev')
@@ -585,7 +585,7 @@ def add_parser(subparsers):
                    name of a key attached to the keyring or a path to a file containing the key.  The
                    latter method is deprecated.""")
     p.add_argument('-m', '--max-bdevs', type=int,
-                   help='The size of the name array for newly created bdevs. Default is 128',)
+                   help='The size of the name array for newly created bdevs. Default is 128')
     p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
     p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
     p.add_argument('-U', '--allow-unrecognized-csi', help="""Allow attaching namespaces with unrecognized command set identifiers.

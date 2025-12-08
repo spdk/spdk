@@ -87,7 +87,7 @@ def get_iscsi_destroy_method(iscsi):
     delete_method_map = {'iscsi_create_portal_group': "iscsi_delete_portal_group",
                          'iscsi_create_initiator_group': "iscsi_delete_initiator_group",
                          'iscsi_create_target_node': "iscsi_delete_target_node",
-                         'iscsi_set_options': None
+                         'iscsi_set_options': None,
                          }
     return delete_method_map[iscsi['method']]
 
@@ -114,7 +114,7 @@ def clear_iscsi_subsystem(args, iscsi_config):
 
 
 def get_nbd_destroy_method(nbd):
-    delete_method_map = {'nbd_start_disk': "nbd_stop_disk"
+    delete_method_map = {'nbd_start_disk': "nbd_stop_disk",
                          }
     return delete_method_map[nbd['method']]
 

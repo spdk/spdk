@@ -124,7 +124,7 @@ class JSONRPCClient(object):
         req = {
             'jsonrpc': '2.0',
             'method': method,
-            'id': self._request_id
+            'id': self._request_id,
         }
 
         if params:
@@ -252,7 +252,7 @@ class JSONRPCGoClient(object):
 
         command_info = {
             "method": method,
-            "params": params
+            "params": params,
         }
         resp = lib.spdk_gorpc_call(json.dumps(command_info).encode('utf-8'),
                                    self.addr.encode('utf-8'))
