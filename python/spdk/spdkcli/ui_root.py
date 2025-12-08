@@ -64,7 +64,7 @@ class UIRoot(UINode):
         def w(self, **kwargs):
             self.client.set_log_level("INFO" if self.verbose else "ERROR")
             r = f(self, **kwargs)
-            self.client.set_log_level(level="ERROR")
+            self.client.set_log_level("ERROR")
             return r
         return w
 
