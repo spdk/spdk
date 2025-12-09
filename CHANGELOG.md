@@ -11,6 +11,20 @@ it using --no-wait (nowait) option.
 
 All aliases are now removed from the block device names list upon unregistration.
 
+### util/net
+
+`spdk_net_getaddr` returns negative errno value on failure instead -1 and setting errno.
+
+### sock
+
+`spdk_sock_getaddr`, `spdk_sock_close`, `spdk_sock_flush`, `spdk_sock_recv`, `spdk_sock_writev`,
+`spdk_sock_readv`, `spdk_sock_recv_next`, `spdk_sock_set_recvlowat`, `spdk_sock_set_recvbuf`,
+`spdk_sock_set_sendbuf`, `spdk_sock_group_add_sock`, `spdk_sock_group_remove_sock`,
+`spdk_sock_group_provide_buf`, `spdk_sock_group_poll`, `spdk_sock_group_poll_count`,
+`spdk_sock_group_close`, `spdk_sock_impl_get_opts`, `spdk_sock_impl_set_opts`,
+`spdk_sock_set_default_impl`, `spdk_sock_group_register_interrupt`
+return negative errno value on failure instead -1 and setting errno.
+
 ### event
 
 Added new public API: `spdk_app_setup_trace()` to set up SPDK tracing for applications.
