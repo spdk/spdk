@@ -9,6 +9,7 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk_internal/sock_module.h"
+#include "spdk/string.h"
 
 static void
 sock_subsystem_init(void)
@@ -29,10 +30,10 @@ sock_subsystem_init(void)
 
 	if (sock_impl_override) {
 		rc = spdk_sock_set_default_impl(sock_impl_override);
-		if (rc) {
+		if (rc < 0) {
 			SPDK_ERRLOG("Could not override socket implementation with: %s,"
-				    " set by SPDK_SOCK_IMPL_DEFAULT environment variable\n",
-				    sock_impl_override);
+				    " set by SPDK_SOCK_IMPL_DEFAULT environment variable, rc %d: %s\n", sock_impl_override, rc,
+				    spdk_strerror(-rc));
 		} else {
 			SPDK_NOTICELOG("Default socket implementation override: %s\n",
 				       sock_impl_override);

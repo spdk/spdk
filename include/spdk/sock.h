@@ -726,28 +726,22 @@ int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_gr
 /**
  * Get current socket implementation options.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param impl_name The socket implementation to use, such as "posix".
  * \param opts Pointer to allocated spdk_sock_impl_opts structure that will be filled with actual values.
  * \param len On input specifies size of passed opts structure. On return it is set to actual size that was filled with values.
  *
- * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_impl_get_opts(const char *impl_name, struct spdk_sock_impl_opts *opts, size_t *len);
 
 /**
  * Set socket implementation options.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param impl_name The socket implementation to use, such as "posix".
  * \param opts Pointer to allocated spdk_sock_impl_opts structure with new options values.
  * \param len Size of passed opts structure.
  *
- * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts *opts,
 			    size_t len);
@@ -759,7 +753,7 @@ int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_o
  * (such as @ref spdk_sock_connect, @ref spdk_sock_listen and etc) ignores the default value set by this function.
  *
  * \param impl_name The socket implementation to use, such as "posix".
- * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_default_impl(const char *impl_name);
 

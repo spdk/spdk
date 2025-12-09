@@ -1208,19 +1208,16 @@ spdk_sock_impl_get_opts(const char *impl_name, struct spdk_sock_impl_opts *opts,
 	struct spdk_net_impl *impl;
 
 	if (!impl_name || !opts || !len) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	impl = sock_get_impl_by_name(impl_name);
 	if (!impl) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	if (!impl->get_opts) {
-		errno = ENOTSUP;
-		return -1;
+		return -ENOTSUP;
 	}
 
 	return impl->get_opts(opts, len);
@@ -1233,19 +1230,16 @@ spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts 
 	struct spdk_net_impl *impl;
 
 	if (!impl_name || !opts) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	impl = sock_get_impl_by_name(impl_name);
 	if (!impl) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	if (!impl->set_opts) {
-		errno = ENOTSUP;
-		return -1;
+		return -ENOTSUP;
 	}
 
 	return impl->set_opts(opts, len);
@@ -1387,14 +1381,12 @@ spdk_sock_set_default_impl(const char *impl_name)
 	struct spdk_net_impl *impl;
 
 	if (!impl_name) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	impl = sock_get_impl_by_name(impl_name);
 	if (!impl) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	if (impl == g_default_impl) {
@@ -1409,7 +1401,6 @@ spdk_sock_set_default_impl(const char *impl_name)
 	}
 
 	g_default_impl = impl;
-
 	return 0;
 }
 

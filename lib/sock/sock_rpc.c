@@ -37,7 +37,8 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 
 	len = sizeof(sock_opts);
 	rc = spdk_sock_impl_get_opts(impl_name, &sock_opts, &len);
-	if (rc) {
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_impl_get_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
@@ -134,7 +135,8 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	/* Retrieve default opts for requested socket implementation */
 	len = sizeof(opts.sock_opts);
 	rc = spdk_sock_impl_get_opts(opts.impl_name, &opts.sock_opts, &len);
-	if (rc) {
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_impl_get_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		free(opts.impl_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -151,7 +153,8 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = spdk_sock_impl_set_opts(opts.impl_name, &opts.sock_opts, sizeof(opts.sock_opts));
-	if (rc != 0) {
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_impl_set_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		free(opts.impl_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -180,7 +183,8 @@ rpc_sock_set_default_impl(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = spdk_sock_set_default_impl(impl_name);
-	if (rc) {
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_set_default_impl() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		free(impl_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");

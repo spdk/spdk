@@ -174,8 +174,7 @@ _sock_impl_get_opts(struct spdk_sock_impl_opts *opts, struct spdk_sock_impl_opts
 		    size_t *len)
 {
 	if (!opts || !len) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	assert(sizeof(*opts) >= *len);
@@ -183,7 +182,6 @@ _sock_impl_get_opts(struct spdk_sock_impl_opts *opts, struct spdk_sock_impl_opts
 
 	posix_sock_copy_impl_opts(opts, impl_opts, *len);
 	*len = spdk_min(*len, sizeof(*impl_opts));
-
 	return 0;
 }
 
@@ -204,13 +202,11 @@ _sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, struct spdk_sock_imp
 		    size_t len)
 {
 	if (!opts) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	assert(sizeof(*opts) >= len);
 	posix_sock_copy_impl_opts(impl_opts, opts, len);
-
 	return 0;
 }
 

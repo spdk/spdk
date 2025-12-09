@@ -332,12 +332,12 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 	int rc;
 
 	rc = spdk_sock_impl_get_opts(impl_name, &sock_opts, &opts_size);
-	if (rc != 0) {
-		if (errno == EINVAL) {
+	if (rc < 0) {
+		if (rc == -EINVAL) {
 			fprintf(stderr, "Unknown sock impl %s\n", impl_name);
 		} else {
-			fprintf(stderr, "Failed to get opts for sock impl %s: error %d (%s)\n", impl_name, errno,
-				strerror(errno));
+			fprintf(stderr, "spdk_sock_impl_get_opts() failed, sock impl %s, %d: %s\n", impl_name, rc,
+				spdk_strerror(-rc));
 		}
 		return;
 	}
@@ -364,9 +364,10 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 		return;
 	}
 
-	if (spdk_sock_impl_set_opts(impl_name, &sock_opts, opts_size)) {
-		fprintf(stderr, "Failed to set %s: %d for sock impl %s : error %d (%s)\n", field, val, impl_name,
-			errno, strerror(errno));
+	rc = spdk_sock_impl_set_opts(impl_name, &sock_opts, opts_size);
+	if (rc < 0) {
+		fprintf(stderr, "spdk_sock_impl_set_opts() failed to set %s: %d for sock impl %s, rc %d: %s\n",
+			field, val, impl_name, rc, strerror(-rc));
 	}
 }
 
@@ -2753,7 +2754,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			sock_impl = optarg;
 			rc = spdk_sock_set_default_impl(optarg);
 			if (rc) {
-				fprintf(stderr, "Failed to set sock impl %s, err %d (%s)\n", optarg, errno, strerror(errno));
+				fprintf(stderr, "spdk_sock_set_default_impl() failed to set sock impl %s, rc %d: %s\n", optarg, rc,
+					spdk_strerror(-rc));
 				return 1;
 			}
 			break;
