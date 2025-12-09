@@ -107,30 +107,39 @@ yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 
 [[ $VERSION_ID != 10* ]] && yum install -y libiscsi-devel
 
-# Minimal install
-# workaround for arm: ninja fails with dep on skbuild python module
-if [ "$(uname -m)" = "aarch64" ]; then
-	pip3 install scikit-build
-fi
-
 if echo "$ID $VERSION_ID" | grep -E -q 'rhel 8|rocky 8'; then
 	yum install -y python36 python36-devel
 	#Create hard link to use in SPDK as python
 	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
 		ln -s /etc/alternatives/python3 /usr/bin/python
 	fi
-	# pip3, which is shipped with centos8 and rocky8, is currently providing faulty ninja binary
-	# which segfaults at each run. To workaround it, upgrade pip itself and then use it for each
-	# package - new pip will provide ninja at the same version but with the actually working
-	# binary.
-	# shellcheck disable=SC2218
-	pip3 install --upgrade pip
-	pip3() { /usr/local/bin/pip "$@"; }
 else
 	yum install -y python python3-devel
 fi
 
-pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
+# per PEP668 work inside virtual env
+virtdir=${PIP_VIRTDIR:-/var/spdk/dependencies/pip}
+if python3 -c 'import sys; exit(0 if sys.version_info >= (3,9) else 1)'; then
+	python3 -m venv --upgrade-deps --system-site-packages "$virtdir"
+else
+	# --upgrade-deps was introduced only in Python 3.9.0 (October 5, 2020).
+	python3 -m venv --system-site-packages "$virtdir"
+	# pip3, which is shipped with centos8 and rocky8, is currently providing faulty ninja binary
+	# which segfaults at each run. To workaround it, upgrade pip itself and then use it for each
+	# package - new pip will provide ninja at the same version but with the actually working
+	# binary.
+	"$virtdir"/bin/pip install --upgrade pip setuptools
+fi
+source "$virtdir/bin/activate"
+python -m pip install -r "$rootdir/scripts/pkgdep/requirements.txt"
+
+# workaround for arm: ninja fails with dep on skbuild python module
+if [[ "$(uname -m)" == "aarch64" ]]; then
+	python -m pip install --upgrade scikit-build
+fi
+
+# Fixes issue: #3721
+pkgdep_toolpath meson "${virtdir}/bin"
 
 # Additional dependencies for SPDK CLI
 yum install -y python3-configshell python3-pexpect
