@@ -1770,7 +1770,7 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		 * It will automatically call io_uring_enter appropriately. */
 		ret = io_uring_submit(&group->uring);
 		if (ret < 0) {
-			return 1;
+			return ret;
 		}
 		group->io_queued = 0;
 		group->io_inflight += to_submit;

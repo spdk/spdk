@@ -1977,8 +1977,7 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 		}
 
 		SPDK_ERRLOG("Connection failed.\n");
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 
 #if defined(SPDK_EPOLL)
@@ -1998,9 +1997,8 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 
 	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
 #endif
-
-	if (rc != 0) {
-		return rc;
+	if (rc < 0) {
+		return -errno;
 	}
 
 	/* switched from another polling group due to scheduling */
@@ -2071,8 +2069,7 @@ posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct sp
 #endif
 
 	spdk_sock_abort_requests(_sock);
-
-	return rc;
+	return rc < 0 ? -errno : rc;
 }
 
 static int
@@ -2148,14 +2145,17 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	assert(max_events > 0);
 
 #if defined(SPDK_EPOLL)
-	num_events = epoll_wait(group->fd, events, max_events, 0);
+	rc = epoll_wait(group->fd, events, max_events, 0);
 #elif defined(SPDK_KEVENT)
-	num_events = kevent(group->fd, NULL, 0, events, max_events, &ts);
+	rc = kevent(group->fd, NULL, 0, events, max_events, &ts);
 #endif
 
-	if (num_events == -1) {
-		return -1;
-	} else if (num_events == 0 && !TAILQ_EMPTY(&_group->socks)) {
+	if (rc < 0) {
+		return -errno;
+	}
+
+	num_events = rc;
+	if (num_events == 0 && !TAILQ_EMPTY(&_group->socks)) {
 		sock = TAILQ_FIRST(&_group->socks);
 		psock = __posix_sock(sock);
 		/* poll() is called here to busy poll the queue associated with
@@ -2279,7 +2279,7 @@ _sock_group_impl_close(struct spdk_sock_group_impl *_group, uint32_t enable_plac
 	spdk_pipe_group_destroy(group->pipe_group);
 	rc = close(group->fd);
 	free(group);
-	return rc;
+	return rc < 0 ? -errno : rc;
 }
 
 static int

@@ -2467,8 +2467,9 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		tgroup = nvme_tcp_poll_group(qpair->poll_group);
 
 		rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair);
-		if (rc) {
-			NVME_TQPAIR_ERRLOG(tqpair, "Unable to activate the tcp qpair.\n");
+		if (rc < 0) {
+			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_group_add_sock() failed, rc %d: %s\n", rc,
+					   spdk_strerror(-rc));
 			return rc;
 		}
 
@@ -2813,16 +2814,20 @@ nvme_tcp_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	int rc;
 
 	if (TAILQ_ENTRY_ENQUEUED(tqpair, link_poll)) {
 		TAILQ_REMOVE_CLEAR(&group->needs_poll, tqpair, link_poll);
 	}
 
 	if (tqpair->sock && group->sock_group) {
-		if (spdk_sock_group_remove_sock(group->sock_group, tqpair->sock)) {
+		rc = spdk_sock_group_remove_sock(group->sock_group, tqpair->sock);
+		if (rc < 0) {
+			SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 			return -EPROTO;
 		}
 	}
+
 	return 0;
 }
 
@@ -2868,13 +2873,13 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
 	struct nvme_tcp_qpair *tqpair, *tmp_tqpair;
-	int num_events;
+	int rc, num_events;
 
 	group->completions_per_qpair = completions_per_qpair;
 	group->num_completions = 0;
 	group->stats.polls++;
 
-	num_events = spdk_sock_group_poll(group->sock_group);
+	rc = spdk_sock_group_poll(group->sock_group);
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
 		tqpair = nvme_tcp_qpair(qpair);
@@ -2903,13 +2908,14 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 		nvme_tcp_qpair_check_timeout(qpair);
 	}
 
-	if (spdk_unlikely(num_events < 0)) {
-		return num_events;
+	if (spdk_unlikely(rc < 0)) {
+		SPDK_ERRLOG("spdk_sock_group_poll() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+		return rc;
 	}
 
+	num_events = rc;
 	group->stats.idle_polls += !num_events;
 	group->stats.socket_completions += num_events;
-
 	return group->num_completions;
 }
 
@@ -2933,13 +2939,12 @@ nvme_tcp_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 	}
 
 	rc = spdk_sock_group_close(&group->sock_group);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to close the sock group for a tcp poll group.\n");
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_group_close() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		assert(false);
 	}
 
 	free(tgroup);
-
 	return 0;
 }
 

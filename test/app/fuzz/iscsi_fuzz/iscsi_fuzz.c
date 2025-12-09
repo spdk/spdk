@@ -919,7 +919,8 @@ poll_dev(void *ctx)
 
 	rc = spdk_sock_group_poll(dev_ctx->group);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to poll sock_group=%p\n", dev_ctx->group);
+		SPDK_ERRLOG("spdk_sock_group_poll() failed, sock_group=%p, rc %d: %s\n", dev_ctx->group, rc,
+			    spdk_strerror(-rc));
 	}
 
 	return 0;

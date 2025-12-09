@@ -998,22 +998,19 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	int rc;
 
 	if (cb_fn == NULL) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	if (sock->group_impl != NULL) {
 		/*
 		 * This sock is already part of a sock_group.
 		 */
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	group_impl = sock_get_group_impl_from_group(sock, group);
 	if (group_impl == NULL) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	rc = group_impl->net_impl->group_impl_add_sock(group_impl, sock);
@@ -1025,7 +1022,6 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	sock->group_impl = group_impl;
 	sock->cb_fn = cb_fn;
 	sock->cb_arg = cb_arg;
-
 	return 0;
 }
 
@@ -1037,8 +1033,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 
 	group_impl = sock_get_group_impl_from_group(sock, group);
 	if (group_impl == NULL) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	assert(group_impl == sock->group_impl);
@@ -1097,17 +1092,18 @@ sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 			   int max_events)
 {
 	struct spdk_sock *socks[MAX_EVENTS_PER_POLL];
-	int num_events, i;
+	int num_events, i, rc;
 
 	if (TAILQ_EMPTY(&group_impl->socks)) {
 		return 0;
 	}
 
-	num_events = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks);
-	if (num_events == -1) {
-		return -1;
+	rc = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks);
+	if (rc < 0) {
+		return rc;
 	}
 
+	num_events = rc;
 	for (i = 0; i < num_events; i++) {
 		struct spdk_sock *sock = socks[i];
 		assert(sock->cb_fn != NULL);
@@ -1124,8 +1120,7 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 	int rc, num_events = 0;
 
 	if (max_events < 1) {
-		errno = -EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	/*
@@ -1158,16 +1153,14 @@ spdk_sock_group_close(struct spdk_sock_group **_group)
 	int rc, fd;
 
 	if (_group == NULL || (*_group) == NULL) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	group = *_group;
 
 	STAILQ_FOREACH_SAFE(group_impl, &group->group_impls, link, tmp) {
 		if (!TAILQ_EMPTY(&group_impl->socks)) {
-			errno = EBUSY;
-			return -1;
+			return -EBUSY;
 		}
 	}
 
@@ -1191,7 +1184,6 @@ spdk_sock_group_close(struct spdk_sock_group **_group)
 
 	free(group);
 	*_group = NULL;
-
 	return 0;
 }
 
@@ -1235,7 +1227,8 @@ spdk_sock_impl_get_opts(const char *impl_name, struct spdk_sock_impl_opts *opts,
 }
 
 int
-spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts *opts, size_t len)
+spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts *opts,
+			size_t len)
 {
 	struct spdk_net_impl *impl;
 

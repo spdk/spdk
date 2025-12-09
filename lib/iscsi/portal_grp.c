@@ -165,8 +165,8 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 	}
 
 	rc = spdk_sock_group_add_sock(p->group->sock_group, sock, iscsi_portal_accept, p);
-	if (rc) {
-		SPDK_ERRLOG("Unable to add listen socket to poll group\n");
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		spdk_sock_close(&sock);
 		return -1;
 	}
@@ -186,8 +186,8 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 			      p->host, p->port);
 
 		rc = spdk_sock_group_remove_sock(p->group->sock_group, p->sock);
-		if (rc) {
-			SPDK_ERRLOG("Unable to remove listen socket from poll group\n");
+		if (rc < 0) {
+			SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		}
 
 		spdk_sock_close(&p->sock);

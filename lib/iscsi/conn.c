@@ -119,7 +119,8 @@ iscsi_poll_group_add_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi_co
 
 	rc = spdk_sock_group_add_sock(pg->sock_group, conn->sock, iscsi_conn_sock_cb, conn);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to add sock=%p of conn=%p\n", conn->sock, conn);
+		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, sock=%p, conn=%p, rc %d: %s\n", conn->sock, conn,
+			    rc, spdk_strerror(-rc));
 		return;
 	}
 
@@ -135,7 +136,8 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 	assert(conn->sock != NULL);
 	rc = spdk_sock_group_remove_sock(pg->sock_group, conn->sock);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
+		SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, sock=%p, conn=%p, rc %d: %s\n", conn->sock, conn,
+			    rc, spdk_strerror(-rc));
 	}
 
 	conn->is_stopped = true;

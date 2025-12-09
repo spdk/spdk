@@ -642,15 +642,12 @@ void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
 /**
  * Add a socket to the group.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param group Socket group.
  * \param sock Socket to add.
  * \param cb_fn Called when the operation completes.
  * \param cb_arg Argument passed to the callback function.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			     spdk_sock_cb cb_fn, void *cb_arg);
@@ -661,7 +658,7 @@ int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *so
  * \param group Socket group.
  * \param sock Socket to remove.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock);
 
@@ -669,15 +666,12 @@ int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock 
  * Provides a buffer to the group to be used in its receive pool.
  * See spdk_sock_recv_next() for more details.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param group Socket group.
  * \param buf Pointer the buffer provided.
  * \param len Length of the buffer.
  * \param ctx Pointer that will be returned in spdk_sock_recv_next()
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t len, void *ctx);
 
@@ -686,35 +680,29 @@ int spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t
  *
  * \param group Group to poll.
  *
- * \return the number of events on success, -1 on failure.
+ * \return the number of events on success, negative errno value on failure.
  */
 int spdk_sock_group_poll(struct spdk_sock_group *group);
 
 /**
  * Poll incoming events up to max_events for each registered socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param group Group to poll.
  * \param max_events Number of maximum events to poll for each socket.
  *
- * \return the number of events on success, -1 on failure.
+ * \return the number of events on success, negative errno value on failure.
  */
 int spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events);
 
 /**
  * Close all registered sockets of the group and then remove the group.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * If any sockets were added to the group by \ref spdk_sock_group_add_sock
  * these must be removed first by using \ref spdk_sock_group_remove_sock.
  *
  * \param group Group to close.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_close(struct spdk_sock_group **group);
 

@@ -519,16 +519,14 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	/* pass null cb_fn */
 	rc = spdk_sock_group_add_sock(group, server_sock, NULL, NULL);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
 	CU_ASSERT(rc == 0);
 
 	/* try adding sock a second time */
 	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	g_read_data_called = false;
 	g_bytes_read = 0;
@@ -564,8 +562,7 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	/* Try to close sock_group while it still has sockets. */
 	rc = spdk_sock_group_close(&group);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EBUSY);
+	CU_ASSERT(rc == -EBUSY);
 
 	/* Try to close sock while it is still part of a sock_group. */
 	rc = spdk_sock_close(&server_sock);
