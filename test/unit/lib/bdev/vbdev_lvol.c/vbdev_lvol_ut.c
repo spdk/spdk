@@ -428,6 +428,7 @@ spdk_bdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, voi
 	vbdev->internal.unregister_cb = cb_fn;
 	vbdev->internal.unregister_ctx = cb_arg;
 
+	spdk_bdev_alias_del_all(vbdev);
 	rc = vbdev->fn_table->destruct(vbdev->ctxt);
 	CU_ASSERT(rc == 1);
 }
