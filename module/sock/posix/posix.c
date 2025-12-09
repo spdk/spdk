@@ -386,15 +386,13 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 		}
 
 		SPDK_ERRLOG("Connection failed.\n");
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 
 	if (_sock->impl_opts.enable_recv_pipe) {
 		rc = posix_sock_alloc_pipe(sock, sz);
 		if (rc) {
-			errno = rc;
-			return -1;
+			return rc;
 		}
 	}
 
@@ -407,8 +405,8 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
-	if (rc) {
-		return rc;
+	if (rc < 0) {
+		return -errno;
 	}
 
 	_sock->impl_opts.recv_buf_size = sz;
@@ -431,8 +429,7 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 		}
 
 		SPDK_ERRLOG("Connection failed.\n");
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 
 	/* Set kernel buffer size to be at least MIN_SO_SNDBUF_SIZE and
@@ -444,8 +441,8 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
-	if (rc) {
-		return rc;
+	if (rc < 0) {
+		return -errno;
 	}
 
 	_sock->impl_opts.send_buf_size = sz;
@@ -1736,7 +1733,7 @@ static int
 posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	int val;
+	int rc, val;
 
 	assert(sock != NULL);
 
@@ -1747,12 +1744,12 @@ posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 		}
 
 		SPDK_ERRLOG("Connection failed.\n");
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 
 	val = nbytes;
-	return setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
+	return rc < 0 ? -errno : rc;
 }
 
 static bool
@@ -2350,9 +2347,8 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	if (ctx->set_recvlowat != -1) {
 		rc = posix_sock_set_recvlowat(&sock->base, ctx->set_recvlowat);
 		if (rc < 0) {
-			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_recvlowat() failed %d (errno=%d).\n",
-				    rc, errno);
-			rc = -errno;
+			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_recvlowat() failed, rc %d: %s.\n",
+				    rc, spdk_strerror(-rc));
 			goto err;
 		}
 	}
@@ -2360,9 +2356,8 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	if (ctx->set_recvbuf != -1) {
 		rc = posix_sock_set_recvbuf(&sock->base, ctx->set_recvbuf);
 		if (rc < 0) {
-			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_recvbuf() failed %d (errno=%d).\n",
-				    rc, errno);
-			rc = -errno;
+			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_recvbuf() failed, rc %d: %s.\n",
+				    rc, spdk_strerror(-rc));
 			goto err;
 		}
 	}
@@ -2370,9 +2365,8 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	if (ctx->set_sendbuf != -1) {
 		rc = posix_sock_set_sendbuf(&sock->base, ctx->set_sendbuf);
 		if (rc < 0) {
-			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_sendbuf() failed %d (errno=%d).\n",
-				    rc, errno);
-			rc = -errno;
+			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_sendbuf() failed, rc %d: %s.\n",
+				    rc, spdk_strerror(-rc));
 			goto err;
 		}
 	}

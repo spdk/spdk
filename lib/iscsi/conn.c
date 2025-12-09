@@ -232,8 +232,8 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 
 	/* set low water mark */
 	rc = spdk_sock_set_recvlowat(conn->sock, 1);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed\n");
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		goto error_return;
 	}
 

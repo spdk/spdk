@@ -555,39 +555,30 @@ int spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx);
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to set for.
  * \param nbytes Value for recvlowat.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes);
 
 /**
  * Set receive buffer size for the given socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to set buffer size for.
  * \param sz Buffer size in bytes.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz);
 
 /**
  * Set send buffer size for the given socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to set buffer size for.
  * \param sz Buffer size in bytes.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
 

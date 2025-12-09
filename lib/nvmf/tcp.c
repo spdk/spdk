@@ -1487,8 +1487,8 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	/* set low water mark */
 	rc = spdk_sock_set_recvlowat(tqpair->sock, 1);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed\n");
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		return rc;
 	}
 
@@ -2303,6 +2303,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	struct spdk_nvme_tcp_ic_resp *ic_resp;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	int rc;
 
 	/* Only PFV 0 is defined currently */
 	if (ic_req->pfv != 0) {
@@ -2335,10 +2336,10 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	tqpair->recv_buf_size = spdk_max(tqpair->recv_buf_size, MIN_SOCK_PIPE_SIZE);
 	/* Now that we know whether digests are enabled, properly size the receive buffer */
-	if (spdk_sock_set_recvbuf(tqpair->sock, tqpair->recv_buf_size) < 0) {
-		SPDK_WARNLOG("Unable to allocate enough memory for receive buffer on tqpair=%p with size=%d\n",
-			     tqpair,
-			     tqpair->recv_buf_size);
+	rc = spdk_sock_set_recvbuf(tqpair->sock, tqpair->recv_buf_size);
+	if (rc < 0) {
+		SPDK_WARNLOG("spdk_sock_set_recvbuf() failed, rc %d: %s. Unable to allocate enough memory for receive buffer on tqpair=%p with size=%d\n",
+			     rc, spdk_strerror(-rc), tqpair, tqpair->recv_buf_size);
 		/* Not fatal. */
 	}
 
