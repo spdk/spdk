@@ -141,6 +141,8 @@ fi
 
 if $INSTALL; then
 	sudo "$rootdir/scripts/pkgdep.sh" --all
+	# Re-source the scripts/common.sh to make sure $PATH is updated with changes committed via pkgdep_toolpath() as "meson" depends on it.
+	source "$rootdir/scripts/common.sh"
 	pre_install
 	install "${packages[@]}"
 fi
