@@ -819,8 +819,7 @@ ssize_t
 spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
 	if (sock == NULL || sock->flags.closed) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	return sock->net_impl->recv(sock, buf, len);
@@ -830,8 +829,7 @@ ssize_t
 spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
 	if (sock == NULL || sock->flags.closed) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	return sock->net_impl->readv(sock, iov, iovcnt);
@@ -864,13 +862,11 @@ int
 spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
 {
 	if (sock == NULL || sock->flags.closed) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	if (sock->group_impl == NULL) {
-		errno = ENOTSUP;
-		return -1;
+		return -ENOTSUP;
 	}
 
 	return sock->net_impl->recv_next(sock, buf, ctx);

@@ -480,16 +480,13 @@ int spdk_sock_flush(struct spdk_sock *sock);
 /**
  * Receive a message from the given socket.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to receive message.
  * \param buf Pointer to a buffer to hold the data.
  * \param len Length of the buffer.
  *
- * \return the length of the received message on success, -1 on failure with errno set.
+ * \return the length of the received message on success, negative errno value on failure.
  */
 ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 
@@ -520,14 +517,11 @@ void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *re
  *
  * On failure check errno matching EAGAIN to determine failure is retryable.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to receive message.
  * \param iov I/O vector.
  * \param iovcnt Number of I/O vectors in the array.
  *
- * \return the length of the received message on success, -1 on failure.
+ * \return the length of the received message on success, negative errno value on failure.
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
@@ -548,16 +542,13 @@ ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
  * This code path will only work if the recvbuf is disabled. To disable
  * the recvbuf, call spdk_sock_set_recvbuf with a size of 0.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to receive from.
  * \param buf Populated with the next portion of the stream
  * \param ctx Returned context pointer from when the buffer was provided.
  *
- * \return On success, the length of the buffer placed into buf, On failure, -1 with errno set.
+ * \return On success, the length of the buffer placed into buf, negative errno value on failure.
  */
 int spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx);
 

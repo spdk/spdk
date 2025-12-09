@@ -852,8 +852,7 @@ posix_ssl_readv(SSL *ssl, const struct iovec *iov, int iovcnt)
 	}
 	switch (SSL_get_error(ssl, rc)) {
 	case SSL_ERROR_ZERO_RETURN:
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	case SSL_ERROR_WANT_READ:
 	case SSL_ERROR_WANT_WRITE:
 	case SSL_ERROR_WANT_CONNECT:
@@ -862,15 +861,12 @@ posix_ssl_readv(SSL *ssl, const struct iovec *iov, int iovcnt)
 	case SSL_ERROR_WANT_ASYNC:
 	case SSL_ERROR_WANT_ASYNC_JOB:
 	case SSL_ERROR_WANT_CLIENT_HELLO_CB:
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	case SSL_ERROR_SYSCALL:
 	case SSL_ERROR_SSL:
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	default:
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 }
 
@@ -1394,11 +1390,18 @@ posix_writev(struct spdk_posix_sock *sock, struct iovec *iov, int iovcnt, int fl
 static int
 posix_readv(struct spdk_posix_sock *sock, struct iovec *iov, int iovcnt)
 {
+	int rc;
+
 	if (sock->ssl) {
 		return posix_ssl_readv(sock->ssl, iov, iovcnt);
 	}
 
-	return readv(sock->fd, iov, iovcnt);
+	rc = readv(sock->fd, iov, iovcnt);
+	if (rc < 0) {
+		return -errno;
+	}
+
+	return rc;
 }
 
 static int
@@ -1544,19 +1547,15 @@ posix_sock_recv_from_pipe(struct spdk_posix_sock *sock, struct iovec *diov, int 
 
 	sbytes = spdk_pipe_reader_get_buffer(sock->recv_pipe, sock->recv_buf_sz, siov);
 	if (sbytes < 0) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	} else if (sbytes == 0) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	bytes = spdk_iovcpy(siov, 2, diov, diovcnt);
-
 	if (bytes == 0) {
 		/* The only way this happens is if diov is 0 length */
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	spdk_pipe_reader_advance(sock->recv_pipe, bytes);
@@ -1582,16 +1581,18 @@ posix_sock_read(struct spdk_posix_sock *sock)
 	struct iovec iov[2];
 	int bytes_avail, bytes_recvd;
 	struct spdk_posix_sock_group_impl *group;
+	int rc;
 
-	bytes_avail = spdk_pipe_writer_get_buffer(sock->recv_pipe, sock->recv_buf_sz, iov);
-
-	if (bytes_avail <= 0) {
-		return bytes_avail;
+	rc = spdk_pipe_writer_get_buffer(sock->recv_pipe, sock->recv_buf_sz, iov);
+	if (rc <= 0) {
+		return rc;
 	}
 
-	bytes_recvd = posix_readv(sock, iov, 2);
+	bytes_avail = rc;
+
+	rc = posix_readv(sock, iov, 2);
 	assert(sock->pipe_has_data == false);
-	if (bytes_recvd <= 0) {
+	if (rc <= 0) {
 		/* Errors count as draining the socket data */
 		if (sock->base.group_impl && sock->socket_has_data) {
 			group = __posix_group_impl(sock->base.group_impl);
@@ -1599,10 +1600,10 @@ posix_sock_read(struct spdk_posix_sock *sock)
 		}
 
 		sock->socket_has_data = false;
-
-		return bytes_recvd;
+		return rc;
 	}
 
+	bytes_recvd = rc;
 	spdk_pipe_writer_advance(sock->recv_pipe, bytes_recvd);
 
 #if DEBUG
@@ -1630,8 +1631,7 @@ posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 
 	rc = posix_connect_poller(sock);
 	if (rc < 0) {
-		errno = -rc;
-		return -1;
+		return rc;
 	}
 
 	if (sock->recv_pipe == NULL) {
@@ -1709,14 +1709,12 @@ posix_sock_recv_next(struct spdk_sock *_sock, void **buf, void **ctx)
 	ssize_t rc;
 
 	if (sock->recv_pipe != NULL) {
-		errno = ENOTSUP;
-		return -1;
+		return -ENOTSUP;
 	}
 
 	iov.iov_len = spdk_sock_group_get_buf(_sock->group_impl->group, &iov.iov_base, ctx);
 	if (iov.iov_len == 0) {
-		errno = ENOBUFS;
-		return -1;
+		return -ENOBUFS;
 	}
 
 	rc = posix_sock_readv(_sock, &iov, 1);
@@ -1726,7 +1724,6 @@ posix_sock_recv_next(struct spdk_sock *_sock, void **buf, void **ctx)
 	}
 
 	*buf = iov.iov_base;
-
 	return rc;
 }
 

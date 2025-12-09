@@ -684,19 +684,15 @@ uring_sock_recv_from_pipe(struct spdk_uring_sock *sock, struct iovec *diov, int 
 
 	sbytes = spdk_pipe_reader_get_buffer(sock->recv_pipe, sock->recv_buf_sz, siov);
 	if (sbytes < 0) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	} else if (sbytes == 0) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	bytes = spdk_iovcpy(siov, 2, diov, diovcnt);
-
 	if (bytes == 0) {
 		/* The only way this happens is if diov is 0 length */
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	spdk_pipe_reader_advance(sock->recv_pipe, bytes);
@@ -718,8 +714,10 @@ sock_readv(int fd, struct iovec *iov, int iovcnt)
 		.msg_iov = iov,
 		.msg_iovlen = iovcnt,
 	};
+	int rc;
 
-	return recvmsg(fd, &msg, MSG_DONTWAIT);
+	rc = recvmsg(fd, &msg, MSG_DONTWAIT);
+	return rc < 0 ? -errno : rc;
 }
 
 static inline ssize_t
@@ -754,13 +752,11 @@ uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
 	struct spdk_uring_buf_tracker *tr;
 
 	if (sock->connection_status < 0) {
-		errno = -sock->connection_status;
-		return -1;
+		return sock->connection_status;
 	}
 
 	if (sock->recv_pipe != NULL) {
-		errno = ENOTSUP;
-		return -1;
+		return -ENOTSUP;
 	}
 
 	group = __uring_group_impl(_sock->group_impl);
@@ -769,13 +765,12 @@ uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
 	if (tr == NULL) {
 		if (sock->group->buf_ring_count > 0) {
 			/* There are buffers posted, but data hasn't arrived. */
-			errno = EAGAIN;
+			return -EAGAIN;
 		} else {
 			/* There are no buffers posted, so this won't ever
 			 * make forward progress. */
-			errno = ENOBUFS;
+			return -ENOBUFS;
 		}
-		return -1;
 	}
 	assert(sock->pending_recv == true);
 	assert(tr->buf != NULL);
@@ -804,8 +799,7 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 	int i;
 
 	if (sock->connection_status < 0) {
-		errno = -sock->connection_status;
-		return -1;
+		return sock->connection_status;
 	}
 
 	if (_sock->group_impl == NULL) {
@@ -826,8 +820,7 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 			return sock_readv(sock->fd, iovs, iovcnt);
 		}
 
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	total = 0;
@@ -879,8 +872,7 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	size_t len;
 
 	if (sock->connection_status < 0) {
-		errno = -sock->connection_status;
-		return -1;
+		return sock->connection_status;
 	}
 
 	if (sock->recv_pipe == NULL) {

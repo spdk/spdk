@@ -194,9 +194,8 @@ hello_sock_recv_poll(void *arg, struct spdk_sock_group *group, struct spdk_sock 
 	 * Get response
 	 */
 	rc = spdk_sock_recv(sock, buf_in, sizeof(buf_in) - 1);
-
 	if (rc <= 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 			return;
 		}
 
@@ -206,8 +205,8 @@ hello_sock_recv_poll(void *arg, struct spdk_sock_group *group, struct spdk_sock 
 		if (ctx->rc == 0) {
 			hello_sock_quit(ctx, -1);
 		}
-		SPDK_ERRLOG_RATELIMIT("spdk_sock_recv() failed, errno %d: %s\n",
-				      errno, spdk_strerror(errno));
+
+		SPDK_ERRLOG_RATELIMIT("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		return;
 	}
 
