@@ -711,14 +711,11 @@ int spdk_sock_group_close(struct spdk_sock_group **group);
  *
  * This function is allowed only when connection is established.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock The socket
  * \param group Returns the optimal sock group. If there is no optimal sock group, returns NULL.
  * \param hint When return is 0 and group is set to NULL, hint is used to set optimal sock group for the socket.
  *
- * \return 0 on success. Negated errno on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group,
 				     struct spdk_sock_group *hint);
