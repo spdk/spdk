@@ -78,7 +78,9 @@ mapfile -t nvmes < <(nvme_in_userspace)
 nvme=${nvmes[0]}
 
 run_test "spdk_target_abort" spdk_target
-run_test "kernel_target_abort" kernel_target
+if [[ "$SPDK_TEST_SKIP_NVMF_KERNEL_TESTS" -eq 0 ]]; then
+	run_test "kernel_target_abort" kernel_target
+fi
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini
