@@ -244,7 +244,6 @@ posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		   char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	int rc;
 
 	if (!sock->ready) {
 		SPDK_ERRLOG("Connection %s.\n", sock->connect_ctx ? "in progress" : "failed");
@@ -252,12 +251,7 @@ posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 	}
 
 	assert(sock != NULL);
-	rc = spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
-	if (rc < 0) {
-		return -errno;
-	}
-
-	return 0;
+	return spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
 }
 
 static const char *
@@ -268,7 +262,7 @@ posix_sock_get_interface_name(struct spdk_sock *_sock)
 	int rc;
 
 	rc = spdk_net_getaddr(sock->fd, saddr, sizeof(saddr), NULL, NULL, 0, NULL);
-	if (rc != 0) {
+	if (rc < 0) {
 		return NULL;
 	}
 

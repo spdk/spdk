@@ -52,9 +52,6 @@ bool spdk_net_is_loopback(int fd);
 /*
  * Get local and peer addresses of the given fd.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param fd file descriptor to get address.
  * \param laddr A pointer (may be NULL) to the buffer to hold the local address.
  * \param llen Length of the buffer 'laddr'.
@@ -63,7 +60,7 @@ bool spdk_net_is_loopback(int fd);
  * \param plen Length of the buffer 'paddr'.
  * \param pport A pointer (may be NULL) to the buffer to hold the peer port info.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		     char *paddr, int plen, uint16_t *pport);

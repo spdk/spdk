@@ -233,15 +233,9 @@ uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *spo
 		   char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	int rc;
 
 	assert(sock != NULL);
-	rc = spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
-	if (rc < 0) {
-		return -errno;
-	}
-
-	return 0;
+	return spdk_net_getaddr(sock->fd, saddr, slen, sport, caddr, clen, cport);
 }
 
 static const char *
@@ -252,7 +246,7 @@ uring_sock_get_interface_name(struct spdk_sock *_sock)
 	int rc;
 
 	rc = spdk_net_getaddr(sock->fd, saddr, sizeof(saddr), NULL, NULL, 0, NULL);
-	if (rc != 0) {
+	if (rc < 0) {
 		return NULL;
 	}
 
