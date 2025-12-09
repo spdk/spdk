@@ -31,6 +31,10 @@ it allows providing array of devices names to obtain statistics from.
 Calling these functions from any thread is deprecated and will be disallowed in v26.05.
 These functions should be called from the SPDK app thread.
 
+### scripts/rpc
+
+Use of underscores instead of dashes in RPCs is deprecated and will be removed in 26.05 release
+
 ### python/cli
 
 #### `framework_monitor_context_switch`

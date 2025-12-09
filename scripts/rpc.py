@@ -119,6 +119,8 @@ def replace_arg_underscores(args):
     for i in range(len(args)):
         arg = args[i]
         if arg.startswith('--') and "_" in arg:
+            print(f"WARNING: use of underscores instead of dashes in {arg} is deprecated and will be removed in 26.05 release",
+                  file=sys.stderr)
             opt, *vals = arg.split('=')
             args[i] = '='.join([opt.replace('_', '-'), *vals])
 
