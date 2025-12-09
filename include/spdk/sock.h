@@ -469,14 +469,11 @@ int spdk_sock_close(struct spdk_sock **sock);
 /**
  * Flush a socket from data gathered in previous writev_async calls.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to flush.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_flush(struct spdk_sock *sock);
 
@@ -499,16 +496,13 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 /**
  * Write message to the given socket from the I/O vector array.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to write to.
  * \param iov I/O vector.
  * \param iovcnt Number of I/O vectors in the array.
  *
- * \return the length of written message on success, -1 on failure with errno set.
+ * \return the length of written message on success, negative errno value on failure.
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 

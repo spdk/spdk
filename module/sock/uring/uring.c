@@ -929,10 +929,10 @@ uring_writev(struct spdk_uring_sock *sock, struct iovec *iov, int iovcnt, int fl
 	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
 	if (rc <= 0) {
 		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
-			errno = EAGAIN;
+			return -EAGAIN;
 		}
 
-		return -1;
+		return -errno;
 	}
 
 	return rc;
@@ -944,8 +944,7 @@ uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	return uring_writev(sock, iov, iovcnt, 0);
@@ -1462,7 +1461,7 @@ uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
 	if (!sock->group) {
 		if (_sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 			rc = uring_sock_flush(_sock);
-			if (rc < 0 && errno != EAGAIN) {
+			if (rc < 0 && rc != -EAGAIN) {
 				spdk_sock_abort_requests(_sock);
 			}
 		}
@@ -1898,8 +1897,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (_sock->cb_cnt > 0) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	if (sock->connect_cb_fn) {
@@ -1910,8 +1908,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 
 	/* Can't flush while a write is already outstanding */
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	/* Gather an iov */
@@ -1932,8 +1929,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 	retval = sock_complete_write_reqs(_sock, rc, is_zcopy);
 	if (retval < 0) {
 		/* if the socket is closed, return to avoid heap-use-after-free error */
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 
 #ifdef SPDK_ZEROCOPY

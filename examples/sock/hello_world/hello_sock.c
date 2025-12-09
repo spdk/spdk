@@ -232,13 +232,12 @@ hello_sock_writev_poll(void *arg)
 	if (ctx->n != 0) {
 		iov.iov_base = ctx->buf;
 		iov.iov_len = ctx->n;
-		errno = 0;
 		rc = spdk_sock_writev(ctx->sock, &iov, 1);
 		if (rc < 0) {
-			if (errno == EAGAIN) {
+			if (rc == -EAGAIN) {
 				return SPDK_POLLER_BUSY;
 			}
-			SPDK_ERRLOG("Write to socket failed. Closing connection...\n");
+			SPDK_ERRLOG("spdk_sock_writev failed, rc %d: %s. Closing connection...\n", rc, spdk_strerror(-rc));
 			hello_sock_quit(ctx, -1);
 			return SPDK_POLLER_IDLE;
 		}
@@ -260,13 +259,12 @@ hello_sock_writev_poll(void *arg)
 		 */
 		iov.iov_base = ctx->buf;
 		iov.iov_len = n;
-		errno = 0;
 		rc = spdk_sock_writev(ctx->sock, &iov, 1);
 		if (rc < 0) {
-			if (errno == EAGAIN) {
+			if (rc == -EAGAIN) {
 				ctx->n = n;
 			} else {
-				SPDK_ERRLOG("Write to socket failed. Closing connection...\n");
+				SPDK_ERRLOG("spdk_sock_writev failed, rc %d: %s. Closing connection...\n", rc, spdk_strerror(-rc));
 				hello_sock_quit(ctx, -1);
 				return SPDK_POLLER_IDLE;
 			}

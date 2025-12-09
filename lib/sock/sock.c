@@ -841,8 +841,7 @@ ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
 	if (sock == NULL || sock->flags.closed) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	return sock->net_impl->writev(sock, iov, iovcnt);
@@ -881,8 +880,7 @@ int
 spdk_sock_flush(struct spdk_sock *sock)
 {
 	if (sock == NULL || sock->flags.closed) {
-		errno = EBADF;
-		return -1;
+		return -EBADF;
 	}
 
 	return sock->net_impl->flush(sock);

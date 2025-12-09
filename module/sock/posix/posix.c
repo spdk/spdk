@@ -895,8 +895,7 @@ posix_ssl_writev(SSL *ssl, struct iovec *iov, int iovcnt)
 	}
 	switch (SSL_get_error(ssl, rc)) {
 	case SSL_ERROR_ZERO_RETURN:
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	case SSL_ERROR_WANT_READ:
 	case SSL_ERROR_WANT_WRITE:
 	case SSL_ERROR_WANT_CONNECT:
@@ -905,15 +904,12 @@ posix_ssl_writev(SSL *ssl, struct iovec *iov, int iovcnt)
 	case SSL_ERROR_WANT_ASYNC:
 	case SSL_ERROR_WANT_ASYNC_JOB:
 	case SSL_ERROR_WANT_CLIENT_HELLO_CB:
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	case SSL_ERROR_SYSCALL:
 	case SSL_ERROR_SSL:
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	default:
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 }
 
@@ -1386,10 +1382,10 @@ posix_writev(struct spdk_posix_sock *sock, struct iovec *iov, int iovcnt, int fl
 	rc = sendmsg(sock->fd, &msg, flags);
 	if (rc <= 0) {
 		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
-			errno = EAGAIN;
+			return -EAGAIN;
 		}
 
-		return -1;
+		return -errno;
 	}
 
 	return rc;
@@ -1412,14 +1408,12 @@ _sock_flush(struct spdk_sock *sock)
 
 	rc = posix_connect_poller(psock);
 	if (rc < 0) {
-		errno = -rc;
-		return -1;
+		return rc;
 	}
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (sock->cb_cnt > 0) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 #ifdef SPDK_ZEROCOPY
@@ -1475,8 +1469,7 @@ _sock_flush(struct spdk_sock *sock)
 				/* This element was partially sent. */
 				req->internal.offset += rc;
 				/* Caller in interrupt mode should retry for partial flush */
-				errno = EAGAIN;
-				return -1;
+				return -EAGAIN;
 			}
 
 			offset = 0;
@@ -1506,8 +1499,7 @@ _sock_flush(struct spdk_sock *sock)
 	}
 
 	if (!TAILQ_EMPTY(&sock->queued_reqs)) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	return 0;
@@ -1518,17 +1510,14 @@ posix_sock_flush(struct spdk_sock *sock)
 {
 #ifdef SPDK_ZEROCOPY
 	struct spdk_posix_sock *psock = __posix_sock(sock);
-	int rc, _errno;
+	int rc;
 
 	rc = _sock_flush(sock);
-	_errno = errno;
 
 	if (psock->zcopy && !TAILQ_EMPTY(&sock->pending_reqs)) {
 		_sock_check_zcopy(sock);
 	}
 
-	/* Restore errno to prevent potential change when executing zcopy check. */
-	errno = _errno;
 	return rc;
 #else
 	return _sock_flush(sock);
@@ -1709,8 +1698,7 @@ posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 
 	if (!TAILQ_EMPTY(&_sock->queued_reqs)) {
 		/* We weren't able to flush all requests */
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	return posix_writev(sock, iov, iovcnt, 0);
@@ -1755,7 +1743,7 @@ posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	/* If there are a sufficient number queued, just flush them out immediately. */
 	if (sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 		rc = _sock_flush(sock);
-		if (rc < 0 && errno != EAGAIN) {
+		if (rc < 0 && rc != -EAGAIN) {
 			spdk_sock_abort_requests(sock);
 		}
 	}
@@ -2172,7 +2160,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	 * group. */
 	TAILQ_FOREACH_SAFE(sock, &_group->socks, link, tmp) {
 		rc = _sock_flush(sock);
-		if (rc < 0 && errno != EAGAIN) {
+		if (rc < 0 && rc != -EAGAIN) {
 			spdk_sock_abort_requests(sock);
 		}
 	}

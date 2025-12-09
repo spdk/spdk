@@ -1221,7 +1221,7 @@ tcp_sock_flush_cb(void *arg)
 
 	tqpair->pending_flush = false;
 	rc = spdk_sock_flush(tqpair->sock);
-	if (rc < 0 && errno == EAGAIN) {
+	if (rc < 0 && rc == -EAGAIN) {
 		if (spdk_interrupt_mode_is_enabled()) {
 			/* In interrupt mode we need to force a retry. In polling mode it will naturally
 			 * try again. */
@@ -1233,7 +1233,7 @@ tcp_sock_flush_cb(void *arg)
 	}
 
 	if (rc < 0) {
-		SPDK_ERRLOG("Could not write to socket: rc=%d, errno=%d\n", rc, errno);
+		SPDK_ERRLOG("spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 	}
 }
 
