@@ -8052,7 +8052,7 @@ bdev_io_iobuf_wait_abort(void)
 	/* Bdev does not support copy, so fallback path tries allocating buffer
 	 * to emulate copy. But, iobuf pool is empty and bdev_io is queued.
 	 */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_COPY, false);
 
 	g_io_done = false;
 	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -8073,7 +8073,7 @@ bdev_io_iobuf_wait_abort(void)
 	CU_ASSERT(g_abort_done == true);
 	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+	ut_enable_io_type(bdev, SPDK_BDEV_IO_TYPE_COPY, true);
 
 	/*
 	 * Case 3: Reset aborts a bdev_io when it is queued in the iobuf pool after submission.
