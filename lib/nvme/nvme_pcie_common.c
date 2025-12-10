@@ -236,7 +236,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
 	pqpair->tr = spdk_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), NULL,
-				  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+				  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
 	if (pqpair->tr == NULL) {
 		NVME_QPAIR_ERRLOG(qpair, "nvme_tr failed\n");
 		return -ENOMEM;
