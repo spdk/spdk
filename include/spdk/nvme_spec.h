@@ -2223,16 +2223,53 @@ struct spdk_nvme_cdata_sgls {
 
 /** Identify Controller data Optional NVM Command Support */
 struct spdk_nvme_cdata_oncs {
-	uint16_t	compare : 1;
-	uint16_t	write_unc : 1;
-	uint16_t	dsm: 1;
-	uint16_t	write_zeroes: 1;
-	uint16_t	set_features_save: 1;
-	uint16_t	reservations: 1;
-	uint16_t	timestamp: 1;
-	uint16_t	verify: 1;
-	uint16_t	copy: 1;
-	uint16_t	reserved9: 7;
+	union {
+		uint16_t	raw;
+		struct {
+			/** Compare Command Support */
+			uint16_t	nvmcmps: 1;
+
+			/** Write Uncorrectable Support Variants */
+			uint16_t	nvmwusv: 1;
+
+			/** Dataset Management Support Variants */
+			uint16_t	nvmdsmsv: 1;
+
+			/** Write Zeroes Support Variants */
+			uint16_t	nvmwzsv: 1;
+
+			/** Save and Select Feature Support */
+			uint16_t	ssfs: 1;
+
+			/** Reservations Support */
+			uint16_t	reservs: 1;
+
+			/** Timestamp Support */
+			uint16_t	tss: 1;
+
+			/** Verify Support */
+			uint16_t	nvmvfys: 1;
+
+			/** Copy Support */
+			uint16_t	nvmcpys: 1;
+
+			uint16_t	rsvd : 7;
+		};
+
+		/** Old bit names are deprecated and will be removed in 26.05 release */
+		struct {
+			uint16_t	compare : 1;
+			uint16_t	write_unc : 1;
+			uint16_t	dsm: 1;
+			uint16_t	write_zeroes: 1;
+			uint16_t	set_features_save: 1;
+			uint16_t	reservations: 1;
+			uint16_t	timestamp: 1;
+			uint16_t	verify: 1;
+			uint16_t	copy: 1;
+			uint16_t	reserved9: 7;
+		};
+	};
 };
 
 struct spdk_nvme_cdata_oacs {

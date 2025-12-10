@@ -377,11 +377,11 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->ieee[0] = 0xe4;
 	cdata->ieee[1] = 0xd2;
 	cdata->ieee[2] = 0x5c;
-	cdata->oncs.compare = 1;
-	cdata->oncs.dsm = 1;
-	cdata->oncs.write_zeroes = 1;
-	cdata->oncs.reservations = 1;
-	cdata->oncs.copy = 1;
+	cdata->oncs.nvmcmps = 1;
+	cdata->oncs.nvmdsmsv = 1;
+	cdata->oncs.nvmwzsv = 1;
+	cdata->oncs.reservs = 1;
+	cdata->oncs.nvmcpys = 1;
 	cdata->fuses.compare_and_write = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
@@ -2697,15 +2697,15 @@ spdk_nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	struct spdk_nvme_cmds_and_effect_entry *entry;
 
 	*log_page = g_cmds_and_effect_log_page;
-	if (!ctrlr->cdata.oncs.write_zeroes || !nvmf_ctrlr_write_zeroes_supported(ctrlr)) {
+	if (!ctrlr->cdata.oncs.nvmwzsv || !nvmf_ctrlr_write_zeroes_supported(ctrlr)) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_WRITE_ZEROES];
 		memset(entry, 0, sizeof(*entry));
 	}
-	if (!ctrlr->cdata.oncs.dsm || !nvmf_ctrlr_dsm_supported(ctrlr)) {
+	if (!ctrlr->cdata.oncs.nvmdsmsv || !nvmf_ctrlr_dsm_supported(ctrlr)) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_DATASET_MANAGEMENT];
 		memset(entry, 0, sizeof(*entry));
 	}
-	if (!ctrlr->cdata.oncs.compare) {
+	if (!ctrlr->cdata.oncs.nvmcmps) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_COMPARE];
 		memset(entry, 0, sizeof(*entry));
 	}
@@ -2719,11 +2719,11 @@ spdk_nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_ZONE_APPEND];
 		memset(entry, 0, sizeof(*entry));
 	}
-	if (!ctrlr->cdata.oncs.copy) {
+	if (!ctrlr->cdata.oncs.nvmcpys) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_COPY];
 		memset(entry, 0, sizeof(*entry));
 	}
-	if (!ctrlr->cdata.oncs.reservations) {
+	if (!ctrlr->cdata.oncs.reservs) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_RESERVATION_REGISTER];
 		memset(entry, 0, sizeof(*entry));
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_RESERVATION_REPORT];
@@ -3338,13 +3338,13 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
 
-		cdata->oncs.compare = ctrlr->cdata.oncs.compare;
-		cdata->oncs.dsm = ctrlr->cdata.oncs.dsm && nvmf_ctrlr_dsm_supported(ctrlr);
-		cdata->oncs.write_zeroes = ctrlr->cdata.oncs.write_zeroes &&
-					   nvmf_ctrlr_write_zeroes_supported(ctrlr);
-		cdata->oncs.reservations = ctrlr->cdata.oncs.reservations;
-		cdata->oncs.copy = ctrlr->cdata.oncs.copy;
-		cdata->ocfs.copy_format0 = cdata->oncs.copy;
+		cdata->oncs.nvmcmps = ctrlr->cdata.oncs.nvmcmps;
+		cdata->oncs.nvmdsmsv = ctrlr->cdata.oncs.nvmdsmsv && nvmf_ctrlr_dsm_supported(ctrlr);
+		cdata->oncs.nvmwzsv = ctrlr->cdata.oncs.nvmwzsv &&
+				      nvmf_ctrlr_write_zeroes_supported(ctrlr);
+		cdata->oncs.reservs = ctrlr->cdata.oncs.reservs;
+		cdata->oncs.nvmcpys = ctrlr->cdata.oncs.nvmcpys;
+		cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
 		if (subsystem->flags.ana_reporting) {
 			/* Asymmetric Namespace Access Reporting is supported. */
 			cdata->cmic.ana_reporting = 1;
@@ -5091,17 +5091,17 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_OPC_FLUSH:
 			return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_COMPARE:
-			if (spdk_unlikely(!ctrlr->cdata.oncs.compare)) {
+			if (spdk_unlikely(!ctrlr->cdata.oncs.nvmcmps)) {
 				goto invalid_opcode;
 			}
 			return nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_WRITE_ZEROES:
-			if (spdk_unlikely(!ctrlr->cdata.oncs.write_zeroes)) {
+			if (spdk_unlikely(!ctrlr->cdata.oncs.nvmwzsv)) {
 				goto invalid_opcode;
 			}
 			return nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
 		case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-			if (spdk_unlikely(!ctrlr->cdata.oncs.dsm)) {
+			if (spdk_unlikely(!ctrlr->cdata.oncs.nvmdsmsv)) {
 				goto invalid_opcode;
 			}
 			return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
@@ -5109,13 +5109,13 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
 		case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		case SPDK_NVME_OPC_RESERVATION_REPORT:
-			if (spdk_unlikely(!ctrlr->cdata.oncs.reservations)) {
+			if (spdk_unlikely(!ctrlr->cdata.oncs.reservs)) {
 				goto invalid_opcode;
 			}
 			spdk_thread_send_msg(ctrlr->subsys->thread, nvmf_ns_reservation_request, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		case SPDK_NVME_OPC_COPY:
-			if (spdk_unlikely(!ctrlr->cdata.oncs.copy)) {
+			if (spdk_unlikely(!ctrlr->cdata.oncs.nvmcpys)) {
 				goto invalid_opcode;
 			}
 			return nvmf_bdev_ctrlr_copy_cmd(bdev, desc, ch, req);

@@ -1529,7 +1529,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("  Atomic Boundary Offset:              %d\n", nsdata->nabo);
 	}
 
-	if (cdata->oncs.copy) {
+	if (cdata->oncs.nvmcpys) {
 		printf("Maximum Single Source Range Length:    %d\n", nsdata->mssrl);
 		printf("Maximum Copy Length:                   %d\n", nsdata->mcl);
 		printf("Maximum Source Range Count:            %d\n", nsdata->msrc + 1);
@@ -2061,21 +2061,21 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("  Min:                       %d\n", 1 << cdata->cqes.min);
 	printf("Number of Namespaces:        %d\n", cdata->nn);
 	printf("Compare Command:             %s\n",
-	       cdata->oncs.compare ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmcmps ? "Supported" : "Not Supported");
 	printf("Write Uncorrectable Command: %s\n",
-	       cdata->oncs.write_unc ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmwusv ? "Supported" : "Not Supported");
 	printf("Dataset Management Command:  %s\n",
-	       cdata->oncs.dsm ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmdsmsv ? "Supported" : "Not Supported");
 	printf("Write Zeroes Command:        %s\n",
-	       cdata->oncs.write_zeroes ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmwzsv ? "Supported" : "Not Supported");
 	printf("Set Features Save Field:     %s\n",
-	       cdata->oncs.set_features_save ? "Supported" : "Not Supported");
+	       cdata->oncs.ssfs ? "Supported" : "Not Supported");
 	printf("Reservations:                %s\n",
-	       cdata->oncs.reservations ? "Supported" : "Not Supported");
+	       cdata->oncs.reservs ? "Supported" : "Not Supported");
 	printf("Timestamp:                   %s\n",
-	       cdata->oncs.timestamp ? "Supported" : "Not Supported");
+	       cdata->oncs.tss ? "Supported" : "Not Supported");
 	printf("Copy:                        %s\n",
-	       cdata->oncs.copy ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmcpys ? "Supported" : "Not Supported");
 	printf("Volatile Write Cache:        %s\n",
 	       cdata->vwc.present ? "Present" : "Not Present");
 	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);

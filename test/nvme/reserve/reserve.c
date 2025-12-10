@@ -527,9 +527,9 @@ reserve_controller(struct ctrlr_entry *entry)
 	printf("=====================================================\n");
 
 	printf("Reservations:                %s\n",
-	       cdata->oncs.reservations ? "Supported" : "Not Supported");
+	       cdata->oncs.reservs ? "Supported" : "Not Supported");
 
-	if (!cdata->oncs.reservations) {
+	if (!cdata->oncs.reservs) {
 		return 0;
 	}
 

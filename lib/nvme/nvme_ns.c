@@ -59,11 +59,11 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 		ns->sectors_per_stripe = 0;
 	}
 
-	if (ns->ctrlr->cdata.oncs.dsm) {
+	if (ns->ctrlr->cdata.oncs.nvmdsmsv) {
 		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.oncs.compare) {
+	if (ns->ctrlr->cdata.oncs.nvmcmps) {
 		ns->flags |= SPDK_NVME_NS_COMPARE_SUPPORTED;
 	}
 
@@ -71,11 +71,11 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_FLUSH_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.oncs.write_zeroes) {
+	if (ns->ctrlr->cdata.oncs.nvmwzsv) {
 		ns->flags |= SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.oncs.write_unc) {
+	if (ns->ctrlr->cdata.oncs.nvmwusv) {
 		ns->flags |= SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED;
 	}
 

@@ -263,11 +263,11 @@ test_nvme_ns_set_identify_data(void)
 	ns.id = 1;
 	ns.ctrlr = &ctrlr;
 
-	ns.ctrlr->cdata.oncs.dsm = 1;
-	ns.ctrlr->cdata.oncs.compare = 1;
+	ns.ctrlr->cdata.oncs.nvmdsmsv = 1;
+	ns.ctrlr->cdata.oncs.nvmcmps = 1;
 	ns.ctrlr->cdata.vwc.present = 1;
-	ns.ctrlr->cdata.oncs.write_zeroes = 1;
-	ns.ctrlr->cdata.oncs.write_unc = 1;
+	ns.ctrlr->cdata.oncs.nvmwzsv = 1;
+	ns.ctrlr->cdata.oncs.nvmwusv = 1;
 	ns.ctrlr->min_page_size = 4096;
 	ns.ctrlr->max_xfer_size = 131072;
 

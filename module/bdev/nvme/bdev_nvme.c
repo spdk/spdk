@@ -3613,11 +3613,11 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-		return cdata->oncs.dsm;
+		return cdata->oncs.nvmdsmsv;
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-		return cdata->oncs.write_zeroes;
+		return cdata->oncs.nvmwzsv;
 
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 		if (spdk_nvme_ctrlr_get_flags(ctrlr) &
@@ -3636,7 +3636,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 
 	case SPDK_BDEV_IO_TYPE_COPY:
 		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-		return cdata->oncs.copy;
+		return cdata->oncs.nvmcpys;
 
 	default:
 		return false;
@@ -4607,7 +4607,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 		/* Enable if the Volatile Write Cache exists */
 		disk->write_cache = 1;
 	}
-	if (cdata->oncs.write_zeroes) {
+	if (cdata->oncs.nvmwzsv) {
 		disk->max_write_zeroes = UINT16_MAX + 1;
 	}
 	disk->blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
@@ -4683,7 +4683,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 		disk->acwu = cdata->acwu + 1; /* 0-based */
 	}
 
-	if (cdata->oncs.copy) {
+	if (cdata->oncs.nvmcpys) {
 		/* For now bdev interface allows only single segment copy */
 		disk->max_copy = nsdata->mssrl;
 	}

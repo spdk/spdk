@@ -3769,9 +3769,9 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 	cdata->ieee[2] = 0x50;
 	memset(&cdata->sgls, 0, sizeof(struct spdk_nvme_cdata_sgls));
 	cdata->sgls.supported = SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED;
-	cdata->oncs.compare = !vu_transport->transport_opts.disable_compare;
+	cdata->oncs.nvmcmps = !vu_transport->transport_opts.disable_compare;
 	/* libvfio-user can only support 1 connection for now */
-	cdata->oncs.reservations = 0;
+	cdata->oncs.reservs = 0;
 	cdata->oacs.dbcs = !vu_transport->transport_opts.disable_shadow_doorbells;
 	cdata->fuses.compare_and_write = !vu_transport->transport_opts.disable_compare;
 }

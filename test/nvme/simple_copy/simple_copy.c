@@ -333,7 +333,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (cdata->oncs.copy) {
+	if (cdata->oncs.nvmcpys) {
 		printf("Controller supports SCC. Attached to %s\n", trid->traddr);
 		/*
 		 * Use only the first namespace from each controller since we are testing controller level functionality.
