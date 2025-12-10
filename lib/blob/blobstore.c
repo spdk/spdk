@@ -1766,7 +1766,7 @@ blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	}
 
 	ctx->blob = blob;
-	ctx->pages = spdk_realloc(ctx->pages, bs->md_page_size, 0);
+	ctx->pages =  spdk_malloc(bs->md_page_size, 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->pages) {
 		free(ctx);
 		cb_fn(seq, cb_arg, -ENOMEM);
