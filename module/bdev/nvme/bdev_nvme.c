@@ -9092,6 +9092,9 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	if (nvme_ctrlr->opts.multipath) {
 		spdk_json_write_named_string(w, "multipath", "multipath");
 	}
+	spdk_json_write_named_uint64(w, "fabrics_connect_timeout_us", opts->fabrics_connect_timeout_us);
+	spdk_json_write_named_uint32(w, "num_io_queues", opts->num_io_queues);
+
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

@@ -738,6 +738,10 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
 	spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
 	spdk_json_write_named_bool(w, "ana_reporting", spdk_nvmf_subsystem_get_ana_reporting(subsystem));
+	spdk_json_write_named_uint64(w, "max_discard_size_kib", subsystem->max_discard_size_kib);
+	spdk_json_write_named_uint64(w, "max_write_zeroes_size_kib", subsystem->max_write_zeroes_size_kib);
+	spdk_json_write_named_bool(w, "passthrough", subsystem->passthrough);
+	spdk_json_write_named_bool(w, "enable_nssr", subsystem->nssr_enabled);
 
 	/*     } "params" */
 	spdk_json_write_object_end(w);

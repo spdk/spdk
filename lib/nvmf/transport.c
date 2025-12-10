@@ -95,6 +95,9 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "abort_timeout_sec", opts->abort_timeout_sec);
 	spdk_json_write_named_uint32(w, "ack_timeout", opts->ack_timeout);
 	spdk_json_write_named_uint32(w, "data_wr_pool_size", opts->data_wr_pool_size);
+	spdk_json_write_named_bool(w, "disable_command_passthru", opts->disable_command_passthru);
+	spdk_json_write_named_uint16(w, "kas", opts->kas);
+	spdk_json_write_named_uint32(w, "min_kato", opts->min_kato);
 	spdk_json_write_object_end(w);
 }
 
