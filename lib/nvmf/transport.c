@@ -156,10 +156,11 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(min_kato);
 	SET_FIELD(kas);
 	SET_FIELD(oncs);
+	SET_FIELD(fuses);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 80, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 82, "Incorrect size");
 
 #undef SET_FIELD
 #undef FILED_CHECK
@@ -862,6 +863,7 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 	opts_local.kas = NVMF_DEFAULT_KAS;
 	opts_local.min_kato = NVMF_DEFAULT_MIN_KATO;
 	opts_local.oncs.raw = UINT16_MAX;
+	opts_local.fuses.raw = UINT16_MAX;
 	ops->opts_init(&opts_local);
 
 	nvmf_transport_opts_copy(opts, &opts_local, opts_size);

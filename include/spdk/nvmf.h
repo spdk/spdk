@@ -124,8 +124,10 @@ struct spdk_nvmf_transport_opts {
 	uint16_t kas;
 	/* Enable or disable ONCS features. By default, all supported features are enabled. */
 	struct spdk_nvme_cdata_oncs oncs;
+	/* Enable or disable FUSES features. By default, all supported features are enabled. */
+	struct spdk_nvme_cdata_fuses fuses;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 80, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 82, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**

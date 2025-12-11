@@ -385,7 +385,9 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->oncs.reservs = transport->opts.oncs.reservs;
 	cdata->oncs.nvmcpys = transport->opts.oncs.nvmcpys;
 
-	cdata->fuses.fcws = 1;
+	/* When adding support for a new FUSES feature, ensure it follows the pattern below. */
+	cdata->fuses.fcws = transport->opts.fuses.fcws;
+
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
