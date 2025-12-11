@@ -2469,6 +2469,46 @@ nvmf_rpc_decode_max_io_qpairs(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
+static int
+decode_masked_oncs(const struct spdk_json_val *val, void *out)
+{
+	struct spdk_nvme_cdata_oncs *oncs = out;
+	char *name = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &name);
+	if (rc) {
+		return rc;
+	}
+
+	if (strcmp(name, "nvmcmps") == 0) {
+		oncs->nvmcmps = 0;
+	} else if (strcmp(name, "nvmdsmsv") == 0) {
+		oncs->nvmdsmsv = 0;
+	} else if (strcmp(name, "nvmwzsv") == 0) {
+		oncs->nvmwzsv = 0;
+	} else if (strcmp(name, "reservs") == 0) {
+		oncs->reservs = 0;
+	} else if (strcmp(name, "nvmcpys") == 0) {
+		oncs->nvmcpys = 0;
+	} else {
+		rc = -EINVAL;
+		goto out;
+	}
+
+out:
+	free(name);
+	return rc;
+}
+
+static int
+decode_masked_oncs_array(const struct spdk_json_val *val, void *out)
+{
+	size_t count;
+
+	return spdk_json_decode_array(val, decode_masked_oncs, out, 16, &count, 0);
+}
+
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
 	{	"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
 	{
@@ -2542,7 +2582,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{
 		"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, opts.min_kato),
 		spdk_json_decode_uint32, true
-	}
+	},
+	{	"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs), decode_masked_oncs_array, true},
 };
 
 static void

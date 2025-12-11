@@ -56,9 +56,18 @@ def add_parser(subparsers):
                    type=lambda d: d.split(','))
     p.set_defaults(func=nvmf_set_config)
 
+    oncs = ('nvmcmps', 'nvmdsmsv', 'nvmwzsv', 'reservs', 'nvmcpys')
+    help_oncs = ", ".join(("all",) + oncs)
+
     def nvmf_create_transport(args):
         params = strip_globals(vars(args))
         params = apply_defaults(params, no_srq=False, c2h_success=True)
+        if args.masked_oncs:
+            invalid_oncs = set(args.masked_oncs) - set(oncs) - {'all'}
+            if invalid_oncs:
+                print(f"Invalid oncs: '{', '.join(invalid_oncs)}'. Available options: {help_oncs}.", file=sys.stderr)
+                exit(1)
+            params['masked_oncs'] = oncs if 'all' in args.masked_oncs else args.masked_oncs
         args.client.nvmf_create_transport(**params)
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
@@ -98,6 +107,8 @@ def add_parser(subparsers):
     p.add_argument('--disable-command-passthru', help='Disallow command passthru', action='store_true')
     p.add_argument('--kas', help="Keep alive support", type=int)
     p.add_argument('--min-kato', help="The minimum keep alive timeout in milliseconds", type=int)
+    p.add_argument('--masked-oncs', help=f"Comma-separated list of ONCS features to mask (disable). Available options: {help_oncs}",
+                   type=lambda d: d.split(','))
     p.set_defaults(func=nvmf_create_transport)
 
     def nvmf_get_transports(args):
