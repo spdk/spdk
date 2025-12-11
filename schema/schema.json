@@ -3940,6 +3940,12 @@
           "type": "list",
           "required": false,
           "description": "List of ONCS features to mask (disable)"
+        },
+        {
+          "name": "masked_fuses",
+          "type": "list",
+          "required": false,
+          "description": "List of FUSES features to mask (disable)"
         }
       ]
     },

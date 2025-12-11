@@ -2509,6 +2509,38 @@ decode_masked_oncs_array(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_array(val, decode_masked_oncs, out, 16, &count, 0);
 }
 
+static int
+decode_masked_fuses(const struct spdk_json_val *val, void *out)
+{
+	struct spdk_nvme_cdata_fuses *fuses = out;
+	char *name = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &name);
+	if (rc) {
+		return rc;
+	}
+
+	if (strcmp(name, "fcws") == 0) {
+		fuses->fcws = 0;
+	} else {
+		rc = -EINVAL;
+		goto out;
+	}
+
+out:
+	free(name);
+	return rc;
+}
+
+static int
+decode_masked_fuses_array(const struct spdk_json_val *val, void *out)
+{
+	size_t count;
+
+	return spdk_json_decode_array(val, decode_masked_fuses, out, 16, &count, 0);
+}
+
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
 	{	"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
 	{
@@ -2584,6 +2616,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 		spdk_json_decode_uint32, true
 	},
 	{	"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs), decode_masked_oncs_array, true},
+	{	"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses), decode_masked_fuses_array, true},
 };
 
 static void
