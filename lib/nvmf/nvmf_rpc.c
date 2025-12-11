@@ -2542,81 +2542,27 @@ decode_masked_fuses_array(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
-	{	"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
-	{
-		"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth),
-		spdk_json_decode_uint16, true
-	},
-	{
-		"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr),
-		nvmf_rpc_decode_max_io_qpairs, true
-	},
-	{
-		"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.in_capsule_data_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_io_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_insert_or_strip),
-		spdk_json_decode_bool, true
-	},
-	{
-		"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, opts.abort_timeout_sec),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, opts.zcopy),
-		spdk_json_decode_bool, true
-	},
-	{
-		"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name),
-		spdk_json_decode_string, true
-	},
-	{
-		"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_poll_rate),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"ack_timeout", offsetof(struct nvmf_rpc_create_transport_ctx, opts.ack_timeout),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"data_wr_pool_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.data_wr_pool_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, opts.disable_command_passthru),
-		spdk_json_decode_bool, true
-	},
-	{
-		"kas", offsetof(struct nvmf_rpc_create_transport_ctx, opts.kas),
-		spdk_json_decode_uint16, true
-	},
-	{
-		"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, opts.min_kato),
-		spdk_json_decode_uint32, true
-	},
-	{	"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs), decode_masked_oncs_array, true},
-	{	"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses), decode_masked_fuses_array, true},
+	{"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
+	{"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth), spdk_json_decode_uint16, true},
+	{"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
+	{"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.in_capsule_data_size), spdk_json_decode_uint32, true},
+	{"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_io_size), spdk_json_decode_uint32, true},
+	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size), spdk_json_decode_uint32, true},
+	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth), spdk_json_decode_uint32, true},
+	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers), spdk_json_decode_uint32, true},
+	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size), spdk_json_decode_uint32, true},
+	{"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_insert_or_strip), spdk_json_decode_bool, true},
+	{"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, opts.abort_timeout_sec), spdk_json_decode_uint32, true},
+	{"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, opts.zcopy), spdk_json_decode_bool, true},
+	{"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name), spdk_json_decode_string, true},
+	{"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_poll_rate), spdk_json_decode_uint32, true},
+	{"ack_timeout", offsetof(struct nvmf_rpc_create_transport_ctx, opts.ack_timeout), spdk_json_decode_uint32, true},
+	{"data_wr_pool_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.data_wr_pool_size), spdk_json_decode_uint32, true},
+	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, opts.disable_command_passthru), spdk_json_decode_bool, true},
+	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, opts.kas), spdk_json_decode_uint16, true},
+	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, opts.min_kato), spdk_json_decode_uint32, true},
+	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs), decode_masked_oncs_array, true},
+	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses), decode_masked_fuses_array, true},
 };
 
 static void
