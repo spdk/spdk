@@ -377,11 +377,14 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->ieee[0] = 0xe4;
 	cdata->ieee[1] = 0xd2;
 	cdata->ieee[2] = 0x5c;
-	cdata->oncs.nvmcmps = 1;
-	cdata->oncs.nvmdsmsv = 1;
-	cdata->oncs.nvmwzsv = 1;
-	cdata->oncs.reservs = 1;
-	cdata->oncs.nvmcpys = 1;
+
+	/* When adding support for a new ONCS feature, ensure it follows the pattern below. */
+	cdata->oncs.nvmcmps = transport->opts.oncs.nvmcmps;
+	cdata->oncs.nvmdsmsv = transport->opts.oncs.nvmdsmsv;
+	cdata->oncs.nvmwzsv = transport->opts.oncs.nvmwzsv;
+	cdata->oncs.reservs = transport->opts.oncs.reservs;
+	cdata->oncs.nvmcpys = transport->opts.oncs.nvmcpys;
+
 	cdata->fuses.fcws = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;

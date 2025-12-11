@@ -122,8 +122,10 @@ struct spdk_nvmf_transport_opts {
 	uint32_t min_kato;
 	/* kas indicates the granularity of the Keep Alive Timer in 100ms units. */
 	uint16_t kas;
+	/* Enable or disable ONCS features. By default, all supported features are enabled. */
+	struct spdk_nvme_cdata_oncs oncs;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 78, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 80, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**
