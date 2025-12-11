@@ -2115,8 +2115,8 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 
 	NVME_CTRLR_DEBUGLOG(ctrlr, "fuses compare and write: %d\n",
-			    ctrlr->cdata.fuses.compare_and_write);
-	if (ctrlr->cdata.fuses.compare_and_write) {
+			    ctrlr->cdata.fuses.fcws);
+	if (ctrlr->cdata.fuses.fcws) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED;
 	}
 

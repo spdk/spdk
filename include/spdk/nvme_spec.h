@@ -2333,8 +2333,21 @@ struct spdk_nvme_cdata_oacs {
 };
 
 struct spdk_nvme_cdata_fuses {
-	uint16_t	compare_and_write : 1;
-	uint16_t	reserved : 15;
+	union {
+		uint16_t	raw;
+		struct {
+			/** Fused Compare and Write Supported */
+			uint16_t	fcws: 1;
+
+			uint16_t	rsvd: 15;
+		};
+
+		/** Old bit names are deprecated and will be removed in 26.05 release */
+		struct {
+			uint16_t	compare_and_write : 1;
+			uint16_t	reserved : 15;
+		};
+	};
 };
 
 struct spdk_nvme_cdata_oaes {

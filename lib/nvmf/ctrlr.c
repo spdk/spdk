@@ -382,7 +382,7 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->oncs.nvmwzsv = 1;
 	cdata->oncs.reservs = 1;
 	cdata->oncs.nvmcpys = 1;
-	cdata->fuses.compare_and_write = 1;
+	cdata->fuses.fcws = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;

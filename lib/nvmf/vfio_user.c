@@ -3773,7 +3773,7 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 	/* libvfio-user can only support 1 connection for now */
 	cdata->oncs.reservs = 0;
 	cdata->oacs.dbcs = !vu_transport->transport_opts.disable_shadow_doorbells;
-	cdata->fuses.compare_and_write = !vu_transport->transport_opts.disable_compare;
+	cdata->fuses.fcws = !vu_transport->transport_opts.disable_compare;
 }
 
 static int
