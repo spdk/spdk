@@ -2205,7 +2205,7 @@ test_fused_compare_and_write(void)
 	struct spdk_nvmf_qpair qpair = {};
 	struct spdk_nvme_cmd cmd = {};
 	union nvmf_c2h_msg rsp = {};
-	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_ctrlr ctrlr = {.cdata.fuses.fcws = 1};
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_ns ns = {};
 	struct spdk_nvmf_ns *subsys_ns[1] = {};

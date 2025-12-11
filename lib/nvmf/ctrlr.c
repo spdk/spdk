@@ -4867,6 +4867,11 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 	struct spdk_nvmf_request *first_fused_req = req->qpair->first_fused_req;
 	int rc;
 
+	if (spdk_unlikely(!req->qpair->ctrlr->cdata.fuses.fcws)) {
+		SPDK_DEBUGLOG(nvmf, "Controller does not support fused operation.\n");
+		goto invalid_field;
+	}
+
 	if (cmd->fuse == SPDK_NVME_CMD_FUSE_FIRST) {
 		/* first fused operation (should be compare) */
 		if (first_fused_req != NULL) {
@@ -4916,9 +4921,7 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 		req->qpair->first_fused_req = NULL;
 	} else {
 		SPDK_ERRLOG("Invalid fused command fuse field.\n");
-		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		goto invalid_field;
 	}
 
 	rc = nvmf_bdev_ctrlr_compare_and_write_cmd(bdev, desc, ch, req->first_fused_req, req);
@@ -4938,6 +4941,12 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 	}
 
 	return rc;
+
+invalid_field:
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	rsp->status.dnr = 1;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 bool
