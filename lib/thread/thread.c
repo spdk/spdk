@@ -2063,7 +2063,9 @@ _back_to_orig_thread(void *ctx)
 	assert(ct->orig_thread->for_each_count > 0);
 	ct->orig_thread->for_each_count--;
 
-	ct->cpl(ct->ctx);
+	if (ct->cpl) {
+		ct->cpl(ct->ctx);
+	}
 	free(ctx);
 }
 
