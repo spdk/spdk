@@ -267,7 +267,7 @@ install_astyle() {
 
 	# For 3.1 /usr/bin destination is hardcoded in CMakeLists.txt, so copy built binary
 	# so that we don't overwrite whatever may be installed in /usr/bin
-	(cd "$astyle_dir/AStyle/astyle" && cmake ../ && make -j && cp ./astyle /usr/local/bin)
+	(cd "$astyle_dir/AStyle/astyle" && cmake ../ && make -j$(nproc) && cp ./astyle /usr/local/bin)
 }
 
 if [[ $INSTALL_DEV_TOOLS == true ]]; then
