@@ -1707,8 +1707,10 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 
 	/* fallthrough */
 	default:
-		spdk_accel_sequence_abort(bdev_io->u.bdev.accel_sequence);
-		bdev_io->u.bdev.accel_sequence = NULL;
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ || bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			spdk_accel_sequence_abort(bdev_io->u.bdev.accel_sequence);
+			bdev_io->u.bdev.accel_sequence = NULL;
+		}
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 		break;
 	}
