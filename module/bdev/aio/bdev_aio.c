@@ -27,6 +27,31 @@
 #include <libaio.h>
 #endif
 
+#define AIO_FDISK_LOG_FMT "%s,fdisk:%p,filename:%s"
+#define AIO_FDISK_LOG_ARGS(fdisk) \
+  (fdisk)->disk.name, \
+  (fdisk), \
+  (fdisk)->filename
+
+#define AIO_FDISK_LOG(type, fdisk, format, ...) do { \
+	SPDK_##type##LOG("["AIO_FDISK_LOG_FMT"] " format, AIO_FDISK_LOG_ARGS(fdisk), ##__VA_ARGS__); \
+} while (0)
+
+#define AIO_FDISK_LOG2(type, component, fdisk, format, ...) do { \
+	SPDK_##type##LOG(component, "["AIO_FDISK_LOG_FMT"] " format, AIO_FDISK_LOG_ARGS(fdisk), ##__VA_ARGS__); \
+} while (0)
+
+#define AIO_FDISK_ERRLOG(fdisk, format, ...) AIO_FDISK_LOG(ERR, fdisk, format, ##__VA_ARGS__)
+#define AIO_FDISK_WARNLOG(fdisk, format, ...) AIO_FDISK_LOG(WARN, fdisk, format, ##__VA_ARGS__)
+#define AIO_FDISK_NOTICELOG(fdisk, format, ...) AIO_FDISK_LOG(NOTICE, fdisk, format, ##__VA_ARGS__)
+#define AIO_FDISK_INFOLOG(fdisk, format, ...) AIO_FDISK_LOG2(INFO, aio, fdisk, format, ##__VA_ARGS__)
+
+#ifdef DEBUG
+#define AIO_FDISK_DEBUGLOG(fdisk, format, ...) AIO_FDISK_LOG2(DEBUG, aio, fdisk, format, ##__VA_ARGS__)
+#else
+#define AIO_FDISK_DEBUGLOG(...) do { } while (0)
+#endif
+
 struct bdev_aio_io_channel {
 	uint64_t				io_inflight;
 #ifdef __FreeBSD__
@@ -102,6 +127,12 @@ bdev_aio_get_ctx_size(void)
 	return sizeof(struct bdev_aio_task);
 }
 
+static struct file_disk *
+fdisk_from_bdev(struct spdk_bdev *bdev)
+{
+	return SPDK_CONTAINEROF(bdev, struct file_disk, disk);
+}
+
 static struct spdk_bdev_module aio_if = {
 	.name		= "aio",
 	.module_init	= bdev_aio_initialize,
@@ -146,8 +177,8 @@ bdev_aio_open(struct file_disk *disk)
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(disk->filename, io_flag);
 		if (fd < 0) {
-			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
-				    disk->filename, errno, spdk_strerror(errno));
+			AIO_FDISK_ERRLOG(disk, "open() failed, errno %d: %s\n",
+					 errno, spdk_strerror(errno));
 			disk->fd = -1;
 			return -1;
 		}
@@ -240,11 +271,11 @@ bdev_aio_rw(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 	int rc;
 
 	if (type == SPDK_BDEV_IO_TYPE_READ) {
-		SPDK_DEBUGLOG(aio, "read %d iovs size %lu to off: %#lx\n",
-			      iovcnt, nbytes, offset);
+		AIO_FDISK_DEBUGLOG(fdisk, "read %d iovs size %lu to off: %#lx\n",
+				   iovcnt, nbytes, offset);
 	} else {
-		SPDK_DEBUGLOG(aio, "write %d iovs size %lu from off: %#lx\n",
-			      iovcnt, nbytes, offset);
+		AIO_FDISK_DEBUGLOG(fdisk, "write %d iovs size %lu from off: %#lx\n",
+				   iovcnt, nbytes, offset);
 	}
 
 	rc = bdev_aio_submit_io(type, fdisk, ch, aio_task, iov, iovcnt, nbytes, offset);
@@ -253,7 +284,7 @@ bdev_aio_rw(enum spdk_bdev_io_type type, struct file_disk *fdisk,
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
-			SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
+			AIO_FDISK_ERRLOG(fdisk, "%s: io_submit returned %d\n", __func__, rc);
 		}
 	} else {
 		aio_ch->io_inflight++;
@@ -322,7 +353,7 @@ bdev_aio_destruct_cb(void *io_device)
 	TAILQ_REMOVE(&g_aio_disk_head, fdisk, link);
 	rc = bdev_aio_close(fdisk);
 	if (rc < 0) {
-		SPDK_ERRLOG("bdev_aio_close() failed\n");
+		AIO_FDISK_ERRLOG(fdisk, "bdev_aio_close() failed\n");
 	}
 	aio_free_disk(fdisk);
 }
@@ -380,7 +411,8 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		} else if ((uint64_t)aio_return(&aio_task->aiocb) == aio_task->len) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		} else {
-			SPDK_ERRLOG("failed to complete aio: rc %d\n", aio_error(&aio_task->aiocb));
+			AIO_FDISK_ERRLOG(fdisk_from_bdev(bdev_io->bdev), "failed to complete: rc %d\n",
+					 aio_error(&aio_task->aiocb));
 			res = aio_error(&aio_task->aiocb);
 			if (res != 0) {
 				spdk_bdev_io_complete_aio_status(bdev_io, res);
@@ -487,11 +519,13 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 				if (res == -EAGAIN) {
 					spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 				} else {
-					SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+					AIO_FDISK_ERRLOG(fdisk_from_bdev(bdev_io->bdev), "failed to complete: rc %"PRId64"\n",
+							 events[i].res);
 					spdk_bdev_io_complete_aio_status(bdev_io, res);
 				}
 			} else {
-				SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
+				AIO_FDISK_ERRLOG(fdisk_from_bdev(bdev_io->bdev), "failed to complete: rc %"PRId64"\n",
+						 events[i].res);
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			}
 		}
@@ -948,7 +982,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	}
 
 	if (bdev_aio_open(fdisk)) {
-		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
+		AIO_FDISK_ERRLOG(fdisk, "Unable to open file, errno: %d\n", errno);
 		rc = -errno;
 		goto error_return;
 	}
@@ -964,7 +998,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	if (block_size == 0) {
 		/* User did not specify block size - use autodetected block size. */
 		if (detected_block_size == 0) {
-			SPDK_ERRLOG("Block size could not be auto-detected\n");
+			AIO_FDISK_ERRLOG(fdisk, "Block size could not be auto-detected\n");
 			rc = -EINVAL;
 			goto error_return;
 		}
@@ -972,27 +1006,27 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 		block_size = detected_block_size;
 	} else {
 		if (block_size < detected_block_size) {
-			SPDK_ERRLOG("Specified block size %" PRIu32 " is smaller than "
-				    "auto-detected block size %" PRIu32 "\n",
-				    block_size, detected_block_size);
+			AIO_FDISK_ERRLOG(fdisk, "Specified block size %" PRIu32 " is smaller than "
+					 "auto-detected block size %" PRIu32 "\n",
+					 block_size, detected_block_size);
 			rc = -EINVAL;
 			goto error_return;
 		} else if (detected_block_size != 0 && block_size != detected_block_size) {
-			SPDK_WARNLOG("Specified block size %" PRIu32 " does not match "
-				     "auto-detected block size %" PRIu32 "\n",
-				     block_size, detected_block_size);
+			AIO_FDISK_ERRLOG(fdisk, "Specified block size %" PRIu32 " does not match "
+					 "auto-detected block size %" PRIu32 "\n",
+					 block_size, detected_block_size);
 		}
 		fdisk->block_size_override = true;
 	}
 
 	if (block_size < 512) {
-		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be at least 512).\n", block_size);
+		AIO_FDISK_ERRLOG(fdisk, "Invalid block size %" PRIu32 " (must be at least 512).\n", block_size);
 		rc = -EINVAL;
 		goto error_return;
 	}
 
 	if (!spdk_u32_is_pow2(block_size)) {
-		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be a power of 2.)\n", block_size);
+		AIO_FDISK_ERRLOG(fdisk, "Invalid block size %" PRIu32 " (must be a power of 2.)\n", block_size);
 		rc = -EINVAL;
 		goto error_return;
 	}
@@ -1005,8 +1039,8 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	}
 
 	if (disk_size % fdisk->disk.blocklen != 0) {
-		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
-			    disk_size, fdisk->disk.blocklen);
+		AIO_FDISK_ERRLOG(fdisk, "Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
+				 disk_size, fdisk->disk.blocklen);
 		rc = -EINVAL;
 		goto error_return;
 	}
@@ -1067,15 +1101,13 @@ bdev_aio_rescan(const char *name)
 	blockcnt = disk_size / bdev->blocklen;
 
 	if (bdev->blockcnt != blockcnt) {
-		SPDK_NOTICELOG("AIO device is resized: bdev name %s, old block count %" PRIu64 ", new block count %"
-			       PRIu64 "\n",
-			       fdisk->filename,
-			       bdev->blockcnt,
-			       blockcnt);
+		AIO_FDISK_NOTICELOG(fdisk, "device is resized: old block count %" PRIu64 ", new block count %"
+				    PRIu64 "\n",
+				    bdev->blockcnt,
+				    blockcnt);
 		rc = spdk_bdev_notify_blockcnt_change(bdev, blockcnt);
 		if (rc != 0) {
-			SPDK_ERRLOG("Could not change num blocks for aio bdev: name %s, errno: %d.\n",
-				    fdisk->filename, rc);
+			AIO_FDISK_ERRLOG(fdisk, "Could not change num blocks, errno: %d.\n", rc);
 			goto exit;
 		}
 	}
