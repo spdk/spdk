@@ -3468,6 +3468,9 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 				goto exit;
 			}
 			reg->rkey = key.nrkey;
+			if (nvmf_ns_reservation_registrant_is_holder(ns, reg)) {
+				ns->crkey = key.nrkey;
+			}
 		} else if (iekey) { /* No registrant but IEKEY is set */
 			/* new registrant */
 			rc = nvmf_ns_reservation_add_registrant(ns, ctrlr, key.nrkey);
