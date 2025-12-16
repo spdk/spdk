@@ -642,7 +642,7 @@
       "name": "accel_crypto_key_destroy",
       "params": [
         {
-          "name": "name",
+          "name": "key_name",
           "type": "string",
           "required": true,
           "description": "The key name"

@@ -48,10 +48,10 @@ def add_parser(subparsers):
     p.set_defaults(func=accel_crypto_key_create)
 
     def accel_crypto_key_destroy(args):
-        print_dict(args.client.accel_crypto_key_destroy(key_name=args.name))
+        print_dict(args.client.accel_crypto_key_destroy(key_name=args.key_name))
 
     p = subparsers.add_parser('accel_crypto_key_destroy', help='Destroy encryption key')
-    p.add_argument('-n', '--name', help='key name', required=True, type=str)
+    p.add_argument('-n', '--name', dest='key_name', help='key name', required=True, type=str)
     p.set_defaults(func=accel_crypto_key_destroy)
 
     def accel_crypto_keys_get(args):
