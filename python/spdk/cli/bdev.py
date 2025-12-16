@@ -1513,6 +1513,41 @@ def add_parser(subparsers):
     p.add_argument('-o', '--opc', help="""Opcode of the nvme cmd.""", required=True, type=int)
     p.set_defaults(func=bdev_nvme_remove_error_injection)
 
+    # wal
+    def wal_bdev_create(args):
+        params = {
+            "name": args.name,
+            "journal_name": args.journal_name,
+            "bdev_name": args.bdev_name
+        }
+        if args.block_size is not None:
+            params["block_size"] = args.block_size
+        if args.size_mb is not None:
+            params["size_mb"] = args.size_mb
+        print_json(args.client.wal_bdev_create(**params))
+
+    p = subparsers.add_parser('wal_bdev_create', help='Create WAL virtual bdev')
+    p.add_argument('-n', '--name', help='Name of WAL bdev to create', required=True)
+    p.add_argument('-j', '--journal-name', help='Name of journal base bdev', required=True)
+    p.add_argument('-b', '--bdev-name', help='Name of main base bdev', required=True)
+    p.add_argument('--block-size', help='Optional block size (must match base bdevs)', type=int)
+    p.add_argument('--size-mb', help='Optional size hint in MiB (must match base bdevs)', type=int)
+    p.set_defaults(func=wal_bdev_create)
+
+    def wal_bdev_delete(args):
+        args.client.wal_bdev_delete(name=args.name)
+
+    p = subparsers.add_parser('wal_bdev_delete', help='Delete WAL virtual bdev')
+    p.add_argument('name', help='Name of WAL bdev')
+    p.set_defaults(func=wal_bdev_delete)
+
+    def wal_bdev_recover(args):
+        print_json(args.client.wal_bdev_recover(name=args.name))
+
+    p = subparsers.add_parser('wal_bdev_recover', help='Recover main bdev from WAL journal')
+    p.add_argument('name', help='Name of WAL bdev')
+    p.set_defaults(func=wal_bdev_recover)
+
     # daos
     def bdev_daos_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
