@@ -59,6 +59,7 @@ tdnf install -y CUnit-devel \
 	libiscsi-devel \
 	libuuid-devel \
 	ncurses-devel \
+	ncurses-compat \
 	openssl-devel \
 	procps-ng \
 	python \
