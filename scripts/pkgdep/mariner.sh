@@ -18,7 +18,7 @@ additional_dependencies() {
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		# Tools for developers
 		devtool_pkgs=(git sg3_utils pciutils bash-completion ruby-devel)
-		devtool_pkgs+=(gcovr python3-pycodestyle)
+		devtool_pkgs+=(gcovr rubygem-rake python3-pycodestyle)
 		tdnf install -y "${devtool_pkgs[@]}"
 	fi
 	if [[ $INSTALL_FUSE == "true" ]]; then
