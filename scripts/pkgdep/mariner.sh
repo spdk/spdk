@@ -21,10 +21,6 @@ additional_dependencies() {
 		devtool_pkgs+=(gcovr rubygem-rake python3-pycodestyle)
 		tdnf install -y "${devtool_pkgs[@]}"
 	fi
-	if [[ $INSTALL_FUSE == "true" ]]; then
-		# Additional dependencies for FUSE and NVMe-CUSE
-		tdnf install -y fuse3-devel
-	fi
 	if [[ $INSTALL_RBD == "true" ]]; then
 		# Additional dependencies for RBD bdev in NVMe over Fabrics
 		tdnf install -y librados-devel librbd-devel
@@ -56,6 +52,7 @@ tdnf install -y CUnit-devel \
 	clang \
 	clang-devel \
 	cmake \
+	fuse3-devel \
 	json-c-devel \
 	libaio-devel \
 	libcmocka-devel \
