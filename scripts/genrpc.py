@@ -41,10 +41,10 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     for folder in ("module", "lib"):
         for path in (base_dir / folder).rglob("*_rpc.c"):
             data = path.read_text()
-            methods = re.findall(r'SPDK_RPC_REGISTER\("([A-Za-z0-9_]+)"\s*,\s*rpc_([A-Za-z0-9_]+)\s*,', data, re.MULTILINE)
+            methods = re.findall(r'SPDK_RPC_REGISTER\("([A-Za-z0-9_]+)"\s*,\s*([A-Za-z0-9_]+)\s*,', data, re.MULTILINE)
             for name, func in methods:
-                if name != func:
-                    raise ValueError(f"In file {path}: RPC name '{name}' does not match function name 'rpc_{func}'")
+                if func != f"rpc_{name}":
+                    raise ValueError(f"In file {path}: RPC name '{name}' does not match function name '{func}'")
                 if name not in schema_methods | exception_methods:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not appear in schema. Update schema or exception list")
 
