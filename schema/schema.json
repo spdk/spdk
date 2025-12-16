@@ -4056,12 +4056,6 @@
           "type": "string",
           "required": false,
           "description": "Parent NVMe-oF target name."
-        },
-        {
-          "name": "no_auto_visible",
-          "type": "boolean",
-          "required": false,
-          "description": "Namespace is not automatically visible to controllers (default: false)"
         }
       ]
     },
