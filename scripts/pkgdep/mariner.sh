@@ -47,7 +47,7 @@ additional_dependencies() {
 		tdnf install -y avahi-devel
 	fi
 	if [[ $INSTALL_LZ4 == "true" ]]; then
-		tdnf install -y liblz4
+		tdnf install -y lz4 lz4-devel
 	fi
 }
 
