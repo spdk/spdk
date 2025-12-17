@@ -44,10 +44,9 @@ def add_parser(subparsers):
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
     p.add_argument('-o', '--nop-timeout', help='Timeout in seconds to nop-in request to the initiator', type=int)
     p.add_argument('-n', '--nop-in-interval', help='Time interval in secs between nop-in requests by the target', type=int)
-    p.add_argument('-d', '--disable-chap', help="""CHAP for discovery session should be disabled.
-    *** Mutually exclusive with --require-chap""", action='store_true')
-    p.add_argument('-r', '--require-chap', help="""CHAP for discovery session should be required.
-    *** Mutually exclusive with --disable-chap""", action='store_true')
+    g = p.add_mutually_exclusive_group()
+    g.add_argument('-d', '--disable-chap', help="CHAP for discovery session should be disabled.", action='store_true')
+    g.add_argument('-r', '--require-chap', help="CHAP for discovery session should be required.", action='store_true')
     p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
     *** Authentication group must be precreated ***""", type=int)
@@ -76,10 +75,9 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('iscsi_set_discovery_auth',
                               help="""Set CHAP authentication for discovery session.""")
-    p.add_argument('-d', '--disable-chap', help="""CHAP for discovery session should be disabled.
-    *** Mutually exclusive with --require-chap""", action='store_true')
-    p.add_argument('-r', '--require-chap', help="""CHAP for discovery session should be required.
-    *** Mutually exclusive with --disable-chap""", action='store_true')
+    g = p.add_mutually_exclusive_group()
+    g.add_argument('-d', '--disable-chap', help="CHAP for discovery session should be disabled.", action='store_true')
+    g.add_argument('-r', '--require-chap', help="CHAP for discovery session should be required.", action='store_true')
     p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
     *** Authentication group must be precreated ***""", type=int)
@@ -225,10 +223,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('queue_depth', help='Desired target queue depth', type=int)
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
     *** Authentication group must be precreated ***""", type=int)
-    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this target node.
-    *** Mutually exclusive with --require-chap ***""", action='store_true')
-    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this target node.
-    *** Mutually exclusive with --disable-chap ***""", action='store_true')
+    g = p.add_mutually_exclusive_group()
+    g.add_argument('-d', '--disable-chap', help="CHAP authentication should be disabled for this target node.", action='store_true')
+    g.add_argument('-r', '--require-chap', help="CHAP authentication should be required for this target node.", action='store_true')
     p.add_argument(
         '-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.', action='store_true')
     p.add_argument('-H', '--header-digest',
@@ -265,10 +262,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
     *** Authentication group must be precreated ***""", type=int)
-    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this target node.
-    *** Mutually exclusive with --require-chap ***""", action='store_true')
-    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this target node.
-    *** Mutually exclusive with --disable-chap ***""", action='store_true')
+    g = p.add_mutually_exclusive_group()
+    g.add_argument('-d', '--disable-chap', help="CHAP authentication should be disabled for this target node.", action='store_true')
+    g.add_argument('-r', '--require-chap', help="CHAP authentication should be required for this target node.", action='store_true')
     p.add_argument('-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.',
                    action='store_true')
     p.set_defaults(func=iscsi_target_node_set_auth)
@@ -467,10 +463,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for this portal group.
     *** Authentication group must be precreated ***""", type=int)
-    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this portal group.
-    *** Mutually exclusive with --require-chap ***""", action='store_true')
-    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this portal group.
-    *** Mutually exclusive with --disable-chap ***""", action='store_true')
+    g = p.add_mutually_exclusive_group()
+    g.add_argument('-d', '--disable-chap', help="CHAP authentication should be disabled for this portal group.", action='store_true')
+    g.add_argument('-r', '--require-chap', help="CHAP authentication should be required for this portal group.", action='store_true')
     p.add_argument('-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.',
                    action='store_true')
     p.set_defaults(func=iscsi_portal_group_set_auth)
