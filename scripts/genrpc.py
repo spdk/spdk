@@ -37,7 +37,11 @@ def lint_json_examples() -> None:
 
 def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_methods = set(method["name"] for method in schema['methods'])
+    schema_objects = {obj["name"]: obj for obj in schema['objects']}
+    schema_decoders = {method["name"]:method["decoder"] for method in schema['methods'] if "decoder" in method}
     exception_methods = {"nvmf_create_target", "nvmf_delete_target", "nvmf_get_targets"}
+    # TODO: those are embeeded objects decoders and will be resolved soon
+    exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
     for folder in ("module", "lib"):
         for path in (base_dir / folder).rglob("*_rpc.c"):
             data = path.read_text()
@@ -47,6 +51,14 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not match function name '{func}'")
                 if name not in schema_methods | exception_methods:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not appear in schema. Update schema or exception list")
+            decoders = re.findall(r"static\s+const\s+struct\s+spdk_json_object_decoder\s+(.+?)\[\]\s+=\s+{(.+?)};",
+                                  data, re.MULTILINE | re.DOTALL)
+            struct_names = {schema_decoders.get(name, f"rpc_{name}_decoders") for name, _ in methods}
+            decoder_names = {name for name, _ in decoders}
+            invalid = decoder_names - exceptions_decoders - struct_names
+            if invalid:
+                raise ValueError(f"In file {path}: RPC names {invalid} do not match available decoders: {struct_names}."
+                                "Update decoder names or exception list.")
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:

@@ -454,6 +454,7 @@
     },
     {
       "name": "trace_enable_tpoint_group",
+      "decoder": "rpc_tpoint_group_decoders",
       "params": [
         {
           "name": "name",
@@ -465,6 +466,7 @@
     },
     {
       "name": "trace_disable_tpoint_group",
+      "decoder": "rpc_tpoint_group_decoders",
       "params": [
         {
           "name": "name",
@@ -476,6 +478,7 @@
     },
     {
       "name": "trace_set_tpoint_mask",
+      "decoder": "rpc_tpoint_mask_decoders",
       "params": [
         {
           "name": "name",
@@ -493,6 +496,7 @@
     },
     {
       "name": "trace_clear_tpoint_mask",
+      "decoder": "rpc_tpoint_mask_decoders",
       "params": [
         {
           "name": "name",
@@ -518,6 +522,7 @@
     },
     {
       "name": "log_set_print_level",
+      "decoder": "rpc_log_level_decoders",
       "params": [
         {
           "name": "level",
@@ -533,6 +538,7 @@
     },
     {
       "name": "log_set_level",
+      "decoder": "rpc_log_level_decoders",
       "params": [
         {
           "name": "level",
@@ -548,6 +554,7 @@
     },
     {
       "name": "log_set_flag",
+      "decoder": "rpc_log_flag_decoders",
       "params": [
         {
           "name": "flag",
@@ -559,6 +566,7 @@
     },
     {
       "name": "log_clear_flag",
+      "decoder": "rpc_log_flag_decoders",
       "params": [
         {
           "name": "flag",
@@ -1177,6 +1185,7 @@
     },
     {
       "name": "bdev_ocf_delete",
+      "decoder": "rpc_bdev_ocf_name_decoders",
       "params": [
         {
           "name": "name",
@@ -1188,6 +1197,7 @@
     },
     {
       "name": "bdev_ocf_get_stats",
+      "decoder": "rpc_bdev_ocf_name_decoders",
       "params": [
         {
           "name": "name",
@@ -1199,6 +1209,7 @@
     },
     {
       "name": "bdev_ocf_reset_stats",
+      "decoder": "rpc_bdev_ocf_name_decoders",
       "params": [
         {
           "name": "name",
@@ -1267,6 +1278,7 @@
     },
     {
       "name": "bdev_ocf_flush_start",
+      "decoder": "rpc_bdev_ocf_name_decoders",
       "params": [
         {
           "name": "name",
@@ -1278,6 +1290,7 @@
     },
     {
       "name": "bdev_ocf_flush_status",
+      "decoder": "rpc_bdev_ocf_name_decoders",
       "params": [
         {
           "name": "name",
@@ -1990,6 +2003,7 @@
     },
     {
       "name": "bdev_nvme_reset_controller",
+      "decoder": "rpc_bdev_nvme_controller_op_decoders",
       "params": [
         {
           "name": "name",
@@ -2007,6 +2021,7 @@
     },
     {
       "name": "bdev_nvme_enable_controller",
+      "decoder": "rpc_bdev_nvme_controller_op_decoders",
       "params": [
         {
           "name": "name",
@@ -2024,6 +2039,7 @@
     },
     {
       "name": "bdev_nvme_disable_controller",
+      "decoder": "rpc_bdev_nvme_controller_op_decoders",
       "params": [
         {
           "name": "name",
@@ -2716,6 +2732,7 @@
     },
     {
       "name": "bdev_ftl_load",
+      "decoder": "rpc_bdev_ftl_create_decoders",
       "params": [
         {
           "name": "name",
@@ -2786,6 +2803,7 @@
     },
     {
       "name": "bdev_ftl_unload",
+      "decoder": "rpc_bdev_ftl_delete_decoders",
       "params": [
         {
           "name": "name",
@@ -2826,6 +2844,7 @@
     },
     {
       "name": "bdev_ftl_get_stats",
+      "decoder": "rpc_ftl_basic_decoders",
       "params": [
         {
           "name": "name",
@@ -2837,6 +2856,7 @@
     },
     {
       "name": "bdev_ftl_get_properties",
+      "decoder": "rpc_ftl_basic_decoders",
       "params": [
         {
           "name": "name",
@@ -3314,6 +3334,7 @@
     },
     {
       "name": "iscsi_initiator_group_add_initiators",
+      "decoder": "rpc_add_or_delete_initiators_decoders",
       "params": [
         {
           "name": "tag",
@@ -3337,6 +3358,7 @@
     },
     {
       "name": "iscsi_initiator_group_remove_initiators",
+      "decoder": "rpc_add_or_delete_initiators_decoders",
       "params": [
         {
           "name": "tag",
@@ -3470,6 +3492,7 @@
     },
     {
       "name": "iscsi_target_node_add_pg_ig_maps",
+      "decoder": "rpc_tgt_node_pg_ig_maps_decoders",
       "params": [
         {
           "name": "name",
@@ -3487,6 +3510,7 @@
     },
     {
       "name": "iscsi_target_node_remove_pg_ig_maps",
+      "decoder": "rpc_tgt_node_pg_ig_maps_decoders",
       "params": [
         {
           "name": "name",
@@ -3548,6 +3572,7 @@
     },
     {
       "name": "iscsi_start_portal_group",
+      "decoder": "rpc_iscsi_change_portal_group_decoders",
       "params": [
         {
           "name": "tag",
@@ -3559,6 +3584,7 @@
     },
     {
       "name": "iscsi_delete_portal_group",
+      "decoder": "rpc_iscsi_change_portal_group_decoders",
       "params": [
         {
           "name": "tag",
@@ -4012,6 +4038,7 @@
     },
     {
       "name": "nvmf_subsystem_add_listener",
+      "decoder": "nvmf_rpc_listener_decoder",
       "params": [
         {
           "name": "nqn",
@@ -4054,6 +4081,7 @@
     },
     {
       "name": "nvmf_subsystem_remove_listener",
+      "decoder": "nvmf_rpc_listener_decoder",
       "params": [
         {
           "name": "nqn",
@@ -4190,6 +4218,7 @@
     },
     {
       "name": "nvmf_subsystem_add_host",
+      "decoder": "nvmf_rpc_subsystem_host_decoder",
       "params": [
         {
           "name": "nqn",
@@ -4231,6 +4260,7 @@
     },
     {
       "name": "nvmf_subsystem_remove_host",
+      "decoder": "nvmf_rpc_subsystem_host_decoder",
       "params": [
         {
           "name": "nqn",
@@ -4277,6 +4307,7 @@
     },
     {
       "name": "nvmf_subsystem_set_keys",
+      "decoder": "nvmf_rpc_subsystem_host_decoder",
       "params": [
         {
           "name": "nqn",
@@ -4312,6 +4343,7 @@
     },
     {
       "name": "nvmf_subsystem_get_controllers",
+      "decoder": "rpc_subsystem_query_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4329,6 +4361,7 @@
     },
     {
       "name": "nvmf_subsystem_get_qpairs",
+      "decoder": "rpc_subsystem_query_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4346,6 +4379,7 @@
     },
     {
       "name": "nvmf_subsystem_get_listeners",
+      "decoder": "rpc_subsystem_query_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4363,6 +4397,7 @@
     },
     {
       "name": "nvmf_ns_add_host",
+      "decoder": "nvmf_rpc_ns_visible_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4392,6 +4427,7 @@
     },
     {
       "name": "nvmf_ns_remove_host",
+      "decoder": "nvmf_rpc_ns_visible_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4432,6 +4468,7 @@
     },
     {
       "name": "nvmf_discovery_add_referral",
+      "decoder": "nvmf_rpc_referral_decoder",
       "params": [
         {
           "name": "tgt_name",
@@ -4462,6 +4499,7 @@
     },
     {
       "name": "nvmf_discovery_remove_referral",
+      "decoder": "nvmf_rpc_referral_decoder",
       "params": [
         {
           "name": "tgt_name",
@@ -5218,6 +5256,7 @@
     },
     {
       "name": "bdev_lvol_decouple_parent",
+      "decoder": "rpc_bdev_lvol_inflate_decoders",
       "params": [
         {
           "name": "name",
@@ -5263,6 +5302,7 @@
     },
     {
       "name": "bdev_lvol_set_parent_bdev",
+      "decoder": "rpc_bdev_lvol_set_parent_decoders",
       "params": [
         {
           "name": "lvol_name",
@@ -5942,6 +5982,7 @@
     },
     {
       "name": "sock_set_default_impl",
+      "decoder": "rpc_sock_impl_get_options_decoders",
       "params": [
         {
           "name": "impl_name",
@@ -6271,6 +6312,7 @@
     },
     {
       "name": "nvmf_publish_mdns_prr",
+      "decoder": "rpc_mdns_prr_decoders",
       "params": [
         {
           "name": "tgt_name",
@@ -6282,6 +6324,7 @@
     },
     {
       "name": "nvmf_stop_mdns_prr",
+      "decoder": "rpc_mdns_prr_decoders",
       "params": [
         {
           "name": "tgt_name",
