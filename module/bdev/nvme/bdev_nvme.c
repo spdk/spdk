@@ -6327,6 +6327,18 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->timeout_us &&
+	    opts->keep_alive_timeout_ms * SPDK_MSEC_TO_USEC > opts->timeout_us) {
+		SPDK_WARNLOG("keep_alive_timeout_ms %u should be less than timeout_us %lu\n",
+			     opts->keep_alive_timeout_ms, opts->timeout_us);
+	}
+
+	if (opts->timeout_admin_us &&
+	    opts->keep_alive_timeout_ms * SPDK_MSEC_TO_USEC > opts->timeout_admin_us) {
+		SPDK_WARNLOG("keep_alive_timeout_ms %u should be less than timeout_admin_us %lu\n",
+			     opts->keep_alive_timeout_ms, opts->timeout_admin_us);
+	}
+
 	if (opts->bdev_retry_count < -1) {
 		SPDK_WARNLOG("Invalid option: bdev_retry_count can't be less than -1.\n");
 		return -EINVAL;
