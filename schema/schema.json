@@ -812,6 +812,24 @@
           "type": "number",
           "required": false,
           "description": "Size of the shared requests pool"
+        },
+        {
+          "name": "allowed_devs",
+          "type": "string",
+          "required": false,
+          "description": "Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1"
+        },
+        {
+          "name": "crypto_split_blocks",
+          "type": "number",
+          "required": false,
+          "description": "Number of data blocks to be processed in 1 crypto UMR. [0-65535], 0 means no limit"
+        },
+        {
+          "name": "enable_driver",
+          "type": "boolean",
+          "required": false,
+          "description": "Enable mlx5 platform driver. Note: the driver supports reduced scope of operations, enable with care"
         }
       ]
     },
@@ -1314,6 +1332,12 @@
           "type": "number",
           "required": false,
           "description": "Physical block size of device; must be a power of 2 and at least 512"
+        },
+        {
+          "name": "dif_pi_format",
+          "type": "number",
+          "required": false,
+          "description": "protection information format"
         }
       ]
     },
@@ -1356,6 +1380,12 @@
           "description": "UUID of new bdev"
         },
         {
+          "name": "physical_block_size",
+          "type": "number",
+          "required": false,
+          "description": "Physical block size for this bdev."
+        },
+        {
           "name": "md_size",
           "type": "number",
           "required": false,
@@ -1366,6 +1396,12 @@
           "type": "number",
           "required": false,
           "description": "Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection."
+        },
+        {
+          "name": "dif_pi_format",
+          "type": "number",
+          "required": false,
+          "description": "protection information format"
         },
         {
           "name": "dif_is_head_of_md",
@@ -3513,6 +3549,12 @@
       "name": "iscsi_portal_group_set_auth",
       "params": [
         {
+          "name": "tag",
+          "type": "number",
+          "required": true,
+          "description": "Portal group tag (unique, integer > 0)"
+        },
+        {
           "name": "disable_chap",
           "type": "boolean",
           "required": false,
@@ -3832,6 +3874,12 @@
       "name": "nvmf_get_subsystems",
       "params": [
         {
+          "name": "nqn",
+          "type": "string",
+          "required": false,
+          "description": "Subsystem NQN (optional)"
+        },
+        {
           "name": "tgt_name",
           "type": "string",
           "required": false,
@@ -3966,6 +4014,12 @@
           "type": "boolean",
           "required": false,
           "description": "Whether all connections immediately attempt to establish a secure channel"
+        },
+        {
+          "name": "ana_state",
+          "type": "string",
+          "required": false,
+          "description": "ANA state to set: optimized, non_optimized, or inaccessible"
         },
         {
           "name": "sock_impl",
@@ -4304,6 +4358,12 @@
           "type": "string",
           "required": true,
           "description": "Host NQN"
+        },
+        {
+          "name": "tgt_name",
+          "type": "string",
+          "required": false,
+          "description": "The name of the parent NVMe-oF target (optional)"
         }
       ]
     },
@@ -4327,6 +4387,12 @@
           "type": "string",
           "required": true,
           "description": "Host NQN"
+        },
+        {
+          "name": "tgt_name",
+          "type": "string",
+          "required": false,
+          "description": "The name of the parent NVMe-oF target (optional)"
         }
       ]
     },
@@ -4362,6 +4428,12 @@
           "type": "boolean",
           "required": false,
           "description": "The connection to that discovery subsystem requires a secure channel"
+        },
+        {
+          "name": "subnqn",
+          "type": "string",
+          "required": false,
+          "description": "Subsystem NQN"
         }
       ]
     },
@@ -4380,6 +4452,12 @@
           "required": true,
           "class": "nvmf_listen_address",
           "description": "@ref rpc_nvmf_listen_address object"
+        },
+        {
+          "name": "subnqn",
+          "type": "string",
+          "required": false,
+          "description": "Subsystem NQN"
         }
       ]
     },
