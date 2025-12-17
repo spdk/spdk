@@ -1375,12 +1375,12 @@ def add_parser(subparsers):
 
     def bdev_ftl_set_property(args):
         print_dict(args.client.bdev_ftl_set_property(name=args.name,
-                   ftl_property=args.property,
+                   ftl_property=args.ftl_property,
                    value=args.value))
 
     p = subparsers.add_parser('bdev_ftl_set_property', help='Set FTL property')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-p', '--property', help="Name of the property to be set", required=True)
+    p.add_argument('-p', '--property', dest='ftl_property', help="Name of the property to be set", required=True)
     p.add_argument('-v', '--value', help="Value of the property", required=True)
     p.set_defaults(func=bdev_ftl_set_property)
 

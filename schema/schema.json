@@ -2797,7 +2797,7 @@
           "description": "Bdev name"
         },
         {
-          "name": "property",
+          "name": "ftl_property",
           "type": "string",
           "required": true,
           "description": "Name of the property to modify"
