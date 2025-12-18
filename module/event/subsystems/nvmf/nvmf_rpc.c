@@ -44,7 +44,7 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 
-static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_admin_cmd_passthru_decoders[] = {
 	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool, true},
 	{"identify_uuid_list", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_uuid_list), spdk_json_decode_bool, true},
 	{"get_log_page", offsetof(struct spdk_nvmf_admin_passthru_conf, get_log_page), spdk_json_decode_bool, true},
@@ -61,8 +61,8 @@ decode_admin_passthru(const struct spdk_json_val *val, void *out)
 {
 	struct spdk_nvmf_admin_passthru_conf *req = (struct spdk_nvmf_admin_passthru_conf *)out;
 
-	if (spdk_json_decode_object(val, admin_passthru_decoder,
-				    SPDK_COUNTOF(admin_passthru_decoder),
+	if (spdk_json_decode_object(val, rpc_nvmf_admin_cmd_passthru_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_admin_cmd_passthru_decoders),
 				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		return -1;

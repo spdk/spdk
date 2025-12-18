@@ -280,7 +280,7 @@ struct rpc_pg_ig_map {
 	int32_t ig_tag;
 };
 
-static const struct spdk_json_object_decoder rpc_pg_ig_map_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_pg_ig_map_decoders[] = {
 	{"pg_tag", offsetof(struct rpc_pg_ig_map, pg_tag), spdk_json_decode_int32},
 	{"ig_tag", offsetof(struct rpc_pg_ig_map, ig_tag), spdk_json_decode_int32},
 };
@@ -290,8 +290,8 @@ decode_rpc_pg_ig_map(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_pg_ig_map *pg_ig_map = out;
 
-	return spdk_json_decode_object(val, rpc_pg_ig_map_decoders,
-				       SPDK_COUNTOF(rpc_pg_ig_map_decoders),
+	return spdk_json_decode_object(val, rpc_iscsi_pg_ig_map_decoders,
+				       SPDK_COUNTOF(rpc_iscsi_pg_ig_map_decoders),
 				       pg_ig_map);
 }
 
@@ -317,7 +317,7 @@ struct rpc_lun {
 	int32_t lun_id;
 };
 
-static const struct spdk_json_object_decoder rpc_lun_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_lun_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_lun, bdev_name), spdk_json_decode_string},
 	{"lun_id", offsetof(struct rpc_lun, lun_id), spdk_json_decode_int32},
 };
@@ -327,8 +327,8 @@ decode_rpc_lun(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_lun *lun = out;
 
-	return spdk_json_decode_object(val, rpc_lun_decoders,
-				       SPDK_COUNTOF(rpc_lun_decoders), lun);
+	return spdk_json_decode_object(val, rpc_iscsi_lun_decoders,
+				       SPDK_COUNTOF(rpc_iscsi_lun_decoders), lun);
 }
 
 struct rpc_luns {
@@ -697,7 +697,7 @@ free_rpc_portal_group(struct rpc_portal_group *pg)
 	free_rpc_portal_list(&pg->portal_list);
 }
 
-static const struct spdk_json_object_decoder rpc_portal_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_portal_decoders[] = {
 	{"host", offsetof(struct rpc_portal, host), spdk_json_decode_string},
 	{"port", offsetof(struct rpc_portal, port), spdk_json_decode_string},
 };
@@ -707,8 +707,8 @@ decode_rpc_portal(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_portal *portal = out;
 
-	return spdk_json_decode_object(val, rpc_portal_decoders,
-				       SPDK_COUNTOF(rpc_portal_decoders),
+	return spdk_json_decode_object(val, rpc_iscsi_portal_decoders,
+				       SPDK_COUNTOF(rpc_iscsi_portal_decoders),
 				       portal);
 }
 
@@ -1406,7 +1406,7 @@ free_rpc_auth_secret(struct rpc_auth_secret *_secret)
 	free(_secret->msecret);
 }
 
-static const struct spdk_json_object_decoder rpc_auth_secret_decoders[] = {
+static const struct spdk_json_object_decoder rpc_iscsi_auth_secret_decoders[] = {
 	{"user", offsetof(struct rpc_auth_secret, user), spdk_json_decode_string},
 	{"secret", offsetof(struct rpc_auth_secret, secret), spdk_json_decode_string},
 	{"muser", offsetof(struct rpc_auth_secret, muser), spdk_json_decode_string, true},
@@ -1418,8 +1418,8 @@ decode_rpc_auth_secret(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_auth_secret *_secret = out;
 
-	return spdk_json_decode_object(val, rpc_auth_secret_decoders,
-				       SPDK_COUNTOF(rpc_auth_secret_decoders), _secret);
+	return spdk_json_decode_object(val, rpc_iscsi_auth_secret_decoders,
+				       SPDK_COUNTOF(rpc_iscsi_auth_secret_decoders), _secret);
 }
 
 struct rpc_auth_secrets {

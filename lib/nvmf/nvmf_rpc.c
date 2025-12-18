@@ -591,7 +591,7 @@ struct rpc_listen_address {
 	char *trsvcid;
 };
 
-static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_listen_address_decoders[] = {
 	{"trtype", offsetof(struct rpc_listen_address, trtype), spdk_json_decode_string, true},
 	{"adrfam", offsetof(struct rpc_listen_address, adrfam), spdk_json_decode_string, true},
 	{"traddr", offsetof(struct rpc_listen_address, traddr), spdk_json_decode_string},
@@ -603,8 +603,8 @@ decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_listen_address *req = (struct rpc_listen_address *)out;
 
-	return spdk_json_decode_object(val, rpc_listen_address_decoders,
-				       SPDK_COUNTOF(rpc_listen_address_decoders), req);
+	return spdk_json_decode_object(val, rpc_nvmf_listen_address_decoders,
+				       SPDK_COUNTOF(rpc_nvmf_listen_address_decoders), req);
 }
 
 static void
@@ -1385,7 +1385,7 @@ struct nvmf_rpc_ns_params {
 	bool hide_metadata;
 };
 
-static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_namespace_decoders[] = {
 	{"nsid", offsetof(struct nvmf_rpc_ns_params, nsid), spdk_json_decode_uint32, true},
 	{"bdev_name", offsetof(struct nvmf_rpc_ns_params, bdev_name), spdk_json_decode_string},
 	{"ptpl_file", offsetof(struct nvmf_rpc_ns_params, ptpl_file), spdk_json_decode_string, true},
@@ -1402,8 +1402,8 @@ decode_rpc_ns_params(const struct spdk_json_val *val, void *out)
 {
 	struct nvmf_rpc_ns_params *ns_params = out;
 
-	return spdk_json_decode_object(val, rpc_ns_params_decoders,
-				       SPDK_COUNTOF(rpc_ns_params_decoders),
+	return spdk_json_decode_object(val, rpc_nvmf_namespace_decoders,
+				       SPDK_COUNTOF(rpc_nvmf_namespace_decoders),
 				       ns_params);
 }
 

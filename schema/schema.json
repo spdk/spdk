@@ -30,7 +30,7 @@
       ]
     },
     {
-      "name": "iscsi_tgt_pg_ig_map",
+      "name": "iscsi_pg_ig_map",
       "fields": [
         {
           "name": "ig_tag",
@@ -60,6 +60,23 @@
           "type": "string",
           "required": true,
           "description": "Port number"
+        }
+      ]
+    },
+    {
+      "name": "iscsi_lun",
+      "fields": [
+        {
+          "name": "lun_id",
+          "type": "number",
+          "required": false,
+          "description": "SCSI LUN ID"
+        },
+        {
+          "name": "bdev_name",
+          "type": "string",
+          "required": false,
+          "description": "Backing bdev name"
         }
       ]
     },
