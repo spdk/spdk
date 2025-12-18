@@ -1137,6 +1137,8 @@ bdev_aio_delete(const char *name, delete_aio_bdev_complete cb_fn, void *cb_arg)
 	struct delete_aio_bdev_ctx *ctx;
 	int rc;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
