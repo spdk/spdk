@@ -362,6 +362,7 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	int nr, i, res = 0;
 	struct bdev_aio_task *aio_task;
 	struct kevent events[SPDK_AIO_QUEUE_DEPTH];
+	struct spdk_bdev_io *bdev_io;
 
 	nr = bdev_user_io_getevents(io_ch->kqfd, SPDK_AIO_QUEUE_DEPTH, events);
 	if (nr < 0) {
@@ -371,18 +372,20 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	for (i = 0; i < nr; i++) {
 		aio_task = events[i].udata;
 		aio_task->ch->io_inflight--;
+		bdev_io = (struct spdk_bdev_io *)spdk_bdev_io_from_ctx(aio_task);
+
 		if (aio_task == NULL) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			break;
 		} else if ((uint64_t)aio_return(&aio_task->aiocb) == aio_task->len) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		} else {
 			SPDK_ERRLOG("failed to complete aio: rc %d\n", aio_error(&aio_task->aiocb));
 			res = aio_error(&aio_task->aiocb);
 			if (res != 0) {
-				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), res);
+				spdk_bdev_io_complete_aio_status(bdev_io, res);
 			} else {
-				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			}
 		}
 	}
@@ -459,6 +462,7 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	int nr, i, res = 0;
 	struct bdev_aio_task *aio_task;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
+	struct spdk_bdev_io *bdev_io;
 
 	nr = bdev_user_io_getevents(io_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
 	if (nr < 0) {
@@ -468,8 +472,10 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	for (i = 0; i < nr; i++) {
 		aio_task = events[i].data;
 		aio_task->ch->io_inflight--;
+		bdev_io = (struct spdk_bdev_io *)spdk_bdev_io_from_ctx(aio_task);
+
 		if (events[i].res == aio_task->len) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		} else {
 			/* From aio_abi.h, io_event.res is defined __s64, negative errno
 			 * will be assigned to io_event.res for error situation.
@@ -479,14 +485,14 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 			res = (int)events[i].res;
 			if (res < 0) {
 				if (res == -EAGAIN) {
-					spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+					spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 				} else {
 					SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-					spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), res);
+					spdk_bdev_io_complete_aio_status(bdev_io, res);
 				}
 			} else {
 				SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			}
 		}
 	}
