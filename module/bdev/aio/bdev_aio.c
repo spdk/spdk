@@ -935,6 +935,12 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 		goto error_return;
 	}
 
+	fdisk->disk.name = strdup(name);
+	if (!fdisk->disk.name) {
+		rc = -ENOMEM;
+		goto error_return;
+	}
+
 	if (bdev_aio_open(fdisk)) {
 		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
 		rc = -errno;
@@ -943,11 +949,6 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 
 	disk_size = spdk_fd_get_size(fdisk->fd);
 
-	fdisk->disk.name = strdup(name);
-	if (!fdisk->disk.name) {
-		rc = -ENOMEM;
-		goto error_return;
-	}
 	fdisk->disk.product_name = "AIO disk";
 	fdisk->disk.module = &aio_if;
 
