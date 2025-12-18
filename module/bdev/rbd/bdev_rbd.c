@@ -983,6 +983,7 @@ bdev_rbd_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	}
 
 	spdk_json_write_named_string(w, "rbd_name", rbd_bdev->rbd_name);
+	spdk_json_write_named_bool(w, "read_only", rbd_bdev->rbd_read_only);
 
 	if (rbd_bdev->cluster_name) {
 		bdev_rbd_cluster_dump_entry(rbd_bdev->cluster_name, w);
@@ -1026,6 +1027,7 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
     	spdk_json_write_named_string(w, "namespace_name", rbd->namespace_name);
 	}
 	spdk_json_write_named_string(w, "rbd_name", rbd->rbd_name);
+	spdk_json_write_named_bool(w, "read_only", rbd->rbd_read_only);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
 	if (rbd->user_id) {
 		spdk_json_write_named_string(w, "user_id", rbd->user_id);

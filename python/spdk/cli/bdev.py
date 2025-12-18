@@ -883,7 +883,7 @@ def add_parser(subparsers):
     p.add_argument('block_size', help='rbd block size', type=int)
     p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
-    p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
+    p.add_argument("-r", "--readonly", dest='read_only', action='store_true', help='Set this bdev as read-only')
     p.set_defaults(func=bdev_rbd_create)
 
     def bdev_rbd_delete(args):
