@@ -42,6 +42,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     exception_methods = {"nvmf_create_target", "nvmf_delete_target", "nvmf_get_targets"}
     # TODO: those are embeeded objects decoders and will be resolved soon
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
+    c_code_methods = dict()
     for folder in ("module", "lib"):
         for path in (base_dir / folder).rglob("*_rpc.c"):
             data = path.read_text()
@@ -59,6 +60,10 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             if invalid:
                 raise ValueError(f"In file {path}: RPC names {invalid} do not match available decoders: {struct_names}."
                                 "Update decoder names or exception list.")
+            for name, fields in decoders:
+                c_code_methods[name] = re.findall(r'\{\s*"(\w+)",\s*(offsetof\(.+?\)|0),\s*(\w+)', fields, re.MULTILINE | re.DOTALL)
+                if not c_code_methods[name]:
+                    raise ValueError(f"In file {path}: could not parse fields for decoder '{name}' fields: '{fields}'. Fix decoder code.")
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
