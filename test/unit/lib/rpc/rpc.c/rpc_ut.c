@@ -183,7 +183,7 @@ test_rpc_get_methods(void)
 	/* Case 1: spdk_json_decode_object failed */
 	g_rpc_err = -1;
 	params.type = SPDK_JSON_VAL_INVALID;
-	rpc_get_methods(request, &params);
+	rpc_rpc_get_methods(request, &params);
 	CU_ASSERT(g_rpc_err == SPDK_JSONRPC_ERROR_INVALID_PARAMS);
 
 	/* Case 2: Expect pass */
@@ -191,7 +191,7 @@ test_rpc_get_methods(void)
 	m.state_mask = SPDK_RPC_RUNTIME;
 	g_rpc_state = SPDK_RPC_STARTUP;
 	SLIST_INSERT_HEAD(&g_rpc_methods, &m, slist);
-	rpc_get_methods(request, &params);
+	rpc_rpc_get_methods(request, &params);
 	SLIST_REMOVE_HEAD(&g_rpc_methods, slist);
 }
 
