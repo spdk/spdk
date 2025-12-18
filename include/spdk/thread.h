@@ -566,7 +566,7 @@ spdk_thread_exec_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
  * \param fn This is the function that will be called on each thread.
  * \param ctx This context will be passed to fn when called.
  * \param cpl This will be called on the originating thread after `fn` has been
- * called on each thread.
+ * called on each thread. Optional - may be NULL.
  */
 void spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl);
 
@@ -793,7 +793,7 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
  * \param ctx Context buffer registered to spdk_io_channel_iter that can be obtained
  * form the function spdk_io_channel_iter_get_ctx().
  * \param cpl Called on the thread that spdk_for_each_channel was initially called
- * from when 'fn' has been called on each channel.
+ * from when 'fn' has been called on each channel. Optional - may be NULL.
  */
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
