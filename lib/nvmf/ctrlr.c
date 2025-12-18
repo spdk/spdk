@@ -677,9 +677,7 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_io_qpair, ctrlr, req->qpair, req->qpair->qid,
 				 spdk_thread_get_id(ctrlr->thread));
 
-	/* Unit test will check qpair->ctrlr after calling spdk_nvmf_ctrlr_connect.
-	  * For error case, the value should be NULL. So set it to NULL at first.
-	  */
+	/* For error case, the value should be NULL. So set it to NULL at first. */
 	qpair->ctrlr = NULL;
 
 	/* Make sure the controller is not being destroyed. */
@@ -770,7 +768,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	SPDK_DEBUGLOG(nvmf, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
-	/* We already checked this in spdk_nvmf_ctrlr_connect */
+	/* We already checked this in _nvmf_ctrlr_connect */
 	assert(subsystem != NULL);
 
 	ctrlr = nvmf_subsystem_get_ctrlr(subsystem, data->cntlid);
@@ -983,6 +981,8 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 	return &req->qpair->group->sgroups[subsystem->id];
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_ctrlr_connect, "", "v26.05", 86400);
+
 int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
@@ -990,6 +990,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	enum spdk_nvmf_request_exec_status status;
+
+	SPDK_LOG_DEPRECATED(spdk_nvmf_ctrlr_connect);
 
 	if (req->iovcnt > 1) {
 		SPDK_ERRLOG("Connect command invalid iovcnt: %d\n", req->iovcnt);

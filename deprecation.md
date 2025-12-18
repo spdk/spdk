@@ -130,3 +130,11 @@ LPA and OACS bits are updated to NVMe 2.2 definitions. The old bit names will be
 `spdk_nvme_ns_data`
 
 NMIC, RESCAP, FPI and NSATTR bits are updated to NVMe 2.2 definitions. The old bit names will be removed in 26.05 release.
+
+### nvmf
+
+#### nvmf_transport.h
+
+`spdk_nvmf_ctrlr_connect`
+
+spdk_nvmf_ctrlr_connect() is deprecated and will be removed in 26.05 release.
