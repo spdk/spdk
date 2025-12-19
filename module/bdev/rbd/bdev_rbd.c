@@ -695,11 +695,36 @@ bdev_rbd_get_ctx_size(void)
 	return sizeof(struct bdev_rbd_io);
 }
 
+static int
+bdev_rbd_config_json(struct spdk_json_write_ctx *w)
+{
+	struct bdev_rbd_cluster *entry;
+
+	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
+	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "bdev_rbd_register_cluster");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "name", entry->name);
+		if (entry->user_id && *entry->user_id) {
+			spdk_json_write_named_string(w, "user_id", entry->user_id);
+		}
+		if (entry->core_mask && *entry->core_mask) {
+			spdk_json_write_named_string(w, "core_mask", entry->core_mask);
+		}
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+	return 0;
+}
+
 static struct spdk_bdev_module rbd_if = {
 	.name = "rbd",
 	.module_init = bdev_rbd_library_init,
 	.module_fini = bdev_rbd_library_fini,
 	.get_ctx_size = bdev_rbd_get_ctx_size,
+	.config_json = bdev_rbd_config_json,
 
 };
 SPDK_BDEV_MODULE_REGISTER(rbd, &rbd_if)
@@ -1014,8 +1039,9 @@ end:
 static void
 bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	struct bdev_rbd *rbd = bdev->ctxt;
+	struct bdev_rbd *rbd;
 
+	rbd = bdev->ctxt;
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string(w, "method", "bdev_rbd_create");
@@ -1024,7 +1050,7 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_string(w, "pool_name", rbd->pool_name);
 	if (rbd->namespace_name) {
-    	spdk_json_write_named_string(w, "namespace_name", rbd->namespace_name);
+		spdk_json_write_named_string(w, "namespace_name", rbd->namespace_name);
 	}
 	spdk_json_write_named_string(w, "rbd_name", rbd->rbd_name);
 	spdk_json_write_named_bool(w, "read_only", rbd->rbd_read_only);
@@ -1045,6 +1071,9 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	}
 
 	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
+	if (rbd->cluster_name) {
+		spdk_json_write_named_string(w, "cluster_name", rbd->cluster_name);
+	}
 
 	spdk_json_write_object_end(w);
 
