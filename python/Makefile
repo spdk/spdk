@@ -7,6 +7,11 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+USE_SYSTEM_PYTHON :=
+ifeq ($(VIRTUAL_ENV),)
+USE_SYSTEM_PYTHON += --system
+endif
+
 all: spdk/version.py
 
 clean:
@@ -30,6 +35,6 @@ install:
 	rm -rf $(SPDK_ROOT_DIR)/python/spdk.egg-info
 
 uninstall:
-	$(Q)uv pip uninstall --prefix=$(CONFIG_PREFIX) spdk
+	$(Q)uv pip uninstall $(USE_SYSTEM_PYTHON) --prefix=$(CONFIG_PREFIX) spdk
 
 .PHONY: all clean install uninstall build check
