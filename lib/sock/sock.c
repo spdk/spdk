@@ -1125,32 +1125,35 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 }
 
 int
-spdk_sock_group_close(struct spdk_sock_group **group)
+spdk_sock_group_close(struct spdk_sock_group **_group)
 {
 	struct spdk_sock_group_impl *group_impl = NULL, *tmp;
+	struct spdk_sock_group *group;
 	int rc;
 
-	if (*group == NULL) {
+	if (_group == NULL || (*_group) == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
+	group = *_group;
+
+	STAILQ_FOREACH_SAFE(group_impl, &group->group_impls, link, tmp) {
 		if (!TAILQ_EMPTY(&group_impl->socks)) {
 			errno = EBUSY;
 			return -1;
 		}
 	}
 
-	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
+	STAILQ_FOREACH_SAFE(group_impl, &group->group_impls, link, tmp) {
 		rc = group_impl->net_impl->group_impl_close(group_impl);
 		if (rc != 0) {
 			SPDK_ERRLOG("group_impl_close for net failed\n");
 		}
 	}
 
-	free(*group);
-	*group = NULL;
+	free(group);
+	*_group = NULL;
 
 	return 0;
 }
