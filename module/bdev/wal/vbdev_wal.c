@@ -78,9 +78,7 @@ static void vbdev_wal_fini(void) {
 }
 
 /* Examine-конфигурация для SPDK-модуля */
-static void vbdev_wal_examine(struct spdk_bdev *bdev) {
-	spdk_bdev_module_examine_done(&wal_bdev_if);
-}
+static void vbdev_wal_examine(struct spdk_bdev *bdev);
 
 /* Возвращает размер приватного контекста на bdev_io */
 static int vbdev_wal_get_ctx_size(void) {
@@ -122,6 +120,10 @@ static struct spdk_bdev_module wal_bdev_if = {
 	.examine_config = vbdev_wal_examine,
 	.get_ctx_size = vbdev_wal_get_ctx_size,
 };
+
+static void vbdev_wal_examine(struct spdk_bdev *bdev) {
+	spdk_bdev_module_examine_done(&wal_bdev_if);
+}
 
 /* Регистрация модуля WAL в SPDK */
 SPDK_BDEV_MODULE_REGISTER(wal, &wal_bdev_if)
