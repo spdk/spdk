@@ -2396,18 +2396,15 @@ bdev_initialize(void *not_used)
 
 SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_initialize,
 			      "calling spdk_bdev_initialize from any thread is deprecated",
-			      "v26.05", 0);
+			      "v26.05", SPDK_LOG_DEPRECATION_ALWAYS);
 
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
-	static bool deprecate_any_thread;
-
 	assert(cb_fn != NULL);
 
-	if (!spdk_thread_is_app_thread(NULL) && !deprecate_any_thread) {
+	if (!spdk_thread_is_app_thread(NULL)) {
 		SPDK_LOG_DEPRECATED(spdk_bdev_initialize);
-		deprecate_any_thread = true;
 	}
 
 	g_init_cb_fn = cb_fn;
@@ -2636,18 +2633,15 @@ bdev_finish_wait_for_examine(void *not_used)
 
 SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_finish,
 			      "calling spdk_bdev_finish from any thread is deprecated",
-			      "v26.05", 0);
+			      "v26.05", SPDK_LOG_DEPRECATION_ALWAYS);
 
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
-	static bool deprecate_any_thread;
-
 	assert(cb_fn != NULL);
 
-	if (!spdk_thread_is_app_thread(NULL) && !deprecate_any_thread) {
+	if (!spdk_thread_is_app_thread(NULL)) {
 		SPDK_LOG_DEPRECATED(spdk_bdev_finish);
-		deprecate_any_thread = true;
 	}
 
 	g_fini_cb_fn = cb_fn;
@@ -8687,13 +8681,12 @@ _bdev_unregister(void *ctx)
 
 SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_unregister,
 			      "calling spdk_bdev_unregister from any thread is deprecated",
-			      "v26.05", 0);
+			      "v26.05", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_thread	*thread;
-	static bool		deprecate_any_thread;
 
 	SPDK_DEBUGLOG(bdev, "Removing bdev %s from list\n", bdev->name);
 
@@ -8706,9 +8699,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 		return;
 	}
 
-	if (!spdk_thread_is_app_thread(NULL) && !deprecate_any_thread) {
+	if (!spdk_thread_is_app_thread(NULL)) {
 		SPDK_LOG_DEPRECATED(spdk_bdev_unregister);
-		deprecate_any_thread = true;
 	}
 
 	spdk_spin_lock(&g_bdev_mgr.spinlock);

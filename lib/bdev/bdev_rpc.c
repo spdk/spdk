@@ -394,7 +394,7 @@ static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
 };
 
 SPDK_LOG_DEPRECATION_REGISTER(bdev_get_iostat_with_name,
-			      "--name option for bdev_get_iostat is deprecated", "v26.05", 0);
+			      "--name option for bdev_get_iostat is deprecated", "v26.05", SPDK_LOG_DEPRECATION_ALWAYS);
 
 static void
 rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,

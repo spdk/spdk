@@ -986,7 +986,8 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 	return &req->qpair->group->sgroups[subsystem->id];
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_ctrlr_connect, "", "v26.05", 86400);
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_ctrlr_connect, "", "v26.05",
+			      SPDK_LOG_DEPRECATION_EVERY_24H);
 
 int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
