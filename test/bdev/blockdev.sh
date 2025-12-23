@@ -123,11 +123,15 @@ function setup_gpt_conf() {
 		typeset -g g_unique_partguid=6f89f330-603b-4116-ac73-2ca8eae53030
 		typeset -g g_unique_partguid_old=abf1734f-66e5-4c0f-aa29-4021d4d307df
 
+		# This Partition Table GUID was randomly generated for testing.
+		typeset -g g_partition_table_guid=68680d47-26ac-49ac-8885-6b5eb35b63b2
+
 		# Create gpt partition table
 		parted -s "$gpt_nvme" mklabel gpt mkpart SPDK_TEST_first '0%' '50%' mkpart SPDK_TEST_second '50%' '100%'
 		# Change the partition type GUIDs to SPDK partition type values
 		SPDK_GPT_OLD_GUID=$(get_spdk_gpt_old)
 		SPDK_GPT_GUID=$(get_spdk_gpt)
+		sgdisk -U "$g_partition_table_guid" "$gpt_nvme"
 		sgdisk -t "1:$SPDK_GPT_GUID" -u "1:$g_unique_partguid" "$gpt_nvme"
 		sgdisk -t "2:$SPDK_GPT_OLD_GUID" -u "2:$g_unique_partguid_old" "$gpt_nvme"
 		"$rootdir/scripts/setup.sh"
@@ -727,11 +731,13 @@ function bdev_gpt_uuid() {
 	[[ "$(jq -r 'length' <<< "$bdev")" == "1" ]]
 	[[ "$(jq -r '.[0].aliases[0]' <<< "$bdev")" == "$g_unique_partguid" ]]
 	[[ "$(jq -r '.[0].driver_specific.gpt.unique_partition_guid' <<< "$bdev")" == "$g_unique_partguid" ]]
+	[[ "$(jq -r '.[0].driver_specific.gpt.partition_table_guid' <<< "$bdev")" == "$g_partition_table_guid" ]]
 
 	bdev=$("$rpc_py" bdev_get_bdevs -b "$g_unique_partguid_old")
 	[[ "$(jq -r 'length' <<< "$bdev")" == "1" ]]
 	[[ "$(jq -r '.[0].aliases[0]' <<< "$bdev")" == "$g_unique_partguid_old" ]]
 	[[ "$(jq -r '.[0].driver_specific.gpt.unique_partition_guid' <<< "$bdev")" == "$g_unique_partguid_old" ]]
+	[[ "$(jq -r '.[0].driver_specific.gpt.partition_table_guid' <<< "$bdev")" == "$g_partition_table_guid" ]]
 
 	killprocess "$spdk_tgt_pid"
 }

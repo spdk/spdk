@@ -287,6 +287,9 @@ vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_uint64(w, "offset_blocks", offset_blocks);
 
+	spdk_json_write_name(w, "partition_table_guid");
+	write_guid(w, &gpt->header->disk_guid);
+
 	spdk_json_write_name(w, "partition_type_guid");
 	write_guid(w, &gpt_entry->part_type_guid);
 
