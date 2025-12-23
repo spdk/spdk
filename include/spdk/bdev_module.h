@@ -1092,9 +1092,6 @@ struct spdk_bdev_io_internal_fields {
 		int           orig_iovcnt;
 	} bounce_buf;
 
-	/** Callback for when the aux buf is allocated */
-	spdk_bdev_io_get_aux_buf_cb get_aux_buf_cb;
-
 	/** Callback for when buf is allocated */
 	spdk_bdev_io_get_buf_cb get_buf_cb;
 
@@ -1163,7 +1160,7 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct spdk_bdev_io_internal_fields internal;
-	uint8_t reserved4[56];
+	uint8_t reserved4[64];
 
 	/**
 	 * Per I/O context for use by the bdev module.
@@ -1341,26 +1338,6 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
-
-/**
- * Allocate an auxiliary buffer for given bdev_io. The length of the
- * buffer will be the same size as the bdev_io primary buffer. The buffer
- * must be freed using \c spdk_bdev_io_put_aux_buf() before completing
- * the associated bdev_io.  This call will never fail. In case of lack of
- * memory given callback \c cb will be deferred until enough memory is freed.
- *
- * \param bdev_io I/O to allocate buffer for.
- * \param cb callback to be called when the buffer is allocated
- */
-void spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb);
-
-/**
- * Free an auxiliary buffer previously allocated by \c spdk_bdev_io_get_aux_buf().
- *
- * \param bdev_io bdev_io specified when the aux_buf was allocated.
- * \param aux_buf auxiliary buffer to free
- */
-void spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *aux_buf);
 
 /**
  * Set the given buffer as the data buffer described by this bdev_io.

@@ -155,8 +155,6 @@
 	spdk_bdev_alias_del_all;
 	spdk_bdev_get_aliases;
 	spdk_bdev_io_get_buf;
-	spdk_bdev_io_get_aux_buf;
-	spdk_bdev_io_put_aux_buf;
 	spdk_bdev_io_set_buf;
 	spdk_bdev_io_set_md_buf;
 	spdk_bdev_io_complete;

@@ -1188,19 +1188,10 @@ static void
 bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
 {
 	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
-	void *buf;
 
-	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
-		buf = bdev_io->internal.buf.ptr;
-		bdev_io->internal.buf.ptr = NULL;
-		bdev_io->internal.f.has_buf = false;
-		bdev_io->internal.get_aux_buf_cb(ch, bdev_io, buf);
-		bdev_io->internal.get_aux_buf_cb = NULL;
-	} else {
-		assert(bdev_io->internal.get_buf_cb != NULL);
-		bdev_io->internal.get_buf_cb(ch, bdev_io, status);
-		bdev_io->internal.get_buf_cb = NULL;
-	}
+	assert(bdev_io->internal.get_buf_cb != NULL);
+	bdev_io->internal.get_buf_cb(ch, bdev_io, status);
+	bdev_io->internal.get_buf_cb = NULL;
 }
 
 static void
@@ -1512,11 +1503,6 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 	bdev_io->internal.buf.ptr = buf;
 	bdev_io->internal.f.has_buf = true;
 
-	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
-		bdev_io_get_buf_complete(bdev_io, true);
-		return;
-	}
-
 	alignment = spdk_bdev_get_buf_align(bdev);
 	buf_allocated = _is_buf_allocated(bdev_io->u.bdev.iovs);
 	aligned_buf = (void *)(((uintptr_t)buf + (alignment - 1)) & ~(alignment - 1));
@@ -1580,20 +1566,6 @@ bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	}
 	bdev_io->internal.buf.ptr = NULL;
 	bdev_io->internal.f.has_buf = false;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_io_put_aux_buf,
-			      "spdk_bdev_io_put_aux_buf is deprecated", "v25.01", 0);
-
-void
-spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *buf)
-{
-	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-
-	SPDK_LOG_DEPRECATED(spdk_bdev_io_put_aux_buf);
-
-	assert(buf != NULL);
-	_bdev_io_put_buf(bdev_io, buf, len);
 }
 
 static inline void
@@ -2034,22 +2006,6 @@ bdev_io_get_accel_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
 	bdev_io->internal.get_buf_cb = cb;
 
 	_bdev_io_get_accel_buf(bdev_io);
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_io_get_aux_buf,
-			      "spdk_bdev_io_get_aux_buf is deprecated", "v25.01", 0);
-
-void
-spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb)
-{
-	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-
-	SPDK_LOG_DEPRECATED(spdk_bdev_io_get_aux_buf);
-
-	assert(cb != NULL);
-	assert(bdev_io->internal.get_aux_buf_cb == NULL);
-	bdev_io->internal.get_aux_buf_cb = cb;
-	bdev_io_get_buf(bdev_io, len);
 }
 
 static int
@@ -4068,7 +4024,6 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.error.nvme.cdw0 = 0;
 	bdev_io->num_retries = 0;
 	bdev_io->internal.get_buf_cb = NULL;
-	bdev_io->internal.get_aux_buf_cb = NULL;
 	bdev_io->internal.data_transfer_cpl = NULL;
 	bdev_io->internal.waitq_entry.dep_unblock = false;
 	if (cb == bdev_io_split_done) {
