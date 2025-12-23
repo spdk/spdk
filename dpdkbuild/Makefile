@@ -23,12 +23,6 @@ endif
 endif
 endif
 
-DPDK_KMODS = false
-ifeq ($(OS),FreeBSD)
-DPDK_KMODS = true
-endif
-DPDK_OPTS += -Denable_kmods=$(DPDK_KMODS)
-
 ifeq ($(CONFIG_DEBUG),y)
 DPDK_OPTS += --buildtype=debug
 endif

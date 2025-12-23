@@ -49,7 +49,6 @@ _build_native_dpdk() {
 	local external_dpdk_base_dir
 	local compiler_version
 	local compiler
-	local dpdk_kmods
 	local repo='dpdk'
 
 	compiler=${CC:-gcc}
@@ -159,13 +158,8 @@ _build_native_dpdk() {
 		patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/24.07/uio-open-in-primary.patch"
 	fi
 
-	dpdk_kmods="false"
-	if [ "$(uname -s)" = "FreeBSD" ]; then
-		dpdk_kmods="true"
-	fi
-
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
-		-Denable_docs=false -Denable_kmods="$dpdk_kmods" -Dtests=false \
+		-Denable_docs=false -Dtests=false \
 		-Dc_link_args="$dpdk_ldflags" -Dc_args="$dpdk_cflags" \
 		-Dmachine=native -Denable_drivers=$(printf "%s," "${DPDK_DRIVERS[@]}")
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
