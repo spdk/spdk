@@ -36,7 +36,7 @@ endif
 DPDK_INC := -I$(DPDK_INC_DIR)
 
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_bus_pci rte_pci rte_mempool_ring
-DPDK_LIB_LIST += rte_telemetry rte_kvargs rte_rcu rte_log
+DPDK_LIB_LIST += rte_telemetry rte_kvargs rte_rcu rte_log rte_argparse
 
 DPDK_POWER=n
 
