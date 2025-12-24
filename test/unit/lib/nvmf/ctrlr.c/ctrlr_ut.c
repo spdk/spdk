@@ -1187,7 +1187,7 @@ test_get_ns_id_desc_list(void)
 }
 
 static void
-test_identify_ns(void)
+ut_identify_ns(bool is_admin, bool is_ns_active)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_transport transport = {};
@@ -1202,6 +1202,7 @@ test_identify_ns(void)
 	struct spdk_bdev bdev[3] = {{.blockcnt = 1234}, {.blockcnt = 0}, {.blockcnt = 5678}};
 	struct spdk_nvmf_ns ns[3] = {{.bdev = &bdev[0]}, {.bdev = NULL}, {.bdev = &bdev[2]}};
 	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], NULL, &ns[2]};
+	bool is_admin_and_ns_active = is_admin && is_ns_active;
 
 	ctrlr.visible_ns = spdk_bit_array_create(3);
 	spdk_bit_array_set(ctrlr.visible_ns, 0);
@@ -1209,6 +1210,9 @@ test_identify_ns(void)
 
 	subsystem.ns = ns_arr;
 	subsystem.max_nsid = SPDK_COUNTOF(ns_arr);
+	subsystem.opts.admin = is_admin;
+	cmd.cdw10_bits.identify.cns = is_ns_active ? SPDK_NVME_IDENTIFY_NS :
+				      SPDK_NVME_IDENTIFY_NS_ALLOCATED;
 
 	/* Invalid NSID 0 */
 	cmd.nsid = 0;
@@ -1228,7 +1232,8 @@ test_identify_ns(void)
 					      &nsdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT(nsdata.nsze == 1234);
+	CU_ASSERT(is_admin_and_ns_active ? spdk_mem_all_zero(&nsdata,
+			sizeof(nsdata)) : nsdata.nsze == 1234);
 
 	/* Valid but inactive NSID 1 */
 	spdk_bit_array_clear(ctrlr.visible_ns, 0);
@@ -1259,7 +1264,8 @@ test_identify_ns(void)
 					      &nsdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT(nsdata.nsze == 5678);
+	CU_ASSERT(is_admin_and_ns_active ? spdk_mem_all_zero(&nsdata,
+			sizeof(nsdata)) : nsdata.nsze == 5678);
 
 	/* Invalid NSID 4 */
 	cmd.nsid = 4;
@@ -1282,6 +1288,148 @@ test_identify_ns(void)
 	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
 
 	spdk_bit_array_free(&ctrlr.visible_ns);
+}
+
+static void
+test_identify_ns(void)
+{
+	ut_identify_ns(false, false);	/* I/O controller, Allocated namespace */
+	ut_identify_ns(false, true);	/* I/O controller, Active namespace */
+	ut_identify_ns(true,  false);	/* Administrative controller, Allocated namespace */
+	ut_identify_ns(true,  true);	/* Administrative controller, Active namespace */
+}
+
+static void
+ut_nvmf_ctrlr_identify_ns_list(bool is_admin, bool is_ns_active)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_transport transport = {};
+	struct spdk_nvmf_qpair admin_qpair = { .transport = &transport};
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.subsys = &subsystem,
+		.admin_qpair = &admin_qpair,
+	};
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_nvme_cpl rsp = {};
+	struct spdk_nvme_ns_list nslist = {};
+	struct spdk_bdev bdev[3] = {{.blockcnt = 1234}, {.blockcnt = 0}, {.blockcnt = 5678}};
+	struct spdk_nvmf_ns ns[3] = {{.bdev = &bdev[0], .nsid = 1, .opts.nsid = 1},
+		{.bdev = NULL},
+		{.bdev = &bdev[2], .nsid = 3, .opts.nsid = 3}
+	};
+	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], NULL, &ns[2]};
+	bool is_admin_and_ns_active = is_admin && is_ns_active;
+
+	ctrlr.visible_ns = spdk_bit_array_create(3);
+	spdk_bit_array_set(ctrlr.visible_ns, 0);
+	spdk_bit_array_set(ctrlr.visible_ns, 2);
+	subsystem.ns = ns_arr;
+	subsystem.max_nsid = SPDK_COUNTOF(ns_arr);
+	subsystem.opts.admin = is_admin;
+	cmd.cdw10_bits.identify.cns = is_ns_active ? SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST :
+				      SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
+
+	/* Invalid NSID 0xFFFFFFFF (NS management not supported) */
+	cmd.nsid = 0xFFFFFFFF;
+	memset(&nslist, 0, sizeof(nslist));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_identify_ns_list(&ctrlr, &cmd, &rsp, &nslist, false) ==
+		  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+	CU_ASSERT(spdk_mem_all_zero(&nslist, sizeof(nslist)));
+
+	/* NSID 0 (returns list with NSIDs greater than NSID 0) */
+	cmd.nsid = 0;
+	memset(&nslist, 0, sizeof(nslist));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_identify_ns_list(&ctrlr, &cmd, &rsp, &nslist, false) ==
+		  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	if (is_admin_and_ns_active) {
+		CU_ASSERT(spdk_mem_all_zero(&nslist, sizeof(nslist)));
+	} else {
+		CU_ASSERT(nslist.ns_list[0] == 1);
+		CU_ASSERT(nslist.ns_list[1] == 3);
+		CU_ASSERT(nslist.ns_list[2] == 0);
+		CU_ASSERT(nslist.ns_list[3] == 0);
+	}
+
+	/* NSID 1 (returns list with NSIDs greater than NSID 1) */
+	cmd.nsid = 1;
+	memset(&nslist, 0, sizeof(nslist));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_identify_ns_list(&ctrlr, &cmd, &rsp, &nslist, false) ==
+		  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	if (is_admin_and_ns_active) {
+		CU_ASSERT(spdk_mem_all_zero(&nslist, sizeof(nslist)));
+	} else {
+		CU_ASSERT(nslist.ns_list[0] == 3);
+		CU_ASSERT(nslist.ns_list[1] == 0);
+		CU_ASSERT(nslist.ns_list[2] == 0);
+		CU_ASSERT(nslist.ns_list[3] == 0);
+	}
+
+	spdk_bit_array_free(&ctrlr.visible_ns);
+
+	/* Part 2: CNS=SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST (allocated ns) */
+
+	ctrlr.visible_ns = spdk_bit_array_create(3);
+	spdk_bit_array_set(ctrlr.visible_ns, 0);
+	spdk_bit_array_set(ctrlr.visible_ns, 2);
+
+	/* set CNS for allocated namespaces */
+	cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
+
+	/* Invalid NSID 0xFFFFFFFF (NS management not supported) */
+	cmd.nsid = 0xFFFFFFFF;
+	memset(&nslist, 0, sizeof(nslist));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_identify_ns_list(&ctrlr, &cmd, &rsp, &nslist, false) ==
+		  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+	CU_ASSERT(spdk_mem_all_zero(&nslist, sizeof(nslist)));
+
+	/* NSID 0 (returns list with NSIDs greater than NSID 0) */
+	cmd.nsid = 0;
+	memset(&nslist, 0, sizeof(nslist));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_identify_ns_list(&ctrlr, &cmd, &rsp, &nslist, false) ==
+		  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(nslist.ns_list[0] == 1);
+	CU_ASSERT(nslist.ns_list[1] == 3);
+	CU_ASSERT(nslist.ns_list[2] == 0);
+	CU_ASSERT(nslist.ns_list[3] == 0);
+
+	/* NSID 1 (returns list with NSIDs greater than NSID 1) */
+	cmd.nsid = 1;
+	memset(&nslist, 0, sizeof(nslist));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(nvmf_ctrlr_identify_ns_list(&ctrlr, &cmd, &rsp, &nslist, false) ==
+		  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(nslist.ns_list[0] == 3);
+	CU_ASSERT(nslist.ns_list[1] == 0);
+	CU_ASSERT(nslist.ns_list[2] == 0);
+	CU_ASSERT(nslist.ns_list[3] == 0);
+
+	spdk_bit_array_free(&ctrlr.visible_ns);
+}
+
+static void
+test_nvmf_ctrlr_identify_ns_list(void)
+{
+	ut_nvmf_ctrlr_identify_ns_list(false, false);	/* I/O controller, Allocated namespace */
+	ut_nvmf_ctrlr_identify_ns_list(false, true);	/* I/O controller, Active namespace */
+	ut_nvmf_ctrlr_identify_ns_list(true,  false);	/* Administrative controller, Allocated namespace */
+	ut_nvmf_ctrlr_identify_ns_list(true,  true);	/* Administrative controller, Active namespace */
 }
 
 static void
@@ -1985,6 +2133,89 @@ test_identify_ctrlr(void)
 	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+}
+
+static void
+test_admin_identify_ctrlr(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.opts.type = SPDK_NVMF_SUBTYPE_NVME,
+		.tgt = &tgt,
+	};
+	struct spdk_nvmf_transport_ops tops = {};
+	struct spdk_nvmf_transport transport = {
+		.ops = &tops,
+		.opts.in_capsule_data_size = 4096,
+	};
+	struct spdk_nvmf_qpair admin_qpair = { .transport = &transport };
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .admin_qpair = &admin_qpair };
+	struct spdk_nvme_ctrlr_data cdata = {};
+
+	/* Check cntrltype I/O Controller */
+	subsystem.opts.admin = false;
+	nvmf_ctrlr_cdata_init(&transport, &subsystem, &ctrlr.cdata);
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.cntrltype == SPDK_NVME_CTRLR_IO);
+
+	/* Check cntrltype Administrative Controller */
+	cdata = (typeof(cdata)) {};
+	subsystem.opts.admin = true;
+	nvmf_ctrlr_cdata_init(&transport, &subsystem, &ctrlr.cdata);
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.cntrltype == SPDK_NVME_CTRLR_ADMINISTRATIVE);
+	CU_ASSERT(cdata.oncs.raw == 0);
+	CU_ASSERT(cdata.ocfs.copy_format0 == 0);
+	CU_ASSERT(cdata.fuses.raw == 0);
+	CU_ASSERT(cdata.vwc.present == 0);
+	CU_ASSERT(cdata.ctratt.fdps == 0);
+}
+
+static void
+test_set_features_number_of_queues(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.opts.type = SPDK_NVMF_SUBTYPE_NVME,
+		.tgt = &tgt,
+	};
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.subsys = &subsystem,
+		.feat.number_of_queues.bits.ncqr = 1,
+		.feat.number_of_queues.bits.nsqr = 1
+	};
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_request req = { .qpair = &qpair, .cmd = &cmd, .rsp = &rsp };
+	int rc;
+
+	/* Admin ctrlr. */
+	subsystem.opts.admin = true;
+	rc = nvmf_ctrlr_set_features_number_of_queues(&req);
+	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Non-admin ctrlr, invalid number of queues. */
+	rsp = (typeof(rsp)) {};
+	subsystem.opts.admin = false;
+	cmd.nvme_cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = UINT16_MAX;
+	cmd.nvme_cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = UINT16_MAX;
+	rc = nvmf_ctrlr_set_features_number_of_queues(&req);
+	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Non-admin ctrlr, valid number of queues. */
+	rsp = (typeof(rsp)) {};
+	ctrlr.qpair_mask = spdk_bit_array_create(1);
+	spdk_bit_array_set(ctrlr.qpair_mask, 0);
+	cmd.nvme_cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = 1;
+	cmd.nvme_cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = 1;
+	rc = nvmf_ctrlr_set_features_number_of_queues(&req);
+	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.cdw0, ctrlr.feat.number_of_queues.raw);
+	spdk_bit_array_free(&ctrlr.qpair_mask);
 }
 
 static void
@@ -2832,7 +3063,7 @@ test_rae(void)
 }
 
 static void
-test_nvmf_ctrlr_create_destruct(void)
+ut_nvmf_ctrlr_create_destruct(bool is_admin)
 {
 	struct spdk_nvmf_fabric_connect_data connect_data = {};
 	struct spdk_nvmf_poll_group group = {};
@@ -2882,6 +3113,7 @@ test_nvmf_ctrlr_create_destruct(void)
 	subsystem.vwc_present = true;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
 	subsystem.ns = ns_arr;
+	subsystem.opts.admin = is_admin;
 
 	group.sgroups = sgroups;
 
@@ -2915,8 +3147,8 @@ test_nvmf_ctrlr_create_destruct(void)
 	CU_ASSERT(ctrlr->feat.keep_alive_timer.bits.kato == 120000);
 	CU_ASSERT(ctrlr->feat.async_event_configuration.bits.ns_attr_notice == 1);
 	CU_ASSERT(ctrlr->feat.volatile_write_cache.bits.wce == 1);
-	CU_ASSERT(ctrlr->feat.number_of_queues.bits.ncqr == 1);
-	CU_ASSERT(ctrlr->feat.number_of_queues.bits.nsqr == 1);
+	CU_ASSERT(ctrlr->feat.number_of_queues.bits.ncqr == (is_admin ? 0 : 1));
+	CU_ASSERT(ctrlr->feat.number_of_queues.bits.nsqr == (is_admin ? 0 : 1));
 	CU_ASSERT(!strncmp((void *)&ctrlr->hostid, hostid, 16));
 	CU_ASSERT(ctrlr->vcprop.cap.bits.cqr == 1);
 	CU_ASSERT(ctrlr->vcprop.cap.bits.mqes == 63);
@@ -2939,6 +3171,13 @@ test_nvmf_ctrlr_create_destruct(void)
 	poll_threads();
 	CU_ASSERT(TAILQ_EMPTY(&subsystem.ctrlrs));
 	CU_ASSERT(TAILQ_EMPTY(&qpair.outstanding));
+}
+
+static void
+test_nvmf_ctrlr_create_destruct(void)
+{
+	ut_nvmf_ctrlr_create_destruct(false);  /* I/O controller */
+	ut_nvmf_ctrlr_create_destruct(true);   /* Administrative controller */
 }
 
 static void
@@ -4424,6 +4663,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_connect);
 	CU_ADD_TEST(suite, test_get_ns_id_desc_list);
 	CU_ADD_TEST(suite, test_identify_ns);
+	CU_ADD_TEST(suite, test_nvmf_ctrlr_identify_ns_list);
 	CU_ADD_TEST(suite, test_identify_ns_iocs_specific);
 	CU_ADD_TEST(suite, test_identify_ns_iocs_ind);
 	CU_ADD_TEST(suite, test_reservation_write_exclusive);
@@ -4434,6 +4674,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_notification_log_page);
 	CU_ADD_TEST(suite, test_set_get_features);
 	CU_ADD_TEST(suite, test_identify_ctrlr);
+	CU_ADD_TEST(suite, test_admin_identify_ctrlr);
+	CU_ADD_TEST(suite, test_set_features_number_of_queues);
 	CU_ADD_TEST(suite, test_identify_ctrlr_iocs_specific);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_vwc);
 	CU_ADD_TEST(suite, test_custom_admin_cmd);
