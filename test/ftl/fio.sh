@@ -70,7 +70,7 @@ waitforbdev ftl0
 	echo ']}'
 ) > $FTL_JSON_CONF
 
-$rpc_py bdev_ftl_unload -b ftl0
+$rpc_py bdev_ftl_delete -b ftl0
 
 killprocess $svcpid
 trap - SIGINT SIGTERM EXIT

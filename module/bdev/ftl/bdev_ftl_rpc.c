@@ -126,14 +126,7 @@ out:
 	spdk_ftl_conf_deinit(&conf);
 }
 SPDK_RPC_REGISTER("bdev_ftl_create", rpc_bdev_ftl_create, SPDK_RPC_RUNTIME)
-
-static void
-rpc_bdev_ftl_load(struct spdk_jsonrpc_request *request,
-		  const struct spdk_json_val *params)
-{
-	rpc_bdev_ftl_create(request, params);
-}
-SPDK_RPC_REGISTER("bdev_ftl_load", rpc_bdev_ftl_load, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_create, bdev_ftl_load)
 
 struct rpc_delete_ftl {
 	char *name;
@@ -167,14 +160,7 @@ invalid:
 	free(attrs.name);
 }
 SPDK_RPC_REGISTER("bdev_ftl_delete", rpc_bdev_ftl_delete, SPDK_RPC_RUNTIME)
-
-static void
-rpc_bdev_ftl_unload(struct spdk_jsonrpc_request *request,
-		    const struct spdk_json_val *params)
-{
-	rpc_bdev_ftl_delete(request, params);
-}
-SPDK_RPC_REGISTER("bdev_ftl_unload", rpc_bdev_ftl_unload, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_delete, bdev_ftl_unload)
 
 struct rpc_ftl_unmap {
 	char *name;

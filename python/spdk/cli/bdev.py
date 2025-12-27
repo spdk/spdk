@@ -6,6 +6,7 @@
 #
 
 import argparse
+import sys
 
 from spdk.rpc.cmd_parser import print_array, print_dict, print_json, strip_globals
 from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
@@ -1312,6 +1313,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_create)
 
     def bdev_ftl_load(args):
+        print("bdev_ftl_load RPC is deprecated, use bdev_ftl_create instead", file=sys.stderr)
         print_dict(args.client.bdev_ftl_load(
                                           name=args.name,
                                           base_bdev=args.base_bdev,
@@ -1339,6 +1341,7 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_ftl_load)
 
     def bdev_ftl_unload(args):
+        print("bdev_ftl_unload RPC is deprecated, use bdev_ftl_delete instead", file=sys.stderr)
         print_dict(args.client.bdev_ftl_unload(name=args.name, fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_unload', help='Unload FTL bdev')
