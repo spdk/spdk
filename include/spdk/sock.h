@@ -524,6 +524,8 @@ void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *re
 /**
  * Read message from the given socket to the I/O vector array.
  *
+ * On failure check errno matching EAGAIN to determine failure is retryable.
+ *
  * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
  * This function will return negative errno values instead.
  *

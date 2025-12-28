@@ -853,7 +853,7 @@ posix_ssl_readv(SSL *ssl, const struct iovec *iov, int iovcnt)
 	switch (SSL_get_error(ssl, rc)) {
 	case SSL_ERROR_ZERO_RETURN:
 		errno = ENOTCONN;
-		return 0;
+		return -1;
 	case SSL_ERROR_WANT_READ:
 	case SSL_ERROR_WANT_WRITE:
 	case SSL_ERROR_WANT_CONNECT:
@@ -896,7 +896,7 @@ posix_ssl_writev(SSL *ssl, struct iovec *iov, int iovcnt)
 	switch (SSL_get_error(ssl, rc)) {
 	case SSL_ERROR_ZERO_RETURN:
 		errno = ENOTCONN;
-		return 0;
+		return -1;
 	case SSL_ERROR_WANT_READ:
 	case SSL_ERROR_WANT_WRITE:
 	case SSL_ERROR_WANT_CONNECT:
