@@ -2446,11 +2446,11 @@ static const struct option g_perf_cmdline_opts[] = {
 #define PERF_DHCHAP_CTRLR_PATH		272
 	{"dhchap-ctrlr-key", required_argument, NULL, PERF_DHCHAP_CTRLR_PATH},
 #define PERF_VFIO_VF_TOKEN  273
-	{ "vfio-vf-token", required_argument, NULL, PERF_VFIO_VF_TOKEN},
+	{"vfio-vf-token", required_argument, NULL, PERF_VFIO_VF_TOKEN},
+#define PERF_LOG_LEVEL		274
+	{"log-level", required_argument, NULL, PERF_LOG_LEVEL},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
-#define PERF_LOG_LEVEL		273
-	{"log-level", required_argument, NULL, PERF_LOG_LEVEL},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
