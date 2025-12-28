@@ -831,6 +831,27 @@ posix_sock_configure_ssl(struct spdk_posix_sock *sock, bool client)
 	return 0;
 }
 
+static int
+posix_ssl_get_error(SSL *ssl, int rc)
+{
+	switch (SSL_get_error(ssl, rc)) {
+	case SSL_ERROR_WANT_READ:
+	case SSL_ERROR_WANT_WRITE:
+	case SSL_ERROR_WANT_CONNECT:
+	case SSL_ERROR_WANT_ACCEPT:
+	case SSL_ERROR_WANT_X509_LOOKUP:
+	case SSL_ERROR_WANT_ASYNC:
+	case SSL_ERROR_WANT_ASYNC_JOB:
+	case SSL_ERROR_WANT_CLIENT_HELLO_CB:
+		return -EAGAIN;
+	case SSL_ERROR_ZERO_RETURN:
+	case SSL_ERROR_SYSCALL:
+	case SSL_ERROR_SSL:
+	default:
+		return -ENOTCONN;
+	}
+}
+
 static ssize_t
 posix_ssl_readv(SSL *ssl, const struct iovec *iov, int iovcnt)
 {
@@ -850,24 +871,8 @@ posix_ssl_readv(SSL *ssl, const struct iovec *iov, int iovcnt)
 	if (total > 0) {
 		return total;
 	}
-	switch (SSL_get_error(ssl, rc)) {
-	case SSL_ERROR_ZERO_RETURN:
-		return -ENOTCONN;
-	case SSL_ERROR_WANT_READ:
-	case SSL_ERROR_WANT_WRITE:
-	case SSL_ERROR_WANT_CONNECT:
-	case SSL_ERROR_WANT_ACCEPT:
-	case SSL_ERROR_WANT_X509_LOOKUP:
-	case SSL_ERROR_WANT_ASYNC:
-	case SSL_ERROR_WANT_ASYNC_JOB:
-	case SSL_ERROR_WANT_CLIENT_HELLO_CB:
-		return -EAGAIN;
-	case SSL_ERROR_SYSCALL:
-	case SSL_ERROR_SSL:
-		return -ENOTCONN;
-	default:
-		return -ENOTCONN;
-	}
+
+	return posix_ssl_get_error(ssl, rc);
 }
 
 static ssize_t
@@ -889,24 +894,8 @@ posix_ssl_writev(SSL *ssl, struct iovec *iov, int iovcnt)
 	if (total > 0) {
 		return total;
 	}
-	switch (SSL_get_error(ssl, rc)) {
-	case SSL_ERROR_ZERO_RETURN:
-		return -ENOTCONN;
-	case SSL_ERROR_WANT_READ:
-	case SSL_ERROR_WANT_WRITE:
-	case SSL_ERROR_WANT_CONNECT:
-	case SSL_ERROR_WANT_ACCEPT:
-	case SSL_ERROR_WANT_X509_LOOKUP:
-	case SSL_ERROR_WANT_ASYNC:
-	case SSL_ERROR_WANT_ASYNC_JOB:
-	case SSL_ERROR_WANT_CLIENT_HELLO_CB:
-		return -EAGAIN;
-	case SSL_ERROR_SYSCALL:
-	case SSL_ERROR_SSL:
-		return -ENOTCONN;
-	default:
-		return -ENOTCONN;
-	}
+
+	return posix_ssl_get_error(ssl, rc);
 }
 
 static struct spdk_sock *
