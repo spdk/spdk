@@ -1688,6 +1688,7 @@ static ssize_t
 posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct msghdr msg = {.msg_iov = iov, .msg_iovlen = iovcnt};
 	int rc;
 
 	/* In order to process a writev, we need to flush any asynchronous writes
@@ -1706,7 +1707,7 @@ posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	if (sock->ssl) {
 		return posix_ssl_writev(sock->ssl, iov, iovcnt);
 	} else {
-		return writev(sock->fd, iov, iovcnt);
+		return sendmsg(sock->fd, &msg, 0);
 	}
 }
 
