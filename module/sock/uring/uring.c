@@ -920,21 +920,35 @@ uring_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 	return uring_sock_readv(sock, iov, 1);
 }
 
+static int
+uring_writev(struct spdk_uring_sock *sock, struct iovec *iov, int iovcnt, int flags)
+{
+	struct msghdr msg = {.msg_iov = iov, .msg_iovlen = iovcnt};
+	int rc;
+
+	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
+	if (rc <= 0) {
+		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
+			errno = EAGAIN;
+		}
+
+		return -1;
+	}
+
+	return rc;
+}
+
 static ssize_t
 uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct msghdr msg = {
-		.msg_iov = iov,
-		.msg_iovlen = iovcnt,
-	};
 
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
 		errno = EAGAIN;
 		return -1;
 	}
 
-	return sendmsg(sock->fd, &msg, MSG_DONTWAIT);
+	return uring_writev(sock, iov, iovcnt, 0);
 }
 
 static ssize_t
@@ -1874,7 +1888,6 @@ static int
 uring_sock_flush(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct msghdr msg = {};
 	struct iovec iovs[IOV_BATCH_SIZE];
 	int iovcnt;
 	ssize_t rc;
@@ -1908,15 +1921,9 @@ uring_sock_flush(struct spdk_sock *_sock)
 		return 0;
 	}
 
-	/* Perform the vectored write */
-	msg.msg_iov = iovs;
-	msg.msg_iovlen = iovcnt;
-	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
-	if (rc <= 0) {
-		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
-			errno = EAGAIN;
-		}
-		return -1;
+	rc = uring_writev(sock, iovs, iovcnt, flags);
+	if (rc < 0) {
+		return rc;
 	}
 
 #ifdef SPDK_ZEROCOPY
