@@ -1392,6 +1392,16 @@ posix_writev(struct spdk_posix_sock *sock, struct iovec *iov, int iovcnt, int fl
 }
 
 static int
+posix_readv(struct spdk_posix_sock *sock, struct iovec *iov, int iovcnt)
+{
+	if (sock->ssl) {
+		return posix_ssl_readv(sock->ssl, iov, iovcnt);
+	}
+
+	return readv(sock->fd, iov, iovcnt);
+}
+
+static int
 _sock_flush(struct spdk_sock *sock)
 {
 	struct spdk_posix_sock *psock = __posix_sock(sock);
@@ -1579,14 +1589,8 @@ posix_sock_read(struct spdk_posix_sock *sock)
 		return bytes_avail;
 	}
 
-	if (sock->ssl) {
-		bytes_recvd = posix_ssl_readv(sock->ssl, iov, 2);
-	} else {
-		bytes_recvd = readv(sock->fd, iov, 2);
-	}
-
+	bytes_recvd = posix_readv(sock, iov, 2);
 	assert(sock->pipe_has_data == false);
-
 	if (bytes_recvd <= 0) {
 		/* Errors count as draining the socket data */
 		if (sock->base.group_impl && sock->socket_has_data) {
@@ -1636,11 +1640,8 @@ posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 			sock->socket_has_data = false;
 			TAILQ_REMOVE(&group->socks_with_data, sock, link);
 		}
-		if (sock->ssl) {
-			return posix_ssl_readv(sock->ssl, iov, iovcnt);
-		} else {
-			return readv(sock->fd, iov, iovcnt);
-		}
+
+		return posix_readv(sock, iov, iovcnt);
 	}
 
 	/* If the socket is not in a group, we must assume it always has
@@ -1655,11 +1656,7 @@ posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 
 		if (len >= MIN_SOCK_PIPE_SIZE) {
 			/* TODO: Should this detect if kernel socket is drained? */
-			if (sock->ssl) {
-				return posix_ssl_readv(sock->ssl, iov, iovcnt);
-			} else {
-				return readv(sock->fd, iov, iovcnt);
-			}
+			return posix_readv(sock, iov, iovcnt);
 		}
 
 		/* Otherwise, do a big read into our pipe */
