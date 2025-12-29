@@ -70,11 +70,6 @@ ifeq ($(or $(filter y,$(CONFIG_CRYPTO)),$(filter y,$(CONFIG_DPDK_COMPRESSDEV))),
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
-# common mlx5 libs
-ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_DRIVERS += common/mlx5 bus/auxiliary
-endif
-
 # uadk drivers
 ifeq ($(CONFIG_DPDK_UADK),y)
 DPDK_DRIVERS += crypto/uadk
@@ -83,7 +78,7 @@ endif
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_DRIVERS += crypto
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_DRIVERS += crypto/mlx5
+DPDK_DRIVERS += common/mlx5 bus/auxiliary crypto/mlx5
 endif
 ifeq ($(CONFIG_IPSEC_MB),y)
 DPDK_DRIVERS += crypto/ipsec_mb

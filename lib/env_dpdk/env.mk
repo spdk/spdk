@@ -61,10 +61,6 @@ endif
 # ones after that.
 DPDK_FRAMEWORK=n
 
-ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_LIB_LIST += rte_common_mlx5 rte_bus_auxiliary
-endif
-
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_ipsec_mb.*))
@@ -72,7 +68,7 @@ DPDK_LIB_LIST += rte_crypto_ipsec_mb
 endif
 
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_LIB_LIST += rte_crypto_mlx5
+DPDK_LIB_LIST += rte_common_mlx5 rte_bus_auxiliary rte_crypto_mlx5
 endif
 
 ifeq ($(CONFIG_DPDK_UADK),y)
