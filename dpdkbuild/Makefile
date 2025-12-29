@@ -82,19 +82,12 @@ DPDK_DRIVERS += compress/uadk
 endif
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_DRIVERS += crypto
-# aesni_mb is name of the PMD in DPDK 21.08 and earlier
-DPDK_DRIVERS += crypto/aesni_mb
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_DRIVERS += crypto/mlx5
 endif
 ifeq ($(CONFIG_IPSEC_MB),y)
 DPDK_DRIVERS += crypto/ipsec_mb
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
-# Workaround for DPDK 22.07 and DPDK 22.11.1,
-# will be able to remove starting with DPDK 23.03.
-ifeq ($(shell grep "define NO_COMPAT_IMB_API_053" $(SPDK_ROOT_DIR)/dpdk/drivers/crypto/qat/qat_sym_session.c), )
-DPDK_CFLAGS += -DNO_COMPAT_IMB_API_053
-endif
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
 endif

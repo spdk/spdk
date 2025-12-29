@@ -36,7 +36,7 @@ endif
 DPDK_INC := -I$(DPDK_INC_DIR)
 
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_bus_pci rte_pci rte_mempool_ring
-DPDK_LIB_LIST += rte_telemetry rte_kvargs rte_rcu
+DPDK_LIB_LIST += rte_telemetry rte_kvargs rte_rcu rte_log
 
 DPDK_POWER=n
 
@@ -62,29 +62,17 @@ endif
 DPDK_FRAMEWORK=n
 
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_LIB_LIST += rte_common_mlx5
-# Introduced in DPDK 21.08
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
-DPDK_LIB_LIST += rte_bus_auxiliary
-endif
+DPDK_LIB_LIST += rte_common_mlx5 rte_bus_auxiliary
 endif
 
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_ipsec_mb.*))
-# PMD name as of DPDK 21.11
 DPDK_LIB_LIST += rte_crypto_ipsec_mb
-else
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_aesni_mb.*))
-# PMD name for DPDK 21.08 and earlier
-DPDK_LIB_LIST += rte_crypto_aesni_mb
-endif
 endif
 
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_mlx5.*))
 DPDK_LIB_LIST += rte_crypto_mlx5
-endif
 endif
 
 ifeq ($(CONFIG_DPDK_UADK),y)
@@ -114,12 +102,7 @@ endif
 LINK_HASH=n
 
 ifeq ($(CONFIG_VHOST),y)
-DPDK_LIB_LIST += rte_vhost rte_net
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_dmadev.*))
-# Introduced in DPDK 21.11, and rte_vhost became dependent on
-# it shortly thereafter
-DPDK_LIB_LIST += rte_dmadev
-endif
+DPDK_LIB_LIST += rte_vhost rte_net rte_dmadev
 LINK_HASH=y
 ifneq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev
@@ -132,11 +115,6 @@ endif
 
 ifeq ($(LINK_HASH),y)
 DPDK_LIB_LIST += rte_hash
-endif
-
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_log.*))
-# Since DPDK 23.11.0-rc0 logging functions are in a separate library
-DPDK_LIB_LIST += rte_log
 endif
 
 DPDK_LIB_LIST_SORTED = $(sort $(DPDK_LIB_LIST))
