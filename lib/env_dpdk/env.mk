@@ -61,7 +61,7 @@ endif
 # ones after that.
 DPDK_FRAMEWORK=n
 
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)),y)
+ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_LIB_LIST += rte_common_mlx5
 # Introduced in DPDK 21.08
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
@@ -94,7 +94,7 @@ endif
 endif
 endif
 
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)),y)
+ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
