@@ -61,11 +61,14 @@ DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 DPDK_LIBS = eal hash log mbuf mempool pci ring
 # Depdencies of core DPDK libs
 DPDK_LIBS += argparse cmdline ethdev kvargs meter net rcu stack telemetry
+
 # Governor required libs
+ifeq ($(OS),Linux)
 DPDK_LIBS += power timer
 # rte_power drivers
 DPDK_DRIVERS += power/acpi power/amd_pstate power/cppc power/intel_pstate power/intel_uncore \
 		power/kvm_vm
+endif
 
 # Both crypto and compress QAT drivers are bunched up in common/qat. Crypto and compress drivers can only be disabled,
 # but not explicitly enabled. Rather than trying to separate them out, enable both and their dependencies.
@@ -103,7 +106,9 @@ endif
 DPDK_ENABLED_DRIVERS = $(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")
 
 # vhost and deps
+ifeq ($(CONFIG_VHOST),y)
 DPDK_LIBS += vhost cryptodev dmadev
+endif
 
 DPDK_OPTS += -Dcpu_instruction_set=$(TARGET_ARCHITECTURE)
 
