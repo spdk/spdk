@@ -2525,7 +2525,10 @@ struct rpc_get_path_stat {
 struct path_stat {
 	struct spdk_bdev_io_stat	stat;
 	struct spdk_nvme_transport_id	trid;
-	struct nvme_ns			*ns;
+
+	/* This pointer is cached on the app thread and may be freed while
+	 * iterating over nbdev channels; it must not be dereferenced. */
+	void				*nvme_ns;
 };
 
 struct rpc_bdev_nvme_path_stat_ctx {
@@ -2567,7 +2570,7 @@ rpc_bdev_nvme_path_stat_per_channel(struct nvme_bdev_channel_iter *i,
 		path_stat = &ctx->path_stat[j];
 
 		STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
-			if (path_stat->ns == io_path->nvme_ns) {
+			if (path_stat->nvme_ns == io_path->nvme_ns) {
 				assert(io_path->stat != NULL);
 				spdk_bdev_add_io_stat(&path_stat->stat, io_path->stat);
 			}
@@ -2686,7 +2689,7 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	/* store the history stat */
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		assert(i < num_paths);
-		path_stat[i].ns = nvme_ns;
+		path_stat[i].nvme_ns = nvme_ns;
 		path_stat[i].trid = nvme_ns->ctrlr->active_path_id->trid;
 		i++;
 	}
@@ -2696,7 +2699,8 @@ rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 	ctx->path_stat = path_stat;
 	ctx->num_paths = num_paths;
 
-	/* TODO race is here, number of paths can change. */
+	/* Number of paths can change while iterating over nbdev channels; stats for
+	 * these will not be gathered until the next bdev_nvme_get_path_iostat call. */
 	nvme_bdev_for_each_channel(nbdev,
 				   rpc_bdev_nvme_path_stat_per_channel,
 				   ctx,
