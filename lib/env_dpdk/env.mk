@@ -72,9 +72,7 @@ DPDK_LIB_LIST += rte_common_mlx5 rte_bus_auxiliary rte_crypto_mlx5
 endif
 
 ifeq ($(CONFIG_DPDK_UADK),y)
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_uadk.*))
 DPDK_LIB_LIST += rte_crypto_uadk
-endif
 endif
 endif
 
@@ -84,9 +82,7 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
 endif
 ifeq ($(CONFIG_DPDK_UADK),y)
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_uadk.*))
 DPDK_LIB_LIST += rte_compress_uadk
-endif
 endif
 endif
 
