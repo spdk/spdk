@@ -3544,6 +3544,8 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	struct spdk_nvme_ctrlr *ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	nvme_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
 	assert(nvme_ns != NULL);
 	ns = nvme_ns->ns;
@@ -3919,6 +3921,8 @@ bdev_nvme_get_module_ctx(void *ctx)
 	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (!nbdev || nbdev->disk.module != &nvme_if) {
 		return NULL;
 	}
@@ -3958,6 +3962,8 @@ bdev_nvme_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	struct nvme_ns *nvme_ns;
 	int i = 0, _array_size = array_size;
 	int rc = 0;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		if (domains && array_size >= i) {
@@ -4345,6 +4351,8 @@ bdev_nvme_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns;
 	struct spdk_nvme_ctrlr *ctrlr;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (!g_opts.allow_accel_sequence) {
 		return false;
@@ -5021,6 +5029,8 @@ nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 	struct nvme_ns *tmp_ns;
 	const struct spdk_nvme_ns_data *nsdata;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	nsdata = spdk_nvme_ns_get_data(nvme_ns->ns);
 	if (!nsdata->nmic.shrns) {
 		NVME_NS_ERRLOG(nvme_ns, "Namespace cannot be shared.\n");
@@ -5106,6 +5116,8 @@ static void
 nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev *nbdev;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (nvme_ns->depopulating) {
 		/* Maybe we received 2 AENs in a row */
@@ -5440,6 +5452,8 @@ bdev_nvme_set_preferred_ns(struct nvme_bdev *nbdev, uint16_t cntlid)
 {
 	struct nvme_ns *nvme_ns, *prev;
 	const struct spdk_nvme_ctrlr_data *cdata;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	prev = NULL;
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
@@ -9177,6 +9191,8 @@ bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 {
 	struct nvme_bdev *nbdev;
 	struct nvme_ns *nvme_ns;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (!bdev || bdev->module != &nvme_if) {
 		return NULL;

@@ -158,6 +158,12 @@ struct nvme_bdev {
 	enum spdk_bdev_nvme_multipath_policy	mp_policy;
 	enum spdk_bdev_nvme_multipath_selector	mp_selector;
 	uint32_t				rr_min_io;
+
+	/* This list is modified on the app thread only but can be accessed on other threads:
+	 * - Modifications must use the mutex.
+	 * - Access on the app thread does not require locking.
+	 * - Access on other threads must use the mutex.
+	 */
 	TAILQ_HEAD(, nvme_ns)			nvme_ns_list;
 	bool					opal;
 	TAILQ_ENTRY(nvme_bdev)			tailq;
