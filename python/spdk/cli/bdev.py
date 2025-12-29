@@ -6,7 +6,6 @@
 #
 
 import argparse
-import sys
 from functools import partial
 
 from spdk.rpc.cmd_parser import print_array, print_dict, print_json, strip_globals
@@ -1316,43 +1315,6 @@ def add_parser(subparsers):
                    'by default core thread will be set to the main application core (optional)')
     p.add_argument('-f', '--fast-shutdown', help="Enable fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_create)
-
-    def bdev_ftl_load(args):
-        print("bdev_ftl_load RPC is deprecated, use bdev_ftl_create instead", file=sys.stderr)
-        print_dict(args.client.bdev_ftl_load(
-                                          name=args.name,
-                                          base_bdev=args.base_bdev,
-                                          uuid=args.uuid,
-                                          cache=args.cache,
-                                          overprovisioning=args.overprovisioning,
-                                          l2p_dram_limit=args.l2p_dram_limit,
-                                          core_mask=args.core_mask,
-                                          fast_shutdown=args.fast_shutdown))
-
-    p = subparsers.add_parser('bdev_ftl_load', help='Load FTL bdev')
-    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-d', '--base-bdev', help='Name of bdev used as underlying device',
-                   required=True)
-    p.add_argument('-u', '--uuid', help='UUID of restored bdev', required=True)
-    p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache',
-                   required=True)
-    p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
-                   ' to user (optional); default 20', type=int)
-    p.add_argument('--l2p-dram-limit', help='l2p size that could reside in DRAM (optional); default 2048',
-                   type=int)
-    p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
-                   'by default core thread will be set to the main application core (optional)')
-    p.add_argument('-f', '--fast-shutdown', help="Enable fast shutdown", action='store_true')
-    p.set_defaults(func=bdev_ftl_load)
-
-    def bdev_ftl_unload(args):
-        print("bdev_ftl_unload RPC is deprecated, use bdev_ftl_delete instead", file=sys.stderr)
-        print_dict(args.client.bdev_ftl_unload(name=args.name, fast_shutdown=args.fast_shutdown))
-
-    p = subparsers.add_parser('bdev_ftl_unload', help='Unload FTL bdev')
-    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
-    p.set_defaults(func=bdev_ftl_unload)
 
     def bdev_ftl_delete(args):
         print_dict(args.client.bdev_ftl_delete(name=args.name, fast_shutdown=args.fast_shutdown))

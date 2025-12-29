@@ -19,11 +19,6 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### ftl
-
-bdev_ftl_load is depreacted and will be removed in the 26.05 release. use bdev_ftl_create instead
-bdev_ftl_unload is depreacted and will be removed in the 26.05 release. use bdev_ftl_delete instead
-
 ### bdev
 
 #### `bdev_get_iostat`

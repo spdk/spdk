@@ -2484,7 +2484,6 @@
     },
     {
       "name": "bdev_ftl_create",
-      "alias": "bdev_ftl_load",
       "params": [
         {
           "name": "name",
@@ -2532,75 +2531,7 @@
       ]
     },
     {
-      "name": "bdev_ftl_load",
-      "decoder": "rpc_bdev_ftl_create_decoders",
-      "params": [
-        {
-          "name": "name",
-          "type": "string",
-          "required": true,
-          "description": "Bdev name"
-        },
-        {
-          "name": "base_bdev",
-          "type": "string",
-          "required": true,
-          "description": "Name of the base device"
-        },
-        {
-          "name": "cache",
-          "type": "string",
-          "required": true,
-          "description": "Name of the cache device"
-        },
-        {
-          "name": "uuid",
-          "type": "string",
-          "required": true,
-          "description": "UUID of restored bdev"
-        },
-        {
-          "name": "core_mask",
-          "type": "string",
-          "description": "CPU core(s) possible for placement of the ftl core thread, application main thread by default"
-        },
-        {
-          "name": "overprovisioning",
-          "type": "number",
-          "description": "Percentage of base device used for relocation, 20% by default"
-        },
-        {
-          "name": "fast_shutdown",
-          "type": "boolean",
-          "description": "When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load"
-        },
-        {
-          "name": "l2p_dram_limit",
-          "type": "number",
-          "description": "DRAM limit for most recent L2P addresses (default 2048 MiB)"
-        }
-      ]
-    },
-    {
       "name": "bdev_ftl_delete",
-      "alias": "bdev_ftl_unload",
-      "params": [
-        {
-          "name": "name",
-          "type": "string",
-          "required": true,
-          "description": "Bdev name"
-        },
-        {
-          "name": "fast_shutdown",
-          "type": "boolean",
-          "description": "When set FTL will minimize persisted data during deletion and rely on shared memory during next load"
-        }
-      ]
-    },
-    {
-      "name": "bdev_ftl_unload",
-      "decoder": "rpc_bdev_ftl_delete_decoders",
       "params": [
         {
           "name": "name",

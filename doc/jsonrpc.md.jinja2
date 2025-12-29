@@ -5489,53 +5489,6 @@ Example response:
 }
 ~~~
 
-### bdev_ftl_load {#rpc_bdev_ftl_load}
-
-Loads FTL bdev.
-
-This RPC is deprecated.
-
-#### Parameters
-
-{{ bdev_ftl_load_params }}
-
-#### Response
-
-Name of loaded bdev.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "params": {
-    "name": "ftl0",
-    "base_bdev": "nvme0n1",
-    "cache": "nvme1n1",
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
-    "core_mask": "[0]",
-    "overprovisioning": 10
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_load",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": {
-    "name": "ftl0",
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
-  }
-}
-~~~
-
 ### bdev_ftl_delete {#rpc_bdev_ftl_delete}
 
 Delete FTL bdev.
@@ -5557,41 +5510,6 @@ Example request:
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_delete",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
-### bdev_ftl_unload {#rpc_bdev_ftl_unload}
-
-Unloads FTL bdev.
-
-This RPC is deprecated.
-
-#### Parameters
-
-{{ bdev_ftl_unload_params }}
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "params": {
-    "name": "ftl0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_unload",
   "id": 1
 }
 ~~~

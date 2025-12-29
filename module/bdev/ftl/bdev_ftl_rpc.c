@@ -126,7 +126,6 @@ out:
 	spdk_ftl_conf_deinit(&conf);
 }
 SPDK_RPC_REGISTER("bdev_ftl_create", rpc_bdev_ftl_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_create, bdev_ftl_load)
 
 struct rpc_delete_ftl {
 	char *name;
@@ -160,7 +159,6 @@ invalid:
 	free(attrs.name);
 }
 SPDK_RPC_REGISTER("bdev_ftl_delete", rpc_bdev_ftl_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_delete, bdev_ftl_unload)
 
 struct rpc_ftl_unmap {
 	char *name;
