@@ -508,6 +508,7 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	struct bdev_aio_task *aio_task;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
 	struct spdk_bdev_io *bdev_io;
+	struct file_disk *fdisk;
 
 	nr = bdev_user_io_getevents(io_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
 	if (nr < 0) {
@@ -521,26 +522,27 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 
 		if (events[i].res == aio_task->len) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-		} else {
-			/* From aio_abi.h, io_event.res is defined __s64, negative errno
-			 * will be assigned to io_event.res for error situation.
-			 * But from libaio.h, io_event.res is defined unsigned long, so
-			 * convert it to signed value for error detection.
-			 */
-			res = (int)events[i].res;
-			if (res < 0) {
-				if (res == -EAGAIN) {
-					spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-				} else {
-					AIO_FDISK_ERRLOG(fdisk_from_bdev(bdev_io->bdev), "failed to complete: rc %"PRId64"\n",
-							 events[i].res);
-					spdk_bdev_io_complete_aio_status(bdev_io, res);
-				}
+			continue;
+		}
+
+		/* From aio_abi.h, io_event.res is defined __s64, negative errno
+		 * will be assigned to io_event.res for error situation.
+		 * But from libaio.h, io_event.res is defined unsigned long, so
+		 * convert it to signed value for error detection.
+		 */
+		res = (int)events[i].res;
+		fdisk = fdisk_from_bdev(bdev_io->bdev);
+
+		if (res < 0) {
+			if (res == -EAGAIN) {
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 			} else {
-				AIO_FDISK_ERRLOG(fdisk_from_bdev(bdev_io->bdev), "failed to complete: rc %"PRId64"\n",
-						 events[i].res);
-				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+				AIO_FDISK_ERRLOG(fdisk, "failed to complete: rc %"PRId64"\n", events[i].res);
+				spdk_bdev_io_complete_aio_status(bdev_io, res);
 			}
+		} else {
+			AIO_FDISK_ERRLOG(fdisk, "failed to complete: rc %"PRId64"\n", events[i].res);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
 
