@@ -65,9 +65,12 @@ DPDK_LIBS += power timer ethdev net
 # rte_power drivers
 DPDK_DRIVERS += power/acpi power/amd_pstate power/cppc power/intel_pstate power/intel_uncore \
 		power/kvm_vm
-# common crypto/compress drivers
+
+# Both crypto and compress QAT drivers are bunched up in common/qat. Crypto and compress drivers can only be disabled,
+# but not explicitly enabled. Rather than trying to separate them out, enable both and their dependencies.
 ifeq ($(or $(filter y,$(CONFIG_CRYPTO)),$(filter y,$(CONFIG_DPDK_COMPRESSDEV))),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
+DPDK_LIBS += compressdev cryptodev security
 endif
 
 # uadk drivers
@@ -77,11 +80,13 @@ DPDK_DRIVERS += compress/uadk
 endif
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_DRIVERS += crypto
+DPDK_LIBS += cryptodev
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_DRIVERS += common/mlx5 bus/auxiliary crypto/mlx5
 endif
 ifeq ($(CONFIG_IPSEC_MB),y)
 DPDK_DRIVERS += crypto/ipsec_mb
+DPDK_LIBS += security
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
@@ -89,16 +94,12 @@ endif
 
 ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
 DPDK_DRIVERS += compress compress/isal
+DPDK_LIBS += compressdev
 DPDK_CFLAGS += -I$(ISAL_DIR) -I$(ISAL_BUILD_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif
 
 DPDK_ENABLED_DRIVERS = $(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")
-
-# crypto & compress deps
-DPDK_LIBS += reorder cryptodev
-DPDK_LIBS += compressdev
-DPDK_LIBS += security
 
 # vhost and deps
 DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost dmadev
