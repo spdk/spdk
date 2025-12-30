@@ -112,6 +112,17 @@ def add_parser(subparsers):
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_subsystems)
 
+    def nvmf_get_ctrl_io_stats(args):
+        print_dict(args.client.nvmf_get_ctrl_io_stats(tgt_name=args.tgt_name, nqn=args.nqn, host_nqn=args.host_nqn, reset=args.reset))
+
+    p = subparsers.add_parser('nvmf_get_ctrl_io_stats', help='Display IO statistics for a specific NVMe-oF controller')
+    p.add_argument('-t', '--tgt-name', help='The name of the NVMe-oF target', type=str)
+    p.add_argument('-n', '--nqn', help='Subsystem NQN', type=str, required=True)
+    p.add_argument('-H', '--host-nqn', help='Host NQN', type=str, required=True)
+    p.add_argument('-r', '--reset', action='store_true', help=""" reset statistics of the controller""")
+    # Link parser to function
+    p.set_defaults(func=nvmf_get_ctrl_io_stats)
+
     def nvmf_create_subsystem(args):
         args.client.nvmf_create_subsystem(
                                        nqn=args.nqn,

@@ -14,6 +14,7 @@
 #include "spdk/util.h"
 #include "spdk/bit_array.h"
 #include "spdk/config.h"
+#include "nvmf_tcp_stats.h"
 
 #include "spdk_internal/assert.h"
 
@@ -317,6 +318,150 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 	free(req.nqn);
 }
 SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTIME)
+
+struct rpc_get_ctrl_io_stats {
+	char *nqn;
+	char *host_nqn;
+	char *tgt_name;
+	bool reset;
+};
+
+static const struct spdk_json_object_decoder rpc_get_ctrl_io_stats_decoders[] = {
+	{"nqn", offsetof(struct rpc_get_ctrl_io_stats, nqn), spdk_json_decode_string, true},
+	{"host_nqn", offsetof(struct rpc_get_ctrl_io_stats, host_nqn), spdk_json_decode_string, true},
+	{"tgt_name", offsetof(struct rpc_get_ctrl_io_stats, tgt_name), spdk_json_decode_string, true},
+	{"reset", offsetof(struct rpc_get_ctrl_io_stats, reset), spdk_json_decode_bool, true}
+};
+
+struct rpc_max_qp_ctx {
+	struct qp_io_stats stats;
+	bool has_max;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_jsonrpc_request *request;
+	bool reset_stats;
+};
+
+static void
+rpc_collect_qp_stats(struct spdk_io_channel_iter *i)
+{
+	struct rpc_max_qp_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_poll_group *pg;
+	struct spdk_nvmf_qpair *qpair;
+
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	if (!ch) {
+		spdk_for_each_channel_continue(i, -ENOMEM);
+		return;
+	}
+	pg = spdk_io_channel_get_ctx(ch);
+	//SPDK_NOTICELOG("collect_qp_stats ch=%p ctx=%p ctrlr=%p\n", ch, ctx, ctx->ctrlr);
+	TAILQ_FOREACH(qpair, &pg->qpairs, link) {
+		if (qpair->ctrlr != ctx->ctrlr) {
+			continue;
+		}
+		struct qp_io_stats * stats = NULL;
+		if (qpair->transport->ops->get_qp_statistics) {
+			qpair->transport->ops->get_qp_statistics(qpair, (void **)&stats);
+		}
+		if (stats == NULL) {
+			continue;
+		}
+		accumulate_stats(&ctx->stats, stats);
+		ctx->has_max = true;
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+rpc_collect_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_max_qp_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_json_write_ctx *w;
+	w = spdk_jsonrpc_begin_result(ctx->request);
+
+	if (ctx->has_max) {
+		emit_qp_stats(w, &ctx->stats);
+	} else {
+		spdk_json_write_null(w);
+	}
+	SPDK_NOTICELOG("RPC about to end_result\n");
+	spdk_jsonrpc_end_result(ctx->request, w);
+	SPDK_NOTICELOG("RPC end_result returned\n");
+	free(ctx);
+}
+
+static void
+rpc_nvmf_get_ctrl_io_stats(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+{
+	struct rpc_get_ctrl_io_stats req = { 0 };
+	struct spdk_nvmf_subsystem *subsystem = NULL;
+	struct spdk_nvmf_tgt *tgt;
+	struct spdk_nvmf_ctrlr *ctrlr = NULL;
+	bool found_ctrl = false;
+	struct rpc_max_qp_ctx *ctx = NULL;
+	if (params) {
+		if (spdk_json_decode_object(params, rpc_get_ctrl_io_stats_decoders,
+						SPDK_COUNTOF(rpc_get_ctrl_io_stats_decoders),
+						&req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			return;
+		}
+	}
+	tgt = spdk_nvmf_get_tgt(req.tgt_name);
+	if (!tgt) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to find a target.");
+		goto cleanup;
+	}
+	if (!req.nqn || !req.host_nqn) {
+		spdk_jsonrpc_send_error_response(request,
+			SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+			"nqn and host_nqn are required");
+		goto cleanup;
+	}
+	if (req.nqn) {
+		subsystem = spdk_nvmf_tgt_find_subsystem(tgt, req.nqn);
+		if (!subsystem) {
+			SPDK_ERRLOG("subsystem '%s' does not exist\n", req.nqn);
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			goto cleanup;
+		}
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (strcmp(ctrlr->hostnqn, req.host_nqn) == 0) {
+			/* Found controller */
+				found_ctrl = true;
+				ctx = calloc(1, sizeof(*ctx));
+				if (!ctx) {
+					spdk_jsonrpc_send_error_response(request,
+							SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							"Out of memory");
+					goto cleanup;
+				}
+				ctx->ctrlr = ctrlr;
+				//ctx->tgt = tgt;
+				break;
+			}
+		}
+		if (!found_ctrl) {
+			SPDK_ERRLOG("controller does not exist for host '%s'\n", req.host_nqn);
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			goto cleanup;
+		}
+	}
+	ctx->request = request;
+	ctx->reset_stats = req.reset;
+	SPDK_NOTICELOG("RPC starting for_each_channel ctx=%p ctrlr=%p tgt=%s reset? %d\n",
+		ctx, ctx->ctrlr, req.tgt_name, ctx->reset_stats);
+	spdk_for_each_channel(tgt, rpc_collect_qp_stats, ctx, rpc_collect_done);
+cleanup:
+	free(req.tgt_name);
+	free(req.nqn);
+	free(req.host_nqn);
+}
+
+SPDK_RPC_REGISTER("nvmf_get_ctrl_io_stats", rpc_nvmf_get_ctrl_io_stats, SPDK_RPC_RUNTIME)
 
 struct rpc_subsystem_create {
 	char *nqn;

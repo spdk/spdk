@@ -508,6 +508,8 @@ struct spdk_nvmf_transport_ops {
 	void (*subsystem_dump_host)(struct spdk_nvmf_transport *transport,
 				    const struct spdk_nvmf_subsystem *subsystem,
 				    const char *hostnqn, struct spdk_json_write_ctx *w);
+
+	void (*get_qp_statistics)(struct spdk_nvmf_qpair *qpair, void **stats);
 };
 
 /**
