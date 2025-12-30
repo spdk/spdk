@@ -494,6 +494,7 @@ test_spdk_nvme_poll_group_process_completions(void)
 	CU_ASSERT(nvme_poll_group_connect_qpair(&qpair1_1) == 0);
 	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 128,
 			unit_test_disconnected_qpair_cb) == 32);
+	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
 	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair1_1) == 0);
 	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
 		CU_ASSERT(STAILQ_EMPTY(&tgroup->connected_qpairs));

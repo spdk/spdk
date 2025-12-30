@@ -2307,11 +2307,8 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	 * It is ensured that poll_group_process_completions() calls disconnected_qpair_cb
 	 * for any disconnected qpair. Hence, we do not have to check if the qpair is in
 	 * a poll group or not.
-	 * At the same time, if the qpair is being destroyed, i.e. this function is called by
-	 * spdk_nvme_ctrlr_free_io_qpair then we need to wait until qpair is disconnected, otherwise
-	 * we may leak some resources.
 	 */
-	if (qpair->async && !qpair->destroy_in_progress) {
+	if (qpair->async) {
 		return;
 	}
 

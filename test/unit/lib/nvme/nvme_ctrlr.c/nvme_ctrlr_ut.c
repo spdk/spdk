@@ -281,6 +281,9 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 void
 nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
+	if (qpair != NULL) {
+		qpair->state = NVME_QPAIR_DISCONNECTED;
+	}
 }
 
 int
