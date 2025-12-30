@@ -57,11 +57,12 @@ endif
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
-# Core DPDK libs
-DPDK_LIBS = eal ring mempool pci
-DPDK_LIBS += argparse log kvargs telemetry
+# Core DPDK libs - used by SPDK directly
+DPDK_LIBS = eal hash log mbuf mempool pci ring
+# Depdencies of core DPDK libs
+DPDK_LIBS += argparse cmdline ethdev kvargs meter net rcu stack telemetry
 # Governor required libs
-DPDK_LIBS += power timer ethdev net
+DPDK_LIBS += power timer
 # rte_power drivers
 DPDK_DRIVERS += power/acpi power/amd_pstate power/cppc power/intel_pstate power/intel_uncore \
 		power/kvm_vm
@@ -102,10 +103,7 @@ endif
 DPDK_ENABLED_DRIVERS = $(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")
 
 # vhost and deps
-DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost dmadev
-
-# raid5 deps
-DPDK_LIBS += hash rcu
+DPDK_LIBS += vhost cryptodev dmadev
 
 DPDK_OPTS += -Dcpu_instruction_set=$(TARGET_ARCHITECTURE)
 
