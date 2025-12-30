@@ -40,6 +40,7 @@ struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_json_val;
 struct spdk_nvmf_transport;
+struct qp_io_stats;
 
 /**
  * Specify filter rules which are applied during discovery log generation.
@@ -1532,6 +1533,30 @@ int spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 void spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group,
 				    struct spdk_json_write_ctx *w);
 
+/*
+ Accumulate nvmf controller statistics by summarizing qp statistics
+ * /param w accumulated statistics
+ * /param r qp statistics to accumulate
+ */
+void
+spdk_nvmf_accumulate_stats(struct qp_io_stats *accum_stats,
+		 const struct qp_io_stats *qp_stats);
+
+/**
+ * Dump empty statistics for the controller
+ * \param w The JSON write context to which statistics should be dumped.
+ */
+void
+spdk_nvmf_dump_empty_ctrl_stats(struct spdk_json_write_ctx *w);
+
+/*
+ * Dump controller statistics into JSON
+ * \param w The JSON write context to which statistics should be dumped.
+ * \param r ctrl statistic saccumulated from all qps of the controller
+ */
+void
+spdk_nvmf_dump_ctrl_stats(struct spdk_json_write_ctx *w,
+		const struct qp_io_stats *stats);
 /**
  * \brief Set the global hooks for the RDMA transport, if necessary.
  *
