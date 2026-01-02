@@ -60,6 +60,8 @@ endif
 # ones after that.
 DPDK_FRAMEWORK=n
 
+LINK_HASH=n
+
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_ipsec_mb.*))
@@ -68,6 +70,7 @@ endif
 
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_LIB_LIST += rte_common_mlx5 rte_bus_auxiliary rte_crypto_mlx5
+LINK_HASH=y
 endif
 
 ifeq ($(CONFIG_DPDK_UADK),y)
@@ -91,8 +94,6 @@ DPDK_LIB_LIST += rte_compressdev
 DPDK_LIB_LIST += rte_bus_vdev
 DPDK_LIB_LIST += rte_common_qat
 endif
-
-LINK_HASH=n
 
 ifeq ($(CONFIG_VHOST),y)
 DPDK_LIB_LIST += rte_vhost rte_ethdev rte_meter rte_cryptodev rte_dmadev
