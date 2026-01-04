@@ -3220,6 +3220,16 @@ setup_spdk_tracing(const char *app_name, const char *tpoint_group_mask, int num_
 	return spdk_app_setup_trace(&app_opts);
 }
 
+static void
+free_globals(void)
+{
+	free(g_tpoint_group_mask);
+
+	free_key(&g_psk);
+	free_key(&g_dhchap);
+	free_key(&g_dhchap_ctrlr);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3238,9 +3248,7 @@ main(int argc, char **argv)
 	opts.pci_allowed = g_allowed_pci_addr;
 	rc = parse_args(argc, argv, &opts);
 	if (rc != 0 || rc == HELP_RETURN_CODE) {
-		free_key(&g_psk);
-		free_key(&g_dhchap);
-		free_key(&g_dhchap_ctrlr);
+		free_globals();
 		if (rc == HELP_RETURN_CODE) {
 			return 0;
 		}
@@ -3252,17 +3260,13 @@ main(int argc, char **argv)
 	rc = pthread_mutex_init(&g_stats_mutex, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "Failed to init mutex\n");
-		free_key(&g_psk);
-		free_key(&g_dhchap);
-		free_key(&g_dhchap_ctrlr);
+		free_globals();
 		return -1;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		pthread_mutex_destroy(&g_stats_mutex);
-		free_key(&g_psk);
-		free_key(&g_dhchap);
-		free_key(&g_dhchap_ctrlr);
+		free_globals();
 		return -1;
 	}
 
@@ -3270,9 +3274,7 @@ main(int argc, char **argv)
 	if (rc != 0) {
 		fprintf(stderr, "Unable to initialize keyring: %s\n", spdk_strerror(-rc));
 		pthread_mutex_destroy(&g_stats_mutex);
-		free_key(&g_psk);
-		free_key(&g_dhchap);
-		free_key(&g_dhchap_ctrlr);
+		free_globals();
 		spdk_env_fini();
 		return -1;
 	}
@@ -3395,11 +3397,8 @@ cleanup:
 	unregister_controllers();
 	unregister_workers();
 
-	free(g_tpoint_group_mask);
+	free_globals();
 
-	free_key(&g_psk);
-	free_key(&g_dhchap);
-	free_key(&g_dhchap_ctrlr);
 	spdk_keyring_cleanup();
 	spdk_env_fini();
 
