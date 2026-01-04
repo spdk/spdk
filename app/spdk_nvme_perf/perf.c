@@ -3261,7 +3261,7 @@ main(int argc, char **argv)
 			return 0;
 		}
 
-		return rc;
+		goto out;
 	}
 
 	/* Transport statistics are printed from each thread.
@@ -3270,15 +3270,16 @@ main(int argc, char **argv)
 	if (rc != 0) {
 		fprintf(stderr, "Failed to init mutex\n");
 		free_globals();
-		return -1;
+		goto out;
 	}
 
 	opts.vf_token = g_vf_token;
-	if (spdk_env_init(&opts) < 0) {
+	rc = spdk_env_init(&opts);
+	if (rc < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		pthread_mutex_destroy(&g_stats_mutex);
 		free_globals();
-		return -1;
+		goto out;
 	}
 
 	rc = spdk_keyring_init();
@@ -3287,31 +3288,30 @@ main(int argc, char **argv)
 		pthread_mutex_destroy(&g_stats_mutex);
 		free_globals();
 		spdk_env_fini();
-		return -1;
+		goto out;
 	}
 
 	rc = setup_sig_handlers();
 	if (rc != 0) {
-		rc = -1;
 		goto cleanup;
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 
-	if (register_workers() != 0) {
-		rc = -1;
+	rc = register_workers();
+	if (rc != 0) {
 		goto cleanup;
 	}
 
 #if defined(HAVE_LIBAIO) || defined(SPDK_CONFIG_URING)
-	if (register_files(argc, argv) != 0) {
-		rc = -1;
+	rc = register_files(argc, argv);
+	if (rc != 0) {
 		goto cleanup;
 	}
 #endif
 
-	if (register_controllers() != 0) {
-		rc = -1;
+	rc = register_controllers();
+	if (rc != 0) {
 		goto cleanup;
 	}
 
@@ -3331,6 +3331,7 @@ main(int argc, char **argv)
 		} else {
 			fprintf(stderr, "No active namespaces found\n");
 		}
+
 		goto cleanup;
 	}
 
@@ -3339,8 +3340,9 @@ main(int argc, char **argv)
 		fprintf(stderr, "Error suppression count may not be exact.\n");
 	}
 
-	if (setup_spdk_tracing("spdk_nvme_perf", g_tpoint_group_mask, g_num_workers) != 0) {
-		return 1;
+	rc = setup_spdk_tracing("spdk_nvme_perf", g_tpoint_group_mask, g_num_workers);
+	if (rc != 0) {
+		goto cleanup;
 	}
 
 	rc = pthread_create(&thread_id, NULL, &nvme_poll_ctrlrs, NULL);
@@ -3349,8 +3351,8 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	if (associate_workers_with_ns() != 0) {
-		rc = -1;
+	rc = associate_workers_with_ns();
+	if (rc != 0) {
 		goto cleanup;
 	}
 
@@ -3415,6 +3417,7 @@ cleanup:
 
 	pthread_mutex_destroy(&g_stats_mutex);
 
+out:
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occurred\n", argv[0]);
 	}
