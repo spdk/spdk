@@ -155,6 +155,12 @@
           "description": "ANA group ID. Default: Namespace ID."
         },
         {
+          "name": "no_auto_visible",
+          "type": "boolean",
+          "required": false,
+          "description": "Do not auto make namespace visible to controllers"
+        },
+        {
           "name": "hide_metadata",
           "type": "boolean",
           "required": false,
@@ -341,6 +347,12 @@
           "type": "boolean",
           "required": false,
           "description": "Get an array of RPC methods only callable in the current state."
+        },
+        {
+          "name": "include_aliases",
+          "type": "boolean",
+          "required": false,
+          "description": "include RPC aliases"
         }
       ]
     },
@@ -395,6 +407,12 @@
           "type": "number",
           "required": false,
           "description": "Indicates at what load on core scheduler should move threads to a different core (dynamic only)"
+        },
+        {
+          "name": "mappings",
+          "type": "array",
+          "required": false,
+          "description": "Comma-separated list of thread:core mappings. Reserved for static scheduler"
         }
       ]
     },
@@ -4943,6 +4961,12 @@
           "type": "boolean",
           "required": false,
           "description": "If true, this target will be read only (default: false)"
+        },
+        {
+          "name": "packed_ring",
+          "type": "boolean",
+          "required": false,
+          "description": "Set controller as packed ring supported"
         },
         {
           "name": "cpumask",

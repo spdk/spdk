@@ -82,12 +82,22 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
         subparser = subparsers.choices[method['name']]
         groups = subparser._mutually_exclusive_groups
         actions = {a.dest: a for a in subparser._actions}
-        for parameter in method['params']:
-            if parameter['name'] in ['num_blocks']:
-                # TODO: handle this case later and fix issues raised by it
-                continue
-            params = schema_objects[parameter['class']]['fields'] if 'class' in parameter else [parameter]
-            for param in params:
+        # Those are not part of the schema, just part of the python cli
+        p_schema_exceptions = {'help', 'total_size', 'format_lspci'}
+        p_cli_exceptions = {'num_blocks'}
+        p_params = [schema_objects[parameter['class']]['fields'] if 'class' in parameter else [parameter] for parameter in method['params']]
+        p_params_set = set([p['name'] for sub in p_params for p in sub])
+        p_missing_in_cli = p_params_set - set(actions) - p_cli_exceptions
+        p_missing_in_schema = set(actions) - p_params_set - p_schema_exceptions
+        if p_missing_in_cli:
+            raise ValueError(f"For method {method['name']}: Params defined in schema but missing in CLI: {sorted(p_missing_in_cli)}")
+        if p_missing_in_schema:
+            raise ValueError(f"For method {method['name']}: Params found in CLI but not defined in schema: {sorted(p_missing_in_schema)}")
+        for parameters_list in p_params:
+            for param in parameters_list:
+                if param['name'] in p_cli_exceptions:
+                    # TODO: handle this case later and fix issues raised by it
+                    continue
                 action = actions.get(param['name'])
                 if action is None:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': is defined in schema but not found in CLI")
