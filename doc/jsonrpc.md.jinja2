@@ -2750,6 +2750,63 @@ Example response:
 }
 ~~~
 
+### bdev_get_histogram_borders {#rpc_bdev_get_histogram_borders}
+
+Dump latency histogram for specified bdev into user-provided borders.
+
+#### Parameters
+
+{{ bdev_get_histogram_borders_params }}
+
+#### Response
+
+ Name          | Type   | Description
+-------------- | ------ | ------------------------------------------------------------
+ borders_count | array  | Number of requests whose latency was less than given border
+
+#### Example
+
+Note that last value represents total number of elements in histogram (i.e. +Inf border).
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_get_histogram_borders",
+  "params": {
+    "name": "Nvme0n1",
+    "borders": [
+      100,
+      200,
+      1000,
+      5000,
+      100000
+    ]
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "borders_count": [
+      42,
+      42,
+      133,
+      1024,
+      2002,
+      2018
+    ]
+  }
+}
+~~~
+
 ### bdev_set_qos_limit {#rpc_bdev_set_qos_limit}
 
 Set the quality of service rate limit on a bdev.

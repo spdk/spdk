@@ -21,6 +21,7 @@
 #define SPDK_BDEV_HISTOGRAM_DEFAULT_MIN_VALUE_NS (1000)
 #define SPDK_BDEV_HISTOGRAM_DEFAULT_MAX_VALUE_NS (120000000000)
 #define SPDK_BDEV_MAX_GET_IOSTAT_BDEV_NAMES (1024)
+#define SPDK_BDEV_HISTOGRAM_BORDERS_MAX_COUNT (256)
 
 static void
 dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
@@ -1072,25 +1073,55 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_enable_histogram", rpc_bdev_enable_histogram, SPDK_RPC_RUNTIME)
 
+/* SPDK_RPC_GET_BDEV_HISTOGRAM */
+
+struct rpc_bdev_get_histogram_borders {
+	size_t count;
+	uint64_t borders[SPDK_BDEV_HISTOGRAM_BORDERS_MAX_COUNT];
+};
+
+struct rpc_bdev_get_histogram_request {
+	char *name;
+	struct rpc_bdev_get_histogram_borders borders;
+};
+
+static int
+rpc_decode_bdev_histogram_borders(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_bdev_get_histogram_borders *borders = out;
+
+	return spdk_json_decode_array(val, spdk_json_decode_uint64, borders->borders,
+				      SPDK_BDEV_HISTOGRAM_BORDERS_MAX_COUNT, &borders->count,
+				      sizeof(uint64_t));
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_get_histogram_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_get_histogram_ctx, name), spdk_json_decode_string}
+	{"name", offsetof(struct rpc_bdev_get_histogram_request, name), spdk_json_decode_string},
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_get_histogram_borders_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_histogram_request, name), spdk_json_decode_string},
+	{"borders", offsetof(struct rpc_bdev_get_histogram_request, borders), rpc_decode_bdev_histogram_borders},
 };
 
 static void
-_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+free_rpc_bdev_get_histogram_request(struct rpc_bdev_get_histogram_request *r)
 {
-	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
+	free(r->name);
+}
+
+struct _rpc_bdev_get_histogram_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct rpc_bdev_get_histogram_borders borders;
+};
+
+static void
+rpc_encode_histogram(struct spdk_jsonrpc_request *request, struct spdk_histogram_data *histogram)
+{
 	int rc;
+	struct spdk_json_write_ctx *w;
 	char *encoded_histogram;
 	size_t src_len, dst_len;
-
-
-	if (status != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 spdk_strerror(-status));
-		goto invalid;
-	}
 
 	src_len = SPDK_HISTOGRAM_NUM_BUCKETS(histogram) * sizeof(uint64_t);
 	dst_len = spdk_base64_get_encoded_strlen(src_len) + 1;
@@ -1099,14 +1130,15 @@ _rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 	if (encoded_histogram == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(ENOMEM));
-		goto invalid;
+		return;
 	}
 
 	rc = spdk_base64_encode(encoded_histogram, histogram->bucket, src_len);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
-		goto free_encoded_histogram;
+		free(encoded_histogram);
+		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -1119,21 +1151,101 @@ _rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 
-free_encoded_histogram:
 	free(encoded_histogram);
-invalid:
+}
+
+static void
+rpc_dump_histogram_borders(struct _rpc_bdev_get_histogram_ctx *rpc_ctx,
+			   struct spdk_histogram_data *histogram)
+{
+	struct spdk_histogram_borders *ctx;
+	struct spdk_json_write_ctx *w;
+	size_t i;
+
+	ctx = spdk_histogram_get_borders_count_alloc_ctx(rpc_ctx->borders.borders, rpc_ctx->borders.count);
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(rpc_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(ENOMEM));
+		return;
+	}
+
+	spdk_histogram_get_borders_count(histogram, ctx);
+	w = spdk_jsonrpc_begin_result(rpc_ctx->request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_array_begin(w, "borders_count");
+	for (i = 0; i < ctx->num_borders_count; i++) {
+		spdk_json_write_uint64(w, ctx->border_count[i]);
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(rpc_ctx->request, w);
+
+	spdk_histogram_get_borders_count_free_ctx(ctx);
+}
+
+static void
+_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	struct _rpc_bdev_get_histogram_ctx *rpc_ctx = cb_arg;
+	struct spdk_jsonrpc_request *request = rpc_ctx->request;
+
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-status));
+		spdk_histogram_data_free(histogram);
+		free(rpc_ctx);
+		return;
+	}
+
+	if (rpc_ctx->borders.count > 0) {
+		rpc_dump_histogram_borders(rpc_ctx, histogram);
+	} else {
+		rpc_encode_histogram(request, histogram);
+	}
+
 	spdk_histogram_data_free(histogram);
+	free(rpc_ctx);
+}
+
+static void
+rpc_bdev_get_histogram_common(struct spdk_jsonrpc_request *request,
+			      char *bdev_name, struct _rpc_bdev_get_histogram_ctx *rpc_ctx)
+{
+	struct spdk_histogram_data *histogram;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	rc = spdk_bdev_open_ext(bdev_name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		free(rpc_ctx);
+		return;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
+	histogram = spdk_histogram_data_alloc_sized_ext(bdev->internal.histogram_granularity,
+			bdev->internal.histogram_min_val, bdev->internal.histogram_max_val);
+	if (histogram == NULL) {
+		spdk_bdev_close(desc);
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		free(rpc_ctx);
+		return;
+	}
+
+	spdk_bdev_histogram_get(bdev, histogram,
+				_rpc_bdev_histogram_data_cb, rpc_ctx);
+
+	spdk_bdev_close(desc);
 }
 
 static void
 rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_get_histogram_ctx req = {};
-	struct spdk_histogram_data *histogram;
-	struct spdk_bdev_desc *desc;
-	struct spdk_bdev *bdev;
-	int rc;
+	struct rpc_bdev_get_histogram_request req = {NULL};
+	struct _rpc_bdev_get_histogram_ctx *rpc_ctx;
 
 	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_decoders,
 				    SPDK_COUNTOF(rpc_bdev_get_histogram_decoders),
@@ -1144,29 +1256,58 @@ rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	rpc_ctx = calloc(1, sizeof(*rpc_ctx));
+	if (rpc_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate _rpc_bdev_get_histogram_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate _rpc_bdev_get_histogram_ctx struct");
 		goto cleanup;
 	}
+	rpc_ctx->request = request;
+	rpc_ctx->borders.count = 0;
 
-	bdev = spdk_bdev_desc_get_bdev(desc);
-
-	histogram = spdk_histogram_data_alloc_sized_ext(bdev->internal.histogram_granularity,
-			bdev->internal.histogram_min_val, bdev->internal.histogram_max_val);
-	if (histogram == NULL) {
-		spdk_bdev_close(desc);
-		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		goto cleanup;
-	}
-
-	spdk_bdev_histogram_get(bdev, histogram,
-				_rpc_bdev_histogram_data_cb, request);
-
-	spdk_bdev_close(desc);
+	rpc_bdev_get_histogram_common(request, req.name, rpc_ctx);
 
 cleanup:
-	free_rpc_bdev_get_histogram(&req);
+	free_rpc_bdev_get_histogram_request(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_get_histogram", rpc_bdev_get_histogram, SPDK_RPC_RUNTIME)
+
+static void
+rpc_bdev_get_histogram_borders(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_get_histogram_request req = {NULL};
+	struct _rpc_bdev_get_histogram_ctx *rpc_ctx;
+	size_t i;
+
+	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_borders_decoders,
+				    SPDK_COUNTOF(rpc_bdev_get_histogram_borders_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rpc_ctx = calloc(1, sizeof(struct _rpc_bdev_get_histogram_ctx));
+	if (rpc_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate _rpc_bdev_get_histogram_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate _rpc_bdev_get_histogram_ctx struct");
+		goto cleanup;
+	}
+	rpc_ctx->request = request;
+	memcpy(&rpc_ctx->borders, &req.borders, sizeof(req.borders));
+	for (i = 0; i < rpc_ctx->borders.count; i++) {
+		rpc_ctx->borders.borders[i] *= spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	}
+
+	rpc_bdev_get_histogram_common(request, req.name, rpc_ctx);
+
+cleanup:
+	free_rpc_bdev_get_histogram_request(&req);
+}
+
+SPDK_RPC_REGISTER("bdev_get_histogram_borders", rpc_bdev_get_histogram_borders, SPDK_RPC_RUNTIME)

@@ -961,6 +961,23 @@
       ]
     },
     {
+      "name": "bdev_get_histogram_borders",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Block device name"
+        },
+        {
+          "name": "borders",
+          "type": "array",
+          "required": true,
+          "description": "Array of buckets in microseconds to dump histogram into"
+        }
+      ]
+    },
+    {
       "name": "bdev_set_qos_limit",
       "params": [
         {

@@ -1077,6 +1077,25 @@ def add_parser(subparsers):
     p.add_argument('name', help='bdev name')
     p.set_defaults(func=bdev_get_histogram)
 
+    def bdev_get_histogram_borders(args):
+        borders = None
+        if args.borders:
+            borders = []
+            for i in args.borders:
+                borders.append(int(i))
+        print_dict(args.client.bdev_get_histogram_borders(name=args.name, borders=borders))
+
+    p = subparsers.add_parser('bdev_get_histogram_borders',
+                              help='Dump histogram for specified bdev into user-provided borders')
+    p.add_argument('name', help='bdev name')
+    p.add_argument('--borders', type=partial(str.split, sep=','),
+                   help='Comma-separated list of borders in microseconds to dump histogram into.'
+                   ' Borders should be in sorted ascending order. For each border response will contain'
+                   ' number of elements that are less than given border value.'
+                   ' One additional value will be added in the end to represent total number of elements (i.e. border +Inf).',
+                   required=True)
+    p.set_defaults(func=bdev_get_histogram_borders)
+
     def bdev_set_qd_sampling_period(args):
         args.client.bdev_set_qd_sampling_period(
                                              name=args.name,
