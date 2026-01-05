@@ -601,10 +601,12 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 			return -1;
 		}
 
-		/* set the process type */
-		args = push_arg(args, &argcount, _sprintf_alloc("--proc-type=auto"));
-		if (args == NULL) {
-			return -1;
+		/* set the process type, if not provided by the user */
+		if (!opts->env_context || strstr(opts->env_context, "--proc-type") == NULL) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--proc-type=auto"));
+			if (args == NULL) {
+				return -1;
+			}
 		}
 	}
 
