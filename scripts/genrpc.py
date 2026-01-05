@@ -46,7 +46,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     c_code_methods = dict()
     c_code_aliases = dict()
     for folder in ("module", "lib"):
-        for path in (base_dir / folder).rglob("*_rpc.c"):
+        for path in (base_dir / folder).rglob("*rpc.c"):
             data = path.read_text()
             methods = re.findall(r'SPDK_RPC_REGISTER\("([A-Za-z0-9_]+)"\s*,\s*([A-Za-z0-9_]+)\s*,', data, re.MULTILINE)
             for name, func in methods:
@@ -70,6 +70,24 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"In file {path}: could not parse fields for decoder '{name}' fields: '{fields}'. Fix decoder code.")
     if c_code_aliases != schema_aliases:
         raise ValueError(f"Aliases {c_code_aliases} do not match schema aliases {schema_aliases}. Update schema aliases or code c.")
+    for method in schema['methods']:
+        decoder_name = schema_decoders.get(method['name'], f"rpc_{method['name']}_decoders")
+        schema_params = set(parameter["name"] for parameter in method['params'])
+        # if there are no params, there will be no decoder
+        if not schema_params and decoder_name not in c_code_methods:
+            continue
+        if not c_code_methods.get(decoder_name, {}):
+            raise ValueError(f"Decoder of '{method['name']}' named '{decoder_name}' was not found. Update decoder names or exception list.")
+        cli_params = set(n for n, o, t in c_code_methods[decoder_name])
+        missing_in_cli = schema_params - cli_params
+        missing_in_schema = cli_params - schema_params
+        if missing_in_cli:
+            # TODO: handle this case later and fix issues raised by it
+            cli_exceptions = {'framework_set_scheduler', 'nvmf_create_transport', 'vhost_create_blk_controller', 'nvmf_subsystem_add_host'}
+            if method['name'] not in cli_exceptions:
+                raise ValueError(f"Params of '{method['name']}' defined in schema but missing in CLI: {sorted(missing_in_cli)}")
+        if missing_in_schema:
+            raise ValueError(f"Params of '{method['name']}' defined in CLI but missing in schema: {sorted(missing_in_schema)}")
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
