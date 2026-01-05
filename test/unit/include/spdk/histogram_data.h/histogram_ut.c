@@ -187,6 +187,43 @@ histogram_min_max_range_test(void)
 	spdk_histogram_data_free(h2);
 }
 
+static void
+histogram_get_with_borders_test(void)
+{
+	struct spdk_histogram_data *h;
+	uint64_t test_buckets[] = {1000, 10000, 10011, 30000};
+	struct spdk_histogram_borders *ctx = spdk_histogram_get_borders_count_alloc_ctx(test_buckets, 4);
+	uint64_t i = 0;
+	uint64_t total_elements = 0;
+
+	h = spdk_histogram_data_alloc();
+
+	for (i = 0; i < 1 << 16; i++) {
+		spdk_histogram_data_tally(h, i);
+		total_elements++;
+	}
+	for (i = 1000; i < 10000; i++) {
+		spdk_histogram_data_tally(h, i);
+		total_elements++;
+	}
+
+	spdk_histogram_get_borders_count(h, ctx);
+
+	/* 1008 is the first bucket border that is greater than 1000 */
+	CU_ASSERT(ctx->border_count[0] == 1008);
+	/* 10048 is the first bucket border that is greater than 10000 +9000 for duplicated values */
+	CU_ASSERT(ctx->border_count[1] == 10048 + 9000);
+	/* 10011 is in the same bucket as 10000 so this borders should report same values */
+	CU_ASSERT(ctx->border_count[2] == 10048 + 9000);
+	/* 30080 is the first bucket border that is greater than 30000 +9000 for duplicated values */
+	CU_ASSERT(ctx->border_count[3] == 30080 + 9000);
+	/* Last values should be total elements */
+	CU_ASSERT(ctx->border_count[4] == total_elements);
+
+	spdk_histogram_get_borders_count_free_ctx(ctx);
+	spdk_histogram_data_free(h);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -206,7 +243,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "histogram_test", histogram_test) == NULL ||
 		CU_add_test(suite, "histogram_merge", histogram_merge) == NULL ||
-		CU_add_test(suite, "histogram_min_max_range_test", histogram_min_max_range_test) == NULL
+		CU_add_test(suite, "histogram_min_max_range_test", histogram_min_max_range_test) == NULL ||
+		CU_add_test(suite, "histogram_get_with_borders_test", histogram_get_with_borders_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
