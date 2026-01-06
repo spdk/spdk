@@ -3477,7 +3477,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->elpe = NVMF_ERROR_LOG_SLOTS - 1;
 	cdata->maxcmd = transport->opts.max_queue_depth;
 	cdata->sgls = ctrlr->cdata.sgls;
-	cdata->fuses = ctrlr->cdata.fuses;
+	cdata->fuses.raw = subsystem->opts.admin ? 0 : ctrlr->cdata.fuses.raw;
 	cdata->acwu = 0; /* ACWU is 0-based. */
 	cdata->wctemp = 0x0157; /* Recommended value from NVMe 1.3d spec. */
 	cdata->cctemp = 0x0175;
@@ -3514,9 +3514,6 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->cmic.mctrs = 1;
 	cdata->oaes.ns_attribute_notices = 1;
 	cdata->ctratt.hids = 1;
-	cdata->ctratt.fdps = ctrlr->subsys->fdp_supported;
-	cdata->ctratt.elbas = nvmf_subsystem_has_nvm_iocs(subsystem);
-	cdata->cntrltype = SPDK_NVME_CTRLR_IO;
 	/* We do not have any actual limitation to the number of abort commands.
 	 * We follow the recommendation by the NVMe specification.
 	 */
@@ -3532,17 +3529,27 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->cqes.min = 4;
 	cdata->cqes.max = 4;
 	cdata->nn = subsystem->max_nsid;
-	cdata->vwc.present = subsystem->vwc_present ? 1 : 0;
-	cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
 
 	cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
 
-	cdata->oncs.nvmcmps = ctrlr->cdata.oncs.nvmcmps;
-	cdata->oncs.nvmdsmsv = ctrlr->cdata.oncs.nvmdsmsv && nvmf_ctrlr_dsm_supported(ctrlr);
-	cdata->oncs.nvmwzsv = ctrlr->cdata.oncs.nvmwzsv && nvmf_ctrlr_write_zeroes_supported(ctrlr);
-	cdata->oncs.reservs = ctrlr->cdata.oncs.reservs;
-	cdata->oncs.nvmcpys = ctrlr->cdata.oncs.nvmcpys;
-	cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
+	cdata->cntrltype = subsystem->opts.admin ? SPDK_NVME_CTRLR_ADMINISTRATIVE :
+			   SPDK_NVME_CTRLR_IO;
+
+	if (!subsystem->opts.admin) {
+		cdata->ctratt.fdps = ctrlr->subsys->fdp_supported;
+		cdata->ctratt.elbas = nvmf_subsystem_has_nvm_iocs(subsystem);
+		cdata->vwc.present = subsystem->vwc_present ? 1 : 0;
+		cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
+		cdata->oncs.nvmcmps = ctrlr->cdata.oncs.nvmcmps;
+		cdata->oncs.nvmdsmsv = ctrlr->cdata.oncs.nvmdsmsv &&
+				       nvmf_ctrlr_dsm_supported(ctrlr);
+		cdata->oncs.nvmwzsv = ctrlr->cdata.oncs.nvmwzsv &&
+				      nvmf_ctrlr_write_zeroes_supported(ctrlr);
+		cdata->oncs.reservs = ctrlr->cdata.oncs.reservs;
+		cdata->oncs.nvmcpys = ctrlr->cdata.oncs.nvmcpys;
+		cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
+	}
+
 	if (subsystem->opts.ana_reporting) {
 		/* Asymmetric Namespace Access Reporting is supported. */
 		cdata->cmic.anars = 1;
