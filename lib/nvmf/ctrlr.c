@@ -572,9 +572,9 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	/* NVMe 2.0 specification required */
 	ctrlr->vcprop.cap.bits.crwms = 1;
 
-	/* Version Supported: 1.4 */
-	ctrlr->vcprop.vs.bits.mjr = 1;
-	ctrlr->vcprop.vs.bits.mnr = 4;
+	/* Version Supported: 2.0 */
+	ctrlr->vcprop.vs.bits.mjr = 2;
+	ctrlr->vcprop.vs.bits.mnr = 0;
 	ctrlr->vcprop.vs.bits.ter = 0;
 
 	ctrlr->vcprop.cc.raw = 0;
