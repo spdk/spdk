@@ -94,6 +94,9 @@ struct file_disk {
 	bool			block_size_override;
 	bool			readonly;
 	bool			fallocate;
+
+	delete_aio_bdev_complete  delete_cb_fn;
+	void                     *delete_cb_arg;
 };
 
 /* For user space reaping of completions */
@@ -368,6 +371,11 @@ bdev_aio_destruct_cb(void *io_device)
 	if (rc < 0) {
 		AIO_FDISK_ERRLOG(fdisk, "bdev_aio_close() failed\n");
 	}
+
+	if (fdisk->delete_cb_fn) {
+		fdisk->delete_cb_fn(fdisk->delete_cb_arg, 0);
+	}
+
 	aio_free_disk(fdisk);
 }
 
@@ -1127,40 +1135,34 @@ exit:
 	return rc;
 }
 
-struct delete_aio_bdev_ctx {
-	delete_aio_bdev_complete cb_fn;
-	void *cb_arg;
-};
-
 static void
-aio_bdev_unregister_cb(void *arg, int bdeverrno)
+dummy_aio_bdev_unregister_cb(void *arg, int bdeverrno)
 {
-	struct delete_aio_bdev_ctx *ctx = arg;
-
-	ctx->cb_fn(ctx->cb_arg, bdeverrno);
-	free(ctx);
 }
 
 void
 bdev_aio_delete(const char *name, delete_aio_bdev_complete cb_fn, void *cb_arg)
 {
-	struct delete_aio_bdev_ctx *ctx;
+	struct spdk_bdev *bdev;
+	struct file_disk *fdisk;
 	int rc;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		cb_fn(cb_arg, -ENOMEM);
-		return;
+	rc = spdk_bdev_unregister_by_name(name, &aio_if, dummy_aio_bdev_unregister_cb, NULL);
+	if (rc == 0) {
+		bdev = spdk_bdev_get_by_name(name);
+		if (bdev && bdev->module == &aio_if) {
+			fdisk = fdisk_from_bdev(bdev);
+			if (!fdisk->delete_cb_fn) {
+				fdisk->delete_cb_fn = cb_fn;
+				fdisk->delete_cb_arg = cb_arg;
+				return;
+			}
+		}
 	}
 
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-	rc = spdk_bdev_unregister_by_name(name, &aio_if, aio_bdev_unregister_cb, ctx);
-	if (rc != 0) {
-		aio_bdev_unregister_cb(ctx, rc);
-	}
+	cb_fn(cb_arg, rc);
 }
 
 static int
