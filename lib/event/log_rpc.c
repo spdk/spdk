@@ -28,11 +28,11 @@ free_rpc_log_level(struct rpc_log_level *p)
 	free(p->level);
 }
 
-static const struct spdk_json_object_decoder rpc_log_flag_decoders[] = {
+static const struct spdk_json_object_decoder rpc_log_set_flag_decoders[] = {
 	{"flag", offsetof(struct rpc_log_flag, flag), spdk_json_decode_string},
 };
 
-static const struct spdk_json_object_decoder rpc_log_level_decoders[] = {
+static const struct spdk_json_object_decoder rpc_log_set_print_level_decoders[] = {
 	{"level", offsetof(struct rpc_log_level, level), spdk_json_decode_string},
 };
 
@@ -77,8 +77,8 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 	struct rpc_log_level req = {};
 	int level;
 
-	if (spdk_json_decode_object(params, rpc_log_level_decoders,
-				    SPDK_COUNTOF(rpc_log_level_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_set_print_level_decoders,
+				    SPDK_COUNTOF(rpc_log_set_print_level_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -138,8 +138,8 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 	struct rpc_log_level req = {};
 	int level;
 
-	if (spdk_json_decode_object(params, rpc_log_level_decoders,
-				    SPDK_COUNTOF(rpc_log_level_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_set_print_level_decoders,
+				    SPDK_COUNTOF(rpc_log_set_print_level_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -197,8 +197,8 @@ rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_log_flag req = {};
 
-	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
-				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_set_flag_decoders,
+				    SPDK_COUNTOF(rpc_log_set_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -224,8 +224,8 @@ rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_log_flag req = {};
 
-	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
-				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_set_flag_decoders,
+				    SPDK_COUNTOF(rpc_log_set_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");

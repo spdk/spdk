@@ -29,7 +29,7 @@ struct rpc_ftl_basic_param {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_ftl_basic_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_ftl_get_stats_decoders[] = {
 	{"name", offsetof(struct rpc_ftl_basic_param, name), spdk_json_decode_string},
 };
 
@@ -276,7 +276,8 @@ rpc_bdev_ftl_get_stats(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_ftl_basic_decoders, SPDK_COUNTOF(rpc_ftl_basic_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_ftl_get_stats_decoders,
+				    SPDK_COUNTOF(rpc_bdev_ftl_get_stats_decoders),
 				    &attrs)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		free(ctx);
@@ -307,7 +308,8 @@ rpc_bdev_ftl_get_properties(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_ftl_basic_param attrs = {};
 
-	if (spdk_json_decode_object(params, rpc_ftl_basic_decoders, SPDK_COUNTOF(rpc_ftl_basic_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_ftl_get_stats_decoders,
+				    SPDK_COUNTOF(rpc_bdev_ftl_get_stats_decoders),
 				    &attrs)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		free(attrs.name);

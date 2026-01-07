@@ -20,7 +20,7 @@ free_rpc_tpoint_group(struct rpc_tpoint_group *p)
 	free(p->name);
 }
 
-static const struct spdk_json_object_decoder rpc_tpoint_mask_decoders[] = {
+static const struct spdk_json_object_decoder rpc_trace_set_tpoint_mask_decoders[] = {
 	{"name", offsetof(struct rpc_tpoint_group, name), spdk_json_decode_string},
 	{"tpoint_mask", offsetof(struct rpc_tpoint_group, tpoint_mask), spdk_json_decode_uint64, true},
 };
@@ -32,8 +32,8 @@ rpc_trace_set_tpoint_mask(struct spdk_jsonrpc_request *request,
 	struct rpc_tpoint_group req = {};
 	uint64_t tpoint_group_mask = 0;
 
-	if (spdk_json_decode_object(params, rpc_tpoint_mask_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_mask_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_set_tpoint_mask_decoders,
+				    SPDK_COUNTOF(rpc_trace_set_tpoint_mask_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -69,8 +69,8 @@ rpc_trace_clear_tpoint_mask(struct spdk_jsonrpc_request *request,
 	struct rpc_tpoint_group req = {};
 	uint64_t tpoint_group_mask = 0;
 
-	if (spdk_json_decode_object(params, rpc_tpoint_mask_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_mask_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_set_tpoint_mask_decoders,
+				    SPDK_COUNTOF(rpc_trace_set_tpoint_mask_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -99,7 +99,7 @@ invalid:
 SPDK_RPC_REGISTER("trace_clear_tpoint_mask", rpc_trace_clear_tpoint_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_tpoint_group_decoders[] = {
+static const struct spdk_json_object_decoder rpc_trace_enable_tpoint_group_decoders[] = {
 	{"name", offsetof(struct rpc_tpoint_group, name), spdk_json_decode_string},
 };
 
@@ -109,8 +109,8 @@ rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_tpoint_group req = {};
 
-	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_enable_tpoint_group_decoders,
+				    SPDK_COUNTOF(rpc_trace_enable_tpoint_group_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -142,8 +142,8 @@ rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_tpoint_group req = {};
 
-	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_enable_tpoint_group_decoders,
+				    SPDK_COUNTOF(rpc_trace_enable_tpoint_group_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}

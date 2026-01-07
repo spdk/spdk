@@ -23,7 +23,7 @@ free_rpc_bdev_ocf_name(struct rpc_bdev_ocf_name *r)
 }
 
 /* Common function to decode the name input parameter for RPC methods using bdev name only. */
-static const struct spdk_json_object_decoder rpc_bdev_ocf_name_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_ocf_delete_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_ocf_name, name), spdk_json_decode_string},
 };
 
@@ -117,8 +117,8 @@ rpc_bdev_ocf_delete(struct spdk_jsonrpc_request *request,
 	struct vbdev_ocf *vbdev;
 	int status;
 
-	status = spdk_json_decode_object(params, rpc_bdev_ocf_name_decoders,
-					 SPDK_COUNTOF(rpc_bdev_ocf_name_decoders),
+	status = spdk_json_decode_object(params, rpc_bdev_ocf_delete_decoders,
+					 SPDK_COUNTOF(rpc_bdev_ocf_delete_decoders),
 					 &req);
 	if (status) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -198,8 +198,8 @@ rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	if (spdk_json_decode_object(params, rpc_bdev_ocf_name_decoders,
-				    SPDK_COUNTOF(rpc_bdev_ocf_name_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_ocf_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_ocf_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -263,8 +263,8 @@ rpc_bdev_ocf_reset_stats(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	if (spdk_json_decode_object(params, rpc_bdev_ocf_name_decoders,
-				    SPDK_COUNTOF(rpc_bdev_ocf_name_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_ocf_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_ocf_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -556,8 +556,8 @@ rpc_bdev_ocf_flush_start(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	status = spdk_json_decode_object(params, rpc_bdev_ocf_name_decoders,
-					 SPDK_COUNTOF(rpc_bdev_ocf_name_decoders),
+	status = spdk_json_decode_object(params, rpc_bdev_ocf_delete_decoders,
+					 SPDK_COUNTOF(rpc_bdev_ocf_delete_decoders),
 					 &req);
 	if (status) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -598,8 +598,8 @@ rpc_bdev_ocf_flush_status(struct spdk_jsonrpc_request *request,
 	struct vbdev_ocf *vbdev;
 	int status;
 
-	status = spdk_json_decode_object(params, rpc_bdev_ocf_name_decoders,
-					 SPDK_COUNTOF(rpc_bdev_ocf_name_decoders),
+	status = spdk_json_decode_object(params, rpc_bdev_ocf_delete_decoders,
+					 SPDK_COUNTOF(rpc_bdev_ocf_delete_decoders),
 					 &req);
 	if (status) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
