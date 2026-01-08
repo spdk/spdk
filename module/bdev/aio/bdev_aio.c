@@ -1150,7 +1150,7 @@ bdev_aio_delete(const char *name, delete_aio_bdev_complete cb_fn, void *cb_arg)
 	assert(spdk_thread_is_app_thread(NULL));
 
 	rc = spdk_bdev_unregister_by_name(name, &aio_if, dummy_aio_bdev_unregister_cb, NULL);
-	if (rc == 0 && cb_fn) {
+	if ((rc == -ENODEV || rc == 0) && cb_fn) {
 		bdev = spdk_bdev_get_by_name(name);
 		if (bdev && bdev->module == &aio_if) {
 			fdisk = fdisk_from_bdev(bdev);
