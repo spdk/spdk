@@ -143,3 +143,10 @@ NMIC, RESCAP, FPI and NSATTR bits are updated to NVMe 2.2 definitions. The old b
 `spdk_nvmf_ctrlr_connect`
 
 spdk_nvmf_ctrlr_connect() is deprecated and will be removed in 26.05 release.
+
+### app/spdk_nvme_perf
+
+#### perf_g_option
+
+The `-G` command line option is deprecated and will be removed in the v26.05 release.
+Use `--log-level debug -T nvme` instead.

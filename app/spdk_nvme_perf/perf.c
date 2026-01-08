@@ -314,6 +314,8 @@ struct _trid_entry {
 	TAILQ_ENTRY(_trid_entry) tailq;
 };
 
+SPDK_LOG_DEPRECATION_REGISTER(perf_g_option, "perf -G option", "v26.05", 0);
+
 #define MAX_TRID_ENTRY 256
 static struct _trid_entry g_trids[MAX_TRID_ENTRY];
 static TAILQ_HEAD(, _trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
@@ -2652,6 +2654,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			usage(argv[0]);
 			return 1;
 #else
+			SPDK_LOG_DEPRECATED(perf_g_option);
 			spdk_log_set_flag("nvme");
 			debug_implied = true;
 			break;
