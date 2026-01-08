@@ -26,6 +26,31 @@
 #define SECTOR_SHIFT 9
 #endif
 
+#define URING_LOG_FMT "%s,uring:%p,filename:%s"
+#define URING_LOG_ARGS(uring) \
+  (uring)->bdev.name, \
+  (uring), \
+  (uring)->filename
+
+#define URING_LOG(type, uring, format, ...) do { \
+	SPDK_##type##LOG("["URING_LOG_FMT"] " format, URING_LOG_ARGS(uring), ##__VA_ARGS__); \
+} while (0)
+
+#define URING_LOG2(type, component, uring, format, ...) do { \
+	SPDK_##type##LOG(component, "["URING_LOG_FMT"] " format, URING_LOG_ARGS(uring), ##__VA_ARGS__); \
+} while (0)
+
+#define URING_ERRLOG(uring, format, ...) URING_LOG(ERR, uring, format, ##__VA_ARGS__)
+#define URING_WARNLOG(uring, format, ...) URING_LOG(WARN, uring, format, ##__VA_ARGS__)
+#define URING_NOTICELOG(uring, format, ...) URING_LOG(NOTICE, uring, format, ##__VA_ARGS__)
+#define URING_INFOLOG(uring, format, ...) URING_LOG2(INFO, uring, uring, format, ##__VA_ARGS__)
+
+#ifdef DEBUG
+#define URING_DEBUGLOG(uring, format, ...) URING_LOG2(DEBUG, uring, uring, format, ##__VA_ARGS__)
+#else
+#define URING_DEBUGLOG(...) do { } while (0)
+#endif
+
 struct bdev_uring_zoned_dev {
 	uint64_t		num_zones;
 	uint32_t		zone_shift;
@@ -96,8 +121,7 @@ bdev_uring_open(struct bdev_uring *uring)
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(uring->filename, O_RDWR | O_NOATIME);
 		if (fd < 0) {
-			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
-				    uring->filename, errno, spdk_strerror(errno));
+			URING_ERRLOG(uring, "open() failed, rc %d: %s\n", fd, spdk_strerror(errno));
 			uring->fd = -1;
 			return -1;
 		}
@@ -138,16 +162,13 @@ bdev_uring_rescan(const char *name)
 	blockcnt = uring_size / bdev->blocklen;
 
 	if (bdev->blockcnt != blockcnt) {
-		SPDK_NOTICELOG("URING device is resized: bdev name %s, old block count %" PRIu64
-			       ", new block count %"
-			       PRIu64 "\n",
-			       uring->filename,
-			       bdev->blockcnt,
-			       blockcnt);
+		URING_NOTICELOG(uring, "URING device is resized: old block count %" PRIu64 ", new block count %"
+				PRIu64 "\n",
+				bdev->blockcnt,
+				blockcnt);
 		rc = spdk_bdev_notify_blockcnt_change(bdev, blockcnt);
 		if (rc != 0) {
-			SPDK_ERRLOG("Could not change num blocks for uring bdev: name %s, errno: %d.\n",
-				    uring->filename, rc);
+			URING_ERRLOG(uring, "Could not change num blocks, rc: %d\n", rc);
 			goto exit;
 		}
 	}
@@ -168,8 +189,8 @@ bdev_uring_close(struct bdev_uring *uring)
 
 	rc = close(uring->fd);
 	if (rc < 0) {
-		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
-			    uring->fd, errno, spdk_strerror(errno));
+		URING_ERRLOG(uring, "close() failed (fd=%d), rc %d: %s\n",
+			     uring->fd, rc, spdk_strerror(errno));
 		return -1;
 	}
 
@@ -189,7 +210,7 @@ bdev_uring_readv(struct bdev_uring *uring, struct spdk_io_channel *ch,
 
 	sqe = io_uring_get_sqe(&group_ch->uring);
 	if (!sqe) {
-		SPDK_DEBUGLOG(uring, "get sqe failed as out of resource\n");
+		URING_DEBUGLOG(uring, "get sqe failed as out of resource\n");
 		return -ENOMEM;
 	}
 
@@ -198,8 +219,7 @@ bdev_uring_readv(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	uring_task->len = nbytes;
 	uring_task->ch = uring_ch;
 
-	SPDK_DEBUGLOG(uring, "read %d iovs size %lu to off: %#lx\n",
-		      iovcnt, nbytes, offset);
+	URING_DEBUGLOG(uring, "read %d iovs size %lu to off: %#lx\n", iovcnt, nbytes, offset);
 
 	group_ch->io_pending++;
 	return nbytes;
@@ -216,7 +236,7 @@ bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
 
 	sqe = io_uring_get_sqe(&group_ch->uring);
 	if (!sqe) {
-		SPDK_DEBUGLOG(uring, "get sqe failed as out of resource\n");
+		URING_DEBUGLOG(uring, "get sqe failed as out of resource\n");
 		return -ENOMEM;
 	}
 
@@ -225,8 +245,7 @@ bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	uring_task->len = nbytes;
 	uring_task->ch = uring_ch;
 
-	SPDK_DEBUGLOG(uring, "write %d iovs size %lu from off: %#lx\n",
-		      iovcnt, nbytes, offset);
+	URING_DEBUGLOG(uring, "write %d iovs size %lu from off: %#lx\n", iovcnt, nbytes, offset);
 
 	group_ch->io_pending++;
 	return nbytes;
@@ -240,9 +259,6 @@ bdev_uring_destruct(void *ctx)
 
 	TAILQ_REMOVE(&g_uring_bdev_head, uring, link);
 	rc = bdev_uring_close(uring);
-	if (rc < 0) {
-		SPDK_ERRLOG("bdev_uring_close() failed\n");
-	}
 	spdk_io_device_unregister(uring, NULL);
 	uring_free_bdev(uring);
 	return rc;
@@ -273,7 +289,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 			if (cqe->res == -EAGAIN || cqe->res == -EWOULDBLOCK) {
 				status = SPDK_BDEV_IO_STATUS_NOMEM;
 			} else {
-				SPDK_ERRLOG("I/O failed with error %d\n", cqe->res);
+				URING_ERRLOG(uring_from_bdev(bdev_io->bdev), "I/O failed with error %d\n", cqe->res);
 				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
@@ -355,7 +371,7 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 					bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	default:
-		SPDK_ERRLOG("Wrong io type\n");
+		URING_ERRLOG(uring, "Wrong io type\n");
 		break;
 	}
 
@@ -366,7 +382,8 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 #ifdef SPDK_CONFIG_URING_ZNS
 static int
-bdev_uring_fill_zone_type(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
+bdev_uring_fill_zone_type(struct bdev_uring *uring, struct spdk_bdev_zone_info *zone_info,
+			  struct blk_zone *zones_rep)
 {
 	switch (zones_rep->type) {
 	case BLK_ZONE_TYPE_CONVENTIONAL:
@@ -379,14 +396,15 @@ bdev_uring_fill_zone_type(struct spdk_bdev_zone_info *zone_info, struct blk_zone
 		zone_info->type = SPDK_BDEV_ZONE_TYPE_SEQWP;
 		break;
 	default:
-		SPDK_ERRLOG("Invalid zone type: %#x in zone report\n", zones_rep->type);
+		URING_ERRLOG(uring, "Invalid zone type: %#x in zone report\n", zones_rep->type);
 		return -EIO;
 	}
 	return 0;
 }
 
 static int
-bdev_uring_fill_zone_state(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
+bdev_uring_fill_zone_state(struct bdev_uring *uring, struct spdk_bdev_zone_info *zone_info,
+			   struct blk_zone *zones_rep)
 {
 	switch (zones_rep->cond) {
 	case BLK_ZONE_COND_EMPTY:
@@ -414,7 +432,7 @@ bdev_uring_fill_zone_state(struct spdk_bdev_zone_info *zone_info, struct blk_zon
 		zone_info->state = SPDK_BDEV_ZONE_STATE_NOT_WP;
 		break;
 	default:
-		SPDK_ERRLOG("Invalid zone state: %#x in zone report\n", zones_rep->cond);
+		URING_ERRLOG(uring, "Invalid zone state: %#x in zone report\n", zones_rep->cond);
 		return -EIO;
 	}
 	return 0;
@@ -451,8 +469,8 @@ bdev_uring_zone_management_op(struct spdk_bdev_io *bdev_io)
 	range.nr_sectors = (uring->bdev.zone_size << uring->zd.lba_shift);
 
 	if (ioctl(uring->fd, zone_mgmt_op, &range)) {
-		SPDK_ERRLOG("Ioctl BLKXXXZONE(%#x) failed errno: %d(%s)\n",
-			    bdev_io->u.zone_mgmt.zone_action, errno, strerror(errno));
+		URING_ERRLOG(uring, "Ioctl BLKXXXZONE(%#x) failed errno: %d(%s)\n",
+			     bdev_io->u.zone_mgmt.zone_action, errno, strerror(errno));
 		return -EINVAL;
 	}
 
@@ -494,8 +512,8 @@ bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
 		rep->nr_zones = num_zones;
 
 		if (ioctl(uring->fd, BLKREPORTZONE, rep)) {
-			SPDK_ERRLOG("Ioctl BLKREPORTZONE failed errno: %d(%s)\n",
-				    errno, strerror(errno));
+			URING_ERRLOG(uring, "Ioctl BLKREPORTZONE failed errno: %d(%s)\n",
+				     errno, strerror(errno));
 			free(rep);
 			return -EINVAL;
 		}
@@ -509,8 +527,8 @@ bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
 			zone_info->write_pointer = ((zones + i)->wp >> shift);
 			zone_info->capacity = ((zones + i)->capacity >> shift);
 
-			bdev_uring_fill_zone_state(zone_info, zones + i);
-			bdev_uring_fill_zone_type(zone_info, zones + i);
+			bdev_uring_fill_zone_state(uring, zone_info, zones + i);
+			bdev_uring_fill_zone_type(uring, zone_info, zones + i);
 
 			zone_id = ((zones + i)->start + (zones + i)->len) >> shift;
 			zone_info++;
@@ -550,7 +568,7 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 	/* strdup() because basename() may modify the passed parameter */
 	filename_dup = strdup(filename);
 	if (filename_dup == NULL) {
-		SPDK_ERRLOG("Could not duplicate string %s\n", filename);
+		URING_ERRLOG(uring, "Could not duplicate string %s\n", filename);
 		return -1;
 	}
 
@@ -559,19 +577,19 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 	retval = spdk_read_sysfs_attribute(&str, "%s", sysfs_path);
 	/* Check if this is a zoned block device */
 	if (retval < 0) {
-		SPDK_ERRLOG("Unable to open file %s. errno: %d\n", sysfs_path, retval);
+		URING_ERRLOG(uring, "Unable to open file %s. errno: %d\n", sysfs_path, retval);
 	} else if (strcmp(str, "host-aware") == 0 || strcmp(str, "host-managed") == 0) {
 		/* Only host-aware & host-managed zns devices */
 		uring->bdev.zoned = true;
 
 		if (ioctl(uring->fd, BLKGETNRZONES, &zinfo)) {
-			SPDK_ERRLOG("ioctl BLKNRZONES failed %d (%s)\n", errno, strerror(errno));
+			URING_ERRLOG(uring, "ioctl BLKNRZONES failed %d (%s)\n", errno, strerror(errno));
 			goto err_ret;
 		}
 		uring->zd.num_zones = zinfo;
 
 		if (ioctl(uring->fd, BLKGETZONESZ, &zinfo)) {
-			SPDK_ERRLOG("ioctl BLKGETZONESZ failed %d (%s)\n", errno, strerror(errno));
+			URING_ERRLOG(uring, "ioctl BLKGETZONESZ failed %d (%s)\n", errno, strerror(errno));
 			goto err_ret;
 		}
 
@@ -581,14 +599,14 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 
 		retval = spdk_read_sysfs_attribute_uint32(&val, "/sys/block/%s/queue/max_open_zones", base);
 		if (retval < 0) {
-			SPDK_ERRLOG("Failed to get max open zones %d (%s)\n", retval, strerror(-retval));
+			URING_ERRLOG(uring, "Failed to get max open zones %d (%s)\n", retval, strerror(-retval));
 			goto err_ret;
 		}
 		uring->bdev.max_open_zones = uring->bdev.optimal_open_zones = val;
 
 		retval = spdk_read_sysfs_attribute_uint32(&val, "/sys/block/%s/queue/max_active_zones", base);
 		if (retval < 0) {
-			SPDK_ERRLOG("Failed to get max active zones %d (%s)\n", retval, strerror(-retval));
+			URING_ERRLOG(uring, "Failed to get max active zones %d (%s)\n", retval, strerror(-retval));
 			goto err_ret;
 		}
 		uring->bdev.max_active_zones = val;
@@ -802,7 +820,6 @@ create_uring_bdev(const struct bdev_uring_opts *opts)
 	}
 
 	if (bdev_uring_open(uring)) {
-		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", opts->filename, uring->fd, errno);
 		goto error_return;
 	}
 
@@ -817,30 +834,30 @@ create_uring_bdev(const struct bdev_uring_opts *opts)
 	if (block_size == 0) {
 		/* User did not specify block size - use autodetected block size. */
 		if (detected_block_size == 0) {
-			SPDK_ERRLOG("Block size could not be auto-detected\n");
+			URING_ERRLOG(uring, "Block size could not be auto-detected\n");
 			goto error_return;
 		}
 		block_size = detected_block_size;
 	} else {
 		if (block_size < detected_block_size) {
-			SPDK_ERRLOG("Specified block size %" PRIu32 " is smaller than "
-				    "auto-detected block size %" PRIu32 "\n",
-				    block_size, detected_block_size);
-			goto error_return;
-		} else if (detected_block_size != 0 && block_size != detected_block_size) {
-			SPDK_WARNLOG("Specified block size %" PRIu32 " does not match "
+			URING_ERRLOG(uring, "Specified block size %" PRIu32 " is smaller than "
 				     "auto-detected block size %" PRIu32 "\n",
 				     block_size, detected_block_size);
+			goto error_return;
+		} else if (detected_block_size != 0 && block_size != detected_block_size) {
+			URING_WARNLOG(uring, "Specified block size %" PRIu32 " does not match "
+				      "auto-detected block size %" PRIu32 "\n",
+				      block_size, detected_block_size);
 		}
 	}
 
 	if (block_size < 512) {
-		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be at least 512).\n", block_size);
+		URING_ERRLOG(uring, "Invalid block size %" PRIu32 " (must be at least 512).\n", block_size);
 		goto error_return;
 	}
 
 	if (!spdk_u32_is_pow2(block_size)) {
-		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be a power of 2.)\n", block_size);
+		URING_ERRLOG(uring, "Invalid block size %" PRIu32 " (must be a power of 2.)\n", block_size);
 		goto error_return;
 	}
 
@@ -853,8 +870,8 @@ create_uring_bdev(const struct bdev_uring_opts *opts)
 	}
 
 	if (bdev_size % uring->bdev.blocklen != 0) {
-		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
-			    bdev_size, uring->bdev.blocklen);
+		URING_ERRLOG(uring, "Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
+			     bdev_size, uring->bdev.blocklen);
 		goto error_return;
 	}
 
