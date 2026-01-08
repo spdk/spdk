@@ -787,6 +787,11 @@ create_uring_bdev(const struct bdev_uring_opts *opts)
 		goto error_return;
 	}
 
+	uring->bdev.name = strdup(opts->name);
+	if (!uring->bdev.name) {
+		goto error_return;
+	}
+
 	if (bdev_uring_open(uring)) {
 		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", opts->filename, uring->fd, errno);
 		goto error_return;
@@ -794,10 +799,6 @@ create_uring_bdev(const struct bdev_uring_opts *opts)
 
 	bdev_size = spdk_fd_get_size(uring->fd);
 
-	uring->bdev.name = strdup(opts->name);
-	if (!uring->bdev.name) {
-		goto error_return;
-	}
 	uring->bdev.product_name = "URING bdev";
 	uring->bdev.module = &uring_if;
 
