@@ -249,6 +249,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 	struct io_uring_cqe *cqe;
 	struct bdev_uring_task *uring_task;
 	enum spdk_bdev_io_status status;
+	struct spdk_bdev_io *bdev_io;
 
 	count = 0;
 	for (i = 0; i < max; i++) {
@@ -261,6 +262,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 		assert(cqe != NULL);
 
 		uring_task = (struct bdev_uring_task *)cqe->user_data;
+		bdev_io = spdk_bdev_io_from_ctx(uring_task);
 		if (spdk_unlikely(cqe->res != (signed)uring_task->len)) {
 			if (cqe->res == -EAGAIN || cqe->res == -EWOULDBLOCK) {
 				status = SPDK_BDEV_IO_STATUS_NOMEM;
@@ -274,7 +276,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 
 		uring_task->ch->group_ch->io_inflight--;
 		io_uring_cqe_seen(ring, cqe);
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(uring_task), status);
+		spdk_bdev_io_complete(bdev_io, status);
 		count++;
 	}
 
