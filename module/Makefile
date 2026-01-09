@@ -64,7 +64,7 @@ $(KEYRING_MODULES_PKGCONFIG): $(CONFIG_MK)
 	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_modules.sh keyring "$(KEYRING_MODULES_LIST:%=spdk_%)" > $@
 
 $(SYSLIBS_PKGCONFIG):
-	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh "" "$(PRIVATE_SYSLIBS)" System spdk_syslibs > $@
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh "$(PRIVATE_SYSLIBS)" "" System spdk_syslibs > $@
 
 all: $(DIRS-y) $(MODULES_PKGCONFIG)
 
