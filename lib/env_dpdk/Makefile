@@ -21,19 +21,26 @@ SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_env_dpdk.map)
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
 
 LIBDPDK_PKGCONFIG = $(call pkgconfig_filename,spdk_dpdklibs)
+LIBDPDK_PKGCONFIG_INST = $(call pkgconfig_filename,tmp/spdk_dpdklibs)
 UNIQUE_DPDK_LIB_LIST = $(call _uniq,$(DPDK_LIB_LIST))
 
+# Build-time version with -L path to build directory
 $(LIBDPDK_PKGCONFIG): $(PKGCONFIG) $(PKGCONFIG_INST)
 	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh \
 		"-L$(DPDK_LIB_DIR) $(UNIQUE_DPDK_LIB_LIST:%=-l%)" "" DPDK spdk_dpdklibs > $@
 	$(Q)sed -i.bak '5s,.*,Requires: $(DEPDIRS-$(LIBNAME):%=spdk_%) spdk_dpdklibs,' $(PKGCONFIG) ; rm $(PKGCONFIG).bak
 	$(Q)sed -i.bak '5s,.*,Requires: $(DEPDIRS-$(LIBNAME):%=spdk_%) spdk_dpdklibs,' $(PKGCONFIG_INST) ; rm $(PKGCONFIG_INST).bak
 
-_install_dpdklibs: $(LIBDPDK_PKGCONFIG)
-	@$(call pkgconfig_install,$(LIBDPDK_PKGCONFIG))
+# Install-time version without -L path (libraries should be in standard locations)
+$(LIBDPDK_PKGCONFIG_INST): $(PKGCONFIG) $(PKGCONFIG_INST)
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh \
+		"$(UNIQUE_DPDK_LIB_LIST:%=-l%)" "" DPDK spdk_dpdklibs > $@
 
-_uninstall_dpdklibs: $(LIBDPDK_PKGCONFIG)
-	@$(call pkgconfig_uninstall,$(LIBDPDK_PKGCONFIG))
+_install_dpdklibs: $(LIBDPDK_PKGCONFIG_INST)
+	@$(call pkgconfig_install,$(LIBDPDK_PKGCONFIG_INST))
+
+_uninstall_dpdklibs: $(LIBDPDK_PKGCONFIG_INST)
+	@$(call pkgconfig_uninstall,$(LIBDPDK_PKGCONFIG_INST))
 
 all: $(LIBDPDK_PKGCONFIG)
 install: _install_dpdklibs
