@@ -80,6 +80,8 @@ struct bdev_uring {
 	char			*filename;
 	int			fd;
 	TAILQ_ENTRY(bdev_uring)  link;
+
+	bool			hot_remove_in_progress;
 };
 
 static int bdev_uring_init(void);
@@ -133,6 +135,34 @@ bdev_uring_open(struct bdev_uring *uring)
 }
 
 static void
+bdev_uring_hot_remove(void *ctx)
+{
+	char *name = ctx;
+
+	delete_uring_bdev(name, NULL, NULL);
+	free(name);
+}
+
+static void
+bdev_uring_try_hot_remove(struct bdev_uring *uring)
+{
+	char	*name;
+
+	if (__atomic_test_and_set(&uring->hot_remove_in_progress, __ATOMIC_RELAXED)) {
+		return;
+	}
+
+	name = strdup(uring->bdev.name);
+	if (!name) {
+		__atomic_clear(&uring->hot_remove_in_progress, __ATOMIC_RELAXED);
+		return;
+	}
+
+	URING_ERRLOG(uring, "hot-remove detected, unregistering bdev...\n");
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), bdev_uring_hot_remove, name);
+}
+
+static void
 dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
 }
@@ -160,6 +190,11 @@ bdev_uring_rescan(const char *name)
 	uring = uring_from_bdev(bdev);
 	uring_size = spdk_fd_get_size(uring->fd);
 	blockcnt = uring_size / bdev->blocklen;
+
+	if (uring_size == 0) {
+		bdev_uring_try_hot_remove(uring);
+		goto exit;
+	}
 
 	if (bdev->blockcnt != blockcnt) {
 		URING_NOTICELOG(uring, "URING device is resized: old block count %" PRIu64 ", new block count %"
@@ -272,6 +307,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 	struct bdev_uring_task *uring_task;
 	enum spdk_bdev_io_status status;
 	struct spdk_bdev_io *bdev_io;
+	struct bdev_uring *uring;
 
 	count = 0;
 	for (i = 0; i < max; i++) {
@@ -287,10 +323,28 @@ bdev_uring_reap(struct io_uring *ring, int max)
 		bdev_io = spdk_bdev_io_from_ctx(uring_task);
 		rc = cqe->res;
 		if (spdk_unlikely(rc != (signed)uring_task->len)) {
+			/* When the block device device is detached from the system, IOs fail with res of 0.
+			 * In this case the ioctl BLKGETSIZE64 yields a device size of 0.
+			 * Note that re-attaching the device will not correct this because the existing fd is
+			 * still invalid.
+			 * When the fd is a file and the mount backing the file is detached, IOs fail
+			 * with a res of -EIO and the ioctl BLKGETSIZE64 yields a device size of 0.
+			 */
+			uring = uring_from_bdev(bdev_io->bdev);
+			if (rc == -EIO || rc >= 0) {
+				if (spdk_fd_get_size(uring->fd) == 0) {
+					rc = -ENODEV;
+				}
+			}
+
 			if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 				status = SPDK_BDEV_IO_STATUS_NOMEM;
 			} else {
-				URING_ERRLOG(uring_from_bdev(bdev_io->bdev), "I/O failed with error %d\n", rc);
+				if (rc == -ENODEV) {
+					bdev_uring_try_hot_remove(uring);
+				} else {
+					URING_ERRLOG(uring, "I/O failed with error %d\n", rc);
+				}
 				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
@@ -913,7 +967,9 @@ uring_bdev_unregister_cb(void *arg, int bdeverrno)
 {
 	struct delete_uring_bdev_ctx *ctx = arg;
 
-	ctx->cb_fn(ctx->cb_arg, bdeverrno);
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, bdeverrno);
+	}
 	free(ctx);
 }
 
@@ -925,7 +981,9 @@ delete_uring_bdev(const char *name, spdk_delete_uring_complete cb_fn, void *cb_a
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
-		cb_fn(cb_arg, -ENOMEM);
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOMEM);
+		}
 		return;
 	}
 
