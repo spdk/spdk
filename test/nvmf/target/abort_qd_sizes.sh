@@ -40,19 +40,25 @@ rabort() {
 }
 
 spdk_target() {
-	local name=spdk_target
+	local name=spdk_target bdev_name=spdk_target
 
-	rpc_cmd bdev_nvme_attach_controller -t pcie -a "$nvme" -b "$name"
+	nvme=$(get_first_nvme_bdf) || true
+	if [[ -z "$nvme" ]]; then
+		rpc_cmd bdev_malloc_create -b "$name" 64 512
+	else
+		rpc_cmd bdev_nvme_attach_controller -t pcie -a "$nvme" -b "$name"
+		bdev_name="${bdev_name}n1"
+	fi
 
 	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 	rpc_cmd nvmf_create_subsystem "$NVME_SUBNQN" -a -s "$NVMF_SERIAL"
-	rpc_cmd nvmf_subsystem_add_ns "$NVME_SUBNQN" "${name}n1"
+	rpc_cmd nvmf_subsystem_add_ns "$NVME_SUBNQN" "${bdev_name}"
 	rpc_cmd nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 	rabort "$TEST_TRANSPORT" IPv4 "$NVMF_FIRST_TARGET_IP" "$NVMF_PORT" "$NVME_SUBNQN"
 
 	rpc_cmd nvmf_delete_subsystem "$NVME_SUBNQN"
-	rpc_cmd bdev_nvme_detach_controller "$name"
+	[[ -n "$nvme" ]] && rpc_cmd bdev_nvme_detach_controller "$name"
 
 	# Make sure we fully detached from the ctrl as vfio-pci won't be able to release the
 	# device otherwise - we can either wait a bit or simply kill the app. Since we don't
@@ -71,11 +77,6 @@ nvmftestinit
 nvmfappstart -m 0xf
 
 trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini || :; clean_kernel_target' SIGINT SIGTERM EXIT
-
-mapfile -t nvmes < <(nvme_in_userspace)
-((${#nvmes[@]} > 0))
-
-nvme=${nvmes[0]}
 
 run_test "spdk_target_abort" spdk_target
 if [[ "$SPDK_TEST_SKIP_NVMF_KERNEL_TESTS" -eq 0 ]]; then

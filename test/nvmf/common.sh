@@ -688,7 +688,12 @@ configure_kernel_target() {
 		block_in_use "${block##*/}" || nvme="/dev/${block##*/}"
 	done
 
-	[[ -b $nvme ]]
+	if [[ ! -b $nvme ]]; then
+		echo "INFO: Using ram disk for kernel target"
+		[[ ! -e /sys/module/brd ]] && modprobe brd rd_size=262144 max_part=1 rd_nr=1
+		nvme="/dev/ram0"
+		[[ ! -e $nvme ]]
+	fi
 
 	mkdir "$kernel_subsystem"
 	mkdir "$kernel_namespace"
