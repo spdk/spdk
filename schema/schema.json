@@ -18,13 +18,11 @@
         {
           "name": "muser",
           "type": "string",
-          "required": false,
           "description": "Bidirectional CHAP name"
         },
         {
           "name": "msecret",
           "type": "string",
-          "required": false,
           "description": "Bidirectional CHAP secret"
         }
       ]
@@ -69,13 +67,11 @@
         {
           "name": "lun_id",
           "type": "number",
-          "required": false,
           "description": "SCSI LUN ID"
         },
         {
           "name": "bdev_name",
           "type": "string",
-          "required": false,
           "description": "Backing bdev name"
         }
       ]
@@ -92,7 +88,6 @@
         {
           "name": "adrfam",
           "type": "string",
-          "required": false,
           "description": "Address family (\"IPv4\", \"IPv6\", \"IB\", or \"FC\")"
         },
         {
@@ -104,7 +99,6 @@
         {
           "name": "trsvcid",
           "type": "string",
-          "required": false,
           "description": "Transport service ID (required for RDMA or TCP)"
         }
       ]
@@ -115,7 +109,6 @@
         {
           "name": "nsid",
           "type": "number",
-          "required": false,
           "description": "Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID."
         },
         {
@@ -127,43 +120,36 @@
         {
           "name": "nguid",
           "type": "string",
-          "required": false,
           "description": "16-byte namespace globally unique identifier in hexadecimal (e.g. \"ABCDEF0123456789ABCDEF0123456789\")"
         },
         {
           "name": "eui64",
           "type": "string",
-          "required": false,
           "description": "8-byte namespace EUI-64 in hexadecimal (e.g. \"ABCDEF0123456789\")"
         },
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "RFC 4122 UUID (e.g. \"ceccf520-691e-4b46-9546-34af789907c5\")"
         },
         {
           "name": "ptpl_file",
           "type": "string",
-          "required": false,
           "description": "File path to save/restore persistent reservation information"
         },
         {
           "name": "anagrpid",
           "type": "number",
-          "required": false,
           "description": "ANA group ID. Default: Namespace ID."
         },
         {
           "name": "no_auto_visible",
           "type": "boolean",
-          "required": false,
           "description": "Do not auto make namespace visible to controllers"
         },
         {
           "name": "hide_metadata",
           "type": "boolean",
-          "required": false,
           "description": "Enable hide_metadata option to the bdev. Default: false"
         }
       ]
@@ -174,55 +160,46 @@
         {
           "name": "identify_ctrlr",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive"
         },
         {
           "name": "identify_uuid_list",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru identify UUID list (0x17 CNS) admin cmds for underlying NVMe device"
         },
         {
           "name": "get_log_page",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru get log page command handlers for underlying NVMe drive (for non-fabrics related log pages)"
         },
         {
           "name": "get_set_features",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru get/set_feature OPC handlers for underlying NVMe drive"
         },
         {
           "name": "sanitize",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru sanitize OPC handlers for underlying NVMe drive"
         },
         {
           "name": "security_send_recv",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru security send/recieve OPC handlers for underlying NVMe drive"
         },
         {
           "name": "fw_update",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru firmware download/commit OPC handlers for underlying NVMe drive"
         },
         {
           "name": "nvme_mi",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru NVMe-MI send/recieve OPC handlers for underlying NVMe drive"
         },
         {
           "name": "vendor_specific",
           "type": "boolean",
-          "required": false,
           "description": "If true, enables passthru command handlers for underlying NVMe drive for vendor specific cmds (OPCs: 0xC0-0xFF)"
         }
       ]
@@ -233,13 +210,11 @@
         {
           "name": "bdev",
           "type": "string",
-          "required": false,
           "description": "Backing bdev name or Null if bdev is hot-removed"
         },
         {
           "name": "readonly",
           "type": "boolean",
-          "required": false,
           "description": "True if controllers is readonly, false otherwise"
         }
       ]
@@ -250,25 +225,21 @@
         {
           "name": "target_name",
           "type": "string",
-          "required": false,
           "description": "Name of this SCSI target"
         },
         {
           "name": "id",
           "type": "number",
-          "required": false,
           "description": "Unique SPDK global SCSI target ID"
         },
         {
           "name": "scsi_dev_num",
           "type": "number",
-          "required": false,
           "description": "SCSI target ID initiator will see when scanning this controller"
         },
         {
           "name": "luns",
           "type": "array",
-          "required": false,
           "description": "array of objects describing @ref rpc_vhost_get_controllers_scsi_luns"
         }
       ]
@@ -279,13 +250,11 @@
         {
           "name": "id",
           "type": "number",
-          "required": false,
           "description": "SCSI LUN ID"
         },
         {
           "name": "bdev_name",
           "type": "string",
-          "required": false,
           "description": "Backing bdev name"
         }
       ]
@@ -296,13 +265,11 @@
         {
           "name": "nsid",
           "type": "number",
-          "required": false,
           "description": "Namespace ID"
         },
         {
           "name": "bdev",
           "type": "string",
-          "required": false,
           "description": "Backing bdev name"
         }
       ]
@@ -326,7 +293,6 @@
         {
           "name": "enabled",
           "type": "boolean",
-          "required": false,
           "description": "Enable (`true`) or disable (`false`) monitoring (omit this parameter to query the current state)"
         }
       ]
@@ -345,13 +311,11 @@
         {
           "name": "current",
           "type": "boolean",
-          "required": false,
           "description": "Get an array of RPC methods only callable in the current state."
         },
         {
           "name": "include_aliases",
           "type": "boolean",
-          "required": false,
           "description": "include RPC aliases"
         }
       ]
@@ -387,31 +351,26 @@
         {
           "name": "period",
           "type": "number",
-          "required": false,
           "description": "Scheduler period"
         },
         {
           "name": "load_limit",
           "type": "number",
-          "required": false,
           "description": "Thread load limit in % (dynamic only)"
         },
         {
           "name": "core_limit",
           "type": "number",
-          "required": false,
           "description": "Load limit on the core to be considered full (dynamic only)"
         },
         {
           "name": "core_busy",
           "type": "number",
-          "required": false,
           "description": "Indicates at what load on core scheduler should move threads to a different core (dynamic only)"
         },
         {
           "name": "mappings",
           "type": "array",
-          "required": false,
           "description": "Comma-separated list of thread:core mappings. Reserved for static scheduler"
         }
       ]
@@ -430,13 +389,11 @@
         {
           "name": "scheduling_core",
           "type": "number",
-          "required": false,
           "description": "Main core of scheduler. Idle threads move to the scheduling core. Can be set only once"
         },
         {
           "name": "isolated_core_mask",
           "type": "string",
-          "required": false,
           "description": "Select CPU cores to isolate from scheduling changes. Can be set only once"
         }
       ]
@@ -660,13 +617,11 @@
         {
           "name": "key2",
           "type": "string",
-          "required": false,
           "description": "Optional 2nd part of the key or a tweak in **hex** form"
         },
         {
           "name": "tweak_mode",
           "type": "string",
-          "required": false,
           "description": "Tweak mode to use: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default is SIMPLE_LBA"
         },
         {
@@ -694,7 +649,6 @@
         {
           "name": "key_name",
           "type": "string",
-          "required": false,
           "description": "If specified, return info about a specific key"
         }
       ]
@@ -716,31 +670,26 @@
         {
           "name": "small_cache_size",
           "type": "number",
-          "required": false,
           "description": "Size of the small iobuf cache"
         },
         {
           "name": "large_cache_size",
           "type": "number",
-          "required": false,
           "description": "Size of the large iobuf cache"
         },
         {
           "name": "task_count",
           "type": "number",
-          "required": false,
           "description": "Maximum number of tasks per IO channel"
         },
         {
           "name": "sequence_count",
           "type": "number",
-          "required": false,
           "description": "Maximum number of sequences per IO channel"
         },
         {
           "name": "buf_count",
           "type": "number",
-          "required": false,
           "description": "Maximum number of accel buffers per IO channel"
         }
       ]
@@ -767,19 +716,16 @@
         {
           "name": "count",
           "type": "number",
-          "required": false,
           "description": "Numbers of errors to inject on each IO channel (`UINT64_MAX` by default)."
         },
         {
           "name": "interval",
           "type": "number",
-          "required": false,
           "description": "Interval between injections."
         },
         {
           "name": "errcode",
           "type": "number",
-          "required": false,
           "description": "Error code to inject (only relevant for type=failure)."
         }
       ]
@@ -801,7 +747,6 @@
         {
           "name": "config_kernel_mode",
           "type": "boolean",
-          "required": false,
           "description": "If set, will use kernel idxd driver."
         }
       ]
@@ -843,31 +788,26 @@
         {
           "name": "qp_size",
           "type": "number",
-          "required": false,
           "description": "qpair size"
         },
         {
           "name": "num_requests",
           "type": "number",
-          "required": false,
           "description": "Size of the shared requests pool"
         },
         {
           "name": "allowed_devs",
           "type": "string",
-          "required": false,
           "description": "Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1"
         },
         {
           "name": "crypto_split_blocks",
           "type": "number",
-          "required": false,
           "description": "Number of data blocks to be processed in 1 crypto UMR. [0-65535], 0 means no limit"
         },
         {
           "name": "enable_driver",
           "type": "boolean",
-          "required": false,
           "description": "Enable mlx5 platform driver. Note: the driver supports reduced scope of operations, enable with care"
         }
       ]
@@ -878,7 +818,6 @@
         {
           "name": "level",
           "type": "string",
-          "required": false,
           "description": "Verbose level, one of \\\"total\\\", \\\"channel\\\" or \\\"device\\\""
         }
       ]
@@ -893,31 +832,26 @@
         {
           "name": "bdev_io_pool_size",
           "type": "number",
-          "required": false,
           "description": "Number of spdk_bdev_io structures in shared buffer pool"
         },
         {
           "name": "bdev_io_cache_size",
           "type": "number",
-          "required": false,
           "description": "Maximum number of spdk_bdev_io structures cached per thread"
         },
         {
           "name": "bdev_auto_examine",
           "type": "boolean",
-          "required": false,
           "description": "If set to false, the bdev layer will not examine every disks automatically"
         },
         {
           "name": "iobuf_small_cache_size",
           "type": "number",
-          "required": false,
           "description": "Size of the small iobuf per thread cache"
         },
         {
           "name": "iobuf_large_cache_size",
           "type": "number",
-          "required": false,
           "description": "Size of the large iobuf per thread cache"
         }
       ]
@@ -928,13 +862,11 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Block device name"
         },
         {
           "name": "timeout",
           "type": "number",
-          "required": false,
           "description": "Time (ms) to wait for a bdev with specified name to appear"
         }
       ]
@@ -960,25 +892,21 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Block device name"
         },
         {
           "name": "names",
           "type": "array",
-          "required": false,
           "description": "Array of block device names to obtain statistics from"
         },
         {
           "name": "per_channel",
           "type": "boolean",
-          "required": false,
           "description": "Display per channel data for specified block device."
         },
         {
           "name": "reset_mode",
           "type": "string",
-          "required": false,
           "description": "Mode to reset I/O statistics after obtaining it: all, maxmin, none (default: none)"
         }
       ]
@@ -989,13 +917,11 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Block device name"
         },
         {
           "name": "mode",
           "type": "string",
-          "required": false,
           "description": "Mode to reset I/O statistics: all, maxmin, none (default: all)"
         }
       ]
@@ -1018,25 +944,21 @@
         {
           "name": "opc",
           "type": "string",
-          "required": false,
           "description": "IO type name"
         },
         {
           "name": "granularity",
           "type": "number",
-          "required": false,
           "description": "Histogram bucket granularity. Default: 7"
         },
         {
           "name": "min_nsec",
           "type": "number",
-          "required": false,
           "description": "Min value in nanoseconds to track. Default: 1000 (1us)"
         },
         {
           "name": "max_nsec",
           "type": "number",
-          "required": false,
           "description": "Max value in nanoseconds to track. Default: 120000000000 (120 seconds)"
         }
       ]
@@ -1064,25 +986,21 @@
         {
           "name": "rw_ios_per_sec",
           "type": "number",
-          "required": false,
           "description": "Number of R/W I/Os per second to allow. 0 means unlimited."
         },
         {
           "name": "rw_mbytes_per_sec",
           "type": "number",
-          "required": false,
           "description": "Number of R/W megabytes per second to allow. 0 means unlimited."
         },
         {
           "name": "r_mbytes_per_sec",
           "type": "number",
-          "required": false,
           "description": "Number of Read megabytes per second to allow. 0 means unlimited."
         },
         {
           "name": "w_mbytes_per_sec",
           "type": "number",
-          "required": false,
           "description": "Number of Write megabytes per second to allow. 0 means unlimited."
         }
       ]
@@ -1122,31 +1040,26 @@
         {
           "name": "crypto_pmd",
           "type": "string",
-          "required": false,
           "description": "Name of the crypto device driver. Obsolete, see accel_crypto_key_create"
         },
         {
           "name": "key",
           "type": "string",
-          "required": false,
           "description": "Key in hex form. Obsolete, see accel_crypto_key_create"
         },
         {
           "name": "cipher",
           "type": "string",
-          "required": false,
           "description": "Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create"
         },
         {
           "name": "key2",
           "type": "string",
-          "required": false,
           "description": "2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create"
         },
         {
           "name": "key_name",
           "type": "string",
-          "required": false,
           "description": "Name of the key created with accel_crypto_key_create"
         }
       ]
@@ -1180,7 +1093,6 @@
         {
           "name": "cache_line_size",
           "type": "number",
-          "required": false,
           "description": "OCF cache line size in KiB: 4, 8, 16, 32, 64"
         },
         {
@@ -1238,7 +1150,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Name of OCF vbdev or name of cache device or name of core device"
         }
       ]
@@ -1278,13 +1189,11 @@
         {
           "name": "threshold",
           "type": "number",
-          "required": false,
           "description": "Activation threshold in KiB"
         },
         {
           "name": "promotion_count",
           "type": "number",
-          "required": false,
           "description": "Promotion request count"
         }
       ]
@@ -1319,7 +1228,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Bdev name to use"
         },
         {
@@ -1337,49 +1245,41 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         },
         {
           "name": "optimal_io_boundary",
           "type": "number",
-          "required": false,
           "description": "Split on optimal IO boundary, in number of blocks, default 0"
         },
         {
           "name": "md_size",
           "type": "number",
-          "required": false,
           "description": "Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0."
         },
         {
           "name": "md_interleave",
           "type": "boolean",
-          "required": false,
           "description": "Metadata location, interleaved if true, and separated if false. Default is false."
         },
         {
           "name": "dif_type",
           "type": "number",
-          "required": false,
           "description": "Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection."
         },
         {
           "name": "dif_is_head_of_md",
           "type": "boolean",
-          "required": false,
           "description": "Protection information is in the first 8 bytes of metadata. Default=false."
         },
         {
           "name": "physical_block_size",
           "type": "number",
-          "required": false,
           "description": "Physical block size of device; must be a power of 2 and at least 512"
         },
         {
           "name": "dif_pi_format",
           "type": "number",
-          "required": false,
           "description": "protection information format"
         }
       ]
@@ -1419,67 +1319,56 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         },
         {
           "name": "physical_block_size",
           "type": "number",
-          "required": false,
           "description": "Physical block size for this bdev."
         },
         {
           "name": "md_size",
           "type": "number",
-          "required": false,
           "description": "Metadata size for this bdev. Default=0."
         },
         {
           "name": "dif_type",
           "type": "number",
-          "required": false,
           "description": "Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection."
         },
         {
           "name": "dif_pi_format",
           "type": "number",
-          "required": false,
           "description": "protection information format"
         },
         {
           "name": "dif_is_head_of_md",
           "type": "boolean",
-          "required": false,
           "description": "Protection information is in the first 8 bytes of metadata. Default=false."
         },
         {
           "name": "preferred_write_granularity",
           "type": "number",
-          "required": false,
           "description": "Preferred write granularity in blocks"
         },
         {
           "name": "preferred_write_alignment",
           "type": "number",
-          "required": false,
           "description": "Preferred write alignment in blocks"
         },
         {
           "name": "optimal_write_size",
           "type": "number",
-          "required": false,
           "description": "Optimal write size in blocks"
         },
         {
           "name": "preferred_unmap_granularity",
           "type": "number",
-          "required": false,
           "description": "Preferred unmap granularity in blocks"
         },
         {
           "name": "preferred_unmap_alignment",
           "type": "number",
-          "required": false,
           "description": "Preferred unmap alignment in blocks"
         }
       ]
@@ -1530,31 +1419,26 @@
         {
           "name": "block_size",
           "type": "number",
-          "required": false,
           "description": "Block size in bytes"
         },
         {
           "name": "readonly",
           "type": "boolean",
-          "required": false,
           "description": "set aio bdev as read-only"
         },
         {
           "name": "fallocate",
           "type": "boolean",
-          "required": false,
           "description": "Enable UNMAP and WRITE ZEROES support. Intended only for testing purposes due to synchronous syscall."
         },
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         },
         {
           "name": "nowait",
           "type": "boolean",
-          "required": false,
           "description": "Enable the RWF_NOWAIT flag for block devices. If the flag is not defined, or if the specified device is not a block device, creation will fail. Note that this feature is not advertised by the kernel to userspace. Use with caution, and only if the device is known to work correctly with your kernel."
         }
       ]
@@ -1587,193 +1471,161 @@
         {
           "name": "action_on_timeout",
           "type": "string",
-          "required": false,
           "description": "Action to take on command time out: none, reset or abort"
         },
         {
           "name": "timeout_us",
           "type": "number",
-          "required": false,
           "description": "Timeout for each command, in microseconds. If 0, don't track timeouts"
         },
         {
           "name": "timeout_admin_us",
           "type": "number",
-          "required": false,
           "description": "Timeout for each admin command, in microseconds. If 0, treat same as io timeouts ('timeout_us')"
         },
         {
           "name": "keep_alive_timeout_ms",
           "type": "number",
-          "required": false,
           "description": "Keep alive timeout period in milliseconds, default is 10s"
         },
         {
           "name": "arbitration_burst",
           "type": "number",
-          "required": false,
           "description": "The value is expressed as a power of two, a value of 111b indicates no limit"
         },
         {
           "name": "low_priority_weight",
           "type": "number",
-          "required": false,
           "description": "The maximum number of commands that the controller may launch at one time from a low priority queue"
         },
         {
           "name": "medium_priority_weight",
           "type": "number",
-          "required": false,
           "description": "The maximum number of commands that the controller may launch at one time from a medium priority queue"
         },
         {
           "name": "high_priority_weight",
           "type": "number",
-          "required": false,
           "description": "The maximum number of commands that the controller may launch at one time from a high priority queue"
         },
         {
           "name": "nvme_adminq_poll_period_us",
           "type": "number",
-          "required": false,
           "description": "How often the admin queue is polled for asynchronous events in microseconds"
         },
         {
           "name": "nvme_ioq_poll_period_us",
           "type": "number",
-          "required": false,
           "description": "How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible)."
         },
         {
           "name": "io_queue_requests",
           "type": "number",
-          "required": false,
           "description": "The number of requests allocated for each NVMe I/O queue. Default: 512."
         },
         {
           "name": "delay_cmd_submit",
           "type": "boolean",
-          "required": false,
           "description": "Enable delaying NVMe command submission to allow batching of multiple commands. Default: `true`."
         },
         {
           "name": "transport_retry_count",
           "type": "number",
-          "required": false,
           "description": "The number of attempts per I/O in the transport layer before an I/O fails."
         },
         {
           "name": "bdev_retry_count",
           "type": "number",
-          "required": false,
           "description": "The number of attempts per I/O in the bdev layer before an I/O fails. -1 means infinite retries."
         },
         {
           "name": "transport_ack_timeout",
           "type": "number",
-          "required": false,
           "description": "Time to wait ack until retransmission for RDMA or connection close for TCP. Range 0-31 where 0 means use default."
         },
         {
           "name": "ctrlr_loss_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect."
         },
         {
           "name": "reconnect_delay_sec",
           "type": "number",
-          "required": false,
           "description": "Time to delay a reconnect trial. 0 means no reconnect."
         },
         {
           "name": "fast_io_fail_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout."
         },
         {
           "name": "disable_auto_failback",
           "type": "boolean",
-          "required": false,
           "description": "Disable automatic failback. The RPC bdev_nvme_set_preferred_path can be used to do manual failback."
         },
         {
           "name": "generate_uuids",
           "type": "boolean",
-          "required": false,
           "description": "Enable generation of UUIDs for NVMe bdevs that do not provide this value themselves."
         },
         {
           "name": "transport_tos",
           "type": "number",
-          "required": false,
           "description": "IPv4 Type of Service value. Only applicable for RDMA transport. Default: 0 (no TOS is applied)."
         },
         {
           "name": "nvme_error_stat",
           "type": "boolean",
-          "required": false,
           "description": "Enable collecting NVMe error counts."
         },
         {
           "name": "rdma_srq_size",
           "type": "number",
-          "required": false,
           "description": "Set the size of a shared rdma receive queue. Default: 0 (disabled)."
         },
         {
           "name": "io_path_stat",
           "type": "boolean",
-          "required": false,
           "description": "Enable collecting I/O stat of each nvme bdev io path. Default: `false`."
         },
         {
           "name": "allow_accel_sequence",
           "type": "boolean",
-          "required": false,
           "description": "Allow NVMe bdevs to advertise support for accel sequences if the controller also supports them.  Default: `false`."
         },
         {
           "name": "rdma_max_cq_size",
           "type": "number",
-          "required": false,
           "description": "Set the maximum size of a rdma completion queue. Default: 0 (unlimited)"
         },
         {
           "name": "rdma_cm_event_timeout_ms",
           "type": "number",
-          "required": false,
           "description": "Time to wait for RDMA CM events. Default: 0 (0 means using default value of driver)."
         },
         {
           "name": "dhchap_digests",
           "type": "list",
-          "required": false,
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
           "type": "list",
-          "required": false,
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         },
         {
           "name": "rdma_umr_per_io",
           "type": "boolean",
-          "required": false,
           "description": "Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system"
         },
         {
           "name": "tcp_connect_timeout_ms",
           "type": "number",
-          "required": false,
           "description": "Time to wait until TCP connection is done. Default: 0 (no timeout)."
         },
         {
           "name": "enable_flush",
           "type": "boolean",
-          "required": false,
           "description": "If true, pass flush to nvme devices when volatile write cache is present. Default : `false`."
         }
       ]
@@ -1790,7 +1642,6 @@
         {
           "name": "period_us",
           "type": "number",
-          "required": false,
           "description": "How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000."
         }
       ]
@@ -1819,133 +1670,111 @@
         {
           "name": "adrfam",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host"
         },
         {
           "name": "trsvcid",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target trsvcid: port number"
         },
         {
           "name": "priority",
           "type": "string",
-          "required": false,
           "description": "Transport connection priority. Supported by TCP transport with POSIX sock module (see socket(7) man page)."
         },
         {
           "name": "subnqn",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target subnqn"
         },
         {
           "name": "hostnqn",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target hostnqn"
         },
         {
           "name": "hostaddr",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF host address: ip address"
         },
         {
           "name": "hostsvcid",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF host trsvcid: port number"
         },
         {
           "name": "prchk_reftag",
           "type": "boolean",
-          "required": false,
           "description": "Enable checking of PI reference tag for I/O processing"
         },
         {
           "name": "prchk_guard",
           "type": "boolean",
-          "required": false,
           "description": "Enable checking of PI guard for I/O processing"
         },
         {
           "name": "hdgst",
           "type": "boolean",
-          "required": false,
           "description": "Enable TCP header digest"
         },
         {
           "name": "ddgst",
           "type": "boolean",
-          "required": false,
           "description": "Enable TCP data digest"
         },
         {
           "name": "fabrics_connect_timeout_us",
           "type": "number",
-          "required": false,
           "description": "Timeout for fabrics connect (in microseconds)"
         },
         {
           "name": "multipath",
           "type": "string",
-          "required": false,
           "description": "Multipathing behavior: disable, failover, multipath. Default is failover."
         },
         {
           "name": "num_io_queues",
           "type": "number",
-          "required": false,
           "description": "The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024."
         },
         {
           "name": "ctrlr_loss_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect."
         },
         {
           "name": "reconnect_delay_sec",
           "type": "number",
-          "required": false,
           "description": "Time to delay a reconnect trial. 0 means no reconnect."
         },
         {
           "name": "fast_io_fail_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout."
         },
         {
           "name": "psk",
           "type": "string",
-          "required": false,
           "description": "Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)"
         },
         {
           "name": "max_bdevs",
           "type": "number",
-          "required": false,
           "description": "The size of the name array for newly created bdevs. Default is 128."
         },
         {
           "name": "dhchap_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP key name (required if controller key is specified)"
         },
         {
           "name": "dhchap_ctrlr_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP controller key name."
         },
         {
           "name": "allow_unrecognized_csi",
           "type": "boolean",
-          "required": false,
           "description": "Allow attaching namespaces with unrecognized command set identifiers. These will only support NVMe passthrough."
         }
       ]
@@ -1956,7 +1785,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "NVMe controller name"
         }
       ]
@@ -1973,43 +1801,36 @@
         {
           "name": "trtype",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target trtype: rdma or tcp"
         },
         {
           "name": "traddr",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target address: ip or BDF"
         },
         {
           "name": "adrfam",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host"
         },
         {
           "name": "trsvcid",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target trsvcid: port number"
         },
         {
           "name": "subnqn",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target subnqn"
         },
         {
           "name": "hostaddr",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF host address: ip"
         },
         {
           "name": "hostsvcid",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF host svcid: port number"
         }
       ]
@@ -2027,7 +1848,6 @@
         {
           "name": "cntlid",
           "type": "number",
-          "required": false,
           "description": "NVMe controller ID (used as NVMe controller name for multipath)"
         }
       ]
@@ -2045,7 +1865,6 @@
         {
           "name": "cntlid",
           "type": "number",
-          "required": false,
           "description": "NVMe controller ID (used as NVMe controller name for multipath)"
         }
       ]
@@ -2063,7 +1882,6 @@
         {
           "name": "cntlid",
           "type": "number",
-          "required": false,
           "description": "NVMe controller ID (used as NVMe controller name for multipath)"
         }
       ]
@@ -2092,49 +1910,41 @@
         {
           "name": "adrfam",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target adrfam: ipv4, ipv6"
         },
         {
           "name": "trsvcid",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target trsvcid: port number"
         },
         {
           "name": "hostnqn",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target hostnqn"
         },
         {
           "name": "wait_for_attach",
           "type": "boolean",
-          "required": false,
           "description": "Wait to complete until all discovered NVM subsystems are attached"
         },
         {
           "name": "attach_timeout_ms",
           "type": "number",
-          "required": false,
           "description": "Time to wait until the discovery and all discovered NVM subsystems are attached"
         },
         {
           "name": "ctrlr_loss_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect."
         },
         {
           "name": "reconnect_delay_sec",
           "type": "number",
-          "required": false,
           "description": "Time to delay a reconnect trial. 0 means no reconnect."
         },
         {
           "name": "fast_io_fail_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout."
         }
       ]
@@ -2160,7 +1970,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Name of the NVMe bdev"
         }
       ]
@@ -2200,13 +2009,11 @@
         {
           "name": "selector",
           "type": "string",
-          "required": false,
           "description": "Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin"
         },
         {
           "name": "rr_min_io",
           "type": "number",
-          "required": false,
           "description": "Number of I/Os routed to current io path before switching to another for round-robin selector. The min value is 1."
         }
       ]
@@ -2256,13 +2063,11 @@
         {
           "name": "dhchap_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP key name (required if controller key is specified)"
         },
         {
           "name": "dhchap_ctrlr_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP controller key name"
         }
       ]
@@ -2351,31 +2156,26 @@
         {
           "name": "user_id",
           "type": "string",
-          "required": false,
           "description": "Ceph ID (i.e. admin, not client.admin)"
         },
         {
           "name": "config_param",
           "type": "string map",
-          "required": false,
           "description": "Explicit librados configuration"
         },
         {
           "name": "config_file",
           "type": "string",
-          "required": false,
           "description": "File path of librados configuration file"
         },
         {
           "name": "key_file",
           "type": "string",
-          "required": false,
           "description": "File path of librados key file"
         },
         {
           "name": "core_mask",
           "type": "string",
-          "required": false,
           "description": "Core mask for librados IO context threads"
         }
       ]
@@ -2397,7 +2197,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Rados cluster object name"
         }
       ]
@@ -2408,13 +2207,11 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Bdev name"
         },
         {
           "name": "user_id",
           "type": "string",
-          "required": false,
           "description": "Ceph ID (i.e. admin, not client.admin)"
         },
         {
@@ -2438,25 +2235,21 @@
         {
           "name": "config",
           "type": "string map",
-          "required": false,
           "description": "Explicit librados configuration"
         },
         {
           "name": "cluster_name",
           "type": "string",
-          "required": false,
           "description": "Rados cluster object name created in this module."
         },
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         },
         {
           "name": "read_only",
           "type": "boolean",
-          "required": false,
           "description": "set rbd bdev as read-only"
         }
       ]
@@ -2531,7 +2324,6 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         }
       ]
@@ -2582,7 +2374,6 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID for this bdev"
         }
       ]
@@ -2622,25 +2413,21 @@
         {
           "name": "num",
           "type": "number",
-          "required": false,
           "description": "the number of commands you want to fail.(default:1)"
         },
         {
           "name": "queue_depth",
           "type": "number",
-          "required": false,
           "description": "the queue depth at which to trigger the error"
         },
         {
           "name": "corrupt_offset",
           "type": "number",
-          "required": false,
           "description": "the offset in bytes to xor with corrupt_value"
         },
         {
           "name": "corrupt_value",
           "type": "number",
-          "required": false,
           "description": "the value for xor (1-255, 0 is invalid)"
         }
       ]
@@ -2651,7 +2438,6 @@
         {
           "name": "timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Timeout for command, in seconds, if 0, don't track timeout"
         }
       ]
@@ -2714,31 +2500,26 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of restored bdev (not applicable when creating new instance)"
         },
         {
           "name": "core_mask",
           "type": "string",
-          "required": false,
           "description": "CPU core(s) possible for placement of the ftl core thread, application main thread by default"
         },
         {
           "name": "overprovisioning",
           "type": "number",
-          "required": false,
           "description": "Percentage of base device used for relocation, 20% by default"
         },
         {
           "name": "fast_shutdown",
           "type": "boolean",
-          "required": false,
           "description": "When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load"
         },
         {
           "name": "l2p_dram_limit",
           "type": "number",
-          "required": false,
           "description": "DRAM limit for most recent L2P addresses (default 2048 MiB)"
         }
       ]
@@ -2774,25 +2555,21 @@
         {
           "name": "core_mask",
           "type": "string",
-          "required": false,
           "description": "CPU core(s) possible for placement of the ftl core thread, application main thread by default"
         },
         {
           "name": "overprovisioning",
           "type": "number",
-          "required": false,
           "description": "Percentage of base device used for relocation, 20% by default"
         },
         {
           "name": "fast_shutdown",
           "type": "boolean",
-          "required": false,
           "description": "When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load"
         },
         {
           "name": "l2p_dram_limit",
           "type": "number",
-          "required": false,
           "description": "DRAM limit for most recent L2P addresses (default 2048 MiB)"
         }
       ]
@@ -2809,7 +2586,6 @@
         {
           "name": "fast_shutdown",
           "type": "boolean",
-          "required": false,
           "description": "When set FTL will minimize persisted data during deletion and rely on shared memory during next load"
         }
       ]
@@ -2827,7 +2603,6 @@
         {
           "name": "fast_shutdown",
           "type": "boolean",
-          "required": false,
           "description": "When set FTL will minimize persisted data during deletion and rely on shared memory during next load"
         }
       ]
@@ -2919,7 +2694,6 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         }
       ]
@@ -2959,7 +2733,6 @@
         {
           "name": "conserve_cpu",
           "type": "boolean",
-          "required": false,
           "description": "Whether or not to conserve CPU when polling (default: false)"
         }
       ]
@@ -3005,13 +2778,11 @@
         {
           "name": "vq_count",
           "type": "number",
-          "required": false,
           "description": "Number of queues this controller will utilize (default: 1)"
         },
         {
           "name": "vq_size",
           "type": "number",
-          "required": false,
           "description": "Size of each queue. Must be power of 2. (default: 512)"
         }
       ]
@@ -3043,7 +2814,6 @@
         {
           "name": "period_us",
           "type": "number",
-          "required": false,
           "description": "The period time of the monitor"
         }
       ]
@@ -3054,133 +2824,111 @@
         {
           "name": "auth_file",
           "type": "string",
-          "required": false,
           "description": "Path to CHAP shared secret file (default: \"\")"
         },
         {
           "name": "node_base",
           "type": "string",
-          "required": false,
           "description": "Prefix of the name of iSCSI target node (default: \"iqn.2016-06.io.spdk\")"
         },
         {
           "name": "nop_timeout",
           "type": "number",
-          "required": false,
           "description": "Timeout in seconds to nop-in request to the initiator (default: 60)"
         },
         {
           "name": "nop_in_interval",
           "type": "number",
-          "required": false,
           "description": "Time interval in secs between nop-in requests by the target (default: 30)"
         },
         {
           "name": "disable_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be disabled (default: `false`)"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be required (default: `false`)"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)"
         },
         {
           "name": "chap_group",
           "type": "number",
-          "required": false,
           "description": "CHAP group ID for discovery session (default: 0)"
         },
         {
           "name": "max_sessions",
           "type": "number",
-          "required": false,
           "description": "Maximum number of sessions in the host (default: 128)"
         },
         {
           "name": "max_queue_depth",
           "type": "number",
-          "required": false,
           "description": "Maximum number of outstanding I/Os per queue (default: 64)"
         },
         {
           "name": "max_connections_per_session",
           "type": "number",
-          "required": false,
           "description": "Session specific parameter, MaxConnections (default: 2)"
         },
         {
           "name": "default_time2wait",
           "type": "number",
-          "required": false,
           "description": "Session specific parameter, DefaultTime2Wait (default: 2)"
         },
         {
           "name": "default_time2retain",
           "type": "number",
-          "required": false,
           "description": "Session specific parameter, DefaultTime2Retain (default: 20)"
         },
         {
           "name": "first_burst_length",
           "type": "number",
-          "required": false,
           "description": "Session specific parameter, FirstBurstLength (default: 8192)"
         },
         {
           "name": "immediate_data",
           "type": "boolean",
-          "required": false,
           "description": "Session specific parameter, ImmediateData (default: `true`)"
         },
         {
           "name": "error_recovery_level",
           "type": "number",
-          "required": false,
           "description": "Session specific parameter, ErrorRecoveryLevel (default: 0)"
         },
         {
           "name": "allow_duplicated_isid",
           "type": "boolean",
-          "required": false,
           "description": "Allow duplicated initiator session ID (default: `false`)"
         },
         {
           "name": "max_large_datain_per_connection",
           "type": "number",
-          "required": false,
           "description": "Max number of outstanding split read I/Os per connection (default: 64)"
         },
         {
           "name": "max_r2t_per_connection",
           "type": "number",
-          "required": false,
           "description": "Max number of outstanding R2Ts per connection (default: 4)"
         },
         {
           "name": "pdu_pool_size",
           "type": "number",
-          "required": false,
           "description": "Number of PDUs in the pool (default: approximately 2 * max_sessions * (max_queue_depth + max_connections_per_session))"
         },
         {
           "name": "immediate_data_pool_size",
           "type": "number",
-          "required": false,
           "description": "Number of immediate data buffers in the pool (default: 128 * max_sessions)"
         },
         {
           "name": "data_out_pool_size",
           "type": "number",
-          "required": false,
           "description": "Number of data out buffers in the pool (default: 16 * max_sessions)"
         }
       ]
@@ -3199,25 +2947,21 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be disabled (default: `false`)"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be required (default: `false`)"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)"
         },
         {
           "name": "chap_group",
           "type": "number",
-          "required": false,
           "description": "CHAP group ID for discovery session (default: 0)"
         }
       ]
@@ -3234,7 +2978,6 @@
         {
           "name": "secrets",
           "type": "array",
-          "required": false,
           "description": "Array of @ref rpc_iscsi_create_auth_group_secret objects"
         }
       ]
@@ -3278,13 +3021,11 @@
         {
           "name": "muser",
           "type": "string",
-          "required": false,
           "description": "Bidirectional CHAP name"
         },
         {
           "name": "msecret",
           "type": "string",
-          "required": false,
           "description": "Bidirectional CHAP secret"
         }
       ]
@@ -3356,13 +3097,11 @@
         {
           "name": "initiators",
           "type": "array",
-          "required": false,
           "description": "Array of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
-          "required": false,
           "description": "Array of initiator netmasks"
         }
       ]
@@ -3380,13 +3119,11 @@
         {
           "name": "initiators",
           "type": "array",
-          "required": false,
           "description": "Array of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
-          "required": false,
           "description": "Array of initiator netmasks"
         }
       ]
@@ -3431,37 +3168,31 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP authentication should be disabled for this target"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP authentication should be required for this target"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)"
         },
         {
           "name": "chap_group",
           "type": "number",
-          "required": false,
           "description": "Authentication group ID for this target node"
         },
         {
           "name": "header_digest",
           "type": "boolean",
-          "required": false,
           "description": "Header Digest should be required for this target node"
         },
         {
           "name": "data_digest",
           "type": "boolean",
-          "required": false,
           "description": "Data Digest should be required for this target node"
         }
       ]
@@ -3478,25 +3209,21 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP authentication should be disabled for this target"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP authentication should be required for this target"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)"
         },
         {
           "name": "chap_group",
           "type": "number",
-          "required": false,
           "description": "Authentication group ID for this target node"
         }
       ]
@@ -3569,13 +3296,11 @@
         {
           "name": "private",
           "type": "boolean",
-          "required": false,
           "description": "When true, portals in this group are not returned by a discovery session. Used for login redirection. (default: `false`)"
         },
         {
           "name": "wait",
           "type": "boolean",
-          "required": false,
           "description": "When true, do not listen on portals until it is started explicitly. (default: `false`)"
         }
       ]
@@ -3616,25 +3341,21 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be disabled (default: `false`)"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be required (default: `false`)"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "required": false,
           "description": "CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)"
         },
         {
           "name": "chap_group",
           "type": "number",
-          "required": false,
           "description": "CHAP group ID for discovery session (default: 0)"
         }
       ]
@@ -3665,7 +3386,6 @@
         {
           "name": "lun_id",
           "type": "number",
-          "required": false,
           "description": "LUN ID (default: first free ID)"
         }
       ]
@@ -3688,13 +3408,11 @@
         {
           "name": "redirect_host",
           "type": "string",
-          "required": false,
           "description": "Numeric IP address to which the target node is redirected"
         },
         {
           "name": "redirect_port",
           "type": "string",
-          "required": false,
           "description": "Numeric TCP port to which the target node is redirected"
         }
       ]
@@ -3711,7 +3429,6 @@
         {
           "name": "pg_tag",
           "type": "number",
-          "required": false,
           "description": "Existing portal group tag"
         }
       ]
@@ -3756,175 +3473,146 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
           "name": "max_queue_depth",
           "type": "number",
-          "required": false,
           "description": "Max number of outstanding I/O per queue"
         },
         {
           "name": "max_io_qpairs_per_ctrlr",
           "type": "number",
-          "required": false,
           "description": "Max number of IO qpairs per controller"
         },
         {
           "name": "in_capsule_data_size",
           "type": "number",
-          "required": false,
           "description": "Max number of in-capsule data size"
         },
         {
           "name": "max_io_size",
           "type": "number",
-          "required": false,
           "description": "Max I/O size (bytes)"
         },
         {
           "name": "io_unit_size",
           "type": "number",
-          "required": false,
           "description": "I/O unit size (bytes)"
         },
         {
           "name": "max_aq_depth",
           "type": "number",
-          "required": false,
           "description": "Max number of admin cmds per AQ"
         },
         {
           "name": "num_shared_buffers",
           "type": "number",
-          "required": false,
           "description": "The number of pooled data buffers available to the transport"
         },
         {
           "name": "buf_cache_size",
           "type": "number",
-          "required": false,
           "description": "The number of shared buffers to reserve for each poll group"
         },
         {
           "name": "zcopy",
           "type": "boolean",
-          "required": false,
           "description": "Use zero-copy operations if the underlying bdev supports them"
         },
         {
           "name": "num_cqe",
           "type": "number",
-          "required": false,
           "description": "The number of CQ entries. Only used when no_srq=true (RDMA only)"
         },
         {
           "name": "max_srq_depth",
           "type": "number",
-          "required": false,
           "description": "The number of elements in a per-thread shared receive queue (RDMA only)"
         },
         {
           "name": "no_srq",
           "type": "boolean",
-          "required": false,
           "description": "Disable shared receive queue even for devices that support it. (RDMA only)"
         },
         {
           "name": "c2h_success",
           "type": "boolean",
-          "required": false,
           "description": "Disable C2H success optimization (TCP only)"
         },
         {
           "name": "dif_insert_or_strip",
           "type": "boolean",
-          "required": false,
           "description": "Enable DIF insert for write I/O and DIF strip for read I/O DIF"
         },
         {
           "name": "sock_priority",
           "type": "number",
-          "required": false,
           "description": "The socket priority of the connection owned by this transport (TCP only)"
         },
         {
           "name": "acceptor_backlog",
           "type": "number",
-          "required": false,
           "description": "The number of pending connections allowed in backlog before failing new connection attempts (RDMA only)"
         },
         {
           "name": "abort_timeout_sec",
           "type": "number",
-          "required": false,
           "description": "Abort execution timeout value, in seconds"
         },
         {
           "name": "no_wr_batching",
           "type": "boolean",
-          "required": false,
           "description": "Disable work requests batching (RDMA only)"
         },
         {
           "name": "control_msg_num",
           "type": "number",
-          "required": false,
           "description": "The number of control messages per poll group (TCP only)"
         },
         {
           "name": "disable_mappable_bar0",
           "type": "boolean",
-          "required": false,
           "description": "disable client mmap() of BAR0 (VFIO-USER only)"
         },
         {
           "name": "disable_adaptive_irq",
           "type": "boolean",
-          "required": false,
           "description": "Disable adaptive interrupt feature (VFIO-USER only)"
         },
         {
           "name": "disable_shadow_doorbells",
           "type": "boolean",
-          "required": false,
           "description": "disable shadow doorbell support (VFIO-USER only)"
         },
         {
           "name": "acceptor_poll_rate",
           "type": "number",
-          "required": false,
           "description": "Polling interval of the acceptor for incoming connections (microseconds)"
         },
         {
           "name": "ack_timeout",
           "type": "number",
-          "required": false,
           "description": "ACK timeout in milliseconds"
         },
         {
           "name": "data_wr_pool_size",
           "type": "number",
-          "required": false,
           "description": "RDMA data WR pool size (RDMA only)"
         },
         {
           "name": "disable_command_passthru",
           "type": "boolean",
-          "required": false,
           "description": "Disallow command passthru."
         },
         {
           "name": "kas",
           "type": "number",
-          "required": false,
           "description": "The granularity of the KATO (Keep Alive Timeout) in 100 millisecond units"
         },
         {
           "name": "min_kato",
           "type": "number",
-          "required": false,
           "description": "The minimum Keep Alive Timeout value in milliseconds"
         },
         {
@@ -3947,13 +3635,11 @@
         {
           "name": "nqn",
           "type": "string",
-          "required": false,
           "description": "Subsystem NQN (optional)"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -3970,73 +3656,61 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
           "name": "serial_number",
           "type": "string",
-          "required": false,
           "description": "Serial number of virtual controller."
         },
         {
           "name": "model_number",
           "type": "string",
-          "required": false,
           "description": "Model number of virtual controller."
         },
         {
           "name": "max_namespaces",
           "type": "number",
-          "required": false,
           "description": "Maximum number of namespaces that can be attached to the subsystem. Default: 32 (also used if user specifies 0)"
         },
         {
           "name": "allow_any_host",
           "type": "boolean",
-          "required": false,
           "description": "Allow any host (`true`) or enforce allowed host list (`false`). Default: `false`"
         },
         {
           "name": "ana_reporting",
           "type": "boolean",
-          "required": false,
           "description": "Enable ANA reporting feature. Default: `false`"
         },
         {
           "name": "min_cntlid",
           "type": "number",
-          "required": false,
           "description": "Minimum controller ID. Default: 1"
         },
         {
           "name": "max_cntlid",
           "type": "number",
-          "required": false,
           "description": "Maximum controller ID. Default: 0xffef"
         },
         {
           "name": "max_discard_size_kib",
           "type": "number",
-          "required": false,
           "description": "Maximum discard size (Kib). Default: 0"
         },
         {
           "name": "max_write_zeroes_size_kib",
           "type": "number",
-          "required": false,
           "description": "Maximum write_zeroes size (Kib). Default: 0"
         },
         {
           "name": "passthrough",
           "type": "boolean",
-          "required": false,
           "description": "Use NVMe passthrough for I/O commands and namespace-directed admin commands. Default: `false`"
         },
         {
           "name": "enable_nssr",
           "type": "boolean",
-          "required": false,
           "description": "Enable NSSR (NVMe subsystem reset). Default: `false`"
         }
       ]
@@ -4053,7 +3727,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4070,7 +3743,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
@@ -4083,19 +3755,16 @@
         {
           "name": "secure_channel",
           "type": "boolean",
-          "required": false,
           "description": "Whether all connections immediately attempt to establish a secure channel"
         },
         {
           "name": "ana_state",
           "type": "string",
-          "required": false,
           "description": "ANA state to set: optimized, non_optimized, or inaccessible"
         },
         {
           "name": "sock_impl",
           "type": "string",
-          "required": false,
           "description": "The socket implementation to use for the listener"
         }
       ]
@@ -4113,7 +3782,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
@@ -4137,7 +3805,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
@@ -4156,7 +3823,6 @@
         {
           "name": "anagrpid",
           "type": "number",
-          "required": false,
           "description": "ANA group ID"
         }
       ]
@@ -4180,7 +3846,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4203,7 +3868,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4232,7 +3896,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4255,25 +3918,21 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
           "name": "psk",
           "type": "string",
-          "required": false,
           "description": "Path to a file containing PSK for TLS connection"
         },
         {
           "name": "dhchap_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP key name (required if controller key is specified)"
         },
         {
           "name": "dhchap_ctrlr_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP controller key name."
         }
       ]
@@ -4297,7 +3956,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4320,7 +3978,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4344,19 +4001,16 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF target name"
         },
         {
           "name": "dhchap_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP key name (required if controller key is specified)"
         },
         {
           "name": "dhchap_ctrlr_key",
           "type": "string",
-          "required": false,
           "description": "DH-HMAC-CHAP controller key name"
         }
       ]
@@ -4374,7 +4028,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4392,7 +4045,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4410,7 +4062,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4439,7 +4090,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "The name of the parent NVMe-oF target (optional)"
         }
       ]
@@ -4469,7 +4119,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "The name of the parent NVMe-oF target (optional)"
         }
       ]
@@ -4491,7 +4140,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
@@ -4504,13 +4152,11 @@
         {
           "name": "secure_channel",
           "type": "boolean",
-          "required": false,
           "description": "The connection to that discovery subsystem requires a secure channel"
         },
         {
           "name": "subnqn",
           "type": "string",
-          "required": false,
           "description": "Subsystem NQN"
         }
       ]
@@ -4522,7 +4168,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
@@ -4535,7 +4180,6 @@
         {
           "name": "subnqn",
           "type": "string",
-          "required": false,
           "description": "Subsystem NQN"
         }
       ]
@@ -4546,7 +4190,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4557,31 +4200,26 @@
         {
           "name": "admin_cmd_passthru",
           "type": "object",
-          "required": false,
           "description": "Admin command passthru configuration"
         },
         {
           "name": "poll_groups_mask",
           "type": "string",
-          "required": false,
           "description": "Set cpumask for NVMf poll groups"
         },
         {
           "name": "discovery_filter",
           "type": "string",
-          "required": false,
           "description": "Set discovery filter, possible values are: `match_any` (default) or comma separated values: `transport`, `address`, `svcid`"
         },
         {
           "name": "dhchap_digests",
           "type": "list",
-          "required": false,
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
           "type": "list",
-          "required": false,
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         }
       ]
@@ -4592,13 +4230,11 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         },
         {
           "name": "trtype",
           "type": "string",
-          "required": false,
           "description": "Transport type."
         }
       ]
@@ -4609,7 +4245,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -4620,19 +4255,16 @@
         {
           "name": "crdt1",
           "type": "number",
-          "required": false,
           "description": "Command Retry Delay Time 1"
         },
         {
           "name": "crdt2",
           "type": "number",
-          "required": false,
           "description": "Command Retry Delay Time 2"
         },
         {
           "name": "crdt3",
           "type": "number",
-          "required": false,
           "description": "Command Retry Delay Time 3"
         }
       ]
@@ -4677,25 +4309,21 @@
         {
           "name": "cpumask",
           "type": "string",
-          "required": false,
           "description": "CPU masks"
         },
         {
           "name": "num_queues",
           "type": "number",
-          "required": false,
           "description": "Number of queues"
         },
         {
           "name": "qsize",
           "type": "number",
-          "required": false,
           "description": "Queue size"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "required": false,
           "description": "Enable packed ring"
         }
       ]
@@ -4752,25 +4380,21 @@
         {
           "name": "cpumask",
           "type": "string",
-          "required": false,
           "description": "CPU masks"
         },
         {
           "name": "num_io_queues",
           "type": "number",
-          "required": false,
           "description": "Number of IO queues"
         },
         {
           "name": "qsize",
           "type": "number",
-          "required": false,
           "description": "Queue size"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "required": false,
           "description": "Enable packed ring"
         }
       ]
@@ -4799,25 +4423,21 @@
         {
           "name": "cpumask",
           "type": "string",
-          "required": false,
           "description": "CPU masks"
         },
         {
           "name": "num_queues",
           "type": "number",
-          "required": false,
           "description": "Number of IO queues"
         },
         {
           "name": "qsize",
           "type": "number",
-          "required": false,
           "description": "Queue size"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "required": false,
           "description": "Enable packed ring"
         }
       ]
@@ -4857,13 +4477,11 @@
         {
           "name": "cpumask",
           "type": "string",
-          "required": false,
           "description": "@ref cpu_mask for this controller"
         },
         {
           "name": "delay",
           "type": "boolean",
-          "required": false,
           "description": "If true, delay the controller startup."
         }
       ]
@@ -4936,7 +4554,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Transport name."
         }
       ]
@@ -4959,25 +4576,21 @@
         {
           "name": "readonly",
           "type": "boolean",
-          "required": false,
           "description": "If true, this target will be read only (default: false)"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "required": false,
           "description": "Set controller as packed ring supported"
         },
         {
           "name": "cpumask",
           "type": "string",
-          "required": false,
           "description": "@ref cpu_mask for this controller"
         },
         {
           "name": "transport",
           "type": "string",
-          "required": false,
           "description": "virtio blk transport name (default: vhost_user_blk)"
         }
       ]
@@ -4988,7 +4601,6 @@
         {
           "name": "name",
           "type": "string",
-          "required": false,
           "description": "Vhost controller name"
         }
       ]
@@ -5022,25 +4634,21 @@
         {
           "name": "cluster_sz",
           "type": "number",
-          "required": false,
           "description": "Cluster size of the logical volume store in bytes (Default: 4MiB)"
         },
         {
           "name": "clear_method",
           "type": "string",
-          "required": false,
           "description": "Change clear method for data region. Available: none, unmap (default), write_zeroes"
         },
         {
           "name": "num_md_pages_per_cluster_ratio",
           "type": "number",
-          "required": false,
           "description": "Reserved metadata pages per cluster (Default: 100)"
         },
         {
           "name": "md_page_size",
           "type": "number",
-          "required": false,
           "description": "Metadata page size of the logical volume store in bytes (Default: max(4KB, bdev phys blocklen)"
         }
       ]
@@ -5051,13 +4659,11 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of the logical volume store to destroy"
         },
         {
           "name": "lvs_name",
           "type": "string",
-          "required": false,
           "description": "Name of the logical volume store to destroy"
         }
       ]
@@ -5068,13 +4674,11 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of the logical volume store to retrieve information about"
         },
         {
           "name": "lvs_name",
           "type": "string",
-          "required": false,
           "description": "Name of the logical volume store to retrieve information about"
         }
       ]
@@ -5102,13 +4706,11 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of the logical volume store to grow"
         },
         {
           "name": "lvs_name",
           "type": "string",
-          "required": false,
           "description": "Name of the logical volume store to grow"
         }
       ]
@@ -5131,25 +4733,21 @@
         {
           "name": "thin_provision",
           "type": "boolean",
-          "required": false,
           "description": "True to enable thin provisioning"
         },
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of logical volume store to create logical volume on"
         },
         {
           "name": "lvs_name",
           "type": "string",
-          "required": false,
           "description": "Name of logical volume store to create logical volume on"
         },
         {
           "name": "clear_method",
           "type": "string",
-          "required": false,
           "description": "Change default data clusters clear method. Available: none, unmap, write_zeroes"
         }
       ]
@@ -5296,13 +4894,11 @@
         {
           "name": "lvs_uuid",
           "type": "string",
-          "required": false,
           "description": "Only show volumes in the logical volume store with this UUID"
         },
         {
           "name": "lvs_name",
           "type": "string",
-          "required": false,
           "description": "Only show volumes in the logical volume store with this name"
         }
       ]
@@ -5376,13 +4972,11 @@
         {
           "name": "process_window_size_kb",
           "type": "number",
-          "required": false,
           "description": "Background process (e.g. rebuild) window size in KiB"
         },
         {
           "name": "process_max_bandwidth_mb_sec",
           "type": "number",
-          "required": false,
           "description": "Background process (e.g. rebuild) maximum bandwidth in MiB/Sec"
         }
       ]
@@ -5410,7 +5004,6 @@
         {
           "name": "strip_size_kb",
           "type": "number",
-          "required": false,
           "description": "Strip size in KB"
         },
         {
@@ -5428,13 +5021,11 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID for this RAID bdev"
         },
         {
           "name": "superblock",
           "type": "boolean",
-          "required": false,
           "description": "If set, information about raid bdev will be stored in superblock on each base bdev (default: `false`)"
         }
       ]
@@ -5496,7 +5087,6 @@
         {
           "name": "split_size_mb",
           "type": "number",
-          "required": false,
           "description": "size in MB to restrict the size"
         }
       ]
@@ -5530,13 +5120,11 @@
         {
           "name": "block_size",
           "type": "number",
-          "required": false,
           "description": "block size of device (If omitted, get the block size from the file)"
         },
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         }
       ]
@@ -5740,13 +5328,11 @@
         {
           "name": "id",
           "type": "number",
-          "required": false,
           "description": "First Event ID to fetch (default: first available)."
         },
         {
           "name": "max",
           "type": "number",
-          "required": false,
           "description": "Maximum number of event to return (default: no limit)."
         }
       ]
@@ -5789,7 +5375,6 @@
         {
           "name": "enable",
           "type": "boolean",
-          "required": false,
           "description": "Enable the module."
         }
       ]
@@ -5800,13 +5385,11 @@
         {
           "name": "cpumask",
           "type": "string",
-          "required": false,
           "description": "Cpumask for ublk target"
         },
         {
           "name": "disable_user_copy",
           "type": "boolean",
-          "required": false,
           "description": "Disable user copy feature"
         }
       ]
@@ -5833,13 +5416,11 @@
         {
           "name": "queue_depth",
           "type": "number",
-          "required": false,
           "description": "Device queue depth"
         },
         {
           "name": "num_queues",
           "type": "number",
-          "required": false,
           "description": "Total number of device queues"
         }
       ]
@@ -5878,7 +5459,6 @@
         {
           "name": "ublk_id",
           "type": "number",
-          "required": false,
           "description": "ublk device id to display"
         }
       ]
@@ -5895,7 +5475,6 @@
         {
           "name": "nbd_device",
           "type": "string",
-          "required": false,
           "description": "NBD device name to assign"
         }
       ]
@@ -5917,7 +5496,6 @@
         {
           "name": "nbd_device",
           "type": "string",
-          "required": false,
           "description": "NBD device name to display"
         }
       ]
@@ -5945,61 +5523,51 @@
         {
           "name": "recv_buf_size",
           "type": "number",
-          "required": false,
           "description": "Size of socket receive buffer in bytes"
         },
         {
           "name": "send_buf_size",
           "type": "number",
-          "required": false,
           "description": "Size of socket send buffer in bytes"
         },
         {
           "name": "enable_recv_pipe",
           "type": "boolean",
-          "required": false,
           "description": "Enable or disable receive pipe"
         },
         {
           "name": "enable_quickack",
           "type": "boolean",
-          "required": false,
           "description": "Enable or disable quick ACK"
         },
         {
           "name": "enable_placement_id",
           "type": "number",
-          "required": false,
           "description": "Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu"
         },
         {
           "name": "enable_zerocopy_send_server",
           "type": "boolean",
-          "required": false,
           "description": "Enable or disable zero copy on send for server sockets"
         },
         {
           "name": "enable_zerocopy_send_client",
           "type": "boolean",
-          "required": false,
           "description": "Enable or disable zero copy on send for client sockets"
         },
         {
           "name": "zerocopy_threshold",
           "type": "number",
-          "required": false,
           "description": "Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs that fall below this threshold may be sent without zerocopy flag set"
         },
         {
           "name": "tls_version",
           "type": "number",
-          "required": false,
           "description": "TLS protocol version, e.g. 13 for v1.3 (only applies when impl_name == ssl)"
         },
         {
           "name": "enable_ktls",
           "type": "boolean",
-          "required": false,
           "description": "Enable or disable Kernel TLS (only applies when impl_name == ssl)"
         }
       ]
@@ -6050,31 +5618,26 @@
         {
           "name": "data",
           "type": "string",
-          "required": false,
           "description": "Data transferring to controller from host, encoded by base64 urlsafe"
         },
         {
           "name": "metadata",
           "type": "string",
-          "required": false,
           "description": "Metadata transferring to controller from host, encoded by base64 urlsafe"
         },
         {
           "name": "data_len",
           "type": "number",
-          "required": false,
           "description": "Data length required to transfer from controller to host"
         },
         {
           "name": "metadata_len",
           "type": "number",
-          "required": false,
           "description": "Metadata length required to transfer from controller to host"
         },
         {
           "name": "timeout_ms",
           "type": "number",
-          "required": false,
           "description": "Command execution timeout value, in milliseconds"
         }
       ]
@@ -6130,31 +5693,26 @@
         {
           "name": "do_not_submit",
           "type": "boolean",
-          "required": false,
           "description": "Set to true if request should not be submitted to the controller (default false)"
         },
         {
           "name": "timeout_in_us",
           "type": "number",
-          "required": false,
           "description": "Wait specified microseconds when do_not_submit is true"
         },
         {
           "name": "err_count",
           "type": "number",
-          "required": false,
           "description": "Number of matching NVMe commands to inject errors"
         },
         {
           "name": "sct",
           "type": "number",
-          "required": false,
           "description": "Status code type (default 0)"
         },
         {
           "name": "sc",
           "type": "number",
-          "required": false,
           "description": "Status code (default 0)"
         }
       ]
@@ -6218,13 +5776,11 @@
         {
           "name": "uuid",
           "type": "string",
-          "required": false,
           "description": "UUID of new bdev"
         },
         {
           "name": "oclass",
           "type": "string",
-          "required": false,
           "description": "DAOS object class (default SX)"
         }
       ]
@@ -6263,31 +5819,26 @@
         {
           "name": "small_pool_count",
           "type": "number",
-          "required": false,
           "description": "Number of small buffers in the global pool"
         },
         {
           "name": "large_pool_count",
           "type": "number",
-          "required": false,
           "description": "Number of large buffers in the global pool"
         },
         {
           "name": "small_bufsize",
           "type": "number",
-          "required": false,
           "description": "Size of a small buffer"
         },
         {
           "name": "large_bufsize",
           "type": "number",
-          "required": false,
           "description": "Size of a small buffer"
         },
         {
           "name": "enable_numa",
           "type": "boolean",
-          "required": false,
           "description": "Enable per-NUMA node buffer pools. Each node will allocate a full pool based on small_pool_count and large_pool_count."
         }
       ]
@@ -6314,7 +5865,6 @@
         {
           "name": "hostnqn",
           "type": "string",
-          "required": false,
           "description": "NVMe-oF hostnqn"
         }
       ]
@@ -6340,7 +5890,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -6352,7 +5901,6 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "required": false,
           "description": "Parent NVMe-oF target name."
         }
       ]
@@ -6396,25 +5944,21 @@
         {
           "name": "enable_xattr",
           "type": "boolean",
-          "required": false,
           "description": "true to enable the extended attributes, false otherwise"
         },
         {
           "name": "enable_writeback_cache",
           "type": "boolean",
-          "required": false,
           "description": "true to enable the writeback cache, false otherwise"
         },
         {
           "name": "max_write",
           "type": "number",
-          "required": false,
           "description": "Max write size in bytes"
         },
         {
           "name": "skip_rw",
           "type": "boolean",
-          "required": false,
           "description": "Skip processing read and write requests and complete them successfully immediately. This is useful for benchmarking."
         }
       ]

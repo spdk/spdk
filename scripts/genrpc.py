@@ -109,7 +109,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                 required = next((g.required for g in groups
                                 if any(a.dest == action.dest for a in g._group_actions)),
                                 action.required)
-                if param['required'] != required:
+                if param.get('required', False) != required:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
                 if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction, argparse.BooleanOptionalAction]:
                     newtype = 'boolean'
@@ -135,7 +135,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
         params = [
             dict(
                 Name=el["name"],
-                Optional="Required" if el["required"] else "Optional",
+                Optional="Required" if el.get("required", False) else "Optional",
                 Type=el["type"],
                 Description=el["description"],
             )
@@ -150,7 +150,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
         fields = [
             dict(
                 Name=el["name"],
-                Optional="Required" if el["required"] else "Optional",
+                Optional="Required" if el.get("required", False) else "Optional",
                 Type=el["type"],
                 Description=el["description"],
             )
