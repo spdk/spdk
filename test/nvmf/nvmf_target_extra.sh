@@ -39,7 +39,9 @@ fi
 run_test "nvmf_auth_target" "$rootdir/test/nvmf/target/auth.sh" "${TEST_ARGS[@]}"
 
 if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
-	run_test "nvmf_bdevio_no_huge" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}" --no-hugepages
+	if [[ $SPDK_TEST_NO_HUGE -eq 1 ]]; then
+		run_test "nvmf_bdevio_no_huge" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
+	fi
 	run_test "nvmf_tls" $rootdir/test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_fips" $rootdir/test/nvmf/fips/fips.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_control_msg_list" $rootdir/test/nvmf/target/control_msg_list.sh "${TEST_ARGS[@]}"

@@ -174,6 +174,8 @@ export SPDK_TEST_SETUP
 export SPDK_TEST_NVME_INTERRUPT
 : ${SPDK_TEST_SKIP_NVMF_KERNEL_TESTS=0}
 export SPDK_TEST_SKIP_NVMF_KERNEL_TESTS
+: ${SPDK_TEST_NO_HUGE=0}
+export SPDK_TEST_NO_HUGE
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -304,6 +306,10 @@ fi
 export HUGEMEM=$HUGEMEM
 
 NO_HUGE=()
+if [[ $SPDK_TEST_NO_HUGE -eq 1 ]]; then
+	NO_HUGE=(--no-huge -s 1024)
+fi
+
 TEST_MODE=
 for i in "$@"; do
 	case "$i" in
@@ -314,7 +320,8 @@ for i in "$@"; do
 			TEST_TRANSPORT="${i#*=}"
 			;;
 		--no-hugepages)
-			NO_HUGE=(--no-huge -s 1024)
+			echo "Parameter --no-hugepages is deprecated, use the SPDK_TEST_NO_HUGE variable instead"
+			exit 1
 			;;
 		--interrupt-mode)
 			TEST_INTERRUPT_MODE=1

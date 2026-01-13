@@ -222,3 +222,6 @@ vhost_shared
 xnvme_bdevperf
 xnvme_fio_plugin
 xnvme_rpc
+
+# Temporarily disabled as part of no-huge rafactor
+nvmf_bdevio_no_huge
