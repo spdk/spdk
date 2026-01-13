@@ -907,7 +907,7 @@
         {
           "name": "reset_mode",
           "type": "string",
-          "description": "Mode to reset I/O statistics after obtaining it: all, maxmin, none (default: none)"
+          "description": "Mode to reset I/O statistics after obtaining it: all, maxmin, error, none (default: none)"
         }
       ]
     },
@@ -922,7 +922,7 @@
         {
           "name": "mode",
           "type": "string",
-          "description": "Mode to reset I/O statistics: all, maxmin, none (default: all)"
+          "description": "Mode to reset I/O statistics: all, maxmin, error, none (default: all)"
         }
       ]
     },

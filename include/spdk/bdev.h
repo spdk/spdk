@@ -324,6 +324,8 @@ enum spdk_bdev_reset_stat_mode {
 	SPDK_BDEV_RESET_STAT_ALL,
 	/** Reset only max and min stats */
 	SPDK_BDEV_RESET_STAT_MAXMIN,
+	/** Reset i/o error stats */
+	SPDK_BDEV_RESET_STAT_ERROR,
 	/** Do not reset stats at all */
 	SPDK_BDEV_RESET_STAT_NONE,
 };

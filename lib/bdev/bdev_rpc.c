@@ -367,6 +367,8 @@ rpc_decode_reset_iostat_mode(const struct spdk_json_val *val, void *out)
 		*mode = SPDK_BDEV_RESET_STAT_ALL;
 	} else if (spdk_json_strequal(val, "maxmin") == true) {
 		*mode = SPDK_BDEV_RESET_STAT_MAXMIN;
+	} else if (spdk_json_strequal(val, "error") == true) {
+		*mode = SPDK_BDEV_RESET_STAT_ERROR;
 	} else if (spdk_json_strequal(val, "none") == true) {
 		*mode = SPDK_BDEV_RESET_STAT_NONE;
 	} else {

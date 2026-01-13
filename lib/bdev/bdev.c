@@ -4877,6 +4877,15 @@ spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_sta
 		return;
 	}
 
+	if (mode == SPDK_BDEV_RESET_STAT_ERROR || mode == SPDK_BDEV_RESET_STAT_ALL) {
+		if (stat->io_error != NULL) {
+			memset(stat->io_error, 0, sizeof(struct spdk_bdev_io_error_stat));
+		}
+		if (mode == SPDK_BDEV_RESET_STAT_ERROR) {
+			return;
+		}
+	}
+
 	stat->max_read_latency_ticks = 0;
 	stat->min_read_latency_ticks = UINT64_MAX;
 	stat->max_write_latency_ticks = 0;
@@ -4902,10 +4911,6 @@ spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_sta
 	stat->write_latency_ticks = 0;
 	stat->unmap_latency_ticks = 0;
 	stat->copy_latency_ticks = 0;
-
-	if (stat->io_error != NULL) {
-		memset(stat->io_error, 0, sizeof(struct spdk_bdev_io_error_stat));
-	}
 }
 
 struct spdk_bdev_io_stat *
