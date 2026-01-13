@@ -3496,91 +3496,84 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		 */
 		cdata->oaes.discovery_log_change_notices = 1;
 		cdata->cntrltype = SPDK_NVME_CTRLR_DISCOVERY;
-	} else {
-		cdata->vid = ctrlr->cdata.vid;
-		cdata->ssvid = ctrlr->cdata.ssvid;
-		cdata->ieee[0] = ctrlr->cdata.ieee[0];
-		cdata->ieee[1] = ctrlr->cdata.ieee[1];
-		cdata->ieee[2] = ctrlr->cdata.ieee[2];
-
-		/*
-		 * NVM subsystem fields (reserved for discovery subsystems)
-		 */
-		spdk_strcpy_pad(cdata->mn, subsystem->opts.mn, sizeof(cdata->mn), ' ');
-		spdk_strcpy_pad(cdata->sn, subsystem->opts.sn, sizeof(cdata->sn), ' ');
-		cdata->kas = ctrlr->cdata.kas;
-
-		cdata->rab = 6;
-		cdata->cmic.mports = 1;
-		cdata->cmic.mctrs = 1;
-		cdata->oaes.ns_attribute_notices = 1;
-		cdata->ctratt.hids = 1;
-		cdata->ctratt.fdps = ctrlr->subsys->fdp_supported;
-		cdata->ctratt.elbas = nvmf_subsystem_has_nvm_iocs(subsystem);
-		cdata->cntrltype = SPDK_NVME_CTRLR_IO;
-		/* We do not have any actual limitation to the number of abort commands.
-		 * We follow the recommendation by the NVMe specification.
-		 */
-		cdata->acl = NVMF_ABORT_COMMAND_LIMIT;
-		cdata->frmw.slot1_ro = 1;
-		cdata->frmw.num_slots = 1;
-
-		cdata->lpa.cses = 1; /* Command Effects log page supported */
-		cdata->lpa.mlps = 1;
-
-		cdata->sqes.min = 6;
-		cdata->sqes.max = 6;
-		cdata->cqes.min = 4;
-		cdata->cqes.max = 4;
-		cdata->nn = subsystem->max_nsid;
-		cdata->vwc.present = subsystem->vwc_present ? 1 : 0;
-		cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
-
-		cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
-
-		cdata->oncs.nvmcmps = ctrlr->cdata.oncs.nvmcmps;
-		cdata->oncs.nvmdsmsv = ctrlr->cdata.oncs.nvmdsmsv && nvmf_ctrlr_dsm_supported(ctrlr);
-		cdata->oncs.nvmwzsv = ctrlr->cdata.oncs.nvmwzsv &&
-				      nvmf_ctrlr_write_zeroes_supported(ctrlr);
-		cdata->oncs.reservs = ctrlr->cdata.oncs.reservs;
-		cdata->oncs.nvmcpys = ctrlr->cdata.oncs.nvmcpys;
-		cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
-		if (subsystem->opts.ana_reporting) {
-			/* Asymmetric Namespace Access Reporting is supported. */
-			cdata->cmic.anars = 1;
-			cdata->oaes.ana_change_notices = 1;
-
-			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
-			/* ANA Change state is not used, and ANA Persistent Loss state
-			 * is not supported for now.
-			 */
-			cdata->anacap.ana_optimized_state = 1;
-			cdata->anacap.ana_non_optimized_state = 1;
-			cdata->anacap.ana_inaccessible_state = 1;
-			/* ANAGRPID does not change while namespace is attached to controller */
-			cdata->anacap.no_change_anagrpid = 1;
-			cdata->anagrpmax = subsystem->max_nsid;
-			cdata->nanagrpid = subsystem->max_nsid;
-		}
-
-		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
-
-		assert(subsystem->tgt != NULL);
-		cdata->crdt[0] = subsystem->tgt->crdt[0];
-		cdata->crdt[1] = subsystem->tgt->crdt[1];
-		cdata->crdt[2] = subsystem->tgt->crdt[2];
-
-		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ioccsz 0x%x\n",
-			      cdata->nvmf_specific.ioccsz);
-		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: iorcsz 0x%x\n",
-			      cdata->nvmf_specific.iorcsz);
-		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: icdoff 0x%x\n",
-			      cdata->nvmf_specific.icdoff);
-		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ctrattr 0x%x\n",
-			      *(uint8_t *)&cdata->nvmf_specific.ctrattr);
-		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: msdbd 0x%x\n",
-			      cdata->nvmf_specific.msdbd);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+	cdata->vid = ctrlr->cdata.vid;
+	cdata->ssvid = ctrlr->cdata.ssvid;
+	cdata->ieee[0] = ctrlr->cdata.ieee[0];
+	cdata->ieee[1] = ctrlr->cdata.ieee[1];
+	cdata->ieee[2] = ctrlr->cdata.ieee[2];
+
+	/* NVM subsystem fields (reserved for discovery subsystems) */
+	spdk_strcpy_pad(cdata->mn, subsystem->opts.mn, sizeof(cdata->mn), ' ');
+	spdk_strcpy_pad(cdata->sn, subsystem->opts.sn, sizeof(cdata->sn), ' ');
+	cdata->kas = ctrlr->cdata.kas;
+
+	cdata->rab = 6;
+	cdata->cmic.mports = 1;
+	cdata->cmic.mctrs = 1;
+	cdata->oaes.ns_attribute_notices = 1;
+	cdata->ctratt.hids = 1;
+	cdata->ctratt.fdps = ctrlr->subsys->fdp_supported;
+	cdata->ctratt.elbas = nvmf_subsystem_has_nvm_iocs(subsystem);
+	cdata->cntrltype = SPDK_NVME_CTRLR_IO;
+	/* We do not have any actual limitation to the number of abort commands.
+	 * We follow the recommendation by the NVMe specification.
+	 */
+	cdata->acl = NVMF_ABORT_COMMAND_LIMIT;
+	cdata->frmw.slot1_ro = 1;
+	cdata->frmw.num_slots = 1;
+
+	cdata->lpa.cses = 1; /* Command Effects log page supported */
+	cdata->lpa.mlps = 1;
+
+	cdata->sqes.min = 6;
+	cdata->sqes.max = 6;
+	cdata->cqes.min = 4;
+	cdata->cqes.max = 4;
+	cdata->nn = subsystem->max_nsid;
+	cdata->vwc.present = subsystem->vwc_present ? 1 : 0;
+	cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
+
+	cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
+
+	cdata->oncs.nvmcmps = ctrlr->cdata.oncs.nvmcmps;
+	cdata->oncs.nvmdsmsv = ctrlr->cdata.oncs.nvmdsmsv && nvmf_ctrlr_dsm_supported(ctrlr);
+	cdata->oncs.nvmwzsv = ctrlr->cdata.oncs.nvmwzsv && nvmf_ctrlr_write_zeroes_supported(ctrlr);
+	cdata->oncs.reservs = ctrlr->cdata.oncs.reservs;
+	cdata->oncs.nvmcpys = ctrlr->cdata.oncs.nvmcpys;
+	cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
+	if (subsystem->opts.ana_reporting) {
+		/* Asymmetric Namespace Access Reporting is supported. */
+		cdata->cmic.anars = 1;
+		cdata->oaes.ana_change_notices = 1;
+
+		cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
+		/* ANA Change state is not used, and ANA Persistent Loss state is not supported for
+		 * now.
+		 */
+		cdata->anacap.ana_optimized_state = 1;
+		cdata->anacap.ana_non_optimized_state = 1;
+		cdata->anacap.ana_inaccessible_state = 1;
+		/* ANAGRPID does not change while namespace is attached to controller */
+		cdata->anacap.no_change_anagrpid = 1;
+		cdata->anagrpmax = subsystem->max_nsid;
+		cdata->nanagrpid = subsystem->max_nsid;
+	}
+
+	nvmf_ctrlr_populate_oacs(ctrlr, cdata);
+
+	assert(subsystem->tgt != NULL);
+	cdata->crdt[0] = subsystem->tgt->crdt[0];
+	cdata->crdt[1] = subsystem->tgt->crdt[1];
+	cdata->crdt[2] = subsystem->tgt->crdt[2];
+
+	SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ioccsz 0x%x\n", cdata->nvmf_specific.ioccsz);
+	SPDK_DEBUGLOG(nvmf, "ext ctrlr data: iorcsz 0x%x\n", cdata->nvmf_specific.iorcsz);
+	SPDK_DEBUGLOG(nvmf, "ext ctrlr data: icdoff 0x%x\n", cdata->nvmf_specific.icdoff);
+	SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ctrattr 0x%x\n",
+		      *(uint8_t *)&cdata->nvmf_specific.ctrattr);
+	SPDK_DEBUGLOG(nvmf, "ext ctrlr data: msdbd 0x%x\n", cdata->nvmf_specific.msdbd);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
