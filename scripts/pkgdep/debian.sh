@@ -25,6 +25,9 @@ python -m pip install pip-tools
 pip-compile --extra dev --strip-extras -o "$rootdir/scripts/pkgdep/requirements.txt" "${rootdir}/python/pyproject.toml"
 pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
 
+# Fixes issue: #3721
+pkgdep_toolpath meson "${virtdir}/bin"
+
 # Additional dependencies for SPDK CLI
 apt-get install -y python3-configshell-fb python3-pexpect
 
