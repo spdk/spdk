@@ -2456,6 +2456,12 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	tqpair = nvme_tcp_qpair(qpair);
 	memset(&tqpair->flags, 0, sizeof(tqpair->flags));
 
+	if (qpair->poll_group) {
+		tgroup = nvme_tcp_poll_group(qpair->poll_group);
+		tqpair->stats = &tgroup->stats;
+		tqpair->shared_stats = true;
+	}
+
 	if (!tqpair->sock) {
 		rc = nvme_tcp_qpair_connect_sock(ctrlr, qpair);
 		if (rc < 0) {
@@ -2477,9 +2483,6 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 					   spdk_strerror(-rc));
 			return rc;
 		}
-
-		tqpair->stats = &tgroup->stats;
-		tqpair->shared_stats = true;
 	} else {
 		/* When resetting a controller, we disconnect adminq and then reconnect. The stats
 		 * is not freed when disconnecting. So when reconnecting, don't allocate memory
