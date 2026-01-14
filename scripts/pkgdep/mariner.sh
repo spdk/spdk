@@ -72,17 +72,13 @@ if [[ ! -e /usr/bin/python ]]; then
 	ln -s /usr/bin/python3 /usr/bin/python
 fi
 
-if ((EUID == 0)); then
-	cat <<- WARNING
-		Warning: Running as root. You may want to install the pip packages
-		as a non-root user if you wish to build SPDK as a non-root user.
-
-		Required packages:
-		$(printf '  %s\n' "${pips[@]}")
-
-	WARNING
-fi
-
+# per PEP668 work inside virtual env
+virtdir=${PIP_VIRTDIR:-/var/spdk/dependencies/pip}
+python3 -m venv --upgrade-deps --system-site-packages "$virtdir"
+source "$virtdir/bin/activate"
 pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
+
+# Fixes issue: #3721
+pkgdep_toolpath meson "${virtdir}/bin"
 
 additional_dependencies
