@@ -949,6 +949,12 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_add_listener", rpc_nvmf_subsystem_add_listener,
 		  SPDK_RPC_RUNTIME);
 
+static const struct spdk_json_object_decoder rpc_nvmf_subsystem_remove_listener_decoders[] = {
+	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
+	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
+	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
+};
+
 static void
 rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
@@ -966,8 +972,8 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_add_listener_decoders,
-				    SPDK_COUNTOF(rpc_nvmf_subsystem_add_listener_decoders),
+	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_remove_listener_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_subsystem_remove_listener_decoders),
 				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -1120,6 +1126,12 @@ rpc_nvmf_discovery_add_referral(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("nvmf_discovery_add_referral", rpc_nvmf_discovery_add_referral, SPDK_RPC_RUNTIME);
 
+static const struct spdk_json_object_decoder rpc_nvmf_discovery_remove_referral_decoders[] = {
+	{"address", offsetof(struct nvmf_rpc_referral_ctx, address), decode_rpc_listen_address},
+	{"tgt_name", offsetof(struct nvmf_rpc_referral_ctx, tgt_name), spdk_json_decode_string, true},
+	{"subnqn", offsetof(struct nvmf_rpc_referral_ctx, subnqn), spdk_json_decode_string, true},
+};
+
 static void
 rpc_nvmf_discovery_remove_referral(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
@@ -1130,8 +1142,8 @@ rpc_nvmf_discovery_remove_referral(struct spdk_jsonrpc_request *request,
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_nvmf_discovery_add_referral_decoders,
-				    SPDK_COUNTOF(rpc_nvmf_discovery_add_referral_decoders),
+	if (spdk_json_decode_object(params, rpc_nvmf_discovery_remove_referral_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_discovery_remove_referral_decoders),
 				    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -2067,6 +2079,12 @@ rpc_nvmf_subsystem_remove_host_done(void *_ctx, int status)
 	free(ctx);
 }
 
+static const struct spdk_json_object_decoder rpc_nvmf_subsystem_remove_host_decoders[] = {
+	{"nqn", offsetof(struct nvmf_rpc_host_ctx, nqn), spdk_json_decode_string},
+	{"host", offsetof(struct nvmf_rpc_host_ctx, host), spdk_json_decode_string},
+	{"tgt_name", offsetof(struct nvmf_rpc_host_ctx, tgt_name), spdk_json_decode_string, true},
+};
+
 static void
 rpc_nvmf_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
@@ -2085,8 +2103,8 @@ rpc_nvmf_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_add_host_decoders,
-				    SPDK_COUNTOF(rpc_nvmf_subsystem_add_host_decoders),
+	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_remove_host_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_subsystem_remove_host_decoders),
 				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");

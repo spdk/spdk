@@ -3771,7 +3771,6 @@
     },
     {
       "name": "nvmf_subsystem_remove_listener",
-      "decoder": "rpc_nvmf_subsystem_add_listener_decoders",
       "params": [
         {
           "name": "nqn",
@@ -3939,7 +3938,6 @@
     },
     {
       "name": "nvmf_subsystem_remove_host",
-      "decoder": "rpc_nvmf_subsystem_add_host_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4163,7 +4161,6 @@
     },
     {
       "name": "nvmf_discovery_remove_referral",
-      "decoder": "rpc_nvmf_discovery_add_referral_decoders",
       "params": [
         {
           "name": "tgt_name",
