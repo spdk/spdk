@@ -71,6 +71,12 @@ bdev_uring_get_ctx_size(void)
 	return sizeof(struct bdev_uring_task);
 }
 
+static struct bdev_uring *
+uring_from_bdev(struct spdk_bdev *bdev)
+{
+	return SPDK_CONTAINEROF(bdev, struct bdev_uring, bdev);
+}
+
 static struct spdk_bdev_module uring_if = {
 	.name		= "uring",
 	.module_init	= bdev_uring_init,
@@ -127,7 +133,7 @@ bdev_uring_rescan(const char *name)
 		goto exit;
 	}
 
-	uring = SPDK_CONTAINEROF(bdev, struct bdev_uring, bdev);
+	uring = uring_from_bdev(bdev);
 	uring_size = spdk_fd_get_size(uring->fd);
 	blockcnt = uring_size / bdev->blocklen;
 
@@ -322,6 +328,7 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		      bool success)
 {
 	int64_t ret = 0;
+	struct bdev_uring *uring = uring_from_bdev(bdev_io->bdev);
 
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -330,7 +337,7 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		ret = bdev_uring_readv((struct bdev_uring *)bdev_io->bdev->ctxt,
+		ret = bdev_uring_readv(uring,
 				       ch,
 				       (struct bdev_uring_task *)bdev_io->driver_ctx,
 				       bdev_io->u.bdev.iovs,
@@ -339,7 +346,7 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 				       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		ret = bdev_uring_writev((struct bdev_uring *)bdev_io->bdev->ctxt,
+		ret = bdev_uring_writev(uring,
 					ch,
 					(struct bdev_uring_task *)bdev_io->driver_ctx,
 					bdev_io->u.bdev.iovs,
@@ -421,7 +428,7 @@ bdev_uring_zone_management_op(struct spdk_bdev_io *bdev_io)
 	long unsigned zone_mgmt_op;
 	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
 
-	uring = (struct bdev_uring *)bdev_io->bdev->ctxt;
+	uring = uring_from_bdev(bdev_io->bdev);
 
 	switch (bdev_io->u.zone_mgmt.zone_action) {
 	case SPDK_BDEV_ZONE_RESET:
@@ -466,7 +473,7 @@ bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
 	uint32_t num_zones = bdev_io->u.zone_mgmt.num_zones;
 	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
 
-	uring = (struct bdev_uring *)bdev_io->bdev->ctxt;
+	uring = uring_from_bdev(bdev_io->bdev);
 	shift = uring->zd.lba_shift;
 
 	if ((num_zones > uring->zd.num_zones) || !num_zones) {
@@ -705,7 +712,7 @@ bdev_uring_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 static void
 bdev_uring_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	struct bdev_uring *uring = bdev->ctxt;
+	struct bdev_uring *uring = uring_from_bdev(bdev);
 	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_object_begin(w);
