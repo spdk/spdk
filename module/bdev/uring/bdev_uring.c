@@ -267,7 +267,7 @@ bdev_uring_destruct(void *ctx)
 static int
 bdev_uring_reap(struct io_uring *ring, int max)
 {
-	int i, count, ret;
+	int i, count, rc;
 	struct io_uring_cqe *cqe;
 	struct bdev_uring_task *uring_task;
 	enum spdk_bdev_io_status status;
@@ -275,9 +275,9 @@ bdev_uring_reap(struct io_uring *ring, int max)
 
 	count = 0;
 	for (i = 0; i < max; i++) {
-		ret = io_uring_peek_cqe(ring, &cqe);
-		if (ret != 0) {
-			assert(ret == -EAGAIN || ret == -EWOULDBLOCK);
+		rc = io_uring_peek_cqe(ring, &cqe);
+		if (rc != 0) {
+			assert(rc == -EAGAIN || rc == -EWOULDBLOCK);
 			return count;
 		}
 
@@ -285,11 +285,12 @@ bdev_uring_reap(struct io_uring *ring, int max)
 
 		uring_task = (struct bdev_uring_task *)cqe->user_data;
 		bdev_io = spdk_bdev_io_from_ctx(uring_task);
-		if (spdk_unlikely(cqe->res != (signed)uring_task->len)) {
-			if (cqe->res == -EAGAIN || cqe->res == -EWOULDBLOCK) {
+		rc = cqe->res;
+		if (spdk_unlikely(rc != (signed)uring_task->len)) {
+			if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 				status = SPDK_BDEV_IO_STATUS_NOMEM;
 			} else {
-				URING_ERRLOG(uring_from_bdev(bdev_io->bdev), "I/O failed with error %d\n", cqe->res);
+				URING_ERRLOG(uring_from_bdev(bdev_io->bdev), "I/O failed with error %d\n", rc);
 				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
