@@ -87,23 +87,23 @@ static struct spdk_bdev_module uring_if = {
 SPDK_BDEV_MODULE_REGISTER(uring, &uring_if)
 
 static int
-bdev_uring_open(struct bdev_uring *bdev)
+bdev_uring_open(struct bdev_uring *uring)
 {
 	int fd;
 
-	fd = open(bdev->filename, O_RDWR | O_DIRECT | O_NOATIME);
+	fd = open(uring->filename, O_RDWR | O_DIRECT | O_NOATIME);
 	if (fd < 0) {
 		/* Try without O_DIRECT for non-disk files */
-		fd = open(bdev->filename, O_RDWR | O_NOATIME);
+		fd = open(uring->filename, O_RDWR | O_NOATIME);
 		if (fd < 0) {
 			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
-				    bdev->filename, errno, spdk_strerror(errno));
-			bdev->fd = -1;
+				    uring->filename, errno, spdk_strerror(errno));
+			uring->fd = -1;
 			return -1;
 		}
 	}
 
-	bdev->fd = fd;
+	uring->fd = fd;
 
 	return 0;
 }
@@ -158,22 +158,22 @@ exit:
 }
 
 static int
-bdev_uring_close(struct bdev_uring *bdev)
+bdev_uring_close(struct bdev_uring *uring)
 {
 	int rc;
 
-	if (bdev->fd == -1) {
+	if (uring->fd == -1) {
 		return 0;
 	}
 
-	rc = close(bdev->fd);
+	rc = close(uring->fd);
 	if (rc < 0) {
 		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
-			    bdev->fd, errno, spdk_strerror(errno));
+			    uring->fd, errno, spdk_strerror(errno));
 		return -1;
 	}
 
-	bdev->fd = -1;
+	uring->fd = -1;
 
 	return 0;
 }
