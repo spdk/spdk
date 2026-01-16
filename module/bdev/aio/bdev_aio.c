@@ -436,7 +436,7 @@ bdev_user_io_getevents(int kq, unsigned int max, struct kevent *events)
 static int
 bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 {
-	int nr, i, res = 0;
+	int nr, i, rc;
 	struct bdev_aio_task *aio_task;
 	struct kevent events[SPDK_AIO_QUEUE_DEPTH];
 	struct spdk_bdev_io *bdev_io;
@@ -459,9 +459,9 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		} else {
 			AIO_FDISK_ERRLOG(fdisk_from_bdev(bdev_io->bdev), "failed to complete: rc %d\n",
 					 aio_error(&aio_task->aiocb));
-			res = aio_error(&aio_task->aiocb);
-			if (res != 0) {
-				spdk_bdev_io_complete_aio_status(bdev_io, res);
+			rc = aio_error(&aio_task->aiocb);
+			if (rc != 0) {
+				spdk_bdev_io_complete_aio_status(bdev_io, rc);
 			} else {
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			}
@@ -537,7 +537,7 @@ bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *u
 static int
 bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 {
-	int nr, i, res = 0;
+	int nr, i, rc;
 	struct bdev_aio_task *aio_task;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
 	struct spdk_bdev_io *bdev_io;
@@ -563,7 +563,7 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		 * But from libaio.h, io_event.res is defined unsigned long, so
 		 * convert it to signed value for error detection.
 		 */
-		res = (int)events[i].res;
+		rc = (int)events[i].res;
 		fdisk = fdisk_from_bdev(bdev_io->bdev);
 
 		/* When the block device device is detached from the system, IOs fail with res of 0.
@@ -573,21 +573,21 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		 * When the fd is a file and the mount backing the file is detached, IOs fail
 		 * with a res of -EIO and the ioctl BLKGETSIZE64 yields a device size of 0.
 		 */
-		if (res == -EIO || res >= 0) {
+		if (rc == -EIO || rc >= 0) {
 			if (spdk_fd_get_size(fdisk->fd) == 0) {
-				res = -ENODEV;
+				rc = -ENODEV;
 			}
 		}
 
-		if (res < 0) {
-			if (res == -EAGAIN) {
+		if (rc < 0) {
+			if (rc == -EAGAIN) {
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-			} else if (res == -ENODEV) {
+			} else if (rc == -ENODEV) {
 				bdev_aio_try_hot_remove(fdisk);
-				spdk_bdev_io_complete_aio_status(bdev_io, res);
+				spdk_bdev_io_complete_aio_status(bdev_io, rc);
 			} else {
 				AIO_FDISK_ERRLOG(fdisk, "failed to complete: rc %"PRId64"\n", events[i].res);
-				spdk_bdev_io_complete_aio_status(bdev_io, res);
+				spdk_bdev_io_complete_aio_status(bdev_io, rc);
 			}
 		} else {
 			AIO_FDISK_ERRLOG(fdisk, "failed to complete: rc %"PRId64"\n", events[i].res);
