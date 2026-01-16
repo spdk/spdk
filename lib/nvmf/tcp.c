@@ -3527,7 +3527,7 @@ nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	return rc;
 }
 
-static int
+static void
 nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
@@ -3555,8 +3555,6 @@ nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 	}
 
 	nvmf_tcp_req_process(ttransport, tcp_req);
-
-	return 0;
 }
 
 static void

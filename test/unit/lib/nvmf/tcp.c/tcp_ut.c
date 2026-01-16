@@ -181,10 +181,7 @@ DEFINE_STUB(nvmf_bdev_ctrlr_get_dif_ctx,
 DEFINE_STUB_V(nvmf_bdev_ctrlr_identify_iocs_nvm,
 	      (struct spdk_nvmf_ns *ns, struct spdk_nvme_nvm_ns_data *nsdata_nvm));
 
-DEFINE_STUB(nvmf_transport_req_complete,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    0);
+DEFINE_STUB_V(nvmf_transport_req_complete, (struct spdk_nvmf_request *req));
 
 DEFINE_STUB(nvmf_bdev_zcopy_enabled,
 	    bool,

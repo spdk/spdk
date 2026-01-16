@@ -5281,9 +5281,7 @@ _nvmf_request_complete(void *ctx)
 		break;
 	}
 
-	if (spdk_unlikely(nvmf_transport_req_complete(req))) {
-		SPDK_ERRLOG("Transport request completion error!\n");
-	}
+	nvmf_transport_req_complete(req);
 
 	/* AER cmd is an exception */
 	if (spdk_likely(sgroup && !is_aer)) {

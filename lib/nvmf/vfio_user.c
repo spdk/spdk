@@ -4478,7 +4478,7 @@ nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 	_nvmf_vfio_user_req_free(sq, vu_req);
 }
 
-static int
+static void
 nvmf_vfio_user_req_complete(struct spdk_nvmf_request *req)
 {
 	struct nvmf_vfio_user_sq *sq;
@@ -4496,8 +4496,6 @@ nvmf_vfio_user_req_complete(struct spdk_nvmf_request *req)
 	}
 
 	_nvmf_vfio_user_req_free(sq, vu_req);
-
-	return 0;
 }
 
 static void

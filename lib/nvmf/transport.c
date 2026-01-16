@@ -788,10 +788,10 @@ nvmf_transport_req_free(struct spdk_nvmf_request *req)
 	req->qpair->transport->ops->req_free(req);
 }
 
-int
+void
 nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 {
-	return req->qpair->transport->ops->req_complete(req);
+	req->qpair->transport->ops->req_complete(req);
 }
 
 void

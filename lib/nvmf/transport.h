@@ -36,7 +36,7 @@ int nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 void nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
-int nvmf_transport_req_complete(struct spdk_nvmf_request *req);
+void nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
 void nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
 			       spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg);

@@ -4473,7 +4473,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 	_nvmf_rdma_request_free(rdma_req, rtransport);
 }
 
-static int
+static void
 nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
@@ -4492,8 +4492,6 @@ nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	}
 
 	nvmf_rdma_request_process(rtransport, rdma_req);
-
-	return 0;
 }
 
 static void

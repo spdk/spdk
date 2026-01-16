@@ -420,7 +420,7 @@ struct spdk_nvmf_transport_ops {
 	 * Signal request completion, which sends a response
 	 * to the originator.
 	 */
-	int (*req_complete)(struct spdk_nvmf_request *req);
+	void (*req_complete)(struct spdk_nvmf_request *req);
 
 	/**
 	 * Callback for the iobuf based queuing of requests awaiting free buffers.

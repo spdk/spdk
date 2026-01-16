@@ -169,10 +169,7 @@ DEFINE_STUB(nvmf_bdev_ctrlr_nvme_passthru_io,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(nvmf_transport_req_complete,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    0);
+DEFINE_STUB_V(nvmf_transport_req_complete, (struct spdk_nvmf_request *req));
 
 DEFINE_STUB_V(nvmf_ns_reservation_request, (void *ctx));
 

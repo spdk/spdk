@@ -1867,7 +1867,7 @@ nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
 	return false;
 }
 
-static int
+static void
 nvmf_fc_request_complete(struct spdk_nvmf_request *req)
 {
 	int rc = 0;
@@ -1900,7 +1900,6 @@ nvmf_fc_request_complete(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Error in request complete.\n");
 		_nvmf_fc_request_free(fc_req);
 	}
-	return 0;
 }
 
 struct spdk_nvmf_tgt *
