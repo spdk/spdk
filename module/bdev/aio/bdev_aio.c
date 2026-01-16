@@ -156,8 +156,7 @@ bdev_aio_close(struct file_disk *disk)
 
 	rc = close(disk->fd);
 	if (rc < 0) {
-		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
-			    disk->fd, errno, spdk_strerror(errno));
+		SPDK_ERRLOG("close() failed (fd=%d), rc %d: %s\n", disk->fd, rc, spdk_strerror(errno));
 		return -1;
 	}
 
@@ -180,8 +179,7 @@ bdev_aio_open(struct file_disk *disk, bool nowait)
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(disk->filename, io_flag);
 		if (fd < 0) {
-			AIO_FDISK_ERRLOG(disk, "open() failed, errno %d: %s\n",
-					 errno, spdk_strerror(errno));
+			AIO_FDISK_ERRLOG(disk, "open() failed, rc %d: %s\n", fd, spdk_strerror(errno));
 			disk->fd = -1;
 			return -1;
 		}
@@ -325,7 +323,7 @@ bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 static void
 bdev_aio_fallocate(struct spdk_bdev_io *bdev_io, int mode)
 {
-	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+	struct file_disk *fdisk = fdisk_from_bdev(bdev_io->bdev);
 	struct bdev_aio_task *aio_task = (struct bdev_aio_task *)bdev_io->driver_ctx;
 	uint64_t offset_bytes = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
 	uint64_t length_bytes = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
@@ -366,13 +364,9 @@ static void
 bdev_aio_destruct_cb(void *io_device)
 {
 	struct file_disk *fdisk = io_device;
-	int rc = 0;
 
 	TAILQ_REMOVE(&g_aio_disk_head, fdisk, link);
-	rc = bdev_aio_close(fdisk);
-	if (rc < 0) {
-		AIO_FDISK_ERRLOG(fdisk, "bdev_aio_close() failed\n");
-	}
+	bdev_aio_close(fdisk);
 
 	if (fdisk->delete_cb_fn) {
 		fdisk->delete_cb_fn(fdisk->delete_cb_arg, 0);
@@ -706,6 +700,8 @@ static void
 bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		    bool success)
 {
+	struct file_disk *fdisk = fdisk_from_bdev(bdev_io->bdev);
+
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -715,7 +711,7 @@ bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		bdev_aio_rw(bdev_io->type,
-			    (struct file_disk *)bdev_io->bdev->ctxt,
+			    fdisk,
 			    ch,
 			    (struct bdev_aio_task *)bdev_io->driver_ctx,
 			    bdev_io->u.bdev.iovs,
@@ -724,7 +720,7 @@ bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			    bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	default:
-		SPDK_ERRLOG("Wrong io type\n");
+		AIO_FDISK_ERRLOG(fdisk, "Wrong io type: %d\n", bdev_io->type);
 		break;
 	}
 }
@@ -732,7 +728,7 @@ bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 static int
 _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+	struct file_disk *fdisk = fdisk_from_bdev(bdev_io->bdev);
 
 	switch (bdev_io->type) {
 	/* Read and write operations must be performed on buffers aligned to
@@ -752,13 +748,11 @@ _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
-			       (struct bdev_aio_task *)bdev_io->driver_ctx);
+		bdev_aio_flush(fdisk, (struct bdev_aio_task *)bdev_io->driver_ctx);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		bdev_aio_reset((struct file_disk *)bdev_io->bdev->ctxt,
-			       (struct bdev_aio_task *)bdev_io->driver_ctx);
+		bdev_aio_reset(fdisk, (struct bdev_aio_task *)bdev_io->driver_ctx);
 		return 0;
 
 #ifndef __FreeBSD__
@@ -900,7 +894,7 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 static void
 bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	struct file_disk *fdisk = bdev->ctxt;
+	struct file_disk *fdisk = fdisk_from_bdev(bdev);
 	const struct spdk_uuid *uuid = spdk_bdev_get_uuid(bdev);
 
 	spdk_json_write_object_begin(w);
@@ -1047,7 +1041,6 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	}
 
 	if (bdev_aio_open(fdisk, nowait)) {
-		AIO_FDISK_ERRLOG(fdisk, "Unable to open file, errno: %d\n", errno);
 		rc = -errno;
 		goto error_return;
 	}
@@ -1161,7 +1154,7 @@ bdev_aio_rescan(const char *name)
 		goto exit;
 	}
 
-	fdisk = SPDK_CONTAINEROF(bdev, struct file_disk, disk);
+	fdisk = fdisk_from_bdev(bdev);
 	disk_size = spdk_fd_get_size(fdisk->fd);
 	blockcnt = disk_size / bdev->blocklen;
 
