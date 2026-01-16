@@ -414,7 +414,7 @@ struct spdk_nvmf_transport_ops {
 	 * Free the request without sending a response
 	 * to the originator. Release memory tied to this request.
 	 */
-	int (*req_free)(struct spdk_nvmf_request *req);
+	void (*req_free)(struct spdk_nvmf_request *req);
 
 	/*
 	 * Signal request completion, which sends a response

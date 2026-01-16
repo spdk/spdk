@@ -527,14 +527,12 @@ nvmf_tcp_request_free(void *cb_arg)
 	nvmf_tcp_req_process(ttransport, tcp_req);
 }
 
-static int
+static void
 nvmf_tcp_req_free(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_tcp_req *tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 
 	nvmf_tcp_request_free(tcp_req);
-
-	return 0;
 }
 
 static void

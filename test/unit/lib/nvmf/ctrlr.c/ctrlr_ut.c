@@ -196,10 +196,8 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_abort_cmd,
 	     struct spdk_nvmf_request *req, struct spdk_nvmf_request *req_to_abort),
 	    0);
 
-DEFINE_STUB(nvmf_transport_req_free,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    0);
+DEFINE_STUB_V(nvmf_transport_req_free,
+	      (struct spdk_nvmf_request *req));
 
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_admin,
 	    int,

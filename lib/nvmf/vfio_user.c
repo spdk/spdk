@@ -420,7 +420,7 @@ struct nvmf_vfio_user_transport {
 /*
  * function prototypes
  */
-static int nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
+static void nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
 
 static struct nvmf_vfio_user_req *get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *sq);
 
@@ -4464,7 +4464,7 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_sq *sq, struct nvmf_vfio_user_req
 	TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
 }
 
-static int
+static void
 nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 {
 	struct nvmf_vfio_user_sq *sq;
@@ -4476,8 +4476,6 @@ nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 	sq = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_sq, qpair);
 
 	_nvmf_vfio_user_req_free(sq, vu_req);
-
-	return 0;
 }
 
 static int

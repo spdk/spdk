@@ -567,7 +567,7 @@ static void _poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
 
 static void _nvmf_rdma_remove_destroyed_device(void *c);
 
-static int nvmf_rdma_request_free(struct spdk_nvmf_request *req);
+static void nvmf_rdma_request_free(struct spdk_nvmf_request *req);
 
 static inline enum spdk_nvme_media_error_status_code
 nvmf_rdma_dif_error_to_compl_status(uint8_t err_type) {
@@ -4445,7 +4445,7 @@ nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	return 0;
 }
 
-static int
+static void
 nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
@@ -4471,7 +4471,6 @@ nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 	}
 
 	_nvmf_rdma_request_free(rdma_req, rtransport);
-	return 0;
 }
 
 static int

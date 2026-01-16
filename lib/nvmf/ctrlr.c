@@ -5173,9 +5173,7 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
-	if (spdk_unlikely(nvmf_transport_req_free(req))) {
-		SPDK_ERRLOG("Unable to free transport level request resources.\n");
-	}
+	nvmf_transport_req_free(req);
 
 	nvmf_qpair_request_cleanup(qpair);
 

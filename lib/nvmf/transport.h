@@ -34,7 +34,7 @@ int nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *grou
 
 int nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
-int nvmf_transport_req_free(struct spdk_nvmf_request *req);
+void nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
 int nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 

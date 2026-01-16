@@ -27,7 +27,7 @@ DEFINE_STUB(nvmf_ctrlr_async_event_ana_change_notice, int,
 	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
 DEFINE_STUB(nvmf_transport_poll_group_remove, int, (struct spdk_nvmf_transport_poll_group *group,
 		struct spdk_nvmf_qpair *qpair), 0);
-DEFINE_STUB(nvmf_transport_req_free, int, (struct spdk_nvmf_request *req), 0);
+DEFINE_STUB_V(nvmf_transport_req_free, (struct spdk_nvmf_request *req));
 DEFINE_STUB(nvmf_transport_poll_group_poll, int, (struct spdk_nvmf_transport_poll_group *group), 0);
 DEFINE_STUB_V(nvmf_subsystem_remove_all_listeners, (struct spdk_nvmf_subsystem *subsystem,
 		bool stop));

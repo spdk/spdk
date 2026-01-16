@@ -1504,9 +1504,7 @@ _nvmf_qpair_sgroup_req_clean(struct spdk_nvmf_subsystem_poll_group *sgroup,
 	TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
 		if (req->qpair == qpair) {
 			TAILQ_REMOVE(&sgroup->queued, req, link);
-			if (nvmf_transport_req_free(req)) {
-				SPDK_ERRLOG("Transport request free error!\n");
-			}
+			nvmf_transport_req_free(req);
 		}
 	}
 }
@@ -1789,9 +1787,7 @@ nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 		SPDK_ERRLOG("sgroup->queued not empty when adding subsystem\n");
 		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
 			TAILQ_REMOVE(&sgroup->queued, req, link);
-			if (nvmf_transport_req_free(req)) {
-				SPDK_ERRLOG("Transport request free error!\n");
-			}
+			nvmf_transport_req_free(req);
 		}
 	}
 

@@ -2193,7 +2193,7 @@ nvmf_fc_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return (int) count;
 }
 
-static int
+static void
 nvmf_fc_request_free(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fc_request *fc_req = nvmf_fc_get_fc_req(req);
@@ -2204,8 +2204,6 @@ nvmf_fc_request_free(struct spdk_nvmf_request *req)
 	} else {
 		nvmf_fc_request_abort_complete(fc_req);
 	}
-
-	return 0;
 }
 
 static void

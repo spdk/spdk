@@ -782,10 +782,10 @@ nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return group->transport->ops->poll_group_poll(group);
 }
 
-int
+void
 nvmf_transport_req_free(struct spdk_nvmf_request *req)
 {
-	return req->qpair->transport->ops->req_free(req);
+	req->qpair->transport->ops->req_free(req);
 }
 
 int
