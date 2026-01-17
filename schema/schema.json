@@ -2478,6 +2478,7 @@
     },
     {
       "name": "bdev_ftl_create",
+      "alias": "bdev_ftl_load",
       "params": [
         {
           "name": "name",
@@ -2576,6 +2577,7 @@
     },
     {
       "name": "bdev_ftl_delete",
+      "alias": "bdev_ftl_unload",
       "params": [
         {
           "name": "name",

@@ -39,10 +39,12 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_methods = set(method["name"] for method in schema['methods'])
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
     schema_decoders = {method["name"]:method["decoder"] for method in schema['methods'] if "decoder" in method}
+    schema_aliases = {method["name"]:method["alias"] for method in schema['methods'] if "alias" in method}
     exception_methods = {"nvmf_create_target", "nvmf_delete_target", "nvmf_get_targets"}
     # TODO: those are embeeded objects decoders and will be resolved soon
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
     c_code_methods = dict()
+    c_code_aliases = dict()
     for folder in ("module", "lib"):
         for path in (base_dir / folder).rglob("*_rpc.c"):
             data = path.read_text()
@@ -52,6 +54,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not match function name '{func}'")
                 if name not in schema_methods | exception_methods:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not appear in schema. Update schema or exception list")
+            aliases = re.findall(r'SPDK_RPC_REGISTER_ALIAS_DEPRECATED\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)', data)
+            c_code_aliases.update(aliases)
             decoders = re.findall(r"static\s+const\s+struct\s+spdk_json_object_decoder\s+(.+?)\[\]\s+=\s+{(.+?)};",
                                   data, re.MULTILINE | re.DOTALL)
             struct_names = {schema_decoders.get(name, f"rpc_{name}_decoders") for name, _ in methods}
@@ -64,6 +68,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 c_code_methods[name] = re.findall(r'\{\s*"(\w+)",\s*(offsetof\(.+?\)|0),\s*(\w+)', fields, re.MULTILINE | re.DOTALL)
                 if not c_code_methods[name]:
                     raise ValueError(f"In file {path}: could not parse fields for decoder '{name}' fields: '{fields}'. Fix decoder code.")
+    if c_code_aliases != schema_aliases:
+        raise ValueError(f"Aliases {c_code_aliases} do not match schema aliases {schema_aliases}. Update schema aliases or code c.")
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
