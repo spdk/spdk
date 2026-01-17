@@ -71,6 +71,11 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"In file {path}: could not parse fields for decoder '{name}' fields: '{fields}'. Fix decoder code.")
     if c_code_aliases != schema_aliases:
         raise ValueError(f"Aliases {c_code_aliases} do not match schema aliases {schema_aliases}. Update schema aliases or code c.")
+    types = {'spdk_json_decode_bool': 'boolean', 'spdk_json_decode_string': 'string',
+             'spdk_json_decode_uint8': 'number', 'spdk_json_decode_uint16': 'number',
+             'spdk_json_decode_int32': 'number', 'spdk_json_decode_uint32': 'number',
+             'spdk_json_decode_uint64':'number', 'spdk_json_decode_uuid': 'string',
+             }
     for method in schema['methods']:
         decoder_name = schema_decoders.get(method['name'], f"rpc_{method['name']}_decoders")
         schema_params = set(parameter["name"] for parameter in method['params'])
@@ -89,6 +94,17 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 raise ValueError(f"Params of '{method['name']}' defined in schema but missing in CLI: {sorted(missing_in_cli)}")
         if missing_in_schema:
             raise ValueError(f"Params of '{method['name']}' defined in CLI but missing in schema: {sorted(missing_in_schema)}")
+        for parameter in method['params']:
+            code_type = [ctype for name, _, ctype in c_code_methods[decoder_name] if name == parameter['name']]
+            if not code_type:
+                # TODO: handle this case later and fix issues raised by it
+                continue
+            new_type = types.get(code_type[0])
+            if not new_type:
+                # TODO: handle this case later and fix issues raised by it
+                continue
+            if new_type != parameter['type']:
+                raise ValueError(f"For method '{method['name']}', parameter '{parameter['name']}': 'type' field is mismatched")
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
