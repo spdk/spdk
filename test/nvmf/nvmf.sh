@@ -17,8 +17,8 @@ run_test "nvmf_sock" $rootdir/test/nvmf/sock/sock.sh "${TEST_ARGS[@]}"
 run_test "nvmf_target_core" $rootdir/test/nvmf/nvmf_target_core.sh "${TEST_ARGS[@]}"
 run_test "nvmf_target_extra" $rootdir/test/nvmf/nvmf_target_extra.sh "${TEST_ARGS[@]}"
 run_test "nvmf_host" $rootdir/test/nvmf/nvmf_host.sh "${TEST_ARGS[@]}"
-# Interrupt mode for now is supported only on the target, with the TCP transport and posix or ssl socket implementations.
-if [[ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" && $SPDK_TEST_URING -eq 0 ]]; then
+# Interrupt mode for now is supported only on the target, with the TCP and RDMA Transports and posix or ssl socket implementations.
+if [[ ("$SPDK_TEST_NVMF_TRANSPORT" = "tcp" && $SPDK_TEST_URING -eq 0) || "$SPDK_TEST_NVMF_TRANSPORT" = "rdma" ]]; then
 	run_test "nvmf_target_core_interrupt_mode" $rootdir/test/nvmf/nvmf_target_core.sh "${TEST_ARGS[@]}" --interrupt-mode
 	run_test "nvmf_interrupt" $rootdir/test/nvmf/target/interrupt.sh "${TEST_ARGS[@]}" --interrupt-mode
 fi
