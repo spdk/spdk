@@ -43,7 +43,7 @@ fi
 
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
-if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
+if [[ $ID == centos || $ID == rhel || $ID == rocky || $ID == almalinux ]]; then
 	repos=() enable=("epel" "elrepo" "elrepo-testing") add=() elrepo_configured=false
 
 	if [[ -n $(yum repolist --all elrepo) ]]; then
