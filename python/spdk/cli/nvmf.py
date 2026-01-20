@@ -7,6 +7,7 @@
 
 import argparse
 import sys
+from functools import partial
 
 from spdk.rpc.cmd_parser import apply_defaults, group_as, print_dict, strip_globals
 from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
@@ -46,14 +47,14 @@ def add_parser(subparsers):
                    when the controller has a single namespace that is an NVMe bdev.
                    Available options are: all, identify_ctrlr, identify_uuid_list, get_log_page, get_set_features, sanitize,
                    security_send_recv, fw_update, nvme_mi, vendor_specific""",
-                   type=lambda d: d.split(','), default=[])
+                   type=partial(str.split, sep=','), default=[])
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.add_argument('-d', '--discovery-filter', help="""Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`""", type=str)
     p.add_argument('--dhchap-digests', help='Comma-separated list of allowed DH-HMAC-CHAP digests',
-                   type=lambda d: d.split(','))
+                   type=partial(str.split, sep=','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
-                   type=lambda d: d.split(','))
+                   type=partial(str.split, sep=','))
     p.set_defaults(func=nvmf_set_config)
 
     oncs = ('nvmcmps', 'nvmdsmsv', 'nvmwzsv', 'reservs', 'nvmcpys')
@@ -117,9 +118,9 @@ def add_parser(subparsers):
     p.add_argument('--kas', help="Keep alive support", type=int)
     p.add_argument('--min-kato', help="The minimum keep alive timeout in milliseconds", type=int)
     p.add_argument('--masked-oncs', help=f"Comma-separated list of ONCS features to mask (disable). Available options: {help_oncs}",
-                   type=lambda d: d.split(','))
+                   type=partial(str.split, sep=','))
     p.add_argument('--masked-fuses', help=f"Comma-separated list of FUSES features to mask (disable). Available options: {help_fuses}",
-                   type=lambda d: d.split(','))
+                   type=partial(str.split, sep=','))
     p.set_defaults(func=nvmf_create_transport)
 
     def nvmf_get_transports(args):

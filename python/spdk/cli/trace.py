@@ -5,6 +5,8 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
+from functools import partial
+
 from spdk.rpc.cmd_parser import print_dict
 
 
@@ -41,7 +43,7 @@ def add_parser(subparsers):
     p.add_argument(
         'tpoint_mask', help="""tracepoints to be enabled inside a given trace group.
         (for example value of "0x3" will enable only the first two tpoints in this group)""",
-        type=lambda m: int(m, 16))
+        type=partial(int, base=16))
     p.set_defaults(func=trace_set_tpoint_mask)
 
     def trace_clear_tpoint_mask(args):
@@ -55,7 +57,7 @@ def add_parser(subparsers):
     p.add_argument(
         'tpoint_mask', help="""tracepoints to be disabled inside a given trace group.
         (for example value of "0x3" will disable the first two tpoints in this group)""",
-        type=lambda m: int(m, 16))
+        type=partial(int, base=16))
     p.set_defaults(func=trace_clear_tpoint_mask)
 
     def trace_get_tpoint_group_mask(args):

@@ -7,6 +7,7 @@
 
 import argparse
 import sys
+from functools import partial
 
 from spdk.rpc.cmd_parser import print_array, print_dict, print_json, strip_globals
 from spdk.rpc.helpers import DeprecateFalseAction, DeprecateTrueAction
@@ -473,9 +474,9 @@ def add_parser(subparsers):
     p.add_argument('--rdma-cm-event-timeout-ms',
                    help='Time to wait for RDMA CM event. Only applicable for RDMA transports.', type=int)
     p.add_argument('--dhchap-digests', help='Comma-separated list of allowed DH-HMAC-CHAP digests',
-                   type=lambda d: d.split(','))
+                   type=partial(str.split, sep=','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
-                   type=lambda d: d.split(','))
+                   type=partial(str.split, sep=','))
     # TODO: this group is deprecated, remove in next version
     group = p.add_mutually_exclusive_group()
     group.add_argument('--enable-rdma-umr-per-io',

@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+from functools import partial
 from pathlib import Path
 from typing import Any, Dict, NoReturn
 
@@ -91,7 +92,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
-    types = {str: 'string', None: 'string', int: 'number', bool: 'boolean', list: 'array'}
+    types = {str: 'string', None: 'string', int: 'number', bool: 'boolean', str.split: 'array'}
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     parser, subparsers = rpc.create_parser()
     schema_methods = set(method["name"] for method in schema['methods'])
@@ -140,11 +141,12 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"Invalid schema type '{param['type']}' for '{param['name']}' in '{method['name']}' rpc")
                 if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction, argparse.BooleanOptionalAction]:
                     newtype = 'boolean'
+                elif isinstance(action.type, partial):
+                    newtype = types.get(action.type.func)
                 else:
                     newtype = types.get(action.type)
                 if not newtype:
-                    # TODO: handle this case later and fix issues raised by it
-                    continue
+                    raise ValueError(f"Invalid schema type '{param['type']}' for '{param['name']}' in '{method['name']}' rpc")
                 if param['type'] != newtype and action.metavar is None and param['type'] != "array":
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
 
