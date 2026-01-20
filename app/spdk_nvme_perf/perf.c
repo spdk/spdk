@@ -1919,6 +1919,7 @@ usage(char *program_name)
 #endif
 	printf("\t--iova-mode <mode> specify DPDK IOVA mode: va|pa\n");
 	printf("\t--no-huge, SPDK is run without hugepages\n");
+	printf("\t--enforce-numa, SPDK is run with enforce-numa environment flag, useful to enforce NUMA restrictions on huge page allocations\n");
 	printf("\t--vfio-vf-token <token> VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	spdk_trace_mask_usage(stdout, "-y");
 	printf("\n");
@@ -2450,6 +2451,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"vfio-vf-token", required_argument, NULL, PERF_VFIO_VF_TOKEN},
 #define PERF_LOG_LEVEL		274
 	{"log-level", required_argument, NULL, PERF_LOG_LEVEL},
+#define PERF_ENFORCE_NUMA   275
+	{"enforce-numa",			no_argument,	NULL, PERF_ENFORCE_NUMA},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
@@ -2778,6 +2781,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_NO_HUGE:
 			env_opts->no_huge = true;
+			break;
+		case PERF_ENFORCE_NUMA:
+			env_opts->enforce_numa = true;
 			break;
 		case PERF_VFIO_VF_TOKEN:
 			g_vf_token = strdup(optarg);
