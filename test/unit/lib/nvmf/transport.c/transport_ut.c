@@ -37,8 +37,8 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), 0);
-DEFINE_STUB(ut_transport_destroy, int, (struct spdk_nvmf_transport *transport,
-					spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB_V(ut_transport_destroy, (struct spdk_nvmf_transport *transport,
+				     spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg));
 DEFINE_STUB(ibv_get_device_name, const char *, (struct ibv_device *device), NULL);
 DEFINE_STUB(ibv_query_qp, int, (struct ibv_qp *qp, struct ibv_qp_attr *attr,
 				int attr_mask,

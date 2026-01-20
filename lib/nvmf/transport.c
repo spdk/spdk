@@ -391,7 +391,8 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 	}
 
 	pthread_mutex_destroy(&transport->mutex);
-	return transport->ops->destroy(transport, cb_fn, cb_arg);
+	transport->ops->destroy(transport, cb_fn, cb_arg);
+	return 0;
 }
 
 struct spdk_nvmf_listener *

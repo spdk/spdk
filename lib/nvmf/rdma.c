@@ -2581,8 +2581,8 @@ nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->data_wr_pool_size	=	SPDK_NVMF_RDMA_DEFAULT_DATA_WR_POOL_SIZE;
 }
 
-static int nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
-			     spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
+static void nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
+			      spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
 static inline bool
 nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
@@ -2943,7 +2943,7 @@ nvmf_rdma_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_writ
 	spdk_json_write_named_bool(w, "no_wr_batching", rtransport->rdma_opts.no_wr_batching);
 }
 
-static int
+static void
 nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 		  spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
@@ -2990,7 +2990,6 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 	if (cb_fn) {
 		cb_fn(cb_arg);
 	}
-	return 0;
 }
 
 static void nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,

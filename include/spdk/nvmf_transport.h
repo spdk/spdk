@@ -315,8 +315,8 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Destroy the transport
 	 */
-	int (*destroy)(struct spdk_nvmf_transport *transport,
-		       spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
+	void (*destroy)(struct spdk_nvmf_transport *transport,
+			spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
 	/**
 	  * Instruct the transport to accept new connections at the address

@@ -2011,7 +2011,7 @@ nvmf_fc_destroy_done_cb(void *cb_arg)
 	}
 }
 
-static int
+static void
 nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 		spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
@@ -2031,8 +2031,6 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 		/* low level FC driver clean up */
 		nvmf_fc_lld_fini(nvmf_fc_destroy_done_cb, cb_arg);
 	}
-
-	return 0;
 }
 
 static int

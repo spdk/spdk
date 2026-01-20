@@ -703,7 +703,7 @@ nvmf_tcp_free_psk_entry(struct tcp_psk_entry *entry)
 	free(entry);
 }
 
-static int
+static void
 nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 		 spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
@@ -732,7 +732,6 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	if (cb_fn) {
 		cb_fn(cb_arg);
 	}
-	return 0;
 }
 
 static int nvmf_tcp_accept(void *ctx);

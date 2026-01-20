@@ -447,7 +447,7 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
 	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
-	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
+	nvmf_tcp_destroy(transport, NULL, NULL);
 
 	/* case 2 */
 	memset(&opts, 0, sizeof(opts));
@@ -469,7 +469,7 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
 	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
-	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
+	nvmf_tcp_destroy(transport, NULL, NULL);
 
 	/* case 3 */
 	memset(&opts, 0, sizeof(opts));
@@ -514,7 +514,7 @@ test_nvmf_tcp_destroy(void)
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
 	/* destroy transport */
-	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
+	nvmf_tcp_destroy(transport, NULL, NULL);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
@@ -1445,7 +1445,7 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 
 	CU_ASSERT(found == false);
 
-	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
+	nvmf_tcp_destroy(transport, NULL, NULL);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {

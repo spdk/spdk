@@ -1078,7 +1078,7 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 }
 
 /* called when process exits */
-static int
+static void
 nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 		       spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
@@ -1103,8 +1103,6 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 	if (cb_fn) {
 		cb_fn(cb_arg);
 	}
-
-	return 0;
 }
 
 static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] = {

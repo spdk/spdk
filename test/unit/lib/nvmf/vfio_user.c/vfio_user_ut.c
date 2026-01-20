@@ -225,7 +225,6 @@ test_nvmf_vfio_user_create_destroy(void)
 	struct nvmf_vfio_user_transport *vu_transport = NULL;
 	struct nvmf_vfio_user_endpoint *endpoint = NULL;
 	struct spdk_nvmf_transport_opts opts = {};
-	int rc;
 	int done;
 
 	/* Initialize transport_specific NULL to avoid decoding json */
@@ -242,8 +241,7 @@ test_nvmf_vfio_user_create_destroy(void)
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
 	done = 0;
 
-	rc = nvmf_vfio_user_destroy(transport, ut_transport_destroy_done_cb, &done);
-	CU_ASSERT(rc == 0);
+	nvmf_vfio_user_destroy(transport, ut_transport_destroy_done_cb, &done);
 	CU_ASSERT(done == 1);
 }
 
