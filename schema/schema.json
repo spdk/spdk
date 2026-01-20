@@ -1611,12 +1611,12 @@
         },
         {
           "name": "dhchap_digests",
-          "type": "list",
+          "type": "array",
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
-          "type": "list",
+          "type": "array",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         },
         {
@@ -2166,7 +2166,7 @@
         },
         {
           "name": "config_param",
-          "type": "string map",
+          "type": "string",
           "description": "Explicit librados configuration"
         },
         {
@@ -2240,7 +2240,7 @@
         },
         {
           "name": "config",
-          "type": "string map",
+          "type": "string",
           "description": "Explicit librados configuration"
         },
         {
@@ -3625,13 +3625,13 @@
         },
         {
           "name": "masked_oncs",
-          "type": "list",
+          "type": "array",
           "required": false,
           "description": "List of ONCS features to mask (disable)"
         },
         {
           "name": "masked_fuses",
-          "type": "list",
+          "type": "array",
           "required": false,
           "description": "List of FUSES features to mask (disable)"
         }
@@ -4204,7 +4204,7 @@
       "params": [
         {
           "name": "admin_cmd_passthru",
-          "type": "object",
+          "type": "array",
           "description": "Admin command passthru configuration"
         },
         {
@@ -4219,12 +4219,12 @@
         },
         {
           "name": "dhchap_digests",
-          "type": "list",
+          "type": "array",
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
-          "type": "list",
+          "type": "array",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         }
       ]

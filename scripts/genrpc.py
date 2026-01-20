@@ -91,7 +91,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
 
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
-    types = {str: 'string', None: 'string', int: 'number', bool: 'boolean'}
+    types = {str: 'string', None: 'string', int: 'number', bool: 'boolean', list: 'array'}
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     parser, subparsers = rpc.create_parser()
     schema_methods = set(method["name"] for method in schema['methods'])
@@ -135,6 +135,9 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                                 action.required)
                 if param.get('required', False) != required:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
+                # Check that schema has only those valid types:
+                if param['type'] not in types.values():
+                    raise ValueError(f"Invalid schema type '{param['type']}' for '{param['name']}' in '{method['name']}' rpc")
                 if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction, argparse.BooleanOptionalAction]:
                     newtype = 'boolean'
                 else:
