@@ -26,8 +26,8 @@
 #ifdef SPDK_CONFIG_ISAL
 #include "../isa-l/include/igzip_lib.h"
 #ifdef SPDK_CONFIG_ISAL_CRYPTO
-#include "../isa-l-crypto/include/aes_xts.h"
-#include "../isa-l-crypto/include/isal_crypto_api.h"
+#include "../isa-l-crypto/include/isa-l_crypto/aes_xts.h"
+#include "../isa-l-crypto/include/isa-l_crypto/isal_crypto_api.h"
 #endif
 #endif
 
