@@ -210,7 +210,7 @@ spdk_bdev_open_ext_v2(const char *bdev_name, bool write, spdk_bdev_event_cb_t ev
 	struct spdk_bdev_desc *desc;
 	size_t i;
 
-	for (i = 0; i < sizeof(g_bdevs); i++) {
+	for (i = 0; i < SPDK_COUNTOF(g_bdevs); i++) {
 		if (strcmp(bdev_name, g_bdevs[i].name) == 0) {
 
 			desc = calloc(1, sizeof(*desc));
