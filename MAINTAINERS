@@ -384,6 +384,10 @@ S:	Supported
 SPDK COMBINED TARGET APPLICATION
 F:	app/spdk_tgt/
 
+SPDK-CSI REPOSITORY (https://github.com/spdk/spdk-csi)
+M:	Yibo Cai <yibo.cai@arm.com>
+S:	Supported
+
 SPDK TOP APPLICATION
 F:	app/spdk_top/
 
