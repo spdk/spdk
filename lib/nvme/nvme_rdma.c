@@ -25,6 +25,7 @@
 #include "nvme_internal.h"
 #include "spdk_internal/rdma_provider.h"
 #include "spdk_internal/rdma_utils.h"
+#include "spdk_internal/sgl.h"
 
 #define NVME_RDMA_TIME_OUT_IN_MS 2000
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
@@ -1856,19 +1857,22 @@ static inline int
 nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 			       struct spdk_nvme_rdma_req *rdma_req)
 {
+	struct spdk_iov_sgl sgl;
 	struct spdk_nvme_poll_group *pg = rqpair->qpair.poll_group->group;
 	struct spdk_memory_domain *src_domain;
 	void *src_domain_ctx;
 	void *accel_seq = req->accel_sequence;
+	struct iovec *iovs = rdma_req->iovs;
 	uint32_t iovcnt = 0;
+	uint32_t payload_size = req->payload.payload_size;
 	int rc;
 
 	NVME_RQPAIR_DEBUGLOG(rqpair, "req %p, start accel seq %p\n", rdma_req, accel_seq);
-	if (nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_SGL) {
+	switch (nvme_req_payload_type(req)) {
+	case NVME_PAYLOAD_TYPE_SGL: {
 		void *addr;
-		uint32_t sge_length, payload_size;
+		uint32_t sge_length;
 
-		payload_size = req->payload.payload_size;
 		assert(payload_size);
 		req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.payload_offset);
 		do {
@@ -1877,8 +1881,8 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 				return -1;
 			}
 			sge_length = spdk_min(payload_size, sge_length);
-			rdma_req->iovs[iovcnt].iov_base = addr;
-			rdma_req->iovs[iovcnt].iov_len = sge_length;
+			iovs[iovcnt].iov_base = addr;
+			iovs[iovcnt].iov_len = sge_length;
 			iovcnt++;
 			payload_size -= sge_length;
 		} while (payload_size && iovcnt < NVME_RDMA_MAX_SGL_DESCRIPTORS);
@@ -1888,10 +1892,37 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 					   payload_size);
 			return -E2BIG;
 		}
-	} else {
-		rdma_req->iovs[iovcnt].iov_base = req->payload.contig_or_cb_arg;
-		rdma_req->iovs[iovcnt].iov_len = req->payload.payload_size;
-		iovcnt = 1;
+	}
+	break;
+	case NVME_PAYLOAD_TYPE_CONTIG:
+		iovs[0].iov_base = req->payload.contig_or_cb_arg;
+		iovs[0].iov_len = req->payload.payload_size;
+		iovcnt++;
+		break;
+	case NVME_PAYLOAD_TYPE_IOV:
+		if (req->payload.payload_offset != 0) {
+			/* Split reuqest, need to advance iovs and copy them to the req's iovs */
+			spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
+			spdk_iov_sgl_advance(&sgl, req->payload.payload_offset);
+			do {
+				iovs[iovcnt].iov_base = (uint8_t *)sgl.iov->iov_base + sgl.iov_offset;
+				iovs[iovcnt].iov_len = spdk_min(payload_size, sgl.iov->iov_len - sgl.iov_offset);
+				payload_size -= iovs[iovcnt].iov_len;
+				spdk_iov_sgl_advance(&sgl, iovs[iovcnt].iov_len);
+				iovcnt++;
+			} while (payload_size && iovcnt < NVME_RDMA_MAX_SGL_DESCRIPTORS);
+			if (spdk_unlikely(payload_size)) {
+				NVME_RQPAIR_ERRLOG(rqpair, "not enough iovs to handle req %p, remaining len %u\n", rdma_req,
+						   payload_size);
+				return -E2BIG;
+			}
+		} else {
+			iovcnt = req->payload.iov_count;
+			iovs = req->payload.iov;
+		}
+		break;
+	default:
+		return -EINVAL;
 	}
 	if (req->payload.opts && req->payload.opts->memory_domain) {
 		if (accel_seq) {
@@ -1906,7 +1937,7 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 		src_domain_ctx = NULL;
 	}
 
-	rc = nvme_rdma_accel_append_copy(pg, &accel_seq, rqpair->rdma_qp->domain, rdma_req, rdma_req->iovs,
+	rc = nvme_rdma_accel_append_copy(pg, &accel_seq, rqpair->rdma_qp->domain, rdma_req, iovs,
 					 iovcnt, src_domain, src_domain_ctx);
 	if (spdk_unlikely(rc)) {
 		return rc;
