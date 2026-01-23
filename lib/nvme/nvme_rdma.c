@@ -1740,6 +1740,127 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	return 0;
 }
 
+static inline int
+nvme_rdma_build_iov_request_fill_cmd_with_offset(struct nvme_rdma_qpair *rqpair,
+		struct spdk_nvme_rdma_req *rdma_req, struct spdk_nvmf_cmd *cmd)
+{
+	struct nvme_rdma_memory_translation_ctx ctx;
+	struct spdk_iov_sgl sgl;
+	struct nvme_request *req = rdma_req->req;
+	uint32_t remaining_size = req->payload.payload_size;
+	uint32_t max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, req->payload.iov_count);
+	uint32_t i;
+	int rc;
+
+	spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
+	spdk_iov_sgl_advance(&sgl, req->payload.payload_offset);
+
+	for (i = 0; i < max_num_sgl && remaining_size > 0; i++) {
+		ctx.length = spdk_min(sgl.iov->iov_len - sgl.iov_offset, remaining_size);
+		if (spdk_unlikely(ctx.length > NVME_RDMA_MAX_KEYED_SGL_LENGTH)) {
+			NVME_RQPAIR_ERRLOG(rqpair, "SGL length %zu exceeds max keyed SGL block size %u\n", ctx.length,
+					   NVME_RDMA_MAX_KEYED_SGL_LENGTH);
+			return -1;
+		}
+		ctx.addr = (uint8_t *)sgl.iov->iov_base + sgl.iov_offset;
+		rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
+		if (spdk_unlikely(rc)) {
+			return rc;
+		}
+
+		cmd->sgl[i].keyed.key = ctx.rkey;
+		cmd->sgl[i].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		cmd->sgl[i].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		cmd->sgl[i].keyed.length = (uint32_t)ctx.length;
+		cmd->sgl[i].address = (uint64_t)ctx.addr;
+
+		spdk_iov_sgl_advance(&sgl, ctx.length);
+		remaining_size -= ctx.length;
+	}
+
+	if (spdk_unlikely(remaining_size > 0)) {
+		return -E2BIG;
+	}
+
+	return i;
+}
+
+static inline int
+nvme_rdma_build_iov_request_fill_cmd(struct nvme_rdma_qpair *rqpair,
+				     struct spdk_nvme_rdma_req *rdma_req, struct spdk_nvmf_cmd *cmd)
+{
+	struct nvme_rdma_memory_translation_ctx ctx;
+	struct nvme_request *req = rdma_req->req;
+	uint32_t i, remaining_size = req->payload.payload_size;
+	uint32_t max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, req->payload.iov_count);
+	int rc;
+
+	for (i = 0; i < max_num_sgl && remaining_size > 0; i++) {
+		ctx.length = spdk_min(req->payload.iov[i].iov_len, remaining_size);
+		if (spdk_unlikely(ctx.length > NVME_RDMA_MAX_KEYED_SGL_LENGTH)) {
+			NVME_RQPAIR_ERRLOG(rqpair, "SGL length %zu exceeds max keyed SGL block size %u\n", ctx.length,
+					   NVME_RDMA_MAX_KEYED_SGL_LENGTH);
+			return -E2BIG;
+		}
+		ctx.addr = (uint8_t *)req->payload.iov[i].iov_base;
+
+		rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
+		if (spdk_unlikely(rc)) {
+			return rc;
+		}
+
+		cmd->sgl[i].keyed.key = ctx.rkey;
+		cmd->sgl[i].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		cmd->sgl[i].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		cmd->sgl[i].keyed.length = (uint32_t)ctx.length;
+		cmd->sgl[i].address = (uint64_t)ctx.addr;
+
+		remaining_size -= ctx.length;
+	}
+	if (spdk_unlikely(remaining_size > 0)) {
+		return -E2BIG;
+	}
+
+	return i;
+}
+
+static inline int
+nvme_rdma_build_iov_request(struct nvme_rdma_qpair *rqpair,
+			    struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct nvme_request *req = rdma_req->req;
+	struct spdk_nvmf_cmd *cmd = &rqpair->cmds[rdma_req->id];
+	uint32_t descriptors_size;
+	int rc, num_sgl_desc;
+
+	assert(req->payload.payload_size != 0);
+	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
+
+	if (req->payload.payload_offset != 0) {
+		rc = nvme_rdma_build_iov_request_fill_cmd_with_offset(rqpair, rdma_req, cmd);
+	} else {
+		rc = nvme_rdma_build_iov_request_fill_cmd(rqpair, rdma_req, cmd);
+	}
+	if (spdk_unlikely(rc <= 0)) {
+		if (rc == 0) {
+			return -EINVAL;
+		}
+		return rc;
+	}
+	num_sgl_desc = rc;
+
+	descriptors_size = sizeof(struct spdk_nvme_sgl_descriptor) * num_sgl_desc;
+	if (spdk_unlikely(num_sgl_desc > 0 && descriptors_size > rqpair->qpair.ctrlr->ioccsz_bytes)) {
+		NVME_RQPAIR_ERRLOG(rqpair, "Size of SGL descriptors (%u) exceeds ICD (%u)\n", descriptors_size,
+				   rqpair->qpair.ctrlr->ioccsz_bytes);
+		return -E2BIG;
+	}
+
+	nvme_rdma_configure_sgl_request(req, rdma_req, cmd, num_sgl_desc, descriptors_size);
+
+	return 0;
+}
+
 /*
  * Build inline SGL describing sgl payload buffer.
  */
@@ -1776,6 +1897,37 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
 	if (spdk_unlikely(rc)) {
 		return -1;
+	}
+
+	nvme_rdma_configure_contig_inline_request(rdma_req, req, &ctx);
+
+	return 0;
+}
+
+static inline int
+nvme_rdma_build_iov_inline_request(struct nvme_rdma_qpair *rqpair,
+				   struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct nvme_request *req = rdma_req->req;
+	struct nvme_rdma_memory_translation_ctx ctx;
+	int rc;
+
+	assert(req->payload.payload_size != 0);
+	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
+
+	if (req->payload.iov_count > 1) {
+		NVME_RQPAIR_DEBUGLOG(rqpair, "Inline SGL request split so sending separately.\n");
+		return nvme_rdma_build_iov_request(rqpair, rdma_req);
+	}
+
+	ctx.addr = (uint8_t *)req->payload.iov[0].iov_base + req->payload.payload_offset;
+	ctx.length = spdk_min(req->payload.iov[0].iov_len - req->payload.payload_offset,
+			      req->payload.payload_size);
+	assert(ctx.length == req->payload.payload_size);
+
+	rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
+	if (spdk_unlikely(rc)) {
+		return -EINVAL;
 	}
 
 	nvme_rdma_configure_contig_inline_request(rdma_req, req, &ctx);
@@ -2047,6 +2199,12 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rd
 			rc = nvme_rdma_build_sgl_inline_request(rqpair, rdma_req);
 		} else {
 			rc = nvme_rdma_build_sgl_request(rqpair, rdma_req);
+		}
+	} else if (payload_type == NVME_PAYLOAD_TYPE_IOV) {
+		if (icd_supported) {
+			rc = nvme_rdma_build_iov_inline_request(rqpair, rdma_req);
+		} else {
+			rc = nvme_rdma_build_iov_request(rqpair, rdma_req);
 		}
 	}
 

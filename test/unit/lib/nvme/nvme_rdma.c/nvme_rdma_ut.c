@@ -451,6 +451,225 @@ test_nvme_rdma_build_contig_inline_request(void)
 }
 
 static void
+test_nvme_rdma_build_iov_request(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
+	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
+	uint64_t i;
+	int rc;
+
+	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
+	ctrlr.ioccsz_bytes = 4096;
+
+	rqpair.mr_map = (struct spdk_rdma_utils_mem_map *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.cmds = &cmd;
+	cmd.sgl[0].address = 0x1111;
+	rdma_req.id = 0;
+	rdma_req.req = &req;
+
+	req.payload.iov = bio.iovs;
+	req.payload.iov_count = 1;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.qpair = &rqpair.qpair;
+
+	for (i = 0; i < NVME_RDMA_MAX_SGL_DESCRIPTORS; i++) {
+		bio.iovs[i].iov_base = (void *)0xF00000000 + i + 1;
+		bio.iovs[i].iov_len = 0;
+	}
+
+	/* Test case 1: single SGL. Expected: PASS */
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 0x1000;
+	bio.iovs[0].iov_len = 0x1000;
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.key == RDMA_UT_RKEY);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+
+	/* Test case 2: multiple SGL. Expected: PASS */
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 0x4000;
+	req.payload.iov_count = 4;
+	for (i = 0; i < 4; i++) {
+		bio.iovs[i].iov_len = 0x1000;
+	}
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 4 * sizeof(struct spdk_nvme_sgl_descriptor));
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == 4 * sizeof(struct spdk_nvme_sgl_descriptor) + sizeof(
+			  struct spdk_nvme_cmd))
+	for (i = 0; i < 4; i++) {
+		CU_ASSERT(cmd.sgl[i].keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+		CU_ASSERT(cmd.sgl[i].keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+		CU_ASSERT(cmd.sgl[i].keyed.length == bio.iovs[i].iov_len);
+		CU_ASSERT(cmd.sgl[i].keyed.key == RDMA_UT_RKEY);
+		CU_ASSERT(cmd.sgl[i].address == (uint64_t)bio.iovs[i].iov_base);
+	}
+
+	/* Test case 3: multiple SGL. payload with offset. Expected: PASS */
+	req.payload.payload_offset = 0x1000;
+	req.payload.payload_size = 0x4000;
+	req.payload.iov_count = 4;
+	for (i = 0; i < 4; i++) {
+		bio.iovs[i].iov_len = 0x1000;
+	}
+	bio.iovs[0].iov_len += 0x1000; /* offset */
+	bio.iovs[3].iov_len += 0x1000; /* verify that extra data is not consumed */
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 4 * sizeof(struct spdk_nvme_sgl_descriptor));
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == 4 * sizeof(struct spdk_nvme_sgl_descriptor) + sizeof(
+			  struct spdk_nvme_cmd))
+	CU_ASSERT(cmd.sgl[0].keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(cmd.sgl[0].keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(cmd.sgl[0].keyed.length == bio.iovs[0].iov_len - 0x1000);
+	CU_ASSERT(cmd.sgl[0].keyed.key == RDMA_UT_RKEY);
+	CU_ASSERT(cmd.sgl[0].address == (uint64_t)bio.iovs[0].iov_base + 0x1000);
+	for (i = 1; i < 3; i++) {
+		CU_ASSERT(cmd.sgl[i].keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+		CU_ASSERT(cmd.sgl[i].keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+		CU_ASSERT(cmd.sgl[i].keyed.length == bio.iovs[i].iov_len);
+		CU_ASSERT(cmd.sgl[i].keyed.key == RDMA_UT_RKEY);
+		CU_ASSERT(cmd.sgl[i].address == (uint64_t)bio.iovs[i].iov_base);
+	}
+	CU_ASSERT(cmd.sgl[3].keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(cmd.sgl[3].keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(cmd.sgl[3].keyed.length == bio.iovs[3].iov_len - 0x1000);
+	CU_ASSERT(cmd.sgl[3].keyed.key == RDMA_UT_RKEY);
+	CU_ASSERT(cmd.sgl[3].address == (uint64_t)bio.iovs[3].iov_base);
+
+	/* Test case 4: Multiple SGL, SGL 2X mr size. Expected: FAIL */
+	req.payload.payload_offset = 0;
+	g_mr_size = 0x800;
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+
+	/* Test case 5: Multiple SGL, SGL size smaller than I/O size. Expected: FAIL */
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 0x6000;
+	req.payload.iov_count = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	for (i = 0; i < 4; i++) {
+		bio.iovs[i].iov_len = 0x1000;
+	}
+	g_mr_size = 0x0;
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+	bio.iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+
+	/* Test case 6: SGL length exceeds 3 bytes. Expected: FAIL */
+	req.payload.payload_size = 0x1000 + (1 << 24);
+	req.payload.iov_count = 2;
+	bio.iovs[0].iov_len = 0x1000;
+	bio.iovs[1].iov_len = 1 << 24;
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+
+	/* Test case 7: 4 SGL descriptors, size of SGL descriptors exceeds ICD. Expected: FAIL */
+	ctrlr.ioccsz_bytes = 60;
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 0x4000;
+	req.payload.iov_count = 4;
+	for (i = 0; i < 4; i++) {
+		bio.iovs[i].iov_len = 0x1000;
+	}
+	rc = nvme_rdma_build_iov_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+}
+
+static void
+test_nvme_rdma_build_iov_inline_request(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
+	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
+	int rc;
+
+	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
+
+	rqpair.mr_map = (struct spdk_rdma_utils_mem_map *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.cmds = &cmd;
+	cmd.sgl[0].address = 0x1111;
+	rdma_req.id = 0;
+	rdma_req.req = &req;
+
+	req.payload.iov = bio.iovs;
+	req.payload.iov_count = 1;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.qpair = &rqpair.qpair;
+
+	/* Test case 1: single inline SGL. Expected: PASS */
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 0x1000;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 0x1000;
+	rc = nvme_rdma_build_iov_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
+
+	/* Test case 2: single inline SGL with offset. Expected: PASS */
+	req.payload.payload_offset = 0x100;
+	req.payload.payload_size = 0x1000;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 0x1100;
+	rc = nvme_rdma_build_iov_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base + 0x100);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
+
+	/* Test case 3: SGL length exceeds 3 bytes. Expected: PASS */
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 1 << 24;
+	bio.iovs[0].iov_len = 1 << 24;
+	rc = nvme_rdma_build_iov_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
+}
+
+
+static void
 test_nvme_rdma_create_reqs(void)
 {
 	struct nvme_rdma_ctrlr rctrlr = {};
@@ -921,6 +1140,50 @@ test_nvme_rdma_req_init(void)
 	rc = nvme_rdma_req_init(&rqpair, &rdma_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(bio.iovpos == 1);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.key == RDMA_UT_RKEY);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+
+
+	/* case 4: payload_type == NVME_PAYLOAD_TYPE_IOVS, expect: pass. */
+	/* icd_supported is true, basic scenario */
+	bio.iovcnt = 1;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 1024;
+	rqpair.qpair.ctrlr->icdoff = 0;
+	req.payload.iov = bio.iovs;
+	req.payload.iov_count = bio.iovcnt;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.qpair = &rqpair.qpair;
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 1024;
+	rc = nvme_rdma_req_init(&rqpair, &rdma_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
+
+	/* icd_supported is false */
+	bio.iovcnt = 1;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 1024;
+	rqpair.qpair.ctrlr->icdoff = 1;
+	req.payload.iov = bio.iovs;
+	req.payload.iov_count = bio.iovcnt;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.qpair = &rqpair.qpair;
+	req.payload.payload_offset = 0;
+	req.payload.payload_size = 1024;
+	rc = nvme_rdma_req_init(&rqpair, &rdma_req);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
 	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
 	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == req.payload.payload_size);
@@ -1413,6 +1676,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_inline_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_inline_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_build_iov_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_build_iov_inline_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_create_reqs);
 	CU_ADD_TEST(suite, test_nvme_rdma_create_rsps);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_create_qpair);
