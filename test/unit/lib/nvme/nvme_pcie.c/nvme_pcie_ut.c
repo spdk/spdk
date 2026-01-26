@@ -633,6 +633,89 @@ test_nvme_pcie_qpair_build_prps_sgl_request(void)
 }
 
 static void
+test_nvme_pcie_qpair_build_prps_iov_request(void)
+{
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_qpair *qpair = &pqpair.qpair;
+	struct nvme_request req = {};
+	struct nvme_tracker tr = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct iovec iovs[4] = {};
+	uint32_t i;
+	int rc;
+
+	tr.req = &req;
+	qpair->ctrlr = &ctrlr;
+	for (i = 0; i < 4; i++) {
+		iovs[i].iov_base = (void *)0x100000 + i * 4096;
+		iovs[i].iov_len = 4096;
+	}
+	ctrlr.page_size = 4096;
+
+	/* Multiple vectors, each 4K */
+	req.payload.iov = iovs;
+	req.payload.iov_count = 4;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.payload.payload_size = 16384;
+
+	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == tr.prp_sgl_bus_addr);
+	CU_ASSERT(tr.u.prp[0] == 0x101000);
+	CU_ASSERT(tr.u.prp[1] == 0x102000);
+	CU_ASSERT(tr.u.prp[2] == 0x103000);
+
+	/* Multiple vectors, each 4K, with offset 4K */
+	req.payload.iov = iovs;
+	req.payload.iov_count = 3;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.payload.payload_size = 12288;
+	req.payload.payload_offset = 4096;
+
+	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x101000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == tr.prp_sgl_bus_addr);
+	CU_ASSERT(tr.u.prp[0] == 0x102000);
+	CU_ASSERT(tr.u.prp[1] == 0x103000);
+
+	/* 2 vectors with offset 4K */
+	req.payload.iov = iovs;
+	req.payload.iov_count = 2;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.payload.payload_size = 8192;
+	req.payload.payload_offset = 4096;
+
+	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x101000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == 0x102000);
+
+	/* Single vector without offset */
+	req.payload.iov = iovs;
+	req.payload.iov_count = 2;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.payload.payload_size = 4096;
+	req.payload.payload_offset = 0;
+
+	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == 0);
+
+	/* 2 vectors with offset not aligned on page size */
+	req.payload.iov = iovs;
+	req.payload.iov_count = 2;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.payload.payload_size = 8192;
+	req.payload.payload_offset = 4095;
+
+	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
+	CU_ASSERT(rc != 0);
+}
+
+static void
 test_nvme_pcie_qpair_build_hw_sgl_request(void)
 {
 	struct nvme_pcie_qpair pqpair = {};
@@ -693,6 +776,109 @@ test_nvme_pcie_qpair_build_hw_sgl_request(void)
 	bio.iovs[0].iov_len = 4096;
 
 	rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, &req, &tr, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 4096);
+	CU_ASSERT(tr.u.sgl[0].address == 0xDBADBEE0);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.subtype == 0);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDBADBEE0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 4096);
+}
+
+static void
+test_nvme_pcie_qpair_build_hw_iov_request(void)
+{
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_qpair *qpair = &pqpair.qpair;
+	struct nvme_request req = {};
+	struct nvme_tracker tr = {};
+	struct iovec iovs[4] = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	int rc;
+
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	qpair->ctrlr = &ctrlr;
+	req.payload.iov = iovs;
+	req.payload.iov_count = 3;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_OPC_WRITE;
+	tr.prp_sgl_bus_addr =  0xDAADBEE0;
+	g_vtophys_size = 4096;
+
+	/* Multiple vectors, 2k + 4k + 2k */
+	req.payload.payload_size = 8192;
+	iovs[0].iov_base = (void *)0xDBADBEE0;
+	iovs[0].iov_len = 2048;
+	iovs[1].iov_base = (void *)0xDCADBEE0;
+	iovs[1].iov_len = 4096;
+	iovs[2].iov_base = (void *)0xDDADBEE0;
+	iovs[2].iov_len = 2048;
+
+	rc = nvme_pcie_qpair_build_hw_iov_request(qpair, &req, &tr, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 2048);
+	CU_ASSERT(tr.u.sgl[0].address == 0xDBADBEE0);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.subtype == 0);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.length == 4096);
+	CU_ASSERT(tr.u.sgl[1].address == 0xDCADBEE0);
+	CU_ASSERT(tr.u.sgl[2].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[2].unkeyed.length == 2048);
+	CU_ASSERT(tr.u.sgl[2].address == 0xDDADBEE0);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDAADBEE0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 48);
+
+	/* Multiple vectors, 2k + 4k + 2k with offset 4k */
+	req.payload.iov = iovs;
+	req.payload.iov_count = 3;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.payload.payload_offset = 4096;
+	req.payload.payload_size = 8192;
+	iovs[0].iov_base = (void *)0xDBADBEE0;
+	iovs[0].iov_len = 2048 + 4096; /* offset 4k */
+	iovs[1].iov_base = (void *)0xDCADBEE0;
+	iovs[1].iov_len = 4096;
+	iovs[2].iov_base = (void *)0xDDADBEE0;
+	iovs[2].iov_len = 2048 + 4096; /* extra length that must not be consumed */
+
+	rc = nvme_pcie_qpair_build_hw_iov_request(qpair, &req, &tr, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 2048);
+	CU_ASSERT(tr.u.sgl[0].address == 0xDBADBEE0 + 4096);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.subtype == 0);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.length == 4096);
+	CU_ASSERT(tr.u.sgl[1].address == 0xDCADBEE0);
+	CU_ASSERT(tr.u.sgl[2].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[2].unkeyed.length == 2048);
+	CU_ASSERT(tr.u.sgl[2].address == 0xDDADBEE0);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDAADBEE0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 48);
+
+
+	/* Single vector */
+	memset(&tr, 0, sizeof(tr));
+	memset(&req, 0, sizeof(req));
+	req.payload.iov = iovs;
+	req.payload.iov_count = 1;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_OPC_WRITE;
+	req.payload.payload_size = 4096;
+	iovs[0].iov_base = (void *)0xDBADBEE0;
+	iovs[0].iov_len = 4096;
+
+	rc = nvme_pcie_qpair_build_hw_iov_request(qpair, &req, &tr, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 4096);
@@ -1147,7 +1333,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_build_contig_hw_sgl_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_metadata);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_prps_sgl_request);
+	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_prps_iov_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_hw_sgl_request);
+	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_hw_iov_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_regs_get_set);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_cmb);

@@ -16,6 +16,7 @@
 #include "spdk/trace.h"
 
 #include "spdk_internal/trace_defs.h"
+#include "spdk_internal/sgl.h"
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 
@@ -1613,6 +1614,214 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	return 0;
 }
 
+/**
+ * Build SGL list describing iov payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_hw_iov_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				     struct nvme_tracker *tr, bool dword_aligned)
+{
+	int rc;
+	void *virt_addr;
+	uint64_t phys_addr, mapping_length;
+	uint32_t remaining_transfer_len, remaining_user_sge_len, length;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	struct spdk_iov_sgl iov_sgl;
+	uint32_t nseg = 0;
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+	assert(req->payload.payload_size != 0);
+	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
+
+	sgl = tr->u.sgl;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
+
+	remaining_transfer_len = req->payload.payload_size;
+
+	spdk_iov_sgl_init(&iov_sgl, req->payload.iov, req->payload.iov_count, 0);
+	spdk_iov_sgl_advance(&iov_sgl, req->payload.payload_offset);
+
+	while (remaining_transfer_len > 0 && nseg < NVME_MAX_SGL_DESCRIPTORS) {
+		remaining_user_sge_len = spdk_min(iov_sgl.iov->iov_len - iov_sgl.iov_offset,
+						  remaining_transfer_len);
+		virt_addr = (uint8_t *)iov_sgl.iov->iov_base + iov_sgl.iov_offset;
+		remaining_transfer_len -= remaining_user_sge_len;
+		spdk_iov_sgl_advance(&iov_sgl, remaining_user_sge_len);
+
+		/* Bit Bucket SGL descriptor */
+		if ((uint64_t)virt_addr == UINT64_MAX) {
+			rc = nvme_pcie_qpair_fill_bit_bucket_sgl(qpair, req, tr, sgl, remaining_user_sge_len);
+			if (spdk_unlikely(rc)) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return rc;
+			}
+
+			sgl++;
+			nseg++;
+
+			continue;
+		}
+
+		while (remaining_user_sge_len > 0 && nseg < NVME_MAX_SGL_DESCRIPTORS) {
+			if (spdk_unlikely(dword_aligned && ((uintptr_t)virt_addr & 3))) {
+				NVME_QPAIR_ERRLOG(qpair, "virt_addr %p not dword aligned\n", virt_addr);
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -EFAULT;
+			}
+
+			mapping_length = remaining_user_sge_len;
+			phys_addr = nvme_pcie_vtophys(qpair->ctrlr, virt_addr, &mapping_length);
+			if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -EFAULT;
+			}
+
+			length = spdk_min(remaining_user_sge_len, mapping_length);
+			remaining_user_sge_len -= length;
+			virt_addr = (uint8_t *)virt_addr + length;
+
+			if (!pqpair->flags.disable_pcie_sgl_merge && nseg > 0 &&
+			    phys_addr == (*(sgl - 1)).address + (*(sgl - 1)).unkeyed.length) {
+				/* extend previous entry */
+				(*(sgl - 1)).unkeyed.length += length;
+				continue;
+			}
+
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			sgl->unkeyed.length = length;
+			sgl->address = phys_addr;
+			sgl->unkeyed.subtype = 0;
+
+			sgl++;
+			nseg++;
+		}
+	}
+
+	if (spdk_unlikely(remaining_transfer_len > 0)) {
+		NVME_QPAIR_ERRLOG(qpair, "Remaining transfer length: %u\n", remaining_transfer_len);
+		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+		return -EFAULT;
+	}
+
+	if (nseg == 1) {
+		/*
+		 * The whole transfer can be described by a single SGL descriptor.
+		 *  Use the special case described by the spec where SGL1's type is Data Block.
+		 *  This means the SGL in the tracker is not used at all, so copy the first (and only)
+		 *  SGL element into SGL1.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
+		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
+	} else {
+		/* SPDK NVMe driver supports only 1 SGL segment for now, it is enough because
+		 *  NVME_MAX_SGL_DESCRIPTORS * 16 is less than one page.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
+		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
+	}
+
+	NVME_QPAIR_DEBUGLOG(qpair, "Number of SGL descriptors: %" PRIu32 "\n", nseg);
+	return 0;
+}
+
+static inline int
+nvme_pcie_qpair_build_prps_iov_request_fill_with_offset(struct spdk_nvme_qpair *qpair,
+		struct nvme_request *req, struct nvme_tracker *tr)
+{
+	int rc;
+	void *virt_addr;
+	uint32_t remaining_transfer_len, length;
+	uint32_t prp_index = 0;
+	uint32_t page_size = qpair->ctrlr->page_size;
+	struct spdk_iov_sgl sgl;
+
+	remaining_transfer_len = req->payload.payload_size;
+
+	spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
+	spdk_iov_sgl_advance(&sgl, req->payload.payload_offset);
+
+	while (remaining_transfer_len > 0) {
+		length = spdk_min(sgl.iov->iov_len - sgl.iov_offset, remaining_transfer_len);
+		virt_addr = (uint8_t *)sgl.iov->iov_base + sgl.iov_offset;
+
+		/*
+		 * Any incompatible sges should have been handled up in the splitting routine,
+		 *  but assert here as an additional check.
+		 *
+		 * All SGEs except last must end on a page boundary.
+		 */
+		assert((length == remaining_transfer_len) ||
+		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
+
+		rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index, virt_addr, length, page_size);
+		if (spdk_unlikely(rc)) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+		spdk_iov_sgl_advance(&sgl, length);
+		remaining_transfer_len -= length;
+	}
+
+	return 0;
+}
+
+static inline int
+nvme_pcie_qpair_build_prps_iov_request_fill(struct spdk_nvme_qpair *qpair,
+		struct nvme_request *req, struct nvme_tracker *tr)
+{
+	int rc;
+	void *virt_addr;
+	uint32_t remaining_transfer_len, length;
+	uint32_t prp_index = 0;
+	uint32_t i;
+	uint32_t page_size = qpair->ctrlr->page_size;
+
+	remaining_transfer_len = req->payload.payload_size;
+
+	for (i = 0; i < req->payload.iov_count && remaining_transfer_len > 0; i++) {
+		length = spdk_min(req->payload.iov[i].iov_len, remaining_transfer_len);
+		virt_addr = (uint8_t *)req->payload.iov[i].iov_base;
+
+		/*
+		 * Any incompatible sges should have been handled up in the splitting routine,
+		 *  but assert here as an additional check.
+		 *
+		 * All SGEs except last must end on a page boundary.
+		 */
+		assert((length == remaining_transfer_len) ||
+		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
+
+		rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index, virt_addr, length, page_size);
+		if (spdk_unlikely(rc)) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+		remaining_transfer_len -= length;
+	}
+
+	return 0;
+}
+
+/**
+ * Build PRP list describing iov payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_prps_iov_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				       struct nvme_tracker *tr, bool dword_aligned)
+{
+	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
+
+	if (req->payload.payload_offset != 0) {
+		return nvme_pcie_qpair_build_prps_iov_request_fill_with_offset(qpair, req, tr);
+	} else {
+		return nvme_pcie_qpair_build_prps_iov_request_fill(qpair, req, tr);
+	}
+}
+
+
 typedef int(*build_req_fn)(struct spdk_nvme_qpair *, struct nvme_request *, struct nvme_tracker *,
 			   bool);
 
@@ -1628,7 +1837,11 @@ static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
 	[NVME_PAYLOAD_TYPE_SGL] = {
 		nvme_pcie_qpair_build_prps_sgl_request,			/* PRP */
 		nvme_pcie_qpair_build_hw_sgl_request			/* SGL */
-	}
+	},
+	[NVME_PAYLOAD_TYPE_IOV] = {
+		nvme_pcie_qpair_build_prps_iov_request,			/* PRP */
+		nvme_pcie_qpair_build_hw_iov_request			/* SGL */
+	},
 };
 
 static int
