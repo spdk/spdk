@@ -386,6 +386,7 @@ usage(const char *program_name)
 	printf("\t-V, --enable-vmd            enable VMD enumeration\n");
 	spdk_log_usage(stdout, "\t-L");
 	printf("\t-h, --help                  show this usage\n");
+	printf("\t--iova-mode <mode>          specify DPDK IOVA mode: va|pa\n");
 }
 
 #define HELLO_GETOPT_SHORT "d:ghi:r:L:V"
@@ -405,6 +406,8 @@ static const struct option g_hello_cmdline_opts[] = {
 	{"logflag", required_argument, NULL, HELLO_LOG_FLAG},
 #define HELLO_ENABLE_VMD	'V'
 	{"enable-vmd", no_argument, NULL, HELLO_ENABLE_VMD},
+#define HELLO_IOVA_MODE		256
+	{"iova-mode", required_argument, NULL, HELLO_IOVA_MODE},
 	{0, 0, 0, 0}
 };
 
@@ -458,6 +461,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case HELLO_HELP:
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
+		case HELLO_IOVA_MODE:
+			env_opts->iova_mode = optarg;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
