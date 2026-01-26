@@ -1418,6 +1418,30 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 	return 0;
 }
 
+static inline int
+nvme_pcie_qpair_fill_bit_bucket_sgl(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				    struct nvme_tracker *tr, struct spdk_nvme_sgl_descriptor *sgl, uint32_t remaining_user_sge_len)
+{
+	/* TODO: enable WRITE and COMPARE when necessary */
+	if (spdk_unlikely(req->cmd.opc != SPDK_NVME_OPC_READ)) {
+		NVME_QPAIR_ERRLOG(qpair, "Only READ command can be supported\n");
+		return -EFAULT;
+	}
+
+	sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_BIT_BUCKET;
+	/* If the SGL describes a destination data buffer, the length of data
+	 * buffer shall be discarded by controller, and the length is included
+	 * in Number of Logical Blocks (NLB) parameter. Otherwise, the length
+	 * is not included in the NLB parameter.
+	 */
+
+	sgl->unkeyed.length = remaining_user_sge_len;
+	sgl->address = 0;
+	sgl->unkeyed.subtype = 0;
+
+	return 0;
+}
+
 /**
  * Build SGL list describing scattered payload buffer.
  */
@@ -1448,38 +1472,23 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 
 	remaining_transfer_len = req->payload.payload_size;
 
-	while (remaining_transfer_len > 0) {
+	while (remaining_transfer_len > 0 && nseg < NVME_MAX_SGL_DESCRIPTORS) {
 		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg,
 					      &virt_addr, &remaining_user_sge_len);
 		if (rc) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -EFAULT;
 		}
+		remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
+		remaining_transfer_len -= remaining_user_sge_len;
 
 		/* Bit Bucket SGL descriptor */
 		if ((uint64_t)virt_addr == UINT64_MAX) {
-			/* TODO: enable WRITE and COMPARE when necessary */
-			if (req->cmd.opc != SPDK_NVME_OPC_READ) {
-				NVME_QPAIR_ERRLOG(qpair, "Only READ command can be supported\n");
-				goto exit;
+			rc = nvme_pcie_qpair_fill_bit_bucket_sgl(qpair, req, tr, sgl, remaining_user_sge_len);
+			if (spdk_unlikely(rc)) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return rc;
 			}
-			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
-				NVME_QPAIR_ERRLOG(qpair, "Too many SGL entries\n");
-				goto exit;
-			}
-
-			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_BIT_BUCKET;
-			/* If the SGL describes a destination data buffer, the length of data
-			 * buffer shall be discarded by controller, and the length is included
-			 * in Number of Logical Blocks (NLB) parameter. Otherwise, the length
-			 * is not included in the NLB parameter.
-			 */
-			remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
-			remaining_transfer_len -= remaining_user_sge_len;
-
-			sgl->unkeyed.length = remaining_user_sge_len;
-			sgl->address = 0;
-			sgl->unkeyed.subtype = 0;
 
 			sgl++;
 			nseg++;
@@ -1487,23 +1496,18 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			continue;
 		}
 
-		remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
-		remaining_transfer_len -= remaining_user_sge_len;
-		while (remaining_user_sge_len > 0) {
-			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
-				NVME_QPAIR_ERRLOG(qpair, "Too many SGL entries\n");
-				goto exit;
-			}
-
-			if (dword_aligned && ((uintptr_t)virt_addr & 3)) {
+		while (remaining_user_sge_len > 0 && nseg < NVME_MAX_SGL_DESCRIPTORS) {
+			if (spdk_unlikely(dword_aligned && ((uintptr_t)virt_addr & 3))) {
 				NVME_QPAIR_ERRLOG(qpair, "virt_addr %p not dword aligned\n", virt_addr);
-				goto exit;
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -EFAULT;
 			}
 
 			mapping_length = remaining_user_sge_len;
 			phys_addr = nvme_pcie_vtophys(qpair->ctrlr, virt_addr, &mapping_length);
-			if (phys_addr == SPDK_VTOPHYS_ERROR) {
-				goto exit;
+			if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -EFAULT;
 			}
 
 			length = spdk_min(remaining_user_sge_len, mapping_length);
@@ -1527,6 +1531,12 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		}
 	}
 
+	if (spdk_unlikely(remaining_transfer_len > 0)) {
+		NVME_QPAIR_ERRLOG(qpair, "Remaining transfer length: %u\n", remaining_transfer_len);
+		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+		return -EFAULT;
+	}
+
 	if (nseg == 1) {
 		/*
 		 * The whole transfer can be described by a single SGL descriptor.
@@ -1548,10 +1558,6 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 
 	NVME_QPAIR_DEBUGLOG(qpair, "Number of SGL descriptors: %" PRIu32 "\n", nseg);
 	return 0;
-
-exit:
-	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-	return -EFAULT;
 }
 
 /**
