@@ -757,7 +757,7 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	pdu_compute_crc32(pdu);
 }
 
-static int
+static inline int
 nvme_tcp_try_memory_translation(struct nvme_tcp_req *tcp_req, void **addr, uint32_t length)
 {
 	struct nvme_request *req = tcp_req->req;
@@ -775,6 +775,10 @@ nvme_tcp_try_memory_translation(struct nvme_tcp_req *tcp_req, void **addr, uint3
 					       req->payload.opts->memory_domain_ctx, spdk_memory_domain_get_system_domain(), NULL, *addr, length,
 					       &translation);
 	if (spdk_unlikely(rc || translation.iov_count != 1)) {
+		/* These asserts are needed to calm down scanbuild which complain on the dereference of NULL pointers NVME_TQPAIR_ERRLOG though
+		 * the macro checks both qpair and controller pointers internally */
+		assert(tcp_req->tqpair);
+		assert(tcp_req->tqpair->qpair.ctrlr);
 		NVME_TQPAIR_ERRLOG(tcp_req->tqpair, "DMA memory translation failed, rc %d, iov_count %u\n", rc,
 				   translation.iov_count);
 		return -EFAULT;
@@ -788,7 +792,7 @@ nvme_tcp_try_memory_translation(struct nvme_tcp_req *tcp_req, void **addr, uint3
 /*
  * Build SGL describing contiguous payload buffer.
  */
-static int
+static inline int
 nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	struct nvme_request *req = tcp_req->req;
@@ -816,7 +820,7 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req
 /*
  * Build SGL describing scattered payload buffer.
  */
-static int
+static inline int
 nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	int rc;
@@ -867,6 +871,97 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 	return 0;
 }
 
+static inline int
+nvme_tcp_build_iov_request_fill_with_offset(struct nvme_tcp_qpair *tqpair,
+		struct nvme_tcp_req *tcp_req, uint32_t max_num_sgl)
+{
+	struct spdk_iov_sgl sgl;
+	uint32_t remaining_size = tcp_req->req->payload.payload_size;
+	int rc;
+
+	spdk_iov_sgl_init(&sgl, tcp_req->req->payload.iov, tcp_req->req->payload.iov_count, 0);
+	spdk_iov_sgl_advance(&sgl, tcp_req->req->payload.payload_offset);
+
+	for (; tcp_req->iovcnt < max_num_sgl && remaining_size > 0; tcp_req->iovcnt++) {
+		void *addr;
+		uint32_t length;
+
+		length = spdk_min(sgl.iov->iov_len - sgl.iov_offset, remaining_size);
+		addr = (uint8_t *)sgl.iov->iov_base + sgl.iov_offset;
+
+		rc = nvme_tcp_try_memory_translation(tcp_req, &addr, length);
+		if (spdk_unlikely(rc)) {
+			return rc;
+		}
+
+		tcp_req->iov[tcp_req->iovcnt].iov_base = addr;
+		tcp_req->iov[tcp_req->iovcnt].iov_len = length;
+		remaining_size -= length;
+		spdk_iov_sgl_advance(&sgl, length);
+	}
+
+	if (spdk_unlikely(remaining_size > 0)) {
+		return -E2BIG;
+	}
+
+	return 0;
+}
+
+static inline int
+nvme_tcp_build_iov_request_fill(struct nvme_tcp_qpair *tqpair,
+				struct nvme_tcp_req *tcp_req, uint32_t max_num_sgl)
+{
+	uint32_t remaining_size = tcp_req->req->payload.payload_size;
+	int rc;
+
+	for (; tcp_req->iovcnt < max_num_sgl && remaining_size > 0; tcp_req->iovcnt++) {
+		void *addr;
+		uint32_t length;
+
+		length = spdk_min(tcp_req->req->payload.iov[tcp_req->iovcnt].iov_len, remaining_size);
+		addr = (uint8_t *)tcp_req->req->payload.iov[tcp_req->iovcnt].iov_base;
+
+		rc = nvme_tcp_try_memory_translation(tcp_req, &addr, length);
+		if (spdk_unlikely(rc)) {
+			return rc;
+		}
+
+		tcp_req->iov[tcp_req->iovcnt].iov_base = addr;
+		tcp_req->iov[tcp_req->iovcnt].iov_len = length;
+		remaining_size -= length;
+	}
+
+	if (spdk_unlikely(remaining_size > 0)) {
+		return -E2BIG;
+	}
+
+	return 0;
+}
+
+/*
+ * Build SGL describing scattered payload buffer.
+ */
+static inline int
+nvme_tcp_build_iov_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
+{
+	uint32_t max_num_sgl;
+	struct nvme_request *req = tcp_req->req;
+
+	NVME_TQPAIR_DEBUGLOG(tqpair, "enter\n");
+
+	assert(req->payload.payload_size != 0);
+	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
+
+	max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, NVME_TCP_MAX_SGL_DESCRIPTORS);
+	max_num_sgl = spdk_min(req->payload.iov_count, max_num_sgl);
+
+	if (req->payload.payload_offset != 0) {
+		return nvme_tcp_build_iov_request_fill_with_offset(tqpair, tcp_req, max_num_sgl);
+	} else {
+		return nvme_tcp_build_iov_request_fill(tqpair, tcp_req, max_num_sgl);
+	}
+}
+
 static int
 nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		  struct nvme_tcp_req *tcp_req)
@@ -874,6 +969,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	struct spdk_nvme_ctrlr *ctrlr = tqpair->qpair.ctrlr;
 	int rc = 0;
 	enum spdk_nvme_data_transfer xfer;
+	enum nvme_payload_type payload_type;
 	uint32_t max_in_capsule_data_size;
 
 	tcp_req->req = req;
@@ -893,21 +989,31 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 	}
 
+	payload_type = nvme_req_payload_type(req);
 	/* For c2h delay filling in the iov until the data arrives.
 	 * For h2c some delay is also possible if data doesn't fit into cmd capsule (not implemented). */
-	if (nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_CONTIG) {
+	switch (payload_type) {
+	case NVME_PAYLOAD_TYPE_CONTIG:
 		if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 			rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
 		}
-	} else if (nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_SGL) {
+		break;
+	case NVME_PAYLOAD_TYPE_SGL:
 		if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 			rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
 		}
-	} else {
+		break;
+	case NVME_PAYLOAD_TYPE_IOV:
+		if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			rc = nvme_tcp_build_iov_request(tqpair, tcp_req);
+		}
+		break;
+	default:
 		rc = -1;
+		break;
 	}
 
-	if (rc) {
+	if (spdk_unlikely(rc)) {
 		return rc;
 	}
 
@@ -1704,6 +1810,7 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data = &pdu->hdr.c2h_data;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	enum nvme_payload_type payload_type;
 	int flags = c2h_data->common.flags;
 	int rc;
 
@@ -1757,14 +1864,24 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	}
 
-	if (nvme_req_payload_type(tcp_req->req) == NVME_PAYLOAD_TYPE_CONTIG) {
+	payload_type = nvme_req_payload_type(tcp_req->req);
+
+	switch (payload_type) {
+	case NVME_PAYLOAD_TYPE_CONTIG:
 		rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
-	} else {
-		assert(nvme_req_payload_type(tcp_req->req) == NVME_PAYLOAD_TYPE_SGL);
+		break;
+	case NVME_PAYLOAD_TYPE_SGL:
 		rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
+		break;
+	case NVME_PAYLOAD_TYPE_IOV:
+		rc = nvme_tcp_build_iov_request(tqpair, tcp_req);
+		break;
+	default:
+		rc = -1;
+		break;
 	}
 
-	if (rc) {
+	if (spdk_unlikely(rc)) {
 		/* Not the right error message but at least it handles the failure. */
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED;
 		goto end;

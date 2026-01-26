@@ -541,6 +541,8 @@ test_nvme_tcp_req_init(void)
 	struct nvme_tcp_req tcp_req = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_tcp_ut_bdev_io bio = {};
+	struct iovec iov[16] = {};
+	uint32_t i;
 	int rc;
 
 	tqpair.qpair.ctrlr = &ctrlr;
@@ -596,6 +598,86 @@ test_nvme_tcp_req_init(void)
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
 
+	/* Test case3: payload type IOV. Expect: PASS */
+	for (i = 0; i < 16; i++) {
+		iov[i].iov_base = (void *)((uint64_t)0xFEEDB000 + i * 0x1000);
+		iov[i].iov_len = 0x1000;
+	}
+	memset(&req.cmd, 0, sizeof(req.cmd));
+	memset(&tcp_req, 0, sizeof(tcp_req));
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+	req.payload.iov = iov;
+	req.payload.iov_count = 16;
+	req.payload.payload_size = 16 * 0x1000;
+	req.payload.payload_offset = 0;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tcp_req.req == &req);
+	CU_ASSERT(tcp_req.in_capsule_data == false);
+	for (i = 0; i < 16; i++) {
+		CU_ASSERT(tcp_req.iov[i].iov_base == iov[i].iov_base);
+		CU_ASSERT(tcp_req.iov[i].iov_len == iov[i].iov_len);
+	}
+	CU_ASSERT(tcp_req.iovcnt == 16);
+	CU_ASSERT(req.cmd.cid == tcp_req.cid);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+
+	/* Test case4: payload type IOV. Controller's max_sge is less than iovcount. Expect FAIL */
+	memset(&req.cmd, 0, sizeof(req.cmd));
+	memset(&tcp_req, 0, sizeof(tcp_req));
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+	req.payload.iov = iov;
+	req.payload.iov_count = 16;
+	req.payload.payload_size = 16 * 0x1000;
+	req.payload.payload_offset = 0;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	ctrlr.max_sges = NVME_TCP_MAX_SGL_DESCRIPTORS - 1;
+	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
+	CU_ASSERT(rc != 0);
+	ctrlr.max_sges = NVME_TCP_MAX_SGL_DESCRIPTORS;
+
+	/* Test case5: payload type IOV with offset. Expect: PASS */
+	iov[0].iov_len += 0x1000; /* offset */
+	iov[15].iov_len += 0x2000; /* extra data which must not be consumed */
+	memset(&req.cmd, 0, sizeof(req.cmd));
+	memset(&tcp_req, 0, sizeof(tcp_req));
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+	req.payload.iov = iov;
+	req.payload.iov_count = 16;
+	req.payload.payload_size = 16 * 0x1000;
+	req.payload.payload_offset = 0x1000;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tcp_req.req == &req);
+	CU_ASSERT(tcp_req.in_capsule_data == false);
+	CU_ASSERT(tcp_req.iov[0].iov_base == iov[0].iov_base + 0x1000);
+	CU_ASSERT(tcp_req.iov[0].iov_len == 0x1000);
+	for (i = 1; i < 16; i++) {
+		CU_ASSERT(tcp_req.iov[i].iov_base == iov[i].iov_base);
+		CU_ASSERT(tcp_req.iov[i].iov_len == 0x1000);
+	}
+	CU_ASSERT(tcp_req.iovcnt == 16);
+	CU_ASSERT(req.cmd.cid == tcp_req.cid);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
 }
 
 static void
