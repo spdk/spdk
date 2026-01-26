@@ -3234,6 +3234,11 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	if (!spdk_nvmf_subsystem_log_page_allowed(subsystem, lid)) {
+		SPDK_INFOLOG(nvmf, "Prohibited Get Log Page 0x%02X\n", lid);
+		goto invalid_log_page;
+	}
+
 	switch (lid) {
 	/* If you are adding support for new log pages, please update g_supported_log_pages[] to reflect it. */
 	case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
@@ -4395,6 +4400,13 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	}
+
+	if (!spdk_nvmf_subsystem_feature_allowed(ctrlr->subsys, feature)) {
+		SPDK_INFOLOG(nvmf, "Get Features command with prohibited feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	/*
 	 * Process Get Features command for non-discovery controller
 	 */
@@ -4531,6 +4543,13 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	}
+
+	if (!spdk_nvmf_subsystem_feature_allowed(ctrlr->subsys, feature)) {
+		SPDK_INFOLOG(nvmf, "Set Features command with prohibited feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	/*
 	 * Process Set Features command for non-discovery controller
 	 */
