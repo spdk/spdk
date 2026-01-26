@@ -1076,35 +1076,6 @@ spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 }
 
 int
-spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
-			      void *metadata, uint64_t lba, uint32_t lba_count,
-			      spdk_nvme_cmd_cb cb_fn, void *cb_arg,
-			      uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
-{
-	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
-}
-
-int
-spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-			       void *buffer, void *metadata, uint64_t lba,
-			       uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
-			       uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
-{
-	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
-}
-
-int
-spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-			       uint64_t lba, uint32_t lba_count,
-			       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
-			       spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-			       spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
-			       uint16_t apptag_mask, uint16_t apptag)
-{
-	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
-}
-
-int
 spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				uint64_t lba, uint32_t lba_count,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
@@ -1115,49 +1086,25 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
 }
 
-static bool g_ut_readv_ext_called;
+static bool g_ut_read_iov_called;
 int
-spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-			   uint64_t lba, uint32_t lba_count,
-			   spdk_nvme_cmd_cb cb_fn, void *cb_arg,
-			   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-			   spdk_nvme_req_next_sge_cb next_sge_fn,
-			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
-{
-	g_ut_readv_ext_called = true;
-	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
-}
-
-static bool g_ut_read_ext_called;
-int
-spdk_nvme_ns_cmd_read_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
-			  uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+spdk_nvme_ns_cmd_read_iov(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			  uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			  void *cb_arg, struct iovec *iov, uint32_t iov_count,
 			  struct spdk_nvme_ns_cmd_ext_io_opts *opts)
 {
-	g_ut_read_ext_called = true;
+	g_ut_read_iov_called = true;
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
 }
 
-static bool g_ut_writev_ext_called;
+static bool g_ut_write_iov_called;
 int
-spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-			    uint64_t lba, uint32_t lba_count,
-			    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
-			    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-			    spdk_nvme_req_next_sge_cb next_sge_fn,
-			    struct spdk_nvme_ns_cmd_ext_io_opts *opts)
-{
-	g_ut_writev_ext_called = true;
-	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
-}
-
-static bool g_ut_write_ext_called;
-int
-spdk_nvme_ns_cmd_write_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
-			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+spdk_nvme_ns_cmd_write_iov(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			   void *cb_arg, struct iovec *iov, uint32_t iov_count,
 			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
 {
-	g_ut_write_ext_called = true;
+	g_ut_write_iov_called = true;
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
 }
 
@@ -2591,11 +2538,11 @@ test_submit_nvme_cmd(void)
 	ut_test_submit_fused_nvme_cmd(ch, bdev_io);
 
 	/* Verify that ext NVME API is called when data is described by memory domain  */
-	g_ut_read_ext_called = false;
+	g_ut_read_iov_called = false;
 	bdev_io->u.bdev.memory_domain = (void *)0xdeadbeef;
 	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_READ);
-	CU_ASSERT(g_ut_read_ext_called == true);
-	g_ut_read_ext_called = false;
+	CU_ASSERT(g_ut_read_iov_called == true);
+	g_ut_read_iov_called = false;
 	bdev_io->u.bdev.memory_domain = NULL;
 
 	ut_test_submit_admin_cmd(ch, bdev_io, ctrlr);

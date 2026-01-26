@@ -8424,17 +8424,13 @@ bdev_nvme_no_pi_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	SPDK_DEBUGLOG(bdev_nvme, "read %" PRIu64 " blocks with offset %#" PRIx64 " without PI check\n",
 		      lba_count, lba);
 
-	bio->iovs = iov;
-	bio->iovcnt = iovcnt;
-	bio->iovpos = 0;
-	bio->iov_offset = 0;
+	memset(&bio->ext_opts, 0, SPDK_SIZEOF(&bio->ext_opts, accel_sequence));
+	bio->ext_opts.size = SPDK_SIZEOF(&bio->ext_opts, accel_sequence);
+	bio->ext_opts.metadata = md;
 
-	rc = spdk_nvme_ns_cmd_readv_with_md(bio->io_path->nvme_ns->ns,
-					    bio->io_path->qpair->qpair,
-					    lba, lba_count,
-					    bdev_nvme_no_pi_readv_done, bio, 0,
-					    bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
-					    md, 0, 0);
+	rc = spdk_nvme_ns_cmd_read_iov(bio->io_path->nvme_ns->ns, bio->io_path->qpair->qpair,
+				       lba, lba_count, bdev_nvme_no_pi_readv_done, bio, iov, iovcnt,
+				       &bio->ext_opts);
 
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("no_pi_readv failed: rc = %d\n", rc);
@@ -8455,28 +8451,18 @@ bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	SPDK_DEBUGLOG(bdev_nvme, "read %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
 
-	bio->iovs = iov;
-	bio->iovcnt = iovcnt;
-	bio->iovpos = 0;
-	bio->iov_offset = 0;
-
 	bio->ext_opts.size = SPDK_SIZEOF(&bio->ext_opts, accel_sequence);
 	bio->ext_opts.memory_domain = domain;
 	bio->ext_opts.memory_domain_ctx = domain_ctx;
 	bio->ext_opts.io_flags = flags;
 	bio->ext_opts.metadata = md;
+	bio->ext_opts.apptag_mask = 0;
+	bio->ext_opts.apptag = 0;
+	bio->ext_opts.cdw13 = 0;
 	bio->ext_opts.accel_sequence = seq;
 
-	if (iovcnt == 1) {
-		rc = spdk_nvme_ns_cmd_read_ext(ns, qpair, iov[0].iov_base, lba, lba_count, bdev_nvme_readv_done,
-					       bio, &bio->ext_opts);
-	} else {
-		rc = spdk_nvme_ns_cmd_readv_ext(ns, qpair, lba, lba_count,
-						bdev_nvme_readv_done, bio,
-						bdev_nvme_queued_reset_sgl,
-						bdev_nvme_queued_next_sge,
-						&bio->ext_opts);
-	}
+	rc = spdk_nvme_ns_cmd_read_iov(ns, qpair, lba, lba_count, bdev_nvme_readv_done, bio, iov, iovcnt,
+				       &bio->ext_opts);
 
 	if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
 		SPDK_ERRLOG("readv failed: rc = %d\n", rc);
@@ -8498,29 +8484,18 @@ bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	SPDK_DEBUGLOG(bdev_nvme, "write %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
 
-	bio->iovs = iov;
-	bio->iovcnt = iovcnt;
-	bio->iovpos = 0;
-	bio->iov_offset = 0;
-
 	bio->ext_opts.size = SPDK_SIZEOF(&bio->ext_opts, accel_sequence);
 	bio->ext_opts.memory_domain = domain;
 	bio->ext_opts.memory_domain_ctx = domain_ctx;
 	bio->ext_opts.io_flags = flags | SPDK_NVME_IO_FLAGS_DIRECTIVE(cdw12.write.dtype);
-	bio->ext_opts.cdw13 = cdw13.raw;
 	bio->ext_opts.metadata = md;
+	bio->ext_opts.apptag_mask = 0;
+	bio->ext_opts.apptag = 0;
+	bio->ext_opts.cdw13 = cdw13.raw;
 	bio->ext_opts.accel_sequence = seq;
 
-	if (iovcnt == 1) {
-		rc = spdk_nvme_ns_cmd_write_ext(ns, qpair, iov[0].iov_base, lba, lba_count, bdev_nvme_writev_done,
-						bio, &bio->ext_opts);
-	} else {
-		rc = spdk_nvme_ns_cmd_writev_ext(ns, qpair, lba, lba_count,
-						 bdev_nvme_writev_done, bio,
-						 bdev_nvme_queued_reset_sgl,
-						 bdev_nvme_queued_next_sge,
-						 &bio->ext_opts);
-	}
+	rc = spdk_nvme_ns_cmd_write_iov(ns, qpair, lba, lba_count, bdev_nvme_writev_done, bio, iov, iovcnt,
+					&bio->ext_opts);
 
 	if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
 		SPDK_ERRLOG("writev failed: rc = %d\n", rc);
