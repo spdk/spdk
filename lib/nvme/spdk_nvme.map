@@ -189,8 +189,10 @@
 	spdk_nvme_ns_cmd_compare_with_md;
 	spdk_nvme_ns_cmd_writev_ext;
 	spdk_nvme_ns_cmd_write_ext;
+	spdk_nvme_ns_cmd_write_iov;
 	spdk_nvme_ns_cmd_readv_ext;
 	spdk_nvme_ns_cmd_read_ext;
+	spdk_nvme_ns_cmd_read_iov;
 	spdk_nvme_ns_cmd_verify;
 
 	spdk_nvme_qpair_process_completions;

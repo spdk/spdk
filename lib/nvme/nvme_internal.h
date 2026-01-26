@@ -1531,6 +1531,25 @@ nvme_request_clear(struct nvme_request *req)
 		req->payload_type = NVME_PAYLOAD_TYPE_SGL;	\
 	} while (0);
 
+#define NVME_INIT_REQUEST_IOV(req, _cb_fn, _cb_arg, _iov, _iov_count, _md, _payload_size, _md_size, _payload_offset, _md_offset)	\
+	do {							\
+		nvme_request_clear(req);			\
+		req->cb_fn = _cb_fn;				\
+		req->cb_arg = _cb_arg;				\
+		req->payload.iov = _iov;			\
+		req->payload.iov_count = _iov_count;		\
+		req->payload.md = _md;				\
+		req->payload.payload_size = _payload_size;	\
+		req->payload.md_size = _md_size;		\
+		req->payload.payload_offset = _payload_offset;	\
+		req->payload.md_offset = _md_offset;		\
+		req->payload.opts = NULL;			\
+		req->pid = g_spdk_nvme_pid;			\
+		req->submit_tick = 0;				\
+		req->accel_sequence = NULL;			\
+		req->payload_type = NVME_PAYLOAD_TYPE_IOV;	\
+	} while (0);
+
 static inline struct nvme_request *
 nvme_allocate_request(struct spdk_nvme_qpair *qpair)
 {
