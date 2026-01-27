@@ -835,10 +835,6 @@ nvme_ctrlr_can_be_unregistered(struct nvme_ctrlr *nvme_ctrlr)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
-	if (!nvme_ctrlr->destruct) {
-		return false;
-	}
-
 	if (nvme_ctrlr->ref > 0) {
 		return false;
 	}
@@ -850,6 +846,9 @@ nvme_ctrlr_can_be_unregistered(struct nvme_ctrlr *nvme_ctrlr)
 	/* Flags are set after ref get and cleared before ref put, so the above check is sufficient. */
 	assert(!nvme_ctrlr->ana_log_page_updating);
 	assert(!nvme_ctrlr->io_path_cache_clearing);
+
+	/* The controller shouldn't be unregistered without the explicit destruct flag set. */
+	assert(nvme_ctrlr->destruct);
 	return true;
 }
 
