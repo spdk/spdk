@@ -131,8 +131,8 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ctrlr_unlock(ctrlr);
 		return -ENOMEM;
 	}
-
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
+	req->pid = g_spdk_nvme_pid;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 

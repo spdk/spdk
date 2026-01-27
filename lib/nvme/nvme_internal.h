@@ -1504,7 +1504,6 @@ nvme_request_clear(struct nvme_request *req)
 		req->payload.payload_offset = _payload_offset;	\
 		req->payload.md_offset = _md_offset;		\
 		req->payload.opts = NULL;			\
-		req->pid = g_spdk_nvme_pid;			\
 		req->submit_tick = 0;				\
 		req->accel_sequence = NULL;			\
 		req->payload_type = NVME_PAYLOAD_TYPE_CONTIG;	\
@@ -1524,7 +1523,6 @@ nvme_request_clear(struct nvme_request *req)
 		req->payload.payload_offset = _payload_offset;	\
 		req->payload.md_offset = _md_offset;		\
 		req->payload.opts = NULL;			\
-		req->pid = g_spdk_nvme_pid;			\
 		req->submit_tick = 0;				\
 		req->accel_sequence = NULL;			\
 		req->payload_type = NVME_PAYLOAD_TYPE_SGL;	\
@@ -1543,7 +1541,6 @@ nvme_request_clear(struct nvme_request *req)
 		req->payload.payload_offset = _payload_offset;	\
 		req->payload.md_offset = _md_offset;		\
 		req->payload.opts = NULL;			\
-		req->pid = g_spdk_nvme_pid;			\
 		req->submit_tick = 0;				\
 		req->accel_sequence = NULL;			\
 		req->payload_type = NVME_PAYLOAD_TYPE_IOV;	\
@@ -1584,7 +1581,13 @@ nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
 static inline struct nvme_request *
 nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
+	struct nvme_request *req;
+
+	req = nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
+	if (nvme_qpair_is_admin_queue(qpair) && req) {
+		req->pid = g_spdk_nvme_pid;
+	}
+	return req;
 }
 
 struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,

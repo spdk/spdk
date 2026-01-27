@@ -544,6 +544,7 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvmf_data->cntlid = 0xFFFF;
+		req->pid = g_spdk_nvme_pid;
 	} else {
 		nvmf_data->cntlid = ctrlr->cntlid;
 	}

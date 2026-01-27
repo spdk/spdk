@@ -607,6 +607,7 @@ dummy_cb(void *user_cb_arg, const struct spdk_nvme_cpl *cpl)
 static void
 test_nvme_user_copy_cmd_complete(void)
 {
+	struct spdk_nvme_qpair qpair = {.id = 1};
 	struct nvme_request req;
 	int test_data = 0xdeadbeef;
 	int buff_size = sizeof(int);
@@ -620,6 +621,7 @@ test_nvme_user_copy_cmd_complete(void)
 	/* test without a user buffer provided */
 	req.user_cb_fn = (void *)dummy_cb;
 	req.user_cb_arg = (void *)&user_cb_arg;
+	req.qpair = &qpair;
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
 	CU_ASSERT(req.user_cb_fn == NULL);
@@ -640,7 +642,6 @@ test_nvme_user_copy_cmd_complete(void)
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	req.pid = getpid();
 
 	/* zero out the test value set in the callback */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
@@ -695,6 +696,7 @@ test_nvme_allocate_request_null(void)
 	 * Put a dummy on the queue so we can make a request
 	 * and confirm that what comes back is what we expect.
 	 */
+	dummy_req.pid = getpid();
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
 
 	req = nvme_allocate_request_null(&qpair, cb_fn, cb_arg);
@@ -742,7 +744,6 @@ test_nvme_allocate_request(void)
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(req->payload.payload_size == payload_struct_size);
-	CU_ASSERT(req->pid == getpid());
 }
 
 static void
@@ -770,7 +771,7 @@ test_nvme_free_request(void)
 static void
 test_nvme_allocate_request_user_copy(void)
 {
-	struct spdk_nvme_qpair qpair;
+	struct spdk_nvme_qpair qpair = {};
 	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x12345;
 	void *cb_arg = (void *)0x12345;
 	bool host_to_controller = true;
@@ -1279,6 +1280,7 @@ test_nvme_request_check_timeout(void)
 	CU_ASSERT(ut_timeout_cb_call == false);
 
 	/* req->pid isn't right then return directly */
+	qpair.id = 0;
 	req.submit_tick = 1;
 	req.pid = g_spdk_nvme_pid + 1;
 	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);

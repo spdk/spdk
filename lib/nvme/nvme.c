@@ -335,7 +335,8 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
-			assert(req->pid == getpid());
+			assert(req->qpair);
+			assert(req->qpair->id != 0 || req->pid == getpid());
 			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload.payload_size);
 		}
 	}
@@ -381,6 +382,9 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 		spdk_free(dma_buffer);
 		return NULL;
 	}
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		req->pid = g_spdk_nvme_pid;
+	}
 
 	req->user_cb_fn = cb_fn;
 	req->user_cb_arg = cb_arg;
@@ -424,6 +428,9 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 			timeout_ticks = ctrlr->opts.keep_alive_timeout_ms * spdk_get_ticks_hz() / SPDK_SEC_TO_MSEC;
 		}
 
+		if (req->pid != g_spdk_nvme_pid) {
+			return 0;
+		}
 		/*
 		 * We don't want to expose the admin queue to the user, so when
 		 * we're timing out admin commands set the qpair to NULL.
@@ -435,9 +442,6 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 		return 0;
 	}
 
-	if (spdk_unlikely(req->pid != g_spdk_nvme_pid)) {
-		return 0;
-	}
 
 	if (spdk_likely(req->submit_tick + timeout_ticks > now_tick)) {
 		return 1;
