@@ -139,6 +139,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "thread" $rootdir/test/thread/thread.sh
 	fi
 	run_test "rpc" $rootdir/test/rpc/rpc.sh
+	run_test "rpc_batching" $rootdir/test/rpc/rpc_batching.sh
 	run_test "skip_rpc" $rootdir/test/rpc/skip_rpc.sh
 	run_test "rpc_client" $rootdir/test/rpc_client/rpc_client.sh
 	run_test "json_config" $rootdir/test/json_config/json_config.sh
