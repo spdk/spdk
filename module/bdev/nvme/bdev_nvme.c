@@ -9226,9 +9226,9 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 	bdev_nvme_opts_config_json(w);
 
+	/* Emit bdev_nvme_attach_controller calls as a batch */
+	spdk_json_write_batch_begin(w);
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		struct nvme_bdev *nbdev;
-
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			path_id = nvme_ctrlr->active_path_id;
 			assert(path_id == TAILQ_FIRST(&nvme_ctrlr->trids));
@@ -9239,11 +9239,22 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 				nvme_ctrlr_config_json(w, nvme_ctrlr, path_id);
 				path_id = TAILQ_NEXT(path_id, link);
 			}
+		}
+	}
+	spdk_json_write_batch_end(w);
+
+	/* Emit remaining config items individually (not in a batch), some
+	 * of these might be able to run in parallel in a batch but that's
+	 * something to look at later.
+	 */
+	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		struct nvme_bdev *nbdev;
 
 #ifdef SPDK_CONFIG_NVME_CUSE
+		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			nvme_ctrlr_cuse_config_json(w, nvme_ctrlr);
-#endif
 		}
+#endif
 
 		TAILQ_FOREACH(nbdev, &nbdev_ctrlr->bdevs, tailq) {
 			bdev_nvme_multipath_config_json(nbdev, w);
