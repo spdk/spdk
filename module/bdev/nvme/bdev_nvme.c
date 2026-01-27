@@ -179,6 +179,20 @@ static struct nvme_ctrlr *null_ctrlr;
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
 struct nvme_bdev_io {
+	/** Extended IO opts passed by the user to bdev layer and mapped to NVME format */
+	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
+
+	/** I/O path the current I/O or admin passthrough is submitted on, or the I/O path
+	 *  being reset in a reset I/O.
+	 */
+	struct nvme_io_path *io_path;
+
+	/* Current tsc at submit time. */
+	uint64_t submit_tsc;
+
+	/* How many times the current I/O was retried. */
+	int32_t retry_count;
+
 	/** array of iovecs to transfer. */
 	struct iovec *iovs;
 
@@ -203,25 +217,14 @@ struct nvme_bdev_io {
 	/** Current iovec position. */
 	int fused_iovpos;
 
-	/** I/O path the current I/O or admin passthrough is submitted on, or the I/O path
-	 *  being reset in a reset I/O.
-	 */
-	struct nvme_io_path *io_path;
-
 	/** Saved status for admin passthru completion event, PI error verification, or intermediate compare-and-write status */
 	struct spdk_nvme_cpl cpl;
-
-	/** Extended IO opts passed by the user to bdev layer and mapped to NVME format */
-	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
 
 	/** Keeps track if first of fused commands was submitted */
 	bool first_fused_submitted;
 
 	/** Keeps track if first of fused commands was completed */
 	bool first_fused_completed;
-
-	/* How many times the current I/O was retried. */
-	int32_t retry_count;
 
 	/** Expiration value in ticks to retry the current I/O. */
 	uint64_t retry_ticks;
@@ -231,9 +234,6 @@ struct nvme_bdev_io {
 
 	/** Keep track of how many zones that have been copied to the spdk_bdev_zone_info struct */
 	uint64_t handled_zones;
-
-	/* Current tsc at submit time. */
-	uint64_t submit_tsc;
 
 	/* Used to put nvme_bdev_io into the list */
 	TAILQ_ENTRY(nvme_bdev_io) retry_link;
