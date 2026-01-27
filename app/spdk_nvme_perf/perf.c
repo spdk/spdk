@@ -174,8 +174,6 @@ struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	struct iovec		*iovs; /* array of iovecs to transfer. */
 	int			iovcnt; /* Number of iovecs in iovs array. */
-	int			iovpos; /* Current iovec position. */
-	uint32_t		iov_offset; /* Offset in current iovec. */
 	struct iovec		md_iov;
 	uint64_t		submit_tsc;
 	bool			is_read;
@@ -370,42 +368,6 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 		fprintf(stderr, "spdk_sock_impl_set_opts() failed to set %s: %d for sock impl %s, rc %d: %s\n",
 			field, val, impl_name, rc, strerror(-rc));
 	}
-}
-
-static void
-nvme_perf_reset_sgl(void *ref, uint32_t sgl_offset)
-{
-	struct iovec *iov;
-	struct perf_task *task = (struct perf_task *)ref;
-
-	task->iov_offset = sgl_offset;
-	for (task->iovpos = 0; task->iovpos < task->iovcnt; task->iovpos++) {
-		iov = &task->iovs[task->iovpos];
-		if (task->iov_offset < iov->iov_len) {
-			break;
-		}
-
-		task->iov_offset -= iov->iov_len;
-	}
-}
-
-static int
-nvme_perf_next_sge(void *ref, void **address, uint32_t *length)
-{
-	struct iovec *iov;
-	struct perf_task *task = (struct perf_task *)ref;
-
-	assert(task->iovpos < task->iovcnt);
-
-	iov = &task->iovs[task->iovpos];
-	assert(task->iov_offset <= iov->iov_len);
-
-	*address = iov->iov_base + task->iov_offset;
-	*length = iov->iov_len - task->iov_offset;
-	task->iovpos++;
-	task->iov_offset = 0;
-
-	return 0;
 }
 
 static int
@@ -911,18 +873,9 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		if (task->iovcnt == 1) {
-			return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
-							     task->iovs[0].iov_base, task->md_iov.iov_base,
-							     lba,
-							     entry->io_size_blocks, io_complete,
-							     task, entry->io_flags,
-							     task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
-		} else {
-			return spdk_nvme_ns_cmd_readv_ext(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
-							  entry->io_size_blocks, io_complete, task, nvme_perf_reset_sgl, nvme_perf_next_sge, &task->ext_opts);
+		return spdk_nvme_ns_cmd_read_iov(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
+						 entry->io_size_blocks, io_complete, task, task->iovs, task->iovcnt, &task->ext_opts);
 
-		}
 	} else {
 		switch (mode) {
 		case DIF_MODE_DIF:
@@ -943,19 +896,8 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		default:
 			break;
 		}
-
-		if (task->iovcnt == 1) {
-			return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
-							      task->iovs[0].iov_base, task->md_iov.iov_base,
-							      lba,
-							      entry->io_size_blocks, io_complete,
-							      task, entry->io_flags,
-							      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
-		} else {
-
-			return spdk_nvme_ns_cmd_writev_ext(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
-							   entry->io_size_blocks, io_complete, task, nvme_perf_reset_sgl, nvme_perf_next_sge, &task->ext_opts);
-		}
+		return spdk_nvme_ns_cmd_write_iov(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
+						  entry->io_size_blocks, io_complete, task, task->iovs, task->iovcnt, &task->ext_opts);
 	}
 }
 
