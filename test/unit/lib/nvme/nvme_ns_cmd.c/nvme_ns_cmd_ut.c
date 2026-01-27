@@ -885,9 +885,8 @@ test_nvme_ns_cmd_read_iov(void)
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_READ);
-	CU_ASSERT(nvme_req_payload_type(g_request) == NVME_PAYLOAD_TYPE_IOV);
-	CU_ASSERT(g_request->payload.iov == iov);
-	CU_ASSERT(g_request->payload.iov_count == 1);
+	CU_ASSERT(nvme_req_payload_type(g_request) == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.contig_or_cb_arg == iov[0].iov_base);
 	CU_ASSERT(g_request->payload.payload_size == sector_size * lba_count);
 	CU_ASSERT(g_request->payload.payload_offset == 0);
 	CU_ASSERT(g_request->num_children == 0);
@@ -937,16 +936,18 @@ test_nvme_ns_cmd_read_iov(void)
 
 	/* Test split into 2 parts due to IO size exceeds sectors_per_max_io */
 	iov[0].iov_base = (void *)(uintptr_t)0x10000000;
-	iov[0].iov_len = max_io_size + 4096;
-	rc = spdk_nvme_ns_cmd_read_iov(&ns, &qpair, 0x1000, sectors_per_max_io + 8, NULL, NULL, iov, 1,
+	iov[0].iov_len = max_io_size - 4096;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 8192;
+	rc = spdk_nvme_ns_cmd_read_iov(&ns, &qpair, 0x1000, sectors_per_max_io + 8, NULL, NULL, iov, 2,
 				       NULL);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(nvme_req_payload_type(g_request) == NVME_PAYLOAD_TYPE_IOV);
 	CU_ASSERT(g_request->payload.iov == iov);
-	CU_ASSERT(g_request->payload.iov_count == 1);
-	CU_ASSERT(g_request->payload.payload_size == iov[0].iov_len);
+	CU_ASSERT(g_request->payload.iov_count == 2);
+	CU_ASSERT(g_request->payload.payload_size == iov[0].iov_len + iov[1].iov_len);
 	CU_ASSERT(g_request->payload.payload_offset == 0);
 	CU_ASSERT(g_request->num_children == 2);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
@@ -1004,9 +1005,8 @@ test_nvme_ns_cmd_read_iov_sgl(void)
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_READ);
-	CU_ASSERT(nvme_req_payload_type(g_request) == NVME_PAYLOAD_TYPE_IOV);
-	CU_ASSERT(g_request->payload.iov == iov);
-	CU_ASSERT(g_request->payload.iov_count == 1);
+	CU_ASSERT(nvme_req_payload_type(g_request) == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.contig_or_cb_arg == iov[0].iov_base);
 	CU_ASSERT(g_request->payload.payload_size == sector_size * lba_count);
 	CU_ASSERT(g_request->payload.payload_offset == 0);
 	CU_ASSERT(g_request->num_children == 0);

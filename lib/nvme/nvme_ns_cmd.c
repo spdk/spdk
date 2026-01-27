@@ -1195,8 +1195,14 @@ nvme_ns_cmd_rw_iov_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, u
 	}
 	io_flags = nvme_ns_cmd_get_ext_io_opt(opts, io_flags, 0);
 
-	req = _nvme_ns_cmd_rw_req_init_iov(ns, qpair, iov, iov_count, NULL, 0, 0, lba,
-					   lba_count, cb_fn, cb_arg, io_flags, seq);
+	if (iov_count == 1) {
+		req = _nvme_ns_cmd_rw_req_init_contig(ns, qpair, iov[0].iov_base, NULL, 0, 0, lba, lba_count, cb_fn,
+						      cb_arg, io_flags, seq);
+
+	} else {
+		req = _nvme_ns_cmd_rw_req_init_iov(ns, qpair, iov, iov_count, NULL, 0, 0, lba,
+						   lba_count, cb_fn, cb_arg, io_flags, seq);
+	}
 	if (req == NULL) {
 		return -ENOMEM;
 	}
