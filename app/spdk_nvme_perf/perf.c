@@ -180,6 +180,7 @@ struct perf_task {
 	uint64_t		submit_tsc;
 	bool			is_read;
 	struct spdk_dif_ctx	dif_ctx;
+	struct spdk_nvme_ns_cmd_ext_io_opts	ext_opts;
 #if HAVE_LIBAIO
 	struct iocb		iocb;
 #endif
@@ -843,6 +844,9 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 		exit(1);
 	}
 
+	task->ext_opts.size = SPDK_SIZEOF(&task->ext_opts, accel_sequence);
+	task->ext_opts.io_flags = task->ns_ctx->entry->io_flags;
+
 	max_io_md_size = g_max_io_md_size * g_max_io_size_blocks;
 	if (max_io_md_size != 0) {
 		task->md_iov.iov_base = spdk_dma_zmalloc(max_io_md_size, g_io_align, NULL);
@@ -853,6 +857,7 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 			free(task->iovs);
 			exit(1);
 		}
+		task->ext_opts.metadata = task->md_iov.iov_base;
 	}
 }
 
@@ -898,6 +903,11 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			fprintf(stderr, "Initialization of DIF context failed\n");
 			exit(1);
 		}
+		task->ext_opts.apptag_mask = task->dif_ctx.apptag_mask;
+		task->ext_opts.apptag = task->dif_ctx.app_tag;
+	} else {
+		task->ext_opts.apptag_mask = 0;
+		task->ext_opts.apptag = 0;
 	}
 
 	if (task->is_read) {
@@ -909,12 +919,9 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 							     task, entry->io_flags,
 							     task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
 		} else {
-			return spdk_nvme_ns_cmd_readv_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
-							      lba, entry->io_size_blocks,
-							      io_complete, task, entry->io_flags,
-							      nvme_perf_reset_sgl, nvme_perf_next_sge,
-							      task->md_iov.iov_base,
-							      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+			return spdk_nvme_ns_cmd_readv_ext(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
+							  entry->io_size_blocks, io_complete, task, nvme_perf_reset_sgl, nvme_perf_next_sge, &task->ext_opts);
+
 		}
 	} else {
 		switch (mode) {
@@ -945,12 +952,9 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 							      task, entry->io_flags,
 							      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
 		} else {
-			return spdk_nvme_ns_cmd_writev_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
-							       lba, entry->io_size_blocks,
-							       io_complete, task, entry->io_flags,
-							       nvme_perf_reset_sgl, nvme_perf_next_sge,
-							       task->md_iov.iov_base,
-							       task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+
+			return spdk_nvme_ns_cmd_writev_ext(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
+							   entry->io_size_blocks, io_complete, task, nvme_perf_reset_sgl, nvme_perf_next_sge, &task->ext_opts);
 		}
 	}
 }
