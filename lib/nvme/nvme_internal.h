@@ -1043,23 +1043,29 @@ struct nvme_register_completion {
 
 struct spdk_nvme_ctrlr {
 	/* Hot data (accessed in I/O path) starts here. */
+	/** Controller support flags */
+	uint64_t			flags;
 
-	/* Tree of namespaces */
-	RB_HEAD(nvme_ns_tree, spdk_nvme_ns)	ns;
+	int				state;
 
-	/* The number of active namespaces */
-	uint32_t			active_ns_count;
+	/** NVMEoF in-capsule data size in bytes */
+	uint32_t			ioccsz_bytes;
 
-	bool				is_removed;
+	/** selected memory page size for this controller in bytes */
+	uint32_t			page_size;
+
+	/** NVMEoF in-capsule data offset in 16 byte units */
+	uint16_t			icdoff;
+
+	uint16_t			max_sges;
 
 	bool				is_resetting;
-
 	bool				is_failed;
-
-	bool				is_destructed;
+	/* Members above are used in IO path */
 
 	bool				timeout_enabled;
-
+	bool				is_removed;
+	bool				is_destructed;
 	/* The application is preparing to reset the controller.  Transports
 	 * can use this to skip unnecessary parts of the qpair deletion process
 	 * for example, like the DELETE_SQ/CQ commands.
@@ -1070,18 +1076,13 @@ struct spdk_nvme_ctrlr {
 
 	bool				needs_io_msg_update;
 
-	uint16_t			max_sges;
+	/* Tree of namespaces */
+	RB_HEAD(nvme_ns_tree, spdk_nvme_ns)	ns;
+
+	/* The number of active namespaces */
+	uint32_t			active_ns_count;
 
 	uint16_t			cntlid;
-
-	/** Controller support flags */
-	uint64_t			flags;
-
-	/** NVMEoF in-capsule data size in bytes */
-	uint32_t			ioccsz_bytes;
-
-	/** NVMEoF in-capsule data offset in 16 byte units */
-	uint16_t			icdoff;
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
@@ -1096,7 +1097,6 @@ struct spdk_nvme_ctrlr {
 	union spdk_nvme_cap_register	cap;
 	union spdk_nvme_vs_register	vs;
 
-	int				state;
 	uint64_t			state_timeout_tsc;
 
 	uint64_t			next_keep_alive_tick;
@@ -1115,9 +1115,6 @@ struct spdk_nvme_ctrlr {
 
 	/** minimum page size supported by this controller in bytes */
 	uint32_t			min_page_size;
-
-	/** selected memory page size for this controller in bytes */
-	uint32_t			page_size;
 
 	uint32_t			num_aers;
 	struct nvme_async_event_request	aer[NVME_MAX_ASYNC_EVENTS];
