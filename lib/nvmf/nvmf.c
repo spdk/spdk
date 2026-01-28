@@ -708,12 +708,69 @@ spdk_nvmf_get_next_tgt(struct spdk_nvmf_tgt *prev)
 }
 
 static void
+nvmf_write_subsystem_add_ns_config(struct spdk_json_write_ctx *w,
+				   struct spdk_nvmf_subsystem *subsystem,
+				   struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_ns_opts ns_opts;
+
+	spdk_nvmf_ns_get_opts(ns, &ns_opts, sizeof(ns_opts));
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_ns");
+
+	/*     "params" : { */
+	spdk_json_write_named_object_begin(w, "params");
+
+	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+
+	/*     "namespace" : { */
+	spdk_json_write_named_object_begin(w, "namespace");
+
+	spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
+	spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
+
+	if (ns->ptpl_file != NULL) {
+		spdk_json_write_named_string(w, "ptpl_file", ns->ptpl_file);
+	}
+
+	if (!spdk_mem_all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
+		SPDK_STATIC_ASSERT(sizeof(ns_opts.nguid) == sizeof(uint64_t) * 2, "size mismatch");
+		spdk_json_write_named_string_fmt(w, "nguid", "%016"PRIX64"%016"PRIX64, from_be64(&ns_opts.nguid[0]),
+						 from_be64(&ns_opts.nguid[8]));
+	}
+
+	if (!spdk_mem_all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
+		SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(uint64_t), "size mismatch");
+		spdk_json_write_named_string_fmt(w, "eui64", "%016"PRIX64, from_be64(&ns_opts.eui64));
+	}
+
+	if (!spdk_uuid_is_null(&ns_opts.uuid)) {
+		spdk_json_write_named_uuid(w, "uuid",  &ns_opts.uuid);
+	}
+
+	if (subsystem->opts.ana_reporting) {
+		spdk_json_write_named_uint32(w, "anagrpid", ns_opts.anagrpid);
+	}
+
+	spdk_json_write_named_bool(w, "no_auto_visible", !ns->always_visible);
+
+	/*     "namespace" */
+	spdk_json_write_object_end(w);
+
+	/*     } "params" */
+	spdk_json_write_object_end(w);
+
+	/* } */
+	spdk_json_write_object_end(w);
+}
+
+static void
 nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 				 struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_host *host;
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_ns_opts ns_opts;
 	struct spdk_nvmf_transport *transport;
 
 	assert(subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME);
@@ -789,55 +846,7 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		spdk_nvmf_ns_get_opts(ns, &ns_opts, sizeof(ns_opts));
-
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_ns");
-
-		/*     "params" : { */
-		spdk_json_write_named_object_begin(w, "params");
-
-		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
-
-		/*     "namespace" : { */
-		spdk_json_write_named_object_begin(w, "namespace");
-
-		spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
-		spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
-
-		if (ns->ptpl_file != NULL) {
-			spdk_json_write_named_string(w, "ptpl_file", ns->ptpl_file);
-		}
-
-		if (!spdk_mem_all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
-			SPDK_STATIC_ASSERT(sizeof(ns_opts.nguid) == sizeof(uint64_t) * 2, "size mismatch");
-			spdk_json_write_named_string_fmt(w, "nguid", "%016"PRIX64"%016"PRIX64, from_be64(&ns_opts.nguid[0]),
-							 from_be64(&ns_opts.nguid[8]));
-		}
-
-		if (!spdk_mem_all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
-			SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(uint64_t), "size mismatch");
-			spdk_json_write_named_string_fmt(w, "eui64", "%016"PRIX64, from_be64(&ns_opts.eui64));
-		}
-
-		if (!spdk_uuid_is_null(&ns_opts.uuid)) {
-			spdk_json_write_named_uuid(w, "uuid",  &ns_opts.uuid);
-		}
-
-		if (subsystem->opts.ana_reporting) {
-			spdk_json_write_named_uint32(w, "anagrpid", ns_opts.anagrpid);
-		}
-
-		spdk_json_write_named_bool(w, "no_auto_visible", !ns->always_visible);
-
-		/*     "namespace" */
-		spdk_json_write_object_end(w);
-
-		/*     } "params" */
-		spdk_json_write_object_end(w);
-
-		/* } */
-		spdk_json_write_object_end(w);
+		nvmf_write_subsystem_add_ns_config(w, subsystem, ns);
 
 		TAILQ_FOREACH(host, &ns->hosts, link) {
 			spdk_json_write_object_begin(w);
