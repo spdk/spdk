@@ -802,6 +802,22 @@ nvmf_write_subsystem_add_host_config(struct spdk_json_write_ctx *w,
 }
 
 static void
+nvmf_write_ns_add_host_config(struct spdk_json_write_ctx *w,
+			      const struct spdk_nvmf_subsystem *subsystem,
+			      const struct spdk_nvmf_ns *ns,
+			      const struct spdk_nvmf_host *host)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "nvmf_ns_add_host");
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+	spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
+	spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+}
+
+static void
 nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 				 struct spdk_nvmf_subsystem *subsystem)
 {
@@ -857,14 +873,7 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 		nvmf_write_subsystem_add_ns_config(w, subsystem, ns);
 
 		TAILQ_FOREACH(host, &ns->hosts, link) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_named_string(w, "method", "nvmf_ns_add_host");
-			spdk_json_write_named_object_begin(w, "params");
-			spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
-			spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
-			spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
-			spdk_json_write_object_end(w);
-			spdk_json_write_object_end(w);
+			nvmf_write_ns_add_host_config(w, subsystem, ns, host);
 		}
 	}
 }
