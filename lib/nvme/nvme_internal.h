@@ -299,10 +299,14 @@ struct nvme_request {
 	 * The type of the payload for this request, refer to enum nvme_payload_type
 	 */
 	uint8_t				payload_type : 2;
+
+	/* This request is reserved for a qpair's FABRICS/CONNECT command.
+	 * not to be confused with the reserved bits below */
+	uint8_t				qpair_reserved : 1;
 	/**
 	 * Reserved bits.
 	 */
-	uint8_t				reserved : 4;
+	uint8_t				reserved : 3;
 
 	/**
 	 * Number of children requests still outstanding for this
@@ -1603,7 +1607,7 @@ _nvme_free_request(struct nvme_request *req, struct spdk_nvme_qpair *qpair)
 	/* The reserved_req does not go in the free_req STAILQ - it is
 	 * saved only for use with a FABRICS/CONNECT command.
 	 */
-	if (spdk_likely(qpair->reserved_req != req)) {
+	if (spdk_likely(!req->qpair_reserved)) {
 		STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
 
 		assert(qpair->num_outstanding_reqs > 0);

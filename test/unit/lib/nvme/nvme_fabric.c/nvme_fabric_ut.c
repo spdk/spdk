@@ -378,6 +378,7 @@ test_nvme_fabric_qpair_connect(void)
 	CU_ASSERT(!strncmp(g_nvmf_data.subnqn, ctrlr.trid.subnqn, sizeof(ctrlr.trid.subnqn)));
 	/* Make sure we used the qpair's reserved_req, and not one from the STAILQ */
 	CU_ASSERT(g_request == qpair.reserved_req);
+	CU_ASSERT(g_request->qpair_reserved == true);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
 
 	/* qid is adminq */
@@ -400,6 +401,7 @@ test_nvme_fabric_qpair_connect(void)
 	CU_ASSERT(!strncmp(g_nvmf_data.subnqn, ctrlr.trid.subnqn, sizeof(ctrlr.trid.subnqn)));
 	/* Make sure we used the qpair's reserved_req, and not one from the STAILQ */
 	CU_ASSERT(g_request == qpair.reserved_req);
+	CU_ASSERT(g_request->qpair_reserved == true);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
 
 	/* Wait_for completion timeout */
