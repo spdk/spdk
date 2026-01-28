@@ -6234,6 +6234,8 @@ bdev_nvme_hotplug(void *arg)
 void
 spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
 {
+	struct spdk_nvme_transport_opts drv_opts;
+
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
 		return;
@@ -6243,6 +6245,15 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
 		SPDK_ERRLOG("opts_size should not be zero value\n");
 		return;
 	}
+
+	/* Update transport options */
+	spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
+	g_opts.rdma_srq_size = drv_opts.rdma_srq_size;
+	g_opts.rdma_max_cq_size = drv_opts.rdma_max_cq_size;
+	g_opts.rdma_cm_event_timeout_ms = drv_opts.rdma_cm_event_timeout_ms;
+	g_opts.poll_group_requests = drv_opts.poll_group_requests;
+	g_opts.rdma_umr_per_io = drv_opts.rdma_umr_per_io;
+	g_opts.tcp_connect_timeout_ms = drv_opts.tcp_connect_timeout_ms;
 
 	opts->opts_size = opts_size;
 
