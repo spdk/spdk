@@ -766,12 +766,47 @@ nvmf_write_subsystem_add_ns_config(struct spdk_json_write_ctx *w,
 }
 
 static void
+nvmf_write_subsystem_add_host_config(struct spdk_json_write_ctx *w,
+				     const struct spdk_nvmf_subsystem *subsystem,
+				     const struct spdk_nvmf_host *host)
+{
+	struct spdk_nvmf_transport *transport;
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_host");
+
+	/*     "params" : { */
+	spdk_json_write_named_object_begin(w, "params");
+
+	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+	spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
+	if (host->dhchap_key != NULL) {
+		spdk_json_write_named_string(w, "dhchap_key",
+					     spdk_key_get_name(host->dhchap_key));
+	}
+	if (host->dhchap_ctrlr_key != NULL) {
+		spdk_json_write_named_string(w, "dhchap_ctrlr_key",
+					     spdk_key_get_name(host->dhchap_ctrlr_key));
+	}
+	TAILQ_FOREACH(transport, &subsystem->tgt->transports, link) {
+		if (transport->ops->subsystem_dump_host != NULL) {
+			transport->ops->subsystem_dump_host(transport, subsystem, host->nqn, w);
+		}
+	}
+
+	/*     } "params" */
+	spdk_json_write_object_end(w);
+
+	/* } */
+	spdk_json_write_object_end(w);
+}
+
+static void
 nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 				 struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_host *host;
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_transport *transport;
 
 	assert(subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME);
 
@@ -814,34 +849,7 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 
 	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
 	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
-
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_host");
-
-		/*     "params" : { */
-		spdk_json_write_named_object_begin(w, "params");
-
-		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
-		spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
-		if (host->dhchap_key != NULL) {
-			spdk_json_write_named_string(w, "dhchap_key",
-						     spdk_key_get_name(host->dhchap_key));
-		}
-		if (host->dhchap_ctrlr_key != NULL) {
-			spdk_json_write_named_string(w, "dhchap_ctrlr_key",
-						     spdk_key_get_name(host->dhchap_ctrlr_key));
-		}
-		TAILQ_FOREACH(transport, &subsystem->tgt->transports, link) {
-			if (transport->ops->subsystem_dump_host != NULL) {
-				transport->ops->subsystem_dump_host(transport, subsystem, host->nqn, w);
-			}
-		}
-
-		/*     } "params" */
-		spdk_json_write_object_end(w);
-
-		/* } */
-		spdk_json_write_object_end(w);
+		nvmf_write_subsystem_add_host_config(w, subsystem, host);
 	}
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
