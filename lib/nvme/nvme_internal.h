@@ -517,15 +517,19 @@ struct spdk_nvme_qpair {
 
 	uint32_t				num_outstanding_reqs;
 
-	/* request object used only for this qpair's FABRICS/CONNECT command (if needed) */
-	struct nvme_request			*reserved_req;
-
 	STAILQ_HEAD(, nvme_request)		free_req;
 	STAILQ_HEAD(, nvme_request)		queued_req;
+
+	const struct spdk_nvme_transport	*transport;
 
 	/* List entry for spdk_nvme_transport_poll_group::qpairs */
 	STAILQ_ENTRY(spdk_nvme_qpair)		poll_group_stailq;
 
+	struct spdk_nvme_transport_poll_group	*poll_group;
+
+	struct spdk_nvme_qpair_io_stats		io_stats;
+
+	/* Entries below here are not touched in the main I/O path. */
 	/** Commands opcode in this list will return error */
 	TAILQ_HEAD(, nvme_error_cmd)		err_cmd_head;
 	/** Requests in this list will return error */
@@ -533,15 +537,10 @@ struct spdk_nvme_qpair {
 
 	struct spdk_nvme_ctrlr_process		*active_proc;
 
-	struct spdk_nvme_transport_poll_group	*poll_group;
-
 	void					*poll_group_tailq_head;
 
-	struct spdk_nvme_qpair_io_stats		io_stats;
-
-	const struct spdk_nvme_transport	*transport;
-
-	/* Entries below here are not touched in the main I/O path. */
+	/* request object used only for this qpair's FABRICS/CONNECT command (if needed) */
+	struct nvme_request			*reserved_req;
 
 	struct nvme_completion_poll_status	*fabric_poll_status;
 
