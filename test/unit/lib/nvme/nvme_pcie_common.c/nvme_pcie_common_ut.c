@@ -138,6 +138,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	pqpair->num_entries = 2;
 	pqpair->qpair.id = 1;
 	pqpair->cpl = cpl;
+	pqpair->qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
 	/* Enable submission queue in controller memory buffer. */
 	pctrlr.ctrlr.opts.use_cmb_sqs = true;
@@ -197,6 +198,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	pqpair->num_entries = 2;
 	pqpair->qpair.id = 1;
 	pqpair->cpl = cpl;
+	pqpair->qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	MOCK_SET(spdk_vtophys, 0xDAADBEEF);
 
 	rc = nvme_pcie_qpair_construct(&pqpair->qpair, NULL);

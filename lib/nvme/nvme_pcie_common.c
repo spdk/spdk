@@ -26,9 +26,9 @@ static void nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair,
 		struct nvme_tracker *tr);
 
 static inline uint64_t
-nvme_pcie_vtophys(struct spdk_nvme_ctrlr *ctrlr, const void *buf, uint64_t *size)
+nvme_pcie_vtophys(struct spdk_nvme_qpair *qpair, const void *buf, uint64_t *size)
 {
-	if (spdk_likely(ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE)) {
+	if (spdk_likely(qpair->trtype == SPDK_NVME_TRANSPORT_PCIE)) {
 		return spdk_vtophys(buf, size);
 	} else {
 		/* vfio-user address translation with IOVA=VA mode */
@@ -196,7 +196,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 			assert(pqpair->sq_vaddr != NULL);
 			pqpair->cmd_bus_addr = sq_paddr;
 		} else {
-			pqpair->cmd_bus_addr = nvme_pcie_vtophys(ctrlr, pqpair->cmd, NULL);
+			pqpair->cmd_bus_addr = nvme_pcie_vtophys(qpair, pqpair->cmd, NULL);
 			if (pqpair->cmd_bus_addr == SPDK_VTOPHYS_ERROR) {
 				NVME_QPAIR_ERRLOG(qpair, "spdk_vtophys(pqpair->cmd) failed\n");
 				return -EFAULT;
@@ -220,7 +220,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 		assert(pqpair->cq_vaddr != NULL);
 		pqpair->cpl_bus_addr = cq_paddr;
 	} else {
-		pqpair->cpl_bus_addr =  nvme_pcie_vtophys(ctrlr, pqpair->cpl, NULL);
+		pqpair->cpl_bus_addr =  nvme_pcie_vtophys(qpair, pqpair->cpl, NULL);
 		if (pqpair->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
 			NVME_QPAIR_ERRLOG(qpair, "spdk_vtophys(pqpair->cpl) failed\n");
 			return -EFAULT;
@@ -249,7 +249,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 
 	for (i = 0; i < num_trackers; i++) {
 		tr = &pqpair->tr[i];
-		nvme_qpair_construct_tracker(tr, i, nvme_pcie_vtophys(ctrlr, tr, NULL));
+		nvme_qpair_construct_tracker(tr, i, nvme_pcie_vtophys(qpair, tr, NULL));
 		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
 	}
 
@@ -1232,7 +1232,7 @@ nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tr
  * *prp_index will be updated to account for the number of PRP entries used.
  */
 static inline int
-nvme_pcie_prp_list_append(struct spdk_nvme_ctrlr *ctrlr, struct nvme_tracker *tr,
+nvme_pcie_prp_list_append(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
 			  uint32_t *prp_index, void *virt_addr, size_t len,
 			  uint32_t page_size)
 {
@@ -1241,11 +1241,11 @@ nvme_pcie_prp_list_append(struct spdk_nvme_ctrlr *ctrlr, struct nvme_tracker *tr
 	uint64_t phys_addr;
 	uint32_t i;
 
-	NVME_QPAIR_DEBUGLOG(tr->req->qpair, "prp_index:%u virt_addr:%p len:%u\n", *prp_index, virt_addr,
+	NVME_QPAIR_DEBUGLOG(qpair, "prp_index:%u virt_addr:%p len:%u\n", *prp_index, virt_addr,
 			    (uint32_t)len);
 
 	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
-		NVME_QPAIR_ERRLOG(tr->req->qpair, "virt_addr %p not dword aligned\n", virt_addr);
+		NVME_QPAIR_ERRLOG(qpair, "virt_addr %p not dword aligned\n", virt_addr);
 		return -EFAULT;
 	}
 
@@ -1258,27 +1258,27 @@ nvme_pcie_prp_list_append(struct spdk_nvme_ctrlr *ctrlr, struct nvme_tracker *tr
 		 * so prp_index == count is valid.
 		 */
 		if (spdk_unlikely(i > SPDK_COUNTOF(tr->u.prp))) {
-			NVME_QPAIR_ERRLOG(tr->req->qpair, "out of PRP entries\n");
+			NVME_QPAIR_ERRLOG(qpair, "out of PRP entries\n");
 			return -EFAULT;
 		}
 
-		phys_addr = nvme_pcie_vtophys(ctrlr, virt_addr, NULL);
+		phys_addr = nvme_pcie_vtophys(qpair, virt_addr, NULL);
 		if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
-			NVME_QPAIR_ERRLOG(tr->req->qpair, "vtophys(%p) failed\n", virt_addr);
+			NVME_QPAIR_ERRLOG(qpair, "vtophys(%p) failed\n", virt_addr);
 			return -EFAULT;
 		}
 
 		if (i == 0) {
-			NVME_QPAIR_DEBUGLOG(tr->req->qpair, "prp1 = %p\n", (void *)phys_addr);
+			NVME_QPAIR_DEBUGLOG(qpair, "prp1 = %p\n", (void *)phys_addr);
 			cmd->dptr.prp.prp1 = phys_addr;
 			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
 		} else {
 			if ((phys_addr & page_mask) != 0) {
-				NVME_QPAIR_ERRLOG(tr->req->qpair, "PRP %u not page aligned (%p)\n", i, virt_addr);
+				NVME_QPAIR_ERRLOG(qpair, "PRP %u not page aligned (%p)\n", i, virt_addr);
 				return -EFAULT;
 			}
 
-			NVME_QPAIR_DEBUGLOG(tr->req->qpair, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
+			NVME_QPAIR_DEBUGLOG(qpair, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
 			tr->u.prp[i - 1] = phys_addr;
 			seg_len = page_size;
 		}
@@ -1294,10 +1294,10 @@ nvme_pcie_prp_list_append(struct spdk_nvme_ctrlr *ctrlr, struct nvme_tracker *tr
 		cmd->dptr.prp.prp2 = 0;
 	} else if (i == 2) {
 		cmd->dptr.prp.prp2 = tr->u.prp[0];
-		NVME_QPAIR_DEBUGLOG(tr->req->qpair, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
+		NVME_QPAIR_DEBUGLOG(qpair, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
 	} else {
 		cmd->dptr.prp.prp2 = tr->prp_sgl_bus_addr;
-		NVME_QPAIR_DEBUGLOG(tr->req->qpair, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
+		NVME_QPAIR_DEBUGLOG(qpair, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
 	}
 
 	*prp_index = i;
@@ -1323,7 +1323,7 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	uint32_t prp_index = 0;
 	int rc;
 
-	rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index,
+	rc = nvme_pcie_prp_list_append(qpair, tr, &prp_index,
 				       (uint8_t *)req->payload.contig_or_cb_arg + req->payload.payload_offset,
 				       req->payload.payload_size, qpair->ctrlr->page_size);
 	if (rc) {
@@ -1376,7 +1376,7 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 		}
 
 		mapping_length = length;
-		phys_addr = nvme_pcie_vtophys(qpair->ctrlr, virt_addr, &mapping_length);
+		phys_addr = nvme_pcie_vtophys(qpair, virt_addr, &mapping_length);
 		if (phys_addr == SPDK_VTOPHYS_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -EFAULT;
@@ -1505,7 +1505,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			}
 
 			mapping_length = remaining_user_sge_len;
-			phys_addr = nvme_pcie_vtophys(qpair->ctrlr, virt_addr, &mapping_length);
+			phys_addr = nvme_pcie_vtophys(qpair, virt_addr, &mapping_length);
 			if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 				return -EFAULT;
@@ -1601,7 +1601,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		assert((length == remaining_transfer_len) ||
 		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
 
-		rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index, virt_addr, length, page_size);
+		rc = nvme_pcie_prp_list_append(qpair, tr, &prp_index, virt_addr, length, page_size);
 		if (rc) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return rc;
@@ -1671,7 +1671,7 @@ nvme_pcie_qpair_build_hw_iov_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			}
 
 			mapping_length = remaining_user_sge_len;
-			phys_addr = nvme_pcie_vtophys(qpair->ctrlr, virt_addr, &mapping_length);
+			phys_addr = nvme_pcie_vtophys(qpair, virt_addr, &mapping_length);
 			if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 				return -EFAULT;
@@ -1756,7 +1756,7 @@ nvme_pcie_qpair_build_prps_iov_request_fill_with_offset(struct spdk_nvme_qpair *
 		assert((length == remaining_transfer_len) ||
 		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
 
-		rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index, virt_addr, length, page_size);
+		rc = nvme_pcie_prp_list_append(qpair, tr, &prp_index, virt_addr, length, page_size);
 		if (spdk_unlikely(rc)) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -EFAULT;
@@ -1794,7 +1794,7 @@ nvme_pcie_qpair_build_prps_iov_request_fill(struct spdk_nvme_qpair *qpair,
 		assert((length == remaining_transfer_len) ||
 		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
 
-		rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index, virt_addr, length, page_size);
+		rc = nvme_pcie_prp_list_append(qpair, tr, &prp_index, virt_addr, length, page_size);
 		if (spdk_unlikely(rc)) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -EFAULT;
@@ -1864,7 +1864,7 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 			assert(req->cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 			req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
 
-			tr->meta_sgl.address = nvme_pcie_vtophys(qpair->ctrlr, md_payload, &mapping_length);
+			tr->meta_sgl.address = nvme_pcie_vtophys(qpair, md_payload, &mapping_length);
 			if (tr->meta_sgl.address == SPDK_VTOPHYS_ERROR || mapping_length != req->payload.md_size) {
 				goto exit;
 			}
@@ -1873,7 +1873,7 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 			tr->meta_sgl.unkeyed.subtype = 0;
 			req->cmd.mptr = tr->prp_sgl_bus_addr - sizeof(struct spdk_nvme_sgl_descriptor);
 		} else {
-			req->cmd.mptr = nvme_pcie_vtophys(qpair->ctrlr, md_payload, &mapping_length);
+			req->cmd.mptr = nvme_pcie_vtophys(qpair, md_payload, &mapping_length);
 			if (req->cmd.mptr == SPDK_VTOPHYS_ERROR || mapping_length != req->payload.md_size) {
 				goto exit;
 			}

@@ -723,8 +723,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		 * but we have historically not disconnected pcie qpairs during reset so we have to abort requests
 		 * here.
 		 */
-		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
-		    !qpair->is_new_qpair) {
+		if (qpair->trtype == SPDK_NVME_TRANSPORT_PCIE && !qpair->is_new_qpair) {
 			nvme_qpair_abort_all_queued_reqs(qpair);
 			nvme_transport_qpair_abort_reqs(qpair);
 		}
@@ -749,7 +748,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE &&
 			  nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED)) {
 		/* Don't disconnect PCIe qpairs. They are a special case for reset. */
-		if (qpair->ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		if (qpair->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 			nvme_ctrlr_disconnect_qpair(qpair);
 		}
 		if (qpair->transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_RESET) {
