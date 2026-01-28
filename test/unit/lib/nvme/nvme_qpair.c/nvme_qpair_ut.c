@@ -448,11 +448,13 @@ test_nvme_qpair_add_cmd_error_injection(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == true);
 
 	/* Remove cmd error injection */
 	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, NULL, SPDK_NVME_OPC_GET_FEATURES);
 
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == false);
 
 	/* IO error injection at completion path */
 	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
@@ -461,6 +463,7 @@ test_nvme_qpair_add_cmd_error_injection(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == true);
 
 	/* Provide the same opc, and check whether allocate a new entry */
 	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
@@ -470,11 +473,13 @@ test_nvme_qpair_add_cmd_error_injection(void)
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&qpair.err_cmd_head));
 	CU_ASSERT(TAILQ_NEXT(TAILQ_FIRST(&qpair.err_cmd_head), link) == NULL);
+	CU_ASSERT(qpair.err_cmd_enabled == true);
 
 	/* Remove cmd error injection */
 	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
 
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == false);
 
 	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
 			SPDK_NVME_OPC_COMPARE, true, 0, 5,
@@ -482,11 +487,13 @@ test_nvme_qpair_add_cmd_error_injection(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == true);
 
 	/* Remove cmd error injection */
 	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_COMPARE);
 
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == false);
 
 	pthread_mutex_destroy(&ctrlr.ctrlr_lock);
 	cleanup_submit_request_test(&qpair);

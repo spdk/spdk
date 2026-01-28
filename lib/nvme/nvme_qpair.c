@@ -865,7 +865,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	/* error injection for those queued error requests */
-	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->err_req_head))) {
+	if (spdk_unlikely(qpair->err_cmd_enabled && !STAILQ_EMPTY(&qpair->err_req_head))) {
 		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
 			if ((qpair->id != 0 || req->pid == getpid()) &&
 			    spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
@@ -1084,7 +1084,7 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 	/* queue those requests which matches with opcode in err_cmd list */
-	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_cmd_head))) {
+	if (spdk_unlikely(qpair->err_cmd_enabled)) {
 		TAILQ_FOREACH(cmd, &qpair->err_cmd_head, link) {
 			if (!cmd->do_not_submit) {
 				continue;
@@ -1273,6 +1273,8 @@ spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->opc = opc;
 	cmd->status.sct = sct;
 	cmd->status.sc = sc;
+
+	qpair->err_cmd_enabled = true;
 out:
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_ctrlr_unlock(ctrlr);
@@ -1300,6 +1302,8 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 			break;
 		}
 	}
+
+	qpair->err_cmd_enabled = !TAILQ_EMPTY(&qpair->err_cmd_head);
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_ctrlr_unlock(ctrlr);

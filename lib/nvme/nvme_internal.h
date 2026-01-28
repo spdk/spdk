@@ -504,6 +504,8 @@ struct spdk_nvme_qpair {
 	/* Flag for enabling/disabling statistics collection */
 	uint8_t					collect_stats: 1;
 
+	uint8_t					err_cmd_enabled: 1;
+
 	/* Number of IO outstanding at transport level */
 	uint16_t				queue_depth;
 
@@ -1640,8 +1642,7 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 	/* error injection at completion path,
 	 * only inject for successful completed commands
 	 */
-	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_cmd_head) &&
-			  !spdk_nvme_cpl_is_error(cpl))) {
+	if (spdk_unlikely(qpair->err_cmd_enabled && !spdk_nvme_cpl_is_error(cpl))) {
 		TAILQ_FOREACH(cmd, &qpair->err_cmd_head, link) {
 
 			if (cmd->do_not_submit) {
