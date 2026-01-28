@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019, 2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023, 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   Copyright (c) 2025, Oracle and/or its affiliates.
  */
 
@@ -847,49 +847,54 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 }
 
 static void
+nvmf_write_subsystem_add_listener_config(struct spdk_json_write_ctx *w,
+		struct spdk_nvmf_subsystem *subsystem,
+		struct spdk_nvmf_subsystem_listener *listener)
+{
+	struct spdk_nvmf_transport *transport = listener->transport;
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_listener");
+
+	/*     "params" : { */
+	spdk_json_write_named_object_begin(w, "params");
+
+	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+
+	spdk_json_write_named_object_begin(w, "listen_address");
+	nvmf_transport_listen_dump_trid(listener->trid, w);
+	spdk_json_write_object_end(w);
+	if (transport->ops->listen_dump_opts) {
+		transport->ops->listen_dump_opts(transport, listener->trid, w);
+	}
+
+	spdk_json_write_named_bool(w, "secure_channel", listener->opts.secure_channel);
+
+	if (listener->opts.sock_impl) {
+		spdk_json_write_named_string(w, "sock_impl", listener->opts.sock_impl);
+	}
+
+	/*     } "params" */
+	spdk_json_write_object_end(w);
+
+	/* } */
+	spdk_json_write_object_end(w);
+}
+
+static void
 nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 				 struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_subsystem_listener *listener;
-	struct spdk_nvmf_transport *transport;
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		nvmf_write_nvme_subsystem_config(w, subsystem);
 	}
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
-		if (!nvmf_subsystem_listener_is_active(listener)) {
-			continue;
+		if (nvmf_subsystem_listener_is_active(listener)) {
+			nvmf_write_subsystem_add_listener_config(w, subsystem, listener);
 		}
-
-		transport = listener->transport;
-
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_listener");
-
-		/*     "params" : { */
-		spdk_json_write_named_object_begin(w, "params");
-
-		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
-
-		spdk_json_write_named_object_begin(w, "listen_address");
-		nvmf_transport_listen_dump_trid(listener->trid, w);
-		spdk_json_write_object_end(w);
-		if (transport->ops->listen_dump_opts) {
-			transport->ops->listen_dump_opts(transport, listener->trid, w);
-		}
-
-		spdk_json_write_named_bool(w, "secure_channel", listener->opts.secure_channel);
-
-		if (listener->opts.sock_impl) {
-			spdk_json_write_named_string(w, "sock_impl", listener->opts.sock_impl);
-		}
-
-		/*     } "params" */
-		spdk_json_write_object_end(w);
-
-		/* } */
-		spdk_json_write_object_end(w);
 	}
 }
 
