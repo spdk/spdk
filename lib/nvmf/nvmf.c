@@ -818,12 +818,9 @@ nvmf_write_ns_add_host_config(struct spdk_json_write_ctx *w,
 }
 
 static void
-nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
-				 struct spdk_nvmf_subsystem *subsystem)
+nvmf_write_create_subsystem_config(struct spdk_json_write_ctx *w,
+				   struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_host *host;
-	struct spdk_nvmf_ns *ns;
-
 	assert(subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME);
 
 	/* { */
@@ -862,6 +859,16 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 
 	/* } */
 	spdk_json_write_object_end(w);
+}
+
+static void
+nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
+				 struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_host *host;
+	struct spdk_nvmf_ns *ns;
+
+	nvmf_write_create_subsystem_config(w, subsystem);
 
 	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
 	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
