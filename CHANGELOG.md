@@ -25,6 +25,9 @@ Removed the transport APIs poll_group_connect_qpair and poll_group_disconnet_qpa
 transports did anything inside of these functions, and we've simplified the model such that
 connections are only added or removed while disconnected.
 
+Changed the NVME request timeout tracking - now the timeout includes the time the request spent
+in the internal SPDK queues, before it was sent to the disk/network.
+
 ## v26.01
 
 ### accel_ae4dma

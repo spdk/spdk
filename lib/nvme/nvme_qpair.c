@@ -1108,16 +1108,6 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 		goto error;
 	}
 
-	/* assign submit_tick before submitting req to specific transport */
-	if (ctrlr->timeout_enabled) {
-		if (req->submit_tick == 0) { /* req submitted for the first time */
-			req->submit_tick = spdk_get_ticks();
-			req->timed_out = false;
-		}
-	} else {
-		req->submit_tick = 0;
-	}
-
 	/* Allow two cases:
 	 * 1. NVMe qpair is enabled.
 	 * 2. Always allow fabrics commands through - these get
@@ -1178,7 +1168,15 @@ error:
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	int rc;
+
+	/* That is the first submission of the request, assign submit_tick if requested by the configuration.
+	 * Parent requests are ignored */
+	if (ctrlr->timeout_enabled && req->num_children == 0) {
+		req->submit_tick = spdk_get_ticks();
+		req->timed_out = false;
+	}
 
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
 		/*
