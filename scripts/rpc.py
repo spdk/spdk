@@ -8,6 +8,7 @@
 
 import argparse
 import importlib
+import json
 import logging
 import os
 import shlex
@@ -52,6 +53,9 @@ def create_parser():
                                 pipes and can be used as a faster way to send RPC commands. If enabled, rpc.py \
                                 must be executed without any other parameters.")
     parser.set_defaults(is_server=False)
+    parser.add_argument('-b', '--batch-mode', action=argparse.BooleanOptionalAction,
+                        help="If batch mode enabled, read multiple RPC commands from stdin and send them as a single \
+                                JSON-RPC batch request.")
     parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name', metavar='')
     for _, obj in vars(cli).items():
@@ -65,7 +69,10 @@ def call_rpc_func(args):
     check_called_name(args.called_rpc_name)
 
 
-def execute_script(parser, client, timeout, fd):
+def execute_script(parser, client, timeout, fd, batch=False):
+    if batch:
+        print("WARNING: Batch mode is experimental. Some RPCs may not work correctly in batch mode.",
+              file=sys.stderr)
     executed_rpc = ""
     for rpc_call in map(str.rstrip, fd):
         if not rpc_call.strip():
@@ -83,6 +90,31 @@ def execute_script(parser, client, timeout, fd):
         except JSONRPCException as ex:
             print("Exception:")
             print(executed_rpc.strip() + " <<<")
+            print(ex.message)
+            exit(1)
+
+    # In batch mode, send collected requests and receive results
+    if batch:
+        try:
+            if not client.send_batch():
+                return  # Nothing was queued, don't call recv()
+            response = client.recv()
+            if not isinstance(response, list):
+                raise JSONRPCException("Expected batch response array, got: %s" % type(response))
+            errors = []
+            for resp in response:
+                if 'error' in resp:
+                    errors.append("\n".join(["Got JSON-RPC error response",
+                                             "response:", json.dumps(resp['error'], indent=2)]))
+                    continue
+                result = resp.get('result')
+                if result is not None:
+                    print(json.dumps(result, indent=2))
+            if len(errors) > 0:
+                raise JSONRPCException("\n".join(errors))
+        except JSONRPCException as ex:
+            print("Exception:")
+            print(executed_rpc.strip())
             print(ex.message)
             exit(1)
 
@@ -159,7 +191,7 @@ def main():
         run_server(parser, subparsers, plugins, use_go_client)
         exit(0)
     elif args.dry_run:
-        args.client = JSONRPCDryRunClient()
+        args.client = JSONRPCDryRunClient(batch_mode=args.batch_mode)
         for _, obj in vars(cli).items():
             if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
                 obj.print_dict = obj.print_json = obj.print_array = print_null
@@ -174,7 +206,8 @@ def main():
         try:
             args.client = JSONRPCClient(args.server_addr, args.port, args.timeout,
                                         log_level=getattr(logging, args.verbose.upper()),
-                                        conn_retries=args.conn_retries)
+                                        conn_retries=args.conn_retries,
+                                        batch_mode=args.batch_mode)
         except JSONRPCException as ex:
             print(ex.message)
             exit(1)
@@ -186,7 +219,7 @@ def main():
             print(ex.message)
             exit(1)
     else:
-        execute_script(parser, args.client, args.timeout, sys.stdin)
+        execute_script(parser, args.client, args.timeout, sys.stdin, batch=args.batch_mode)
 
 
 if __name__ == "__main__":

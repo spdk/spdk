@@ -42,11 +42,26 @@ class JSONRPCException(Exception):
 
 
 class JSONRPCDryRunClient(JSONRPCAbstractClient):
+    def __init__(self, batch_mode=False):
+        self._batch_mode = batch_mode
+        self._reqs = []
+
     def __getattr__(self, name):
         return lambda **kwargs: self.call(name, remove_null(kwargs))
 
     def call(self, method, params=None):
-        print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
+        req = {"method": method, "params": params}
+        if self._batch_mode:
+            self._reqs.append(req)
+            return None
+        print("Request:\n" + json.dumps(req, indent=2))
+
+    def send_batch(self):
+        if not self._reqs:
+            return False
+        print("Request:\n" + json.dumps(self._reqs, indent=2))
+        self._reqs = []
+        return False
 
 
 class JSONRPCClient(JSONRPCAbstractClient):
@@ -64,6 +79,7 @@ class JSONRPCClient(JSONRPCAbstractClient):
         self._request_id = 0
         self._recv_buf = ""
         self._reqs = []
+        self._batch_mode = kwargs.get('batch_mode', False)
 
         for _ in range(connect_retries):
             try:
@@ -144,16 +160,26 @@ class JSONRPCClient(JSONRPCAbstractClient):
 
     def flush(self):
         self._logger.debug("Flushing buffer")
-        # TODO: We can drop indent parameter
-        reqstr = "\n".join(json.dumps(req, indent=2) for req in self._reqs)
-        self._reqs = []
+        if self._batch_mode:
+            # Send as JSON-RPC batch array
+            reqstr = json.dumps(self._reqs, indent=2)
+        else:
+            # TODO: We can drop indent parameter
+            reqstr = "\n".join(json.dumps(req, indent=2) for req in self._reqs)
         self._logger.info("Requests:\n%s\n", reqstr)
         self.sock.sendall(reqstr.encode("utf-8"))
+        self._reqs = []
 
     def send(self, method, params=None):
         req_id = self.add_request(method, params)
         self.flush()
         return req_id
+
+    def send_batch(self):
+        if not self._reqs:
+            return False
+        self.flush()
+        return True
 
     def decode_one_response(self):
         try:
@@ -194,6 +220,10 @@ class JSONRPCClient(JSONRPCAbstractClient):
     def __getattr__(self, name):
         """Dynamically handle unknown attributes as JSON-RPC methods"""
         def rpc_method(**kwargs):
+            if self._batch_mode:
+                # In batch mode, collect requests instead of executing
+                self.add_request(name, remove_null(kwargs))
+                return None
             return self.call(name, remove_null(kwargs))
         return rpc_method
 
