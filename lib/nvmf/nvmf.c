@@ -860,30 +860,6 @@ nvmf_write_create_subsystem_config(struct spdk_json_write_ctx *w,
 }
 
 static void
-nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
-				 struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_nvmf_host *host;
-	struct spdk_nvmf_ns *ns;
-
-	nvmf_write_create_subsystem_config(w, subsystem);
-
-	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
-	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
-		nvmf_write_subsystem_add_host_config(w, subsystem, host);
-	}
-
-	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
-	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		nvmf_write_subsystem_add_ns_config(w, subsystem, ns);
-
-		TAILQ_FOREACH(host, &ns->hosts, link) {
-			nvmf_write_ns_add_host_config(w, subsystem, ns, host);
-		}
-	}
-}
-
-static void
 nvmf_write_subsystem_add_listener_config(struct spdk_json_write_ctx *w,
 		struct spdk_nvmf_subsystem *subsystem,
 		struct spdk_nvmf_subsystem_listener *listener)
@@ -918,29 +894,15 @@ nvmf_write_subsystem_add_listener_config(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-static void
-nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
-				 struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_nvmf_subsystem_listener *listener;
-
-	if (subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
-		nvmf_write_nvme_subsystem_config(w, subsystem);
-	}
-
-	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
-		if (nvmf_subsystem_listener_is_active(listener)) {
-			nvmf_write_subsystem_add_listener_config(w, subsystem, listener);
-		}
-	}
-}
-
 void
 spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_referral *referral;
+	struct spdk_nvmf_subsystem_listener *listener;
+	struct spdk_nvmf_host *host;
+	struct spdk_nvmf_ns *ns;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "nvmf_set_max_subsystems");
@@ -985,11 +947,63 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 		spdk_json_write_object_end(w);
 	}
 
-	subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	while (subsystem) {
-		nvmf_write_subsystem_config_json(w, subsystem);
-		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	/* Emit nvmf_create_subsystem RPCs as a batch */
+	spdk_json_write_batch_begin(w);
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
+		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+			nvmf_write_create_subsystem_config(w, subsystem);
+		}
 	}
+	spdk_json_write_batch_end(w);
+
+	/* Emit nvmf_subsystem_add_host RPCs as a batch */
+	spdk_json_write_batch_begin(w);
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
+		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+			for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
+			     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
+				nvmf_write_subsystem_add_host_config(w, subsystem, host);
+			}
+		}
+	}
+	spdk_json_write_batch_end(w);
+
+	/* Emit nvmf_subsystem_add_ns RPCs as a batch */
+	spdk_json_write_batch_begin(w);
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
+		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+			for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+			     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+				nvmf_write_subsystem_add_ns_config(w, subsystem, ns);
+			}
+		}
+	}
+	spdk_json_write_batch_end(w);
+
+	/* Emit nvmf_ns_add_host RPCs as a batch */
+	spdk_json_write_batch_begin(w);
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
+		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+			for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+			     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+				TAILQ_FOREACH(host, &ns->hosts, link) {
+					nvmf_write_ns_add_host_config(w, subsystem, ns, host);
+				}
+			}
+		}
+	}
+	spdk_json_write_batch_end(w);
+
+	/* Emit nvmf_subsystem_add_listener RPCs as a batch */
+	spdk_json_write_batch_begin(w);
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
+		TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+			if (nvmf_subsystem_listener_is_active(listener)) {
+				nvmf_write_subsystem_add_listener_config(w, subsystem, listener);
+			}
+		}
+	}
+	spdk_json_write_batch_end(w);
 }
 
 static void
