@@ -2782,19 +2782,15 @@ bdev_nvme_disable_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
 	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	nvme_ctrlr->resetting = false;
 	nvme_ctrlr->dont_retry = false;
 	nvme_ctrlr->pending_failover = false;
-
 	nvme_ctrlr->disabled = true;
+
 	spdk_poller_pause(nvme_ctrlr->adminq_timer_poller);
 
 	/* Make sure we clear any pending resets before returning. */
 	bdev_nvme_complete_pending_resets(nvme_ctrlr, true);
-
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	if (ctrlr_op_cb_fn) {
 		ctrlr_op_cb_fn(ctrlr_op_cb_arg, 0);
