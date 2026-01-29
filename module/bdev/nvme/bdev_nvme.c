@@ -7990,18 +7990,7 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-			pthread_mutex_lock(&nvme_ctrlr->mutex);
-			if (nvme_ctrlr->destruct) {
-				/* This controller's destruction was already started
-				 * before the application started shutting down
-				 */
-				pthread_mutex_unlock(&nvme_ctrlr->mutex);
-				continue;
-			}
-			nvme_ctrlr->destruct = true;
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-			_nvme_ctrlr_destruct(nvme_ctrlr);
+			bdev_nvme_delete_ctrlr(nvme_ctrlr, true);
 		}
 	}
 
