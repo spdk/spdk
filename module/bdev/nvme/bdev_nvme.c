@@ -3314,7 +3314,7 @@ bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, false);
 	if (rc == 0) {
-		spdk_thread_send_msg(spdk_thread_get_app_thread(), _bdev_nvme_reset_ctrlr, nvme_ctrlr);
+		_bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	} else if (rc == -EALREADY) {
 		rc = 0;
 	}
