@@ -1776,11 +1776,9 @@ bdev_nvme_clear_io_path_caches_done(struct nvme_ctrlr *nvme_ctrlr,
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	assert(nvme_ctrlr->io_path_cache_clearing == true);
 	nvme_ctrlr->io_path_cache_clearing = false;
 	nvme_ctrlr_put_ref(nvme_ctrlr);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 }
 
 static void
@@ -1814,17 +1812,13 @@ bdev_nvme_clear_io_path_caches(struct nvme_ctrlr *nvme_ctrlr)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (!nvme_ctrlr_is_available(nvme_ctrlr) ||
 	    nvme_ctrlr->io_path_cache_clearing) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
 
 	nvme_ctrlr->io_path_cache_clearing = true;
 	nvme_ctrlr_get_ref(nvme_ctrlr);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	nvme_ctrlr_for_each_channel(nvme_ctrlr,
 				    bdev_nvme_clear_io_path_cache,
 				    NULL,
