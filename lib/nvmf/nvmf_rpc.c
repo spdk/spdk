@@ -505,6 +505,14 @@ rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_jsonrpc_request *request = cb_arg;
 	int rc;
 
+	/* If the stop was cancelled (e.g., subsystem is being destroyed), don't proceed */
+	if (status != 0) {
+		SPDK_ERRLOG("Subsystem stop failed or was cancelled, status %d\n", status);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Subsystem stop failed or was cancelled, status %d", status);
+		return;
+	}
+
 	nvmf_subsystem_remove_all_listeners(subsystem, true);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, rpc_nvmf_subsystem_destroy_complete_cb, request);
 	if (rc) {
@@ -561,10 +569,14 @@ rpc_nvmf_delete_subsystem(struct spdk_jsonrpc_request *request,
 
 	free_rpc_delete_subsystem(&req);
 
-	rc = spdk_nvmf_subsystem_stop(subsystem,
-				      rpc_nvmf_subsystem_stopped,
-				      request);
-	if (rc == -EBUSY) {
+	rc = spdk_nvmf_subsystem_stop_for_destroy(subsystem,
+			rpc_nvmf_subsystem_stopped,
+			request);
+	if (rc == -ENODEV) {
+		SPDK_ERRLOG("Subsystem is already being destroyed.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Subsystem is already being destroyed.");
+	} else if (rc == -EBUSY) {
 		SPDK_ERRLOG("Subsystem currently in another state change try again later.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Subsystem currently in another state change try again later.");

@@ -31,6 +31,7 @@
 	spdk_nvmf_subsystem_destroy;
 	spdk_nvmf_subsystem_start;
 	spdk_nvmf_subsystem_stop;
+	spdk_nvmf_subsystem_stop_for_destroy;
 	spdk_nvmf_subsystem_pause;
 	spdk_nvmf_subsystem_resume;
 	spdk_nvmf_tgt_find_subsystem;

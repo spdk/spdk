@@ -606,9 +606,9 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 			    subsystem->subnqn, subsystem->state);
 		return -EAGAIN;
 	}
-	if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
-		SPDK_ERRLOG("Subsystem destruction is already started\n");
-		assert(0);
+
+	if (subsystem->destroy_state == NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS) {
+		SPDK_ERRLOG("Subsystem %s destruction is already in progress\n", subsystem->subnqn);
 		return -EALREADY;
 	}
 
@@ -893,10 +893,17 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    uint32_t nsid,
 			    enum spdk_nvmf_subsystem_state requested_state,
 			    spdk_nvmf_subsystem_state_change_done cb_fn,
-			    void *cb_arg)
+			    void *cb_arg,
+			    bool skip_destroy_check)
 {
 	struct nvmf_subsystem_state_change_ctx *ctx;
 	struct spdk_thread *thread;
+
+	if (skip_destroy_check) {
+		assert(requested_state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
+	} else if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
+		return -ENODEV;
+	}
 
 	thread = spdk_get_thread();
 	if (thread == NULL) {
@@ -933,7 +940,8 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg,
+					   false);
 }
 
 int
@@ -941,7 +949,27 @@ spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			 spdk_nvmf_subsystem_state_change_done cb_fn,
 			 void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg,
+					   false);
+}
+
+int
+spdk_nvmf_subsystem_stop_for_destroy(struct spdk_nvmf_subsystem *subsystem,
+				     spdk_nvmf_subsystem_state_change_done cb_fn,
+				     void *cb_arg)
+{
+	int rc;
+
+	if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
+		return -ENODEV;
+	}
+	subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_PENDING;
+	rc = nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg,
+					 true);
+	if (rc != 0) {
+		subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_NOT_STARTED;
+	}
+	return rc;
 }
 
 int
@@ -950,7 +978,8 @@ spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, nsid, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, nsid, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg,
+					   false);
 }
 
 int
@@ -958,7 +987,8 @@ spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
 			   spdk_nvmf_subsystem_state_change_done cb_fn,
 			   void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg,
+					   false);
 }
 
 struct spdk_nvmf_subsystem *

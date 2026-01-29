@@ -357,6 +357,7 @@ struct nvmf_subsystem_state_change_ctx {
 
 enum nvmf_subsystem_destroy_state {
 	NVMF_SUBSYSTEM_DESTROY_NOT_STARTED = 0,
+	NVMF_SUBSYSTEM_DESTROY_PENDING,
 	NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS,
 };
 
@@ -378,6 +379,7 @@ struct spdk_nvmf_subsystem {
 
 	/* Tracks subsystem destruction state */
 	enum nvmf_subsystem_destroy_state		destroy_state;
+	/* Set when destroy() must wait for active controllers to disconnect */
 	bool						async_destroy;
 
 	/* FDP related fields */

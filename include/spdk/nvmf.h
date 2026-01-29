@@ -720,6 +720,20 @@ int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			     void *cb_arg);
 
 /**
+ * Transition an NVMe-oF subsystem from Active to Inactive state, preparing
+ * for destruction. This prevents any further state changes on the subsystem.
+ *
+ * \param subsystem The NVMe-oF subsystem.
+ * \param cb_fn A function that will be called once the subsystem has changed state.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * \return 0 on success, -ENODEV if already being destroyed, or negated errno on failure.
+ */
+int spdk_nvmf_subsystem_stop_for_destroy(struct spdk_nvmf_subsystem *subsystem,
+		spdk_nvmf_subsystem_state_change_done cb_fn,
+		void *cb_arg);
+
+/**
  * Transition an NVMe-oF subsystem from Active to Paused state.
  *
  * In a paused state, all admin queues are frozen across the whole subsystem. If
