@@ -6324,10 +6324,7 @@ bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	rc = bdev_nvme_delete_ctrlr_unsafe(nvme_ctrlr, hotplug);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	if (rc == 0) {
 		_nvme_ctrlr_destruct(nvme_ctrlr);
 	} else if (rc == -EALREADY) {
