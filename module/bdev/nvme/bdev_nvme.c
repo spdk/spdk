@@ -2855,19 +2855,15 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return -ENXIO;
 	}
 
 	if (nvme_ctrlr->resetting) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return -EBUSY;
 	}
 
 	if (nvme_ctrlr->disabled) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return -EALREADY;
 	}
 
@@ -2882,9 +2878,7 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
-
 	nvme_ctrlr_get_ref(nvme_ctrlr);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	/* Ensure completion is async otherwise ctrlr_op_cb_fn might not be set yet. */
 	spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
