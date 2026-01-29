@@ -2355,8 +2355,6 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	pending_failover = nvme_ctrlr->pending_failover;
 	nvme_ctrlr->pending_failover = false;
 
@@ -2366,8 +2364,6 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		 */
 		if (bdev_nvme_failover_trid(nvme_ctrlr, false, false)) {
 			/* The next alternate trid exists and is ready to try. Try it now. */
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 			NVME_CTRLR_INFOLOG(nvme_ctrlr, "Try the next alternate trid now.\n");
 			nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
 			return;
@@ -2406,6 +2402,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
 	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
 
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success, pending_failover);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
