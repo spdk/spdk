@@ -804,6 +804,7 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 		}
 		rdma_req->req.cmd = NULL;
 		rdma_req->req.iovcnt = 0;
+		rdma_req->req.error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 
 		/* Set up memory to send responses */
 		rdma_req->req.rsp = &resources->cpls[i];

@@ -33,6 +33,18 @@
 #define NVMF_DEFAULT_KAS 100
 #define NVMF_DEFAULT_MIN_KATO 10000
 
+#define NVMF_ERROR_LOG_SLOTS 16
+
+static inline union spdk_nvme_parameter_error_location
+	nvmf_error_loc(uint8_t byte_offset, uint8_t bit_offset)
+{
+	return (union spdk_nvme_parameter_error_location) {
+		.bits = { .bytloc = byte_offset, .bitloc = bit_offset }
+	};
+}
+
+struct nvmf_ctrlr_error_log_entry;
+
 #if __has_attribute(nonstring)
 #define __spdk_nonstring __attribute__((nonstring))
 #else
@@ -334,6 +346,11 @@ struct spdk_nvmf_ctrlr {
 	bool				dynamic_ctrlr;
 	/* LBA Format Extension Enabled (LBAFEE) */
 	bool				lbafee_enabled;
+
+	struct spdk_nvme_error_information_entry	error_log[NVMF_ERROR_LOG_SLOTS];
+	uint64_t					error_counter;
+	uint64_t					error_entry_free_mask;
+	struct nvmf_ctrlr_error_log_entry		*error_entry_buf;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };

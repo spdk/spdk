@@ -113,8 +113,9 @@ struct spdk_nvmf_request {
 	} iobuf;
 
 	/* Timeout tracked for connect and abort flows. */
-	uint64_t timeout_tsc;
+	uint64_t			timeout_tsc;
 	uint32_t			orig_nsid;
+	union spdk_nvme_parameter_error_location	error_location;
 	STAILQ_ENTRY(spdk_nvmf_request)	reservation_link;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 752, "Incorrect size");

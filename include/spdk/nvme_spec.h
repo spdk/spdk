@@ -4074,6 +4074,20 @@ struct spdk_nvme_feature_ids_effects_log_page {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feature_ids_effects_log_page) == 1024, "Incorrect size");
 
+/** Parameter error location is not specific to a particular command. */
+#define SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC 0xFFFFu
+
+union spdk_nvme_parameter_error_location {
+	uint16_t raw;
+	struct {
+		uint16_t bytloc    : 8; /* Byte location */
+		uint16_t bitloc    : 3; /* Bit location */
+		uint16_t reserved  : 5;
+	} bits;
+};
+
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_parameter_error_location) == 2, "Incorrect size");
+
 /**
  * Error information log page (\ref SPDK_NVME_LOG_ERROR)
  */
@@ -4082,7 +4096,10 @@ struct spdk_nvme_error_information_entry {
 	uint16_t		sqid;
 	uint16_t		cid;
 	struct spdk_nvme_status	status;
-	uint16_t		error_location;
+	union {
+		uint16_t					error_location;
+		union spdk_nvme_parameter_error_location	pel;
+	};
 	uint64_t		lba;
 	uint32_t		nsid;
 	uint8_t			vendor_specific;

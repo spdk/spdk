@@ -2239,7 +2239,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Status Code:            0x%x\n", error_entry->status.sc);
 		printf("Status Code Type:       0x%x\n", error_entry->status.sct);
 		printf("Do Not Retry:           %x\n", error_entry->status.dnr);
-		printf("Error Location:         0x%x\n", error_entry->error_location);
+		printf("Error Location:         Byte=0x%x, Bit=0x%x\n",
+		       error_entry->pel.bits.bytloc,
+		       error_entry->pel.bits.bitloc);
 		printf("LBA:                    0x%"PRIx64"\n", error_entry->lba);
 		printf("Namespace:              0x%x\n", error_entry->nsid);
 		printf("Vendor Log Page:        0x%x\n", error_entry->vendor_specific);

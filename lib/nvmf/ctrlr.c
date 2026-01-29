@@ -354,11 +354,96 @@ _nvmf_ctrlr_add_admin_qpair(void *ctx)
 	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
 }
 
+struct nvmf_ctrlr_error_log_entry {
+	struct spdk_nvmf_ctrlr				*ctrlr;
+	struct spdk_nvme_error_information_entry	entry;
+};
+
+#define NVMF_ERROR_LOG_MAX_PENDING_ENTRIES 64
+
+SPDK_STATIC_ASSERT(NVMF_ERROR_LOG_MAX_PENDING_ENTRIES >= 4 &&
+		   NVMF_ERROR_LOG_MAX_PENDING_ENTRIES <= 64,
+		   "Invalid error log entry pool size");
+
+static struct nvmf_ctrlr_error_log_entry *
+nvmf_ctrlr_error_log_entry_get(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	uint64_t free_mask, entry_mask;
+	uint32_t index;
+
+	/* A set bit means the corresponding entry in error_entry_buf is available. */
+	free_mask = __atomic_load_n(&ctrlr->error_entry_free_mask, __ATOMIC_RELAXED);
+	while (free_mask != 0) {
+		/* Select the lowest-numbered available entry. */
+		index = (uint32_t)__builtin_ctzll(free_mask);
+		entry_mask = SPDK_BIT(index);
+		/* Acquire ownership of the entry before writing its contents. */
+		free_mask = __atomic_fetch_and(&ctrlr->error_entry_free_mask, ~entry_mask,
+					       __ATOMIC_ACQUIRE);
+		if (free_mask & entry_mask) {
+			return &ctrlr->error_entry_buf[index];
+		}
+	}
+
+	return NULL;
+}
+
+static void
+nvmf_ctrlr_error_log_entry_put(struct nvmf_ctrlr_error_log_entry *entry)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = entry->ctrlr;
+	uint64_t entry_mask, old_mask;
+	uint32_t index;
+
+	index = (uint32_t)(entry - ctrlr->error_entry_buf);
+	assert(index < NVMF_ERROR_LOG_MAX_PENDING_ENTRIES);
+	entry_mask = SPDK_BIT(index);
+	/* Release ownership only after the controller has copied the entry. */
+	old_mask = __atomic_fetch_or(&ctrlr->error_entry_free_mask, entry_mask, __ATOMIC_RELEASE);
+	if (spdk_unlikely(old_mask & entry_mask)) {
+		assert(false);
+	}
+}
+
+static int
+nvmf_ctrlr_error_log_init(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct nvmf_ctrlr_error_log_entry *entry;
+	uint32_t pool_size, i;
+
+	/* Error logging is best effort and only NVMF_ERROR_LOG_SLOTS entries are retained. */
+	pool_size = spdk_min(spdk_max(ctrlr->subsys->tgt->num_poll_groups, 4),
+			     NVMF_ERROR_LOG_MAX_PENDING_ENTRIES);
+
+	ctrlr->error_entry_buf = calloc(pool_size, sizeof(*ctrlr->error_entry_buf));
+	if (!ctrlr->error_entry_buf) {
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < pool_size; i++) {
+		entry = &ctrlr->error_entry_buf[i];
+		entry->ctrlr = ctrlr;
+	}
+	__atomic_store_n(&ctrlr->error_entry_free_mask, UINT64_MAX >> (64 - pool_size),
+			 __ATOMIC_RELAXED);
+
+	return 0;
+}
+
+static void
+nvmf_ctrlr_error_log_cleanup(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	__atomic_store_n(&ctrlr->error_entry_free_mask, 0, __ATOMIC_RELAXED);
+	free(ctrlr->error_entry_buf);
+	ctrlr->error_entry_buf = NULL;
+}
+
 static void
 nvmf_ctrlr_cleanup(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	assert(ctrlr != NULL);
 
+	nvmf_ctrlr_error_log_cleanup(ctrlr);
 	spdk_bit_array_free(&ctrlr->visible_ns);
 	spdk_bit_array_free(&ctrlr->qpair_mask);
 	free(ctrlr);
@@ -616,6 +701,11 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 	ctrlr->sq_flow_control_disabled = connect_cmd->cattr.bits.dissqfc;
+
+	if (nvmf_ctrlr_error_log_init(ctrlr) != 0) {
+		SPDK_ERRLOG("Failed to initialize error log\n");
+		goto err;
+	}
 
 	if (ctrlr->subsys->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
 		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
@@ -1115,6 +1205,8 @@ _nvmf_ctrlr_cc_reset_shn_done(void *ctx)
 	}
 
 	spdk_poller_unregister(&ctrlr->cc_timeout_timer);
+
+	memset(ctrlr->error_log, 0, sizeof(ctrlr->error_log));
 
 	if (ctrlr->disconnect_is_shn) {
 		ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -2204,7 +2296,7 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 4936,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 5984,
 		   "Please check migration fields that need to be added or not");
 
 static void
@@ -2420,6 +2512,23 @@ nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 }
 
 static inline bool
+nvmf_io_opc_has_lba(uint8_t opc)
+{
+	switch (opc) {
+	case SPDK_NVME_OPC_READ:
+	case SPDK_NVME_OPC_WRITE:
+	case SPDK_NVME_OPC_COMPARE:
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+	case SPDK_NVME_OPC_WRITE_UNCORRECTABLE:
+	case SPDK_NVME_OPC_VERIFY:
+	case SPDK_NVME_OPC_COPY:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static inline bool
 nvmf_ctrlr_mask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 		    enum spdk_nvme_async_event_mask_bit mask)
 {
@@ -2466,15 +2575,39 @@ nvmf_ctrlr_get_ana_state_from_nsid(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 	return nvmf_ctrlr_get_ana_state(ctrlr, ns->anagrpid);
 }
 
-static void
+static int
 nvmf_get_error_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
 			uint64_t offset, uint32_t length, uint32_t rae)
 {
+	struct spdk_nvme_error_information_entry error_log[NVMF_ERROR_LOG_SLOTS] = {};
+	size_t page_size = sizeof(error_log);
+	size_t copy_len;
+	uint32_t i, slot;
+	struct spdk_iov_xfer ix;
+
+	if (offset >= page_size) {
+		SPDK_ERRLOG("Invalid Get error log page offset: (%" PRIu64 "), log page size (%zu)\n",
+			    offset, page_size);
+		return -EINVAL;
+	}
+
+	/* Copy all entries newest-first. An Error Count of 0 indicates an invalid entry. */
+	slot = (uint32_t)(ctrlr->error_counter % NVMF_ERROR_LOG_SLOTS);
+	for (i = 0; i < NVMF_ERROR_LOG_SLOTS; i++) {
+		slot = slot == 0 ? NVMF_ERROR_LOG_SLOTS - 1 : slot - 1;
+		memcpy(&error_log[i], &ctrlr->error_log[slot], sizeof(error_log[i]));
+	}
+
+	spdk_iov_xfer_init(&ix, iovs, iovcnt);
+	copy_len = spdk_min(page_size - offset, length);
+	spdk_iov_xfer_from_buf(&ix, (char *)error_log + offset, copy_len);
+
+	/* Clear AEN after successful read (if RAE not set) */
 	if (!rae) {
 		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_ERROR_MASK_BIT);
 	}
 
-	/* TODO: actually fill out log page data */
+	return 0;
 }
 
 static int
@@ -3037,7 +3170,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		rc = nvmf_get_supported_log_pages(ctrlr, req->iov, req->iovcnt, offset, len);
 		break;
 	case SPDK_NVME_LOG_ERROR:
-		nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		rc = nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
 		break;
 	case SPDK_NVME_LOG_HEALTH_INFORMATION:
 		/* TODO: actually fill out log page data */
@@ -3278,7 +3411,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->ver = ctrlr->vcprop.vs;
 	cdata->aerl = ctrlr->cdata.aerl;
 	cdata->lpa.lpeds = 1;
-	cdata->elpe = 127;
+	cdata->elpe = NVMF_ERROR_LOG_SLOTS - 1;
 	cdata->maxcmd = transport->opts.max_queue_depth;
 	cdata->sgls = ctrlr->cdata.sgls;
 	cdata->fuses = ctrlr->cdata.fuses;
@@ -5163,6 +5296,72 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 }
 
 static void
+nvmf_error_log_msg_handler(void *ctx)
+{
+	struct nvmf_ctrlr_error_log_entry *msg = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = msg->ctrlr;
+	uint32_t idx;
+
+	idx = (uint32_t)(ctrlr->error_counter % NVMF_ERROR_LOG_SLOTS);
+	/* The Error Count field starts at 1. */
+	ctrlr->error_counter++;
+	msg->entry.error_count = ctrlr->error_counter;
+	memcpy(&ctrlr->error_log[idx], &msg->entry, sizeof(msg->entry));
+
+	/* Return entry to pool */
+	nvmf_ctrlr_error_log_entry_put(msg);
+}
+
+static void
+nvmf_ctrlr_add_error_log_entry(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct nvmf_ctrlr_error_log_entry *msg;
+	union spdk_nvme_parameter_error_location error_location;
+
+	assert(ctrlr != NULL);
+
+	/* This path only records command errors with a known field location. */
+	if (req->error_location.raw == SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC) {
+		return;
+	}
+
+	error_location = req->error_location;
+	req->error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
+
+	assert(ctrlr->error_entry_buf != NULL);
+
+	/* Try to get an entry from the pool */
+	msg = nvmf_ctrlr_error_log_entry_get(ctrlr);
+	if (msg == NULL) {
+		/* All entries in-flight (error storm), drop */
+		return;
+	}
+
+	memset(&msg->entry, 0, sizeof(msg->entry));
+	/* Command errors are not transport related, so trtype remains 0. */
+	msg->entry.sqid = req->qpair->qid;
+	msg->entry.cid = cmd->cid;
+	rsp->status.m = 1;  /* Set MORE bit */
+	msg->entry.status = rsp->status;
+	msg->entry.pel = error_location;
+	msg->entry.nsid = cmd->nsid;
+
+	/*
+	 * The exact LBA that caused the error is not available here. Record the
+	 * command's starting LBA (or destination LBA for Copy) as the best available
+	 * value.
+	 */
+	if (!nvmf_qpair_is_admin_queue(req->qpair) && nvmf_io_opc_has_lba(cmd->opc)) {
+		msg->entry.lba = from_le64(&cmd->cdw10);
+	}
+
+	spdk_thread_send_msg(ctrlr->thread, nvmf_error_log_msg_handler, msg);
+}
+
+static void
 _nvmf_request_complete(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
@@ -5198,15 +5397,17 @@ _nvmf_request_complete(void *ctx)
 		 */
 		nvmf_request_restore_orig_nsid(req);
 
-		/*
-		 * Set the crd value.
-		 * If the the IO has any error, and dnr (DoNotRetry) is not 1,
-		 * and ACRE is enabled, we will set the crd to 1 to select the first CRDT.
-		 */
-		if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp) &&
-				  rsp->status.dnr == 0 &&
-				  qpair->ctrlr->acre_enabled)) {
-			rsp->status.crd = 1;
+		if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp))) {
+			/*
+			 * Set the crd value.
+			 * If the IO has any error, and dnr (DoNotRetry) is not 1,
+			 * and ACRE is enabled, we will set the crd to 1 to select the first CRDT.
+			 */
+			if (rsp->status.dnr == 0 && qpair->ctrlr->acre_enabled) {
+				rsp->status.crd = 1;
+			}
+
+			nvmf_ctrlr_add_error_log_entry(req);
 		}
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
@@ -5463,6 +5664,8 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	enum spdk_nvmf_request_exec_status status;
+
+	req->error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 
 	if (spdk_unlikely(!nvmf_check_subsystem_active(req))) {
 		return;

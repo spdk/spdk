@@ -2358,6 +2358,7 @@ test_fused_compare_and_write(void)
 	req.qpair = &qpair;
 	req.cmd = (union nvmf_h2c_msg *)&cmd;
 	req.rsp = &rsp;
+	req.error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 
 	/* SUCCESS/SUCCESS */
 	cmd.fuse = SPDK_NVME_CMD_FUSE_FIRST;
@@ -2449,6 +2450,7 @@ test_multi_async_event_reqs(void)
 		req[i].qpair = &qpair;
 		req[i].cmd = &cmd[i];
 		req[i].rsp = &rsp[i];
+		req[i].error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 		TAILQ_INSERT_TAIL(&qpair.outstanding, &req[i], link);
 	}
 
@@ -2798,6 +2800,7 @@ test_aer_on_inactive_qpair_mgmt_io_accounting(void)
 	req.qpair = &qpair;
 	req.cmd = &cmd;
 	req.rsp = &rsp;
+	req.error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 
 	spdk_nvmf_request_exec(&req);
 
@@ -3167,6 +3170,7 @@ test_spdk_nvmf_request_zcopy_start(void)
 	req.cmd = (union nvmf_h2c_msg *)&cmd;
 	req.rsp = &rsp;
 	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+	req.error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 	cmd.opc = SPDK_NVME_OPC_READ;
 
 	/* Fail because no controller */
@@ -3241,8 +3245,11 @@ test_spdk_nvmf_request_zcopy_start(void)
 	/* Success */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
 	spdk_nvmf_request_zcopy_start(&req);
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE);
+	CU_ASSERT_EQUAL(req.error_location.raw,
+			SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC);
 
 	spdk_bit_array_free(&ctrlr.visible_ns);
 }
@@ -3994,6 +4001,90 @@ test_req_length(void)
 	spdk_bit_array_free(&ctrlr.visible_ns);
 }
 
+static void
+test_error_log_carrier_pool(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsys = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_nvme_cpl rsp = {};
+	struct spdk_nvme_error_information_entry log[NVMF_ERROR_LOG_SLOTS];
+	struct iovec iov = {
+		.iov_base = log,
+		.iov_len = sizeof(log),
+	};
+	uint32_t i;
+	int rc;
+
+	/* Verify that targets with more than 64 poll groups use a 64-entry carrier pool. */
+	tgt.num_poll_groups = NVMF_ERROR_LOG_MAX_PENDING_ENTRIES + 1;
+	subsys.tgt = &tgt;
+	ctrlr.subsys = &subsys;
+	ctrlr.thread = spdk_get_thread();
+	rc = nvmf_ctrlr_error_log_init(&ctrlr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == UINT64_MAX);
+
+	qpair.ctrlr = &ctrlr;
+	qpair.qid = 1;
+	req.qpair = &qpair;
+	req.cmd = (union nvmf_h2c_msg *)&cmd;
+	req.rsp = (union nvmf_c2h_msg *)&rsp;
+	cmd.opc = SPDK_NVME_OPC_READ;
+	rsp.status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+
+	/* Consume every carrier without polling the controller thread. */
+	for (i = 0; i < NVMF_ERROR_LOG_MAX_PENDING_ENTRIES; i++) {
+		req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+		cmd.cid = (uint16_t)(i + 1);
+		rsp.status.m = 0;
+		nvmf_ctrlr_add_error_log_entry(&req);
+		CU_ASSERT(rsp.status.m == 1);
+	}
+	CU_ASSERT(ctrlr.error_counter == 0);
+	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == 0);
+
+	/* The next entry is dropped while every carrier is in flight. */
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	cmd.cid = NVMF_ERROR_LOG_MAX_PENDING_ENTRIES + 1;
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	CU_ASSERT(rsp.status.m == 0);
+	CU_ASSERT(ctrlr.error_counter == 0);
+
+	poll_threads();
+	CU_ASSERT(ctrlr.error_counter == NVMF_ERROR_LOG_MAX_PENDING_ENTRIES);
+	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == UINT64_MAX);
+
+	/* All carriers were distinct and the newest 16 entries survived the log wrap. */
+	memset(log, 0, sizeof(log));
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(log), 0) == 0);
+	for (i = 0; i < NVMF_ERROR_LOG_SLOTS; i++) {
+		CU_ASSERT(log[i].cid == NVMF_ERROR_LOG_MAX_PENDING_ENTRIES - i);
+	}
+
+	/* Polling returned the carriers, so one can be reused. */
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	cmd.cid = NVMF_ERROR_LOG_MAX_PENDING_ENTRIES + 2;
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	CU_ASSERT(rsp.status.m == 1);
+	poll_threads();
+	CU_ASSERT(ctrlr.error_counter == NVMF_ERROR_LOG_MAX_PENDING_ENTRIES + 1);
+	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == UINT64_MAX);
+
+	memset(log, 0, sizeof(log));
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(log), 0) == 0);
+	CU_ASSERT(log[0].cid == NVMF_ERROR_LOG_MAX_PENDING_ENTRIES + 2);
+
+	nvmf_ctrlr_error_log_cleanup(&ctrlr);
+	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4042,6 +4133,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_check_qpair_active);
 	CU_ADD_TEST(suite, test_nvmf_qpair_cid_is_reservation);
 	CU_ADD_TEST(suite, test_req_length);
+	CU_ADD_TEST(suite, test_error_log_carrier_pool);
 
 	allocate_threads(1);
 	set_thread(0);

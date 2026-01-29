@@ -370,6 +370,7 @@ nvmf_fc_conn_alloc_fc_request(struct spdk_nvmf_fc_conn *fc_conn)
 
 	fc_req = (struct spdk_nvmf_fc_request *)pooled_req;
 	memset(fc_req, 0, sizeof(struct spdk_nvmf_fc_request));
+	fc_req->req.error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
 	nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_INIT);
 
 	TAILQ_INSERT_TAIL(&hwqp->in_use_reqs, fc_req, link);
