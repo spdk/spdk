@@ -2309,29 +2309,22 @@ bdev_nvme_reconnect_delay_timer_expired(void *ctx)
 	assert(spdk_thread_is_app_thread(NULL));
 
 	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reconnect_delay, nvme_ctrlr->nbdev_ctrlr->name);
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
 
 	if (!nvme_ctrlr->reconnect_is_delayed) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return SPDK_POLLER_BUSY;
 	}
 
 	nvme_ctrlr->reconnect_is_delayed = false;
 
 	if (nvme_ctrlr->destruct) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return SPDK_POLLER_BUSY;
 	}
 
 	assert(nvme_ctrlr->resetting == false);
 	nvme_ctrlr->resetting = true;
 
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	spdk_poller_resume(nvme_ctrlr->adminq_timer_poller);
-
 	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 	return SPDK_POLLER_BUSY;
 }
