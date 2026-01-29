@@ -3312,10 +3312,7 @@ bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, false);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
 	if (rc == 0) {
 		spdk_thread_send_msg(spdk_thread_get_app_thread(), _bdev_nvme_reset_ctrlr, nvme_ctrlr);
 	} else if (rc == -EALREADY) {
