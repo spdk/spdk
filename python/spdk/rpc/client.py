@@ -230,6 +230,9 @@ class JSONRPCClient(JSONRPCAbstractClient):
     def call(self, method, params=None):
         self._logger.debug("call('%s')" % method)
         params = {} if params is None else params
+        if self._batch_mode:
+            self.add_request(method, params)
+            return None
         if self.timeout <= 0:
             raise JSONRPCException("Timeout value is invalid: %s\n" % self.timeout)
         req_id = self.send(method, params)
@@ -253,6 +256,35 @@ class JSONRPCClient(JSONRPCAbstractClient):
             raise JSONRPCException(msg)
 
         return response['result']
+
+    @staticmethod
+    def handle_batch_response(response):
+        if not isinstance(response, list):
+            raise JSONRPCException("Expected batch response array, got: %s" % type(response))
+        errors = []
+        results = []
+        for resp in response:
+            if 'error' in resp:
+                errors.append("\n".join(["Got JSON-RPC error response",
+                                         "response:", json.dumps(resp['error'], indent=2)]))
+                continue
+            results.append(resp.get('result'))
+        if len(errors) > 0:
+            raise JSONRPCException("\n".join(errors))
+        return results
+
+    def call_batch(self, batch):
+        self._logger.debug("call_batch() with %d requests" % len(batch))
+        if self.timeout <= 0:
+            raise JSONRPCException("Timeout value is invalid: %s\n" % self.timeout)
+
+        response = [self.call(**item) for item in batch]
+        if not self._batch_mode:
+            return response
+
+        self.send_batch()
+        response = self.recv()
+        return self.handle_batch_response(response)
 
 
 class JSONRPCGoClient(JSONRPCAbstractClient):

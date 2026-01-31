@@ -51,20 +51,49 @@ def save_config(client, fd, indent=2, subsystems=None):
     _json_dump(config, fd, indent)
 
 
-def _validate_config_elem(elem, allowed_methods):
-    """Validate a config element.
-    Raises JSONRPCException if invalid.
+def _check_allowed_method(elem, allowed_methods, raise_on_fail=False):
+    """Check if elem's method is in allowed_methods.
+    Returns True if allowed, False otherwise.
+    If raise_on_fail is True, raises JSONRPCException instead of returning False.
     """
     if 'method' not in elem or elem['method'] not in allowed_methods:
-        raise rpc_client.JSONRPCException("Unknown method was included in the config file")
+        if raise_on_fail:
+            raise rpc_client.JSONRPCException("Unknown method was included in the config file")
+        return False
+    return True
+
+
+def _validate_config_elem(elem, allowed_methods):
+    """Validate a config element (single RPC or batch array).
+    Raises JSONRPCException if invalid.
+    """
+    if isinstance(elem, list):
+        for item in elem:
+            _check_allowed_method(item, allowed_methods, raise_on_fail=True)
+        return
+
+    _check_allowed_method(elem, allowed_methods, raise_on_fail=True)
 
 
 def _process_config_elem(client, elem, config, allowed_methods):
-    """Process a config element.
-    Returns True if method was called, False otherwise.
-    Removes processed element from config.
+    """Process a config element (single RPC or batch array).
+    Returns True if any method was called, False otherwise.
+    Removes processed items from elem/config.
     """
-    if 'method' not in elem or elem['method'] not in allowed_methods:
+    if isinstance(elem, list):
+        for item in elem:
+            if not _check_allowed_method(item, allowed_methods):
+                return False
+
+        if not elem:
+            config.remove(elem)
+            return False
+
+        client.call_batch(elem)
+        config.remove(elem)
+        return True
+
+    if not _check_allowed_method(elem, allowed_methods):
         return False
     client.call(**elem)
     config.remove(elem)

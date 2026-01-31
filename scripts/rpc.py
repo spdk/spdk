@@ -97,21 +97,12 @@ def execute_script(parser, client, timeout, fd, batch=False):
     if batch:
         try:
             if not client.send_batch():
-                return  # Nothing was queued, don't call recv()
+                return
             response = client.recv()
-            if not isinstance(response, list):
-                raise JSONRPCException("Expected batch response array, got: %s" % type(response))
-            errors = []
-            for resp in response:
-                if 'error' in resp:
-                    errors.append("\n".join(["Got JSON-RPC error response",
-                                             "response:", json.dumps(resp['error'], indent=2)]))
-                    continue
-                result = resp.get('result')
+            results = JSONRPCClient.handle_batch_response(response)
+            for result in results:
                 if result is not None:
                     print(json.dumps(result, indent=2))
-            if len(errors) > 0:
-                raise JSONRPCException("\n".join(errors))
         except JSONRPCException as ex:
             print("Exception:")
             print(executed_rpc.strip())
