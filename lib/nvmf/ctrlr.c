@@ -3950,6 +3950,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 
 invalid_cns:
 	SPDK_DEBUGLOG(nvmf, "Identify command with unsupported CNS 0x%02x\n", cns);
+	req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return ret;
@@ -4183,6 +4184,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 
 	if ((cmd->nsid > ctrlr->subsys->max_nsid) && (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG)) {
 		SPDK_ERRLOG("Get Features command with invalid NSID %u, feature ID 0x%02x\n", cmd->nsid, feature);
+		req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, nsid), 0);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -4198,6 +4200,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 			return get_features_generic(req, ctrlr->feat.async_event_configuration.raw);
 		default:
 			SPDK_INFOLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
+			req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
@@ -4259,6 +4262,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		return nvmf_ctrlr_get_features_host_behavior_support(req);
 	default:
 		SPDK_INFOLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
+		req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -4317,6 +4321,7 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 
 	if ((cmd->nsid > ctrlr->subsys->max_nsid) && (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG)) {
 		SPDK_ERRLOG("Set Features command with invalid NSID %u, feature ID 0x%02x\n", cmd->nsid, feature);
+		req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, nsid), 0);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -4562,6 +4567,8 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 
 invalid_opcode:
 	SPDK_INFOLOG(nvmf, "Unsupported admin opcode 0x%x\n", cmd->opc);
+	req->error_location =
+		nvmf_error_loc(offsetof(struct spdk_nvmf_capsule_cmd, opcode), 0);
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -4595,6 +4602,7 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 		default:
 			SPDK_DEBUGLOG(nvmf, "unknown fctype 0x%02x\n",
 				      cap_hdr->fctype);
+			req->error_location = nvmf_error_loc(offsetof(struct spdk_nvmf_capsule_cmd, fctype), 0);
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -4610,6 +4618,7 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 			return nvmf_auth_request_exec(req);
 		default:
 			SPDK_DEBUGLOG(nvmf, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
+			req->error_location = nvmf_error_loc(offsetof(struct spdk_nvmf_capsule_cmd, fctype), 0);
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -5162,6 +5171,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	ns = nvmf_ctrlr_get_ns(ctrlr, nsid);
 	if (spdk_unlikely(ns == NULL || ns->bdev == NULL)) {
 		SPDK_DEBUGLOG(nvmf, "Unsuccessful query for nsid %u\n", cmd->nsid);
+		req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, nsid), 0);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		response->status.dnr = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -5264,6 +5274,8 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 invalid_opcode:
 	SPDK_INFOLOG(nvmf, "Unsupported IO opcode 0x%x\n", cmd->opc);
+	req->error_location =
+		nvmf_error_loc(offsetof(struct spdk_nvmf_capsule_cmd, opcode), 0);
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	response->status.dnr = 1;
@@ -5553,6 +5565,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 
 		/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
 		if (spdk_unlikely(nsid - 1 >= sgroup->num_ns)) {
+			req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, nsid), 0);
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 			req->rsp->nvme_cpl.status.dnr = 1;
@@ -5567,6 +5580,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 			 * in the process of being added, but before the full addition
 			 * process is complete.  Report invalid namespace in that case.
 			 */
+			req->error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, nsid), 0);
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 			req->rsp->nvme_cpl.status.dnr = 1;

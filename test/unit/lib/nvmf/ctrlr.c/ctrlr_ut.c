@@ -3109,6 +3109,7 @@ test_nvmf_ctrlr_use_zcopy(void)
 static void
 test_spdk_nvmf_request_zcopy_start(void)
 {
+	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
 	struct spdk_nvmf_transport transport = {};
@@ -3131,6 +3132,8 @@ test_spdk_nvmf_request_zcopy_start(void)
 	ns.zcopy = true;
 	ns.anagrpid = 1;
 
+	tgt.num_poll_groups = 1;
+	subsystem.tgt = &tgt;
 	subsystem.id = 0;
 	subsystem.max_nsid = 1;
 	subsys_ns[0] = &ns;
@@ -3142,8 +3145,10 @@ test_spdk_nvmf_request_zcopy_start(void)
 	ctrlr.vcprop.cc.bits.en = 1;
 	ctrlr.subsys = (struct spdk_nvmf_subsystem *)&subsystem;
 	ctrlr.listener = &listener;
+	ctrlr.thread = spdk_get_thread();
 	ctrlr.visible_ns = spdk_bit_array_create(1);
 	spdk_bit_array_set(ctrlr.visible_ns, 0);
+	CU_ASSERT(nvmf_ctrlr_error_log_init(&ctrlr) == 0);
 
 	transport.opts.zcopy = true;
 
@@ -3251,6 +3256,13 @@ test_spdk_nvmf_request_zcopy_start(void)
 	CU_ASSERT_EQUAL(req.error_location.raw,
 			SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC);
 
+	/*
+	 * The invalid NSID and missing namespace channel failures each add one
+	 * error log entry; the remaining paths do not provide an error location.
+	 */
+	poll_threads();
+	CU_ASSERT_EQUAL(ctrlr.error_counter, 2);
+	nvmf_ctrlr_error_log_cleanup(&ctrlr);
 	spdk_bit_array_free(&ctrlr.visible_ns);
 }
 
