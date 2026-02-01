@@ -2042,6 +2042,7 @@ test_identify_ctrlr(void)
 	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+	CU_ASSERT(cdata.elpe == NVMF_ERROR_LOG_SLOTS - 1);
 
 	/* Check ioccsz, RDMA transport */
 	tops.type = SPDK_NVME_TRANSPORT_RDMA;
@@ -4014,6 +4015,23 @@ test_req_length(void)
 }
 
 static void
+test_error_information_entry_compatibility(void)
+{
+	struct spdk_nvme_error_information_entry entry = {};
+
+	entry.error_location = 0x1234;
+	CU_ASSERT(entry.pel.raw == 0x1234);
+
+	entry.pel = (union spdk_nvme_parameter_error_location) {
+		.bits = { .bytloc = 0x56, .bitloc = 3 }
+	};
+	CU_ASSERT(entry.error_location == entry.pel.raw);
+
+	entry.error_location = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
+	CU_ASSERT(entry.pel.raw == SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC);
+}
+
+static void
 test_error_log_carrier_pool(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -4097,6 +4115,238 @@ test_error_log_carrier_pool(void)
 	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == 0);
 }
 
+static void
+test_error_log_page(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsys = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroup = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_nvme_cpl rsp = {};
+	struct spdk_nvme_error_information_entry entry;
+	struct spdk_nvme_error_information_entry log[NVMF_ERROR_LOG_SLOTS];
+	uint8_t buffer[sizeof(entry) * NVMF_ERROR_LOG_SLOTS];
+	size_t page_size = NVMF_ERROR_LOG_SLOTS * sizeof(entry);
+	struct iovec iov;
+	uint64_t error_count_before_reset;
+	uint32_t i;
+	int rc;
+
+	/* Setup: controller with thread and error log infrastructure */
+	tgt.num_poll_groups = 1;
+	subsys.tgt = &tgt;
+	ctrlr.subsys = &subsys;
+	ctrlr.thread = spdk_get_thread();
+	rc = nvmf_ctrlr_error_log_init(&ctrlr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(__atomic_load_n(&ctrlr.error_entry_free_mask, __ATOMIC_RELAXED) == UINT64_C(0xf));
+
+	qpair.ctrlr = &ctrlr;
+	qpair.qid = 1;
+	req.qpair = &qpair;
+	req.cmd = (union nvmf_h2c_msg *)&cmd;
+	req.rsp = (union nvmf_c2h_msg *)&rsp;
+
+	/* Log an I/O error with LBA */
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	cmd.opc = SPDK_NVME_OPC_READ;
+	cmd.cid = 42;
+	cmd.nsid = 5;
+	to_le64(&cmd.cdw10, 0x1234);
+	rsp.status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	rsp.status.m = 0;
+
+	nvmf_ctrlr_add_error_log_entry(&req);
+	poll_threads();
+
+	/* Verify error was logged */
+	CU_ASSERT(ctrlr.error_counter == 1);
+	CU_ASSERT(rsp.status.m == 1);
+	CU_ASSERT(req.error_location.raw == SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC);
+
+	/* Read the error log */
+	memset(buffer, 0, sizeof(buffer));
+	iov.iov_base = buffer;
+	iov.iov_len = sizeof(buffer);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(entry), 0) == 0);
+
+	/* Verify the entry fields */
+	memcpy(&entry, buffer, sizeof(entry));
+	CU_ASSERT(entry.error_count == 1);
+	CU_ASSERT(entry.sqid == 1);
+	CU_ASSERT(entry.cid == 42);
+	CU_ASSERT(entry.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(entry.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+	CU_ASSERT(entry.status.m == 1);
+	CU_ASSERT(entry.pel.bits.bytloc == offsetof(struct spdk_nvme_cmd, cdw10));
+	CU_ASSERT(entry.pel.bits.bitloc == 0);
+	CU_ASSERT(entry.nsid == 5);
+	CU_ASSERT(entry.lba == 0x1234);
+	CU_ASSERT(entry.trtype == 0);
+
+	/* Log another error, then read at partial offset to verify LBA field */
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	poll_threads();
+	CU_ASSERT(ctrlr.error_counter == 2);
+
+	memset(buffer, 0, sizeof(buffer));
+	iov.iov_base = buffer;
+	iov.iov_len = sizeof(buffer);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 16, 8, 0) == 0);
+
+	/* Newest entry (error_count==2) is first in log page;
+	 * LBA field is at byte 16 of the entry, should be in buffer[0] */
+	uint64_t copied_lba;
+	memcpy(&copied_lba, buffer, sizeof(uint64_t));
+	CU_ASSERT(copied_lba == 0x1234);
+
+	/* Log an error with non-zero bit_location */
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 3);
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	poll_threads();
+	CU_ASSERT(ctrlr.error_counter == 3);
+
+	memset(buffer, 0, sizeof(buffer));
+	iov.iov_base = buffer;
+	iov.iov_len = sizeof(buffer);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(entry), 0) == 0);
+	memcpy(&entry, buffer, sizeof(entry));
+	CU_ASSERT(entry.pel.bits.bytloc == offsetof(struct spdk_nvme_cmd, cdw10));
+	CU_ASSERT(entry.pel.bits.bitloc == 3);
+
+	/* An error without a known command-field location should not be logged. */
+	req.error_location.raw = SPDK_NVME_PARAMETER_ERROR_LOCATION_NOT_CMD_SPECIFIC;
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	poll_threads();
+	CU_ASSERT(ctrlr.error_counter == 3);
+	CU_ASSERT(rsp.status.m == 0);
+
+	/* Wrap: log NVMF_ERROR_LOG_SLOTS + 1 entries to force slot overwrite */
+	ctrlr.error_counter = 0;
+	memset(ctrlr.error_log, 0, sizeof(ctrlr.error_log));
+	cmd.opc = SPDK_NVME_OPC_WRITE;
+	for (i = 1; i <= NVMF_ERROR_LOG_SLOTS + 1; i++) {
+		req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+		cmd.cid = (uint16_t)i;
+		rsp.status.m = 0;
+		nvmf_ctrlr_add_error_log_entry(&req);
+		poll_threads();
+	}
+	CU_ASSERT(ctrlr.error_counter == NVMF_ERROR_LOG_SLOTS + 1);
+
+	/* Read full log page and verify newest-first ordering */
+	memset(log, 0, sizeof(log));
+	iov.iov_base = log;
+	iov.iov_len = sizeof(log);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(log), 0) == 0);
+
+	/* Entry [0]: newest, error_count == NVMF_ERROR_LOG_SLOTS + 1 */
+	CU_ASSERT(log[0].error_count == NVMF_ERROR_LOG_SLOTS + 1);
+	/* Entry [NVMF_ERROR_LOG_SLOTS - 1]: oldest surviving (entry 1 was overwritten) */
+	CU_ASSERT(log[NVMF_ERROR_LOG_SLOTS - 1].error_count == 2);
+	/* All entries strictly decreasing */
+	for (i = 1; i < NVMF_ERROR_LOG_SLOTS; i++) {
+		CU_ASSERT(log[i].error_count == log[i - 1].error_count - 1);
+	}
+
+	/* Invalid offset: offset >= page_size must return -EINVAL */
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, page_size, sizeof(buffer), 0) == -EINVAL);
+
+	/* Controller reset: error_log is cleared and error_counter is retained */
+	/* First, log some entries to have data */
+	for (i = 0; i < 5; i++) {
+		req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+		cmd.cid = (uint16_t)(200 + i);
+		rsp.status.m = 0;
+		nvmf_ctrlr_add_error_log_entry(&req);
+		poll_threads();
+	}
+
+	/* Simulate what _nvmf_ctrlr_cc_reset_shn_done() does */
+	error_count_before_reset = ctrlr.error_counter;
+	memset(ctrlr.error_log, 0, sizeof(ctrlr.error_log));
+
+	CU_ASSERT(ctrlr.error_counter == error_count_before_reset);
+
+	/* Log one new error after reset */
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	cmd.opc = SPDK_NVME_OPC_READ;
+	cmd.cid = 99;
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	poll_threads();
+
+	CU_ASSERT(ctrlr.error_counter == error_count_before_reset + 1);
+
+	/* Log page: only the new entry should be present; rest are zeroed */
+	memset(log, 0, sizeof(log));
+	iov.iov_base = log;
+	iov.iov_len = sizeof(log);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(log), 0) == 0);
+	CU_ASSERT(log[0].error_count == error_count_before_reset + 1);
+	for (i = 1; i < NVMF_ERROR_LOG_SLOTS; i++) {
+		CU_ASSERT(log[i].error_count == 0);
+	}
+
+	/* Admin opcodes may overlap I/O opcodes, but their CDW10 field is not an LBA. */
+	qpair.qid = 0;
+	cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	to_le64(&cmd.cdw10, 0x5678);
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	rsp.status.m = 0;
+	nvmf_ctrlr_add_error_log_entry(&req);
+	poll_threads();
+
+	memset(log, 0, sizeof(log));
+	iov.iov_base = log;
+	iov.iov_len = sizeof(log);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(log), 0) == 0);
+	CU_ASSERT(log[0].error_count == error_count_before_reset + 2);
+	CU_ASSERT(log[0].sqid == 0);
+	CU_ASSERT(log[0].lba == 0);
+
+	/* The logged status must match the final completion status. */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	group.sgroups = &sgroup;
+	qpair.group = &group;
+	qpair.qid = 1;
+	TAILQ_INIT(&qpair.outstanding);
+	cmd.opc = SPDK_NVME_OPC_READ;
+	cmd.cid = 100;
+	cmd.nsid = 5;
+	rsp.status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	req.error_location = nvmf_error_loc(offsetof(struct spdk_nvme_cmd, cdw10), 0);
+	ctrlr.acre_enabled = true;
+
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	_nvmf_request_complete(&req);
+	poll_threads();
+
+	CU_ASSERT(ctrlr.error_counter == error_count_before_reset + 3);
+	CU_ASSERT(rsp.status.m == 1);
+	CU_ASSERT(rsp.status.crd == 1);
+
+	memset(log, 0, sizeof(log));
+	iov.iov_base = log;
+	iov.iov_len = sizeof(log);
+	CU_ASSERT(nvmf_get_error_log_page(&ctrlr, &iov, 1, 0, sizeof(log), 0) == 0);
+	CU_ASSERT(memcmp(&log[0].status, &rsp.status, sizeof(rsp.status)) == 0);
+
+	/* Cleanup */
+	nvmf_ctrlr_error_log_cleanup(&ctrlr);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4146,6 +4396,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_qpair_cid_is_reservation);
 	CU_ADD_TEST(suite, test_req_length);
 	CU_ADD_TEST(suite, test_error_log_carrier_pool);
+	CU_ADD_TEST(suite, test_error_log_page);
+	CU_ADD_TEST(suite, test_error_information_entry_compatibility);
 
 	allocate_threads(1);
 	set_thread(0);
