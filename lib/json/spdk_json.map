@@ -51,6 +51,8 @@
 	spdk_json_write_uuid;
 	spdk_json_write_array_begin;
 	spdk_json_write_array_end;
+	spdk_json_write_batch_begin;
+	spdk_json_write_batch_end;
 	spdk_json_write_object_begin;
 	spdk_json_write_object_end;
 	spdk_json_write_name;

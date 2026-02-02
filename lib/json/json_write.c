@@ -591,6 +591,24 @@ spdk_json_write_array_end(struct spdk_json_write_ctx *w)
 }
 
 int
+spdk_json_write_batch_begin(struct spdk_json_write_ctx *w)
+{
+	if (w->flags & SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES) {
+		return 0;
+	}
+	return spdk_json_write_array_begin(w);
+}
+
+int
+spdk_json_write_batch_end(struct spdk_json_write_ctx *w)
+{
+	if (w->flags & SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES) {
+		return 0;
+	}
+	return spdk_json_write_array_end(w);
+}
+
+int
 spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
 {
 	if (begin_value(w)) { return fail(w); }
