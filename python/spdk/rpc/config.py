@@ -8,13 +8,14 @@ from .cmd_parser import json_dump as _json_dump
 from .cmd_parser import json_load as _json_load
 
 
-def save_config(client, fd, indent=2, subsystems=None):
+def save_config(client, fd, indent=2, subsystems=None, batch_mode=None):
     """Write current (live) configuration of SPDK subsystems and targets to stdout.
     Args:
         fd: opened file descriptor where data will be saved
         indent: Indent level. Value less than 0 mean compact mode.
             Default indent level is 2.
         subsystems: subsystems (and their dependencies) to save
+        batch_mode: If True, include batch arrays in output. If False, flatten them.
     """
     config = {
         'subsystems': [],
@@ -44,7 +45,7 @@ def save_config(client, fd, indent=2, subsystems=None):
     for elem in filter(_print, subsystems_json):
         cfg = {
             'subsystem': elem['subsystem'],
-            'config': client.framework_get_config(name=elem['subsystem']),
+            'config': client.framework_get_config(name=elem['subsystem'], batch_mode=batch_mode),
         }
         config['subsystems'].append(cfg)
 
@@ -148,16 +149,17 @@ def load_config(client, fd, include_aliases=False):
         print("Some configs were skipped because the RPC state that can call them passed over.")
 
 
-def save_subsystem_config(client, fd, indent=2, name=None):
+def save_subsystem_config(client, fd, indent=2, name=None, batch_mode=None):
     """Write current (live) configuration of SPDK subsystem to stdout.
     Args:
         fd: opened file descriptor where data will be saved
         indent: Indent level. Value less than 0 mean compact mode.
             Default is indent level 2.
+        batch_mode: If True, include batch arrays in output. If False, flatten them.
     """
     cfg = {
         'subsystem': name,
-        'config': client.framework_get_config(name=name),
+        'config': client.framework_get_config(name=name, batch_mode=batch_mode),
     }
 
     _json_dump(cfg, fd, indent)

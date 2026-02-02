@@ -59,7 +59,7 @@ tgt_rpc bdev_set_options --auto-examine -p $expected_io_pool_size -c $expected_i
 tgt_rpc framework_start_init
 
 # Check if the configuration override was successful.
-jq_args='.[] | select(.method=="bdev_set_options").params'
+jq_args='map(select(.method=="bdev_set_options")) | .[].params'
 bdev_set_options_params=$(tgt_rpc framework_get_config bdev | jq -r "$jq_args")
 set_auto_examine=$(echo $bdev_set_options_params | jq .bdev_auto_examine)
 set_io_pool_size=$(echo $bdev_set_options_params | jq .bdev_io_pool_size)

@@ -317,6 +317,12 @@
           "type": "string",
           "required": true,
           "description": "SPDK subsystem name"
+        },
+        {
+          "name": "batch_mode",
+          "type": "boolean",
+          "required": false,
+          "description": "If true, include batch arrays in output. If false (default), flatten batch arrays into individual entries."
         }
       ]
     },

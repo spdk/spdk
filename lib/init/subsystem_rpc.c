@@ -54,10 +54,12 @@ SPDK_RPC_REGISTER("framework_get_subsystems", rpc_framework_get_subsystems, SPDK
 
 struct rpc_framework_get_config_ctx {
 	char *name;
+	bool batch_mode;
 };
 
 static const struct spdk_json_object_decoder rpc_framework_get_config_decoders[] = {
 	{"name", offsetof(struct rpc_framework_get_config_ctx, name), spdk_json_decode_string},
+	{"batch_mode", offsetof(struct rpc_framework_get_config_ctx, batch_mode), spdk_json_decode_bool, true},
 };
 
 static void
@@ -85,6 +87,7 @@ rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 	free(req.name);
 
 	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_add_flags(w, req.batch_mode ? 0 : SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES);
 	subsystem_config_json(w, subsystem);
 	spdk_jsonrpc_end_result(request, w);
 }

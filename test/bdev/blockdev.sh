@@ -650,7 +650,7 @@ function dif_insert_strip_test_suite() {
 # Verify persistent configuration
 function get_malloc_config_numa() {
 	bdev_config=$("$rpc_py" framework_get_config bdev)
-	jq_filter=".[] | select(.params.name == \"$1\") | .params.numa_id"
+	jq_filter="map(select(.params.name == \"$1\") | .params.numa_id) | .[]"
 	jq -r "$jq_filter" <<< "$bdev_config"
 }
 
