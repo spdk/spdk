@@ -451,12 +451,24 @@ fixup_get_cmds_and_effects_log_page(struct spdk_nvmf_request *req)
 }
 
 static void
+nvmf_clear_prohibited_supported_log_pages(struct spdk_nvmf_subsystem *subsys,
+		struct spdk_nvme_supported_log_pages *page)
+{
+	for (uint32_t lid = 0; lid < SPDK_COUNTOF_MEMBER(typeof(*page), lids); lid++) {
+		if (!spdk_nvmf_subsystem_log_page_allowed(subsys, lid)) {
+			page->lids[lid] = (typeof(page->lids[lid])) {};
+		}
+	}
+}
+
+static void
 fixup_get_supported_log_pages(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_supported_log_pages nvme_log_data = {};
 	struct spdk_nvme_supported_log_pages nvmf_log_data = {};
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
 	uint32_t page_size = sizeof(struct spdk_nvme_supported_log_pages);
+	struct spdk_nvmf_subsystem *subsys = spdk_nvmf_request_get_subsystem(req);
 	uint64_t offset;
 	size_t datalen, copy_len = 0;
 
@@ -473,6 +485,8 @@ fixup_get_supported_log_pages(struct spdk_nvmf_request *req)
 	/* Those are supported log pages from SPDK */
 	spdk_nvmf_get_supported_log_pages(ctrlr, &nvmf_log_data);
 
+	nvmf_clear_prohibited_supported_log_pages(subsys, &nvme_log_data);
+
 	/* Make sure that logs handled by SPDK are added as well */
 	nvme_log_data.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] =
 		nvmf_log_data.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS];
@@ -488,11 +502,23 @@ fixup_get_supported_log_pages(struct spdk_nvmf_request *req)
 }
 
 static void
+nvmf_clear_prohibited_feat_id_effects_log_page(struct spdk_nvmf_subsystem *subsys,
+		struct spdk_nvme_feature_ids_effects_log_page *page)
+{
+	for (uint32_t fid = 0; fid < SPDK_COUNTOF_MEMBER(typeof(*page), fis); fid++) {
+		if (!spdk_nvmf_subsystem_feature_allowed(subsys, fid)) {
+			page->fis[fid] = (typeof(page->fis[fid])) {};
+		}
+	}
+}
+
+static void
 fixup_get_feature_ids_effects_log_page(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_feature_ids_effects_log_page nvme_log_data = {};
 	struct spdk_nvme_feature_ids_effects_log_page nvmf_log_data = {};
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	struct spdk_nvmf_subsystem *subsys = spdk_nvmf_request_get_subsystem(req);
 	uint32_t page_size = sizeof(struct spdk_nvme_feature_ids_effects_log_page);
 	uint64_t offset;
 	size_t datalen, copy_len = 0;
@@ -509,6 +535,8 @@ fixup_get_feature_ids_effects_log_page(struct spdk_nvmf_request *req)
 
 	/* This is supported features log page from SPDK */
 	spdk_nvmf_get_feature_ids_effects_log_page(ctrlr, &nvmf_log_data);
+
+	nvmf_clear_prohibited_feat_id_effects_log_page(subsys, &nvme_log_data);
 
 	if (!g_spdk_nvmf_tgt_conf.admin_passthru.get_set_features) {
 		/* Passthru support to the drive is disabled for get/set features OPC

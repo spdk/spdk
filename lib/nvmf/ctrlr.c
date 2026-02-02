@@ -3045,6 +3045,13 @@ spdk_nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		*log_page = g_supported_feat_id_effects_log_pages_discovery;
 	} else {
 		*log_page = g_supported_feat_id_effects_log_pages;
+
+		/* Clear prohibited feature IDs. */
+		for (uint32_t fid = 0; fid < SPDK_COUNTOF_MEMBER(typeof(*log_page), fis); fid++) {
+			if (!spdk_nvmf_subsystem_feature_allowed(ctrlr->subsys, fid)) {
+				log_page->fis[fid] = (typeof(log_page->fis[fid])) {};
+			}
+		}
 	}
 }
 
@@ -3101,6 +3108,14 @@ spdk_nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr,
 		*log_page = g_supported_log_pages_discover;
 	} else {
 		*log_page = g_supported_log_pages;
+
+		/* Clear prohibited log pages. */
+		for (uint32_t lid = 0; lid < SPDK_COUNTOF_MEMBER(typeof(*log_page), lids); lid++) {
+			if (!spdk_nvmf_subsystem_log_page_allowed(ctrlr->subsys, lid)) {
+				log_page->lids[lid] = (typeof(log_page->lids[lid])) {};
+			}
+		}
+
 		if (ctrlr->subsys->opts.ana_reporting != 1) {
 			log_page->lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp = 0;
 		}
@@ -4729,6 +4744,32 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		default:
 			goto invalid_opcode;
 		}
+	}
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_SET_FEATURES:
+	case SPDK_NVME_OPC_GET_FEATURES:
+		if (!spdk_nvmf_subsystem_feature_allowed(ctrlr->subsys,
+				cmd->cdw10_bits.set_features.fid)) {
+			SPDK_INFOLOG(nvmf, "Prohibited FID 0x%x\n",
+				     cmd->cdw10_bits.set_features.fid);
+			response->status.sct = SPDK_NVME_SCT_GENERIC;
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+		break;
+	case SPDK_NVME_OPC_GET_LOG_PAGE:
+		if (!spdk_nvmf_subsystem_log_page_allowed(ctrlr->subsys,
+				cmd->cdw10_bits.get_log_page.lid)) {
+			SPDK_INFOLOG(nvmf, "Prohibited LID 0x%x\n",
+				     cmd->cdw10_bits.get_log_page.lid);
+			response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			response->status.sc = SPDK_NVME_SC_INVALID_LOG_PAGE;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+		break;
+	default:
+		break;
 	}
 
 	/* Call a custom adm cmd handler if set. Aborts are handled in a different path (see nvmf_passthru_admin_cmd) */
