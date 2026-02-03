@@ -2323,12 +2323,38 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+static void
+nvmf_copy_log_page_chunk_ext(struct spdk_iov_xfer *ix, const void *data, size_t data_len,
+			     uint32_t *length, uint64_t *offset)
+{
+	size_t copy_len, copied_len;
+
+	/* Caller needs to ensure that offset starts in this chunk. */
+	assert(data_len >= *offset);
+	copy_len = spdk_min(data_len - *offset, *length);
+	if (!copy_len) {
+		return;
+	}
+
+	copied_len = spdk_iov_xfer_from_buf(ix, (const uint8_t *)data + *offset, copy_len);
+	/* Caller needs to ensure that requested data length fits in the iov buffer. */
+	assert(copied_len == copy_len);
+	*offset = 0;
+	*length -= copied_len;
+}
+
+static void
+nvmf_copy_log_page_chunk(struct spdk_iov_xfer *ix, const void *data, size_t data_len,
+			 uint32_t length, uint64_t offset)
+{
+	nvmf_copy_log_page_chunk_ext(ix, data, data_len, &length, &offset);
+}
+
 static int
 nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length)
 {
 	struct spdk_nvme_firmware_page page = {};
 	size_t page_size = sizeof(page);
-	size_t copy_len;
 	struct spdk_iov_xfer ix;
 
 	if (offset >= page_size) {
@@ -2342,11 +2368,7 @@ nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset,
 	page.afi.active_slot = 1;
 	page.afi.next_reset_slot = 0;
 	spdk_strcpy_pad(page.revision[0], FW_VERSION, sizeof(page.revision[0]), ' ');
-
-	copy_len = spdk_min(page_size - offset, length);
-	if (copy_len > 0) {
-		spdk_iov_xfer_from_buf(&ix, (const char *)&page + offset, copy_len);
-	}
+	nvmf_copy_log_page_chunk(&ix, &page, page_size, length, offset);
 
 	return 0;
 }
@@ -2422,7 +2444,6 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 {
 	struct spdk_nvme_ana_group_descriptor ana_desc = {};
 	struct spdk_nvme_ana_page page = {};
-	size_t copy_len, copied_len;
 	uint32_t num_anagrp = 0, anagrpid;
 	size_t page_size = sizeof(page);
 	struct spdk_nvmf_ns *ns;
@@ -2471,12 +2492,7 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 		page.num_ana_group_desc = num_anagrp;
 		/* TODO: Support Change Count. */
 
-		copy_len = spdk_min(sizeof(page) - offset, length);
-		copied_len = spdk_iov_xfer_from_buf(&ix, (const char *)&page + offset, copy_len);
-		assert(copied_len == copy_len);
-		length -= copied_len;
-		offset = 0;
-
+		nvmf_copy_log_page_chunk_ext(&ix, &page, sizeof(page), &length, &offset);
 		if (length == 0) {
 			goto done;
 		}
@@ -2495,13 +2511,8 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 			ana_desc.num_of_nsid = rgo ? 0 : ctrlr->subsys->ana_group[anagrpid - 1];
 			ana_desc.ana_state = nvmf_ctrlr_get_ana_state(ctrlr, anagrpid);
 
-			copy_len = spdk_min(sizeof(ana_desc) - offset, length);
-			copied_len = spdk_iov_xfer_from_buf(&ix, (const char *)&ana_desc + offset,
-							    copy_len);
-			assert(copied_len == copy_len);
-			length -= copied_len;
-			offset = 0;
-
+			nvmf_copy_log_page_chunk_ext(&ix, &ana_desc, sizeof(ana_desc), &length,
+						     &offset);
 			if (length == 0) {
 				goto done;
 			}
@@ -2525,13 +2536,8 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 				continue;
 			}
 
-			copy_len = spdk_min(sizeof(uint32_t) - offset, length);
-			copied_len = spdk_iov_xfer_from_buf(&ix, (const char *)&ns->nsid + offset,
-							    copy_len);
-			assert(copied_len == copy_len);
-			length -= copied_len;
-			offset = 0;
-
+			nvmf_copy_log_page_chunk_ext(&ix, &ns->nsid, sizeof(ns->nsid), &length,
+						     &offset);
 			if (length == 0) {
 				goto done;
 			}
@@ -2579,7 +2585,6 @@ nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 				  struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length, uint32_t rae)
 {
 	size_t page_size = sizeof(ctrlr->changed_ns_list);
-	size_t copy_len;
 	struct spdk_iov_xfer ix;
 
 	if (offset >= page_size) {
@@ -2590,10 +2595,7 @@ nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
 
-	copy_len = spdk_min(length, page_size - offset);
-	if (copy_len) {
-		spdk_iov_xfer_from_buf(&ix, (char *)&ctrlr->changed_ns_list + offset, copy_len);
-	}
+	nvmf_copy_log_page_chunk(&ix, &ctrlr->changed_ns_list, page_size, length, offset);
 
 	/* Clear log page each time it is read */
 	ctrlr->changed_ns_list_count = 0;
@@ -2707,7 +2709,6 @@ nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *
 {
 	struct spdk_nvme_cmds_and_effect_log_page page = {};
 	size_t page_size = sizeof(page);
-	size_t copy_len;
 	struct spdk_iov_xfer ix;
 
 	if (offset >= page_size) {
@@ -2717,9 +2718,7 @@ nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *
 	}
 	spdk_nvmf_get_cmds_and_effects_log_page(ctrlr, &page);
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
-
-	copy_len = spdk_min(page_size - offset, length);
-	spdk_iov_xfer_from_buf(&ix, (char *)(&page) + offset, copy_len);
+	nvmf_copy_log_page_chunk(&ix, &page, page_size, length, offset);
 
 	return 0;
 }
@@ -2728,7 +2727,7 @@ static int
 nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length, uint32_t rae)
 {
-	uint32_t unit_log_len, avail_log_len, copy_len;
+	uint32_t unit_log_len, avail_log_len;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 	struct spdk_iov_xfer ix;
 
@@ -2754,11 +2753,7 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		if (offset >= unit_log_len) {
 			offset -= unit_log_len;
 		} else {
-			copy_len = spdk_min(unit_log_len - offset, length);
-			spdk_iov_xfer_from_buf(&ix, (uint8_t *)&log->log + offset, copy_len);
-			length -= copy_len;
-			offset = 0;
-
+			nvmf_copy_log_page_chunk_ext(&ix, &log->log, unit_log_len, &length, &offset);
 			if (length == 0) {
 				free(log);
 				break;
@@ -2843,7 +2838,6 @@ nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iove
 {
 	struct spdk_nvme_feature_ids_effects_log_page page = {};
 	size_t page_size = sizeof(page);
-	size_t copy_len;
 	struct spdk_iov_xfer ix;
 
 	if (offset >= page_size) {
@@ -2854,9 +2848,7 @@ nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iove
 
 	spdk_nvmf_get_feature_ids_effects_log_page(ctrlr, &page);
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
-
-	copy_len = spdk_min(page_size - offset, length);
-	spdk_iov_xfer_from_buf(&ix, (char *)(&page) + offset, copy_len);
+	nvmf_copy_log_page_chunk(&ix, &page, page_size, length, offset);
 
 	return 0;
 }
@@ -2904,7 +2896,6 @@ nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, 
 {
 	struct spdk_nvme_supported_log_pages page = {};
 	size_t page_size = sizeof(page);
-	size_t copy_len;
 	struct spdk_iov_xfer ix;
 
 	if (offset >= page_size) {
@@ -2915,9 +2906,7 @@ nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, 
 
 	spdk_nvmf_get_supported_log_pages(ctrlr, &page);
 	spdk_iov_xfer_init(&ix, iovs, iovcnt);
-
-	copy_len = spdk_min(page_size - offset, length);
-	spdk_iov_xfer_from_buf(&ix, (char *)(&page) + offset, copy_len);
+	nvmf_copy_log_page_chunk(&ix, &page, page_size, length, offset);
 
 	return 0;
 }
