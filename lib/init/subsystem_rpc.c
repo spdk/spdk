@@ -108,6 +108,7 @@ dump_pci_device(void *ctx, struct spdk_pci_device *dev)
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "address", bdf);
 	spdk_json_write_named_string(w, "type", spdk_pci_device_get_type(dev));
+	spdk_json_write_named_int32(w, "numa_id", spdk_pci_device_get_numa_id(dev));
 
 	spdk_json_write_name(w, "config_space");
 	rc = spdk_pci_device_cfg_read(dev, config, 256, 0);
