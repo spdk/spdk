@@ -2881,6 +2881,12 @@ spdk_nvmf_get_cmds_and_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	struct spdk_nvme_cmds_and_effect_entry *entry;
 
 	*log_page = g_cmds_and_effect_log_page;
+
+	if (ctrlr->subsys->opts.admin) {
+		memset(log_page->io_cmds_supported, 0, sizeof(log_page->io_cmds_supported));
+		return;
+	}
+
 	if (!ctrlr->cdata.oncs.nvmwzsv || !nvmf_ctrlr_write_zeroes_supported(ctrlr)) {
 		entry = &log_page->io_cmds_supported[SPDK_NVME_OPC_WRITE_ZEROES];
 		memset(entry, 0, sizeof(*entry));
