@@ -307,6 +307,32 @@ struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *r
  */
 struct spdk_nvmf_request *spdk_nvmf_request_get_req_to_abort(struct spdk_nvmf_request *req);
 
+/**
+ * Check whether a feature is allowed for the given subsystem.
+ * According to NVMe spec, some features are prohibited for Administrative
+ * controllers (admin subsystem).
+ *
+ * \param subsystem Subsystem to check
+ * \param feature The feature identifier (FID) to check
+ *
+ * \return true  If the feature is allowed
+ * \return false If the feature is prohibited
+ */
+bool spdk_nvmf_subsystem_feature_allowed(struct spdk_nvmf_subsystem *subsystem, uint8_t feature);
+
+/**
+ * Check whether a log page is allowed for the given subsystem.
+ * According to NVMe spec, some log pages are prohibited for Administrative
+ * controllers (admin subsystem).
+ *
+ * \param subsystem Subsystem to check
+ * \param lid The log page identifier (LID) to check
+ *
+ * \return true  If the log page is allowed
+ * \return false If the log page is prohibited
+ */
+bool spdk_nvmf_subsystem_log_page_allowed(struct spdk_nvmf_subsystem *subsystem, uint8_t lid);
+
 #ifdef __cplusplus
 }
 #endif

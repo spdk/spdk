@@ -128,6 +128,8 @@
 	spdk_nvmf_request_get_req_to_abort;
 	spdk_nvmf_bdev_ctrlr_abort_cmd;
 	spdk_nvmf_ns_identify_iocs_specific;
+	spdk_nvmf_subsystem_feature_allowed;
+	spdk_nvmf_subsystem_log_page_allowed;
 
 	# public functions in nvmf_transport.h
 	spdk_nvmf_transport_register;

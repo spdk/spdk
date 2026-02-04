@@ -3128,6 +3128,31 @@ nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, 
 	return 0;
 }
 
+bool
+spdk_nvmf_subsystem_log_page_allowed(struct spdk_nvmf_subsystem *subsystem, uint8_t lid)
+{
+	if (!subsystem->opts.admin) {
+		return true;
+	}
+
+	/* Range values here below are according to 2.0 spec, different range in 2.1 spec */
+	/* I/O Command Set Specific and Zoned Namespace Command Set */
+	if (lid >= 0x82 && lid <= 0xBF) {
+		return false;
+	}
+
+	switch (lid) {
+	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
+	case SPDK_NVME_LOG_MEDIA_UNIT_STATUS:
+	case SPDK_NVME_LOG_CAPACITY_CONFIGURATION_LIST:
+	case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
+	case SPDK_NVME_LOG_ROTATIONAL_MEDIA_INFORMATION:
+		return false;
+	default:
+		return true;
+	}
+}
+
 static int
 nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
@@ -4308,6 +4333,31 @@ _nvme_ana_state_to_path_status(enum spdk_nvme_ana_state ana_state)
 		return SPDK_NVME_SC_ASYMMETRIC_ACCESS_TRANSITION;
 	default:
 		return SPDK_NVME_SC_INTERNAL_PATH_ERROR;
+	}
+}
+
+bool
+spdk_nvmf_subsystem_feature_allowed(struct spdk_nvmf_subsystem *subsystem, uint8_t feature)
+{
+	if (!subsystem->opts.admin) {
+		return true;
+	}
+
+	switch (feature) {
+	case SPDK_NVME_FEAT_ARBITRATION:
+	case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
+	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+	case SPDK_NVME_FEAT_IO_COMMAND_SET_PROFILE:
+	case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
+	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+	case SPDK_NVME_FEAT_SPINUP_CONTROL:
+	case SPDK_NVME_FEAT_FDP:
+	case SPDK_NVME_FEAT_FDP_EVENTS:
+		return false;
+	default:
+		return true;
 	}
 }
 
