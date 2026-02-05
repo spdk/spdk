@@ -606,13 +606,13 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 			    subsystem->subnqn, subsystem->state);
 		return -EAGAIN;
 	}
-	if (subsystem->destroying) {
+	if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
 		SPDK_ERRLOG("Subsystem destruction is already started\n");
 		assert(0);
 		return -EALREADY;
 	}
 
-	subsystem->destroying = true;
+	subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS;
 
 	SPDK_DEBUGLOG(nvmf, "subsystem is %p %s\n", subsystem, subsystem->subnqn);
 

@@ -355,6 +355,11 @@ struct nvmf_subsystem_state_change_ctx {
 	TAILQ_ENTRY(nvmf_subsystem_state_change_ctx)	link;
 };
 
+enum nvmf_subsystem_destroy_state {
+	NVMF_SUBSYSTEM_DESTROY_NOT_STARTED = 0,
+	NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS,
+};
+
 struct spdk_nvmf_subsystem {
 	struct spdk_thread				*thread;
 
@@ -371,7 +376,8 @@ struct spdk_nvmf_subsystem {
 	/* Protected against concurrent access by ->mutex */
 	bool						allow_any_host;
 
-	bool						destroying;
+	/* Tracks subsystem destruction state */
+	enum nvmf_subsystem_destroy_state		destroy_state;
 	bool						async_destroy;
 
 	/* FDP related fields */
