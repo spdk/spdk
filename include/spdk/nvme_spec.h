@@ -4019,58 +4019,62 @@ enum spdk_nvme_log_page {
 
 #define spdk_nvme_log_page_is_vendor_specific(lid) ((lid) >= SPDK_NVME_LOG_VENDOR_SPECIFIC_START)
 
+struct spdk_nvme_supported_log_pages_entry {
+	/* LID Supported - 0 */
+	uint32_t lsupp		: 1;
+	/* Index Offset Supported - 1 */
+	uint32_t ios		: 1;
+	/* Reserved - 2:15 */
+	uint32_t reserved	: 14;
+	/* LID Specific Parameter - 16:31 */
+	uint32_t lidsp		: 16;
+};
+
 struct spdk_nvme_supported_log_pages {
 	/* Log Page Identifier Supported 0-255 */
-	struct {
-		/* LID Supported - 0 */
-		uint32_t lsupp		: 1;
-		/* Index Offset Supported - 1 */
-		uint32_t ios		: 1;
-		/* Reserved - 2:15 */
-		uint32_t reserved	: 14;
-		/* LID Specific Parameter - 16:31 */
-		uint32_t lidsp		: 16;
-	} lids[256];
+	struct spdk_nvme_supported_log_pages_entry lids[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_supported_log_pages) == 1024, "Incorrect size");
 
 /* Feature Identifiers Effects Log Page */
+struct spdk_nvme_feature_ids_effects_log_page_entry {
+	/* FID Supported - 0 */
+	uint32_t fsupp		: 1;
+	/* User Data Content Change - 1 */
+	uint32_t udcc		: 1;
+	/* Namespace Capability Change - 2 */
+	uint32_t ncc		: 1;
+	/* Namespace Inventory Change - 3 */
+	uint32_t nic		: 1;
+	/* Controller Capability Change - 4 */
+	uint32_t ccc		: 1;
+	/* Reserved - 5:18 */
+	uint32_t reserved	: 14;
+	/* UUID Selection Supported - 19 */
+	uint32_t uss		: 1;
+
+	/* FID scope (FSP) - 20:31 */
+	/* FID scope - Namespace Scope - 0 */
+	uint32_t nscpe		: 1;
+	/* FID scope - Controller Scope - 1 */
+	uint32_t cscpe		: 1;
+	/* FID scope - NVM Set Scope - 2 */
+	uint32_t nsetscpe	: 1;
+	/* FID scope - Endurance Group Scope - 3 */
+	uint32_t egscpe		: 1;
+	/* FID scope - Domain Scope - 4 */
+	uint32_t dscpe		: 1;
+	/* FID scope - NVM Subsystem Scope - 5 */
+	uint32_t nsscpe		: 1;
+	/* FID scope - Controller Data Queue - 6 */
+	uint32_t cdqscpe	: 1;
+	/* FID scope - Reserved - 7:11 */
+	uint32_t fsp_reserved	: 5;
+};
+
 struct spdk_nvme_feature_ids_effects_log_page {
 	/* Feature Identifier Supported 0-255 */
-	struct {
-		/* FID Supported - 0 */
-		uint32_t fsupp		: 1;
-		/* User Data Content Change - 1 */
-		uint32_t udcc		: 1;
-		/* Namespace Capability Change - 2 */
-		uint32_t ncc		: 1;
-		/* Namespace Inventory Change - 3 */
-		uint32_t nic		: 1;
-		/* Controller Capability Change - 4 */
-		uint32_t ccc		: 1;
-		/* Reserved - 5:18 */
-		uint32_t reserved	: 14;
-		/* UUID Selection Supported - 19 */
-		uint32_t uss		: 1;
-
-		/* FID scope (FSP) - 20:31 */
-		/* FID scope - Namespace Scope - 0 */
-		uint32_t nscpe		: 1;
-		/* FID scope - Controller Scope - 1 */
-		uint32_t cscpe		: 1;
-		/* FID scope - NVM Set Scope - 2 */
-		uint32_t nsetscpe	: 1;
-		/* FID scope - Endurance Group Scope - 3 */
-		uint32_t egscpe		: 1;
-		/* FID scope - Domain Scope - 4 */
-		uint32_t dscpe		: 1;
-		/* FID scope - NVM Subsystem Scope - 5 */
-		uint32_t nsscpe		: 1;
-		/* FID scope - Controller Data Queue - 6 */
-		uint32_t cdqscpe	: 1;
-		/* FID scope - Reserved - 7:11 */
-		uint32_t fsp_reserved	: 5;
-	} fis[256];
+	struct spdk_nvme_feature_ids_effects_log_page_entry fis[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feature_ids_effects_log_page) == 1024, "Incorrect size");
 
