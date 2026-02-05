@@ -790,6 +790,7 @@ INPUT                  += \
                          intro.md \
                          concepts.md \
                          user_guides.md \
+                         releases.md \
                          prog_guides.md \
                          general.md \
                          misc.md \
