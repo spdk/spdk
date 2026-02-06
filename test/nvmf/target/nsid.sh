@@ -8,9 +8,9 @@ rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 
-subnqn1="nqn.2024-10.io.spdk:cnode0"
-subnqn2="nqn.2024-10.io.spdk:cnode1"
-subnqn3="nqn.2024-10.io.spdk:cnode2"
+subnqn1="nqn.2024-10.io.spdk:cnode0_$$"
+subnqn2="nqn.2024-10.io.spdk:cnode1_$$"
+subnqn3="nqn.2024-10.io.spdk:cnode2_$$"
 tgt2sock="/var/tmp/tgt2.sock"
 tgt2pid=
 

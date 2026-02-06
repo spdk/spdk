@@ -13,7 +13,7 @@ loops=5
 ns1uuid=$(uuidgen)
 ns2uuid=$(uuidgen)
 
-SUBSYSNQN="nqn.2016-06.io.spdk:cnode1"
+SUBSYSNQN="nqn.2016-06.io.spdk:cnode$$"
 HOSTNQN1="nqn.2016-06.io.spdk:host1"
 HOSTNQN2="nqn.2016-06.io.spdk:host2"
 HOSTID=$(uuidgen)

@@ -9,6 +9,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 loops=5
+subnqn=nqn.2016-06.io.spdk:cnode$$
 
 function jcount() {
 	local filter=$1
@@ -49,62 +50,62 @@ MALLOC_BLOCK_SIZE=512
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
 
 # Disallow host NQN and make sure connect fails
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
-$rpc_py nvmf_subsystem_allow_any_host --no-allow-any-host nqn.2016-06.io.spdk:cnode1
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_create_subsystem $subnqn -a -s $NVMF_SERIAL
+$rpc_py nvmf_subsystem_add_ns $subnqn Malloc1
+$rpc_py nvmf_subsystem_allow_any_host --no-allow-any-host $subnqn
+$rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # This connect should fail - the host NQN is not allowed
-NOT $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q "$NVME_HOSTNQN" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+NOT $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n $subnqn -q "$NVME_HOSTNQN" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 # Add the host NQN and verify that the connect succeeds
-$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 "$NVME_HOSTNQN"
-$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_add_host $subnqn "$NVME_HOSTNQN"
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n $subnqn -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 waitforserial "$NVMF_SERIAL"
-nvme disconnect -n nqn.2016-06.io.spdk:cnode1
+nvme disconnect -n $subnqn
 waitforserial_disconnect "$NVMF_SERIAL"
 
 # Remove the host and verify that the connect fails
-$rpc_py nvmf_subsystem_remove_host nqn.2016-06.io.spdk:cnode1 "$NVME_HOSTNQN"
-NOT $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_remove_host $subnqn "$NVME_HOSTNQN"
+NOT $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n $subnqn -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 # Allow any host and verify that the connect succeeds
-$rpc_py nvmf_subsystem_allow_any_host --allow-any-host nqn.2016-06.io.spdk:cnode1
-$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_allow_any_host --allow-any-host $subnqn
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n $subnqn -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 waitforserial "$NVMF_SERIAL"
-nvme disconnect -n nqn.2016-06.io.spdk:cnode1
+nvme disconnect -n $subnqn
 waitforserial_disconnect "$NVMF_SERIAL"
 
-$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem $subnqn
 
 # do frequent add delete of namespaces with different nsid.
 for i in $(seq 1 $loops); do
-	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s $NVMF_SERIAL
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 5
-	$rpc_py nvmf_subsystem_allow_any_host --allow-any-host nqn.2016-06.io.spdk:cnode1
-	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$rpc_py nvmf_create_subsystem $subnqn -s $NVMF_SERIAL
+	$rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_ns $subnqn Malloc1 -n 5
+	$rpc_py nvmf_subsystem_allow_any_host --allow-any-host $subnqn
+	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n $subnqn -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 	waitforserial "$NVMF_SERIAL"
 
-	nvme disconnect -n nqn.2016-06.io.spdk:cnode1
+	nvme disconnect -n $subnqn
 	waitforserial_disconnect "$NVMF_SERIAL"
 
-	$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 5
-	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+	$rpc_py nvmf_subsystem_remove_ns $subnqn 5
+	$rpc_py nvmf_delete_subsystem $subnqn
 
 done
 
 # do frequent add delete.
 for i in $(seq 1 $loops); do
-	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s $NVMF_SERIAL
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
-	$rpc_py nvmf_subsystem_allow_any_host --allow-any-host nqn.2016-06.io.spdk:cnode1
+	$rpc_py nvmf_create_subsystem $subnqn -s $NVMF_SERIAL
+	$rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_ns $subnqn Malloc1
+	$rpc_py nvmf_subsystem_allow_any_host --allow-any-host $subnqn
 
-	$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 1
+	$rpc_py nvmf_subsystem_remove_ns $subnqn 1
 
-	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+	$rpc_py nvmf_delete_subsystem $subnqn
 done
 
 stats=$($rpc_py nvmf_get_stats)

@@ -9,7 +9,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 source $rootdir/test/interrupt/common.sh
 
-NQN=nqn.2016-06.io.spdk:cnode1
+NQN=nqn.2016-06.io.spdk:cnode$$
 
 nvmftestinit
 nvmfappstart -m 0x3

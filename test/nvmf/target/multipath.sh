@@ -10,7 +10,7 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-nqn=nqn.2016-06.io.spdk:cnode1
+nqn=nqn.2016-06.io.spdk:cnode$$
 
 rpc_py="$rootdir/scripts/rpc.py"
 

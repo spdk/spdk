@@ -10,6 +10,7 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
+subnqn=nqn.2016-06.io.spdk:cnode$$
 
 devs=()
 
@@ -21,15 +22,15 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
 
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL -d SPDK_Controller1 -i 291
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_create_subsystem $subnqn -a -s $NVMF_SERIAL -d SPDK_Controller1 -i 291
+$rpc_py nvmf_subsystem_add_ns $subnqn Malloc0
+$rpc_py nvmf_subsystem_add_ns $subnqn Malloc1
+$rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 nvme discover "${NVME_HOST[@]}" -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 devs=($(get_nvme_devs)) nvme_num_before_connection=${#devs[@]}
-$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "$subnqn" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial $NVMF_SERIAL 2
 if [[ -z $(get_nvme_devs) ]]; then
@@ -57,14 +58,14 @@ for ns in "${nvmes[@]}"; do
 done
 
 devs=($(get_nvme_devs)) nvme_num=${#devs[@]}
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+nvme disconnect -n "$subnqn"
 waitforserial_disconnect "$NVMF_SERIAL"
 if ((nvme_num <= nvme_num_before_connection)); then
 	echo "nvme-cli connect target devices failed"
 	exit 1
 fi
 
-$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem $subnqn
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
