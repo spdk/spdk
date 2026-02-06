@@ -1847,7 +1847,7 @@ usage(char *program_name)
 	printf("\t\t(default: 1)\n");
 	spdk_nvme_transport_id_usage(stdout,
 				     SPDK_NVME_TRID_USAGE_OPT_LONGOPT | SPDK_NVME_TRID_USAGE_OPT_MULTI | SPDK_NVME_TRID_USAGE_OPT_NS |
-				     SPDK_NVME_TRID_USAGE_OPT_HOSTNQN);
+				     SPDK_NVME_TRID_USAGE_OPT_HOSTNQN | SPDK_NVME_TRID_USAGE_OPT_HOSTADDR);
 	printf("\n");
 
 	printf("==== ADVANCED OPTIONS ====\n\n");
@@ -2995,6 +2995,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->dhchap_key = g_dhchap;
 	opts->dhchap_ctrlr_key = g_dhchap_ctrlr;
 	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
+	memcpy(opts->src_addr, trid_entry->hostaddr, sizeof(opts->src_addr));
 
 	opts->transport_tos = g_transport_tos;
 	if (opts->num_io_queues < g_num_workers * g_nr_io_queues_per_ns) {
