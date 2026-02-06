@@ -42,6 +42,11 @@ spdk_nvme_transport_id_usage(FILE *f, uint32_t opts)
 		fprintf(f, "\t\t %-11s Host NQN\n", "hostnqn");
 	}
 
+	if (fabric && opts & SPDK_NVME_TRID_USAGE_OPT_HOSTADDR) {
+		fprintf(f, "\t\t %-11s Source address for NVMe-oF (optional, e.g. local IP for RDMA/TCP)\n",
+			"hostaddr");
+	}
+
 	if (fabric && opts & SPDK_NVME_TRID_USAGE_OPT_ALT_TRADDR) {
 		fprintf(f, "\t\t %-11s Alternative Transport address for failover (optional)\n", "alt_traddr");
 	}
@@ -64,7 +69,7 @@ int
 spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *str)
 {
 	struct spdk_nvme_transport_id *trid;
-	char *ns, *hostnqn, *alt_traddr;
+	char *ns, *hostnqn, *hostaddr, *alt_traddr;
 	size_t len;
 
 	trid = &trid_entry->trid;
@@ -114,6 +119,25 @@ spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *
 		memcpy(trid_entry->hostnqn, hostnqn, len);
 	}
 	trid_entry->hostnqn[len] = '\0';
+
+	len = 0;
+	if ((hostaddr = strcasestr(str, "hostaddr:")) ||
+	    (hostaddr = strcasestr(str, "hostaddr="))) {
+		if (!spdk_nvme_trtype_is_fabrics(trid->trtype)) {
+			SPDK_ERRLOG("hostaddr is only valid with fabrics transport (e.g. RDMA, TCP)\n");
+			return -EINVAL;
+		}
+
+		hostaddr += strlen("hostaddr:");
+		len = strcspn(hostaddr, " \t\n");
+		if (len > SPDK_NVMF_TRADDR_MAX_LEN) {
+			SPDK_ERRLOG("hostaddr is too long\n");
+			return -EINVAL;
+		}
+
+		memcpy(trid_entry->hostaddr, hostaddr, len);
+	}
+	trid_entry->hostaddr[len] = '\0';
 
 	trid_entry->failover_trid = trid_entry->trid;
 	if ((alt_traddr = strcasestr(str, "alt_traddr:")) ||
