@@ -258,6 +258,7 @@ int malloc_disk_count = 0;
 
 static int bdev_malloc_initialize(void);
 static void bdev_malloc_deinitialize(void);
+static int bdev_malloc_config_json(struct spdk_json_write_ctx *w);
 
 static int
 bdev_malloc_get_ctx_size(void)
@@ -269,6 +270,7 @@ static struct spdk_bdev_module malloc_if = {
 	.name = "malloc",
 	.module_init = bdev_malloc_initialize,
 	.module_fini = bdev_malloc_deinitialize,
+	.config_json = bdev_malloc_config_json,
 	.get_ctx_size = bdev_malloc_get_ctx_size,
 
 };
@@ -717,6 +719,20 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 }
 
 static int
+bdev_malloc_config_json(struct spdk_json_write_ctx *w)
+{
+	struct malloc_disk *mdisk;
+
+	spdk_json_write_batch_begin(w);
+	TAILQ_FOREACH(mdisk, &g_malloc_disks, link) {
+		bdev_malloc_write_json_config(&mdisk->disk, w);
+	}
+	spdk_json_write_batch_end(w);
+
+	return 0;
+}
+
+static int
 bdev_malloc_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
 {
 	struct malloc_disk *malloc_disk = ctx;
@@ -756,7 +772,6 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.submit_request			= bdev_malloc_submit_request,
 	.io_type_supported		= bdev_malloc_io_type_supported,
 	.get_io_channel			= bdev_malloc_get_io_channel,
-	.write_config_json		= bdev_malloc_write_json_config,
 	.get_memory_domains		= bdev_malloc_get_memory_domains,
 	.accel_sequence_supported	= bdev_malloc_accel_sequence_supported,
 };
