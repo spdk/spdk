@@ -1284,6 +1284,11 @@ union spdk_nvme_cmd_cdw10 {
 		/* Management Operation Specific */
 		uint32_t mos       : 16;
 	} mgmt_send_recv;
+
+	struct {
+		/* Value Size (Store) or Host Buffer Size (Retrieve/List) */
+		uint32_t vsize     : 32;
+	} kv;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw10) == 4, "Incorrect size");
 
@@ -1367,6 +1372,14 @@ union spdk_nvme_cmd_cdw11 {
 		uint32_t ad       : 1;
 		uint32_t reserved : 29;
 	} dsm;
+
+	struct {
+		/* Key Length */
+		uint32_t kl       : 8;
+		/* Request Options */
+		uint32_t ro       : 8;
+		uint32_t reserved : 16;
+	} kv;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
 
@@ -1826,6 +1839,35 @@ enum spdk_nvme_zns_opcode {
 	SPDK_NVME_OPC_ZONE_MGMT_SEND			= 0x79,
 	SPDK_NVME_OPC_ZONE_MGMT_RECV			= 0x7a,
 	SPDK_NVME_OPC_ZONE_APPEND			= 0x7d,
+};
+
+/**
+ * Key-Value command set opcodes
+ *
+ * The Key-Value command set supports the following opcodes.
+ */
+enum spdk_nvme_kv_opcode {
+	SPDK_NVME_OPC_KV_STORE				= 0x01,
+	SPDK_NVME_OPC_KV_RETRIEVE			= 0x02,
+	SPDK_NVME_OPC_KV_LIST				= 0x06,
+	SPDK_NVME_OPC_KV_DELETE				= 0x10,
+	SPDK_NVME_OPC_KV_EXIST				= 0x14,
+};
+
+/**
+ * Key-Value Store command request options
+ */
+enum spdk_nvme_kv_store_option {
+	SPDK_NVME_KV_STORE_OPT_DONT_STORE_IF_KEY_NOT_EXISTS	= 1 << 0,
+	SPDK_NVME_KV_STORE_OPT_DONT_STORE_IF_KEY_EXISTS		= 1 << 1,
+	SPDK_NVME_KV_STORE_OPT_COMPRESS				= 1 << 2,
+};
+
+/**
+ * Key-Value Retrieve command request options
+ */
+enum spdk_nvme_kv_retrieve_option {
+	SPDK_NVME_KV_RETRIEVE_OPT_RETRIEVE_RAW			= 1 << 0,
 };
 
 /**
@@ -2822,6 +2864,14 @@ struct spdk_nvme_zns_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ctrlr_data) == 4096, "Incorrect size");
 
+struct spdk_nvme_kv_ctrlr_data {
+	/** maximum key size */
+	uint8_t			mks;
+
+	uint8_t			reserved1[4095];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_ctrlr_data) == 4096, "Incorrect size");
+
 #pragma pack(push, 1)
 struct spdk_nvme_primary_ctrl_capabilities {
 	/**  controller id */
@@ -3276,6 +3326,28 @@ struct spdk_nvme_zns_ns_data {
 	uint8_t			vendor_specific[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ns_data) == 4096, "Incorrect size");
+
+#pragma pack(push, 1)
+struct spdk_nvme_kv_ns_data {
+	/** maximum key size */
+	uint8_t			mks;
+
+	/** maximum value size */
+	uint32_t		mvs;
+
+	/** optimal value size */
+	uint32_t		ovs;
+
+	/** key alignment */
+	uint8_t			ka;
+
+	/** value alignment */
+	uint8_t			va;
+
+	uint8_t			reserved[4085];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_ns_data) == 4096, "Incorrect size");
+#pragma pack(pop)
 
 /** Identify – I/O Command Set Independent Identify Namespace Data Structure (CNS 08h) */
 struct spdk_nvme_ns_iocs_independent_data {
