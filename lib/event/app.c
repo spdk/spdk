@@ -151,6 +151,31 @@ static const struct option g_cmdline_options[] = {
 	{"enforce-numa",		no_argument,		NULL, ENFORCE_NUMA_OPT_IDX},
 };
 
+/*
+ * Keep framework long option values < SPDK_APP_LONG_OPT_BASE when adding options.
+ * Long-only options must use values from 256 up to SPDK_APP_LONG_OPT_BASE.
+ */
+static int
+app_validate_long_opts(void)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_cmdline_options); i++) {
+		if (g_cmdline_options[i].name == NULL) {
+			break;
+		}
+
+		if (g_cmdline_options[i].val >= SPDK_APP_LONG_OPT_BASE) {
+			SPDK_ERRLOG("Framework long opt value %d for option '%s' must be < %d\n",
+				    g_cmdline_options[i].val, g_cmdline_options[i].name,
+				    SPDK_APP_LONG_OPT_BASE);
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
 #if defined(__FreeBSD__)
 static int
 parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
@@ -1259,6 +1284,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	}
 
 	global_long_opts_len = SPDK_COUNTOF(g_cmdline_options);
+	if (app_validate_long_opts() != 0) {
+		return SPDK_APP_PARSE_ARGS_FAIL;
+	}
 
 	cmdline_options = calloc(global_long_opts_len + app_long_opts_len + 1, sizeof(*cmdline_options));
 	if (!cmdline_options) {
