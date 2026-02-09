@@ -149,7 +149,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 {
 	uint32_t		sector_size = _nvme_get_host_buffer_sector_size(ns, io_flags);
 	uint32_t		remaining_lba_count = lba_count;
-	uint32_t		payload_offset = req->payload.payload_offset;
+	uint32_t		payload_offset = req->payload.offset;
 	uint32_t		md_offset = req->payload.md_offset;
 	int rc;
 
@@ -248,7 +248,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 {
 	spdk_nvme_req_reset_sgl_cb reset_sgl_fn = req->payload.reset_sgl_fn;
 	spdk_nvme_req_next_sge_cb next_sge_fn = req->payload.next_sge_fn;
-	uint32_t payload_offset = req->payload.payload_offset;
+	uint32_t payload_offset = req->payload.offset;
 	uint32_t md_offset = req->payload.md_offset;
 	void *sgl_cb_arg = req->payload.contig_or_cb_arg;
 	bool start_valid, end_valid, last_sge, child_equals_parent;
@@ -262,12 +262,12 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 
 	reset_sgl_fn(sgl_cb_arg, payload_offset);
 	next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
-	while (req_current_length < req->payload.payload_size) {
+	while (req_current_length < req->payload.size) {
 
 		if (sge_length == 0) {
 			continue;
-		} else if (req_current_length + sge_length > req->payload.payload_size) {
-			sge_length = req->payload.payload_size - req_current_length;
+		} else if (req_current_length + sge_length > req->payload.size) {
+			sge_length = req->payload.size - req_current_length;
 		}
 
 		/*
@@ -277,7 +277,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 		start_valid = child_length == 0 || _is_page_aligned(address, page_size);
 
 		/* Boolean for whether this is the last SGE in the parent request. */
-		last_sge = (req_current_length + sge_length == req->payload.payload_size);
+		last_sge = (req_current_length + sge_length == req->payload.size);
 
 		/*
 		 * The end of the SGE is invalid if the end address is not page aligned,
@@ -291,7 +291,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 		 *  In this case, we do not create a child request at all - we just send
 		 *  the original request as a single request at the end of this function.
 		 */
-		child_equals_parent = (child_length + sge_length == req->payload.payload_size);
+		child_equals_parent = (child_length + sge_length == req->payload.size);
 
 		if (start_valid) {
 			/*
@@ -303,7 +303,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			 */
 			child_length += sge_length;
 			req_current_length += sge_length;
-			if (req_current_length < req->payload.payload_size) {
+			if (req_current_length < req->payload.size) {
 				next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
 				/*
 				 * If the next SGE is not page aligned, we will need to create a
@@ -357,7 +357,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 		}
 	}
 
-	if (child_length == req->payload.payload_size) {
+	if (child_length == req->payload.size) {
 		/* No splitting was required, so setup the whole payload as one request. */
 		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag, cdw13);
 	}
@@ -374,7 +374,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 {
 	spdk_nvme_req_reset_sgl_cb reset_sgl_fn = req->payload.reset_sgl_fn;
 	spdk_nvme_req_next_sge_cb next_sge_fn = req->payload.next_sge_fn;
-	uint32_t payload_offset = req->payload.payload_offset;
+	uint32_t payload_offset = req->payload.offset;
 	uint32_t md_offset = req->payload.md_offset;
 	void *sgl_cb_arg = req->payload.contig_or_cb_arg;
 	uint64_t child_lba = lba;
@@ -389,18 +389,18 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 	reset_sgl_fn(sgl_cb_arg, payload_offset);
 	num_sges = 0;
 
-	while (req_current_length < req->payload.payload_size) {
+	while (req_current_length < req->payload.size) {
 		next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
 
-		if (req_current_length + sge_length > req->payload.payload_size) {
-			sge_length = req->payload.payload_size - req_current_length;
+		if (req_current_length + sge_length > req->payload.size) {
+			sge_length = req->payload.size - req_current_length;
 		}
 
 		accumulated_length += sge_length;
 		req_current_length += sge_length;
 		num_sges++;
 
-		if (num_sges < max_sges && req_current_length < req->payload.payload_size) {
+		if (num_sges < max_sges && req_current_length < req->payload.size) {
 			continue;
 		}
 
@@ -410,7 +410,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 		 *  create a child request when no splitting is required - in that case we will
 		 *  fall-through and just create a single request with no children for the entire I/O.
 		 */
-		if (accumulated_length != req->payload.payload_size) {
+		if (accumulated_length != req->payload.size) {
 			uint32_t child_lba_count;
 			uint32_t child_length;
 			uint32_t extra_length;
@@ -455,7 +455,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 		}
 	}
 
-	if (accumulated_length == req->payload.payload_size) {
+	if (accumulated_length == req->payload.size) {
 		/* No splitting was required, so setup the whole payload as one request. */
 		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag, cdw13);
 	}
@@ -471,7 +471,7 @@ _nvme_ns_cmd_split_request_prp_iov(struct spdk_nvme_ns *ns,
 				   uint16_t apptag_mask, uint16_t apptag, uint32_t cdw13)
 {
 	struct spdk_iov_sgl iov_sgl;
-	uint32_t payload_offset = req->payload.payload_offset;
+	uint32_t payload_offset = req->payload.offset;
 	uint32_t md_offset = req->payload.md_offset;
 	bool start_valid, end_valid, last_sge, child_equals_parent;
 	uint64_t child_lba = lba;
@@ -485,11 +485,11 @@ _nvme_ns_cmd_split_request_prp_iov(struct spdk_nvme_ns *ns,
 	spdk_iov_sgl_init(&iov_sgl, req->payload.iov, req->payload.iov_count, 0);
 	spdk_iov_sgl_advance(&iov_sgl, payload_offset);
 
-	sge_length = spdk_min(iov_sgl.iov->iov_len - iov_sgl.iov_offset, req->payload.payload_size);
+	sge_length = spdk_min(iov_sgl.iov->iov_len - iov_sgl.iov_offset, req->payload.size);
 	address = (uintptr_t)iov_sgl.iov->iov_base + iov_sgl.iov_offset;
 	spdk_iov_sgl_advance(&iov_sgl, sge_length);
 
-	while (req_current_length < req->payload.payload_size) {
+	while (req_current_length < req->payload.size) {
 		/*
 		 * The start of the SGE is invalid if the start address is not page aligned,
 		 *  unless it is the first SGE in the child request.
@@ -497,7 +497,7 @@ _nvme_ns_cmd_split_request_prp_iov(struct spdk_nvme_ns *ns,
 		start_valid = child_length == 0 || _is_page_aligned(address, page_size);
 
 		/* Boolean for whether this is the last SGE in the parent request. */
-		last_sge = (req_current_length + sge_length == req->payload.payload_size);
+		last_sge = (req_current_length + sge_length == req->payload.size);
 
 		/*
 		 * The end of the SGE is invalid if the end address is not page aligned,
@@ -511,7 +511,7 @@ _nvme_ns_cmd_split_request_prp_iov(struct spdk_nvme_ns *ns,
 		 *  In this case, we do not create a child request at all - we just send
 		 *  the original request as a single request at the end of this function.
 		 */
-		child_equals_parent = (child_length + sge_length == req->payload.payload_size);
+		child_equals_parent = (child_length + sge_length == req->payload.size);
 
 		if (start_valid) {
 			/*
@@ -523,9 +523,9 @@ _nvme_ns_cmd_split_request_prp_iov(struct spdk_nvme_ns *ns,
 			 */
 			child_length += sge_length;
 			req_current_length += sge_length;
-			if (req_current_length < req->payload.payload_size) {
+			if (req_current_length < req->payload.size) {
 				sge_length = spdk_min(iov_sgl.iov->iov_len - iov_sgl.iov_offset,
-						      req->payload.payload_size - req_current_length);
+						      req->payload.size - req_current_length);
 				address = (uintptr_t)iov_sgl.iov->iov_base + iov_sgl.iov_offset;
 				spdk_iov_sgl_advance(&iov_sgl, sge_length);
 				/*
@@ -581,7 +581,7 @@ _nvme_ns_cmd_split_request_prp_iov(struct spdk_nvme_ns *ns,
 		}
 	}
 
-	if (child_length == req->payload.payload_size) {
+	if (child_length == req->payload.size) {
 		/* No splitting was required, so setup the whole payload as one request. */
 		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag, cdw13);
 	}
@@ -598,7 +598,7 @@ _nvme_ns_cmd_split_request_sgl_iov(struct spdk_nvme_ns *ns,
 				   uint16_t apptag_mask, uint16_t apptag, uint32_t cdw13)
 {
 	struct spdk_iov_sgl iov_sgl;
-	uint32_t payload_offset = req->payload.payload_offset;
+	uint32_t payload_offset = req->payload.offset;
 	uint32_t md_offset = req->payload.md_offset;
 	uint64_t child_lba = lba;
 	uint32_t req_current_length = 0;
@@ -623,17 +623,17 @@ _nvme_ns_cmd_split_request_sgl_iov(struct spdk_nvme_ns *ns,
 	spdk_iov_sgl_init(&iov_sgl, req->payload.iov, req->payload.iov_count, 0);
 	spdk_iov_sgl_advance(&iov_sgl, payload_offset);
 
-	while (req_current_length < req->payload.payload_size) {
+	while (req_current_length < req->payload.size) {
 
 		sge_length = spdk_min(iov_sgl.iov->iov_len - iov_sgl.iov_offset,
-				      req->payload.payload_size - req_current_length);
+				      req->payload.size - req_current_length);
 		spdk_iov_sgl_advance(&iov_sgl, sge_length);
 
 		accumulated_length += sge_length;
 		req_current_length += sge_length;
 		num_sges++;
 
-		if (num_sges < max_sges && req_current_length < req->payload.payload_size) {
+		if (num_sges < max_sges && req_current_length < req->payload.size) {
 			continue;
 		}
 

@@ -1554,8 +1554,8 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	struct nvme_rdma_memory_translation_ctx ctx = {
-		.addr = (uint8_t *)req->payload.contig_or_cb_arg + req->payload.payload_offset,
-		.length = req->payload.payload_size
+		.addr = (uint8_t *)req->payload.contig_or_cb_arg + req->payload.offset,
+		.length = req->payload.size
 	};
 	int rc;
 
@@ -1603,18 +1603,17 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	struct nvme_rdma_memory_translation_ctx ctx = {
-		.addr = (uint8_t *)req->payload.contig_or_cb_arg + req->payload.payload_offset,
-		.length = req->payload.payload_size
+		.addr = (uint8_t *)req->payload.contig_or_cb_arg + req->payload.offset,
+		.length = req->payload.size
 	};
 	int rc;
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_CONTIG);
 
-	if (spdk_unlikely(req->payload.payload_size > NVME_RDMA_MAX_KEYED_SGL_LENGTH)) {
+	if (spdk_unlikely(req->payload.size > NVME_RDMA_MAX_KEYED_SGL_LENGTH)) {
 		NVME_RQPAIR_ERRLOG(rqpair, "SGL length %u exceeds max keyed SGL block size %u\n",
-				   req->payload.payload_size,
-				   NVME_RDMA_MAX_KEYED_SGL_LENGTH);
+				   req->payload.size, NVME_RDMA_MAX_KEYED_SGL_LENGTH);
 		return -1;
 	}
 
@@ -1684,15 +1683,15 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	uint32_t descriptors_size;
 	int rc, max_num_sgl, num_sgl_desc;
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.reset_sgl_fn != NULL);
 	assert(req->payload.next_sge_fn != NULL);
-	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.payload_offset);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.offset);
 
 	max_num_sgl = req->qpair->ctrlr->max_sges;
 
-	remaining_size = req->payload.payload_size;
+	remaining_size = req->payload.size;
 	num_sgl_desc = 0;
 	do {
 		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &ctx.addr, &sge_length);
@@ -1747,13 +1746,13 @@ nvme_rdma_build_iov_request_fill_cmd_with_offset(struct nvme_rdma_qpair *rqpair,
 	struct nvme_rdma_memory_translation_ctx ctx;
 	struct spdk_iov_sgl sgl;
 	struct nvme_request *req = rdma_req->req;
-	uint32_t remaining_size = req->payload.payload_size;
+	uint32_t remaining_size = req->payload.size;
 	uint32_t max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, req->payload.iov_count);
 	uint32_t i;
 	int rc;
 
 	spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
-	spdk_iov_sgl_advance(&sgl, req->payload.payload_offset);
+	spdk_iov_sgl_advance(&sgl, req->payload.offset);
 
 	for (i = 0; i < max_num_sgl && remaining_size > 0; i++) {
 		ctx.length = spdk_min(sgl.iov->iov_len - sgl.iov_offset, remaining_size);
@@ -1791,7 +1790,7 @@ nvme_rdma_build_iov_request_fill_cmd(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_rdma_memory_translation_ctx ctx;
 	struct nvme_request *req = rdma_req->req;
-	uint32_t i, remaining_size = req->payload.payload_size;
+	uint32_t i, remaining_size = req->payload.size;
 	uint32_t max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, req->payload.iov_count);
 	int rc;
 
@@ -1833,10 +1832,10 @@ nvme_rdma_build_iov_request(struct nvme_rdma_qpair *rqpair,
 	uint32_t descriptors_size;
 	int rc, num_sgl_desc;
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
 
-	if (req->payload.payload_offset != 0) {
+	if (req->payload.offset != 0) {
 		rc = nvme_rdma_build_iov_request_fill_cmd_with_offset(rqpair, rdma_req, cmd);
 	} else {
 		rc = nvme_rdma_build_iov_request_fill_cmd(rqpair, rdma_req, cmd);
@@ -1873,24 +1872,24 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	uint32_t length;
 	int rc;
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.reset_sgl_fn != NULL);
 	assert(req->payload.next_sge_fn != NULL);
-	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.payload_offset);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.offset);
 
 	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &ctx.addr, &length);
 	if (spdk_unlikely(rc)) {
 		return -1;
 	}
 
-	if (length < req->payload.payload_size) {
+	if (length < req->payload.size) {
 		NVME_RQPAIR_DEBUGLOG(rqpair, "Inline SGL request split so sending separately.\n");
 		return nvme_rdma_build_sgl_request(rqpair, rdma_req);
 	}
 
-	if (length > req->payload.payload_size) {
-		length = req->payload.payload_size;
+	if (length > req->payload.size) {
+		length = req->payload.size;
 	}
 
 	ctx.length = length;
@@ -1912,7 +1911,7 @@ nvme_rdma_build_iov_inline_request(struct nvme_rdma_qpair *rqpair,
 	struct nvme_rdma_memory_translation_ctx ctx;
 	int rc;
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
 
 	if (req->payload.iov_count > 1) {
@@ -1920,10 +1919,10 @@ nvme_rdma_build_iov_inline_request(struct nvme_rdma_qpair *rqpair,
 		return nvme_rdma_build_iov_request(rqpair, rdma_req);
 	}
 
-	ctx.addr = (uint8_t *)req->payload.iov[0].iov_base + req->payload.payload_offset;
-	ctx.length = spdk_min(req->payload.iov[0].iov_len - req->payload.payload_offset,
-			      req->payload.payload_size);
-	assert(ctx.length == req->payload.payload_size);
+	ctx.addr = (uint8_t *)req->payload.iov[0].iov_base + req->payload.offset;
+	ctx.length = spdk_min(req->payload.iov[0].iov_len - req->payload.offset,
+			      req->payload.size);
+	assert(ctx.length == req->payload.size);
 
 	rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
 	if (spdk_unlikely(rc)) {
@@ -2016,7 +2015,7 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 	void *accel_seq = req->accel_sequence;
 	struct iovec *iovs = rdma_req->iovs;
 	uint32_t iovcnt = 0;
-	uint32_t payload_size = req->payload.payload_size;
+	uint32_t payload_size = req->payload.size;
 	int rc;
 
 	NVME_RQPAIR_DEBUGLOG(rqpair, "req %p, start accel seq %p\n", rdma_req, accel_seq);
@@ -2026,7 +2025,7 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 		uint32_t sge_length;
 
 		assert(payload_size);
-		req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.payload_offset);
+		req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.offset);
 		do {
 			rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &addr, &sge_length);
 			if (spdk_unlikely(rc)) {
@@ -2048,14 +2047,14 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 	break;
 	case NVME_PAYLOAD_TYPE_CONTIG:
 		iovs[0].iov_base = req->payload.contig_or_cb_arg;
-		iovs[0].iov_len = req->payload.payload_size;
+		iovs[0].iov_len = req->payload.size;
 		iovcnt++;
 		break;
 	case NVME_PAYLOAD_TYPE_IOV:
-		if (req->payload.payload_offset != 0) {
+		if (req->payload.offset != 0) {
 			/* Split reuqest, need to advance iovs and copy them to the req's iovs */
 			spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
-			spdk_iov_sgl_advance(&sgl, req->payload.payload_offset);
+			spdk_iov_sgl_advance(&sgl, req->payload.offset);
 			do {
 				iovs[iovcnt].iov_base = (uint8_t *)sgl.iov->iov_base + sgl.iov_offset;
 				iovs[iovcnt].iov_len = spdk_min(payload_size, sgl.iov->iov_len - sgl.iov_offset);
@@ -2150,7 +2149,7 @@ nvme_rdma_memory_domain_transfer_data(struct spdk_memory_domain *dst_domain, voi
 	NVME_RQPAIR_DEBUGLOG(rqpair, "req %p, addr %p, len %zu, key %u\n", rdma_req, ctx.addr, ctx.length,
 			     ctx.rkey);
 	icd_supported = spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER
-			&& req->payload.payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0;
+			&& req->payload.size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0;
 
 	/* We expect that result of accel sequence is a Memory Key which describes a virtually contig address space.
 	 * That means we prepare a contig request even if original payload was scattered */
@@ -2184,9 +2183,9 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rd
 	 * will currently just not use inline data for now.
 	 */
 	icd_supported = spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER
-			&& req->payload.payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0;
+			&& req->payload.size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0;
 
-	if (spdk_unlikely(req->payload.payload_size == 0)) {
+	if (spdk_unlikely(req->payload.size == 0)) {
 		rc = nvme_rdma_build_null_request(rdma_req);
 	} else if (payload_type == NVME_PAYLOAD_TYPE_CONTIG) {
 		if (icd_supported) {

@@ -427,7 +427,7 @@ test_build_contig_hw_sgl_request(void)
 	qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	/* Test 1: Payload covered by a single mapping */
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0xbeef0, NULL);
-	req.payload.payload_size = 100;
+	req.payload.size = 100;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	g_vtophys_size = 100;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
@@ -447,8 +447,8 @@ test_build_contig_hw_sgl_request(void)
 	/* Test 2: Payload covered by a single mapping, but request is at an offset */
 	qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0xbeef0, NULL);
-	req.payload.payload_size = 100;
-	req.payload.payload_offset = 50;
+	req.payload.size = 100;
+	req.payload.offset = 50;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	g_vtophys_size = 1000;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
@@ -468,7 +468,7 @@ test_build_contig_hw_sgl_request(void)
 	/* Test 3: Payload spans two mappings */
 	qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0xbeef0, NULL);
-	req.payload.payload_size = 100;
+	req.payload.size = 100;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	g_vtophys_size = 60;
 	tr.prp_sgl_bus_addr = 0xFF0FF;
@@ -617,7 +617,7 @@ test_nvme_pcie_qpair_build_prps_sgl_request(void)
 	qpair.ctrlr = &ctrlr;
 	req.payload = NVME_PAYLOAD_SGL(nvme_pcie_ut_reset_sgl, nvme_pcie_ut_next_sge, &bio, NULL);
 	req.payload_type = NVME_PAYLOAD_TYPE_SGL;
-	req.payload.payload_size = 4096;
+	req.payload.size = 4096;
 	ctrlr.page_size = 4096;
 	bio.iovs[0].iov_base = (void *)0x100000;
 	bio.iovs[0].iov_len = 4096;
@@ -651,7 +651,7 @@ test_nvme_pcie_qpair_build_prps_iov_request(void)
 	req.payload.iov = iovs;
 	req.payload.iov_count = 4;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
-	req.payload.payload_size = 16384;
+	req.payload.size = 16384;
 
 	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
 	CU_ASSERT(rc == 0);
@@ -665,8 +665,8 @@ test_nvme_pcie_qpair_build_prps_iov_request(void)
 	req.payload.iov = iovs;
 	req.payload.iov_count = 3;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
-	req.payload.payload_size = 12288;
-	req.payload.payload_offset = 4096;
+	req.payload.size = 12288;
+	req.payload.offset = 4096;
 
 	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
 	CU_ASSERT(rc == 0);
@@ -679,8 +679,8 @@ test_nvme_pcie_qpair_build_prps_iov_request(void)
 	req.payload.iov = iovs;
 	req.payload.iov_count = 2;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
-	req.payload.payload_size = 8192;
-	req.payload.payload_offset = 4096;
+	req.payload.size = 8192;
+	req.payload.offset = 4096;
 
 	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
 	CU_ASSERT(rc == 0);
@@ -691,8 +691,8 @@ test_nvme_pcie_qpair_build_prps_iov_request(void)
 	req.payload.iov = iovs;
 	req.payload.iov_count = 2;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
-	req.payload.payload_size = 4096;
-	req.payload.payload_offset = 0;
+	req.payload.size = 4096;
+	req.payload.offset = 0;
 
 	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
 	CU_ASSERT(rc == 0);
@@ -703,8 +703,8 @@ test_nvme_pcie_qpair_build_prps_iov_request(void)
 	req.payload.iov = iovs;
 	req.payload.iov_count = 2;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
-	req.payload.payload_size = 8192;
-	req.payload.payload_offset = 4095;
+	req.payload.size = 8192;
+	req.payload.offset = 4095;
 
 	rc = nvme_pcie_qpair_build_prps_iov_request(qpair, &req, &tr, false);
 	CU_ASSERT(rc != 0);
@@ -730,7 +730,7 @@ test_nvme_pcie_qpair_build_hw_sgl_request(void)
 	g_vtophys_size = 4096;
 
 	/* Multiple vectors, 2k + 4k + 2k */
-	req.payload.payload_size = 8192;
+	req.payload.size = 8192;
 	bio.iovpos = 3;
 	bio.iovs[0].iov_base = (void *)0xDBADBEE0;
 	bio.iovs[0].iov_len = 2048;
@@ -765,7 +765,7 @@ test_nvme_pcie_qpair_build_hw_sgl_request(void)
 	req.payload = NVME_PAYLOAD_SGL(nvme_pcie_ut_reset_sgl, nvme_pcie_ut_next_sge, &bio, NULL);
 	req.payload_type = NVME_PAYLOAD_TYPE_SGL;
 	req.cmd.opc = SPDK_NVME_OPC_WRITE;
-	req.payload.payload_size = 4096;
+	req.payload.size = 4096;
 	bio.iovpos = 1;
 	bio.iovs[0].iov_base = (void *)0xDBADBEE0;
 	bio.iovs[0].iov_len = 4096;
@@ -804,7 +804,7 @@ test_nvme_pcie_qpair_build_hw_iov_request(void)
 	g_vtophys_size = 4096;
 
 	/* Multiple vectors, 2k + 4k + 2k */
-	req.payload.payload_size = 8192;
+	req.payload.size = 8192;
 	iovs[0].iov_base = (void *)0xDBADBEE0;
 	iovs[0].iov_len = 2048;
 	iovs[1].iov_base = (void *)0xDCADBEE0;
@@ -834,8 +834,8 @@ test_nvme_pcie_qpair_build_hw_iov_request(void)
 	req.payload.iov = iovs;
 	req.payload.iov_count = 3;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
-	req.payload.payload_offset = 4096;
-	req.payload.payload_size = 8192;
+	req.payload.offset = 4096;
+	req.payload.size = 8192;
 	iovs[0].iov_base = (void *)0xDBADBEE0;
 	iovs[0].iov_len = 2048 + 4096; /* offset 4k */
 	iovs[1].iov_base = (void *)0xDCADBEE0;
@@ -869,7 +869,7 @@ test_nvme_pcie_qpair_build_hw_iov_request(void)
 	req.payload.iov_count = 1;
 	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
 	req.cmd.opc = SPDK_NVME_OPC_WRITE;
-	req.payload.payload_size = 4096;
+	req.payload.size = 4096;
 	iovs[0].iov_base = (void *)0xDBADBEE0;
 	iovs[0].iov_len = 4096;
 
@@ -901,7 +901,7 @@ test_nvme_pcie_qpair_build_contig_request(void)
 	/* 1 prp, 4k-aligned */
 	prp_list_prep(&tr, &req, NULL, &pqpair.qpair);
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0x100000, NULL);
-	req.payload.payload_size = 0x1000;
+	req.payload.size = 0x1000;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 
 	rc = nvme_pcie_qpair_build_contig_request(&pqpair.qpair, &req, &tr, true);
@@ -911,8 +911,8 @@ test_nvme_pcie_qpair_build_contig_request(void)
 	/* 2 prps, non-4K-aligned */
 	prp_list_prep(&tr, &req, NULL, &pqpair.qpair);
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0x100000, NULL);
-	req.payload.payload_size = 0x1000;
-	req.payload.payload_offset = 0x800;
+	req.payload.size = 0x1000;
+	req.payload.offset = 0x800;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 
 	rc = nvme_pcie_qpair_build_contig_request(&pqpair.qpair, &req, &tr, true);
@@ -923,7 +923,7 @@ test_nvme_pcie_qpair_build_contig_request(void)
 	/* 3 prps, 4k-aligned */
 	prp_list_prep(&tr, &req, NULL, &pqpair.qpair);
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0x100000, NULL);
-	req.payload.payload_size = 0x3000;
+	req.payload.size = 0x3000;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 
 	rc = nvme_pcie_qpair_build_contig_request(&pqpair.qpair, &req, &tr, true);
@@ -936,7 +936,7 @@ test_nvme_pcie_qpair_build_contig_request(void)
 	/* address not dword aligned */
 	prp_list_prep(&tr, &req, NULL, &pqpair.qpair);
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0x100001, NULL);
-	req.payload.payload_size = 0x3000;
+	req.payload.size = 0x3000;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	req.qpair = &pqpair.qpair;
 	TAILQ_INIT(&pqpair.outstanding_tr);

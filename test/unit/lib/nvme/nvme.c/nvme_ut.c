@@ -638,7 +638,7 @@ test_nvme_user_copy_cmd_complete(void)
 	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
 	req.payload.contig_or_cb_arg = buff;
-	req.payload.payload_size = buff_size;
+	req.payload.size = buff_size;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
@@ -665,7 +665,7 @@ test_nvme_user_copy_cmd_complete(void)
 	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
 	req.payload.contig_or_cb_arg = buff;
-	req.payload.payload_size = buff_size;
+	req.payload.size = buff_size;
 	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
@@ -743,7 +743,7 @@ test_nvme_allocate_request(void)
 	CU_ASSERT(qpair.num_outstanding_reqs == 1);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
-	CU_ASSERT(req->payload.payload_size == payload_struct_size);
+	CU_ASSERT(req->payload.size == payload_struct_size);
 }
 
 static void

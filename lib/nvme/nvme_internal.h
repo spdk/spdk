@@ -244,13 +244,13 @@ struct nvme_payload {
 		};
 	};
 
-	uint32_t payload_size;
+	uint32_t size;
 
 	/**
 	 * Offset in bytes from the beginning of payload for this request.
 	 * This is used for I/O commands that are split into multiple requests.
 	 */
-	uint32_t payload_offset;
+	uint32_t offset;
 
 	/**
 	 * Extended IO options passed by the user
@@ -1501,9 +1501,9 @@ nvme_request_clear(struct nvme_request *req)
 		req->cb_arg = _cb_arg;				\
 		req->payload.contig_or_cb_arg = _buffer;	\
 		req->payload.md = _md;				\
-		req->payload.payload_size = _payload_size;	\
+		req->payload.size = _payload_size;		\
 		req->payload.md_size = _md_size;		\
-		req->payload.payload_offset = _payload_offset;	\
+		req->payload.offset = _payload_offset;		\
 		req->payload.md_offset = _md_offset;		\
 		req->payload.opts = NULL;			\
 		req->accel_sequence = NULL;			\
@@ -1519,9 +1519,9 @@ nvme_request_clear(struct nvme_request *req)
 		req->payload.next_sge_fn = _next_sge_fn;	\
 		req->payload.contig_or_cb_arg = _sg_cb_arg;	\
 		req->payload.md = _md;				\
-		req->payload.payload_size = _payload_size;	\
+		req->payload.size = _payload_size;		\
 		req->payload.md_size = _md_size;		\
-		req->payload.payload_offset = _payload_offset;	\
+		req->payload.offset = _payload_offset;		\
 		req->payload.md_offset = _md_offset;		\
 		req->payload.opts = NULL;			\
 		req->accel_sequence = NULL;			\
@@ -1536,9 +1536,9 @@ nvme_request_clear(struct nvme_request *req)
 		req->payload.iov = _iov;			\
 		req->payload.iov_count = _iov_count;		\
 		req->payload.md = _md;				\
-		req->payload.payload_size = _payload_size;	\
+		req->payload.size = _payload_size;		\
 		req->payload.md_size = _md_size;		\
-		req->payload.payload_offset = _payload_offset;	\
+		req->payload.offset = _payload_offset;		\
 		req->payload.md_offset = _md_offset;		\
 		req->payload.opts = NULL;			\
 		req->accel_sequence = NULL;			\
@@ -1625,7 +1625,7 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 	struct nvme_error_cmd           *cmd;
 
 	if (spdk_unlikely(qpair->collect_stats)) {
-		spdk_nvme_qpair_io_stats_update(&qpair->io_stats, &req->cmd, req->payload.payload_size);
+		spdk_nvme_qpair_io_stats_update(&qpair->io_stats, &req->cmd, req->payload.size);
 	}
 
 	if (spdk_unlikely(req->accel_sequence != NULL)) {
@@ -1677,7 +1677,7 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 static inline void
 nvme_cleanup_user_req(struct nvme_request *req)
 {
-	if (req->user_buffer && req->payload.payload_size) {
+	if (req->user_buffer && req->payload.size) {
 		spdk_free(req->payload.contig_or_cb_arg);
 		req->user_buffer = NULL;
 	}

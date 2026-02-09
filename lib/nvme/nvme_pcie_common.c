@@ -1324,8 +1324,8 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	int rc;
 
 	rc = nvme_pcie_prp_list_append(qpair, tr, &prp_index,
-				       (uint8_t *)req->payload.contig_or_cb_arg + req->payload.payload_offset,
-				       req->payload.payload_size, qpair->ctrlr->page_size);
+				       (uint8_t *)req->payload.contig_or_cb_arg + req->payload.offset,
+				       req->payload.size, qpair->ctrlr->page_size);
 	if (rc) {
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 	} else {
@@ -1351,17 +1351,17 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 	struct spdk_nvme_sgl_descriptor *sgl;
 	uint32_t nseg = 0;
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_CONTIG);
 
 	sgl = tr->u.sgl;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
 
-	length = req->payload.payload_size;
+	length = req->payload.size;
 	/* ubsan complains about applying zero offset to null pointer if contig_or_cb_arg is NULL,
 	 * so just double cast it to make it go away */
-	virt_addr = (uint8_t *)((uintptr_t)req->payload.contig_or_cb_arg + req->payload.payload_offset);
+	virt_addr = (uint8_t *)((uintptr_t)req->payload.contig_or_cb_arg + req->payload.offset);
 
 	while (length > 0) {
 		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
@@ -1461,17 +1461,17 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	/*
 	 * Build scattered payloads.
 	 */
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.reset_sgl_fn != NULL);
 	assert(req->payload.next_sge_fn != NULL);
-	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.payload_offset);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.offset);
 
 	sgl = tr->u.sgl;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
 
-	remaining_transfer_len = req->payload.payload_size;
+	remaining_transfer_len = req->payload.size;
 
 	while (remaining_transfer_len > 0 && nseg < NVME_MAX_SGL_DESCRIPTORS) {
 		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg,
@@ -1579,9 +1579,9 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	 */
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.reset_sgl_fn != NULL);
-	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.payload_offset);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload.offset);
 
-	remaining_transfer_len = req->payload.payload_size;
+	remaining_transfer_len = req->payload.size;
 	while (remaining_transfer_len > 0) {
 		assert(req->payload.next_sge_fn != NULL);
 		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
@@ -1630,17 +1630,17 @@ nvme_pcie_qpair_build_hw_iov_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	uint32_t nseg = 0;
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
-	assert(req->payload.payload_size != 0);
+	assert(req->payload.size != 0);
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
 
 	sgl = tr->u.sgl;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
 
-	remaining_transfer_len = req->payload.payload_size;
+	remaining_transfer_len = req->payload.size;
 
 	spdk_iov_sgl_init(&iov_sgl, req->payload.iov, req->payload.iov_count, 0);
-	spdk_iov_sgl_advance(&iov_sgl, req->payload.payload_offset);
+	spdk_iov_sgl_advance(&iov_sgl, req->payload.offset);
 
 	while (remaining_transfer_len > 0 && nseg < NVME_MAX_SGL_DESCRIPTORS) {
 		remaining_user_sge_len = spdk_min(iov_sgl.iov->iov_len - iov_sgl.iov_offset,
@@ -1738,10 +1738,10 @@ nvme_pcie_qpair_build_prps_iov_request_fill_with_offset(struct spdk_nvme_qpair *
 	uint32_t page_size = qpair->ctrlr->page_size;
 	struct spdk_iov_sgl sgl;
 
-	remaining_transfer_len = req->payload.payload_size;
+	remaining_transfer_len = req->payload.size;
 
 	spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
-	spdk_iov_sgl_advance(&sgl, req->payload.payload_offset);
+	spdk_iov_sgl_advance(&sgl, req->payload.offset);
 
 	while (remaining_transfer_len > 0) {
 		length = spdk_min(sgl.iov->iov_len - sgl.iov_offset, remaining_transfer_len);
@@ -1779,7 +1779,7 @@ nvme_pcie_qpair_build_prps_iov_request_fill(struct spdk_nvme_qpair *qpair,
 	uint32_t i;
 	uint32_t page_size = qpair->ctrlr->page_size;
 
-	remaining_transfer_len = req->payload.payload_size;
+	remaining_transfer_len = req->payload.size;
 
 	for (i = 0; i < req->payload.iov_count && remaining_transfer_len > 0; i++) {
 		length = spdk_min(req->payload.iov[i].iov_len, remaining_transfer_len);
@@ -1814,7 +1814,7 @@ nvme_pcie_qpair_build_prps_iov_request(struct spdk_nvme_qpair *qpair, struct nvm
 {
 	assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_IOV);
 
-	if (req->payload.payload_offset != 0) {
+	if (req->payload.offset != 0) {
 		return nvme_pcie_qpair_build_prps_iov_request_fill_with_offset(qpair, req, tr);
 	} else {
 		return nvme_pcie_qpair_build_prps_iov_request_fill(qpair, req, tr);
@@ -1923,7 +1923,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	/* Use PRP by default. This bit will be overridden below if needed. */
 	req->cmd.psdt = SPDK_NVME_PSDT_PRP;
 
-	if (req->payload.payload_size != 0) {
+	if (req->payload.size != 0) {
 		payload_type = nvme_req_payload_type(req);
 		/* According to the specification, PRPs shall be used for all
 		 *  Admin commands for NVMe over PCIe implementations.
