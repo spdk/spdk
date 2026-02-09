@@ -80,6 +80,56 @@ static bool g_nohuge_alloc = false;
 static struct spdk_cpuset g_all_cpuset;
 static struct spdk_poller *g_perf_timer = NULL;
 
+static const struct option g_bdevperf_long_opts[] = {
+#define QUEUE_DEPTH_OPT_IDX	'q'
+	{"queue-depth",			required_argument,	NULL, QUEUE_DEPTH_OPT_IDX},
+#define IO_SIZE_OPT_IDX		'o'
+	{"io-size",			required_argument,	NULL, IO_SIZE_OPT_IDX},
+#define WORKLOAD_OPT_IDX	'w'
+	{"workload",			required_argument,	NULL, WORKLOAD_OPT_IDX},
+#define TIME_OPT_IDX		't'
+	{"time",			required_argument,	NULL, TIME_OPT_IDX},
+#define TIMEOUT_OPT_IDX		'k'
+	{"timeout",			required_argument,	NULL, TIMEOUT_OPT_IDX},
+#define RW_PERCENTAGE_OPT_IDX	'M'
+	{"rwmixread",			required_argument,	NULL, RW_PERCENTAGE_OPT_IDX},
+#define EXP_MOVING_AVG_OPT_IDX	'P'
+	{"exp-moving-avg",		required_argument,	NULL, EXP_MOVING_AVG_OPT_IDX},
+#define STATS_PERIOD_OPT_IDX	'S'
+	{"stats-period",		required_argument,	NULL, STATS_PERIOD_OPT_IDX},
+#define BDEV_NAME_OPT_IDX	'T'
+	{"bdev",			required_argument,	NULL, BDEV_NAME_OPT_IDX},
+#define CONTINUE_ON_FAILURE_OPT_IDX 'f'
+	{"continue-on-failure",		no_argument,		NULL, CONTINUE_ON_FAILURE_OPT_IDX},
+#define ZIPF_OPT_IDX		'F'
+	{"zipf",			required_argument,	NULL, ZIPF_OPT_IDX},
+#define ZCOPY_OPT_IDX		'Z'
+	{"zcopy",			no_argument,		NULL, ZCOPY_OPT_IDX},
+#define WAIT_TESTS_OPT_IDX	'z'
+	{"wait-for-tests",		no_argument,		NULL, WAIT_TESTS_OPT_IDX},
+#define ABORT_OPT_IDX		'X'
+	{"abort",			no_argument,		NULL, ABORT_OPT_IDX},
+#define ALL_CORES_OPT_IDX	'C'
+	{"all-cores",			no_argument,		NULL, ALL_CORES_OPT_IDX},
+#define JOB_CONFIG_OPT_IDX	'j'
+	{"job-config",			required_argument,	NULL, JOB_CONFIG_OPT_IDX},
+#define LATENCY_HISTOGRAM_OPT_IDX 'l'
+	{"latency-histogram",		no_argument,		NULL, LATENCY_HISTOGRAM_OPT_IDX},
+#define RANDOM_MAP_OPT_IDX	'D'
+	{"random-map",			no_argument,		NULL, RANDOM_MAP_OPT_IDX},
+#define THREAD_PER_LCORE_OPT_IDX 'E'
+	{"thread-per-lcore",		no_argument,		NULL, THREAD_PER_LCORE_OPT_IDX},
+#define LOG_RPC_OPT_IDX		'J'
+	{"log-rpc",			required_argument,	NULL, LOG_RPC_OPT_IDX},
+#define UNIQUE_WRITE_DATA_OPT_IDX 'U'
+	{"unique-write-data",		no_argument,		NULL, UNIQUE_WRITE_DATA_OPT_IDX},
+#define HIDE_METADATA_OPT_IDX	'N'
+	{"hide-metadata",		no_argument,		NULL, HIDE_METADATA_OPT_IDX},
+#define NO_HUGE_ALLOC_OPT_IDX	'H'
+	{"no-huge-alloc",		no_argument,		NULL, NO_HUGE_ALLOC_OPT_IDX},
+	{NULL, 0, NULL, 0},
+};
+
 static void bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task);
 static void rpc_perform_tests_cb(void);
 static int bdevperf_parse_arg(int ch, char *arg);
@@ -2722,7 +2772,7 @@ rpc_apply_bdevperf_params(struct rpc_bdevperf_params *params)
 		g_queue_depth = params->queue_depth;
 	}
 	if (params->io_size) {
-		bdevperf_parse_arg('o', params->io_size);
+		bdevperf_parse_arg(IO_SIZE_OPT_IDX, params->io_size);
 	}
 	if (params->time_in_sec) {
 		g_time_in_sec = params->time_in_sec;
@@ -2821,23 +2871,23 @@ bdevperf_parse_arg(int ch, char *arg)
 {
 	long long tmp;
 
-	if (ch == 'w') {
+	if (ch == WORKLOAD_OPT_IDX) {
 		g_workload_type = strdup(arg);
-	} else if (ch == 'T') {
+	} else if (ch == BDEV_NAME_OPT_IDX) {
 		g_job_bdev_name = arg;
-	} else if (ch == 'z') {
+	} else if (ch == WAIT_TESTS_OPT_IDX) {
 		g_wait_for_tests = true;
-	} else if (ch == 'Z') {
+	} else if (ch == ZCOPY_OPT_IDX) {
 		g_zcopy = true;
-	} else if (ch == 'X') {
+	} else if (ch == ABORT_OPT_IDX) {
 		g_abort = true;
-	} else if (ch == 'C') {
+	} else if (ch == ALL_CORES_OPT_IDX) {
 		g_multithread_mode = true;
-	} else if (ch == 'f') {
+	} else if (ch == CONTINUE_ON_FAILURE_OPT_IDX) {
 		g_continue_on_failure = true;
-	} else if (ch == 'j') {
+	} else if (ch == JOB_CONFIG_OPT_IDX) {
 		g_bdevperf_conf_file = arg;
-	} else if (ch == 'F') {
+	} else if (ch == ZIPF_OPT_IDX) {
 		char *endptr;
 
 		errno = 0;
@@ -2846,17 +2896,17 @@ bdevperf_parse_arg(int ch, char *arg)
 			fprintf(stderr, "Illegal zipf theta value %s\n", arg);
 			return -EINVAL;
 		}
-	} else if (ch == 'H') {
+	} else if (ch == NO_HUGE_ALLOC_OPT_IDX) {
 		g_nohuge_alloc = true;
-	} else if (ch == 'l') {
+	} else if (ch == LATENCY_HISTOGRAM_OPT_IDX) {
 		g_latency_display_level++;
-	} else if (ch == 'D') {
+	} else if (ch == RANDOM_MAP_OPT_IDX) {
 		g_random_map = true;
-	} else if (ch == 'E') {
+	} else if (ch == THREAD_PER_LCORE_OPT_IDX) {
 		g_one_thread_per_lcore = true;
-	} else if (ch == 'J') {
+	} else if (ch == LOG_RPC_OPT_IDX) {
 		g_rpc_log_file_name = arg;
-	} else if (ch == 'o') {
+	} else if (ch == IO_SIZE_OPT_IDX) {
 		uint64_t size;
 
 		if (spdk_parse_capacity(arg, &size, NULL) != 0) {
@@ -2864,9 +2914,9 @@ bdevperf_parse_arg(int ch, char *arg)
 			return -EINVAL;
 		}
 		g_io_size = (int)size;
-	} else if (ch == 'U') {
+	} else if (ch == UNIQUE_WRITE_DATA_OPT_IDX) {
 		g_unique_writes = true;
-	} else if (ch == 'N') {
+	} else if (ch == HIDE_METADATA_OPT_IDX) {
 		g_hide_metadata = true;
 	} else {
 		tmp = spdk_strtoll(arg, 10);
@@ -2879,23 +2929,23 @@ bdevperf_parse_arg(int ch, char *arg)
 		}
 
 		switch (ch) {
-		case 'q':
+		case QUEUE_DEPTH_OPT_IDX:
 			g_queue_depth = tmp;
 			break;
-		case 't':
+		case TIME_OPT_IDX:
 			g_time_in_sec = tmp;
 			break;
-		case 'k':
+		case TIMEOUT_OPT_IDX:
 			g_timeout_in_sec = tmp;
 			break;
-		case 'M':
+		case RW_PERCENTAGE_OPT_IDX:
 			g_rw_percentage = tmp;
 			g_mix_specified = true;
 			break;
-		case 'P':
+		case EXP_MOVING_AVG_OPT_IDX:
 			g_show_performance_ema_period = tmp;
 			break;
-		case 'S':
+		case STATS_PERIOD_OPT_IDX:
 			g_summarize_performance = false;
 			g_show_performance_period_in_usec = tmp * SPDK_SEC_TO_USEC;
 			break;
@@ -2909,33 +2959,33 @@ bdevperf_parse_arg(int ch, char *arg)
 static void
 bdevperf_usage(void)
 {
-	printf(" -q <depth>                io depth\n");
-	printf(" -o <size>                 io size in bytes\n");
-	printf(" -w <type>                 io pattern type, must be one of " PATTERN_TYPES_STR "\n");
-	printf(" -t <time>                 time in seconds\n");
-	printf(" -k <timeout>              timeout in seconds to detect starved I/O (default is 0 and disabled)\n");
-	printf(" -M <percent>              rwmixread (100 for reads, 0 for writes)\n");
-	printf(" -P <num>                  number of moving average period\n");
+	printf(" -q, --queue-depth <depth>        io depth\n");
+	printf(" -o, --io-size <size>             io size in bytes\n");
+	printf(" -w, --workload <type>            io pattern type, must be one of " PATTERN_TYPES_STR "\n");
+	printf(" -t, --time <time>                time in seconds\n");
+	printf(" -k, --timeout <timeout>          timeout in seconds to detect starved I/O (default is 0 and disabled)\n");
+	printf(" -M, --rwmixread <percent>        rwmixread (100 for reads, 0 for writes)\n");
+	printf(" -P, --exp-moving-avg <num>       number of moving average period\n");
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
-	printf("\t\t(only valid with -S)\n");
-	printf(" -S <period>               show performance result in real time every <period> seconds\n");
-	printf(" -T <bdev>                 bdev to run against. Default: all available bdevs.\n");
-	printf(" -f                        continue processing I/O even after failures\n");
-	printf(" -F <zipf theta>           use zipf distribution for random I/O\n");
-	printf(" -Z                        enable using zcopy bdev API for read or write I/O\n");
-	printf(" -z                        start bdevperf, but wait for perform_tests RPC to start tests\n");
-	printf("                           (See examples/bdev/bdevperf/bdevperf.py)\n");
-	printf(" -X                        abort timed out I/O\n");
-	printf(" -C                        enable every core to send I/Os to each bdev\n");
-	printf(" -j <filename>             use job config file\n");
-	printf(" -l                        display latency histogram, default: disable. -l display summary, -ll display details\n");
-	printf(" -D                        use a random map for picking offsets not previously read or written (for all jobs)\n");
-	printf(" -E                        share per lcore thread among jobs. Available only if -j is not used.\n");
-	printf(" -J                        File name to open with append mode and log JSON RPC calls.\n");
-	printf(" -U                        generate unique data for each write I/O, has no effect on non-write I/O\n");
-	printf(" -N                        Enable hide_metadata option to each bdev\n");
-	printf(" -H                        allocate non-huge data buffers\n");
+	printf("\t\t(only valid with -S/--stats-period)\n");
+	printf(" -S, --stats-period <period>      show performance result in real time every <period> seconds\n");
+	printf(" -T, --bdev <bdev>                bdev to run against. Default: all available bdevs.\n");
+	printf(" -f, --continue-on-failure        continue processing I/O even after failures\n");
+	printf(" -F, --zipf <zipf theta>          use zipf distribution for random I/O\n");
+	printf(" -Z, --zcopy                      enable using zcopy bdev API for read or write I/O\n");
+	printf(" -z, --wait-for-tests             start bdevperf, but wait for perform_tests RPC to start tests\n");
+	printf("                                  (See examples/bdev/bdevperf/bdevperf.py)\n");
+	printf(" -X, --abort                      abort timed out I/O\n");
+	printf(" -C, --all-cores                  enable every core to send I/Os to each bdev\n");
+	printf(" -j, --job-config <filename>      use job config file\n");
+	printf(" -l, --latency-histogram          display latency histogram, default: disable. -l display summary, -ll display details\n");
+	printf(" -D, --random-map                 use a random map for picking offsets not previously read or written (for all jobs)\n");
+	printf(" -E, --thread-per-lcore           share per lcore thread among jobs. Available only if -j is not used.\n");
+	printf(" -J, --log-rpc                    File name to open with append mode and log JSON RPC calls.\n");
+	printf(" -U, --unique-write-data          generate unique data for each write I/O, has no effect on non-write I/O\n");
+	printf(" -N, --hide-metadata              Enable hide_metadata option to each bdev\n");
+	printf(" -H, --no-huge-alloc              allocate non-huge data buffers\n");
 }
 
 static void
@@ -3055,7 +3105,8 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:HJ:M:P:S:T:Xlj:DUN", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:HJ:M:P:S:T:Xlj:DUN",
+				      g_bdevperf_long_opts,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
