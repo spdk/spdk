@@ -522,6 +522,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 	struct spdk_nvmf_target_opts opts = {
 		.max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS,
 		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
+		.dup_host_policy = SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW,
 	};
 
 	nvmf_target_opts_copy(&opts, _opts, _opts->size);
@@ -563,6 +564,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 	tgt->discovery_genctr = 0;
 	tgt->dhchap_digests = opts.dhchap_digests;
 	tgt->dhchap_dhgroups = opts.dhchap_dhgroups;
+	tgt->dup_host_policy = opts.dup_host_policy;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);
 	TAILQ_INIT(&tgt->referrals);

@@ -3091,6 +3091,61 @@ test_nvmf_subsystem_add_ctrlr(void)
 }
 
 static void
+test_nvmf_subsystem_add_ctrlr_dup_hostid(void)
+{
+	int rc;
+	struct spdk_nvmf_subsystem_listener listener_a = {};
+	struct spdk_nvmf_subsystem_listener listener_b = {};
+	struct spdk_nvmf_ctrlr ctrlr_a = {};
+	struct spdk_nvmf_ctrlr ctrlr_b = {};
+	struct spdk_nvmf_tgt tgt = {
+		.max_subsystems = 1024,
+		.dup_host_policy = SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER,
+	};
+	struct spdk_nvmf_subsystem *subsystem = NULL;
+
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
+	RB_INIT(&tgt.subsystems);
+
+	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+
+	ctrlr_a.subsys = subsystem;
+	ctrlr_a.dynamic_ctrlr = true;
+	ctrlr_a.listener = &listener_a;
+	spdk_uuid_generate(&ctrlr_a.hostid);
+
+	rc = nvmf_subsystem_add_ctrlr(subsystem, &ctrlr_a);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&subsystem->ctrlrs));
+	CU_ASSERT(ctrlr_a.cntlid == 1);
+	CU_ASSERT(nvmf_subsystem_get_ctrlr(subsystem, 1) == &ctrlr_a);
+
+	/* Try to add another dynamic controller with the same hostid on the same listener */
+	ctrlr_b.subsys = subsystem;
+	ctrlr_b.dynamic_ctrlr = true;
+	ctrlr_b.listener = &listener_a;
+	ctrlr_b.hostid = ctrlr_a.hostid;
+	rc = nvmf_subsystem_add_ctrlr(subsystem, &ctrlr_b);
+	CU_ASSERT(rc == -EEXIST);
+
+	/* Validate controller on another listener is allowed */
+	ctrlr_b.listener = &listener_b;
+	rc = nvmf_subsystem_add_ctrlr(subsystem, &ctrlr_b);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr_b.cntlid == 2);
+	CU_ASSERT(nvmf_subsystem_get_ctrlr(subsystem, 2) == &ctrlr_b);
+
+	nvmf_subsystem_remove_ctrlr(subsystem, &ctrlr_a);
+	nvmf_subsystem_remove_ctrlr(subsystem, &ctrlr_b);
+	CU_ASSERT(TAILQ_EMPTY(&subsystem->ctrlrs));
+	rc = spdk_nvmf_subsystem_destroy(subsystem, test_nvmf_subsystem_destroy_cb, NULL);
+	CU_ASSERT(rc == 0);
+	spdk_bit_array_free(&tgt.subsystem_ids);
+}
+
+static void
 _add_transport_cb(void *arg, int status)
 {
 	CU_ASSERT(status == 0);
@@ -3690,6 +3745,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr_dup_hostid);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_host);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_report);
 	CU_ADD_TEST(suite, test_nvmf_nqn_is_valid);

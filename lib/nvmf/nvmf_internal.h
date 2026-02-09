@@ -119,6 +119,8 @@ struct spdk_nvmf_tgt {
 	uint32_t				dhchap_digests;
 	uint32_t				dhchap_dhgroups;
 
+	enum spdk_nvmf_subsystem_dup_host_policy	dup_host_policy;
+
 	TAILQ_ENTRY(spdk_nvmf_tgt)		link;
 };
 

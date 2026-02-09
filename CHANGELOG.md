@@ -24,6 +24,16 @@ are deprecated and will be removed: `buf-cache-size`, `num-shared-buffers`. New 
 number of small or large buffers were added: `iobuf-small-cache-size` and `iobuf-large-cache-size`.
 The transport now selects a buffer from a pool based on IO size.
 
+Add TGT option _Duplicate Host Policy_ (`dup_host_policy`).
+This introduces an enumeration `spdk_nvmf_subsystem_dup_host_policy`, which defines modes of
+restricting hostid reuse across multiple controllers.
+
+1. `_ALLOW` is the default and maintains standards compliant behavior.
+1. `_RESTRICT_PER_LISTENER` places the restriction at the listener level while supporting multipath.
+
+Restricting duplicate hostids is a basic IO fencing mechanism that ensures any previous controller
+has disconnected at the target side before it can conntect again.
+
 ### nvme
 
 Removed the transport APIs poll_group_connect_qpair and poll_group_disconnet_qpair. None of the

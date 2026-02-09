@@ -3001,6 +3001,24 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf
 {
 
 	if (ctrlr->dynamic_ctrlr) {
+		/* If duplicate host policy is restricted per listener, walk the controller list for this
+		 * listener and check for any existing controllers with the same hostid.
+		 * Initiators will be able to create a new controller once the existing one with this hostid
+		 * disconnects or times out.
+		 */
+		if (subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME &&
+		    subsystem->tgt->dup_host_policy == SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER) {
+			struct spdk_nvmf_ctrlr *tmp_ctrlr;
+			TAILQ_FOREACH(tmp_ctrlr, &subsystem->ctrlrs, link) {
+				if (tmp_ctrlr->listener == ctrlr->listener &&
+				    spdk_uuid_compare(&tmp_ctrlr->hostid, &ctrlr->hostid) == 0) {
+					SPDK_ERRLOG("Host ID is already attached to a different controller id 0x%04x\n",
+						    tmp_ctrlr->cntlid);
+					return -EEXIST;
+				}
+			}
+		}
+
 		ctrlr->cntlid = nvmf_subsystem_gen_cntlid(subsystem);
 		if (ctrlr->cntlid == 0xFFFF) {
 			/* Unable to get a cntlid */

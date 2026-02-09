@@ -6,7 +6,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk_internal/cunit.h"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "nvmf/nvmf.c"
 #include "spdk/bdev_module.h"
 
@@ -144,6 +144,38 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 }
 
 static void
+test_nvmf_tgt_options(void)
+{
+	struct spdk_nvmf_target_opts dflt_opts = {
+		.size = SPDK_SIZEOF(&dflt_opts, dhchap_dhgroups),
+		.name = "nvmf_test_tgt",
+	};
+	struct spdk_nvmf_target_opts dup_enable_opts = {
+		.size = SPDK_SIZEOF(&dflt_opts, dup_host_policy),
+		.name = "nvmf_test_tgt",
+		.dup_host_policy = SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER,
+	};
+	struct spdk_nvmf_tgt *tgt;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	/* Ensure dup_host_policy is set to ALLOW when not specified */
+	tgt = spdk_nvmf_tgt_create(&dflt_opts);
+	SPDK_CU_ASSERT_FATAL(tgt);
+	SPDK_CU_ASSERT_FATAL(tgt->dup_host_policy == SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW);
+	spdk_nvmf_tgt_destroy(tgt, NULL, NULL);
+	poll_threads();
+
+	tgt = spdk_nvmf_tgt_create(&dup_enable_opts);
+	SPDK_CU_ASSERT_FATAL(tgt);
+	SPDK_CU_ASSERT_FATAL(
+		tgt->dup_host_policy == SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER);
+	spdk_nvmf_tgt_destroy(tgt, NULL, NULL);
+	poll_threads();
+}
+
+static void
 test_nvmf_tgt_create_poll_group(void)
 {
 	int rc;
@@ -260,6 +292,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_nvmf_tgt_create_poll_group);
 	CU_ADD_TEST(suite, test_nvmf_target_opts_copy_bounds_size);
+	CU_ADD_TEST(suite, test_nvmf_tgt_options);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

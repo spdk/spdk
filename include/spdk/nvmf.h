@@ -70,6 +70,21 @@ typedef bool (*spdk_nvmf_custom_discovery_filter)(
 	const struct spdk_nvme_transport_id *listener_trid,
 	const struct spdk_nvme_transport_id *discovery_cmd_source_trid);
 
+/* Duplicate Host Policy is a basic IO fencing mechanism that ensures an
+ * initiator's previous controller has timed out (from the target side)
+ * before it can connect again and submit IOs.
+ */
+enum spdk_nvmf_subsystem_dup_host_policy {
+	/* Default, standards compliant behavior.
+	 * Multiple controllers in a subsystem can use the same hostid.
+	 */
+	SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW = 0,
+	/* Only a single controller per subsystem listener can have the same hostid.
+	 * Supports multi-path via a host connecting to multiple listeners in the subsystem.
+	 */
+	SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER,
+};
+
 struct spdk_nvmf_target_opts {
 	size_t		size;
 	char		name[NVMF_TGT_NAME_MAX_LENGTH];
@@ -78,6 +93,8 @@ struct spdk_nvmf_target_opts {
 	uint32_t	discovery_filter;
 	uint32_t	dhchap_digests;
 	uint32_t	dhchap_dhgroups;
+
+	enum spdk_nvmf_subsystem_dup_host_policy	dup_host_policy;
 };
 
 struct spdk_nvmf_transport_opts {
