@@ -818,7 +818,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	/* In capsule data size cannot be larger than max I/O size */
 	if (opts->in_capsule_data_size > opts->max_io_size) {
 		SPDK_WARNLOG("TCP param ICD size %u can't be larger than max_io_size %u. Using max_io_size as ICD size\n",
-			     opts->io_unit_size, opts->max_io_size);
+			     opts->in_capsule_data_size, opts->max_io_size);
 		opts->in_capsule_data_size = opts->max_io_size;
 	}
 
