@@ -52,4 +52,22 @@ ut_ns_free(struct spdk_nvme_ns *ns)
 	free(ns);
 }
 
+static inline void
+ut_req_cleanup(struct nvme_request **req)
+{
+	if (*req != NULL) {
+		nvme_free_request(*req);
+		*req = NULL;
+	}
+}
+
+static inline void
+ut_user_req_cleanup(struct nvme_request **req)
+{
+	if (*req != NULL) {
+		nvme_cleanup_user_req(*req);
+	}
+	ut_req_cleanup(req);
+}
+
 #endif /* SPDK_NVME_CMD_UT_COMMON_H */
