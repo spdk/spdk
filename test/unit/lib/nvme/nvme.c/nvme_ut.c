@@ -610,15 +610,18 @@ test_nvme_user_copy_cmd_complete(void)
 	struct spdk_nvme_qpair qpair = {.id = 1};
 	struct nvme_request req;
 	int test_data = 0xdeadbeef;
+	int zero_data = 0;
 	int buff_size = sizeof(int);
 	void *user_buffer, *buff;
 	int user_cb_arg = 0x123;
-	static struct spdk_nvme_cpl cpl;
+	struct spdk_nvme_cpl cpl;
 
 	memset(&req, 0, sizeof(req));
 	memset(&cpl, 0x5a, sizeof(cpl));
 
 	/* test without a user buffer provided */
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
 	req.user_cb_fn = (void *)dummy_cb;
 	req.user_cb_arg = (void *)&user_cb_arg;
 	req.qpair = &qpair;
@@ -648,6 +651,31 @@ test_nvme_user_copy_cmd_complete(void)
 
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(user_buffer, &test_data, buff_size) == 0);
+	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+	CU_ASSERT(req.user_cb_fn == NULL);
+	CU_ASSERT(req.user_cb_arg == NULL);
+	CU_ASSERT(req.user_buffer == NULL);
+
+	/* test with a failure status: the data shouldn't be transferred */
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+	req.user_cb_fn = (void *)dummy_cb;
+	req.user_cb_arg = (void *)&user_cb_arg;
+	req.user_buffer = user_buffer;
+	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
+	memset(req.user_buffer, 0, buff_size);
+	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	SPDK_CU_ASSERT_FATAL(buff != NULL);
+	req.payload.contig_or_cb_arg = buff;
+	req.payload.size = buff_size;
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
+	memcpy(buff, &test_data, buff_size);
+	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+
+	/* zero out the test value set in the callback */
+	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
+
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(memcmp(user_buffer, &zero_data, buff_size) == 0);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
 	CU_ASSERT(req.user_cb_fn == NULL);
 	CU_ASSERT(req.user_cb_arg == NULL);
