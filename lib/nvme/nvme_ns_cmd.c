@@ -330,10 +330,12 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			if ((child_length % ns->extended_lba_size) != 0) {
 				NVME_QPAIR_ERRLOG(qpair, "child_length %u not even multiple of lba_size %u\n",
 						  child_length, ns->extended_lba_size);
+				nvme_request_free_children(req);
 				return -EINVAL;
 			}
 			if (spdk_unlikely(req->accel_sequence != NULL)) {
 				NVME_QPAIR_ERRLOG(qpair, "Splitting requests with accel sequence is unsupported\n");
+				assert(req->num_children == 0);
 				return -EINVAL;
 			}
 
@@ -425,6 +427,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 				if (extra_length >= child_length) {
 					NVME_QPAIR_ERRLOG(qpair, "Unable to send I/O. Would require more than the supported number of "
 							  "SGL Elements.");
+					nvme_request_free_children(req);
 					return -EINVAL;
 				}
 				child_length -= extra_length;
@@ -432,6 +435,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 
 			if (spdk_unlikely(req->accel_sequence != NULL)) {
 				NVME_QPAIR_ERRLOG(qpair, "Splitting requests with accel sequence is unsupported\n");
+				assert(req->num_children == 0);
 				return -EINVAL;
 			}
 
