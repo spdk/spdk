@@ -10,6 +10,7 @@
 #include "spdk/log.h"
 
 #include "spdk_internal/init.h"
+#include "spdk_internal/rpc_autogen.h"
 
 #include "subsystem.h"
 
@@ -51,17 +52,6 @@ rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("framework_get_subsystems", rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
-
-struct rpc_framework_get_config_ctx {
-	char *name;
-	bool with_batches;
-};
-
-static void
-free_rpc_framework_get_config(struct rpc_framework_get_config_ctx *ctx)
-{
-	free(ctx->name);
-}
 
 static const struct spdk_json_object_decoder rpc_framework_get_config_decoders[] = {
 	{"name", offsetof(struct rpc_framework_get_config_ctx, name), spdk_json_decode_string},

@@ -5,36 +5,9 @@
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"
-
 #include "spdk/log.h"
 
-struct rpc_log_flag {
-	char *flag;
-};
-
-struct rpc_log_level {
-	char *level;
-};
-
-static void
-free_rpc_log_flag(struct rpc_log_flag *p)
-{
-	free(p->flag);
-}
-
-static void
-free_rpc_log_level(struct rpc_log_level *p)
-{
-	free(p->level);
-}
-
-static const struct spdk_json_object_decoder rpc_log_set_flag_decoders[] = {
-	{"flag", offsetof(struct rpc_log_flag, flag), spdk_json_decode_string},
-};
-
-static const struct spdk_json_object_decoder rpc_log_set_print_level_decoders[] = {
-	{"level", offsetof(struct rpc_log_level, level), spdk_json_decode_string},
-};
+#include "spdk_internal/rpc_autogen.h"
 
 static int
 _parse_log_level(char *level)
@@ -70,11 +43,15 @@ _log_get_level_name(int level)
 	return NULL;
 }
 
+static const struct spdk_json_object_decoder rpc_log_set_print_level_decoders[] = {
+	{"level", offsetof(struct rpc_log_set_print_level_ctx, level), spdk_json_decode_string},
+};
+
 static void
 rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct rpc_log_level req = {};
+	struct rpc_log_set_print_level_ctx req = {};
 	int level;
 
 	if (spdk_json_decode_object(params, rpc_log_set_print_level_decoders,
@@ -96,7 +73,7 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 	spdk_log_set_print_level(level);
 	spdk_jsonrpc_send_bool_response(request, true);
 end:
-	free_rpc_log_level(&req);
+	free_rpc_log_set_print_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_print_level", rpc_log_set_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -131,15 +108,19 @@ rpc_log_get_print_level(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("log_get_print_level", rpc_log_get_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
+static const struct spdk_json_object_decoder rpc_log_set_level_decoders[] = {
+	{"level", offsetof(struct rpc_log_set_level_ctx, level), spdk_json_decode_string},
+};
+
 static void
 rpc_log_set_level(struct spdk_jsonrpc_request *request,
 		  const struct spdk_json_val *params)
 {
-	struct rpc_log_level req = {};
+	struct rpc_log_set_level_ctx req = {};
 	int level;
 
-	if (spdk_json_decode_object(params, rpc_log_set_print_level_decoders,
-				    SPDK_COUNTOF(rpc_log_set_print_level_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_set_level_decoders,
+				    SPDK_COUNTOF(rpc_log_set_level_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -158,7 +139,7 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 	spdk_log_set_level(level);
 	spdk_jsonrpc_send_bool_response(request, true);
 end:
-	free_rpc_log_level(&req);
+	free_rpc_log_set_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_level", rpc_log_set_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
@@ -191,11 +172,15 @@ rpc_log_get_level(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("log_get_level", rpc_log_get_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
+static const struct spdk_json_object_decoder rpc_log_set_flag_decoders[] = {
+	{"flag", offsetof(struct rpc_log_set_flag_ctx, flag), spdk_json_decode_string},
+};
+
 static void
 rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 		 const struct spdk_json_val *params)
 {
-	struct rpc_log_flag req = {};
+	struct rpc_log_set_flag_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_log_set_flag_decoders,
 				    SPDK_COUNTOF(rpc_log_set_flag_decoders), &req)) {
@@ -214,18 +199,22 @@ rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_send_bool_response(request, true);
 end:
-	free_rpc_log_flag(&req);
+	free_rpc_log_set_flag(&req);
 }
 SPDK_RPC_REGISTER("log_set_flag", rpc_log_set_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static const struct spdk_json_object_decoder rpc_log_clear_flag_decoders[] = {
+	{"flag", offsetof(struct rpc_log_clear_flag_ctx, flag), spdk_json_decode_string},
+};
 
 static void
 rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
-	struct rpc_log_flag req = {};
+	struct rpc_log_clear_flag_ctx req = {};
 
-	if (spdk_json_decode_object(params, rpc_log_set_flag_decoders,
-				    SPDK_COUNTOF(rpc_log_set_flag_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_clear_flag_decoders,
+				    SPDK_COUNTOF(rpc_log_clear_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -241,7 +230,7 @@ rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_send_bool_response(request, true);
 end:
-	free_rpc_log_flag(&req);
+	free_rpc_log_clear_flag(&req);
 }
 SPDK_RPC_REGISTER("log_clear_flag", rpc_log_clear_flag,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -272,19 +261,15 @@ rpc_log_get_flags(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("log_get_flags", rpc_log_get_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-struct rpc_log_enable_timestamps {
-	bool enabled;
-};
-
 static const struct spdk_json_object_decoder rpc_log_enable_timestamps_decoders[] = {
-	{"enabled", offsetof(struct rpc_log_enable_timestamps, enabled), spdk_json_decode_bool},
+	{"enabled", offsetof(struct rpc_log_enable_timestamps_ctx, enabled), spdk_json_decode_bool},
 };
 
 static void
 rpc_log_enable_timestamps(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_log_enable_timestamps req = {};
+	struct rpc_log_enable_timestamps_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_log_enable_timestamps_decoders,
 				    SPDK_COUNTOF(rpc_log_enable_timestamps_decoders),
@@ -298,6 +283,7 @@ rpc_log_enable_timestamps(struct spdk_jsonrpc_request *request,
 	spdk_log_enable_timestamps(req.enabled);
 
 	spdk_jsonrpc_send_bool_response(request, true);
+	free_rpc_log_enable_timestamps(&req);
 }
 SPDK_RPC_REGISTER("log_enable_timestamps", rpc_log_enable_timestamps, SPDK_RPC_RUNTIME)
 SPDK_LOG_REGISTER_COMPONENT(log_rpc)

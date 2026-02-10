@@ -11,27 +11,18 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
+#include "spdk_internal/rpc_autogen.h"
 #include "tgt_internal.h"
 
-struct rpc_set_vfu_path {
-	char		*path;
-};
-
 static const struct spdk_json_object_decoder rpc_vfu_tgt_set_base_path_decoders[] = {
-	{"path", offsetof(struct rpc_set_vfu_path, path), spdk_json_decode_string }
+	{"path", offsetof(struct rpc_vfu_tgt_set_base_path_ctx, path), spdk_json_decode_string }
 };
-
-static void
-free_rpc_vfu_tgt_set_base_path(struct rpc_set_vfu_path *req)
-{
-	free(req->path);
-}
 
 static void
 rpc_vfu_tgt_set_base_path(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_set_vfu_path req = {0};
+	struct rpc_vfu_tgt_set_base_path_ctx req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_vfu_tgt_set_base_path_decoders,

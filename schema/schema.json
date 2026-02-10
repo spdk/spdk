@@ -431,7 +431,6 @@
     },
     {
       "name": "trace_disable_tpoint_group",
-      "decoder": "rpc_trace_enable_tpoint_group_decoders",
       "params": [
         {
           "name": "name",
@@ -460,7 +459,6 @@
     },
     {
       "name": "trace_clear_tpoint_mask",
-      "decoder": "rpc_trace_set_tpoint_mask_decoders",
       "params": [
         {
           "name": "name",
@@ -501,7 +499,6 @@
     },
     {
       "name": "log_set_level",
-      "decoder": "rpc_log_set_print_level_decoders",
       "params": [
         {
           "name": "level",
@@ -528,7 +525,6 @@
     },
     {
       "name": "log_clear_flag",
-      "decoder": "rpc_log_set_flag_decoders",
       "params": [
         {
           "name": "flag",
