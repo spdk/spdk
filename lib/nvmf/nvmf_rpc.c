@@ -3242,6 +3242,12 @@ struct rpc_mdns_prr {
 	char *tgt_name;
 };
 
+static void
+free_rpc_nvmf_publish_mdns_prr(struct rpc_mdns_prr *req)
+{
+	free(req->tgt_name);
+}
+
 static const struct spdk_json_object_decoder rpc_nvmf_publish_mdns_prr_decoders[] = {
 	{"tgt_name", offsetof(struct rpc_mdns_prr, tgt_name), spdk_json_decode_string, true},
 };
@@ -3268,19 +3274,19 @@ rpc_nvmf_publish_mdns_prr(struct spdk_jsonrpc_request *request,
 	if (!tgt) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		free(req.tgt_name);
+		free_rpc_nvmf_publish_mdns_prr(&req);
 		return;
 	}
 
 	rc = nvmf_publish_mdns_prr(tgt);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free(req.tgt_name);
+		free_rpc_nvmf_publish_mdns_prr(&req);
 		return;
 	}
 
 	spdk_jsonrpc_send_bool_response(request, true);
-	free(req.tgt_name);
+	free_rpc_nvmf_publish_mdns_prr(&req);
 }
 SPDK_RPC_REGISTER("nvmf_publish_mdns_prr", rpc_nvmf_publish_mdns_prr, SPDK_RPC_RUNTIME);
 

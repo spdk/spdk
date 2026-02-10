@@ -14,7 +14,7 @@
 
 /* TODO: replace with free_rpc_bdev_null_create */
 static void
-free_rpc_construct_null(struct null_bdev_opts *req)
+free_rpc_bdev_null_create_ctx(struct null_bdev_opts *req)
 {
 	free(req->name);
 }
@@ -63,11 +63,11 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, bdev->name);
 	spdk_jsonrpc_end_result(request, w);
-	free_rpc_construct_null(&req);
+	free_rpc_bdev_null_create_ctx(&req);
 	return;
 
 cleanup:
-	free_rpc_construct_null(&req);
+	free_rpc_bdev_null_create_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_null_create", rpc_bdev_null_create, SPDK_RPC_RUNTIME)
 

@@ -16,7 +16,7 @@ struct rpc_construct_aio_ctx {
 };
 
 static void
-free_rpc_construct_aio(struct rpc_construct_aio_ctx *ctx)
+free_rpc_bdev_aio_create_ctx(struct rpc_construct_aio_ctx *ctx)
 {
 	free_rpc_bdev_aio_create(&ctx->req);
 	free(ctx);
@@ -42,7 +42,7 @@ rpc_bdev_aio_create_cb(void *cb_arg)
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, ctx->req.name);
 	spdk_jsonrpc_end_result(request, w);
-	free_rpc_construct_aio(ctx);
+	free_rpc_bdev_aio_create_ctx(ctx);
 }
 
 static void
@@ -64,7 +64,7 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		free_rpc_construct_aio(ctx);
+		free_rpc_bdev_aio_create_ctx(ctx);
 		return;
 	}
 
@@ -73,7 +73,7 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 			     ctx->req.readonly, ctx->req.fallocate, &ctx->req.uuid, ctx->req.nowait);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free_rpc_construct_aio(ctx);
+		free_rpc_bdev_aio_create_ctx(ctx);
 		return;
 	}
 

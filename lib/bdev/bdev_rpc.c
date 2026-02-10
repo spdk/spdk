@@ -1038,7 +1038,7 @@ struct rpc_bdev_enable_histogram_request {
 };
 
 static void
-free_rpc_bdev_enable_histogram_request(struct rpc_bdev_enable_histogram_request *r)
+free_rpc_bdev_enable_histogram(struct rpc_bdev_enable_histogram_request *r)
 {
 	free(r->name);
 	free(r->opc);
@@ -1116,7 +1116,7 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 	spdk_bdev_close(desc);
 
 cleanup:
-	free_rpc_bdev_enable_histogram_request(&req);
+	free_rpc_bdev_enable_histogram(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_enable_histogram", rpc_bdev_enable_histogram, SPDK_RPC_RUNTIME)
@@ -1132,7 +1132,7 @@ static const struct spdk_json_object_decoder rpc_bdev_get_histogram_decoders[] =
 };
 
 static void
-free_rpc_bdev_get_histogram_request(struct rpc_bdev_get_histogram_request *r)
+free_rpc_bdev_get_histogram(struct rpc_bdev_get_histogram_request *r)
 {
 	free(r->name);
 }
@@ -1227,7 +1227,7 @@ rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 	spdk_bdev_close(desc);
 
 cleanup:
-	free_rpc_bdev_get_histogram_request(&req);
+	free_rpc_bdev_get_histogram(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_get_histogram", rpc_bdev_get_histogram, SPDK_RPC_RUNTIME)

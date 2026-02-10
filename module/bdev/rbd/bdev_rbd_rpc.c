@@ -25,7 +25,7 @@ struct rpc_create_rbd {
 
 /* TODO: replace with free_rpc_bdev_rbd_create */
 static void
-free_rpc_create_rbd(struct rpc_create_rbd *req)
+free_rpc_bdev_rbd_create_ctx(struct rpc_create_rbd *req)
 {
 	free(req->name);
 	free(req->user_id);
@@ -121,7 +121,7 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_create_rbd(&req);
+	free_rpc_bdev_rbd_create_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_create", rpc_bdev_rbd_create, SPDK_RPC_RUNTIME)
 
@@ -196,7 +196,7 @@ SPDK_RPC_REGISTER("bdev_rbd_resize", rpc_bdev_rbd_resize, SPDK_RPC_RUNTIME)
 
 /* TODO: replace with free_rpc_bdev_rbd_register_cluster */
 static void
-free_rpc_register_cluster(struct cluster_register_info *req)
+free_rpc_bdev_rbd_register_cluster_ctx(struct cluster_register_info *req)
 {
 	free(req->name);
 	free(req->user_id);
@@ -242,7 +242,7 @@ rpc_bdev_rbd_register_cluster(struct spdk_jsonrpc_request *request,
 	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
 cleanup:
-	free_rpc_register_cluster(&req);
+	free_rpc_bdev_rbd_register_cluster_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_register_cluster", rpc_bdev_rbd_register_cluster, SPDK_RPC_RUNTIME)
 

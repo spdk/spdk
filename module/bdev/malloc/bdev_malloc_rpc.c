@@ -12,7 +12,7 @@
 
 /* TODO: replace with free_rpc_bdev_malloc_create */
 static void
-free_rpc_construct_malloc(struct malloc_bdev_opts *r)
+free_rpc_bdev_malloc_create_ctx(struct malloc_bdev_opts *r)
 {
 	free(r->name);
 }
@@ -58,7 +58,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	free_rpc_construct_malloc(&req);
+	free_rpc_bdev_malloc_create_ctx(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
@@ -66,7 +66,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_construct_malloc(&req);
+	free_rpc_bdev_malloc_create_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_malloc_create", rpc_bdev_malloc_create, SPDK_RPC_RUNTIME)
 

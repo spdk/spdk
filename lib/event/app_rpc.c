@@ -709,6 +709,12 @@ struct rpc_thread_set_cpumask {
 	char *cpumask;
 };
 
+static void
+free_rpc_thread_set_cpumask(struct rpc_thread_set_cpumask *req)
+{
+	free(req->cpumask);
+}
+
 static const struct spdk_json_object_decoder rpc_thread_set_cpumask_decoders[] = {
 	{"id", offsetof(struct rpc_thread_set_cpumask, id), spdk_json_decode_uint64},
 	{"cpumask", offsetof(struct rpc_thread_set_cpumask, cpumask), spdk_json_decode_string},
@@ -794,11 +800,11 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 
 	spdk_thread_send_msg(thread, _rpc_thread_set_cpumask, ctx);
 
-	free(req.cpumask);
+	free_rpc_thread_set_cpumask(&req);
 	return;
 
 err:
-	free(req.cpumask);
+	free_rpc_thread_set_cpumask(&req);
 	free(ctx);
 }
 SPDK_RPC_REGISTER("thread_set_cpumask", rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)

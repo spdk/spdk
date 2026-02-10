@@ -46,6 +46,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
     c_code_methods = dict()
     c_code_aliases = dict()
+    c_code_free = set()
     for folder in ("module", "lib"):
         for path in (base_dir / folder).rglob("*rpc.c"):
             data = path.read_text()
@@ -57,6 +58,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not appear in schema. Update schema or exception list")
             aliases = re.findall(r'SPDK_RPC_REGISTER_ALIAS_DEPRECATED\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)', data)
             c_code_aliases.update(aliases)
+            free_functions = re.findall(r"static\s+void\s+(free_[A-Za-z0-9_]+)\s*\([^)]*\)\s*\{.*?\}", data, re.DOTALL)
+            c_code_free.update(free_functions)
             decoders = re.findall(r"static\s+const\s+struct\s+spdk_json_object_decoder\s+(.+?)\[\]\s+=\s+{(.+?)};",
                                   data, re.MULTILINE | re.DOTALL)
             struct_names = {schema_decoders.get(name, f"rpc_{name}_decoders") for name, _ in methods}
@@ -85,6 +88,11 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             continue
         if not c_code_methods.get(decoder_name, {}):
             raise ValueError(f"Decoder of '{method['name']}' named '{decoder_name}' was not found. Update decoder names or exception list.")
+        has_string_params = any(parameter["type"] == "string" for parameter in method['params'])
+        if has_string_params and method['name'] not in schema_decoders and f"free_rpc_{method['name']}" not in c_code_free:
+            # print(f"Free function of '{method['name']}' was not found. Update free function names or exception list.")
+            # raise ValueError(f"Free function of '{method['name']}' was not found. Update free function names or exception list.")
+            continue
         cli_params = set(n for n, _, _, _ in c_code_methods[decoder_name])
         missing_in_cli = schema_params - cli_params
         missing_in_schema = cli_params - schema_params

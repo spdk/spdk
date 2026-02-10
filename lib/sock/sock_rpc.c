@@ -68,6 +68,12 @@ struct spdk_rpc_sock_impl_set_opts {
 	struct spdk_sock_impl_opts sock_opts;
 };
 
+static void
+free_rpc_sock_impl_set_opts(struct spdk_rpc_sock_impl_set_opts *opts)
+{
+	free(opts->impl_name);
+}
+
 static const struct spdk_json_object_decoder rpc_sock_impl_set_options_decoders[] = {
 	{
 		"impl_name", offsetof(struct spdk_rpc_sock_impl_set_opts, impl_name),
@@ -137,7 +143,7 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	rc = spdk_sock_impl_get_opts(opts.impl_name, &opts.sock_opts, &len);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_impl_get_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		free(opts.impl_name);
+		free_rpc_sock_impl_set_opts(&opts);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
@@ -155,14 +161,14 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	rc = spdk_sock_impl_set_opts(opts.impl_name, &opts.sock_opts, sizeof(opts.sock_opts));
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_impl_set_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		free(opts.impl_name);
+		free_rpc_sock_impl_set_opts(&opts);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
 	}
 
 	spdk_jsonrpc_send_bool_response(request, true);
-	free(opts.impl_name);
+	free_rpc_sock_impl_set_opts(&opts);
 }
 SPDK_RPC_REGISTER("sock_impl_set_options", rpc_sock_impl_set_options, SPDK_RPC_STARTUP)
 

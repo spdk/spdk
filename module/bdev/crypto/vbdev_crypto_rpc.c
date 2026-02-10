@@ -23,7 +23,7 @@ struct rpc_construct_crypto {
 
 /* TODO: replace with free_rpc_bdev_crypto_create */
 static void
-free_rpc_construct_crypto(struct rpc_construct_crypto *r)
+free_rpc_bdev_crypto_create_ctx(struct rpc_construct_crypto *r)
 {
 	free(r->base_bdev_name);
 	free(r->name);
@@ -189,7 +189,7 @@ cleanup:
 	if (rc && created_key) {
 		spdk_accel_crypto_key_destroy(created_key);
 	}
-	free_rpc_construct_crypto(&req);
+	free_rpc_bdev_crypto_create_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_crypto_create", rpc_bdev_crypto_create, SPDK_RPC_RUNTIME)
 

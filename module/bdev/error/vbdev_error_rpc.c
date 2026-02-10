@@ -146,7 +146,7 @@ static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoder
 
 /* TODO: replace with free_rpc_bdev_error_inject_error */
 static void
-free_rpc_error_information(struct rpc_error_information *p)
+free_rpc_bdev_error_inject_error_ctx(struct rpc_error_information *p)
 {
 	free(p->name);
 }
@@ -176,6 +176,6 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
-	free_rpc_error_information(&req);
+	free_rpc_bdev_error_inject_error_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_inject_error", rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)

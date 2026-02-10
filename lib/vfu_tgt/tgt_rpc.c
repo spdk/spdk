@@ -22,7 +22,7 @@ static const struct spdk_json_object_decoder rpc_vfu_tgt_set_base_path_decoders[
 };
 
 static void
-free_rpc_set_vfu_path(struct rpc_set_vfu_path *req)
+free_rpc_vfu_tgt_set_base_path(struct rpc_set_vfu_path *req)
 {
 	free(req->path);
 }
@@ -46,13 +46,13 @@ rpc_vfu_tgt_set_base_path(struct spdk_jsonrpc_request *request,
 	if (rc < 0) {
 		goto invalid;
 	}
-	free_rpc_set_vfu_path(&req);
+	free_rpc_vfu_tgt_set_base_path(&req);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
-	free_rpc_set_vfu_path(&req);
+	free_rpc_vfu_tgt_set_base_path(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }

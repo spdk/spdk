@@ -248,7 +248,7 @@ static const struct spdk_json_object_decoder rpc_vfu_virtio_create_fs_endpoint_d
 
 /* TODO: replace with free_rpc_vfu_virtio_create_fs_endpoint */
 static void
-free_rpc_vfu_virtio_create_fs(struct rpc_vfu_virtio_create_fs *req)
+free_rpc_vfu_virtio_create_fs_endpoint_ctx(struct rpc_vfu_virtio_create_fs *req)
 {
 	if (req) {
 		free(req->name);
@@ -266,7 +266,7 @@ rpc_vfu_virtio_create_fs_endpoint_cpl(void *cb_arg, int status)
 
 	spdk_jsonrpc_send_bool_response(req->request, true);
 
-	free_rpc_vfu_virtio_create_fs(req);
+	free_rpc_vfu_virtio_create_fs_endpoint_ctx(req);
 }
 
 static void
@@ -309,7 +309,7 @@ rpc_vfu_virtio_create_fs_endpoint(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_vfu_virtio_create_fs(req);
+	free_rpc_vfu_virtio_create_fs_endpoint_ctx(req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }

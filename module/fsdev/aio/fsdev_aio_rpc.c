@@ -19,7 +19,7 @@ struct rpc_aio_create {
 
 /* TODO: replace with free_rpc_fsdev_aio_create */
 static void
-free_rpc_aio_create(struct rpc_aio_create *req)
+free_rpc_fsdev_aio_create_ctx(struct rpc_aio_create *req)
 {
 	free(req->name);
 	free(req->root_path);
@@ -51,7 +51,7 @@ rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 
-		free_rpc_aio_create(&req);
+		free_rpc_fsdev_aio_create_ctx(&req);
 		return;
 	}
 
@@ -61,14 +61,14 @@ rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		spdk_jsonrpc_send_error_response(request,
 						 SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
-		free_rpc_aio_create(&req);
+		free_rpc_fsdev_aio_create_ctx(&req);
 		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, fsdev->name);
 	spdk_jsonrpc_end_result(request, w);
-	free_rpc_aio_create(&req);
+	free_rpc_fsdev_aio_create_ctx(&req);
 }
 SPDK_RPC_REGISTER("fsdev_aio_create", rpc_fsdev_aio_create, SPDK_RPC_RUNTIME)
 
