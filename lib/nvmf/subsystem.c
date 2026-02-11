@@ -2654,11 +2654,11 @@ spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 }
 
 int
-spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
+nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size)
 {
 	size_t len, max_len;
 
-	max_len = sizeof(subsystem->sn) - 1;
+	max_len = size - 1;
 	len = strlen(sn);
 	if (len > max_len) {
 		SPDK_DEBUGLOG(nvmf, "Invalid sn \"%s\": length %zu > max %zu\n",
@@ -2672,9 +2672,13 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 		return -1;
 	}
 
-	snprintf(subsystem->sn, sizeof(subsystem->sn), "%s", sn);
+	return snprintf(dst, size, "%s", sn) < 0 ? -1 : 0;
+}
 
-	return 0;
+int
+spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
+{
+	return nvmf_subsystem_copy_sn(subsystem->sn, sn, sizeof(subsystem->sn));
 }
 
 const char *
@@ -2684,14 +2688,14 @@ spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
 }
 
 int
-spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
+nvmf_subsystem_copy_mn(char *dst, const char *mn, size_t size)
 {
 	size_t len, max_len;
 
 	if (mn == NULL) {
 		mn = MODEL_NUMBER_DEFAULT;
 	}
-	max_len = sizeof(subsystem->mn) - 1;
+	max_len = size - 1;
 	len = strlen(mn);
 	if (len > max_len) {
 		SPDK_DEBUGLOG(nvmf, "Invalid mn \"%s\": length %zu > max %zu\n",
@@ -2705,9 +2709,13 @@ spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn
 		return -1;
 	}
 
-	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s", mn);
+	return snprintf(dst, size, "%s", mn) < 0 ? -1 : 0;
+}
 
-	return 0;
+int
+spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
+{
+	return nvmf_subsystem_copy_mn(subsystem->mn, mn, sizeof(subsystem->mn));
 }
 
 const char *

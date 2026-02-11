@@ -709,4 +709,7 @@ nvmf_get_transport_poll_group(struct spdk_nvmf_poll_group *group,
  */
 uint16_t nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem);
 
+int nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size);
+int nvmf_subsystem_copy_mn(char *dst, const char *mn, size_t size);
+
 #endif /* __NVMF_INTERNAL_H__ */

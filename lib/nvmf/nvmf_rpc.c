@@ -412,7 +412,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req->serial_number) {
-		if (spdk_nvmf_subsystem_set_sn(subsystem, req->serial_number)) {
+		rc = nvmf_subsystem_copy_sn(subsystem->sn, req->serial_number, sizeof(subsystem->sn));
+		if (rc < 0) {
 			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							     "Invalid SN %s", req->serial_number);
@@ -421,7 +422,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req->model_number) {
-		if (spdk_nvmf_subsystem_set_mn(subsystem, req->model_number)) {
+		rc = nvmf_subsystem_copy_mn(subsystem->mn, req->model_number, sizeof(subsystem->mn));
+		if (rc < 0) {
 			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req->nqn, req->model_number);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							     "Invalid MN %s", req->model_number);
