@@ -217,14 +217,112 @@ nvmf_nqn_is_valid(const char *nqn)
 
 static void subsystem_state_change_on_pg(struct spdk_io_channel_iter *i);
 
+void
+spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type, struct spdk_nvmf_subsystem_opts *opts,
+			      size_t size)
+{
+	bool is_discovery = (type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+			     type == SPDK_NVMF_SUBTYPE_DISCOVERY);
+
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		assert(false);
+		return;
+	}
+
+	if (size == 0) {
+		SPDK_ERRLOG("size should not be zero\n");
+		assert(false);
+		return;
+	}
+
+	memset(opts, 0, size);
+	opts->opts_size = size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvmf_subsystem_opts, field) + sizeof(opts->field) <= size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(type, type);
+	SET_FIELD(max_namespaces, is_discovery ? 0 : NVMF_SUBSYSTEM_DEFAULT_NAMESPACES);
+
+	if (FIELD_OK(sn)) {
+		memset(opts->sn, '0', sizeof(opts->sn) - 1);
+		opts->sn[sizeof(opts->sn) - 1] = '\0';
+	}
+
+	if (FIELD_OK(mn)) {
+		snprintf(opts->mn, sizeof(opts->mn), "%s", MODEL_NUMBER_DEFAULT);
+	}
+
+	SET_FIELD(ana_reporting, false);
+	SET_FIELD(passthrough, false);
+	SET_FIELD(enable_nssr, false);
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+static void
+nvmf_subsystem_opts_copy(struct spdk_nvmf_subsystem_opts *opts,
+			 const struct spdk_nvmf_subsystem_opts *user_opts)
+{
+#define FIELD_OK(field)	\
+	offsetof(struct spdk_nvmf_subsystem_opts, field) + sizeof(opts->field) <= user_opts->opts_size
+
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		opts->field = user_opts->field;	\
+	} \
+
+	SET_FIELD(type);
+	SET_FIELD(max_namespaces);
+
+	if (FIELD_OK(sn)) {
+		memcpy(opts->sn, user_opts->sn, sizeof(opts->sn));
+	}
+
+	if (FIELD_OK(mn)) {
+		memcpy(opts->mn, user_opts->mn, sizeof(opts->mn));
+	}
+
+	SET_FIELD(ana_reporting);
+	SET_FIELD(passthrough);
+	SET_FIELD(enable_nssr);
+
+	opts->opts_size = user_opts->opts_size;
+
+	/* We should not remove this statement, but need to update the assert statement
+	 * if we add a new field, and also add a corresponding SET_FIELD statement.
+	 */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 81, "Incorrect size");
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
 struct spdk_nvmf_subsystem *
-spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
-			   const char *nqn,
-			   enum spdk_nvmf_subtype type,
-			   uint32_t num_ns)
+spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
+			       const char *nqn,
+			       enum spdk_nvmf_subtype type,
+			       const struct spdk_nvmf_subsystem_opts *user_opts)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
+	struct spdk_nvmf_subsystem_opts opts;
 	uint32_t			sid;
+
+	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
+	if (user_opts) {
+		nvmf_subsystem_opts_copy(&opts, user_opts);
+		if (opts.type != type) {
+			SPDK_ERRLOG("User provided opts type %d for Subsystem NQN '%s' does not match expected type %d\n",
+				    opts.type, nqn, type);
+			return NULL;
+		}
+	}
 
 	if (spdk_nvmf_tgt_find_subsystem(tgt, nqn)) {
 		SPDK_ERRLOG("Subsystem NQN '%s' already exists\n", nqn);
@@ -238,12 +336,12 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 
 	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
 	    type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		if (num_ns != 0) {
+		if (opts.max_namespaces != 0) {
 			SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
 			return NULL;
 		}
-	} else if (num_ns == 0) {
-		num_ns = NVMF_SUBSYSTEM_DEFAULT_NAMESPACES;
+	} else if (opts.max_namespaces == 0) {
+		opts.max_namespaces = NVMF_SUBSYSTEM_DEFAULT_NAMESPACES;
 	}
 
 	/* Find a free subsystem id (sid) */
@@ -252,6 +350,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		SPDK_ERRLOG("No free subsystem IDs are available for subsystem creation\n");
 		return NULL;
 	}
+
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem memory allocation failed\n");
@@ -263,11 +362,27 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->tgt = tgt;
 	subsystem->id = sid;
 	subsystem->subtype = type;
-	subsystem->max_nsid = num_ns;
 	subsystem->next_cntlid = 1;
 	subsystem->min_cntlid = NVMF_MIN_CNTLID;
 	subsystem->max_cntlid = NVMF_MAX_CNTLID;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
+
+	subsystem->max_nsid = opts.max_namespaces;
+
+	if (nvmf_subsystem_copy_sn(subsystem->sn, opts.sn, sizeof(subsystem->sn))) {
+		free(subsystem);
+		return NULL;
+	}
+
+	if (nvmf_subsystem_copy_mn(subsystem->mn, opts.mn, sizeof(subsystem->mn))) {
+		free(subsystem);
+		return NULL;
+	}
+
+	subsystem->flags.ana_reporting = opts.ana_reporting;
+	subsystem->passthrough = opts.passthrough;
+	subsystem->nssr_enabled = opts.enable_nssr;
+
 	pthread_mutex_init(&subsystem->mutex, NULL);
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
@@ -281,8 +396,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	if (num_ns != 0) {
-		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
+	if (opts.max_namespaces != 0) {
+		subsystem->ns = calloc(opts.max_namespaces, sizeof(struct spdk_nvmf_ns *));
 		if (subsystem->ns == NULL) {
 			SPDK_ERRLOG("Namespace memory allocation failed\n");
 			pthread_mutex_destroy(&subsystem->mutex);
@@ -290,7 +405,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			free(subsystem);
 			return NULL;
 		}
-		subsystem->ana_group = calloc(num_ns, sizeof(uint32_t));
+
+		subsystem->ana_group = calloc(opts.max_namespaces, sizeof(uint32_t));
 		if (subsystem->ana_group == NULL) {
 			SPDK_ERRLOG("ANA group memory allocation failed\n");
 			pthread_mutex_destroy(&subsystem->mutex);
@@ -301,18 +417,26 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 
-	memset(subsystem->sn, '0', sizeof(subsystem->sn) - 1);
-	subsystem->sn[sizeof(subsystem->sn) - 1] = '\0';
-
-	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s",
-		 MODEL_NUMBER_DEFAULT);
-
 	spdk_bit_array_set(tgt->subsystem_ids, sid);
 	RB_INSERT(subsystem_tree, &tgt->subsystems, subsystem);
 
 	SPDK_DTRACE_PROBE1(nvmf_subsystem_create, subsystem->subnqn);
 
 	return subsystem;
+}
+
+struct spdk_nvmf_subsystem *
+spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
+			   const char *nqn,
+			   enum spdk_nvmf_subtype type,
+			   uint32_t num_ns)
+{
+	struct spdk_nvmf_subsystem_opts opts;
+
+	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
+	opts.max_namespaces = num_ns;
+
+	return spdk_nvmf_subsystem_create_ext(tgt, nqn, type, &opts);
 }
 
 static void

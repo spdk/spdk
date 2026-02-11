@@ -176,6 +176,44 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 32, "Incorrect size")
  */
 void spdk_nvmf_listen_opts_init(struct spdk_nvmf_listen_opts *opts, size_t opts_size);
 
+struct spdk_nvmf_subsystem_opts {
+	/**
+	 * The size of spdk_nvmf_subsystem_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
+
+	/* Subsystem type. */
+	enum spdk_nvmf_subtype type;
+
+	/* Maximum number of NSID/namespaces that can be attached to the subsystem. */
+	union {
+		uint32_t max_namespaces;
+		uint32_t max_nsid;
+	};
+
+	/* Serial number. */
+	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+
+	/* Model number. */
+	char mn[SPDK_NVME_CTRLR_MN_LEN + 1];
+
+	/* Enable ANA reporting feature. */
+	bool ana_reporting;
+
+	/* Use NVMe passthrough for I/O commands and namespace-directed admin commands. */
+	bool passthrough;
+
+	/* Enable NSSR (NVMe subsystem reset). */
+	bool enable_nssr;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 81, "Incorrect size");
+
+void spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type,
+				   struct spdk_nvmf_subsystem_opts *opts, size_t opts_size);
+
 struct spdk_nvmf_poll_group_stat {
 	/* cumulative admin qpair count */
 	uint32_t admin_qpairs;
@@ -578,6 +616,27 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt
 		const char *nqn,
 		enum spdk_nvmf_subtype type,
 		uint32_t num_ns);
+
+/**
+ * Create an NVMe-oF subsystem.
+ *
+ * Subsystems are in one of three states: Inactive, Active, Paused. This
+ * state affects which operations may be performed on the subsystem. Upon
+ * creation, the subsystem will be in the Inactive state and may be activated
+ * by calling spdk_nvmf_subsystem_start(). No I/O will be processed in the Inactive
+ * or Paused states, but changes to the state of the subsystem may be made.
+ *
+ * \param tgt The NVMe-oF target that will own this subsystem.
+ * \param nqn The NVMe qualified name of this subsystem.
+ * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
+ * \param opts Subsystem options.
+ *
+ * \return a pointer to a NVMe-oF subsystem on success, or NULL on failure.
+ */
+struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
+		const char *nqn,
+		enum spdk_nvmf_subtype type,
+		const struct spdk_nvmf_subsystem_opts *opts);
 
 typedef void (*nvmf_subsystem_destroy_cb)(void *cb_arg);
 

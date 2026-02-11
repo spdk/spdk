@@ -373,6 +373,7 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_subsystem_create *req;
 	struct spdk_nvmf_subsystem *subsystem = NULL;
+	struct spdk_nvmf_subsystem_opts opts;
 	struct spdk_nvmf_tgt *tgt;
 	int rc = -1;
 
@@ -402,17 +403,10 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME,
-					       req->max_namespaces);
-	if (!subsystem) {
-		SPDK_ERRLOG("Unable to create subsystem %s\n", req->nqn);
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Unable to create subsystem %s", req->nqn);
-		goto cleanup;
-	}
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
 
 	if (req->serial_number) {
-		rc = nvmf_subsystem_copy_sn(subsystem->sn, req->serial_number, sizeof(subsystem->sn));
+		rc = nvmf_subsystem_copy_sn(opts.sn, req->serial_number, sizeof(opts.sn));
 		if (rc < 0) {
 			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -422,7 +416,7 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req->model_number) {
-		rc = nvmf_subsystem_copy_mn(subsystem->mn, req->model_number, sizeof(subsystem->mn));
+		rc = nvmf_subsystem_copy_mn(opts.mn, req->model_number, sizeof(opts.mn));
 		if (rc < 0) {
 			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req->nqn, req->model_number);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -431,9 +425,20 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
+	opts.max_namespaces = req->max_namespaces;
+	opts.ana_reporting = req->ana_reporting;
+	opts.passthrough = req->passthrough;
+	opts.enable_nssr = req->enable_nssr;
 
-	spdk_nvmf_subsystem_set_ana_reporting(subsystem, req->ana_reporting);
+	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to create subsystem %s\n", req->nqn);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Unable to create subsystem %s", req->nqn);
+		goto cleanup;
+	}
+
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
 
 	if (spdk_nvmf_subsystem_set_cntlid_range(subsystem, req->min_cntlid, req->max_cntlid)) {
 		SPDK_ERRLOG("Subsystem %s: invalid cntlid range [%u-%u]\n", req->nqn, req->min_cntlid,
@@ -456,9 +461,6 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 						     "Invalid max_write_zeroes_size_kib %"PRIu64, req->max_write_zeroes_size_kib);
 		goto cleanup;
 	}
-
-	subsystem->passthrough = req->passthrough;
-	subsystem->nssr_enabled = req->enable_nssr;
 
 	rc = spdk_nvmf_subsystem_start(subsystem,
 				       rpc_nvmf_subsystem_started,

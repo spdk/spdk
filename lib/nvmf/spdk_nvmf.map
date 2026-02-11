@@ -25,6 +25,8 @@
 	spdk_nvmf_qpair_get_local_trid;
 	spdk_nvmf_qpair_get_listen_trid;
 	spdk_nvmf_subsystem_create;
+	spdk_nvmf_subsystem_create_ext;
+	spdk_nvmf_subsystem_opts_init;
 	spdk_nvmf_subsystem_destroy;
 	spdk_nvmf_subsystem_start;
 	spdk_nvmf_subsystem_stop;

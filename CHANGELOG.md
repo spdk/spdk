@@ -15,6 +15,10 @@ equal to `NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS` is used. The
 `nvmf_subsystem_remove_host` json-rpc methods also reflects to above behavior and
 allow to configure the timeout now.
 
+Added the spdk_nvmf_subsystem_create_ext API. It is meant to replace some API setters and
+getters. By using creation time options, the design is improved - it becomes clear that
+certain settings are not meant to be modified dynamically.
+
 ### nvme
 
 Removed the transport APIs poll_group_connect_qpair and poll_group_disconnet_qpair. None of the

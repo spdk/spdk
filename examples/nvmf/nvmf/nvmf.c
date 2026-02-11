@@ -417,6 +417,7 @@ nvmf_create_nvmf_tgt(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_target_opts tgt_opts = {};
+	struct spdk_nvmf_subsystem_opts subsystem_opts;
 
 	tgt_opts.size = SPDK_SIZEOF(&tgt_opts, discovery_filter);
 	tgt_opts.max_subsystems = g_nvmf_tgt.max_subsystems;
@@ -440,8 +441,10 @@ nvmf_create_nvmf_tgt(void)
 	 *	2,The ability to discover multiple paths to an NVM subsystem.
 	 *	3,The ability to discover controllers that are statically configured.
 	 */
-	subsystem = spdk_nvmf_subsystem_create(g_nvmf_tgt.tgt, SPDK_NVMF_DISCOVERY_NQN,
-					       SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, 0);
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, &subsystem_opts,
+				      sizeof(subsystem_opts));
+	subsystem = spdk_nvmf_subsystem_create_ext(g_nvmf_tgt.tgt, SPDK_NVMF_DISCOVERY_NQN,
+			SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, &subsystem_opts);
 	if (subsystem == NULL) {
 		fprintf(stderr, "failed to create discovery nvmf library subsystem\n");
 		goto error;
