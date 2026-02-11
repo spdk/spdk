@@ -425,6 +425,9 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 	return subsystem;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_create,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
@@ -433,6 +436,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 {
 	struct spdk_nvmf_subsystem_opts opts;
 
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_create);
 	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
 	opts.max_namespaces = num_ns;
 
@@ -2799,9 +2803,14 @@ nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size)
 	return snprintf(dst, size, "%s", sn) < 0 ? -1 : 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_sn,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
 {
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_sn);
+
 	return nvmf_subsystem_copy_sn(subsystem->sn, sn, sizeof(subsystem->sn));
 }
 
@@ -2836,9 +2845,14 @@ nvmf_subsystem_copy_mn(char *dst, const char *mn, size_t size)
 	return snprintf(dst, size, "%s", mn) < 0 ? -1 : 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_mn,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
 {
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_mn);
+
 	return nvmf_subsystem_copy_mn(subsystem->mn, mn, sizeof(subsystem->mn));
 }
 
@@ -4413,10 +4427,15 @@ spdk_nvmf_set_custom_ns_reservation_ops(const struct spdk_nvmf_ns_reservation_op
 	g_reservation_ops = *ops;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_ana_reporting,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 				      bool ana_reporting)
 {
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_ana_reporting);
+
 	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
 		return -EAGAIN;
 	}
