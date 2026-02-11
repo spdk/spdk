@@ -487,7 +487,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
-	if (ctrlr->subsys->flags.ana_reporting) {
+	if (ctrlr->subsys->opts.ana_reporting) {
 		ctrlr->feat.async_event_configuration.bits.ana_change_notice = 1;
 	}
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
@@ -561,7 +561,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
 	ctrlr->vcprop.cap.bits.mpsmax = 0; /* 2 ^ (12 + mpsmax) == 4k */
 
-	if (subsystem->nssr_enabled == 1) {
+	if (subsystem->opts.enable_nssr == 1) {
 		ctrlr->vcprop.cap.bits.nssrs = 1;
 	}
 
@@ -593,7 +593,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 
-	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+	if (ctrlr->subsys->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
 		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
 			SPDK_ERRLOG("Could not get listener transport ID\n");
 			goto err_listener;
@@ -789,7 +789,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	}
 
 	/* If ANA reporting is enabled, check if I/O connect is on the same listener. */
-	if (subsystem->flags.ana_reporting) {
+	if (subsystem->opts.ana_reporting) {
 		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
 			SPDK_ERRLOG("Could not get listener transport ID\n");
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
@@ -2365,7 +2365,7 @@ typedef enum spdk_nvme_ana_state spdk_nvme_ana_state_t;
 static inline spdk_nvme_ana_state_t
 nvmf_ctrlr_get_ana_state(struct spdk_nvmf_ctrlr *ctrlr, uint32_t anagrpid)
 {
-	if (!ctrlr->subsys->flags.ana_reporting) {
+	if (!ctrlr->subsys->opts.ana_reporting) {
 		return SPDK_NVME_ANA_OPTIMIZED_STATE;
 	}
 
@@ -2889,7 +2889,7 @@ spdk_nvmf_get_supported_log_pages(struct spdk_nvmf_ctrlr *ctrlr,
 		*log_page = g_supported_log_pages_discover;
 	} else {
 		*log_page = g_supported_log_pages;
-		if (ctrlr->subsys->flags.ana_reporting != 1) {
+		if (ctrlr->subsys->opts.ana_reporting != 1) {
 			log_page->lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp = 0;
 		}
 	}
@@ -3010,7 +3010,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		rc = nvmf_get_firmware_slot_log_page(req->iov, req->iovcnt, offset, len);
 		break;
 	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
-		if (subsystem->flags.ana_reporting) {
+		if (subsystem->opts.ana_reporting) {
 			uint32_t rgo = cmd->cdw10_bits.get_log_page.lsp & 1;
 			rc = nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae, rgo);
 			break;
@@ -3101,7 +3101,7 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 
 	assert(ctrlr->admin_qpair);
 
-	if (subsystem->flags.ana_reporting) {
+	if (subsystem->opts.ana_reporting) {
 		assert(ns->anagrpid - 1 < subsystem->max_nsid);
 		nsdata->anagrpid = ns->anagrpid;
 
@@ -3250,7 +3250,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->acwu = 0; /* ACWU is 0-based. */
 	cdata->wctemp = 0x0157; /* Recommended value from NVMe 1.3d spec. */
 	cdata->cctemp = 0x0175;
-	if (subsystem->flags.ana_reporting) {
+	if (subsystem->opts.ana_reporting) {
 		cdata->mnan = subsystem->max_nsid;
 	}
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
@@ -3313,7 +3313,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.reservs = ctrlr->cdata.oncs.reservs;
 		cdata->oncs.nvmcpys = ctrlr->cdata.oncs.nvmcpys;
 		cdata->ocfs.copy_format0 = cdata->oncs.nvmcpys;
-		if (subsystem->flags.ana_reporting) {
+		if (subsystem->opts.ana_reporting) {
 			/* Asymmetric Namespace Access Reporting is supported. */
 			cdata->cmic.anars = 1;
 			cdata->oaes.ana_change_notices = 1;
@@ -4365,7 +4365,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	/* We only want to send passthrough admin commands to namespaces.
 	 * However, we don't want to passthrough a command with intended for all namespaces.
 	 */
-	if (ctrlr->subsys->passthrough && cmd->nsid && cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG) {
+	if (ctrlr->subsys->opts.passthrough && cmd->nsid && cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG) {
 		return nvmf_passthru_admin_cmd(req);
 	}
 
@@ -5048,7 +5048,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		qpair->first_fused_req = NULL;
 	}
 
-	if (ctrlr->subsys->passthrough) {
+	if (ctrlr->subsys->opts.passthrough) {
 		assert(ns->passthru_nsid > 0);
 		req->orig_nsid = req->cmd->nvme_cmd.nsid;
 		req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
@@ -5174,7 +5174,7 @@ _nvmf_request_complete(void *ctx)
 		/* If we changed nvme_cmd.nsid to match the passthrough nsid, we need to
 		 * restore it here for accounting purposes.
 		 */
-		if (qpair->ctrlr->subsys->passthrough && req->orig_nsid) {
+		if (qpair->ctrlr->subsys->opts.passthrough && req->orig_nsid) {
 			req->cmd->nvme_cmd.nsid = req->orig_nsid;
 		}
 

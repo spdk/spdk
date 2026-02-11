@@ -356,12 +356,10 @@ struct spdk_nvmf_subsystem {
 	uint32_t					id;
 
 	enum spdk_nvmf_subsystem_state			state;
-	enum spdk_nvmf_subtype				subtype;
 
 	uint16_t					next_cntlid;
 	struct {
 		uint8_t					allow_any_listener : 1;
-		uint8_t					ana_reporting : 1;
 		uint8_t					reserved : 6;
 	} flags;
 
@@ -382,10 +380,13 @@ struct spdk_nvmf_subsystem {
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns				**ns;
+
 	uint32_t					max_nsid;
 
 	uint16_t					min_cntlid;
 	uint16_t					max_cntlid;
+
+	struct spdk_nvmf_subsystem_opts			opts;
 
 	uint64_t					max_discard_size_kib;
 	uint64_t					max_write_zeroes_size_kib;
@@ -408,8 +409,6 @@ struct spdk_nvmf_subsystem {
 	nvmf_subsystem_destroy_cb			async_destroy_cb;
 	void						*async_destroy_cb_arg;
 
-	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
-	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
 	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	/* Array of namespace count per ANA group of size max_nsid indexed anagrpid - 1
@@ -420,8 +419,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, nvmf_subsystem_state_change_ctx)	state_changes;
 	/* In-band authentication sequence number, protected by ->mutex */
 	uint32_t					auth_seqnum;
-	bool						passthrough;
-	bool						nssr_enabled;
 };
 
 extern spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;

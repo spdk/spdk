@@ -740,8 +740,8 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_bool(w, "ana_reporting", spdk_nvmf_subsystem_get_ana_reporting(subsystem));
 	spdk_json_write_named_uint64(w, "max_discard_size_kib", subsystem->max_discard_size_kib);
 	spdk_json_write_named_uint64(w, "max_write_zeroes_size_kib", subsystem->max_write_zeroes_size_kib);
-	spdk_json_write_named_bool(w, "passthrough", subsystem->passthrough);
-	spdk_json_write_named_bool(w, "enable_nssr", subsystem->nssr_enabled);
+	spdk_json_write_named_bool(w, "passthrough", subsystem->opts.passthrough);
+	spdk_json_write_named_bool(w, "enable_nssr", subsystem->opts.enable_nssr);
 
 	/*     } "params" */
 	spdk_json_write_object_end(w);

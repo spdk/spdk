@@ -501,11 +501,11 @@ test_spdk_nvmf_subsystem_set_sn(void)
 
 	/* Basic valid serial number */
 	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "abcd xyz") == 0);
-	CU_ASSERT(strcmp(subsystem.sn, "abcd xyz") == 0);
+	CU_ASSERT(strcmp(subsystem.opts.sn, "abcd xyz") == 0);
 
 	/* Exactly 20 characters (valid) */
 	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "12345678901234567890") == 0);
-	CU_ASSERT(strcmp(subsystem.sn, "12345678901234567890") == 0);
+	CU_ASSERT(strcmp(subsystem.opts.sn, "12345678901234567890") == 0);
 
 	/* 21 characters (too long, invalid) */
 	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "123456789012345678901") < 0);

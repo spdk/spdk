@@ -406,13 +406,13 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->sn;
+	return subsystem->opts.sn;
 }
 
 const char *
 spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->mn;
+	return subsystem->opts.mn;
 }
 
 static void

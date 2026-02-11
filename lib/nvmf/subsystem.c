@@ -361,27 +361,28 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	subsystem->tgt = tgt;
 	subsystem->id = sid;
-	subsystem->subtype = type;
 	subsystem->next_cntlid = 1;
 	subsystem->min_cntlid = NVMF_MIN_CNTLID;
 	subsystem->max_cntlid = NVMF_MAX_CNTLID;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 
+	subsystem->opts.type = opts.type;
 	subsystem->max_nsid = opts.max_namespaces;
+	subsystem->opts.max_namespaces = opts.max_namespaces;
 
-	if (nvmf_subsystem_copy_sn(subsystem->sn, opts.sn, sizeof(subsystem->sn))) {
+	if (nvmf_subsystem_copy_sn(subsystem->opts.sn, opts.sn, sizeof(subsystem->opts.sn))) {
 		free(subsystem);
 		return NULL;
 	}
 
-	if (nvmf_subsystem_copy_mn(subsystem->mn, opts.mn, sizeof(subsystem->mn))) {
+	if (nvmf_subsystem_copy_mn(subsystem->opts.mn, opts.mn, sizeof(subsystem->opts.mn))) {
 		free(subsystem);
 		return NULL;
 	}
 
-	subsystem->flags.ana_reporting = opts.ana_reporting;
-	subsystem->passthrough = opts.passthrough;
-	subsystem->nssr_enabled = opts.enable_nssr;
+	subsystem->opts.ana_reporting = opts.ana_reporting;
+	subsystem->opts.passthrough = opts.passthrough;
+	subsystem->opts.enable_nssr = opts.enable_nssr;
 
 	pthread_mutex_init(&subsystem->mutex, NULL);
 	TAILQ_INIT(&subsystem->listeners);
@@ -2552,7 +2553,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	}
 
 	ns->passthru_nsid = spdk_bdev_get_nvme_nsid(ns->bdev);
-	if (subsystem->passthrough && ns->passthru_nsid == 0) {
+	if (subsystem->opts.passthrough && ns->passthru_nsid == 0) {
 		SPDK_ERRLOG("Only bdev_nvme namespaces can be added to a passthrough subsystem.\n");
 		goto err;
 	}
@@ -2778,7 +2779,7 @@ spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *o
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->sn;
+	return subsystem->opts.sn;
 }
 
 int
@@ -2811,13 +2812,13 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 {
 	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_sn);
 
-	return nvmf_subsystem_copy_sn(subsystem->sn, sn, sizeof(subsystem->sn));
+	return nvmf_subsystem_copy_sn(subsystem->opts.sn, sn, sizeof(subsystem->opts.sn));
 }
 
 const char *
 spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->mn;
+	return subsystem->opts.mn;
 }
 
 int
@@ -2853,7 +2854,7 @@ spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn
 {
 	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_mn);
 
-	return nvmf_subsystem_copy_mn(subsystem->mn, mn, sizeof(subsystem->mn));
+	return nvmf_subsystem_copy_mn(subsystem->opts.mn, mn, sizeof(subsystem->opts.mn));
 }
 
 const char *
@@ -2868,7 +2869,7 @@ typedef enum spdk_nvmf_subtype spdk_nvmf_subtype_t;
 spdk_nvmf_subtype_t
 spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->subtype;
+	return subsystem->opts.type;
 }
 
 uint32_t
@@ -4440,7 +4441,7 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 		return -EAGAIN;
 	}
 
-	subsystem->flags.ana_reporting = ana_reporting;
+	subsystem->opts.ana_reporting = ana_reporting;
 
 	return 0;
 }
@@ -4448,7 +4449,7 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 bool
 spdk_nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->flags.ana_reporting;
+	return subsystem->opts.ana_reporting;
 }
 
 struct subsystem_listener_update_ctx {
@@ -4507,7 +4508,7 @@ spdk_nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
 
-	if (!subsystem->flags.ana_reporting) {
+	if (!subsystem->opts.ana_reporting) {
 		SPDK_ERRLOG("ANA reporting is disabled\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
@@ -4576,7 +4577,7 @@ spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
 
 	struct spdk_nvmf_subsystem_listener *listener;
 
-	if (!subsystem->flags.ana_reporting) {
+	if (!subsystem->opts.ana_reporting) {
 		SPDK_ERRLOG("ANA reporting is disabled\n");
 		return -EINVAL;
 	}
@@ -4599,8 +4600,8 @@ spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
 bool
 spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
-	       subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY;
+	return subsystem->opts.type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+	       subsystem->opts.type == SPDK_NVMF_SUBTYPE_DISCOVERY;
 }
 
 bool

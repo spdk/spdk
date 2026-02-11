@@ -163,10 +163,10 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			entry->portid = listener->id;
 			entry->cntlid = 0xffff;
 			entry->asqsz = listener->transport->opts.max_aq_depth;
-			entry->subtype = subsystem->subtype;
+			entry->subtype = subsystem->opts.type;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-			if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT) {
+			if (subsystem->opts.type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT) {
 				/* Each listener in the Current Discovery Subsystem provides access
 				 * to the same Discovery Log Pages, so set the Duplicate Returned
 				 * Information flag. */

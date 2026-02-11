@@ -365,7 +365,7 @@ test_get_log_page(void)
 	union nvmf_c2h_msg rsp = {};
 	char data[4096];
 
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 
 	ctrlr.subsys = &subsystem;
 
@@ -538,7 +538,7 @@ test_connect(void)
 	subsystem.id = 1;
 	TAILQ_INIT(&subsystem.ctrlrs);
 	subsystem.tgt = &tgt;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
 	subsystem.ns = ns_arr;
@@ -803,7 +803,7 @@ test_connect(void)
 
 	/* I/O connect to discovery controller */
 	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
 	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
@@ -823,7 +823,7 @@ test_connect(void)
 	cmd.connect_cmd.qid = 0;
 	cmd.connect_cmd.kato = 120000;
 	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
 	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
@@ -849,7 +849,7 @@ test_connect(void)
 	 */
 	cmd.connect_cmd.kato = 0;
 	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
 	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
@@ -871,7 +871,7 @@ test_connect(void)
 	qpair.ctrlr = NULL;
 	cmd.connect_cmd.qid = 1;
 	cmd.connect_cmd.kato = 120000;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 	MOCK_SET(spdk_nvmf_subsystem_is_discovery, false);
 
 	/* I/O connect to disabled controller */
@@ -1046,7 +1046,7 @@ test_get_ns_id_desc_list(void)
 	ns_ptrs[0] = &ns;
 	subsystem.ns = ns_ptrs;
 	subsystem.max_nsid = 1;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 
 	memset(&ns, 0, sizeof(ns));
 	ns.opts.nsid = 1;
@@ -1843,7 +1843,7 @@ test_get_supported_log_pages(void)
 	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_DISCOVERY].lsupp == 0);
 
 	/* check IO controller with ANA support */
-	subsystem.flags.ana_reporting = 1;
+	subsystem.opts.ana_reporting = 1;
 	spdk_nvmf_get_supported_log_pages(&ctrlr, &supported_log_pages);
 	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS].lsupp == 1);
 	CU_ASSERT(supported_log_pages.lids[SPDK_NVME_LOG_ERROR].lsupp == 1);
@@ -2014,7 +2014,7 @@ test_identify_ctrlr(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
-		.subtype = SPDK_NVMF_SUBTYPE_NVME,
+		.opts = {.type = SPDK_NVMF_SUBTYPE_NVME},
 		.tgt = &tgt,
 	};
 	struct spdk_nvmf_transport_ops tops = {};
@@ -2157,7 +2157,7 @@ test_custom_admin_cmd(void)
 	ns_ptrs[0] = &ns;
 	subsystem.ns = ns_ptrs;
 	subsystem.max_nsid = 1;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 
 	memset(&ns, 0, sizeof(ns));
 	ns.opts.nsid = 1;
@@ -2320,7 +2320,7 @@ test_multi_async_event_reqs(void)
 	ns_ptrs[0] = &ns;
 	subsystem.ns = ns_ptrs;
 	subsystem.max_nsid = 1;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 
 	ns.opts.nsid = 1;
 	group.sgroups = &sgroups;
@@ -2601,7 +2601,7 @@ test_multi_async_events(void)
 	ns_ptrs[0] = &ns;
 	subsystem.ns = ns_ptrs;
 	subsystem.max_nsid = 1;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 
 	ns.opts.nsid = 1;
 	group.sgroups = &sgroups;
@@ -2676,7 +2676,7 @@ test_rae(void)
 	ns_ptrs[0] = &ns;
 	subsystem.ns = ns_ptrs;
 	subsystem.max_nsid = 1;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 
 	ns.opts.nsid = 1;
 	group.sgroups = &sgroups;
@@ -2795,7 +2795,7 @@ test_nvmf_ctrlr_create_destruct(void)
 	subsystem.id = 1;
 	TAILQ_INIT(&subsystem.ctrlrs);
 	subsystem.tgt = &tgt;
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
 	subsystem.ns = ns_arr;
@@ -2877,7 +2877,7 @@ test_nvmf_ctrlr_use_zcopy(void)
 	struct spdk_io_channel io_ch = {};
 	int opc;
 
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 	ns.bdev = &bdev;
 
 	subsystem.id = 0;
@@ -3787,7 +3787,7 @@ test_req_length(void)
 	struct spdk_nvmf_ns *ns_ptrs[1] = {&ns};
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
-		.subtype = SPDK_NVMF_SUBTYPE_NVME,
+		.opts = {.type = SPDK_NVMF_SUBTYPE_NVME},
 		.tgt = &tgt,
 		.ns = ns_ptrs,
 		.max_nsid = 1
