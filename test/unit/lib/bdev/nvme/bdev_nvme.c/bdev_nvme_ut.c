@@ -5621,13 +5621,16 @@ test_retry_io_for_ana_error(void)
 	req->cpl.status.sc = SPDK_NVME_SC_ASYMMETRIC_ACCESS_INACCESSIBLE;
 	req->cpl.status.sct = SPDK_NVME_SCT_PATH;
 
-	poll_thread_times(0, 1);
+	poll_thread(0);
 
 	CU_ASSERT(nvme_qpair->qpair->num_outstanding_reqs == 0);
 	CU_ASSERT(bdev_io->internal.f.in_submit_request == true);
 	CU_ASSERT(bdev_io == spdk_bdev_io_from_ctx(TAILQ_FIRST(&nbdev_ch->retry_io_list)));
-	/* I/O should be retried immediately. */
-	CU_ASSERT(bio->retry_ticks == now);
+	/* I/O was retried immediately but no active path was found
+	 * (ana_state_updating makes nvme_ns_is_active return false),
+	 * so it is re-queued with a 1-second delay.
+	 */
+	CU_ASSERT(bio->retry_ticks == now + spdk_get_ticks_hz());
 	CU_ASSERT(nvme_ns->ana_state_updating == true);
 	CU_ASSERT(nvme_ctrlr->ana_log_page_updating == true);
 

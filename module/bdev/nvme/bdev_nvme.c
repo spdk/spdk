@@ -1622,6 +1622,31 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 	}
 }
 
+struct nvme_ctrlr_read_ana_log_msg_ctx {
+	uint32_t nsid;
+	struct nvme_ctrlr *nvme_ctrlr;
+};
+
+static void
+nvme_ctrlr_read_ana_log_page_msg(void *_ctx)
+{
+	struct nvme_ctrlr_read_ana_log_msg_ctx *ctx = _ctx;
+	struct nvme_ctrlr *nvme_ctrlr = ctx->nvme_ctrlr;
+	struct nvme_ns *nvme_ns;
+	int rc;
+
+	rc = nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+	if (rc == 0) {
+		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, ctx->nsid);
+		if (nvme_ns) {
+			nvme_ns->ana_state_updating = true;
+		}
+	}
+
+	nvme_ctrlr_put_ref(nvme_ctrlr);
+	free(ctx);
+}
+
 static bool
 bdev_nvme_check_retry_io(struct nvme_bdev_io *bio,
 			 const struct spdk_nvme_cpl *cpl,
@@ -1638,9 +1663,15 @@ bdev_nvme_check_retry_io(struct nvme_bdev_io *bio,
 	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		bdev_nvme_clear_current_io_path(nbdev_ch);
 		bio->io_path = NULL;
-		if (spdk_nvme_cpl_is_ana_error(cpl)) {
-			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
-				io_path->nvme_ns->ana_state_updating = true;
+		if (spdk_nvme_cpl_is_ana_error(cpl) && !io_path->nvme_ns->ana_state_updating) {
+			struct nvme_ctrlr_read_ana_log_msg_ctx *ctx;
+
+			ctx = calloc(1, sizeof(*ctx));
+			if (ctx) {
+				ctx->nvme_ctrlr = nvme_ctrlr;
+				ctx->nsid = io_path->nvme_ns->id;
+				nvme_ctrlr_get_ref(nvme_ctrlr);
+				spdk_thread_send_msg(spdk_thread_get_app_thread(), nvme_ctrlr_read_ana_log_page_msg, ctx);
 			}
 		}
 		if (!any_io_path_may_become_available(nbdev_ch)) {
@@ -5459,6 +5490,8 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 {
 	uint32_t ana_log_page_size;
 	int rc;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (nvme_ctrlr->ana_log_page == NULL) {
 		return -EINVAL;
