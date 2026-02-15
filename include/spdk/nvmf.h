@@ -638,6 +638,16 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt 
 		enum spdk_nvmf_subtype type,
 		const struct spdk_nvmf_subsystem_opts *opts);
 
+/**
+ * Get the options specified for a NVMe-oF subsystem.
+ *
+ * \param subsystem NVMe-oF subsystem from which to retrieve options.
+ *
+ * \return the NVMe-oF subsystem options.
+ */
+const struct spdk_nvmf_subsystem_opts *spdk_nvmf_subsystem_get_opts(
+	const struct spdk_nvmf_subsystem *subsystem);
+
 typedef void (*nvmf_subsystem_destroy_cb)(void *cb_arg);
 
 /**

@@ -444,6 +444,12 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	return spdk_nvmf_subsystem_create_ext(tgt, nqn, type, &opts);
 }
 
+const struct spdk_nvmf_subsystem_opts *
+spdk_nvmf_subsystem_get_opts(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return &subsystem->opts;
+}
+
 static void
 nvmf_host_free(struct spdk_nvmf_host *host)
 {

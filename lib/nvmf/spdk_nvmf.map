@@ -27,6 +27,7 @@
 	spdk_nvmf_subsystem_create;
 	spdk_nvmf_subsystem_create_ext;
 	spdk_nvmf_subsystem_opts_init;
+	spdk_nvmf_subsystem_get_opts;
 	spdk_nvmf_subsystem_destroy;
 	spdk_nvmf_subsystem_start;
 	spdk_nvmf_subsystem_stop;
