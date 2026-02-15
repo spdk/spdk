@@ -47,6 +47,10 @@ a bdev of the correct size.
 `spdk_nvmf_subsystem_set_ana_reporting` are deprecated and will be removed in v26.09.
 Use `spdk_nvmf_subsystem_create_ext` with subsystem options instead.
 
+`spdk_nvmf_subsystem_get_sn`, `spdk_nvmf_subsystem_get_mn`, `spdk_nvmf_subsystem_get_max_nsid`,
+`spdk_nvmf_subsystem_get_max_namespaces`, `spdk_nvmf_subsystem_get_ana_reporting`, `spdk_nvmf_subsystem_get_type`
+are deprecated and will be removed in v26.09. Use `spdk_nvmf_subsystem_get_opts` instead.
+
 ### app/spdk_nvme_perf
 
 #### perf_g_option
