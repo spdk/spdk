@@ -602,6 +602,7 @@ nvmf_admin_passthru_generic_hdlr(struct spdk_nvmf_request *req,
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem *subsys;
+	const struct spdk_nvmf_subsystem_opts *subsys_opts;
 	int rc;
 
 	subsys = spdk_nvmf_request_get_subsystem(req);
@@ -609,8 +610,10 @@ nvmf_admin_passthru_generic_hdlr(struct spdk_nvmf_request *req,
 		return -1;
 	}
 
+	subsys_opts = spdk_nvmf_subsystem_get_opts(subsys);
+
 	/* Only procss this request if it has exactly one namespace */
-	if (spdk_nvmf_subsystem_get_max_nsid(subsys) != 1) {
+	if (subsys_opts->max_namespaces != 1) {
 		return -1;
 	}
 
