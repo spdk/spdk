@@ -714,10 +714,9 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 	struct spdk_nvmf_host *host;
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_ns_opts ns_opts;
-	uint32_t max_namespaces;
 	struct spdk_nvmf_transport *transport;
 
-	assert(spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME);
+	assert(subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME);
 
 	/* { */
 	spdk_json_write_object_begin(w);
@@ -727,17 +726,16 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 	spdk_json_write_named_bool(w, "allow_any_host", spdk_nvmf_subsystem_get_allow_any_host(subsystem));
-	spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
-	spdk_json_write_named_string(w, "model_number", spdk_nvmf_subsystem_get_mn(subsystem));
+	spdk_json_write_named_string(w, "serial_number", subsystem->opts.sn);
+	spdk_json_write_named_string(w, "model_number", subsystem->opts.mn);
 
-	max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);
-	if (max_namespaces != 0) {
-		spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
+	if (subsystem->opts.max_namespaces != 0) {
+		spdk_json_write_named_uint32(w, "max_namespaces", subsystem->opts.max_namespaces);
 	}
 
 	spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
 	spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
-	spdk_json_write_named_bool(w, "ana_reporting", spdk_nvmf_subsystem_get_ana_reporting(subsystem));
+	spdk_json_write_named_bool(w, "ana_reporting", subsystem->opts.ana_reporting);
 	spdk_json_write_named_uint64(w, "max_discard_size_kib", subsystem->max_discard_size_kib);
 	spdk_json_write_named_uint64(w, "max_write_zeroes_size_kib", subsystem->max_write_zeroes_size_kib);
 	spdk_json_write_named_bool(w, "passthrough", subsystem->opts.passthrough);
@@ -818,7 +816,7 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 			spdk_json_write_named_uuid(w, "uuid",  &ns_opts.uuid);
 		}
 
-		if (spdk_nvmf_subsystem_get_ana_reporting(subsystem)) {
+		if (subsystem->opts.ana_reporting) {
 			spdk_json_write_named_uint32(w, "anagrpid", ns_opts.anagrpid);
 		}
 
@@ -887,7 +885,7 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 {
 	struct spdk_nvmf_subsystem_listener *listener;
 
-	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+	if (subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
 		nvmf_write_nvme_subsystem_config(w, subsystem);
 	}
 

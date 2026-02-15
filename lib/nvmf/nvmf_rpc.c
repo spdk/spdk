@@ -165,7 +165,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 
 	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 	spdk_json_write_name(w, "subtype");
-	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+	if (subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_json_write_string(w, "NVMe");
 	} else {
 		spdk_json_write_string(w, "Discovery");
@@ -205,18 +205,15 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	}
 	spdk_json_write_array_end(w);
 
-	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+	if (subsystem->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
 		struct spdk_nvmf_ns *ns;
 		struct spdk_nvmf_ns_opts ns_opts;
-		uint32_t max_namespaces;
 
-		spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
+		spdk_json_write_named_string(w, "serial_number", subsystem->opts.sn);
+		spdk_json_write_named_string(w, "model_number", subsystem->opts.mn);
 
-		spdk_json_write_named_string(w, "model_number", spdk_nvmf_subsystem_get_mn(subsystem));
-
-		max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);
-		if (max_namespaces != 0) {
-			spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
+		if (subsystem->opts.max_namespaces != 0) {
+			spdk_json_write_named_uint32(w, "max_namespaces", subsystem->opts.max_namespaces);
 		}
 
 		spdk_json_write_named_bool(w, "passthrough", subsystem->opts.passthrough);
@@ -250,7 +247,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 				spdk_json_write_named_uuid(w, "uuid", &ns_opts.uuid);
 			}
 
-			if (spdk_nvmf_subsystem_get_ana_reporting(subsystem)) {
+			if (subsystem->opts.ana_reporting) {
 				spdk_json_write_named_uint32(w, "anagrpid", ns_opts.anagrpid);
 			}
 
@@ -3007,7 +3004,7 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 	nvmf_transport_listen_dump_trid(listener->trid, w);
 	spdk_json_write_object_end(w);
 
-	if (spdk_nvmf_subsystem_get_ana_reporting(listener->subsystem)) {
+	if (listener->subsystem->opts.ana_reporting) {
 		spdk_json_write_named_array_begin(w, "ana_states");
 		for (i = 0; i < listener->subsystem->max_nsid; i++) {
 			spdk_json_write_object_begin(w);

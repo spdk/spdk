@@ -3275,8 +3275,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		/*
 		 * NVM subsystem fields (reserved for discovery subsystems)
 		 */
-		spdk_strcpy_pad(cdata->mn, spdk_nvmf_subsystem_get_mn(subsystem), sizeof(cdata->mn), ' ');
-		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
+		spdk_strcpy_pad(cdata->mn, subsystem->opts.mn, sizeof(cdata->mn), ' ');
+		spdk_strcpy_pad(cdata->sn, subsystem->opts.sn, sizeof(cdata->sn), ' ');
 		cdata->kas = ctrlr->cdata.kas;
 
 		cdata->rab = 6;
