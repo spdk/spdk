@@ -3441,8 +3441,9 @@ nvmf_ctrlr_identify_iocs_nvm(struct spdk_nvmf_ctrlr *ctrlr,
 	 * dataset management command. opts.dmrsl is already stored
 	 * in logical block units.
 	 */
+	cdata_nvm->dmrl = ctrlr->subsys->opts.dmrsl ? 1 : 0;
 	cdata_nvm->dmrsl = ctrlr->subsys->opts.dmrsl;
-	cdata_nvm->dmrl = 1;
+	cdata_nvm->dmsl = (uint64_t)cdata_nvm->dmrl * cdata_nvm->dmrsl;
 
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
