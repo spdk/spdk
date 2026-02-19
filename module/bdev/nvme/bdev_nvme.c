@@ -167,6 +167,9 @@
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 #define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
+/* The NVMe Write Zeroes command NLB field is 16-bit (0..65535 => max 65536 blocks). */
+#define BDEV_NVME_WRITE_ZEROES_MAX_BLOCKS (UINT16_MAX + 1)
+
 #define NSID_STR_LEN 10
 
 #define SPDK_CONTROLLER_NAME_MAX 512
@@ -4593,6 +4596,48 @@ nvme_generate_uuid(const char *sn, uint32_t nsid, struct spdk_uuid *uuid)
 	return rc;
 }
 
+static void
+bdev_nvme_set_nvm_limits(struct spdk_bdev *disk, struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_ns *ns)
+{
+	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	const struct spdk_nvme_nvm_ctrlr_data *nvm_cdata = spdk_nvme_nvm_ctrlr_get_data(ctrlr);
+	const union spdk_nvme_cap_register cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
+	const uint32_t page_size = 1ULL << (12 + cap.bits.mpsmin);
+	const uint32_t block_size = spdk_nvme_ns_get_extended_sector_size(ns);
+	const uint32_t blocks_per_page = page_size / block_size;
+
+	/*
+	 * WZSL is an exponent: allowed write-zeroes size is (2^WZSL) pages.
+	 * WZSL=0 or out-of-range values are not usable here, so use protocol max.
+	 * Also cap to the 16-bit NVMe Write Zeroes limit to avoid overflow.
+	 */
+	if (nvm_cdata) {
+		if (blocks_per_page == 0 ||
+		    nvm_cdata->wzsl == 0 ||
+		    nvm_cdata->wzsl > 16 ||
+		    (1ULL << nvm_cdata->wzsl) > BDEV_NVME_WRITE_ZEROES_MAX_BLOCKS / blocks_per_page) {
+			disk->max_write_zeroes = BDEV_NVME_WRITE_ZEROES_MAX_BLOCKS;
+		} else {
+			disk->max_write_zeroes = (1ULL << nvm_cdata->wzsl) * blocks_per_page;
+		}
+
+		disk->max_unmap_segments = nvm_cdata->dmrl;
+		disk->max_unmap = nvm_cdata->dmrsl;
+		return;
+	}
+
+	/* Set max values if NVM controller data is missing but DSM/Write Zeroes are supported. */
+	if (cdata->oncs.nvmwzsv) {
+		disk->max_write_zeroes = BDEV_NVME_WRITE_ZEROES_MAX_BLOCKS;
+	}
+
+	if (cdata->oncs.nvmdsmsv) {
+		disk->max_unmap_segments = SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES;
+		disk->max_unmap = SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS;
+	}
+}
+
 static int
 nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	     struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
@@ -4661,9 +4706,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 		/* Enable if the Volatile Write Cache exists */
 		disk->write_cache = 1;
 	}
-	if (cdata->oncs.nvmwzsv) {
-		disk->max_write_zeroes = UINT16_MAX + 1;
-	}
+
 	disk->blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
 	disk->blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 	disk->max_segment_size = spdk_nvme_ctrlr_get_max_xfer_size(ctrlr);
@@ -4749,6 +4792,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	disk->numa.id_valid = 1;
 	disk->numa.id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
 
+	bdev_nvme_set_nvm_limits(disk, ctrlr, ns);
 	return 0;
 }
 

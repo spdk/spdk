@@ -94,6 +94,11 @@ DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
 DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB(spdk_nvme_ctrlr_is_nssr_supported, bool, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_get_regs_cap, union spdk_nvme_cap_register,
+	    (struct spdk_nvme_ctrlr *ctrlr), {});
+DEFINE_STUB(spdk_nvme_nvm_ctrlr_get_data, const struct spdk_nvme_nvm_ctrlr_data *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_memory_domain **domains, int array_size)
@@ -168,9 +173,9 @@ DEFINE_STUB(spdk_nvme_cuse_get_ctrlr_name, int, (struct spdk_nvme_ctrlr *ctrlr, 
 
 DEFINE_STUB(spdk_nvme_ns_get_max_io_xfer_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_extended_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
+DEFINE_STUB(spdk_nvme_ns_get_extended_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 1ULL << 12);
 
-DEFINE_STUB(spdk_nvme_ns_get_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
+DEFINE_STUB(spdk_nvme_ns_get_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 1ULL << 12);
 
 DEFINE_STUB(spdk_nvme_ns_get_pi_type, enum spdk_nvme_pi_type, (struct spdk_nvme_ns *ns), 0);
 
