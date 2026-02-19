@@ -1362,6 +1362,19 @@ bool spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr);
 const struct spdk_nvme_ctrlr_data *spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NVM I/O Command Set Specific Identify Controller data as defined by the NVMe specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return pointer to the controller data, or NULL if the controller does not
+ * support the NVM Command Set.
+ */
+const struct spdk_nvme_nvm_ctrlr_data *spdk_nvme_nvm_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the NVMe controller CSTS (Status) register.
  *
  * \param ctrlr Opaque handle to NVMe controller.

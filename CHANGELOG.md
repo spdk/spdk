@@ -28,6 +28,8 @@ connections are only added or removed while disconnected.
 Changed the NVME request timeout tracking - now the timeout includes the time the request spent
 in the internal SPDK queues, before it was sent to the disk/network.
 
+Added `spdk_nvme_nvm_ctrlr_get_data` API for NVM I/O Command Set Specific Identify Controller Data.
+
 ## v26.01
 
 ### accel_ae4dma

@@ -856,6 +856,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG,
 
 	/**
+	 * Get Identify I/O Command Set NVM Specific Controller data structure.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_IOCS_NVM_SPECIFIC,
+
+	/**
+	 * Waiting for Identify I/O Command Set NVM Specific Controller command to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_NVM_SPECIFIC,
+
+	/**
 	 * Set Number of Queues of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_NUM_QUEUES,
@@ -1135,9 +1145,10 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ctrlr_data	cdata;
 
 	/**
-	 * Zoned Namespace Command Set Specific Identify Controller data.
+	 * Command Set Specific Identify Controller data.
 	 */
 	struct spdk_nvme_zns_ctrlr_data	*cdata_zns;
+	struct spdk_nvme_nvm_ctrlr_data	*cdata_nvm;
 
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
