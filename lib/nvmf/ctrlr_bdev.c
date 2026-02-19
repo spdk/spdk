@@ -737,6 +737,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint32_t dmrsl = req->qpair->ctrlr->subsys->opts.dmrsl;
+	uint32_t dmrl = req->qpair->ctrlr->subsys->opts.dmrsl ? 1 : 0;
 	struct spdk_iov_xfer ix;
 	uint64_t lba;
 	uint32_t lba_count;
@@ -771,6 +772,12 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	for (i = unmap_ctx->range_index; i < nr; i++) {
 		struct spdk_nvme_dsm_range dsm_range = { 0 };
+
+		if (dmrl && unmap_ctx->range_index >= dmrl) {
+			SPDK_DEBUGLOG(nvmf, "Maximum number of logical block ranges %" PRIu32
+				      " exceeded, skip processing remaining ranges %" PRIu32 ".\n", dmrl, nr - dmrl);
+			break;
+		}
 
 		spdk_iov_xfer_to_buf(&ix, &dsm_range, sizeof(dsm_range));
 
