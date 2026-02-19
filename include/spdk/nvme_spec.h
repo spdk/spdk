@@ -2398,7 +2398,10 @@ union spdk_nvme_cdata_ctratt {
 		/* Supports I/O command set specific extended PI formats */
 		uint32_t	elbas: 1;
 
-		uint32_t	reserved1: 3;
+		/* MDTS and Size Limits Exclude Metadata (MEM) */
+		uint32_t	mem: 1;
+
+		uint32_t	reserved1: 2;
 
 		/* Supports flexible data placement */
 		uint32_t	fdps: 1;
