@@ -226,15 +226,19 @@ struct spdk_bdev_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 /**
- * Union for controller attributes field, to list whether bdev supports fdp etc.
- * By convention we match the NVMe definition, allowing other bdevs to use this feature
+ * Controller attributes indicating optional bdev capabilities (e.g. Flexible Data Placement).
+ * The layout follows the NVMe controller attributes definition so that non-NVMe bdevs can
+ * advertise the same features through a common interface.
  */
 union spdk_bdev_nvme_ctratt {
 	uint32_t raw;
 
 	struct {
-		uint32_t reserved	: 19;
-		/* Supports flexible data placement */
+		uint32_t reserved	: 16;
+		/* MDTS and Size Limits Exclude Metadata (MEM) */
+		uint32_t mem		: 1;
+		uint32_t reserved1	: 2;
+		/* Flexible Data Placement Support (FDPS) */
 		uint32_t fdps		: 1;
 		uint32_t reserved2	: 12;
 	} bits;

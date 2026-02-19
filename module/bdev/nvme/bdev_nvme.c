@@ -4604,7 +4604,8 @@ bdev_nvme_set_nvm_limits(struct spdk_bdev *disk, struct spdk_nvme_ctrlr *ctrlr,
 	const struct spdk_nvme_nvm_ctrlr_data *nvm_cdata = spdk_nvme_nvm_ctrlr_get_data(ctrlr);
 	const union spdk_nvme_cap_register cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	const uint32_t page_size = 1ULL << (12 + cap.bits.mpsmin);
-	const uint32_t block_size = spdk_nvme_ns_get_extended_sector_size(ns);
+	const uint32_t block_size = disk->ctratt.bits.mem ?
+				    spdk_nvme_ns_get_sector_size(ns) : spdk_nvme_ns_get_extended_sector_size(ns);
 	const uint32_t blocks_per_page = page_size / block_size;
 
 	/*
