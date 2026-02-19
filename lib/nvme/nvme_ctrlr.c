@@ -915,7 +915,7 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	if (ctrlr->cdata.ctratt.bits.fdps) {
+	if (ctrlr->cdata.ctratt.fdps) {
 		ctrlr->log_page_supported[SPDK_NVME_LOG_FDP_CONFIGURATIONS] = true;
 		ctrlr->log_page_supported[SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE] = true;
 		ctrlr->log_page_supported[SPDK_NVME_LOG_FDP_STATISTICS] = true;
@@ -1055,7 +1055,7 @@ nvme_ctrlr_set_host_feature(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_host_behavior *host;
 	int rc;
 
-	if (!ctrlr->cdata.ctratt.bits.elbas) {
+	if (!ctrlr->cdata.ctratt.elbas) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_DB_BUF_CFG,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
@@ -2923,7 +2923,7 @@ nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 	case SPDK_NVME_CSI_ZNS:
 		return nvme_ctrlr_identify_ns_zns_specific_async(ns);
 	case SPDK_NVME_CSI_NVM:
-		if (ns->ctrlr->cdata.ctratt.bits.elbas) {
+		if (ns->ctrlr->cdata.ctratt.elbas) {
 			return nvme_ctrlr_identify_ns_nvm_specific_async(ns);
 		}
 	/* fallthrough */
@@ -3268,7 +3268,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
-	if (ctrlr->cdata.ctratt.bits.host_id_exhid_supported) {
+	if (ctrlr->cdata.ctratt.hids) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Using 128-bit extended host identifier\n");
 		host_id = ctrlr->opts.extended_host_id;
 		host_id_size = sizeof(ctrlr->opts.extended_host_id);

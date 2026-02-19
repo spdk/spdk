@@ -426,17 +426,17 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns ns = { .ctrlr = &ctrlr, };
 
-	/* case 1: ns.csi == SPDK_NVME_CSI_NVM && !ctrlr.cdata.ctratt.bits.elbas.
+	/* case 1: ns.csi == SPDK_NVME_CSI_NVM && !ctrlr.cdata.ctratt.elbas.
 	 * Expect: false */
 	ns.csi = SPDK_NVME_CSI_NVM;
-	ctrlr.cdata.ctratt.bits.elbas = false;
+	ctrlr.cdata.ctratt.elbas = false;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
-	/* case 2: ns.csi == SPDK_NVME_CSI_NVM && ctrlr.cdata.ctratt.bits.elbas.
+	/* case 2: ns.csi == SPDK_NVME_CSI_NVM && ctrlr.cdata.ctratt.elbas.
 	 * Expect: true */
-	ctrlr.cdata.ctratt.bits.elbas = true;
+	ctrlr.cdata.ctratt.elbas = true;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
 	/* case 3: ns.csi == SPDK_NVME_CSI_ZNS. Expect: true */
-	ctrlr.cdata.ctratt.bits.elbas = false;
+	ctrlr.cdata.ctratt.elbas = false;
 	ns.csi = SPDK_NVME_CSI_ZNS;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
 	/* case 4: default ns.csi == SPDK_NVME_CSI_KV. Expect: false */
@@ -468,7 +468,7 @@ test_nvme_ctrlr_identify_ns_iocs_specific(void)
 	CU_ASSERT(ns.nsdata_zns == NULL);
 
 	ns.csi = SPDK_NVME_CSI_NVM;
-	ctrlr.cdata.ctratt.bits.elbas = true;
+	ctrlr.cdata.ctratt.elbas = true;
 
 	/* case 3: Test nvme_ctrlr_identify_ns_iocs_specific. Expect: PASS. */
 	rc = nvme_ctrlr_identify_ns_iocs_specific(&ns);

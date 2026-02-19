@@ -87,7 +87,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	if (nsdata->lbaf[format_index].ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
-		if (nsdata_nvm != NULL && ns->ctrlr->cdata.ctratt.bits.elbas) {
+		if (nsdata_nvm != NULL && ns->ctrlr->cdata.ctratt.elbas) {
 			/* We may have nsdata_nvm for other purposes but
 			 * the elbaf array is only valid when elbas is 1.
 			 */
@@ -229,7 +229,7 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 	case SPDK_NVME_CSI_ZNS:
 		return nvme_ctrlr_identify_ns_zns_specific(ns);
 	case SPDK_NVME_CSI_NVM:
-		if (ns->ctrlr->cdata.ctratt.bits.elbas) {
+		if (ns->ctrlr->cdata.ctratt.elbas) {
 			return nvme_ctrlr_identify_ns_nvm_specific(ns);
 		}
 	/* fallthrough */
@@ -575,7 +575,7 @@ nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns)
 {
 	switch (ns->csi) {
 	case SPDK_NVME_CSI_NVM:
-		if (ns->ctrlr->cdata.ctratt.bits.elbas) {
+		if (ns->ctrlr->cdata.ctratt.elbas) {
 			return true;
 		}
 

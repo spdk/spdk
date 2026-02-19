@@ -1946,13 +1946,13 @@ test_nvme_ctrlr_set_host_feature(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 
-	ctrlr.cdata.ctratt.bits.elbas = 0;
+	ctrlr.cdata.ctratt.elbas = 0;
 	ctrlr.state = NVME_CTRLR_STATE_SET_HOST_FEATURE;
 
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_DB_BUF_CFG);
 
-	ctrlr.cdata.ctratt.bits.elbas = 1;
+	ctrlr.cdata.ctratt.elbas = 1;
 	ctrlr.state = NVME_CTRLR_STATE_SET_HOST_FEATURE;
 
 	while (ctrlr.state != NVME_CTRLR_STATE_SET_DB_BUF_CFG) {

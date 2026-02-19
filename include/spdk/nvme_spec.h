@@ -2392,52 +2392,52 @@ struct spdk_nvme_cdata_oaes {
 union spdk_nvme_cdata_ctratt {
 	uint32_t	raw;
 	struct {
-		/* Supports 128-bit host identifier */
-		uint32_t	host_id_exhid_supported: 1;
+		/* Host Identifier Support (HIDS)  */
+		uint32_t	hids: 1;
 
-		/* Supports non-operational power state permissive mode */
-		uint32_t	non_operational_power_state_permissive_mode: 1;
+		/* Non-Operational Power State Permissive Mode (NOPSPM) */
+		uint32_t	nopspm: 1;
 
-		/* Supports NVM sets */
-		uint32_t	nvm_sets: 1;
+		/* NVM Sets (NSETS) */
+		uint32_t	nsets: 1;
 
-		/* Supports read recovery levels */
-		uint32_t	read_recovery_levels: 1;
+		/* Read Recovery Levels (RRLVLS) */
+		uint32_t	rrlvls: 1;
 
-		/* Supports endurance groups */
-		uint32_t	endurance_groups: 1;
+		/* Endurance Groups (EGS) */
+		uint32_t	egs: 1;
 
-		/* Supports predictable latency mode */
-		uint32_t	predictable_latency_mode: 1;
+		/* Predictable Latency Mode (PLM) */
+		uint32_t	plm: 1;
 
-		/* Supports traffic based keep alive */
+		/* Traffic Based Keep Alive Support (TBKAS) */
 		uint32_t	tbkas: 1;
 
-		/* Supports reporting of namespace granularity */
-		uint32_t	namespace_granularity: 1;
+		/* Namespace Granularity (NG) */
+		uint32_t	ng: 1;
 
-		/* Supports SQ associations */
-		uint32_t	sq_associations: 1;
+		/* SQ Associations (SQA) */
+		uint32_t	sqa: 1;
 
-		/* Supports reporting of UUID list */
-		uint32_t	uuid_list: 1;
+		/* UUID List (ULIST) */
+		uint32_t	ulist: 1;
 
-		/* NVM subsystem supports multiple domains */
+		/* Multi-Domain Subsystem (MDS) */
 		uint32_t	mds: 1;
 
-		/* Supports fixed capacity management */
-		uint32_t	fixed_capacity_management: 1;
+		/* Fixed Capacity Management (FCM) */
+		uint32_t	fcm: 1;
 
-		/* Supports variable capacity management */
-		uint32_t	variable_capacity_management: 1;
+		/* Variable Capacity Management (VCM) */
+		uint32_t	vcm: 1;
 
-		/* Supports delete endurance group operation */
-		uint32_t	delete_endurance_group: 1;
+		/* Delete Endurance Group (DEG) */
+		uint32_t	deg: 1;
 
-		/* Supports delete NVM set */
-		uint32_t	delete_nvm_set: 1;
+		/* Delete NVM Set (DNVMS) */
+		uint32_t	dnvms: 1;
 
-		/* Supports I/O command set specific extended PI formats */
+		/* Extended LBA Formats Supported (ELBAS) */
 		uint32_t	elbas: 1;
 
 		/* MDTS and Size Limits Exclude Metadata (MEM) */
@@ -2445,9 +2445,33 @@ union spdk_nvme_cdata_ctratt {
 
 		uint32_t	reserved1: 2;
 
-		/* Supports flexible data placement */
+		/* Flexible Data Placement Support (FDPS) */
 		uint32_t	fdps: 1;
 
+		uint32_t	reserved2: 12;
+	};
+
+	/** Old bit names are deprecated and will be removed in 26.09 release */
+	struct {
+		uint32_t	host_id_exhid_supported: 1;
+		uint32_t	non_operational_power_state_permissive_mode: 1;
+		uint32_t	nvm_sets: 1;
+		uint32_t	read_recovery_levels: 1;
+		uint32_t	endurance_groups: 1;
+		uint32_t	predictable_latency_mode: 1;
+		uint32_t	tbkas: 1;
+		uint32_t	namespace_granularity: 1;
+		uint32_t	sq_associations: 1;
+		uint32_t	uuid_list: 1;
+		uint32_t	mds: 1;
+		uint32_t	fixed_capacity_management: 1;
+		uint32_t	variable_capacity_management: 1;
+		uint32_t	delete_endurance_group: 1;
+		uint32_t	delete_nvm_set: 1;
+		uint32_t	elbas: 1;
+		uint32_t	mem: 1;
+		uint32_t	reserved1: 2;
+		uint32_t	fdps: 1;
 		uint32_t	reserved2: 12;
 	} bits;
 };

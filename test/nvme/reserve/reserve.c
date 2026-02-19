@@ -218,7 +218,7 @@ get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t host_id_size;
 	uint32_t cdw11;
 
-	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.bits.host_id_exhid_supported) {
+	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.hids) {
 		host_id_size = 16;
 		cdw11 = 1;
 		printf("Using 128-bit extended host identifier\n");
@@ -260,7 +260,7 @@ set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t host_id_size;
 	uint32_t cdw11;
 
-	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.bits.host_id_exhid_supported) {
+	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.hids) {
 		host_id_size = 16;
 		cdw11 = 1;
 		printf("Using 128-bit extended host identifier\n");
@@ -399,7 +399,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	fprintf(stdout, "Reservation Number of Registered Controllers    %u\n", status->regctl);
 	fprintf(stdout, "Reservation Persist Through Power Loss State    %u\n", status->ptpls);
 
-	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.bits.host_id_exhid_supported) {
+	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.hids) {
 		struct spdk_nvme_reservation_status_extended_data *ext_status;
 
 		ext_status = (struct spdk_nvme_reservation_status_extended_data *)payload;

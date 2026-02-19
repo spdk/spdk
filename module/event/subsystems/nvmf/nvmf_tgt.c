@@ -587,7 +587,7 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 		nvmf_cdata.oacs.nsrs = nvme_cdata.oacs.nsrs;
 	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list) {
-		nvmf_cdata.ctratt.bits.uuid_list = nvme_cdata.ctratt.bits.uuid_list;
+		nvmf_cdata.ctratt.ulist = nvme_cdata.ctratt.ulist;
 	}
 
 	/* Copy the fixed up data back to the response */
