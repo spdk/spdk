@@ -783,12 +783,11 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 		lba = dsm_range.starting_lba;
 		lba_count = dsm_range.length;
-		if (dmrsl > 0 && lba_count > dmrsl) {
-			SPDK_ERRLOG("invalid unmap size %" PRIu32 " blocks, should not exceed"
-				    " %" PRIu32 " blocks\n", lba_count, dmrsl);
-			response->status.sct = SPDK_NVME_SCT_GENERIC;
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			break;
+
+		if (dmrsl && lba_count > dmrsl) {
+			SPDK_DEBUGLOG(nvmf, "Maximum number of logical block in a single range exceeded %" PRIu32
+				      ", skip processing remaining blocks %" PRIu32 ".\n", dmrsl, lba_count - dmrsl);
+			lba_count = dmrsl;
 		}
 
 		unmap_ctx->count++;
