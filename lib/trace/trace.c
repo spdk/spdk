@@ -248,15 +248,18 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 {
 	uint32_t i = 0, max_dedicated_cpu = 0;
 	uint64_t file_size;
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
 	uint64_t main_section_offset, tpoint_mask_section_offset, owner_type_section_offset;
-	uint64_t object_section_offset, tpoint_section_offset, owner_section_offset;
+	uint64_t object_section_offset, tpoint_section_offset, lcore_offsets_section_offset;
+	uint64_t owner_section_offset;
+	uint32_t max_lcore;
 	struct spdk_trace_section_main *main_section;
 	struct spdk_trace_section_owner *owner_section;
 	struct spdk_trace_section_tpoint_mask *tpoint_mask_section;
 	struct spdk_trace_section_owner_type *owner_type_section;
 	struct spdk_trace_section_object *object_section;
 	struct spdk_trace_section_tpoint *tpoint_section;
+	struct spdk_trace_section_lcore_offsets *lcore_offsets_section;
+	uint64_t next_lcore_offset;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -271,6 +274,27 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 
 	spdk_cpuset_zero(&cpuset);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&cpuset, i, true);
+		max_dedicated_cpu = i;
+	}
+
+	g_user_thread_index_start = max_dedicated_cpu + 1;
+
+	if (g_user_thread_index_start + num_threads > SPDK_TRACE_MAX_LCORE) {
+		SPDK_ERRLOG("user threads overlap with the threads on dedicated cpus\n");
+		return 1;
+	}
+
+	g_ut_array = spdk_bit_array_create(num_threads);
+	if (!g_ut_array) {
+		SPDK_ERRLOG("could not create bit array for threads\n");
+		return 1;
+	}
+
+	max_lcore = g_user_thread_index_start + num_threads;
+
 	file_size = sizeof(struct spdk_trace_file);
 
 	main_section_offset = file_size;
@@ -296,30 +320,12 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	file_size += sizeof(struct spdk_trace_section_tpoint) +
 		     SPDK_TRACE_MAX_TPOINT_ID * sizeof(struct spdk_trace_tpoint);
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		spdk_cpuset_set_cpu(&cpuset, i, true);
-		lcore_offsets[i] = file_size;
-		file_size += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
-		max_dedicated_cpu = i;
-	}
+	lcore_offsets_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_lcore_offsets) +
+		     max_lcore * sizeof(uint64_t);
 
-	g_user_thread_index_start = max_dedicated_cpu + 1;
-
-	if (g_user_thread_index_start + num_threads > SPDK_TRACE_MAX_LCORE) {
-		SPDK_ERRLOG("user threads overlap with the threads on dedicated cpus\n");
-		return 1;
-	}
-
-	g_ut_array = spdk_bit_array_create(num_threads);
-	if (!g_ut_array) {
-		SPDK_ERRLOG("could not create bit array for threads\n");
-		return 1;
-	}
-
-	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
-		lcore_offsets[i] = file_size;
-		file_size += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
-	}
+	file_size += (spdk_env_get_core_count() + num_threads) *
+		     spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -365,6 +371,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER_TYPE] = owner_type_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OBJECT] = object_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT] = tpoint_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_LCORE_OFFSETS] = lcore_offsets_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER] = owner_section_offset;
 
 	main_section = spdk_trace_get_main_section(g_trace_file);
@@ -386,22 +393,33 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	owner_section->num_owners = TRACE_NUM_OWNERS;
 	owner_section->owner_description_size = TRACE_OWNER_DESCRIPTION_SIZE;
 
-	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+	lcore_offsets_section = spdk_trace_get_lcore_offsets_section(g_trace_file);
+	lcore_offsets_section->count = max_lcore;
+
+	next_lcore_offset = lcore_offsets_section_offset + sizeof(struct spdk_trace_section_lcore_offsets) +
+			    max_lcore * sizeof(uint64_t);
+
+	SPDK_ENV_FOREACH_CORE(i) {
 		struct spdk_trace_history *lcore_history;
 
-		g_trace_file->lcore_history_offsets[i] = lcore_offsets[i];
-		if (lcore_offsets[i] == 0) {
-			continue;
-		}
-
-		if (i <= max_dedicated_cpu) {
-			assert(spdk_cpuset_get_cpu(&cpuset, i));
-		}
-
+		assert(spdk_cpuset_get_cpu(&cpuset, i));
+		lcore_offsets_section->lcore_offsets[i] = next_lcore_offset;
 		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
 		lcore_history->num_tpoint_ids = SPDK_TRACE_MAX_TPOINT_ID;
+		next_lcore_offset += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
+	}
+
+	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
+		struct spdk_trace_history *lcore_history;
+
+		lcore_offsets_section->lcore_offsets[i] = next_lcore_offset;
+		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
+		lcore_history->lcore = i;
+		lcore_history->num_entries = num_entries;
+		lcore_history->num_tpoint_ids = SPDK_TRACE_MAX_TPOINT_ID;
+		next_lcore_offset += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 	}
 	g_trace_file->file_size = file_size;
 

@@ -442,7 +442,12 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	struct lcore_trace_record_ctx *lcore_port;
 	char copy_buff[TRACE_FILE_COPY_SIZE];
 	struct spdk_trace_file header;
-	int rc, i;
+	struct spdk_trace_section_lcore_offsets *in_lcore_offsets_section;
+	struct spdk_trace_section_lcore_offsets out_lcore_offsets_header;
+	uint64_t *lcore_offsets;
+	uint64_t next_lcore_offset;
+	int rc;
+	uint32_t i;
 	ssize_t len = 0;
 	uint64_t current_offset;
 	uint64_t len_sum;
@@ -459,16 +464,15 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 
 	memcpy(&header, ctx->trace_file, sizeof(header));
 
+	in_lcore_offsets_section = spdk_trace_get_lcore_offsets_section(ctx->trace_file);
 	current_offset = sizeof(header) +
 			 spdk_trace_file_get_sections_size(ctx->trace_file);
-	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+
+	for (i = 0; i < in_lcore_offsets_section->count; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {
-			header.lcore_history_offsets[i] = current_offset;
 			current_offset += spdk_get_trace_history_size(lcore_port->num_entries,
 					  lcore_port->in_history->num_tpoint_ids);
-		} else {
-			header.lcore_history_offsets[i] = 0;
 		}
 	}
 	header.file_size = current_offset;
@@ -480,14 +484,49 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	}
 
 	rc = cont_write(ctx->out_fd, (char *)ctx->trace_file + sizeof(header),
-			spdk_trace_file_get_sections_size(ctx->trace_file));
+			header.section_offsets[SPDK_TRACE_SECTION_LCORE_OFFSETS] - sizeof(header));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write sections into trace file\n");
 		goto out;
 	}
 
+	memset(&out_lcore_offsets_header, 0, sizeof(out_lcore_offsets_header));
+	out_lcore_offsets_header.count = in_lcore_offsets_section->count;
+	lcore_offsets = calloc(in_lcore_offsets_section->count, sizeof(uint64_t));
+	if (!lcore_offsets) {
+		fprintf(stderr, "Failed to allocate lcore offsets\n");
+		rc = -ENOMEM;
+		goto out;
+	}
+
+	next_lcore_offset = sizeof(header) +
+			    spdk_trace_file_get_sections_size(ctx->trace_file);
+
+	for (i = 0; i < in_lcore_offsets_section->count; i++) {
+		lcore_port = &ctx->lcore_ports[i];
+		if (lcore_port->valid) {
+			lcore_offsets[i] = next_lcore_offset;
+			next_lcore_offset += spdk_get_trace_history_size(lcore_port->num_entries,
+					     lcore_port->in_history->num_tpoint_ids);
+		}
+	}
+
+	rc = cont_write(ctx->out_fd, &out_lcore_offsets_header, sizeof(out_lcore_offsets_header));
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write lcore section header into trace file\n");
+		free(lcore_offsets);
+		goto out;
+	}
+	rc = cont_write(ctx->out_fd, lcore_offsets,
+			in_lcore_offsets_section->count * sizeof(uint64_t));
+	free(lcore_offsets);
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write lcore section offsets into trace file\n");
+		goto out;
+	}
+
 	/* Append each lcore trace file into converged trace file */
-	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+	for (i = 0; i < in_lcore_offsets_section->count; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 
 		if (!lcore_port->valid) {
