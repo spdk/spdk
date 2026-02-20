@@ -26,6 +26,8 @@ SPDK_LOG_REGISTER_COMPONENT(trace)
 uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)
 {
+	struct spdk_trace_section_tpoint_mask *section;
+
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
 		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return 0ULL;
@@ -35,12 +37,15 @@ spdk_trace_get_tpoint_mask(uint32_t group_id)
 		return 0ULL;
 	}
 
-	return g_trace_file->tpoint_mask[group_id];
+	section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	return section->tpoint_mask[group_id];
 }
 
 void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	struct spdk_trace_section_tpoint_mask *section;
+
 	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
@@ -51,12 +56,15 @@ spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 		return;
 	}
 
-	g_trace_file->tpoint_mask[group_id] |= tpoint_mask;
+	section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	section->tpoint_mask[group_id] |= tpoint_mask;
 }
 
 void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	struct spdk_trace_section_tpoint_mask *section;
+
 	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
@@ -67,7 +75,8 @@ spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 		return;
 	}
 
-	g_trace_file->tpoint_mask[group_id] &= ~tpoint_mask;
+	section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	section->tpoint_mask[group_id] &= ~tpoint_mask;
 }
 
 uint64_t

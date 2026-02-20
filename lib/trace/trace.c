@@ -249,9 +249,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	uint32_t i = 0, max_dedicated_cpu = 0;
 	uint64_t file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
-	uint64_t main_section_offset, owner_section_offset;
+	uint64_t main_section_offset, tpoint_mask_section_offset, owner_section_offset;
 	struct spdk_trace_section_main *main_section;
 	struct spdk_trace_section_owner *owner_section;
+	struct spdk_trace_section_tpoint_mask *tpoint_mask_section;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -274,6 +275,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	owner_section_offset = file_size;
 	file_size += sizeof(struct spdk_trace_section_owner) +
 		     TRACE_NUM_OWNERS * (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
+
+	tpoint_mask_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_tpoint_mask) +
+		     SPDK_TRACE_MAX_GROUP_ID * sizeof(uint64_t);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
@@ -340,10 +345,14 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	g_trace_file->num_sections = SPDK_TRACE_NUM_SECTIONS;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_MAIN] = main_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT_MASK] = tpoint_mask_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER] = owner_section_offset;
 
 	main_section = spdk_trace_get_main_section(g_trace_file);
 	main_section->tsc_rate = spdk_get_ticks_hz();
+
+	tpoint_mask_section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	tpoint_mask_section->count = SPDK_TRACE_MAX_GROUP_ID;
 
 	owner_section = spdk_trace_get_owner_section(g_trace_file);
 	owner_section->num_owners = TRACE_NUM_OWNERS;
