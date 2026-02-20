@@ -250,11 +250,12 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	uint64_t file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
 	uint64_t main_section_offset, tpoint_mask_section_offset, owner_type_section_offset;
-	uint64_t owner_section_offset;
+	uint64_t object_section_offset, owner_section_offset;
 	struct spdk_trace_section_main *main_section;
 	struct spdk_trace_section_owner *owner_section;
 	struct spdk_trace_section_tpoint_mask *tpoint_mask_section;
 	struct spdk_trace_section_owner_type *owner_type_section;
+	struct spdk_trace_section_object *object_section;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -285,6 +286,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	owner_type_section_offset = file_size;
 	file_size += sizeof(struct spdk_trace_section_owner_type) +
 		     SPDK_TRACE_MAX_OWNER_TYPE * sizeof(struct spdk_trace_owner_type);
+
+	object_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_object) +
+		     SPDK_TRACE_MAX_OBJECT * sizeof(struct spdk_trace_object);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
@@ -353,6 +358,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_MAIN] = main_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT_MASK] = tpoint_mask_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER_TYPE] = owner_type_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OBJECT] = object_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER] = owner_section_offset;
 
 	main_section = spdk_trace_get_main_section(g_trace_file);
@@ -363,6 +369,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	owner_type_section = spdk_trace_get_owner_type_section(g_trace_file);
 	owner_type_section->count = SPDK_TRACE_MAX_OWNER_TYPE;
+
+	object_section = spdk_trace_get_object_section(g_trace_file);
+	object_section->count = SPDK_TRACE_MAX_OBJECT;
 
 	owner_section = spdk_trace_get_owner_section(g_trace_file);
 	owner_section->num_owners = TRACE_NUM_OWNERS;

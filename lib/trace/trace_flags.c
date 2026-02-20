@@ -443,7 +443,7 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 	/* 'object' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	 */
-	object = &g_trace_file->object[type];
+	object = &spdk_trace_get_object_section(g_trace_file)->object[type];
 	assert(object->type == 0);
 
 	object->type = type;

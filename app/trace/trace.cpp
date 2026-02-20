@@ -112,14 +112,16 @@ print_object_id(const struct spdk_trace_tpoint *d, struct spdk_trace_parser_entr
 	/* Set size to 128 and 256 bytes to make sure we can fit all the characters we need */
 	char related_id[128] = {'\0'};
 	char ids[256] = {'\0'};
+	struct spdk_trace_section_object *obj_section;
 
+	obj_section = spdk_trace_get_object_section(g_file);
 	if (entry->related_type != OBJECT_NONE) {
 		snprintf(related_id, sizeof(related_id), " (%c%jd)",
-			 g_file->object[entry->related_type].id_prefix,
+			 obj_section->object[entry->related_type].id_prefix,
 			 entry->related_index);
 	}
 
-	snprintf(ids, sizeof(ids), "%c%jd%s", g_file->object[d->object_type].id_prefix,
+	snprintf(ids, sizeof(ids), "%c%jd%s", obj_section->object[d->object_type].id_prefix,
 		 entry->object_index, related_id);
 	printf("id:    %-17s", ids);
 }
@@ -203,6 +205,7 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 {
 	struct spdk_trace_entry *e = entry->entry;
 	struct spdk_trace_section_owner_type *ot_section;
+	struct spdk_trace_section_object *obj_section;
 	const struct spdk_trace_tpoint *d;
 	size_t i;
 
@@ -229,16 +232,17 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 	if (e->size != 0) {
 		spdk_json_write_named_uint32(g_json, "size", e->size);
 	}
+	obj_section = spdk_trace_get_object_section(g_file);
 	if (d->new_object || d->object_type != OBJECT_NONE || e->object_id != 0) {
 		char object_type;
 
 		spdk_json_write_named_object_begin(g_json, "object");
 		if (d->new_object) {
-			object_type =  g_file->object[d->object_type].id_prefix;
+			object_type =  obj_section->object[d->object_type].id_prefix;
 			spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64, object_type,
 							 entry->object_index);
 		} else if (d->object_type != OBJECT_NONE) {
-			object_type =  g_file->object[d->object_type].id_prefix;
+			object_type =  obj_section->object[d->object_type].id_prefix;
 			if (entry->object_index != UINT64_MAX) {
 				spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64,
 								 object_type,
@@ -251,10 +255,9 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 		spdk_json_write_object_end(g_json);
 	}
 
-	/* Print related objects array */
 	if (entry->related_index != UINT64_MAX) {
 		spdk_json_write_named_string_fmt(g_json, "related", "%c%" PRIu64,
-						 g_file->object[entry->related_type].id_prefix,
+						 obj_section->object[entry->related_type].id_prefix,
 						 entry->related_index);
 	}
 
