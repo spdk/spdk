@@ -386,6 +386,9 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 	}
 
 	_iter = _entries.begin();
+	if (_tsc_offset == 0 && !_entries.empty()) {
+		_tsc_offset = _iter->first.tsc;
+	}
 	return true;
 }
 

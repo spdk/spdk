@@ -225,11 +225,6 @@ spdk_trace_get_tsc_rate(const struct spdk_trace_file *trace_file)
 	return spdk_trace_get_main_section(trace_file)->tsc_rate;
 }
 
-static inline uint64_t
-spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
-{
-	return trace_file->file_size;
-}
 
 #define spdk_trace_get_tpoint_mask_section(f) \
 	((struct spdk_trace_section_tpoint_mask *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_TPOINT_MASK))
@@ -248,6 +243,12 @@ spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 
 #define spdk_trace_get_owner_section(f) \
 	((struct spdk_trace_section_owner *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OWNER))
+
+static inline uint64_t
+spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
+{
+	return trace_file->file_size;
+}
 
 static inline uint64_t
 spdk_trace_file_get_sections_size(const struct spdk_trace_file *f)
