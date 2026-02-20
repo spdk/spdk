@@ -122,6 +122,7 @@ struct spdk_trace_history {
 
 enum spdk_trace_section_type {
 	SPDK_TRACE_SECTION_MAIN = 0,
+	SPDK_TRACE_SECTION_OWNER = 1,
 	SPDK_TRACE_NUM_SECTIONS,
 };
 
@@ -133,6 +134,14 @@ struct spdk_trace_section_main {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_main) == 512, "incorrect size");
 
+struct spdk_trace_section_owner {
+	uint16_t	num_owners;
+	uint16_t	owner_description_size;
+	uint8_t		reserved[124];
+	uint8_t		data[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_owner) == 128, "incorrect size");
+
 struct spdk_trace_file {
 	uint64_t			file_size;
 	uint16_t			num_sections;
@@ -143,20 +152,8 @@ struct spdk_trace_file {
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 
-	uint16_t			num_owners;
-	uint16_t			owner_description_size;
-	uint8_t				reserved2[4];
-
 	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
-
-	/** Offset of beginning of struct spdk_trace_owner data. */
-	uint64_t			owner_offset;
-
-	/** Variable sized data sections are at the end of this data structure,
-	 *  referenced by offsets defined in this structure.
-	 */
-	uint8_t	data[0];
 };
 extern struct spdk_trace_file *g_trace_file;
 
@@ -201,10 +198,17 @@ spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 	return trace_file->file_size;
 }
 
+#define spdk_trace_get_owner_section(f) \
+	((struct spdk_trace_section_owner *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OWNER))
+
 static inline uint64_t
-spdk_trace_file_get_sections_size(void)
+spdk_trace_file_get_sections_size(const struct spdk_trace_file *f)
 {
-	return sizeof(struct spdk_trace_section_main);
+	struct spdk_trace_section_owner *os = spdk_trace_get_owner_section(f);
+
+	return sizeof(struct spdk_trace_section_main) +
+	       sizeof(struct spdk_trace_section_owner) +
+	       os->num_owners * (sizeof(struct spdk_trace_owner) + os->owner_description_size);
 }
 
 static inline struct spdk_trace_history *
@@ -227,15 +231,16 @@ spdk_get_per_lcore_history(struct spdk_trace_file *trace_file, unsigned lcore)
 static inline struct spdk_trace_owner *
 spdk_get_trace_owner(const struct spdk_trace_file *trace_file, uint16_t owner_id)
 {
+	struct spdk_trace_section_owner *section;
 	uint64_t owner_size;
 
-	if (owner_id >= trace_file->num_owners) {
+	section = spdk_trace_get_owner_section(trace_file);
+	if (section == NULL || owner_id >= section->num_owners) {
 		return NULL;
 	}
 
-	owner_size = sizeof(struct spdk_trace_owner) + trace_file->owner_description_size;
-	return (struct spdk_trace_owner *)
-	       (((char *)trace_file) + trace_file->owner_offset + owner_id * owner_size);
+	owner_size = sizeof(struct spdk_trace_owner) + section->owner_description_size;
+	return (struct spdk_trace_owner *)(section->data + owner_id * owner_size);
 }
 
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id,

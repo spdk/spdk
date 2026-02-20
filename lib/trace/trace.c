@@ -249,9 +249,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	uint32_t i = 0, max_dedicated_cpu = 0;
 	uint64_t file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
-	uint64_t main_section_offset;
+	uint64_t main_section_offset, owner_section_offset;
 	struct spdk_trace_section_main *main_section;
-	uint64_t owner_offset;
+	struct spdk_trace_section_owner *owner_section;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -271,9 +271,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	main_section_offset = file_size;
 	file_size += sizeof(struct spdk_trace_section_main);
 
-	owner_offset = file_size;
-	file_size += TRACE_NUM_OWNERS *
-		     (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
+	owner_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_owner) +
+		     TRACE_NUM_OWNERS * (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
@@ -340,9 +340,14 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	g_trace_file->num_sections = SPDK_TRACE_NUM_SECTIONS;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_MAIN] = main_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER] = owner_section_offset;
 
 	main_section = spdk_trace_get_main_section(g_trace_file);
 	main_section->tsc_rate = spdk_get_ticks_hz();
+
+	owner_section = spdk_trace_get_owner_section(g_trace_file);
+	owner_section->num_owners = TRACE_NUM_OWNERS;
+	owner_section->owner_description_size = TRACE_OWNER_DESCRIPTION_SIZE;
 
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		struct spdk_trace_history *lcore_history;
@@ -362,9 +367,6 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_history->num_tpoint_ids = SPDK_TRACE_MAX_TPOINT_ID;
 	}
 	g_trace_file->file_size = file_size;
-	g_trace_file->num_owners = TRACE_NUM_OWNERS;
-	g_trace_file->owner_description_size = TRACE_OWNER_DESCRIPTION_SIZE;
-	g_trace_file->owner_offset = owner_offset;
 
 	if (trace_flags_init()) {
 		goto trace_init_err;

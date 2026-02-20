@@ -445,9 +445,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	int rc, i;
 	ssize_t len = 0;
 	uint64_t current_offset;
-	uint64_t owner_size;
 	uint64_t len_sum;
-	uint8_t *owner_buf;
 
 	ctx->out_fd = open(ctx->out_file, flags, 0600);
 	if (ctx->out_fd < 0) {
@@ -461,11 +459,8 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 
 	memcpy(&header, ctx->trace_file, sizeof(header));
 
-	current_offset = sizeof(header) + spdk_trace_file_get_sections_size();
-	owner_size = (uint64_t)ctx->trace_file->num_owners *
-		     (sizeof(struct spdk_trace_owner) + ctx->trace_file->owner_description_size);
-	header.owner_offset = current_offset;
-	current_offset += owner_size;
+	current_offset = sizeof(header) +
+			 spdk_trace_file_get_sections_size(ctx->trace_file);
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {
@@ -485,17 +480,9 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	}
 
 	rc = cont_write(ctx->out_fd, (char *)ctx->trace_file + sizeof(header),
-			spdk_trace_file_get_sections_size());
+			spdk_trace_file_get_sections_size(ctx->trace_file));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write sections into trace file\n");
-		goto out;
-	}
-
-	/* Append owner data into converged trace file */
-	owner_buf = (uint8_t *)ctx->trace_file + ctx->trace_file->owner_offset;
-	rc = cont_write(ctx->out_fd, owner_buf, owner_size);
-	if (rc < 0) {
-		fprintf(stderr, "Failed to write owner_data into trace file\n");
 		goto out;
 	}
 

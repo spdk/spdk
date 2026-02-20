@@ -373,6 +373,7 @@ trace_print_json(void)
 	struct spdk_trace_parser_entry	entry;
 	uint64_t	tsc_offset, tsc_base_offset;
 	uint64_t	tsc_rate = spdk_trace_get_tsc_rate(g_file);
+	uint16_t	i;
 
 	g_json = spdk_json_write_begin(print_json, NULL, 0);
 	if (g_json == NULL) {
@@ -384,7 +385,7 @@ trace_print_json(void)
 	print_tpoint_definitions();
 
 	spdk_json_write_named_object_begin(g_json, "owners");
-	for (uint16_t i = 1; i < g_file->num_owners; i++) {
+	for (i = 1; i < spdk_trace_get_owner_section(g_file)->num_owners; i++) {
 		struct spdk_trace_owner *owner = spdk_get_trace_owner(g_file, i);
 		char key[16];
 

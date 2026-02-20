@@ -311,16 +311,18 @@ static void
 _owner_set_description(uint16_t owner_id, const char *description, bool append)
 {
 	struct spdk_trace_owner *owner;
+	struct spdk_trace_section_owner *section;
 	char old[256] = {};
 
-	assert(sizeof(old) >= g_trace_file->owner_description_size);
+	section = spdk_trace_get_owner_section(g_trace_file);
+	assert(sizeof(old) >= section->owner_description_size);
 	owner = spdk_get_trace_owner(g_trace_file, owner_id);
 	assert(owner != NULL);
 	if (append) {
-		memcpy(old, owner->description, g_trace_file->owner_description_size);
+		memcpy(old, owner->description, section->owner_description_size);
 	}
 
-	snprintf(owner->description, g_trace_file->owner_description_size,
+	snprintf(owner->description, section->owner_description_size,
 		 "%s%s%s", old, append ? " " : "", description);
 }
 
@@ -617,6 +619,7 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 int
 trace_flags_init(void)
 {
+	struct spdk_trace_section_owner *owner_section;
 	struct spdk_trace_register_fn *reg_fn;
 	uint16_t i;
 	uint16_t owner_id_start;
@@ -636,14 +639,15 @@ trace_flags_init(void)
 	 * owner_ids at 256 to avoid collisions.
 	 */
 	owner_id_start = 256;
-	g_owner_ids.ring = calloc(g_trace_file->num_owners, sizeof(uint16_t));
+	owner_section = spdk_trace_get_owner_section(g_trace_file);
+	g_owner_ids.ring = calloc(owner_section->num_owners, sizeof(uint16_t));
 	if (g_owner_ids.ring == NULL) {
 		SPDK_ERRLOG("could not allocate g_owner_ids.ring\n");
 		return -ENOMEM;
 	}
 	g_owner_ids.head = 0;
-	g_owner_ids.tail = g_trace_file->num_owners - owner_id_start;
-	g_owner_ids.size = g_trace_file->num_owners;
+	g_owner_ids.tail = owner_section->num_owners - owner_id_start;
+	g_owner_ids.size = owner_section->num_owners;
 	for (i = 0; i < g_owner_ids.tail; i++) {
 		g_owner_ids.ring[i] = i + owner_id_start;
 	}
