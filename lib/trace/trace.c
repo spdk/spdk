@@ -33,10 +33,16 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) == 9, "incorrect size");
 SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE == 128,
 		   "incorrect size");
 
+static inline void
+trace_history_increment_tpoint_count(struct spdk_trace_history *history, uint16_t tpoint_id)
+{
+	history->tpoint_count[tpoint_id]++;
+}
+
 static inline struct spdk_trace_entry *
 get_trace_entry(struct spdk_trace_history *history, uint64_t offset)
 {
-	return &history->entries[offset & (history->num_entries - 1)];
+	return spdk_trace_history_get_entry(history, offset & (history->num_entries - 1));
 }
 
 void
@@ -66,7 +72,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id, uint32_t
 		tsc = spdk_get_ticks();
 	}
 
-	lcore_history->tpoint_count[tpoint_id]++;
+	trace_history_increment_tpoint_count(lcore_history, tpoint_id);
 
 	tpoint = &g_trace_file->tpoint[tpoint_id];
 	/* Make sure that the number of arguments passed matches tracepoint definition */
@@ -385,7 +391,7 @@ spdk_trace_cleanup(void)
 		if (lcore_history == NULL) {
 			continue;
 		}
-		unlink = lcore_history->entries[0].tsc == 0;
+		unlink = spdk_trace_history_get_entry(lcore_history, 0)->tsc == 0;
 		if (!unlink) {
 			break;
 		}

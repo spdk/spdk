@@ -280,7 +280,7 @@ circular_buffer_padding_backward(int fd, struct spdk_trace_history *in_history,
 		return -1;
 	}
 
-	rc = cont_write(fd, &in_history->entries[cir_start],
+	rc = cont_write(fd, spdk_trace_history_get_entry(in_history, cir_start),
 			sizeof(struct spdk_trace_entry) * (cir_end - cir_start));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to append entries into lcore file\n");
@@ -302,7 +302,7 @@ circular_buffer_padding_across(int fd, struct spdk_trace_history *in_history,
 		return -1;
 	}
 
-	rc = cont_write(fd, &in_history->entries[cir_start],
+	rc = cont_write(fd, spdk_trace_history_get_entry(in_history, cir_start),
 			sizeof(struct spdk_trace_entry) * (num_entries - cir_start));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to append entries into lcore file backward\n");
@@ -313,7 +313,8 @@ circular_buffer_padding_across(int fd, struct spdk_trace_history *in_history,
 		return 0;
 	}
 
-	rc = cont_write(fd, &in_history->entries[0], sizeof(struct spdk_trace_entry) * cir_end);
+	rc = cont_write(fd, spdk_trace_history_get_entry(in_history, 0),
+			sizeof(struct spdk_trace_entry) * cir_end);
 	if (rc < 0) {
 		fprintf(stderr, "Failed to append entries into lcore file forward\n");
 		return rc;
@@ -368,7 +369,7 @@ lcore_trace_record(struct lcore_trace_record_ctx *lcore_port)
 			/* Updates haven't been across circular buffer yet.
 			 * The first entry in shared memory is the eldest one.
 			 */
-			lcore_port->first_entry_tsc = in_history->entries[0].tsc;
+			lcore_port->first_entry_tsc = spdk_trace_history_get_entry(in_history, 0)->tsc;
 
 			lcore_port->num_entries += shm_cir_next;
 			rc = circular_buffer_padding_backward(fd, in_history, 0, shm_cir_next);
@@ -376,7 +377,7 @@ lcore_trace_record(struct lcore_trace_record_ctx *lcore_port)
 			/* Updates have already been across circular buffer.
 			 * The eldest entry in shared memory is pointed by shm_cir_next.
 			 */
-			lcore_port->first_entry_tsc = in_history->entries[shm_cir_next].tsc;
+			lcore_port->first_entry_tsc = spdk_trace_history_get_entry(in_history, shm_cir_next)->tsc;
 
 			lcore_port->num_entries += num_cir_entries;
 			rc = circular_buffer_padding_all(fd, in_history, shm_cir_next);
@@ -426,7 +427,7 @@ out:
 
 	/* Update last_entry_tsc to align with appended entries */
 	last_idx = lcore_trace_last_entry_idx(in_history, shm_cir_next);
-	lcore_port->last_entry_tsc = in_history->entries[last_idx].tsc;
+	lcore_port->last_entry_tsc = spdk_trace_history_get_entry(in_history, last_idx)->tsc;
 	lcore_port->rec_next_entry = shm_next_entry;
 
 	return rc;

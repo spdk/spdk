@@ -153,6 +153,12 @@ struct spdk_trace_file {
 };
 extern struct spdk_trace_file *g_trace_file;
 
+static inline struct spdk_trace_entry *
+spdk_trace_history_get_entry(struct spdk_trace_history *history, uint64_t offset)
+{
+	return &history->entries[offset];
+}
+
 static inline uint64_t
 spdk_get_trace_history_size(uint64_t num_entries)
 {
