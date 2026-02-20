@@ -288,7 +288,7 @@ print_tpoint_definitions(void)
 		return;
 	}
 
-	spdk_json_write_named_uint64(g_json, "tsc_rate", g_file->tsc_rate);
+	spdk_json_write_named_uint64(g_json, "tsc_rate", spdk_trace_get_tsc_rate(g_file));
 	spdk_json_write_named_array_begin(g_json, "tpoints");
 
 	for (i = 0; i < SPDK_COUNTOF(g_file->tpoint); ++i) {
@@ -341,7 +341,7 @@ trace_print(int lcore)
 	struct spdk_trace_parser_entry	entry;
 	int		i;
 	uint64_t	tsc_offset, entry_count, tsc_base_offset;
-	uint64_t	tsc_rate = g_file->tsc_rate;
+	uint64_t	tsc_rate = spdk_trace_get_tsc_rate(g_file);
 
 	printf("TSC Rate: %ju\n", tsc_rate);
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; ++i) {
@@ -372,7 +372,7 @@ trace_print_json(void)
 {
 	struct spdk_trace_parser_entry	entry;
 	uint64_t	tsc_offset, tsc_base_offset;
-	uint64_t	tsc_rate = g_file->tsc_rate;
+	uint64_t	tsc_rate = spdk_trace_get_tsc_rate(g_file);
 
 	g_json = spdk_json_write_begin(print_json, NULL, 0);
 	if (g_json == NULL) {

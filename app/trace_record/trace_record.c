@@ -70,7 +70,7 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 
 	ctx->trace_file = (struct spdk_trace_file *)history_ptr;
 
-	g_tsc_rate = ctx->trace_file->tsc_rate;
+	g_tsc_rate = spdk_trace_get_tsc_rate(ctx->trace_file);
 	g_utsc_rate = g_tsc_rate / 1000;
 	if (g_tsc_rate == 0) {
 		fprintf(stderr, "Invalid tsc_rate %ju\n", g_tsc_rate);
@@ -461,7 +461,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 
 	memcpy(&header, ctx->trace_file, sizeof(header));
 
-	current_offset = sizeof(header);
+	current_offset = sizeof(header) + spdk_trace_file_get_sections_size();
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {
@@ -481,6 +481,13 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	rc = cont_write(ctx->out_fd, &header, sizeof(header));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write trace file header\n");
+		goto out;
+	}
+
+	rc = cont_write(ctx->out_fd, (char *)ctx->trace_file + sizeof(header),
+			spdk_trace_file_get_sections_size());
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write sections into trace file\n");
 		goto out;
 	}
 

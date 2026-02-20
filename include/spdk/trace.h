@@ -120,12 +120,24 @@ struct spdk_trace_history {
 
 #define SPDK_TRACE_MAX_LCORE		1024
 
+enum spdk_trace_section_type {
+	SPDK_TRACE_SECTION_MAIN = 0,
+	SPDK_TRACE_NUM_SECTIONS,
+};
+
+struct spdk_trace_section_main {
+	uint64_t	tsc_rate;
+	/** TSC value set by spdk_trace_clear(); the parser ignores entries older than this. */
+	uint64_t	clear_tsc;
+	uint8_t		reserved[496];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_main) == 512, "incorrect size");
+
 struct spdk_trace_file {
 	uint64_t			file_size;
-	uint64_t			tsc_rate;
-	/** TSC value set by spdk_trace_clear(); the parser ignores entries older than this. */
-	uint64_t			clear_tsc;
-
+	uint16_t			num_sections;
+	uint8_t				reserved[6];
+	uint64_t			section_offsets[SPDK_TRACE_NUM_SECTIONS];
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
 	struct spdk_trace_owner_type	owner_type[SPDK_TRACE_MAX_OWNER_TYPE];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
@@ -133,7 +145,7 @@ struct spdk_trace_file {
 
 	uint16_t			num_owners;
 	uint16_t			owner_description_size;
-	uint8_t				reserved[4];
+	uint8_t				reserved2[4];
 
 	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
@@ -165,10 +177,34 @@ spdk_get_trace_history_size(uint64_t num_entries, uint64_t num_tpoint_ids)
 	       num_entries * sizeof(struct spdk_trace_entry);
 }
 
+static inline void *
+spdk_trace_get_section(const struct spdk_trace_file *f, enum spdk_trace_section_type type)
+{
+	if ((uint32_t)type >= f->num_sections || f->section_offsets[type] == 0) {
+		return NULL;
+	}
+	return (char *)f + f->section_offsets[type];
+}
+
+#define spdk_trace_get_main_section(f) \
+	((struct spdk_trace_section_main *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_MAIN))
+
+static inline uint64_t
+spdk_trace_get_tsc_rate(const struct spdk_trace_file *trace_file)
+{
+	return spdk_trace_get_main_section(trace_file)->tsc_rate;
+}
+
 static inline uint64_t
 spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 {
 	return trace_file->file_size;
+}
+
+static inline uint64_t
+spdk_trace_file_get_sections_size(void)
+{
+	return sizeof(struct spdk_trace_section_main);
 }
 
 static inline struct spdk_trace_history *

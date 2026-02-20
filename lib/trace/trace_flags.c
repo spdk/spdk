@@ -127,7 +127,7 @@ spdk_trace_clear(void)
 		return;
 	}
 
-	g_trace_file->clear_tsc = spdk_get_ticks();
+	spdk_trace_get_main_section(g_trace_file)->clear_tsc = spdk_get_ticks();
 }
 
 struct spdk_trace_register_fn *

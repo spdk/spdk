@@ -249,6 +249,8 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	uint32_t i = 0, max_dedicated_cpu = 0;
 	uint64_t file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
+	uint64_t main_section_offset;
+	struct spdk_trace_section_main *main_section;
 	uint64_t owner_offset;
 	struct spdk_cpuset cpuset = {};
 
@@ -265,6 +267,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	spdk_cpuset_zero(&cpuset);
 	file_size = sizeof(struct spdk_trace_file);
+
+	main_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_main);
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		lcore_offsets[i] = file_size;
@@ -331,7 +337,11 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	memset(g_trace_file, 0, file_size);
 
-	g_trace_file->tsc_rate = spdk_get_ticks_hz();
+	g_trace_file->num_sections = SPDK_TRACE_NUM_SECTIONS;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_MAIN] = main_section_offset;
+
+	main_section = spdk_trace_get_main_section(g_trace_file);
+	main_section->tsc_rate = spdk_get_ticks_hz();
 
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		struct spdk_trace_history *lcore_history;
