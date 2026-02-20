@@ -104,23 +104,18 @@ struct spdk_trace_history {
 	/** Number of trace_entries contained in each trace_history. */
 	uint64_t			num_entries;
 
-	/**
-	 * Running count of number of occurrences of each tracepoint on this
-	 *  lcore.  Debug tools can use this to easily count tracepoints such as
-	 *  number of SCSI tasks completed or PDUs read.
-	 */
-	uint64_t			tpoint_count[SPDK_TRACE_MAX_TPOINT_ID];
+	/** Number of tracepoint IDs for the tpoint_count array. */
+	uint64_t			num_tpoint_ids;
 
 	/** Index to next spdk_trace_entry to fill. */
 	uint64_t			next_entry;
 
-	/**
-	 * Circular buffer of spdk_trace_entry structures for tracing
-	 *  tpoints on this core.  Debug tool spdk_trace reads this
-	 *  buffer from shared memory to post-process the tpoint entries and
-	 *  display in a human-readable format.
+	/*
+	 * Variable-length data follows:
+	 *   uint64_t tpoint_count[num_tpoint_ids]
+	 *   struct spdk_trace_entry entries[num_entries]
 	 */
-	struct spdk_trace_entry		entries[0];
+	uint8_t				data[0];
 };
 
 #define SPDK_TRACE_MAX_LCORE		1024
@@ -156,13 +151,18 @@ extern struct spdk_trace_file *g_trace_file;
 static inline struct spdk_trace_entry *
 spdk_trace_history_get_entry(struct spdk_trace_history *history, uint64_t offset)
 {
-	return &history->entries[offset];
+	uint64_t *counts = (uint64_t *)history->data;
+	struct spdk_trace_entry *entries = (struct spdk_trace_entry *)(counts + history->num_tpoint_ids);
+
+	return &entries[offset];
 }
 
 static inline uint64_t
-spdk_get_trace_history_size(uint64_t num_entries)
+spdk_get_trace_history_size(uint64_t num_entries, uint64_t num_tpoint_ids)
 {
-	return sizeof(struct spdk_trace_history) + num_entries * sizeof(struct spdk_trace_entry);
+	return sizeof(struct spdk_trace_history) +
+	       num_tpoint_ids * sizeof(uint64_t) +
+	       num_entries * sizeof(struct spdk_trace_entry);
 }
 
 static inline uint64_t

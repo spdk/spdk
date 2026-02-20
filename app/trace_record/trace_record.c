@@ -168,7 +168,8 @@ output_trace_files_prepare(struct aggr_trace_record_ctx *ctx, const char *aggr_p
 			printf("Create tmp lcore trace file %s for lcore %d\n", port_ctx->lcore_file, i);
 		}
 
-		port_ctx->out_history = calloc(1, sizeof(struct spdk_trace_history));
+		port_ctx->out_history =
+			calloc(1, spdk_get_trace_history_size(0, port_ctx->in_history->num_tpoint_ids));
 		if (port_ctx->out_history == NULL) {
 			fprintf(stderr, "Failed to allocate memory for out_history.\n");
 			goto err;
@@ -423,7 +424,8 @@ out:
 	}
 
 	/* Update tpoint_count info */
-	memcpy(lcore_port->out_history, lcore_port->in_history, sizeof(struct spdk_trace_history));
+	memcpy(lcore_port->out_history, lcore_port->in_history,
+	       spdk_get_trace_history_size(0, in_history->num_tpoint_ids));
 
 	/* Update last_entry_tsc to align with appended entries */
 	last_idx = lcore_trace_last_entry_idx(in_history, shm_cir_next);
@@ -464,7 +466,8 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {
 			header.lcore_history_offsets[i] = current_offset;
-			current_offset += spdk_get_trace_history_size(lcore_port->num_entries);
+			current_offset += spdk_get_trace_history_size(lcore_port->num_entries,
+					  lcore_port->in_history->num_tpoint_ids);
 		} else {
 			header.lcore_history_offsets[i] = 0;
 		}
@@ -490,7 +493,8 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		}
 
 		lcore_port->out_history->num_entries = lcore_port->num_entries;
-		rc = cont_write(ctx->out_fd, lcore_port->out_history, sizeof(struct spdk_trace_history));
+		rc = cont_write(ctx->out_fd, lcore_port->out_history,
+				spdk_get_trace_history_size(0, lcore_port->out_history->num_tpoint_ids));
 		if (rc < 0) {
 			fprintf(stderr, "Failed to write lcore trace header into trace file\n");
 			goto out;

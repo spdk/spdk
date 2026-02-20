@@ -36,7 +36,13 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZ
 static inline void
 trace_history_increment_tpoint_count(struct spdk_trace_history *history, uint16_t tpoint_id)
 {
-	history->tpoint_count[tpoint_id]++;
+	uint64_t *counts;
+
+	assert(history != NULL);
+	assert(tpoint_id < history->num_tpoint_ids);
+	counts = (uint64_t *)history->data;
+
+	counts[tpoint_id]++;
 }
 
 static inline struct spdk_trace_entry *
@@ -262,7 +268,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		lcore_offsets[i] = file_size;
-		file_size += spdk_get_trace_history_size(num_entries);
+		file_size += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 		max_dedicated_cpu = i;
 	}
 
@@ -281,7 +287,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
 		lcore_offsets[i] = file_size;
-		file_size += spdk_get_trace_history_size(num_entries);
+		file_size += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 	}
 	owner_offset = file_size;
 	file_size += TRACE_NUM_OWNERS *
@@ -342,6 +348,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
+		lcore_history->num_tpoint_ids = SPDK_TRACE_MAX_TPOINT_ID;
 	}
 	g_trace_file->file_size = file_size;
 	g_trace_file->num_owners = TRACE_NUM_OWNERS;
