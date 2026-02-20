@@ -98,6 +98,9 @@ struct spdk_trace_history {
 	/** Logical core number associated with this structure instance. */
 	int				lcore;
 
+	/** Thread name associated with this lcore. */
+	char				tname[SPDK_TRACE_THREAD_NAME_LEN];
+
 	/** Number of trace_entries contained in each trace_history. */
 	uint64_t			num_entries;
 
@@ -129,7 +132,6 @@ struct spdk_trace_file {
 	uint64_t			clear_tsc;
 
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
-	char				tname[SPDK_TRACE_MAX_LCORE][SPDK_TRACE_THREAD_NAME_LEN];
 	struct spdk_trace_owner_type	owner_type[SPDK_TRACE_MAX_OWNER_TYPE];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];

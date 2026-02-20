@@ -191,10 +191,10 @@ spdk_trace_register_user_thread(void)
 
 	assert(t_ut_lcore_history != NULL);
 
-	memset(g_trace_file->tname[ut_index], 0, SPDK_TRACE_THREAD_NAME_LEN);
+	memset(t_ut_lcore_history->tname, 0, SPDK_TRACE_THREAD_NAME_LEN);
 
 	tid = pthread_self();
-	ret = pthread_getname_np(tid, g_trace_file->tname[ut_index], SPDK_TRACE_THREAD_NAME_LEN);
+	ret = pthread_getname_np(tid, t_ut_lcore_history->tname, SPDK_TRACE_THREAD_NAME_LEN);
 	if (ret) {
 		SPDK_ERRLOG("cannot get thread name\n");
 		pthread_mutex_unlock(&g_ut_array_mutex);

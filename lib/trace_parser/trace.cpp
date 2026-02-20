@@ -171,6 +171,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 
 	pe->entry = entry = _iter->second;
 	pe->lcore = _iter->first.lcore;
+	pe->tname = spdk_get_per_lcore_history(_trace_file, pe->lcore)->tname;
 	/* Set related index to the max value to indicate "empty" state */
 	pe->related_index = UINT64_MAX;
 	pe->related_type = OBJECT_NONE;
