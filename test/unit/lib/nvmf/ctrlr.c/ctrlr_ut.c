@@ -2114,13 +2114,12 @@ test_identify_ctrlr_iocs_specific(void)
 	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_NVM;
 
 	/* dmrsl = 2048 logical blocks;
-	 * max_write_zeroes_size_kib = 1024;
-	 * mpsmin = 0;
+	 * wzsl = 8 (2^8 = 256 pages * 4 KiB/page (assuming mpsmin=0) = 1024 KiB);
 	 */
 	memset(&cdata_nvm, 0xFF, sizeof(cdata_nvm));
 	memset(&rsp, 0, sizeof(rsp));
 	subsystem.opts.dmrsl = 2048;
-	subsystem.max_write_zeroes_size_kib = (uint64_t)1024;
+	subsystem.opts.wzsl = 8;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
 			&cdata_nvm, sizeof(cdata_nvm)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);

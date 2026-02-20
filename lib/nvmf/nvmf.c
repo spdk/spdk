@@ -736,9 +736,16 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
 	spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
 	spdk_json_write_named_bool(w, "ana_reporting", subsystem->opts.ana_reporting);
-	/* dmrsl is in logical blocks; convert to KiB (assuming 512B block size). */
-	spdk_json_write_named_uint64(w, "max_discard_size_kib", subsystem->opts.dmrsl >> 1);
-	spdk_json_write_named_uint64(w, "max_write_zeroes_size_kib", subsystem->max_write_zeroes_size_kib);
+	/* dmrsl is in logical blocks; convert to KiB
+	 * (assuming 512B block size).
+	 */
+	spdk_json_write_named_uint64(w, "max_discard_size_kib",
+				     subsystem->opts.dmrsl >> 1);
+	/* wzsl to KiB: 2^wzsl pages * 4 KiB/page = 1 << (wzsl+2). */
+	spdk_json_write_named_uint64(w, "max_write_zeroes_size_kib",
+				     subsystem->opts.wzsl > 0 ?
+				     (uint64_t)1 << (subsystem->opts.wzsl + 2)
+				     : 0);
 	spdk_json_write_named_bool(w, "passthrough", subsystem->opts.passthrough);
 	spdk_json_write_named_bool(w, "enable_nssr", subsystem->opts.enable_nssr);
 

@@ -3432,12 +3432,10 @@ nvmf_ctrlr_identify_iocs_nvm(struct spdk_nvmf_ctrlr *ctrlr,
 			     struct spdk_nvme_cpl *rsp,
 			     struct spdk_nvme_nvm_ctrlr_data *cdata_nvm)
 {
-	/* The unit of max_write_zeroes_size_kib is KiB.
-	 * The unit of wzsl is the minimum memory page size(2 ^ (12 + CAP.MPSMIN) bytes)
-	 * and is reported as a power of two (2^n).
+	/* wzsl is in units of minimum memory page size, reported as a power of two
+	 * (2^wzsl). opts.wzsl is already in the NVMe spec format.
 	 */
-	cdata_nvm->wzsl = spdk_u64log2(ctrlr->subsys->max_write_zeroes_size_kib >>
-				       (2 + ctrlr->vcprop.cap.bits.mpsmin));
+	cdata_nvm->wzsl = ctrlr->subsys->opts.wzsl;
 
 	/* dmrsl is the maximum number of logical blocks for a
 	 * dataset management command. opts.dmrsl is already stored

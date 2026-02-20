@@ -828,13 +828,14 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
-	cmd.nvme_cmd.cdw12 = 3;
-	subsystem.max_write_zeroes_size_kib = 1;
+	/* wzsl=1 => max 2^(1+12)=8192 bytes => 16 blocks (512B) */
+	cmd.nvme_cmd.cdw12 = 16;
+	subsystem.opts.wzsl = 1;
 	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 
 	/* SLBA out of range */
-	subsystem.max_write_zeroes_size_kib = 0;
+	subsystem.opts.wzsl = 0;
 	cmd.nvme_cmd.cdw12 = 2;
 	cmd.nvme_cmd.cdw10 = 3;
 	memset(&rsp, 0, sizeof(rsp));

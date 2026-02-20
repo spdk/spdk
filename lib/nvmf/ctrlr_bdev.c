@@ -588,6 +588,12 @@ nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+static uint64_t
+nvmf_mps_to_blocks(uint8_t val, uint32_t block_size)
+{
+	return ((uint64_t)1 << (val + 12)) / block_size;
+}
+
 int
 nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
@@ -595,15 +601,18 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	uint64_t max_write_zeroes_size = req->qpair->ctrlr->subsys->max_write_zeroes_size_kib;
+	uint8_t wzsl = req->qpair->ctrlr->subsys->opts.wzsl;
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	uint64_t start_lba;
 	uint64_t num_blocks;
+	uint64_t max_blocks;
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
-	if (spdk_unlikely(max_write_zeroes_size > 0 &&
-			  num_blocks > (max_write_zeroes_size << 10) / spdk_bdev_desc_get_block_size(desc))) {
-		SPDK_ERRLOG("invalid write zeroes size, should not exceed %" PRIu64 "Kib\n", max_write_zeroes_size);
+	max_blocks = nvmf_mps_to_blocks(wzsl, block_size);
+	if (spdk_unlikely(wzsl > 0 && num_blocks > max_blocks)) {
+		SPDK_ERRLOG("invalid write zeroes size %" PRIu64 " blocks, should not exceed"
+			    " %" PRIu64 " blocks\n", num_blocks, max_blocks);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

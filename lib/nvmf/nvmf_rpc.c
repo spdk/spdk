@@ -430,6 +430,24 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	/* Convert KiB to logical blocks assuming 512B block size. */
 	opts.dmrsl = req->max_discard_size_kib << 1;
 
+	/* Convert max_write_zeroes_size_kib to wzsl.
+	 * wzsl is in units of minimum memory page size (4 KiB when mpsmin=0),
+	 * reported as a power of two (2^wzsl). Valid KiB values: 0 (no limit) or
+	 * power of 2 >= 8.
+	 */
+	if (req->max_write_zeroes_size_kib == 0) {
+		opts.wzsl = 0;
+	} else if (req->max_write_zeroes_size_kib >= 8 &&
+		   spdk_u64_is_pow2(req->max_write_zeroes_size_kib)) {
+		opts.wzsl = spdk_u64log2(req->max_write_zeroes_size_kib >> 2);
+	} else {
+		SPDK_ERRLOG("Subsystem %s: invalid max_write_zeroes_size_kib %"PRIu64"\n", req->nqn,
+			    req->max_write_zeroes_size_kib);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid max_write_zeroes_size_kib %"PRIu64, req->max_write_zeroes_size_kib);
+		goto cleanup;
+	}
+
 	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to create subsystem %s\n", req->nqn);
@@ -445,18 +463,6 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			    req->max_cntlid);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Invalid cntlid range [%u-%u]", req->min_cntlid, req->max_cntlid);
-		goto cleanup;
-	}
-
-	/* max_write_zeroes_size_kib must be aligned to 4 and power of 2 */
-	if (req->max_write_zeroes_size_kib == 0 || (req->max_write_zeroes_size_kib > 2 &&
-			spdk_u64_is_pow2(req->max_write_zeroes_size_kib))) {
-		subsystem->max_write_zeroes_size_kib = req->max_write_zeroes_size_kib;
-	} else {
-		SPDK_ERRLOG("Subsystem %s: invalid max_write_zeroes_size_kib %"PRIu64"\n", req->nqn,
-			    req->max_write_zeroes_size_kib);
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid max_write_zeroes_size_kib %"PRIu64, req->max_write_zeroes_size_kib);
 		goto cleanup;
 	}
 

@@ -264,6 +264,8 @@ spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type, struct spdk_nvmf_subs
 	SET_FIELD(enable_nssr, false);
 	/* 1 GiB in logical blocks (512B): 1 GiB / 512 = 2097152 */
 	SET_FIELD(dmrsl, 2097152);
+	/* 2^12 pages * 4 KiB/page = 16 MiB */
+	SET_FIELD(wzsl, 12);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -296,13 +298,14 @@ nvmf_subsystem_opts_copy(struct spdk_nvmf_subsystem_opts *opts,
 	SET_FIELD(passthrough);
 	SET_FIELD(enable_nssr);
 	SET_FIELD(dmrsl);
+	SET_FIELD(wzsl);
 
 	opts->opts_size = user_opts->opts_size;
 
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement.
 	 */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 85, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 86, "Incorrect size");
 #undef FIELD_OK
 #undef SET_FIELD
 }
@@ -387,6 +390,7 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 	subsystem->opts.passthrough = opts.passthrough;
 	subsystem->opts.enable_nssr = opts.enable_nssr;
 	subsystem->opts.dmrsl = opts.dmrsl;
+	subsystem->opts.wzsl = opts.wzsl;
 
 	pthread_mutex_init(&subsystem->mutex, NULL);
 	TAILQ_INIT(&subsystem->listeners);

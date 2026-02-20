@@ -213,8 +213,14 @@ struct spdk_nvmf_subsystem_opts {
 	 * 0 means no limit.
 	 */
 	uint32_t dmrsl;
+
+	/* Write Zeroes Size Limit (WZSL) in units of minimum memory
+	 * page size, reported as a power of two (2^wzsl). 0 means no limit.
+	 */
+	uint8_t wzsl;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 85, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 86,
+		   "Incorrect size");
 
 void spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type,
 				   struct spdk_nvmf_subsystem_opts *opts, size_t opts_size);

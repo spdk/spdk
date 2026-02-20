@@ -388,8 +388,6 @@ struct spdk_nvmf_subsystem {
 
 	struct spdk_nvmf_subsystem_opts			opts;
 
-	uint64_t					max_write_zeroes_size_kib;
-
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 
 	/* This mutex is used to protect fields that aren't touched on the I/O path (e.g. it's
