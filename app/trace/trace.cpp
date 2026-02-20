@@ -202,6 +202,7 @@ static void
 print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t tsc_offset)
 {
 	struct spdk_trace_entry *e = entry->entry;
+	struct spdk_trace_section_owner_type *ot_section;
 	const struct spdk_trace_tpoint *d;
 	size_t i;
 
@@ -212,9 +213,10 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 	spdk_json_write_named_uint64(g_json, "tpoint", e->tpoint_id);
 	spdk_json_write_named_uint64(g_json, "tsc", e->tsc);
 
-	if (g_file->owner_type[d->owner_type].id_prefix) {
+	ot_section = spdk_trace_get_owner_type_section(g_file);
+	if (ot_section->owner_type[d->owner_type].id_prefix) {
 		spdk_json_write_named_string_fmt(g_json, "poller", "%c%02d",
-						 g_file->owner_type[d->owner_type].id_prefix,
+						 ot_section->owner_type[d->owner_type].id_prefix,
 						 e->owner_id);
 	}
 	if (e->owner_id != OWNER_ID_NONE) {

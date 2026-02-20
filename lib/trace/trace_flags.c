@@ -306,10 +306,7 @@ spdk_trace_register_owner_type(uint8_t type, char id_prefix)
 		return;
 	}
 
-	/* 'owner_type' has 256 entries and since 'type' is a uint8_t, it
-	 * can't overrun the array.
-	 */
-	owner_type = &g_trace_file->owner_type[type];
+	owner_type = &spdk_trace_get_owner_type_section(g_trace_file)->owner_type[type];
 	assert(owner_type->type == 0);
 
 	owner_type->type = type;
