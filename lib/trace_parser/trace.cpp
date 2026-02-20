@@ -175,7 +175,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 	/* Set related index to the max value to indicate "empty" state */
 	pe->related_index = UINT64_MAX;
 	pe->related_type = OBJECT_NONE;
-	tpoint = &_trace_file->tpoint[entry->tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(_trace_file)->tpoint[entry->tpoint_id];
 	stats = &_stats[tpoint->object_type];
 
 	if (tpoint->new_object) {

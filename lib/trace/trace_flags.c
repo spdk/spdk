@@ -167,8 +167,10 @@ spdk_trace_create_tpoint_mask(uint32_t group_id, const char *tpoint_name)
 	}
 
 	for (i = group_base; i < next_group_base; i++) {
-		if (g_trace_file->tpoint[i].tpoint_id != 0 &&
-		    strcasecmp(g_trace_file->tpoint[i].name, tpoint_name) == 0) {
+		struct spdk_trace_tpoint *tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[i];
+
+		if (tpoint->tpoint_id != 0 &&
+		    strcasecmp(tpoint->name, tpoint_name) == 0) {
 			return SPDK_BIT(i - group_base);
 		}
 	}
@@ -462,7 +464,7 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 		SPDK_ERRLOG("name (%s) too long\n", opts->name);
 	}
 
-	tpoint = &g_trace_file->tpoint[opts->tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[opts->tpoint_id];
 	assert(tpoint->tpoint_id == 0);
 
 	snprintf(tpoint->name, sizeof(tpoint->name), "%s", opts->name);
@@ -560,7 +562,7 @@ spdk_trace_tpoint_register_relation(uint16_t tpoint_id, uint8_t object_type, uin
 	 * there is no order in which trace definitions are registered.
 	 * This way we can create relations between tpoint and objects
 	 * that will be declared later. */
-	tpoint = &g_trace_file->tpoint[tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[tpoint_id];
 	for (i = 0; i < SPDK_COUNTOF(tpoint->related_objects); ++i) {
 		if (tpoint->related_objects[i].object_type == OBJECT_NONE) {
 			tpoint->related_objects[i].object_type = object_type;

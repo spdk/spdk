@@ -126,6 +126,7 @@ enum spdk_trace_section_type {
 	SPDK_TRACE_SECTION_TPOINT_MASK = 2,
 	SPDK_TRACE_SECTION_OWNER_TYPE = 3,
 	SPDK_TRACE_SECTION_OBJECT = 4,
+	SPDK_TRACE_SECTION_TPOINT = 5,
 	SPDK_TRACE_NUM_SECTIONS,
 };
 
@@ -166,14 +167,18 @@ struct spdk_trace_section_object {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_object) == 128, "incorrect size");
 
+struct spdk_trace_section_tpoint {
+	uint16_t			count;
+	uint8_t				reserved[126];
+	struct spdk_trace_tpoint	tpoint[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_tpoint) == 128, "incorrect size");
+
 struct spdk_trace_file {
 	uint64_t			file_size;
 	uint16_t			num_sections;
 	uint8_t				reserved[6];
 	uint64_t			section_offsets[SPDK_TRACE_NUM_SECTIONS];
-	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
-
-	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
 };
 extern struct spdk_trace_file *g_trace_file;
@@ -228,6 +233,9 @@ spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 #define spdk_trace_get_object_section(f) \
 	((struct spdk_trace_section_object *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OBJECT))
 
+#define spdk_trace_get_tpoint_section(f) \
+	((struct spdk_trace_section_tpoint *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_TPOINT))
+
 #define spdk_trace_get_owner_section(f) \
 	((struct spdk_trace_section_owner *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OWNER))
 
@@ -238,6 +246,7 @@ spdk_trace_file_get_sections_size(const struct spdk_trace_file *f)
 	struct spdk_trace_section_tpoint_mask *tpm = spdk_trace_get_tpoint_mask_section(f);
 	struct spdk_trace_section_owner_type *ot = spdk_trace_get_owner_type_section(f);
 	struct spdk_trace_section_object *obj = spdk_trace_get_object_section(f);
+	struct spdk_trace_section_tpoint *tp = spdk_trace_get_tpoint_section(f);
 
 	return sizeof(struct spdk_trace_section_main) +
 	       sizeof(struct spdk_trace_section_owner) +
@@ -247,7 +256,9 @@ spdk_trace_file_get_sections_size(const struct spdk_trace_file *f)
 	       sizeof(struct spdk_trace_section_owner_type) +
 	       ot->count * sizeof(struct spdk_trace_owner_type) +
 	       sizeof(struct spdk_trace_section_object) +
-	       obj->count * sizeof(struct spdk_trace_object);
+	       obj->count * sizeof(struct spdk_trace_object) +
+	       sizeof(struct spdk_trace_section_tpoint) +
+	       tp->count * sizeof(struct spdk_trace_tpoint);
 }
 
 static inline struct spdk_trace_history *

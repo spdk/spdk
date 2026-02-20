@@ -140,7 +140,7 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	float				us;
 	size_t				i;
 
-	d = &g_file->tpoint[e->tpoint_id];
+	d = &spdk_trace_get_tpoint_section(g_file)->tpoint[e->tpoint_id];
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
 	printf("%-*s ", SPDK_TRACE_THREAD_NAME_LEN, entry->tname);
@@ -209,7 +209,7 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 	const struct spdk_trace_tpoint *d;
 	size_t i;
 
-	d = &g_file->tpoint[e->tpoint_id];
+	d = &spdk_trace_get_tpoint_section(g_file)->tpoint[e->tpoint_id];
 
 	spdk_json_write_object_begin(g_json);
 	spdk_json_write_named_uint64(g_json, "lcore", entry->lcore);
@@ -285,6 +285,7 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 static void
 print_tpoint_definitions(void)
 {
+	struct spdk_trace_section_tpoint *tp_section;
 	const struct spdk_trace_tpoint *tpoint;
 	size_t i, j;
 
@@ -296,8 +297,9 @@ print_tpoint_definitions(void)
 	spdk_json_write_named_uint64(g_json, "tsc_rate", spdk_trace_get_tsc_rate(g_file));
 	spdk_json_write_named_array_begin(g_json, "tpoints");
 
-	for (i = 0; i < SPDK_COUNTOF(g_file->tpoint); ++i) {
-		tpoint = &g_file->tpoint[i];
+	tp_section = spdk_trace_get_tpoint_section(g_file);
+	for (i = 0; i < tp_section->count; ++i) {
+		tpoint = &tp_section->tpoint[i];
 		if (tpoint->tpoint_id == 0) {
 			continue;
 		}

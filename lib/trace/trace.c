@@ -80,7 +80,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id, uint32_t
 
 	trace_history_increment_tpoint_count(lcore_history, tpoint_id);
 
-	tpoint = &g_trace_file->tpoint[tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[tpoint_id];
 	/* Make sure that the number of arguments passed matches tracepoint definition */
 	if (spdk_unlikely(tpoint->num_args != num_args)) {
 		assert(0 && "Unexpected number of tracepoint arguments");
@@ -250,12 +250,13 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	uint64_t file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
 	uint64_t main_section_offset, tpoint_mask_section_offset, owner_type_section_offset;
-	uint64_t object_section_offset, owner_section_offset;
+	uint64_t object_section_offset, tpoint_section_offset, owner_section_offset;
 	struct spdk_trace_section_main *main_section;
 	struct spdk_trace_section_owner *owner_section;
 	struct spdk_trace_section_tpoint_mask *tpoint_mask_section;
 	struct spdk_trace_section_owner_type *owner_type_section;
 	struct spdk_trace_section_object *object_section;
+	struct spdk_trace_section_tpoint *tpoint_section;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -290,6 +291,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	object_section_offset = file_size;
 	file_size += sizeof(struct spdk_trace_section_object) +
 		     SPDK_TRACE_MAX_OBJECT * sizeof(struct spdk_trace_object);
+
+	tpoint_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_tpoint) +
+		     SPDK_TRACE_MAX_TPOINT_ID * sizeof(struct spdk_trace_tpoint);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
@@ -359,6 +364,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT_MASK] = tpoint_mask_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER_TYPE] = owner_type_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OBJECT] = object_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT] = tpoint_section_offset;
 	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER] = owner_section_offset;
 
 	main_section = spdk_trace_get_main_section(g_trace_file);
@@ -372,6 +378,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	object_section = spdk_trace_get_object_section(g_trace_file);
 	object_section->count = SPDK_TRACE_MAX_OBJECT;
+
+	tpoint_section = spdk_trace_get_tpoint_section(g_trace_file);
+	tpoint_section->count = SPDK_TRACE_MAX_TPOINT_ID;
 
 	owner_section = spdk_trace_get_owner_section(g_trace_file);
 	owner_section->num_owners = TRACE_NUM_OWNERS;
