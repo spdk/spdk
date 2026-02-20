@@ -727,8 +727,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	uint16_t nr, i;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	uint64_t max_discard_size = req->qpair->ctrlr->subsys->max_discard_size_kib;
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
+	uint32_t dmrsl = req->qpair->ctrlr->subsys->opts.dmrsl;
 	struct spdk_iov_xfer ix;
 	uint64_t lba;
 	uint32_t lba_count;
@@ -768,9 +767,9 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 		lba = dsm_range.starting_lba;
 		lba_count = dsm_range.length;
-		if (max_discard_size > 0 && lba_count > (max_discard_size << 10) / block_size) {
-			SPDK_ERRLOG("invalid unmap size %" PRIu32 " blocks, should not exceed %" PRIu64 " blocks\n",
-				    lba_count, max_discard_size << 1);
+		if (dmrsl > 0 && lba_count > dmrsl) {
+			SPDK_ERRLOG("invalid unmap size %" PRIu32 " blocks, should not exceed"
+				    " %" PRIu32 " blocks\n", lba_count, dmrsl);
 			response->status.sct = SPDK_NVME_SCT_GENERIC;
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			break;

@@ -388,7 +388,6 @@ struct spdk_nvmf_subsystem {
 
 	struct spdk_nvmf_subsystem_opts			opts;
 
-	uint64_t					max_discard_size_kib;
 	uint64_t					max_write_zeroes_size_kib;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;

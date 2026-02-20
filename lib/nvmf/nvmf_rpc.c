@@ -427,6 +427,9 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	opts.passthrough = req->passthrough;
 	opts.enable_nssr = req->enable_nssr;
 
+	/* Convert KiB to logical blocks assuming 512B block size. */
+	opts.dmrsl = req->max_discard_size_kib << 1;
+
 	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to create subsystem %s\n", req->nqn);
@@ -444,8 +447,6 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 						     "Invalid cntlid range [%u-%u]", req->min_cntlid, req->max_cntlid);
 		goto cleanup;
 	}
-
-	subsystem->max_discard_size_kib = req->max_discard_size_kib;
 
 	/* max_write_zeroes_size_kib must be aligned to 4 and power of 2 */
 	if (req->max_write_zeroes_size_kib == 0 || (req->max_write_zeroes_size_kib > 2 &&
