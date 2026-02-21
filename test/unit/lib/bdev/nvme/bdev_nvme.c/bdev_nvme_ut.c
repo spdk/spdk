@@ -94,10 +94,21 @@ DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
 DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB(spdk_nvme_ctrlr_is_nssr_supported, bool, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
-DEFINE_STUB(spdk_nvme_ctrlr_get_regs_cap, union spdk_nvme_cap_register,
-	    (struct spdk_nvme_ctrlr *ctrlr), {});
-DEFINE_STUB(spdk_nvme_nvm_ctrlr_get_data, const struct spdk_nvme_nvm_ctrlr_data *,
-	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+static union spdk_nvme_cap_register g_ut_cap_register = {};
+
+union spdk_nvme_cap_register
+	spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return g_ut_cap_register;
+}
+
+static const struct spdk_nvme_nvm_ctrlr_data *g_ut_nvm_cdata = NULL;
+
+const struct spdk_nvme_nvm_ctrlr_data *
+spdk_nvme_nvm_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return g_ut_nvm_cdata;
+}
 
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
@@ -8438,6 +8449,73 @@ test_race_between_ctrlr_loss_timeout_and_pending_failover(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_set_nvm_limits(void)
+{
+	struct spdk_bdev disk = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = {};
+	struct spdk_nvme_nvm_ctrlr_data nvm_cdata = {};
+
+	/* Case 1: NVM cdata present, valid wzsl/dmrl/dmrsl.
+	 * wzsl=1 => 2^1=2 pages; mpsmin=0 => page=4096, block=4096 => 2 blocks.
+	 */
+	memset(&disk, 0, sizeof(disk));
+	memset(&nvm_cdata, 0, sizeof(nvm_cdata));
+	g_ut_cap_register.raw = 0;
+	nvm_cdata.wzsl = 1;
+	nvm_cdata.dmrl = 4;
+	nvm_cdata.dmrsl = 1024;
+	g_ut_nvm_cdata = &nvm_cdata;
+
+	bdev_nvme_set_nvm_limits(&disk, &ctrlr, &ns);
+
+	CU_ASSERT(disk.max_write_zeroes == 2);
+	CU_ASSERT(disk.max_unmap_segments == nvm_cdata.dmrl);
+	CU_ASSERT(disk.max_unmap == nvm_cdata.dmrsl);
+
+	/* Case 2: wzsl=0 falls back to max (UINT16_MAX + 1). */
+	memset(&disk, 0, sizeof(disk));
+	nvm_cdata.wzsl = 0;
+
+	bdev_nvme_set_nvm_limits(&disk, &ctrlr, &ns);
+	CU_ASSERT(disk.max_write_zeroes == UINT16_MAX + 1);
+
+	/* Case 3: Very large wzsl (>16) falls back to max. */
+	memset(&disk, 0, sizeof(disk));
+	nvm_cdata.wzsl = 17;
+
+	bdev_nvme_set_nvm_limits(&disk, &ctrlr, &ns);
+
+	CU_ASSERT(disk.max_write_zeroes == UINT16_MAX + 1);
+
+	/* Case 4: No NVM cdata, DSM and Write Zeroes supported. */
+	memset(&disk, 0, sizeof(disk));
+	g_ut_nvm_cdata = NULL;
+	ctrlr.cdata.oncs.nvmwzsv = 1;
+	ctrlr.cdata.oncs.nvmdsmsv = 1;
+
+	bdev_nvme_set_nvm_limits(&disk, &ctrlr, &ns);
+
+	CU_ASSERT(disk.max_write_zeroes == UINT16_MAX + 1);
+	CU_ASSERT(disk.max_unmap_segments == SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES);
+	CU_ASSERT(disk.max_unmap == SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS);
+
+	/* Case 5: No NVM cdata, DSM and Write Zeroes not supported. */
+	memset(&disk, 0, sizeof(disk));
+	ctrlr.cdata.oncs.nvmwzsv = 0;
+	ctrlr.cdata.oncs.nvmdsmsv = 0;
+
+	bdev_nvme_set_nvm_limits(&disk, &ctrlr, &ns);
+
+	CU_ASSERT(disk.max_write_zeroes == 0);
+	CU_ASSERT(disk.max_unmap_segments == 0);
+	CU_ASSERT(disk.max_unmap == 0);
+
+	g_ut_nvm_cdata = NULL;
+	g_ut_cap_register.raw = 0;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8502,6 +8580,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_bdev_reset_abort_io);
 	CU_ADD_TEST(suite, test_race_between_clear_pending_resets_and_reset_ctrlr_complete);
 	CU_ADD_TEST(suite, test_race_between_ctrlr_loss_timeout_and_pending_failover);
+	CU_ADD_TEST(suite, test_set_nvm_limits);
 
 	allocate_threads(3);
 	set_thread(0);
