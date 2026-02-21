@@ -209,17 +209,20 @@ struct spdk_nvmf_subsystem_opts {
 	/* Enable NSSR (NVMe subsystem reset). */
 	bool enable_nssr;
 
-	/* Dataset Management Range Size Limit (DMRSL) in logical block units.
-	 * 0 means no limit.
-	 */
-	uint32_t dmrsl;
+	/* Hole at bytes 81-82. */
+	uint8_t reserved81[2];
 
 	/* Write Zeroes Size Limit (WZSL) in units of minimum memory
 	 * page size, reported as a power of two (2^wzsl). 0 means no limit.
 	 */
 	uint8_t wzsl;
+
+	/* Dataset Management Range Size Limit (DMRSL) in logical block units.
+	 * 0 means no limit.
+	 */
+	uint32_t dmrsl;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 86,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88,
 		   "Incorrect size");
 
 void spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type,

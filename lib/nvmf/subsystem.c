@@ -305,7 +305,7 @@ nvmf_subsystem_opts_copy(struct spdk_nvmf_subsystem_opts *opts,
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement.
 	 */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 86, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88, "Incorrect size");
 #undef FIELD_OK
 #undef SET_FIELD
 }
