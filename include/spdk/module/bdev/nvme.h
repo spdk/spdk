@@ -285,6 +285,22 @@ struct spdk_nvme_ctrlr *spdk_bdev_nvme_ctrlr_first_ctrlr(
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_ctrlr_next_ctrlr(
 	struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr, struct spdk_nvme_ctrlr *prev);
 
+/**
+ * Get the controller opts.
+ *
+ * Returns creation time controller configuration.
+ *
+ * Must be called from the app thread.
+ *
+ * \warning The returned pointer is valid only while the controller group exists.
+ *
+ * \param nbdev_ctrlr Controller group handle.
+ * \param ctrlr Controller handle (optional); if not provided opts are retrived from the first.
+ * \return Pointer to the options, or NULL if the controller group is invalid.
+ */
+const struct spdk_bdev_nvme_ctrlr_opts *spdk_bdev_nvme_ctrlr_get_opts(
+	struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr, struct spdk_nvme_ctrlr *ctrlr);
+
 #ifdef __cplusplus
 }
 #endif

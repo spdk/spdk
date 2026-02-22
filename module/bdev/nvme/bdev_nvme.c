@@ -7042,6 +7042,32 @@ spdk_bdev_nvme_ctrlr_next_ctrlr(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr,
 	return NULL;
 }
 
+const struct spdk_bdev_nvme_ctrlr_opts *
+spdk_bdev_nvme_ctrlr_get_opts(struct spdk_bdev_nvme_ctrlr *_nbdev_ctrlr,
+			      struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_bdev_ctrlr *nbdev_ctrlr = (struct nvme_bdev_ctrlr *)_nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (!ctrlr) {
+		nvme_ctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+	} else {
+		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
+			if (nvme_ctrlr->ctrlr == ctrlr) {
+				break;
+			}
+		}
+	}
+
+	if (!nvme_ctrlr || (ctrlr && nvme_ctrlr->ctrlr != ctrlr)) {
+		return NULL;
+	}
+
+	return &nvme_ctrlr->opts;
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,
