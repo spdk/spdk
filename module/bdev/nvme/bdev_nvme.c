@@ -4303,9 +4303,9 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 }
 
 static const char *
-nvme_bdev_get_mp_policy_str(struct nvme_bdev *nbdev)
+bdev_nvme_multipath_policy_str(enum spdk_bdev_nvme_multipath_policy policy)
 {
-	switch (nbdev->mp_policy) {
+	switch (policy) {
 	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE:
 		return "active_passive";
 	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE:
@@ -4317,9 +4317,9 @@ nvme_bdev_get_mp_policy_str(struct nvme_bdev *nbdev)
 }
 
 static const char *
-nvme_bdev_get_mp_selector_str(struct nvme_bdev *nbdev)
+bdev_nvme_multipath_selector_str(enum spdk_bdev_nvme_multipath_selector selector)
 {
-	switch (nbdev->mp_selector) {
+	switch (selector) {
 	case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN:
 		return "round_robin";
 	case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH:
@@ -4343,9 +4343,9 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 		nvme_namespace_info_json(w, nvme_ns);
 	}
 	spdk_json_write_array_end(w);
-	spdk_json_write_named_string(w, "mp_policy", nvme_bdev_get_mp_policy_str(nbdev));
+	spdk_json_write_named_string(w, "mp_policy", bdev_nvme_multipath_policy_str(nbdev->mp_policy));
 	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
-		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nbdev));
+		spdk_json_write_named_string(w, "selector", bdev_nvme_multipath_selector_str(nbdev->mp_selector));
 		if (nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
 			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
 		}
@@ -9281,9 +9281,9 @@ bdev_nvme_multipath_config_json(struct nvme_bdev *nbdev, struct spdk_json_write_
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", nbdev->disk.name);
-	spdk_json_write_named_string(w, "policy", nvme_bdev_get_mp_policy_str(nbdev));
+	spdk_json_write_named_string(w, "policy", bdev_nvme_multipath_policy_str(nbdev->mp_policy));
 	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
-		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nbdev));
+		spdk_json_write_named_string(w, "selector", bdev_nvme_multipath_selector_str(nbdev->mp_selector));
 		if (nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
 			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
 		}
