@@ -6987,6 +6987,30 @@ bdev_nvme_check_io_error_resiliency_params(int32_t ctrlr_loss_timeout_sec,
 	return true;
 }
 
+struct spdk_bdev_nvme_ctrlr *
+spdk_bdev_nvme_first_bdev_ctrlr(void)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return (struct spdk_bdev_nvme_ctrlr *)TAILQ_FIRST(&g_nvme_bdev_ctrlrs);
+}
+
+struct spdk_bdev_nvme_ctrlr *
+spdk_bdev_nvme_next_bdev_ctrlr(struct spdk_bdev_nvme_ctrlr *prev)
+{
+	struct nvme_bdev_ctrlr *nbdev_ctrlr = (struct nvme_bdev_ctrlr *)prev;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	return (struct spdk_bdev_nvme_ctrlr *)TAILQ_NEXT(nbdev_ctrlr, tailq);
+}
+
+const char *
+spdk_bdev_nvme_ctrlr_get_name(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr)
+{
+	assert(spdk_thread_is_app_thread(NULL));
+	return ((struct nvme_bdev_ctrlr *)nbdev_ctrlr)->name;
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,

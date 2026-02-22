@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+struct spdk_bdev_nvme_ctrlr;
+
 typedef void (*spdk_bdev_nvme_create_cb)(void *ctx, size_t bdev_count, int rc);
 typedef void (*spdk_bdev_nvme_set_multipath_policy_cb)(void *cb_arg, int rc);
 typedef void (*spdk_bdev_nvme_delete_cb)(void *ctx, int rc);
@@ -216,6 +218,43 @@ void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
  * \return 0 on success, negative errno on failure.
  */
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
+
+/**
+ * Get the first bdev_nvme controller group.
+ *
+ * Must be called from the app thread.
+ *
+ * \warning The returned handle is valid only while the controller group exists.
+ * Do not hold references across operations that may add or remove controller groups.
+ *
+ * \return Pointer to the first controller group, or NULL if none.
+ */
+struct spdk_bdev_nvme_ctrlr *spdk_bdev_nvme_first_bdev_ctrlr(void);
+
+/**
+ * Get the next bdev_nvme controller group.
+ *
+ * Must be called from the app thread.
+ *
+ * \warning The returned handle is valid only while the controller group exists.
+ * Do not hold references across operations that may add or remove controller groups.
+ *
+ * \param prev Previous controller group returned by first or next.
+ * \return Pointer to the next controller group, or NULL if no more.
+ */
+struct spdk_bdev_nvme_ctrlr *spdk_bdev_nvme_next_bdev_ctrlr(struct spdk_bdev_nvme_ctrlr *prev);
+
+/**
+ * Get the name of a bdev_nvme controller group.
+ *
+ * Must be called from the app thread.
+ *
+ * \warning The returned string is valid only while the controller group exists.
+ *
+ * \param nbdev_ctrlr Controller group handle.
+ * \return Name string.
+ */
+const char *spdk_bdev_nvme_ctrlr_get_name(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr);
 
 #ifdef __cplusplus
 }
