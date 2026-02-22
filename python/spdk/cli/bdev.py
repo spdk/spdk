@@ -489,32 +489,8 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_nvme_set_hotplug)
 
     def bdev_nvme_attach_controller(args):
-        print_array(args.client.bdev_nvme_attach_controller(
-                                                         name=args.name,
-                                                         trtype=args.trtype,
-                                                         traddr=args.traddr,
-                                                         adrfam=args.adrfam,
-                                                         trsvcid=args.trsvcid,
-                                                         priority=args.priority,
-                                                         subnqn=args.subnqn,
-                                                         hostnqn=args.hostnqn,
-                                                         hostaddr=args.hostaddr,
-                                                         hostsvcid=args.hostsvcid,
-                                                         prchk_reftag=args.prchk_reftag,
-                                                         prchk_guard=args.prchk_guard,
-                                                         hdgst=args.hdgst,
-                                                         ddgst=args.ddgst,
-                                                         fabrics_connect_timeout_us=args.fabrics_connect_timeout_us,
-                                                         multipath=args.multipath,
-                                                         num_io_queues=args.num_io_queues,
-                                                         ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
-                                                         reconnect_delay_sec=args.reconnect_delay_sec,
-                                                         fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
-                                                         psk=args.psk,
-                                                         max_bdevs=args.max_bdevs,
-                                                         dhchap_key=args.dhchap_key,
-                                                         dhchap_ctrlr_key=args.dhchap_ctrlr_key,
-                                                         allow_unrecognized_csi=args.allow_unrecognized_csi))
+        params = strip_globals(vars(args))
+        print_array(args.client.bdev_nvme_attach_controller(**params))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', help='Add bdevs with nvme backend')
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
