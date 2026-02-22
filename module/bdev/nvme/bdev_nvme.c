@@ -33,6 +33,10 @@
 #include "spdk_internal/usdt.h"
 #include "spdk_internal/trace_defs.h"
 
+#define BDEV_NVME_MULTIPATH_POLICY_DEFAULT	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE
+#define BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT	SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN
+#define BDEV_NVME_MULTIPATH_MIN_IO_UNUSED	UINT32_MAX
+
 #define NVME_CTRLR_LOG_FMT "%s%s%s:%s,cntlid:%u"
 #define NVME_CTRLR_LOG_ARGS(nvme_ctrlr) \
   spdk_nvme_trtype_is_fabrics((nvme_ctrlr)->active_path_id->trid.trtype) ? (nvme_ctrlr)->active_path_id->trid.subnqn : "", \
@@ -4869,9 +4873,9 @@ nvme_bdev_alloc(void)
 	}
 
 	nbdev->ref = 1;
-	nbdev->mp_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE;
-	nbdev->mp_selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
-	nbdev->rr_min_io = UINT32_MAX;
+	nbdev->mp_policy = BDEV_NVME_MULTIPATH_POLICY_DEFAULT;
+	nbdev->mp_selector = BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT;
+	nbdev->rr_min_io = BDEV_NVME_MULTIPATH_MIN_IO_UNUSED;
 	TAILQ_INIT(&nbdev->nvme_ns_list);
 
 	return nbdev;
