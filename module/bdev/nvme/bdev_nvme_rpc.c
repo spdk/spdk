@@ -109,6 +109,40 @@ rpc_decode_dhgroup_array(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_array(val, rpc_decode_dhgroup, out, 32, &count, 0);
 }
 
+static int
+rpc_decode_mp_policy(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_bdev_nvme_multipath_policy *policy = out;
+
+	if (spdk_json_strequal(val, "active_passive") == true) {
+		*policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE;
+	} else if (spdk_json_strequal(val, "active_active") == true) {
+		*policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter value: policy\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
+rpc_decode_mp_selector(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_bdev_nvme_multipath_selector *selector = out;
+
+	if (spdk_json_strequal(val, "round_robin") == true) {
+		*selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
+	} else if (spdk_json_strequal(val, "queue_depth") == true) {
+		*selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter value: selector\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_nvme_set_options_decoders[] = {
 	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_action_on_timeout, true},
 	{"keep_alive_timeout_ms", offsetof(struct spdk_bdev_nvme_opts, keep_alive_timeout_ms), spdk_json_decode_uint32, true},
@@ -301,7 +335,6 @@ bdev_nvme_decode_multipath(const struct spdk_json_val *val, void *out)
 
 	return 0;
 }
-
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_nvme_attach_controller, name), spdk_json_decode_string},
@@ -2224,40 +2257,6 @@ static void
 free_rpc_bdev_nvme_set_multipath_policy_tmp(struct rpc_set_multipath_policy *req)
 {
 	free(req->name);
-}
-
-static int
-rpc_decode_mp_policy(const struct spdk_json_val *val, void *out)
-{
-	enum spdk_bdev_nvme_multipath_policy *policy = out;
-
-	if (spdk_json_strequal(val, "active_passive") == true) {
-		*policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE;
-	} else if (spdk_json_strequal(val, "active_active") == true) {
-		*policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: policy\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static int
-rpc_decode_mp_selector(const struct spdk_json_val *val, void *out)
-{
-	enum spdk_bdev_nvme_multipath_selector *selector = out;
-
-	if (spdk_json_strequal(val, "round_robin") == true) {
-		*selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
-	} else if (spdk_json_strequal(val, "queue_depth") == true) {
-		*selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: selector\n");
-		return -EINVAL;
-	}
-
-	return 0;
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_set_multipath_policy_decoders[] = {
