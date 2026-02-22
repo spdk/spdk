@@ -27,7 +27,9 @@ def apply_defaults(kwargs, **defaults):
 def group_as(kwargs, name, values):
     group = {k: v for k, v in kwargs.items() if k in values and v is not None}
     rest = {k: v for k, v in kwargs.items() if k not in values}
-    return {**rest, name: group}
+    if group:
+        rest[name] = group
+    return rest
 
 
 def print_null(arg):
