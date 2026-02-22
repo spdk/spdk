@@ -2145,6 +2145,12 @@
           "name": "allow_unrecognized_csi",
           "type": "boolean",
           "description": "Allow attaching namespaces with unrecognized command set identifiers. These will only support NVMe passthrough."
+        },
+        {
+          "name": "multipath_opts",
+          "type": "object",
+          "class": "bdev_nvme_multipath_opts",
+          "description": "Multipath options."
         }
       ]
     },

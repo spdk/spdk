@@ -54,6 +54,11 @@ struct spdk_bdev_nvme_ctrlr_opts {
 
 	/* Set to true if multipath enabled */
 	bool multipath;
+
+	uint8_t multipath_policy; /* \ref spdk_bdev_nvme_multipath_policy */
+	uint8_t multipath_selector; /* \ref spdk_bdev_nvme_multipath_selector */
+	/* Minimum I/O count before switching path (round_robin selector only). */
+	uint32_t multipath_min_io;
 };
 
 struct spdk_nvme_path_id;

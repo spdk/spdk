@@ -4866,9 +4866,6 @@ nvme_bdev_alloc(void)
 	}
 
 	nbdev->ref = 1;
-	nbdev->mp_policy = BDEV_NVME_MULTIPATH_POLICY_DEFAULT;
-	nbdev->mp_selector = BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT;
-	nbdev->rr_min_io = BDEV_NVME_MULTIPATH_MIN_IO_UNUSED;
 	TAILQ_INIT(&nbdev->nvme_ns_list);
 
 	return nbdev;
@@ -4890,6 +4887,9 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	}
 
 	nbdev->opal = nvme_ctrlr->opal_dev != NULL;
+	nbdev->mp_policy = nvme_ctrlr->opts.multipath_policy;
+	nbdev->mp_selector = nvme_ctrlr->opts.multipath_selector;
+	nbdev->rr_min_io = nvme_ctrlr->opts.multipath_min_io;
 
 	rc = nbdev_create(&nbdev->disk, nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
 			  nvme_ns->ns, &nvme_ctrlr->opts, nbdev);
@@ -6069,6 +6069,7 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ctrlr      *nctrlr;
+	const struct spdk_bdev_nvme_ctrlr_opts *bdev_opts = &nvme_ctrlr->opts;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -6077,14 +6078,29 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 		if (!bdev_nvme_check_multipath(nbdev_ctrlr, ctrlr)) {
 			return -EINVAL;
 		}
+
+		/* All controllers with the same name must be configured the same way, either
+		 * for multipath or failover. If the configuration doesn't match - report error.
+		 */
 		TAILQ_FOREACH(nctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-			if (nctrlr->opts.multipath != nvme_ctrlr->opts.multipath) {
-				/* All controllers with the same name must be configured the same
-				 * way, either for multipath or failover. If the configuration doesn't
-				 * match - report error.
-				 */
+			if (nctrlr->opts.multipath != bdev_opts->multipath) {
 				return -EINVAL;
 			}
+		}
+
+		nctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+		assert(nctrlr);
+
+		if (nctrlr->opts.multipath_policy != bdev_opts->multipath_policy ||
+		    nctrlr->opts.multipath_selector != bdev_opts->multipath_selector ||
+		    nctrlr->opts.multipath_min_io != bdev_opts->multipath_min_io) {
+			SPDK_ERRLOG("Multipath opts mismatch for controller %s:\n"
+				    " existing: policy=%u selector=%u min_io=%u\n"
+				    " new:      policy=%u selector=%u min_io=%u\n",
+				    name,
+				    nctrlr->opts.multipath_policy, nctrlr->opts.multipath_selector, nctrlr->opts.multipath_min_io,
+				    bdev_opts->multipath_policy, bdev_opts->multipath_selector, bdev_opts->multipath_min_io);
+			return -EINVAL;
 		}
 	} else {
 		nbdev_ctrlr = calloc(1, sizeof(*nbdev_ctrlr));
@@ -6328,6 +6344,9 @@ spdk_bdev_nvme_get_default_ctrlr_opts(struct spdk_bdev_nvme_ctrlr_opts *opts)
 	opts->reconnect_delay_sec = g_opts.reconnect_delay_sec;
 	opts->fast_io_fail_timeout_sec = g_opts.fast_io_fail_timeout_sec;
 	opts->multipath = true;
+	opts->multipath_policy = g_opts.multipath_policy;
+	opts->multipath_selector = g_opts.multipath_selector;
+	opts->multipath_min_io = g_opts.multipath_min_io;
 }
 
 static void
@@ -6998,6 +7017,12 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	    !bdev_nvme_check_io_error_resiliency_params(bdev_opts->ctrlr_loss_timeout_sec,
 			    bdev_opts->reconnect_delay_sec,
 			    bdev_opts->fast_io_fail_timeout_sec)) {
+		return -EINVAL;
+	}
+
+	if (bdev_opts != NULL &&
+	    bdev_nvme_validate_multipath_opts(bdev_opts->multipath_policy, bdev_opts->multipath_selector,
+					      bdev_opts->multipath_min_io)) {
 		return -EINVAL;
 	}
 
@@ -9233,8 +9258,9 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 {
 	struct spdk_nvme_transport_id	*trid;
 	const struct spdk_nvme_ctrlr_opts *opts;
+	const struct spdk_bdev_nvme_ctrlr_opts *bdev_opts = &nvme_ctrlr->opts;
 
-	if (nvme_ctrlr->opts.from_discovery_service) {
+	if (bdev_opts->from_discovery_service) {
 		/* Do not emit an RPC for this - it will be implicitly
 		 * covered by a separate bdev_nvme_start_discovery or
 		 * bdev_nvme_start_mdns_discovery RPC.
@@ -9252,13 +9278,12 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_string(w, "name", nvme_ctrlr->nbdev_ctrlr->name);
 	nvme_bdev_dump_trid_json(trid, w);
 	spdk_json_write_named_bool(w, "prchk_reftag",
-				   (nvme_ctrlr->opts.prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
+				   bdev_opts->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG);
 	spdk_json_write_named_bool(w, "prchk_guard",
-				   (nvme_ctrlr->opts.prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) != 0);
-	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", nvme_ctrlr->opts.ctrlr_loss_timeout_sec);
-	spdk_json_write_named_uint32(w, "reconnect_delay_sec", nvme_ctrlr->opts.reconnect_delay_sec);
-	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec",
-				     nvme_ctrlr->opts.fast_io_fail_timeout_sec);
+				   bdev_opts->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD);
+	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", bdev_opts->ctrlr_loss_timeout_sec);
+	spdk_json_write_named_uint32(w, "reconnect_delay_sec", bdev_opts->reconnect_delay_sec);
+	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", bdev_opts->fast_io_fail_timeout_sec);
 	if (nvme_ctrlr->psk != NULL) {
 		spdk_json_write_named_string(w, "psk", spdk_key_get_name(nvme_ctrlr->psk));
 	}
@@ -9281,11 +9306,14 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "hostsvcid", opts->src_svcid);
 	}
 
-	if (nvme_ctrlr->opts.multipath) {
+	if (bdev_opts->multipath) {
 		spdk_json_write_named_string(w, "multipath", "multipath");
 	}
 	spdk_json_write_named_uint64(w, "fabrics_connect_timeout_us", opts->fabrics_connect_timeout_us);
 	spdk_json_write_named_uint32(w, "num_io_queues", opts->num_io_queues);
+
+	bdev_nvme_write_multipath_config(w, bdev_opts->multipath_policy, bdev_opts->multipath_selector,
+					 bdev_opts->multipath_min_io);
 
 	spdk_json_write_object_end(w);
 

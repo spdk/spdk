@@ -496,6 +496,7 @@ def add_parser(subparsers):
 
     def bdev_nvme_attach_controller(args):
         params = strip_globals(vars(args))
+        params = group_as(params, 'multipath_opts', ['policy', 'selector', 'min_io'])
         print_array(args.client.bdev_nvme_attach_controller(**params))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', help='Add bdevs with nvme backend')
@@ -559,6 +560,10 @@ def add_parser(subparsers):
     p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
     p.add_argument('-U', '--allow-unrecognized-csi', help="""Allow attaching namespaces with unrecognized command set identifiers.
                    These will only support NVMe passthrough.""", action='store_true')
+    p.add_argument('--policy', choices=['active_passive', 'active_active'], help='Multipath policy')
+    p.add_argument('--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
+    p.add_argument('--min-io', type=int,
+                   help='Number of IO to route to a path before switching (round_robin selector only)')
 
     p.set_defaults(func=bdev_nvme_attach_controller)
 
