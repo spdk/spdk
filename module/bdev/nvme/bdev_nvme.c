@@ -35,6 +35,7 @@
 
 #define BDEV_NVME_MULTIPATH_POLICY_DEFAULT	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE
 #define BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT	SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN
+#define BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT	1
 #define BDEV_NVME_MULTIPATH_MIN_IO_UNUSED	UINT32_MAX
 
 #define NVME_CTRLR_LOG_FMT "%s%s%s:%s,cntlid:%u"
@@ -298,6 +299,9 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.dhchap_dhgroups = BDEV_NVME_DEFAULT_DHGROUPS,
 	.rdma_umr_per_io = false,
 	.enable_flush = false,
+	.multipath_policy = BDEV_NVME_MULTIPATH_POLICY_DEFAULT,
+	.multipath_selector = BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT,
+	.multipath_min_io = BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -6473,6 +6477,9 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
 	SET_FIELD(rdma_umr_per_io, false);
 	SET_FIELD(tcp_connect_timeout_ms, 0);
 	SET_FIELD(enable_flush, false);
+	SET_FIELD(multipath_policy, BDEV_NVME_MULTIPATH_POLICY_DEFAULT);
+	SET_FIELD(multipath_selector, BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT);
+	SET_FIELD(multipath_min_io, BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT);
 
 #undef SET_FIELD
 
@@ -6484,6 +6491,35 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
 static bool bdev_nvme_check_io_error_resiliency_params(int32_t ctrlr_loss_timeout_sec,
 		uint32_t reconnect_delay_sec,
 		uint32_t fast_io_fail_timeout_sec);
+
+static int
+bdev_nvme_validate_multipath_opts(uint8_t policy, uint8_t selector, uint32_t min_io)
+{
+	switch (policy) {
+	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE:
+		break;
+	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE:
+		switch (selector) {
+		case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN:
+			if (min_io == 0) {
+				SPDK_ERRLOG("min_io must be non-zero.\n");
+				return -EINVAL;
+			}
+			break;
+		case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH:
+			break;
+		default:
+			SPDK_ERRLOG("Invalid multipath selector %u.\n", selector);
+			return -EINVAL;
+		}
+		break;
+	default:
+		SPDK_ERRLOG("Invalid multipath policy %u.\n", policy);
+		return -EINVAL;
+	}
+
+	return 0;
+}
 
 static int
 bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
@@ -6517,7 +6553,8 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 		return -EINVAL;
 	}
 
-	return 0;
+	return bdev_nvme_validate_multipath_opts(opts->multipath_policy, opts->multipath_selector,
+			opts->multipath_min_io);
 }
 
 int
@@ -6602,6 +6639,9 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 	SET_FIELD(dhchap_dhgroups, 0);
 	SET_FIELD(tcp_connect_timeout_ms, 0);
 	SET_FIELD(enable_flush, false);
+	SET_FIELD(multipath_policy, BDEV_NVME_MULTIPATH_POLICY_DEFAULT);
+	SET_FIELD(multipath_selector, BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT);
+	SET_FIELD(multipath_min_io, BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT);
 
 	g_opts.opts_size = opts->opts_size;
 
@@ -9047,6 +9087,21 @@ bdev_nvme_copy(struct nvme_bdev_io *bio, uint64_t dst_offset_blocks, uint64_t sr
 }
 
 static void
+bdev_nvme_write_multipath_config(struct spdk_json_write_ctx *w,
+				 uint8_t policy, uint8_t selector, uint32_t min_io)
+{
+	spdk_json_write_named_object_begin(w, "multipath_opts");
+	spdk_json_write_named_string(w, "policy", bdev_nvme_multipath_policy_str(policy));
+	if (policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
+		spdk_json_write_named_string(w, "selector", bdev_nvme_multipath_selector_str(selector));
+		if (selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
+			spdk_json_write_named_uint32(w, "min_io", min_io);
+		}
+	}
+	spdk_json_write_object_end(w);
+}
+
+static void
 bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 {
 	const char *action;
@@ -9110,6 +9165,9 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "rdma_umr_per_io", g_opts.rdma_umr_per_io);
 	spdk_json_write_named_uint32(w, "tcp_connect_timeout_ms", g_opts.tcp_connect_timeout_ms);
 	spdk_json_write_named_bool(w, "enable_flush", g_opts.enable_flush);
+
+	bdev_nvme_write_multipath_config(w,
+					 g_opts.multipath_policy, g_opts.multipath_selector, g_opts.multipath_min_io);
 
 	spdk_json_write_object_end(w);
 

@@ -8,7 +8,7 @@
 import argparse
 from functools import partial
 
-from spdk.rpc.cmd_parser import print_array, print_dict, print_json, strip_globals
+from spdk.rpc.cmd_parser import group_as, print_array, print_dict, print_json, strip_globals
 
 
 def add_parser(subparsers):
@@ -382,6 +382,7 @@ def add_parser(subparsers):
 
     def bdev_nvme_set_options(args):
         params = strip_globals(vars(args))
+        params = group_as(params, 'multipath_opts', ['policy', 'selector', 'min_io'])
         args.client.bdev_nvme_set_options(**params)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
@@ -476,6 +477,10 @@ def add_parser(subparsers):
                    help='Time to wait until TCP connection is done. Default: 0 (no timeout).', type=int)
     p.add_argument('--enable-flush', help='Pass flush to NVMe when volatile write cache is present',
                    action='store_true')
+    p.add_argument('--policy', choices=['active_passive', 'active_active'], help='Multipath policy')
+    p.add_argument('--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
+    p.add_argument('--min-io', type=int,
+                   help='Number of IO to route to a path before switching (round_robin selector only)')
 
     p.set_defaults(func=bdev_nvme_set_options)
 

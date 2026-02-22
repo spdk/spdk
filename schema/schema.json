@@ -256,6 +256,28 @@
   ],
   "objects": [
     {
+      "name": "bdev_nvme_multipath_opts",
+      "fields": [
+        {
+          "name": "policy",
+          "type": "enum",
+          "class": "bdev_nvme_multipath_policy",
+          "description": "Multipath policy"
+        },
+        {
+          "name": "selector",
+          "type": "enum",
+          "class": "bdev_nvme_multipath_selector",
+          "description": "Multipath selector"
+        },
+        {
+          "name": "min_io",
+          "type": "uint32",
+          "description": "Number of IO to route to a path before switching (round_robin selector only)."
+        }
+      ]
+    },
+    {
       "name": "iscsi_auth_secret",
       "fields": [
         {
@@ -1967,6 +1989,12 @@
           "name": "enable_flush",
           "type": "boolean",
           "description": "If true, pass flush to nvme devices when volatile write cache is present. Default : `false`."
+        },
+        {
+          "name": "multipath_opts",
+          "type": "object",
+          "class": "bdev_nvme_multipath_opts",
+          "description": "Default multipath options."
         }
       ]
     },

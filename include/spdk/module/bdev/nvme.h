@@ -115,6 +115,11 @@ struct spdk_bdev_nvme_opts {
 	uint8_t reserved121[3];
 	uint32_t tcp_connect_timeout_ms;
 	bool enable_flush;
+	uint8_t multipath_policy; /* \ref spdk_bdev_nvme_multipath_policy */
+	uint8_t multipath_selector; /* \ref spdk_bdev_nvme_multipath_selector */
+	uint8_t reserved131[1];
+	/* Minimum I/O count before switching path (round_robin selector only). */
+	uint32_t multipath_min_io;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_nvme_opts) == 136, "Incorrect size");
 
