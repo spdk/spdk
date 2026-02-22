@@ -32,6 +32,14 @@ Will be removed in the v26.09 release.
 `--name` option will be removed in the 26.05 release. `--names` option should be used instead,
 it allows providing array of devices names to obtain statistics from.
 
+### bdev/nvme
+
+The `BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE`, `BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE`,
+`BDEV_NVME_MP_SELECTOR_ROUND_ROBIN`, and `BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH` enum
+value names are deprecated and will be removed in v25.09. Use the
+`SPDK_BDEV_NVME_MULTIPATH_POLICY_*` and `SPDK_BDEV_NVME_MULTIPATH_SELECTOR_*`
+names instead.
+
 ### gpt
 
 #### `old_gpt_guid`

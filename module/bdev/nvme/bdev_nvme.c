@@ -1327,7 +1327,7 @@ _bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
 		}
 	}
 
-	/* don't cache io path for BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH selector */
+	/* don't cache io path for SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH selector */
 	if (optimized != NULL) {
 		return optimized;
 	}
@@ -1339,9 +1339,9 @@ static inline struct nvme_io_path *
 bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
 	if (spdk_likely(nbdev_ch->current_io_path != NULL)) {
-		if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE) {
+		if (nbdev_ch->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE) {
 			return nbdev_ch->current_io_path;
-		} else if (nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+		} else if (nbdev_ch->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
 			if (++nbdev_ch->rr_counter < nbdev_ch->rr_min_io) {
 				return nbdev_ch->current_io_path;
 			}
@@ -1349,8 +1349,8 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 		}
 	}
 
-	if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE ||
-	    nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+	if (nbdev_ch->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE ||
+	    nbdev_ch->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
 		return _bdev_nvme_find_io_path(nbdev_ch);
 	} else {
 		return _bdev_nvme_find_io_path_min_qd(nbdev_ch);
@@ -4302,9 +4302,9 @@ static const char *
 nvme_bdev_get_mp_policy_str(struct nvme_bdev *nbdev)
 {
 	switch (nbdev->mp_policy) {
-	case BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE:
+	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE:
 		return "active_passive";
-	case BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE:
+	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE:
 		return "active_active";
 	default:
 		assert(false);
@@ -4316,9 +4316,9 @@ static const char *
 nvme_bdev_get_mp_selector_str(struct nvme_bdev *nbdev)
 {
 	switch (nbdev->mp_selector) {
-	case BDEV_NVME_MP_SELECTOR_ROUND_ROBIN:
+	case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN:
 		return "round_robin";
-	case BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH:
+	case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH:
 		return "queue_depth";
 	default:
 		assert(false);
@@ -4340,9 +4340,9 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	}
 	spdk_json_write_array_end(w);
 	spdk_json_write_named_string(w, "mp_policy", nvme_bdev_get_mp_policy_str(nbdev));
-	if (nbdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
 		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nbdev));
-		if (nbdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+		if (nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
 			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
 		}
 	}
@@ -4869,8 +4869,8 @@ nvme_bdev_alloc(void)
 	}
 
 	nbdev->ref = 1;
-	nbdev->mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
-	nbdev->mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+	nbdev->mp_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE;
+	nbdev->mp_selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
 	nbdev->rr_min_io = UINT32_MAX;
 	TAILQ_INIT(&nbdev->nvme_ns_list);
 
@@ -5749,11 +5749,11 @@ spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multip
 	assert(spdk_thread_is_app_thread(NULL));
 
 	switch (policy) {
-	case BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE:
+	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE:
 		break;
-	case BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE:
+	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE:
 		switch (selector) {
-		case BDEV_NVME_MP_SELECTOR_ROUND_ROBIN:
+		case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN:
 			if (rr_min_io == UINT32_MAX) {
 				rr_min_io = 1;
 			} else if (rr_min_io == 0) {
@@ -5761,7 +5761,7 @@ spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multip
 				goto exit;
 			}
 			break;
-		case BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH:
+		case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH:
 			break;
 		default:
 			rc = -EINVAL;
@@ -9266,8 +9266,9 @@ static void
 bdev_nvme_multipath_config_json(struct nvme_bdev *nbdev, struct spdk_json_write_ctx *w)
 {
 	/* Skip dump if it is matching the default conf. */
-	if (nbdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE &&
-	    nbdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN && nbdev->rr_min_io == UINT32_MAX) {
+	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE &&
+	    nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN &&
+	    nbdev->rr_min_io == UINT32_MAX) {
 		return;
 	}
 
@@ -9277,9 +9278,9 @@ bdev_nvme_multipath_config_json(struct nvme_bdev *nbdev, struct spdk_json_write_
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", nbdev->disk.name);
 	spdk_json_write_named_string(w, "policy", nvme_bdev_get_mp_policy_str(nbdev));
-	if (nbdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
 		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nbdev));
-		if (nbdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+		if (nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
 			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
 		}
 	}
@@ -9381,7 +9382,7 @@ nvme_io_path_is_current(struct nvme_io_path *io_path)
 	nbdev_ch = io_path->nbdev_ch;
 	if (nbdev_ch == NULL) {
 		current = false;
-	} else if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+	} else if (nbdev_ch->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
 		struct nvme_io_path *optimized_io_path = NULL;
 
 		STAILQ_FOREACH(optimized_io_path, &nbdev_ch->io_path_list, stailq) {

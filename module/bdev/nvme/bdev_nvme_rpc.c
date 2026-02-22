@@ -2232,9 +2232,9 @@ rpc_decode_mp_policy(const struct spdk_json_val *val, void *out)
 	enum spdk_bdev_nvme_multipath_policy *policy = out;
 
 	if (spdk_json_strequal(val, "active_passive") == true) {
-		*policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+		*policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE;
 	} else if (spdk_json_strequal(val, "active_active") == true) {
-		*policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE;
+		*policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: policy\n");
 		return -EINVAL;
@@ -2249,9 +2249,9 @@ rpc_decode_mp_selector(const struct spdk_json_val *val, void *out)
 	enum spdk_bdev_nvme_multipath_selector *selector = out;
 
 	if (spdk_json_strequal(val, "round_robin") == true) {
-		*selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+		*selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
 	} else if (spdk_json_strequal(val, "queue_depth") == true) {
-		*selector = BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH;
+		*selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: selector\n");
 		return -EINVAL;
@@ -2314,14 +2314,14 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	if (ctx->req.selector == UINT32_MAX) {
-		if (ctx->req.policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
-			ctx->req.selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+		if (ctx->req.policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
+			ctx->req.selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
 		} else {
 			ctx->req.selector = 0;
 		}
 	}
 
-	if (ctx->req.policy != BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE && ctx->req.selector > 0) {
+	if (ctx->req.policy != SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE && ctx->req.selector > 0) {
 		SPDK_ERRLOG("selector only works in active_active mode\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
