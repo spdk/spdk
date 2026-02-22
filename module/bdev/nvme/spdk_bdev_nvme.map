@@ -12,6 +12,8 @@
 	spdk_bdev_nvme_first_bdev_ctrlr;
 	spdk_bdev_nvme_next_bdev_ctrlr;
 	spdk_bdev_nvme_ctrlr_get_name;
+	spdk_bdev_nvme_ctrlr_first_ctrlr;
+	spdk_bdev_nvme_ctrlr_next_ctrlr;
 
 	# Everything else
 	local: *;

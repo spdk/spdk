@@ -7011,6 +7011,37 @@ spdk_bdev_nvme_ctrlr_get_name(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr)
 	return ((struct nvme_bdev_ctrlr *)nbdev_ctrlr)->name;
 }
 
+struct spdk_nvme_ctrlr *
+spdk_bdev_nvme_ctrlr_first_ctrlr(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr)
+{
+	struct nvme_bdev_ctrlr *ctrlr = (struct nvme_bdev_ctrlr *)nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	nvme_ctrlr = TAILQ_FIRST(&ctrlr->ctrlrs);
+	return nvme_ctrlr ? nvme_ctrlr->ctrlr : NULL;
+}
+
+struct spdk_nvme_ctrlr *
+spdk_bdev_nvme_ctrlr_next_ctrlr(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr,
+				struct spdk_nvme_ctrlr *prev)
+{
+	struct nvme_bdev_ctrlr *ctrlr = (struct nvme_bdev_ctrlr *)nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	TAILQ_FOREACH(nvme_ctrlr, &ctrlr->ctrlrs, tailq) {
+		if (nvme_ctrlr->ctrlr == prev) {
+			nvme_ctrlr = TAILQ_NEXT(nvme_ctrlr, tailq);
+			return nvme_ctrlr ? nvme_ctrlr->ctrlr : NULL;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,

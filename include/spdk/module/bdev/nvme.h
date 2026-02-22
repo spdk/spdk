@@ -256,6 +256,35 @@ struct spdk_bdev_nvme_ctrlr *spdk_bdev_nvme_next_bdev_ctrlr(struct spdk_bdev_nvm
  */
 const char *spdk_bdev_nvme_ctrlr_get_name(struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr);
 
+/**
+ * Get the first NVMe controller within a bdev_nvme controller group.
+ *
+ * Must be called from the app thread.
+ *
+ * \warning The returned pointer is valid only while the controller is attached.
+ * Do not hold references across operations that may disconnect controllers.
+ *
+ * \param nbdev_ctrlr Controller group handle.
+ * \return Pointer to the first spdk_nvme_ctrlr, or NULL if none.
+ */
+struct spdk_nvme_ctrlr *spdk_bdev_nvme_ctrlr_first_ctrlr(
+	struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr);
+
+/**
+ * Get the next NVMe controller within a bdev_nvme controller group.
+ *
+ * Must be called from the app thread.
+ *
+ * \warning The returned pointer is valid only while the controller is attached.
+ * Do not hold references across operations that may disconnect controllers.
+ *
+ * \param nbdev_ctrlr Controller group handle.
+ * \param prev Previous spdk_nvme_ctrlr returned by first_ctrlr or next_ctrlr.
+ * \return Pointer to the next spdk_nvme_ctrlr, or NULL if no more.
+ */
+struct spdk_nvme_ctrlr *spdk_bdev_nvme_ctrlr_next_ctrlr(
+	struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr, struct spdk_nvme_ctrlr *prev);
+
 #ifdef __cplusplus
 }
 #endif
