@@ -5766,6 +5766,10 @@ _bdev_nvme_set_multipath_policy(struct nvme_bdev_channel_iter *i,
 	nvme_bdev_for_each_channel_continue(i, 0);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_nvme_set_multipath_policy,
+			      "use spdk_bdev_nvme_create() with multipath options instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 void
 spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multipath_policy policy,
 				    enum spdk_bdev_nvme_multipath_selector selector, uint32_t rr_min_io,
@@ -5778,6 +5782,8 @@ spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multip
 
 	assert(cb_fn != NULL);
 	assert(spdk_thread_is_app_thread(NULL));
+
+	SPDK_LOG_DEPRECATED(bdev_nvme_set_multipath_policy);
 
 	switch (policy) {
 	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE:

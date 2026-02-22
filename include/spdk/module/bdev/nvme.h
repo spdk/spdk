@@ -177,6 +177,8 @@ int spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path
 /**
  * Set multipath policy of the NVMe bdev.
  *
+ * \deprecated Use spdk_bdev_nvme_create() with multipath options instead.
+ *
  * Subsequent calls for the same bdev must wait until the current execution finishes.
  *
  * \param name NVMe bdev name.
