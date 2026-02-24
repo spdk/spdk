@@ -10,6 +10,7 @@ DIRS-y = aer reset sgl e2edp overhead err_injection \
 	startup reserve simple_copy connect_stress boot_partition \
 	compliance fused_ordering doorbell_aers fdp
 DIRS-$(CONFIG_NVME_CUSE) += cuse
+DIRS-$(CONFIG_RDMA) += rdma_err_injection
 
 .PHONY: all clean $(DIRS-y)
 

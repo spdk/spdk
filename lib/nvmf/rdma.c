@@ -4839,7 +4839,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 
 	/* Poll for completing operations. */
-	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
+	reaped = spdk_rdma_utils_poll_cq(rpoller->cq, 32, wc);
 	if (spdk_unlikely(reaped < 0)) {
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 			    errno, spdk_strerror(errno));

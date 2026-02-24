@@ -42,6 +42,8 @@ DEFINE_STUB(spdk_memory_domain_pull_data, int, (struct spdk_memory_domain *src_d
 		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
 		uint32_t dst_iov_cnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
 DEFINE_STUB(spdk_rdma_cm_id_get_numa_id, int32_t, (struct rdma_cm_id *cm_id), 0);
+DEFINE_STUB(spdk_rdma_utils_poll_cq, int, (struct ibv_cq *cq, int num_entries, struct ibv_wc *wc),
+	    0);
 
 DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cmd *cmd));

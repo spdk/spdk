@@ -2991,7 +2991,7 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 	int				completion_rc = 0;
 	int				rc, _rc, i;
 
-	rc = ibv_poll_cq(cq, batch_size, wc);
+	rc = spdk_rdma_utils_poll_cq(cq, batch_size, wc);
 	if (spdk_unlikely(rc < 0)) {
 		NVME_RQPAIR_ERRLOG(rdma_qpair, "Error polling CQ! (%d): %s\n", errno, spdk_strerror(errno));
 		return -ECANCELED;
