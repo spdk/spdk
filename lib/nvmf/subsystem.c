@@ -3076,8 +3076,8 @@ nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 static int
-nvmf_ns_reservation_update_json(const struct spdk_nvmf_ns *ns,
-				const struct spdk_nvmf_reservation_info *info)
+nvmf_ns_reservation_store_json(const struct spdk_nvmf_ns *ns,
+			       const struct spdk_nvmf_reservation_info *info)
 {
 	const char *file = ns->ptpl_file;
 	struct spdk_json_write_ctx *w;
@@ -4235,8 +4235,8 @@ nvmf_ns_is_ptpl_capable_json(const struct spdk_nvmf_ns *ns)
 
 static struct spdk_nvmf_ns_reservation_ops g_reservation_ops = {
 	.is_ptpl_capable = nvmf_ns_is_ptpl_capable_json,
-	.update = nvmf_ns_reservation_update_json,
-	.load = nvmf_ns_reservation_load_json,
+	.ptpl_store = nvmf_ns_reservation_store_json,
+	.ptpl_load = nvmf_ns_reservation_load_json,
 };
 
 bool
@@ -4265,14 +4265,14 @@ static int
 nvmf_ns_reservation_ptpl_store(const struct spdk_nvmf_ns *ns,
 			       const struct spdk_nvmf_reservation_info *info)
 {
-	return g_reservation_ops.update(ns, info);
+	return g_reservation_ops.ptpl_store(ns, info);
 }
 
 static int
 nvmf_ns_reservation_ptpl_load(const struct spdk_nvmf_ns *ns,
 			      struct spdk_nvmf_reservation_info *info)
 {
-	return g_reservation_ops.load(ns, info);
+	return g_reservation_ops.ptpl_load(ns, info);
 }
 
 void

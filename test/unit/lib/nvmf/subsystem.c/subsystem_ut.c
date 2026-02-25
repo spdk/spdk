@@ -3526,7 +3526,7 @@ ut_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
 static struct spdk_nvmf_reservation_info g_resv_info;
 
 static int
-ut_update_reservation(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info)
+ut_store_reservation(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info)
 {
 	g_resv_info = *info;
 
@@ -3546,8 +3546,8 @@ test_nvmf_reservation_custom_ops(void)
 {
 	struct spdk_nvmf_ns_reservation_ops ops = {
 		.is_ptpl_capable = ut_is_ptpl_capable,
-		.update = ut_update_reservation,
-		.load = ut_load_reservation,
+		.ptpl_store = ut_store_reservation,
+		.ptpl_load = ut_load_reservation,
 	};
 	struct spdk_nvmf_request *req;
 	struct spdk_nvme_cpl *rsp;
@@ -3625,8 +3625,8 @@ test_nvmf_ns_reservation_add_max_registrants(void)
 {
 	struct spdk_nvmf_ns_reservation_ops ops = {
 		.is_ptpl_capable = ut_is_ptpl_capable,
-		.update = ut_update_reservation,
-		.load = ut_load_reservation,
+		.ptpl_store = ut_store_reservation,
+		.ptpl_load = ut_load_reservation,
 	};
 	spdk_nvmf_set_custom_ns_reservation_ops(&ops);
 	ut_reservation_init();

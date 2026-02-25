@@ -1688,15 +1688,16 @@ struct spdk_nvmf_ns_reservation_ops {
 	/* Checks if the namespace supports the Persist Through Power Loss capability. */
 	bool (*is_ptpl_capable)(const struct spdk_nvmf_ns *ns);
 
-	/* Called when namespace reservation information needs to be updated.
-	 * The new reservation information is provided via the info parameter.
+	/* Called when PTPL is capable and the namespace reservation state needs to be stored
+	 * persistently (including when PTPL is inactive and state needs to be cleared).
+	 * The current reservation information is provided via the info parameter.
 	 * Returns 0 on success, negated errno on failure. */
-	int (*update)(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info);
+	int (*ptpl_store)(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info);
 
-	/* Called when restoring the namespace reservation information.
-	 * The new reservation information is returned via the info parameter.
+	/* Called when PTLP is capable, to load (if present) persistently stored reservation state.
+	 * The loaded reservation state is returned via the info parameter.
 	 * Returns 0 on success, negated errno on failure. */
-	int (*load)(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+	int (*ptpl_load)(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
 };
 
 /**
