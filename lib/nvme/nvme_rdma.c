@@ -248,6 +248,8 @@ struct nvme_rdma_qpair {
 	bool					need_destroy;
 	bool					connected;
 	TAILQ_ENTRY(nvme_rdma_qpair)		link_connecting;
+
+	TAILQ_ENTRY(nvme_rdma_qpair)		link_to_fail;
 };
 
 enum NVME_RDMA_COMPLETION_FLAGS {
@@ -2803,21 +2805,6 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct nvme_r
 
 	rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
 
-	if (spdk_unlikely(!rqpair)) {
-		if (poller && poller->srq) {
-			/* Since we do not handle the LAST_WQE_REACHED event, we do not know when
-			 * a Receive Queue in a QP, that is associated with an SRQ, is flushed.
-			 * We may get a WC for a already destroyed QP.
-			 *
-			 * However, for the SRQ, this is not any error. Hence, just re-post the
-			 * receive request to the SRQ to reuse for other QPs, and return 0.
-			 */
-			rdma_rsp->recv_wr->next = NULL;
-			spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
-		}
-		return 0;
-	}
-
 	assert(rqpair->rsps->current_num_recvs > 0);
 	rqpair->rsps->current_num_recvs--;
 
@@ -2848,7 +2835,6 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct nvme_r
 	if (!rqpair->delay_cmd_submit) {
 		if (spdk_unlikely(nvme_rdma_qpair_submit_recvs(rqpair))) {
 			NVME_RQPAIR_ERRLOG(rqpair, "Unable to re-post rx descriptor\n");
-			nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 			return -ENXIO;
 		}
 	}
@@ -2856,7 +2842,6 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct nvme_r
 	return 1;
 
 err_wc:
-	nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 	if (poller && poller->srq) {
 		rdma_rsp->recv_wr->next = NULL;
 		spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
@@ -2879,18 +2864,9 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 
 	/* If we are flushing I/O */
 	if (spdk_unlikely(wc->status)) {
-		if (!rqpair) {
-			/* When poll_group is used, several qpairs share the same CQ and it is possible to
-			 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
-			 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
-			 * Work Requests */
-			assert(poller);
-			return 0;
-		}
 		assert(rqpair->current_num_sends > 0);
 		rqpair->current_num_sends--;
 		nvme_rdma_log_wc_status(rqpair, wc);
-		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 		if (rdma_req->rdma_rsp && poller && poller->srq) {
 			rdma_req->rdma_rsp->recv_wr->next = NULL;
 			spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_req->rdma_rsp->recv_wr);
@@ -2932,7 +2908,6 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 	if (!rqpair->delay_cmd_submit) {
 		if (spdk_unlikely(nvme_rdma_qpair_submit_recvs(rqpair))) {
 			NVME_RQPAIR_ERRLOG(rqpair, "Unable to re-post rx descriptor\n");
-			nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 			return -ENXIO;
 		}
 	}
@@ -3054,10 +3029,8 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		if (rc == 0) {
 			break;
 			/* Handle the case where we fail to poll the cq. */
-		} else if (rc == -ECANCELED) {
+		} else if (spdk_unlikely(rc < 0)) {
 			goto failed;
-		} else if (rc == -ENXIO) {
-			return rc;
 		}
 	} while (rqpair->num_completions < max_completions);
 
@@ -3431,9 +3404,11 @@ static inline int
 nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_t batch_size,
 					uint64_t *rdma_completions)
 {
+	TAILQ_HEAD(, nvme_rdma_qpair)	rqpairs_to_fail = TAILQ_HEAD_INITIALIZER(rqpairs_to_fail);
 	struct ibv_wc			wc[MAX_COMPLETIONS_PER_POLL];
 	struct nvme_rdma_wr		*rdma_wr;
 	struct nvme_rdma_qpair		*rqpair;
+	struct spdk_nvme_rdma_rsp	*rdma_rsp;
 	int				reaped = 0;
 	int				completion_rc = 0;
 	int				rc, _rc, i;
@@ -3449,6 +3424,26 @@ nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_
 	for (i = 0; i < rc; i++) {
 		rdma_wr = (struct nvme_rdma_wr *)wc[i].wr_id;
 		rqpair = get_rdma_qpair_from_wc(poller->group, &wc[i]);
+
+		if (!rqpair || rqpair->state == NVME_RDMA_QPAIR_STATE_EXITED) {
+			/**
+			 * Since we do not handle the LAST_WQE_REACHED event, we do not know when
+			 * a QP is flushed. We may get a WC for a already destroyed QP.
+			 *
+			 * If the QP has been destroyed, rdma_wr might be a dangling pointer
+			 * because the corresponding rdma_req/rdma_rsp might have been freed. The
+			 * only case in which rdma_wr is still valid is that srq is used and the
+			 * WR is RECV. In this case, we can safely dereference the pointer and
+			 * re-post the receive request to the SRQ to reuse for other QPs.
+			 */
+			if (poller->srq && (wc[i].opcode == IBV_WC_RECV)) {
+				rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
+				rdma_rsp->recv_wr->next = NULL;
+				spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
+			}
+			continue;
+		}
+
 		switch (rdma_wr->type) {
 		case RDMA_WR_TYPE_RECV:
 			_rc = nvme_rdma_process_recv_completion(poller, rqpair, &wc[i], rdma_wr);
@@ -3460,22 +3455,32 @@ nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_
 
 		default:
 			SPDK_ERRLOG("Received an unexpected opcode on the CQ of poller(%p): %d\n", poller, rdma_wr->type);
-			return -ECANCELED;
+			completion_rc = -ECANCELED;
+			goto fail_rqpairs;
 		}
 		if (spdk_likely(_rc >= 0)) {
 			reaped += _rc;
 		} else {
+			if (rqpair != NULL && TAILQ_ENTRY_NOT_ENQUEUED(rqpair, link_to_fail)) {
+				TAILQ_INSERT_TAIL(&rqpairs_to_fail, rqpair, link_to_fail);
+			}
 			completion_rc = _rc;
 		}
 	}
 
 	*rdma_completions += rc;
 
-	if (spdk_unlikely(completion_rc)) {
-		return completion_rc;
+	if (spdk_likely(completion_rc == 0)) {
+		return reaped;
 	}
 
-	return reaped;
+fail_rqpairs:
+	while (!TAILQ_EMPTY(&rqpairs_to_fail)) {
+		rqpair = TAILQ_FIRST(&rqpairs_to_fail);
+		TAILQ_REMOVE_CLEAR(&rqpairs_to_fail, rqpair, link_to_fail);
+		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+	}
+	return completion_rc;
 }
 
 static inline void
