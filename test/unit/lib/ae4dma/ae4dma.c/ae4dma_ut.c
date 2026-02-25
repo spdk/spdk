@@ -55,13 +55,14 @@ ae4dma_queue_full_check(void)
 	uint8_t i;
 
 	/* Checking cmdq full */
-	for (i = 0; i < 28; i++)
-		CU_ASSERT(ae4dma_desc_cmdq_full(i) == false)
-
-		CU_ASSERT(ae4dma_desc_cmdq_full(28) == true)
-		CU_ASSERT(ae4dma_desc_cmdq_full(29) == true)
-		CU_ASSERT(ae4dma_desc_cmdq_full(30) == true)
+	for (i = 0; i < (AE4DMA_DESCRIPTORS_PER_CMDQ - 1); i++) {
+		CU_ASSERT(ae4dma_desc_cmdq_full(i) == false);
 	}
+
+	CU_ASSERT(ae4dma_desc_cmdq_full(AE4DMA_DESCRIPTORS_PER_CMDQ - 1) == true);
+	CU_ASSERT(ae4dma_desc_cmdq_full(AE4DMA_DESCRIPTORS_PER_CMDQ) == true);
+	CU_ASSERT(ae4dma_desc_cmdq_full(AE4DMA_DESCRIPTORS_PER_CMDQ + 1) == true);
+}
 
 static void
 ae4dma_max_queue_config_check(void)

@@ -156,7 +156,7 @@ spdk_ae4dma_build_copy(struct spdk_ae4dma_chan *ae4dma, int hwq_id, void *cb_arg
 				return -EINVAL;
 			}
 
-			if (ae4dma->cmd_q[hwq_id].ring_buff_count >= (AE4DMA_DESCRIPTORS_PER_CMDQ - 4)) {
+			if (ae4dma_desc_cmdq_full(ae4dma->cmd_q[hwq_id].ring_buff_count)) {
 
 				SPDK_ERRLOG("Descriptor ring is full\n");
 				return 1;

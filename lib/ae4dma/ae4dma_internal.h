@@ -70,7 +70,7 @@ struct spdk_ae4dma_chan {
 static inline bool
 ae4dma_desc_cmdq_full(uint8_t count)
 {
-	if (count >= (AE4DMA_DESCRIPTORS_PER_CMDQ - 4)) {
+	if (count >= (AE4DMA_DESCRIPTORS_PER_CMDQ - 1)) {
 		return true;
 	} else {
 		return false;
