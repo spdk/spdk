@@ -206,6 +206,17 @@ struct spdk_json_write_ctx *spdk_json_write_begin(spdk_json_write_cb write_cb, v
 		uint32_t flags);
 int spdk_json_write_end(struct spdk_json_write_ctx *w);
 void spdk_json_write_reset(struct spdk_json_write_ctx *w);
+
+/**
+ * Set additional flags on a JSON write context.
+ *
+ * The provided flags are OR'd into the existing flags.
+ *
+ * \param w JSON write context.
+ * \param flags Flags to add
+ */
+void spdk_json_write_add_flags(struct spdk_json_write_ctx *w, uint32_t flags);
+
 int spdk_json_write_null(struct spdk_json_write_ctx *w);
 int spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val);
 int spdk_json_write_uint8(struct spdk_json_write_ctx *w, uint8_t val);

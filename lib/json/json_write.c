@@ -101,6 +101,12 @@ spdk_json_write_reset(struct spdk_json_write_ctx *w)
 	w->indent = 0;
 }
 
+void
+spdk_json_write_add_flags(struct spdk_json_write_ctx *w, uint32_t flags)
+{
+	w->flags |= flags;
+}
+
 static inline int
 emit(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
