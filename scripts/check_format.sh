@@ -96,7 +96,7 @@ function check_permissions() {
 		fname=$(basename -- "$path")
 
 		case ${fname##*.} in
-			c | h | cpp | cc | cxx | hh | hpp | md | html | js | json | svg | Doxyfile | yml | LICENSE | README | conf | in | Makefile | mk | gitignore | go | txt)
+			c | h | cpp | cc | cxx | cu | hh | hpp | md | html | js | json | svg | Doxyfile | yml | LICENSE | README | conf | in | Makefile | mk | gitignore | go | txt)
 				# These file types should never be executable
 				if [ "$perm" -eq 100755 ]; then
 					echo "ERROR: $path is marked executable but is a code file."
@@ -145,7 +145,7 @@ function check_c_style() {
 			rm -f astyle.log
 			touch astyle.log
 			# Exclude DPDK header files copied into our tree
-			git ls-files '*.[ch]' ':!:*/env_dpdk/*/*.h' ':!:include/linux/fuse_kernel.h' \
+			git ls-files '*.[ch]' '*.cu' ':!:*/env_dpdk/*/*.h' ':!:include/linux/fuse_kernel.h' \
 				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
 					--options=.astylerc >> astyle.log
 			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
@@ -175,11 +175,11 @@ function check_comment_style() {
 
 	echo -n "Checking comment style..."
 
-	git grep --line-number -e '\/[*][^ *-]' -- '*.[ch]' > comment.log || true
-	git grep --line-number -e '[^ ][*]\/' -- '*.[ch]' ':!lib/rte_vhost*/*' >> comment.log || true
-	git grep --line-number -e '^[*]' -- '*.[ch]' ':!include/linux/fuse_kernel.h' >> comment.log || true
-	git grep --line-number -e '\s\/\/' -- '*.[ch]' >> comment.log || true
-	git grep --line-number -e '^\/\/' -- '*.[ch]' >> comment.log || true
+	git grep --line-number -e '\/[*][^ *-]' -- '*.[ch]' '*.cu' > comment.log || true
+	git grep --line-number -e '[^ ][*]\/' -- '*.[ch]' '*.cu' ':!lib/rte_vhost*/*' >> comment.log || true
+	git grep --line-number -e '^[*]' -- '*.[ch]' '*.cu' ':!include/linux/fuse_kernel.h' >> comment.log || true
+	git grep --line-number -e '\s\/\/' -- '*.[ch]' '*.cu' >> comment.log || true
+	git grep --line-number -e '^\/\/' -- '*.[ch]' '*.cu' >> comment.log || true
 
 	if [ -s comment.log ]; then
 		echo " Incorrect comment formatting detected"
@@ -215,7 +215,7 @@ function check_trailing_whitespace() {
 
 	echo -n "Checking trailing whitespace in output strings..."
 
-	git grep --line-number -e ' \\n"' -- '*.[ch]' > whitespace.log || true
+	git grep --line-number -e ' \\n"' -- '*.[ch]' '*.cu' > whitespace.log || true
 
 	if [ -s whitespace.log ]; then
 		echo " Incorrect trailing whitespace detected"
@@ -234,7 +234,7 @@ function check_forbidden_functions() {
 
 	echo -n "Checking for use of forbidden library functions..."
 
-	git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\|strtok\)' -- './*.c' ':!lib/rte_vhost*/**' > badfunc.log || true
+	git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\|strtok\)' -- '*.c' '*.cu' ':!lib/rte_vhost*/**' > badfunc.log || true
 	if [ -s badfunc.log ]; then
 		echo " Forbidden library functions detected"
 		cat badfunc.log
@@ -418,7 +418,7 @@ function check_include_style() {
 	local rc=0
 
 	echo -n "Checking #include style..."
-	git grep -I -i --line-number "#include <spdk/" -- '*.[ch]' > scripts/includes.log || true
+	git grep -I -i --line-number "#include <spdk/" -- '*.[ch]' '*.cu' > scripts/includes.log || true
 	if [ -s scripts/includes.log ]; then
 		echo "Incorrect #include syntax. #includes of spdk/ files should use quotes."
 		cat scripts/includes.log
@@ -840,6 +840,7 @@ function get_files_for_lic() {
 	f_suffix+=("*.c")
 	f_suffix+=("*.cpp")
 	f_suffix+=("*.h")
+	f_suffix+=("*.cu")
 	f_suffix+=("*.go")
 	f_suffix+=("*.mk")
 	f_suffix+=("*.pl")
