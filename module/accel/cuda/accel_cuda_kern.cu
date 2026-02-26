@@ -107,7 +107,7 @@ accel_cuda_xor_start(
 
 	if (num_inputs < 2 || num_inputs > CUDA_XOR_MAX_SOURCES) {
 		SPDK_ERRLOG("accel_cuda_xor_prepare supports 2-%d inputs (we got %d)!\n",
-			CUDA_XOR_MAX_SOURCES, num_inputs);
+			    CUDA_XOR_MAX_SOURCES, num_inputs);
 		return -EINVAL;
 	}
 
@@ -144,10 +144,10 @@ accel_cuda_xor_start(
 	step = grid_size * tpb;
 
 	SPDK_DEBUGLOG(accel_cuda, "grid %u, tpb %u, count %u, steps %u, step %u\n",
-		grid_size, tpb, count, (count + step - 1) / step, step);
+		      grid_size, tpb, count, (count + step - 1) / step, step);
 
 	/* launch our cuda kernel */
-	xor_kernel<<<grid_size, tpb, num_inputs * sizeof(void*), stream>>>(
+	xor_kernel <<< grid_size, tpb, num_inputs *sizeof(void *), stream>>>(
 		doutput, (const uint32_t **)dinputs, num_inputs, count, step);
 
 	return _accel_cuda_queue_status_return(status, stream);
@@ -189,7 +189,7 @@ accel_cuda_copy_start(
 		err = cudaMemcpyAsync(ddst, dsrc, len, cudaMemcpyHostToHost, stream);
 		if (err != cudaSuccess)	{
 			SPDK_ERRLOG("cudaMemcpyAsync failed for ddst %p, dsrc %p, len %lu (err %d)!\n",
-						ddst, dsrc, len, err);
+				    ddst, dsrc, len, err);
 			return -EINVAL;
 		}
 	}
