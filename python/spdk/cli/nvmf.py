@@ -139,20 +139,8 @@ def add_parser(subparsers):
     p.set_defaults(func=nvmf_get_subsystems)
 
     def nvmf_create_subsystem(args):
-        args.client.nvmf_create_subsystem(
-                                       nqn=args.nqn,
-                                       tgt_name=args.tgt_name,
-                                       serial_number=args.serial_number,
-                                       model_number=args.model_number,
-                                       allow_any_host=args.allow_any_host,
-                                       max_namespaces=args.max_namespaces,
-                                       ana_reporting=args.ana_reporting,
-                                       min_cntlid=args.min_cntlid,
-                                       max_cntlid=args.max_cntlid,
-                                       max_discard_size_kib=args.max_discard_size_kib,
-                                       max_write_zeroes_size_kib=args.max_write_zeroes_size_kib,
-                                       passthrough=args.passthrough,
-                                       enable_nssr=args.enable_nssr)
+        params = strip_globals(vars(args))
+        args.client.nvmf_create_subsystem(**params)
 
     p = subparsers.add_parser('nvmf_create_subsystem', help='Create an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
