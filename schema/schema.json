@@ -3629,6 +3629,16 @@
           "description": "Maximum write_zeroes size (Kib). Default: 0"
         },
         {
+          "name": "dmrsl",
+          "type": "uint32",
+          "description": "Dataset Management Range Size Limit in logical block units. Default: 2097152 (1 GiB). Mutually exclusive with max_discard_size_kib."
+        },
+        {
+          "name": "wzsl",
+          "type": "uint8",
+          "description": "Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size. Default: 12 (16 MiB). Mutually exclusive with max_write_zeroes_size_kib."
+        },
+        {
           "name": "passthrough",
           "type": "boolean",
           "description": "Use NVMe passthrough for I/O commands and namespace-directed admin commands. Default: `false`"

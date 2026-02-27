@@ -376,6 +376,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_subsystem_decoders[
 	{"max_cntlid", offsetof(struct rpc_subsystem_create, max_cntlid), spdk_json_decode_uint16, true},
 	{"max_discard_size_kib", offsetof(struct rpc_subsystem_create, max_discard_size_kib), spdk_json_decode_uint64, true},
 	{"max_write_zeroes_size_kib", offsetof(struct rpc_subsystem_create, max_write_zeroes_size_kib), spdk_json_decode_uint64, true},
+	{"dmrsl", offsetof(struct rpc_subsystem_create, opts.dmrsl), spdk_json_decode_uint32, true},
+	{"wzsl", offsetof(struct rpc_subsystem_create, opts.wzsl), spdk_json_decode_uint8, true},
 	{"passthrough", offsetof(struct rpc_subsystem_create, opts.passthrough), spdk_json_decode_bool, true},
 	{"enable_nssr", offsetof(struct rpc_subsystem_create, opts.enable_nssr), spdk_json_decode_bool, true},
 };
@@ -409,6 +411,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	req.max_cntlid = NVMF_MAX_CNTLID;
 
 	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &req.opts, sizeof(req.opts));
+	req.max_discard_size_kib = UINT64_MAX;
+	req.max_write_zeroes_size_kib = UINT64_MAX;
 
 	if (spdk_json_decode_object(params, rpc_nvmf_create_subsystem_decoders,
 				    SPDK_COUNTOF(rpc_nvmf_create_subsystem_decoders),
@@ -426,25 +430,32 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	/* Convert KiB to logical blocks assuming 512B block size. */
-	req.opts.dmrsl = req.max_discard_size_kib << 1;
+	if (req.max_discard_size_kib != UINT64_MAX) {
+		/* Convert KiB to logical blocks assuming 512B block size. */
+		req.opts.dmrsl = req.max_discard_size_kib << 1;
+	}
 
-	/* Convert max_write_zeroes_size_kib to wzsl.
-	 * wzsl is in units of minimum memory page size (4 KiB when mpsmin=0),
-	 * reported as a power of two (2^wzsl). Valid KiB values: 0 (no limit) or
-	 * power of 2 >= 8.
-	 */
-	if (req.max_write_zeroes_size_kib == 0) {
-		req.opts.wzsl = 0;
-	} else if (req.max_write_zeroes_size_kib >= 8 &&
-		   spdk_u64_is_pow2(req.max_write_zeroes_size_kib)) {
-		req.opts.wzsl = spdk_u64log2(req.max_write_zeroes_size_kib >> 2);
-	} else {
-		SPDK_ERRLOG("Subsystem %s: invalid max_write_zeroes_size_kib %"PRIu64"\n", req.nqn,
-			    req.max_write_zeroes_size_kib);
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid max_write_zeroes_size_kib %"PRIu64, req.max_write_zeroes_size_kib);
-		goto cleanup;
+	if (req.max_write_zeroes_size_kib != UINT64_MAX) {
+		/* Convert max_write_zeroes_size_kib to wzsl.
+		 * wzsl is in units of minimum memory page size (4 KiB when mpsmin=0),
+		 * reported as a power of two (2^wzsl). Valid KiB values: 0 (no limit)
+		 * or power of 2 >= 8.
+		 */
+		if (req.max_write_zeroes_size_kib == 0) {
+			req.opts.wzsl = 0;
+		} else if (req.max_write_zeroes_size_kib >= 8 &&
+			   spdk_u64_is_pow2(req.max_write_zeroes_size_kib)) {
+			req.opts.wzsl = spdk_u64log2(req.max_write_zeroes_size_kib >> 2);
+		} else {
+			SPDK_ERRLOG("Subsystem %s: invalid "
+				    "max_write_zeroes_size_kib %"PRIu64"\n",
+				    req.nqn, req.max_write_zeroes_size_kib);
+			spdk_jsonrpc_send_error_response_fmt(request,
+							     SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid max_write_zeroes_size_kib %"PRIu64,
+							     req.max_write_zeroes_size_kib);
+			goto cleanup;
+		}
 	}
 
 	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, &req.opts);
