@@ -43,20 +43,20 @@ out=$("$rpc" nvmf_create_subsystem -t "$target" "$nqn$RANDOM" 2>&1) && false
 # Attempt to create subsystem with invalid serial number - inject ASCII char that's
 # not in the range (0x20-0x7e) of these supported by the nvme spec.
 out=$("$rpc" nvmf_create_subsystem -s "$NVMF_SERIAL$(echo -e "\x1f")" "$nqn$RANDOM" 2>&1) && false
-[[ $out == *"Invalid SN"* ]]
+[[ $out == *"Invalid parameters"* ]]
 
 # Attempt to create subsystem with invalid model - inject ASCII char that's not in the
 # range (0x20-0x7e) of these supported by the nvme spec.
 out=$("$rpc" nvmf_create_subsystem -d "SPDK_Controller$(echo -e "\x1f")" "$nqn$RANDOM" 2>&1) && false
-[[ $out == *"Invalid MN"* ]]
+[[ $out == *"Invalid parameters"* ]]
 
 # Attempt to create subsystem with invalid serial number - exceed SPDK_NVME_CTRLR_SN_LEN (20)
 out=$("$rpc" nvmf_create_subsystem -s "$(gen_random_s 21)" "$nqn$RANDOM" 2>&1) && false
-[[ $out == *"Invalid SN"* ]]
+[[ $out == *"Invalid parameters"* ]]
 
 # Attempt to create subsystem with invalid model - exceed SPDK_NVME_CTRLR_MN_LEN (40)
 out=$("$rpc" nvmf_create_subsystem -d "$(gen_random_s 41)" "$nqn$RANDOM" 2>&1) && false
-[[ $out == *"Invalid MN"* ]]
+[[ $out == *"Invalid parameters"* ]]
 
 # Attempt to delete non-existing subsystem listener
 $rpc nvmf_create_transport --trtype "$TEST_TRANSPORT"
