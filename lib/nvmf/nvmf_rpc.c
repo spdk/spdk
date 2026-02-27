@@ -317,6 +317,12 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTIME)
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_subsystem_max_discard_size_kib,
+			      "use dmrsl instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_subsystem_max_write_zeroes_size_kib,
+			      "use wzsl instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 static int
 decode_subsystem_serial_number(const struct spdk_json_val *val, void *out)
 {
@@ -433,11 +439,13 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.max_discard_size_kib != UINT64_MAX) {
+		SPDK_LOG_DEPRECATED(nvmf_create_subsystem_max_discard_size_kib);
 		/* Convert KiB to logical blocks assuming 512B block size. */
 		req.opts.dmrsl = req.max_discard_size_kib << 1;
 	}
 
 	if (req.max_write_zeroes_size_kib != UINT64_MAX) {
+		SPDK_LOG_DEPRECATED(nvmf_create_subsystem_max_write_zeroes_size_kib);
 		/* Convert max_write_zeroes_size_kib to wzsl.
 		 * wzsl is in units of minimum memory page size (4 KiB when mpsmin=0),
 		 * reported as a power of two (2^wzsl). Valid KiB values: 0 (no limit)
