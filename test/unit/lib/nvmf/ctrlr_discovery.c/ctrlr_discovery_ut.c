@@ -105,10 +105,11 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-test_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
-				 struct iovec *iov, uint32_t iovcnt,
-				 uint64_t offset, uint32_t length,
-				 struct spdk_nvme_transport_id *cmd_source_trid)
+_test_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
+				  struct iovec *iov, uint32_t iovcnt,
+				  uint64_t offset, uint32_t length,
+				  struct spdk_nvme_transport_id *cmd_source_trid,
+				  bool extdlpe)
 {
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_subsystem subsys = { .tgt = tgt };
@@ -126,13 +127,23 @@ test_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
 		memcpy(req.iov, iov, iovcnt * sizeof(struct iovec));
 	}
 
-	nvmf_get_discovery_log_page_async(&req, offset, length, cmd_source_trid, false, false);
+	nvmf_get_discovery_log_page_async(&req, offset, length, cmd_source_trid, false, extdlpe);
 
 	/* Process async messages */
 	poll_thread(0);
 
 	/* Verify completion occurred */
 	CU_ASSERT(g_async_discovery_complete);
+}
+
+static void
+test_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
+				 struct iovec *iov, uint32_t iovcnt,
+				 uint64_t offset, uint32_t length,
+				 struct spdk_nvme_transport_id *cmd_source_trid)
+{
+	_test_nvmf_get_discovery_log_page(tgt, hostnqn, iov, iovcnt, offset, length,
+					  cmd_source_trid, false);
 }
 
 const char *
@@ -840,6 +851,222 @@ test_discovery_log_with_filters(void)
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
+static void
+test_discovery_log_extended(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_opts opts;
+	uint8_t buffer[8192];
+	struct iovec iov;
+	struct spdk_nvmf_discovery_log_page *disc_log;
+	struct spdk_nvmf_discovery_log_page_entry *entry;
+	struct spdk_nvmf_discovery_log_page_entry_extended *ext_hdr;
+	struct spdk_nvmf_discovery_extended_attribute *attr;
+	struct spdk_nvme_transport_id trid = {};
+	const char *hostnqn = "nqn.2016-06.io.spdk:host1";
+	const char *admin_label = "test subsys label";  /* 17 chars, padded EXATLEN = 20 */
+	size_t expected_exatlen;
+	size_t expected_entry_size;
+	int rc;
+
+	iov.iov_base = buffer;
+	iov.iov_len = sizeof(buffer);
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
+	RB_INIT(&tgt.subsystems);
+
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "%s", admin_label);
+	subsystem = spdk_nvmf_subsystem_create_ext(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+			SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT_STRING_EQUAL(spdk_nvmf_subsystem_get_opts(subsystem)->admin_label, admin_label);
+
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Setup listener for discovery tests */
+	test_gen_trid(&trid, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
+	spdk_nvmf_subsystem_add_listener(subsystem, &trid, _subsystem_add_listen_done, NULL);
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+
+	/* extdlpe = true - verify extended entry, DLPF, TDLPL, and attribute */
+	memset(buffer, 0, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	_test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(buffer), &trid, true);
+	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->dlpf.extend == 1);
+
+	expected_exatlen = SPDK_ALIGN_CEIL(strlen(admin_label), 4);
+	expected_entry_size = SPDK_NVMF_DISC_EXT_ENTRY_TEL(expected_exatlen);
+	CU_ASSERT(disc_log->tdlpl == SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE + expected_entry_size);
+
+	entry = (struct spdk_nvmf_discovery_log_page_entry *)
+		(buffer + SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE);
+	ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)
+		  ((uint8_t *)entry + SPDK_NVMF_DISC_ENTRY_SIZE);
+	CU_ASSERT(ext_hdr->tel == expected_entry_size);
+	CU_ASSERT(ext_hdr->numexat == 1);
+
+	attr = (struct spdk_nvmf_discovery_extended_attribute *)
+	       ((uint8_t *)entry + SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+	CU_ASSERT(attr->exattype == SPDK_NVMF_EXTAT_ADMIN_LABEL);
+	CU_ASSERT(attr->exatlen == expected_exatlen);
+	CU_ASSERT(memcmp(attr->exatval, admin_label, strlen(admin_label)) == 0);
+
+	/* extdlpe = false with admin_label - should return standard entry */
+	memset(buffer, 0, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	_test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(buffer), &trid, false);
+	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->dlpf.extend == 0);
+	CU_ASSERT(disc_log->tdlpl == 0);
+
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* extdlpe = true with empty admin_label - extended header still present, NUMEXAT=0 */
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	subsystem = spdk_nvmf_subsystem_create_ext(&tgt, "nqn.2016-06.io.spdk:subsystem2",
+			SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->admin_label[0] == '\0');
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
+	CU_ASSERT(rc == 0);
+	spdk_nvmf_subsystem_add_listener(subsystem, &trid, _subsystem_add_listen_done, NULL);
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+
+	memset(buffer, 0, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	_test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(buffer), &trid, true);
+	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->dlpf.extend == 1);
+	CU_ASSERT(disc_log->tdlpl == SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE +
+		  SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+
+	entry = (struct spdk_nvmf_discovery_log_page_entry *)
+		(buffer + SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE);
+	ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)
+		  ((uint8_t *)entry + SPDK_NVMF_DISC_ENTRY_SIZE);
+	CU_ASSERT(ext_hdr->tel == SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+	CU_ASSERT(ext_hdr->numexat == 0);
+
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_bit_array_free(&tgt.subsystem_ids);
+}
+
+static void
+test_discovery_log_extended_mixed(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem *subsys_with_label, *subsys_no_label;
+	struct spdk_nvmf_subsystem_opts opts;
+	struct spdk_nvmf_referral referral = {};
+	uint8_t buffer[16384];
+	struct iovec iov;
+	struct spdk_nvmf_discovery_log_page *disc_log;
+	struct spdk_nvmf_discovery_log_page_entry_extended *ext_hdr;
+	struct spdk_nvmf_discovery_extended_attribute *attr;
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_transport_id ref_trid = {};
+	const char *hostnqn = "nqn.2016-06.io.spdk:host1";
+	const char *admin_label = "test label";  /* 10 chars, padded EXATLEN = 12 */
+	size_t expected_exatlen;
+	size_t expected_entry_size_with_label;
+	uint8_t *ptr;
+	int rc;
+
+	iov.iov_base = buffer;
+	iov.iov_len = sizeof(buffer);
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
+	RB_INIT(&tgt.subsystems);
+	TAILQ_INIT(&tgt.referrals);
+
+	/* Subsystem 1: has admin_label */
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "%s", admin_label);
+	subsys_with_label = spdk_nvmf_subsystem_create_ext(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+			    SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsys_with_label != NULL);
+	rc = spdk_nvmf_subsystem_add_host(subsys_with_label, hostnqn, NULL);
+	CU_ASSERT(rc == 0);
+	test_gen_trid(&trid, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "1.2.3.4", "4420");
+	spdk_nvmf_subsystem_add_listener(subsys_with_label, &trid, _subsystem_add_listen_done, NULL);
+	subsys_with_label->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+
+	/* Subsystem 2: no admin_label */
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	subsys_no_label = spdk_nvmf_subsystem_create_ext(&tgt, "nqn.2016-06.io.spdk:subsystem2",
+			  SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsys_no_label != NULL);
+	rc = spdk_nvmf_subsystem_add_host(subsys_no_label, hostnqn, NULL);
+	CU_ASSERT(rc == 0);
+	spdk_nvmf_subsystem_add_listener(subsys_no_label, &trid, _subsystem_add_listen_done, NULL);
+	subsys_no_label->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+
+	/* Referral */
+	test_gen_trid(&ref_trid, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "5.6.7.8", "4420");
+	referral.trid = ref_trid;
+	referral.entry.trtype = ref_trid.trtype;
+	referral.entry.adrfam = ref_trid.adrfam;
+	referral.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	referral.entry.cntlid = 0xffff;
+	referral.allow_any_host = true;
+	memcpy(referral.entry.trsvcid, ref_trid.trsvcid, sizeof(referral.entry.trsvcid));
+	memcpy(referral.entry.traddr, ref_trid.traddr, sizeof(referral.entry.traddr));
+	snprintf(referral.entry.subnqn, sizeof(referral.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	TAILQ_INSERT_TAIL(&tgt.referrals, &referral, link);
+
+	/* extdlpe = true: all 3 entries must carry extended header with valid TEL */
+	memset(buffer, 0, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
+	_test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(buffer), &trid, true);
+
+	CU_ASSERT(disc_log->numrec == 3);
+	CU_ASSERT(disc_log->dlpf.extend == 1);
+
+	expected_exatlen = SPDK_ALIGN_CEIL(strlen(admin_label), 4);
+	expected_entry_size_with_label = SPDK_NVMF_DISC_EXT_ENTRY_TEL(expected_exatlen);
+
+	/* Entry 0: subsys_with_label - TEL includes attr, NUMEXAT=1 */
+	ptr = buffer + SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE;
+	ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)(ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
+	CU_ASSERT(ext_hdr->tel == expected_entry_size_with_label);
+	CU_ASSERT(ext_hdr->numexat == 1);
+	attr = (struct spdk_nvmf_discovery_extended_attribute *)(ptr + SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+	CU_ASSERT(attr->exattype == SPDK_NVMF_EXTAT_ADMIN_LABEL);
+	CU_ASSERT(attr->exatlen == expected_exatlen);
+	CU_ASSERT(memcmp(attr->exatval, admin_label, strlen(admin_label)) == 0);
+
+	/* Entry 1: subsys_no_label - TEL = base size, NUMEXAT=0 */
+	ptr += expected_entry_size_with_label;
+	ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)(ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
+	CU_ASSERT(ext_hdr->tel == SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+	CU_ASSERT(ext_hdr->numexat == 0);
+
+	/* Entry 2: referral - TEL = base size, NUMEXAT=0 */
+	ptr += SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE;
+	ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)(ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
+	CU_ASSERT(ext_hdr->tel == SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+	CU_ASSERT(ext_hdr->numexat == 0);
+
+	/* cleanup */
+	subsys_with_label->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+	spdk_nvmf_subsystem_destroy(subsys_with_label, NULL, NULL);
+	subsys_no_label->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+	spdk_nvmf_subsystem_destroy(subsys_no_label, NULL, NULL);
+	spdk_bit_array_free(&tgt.subsystem_ids);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -852,6 +1079,8 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_discovery_log);
 	CU_ADD_TEST(suite, test_discovery_log_with_filters);
+	CU_ADD_TEST(suite, test_discovery_log_extended);
+	CU_ADD_TEST(suite, test_discovery_log_extended_mixed);
 
 	allocate_threads(1);
 	set_thread(0);

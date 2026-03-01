@@ -704,6 +704,76 @@ test_spdk_nvmf_subsystem_opts(void)
 }
 
 static void
+test_spdk_nvmf_subsystem_admin_label(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem_opts opts;
+	struct spdk_nvmf_subsystem *subsystem;
+	const char *nqn = "nqn.2016-06.io.spdk:admin-label";
+	int rc;
+
+	ut_target_create(&tgt);
+
+	/* Empty admin label is the default and means not configured. */
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	CU_ASSERT(opts.admin_label[0] == '\0');
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->opts_size ==
+		  sizeof(struct spdk_nvmf_subsystem_opts));
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->admin_label[0] == '\0');
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Minimum-length admin label. */
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "abcd");
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT_STRING_EQUAL(spdk_nvmf_subsystem_get_opts(subsystem)->admin_label, "abcd");
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Maximum-length admin label. */
+	memset(opts.admin_label, 'a', SPDK_NVMF_ADMIN_LABEL_MAX_LEN);
+	opts.admin_label[SPDK_NVMF_ADMIN_LABEL_MAX_LEN] = '\0';
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT(strlen(spdk_nvmf_subsystem_get_opts(subsystem)->admin_label) ==
+		  SPDK_NVMF_ADMIN_LABEL_MAX_LEN);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Too short, non-printable, and unterminated admin labels are invalid. */
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "abc");
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	CU_ASSERT(subsystem == NULL);
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "test\tlabel");
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	CU_ASSERT(subsystem == NULL);
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "test label");
+	opts.admin_label[4] = (char)0x80;
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	CU_ASSERT(subsystem == NULL);
+	memset(opts.admin_label, 'a', sizeof(opts.admin_label));
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	CU_ASSERT(subsystem == NULL);
+
+	/* Older callers do not provide the appended admin_label field. */
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	snprintf(opts.admin_label, sizeof(opts.admin_label), "ignored label");
+	opts.opts_size = offsetof(struct spdk_nvmf_subsystem_opts, admin_label);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->opts_size ==
+		  offsetof(struct spdk_nvmf_subsystem_opts, admin_label));
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->admin_label[0] == '\0');
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_bit_array_free(&tgt.subsystem_ids);
+}
+
+static void
 test_spdk_nvmf_ns_visible(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
@@ -4238,6 +4308,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_no_ctrlrs);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_with_ctrlrs);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_opts);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_admin_label);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_visible);
 	CU_ADD_TEST(suite, test_reservation_register);
 	CU_ADD_TEST(suite, test_reservation_register_with_ptpl);
