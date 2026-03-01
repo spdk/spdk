@@ -3006,6 +3006,9 @@ methods:
       - name: model_number
         type: string
         description: Model number of the virtual NVMe controller
+      - name: admin_label
+        type: string
+        description: Admin label for extended discovery log page entry (4-256 ASCII characters)
       - name: max_namespaces
         type: uint32
         description: Maximum number of namespaces that can be attached to the subsystem

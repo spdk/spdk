@@ -58,6 +58,18 @@ out=$("$rpc" nvmf_create_subsystem -s "$(gen_random_s 21)" "$nqn$RANDOM" 2>&1) &
 out=$("$rpc" nvmf_create_subsystem -d "$(gen_random_s 41)" "$nqn$RANDOM" 2>&1) && false
 [[ $out == *"Invalid parameters"* ]]
 
+# Attempt to create a subsystem with an invalid admin label, then reuse the NQN
+# to verify that validation did not leave a subsystem behind.
+invalid_nqn=$nqn$RANDOM
+out=$("$rpc" nvmf_create_subsystem "$invalid_nqn" -s SPDK001 --admin-label abc 2>&1) && false
+[[ $out == *"Invalid admin_label"* ]]
+"$rpc" nvmf_create_subsystem "$invalid_nqn" --admin-label "test label"
+out=$("$rpc" nvmf_get_subsystems "$invalid_nqn")
+[[ $out == *'"admin_label": "test label"'* ]]
+out=$("$rpc" save_subsystem_config -n nvmf)
+[[ $out == *'"admin_label": "test label"'* ]]
+"$rpc" nvmf_delete_subsystem "$invalid_nqn"
+
 # Attempt to delete non-existing subsystem listener
 $rpc nvmf_create_transport --trtype "$TEST_TRANSPORT"
 $rpc nvmf_create_subsystem $nqn -s SPDK001 -a

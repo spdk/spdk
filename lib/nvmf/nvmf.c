@@ -856,6 +856,10 @@ nvmf_write_create_subsystem_config(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_bool(w, "passthrough", subsystem->opts.passthrough);
 	spdk_json_write_named_bool(w, "enable_nssr", subsystem->opts.enable_nssr);
 
+	if (subsystem->opts.admin_label[0] != '\0') {
+		spdk_json_write_named_string(w, "admin_label", subsystem->opts.admin_label);
+	}
+
 	/*     } "params" */
 	spdk_json_write_object_end(w);
 

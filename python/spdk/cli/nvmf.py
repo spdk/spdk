@@ -195,6 +195,7 @@ Deprecated, use iobuf-small-cache-size instead""",
     p.add_argument("-p", "--passthrough", action='store_true',
                    help="Use NVMe passthrough for all I/O commands and namespace-directed admin commands")
     p.add_argument("-n", "--enable-nssr", action='store_true', help="Enable NSSR (NVMe subsystem reset)")
+    p.add_argument("--admin-label", help="Admin label for extended discovery log page entry (4-256 ASCII characters)", type=str)
     p.set_defaults(func=nvmf_create_subsystem)
 
     def nvmf_delete_subsystem(args):

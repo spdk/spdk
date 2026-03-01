@@ -244,8 +244,15 @@ struct spdk_nvmf_subsystem_opts {
 	 * 0 means no limit.
 	 */
 	uint32_t dmrsl;
+
+	/* Admin label advertised in Extended Discovery Log Page entries.
+	 * An empty string means no admin label is configured. Otherwise, the label must be
+	 * NUL-terminated and contain between SPDK_NVMF_ADMIN_LABEL_MIN_LEN and
+	 * SPDK_NVMF_ADMIN_LABEL_MAX_LEN printable ASCII characters.
+	 */
+	char admin_label[SPDK_NVMF_ADMIN_LABEL_MAX_LEN + 1];
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 345,
 		   "Incorrect size");
 
 void spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type,
@@ -1416,7 +1423,6 @@ const char *spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsys
  *	   if the subsystem is an nvm subsystem
  */
 bool spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem);
-
 
 /**
  * Initialize transport options

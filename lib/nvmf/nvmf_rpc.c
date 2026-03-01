@@ -168,6 +168,10 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 		spdk_json_write_named_string(w, "serial_number", subsystem->opts.sn);
 		spdk_json_write_named_string(w, "model_number", subsystem->opts.mn);
 
+		if (subsystem->opts.admin_label[0] != '\0') {
+			spdk_json_write_named_string(w, "admin_label", subsystem->opts.admin_label);
+		}
+
 		if (subsystem->opts.max_namespaces != 0) {
 			spdk_json_write_named_uint32(w, "max_namespaces", subsystem->opts.max_namespaces);
 		}
@@ -259,8 +263,8 @@ SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTI
 /*
  * X-macro list of fields shared between rpc_nvmf_create_subsystem_ctx
  * and spdk_nvmf_subsystem_opts.  Each entry is X(field).
- * serial_number/model_number are excluded because the ctx uses char*
- * while opts uses fixed-size char arrays (sn/mn).
+ * serial_number/model_number/admin_label are excluded because the ctx uses
+ * char * while opts uses fixed-size char arrays (sn/mn/admin_label).
  */
 #define NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS(X) \
 	X(max_namespaces)                    \
@@ -271,7 +275,7 @@ SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTI
 	X(enable_nssr)
 
 /* Bump and audit NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS when this size changes. */
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 345,
 		   "opts grew -- update NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS");
 
 static void
@@ -343,6 +347,16 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			SPDK_ERRLOG("Invalid MN '%s'\n", req.model_number);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
+			goto cleanup;
+		}
+	}
+
+	if (req.admin_label != NULL) {
+		if (nvmf_subsystem_copy_admin_label(opts.admin_label, req.admin_label,
+						    sizeof(opts.admin_label))) {
+			SPDK_ERRLOG("Subsystem %s: invalid admin_label\n", req.nqn);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid admin_label");
 			goto cleanup;
 		}
 	}

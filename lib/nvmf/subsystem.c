@@ -63,6 +63,43 @@ nvmf_valid_ascii_string(const void *buf, size_t size)
 	return true;
 }
 
+int
+nvmf_subsystem_copy_admin_label(char *dst, const char *admin_label, size_t size)
+{
+	size_t len;
+
+	if (dst == NULL || size == 0) {
+		return -EINVAL;
+	}
+
+	if (admin_label == NULL || admin_label[0] == '\0') {
+		dst[0] = '\0';
+		return 0;
+	}
+
+	len = strnlen(admin_label, SPDK_NVMF_ADMIN_LABEL_MAX_LEN + 1);
+	if (len > SPDK_NVMF_ADMIN_LABEL_MAX_LEN || len >= size) {
+		SPDK_ERRLOG("Invalid admin label: length exceeds max %u\n",
+			    SPDK_NVMF_ADMIN_LABEL_MAX_LEN);
+		return -EINVAL;
+	}
+
+	if (len < SPDK_NVMF_ADMIN_LABEL_MIN_LEN) {
+		SPDK_ERRLOG("Invalid admin label: length %zu < min %u\n", len,
+			    SPDK_NVMF_ADMIN_LABEL_MIN_LEN);
+		return -EINVAL;
+	}
+
+	if (!nvmf_valid_ascii_string(admin_label, len)) {
+		SPDK_ERRLOG("Admin label contains non-printable ASCII characters\n");
+		return -EINVAL;
+	}
+
+	memcpy(dst, admin_label, len + 1);
+
+	return 0;
+}
+
 bool
 nvmf_nqn_is_valid(const char *nqn)
 {
@@ -300,12 +337,16 @@ nvmf_subsystem_opts_copy(struct spdk_nvmf_subsystem_opts *opts,
 	SET_FIELD(dmrsl);
 	SET_FIELD(wzsl);
 
+	if (FIELD_OK(admin_label)) {
+		memcpy(opts->admin_label, user_opts->admin_label, sizeof(opts->admin_label));
+	}
+
 	opts->opts_size = user_opts->opts_size;
 
 	/* We should not remove this statement, but need to update the assert statement
-	 * if we add a new field, and also add a corresponding SET_FIELD statement.
+	 * if we add a new field, and also add a corresponding field copy.
 	 */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 345, "Incorrect size");
 #undef FIELD_OK
 #undef SET_FIELD
 }
@@ -318,6 +359,7 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_subsystem_opts opts;
+	char				admin_label[SPDK_NVMF_ADMIN_LABEL_MAX_LEN + 1] = {};
 	uint32_t			sid;
 
 	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
@@ -328,6 +370,11 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 				    opts.type, nqn, type);
 			return NULL;
 		}
+	}
+
+	if (nvmf_subsystem_copy_admin_label(admin_label, opts.admin_label,
+					    sizeof(admin_label))) {
+		return NULL;
 	}
 
 	if (spdk_nvmf_tgt_find_subsystem(tgt, nqn)) {
@@ -372,6 +419,7 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 	subsystem->max_cntlid = NVMF_MAX_CNTLID;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 
+	subsystem->opts.opts_size = opts.opts_size;
 	subsystem->opts.type = opts.type;
 	subsystem->max_nsid = opts.max_namespaces;
 	subsystem->opts.max_namespaces = opts.max_namespaces;
@@ -385,6 +433,8 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 		free(subsystem);
 		return NULL;
 	}
+
+	memcpy(subsystem->opts.admin_label, admin_label, sizeof(subsystem->opts.admin_label));
 
 	subsystem->opts.ana_reporting = opts.ana_reporting;
 	subsystem->opts.passthrough = opts.passthrough;
