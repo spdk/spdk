@@ -107,7 +107,7 @@ dpdkdeps $(DPDK_DEPS): $(WPDK)
 dpdkbuild: $(WPDK) $(DPDK_DEPS)
 endif
 
-lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD) $(XNVMEBUILD) $(ISALBUILD) $(ISALCRYPTOBUILD)
+lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD) $(XNVMEBUILD) $(ISALBUILD) $(ISALCRYPTOBUILD) include
 module: lib
 shared_lib: module
 app: $(LIB)
