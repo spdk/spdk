@@ -472,8 +472,7 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 		pthread_mutex_unlock(&transport->mutex);
 
 		/* The transport listener has stopped and we are about to free trid; clear dangling pointers. */
-		for (subsystem = spdk_nvmf_subsystem_get_first(transport->tgt); subsystem != NULL;
-		     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+		NVMF_SUBSYSTEM_FOREACH(transport->tgt, subsystem) {
 			TAILQ_FOREACH(subsystem_listener, &subsystem->listeners, link) {
 				if (subsystem_listener->trid == &listener->trid) {
 					subsystem_listener->trid = NULL;

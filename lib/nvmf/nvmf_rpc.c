@@ -303,8 +303,7 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 	if (subsystem) {
 		dump_nvmf_subsystem(w, subsystem);
 	} else {
-		for (subsystem = spdk_nvmf_subsystem_get_first(tgt); subsystem != NULL;
-		     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+		NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
 			dump_nvmf_subsystem(w, subsystem);
 		}
 	}

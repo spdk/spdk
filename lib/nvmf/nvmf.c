@@ -439,9 +439,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 		TAILQ_INIT(&group->sgroups[i].queued);
 	}
 
-	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	     subsystem != NULL;
-	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
 		if (nvmf_poll_group_add_subsystem(group, subsystem, NULL, NULL) != 0) {
 			nvmf_tgt_cleanup_poll_group(group);
 			return -1;

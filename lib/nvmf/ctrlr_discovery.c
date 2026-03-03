@@ -123,9 +123,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 		return NULL;
 	}
 
-	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	     subsystem != NULL;
-	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
 		if ((subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE) ||
 		    (subsystem->state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING)) {
 			continue;

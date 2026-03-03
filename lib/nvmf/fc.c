@@ -3151,8 +3151,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 
 	spdk_nvmf_listen_opts_init(&opts, sizeof(opts));
 
-	subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	while (subsystem) {
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
 		struct nvmf_fc_add_rem_listener_ctx *ctx;
 
 		if (spdk_nvmf_subsystem_any_listener_allowed(subsystem) == true) {
@@ -3178,8 +3177,6 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 				}
 			}
 		}
-
-		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
 	}
 
 	return 0;

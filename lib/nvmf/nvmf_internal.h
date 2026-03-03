@@ -334,6 +334,11 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
 
+#define NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) \
+	for ((subsystem) = spdk_nvmf_subsystem_get_first(tgt); \
+	     (subsystem) != NULL; \
+	     (subsystem) = spdk_nvmf_subsystem_get_next(subsystem))
+
 #define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
 
 struct nvmf_subsystem_state_change_ctx {
