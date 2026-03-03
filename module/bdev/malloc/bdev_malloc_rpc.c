@@ -10,33 +10,27 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-/* TODO: replace with free_rpc_bdev_malloc_create */
-static void
-free_rpc_bdev_malloc_create_ctx(struct malloc_bdev_opts *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_malloc_create_decoders[] = {
-	{"name", offsetof(struct malloc_bdev_opts, name), spdk_json_decode_string, true},
-	{"uuid", offsetof(struct malloc_bdev_opts, uuid), spdk_json_decode_uuid, true},
-	{"num_blocks", offsetof(struct malloc_bdev_opts, num_blocks), spdk_json_decode_uint64},
-	{"block_size", offsetof(struct malloc_bdev_opts, block_size), spdk_json_decode_uint32},
-	{"physical_block_size", offsetof(struct malloc_bdev_opts, physical_block_size), spdk_json_decode_uint32, true},
-	{"optimal_io_boundary", offsetof(struct malloc_bdev_opts, optimal_io_boundary), spdk_json_decode_uint32, true},
-	{"md_size", offsetof(struct malloc_bdev_opts, md_size), spdk_json_decode_uint32, true},
-	{"md_interleave", offsetof(struct malloc_bdev_opts, md_interleave), spdk_json_decode_bool, true},
-	{"dif_type", offsetof(struct malloc_bdev_opts, dif_type), spdk_json_decode_int32, true},
-	{"dif_is_head_of_md", offsetof(struct malloc_bdev_opts, dif_is_head_of_md), spdk_json_decode_bool, true},
-	{"dif_pi_format", offsetof(struct malloc_bdev_opts, dif_pi_format), spdk_json_decode_uint32, true},
-	{"numa_id", offsetof(struct malloc_bdev_opts, numa_id), spdk_json_decode_int32, true},
+	{"name", offsetof(struct rpc_bdev_malloc_create_ctx, name), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_bdev_malloc_create_ctx, uuid), spdk_json_decode_uuid, true},
+	{"num_blocks", offsetof(struct rpc_bdev_malloc_create_ctx, num_blocks), spdk_json_decode_uint64},
+	{"block_size", offsetof(struct rpc_bdev_malloc_create_ctx, block_size), spdk_json_decode_uint32},
+	{"physical_block_size", offsetof(struct rpc_bdev_malloc_create_ctx, physical_block_size), spdk_json_decode_uint32, true},
+	{"optimal_io_boundary", offsetof(struct rpc_bdev_malloc_create_ctx, optimal_io_boundary), spdk_json_decode_uint32, true},
+	{"md_size", offsetof(struct rpc_bdev_malloc_create_ctx, md_size), spdk_json_decode_uint32, true},
+	{"md_interleave", offsetof(struct rpc_bdev_malloc_create_ctx, md_interleave), spdk_json_decode_bool, true},
+	{"dif_type", offsetof(struct rpc_bdev_malloc_create_ctx, dif_type), spdk_json_decode_int32, true},
+	{"dif_is_head_of_md", offsetof(struct rpc_bdev_malloc_create_ctx, dif_is_head_of_md), spdk_json_decode_bool, true},
+	{"dif_pi_format", offsetof(struct rpc_bdev_malloc_create_ctx, dif_pi_format), spdk_json_decode_uint32, true},
+	{"numa_id", offsetof(struct rpc_bdev_malloc_create_ctx, numa_id), spdk_json_decode_int32, true},
 };
 
 static void
 rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct malloc_bdev_opts req = {NULL};
+	struct rpc_bdev_malloc_create_ctx req = {};
+	struct malloc_bdev_opts opts = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 	int rc = 0;
@@ -52,13 +46,26 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = create_malloc_disk(&bdev, &req);
+	opts.name = req.name; /* strdup() already happens in create_malloc_disk() */
+	spdk_uuid_copy(&opts.uuid, &req.uuid);
+	opts.num_blocks = req.num_blocks;
+	opts.block_size = req.block_size;
+	opts.physical_block_size = req.physical_block_size;
+	opts.optimal_io_boundary = req.optimal_io_boundary;
+	opts.md_size = req.md_size;
+	opts.md_interleave = req.md_interleave;
+	opts.dif_type = req.dif_type;
+	opts.dif_is_head_of_md = req.dif_is_head_of_md;
+	opts.dif_pi_format = req.dif_pi_format;
+	opts.numa_id = req.numa_id;
+
+	rc = create_malloc_disk(&bdev, &opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
-	free_rpc_bdev_malloc_create_ctx(&req);
+	free_rpc_bdev_malloc_create(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
@@ -66,7 +73,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_malloc_create_ctx(&req);
+	free_rpc_bdev_malloc_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_malloc_create", rpc_bdev_malloc_create, SPDK_RPC_RUNTIME)
 
