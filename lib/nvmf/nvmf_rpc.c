@@ -220,6 +220,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 
 		spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
 		spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
+		spdk_json_write_named_uint32(w, "dmrsl", subsystem->opts.dmrsl);
+		spdk_json_write_named_uint8(w, "wzsl", subsystem->opts.wzsl);
 
 		spdk_json_write_named_array_begin(w, "namespaces");
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
