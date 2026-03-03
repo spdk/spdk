@@ -604,6 +604,22 @@ nvmf_rdma_dif_error_to_compl_status(uint8_t err_type) {
 	return result;
 }
 
+static void
+nvmf_rdma_complete_request_with_status(struct spdk_nvmf_rdma_qpair *rqpair,
+				       struct spdk_nvmf_rdma_request *rdma_req,
+				       uint32_t sct, uint32_t sc)
+{
+	struct spdk_nvmf_request *req = &rdma_req->req;
+
+	req->rsp->nvme_cpl.status.sct = sct;
+	req->rsp->nvme_cpl.status.sc = sc;
+	/* Ensure cid is correct in case the req is completed before IO is being executed */
+	req->rsp->nvme_cpl.sqid = 0;
+	req->rsp->nvme_cpl.cid = req->cmd->nvme_cmd.cid;
+	STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+	rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+}
+
 /*
  * Return data_wrs to pool starting from \b data_wr
  * Request's own response and data WR are excluded
@@ -2219,10 +2235,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->req.xfer = spdk_nvmf_req_get_xfer(&rdma_req->req);
 
 			if (spdk_unlikely(rdma_req->req.xfer == SPDK_NVME_DATA_BIDIRECTIONAL)) {
-				rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-				rsp->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+				nvmf_rdma_complete_request_with_status(rqpair, rdma_req, SPDK_NVME_SCT_GENERIC,
+								       SPDK_NVME_SC_INVALID_OPCODE);
 				SPDK_DEBUGLOG(rdma, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", rdma_req);
 				break;
 			}
@@ -2239,8 +2253,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				/* In-capsule data, no need to get a buffer */
 				rc = nvmf_rdma_request_parse_icd(rtransport, rdma_req);
 				if (spdk_unlikely(rc < 0)) {
-					STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+					nvmf_rdma_complete_request_with_status(rqpair, rdma_req, SPDK_NVME_SCT_GENERIC,
+									       rdma_req->req.rsp->nvme_cpl.status.sc);
 					break;
 				}
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
@@ -2302,8 +2316,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rc = nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (spdk_unlikely(rc < 0)) {
 				STAILQ_REMOVE_HEAD(&rgroup->group.pending_buf_queue, buf_link);
-				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+				nvmf_rdma_complete_request_with_status(rqpair, rdma_req, SPDK_NVME_SCT_GENERIC,
+								       rdma_req->req.rsp->nvme_cpl.status.sc);
 				break;
 			}
 
@@ -2401,10 +2415,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					/* This request failed FUSED semantics.  Fail it immediately, without
 					 * even sending it to the target layer.
 					 */
-					rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-					rsp->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
-					STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+					nvmf_rdma_complete_request_with_status(rqpair, rdma_req, SPDK_NVME_SCT_GENERIC,
+									       SPDK_NVME_SC_ABORTED_MISSING_FUSED);
 					break;
 				}
 
@@ -2481,15 +2493,11 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 									  &rdma_req->req.dif.dif_ctx, &error_blk);
 					}
 					if (rc) {
-						struct spdk_nvme_cpl *rsp = &rdma_req->req.rsp->nvme_cpl;
-
 						SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n", error_blk.err_type,
 							    error_blk.err_offset);
-						rsp->status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
-						rsp->status.sc = nvmf_rdma_dif_error_to_compl_status(error_blk.err_type);
 						STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
-						STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
-						rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+						nvmf_rdma_complete_request_with_status(rqpair, rdma_req, SPDK_NVME_SCT_MEDIA_ERROR,
+										       nvmf_rdma_dif_error_to_compl_status(error_blk.err_type));
 					}
 				}
 			}
@@ -4767,9 +4775,8 @@ _qp_reset_failed_sends(struct spdk_nvmf_rdma_transport *rtransport,
 
 		switch (cur_rdma_req->state) {
 		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
-			cur_rdma_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, cur_rdma_req, state_link);
-			cur_rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
+			nvmf_rdma_complete_request_with_status(rqpair, cur_rdma_req, SPDK_NVME_SCT_GENERIC,
+							       SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
 		case RDMA_REQUEST_STATE_COMPLETING:
@@ -5233,16 +5240,8 @@ nvmf_rdma_request_set_abort_status(struct spdk_nvmf_request *req,
 				   struct spdk_nvmf_rdma_request *rdma_req_to_abort,
 				   struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	rdma_req_to_abort->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-	rdma_req_to_abort->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
-	/* Ensure cid is correct in case abort was requested before IO is being executed */
-	rdma_req_to_abort->req.rsp->nvme_cpl.sqid = 0;
-	rdma_req_to_abort->req.rsp->nvme_cpl.status.p = 0;
-	rdma_req_to_abort->req.rsp->nvme_cpl.cid = rdma_req_to_abort->req.cmd->nvme_cmd.cid;
-
-	STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req_to_abort, state_link);
-	rdma_req_to_abort->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
-
+	nvmf_rdma_complete_request_with_status(rqpair, rdma_req_to_abort, SPDK_NVME_SCT_GENERIC,
+					       SPDK_NVME_SC_ABORTED_BY_REQUEST);
 	req->rsp->nvme_cpl.cdw0 &= ~1U;	/* Command was successfully aborted. */
 }
 
