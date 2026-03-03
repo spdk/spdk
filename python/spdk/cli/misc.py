@@ -25,15 +25,15 @@ def add_parser(subparsers):
                            fd=sys.stdout,
                            indent=args.indent,
                            subsystems=args.subsystems,
-                           batch_mode=args.batch_mode)
+                           with_batches=args.with_batches)
 
     p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets to stdout.
     """)
     p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. Default indent level is 2.
     """, type=int, default=2)
     p.add_argument('-s', '--subsystems', help="""Comma-separated list of subsystems (and their dependencies) to save""")
-    p.add_argument('--batch-mode', action=argparse.BooleanOptionalAction,
-                   help='If batch mode is enabled, keep batch arrays; otherwise, flatten them.')
+    p.add_argument('--with-batches', action=argparse.BooleanOptionalAction, default=False,
+                   help='Keep batch arrays in output; --no-with-batches flattens them (default)')
     p.set_defaults(func=save_config)
 
     def load_config(args):
@@ -51,15 +51,15 @@ def add_parser(subparsers):
                                      fd=sys.stdout,
                                      indent=args.indent,
                                      name=args.name,
-                                     batch_mode=args.batch_mode)
+                                     with_batches=args.with_batches)
 
     p = subparsers.add_parser('save_subsystem_config', help="""Write current (live) configuration of SPDK subsystem to stdout.
     """)
     p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. Default indent level is 2.
     """, type=int, default=2)
     p.add_argument('-n', '--name', help='Name of subsystem', required=True)
-    p.add_argument('--batch-mode', action=argparse.BooleanOptionalAction,
-                   help='If batch mode is enabled, keep batch arrays; otherwise, flatten them.')
+    p.add_argument('--with-batches', action=argparse.BooleanOptionalAction, default=False,
+                   help='Keep batch arrays in output; --no-with-batches flattens them (default)')
     p.set_defaults(func=save_subsystem_config)
 
     def load_subsystem_config(args):
@@ -79,12 +79,12 @@ def add_parser(subparsers):
     p.set_defaults(func=framework_get_subsystems)
 
     def framework_get_config(args):
-        print_dict(args.client.framework_get_config(name=args.name, batch_mode=args.batch_mode))
+        print_dict(args.client.framework_get_config(name=args.name, with_batches=args.with_batches))
 
     p = subparsers.add_parser('framework_get_config', help="""Print subsystem configuration""")
     p.add_argument('name', help='Name of subsystem to query')
-    p.add_argument('--batch-mode', action=argparse.BooleanOptionalAction,
-                   help='If batch mode is enabled, keep batch arrays; otherwise, flatten them.')
+    p.add_argument('--with-batches', action=argparse.BooleanOptionalAction, default=False,
+                   help='Keep batch arrays in output; --no-with-batches flattens them (default)')
     p.set_defaults(func=framework_get_config)
 
     # ioat
