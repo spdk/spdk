@@ -367,101 +367,94 @@ static void
 rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_subsystem_create *req;
+	struct rpc_subsystem_create req = {};
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 	struct spdk_nvmf_subsystem_opts opts;
 	struct spdk_nvmf_tgt *tgt;
 	int rc = -1;
 
-	req = calloc(1, sizeof(*req));
-	if (!req) {
-		SPDK_ERRLOG("Memory allocation failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Memory allocation failed");
-		return;
-	}
-	req->min_cntlid = NVMF_MIN_CNTLID;
-	req->max_cntlid = NVMF_MAX_CNTLID;
+	req.min_cntlid = NVMF_MIN_CNTLID;
+	req.max_cntlid = NVMF_MAX_CNTLID;
 
 	if (spdk_json_decode_object(params, rpc_nvmf_create_subsystem_decoders,
 				    SPDK_COUNTOF(rpc_nvmf_create_subsystem_decoders),
-				    req)) {
+				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto cleanup;
 	}
 
-	tgt = spdk_nvmf_get_tgt(req->tgt_name);
+	tgt = spdk_nvmf_get_tgt(req.tgt_name);
 	if (!tgt) {
-		SPDK_ERRLOG("Unable to find target %s\n", req->tgt_name);
+		SPDK_ERRLOG("Unable to find target %s\n", req.tgt_name);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Unable to find target %s", req->tgt_name);
+						     "Unable to find target %s", req.tgt_name);
 		goto cleanup;
 	}
 
 	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
 
-	if (req->serial_number) {
-		rc = nvmf_subsystem_copy_sn(opts.sn, req->serial_number, sizeof(opts.sn));
+	if (req.serial_number) {
+		rc = nvmf_subsystem_copy_sn(opts.sn, req.serial_number, sizeof(opts.sn));
 		if (rc < 0) {
-			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
+			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req.nqn, req.serial_number);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							     "Invalid SN %s", req->serial_number);
+							     "Invalid SN %s", req.serial_number);
 			goto cleanup;
 		}
 	}
 
-	if (req->model_number) {
-		rc = nvmf_subsystem_copy_mn(opts.mn, req->model_number, sizeof(opts.mn));
+	if (req.model_number) {
+		rc = nvmf_subsystem_copy_mn(opts.mn, req.model_number, sizeof(opts.mn));
 		if (rc < 0) {
-			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req->nqn, req->model_number);
+			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req.nqn, req.model_number);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							     "Invalid MN %s", req->model_number);
+							     "Invalid MN %s", req.model_number);
 			goto cleanup;
 		}
 	}
 
-	opts.max_namespaces = req->max_namespaces;
-	opts.ana_reporting = req->ana_reporting;
-	opts.passthrough = req->passthrough;
-	opts.enable_nssr = req->enable_nssr;
+	opts.max_namespaces = req.max_namespaces;
+	opts.ana_reporting = req.ana_reporting;
+	opts.passthrough = req.passthrough;
+	opts.enable_nssr = req.enable_nssr;
 
 	/* Convert KiB to logical blocks assuming 512B block size. */
-	opts.dmrsl = req->max_discard_size_kib << 1;
+	opts.dmrsl = req.max_discard_size_kib << 1;
 
 	/* Convert max_write_zeroes_size_kib to wzsl.
 	 * wzsl is in units of minimum memory page size (4 KiB when mpsmin=0),
 	 * reported as a power of two (2^wzsl). Valid KiB values: 0 (no limit) or
 	 * power of 2 >= 8.
 	 */
-	if (req->max_write_zeroes_size_kib == 0) {
+	if (req.max_write_zeroes_size_kib == 0) {
 		opts.wzsl = 0;
-	} else if (req->max_write_zeroes_size_kib >= 8 &&
-		   spdk_u64_is_pow2(req->max_write_zeroes_size_kib)) {
-		opts.wzsl = spdk_u64log2(req->max_write_zeroes_size_kib >> 2);
+	} else if (req.max_write_zeroes_size_kib >= 8 &&
+		   spdk_u64_is_pow2(req.max_write_zeroes_size_kib)) {
+		opts.wzsl = spdk_u64log2(req.max_write_zeroes_size_kib >> 2);
 	} else {
-		SPDK_ERRLOG("Subsystem %s: invalid max_write_zeroes_size_kib %"PRIu64"\n", req->nqn,
-			    req->max_write_zeroes_size_kib);
+		SPDK_ERRLOG("Subsystem %s: invalid max_write_zeroes_size_kib %"PRIu64"\n", req.nqn,
+			    req.max_write_zeroes_size_kib);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid max_write_zeroes_size_kib %"PRIu64, req->max_write_zeroes_size_kib);
+						     "Invalid max_write_zeroes_size_kib %"PRIu64, req.max_write_zeroes_size_kib);
 		goto cleanup;
 	}
 
-	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
 	if (!subsystem) {
-		SPDK_ERRLOG("Unable to create subsystem %s\n", req->nqn);
+		SPDK_ERRLOG("Unable to create subsystem %s\n", req.nqn);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Unable to create subsystem %s", req->nqn);
+						     "Unable to create subsystem %s", req.nqn);
 		goto cleanup;
 	}
 
-	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req.allow_any_host);
 
-	if (spdk_nvmf_subsystem_set_cntlid_range(subsystem, req->min_cntlid, req->max_cntlid)) {
-		SPDK_ERRLOG("Subsystem %s: invalid cntlid range [%u-%u]\n", req->nqn, req->min_cntlid,
-			    req->max_cntlid);
+	if (spdk_nvmf_subsystem_set_cntlid_range(subsystem, req.min_cntlid, req.max_cntlid)) {
+		SPDK_ERRLOG("Subsystem %s: invalid cntlid range [%u-%u]\n", req.nqn, req.min_cntlid,
+			    req.max_cntlid);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid cntlid range [%u-%u]", req->min_cntlid, req->max_cntlid);
+						     "Invalid cntlid range [%u-%u]", req.min_cntlid, req.max_cntlid);
 		goto cleanup;
 	}
 
@@ -474,11 +467,10 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 cleanup:
-	free(req->nqn);
-	free(req->tgt_name);
-	free(req->serial_number);
-	free(req->model_number);
-	free(req);
+	free(req.nqn);
+	free(req.tgt_name);
+	free(req.serial_number);
+	free(req.model_number);
 
 	if (rc && subsystem) {
 		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
