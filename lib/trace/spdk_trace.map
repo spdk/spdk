@@ -29,6 +29,7 @@
 	spdk_trace_add_register_fn;
 	spdk_trace_tpoint_register_relation;
 	spdk_trace_create_tpoint_group_mask;
+	spdk_trace_create_tpoint_mask;
 
 	# public variables
 	g_trace_file;

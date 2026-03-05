@@ -132,6 +132,31 @@ spdk_trace_get_next_register_fn(struct spdk_trace_register_fn *register_fn)
 }
 
 uint64_t
+spdk_trace_create_tpoint_mask(uint32_t group_id, const char *tpoint_name)
+{
+	uint16_t group_base = SPDK_TPOINT_ID(group_id, 0);
+	uint16_t next_group_base = SPDK_TPOINT_ID(group_id + 1, 0);
+	uint16_t i;
+
+	if (g_trace_file == NULL) {
+		return 0;
+	}
+
+	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
+		return 0;
+	}
+
+	for (i = group_base; i < next_group_base; i++) {
+		if (g_trace_file->tpoint[i].tpoint_id != 0 &&
+		    strcasecmp(g_trace_file->tpoint[i].name, tpoint_name) == 0) {
+			return SPDK_BIT(i - group_base);
+		}
+	}
+
+	return 0;
+}
+
+uint64_t
 spdk_trace_create_tpoint_group_mask(const char *group_name)
 {
 	uint64_t tpoint_group_mask = 0;
