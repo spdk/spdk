@@ -1139,6 +1139,38 @@ Example response:
 }
 ~~~
 
+### trace_clear {#rpc_trace_clear}
+
+Clear trace history. All entries recorded before this call will be
+hidden from subsequent reads by external trace tools such as spdk_trace.
+This does not disable tracing; new entries continue to be recorded.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "trace_clear",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### trace_get_info {#rpc_trace_get_info}
 
 Get name of shared memory file, list of the available trace point groups

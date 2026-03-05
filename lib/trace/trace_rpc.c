@@ -235,6 +235,21 @@ SPDK_RPC_REGISTER("trace_get_tpoint_group_mask", rpc_trace_get_tpoint_group_mask
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
+rpc_trace_clear(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "trace_clear requires no parameters");
+		return;
+	}
+
+	spdk_trace_clear();
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("trace_clear", rpc_trace_clear, SPDK_RPC_RUNTIME)
+
+static void
 rpc_trace_get_info(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {

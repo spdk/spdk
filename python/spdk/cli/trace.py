@@ -66,6 +66,13 @@ def add_parser(subparsers):
     p = subparsers.add_parser('trace_get_tpoint_group_mask', help='get trace point group mask')
     p.set_defaults(func=trace_get_tpoint_group_mask)
 
+    def trace_clear(args):
+        args.client.trace_clear()
+
+    p = subparsers.add_parser('trace_clear',
+                              help='clear trace history so subsequent reads only see new entries')
+    p.set_defaults(func=trace_clear)
+
     def trace_get_info(args):
         print_dict(args.client.trace_get_info())
 

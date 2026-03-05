@@ -479,6 +479,10 @@
       "params": []
     },
     {
+      "name": "trace_clear",
+      "params": []
+    },
+    {
       "name": "trace_get_info",
       "params": []
     },
