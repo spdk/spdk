@@ -217,6 +217,13 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 						 g_file->owner_type[d->owner_type].id_prefix,
 						 e->owner_id);
 	}
+	if (e->owner_id != OWNER_ID_NONE) {
+		struct spdk_trace_owner *owner = spdk_get_trace_owner(g_file, e->owner_id);
+
+		if (owner->tsc < e->tsc) {
+			spdk_json_write_named_string(g_json, "owner", owner->description);
+		}
+	}
 	if (e->size != 0) {
 		spdk_json_write_named_uint32(g_json, "size", e->size);
 	}
@@ -375,6 +382,20 @@ trace_print_json(void)
 
 	spdk_json_write_object_begin(g_json);
 	print_tpoint_definitions();
+
+	spdk_json_write_named_object_begin(g_json, "owners");
+	for (uint16_t i = 1; i < g_file->num_owners; i++) {
+		struct spdk_trace_owner *owner = spdk_get_trace_owner(g_file, i);
+		char key[16];
+
+		if (owner->tsc == 0) {
+			continue;
+		}
+		snprintf(key, sizeof(key), "%d", i);
+		spdk_json_write_named_string(g_json, key, owner->description);
+	}
+	spdk_json_write_object_end(g_json);
+
 	spdk_json_write_named_array_begin(g_json, "entries");
 
 	tsc_base_offset = tsc_offset = spdk_trace_parser_get_tsc_offset(g_parser);
