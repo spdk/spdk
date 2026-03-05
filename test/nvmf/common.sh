@@ -26,7 +26,8 @@ function build_nvmf_app_args() {
 		# We assume that test script is started from sudo
 		NVMF_APP=(sudo -E -u $SUDO_USER "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" "${NVMF_APP[@]}")
 	fi
-	NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
+	NVMF_APP+=(-i "$NVMF_APP_SHM_ID")
+	NVMF_APP+=(${NVMF_APP_TRACE_ARG:--e 0xFFFF})
 
 	NVMF_APP+=("${NO_HUGE[@]}")
 
