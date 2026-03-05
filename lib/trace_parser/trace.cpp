@@ -266,7 +266,7 @@ spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries,
 
 	i = first;
 	while (1) {
-		if (e[i].tpoint_id != SPDK_TRACE_MAX_TPOINT_ID) {
+		if (e[i].tpoint_id != SPDK_TRACE_MAX_TPOINT_ID && e[i].tsc >= _trace_file->clear_tsc) {
 			_entries[entry_key(lcore, e[i].tsc)] = &e[i];
 		}
 		if (i == last) {

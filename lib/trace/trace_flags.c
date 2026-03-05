@@ -119,6 +119,17 @@ spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask)
 	}
 }
 
+void
+spdk_trace_clear(void)
+{
+	if (g_trace_file == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
+	g_trace_file->clear_tsc = spdk_get_ticks();
+}
+
 struct spdk_trace_register_fn *
 spdk_trace_get_first_register_fn(void)
 {

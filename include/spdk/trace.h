@@ -135,6 +135,9 @@ struct spdk_trace_file {
 	uint16_t			owner_description_size;
 	uint8_t				reserved[4];
 
+	/** TSC value set by spdk_trace_clear(); the parser ignores entries older than this. */
+	uint64_t			clear_tsc;
+
 	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
 
@@ -324,6 +327,12 @@ int spdk_trace_unregister_user_thread(void);
  * Unmap global trace memory structs.
  */
 void spdk_trace_cleanup(void);
+
+/**
+ * Record the current TSC as a clear point. Subsequent reads by the trace
+ * parser will skip all entries recorded before this point.
+ */
+void spdk_trace_clear(void);
 
 #define OWNER_TYPE_NONE 0
 #define OBJECT_NONE 0
