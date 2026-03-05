@@ -236,7 +236,8 @@ spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
 	uint64_t curr_entry_len;
 	struct spdk_trace_register_fn *register_fn;
 
-	fprintf(f, " %s, --tpoint-group <group-name>[:<tpoint_mask>]\n", tmask_arg);
+	fprintf(f, " %s, --tpoint-group <group-name>[:<tpoint_mask>|<tpoint_name>[+<tpoint_name>...]]\n",
+		tmask_arg);
 	fprintf(f, "%s%s", LINE_PREFIX, first_entry);
 	curr_line_len = prefix_len + strlen(first_entry);
 

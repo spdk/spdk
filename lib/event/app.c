@@ -631,8 +631,31 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 			errno = 0;
 			tpoint_mask = strtoull(tpoints, &end, 16);
 			if (*end != '\0' || errno) {
-				error_found = true;
-				break;
+				char *tp_name, *tp_names, *tp_save;
+				uint64_t m;
+
+				tpoint_mask = 0;
+				group_id = spdk_u64log2(tpoint_group_mask);
+				tp_names = strdup(tpoints);
+				if (tp_names == NULL) {
+					error_found = true;
+					break;
+				}
+				tp_save = tp_names;
+				while ((tp_name = strsep(&tp_names, "+")) != NULL) {
+					m = spdk_trace_create_tpoint_mask(group_id, tp_name);
+					if (m == 0) {
+						SPDK_ERRLOG("no tpoint '%s' in group '%s'\n",
+							    tp_name, tpoint_group);
+						error_found = true;
+						break;
+					}
+					tpoint_mask |= m;
+				}
+				free(tp_save);
+				if (error_found) {
+					break;
+				}
 			}
 		} else {
 			errno = 0;
