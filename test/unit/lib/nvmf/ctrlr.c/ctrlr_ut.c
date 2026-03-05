@@ -106,11 +106,19 @@ DEFINE_STUB(spdk_nvmf_subsystem_listener_allowed,
 	    (struct spdk_nvmf_subsystem *subsystem, const struct spdk_nvme_transport_id *trid),
 	    true);
 
+static struct spdk_nvme_transport_id g_ut_listener_trid = {
+	.traddr = "192.168.1.1",
+	.trsvcid = "4420",
+};
+static struct spdk_nvmf_subsystem_listener g_ut_listener = {
+	.trid = &g_ut_listener_trid,
+};
+
 DEFINE_STUB(nvmf_subsystem_find_listener,
 	    struct spdk_nvmf_subsystem_listener *,
 	    (struct spdk_nvmf_subsystem *subsystem,
 	     const struct spdk_nvme_transport_id *trid),
-	    (void *)0x1);
+	    &g_ut_listener);
 
 DEFINE_STUB(nvmf_subsystem_listener_is_active, bool,
 	    (const struct spdk_nvmf_subsystem_listener *listener), true);
@@ -764,6 +772,7 @@ test_connect(void)
 
 	ctrlr.admin_qpair = &admin_qpair;
 	ctrlr.subsys = &subsystem;
+	ctrlr.listener = &g_ut_listener;
 
 	/* Valid I/O queue connect command */
 	memset(&rsp, 0, sizeof(rsp));
