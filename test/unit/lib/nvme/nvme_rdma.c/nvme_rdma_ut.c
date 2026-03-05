@@ -1306,7 +1306,7 @@ test_rdma_ctrlr_get_memory_domains(void)
 	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_rdma_provider_qp rdma_qp = {};
 	struct spdk_memory_domain *domain = (struct spdk_memory_domain *)0xbaadbeef;
-	struct spdk_memory_domain *domains[1] = {NULL};
+	struct spdk_memory_domain *domains[1] = {};
 
 	rdma_qp.domain = domain;
 	rqpair.rdma_qp = &rdma_qp;

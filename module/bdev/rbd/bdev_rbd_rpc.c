@@ -145,7 +145,7 @@ static void
 rpc_bdev_rbd_delete(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_rbd_delete_ctx req = {NULL};
+	struct rpc_bdev_rbd_delete_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_bdev_rbd_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_rbd_delete_decoders),
@@ -254,7 +254,7 @@ static void
 rpc_bdev_rbd_unregister_cluster(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	struct rpc_bdev_rbd_unregister_cluster_ctx req = {NULL};
+	struct rpc_bdev_rbd_unregister_cluster_ctx req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_rbd_unregister_cluster_decoders,
@@ -286,7 +286,7 @@ static void
 rpc_bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_rbd_get_clusters_info_ctx req = {NULL};
+	struct rpc_bdev_rbd_get_clusters_info_ctx req = {};
 	int rc;
 
 	if (params && spdk_json_decode_object(params, rpc_bdev_rbd_get_clusters_info_decoders,

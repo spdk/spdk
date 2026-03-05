@@ -109,7 +109,7 @@ static void
 rpc_bdev_examine(struct spdk_jsonrpc_request *request,
 		 const struct spdk_json_val *params)
 {
-	struct rpc_bdev_examine req = {NULL};
+	struct rpc_bdev_examine req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_examine_decoders,
@@ -1190,7 +1190,7 @@ static void
 rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_get_histogram_request req = {NULL};
+	struct rpc_bdev_get_histogram_request req = {};
 	struct spdk_histogram_data *histogram;
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;

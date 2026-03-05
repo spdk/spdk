@@ -1863,7 +1863,7 @@ static void
 rpc_iscsi_enable_histogram(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct rpc_iscsi_enable_histogram_request req = {NULL};
+	struct rpc_iscsi_enable_histogram_request req = {};
 	struct iscsi_enable_histogram_ctx *ctx;
 	struct spdk_iscsi_tgt_node *target;
 	struct spdk_thread *thread;
@@ -1944,7 +1944,7 @@ static void
 rpc_iscsi_get_histogram(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct rpc_iscsi_get_histogram_request req = {NULL};
+	struct rpc_iscsi_get_histogram_request req = {};
 	struct spdk_iscsi_tgt_node *target;
 	struct spdk_json_write_ctx *w;
 	char *encoded_histogram;

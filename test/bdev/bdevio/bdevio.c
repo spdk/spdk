@@ -1494,7 +1494,7 @@ rpc_perform_tests_cb(unsigned num_failures, struct spdk_jsonrpc_request *request
 static void
 rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_perform_tests req = {NULL};
+	struct rpc_perform_tests req = {};
 	int rc;
 
 	if (params && spdk_json_decode_object(params, rpc_perform_tests_decoders,

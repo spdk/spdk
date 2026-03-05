@@ -26,7 +26,7 @@ static void
 rpc_bdev_daos_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_daos_create_ctx req = {NULL};
+	struct rpc_bdev_daos_create_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 	int rc = 0;
@@ -79,7 +79,7 @@ static void
 rpc_bdev_daos_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_daos_delete_ctx req = {NULL};
+	struct rpc_bdev_daos_delete_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_bdev_daos_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_daos_delete_decoders),

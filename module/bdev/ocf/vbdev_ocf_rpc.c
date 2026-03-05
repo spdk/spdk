@@ -76,7 +76,7 @@ static void
 rpc_bdev_ocf_create(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_create req = {NULL};
+	struct rpc_bdev_ocf_create req = {};
 	int ret;
 
 	ret = spdk_json_decode_object(params, rpc_bdev_ocf_create_decoders,
@@ -113,7 +113,7 @@ static void
 rpc_bdev_ocf_delete(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_name req = {NULL};
+	struct rpc_bdev_ocf_name req = {};
 	struct vbdev_ocf *vbdev;
 	int status;
 
@@ -187,7 +187,7 @@ static void
 rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_name req = {NULL};
+	struct rpc_bdev_ocf_name req = {};
 	struct vbdev_ocf *vbdev;
 	struct get_ocf_stats_ctx *ctx;
 
@@ -252,7 +252,7 @@ static void
 rpc_bdev_ocf_reset_stats(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_name req = {NULL};
+	struct rpc_bdev_ocf_name req = {};
 	struct vbdev_ocf *vbdev;
 	struct get_ocf_stats_ctx *ctx;
 
@@ -334,7 +334,7 @@ rpc_bdev_ocf_get_bdevs(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	struct rpc_bdev_ocf_name req = {NULL};
+	struct rpc_bdev_ocf_name req = {};
 	struct bdev_get_bdevs_ctx cctx;
 
 	if (params && spdk_json_decode_object(params, rpc_bdev_ocf_get_bdevs_decoders,
@@ -410,7 +410,7 @@ static void
 rpc_bdev_ocf_set_cache_mode(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_set_cache_mode req = {NULL};
+	struct rpc_bdev_ocf_set_cache_mode req = {};
 	struct vbdev_ocf *vbdev;
 	int status;
 
@@ -477,7 +477,7 @@ static void
 rpc_bdev_ocf_set_seqcutoff(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_set_seqcutoff req = {NULL};
+	struct rpc_bdev_ocf_set_seqcutoff req = {};
 	struct vbdev_ocf *vbdev;
 	int ret;
 
@@ -545,7 +545,7 @@ static void
 rpc_bdev_ocf_flush_start(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_name req = {NULL};
+	struct rpc_bdev_ocf_name req = {};
 	struct get_ocf_flush_start_ctx *ctx;
 	int status;
 
@@ -593,7 +593,7 @@ static void
 rpc_bdev_ocf_flush_status(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_name req = {NULL};
+	struct rpc_bdev_ocf_name req = {};
 	struct spdk_json_write_ctx *w;
 	struct vbdev_ocf *vbdev;
 	int status;

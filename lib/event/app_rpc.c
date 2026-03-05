@@ -464,7 +464,7 @@ static void
 rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_set_scheduler_ctx req = {NULL};
+	struct rpc_set_scheduler_ctx req = {};
 	struct spdk_scheduler *scheduler;
 	bool has_custom_opts = false;
 	int ret;
@@ -634,7 +634,7 @@ static void
 rpc_scheduler_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_set_scheduler_opts_ctx req = {NULL};
+	struct rpc_set_scheduler_opts_ctx req = {};
 	struct spdk_cpuset core_mask;
 
 	req.scheduling_core = spdk_scheduler_get_scheduling_lcore();

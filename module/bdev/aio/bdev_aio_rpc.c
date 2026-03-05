@@ -89,7 +89,7 @@ static void
 rpc_bdev_aio_rescan(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_aio_rescan_ctx req = {NULL};
+	struct rpc_bdev_aio_rescan_ctx req = {};
 	int bdeverrno;
 
 	if (spdk_json_decode_object(params, rpc_bdev_aio_rescan_decoders,
@@ -133,7 +133,7 @@ static void
 rpc_bdev_aio_delete(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_aio_delete_ctx req = {NULL};
+	struct rpc_bdev_aio_delete_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_bdev_aio_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_aio_delete_decoders),

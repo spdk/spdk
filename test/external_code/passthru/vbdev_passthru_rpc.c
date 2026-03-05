@@ -37,7 +37,7 @@ static void
 rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_bdev_passthru_create req = {NULL};
+	struct rpc_bdev_passthru_create req = {};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
@@ -96,7 +96,7 @@ static void
 rpc_bdev_passthru_delete(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_bdev_passthru_delete req = {NULL};
+	struct rpc_bdev_passthru_delete req = {};
 	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_bdev_passthru_delete_decoders,

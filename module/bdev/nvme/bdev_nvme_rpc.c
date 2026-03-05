@@ -750,7 +750,7 @@ static void
 rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_detach_controller req = {NULL};
+	struct rpc_bdev_nvme_detach_controller req = {};
 	struct spdk_nvme_path_id path = {};
 	size_t len, maxlen;
 	int rc = 0;
@@ -1321,7 +1321,7 @@ rpc_bdev_nvme_controller_op(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params,
 			    enum nvme_ctrlr_op op)
 {
-	struct rpc_bdev_nvme_controller_op_req req = {NULL};
+	struct rpc_bdev_nvme_controller_op_req req = {};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr;
 

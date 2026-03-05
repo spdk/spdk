@@ -70,7 +70,7 @@ static void
 rpc_bdev_virtio_detach_controller(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)
 {
-	struct rpc_bdev_virtio_detach_controller_ctx req = {NULL};
+	struct rpc_bdev_virtio_detach_controller_ctx req = {};
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_bdev_virtio_detach_controller_decoders,
