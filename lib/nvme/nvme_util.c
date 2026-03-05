@@ -101,6 +101,7 @@ spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *
 		trid_entry->nsid = (uint16_t)nsid;
 	}
 
+	len = 0;
 	if ((hostnqn = strcasestr(str, "hostnqn:")) ||
 	    (hostnqn = strcasestr(str, "hostnqn="))) {
 		hostnqn += strlen("hostnqn:");
@@ -111,8 +112,8 @@ spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *
 		}
 
 		memcpy(trid_entry->hostnqn, hostnqn, len);
-		trid_entry->hostnqn[len] = '\0';
 	}
+	trid_entry->hostnqn[len] = '\0';
 
 	trid_entry->failover_trid = trid_entry->trid;
 	if ((alt_traddr = strcasestr(str, "alt_traddr:")) ||
@@ -124,7 +125,8 @@ spdk_nvme_trid_entry_parse(struct spdk_nvme_trid_entry *trid_entry, const char *
 			return -EINVAL;
 		}
 
-		snprintf(trid_entry->failover_trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1, "%s", alt_traddr);
+		memcpy(trid_entry->failover_trid.traddr, alt_traddr, len);
+		trid_entry->failover_trid.traddr[len] = '\0';
 	}
 
 	return 0;
