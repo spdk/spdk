@@ -172,33 +172,38 @@ cleanup:
 }
 SPDK_RPC_REGISTER("accel_assign_opc", rpc_accel_assign_opc, SPDK_RPC_STARTUP)
 
-struct rpc_accel_crypto_key_create {
-	struct spdk_accel_crypto_key_create_param param;
+struct rpc_accel_crypto_key_create_ctx {
+	char *cipher;
+	char *key;
+	char *key2;
+	char *tweak_mode;
+	char *name;
 };
 
-static void
-free_rpc_accel_crypto_key_create(struct spdk_accel_crypto_key_create_param *req)
+static inline void
+free_rpc_accel_crypto_key_create(struct rpc_accel_crypto_key_create_ctx *req)
 {
 	free(req->cipher);
-	free(req->hex_key);
-	free(req->hex_key2);
+	free(req->key);
+	free(req->key2);
 	free(req->tweak_mode);
-	free(req->key_name);
+	free(req->name);
 }
 
 static const struct spdk_json_object_decoder rpc_accel_crypto_key_create_decoders[] = {
-	{"cipher", offsetof(struct rpc_accel_crypto_key_create, param.cipher), spdk_json_decode_string},
-	{"key", offsetof(struct rpc_accel_crypto_key_create, param.hex_key),   spdk_json_decode_string},
-	{"key2", offsetof(struct rpc_accel_crypto_key_create, param.hex_key2), spdk_json_decode_string, true},
-	{"tweak_mode", offsetof(struct rpc_accel_crypto_key_create, param.tweak_mode), spdk_json_decode_string, true},
-	{"name", offsetof(struct rpc_accel_crypto_key_create, param.key_name), spdk_json_decode_string},
+	{"cipher", offsetof(struct rpc_accel_crypto_key_create_ctx, cipher), spdk_json_decode_string},
+	{"key", offsetof(struct rpc_accel_crypto_key_create_ctx, key), spdk_json_decode_string},
+	{"key2", offsetof(struct rpc_accel_crypto_key_create_ctx, key2), spdk_json_decode_string, true},
+	{"tweak_mode", offsetof(struct rpc_accel_crypto_key_create_ctx, tweak_mode), spdk_json_decode_string, true},
+	{"name", offsetof(struct rpc_accel_crypto_key_create_ctx, name), spdk_json_decode_string},
 };
 
 static void
 rpc_accel_crypto_key_create(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_accel_crypto_key_create req = {};
+	struct rpc_accel_crypto_key_create_ctx req = {};
+	struct spdk_accel_crypto_key_create_param param = {};
 	size_t key_size;
 	int rc;
 
@@ -210,7 +215,13 @@ rpc_accel_crypto_key_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_accel_crypto_key_create(&req.param);
+	param.cipher = req.cipher;
+	param.hex_key = req.key;
+	param.hex_key2 = req.key2;
+	param.tweak_mode = req.tweak_mode;
+	param.key_name = req.name;
+
+	rc = spdk_accel_crypto_key_create(&param);
 	if (rc) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "failed to create DEK, rc %d", rc);
@@ -219,15 +230,15 @@ rpc_accel_crypto_key_create(struct spdk_jsonrpc_request *request,
 	}
 
 cleanup:
-	if (req.param.hex_key) {
-		key_size = strnlen(req.param.hex_key, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH);
-		spdk_memset_s(req.param.hex_key, key_size, 0, key_size);
+	if (req.key) {
+		key_size = strnlen(req.key, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH);
+		spdk_memset_s(req.key, key_size, 0, key_size);
 	}
-	if (req.param.hex_key2) {
-		key_size = strnlen(req.param.hex_key2, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH);
-		spdk_memset_s(req.param.hex_key2, key_size, 0, key_size);
+	if (req.key2) {
+		key_size = strnlen(req.key2, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH);
+		spdk_memset_s(req.key2, key_size, 0, key_size);
 	}
-	free_rpc_accel_crypto_key_create(&req.param);
+	free_rpc_accel_crypto_key_create(&req);
 }
 SPDK_RPC_REGISTER("accel_crypto_key_create", rpc_accel_crypto_key_create, SPDK_RPC_RUNTIME)
 
