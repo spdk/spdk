@@ -191,6 +191,15 @@ def confirmPerPatchTests(test_list, skiplist):
         sys.exit(1)
 
 
+def validateSkippedTests(skiplist, test_list):
+    unknown_skips = [x for x in skiplist if x not in test_list]
+    if len(unknown_skips) > 0:
+        print("skipped_tests.txt has an entry with no matching run_test declaration:")
+        print("\n".join(unknown_skips))
+        print(unknown_skips)
+        sys.exit(1)
+
+
 def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
     test_list = {}
     test_completion_table = []
@@ -219,6 +228,7 @@ def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
     printListInformation("Tests", test_list)
     generateTestCompletionTables(output_dir, test_completion_table)
     skipped_tests = getSkippedTests(repo_dir)
+    validateSkippedTests(skipped_tests, test_list)
     if not skip_confirm:
         confirmPerPatchTests(test_list, skipped_tests)
 
