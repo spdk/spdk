@@ -218,7 +218,7 @@ _scanbuild_make() {
 	xtrace_disable
 
 	rm -f $out/*files.txt
-	for ent in $(find app examples lib module test -type f | grep -vF ".h"); do
+	for ent in $(find -L app examples lib module test -type f | grep -vF ".h"); do
 		if [[ $ent == lib/env_ocf* ]]; then continue; fi
 		if file -bi $ent | grep -q 'text/x-c'; then
 			echo $ent | sed 's/\.cp\{0,2\}$//g' >> $out/all_c_files.txt
