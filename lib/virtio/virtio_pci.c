@@ -202,12 +202,14 @@ virtio_pci_dev_event_process(int fd, uint16_t device_id)
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
 {
-	/* Virtio PCI device VIRTIO_PCI_QUEUE_PF register is 32bit,
-	 * and only accepts 32 bit page frame number.
-	 * Check if the allocated physical memory exceeds 16TB.
+	struct virtio_dev *dev = vq->vdev;
+
+	/* Legacy virtio PCI devices use VIRTIO_PCI_QUEUE_PFN register to set virtqueue address.
+	 * This register is 32 bit, and only accepts 32 bit page frame number.  Check if the
+	 * allocated physical memory exceeds 16TB.
 	 */
-	if ((vq->vq_ring_mem + vq->vq_ring_size - 1) >>
-	    (VIRTIO_PCI_QUEUE_ADDR_SHIFT + 32)) {
+	if (!dev->modern &&
+	    ((vq->vq_ring_mem + vq->vq_ring_size - 1) >> (VIRTIO_PCI_QUEUE_ADDR_SHIFT + 32))) {
 		SPDK_ERRLOG("vring address shouldn't be above 16TB!\n");
 		return 0;
 	}
