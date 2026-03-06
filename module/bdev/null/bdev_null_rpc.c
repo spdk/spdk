@@ -8,11 +8,9 @@
 #include "spdk/string.h"
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
-#include "spdk/uuid.h"
 #include "spdk_internal/rpc_autogen.h"
 
 #include "bdev_null.h"
-
 
 static const struct spdk_json_object_decoder rpc_bdev_null_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_null_create_ctx, name), spdk_json_decode_string},
@@ -51,7 +49,7 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	}
 
 	opts.name = req.name; /* strdup() already happens in bdev_null_create() */
-	spdk_uuid_copy(&opts.uuid, &req.uuid);
+	opts.uuid = req.uuid;
 	opts.num_blocks = req.num_blocks;
 	opts.block_size = req.block_size;
 	opts.physical_block_size = req.physical_block_size;

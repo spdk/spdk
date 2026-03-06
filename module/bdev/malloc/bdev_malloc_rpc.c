@@ -47,7 +47,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 	}
 
 	opts.name = req.name; /* strdup() already happens in create_malloc_disk() */
-	spdk_uuid_copy(&opts.uuid, &req.uuid);
+	opts.uuid = req.uuid;
 	opts.num_blocks = req.num_blocks;
 	opts.block_size = req.block_size;
 	opts.physical_block_size = req.physical_block_size;
