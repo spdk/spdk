@@ -421,11 +421,9 @@ function get_config_params() {
 		config_params+=" --with-usdt"
 	fi
 
-	case "$(uname -s)" in
-		FreeBSD) [[ $(sysctl -n hw.model) == Intel* ]] ;;
-		Linux) [[ $(< /proc/cpuinfo) == *GenuineIntel* ]] ;;
-		*) false ;;
-	esac && config_params+=" --with-idxd" || config_params+=" --without-idxd"
+	if [ $SPDK_TEST_ACCEL_IAA -eq 1 ] || [ $SPDK_TEST_ACCEL_DSA -eq 1 ]; then
+		config_params+=" --with-idxd"
+	fi
 
 	if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
 		config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
