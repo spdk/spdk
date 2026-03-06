@@ -192,6 +192,17 @@ def confirmPerPatchTests(test_list, skiplist):
 
 
 def validateSkippedTests(skiplist, test_list):
+    seen = set()
+    dupes = set()
+    for x in skiplist:
+        if x in seen:
+            dupes.add(x)
+        seen.add(x)
+    if dupes:
+        print("skipped_tests.txt contains duplicate entries:")
+        print("\n".join(sorted(dupes)))
+        sys.exit(1)
+
     unknown_skips = [x for x in skiplist if x not in test_list]
     if len(unknown_skips) > 0:
         print("skipped_tests.txt has an entry with no matching run_test declaration:")

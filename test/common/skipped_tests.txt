@@ -133,8 +133,6 @@ ioat
 ioat_perf
 ioat_verify
 iscsi_tgt_calsoft
-iscsi_tgt_data_digest
-iscsi_tgt_ext4test
 iscsi_tgt_rbd
 nvme_cli_cuse
 nvme_cli_plugin
