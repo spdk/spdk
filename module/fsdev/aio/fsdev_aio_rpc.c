@@ -10,39 +10,30 @@
 #include "fsdev_aio.h"
 #include "spdk_internal/rpc_autogen.h"
 
-/* TODO: replace with rpc_fsdev_aio_create_ctx */
-struct rpc_aio_create {
-	char *name;
-	char *root_path;
-	struct spdk_fsdev_aio_opts opts;
-};
-
-/* TODO: replace with free_rpc_fsdev_aio_create */
-static void
-free_rpc_fsdev_aio_create_ctx(struct rpc_aio_create *req)
-{
-	free(req->name);
-	free(req->root_path);
-}
-
 static const struct spdk_json_object_decoder rpc_fsdev_aio_create_decoders[] = {
-	{"name", offsetof(struct rpc_aio_create, name), spdk_json_decode_string},
-	{"root_path", offsetof(struct rpc_aio_create, root_path), spdk_json_decode_string},
-	{"enable_xattr", offsetof(struct rpc_aio_create, opts.xattr_enabled), spdk_json_decode_bool, true},
-	{"enable_writeback_cache", offsetof(struct rpc_aio_create, opts.writeback_cache_enabled), spdk_json_decode_bool, true},
-	{"max_write", offsetof(struct rpc_aio_create, opts.max_write), spdk_json_decode_uint32, true},
-	{"skip_rw", offsetof(struct rpc_aio_create, opts.skip_rw), spdk_json_decode_bool, true},
+	{"name", offsetof(struct rpc_fsdev_aio_create_ctx, name), spdk_json_decode_string},
+	{"root_path", offsetof(struct rpc_fsdev_aio_create_ctx, root_path), spdk_json_decode_string},
+	{"enable_xattr", offsetof(struct rpc_fsdev_aio_create_ctx, enable_xattr), spdk_json_decode_bool, true},
+	{"enable_writeback_cache", offsetof(struct rpc_fsdev_aio_create_ctx, enable_writeback_cache), spdk_json_decode_bool, true},
+	{"max_write", offsetof(struct rpc_fsdev_aio_create_ctx, max_write), spdk_json_decode_uint32, true},
+	{"skip_rw", offsetof(struct rpc_fsdev_aio_create_ctx, skip_rw), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_aio_create req = {};
+	struct rpc_fsdev_aio_create_ctx req = {};
+	struct spdk_fsdev_aio_opts opts = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_fsdev *fsdev;
 	int rc;
 
-	spdk_fsdev_aio_get_default_opts(&req.opts);
+	/* Load defaults, then copy to req so JSON decode overrides only specified fields */
+	spdk_fsdev_aio_get_default_opts(&opts);
+	req.enable_xattr = opts.xattr_enabled;
+	req.enable_writeback_cache = opts.writeback_cache_enabled;
+	req.max_write = opts.max_write;
+	req.skip_rw = opts.skip_rw;
 
 	if (spdk_json_decode_object(params, rpc_fsdev_aio_create_decoders,
 				    SPDK_COUNTOF(rpc_fsdev_aio_create_decoders),
@@ -51,24 +42,29 @@ rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 
-		free_rpc_fsdev_aio_create_ctx(&req);
+		free_rpc_fsdev_aio_create(&req);
 		return;
 	}
 
-	rc = spdk_fsdev_aio_create(&fsdev, req.name, req.root_path, &req.opts);
+	opts.xattr_enabled = req.enable_xattr;
+	opts.writeback_cache_enabled = req.enable_writeback_cache;
+	opts.max_write = req.max_write;
+	opts.skip_rw = req.skip_rw;
+
+	rc = spdk_fsdev_aio_create(&fsdev, req.name, req.root_path, &opts);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create aio %s: rc %d\n", req.name, rc);
 		spdk_jsonrpc_send_error_response(request,
 						 SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
-		free_rpc_fsdev_aio_create_ctx(&req);
+		free_rpc_fsdev_aio_create(&req);
 		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, fsdev->name);
 	spdk_jsonrpc_end_result(request, w);
-	free_rpc_fsdev_aio_create_ctx(&req);
+	free_rpc_fsdev_aio_create(&req);
 }
 SPDK_RPC_REGISTER("fsdev_aio_create", rpc_fsdev_aio_create, SPDK_RPC_RUNTIME)
 
