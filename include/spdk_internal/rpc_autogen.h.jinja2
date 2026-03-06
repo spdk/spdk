@@ -51,6 +51,9 @@ free_rpc_{{ method.name }}(struct rpc_{{ method.name }}_ctx *req)
 {%- for param in method.params if param.type == "string" %}
 	free(req->{{ "is_private" if param.name == "private" else param.name }});
 {%- endfor %}
+{%- for param in method.params if "class" in param %}
+	free_{{ param.class }}(&req->{{ param.name }});
+{%- endfor %}
 }
 {%- endif %}
 {% endfor %}
