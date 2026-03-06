@@ -63,11 +63,13 @@ vhost_scsi_cores_2ctrl
 busy
 balanced
 core_load
+load_balancing
 
 # Disabled due to https://github.com/spdk/spdk/issues/3345
 nvmf_device_removal
 nvmf_device_removal_pci_remove_no_srq
 nvmf_device_removal_pci_remove
+nvmf_device_removal_bond_slaves
 
 # Disabled due to mlx5 HW/build dependency
 accel_mlx5_crypto
