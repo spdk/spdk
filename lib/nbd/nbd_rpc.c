@@ -12,7 +12,9 @@
 
 #include "nbd_internal.h"
 #include "spdk/log.h"
+#include "spdk_internal/rpc_autogen.h"
 
+/* TODO: replace with rpc_nbd_start_disk_ctx */
 struct rpc_nbd_start_disk {
 	char *bdev_name;
 	char *nbd_device;
@@ -23,7 +25,7 @@ struct rpc_nbd_start_disk {
 };
 
 static void
-free_rpc_nbd_start_disk(struct rpc_nbd_start_disk *req)
+free_rpc_nbd_start_disk_ctx(struct rpc_nbd_start_disk *req)
 {
 	free(req->bdev_name);
 	free(req->nbd_device);
@@ -130,7 +132,7 @@ rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free_rpc_nbd_start_disk(req);
+		free_rpc_nbd_start_disk_ctx(req);
 		return;
 	}
 
@@ -138,7 +140,7 @@ rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 	spdk_json_write_string(w, spdk_nbd_get_path(nbd));
 	spdk_jsonrpc_end_result(request, w);
 
-	free_rpc_nbd_start_disk(req);
+	free_rpc_nbd_start_disk_ctx(req);
 }
 
 static void
@@ -201,23 +203,13 @@ rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_nbd_start_disk(req);
+	free_rpc_nbd_start_disk_ctx(req);
 }
 
 SPDK_RPC_REGISTER("nbd_start_disk", rpc_nbd_start_disk, SPDK_RPC_RUNTIME)
 
-struct rpc_nbd_stop_disk {
-	char *nbd_device;
-};
-
-static void
-free_rpc_nbd_stop_disk(struct rpc_nbd_stop_disk *req)
-{
-	free(req->nbd_device);
-}
-
 static const struct spdk_json_object_decoder rpc_nbd_stop_disk_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_nbd_stop_disk, nbd_device), spdk_json_decode_string},
+	{"nbd_device", offsetof(struct rpc_nbd_stop_disk_ctx, nbd_device), spdk_json_decode_string},
 };
 
 struct nbd_disconnect_arg {
@@ -244,7 +236,7 @@ static void
 rpc_nbd_stop_disk(struct spdk_jsonrpc_request *request,
 		  const struct spdk_json_val *params)
 {
-	struct rpc_nbd_stop_disk req = {};
+	struct rpc_nbd_stop_disk_ctx req = {};
 	struct spdk_nbd_disk *nbd;
 	pthread_t tid;
 	struct nbd_disconnect_arg *thd_arg = NULL;
@@ -322,25 +314,15 @@ rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_nbd_get_disks {
-	char *nbd_device;
-};
-
-static void
-free_rpc_nbd_get_disks(struct rpc_nbd_get_disks *r)
-{
-	free(r->nbd_device);
-}
-
 static const struct spdk_json_object_decoder rpc_nbd_get_disks_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_nbd_get_disks, nbd_device), spdk_json_decode_string, true},
+	{"nbd_device", offsetof(struct rpc_nbd_get_disks_ctx, nbd_device), spdk_json_decode_string, true},
 };
 
 static void
 rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
 		  const struct spdk_json_val *params)
 {
-	struct rpc_nbd_get_disks req = {};
+	struct rpc_nbd_get_disks_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nbd_disk *nbd = NULL;
 
