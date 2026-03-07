@@ -15,3 +15,4 @@
 - @subpage nvmf_multipath_howto
 - @subpage sma
 - @subpage ublk
+- @subpage numa_guidelines

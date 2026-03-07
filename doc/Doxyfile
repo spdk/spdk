@@ -830,6 +830,7 @@ INPUT                  += \
                          lvol.md \
                          memory.md \
                          notify.md \
+                         numa_guidelines.md \
                          nvme.md \
                          nvme_interrupt_mode.md \
                          nvme_multipath.md \

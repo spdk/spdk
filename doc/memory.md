@@ -115,3 +115,7 @@ operations into and out of a user space process and forms the long-term
 foundation for SPDK and DPDK's memory management strategy. We highly recommend
 that applications are deployed using vfio and the IOMMU enabled, which is fully
 supported today.
+
+## NUMA Support
+
+For NUMA-aware configuration guidelines, see @ref numa_guidelines.
