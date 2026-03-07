@@ -3245,7 +3245,6 @@
     },
     {
       "name": "iscsi_start_portal_group",
-      "decoder": "rpc_iscsi_change_portal_group_decoders",
       "params": [
         {
           "name": "tag",
@@ -3257,7 +3256,6 @@
     },
     {
       "name": "iscsi_delete_portal_group",
-      "decoder": "rpc_iscsi_change_portal_group_decoders",
       "params": [
         {
           "name": "tag",
