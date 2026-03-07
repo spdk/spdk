@@ -1108,7 +1108,6 @@
     },
     {
       "name": "bdev_ocf_get_stats",
-      "decoder": "rpc_bdev_ocf_delete_decoders",
       "params": [
         {
           "name": "name",
@@ -1120,7 +1119,6 @@
     },
     {
       "name": "bdev_ocf_reset_stats",
-      "decoder": "rpc_bdev_ocf_delete_decoders",
       "params": [
         {
           "name": "name",
@@ -1186,7 +1184,6 @@
     },
     {
       "name": "bdev_ocf_flush_start",
-      "decoder": "rpc_bdev_ocf_delete_decoders",
       "params": [
         {
           "name": "name",
@@ -1198,7 +1195,6 @@
     },
     {
       "name": "bdev_ocf_flush_status",
-      "decoder": "rpc_bdev_ocf_delete_decoders",
       "params": [
         {
           "name": "name",
