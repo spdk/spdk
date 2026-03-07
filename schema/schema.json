@@ -1846,7 +1846,6 @@
     },
     {
       "name": "bdev_nvme_reset_controller",
-      "decoder": "rpc_bdev_nvme_controller_op_decoders",
       "params": [
         {
           "name": "name",
@@ -1863,7 +1862,6 @@
     },
     {
       "name": "bdev_nvme_enable_controller",
-      "decoder": "rpc_bdev_nvme_controller_op_decoders",
       "params": [
         {
           "name": "name",
@@ -1880,7 +1878,6 @@
     },
     {
       "name": "bdev_nvme_disable_controller",
-      "decoder": "rpc_bdev_nvme_controller_op_decoders",
       "params": [
         {
           "name": "name",
