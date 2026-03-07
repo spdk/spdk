@@ -81,6 +81,7 @@ function unittest_rpc() {
 
 function unittest_nvme() {
 	$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
+	$valgrind $testdir/lib/nvme/nvme_auth.c/nvme_auth_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
