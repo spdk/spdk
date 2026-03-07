@@ -185,14 +185,21 @@ invalid:
 SPDK_RPC_REGISTER("iscsi_initiator_group_add_initiators",
 		  rpc_iscsi_initiator_group_add_initiators, SPDK_RPC_RUNTIME)
 
+static const struct spdk_json_object_decoder rpc_iscsi_initiator_group_remove_initiators_decoders[]
+	= {
+	{"tag", offsetof(struct rpc_initiator_group, tag), spdk_json_decode_int32},
+	{"initiators", offsetof(struct rpc_initiator_group, initiator_list), decode_rpc_initiator_list, true},
+	{"netmasks", offsetof(struct rpc_initiator_group, netmask_list), decode_rpc_netmask_list, true},
+};
+
 static void
 rpc_iscsi_initiator_group_remove_initiators(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
 
-	if (spdk_json_decode_object(params, rpc_iscsi_initiator_group_add_initiators_decoders,
-				    SPDK_COUNTOF(rpc_iscsi_initiator_group_add_initiators_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_iscsi_initiator_group_remove_initiators_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_initiator_group_remove_initiators_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -522,6 +529,11 @@ invalid:
 SPDK_RPC_REGISTER("iscsi_target_node_add_pg_ig_maps",
 		  rpc_iscsi_target_node_add_pg_ig_maps, SPDK_RPC_RUNTIME)
 
+static const struct spdk_json_object_decoder rpc_iscsi_target_node_remove_pg_ig_maps_decoders[] = {
+	{"name", offsetof(struct rpc_tgt_node_pg_ig_maps, name), spdk_json_decode_string},
+	{"pg_ig_maps", offsetof(struct rpc_tgt_node_pg_ig_maps, pg_ig_maps), decode_rpc_pg_ig_maps},
+};
+
 static void
 rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *params)
@@ -532,8 +544,8 @@ rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *request,
 	size_t i;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_iscsi_target_node_add_pg_ig_maps_decoders,
-				    SPDK_COUNTOF(rpc_iscsi_target_node_add_pg_ig_maps_decoders),
+	if (spdk_json_decode_object(params, rpc_iscsi_target_node_remove_pg_ig_maps_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_target_node_remove_pg_ig_maps_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;

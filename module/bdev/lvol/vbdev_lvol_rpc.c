@@ -649,6 +649,10 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_lvol_inflate", rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
 
+static const struct spdk_json_object_decoder rpc_bdev_lvol_decouple_parent_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_lvol_inflate_ctx, name), spdk_json_decode_string},
+};
+
 static void
 rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
@@ -659,8 +663,8 @@ rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 
 	SPDK_INFOLOG(lvol_rpc, "Decoupling parent of lvol\n");
 
-	if (spdk_json_decode_object(params, rpc_bdev_lvol_inflate_decoders,
-				    SPDK_COUNTOF(rpc_bdev_lvol_inflate_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_decouple_parent_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_decouple_parent_decoders),
 				    &req)) {
 		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -1395,6 +1399,11 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_lvol_set_parent", rpc_bdev_lvol_set_parent, SPDK_RPC_RUNTIME)
 
+static const struct spdk_json_object_decoder rpc_bdev_lvol_set_parent_bdev_decoders[] = {
+	{"lvol_name", offsetof(struct rpc_bdev_lvol_set_parent_ctx, lvol_name), spdk_json_decode_string},
+	{"parent_name", offsetof(struct rpc_bdev_lvol_set_parent_ctx, parent_name), spdk_json_decode_string},
+};
+
 static void
 rpc_bdev_lvol_set_parent_bdev(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
@@ -1405,8 +1414,8 @@ rpc_bdev_lvol_set_parent_bdev(struct spdk_jsonrpc_request *request,
 
 	SPDK_INFOLOG(lvol_rpc, "Set external parent of lvol\n");
 
-	if (spdk_json_decode_object(params, rpc_bdev_lvol_set_parent_decoders,
-				    SPDK_COUNTOF(rpc_bdev_lvol_set_parent_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_set_parent_bdev_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_set_parent_bdev_decoders),
 				    &req)) {
 		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

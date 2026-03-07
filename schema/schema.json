@@ -2581,7 +2581,6 @@
     },
     {
       "name": "bdev_ftl_get_properties",
-      "decoder": "rpc_bdev_ftl_get_stats_decoders",
       "params": [
         {
           "name": "name",
@@ -3046,7 +3045,6 @@
     },
     {
       "name": "iscsi_initiator_group_remove_initiators",
-      "decoder": "rpc_iscsi_initiator_group_add_initiators_decoders",
       "params": [
         {
           "name": "tag",
@@ -3185,7 +3183,6 @@
     },
     {
       "name": "iscsi_target_node_remove_pg_ig_maps",
-      "decoder": "rpc_iscsi_target_node_add_pg_ig_maps_decoders",
       "params": [
         {
           "name": "name",
@@ -4826,7 +4823,6 @@
     },
     {
       "name": "bdev_lvol_decouple_parent",
-      "decoder": "rpc_bdev_lvol_inflate_decoders",
       "params": [
         {
           "name": "name",
@@ -4870,7 +4866,6 @@
     },
     {
       "name": "bdev_lvol_set_parent_bdev",
-      "decoder": "rpc_bdev_lvol_set_parent_decoders",
       "params": [
         {
           "name": "lvol_name",
@@ -5522,7 +5517,6 @@
     },
     {
       "name": "sock_set_default_impl",
-      "decoder": "rpc_sock_impl_get_options_decoders",
       "params": [
         {
           "name": "impl_name",
