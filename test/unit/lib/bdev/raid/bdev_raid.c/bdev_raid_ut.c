@@ -876,7 +876,7 @@ free_test_req(struct rpc_bdev_raid_create *r)
 }
 
 static void
-create_raid_bdev_delete_req(struct rpc_bdev_raid_delete *r, const char *raid_name,
+create_raid_bdev_delete_req(struct rpc_bdev_raid_delete_ctx *r, const char *raid_name,
 			    uint8_t json_decode_obj_err)
 {
 	r->name = strdup(raid_name);
@@ -891,7 +891,7 @@ create_raid_bdev_delete_req(struct rpc_bdev_raid_delete *r, const char *raid_nam
 }
 
 static void
-create_get_raids_req(struct rpc_bdev_raid_get_bdevs *r, const char *category,
+create_get_raids_req(struct rpc_bdev_raid_get_bdevs_ctx *r, const char *category,
 		     uint8_t json_decode_obj_err)
 {
 	r->category = strdup(category);
@@ -910,7 +910,7 @@ static void
 test_create_raid(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete delete_req;
+	struct rpc_bdev_raid_delete_ctx delete_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -934,7 +934,7 @@ static void
 test_delete_raid(void)
 {
 	struct rpc_bdev_raid_create construct_req;
-	struct rpc_bdev_raid_delete delete_req;
+	struct rpc_bdev_raid_delete_ctx delete_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -960,7 +960,7 @@ static void
 test_create_raid_invalid_args(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *raid_bdev;
 
 	set_globals();
@@ -1045,7 +1045,7 @@ static void
 test_delete_raid_invalid_args(void)
 {
 	struct rpc_bdev_raid_create construct_req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1081,7 +1081,7 @@ static void
 test_io_channel(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
@@ -1127,7 +1127,7 @@ static void
 test_reset_io(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
@@ -1185,8 +1185,8 @@ static void
 test_multi_raid(void)
 {
 	struct rpc_bdev_raid_create *construct_req;
-	struct rpc_bdev_raid_delete destroy_req;
-	struct rpc_bdev_raid_get_bdevs get_raids_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
+	struct rpc_bdev_raid_get_bdevs_ctx get_raids_req;
 	uint8_t i;
 	char name[16];
 	uint8_t bbdev_idx = 0;
@@ -1279,7 +1279,7 @@ static void
 test_raid_json_dump_info(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 
 	set_globals();
@@ -1340,7 +1340,7 @@ static void
 test_create_raid_superblock(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete delete_req;
+	struct rpc_bdev_raid_delete_ctx delete_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1364,7 +1364,7 @@ static void
 test_raid_process(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_bdev *base_bdev;
 	struct spdk_thread *process_thread;
@@ -1425,7 +1425,7 @@ static void
 test_raid_process_with_qos(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_bdev *base_bdev;
 	struct spdk_thread *process_thread;
@@ -1497,7 +1497,7 @@ static void
 test_raid_io_split(void)
 {
 	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *raid_ch;
