@@ -226,19 +226,15 @@ rpc_dump_ublk_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_ublk_get_disks {
-	uint32_t ublk_id;
-};
-
 static const struct spdk_json_object_decoder rpc_ublk_get_disks_decoders[] = {
-	{"ublk_id", offsetof(struct rpc_ublk_get_disks, ublk_id), spdk_json_decode_uint32, true},
+	{"ublk_id", offsetof(struct rpc_ublk_get_disks_ctx, ublk_id), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
-	struct rpc_ublk_get_disks req = {};
+	struct rpc_ublk_get_disks_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_ublk_dev *ublk = NULL;
 

@@ -77,19 +77,15 @@ invalid:
 SPDK_RPC_REGISTER("spdk_kill_instance", rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
 
 
-struct rpc_framework_monitor_context_switch {
-	bool enabled;
-};
-
 static const struct spdk_json_object_decoder rpc_framework_monitor_context_switch_decoders[] = {
-	{"enabled", offsetof(struct rpc_framework_monitor_context_switch, enabled), spdk_json_decode_bool, true},
+	{"enabled", offsetof(struct rpc_framework_monitor_context_switch_ctx, enabled), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
 				     const struct spdk_json_val *params)
 {
-	struct rpc_framework_monitor_context_switch req = {};
+	struct rpc_framework_monitor_context_switch_ctx req = {};
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
