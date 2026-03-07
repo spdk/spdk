@@ -217,6 +217,7 @@ enum bdev_nvme_multipath_mode {
 	BDEV_NVME_MP_MODE_DISABLE,
 };
 
+/* TODO: replace with rpc_bdev_nvme_attach_controller_ctx */
 struct rpc_bdev_nvme_attach_controller {
 	char *name;
 	char *trtype;
@@ -1597,6 +1598,7 @@ rpc_bdev_nvme_get_controller_health_info(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("bdev_nvme_get_controller_health_info",
 		  rpc_bdev_nvme_get_controller_health_info, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_bdev_nvme_start_discovery_ctx */
 struct rpc_bdev_nvme_start_discovery {
 	char *name;
 	char *trtype;
@@ -1838,6 +1840,7 @@ enum error_injection_cmd_type {
 	NVME_IO_CMD,
 };
 
+/* TODO: replace with rpc_bdev_nvme_add_error_injection_ctx */
 struct rpc_add_error_injection {
 	char *name;
 	enum error_injection_cmd_type cmd_type;
@@ -1983,6 +1986,7 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_nvme_add_error_injection", rpc_bdev_nvme_add_error_injection,
 		  SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_bdev_nvme_remove_error_injection_ctx */
 struct rpc_remove_error_injection {
 	char *name;
 	enum error_injection_cmd_type cmd_type;
@@ -2266,6 +2270,7 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_nvme_set_preferred_path", rpc_bdev_nvme_set_preferred_path,
 		  SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_bdev_nvme_set_multipath_policy_ctx */
 struct rpc_set_multipath_policy {
 	char *name;
 	enum spdk_bdev_nvme_multipath_policy policy;
@@ -2392,6 +2397,7 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_nvme_set_multipath_policy", rpc_bdev_nvme_set_multipath_policy,
 		  SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_bdev_nvme_start_mdns_discovery_ctx */
 struct rpc_bdev_nvme_start_mdns_discovery {
 	char *name;
 	char *svcname;

@@ -68,6 +68,7 @@ rpc_ublk_destroy_target(struct spdk_jsonrpc_request *request, const struct spdk_
 }
 SPDK_RPC_REGISTER("ublk_destroy_target", rpc_ublk_destroy_target, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_ublk_start_disk_ctx */
 struct rpc_ublk_start_disk {
 	char		*bdev_name;
 	uint32_t	ublk_id;
@@ -147,6 +148,7 @@ out:
 
 SPDK_RPC_REGISTER("ublk_start_disk", rpc_ublk_start_disk, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_ublk_stop_disk_ctx */
 struct rpc_ublk_stop_disk {
 	uint32_t ublk_id;
 	struct spdk_jsonrpc_request *request;
@@ -276,6 +278,7 @@ rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("ublk_get_disks", rpc_ublk_get_disks, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_ublk_recover_disk_ctx */
 struct rpc_ublk_recover_disk {
 	char		*bdev_name;
 	uint32_t	ublk_id;

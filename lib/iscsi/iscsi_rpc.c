@@ -88,6 +88,7 @@ free_rpc_netmask_list(struct rpc_netmask_list *list)
 	}
 }
 
+/* TODO: replace with rpc_iscsi_create_initiator_group_ctx */
 struct rpc_initiator_group {
 	int32_t tag;
 	struct rpc_initiator_list initiator_list;
@@ -353,6 +354,7 @@ free_rpc_luns(struct rpc_luns *p)
 	}
 }
 
+/* TODO: replace with rpc_iscsi_create_target_node_ctx */
 struct rpc_target_node {
 	char *name;
 	char *alias_name;
@@ -455,6 +457,7 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_create_target_node", rpc_iscsi_create_target_node, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_iscsi_target_node_add_pg_ig_maps_ctx */
 struct rpc_tgt_node_pg_ig_maps {
 	char *name;
 	struct rpc_pg_ig_maps pg_ig_maps;
@@ -659,6 +662,7 @@ struct rpc_portal_list {
 	struct rpc_portal portals[MAX_PORTAL];
 };
 
+/* TODO: replace with rpc_iscsi_create_portal_group_ctx */
 struct rpc_portal_group {
 	int32_t tag;
 	struct rpc_portal_list portal_list;
@@ -1357,6 +1361,7 @@ decode_rpc_auth_secrets(const struct spdk_json_val *val, void *out)
 				      sizeof(struct rpc_auth_secret));
 }
 
+/* TODO: replace with rpc_iscsi_create_auth_group_ctx */
 struct rpc_auth_group {
 	int32_t tag;
 	struct rpc_auth_secrets secrets;

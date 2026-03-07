@@ -98,6 +98,7 @@ struct rpc_bdev_raid_create_base_bdevs {
 /*
  * Input structure for RPC rpc_bdev_raid_create
  */
+/* TODO: replace with rpc_bdev_raid_create_ctx */
 struct rpc_bdev_raid_create {
 	/* Raid bdev name */
 	char                                 *name;

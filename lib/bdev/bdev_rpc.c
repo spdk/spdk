@@ -327,6 +327,7 @@ struct rpc_bdev_get_iostat_names {
 	char *names[SPDK_BDEV_MAX_GET_IOSTAT_BDEV_NAMES];
 };
 
+/* TODO: replace with rpc_bdev_get_iostat_ctx */
 struct rpc_bdev_get_iostat {
 	char *name;
 	bool per_channel;
@@ -564,6 +565,7 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 	return 0;
 }
 
+/* TODO: replace with rpc_bdev_reset_iostat_ctx */
 struct rpc_bdev_reset_iostat {
 	char *name;
 	enum spdk_bdev_reset_stat_mode mode;
@@ -898,6 +900,7 @@ SPDK_RPC_REGISTER("bdev_set_qd_sampling_period",
 		  rpc_bdev_set_qd_sampling_period,
 		  SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_bdev_set_qos_limit_ctx */
 struct rpc_bdev_set_qos_limit {
 	char		*name;
 	uint64_t	limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];

@@ -40,6 +40,7 @@ rpc_notify_get_types(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("notify_get_types", rpc_notify_get_types, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_notify_get_notifications_ctx */
 struct rpc_notify_get_notifications {
 	uint64_t id;
 	uint64_t max;

@@ -659,6 +659,7 @@ enum nvmf_rpc_listen_op {
 	NVMF_RPC_LISTEN_SET_ANA_STATE,
 };
 
+/* TODO: replace with rpc_nvmf_subsystem_add_listener_ctx */
 struct nvmf_rpc_listener_ctx {
 	char				*nqn;
 	char				*tgt_name;
@@ -1422,6 +1423,7 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_listener_set_ana_state",
 		  rpc_nvmf_subsystem_listener_set_ana_state, SPDK_RPC_RUNTIME);
 
+/* TODO: replace with rpc_nvmf_subsystem_add_ns_ctx */
 struct nvmf_rpc_ns_params {
 	char *bdev_name;
 	char *ptpl_file;
@@ -1637,6 +1639,7 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_add_ns", rpc_nvmf_subsystem_add_ns, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_nvmf_subsystem_set_ns_ana_group_ctx */
 struct nvmf_rpc_ana_group_ctx {
 	char *nqn;
 	char *tgt_name;
@@ -1755,6 +1758,7 @@ rpc_nvmf_subsystem_set_ns_ana_group(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_set_ns_ana_group", rpc_nvmf_subsystem_set_ns_ana_group,
 		  SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_nvmf_subsystem_remove_ns_ctx */
 struct nvmf_rpc_remove_ns_ctx {
 	char *nqn;
 	char *tgt_name;
@@ -1870,6 +1874,7 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_remove_ns", rpc_nvmf_subsystem_remove_ns, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_nvmf_ns_add_host_ctx */
 struct nvmf_rpc_ns_visible_ctx {
 	struct spdk_jsonrpc_request *request;
 	char *nqn;
@@ -2005,6 +2010,7 @@ rpc_nvmf_ns_remove_host(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_ns_remove_host", rpc_nvmf_ns_remove_host, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_nvmf_subsystem_add_host_ctx */
 struct nvmf_rpc_host_ctx {
 	struct spdk_jsonrpc_request *request;
 	char *nqn;
@@ -2504,6 +2510,7 @@ rpc_nvmf_get_targets(struct spdk_jsonrpc_request *request,
 }
 /* private */ SPDK_RPC_REGISTER("nvmf_get_targets", rpc_nvmf_get_targets, SPDK_RPC_RUNTIME);
 
+/* TODO: replace with rpc_nvmf_create_transport_ctx */
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
 	char				*tgt_name;
@@ -2830,6 +2837,7 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_get_transports", rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_nvmf_get_stats_ctx */
 struct rpc_nvmf_get_stats_ctx {
 	char *tgt_name;
 	struct spdk_nvmf_tgt *tgt;
@@ -3055,6 +3063,7 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
+/* TODO: replace with rpc_nvmf_subsystem_get_controllers_ctx */
 struct rpc_subsystem_query_ctx {
 	char *nqn;
 	char *tgt_name;
