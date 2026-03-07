@@ -753,18 +753,8 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_lvol_resize", rpc_bdev_lvol_resize, SPDK_RPC_RUNTIME)
 
-struct rpc_set_ro_lvol_bdev {
-	char *name;
-};
-
-static void
-free_rpc_set_ro_lvol_bdev(struct rpc_set_ro_lvol_bdev *req)
-{
-	free(req->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_lvol_set_read_only_decoders[] = {
-	{"name", offsetof(struct rpc_set_ro_lvol_bdev, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_lvol_set_read_only_ctx, name), spdk_json_decode_string},
 };
 
 static void
@@ -788,7 +778,7 @@ static void
 rpc_bdev_lvol_set_read_only(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_set_ro_lvol_bdev req = {};
+	struct rpc_bdev_lvol_set_read_only_ctx req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
@@ -825,7 +815,7 @@ rpc_bdev_lvol_set_read_only(struct spdk_jsonrpc_request *request,
 	vbdev_lvol_set_read_only(lvol, rpc_set_ro_lvol_bdev_cb, request);
 
 cleanup:
-	free_rpc_set_ro_lvol_bdev(&req);
+	free_rpc_bdev_lvol_set_read_only(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_set_read_only", rpc_bdev_lvol_set_read_only, SPDK_RPC_RUNTIME)
