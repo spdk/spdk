@@ -59,8 +59,8 @@ cache_pci_init() {
 	[[ -z ${pci_bus_cache[*]} || $CMD == reset ]] || return 1
 
 	pci_bus_cache=()
-	pci_bus_ids_vendor=()
-	pci_bus_ids_device=()
+	pci_ids_vendor=()
+	pci_ids_device=()
 	pci_bus_driver=()
 	pci_mod_driver=()
 	pci_mod_resolved=()
