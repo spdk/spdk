@@ -3597,6 +3597,7 @@ nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_
 	struct nvme_rdma_wr		*rdma_wr;
 	struct nvme_rdma_qpair		*rqpair;
 	struct spdk_nvme_rdma_rsp	*rdma_rsp;
+	struct spdk_nvme_rdma_req	*rdma_req;
 	int				reaped = 0;
 	int				completion_rc = 0;
 	int				rc, _rc, i;
@@ -3611,33 +3612,50 @@ nvme_rdma_poller_process_cq_completions(struct nvme_rdma_poller *poller, uint32_
 
 	for (i = 0; i < rc; i++) {
 		rdma_wr = (struct nvme_rdma_wr *)wc[i].wr_id;
-		rqpair = get_rdma_qpair_from_wc(poller->group, &wc[i]);
-
-		if (!rqpair || rqpair->state == NVME_RDMA_QPAIR_STATE_EXITED) {
-			/**
-			 * Since we do not handle the LAST_WQE_REACHED event, we do not know when
-			 * a QP is flushed. We may get a WC for a already destroyed QP.
-			 *
-			 * If the QP has been destroyed, rdma_wr might be a dangling pointer
-			 * because the corresponding rdma_req/rdma_rsp might have been freed. The
-			 * only case in which rdma_wr is still valid is that srq is used and the
-			 * WR is RECV. In this case, we can safely dereference the pointer and
-			 * re-post the receive request to the SRQ to reuse for other QPs.
-			 */
-			if (poller->srq && (wc[i].opcode == IBV_WC_RECV)) {
-				rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
-				rdma_rsp->recv_wr->next = NULL;
-				spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
-			}
-			continue;
-		}
 
 		switch (rdma_wr->type) {
 		case RDMA_WR_TYPE_RECV:
+			rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
+			if (poller->srq) {
+				rqpair = get_rdma_qpair_from_wc(poller->group, &wc[i]);
+			} else {
+				rqpair = rdma_rsp->rqpair;
+			}
+			if (spdk_unlikely(!rqpair || rqpair->state == NVME_RDMA_QPAIR_STATE_EXITED)) {
+				/**
+				 * Since we do not handle the LAST_WQE_REACHED event, we do not know when
+				 * a QP is flushed. We may get a WC for a already destroyed QP.
+				 *
+				 * If the QP has been destroyed, rdma_wr might be a dangling pointer
+				 * because the corresponding rdma_req/rdma_rsp might have been freed. The
+				 * only case in which rdma_wr is still valid is that srq is used and the
+				 * WR is RECV. In this case, we can safely dereference the pointer and
+				 * re-post the receive request to the SRQ to reuse for other QPs.
+				 */
+				if (poller->srq) {
+					rdma_rsp->recv_wr->next = NULL;
+					spdk_rdma_provider_srq_queue_recv_wrs(poller->srq, rdma_rsp->recv_wr);
+				}
+				continue;
+			}
 			_rc = nvme_rdma_process_recv_completion(poller, rqpair, &wc[i], rdma_wr);
 			break;
 
 		case RDMA_WR_TYPE_SEND:
+			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_req, rdma_wr);
+			rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
+			if (spdk_unlikely(!rqpair)) {
+				rqpair = get_rdma_qpair_from_wc(poller->group, &wc[i]);
+				if (!rqpair) {
+					/* When poll_group is used, several qpairs share the same CQ and it is possible to
+					 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
+					 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
+					 * Work Requests
+					 */
+					assert(wc[i].status != IBV_WC_SUCCESS);
+					continue;
+				}
+			}
 			_rc = nvme_rdma_process_send_completion(poller, rqpair, &wc[i], rdma_wr);
 			break;
 
