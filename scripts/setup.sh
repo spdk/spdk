@@ -91,6 +91,9 @@ function usage() {
 	echo "PCI_BLOCK_SYNC_ON_RESET"
 	echo "                  If set in the environment, the attempt to wait for block devices associated"
 	echo "                  with given PCI device will be made upon reset"
+	echo "UEVENT_TIMEOUT    Timeout in seconds for waiting on block device uevents during reset."
+	echo "                  Default is 10 seconds. This value is passed as an idle timeout to"
+	echo "                  sync_dev_uevents.sh, implying that the timer resets each time a uevent is received."
 	echo "UNBIND_ENTIRE_IOMMU_GROUP"
 	echo "                  If set, all devices from nvme's iommu group will be unbound from their drivers."
 	echo "                  Use with caution."
@@ -957,7 +960,7 @@ if [[ $mode == reset && $PCI_BLOCK_SYNC_ON_RESET == yes ]]; then
 	done
 	if ((${#bdfs_to_wait_for[@]} > 0)); then
 		echo "Waiting for block devices as requested"
-		export UEVENT_TIMEOUT=5 DEVPATH_LOOKUP=yes DEVPATH_SUBSYSTEM=pci
+		export UEVENT_TIMEOUT=${UEVENT_TIMEOUT:-10} DEVPATH_LOOKUP=yes DEVPATH_SUBSYSTEM=pci
 		"$rootdir/scripts/sync_dev_uevents.sh" \
 			block/disk \
 			"${bdfs_to_wait_for[@]}" &
