@@ -2051,7 +2051,7 @@ nvme_rdma_apply_accel_sequence(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 		iovcnt++;
 		break;
 	case NVME_PAYLOAD_TYPE_IOV:
-		if (req->payload.offset != 0) {
+		if (req->payload.offset != 0 || req->parent != NULL) {
 			/* Split reuqest, need to advance iovs and copy them to the req's iovs */
 			spdk_iov_sgl_init(&sgl, req->payload.iov, req->payload.iov_count, 0);
 			spdk_iov_sgl_advance(&sgl, req->payload.offset);
