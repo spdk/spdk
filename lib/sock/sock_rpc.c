@@ -11,6 +11,7 @@
 #include "spdk/string.h"
 
 #include "spdk/log.h"
+#include "spdk_internal/rpc_autogen.h"
 
 
 static const struct spdk_json_object_decoder rpc_sock_impl_get_options_decoders[] = {
@@ -63,75 +64,32 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("sock_impl_get_options", rpc_sock_impl_get_options,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-struct spdk_rpc_sock_impl_set_opts {
-	char *impl_name;
-	struct spdk_sock_impl_opts sock_opts;
-};
-
-static void
-free_rpc_sock_impl_set_opts(struct spdk_rpc_sock_impl_set_opts *opts)
-{
-	free(opts->impl_name);
-}
-
 static const struct spdk_json_object_decoder rpc_sock_impl_set_options_decoders[] = {
-	{
-		"impl_name", offsetof(struct spdk_rpc_sock_impl_set_opts, impl_name),
-		spdk_json_decode_string, false
-	},
-	{
-		"recv_buf_size", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.recv_buf_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"send_buf_size", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.send_buf_size),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"enable_recv_pipe", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_recv_pipe),
-		spdk_json_decode_bool, true
-	},
-	{
-		"enable_quickack", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_quickack),
-		spdk_json_decode_bool, true
-	},
-	{
-		"enable_placement_id", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_placement_id),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"enable_zerocopy_send_server", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_zerocopy_send_server),
-		spdk_json_decode_bool, true
-	},
-	{
-		"enable_zerocopy_send_client", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_zerocopy_send_client),
-		spdk_json_decode_bool, true
-	},
-	{
-		"zerocopy_threshold", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.zerocopy_threshold),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"tls_version", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.tls_version),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"enable_ktls", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_ktls),
-		spdk_json_decode_bool, true
-	}
+	{"impl_name", offsetof(struct rpc_sock_impl_set_options_ctx, impl_name), spdk_json_decode_string, false},
+	{"recv_buf_size", offsetof(struct rpc_sock_impl_set_options_ctx, recv_buf_size), spdk_json_decode_uint32, true},
+	{"send_buf_size", offsetof(struct rpc_sock_impl_set_options_ctx, send_buf_size), spdk_json_decode_uint32, true},
+	{"enable_recv_pipe", offsetof(struct rpc_sock_impl_set_options_ctx, enable_recv_pipe), spdk_json_decode_bool, true},
+	{"enable_quickack", offsetof(struct rpc_sock_impl_set_options_ctx, enable_quickack), spdk_json_decode_bool, true},
+	{"enable_placement_id", offsetof(struct rpc_sock_impl_set_options_ctx, enable_placement_id), spdk_json_decode_uint32, true},
+	{"enable_zerocopy_send_server", offsetof(struct rpc_sock_impl_set_options_ctx, enable_zerocopy_send_server), spdk_json_decode_bool, true},
+	{"enable_zerocopy_send_client", offsetof(struct rpc_sock_impl_set_options_ctx, enable_zerocopy_send_client), spdk_json_decode_bool, true},
+	{"zerocopy_threshold", offsetof(struct rpc_sock_impl_set_options_ctx, zerocopy_threshold), spdk_json_decode_uint32, true},
+	{"tls_version", offsetof(struct rpc_sock_impl_set_options_ctx, tls_version), spdk_json_decode_uint32, true},
+	{"enable_ktls", offsetof(struct rpc_sock_impl_set_options_ctx, enable_ktls), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct spdk_rpc_sock_impl_set_opts opts = {};
+	struct rpc_sock_impl_set_options_ctx req = {};
+	struct spdk_sock_impl_opts sock_opts = {};
 	size_t len;
 	int rc;
 
 	/* Get type */
 	if (spdk_json_decode_object(params, rpc_sock_impl_set_options_decoders,
-				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &opts)) {
+				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -139,36 +97,58 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Retrieve default opts for requested socket implementation */
-	len = sizeof(opts.sock_opts);
-	rc = spdk_sock_impl_get_opts(opts.impl_name, &opts.sock_opts, &len);
+	len = sizeof(sock_opts);
+	rc = spdk_sock_impl_get_opts(req.impl_name, &sock_opts, &len);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_impl_get_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		free_rpc_sock_impl_set_opts(&opts);
+		free_rpc_sock_impl_set_options(&req);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
 	}
 
-	/* Decode opts */
+	/* Pre-fill req with defaults, then decode again so user values override */
+	req.recv_buf_size = sock_opts.recv_buf_size;
+	req.send_buf_size = sock_opts.send_buf_size;
+	req.enable_recv_pipe = sock_opts.enable_recv_pipe;
+	req.enable_quickack = sock_opts.enable_quickack;
+	req.enable_placement_id = sock_opts.enable_placement_id;
+	req.enable_zerocopy_send_server = sock_opts.enable_zerocopy_send_server;
+	req.enable_zerocopy_send_client = sock_opts.enable_zerocopy_send_client;
+	req.zerocopy_threshold = sock_opts.zerocopy_threshold;
+	req.tls_version = sock_opts.tls_version;
+	req.enable_ktls = sock_opts.enable_ktls;
+
 	if (spdk_json_decode_object(params, rpc_sock_impl_set_options_decoders,
-				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &opts)) {
+				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
 	}
 
-	rc = spdk_sock_impl_set_opts(opts.impl_name, &opts.sock_opts, sizeof(opts.sock_opts));
+	sock_opts.recv_buf_size = req.recv_buf_size;
+	sock_opts.send_buf_size = req.send_buf_size;
+	sock_opts.enable_recv_pipe = req.enable_recv_pipe;
+	sock_opts.enable_quickack = req.enable_quickack;
+	sock_opts.enable_placement_id = req.enable_placement_id;
+	sock_opts.enable_zerocopy_send_server = req.enable_zerocopy_send_server;
+	sock_opts.enable_zerocopy_send_client = req.enable_zerocopy_send_client;
+	sock_opts.zerocopy_threshold = req.zerocopy_threshold;
+	sock_opts.tls_version = req.tls_version;
+	sock_opts.enable_ktls = req.enable_ktls;
+
+	rc = spdk_sock_impl_set_opts(req.impl_name, &sock_opts, sizeof(sock_opts));
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_impl_set_opts() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		free_rpc_sock_impl_set_opts(&opts);
+		free_rpc_sock_impl_set_options(&req);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
 	}
 
 	spdk_jsonrpc_send_bool_response(request, true);
-	free_rpc_sock_impl_set_opts(&opts);
+	free_rpc_sock_impl_set_options(&req);
 }
 SPDK_RPC_REGISTER("sock_impl_set_options", rpc_sock_impl_set_options, SPDK_RPC_STARTUP)
 
