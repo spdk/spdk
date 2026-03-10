@@ -1524,6 +1524,14 @@ uring_sock_is_connected(struct spdk_sock *_sock)
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	uint8_t byte;
 	int rc;
+	struct pollfd pfd;
+
+	pfd.fd = sock->fd;
+	pfd.events = 0;
+	pfd.revents = 0;
+	if (poll(&pfd, 1, 0) >= 0 && (pfd.revents & POLLHUP)) {
+		return false;
+	}
 
 	rc = recv(sock->fd, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
 	if (rc == 0) {

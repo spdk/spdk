@@ -310,10 +310,23 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	free(req2);
 }
 
+static int g_ut_poll_rc;
+static short g_ut_poll_revents;
 static ssize_t g_ut_recv_rc;
 static int g_ut_recv_errno;
 
+int __wrap_poll(struct pollfd *fds, nfds_t nfds, int timeout);
 ssize_t __wrap_recv(int sockfd, void *buf, size_t len, int flags);
+
+int
+__wrap_poll(struct pollfd *fds, nfds_t nfds, int timeout)
+{
+	if (nfds > 0 && fds != NULL) {
+		fds[0].revents = g_ut_poll_revents;
+	}
+
+	return g_ut_poll_rc;
+}
 
 ssize_t
 __wrap_recv(int sockfd, void *buf, size_t len, int flags)
@@ -329,6 +342,9 @@ test_posix_sock_is_connected(void)
 
 	psock.fd = 1;
 	psock.ready = true;
+
+	g_ut_poll_rc = 1;
+	g_ut_poll_revents = 0;
 
 	/* recv returns EAGAIN -> connected */
 	g_ut_recv_rc = -1;
@@ -352,6 +368,15 @@ test_posix_sock_is_connected(void)
 	g_ut_recv_rc = -1;
 	g_ut_recv_errno = ECONNRESET;
 	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	/* POLLHUP with buffered data -> not connected */
+	g_ut_poll_rc = 1;
+	g_ut_poll_revents = POLLHUP;
+	g_ut_recv_rc = 1;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	g_ut_poll_rc = 1;
+	g_ut_poll_revents = 0;
 
 	/* Socket not ready with no connect context -> not connected */
 	psock.ready = false;
