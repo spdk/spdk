@@ -310,6 +310,54 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	free(req2);
 }
 
+static ssize_t g_ut_recv_rc;
+static int g_ut_recv_errno;
+
+ssize_t __wrap_recv(int sockfd, void *buf, size_t len, int flags);
+
+ssize_t
+__wrap_recv(int sockfd, void *buf, size_t len, int flags)
+{
+	errno = g_ut_recv_errno;
+	return g_ut_recv_rc;
+}
+
+static void
+test_posix_sock_is_connected(void)
+{
+	struct spdk_posix_sock psock = {};
+
+	psock.fd = 1;
+	psock.ready = true;
+
+	/* recv returns EAGAIN -> connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = EAGAIN;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == true);
+
+	/* recv returns EWOULDBLOCK -> connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = EWOULDBLOCK;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == true);
+
+	/* recv returns 0 (peer closed, no buffered data) -> not connected */
+	g_ut_recv_rc = 0;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	/* recv returns > 0 (data available) -> connected */
+	g_ut_recv_rc = 1;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == true);
+
+	/* recv error other than EAGAIN/EWOULDBLOCK -> not connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = ECONNRESET;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	/* Socket not ready with no connect context -> not connected */
+	psock.ready = false;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -323,6 +371,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, flush);
 	CU_ADD_TEST(suite, flush_req_chunks_with_zero_copy_threshold);
 	CU_ADD_TEST(suite, flush_two_reqs_chunks_with_zero_copy_threshold);
+	CU_ADD_TEST(suite, test_posix_sock_is_connected);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 

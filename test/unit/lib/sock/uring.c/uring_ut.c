@@ -233,6 +233,49 @@ flush_server(void)
 	free(req2);
 }
 
+static ssize_t g_ut_recv_rc;
+static int g_ut_recv_errno;
+
+ssize_t __wrap_recv(int sockfd, void *buf, size_t len, int flags);
+
+ssize_t
+__wrap_recv(int sockfd, void *buf, size_t len, int flags)
+{
+	errno = g_ut_recv_errno;
+	return g_ut_recv_rc;
+}
+
+static void
+test_uring_sock_is_connected(void)
+{
+	struct spdk_uring_sock usock = {};
+
+	usock.fd = 1;
+
+	/* recv returns EAGAIN -> connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = EAGAIN;
+	CU_ASSERT(uring_sock_is_connected(&usock.base) == true);
+
+	/* recv returns EWOULDBLOCK -> connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = EWOULDBLOCK;
+	CU_ASSERT(uring_sock_is_connected(&usock.base) == true);
+
+	/* recv returns 0 (peer closed, no buffered data) -> not connected */
+	g_ut_recv_rc = 0;
+	CU_ASSERT(uring_sock_is_connected(&usock.base) == false);
+
+	/* recv returns > 0 (data available) -> connected */
+	g_ut_recv_rc = 1;
+	CU_ASSERT(uring_sock_is_connected(&usock.base) == true);
+
+	/* recv error other than EAGAIN/EWOULDBLOCK -> not connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = ECONNRESET;
+	CU_ASSERT(uring_sock_is_connected(&usock.base) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -243,10 +286,9 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("uring", NULL, NULL);
 
-
 	CU_ADD_TEST(suite, flush_client);
 	CU_ADD_TEST(suite, flush_server);
-
+	CU_ADD_TEST(suite, test_uring_sock_is_connected);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
