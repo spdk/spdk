@@ -79,7 +79,7 @@ or locally
 $ uv pip install python/[mcp]
 ```
 
-You can install this server in [Claude Desktop](https://claude.ai/download) and interact with it right away by running:
+You can install this server in a compatible MCP client and interact with it right away by running:
 
 ```bash
 mcp install server.py

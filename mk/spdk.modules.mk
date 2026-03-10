@@ -88,6 +88,9 @@ ifeq ($(OS), Linux)
 ifeq ($(CONFIG_URING),y)
 SOCK_MODULES_LIST += sock_uring
 endif
+ifeq ($(CONFIG_VCL),y)
+SOCK_MODULES_LIST += sock_vcl
+endif
 endif
 
 ACCEL_MODULES_LIST = accel_error accel_ioat ioat accel_ae4dma ae4dma

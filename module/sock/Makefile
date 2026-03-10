@@ -9,6 +9,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 DIRS-y = posix
 ifeq ($(OS), Linux)
 DIRS-$(CONFIG_URING) += uring
+DIRS-$(CONFIG_VCL) += vcl
 endif
 
 .PHONY: all clean $(DIRS-y)

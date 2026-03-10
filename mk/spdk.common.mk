@@ -177,6 +177,13 @@ ifeq ($(CONFIG_AVAHI),y)
 SYS_LIBS += -lavahi-common -lavahi-client
 endif
 
+ifeq ($(CONFIG_VCL),y)
+COMMON_CFLAGS += -I$(CONFIG_VCL_PATH)/src
+LDFLAGS += -L$(CONFIG_VCL_PATH)/build-root/build-vpp-native/vpp/lib/x86_64-linux-gnu
+LDFLAGS += -Wl,-rpath=$(CONFIG_VCL_PATH)/build-root/build-vpp-native/vpp/lib/x86_64-linux-gnu
+SYS_LIBS += -lvppcom
+endif
+
 IPSEC_MB_DIR=$(CONFIG_IPSEC_MB_DIR)
 
 ifeq ($(CONFIG_ISAL_PATH),)

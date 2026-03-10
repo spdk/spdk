@@ -107,6 +107,7 @@ function usage() {
 	echo "                           If no argument is specified, OCF git submodule is used by default"
 	echo "                           example: /usr/src/ocf/"
 	echo " --with-uring[=DIR]        Build I/O uring bdev or socket module."
+	echo " --with-vcl=DIR           Build VCL socket module against VPP source tree."
 	echo " --without-uring           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
 	echo "                           be searched."
@@ -636,6 +637,15 @@ for i in "$@"; do
 			CONFIG[URING]=y
 			CONFIG[URING_ZNS]=y
 			CONFIG[URING_PATH]=
+			;;
+		--with-vcl=*)
+			check_dir "$i"
+			CONFIG[VCL]=y
+			CONFIG[VCL_PATH]=$(readlink -f ${i#*=})
+			;;
+		--without-vcl)
+			CONFIG[VCL]=n
+			CONFIG[VCL_PATH]=
 			;;
 		--without-uring)
 			CONFIG[URING]=n
@@ -1215,6 +1225,14 @@ if [[ "${CONFIG[URING]}" = "y" || "${CONFIG[XNVME]}" = "y" ]]; then
 			echo "Disabling Zoned NS support in Uring! Requires blkzoned.h from kernel >= linux-5.9."
 			CONFIG[URING_ZNS]=n
 		fi
+	fi
+fi
+
+if [[ "${CONFIG[VCL]}" = "y" ]]; then
+	check_dir "${CONFIG[VCL_PATH]}"
+	if [[ ! -f "${CONFIG[VCL_PATH]}/src/vcl/vppcom.h" ]]; then
+		echo "--with-vcl requires a VPP source tree with src/vcl/vppcom.h."
+		exit 1
 	fi
 fi
 

@@ -181,6 +181,10 @@ CONFIG_URING_ZNS=n
 # Path to custom built IO_URING library
 CONFIG_URING_PATH=
 
+# Build with VPP VCL socket backend
+CONFIG_VCL=n
+CONFIG_VCL_PATH=
+
 # Path to custom built OPENSSL library
 CONFIG_OPENSSL_PATH=
 
