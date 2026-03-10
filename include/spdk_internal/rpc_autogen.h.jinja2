@@ -20,14 +20,14 @@ extern "C" {
 /* Embedded objects section */
 
 {% for object in schema["objects"] %}
-struct {{ object.name }} {
+struct rpc_{{ object.name }} {
     {%- for field in object.fields %}
 	{{ types[field.type] }}{{ field.name }};
     {%- endfor %}
 };
 
 static inline void
-free_{{ object.name }}(struct {{ object.name }} *req)
+free_rpc_{{ object.name }}(struct rpc_{{ object.name }} *req)
 {
 {%- for field in object.fields if field.type == "string" %}
 	free(req->{{ field.name }});
@@ -41,7 +41,7 @@ free_{{ object.name }}(struct {{ object.name }} *req)
 {%- if method.params %}
 struct rpc_{{ method.name }}_ctx {
     {%- for param in method.params %}
-	{{ "struct    "+param.class+" " if "class" in param else types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
+	{{ "struct    rpc_"+param.class+" " if "class" in param else types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
 	{%- endfor %}
 };
 
@@ -52,7 +52,7 @@ free_rpc_{{ method.name }}(struct rpc_{{ method.name }}_ctx *req)
 	free(req->{{ "is_private" if param.name == "private" else param.name }});
 {%- endfor %}
 {%- for param in method.params if "class" in param %}
-	free_{{ param.class }}(&req->{{ param.name }});
+	free_rpc_{{ param.class }}(&req->{{ param.name }});
 {%- endfor %}
 }
 {%- endif %}
