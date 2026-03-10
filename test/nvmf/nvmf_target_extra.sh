@@ -47,6 +47,7 @@ if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
 	run_test "nvmf_control_msg_list" $rootdir/test/nvmf/target/control_msg_list.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_wait_for_buf_clean_flow" $rootdir/test/nvmf/target/wait_for_buf.sh clean_flow "${TEST_ARGS[@]}"
 	run_test "nvmf_wait_for_buf_dirty_flow" $rootdir/test/nvmf/target/wait_for_buf.sh dirty_flow "${TEST_ARGS[@]}"
+	run_test "nvmf_connect_cleanup" $rootdir/test/nvmf/target/connect_cleanup.sh "${TEST_ARGS[@]}"
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
