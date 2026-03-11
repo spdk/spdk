@@ -4061,6 +4061,47 @@ bdev_nvme_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	return i;
 }
 
+static int
+bdev_nvme_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types, uint32_t array_size)
+{
+	struct nvme_bdev *nbdev = ctx;
+	struct nvme_ns *nvme_ns;
+	struct nvme_ctrlr *first_ctrlr = NULL, *nvme_ctrlr;
+	uint32_t i;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
+		nvme_ctrlr = nvme_ns->ctrlr;
+		if (first_ctrlr == NULL) {
+			first_ctrlr = nvme_ctrlr;
+			continue;
+		}
+		/* Ordering is consistent because types are cached at attach time
+		 * from the same transport code path.
+		 */
+		if (nvme_ctrlr->num_memory_domain_types != first_ctrlr->num_memory_domain_types ||
+		    memcmp(nvme_ctrlr->memory_domain_types, first_ctrlr->memory_domain_types,
+			   first_ctrlr->num_memory_domain_types * sizeof(enum spdk_dma_device_type)) != 0) {
+			SPDK_ERRLOG("bdev %s: multipath controllers have different memory domain types\n",
+				    nbdev->disk.name);
+			return 0;
+		}
+	}
+
+	if (first_ctrlr == NULL) {
+		return 0;
+	}
+
+	if (types) {
+		for (i = 0; i < spdk_min(first_ctrlr->num_memory_domain_types, array_size); i++) {
+			types[i] = first_ctrlr->memory_domain_types[i];
+		}
+	}
+
+	return first_ctrlr->num_memory_domain_types;
+}
+
 static const char *
 nvme_ctrlr_get_state_str(struct nvme_ctrlr *nvme_ctrlr)
 {
@@ -4460,6 +4501,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_spin_time			= bdev_nvme_get_spin_time,
 	.get_module_ctx			= bdev_nvme_get_module_ctx,
 	.get_memory_domains		= bdev_nvme_get_memory_domains,
+	.get_memory_domain_types	= bdev_nvme_get_memory_domain_types,
 	.accel_sequence_supported	= bdev_nvme_accel_sequence_supported,
 	.reset_device_stat		= bdev_nvme_reset_device_stat,
 	.dump_device_stat_json		= bdev_nvme_dump_device_stat_json,
@@ -6056,8 +6098,9 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_event_handler_opts opts = {
 		.opts_size = SPDK_SIZEOF(&opts, fd_type),
 	};
+	struct spdk_memory_domain *domains[SPDK_COUNTOF(nvme_ctrlr->memory_domain_types)];
 	uint64_t period;
-	int fd, rc;
+	int fd, rc, i, domains_count;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -6139,6 +6182,20 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_ctrlr->ctrlr = ctrlr;
 	nvme_ctrlr->ref = 1;
+
+	domains_count = spdk_nvme_ctrlr_get_memory_domains(ctrlr, domains, SPDK_COUNTOF(domains));
+	if (domains_count > 0) {
+		if (domains_count > (int)SPDK_COUNTOF(domains)) {
+			SPDK_WARNLOG("Controller reports %d memory domains, but only %zu can be cached\n",
+				     domains_count, SPDK_COUNTOF(domains));
+			domains_count = SPDK_COUNTOF(domains);
+		}
+		for (i = 0; i < domains_count; i++) {
+			nvme_ctrlr->memory_domain_types[i] =
+				spdk_memory_domain_get_dma_device_type(domains[i]);
+		}
+		nvme_ctrlr->num_memory_domain_types = domains_count;
+	}
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		SPDK_ERRLOG("OCSSDs are not supported");

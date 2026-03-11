@@ -53,6 +53,9 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_discovery_log_page, int,
 
 DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domains, int);
 
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *domain), SPDK_DMA_DEVICE_TYPE_RDMA);
+
 DEFINE_STUB_V(spdk_jsonrpc_send_error_response, (struct spdk_jsonrpc_request *request,
 		int error_code, const char *msg));
 DEFINE_STUB(spdk_jsonrpc_begin_result, struct spdk_json_write_ctx *,
@@ -3375,6 +3378,55 @@ test_get_memory_domains(void)
 	memset(domains, 0, sizeof(domains));
 
 	MOCK_CLEAR(spdk_nvme_ctrlr_get_memory_domains);
+}
+
+static void
+test_get_memory_domain_types(void)
+{
+	struct nvme_ctrlr ctrlr_1 = {};
+	struct nvme_ctrlr ctrlr_2 = {};
+	struct nvme_ns ns_1 = { .ctrlr = &ctrlr_1 };
+	struct nvme_ns ns_2 = { .ctrlr = &ctrlr_2 };
+	struct nvme_bdev nbdev = { .nvme_ns_list = TAILQ_HEAD_INITIALIZER(nbdev.nvme_ns_list) };
+	enum spdk_dma_device_type types[4] = {};
+	int rc;
+
+	TAILQ_INSERT_TAIL(&nbdev.nvme_ns_list, &ns_1, tailq);
+
+	/* controller has no cached types */
+	rc = bdev_nvme_get_memory_domain_types(&nbdev, types, 4);
+	CU_ASSERT(rc == 0);
+
+	/* controller has one cached type */
+	ctrlr_1.num_memory_domain_types = 1;
+	ctrlr_1.memory_domain_types[0] = SPDK_DMA_DEVICE_TYPE_RDMA;
+	rc = bdev_nvme_get_memory_domain_types(&nbdev, types, 4);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(types[0] == SPDK_DMA_DEVICE_TYPE_RDMA);
+	memset(types, 0, sizeof(types));
+
+	/* NULL types ptr */
+	rc = bdev_nvme_get_memory_domain_types(&nbdev, NULL, 4);
+	CU_ASSERT(rc == 1);
+
+	/* array_size = 0 */
+	rc = bdev_nvme_get_memory_domain_types(&nbdev, types, 0);
+	CU_ASSERT(rc == 1);
+
+	/* multipath, both controllers have matching types */
+	ctrlr_2.num_memory_domain_types = 1;
+	ctrlr_2.memory_domain_types[0] = SPDK_DMA_DEVICE_TYPE_RDMA;
+	TAILQ_INSERT_TAIL(&nbdev.nvme_ns_list, &ns_2, tailq);
+
+	rc = bdev_nvme_get_memory_domain_types(&nbdev, types, 4);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(types[0] == SPDK_DMA_DEVICE_TYPE_RDMA);
+	memset(types, 0, sizeof(types));
+
+	/* multipath, controllers have mismatched types */
+	ctrlr_2.num_memory_domain_types = 0;
+	rc = bdev_nvme_get_memory_domain_types(&nbdev, types, 4);
+	CU_ASSERT(rc == 0);
 }
 
 static void
@@ -8543,6 +8595,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_compare_ns);
 	CU_ADD_TEST(suite, test_init_ana_log_page);
 	CU_ADD_TEST(suite, test_get_memory_domains);
+	CU_ADD_TEST(suite, test_get_memory_domain_types);
 	CU_ADD_TEST(suite, test_reconnect_qpair);
 	CU_ADD_TEST(suite, test_create_bdev_ctrlr);
 	CU_ADD_TEST(suite, test_add_multi_ns_to_bdev);

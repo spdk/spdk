@@ -135,6 +135,9 @@ struct nvme_ctrlr {
 	struct spdk_key				*dhchap_key;
 	struct spdk_key				*dhchap_ctrlr_key;
 
+	enum spdk_dma_device_type		memory_domain_types[8];
+	uint32_t				num_memory_domain_types;
+
 	/* Used for ref, flags protection. */
 	pthread_mutex_t				mutex;
 };
