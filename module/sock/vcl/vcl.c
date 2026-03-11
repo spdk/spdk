@@ -572,31 +572,34 @@ static int
 vcl_sock_close(struct spdk_sock *_sock)
 {
 	struct spdk_vcl_sock *sock = __vcl_sock(_sock);
-	int rc;
+	int rc, close_rc = 0;
 
 	rc = vcl_sock_bind_worker(sock);
 	if (rc != 0) {
-		free(sock);
-		return rc;
+		close_rc = rc;
 	}
 
-	if (sock->connect_registered && sock->connect_epfd >= 0) {
+	if (sock->connect_registered && sock->connect_epfd >= 0 && close_rc == 0) {
 		vppcom_epoll_ctl(sock->connect_epfd, EPOLL_CTL_DEL, sock->sh, NULL);
 		sock->connect_registered = false;
 	}
 	if (sock->connect_epfd >= 0) {
-		vppcom_session_close(sock->connect_epfd);
+		rc = vppcom_session_close(sock->connect_epfd);
+		if (close_rc == 0 && rc != 0) {
+			close_rc = rc;
+		}
 		sock->connect_epfd = -1;
 	}
 
 	if (sock->sh != VCL_INVALID_SH) {
 		rc = vppcom_session_close(sock->sh);
-	} else {
-		rc = 0;
+		if (close_rc == 0 && rc != 0) {
+			close_rc = rc;
+		}
 	}
 
 	free(sock);
-	return rc;
+	return close_rc;
 }
 
 static ssize_t
