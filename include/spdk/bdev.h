@@ -285,7 +285,7 @@ struct spdk_bdev_ext_io_opts {
 	/** Size of this structure in bytes */
 	size_t size;
 	/** Memory domain which describes payload in this IO request. bdev must support DMA device type that
-	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domains and \ref spdk_memory_domain_get_dma_device_type
+	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domain_types
 	 * If set, that means that data buffers can't be accessed directly and the memory domain must
 	 * be used to fetch data to local buffers or to translate data to another memory domain */
 	struct spdk_memory_domain *memory_domain;
@@ -2462,6 +2462,8 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
  * Get SPDK memory domains used by the given bdev. If bdev reports that it uses memory domains
  * that means that it can work with data buffers located in those memory domains.
  *
+ * Deprecated: use \ref spdk_bdev_get_memory_domain_types instead. Will be removed in v26.09.
+ *
  * The user can call this function with \b domains set to NULL and \b array_size set to 0 to get the
  * number of memory domains used by bdev
  *
@@ -2476,6 +2478,27 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
  */
 int spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
 				 int array_size);
+
+/**
+ * Get SPDK memory domain types used by the given bdev. If bdev reports that it uses memory domains
+ * that means that it can work with data buffers located in those memory domains.
+ *
+ * The user can call this function with \b types set to NULL and \b array_size set to 0 to get the
+ * number of memory domain types used by bdev
+ *
+ * \param bdev Block device
+ * \param types Pointer to an array of memory domain types to be filled by this function. The user
+ * should allocate big enough array to keep all memory domain types used by bdev and all underlying
+ * bdevs
+ * \param array_size size of \b types array
+ * \return the number of entries in \b types array or negated errno. If returned value is bigger
+ * than \b array_size passed by the user, the first \b array_size entries in the array are valid
+ * but the list is not complete. The user should increase the size of the array and call this
+ * function again to get the full list.
+ *         -EINVAL if input parameters were invalid
+ */
+int spdk_bdev_get_memory_domain_types(struct spdk_bdev *bdev, enum spdk_dma_device_type *types,
+				      uint32_t array_size);
 
 /**
  * \brief SPDK bdev channel iterator.

@@ -6098,6 +6098,54 @@ bdev_get_memory_domains(void)
 	CU_ASSERT(rc == 0);
 }
 
+static int
+test_bdev_get_memory_domain_types_op(void *ctx, enum spdk_dma_device_type *types,
+				     uint32_t array_size)
+{
+	if (array_size > 0 && types) {
+		types[0] = SPDK_DMA_DEVICE_TYPE_RDMA;
+	}
+
+	return 1;
+}
+
+static void
+bdev_get_memory_domain_types(void)
+{
+	struct spdk_bdev_fn_table fn_table = {
+		.get_memory_domain_types = test_bdev_get_memory_domain_types_op
+	};
+	struct spdk_bdev bdev = { .fn_table = &fn_table };
+	enum spdk_dma_device_type types[2] = {};
+	int rc;
+
+	/* bdev is NULL */
+	rc = spdk_bdev_get_memory_domain_types(NULL, types, 2);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* types is NULL but array_size is not 0 */
+	rc = spdk_bdev_get_memory_domain_types(&bdev, NULL, 2);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* types is not NULL but array_size is 0 */
+	rc = spdk_bdev_get_memory_domain_types(&bdev, types, 0);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* types is NULL and array_size is 0 - query count */
+	rc = spdk_bdev_get_memory_domain_types(&bdev, NULL, 0);
+	CU_ASSERT(rc == 1);
+
+	/* get_memory_domain_types op is set */
+	rc = spdk_bdev_get_memory_domain_types(&bdev, types, 2);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(types[0] == SPDK_DMA_DEVICE_TYPE_RDMA);
+
+	/* get_memory_domain_types op is not set */
+	fn_table.get_memory_domain_types = NULL;
+	rc = spdk_bdev_get_memory_domain_types(&bdev, types, 2);
+	CU_ASSERT(rc == 0);
+}
+
 static void
 _bdev_io_ext(struct spdk_bdev_ext_io_opts *ext_io_opts)
 {
@@ -8253,6 +8301,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_write_zeroes_split_test);
 	CU_ADD_TEST(suite, bdev_set_options_test);
 	CU_ADD_TEST(suite, bdev_get_memory_domains);
+	CU_ADD_TEST(suite, bdev_get_memory_domain_types);
 	CU_ADD_TEST(suite, bdev_io_ext);
 	CU_ADD_TEST(suite, bdev_io_ext_no_opts);
 	CU_ADD_TEST(suite, bdev_io_ext_invalid_opts);

@@ -61,6 +61,11 @@ only the I/O error stats are reset, leaving the rest of the stats unchanged.
 
 Removed the deprecated `spdk_bdev_io_get_aux_buf()` and `spdk_bdev_io_put_aux_buf()` APIs.
 
+Added new API `spdk_bdev_get_memory_domain_types` and corresponding `get_memory_domain_types`
+fn_table entry. These return DMA device types supported by a bdev rather than memory domain
+pointers. Deprecated `spdk_bdev_get_memory_domains` and the `get_memory_domains` fn_table
+entry, which will be removed in v26.09.
+
 ### bdev_aio
 
 Disabled `RWF_NOWAIT` default flag usage - user needs to explicitly request to enable it using
