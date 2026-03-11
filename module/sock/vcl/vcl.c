@@ -116,6 +116,16 @@ vcl_sock_bind_worker(struct spdk_vcl_sock *sock)
 	return 0;
 }
 
+static inline int
+vcl_sock_normalize_rc(ssize_t rc)
+{
+	if (rc == VPPCOM_EAGAIN || rc == VPPCOM_EWOULDBLOCK) {
+		return -EAGAIN;
+	}
+
+	return (int)rc;
+}
+
 static int
 vcl_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
 		 char *caddr, int clen, uint16_t *cport)
@@ -268,7 +278,7 @@ vcl_sock_start_connect(struct spdk_vcl_sock *sock)
 		vcl_sock_connect_done(sock, 0);
 		return 0;
 	}
-	if (rc == VPPCOM_EINPROGRESS || rc == -EINPROGRESS) {
+	if (rc == VPPCOM_EINPROGRESS) {
 		sock->pending_connect = true;
 		return 0;
 	}
@@ -371,11 +381,8 @@ vcl_sock_flush(struct spdk_sock *_sock)
 		requested = 0;
 		iovcnt = spdk_sock_prep_req(req, iovs, 0, &requested);
 		rc = vcl_sock_writev_internal(sock, iovs, iovcnt);
-		if (rc == -EAGAIN || rc == -EWOULDBLOCK || rc == VPPCOM_EAGAIN) {
-			return -EAGAIN;
-		}
 		if (rc < 0) {
-			return (int)rc;
+			return vcl_sock_normalize_rc(rc);
 		}
 		req->internal.offset += rc;
 		if ((uint64_t)rc < requested) {
@@ -437,7 +444,7 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 		if (async) {
 			vcl_sock_connect_done(sock, 0);
 		}
-	} else if (rc == VPPCOM_EINPROGRESS || rc == -EINPROGRESS) {
+	} else if (rc == VPPCOM_EINPROGRESS) {
 		sock->pending_connect = true;
 	} else {
 		free(sock);
@@ -620,7 +627,12 @@ vcl_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 		return rc;
 	}
 
-	return vppcom_session_read(sock->sh, buf, len);
+	rc = vppcom_session_read(sock->sh, buf, len);
+	if (rc < 0) {
+		return vcl_sock_normalize_rc(rc);
+	}
+
+	return rc;
 }
 
 static ssize_t
@@ -647,7 +659,7 @@ vcl_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	for (i = 0; i < iovcnt; i++) {
 		rc = vppcom_session_read(sock->sh, iov[i].iov_base, iov[i].iov_len);
 		if (rc < 0) {
-			return total > 0 ? total : rc;
+			return total > 0 ? total : vcl_sock_normalize_rc(rc);
 		}
 		total += rc;
 		if (rc != (ssize_t)iov[i].iov_len) {
@@ -672,7 +684,12 @@ vcl_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 		return -EAGAIN;
 	}
 
-	return vcl_sock_writev_internal(sock, iov, iovcnt);
+	rc = vcl_sock_writev_internal(sock, iov, iovcnt);
+	if (rc < 0) {
+		return vcl_sock_normalize_rc(rc);
+	}
+
+	return rc;
 }
 
 static int
