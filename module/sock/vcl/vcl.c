@@ -398,6 +398,8 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 	bool is_ipv6;
 	int rc, sh;
 
+	assert(async || (!cb_fn && !cb_arg));
+
 	rc = vcl_ensure_init();
 	if (rc != 0) {
 		if (cb_fn) {
@@ -425,17 +427,18 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 
 	vcl_fill_endpoint(ip, port, &ep, ipbuf, &is_ipv6);
 	sock->is_ipv6 = is_ipv6;
+	if (async) {
+		sock->connect_cb_fn = cb_fn;
+		sock->connect_cb_arg = cb_arg;
+	}
 	rc = vppcom_session_connect(sh, &ep);
 	if (rc == 0) {
 		sock->connected = true;
 		if (async) {
-			sock->connect_cb_fn = cb_fn;
-			sock->connect_cb_arg = cb_arg;
+			vcl_sock_connect_done(sock, 0);
 		}
 	} else if (rc == VPPCOM_EINPROGRESS || rc == -EINPROGRESS) {
 		sock->pending_connect = true;
-		sock->connect_cb_fn = cb_fn;
-		sock->connect_cb_arg = cb_arg;
 	} else {
 		free(sock);
 		vppcom_session_close(sh);
@@ -449,10 +452,6 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 		free(sock);
 		vppcom_session_close(sh);
 		return NULL;
-	}
-
-	if (!async && cb_fn && !sock->pending_connect) {
-		vcl_sock_connect_done(sock, 0);
 	}
 
 	return &sock->base;
