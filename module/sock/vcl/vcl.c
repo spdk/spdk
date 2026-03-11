@@ -788,7 +788,6 @@ vcl_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_so
 	struct epoll_event ev = {};
 	int rc;
 
-	ev.events = EPOLLIN | EPOLLERR | EPOLLOUT;
 	if (!sock->pending_connect) {
 		ev.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
 	} else {
