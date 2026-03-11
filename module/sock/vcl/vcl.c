@@ -821,9 +821,15 @@ vcl_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct spdk
 	int rc = 0;
 
 	if (sock->registered) {
-		vcl_sock_bind_worker(sock);
+		rc = vcl_sock_bind_worker(sock);
+		if (rc != 0) {
+			return rc;
+		}
+
 		rc = vppcom_epoll_ctl(group->epfd, EPOLL_CTL_DEL, sock->sh, NULL);
-		sock->registered = false;
+		if (rc == 0) {
+			sock->registered = false;
+		}
 	}
 
 	spdk_sock_abort_requests(_sock);
