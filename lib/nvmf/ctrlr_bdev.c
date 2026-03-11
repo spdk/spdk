@@ -611,11 +611,9 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
 	max_blocks = nvmf_mps_to_blocks(wzsl, block_size);
 	if (spdk_unlikely(wzsl > 0 && num_blocks > max_blocks)) {
-		SPDK_ERRLOG("invalid write zeroes size %" PRIu64 " blocks, should not exceed"
-			    " %" PRIu64 " blocks\n", num_blocks, max_blocks);
-		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		SPDK_DEBUGLOG(nvmf, "write zeroes size %" PRIu64 " blocks exceeds WZSL"
+			      " %" PRIu64 " blocks, processing may take longer\n",
+			      num_blocks, max_blocks);
 	}
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {

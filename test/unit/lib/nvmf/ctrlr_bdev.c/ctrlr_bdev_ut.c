@@ -866,13 +866,21 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
-	/* wzsl=1 => max 2^(1+12)=8192 bytes => 16 blocks (512B) */
+	/* WZSL is advisory per NVMe spec: controller may take longer
+	 * but should not reject the command.
+	 * wzsl=1 => max 2^(1+12)=8192 bytes => 16 blocks (512B).
+	 * NLB=16 means 17 blocks (0-based); exceeds WZSL but must pass through.
+	 */
+	bdev.blockcnt = 100000;
+	cmd.nvme_cmd.cdw10 = 0;
 	cmd.nvme_cmd.cdw12 = 16;
 	subsystem.opts.wzsl = 1;
+	memset(&rsp, 0, sizeof(rsp));
 	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
-	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 	/* SLBA out of range */
+	bdev.blockcnt = 3;
 	subsystem.opts.wzsl = 0;
 	cmd.nvme_cmd.cdw12 = 2;
 	cmd.nvme_cmd.cdw10 = 3;
