@@ -462,6 +462,10 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	memcpy(&header, ctx->trace_file, sizeof(header));
 
 	current_offset = sizeof(header) + spdk_trace_file_get_sections_size();
+	owner_size = (uint64_t)ctx->trace_file->num_owners *
+		     (sizeof(struct spdk_trace_owner) + ctx->trace_file->owner_description_size);
+	header.owner_offset = current_offset;
+	current_offset += owner_size;
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {
@@ -472,10 +476,6 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 			header.lcore_history_offsets[i] = 0;
 		}
 	}
-	owner_size = (uint64_t)ctx->trace_file->num_owners *
-		     (sizeof(struct spdk_trace_owner) + ctx->trace_file->owner_description_size);
-	header.owner_offset = current_offset;
-	current_offset += owner_size;
 	header.file_size = current_offset;
 
 	rc = cont_write(ctx->out_fd, &header, sizeof(header));
@@ -488,6 +488,14 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 			spdk_trace_file_get_sections_size());
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write sections into trace file\n");
+		goto out;
+	}
+
+	/* Append owner data into converged trace file */
+	owner_buf = (uint8_t *)ctx->trace_file + ctx->trace_file->owner_offset;
+	rc = cont_write(ctx->out_fd, owner_buf, owner_size);
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write owner_data into trace file\n");
 		goto out;
 	}
 
@@ -527,14 +535,6 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		if (len_sum != lcore_port->num_entries * sizeof(struct spdk_trace_entry)) {
 			fprintf(stderr, "Len of lcore trace file doesn't match number of entries for lcore\n");
 		}
-	}
-
-	/* Append owner data into converged trace file */
-	owner_buf = (uint8_t *)ctx->trace_file + ctx->trace_file->owner_offset;
-	rc = cont_write(ctx->out_fd, owner_buf, owner_size);
-	if (rc < 0) {
-		fprintf(stderr, "Failed to write owner_data into trace file\n");
-		goto out;
 	}
 
 	printf("All lcores trace entries are aggregated into trace file %s\n", ctx->out_file);

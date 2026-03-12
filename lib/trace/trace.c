@@ -271,6 +271,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	main_section_offset = file_size;
 	file_size += sizeof(struct spdk_trace_section_main);
 
+	owner_offset = file_size;
+	file_size += TRACE_NUM_OWNERS *
+		     (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		lcore_offsets[i] = file_size;
@@ -295,9 +299,6 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_offsets[i] = file_size;
 		file_size += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 	}
-	owner_offset = file_size;
-	file_size += TRACE_NUM_OWNERS *
-		     (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
