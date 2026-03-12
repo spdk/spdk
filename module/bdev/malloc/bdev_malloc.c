@@ -755,6 +755,27 @@ bdev_malloc_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, i
 	return num_domains;
 }
 
+static int
+bdev_malloc_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types,
+				    uint32_t array_size)
+{
+	struct spdk_memory_domain *domains[16];
+	uint32_t i;
+	int rc;
+
+	rc = spdk_accel_get_opc_memory_domains(SPDK_ACCEL_OPC_COPY, domains,
+					       SPDK_COUNTOF(domains));
+	if (rc <= 0) {
+		return rc;
+	}
+
+	for (i = 0; i < spdk_min((uint32_t)rc, array_size); i++) {
+		types[i] = spdk_memory_domain_get_dma_device_type(domains[i]);
+	}
+
+	return rc;
+}
+
 static bool
 bdev_malloc_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 {
@@ -773,6 +794,7 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.io_type_supported		= bdev_malloc_io_type_supported,
 	.get_io_channel			= bdev_malloc_get_io_channel,
 	.get_memory_domains		= bdev_malloc_get_memory_domains,
+	.get_memory_domain_types	= bdev_malloc_get_memory_domain_types,
 	.accel_sequence_supported	= bdev_malloc_accel_sequence_supported,
 };
 
