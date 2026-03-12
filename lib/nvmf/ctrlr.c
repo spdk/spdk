@@ -214,6 +214,7 @@ static void
 nvmf_qpair_set_ctrlr(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_ctrlr *ctrlr)
 {
 	char listener_addr[SPDK_NVMF_TRADDR_MAX_LEN + SPDK_NVMF_TRSVCID_MAX_LEN + 2];
+	char qid_str[16];
 
 	if (qpair->ctrlr != NULL) {
 		/* Admin queues will call this function twice. */
@@ -230,6 +231,8 @@ nvmf_qpair_set_ctrlr(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_ctrlr *ctrl
 			 ctrlr->listener->trid->trsvcid);
 		spdk_trace_owner_append_description(qpair->trace_id, listener_addr);
 	}
+	snprintf(qid_str, sizeof(qid_str), "qid:%u", qpair->qid);
+	spdk_trace_owner_append_description(qpair->trace_id, qid_str);
 }
 
 static int _retry_qid_check(void *ctx);
