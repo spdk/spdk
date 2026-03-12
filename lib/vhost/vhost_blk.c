@@ -689,6 +689,23 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	}
 }
 
+/* A guest-supplied index (buffer id, inflight desc link) is only usable if it
+ * addresses a valid entry of the vring and of the per-vq task array, which both
+ * hold exactly vring.size entries. A malicious VM can hit this on every request,
+ * so keep it out of the error log.
+ */
+static inline bool
+vhost_vq_is_idx_valid(struct spdk_vhost_virtqueue *vq, uint16_t idx)
+{
+	if (spdk_unlikely(idx >= vq->vring.size)) {
+		SPDK_DEBUGLOG(vhost_blk, "Invalid idx '%"PRIu16"', exceeds virtqueue size (%"PRIu16").\n",
+			      idx, vq->vring.size);
+		return false;
+	}
+
+	return true;
+}
+
 static void
 process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 {
@@ -713,6 +730,14 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	 * ensures the req_idx is unique in the outstanding requests.
 	 */
 	task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
+	if (spdk_unlikely(!vhost_vq_is_idx_valid(vq, task_idx))) {
+		/* This request never got an inflight entry. Do not write a used
+		 * entry or touch the inflight bookkeeping: passing a fabricated
+		 * inflight_head would corrupt the inflight free list and could
+		 * hand an entry to a request that is already using it. Just drop
+		 * the malformed request. */
+		return;
+	}
 
 	task = &((struct spdk_vhost_user_blk_task *)vq->tasks)[task_idx];
 	blk_task = &task->blk_task;
@@ -991,6 +1016,15 @@ no_bdev_process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_
 	}
 
 	task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
+	if (spdk_unlikely(!vhost_vq_is_idx_valid(vq, task_idx))) {
+		/* This request never got an inflight entry. Do not write a used
+		 * entry or touch the inflight bookkeeping: passing a fabricated
+		 * inflight_head would corrupt the inflight free list and could
+		 * hand an entry to a request that is already using it. Just drop
+		 * the malformed request. */
+		return;
+	}
+
 	task = &((struct spdk_vhost_user_blk_task *)vq->tasks)[task_idx];
 	blk_task = &task->blk_task;
 	if (spdk_unlikely(task->used)) {
