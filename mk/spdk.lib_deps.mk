@@ -147,7 +147,7 @@ DEPDIRS-bdev_rpc := $(BDEV_DEPS)
 DEPDIRS-bdev_split := $(BDEV_DEPS)
 
 DEPDIRS-bdev_aio := $(BDEV_DEPS_THREAD)
-DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel
+DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel dma
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_error := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_THREAD)

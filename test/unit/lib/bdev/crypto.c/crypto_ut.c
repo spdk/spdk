@@ -74,6 +74,8 @@ DEFINE_STUB_V(spdk_accel_put_buf, (struct spdk_io_channel *ch, void *buf,
 DEFINE_STUB(spdk_bdev_get_memory_domains, int,
 	    (struct spdk_bdev *bdev, struct spdk_memory_domain **domains, int sz), 0);
 DEFINE_STUB(spdk_accel_get_memory_domain, struct spdk_memory_domain *, (void), (void *)0xdeadbeef);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *domain), SPDK_DMA_DEVICE_TYPE_RDMA);
 DEFINE_STUB(spdk_accel_get_buf_align, uint8_t,
 	    (enum spdk_accel_opcode opcode, const struct spdk_accel_operation_exec_ctx *ctx), 0);
 DEFINE_STUB(spdk_accel_get_opc_memory_domains, int, (enum spdk_accel_opcode opcode,

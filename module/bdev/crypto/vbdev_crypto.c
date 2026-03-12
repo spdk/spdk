@@ -756,6 +756,27 @@ vbdev_crypto_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, 
 	return num_domains;
 }
 
+static int
+vbdev_crypto_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types,
+				     uint32_t array_size)
+{
+	struct spdk_memory_domain *domains[16];
+	uint32_t i;
+	int rc;
+
+	rc = spdk_accel_get_opc_memory_domains(SPDK_ACCEL_OPC_ENCRYPT, domains,
+					       SPDK_COUNTOF(domains));
+	if (rc <= 0) {
+		return rc;
+	}
+
+	for (i = 0; i < spdk_min((uint32_t)rc, array_size); i++) {
+		types[i] = spdk_memory_domain_get_dma_device_type(domains[i]);
+	}
+
+	return rc;
+}
+
 static bool
 vbdev_crypto_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 {
@@ -776,6 +797,7 @@ static const struct spdk_bdev_fn_table vbdev_crypto_fn_table = {
 	.get_io_channel			= vbdev_crypto_get_io_channel,
 	.dump_info_json			= vbdev_crypto_dump_info_json,
 	.get_memory_domains		= vbdev_crypto_get_memory_domains,
+	.get_memory_domain_types	= vbdev_crypto_get_memory_domain_types,
 	.accel_sequence_supported	= vbdev_crypto_sequence_supported,
 };
 
