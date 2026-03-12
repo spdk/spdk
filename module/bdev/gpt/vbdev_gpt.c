@@ -85,12 +85,15 @@ static void vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bd
 static int vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w);
 static int vbdev_gpt_get_memory_domains(void *ctx, struct spdk_memory_domain **domains,
 					int array_size);
+static int vbdev_gpt_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types,
+		uint32_t array_size);
 
 static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
 	.destruct		= vbdev_gpt_destruct,
 	.submit_request		= vbdev_gpt_submit_request,
 	.dump_info_json		= vbdev_gpt_dump_info_json,
 	.get_memory_domains	= vbdev_gpt_get_memory_domains,
+	.get_memory_domain_types = vbdev_gpt_get_memory_domain_types,
 };
 
 static struct gpt_base *
@@ -312,6 +315,22 @@ vbdev_gpt_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	}
 
 	return spdk_bdev_get_memory_domains(part_base_bdev, domains, array_size);
+}
+
+static int
+vbdev_gpt_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types, uint32_t array_size)
+{
+	struct gpt_disk *gpt_disk = SPDK_CONTAINEROF(ctx, struct gpt_disk, part);
+	struct spdk_bdev_part_base *part_base = spdk_bdev_part_get_base(&gpt_disk->part);
+	struct spdk_bdev *part_base_bdev = spdk_bdev_part_base_get_bdev(part_base);
+
+	if (part_base_bdev->dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
+		/* bdev_part remaps reftag and touches metadata buffer, that means it can't support memory domains
+		 * if dif is enabled */
+		return 0;
+	}
+
+	return spdk_bdev_get_memory_domain_types(part_base_bdev, types, array_size);
 }
 
 static int

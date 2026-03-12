@@ -715,6 +715,15 @@ vbdev_delay_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, i
 	return spdk_bdev_get_memory_domains(delay_node->base_bdev, domains, array_size);
 }
 
+static int
+vbdev_delay_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types,
+				    uint32_t array_size)
+{
+	struct vbdev_delay *delay_node = (struct vbdev_delay *)ctx;
+
+	return spdk_bdev_get_memory_domain_types(delay_node->base_bdev, types, array_size);
+}
+
 /* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_delay_fn_table = {
 	.destruct		= vbdev_delay_destruct,
@@ -724,6 +733,7 @@ static const struct spdk_bdev_fn_table vbdev_delay_fn_table = {
 	.dump_info_json		= vbdev_delay_dump_info_json,
 	.write_config_json	= vbdev_delay_write_config_json,
 	.get_memory_domains	= vbdev_delay_get_memory_domains,
+	.get_memory_domain_types = vbdev_delay_get_memory_domain_types,
 };
 
 static void
