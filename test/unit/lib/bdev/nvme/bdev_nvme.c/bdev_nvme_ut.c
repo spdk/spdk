@@ -459,6 +459,15 @@ ut_init_trid3(struct spdk_nvme_transport_id *trid)
 	snprintf(trid->trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN, "%s", "4420");
 }
 
+static void
+ut_complete_async_attach(void)
+{
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+}
+
 static int
 cmp_int(int a, int b)
 {
@@ -3262,12 +3271,7 @@ test_init_ana_log_page(void)
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
@@ -3616,12 +3620,7 @@ test_create_bdev_ctrlr(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -3638,12 +3637,7 @@ test_create_bdev_ctrlr(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid, opts.hostnqn) == NULL);
 
@@ -3656,12 +3650,7 @@ test_create_bdev_ctrlr(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid, opts.hostnqn) != NULL);
 
@@ -3689,22 +3678,12 @@ test_create_bdev_ctrlr(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -3799,12 +3778,7 @@ test_add_multi_ns_to_bdev(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, 32,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	/* Attach 2nd ctrlr, whose max number of namespaces is 5, and 1st, 2nd, and 4th
 	 * namespaces are populated. The uuid of 4th namespace is different, and hence
@@ -3825,12 +3799,7 @@ test_add_multi_ns_to_bdev(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, 32,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -3902,12 +3871,7 @@ test_add_multi_ns_to_bdev(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, 32,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ut_init_trid2(&path2.trid);
 
@@ -3919,12 +3883,7 @@ test_add_multi_ns_to_bdev(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, 32,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -4009,12 +3968,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -4024,12 +3978,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -4157,12 +4106,7 @@ test_add_multi_io_paths_to_nbdev_ch_fail(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -4195,12 +4139,7 @@ test_add_multi_io_paths_to_nbdev_ch_fail(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nvme_ctrlr2 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid, opts.hostnqn);
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr2 != NULL);
@@ -4268,12 +4207,7 @@ test_admin_path(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -4283,12 +4217,7 @@ test_admin_path(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -4400,12 +4329,7 @@ test_reset_bdev_ctrlr(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -4413,12 +4337,7 @@ test_reset_bdev_ctrlr(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -5056,12 +4975,7 @@ test_retry_io_for_io_path_error(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -5151,12 +5065,7 @@ test_retry_io_for_io_path_error(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nvme_ctrlr2 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid, opts.hostnqn);
 	CU_ASSERT(nvme_ctrlr2 != NULL);
@@ -5454,12 +5363,7 @@ test_concurrent_read_ana_log_page(void)
 	rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
@@ -5573,12 +5477,7 @@ test_retry_io_for_ana_error(void)
 	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -6477,11 +6376,7 @@ test_set_preferred_path(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -6491,11 +6386,7 @@ test_set_preferred_path(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr3 = ut_attach_ctrlr(&path3.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr3 != NULL);
@@ -6505,11 +6396,7 @@ test_set_preferred_path(void)
 	rc = spdk_bdev_nvme_create(&path3.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -6752,11 +6639,7 @@ test_disable_auto_failback(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &dopts, &opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -6766,11 +6649,7 @@ test_disable_auto_failback(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &dopts, &opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -6907,11 +6786,7 @@ test_set_multipath_policy(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &dopts, &opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -6921,11 +6796,7 @@ test_set_multipath_policy(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &dopts, &opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
@@ -7069,11 +6940,7 @@ test_retry_io_to_same_path(void)
 	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -7083,11 +6950,7 @@ test_retry_io_to_same_path(void)
 	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
 				   attach_ctrlr_done, NULL, &opts, &bdev_opts);
 	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
+	ut_complete_async_attach();
 
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
