@@ -836,6 +836,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT,
 
 	/**
+	 * Get Identify I/O Command Set NVM Specific Controller data structure.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_IOCS_NVM_SPECIFIC,
+
+	/**
+	 * Waiting for Identify I/O Command Set NVM Specific Controller command to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_NVM_SPECIFIC,
+
+	/**
 	 * Get Identify I/O Command Set Specific Controller data structure.
 	 */
 	NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
@@ -854,16 +864,6 @@ enum nvme_ctrlr_state {
 	 * Waiting for the Get Log Page command to be completed.
 	 */
 	NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG,
-
-	/**
-	 * Get Identify I/O Command Set NVM Specific Controller data structure.
-	 */
-	NVME_CTRLR_STATE_IDENTIFY_IOCS_NVM_SPECIFIC,
-
-	/**
-	 * Waiting for Identify I/O Command Set NVM Specific Controller command to be completed.
-	 */
-	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_NVM_SPECIFIC,
 
 	/**
 	 * Set Number of Queues of the controller.
