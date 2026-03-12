@@ -23,6 +23,7 @@
 	spdk_memory_domain_get_first;
 	spdk_memory_domain_get_next;
 	spdk_memory_domain_get_system_domain;
+	spdk_dma_device_type_get_name;
 
 	local: *;
 };

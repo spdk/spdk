@@ -66,6 +66,10 @@ fn_table entry. These return DMA device types supported by a bdev rather than me
 pointers. Deprecated `spdk_bdev_get_memory_domains` and the `get_memory_domains` fn_table
 entry, which will be removed in v26.09.
 
+### dma
+
+Added `spdk_dma_device_type_get_name()` to return a human-readable name for a DMA device type.
+
 ### bdev_aio
 
 Disabled `RWF_NOWAIT` default flag usage - user needs to explicitly request to enable it using

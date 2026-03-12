@@ -465,6 +465,14 @@ struct spdk_memory_domain *spdk_memory_domain_get_next(struct spdk_memory_domain
  */
 struct spdk_memory_domain *spdk_memory_domain_get_system_domain(void);
 
+/**
+ * Get a name string for a given DMA device type.
+ *
+ * \param type DMA device type
+ * \return string representing name for the DMA device type
+ */
+const char *spdk_dma_device_type_get_name(enum spdk_dma_device_type type);
+
 #ifdef __cplusplus
 }
 #endif
