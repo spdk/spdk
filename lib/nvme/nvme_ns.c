@@ -186,7 +186,7 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_nvm_ns_data *nsdata_nvm;
 	int rc;
 
-	nvme_ns_free_zns_specific_data(ns);
+	nvme_ns_free_nvm_specific_data(ns);
 
 	nsdata_nvm = spdk_zmalloc(sizeof(*nsdata_nvm), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				  SPDK_MALLOC_SHARE);
