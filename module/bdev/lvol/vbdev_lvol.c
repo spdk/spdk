@@ -1083,6 +1083,29 @@ vbdev_lvol_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, in
 	return base_cnt + esnap_cnt;
 }
 
+/* TODO: when get_memory_domains() logic is removed, fix get_memory_domain_types() here
+ * to only report the types supported by both the base bdev and its esnap parent (if it
+ * exists).
+ */
+static int
+vbdev_lvol_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types, uint32_t array_size)
+{
+	struct spdk_memory_domain *domains[16] = {};
+	uint32_t i;
+	int rc;
+
+	rc = vbdev_lvol_get_memory_domains(ctx, domains, SPDK_COUNTOF(domains));
+	if (rc <= 0) {
+		return rc;
+	}
+
+	for (i = 0; i < spdk_min((uint32_t)rc, array_size); i++) {
+		types[i] = spdk_memory_domain_get_dma_device_type(domains[i]);
+	}
+
+	return rc;
+}
+
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.destruct		= vbdev_lvol_unregister,
 	.io_type_supported	= vbdev_lvol_io_type_supported,
@@ -1091,6 +1114,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.dump_info_json		= vbdev_lvol_dump_info_json,
 	.write_config_json	= vbdev_lvol_write_config_json,
 	.get_memory_domains	= vbdev_lvol_get_memory_domains,
+	.get_memory_domain_types = vbdev_lvol_get_memory_domain_types,
 };
 
 static void

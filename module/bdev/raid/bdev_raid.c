@@ -1256,6 +1256,28 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	return domains_count;
 }
 
+/* TODO: when get_memory_domains() logic is removed, fix get_memory_domain_types() here
+ * to only report the types supported by all of the raid volume's base bdevs.
+ */
+static int
+raid_bdev_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types, uint32_t array_size)
+{
+	struct spdk_memory_domain *domains[16] = {};
+	uint32_t i;
+	int rc;
+
+	rc = raid_bdev_get_memory_domains(ctx, domains, SPDK_COUNTOF(domains));
+	if (rc <= 0) {
+		return rc;
+	}
+
+	for (i = 0; i < spdk_min((uint32_t)rc, array_size); i++) {
+		types[i] = spdk_memory_domain_get_dma_device_type(domains[i]);
+	}
+
+	return rc;
+}
+
 /* g_raid_bdev_fn_table is the function table for raid bdev */
 static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 	.destruct		= raid_bdev_destruct,
@@ -1265,6 +1287,7 @@ static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 	.dump_info_json		= raid_bdev_dump_info_json,
 	.write_config_json	= raid_bdev_write_config_json,
 	.get_memory_domains	= raid_bdev_get_memory_domains,
+	.get_memory_domain_types = raid_bdev_get_memory_domain_types,
 };
 
 struct raid_bdev *

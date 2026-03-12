@@ -179,6 +179,10 @@ DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_i
 		struct spdk_bdev_io_wait_entry *entry), 0);
 DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
 		struct spdk_memory_domain **domains,	int array_size), 0);
+DEFINE_STUB(spdk_bdev_get_memory_domain_types, int, (struct spdk_bdev *bdev,
+		enum spdk_dma_device_type *types, uint32_t array_size), 0);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *domain), SPDK_DMA_DEVICE_TYPE_RDMA);
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), MD_SIZE);
 DEFINE_STUB(spdk_bdev_is_md_interleaved, bool, (const struct spdk_bdev *bdev), false);

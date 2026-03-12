@@ -142,7 +142,7 @@ DEPDIRS-bdev_ftl := $(BDEV_DEPS) ftl
 endif
 DEPDIRS-bdev_gpt := bdev json log thread util
 
-DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
+DEPDIRS-bdev_lvol := $(BDEV_DEPS) dma lvol blob blob_bdev
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
 DEPDIRS-bdev_split := $(BDEV_DEPS)
 
@@ -156,7 +156,7 @@ DEPDIRS-bdev_null := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_nvme = $(BDEV_DEPS_THREAD) accel dma keyring nvme trace
 DEPDIRS-bdev_ocf := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_THREAD)
-DEPDIRS-bdev_raid := $(BDEV_DEPS_THREAD) trace
+DEPDIRS-bdev_raid := $(BDEV_DEPS_THREAD) dma trace
 ifeq ($(CONFIG_RAID5F),y)
 DEPDIRS-bdev_raid += accel
 endif

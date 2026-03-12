@@ -46,6 +46,10 @@ DEFINE_STUB_V(spdk_lvs_grow_live, (struct spdk_lvol_store *lvs,
 				   spdk_lvs_op_complete cb_fn, void *cb_arg));
 DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
 		struct spdk_memory_domain **domains, int array_size), 0);
+DEFINE_STUB(spdk_bdev_get_memory_domain_types, int, (struct spdk_bdev *bdev,
+		enum spdk_dma_device_type *types, uint32_t array_size), 0);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *domain), SPDK_DMA_DEVICE_TYPE_RDMA);
 DEFINE_STUB(spdk_blob_get_esnap_id, int,
 	    (struct spdk_blob *blob, const void **id, size_t *len), -ENOTSUP);
 DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), false);
