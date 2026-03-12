@@ -234,6 +234,7 @@ struct rpc_bdev_nvme_attach_controller {
 	uint32_t max_bdevs;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_attach_controller */
 static void
 free_rpc_bdev_nvme_attach_controller_ctx_tmp(struct rpc_bdev_nvme_attach_controller *req)
 {
@@ -334,6 +335,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 
 #define DEFAULT_MAX_BDEVS_PER_RPC 128
 
+/* TODO: replace with rpc_bdev_nvme_attach_controller_ctx */
 struct rpc_bdev_nvme_attach_controller_ctx_tmp {
 	struct rpc_bdev_nvme_attach_controller req;
 	size_t bdev_count;
@@ -341,6 +343,7 @@ struct rpc_bdev_nvme_attach_controller_ctx_tmp {
 	struct spdk_jsonrpc_request *request;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_attach_controller */
 static void
 free_rpc_bdev_nvme_attach_controller_ctx(struct rpc_bdev_nvme_attach_controller_ctx_tmp *ctx)
 {
@@ -1575,6 +1578,7 @@ struct rpc_bdev_nvme_start_discovery {
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_start_discovery */
 static void
 free_rpc_bdev_nvme_start_discovery_tmp(struct rpc_bdev_nvme_start_discovery *req)
 {
@@ -1600,6 +1604,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_start_discovery_decod
 	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 };
 
+/* TODO: replace with rpc_bdev_nvme_start_discovery_ctx */
 struct rpc_bdev_nvme_start_discovery_ctx_tmp {
 	struct rpc_bdev_nvme_start_discovery req;
 	struct spdk_jsonrpc_request *request;
@@ -1805,6 +1810,7 @@ struct rpc_add_error_injection {
 	uint8_t sc;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_add_error_injection */
 static void
 free_rpc_bdev_nvme_add_error_injection_tmp(struct rpc_add_error_injection *req)
 {
@@ -1839,6 +1845,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_add_error_injection_d
 	{ "sc", offsetof(struct rpc_add_error_injection, sc), spdk_json_decode_uint8, true},
 };
 
+/* TODO: replace with rpc_bdev_nvme_add_error_injection_ctx */
 struct rpc_add_error_injection_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct rpc_add_error_injection rpc;
@@ -1946,6 +1953,7 @@ struct rpc_remove_error_injection {
 	uint8_t opc;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_remove_error_injection */
 static void
 free_rpc_bdev_nvme_remove_error_injection_tmp(struct rpc_remove_error_injection *req)
 {
@@ -1958,6 +1966,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_remove_error_injectio
 	{ "opc", offsetof(struct rpc_remove_error_injection, opc), spdk_json_decode_uint8 },
 };
 
+/* TODO: replace with rpc_bdev_nvme_remove_error_injection_ctx */
 struct rpc_remove_error_injection_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct rpc_remove_error_injection rpc;
@@ -2210,6 +2219,7 @@ struct rpc_set_multipath_policy {
 	uint32_t rr_min_io;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_set_multipath_policy */
 static void
 free_rpc_bdev_nvme_set_multipath_policy_tmp(struct rpc_set_multipath_policy *req)
 {
@@ -2257,6 +2267,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_set_multipath_policy_
 	{"rr_min_io", offsetof(struct rpc_set_multipath_policy, rr_min_io), spdk_json_decode_uint32, true},
 };
 
+/* TODO: replace with rpc_bdev_nvme_set_multipath_policy_ctx */
 struct rpc_set_multipath_policy_ctx {
 	struct rpc_set_multipath_policy req;
 	struct spdk_jsonrpc_request *request;
@@ -2338,6 +2349,7 @@ struct rpc_bdev_nvme_start_mdns_discovery {
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 };
 
+/* TODO: replace with free_rpc_bdev_nvme_start_mdns_discovery */
 static void
 free_rpc_bdev_nvme_start_mdns_discovery_tmp(struct rpc_bdev_nvme_start_mdns_discovery *req)
 {
@@ -2352,6 +2364,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_start_mdns_discovery_
 	{"hostnqn", offsetof(struct rpc_bdev_nvme_start_mdns_discovery, hostnqn), spdk_json_decode_string, true},
 };
 
+/* TODO: replace with rpc_bdev_nvme_start_mdns_discovery_ctx */
 struct rpc_bdev_nvme_start_mdns_discovery_ctx_tmp {
 	struct rpc_bdev_nvme_start_mdns_discovery req;
 	struct spdk_jsonrpc_request *request;

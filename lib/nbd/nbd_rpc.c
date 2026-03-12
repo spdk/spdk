@@ -24,6 +24,7 @@ struct rpc_nbd_start_disk {
 	struct spdk_jsonrpc_request *request;
 };
 
+/* TODO: replace with free_rpc_nbd_start_disk */
 static void
 free_rpc_nbd_start_disk_ctx(struct rpc_nbd_start_disk *req)
 {

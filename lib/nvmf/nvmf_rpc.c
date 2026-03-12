@@ -621,6 +621,7 @@ invalid_custom_response:
 }
 SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
 
+/* TODO: replace with rpc_nvmf_listen_address */
 struct rpc_listen_address {
 	char *trtype;
 	char *adrfam;
@@ -644,6 +645,7 @@ decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 				       SPDK_COUNTOF(rpc_nvmf_listen_address_decoders), req);
 }
 
+/* TODO: replace with free_rpc_nvmf_listen_address */
 static void
 free_rpc_listen_address(struct rpc_listen_address *r)
 {
@@ -1660,6 +1662,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_subsystem_set_ns_ana_group
 	{"tgt_name", offsetof(struct nvmf_rpc_ana_group_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
+/* TODO: replace with free_rpc_nvmf_subsystem_set_ns_ana_group */
 static void
 nvmf_rpc_ana_group_ctx_free(struct nvmf_rpc_ana_group_ctx *ctx)
 {
@@ -1777,6 +1780,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_subsystem_remove_ns_decode
 	{"tgt_name", offsetof(struct nvmf_rpc_remove_ns_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
+/* TODO: replace with free_rpc_nvmf_subsystem_remove_ns */
 static void
 nvmf_rpc_remove_ns_ctx_free(struct nvmf_rpc_remove_ns_ctx *ctx)
 {
@@ -1895,6 +1899,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_ns_add_host_decoders[] = {
 	{"tgt_name", offsetof(struct nvmf_rpc_ns_visible_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
+/* TODO: replace with free_rpc_nvmf_ns_add_host */
 static void
 nvmf_rpc_ns_visible_ctx_free(struct nvmf_rpc_ns_visible_ctx *ctx)
 {
@@ -2641,6 +2646,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses), decode_masked_fuses_array, true},
 };
 
+/* TODO: replace with free_rpc_nvmf_create_transport */
 static void
 nvmf_rpc_create_transport_ctx_free(struct nvmf_rpc_create_transport_ctx *ctx)
 {
@@ -2852,6 +2858,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_get_stats_decoders[] = {
 	{"tgt_name", offsetof(struct rpc_nvmf_get_stats_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
+/* TODO: replace with free_rpc_nvmf_get_stats */
 static void
 free_get_stats_ctx(struct rpc_nvmf_get_stats_ctx *ctx)
 {
@@ -3080,6 +3087,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_query_decoders[] = {
 	{"tgt_name", offsetof(struct rpc_subsystem_query_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
+/* TODO: replace with free_rpc_nvmf_subsystem_get_controllers */
 static void
 free_rpc_subsystem_query_ctx(struct rpc_subsystem_query_ctx *ctx)
 {
