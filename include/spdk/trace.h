@@ -64,7 +64,7 @@ struct spdk_trace_object {
 #define	SPDK_TRACE_THREAD_NAME_LEN 16
 #define SPDK_TRACE_MAX_GROUP_ID  20
 #define SPDK_TRACE_MAX_TPOINT_ID (SPDK_TRACE_MAX_GROUP_ID * 64)
-#define SPDK_TPOINT_ID(group, tpoint)	((group * 64) + tpoint)
+#define SPDK_TPOINT_ID(group, tpoint)	(((group) * 64) + (tpoint))
 
 #define SPDK_TRACE_ARG_TYPE_INT 0
 #define SPDK_TRACE_ARG_TYPE_PTR 1
