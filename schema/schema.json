@@ -3931,7 +3931,6 @@
     },
     {
       "name": "nvmf_subsystem_set_keys",
-      "decoder": "rpc_nvmf_subsystem_add_host_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4043,7 +4042,6 @@
     },
     {
       "name": "nvmf_ns_remove_host",
-      "decoder": "rpc_nvmf_ns_add_host_decoders",
       "params": [
         {
           "name": "nqn",
@@ -5839,7 +5837,6 @@
     },
     {
       "name": "nvmf_stop_mdns_prr",
-      "decoder": "rpc_nvmf_publish_mdns_prr_decoders",
       "params": [
         {
           "name": "tgt_name",
