@@ -12,6 +12,7 @@
 #include "spdk/log.h"
 #include "spdk/config.h"
 #include "spdk/string.h"
+#include "spdk/cpuset.h"
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -285,6 +286,49 @@ x86_cpu_support_iommu(void)
 
 #endif
 
+static char *
+coremask_to_corelist(const char *mask)
+{
+	struct spdk_cpuset cpuset = {};
+	char buf[SPDK_CPUSET_SIZE];
+	int len = 0;
+	uint32_t cpu, start;
+
+	if (spdk_cpuset_parse(&cpuset, mask) != 0) {
+		return NULL;
+	}
+
+	cpu = 0;
+	while (cpu < SPDK_CPUSET_SIZE) {
+		if (!spdk_cpuset_get_cpu(&cpuset, cpu)) {
+			cpu++;
+			continue;
+		}
+		start = cpu;
+		while (cpu + 1 < SPDK_CPUSET_SIZE && spdk_cpuset_get_cpu(&cpuset, cpu + 1)) {
+			cpu++;
+		}
+		if (len > 0) {
+			len += snprintf(buf + len, sizeof(buf) - len, ",");
+		}
+		if (cpu == start) {
+			len += snprintf(buf + len, sizeof(buf) - len, "%u", start);
+		} else {
+			len += snprintf(buf + len, sizeof(buf) - len, "%u-%u", start, cpu);
+		}
+		if ((size_t)len >= sizeof(buf)) {
+			return NULL;
+		}
+		cpu++;
+	}
+
+	if (len == 0) {
+		return NULL;
+	}
+
+	return _sprintf_alloc("%s", buf);
+}
+
 static int
 build_eal_cmdline(const struct spdk_env_opts *opts)
 {
@@ -326,7 +370,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		args = push_arg(args, &argcount, _sprintf_alloc("--lcores=%s", opts->lcore_map));
 	} else if (opts->core_mask[0] == '-') {
 		/*
-		 * Set the coremask:
+		 * Set the core specification:
 		 *
 		 * - if it starts with '-', we presume it's literal EAL arguments such
 		 *   as --lcores.
@@ -334,8 +378,8 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		 * - if it starts with '[', we presume it's a core list to use with the
 		 *   -l option.
 		 *
-		 * - otherwise, it's a CPU mask of the form "0xff.." as expected by the
-		 *   -c option.
+		 * - otherwise, it's a CPU mask of the form "0xff.." which is converted
+		 *   to a core list for the -l option (DPDK deprecated -c in v25.07).
 		 */
 		args = push_arg(args, &argcount, _sprintf_alloc("%s", opts->core_mask));
 	} else if (opts->core_mask[0] == '[') {
@@ -350,7 +394,15 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 		args = push_arg(args, &argcount, l_arg);
 	} else {
-		args = push_arg(args, &argcount, _sprintf_alloc("-c %s", opts->core_mask));
+		char *corelist = coremask_to_corelist(opts->core_mask);
+
+		if (corelist == NULL) {
+			fprintf(stderr, "Invalid core mask '%s'\n", opts->core_mask);
+			free_args(args, argcount);
+			return -1;
+		}
+		args = push_arg(args, &argcount, _sprintf_alloc("-l %s", corelist));
+		free(corelist);
 	}
 
 	if (args == NULL) {
