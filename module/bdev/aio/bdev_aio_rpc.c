@@ -10,18 +10,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-struct rpc_construct_aio_ctx {
-	struct rpc_bdev_aio_create_ctx req;
-	struct spdk_jsonrpc_request *request;
-};
-
-static void
-free_rpc_bdev_aio_create_ctx(struct rpc_construct_aio_ctx *ctx)
-{
-	free_rpc_bdev_aio_create(&ctx->req);
-	free(ctx);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_aio_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_aio_create_ctx, name), spdk_json_decode_string},
 	{"filename", offsetof(struct rpc_bdev_aio_create_ctx, filename), spdk_json_decode_string},
@@ -35,21 +23,21 @@ static const struct spdk_json_object_decoder rpc_bdev_aio_create_decoders[] = {
 static void
 rpc_bdev_aio_create_cb(void *cb_arg)
 {
-	struct rpc_construct_aio_ctx *ctx = cb_arg;
-	struct spdk_jsonrpc_request *request = ctx->request;
+	struct rpc_bdev_aio_create_ctx *ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_string(w, ctx->req.name);
-	spdk_jsonrpc_end_result(request, w);
-	free_rpc_bdev_aio_create_ctx(ctx);
+	w = spdk_jsonrpc_begin_result(ctx->request);
+	spdk_json_write_string(w, ctx->name);
+	spdk_jsonrpc_end_result(ctx->request, w);
+	free_rpc_bdev_aio_create(ctx);
+	free(ctx);
 }
 
 static void
 rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_construct_aio_ctx *ctx;
+	struct rpc_bdev_aio_create_ctx *ctx;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -60,20 +48,22 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_bdev_aio_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_aio_create_decoders),
-				    &ctx->req)) {
+				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		free_rpc_bdev_aio_create_ctx(ctx);
+		free_rpc_bdev_aio_create(ctx);
+		free(ctx);
 		return;
 	}
 
 	ctx->request = request;
-	rc = create_aio_bdev(ctx->req.name, ctx->req.filename, ctx->req.block_size,
-			     ctx->req.readonly, ctx->req.fallocate, &ctx->req.uuid, ctx->req.nowait);
+	rc = create_aio_bdev(ctx->name, ctx->filename, ctx->block_size,
+			     ctx->readonly, ctx->fallocate, &ctx->uuid, ctx->nowait);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free_rpc_bdev_aio_create_ctx(ctx);
+		free_rpc_bdev_aio_create(ctx);
+		free(ctx);
 		return;
 	}
 

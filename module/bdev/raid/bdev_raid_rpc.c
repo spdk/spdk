@@ -313,12 +313,6 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_raid_delete_ctx, name), spdk_json_decode_string},
 };
 
-/* TODO: replace with rpc_bdev_raid_delete_ctx */
-struct rpc_bdev_raid_delete_ctx_tmp {
-	struct rpc_bdev_raid_delete_ctx req;
-	struct spdk_jsonrpc_request *request;
-};
-
 /*
  * brief:
  * params:
@@ -330,20 +324,19 @@ struct rpc_bdev_raid_delete_ctx_tmp {
 static void
 bdev_raid_delete_done(void *cb_arg, int rc)
 {
-	struct rpc_bdev_raid_delete_ctx_tmp *ctx = cb_arg;
-	struct spdk_jsonrpc_request *request = ctx->request;
+	struct rpc_bdev_raid_delete_ctx *ctx = cb_arg;
 
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to delete raid bdev %s (%d): %s\n",
-			    ctx->req.name, rc, spdk_strerror(-rc));
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+			    ctx->name, rc, spdk_strerror(-rc));
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
 		goto exit;
 	}
 
-	spdk_jsonrpc_send_bool_response(request, true);
+	spdk_jsonrpc_send_bool_response(ctx->request, true);
 exit:
-	free_rpc_bdev_raid_delete(&ctx->req);
+	free_rpc_bdev_raid_delete(ctx);
 	free(ctx);
 }
 
@@ -362,7 +355,7 @@ static void
 rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_raid_delete_ctx_tmp *ctx;
+	struct rpc_bdev_raid_delete_ctx *ctx;
 	struct raid_bdev *raid_bdev;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -373,17 +366,17 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_delete_decoders),
-				    &ctx->req)) {
+				    ctx)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	raid_bdev = raid_bdev_find_by_name(ctx->req.name);
+	raid_bdev = raid_bdev_find_by_name(ctx->name);
 	if (raid_bdev == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV,
 						     "raid bdev %s not found",
-						     ctx->req.name);
+						     ctx->name);
 		goto cleanup;
 	}
 
@@ -394,7 +387,7 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_raid_delete(&ctx->req);
+	free_rpc_bdev_raid_delete(ctx);
 	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)

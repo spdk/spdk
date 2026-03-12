@@ -586,22 +586,17 @@ static const struct spdk_json_object_decoder rpc_iscsi_delete_target_node_decode
 	{"name", offsetof(struct rpc_iscsi_delete_target_node_ctx, name), spdk_json_decode_string},
 };
 
-struct iscsi_delete_target_node_ctx {
-	struct rpc_iscsi_delete_target_node_ctx req;
-	struct spdk_jsonrpc_request *request;
-};
-
 static void
 rpc_iscsi_delete_target_node_done(void *cb_arg, int rc)
 {
-	struct iscsi_delete_target_node_ctx *ctx = cb_arg;
+	struct rpc_iscsi_delete_target_node_ctx *ctx = cb_arg;
 
-	free_rpc_iscsi_delete_target_node(&ctx->req);
 	if (rc == 0) {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	} else {
 		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
 	}
+	free_rpc_iscsi_delete_target_node(ctx);
 	free(ctx);
 }
 
@@ -609,7 +604,7 @@ static void
 rpc_iscsi_delete_target_node(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
-	struct iscsi_delete_target_node_ctx *ctx;
+	struct rpc_iscsi_delete_target_node_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -620,25 +615,25 @@ rpc_iscsi_delete_target_node(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_iscsi_delete_target_node_decoders,
 				    SPDK_COUNTOF(rpc_iscsi_delete_target_node_decoders),
-				    &ctx->req)) {
+				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	if (ctx->req.name == NULL) {
+	if (ctx->name == NULL) {
 		SPDK_ERRLOG("missing name param\n");
 		goto invalid;
 	}
 
 	ctx->request = request;
 
-	iscsi_shutdown_tgt_node_by_name(ctx->req.name,
+	iscsi_shutdown_tgt_node_by_name(ctx->name,
 					rpc_iscsi_delete_target_node_done, ctx);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_iscsi_delete_target_node(&ctx->req);
+	free_rpc_iscsi_delete_target_node(ctx);
 	free(ctx);
 }
 SPDK_RPC_REGISTER("iscsi_delete_target_node", rpc_iscsi_delete_target_node, SPDK_RPC_RUNTIME)

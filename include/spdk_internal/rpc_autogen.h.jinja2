@@ -43,6 +43,7 @@ struct rpc_{{ method.name }}_ctx {
     {%- for param in method.params %}
 	{{ "struct    rpc_"+param.class+" " if "class" in param else types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
 	{%- endfor %}
+	struct spdk_jsonrpc_request *request;
 };
 
 static inline void
