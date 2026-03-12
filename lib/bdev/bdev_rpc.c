@@ -671,7 +671,7 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	struct spdk_json_write_ctx *w = ctx;
 	struct spdk_bdev_alias *tmp;
 	uint64_t qos_limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
-	struct spdk_memory_domain **domains;
+	enum spdk_dma_device_type types[16];
 	enum spdk_bdev_io_type io_type;
 	const char *name = NULL;
 	int i, rc;
@@ -752,29 +752,20 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	}
 	spdk_json_write_object_end(w);
 
-	rc = spdk_bdev_get_memory_domains(bdev, NULL, 0);
+	rc = spdk_bdev_get_memory_domain_types(bdev, types, SPDK_COUNTOF(types));
 	if (rc > 0) {
-		domains = calloc(rc, sizeof(struct spdk_memory_domain *));
-		if (domains) {
-			i = spdk_bdev_get_memory_domains(bdev, domains, rc);
-			if (i == rc) {
-				spdk_json_write_named_array_begin(w, "memory_domains");
-				for (i = 0; i < rc; i++) {
-					spdk_json_write_object_begin(w);
-					spdk_json_write_named_string(w, "dma_device_id", spdk_memory_domain_get_dma_device_id(domains[i]));
-					spdk_json_write_named_int32(w, "dma_device_type",
-								    spdk_memory_domain_get_dma_device_type(domains[i]));
-					spdk_json_write_object_end(w);
-				}
-				spdk_json_write_array_end(w);
-			} else {
-				SPDK_ERRLOG("Unexpected number of memory domains %d (should be %d)\n", i, rc);
-			}
-
-			free(domains);
-		} else {
-			SPDK_ERRLOG("Memory allocation failed\n");
+		if (rc > (int)SPDK_COUNTOF(types)) {
+			SPDK_ERRLOG("Unexpected high number (%d) of memory domain types, listing only "
+				    "first %d.\n", rc, (int)SPDK_COUNTOF(types));
 		}
+		spdk_json_write_named_array_begin(w, "memory_domains");
+		for (i = 0; i < spdk_min(rc, (int)SPDK_COUNTOF(types)); i++) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "dma_device_type",
+						     spdk_dma_device_type_get_name(types[i]));
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
 	}
 
 	spdk_json_write_named_object_begin(w, "driver_specific");
