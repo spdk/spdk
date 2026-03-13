@@ -8335,6 +8335,241 @@ test_set_nvm_limits(void)
 	g_ut_cap_register.raw = 0;
 }
 
+static void
+ut_detach_ctrlr_on_failure(struct spdk_nvme_ctrlr *ctrlr)
+{
+	TAILQ_REMOVE(&g_ut_init_ctrlrs, ctrlr, tailq);
+	free(ctrlr->ns);
+	free(ctrlr);
+}
+
+#define UT_ATTACHED_NAMES_MAX 32
+
+static void
+test_multipath_opts_mismatch(void)
+{
+	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
+	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};
+	struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr;
+	const char *attached_names[UT_ATTACHED_NAMES_MAX] = {};
+	int rc;
+
+	set_thread(0);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
+	bdev_opts.multipath_selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
+	bdev_opts.multipath_min_io = 4;
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	nbdev_ctrlr = spdk_bdev_nvme_first_bdev_ctrlr();
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	g_ut_attach_ctrlr_status = -EINVAL;
+	bdev_opts.multipath_min_io = 8;
+	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	/* Verify second controller was NOT added due to mismatch */
+	CU_ASSERT(spdk_bdev_nvme_next_bdev_ctrlr(nbdev_ctrlr) == NULL);
+
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	ut_complete_async_delete();
+	CU_ASSERT(spdk_bdev_nvme_first_bdev_ctrlr() == NULL);
+
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE;
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	nbdev_ctrlr = spdk_bdev_nvme_first_bdev_ctrlr();
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	g_ut_attach_ctrlr_status = -EINVAL;
+	bdev_opts.multipath_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
+	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	/* Verify second controller was NOT added due to mismatch */
+	CU_ASSERT(spdk_bdev_nvme_next_bdev_ctrlr(nbdev_ctrlr) == NULL);
+
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	ut_complete_async_delete();
+	CU_ASSERT(spdk_bdev_nvme_first_bdev_ctrlr() == NULL);
+}
+
+static void
+test_multipath_opts_validation(void)
+{
+	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
+	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};
+	struct spdk_nvme_ctrlr *ctrlr;
+	const char *attached_names[UT_ATTACHED_NAMES_MAX] = {};
+	int rc;
+
+	set_thread(0);
+	ut_init_trid(&path.trid);
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	/* min_io = 0 with round_robin is invalid */
+	bdev_opts.multipath_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
+	bdev_opts.multipath_selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
+	bdev_opts.multipath_min_io = 0;
+
+	ctrlr = ut_attach_ctrlr(&path.trid, 0, false, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == -EINVAL);
+	ut_detach_ctrlr_on_failure(ctrlr);
+
+	/* Invalid policy value */
+	bdev_opts.multipath_policy = 99;
+	bdev_opts.multipath_min_io = UINT32_MAX;
+
+	ctrlr = ut_attach_ctrlr(&path.trid, 0, false, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == -EINVAL);
+	ut_detach_ctrlr_on_failure(ctrlr);
+
+	/* Invalid selector value */
+	bdev_opts.multipath_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
+	bdev_opts.multipath_selector = 99;
+
+	ctrlr = ut_attach_ctrlr(&path.trid, 0, false, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	rc = spdk_bdev_nvme_create(&path.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == -EINVAL);
+	ut_detach_ctrlr_on_failure(ctrlr);
+}
+
+static void
+test_bdev_nvme_ctrlr_iterators(void)
+{
+	struct spdk_nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};
+	struct spdk_bdev_nvme_ctrlr *nbdev_ctrlr;
+	const struct spdk_bdev_nvme_ctrlr_opts *bdev_opts_ptr;
+	const char *attached_names[UT_ATTACHED_NAMES_MAX] = {};
+	int nbdev_ctrlr_count = 0, ctrlr_count = 0;
+	int rc;
+
+	set_thread(0);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	ut_init_trid3(&path3.trid);
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath_policy = SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE;
+	bdev_opts.multipath_selector = SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN;
+	bdev_opts.multipath_min_io = 8;
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	/* Create group "nvme0" with 2 controllers (path1, path2) */
+	ctrlr = ut_attach_ctrlr(&path1.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	ctrlr = ut_attach_ctrlr(&path2.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	/* Create group "nvme1" with 1 controller (path3) */
+	ctrlr = ut_attach_ctrlr(&path3.trid, 0, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	rc = spdk_bdev_nvme_create(&path3.trid, "nvme1", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	for (nbdev_ctrlr = spdk_bdev_nvme_first_bdev_ctrlr();
+	     nbdev_ctrlr != NULL;
+	     nbdev_ctrlr = spdk_bdev_nvme_next_bdev_ctrlr(nbdev_ctrlr)) {
+		nbdev_ctrlr_count++;
+
+		for (ctrlr = spdk_bdev_nvme_ctrlr_first_ctrlr(nbdev_ctrlr);
+		     ctrlr != NULL;
+		     ctrlr = spdk_bdev_nvme_ctrlr_next_ctrlr(nbdev_ctrlr, ctrlr)) {
+			ctrlr_count++;
+			bdev_opts_ptr = spdk_bdev_nvme_ctrlr_get_opts(nbdev_ctrlr, ctrlr);
+			SPDK_CU_ASSERT_FATAL(bdev_opts_ptr != NULL);
+			CU_ASSERT(bdev_opts_ptr->multipath_policy == bdev_opts.multipath_policy);
+			CU_ASSERT(bdev_opts_ptr->multipath_selector == bdev_opts.multipath_selector);
+			CU_ASSERT(bdev_opts_ptr->multipath_min_io == bdev_opts.multipath_min_io);
+		}
+
+		bdev_opts_ptr = spdk_bdev_nvme_ctrlr_get_opts(nbdev_ctrlr, NULL);
+		SPDK_CU_ASSERT_FATAL(bdev_opts_ptr != NULL);
+		CU_ASSERT(bdev_opts_ptr->multipath_policy == bdev_opts.multipath_policy);
+		CU_ASSERT(bdev_opts_ptr->multipath_selector == bdev_opts.multipath_selector);
+		CU_ASSERT(bdev_opts_ptr->multipath_min_io == bdev_opts.multipath_min_io);
+	}
+	CU_ASSERT(ctrlr_count == 3);
+	CU_ASSERT(nbdev_ctrlr_count == 2);
+
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_nvme_delete("nvme1", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	ut_complete_async_delete();
+	CU_ASSERT(spdk_bdev_nvme_first_bdev_ctrlr() == NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8401,6 +8636,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_race_between_clear_pending_resets_and_reset_ctrlr_complete);
 	CU_ADD_TEST(suite, test_race_between_ctrlr_loss_timeout_and_pending_failover);
 	CU_ADD_TEST(suite, test_set_nvm_limits);
+	CU_ADD_TEST(suite, test_multipath_opts_mismatch);
+	CU_ADD_TEST(suite, test_multipath_opts_validation);
+	CU_ADD_TEST(suite, test_bdev_nvme_ctrlr_iterators);
 
 	allocate_threads(3);
 	set_thread(0);
