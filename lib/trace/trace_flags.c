@@ -368,9 +368,9 @@ spdk_trace_unregister_owner(uint16_t owner_id)
 		return;
 	}
 
-	if (owner_id == 0) {
-		/* owner_id 0 means no owner. Allow this to be passed here, it
-		 * avoids caller having to do extra checking.
+	if (owner_id == OWNER_ID_NONE) {
+		/* Allow this to be passed here, it avoids caller having
+		 * to do extra checking.
 		 */
 		return;
 	}
@@ -408,9 +408,9 @@ spdk_trace_owner_append_description(uint16_t owner_id, const char *description)
 		return;
 	}
 
-	if (owner_id == 0) {
-		/* owner_id 0 means no owner. Allow this to be passed here, it
-		 * avoids caller having to do extra checking.
+	if (owner_id == OWNER_ID_NONE) {
+		/* Allow this to be passed here, it avoids caller having
+		 * to do extra checking.
 		 */
 		return;
 	}

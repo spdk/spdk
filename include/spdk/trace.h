@@ -334,6 +334,7 @@ void spdk_trace_cleanup(void);
  */
 void spdk_trace_clear(void);
 
+#define OWNER_ID_NONE 0
 #define OWNER_TYPE_NONE 0
 #define OBJECT_NONE 0
 
