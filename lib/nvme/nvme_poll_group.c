@@ -241,8 +241,23 @@ static int
 nvme_qpair_process_completion_wrapper(void *arg)
 {
 	struct spdk_nvme_qpair *qpair = arg;
+	int total = 0;
+	int rc;
 
-	return spdk_nvme_qpair_process_completions(qpair, 0);
+	/*
+	 * In interrupt mode, the eventfd is cleared before calling this function.
+	 * We must loop to drain all completions, because the underlying transport
+	 * (e.g. PCIe) may cap the number of completions processed per call.
+	 * If we leave items in the CQ, we may not get another event.
+	 */
+	do {
+		rc = spdk_nvme_qpair_process_completions(qpair, 0);
+		if (rc > 0) {
+			total += rc;
+		}
+	} while (rc > 0);
+
+	return total;
 }
 
 static int
