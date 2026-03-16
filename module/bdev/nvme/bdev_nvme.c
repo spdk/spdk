@@ -7035,14 +7035,14 @@ nvme_path_id_compare(struct spdk_nvme_path_id *p, const struct spdk_nvme_path_id
 		}
 	}
 
-	if (!spdk_mem_all_zero(path_id->trid.traddr, sizeof(path_id->trid.traddr))) {
-		if (strcasecmp(path_id->trid.traddr, p->trid.traddr) != 0) {
+	if (path_id->trid.adrfam != SPDK_NVMF_ADRFAM_NOT_SPECIFIED) {
+		if (path_id->trid.adrfam != p->trid.adrfam) {
 			return false;
 		}
 	}
 
-	if (path_id->trid.adrfam != SPDK_NVMF_ADRFAM_NOT_SPECIFIED) {
-		if (path_id->trid.adrfam != p->trid.adrfam) {
+	if (!spdk_mem_all_zero(path_id->trid.traddr, sizeof(path_id->trid.traddr))) {
+		if (strcasecmp(path_id->trid.traddr, p->trid.traddr) != 0) {
 			return false;
 		}
 	}
