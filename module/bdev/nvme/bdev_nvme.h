@@ -75,6 +75,30 @@ struct spdk_nvme_path_id {
 typedef void (*bdev_nvme_ctrlr_op_cb)(void *cb_arg, int rc);
 typedef void (*nvme_ctrlr_disconnected_cb)(struct nvme_ctrlr *nvme_ctrlr);
 
+/**
+ * Threading model for nvme_ctrlr
+ *
+ * All flags are MODIFIED exclusively on the app thread.
+ *
+ * Flags read ONLY on the app thread (no synchronization needed):
+ *   in_failover, pending_failover, io_path_cache_clearing
+ *
+ * Flags read on IO threads as best-effort informational checks
+ * (via nvme_ctrlr_is_available, nvme_ctrlr_is_failed, and direct reads):
+ *   resetting, reconnect_is_delayed, fast_io_fail_timedout,
+ *   destruct, ana_log_page_updating, dont_retry, disabled
+ *
+ * Stale reads are harmless - the IO path handles unavailable controllers
+ * gracefully. The worst outcome of an IO thread seeing an outdated value
+ * is a single extra IO attempt that fails and enters the normal error
+ * handling path. The system converges to correct behavior within one
+ * retry cycle, without any risk of data corruption or undefined behavior.
+ *
+ * Lists are MODIFIED and read exclusively on the app thread:
+ *   namespaces, pending_resets, trids
+ *
+ * Reference counter ref is protected by mutex.
+ */
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -98,7 +122,6 @@ struct nvme_ctrlr {
 
 	struct spdk_bdev_nvme_ctrlr_opts	opts;
 
-	/* This list can only be accessed from the app thread. */
 	RB_HEAD(nvme_ns_tree, nvme_ns)		namespaces;
 
 	struct spdk_opal_dev			*opal_dev;
@@ -123,7 +146,6 @@ struct nvme_ctrlr {
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
 
-	/* This list can only be accessed from the app thread. */
 	TAILQ_HEAD(nvme_paths, spdk_nvme_path_id)	trids;
 
 	uint32_t				max_ana_log_page_size;
@@ -138,7 +160,6 @@ struct nvme_ctrlr {
 	enum spdk_dma_device_type		memory_domain_types[8];
 	uint32_t				num_memory_domain_types;
 
-	/* Used for ref, flags protection. */
 	pthread_mutex_t				mutex;
 };
 
