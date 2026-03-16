@@ -6,7 +6,7 @@
 	url = https://github.com/spdk/intel-ipsec-mb.git
 [submodule "isa-l"]
 	path = isa-l
-	url = https://github.com/spdk/isa-l.git
+	url = https://github.com/intel/isa-l.git
 [submodule "ocf"]
 	path = ocf
 	url = https://github.com/Open-CAS/ocf.git
