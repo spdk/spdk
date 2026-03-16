@@ -207,3 +207,40 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 
 	return 0;
 }
+
+int
+spdk_net_compare_address(int adrfam, const char *addr1, const char *addr2, int *cmp)
+{
+	union {
+		struct in_addr v4;
+		struct in6_addr v6;
+	} in_addr1, in_addr2;
+	size_t addr_len;
+
+	if (addr1 == NULL || addr2 == NULL || cmp == NULL) {
+		SPDK_ERRLOG("Compare parameters cannot be NULL\n");
+		return -EINVAL;
+	}
+
+	switch (adrfam) {
+	case AF_INET:
+		addr_len = sizeof(struct in_addr);
+		break;
+	case AF_INET6:
+		addr_len = sizeof(struct in6_addr);
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported address family: %d\n", adrfam);
+		return -EAFNOSUPPORT;
+	}
+
+	if (inet_pton(adrfam, addr1, &in_addr1) != 1 ||
+	    inet_pton(adrfam, addr2, &in_addr2) != 1) {
+		SPDK_ERRLOG("Invalid IP addresses of family(%d) to "
+			    "compare: %s, %s\n", adrfam, addr1, addr2);
+		return -EINVAL;
+	}
+
+	*cmp = memcmp(&in_addr1, &in_addr2, addr_len);
+	return 0;
+}

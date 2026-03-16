@@ -65,6 +65,26 @@ bool spdk_net_is_loopback(int fd);
 int spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		     char *paddr, int plen, uint16_t *pport);
 
+/**
+ * Compare two IP addresses to check if they are equal, and store the comparison
+ * result in *cmp.
+ *
+ * The comparison result follows the same rule as strcmp, i.e. 0 if addr1 == addr2,
+ * less than 0 if addr1 < addr2, and greater than 0 if addr1 > addr2.
+ *
+ * Note that the result is only valid when this function returns 0. Otherwise, the
+ * content of *cmp will not be touched.
+ *
+ * \param adrfam Address family of the IP addresses, can be AF_INET or AF_INET6.
+ * \param addr1 First IP address.
+ * \param addr2 Second IP address.
+ * \param cmp A pointer to the variable to store the result of the comparison.
+ *
+ * \return 0 on success, and *cmp contains the comparison result, -EAFNOSUPPORT if
+ *         adrfam is not supported, or -EINVAL if the addresses are invalid.
+ */
+int spdk_net_compare_address(int adrfam, const char *addr1, const char *addr2, int *cmp);
+
 #ifdef __cplusplus
 }
 #endif
