@@ -1093,7 +1093,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		adrfam = SPDK_NVMF_ADRFAM_IPV6;
 	} else {
 		SPDK_ERRLOG("Unhandled socket type\n");
-		adrfam = 0;
+		adrfam = SPDK_NVMF_ADRFAM_NOT_SPECIFIED;
 	}
 
 	if (adrfam != trid->adrfam) {

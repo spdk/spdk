@@ -7041,7 +7041,7 @@ nvme_path_id_compare(struct spdk_nvme_path_id *p, const struct spdk_nvme_path_id
 		}
 	}
 
-	if (path_id->trid.adrfam != 0) {
+	if (path_id->trid.adrfam != SPDK_NVMF_ADRFAM_NOT_SPECIFIED) {
 		if (path_id->trid.adrfam != p->trid.adrfam) {
 			return false;
 		}
