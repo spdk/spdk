@@ -783,10 +783,6 @@ int spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const cha
  * order; however, the comparison result is not guaranteed to be consistent across
  * library versions.
  *
- * This function uses a case-insensitive comparison for string fields, but it does
- * not otherwise normalize the transport ID. It is the caller's responsibility to
- * provide the transport IDs in a consistent format.
- *
  * \param trid1 First transport ID to compare.
  * \param trid2 Second transport ID to compare.
  *

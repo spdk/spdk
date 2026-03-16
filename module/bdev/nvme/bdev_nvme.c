@@ -16,6 +16,7 @@
 #include "spdk/json.h"
 #include "spdk/keyring.h"
 #include "spdk/likely.h"
+#include "spdk/net.h"
 #include "spdk/nvme.h"
 #include "spdk/nvme_ocssd.h"
 #include "spdk/nvme_zns.h"
@@ -7023,6 +7024,8 @@ free_bdev_nvme_delete_ctx(struct bdev_nvme_delete_ctx *ctx)
 static bool
 nvme_path_id_compare(struct spdk_nvme_path_id *p, const struct spdk_nvme_path_id *path_id)
 {
+	int cmp;
+
 	if (path_id->trid.trtype != 0) {
 		if (path_id->trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
 			if (strcasecmp(path_id->trid.trstring, p->trid.trstring) != 0) {
@@ -7042,7 +7045,23 @@ nvme_path_id_compare(struct spdk_nvme_path_id *p, const struct spdk_nvme_path_id
 	}
 
 	if (!spdk_mem_all_zero(path_id->trid.traddr, sizeof(path_id->trid.traddr))) {
-		if (strcasecmp(path_id->trid.traddr, p->trid.traddr) != 0) {
+		switch (path_id->trid.adrfam) {
+		case SPDK_NVMF_ADRFAM_IPV4:
+			if (spdk_net_compare_address(AF_INET, path_id->trid.traddr, p->trid.traddr, &cmp) != 0) {
+				return false;
+			}
+			break;
+		case SPDK_NVMF_ADRFAM_IPV6:
+			if (spdk_net_compare_address(AF_INET6, path_id->trid.traddr, p->trid.traddr, &cmp) != 0) {
+				return false;
+			}
+			break;
+		default:
+			cmp = strcasecmp(path_id->trid.traddr, p->trid.traddr);
+			break;
+		}
+
+		if (cmp != 0) {
 			return false;
 		}
 	}

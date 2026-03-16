@@ -7,6 +7,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
+#include "spdk/net.h"
 #include "nvme_internal.h"
 #include "nvme_io_msg.h"
 
@@ -1409,7 +1410,22 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return cmp;
 	}
 
-	cmp = strcasecmp(trid1->traddr, trid2->traddr);
+	switch (trid1->adrfam) {
+	case SPDK_NVMF_ADRFAM_IPV4:
+		if (spdk_net_compare_address(AF_INET, trid1->traddr, trid2->traddr, &cmp) != 0) {
+			return -1;
+		}
+		break;
+	case SPDK_NVMF_ADRFAM_IPV6:
+		if (spdk_net_compare_address(AF_INET6, trid1->traddr, trid2->traddr, &cmp) != 0) {
+			return -1;
+		}
+		break;
+	default:
+		cmp = strcasecmp(trid1->traddr, trid2->traddr);
+		break;
+	}
+
 	if (cmp) {
 		return cmp;
 	}

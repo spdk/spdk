@@ -1066,6 +1066,52 @@ test_trid_parse_and_compare(void)
 					       "priority:2\n"
 					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
 	CU_ASSERT(trid1.priority == 2);
+
+	/* Compare IP addresses via their binary representations instead of as strings */
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
+					       "trtype:tcp\n"
+					       "adrfam:ipv4\n"
+					       "traddr:192.168.100.nvm\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2,
+					       "trtype:tcp\n"
+					       "adrfam:ipv4\n"
+					       "traddr:192.168.100.nvm\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:0123:4567:89ab:cdef:nvme:0098:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:123:4567:89ab:cdef::98:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:0123:4567:89ab:cdef:0000:0098:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:123:4567:89ab:cdef::98:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) == 0);
 }
 
 static void
