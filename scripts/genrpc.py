@@ -113,6 +113,9 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 raise ValueError(f"For method {method['name']}: parameter '{parameter['name']}': 'required' field is mismatched")
             code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
             if 'class' in parameter:
+                if parameter['type'] == 'enum':
+                    # Enum fields use custom decoders — skip type validation
+                    continue
                 if parameter['type'] != 'object':
                     raise ValueError(f"Invalid 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc")
                 f_decoder_name = f"rpc_{parameter['class']}_decoders"
@@ -138,7 +141,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
     types = {'string' : str, 'uint8': int, 'uint16': int, 'int32': int, 'uint32': int, 'uint64': int, 'boolean':bool,
-             'uuid' : str, 'array': str.split}
+             'uuid' : str, 'enum': str, 'array': str.split}
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     _, subparsers = rpc.create_parser()
     schema_methods = set(method["name"] for method in schema['methods'])
@@ -161,7 +164,9 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
         # Those are not part of the schema, just part of the python cli
         p_schema_exceptions = {'help', 'total_size', 'format_lspci'}
         p_cli_exceptions = {'num_blocks'}
-        p_params = [schema_objects[parameter['class']]['fields'] if 'class' in parameter else [parameter] for parameter in method['params']]
+        p_params = [schema_objects[parameter['class']]['fields']
+                    if parameter.get('type') == 'object' else [parameter]
+                    for parameter in method['params']]
         p_params_set = set([p['name'] for sub in p_params for p in sub])
         p_missing_in_cli = p_params_set - set(actions) - p_cli_exceptions
         p_missing_in_schema = set(actions) - p_params_set - p_schema_exceptions

@@ -17,6 +17,16 @@
 extern "C" {
 #endif
 
+/* Enum definitions section */
+
+{% for enum in schema.get("enums", []) %}
+enum rpc_{{ enum.name }} {
+    {%- for val in enum.fields %}
+    RPC_{{ enum.name | upper }}_{{ val.name | upper }} = {{ val.value }},
+    {%- endfor %}
+};
+{% endfor %}
+
 /* Embedded objects section */
 
 {% for object in schema["objects"] %}
@@ -43,6 +53,8 @@ struct rpc_{{ method.name }}_ctx {
     {%- for param in method.params %}
 	{% if param.type == "object" -%}
 		struct    rpc_{{ param.class }} {{ param.name }};
+	{%- elif param.type == "enum" -%}
+		enum      rpc_{{ param.class }} {{ param.name }};
 	{%- else -%}
 		{{ types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
 	{%- endif %}

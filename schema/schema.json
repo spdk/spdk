@@ -1,4 +1,63 @@
 {
+  "enums": [
+    {
+      "name": "bdev_nvme_cmd_type",
+      "fields": [
+        {"name": "admin", "value": 1},
+        {"name": "io", "value": 2}
+      ]
+    },
+    {
+      "name": "bdev_nvme_data_direction",
+      "fields": [
+        {"name": "h2c", "value": 1},
+        {"name": "c2h", "value": 2}
+      ]
+    },
+    {
+      "name": "bdev_nvme_multipath_policy",
+      "fields": [
+        {"name": "active_passive", "value": 0},
+        {"name": "active_active", "value": 1}
+      ]
+    },
+    {
+      "name": "bdev_nvme_multipath_selector",
+      "fields": [
+        {"name": "round_robin", "value": 1},
+        {"name": "queue_depth", "value": 2}
+      ]
+    },
+    {
+      "name": "bdev_error_inject_io_type",
+      "fields": [
+        {"name": "clear", "value": 0},
+        {"name": "read", "value": 1},
+        {"name": "write", "value": 2},
+        {"name": "unmap", "value": 3},
+        {"name": "flush", "value": 4},
+        {"name": "all", "value": 4294967295}
+      ]
+    },
+    {
+      "name": "bdev_error_inject_error_type",
+      "fields": [
+        {"name": "failure", "value": 1},
+        {"name": "pending", "value": 2},
+        {"name": "corrupt_data", "value": 3},
+        {"name": "nomem", "value": 4}
+      ]
+    },
+    {
+      "name": "bdev_reset_stat_mode",
+      "fields": [
+        {"name": "all", "value": 0},
+        {"name": "maxmin", "value": 1},
+        {"name": "error", "value": 2},
+        {"name": "none", "value": 3}
+      ]
+    }
+  ],
   "objects": [
     {
       "name": "iscsi_auth_secret",
@@ -896,7 +955,8 @@
         },
         {
           "name": "reset_mode",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_reset_stat_mode",
           "description": "Mode to reset I/O statistics after obtaining it: all, maxmin, error, none (default: none)"
         }
       ]
@@ -911,7 +971,8 @@
         },
         {
           "name": "mode",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_reset_stat_mode",
           "description": "Mode to reset I/O statistics: all, maxmin, error, none (default: all)"
         }
       ]
@@ -2008,13 +2069,15 @@
         },
         {
           "name": "policy",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_multipath_policy",
           "required": true,
           "description": "Multipath policy: active_active or active_passive"
         },
         {
           "name": "selector",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_multipath_selector",
           "description": "Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin"
         },
         {
@@ -2406,13 +2469,15 @@
         },
         {
           "name": "io_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_error_inject_io_type",
           "required": true,
           "description": "io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'"
         },
         {
           "name": "error_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_error_inject_error_type",
           "required": true,
           "description": "error type 'failure' 'pending' 'corrupt_data' 'nomem'"
         },
@@ -5546,15 +5611,17 @@
         },
         {
           "name": "cmd_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_cmd_type",
           "required": true,
-          "description": "Type of nvme cmd. Valid values are: admin, io"
+          "description": "Type of NVMe command"
         },
         {
           "name": "data_direction",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_data_direction",
           "required": true,
-          "description": "Direction of data transfer. Valid values are: c2h, h2c"
+          "description": "Direction of data transfer"
         },
         {
           "name": "cmdbuf",
@@ -5627,9 +5694,10 @@
         },
         {
           "name": "cmd_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_cmd_type",
           "required": true,
-          "description": "Type of NVMe command. Valid values are: admin, io"
+          "description": "Type of NVMe command"
         },
         {
           "name": "opc",
@@ -5675,9 +5743,10 @@
         },
         {
           "name": "cmd_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_cmd_type",
           "required": true,
-          "description": "Type of NVMe command. Valid values are: admin, io"
+          "description": "Type of NVMe command"
         },
         {
           "name": "opc",
