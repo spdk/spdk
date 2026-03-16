@@ -93,7 +93,7 @@ endif
 all: mk/cc.mk $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f include/spdk/config.h include/spdk/config.h.tmp
-	$(Q)rm -f include/spdk/version.h
+	$(Q)rm -f include/spdk/version.h include/spdk/version.h.tmp
 	$(Q)rm -rf build
 
 install: all
@@ -143,7 +143,9 @@ include/spdk/version.h: include/spdk/version.h.in VERSION
 		s/\$$SPDK_VERSION_MINOR/$(version_minor)/g; \
 		s/\$$SPDK_VERSION_PATCH/$(version_patch)/g; \
 		s/\$$SPDK_VERSION_SUFFIX/$(version_suffix)/g;" \
-		$@.in > $@
+		$@.in > $@.tmp && \
+		{ cmp -s $@.tmp $@ && rm -f $@.tmp || mv $@.tmp $@; } || \
+		{ rm -f $@.tmp; echo "ERROR: Failed to generate $@."; exit 1; }
 
 cc_version: mk/cc.mk
 	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
