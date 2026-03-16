@@ -301,7 +301,7 @@ hugepages() {
 	[[ -n $HUGEPG_SUPPORTED ]] || return 0
 	local hp
 
-	while read -rp "('clear' 'even' 'commit' HUGEMEM[=$HUGEMEM MB])> " hp; do
+	while read -rp "('clear' 'even' 'commit' HUGEMEM[=$HUGEMEM MB] HUGENODE=[$HUGENODE])> " hp; do
 		hp=${hp,,}
 		if [[ -z $hp ]]; then
 			return
@@ -311,6 +311,11 @@ hugepages() {
 		elif [[ $hp =~ ^[1-9][0-9]*$ ]]; then
 			NRHUGE=""
 			HUGEMEM=$hp
+		elif [[ $hp =~ node([0-9]+)=([0-9]+) ]]; then
+			HUGENODE=${BASH_REMATCH[1]}
+			HUGEMEM=${BASH_REMATCH[2]}
+		elif [[ $hp == nodes_hp* ]]; then
+			HUGENODE=$hp
 		elif [[ $hp == commit ]]; then
 			set_hp
 			configure_linux_hugepages
