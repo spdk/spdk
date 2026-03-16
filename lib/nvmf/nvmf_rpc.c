@@ -874,7 +874,10 @@ rpc_listen_address_to_trid(const struct rpc_listen_address *address,
 			SPDK_ERRLOG("Invalid adrfam: %s\n", address->adrfam);
 			return -EINVAL;
 		}
-	} else {
+	} else if (trid->trtype == SPDK_NVME_TRANSPORT_TCP || trid->trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		/**
+		 * For backward compatibility, if adrfam is not specified for TCP or RDMA transport, assume IPv4.
+		 */
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	}
 
