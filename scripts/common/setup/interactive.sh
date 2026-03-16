@@ -58,7 +58,7 @@ main_menu() {
 			c) configure
 			s) status
 			r) reset
-			$([[ $os == Linux ]] && echo "hp) hugepages")
+			$([[ -n $HUGEPG_SUPPORTED ]] && echo "hp) hugepages")
 
 			Q) Quit
 			U) Update Devices View
@@ -298,7 +298,7 @@ status() {
 }
 
 hugepages() {
-	[[ $os == Linux ]] || return 0
+	[[ -n $HUGEPG_SUPPORTED ]] || return 0
 	local hp
 
 	while read -rp "('clear' 'even' 'commit' HUGEMEM[=$HUGEMEM MB])> " hp; do

@@ -532,10 +532,25 @@ clear_hugepages() {
 configure_linux_hugepages() {
 	local node system_nodes
 	local nodes_to_use nodes_hp
+	local hugetlbfs_mounts
+
+	if [[ -z $HUGEPG_SUPPORTED ]]; then
+		# Can't do much with no support, just bail
+		return 0
+	fi
 
 	if [[ $SKIP_HUGE == yes ]]; then
 		# Do nothing as requested
 		return 0
+	fi
+
+	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
+
+	if [[ -z $hugetlbfs_mounts ]]; then
+		local hugetlbfs_mounts=/mnt/huge
+		echo "Mounting hugetlbfs at $hugetlbfs_mounts"
+		mkdir -p "$hugetlbfs_mounts"
+		mount -t hugetlbfs nodev "$hugetlbfs_mounts"
 	fi
 
 	if [[ $CLEAR_HUGE == yes ]]; then
@@ -594,15 +609,6 @@ configure_linux_hugepages() {
 
 function configure_linux() {
 	configure_linux_pci
-	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
-
-	if [ -z "$hugetlbfs_mounts" ]; then
-		hugetlbfs_mounts=/mnt/huge
-		echo "Mounting hugetlbfs at $hugetlbfs_mounts"
-		mkdir -p "$hugetlbfs_mounts"
-		mount -t hugetlbfs nodev "$hugetlbfs_mounts"
-	fi
-
 	configure_linux_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
@@ -671,8 +677,17 @@ function reset_linux() {
 	rm -f /run/.spdk*
 }
 
-function status_linux() {
-	echo "Hugepages" >&2
+function status_linux_hp() {
+	printf 'Hugepages\n'
+
+	if [[ -z $HUGEPG_SUPPORTED ]]; then
+		printf '  NOT SUPPORTED\n'
+		return 0
+	fi
+
+	local numa_nodes node path
+	local free_pages all_pages huge_size
+
 	printf "%-6s %10s %8s / %6s\n" "node" "hugesize" "free" "total" >&2
 
 	numa_nodes=0
@@ -690,14 +705,17 @@ function status_linux() {
 	done
 
 	# fall back to system-wide hugepages
-	if [ "$numa_nodes" = "0" ]; then
-		free_pages=$(grep HugePages_Free /proc/meminfo | awk '{ print $2 }')
-		all_pages=$(grep HugePages_Total /proc/meminfo | awk '{ print $2 }')
-		node="-"
-		huge_size="$HUGEPGSZ"
+	((numa_nodes == 0)) || return 0
+	free_pages=$(grep HugePages_Free /proc/meminfo | awk '{ print $2 }')
+	all_pages=$(grep HugePages_Total /proc/meminfo | awk '{ print $2 }')
+	node="-"
+	huge_size="$HUGEPGSZ"
 
-		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
-	fi
+	printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
+}
+
+function status_linux() {
+	status_linux_hp
 
 	printf '\n%-25s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices" >&2
@@ -893,6 +911,13 @@ function reset_freebsd() {
 }
 
 function set_hp() {
+	if ! grep -q hugetlbfs /proc/filesystems; then
+		echo "Hugepages are not supported by the running kernel" >&2
+		return 0
+	fi
+
+	HUGEPG_SUPPORTED=yes
+
 	if [[ -n $HUGEPGSZ && ! -e /sys/kernel/mm/hugepages/hugepages-${HUGEPGSZ}kB ]]; then
 		echo "${HUGEPGSZ}kB is not supported by the running kernel, ignoring" >&2
 		unset -v HUGEPGSZ
