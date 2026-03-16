@@ -891,40 +891,12 @@ SPDK_RPC_REGISTER("bdev_set_qd_sampling_period",
 		  rpc_bdev_set_qd_sampling_period,
 		  SPDK_RPC_RUNTIME)
 
-/* TODO: replace with rpc_bdev_set_qos_limit_ctx */
-struct rpc_bdev_set_qos_limit {
-	char		*name;
-	uint64_t	limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
-};
-
-static void
-free_rpc_bdev_set_qos_limit_ctx(struct rpc_bdev_set_qos_limit *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_set_qos_limit_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_set_qos_limit, name), spdk_json_decode_string},
-	{
-		"rw_ios_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					   limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
-	{
-		"rw_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					      limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
-	{
-		"r_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					     limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
-	{
-		"w_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					     limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
+	{"name", offsetof(struct rpc_bdev_set_qos_limit_ctx, name), spdk_json_decode_string},
+	{"rw_ios_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, rw_ios_per_sec), spdk_json_decode_uint64, true},
+	{"rw_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, rw_mbytes_per_sec), spdk_json_decode_uint64, true},
+	{"r_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, r_mbytes_per_sec), spdk_json_decode_uint64, true},
+	{"w_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, w_mbytes_per_sec), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -946,7 +918,12 @@ static void
 rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_set_qos_limit req = {NULL, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
+	struct rpc_bdev_set_qos_limit_ctx req = {.rw_ios_per_sec = UINT64_MAX,
+		       .rw_mbytes_per_sec = UINT64_MAX,
+		       .r_mbytes_per_sec = UINT64_MAX,
+		       .w_mbytes_per_sec = UINT64_MAX
+	};
+	uint64_t limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
 	struct spdk_bdev_desc *desc;
 	int i, rc;
 
@@ -966,8 +943,13 @@ rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = req.rw_ios_per_sec;
+	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = req.rw_mbytes_per_sec;
+	limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] = req.r_mbytes_per_sec;
+	limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] = req.w_mbytes_per_sec;
+
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (req.limits[i] != UINT64_MAX) {
+		if (limits[i] != UINT64_MAX) {
 			break;
 		}
 	}
@@ -978,13 +960,13 @@ rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_bdev_set_qos_rate_limits(spdk_bdev_desc_get_bdev(desc), req.limits,
+	spdk_bdev_set_qos_rate_limits(spdk_bdev_desc_get_bdev(desc), limits,
 				      rpc_bdev_set_qos_limit_complete, request);
 
 	spdk_bdev_close(desc);
 
 cleanup:
-	free_rpc_bdev_set_qos_limit_ctx(&req);
+	free_rpc_bdev_set_qos_limit(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_set_qos_limit", rpc_bdev_set_qos_limit, SPDK_RPC_RUNTIME)
