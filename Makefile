@@ -92,7 +92,7 @@ endif
 
 all: mk/cc.mk $(DIRS-y)
 clean: $(DIRS-y)
-	$(Q)rm -f include/spdk/config.h
+	$(Q)rm -f include/spdk/config.h include/spdk/config.h.tmp
 	$(Q)rm -f include/spdk/version.h
 	$(Q)rm -rf build
 
@@ -130,12 +130,12 @@ build_dir: mk/cc.mk
 	$(Q)mkdir -p build/include/spdk
 
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
-	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
-	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
-	scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
-	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp && \
+	echo "#define SPDK_CONFIG_H" >> $@.tmp && \
+	scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp && \
+	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp && \
+	{ cmp -s $@.tmp $@ && rm -f $@.tmp || mv $@.tmp $@; } || \
+	{ rm -f $@.tmp; echo "ERROR: scripts/genconfig.py failed to generate $@."; exit 1; }
 
 include/spdk/version.h: include/spdk/version.h.in VERSION
 	$(Q)sed " \
