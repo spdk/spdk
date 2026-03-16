@@ -48,3 +48,5 @@ scripts/pkgdep/requirements.txt
 .run_test_name
 .spdk-isal.log
 .spdk-isal-crypto.log
+.venv/
+__pycache__/
