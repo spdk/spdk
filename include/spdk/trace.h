@@ -125,6 +125,9 @@ struct spdk_trace_history {
 struct spdk_trace_file {
 	uint64_t			file_size;
 	uint64_t			tsc_rate;
+	/** TSC value set by spdk_trace_clear(); the parser ignores entries older than this. */
+	uint64_t			clear_tsc;
+
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
 	char				tname[SPDK_TRACE_MAX_LCORE][SPDK_TRACE_THREAD_NAME_LEN];
 	struct spdk_trace_owner_type	owner_type[SPDK_TRACE_MAX_OWNER_TYPE];
@@ -134,9 +137,6 @@ struct spdk_trace_file {
 	uint16_t			num_owners;
 	uint16_t			owner_description_size;
 	uint8_t				reserved[4];
-
-	/** TSC value set by spdk_trace_clear(); the parser ignores entries older than this. */
-	uint64_t			clear_tsc;
 
 	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
