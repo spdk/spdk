@@ -505,6 +505,16 @@ spdk_nvmf_set_custom_discovery_filter(spdk_nvmf_custom_discovery_filter filter)
 	g_custom_discovery_filter = filter;
 }
 
+static void
+nvmf_target_opts_copy(struct spdk_nvmf_target_opts *opts,
+		      const struct spdk_nvmf_target_opts *opts_src, size_t opts_size)
+{
+	assert(opts);
+	assert(opts_src);
+
+	memcpy(opts, opts_src, spdk_min(opts_size, sizeof(*opts)));
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 {
@@ -514,7 +524,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
 	};
 
-	memcpy(&opts, _opts, _opts->size);
+	nvmf_target_opts_copy(&opts, _opts, _opts->size);
 	if (strnlen(opts.name, NVMF_TGT_NAME_MAX_LENGTH) == NVMF_TGT_NAME_MAX_LENGTH) {
 		SPDK_ERRLOG("Provided target name exceeds the max length of %u.\n", NVMF_TGT_NAME_MAX_LENGTH);
 		return NULL;

@@ -220,6 +220,34 @@ test_nvmf_tgt_create_poll_group(void)
 	MOCK_CLEAR(spdk_bdev_get_io_channel);
 }
 
+static void
+test_nvmf_target_opts_copy_bounds_size(void)
+{
+	struct {
+		struct spdk_nvmf_target_opts opts;
+		uint32_t canary;
+	} dst = {};
+	struct {
+		struct spdk_nvmf_target_opts opts;
+		uint8_t extra[32];
+	} src = {};
+
+	dst.canary = 0xdeadbeef;
+	src.opts.size = sizeof(src);
+	snprintf(src.opts.name, sizeof(src.opts.name), "%s", "nvmf_target");
+	src.opts.max_subsystems = 17;
+	src.opts.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	memset(src.extra, 0x5a, sizeof(src.extra));
+
+	nvmf_target_opts_copy(&dst.opts, &src.opts, src.opts.size);
+
+	CU_ASSERT(dst.canary == 0xdeadbeef);
+	CU_ASSERT(dst.opts.size == sizeof(src));
+	CU_ASSERT_STRING_EQUAL(dst.opts.name, "nvmf_target");
+	CU_ASSERT(dst.opts.max_subsystems == 17);
+	CU_ASSERT(dst.opts.discovery_filter == SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -231,6 +259,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_nvmf_tgt_create_poll_group);
+	CU_ADD_TEST(suite, test_nvmf_target_opts_copy_bounds_size);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
