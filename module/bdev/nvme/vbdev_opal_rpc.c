@@ -158,6 +158,11 @@ rpc_bdev_opal_create(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 	opal_bdev_name = spdk_sprintf_alloc("%sn%dr%d", req.nvme_ctrlr_name, req.nsid,
 					    req.locking_range_id);
+	if (!opal_bdev_name) {
+		SPDK_ERRLOG("Unable to allocate memory for opal_bdev_name.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		goto out;
+	}
 	spdk_json_write_string(w, opal_bdev_name);
 	spdk_jsonrpc_end_result(request, w);
 	free(opal_bdev_name);
