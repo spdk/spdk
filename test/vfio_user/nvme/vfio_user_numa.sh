@@ -61,4 +61,7 @@ NOT $rpc_py nvmf_subsystem_add_ns "$nqn:cnode_ZERO" Malloc_ANY_2
 [[ "$(get_listener_numa_id "$nqn:cnode_ZERO")" = "0" ]]
 $rpc_py nvmf_subsystem_remove_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ZERO"
 
+# Start listener that requires NUMA node ID unavailable on the system
+NOT $rpc_py nvmf_subsystem_add_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ANY" --numa-id "42"
+
 vhost_kill 0

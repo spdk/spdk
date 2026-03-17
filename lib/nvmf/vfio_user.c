@@ -314,6 +314,7 @@ struct nvmf_vfio_user_poll_group {
 
 	/* Whether this PG needs kicking to wake up again. */
 	bool need_kick;
+	int32_t numa_id;
 };
 
 struct nvmf_vfio_user_shadow_doorbells {
@@ -3600,6 +3601,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint, *tmp;
 	struct nvmf_vfio_user_listen_opts vu_listen_opts = {};
+	struct nvmf_vfio_user_poll_group *vu_group;
 	char path[PATH_MAX] = {};
 	char uuid[PATH_MAX] = {};
 	int ret;
@@ -3635,6 +3637,26 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
 	endpoint->transport = vu_transport;
 	endpoint->numa_id = vu_listen_opts.numa_id;
+
+	/*
+	 * Endpoint cannot require NUMA for which there is no poll group.
+	 */
+	if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY) {
+		pthread_mutex_lock(&vu_transport->pg_lock);
+		TAILQ_FOREACH(vu_group, &vu_transport->poll_groups, link) {
+			if (endpoint->numa_id == vu_group->numa_id) {
+				break;
+			}
+		}
+		pthread_mutex_unlock(&vu_transport->pg_lock);
+
+		if (vu_group == NULL) {
+			ret = -EINVAL;
+			SPDK_ERRLOG("Endpoint %s cannot require numa_id %d, when no poll group is assigned to that numa_id.\n",
+				    endpoint_id(endpoint), endpoint->numa_id);
+			goto out;
+		}
+	}
 
 	ret = snprintf(path, PATH_MAX, "%s/bar0", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
@@ -4022,6 +4044,7 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 	}
 
 	TAILQ_INIT(&vu_group->sqs);
+	vu_group->numa_id = spdk_env_get_numa_id(spdk_env_get_current_core());
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	TAILQ_INSERT_TAIL(&vu_transport->poll_groups, vu_group, link);
@@ -4051,6 +4074,7 @@ static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
+	struct nvmf_vfio_user_endpoint *endpoint;
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
 
@@ -4094,9 +4118,20 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 	}
 
+	endpoint = sq->ctrlr->endpoint;
+
 	/* Select the group with the smallest number of qpairs */
 	TAILQ_FOREACH(vu_group, &vu_transport->poll_groups, link) {
 		group = vu_group->group.group;
+
+		/*
+		 * If endpoint requires specific NUMA node ID, it can be processed only
+		 * by a poll group assigned to that NUMA node ID.
+		 */
+		if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY &&
+		    endpoint->numa_id != vu_group->numa_id) {
+			continue;
+		}
 		if (nvmf_qpair_is_admin_queue(qpair)) {
 			qpair_count = group->stat.current_admin_qpairs;
 		} else {
@@ -5161,6 +5196,7 @@ nvmf_vfio_user_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group
 
 	spdk_json_write_named_uint64(w, "cqh_admin_writes", vu_group->stats.cqh_admin_writes);
 	spdk_json_write_named_uint64(w, "cqh_io_writes", vu_group->stats.cqh_io_writes);
+	spdk_json_write_named_int32(w, "numa_id", vu_group->numa_id);
 }
 
 static void
