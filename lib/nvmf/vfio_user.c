@@ -380,6 +380,7 @@ struct nvmf_vfio_user_endpoint {
 
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_nvmf_subsystem		*subsystem;
+	int32_t					numa_id;
 
 	/* Controller is associated with an active socket connection,
 	 * the lifecycle of the controller is same as the VM.
@@ -3615,6 +3616,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	endpoint->devmem_fd = -1;
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
 	endpoint->transport = vu_transport;
+	endpoint->numa_id = SPDK_ENV_NUMA_ID_ANY;
 
 	ret = snprintf(path, PATH_MAX, "%s/bar0", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
@@ -3769,6 +3771,79 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 			    vu_transport->transport.opts.fuses.fcws;
 }
 
+static int32_t
+nvmf_vfio_user_get_subsystem_numa_id(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+	int32_t result_numa_id = SPDK_ENV_NUMA_ID_ANY;
+	int32_t bdev_numa_id;
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		assert(ns->bdev != NULL);
+
+		bdev_numa_id = spdk_bdev_get_numa_id(ns->bdev);
+
+		/*
+		 * Even one bdev without NUMA assigned,
+		 * marks the endpoint as ANY NUMA node ID.
+		 */
+		if (bdev_numa_id == SPDK_ENV_NUMA_ID_ANY) {
+			return SPDK_ENV_NUMA_ID_ANY;
+		}
+
+		/* First bdev with specific NUMA node ID */
+		if (result_numa_id == SPDK_ENV_NUMA_ID_ANY) {
+			result_numa_id = bdev_numa_id;
+		}
+
+		/*
+		 * Even one bdev with mismatched NUMA assigned,
+		 * marks the endpoint as ANY NUMA node ID.
+		 */
+		if (result_numa_id != bdev_numa_id) {
+			return SPDK_ENV_NUMA_ID_ANY;
+		}
+	}
+
+	return result_numa_id;
+}
+
+static int
+nvmf_vfio_user_subsystem_add_ns(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvmf_subsystem *subsystem,
+				struct spdk_nvmf_ns *ns)
+{
+	struct nvmf_vfio_user_transport *vu_transport;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
+
+	pthread_mutex_lock(&vu_transport->lock);
+	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
+		if (endpoint->subsystem == subsystem) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vu_transport->lock);
+
+	if (endpoint == NULL) {
+		/*
+		 * Listener not yet associated with a subsystem.
+		 * NUMA verification will be done when the subsystem
+		 * is associated via listen_associate.
+		 */
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(nvmf_vfio, "Endpoint %s updated from numa_id %d to %d\n",
+		      endpoint_id(endpoint), endpoint->numa_id,
+		      nvmf_vfio_user_get_subsystem_numa_id(endpoint->subsystem));
+	endpoint->numa_id = nvmf_vfio_user_get_subsystem_numa_id(endpoint->subsystem);
+
+	return 0;
+}
+
 static int
 nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvmf_subsystem *subsystem,
@@ -3793,8 +3868,33 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 
 	/* Drop const - we will later need to pause/unpause. */
 	endpoint->subsystem = (struct spdk_nvmf_subsystem *)subsystem;
+	endpoint->numa_id = nvmf_vfio_user_get_subsystem_numa_id(endpoint->subsystem);
+	SPDK_DEBUGLOG(nvmf_vfio, "Endpoint %s created with numa_id %d\n",
+		      endpoint_id(endpoint), endpoint->numa_id);
 
 	return 0;
+}
+
+static void
+nvmf_vfio_user_listen_dump_opts(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+{
+	struct nvmf_vfio_user_transport *vu_transport;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	assert(w != NULL);
+
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
+
+	pthread_mutex_lock(&vu_transport->lock);
+	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
+		/* Only compare traddr */
+		if (strncmp(endpoint->trid.traddr, trid->traddr, sizeof(endpoint->trid.traddr)) == 0) {
+			spdk_json_write_named_int32(w, "numa_id", endpoint->numa_id);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vu_transport->lock);
 }
 
 /*
@@ -5036,6 +5136,9 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 	.stop_listen = nvmf_vfio_user_stop_listen,
 	.cdata_init = nvmf_vfio_user_cdata_init,
 	.listen_associate = nvmf_vfio_user_listen_associate,
+	.listen_dump_opts = nvmf_vfio_user_listen_dump_opts,
+
+	.subsystem_add_ns = nvmf_vfio_user_subsystem_add_ns,
 
 	.listener_discover = nvmf_vfio_user_discover,
 
