@@ -1617,3 +1617,9 @@ tr.heading h2 {
 .form-inline .has-feedback .form-control-feedback {
 	top: 0;
 }
+
+pre.mermaid {
+	background: none;
+	border: none;
+	text-align: center;
+}

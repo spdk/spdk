@@ -10,6 +10,24 @@
   <script type="text/javascript" src="$relpath^jquery.js"></script>
   <script type="text/javascript" src="$relpath^dynsections.js"></script>
   <script type="text/javascript" src="$relpath^two.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    document.addEventListener('DOMContentLoaded', function() {
+      var kw = /^(stateDiagram|graph\b|flowchart\b|sequenceDiagram|classDiagram|erDiagram|gantt\b|pie\b|gitgraph\b|mindmap\b|timeline\b|sankey\b|xychart\b|block-beta\b|quadrantChart|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment|journey\b)/;
+      document.querySelectorAll('div.fragment').forEach(function(fragment) {
+        var lines = fragment.querySelectorAll('div.line');
+        var text = Array.from(lines).map(function(l) { return l.textContent; }).join('\n');
+        if (kw.test(text.trimStart())) {
+          var pre = document.createElement('pre');
+          pre.className = 'mermaid';
+          pre.textContent = text;
+          fragment.parentNode.replaceChild(pre, fragment);
+        }
+      });
+      mermaid.run();
+    });
+  </script>
 
   $treeview
   $search
