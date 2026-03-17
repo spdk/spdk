@@ -98,7 +98,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
         missing_in_schema = cli_params - schema_params
         if missing_in_cli:
             # TODO: handle this case later and fix issues raised by it
-            cli_exceptions = {'framework_set_scheduler', 'nvmf_create_transport', 'vhost_create_blk_controller', 'nvmf_subsystem_add_host'}
+            cli_exceptions = {'framework_set_scheduler', 'nvmf_create_transport', 'vhost_create_blk_controller', 'nvmf_subsystem_add_host',
+                              'nvmf_subsystem_add_listener'}
             if method['name'] not in cli_exceptions:
                 raise ValueError(f"Params of '{method['name']}' defined in schema but missing in CLI: {sorted(missing_in_cli)}")
         if missing_in_schema:

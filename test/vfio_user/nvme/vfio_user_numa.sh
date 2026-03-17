@@ -36,8 +36,13 @@ $rpc_py bdev_malloc_create 1 512 -n 0 -b Malloc_ZERO
 $rpc_py nvmf_create_subsystem "$nqn:cnode_ZERO" -a -s SPDK0
 $rpc_py nvmf_subsystem_add_ns "$nqn:cnode_ZERO" Malloc_ZERO
 
-# Start listener for a subsystem with ANY NUMA node ID
+# Start listener for a subsystem with implicit ANY NUMA node ID
 $rpc_py nvmf_subsystem_add_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ANY"
+[[ "$(get_listener_numa_id "$nqn:cnode_ANY")" = "-1" ]]
+$rpc_py nvmf_subsystem_remove_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ANY"
+
+# Start listener for a subsystem with explicit ANY NUMA node ID
+$rpc_py nvmf_subsystem_add_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ANY" --numa-id "-1"
 [[ "$(get_listener_numa_id "$nqn:cnode_ANY")" = "-1" ]]
 
 # Add namespace with zero NUMA to subsystem that had ANY NUMA node ID
@@ -47,13 +52,13 @@ $rpc_py nvmf_subsystem_add_ns "$nqn:cnode_ANY" Malloc_ZERO_2
 $rpc_py nvmf_subsystem_remove_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ANY"
 
 # Start listener for a subsystem with zero NUMA node ID
-$rpc_py nvmf_subsystem_add_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ZERO"
+$rpc_py nvmf_subsystem_add_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ZERO" --numa-id "0"
 [[ "$(get_listener_numa_id "$nqn:cnode_ZERO")" = "0" ]]
 
 # Add namespace with ANY NUMA to subsystem that had zero NUMA node ID
 $rpc_py bdev_malloc_create 1 512 -n -1 -b Malloc_ANY_2
-$rpc_py nvmf_subsystem_add_ns "$nqn:cnode_ZERO" Malloc_ANY_2
-[[ "$(get_listener_numa_id "$nqn:cnode_ZERO")" = "-1" ]]
+NOT $rpc_py nvmf_subsystem_add_ns "$nqn:cnode_ZERO" Malloc_ANY_2
+[[ "$(get_listener_numa_id "$nqn:cnode_ZERO")" = "0" ]]
 $rpc_py nvmf_subsystem_remove_listener -t VFIOUSER -a "$vm_muser_dir" -s 0 "$nqn:cnode_ZERO"
 
 vhost_kill 0

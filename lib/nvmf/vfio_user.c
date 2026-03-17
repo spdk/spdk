@@ -3583,6 +3583,16 @@ out:
 	return err;
 }
 
+struct nvmf_vfio_user_listen_opts {
+	int32_t numa_id;
+};
+
+static const struct spdk_json_object_decoder vfio_user_listen_opts_decoder[] = {
+	{
+		"numa_id", offsetof(struct nvmf_vfio_user_listen_opts, numa_id), spdk_json_decode_int32, true
+	},
+};
+
 static int
 nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid,
@@ -3590,6 +3600,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint, *tmp;
+	struct nvmf_vfio_user_listen_opts vu_listen_opts = {};
 	char path[PATH_MAX] = {};
 	char uuid[PATH_MAX] = {};
 	int ret;
@@ -3607,6 +3618,14 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 	pthread_mutex_unlock(&vu_transport->lock);
 
+	vu_listen_opts.numa_id = SPDK_ENV_NUMA_ID_ANY;
+	if (listen_opts->transport_specific != NULL &&
+	    spdk_json_decode_object_relaxed(listen_opts->transport_specific, vfio_user_listen_opts_decoder,
+					    SPDK_COUNTOF(vfio_user_listen_opts_decoder), &vu_listen_opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
+		return -EINVAL;
+	}
+
 	endpoint = calloc(1, sizeof(*endpoint));
 	if (!endpoint) {
 		return -ENOMEM;
@@ -3616,7 +3635,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	endpoint->devmem_fd = -1;
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
 	endpoint->transport = vu_transport;
-	endpoint->numa_id = SPDK_ENV_NUMA_ID_ANY;
+	endpoint->numa_id = vu_listen_opts.numa_id;
 
 	ret = snprintf(path, PATH_MAX, "%s/bar0", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
@@ -3836,10 +3855,16 @@ nvmf_vfio_user_subsystem_add_ns(struct spdk_nvmf_transport *transport,
 		return 0;
 	}
 
-	SPDK_DEBUGLOG(nvmf_vfio, "Endpoint %s updated from numa_id %d to %d\n",
-		      endpoint_id(endpoint), endpoint->numa_id,
-		      nvmf_vfio_user_get_subsystem_numa_id(endpoint->subsystem));
-	endpoint->numa_id = nvmf_vfio_user_get_subsystem_numa_id(endpoint->subsystem);
+	/*
+	 * Endpoint can require specific NUMA node ID, if it does compare it
+	 * with new bdev added to the subsystem.
+	 */
+	if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY &&
+	    endpoint->numa_id != spdk_bdev_get_numa_id(ns->bdev)) {
+		SPDK_ERRLOG("Endpoint %s requires numa_id %d, cannot add bdev with numa_id %d\n",
+			    endpoint_id(endpoint), endpoint->numa_id, spdk_bdev_get_numa_id(ns->bdev));
+		return -EINVAL;
+	}
 
 	return 0;
 }
@@ -3851,6 +3876,7 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint;
+	int32_t subsystem_numa_id;
 
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
 
@@ -3866,9 +3892,21 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 		return -ENOENT;
 	}
 
+	/*
+	 * Endpoint can require specific NUMA node ID, if it does compare it
+	 * with every bdev in subsystem.
+	 */
+	subsystem_numa_id = nvmf_vfio_user_get_subsystem_numa_id((struct spdk_nvmf_subsystem *)subsystem);
+	if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY &&
+	    endpoint->numa_id != subsystem_numa_id) {
+		SPDK_ERRLOG("Endpoint %s requires numa_id %d, cannot add listener for subsystem with numa_id %d\n",
+			    endpoint_id(endpoint), endpoint->numa_id, subsystem_numa_id);
+		return -EINVAL;
+	}
+
 	/* Drop const - we will later need to pause/unpause. */
 	endpoint->subsystem = (struct spdk_nvmf_subsystem *)subsystem;
-	endpoint->numa_id = nvmf_vfio_user_get_subsystem_numa_id(endpoint->subsystem);
+
 	SPDK_DEBUGLOG(nvmf_vfio, "Endpoint %s created with numa_id %d\n",
 		      endpoint_id(endpoint), endpoint->numa_id);
 

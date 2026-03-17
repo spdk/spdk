@@ -197,6 +197,9 @@ def add_parser(subparsers):
     p.add_argument('-k', '--secure-channel', help='Immediately establish a secure channel', action="store_true")
     p.add_argument('-n', '--ana-state', help='ANA state to set: optimized, non_optimized, or inaccessible', type=str)
     p.add_argument('-S', '--sock-impl', help='The socket implementation to use for the listener (ex. posix)', type=str)
+    p.add_argument('--numa-id', type=int,
+                   help='Required NUMA node ID for all namespaces, if -1 then any namespace can be used.'
+                   ' Default is -1. Relevant only for VFIOUSER transport.')
     p.set_defaults(func=nvmf_subsystem_add_listener)
 
     def nvmf_subsystem_remove_listener(args):

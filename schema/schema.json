@@ -3710,6 +3710,12 @@
           "name": "sock_impl",
           "type": "string",
           "description": "The socket implementation to use for the listener"
+        },
+        {
+          "name": "numa_id",
+          "type": "int32",
+          "required": false,
+          "description": "Required NUMA node ID for all namespaces, if -1 then any namespace can be used. Default is -1. Relevant only for VFIOUSER transport."
         }
       ]
     },
