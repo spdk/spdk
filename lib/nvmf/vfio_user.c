@@ -414,7 +414,6 @@ struct nvmf_vfio_user_transport {
 
 	pthread_mutex_t				pg_lock;
 	TAILQ_HEAD(, nvmf_vfio_user_poll_group)	poll_groups;
-	struct nvmf_vfio_user_poll_group	*next_pg;
 };
 
 /*
@@ -4026,23 +4025,39 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	TAILQ_INSERT_TAIL(&vu_transport->poll_groups, vu_group, link);
-	if (vu_transport->next_pg == NULL) {
-		vu_transport->next_pg = vu_group;
-	}
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 
 	return &vu_group->group;
+}
+
+static uint32_t
+nvmf_poll_group_get_io_qpair_count(struct spdk_nvmf_poll_group *group)
+{
+	uint32_t count;
+
+	/*
+	 * Just assume that unassociated qpairs will eventually be io
+	 * qpairs.  This is close enough for the use cases for this
+	 * function.
+	 */
+	pthread_mutex_lock(&group->mutex);
+	count = group->stat.current_io_qpairs + group->current_unassociated_qpairs;
+	pthread_mutex_unlock(&group->mutex);
+
+	return count;
 }
 
 static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
-	struct nvmf_vfio_user_poll_group **vu_group;
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
 
 	struct spdk_nvmf_transport_poll_group *result = NULL;
+	struct nvmf_vfio_user_poll_group *vu_group;
+	struct spdk_nvmf_poll_group *group;
+	uint32_t qpair_count, min_qpair_count = UINT32_MAX;
 
 	sq = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_sq, qpair);
 	cq = sq->ctrlr->cqs[sq->cqid];
@@ -4079,14 +4094,21 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 	}
 
-	vu_group = &vu_transport->next_pg;
-	assert(*vu_group != NULL);
-
-	result = &(*vu_group)->group;
-	*vu_group = TAILQ_NEXT(*vu_group, link);
-	if (*vu_group == NULL) {
-		*vu_group = TAILQ_FIRST(&vu_transport->poll_groups);
+	/* Select the group with the smallest number of qpairs */
+	TAILQ_FOREACH(vu_group, &vu_transport->poll_groups, link) {
+		group = vu_group->group.group;
+		if (nvmf_qpair_is_admin_queue(qpair)) {
+			qpair_count = group->stat.current_admin_qpairs;
+		} else {
+			qpair_count = nvmf_poll_group_get_io_qpair_count(group);
+		}
+		if (qpair_count < min_qpair_count) {
+			min_qpair_count = qpair_count;
+			result = &vu_group->group;
+		}
 	}
+
+	assert(result != NULL);
 
 out:
 	if (cq->group == NULL) {
@@ -4112,7 +4134,7 @@ vfio_user_poll_group_del_intr(struct nvmf_vfio_user_poll_group *vu_group)
 static void
 nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct nvmf_vfio_user_poll_group *vu_group, *next_tgroup;
+	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_transport *vu_transport;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "destroy poll group\n");
@@ -4126,14 +4148,7 @@ nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
-	next_tgroup = TAILQ_NEXT(vu_group, link);
 	TAILQ_REMOVE(&vu_transport->poll_groups, vu_group, link);
-	if (next_tgroup == NULL) {
-		next_tgroup = TAILQ_FIRST(&vu_transport->poll_groups);
-	}
-	if (vu_transport->next_pg == vu_group) {
-		vu_transport->next_pg = next_tgroup;
-	}
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 
 	free(vu_group);
