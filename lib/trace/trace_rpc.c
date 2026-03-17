@@ -217,7 +217,7 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 			}
 			spdk_json_write_object_begin(w);
 			spdk_json_write_named_string(w, "name", g_trace_file->tpoint[i].name);
-			spdk_json_write_named_uint32(w, "tpoint_id", i - group_base);
+			spdk_json_write_named_uint32(w, "id", i - group_base);
 			spdk_json_write_named_bool(w, "enabled", tpoint_mask & SPDK_BIT(i - group_base));
 			spdk_json_write_object_end(w);
 		}
