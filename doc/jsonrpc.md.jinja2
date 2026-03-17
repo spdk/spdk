@@ -1104,36 +1104,59 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "tpoint_group_mask": "0x0",
+    "tpoint_group_mask": "0x8",
     "iscsi_conn": {
       "enabled": false,
       "mask": "0x2",
       "tpoint_mask": "0x0",
-      "tpoints": []
+      "tpoints": [
+        {"name": "ISCSI_READ_DONE", "id": 0, "enabled": false},
+        {"name": "ISCSI_READ_PDU", "id": 1, "enabled": false},
+        {"name": "ISCSI_TASK_DONE", "id": 2, "enabled": false},
+        {"name": "ISCSI_TASK_QUEUE", "id": 3, "enabled": false},
+        {"name": "ISCSI_TASK_EXECUTED", "id": 4, "enabled": false},
+        {"name": "ISCSI_PDU_COMPLETED", "id": 5, "enabled": false}
+      ]
     },
     "scsi": {
       "enabled": false,
       "mask": "0x4",
       "tpoint_mask": "0x0",
-      "tpoints": []
+      "tpoints": [
+        {"name": "SCSI_TASK_DONE", "id": 0, "enabled": false},
+        {"name": "SCSI_TASK_START", "id": 1, "enabled": false}
+      ]
     },
     "bdev": {
-      "enabled": false,
+      "enabled": true,
       "mask": "0x8",
-      "tpoint_mask": "0x0",
-      "tpoints": []
+      "tpoint_mask": "0xffffffffffffffff",
+      "tpoints": [
+        {"name": "BDEV_IO_START", "id": 0, "enabled": true},
+        {"name": "BDEV_IO_DONE", "id": 1, "enabled": true},
+        {"name": "BDEV_IOCH_CREATE", "id": 2, "enabled": true},
+        {"name": "BDEV_IOCH_DESTROY", "id": 3, "enabled": true}
+      ]
     },
     "nvmf_tcp": {
       "enabled": false,
       "mask": "0x20",
       "tpoint_mask": "0x0",
-      "tpoints": []
+      "tpoints": [
+        {"name": "TCP_REQ_NEW", "id": 0, "enabled": false},
+        {"name": "TCP_REQ_NEED_BUFFER", "id": 1, "enabled": false},
+        {"name": "TCP_REQ_EXECUTED", "id": 2, "enabled": false},
+        {"name": "TCP_REQ_COMPLETED", "id": 3, "enabled": false}
+      ]
     },
     "ftl": {
       "enabled": false,
       "mask": "0x40",
       "tpoint_mask": "0x0",
-      "tpoints": []
+      "tpoints": [
+        {"name": "U_band_reloc", "id": 0, "enabled": false},
+        {"name": "U_band_write", "id": 1, "enabled": false}
+      ]
     }
   }
 }
