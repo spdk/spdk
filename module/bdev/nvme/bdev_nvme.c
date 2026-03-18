@@ -839,11 +839,8 @@ nvme_ctrlr_can_be_unregistered(struct nvme_ctrlr *nvme_ctrlr)
 		return false;
 	}
 
-	if (nvme_ctrlr->resetting) {
-		return false;
-	}
-
 	/* Flags are set after ref get and cleared before ref put, so the above check is sufficient. */
+	assert(!nvme_ctrlr->resetting);
 	assert(!nvme_ctrlr->ana_log_page_updating);
 	assert(!nvme_ctrlr->io_path_cache_clearing);
 
@@ -2352,6 +2349,7 @@ bdev_nvme_reconnect_delay_timer_expired(void *ctx)
 		return SPDK_POLLER_BUSY;
 	}
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	assert(nvme_ctrlr->resetting == false);
 	nvme_ctrlr->resetting = true;
 
@@ -2441,6 +2439,17 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	if (ctrlr_op_cb_fn && op_after_reset != OP_FAILOVER) {
 		ctrlr_op_cb_fn(ctrlr_op_cb_arg, success ? 0 : -1);
 	}
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	nvme_ctrlr_put_ref(nvme_ctrlr);
+	if (nvme_ctrlr->ref == 0) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		NVME_CTRLR_NOTICELOG(nvme_ctrlr,
+				     "Controller was detached during reset, skipping post-reset operations.\n");
+		return;
+	}
+
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	switch (op_after_reset) {
 	case OP_COMPLETE_PENDING_DESTRUCT:
@@ -2724,6 +2733,7 @@ bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 		return -EALREADY;
 	}
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->resetting = true;
 	nvme_ctrlr->dont_retry = true;
 
@@ -2790,6 +2800,7 @@ bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 		return -EALREADY;
 	}
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->disabled = false;
 	nvme_ctrlr->resetting = true;
 
@@ -2894,6 +2905,7 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 		return -EALREADY;
 	}
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->resetting = true;
 	nvme_ctrlr->dont_retry = true;
 
@@ -2905,7 +2917,6 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
-	nvme_ctrlr_get_ref(nvme_ctrlr);
 
 	/* Ensure completion is async otherwise ctrlr_op_cb_fn might not be set yet. */
 	spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
@@ -3290,6 +3301,7 @@ bdev_nvme_start_ctrlr_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		return 0;
 	}
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->resetting = true;
 	nvme_ctrlr->in_failover = true;
 
