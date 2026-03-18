@@ -108,6 +108,12 @@ F:	lib/ftl/
 F:	module/bdev/ftl/
 S:	Supported
 
+CUDA ACCEL MODULE
+M:	Valerii Hlushkov <valerii.hlushkov@datacore.com>
+F:	module/accel/cuda/
+F:	module/accel/scripts/
+S:	Supported
+
 DAOS BDEV MODULE
 F:	module/bdev/daos/
 
