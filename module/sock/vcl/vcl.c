@@ -116,6 +116,15 @@ vcl_sock_bind_worker(struct spdk_vcl_sock *sock)
 	return 0;
 }
 
+static int
+vcl_sock_set_nonblock(uint32_t sh)
+{
+	int flags = O_RDWR | O_NONBLOCK;
+	uint32_t len = sizeof(flags);
+
+	return vppcom_session_attr(sh, VPPCOM_ATTR_SET_FLAGS, &flags, &len);
+}
+
 static inline int
 vcl_sock_normalize_rc(ssize_t rc)
 {
@@ -263,6 +272,12 @@ vcl_sock_start_connect(struct spdk_vcl_sock *sock)
 	sh = vppcom_session_create(VPPCOM_PROTO_TCP, 1);
 	if (sh < 0) {
 		return sh;
+	}
+
+	rc = vcl_sock_set_nonblock(sh);
+	if (rc != 0) {
+		vppcom_session_close(sh);
+		return rc;
 	}
 
 	vcl_fill_endpoint(sock->connect_addr, sock->connect_port, &ep, ipbuf, &is_ipv6);
@@ -435,11 +450,26 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 	vcl_fill_endpoint(ip, port, &ep, ipbuf, &is_ipv6);
 	sock->is_ipv6 = is_ipv6;
 	if (async) {
+		rc = vcl_sock_set_nonblock(sh);
+		if (rc != 0) {
+			free(sock);
+			vppcom_session_close(sh);
+			cb_fn(cb_arg, rc);
+			return NULL;
+		}
 		sock->connect_cb_fn = cb_fn;
 		sock->connect_cb_arg = cb_arg;
 	}
 	rc = vppcom_session_connect(sh, &ep);
 	if (rc == 0) {
+		if (!async) {
+			rc = vcl_sock_set_nonblock(sh);
+			if (rc != 0) {
+				free(sock);
+				vppcom_session_close(sh);
+				return NULL;
+			}
+		}
 		sock->connected = true;
 		if (async) {
 			vcl_sock_connect_done(sock, 0);
