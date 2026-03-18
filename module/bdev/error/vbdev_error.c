@@ -41,6 +41,8 @@ struct vbdev_error_info {
 struct error_io {
 	enum spdk_bdev_error_type error_type;
 	TAILQ_ENTRY(error_io) link;
+	uint8_t *corruption_buf;
+	uint64_t corruption_buf_size;
 };
 
 /* Context for each error bdev */
@@ -53,6 +55,7 @@ struct error_channel {
 	struct spdk_bdev_part_channel	part_ch;
 	uint64_t			io_inflight;
 	TAILQ_HEAD(, error_io)		pending_ios;
+	struct spdk_iobuf_channel	iobuf_ch;
 };
 
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -256,6 +259,59 @@ vbdev_error_corrupt_io_data(struct spdk_bdev_io *bdev_io, uint64_t corrupt_offse
 }
 
 static void
+vbdev_error_corrupt_buf_data(uint8_t *buf, uint64_t buf_size, uint64_t corrupt_offset,
+			     uint8_t corrupt_value)
+{
+	if (buf == NULL || buf_size == 0 || corrupt_offset >= buf_size) {
+		return;
+	}
+
+	buf[corrupt_offset] ^= corrupt_value;
+}
+
+static int
+vbdev_error_copy_iovs(struct spdk_bdev_io *bdev_io, struct error_io *error_io,
+		      struct spdk_iobuf_channel *iobuf_ch)
+{
+	struct iovec *iovs = bdev_io->u.bdev.iovs;
+	int iovcnt = bdev_io->u.bdev.iovcnt;
+	uint8_t *offset = NULL;
+	int i;
+
+	error_io->corruption_buf = NULL;
+	error_io->corruption_buf_size = 0;
+	if (iovs == NULL || iovcnt == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < iovcnt; i++) {
+		error_io->corruption_buf_size += iovs[i].iov_len;
+	}
+
+	if (error_io->corruption_buf_size == 0) {
+		return 0;
+	}
+
+	if (bdev_io->u.bdev.memory_domain != NULL) {
+		SPDK_ERRLOG("bdev_error: cannot copy iovs with memory domain\n");
+		return -ENOTSUP;
+	}
+
+	error_io->corruption_buf = spdk_iobuf_get(iobuf_ch, error_io->corruption_buf_size, NULL, NULL);
+	if (error_io->corruption_buf == NULL) {
+		return -ENOMEM;
+	}
+
+	offset = error_io->corruption_buf;
+	for (i = 0; i < iovcnt; i++) {
+		memcpy(offset, iovs[i].iov_base, iovs[i].iov_len);
+		offset += iovs[i].iov_len;
+	}
+
+	return 0;
+}
+
+static void
 vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct error_io *error_io = (struct error_io *)bdev_io->driver_ctx;
@@ -278,12 +334,31 @@ vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *c
 }
 
 static void
+vbdev_error_complete_corruption_write_request(struct spdk_bdev_io *bdev_io, bool success,
+		void *cb_arg)
+{
+	struct spdk_bdev_io *orig_bdev_io = (struct spdk_bdev_io *)cb_arg;
+	struct error_io *error_io = (struct error_io *)orig_bdev_io->driver_ctx;
+	struct error_channel *ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(orig_bdev_io));
+
+	assert(ch->io_inflight > 0);
+	ch->io_inflight--;
+
+	spdk_bdev_free_io(bdev_io);
+	spdk_iobuf_put(&(ch->iobuf_ch), error_io->corruption_buf, error_io->corruption_buf_size);
+
+	spdk_bdev_io_complete(orig_bdev_io, success);
+}
+
+static void
 vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct error_io *error_io = (struct error_io *)bdev_io->driver_ctx;
 	struct error_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
 	int rc;
+
+	*error_io = (struct error_io) {0};
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		vbdev_error_reset(error_disk, bdev_io);
@@ -308,10 +383,31 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		break;
 	case SPDK_BDEV_ERROR_TYPE_CORRUPT_DATA:
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			vbdev_error_corrupt_io_data(bdev_io,
-						    error_disk->error_vector[bdev_io->type].corrupt_offset,
-						    error_disk->error_vector[bdev_io->type].corrupt_value);
+			rc = vbdev_error_copy_iovs(bdev_io, error_io, &ch->iobuf_ch);
+			if (rc != 0) {
+				SPDK_ERRLOG("bdev_error: failed to copy iovs for corrupted write, rc=%d\n", rc);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+				break;
+			}
+
+			vbdev_error_corrupt_buf_data(error_io->corruption_buf, error_io->corruption_buf_size,
+						     error_disk->error_vector[bdev_io->type].corrupt_offset,
+						     error_disk->error_vector[bdev_io->type].corrupt_value);
+
+			ch->io_inflight++;
+			rc = spdk_bdev_write(spdk_bdev_part_base_get_desc(ch->part_ch.part->internal.base),
+					     ch->part_ch.base_ch, error_io->corruption_buf, 0, error_io->corruption_buf_size,
+					     vbdev_error_complete_corruption_write_request, bdev_io);
+			if (rc) {
+				SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
+				ch->io_inflight--;
+				spdk_iobuf_put(&(ch->iobuf_ch), error_io->corruption_buf, error_io->corruption_buf_size);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			}
+
+			break;
 		}
+
 	/* fallthrough */
 	case SPDK_BDEV_ERROR_TYPE_NO_ERROR:
 		ch->io_inflight++;
@@ -386,9 +482,16 @@ static int
 vbdev_error_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct error_channel *ch = ctx_buf;
+	int rc;
 
 	ch->io_inflight = 0;
 	TAILQ_INIT(&ch->pending_ios);
+
+	rc = spdk_iobuf_channel_init(&ch->iobuf_ch, "bdev", 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("bdev_error: failed to init iobuf channel, rc=%d\n", rc);
+		return rc;
+	}
 
 	return 0;
 }
@@ -396,6 +499,9 @@ vbdev_error_ch_create_cb(void *io_device, void *ctx_buf)
 static void
 vbdev_error_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct error_channel *ch = ctx_buf;
+
+	spdk_iobuf_channel_fini(&ch->iobuf_ch);
 }
 
 static int
