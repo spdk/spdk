@@ -4983,13 +4983,10 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
 			/* Don't send abort to ctrlr when ctrlr is not available. */
-			pthread_mutex_lock(&nvme_ctrlr->mutex);
 			if (!nvme_ctrlr_is_available(nvme_ctrlr)) {
-				pthread_mutex_unlock(&nvme_ctrlr->mutex);
 				NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Quit abort on qpair:%p. Ctrlr is not available.\n", qpair);
 				return;
 			}
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
 						       nvme_abort_cpl, nvme_ctrlr);
