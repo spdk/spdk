@@ -384,7 +384,9 @@ rpc_decode_pollers_array(struct spdk_json_val *poller, struct rpc_poller_info *o
 
 	for (poller = spdk_json_array_first(poller); poller != NULL; poller = spdk_json_next(poller)) {
 		out[*poller_count].thread_id = thread_id;
-		memcpy(out[*poller_count].thread_name, thread_name, sizeof(char) * thread_name_length);
+		snprintf(out[*poller_count].thread_name,
+			 sizeof(out[*poller_count].thread_name), "%s",
+			 thread_name);
 		out[*poller_count].type = poller_type;
 
 		rc = spdk_json_decode_object(poller, rpc_pollers_decoders,
