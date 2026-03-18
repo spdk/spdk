@@ -5509,11 +5509,9 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 		bdev_nvme_disable_read_ana_log_page(nvme_ctrlr);
 	}
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	assert(nvme_ctrlr->ana_log_page_updating == true);
 	nvme_ctrlr->ana_log_page_updating = false;
 	nvme_ctrlr_put_ref_ext(nvme_ctrlr, bdev_nvme_clear_io_path_caches);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 }
 
 static int
@@ -5541,15 +5539,12 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 		return -EBUSY;
 	}
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->ana_log_page_updating) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return 0;
 	}
 
 	nvme_ctrlr->ana_log_page_updating = true;
 	nvme_ctrlr_get_ref(nvme_ctrlr);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_ctrlr->ctrlr,
 					      SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
