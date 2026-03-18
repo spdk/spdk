@@ -824,31 +824,6 @@ nvme_ctrlr_unregister_cb(void *io_device)
 	nvme_ctrlr_delete(nvme_ctrlr);
 }
 
-static void
-nvme_ctrlr_unregister(struct nvme_ctrlr *nvme_ctrlr)
-{
-	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
-}
-
-static bool
-nvme_ctrlr_can_be_unregistered(struct nvme_ctrlr *nvme_ctrlr)
-{
-	assert(spdk_thread_is_app_thread(NULL));
-
-	if (nvme_ctrlr->ref > 0) {
-		return false;
-	}
-
-	/* Flags are set after ref get and cleared before ref put, so the above check is sufficient. */
-	assert(!nvme_ctrlr->resetting);
-	assert(!nvme_ctrlr->ana_log_page_updating);
-	assert(!nvme_ctrlr->io_path_cache_clearing);
-
-	/* The controller shouldn't be unregistered without the explicit destruct flag set. */
-	assert(nvme_ctrlr->destruct);
-	return true;
-}
-
 /* Invokes cb_fn under the ctrlr’s lock but only if not scheduled to unregister. */
 static void
 nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_fn)
@@ -859,9 +834,7 @@ nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_f
 	SPDK_DTRACE_PROBE2(bdev_nvme_ctrlr_release, nvme_ctrlr->nbdev_ctrlr->name, nvme_ctrlr->ref);
 
 	assert(nvme_ctrlr->ref > 0);
-	nvme_ctrlr->ref--;
-
-	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
+	if (--nvme_ctrlr->ref > 0) {
 		if (cb_fn) {
 			cb_fn(nvme_ctrlr);
 		}
@@ -871,7 +844,15 @@ nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_f
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-	nvme_ctrlr_unregister(nvme_ctrlr);
+
+	/* Flags are set after ref get and cleared before ref put, so the above check is sufficient. */
+	assert(!nvme_ctrlr->resetting);
+	assert(!nvme_ctrlr->ana_log_page_updating);
+	assert(!nvme_ctrlr->io_path_cache_clearing);
+
+	/* The controller shouldn't be unregistered without the explicit destruct flag set. */
+	assert(nvme_ctrlr->destruct);
+	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
 }
 
 static void
