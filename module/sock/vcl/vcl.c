@@ -204,19 +204,22 @@ vcl_sock_alloc(uint32_t sh)
 static ssize_t
 vcl_sock_writev_internal(struct spdk_vcl_sock *sock, struct iovec *iov, int iovcnt)
 {
-	vppcom_data_segment_t segs[IOV_BATCH_SIZE];
+	ssize_t total = 0;
 	ssize_t rc;
 	int i;
 
-	assert(iovcnt <= IOV_BATCH_SIZE);
-
 	for (i = 0; i < iovcnt; i++) {
-		segs[i].data = iov[i].iov_base;
-		segs[i].len = iov[i].iov_len;
+		rc = vppcom_session_write(sock->sh, iov[i].iov_base, iov[i].iov_len);
+		if (rc < 0) {
+			return total > 0 ? total : rc;
+		}
+		total += rc;
+		if (rc != (ssize_t)iov[i].iov_len) {
+			break;
+		}
 	}
 
-	rc = vppcom_session_write_segments(sock->sh, segs, iovcnt);
-	return rc;
+	return total;
 }
 
 static int
@@ -636,15 +639,9 @@ static ssize_t
 vcl_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_vcl_sock *sock = __vcl_sock(_sock);
-	vppcom_data_segment_t segs[IOV_BATCH_SIZE];
-	uint32_t max_bytes = 0;
-	uint32_t remaining;
-	size_t seg_offset = 0;
-	size_t iov_offset;
-	size_t to_copy;
 	ssize_t total = 0;
 	ssize_t rc;
-	int i, seg_idx = 0;
+	int i;
 
 	rc = vcl_sock_connect_poller(sock);
 	if (rc == -EAGAIN) {
@@ -660,41 +657,15 @@ vcl_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	}
 
 	for (i = 0; i < iovcnt; i++) {
-		max_bytes += iov[i].iov_len;
-	}
-
-	rc = vppcom_session_read_segments(sock->sh, segs, SPDK_COUNTOF(segs), max_bytes);
-	if (rc < 0) {
-		return vcl_sock_normalize_rc(rc);
-	}
-
-	remaining = rc;
-	for (i = 0; i < iovcnt && remaining > 0; i++) {
-		iov_offset = 0;
-		while (iov_offset < iov[i].iov_len && remaining > 0) {
-			size_t seg_len;
-
-			assert(seg_idx < (int)SPDK_COUNTOF(segs));
-			seg_len = segs[seg_idx].len;
-			if (seg_offset == seg_len) {
-				seg_idx++;
-				seg_offset = 0;
-				continue;
-			}
-
-			to_copy = spdk_min((size_t)remaining, iov[i].iov_len - iov_offset);
-			to_copy = spdk_min(to_copy, seg_len - seg_offset);
-			memcpy((char *)iov[i].iov_base + iov_offset,
-			       segs[seg_idx].data + seg_offset, to_copy);
-			iov_offset += to_copy;
-			seg_offset += to_copy;
-			remaining -= to_copy;
-			total += to_copy;
+		rc = vppcom_session_read(sock->sh, iov[i].iov_base, iov[i].iov_len);
+		if (rc < 0) {
+			return total > 0 ? total : vcl_sock_normalize_rc(rc);
+		}
+		total += rc;
+		if (rc != (ssize_t)iov[i].iov_len) {
+			break;
 		}
 	}
-
-	vppcom_session_free_segments(sock->sh, total);
-	assert(remaining == 0);
 
 	return total;
 }
