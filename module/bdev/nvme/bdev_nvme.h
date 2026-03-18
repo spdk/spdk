@@ -42,6 +42,19 @@ struct nvme_async_probe_ctx {
 	bool namespaces_populated;
 };
 
+/**
+ * Threading model for nvme_ns
+ *
+ * All fields are MODIFIED exclusively on the app thread.
+ *
+ * Fields read on IO threads as best-effort informational checks
+ * (via nvme_ns_is_active, nvme_ns_is_accessible, and direct reads):
+ *   ns, ana_state, ana_state_updating, ana_transition_timedout
+ *
+ * Stale reads are harmless - the IO path handles unavailable namespaces
+ * gracefully. The worst outcome is a single extra IO attempt that fails
+ * and enters the normal error handling path.
+ */
 struct nvme_ns {
 	uint32_t			id;
 	struct spdk_nvme_ns		*ns;
