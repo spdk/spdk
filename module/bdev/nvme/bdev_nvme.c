@@ -2693,8 +2693,6 @@ bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 		return -EALREADY;
 	}
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	nvme_ctrlr->resetting = true;
 	nvme_ctrlr->dont_retry = true;
 
@@ -2705,8 +2703,6 @@ bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 	} else {
 		*msg_fn = _bdev_nvme_reset_ctrlr;
 	}
-
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	if (nvme_ctrlr->reset_start_tsc == 0) {
 		nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
