@@ -879,7 +879,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	qpair->in_completion_context = 1;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
-		if (ret == -ENXIO && nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+		if (ret == -ENXIO &&
+		    (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING ||
+		     nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED ||
+		     qpair->ctrlr->is_disconnecting)) {
 			ret = 0;
 		} else {
 			NVME_QPAIR_ERRLOG(qpair, "CQ transport error %d (%s)\n", ret, spdk_strerror(-ret));
