@@ -3702,7 +3702,12 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 
 	TAILQ_INIT(&nvme_qpair->io_path_list);
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
+	if (!nvme_ctrlr_try_get_ref(nvme_ctrlr)) {
+		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Failed to create qpair, controller is being destroyed.\n");
+		free(nvme_qpair);
+		return -1;
+	}
+
 	nvme_qpair->ctrlr = nvme_ctrlr;
 	nvme_qpair->ctrlr_ch = ctrlr_ch;
 
