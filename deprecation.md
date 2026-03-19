@@ -83,6 +83,11 @@ removed in v26.09. Use `dmrsl` instead.
 The `max_write_zeroes_size_kib` parameter of `nvmf_create_subsystem` RPC is deprecated and will be
 removed in v26.09. Use `wzsl` instead.
 
+### scripts
+
+The `autorun_post.py` symlink in the repository root is deprecated. The script has been moved to
+`scripts/autorun_post.py`. The symlink will be removed in the v26.09 release.
+
 ### app/spdk_nvme_perf
 
 #### perf_g_option
