@@ -60,6 +60,7 @@ static int g_vcl_init_rc;
 #define __vcl_sock(sock) ((struct spdk_vcl_sock *)(sock))
 #define __vcl_group(group) ((struct spdk_vcl_sock_group_impl *)(group))
 #define VCL_INVALID_SH UINT32_MAX
+#define VCL_SOCK_LISTEN_BACKLOG 512
 
 static void
 vcl_global_init_once(void)
@@ -89,6 +90,14 @@ static void
 vcl_fill_endpoint(const char *ip, int port, vppcom_endpt_t *ep, uint8_t ipbuf[16], bool *is_ipv6)
 {
 	memset(ep, 0, sizeof(*ep));
+	if (ip == NULL) {
+		*is_ipv6 = false;
+		ep->is_ip4 = 1;
+		ep->ip = ipbuf;
+		ep->port = htons(port);
+		return;
+	}
+
 	if (strchr(ip, ':') != NULL) {
 		*is_ipv6 = true;
 		ep->is_ip4 = 0;
@@ -485,12 +494,6 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 		return NULL;
 	}
 
-	if (!async && sock->pending_connect) {
-		free(sock);
-		vppcom_session_close(sh);
-		return NULL;
-	}
-
 	return &sock->base;
 }
 
@@ -553,7 +556,7 @@ vcl_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 		return NULL;
 	}
 
-	rc = vppcom_session_listen(sh, 512);
+	rc = vppcom_session_listen(sh, VCL_SOCK_LISTEN_BACKLOG);
 	if (rc < 0) {
 		vppcom_session_close(sh);
 		return NULL;
