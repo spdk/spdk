@@ -875,6 +875,21 @@ nvme_ctrlr_put_ref_async(void *nvme_ctrlr)
 	spdk_thread_send_msg(spdk_thread_get_app_thread(), _nvme_ctrlr_put_ref, nvme_ctrlr);
 }
 
+static bool
+nvme_ctrlr_try_get_ref(struct nvme_ctrlr *nvme_ctrlr)
+{
+	bool success = false;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	if (nvme_ctrlr->ref > 0) {
+		nvme_ctrlr->ref++;
+		success = true;
+	}
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	return success;
+}
+
 static void
 nvme_ctrlr_get_ref(struct nvme_ctrlr *nvme_ctrlr)
 {
@@ -9375,14 +9390,10 @@ bdev_nvme_next_ctrlr(struct nvme_bdev_ctrlr *nbdev_ctrlr, struct nvme_ctrlr *pre
 	}
 	while (next != NULL) {
 		/* ref can be 0 when the ctrlr was released, but hasn't been detached yet */
-		pthread_mutex_lock(&next->mutex);
-		if (next->ref > 0) {
-			next->ref++;
-			pthread_mutex_unlock(&next->mutex);
+		if (nvme_ctrlr_try_get_ref(next)) {
 			return next;
 		}
 
-		pthread_mutex_unlock(&next->mutex);
 		next = TAILQ_NEXT(next, tailq);
 	}
 
