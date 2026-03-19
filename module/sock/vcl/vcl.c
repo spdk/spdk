@@ -779,12 +779,12 @@ vcl_sock_is_connected(struct spdk_sock *_sock)
 	struct spdk_vcl_sock *sock = __vcl_sock(_sock);
 	int rc;
 
-	rc = vcl_sock_connect_poller(sock);
+	rc = vcl_sock_bind_worker(sock);
 	if (rc < 0) {
 		return false;
 	}
 
-	rc = vcl_sock_bind_worker(sock);
+	rc = vcl_sock_connect_poller(sock);
 	if (rc < 0) {
 		return false;
 	}
