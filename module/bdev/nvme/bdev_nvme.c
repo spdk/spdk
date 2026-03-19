@@ -5514,7 +5514,15 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	assert(nvme_ctrlr->ana_log_page_updating == true);
 	nvme_ctrlr->ana_log_page_updating = false;
-	nvme_ctrlr_put_ref_ext(nvme_ctrlr, bdev_nvme_clear_io_path_caches);
+
+	if (nvme_ctrlr_put_ref(nvme_ctrlr) == 0) {
+		NVME_CTRLR_NOTICELOG(nvme_ctrlr,
+				     "Controller was detached during ANA log page update, "
+				     "skipping IO path cache clear.\n");
+		return;
+	}
+
+	bdev_nvme_clear_io_path_caches(nvme_ctrlr);
 }
 
 static int
