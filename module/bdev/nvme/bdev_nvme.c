@@ -6117,24 +6117,6 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static int
-nvme_ctrlr_mutex_init(pthread_mutex_t *mtx)
-{
-	pthread_mutexattr_t attr;
-	int rc = 0;
-
-	if (pthread_mutexattr_init(&attr)) {
-		return -1;
-	}
-
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) || pthread_mutex_init(mtx, &attr)) {
-		rc = -1;
-	}
-
-	pthread_mutexattr_destroy(&attr);
-	return rc;
-}
-
-static int
 nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		  const char *name,
 		  const struct spdk_nvme_transport_id *trid,
@@ -6158,7 +6140,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 
-	rc = nvme_ctrlr_mutex_init(&nvme_ctrlr->mutex);
+	rc = pthread_mutex_init(&nvme_ctrlr->mutex, NULL);
 	if (rc != 0) {
 		free(nvme_ctrlr);
 		return rc;
