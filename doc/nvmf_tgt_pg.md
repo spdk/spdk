@@ -117,6 +117,37 @@ A discovery subsystem, as defined by the NVMe-oF specification, is
 automatically created for each NVMe-oF target constructed. Connections to the
 discovery subsystem are handled in the same way as any other subsystem.
 
+## Subsystem Destruction
+
+Subsystem destruction is tracked by an internal `destroy_state` flag that
+progresses through three phases:
+
+1. **NOT_STARTED** (initial): The subsystem is live and state changes are
+   permitted normally.
+2. **PENDING**: Set by spdk_nvmf_subsystem_stop_for_destroy(), which
+   transitions the subsystem to Inactive while simultaneously marking it for
+   destruction. Once in this phase all further state change requests are
+   rejected (-ENODEV), preventing races between stopping and destroying.
+3. **IN_PROGRESS**: Set by spdk_nvmf_subsystem_destroy(), which requires the
+   subsystem to already be Inactive. Listeners, hosts, and namespaces are
+   removed. If controllers are still connected the destroy retries
+   asynchronously (returning -EINPROGRESS) until all controllers disconnect.
+
+```mermaid
+stateDiagram-v2
+    state "Inactive<br/>(destroy pending)" as pending
+    Active --> pending : stop_for_destroy()<br/>destroy_state ← PENDING
+    Paused --> pending : stop_for_destroy()<br/>destroy_state ← PENDING
+    pending --> Destroying : destroy()<br/>destroy_state ← IN_PROGRESS
+    Destroying --> Destroying : controllers still connected
+    Destroying --> [*] : all controllers disconnected
+```
+
+An application may also call spdk_nvmf_subsystem_stop() followed by
+spdk_nvmf_subsystem_destroy() separately, but using
+spdk_nvmf_subsystem_stop_for_destroy() is preferred because it atomically
+blocks new state changes.
+
 ## Transports
 
 The NVMe-oF specification defines multiple network transports (the "Fabrics"
