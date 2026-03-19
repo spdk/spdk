@@ -825,22 +825,25 @@ nvme_ctrlr_unregister_cb(void *io_device)
 }
 
 /* Invokes cb_fn under the ctrlr’s lock but only if not scheduled to unregister. */
-static void
+static int
 nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_fn)
 {
+	int ref;
+
 	assert(spdk_thread_is_app_thread(NULL));
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	SPDK_DTRACE_PROBE2(bdev_nvme_ctrlr_release, nvme_ctrlr->nbdev_ctrlr->name, nvme_ctrlr->ref);
 
 	assert(nvme_ctrlr->ref > 0);
-	if (--nvme_ctrlr->ref > 0) {
+	ref = --nvme_ctrlr->ref;
+	if (ref > 0) {
 		if (cb_fn) {
 			cb_fn(nvme_ctrlr);
 		}
 
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return;
+		return ref;
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -853,12 +856,13 @@ nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_f
 	/* The controller shouldn't be unregistered without the explicit destruct flag set. */
 	assert(nvme_ctrlr->destruct);
 	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
+	return 0;
 }
 
-static void
+static int
 nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
 {
-	nvme_ctrlr_put_ref_ext(nvme_ctrlr, NULL);
+	return nvme_ctrlr_put_ref_ext(nvme_ctrlr, NULL);
 }
 
 static void
@@ -2430,16 +2434,11 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		ctrlr_op_cb_fn(ctrlr_op_cb_arg, success ? 0 : -1);
 	}
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	nvme_ctrlr_put_ref(nvme_ctrlr);
-	if (nvme_ctrlr->ref == 0) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+	if (nvme_ctrlr_put_ref(nvme_ctrlr) == 0) {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr,
 				     "Controller was detached during reset, skipping post-reset operations.\n");
 		return;
 	}
-
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	switch (op_after_reset) {
 	case OP_DESTRUCT:
