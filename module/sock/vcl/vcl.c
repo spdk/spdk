@@ -351,7 +351,7 @@ vcl_sock_connect_poller(struct spdk_vcl_sock *sock)
 		sock->connect_registered = true;
 	}
 
-	n = vppcom_epoll_wait(sock->connect_epfd, &ev, 1, 0.001);
+	n = vppcom_epoll_wait(sock->connect_epfd, &ev, 1, 0.0);
 	if (n < 0) {
 		return n;
 	}
