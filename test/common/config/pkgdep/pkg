@@ -27,4 +27,5 @@ packages=(
 	llvm-devel
 	avahi
 	xxd
+	flock
 )
