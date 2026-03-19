@@ -930,6 +930,23 @@ vcl_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events, st
 }
 
 static int
+vcl_sock_group_impl_get_interruptfd(struct spdk_sock_group_impl *_group)
+{
+	int fd;
+
+	if (vcl_ensure_init() != 0) {
+		return -1;
+	}
+
+	fd = vppcom_worker_mqs_epfd();
+	if (fd < 0) {
+		return -1;
+	}
+
+	return fd;
+}
+
+static int
 vcl_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	struct spdk_vcl_sock_group_impl *group = __vcl_group(_group);
@@ -998,7 +1015,7 @@ static struct spdk_net_impl g_vcl_net_impl = {
 	.group_impl_add_sock = vcl_sock_group_impl_add_sock,
 	.group_impl_remove_sock = vcl_sock_group_impl_remove_sock,
 	.group_impl_poll = vcl_sock_group_impl_poll,
-	.group_impl_get_interruptfd = NULL,
+	.group_impl_get_interruptfd = vcl_sock_group_impl_get_interruptfd,
 	.group_impl_close = vcl_sock_group_impl_close,
 	.get_opts = vcl_sock_impl_get_opts,
 	.set_opts = vcl_sock_impl_set_opts,
