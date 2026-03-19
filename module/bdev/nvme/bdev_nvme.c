@@ -253,8 +253,6 @@ struct nvme_probe_skip_entry {
 	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
 };
 
-typedef void (*nvme_ctrlr_put_ref_cb)(struct nvme_ctrlr *nvme_ctrlr);
-
 /* All the controllers deleted by users via RPC are skipped by hotplug monitor */
 static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_skipped_nvme_ctrlrs);
@@ -828,9 +826,8 @@ nvme_ctrlr_unregister_cb(void *io_device)
 	nvme_ctrlr_delete(nvme_ctrlr);
 }
 
-/* Invokes cb_fn under the ctrlr’s lock but only if not scheduled to unregister. */
 static int
-nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_fn)
+nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
 {
 	int ref;
 
@@ -842,10 +839,6 @@ nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_f
 	assert(nvme_ctrlr->ref > 0);
 	ref = --nvme_ctrlr->ref;
 	if (ref > 0) {
-		if (cb_fn) {
-			cb_fn(nvme_ctrlr);
-		}
-
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return ref;
 	}
@@ -863,18 +856,12 @@ nvme_ctrlr_put_ref_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_put_ref_cb cb_f
 	return 0;
 }
 
-static int
-nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
-{
-	return nvme_ctrlr_put_ref_ext(nvme_ctrlr, NULL);
-}
-
 static void
 _nvme_ctrlr_put_ref(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
-	nvme_ctrlr_put_ref_ext(nvme_ctrlr, NULL);
+	nvme_ctrlr_put_ref(nvme_ctrlr);
 }
 
 static void
