@@ -3687,12 +3687,13 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 
 	TAILQ_INIT(&nvme_qpair->io_path_list);
 
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_qpair->ctrlr = nvme_ctrlr;
 	nvme_qpair->ctrlr_ch = ctrlr_ch;
 
 	pg_ch = spdk_get_io_channel(&g_nvme_bdev_ctrlrs);
 	if (!pg_ch) {
-		free(nvme_qpair);
+		nvme_qpair_delete(nvme_qpair);
 		return -1;
 	}
 
@@ -3718,19 +3719,14 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 			 * Hence, if both are satisfied, ignore the failure.
 			 */
 			if (nvme_ctrlr->opts.reconnect_delay_sec == 0 || g_opts.bdev_retry_count == 0) {
-				spdk_put_io_channel(pg_ch);
-				free(nvme_qpair);
+				nvme_qpair_delete(nvme_qpair);
 				return rc;
 			}
 		}
 	}
 
 	TAILQ_INSERT_TAIL(&nvme_qpair->group->qpair_list, nvme_qpair, tailq);
-
 	ctrlr_ch->qpair = nvme_qpair;
-
-	nvme_ctrlr_get_ref(nvme_ctrlr);
-
 	return 0;
 }
 
@@ -3746,17 +3742,22 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 static void
 nvme_qpair_delete(struct nvme_qpair *nvme_qpair)
 {
+	struct nvme_poll_group *group = nvme_qpair->group;
 	struct nvme_io_path *io_path, *next;
-
-	assert(nvme_qpair->group != NULL);
 
 	TAILQ_FOREACH_SAFE(io_path, &nvme_qpair->io_path_list, tailq, next) {
 		TAILQ_REMOVE(&nvme_qpair->io_path_list, io_path, tailq);
 		nvme_io_path_free(io_path);
 	}
 
-	TAILQ_REMOVE(&nvme_qpair->group->qpair_list, nvme_qpair, tailq);
-	spdk_put_io_channel(spdk_io_channel_from_ctx(nvme_qpair->group));
+	if (group) {
+		if (TAILQ_ENTRY_ENQUEUED(nvme_qpair, tailq)) {
+			TAILQ_REMOVE_CLEAR(&group->qpair_list, nvme_qpair, tailq);
+		}
+
+		spdk_put_io_channel(spdk_io_channel_from_ctx(group));
+	}
+
 	nvme_ctrlr_put_ref_async(nvme_qpair->ctrlr);
 	free(nvme_qpair);
 }
