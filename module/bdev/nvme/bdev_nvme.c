@@ -2289,7 +2289,6 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 
 enum bdev_nvme_op_after_reset {
 	OP_NONE,
-	OP_COMPLETE_PENDING_DESTRUCT,
 	OP_DESTRUCT,
 	OP_DELAYED_RECONNECT,
 	OP_FAILOVER,
@@ -2301,10 +2300,7 @@ static _bdev_nvme_op_after_reset
 bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
 			       bool pending_failover)
 {
-	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
-		/* Complete pending destruct after reset completes. */
-		return OP_COMPLETE_PENDING_DESTRUCT;
-	} else if (success || nvme_ctrlr->opts.reconnect_delay_sec == 0) {
+	if (success || nvme_ctrlr->opts.reconnect_delay_sec == 0) {
 		if (pending_failover) {
 			/* This is a fix for a race condition that failover was lost
 			 * if fabric connect command got timeout while ctrlr was being
@@ -2431,9 +2427,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
 	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success, pending_failover);
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	/* Delay callbacks when the next operation is a failover. */
 	if (ctrlr_op_cb_fn && op_after_reset != OP_FAILOVER) {
@@ -2452,9 +2446,6 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	switch (op_after_reset) {
-	case OP_COMPLETE_PENDING_DESTRUCT:
-		nvme_ctrlr_unregister(nvme_ctrlr);
-		break;
 	case OP_DESTRUCT:
 		bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, false);
 		remove_discovery_entry(nvme_ctrlr);
