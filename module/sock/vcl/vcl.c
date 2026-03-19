@@ -10,7 +10,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
-#include <sys/eventfd.h>
 #include <vcl/vppcom.h>
 
 struct spdk_vcl_sock {
@@ -36,7 +35,6 @@ struct spdk_vcl_sock {
 struct spdk_vcl_sock_group_impl {
 	struct spdk_sock_group_impl base;
 	int epfd;
-	int intrfd;
 };
 
 static struct spdk_sock_impl_opts g_vcl_impl_opts = {
@@ -820,13 +818,6 @@ vcl_sock_group_impl_create(void)
 		return NULL;
 	}
 
-	group->intrfd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-	if (group->intrfd < 0) {
-		vppcom_session_close(group->epfd);
-		free(group);
-		return NULL;
-	}
-
 	return &group->base;
 }
 
@@ -939,18 +930,11 @@ vcl_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events, st
 }
 
 static int
-vcl_sock_group_impl_get_interruptfd(struct spdk_sock_group_impl *_group)
-{
-	return __vcl_group(_group)->intrfd;
-}
-
-static int
 vcl_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	struct spdk_vcl_sock_group_impl *group = __vcl_group(_group);
 	int rc = vppcom_session_close(group->epfd);
 
-	close(group->intrfd);
 	free(group);
 	return rc;
 }
@@ -1014,7 +998,7 @@ static struct spdk_net_impl g_vcl_net_impl = {
 	.group_impl_add_sock = vcl_sock_group_impl_add_sock,
 	.group_impl_remove_sock = vcl_sock_group_impl_remove_sock,
 	.group_impl_poll = vcl_sock_group_impl_poll,
-	.group_impl_get_interruptfd = vcl_sock_group_impl_get_interruptfd,
+	.group_impl_get_interruptfd = NULL,
 	.group_impl_close = vcl_sock_group_impl_close,
 	.get_opts = vcl_sock_impl_get_opts,
 	.set_opts = vcl_sock_impl_set_opts,
