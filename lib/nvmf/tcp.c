@@ -1087,6 +1087,16 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		return -errno;
 	}
 
+	/* VCL jumbo interop is unstable with C2H success optimization enabled. Disable the
+	 * optimization once a TCP transport is backed by a VCL listen socket so all subsequent
+	 * qpairs use the conservative completion path.
+	 */
+	if (ttransport->tcp_opts.c2h_success &&
+	    strcmp(spdk_sock_get_impl_name(port->listen_sock), "vcl") == 0) {
+		SPDK_NOTICELOG("Disabling NVMe/TCP C2H success optimization for VCL-backed listener\n");
+		ttransport->tcp_opts.c2h_success = false;
+	}
+
 	if (spdk_sock_is_ipv4(port->listen_sock)) {
 		adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	} else if (spdk_sock_is_ipv6(port->listen_sock)) {
