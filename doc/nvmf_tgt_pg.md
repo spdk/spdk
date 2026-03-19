@@ -75,7 +75,18 @@ Subsystems begin in an inactive state and must be activated by calling
 spdk_nvmf_subsystem_start(). Subsystems may be modified at run time, but only
 when in the paused or inactive state. A running subsystem may be paused by
 calling spdk_nvmf_subsystem_pause() and resumed by calling
-spdk_nvmf_subsystem_resume().
+spdk_nvmf_subsystem_resume(). A subsystem may be deactivated by calling
+spdk_nvmf_subsystem_stop(), from either the active or the paused state.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inactive : spdk_nvmf_subsystem_create()
+    Inactive --> Active : spdk_nvmf_subsystem_start()
+    Active --> Inactive : spdk_nvmf_subsystem_stop()
+    Active --> Paused : spdk_nvmf_subsystem_pause()
+    Paused --> Active : spdk_nvmf_subsystem_resume()
+    Paused --> Inactive : spdk_nvmf_subsystem_stop()
+```
 
 Namespaces may be added to the subsystem by calling
 spdk_nvmf_subsystem_add_ns_ext() when the subsystem is inactive or paused.
