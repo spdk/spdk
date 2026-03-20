@@ -18,7 +18,6 @@ struct spdk_iscsi_portal_grp;
 struct spdk_iscsi_portal;
 struct spdk_json_write_ctx;
 
-#define MAX_TARGET_MAP			256
 #define SPDK_TN_TAG_MAX			0x0000ffff
 
 typedef void (*iscsi_tgt_node_destruct_cb)(void *cb_arg, int rc);
