@@ -113,8 +113,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 raise ValueError(f"For method {method['name']}: parameter '{parameter['name']}': 'required' field is mismatched")
             code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
             if 'class' in parameter:
-                if parameter['type'] == 'enum':
-                    # Enum fields use custom decoders — skip type validation
+                if parameter['type'] in ('enum', 'array'):
+                    # Enum and array fields use custom decoders — skip type validation
                     continue
                 if parameter['type'] != 'object':
                     raise ValueError(f"Invalid 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc")

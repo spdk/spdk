@@ -319,6 +319,52 @@
       ]
     }
   ],
+  "arrays": [
+    {
+      "name": "bdev_histogram_borders",
+      "item_type": "uint64",
+      "max_count": 256
+    },
+    {
+      "name": "bdev_iostat_names",
+      "item_type": "string",
+      "max_count": 1024
+    },
+    {
+      "name": "iscsi_initiators",
+      "item_type": "string",
+      "max_count": 256
+    },
+    {
+      "name": "iscsi_netmasks",
+      "item_type": "string",
+      "max_count": 256
+    },
+    {
+      "name": "iscsi_pg_ig_maps",
+      "item_type": "object",
+      "class": "iscsi_pg_ig_map",
+      "max_count": 256
+    },
+    {
+      "name": "iscsi_luns",
+      "item_type": "object",
+      "class": "iscsi_lun",
+      "max_count": 64
+    },
+    {
+      "name": "iscsi_portals",
+      "item_type": "object",
+      "class": "iscsi_portal",
+      "max_count": 1024
+    },
+    {
+      "name": "iscsi_auth_secrets",
+      "item_type": "object",
+      "class": "iscsi_auth_secret",
+      "max_count": 64
+    }
+  ],
   "methods": [
     {
       "name": "spdk_kill_instance",
@@ -946,6 +992,7 @@
         {
           "name": "names",
           "type": "array",
+          "class": "bdev_iostat_names",
           "description": "Array of block device names to obtain statistics from"
         },
         {
@@ -1037,6 +1084,7 @@
         {
           "name": "borders",
           "type": "array",
+          "class": "bdev_histogram_borders",
           "required": true,
           "description": "Array of buckets in microseconds to dump histogram into"
         }
@@ -2981,6 +3029,7 @@
         {
           "name": "secrets",
           "type": "array",
+          "class": "iscsi_auth_secrets",
           "description": "Array of @ref rpc_iscsi_create_auth_group_secret objects"
         }
       ]
@@ -3066,12 +3115,14 @@
         {
           "name": "initiators",
           "type": "array",
+          "class": "iscsi_initiators",
           "required": true,
           "description": "Not empty array of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
+          "class": "iscsi_netmasks",
           "required": true,
           "description": "Not empty array of initiator netmasks"
         }
@@ -3100,11 +3151,13 @@
         {
           "name": "initiators",
           "type": "array",
+          "class": "iscsi_initiators",
           "description": "Array of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
+          "class": "iscsi_netmasks",
           "description": "Array of initiator netmasks"
         }
       ]
@@ -3121,11 +3174,13 @@
         {
           "name": "initiators",
           "type": "array",
+          "class": "iscsi_initiators",
           "description": "Array of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
+          "class": "iscsi_netmasks",
           "description": "Array of initiator netmasks"
         }
       ]
@@ -3152,12 +3207,14 @@
         {
           "name": "pg_ig_maps",
           "type": "array",
+          "class": "iscsi_pg_ig_maps",
           "required": true,
           "description": "Array of (Portal_Group_Tag:Initiator_Group_Tag) mappings"
         },
         {
           "name": "luns",
           "type": "array",
+          "class": "iscsi_luns",
           "required": true,
           "description": "Array of Bdev names to LUN ID mappings"
         },
@@ -3242,6 +3299,7 @@
         {
           "name": "pg_ig_maps",
           "type": "array",
+          "class": "iscsi_pg_ig_maps",
           "required": true,
           "description": "Not empty array of initiator to portal group mappings objects"
         }
@@ -3259,6 +3317,7 @@
         {
           "name": "pg_ig_maps",
           "type": "array",
+          "class": "iscsi_pg_ig_maps",
           "required": true,
           "description": "Not empty array of Portal to Initiator group mappings objects"
         }
@@ -3291,6 +3350,7 @@
         {
           "name": "portals",
           "type": "array",
+          "class": "iscsi_portals",
           "required": true,
           "description": "Not empty array of portals"
         },

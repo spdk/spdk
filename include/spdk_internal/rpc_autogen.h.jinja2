@@ -45,6 +45,42 @@ free_rpc_{{ object.name }}(struct rpc_{{ object.name }} *req)
 }
 {% endfor %}
 
+/* Array definitions section */
+
+{% for array in schema["arrays"] %}
+{%- set array_max_count = "RPC_" ~ (array.name | upper) ~ "_MAX" %}
+#define {{ array_max_count }} {{ array.max_count }}
+
+struct rpc_{{ array.name }} {
+	size_t    count;
+    {%- if array.item_type == "object" %}
+	struct rpc_{{ array.class }}  items[{{ array_max_count }}];
+    {%- elif array.item_type == "string" %}
+	char      *items[{{ array_max_count }}];
+    {%- else %}
+	{{ types[array.item_type] }}items[{{ array_max_count }}];
+    {%- endif %}
+};
+
+static inline void
+free_rpc_{{ array.name }}(struct rpc_{{ array.name }} *arr)
+{
+{%- if array.item_type == "string" %}
+	size_t i;
+
+	for (i = 0; i < arr->count; i++) {
+		free(arr->items[i]);
+	}
+{%- elif array.item_type == "object" %}
+	size_t i;
+
+	for (i = 0; i < arr->count; i++) {
+		free_rpc_{{ array.class }}(&arr->items[i]);
+	}
+{%- endif %}
+}
+{% endfor %}
+
 /* RPC objects section */
 
 {% for method in schema["methods"] %}
@@ -55,6 +91,8 @@ struct rpc_{{ method.name }}_ctx {
 		struct    rpc_{{ param.class }} {{ param.name }};
 	{%- elif param.type == "enum" -%}
 		enum      rpc_{{ param.class }} {{ param.name }};
+	{%- elif param.type == "array" and param.class -%}
+		struct    rpc_{{ param.class }} {{ param.name }};
 	{%- else -%}
 		{{ types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
 	{%- endif %}
@@ -69,6 +107,9 @@ free_rpc_{{ method.name }}(struct rpc_{{ method.name }}_ctx *req)
 	free(req->{{ "is_private" if param.name == "private" else param.name }});
 {%- endfor %}
 {%- for param in method.params if param.type == "object" %}
+	free_rpc_{{ param.class }}(&req->{{ param.name }});
+{%- endfor %}
+{%- for param in method.params if param.type == "array" and param.class %}
 	free_rpc_{{ param.class }}(&req->{{ param.name }});
 {%- endfor %}
 }
