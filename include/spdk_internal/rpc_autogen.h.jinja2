@@ -41,8 +41,12 @@ free_rpc_{{ object.name }}(struct rpc_{{ object.name }} *req)
 {%- if method.params %}
 struct rpc_{{ method.name }}_ctx {
     {%- for param in method.params %}
-	{{ "struct    rpc_"+param.class+" " if "class" in param else types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
-	{%- endfor %}
+	{% if param.type == "object" -%}
+		struct    rpc_{{ param.class }} {{ param.name }};
+	{%- else -%}
+		{{ types[param.type] }}{{ "is_private" if param.name == "private" else param.name }};
+	{%- endif %}
+    {%- endfor %}
 	struct spdk_jsonrpc_request *request;
 };
 
@@ -52,7 +56,7 @@ free_rpc_{{ method.name }}(struct rpc_{{ method.name }}_ctx *req)
 {%- for param in method.params if param.type == "string" %}
 	free(req->{{ "is_private" if param.name == "private" else param.name }});
 {%- endfor %}
-{%- for param in method.params if "class" in param %}
+{%- for param in method.params if param.type == "object" %}
 	free_rpc_{{ param.class }}(&req->{{ param.name }});
 {%- endfor %}
 }
