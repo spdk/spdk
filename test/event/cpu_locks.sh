@@ -22,6 +22,27 @@ locks_exist() {
 	lslocks -p "$1" | grep -q "spdk_cpu_lock"
 }
 
+dump_lock_diagnostics() {
+	local pid=$1
+
+	echo "=== LOCK DIAGNOSTICS for PID $pid ==="
+	echo "--- Process alive? ---"
+	kill -0 "$pid" && echo "YES" || echo "NO"
+	echo "--- Lock files on disk ---"
+	ls -la /var/tmp/spdk_cpu_lock* || echo "(none)"
+	echo "--- /proc/locks WRITE entries ---"
+	grep WRITE /proc/locks || echo "(no WRITE locks)"
+	echo "--- lslocks (excl. hugepages) ---"
+	lslocks | grep -v hugepage || echo "(none)"
+	echo "--- lslocks -p $pid (excl. hugepages) ---"
+	lslocks -p "$pid" | grep -v hugepage
+	echo "--- /proc/$pid/fd -> lock files ---"
+	ls -la /proc/"$pid"/fd/ | grep spdk_cpu_lock || echo "(no fd links to spdk_cpu_lock)"
+	echo "--- lslocks version ---"
+	lslocks --version
+	echo "=== END DIAGNOSTICS ==="
+}
+
 # Wait for locks to appear (e.g. after framework_enable_cpumask_locks or app start).
 # Retries to avoid race with lslocks/proc visibility (see issue #2920).
 wait_for_locks() {
@@ -35,6 +56,8 @@ wait_for_locks() {
 		fi
 		sleep 0.2
 	done
+
+	dump_lock_diagnostics "$pid"
 	return 1
 }
 
