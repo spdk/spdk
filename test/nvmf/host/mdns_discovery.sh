@@ -117,6 +117,11 @@ function get_notification_count() {
 	notify_id=$((notify_id + notification_count))
 }
 
+function is_notification_count_eq() {
+	expected_count=$1
+	waitforcondition 'get_notification_count && ((notification_count == expected_count))'
+}
+
 [[ "$(get_subsystem_names)" == "" ]]
 [[ "$(get_bdev_list)" == "" ]]
 
@@ -146,94 +151,86 @@ $rpc_py nvmf_subsystem_add_host ${NQN2}0 $HOST_NQN
 
 #Publish discovery service
 $rpc_py nvmf_publish_mdns_prr
-sleep 5 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
-# Listener not found in the discovery service
+# Wait for the first discovery service to appear in Avahi
+waitforcondition 'check_mdns_request_exists spdk0 $NVMF_FIRST_TARGET_IP $DISCOVERY_PORT "found"'
+
+# Second listener not added yet - should not be in Avahi
 check_mdns_request_exists spdk1 $NVMF_SECOND_TARGET_IP $DISCOVERY_PORT "not found"
 
 $rpc_py nvmf_subsystem_add_listener $DISCOVERY_NQN -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP \
 	-s $DISCOVERY_PORT
 $rpc_py nvmf_subsystem_add_listener ${NQN2}0 -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
-sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
-# Listener found in the discovery service
-check_mdns_request_exists spdk1 $NVMF_SECOND_TARGET_IP $DISCOVERY_PORT "found"
+# Wait for the second service to appear in Avahi
+waitforcondition 'check_mdns_request_exists spdk1 $NVMF_SECOND_TARGET_IP $DISCOVERY_PORT "found"'
 
+# Wait for both discovery controllers to finish attaching I/O controllers and bdevs
+waitforcondition '[[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns1_nvme0n1" ]]'
 [[ "$(get_mdns_discovery_svcs)" == "mdns" ]]
-[[ $(get_discovery_ctrlrs) == "mdns0_nvme mdns1_nvme" ]]
+[[ "$(get_discovery_ctrlrs)" == "mdns0_nvme mdns1_nvme" ]]
 [[ "$(get_subsystem_names)" == "mdns0_nvme0 mdns1_nvme0" ]]
-[[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns1_nvme0n1" ]]
 [[ "$(get_subsystem_paths mdns0_nvme0)" == "$NVMF_PORT" ]]
 [[ "$(get_subsystem_paths mdns1_nvme0)" == "$NVMF_PORT" ]]
-get_notification_count
-[[ $notification_count == 2 ]]
+is_notification_count_eq 2
 
 # Adding a namespace isn't a discovery function, but do it here anyways just to confirm we see a new bdev.
 $rpc_py nvmf_subsystem_add_ns ${NQN}0 null1
 $rpc_py nvmf_subsystem_add_ns ${NQN2}0 null3
-sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
-[[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
-get_notification_count
-[[ $notification_count == 2 ]]
+waitforcondition '[[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]'
+is_notification_count_eq 2
 
 # Add a second path to the same subsystems.  This shouldn't change the list of subsystems or bdevs, but
 # we should see a second path on the mdns0_nvme0 and mdns1_nvme0  subsystems now.
 $rpc_py nvmf_subsystem_add_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
 $rpc_py nvmf_subsystem_add_listener ${NQN2}0 -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP -s $NVMF_SECOND_PORT
-sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
+waitforcondition '[[ "$(get_subsystem_paths mdns0_nvme0)" == "$NVMF_PORT $NVMF_SECOND_PORT" ]]'
+waitforcondition '[[ "$(get_subsystem_paths mdns1_nvme0)" == "$NVMF_PORT $NVMF_SECOND_PORT" ]]'
 [[ "$(get_subsystem_names)" == "mdns0_nvme0 mdns1_nvme0" ]]
 [[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
-[[ "$(get_subsystem_paths mdns0_nvme0)" == "$NVMF_PORT $NVMF_SECOND_PORT" ]]
-[[ "$(get_subsystem_paths mdns1_nvme0)" == "$NVMF_PORT $NVMF_SECOND_PORT" ]]
-get_notification_count
-[[ $notification_count == 0 ]]
+is_notification_count_eq 0
 
 # Remove the listener for the first port.  The subsystem and bdevs should stay, but we should see
 # the path to that first port disappear.
 $rpc_py nvmf_subsystem_remove_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_remove_listener ${NQN2}0 -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
-sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
+waitforcondition '[[ "$(get_subsystem_paths mdns0_nvme0)" == "$NVMF_SECOND_PORT" ]]'
+waitforcondition '[[ "$(get_subsystem_paths mdns1_nvme0)" == "$NVMF_SECOND_PORT" ]]'
 [[ "$(get_subsystem_names)" == "mdns0_nvme0 mdns1_nvme0" ]]
 [[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
-[[ "$(get_subsystem_paths mdns0_nvme0)" == "$NVMF_SECOND_PORT" ]]
-[[ "$(get_subsystem_paths mdns1_nvme0)" == "$NVMF_SECOND_PORT" ]]
-get_notification_count
-[[ $notification_count == 0 ]]
+is_notification_count_eq 0
 
 $rpc_py -s $HOST_SOCK bdev_nvme_stop_mdns_discovery -b mdns
-sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
-[[ "$(get_mdns_discovery_svcs)" == "" ]]
-[[ "$(get_subsystem_names)" == "" ]]
+waitforcondition '[[ "$(get_mdns_discovery_svcs)" == "" ]]'
+waitforcondition '[[ "$(get_subsystem_names)" == "" ]]'
 [[ "$(get_bdev_list)" == "" ]]
-get_notification_count
-[[ $notification_count == 4 ]]
+is_notification_count_eq 4
 
 # Make sure that it's impossible to start the discovery using the same bdev name
 $rpc_py -s $HOST_SOCK bdev_nvme_start_mdns_discovery -b mdns -s _nvme-disc._tcp -q $HOST_NQN
 NOT $rpc_py -s $HOST_SOCK bdev_nvme_start_mdns_discovery -b mdns -s _nvme-disc._http -q $HOST_NQN
-sleep 5
 
+waitforcondition '[[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]'
 [[ "$(get_mdns_discovery_svcs)" == "mdns" ]]
-[[ $(get_discovery_ctrlrs) == "mdns0_nvme mdns1_nvme" ]]
-[[ $(get_bdev_list) == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
+[[ "$(get_discovery_ctrlrs)" == "mdns0_nvme mdns1_nvme" ]]
 
 # Make sure that it's also impossible to start the discovery using the same service name
 NOT $rpc_py -s $HOST_SOCK bdev_nvme_start_mdns_discovery -b cdc -s _nvme-disc._tcp -q $HOST_NQN
-[[ $(get_discovery_ctrlrs) == "mdns0_nvme mdns1_nvme" ]]
-[[ $(get_bdev_list) == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
+[[ "$(get_discovery_ctrlrs)" == "mdns0_nvme mdns1_nvme" ]]
+[[ "$(get_bdev_list)" == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
 $rpc_py -s $HOST_SOCK bdev_nvme_stop_mdns_discovery -b mdns
 
 # Listener found in the discovery service
 check_mdns_request_exists spdk1 $NVMF_FIRST_TARGET_IP $DISCOVERY_PORT "found"
 $rpc_py nvmf_subsystem_remove_listener $DISCOVERY_NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $DISCOVERY_PORT
-sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
-# Removed listener is applied in the discovery service
-check_mdns_request_exists spdk1 $NVMF_FIRST_TARGET_IP $DISCOVERY_PORT "not found"
+
+# Wait for the removed listener to be reflected in the discovery service
+waitforcondition 'check_mdns_request_exists spdk1 $NVMF_FIRST_TARGET_IP $DISCOVERY_PORT "not found"'
 
 $rpc_py nvmf_stop_mdns_prr
 
