@@ -347,6 +347,7 @@ struct spdk_nvmf_tcp_poll_group {
 	struct spdk_interrupt			*intr;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
+	uint32_t				num_listeners;
 
 	struct spdk_io_channel			*accel_channel;
 	struct spdk_nvmf_tcp_control_msg_list	*control_msg_list;
@@ -354,10 +355,29 @@ struct spdk_nvmf_tcp_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_tcp_poll_group)	link;
 };
 
+struct spdk_nvmf_tcp_listener {
+	struct spdk_nvmf_tcp_port		*port;
+	struct spdk_nvmf_tcp_poll_group		*tgroup;
+	struct spdk_sock			*sock;
+	TAILQ_ENTRY(spdk_nvmf_tcp_listener)	link;
+};
+
+struct nvmf_tcp_new_qpair_ctx {
+	struct spdk_nvmf_tcp_qpair		*tqpair;
+	struct spdk_nvmf_poll_group		*group;
+};
+
 struct spdk_nvmf_tcp_port {
 	const struct spdk_nvme_transport_id	*trid;
 	struct spdk_sock			*listen_sock;
 	struct spdk_nvmf_transport		*transport;
+	const char				*sock_impl_name;
+	struct spdk_sock_opts			sock_opts;
+	struct spdk_sock_impl_opts		impl_opts;
+	bool					impl_opts_valid;
+	bool					per_pg_listen;
+	pthread_mutex_t				listeners_lock;
+	TAILQ_HEAD(, spdk_nvmf_tcp_listener)	listeners;
 	TAILQ_ENTRY(spdk_nvmf_tcp_port)		link;
 };
 
@@ -737,6 +757,49 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 static int nvmf_tcp_accept(void *ctx);
 
 static void nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock);
+static void nvmf_tcp_accept_local_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock);
+static void nvmf_tcp_add_local_qpair(void *ctx);
+static int nvmf_tcp_port_create_listener(struct spdk_nvmf_tcp_port *port,
+		struct spdk_nvmf_tcp_poll_group *tgroup);
+static void nvmf_tcp_port_destroy_listener(struct spdk_nvmf_tcp_listener *listener);
+static int nvmf_tcp_poll_group_ensure_vcl_listeners(struct spdk_nvmf_tcp_poll_group *tgroup);
+static int nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
+				   struct spdk_nvmf_qpair *qpair);
+
+static inline int
+nvmf_tcp_poll_group_add_local_qpair(struct spdk_nvmf_tcp_poll_group *tgroup,
+				    struct spdk_nvmf_poll_group *group,
+				    struct spdk_nvmf_qpair *qpair)
+{
+#ifdef SPDK_UNIT_TEST
+	int rc;
+
+	TAILQ_INIT(&qpair->outstanding);
+	qpair->group = group;
+	qpair->ctrlr = NULL;
+	qpair->disconnect_started = false;
+
+	rc = nvmf_tcp_poll_group_add(&tgroup->group, qpair);
+	if (rc == 0) {
+		TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);
+		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_CONNECTING);
+	}
+
+	return rc;
+#else
+	return spdk_nvmf_poll_group_add(group, qpair);
+#endif
+}
+
+static inline const char *
+nvmf_tcp_get_default_sock_impl_name(void)
+{
+#ifdef SPDK_UNIT_TEST
+	return NULL;
+#else
+	return spdk_sock_get_default_impl();
+#endif
+}
 
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
@@ -913,6 +976,121 @@ nvmf_tcp_trsvcid_to_int(const char *trsvcid)
 	return (int)ull;
 }
 
+static struct spdk_nvmf_tcp_listener *
+nvmf_tcp_port_find_listener(struct spdk_nvmf_tcp_port *port,
+			    struct spdk_nvmf_tcp_poll_group *tgroup)
+{
+	struct spdk_nvmf_tcp_listener *listener;
+
+	TAILQ_FOREACH(listener, &port->listeners, link) {
+		if (listener->tgroup == tgroup) {
+			return listener;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+nvmf_tcp_port_create_listener(struct spdk_nvmf_tcp_port *port,
+			      struct spdk_nvmf_tcp_poll_group *tgroup)
+{
+	struct spdk_nvmf_tcp_listener *listener;
+	int trsvcid_int, rc;
+
+	if (!port->per_pg_listen) {
+		return 0;
+	}
+
+	pthread_mutex_lock(&port->listeners_lock);
+	listener = nvmf_tcp_port_find_listener(port, tgroup);
+	pthread_mutex_unlock(&port->listeners_lock);
+	if (listener != NULL) {
+		return 0;
+	}
+
+	trsvcid_int = nvmf_tcp_trsvcid_to_int(port->trid->trsvcid);
+	if (trsvcid_int < 0) {
+		return -EINVAL;
+	}
+
+	listener = calloc(1, sizeof(*listener));
+	if (listener == NULL) {
+		return -ENOMEM;
+	}
+
+	listener->port = port;
+	listener->tgroup = tgroup;
+	listener->sock = spdk_sock_listen_ext(port->trid->traddr, trsvcid_int,
+					      port->sock_impl_name, &port->sock_opts);
+	if (listener->sock == NULL) {
+		rc = -errno;
+		SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed on poll group %p: %s (%d)\n",
+			    port->trid->traddr, trsvcid_int, tgroup, spdk_strerror(errno), errno);
+		free(listener);
+		return rc;
+	}
+
+	rc = spdk_sock_group_add_sock(tgroup->sock_group, listener->sock, nvmf_tcp_accept_local_cb, listener);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_group_add_sock() failed for local listener, rc %d: %s\n",
+			    rc, spdk_strerror(-rc));
+		spdk_sock_close(&listener->sock);
+		free(listener);
+		return rc;
+	}
+
+	pthread_mutex_lock(&port->listeners_lock);
+	TAILQ_INSERT_TAIL(&port->listeners, listener, link);
+	pthread_mutex_unlock(&port->listeners_lock);
+	tgroup->num_listeners++;
+	return 0;
+}
+
+static void
+nvmf_tcp_port_destroy_listener(struct spdk_nvmf_tcp_listener *listener)
+{
+	int rc;
+
+	if (listener == NULL) {
+		return;
+	}
+
+	rc = spdk_sock_group_remove_sock(listener->tgroup->sock_group, listener->sock);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_group_remove_sock() failed for local listener, rc %d: %s\n",
+			    rc, spdk_strerror(-rc));
+	}
+
+	spdk_sock_close(&listener->sock);
+	if (listener->tgroup->num_listeners > 0) {
+		listener->tgroup->num_listeners--;
+	}
+	free(listener);
+}
+
+static int
+nvmf_tcp_poll_group_ensure_vcl_listeners(struct spdk_nvmf_tcp_poll_group *tgroup)
+{
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_tcp_port *port;
+	int rc;
+
+	ttransport = SPDK_CONTAINEROF(tgroup->group.transport, struct spdk_nvmf_tcp_transport, transport);
+	TAILQ_FOREACH(port, &ttransport->ports, link) {
+		if (!port->per_pg_listen) {
+			continue;
+		}
+
+		rc = nvmf_tcp_port_create_listener(port, tgroup);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 /**
  * Canonicalize a listen address trid.
  */
@@ -1041,9 +1219,13 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	}
 
 	port->trid = trid;
+	port->transport = transport;
+	pthread_mutex_init(&port->listeners_lock, NULL);
+	TAILQ_INIT(&port->listeners);
 
 	sock_impl_name = NULL;
 
+	memset(&opts, 0, sizeof(opts));
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ttransport->tcp_opts.sock_priority;
@@ -1077,52 +1259,75 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		opts.impl_opts_size = sizeof(impl_opts);
 	}
 
-	port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int,
-			    sock_impl_name, &opts);
-	if (port->listen_sock == NULL) {
-		SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed: %s (%d)\n",
-			    trid->traddr, trsvcid_int,
-			    spdk_strerror(errno), errno);
-		free(port);
-		return -errno;
+	port->sock_impl_name = sock_impl_name;
+	port->sock_opts = opts;
+	if (opts.impl_opts != NULL) {
+		port->impl_opts = impl_opts;
+		port->sock_opts.impl_opts = &port->impl_opts;
+		port->sock_opts.impl_opts_size = sizeof(port->impl_opts);
+		port->impl_opts_valid = true;
 	}
 
-	/* VCL jumbo interop is unstable with C2H success optimization enabled. Disable the
-	 * optimization once a TCP transport is backed by a VCL listen socket so all subsequent
-	 * qpairs use the conservative completion path.
-	 */
-	if (ttransport->tcp_opts.c2h_success &&
-	    strcmp(spdk_sock_get_impl_name(port->listen_sock), "vcl") == 0) {
-		SPDK_NOTICELOG("Disabling NVMe/TCP C2H success optimization for VCL-backed listener\n");
-		ttransport->tcp_opts.c2h_success = false;
+	if (sock_impl_name == NULL) {
+		sock_impl_name = nvmf_tcp_get_default_sock_impl_name();
+		port->sock_impl_name = sock_impl_name;
 	}
 
-	if (spdk_sock_is_ipv4(port->listen_sock)) {
-		adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	} else if (spdk_sock_is_ipv6(port->listen_sock)) {
-		adrfam = SPDK_NVMF_ADRFAM_IPV6;
+	port->per_pg_listen = sock_impl_name != NULL && strcmp(sock_impl_name, "vcl") == 0;
+	if (!port->per_pg_listen) {
+		port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int, sock_impl_name, &port->sock_opts);
+		if (port->listen_sock == NULL) {
+			SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed: %s (%d)\n",
+				    trid->traddr, trsvcid_int, spdk_strerror(errno), errno);
+			pthread_mutex_destroy(&port->listeners_lock);
+			free(port);
+			return -errno;
+		}
+
+		/* VCL jumbo interop is unstable with C2H success optimization enabled. Disable the
+		 * optimization once a TCP transport is backed by a VCL listen socket so all subsequent
+		 * qpairs use the conservative completion path.
+		 */
+		if (ttransport->tcp_opts.c2h_success &&
+		    strcmp(spdk_sock_get_impl_name(port->listen_sock), "vcl") == 0) {
+			SPDK_NOTICELOG("Disabling NVMe/TCP C2H success optimization for VCL-backed listener\n");
+			ttransport->tcp_opts.c2h_success = false;
+		}
+
+		if (spdk_sock_is_ipv4(port->listen_sock)) {
+			adrfam = SPDK_NVMF_ADRFAM_IPV4;
+		} else if (spdk_sock_is_ipv6(port->listen_sock)) {
+			adrfam = SPDK_NVMF_ADRFAM_IPV6;
+		} else {
+			SPDK_ERRLOG("Unhandled socket type\n");
+			adrfam = 0;
+		}
+
+		if (adrfam != trid->adrfam) {
+			SPDK_ERRLOG("Socket address family mismatch\n");
+			spdk_sock_close(&port->listen_sock);
+			pthread_mutex_destroy(&port->listeners_lock);
+			free(port);
+			return -EINVAL;
+		}
+
+		rc = spdk_sock_group_add_sock(ttransport->listen_sock_group, port->listen_sock, nvmf_tcp_accept_cb,
+					      port);
+		if (rc < 0) {
+			SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+			spdk_sock_close(&port->listen_sock);
+			pthread_mutex_destroy(&port->listeners_lock);
+			free(port);
+			return rc;
+		}
 	} else {
-		SPDK_ERRLOG("Unhandled socket type\n");
-		adrfam = 0;
-	}
+		if (ttransport->tcp_opts.c2h_success) {
+			SPDK_NOTICELOG("Disabling NVMe/TCP C2H success optimization for VCL-backed listener\n");
+			ttransport->tcp_opts.c2h_success = false;
+		}
 
-	if (adrfam != trid->adrfam) {
-		SPDK_ERRLOG("Socket address family mismatch\n");
-		spdk_sock_close(&port->listen_sock);
-		free(port);
-		return -EINVAL;
+		adrfam = trid->adrfam;
 	}
-
-	rc = spdk_sock_group_add_sock(ttransport->listen_sock_group, port->listen_sock, nvmf_tcp_accept_cb,
-				      port);
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		spdk_sock_close(&port->listen_sock);
-		free(port);
-		return rc;
-	}
-
-	port->transport = transport;
 
 	SPDK_NOTICELOG("*** NVMe/TCP Target Listening on %s port %s ***\n",
 		       trid->traddr, trid->trsvcid);
@@ -1146,13 +1351,27 @@ nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 
 	port = nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
-		rc = spdk_sock_group_remove_sock(ttransport->listen_sock_group, port->listen_sock);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-		}
-
 		TAILQ_REMOVE(&ttransport->ports, port, link);
-		spdk_sock_close(&port->listen_sock);
+		if (!port->per_pg_listen) {
+			rc = spdk_sock_group_remove_sock(ttransport->listen_sock_group, port->listen_sock);
+			if (rc < 0) {
+				SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+			}
+
+			spdk_sock_close(&port->listen_sock);
+		} else {
+			struct spdk_nvmf_tcp_listener *listener, *tmp;
+
+			pthread_mutex_lock(&port->listeners_lock);
+			TAILQ_FOREACH_SAFE(listener, &port->listeners, link, tmp) {
+				TAILQ_REMOVE(&port->listeners, listener, link);
+				pthread_mutex_unlock(&port->listeners_lock);
+				nvmf_tcp_port_destroy_listener(listener);
+				pthread_mutex_lock(&port->listeners_lock);
+			}
+			pthread_mutex_unlock(&port->listeners_lock);
+		}
+		pthread_mutex_destroy(&port->listeners_lock);
 		free(port);
 	}
 }
@@ -1514,9 +1733,12 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
+nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock,
+			struct spdk_nvmf_tcp_poll_group *tgroup)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
+	struct spdk_nvmf_poll_group *group;
+	struct nvmf_tcp_new_qpair_ctx *ctx;
 	int rc;
 
 	SPDK_DEBUGLOG(nvmf_tcp, "New connection accepted on %s port %s\n",
@@ -1546,23 +1768,65 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_tcp_port *port, struct spdk_sock *sock)
 		return;
 	}
 
-	spdk_nvmf_tgt_new_qpair(port->transport->tgt, &tqpair->qpair);
+	if (tgroup == NULL) {
+		spdk_nvmf_tgt_new_qpair(port->transport->tgt, &tqpair->qpair);
+		return;
+	}
+
+	group = tgroup->group.group;
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		nvmf_tcp_qpair_destroy(tqpair);
+		return;
+	}
+
+	pthread_mutex_lock(&group->mutex);
+	group->current_unassociated_qpairs++;
+	pthread_mutex_unlock(&group->mutex);
+
+	ctx->tqpair = tqpair;
+	ctx->group = group;
+	spdk_thread_send_msg(group->thread, nvmf_tcp_add_local_qpair, ctx);
+}
+
+static void
+nvmf_tcp_add_local_qpair(void *ctx)
+{
+	struct nvmf_tcp_new_qpair_ctx *add_ctx = ctx;
+	struct spdk_nvmf_tcp_qpair *tqpair = add_ctx->tqpair;
+	struct spdk_nvmf_poll_group *group = add_ctx->group;
+	int rc;
+
+	free(add_ctx);
+
+	rc = nvmf_tcp_poll_group_add_local_qpair(SPDK_CONTAINEROF(
+						 nvmf_get_transport_poll_group(group, tqpair->qpair.transport),
+						 struct spdk_nvmf_tcp_poll_group, group),
+						 group, &tqpair->qpair);
+	if (rc != 0) {
+		pthread_mutex_lock(&group->mutex);
+		assert(group->current_unassociated_qpairs > 0);
+		group->current_unassociated_qpairs--;
+		pthread_mutex_unlock(&group->mutex);
+		spdk_nvmf_qpair_disconnect(&tqpair->qpair);
+	}
 }
 
 static uint32_t
-nvmf_tcp_port_accept(struct spdk_nvmf_tcp_port *port)
+nvmf_tcp_port_accept(struct spdk_nvmf_tcp_port *port, struct spdk_sock *listen_sock,
+		     struct spdk_nvmf_tcp_poll_group *tgroup)
 {
 	struct spdk_sock *sock;
 	uint32_t count = 0;
 	int i;
 
 	for (i = 0; i < NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME; i++) {
-		sock = spdk_sock_accept(port->listen_sock);
+		sock = spdk_sock_accept(listen_sock);
 		if (sock == NULL) {
 			break;
 		}
 		count++;
-		nvmf_tcp_handle_connect(port, sock);
+		nvmf_tcp_handle_connect(port, sock, tgroup);
 	}
 
 	return count;
@@ -1591,7 +1855,15 @@ nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *s
 {
 	struct spdk_nvmf_tcp_port *port = ctx;
 
-	nvmf_tcp_port_accept(port);
+	nvmf_tcp_port_accept(port, port->listen_sock, NULL);
+}
+
+static void
+nvmf_tcp_accept_local_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_nvmf_tcp_listener *listener = ctx;
+
+	nvmf_tcp_port_accept(listener->port, listener->sock, listener->tgroup);
 }
 
 static void
@@ -1613,7 +1885,7 @@ nvmf_tcp_discover(struct spdk_nvmf_transport *transport,
 
 	assert(port != NULL);
 
-	if (strcmp(spdk_sock_get_impl_name(port->listen_sock), "ssl") == 0) {
+	if (port->sock_impl_name && strcmp(port->sock_impl_name, "ssl") == 0) {
 		entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED;
 		entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_TLS_1_3;
 	} else {
@@ -1721,6 +1993,24 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 		ttransport->next_pg = tgroup;
 	}
 
+	{
+		struct spdk_nvmf_tcp_port *port;
+		int rc;
+
+		TAILQ_FOREACH(port, &ttransport->ports, link) {
+			if (!port->per_pg_listen) {
+				continue;
+			}
+
+			rc = nvmf_tcp_port_create_listener(port, tgroup);
+			if (rc != 0) {
+				SPDK_ERRLOG("Cannot create local VCL listener for poll group %p, rc %d\n",
+					    tgroup, rc);
+				goto cleanup;
+			}
+		}
+	}
+
 	if (spdk_interrupt_mode_is_enabled()) {
 		tgroup->intr = SPDK_INTERRUPT_REGISTER_FOR_EVENTS(spdk_sock_group_get_interruptfd(
 					tgroup->sock_group),
@@ -1781,10 +2071,46 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup, *next_tgroup;
 	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_tcp_port *port;
 	int rc;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_interrupt_unregister(&tgroup->intr);
+
+	if (tgroup->group.transport == NULL) {
+		/* Transport can be NULL when nvmf_tcp_poll_group_create()
+		 * calls this function directly in a failure path. */
+		rc = spdk_sock_group_close(&tgroup->sock_group);
+		if (rc < 0) {
+			SPDK_ERRLOG("spdk_sock_group_close() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+			assert(false);
+		}
+		if (tgroup->control_msg_list) {
+			nvmf_tcp_control_msg_list_free(tgroup->control_msg_list);
+		}
+		if (tgroup->accel_channel) {
+			spdk_put_io_channel(tgroup->accel_channel);
+		}
+		free(tgroup);
+		return;
+	}
+
+	ttransport = SPDK_CONTAINEROF(tgroup->group.transport, struct spdk_nvmf_tcp_transport, transport);
+
+	TAILQ_FOREACH(port, &ttransport->ports, link) {
+		struct spdk_nvmf_tcp_listener *listener;
+
+		pthread_mutex_lock(&port->listeners_lock);
+		listener = nvmf_tcp_port_find_listener(port, tgroup);
+		if (listener != NULL) {
+			TAILQ_REMOVE(&port->listeners, listener, link);
+			pthread_mutex_unlock(&port->listeners_lock);
+			nvmf_tcp_port_destroy_listener(listener);
+		} else {
+			pthread_mutex_unlock(&port->listeners_lock);
+		}
+	}
+
 	rc = spdk_sock_group_close(&tgroup->sock_group);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_group_close() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
@@ -1798,15 +2124,6 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	if (tgroup->accel_channel) {
 		spdk_put_io_channel(tgroup->accel_channel);
 	}
-
-	if (tgroup->group.transport == NULL) {
-		/* Transport can be NULL when nvmf_tcp_poll_group_create()
-		 * calls this function directly in a failure path. */
-		free(tgroup);
-		return;
-	}
-
-	ttransport = SPDK_CONTAINEROF(tgroup->group.transport, struct spdk_nvmf_tcp_transport, transport);
 
 	next_tgroup = TAILQ_NEXT(tgroup, link);
 	TAILQ_REMOVE(&ttransport->poll_groups, tgroup, link);
@@ -3592,7 +3909,14 @@ nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
-	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
+	rc = nvmf_tcp_poll_group_ensure_vcl_listeners(tgroup);
+	if (spdk_unlikely(rc < 0)) {
+		SPDK_ERRLOG("Failed to create local VCL listeners for sock_group=%p, rc %d: %s\n",
+			    tgroup->sock_group, rc, spdk_strerror(-rc));
+		return rc;
+	}
+
+	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs) && tgroup->num_listeners == 0)) {
 		return 0;
 	}
 
