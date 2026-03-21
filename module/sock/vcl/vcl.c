@@ -138,8 +138,35 @@ vcl_sock_normalize_rc(ssize_t rc)
 	if (rc == VPPCOM_EAGAIN || rc == VPPCOM_EWOULDBLOCK) {
 		return -EAGAIN;
 	}
+	if (rc == VPPCOM_EINPROGRESS) {
+		return -EINPROGRESS;
+	}
+	if (rc == VPPCOM_ENOTCONN) {
+		return -ENOTCONN;
+	}
+	if (rc == VPPCOM_ECONNRESET) {
+		return -ECONNRESET;
+	}
+	if (rc == VPPCOM_ECONNREFUSED) {
+		return -ECONNREFUSED;
+	}
+	if (rc == VPPCOM_ETIMEDOUT) {
+		return -ETIMEDOUT;
+	}
 
 	return (int)rc;
+}
+
+static inline bool
+vcl_sock_needs_connect_poll(const struct spdk_vcl_sock *sock)
+{
+	return sock->deferred_connect || sock->pending_connect;
+}
+
+static inline bool
+vcl_sock_has_flush_work(const struct spdk_vcl_sock *sock)
+{
+	return vcl_sock_needs_connect_poll(sock) || !TAILQ_EMPTY(&sock->base.queued_reqs);
 }
 
 static int
@@ -318,6 +345,10 @@ vcl_sock_connect_poller(struct spdk_vcl_sock *sock)
 	struct epoll_event ev = {};
 	int rc, n;
 
+	if (!vcl_sock_needs_connect_poll(sock)) {
+		return 0;
+	}
+
 	if (sock->deferred_connect) {
 		rc = vcl_sock_start_connect(sock);
 		if (rc != 0 || !sock->pending_connect) {
@@ -384,6 +415,10 @@ vcl_sock_flush(struct spdk_sock *_sock)
 	ssize_t rc;
 	int iovcnt;
 	uint64_t requested;
+
+	if (!vcl_sock_has_flush_work(sock)) {
+		return 0;
+	}
 
 	rc = vcl_sock_connect_poller(sock);
 	if (rc == -EAGAIN) {
@@ -590,7 +625,7 @@ vcl_sock_accept(struct spdk_sock *_sock)
 	ep.ip = ep_ip;
 	sh = vppcom_session_accept(listen_sock->sh, &ep, O_NONBLOCK);
 	if (sh < 0) {
-		errno = sh == -ENOENT ? EAGAIN : -sh;
+		errno = sh == -ENOENT ? EAGAIN : -vcl_sock_normalize_rc(sh);
 		return NULL;
 	}
 
@@ -744,19 +779,19 @@ vcl_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 static int
 vcl_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
-	return 0;
+	return -ENOTSUP;
 }
 
 static int
 vcl_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 {
-	return 0;
+	return -ENOTSUP;
 }
 
 static int
 vcl_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 {
-	return 0;
+	return -ENOTSUP;
 }
 
 static bool
@@ -886,6 +921,9 @@ vcl_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events, st
 
 	TAILQ_FOREACH(sock, &_group->socks, link) {
 		vsock = __vcl_sock(sock);
+		if (!vcl_sock_has_flush_work(vsock)) {
+			continue;
+		}
 		rc = vcl_sock_flush(sock);
 		if (rc < 0 && rc != -EAGAIN) {
 			spdk_sock_abort_requests(sock);
