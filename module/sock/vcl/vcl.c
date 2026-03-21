@@ -273,6 +273,29 @@ vcl_sock_complete_connect(struct spdk_vcl_sock *sock)
 	return 0;
 }
 
+static int
+vcl_sock_complete_connect_event(struct spdk_vcl_sock *sock, uint32_t events)
+{
+	int rc;
+
+	if (events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+		vcl_sock_connect_done(sock, -ECONNRESET);
+		return -ECONNRESET;
+	}
+	if (!(events & EPOLLOUT)) {
+		return -EAGAIN;
+	}
+
+	rc = vcl_sock_complete_connect(sock);
+	if (rc == 0) {
+		vcl_sock_connect_done(sock, 0);
+	} else {
+		vcl_sock_connect_done(sock, rc);
+	}
+
+	return rc;
+}
+
 static void
 vcl_sock_connect_done(struct spdk_vcl_sock *sock, int status)
 {
@@ -389,21 +412,7 @@ vcl_sock_connect_poller(struct spdk_vcl_sock *sock)
 	if (n == 0) {
 		return -EAGAIN;
 	}
-	if (ev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
-		vcl_sock_connect_done(sock, -ECONNRESET);
-		return -ECONNRESET;
-	}
-	if (ev.events & EPOLLOUT) {
-		rc = vcl_sock_complete_connect(sock);
-		if (rc == 0) {
-			vcl_sock_connect_done(sock, 0);
-		} else {
-			vcl_sock_connect_done(sock, rc);
-		}
-		return rc;
-	}
-
-	return -EAGAIN;
+	return vcl_sock_complete_connect_event(sock, ev.events);
 }
 
 static int
@@ -452,9 +461,12 @@ vcl_sock_flush(struct spdk_sock *_sock)
 	return 0;
 }
 
+/*
+ * Keep synchronous connect eager, but keep async connect deferred until the
+ * socket is assigned to its final SPDK/VCL worker thread.
+ */
 static struct spdk_sock *
-vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
-			  bool async, spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
+vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts)
 {
 	struct spdk_vcl_sock *sock;
 	vppcom_endpt_t ep;
@@ -462,68 +474,36 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 	bool is_ipv6;
 	int rc, sh;
 
-	assert(async || (!cb_fn && !cb_arg));
-
 	rc = vcl_ensure_init();
 	if (rc != 0) {
-		if (cb_fn) {
-			cb_fn(cb_arg, rc);
-		}
 		return NULL;
 	}
 
-	sh = vppcom_session_create(VPPCOM_PROTO_TCP, async ? 1 : 0);
+	sh = vppcom_session_create(VPPCOM_PROTO_TCP, 0);
 	if (sh < 0) {
-		if (cb_fn) {
-			cb_fn(cb_arg, sh);
-		}
 		return NULL;
 	}
 
 	sock = vcl_sock_alloc(sh);
 	if (sock == NULL) {
 		vppcom_session_close(sh);
-		if (cb_fn) {
-			cb_fn(cb_arg, -ENOMEM);
-		}
 		return NULL;
 	}
 
 	vcl_fill_endpoint(ip, port, &ep, ipbuf, &is_ipv6);
 	sock->is_ipv6 = is_ipv6;
-	if (async) {
+	rc = vppcom_session_connect(sh, &ep);
+	if (rc == 0) {
 		rc = vcl_sock_set_nonblock(sh);
 		if (rc != 0) {
 			free(sock);
 			vppcom_session_close(sh);
-			cb_fn(cb_arg, rc);
 			return NULL;
 		}
-		sock->connect_cb_fn = cb_fn;
-		sock->connect_cb_arg = cb_arg;
-	}
-	rc = vppcom_session_connect(sh, &ep);
-	if (rc == 0) {
-		if (!async) {
-			rc = vcl_sock_set_nonblock(sh);
-			if (rc != 0) {
-				free(sock);
-				vppcom_session_close(sh);
-				return NULL;
-			}
-		}
 		sock->connected = true;
-		if (async) {
-			vcl_sock_connect_done(sock, 0);
-		}
-	} else if (rc == VPPCOM_EINPROGRESS) {
-		sock->pending_connect = true;
 	} else {
 		free(sock);
 		vppcom_session_close(sh);
-		if (cb_fn) {
-			cb_fn(cb_arg, rc);
-		}
 		return NULL;
 	}
 
@@ -533,7 +513,7 @@ vcl_sock_connect_internal(const char *ip, int port, struct spdk_sock_opts *opts,
 static struct spdk_sock *
 vcl_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return vcl_sock_connect_internal(ip, port, opts, false, NULL, NULL);
+	return vcl_sock_connect_internal(ip, port, opts);
 }
 
 static struct spdk_sock *
@@ -941,18 +921,9 @@ vcl_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events, st
 			continue;
 		}
 		if (vsock->pending_connect) {
-			if (events[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
-				vcl_sock_connect_done(vsock, -ECONNRESET);
+			if (vcl_sock_complete_connect_event(vsock, events[i].events) != 0) {
 				continue;
 			}
-			if (!(events[i].events & EPOLLOUT)) {
-				continue;
-			}
-			if (vcl_sock_complete_connect(vsock) != 0) {
-				vcl_sock_connect_done(vsock, -ECONNRESET);
-				continue;
-			}
-			vcl_sock_connect_done(vsock, 0);
 		} else if (vsock->connect_cb_fn != NULL && vsock->connected) {
 			vcl_sock_connect_done(vsock, 0);
 		}
