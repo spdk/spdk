@@ -2984,6 +2984,79 @@ Example response:
 }
 ~~~
 
+### bdev_kvmalloc_create {#rpc_bdev_kvmalloc_create}
+
+{{ bdev_kvmalloc_create_description }}
+
+#### Parameters
+
+{{ bdev_kvmalloc_create_params }}
+
+#### Response
+
+Name of newly created bdev.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "KVMalloc0",
+    "max_key_size": 16,
+    "max_value_size": 131072,
+    "optimal_value_granularity": 4096
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_kvmalloc_create",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "KVMalloc0"
+}
+~~~
+
+### bdev_kvmalloc_delete {#rpc_bdev_kvmalloc_delete}
+
+{{ bdev_kvmalloc_delete_description }}
+
+#### Parameters
+
+{{ bdev_kvmalloc_delete_params }}
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "KVMalloc0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_kvmalloc_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_malloc_create {#rpc_bdev_malloc_create}
 
 {{ bdev_malloc_create_description }}
