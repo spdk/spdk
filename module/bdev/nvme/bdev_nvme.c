@@ -4704,6 +4704,8 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	csi = spdk_nvme_ns_get_csi(ns);
 	opts = spdk_nvme_ctrlr_get_opts(ctrlr);
 
+	disk->csi = csi;
+
 	switch (csi) {
 	case SPDK_NVME_CSI_NVM:
 		disk->product_name = "NVMe disk";
@@ -4716,6 +4718,9 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 					     spdk_nvme_ns_get_extended_sector_size(ns);
 		disk->max_open_zones = spdk_nvme_zns_ns_get_max_open_zones(ns);
 		disk->max_active_zones = spdk_nvme_zns_ns_get_max_active_zones(ns);
+		break;
+	case SPDK_NVME_CSI_KV:
+		disk->product_name = "NVMe KV disk";
 		break;
 	default:
 		if (bdev_opts->allow_unrecognized_csi) {
