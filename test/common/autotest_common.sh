@@ -41,6 +41,10 @@ if [ -z "${output_dir:-}" ]; then
 	export output_dir="$rootdir/../output"
 fi
 
+# create .backtrace.lock early on to avoid ownership issues when print_backtrace()
+# ends up being called from root and non-root context under a single workflow.
+touch "$output_dir/.backtrace.lock"
+
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
 elif [[ -e $rootdir/mk/config.mk ]]; then
@@ -1198,7 +1202,7 @@ function print_backtrace() {
 	local trace_name
 	local trace_lock
 
-	exec {trace_lock}> "$output_dir/.backtrace.lock"
+	exec {trace_lock}< "$output_dir/.backtrace.lock"
 	flock "$trace_lock"
 
 	bts=("$output_dir/"+([0-9])backtrace.!(*.@(stack|context)))
