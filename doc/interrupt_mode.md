@@ -493,3 +493,12 @@ poll group creation or initialization typically fails with `-ENOTSUP`.
   on the fd_group infrastructure being initialized. Calling
   `spdk_reactor_set_interrupt_mode()` without prior `spdk_interrupt_mode_enable()` has
   no effect — fd_groups are not nested and pollers do not wake reactors correctly.
+
+---
+
+## Subsystem-Specific Documentation
+
+For subsystem-specific interrupt mode integration details:
+
+* **NVMe-oF Target**: See @ref nvmf_interrupt_mode for usage with the `nvmf_tgt`
+  application and developer guide for embedding the `lib/nvmf` library.

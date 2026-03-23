@@ -5,6 +5,7 @@
 - @subpage bdev_pg
 - @subpage bdev_module
 - @subpage nvmf_tgt_pg
+- @subpage nvmf_interrupt_mode
 - @subpage ftl
 - @subpage gdb_macros
 - @subpage notify
