@@ -653,6 +653,12 @@ struct spdk_bdev {
 	 */
 	uint32_t nsid;
 
+	/**
+	 * NVMe I/O Command Set Identifier.
+	 * Only meaningful when nsid != 0. Defaults to SPDK_NVME_CSI_NVM.
+	 */
+	enum spdk_nvme_csi csi;
+
 	/* Upon receiving a reset request, this is the amount of time in seconds
 	 * to wait for all I/O to complete before moving forward with the reset.
 	 * If all I/O completes prior to this time out, the reset will be skipped.

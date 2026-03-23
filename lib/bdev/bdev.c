@@ -5410,6 +5410,15 @@ spdk_bdev_get_nvme_nsid(struct spdk_bdev *bdev)
 	return bdev->nsid;
 }
 
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvme_csi spdk_nvme_csi_t;
+
+spdk_nvme_csi_t
+spdk_bdev_get_nvme_csi(const struct spdk_bdev *bdev)
+{
+	return bdev->csi;
+}
+
 uint32_t
 spdk_bdev_desc_get_block_size(struct spdk_bdev_desc *desc)
 {

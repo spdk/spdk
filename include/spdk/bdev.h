@@ -2571,6 +2571,18 @@ union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev);
  */
 uint32_t spdk_bdev_get_nvme_nsid(struct spdk_bdev *bdev);
 
+/**
+ * Get the NVMe I/O Command Set Identifier for the bdev.
+ *
+ * Returns SPDK_NVME_CSI_NVM if the bdev does not have a namespace ID
+ * or does not set a CSI.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return NVMe CSI value.
+ */
+enum spdk_nvme_csi spdk_bdev_get_nvme_csi(const struct spdk_bdev *bdev);
+
 #ifdef __cplusplus
 }
 #endif
