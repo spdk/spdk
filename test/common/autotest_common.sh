@@ -909,7 +909,7 @@ function waitforbdev() {
 
 function waitforcondition() {
 	local cond=$1
-	local max=${2:-10}
+	local max=${2:-20}
 	while ((max--)); do
 		if eval $cond; then
 			return 0
