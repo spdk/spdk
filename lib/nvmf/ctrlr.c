@@ -524,6 +524,21 @@ nvmf_subsystem_has_zns_iocs(struct spdk_nvmf_subsystem *subsystem)
 	return false;
 }
 
+static bool
+nvmf_subsystem_has_kv_iocs(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+	uint32_t i;
+
+	for (i = 0; i < subsystem->max_nsid; i++) {
+		ns = subsystem->ns[i];
+		if (ns && ns->csi == SPDK_NVME_CSI_KV) {
+			return true;
+		}
+	}
+	return false;
+}
+
 static void
 nvmf_ctrlr_init_visible_ns(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -658,7 +673,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	/* ready timeout - 500 msec units */
 	ctrlr->vcprop.cap.bits.to = NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS / 500;
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
-	subsys_has_multi_iocs = nvmf_subsystem_has_zns_iocs(subsystem);
+	subsys_has_multi_iocs = nvmf_subsystem_has_zns_iocs(subsystem) ||
+				nvmf_subsystem_has_kv_iocs(subsystem);
 	if (subsys_has_multi_iocs) {
 		ctrlr->vcprop.cap.bits.css =
 			SPDK_NVME_CAP_CSS_IOCS; /* One or more I/O command sets supported */
@@ -3554,6 +3570,31 @@ nvmf_ns_identify_iocs_nvm(struct spdk_nvmf_ns *ns,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ns_identify_iocs_kv_passthru(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	int rc;
+
+	rc = spdk_nvmf_request_get_bdev(cmd->nsid, req, &bdev, &desc, &ch);
+	if (rc) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {
+		memset(req->iov[0].iov_base, 0, req->length);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, NULL);
+}
+
 int
 spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 				    struct spdk_nvme_cmd *cmd,
@@ -3632,6 +3673,18 @@ nvmf_ctrlr_identify_iocs_zns(struct spdk_nvmf_ctrlr *ctrlr,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ctrlr_identify_iocs_kv(struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvme_cpl *rsp,
+			    struct spdk_nvme_kv_ctrlr_data *cdata_kv)
+{
+	cdata_kv->ver = SPDK_NVME_KV_SPEC_VER;
+
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 int
 spdk_nvmf_ctrlr_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 				       struct spdk_nvme_cmd *cmd,
@@ -3648,6 +3701,8 @@ spdk_nvmf_ctrlr_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 		return nvmf_ctrlr_identify_iocs_nvm(ctrlr, cmd, rsp, cdata);
 	case SPDK_NVME_CSI_ZNS:
 		return nvmf_ctrlr_identify_iocs_zns(ctrlr, cmd, rsp, cdata);
+	case SPDK_NVME_CSI_KV:
+		return nvmf_ctrlr_identify_iocs_kv(ctrlr, rsp, cdata);
 	default:
 		break;
 	}
@@ -3702,7 +3757,8 @@ static bool
 nvmf_ctrlr_is_csi_supported(struct spdk_nvmf_ctrlr *ctrlr, uint8_t csi)
 {
 	return (csi == SPDK_NVME_CSI_NVM) ||
-	       (csi == SPDK_NVME_CSI_ZNS && nvmf_subsystem_has_zns_iocs(ctrlr->subsys));
+	       (csi == SPDK_NVME_CSI_ZNS && nvmf_subsystem_has_zns_iocs(ctrlr->subsys)) ||
+	       (csi == SPDK_NVME_CSI_KV && nvmf_subsystem_has_kv_iocs(ctrlr->subsys));
 }
 
 static int
@@ -3865,6 +3921,9 @@ nvmf_ctrlr_identify_iocs(struct spdk_nvmf_ctrlr *ctrlr,
 		if (spdk_bdev_is_zoned(ns->bdev)) {
 			vector->zns = 1;
 		}
+		if (ns->csi == SPDK_NVME_CSI_KV) {
+			vector->kv = 1;
+		}
 	}
 
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3923,6 +3982,9 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 				tmpbuf, sizeof(tmpbuf));
 		break;
 	case SPDK_NVME_IDENTIFY_NS_IOCS:
+		if (cmd->cdw11_bits.identify.csi == SPDK_NVME_CSI_KV) {
+			return nvmf_ns_identify_iocs_kv_passthru(req);
+		}
 		ret = spdk_nvmf_ns_identify_iocs_specific(ctrlr, cmd, rsp, (void *)&tmpbuf, sizeof(tmpbuf));
 		break;
 	case SPDK_NVME_IDENTIFY_CTRLR_IOCS:
@@ -5221,6 +5283,14 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
 
+	/* For KV namespaces, all commands must go through passthru since
+	 * KV opcodes overlap with NVM opcodes (e.g., KV_STORE=0x01=WRITE,
+	 * KV_RETRIEVE=0x02=READ). We can't interpret opcodes without knowing
+	 * the CSI, so route all KV commands to passthru. */
+	if (spdk_unlikely(ns->csi == SPDK_NVME_CSI_KV)) {
+		goto passthru;
+	}
+
 	if (spdk_nvmf_request_using_zcopy(req)) {
 		assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 		return nvmf_bdev_ctrlr_zcopy_start(bdev, desc, ch, req);
@@ -5262,15 +5332,18 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 			}
 			return nvmf_bdev_ctrlr_copy_cmd(bdev, desc, ch, req);
 		default:
-			if (spdk_unlikely(qpair->transport->opts.disable_command_passthru)) {
-				goto invalid_opcode;
-			}
-			if (ns->passthru_nsid) {
-				nvmf_request_set_passthru_nsid(req, ns->passthru_nsid);
-			}
-			return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+			break;
 		}
 	}
+passthru:
+	if (spdk_unlikely(qpair->transport->opts.disable_command_passthru)) {
+		goto invalid_opcode;
+	}
+	if (ns->passthru_nsid) {
+		nvmf_request_set_passthru_nsid(req, ns->passthru_nsid);
+	}
+	return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+
 invalid_opcode:
 	SPDK_INFOLOG(nvmf, "Unsupported IO opcode 0x%x\n", cmd->opc);
 	req->error_location =
