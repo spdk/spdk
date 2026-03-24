@@ -26,6 +26,7 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 		run_test "nvmf_target_discovery" $rootdir/test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
 		run_test "nvmf_referrals" $rootdir/test/nvmf/target/referrals.sh "${TEST_ARGS[@]}"
 		run_test "nvmf_ns_masking" test/nvmf/target/ns_masking.sh "${TEST_ARGS[@]}"
+		run_test "nvmf_kv" $rootdir/test/nvmf/target/kv.sh "${TEST_ARGS[@]}"
 	fi
 	if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 		run_test "nvmf_nvme_cli" $rootdir/test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
