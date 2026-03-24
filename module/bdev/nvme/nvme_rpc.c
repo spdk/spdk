@@ -10,19 +10,16 @@
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
 
+#include "spdk_internal/rpc_autogen.h"
+
 #include "bdev_nvme.h"
 #include "spdk/base64.h"
-
-enum spdk_nvme_rpc_type {
-	NVME_ADMIN_CMD = 1,
-	NVME_IO_CMD,
-};
 
 /* TODO: replace with rpc_bdev_nvme_send_cmd_ctx */
 struct rpc_bdev_nvme_send_cmd_req {
 	char			*name;
-	int			cmd_type;
-	int			data_direction;
+	enum rpc_bdev_nvme_cmd_type cmd_type;
+	enum rpc_bdev_nvme_data_direction data_direction;
 	uint32_t		timeout_ms;
 	uint32_t		data_len;
 	uint32_t		md_len;
@@ -38,7 +35,7 @@ struct rpc_bdev_nvme_send_cmd_resp {
 	char	*md_text;
 };
 
-struct rpc_bdev_nvme_send_cmd_ctx {
+struct rpc_bdev_nvme_send_cmd_tmp {
 	struct spdk_jsonrpc_request	*jsonrpc_request;
 	struct rpc_bdev_nvme_send_cmd_req	req;
 	struct rpc_bdev_nvme_send_cmd_resp	resp;
@@ -48,7 +45,7 @@ struct rpc_bdev_nvme_send_cmd_ctx {
 
 /* TODO: replace with free_rpc_bdev_nvme_send_cmd */
 static void
-free_rpc_bdev_nvme_send_cmd_ctx(struct rpc_bdev_nvme_send_cmd_ctx *ctx)
+free_rpc_bdev_nvme_send_cmd_tmp(struct rpc_bdev_nvme_send_cmd_tmp *ctx)
 {
 	assert(ctx != NULL);
 
@@ -73,7 +70,7 @@ rpc_bdev_nvme_send_cmd_resp_construct(struct rpc_bdev_nvme_send_cmd_resp *resp,
 	}
 	spdk_base64_urlsafe_encode(resp->cpl_text, cpl, sizeof(*cpl));
 
-	if (req->data_direction == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+	if (req->data_direction == RPC_BDEV_NVME_DATA_DIRECTION_C2H) {
 		if (req->data_len) {
 			resp->data_text = malloc(spdk_base64_get_encoded_strlen(req->data_len) + 1);
 			if (!resp->data_text) {
@@ -94,7 +91,7 @@ rpc_bdev_nvme_send_cmd_resp_construct(struct rpc_bdev_nvme_send_cmd_resp *resp,
 }
 
 static void
-rpc_bdev_nvme_send_cmd_complete(struct rpc_bdev_nvme_send_cmd_ctx *ctx,
+rpc_bdev_nvme_send_cmd_complete(struct rpc_bdev_nvme_send_cmd_tmp *ctx,
 				const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_jsonrpc_request *request = ctx->jsonrpc_request;
@@ -124,14 +121,14 @@ rpc_bdev_nvme_send_cmd_complete(struct rpc_bdev_nvme_send_cmd_ctx *ctx,
 	spdk_jsonrpc_end_result(request, w);
 
 out:
-	free_rpc_bdev_nvme_send_cmd_ctx(ctx);
+	free_rpc_bdev_nvme_send_cmd_tmp(ctx);
 	return;
 }
 
 static void
 nvme_rpc_bdev_nvme_cb(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct rpc_bdev_nvme_send_cmd_ctx *ctx = (struct rpc_bdev_nvme_send_cmd_ctx *)ref;
+	struct rpc_bdev_nvme_send_cmd_tmp *ctx = (struct rpc_bdev_nvme_send_cmd_tmp *)ref;
 
 	if (ctx->ctrlr_io_ch) {
 		spdk_put_io_channel(ctx->ctrlr_io_ch);
@@ -142,7 +139,7 @@ nvme_rpc_bdev_nvme_cb(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-nvme_rpc_admin_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
+nvme_rpc_admin_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_tmp *ctx, struct spdk_nvme_cmd *cmd,
 			     void *buf, uint32_t nbytes, uint32_t timeout_ms)
 {
 	struct nvme_ctrlr *_nvme_ctrlr = ctx->nvme_ctrlr;
@@ -155,7 +152,7 @@ nvme_rpc_admin_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk
 }
 
 static int
-nvme_rpc_io_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
+nvme_rpc_io_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_tmp *ctx, struct spdk_nvme_cmd *cmd,
 			  void *buf, uint32_t nbytes, void *md_buf, uint32_t md_len,
 			  uint32_t timeout_ms)
 {
@@ -177,17 +174,17 @@ nvme_rpc_io_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk_nv
 }
 
 static int
-rpc_bdev_nvme_send_cmd_exec(struct rpc_bdev_nvme_send_cmd_ctx *ctx)
+rpc_bdev_nvme_send_cmd_exec(struct rpc_bdev_nvme_send_cmd_tmp *ctx)
 {
 	struct rpc_bdev_nvme_send_cmd_req *req = &ctx->req;
 	int ret = -EINVAL;
 
 	switch (req->cmd_type) {
-	case NVME_ADMIN_CMD:
+	case RPC_BDEV_NVME_CMD_TYPE_ADMIN:
 		ret = nvme_rpc_admin_cmd_bdev_nvme(ctx, req->cmdbuf, req->data,
 						   req->data_len, req->timeout_ms);
 		break;
-	case NVME_IO_CMD:
+	case RPC_BDEV_NVME_CMD_TYPE_IO:
 		ret = nvme_rpc_io_cmd_bdev_nvme(ctx, req->cmdbuf, req->data,
 						req->data_len, req->md, req->md_len, req->timeout_ms);
 		break;
@@ -199,12 +196,12 @@ rpc_bdev_nvme_send_cmd_exec(struct rpc_bdev_nvme_send_cmd_ctx *ctx)
 static int
 rpc_decode_cmd_type(const struct spdk_json_val *val, void *out)
 {
-	int *cmd_type = out;
+	enum rpc_bdev_nvme_cmd_type *cmd_type = out;
 
 	if (spdk_json_strequal(val, "admin") == true) {
-		*cmd_type = NVME_ADMIN_CMD;
+		*cmd_type = RPC_BDEV_NVME_CMD_TYPE_ADMIN;
 	} else if (spdk_json_strequal(val, "io") == true) {
-		*cmd_type = NVME_IO_CMD;
+		*cmd_type = RPC_BDEV_NVME_CMD_TYPE_IO;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: cmd_type\n");
 		return -EINVAL;
@@ -216,12 +213,12 @@ rpc_decode_cmd_type(const struct spdk_json_val *val, void *out)
 static int
 rpc_decode_data_direction(const struct spdk_json_val *val, void *out)
 {
-	int *data_direction = out;
+	enum rpc_bdev_nvme_data_direction *data_direction = out;
 
 	if (spdk_json_strequal(val, "h2c") == true) {
-		*data_direction = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+		*data_direction = RPC_BDEV_NVME_DATA_DIRECTION_H2C;
 	} else if (spdk_json_strequal(val, "c2h") == true) {
-		*data_direction = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+		*data_direction = RPC_BDEV_NVME_DATA_DIRECTION_C2H;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: data_direction\n");
 		return -EINVAL;
@@ -417,7 +414,7 @@ static void
 rpc_bdev_nvme_send_cmd(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_send_cmd_ctx *ctx;
+	struct rpc_bdev_nvme_send_cmd_tmp *ctx;
 	int ret, error_code;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -458,7 +455,7 @@ rpc_bdev_nvme_send_cmd(struct spdk_jsonrpc_request *request,
 
 invalid:
 	if (ctx != NULL) {
-		free_rpc_bdev_nvme_send_cmd_ctx(ctx);
+		free_rpc_bdev_nvme_send_cmd_tmp(ctx);
 	}
 	spdk_jsonrpc_send_error_response(request, error_code, spdk_strerror(-ret));
 }

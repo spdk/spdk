@@ -39,16 +39,16 @@ rpc_error_bdev_decode_io_type(const struct spdk_json_val *val, void *out)
 static int
 rpc_error_bdev_decode_error_type(const struct spdk_json_val *val, void *out)
 {
-	uint32_t *error_type = out;
+	enum rpc_bdev_error_inject_error_type *error_type = out;
 
 	if (spdk_json_strequal(val, "failure") == true) {
-		*error_type = VBDEV_IO_FAILURE;
+		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_FAILURE;
 	} else if (spdk_json_strequal(val, "pending") == true) {
-		*error_type = VBDEV_IO_PENDING;
+		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_PENDING;
 	} else if (spdk_json_strequal(val, "corrupt_data") == true) {
-		*error_type = VBDEV_IO_CORRUPT_DATA;
+		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_CORRUPT_DATA;
 	} else if (spdk_json_strequal(val, "nomem") == true) {
-		*error_type = VBDEV_IO_NOMEM;
+		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_NOMEM;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: error_type\n");
 		return -EINVAL;
@@ -128,34 +128,22 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_error_delete", rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
 
-/* TODO: replace with rpc_bdev_error_inject_error_ctx */
-struct rpc_error_information {
-	char *name;
-	struct vbdev_error_inject_opts opts;
-};
-
 static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoders[] = {
-	{"name", offsetof(struct rpc_error_information, name), spdk_json_decode_string},
-	{"io_type", offsetof(struct rpc_error_information, opts.io_type), rpc_error_bdev_decode_io_type},
-	{"error_type", offsetof(struct rpc_error_information, opts.error_type), rpc_error_bdev_decode_error_type},
-	{"num", offsetof(struct rpc_error_information, opts.error_num), spdk_json_decode_uint32, true},
-	{"queue_depth", offsetof(struct rpc_error_information, opts.error_qd), spdk_json_decode_uint64, true},
-	{"corrupt_offset", offsetof(struct rpc_error_information, opts.corrupt_offset), spdk_json_decode_uint64, true},
-	{"corrupt_value", offsetof(struct rpc_error_information, opts.corrupt_value), spdk_json_decode_uint8, true},
+	{"name", offsetof(struct rpc_bdev_error_inject_error_ctx, name), spdk_json_decode_string},
+	{"io_type", offsetof(struct rpc_bdev_error_inject_error_ctx, io_type), rpc_error_bdev_decode_io_type},
+	{"error_type", offsetof(struct rpc_bdev_error_inject_error_ctx, error_type), rpc_error_bdev_decode_error_type},
+	{"num", offsetof(struct rpc_bdev_error_inject_error_ctx, num), spdk_json_decode_uint32, true},
+	{"queue_depth", offsetof(struct rpc_bdev_error_inject_error_ctx, queue_depth), spdk_json_decode_uint64, true},
+	{"corrupt_offset", offsetof(struct rpc_bdev_error_inject_error_ctx, corrupt_offset), spdk_json_decode_uint64, true},
+	{"corrupt_value", offsetof(struct rpc_bdev_error_inject_error_ctx, corrupt_value), spdk_json_decode_uint8, true},
 };
-
-/* TODO: replace with free_rpc_bdev_error_inject_error */
-static void
-free_rpc_bdev_error_inject_error_ctx(struct rpc_error_information *p)
-{
-	free(p->name);
-}
 
 static void
 rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_error_information req = {.opts.error_num = 1};
+	struct rpc_bdev_error_inject_error_ctx req = {.num = 1};
+	struct vbdev_error_inject_opts opts;
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_bdev_error_inject_error_decoders,
@@ -167,7 +155,14 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = vbdev_error_inject_error(req.name, &req.opts);
+	opts.io_type = req.io_type;
+	opts.error_type = req.error_type;
+	opts.error_num = req.num;
+	opts.error_qd = req.queue_depth;
+	opts.corrupt_offset = req.corrupt_offset;
+	opts.corrupt_value = req.corrupt_value;
+
+	rc = vbdev_error_inject_error(req.name, &opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -176,6 +171,6 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
-	free_rpc_bdev_error_inject_error_ctx(&req);
+	free_rpc_bdev_error_inject_error(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_inject_error", rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)
