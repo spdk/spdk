@@ -157,6 +157,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
     if missing_in_schema:
         raise ValueError(f"Commands found in CLI but not defined in schema: {sorted(missing_in_schema)}")
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
+    schema_enums = {obj["name"]: obj for obj in schema['enums']}
     for method in schema['methods']:
         subparser = subparsers.choices[method['name']]
         groups = subparser._mutually_exclusive_groups
@@ -192,6 +193,14 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"Invalid schema type '{param['type']}' for '{param['name']}' in '{method['name']}' rpc")
                 if type(action) in [argparse._StoreTrueAction, argparse._StoreFalseAction, argparse.BooleanOptionalAction]:
                     newtype = bool
+                elif action.choices is not None:
+                    if "class" not in param:
+                        # TODO: handle this case later and fix issues raised by it
+                        continue
+                    choices = {x['name'] for x in schema_enums[param.get('class')]['fields']}
+                    if choices != set(action.choices):
+                        raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'choices' field is mismatched")
+                    newtype = str if action.type is None else action.type
                 elif action.type is None:
                     newtype = str
                 elif isinstance(action.type, partial):

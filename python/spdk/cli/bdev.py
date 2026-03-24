@@ -719,8 +719,8 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_set_multipath_policy',
                               help="""Set multipath policy of the NVMe bdev""")
     p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
-    p.add_argument('-p', '--policy', help='Multipath policy (active_passive or active_active)', required=True)
-    p.add_argument('-s', '--selector', help='Multipath selector (round_robin, queue_depth)')
+    p.add_argument('-p', '--policy', choices=['active_passive', 'active_active'], help='Multipath policy', required=True)
+    p.add_argument('-s', '--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
     p.add_argument('-r', '--rr-min-io',
                    help='Number of IO to route to a path before switching to another for round-robin',
                    type=int)
@@ -1122,8 +1122,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_error_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
-    p.add_argument('io_type', help="""io_type: 'clear' 'read' 'write' 'unmap' 'flush' 'all'""")
-    p.add_argument('error_type', help="""error_type: 'failure' 'pending' 'corrupt_data' 'nomem'""")
+    p.add_argument('io_type', choices=['clear', 'read', 'write', 'unmap', 'flush', 'all'], help='IO type')
+    p.add_argument('error_type', choices=['failure', 'pending', 'corrupt_data', 'nomem'], help='Error type')
     p.add_argument(
         '-n', '--num', help='the number of commands you want to fail', type=int)
     p.add_argument(
@@ -1429,8 +1429,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_nvme_send_cmd', help='NVMe passthrough cmd.')
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
-    p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""", required=True)
-    p.add_argument('-r', '--data-direction', help="""Direction of data transfer. Valid values are: c2h, h2c""", required=True)
+    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe cmd', required=True)
+    p.add_argument('-r', '--data-direction', choices=['c2h', 'h2c'], help='Direction of data transfer', required=True)
     p.add_argument('-c', '--cmdbuf', help="""NVMe command encoded by base64 urlsafe""", required=True)
     p.add_argument('-d', '--data', help="""Data transferring to controller from host, encoded by base64 urlsafe""")
     p.add_argument('-m', '--metadata', help="""Metadata transferring to controller from host, encoded by base64 urlsafe""")
@@ -1455,7 +1455,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_add_error_injection',
                               help='Add a NVMe command error injection.')
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
-    p.add_argument('-t', '--cmd-type', help="""Type of NVMe command. Valid values are: admin, io""", required=True)
+    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe command', required=True)
     p.add_argument('-o', '--opc', help="""Opcode of the NVMe command.""", required=True, type=int)
     p.add_argument('-s', '--do-not-submit',
                    help="""Set to true if request should not be submitted to the controller""",
@@ -1475,7 +1475,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_remove_error_injection',
                               help='Removes a NVMe command error injection.')
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
-    p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""", required=True)
+    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe cmd', required=True)
     p.add_argument('-o', '--opc', help="""Opcode of the nvme cmd.""", required=True, type=int)
     p.set_defaults(func=bdev_nvme_remove_error_injection)
 
