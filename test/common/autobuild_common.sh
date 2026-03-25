@@ -201,6 +201,27 @@ check_dpdk_pci_api() {
 	"$rootdir/scripts/env_dpdk/check_dpdk_pci_api.sh" check "$dpdk_dir"
 }
 
+check_rdma_cm_api() {
+	# Build with RDMA CM mock to ensure we do not accidentally
+	# introduce direct dependencies to librdmacm. If we do, the
+	# build will fail as RDMA CM mock does not link librdmacm.
+	#
+	# The --with-rdma should be set by get_config_params. If it
+	# is not set, RDMA support should be disabled and there is
+	# no need to do the check.
+	#
+	# Note: that we add spaces around $config_params to ensure
+	# \s+--with-rdma(\s+|=) is valid even if --with-rdma is at
+	# the beginning or end of $config_params.
+	if [[ $(echo " $config_params " | grep -Ec "\s+--with-rdma(\s+|=)") -le 0 ]]; then
+		echo "RDMA support is not enabled, skip checking librdmacm API dependency."
+		return 0
+	fi
+
+	"$rootdir/configure" $config_params --with-rdma-cm=mock
+	$MAKE $MAKEFLAGS
+}
+
 make_fail_cleanup() {
 	if [ -d $out/scan-build-tmp ]; then
 		scanoutput=$(ls -1 $out/scan-build-tmp/)
@@ -346,6 +367,10 @@ dpdk_pci_api() {
 	run_test "autobuild_check_dpdk_pci_api" check_dpdk_pci_api
 }
 
+rdma_cm_api() {
+	run_test "autobuild_check_rdma_cm_api" check_rdma_cm_api
+}
+
 build_files() {
 	"$rootdir/configure" $config_params --without-shared
 	$MAKE $MAKEFLAGS
@@ -365,6 +390,7 @@ autobuild_test_suite_tiny() {
 	check_format
 	check_so_deps
 	dpdk_pci_api
+	rdma_cm_api
 }
 
 autobuild_test_suite_ext() {

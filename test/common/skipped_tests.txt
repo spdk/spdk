@@ -88,6 +88,7 @@ accel_cdev_decomp_full_mthread
 accel_cdev_decomp_mcore
 accel_cdev_decomp_mthread
 autobuild
+autobuild_check_rdma_cm_api
 autobuild_external_code
 bdev_crypto_enomem
 blockdev_crypto_aesni
