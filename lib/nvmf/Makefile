@@ -19,7 +19,7 @@ C_SRCS-$(CONFIG_HAVE_EVP_MAC) += auth.c
 LIBNAME = nvmf
 LOCAL_SYS_LIBS =
 ifeq ($(CONFIG_RDMA),y)
-LOCAL_SYS_LIBS += -libverbs -lrdmacm
+LOCAL_SYS_LIBS += -libverbs
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 # Mellanox - MLX4 HBA Userspace Library

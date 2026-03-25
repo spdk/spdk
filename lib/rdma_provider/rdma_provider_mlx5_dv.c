@@ -4,7 +4,6 @@
  *   Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include <rdma/rdma_cma.h>
 #include <infiniband/mlx5dv.h>
 
 #include "spdk/stdinc.h"
@@ -12,6 +11,7 @@
 #include "spdk/likely.h"
 #include "spdk/dma.h"
 
+#include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_provider.h"
 #include "spdk_internal/mlx5.h"
 #include "spdk/log.h"
@@ -30,7 +30,7 @@ rdma_mlx5_dv_init_qpair(struct spdk_rdma_mlx5_dv_qp *mlx5_qp)
 	int qp_attr_mask, rc;
 
 	qp_attr.qp_state = IBV_QPS_INIT;
-	rc = rdma_init_qp_attr(mlx5_qp->common.cm_id, &qp_attr, &qp_attr_mask);
+	rc = spdk_rdma_cm_init_qp_attr(mlx5_qp->common.cm_id, &qp_attr, &qp_attr_mask);
 	if (rc) {
 		SPDK_ERRLOG("Failed to init attr IBV_QPS_INIT, errno %s (%d)\n", spdk_strerror(errno), errno);
 		return rc;
@@ -43,7 +43,7 @@ rdma_mlx5_dv_init_qpair(struct spdk_rdma_mlx5_dv_qp *mlx5_qp)
 	}
 
 	qp_attr.qp_state = IBV_QPS_RTR;
-	rc = rdma_init_qp_attr(mlx5_qp->common.cm_id, &qp_attr, &qp_attr_mask);
+	rc = spdk_rdma_cm_init_qp_attr(mlx5_qp->common.cm_id, &qp_attr, &qp_attr_mask);
 	if (rc) {
 		SPDK_ERRLOG("Failed to init attr IBV_QPS_RTR, errno %s (%d)\n", spdk_strerror(errno), errno);
 		return rc;
@@ -56,7 +56,7 @@ rdma_mlx5_dv_init_qpair(struct spdk_rdma_mlx5_dv_qp *mlx5_qp)
 	}
 
 	qp_attr.qp_state = IBV_QPS_RTS;
-	rc = rdma_init_qp_attr(mlx5_qp->common.cm_id, &qp_attr, &qp_attr_mask);
+	rc = spdk_rdma_cm_init_qp_attr(mlx5_qp->common.cm_id, &qp_attr, &qp_attr_mask);
 	if (rc) {
 		SPDK_ERRLOG("Failed to init attr IBV_QPS_RTR, errno %s (%d)\n", spdk_strerror(errno), errno);
 		return rc;
@@ -171,12 +171,12 @@ spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 	/* NVMEoF target must move qpair to RTS state */
 	if (rdma_mlx5_dv_init_qpair(mlx5_qp) != 0) {
 		SPDK_ERRLOG("Failed to initialize qpair\n");
-		/* Set errno to be compliant with rdma_accept behaviour */
+		/* Set errno to be compliant with spdk_rdma_cm_accept behaviour */
 		errno = ECONNABORTED;
 		return -1;
 	}
 
-	return rdma_accept(spdk_rdma_qp->cm_id, conn_param);
+	return spdk_rdma_cm_accept(spdk_rdma_qp->cm_id, conn_param);
 }
 
 int
@@ -195,9 +195,9 @@ spdk_rdma_provider_qp_complete_connect(struct spdk_rdma_provider_qp *spdk_rdma_q
 		return rc;
 	}
 
-	rc = rdma_establish(mlx5_qp->common.cm_id);
+	rc = spdk_rdma_cm_establish(mlx5_qp->common.cm_id);
 	if (rc) {
-		SPDK_ERRLOG("rdma_establish failed, errno %s (%d)\n", spdk_strerror(errno), errno);
+		SPDK_ERRLOG("spdk_rdma_cm_establish failed, errno %s (%d)\n", spdk_strerror(errno), errno);
 	}
 
 	return rc;
@@ -252,9 +252,9 @@ spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 	}
 
 	if (spdk_rdma_qp->cm_id) {
-		rc = rdma_disconnect(spdk_rdma_qp->cm_id);
+		rc = spdk_rdma_cm_disconnect(spdk_rdma_qp->cm_id);
 		if (rc) {
-			SPDK_ERRLOG("rdma_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
+			SPDK_ERRLOG("spdk_rdma_cm_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
 		}
 	}
 

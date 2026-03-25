@@ -12,7 +12,7 @@ SO_MINOR := 0
 C_SRCS = mlx5_crypto.c mlx5_qp.c mlx5_dma.c mlx5_umr.c
 LIBNAME = mlx5
 
-LOCAL_SYS_LIBS += -lmlx5 -libverbs -lrdmacm
+LOCAL_SYS_LIBS += -lmlx5 -libverbs
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_mlx5.map)
 

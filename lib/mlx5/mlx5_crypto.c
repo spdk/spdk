@@ -2,7 +2,6 @@
  *   Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include <rdma/rdma_cma.h>
 #include <infiniband/verbs.h>
 #include <infiniband/mlx5dv.h>
 
@@ -12,6 +11,7 @@
 #include "spdk/likely.h"
 #include "spdk/util.h"
 #include "spdk_internal/mlx5.h"
+#include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_utils.h"
 #include "mlx5_ifc.h"
 #include "mlx5_priv.h"
@@ -137,7 +137,7 @@ spdk_mlx5_crypto_devs_get(int *dev_num)
 	int num_crypto_devs = 0;
 
 	/* query all devices, save mlx5 with crypto support */
-	rdma_devs = rdma_get_devices(&num_rdma_devs);
+	rdma_devs = spdk_rdma_cm_get_devices(&num_rdma_devs);
 	if (!rdma_devs || !num_rdma_devs) {
 		*dev_num = 0;
 		return NULL;
@@ -219,14 +219,14 @@ spdk_mlx5_crypto_devs_get(int *dev_num)
 		goto err_out;
 	}
 
-	rdma_free_devices(rdma_devs);
+	spdk_rdma_cm_free_devices(rdma_devs);
 	*dev_num = num_crypto_devs;
 
 	return rdma_devs_out;
 
 err_out:
 	free(rdma_devs_out);
-	rdma_free_devices(rdma_devs);
+	spdk_rdma_cm_free_devices(rdma_devs);
 	*dev_num = 0;
 	return NULL;
 }

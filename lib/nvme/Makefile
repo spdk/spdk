@@ -22,7 +22,7 @@ C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
 LIBNAME = nvme
 LOCAL_SYS_LIBS =
 ifeq ($(CONFIG_RDMA),y)
-LOCAL_SYS_LIBS += -libverbs -lrdmacm
+LOCAL_SYS_LIBS += -libverbs
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 # Mellanox - MLX4 HBA Userspace Library

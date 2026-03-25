@@ -17,6 +17,7 @@
 
 #include "spdk_internal/assert.h"
 #include "spdk/log.h"
+#include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_provider.h"
 #include "spdk_internal/rdma_utils.h"
 
@@ -975,7 +976,7 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	/* destroy cm_id last so cma device will not be freed before we destroy the cq. */
 	if (rqpair->cm_id) {
-		rdma_destroy_id(rqpair->cm_id);
+		spdk_rdma_cm_destroy_id(rqpair->cm_id);
 	}
 
 	free(rqpair);
@@ -1086,7 +1087,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 		if (!rqpair->resources) {
 			SPDK_ERRLOG("Unable to allocate resources for receive queue.\n");
-			rdma_destroy_qp(rqpair->cm_id);
+			spdk_rdma_cm_destroy_qp(rqpair->cm_id);
 			goto error;
 		}
 	} else {
@@ -1103,7 +1104,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	return 0;
 
 error:
-	rdma_destroy_id(rqpair->cm_id);
+	spdk_rdma_cm_destroy_id(rqpair->cm_id);
 	rqpair->cm_id = NULL;
 	return -1;
 }
@@ -1319,7 +1320,7 @@ nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport_erro
 	rej_data.recfmt = 0;
 	rej_data.sts = error;
 
-	rdma_reject(id, &rej_data, sizeof(rej_data));
+	spdk_rdma_cm_reject(id, &rej_data, sizeof(rej_data));
 }
 
 static void nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
@@ -2847,9 +2848,9 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		opts->in_capsule_data_size = min_in_capsule_data_size;
 	}
 
-	rtransport->event_channel = rdma_create_event_channel();
+	rtransport->event_channel = spdk_rdma_cm_create_event_channel();
 	if (rtransport->event_channel == NULL) {
-		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", spdk_strerror(errno));
+		SPDK_ERRLOG("spdk_rdma_cm_create_event_channel() failed, %s\n", spdk_strerror(errno));
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
@@ -2880,9 +2881,9 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	contexts = rdma_get_devices(NULL);
+	contexts = spdk_rdma_cm_get_devices(NULL);
 	if (contexts == NULL) {
-		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		SPDK_ERRLOG("spdk_rdma_cm_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
@@ -2898,7 +2899,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		max_device_sge = spdk_min(max_device_sge, device->attr.max_sge);
 		device->is_ready = true;
 	}
-	rdma_free_devices(contexts);
+	spdk_rdma_cm_free_devices(contexts);
 
 	if (rc < 0) {
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
@@ -2982,7 +2983,7 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 
 	TAILQ_FOREACH_SAFE(port, &rtransport->ports, link, port_tmp) {
 		TAILQ_REMOVE(&rtransport->ports, port, link);
-		rdma_destroy_id(port->id);
+		spdk_rdma_cm_destroy_id(port->id);
 		free(port);
 	}
 	spdk_interrupt_unregister(&rtransport->cm_event_intr);
@@ -3003,7 +3004,7 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 
 	spdk_mempool_free(rtransport->data_wr_pool);
 	if (rtransport->event_channel != NULL) {
-		rdma_destroy_event_channel(rtransport->event_channel);
+		spdk_rdma_cm_destroy_event_channel(rtransport->event_channel);
 	}
 
 	free(rtransport);
@@ -3087,15 +3088,15 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 		return -(abs(rc));
 	}
 
-	rc = rdma_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);
+	rc = spdk_rdma_cm_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);
 	if (rc < 0) {
-		SPDK_ERRLOG("rdma_create_id() failed\n");
+		SPDK_ERRLOG("spdk_rdma_cm_create_id() failed\n");
 		freeaddrinfo(res);
 		free(port);
 		return rc;
 	}
 
-	rc = rdma_bind_addr(port->id, res->ai_addr);
+	rc = spdk_rdma_cm_bind_addr(port->id, res->ai_addr);
 	freeaddrinfo(res);
 
 	if (rc < 0) {
@@ -3106,24 +3107,24 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 			}
 		}
 		if (!is_retry) {
-			SPDK_ERRLOG("rdma_bind_addr() failed\n");
+			SPDK_ERRLOG("spdk_rdma_cm_bind_addr() failed\n");
 		}
-		rdma_destroy_id(port->id);
+		spdk_rdma_cm_destroy_id(port->id);
 		free(port);
 		return rc;
 	}
 
 	if (!port->id->verbs) {
 		SPDK_ERRLOG("ibv_context is null\n");
-		rdma_destroy_id(port->id);
+		spdk_rdma_cm_destroy_id(port->id);
 		free(port);
 		return -1;
 	}
 
-	rc = rdma_listen(port->id, rtransport->rdma_opts.acceptor_backlog);
+	rc = spdk_rdma_cm_listen(port->id, rtransport->rdma_opts.acceptor_backlog);
 	if (rc < 0) {
-		SPDK_ERRLOG("rdma_listen() failed\n");
-		rdma_destroy_id(port->id);
+		SPDK_ERRLOG("spdk_rdma_cm_listen() failed\n");
+		spdk_rdma_cm_destroy_id(port->id);
 		free(port);
 		return rc;
 	}
@@ -3137,7 +3138,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	if (!port->device) {
 		SPDK_ERRLOG("Accepted a connection with verbs %p, but unable to find a corresponding device.\n",
 			    port->id->verbs);
-		rdma_destroy_id(port->id);
+		spdk_rdma_cm_destroy_id(port->id);
 		free(port);
 		nvmf_rdma_rescan_devices(rtransport);
 		return -EINVAL;
@@ -3173,7 +3174,7 @@ nvmf_rdma_stop_listen_ex(struct spdk_nvmf_transport *transport,
 			SPDK_DEBUGLOG(rdma, "Port %s:%s removed. need retry: %d\n",
 				      port->trid->traddr, port->trid->trsvcid, need_retry);
 			TAILQ_REMOVE(&rtransport->ports, port, link);
-			rdma_destroy_id(port->id);
+			spdk_rdma_cm_destroy_id(port->id);
 			port->id = NULL;
 			port->device = NULL;
 			if (need_retry) {
@@ -3393,7 +3394,7 @@ nvmf_rdma_rescan_devices(struct spdk_nvmf_rdma_transport *rtransport)
 		}
 	}
 
-	contexts = rdma_get_devices(NULL);
+	contexts = spdk_rdma_cm_get_devices(NULL);
 
 	for (i = 0; contexts && contexts[i] != NULL; i++) {
 		new_create |= nvmf_rdma_check_devices_context(rtransport, contexts[i]);
@@ -3405,7 +3406,7 @@ nvmf_rdma_rescan_devices(struct spdk_nvmf_rdma_transport *rtransport)
 	}
 
 	if (contexts) {
-		rdma_free_devices(contexts);
+		spdk_rdma_cm_free_devices(contexts);
 	}
 
 	return new_create;
@@ -3590,7 +3591,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt, bool *event_acked)
 		return -1;
 	}
 
-	rdma_ack_cm_event(evt);
+	spdk_rdma_cm_ack_cm_event(evt);
 	*event_acked = true;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
@@ -3655,7 +3656,7 @@ nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 	TAILQ_FOREACH(port, &rtransport->ports, link) {
 		if (port->id == event->id) {
 			SPDK_ERRLOG("ADDR_CHANGE: IP %s:%s migrated\n", port->trid->traddr, port->trid->trsvcid);
-			rdma_ack_cm_event(event);
+			spdk_rdma_cm_ack_cm_event(event);
 			event_acked = true;
 			trid = port->trid;
 			break;
@@ -3718,7 +3719,7 @@ nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
 	port = event->id->context;
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	rdma_ack_cm_event(event);
+	spdk_rdma_cm_ack_cm_event(event);
 
 	/* if device removal happens during ctrl qpair disconnecting, it's possible that we receive
 	 * an DEVICE_REMOVAL event on qpair but the id->qp is just NULL. So we should make sure that
@@ -3749,7 +3750,7 @@ nvmf_process_cm_events(struct spdk_nvmf_transport *transport, uint32_t max_event
 
 	for (i = 0; i < max_events; i++) {
 		event_acked = false;
-		rc = rdma_get_cm_event(rtransport->event_channel, &event);
+		rc = spdk_rdma_cm_get_cm_event(rtransport->event_channel, &event);
 		if (rc) {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
@@ -3830,7 +3831,7 @@ nvmf_process_cm_events(struct spdk_nvmf_transport *transport, uint32_t max_event
 			break;
 		}
 		if (!event_acked) {
-			rdma_ack_cm_event(event);
+			spdk_rdma_cm_ack_cm_event(event);
 		}
 	}
 }
@@ -5178,9 +5179,9 @@ nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 		inet_ntop(AF_INET, &saddr_in->sin_addr,
 			  trid->traddr, sizeof(trid->traddr));
 		if (peer) {
-			port = ntohs(rdma_get_dst_port(id));
+			port = ntohs(spdk_rdma_cm_get_dst_port(id));
 		} else {
-			port = ntohs(rdma_get_src_port(id));
+			port = ntohs(spdk_rdma_cm_get_src_port(id));
 		}
 		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", port);
 		break;
@@ -5191,9 +5192,9 @@ nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 		inet_ntop(AF_INET6, &saddr_in->sin6_addr,
 			  trid->traddr, sizeof(trid->traddr));
 		if (peer) {
-			port = ntohs(rdma_get_dst_port(id));
+			port = ntohs(spdk_rdma_cm_get_dst_port(id));
 		} else {
-			port = ntohs(rdma_get_src_port(id));
+			port = ntohs(spdk_rdma_cm_get_src_port(id));
 		}
 		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", port);
 		break;

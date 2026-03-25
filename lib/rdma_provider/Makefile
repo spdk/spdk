@@ -25,7 +25,7 @@ else
 $(error Wrong RDMA provider specified: $(CONFIG_RDMA_PROV))
 endif
 
-LOCAL_SYS_LIBS += -libverbs -lrdmacm
+LOCAL_SYS_LIBS += -libverbs
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 # Mellanox - MLX4 HBA Userspace Library

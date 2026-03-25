@@ -32,7 +32,7 @@ struct ut_rdma_device {
 static TAILQ_HEAD(, ut_rdma_device) g_ut_dev_list = TAILQ_HEAD_INITIALIZER(g_ut_dev_list);
 
 struct ibv_context **
-rdma_get_devices(int *num_devices)
+spdk_rdma_cm_get_devices(int *num_devices)
 {
 	struct ibv_context **ctx_list;
 	struct ut_rdma_device *ut_dev;
@@ -63,7 +63,7 @@ rdma_get_devices(int *num_devices)
 }
 
 void
-rdma_free_devices(struct ibv_context **list)
+spdk_rdma_cm_free_devices(struct ibv_context **list)
 {
 	free(list);
 }

@@ -15,7 +15,7 @@ LIBNAME = rdma_utils
 
 C_SRCS = rdma_utils.c
 
-LOCAL_SYS_LIBS += -libverbs -lrdmacm
+LOCAL_SYS_LIBS += -libverbs
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 # Mellanox - MLX4 HBA Userspace Library

@@ -4,12 +4,11 @@
  *   Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include <rdma/rdma_cma.h>
-
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
 
+#include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_provider.h"
 #include "spdk_internal/rdma_utils.h"
 #include "spdk/log.h"
@@ -52,7 +51,7 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 		}
 	}
 
-	rc = rdma_create_qp(cm_id, qp_attr->pd, &attr);
+	rc = spdk_rdma_cm_create_qp(cm_id, qp_attr->pd, &attr);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create qp, rc %d, errno %s (%d)\n", rc, spdk_strerror(errno), errno);
 		if (!spdk_rdma_qp->shared_stats) {
@@ -81,7 +80,7 @@ spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 	assert(spdk_rdma_qp != NULL);
 	assert(spdk_rdma_qp->cm_id != NULL);
 
-	return rdma_accept(spdk_rdma_qp->cm_id, conn_param);
+	return spdk_rdma_cm_accept(spdk_rdma_qp->cm_id, conn_param);
 }
 
 int
@@ -101,7 +100,7 @@ spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 	}
 
 	if (spdk_rdma_qp->qp) {
-		rdma_destroy_qp(spdk_rdma_qp->cm_id);
+		spdk_rdma_cm_destroy_qp(spdk_rdma_qp->cm_id);
 	}
 
 	if (!spdk_rdma_qp->shared_stats) {
@@ -122,15 +121,15 @@ spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 	assert(spdk_rdma_qp != NULL);
 
 	if (spdk_rdma_qp->cm_id) {
-		rc = rdma_disconnect(spdk_rdma_qp->cm_id);
+		rc = spdk_rdma_cm_disconnect(spdk_rdma_qp->cm_id);
 		if (rc) {
 			if (errno == EINVAL && spdk_rdma_qp->qp->context->device->transport_type == IBV_TRANSPORT_IWARP) {
-				/* rdma_disconnect may return an error and set errno to EINVAL in case of iWARP.
+				/* spdk_rdma_cm_disconnect may return an error and set errno to EINVAL in case of iWARP.
 				 * This behaviour is expected since iWARP handles disconnect event other than IB and
-				 * qpair is already in error state when we call rdma_disconnect */
+				 * qpair is already in error state when we call spdk_rdma_cm_disconnect */
 				return 0;
 			}
-			SPDK_ERRLOG("rdma_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
+			SPDK_ERRLOG("spdk_rdma_cm_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
 		}
 	}
 

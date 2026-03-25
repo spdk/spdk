@@ -15,8 +15,7 @@
 
 #include "spdk_internal/assert.h"
 
-#include <rdma/rdma_cma.h>
-#include <rdma/rdma_verbs.h>
+#include "spdk_internal/rdma_cm.h"
 
 struct rdma_utils_device {
 	struct ibv_pd			*pd;
@@ -296,17 +295,17 @@ rdma_sync_dev_list(void)
 	int num_devs = 0;
 
 	/*
-	 * rdma_get_devices() returns a NULL terminated array of opened RDMA devices,
+	 * spdk_rdma_cm_get_devices() returns a NULL terminated array of opened RDMA devices,
 	 * and sets num_devs to the number of the returned devices.
 	 */
-	new_ctx_list = rdma_get_devices(&num_devs);
+	new_ctx_list = spdk_rdma_cm_get_devices(&num_devs);
 	if (new_ctx_list == NULL) {
-		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		SPDK_ERRLOG("spdk_rdma_cm_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
 		return -ENODEV;
 	}
 
 	if (num_devs == 0) {
-		rdma_free_devices(new_ctx_list);
+		spdk_rdma_cm_free_devices(new_ctx_list);
 		SPDK_ERRLOG("Returned RDMA device array was empty\n");
 		return -ENODEV;
 	}
@@ -366,7 +365,7 @@ rdma_sync_dev_list(void)
 	}
 
 	/* Free the old array. */
-	rdma_free_devices(g_ctx_list);
+	spdk_rdma_cm_free_devices(g_ctx_list);
 
 exit:
 	/*
@@ -441,7 +440,7 @@ _rdma_utils_fini(void)
 	}
 
 	if (g_ctx_list != NULL) {
-		rdma_free_devices(g_ctx_list);
+		spdk_rdma_cm_free_devices(g_ctx_list);
 		g_ctx_list = NULL;
 	}
 }

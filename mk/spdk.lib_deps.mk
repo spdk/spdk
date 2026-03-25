@@ -37,8 +37,8 @@ endif
 DEPDIRS-conf := log util
 DEPDIRS-json := log util
 DEPDIRS-rdma_cm :=
-DEPDIRS-rdma_utils := dma log util
-DEPDIRS-rdma_provider := log util rdma_utils
+DEPDIRS-rdma_utils := dma log util rdma_cm
+DEPDIRS-rdma_provider := log util rdma_utils rdma_cm
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 DEPDIRS-rdma_provider += dma mlx5
 endif
@@ -50,7 +50,7 @@ ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-nvme += vfio_user
 endif
 ifeq ($(CONFIG_RDMA),y)
-DEPDIRS-nvme += rdma_provider rdma_utils
+DEPDIRS-nvme += rdma_provider rdma_utils rdma_cm
 endif
 
 DEPDIRS-blob := log util thread dma trace
@@ -78,10 +78,10 @@ DEPDIRS-ublk := log util thread $(JSON_LIBS) bdev
 endif
 DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev keyring
 ifeq ($(CONFIG_RDMA),y)
-DEPDIRS-nvmf += rdma_provider rdma_utils
+DEPDIRS-nvmf += rdma_provider rdma_utils rdma_cm
 endif
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
-DEPDIRS-mlx5 = log rdma_utils util
+DEPDIRS-mlx5 = log rdma_utils util rdma_cm
 endif
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
@@ -116,7 +116,7 @@ DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
 DEPDIRS-accel_error := accel log $(JSON_LIBS) thread util
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
-DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma_utils util
+DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma_utils util rdma_cm
 endif
 
 ifeq ($(CONFIG_CUDA),y)

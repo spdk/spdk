@@ -24,6 +24,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/tree.h"
+#include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_provider.h"
 #include "spdk_internal/rdma_utils.h"
 #include "spdk_internal/sgl.h"
@@ -526,7 +527,7 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		}
 		rqpair->evt = NULL;
-		rdma_ack_cm_event(event);
+		spdk_rdma_cm_ack_cm_event(event);
 	}
 
 	return rc;
@@ -558,7 +559,7 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 		}
 	}
 
-	while (rdma_get_cm_event(channel, &event) == 0) {
+	while (spdk_rdma_cm_get_cm_event(channel, &event) == 0) {
 		event_qpair = event->id->context;
 		if (event_qpair->evt == NULL) {
 			event_qpair->evt = event;
@@ -566,7 +567,7 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 			assert(rctrlr == nvme_rdma_ctrlr(event_qpair->qpair.ctrlr));
 			entry = STAILQ_FIRST(&rctrlr->free_cm_events);
 			if (entry == NULL) {
-				rdma_ack_cm_event(event);
+				spdk_rdma_cm_ack_cm_event(event);
 				return -ENOMEM;
 			}
 			STAILQ_REMOVE_HEAD(&rctrlr->free_cm_events, link);
@@ -575,7 +576,7 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 		}
 	}
 
-	/* rdma_get_cm_event() returns -1 on error. If an error occurs, errno
+	/* spdk_rdma_cm_get_cm_event() returns -1 on error. If an error occurs, errno
 	 * will be set to indicate the failure reason. So return negated errno here.
 	 */
 	return -errno;
@@ -1118,9 +1119,9 @@ nvme_rdma_addr_resolved(struct nvme_rdma_qpair *rqpair, int ret)
 	if (rqpair->qpair.ctrlr->opts.transport_ack_timeout != SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED) {
 #ifdef SPDK_CONFIG_RDMA_SET_ACK_TIMEOUT
 		uint8_t timeout = rqpair->qpair.ctrlr->opts.transport_ack_timeout;
-		ret = rdma_set_option(rqpair->cm_id, RDMA_OPTION_ID,
-				      RDMA_OPTION_ID_ACK_TIMEOUT,
-				      &timeout, sizeof(timeout));
+		ret = spdk_rdma_cm_set_option(rqpair->cm_id, RDMA_OPTION_ID,
+					      RDMA_OPTION_ID_ACK_TIMEOUT,
+					      &timeout, sizeof(timeout));
 		if (ret) {
 			NVME_RQPAIR_NOTICELOG(rqpair, "Can't apply RDMA_OPTION_ID_ACK_TIMEOUT %d, ret %d\n", timeout, ret);
 		}
@@ -1132,7 +1133,7 @@ nvme_rdma_addr_resolved(struct nvme_rdma_qpair *rqpair, int ret)
 	if (rqpair->qpair.ctrlr->opts.transport_tos != SPDK_NVME_TRANSPORT_TOS_DISABLED) {
 #ifdef SPDK_CONFIG_RDMA_SET_TOS
 		uint8_t tos = rqpair->qpair.ctrlr->opts.transport_tos;
-		ret = rdma_set_option(rqpair->cm_id, RDMA_OPTION_ID, RDMA_OPTION_ID_TOS, &tos, sizeof(tos));
+		ret = spdk_rdma_cm_set_option(rqpair->cm_id, RDMA_OPTION_ID, RDMA_OPTION_ID_TOS, &tos, sizeof(tos));
 		if (ret) {
 			NVME_RQPAIR_NOTICELOG(rqpair, "Can't apply RDMA_OPTION_ID_TOS %u, ret %d\n", tos, ret);
 		}
@@ -1141,9 +1142,9 @@ nvme_rdma_addr_resolved(struct nvme_rdma_qpair *rqpair, int ret)
 #endif
 	}
 
-	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
+	ret = spdk_rdma_cm_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
-		NVME_RQPAIR_ERRLOG(rqpair, "rdma_resolve_route\n");
+		NVME_RQPAIR_ERRLOG(rqpair, "spdk_rdma_cm_resolve_route\n");
 		return ret;
 	}
 
@@ -1161,20 +1162,20 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 	if (src_addr) {
 		int reuse = 1;
 
-		ret = rdma_set_option(rqpair->cm_id, RDMA_OPTION_ID, RDMA_OPTION_ID_REUSEADDR,
-				      &reuse, sizeof(reuse));
+		ret = spdk_rdma_cm_set_option(rqpair->cm_id, RDMA_OPTION_ID, RDMA_OPTION_ID_REUSEADDR,
+					      &reuse, sizeof(reuse));
 		if (ret) {
 			NVME_RQPAIR_NOTICELOG(rqpair, "Can't apply RDMA_OPTION_ID_REUSEADDR %d, ret %d\n", reuse, ret);
-			/* It is likely that rdma_resolve_addr() returns -EADDRINUSE, but
-			 * we may missing something. We rely on rdma_resolve_addr().
+			/* It is likely that spdk_rdma_cm_resolve_addr() returns -EADDRINUSE, but
+			 * we may missing something. We rely on spdk_rdma_cm_resolve_addr().
 			 */
 		}
 	}
 
-	ret = rdma_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
-				NVME_RDMA_TIME_OUT_IN_MS);
+	ret = spdk_rdma_cm_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
+					NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
-		NVME_RQPAIR_ERRLOG(rqpair, "rdma_resolve_addr, %d\n", errno);
+		NVME_RQPAIR_ERRLOG(rqpair, "spdk_rdma_cm_resolve_addr, %d\n", errno);
 		return ret;
 	}
 
@@ -1276,7 +1277,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	param.srq = 0;
 	param.qp_num = rqpair->rdma_qp->qp->qp_num;
 
-	ret = rdma_connect(rqpair->cm_id, &param);
+	ret = spdk_rdma_cm_connect(rqpair->cm_id, &param);
 	if (ret) {
 		NVME_RQPAIR_ERRLOG(rqpair, "nvme rdma connect error\n");
 		return ret;
@@ -1344,9 +1345,9 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 		src_addr_specified = false;
 	}
 
-	rc = rdma_create_id(rctrlr->cm_channel, &rqpair->cm_id, rqpair, RDMA_PS_TCP);
+	rc = spdk_rdma_cm_create_id(rctrlr->cm_channel, &rqpair->cm_id, rqpair, RDMA_PS_TCP);
 	if (rc < 0) {
-		NVME_RQPAIR_ERRLOG(rqpair, "rdma_create_id() failed\n");
+		NVME_RQPAIR_ERRLOG(rqpair, "spdk_rdma_cm_create_id() failed\n");
 		return -1;
 	}
 
@@ -2316,7 +2317,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	struct ibv_pd *pd = NULL;
 
 	if (rqpair->evt) {
-		rdma_ack_cm_event(rqpair->evt);
+		spdk_rdma_cm_ack_cm_event(rqpair->evt);
 		rqpair->evt = NULL;
 	}
 
@@ -2329,7 +2330,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 		STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
 			if (entry->evt->id->context == rqpair) {
 				STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
-				rdma_ack_cm_event(entry->evt);
+				spdk_rdma_cm_ack_cm_event(entry->evt);
 				STAILQ_INSERT_HEAD(&rctrlr->free_cm_events, entry, link);
 			}
 		}
@@ -2365,7 +2366,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 
 	/* destroy cm_id last so cma device will not be freed before we destroy the cq. */
 	if (rqpair->cm_id) {
-		rdma_destroy_id(rqpair->cm_id);
+		spdk_rdma_cm_destroy_id(rqpair->cm_id);
 		rqpair->cm_id = NULL;
 	}
 }
@@ -2739,9 +2740,10 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		rctrlr->ctrlr.opts.transport_ack_timeout = NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT;
 	}
 
-	contexts = rdma_get_devices(NULL);
+	contexts = spdk_rdma_cm_get_devices(NULL);
 	if (contexts == NULL) {
-		NVME_CTRLR_ERRLOG(&rctrlr->ctrlr, "rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno),
+		NVME_CTRLR_ERRLOG(&rctrlr->ctrlr, "spdk_rdma_cm_get_devices() failed: %s (%d)\n",
+				  spdk_strerror(errno),
 				  errno);
 		spdk_free(rctrlr);
 		return NULL;
@@ -2754,7 +2756,7 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		rc = ibv_query_device(contexts[i], &dev_attr);
 		if (rc < 0) {
 			NVME_CTRLR_ERRLOG(&rctrlr->ctrlr, "Failed to query RDMA device attributes.\n");
-			rdma_free_devices(contexts);
+			spdk_rdma_cm_free_devices(contexts);
 			spdk_free(rctrlr);
 			return NULL;
 		}
@@ -2762,7 +2764,7 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		i++;
 	}
 
-	rdma_free_devices(contexts);
+	spdk_rdma_cm_free_devices(contexts);
 
 	rc = nvme_ctrlr_construct(&rctrlr->ctrlr);
 	if (rc != 0) {
@@ -2783,9 +2785,9 @@ nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		STAILQ_INSERT_TAIL(&rctrlr->free_cm_events, &rctrlr->cm_events[i], link);
 	}
 
-	rctrlr->cm_channel = rdma_create_event_channel();
+	rctrlr->cm_channel = spdk_rdma_cm_create_event_channel();
 	if (rctrlr->cm_channel == NULL) {
-		NVME_CTRLR_ERRLOG(&rctrlr->ctrlr, "rdma_create_event_channel() failed\n");
+		NVME_CTRLR_ERRLOG(&rctrlr->ctrlr, "spdk_rdma_cm_create_event_channel() failed\n");
 		goto destruct_ctrlr;
 	}
 
@@ -2828,7 +2830,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	STAILQ_FOREACH(entry, &rctrlr->pending_cm_events, link) {
-		rdma_ack_cm_event(entry->evt);
+		spdk_rdma_cm_ack_cm_event(entry->evt);
 	}
 
 	STAILQ_INIT(&rctrlr->free_cm_events);
@@ -2836,7 +2838,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	spdk_free(rctrlr->cm_events);
 
 	if (rctrlr->cm_channel) {
-		rdma_destroy_event_channel(rctrlr->cm_channel);
+		spdk_rdma_cm_destroy_event_channel(rctrlr->cm_channel);
 		rctrlr->cm_channel = NULL;
 	}
 

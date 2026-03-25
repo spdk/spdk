@@ -26,11 +26,6 @@ DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair, uint
 DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
 
-DEFINE_STUB(rdma_ack_cm_event, int, (struct rdma_cm_event *event), 0);
-DEFINE_STUB_V(rdma_free_devices, (struct ibv_context **list));
-DEFINE_STUB(fcntl, int, (int fd, int cmd, ...), 0);
-DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
-
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
 DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
 
@@ -105,28 +100,6 @@ struct nvme_rdma_ut_bdev_io {
 	int iovpos;
 	int iovcnt;
 };
-
-DEFINE_RETURN_MOCK(rdma_get_devices, struct ibv_context **);
-struct ibv_context **
-rdma_get_devices(int *num_devices)
-{
-	static struct ibv_context *_contexts[] = {
-		(struct ibv_context *)0xDEADBEEF,
-		(struct ibv_context *)0xFEEDBEEF,
-		NULL
-	};
-
-	HANDLE_RETURN_MOCK(rdma_get_devices);
-	return _contexts;
-}
-
-DEFINE_RETURN_MOCK(rdma_create_event_channel, struct rdma_event_channel *);
-struct rdma_event_channel *
-rdma_create_event_channel(void)
-{
-	HANDLE_RETURN_MOCK(rdma_create_event_channel);
-	return NULL;
-}
 
 DEFINE_RETURN_MOCK(ibv_query_device, int);
 int
@@ -977,7 +950,7 @@ test_nvme_rdma_ctrlr_construct(void)
 	opts.admin_queue_size = 0xFFFF;
 	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	MOCK_SET(rdma_create_event_channel, &cm_channel);
+	MOCK_SET(spdk_rdma_cm_create_event_channel, &cm_channel);
 
 	ctrlr = nvme_rdma_ctrlr_construct(&trid, &opts, devhandle);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
@@ -996,7 +969,7 @@ test_nvme_rdma_ctrlr_construct(void)
 	rqpair = SPDK_CONTAINEROF(ctrlr->adminq, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(rqpair->num_entries == opts.admin_queue_size - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
-	MOCK_CLEAR(rdma_create_event_channel);
+	MOCK_CLEAR(spdk_rdma_cm_create_event_channel);
 
 	/* Hardcode the trtype, because nvme_qpair_init() is stub function. */
 	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;

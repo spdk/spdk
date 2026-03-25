@@ -13,6 +13,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/mlx5.h"
+#include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_utils.h"
 #include "spdk/accel_module.h"
 #include "spdk_internal/assert.h"
@@ -20,7 +21,6 @@
 #include "accel_mlx5.h"
 
 #include <infiniband/mlx5dv.h>
-#include <rdma/rdma_cma.h>
 
 #define ACCEL_MLX5_QP_SIZE (256u)
 #define ACCEL_MLX5_NUM_REQUESTS (2048u - 1)
@@ -3006,7 +3006,7 @@ accel_mlx5_get_devices(int *_num_devs)
 	int num_devs_out = 0;
 	bool dev_allowed;
 
-	rdma_devs = rdma_get_devices(&num_devs);
+	rdma_devs = spdk_rdma_cm_get_devices(&num_devs);
 	if (!rdma_devs || !num_devs) {
 		*_num_devs = 0;
 		return NULL;
@@ -3015,7 +3015,7 @@ accel_mlx5_get_devices(int *_num_devs)
 	rdma_devs_out = calloc(num_devs + 1, sizeof(struct ibv_context *));
 	if (!rdma_devs_out) {
 		SPDK_ERRLOG("Memory allocation failed\n");
-		rdma_free_devices(rdma_devs);
+		spdk_rdma_cm_free_devices(rdma_devs);
 		*_num_devs = 0;
 		return NULL;
 	}
@@ -3049,7 +3049,7 @@ accel_mlx5_get_devices(int *_num_devs)
 		num_devs_out++;
 	}
 
-	rdma_free_devices(rdma_devs);
+	spdk_rdma_cm_free_devices(rdma_devs);
 	*_num_devs = num_devs_out;
 
 	return rdma_devs_out;
