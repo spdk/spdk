@@ -88,6 +88,8 @@ function usage() {
 	echo " --with-rdma[=PROVIDER]    Build RDMA transport for NVMf target and initiator."
 	echo " --without-rdma            Accepts optional RDMA provider name. Can be \"verbs\" or \"mlx5_dv\"."
 	echo "                           If no provider specified, \"verbs\" provider is used by default."
+	echo " --with-rdma-cm=CM         Use a custom connection manager library for RDMA transport."
+	echo "                           If not specified, librdmacm (cma) will be used."
 	echo " --with-fc[=DIR]           Build FC transport for NVMf target."
 	echo " --without-fc              If an argument is provided, it is considered a directory containing"
 	echo "                           libufc.a and fc_lld.h. Otherwise the regular system paths will"
@@ -482,6 +484,9 @@ for i in "$@"; do
 			;;
 		--without-rdma)
 			CONFIG[RDMA]=n
+			;;
+		--with-rdma-cm=*)
+			CONFIG[RDMA_CM]="${i#*=}"
 			;;
 		--with-fc=*)
 			CONFIG[FC]=y
@@ -966,6 +971,13 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 
 	echo "Using '${CONFIG[RDMA_PROV]}' RDMA provider"
+
+	if [[ ! "${CONFIG[RDMA_CM]}" == "cma" ]] && [[ ! "${CONFIG[RDMA_CM]}" == "mock" ]]; then
+		echo "Invalid RDMA connection manager specified, must be \"cma\" or \"mock\""
+		exit 1
+	fi
+
+	echo "Using '${CONFIG[RDMA_CM]}' RDMA connection manager"
 fi
 
 if [[ "${CONFIG[FC]}" = "y" ]]; then

@@ -1,0 +1,31 @@
+{
+	global:
+
+	# Public functions
+	spdk_rdma_cm_create_event_channel;
+	spdk_rdma_cm_destroy_event_channel;
+	spdk_rdma_cm_create_id;
+	spdk_rdma_cm_destroy_id;
+	spdk_rdma_cm_set_option;
+	spdk_rdma_cm_bind_addr;
+	spdk_rdma_cm_resolve_addr;
+	spdk_rdma_cm_resolve_route;
+	spdk_rdma_cm_create_qp;
+	spdk_rdma_cm_create_qp_ex;
+	spdk_rdma_cm_destroy_qp;
+	spdk_rdma_cm_init_qp_attr;
+	spdk_rdma_cm_connect;
+	spdk_rdma_cm_establish;
+	spdk_rdma_cm_listen;
+	spdk_rdma_cm_accept;
+	spdk_rdma_cm_reject;
+	spdk_rdma_cm_disconnect;
+	spdk_rdma_cm_get_cm_event;
+	spdk_rdma_cm_ack_cm_event;
+	spdk_rdma_cm_get_src_port;
+	spdk_rdma_cm_get_dst_port;
+	spdk_rdma_cm_get_devices;
+	spdk_rdma_cm_free_devices;
+
+	local: *;
+};

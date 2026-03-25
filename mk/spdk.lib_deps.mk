@@ -36,6 +36,7 @@ endif
 
 DEPDIRS-conf := log util
 DEPDIRS-json := log util
+DEPDIRS-rdma_cm :=
 DEPDIRS-rdma_utils := dma log util
 DEPDIRS-rdma_provider := log util rdma_utils
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
