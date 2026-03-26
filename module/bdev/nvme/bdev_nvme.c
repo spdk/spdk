@@ -2298,7 +2298,7 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
 	}
 }
 
-static int bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug);
+static int bdev_nvme_start_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr, bool hotplug);
 static void bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
 
 static int
@@ -2416,7 +2416,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		nvme_ctrlr_unregister(nvme_ctrlr);
 		break;
 	case OP_DESTRUCT:
-		bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
+		bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, false);
 		remove_discovery_entry(nvme_ctrlr);
 		break;
 	case OP_DELAYED_RECONNECT:
@@ -5885,7 +5885,7 @@ nvme_ctrlr_init_ana_log_page_done(void *_ctx, const struct spdk_nvme_cpl *cpl)
 	nvme_ctrlr->probe_ctx = NULL;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
+		bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, false);
 
 		if (ctx != NULL) {
 			ctx->reported_bdevs = 0;
@@ -6274,18 +6274,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	free(name);
 }
 
-static void
-_nvme_ctrlr_destruct(void *ctx)
-{
-	struct nvme_ctrlr *nvme_ctrlr = ctx;
-
-	NVME_CTRLR_INFOLOG(nvme_ctrlr, "destructing ctrlr\n");
-	nvme_ctrlr_depopulate_namespaces(nvme_ctrlr);
-	nvme_ctrlr_put_ref(nvme_ctrlr);
-}
-
 static int
-bdev_nvme_delete_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
+bdev_nvme_start_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 {
 	struct nvme_probe_skip_entry *entry;
 
@@ -6293,7 +6283,7 @@ bdev_nvme_delete_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 
 	/* The controller's destruction was already started */
 	if (nvme_ctrlr->destruct) {
-		return -EALREADY;
+		return 0;
 	}
 
 	if (!hotplug &&
@@ -6306,25 +6296,11 @@ bdev_nvme_delete_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
 	}
 
+	NVME_CTRLR_INFOLOG(nvme_ctrlr, "destructing ctrlr\n");
 	nvme_ctrlr->destruct = true;
+	nvme_ctrlr_depopulate_namespaces(nvme_ctrlr);
+	nvme_ctrlr_put_ref(nvme_ctrlr);
 	return 0;
-}
-
-static int
-bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
-{
-	int rc;
-
-	assert(spdk_thread_is_app_thread(NULL));
-
-	rc = bdev_nvme_delete_ctrlr_unsafe(nvme_ctrlr, hotplug);
-	if (rc == 0) {
-		_nvme_ctrlr_destruct(nvme_ctrlr);
-	} else if (rc == -EALREADY) {
-		rc = 0;
-	}
-
-	return rc;
 }
 
 static void
@@ -6332,7 +6308,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_ctrlr *nvme_ctrlr = cb_ctx;
 
-	bdev_nvme_delete_ctrlr(nvme_ctrlr, true);
+	bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, true);
 }
 
 static int
@@ -7161,7 +7137,6 @@ static int
 _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct spdk_nvme_path_id *path_id)
 {
 	struct spdk_nvme_path_id	*p, *t;
-	spdk_msg_fn		msg_fn;
 	int			rc = -ENXIO;
 
 	assert(spdk_thread_is_app_thread(NULL));
@@ -7192,16 +7167,13 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct spdk_nvme_path_id 
 
 	if (!TAILQ_NEXT(p, link)) {
 		/* The current path is the only path. */
-		msg_fn = _nvme_ctrlr_destruct;
-		rc = bdev_nvme_delete_ctrlr_unsafe(nvme_ctrlr, false);
-	} else {
-		/* There is an alternative path. */
-		msg_fn = _bdev_nvme_reset_ctrlr;
-		rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, true);
+		return bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, false);
 	}
 
+	/* There is an alternative path. */
+	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, true);
 	if (rc == 0) {
-		msg_fn(nvme_ctrlr);
+		_bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	} else if (rc == -EALREADY) {
 		rc = 0;
 	}
@@ -7983,7 +7955,7 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-			bdev_nvme_delete_ctrlr(nvme_ctrlr, true);
+			bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, true);
 		}
 	}
 

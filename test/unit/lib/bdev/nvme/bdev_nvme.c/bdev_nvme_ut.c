@@ -3146,8 +3146,7 @@ test_bdev_unregister(void)
 	CU_ASSERT(nvme_ns1->bdev == NULL);
 	CU_ASSERT(nvme_ns2->bdev == NULL);
 
-	nvme_ctrlr->destruct = true;
-	_nvme_ctrlr_destruct(nvme_ctrlr);
+	bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, true);
 
 	spdk_put_io_channel(ch1);
 
@@ -3947,15 +3946,13 @@ test_add_multi_ns_to_bdev(void)
 	CU_ASSERT(nvme_ns1->bdev == NULL);
 	CU_ASSERT(nvme_ns2->bdev == NULL);
 
-	nvme_ctrlr1->destruct = true;
-	_nvme_ctrlr_destruct(nvme_ctrlr1);
+	bdev_nvme_start_ctrlr_destruct(nvme_ctrlr1, true);
 
 	poll_threads();
 	spdk_delay_us(1000);
 	poll_threads();
 
-	nvme_ctrlr2->destruct = true;
-	_nvme_ctrlr_destruct(nvme_ctrlr2);
+	bdev_nvme_start_ctrlr_destruct(nvme_ctrlr2, true);
 
 	poll_threads();
 	spdk_delay_us(1000);
