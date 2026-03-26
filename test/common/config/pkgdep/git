@@ -20,6 +20,8 @@ function install_fio() {
 	git clone "${GIT_REPO_FIO}" --branch "${fio_version}" "$GIT_REPOS/fio"
 	mv "$GIT_REPOS/fio" "${fio_dir}"
 
+	(cd "$fio_dir" && ./configure --disable-native)
+
 	if [ $OSID == 'freebsd' ]; then
 		gmake -C "${fio_dir}" -j${jobs} \
 			&& sudo gmake -C "${fio_dir}" install
