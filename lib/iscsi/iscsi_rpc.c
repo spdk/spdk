@@ -212,11 +212,6 @@ rpc_iscsi_get_target_nodes(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_get_target_nodes", rpc_iscsi_get_target_nodes, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_iscsi_pg_ig_map_decoders[] = {
-	{"pg_tag", offsetof(struct rpc_iscsi_pg_ig_map, pg_tag), spdk_json_decode_int32},
-	{"ig_tag", offsetof(struct rpc_iscsi_pg_ig_map, ig_tag), spdk_json_decode_int32},
-};
-
 static int
 decode_rpc_iscsi_pg_ig_map(const struct spdk_json_val *val, void *out)
 {
@@ -236,11 +231,6 @@ decode_rpc_iscsi_pg_ig_maps(const struct spdk_json_val *val, void *out)
 				      RPC_ISCSI_PG_IG_MAPS_MAX, &pg_ig_maps->count,
 				      sizeof(struct rpc_iscsi_pg_ig_map));
 }
-
-static const struct spdk_json_object_decoder rpc_iscsi_lun_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_iscsi_lun, bdev_name), spdk_json_decode_string},
-	{"lun_id", offsetof(struct rpc_iscsi_lun, lun_id), spdk_json_decode_int32},
-};
 
 static int
 decode_rpc_iscsi_lun(const struct spdk_json_val *val, void *out)
@@ -520,11 +510,6 @@ rpc_iscsi_get_portal_groups(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("iscsi_get_portal_groups", rpc_iscsi_get_portal_groups, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_iscsi_portal_decoders[] = {
-	{"host", offsetof(struct rpc_iscsi_portal, host), spdk_json_decode_string},
-	{"port", offsetof(struct rpc_iscsi_portal, port), spdk_json_decode_string},
-};
 
 static int
 decode_rpc_iscsi_portal(const struct spdk_json_val *val, void *out)
@@ -1128,13 +1113,6 @@ rpc_iscsi_set_discovery_auth(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_set_discovery_auth", rpc_iscsi_set_discovery_auth, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_iscsi_auth_secret_decoders[] = {
-	{"user", offsetof(struct rpc_iscsi_auth_secret, user), spdk_json_decode_string},
-	{"secret", offsetof(struct rpc_iscsi_auth_secret, secret), spdk_json_decode_string},
-	{"muser", offsetof(struct rpc_iscsi_auth_secret, muser), spdk_json_decode_string, true},
-	{"msecret", offsetof(struct rpc_iscsi_auth_secret, msecret), spdk_json_decode_string, true},
-};
 
 static int
 decode_rpc_iscsi_auth_secret(const struct spdk_json_val *val, void *out)

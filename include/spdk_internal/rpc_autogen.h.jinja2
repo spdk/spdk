@@ -66,6 +66,16 @@ struct rpc_{{ object.name }} {
     {%- endfor %}
 };
 
+{% if object.name.startswith('iscsi') %}
+static const struct spdk_json_object_decoder rpc_{{ object.name }}_decoders[] = {
+    {%- for field in object.fields %}
+	{%- set decode_fn = 'spdk_json_decode_' ~ ('bool' if field.type == 'boolean' else field.type) %}
+	{%- set optional = 'false' if field.required else 'true' %}
+	{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), {{ decode_fn }}, {{ optional }}},
+    {%- endfor %}
+};
+{% endif %}
+
 static inline void
 free_rpc_{{ object.name }}(struct rpc_{{ object.name }} *req)
 {
