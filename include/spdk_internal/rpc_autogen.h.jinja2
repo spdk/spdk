@@ -12,6 +12,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/jsonrpc.h"
+#include "spdk/log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +26,31 @@ enum rpc_{{ enum.name }} {
     RPC_{{ enum.name | upper }}_{{ val.name | upper }} = {{ val.value }},
     {%- endfor %}
 };
+{% endfor %}
+
+/* Enum decoder functions section */
+
+{% for enum in schema.get("enums", []) %}
+static inline int
+rpc_decode_{{ enum.name }}(const struct spdk_json_val *val, void *out)
+{
+	enum rpc_{{ enum.name }} *p = out;
+
+	if (spdk_json_strequal(val, "{{ enum.fields[0].name }}")) {
+		*p = RPC_{{ enum.name | upper }}_{{ enum.fields[0].name | upper }};
+{%- for field in enum.fields[1:] %}
+	} else if (spdk_json_strequal(val, "{{ field.name }}")) {
+		*p = RPC_{{ enum.name | upper }}_{{ field.name | upper }};
+{%- endfor %}
+	} else {
+		char *s = spdk_json_strdup(val);
+		SPDK_ERRLOG("Invalid {{ enum.name }} value: '%s'. Supported values: {{ enum.fields | map(attribute='name') | join(', ') }}\n", s ? s : "null");
+		free(s);
+		return -EINVAL;
+	}
+
+	return 0;
+}
 {% endfor %}
 
 /* Embedded objects section */

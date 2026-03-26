@@ -194,40 +194,6 @@ rpc_bdev_nvme_send_cmd_exec(struct rpc_bdev_nvme_send_cmd_tmp *ctx)
 }
 
 static int
-rpc_decode_cmd_type(const struct spdk_json_val *val, void *out)
-{
-	enum rpc_bdev_nvme_cmd_type *cmd_type = out;
-
-	if (spdk_json_strequal(val, "admin") == true) {
-		*cmd_type = RPC_BDEV_NVME_CMD_TYPE_ADMIN;
-	} else if (spdk_json_strequal(val, "io") == true) {
-		*cmd_type = RPC_BDEV_NVME_CMD_TYPE_IO;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: cmd_type\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static int
-rpc_decode_data_direction(const struct spdk_json_val *val, void *out)
-{
-	enum rpc_bdev_nvme_data_direction *data_direction = out;
-
-	if (spdk_json_strequal(val, "h2c") == true) {
-		*data_direction = RPC_BDEV_NVME_DATA_DIRECTION_H2C;
-	} else if (spdk_json_strequal(val, "c2h") == true) {
-		*data_direction = RPC_BDEV_NVME_DATA_DIRECTION_C2H;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: data_direction\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static int
 rpc_decode_cmdbuf(const struct spdk_json_val *val, void *out)
 {
 	char *text = NULL;
@@ -400,8 +366,8 @@ rpc_decode_metadata_len(const struct spdk_json_val *val, void *out)
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_send_cmd_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_nvme_send_cmd_req, name), spdk_json_decode_string},
-	{"cmd_type", offsetof(struct rpc_bdev_nvme_send_cmd_req, cmd_type), rpc_decode_cmd_type},
-	{"data_direction", offsetof(struct rpc_bdev_nvme_send_cmd_req, data_direction), rpc_decode_data_direction},
+	{"cmd_type", offsetof(struct rpc_bdev_nvme_send_cmd_req, cmd_type), rpc_decode_bdev_nvme_cmd_type},
+	{"data_direction", offsetof(struct rpc_bdev_nvme_send_cmd_req, data_direction), rpc_decode_bdev_nvme_data_direction},
 	{"cmdbuf", offsetof(struct rpc_bdev_nvme_send_cmd_req, cmdbuf), rpc_decode_cmdbuf},
 	{"timeout_ms", offsetof(struct rpc_bdev_nvme_send_cmd_req, timeout_ms), spdk_json_decode_uint32, true},
 	{"data_len", 0, rpc_decode_data_len, true},

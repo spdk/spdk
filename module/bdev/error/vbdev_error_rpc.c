@@ -36,27 +36,6 @@ rpc_error_bdev_decode_io_type(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
-static int
-rpc_error_bdev_decode_error_type(const struct spdk_json_val *val, void *out)
-{
-	enum rpc_bdev_error_inject_error_type *error_type = out;
-
-	if (spdk_json_strequal(val, "failure") == true) {
-		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_FAILURE;
-	} else if (spdk_json_strequal(val, "pending") == true) {
-		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_PENDING;
-	} else if (spdk_json_strequal(val, "corrupt_data") == true) {
-		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_CORRUPT_DATA;
-	} else if (spdk_json_strequal(val, "nomem") == true) {
-		*error_type = RPC_BDEV_ERROR_INJECT_ERROR_TYPE_NOMEM;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: error_type\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_error_create_decoders[] = {
 	{"base_name", offsetof(struct rpc_bdev_error_create_ctx, base_name), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_bdev_error_create_ctx, uuid), spdk_json_decode_uuid, true},
@@ -131,7 +110,7 @@ SPDK_RPC_REGISTER("bdev_error_delete", rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
 static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_error_inject_error_ctx, name), spdk_json_decode_string},
 	{"io_type", offsetof(struct rpc_bdev_error_inject_error_ctx, io_type), rpc_error_bdev_decode_io_type},
-	{"error_type", offsetof(struct rpc_bdev_error_inject_error_ctx, error_type), rpc_error_bdev_decode_error_type},
+	{"error_type", offsetof(struct rpc_bdev_error_inject_error_ctx, error_type), rpc_decode_bdev_error_inject_error_type},
 	{"num", offsetof(struct rpc_bdev_error_inject_error_ctx, num), spdk_json_decode_uint32, true},
 	{"queue_depth", offsetof(struct rpc_bdev_error_inject_error_ctx, queue_depth), spdk_json_decode_uint64, true},
 	{"corrupt_offset", offsetof(struct rpc_bdev_error_inject_error_ctx, corrupt_offset), spdk_json_decode_uint64, true},
