@@ -331,20 +331,11 @@ free_rpc_bdev_get_iostat_ctx(struct rpc_bdev_get_iostat_ctx *r)
 	free_rpc_bdev_iostat_names(&r->names);
 }
 
-static int
-rpc_decode_iostat_bdev_names(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_bdev_iostat_names *names = out;
-
-	return spdk_json_decode_array(val, spdk_json_decode_string, names->items,
-				      RPC_BDEV_IOSTAT_NAMES_MAX, &names->count, sizeof(char *));
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_get_iostat_ctx, name), spdk_json_decode_string, true},
 	{"per_channel", offsetof(struct rpc_bdev_get_iostat_ctx, per_channel), spdk_json_decode_bool, true},
 	{"reset_mode", offsetof(struct rpc_bdev_get_iostat_ctx, reset_mode), rpc_decode_bdev_reset_stat_mode, true},
-	{"names", offsetof(struct rpc_bdev_get_iostat_ctx, names), rpc_decode_iostat_bdev_names, true},
+	{"names", offsetof(struct rpc_bdev_get_iostat_ctx, names), rpc_decode_bdev_iostat_names, true},
 };
 
 SPDK_LOG_DEPRECATION_REGISTER(bdev_get_iostat_with_name,
@@ -998,16 +989,6 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_enable_histogram", rpc_bdev_enable_histogram, SPDK_RPC_RUNTIME)
 
 /* SPDK_RPC_GET_BDEV_HISTOGRAM */
-
-static int
-rpc_decode_bdev_histogram_borders(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_bdev_histogram_borders *borders = out;
-
-	return spdk_json_decode_array(val, spdk_json_decode_uint64, borders->items,
-				      RPC_BDEV_HISTOGRAM_BORDERS_MAX, &borders->count,
-				      sizeof(uint64_t));
-}
 
 static const struct spdk_json_object_decoder rpc_bdev_get_histogram_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_get_histogram_ctx, name), spdk_json_decode_string},

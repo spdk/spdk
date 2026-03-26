@@ -40,29 +40,10 @@ rpc_iscsi_get_initiator_groups(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("iscsi_get_initiator_groups", rpc_iscsi_get_initiator_groups,
 		  SPDK_RPC_RUNTIME)
 
-static int
-decode_rpc_iscsi_initiators(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_iscsi_initiators *list = out;
-
-	return spdk_json_decode_array(val, spdk_json_decode_string, list->items,
-				      RPC_ISCSI_INITIATORS_MAX,
-				      &list->count, sizeof(char *));
-}
-
-static int
-decode_rpc_iscsi_netmasks(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_iscsi_netmasks *list = out;
-
-	return spdk_json_decode_array(val, spdk_json_decode_string, list->items, RPC_ISCSI_NETMASKS_MAX,
-				      &list->count, sizeof(char *));
-}
-
 static const struct spdk_json_object_decoder rpc_iscsi_create_initiator_group_decoders[] = {
 	{"tag", offsetof(struct rpc_iscsi_create_initiator_group_ctx, tag), spdk_json_decode_int32},
-	{"initiators", offsetof(struct rpc_iscsi_create_initiator_group_ctx, initiators), decode_rpc_iscsi_initiators},
-	{"netmasks", offsetof(struct rpc_iscsi_create_initiator_group_ctx, netmasks), decode_rpc_iscsi_netmasks},
+	{"initiators", offsetof(struct rpc_iscsi_create_initiator_group_ctx, initiators), rpc_decode_iscsi_initiators},
+	{"netmasks", offsetof(struct rpc_iscsi_create_initiator_group_ctx, netmasks), rpc_decode_iscsi_netmasks},
 };
 
 static void
@@ -103,8 +84,8 @@ SPDK_RPC_REGISTER("iscsi_create_initiator_group", rpc_iscsi_create_initiator_gro
 
 static const struct spdk_json_object_decoder rpc_iscsi_initiator_group_add_initiators_decoders[] = {
 	{"tag", offsetof(struct rpc_iscsi_initiator_group_add_initiators_ctx, tag), spdk_json_decode_int32},
-	{"initiators", offsetof(struct rpc_iscsi_initiator_group_add_initiators_ctx, initiators), decode_rpc_iscsi_initiators, true},
-	{"netmasks", offsetof(struct rpc_iscsi_initiator_group_add_initiators_ctx, netmasks), decode_rpc_iscsi_netmasks, true},
+	{"initiators", offsetof(struct rpc_iscsi_initiator_group_add_initiators_ctx, initiators), rpc_decode_iscsi_initiators, true},
+	{"netmasks", offsetof(struct rpc_iscsi_initiator_group_add_initiators_ctx, netmasks), rpc_decode_iscsi_netmasks, true},
 };
 
 static void
@@ -141,8 +122,8 @@ SPDK_RPC_REGISTER("iscsi_initiator_group_add_initiators",
 static const struct spdk_json_object_decoder rpc_iscsi_initiator_group_remove_initiators_decoders[]
 	= {
 	{"tag", offsetof(struct rpc_iscsi_initiator_group_remove_initiators_ctx, tag), spdk_json_decode_int32},
-	{"initiators", offsetof(struct rpc_iscsi_initiator_group_remove_initiators_ctx, initiators), decode_rpc_iscsi_initiators, true},
-	{"netmasks", offsetof(struct rpc_iscsi_initiator_group_remove_initiators_ctx, netmasks), decode_rpc_iscsi_netmasks, true},
+	{"initiators", offsetof(struct rpc_iscsi_initiator_group_remove_initiators_ctx, initiators), rpc_decode_iscsi_initiators, true},
+	{"netmasks", offsetof(struct rpc_iscsi_initiator_group_remove_initiators_ctx, netmasks), rpc_decode_iscsi_netmasks, true},
 };
 
 static void

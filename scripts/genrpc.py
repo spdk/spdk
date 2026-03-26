@@ -254,11 +254,13 @@ def generate_docs(schema: Dict[str, Any]) -> str:
 
 
 def generate_rpcs(schema: Dict[str, Any]) -> str:
-    types = {'string': 'char'.ljust(10)+'*', 'boolean': 'bool'.ljust(10),
-             'uint8': 'uint8_t'.ljust(10), 'uint16': 'uint16_t'.ljust(10),
-             'int32': 'int32_t'.ljust(10), 'uint32': 'uint32_t'.ljust(10),
-             'uint64': 'uint64_t'.ljust(10), 'array': '/* TODO: array type */ void	*',
-             'uuid': 'struct'.ljust(10)+'spdk_uuid ' }
+    types = {
+        'string': 'char *', 'boolean': 'bool',
+        'uint8': 'uint8_t', 'uint16': 'uint16_t',
+        'int32': 'int32_t', 'uint32': 'uint32_t',
+        'uint64': 'uint64_t', 'uuid': 'struct spdk_uuid',
+        'array': '/* TODO: array type */ void *',
+    }
     env = Environment(loader=FileSystemLoader(base_dir / "include" / "spdk_internal"),
                       keep_trailing_newline=False)
     schema_template = env.get_template('rpc_autogen.h.jinja2')
