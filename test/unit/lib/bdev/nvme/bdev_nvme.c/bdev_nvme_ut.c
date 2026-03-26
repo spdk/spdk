@@ -6124,8 +6124,8 @@ test_retry_failover_ctrlr(void)
 	/* If we remove trid1 while reconnect is scheduled, trid1 is removed and path_id is
 	 * switched to trid2 but reset is not started.
 	 */
-	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, true);
-	CU_ASSERT(rc == -EALREADY);
+	rc = bdev_nvme_start_ctrlr_failover(nvme_ctrlr, true);
+	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(ut_get_path_id_by_trid(nvme_ctrlr, &trid1) == NULL);
 	CU_ASSERT(path_id2 == nvme_ctrlr->active_path_id);

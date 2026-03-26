@@ -3220,7 +3220,7 @@ bdev_nvme_reset_io(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio)
 }
 
 static int
-bdev_nvme_failover_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool remove)
+bdev_nvme_start_ctrlr_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -3249,14 +3249,14 @@ bdev_nvme_failover_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
 
 		/* We rely on the next reconnect for the failover. */
-		return -EALREADY;
+		return 0;
 	}
 
 	if (nvme_ctrlr->disabled) {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Controller is disabled.\n");
 
 		/* We rely on the enablement for the failover. */
-		return -EALREADY;
+		return 0;
 	}
 
 	nvme_ctrlr->resetting = true;
@@ -3266,24 +3266,16 @@ bdev_nvme_failover_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
 	}
 
+	_bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	return 0;
 }
 
 static int
 bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
-	int rc;
-
 	assert(spdk_thread_is_app_thread(NULL));
 
-	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, false);
-	if (rc == 0) {
-		_bdev_nvme_reset_ctrlr(nvme_ctrlr);
-	} else if (rc == -EALREADY) {
-		rc = 0;
-	}
-
-	return rc;
+	return bdev_nvme_start_ctrlr_failover(nvme_ctrlr, false);
 }
 
 static void
@@ -7171,14 +7163,7 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct spdk_nvme_path_id 
 	}
 
 	/* There is an alternative path. */
-	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, true);
-	if (rc == 0) {
-		_bdev_nvme_reset_ctrlr(nvme_ctrlr);
-	} else if (rc == -EALREADY) {
-		rc = 0;
-	}
-
-	return rc;
+	return bdev_nvme_start_ctrlr_failover(nvme_ctrlr, true);
 }
 
 int
