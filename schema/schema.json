@@ -86,6 +86,14 @@
         {"name": "dix_generate", "value": 15},
         {"name": "dix_verify", "value": 16}
       ]
+    },
+    {
+      "name": "accel_error_inject_type",
+      "fields": [
+        {"name": "disable", "value": 0},
+        {"name": "corrupt", "value": 1},
+        {"name": "failure", "value": 2}
+      ]
     }
   ],
   "objects": [
@@ -835,7 +843,8 @@
         },
         {
           "name": "type",
-          "type": "string",
+          "type": "enum",
+          "class": "accel_error_inject_type",
           "required": true,
           "description": "Type of errors to inject (\"corrupt\": corrupt the data, \"failure\": fail the operation, \"disable\": disable error injection)."
         },

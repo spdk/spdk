@@ -9,35 +9,9 @@
 #include "spdk/util.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static int
-rpc_accel_error_decode_type(const struct spdk_json_val *val, void *out)
-{
-	enum accel_error_inject_type *type = out;
-	char *typestr = NULL;
-	int i, rc;
-
-	rc = spdk_json_decode_string(val, &typestr);
-	if (rc != 0) {
-		return rc;
-	}
-
-	rc = -EINVAL;
-	for (i = 0; i < ACCEL_ERROR_INJECT_MAX; ++i) {
-		if (strcmp(accel_error_get_type_name(i), typestr) == 0) {
-			*type = (enum accel_error_inject_type)i;
-			rc = 0;
-			break;
-		}
-	}
-
-	free(typestr);
-
-	return rc;
-}
-
 static const struct spdk_json_object_decoder rpc_accel_error_inject_error_decoders[] = {
 	{"opcode", offsetof(struct accel_error_inject_opts, opcode), rpc_decode_accel_error_opcode},
-	{"type", offsetof(struct accel_error_inject_opts, type), rpc_accel_error_decode_type},
+	{"type", offsetof(struct accel_error_inject_opts, type), rpc_decode_accel_error_inject_type},
 	{"count", offsetof(struct accel_error_inject_opts, count), spdk_json_decode_uint64, true},
 	{"interval", offsetof(struct accel_error_inject_opts, interval), spdk_json_decode_uint64, true},
 	{"errcode", offsetof(struct accel_error_inject_opts, errcode), spdk_json_decode_int32, true},
