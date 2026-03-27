@@ -64,6 +64,28 @@
         {"name": "non_optimized", "value": 2},
         {"name": "inaccessible", "value": 3}
       ]
+    },
+    {
+      "name": "accel_error_opcode",
+      "fields": [
+        {"name": "copy", "value": 0},
+        {"name": "fill", "value": 1},
+        {"name": "dualcast", "value": 2},
+        {"name": "compare", "value": 3},
+        {"name": "crc32c", "value": 4},
+        {"name": "copy_crc32c", "value": 5},
+        {"name": "compress", "value": 6},
+        {"name": "decompress", "value": 7},
+        {"name": "encrypt", "value": 8},
+        {"name": "decrypt", "value": 9},
+        {"name": "xor", "value": 10},
+        {"name": "dif_verify", "value": 11},
+        {"name": "dif_verify_copy", "value": 12},
+        {"name": "dif_generate", "value": 13},
+        {"name": "dif_generate_copy", "value": 14},
+        {"name": "dix_generate", "value": 15},
+        {"name": "dix_verify", "value": 16}
+      ]
     }
   ],
   "objects": [
@@ -806,7 +828,8 @@
       "params": [
         {
           "name": "opcode",
-          "type": "string",
+          "type": "enum",
+          "class": "accel_error_opcode",
           "required": true,
           "description": "Operation to inject errors."
         },

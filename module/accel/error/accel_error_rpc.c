@@ -7,32 +7,7 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
-
-static int
-rpc_accel_error_decode_opcode(const struct spdk_json_val *val, void *out)
-{
-	enum spdk_accel_opcode *opcode = out;
-	char *opstr = NULL;
-	int i, rc;
-
-	rc = spdk_json_decode_string(val, &opstr);
-	if (rc != 0) {
-		return rc;
-	}
-
-	rc = -EINVAL;
-	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
-		if (strcmp(spdk_accel_get_opcode_name((enum spdk_accel_opcode)i), opstr) == 0) {
-			*opcode = (enum spdk_accel_opcode)i;
-			rc = 0;
-			break;
-		}
-	}
-
-	free(opstr);
-
-	return rc;
-}
+#include "spdk_internal/rpc_autogen.h"
 
 static int
 rpc_accel_error_decode_type(const struct spdk_json_val *val, void *out)
@@ -61,7 +36,7 @@ rpc_accel_error_decode_type(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder rpc_accel_error_inject_error_decoders[] = {
-	{"opcode", offsetof(struct accel_error_inject_opts, opcode), rpc_accel_error_decode_opcode},
+	{"opcode", offsetof(struct accel_error_inject_opts, opcode), rpc_decode_accel_error_opcode},
 	{"type", offsetof(struct accel_error_inject_opts, type), rpc_accel_error_decode_type},
 	{"count", offsetof(struct accel_error_inject_opts, count), spdk_json_decode_uint64, true},
 	{"interval", offsetof(struct accel_error_inject_opts, interval), spdk_json_decode_uint64, true},
