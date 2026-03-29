@@ -162,6 +162,7 @@ struct nvme_rdma_poll_group {
 enum nvme_rdma_qpair_state {
 	NVME_RDMA_QPAIR_STATE_INVALID = 0,
 	NVME_RDMA_QPAIR_STATE_STALE_CONN,
+	NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING,
 	NVME_RDMA_QPAIR_STATE_INITIALIZING,
 	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND,
 	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL,
@@ -1415,6 +1416,22 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 
 		return rc;
 
+	case NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING:
+		/* Wait for all FLUSH_ERR WCs from the old QP to be drained from the
+		 * shared CQ before freeing the WR buffers (rdma_reqs / rsps).
+		 * poll_group_process_completions() runs on the same thread and will
+		 * decrement current_num_sends / current_num_recvs as it collects them. */
+		if (spdk_get_ticks() >= rqpair->evt_timeout_ticks ||
+		    (rqpair->current_num_sends == 0 &&
+		     (rqpair->srq || rqpair->rsps == NULL || rqpair->rsps->current_num_recvs == 0))) {
+			rc = nvme_rdma_stale_conn_complete_disconnect(rqpair);
+			if (rc == 0) {
+				rc = -EAGAIN;
+			}
+		} else {
+			rc = -EAGAIN;
+		}
+		break;
 	case NVME_RDMA_QPAIR_STATE_STALE_CONN:
 		rc = nvme_rdma_stale_conn_reconnect(rqpair);
 		if (rc == 0) {
@@ -2296,8 +2313,6 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
 
-	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
-
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
 		rqpair->evt = NULL;
@@ -2325,6 +2340,11 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 			rqpair->rdma_qp = NULL;
 		}
 	}
+
+	/* Free the memory map after the QP is destroyed to ensure the HCA has
+	 * fully released the QP (and any in-flight DMA it referenced) before
+	 * the underlying ibv_mr registrations are potentially removed. */
+	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
 
 	if (rqpair->poller) {
 		nvme_rdma_qpair_release_poller(rqpair);
@@ -2574,13 +2594,9 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 }
 
 static int
-nvme_rdma_stale_conn_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
+nvme_rdma_stale_conn_complete_disconnect(struct nvme_rdma_qpair *rqpair)
 {
 	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
-
-	if (ret) {
-		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
-	}
 
 	nvme_rdma_qpair_destroy(rqpair);
 
@@ -2592,6 +2608,34 @@ nvme_rdma_stale_conn_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 				    SPDK_SEC_TO_USEC + spdk_get_ticks();
 
 	return 0;
+}
+
+static int
+nvme_rdma_stale_conn_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
+{
+	if (ret) {
+		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
+	}
+
+	if (rqpair->rdma_qp != NULL) {
+		nvme_rdma_qpair_flush_send_wrs(rqpair);
+	}
+
+	/* If there are still outstanding WCs in the shared CQ, delay destruction
+	 * until they are all drained.  Freeing rdma_reqs/rsps while their wr_id
+	 * pointers are still referenced by pending WCs in the CQ causes
+	 * use-after-free; when the freed memory is reused for a new connection's
+	 * rdma_reqs the stale WC processing corrupts the new send_sgl[0].lkey,
+	 * leading to IBV_WC_LOC_PROT_ERR on the reconnected fabric CONNECT. */
+	if (rqpair->current_num_sends != 0 ||
+	    (!rqpair->srq && rqpair->rsps != NULL && rqpair->rsps->current_num_recvs != 0)) {
+		rqpair->state = NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING;
+		rqpair->evt_timeout_ticks = (NVME_RDMA_DISCONNECTED_QPAIR_TIMEOUT_US * spdk_get_ticks_hz()) /
+					    SPDK_SEC_TO_USEC + spdk_get_ticks();
+		return -EAGAIN;
+	}
+
+	return nvme_rdma_stale_conn_complete_disconnect(rqpair);
 }
 
 static int
