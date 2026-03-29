@@ -1662,6 +1662,128 @@ test_nvme_rdma_qpair_set_poller(void)
 	CU_ASSERT(rc == 0);
 }
 
+/*
+ * Test nvme_rdma_stale_conn_disconnected() and the STALE_CONN_LINGERING
+ * drain loop in nvme_rdma_ctrlr_connect_qpair_poll().
+ *
+ * Before this fix, nvme_rdma_stale_conn_disconnected() called
+ * nvme_rdma_qpair_destroy() immediately without waiting for FLUSH_ERR WCs
+ * to drain from the shared CQ.  If the freed rdma_reqs/rsps memory was reused
+ * for a new connection's buffers, the stale WC processing would corrupt the
+ * new connection's send_sgl[0].lkey, causing IBV_WC_LOC_PROT_ERR on the
+ * reconnected fabric CONNECT.
+ *
+ * The fix adds NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING: the qpair waits
+ * for current_num_sends/current_num_recvs to reach zero (or for a timeout)
+ * before calling nvme_rdma_qpair_destroy().
+ */
+static void
+test_nvme_rdma_stale_conn_disconnected(void)
+{
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {};
+	struct nvme_rdma_rsps rsps = {};
+	int rc;
+
+	/*
+	 * Minimal qpair setup so nvme_rdma_qpair_destroy() (called from the
+	 * fast path) does not crash:
+	 *   cm_id=NULL   → skip rdma_qp destroy and rdma_destroy_id
+	 *   poller=NULL  → skip poller release
+	 *   cq=NULL      → skip ibv_destroy_cq
+	 *   rdma_reqs=NULL → nvme_rdma_free_reqs() returns early
+	 *   rsps=NULL    → nvme_rdma_free_rsps(NULL) returns early
+	 */
+	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
+
+	/* Case 1: no outstanding WCs -- fast path, destroys immediately, state -> STALE_CONN */
+	rqpair.rdma_qp = NULL;
+	rqpair.current_num_sends = 0;
+	rqpair.srq = NULL;
+	rqpair.rsps = NULL;
+	rc = nvme_rdma_stale_conn_disconnected(&rqpair, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN);
+
+	/* Case 2: outstanding sends -- deferred destroy, state -> STALE_CONN_LINGERING */
+	rqpair.current_num_sends = 1;
+	rqpair.rsps = NULL;
+	rc = nvme_rdma_stale_conn_disconnected(&rqpair, 0);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING);
+
+	/* Case 3: outstanding recvs (no SRQ) -- deferred destroy, state -> STALE_CONN_LINGERING */
+	rqpair.current_num_sends = 0;
+	rsps.current_num_recvs = 1;
+	rqpair.rsps = &rsps;
+	rc = nvme_rdma_stale_conn_disconnected(&rqpair, 0);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING);
+
+	/*
+	 * Case 4: outstanding recvs but SRQ is set -- SRQ recvs are managed by
+	 * the poller, not this qpair; recv check is skipped → fast path.
+	 */
+	rqpair.current_num_sends = 0;
+	rqpair.rsps = NULL;
+	rqpair.srq = (struct spdk_rdma_provider_srq *)0x1;
+	rc = nvme_rdma_stale_conn_disconnected(&rqpair, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN);
+	rqpair.srq = NULL;
+}
+
+static void
+test_nvme_rdma_stale_conn_lingering_drain(void)
+{
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {};
+	int rc;
+
+	/* Same minimal setup as above so nvme_rdma_qpair_destroy() does not crash */
+	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
+	rqpair.rdma_qp = NULL;
+	rqpair.srq = NULL;
+	rqpair.rsps = NULL;
+
+	/*
+	 * Case 1: STALE_CONN_LINGERING with sends still outstanding and no
+	 * timeout yet -- poll returns -EAGAIN, state stays STALE_CONN_LINGERING.
+	 */
+	rqpair.state = NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING;
+	rqpair.current_num_sends = 1;
+	rqpair.evt_timeout_ticks = UINT64_MAX;   /* will not time out */
+
+	rc = nvme_rdma_ctrlr_connect_qpair_poll(&rctrlr.ctrlr, &rqpair.qpair);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING);
+
+	/*
+	 * Case 2: WCs drained (current_num_sends reaches 0) -- poll calls
+	 * nvme_rdma_stale_conn_complete_disconnect(), state -> STALE_CONN.
+	 * The function returns -EAGAIN even on success to let the caller retry
+	 * the reconnect state machine.
+	 */
+	rqpair.current_num_sends = 0;
+	rc = nvme_rdma_ctrlr_connect_qpair_poll(&rctrlr.ctrlr, &rqpair.qpair);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN);
+
+	/*
+	 * Case 3: timeout fires while WCs are still outstanding -- poll calls
+	 * nvme_rdma_stale_conn_complete_disconnect() anyway, state -> STALE_CONN.
+	 * (spdk_get_ticks() returns 0 by default; evt_timeout_ticks=0 means
+	 *  0 >= 0, which is immediately expired.)
+	 */
+	rqpair.state = NVME_RDMA_QPAIR_STATE_STALE_CONN_LINGERING;
+	rqpair.current_num_sends = 1;
+	rqpair.evt_timeout_ticks = 0;
+
+	rc = nvme_rdma_ctrlr_connect_qpair_poll(&rctrlr.ctrlr, &rqpair.qpair);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1694,6 +1816,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_get_max_sges);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_stats);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_set_poller);
+	CU_ADD_TEST(suite, test_nvme_rdma_stale_conn_disconnected);
+	CU_ADD_TEST(suite, test_nvme_rdma_stale_conn_lingering_drain);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

@@ -2313,8 +2313,6 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
 
-	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
-
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
 		rqpair->evt = NULL;
@@ -2342,6 +2340,11 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 			rqpair->rdma_qp = NULL;
 		}
 	}
+
+	/* Free the memory map after the QP is destroyed to ensure the HCA has
+	 * fully released the QP (and any in-flight DMA it referenced) before
+	 * the underlying ibv_mr registrations are potentially removed. */
+	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
 
 	if (rqpair->poller) {
 		nvme_rdma_qpair_release_poller(rqpair);

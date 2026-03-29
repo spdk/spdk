@@ -94,15 +94,18 @@ the new qpair's SGE data — this only happens under sufficient allocation press
   polls until `current_num_sends == 0 && current_num_recvs == 0` (or timeout), then
   calls `nvme_rdma_stale_conn_complete_disconnect()`.
 
-- [ ] **Fix: Optionally tighten MR/QP destroy order**
-  In `nvme_rdma_qpair_destroy()` (line 2292), consider moving
-  `spdk_rdma_utils_free_mem_map()` AFTER `spdk_rdma_provider_qp_destroy()` to ensure
-  no in-flight HCA operations can race with MR deregistration.
+- [x] **Fix: Optionally tighten MR/QP destroy order**
+  In `nvme_rdma_qpair_destroy()`, moved `spdk_rdma_utils_free_mem_map()` to run
+  AFTER `spdk_rdma_provider_qp_destroy()` so the HCA fully releases the QP before
+  the underlying ibv_mr registrations are potentially removed.
 
-- [ ] **Test**: Add a unit/integration test that:
-  - Connects to a discovery subsystem under I/O load
-  - Forces a stale connection retry (by simulating STALE_CONN rejection)
-  - Verifies no LOC_PROT_ERR on the reconnected admin qpair's CONNECT command
+- [x] **Test**: Added unit tests in `test/unit/lib/nvme/nvme_rdma.c/nvme_rdma_ut.c`:
+  - `test_nvme_rdma_stale_conn_disconnected`: covers fast path (no outstanding WCs →
+    STALE_CONN), sends outstanding → STALE_CONN_LINGERING, recvs outstanding →
+    STALE_CONN_LINGERING, SRQ case (recv check skipped) → STALE_CONN.
+  - `test_nvme_rdma_stale_conn_lingering_drain`: covers poll loop staying in
+    STALE_CONN_LINGERING while WCs are outstanding, transitioning to STALE_CONN
+    once drained, and timeout-forced transition.
 
 - [ ] **Update issue**: Comment on #3807 with root cause analysis and fix PR link
 
