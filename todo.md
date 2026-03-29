@@ -107,7 +107,8 @@ the new qpair's SGE data — this only happens under sufficient allocation press
     STALE_CONN_LINGERING while WCs are outstanding, transitioning to STALE_CONN
     once drained, and timeout-forced transition.
 
-- [ ] **Update issue**: Comment on #3807 with root cause analysis and fix PR link
+- [x] **Update issue**: Commented on #3807 with root cause analysis; PR raised at
+  https://github.com/NishanthMolleti/spdk/tree/fix/nvme-rdma-stale-conn-loc-prot-err
 
 ---
 
