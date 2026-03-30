@@ -92,7 +92,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
         if has_string_params and method['name'] not in schema_decoders and f"free_rpc_{method['name']}" not in c_code_free:
             # print(f"Free function of '{method['name']}' was not found. Update free function names or exception list.")
             # raise ValueError(f"Free function of '{method['name']}' was not found. Update free function names or exception list.")
-            continue
+            pass
         cli_params = set(n for n, _, _, _ in c_code_methods[decoder_name])
         missing_in_cli = schema_params - cli_params
         missing_in_schema = cli_params - schema_params
