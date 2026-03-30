@@ -10,7 +10,20 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
+pid_t g_spdk_nvme_pid;
+
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), "UNKNOWN");
+DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
+DEFINE_STUB(nvme_qpair_submit_request, int, (struct spdk_nvme_qpair *qpair,
+		struct nvme_request *req), 0);
+DEFINE_STUB(nvme_wait_for_completion_poll, int, (struct spdk_nvme_qpair *qpair,
+		struct nvme_completion_poll_status *status), 0);
+DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *key), NULL);
+DEFINE_STUB(spdk_key_get_key, int, (struct spdk_key *key, void *buf, int len), 0);
+DEFINE_STUB(spdk_key_dup, struct spdk_key *, (struct spdk_key *key), NULL);
+DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *key));
+DEFINE_STUB_V(nvme_fabric_qpair_poll_cleanup, (struct spdk_nvme_qpair *qpair));
+DEFINE_STUB_V(nvme_fabric_qpair_auth_cleanup, (struct spdk_nvme_qpair *qpair, int status));
 
 static struct spdk_nvme_ctrlr g_ctrlr;
 static struct spdk_nvme_qpair g_qpair;
