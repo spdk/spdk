@@ -2891,7 +2891,8 @@ nvmf_get_feature_ids_effects_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iove
 static const struct spdk_nvme_supported_log_pages g_supported_log_pages_discover = {
 	.lids = {
 		[SPDK_NVME_LOG_SUPPORTED_LOG_PAGES] = { .lsupp = 1 },
-		[SPDK_NVME_LOG_DISCOVERY] =	      { .lsupp = 1 },
+		/* support Extended Discovery Log Page Entries */
+		[SPDK_NVME_LOG_DISCOVERY] =	      { .lsupp = 1, .lidsp = 1 },
 		[SPDK_NVME_LOG_FEATURE_IDS_EFFECTS] = { .lsupp = 1 },
 	}
 };
@@ -2954,10 +2955,12 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvme_transport_id cmd_source_trid;
+	union spdk_nvmf_discovery_log_lsp lsp;
 	uint64_t offset, len;
 	uint32_t rae, numdl, numdu;
 	uint8_t lid = cmd->cdw10_bits.get_log_page.lid;
 	int rc = 0;
+	bool extdlpe;
 
 	if (req->iovcnt < 1) {
 		SPDK_DEBUGLOG(nvmf, "get log command with no buffer\n");
@@ -3006,7 +3009,9 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			}
 
-			nvmf_get_discovery_log_page_async(req, offset, len, &cmd_source_trid, rae);
+			lsp.raw = cmd->cdw10_bits.get_log_page.lsp;
+			extdlpe = lsp.bits.extdlpe;
+			nvmf_get_discovery_log_page_async(req, offset, len, &cmd_source_trid, rae, extdlpe);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
 			rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);

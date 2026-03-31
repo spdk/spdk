@@ -450,10 +450,75 @@ struct spdk_nvmf_discovery_log_page {
 	uint64_t	genctr;
 	uint64_t	numrec;
 	uint16_t	recfmt;
-	uint8_t		reserved0[1006];
+	struct {
+		uint8_t extend	 : 1;
+		uint8_t portlcl	 : 1;
+		uint8_t allsub	 : 1;
+		uint8_t reserved : 5;
+	} dlpf;
+	uint8_t		reserved0;
+	uint32_t	tdlpl;
+	uint8_t		reserved1[1000];
 	struct spdk_nvmf_discovery_log_page_entry entries[0];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_log_page) == 1024, "Incorrect size");
+
+/* Discovery Log Specific Parameter Field */
+union spdk_nvmf_discovery_log_lsp {
+	struct {
+		uint8_t extdlpe		: 1; /* Extended Discovery Log Page Entry */
+		uint8_t pleo		: 1; /* Port Local Entries Only */
+		uint8_t allsube		: 1; /* All NVM Subsystem Entries */
+		uint8_t reserved	: 5;
+	} bits;
+
+	uint8_t raw;
+};
+
+/* Extended Discovery Log Page Entry Extended Attribute Types */
+enum spdk_nvmf_extat_type {
+	SPDK_NVMF_EXTAT_HOST_ID			= 0x01,
+	SPDK_NVMF_EXTAT_ADMIN_LABEL		= 0x02,
+	SPDK_NVMF_EXTAT_ADMIN_LABEL_UTF8	= 0x03,
+};
+
+/* Admin Label length constraints, must be multiple of 4 */
+#define SPDK_NVMF_ADMIN_LABEL_MIN_LEN		4
+#define SPDK_NVMF_ADMIN_LABEL_MAX_LEN		256
+
+/* Extended Attribute header */
+struct spdk_nvmf_discovery_extended_attribute {
+	uint16_t	exattype;
+	uint16_t	exatlen;
+	uint8_t		exatval[SPDK_NVMF_ADMIN_LABEL_MAX_LEN];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_extended_attribute) == 260, "Incorrect size");
+
+/* Extended Discovery Log Page Entry header */
+struct spdk_nvmf_discovery_log_page_entry_extended {
+	uint32_t	tel;
+	uint16_t	numexat;
+	uint16_t	reserved;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_log_page_entry_extended) == 8,
+		   "Incorrect size");
+
+#define SPDK_NVMF_DISC_ENTRY_SIZE		sizeof(struct spdk_nvmf_discovery_log_page_entry)
+#define SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE	sizeof(struct spdk_nvmf_discovery_log_page)
+#define SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE	(SPDK_NVMF_DISC_ENTRY_SIZE + \
+						sizeof(struct spdk_nvmf_discovery_log_page_entry_extended))
+#define SPDK_NVMF_EXATTYPE_SIZE			sizeof(uint16_t)
+#define SPDK_NVMF_EXATLEN_SIZE			sizeof(uint16_t)
+
+/*
+ * Total Extended Discovery Log Page Entry length (TEL) given a padded EXATLEN value.
+ * Per spec, TEL indicates the length in bytes of the entire Extended Discovery
+ * Log Page Entry.
+ * TODO: modify calculation if more than one extended attribute is added.
+ */
+#define SPDK_NVMF_DISC_EXT_ENTRY_TEL(exatlen) \
+	((exatlen) + SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE + \
+	 SPDK_NVMF_EXATTYPE_SIZE + SPDK_NVMF_EXATLEN_SIZE)
 
 /** Security protocol identifier assigned to NVMe */
 #define SPDK_NVMF_AUTH_SECP_NVME 0xe9

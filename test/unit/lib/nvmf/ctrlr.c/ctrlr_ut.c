@@ -81,7 +81,7 @@ DEFINE_STUB(nvmf_ctrlr_copy_supported,
 
 DEFINE_STUB_V(nvmf_get_discovery_log_page_async,
 	      (struct spdk_nvmf_request *req, uint64_t offset, uint32_t length,
-	       struct spdk_nvme_transport_id *cmd_src_trid, bool rae));
+	       struct spdk_nvme_transport_id *cmd_src_trid, bool rae, bool extdlpe));
 
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,

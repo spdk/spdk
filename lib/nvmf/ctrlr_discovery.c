@@ -99,24 +99,44 @@ nvmf_discovery_compare_trid(uint32_t filter,
 	return true;
 }
 
+/*
+ * Calculate the size of a discovery log page entry.
+ * When extdlpe is set, the entry is always an Extended Discovery Log Page
+ * Entry (with TEL and NUMEXAT fields).
+ */
+static size_t
+nvmf_calc_discovery_entry_size(struct spdk_nvmf_subsystem *subsystem, bool extdlpe)
+{
+	if (extdlpe) {
+		return SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE;
+	}
+
+	return SPDK_NVMF_DISC_ENTRY_SIZE;
+}
+
 static struct spdk_nvmf_discovery_log_page *
 nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size_t *log_page_size,
-			    struct spdk_nvme_transport_id *cmd_source_trid)
+			    struct spdk_nvme_transport_id *cmd_source_trid, bool extdlpe)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
 	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_subsystem_listener *listener;
-	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	size_t cur_size;
 	struct spdk_nvmf_referral *referral;
+	struct spdk_nvmf_discovery_log_page_entry *entry;
+	struct spdk_nvmf_discovery_log_page_entry_extended *ext_hdr;
+	size_t entry_size;
+	size_t new_size;
+	uint8_t *entry_ptr;
+	void *new_log_page;
 
-	SPDK_DEBUGLOG(nvmf, "Generating log page for genctr %" PRIu64 "\n",
-		      tgt->discovery_genctr);
+	SPDK_DEBUGLOG(nvmf, "Generating%s discovery log page for genctr %" PRIu64 "\n",
+		      extdlpe ? " extended" : "", tgt->discovery_genctr);
 
-	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
+	cur_size = SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE;
 	disc_log = calloc(1, cur_size);
 	if (disc_log == NULL) {
 		SPDK_ERRLOG("Discovery log page memory allocation error\n");
@@ -145,8 +165,9 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			SPDK_DEBUGLOG(nvmf, "listener %s:%s trtype %s\n", listener->trid->traddr, listener->trid->trsvcid,
 				      listener->trid->trstring);
 
-			size_t new_size = cur_size + sizeof(*entry);
-			void *new_log_page = realloc(disc_log, new_size);
+			entry_size = nvmf_calc_discovery_entry_size(subsystem, extdlpe);
+			new_size = cur_size + entry_size;
+			new_log_page = realloc(disc_log, new_size);
 
 			if (new_log_page == NULL) {
 				SPDK_ERRLOG("Discovery log page memory allocation error\n");
@@ -154,10 +175,11 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			}
 
 			disc_log = new_log_page;
+			entry_ptr = (uint8_t *)disc_log + cur_size;
 			cur_size = new_size;
 
-			entry = &disc_log->entries[numrec];
-			memset(entry, 0, sizeof(*entry));
+			entry = (struct spdk_nvmf_discovery_log_page_entry *)entry_ptr;
+			memset(entry, 0, entry_size);
 			entry->portid = listener->id;
 			entry->cntlid = 0xffff;
 			entry->asqsz = listener->transport->opts.max_aq_depth;
@@ -177,11 +199,19 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 
 			nvmf_transport_listener_discover(listener->transport, listener->trid, entry);
 
+			/* Add extended entry header when requested */
+			if (extdlpe) {
+				ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)
+					  (entry_ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
+				ext_hdr->tel = entry_size;
+			}
+
 			numrec++;
 		}
 	}
 
 	TAILQ_FOREACH(referral, &tgt->referrals, link) {
+		entry_size = extdlpe ? SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE : SPDK_NVMF_DISC_ENTRY_SIZE;
 		SPDK_DEBUGLOG(nvmf, "referral %s:%s trtype %s\n", referral->trid.traddr, referral->trid.trsvcid,
 			      referral->trid.trstring);
 
@@ -189,8 +219,8 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			continue;
 		}
 
-		size_t new_size = cur_size + sizeof(*entry);
-		void *new_log_page = realloc(disc_log, new_size);
+		new_size = cur_size + entry_size;
+		new_log_page = realloc(disc_log, new_size);
 
 		if (new_log_page == NULL) {
 			SPDK_ERRLOG("Discovery log page memory allocation error\n");
@@ -198,17 +228,31 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 		}
 
 		disc_log = new_log_page;
+		entry_ptr = (uint8_t *)disc_log + cur_size;
 		cur_size = new_size;
 
-		entry = &disc_log->entries[numrec];
-		memcpy(entry, &referral->entry, sizeof(*entry));
+		memcpy(entry_ptr, &referral->entry, sizeof(referral->entry));
+
+		if (extdlpe) {
+			ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)
+				  (entry_ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
+			*ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended) {
+				.tel = entry_size,
+				.numexat = 0,
+			};
+		}
 
 		numrec++;
 	}
 
-
 	disc_log->numrec = numrec;
 	disc_log->genctr = tgt->discovery_genctr;
+
+	if (extdlpe) {
+		disc_log->dlpf.extend = 1;
+		disc_log->tdlpl = cur_size;
+	}
+
 	*log_page_size = cur_size;
 
 	return disc_log;
@@ -223,6 +267,7 @@ struct nvmf_discovery_log_ctx {
 	uint32_t length;
 	struct spdk_nvme_transport_id cmd_source_trid;
 	bool rae;
+	bool extdlpe;
 };
 
 static void
@@ -242,7 +287,7 @@ nvmf_get_discovery_log_page(void *arg)
 	assert(spdk_thread_is_app_thread(NULL));
 
 	discovery_log_page = nvmf_generate_discovery_log(ctx->tgt, ctx->hostnqn,
-			     &log_page_size, &ctx->cmd_source_trid);
+			     &log_page_size, &ctx->cmd_source_trid, ctx->extdlpe);
 
 	if (offset >= log_page_size) {
 		SPDK_ERRLOG("Invalid Get log page discovery offset: (%" PRIu64 "), log page size (%zu)\n",
@@ -299,7 +344,7 @@ void
 nvmf_get_discovery_log_page_async(struct spdk_nvmf_request *req,
 				  uint64_t offset, uint32_t length,
 				  struct spdk_nvme_transport_id *cmd_source_trid,
-				  bool rae)
+				  bool rae, bool extdlpe)
 {
 	struct nvmf_discovery_log_ctx *ctx;
 
@@ -321,6 +366,7 @@ nvmf_get_discovery_log_page_async(struct spdk_nvmf_request *req,
 	ctx->length = length;
 	ctx->cmd_source_trid = *cmd_source_trid;
 	ctx->rae = rae;
+	ctx->extdlpe = extdlpe;
 
 	spdk_thread_send_msg(spdk_thread_get_app_thread(), nvmf_get_discovery_log_page, ctx);
 	return;

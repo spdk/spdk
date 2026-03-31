@@ -126,7 +126,7 @@ test_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
 		memcpy(req.iov, iov, iovcnt * sizeof(struct iovec));
 	}
 
-	nvmf_get_discovery_log_page_async(&req, offset, length, cmd_source_trid, false);
+	nvmf_get_discovery_log_page_async(&req, offset, length, cmd_source_trid, false, false);
 
 	/* Process async messages */
 	poll_thread(0);

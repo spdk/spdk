@@ -467,7 +467,7 @@ void nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 void nvmf_get_discovery_log_page_async(struct spdk_nvmf_request *req,
 				       uint64_t offset, uint32_t length,
 				       struct spdk_nvme_transport_id *cmd_source_trid,
-				       bool rae);
+				       bool rae, bool extdlpe);
 
 void nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 			   enum spdk_nvme_async_event_mask_bit mask);
