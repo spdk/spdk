@@ -99,15 +99,27 @@ nvmf_discovery_compare_trid(uint32_t filter,
 	return true;
 }
 
+/* Per NVMe spec, EXATLEN must be a non-zero multiple of 4 */
+static inline uint16_t
+nvmf_get_ext_attr_len(size_t admin_label_len)
+{
+	return SPDK_ALIGN_CEIL(admin_label_len, 4);
+}
+
 /*
  * Calculate the size of a discovery log page entry.
  * When extdlpe is set, the entry is always an Extended Discovery Log Page
- * Entry (with TEL and NUMEXAT fields).
+ * Entry (with TEL and NUMEXAT fields). If the subsystem has an admin_label
+ * the entry also includes the extended attribute.
  */
 static size_t
 nvmf_calc_discovery_entry_size(struct spdk_nvmf_subsystem *subsystem, bool extdlpe)
 {
 	if (extdlpe) {
+		if (subsystem->admin_label[0] != '\0') {
+			return SPDK_NVMF_DISC_EXT_ENTRY_TEL(
+				       nvmf_get_ext_attr_len(strlen(subsystem->admin_label)));
+		}
 		return SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE;
 	}
 
@@ -128,6 +140,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 	struct spdk_nvmf_referral *referral;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_discovery_log_page_entry_extended *ext_hdr;
+	struct spdk_nvmf_discovery_extended_attribute *attr;
 	size_t entry_size;
 	size_t new_size;
 	uint8_t *entry_ptr;
@@ -199,11 +212,20 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 
 			nvmf_transport_listener_discover(listener->transport, listener->trid, entry);
 
-			/* Add extended entry header when requested */
+			/* Add extended entry header (and attributes if present) when requested */
 			if (extdlpe) {
 				ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)
 					  (entry_ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
 				ext_hdr->tel = entry_size;
+
+				if (subsystem->admin_label[0] != '\0') {
+					ext_hdr->numexat = 1;
+					attr = (struct spdk_nvmf_discovery_extended_attribute *)
+					       (entry_ptr + SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE);
+					attr->exattype = SPDK_NVMF_EXTAT_ADMIN_LABEL;
+					attr->exatlen = nvmf_get_ext_attr_len(strlen(subsystem->admin_label));
+					memcpy(attr->exatval, subsystem->admin_label, strlen(subsystem->admin_label));
+				}
 			}
 
 			numrec++;

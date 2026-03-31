@@ -438,6 +438,8 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, nvmf_subsystem_state_change_ctx)	state_changes;
 	/* In-band authentication sequence number, protected by ->mutex */
 	uint32_t					auth_seqnum;
+	/* Extended Discovery Log Page support - admin label */
+	char						admin_label[SPDK_NVMF_ADMIN_LABEL_MAX_LEN + 1];
 };
 
 extern spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
