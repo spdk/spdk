@@ -1624,15 +1624,37 @@ nvme_ctrlr_read_ana_log_page_msg(void *_ctx)
 	int rc;
 
 	rc = nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
-	if (rc == 0) {
+	if (rc) {
+		/* The flag was set before sending this message; clear it so a future ANA request can be retried. */
 		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, ctx->nsid);
 		if (nvme_ns) {
-			nvme_ns->ana_state_updating = true;
+			__atomic_clear(&nvme_ns->ana_state_updating, __ATOMIC_RELAXED);
 		}
 	}
 
 	nvme_ctrlr_put_ref(nvme_ctrlr);
 	free(ctx);
+}
+
+static void
+nvme_ctrlr_request_ana_update(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+{
+	struct nvme_ctrlr_read_ana_log_msg_ctx *ctx;
+
+	if (__atomic_test_and_set(&nvme_ns->ana_state_updating, __ATOMIC_RELAXED)) {
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		__atomic_clear(&nvme_ns->ana_state_updating, __ATOMIC_RELAXED);
+		return;
+	}
+
+	ctx->nvme_ctrlr = nvme_ctrlr;
+	ctx->nsid = nvme_ns->id;
+	nvme_ctrlr_get_ref(nvme_ctrlr);
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), nvme_ctrlr_read_ana_log_page_msg, ctx);
 }
 
 static bool
@@ -1651,20 +1673,14 @@ bdev_nvme_check_retry_io(struct nvme_bdev_io *bio,
 	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		bdev_nvme_clear_current_io_path(nbdev_ch);
 		bio->io_path = NULL;
-		if (spdk_nvme_cpl_is_ana_error(cpl) && !io_path->nvme_ns->ana_state_updating) {
-			struct nvme_ctrlr_read_ana_log_msg_ctx *ctx;
-
-			ctx = calloc(1, sizeof(*ctx));
-			if (ctx) {
-				ctx->nvme_ctrlr = nvme_ctrlr;
-				ctx->nsid = io_path->nvme_ns->id;
-				nvme_ctrlr_get_ref(nvme_ctrlr);
-				spdk_thread_send_msg(spdk_thread_get_app_thread(), nvme_ctrlr_read_ana_log_page_msg, ctx);
-			}
+		if (spdk_nvme_cpl_is_ana_error(cpl)) {
+			nvme_ctrlr_request_ana_update(nvme_ctrlr, io_path->nvme_ns);
 		}
+
 		if (!any_io_path_may_become_available(nbdev_ch)) {
 			return false;
 		}
+
 		*_delay_ms = 0;
 	} else {
 		bio->retry_count++;
@@ -4551,7 +4567,7 @@ _nvme_ns_set_ana_state(struct nvme_ns *nvme_ns,
 
 	nvme_ns->ana_group_id = desc->ana_group_id;
 	nvme_ns->ana_state = desc->ana_state;
-	nvme_ns->ana_state_updating = false;
+	__atomic_clear(&nvme_ns->ana_state_updating, __ATOMIC_RELAXED);
 
 	switch (nvme_ns->ana_state) {
 	case SPDK_NVME_ANA_OPTIMIZED_STATE:
@@ -5487,7 +5503,7 @@ bdev_nvme_disable_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->ana_log_page = NULL;
 
 	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
-		nvme_ns->ana_state_updating = false;
+		__atomic_clear(&nvme_ns->ana_state_updating, __ATOMIC_RELAXED);
 		nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	}
 }

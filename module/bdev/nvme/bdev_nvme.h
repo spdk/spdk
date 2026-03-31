@@ -45,7 +45,12 @@ struct nvme_async_probe_ctx {
 /**
  * Threading model for nvme_ns
  *
- * All fields are MODIFIED exclusively on the app thread.
+ * All fields (except ana_state_updating) are MODIFIED exclusively on
+ * the app thread.
+ *
+ * ana_state_updating is set atomically on any thread and cleared on
+ * the app thread. This ensures at most one ANA log page read message is
+ * sent per namespace per ANA error event.
  *
  * Fields read on IO threads as best-effort informational checks
  * (via nvme_ns_is_active, nvme_ns_is_accessible, and direct reads):
