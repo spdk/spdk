@@ -20,8 +20,6 @@
 
 #include "nvmf_internal.h"
 
-static int rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state);
-
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -632,7 +630,6 @@ struct nvmf_rpc_listener_ctx {
 	struct spdk_nvmf_transport	*transport;
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct rpc_nvmf_listen_address	address;
-	char				*ana_state_str;
 	enum spdk_nvme_ana_state	ana_state;
 	uint32_t			anagrpid;
 
@@ -655,7 +652,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_subsystem_add_listener_dec
 	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
-	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state_str), spdk_json_decode_string, true},
+	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state, true},
 	{"sock_impl", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.sock_impl), spdk_json_decode_string, true},
 };
 
@@ -665,7 +662,6 @@ nvmf_rpc_listener_ctx_free(struct nvmf_rpc_listener_ctx *ctx)
 	free(ctx->nqn);
 	free(ctx->tgt_name);
 	free_rpc_nvmf_listen_address(&ctx->address);
-	free(ctx->ana_state_str);
 	free(ctx);
 }
 
@@ -934,13 +930,7 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	}
 	ctx->opts.secure_channel = ctx->listener_opts.secure_channel;
 
-	if (ctx->ana_state_str) {
-		if (rpc_ana_state_parse(ctx->ana_state_str, &ctx->ana_state)) {
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			nvmf_rpc_listener_ctx_free(ctx);
-			return;
-		}
+	if (ctx->ana_state) {
 		ctx->listener_opts.ana_state = ctx->ana_state;
 	}
 
@@ -1258,30 +1248,10 @@ static const struct spdk_json_object_decoder rpc_nvmf_subsystem_listener_set_ana
 {
 	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
 	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
-	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state_str), spdk_json_decode_string},
+	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 	{"anagrpid", offsetof(struct nvmf_rpc_listener_ctx, anagrpid), spdk_json_decode_uint32, true},
 };
-
-static int
-rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state)
-{
-	if (ana_state == NULL || str == NULL) {
-		return -EINVAL;
-	}
-
-	if (strcasecmp(str, "optimized") == 0) {
-		*ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
-	} else if (strcasecmp(str, "non_optimized") == 0) {
-		*ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
-	} else if (strcasecmp(str, "inaccessible") == 0) {
-		*ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
-	} else {
-		return -ENOENT;
-	}
-
-	return 0;
-}
 
 static void
 rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
@@ -1334,13 +1304,6 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 	ctx->subsystem = subsystem;
 
 	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
-		return;
-	}
-
-	if (rpc_ana_state_parse(ctx->ana_state_str, &ctx->ana_state)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		nvmf_rpc_listener_ctx_free(ctx);

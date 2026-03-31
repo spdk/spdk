@@ -56,6 +56,14 @@
         {"name": "error", "value": 2},
         {"name": "none", "value": 3}
       ]
+    },
+    {
+      "name": "nvme_ana_state",
+      "fields": [
+        {"name": "optimized", "value": 1},
+        {"name": "non_optimized", "value": 2},
+        {"name": "inaccessible", "value": 3}
+      ]
     }
   ],
   "objects": [
@@ -3828,7 +3836,8 @@
         },
         {
           "name": "ana_state",
-          "type": "string",
+          "type": "enum",
+          "class": "nvme_ana_state",
           "description": "ANA state to set: optimized, non_optimized, or inaccessible"
         },
         {
@@ -3890,7 +3899,8 @@
         },
         {
           "name": "ana_state",
-          "type": "string",
+          "type": "enum",
+          "class": "nvme_ana_state",
           "required": true,
           "description": "ANA state to set (\"optimized\", \"non_optimized\", or \"inaccessible\")"
         },
