@@ -1581,9 +1581,12 @@ uring_sock_group_impl_buf_pool_alloc(struct spdk_uring_sock_group_impl *group_im
 {
 	struct io_uring_buf_reg buf_reg = {};
 	struct io_uring_buf_ring *buf_ring;
+	size_t page_size = sysconf(_SC_PAGESIZE);
 	int i, rc;
 
-	rc = posix_memalign((void **)&buf_ring, 0x1000, URING_BUF_POOL_SIZE * sizeof(struct io_uring_buf));
+	/* uring requires the buffer be aligned on system page boundary */
+	rc = posix_memalign((void **)&buf_ring, page_size,
+			    URING_BUF_POOL_SIZE * sizeof(struct io_uring_buf));
 	if (rc != 0) {
 		/* posix_memalign returns positive errno values */
 		return -rc;
