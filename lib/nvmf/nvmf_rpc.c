@@ -1203,55 +1203,37 @@ dump_nvmf_referral(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_get_referrals_ctx {
-	char *tgt_name;
-};
-
 static const struct spdk_json_object_decoder rpc_nvmf_discovery_get_referrals_decoders[] = {
-	{"tgt_name", offsetof(struct rpc_get_referrals_ctx, tgt_name), spdk_json_decode_string, true},
+	{"tgt_name", offsetof(struct rpc_nvmf_discovery_get_referrals_ctx, tgt_name), spdk_json_decode_string, true},
 };
-
-static void
-free_rpc_get_referrals_ctx(struct rpc_get_referrals_ctx *ctx)
-{
-	free(ctx->tgt_name);
-	free(ctx);
-}
 
 static void
 rpc_nvmf_discovery_get_referrals(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
-	struct rpc_get_referrals_ctx *ctx;
+	struct rpc_nvmf_discovery_get_referrals_ctx req = {};
 	struct spdk_nvmf_tgt *tgt;
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvmf_referral *referral;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Out of memory");
-		return;
-	}
-
 	if (params) {
 		if (spdk_json_decode_object(params, rpc_nvmf_discovery_get_referrals_decoders,
 					    SPDK_COUNTOF(rpc_nvmf_discovery_get_referrals_decoders),
-					    ctx)) {
+					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
-			free_rpc_get_referrals_ctx(ctx);
+			free_rpc_nvmf_discovery_get_referrals(&req);
 			return;
 		}
 	}
 
-	tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
+	tgt = spdk_nvmf_get_tgt(req.tgt_name);
 	if (!tgt) {
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target");
-		free_rpc_get_referrals_ctx(ctx);
+		free_rpc_nvmf_discovery_get_referrals(&req);
 		return;
 	}
 
@@ -1267,7 +1249,7 @@ rpc_nvmf_discovery_get_referrals(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 
-	free_rpc_get_referrals_ctx(ctx);
+	free_rpc_nvmf_discovery_get_referrals(&req);
 }
 SPDK_RPC_REGISTER("nvmf_discovery_get_referrals", rpc_nvmf_discovery_get_referrals,
 		  SPDK_RPC_RUNTIME);
@@ -2720,21 +2702,16 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_create_transport", rpc_nvmf_create_transport, SPDK_RPC_RUNTIME)
 
-struct rpc_get_transport {
-	char *trtype;
-	char *tgt_name;
-};
-
 static const struct spdk_json_object_decoder rpc_nvmf_get_transports_decoders[] = {
-	{"trtype", offsetof(struct rpc_get_transport, trtype), spdk_json_decode_string, true},
-	{"tgt_name", offsetof(struct rpc_get_transport, tgt_name), spdk_json_decode_string, true},
+	{"trtype", offsetof(struct rpc_nvmf_get_transports_ctx, trtype), spdk_json_decode_string, true},
+	{"tgt_name", offsetof(struct rpc_nvmf_get_transports_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
 static void
 rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct rpc_get_transport req = { 0 };
+	struct rpc_nvmf_get_transports_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvmf_transport *transport = NULL;
 	struct spdk_nvmf_tgt *tgt;
@@ -2753,8 +2730,7 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 	if (!tgt) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		free(req.trtype);
-		free(req.tgt_name);
+		free_rpc_nvmf_get_transports(&req);
 		return;
 	}
 
@@ -2763,8 +2739,7 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 		if (transport == NULL) {
 			SPDK_ERRLOG("transport '%s' does not exist\n", req.trtype);
 			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-			free(req.trtype);
-			free(req.tgt_name);
+			free_rpc_nvmf_get_transports(&req);
 			return;
 		}
 	}
@@ -2783,8 +2758,7 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
-	free(req.trtype);
-	free(req.tgt_name);
+	free_rpc_nvmf_get_transports(&req);
 }
 SPDK_RPC_REGISTER("nvmf_get_transports", rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)
 
