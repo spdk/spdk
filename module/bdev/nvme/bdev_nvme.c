@@ -5473,11 +5473,14 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	if (!nvme_ctrlr_is_available(nvme_ctrlr) ||
-	    nvme_ctrlr->ana_log_page_updating) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+	if (!nvme_ctrlr_is_available(nvme_ctrlr)) {
 		return -EBUSY;
+	}
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	if (nvme_ctrlr->ana_log_page_updating) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		return 0;
 	}
 
 	nvme_ctrlr->ana_log_page_updating = true;
