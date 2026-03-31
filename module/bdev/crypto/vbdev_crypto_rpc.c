@@ -13,46 +13,18 @@
 /* Reasonable bdev name length + cipher's name len */
 #define MAX_KEY_NAME_LEN 128
 
-/* TODO: replace with rpc_bdev_crypto_create_ctx */
-struct rpc_construct_crypto {
-	char *base_bdev_name;
-	char *name;
-	char *crypto_pmd;
-	struct spdk_accel_crypto_key_create_param param;
-};
-
-/* TODO: replace with free_rpc_bdev_crypto_create */
-static void
-free_rpc_bdev_crypto_create_ctx(struct rpc_construct_crypto *r)
-{
-	free(r->base_bdev_name);
-	free(r->name);
-	free(r->crypto_pmd);
-	free(r->param.cipher);
-	if (r->param.hex_key) {
-		memset(r->param.hex_key, 0, strnlen(r->param.hex_key, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH));
-		free(r->param.hex_key);
-	}
-	if (r->param.hex_key2) {
-		memset(r->param.hex_key2, 0, strnlen(r->param.hex_key2, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH));
-		free(r->param.hex_key2);
-	}
-	free(r->param.key_name);
-}
-
-/* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_bdev_crypto_create_decoders[] = {
-	{"base_bdev_name", offsetof(struct rpc_construct_crypto, base_bdev_name), spdk_json_decode_string},
-	{"name", offsetof(struct rpc_construct_crypto, name), spdk_json_decode_string},
-	{"crypto_pmd", offsetof(struct rpc_construct_crypto, crypto_pmd), spdk_json_decode_string, true},
-	{"key", offsetof(struct rpc_construct_crypto, param.hex_key), spdk_json_decode_string, true},
-	{"cipher", offsetof(struct rpc_construct_crypto, param.cipher), spdk_json_decode_string, true},
-	{"key2", offsetof(struct rpc_construct_crypto, param.hex_key2), spdk_json_decode_string, true},
-	{"key_name", offsetof(struct rpc_construct_crypto, param.key_name), spdk_json_decode_string, true},
+	{"base_bdev_name", offsetof(struct rpc_bdev_crypto_create_ctx, base_bdev_name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_crypto_create_ctx, name), spdk_json_decode_string},
+	{"crypto_pmd", offsetof(struct rpc_bdev_crypto_create_ctx, crypto_pmd), spdk_json_decode_string, true},
+	{"key", offsetof(struct rpc_bdev_crypto_create_ctx, key), spdk_json_decode_string, true},
+	{"cipher", offsetof(struct rpc_bdev_crypto_create_ctx, cipher), spdk_json_decode_string, true},
+	{"key2", offsetof(struct rpc_bdev_crypto_create_ctx, key2), spdk_json_decode_string, true},
+	{"key_name", offsetof(struct rpc_bdev_crypto_create_ctx, key_name), spdk_json_decode_string, true},
 };
 
 static struct vbdev_crypto_opts *
-create_crypto_opts(struct rpc_construct_crypto *rpc, struct spdk_accel_crypto_key *key,
+create_crypto_opts(struct rpc_bdev_crypto_create_ctx *rpc, struct spdk_accel_crypto_key *key,
 		   bool key_owner)
 {
 	struct vbdev_crypto_opts *opts = calloc(1, sizeof(*opts));
@@ -85,7 +57,8 @@ static void
 rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_construct_crypto req = {};
+	struct rpc_bdev_crypto_create_ctx req = {};
+	struct spdk_accel_crypto_key_create_param param = {};
 	struct vbdev_crypto_opts *crypto_opts = NULL;
 	struct spdk_json_write_ctx *w;
 	struct spdk_accel_crypto_key *key = NULL;
@@ -106,28 +79,28 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.param.key_name) {
+	if (req.key_name) {
 		/* New config version */
-		key = spdk_accel_crypto_key_get(req.param.key_name);
+		key = spdk_accel_crypto_key_get(req.key_name);
 		if (key) {
-			if (req.param.hex_key || req.param.cipher || req.crypto_pmd) {
+			if (req.key || req.cipher || req.crypto_pmd) {
 				SPDK_NOTICELOG("Key name specified, other parameters are ignored\n");
 			}
-			SPDK_NOTICELOG("Found key \"%s\"\n", req.param.key_name);
+			SPDK_NOTICELOG("Found key \"%s\"\n", req.key_name);
 		}
 	}
 
 	/* No key_name. Support legacy configuration */
 	if (!key) {
-		if (req.param.key_name) {
+		if (req.key_name) {
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Key was not found");
 			goto cleanup;
 		}
 
-		if (req.param.cipher == NULL) {
-			req.param.cipher = strdup(BDEV_CRYPTO_DEFAULT_CIPHER);
-			if (req.param.cipher == NULL) {
+		if (req.cipher == NULL) {
+			req.cipher = strdup(BDEV_CRYPTO_DEFAULT_CIPHER);
+			if (req.cipher == NULL) {
 				spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 								 "Unable to allocate memory for req.cipher");
 				goto cleanup;
@@ -137,23 +110,27 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 			SPDK_WARNLOG("\"crypto_pmd\" parameters is obsolete and ignored\n");
 		}
 
-		req.param.key_name = calloc(1, MAX_KEY_NAME_LEN);
-		if (!req.param.key_name) {
+		req.key_name = calloc(1, MAX_KEY_NAME_LEN);
+		if (!req.key_name) {
 			/* The new API requires key name. Create it as pmd_name + cipher */
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "Unable to allocate memory for key_name");
 			goto cleanup;
 		}
-		snprintf(req.param.key_name, MAX_KEY_NAME_LEN, "%s_%s", req.name, req.param.cipher);
+		snprintf(req.key_name, MAX_KEY_NAME_LEN, "%s_%s", req.name, req.cipher);
 
 		/* Try to find a key with generated name, we may be loading from a json config where crypto_bdev had no key_name parameter */
-		key = spdk_accel_crypto_key_get(req.param.key_name);
+		key = spdk_accel_crypto_key_get(req.key_name);
 		if (key) {
-			SPDK_NOTICELOG("Found key \"%s\"\n", req.param.key_name);
+			SPDK_NOTICELOG("Found key \"%s\"\n", req.key_name);
 		} else {
-			rc = spdk_accel_crypto_key_create(&req.param);
+			param.cipher = req.cipher;
+			param.hex_key = req.key;
+			param.hex_key2 = req.key2;
+			param.key_name = req.key_name;
+			rc = spdk_accel_crypto_key_create(&param);
 			if (!rc) {
-				key = spdk_accel_crypto_key_get(req.param.key_name);
+				key = spdk_accel_crypto_key_get(req.key_name);
 				created_key = key;
 			}
 		}
@@ -189,7 +166,13 @@ cleanup:
 	if (rc && created_key) {
 		spdk_accel_crypto_key_destroy(created_key);
 	}
-	free_rpc_bdev_crypto_create_ctx(&req);
+	if (req.key) {
+		memset(req.key, 0, strnlen(req.key, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH));
+	}
+	if (req.key2) {
+		memset(req.key2, 0, strnlen(req.key2, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH));
+	}
+	free_rpc_bdev_crypto_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_crypto_create", rpc_bdev_crypto_create, SPDK_RPC_RUNTIME)
 
