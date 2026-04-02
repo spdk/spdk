@@ -203,6 +203,7 @@
 	spdk_nvme_qpair_remove_cmd_error_injection;
 	spdk_nvme_qpair_print_command;
 	spdk_nvme_qpair_print_completion;
+	spdk_nvme_qpair_print_completion_ext;
 	spdk_nvme_qpair_get_id;
 	spdk_nvme_qpair_get_fd;
 	spdk_nvme_qpair_get_num_outstanding_reqs;
@@ -214,8 +215,10 @@
 
 	spdk_nvme_print_command;
 	spdk_nvme_print_completion;
+	spdk_nvme_print_completion_ext;
 
 	spdk_nvme_cpl_get_status_string;
+	spdk_nvme_cpl_get_status_string_ext;
 	spdk_nvme_cpl_get_status_type_string;
 
 	spdk_nvme_rdma_init_hooks;

@@ -4408,6 +4408,19 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
 
 /**
+ * \brief Given NVMe status and command opcode, return ASCII string for that error.
+ *
+ * Uses the command opcode to select the correct status code table. In particular,
+ * fabric commands (opcode 0x7f) have their own command-specific status codes that
+ * differ from NVMe I/O and admin command-specific status codes.
+ *
+ * \param status Status from NVMe completion queue element.
+ * \param opc Opcode of the command that produced this completion.
+ * \return Returns status as an ASCII string.
+ */
+const char *spdk_nvme_cpl_get_status_string_ext(const struct spdk_nvme_status *status, uint8_t opc);
+
+/**
  * \brief Given NVMe status, return ASCII string for the type of that error.
  *
  * \param status Status from NVMe completion queue element.
@@ -4432,6 +4445,20 @@ void spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair,
  */
 void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 				      struct spdk_nvme_cpl *cpl);
+
+/**
+ * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
+ *
+ * Uses the command opcode to select the correct status code table. In particular,
+ * fabric commands (opcode 0x7f) have their own command-specific status codes that
+ * differ from NVMe I/O and admin command-specific status codes.
+ *
+ * \param qpair Pointer to the NVMe queue pair.
+ * \param cpl Pointer to the completion queue element to be formatted.
+ * \param opc Opcode of the command that produced this completion.
+ */
+void spdk_nvme_qpair_print_completion_ext(const struct spdk_nvme_qpair *qpair,
+		const struct spdk_nvme_cpl *cpl, uint8_t opc);
 
 /**
  * \brief Gets the NVMe qpair ID for the specified qpair.
@@ -4470,6 +4497,19 @@ void spdk_nvme_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd);
  * \param cpl Pointer to the completion queue element to be formatted.
  */
 void spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl);
+
+/**
+ * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
+ *
+ * Uses the command opcode to select the correct status code table. In particular,
+ * fabric commands (opcode 0x7f) have their own command-specific status codes that
+ * differ from NVMe I/O and admin command-specific status codes.
+ *
+ * \param qid Queue identifier.
+ * \param cpl Pointer to the completion queue element to be formatted.
+ * \param opc Opcode of the command that produced this completion.
+ */
+void spdk_nvme_print_completion_ext(uint16_t qid, const struct spdk_nvme_cpl *cpl, uint8_t opc);
 
 /**
  * Return the name of a digest.

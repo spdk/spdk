@@ -458,6 +458,17 @@ static const struct nvme_string path_status[] = {
 	{ 0xFFFF, "PATH ERROR" }
 };
 
+static const struct nvme_string fabric_cmd_status[] = {
+	{ SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT, "INCOMPATIBLE FORMAT" },
+	{ SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY, "CONTROLLER BUSY" },
+	{ SPDK_NVMF_FABRIC_SC_INVALID_PARAM, "INVALID PARAM" },
+	{ SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY, "RESTART DISCOVERY" },
+	{ SPDK_NVMF_FABRIC_SC_INVALID_HOST, "INVALID HOST" },
+	{ SPDK_NVMF_FABRIC_SC_LOG_RESTART_DISCOVERY, "LOG RESTART DISCOVERY" },
+	{ SPDK_NVMF_FABRIC_SC_AUTH_REQUIRED, "AUTH REQUIRED" },
+	{ 0xFFFF, "FABRIC COMMAND SPECIFIC" }
+};
+
 const char *
 spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 {
@@ -486,6 +497,16 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 }
 
 const char *
+spdk_nvme_cpl_get_status_string_ext(const struct spdk_nvme_status *status, uint8_t opc)
+{
+	if (opc == SPDK_NVME_OPC_FABRIC && status->sct == SPDK_NVME_SCT_COMMAND_SPECIFIC) {
+		return nvme_get_string(fabric_cmd_status, status->sc);
+	}
+
+	return spdk_nvme_cpl_get_status_string(status);
+}
+
+const char *
 spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status)
 {
 	return nvme_get_string(status_type, status->sct);
@@ -501,6 +522,20 @@ nvme_get_completion_string(char *buf, size_t size, uint16_t qid, struct spdk_nvm
 		 " p:%" PRIx16 " m:%" PRIx16 " dnr:%" PRIx16,
 		 spdk_nvme_cpl_get_status_string(&cpl->status), cpl->status.sct, cpl->status.sc, qid, cpl->cid,
 		 cpl->cdw0, cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
+}
+
+static void
+nvme_get_completion_string_ext(char *buf, size_t size, uint16_t qid,
+			       const struct spdk_nvme_cpl *cpl, uint8_t opc)
+{
+	assert(cpl != NULL);
+
+	snprintf(buf, size,
+		 "%s (%02" PRIx8 "/%02" PRIx8 ") qid:%" PRIu16 " cid:%" PRIu16 " cdw0:%08" PRIx32 " sqhd:%04" PRIx16
+		 " p:%" PRIx16 " m:%" PRIx16 " dnr:%" PRIx16,
+		 spdk_nvme_cpl_get_status_string_ext(&cpl->status, opc), cpl->status.sct,
+		 cpl->status.sc, qid, cpl->cid, cpl->cdw0, cpl->sqhd, cpl->status.p,
+		 cpl->status.m, cpl->status.dnr);
 }
 
 void
@@ -519,6 +554,19 @@ spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
 }
 
 void
+spdk_nvme_print_completion_ext(uint16_t qid, const struct spdk_nvme_cpl *cpl, uint8_t opc)
+{
+	char buf[NVME_CMD_STR_SIZE] = {'\0'};
+
+	if (cpl->sqid != qid && cpl->sqid != 0) {
+		SPDK_ERRLOG("sqid %u doesn't match qid\n", cpl->sqid);
+	}
+
+	nvme_get_completion_string_ext(buf, sizeof(buf), qid, cpl, opc);
+	SPDK_NOTICELOG("%s\n", buf);
+}
+
+void
 spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
@@ -528,6 +576,20 @@ spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 	}
 
 	nvme_get_completion_string(buf, sizeof(buf), qpair->id, cpl);
+	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
+}
+
+void
+spdk_nvme_qpair_print_completion_ext(const struct spdk_nvme_qpair *qpair,
+				     const struct spdk_nvme_cpl *cpl, uint8_t opc)
+{
+	char buf[NVME_CMD_STR_SIZE] = {'\0'};
+
+	if (cpl->sqid != qpair->id && cpl->sqid != 0) {
+		NVME_QPAIR_ERRLOG(qpair, "sqid %u doesn't match qid\n", cpl->sqid);
+	}
+
+	nvme_get_completion_string_ext(buf, sizeof(buf), qpair->id, cpl, opc);
 	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
 }
 
