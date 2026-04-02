@@ -76,8 +76,10 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 * caller is aware that an error occurred.
 	 */
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
-		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		spdk_nvme_qpair_print_completion_ext(sequence->ns_entry->qpair, completion,
+						     SPDK_NVME_OPC_READ);
+		fprintf(stderr, "I/O error status: %s\n",
+			spdk_nvme_cpl_get_status_string_ext(&completion->status, SPDK_NVME_OPC_READ));
 		fprintf(stderr, "Read I/O failed, aborting run\n");
 		sequence->is_completed = 2;
 		exit(1);
@@ -110,8 +112,10 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 * caller is aware that an error occurred.
 	 */
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
-		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		spdk_nvme_qpair_print_completion_ext(sequence->ns_entry->qpair, completion,
+						     SPDK_NVME_OPC_WRITE);
+		fprintf(stderr, "I/O error status: %s\n",
+			spdk_nvme_cpl_get_status_string_ext(&completion->status, SPDK_NVME_OPC_WRITE));
 		fprintf(stderr, "Write I/O failed, aborting run\n");
 		sequence->is_completed = 2;
 		exit(1);
@@ -150,8 +154,11 @@ reset_zone_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 * caller is aware that an error occurred.
 	 */
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
-		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		spdk_nvme_qpair_print_completion_ext(sequence->ns_entry->qpair, completion,
+						     SPDK_NVME_OPC_ZONE_MGMT_SEND);
+		fprintf(stderr, "I/O error status: %s\n",
+			spdk_nvme_cpl_get_status_string_ext(&completion->status,
+					SPDK_NVME_OPC_ZONE_MGMT_SEND));
 		fprintf(stderr, "Reset zone I/O failed, aborting run\n");
 		sequence->is_completed = 2;
 		exit(1);

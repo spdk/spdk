@@ -4437,7 +4437,8 @@ bdev_nvme_dump_device_stat_json(void *ctx, struct spdk_json_write_ctx *w)
 			}
 			status.sc = sc;
 
-			status_str = spdk_nvme_cpl_get_status_string(&status);
+			/* opc=0 is safe: these are IO stats */
+			status_str = spdk_nvme_cpl_get_status_string_ext(&status, 0x0);
 			assert(status_str != NULL);
 			bdev_nvme_format_nvme_status(status_json, status_str);
 

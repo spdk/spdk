@@ -51,6 +51,8 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cpl *cpl));
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion_ext, (const struct spdk_nvme_qpair *qpair,
+		const struct spdk_nvme_cpl *cpl, uint8_t opc));
 DEFINE_STUB(spdk_key_get_key, int, (struct spdk_key *key, void *buf, int len), 0);
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *key), NULL);
 

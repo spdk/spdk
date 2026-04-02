@@ -66,6 +66,15 @@ a bdev of the correct size.
 
 Updated bit definitions to NVMe 2.3. Old bit names will be removed in the v26.09 release.
 
+#### `nvme_cpl_without_opc`
+
+`spdk_nvme_cpl_get_status_string`, `spdk_nvme_print_completion`, and
+`spdk_nvme_qpair_print_completion` are deprecated and will be removed in v26.09.
+Use `spdk_nvme_cpl_get_status_string_ext`, `spdk_nvme_print_completion_ext`, and
+`spdk_nvme_qpair_print_completion_ext` instead. The new APIs accept the command opcode
+to correctly distinguish fabric command-specific status codes from NVMe command-specific
+status codes.
+
 ### nvmf
 
 `spdk_nvmf_subsystem_create`, `spdk_nvmf_subsystem_set_sn`, `spdk_nvmf_subsystem_set_mn`,

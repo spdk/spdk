@@ -735,7 +735,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	}
 
 	if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
-		spdk_nvme_qpair_print_completion(qpair, cpl);
+		spdk_nvme_qpair_print_completion_ext(qpair, cpl, req->cmd.opc);
 	}
 
 	assert(cpl->cid == req->cmd.cid);
@@ -973,7 +973,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
 			NVME_QPAIR_ERRLOG(qpair, "cpl does not map to outstanding cmd\n");
-			spdk_nvme_qpair_print_completion(qpair, cpl);
+			/* opc=0 is safe: PCIe never carries fabric commands */
+			spdk_nvme_qpair_print_completion_ext(qpair, cpl, 0);
 			assert(0);
 		}
 

@@ -126,6 +126,8 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cmd *cmd));
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cpl *cpl));
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion_ext, (const struct spdk_nvme_qpair *qpair,
+		const struct spdk_nvme_cpl *cpl, uint8_t opc));
 
 static void
 prp_list_prep(struct nvme_tracker *tr, struct nvme_request *req, uint32_t *prp_index,

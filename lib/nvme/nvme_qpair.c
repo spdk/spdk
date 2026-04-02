@@ -469,10 +469,16 @@ static const struct nvme_string fabric_cmd_status[] = {
 	{ 0xFFFF, "FABRIC COMMAND SPECIFIC" }
 };
 
+SPDK_LOG_DEPRECATION_REGISTER(nvme_cpl_without_opc,
+			      "use _ext APIs with opcode parameter instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 const char *
 spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 {
 	const struct nvme_string *entry;
+
+	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
 
 	switch (status->sct) {
 	case SPDK_NVME_SCT_GENERIC:
@@ -543,6 +549,8 @@ spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
 
+	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
+
 	/* Check that sqid matches qid. Note that sqid is reserved
 	 * for fabrics so don't print an error when sqid is 0. */
 	if (cpl->sqid != qid && cpl->sqid != 0) {
@@ -570,6 +578,8 @@ void
 spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
+
+	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
 
 	if (cpl->sqid != qpair->id && cpl->sqid != 0) {
 		NVME_QPAIR_ERRLOG(qpair, "sqid %u doesn't match qid\n", cpl->sqid);
@@ -690,7 +700,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
 		NVME_QPAIR_NOTICELOG(qpair, "Command completed manually:\n");
 		spdk_nvme_qpair_print_command(qpair, &req->cmd);
-		spdk_nvme_qpair_print_completion(qpair, &cpl);
+		spdk_nvme_qpair_print_completion_ext(qpair, &cpl, req->cmd.opc);
 	}
 
 	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, &cpl);

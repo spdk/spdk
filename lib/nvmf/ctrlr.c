@@ -5219,7 +5219,7 @@ _nvmf_request_complete(void *ctx)
 	}
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
-		spdk_nvme_print_completion(qpair->qid, rsp);
+		spdk_nvme_print_completion_ext(qpair->qid, rsp, opcode);
 	}
 
 	switch (req->zcopy_phase) {

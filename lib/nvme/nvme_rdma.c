@@ -445,7 +445,7 @@ nvme_rdma_req_complete(struct spdk_nvme_rdma_req *rdma_req,
 	}
 
 	if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
-		spdk_nvme_qpair_print_completion(qpair, rsp);
+		spdk_nvme_qpair_print_completion_ext(qpair, rsp, req->cmd.opc);
 	}
 
 	nvme_rdma_qpair_remove_req(rqpair, rdma_req);

@@ -36,13 +36,27 @@ static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers)
 
 
 static void
-io_complete(void *arg, const struct spdk_nvme_cpl *cpl)
+write_io_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct worker_thread *worker = arg;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		spdk_nvme_print_completion(spdk_nvme_qpair_get_id(worker->qpair),
-					   (struct spdk_nvme_cpl *)cpl);
+		spdk_nvme_print_completion_ext(spdk_nvme_qpair_get_id(worker->qpair),
+					       cpl, SPDK_NVME_OPC_WRITE);
+		exit(1);
+	}
+
+	worker->outstanding--;
+}
+
+static void
+compare_io_complete(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct worker_thread *worker = arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		spdk_nvme_print_completion_ext(spdk_nvme_qpair_get_id(worker->qpair),
+					       cpl, SPDK_NVME_OPC_COMPARE);
 		exit(1);
 	}
 
@@ -164,7 +178,7 @@ fused_ordering(void *arg)
 	for (i = 0; i < NO_WRITE_CMDS; i++) {
 		rc = spdk_nvme_ns_cmd_write(g_ns, worker->qpair, worker->large_buf,
 					    0,
-					    WRITE_BLOCKS, io_complete,
+					    WRITE_BLOCKS, write_io_complete,
 					    worker,
 					    0);
 		if (rc != 0) {
@@ -178,7 +192,7 @@ fused_ordering(void *arg)
 	/* Submit first fuse command, per queue */
 	rc = spdk_nvme_ns_cmd_compare(g_ns, worker->qpair, worker->cw_buf,
 				      0,
-				      FUSED_BLOCKS, io_complete,
+				      FUSED_BLOCKS, compare_io_complete,
 				      worker,
 				      SPDK_NVME_IO_FLAGS_FUSE_FIRST);
 	if (rc != 0) {
@@ -195,7 +209,7 @@ fused_ordering(void *arg)
 
 	/* Submit second fuse command, one per queue */
 	rc = spdk_nvme_ns_cmd_write(g_ns, worker->qpair, worker->cw_buf, 0,
-				    FUSED_BLOCKS, io_complete,
+				    FUSED_BLOCKS, write_io_complete,
 				    worker,
 				    SPDK_NVME_IO_FLAGS_FUSE_SECOND);
 	if (rc != 0) {

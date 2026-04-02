@@ -1241,7 +1241,7 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		}
 
 		if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
-			spdk_nvme_qpair_print_completion(qpair, rsp);
+			spdk_nvme_qpair_print_completion_ext(qpair, rsp, req->cmd.opc);
 		}
 	}
 

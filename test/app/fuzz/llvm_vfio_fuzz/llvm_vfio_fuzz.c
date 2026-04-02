@@ -330,9 +330,9 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	struct io_thread *io = (struct io_thread *)arg;
 
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(io->io_qpair, (struct spdk_nvme_cpl *)completion);
+		spdk_nvme_qpair_print_completion_ext(io->io_qpair, completion, SPDK_NVME_OPC_READ);
 		fprintf(stderr, "I/O read error status: %s\n",
-			spdk_nvme_cpl_get_status_string(&completion->status));
+			spdk_nvme_cpl_get_status_string_ext(&completion->status, SPDK_NVME_OPC_READ));
 		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
 		pthread_kill(g_fuzz_td, SIGSEGV);
 		return;
@@ -359,10 +359,9 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	struct io_thread *io = (struct io_thread *)arg;
 
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(io->io_qpair,
-						 (struct spdk_nvme_cpl *)completion);
+		spdk_nvme_qpair_print_completion_ext(io->io_qpair, completion, SPDK_NVME_OPC_WRITE);
 		fprintf(stderr, "I/O write error status: %s\n",
-			spdk_nvme_cpl_get_status_string(&completion->status));
+			spdk_nvme_cpl_get_status_string_ext(&completion->status, SPDK_NVME_OPC_WRITE));
 		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
 		pthread_kill(g_fuzz_td, SIGSEGV);
 		return;

@@ -191,6 +191,8 @@ DEFINE_STUB_V(nvmf_transport_qpair_abort_request,
 
 DEFINE_STUB_V(spdk_nvme_print_command, (uint16_t qid, struct spdk_nvme_cmd *cmd));
 DEFINE_STUB_V(spdk_nvme_print_completion, (uint16_t qid, struct spdk_nvme_cpl *cpl));
+DEFINE_STUB_V(spdk_nvme_print_completion_ext, (uint16_t qid, const struct spdk_nvme_cpl *cpl,
+		uint8_t opc));
 
 DEFINE_STUB_V(nvmf_subsystem_remove_ctrlr, (struct spdk_nvmf_subsystem *subsystem,
 		struct spdk_nvmf_ctrlr *ctrlr));
