@@ -13,7 +13,7 @@ C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_fabric.c nvme_ns_cmd.c \
 	nvme_ns.c nvme_pcie_common.c nvme_pcie.c nvme_qpair.c nvme.c \
 	nvme_quirks.c nvme_transport.c nvme_discovery.c \
 	nvme_ctrlr_ocssd_cmd.c nvme_ns_ocssd_cmd.c nvme_tcp.c \
-	nvme_opal.c nvme_io_msg.c nvme_poll_group.c nvme_zns.c \
+	nvme_opal.c nvme_io_msg.c nvme_poll_group.c nvme_zns.c nvme_kv.c \
 	nvme_stubs.c nvme_auth.c nvme_util.c
 C_SRCS-$(CONFIG_NVME_CUSE) += nvme_cuse.c
 C_SRCS-$(CONFIG_VFIO_USER) += nvme_vfio_user.c

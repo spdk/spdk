@@ -268,6 +268,15 @@
 	spdk_nvme_zns_report_zones;
 	spdk_nvme_zns_ext_report_zones;
 
+	# public functions from nvme_kv.h
+	spdk_nvme_kv_ns_get_data;
+	spdk_nvme_kv_ctrlr_get_data;
+	spdk_nvme_kv_store;
+	spdk_nvme_kv_retrieve;
+	spdk_nvme_kv_delete;
+	spdk_nvme_kv_exist;
+	spdk_nvme_kv_list;
+
 	# public functions from nvme_ocssd.h
 	spdk_nvme_ctrlr_is_ocssd_supported;
 	spdk_nvme_ocssd_ctrlr_cmd_geometry;

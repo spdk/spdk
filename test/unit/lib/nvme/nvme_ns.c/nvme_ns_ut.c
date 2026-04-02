@@ -439,9 +439,9 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 	ctrlr.cdata.ctratt.elbas = false;
 	ns.csi = SPDK_NVME_CSI_ZNS;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
-	/* case 4: default ns.csi == SPDK_NVME_CSI_KV. Expect: false */
+	/* case 4: ns.csi == SPDK_NVME_CSI_KV. Expect: true */
 	ns.csi = SPDK_NVME_CSI_KV;
-	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
+	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
 }
 
 static void

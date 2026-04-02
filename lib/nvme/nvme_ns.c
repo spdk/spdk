@@ -223,11 +223,56 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 }
 
 static int
+nvme_ctrlr_identify_ns_kv_specific(struct spdk_nvme_ns *ns)
+{
+	struct nvme_completion_poll_status *status;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct spdk_nvme_kv_ns_data *nsdata_kv;
+	int rc;
+
+	nvme_ns_free_kv_specific_data(ns);
+
+	nsdata_kv = spdk_zmalloc(sizeof(*nsdata_kv), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
+				 SPDK_MALLOC_SHARE);
+	if (!nsdata_kv) {
+		return -ENOMEM;
+	}
+
+	status = calloc(1, sizeof(*status));
+	if (!status) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
+		spdk_free(nsdata_kv);
+		return -ENOMEM;
+	}
+
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
+				     nsdata_kv, sizeof(*nsdata_kv),
+				     nvme_completion_poll_cb, status);
+	if (rc != 0) {
+		spdk_free(nsdata_kv);
+		free(status);
+		return rc;
+	}
+
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: %s\n", spdk_strerror(abs(rc)));
+		spdk_free(nsdata_kv);
+		return -ENXIO;
+	}
+
+	ns->nsdata_kv = nsdata_kv;
+	return 0;
+}
+
+static int
 nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 {
 	switch (ns->csi) {
 	case SPDK_NVME_CSI_ZNS:
 		return nvme_ctrlr_identify_ns_zns_specific(ns);
+	case SPDK_NVME_CSI_KV:
+		return nvme_ctrlr_identify_ns_kv_specific(ns);
 	case SPDK_NVME_CSI_NVM:
 		if (ns->ctrlr->cdata.ctratt.elbas) {
 			return nvme_ctrlr_identify_ns_nvm_specific(ns);
@@ -551,6 +596,19 @@ nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
 }
 
 void
+nvme_ns_free_kv_specific_data(struct spdk_nvme_ns *ns)
+{
+	if (!ns->id) {
+		return;
+	}
+
+	if (ns->nsdata_kv) {
+		spdk_free(ns->nsdata_kv);
+		ns->nsdata_kv = NULL;
+	}
+}
+
+void
 nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns)
 {
 	if (!ns->id) {
@@ -566,8 +624,14 @@ nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns)
 void
 nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns)
 {
-	nvme_ns_free_zns_specific_data(ns);
-	nvme_ns_free_nvm_specific_data(ns);
+	if (!ns->id) {
+		return;
+	}
+
+	if (ns->nsdata_iocs) {
+		spdk_free(ns->nsdata_iocs);
+		ns->nsdata_iocs = NULL;
+	}
 }
 
 bool
@@ -581,6 +645,8 @@ nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns)
 
 		return false;
 	case SPDK_NVME_CSI_ZNS:
+		return true;
+	case SPDK_NVME_CSI_KV:
 		return true;
 	default:
 		NVME_CTRLR_WARNLOG(ns->ctrlr, "Unsupported CSI: %u for NSID: %u\n", ns->csi, ns->id);

@@ -615,10 +615,13 @@ struct spdk_nvme_ns {
 	/* Identify Namespace data. */
 	struct spdk_nvme_ns_data	nsdata;
 
-	/* Zoned Namespace Command Set Specific Identify Namespace data. */
-	struct spdk_nvme_zns_ns_data	*nsdata_zns;
-
-	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
+	/* I/O Command Set Specific Identify Namespace data. */
+	union {
+		void				*nsdata_iocs;
+		struct spdk_nvme_zns_ns_data	*nsdata_zns;
+		struct spdk_nvme_kv_ns_data	*nsdata_kv;
+		struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
+	};
 
 	RB_ENTRY(spdk_nvme_ns)		node;
 };
@@ -864,6 +867,16 @@ enum nvme_ctrlr_state {
 	 * Waiting for the Get Log Page command to be completed.
 	 */
 	NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG,
+
+	/**
+	 * Get Identify I/O Command Set KV Specific Controller data structure.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_IOCS_KV_SPECIFIC,
+
+	/**
+	 * Waiting for Identify I/O Command Set KV Specific Controller command to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_KV_SPECIFIC,
 
 	/**
 	 * Set Number of Queues of the controller.
@@ -1139,16 +1152,11 @@ struct spdk_nvme_ctrlr {
 	/** eventidx buffer */
 	uint32_t			*eventidx;
 
-	/**
-	 * Identify Controller data.
-	 */
+	/** Identify Controller data. */
 	struct spdk_nvme_ctrlr_data	cdata;
-
-	/**
-	 * Command Set Specific Identify Controller data.
-	 */
 	struct spdk_nvme_zns_ctrlr_data	*cdata_zns;
 	struct spdk_nvme_nvm_ctrlr_data	*cdata_nvm;
+	struct spdk_nvme_kv_ctrlr_data	*cdata_kv;
 
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
@@ -1442,6 +1450,7 @@ int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns);
+void	nvme_ns_free_kv_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns);
 bool	nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns);
