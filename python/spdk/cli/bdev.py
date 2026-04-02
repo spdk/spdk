@@ -387,7 +387,8 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
     p.add_argument('-a', '--action-on-timeout',
-                   help="Action to take on command time out. Valid values are: none, reset, abort")
+                   choices=['none', 'reset', 'abort'],
+                   help="Action to take on command time out")
     p.add_argument('-t', '--timeout-us',
                    help="Timeout for each command, in microseconds. If 0, don't track timeouts.", type=int)
     p.add_argument('--timeout-admin-us',
@@ -923,7 +924,8 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_delay_update_latency',
                               help='Update one of the latency values for a given delay bdev')
     p.add_argument('delay_bdev_name', help='The name of the given delay bdev')
-    p.add_argument('latency_type', help='one of: avg_read, avg_write, p99_read, p99_write. No other values accepted.')
+    p.add_argument('latency_type', choices=['avg_read', 'avg_write', 'p99_read', 'p99_write'],
+                   help='one of: avg_read, avg_write, p99_read, p99_write')
     p.add_argument('latency_us', help='new latency value in microseconds.', type=int)
     p.set_defaults(func=bdev_delay_update_latency)
 

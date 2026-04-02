@@ -133,7 +133,10 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('dpdk_cryptodev_set_driver',
                               help='Set the DPDK cryptodev driver.')
-    p.add_argument('-d', '--driver-name', help='The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci', type=str, required=True)
+    p.add_argument('-d', '--driver-name',
+                   help='The driver',
+                   choices=['crypto_aesni_mb', 'crypto_qat', 'mlx5_pci', 'crypto_uadk'],
+                   required=True)
     p.set_defaults(func=dpdk_cryptodev_set_driver)
 
     def dpdk_cryptodev_get_driver(args):
@@ -173,7 +176,9 @@ def add_parser(subparsers):
         print_dict(args.client.accel_mlx5_dump_stats(level=args.level))
 
     p = subparsers.add_parser('accel_mlx5_dump_stats', help='Dump accel mlx5 module statistics.')
-    p.add_argument('-l', '--level', type=str, help='Verbose level, one of \"total\", \"channel\" or \"device\"')
+    p.add_argument('-l', '--level',
+                   choices=['total', 'channel', 'device'],
+                   help='Verbose level')
     p.set_defaults(func=accel_mlx5_dump_stats)
 
     # cuda
@@ -191,8 +196,14 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('accel_error_inject_error',
                               help='Inject an error to processing accel operation')
-    p.add_argument('-o', '--opcode', help='Opcode', required=True)
+    p.add_argument('-o', '--opcode', required=True,
+                   choices=['copy', 'fill', 'dualcast', 'compare', 'crc32c', 'copy_crc32c',
+                            'compress', 'decompress', 'encrypt', 'decrypt', 'xor',
+                            'dif_verify', 'dif_verify_copy', 'dif_generate', 'dif_generate_copy',
+                            'dix_generate', 'dix_verify'],
+                   help='Opcode')
     p.add_argument('-t', '--type', required=True,
+                   choices=['disable', 'corrupt', 'failure'],
                    help='Error type ("corrupt": corrupt the data, "failure": fail the operation, "disable": disable error injection)')
     p.add_argument('-c', '--count', type=int,
                    help='Number of errors to inject on each IO channel (0 to disable error injection)')

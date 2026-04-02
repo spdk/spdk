@@ -26,7 +26,8 @@ def add_parser(subparsers):
         args.client.spdk_kill_instance(sig_name=args.sig_name)
 
     p = subparsers.add_parser('spdk_kill_instance', help='Send signal to instance')
-    p.add_argument('sig_name', help='signal will be sent to server.')
+    p.add_argument('sig_name', help='signal will be sent to server.',
+                   choices=['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGHUP', 'SIGKILL', 'SIGUSR1'])
     p.set_defaults(func=spdk_kill_instance)
 
     def framework_start_init(args):

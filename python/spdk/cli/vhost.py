@@ -125,11 +125,13 @@ def add_parser(subparsers):
     Result is array of added bdevs.""")
     p.add_argument('name', help="Use this name as base for new created bdevs")
     p.add_argument('-t', '--trtype',
-                   help='Virtio target transport type: pci or user', required=True)
+                   help='Virtio target transport type', required=True,
+                   choices=['pci', 'user', 'vfio-user'])
     p.add_argument('-a', '--traddr',
                    help='Transport type specific target address: e.g. UNIX domain socket path or BDF', required=True)
     p.add_argument('-d', '--dev-type',
-                   help='Device type: blk or scsi', required=True)
+                   help='Device type', required=True,
+                   choices=['blk', 'scsi'])
     p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=bdev_virtio_attach_controller)

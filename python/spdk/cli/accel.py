@@ -43,7 +43,9 @@ def add_parser(subparsers):
     p.add_argument('-c', '--cipher', help='cipher', required=True)
     p.add_argument('-k', '--key', help='key', required=True)
     p.add_argument('-e', '--key2', help='key2', default=None)
-    p.add_argument('-t', '--tweak-mode', help='tweak mode', default=None)
+    p.add_argument('-t', '--tweak-mode', help='tweak mode', default=None,
+                   choices=['SIMPLE_LBA', 'JOIN_NEG_LBA_WITH_LBA',
+                            'INCR_512_FULL_LBA', 'INCR_512_UPPER_LBA'])
     p.add_argument('-n', '--name', help='key name', required=True)
     p.set_defaults(func=accel_crypto_key_create)
 
