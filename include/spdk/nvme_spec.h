@@ -1860,7 +1860,7 @@ enum spdk_nvme_kv_opcode {
 enum spdk_nvme_kv_store_option {
 	SPDK_NVME_KV_STORE_OPT_DONT_STORE_IF_KEY_NOT_EXISTS	= 1 << 0,
 	SPDK_NVME_KV_STORE_OPT_DONT_STORE_IF_KEY_EXISTS		= 1 << 1,
-	SPDK_NVME_KV_STORE_OPT_COMPRESS				= 1 << 2,
+	SPDK_NVME_KV_STORE_OPT_DONT_COMPRESS			= 1 << 2,
 };
 
 /**
@@ -2888,11 +2888,14 @@ struct spdk_nvme_zns_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ctrlr_data) == 4096, "Incorrect size");
 
-struct spdk_nvme_kv_ctrlr_data {
-	/** maximum key size */
-	uint8_t			mks;
+/** KV Command Set specification version 1.3 */
+#define SPDK_NVME_KV_SPEC_VER	SPDK_NVME_VERSION(1, 3, 0)
 
-	uint8_t			reserved1[4095];
+struct spdk_nvme_kv_ctrlr_data {
+	/** specification version descriptor */
+	uint32_t		ver;
+
+	uint8_t			reserved1[4092];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_ctrlr_data) == 4096, "Incorrect size");
 
@@ -3351,27 +3354,102 @@ struct spdk_nvme_zns_ns_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ns_data) == 4096, "Incorrect size");
 
-#pragma pack(push, 1)
+/** KV additional format options */
+struct spdk_nvme_kv_afo {
+	/** relative performance */
+	uint8_t		rp	: 2;
+	uint8_t		reserved : 6;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_afo) == 1, "Incorrect size");
+
+/** KV format capabilities */
+struct spdk_nvme_kv_kvfc {
+	/** KV format index */
+	uint8_t		kvfi	: 4;
+	uint8_t		reserved : 4;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_kvfc) == 1, "Incorrect size");
+
+/** KV Format data structure (16 bytes, per KV spec Figure 42) */
+struct spdk_nvme_kv_format {
+	/** KV key max length in bytes (shall be <= 16) */
+	uint16_t			kvkml;
+
+	uint8_t				reserved2;
+
+	/** additional format options */
+	struct spdk_nvme_kv_afo		afo;
+
+	/** KV value max length in bytes */
+	uint32_t			kvvml;
+
+	/** max number of keys (0 = no maximum indicated) */
+	uint32_t			mnks;
+
+	uint8_t				reserved12[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_format) == 16, "Incorrect size");
+
 struct spdk_nvme_kv_ns_data {
-	/** maximum key size */
-	uint8_t			mks;
+	/** namespace size in bytes */
+	uint64_t			nsze;
 
-	/** maximum value size */
-	uint32_t		mvs;
+	uint8_t				reserved8[8];
 
-	/** optimal value size */
-	uint32_t		ovs;
+	/** namespace utilization in bytes */
+	uint64_t			nuse;
 
-	/** key alignment */
-	uint8_t			ka;
+	/** namespace features */
+	uint8_t				nsfeat;
 
-	/** value alignment */
-	uint8_t			va;
+	/** number of KV formats (0's based) */
+	uint8_t				nkvf;
 
-	uint8_t			reserved[4085];
+	/** namespace multi-path I/O and namespace sharing capabilities */
+	struct spdk_nvme_nmic		nmic;
+
+	/** reservation capabilities */
+	struct spdk_nvme_rescap		rescap;
+
+	/** format progress indicator */
+	struct spdk_nvme_fpi		fpi;
+
+	/** KV format capabilities */
+	struct spdk_nvme_kv_kvfc	kvfc;
+
+	uint8_t				reserved30[2];
+
+	/** namespace optimal value granularity in bytes */
+	uint32_t			novg;
+
+	/** ANA group identifier */
+	uint32_t			anagrpid;
+
+	uint8_t				reserved40[3];
+
+	/** namespace attributes */
+	struct spdk_nvme_nsattr		nsattr;
+
+	/** NVM set identifier */
+	uint16_t			nvmsetid;
+
+	/** endurance group identifier */
+	uint16_t			endgid;
+
+	/** namespace globally unique identifier */
+	uint8_t				nguid[16];
+
+	/** IEEE extended unique identifier */
+	uint64_t			eui64;
+
+	/** KV format support (up to 16 formats) */
+	struct spdk_nvme_kv_format	kvf[16];
+
+	uint8_t				reserved328[3512];
+
+	uint8_t				vendor_specific[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_kv_ns_data) == 4096, "Incorrect size");
-#pragma pack(pop)
 
 /** Identify – I/O Command Set Independent Identify Namespace Data Structure (CNS 08h) */
 struct spdk_nvme_ns_iocs_independent_data {
