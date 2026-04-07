@@ -11,8 +11,12 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/accel.h"
+#include "spdk/bdev.h"
 #include "spdk/jsonrpc.h"
 #include "spdk/log.h"
+#include "spdk/module/bdev/nvme.h"
+#include "spdk/nvme_spec.h"
 
 #ifdef __cplusplus
 extern "C" {

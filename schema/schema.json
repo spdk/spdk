@@ -10,33 +10,33 @@
     {
       "name": "bdev_nvme_data_direction",
       "fields": [
-        {"name": "h2c", "value": 1},
-        {"name": "c2h", "value": 2}
+        {"name": "h2c", "value": "SPDK_NVME_DATA_HOST_TO_CONTROLLER"},
+        {"name": "c2h", "value": "SPDK_NVME_DATA_CONTROLLER_TO_HOST"}
       ]
     },
     {
       "name": "bdev_nvme_multipath_policy",
       "fields": [
-        {"name": "active_passive", "value": 0},
-        {"name": "active_active", "value": 1}
+        {"name": "active_passive", "value": "SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE"},
+        {"name": "active_active", "value": "SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE"}
       ]
     },
     {
       "name": "bdev_nvme_multipath_selector",
       "fields": [
-        {"name": "round_robin", "value": 1},
-        {"name": "queue_depth", "value": 2}
+        {"name": "round_robin", "value": "SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN"},
+        {"name": "queue_depth", "value": "SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH"}
       ]
     },
     {
       "name": "bdev_error_inject_io_type",
       "fields": [
         {"name": "clear", "value": 0},
-        {"name": "read", "value": 1},
-        {"name": "write", "value": 2},
-        {"name": "unmap", "value": 3},
-        {"name": "flush", "value": 4},
-        {"name": "all", "value": 4294967295}
+        {"name": "read", "value": "SPDK_BDEV_IO_TYPE_READ"},
+        {"name": "write", "value": "SPDK_BDEV_IO_TYPE_WRITE"},
+        {"name": "unmap", "value": "SPDK_BDEV_IO_TYPE_UNMAP"},
+        {"name": "flush", "value": "SPDK_BDEV_IO_TYPE_FLUSH"},
+        {"name": "all", "value": "UINT32_MAX"}
       ]
     },
     {
@@ -51,40 +51,40 @@
     {
       "name": "bdev_reset_stat_mode",
       "fields": [
-        {"name": "all", "value": 0},
-        {"name": "maxmin", "value": 1},
-        {"name": "error", "value": 2},
-        {"name": "none", "value": 3}
+        {"name": "all", "value": "SPDK_BDEV_RESET_STAT_ALL"},
+        {"name": "maxmin", "value": "SPDK_BDEV_RESET_STAT_MAXMIN"},
+        {"name": "error", "value": "SPDK_BDEV_RESET_STAT_ERROR"},
+        {"name": "none", "value": "SPDK_BDEV_RESET_STAT_NONE"}
       ]
     },
     {
       "name": "nvme_ana_state",
       "fields": [
-        {"name": "optimized", "value": 1},
-        {"name": "non_optimized", "value": 2},
-        {"name": "inaccessible", "value": 3}
+        {"name": "optimized", "value": "SPDK_NVME_ANA_OPTIMIZED_STATE"},
+        {"name": "non_optimized", "value": "SPDK_NVME_ANA_NON_OPTIMIZED_STATE"},
+        {"name": "inaccessible", "value": "SPDK_NVME_ANA_INACCESSIBLE_STATE"}
       ]
     },
     {
       "name": "accel_error_opcode",
       "fields": [
-        {"name": "copy", "value": 0},
-        {"name": "fill", "value": 1},
-        {"name": "dualcast", "value": 2},
-        {"name": "compare", "value": 3},
-        {"name": "crc32c", "value": 4},
-        {"name": "copy_crc32c", "value": 5},
-        {"name": "compress", "value": 6},
-        {"name": "decompress", "value": 7},
-        {"name": "encrypt", "value": 8},
-        {"name": "decrypt", "value": 9},
-        {"name": "xor", "value": 10},
-        {"name": "dif_verify", "value": 11},
-        {"name": "dif_verify_copy", "value": 12},
-        {"name": "dif_generate", "value": 13},
-        {"name": "dif_generate_copy", "value": 14},
-        {"name": "dix_generate", "value": 15},
-        {"name": "dix_verify", "value": 16}
+        {"name": "copy", "value": "SPDK_ACCEL_OPC_COPY"},
+        {"name": "fill", "value": "SPDK_ACCEL_OPC_FILL"},
+        {"name": "dualcast", "value": "SPDK_ACCEL_OPC_DUALCAST"},
+        {"name": "compare", "value": "SPDK_ACCEL_OPC_COMPARE"},
+        {"name": "crc32c", "value": "SPDK_ACCEL_OPC_CRC32C"},
+        {"name": "copy_crc32c", "value": "SPDK_ACCEL_OPC_COPY_CRC32C"},
+        {"name": "compress", "value": "SPDK_ACCEL_OPC_COMPRESS"},
+        {"name": "decompress", "value": "SPDK_ACCEL_OPC_DECOMPRESS"},
+        {"name": "encrypt", "value": "SPDK_ACCEL_OPC_ENCRYPT"},
+        {"name": "decrypt", "value": "SPDK_ACCEL_OPC_DECRYPT"},
+        {"name": "xor", "value": "SPDK_ACCEL_OPC_XOR"},
+        {"name": "dif_verify", "value": "SPDK_ACCEL_OPC_DIF_VERIFY"},
+        {"name": "dif_verify_copy", "value": "SPDK_ACCEL_OPC_DIF_VERIFY_COPY"},
+        {"name": "dif_generate", "value": "SPDK_ACCEL_OPC_DIF_GENERATE"},
+        {"name": "dif_generate_copy", "value": "SPDK_ACCEL_OPC_DIF_GENERATE_COPY"},
+        {"name": "dix_generate", "value": "SPDK_ACCEL_OPC_DIX_GENERATE"},
+        {"name": "dix_verify", "value": "SPDK_ACCEL_OPC_DIX_VERIFY"}
       ]
     },
     {
