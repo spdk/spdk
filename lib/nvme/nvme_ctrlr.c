@@ -2367,7 +2367,7 @@ nvme_ctrlr_identify_iocs_nvm_specific(struct spdk_nvme_ctrlr *ctrlr)
 
 error:
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-	nvme_ctrlr_free_iocs_specific_data(ctrlr);
+	nvme_ctrlr_free_nvm_specific_data(ctrlr);
 	return rc;
 }
 
