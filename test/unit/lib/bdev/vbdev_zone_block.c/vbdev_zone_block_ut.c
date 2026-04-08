@@ -40,8 +40,11 @@ struct io_output {
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
+DEFINE_STUB(spdk_json_decode_int32, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_uint64, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_strequal, bool, (const struct spdk_json_val *val, const char *str), false);
+DEFINE_STUB(spdk_json_strdup, char *, (const struct spdk_json_val *val), NULL);
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
