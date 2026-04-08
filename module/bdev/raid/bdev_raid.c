@@ -112,7 +112,7 @@ raid_bdev_set_opts(const struct spdk_raid_bdev_opts *opts)
 }
 
 static struct raid_bdev_module *
-raid_bdev_module_find(enum raid_level level)
+raid_bdev_module_find(enum spdk_bdev_raid_level level)
 {
 	struct raid_bdev_module *raid_module;
 
@@ -1320,15 +1320,15 @@ raid_bdev_find_by_uuid(const struct spdk_uuid *uuid)
 
 static struct {
 	const char *name;
-	enum raid_level value;
+	enum spdk_bdev_raid_level value;
 } g_raid_level_names[] = {
-	{ "raid0", RAID0 },
-	{ "0", RAID0 },
-	{ "raid1", RAID1 },
-	{ "1", RAID1 },
-	{ "raid5f", RAID5F },
-	{ "5f", RAID5F },
-	{ "concat", CONCAT },
+	{ "raid0", SPDK_BDEV_RAID_LEVEL_RAID0 },
+	{ "0", SPDK_BDEV_RAID_LEVEL_RAID0 },
+	{ "raid1", SPDK_BDEV_RAID_LEVEL_RAID1 },
+	{ "1", SPDK_BDEV_RAID_LEVEL_RAID1 },
+	{ "raid5f", SPDK_BDEV_RAID_LEVEL_RAID5F },
+	{ "5f", SPDK_BDEV_RAID_LEVEL_RAID5F },
+	{ "concat", SPDK_BDEV_RAID_LEVEL_CONCAT },
 	{ }
 };
 
@@ -1346,7 +1346,7 @@ static const char *g_raid_process_type_names[] = {
 };
 
 /* We have to use the typedef in the function declaration to appease astyle. */
-typedef enum raid_level raid_level_t;
+typedef enum spdk_bdev_raid_level raid_level_t;
 typedef enum raid_bdev_state raid_bdev_state_t;
 
 raid_level_t
@@ -1362,11 +1362,11 @@ raid_bdev_str_to_level(const char *str)
 		}
 	}
 
-	return INVALID_RAID_LEVEL;
+	return SPDK_BDEV_RAID_LEVEL_INVALID;
 }
 
 const char *
-raid_bdev_level_to_str(enum raid_level level)
+raid_bdev_level_to_str(enum spdk_bdev_raid_level level)
 {
 	unsigned int i;
 
@@ -1533,7 +1533,7 @@ raid_bdev_init(void)
 
 static int
 _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		  enum raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
+		  enum spdk_bdev_raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
 		  struct raid_bdev **raid_bdev_out)
 {
 	struct raid_bdev *raid_bdev;
@@ -1552,7 +1552,7 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		return -EEXIST;
 	}
 
-	if (level == RAID1) {
+	if (level == SPDK_BDEV_RAID_LEVEL_RAID1) {
 		if (strip_size != 0) {
 			SPDK_ERRLOG("Strip size is not supported by raid1\n");
 			return -EINVAL;
@@ -1709,7 +1709,7 @@ static int raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, 
  */
 int
 raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		 char **base_bdev_names, enum raid_level level, bool superblock_enabled,
+		 char **base_bdev_names, enum spdk_bdev_raid_level level, bool superblock_enabled,
 		 const struct spdk_uuid *uuid, raid_bdev_action_cb cb_fn, void *cb_ctx)
 {
 	struct raid_bdev_create_ctx *ctx;
@@ -1945,7 +1945,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev, raid_bdev_action_cb cb, void *c
 	 * internal use.
 	 */
 	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / data_block_size;
-	if (raid_bdev->strip_size == 0 && raid_bdev->level != RAID1) {
+	if (raid_bdev->strip_size == 0 && raid_bdev->level != SPDK_BDEV_RAID_LEVEL_RAID1) {
 		SPDK_ERRLOG("Strip size cannot be smaller than the device block size\n");
 		return -EINVAL;
 	}

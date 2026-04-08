@@ -107,7 +107,7 @@ struct rpc_bdev_raid_create {
 	uint32_t                             strip_size_kb;
 
 	/* RAID raid level */
-	enum raid_level                      level;
+	enum spdk_bdev_raid_level            level;
 
 	/* Base bdevs information */
 	struct rpc_bdev_raid_create_base_bdevs base_bdevs;
@@ -127,15 +127,15 @@ decode_raid_level(const struct spdk_json_val *val, void *out)
 {
 	int ret;
 	char *str = NULL;
-	enum raid_level level;
+	enum spdk_bdev_raid_level level;
 
 	ret = spdk_json_decode_string(val, &str);
 	if (ret == 0 && str != NULL) {
 		level = raid_bdev_str_to_level(str);
-		if (level == INVALID_RAID_LEVEL) {
+		if (level == SPDK_BDEV_RAID_LEVEL_INVALID) {
 			ret = -EINVAL;
 		} else {
-			*(enum raid_level *)out = level;
+			*(enum spdk_bdev_raid_level *)out = level;
 		}
 	}
 

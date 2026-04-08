@@ -1227,7 +1227,7 @@ raid5f_submit_process_request(struct raid_bdev_process_request *process_req,
 }
 
 static struct raid_bdev_module g_raid5f_module = {
-	.level = RAID5F,
+	.level = SPDK_BDEV_RAID_LEVEL_RAID5F,
 	.base_bdevs_min = 3,
 	.base_bdevs_constraint = {CONSTRAINT_MAX_BASE_BDEVS_REMOVED, 1},
 	.start = raid5f_start,

@@ -972,7 +972,7 @@ test_create_raid_invalid_args(void)
 
 	verify_raid_bdev_present("raid1", false);
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
-	req.level = INVALID_RAID_LEVEL;
+	req.level = SPDK_BDEV_RAID_LEVEL_INVALID;
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	free_test_req(&req);
@@ -1327,16 +1327,16 @@ test_raid_level_conversions(void)
 {
 	const char *raid_str;
 
-	CU_ASSERT(raid_bdev_str_to_level("abcd123") == INVALID_RAID_LEVEL);
-	CU_ASSERT(raid_bdev_str_to_level("0") == RAID0);
-	CU_ASSERT(raid_bdev_str_to_level("raid0") == RAID0);
-	CU_ASSERT(raid_bdev_str_to_level("RAID0") == RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("abcd123") == SPDK_BDEV_RAID_LEVEL_INVALID);
+	CU_ASSERT(raid_bdev_str_to_level("0") == SPDK_BDEV_RAID_LEVEL_RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("raid0") == SPDK_BDEV_RAID_LEVEL_RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("RAID0") == SPDK_BDEV_RAID_LEVEL_RAID0);
 
-	raid_str = raid_bdev_level_to_str(INVALID_RAID_LEVEL);
+	raid_str = raid_bdev_level_to_str(SPDK_BDEV_RAID_LEVEL_INVALID);
 	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);
 	raid_str = raid_bdev_level_to_str(1234);
 	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);
-	raid_str = raid_bdev_level_to_str(RAID0);
+	raid_str = raid_bdev_level_to_str(SPDK_BDEV_RAID_LEVEL_RAID0);
 	CU_ASSERT(raid_str != NULL && strcmp(raid_str, "raid0") == 0);
 }
 
