@@ -1190,22 +1190,18 @@ def add_parser(subparsers):
     p.set_defaults(func=bdev_raid_get_bdevs)
 
     def bdev_raid_create(args):
-        base_bdevs = []
-        for u in args.base_bdevs.strip().split():
-            base_bdevs.append(u)
-
         args.client.bdev_raid_create(
                                   name=args.name,
                                   strip_size_kb=args.strip_size_kb,
                                   raid_level=args.raid_level,
-                                  base_bdevs=base_bdevs,
+                                  base_bdevs=args.base_bdevs,
                                   uuid=args.uuid,
                                   superblock=args.superblock)
     p = subparsers.add_parser('bdev_raid_create', help='Create new raid bdev')
     p.add_argument('-n', '--name', help='raid bdev name', required=True)
     p.add_argument('-z', '--strip-size-kb', help='strip size in KB', type=int)
-    p.add_argument('-r', '--raid-level', help='raid level, raid0, raid1 and a special level concat are supported', required=True)
-    p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
+    p.add_argument('-r', '--raid-level', choices=['raid0', '0', 'raid1', '1', 'raid5f', '5f', 'concat'], help='Raid level', required=True)
+    p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True, type=str.split)
     p.add_argument('--uuid', help='UUID for this raid bdev')
     p.add_argument('-s', '--superblock', help='information about raid bdev will be stored in superblock on each base bdev, '
                                               'disabled by default due to backward compatibility', action='store_true')
