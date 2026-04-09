@@ -3504,8 +3504,12 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 	event.raw = cpl->cdw0;
 
-	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+	if (event.bits.async_event_type != SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
+		goto out;
+	}
+
+	switch (event.bits.async_event_info) {
+	case SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED:
 		async_event->log_page.changed_ns_list = nvme_ctrlr_clear_changed_ns_log(ctrlr);
 
 		rc = nvme_ctrlr_identify_active_ns(ctrlr);
@@ -3517,22 +3521,26 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 		nvme_ctrlr_update_namespaces(async_event);
 		nvme_io_msg_ctrlr_update(ctrlr);
-	}
-
-	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
-		if (!ctrlr->opts.disable_read_ana_log_page) {
-			rc = nvme_ctrlr_update_ana_log_page(ctrlr);
-			if (rc) {
-				spdk_free(async_event);
-				return;
-			}
-
-			nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
-						      ctrlr);
+		break;
+	case SPDK_NVME_ASYNC_EVENT_ANA_CHANGE:
+		if (ctrlr->opts.disable_read_ana_log_page) {
+			break;
 		}
+
+		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
+		if (rc) {
+			spdk_free(async_event);
+			return;
+		}
+
+		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
+					      ctrlr);
+		break;
+	default:
+		break;
 	}
 
+out:
 	nvme_ctrlr_process_async_event_finish(async_event);
 }
 
