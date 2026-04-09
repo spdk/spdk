@@ -349,6 +349,8 @@ struct spdk_nvme_ctrlr {
 	bool				fail_reset;
 	bool				is_removed;
 	spdk_nvme_aer_cb		aer_cb_fn;
+	spdk_nvme_ns_attr_changed_cb	ns_attr_changed_cb_fn;
+	void				*ns_attr_changed_cb_arg;
 	struct spdk_nvme_transport_id	trid;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
@@ -375,6 +377,15 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 				      void *aer_cb_arg)
 {
 	ctrlr->aer_cb_fn = aer_cb_fn;
+}
+
+void
+spdk_nvme_ctrlr_register_ns_attr_changed_callback(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_ns_attr_changed_cb cb_fn,
+		void *cb_arg)
+{
+	ctrlr->ns_attr_changed_cb_fn = cb_fn;
+	ctrlr->ns_attr_changed_cb_arg = cb_arg;
 }
 
 uint32_t
@@ -2343,11 +2354,7 @@ test_aer_cb(void)
 	ctrlr->ns[2].is_active = false;
 	ctrlr->nsdata[3].nsze = 2048;
 
-	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
-	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
-	cpl.cdw0 = event.raw;
-
-	nvme_ctrlr_aer_cb(nvme_ctrlr, &cpl);
+	nvme_ctrlr_ns_attr_changed_cb(nvme_ctrlr, NULL, 0);
 
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
@@ -7892,8 +7899,6 @@ test_ns_remove_during_reset(void)
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *nbdev;
 	struct nvme_ns *nvme_ns;
-	union spdk_nvme_async_event_completion event = {};
-	struct spdk_nvme_cpl cpl = {};
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -7950,15 +7955,11 @@ test_ns_remove_during_reset(void)
 	CU_ASSERT(nvme_ns->bdev == nbdev);
 	CU_ASSERT(nvme_ns->ns == NULL);
 
-	/* Then, async event should fill nvme_ns->ns again. */
+	/* Then, NS attr changed callback should fill nvme_ns->ns again. */
 
 	ctrlr->ns[0].is_active = true;
 
-	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
-	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
-	cpl.cdw0 = event.raw;
-
-	nvme_ctrlr_aer_cb(nvme_ctrlr, &cpl);
+	nvme_ctrlr_ns_attr_changed_cb(nvme_ctrlr, NULL, 0);
 
 	CU_ASSERT(nvme_ns == RB_MIN(nvme_ns_tree, &nvme_ctrlr->namespaces));
 	CU_ASSERT(nbdev == nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1));

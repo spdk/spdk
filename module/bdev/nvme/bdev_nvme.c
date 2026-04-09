@@ -312,6 +312,7 @@ static struct spdk_poller *g_hotplug_probe_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 
 static void nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
+		const uint32_t *changed_ns_list, uint32_t ns_count,
 		struct nvme_async_probe_ctx *ctx);
 static void nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
@@ -5371,11 +5372,13 @@ nvme_ctrlr_add_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid,
 
 static void
 nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
+			       const uint32_t *changed_ns_list,
+			       uint32_t ns_count,
 			       struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ns	*nvme_ns, *tmp;
-	uint32_t		nsid;
+	uint32_t		nsid, i;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -5386,20 +5389,30 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		ctx->populates_in_progress = 1;
 	}
 
-	/* First loop over our existing namespaces and see if they have been
-	 * changed or removed. */
-	RB_FOREACH_SAFE(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp) {
-		nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns);
-	}
-
-	/* Loop through all of the namespaces at the nvme level and see if any of them are new */
-	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
-	     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-		if (nvme_ctrlr_get_ns(nvme_ctrlr, nsid)) {
-			continue;
+	if (!changed_ns_list) {
+		/* Full scan: check all existing namespaces and look for new ones. */
+		RB_FOREACH_SAFE(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp) {
+			nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns);
 		}
 
-		nvme_ctrlr_add_ns(nvme_ctrlr, nsid, ctx);
+		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
+		     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+			if (nvme_ctrlr_get_ns(nvme_ctrlr, nsid)) {
+				continue;
+			}
+
+			nvme_ctrlr_add_ns(nvme_ctrlr, nsid, ctx);
+		}
+	} else {
+		for (i = 0; i < ns_count; i++) {
+			nsid = changed_ns_list[i];
+			nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
+			if (nvme_ns) {
+				nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns);
+			} else {
+				nvme_ctrlr_add_ns(nvme_ctrlr, nsid, ctx);
+			}
+		}
 	}
 
 	/* Populate might complete immediately. */
@@ -5848,12 +5861,18 @@ nvme_ctrlr_aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	NVME_CTRLR_DEBUGLOG(nvme_ctrlr, "executing AER\n");
 	event.raw = cpl->cdw0;
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		nvme_ctrlr_populate_namespaces(nvme_ctrlr, NULL);
-	} else if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-		   (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
 		nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
 	}
+}
+
+static void
+nvme_ctrlr_ns_attr_changed_cb(void *arg, const uint32_t *changed_ns_list,
+			      uint32_t count)
+{
+	struct nvme_ctrlr *nvme_ctrlr = arg;
+
+	nvme_ctrlr_populate_namespaces(nvme_ctrlr, changed_ns_list, count, NULL);
 }
 
 static void
@@ -5909,12 +5928,14 @@ nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 {
 	NVME_CTRLR_INFOLOG(nvme_ctrlr, "ctrlr was created\n");
 
-	/* AER callback is registered late to prevent getting the I/O channel
+	/* Callbacks are registered late to prevent getting the I/O channel
 	 * on an unregistered controller during namespace population. */
 	spdk_nvme_ctrlr_register_aer_callback(nvme_ctrlr->ctrlr, nvme_ctrlr_aer_cb, nvme_ctrlr);
+	spdk_nvme_ctrlr_register_ns_attr_changed_callback(nvme_ctrlr->ctrlr, nvme_ctrlr_ns_attr_changed_cb,
+			nvme_ctrlr);
 
 	/* Populate namespaces for the first time. */
-	nvme_ctrlr_populate_namespaces(nvme_ctrlr, ctx);
+	nvme_ctrlr_populate_namespaces(nvme_ctrlr, NULL, 0, ctx);
 
 	if (g_hotplug_poller == NULL) {
 		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_remove_poller, NULL,
