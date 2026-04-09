@@ -1036,6 +1036,9 @@ struct spdk_nvme_ctrlr_process {
 	spdk_nvme_aer_cb				aer_cb_fn;
 	void						*aer_cb_arg;
 
+	spdk_nvme_ns_attr_changed_cb			ns_attr_changed_cb_fn;
+	void						*ns_attr_changed_cb_arg;
+
 	/**
 	 * A function pointer to timeout callback function
 	 */

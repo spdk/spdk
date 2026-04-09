@@ -1623,6 +1623,34 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 		void *aer_cb_arg);
 
 /**
+ * Signature for callback function invoked when an NS_ATTR_CHANGED async event
+ * is processed.
+ *
+ * \param cb_arg Argument specified by spdk_nvme_ctrlr_register_ns_attr_changed_callback().
+ * \param changed_ns_list Array of changed namespace IDs, or NULL. When NULL, all
+ * namespaces should be treated as potentially changed. The pointer is only valid during
+ * the callback invocation; the caller must copy the data if it needs to be retained.
+ * \param count Number of entries in changed_ns_list. Zero when changed_ns_list is NULL.
+ */
+typedef void (*spdk_nvme_ns_attr_changed_cb)(void *cb_arg, const uint32_t *changed_ns_list,
+		uint32_t count);
+
+/**
+ * Register a callback for NS_ATTR_CHANGED asynchronous events.
+ *
+ * When registered, this callback replaces the generic AER callback for
+ * NS_ATTR_CHANGED events, allowing the consumer to handle namespace
+ * changes with the list of changed namespace IDs.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param cb_fn Callback function, or NULL to unregister.
+ * \param cb_arg Argument passed to callback function.
+ */
+void spdk_nvme_ctrlr_register_ns_attr_changed_callback(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_ns_attr_changed_cb cb_fn,
+		void *cb_arg);
+
+/**
  * Disable reading the CHANGED_NS_LIST log page for the specified controller.
  *
  * Applications that register an AER callback may wish to read the CHANGED_NS_LIST

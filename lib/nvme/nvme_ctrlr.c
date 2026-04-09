@@ -3386,19 +3386,27 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event)
+nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event,
+				      bool ns_attr_changed, uint32_t ns_count)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	active_proc = nvme_ctrlr_get_current_process(async_event->ctrlr);
-	if (active_proc && active_proc->aer_cb_fn) {
-		active_proc->aer_cb_fn(active_proc->aer_cb_arg, &async_event->cpl);
+	if (active_proc) {
+		if (ns_attr_changed && active_proc->ns_attr_changed_cb_fn) {
+			active_proc->ns_attr_changed_cb_fn(active_proc->ns_attr_changed_cb_arg,
+							   async_event->log_page.changed_ns_list,
+							   ns_count);
+		} else if (active_proc->aer_cb_fn) {
+			active_proc->aer_cb_fn(active_proc->aer_cb_arg, &async_event->cpl);
+		}
 	}
 
+	free(async_event->log_page.changed_ns_list);
 	spdk_free(async_event);
 }
 
-static void
+static uint32_t
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
@@ -3414,7 +3422,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 			nvme_ns_construct(ns, nsid, ctrlr);
 		}
 
-		return;
+		return 0;
 	}
 
 	/* Iterate over NSID from the log page. */
@@ -3436,7 +3444,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 		nvme_ns_construct(ns, nsid, ctrlr);
 	}
 
-	free(async_event->log_page.changed_ns_list);
+	return i;
 }
 
 static uint32_t *
@@ -3500,6 +3508,8 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
 	struct spdk_nvme_cpl *cpl = &async_event->cpl;
 	union spdk_nvme_async_event_completion event;
+	bool ns_attr_changed = false;
+	uint32_t ns_count = 0;
 	int rc;
 
 	event.raw = cpl->cdw0;
@@ -3519,8 +3529,9 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 			return;
 		}
 
-		nvme_ctrlr_update_namespaces(async_event);
+		ns_count = nvme_ctrlr_update_namespaces(async_event);
 		nvme_io_msg_ctrlr_update(ctrlr);
+		ns_attr_changed = true;
 		break;
 	case SPDK_NVME_ASYNC_EVENT_ANA_CHANGE:
 		if (ctrlr->opts.disable_read_ana_log_page) {
@@ -3541,7 +3552,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	}
 
 out:
-	nvme_ctrlr_process_async_event_finish(async_event);
+	nvme_ctrlr_process_async_event_finish(async_event, ns_attr_changed, ns_count);
 }
 
 static void
@@ -5078,6 +5089,24 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 	if (active_proc) {
 		active_proc->aer_cb_fn = aer_cb_fn;
 		active_proc->aer_cb_arg = aer_cb_arg;
+	}
+
+	nvme_ctrlr_unlock(ctrlr);
+}
+
+void
+spdk_nvme_ctrlr_register_ns_attr_changed_callback(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_ns_attr_changed_cb cb_fn,
+		void *cb_arg)
+{
+	struct spdk_nvme_ctrlr_process *active_proc;
+
+	nvme_ctrlr_lock(ctrlr);
+
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		active_proc->ns_attr_changed_cb_fn = cb_fn;
+		active_proc->ns_attr_changed_cb_arg = cb_arg;
 	}
 
 	nvme_ctrlr_unlock(ctrlr);

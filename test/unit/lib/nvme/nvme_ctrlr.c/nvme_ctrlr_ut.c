@@ -2969,11 +2969,34 @@ test_nvme_ctrlr_reset(void)
 }
 
 static uint32_t g_aer_cb_counter;
+static uint32_t g_ns_attr_changed_cb_counter;
+static uint32_t g_ns_attr_changed_ns_list[SPDK_NVME_MAX_CHANGED_NAMESPACES];
+static bool g_ns_attr_changed_list_was_null;
 
 static void
 aer_cb(void *aer_cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	g_aer_cb_counter++;
+}
+
+static void
+ns_attr_changed_cb(void *cb_arg, const uint32_t *changed_ns_list, uint32_t count)
+{
+	uint32_t i;
+
+	g_ns_attr_changed_cb_counter++;
+	if (changed_ns_list == NULL) {
+		g_ns_attr_changed_list_was_null = true;
+		memset(g_ns_attr_changed_ns_list, 0, sizeof(g_ns_attr_changed_ns_list));
+	} else {
+		g_ns_attr_changed_list_was_null = false;
+		for (i = 0; i < count; i++) {
+			g_ns_attr_changed_ns_list[i] = changed_ns_list[i];
+		}
+		if (i < SPDK_NVME_MAX_CHANGED_NAMESPACES) {
+			g_ns_attr_changed_ns_list[i] = 0;
+		}
+	}
 }
 
 static void
@@ -3216,6 +3239,33 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 105));
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 106));
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 108));
+
+	/* Register dedicated NS attr changed callback */
+	spdk_nvme_ctrlr_register_ns_attr_changed_callback(&ctrlr, ns_attr_changed_cb, NULL);
+
+	/* Dedicated callback fires, AER does not */
+	g_aer_cb_counter = 0;
+	g_ns_attr_changed_cb_counter = 0;
+	setup_aer_for_ns_change(active_ns_list8, SPDK_COUNTOF(active_ns_list8),
+				changed_ns_list8, SPDK_COUNTOF(changed_ns_list8));
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_ns_attr_changed_cb_counter == 1);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(!g_ns_attr_changed_list_was_null);
+	CU_ASSERT(g_ns_attr_changed_ns_list[0] == 110);
+	CU_ASSERT(g_ns_attr_changed_ns_list[1] == 105);
+	CU_ASSERT(g_ns_attr_changed_ns_list[2] == 107);
+
+	/* With log page disabled: dedicated callback receives NULL */
+	ctrlr.opts.disable_read_changed_ns_list_log_page = true;
+	g_aer_cb_counter = 0;
+	g_ns_attr_changed_cb_counter = 0;
+	setup_aer_for_ns_change(active_ns_list8, SPDK_COUNTOF(active_ns_list8), NULL, 0);
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_ns_attr_changed_cb_counter == 1);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(g_ns_attr_changed_list_was_null);
+	ctrlr.opts.disable_read_changed_ns_list_log_page = false;
 
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
@@ -3648,6 +3698,9 @@ ut_setup(void)
 
 	g_nvme_ns_constructed = 0;
 	g_aer_cb_counter = 0;
+	g_ns_attr_changed_cb_counter = 0;
+	g_ns_attr_changed_list_was_null = false;
+	memset(g_ns_attr_changed_ns_list, 0, sizeof(g_ns_attr_changed_ns_list));
 }
 
 int
