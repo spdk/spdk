@@ -5303,17 +5303,79 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 	nvme_ctrlr_depopulate_namespace_done(nvme_ns);
 }
 
+/* Check if existing bdev namespace has been changed or removed. */
+static void
+nvme_ctrlr_update_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
+	struct spdk_nvme_ns	*ns;
+	struct nvme_bdev	*nbdev;
+	uint64_t		num_sectors;
+	int			rc;
+
+	if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
+		/* NS is still there or added again. Its attributes may have changed. */
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
+		if (nvme_ns->ns != ns) {
+			assert(nvme_ns->ns == NULL);
+			nvme_ns->ns = ns;
+			NVME_NS_DEBUGLOG(nvme_ns, "NSID was added\n");
+		}
+
+		num_sectors = spdk_nvme_ns_get_num_sectors(ns);
+		nbdev = nvme_ns->bdev;
+		assert(nbdev != NULL);
+		if (nbdev->disk.blockcnt != num_sectors) {
+			NVME_NS_NOTICELOG(nvme_ns, "NSID is resized: old size %" PRIu64 ", new size %" PRIu64 "\n",
+					  nbdev->disk.blockcnt, num_sectors);
+			rc = spdk_bdev_notify_blockcnt_change(&nbdev->disk, num_sectors);
+			if (rc != 0) {
+				NVME_NS_ERRLOG(nvme_ns, "Could not change num blocks for nvme bdev, errno: %d.\n", rc);
+			}
+		}
+	} else {
+		/* Namespace was removed */
+		nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
+	}
+}
+
+/* Add a namespace that is active at the nvme level but not yet tracked by bdev. */
+static void
+nvme_ctrlr_add_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid,
+		  struct nvme_async_probe_ctx *ctx)
+{
+	struct spdk_nvme_ns	*ns;
+	struct nvme_ns		*nvme_ns;
+
+	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
+	if (ns == NULL || !spdk_nvme_ns_is_active(ns)) {
+		/* Namespace was present during identify controller,
+		 * but identify ns was not yet sent. */
+		return;
+	}
+
+	nvme_ns = nvme_ns_create(nvme_ctrlr, nsid, ctx);
+	if (nvme_ns == NULL) {
+		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
+		/* This just fails to attach the namespace. It may work on a future attempt. */
+		return;
+	}
+
+	if (ctx) {
+		ctx->populates_in_progress++;
+	}
+
+	RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
+	nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
+}
+
 static void
 nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			       struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct nvme_ns	*nvme_ns, *tmp;
-	struct spdk_nvme_ns	*ns;
-	struct nvme_bdev	*nbdev;
 	uint32_t		nsid;
-	int			rc;
-	uint64_t		num_sectors;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -5327,62 +5389,17 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 	/* First loop over our existing namespaces and see if they have been
 	 * changed or removed. */
 	RB_FOREACH_SAFE(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp) {
-		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
-			/* NS is still there or added again. Its attributes may have changed. */
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
-			if (nvme_ns->ns != ns) {
-				assert(nvme_ns->ns == NULL);
-				nvme_ns->ns = ns;
-				NVME_NS_DEBUGLOG(nvme_ns, "NSID was added\n");
-			}
-
-			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
-			nbdev = nvme_ns->bdev;
-			assert(nbdev != NULL);
-			if (nbdev->disk.blockcnt != num_sectors) {
-				NVME_NS_NOTICELOG(nvme_ns, "NSID is resized: old size %" PRIu64 ", new size %" PRIu64 "\n",
-						  nbdev->disk.blockcnt, num_sectors);
-				rc = spdk_bdev_notify_blockcnt_change(&nbdev->disk, num_sectors);
-				if (rc != 0) {
-					NVME_NS_ERRLOG(nvme_ns, "Could not change num blocks for nvme bdev, errno: %d.\n", rc);
-				}
-			}
-		} else {
-			/* Namespace was removed */
-			nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
-		}
+		nvme_ctrlr_update_ns(nvme_ctrlr, nvme_ns);
 	}
 
 	/* Loop through all of the namespaces at the nvme level and see if any of them are new */
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
 	     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
-		if (nvme_ns != NULL) {
+		if (nvme_ctrlr_get_ns(nvme_ctrlr, nsid)) {
 			continue;
 		}
 
-		/* Found a new one */
-
-		ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
-		if (ns == NULL || !spdk_nvme_ns_is_active(ns)) {
-			/* Namespace was present during identify controller,
-			 * but identify ns was not yet sent. */
-			continue;
-		}
-
-		nvme_ns = nvme_ns_create(nvme_ctrlr, nsid, ctx);
-		if (nvme_ns == NULL) {
-			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
-			/* This just fails to attach the namespace. It may work on a future attempt. */
-			continue;
-		}
-
-		if (ctx) {
-			ctx->populates_in_progress++;
-		}
-
-		RB_INSERT(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
-		nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
+		nvme_ctrlr_add_ns(nvme_ctrlr, nsid, ctx);
 	}
 
 	/* Populate might complete immediately. */
