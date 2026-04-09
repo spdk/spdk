@@ -63,7 +63,11 @@ rpc_decode_{{ enum.name }}(const struct spdk_json_val *val, void *out)
 {% for object in schema["objects"] %}
 struct rpc_{{ object.name }} {
     {%- for field in object.fields %}
-	{{ types[field.type] }} {{ field.name }};
+	{% if field.type == "enum" -%}
+		enum rpc_{{ field.class }} {{ field.name }};
+	{%- else -%}
+		{{ types[field.type] }} {{ field.name }};
+	{%- endif %}
     {%- endfor %}
 };
 
