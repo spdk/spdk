@@ -46,21 +46,6 @@ SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 
 static int
-decode_admin_passthru(const struct spdk_json_val *val, void *out)
-{
-	struct spdk_nvmf_admin_passthru_conf *req = (struct spdk_nvmf_admin_passthru_conf *)out;
-
-	if (spdk_json_decode_object(val, rpc_nvmf_admin_cmd_passthru_decoders,
-				    SPDK_COUNTOF(rpc_nvmf_admin_cmd_passthru_decoders),
-				    req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 decode_discovery_filter(const struct spdk_json_val *val, void *out)
 {
 	uint32_t *_filter = out;
@@ -224,7 +209,7 @@ decode_dhgroup_array(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
-	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
+	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
 	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), decode_digest_array, true},

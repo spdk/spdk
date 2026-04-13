@@ -79,6 +79,13 @@ static const struct spdk_json_object_decoder rpc_{{ object.name }}_decoders[] = 
 	{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), {{ decode_fn }}, {{ optional }}},
     {%- endfor %}
 };
+
+static inline int
+rpc_decode_{{ object.name }}(const struct spdk_json_val *val, void *out)
+{
+	return spdk_json_decode_object(val, rpc_{{ object.name }}_decoders,
+				       SPDK_COUNTOF(rpc_{{ object.name }}_decoders), out);
+}
 {% endif %}
 
 static inline void

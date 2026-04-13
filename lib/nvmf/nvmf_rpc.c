@@ -600,15 +600,6 @@ invalid_custom_response:
 }
 SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
 
-static int
-decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_nvmf_listen_address *req = (struct rpc_nvmf_listen_address *)out;
-
-	return spdk_json_decode_object(val, rpc_nvmf_listen_address_decoders,
-				       SPDK_COUNTOF(rpc_nvmf_listen_address_decoders), req);
-}
-
 enum nvmf_rpc_listen_op {
 	NVMF_RPC_LISTEN_ADD,
 	NVMF_RPC_LISTEN_REMOVE,
@@ -642,7 +633,7 @@ struct nvmf_rpc_listener_ctx {
 
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_add_listener_decoders[] = {
 	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
-	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
+	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), rpc_decode_nvmf_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
 	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state, true},
@@ -940,7 +931,7 @@ SPDK_RPC_REGISTER("nvmf_subsystem_add_listener", rpc_nvmf_subsystem_add_listener
 
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_remove_listener_decoders[] = {
 	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
-	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
+	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), rpc_decode_nvmf_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
@@ -1019,7 +1010,7 @@ SPDK_RPC_REGISTER("nvmf_subsystem_remove_listener", rpc_nvmf_subsystem_remove_li
 		  SPDK_RPC_RUNTIME);
 
 static const struct spdk_json_object_decoder rpc_nvmf_discovery_add_referral_decoders[] = {
-	{"address", offsetof(struct rpc_nvmf_discovery_add_referral_ctx, address), decode_rpc_listen_address},
+	{"address", offsetof(struct rpc_nvmf_discovery_add_referral_ctx, address), rpc_decode_nvmf_listen_address},
 	{"tgt_name", offsetof(struct rpc_nvmf_discovery_add_referral_ctx, tgt_name), spdk_json_decode_string, true},
 	{"secure_channel", offsetof(struct rpc_nvmf_discovery_add_referral_ctx, secure_channel), spdk_json_decode_bool, true},
 	{"subnqn", offsetof(struct rpc_nvmf_discovery_add_referral_ctx, subnqn), spdk_json_decode_string, true},
@@ -1101,7 +1092,7 @@ rpc_nvmf_discovery_add_referral(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_discovery_add_referral", rpc_nvmf_discovery_add_referral, SPDK_RPC_RUNTIME);
 
 static const struct spdk_json_object_decoder rpc_nvmf_discovery_remove_referral_decoders[] = {
-	{"address", offsetof(struct rpc_nvmf_discovery_remove_referral_ctx, address), decode_rpc_listen_address},
+	{"address", offsetof(struct rpc_nvmf_discovery_remove_referral_ctx, address), rpc_decode_nvmf_listen_address},
 	{"tgt_name", offsetof(struct rpc_nvmf_discovery_remove_referral_ctx, tgt_name), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_nvmf_discovery_remove_referral_ctx, subnqn), spdk_json_decode_string, true},
 };
@@ -1240,7 +1231,7 @@ SPDK_RPC_REGISTER("nvmf_discovery_get_referrals", rpc_nvmf_discovery_get_referra
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_listener_set_ana_state_decoders[] =
 {
 	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
-	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
+	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), rpc_decode_nvmf_listen_address},
 	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 	{"anagrpid", offsetof(struct nvmf_rpc_listener_ctx, anagrpid), spdk_json_decode_uint32, true},
