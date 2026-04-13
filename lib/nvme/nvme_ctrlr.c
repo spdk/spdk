@@ -3489,10 +3489,13 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 		goto out;
 	}
 
-	/* only check the case of overflow. */
 	if (changed_ns_list[0] == UINT32_MAX) {
 		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
 		goto out;
+	}
+
+	if (changed_ns_list[0] == 0) {
+		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log is empty despite NS_ATTR_CHANGED AER.\n");
 	}
 
 	return changed_ns_list;
