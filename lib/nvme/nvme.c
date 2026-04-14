@@ -1381,7 +1381,8 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 {
 	int cmp;
 
-	if (trid1->trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
+	if (trid1->trtype == SPDK_NVME_TRANSPORT_CUSTOM ||
+	    trid1->trtype == SPDK_NVME_TRANSPORT_CUSTOM_FABRICS) {
 		cmp = strcasecmp(trid1->trstring, trid2->trstring);
 	} else {
 		cmp = cmp_int(trid1->trtype, trid2->trtype);
