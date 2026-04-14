@@ -327,9 +327,15 @@ jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 
 	/* Queue the response to be sent */
 	pthread_spin_lock(&conn->queue_lock);
-	STAILQ_REMOVE(&conn->outstanding_queue, request, spdk_jsonrpc_request, link);
-	STAILQ_INSERT_TAIL(&conn->send_queue, request, link);
-	pthread_spin_unlock(&conn->queue_lock);
+	if (!conn->closed) {
+		STAILQ_REMOVE(&conn->outstanding_queue, request, spdk_jsonrpc_request, link);
+		STAILQ_INSERT_TAIL(&conn->send_queue, request, link);
+		pthread_spin_unlock(&conn->queue_lock);
+	} else {
+		pthread_spin_unlock(&conn->queue_lock);
+		SPDK_ERRLOG("attempt to send response on closed connection\n");
+		jsonrpc_free_request(request);
+	}
 }
 
 
