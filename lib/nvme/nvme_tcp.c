@@ -1784,7 +1784,8 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 		NVME_TQPAIR_ERRLOG(tqpair, "no tcp_req is found with cid=%u\n", cid);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = offsetof(struct spdk_nvme_tcp_rsp, rccqe);
-		goto end;
+		nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
+		return;
 	}
 
 	assert(tcp_req->req != NULL);
@@ -1806,11 +1807,6 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	if (nvme_tcp_req_complete_safe(tcp_req)) {
 		(*reaped)++;
 	}
-
-	return;
-
-end:
-	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
 }
 
 static void
@@ -1826,16 +1822,14 @@ nvme_tcp_c2h_term_req_hdr_handle(struct nvme_tcp_qpair *tqpair,
 				   pdu);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = offsetof(struct spdk_nvme_tcp_term_req_hdr, fes);
-		goto end;
+		nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
+		return;
 	}
 
 	/* set the data buffer */
 	nvme_tcp_pdu_set_data(pdu, (uint8_t *)pdu->hdr.raw + c2h_term_req->common.hlen,
 			      c2h_term_req->common.plen - c2h_term_req->common.hlen);
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
-	return;
-end:
-	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
 }
 
 static void
@@ -2127,7 +2121,6 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_HDGST_ERROR;
 			nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
 			return;
-
 		}
 	}
 
@@ -2157,7 +2150,6 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 		nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
 		break;
 	}
-
 }
 
 static int
