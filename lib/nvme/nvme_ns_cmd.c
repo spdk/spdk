@@ -1540,8 +1540,6 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			      uint32_t io_flags)
 {
 	struct nvme_request	*req;
-	struct spdk_nvme_cmd	*cmd;
-	uint64_t		*tmp_lba;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -1556,15 +1554,7 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 		return -ENOMEM;
 	}
 
-	cmd = &req->cmd;
-	cmd->opc = SPDK_NVME_OPC_WRITE_ZEROES;
-	cmd->nsid = ns->id;
-
-	tmp_lba = (uint64_t *)&cmd->cdw10;
-	*tmp_lba = lba;
-	cmd->cdw12 = lba_count - 1;
-	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
-	cmd->cdw12 |= (io_flags & SPDK_NVME_IO_FLAGS_CDW12_MASK);
+	_nvme_ns_cmd_setup_request(ns, req, SPDK_NVME_OPC_WRITE_ZEROES, lba, lba_count, io_flags, 0, 0, 0);
 
 	return nvme_qpair_submit_request(qpair, req);
 }
