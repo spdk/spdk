@@ -1292,6 +1292,9 @@ nvme_tcp_qpair_send_h2c_term_req_complete(void *cb_arg)
 	struct nvme_tcp_qpair *tqpair = cb_arg;
 
 	nvme_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITING);
+	tqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+	nvme_transport_ctrlr_disconnect_qpair(tqpair->qpair.ctrlr, &tqpair->qpair);
+	nvme_tcp_qpair_try_disconnect_done(&tqpair->qpair);
 }
 
 static void
