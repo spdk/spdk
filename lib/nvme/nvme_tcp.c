@@ -422,6 +422,17 @@ nvme_tcp_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 }
 
+static inline void
+nvme_tcp_qpair_try_disconnect_done(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING &&
+	    TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
+		nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
+	}
+}
+
 static void
 nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -2238,11 +2249,8 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 			nvme_tcp_pdu_payload_handle(tqpair, reaped);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_QUIESCING:
+			nvme_tcp_qpair_try_disconnect_done(&tqpair->qpair);
 			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
-				if (nvme_qpair_get_state(&tqpair->qpair) == NVME_QPAIR_DISCONNECTING) {
-					nvme_tcp_ctrlr_disconnect_qpair_done(&tqpair->qpair);
-				}
-
 				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 			}
 			break;
@@ -2313,10 +2321,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		if (rc < 0 && rc != -EAGAIN) {
 			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 			if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
-				if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
-					nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
-				}
-
+				nvme_tcp_qpair_try_disconnect_done(qpair);
 				/* Don't return errors until the qpair gets disconnected */
 				return 0;
 			}
@@ -2964,12 +2969,7 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	rc = spdk_sock_group_poll(group->sock_group);
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
-		tqpair = nvme_tcp_qpair(qpair);
-		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
-			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
-				nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
-			}
-		}
+		nvme_tcp_qpair_try_disconnect_done(qpair);
 		/* Wait until the qpair transitions to the DISCONNECTED state, otherwise user might
 		 * want to free it from disconnect_qpair_cb, while it's not fully disconnected (and
 		 * might still have outstanding requests) */
