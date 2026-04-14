@@ -172,15 +172,43 @@ spdk_log_to_syslog_level(enum spdk_log_level level)
 	return LOG_INFO;
 }
 
+/*
+ * Format `format`/`ap` into `stack_buf`. If it doesn't fit, fall back to
+ * vasprintf() into a heap buffer returned via *heap_buf (caller frees).
+ * Returns whichever buffer holds the result; on heap allocation failure
+ * the (truncated) stack buffer is returned.
+ */
+static char *
+log_vsprintf(char *stack_buf, size_t stack_buf_size, char **heap_buf,
+	     const char *format, va_list ap)
+{
+	va_list ap_copy;
+	int rc;
+
+	*heap_buf = NULL;
+
+	va_copy(ap_copy, ap);
+	rc = vsnprintf(stack_buf, stack_buf_size, format, ap);
+	assert(rc >= 0);
+
+	if ((size_t)rc >= stack_buf_size) {
+		rc = vasprintf(heap_buf, format, ap_copy);
+		if (rc < 0) {
+			*heap_buf = NULL;
+		}
+	}
+	va_end(ap_copy);
+
+	return *heap_buf ? *heap_buf : stack_buf;
+}
+
 void
 spdk_vlog(enum spdk_log_level level, const char *file, const int line, const char *func,
 	  const char *format, va_list ap)
 {
 	int severity = LOG_INFO;
-	char *buf, _buf[MAX_TMPBUF], *ext_buf = NULL;
+	char *buf, stack_buf[MAX_TMPBUF], *heap_buf;
 	char timestamp[64];
-	va_list ap_copy;
-	int rc;
 
 	if (g_log_opts.log) {
 		g_log_opts.log(level, file, line, func, format, ap);
@@ -196,22 +224,7 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 		return;
 	}
 
-	buf = _buf;
-
-	va_copy(ap_copy, ap);
-	rc = vsnprintf(_buf, sizeof(_buf), format, ap);
-	if (rc > MAX_TMPBUF) {
-		/* The output including the terminating was more than MAX_TMPBUF bytes.
-		 * Try allocating memory large enough to hold the output.
-		 */
-		rc = vasprintf(&ext_buf, format, ap_copy);
-		if (rc < 0) {
-			/* Failed to allocate memory. Allow output to be truncated. */
-		} else {
-			buf = ext_buf;
-		}
-	}
-	va_end(ap_copy);
+	buf = log_vsprintf(stack_buf, sizeof(stack_buf), &heap_buf, format, ap);
 
 	if (level <= g_spdk_log_print_level) {
 		get_timestamp_prefix(timestamp, sizeof(timestamp));
@@ -230,17 +243,17 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 		}
 	}
 
-	free(ext_buf);
+	free(heap_buf);
 }
 
 void
 spdk_vflog(FILE *fp, const char *file, const int line, const char *func,
 	   const char *format, va_list ap)
 {
-	char buf[MAX_TMPBUF];
+	char *buf, stack_buf[MAX_TMPBUF], *heap_buf;
 	char timestamp[64];
 
-	vsnprintf(buf, sizeof(buf), format, ap);
+	buf = log_vsprintf(stack_buf, sizeof(stack_buf), &heap_buf, format, ap);
 
 	get_timestamp_prefix(timestamp, sizeof(timestamp));
 
@@ -251,6 +264,7 @@ spdk_vflog(FILE *fp, const char *file, const int line, const char *func,
 	}
 
 	fflush(fp);
+	free(heap_buf);
 }
 
 void
