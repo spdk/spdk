@@ -180,14 +180,14 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 	if (strcmp(req->trtype, "pci") == 0) {
 		if (req->vq_count != 0 || req->vq_size != 0) {
 			SPDK_ERRLOG("VQ count or size is not allowed for PCI transport type\n");
-			spdk_jsonrpc_send_error_response(request, EINVAL,
+			spdk_jsonrpc_send_error_response(request, -EINVAL,
 							 "vq_count or vq_size is not allowed for PCI transport type.");
 			goto cleanup;
 		}
 
 		if (spdk_pci_addr_parse(&pci_addr, req->traddr) != 0) {
 			SPDK_ERRLOG("Invalid PCI address '%s'\n", req->traddr);
-			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid PCI address '%s'", req->traddr);
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Invalid PCI address '%s'", req->traddr);
 			goto cleanup;
 		}
 	} else if (strcmp(req->trtype, "user") == 0) {
@@ -196,13 +196,13 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 	} else if (strcmp(req->trtype, "vfio-user") == 0) {
 		if (req->vq_count != 0 || req->vq_size != 0) {
 			SPDK_ERRLOG("VQ count or size is not allowed for vfio-user transport type\n");
-			spdk_jsonrpc_send_error_response(request, EINVAL,
+			spdk_jsonrpc_send_error_response(request, -EINVAL,
 							 "vq_count or vq_size is not allowed for vfio-user transport type.");
 			goto cleanup;
 		}
 	} else {
 		SPDK_ERRLOG("Invalid trtype '%s'\n", req->trtype);
-		spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid trtype '%s'", req->trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Invalid trtype '%s'", req->trtype);
 		goto cleanup;
 	}
 
@@ -235,7 +235,7 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 		}
 	} else {
 		SPDK_ERRLOG("Invalid dev_type '%s'\n", req->dev_type);
-		spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid dev_type '%s'", req->dev_type);
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Invalid dev_type '%s'", req->dev_type);
 		goto cleanup;
 	}
 

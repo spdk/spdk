@@ -665,7 +665,7 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 		nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
 		if (nbdev_ctrlr == NULL) {
 			SPDK_ERRLOG("ctrlr '%s' does not exist\n", req.name);
-			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Controller %s does not exist", req.name);
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Controller %s does not exist", req.name);
 			goto cleanup;
 		}
 	}

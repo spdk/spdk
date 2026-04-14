@@ -962,7 +962,7 @@ rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
 
 		lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 		if (lvs_bdev == NULL) {
-			spdk_jsonrpc_send_error_response(request, ENODEV, spdk_strerror(-ENODEV));
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 			goto cleanup;
 		}
 	}
@@ -1060,7 +1060,7 @@ rpc_bdev_lvol_get_lvols(struct spdk_jsonrpc_request *request, const struct spdk_
 
 		lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 		if (lvs_bdev == NULL) {
-			spdk_jsonrpc_send_error_response(request, ENODEV, spdk_strerror(-ENODEV));
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 			goto cleanup;
 		}
 	}
