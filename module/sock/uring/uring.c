@@ -1577,12 +1577,14 @@ uring_sock_group_impl_buf_pool_free(struct spdk_uring_sock_group_impl *group_imp
 }
 
 static int
-uring_sock_group_impl_buf_pool_alloc(struct spdk_uring_sock_group_impl *group_impl)
+uring_sock_setup_buf_ring(struct io_uring *uring, struct io_uring_buf_ring **_buf_ring)
 {
 	struct io_uring_buf_reg buf_reg = {};
 	struct io_uring_buf_ring *buf_ring;
 	size_t page_size = sysconf(_SC_PAGESIZE);
-	int i, rc;
+	int rc;
+
+	*_buf_ring = NULL;
 
 	/* uring requires the buffer be aligned on system page boundary */
 	rc = posix_memalign((void **)&buf_ring, page_size,
@@ -1596,13 +1598,26 @@ uring_sock_group_impl_buf_pool_alloc(struct spdk_uring_sock_group_impl *group_im
 	buf_reg.ring_entries = URING_BUF_POOL_SIZE;
 	buf_reg.bgid = URING_BUF_GROUP_ID;
 
-	rc = io_uring_register_buf_ring(&group_impl->uring, &buf_reg, 0);
+	rc = io_uring_register_buf_ring(uring, &buf_reg, 0);
 	if (rc != 0) {
 		free(buf_ring);
 		return rc;
 	}
 
-	group_impl->buf_ring = buf_ring;
+	*_buf_ring = buf_ring;
+	return 0;
+}
+
+static int
+uring_sock_group_impl_buf_pool_alloc(struct spdk_uring_sock_group_impl *group_impl)
+{
+	int i, rc;
+
+	rc = uring_sock_setup_buf_ring(&group_impl->uring, &group_impl->buf_ring);
+	if (rc != 0) {
+		return rc;
+	}
+
 	io_uring_buf_ring_init(group_impl->buf_ring);
 	group_impl->buf_ring_count = 0;
 
@@ -1996,13 +2011,23 @@ static struct spdk_net_impl g_uring_net_impl = {
 __attribute__((constructor)) static void
 net_impl_register_uring(void)
 {
-	struct spdk_sock_group_impl *impl;
+	struct io_uring uring = {};
+	struct io_uring_buf_ring *buf_ring;
+	int rc;
 
-	/* Check if we can create a uring sock group before we register
-	 * it as a valid impl. */
-	impl = uring_sock_group_impl_create();
-	if (impl) {
-		uring_sock_group_impl_close(impl);
-		spdk_net_impl_register(&g_uring_net_impl);
+	if (io_uring_queue_init(SPDK_SOCK_GROUP_QUEUE_DEPTH, &uring, 0) < 0) {
+		return;
 	}
+
+	rc = uring_sock_setup_buf_ring(&uring, &buf_ring);
+	if (rc != 0) {
+		io_uring_queue_exit(&uring);
+		return;
+	}
+
+	io_uring_unregister_buf_ring(&uring, URING_BUF_GROUP_ID);
+	free(buf_ring);
+	io_uring_queue_exit(&uring);
+
+	spdk_net_impl_register(&g_uring_net_impl);
 }
