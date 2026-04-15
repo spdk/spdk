@@ -29,6 +29,14 @@
       ]
     },
     {
+      "name": "bdev_nvme_multipath_mode",
+      "fields": [
+        {"name": "failover", "value": 0},
+        {"name": "multipath", "value": 1},
+        {"name": "disable", "value": 2}
+      ]
+    },
+    {
       "name": "bdev_error_inject_io_type",
       "fields": [
         {"name": "clear", "value": 0},
@@ -1904,7 +1912,8 @@
         },
         {
           "name": "multipath",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_multipath_mode",
           "description": "Multipathing behavior: disable, failover, multipath. Default is failover."
         },
         {

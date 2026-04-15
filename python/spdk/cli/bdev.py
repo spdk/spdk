@@ -521,7 +521,8 @@ def add_parser(subparsers):
                    help='Enable TCP data digest.', action='store_true')
     p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds',
                    dest="fabrics_connect_timeout_us")
-    p.add_argument('-x', '--multipath', help='Set multipath behavior (disable, failover, multipath)')
+    p.add_argument('-x', '--multipath', choices=['disable', 'failover', 'multipath'],
+                   help='Set multipath behavior')
     p.add_argument('--num-io-queues', type=int, help='Set the number of IO queues to request during initialization.')
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
                    help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
