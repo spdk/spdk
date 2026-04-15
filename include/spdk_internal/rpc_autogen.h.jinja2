@@ -65,6 +65,10 @@ struct rpc_{{ object.name }} {
     {%- for field in object.fields %}
 	{% if field.type == "enum" -%}
 		enum rpc_{{ field.class }} {{ field.name }};
+    {%- elif field.name == "nguid" -%}
+		char nguid[16];
+    {%- elif field.name == "eui64" -%}
+		char eui64[8];
 	{%- else -%}
 		{{ types[field.type] }} {{ field.name }};
 	{%- endif %}
@@ -91,7 +95,7 @@ rpc_decode_{{ object.name }}(const struct spdk_json_val *val, void *out)
 static inline void
 free_rpc_{{ object.name }}(struct rpc_{{ object.name }} *req)
 {
-{%- for field in object.fields if field.type == "string" %}
+{%- for field in object.fields if field.type == "string" and field.name not in ("nguid", "eui64") %}
 	free(req->{{ field.name }});
 {%- endfor %}
 }
