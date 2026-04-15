@@ -1205,10 +1205,6 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 error:
-	if (req->parent != NULL) {
-		nvme_request_remove_child(req->parent, req);
-	}
-
 	/* The request is from queued_req list we should trigger the callback from caller */
 	if (spdk_unlikely(req->queued)) {
 		if (rc == -ENXIO) {
@@ -1223,6 +1219,9 @@ error:
 		return rc;
 	}
 
+	if (req->parent != NULL) {
+		nvme_request_remove_child(req->parent, req);
+	}
 	nvme_cleanup_user_req(req);
 	nvme_free_request(req);
 

@@ -500,7 +500,7 @@ test_nvme_qpair_add_cmd_error_injection(void)
 }
 
 static struct nvme_request *
-allocate_request_tree(struct spdk_nvme_qpair *qpair)
+allocate_request_tree(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request	*req, *req1, *req2, *req3, *req2_1, *req2_2, *req2_3;
 
@@ -516,7 +516,7 @@ allocate_request_tree(struct spdk_nvme_qpair *qpair)
 	 *     |       |       |
 	 *   req2_1  req2_2  req2_3
 	 */
-	req = nvme_allocate_request_null(qpair, NULL, NULL);
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
 	CU_ASSERT(req != NULL);
 
 	req1 = nvme_allocate_request_null(qpair, NULL, NULL);
@@ -556,15 +556,23 @@ test_nvme_qpair_submit_request(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 
-	req = allocate_request_tree(&qpair);
+	req = allocate_request_tree(&qpair, NULL, NULL);
 	ctrlr.is_failed = true;
 	rc = nvme_qpair_submit_request(&qpair, req);
 	SPDK_CU_ASSERT_FATAL(rc == -ENXIO);
 
-	req = allocate_request_tree(&qpair);
+	req = allocate_request_tree(&qpair, NULL, NULL);
 	ctrlr.is_failed = false;
 	qpair.state = NVME_QPAIR_DISCONNECTING;
 	rc = nvme_qpair_submit_request(&qpair, req);
+	SPDK_CU_ASSERT_FATAL(rc == -ENXIO);
+
+	req = allocate_request_tree(&qpair, NULL, NULL);
+	ctrlr.is_failed = false;
+	qpair.state = NVME_QPAIR_ENABLED;
+	MOCK_SET(nvme_transport_qpair_submit_request, -ENXIO);
+	rc = nvme_qpair_submit_request(&qpair, req);
+	MOCK_CLEAR(nvme_transport_qpair_submit_request);
 	SPDK_CU_ASSERT_FATAL(rc == -ENXIO);
 
 	cleanup_submit_request_test(&qpair);
@@ -594,6 +602,28 @@ test_nvme_qpair_resubmit_request_with_transport_failed(void)
 	rc = spdk_nvme_qpair_process_completions(&qpair, g_transport_process_completions_rc);
 	MOCK_CLEAR(nvme_transport_qpair_submit_request);
 	CU_ASSERT(rc == g_transport_process_completions_rc);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
+	CU_ASSERT(g_num_cb_failed == 1);
+
+	g_transport_process_completions_rc = 1;
+	qpair.state = NVME_QPAIR_ENABLED;
+	g_num_cb_failed = 0;
+	req = allocate_request_tree(&qpair, dummy_cb_fn, NULL);
+	CU_ASSERT(req != NULL);
+
+	/* Queue all requests first. */
+	MOCK_SET(nvme_transport_qpair_submit_request, -EAGAIN);
+	rc = nvme_qpair_submit_request(&qpair, req);
+	MOCK_CLEAR(nvme_transport_qpair_submit_request);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Resubmit queued requests, expect all submissions to fail. */
+	MOCK_SET(nvme_transport_qpair_submit_request, -ENXIO);
+	while (!STAILQ_EMPTY(&qpair.queued_req)) {
+		rc = spdk_nvme_qpair_process_completions(&qpair, g_transport_process_completions_rc);
+		CU_ASSERT(rc == g_transport_process_completions_rc);
+	}
+	MOCK_CLEAR(nvme_transport_qpair_submit_request);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_failed == 1);
 
