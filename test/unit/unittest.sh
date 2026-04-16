@@ -81,7 +81,6 @@ function unittest_rpc() {
 
 function unittest_nvme() {
 	$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
-	$valgrind $testdir/lib/nvme/nvme_auth.c/nvme_auth_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
@@ -222,6 +221,11 @@ run_test "unittest_notify" $valgrind $testdir/lib/notify/notify.c/notify_ut
 run_test "unittest_nvme" unittest_nvme
 run_test "unittest_log" $valgrind $testdir/lib/log/log.c/log_ut
 run_test "unittest_lvol" $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
+
+if [[ $CONFIG_HAVE_EVP_MAC == y ]]; then
+	run_test "unittest_nvme_auth" $valgrind $testdir/lib/nvme/nvme_auth.c/nvme_auth_ut
+fi
+
 if [[ $CONFIG_RDMA == y ]]; then
 	run_test "unittest_nvme_rdma" $valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 	run_test "unittest_nvmf_transport" $valgrind $testdir/lib/nvmf/transport.c/transport_ut
