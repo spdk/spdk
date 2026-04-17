@@ -5,6 +5,8 @@
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 
+yum_opts=()
+
 disclaimer() {
 	case "$ID" in
 		rhel)
@@ -20,14 +22,15 @@ disclaimer() {
 
 			# Don't trigger errexit, simply install what's available. This is default
 			# behavior of older yum versions (e.g. the one present on RHEL 7.x) anyway.
-			yum() { "$(type -P yum)" --skip-broken "$@"; }
+			yum_opts+=(--skip-broken)
 			# For systems which are not registered, subscription-manager will most likely
 			# fail on most calls so simply ignore its failures.
 			sub() { subscription-manager "$@" || :; }
 			;;
 		rocky)
-			[[ $VERSION_ID == 8* ]] || return 0
-			yum() { "$(type -P yum)" --setopt=skip_if_unavailable=True "$@"; }
+			if [[ $VERSION_ID == 8* ]]; then
+				yum_opts+=(--setopt=skip_if_unavailable=True)
+			fi
 			;;
 	esac
 }
@@ -40,6 +43,16 @@ if [[ $ID == centos && $VERSION_ID =~ ^[78].* ]]; then
 	printf 'Not supported distribution detected (%s):(%s), aborting\n' "$ID" "$VERSION_ID" >&2
 	exit 1
 fi
+
+yum() {
+	local attempt max_attempts=3
+	for ((attempt = 1; attempt < max_attempts; attempt++)); do
+		"$(type -P yum)" "${yum_opts[@]}" "$@" && return 0
+		echo "Warning: yum failed (attempt $attempt/$max_attempts), retrying in $((attempt * 10))s..." >&2
+		sleep "$((attempt * 10))"
+	done
+	"$(type -P yum)" "${yum_opts[@]}" "$@"
+}
 
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
