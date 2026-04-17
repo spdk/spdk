@@ -20,7 +20,7 @@ def add_parser(subparsers):
         print_dict(args.client.vmd_remove_device(addr=args.addr))
 
     p = subparsers.add_parser('vmd_remove_device', help='Remove a device behind VMD')
-    p.add_argument('addr', help='Address of the device to remove', type=str)
+    p.add_argument('addr', help='PCI address of the device to remove', type=str)
     p.set_defaults(func=vmd_remove_device)
 
     def vmd_rescan(args):

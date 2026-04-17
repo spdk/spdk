@@ -5855,7 +5855,7 @@
           "name": "addr",
           "type": "string",
           "required": true,
-          "description": "Address of the device to remove."
+          "description": "PCI address of the device to remove"
         }
       ]
     },
