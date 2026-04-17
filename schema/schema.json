@@ -601,7 +601,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "bdev, nvmf_rdma, nvmf_tcp, scsi, iscsi_conn, ftl, all"
+          "description": "Name of a registered trace group, or \"all\" to enable every group"
         }
       ]
     },
@@ -612,7 +612,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "bdev, nvmf_rdma, nvmf_tcp, all"
+          "description": "Name of a registered trace group, or \"all\" to disable every group"
         }
       ]
     },
@@ -623,13 +623,13 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "bdev, nvmf_rdma, nvmf_tcp, scsi, iscsi_conn, ftl"
+          "description": "Name of a registered trace group (e.g. \"bdev\", \"nvmf_rdma\", \"nvmf_tcp\")"
         },
         {
           "name": "tpoint_mask",
           "type": "uint64",
           "required": true,
-          "description": "mask to enable tracepoints inside a group"
+          "description": "Bitmask of tracepoints to enable within the group (e.g. 0x3 enables the first two)"
         }
       ]
     },
@@ -640,13 +640,13 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "bdev, nvmf_rdma, nvmf_tcp, scsi, iscsi_conn, ftl"
+          "description": "Name of a registered trace group (e.g. \"bdev\", \"nvmf_rdma\", \"nvmf_tcp\")"
         },
         {
           "name": "tpoint_mask",
           "type": "uint64",
           "required": true,
-          "description": "mask to diesable tracepoints inside a group"
+          "description": "Bitmask of tracepoints to disable within the group (e.g. 0x3 disables the first two)"
         }
       ]
     },
