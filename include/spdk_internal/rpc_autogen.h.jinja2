@@ -81,7 +81,11 @@ static const struct spdk_json_object_decoder rpc_{{ object.name }}_decoders[] = 
     {%- for field in object.fields if field.type != "array" %}
 	{%- set decode_fn = 'spdk_json_decode_' ~ ('bool' if field.type == 'boolean' else field.type) %}
 	{%- set optional = 'false' if field.required else 'true' %}
-	{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), {{ decode_fn }}, {{ optional }}},
+	{%- if field.type == "enum" %}
+		{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), rpc_decode_{{ field.class }}, {{ optional }}},
+	{%- else %}
+		{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), {{ decode_fn }}, {{ optional }}},
+	{%- endif %}
     {%- endfor %}
 };
 
