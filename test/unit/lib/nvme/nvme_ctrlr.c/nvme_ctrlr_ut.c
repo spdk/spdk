@@ -732,8 +732,9 @@ nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns)
 }
 
 void
-nvme_ns_destruct(struct spdk_nvme_ns *ns)
+nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
+	ns->active = false;
 }
 
 uint32_t g_nvme_ns_constructed;

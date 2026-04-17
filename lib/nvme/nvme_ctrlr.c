@@ -2481,8 +2481,7 @@ nvme_ctrlr_destruct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return -EINVAL;
 	}
 
-	nvme_ns_destruct(ns);
-	ns->active = false;
+	nvme_ns_clear(ns);
 
 	return 0;
 }

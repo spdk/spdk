@@ -124,7 +124,7 @@ test_nvme_ns_uuid(void)
 	nvme_ns_identify(&ns);
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	CU_ASSERT(uuid == NULL);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* NGUID only (no UUID in list) */
 	nvme_ns_identify(&ns);
@@ -133,7 +133,7 @@ test_nvme_ns_uuid(void)
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	CU_ASSERT(uuid == NULL);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* Just UUID in the list */
 	nvme_ns_identify(&ns);
@@ -143,7 +143,7 @@ test_nvme_ns_uuid(void)
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* UUID followed by NGUID */
 	nvme_ns_identify(&ns);
@@ -156,7 +156,7 @@ test_nvme_ns_uuid(void)
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* NGUID followed by UUID */
 	nvme_ns_identify(&ns);
@@ -169,7 +169,7 @@ test_nvme_ns_uuid(void)
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 }
 
 static void
@@ -183,7 +183,7 @@ test_nvme_ns_csi(void)
 	nvme_ns_identify(&ns);
 	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* NVM CSI - SPDK_NVME_CSI_NVM should be returned */
 	nvme_ns_identify(&ns);
@@ -192,7 +192,7 @@ test_nvme_ns_csi(void)
 	ns.id_desc_list[4] = 0x0; /* SPDK_NVME_CSI_NVM */
 	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* NGUID followed by ZNS CSI - SPDK_NVME_CSI_ZNS should be returned */
 	nvme_ns_identify(&ns);
@@ -204,7 +204,7 @@ test_nvme_ns_csi(void)
 	ns.id_desc_list[24] = 0x2; /* SPDK_NVME_CSI_ZNS */
 	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_ZNS);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* KV CSI followed by NGUID - SPDK_NVME_CSI_KV should be returned */
 	nvme_ns_identify(&ns);
@@ -216,7 +216,7 @@ test_nvme_ns_csi(void)
 	memset(&ns.id_desc_list[9], 0xCC, 0x10);
 	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_KV);
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 }
 
 static void
@@ -241,7 +241,7 @@ test_nvme_ns_data(void)
 	CU_ASSERT(nsdata != NULL);
 	CU_ASSERT(nsdata->ncap == 1000);
 
-	nvme_ns_destruct(&ns);
+	nvme_ns_clear(&ns);
 
 	/* Cached NS data is still accessible after destruction. But is cleared. */
 	CU_ASSERT(!spdk_nvme_ns_is_active(&ns));

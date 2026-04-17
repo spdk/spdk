@@ -127,7 +127,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		/* This can occur if the namespace is not active. Simply zero the
 		 * namespace data and continue. */
 		SPDK_ERRLOG("wait for nvme_ctrlr_cmd_identify failed: rc=%s\n", spdk_strerror(abs(rc)));
-		nvme_ns_destruct(ns);
+		nvme_ns_clear(ns);
 		return 0;
 	}
 
@@ -700,7 +700,7 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 }
 
 void
-nvme_ns_destruct(struct spdk_nvme_ns *ns)
+nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data *nsdata;
 
@@ -721,4 +721,5 @@ nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
 	ns->csi = SPDK_NVME_CSI_NVM;
+	ns->active = false;
 }
