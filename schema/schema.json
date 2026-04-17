@@ -819,13 +819,13 @@
           "name": "opname",
           "type": "string",
           "required": true,
-          "description": "name of operation"
+          "description": "Name of the accel operation; see accel_get_opc_assignments for the list"
         },
         {
           "name": "module",
           "type": "string",
           "required": true,
-          "description": "name of module"
+          "description": "Name of the accel module to assign the operation to"
         }
       ]
     },
@@ -836,29 +836,29 @@
           "name": "cipher",
           "type": "string",
           "required": true,
-          "description": "crypto cipher to use"
+          "description": "Crypto cipher: AES_CBC, AES_XTS"
         },
         {
           "name": "key",
           "type": "string",
           "required": true,
-          "description": "Key in **hex** form"
+          "description": "Key in hex form"
         },
         {
           "name": "key2",
           "type": "string",
-          "description": "Optional 2nd part of the key or a tweak in **hex** form"
+          "description": "Second part of the key (or tweak) in hex form, required for AES_XTS"
         },
         {
           "name": "tweak_mode",
           "type": "string",
-          "description": "Tweak mode to use: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default is SIMPLE_LBA"
+          "description": "Tweak mode: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default: SIMPLE_LBA"
         },
         {
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "The key name"
+          "description": "Name of the key"
         }
       ]
     },
@@ -869,7 +869,7 @@
           "name": "key_name",
           "type": "string",
           "required": true,
-          "description": "The key name"
+          "description": "Name of the key to destroy"
         }
       ]
     },
@@ -879,7 +879,7 @@
         {
           "name": "key_name",
           "type": "string",
-          "description": "If specified, return info about a specific key"
+          "description": "Name of a specific key to query. Default: list all"
         }
       ]
     },
@@ -889,7 +889,7 @@
         {
           "name": "name",
           "type": "string",
-          "description": "Name of the platform driver"
+          "description": "Name of the platform driver, or empty string to disable"
         }
       ]
     },

@@ -27,8 +27,8 @@ def add_parser(subparsers):
         args.client.accel_assign_opc(opname=args.opname, module=args.module)
 
     p = subparsers.add_parser('accel_assign_opc', help='Manually assign an operation to a module.')
-    p.add_argument('-o', '--opname', help='opname', required=True)
-    p.add_argument('-m', '--module', help='name of module', required=True)
+    p.add_argument('-o', '--opname', help='Name of the accel operation; see accel_get_opc_assignments for the list', required=True)
+    p.add_argument('-m', '--module', help='Name of the accel module to assign the operation to', required=True)
     p.set_defaults(func=accel_assign_opc)
 
     def accel_crypto_key_create(args):
@@ -40,27 +40,29 @@ def add_parser(subparsers):
                                                      name=args.name))
 
     p = subparsers.add_parser('accel_crypto_key_create', help='Create encryption key')
-    p.add_argument('-c', '--cipher', help='cipher', required=True)
-    p.add_argument('-k', '--key', help='key', required=True)
-    p.add_argument('-e', '--key2', help='key2', default=None)
-    p.add_argument('-t', '--tweak-mode', help='tweak mode', default=None,
+    p.add_argument('-c', '--cipher', help='Crypto cipher: AES_CBC, AES_XTS', required=True)
+    p.add_argument('-k', '--key', help='Key in hex form', required=True)
+    p.add_argument('-e', '--key2', help='Second part of the key (or tweak) in hex form, required for AES_XTS', default=None)
+    p.add_argument('-t', '--tweak-mode',
+                   help='Tweak mode: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default: SIMPLE_LBA',
+                   default=None,
                    choices=['SIMPLE_LBA', 'JOIN_NEG_LBA_WITH_LBA',
                             'INCR_512_FULL_LBA', 'INCR_512_UPPER_LBA'])
-    p.add_argument('-n', '--name', help='key name', required=True)
+    p.add_argument('-n', '--name', help='Name of the key', required=True)
     p.set_defaults(func=accel_crypto_key_create)
 
     def accel_crypto_key_destroy(args):
         print_dict(args.client.accel_crypto_key_destroy(key_name=args.key_name))
 
     p = subparsers.add_parser('accel_crypto_key_destroy', help='Destroy encryption key')
-    p.add_argument('-n', '--name', dest='key_name', help='key name', required=True, type=str)
+    p.add_argument('-n', '--name', dest='key_name', help='Name of the key to destroy', required=True, type=str)
     p.set_defaults(func=accel_crypto_key_destroy)
 
     def accel_crypto_keys_get(args):
         print_dict(args.client.accel_crypto_keys_get(key_name=args.key_name))
 
     p = subparsers.add_parser('accel_crypto_keys_get', help='Get a list of the crypto keys')
-    p.add_argument('-k', '--key-name', help='Get information about a specific key', type=str)
+    p.add_argument('-k', '--key-name', help='Name of a specific key to query. Default: list all', type=str)
     p.set_defaults(func=accel_crypto_keys_get)
 
     def accel_set_driver(args):
@@ -68,7 +70,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('accel_set_driver', help='Select accel platform driver to execute ' +
                               'operation chains')
-    p.add_argument('--name', help='name of the platform driver')
+    p.add_argument('--name', help='Name of the platform driver, or empty string to disable')
     p.set_defaults(func=accel_set_driver)
 
     def accel_set_options(args):
@@ -83,7 +85,7 @@ def add_parser(subparsers):
     p.add_argument('--large-cache-size', type=int, help='Size of the large iobuf cache')
     p.add_argument('--task-count', type=int, help='Maximum number of tasks per IO channel')
     p.add_argument('--sequence-count', type=int, help='Maximum number of sequences per IO channel')
-    p.add_argument('--buf-count', type=int, help='Maximum number of buffers per IO channel')
+    p.add_argument('--buf-count', type=int, help='Maximum number of accel buffers per IO channel')
     p.set_defaults(func=accel_set_options)
 
     def accel_get_stats(args):
