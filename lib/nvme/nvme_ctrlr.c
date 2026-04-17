@@ -2501,27 +2501,24 @@ static void
 nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_ns_list,
 				   size_t max_entries)
 {
-	size_t i;
+	size_t i = 0;
 	uint32_t nsid;
 	struct spdk_nvme_ns *ns, *tmp_ns;
 
-	/* First, remove namespaces that no longer exist */
+	/* First, remove namespaces that no longer exist. List must be in ascending NSID order. */
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
-		nsid = new_ns_list[0];
-		i = 0;
-		while (nsid != 0) {
-			if (nsid == ns->id) {
-				break;
-			}
-
-			nsid = new_ns_list[i++];
+		while (i < max_entries && new_ns_list[i] && new_ns_list[i] < ns->id) {
+			i++;
 		}
 
-		if (nsid != ns->id) {
-			/* Did not find this namespace id in the new list. */
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", ns->id);
-			nvme_ns_clear(ns);
+		if (i < max_entries && new_ns_list[i] == ns->id) {
+			i++;
+			continue;
 		}
+
+		/* Did not find this namespace id in the new list. */
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", ns->id);
+		nvme_ns_clear(ns);
 	}
 
 	/* Next, add new namespaces */
@@ -2531,6 +2528,8 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 		if (nsid == 0) {
 			break;
 		}
+
+		assert(i == 0 || nsid > new_ns_list[i - 1]);
 
 		/* If the namespace already exists, this will not construct it a second time. */
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
