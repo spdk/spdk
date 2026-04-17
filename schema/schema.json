@@ -555,13 +555,13 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "SPDK subsystem name"
+          "description": "Name of the SPDK subsystem to query"
         },
         {
           "name": "with_batches",
           "type": "boolean",
           "required": false,
-          "description": "If true, include batch arrays in output. If false (default), flatten batch arrays into individual entries."
+          "description": "Keep batch arrays in output. Default: false (flatten into individual entries)"
         }
       ]
     },
@@ -935,29 +935,29 @@
           "type": "enum",
           "class": "accel_error_opcode",
           "required": true,
-          "description": "Operation to inject errors."
+          "description": "Accel operation to inject errors into"
         },
         {
           "name": "type",
           "type": "enum",
           "class": "accel_error_inject_type",
           "required": true,
-          "description": "Type of errors to inject (\"corrupt\": corrupt the data, \"failure\": fail the operation, \"disable\": disable error injection)."
+          "description": "Injection type: corrupt (corrupt data), failure (fail operation), disable (disable injection)"
         },
         {
           "name": "count",
           "type": "uint64",
-          "description": "Numbers of errors to inject on each IO channel (`UINT64_MAX` by default)."
+          "description": "Number of errors to inject on each IO channel; 0 disables injection. Default: UINT64_MAX (no limit)"
         },
         {
           "name": "interval",
           "type": "uint64",
-          "description": "Interval between injections."
+          "description": "Number of operations between successive injections"
         },
         {
           "name": "errcode",
           "type": "int32",
-          "description": "Error code to inject (only relevant for type=failure)."
+          "description": "Error code to return; only relevant for type=failure"
         }
       ]
     },
@@ -968,7 +968,7 @@
           "name": "pmd",
           "type": "uint32",
           "required": true,
-          "description": "pmd selection"
+          "description": "PMD selection: 0=auto, 1=QAT only, 2=mlx5_pci only, 3=uadk only"
         }
       ]
     },
@@ -978,7 +978,7 @@
         {
           "name": "config_kernel_mode",
           "type": "boolean",
-          "description": "If set, will use kernel idxd driver."
+          "description": "Use the kernel idxd driver instead of user-mode. Default: false"
         }
       ]
     },
@@ -1005,7 +1005,7 @@
           "name": "driver_name",
           "type": "string",
           "required": true,
-          "description": "The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci"
+          "description": "DPDK crypto driver: crypto_aesni_mb, crypto_qat, crypto_uadk, mlx5_pci"
         }
       ]
     },
@@ -1019,7 +1019,7 @@
         {
           "name": "qp_size",
           "type": "uint16",
-          "description": "qpair size"
+          "description": "Queue pair size"
         },
         {
           "name": "num_requests",
@@ -1049,7 +1049,7 @@
         {
           "name": "level",
           "type": "string",
-          "description": "Verbose level, one of \\\"total\\\", \\\"channel\\\" or \\\"device\\\""
+          "description": "Verbosity level: total, channel, device. Default: channel"
         }
       ]
     },

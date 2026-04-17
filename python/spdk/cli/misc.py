@@ -82,9 +82,9 @@ def add_parser(subparsers):
         print_dict(args.client.framework_get_config(name=args.name, with_batches=args.with_batches))
 
     p = subparsers.add_parser('framework_get_config', help="""Print subsystem configuration""")
-    p.add_argument('name', help='Name of subsystem to query')
+    p.add_argument('name', help='Name of the SPDK subsystem to query')
     p.add_argument('--with-batches', action=argparse.BooleanOptionalAction, default=False,
-                   help='Keep batch arrays in output; --no-with-batches flattens them (default)')
+                   help='Keep batch arrays in output. Default: false (flatten into individual entries)')
     p.set_defaults(func=framework_get_config)
 
     # ioat
@@ -100,7 +100,7 @@ def add_parser(subparsers):
         args.client.compressdev_scan_accel_module(pmd=args.pmd)
 
     p = subparsers.add_parser('compressdev_scan_accel_module', help='Scan and enable compressdev module and set pmd option.')
-    p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only', required=True)
+    p.add_argument('-p', '--pmd', type=int, help='PMD selection: 0=auto, 1=QAT only, 2=mlx5_pci only, 3=uadk only', required=True)
     p.set_defaults(func=compressdev_scan_accel_module)
 
     # dsa
@@ -109,7 +109,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('dsa_scan_accel_module',
                               help='Set config and enable dsa accel module offload.')
-    p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode dsa',
+    p.add_argument('-k', '--config-kernel-mode', help='Use the kernel idxd driver instead of user-mode. Default: false',
                    action='store_true', dest='config_kernel_mode')
     p.set_defaults(func=dsa_scan_accel_module, config_kernel_mode=None)
 
@@ -134,7 +134,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('dpdk_cryptodev_set_driver',
                               help='Set the DPDK cryptodev driver.')
     p.add_argument('-d', '--driver-name',
-                   help='The driver',
+                   help='DPDK crypto driver: crypto_aesni_mb, crypto_qat, crypto_uadk, mlx5_pci',
                    choices=['crypto_aesni_mb', 'crypto_qat', 'mlx5_pci', 'crypto_uadk'],
                    required=True)
     p.set_defaults(func=dpdk_cryptodev_set_driver)
@@ -163,7 +163,7 @@ def add_parser(subparsers):
                                         enable_driver=args.enable_driver)
 
     p = subparsers.add_parser('mlx5_scan_accel_module', help='Enable mlx5 accel module.')
-    p.add_argument('-q', '--qp-size', type=int, help='QP size')
+    p.add_argument('-q', '--qp-size', type=int, help='Queue pair size')
     p.add_argument('-r', '--num-requests', type=int, help='Size of the shared requests pool')
     p.add_argument('-d', '--allowed-devs', help="Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1")
     p.add_argument('-s', '--crypto-split-blocks', type=int,
@@ -178,7 +178,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('accel_mlx5_dump_stats', help='Dump accel mlx5 module statistics.')
     p.add_argument('-l', '--level',
                    choices=['total', 'channel', 'device'],
-                   help='Verbose level')
+                   help='Verbosity level: total, channel, device. Default: channel')
     p.set_defaults(func=accel_mlx5_dump_stats)
 
     # cuda
@@ -201,14 +201,14 @@ def add_parser(subparsers):
                             'compress', 'decompress', 'encrypt', 'decrypt', 'xor',
                             'dif_verify', 'dif_verify_copy', 'dif_generate', 'dif_generate_copy',
                             'dix_generate', 'dix_verify'],
-                   help='Opcode')
+                   help='Accel operation to inject errors into')
     p.add_argument('-t', '--type', required=True,
                    choices=['disable', 'corrupt', 'failure'],
-                   help='Error type ("corrupt": corrupt the data, "failure": fail the operation, "disable": disable error injection)')
+                   help='Injection type: corrupt (corrupt data), failure (fail operation), disable (disable injection)')
     p.add_argument('-c', '--count', type=int,
-                   help='Number of errors to inject on each IO channel (0 to disable error injection)')
-    p.add_argument('-i', '--interval', type=int, help='Interval between injections')
-    p.add_argument('--errcode', type=int, help='Error code to inject (only relevant for type=failure)')
+                   help='Number of errors to inject on each IO channel; 0 disables injection. Default: UINT64_MAX (no limit)')
+    p.add_argument('-i', '--interval', type=int, help='Number of operations between successive injections')
+    p.add_argument('--errcode', type=int, help='Error code to return; only relevant for type=failure')
     p.set_defaults(func=accel_error_inject_error)
 
     def env_dpdk_get_mem_stats(args):
