@@ -17,7 +17,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('log_set_flag', help='set log flag')
     p.add_argument(
-        'flag', help='log flag we want to set. (for example "nvme").')
+        'flag', help='Log flag name (e.g. "nvme") or "all" to set all flags')
     p.set_defaults(func=log_set_flag)
 
     def log_clear_flag(args):
@@ -25,7 +25,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('log_clear_flag', help='clear log flag')
     p.add_argument(
-        'flag', help='log flag we want to clear. (for example "nvme").')
+        'flag', help='Log flag name (e.g. "nvme") or "all" to clear all flags')
     p.set_defaults(func=log_clear_flag)
 
     def log_get_flags(args):
@@ -38,7 +38,7 @@ def add_parser(subparsers):
         args.client.log_set_level(level=args.level)
 
     p = subparsers.add_parser('log_set_level', help='set log level')
-    p.add_argument('level', help='log level we want to set.',
+    p.add_argument('level', help='Log level: ERROR, WARNING, NOTICE, INFO, DEBUG',
                    choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_level)
 
@@ -52,7 +52,7 @@ def add_parser(subparsers):
         args.client.log_set_print_level(level=args.level)
 
     p = subparsers.add_parser('log_set_print_level', help='set log print level')
-    p.add_argument('level', help='log print level we want to set.',
+    p.add_argument('level', help='Log print level: ERROR, WARNING, NOTICE, INFO, DEBUG',
                    choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_print_level)
 
@@ -67,5 +67,5 @@ def add_parser(subparsers):
     p = subparsers.add_parser('log_enable_timestamps',
                               help='Enable or disable timestamps.')
     p.add_argument('--timestamps', dest='enabled', action=argparse.BooleanOptionalAction,
-                   required=True, help='Enable or disable timestamps')
+                   required=True, help='Enable (true) or disable (false) timestamps in log output')
     p.set_defaults(func=log_enable_timestamps)

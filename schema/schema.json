@@ -732,7 +732,7 @@
           "name": "level",
           "type": "string",
           "required": true,
-          "description": "ERROR, WARNING, NOTICE, INFO, DEBUG"
+          "description": "Log print level: ERROR, WARNING, NOTICE, INFO, DEBUG"
         }
       ]
     },
@@ -747,7 +747,7 @@
           "name": "level",
           "type": "string",
           "required": true,
-          "description": "ERROR, WARNING, NOTICE, INFO, DEBUG"
+          "description": "Log level: ERROR, WARNING, NOTICE, INFO, DEBUG"
         }
       ]
     },
@@ -762,7 +762,7 @@
           "name": "flag",
           "type": "string",
           "required": true,
-          "description": "A log flag, or 'all'"
+          "description": "Log flag name (e.g. \"nvme\") or \"all\" to set all flags"
         }
       ]
     },
@@ -773,7 +773,7 @@
           "name": "flag",
           "type": "string",
           "required": true,
-          "description": "A log flag, or 'all'"
+          "description": "Log flag name (e.g. \"nvme\") or \"all\" to clear all flags"
         }
       ]
     },
@@ -788,7 +788,7 @@
           "name": "enabled",
           "type": "boolean",
           "required": true,
-          "description": "on or off"
+          "description": "Enable (true) or disable (false) timestamps in log output"
         }
       ]
     },
