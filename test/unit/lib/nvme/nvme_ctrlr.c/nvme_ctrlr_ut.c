@@ -432,6 +432,7 @@ static uint32_t *g_active_ns_list = NULL;
 static uint32_t g_active_ns_list_length = 0;
 static struct spdk_nvme_ctrlr_data *g_cdata = NULL;
 static bool g_fail_next_identify = false;
+static uint32_t g_identify_active_ns_counter = 0;
 
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
@@ -447,6 +448,8 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 	if (cns == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST) {
 		uint32_t count = 0;
 		uint32_t i = 0;
+
+		g_identify_active_ns_counter++;
 		struct spdk_nvme_ns_list *ns_list = (struct spdk_nvme_ns_list *)payload;
 
 		if (g_active_ns_list == NULL) {
@@ -3136,6 +3139,8 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	uint32_t changed_ns_list7_aer[] = { 0xFFFFFFFF };
 	uint32_t active_ns_list8[] = { 1, 2, 107, 109, 110, 1024 };
 	uint32_t changed_ns_list8[] = { 110, 105, 107, 108, 106, 109 };
+	uint32_t active_ns_list_incr[] = { 1, 2, 107, 109, 111, 1024 };
+	uint32_t changed_ns_list_incr[] = { 110, 111 };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
 		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
@@ -3317,16 +3322,38 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	CU_ASSERT(g_ns_attr_changed_ns_list[1] == 105);
 	CU_ASSERT(g_ns_attr_changed_ns_list[2] == 107);
 
-	/* With log page disabled: dedicated callback receives NULL */
+	/* With log page disabled: dedicated callback receives NULL.
+	 * Full path is taken: Identify Active NS List command must be issued. */
 	ctrlr.opts.disable_read_changed_ns_list_log_page = true;
 	g_aer_cb_counter = 0;
 	g_ns_attr_changed_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
+	g_identify_active_ns_counter = 0;
 	setup_aer_for_ns_change(active_ns_list8, SPDK_COUNTOF(active_ns_list8), NULL, 0);
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_ns_attr_changed_cb_counter == 1);
 	CU_ASSERT(g_aer_cb_counter == 0);
 	CU_ASSERT(g_ns_attr_changed_list_was_null);
+	CU_ASSERT(g_identify_active_ns_counter > 0);
+	CU_ASSERT(g_nvme_ns_constructed == SPDK_COUNTOF(active_ns_list8));
 	ctrlr.opts.disable_read_changed_ns_list_log_page = false;
+
+	/* Unregister dedicated callback so AER callback fires again. */
+	spdk_nvme_ctrlr_register_ns_attr_changed_callback(&ctrlr, NULL, NULL);
+
+	/* Incremental path: remove NS 110, add NS 111.
+	 * No Identify Active NS List command should be issued. */
+	g_aer_cb_counter = 0;
+	g_nvme_ns_constructed = 0;
+	g_identify_active_ns_counter = 0;
+	setup_aer_for_ns_change(active_ns_list_incr, SPDK_COUNTOF(active_ns_list_incr),
+				changed_ns_list_incr, SPDK_COUNTOF(changed_ns_list_incr));
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 1);
+	CU_ASSERT(g_nvme_ns_constructed == 1);
+	CU_ASSERT(g_identify_active_ns_counter == 0);
+	check_active_ns(&ctrlr, active_ns_list_incr, SPDK_COUNTOF(active_ns_list_incr));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 110));
 
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
@@ -3740,6 +3767,7 @@ ut_setup(void)
 	g_active_ns_list_length = 0;
 	g_cdata = NULL;
 	g_fail_next_identify = false;
+	g_identify_active_ns_counter = 0;
 
 	memset(&g_aer_ns_change, 0, sizeof(g_aer_ns_change));
 	g_changed_ns_list = NULL;

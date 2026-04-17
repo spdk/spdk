@@ -3380,51 +3380,6 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 	spdk_free(async_event);
 }
 
-static uint32_t
-nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
-{
-	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
-	uint32_t nsid, i;
-	struct spdk_nvme_ns *ns;
-
-	/* Log page is not used, go over all namespaces pending identification.
-	 * Either the log page overflowed or disable_read_changed_ns_list_log_page is used. */
-	if (async_event->log_page.changed_ns_list == NULL) {
-		RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
-			if (ns->identify_pending) {
-				nvme_ns_identify(ns);
-			}
-		}
-
-		return 0;
-	}
-
-	/* Iterate over NSID from the log page. */
-	for (i = 0; i < SPDK_NVME_MAX_CHANGED_NAMESPACES; i++) {
-		nsid = async_event->log_page.changed_ns_list[i];
-
-		/* End of the list */
-		if (nsid == 0) {
-			break;
-		}
-
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-		if (!ns) {
-			continue;
-		}
-
-		/* Namespace was removed from the active list by swap,
-		 * no need to identify it. */
-		if (!ns->identify_pending) {
-			continue;
-		}
-
-		nvme_ns_identify(ns);
-	}
-
-	return i;
-}
-
 static uint32_t *
 nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -3489,8 +3444,10 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
 	struct spdk_nvme_cpl *cpl = &async_event->cpl;
 	union spdk_nvme_async_event_completion event;
+	struct spdk_nvme_ns *ns;
 	bool ns_attr_changed = false;
 	uint32_t ns_count = 0;
+	uint32_t nsid;
 	int rc;
 
 	event.raw = cpl->cdw0;
@@ -3502,15 +3459,39 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	switch (event.bits.async_event_info) {
 	case SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED:
 		async_event->log_page.changed_ns_list = nvme_ctrlr_clear_changed_ns_log(ctrlr);
+		if (!async_event->log_page.changed_ns_list) {
+			/* Log page is not used, go over all namespaces pending identification. */
+			rc = nvme_ctrlr_identify_active_ns(ctrlr);
+			if (rc) {
+				spdk_free(async_event);
+				return;
+			}
 
-		rc = nvme_ctrlr_identify_active_ns(ctrlr);
-		if (rc) {
-			free(async_event->log_page.changed_ns_list);
-			spdk_free(async_event);
-			return;
+			RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
+				if (ns->identify_pending) {
+					nvme_ns_identify(ns);
+				}
+			}
+		} else {
+			/* Log page is used, go over changed namespace list only. */
+			for (ns_count = 0; ns_count < SPDK_NVME_MAX_CHANGED_NAMESPACES; ns_count++) {
+				nsid = async_event->log_page.changed_ns_list[ns_count];
+				if (nsid == 0) {
+					break;
+				}
+
+				ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+				if (!ns) {
+					assert(false);
+					NVME_CTRLR_ERRLOG(ctrlr, "Failed to get namespace %u from changed NS list "
+							  "(NSID out of range or OOM)\n", nsid);
+					continue;
+				}
+
+				nvme_ns_identify(ns);
+			}
 		}
 
-		ns_count = nvme_ctrlr_update_namespaces(async_event);
 		nvme_io_msg_ctrlr_update(ctrlr);
 		ns_attr_changed = true;
 		break;
