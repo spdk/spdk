@@ -265,6 +265,7 @@ test_nvme_ns_set_identify_data(void)
 	ns.ctrlr->min_page_size = 4096;
 	ns.ctrlr->max_xfer_size = 131072;
 
+	ns.nsdata.ncap = 1;
 	ns.nsdata.flbas.extended = 1;
 	ns.nsdata.nsrescap.raw = 1;
 	ns.nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;

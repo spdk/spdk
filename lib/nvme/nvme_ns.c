@@ -98,6 +98,10 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	}
 
 	ns->active = spdk_nvme_ns_is_active(ns);
+	if (!ns->active) {
+		nvme_ns_clear(ns);
+	}
+
 	ns->identify_pending = false;
 }
 
@@ -125,11 +129,9 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 
 	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status, true);
 	if (rc) {
-		/* This can occur if the namespace is not active. Simply zero the
-		 * namespace data and continue. */
-		SPDK_ERRLOG("wait for nvme_ctrlr_cmd_identify failed: rc=%s\n", spdk_strerror(abs(rc)));
-		nvme_ns_clear(ns);
-		return 0;
+		/* This can occur if the namespace is not active. */
+		NVME_CTRLR_WARNLOG(ns->ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
+				   spdk_strerror(abs(rc)));
 	}
 
 	nvme_ns_set_identify_data(ns);
@@ -679,7 +681,6 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	/* skip Identify NS ID Descriptor List for inactive NS */
 	if (!spdk_nvme_ns_is_active(ns)) {
 		return 0;
 	}
