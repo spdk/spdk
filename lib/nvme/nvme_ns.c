@@ -25,6 +25,14 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	uint32_t			format_index;
 
 	nsdata = _nvme_ns_get_data(ns);
+
+	ns->identify_pending = false;
+	ns->active = spdk_nvme_ns_is_active(ns);
+	if (!ns->active) {
+		nvme_ns_clear(ns);
+		return;
+	}
+
 	nsdata_nvm = ns->nsdata_nvm;
 
 	ns->flags = 0x0000;
@@ -96,13 +104,6 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 			ns->pi_format = SPDK_NVME_16B_GUARD_PI;
 		}
 	}
-
-	ns->active = spdk_nvme_ns_is_active(ns);
-	if (!ns->active) {
-		nvme_ns_clear(ns);
-	}
-
-	ns->identify_pending = false;
 }
 
 static int
