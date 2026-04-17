@@ -5586,12 +5586,12 @@
         {
           "name": "cpumask",
           "type": "string",
-          "description": "Cpumask for ublk target"
+          "description": "CPU mask for the ublk target's I/O threads"
         },
         {
           "name": "disable_user_copy",
           "type": "boolean",
-          "description": "Disable user copy feature"
+          "description": "Disable the ublk user-copy feature. Default: false"
         }
       ]
     },
@@ -5606,23 +5606,23 @@
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Bdev name to export"
+          "description": "Name of the bdev to export"
         },
         {
           "name": "ublk_id",
           "type": "uint32",
           "required": true,
-          "description": "Device id"
+          "description": "ublk device ID, used as the suffix in /dev/ublkb[id]"
         },
         {
           "name": "queue_depth",
           "type": "uint32",
-          "description": "Device queue depth"
+          "description": "Per-queue depth. Default: 128"
         },
         {
           "name": "num_queues",
           "type": "uint32",
-          "description": "Total number of device queues"
+          "description": "Number of queues to create on the device. Default: 1"
         }
       ]
     },
@@ -5633,13 +5633,13 @@
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Bdev name to export"
+          "description": "Name of the bdev backing the recovering ublk device"
         },
         {
           "name": "ublk_id",
           "type": "uint32",
           "required": true,
-          "description": "Device id"
+          "description": "ID of the ublk device to recover"
         }
       ]
     },
@@ -5650,7 +5650,7 @@
           "name": "ublk_id",
           "type": "uint32",
           "required": true,
-          "description": "Device id to delete"
+          "description": "ID of the ublk device to stop"
         }
       ]
     },
@@ -5660,7 +5660,7 @@
         {
           "name": "ublk_id",
           "type": "uint32",
-          "description": "ublk device id to display"
+          "description": "ID of a ublk device to query. Default: list all"
         }
       ]
     },
