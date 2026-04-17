@@ -507,7 +507,7 @@
           "name": "sig_name",
           "type": "string",
           "required": true,
-          "description": "Signal to send (SIGINT, SIGTERM, SIGQUIT, SIGHUP, or SIGKILL)"
+          "description": "Signal to send: SIGINT, SIGTERM, SIGQUIT, SIGHUP, SIGKILL, SIGUSR1"
         }
       ]
     },
@@ -517,7 +517,7 @@
         {
           "name": "enabled",
           "type": "boolean",
-          "description": "Enable (`true`) or disable (`false`) monitoring (omit this parameter to query the current state)"
+          "description": "Enable or disable context switch monitoring; omit to query the current state"
         }
       ]
     },
@@ -535,12 +535,12 @@
         {
           "name": "current",
           "type": "boolean",
-          "description": "Get an array of RPC methods only callable in the current state."
+          "description": "Return only RPC methods callable in the current state. Default: false"
         },
         {
           "name": "include_aliases",
           "type": "boolean",
-          "description": "include RPC aliases"
+          "description": "Include deprecated method aliases in the result. Default: false"
         }
       ]
     },
@@ -581,27 +581,27 @@
         {
           "name": "period",
           "type": "uint64",
-          "description": "Scheduler period"
+          "description": "Scheduler period in microseconds. Default: 1000000 (1 second) on first set"
         },
         {
           "name": "load_limit",
           "type": "uint8",
-          "description": "Thread load limit in % (dynamic only)"
+          "description": "Thread load percentage above which threads may move (dynamic only). Default: 20"
         },
         {
           "name": "core_limit",
           "type": "uint8",
-          "description": "Load limit on the core to be considered full (dynamic only)"
+          "description": "Core busy percentage at which the core is considered full (dynamic only). Default: 80"
         },
         {
           "name": "core_busy",
           "type": "uint8",
-          "description": "Indicates at what load on core scheduler should move threads to a different core (dynamic only)"
+          "description": "Core busy percentage at which the scheduler starts moving threads to other cores (dynamic only). Default: 95"
         },
         {
           "name": "mappings",
           "type": "string",
-          "description": "Comma-separated list of thread:core mappings. Reserved for static scheduler"
+          "description": "Comma-separated list of thread:core mappings (static only)"
         }
       ]
     },
@@ -619,12 +619,12 @@
         {
           "name": "scheduling_core",
           "type": "uint32",
-          "description": "Main core of scheduler. Idle threads move to the scheduling core. Can be set only once"
+          "description": "Core that the scheduler runs on; idle threads are moved here. Default: current scheduling core"
         },
         {
           "name": "isolated_core_mask",
           "type": "string",
-          "description": "Select CPU cores to isolate from scheduling changes. Can be set only once"
+          "description": "CPU mask of cores excluded from scheduling decisions; must not include scheduling_core"
         }
       ]
     },
@@ -647,13 +647,13 @@
           "name": "id",
           "type": "uint64",
           "required": true,
-          "description": "Thread ID"
+          "description": "ID of the SPDK thread to move"
         },
         {
           "name": "cpumask",
           "type": "string",
           "required": true,
-          "description": "Cpumask for this thread"
+          "description": "CPU mask of cores the thread is allowed to run on"
         }
       ]
     },

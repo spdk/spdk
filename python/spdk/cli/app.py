@@ -18,15 +18,16 @@ def add_parser(subparsers):
                                        include_aliases=args.include_aliases))
 
     p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods')
-    p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
-    p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
+    p.add_argument('-c', '--current', help='Return only RPC methods callable in the current state. Default: false', action='store_true')
+    p.add_argument('-i', '--include-aliases', help='Include deprecated method aliases in the result. Default: false',
+                   action='store_true')
     p.set_defaults(func=rpc_get_methods)
 
     def spdk_kill_instance(args):
         args.client.spdk_kill_instance(sig_name=args.sig_name)
 
     p = subparsers.add_parser('spdk_kill_instance', help='Send signal to instance')
-    p.add_argument('sig_name', help='signal will be sent to server.',
+    p.add_argument('sig_name', help='Signal to send: SIGINT, SIGTERM, SIGQUIT, SIGHUP, SIGKILL, SIGUSR1',
                    choices=['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGHUP', 'SIGKILL', 'SIGUSR1'])
     p.set_defaults(func=spdk_kill_instance)
 
@@ -48,7 +49,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('framework_monitor_context_switch',
                               help='Control whether the context switch monitor is enabled')
     p.add_argument('--monitor', dest='enabled', action=argparse.BooleanOptionalAction,
-                   help='Enable or disable context switch monitoring')
+                   help='Enable or disable context switch monitoring; omit to query the current state')
     p.set_defaults(func=framework_monitor_context_switch)
 
     def framework_get_reactors(args):
@@ -69,12 +70,16 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser(
         'framework_set_scheduler', help='Select thread scheduler that will be activated and its period (experimental)')
-    p.add_argument('name', help="Name of a scheduler")
-    p.add_argument('-p', '--period', help="Scheduler period in microseconds", type=int)
-    p.add_argument('--load-limit', help="Scheduler load limit. Reserved for dynamic scheduler", type=int)
-    p.add_argument('--core-limit', help="Scheduler core limit. Reserved for dynamic scheduler", type=int)
-    p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic scheduler", type=int)
-    p.add_argument('--mappings', help="Comma-separated list of thread:core mappings. Reserved for static scheduler")
+    p.add_argument('name', help='Name of a scheduler')
+    p.add_argument('-p', '--period', help='Scheduler period in microseconds. Default: 1000000 (1 second) on first set', type=int)
+    p.add_argument('--load-limit',
+                   help='Thread load percentage above which threads may move (dynamic only). Default: 20', type=int)
+    p.add_argument('--core-limit',
+                   help='Core busy percentage at which the core is considered full (dynamic only). Default: 80', type=int)
+    p.add_argument('--core-busy',
+                   help='Core busy percentage at which the scheduler starts moving threads to other cores (dynamic only). Default: 95',
+                   type=int)
+    p.add_argument('--mappings', help='Comma-separated list of thread:core mappings (static only)')
     p.set_defaults(func=framework_set_scheduler)
 
     def framework_get_scheduler(args):
@@ -96,9 +101,11 @@ def add_parser(subparsers):
                                       isolated_core_mask=args.isolated_core_mask,
                                       scheduling_core=args.scheduling_core)
     p = subparsers.add_parser('scheduler_set_options', help='Set scheduler options')
-    p.add_argument('-i', '--isolated-core-mask', help="Mask of CPU cores to isolate from scheduling change", type=str)
-    p.add_argument('-s', '--scheduling-core', help="Scheduler scheduling core. Idle threads will move to scheduling core."
-                   "Reserved for dynamic scheduler.", type=int)
+    p.add_argument('-i', '--isolated-core-mask',
+                   help='CPU mask of cores excluded from scheduling decisions; must not include scheduling_core', type=str)
+    p.add_argument('-s', '--scheduling-core',
+                   help='Core that the scheduler runs on; idle threads are moved here. Default: current scheduling core',
+                   type=int)
     p.set_defaults(func=scheduler_set_options)
 
     def framework_disable_cpumask_locks(args):
@@ -129,8 +136,8 @@ def add_parser(subparsers):
     p = subparsers.add_parser('thread_set_cpumask',
                               help="""set the cpumask of the thread whose ID matches to the
     specified value. The thread may be migrated to one of the specified CPUs.""")
-    p.add_argument('-i', '--id', type=int, help='thread ID', required=True)
-    p.add_argument('-m', '--cpumask', help='cpumask for this thread', required=True)
+    p.add_argument('-i', '--id', type=int, help='ID of the SPDK thread to move', required=True)
+    p.add_argument('-m', '--cpumask', help='CPU mask of cores the thread is allowed to run on', required=True)
     p.set_defaults(func=thread_set_cpumask)
 
     def thread_get_pollers(args):
