@@ -5777,7 +5777,7 @@
           "name": "impl_name",
           "type": "string",
           "required": true,
-          "description": "Name of socket implementation, e.g. posix"
+          "description": "Socket implementation name (e.g. \"posix\", \"ssl\", \"uring\")"
         }
       ]
     },
@@ -5788,17 +5788,17 @@
           "name": "impl_name",
           "type": "string",
           "required": true,
-          "description": "Name of socket implementation, e.g. posix"
+          "description": "Socket implementation name (e.g. \"posix\", \"ssl\", \"uring\")"
         },
         {
           "name": "recv_buf_size",
           "type": "uint32",
-          "description": "Size of socket receive buffer in bytes"
+          "description": "Receive buffer size in bytes"
         },
         {
           "name": "send_buf_size",
           "type": "uint32",
-          "description": "Size of socket send buffer in bytes"
+          "description": "Send buffer size in bytes"
         },
         {
           "name": "enable_recv_pipe",
@@ -5813,32 +5813,32 @@
         {
           "name": "enable_placement_id",
           "type": "uint32",
-          "description": "Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu"
+          "description": "Placement ID source: 0=disable, 1=incoming_napi, 2=incoming_cpu"
         },
         {
           "name": "enable_zerocopy_send_server",
           "type": "boolean",
-          "description": "Enable or disable zero copy on send for server sockets"
+          "description": "Enable zero-copy on send for server sockets"
         },
         {
           "name": "enable_zerocopy_send_client",
           "type": "boolean",
-          "description": "Enable or disable zero copy on send for client sockets"
+          "description": "Enable zero-copy on send for client sockets"
         },
         {
           "name": "zerocopy_threshold",
           "type": "uint32",
-          "description": "Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs that fall below this threshold may be sent without zerocopy flag set"
+          "description": "Send size threshold in bytes below which the zerocopy flag is omitted"
         },
         {
           "name": "tls_version",
           "type": "uint32",
-          "description": "TLS protocol version, e.g. 13 for v1.3 (only applies when impl_name == ssl)"
+          "description": "TLS protocol version (e.g. 13 for TLS 1.3) (ssl only)"
         },
         {
           "name": "enable_ktls",
           "type": "boolean",
-          "description": "Enable or disable Kernel TLS (only applies when impl_name == ssl)"
+          "description": "Enable Kernel TLS (ssl only). Default: false"
         }
       ]
     },
@@ -5849,7 +5849,7 @@
           "name": "impl_name",
           "type": "string",
           "required": true,
-          "description": "Name of socket implementation, e.g. posix"
+          "description": "Socket implementation name (e.g. \"posix\", \"ssl\", \"uring\")"
         }
       ]
     },
