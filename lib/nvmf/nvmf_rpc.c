@@ -1362,8 +1362,8 @@ nvmf_rpc_ns_failback_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
-		    void *cb_arg, int status)
+rpc_nvmf_subsystem_add_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
+				  void *cb_arg, int status)
 {
 	struct rpc_nvmf_subsystem_add_ns_ext *ereq = cb_arg;
 	struct spdk_jsonrpc_request *request = ereq->req.request;
@@ -1404,8 +1404,8 @@ nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
-		   void *cb_arg, int status)
+rpc_nvmf_subsystem_add_ns_paused(struct spdk_nvmf_subsystem *subsystem,
+				 void *cb_arg, int status)
 {
 	struct rpc_nvmf_subsystem_add_ns_ext *ereq = cb_arg;
 	struct rpc_nvmf_subsystem_add_ns_ctx *ctx = &ereq->req;
@@ -1441,7 +1441,7 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 resume:
-	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_ns_resumed, ereq)) {
+	if (spdk_nvmf_subsystem_resume(subsystem, rpc_nvmf_subsystem_add_ns_resumed, ereq)) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		free_rpc_nvmf_subsystem_add_ns_ext(ereq);
 	}
@@ -1493,7 +1493,8 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_nvmf_subsystem_pause(subsystem, req->namespace.nsid, nvmf_rpc_ns_paused, ereq);
+	rc = spdk_nvmf_subsystem_pause(subsystem, req->namespace.nsid, rpc_nvmf_subsystem_add_ns_paused,
+				       ereq);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		free_rpc_nvmf_subsystem_add_ns_ext(ereq);
@@ -1647,8 +1648,8 @@ nvmf_rpc_remove_ns_ctx_free(struct nvmf_rpc_remove_ns_ctx *ctx)
 }
 
 static void
-nvmf_rpc_remove_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
-			   void *cb_arg, int status)
+rpc_nvmf_subsystem_remove_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
+				     void *cb_arg, int status)
 {
 	struct nvmf_rpc_remove_ns_ctx *ctx = cb_arg;
 	struct spdk_jsonrpc_request *request = ctx->request;
@@ -1664,8 +1665,8 @@ nvmf_rpc_remove_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_remove_ns_paused(struct spdk_nvmf_subsystem *subsystem,
-			  void *cb_arg, int status)
+rpc_nvmf_subsystem_remove_ns_paused(struct spdk_nvmf_subsystem *subsystem,
+				    void *cb_arg, int status)
 {
 	struct nvmf_rpc_remove_ns_ctx *ctx = cb_arg;
 	int ret;
@@ -1678,7 +1679,7 @@ nvmf_rpc_remove_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 		ctx->response_sent = true;
 	}
 
-	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_remove_ns_resumed, ctx)) {
+	if (spdk_nvmf_subsystem_resume(subsystem, rpc_nvmf_subsystem_remove_ns_resumed, ctx)) {
 		if (!ctx->response_sent) {
 			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		}
@@ -1730,7 +1731,7 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_nvmf_subsystem_pause(subsystem, ctx->nsid, nvmf_rpc_remove_ns_paused, ctx);
+	rc = spdk_nvmf_subsystem_pause(subsystem, ctx->nsid, rpc_nvmf_subsystem_remove_ns_paused, ctx);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_remove_ns_ctx_free(ctx);
