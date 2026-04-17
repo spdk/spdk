@@ -4580,7 +4580,7 @@
           "name": "path",
           "type": "string",
           "required": true,
-          "description": "Base path"
+          "description": "Base path for the vfio-user UNIX sockets"
         }
       ]
     },
@@ -4591,7 +4591,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Endpoint name"
+          "description": "Name of the endpoint"
         }
       ]
     },
@@ -4602,33 +4602,33 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Endpoint name"
+          "description": "Name of the endpoint"
         },
         {
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Block device name"
+          "description": "Name of the backing block device"
         },
         {
           "name": "cpumask",
           "type": "string",
-          "description": "CPU masks"
+          "description": "CPU mask for the endpoint's I/O threads"
         },
         {
           "name": "num_queues",
           "type": "uint16",
-          "description": "Number of queues"
+          "description": "Number of virtqueues. Default: 64"
         },
         {
           "name": "qsize",
           "type": "uint16",
-          "description": "Queue size"
+          "description": "Number of entries per virtqueue. Default: 128"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "description": "Enable packed ring"
+          "description": "Enable packed virtqueue layout. Default: false"
         }
       ]
     },
@@ -4639,19 +4639,19 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Endpoint name"
+          "description": "Name of the endpoint"
         },
         {
           "name": "scsi_target_num",
           "type": "uint8",
           "required": true,
-          "description": "SCSI target number"
+          "description": "SCSI target number: 0-7"
         },
         {
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Block device name"
+          "description": "Name of the backing block device"
         }
       ]
     },
@@ -4662,13 +4662,13 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Endpoint name"
+          "description": "Name of the endpoint"
         },
         {
           "name": "scsi_target_num",
           "type": "uint8",
           "required": true,
-          "description": "SCSI target number"
+          "description": "SCSI target number: 0-7"
         }
       ]
     },
@@ -4679,27 +4679,27 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Endpoint name"
+          "description": "Name of the endpoint"
         },
         {
           "name": "cpumask",
           "type": "string",
-          "description": "CPU masks"
+          "description": "CPU mask for the endpoint's I/O threads"
         },
         {
           "name": "num_io_queues",
           "type": "uint16",
-          "description": "Number of IO queues"
+          "description": "Number of I/O virtqueues (control + event virtqueues added automatically). Default: 62"
         },
         {
           "name": "qsize",
           "type": "uint16",
-          "description": "Queue size"
+          "description": "Number of entries per virtqueue. Default: 128"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "description": "Enable packed ring"
+          "description": "Enable packed virtqueue layout. Default: false"
         }
       ]
     },
@@ -4710,39 +4710,39 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Endpoint name"
+          "description": "Name of the endpoint"
         },
         {
           "name": "fsdev_name",
           "type": "string",
           "required": true,
-          "description": "Name of an underlying fsdev"
+          "description": "Name of the backing fsdev"
         },
         {
           "name": "tag",
           "type": "string",
           "required": true,
-          "description": "Virtio FS tag according to the virtio specification"
+          "description": "virtiofs mount tag (per virtio specification)"
         },
         {
           "name": "cpumask",
           "type": "string",
-          "description": "CPU masks"
+          "description": "CPU mask for the endpoint's I/O threads"
         },
         {
           "name": "num_queues",
           "type": "uint16",
-          "description": "Number of IO queues"
+          "description": "Number of virtqueues. Default: 64"
         },
         {
           "name": "qsize",
           "type": "uint16",
-          "description": "Queue size"
+          "description": "Number of entries per virtqueue. Default: 128"
         },
         {
           "name": "packed_ring",
           "type": "boolean",
-          "description": "Enable packed ring"
+          "description": "Enable packed virtqueue layout. Default: false"
         }
       ]
     },
