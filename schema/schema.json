@@ -5671,12 +5671,12 @@
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Bdev name to export"
+          "description": "Name of the bdev to export"
         },
         {
           "name": "nbd_device",
           "type": "string",
-          "description": "NBD device name to assign"
+          "description": "Path to the NBD device, e.g. \"/dev/nbd0\". Default: first available device"
         }
       ]
     },
@@ -5687,7 +5687,7 @@
           "name": "nbd_device",
           "type": "string",
           "required": true,
-          "description": "NBD device name to stop"
+          "description": "Path to the NBD device, e.g. \"/dev/nbd0\""
         }
       ]
     },
@@ -5697,7 +5697,7 @@
         {
           "name": "nbd_device",
           "type": "string",
-          "description": "NBD device name to display"
+          "description": "Path to the NBD device, e.g. \"/dev/nbd0\". Default: list all"
         }
       ]
     },

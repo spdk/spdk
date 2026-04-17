@@ -17,8 +17,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('nbd_start_disk',
                               help='Export a bdev as an nbd disk')
-    p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
-    p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.', nargs='?')
+    p.add_argument('bdev_name', help='Name of the bdev to export')
+    p.add_argument('nbd_device', help='Path to the NBD device, e.g. "/dev/nbd0". Default: first available device', nargs='?')
     p.set_defaults(func=nbd_start_disk)
 
     def nbd_stop_disk(args):
@@ -26,7 +26,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('nbd_stop_disk',
                               help='Stop an nbd disk')
-    p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
+    p.add_argument('nbd_device', help='Path to the NBD device, e.g. "/dev/nbd0"')
     p.set_defaults(func=nbd_stop_disk)
 
     def nbd_get_disks(args):
@@ -34,5 +34,5 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('nbd_get_disks',
                               help='Display full or specified nbd device list')
-    p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0")
+    p.add_argument('-n', '--nbd-device', help='Path to the NBD device, e.g. "/dev/nbd0". Default: list all')
     p.set_defaults(func=nbd_get_disks)
