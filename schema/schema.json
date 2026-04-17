@@ -6119,13 +6119,13 @@
           "name": "fsdev_io_pool_size",
           "type": "uint32",
           "required": true,
-          "description": "Size of fsdev IO objects pool."
+          "description": "Size of the fsdev IO objects pool"
         },
         {
           "name": "fsdev_io_cache_size",
           "type": "uint32",
           "required": true,
-          "description": "Size of fsdev IO objects cache per thread."
+          "description": "Size of the per-thread fsdev IO objects cache"
         }
       ]
     },
@@ -6136,33 +6136,33 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Name of the AIO fsdev to create."
+          "description": "Name of the AIO fsdev"
         },
         {
           "name": "root_path",
           "type": "string",
           "required": true,
-          "description": "Path on the system directory to be exposed as an SPDK filesystem"
+          "description": "Host directory to expose as the SPDK filesystem root"
         },
         {
           "name": "enable_xattr",
           "type": "boolean",
-          "description": "true to enable the extended attributes, false otherwise"
+          "description": "Enable extended attributes. Default: false"
         },
         {
           "name": "enable_writeback_cache",
           "type": "boolean",
-          "description": "true to enable the writeback cache, false otherwise"
+          "description": "Enable the writeback cache. Default: true"
         },
         {
           "name": "max_write",
           "type": "uint32",
-          "description": "Max write size in bytes"
+          "description": "Maximum write size in bytes. Default: 131072"
         },
         {
           "name": "skip_rw",
           "type": "boolean",
-          "description": "Skip processing read and write requests and complete them successfully immediately. This is useful for benchmarking."
+          "description": "Skip read and write operations and complete them immediately (for benchmarking). Default: false"
         }
       ]
     },
@@ -6173,7 +6173,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Name of the AIO fsdev to delete."
+          "description": "Name of the AIO fsdev to delete"
         }
       ]
     }
