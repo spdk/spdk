@@ -9,6 +9,7 @@
 #include "nvme/nvme.c"
 
 #include "common/lib/test_env.c"
+#include "common/lib/nvme/cmd_ut_common.h"
 
 #define UT_SIZE_IOMS 128u
 
@@ -207,9 +208,6 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		 uint32_t sector_size, uint32_t md_size, uint32_t max_xfer_size,
 		 uint32_t stripe_size, bool extended_lba)
 {
-	uint32_t num_requests = 32;
-	uint32_t i;
-
 	memset(ctrlr, 0, sizeof(*ctrlr));
 	ctrlr->quirks = g_ctrlr_quirks;
 	ctrlr->max_xfer_size = max_xfer_size;
@@ -237,25 +235,14 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	}
 	ns->sectors_per_stripe = stripe_size / ns->extended_lba_size;
 
-	memset(qpair, 0, sizeof(*qpair));
-	qpair->ctrlr = ctrlr;
-	qpair->req_buf = calloc(num_requests, sizeof(struct nvme_request));
-	SPDK_CU_ASSERT_FATAL(qpair->req_buf != NULL);
-
-	for (i = 0; i < num_requests; i++) {
-		struct nvme_request *req = qpair->req_buf + i * sizeof(struct nvme_request);
-
-		req->qpair = qpair;
-		STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
-	}
-
+	ut_qpair_init(qpair, ctrlr);
 	g_request = NULL;
 }
 
 static void
 cleanup_after_test(struct spdk_nvme_qpair *qpair)
 {
-	free(qpair->req_buf);
+	ut_qpair_cleanup(qpair);
 	g_ctrlr_quirks = 0;
 }
 
