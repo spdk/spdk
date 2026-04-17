@@ -2980,35 +2980,35 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Virtio SCSI base bdev name or Virtio Blk bdev name"
+          "description": "Prefix used to name the resulting bdev(s)"
         },
         {
           "name": "trtype",
           "type": "string",
           "required": true,
-          "description": "Virtio target trtype: pci or user"
+          "description": "Virtio transport type: pci, user, vfio-user"
         },
         {
           "name": "traddr",
           "type": "string",
           "required": true,
-          "description": "target address: BDF or UNIX socket file path"
+          "description": "Transport-specific address (PCI BDF for pci; UNIX socket path for user and vfio-user)"
         },
         {
           "name": "dev_type",
           "type": "string",
           "required": true,
-          "description": "Virtio device type: blk or scsi"
+          "description": "Virtio device type: blk, scsi"
         },
         {
           "name": "vq_count",
           "type": "uint32",
-          "description": "Number of queues this controller will utilize (default: 1)"
+          "description": "Number of virtqueues (user transport only). Default: 1"
         },
         {
           "name": "vq_size",
           "type": "uint32",
-          "description": "Size of each queue. Must be power of 2. (default: 512)"
+          "description": "Entries per virtqueue, must be a power of 2 (user transport only). Default: 512"
         }
       ]
     },
@@ -3023,7 +3023,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Virtio name"
+          "description": "Name of the virtio bdev (e.g. \"VirtioUser0\")"
         }
       ]
     },
@@ -3034,12 +3034,12 @@
           "name": "enable",
           "type": "boolean",
           "required": true,
-          "description": "Enable or disable the virtio blk hotplug monitor"
+          "description": "Enable the virtio-blk hotplug monitor"
         },
         {
           "name": "period_us",
           "type": "uint64",
-          "description": "The period time of the monitor"
+          "description": "Hotplug polling period in microseconds"
         }
       ]
     },
@@ -4753,19 +4753,19 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         },
         {
           "name": "delay_base_us",
           "type": "uint32",
           "required": true,
-          "description": "Base (minimum) coalescing time in microseconds"
+          "description": "Base coalescing delay in microseconds"
         },
         {
           "name": "iops_threshold",
           "type": "uint32",
           "required": true,
-          "description": "Coalescing activation level greater than 0 in IO per second"
+          "description": "IOPS threshold above which coalescing kicks in (must be > 0)"
         }
       ]
     },
@@ -4776,17 +4776,17 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         },
         {
           "name": "cpumask",
           "type": "string",
-          "description": "@ref cpu_mask for this controller"
+          "description": "CPU mask for the controller's threads"
         },
         {
           "name": "delay",
           "type": "boolean",
-          "description": "If true, delay the controller startup."
+          "description": "Delay controller startup. Default: false"
         }
       ]
     },
@@ -4797,7 +4797,7 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         }
       ]
     },
@@ -4808,19 +4808,19 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         },
         {
           "name": "scsi_target_num",
           "type": "int32",
           "required": true,
-          "description": "SCSI target ID between 0 and 7 or -1 to use first free ID."
+          "description": "SCSI target number (0-7), or -1 to pick the first free slot"
         },
         {
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Name of bdev to expose as a LUN 0"
+          "description": "Name of the bdev to expose as LUN 0 of the target"
         }
       ]
     },
@@ -4831,13 +4831,13 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         },
         {
           "name": "scsi_target_num",
           "type": "uint32",
           "required": true,
-          "description": "SCSI target ID between 0 and 7"
+          "description": "SCSI target number (0-7)"
         }
       ]
     },
@@ -4848,7 +4848,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Transport name"
+          "description": "Name of the virtio-blk transport to create"
         }
       ]
     },
@@ -4858,7 +4858,7 @@
         {
           "name": "name",
           "type": "string",
-          "description": "Transport name."
+          "description": "Name of a specific transport to query. Default: list all"
         }
       ]
     },
@@ -4869,18 +4869,18 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         },
         {
           "name": "dev_name",
           "type": "string",
           "required": true,
-          "description": "Name of bdev to expose block device"
+          "description": "Name of the bdev to expose as the block device"
         },
         {
           "name": "readonly",
           "type": "boolean",
-          "description": "If true, this target will be read only (default: false)"
+          "description": "Expose the block device as read-only. Default: false"
         },
         {
           "name": "packed_ring",
@@ -4890,7 +4890,7 @@
         {
           "name": "cpumask",
           "type": "string",
-          "description": "@ref cpu_mask for this controller"
+          "description": "CPU mask for the controller's threads"
         },
         {
           "name": "transport",
@@ -4905,7 +4905,7 @@
         {
           "name": "name",
           "type": "string",
-          "description": "Vhost controller name"
+          "description": "Name of a specific vhost controller to query. Default: list all"
         }
       ]
     },
@@ -4916,7 +4916,7 @@
           "name": "ctrlr",
           "type": "string",
           "required": true,
-          "description": "Controller name"
+          "description": "Name of the vhost controller"
         }
       ]
     },
