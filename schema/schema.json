@@ -5077,7 +5077,7 @@
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Bdev on which to construct logical volume store"
+          "description": "Bdev on which to construct the logical volume store"
         },
         {
           "name": "lvs_name",
@@ -5088,23 +5088,23 @@
         {
           "name": "cluster_sz",
           "type": "uint32",
-          "description": "Cluster size of the logical volume store in bytes (Default: 4MiB)"
+          "description": "Cluster size of the logical volume store in bytes"
         },
         {
           "name": "clear_method",
           "type": "enum",
           "class": "lvs_clear_method",
-          "description": "Change clear method for data region."
+          "description": "Clear method for the data region"
         },
         {
           "name": "num_md_pages_per_cluster_ratio",
           "type": "uint32",
-          "description": "Reserved metadata pages per cluster (Default: 100)"
+          "description": "Reserved metadata pages per cluster, as a percentage"
         },
         {
           "name": "md_page_size",
           "type": "uint32",
-          "description": "Metadata page size of the logical volume store in bytes (Default: max(4KB, bdev phys blocklen)"
+          "description": "Metadata page size in bytes"
         }
       ]
     },
@@ -5177,34 +5177,34 @@
           "name": "lvol_name",
           "type": "string",
           "required": true,
-          "description": "Name of logical volume to create"
+          "description": "Name of the logical volume to create"
         },
         {
           "name": "size_in_mib",
           "type": "uint64",
           "required": true,
-          "description": "Desired size of logical volume in MiB"
+          "description": "Desired size of the logical volume in MiB"
         },
         {
           "name": "thin_provision",
           "type": "boolean",
-          "description": "True to enable thin provisioning"
+          "description": "Enable thin provisioning"
         },
         {
           "name": "uuid",
           "type": "string",
-          "description": "UUID of logical volume store to create logical volume on"
+          "description": "UUID of the logical volume store"
         },
         {
           "name": "lvs_name",
           "type": "string",
-          "description": "Name of logical volume store to create logical volume on"
+          "description": "Name of the logical volume store"
         },
         {
           "name": "clear_method",
           "type": "enum",
           "class": "lvol_clear_method",
-          "description": "Change default data clusters clear method."
+          "description": "Per-cluster clear method"
         }
       ]
     },
@@ -5255,7 +5255,7 @@
           "name": "lvs_name",
           "type": "string",
           "required": true,
-          "description": "logical volume store name"
+          "description": "Name of the logical volume store"
         },
         {
           "name": "clone_name",
@@ -5339,7 +5339,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "UUID or alias of the logical volume to decouple the parent of it"
+          "description": "UUID or alias of the logical volume to decouple from its parent"
         }
       ]
     },
