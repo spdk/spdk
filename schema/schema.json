@@ -6023,27 +6023,27 @@
         {
           "name": "small_pool_count",
           "type": "uint64",
-          "description": "Number of small buffers in the global pool"
+          "description": "Number of small buffers in the global pool. Default: 8192"
         },
         {
           "name": "large_pool_count",
           "type": "uint64",
-          "description": "Number of large buffers in the global pool"
+          "description": "Number of large buffers in the global pool. Default: 1024"
         },
         {
           "name": "small_bufsize",
           "type": "uint32",
-          "description": "Size of a small buffer"
+          "description": "Size of a small buffer in bytes. Default: 8192"
         },
         {
           "name": "large_bufsize",
           "type": "uint32",
-          "description": "Size of a small buffer"
+          "description": "Size of a large buffer in bytes. Default: 135168"
         },
         {
           "name": "enable_numa",
           "type": "boolean",
-          "description": "Enable per-NUMA node buffer pools. Each node will allocate a full pool based on small_pool_count and large_pool_count."
+          "description": "Enable per-NUMA node buffer pools, each sized by small_pool_count and large_pool_count. Default: false"
         }
       ]
     },

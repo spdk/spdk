@@ -18,11 +18,13 @@ def add_parser(subparsers):
                                     large_bufsize=args.large_bufsize,
                                     enable_numa=args.enable_numa)
     p = subparsers.add_parser('iobuf_set_options', help='Set iobuf pool options')
-    p.add_argument('--small-pool-count', help='number of small buffers in the global pool', type=int)
-    p.add_argument('--large-pool-count', help='number of large buffers in the global pool', type=int)
-    p.add_argument('--small-bufsize', help='size of a small buffer', type=int)
-    p.add_argument('--large-bufsize', help='size of a large buffer', type=int)
-    p.add_argument('--enable-numa', help='enable per-NUMA node buffer pools', action='store_true')
+    p.add_argument('--small-pool-count', help='Number of small buffers in the global pool. Default: 8192', type=int)
+    p.add_argument('--large-pool-count', help='Number of large buffers in the global pool. Default: 1024', type=int)
+    p.add_argument('--small-bufsize', help='Size of a small buffer in bytes. Default: 8192', type=int)
+    p.add_argument('--large-bufsize', help='Size of a large buffer in bytes. Default: 135168', type=int)
+    p.add_argument('--enable-numa',
+                   help='Enable per-NUMA node buffer pools, each sized by small_pool_count and large_pool_count. Default: false',
+                   action='store_true')
     p.set_defaults(func=iobuf_set_options)
 
     def iobuf_get_stats(args):
