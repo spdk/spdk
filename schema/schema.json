@@ -5545,13 +5545,13 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Name of the key to add."
+          "description": "Name of the key"
         },
         {
           "name": "path",
           "type": "string",
           "required": true,
-          "description": "Path to a file containing the key."
+          "description": "Path to the file containing the key"
         }
       ]
     },
@@ -5562,7 +5562,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Name of the key to remove."
+          "description": "Name of the key"
         }
       ]
     },
@@ -5576,7 +5576,7 @@
         {
           "name": "enable",
           "type": "boolean",
-          "description": "Enable the module."
+          "description": "Enable the Linux keyring module. Default: false"
         }
       ]
     },
