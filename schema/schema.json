@@ -5529,12 +5529,12 @@
         {
           "name": "id",
           "type": "uint64",
-          "description": "First Event ID to fetch (default: first available)."
+          "description": "Index of the first event to return. Default: 0 (oldest available)"
         },
         {
           "name": "max",
           "type": "uint64",
-          "description": "Maximum number of event to return (default: no limit)."
+          "description": "Maximum number of events to return. Default: no limit"
         }
       ]
     },

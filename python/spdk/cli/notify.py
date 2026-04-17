@@ -23,6 +23,6 @@ def add_parser(subparsers):
         print_dict(ret)
 
     p = subparsers.add_parser('notify_get_notifications', help='Get notifications')
-    p.add_argument('-i', '--id', help="""First ID to start fetching from""", type=int)
-    p.add_argument('-n', '--max', help="""Maximum number of notifications to return in response""", type=int)
+    p.add_argument('-i', '--id', help='Index of the first event to return. Default: 0 (oldest available)', type=int)
+    p.add_argument('-n', '--max', help='Maximum number of events to return. Default: no limit', type=int)
     p.set_defaults(func=notify_get_notifications)
