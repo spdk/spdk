@@ -1254,7 +1254,7 @@ if [[ "${CONFIG[ISAL_INSTALLED]}" = "y" ]]; then
 		exit 1
 	fi
 	echo "Using ISA-L from ${CONFIG[ISAL_PATH]}"
-elif [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
+elif [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]] || [[ $arch == riscv64* ]]; then
 	CONFIG[ISAL]=y
 	# make sure the submodule is initialized
 	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
@@ -1284,6 +1284,13 @@ elif [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
 			#For gas v2.24~v2.34, sve2 instructions are not supported. To workaround it, sve2 optimization should be disabled
 			ISAL_CRYPTO_OPTS+=("--disable-sve2")
 		fi
+	fi
+	# isa-l_crypto upstream only builds aes/ under X86_64 / AARCH64
+	if [[ $arch == riscv64* ]] \
+		&& [[ "${CONFIG[ISAL_CRYPTO_INSTALLED]}" != "y" ]] \
+		&& [[ "${CONFIG[ISAL_CRYPTO]}" != "n" ]]; then
+		echo "Notice: isa-l_crypto upstream does not build aes/ on riscv64; disabling ISA-L-crypto."
+		CONFIG[ISAL_CRYPTO]=n
 	fi
 else
 	# for PPC
