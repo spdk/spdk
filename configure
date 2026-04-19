@@ -66,6 +66,8 @@ function usage() {
 	echo " --without-crypto          Disable isa-l-crypto and vbdev crypto module."
 	echo " --with-isal[=DIR]         Don't build isa-l, use external library instead."
 	echo " --with-isal-crypto[=DIR]  Don't build isa-l_crypto, use external library instead."
+	echo " --without-isal-crypto     Disable isa-l_crypto and any feature that requires it."
+	echo "                           Implies --without-crypto (SW crypto needs isa-l_crypto)."
 	echo " --with-fio[=DIR]          Build fio_plugin."
 	echo " --without-fio             default: /usr/src/fio"
 	echo " --with-cuda               Enable the CUDA accel module."
@@ -599,6 +601,9 @@ for i in "$@"; do
 			check_dir "--with-isal-crypto=${CONFIG[ISAL_CRYPTO_PATH]}"
 			CONFIG[ISAL_CRYPTO]=y
 			CONFIG[ISAL_CRYPTO_INSTALLED]=y
+			;;
+		--without-isal-crypto)
+			CONFIG[ISAL_CRYPTO]=n
 			;;
 		--with-fio) ;&
 		--with-fio=*)
@@ -1315,7 +1320,7 @@ if [[ ! "${CONFIG[ISAL_INSTALLED]}" = "y" ]]; then
 	fi
 fi
 
-# ISA-L-crypto complements ISA-L functionality, it is only enabled together with ISA-L
+# ISA-L-crypto is enabled together with ISA-L by default; opt out with --without-isal-crypto.
 if [[ "${CONFIG[ISAL_CRYPTO_INSTALLED]}" = "y" ]]; then
 	if [[ "${CONFIG[SHARED]}" != "y" ]]; then
 		echo "External isa-l_crypto only supported with --with-shared"
@@ -1323,6 +1328,12 @@ if [[ "${CONFIG[ISAL_CRYPTO_INSTALLED]}" = "y" ]]; then
 	fi
 	echo "Using isa-l_crypto from ${CONFIG[ISAL_CRYPTO_PATH]}"
 	CONFIG[ISAL_CRYPTO]=y
+elif [[ "${CONFIG[ISAL_CRYPTO]}" = "n" ]]; then
+	# vbdev_crypto needs isa-l_crypto AES
+	if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+		echo "Notice: --without-isal-crypto implies --without-crypto; disabling vbdev_crypto."
+		CONFIG[CRYPTO]=n
+	fi
 elif [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [ ! -f "$rootdir"/isa-l-crypto/autogen.sh ]; then
 		echo "ISA-L-crypto is required but was not found, please init the submodule with:"
