@@ -3587,6 +3587,45 @@
       ]
     },
     {
+      "name": "nvmf_create_target",
+      "private": true,
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Target name (unique to application)"
+        },
+        {
+          "name": "max_subsystems",
+          "type": "uint32",
+          "description": "Max number of NVMf subsystems (default: SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS)"
+        },
+        {
+          "name": "discovery_filter",
+          "type": "uint32",
+          "description": "Comma-separated list of discovery filters: transport, address, svcid"
+        }
+      ]
+    },
+    {
+      "name": "nvmf_delete_target",
+      "private": true,
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Target name"
+        }
+      ]
+    },
+    {
+      "name": "nvmf_get_targets",
+      "private": true,
+      "params": []
+    },
+    {
       "name": "nvmf_create_transport",
       "params": [
         {

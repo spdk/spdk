@@ -41,7 +41,6 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
     schema_decoders = {method["name"]:method["decoder"] for method in schema['methods'] if "decoder" in method}
     schema_aliases = {method["name"]:method["alias"] for method in schema['methods'] if "alias" in method}
-    exception_methods = {"nvmf_create_target", "nvmf_delete_target", "nvmf_get_targets"}
     # TODO: those are embeeded objects decoders and will be resolved soon
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
     c_code_methods = dict()
@@ -54,7 +53,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             for name, func in methods:
                 if func != f"rpc_{name}":
                     raise ValueError(f"In file {path}: RPC name '{name}' does not match function name '{func}'")
-                if name not in schema_methods | exception_methods:
+                if name not in schema_methods:
                     raise ValueError(f"In file {path}: RPC name '{name}' does not appear in schema. Update schema or exception list")
             aliases = re.findall(r'SPDK_RPC_REGISTER_ALIAS_DEPRECATED\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)', data)
             c_code_aliases.update(aliases)
@@ -133,12 +132,13 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     _, subparsers = rpc.create_parser()
     schema_methods = set(method["name"] for method in schema['methods'])
+    private_methods = {method["name"] for method in schema['methods'] if method.get("private")}
     class_methods = set(dir(rpc.JSONRPCClient))
     conflicts = schema_methods & class_methods
     if conflicts:
         raise Exception(f"JSONRPCClient methods already exist, so can't name RPC same: {conflicts}")
     cli_methods = set(subparsers.choices.keys())
-    missing_in_cli = schema_methods - cli_methods
+    missing_in_cli = schema_methods - cli_methods - private_methods
     missing_in_schema = cli_methods - schema_methods - exceptions
     if missing_in_cli:
         raise ValueError(f"Methods defined in schema but missing in CLI: {sorted(missing_in_cli)}")
@@ -147,6 +147,8 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
     schema_enums = {obj["name"]: obj for obj in schema['enums']}
     for method in schema['methods']:
+        if method['name'] in private_methods:
+            continue
         subparser = subparsers.choices[method['name']]
         groups = subparser._mutually_exclusive_groups
         actions = {a.dest: a for a in subparser._actions}

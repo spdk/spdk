@@ -2189,11 +2189,6 @@ rpc_nvmf_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", rpc_nvmf_subsystem_allow_any_host,
 		  SPDK_RPC_RUNTIME)
 
-struct nvmf_rpc_target_ctx {
-	char *name;
-	uint32_t max_subsystems;
-	uint32_t discovery_filter;
-};
 
 static int
 decode_discovery_filter(const struct spdk_json_val *val, void *out)
@@ -2247,19 +2242,19 @@ out:
 }
 
 static const struct spdk_json_object_decoder rpc_nvmf_create_target_decoders[] = {
-	{"name", offsetof(struct nvmf_rpc_target_ctx, name), spdk_json_decode_string},
-	{"max_subsystems", offsetof(struct nvmf_rpc_target_ctx, max_subsystems), spdk_json_decode_uint32, true},
-	{"discovery_filter", offsetof(struct nvmf_rpc_target_ctx, discovery_filter), decode_discovery_filter, true}
+	{"name", offsetof(struct rpc_nvmf_create_target_ctx, name), spdk_json_decode_string},
+	{"max_subsystems", offsetof(struct rpc_nvmf_create_target_ctx, max_subsystems), spdk_json_decode_uint32, true},
+	{"discovery_filter", offsetof(struct rpc_nvmf_create_target_ctx, discovery_filter), decode_discovery_filter, true}
 };
 
 static void
 rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct spdk_nvmf_target_opts	opts;
-	struct nvmf_rpc_target_ctx	ctx = {0};
-	struct spdk_nvmf_tgt		*tgt;
-	struct spdk_json_write_ctx	*w;
+	struct spdk_nvmf_target_opts		opts;
+	struct rpc_nvmf_create_target_ctx	ctx = {};
+	struct spdk_nvmf_tgt			*tgt;
+	struct spdk_json_write_ctx		*w;
 
 	/* Decode parameters the first time to get the transport type */
 	if (spdk_json_decode_object(params, rpc_nvmf_create_target_decoders,
@@ -2293,12 +2288,12 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 	spdk_json_write_string(w, spdk_nvmf_tgt_get_name(tgt));
 	spdk_jsonrpc_end_result(request, w);
 out:
-	free(ctx.name);
+	free_rpc_nvmf_create_target(&ctx);
 }
 /* private */ SPDK_RPC_REGISTER("nvmf_create_target", rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
 
 static const struct spdk_json_object_decoder rpc_nvmf_delete_target_decoders[] = {
-	{"name", offsetof(struct nvmf_rpc_target_ctx, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_nvmf_delete_target_ctx, name), spdk_json_decode_string},
 };
 
 static void
@@ -2313,8 +2308,8 @@ static void
 rpc_nvmf_delete_target(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_target_ctx	ctx = {0};
-	struct spdk_nvmf_tgt		*tgt;
+	struct rpc_nvmf_delete_target_ctx	ctx = {};
+	struct spdk_nvmf_tgt			*tgt;
 
 	/* Decode parameters the first time to get the transport type */
 	if (spdk_json_decode_object(params, rpc_nvmf_delete_target_decoders,
@@ -2322,7 +2317,7 @@ rpc_nvmf_delete_target(struct spdk_jsonrpc_request *request,
 				    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		free(ctx.name);
+		free_rpc_nvmf_delete_target(&ctx);
 		return;
 	}
 
@@ -2331,12 +2326,12 @@ rpc_nvmf_delete_target(struct spdk_jsonrpc_request *request,
 	if (tgt == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "The specified target doesn't exist, cannot delete it.");
-		free(ctx.name);
+		free_rpc_nvmf_delete_target(&ctx);
 		return;
 	}
 
 	spdk_nvmf_tgt_destroy(tgt, nvmf_rpc_destroy_target_done, request);
-	free(ctx.name);
+	free_rpc_nvmf_delete_target(&ctx);
 }
 /* private */ SPDK_RPC_REGISTER("nvmf_delete_target", rpc_nvmf_delete_target, SPDK_RPC_RUNTIME);
 
