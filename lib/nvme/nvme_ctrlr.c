@@ -2476,44 +2476,6 @@ nvme_active_ns_ctx_destroy(struct nvme_active_ns_ctx *ctx)
 	free(ctx);
 }
 
-static int
-nvme_ctrlr_destruct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
-{
-	struct spdk_nvme_ns tmp, *ns;
-
-	assert(ctrlr != NULL);
-
-	tmp.id = nsid;
-	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
-	if (ns == NULL) {
-		return -EINVAL;
-	}
-
-	nvme_ns_clear(ns);
-
-	return 0;
-}
-
-static int
-nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
-{
-	struct spdk_nvme_ns *ns;
-
-	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
-		return -EINVAL;
-	}
-
-	/* Namespaces are constructed on demand, so simply request it. */
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-	if (ns == NULL) {
-		return -ENOMEM;
-	}
-
-	ns->identify_pending = true;
-
-	return 0;
-}
-
 /* Returns true if the identify flow should be terminated, false otherwise. */
 static bool
 nvme_ctrlr_handle_identify_ns_completion(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
@@ -2525,8 +2487,8 @@ nvme_ctrlr_handle_identify_ns_completion(struct spdk_nvme_ctrlr *ctrlr, struct s
 		if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
 		    (cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT ||
 		     cpl->status.sc == SPDK_NVME_SC_INVALID_FIELD)) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Destructing namespace due to identify completion error\n");
-			nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace inactive due to identify completion error\n");
+			nvme_ns_clear(ns);
 		} else {
 			return true;
 		}
@@ -2542,7 +2504,6 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 	size_t i;
 	uint32_t nsid;
 	struct spdk_nvme_ns *ns, *tmp_ns;
-	int rc;
 
 	/* First, remove namespaces that no longer exist */
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
@@ -2559,7 +2520,7 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 		if (nsid != ns->id) {
 			/* Did not find this namespace id in the new list. */
 			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", ns->id);
-			nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
+			nvme_ns_clear(ns);
 		}
 	}
 
@@ -2572,13 +2533,15 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 		}
 
 		/* If the namespace already exists, this will not construct it a second time. */
-		rc = nvme_ctrlr_construct_namespace(ctrlr, nsid);
-		if (rc != 0) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (!ns) {
 			/* We can't easily handle a failure here. But just move on. */
 			assert(false);
 			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to allocate a namespace object.\n");
 			continue;
 		}
+
+		ns->identify_pending = true;
 	}
 }
 
@@ -4727,7 +4690,7 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
-		nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
+		nvme_ns_clear(ns);
 		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
 		spdk_free(ns);
 	}
