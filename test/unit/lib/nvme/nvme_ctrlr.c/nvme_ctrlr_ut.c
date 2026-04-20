@@ -3292,7 +3292,6 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	ctrlr.cdata.nn = 5;
 	/* case 1: No first/next active NS, move on to the next state, expect: pass */
 	prev_nsid = 0;
-	ctrlr.active_ns_count = 0;
 	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
 	CU_ASSERT(rc == 0);
@@ -3306,7 +3305,6 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	for (i = 0; i < 5; i++) {
 		RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns[i]);
 	}
-	ctrlr.active_ns_count = 5;
 	ns[1].csi = SPDK_NVME_CSI_NVM;
 	ns[1].id = 2;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
@@ -3319,7 +3317,6 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
 	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
 	prev_nsid = 0;
-	ctrlr.active_ns_count = 5;
 
 	for (int i = 0; i < 5; i++) {
 		ns[i].csi = SPDK_NVME_CSI_NVM;
@@ -3344,7 +3341,6 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	memset(&ctrlr.state, 0x00, sizeof(ctrlr.state));
 	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
 	prev_nsid = 1;
-	ctrlr.active_ns_count = 5;
 	ns[1].csi = SPDK_NVME_CSI_ZNS;
 	g_fail_next_identify = true;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
@@ -3366,7 +3362,6 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 	ctrlr.cdata.cmic.anars = true;
 	ctrlr.cdata.lpa.cses = 1;
 	ctrlr.cdata.nanagrpid = 1;
-	ctrlr.active_ns_count = 1;
 
 	rc = nvme_ctrlr_set_supported_log_pages(&ctrlr);
 	CU_ASSERT(rc == 0);
@@ -3374,7 +3369,7 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_HEALTH_INFORMATION] == true);
 	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_FIRMWARE_SLOT] == true);
 	CU_ASSERT(ctrlr.ana_log_page_size == sizeof(struct spdk_nvme_ana_page) +
-		  sizeof(struct spdk_nvme_ana_group_descriptor) * 1 + sizeof(uint32_t) * 1);
+		  sizeof(struct spdk_nvme_ana_group_descriptor) * 1);
 	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] == true);
 	free(ctrlr.ana_log_page);
 	free(ctrlr.copied_ana_desc);
@@ -3435,7 +3430,6 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;
-	ctrlr.active_ns_count = 3;
 
 	rc = nvme_ctrlr_update_ana_log_page(&ctrlr);
 	CU_ASSERT(rc == 0);

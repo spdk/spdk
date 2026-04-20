@@ -752,10 +752,18 @@ nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_alloc_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
+	struct spdk_nvme_ns *ns;
 	uint32_t ana_log_page_size;
+	uint32_t active_ns_count = 0;
+
+	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
+		if (ns->active) {
+			active_ns_count++;
+		}
+	}
 
 	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + ctrlr->cdata.nanagrpid *
-			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->active_ns_count *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + active_ns_count *
 			    sizeof(uint32_t);
 
 	/* Number of active namespaces may have changed.
@@ -2531,7 +2539,6 @@ static void
 nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_ns_list,
 				   size_t max_entries)
 {
-	uint32_t active_ns_count = 0;
 	size_t i;
 	uint32_t nsid;
 	struct spdk_nvme_ns *ns, *tmp_ns;
@@ -2540,13 +2547,13 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 	/* First, remove namespaces that no longer exist */
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
 		nsid = new_ns_list[0];
-		active_ns_count = 0;
+		i = 0;
 		while (nsid != 0) {
 			if (nsid == ns->id) {
 				break;
 			}
 
-			nsid = new_ns_list[active_ns_count++];
+			nsid = new_ns_list[i++];
 		}
 
 		if (nsid != ns->id) {
@@ -2557,9 +2564,8 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 	}
 
 	/* Next, add new namespaces */
-	active_ns_count = 0;
 	for (i = 0; i < max_entries; i++) {
-		nsid = new_ns_list[active_ns_count];
+		nsid = new_ns_list[i];
 
 		if (nsid == 0) {
 			break;
@@ -2573,11 +2579,7 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to allocate a namespace object.\n");
 			continue;
 		}
-
-		active_ns_count++;
 	}
-
-	ctrlr->active_ns_count = active_ns_count;
 }
 
 static void
@@ -4708,8 +4710,6 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
 		spdk_free(ns);
 	}
-
-	ctrlr->active_ns_count = 0;
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
