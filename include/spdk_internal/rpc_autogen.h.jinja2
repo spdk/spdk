@@ -118,17 +118,21 @@ struct rpc_{{ array.name }} {
     {%- endif %}
 };
 
-{% if array.item_type != "object" %}
 static inline int
 rpc_decode_{{ array.name }}(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_{{ array.name }} *arr = out;
 
+	{%- if array.item_type == "object" %}
+	return spdk_json_decode_array(val, rpc_decode_{{ array.class }}, arr->items,
+				      {{ array_max_count }}, &arr->count,
+				      sizeof(struct rpc_{{ array.class }}));
+	{%- else %}
 	return spdk_json_decode_array(val, spdk_json_decode_{{ array.item_type }}, arr->items,
 				      {{ array_max_count }}, &arr->count,
 				      sizeof({{ types[array.item_type] }}));
+	{%- endif %}
 }
-{% endif %}
 
 static inline void
 free_rpc_{{ array.name }}(struct rpc_{{ array.name }} *arr)

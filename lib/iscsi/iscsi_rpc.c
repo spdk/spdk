@@ -212,31 +212,11 @@ rpc_iscsi_get_target_nodes(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_get_target_nodes", rpc_iscsi_get_target_nodes, SPDK_RPC_RUNTIME)
 
-static int
-decode_rpc_iscsi_pg_ig_maps(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_iscsi_pg_ig_maps *pg_ig_maps = out;
-
-	return spdk_json_decode_array(val, rpc_decode_iscsi_pg_ig_map, pg_ig_maps->items,
-				      RPC_ISCSI_PG_IG_MAPS_MAX, &pg_ig_maps->count,
-				      sizeof(struct rpc_iscsi_pg_ig_map));
-}
-
-static int
-decode_rpc_iscsi_luns(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_iscsi_luns *luns = out;
-
-	return spdk_json_decode_array(val, rpc_decode_iscsi_lun, luns->items,
-				      RPC_ISCSI_LUNS_MAX,
-				      &luns->count, sizeof(struct rpc_iscsi_lun));
-}
-
 static const struct spdk_json_object_decoder rpc_iscsi_create_target_node_decoders[] = {
 	{"name", offsetof(struct rpc_iscsi_create_target_node_ctx, name), spdk_json_decode_string},
 	{"alias_name", offsetof(struct rpc_iscsi_create_target_node_ctx, alias_name), spdk_json_decode_string},
-	{"pg_ig_maps", offsetof(struct rpc_iscsi_create_target_node_ctx, pg_ig_maps), decode_rpc_iscsi_pg_ig_maps},
-	{"luns", offsetof(struct rpc_iscsi_create_target_node_ctx, luns), decode_rpc_iscsi_luns},
+	{"pg_ig_maps", offsetof(struct rpc_iscsi_create_target_node_ctx, pg_ig_maps), rpc_decode_iscsi_pg_ig_maps},
+	{"luns", offsetof(struct rpc_iscsi_create_target_node_ctx, luns), rpc_decode_iscsi_luns},
 	{"queue_depth", offsetof(struct rpc_iscsi_create_target_node_ctx, queue_depth), spdk_json_decode_int32},
 	{"disable_chap", offsetof(struct rpc_iscsi_create_target_node_ctx, disable_chap), spdk_json_decode_bool, true},
 	{"require_chap", offsetof(struct rpc_iscsi_create_target_node_ctx, require_chap), spdk_json_decode_bool, true},
@@ -311,7 +291,7 @@ SPDK_RPC_REGISTER("iscsi_create_target_node", rpc_iscsi_create_target_node, SPDK
 
 static const struct spdk_json_object_decoder rpc_iscsi_target_node_add_pg_ig_maps_decoders[] = {
 	{"name", offsetof(struct rpc_iscsi_target_node_add_pg_ig_maps_ctx, name), spdk_json_decode_string},
-	{"pg_ig_maps", offsetof(struct rpc_iscsi_target_node_add_pg_ig_maps_ctx, pg_ig_maps), decode_rpc_iscsi_pg_ig_maps},
+	{"pg_ig_maps", offsetof(struct rpc_iscsi_target_node_add_pg_ig_maps_ctx, pg_ig_maps), rpc_decode_iscsi_pg_ig_maps},
 };
 
 static void
@@ -364,7 +344,7 @@ SPDK_RPC_REGISTER("iscsi_target_node_add_pg_ig_maps",
 
 static const struct spdk_json_object_decoder rpc_iscsi_target_node_remove_pg_ig_maps_decoders[] = {
 	{"name", offsetof(struct rpc_iscsi_target_node_remove_pg_ig_maps_ctx, name), spdk_json_decode_string},
-	{"pg_ig_maps", offsetof(struct rpc_iscsi_target_node_remove_pg_ig_maps_ctx, pg_ig_maps), decode_rpc_iscsi_pg_ig_maps},
+	{"pg_ig_maps", offsetof(struct rpc_iscsi_target_node_remove_pg_ig_maps_ctx, pg_ig_maps), rpc_decode_iscsi_pg_ig_maps},
 };
 
 static void
@@ -492,18 +472,9 @@ rpc_iscsi_get_portal_groups(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_get_portal_groups", rpc_iscsi_get_portal_groups, SPDK_RPC_RUNTIME)
 
-static int
-decode_rpc_iscsi_portals(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_iscsi_portals *list = out;
-
-	return spdk_json_decode_array(val, rpc_decode_iscsi_portal, list->items, RPC_ISCSI_PORTALS_MAX,
-				      &list->count, sizeof(struct rpc_iscsi_portal));
-}
-
 static const struct spdk_json_object_decoder rpc_iscsi_create_portal_group_decoders[] = {
 	{"tag", offsetof(struct rpc_iscsi_create_portal_group_ctx, tag), spdk_json_decode_int32},
-	{"portals", offsetof(struct rpc_iscsi_create_portal_group_ctx, portals), decode_rpc_iscsi_portals},
+	{"portals", offsetof(struct rpc_iscsi_create_portal_group_ctx, portals), rpc_decode_iscsi_portals},
 	{"private", offsetof(struct rpc_iscsi_create_portal_group_ctx, is_private), spdk_json_decode_bool, true},
 	{"wait", offsetof(struct rpc_iscsi_create_portal_group_ctx, wait), spdk_json_decode_bool, true},
 };
@@ -1085,19 +1056,9 @@ rpc_iscsi_set_discovery_auth(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_set_discovery_auth", rpc_iscsi_set_discovery_auth, SPDK_RPC_RUNTIME)
 
-static int
-decode_rpc_iscsi_auth_secrets(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_iscsi_auth_secrets *secrets = out;
-
-	return spdk_json_decode_array(val, rpc_decode_iscsi_auth_secret, secrets->items,
-				      RPC_ISCSI_AUTH_SECRETS_MAX, &secrets->count,
-				      sizeof(struct rpc_iscsi_auth_secret));
-}
-
 static const struct spdk_json_object_decoder rpc_iscsi_create_auth_group_decoders[] = {
 	{"tag", offsetof(struct rpc_iscsi_create_auth_group_ctx, tag), spdk_json_decode_int32},
-	{"secrets", offsetof(struct rpc_iscsi_create_auth_group_ctx, secrets), decode_rpc_iscsi_auth_secrets, true},
+	{"secrets", offsetof(struct rpc_iscsi_create_auth_group_ctx, secrets), rpc_decode_iscsi_auth_secrets, true},
 };
 
 static void
