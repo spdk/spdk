@@ -382,7 +382,7 @@ cuse_nvme_rescan_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t unused_nsid, vo
 			continue;
 		}
 		/* Identify to namespace can fail, do not check return. */
-		nvme_ns_construct(ns, nsid, ctrlr);
+		nvme_ns_identify(ns);
 	}
 
 	fuse_reply_ioctl_iov(req, 0, NULL, 0);

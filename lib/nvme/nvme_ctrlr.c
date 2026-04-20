@@ -2786,9 +2786,6 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 				     ctrlr->opts.admin_timeout_ms);
 		return;
 	}
-	ns->ctrlr = ctrlr;
-	ns->id = nsid;
-
 	rc = nvme_ctrlr_identify_ns_async(ns);
 	if (rc) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
@@ -2825,9 +2822,6 @@ nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
-
-	ns->ctrlr = ctrlr;
-	ns->id = nsid;
 
 	rc = nvme_ctrlr_identify_ns_async(ns);
 	if (rc) {
@@ -3419,7 +3413,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-			nvme_ns_construct(ns, nsid, ctrlr);
+			nvme_ns_identify(ns);
 		}
 
 		return 0;
@@ -3441,7 +3435,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 		}
 
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-		nvme_ns_construct(ns, nsid, ctrlr);
+		nvme_ns_identify(ns);
 	}
 
 	return i;
@@ -5214,7 +5208,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return -ENXIO;
 	}
 
-	return nvme_ns_construct(ns, nsid, ctrlr);
+	return nvme_ns_identify(ns);
 }
 
 int

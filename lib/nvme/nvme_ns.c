@@ -666,15 +666,13 @@ spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns) {
 }
 
 int
-nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
-		  struct spdk_nvme_ctrlr *ctrlr)
+nvme_ns_identify(struct spdk_nvme_ns *ns)
 {
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int	rc;
 
-	assert(id > 0);
+	assert(ns->id > 0);
 
-	ns->ctrlr = ctrlr;
-	ns->id = id;
 	/* This will be overwritten when reading ANA log page. */
 	ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 

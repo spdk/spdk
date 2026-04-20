@@ -101,35 +101,33 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 }
 
 static void
-test_nvme_ns_construct(void)
+test_nvme_ns_identify(void)
 {
-	struct spdk_nvme_ns ns = {};
-	uint32_t id = 1;
-	struct spdk_nvme_ctrlr ctrlr = { };
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = { .id = 1, .ctrlr = &ctrlr };
 
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	CU_ASSERT(ns.id == 1);
 }
 
 static void
 test_nvme_ns_uuid(void)
 {
-	struct spdk_nvme_ns ns = {};
-	uint32_t id = 1;
 	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = { .id = 1, .ctrlr = &ctrlr };
 	const struct spdk_uuid *uuid;
 	struct spdk_uuid expected_uuid;
 
 	memset(&expected_uuid, 0xA5, sizeof(expected_uuid));
 
 	/* Empty list - no UUID should be found */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	CU_ASSERT(uuid == NULL);
 	nvme_ns_destruct(&ns);
 
 	/* NGUID only (no UUID in list) */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
@@ -138,7 +136,7 @@ test_nvme_ns_uuid(void)
 	nvme_ns_destruct(&ns);
 
 	/* Just UUID in the list */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x03; /* NIDT == UUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memcpy(&ns.id_desc_list[4], &expected_uuid, sizeof(expected_uuid));
@@ -148,7 +146,7 @@ test_nvme_ns_uuid(void)
 	nvme_ns_destruct(&ns);
 
 	/* UUID followed by NGUID */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x03; /* NIDT == UUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memcpy(&ns.id_desc_list[4], &expected_uuid, sizeof(expected_uuid));
@@ -161,7 +159,7 @@ test_nvme_ns_uuid(void)
 	nvme_ns_destruct(&ns);
 
 	/* NGUID followed by UUID */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
@@ -177,19 +175,18 @@ test_nvme_ns_uuid(void)
 static void
 test_nvme_ns_csi(void)
 {
-	struct spdk_nvme_ns ns = {};
-	uint32_t id = 1;
 	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = { .id = 1, .ctrlr = &ctrlr };
 	enum spdk_nvme_csi csi;
 
 	/* Empty list - SPDK_NVME_CSI_NVM should be returned */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
 	nvme_ns_destruct(&ns);
 
 	/* NVM CSI - SPDK_NVME_CSI_NVM should be returned */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
 	ns.id_desc_list[1] = 0x1; /* NIDL */
 	ns.id_desc_list[4] = 0x0; /* SPDK_NVME_CSI_NVM */
@@ -198,7 +195,7 @@ test_nvme_ns_csi(void)
 	nvme_ns_destruct(&ns);
 
 	/* NGUID followed by ZNS CSI - SPDK_NVME_CSI_ZNS should be returned */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
@@ -210,7 +207,7 @@ test_nvme_ns_csi(void)
 	nvme_ns_destruct(&ns);
 
 	/* KV CSI followed by NGUID - SPDK_NVME_CSI_KV should be returned */
-	nvme_ns_construct(&ns, id, &ctrlr);
+	nvme_ns_identify(&ns);
 	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
 	ns.id_desc_list[1] = 0x1; /* NIDL */
 	ns.id_desc_list[4] = 0x1; /* SPDK_NVME_CSI_KV */
@@ -225,8 +222,8 @@ test_nvme_ns_csi(void)
 static void
 test_nvme_ns_data(void)
 {
-	struct spdk_nvme_ns ns = {};
-	struct spdk_nvme_ctrlr ctrlr = { };
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = { .id = 1, .ctrlr = &ctrlr };
 	struct spdk_nvme_ns_data expected_nsdata = {
 		.nsze = 1000,
 		.ncap = 1000,
@@ -234,7 +231,7 @@ test_nvme_ns_data(void)
 	const struct spdk_nvme_ns_data *nsdata;
 
 	fake_nsdata = &expected_nsdata;
-	SPDK_CU_ASSERT_FATAL(nvme_ns_construct(&ns, 1, &ctrlr) == 0);
+	SPDK_CU_ASSERT_FATAL(nvme_ns_identify(&ns) == 0);
 	fake_nsdata = NULL;
 	CU_ASSERT(spdk_nvme_ns_is_active(&ns));
 	CU_ASSERT(spdk_nvme_ns_get_id(&ns) == 1);
@@ -257,11 +254,8 @@ test_nvme_ns_data(void)
 static void
 test_nvme_ns_set_identify_data(void)
 {
-	struct spdk_nvme_ns ns = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
-
-	ns.id = 1;
-	ns.ctrlr = &ctrlr;
+	struct spdk_nvme_ns ns = { .id = 1, .ctrlr = &ctrlr };
 
 	ns.ctrlr->cdata.oncs.nvmdsmsv = 1;
 	ns.ctrlr->cdata.oncs.nvmcmps = 1;
@@ -554,7 +548,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme", NULL, NULL);
 
-	CU_ADD_TEST(suite, test_nvme_ns_construct);
+	CU_ADD_TEST(suite, test_nvme_ns_identify);
 	CU_ADD_TEST(suite, test_nvme_ns_uuid);
 	CU_ADD_TEST(suite, test_nvme_ns_csi);
 	CU_ADD_TEST(suite, test_nvme_ns_data);

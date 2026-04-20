@@ -739,13 +739,12 @@ nvme_ns_destruct(struct spdk_nvme_ns *ns)
 uint32_t g_nvme_ns_constructed;
 
 int
-nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
-		  struct spdk_nvme_ctrlr *ctrlr)
+nvme_ns_identify(struct spdk_nvme_ns *ns)
 {
 	uint32_t i;
 
 	for (i = 0; i < g_active_ns_list_length; i++) {
-		if (id == g_active_ns_list[i]) {
+		if (ns->id == g_active_ns_list[i]) {
 			g_nvme_ns_constructed++;
 			return 0;
 		}
