@@ -596,6 +596,7 @@ struct spdk_nvme_ns {
 	uint32_t			id;
 	uint16_t			flags;
 	bool				active;
+	bool				identify_pending;
 
 	/* Command Set Identifier */
 	enum spdk_nvme_csi		csi;

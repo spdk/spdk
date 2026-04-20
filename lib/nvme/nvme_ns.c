@@ -98,6 +98,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	}
 
 	ns->active = spdk_nvme_ns_is_active(ns);
+	ns->identify_pending = false;
 }
 
 static int
@@ -722,4 +723,5 @@ nvme_ns_clear(struct spdk_nvme_ns *ns)
 	ns->flags = 0;
 	ns->csi = SPDK_NVME_CSI_NVM;
 	ns->active = false;
+	ns->identify_pending = false;
 }

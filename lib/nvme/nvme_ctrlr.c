@@ -2509,7 +2509,7 @@ nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return -ENOMEM;
 	}
 
-	ns->active = true;
+	ns->identify_pending = true;
 
 	return 0;
 }
@@ -2764,12 +2764,32 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
+static struct spdk_nvme_ns *
+nvme_ctrlr_find_pending_identify_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *prev)
+{
+	struct spdk_nvme_ns *ns;
+
+	if (prev == NULL) {
+		ns = RB_MIN(nvme_ns_tree, &ctrlr->ns);
+	} else {
+		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, prev);
+	}
+
+	while (ns != NULL) {
+		if (ns->identify_pending) {
+			return ns;
+		}
+		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	}
+
+	return NULL;
+}
+
 static void
 nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	uint32_t nsid;
 	int rc;
 
 	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
@@ -2779,9 +2799,8 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	nvme_ns_set_identify_data(ns);
 
-	/* move on to the next active NS */
-	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	/* move on to the next NS pending identify */
+	ns = nvme_ctrlr_find_pending_identify_ns(ctrlr, ns);
 	if (ns == NULL) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
 				     ctrlr->opts.admin_timeout_ms);
@@ -2811,14 +2830,12 @@ nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 	int rc;
 
-	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	ns = nvme_ctrlr_find_pending_identify_ns(ctrlr, NULL);
 	if (ns == NULL) {
-		/* No active NS, move on to the next state */
+		/* No NS pending identify, move on to the next state */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
@@ -3408,13 +3425,13 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 	uint32_t nsid, i;
 	struct spdk_nvme_ns *ns;
 
-	/* Log page is not used, go over all active namespaces.
+	/* Log page is not used, go over all namespaces pending identification.
 	 * Either the log page overflowed or disable_read_changed_ns_list_log_page is used. */
 	if (async_event->log_page.changed_ns_list == NULL) {
-		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-			nvme_ns_identify(ns);
+		RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
+			if (ns->identify_pending) {
+				nvme_ns_identify(ns);
+			}
 		}
 
 		return 0;
@@ -3429,13 +3446,17 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr_aer_completion *async_event)
 			break;
 		}
 
-		/* Log page contains NSID for namespaces that were marked
-		 * as inactive, no need to identify them. */
-		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (!ns) {
 			continue;
 		}
 
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		/* Namespace was removed from the active list by swap,
+		 * no need to identify it. */
+		if (!ns->identify_pending) {
+			continue;
+		}
+
 		nvme_ns_identify(ns);
 	}
 
