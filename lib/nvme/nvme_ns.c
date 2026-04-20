@@ -673,9 +673,6 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 
 	assert(ns->id > 0);
 
-	/* This will be overwritten when reading ANA log page. */
-	ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
-
 	rc = nvme_ctrlr_identify_ns(ns);
 	if (rc != 0) {
 		return rc;

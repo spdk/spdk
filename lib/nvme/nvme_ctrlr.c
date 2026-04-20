@@ -5019,6 +5019,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
 		ns->id = nsid;
 		ns->ctrlr = ctrlr;
+		ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 		RB_INSERT(nvme_ns_tree, &ctrlr->ns, ns);
 	}
 
