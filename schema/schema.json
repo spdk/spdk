@@ -37,6 +37,14 @@
       ]
     },
     {
+      "name": "bdev_nvme_timeout_action",
+      "fields": [
+        {"name": "none", "value": "SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE"},
+        {"name": "reset", "value": "SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET"},
+        {"name": "abort", "value": "SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT"}
+      ]
+    },
+    {
       "name": "bdev_error_inject_io_type",
       "fields": [
         {"name": "clear", "value": 0},
@@ -1653,7 +1661,8 @@
       "params": [
         {
           "name": "action_on_timeout",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_nvme_timeout_action",
           "description": "Action to take on command time out: none, reset or abort"
         },
         {

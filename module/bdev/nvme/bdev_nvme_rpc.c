@@ -25,25 +25,6 @@
 static bool g_tls_log = false;
 
 static int
-rpc_decode_action_on_timeout(const struct spdk_json_val *val, void *out)
-{
-	enum spdk_bdev_timeout_action *action = out;
-
-	if (spdk_json_strequal(val, "none") == true) {
-		*action = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE;
-	} else if (spdk_json_strequal(val, "abort") == true) {
-		*action = SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT;
-	} else if (spdk_json_strequal(val, "reset") == true) {
-		*action = SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: action_on_timeout\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static int
 rpc_decode_digest(const struct spdk_json_val *val, void *out)
 {
 	uint32_t *flags = out;
@@ -110,7 +91,7 @@ rpc_decode_dhgroup_array(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_set_options_decoders[] = {
-	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_action_on_timeout, true},
+	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_bdev_nvme_timeout_action, true},
 	{"keep_alive_timeout_ms", offsetof(struct spdk_bdev_nvme_opts, keep_alive_timeout_ms), spdk_json_decode_uint32, true},
 	{"timeout_us", offsetof(struct spdk_bdev_nvme_opts, timeout_us), spdk_json_decode_uint64, true},
 	{"timeout_admin_us", offsetof(struct spdk_bdev_nvme_opts, timeout_admin_us), spdk_json_decode_uint64, true},
