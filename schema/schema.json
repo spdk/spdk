@@ -310,7 +310,7 @@
       ]
     },
     {
-      "name": "iscsi_lun",
+      "name": "scsi_lun",
       "fields": [
         {
           "name": "lun_id",
@@ -488,22 +488,8 @@
         {
           "name": "luns",
           "type": "array",
+          "class": "scsi_luns",
           "description": "array of objects describing @ref rpc_vhost_get_controllers_scsi_luns"
-        }
-      ]
-    },
-    {
-      "name": "vhost_scsi_luns_controller_params",
-      "fields": [
-        {
-          "name": "id",
-          "type": "int32",
-          "description": "SCSI LUN ID"
-        },
-        {
-          "name": "bdev_name",
-          "type": "string",
-          "description": "Backing bdev name"
         }
       ]
     }
@@ -536,9 +522,9 @@
       "max_count": 256
     },
     {
-      "name": "iscsi_luns",
+      "name": "scsi_luns",
       "item_type": "object",
-      "class": "iscsi_lun",
+      "class": "scsi_lun",
       "max_count": 64
     },
     {
@@ -3475,7 +3461,7 @@
         {
           "name": "luns",
           "type": "array",
-          "class": "iscsi_luns",
+          "class": "scsi_luns",
           "required": true,
           "description": "Array of Bdev names to LUN ID mappings"
         },

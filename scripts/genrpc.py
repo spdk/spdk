@@ -41,6 +41,9 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
     schema_decoders = {method["name"]:method["decoder"] for method in schema['methods'] if "decoder" in method}
     schema_aliases = {method["name"]:method["alias"] for method in schema['methods'] if "alias" in method}
+    schema_enums = {obj["name"]: obj for obj in schema['enums']}
+    schema_arrays = {obj["name"]: obj for obj in schema['arrays']}
+    schema_by_type = {'object': schema_objects, 'enum': schema_enums, 'array': schema_arrays}
     # TODO: those are embeeded objects decoders and will be resolved soon
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
     c_code_methods = dict()
@@ -119,8 +122,11 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                     else:
                         raise ValueError(msg)
             if 'class' in parameter:
+                msg = f"Invalid 'class' '{parameter['class']}' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc"
                 if parameter['type'] not in ('enum', 'array', 'object'):
-                    raise ValueError(f"Invalid 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc")
+                    raise ValueError(msg)
+                if parameter['class'] not in schema_by_type[parameter['type']]:
+                    raise ValueError(msg)
                 continue
             if not code_type and method['name'] in cli_exceptions:
                 # TODO: handle this case later and fix issues raised by it

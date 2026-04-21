@@ -28,6 +28,28 @@
 extern "C" {
 #endif
 
+/*
+ * Forward-declare every generated struct up front.
+ *
+ * Object and array struct definitions are emitted in schema-iteration
+ * order, but a field of type "array" expands to `struct rpc_<class> *`
+ * (and an embedded-object field can reference another object's struct).
+ * The referenced struct may be defined later in the same header — or,
+ * when an object and an array reference each other, there is no
+ * ordering that satisfies both. Emitting forward declarations for all
+ * `rpc_<object>` and `rpc_<array>` names first makes the header order-
+ * independent and lets pointer fields compile regardless of where the
+ * full definition lands.
+ */
+
+{%- for object in schema["objects"] %}
+struct rpc_{{ object.name }};
+{%- endfor %}
+
+{%- for array in schema["arrays"] %}
+struct rpc_{{ array.name }};
+{%- endfor %}
+
 /* Enum definitions section */
 
 {% for enum in schema.get("enums", []) %}
@@ -70,6 +92,8 @@ struct rpc_{{ object.name }} {
     {%- for field in object.fields %}
 	{% if field.type == "enum" -%}
 		enum rpc_{{ field.class }} {{ field.name }};
+	{%- elif field.type == "array" -%}
+		struct rpc_{{ field.class }} *{{ field.name }};
     {%- elif field.name == "nguid" -%}
 		char nguid[16];
     {%- elif field.name == "eui64" -%}

@@ -216,7 +216,7 @@ static const struct spdk_json_object_decoder rpc_iscsi_create_target_node_decode
 	{"name", offsetof(struct rpc_iscsi_create_target_node_ctx, name), spdk_json_decode_string},
 	{"alias_name", offsetof(struct rpc_iscsi_create_target_node_ctx, alias_name), spdk_json_decode_string},
 	{"pg_ig_maps", offsetof(struct rpc_iscsi_create_target_node_ctx, pg_ig_maps), rpc_decode_iscsi_pg_ig_maps},
-	{"luns", offsetof(struct rpc_iscsi_create_target_node_ctx, luns), rpc_decode_iscsi_luns},
+	{"luns", offsetof(struct rpc_iscsi_create_target_node_ctx, luns), rpc_decode_scsi_luns},
 	{"queue_depth", offsetof(struct rpc_iscsi_create_target_node_ctx, queue_depth), spdk_json_decode_int32},
 	{"disable_chap", offsetof(struct rpc_iscsi_create_target_node_ctx, disable_chap), spdk_json_decode_bool, true},
 	{"require_chap", offsetof(struct rpc_iscsi_create_target_node_ctx, require_chap), spdk_json_decode_bool, true},
@@ -233,8 +233,8 @@ rpc_iscsi_create_target_node(struct spdk_jsonrpc_request *request,
 	struct rpc_iscsi_create_target_node_ctx req = {};
 	struct spdk_iscsi_tgt_node *target;
 	int32_t pg_tags[RPC_ISCSI_PG_IG_MAPS_MAX] = {}, ig_tags[RPC_ISCSI_PG_IG_MAPS_MAX] = {};
-	char *bdev_names[RPC_ISCSI_LUNS_MAX] = {};
-	int32_t lun_ids[RPC_ISCSI_LUNS_MAX] = {};
+	char *bdev_names[RPC_SCSI_LUNS_MAX] = {};
+	int32_t lun_ids[RPC_SCSI_LUNS_MAX] = {};
 	size_t i;
 
 	if (spdk_json_decode_object(params, rpc_iscsi_create_target_node_decoders,
