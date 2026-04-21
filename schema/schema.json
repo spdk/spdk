@@ -122,6 +122,25 @@
         {"name": "5f", "value": "SPDK_BDEV_RAID_LEVEL_RAID5F"},
         {"name": "concat", "value": "SPDK_BDEV_RAID_LEVEL_CONCAT"}
       ]
+    },
+    {
+      "name": "dhchap_digest",
+      "fields": [
+        {"name": "sha256", "value": "SPDK_NVMF_DHCHAP_HASH_SHA256"},
+        {"name": "sha384", "value": "SPDK_NVMF_DHCHAP_HASH_SHA384"},
+        {"name": "sha512", "value": "SPDK_NVMF_DHCHAP_HASH_SHA512"}
+      ]
+    },
+    {
+      "name": "dhchap_dhgroup",
+      "fields": [
+        {"name": "null", "value": "SPDK_NVMF_DHCHAP_DHGROUP_NULL"},
+        {"name": "ffdhe2048", "value": "SPDK_NVMF_DHCHAP_DHGROUP_2048"},
+        {"name": "ffdhe3072", "value": "SPDK_NVMF_DHCHAP_DHGROUP_3072"},
+        {"name": "ffdhe4096", "value": "SPDK_NVMF_DHCHAP_DHGROUP_4096"},
+        {"name": "ffdhe6144", "value": "SPDK_NVMF_DHCHAP_DHGROUP_6144"},
+        {"name": "ffdhe8192", "value": "SPDK_NVMF_DHCHAP_DHGROUP_8192"}
+      ]
     }
   ],
   "objects": [
@@ -429,6 +448,18 @@
       "item_type": "object",
       "class": "iscsi_auth_secret",
       "max_count": 64
+    },
+    {
+      "name": "dhchap_digests",
+      "item_type": "enum",
+      "class": "dhchap_digest",
+      "max_count": 32
+    },
+    {
+      "name": "dhchap_dhgroups",
+      "item_type": "enum",
+      "class": "dhchap_dhgroup",
+      "max_count": 32
     },
     {
       "name": "raid_base_bdevs",
@@ -1798,11 +1829,13 @@
         {
           "name": "dhchap_digests",
           "type": "array",
+          "class": "dhchap_digests",
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
           "type": "array",
+          "class": "dhchap_dhgroups",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         },
         {
@@ -4416,11 +4449,13 @@
         {
           "name": "dhchap_digests",
           "type": "array",
+          "class": "dhchap_digests",
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
           "type": "array",
+          "class": "dhchap_dhgroups",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         }
       ]
