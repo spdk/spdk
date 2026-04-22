@@ -1202,7 +1202,6 @@ request_prepare_transfer_in_part(struct spdk_nvmf_request *req, uint32_t num_rea
 static int
 request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 {
-	int				num_outstanding_data_wr = 0;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
@@ -1249,7 +1248,12 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	} else if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		first = rdma_req->transfer_wr;
 		*data_posted = 1;
-		num_outstanding_data_wr = rdma_req->num_outstanding_data_wr;
+	} else {
+		/*
+		 * xfer is SPDK_NVME_DATA_HOST_TO_CONTROLLER: the data transfer has
+		 * already been completed and we're now transferring the completion
+		 */
+		assert(rdma_req->num_outstanding_data_wr == 0);
 	}
 	if (spdk_rdma_provider_qp_queue_send_wrs(rqpair->rdma_qp, first)) {
 		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
@@ -1259,8 +1263,9 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	}
 
 	/* +1 for the rsp wr */
-	assert(rqpair->current_send_depth + num_outstanding_data_wr + 1 <= rqpair->max_send_depth);
-	rqpair->current_send_depth += num_outstanding_data_wr + 1;
+	assert(rqpair->current_send_depth + rdma_req->num_outstanding_data_wr + 1 <=
+	       rqpair->max_send_depth);
+	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr + 1;
 
 	return 0;
 }

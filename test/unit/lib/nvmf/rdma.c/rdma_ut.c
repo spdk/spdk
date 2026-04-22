@@ -681,6 +681,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	CU_ASSERT(progress == true);
 	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_EXECUTING);
 	CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
+	CU_ASSERT(rdma_req->num_outstanding_data_wr == 1);
 	/* EXECUTED -> TRANSFERRING_C2H */
 	rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
 	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
@@ -715,11 +716,13 @@ test_spdk_nvmf_rdma_request_process(void)
 	MOCK_CLEAR(spdk_iobuf_get);
 	/* NEED_BUFFER -> TRANSFERRING_H2C */
 	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(rdma_req->num_outstanding_data_wr == 1);
 	CU_ASSERT(progress == true);
 	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 	CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 	STAILQ_INIT(&poller.qpairs_pending_send);
 	/* READY_TO_EXECUTE -> EXECUTING */
+	rdma_req->num_outstanding_data_wr = 0;
 	rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
 	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
 	CU_ASSERT(progress == true);
@@ -790,16 +793,19 @@ test_spdk_nvmf_rdma_request_process(void)
 		rqpair.current_recv_depth = 1;
 		nvmf_rdma_request_process(&rtransport, req1);
 		CU_ASSERT(req1->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		CU_ASSERT(req1->num_outstanding_data_wr == 1);
 
 		/* WRITE 2: NEW -> TRANSFERRING_H2C */
 		rqpair.current_recv_depth = 2;
 		nvmf_rdma_request_process(&rtransport, req2);
 		CU_ASSERT(req2->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		CU_ASSERT(req2->num_outstanding_data_wr == 1);
 
 		STAILQ_INIT(&poller.qpairs_pending_send);
 
 		/* WRITE 1 completes before WRITE 2 has finished RDMA reading */
 		/* WRITE 1: READY_TO_EXECUTE -> EXECUTING */
+		req1->num_outstanding_data_wr = 0;
 		req1->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
 		nvmf_rdma_request_process(&rtransport, req1);
 		CU_ASSERT(req1->state == RDMA_REQUEST_STATE_EXECUTING);
@@ -816,6 +822,7 @@ test_spdk_nvmf_rdma_request_process(void)
 		/* Now WRITE 2 has finished reading and completes */
 		/* WRITE 2: COMPLETED -> FREE */
 		/* WRITE 2: READY_TO_EXECUTE -> EXECUTING */
+		req2->num_outstanding_data_wr = 0;
 		req2->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
 		nvmf_rdma_request_process(&rtransport, req2);
 		CU_ASSERT(req2->state == RDMA_REQUEST_STATE_EXECUTING);
@@ -875,9 +882,11 @@ test_spdk_nvmf_rdma_request_process(void)
 		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
 		CU_ASSERT(progress == true);
 		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		CU_ASSERT(rdma_req->num_outstanding_data_wr == 1);
 		CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 		STAILQ_INIT(&poller.qpairs_pending_send);
 		/* READY_TO_EXECUTE -> EXECUTING */
+		rdma_req->num_outstanding_data_wr = 0;
 		rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
 		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
 		CU_ASSERT(progress == true);
