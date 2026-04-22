@@ -42,28 +42,35 @@ def add_parser(subparsers):
                               help="""Set options of iSCSI subsystem""")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file')
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
-    p.add_argument('-o', '--nop-timeout', help='Timeout in seconds to nop-in request to the initiator', type=int)
-    p.add_argument('-n', '--nop-in-interval', help='Time interval in secs between nop-in requests by the target', type=int)
+    p.add_argument('-o', '--nop-timeout', help='NOP-In request timeout to the initiator in seconds', type=int)
+    p.add_argument('-n', '--nop-in-interval', help='Interval between NOP-In requests from the target in seconds', type=int)
     g = p.add_mutually_exclusive_group()
-    g.add_argument('-d', '--disable-chap', help="CHAP for discovery session should be disabled.", action='store_true')
-    g.add_argument('-r', '--require-chap', help="CHAP for discovery session should be required.", action='store_true')
-    p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
-    p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
-    *** Authentication group must be precreated ***""", type=int)
-    p.add_argument('-a', '--max-sessions', help='Maximum number of sessions in the host.', type=int)
-    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/Os per queue.', type=int)
-    p.add_argument('-c', '--max-connections-per-session', help='Negotiated parameter, MaxConnections.', type=int)
-    p.add_argument('-w', '--default-time2wait', help='Negotiated parameter, DefaultTime2Wait.', type=int)
-    p.add_argument('-v', '--default-time2retain', help='Negotiated parameter, DefaultTime2Retain.', type=int)
-    p.add_argument('-s', '--first-burst-length', help='Negotiated parameter, FirstBurstLength.', type=int)
-    p.add_argument('-i', '--immediate-data', help='Negotiated parameter, ImmediateData.', action='store_true')
-    p.add_argument('-l', '--error-recovery-level', help='Negotiated parameter, ErrorRecoveryLevel', type=int)
-    p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
-    p.add_argument('-x', '--max-large-datain-per-connection', help='Max number of outstanding split read I/Os per connection', type=int)
-    p.add_argument('-k', '--max-r2t-per-connection', help='Max number of outstanding R2Ts per connection', type=int)
-    p.add_argument('-u', '--pdu-pool-size', help='Number of PDUs in the pool', type=int)
-    p.add_argument('-j', '--immediate-data-pool-size', help='Number of immediate data buffers in the pool', type=int)
-    p.add_argument('-z', '--data-out-pool-size', help='Number of data out buffers in the pool', type=int)
+    g.add_argument('-d', '--disable-chap', help='Disable CHAP for discovery session', action='store_true')
+    g.add_argument('-r', '--require-chap', help='Require CHAP for discovery session', action='store_true')
+    p.add_argument('-m', '--mutual-chap', help='Enable bidirectional CHAP for discovery session', action='store_true')
+    p.add_argument('-g', '--chap-group',
+                   help='CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)', type=int)
+    p.add_argument('-a', '--max-sessions', help='Maximum number of sessions in the host', type=int)
+    p.add_argument('-q', '--max-queue-depth', help='Maximum number of outstanding I/Os per queue', type=int)
+    p.add_argument('-c', '--max-connections-per-session', help='Negotiated MaxConnections value per session', type=int)
+    p.add_argument('-w', '--default-time2wait', help='Negotiated DefaultTime2Wait value in seconds', type=int)
+    p.add_argument('-v', '--default-time2retain', help='Negotiated DefaultTime2Retain value in seconds', type=int)
+    p.add_argument('-s', '--first-burst-length', help='Negotiated FirstBurstLength value in bytes', type=int)
+    p.add_argument('-i', '--immediate-data', help='Negotiated ImmediateData value', action='store_true')
+    p.add_argument('-l', '--error-recovery-level', help='Negotiated ErrorRecoveryLevel value', type=int)
+    p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID', action='store_true')
+    p.add_argument('-x', '--max-large-datain-per-connection',
+                   help='Maximum number of outstanding split read I/Os per connection', type=int)
+    p.add_argument('-k', '--max-r2t-per-connection',
+                   help='Maximum number of outstanding R2Ts per connection', type=int)
+    p.add_argument(
+        '-u', '--pdu-pool-size',
+        help='Number of PDUs in the pool',
+        type=int)
+    p.add_argument('-j', '--immediate-data-pool-size',
+                   help='Number of immediate data buffers in the pool', type=int)
+    p.add_argument('-z', '--data-out-pool-size',
+                   help='Number of data out buffers in the pool', type=int)
     p.set_defaults(func=iscsi_set_options)
 
     def iscsi_set_discovery_auth(args):
@@ -76,11 +83,11 @@ def add_parser(subparsers):
     p = subparsers.add_parser('iscsi_set_discovery_auth',
                               help="""Set CHAP authentication for discovery session.""")
     g = p.add_mutually_exclusive_group()
-    g.add_argument('-d', '--disable-chap', help="CHAP for discovery session should be disabled.", action='store_true')
-    g.add_argument('-r', '--require-chap', help="CHAP for discovery session should be required.", action='store_true')
-    p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
-    p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
-    *** Authentication group must be precreated ***""", type=int)
+    g.add_argument('-d', '--disable-chap', help='Disable CHAP for discovery session', action='store_true')
+    g.add_argument('-r', '--require-chap', help='Require CHAP for discovery session', action='store_true')
+    p.add_argument('-m', '--mutual-chap', help='Enable bidirectional CHAP for discovery session', action='store_true')
+    p.add_argument('-g', '--chap-group',
+                   help='CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)', type=int)
     p.set_defaults(func=iscsi_set_discovery_auth)
 
     def iscsi_create_auth_group(args):
@@ -92,7 +99,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('iscsi_create_auth_group',
                               help='Create authentication group for CHAP authentication.')
-    p.add_argument('tag', help='Authentication group tag (unique, integer > 0).', type=int)
+    p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.add_argument('-c', '--secrets', type=partial(str.split, sep=','), default=[],
                    help="""Comma-separated list of CHAP secrets
 <user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret> enclosed in quotes.
@@ -104,7 +111,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_delete_auth_group',
                               help='Delete an authentication group.')
-    p.add_argument('tag', help='Authentication group tag', type=int)
+    p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_auth_group)
 
     def iscsi_auth_group_add_secret(args):
@@ -117,11 +124,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_auth_group_add_secret',
                               help='Add a secret to an authentication group.')
-    p.add_argument('tag', help='Authentication group tag', type=int)
-    p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
-    p.add_argument('-s', '--secret', help='Secret for one-way CHAP authentication', required=True)
-    p.add_argument('-m', '--muser', help='User name for mutual CHAP authentication')
-    p.add_argument('-r', '--msecret', help='Secret for mutual CHAP authentication')
+    p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
+    p.add_argument('-u', '--user', help='User name for one-way (unidirectional) CHAP authentication', required=True)
+    p.add_argument('-s', '--secret', help='Secret for one-way (unidirectional) CHAP authentication', required=True)
+    p.add_argument('-m', '--muser', help='User name for mutual (bidirectional) CHAP authentication')
+    p.add_argument('-r', '--msecret', help='Secret for mutual (bidirectional) CHAP authentication')
     p.set_defaults(func=iscsi_auth_group_add_secret)
 
     def iscsi_auth_group_remove_secret(args):
@@ -129,8 +136,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_auth_group_remove_secret',
                               help='Remove a secret from an authentication group.')
-    p.add_argument('tag', help='Authentication group tag', type=int)
-    p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
+    p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
+    p.add_argument('-u', '--user', help='User name for one-way (unidirectional) CHAP authentication', required=True)
     p.set_defaults(func=iscsi_auth_group_remove_secret)
 
     def iscsi_get_auth_groups(args):
@@ -165,8 +172,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_enable_histogram',
                               help='Enable or disable histogram for specified iscsi target')
     p.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
-                   required=True, help='Enable or disable histogram for specified iscsi target')
-    p.add_argument('name', help='iscsi target name')
+                   required=True, help='Enable or disable histogram for the specified iSCSI target node')
+    p.add_argument('name', help='iSCSI target node name')
     p.set_defaults(func=iscsi_enable_histogram)
 
     def iscsi_get_histogram(args):
@@ -174,7 +181,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_get_histogram',
                               help='Get histogram for specified iscsi target')
-    p.add_argument('name', help='target name')
+    p.add_argument('name', help='iSCSI target node name')
     p.set_defaults(func=iscsi_get_histogram)
 
     def iscsi_create_target_node(args):
@@ -221,18 +228,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     separated list of "tags" (int > 0)
     Example: '1:1 2:2 2:1'
     *** The Portal/Initiator Groups must be precreated ***""")
-    p.add_argument('queue_depth', help='Desired target queue depth', type=int)
-    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
-    *** Authentication group must be precreated ***""", type=int)
+    p.add_argument('queue_depth', help='Target queue depth', type=int)
+    p.add_argument('-g', '--chap-group',
+                   help='Authentication group ID for this target node (non-zero values must reference a precreated group)', type=int)
     g = p.add_mutually_exclusive_group()
-    g.add_argument('-d', '--disable-chap', help="CHAP authentication should be disabled for this target node.", action='store_true')
-    g.add_argument('-r', '--require-chap', help="CHAP authentication should be required for this target node.", action='store_true')
-    p.add_argument(
-        '-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.', action='store_true')
+    g.add_argument('-d', '--disable-chap', help='Disable CHAP authentication for this target node', action='store_true')
+    g.add_argument('-r', '--require-chap', help='Require CHAP authentication for this target node', action='store_true')
+    p.add_argument('-m', '--mutual-chap',
+                   help='Enable bidirectional CHAP authentication for this target node', action='store_true')
     p.add_argument('-H', '--header-digest',
-                   help='Header Digest should be required for this target node.', action='store_true')
+                   help='Require Header Digest for this target node', action='store_true')
     p.add_argument('-D', '--data-digest',
-                   help='Data Digest should be required for this target node.', action='store_true')
+                   help='Require Data Digest for this target node', action='store_true')
     p.set_defaults(func=iscsi_create_target_node)
 
     def iscsi_target_node_add_lun(args):
@@ -244,10 +251,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_target_node_add_lun',
                               help='Add LUN to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
-    p.add_argument('bdev_name', help="""bdev name enclosed in quotes.
-    *** bdev name cannot contain space or colon characters ***""")
-    p.add_argument('-i', dest='lun_id', help="""LUN ID (integer >= 0)
-    *** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int)
+    p.add_argument('bdev_name', help='bdev name to be added as a LUN (must not contain spaces or colons)')
+    p.add_argument('-i', dest='lun_id', help='LUN ID. -1 or omitted assigns the lowest free ID', type=int)
     p.set_defaults(func=iscsi_target_node_add_lun)
 
     def iscsi_target_node_set_auth(args):
@@ -261,13 +266,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_target_node_set_auth',
                               help='Set CHAP authentication for the target node')
     p.add_argument('name', help='Target node name (ASCII)')
-    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
-    *** Authentication group must be precreated ***""", type=int)
+    p.add_argument('-g', '--chap-group',
+                   help='Authentication group ID for this target node (non-zero values must reference a precreated group)', type=int)
     g = p.add_mutually_exclusive_group()
-    g.add_argument('-d', '--disable-chap', help="CHAP authentication should be disabled for this target node.", action='store_true')
-    g.add_argument('-r', '--require-chap', help="CHAP authentication should be required for this target node.", action='store_true')
-    p.add_argument('-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.',
-                   action='store_true')
+    g.add_argument('-d', '--disable-chap', help='Disable CHAP authentication for this target node', action='store_true')
+    g.add_argument('-r', '--require-chap', help='Require CHAP authentication for this target node', action='store_true')
+    p.add_argument('-m', '--mutual-chap',
+                   help='Enable bidirectional CHAP authentication for this target node', action='store_true')
     p.set_defaults(func=iscsi_target_node_set_auth)
 
     def iscsi_target_node_add_pg_ig_maps(args):
@@ -325,8 +330,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Omit redirect host and port to clear previously set redirect settings.""")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('-a', '--redirect-host', help='Numeric IP address for redirect portal')
-    p.add_argument('-p', '--redirect-port', help='Numeric TCP port for redirect portal')
+    p.add_argument('-a', '--redirect-host', help='Numeric IP address of the redirect portal')
+    p.add_argument('-p', '--redirect-port', help='Numeric TCP port of the redirect portal')
     p.set_defaults(func=iscsi_target_node_set_redirect)
 
     def iscsi_target_node_request_logout(args):
@@ -356,8 +361,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_create_portal_group',
                               help='Add a portal group')
-    p.add_argument(
-        'tag', help='Portal group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('portals', type=partial(str.split, sep=' '), default=[],
                    help="""List of portals in host:port format, separated by whitespace
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262'""")
@@ -375,8 +379,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_start_portal_group',
                               help='Start listening on portals if it is not started yet.')
-    p.add_argument(
-        'tag', help='Portal group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_start_portal_group)
 
     def iscsi_create_initiator_group(args):
@@ -387,8 +390,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_create_initiator_group',
                               help='Add an initiator group')
-    p.add_argument(
-        'tag', help='Initiator group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  Example: 'ANY' or 'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
@@ -405,8 +407,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_initiator_group_add_initiators',
                               help='Add initiators to an existing initiator group')
-    p.add_argument(
-        'tag', help='Initiator group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
@@ -424,8 +425,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_initiator_group_remove_initiators',
                               help='Delete initiators from an existing initiator group')
-    p.add_argument(
-        'tag', help='Initiator group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
@@ -440,8 +440,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_delete_target_node',
                               help='Delete a target node')
-    p.add_argument('name',
-                   help='Target node name to be deleted. Example: iqn.2016-06.io.spdk:disk1.')
+    p.add_argument('name', help='Target node name (ASCII)')
     p.set_defaults(func=iscsi_delete_target_node)
 
     def iscsi_delete_portal_group(args):
@@ -449,8 +448,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_delete_portal_group',
                               help='Delete a portal group')
-    p.add_argument(
-        'tag', help='Portal group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_portal_group)
 
     def iscsi_delete_initiator_group(args):
@@ -458,8 +456,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('iscsi_delete_initiator_group',
                               help='Delete an initiator group')
-    p.add_argument(
-        'tag', help='Initiator group tag (unique, integer > 0)', type=int)
+    p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_initiator_group)
 
     def iscsi_portal_group_set_auth(args):
@@ -473,13 +470,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_portal_group_set_auth',
                               help='Set CHAP authentication for discovery sessions specific for the portal group')
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this portal group.
-    *** Authentication group must be precreated ***""", type=int)
+    p.add_argument('-g', '--chap-group',
+                   help='CHAP authentication group ID for this portal group (non-zero values must reference a precreated group)', type=int)
     g = p.add_mutually_exclusive_group()
-    g.add_argument('-d', '--disable-chap', help="CHAP authentication should be disabled for this portal group.", action='store_true')
-    g.add_argument('-r', '--require-chap', help="CHAP authentication should be required for this portal group.", action='store_true')
-    p.add_argument('-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.',
-                   action='store_true')
+    g.add_argument('-d', '--disable-chap', help='Disable CHAP authentication for this portal group', action='store_true')
+    g.add_argument('-r', '--require-chap', help='Require CHAP authentication for this portal group', action='store_true')
+    p.add_argument('-m', '--mutual-chap',
+                   help='Enable bidirectional CHAP authentication for this portal group', action='store_true')
     p.set_defaults(func=iscsi_portal_group_set_auth)
 
     def iscsi_get_connections(args):

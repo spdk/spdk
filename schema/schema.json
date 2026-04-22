@@ -3188,112 +3188,112 @@
         {
           "name": "auth_file",
           "type": "string",
-          "description": "Path to CHAP shared secret file (default: \"\")"
+          "description": "Path to CHAP shared secret file"
         },
         {
           "name": "node_base",
           "type": "string",
-          "description": "Prefix of the name of iSCSI target node (default: \"iqn.2016-06.io.spdk\")"
+          "description": "Prefix of the name of iSCSI target node"
         },
         {
           "name": "nop_timeout",
           "type": "int32",
-          "description": "Timeout in seconds to nop-in request to the initiator (default: 60)"
+          "description": "NOP-In request timeout to the initiator in seconds"
         },
         {
           "name": "nop_in_interval",
           "type": "int32",
-          "description": "Time interval in secs between nop-in requests by the target (default: 30)"
+          "description": "Interval between NOP-In requests from the target in seconds"
         },
         {
           "name": "disable_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be disabled (default: `false`)"
+          "description": "Disable CHAP for discovery session"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be required (default: `false`)"
+          "description": "Require CHAP for discovery session"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)"
+          "description": "Enable bidirectional CHAP for discovery session"
         },
         {
           "name": "chap_group",
           "type": "int32",
-          "description": "CHAP group ID for discovery session (default: 0)"
+          "description": "CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)"
         },
         {
           "name": "max_sessions",
           "type": "uint32",
-          "description": "Maximum number of sessions in the host (default: 128)"
+          "description": "Maximum number of sessions in the host"
         },
         {
           "name": "max_queue_depth",
           "type": "uint32",
-          "description": "Maximum number of outstanding I/Os per queue (default: 64)"
+          "description": "Maximum number of outstanding I/Os per queue"
         },
         {
           "name": "max_connections_per_session",
           "type": "uint32",
-          "description": "Session specific parameter, MaxConnections (default: 2)"
+          "description": "Negotiated MaxConnections value per session"
         },
         {
           "name": "default_time2wait",
           "type": "uint32",
-          "description": "Session specific parameter, DefaultTime2Wait (default: 2)"
+          "description": "Negotiated DefaultTime2Wait value in seconds"
         },
         {
           "name": "default_time2retain",
           "type": "uint32",
-          "description": "Session specific parameter, DefaultTime2Retain (default: 20)"
+          "description": "Negotiated DefaultTime2Retain value in seconds"
         },
         {
           "name": "first_burst_length",
           "type": "uint32",
-          "description": "Session specific parameter, FirstBurstLength (default: 8192)"
+          "description": "Negotiated FirstBurstLength value in bytes"
         },
         {
           "name": "immediate_data",
           "type": "boolean",
-          "description": "Session specific parameter, ImmediateData (default: `true`)"
+          "description": "Negotiated ImmediateData value"
         },
         {
           "name": "error_recovery_level",
           "type": "uint32",
-          "description": "Session specific parameter, ErrorRecoveryLevel (default: 0)"
+          "description": "Negotiated ErrorRecoveryLevel value"
         },
         {
           "name": "allow_duplicated_isid",
           "type": "boolean",
-          "description": "Allow duplicated initiator session ID (default: `false`)"
+          "description": "Allow duplicated initiator session ID"
         },
         {
           "name": "max_large_datain_per_connection",
           "type": "uint32",
-          "description": "Max number of outstanding split read I/Os per connection (default: 64)"
+          "description": "Maximum number of outstanding split read I/Os per connection"
         },
         {
           "name": "max_r2t_per_connection",
           "type": "uint32",
-          "description": "Max number of outstanding R2Ts per connection (default: 4)"
+          "description": "Maximum number of outstanding R2Ts per connection"
         },
         {
           "name": "pdu_pool_size",
           "type": "uint32",
-          "description": "Number of PDUs in the pool (default: approximately 2 * max_sessions * (max_queue_depth + max_connections_per_session))"
+          "description": "Number of PDUs in the pool"
         },
         {
           "name": "immediate_data_pool_size",
           "type": "uint32",
-          "description": "Number of immediate data buffers in the pool (default: 128 * max_sessions)"
+          "description": "Number of immediate data buffers in the pool"
         },
         {
           "name": "data_out_pool_size",
           "type": "uint32",
-          "description": "Number of data out buffers in the pool (default: 16 * max_sessions)"
+          "description": "Number of data out buffers in the pool"
         }
       ]
     },
@@ -3311,22 +3311,22 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be disabled (default: `false`)"
+          "description": "Disable CHAP for discovery session"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be required (default: `false`)"
+          "description": "Require CHAP for discovery session"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)"
+          "description": "Enable bidirectional CHAP for discovery session"
         },
         {
           "name": "chap_group",
           "type": "int32",
-          "description": "CHAP group ID for discovery session (default: 0)"
+          "description": "CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)"
         }
       ]
     },
@@ -3343,7 +3343,7 @@
           "name": "secrets",
           "type": "array",
           "class": "iscsi_auth_secrets",
-          "description": "Array of @ref rpc_iscsi_create_auth_group_secret objects"
+          "description": "List of CHAP secrets for this authentication group"
         }
       ]
     },
@@ -3375,23 +3375,23 @@
           "name": "user",
           "type": "string",
           "required": true,
-          "description": "Unidirectional CHAP name"
+          "description": "User name for one-way (unidirectional) CHAP authentication"
         },
         {
           "name": "secret",
           "type": "string",
           "required": true,
-          "description": "Unidirectional CHAP secret"
+          "description": "Secret for one-way (unidirectional) CHAP authentication"
         },
         {
           "name": "muser",
           "type": "string",
-          "description": "Bidirectional CHAP name"
+          "description": "User name for mutual (bidirectional) CHAP authentication"
         },
         {
           "name": "msecret",
           "type": "string",
-          "description": "Bidirectional CHAP secret"
+          "description": "Secret for mutual (bidirectional) CHAP authentication"
         }
       ]
     },
@@ -3408,7 +3408,7 @@
           "name": "user",
           "type": "string",
           "required": true,
-          "description": "Unidirectional CHAP name"
+          "description": "User name for one-way (unidirectional) CHAP authentication"
         }
       ]
     },
@@ -3430,14 +3430,14 @@
           "type": "array",
           "class": "iscsi_initiators",
           "required": true,
-          "description": "Not empty array of initiator hostnames or IP addresses"
+          "description": "List of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
           "class": "iscsi_netmasks",
           "required": true,
-          "description": "Not empty array of initiator netmasks"
+          "description": "List of initiator netmasks"
         }
       ]
     },
@@ -3459,19 +3459,19 @@
           "name": "tag",
           "type": "int32",
           "required": true,
-          "description": "Existing initiator group tag."
+          "description": "Initiator group tag (unique, integer > 0)"
         },
         {
           "name": "initiators",
           "type": "array",
           "class": "iscsi_initiators",
-          "description": "Array of initiator hostnames or IP addresses"
+          "description": "List of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
           "class": "iscsi_netmasks",
-          "description": "Array of initiator netmasks"
+          "description": "List of initiator netmasks"
         }
       ]
     },
@@ -3482,19 +3482,19 @@
           "name": "tag",
           "type": "int32",
           "required": true,
-          "description": "Existing initiator group tag."
+          "description": "Initiator group tag (unique, integer > 0)"
         },
         {
           "name": "initiators",
           "type": "array",
           "class": "iscsi_initiators",
-          "description": "Array of initiator hostnames or IP addresses"
+          "description": "List of initiator hostnames or IP addresses"
         },
         {
           "name": "netmasks",
           "type": "array",
           "class": "iscsi_netmasks",
-          "description": "Array of initiator netmasks"
+          "description": "List of initiator netmasks"
         }
       ]
     },
@@ -3522,14 +3522,14 @@
           "type": "array",
           "class": "iscsi_pg_ig_maps",
           "required": true,
-          "description": "Array of (Portal_Group_Tag:Initiator_Group_Tag) mappings"
+          "description": "List of portal-group-tag to initiator-group-tag mappings"
         },
         {
           "name": "luns",
           "type": "array",
           "class": "scsi_luns",
           "required": true,
-          "description": "Array of Bdev names to LUN ID mappings"
+          "description": "List of bdev-name to LUN-ID mappings"
         },
         {
           "name": "queue_depth",
@@ -3540,32 +3540,32 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "description": "CHAP authentication should be disabled for this target"
+          "description": "Disable CHAP authentication for this target node"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "description": "CHAP authentication should be required for this target"
+          "description": "Require CHAP authentication for this target node"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "description": "CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)"
+          "description": "Enable bidirectional CHAP authentication for this target node"
         },
         {
           "name": "chap_group",
           "type": "int32",
-          "description": "Authentication group ID for this target node"
+          "description": "Authentication group ID for this target node (non-zero values must reference a precreated group)"
         },
         {
           "name": "header_digest",
           "type": "boolean",
-          "description": "Header Digest should be required for this target node"
+          "description": "Require Header Digest for this target node"
         },
         {
           "name": "data_digest",
           "type": "boolean",
-          "description": "Data Digest should be required for this target node"
+          "description": "Require Data Digest for this target node"
         }
       ]
     },
@@ -3581,22 +3581,22 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "description": "CHAP authentication should be disabled for this target"
+          "description": "Disable CHAP authentication for this target node"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "description": "CHAP authentication should be required for this target"
+          "description": "Require CHAP authentication for this target node"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "description": "CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)"
+          "description": "Enable bidirectional CHAP authentication for this target node"
         },
         {
           "name": "chap_group",
           "type": "int32",
-          "description": "Authentication group ID for this target node"
+          "description": "Authentication group ID for this target node (non-zero values must reference a precreated group)"
         }
       ]
     },
@@ -3614,7 +3614,7 @@
           "type": "array",
           "class": "iscsi_pg_ig_maps",
           "required": true,
-          "description": "Not empty array of initiator to portal group mappings objects"
+          "description": "List of portal-group-tag to initiator-group-tag mappings"
         }
       ]
     },
@@ -3632,7 +3632,7 @@
           "type": "array",
           "class": "iscsi_pg_ig_maps",
           "required": true,
-          "description": "Not empty array of Portal to Initiator group mappings objects"
+          "description": "List of portal-group-tag to initiator-group-tag mappings"
         }
       ]
     },
@@ -3658,24 +3658,24 @@
           "name": "tag",
           "type": "int32",
           "required": true,
-          "description": "Portal group tag"
+          "description": "Portal group tag (unique, integer > 0)"
         },
         {
           "name": "portals",
           "type": "array",
           "class": "iscsi_portals",
           "required": true,
-          "description": "Not empty array of portals"
+          "description": "List of portals in host:port format"
         },
         {
           "name": "private",
           "type": "boolean",
-          "description": "When true, portals in this group are not returned by a discovery session. Used for login redirection. (default: `false`)"
+          "description": "Private portal group (portals are not returned by a discovery session; used for login redirection)"
         },
         {
           "name": "wait",
           "type": "boolean",
-          "description": "When true, do not listen on portals until it is started explicitly. (default: `false`)"
+          "description": "Do not listen on portals until started explicitly"
         }
       ]
     },
@@ -3686,7 +3686,7 @@
           "name": "tag",
           "type": "int32",
           "required": true,
-          "description": "Existing portal group tag"
+          "description": "Portal group tag (unique, integer > 0)"
         }
       ]
     },
@@ -3697,7 +3697,7 @@
           "name": "tag",
           "type": "int32",
           "required": true,
-          "description": "Existing portal group tag"
+          "description": "Portal group tag (unique, integer > 0)"
         }
       ]
     },
@@ -3713,22 +3713,22 @@
         {
           "name": "disable_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be disabled (default: `false`)"
+          "description": "Disable CHAP authentication for this portal group"
         },
         {
           "name": "require_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be required (default: `false`)"
+          "description": "Require CHAP authentication for this portal group"
         },
         {
           "name": "mutual_chap",
           "type": "boolean",
-          "description": "CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)"
+          "description": "Enable bidirectional CHAP authentication for this portal group"
         },
         {
           "name": "chap_group",
           "type": "int32",
-          "description": "CHAP group ID for discovery session (default: 0)"
+          "description": "CHAP authentication group ID for this portal group (non-zero values must reference a precreated group)"
         }
       ]
     },
@@ -3753,12 +3753,12 @@
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "bdev name to be added as a LUN"
+          "description": "bdev name to be added as a LUN (must not contain spaces or colons)"
         },
         {
           "name": "lun_id",
           "type": "int32",
-          "description": "LUN ID (default: first free ID)"
+          "description": "LUN ID. -1 or omitted assigns the lowest free ID"
         }
       ]
     },
@@ -3775,17 +3775,17 @@
           "name": "pg_tag",
           "type": "int32",
           "required": true,
-          "description": "Existing portal group tag"
+          "description": "Portal group tag (unique, integer > 0)"
         },
         {
           "name": "redirect_host",
           "type": "string",
-          "description": "Numeric IP address to which the target node is redirected"
+          "description": "Numeric IP address of the redirect portal"
         },
         {
           "name": "redirect_port",
           "type": "string",
-          "description": "Numeric TCP port to which the target node is redirected"
+          "description": "Numeric TCP port of the redirect portal"
         }
       ]
     },
@@ -3801,7 +3801,7 @@
         {
           "name": "pg_tag",
           "type": "int32",
-          "description": "Existing portal group tag"
+          "description": "Portal group tag (unique, integer > 0)"
         }
       ]
     },
@@ -3812,13 +3812,13 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Iscsi target node name"
+          "description": "iSCSI target node name"
         },
         {
           "name": "enable",
           "type": "boolean",
           "required": true,
-          "description": "Enable or disable histogram on specified target node"
+          "description": "Enable or disable histogram for the specified iSCSI target node"
         }
       ]
     },
@@ -3829,7 +3829,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Iscsi target node name"
+          "description": "iSCSI target node name"
         }
       ]
     },
