@@ -289,7 +289,7 @@ fi
 
 if [ "$(uname -s)" = "Linux" ]; then
 	HUGEMEM=${HUGEMEM:-4096}
-	export CLEAR_HUGE=yes
+	export CLEAR_HUGE=${CLEAR_HUGE:-yes}
 
 	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
