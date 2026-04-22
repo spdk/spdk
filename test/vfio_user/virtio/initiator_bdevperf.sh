@@ -37,7 +37,7 @@ $rpc_py vfu_virtio_scsi_add_target vfu.scsi --scsi-target-num=1 --bdev-name mall
 bdevperf=$rootdir/build/examples/bdevperf
 bdevperf_rpc_sock=/tmp/bdevperf.sock
 
-$bdevperf -r $bdevperf_rpc_sock -g -s 2048 -q 256 -o 4096 -w randrw -M 50 -t 30 -m 0xc -L vfio_pci -L virtio_vfio_user &
+$bdevperf -r $bdevperf_rpc_sock -g -s 512 -q 256 -o 4096 -w randrw -M 50 -t 30 -m 0xc -L vfio_pci -L virtio_vfio_user &
 bdevperf_pid=$!
 trap 'killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
