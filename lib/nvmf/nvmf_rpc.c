@@ -2398,75 +2398,47 @@ nvmf_rpc_decode_max_io_qpairs(const struct spdk_json_val *val, void *out)
 }
 
 static int
-decode_masked_oncs(const struct spdk_json_val *val, void *out)
+rpc_decode_oncs_bitmask(const struct spdk_json_val *val, void *out)
 {
-	struct spdk_nvme_cdata_oncs *oncs = out;
-	char *name = NULL;
+	uint16_t *flags = out;
+	struct rpc_oncs_features features = {};
+	uint16_t mask = 0;
+	size_t i;
 	int rc;
 
-	rc = spdk_json_decode_string(val, &name);
-	if (rc) {
+	rc = rpc_decode_oncs_features(val, &features);
+	if (rc != 0) {
 		return rc;
 	}
 
-	if (strcmp(name, "nvmcmps") == 0) {
-		oncs->nvmcmps = 0;
-	} else if (strcmp(name, "nvmdsmsv") == 0) {
-		oncs->nvmdsmsv = 0;
-	} else if (strcmp(name, "nvmwzsv") == 0) {
-		oncs->nvmwzsv = 0;
-	} else if (strcmp(name, "reservs") == 0) {
-		oncs->reservs = 0;
-	} else if (strcmp(name, "nvmcpys") == 0) {
-		oncs->nvmcpys = 0;
-	} else {
-		rc = -EINVAL;
-		goto out;
+	for (i = 0; i < features.count; i++) {
+		mask |= SPDK_BIT(features.items[i]);
 	}
+	*flags &= ~mask;
 
-out:
-	free(name);
-	return rc;
+	return 0;
 }
 
 static int
-decode_masked_oncs_array(const struct spdk_json_val *val, void *out)
+rpc_decode_fuses_bitmask(const struct spdk_json_val *val, void *out)
 {
-	size_t count;
-
-	return spdk_json_decode_array(val, decode_masked_oncs, out, 16, &count, 0);
-}
-
-static int
-decode_masked_fuses(const struct spdk_json_val *val, void *out)
-{
-	struct spdk_nvme_cdata_fuses *fuses = out;
-	char *name = NULL;
+	uint16_t *flags = out;
+	struct rpc_fuses_features features = {};
+	uint16_t mask = 0;
+	size_t i;
 	int rc;
 
-	rc = spdk_json_decode_string(val, &name);
-	if (rc) {
+	rc = rpc_decode_fuses_features(val, &features);
+	if (rc != 0) {
 		return rc;
 	}
 
-	if (strcmp(name, "fcws") == 0) {
-		fuses->fcws = 0;
-	} else {
-		rc = -EINVAL;
-		goto out;
+	for (i = 0; i < features.count; i++) {
+		mask |= SPDK_BIT(features.items[i]);
 	}
+	*flags &= ~mask;
 
-out:
-	free(name);
-	return rc;
-}
-
-static int
-decode_masked_fuses_array(const struct spdk_json_val *val, void *out)
-{
-	size_t count;
-
-	return spdk_json_decode_array(val, decode_masked_fuses, out, 16, &count, 0);
+	return 0;
 }
 
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_num_shared_buffers,
@@ -2512,8 +2484,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, opts.disable_command_passthru), spdk_json_decode_bool, true},
 	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, opts.kas), spdk_json_decode_uint16, true},
 	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, opts.min_kato), spdk_json_decode_uint32, true},
-	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs), decode_masked_oncs_array, true},
-	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses), decode_masked_fuses_array, true},
+	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs.raw), rpc_decode_oncs_bitmask, true},
+	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses.raw), rpc_decode_fuses_bitmask, true},
 };
 
 /* TODO: replace with free_rpc_nvmf_create_transport */

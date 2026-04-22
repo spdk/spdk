@@ -141,6 +141,22 @@
         {"name": "ffdhe6144", "value": "SPDK_NVMF_DHCHAP_DHGROUP_6144"},
         {"name": "ffdhe8192", "value": "SPDK_NVMF_DHCHAP_DHGROUP_8192"}
       ]
+    },
+    {
+      "name": "oncs_feature",
+      "fields": [
+        {"name": "nvmcmps", "value": 0},
+        {"name": "nvmdsmsv", "value": 2},
+        {"name": "nvmwzsv", "value": 3},
+        {"name": "reservs", "value": 5},
+        {"name": "nvmcpys", "value": 8}
+      ]
+    },
+    {
+      "name": "fuses_feature",
+      "fields": [
+        {"name": "fcws", "value": 0}
+      ]
     }
   ],
   "objects": [
@@ -460,6 +476,18 @@
       "item_type": "enum",
       "class": "dhchap_dhgroup",
       "max_count": 32
+    },
+    {
+      "name": "oncs_features",
+      "item_type": "enum",
+      "class": "oncs_feature",
+      "max_count": 16
+    },
+    {
+      "name": "fuses_features",
+      "item_type": "enum",
+      "class": "fuses_feature",
+      "max_count": 16
     },
     {
       "name": "raid_base_bdevs",
@@ -3834,12 +3862,14 @@
         {
           "name": "masked_oncs",
           "type": "array",
+          "class": "oncs_features",
           "required": false,
           "description": "List of ONCS features to mask (disable)"
         },
         {
           "name": "masked_fuses",
           "type": "array",
+          "class": "fuses_features",
           "required": false,
           "description": "List of FUSES features to mask (disable)"
         }
