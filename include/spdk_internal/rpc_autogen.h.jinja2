@@ -111,6 +111,8 @@ struct rpc_{{ array.name }} {
 	size_t    count;
     {%- if array.item_type == "object" %}
 	struct rpc_{{ array.class }}  items[{{ array_max_count }}];
+    {%- elif array.item_type == "enum" %}
+	enum rpc_{{ array.class }}  items[{{ array_max_count }}];
     {%- elif array.item_type == "string" %}
 	char      *items[{{ array_max_count }}];
     {%- else %}
@@ -127,6 +129,10 @@ rpc_decode_{{ array.name }}(const struct spdk_json_val *val, void *out)
 	return spdk_json_decode_array(val, rpc_decode_{{ array.class }}, arr->items,
 				      {{ array_max_count }}, &arr->count,
 				      sizeof(struct rpc_{{ array.class }}));
+	{%- elif array.item_type == "enum" %}
+	return spdk_json_decode_array(val, rpc_decode_{{ array.class }}, arr->items,
+				      {{ array_max_count }}, &arr->count,
+				      sizeof(enum rpc_{{ array.class }}));
 	{%- else %}
 	return spdk_json_decode_array(val, spdk_json_decode_{{ array.item_type }}, arr->items,
 				      {{ array_max_count }}, &arr->count,
