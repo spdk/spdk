@@ -27,7 +27,7 @@ $rpc_py nvmf_create_subsystem nqn.2019-07.io.spdk:cnode1 -s SPDK001 -a
 $rpc_py nvmf_subsystem_add_ns nqn.2019-07.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2019-07.io.spdk:cnode1 -t VFIOUSER -a $vm_muser_dir/domain/muser1/1 -s 0
 
-vm_setup --disk-type=vfio_user --force=1 --os=$VM_IMAGE --disks="1"
+vm_setup --disk-type=vfio_user --force=1 --os=$VM_IMAGE --memory=512 --disks="1"
 vm_run 1
 vm_wait_for_boot 60 1
 
@@ -36,7 +36,7 @@ vm_exec 1 "lsblk"
 vm_shutdown_all
 
 # re-launch the vm to see if memory region register / unregister will failed
-vm_setup --disk-type=vfio_user --force=1 --os=$VM_IMAGE --disks="1"
+vm_setup --disk-type=vfio_user --force=1 --os=$VM_IMAGE --memory=512 --disks="1"
 vm_run 1
 vm_wait_for_boot 60 1
 

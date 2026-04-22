@@ -50,7 +50,7 @@ elif [[ "$virtio_type" == "virtio_scsi" ]]; then
 	$rpc_py vfu_virtio_scsi_add_target virtio.$disk_no --scsi-target-num=0 --bdev-name Nvme0n1
 fi
 
-vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --disks="1"
+vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --memory=512 --disks="1"
 vm_run $vm_num
 vm_wait_for_boot 60 $vm_num
 
@@ -78,7 +78,7 @@ notice "Shutting down virtual machine..."
 vm_shutdown_all
 
 # re-launch the vm
-vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --disks="1"
+vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --memory=512 --disks="1"
 vm_run $vm_num
 vm_wait_for_boot 60 $vm_num
 

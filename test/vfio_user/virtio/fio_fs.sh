@@ -42,7 +42,7 @@ $rpc_py fsdev_aio_create aio.$disk_no $be_virtiofs_dir
 $rpc_py vfu_virtio_create_fs_endpoint virtio.$disk_no --fsdev-name aio.$disk_no \
 	--tag vfu_test.$disk_no --num-queues=2 --qsize=512 --packed-ring
 
-vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --disks="1"
+vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --memory=512 --disks="1"
 vm_run $vm_num
 vm_wait_for_boot 60 $vm_num
 
