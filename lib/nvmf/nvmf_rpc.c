@@ -2397,50 +2397,6 @@ nvmf_rpc_decode_max_io_qpairs(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
-static int
-rpc_decode_oncs_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint16_t *flags = out;
-	struct rpc_oncs_features features = {};
-	uint16_t mask = 0;
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_oncs_features(val, &features);
-	if (rc != 0) {
-		return rc;
-	}
-
-	for (i = 0; i < features.count; i++) {
-		mask |= SPDK_BIT(features.items[i]);
-	}
-	*flags &= ~mask;
-
-	return 0;
-}
-
-static int
-rpc_decode_fuses_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint16_t *flags = out;
-	struct rpc_fuses_features features = {};
-	uint16_t mask = 0;
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_fuses_features(val, &features);
-	if (rc != 0) {
-		return rc;
-	}
-
-	for (i = 0; i < features.count; i++) {
-		mask |= SPDK_BIT(features.items[i]);
-	}
-	*flags &= ~mask;
-
-	return 0;
-}
-
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_num_shared_buffers,
 			      "Use iobuf_large_cache_size and iobuf_small_cache_size instead", "v26.09",
 			      SPDK_LOG_DEPRECATION_ALWAYS);
@@ -2484,8 +2440,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, opts.disable_command_passthru), spdk_json_decode_bool, true},
 	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, opts.kas), spdk_json_decode_uint16, true},
 	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, opts.min_kato), spdk_json_decode_uint32, true},
-	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs.raw), rpc_decode_oncs_bitmask, true},
-	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses.raw), rpc_decode_fuses_bitmask, true},
+	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs.raw), rpc_decode_oncs_features_bitmask, true},
+	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses.raw), rpc_decode_fuses_features_bitmask, true},
 };
 
 /* TODO: replace with free_rpc_nvmf_create_transport */

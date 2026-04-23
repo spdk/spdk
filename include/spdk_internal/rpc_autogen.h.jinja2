@@ -136,7 +136,8 @@ rpc_decode_{{ array.name }}(const struct spdk_json_val *val, void *out)
 static inline int
 rpc_decode_{{ array.name }}_bitmask(const struct spdk_json_val *val, void *out)
 {
-	uint32_t *flags = out;
+	uint{{ array.max_count }}_t *flags = out;
+	uint{{ array.max_count }}_t mask = 0;
 	struct rpc_{{ array.name }} array = {};
 	size_t i;
 	int rc;
@@ -146,10 +147,10 @@ rpc_decode_{{ array.name }}_bitmask(const struct spdk_json_val *val, void *out)
 		return rc;
 	}
 
-	*flags = 0;
 	for (i = 0; i < array.count; i++) {
-		*flags |= SPDK_BIT(array.items[i]);
+		mask |= SPDK_BIT(array.items[i]);
 	}
+	*flags {{ '&= ~' if array.bitmask == 'clear' else '= ' }}mask;
 
 	return 0;
 }

@@ -469,26 +469,28 @@
       "name": "dhchap_digests",
       "item_type": "enum",
       "class": "dhchap_digest",
-      "bitmask": true,
+      "bitmask": "set",
       "max_count": 32
     },
     {
       "name": "dhchap_dhgroups",
       "item_type": "enum",
       "class": "dhchap_dhgroup",
-      "bitmask": true,
+      "bitmask": "set",
       "max_count": 32
     },
     {
       "name": "oncs_features",
       "item_type": "enum",
       "class": "oncs_feature",
+      "bitmask": "clear",
       "max_count": 16
     },
     {
       "name": "fuses_features",
       "item_type": "enum",
       "class": "fuses_feature",
+      "bitmask": "clear",
       "max_count": 16
     },
     {
