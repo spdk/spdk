@@ -385,23 +385,23 @@
           "name": "trtype",
           "type": "string",
           "required": true,
-          "description": "Transport type (\"RDMA\")"
+          "description": "NVMe-oF transport type: e.g., rdma"
         },
         {
           "name": "adrfam",
           "type": "string",
-          "description": "Address family (\"IPv4\", \"IPv6\", \"IB\", or \"FC\")"
+          "description": "NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host"
         },
         {
           "name": "traddr",
           "type": "string",
           "required": true,
-          "description": "Transport address"
+          "description": "NVMe-oF transport address: e.g., an ip address"
         },
         {
           "name": "trsvcid",
           "type": "string",
-          "description": "Transport service ID (required for RDMA or TCP)"
+          "description": "NVMe-oF transport service id: e.g., a port number (required for TCP and RDMA transport types)"
         }
       ]
     },
@@ -411,23 +411,23 @@
         {
           "name": "nsid",
           "type": "uint32",
-          "description": "Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID."
+          "description": "Namespace ID between 1 and 4294967294"
         },
         {
           "name": "bdev_name",
           "type": "string",
           "required": true,
-          "description": "Name of bdev to expose as a namespace."
+          "description": "Name of the bdev to expose as a namespace"
         },
         {
           "name": "nguid",
           "type": "string",
-          "description": "16-byte namespace globally unique identifier in hexadecimal (e.g. \"ABCDEF0123456789ABCDEF0123456789\")"
+          "description": "16-byte namespace globally unique identifier in hexadecimal"
         },
         {
           "name": "eui64",
           "type": "string",
-          "description": "8-byte namespace EUI-64 in hexadecimal (e.g. \"ABCDEF0123456789\")"
+          "description": "8-byte namespace EUI-64 in hexadecimal"
         },
         {
           "name": "uuid",
@@ -442,7 +442,7 @@
         {
           "name": "anagrpid",
           "type": "uint32",
-          "description": "ANA group ID. Default: Namespace ID."
+          "description": "ANA group ID"
         },
         {
           "name": "no_auto_visible",
@@ -453,7 +453,7 @@
           "name": "hide_metadata",
           "type": "boolean",
           "deprecated": true,
-          "description": "Enable hide_metadata option to the bdev. Default: false"
+          "description": "[Deprecated] Enable hide_metadata option to the bdev"
         }
       ]
     },
@@ -2185,7 +2185,7 @@
 	{
           "name": "disable_sq_flow_control",
           "type": "boolean",
-          "description": "Disable SQ flow control (set bit 2 of cattr in Fabrics Connect command). Default: false."
+          "description": "Disable SQ flow control (set bit 2 of cattr in Fabrics Connect command)."
         }
       ]
     },
@@ -3896,7 +3896,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "max_queue_depth",
@@ -3922,7 +3922,7 @@
           "name": "io_unit_size",
           "type": "uint32",
           "deprecated": true,
-          "description": "I/O unit size (bytes)"
+          "description": "I/O unit size (bytes). Deprecated, use iobuf_set_options instead."
         },
         {
           "name": "max_aq_depth",
@@ -3933,7 +3933,7 @@
           "name": "num_shared_buffers",
           "type": "uint32",
           "deprecated": true,
-          "description": "The number of pooled data buffers available to the transport"
+          "description": "Number of pooled data buffers available to the transport. Deprecated, use iobuf_set_options instead"
         },
         {
           "name": "buf_cache_size",
@@ -3949,7 +3949,7 @@
         {
           "name": "iobuf_large_cache_size",
           "type": "uint32",
-          "description": "The number of shared buffers from a large iobuf pool to reserve for each poll group"
+          "description": "Number of shared buffers from the large iobuf pool to reserve for each poll group"
         },
         {
           "name": "zcopy",
@@ -3959,17 +3959,17 @@
         {
           "name": "num_cqe",
           "type": "int32",
-          "description": "The number of CQ entries. Only used when no_srq=true (RDMA only)"
+          "description": "Number of CQ entries, only used when no_srq=true (RDMA only)"
         },
         {
           "name": "max_srq_depth",
           "type": "uint32",
-          "description": "The number of elements in a per-thread shared receive queue (RDMA only)"
+          "description": "Number of elements in the per-thread shared receive queue (RDMA only)"
         },
         {
           "name": "no_srq",
           "type": "boolean",
-          "description": "Disable shared receive queue even for devices that support it. (RDMA only)"
+          "description": "Disable shared receive queue even for devices that support it (RDMA only)"
         },
         {
           "name": "c2h_success",
@@ -3979,17 +3979,17 @@
         {
           "name": "dif_insert_or_strip",
           "type": "boolean",
-          "description": "Enable DIF insert for write I/O and DIF strip for read I/O DIF"
+          "description": "Enable DIF insert for write I/O and DIF strip for read I/O (TCP only)"
         },
         {
           "name": "sock_priority",
           "type": "uint32",
-          "description": "The socket priority of the connection owned by this transport (TCP only)"
+          "description": "Socket priority of connections owned by this transport (TCP only)"
         },
         {
           "name": "acceptor_backlog",
           "type": "int32",
-          "description": "The number of pending connections allowed in backlog before failing new connection attempts (RDMA only)"
+          "description": "Number of pending connections allowed in the backlog before failing new connection attempts (RDMA only)"
         },
         {
           "name": "abort_timeout_sec",
@@ -4004,12 +4004,12 @@
         {
           "name": "control_msg_num",
           "type": "uint16",
-          "description": "The number of control messages per poll group (TCP only)"
+          "description": "Number of control messages per poll group (TCP only)"
         },
         {
           "name": "disable_mappable_bar0",
           "type": "boolean",
-          "description": "disable client mmap() of BAR0 (VFIO-USER only)"
+          "description": "Disable client mmap() of BAR0 (VFIO-USER only)"
         },
         {
           "name": "disable_adaptive_irq",
@@ -4019,7 +4019,7 @@
         {
           "name": "disable_shadow_doorbells",
           "type": "boolean",
-          "description": "disable shadow doorbell support (VFIO-USER only)"
+          "description": "Disable shadow doorbell support (VFIO-USER only)"
         },
         {
           "name": "acceptor_poll_rate",
@@ -4039,31 +4039,31 @@
         {
           "name": "disable_command_passthru",
           "type": "boolean",
-          "description": "Disallow forwarding unrecognized I/O opcodes and the Identify Namespace admin command to the underlying bdev. Subsystems in passthrough mode and admin commands set via admin_cmd_passthru are not affected."
+          "description": "Disallow forwarding unrecognized I/O opcodes and the Identify Namespace admin command to the underlying bdev. Passthrough subsystems and admin_cmd_passthru are unaffected"
         },
         {
           "name": "kas",
           "type": "uint16",
-          "description": "The granularity of the KATO (Keep Alive Timeout) in 100 millisecond units"
+          "description": "KATO (Keep Alive Timeout) granularity in units of 100 milliseconds"
         },
         {
           "name": "min_kato",
           "type": "uint32",
-          "description": "The minimum Keep Alive Timeout value in milliseconds"
+          "description": "Minimum Keep Alive Timeout value in milliseconds"
         },
         {
           "name": "masked_oncs",
           "type": "bitmask",
           "class": "oncs_features",
           "required": false,
-          "description": "List of ONCS features to mask (disable)"
+          "description": "Comma-separated list of ONCS features to mask (disable). Available options: all, nvmcmps, nvmdsmsv, nvmwzsv, reservs, nvmcpys"
         },
         {
           "name": "masked_fuses",
           "type": "bitmask",
           "class": "fuses_features",
           "required": false,
-          "description": "List of FUSES features to mask (disable)"
+          "description": "Comma-separated list of FUSES features to mask (disable). Available options: all, fcws"
         }
       ]
     },
@@ -4073,12 +4073,12 @@
         {
           "name": "nqn",
           "type": "string",
-          "description": "Subsystem NQN (optional)"
+          "description": "Subsystem NQN"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4089,67 +4089,67 @@
           "name": "nqn",
           "type": "string",
           "required": true,
-          "description": "Subsystem NQN."
+          "description": "Subsystem NQN"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "serial_number",
           "type": "string",
-          "description": "Serial number of virtual controller."
+          "description": "Serial number of the virtual NVMe controller"
         },
         {
           "name": "model_number",
           "type": "string",
-          "description": "Model number of virtual controller."
+          "description": "Model number of the virtual NVMe controller"
         },
         {
           "name": "max_namespaces",
           "type": "uint32",
-          "description": "Maximum number of namespaces that can be attached to the subsystem. Default: 32 (also used if user specifies 0)"
+          "description": "Maximum number of namespaces that can be attached to the subsystem"
         },
         {
           "name": "allow_any_host",
           "type": "boolean",
-          "description": "Allow any host (`true`) or enforce allowed host list (`false`). Default: `false`"
+          "description": "Allow any host to connect (default: enforce allowed host NQN list)"
         },
         {
           "name": "ana_reporting",
           "type": "boolean",
-          "description": "Enable ANA reporting feature. Default: `false`"
+          "description": "Enable ANA reporting feature"
         },
         {
           "name": "min_cntlid",
           "type": "uint16",
-          "description": "Minimum controller ID. Default: 1"
+          "description": "Minimum controller ID"
         },
         {
           "name": "max_cntlid",
           "type": "uint16",
-          "description": "Maximum controller ID. Default: 0xffef"
+          "description": "Maximum controller ID"
         },
         {
           "name": "dmrsl",
           "type": "uint32",
-          "description": "Dataset Management Range Size Limit in logical block units. Default: 2097152 (1 GiB)."
+          "description": "Dataset Management Range Size Limit in logical block units"
         },
         {
           "name": "wzsl",
           "type": "uint8",
-          "description": "Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size. Default: 12 (16 MiB)."
+          "description": "Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size"
         },
         {
           "name": "passthrough",
           "type": "boolean",
-          "description": "Use NVMe passthrough for I/O commands and namespace-directed admin commands. Default: `false`"
+          "description": "Use NVMe passthrough for all I/O commands and namespace-directed admin commands"
         },
         {
           "name": "enable_nssr",
           "type": "boolean",
-          "description": "Enable NSSR (NVMe subsystem reset). Default: `false`"
+          "description": "Enable NSSR (NVMe subsystem reset)"
         }
       ]
     },
@@ -4160,12 +4160,12 @@
           "name": "nqn",
           "type": "string",
           "required": true,
-          "description": "Subsystem NQN to delete."
+          "description": "Subsystem NQN"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4176,12 +4176,12 @@
           "name": "nqn",
           "type": "string",
           "required": true,
-          "description": "Subsystem NQN"
+          "description": "Subsystem NQN ('discovery' can be used as shortcut for discovery NQN)"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "listen_address",
@@ -4193,18 +4193,18 @@
         {
           "name": "secure_channel",
           "type": "boolean",
-          "description": "Whether all connections immediately attempt to establish a secure channel"
+          "description": "Require all connections to immediately establish a secure channel"
         },
         {
           "name": "ana_state",
           "type": "enum",
           "class": "nvme_ana_state",
-          "description": "ANA state to set: optimized, non_optimized, or inaccessible"
+          "description": "ANA state to set"
         },
         {
           "name": "sock_impl",
           "type": "string",
-          "description": "The socket implementation to use for the listener"
+          "description": "Socket implementation to use for the listener"
         },
         {
           "name": "numa_id",
@@ -4221,12 +4221,12 @@
           "name": "nqn",
           "type": "string",
           "required": true,
-          "description": "Subsystem NQN"
+          "description": "Subsystem NQN ('discovery' can be used as shortcut for discovery NQN)"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "listen_address",
@@ -4249,7 +4249,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "listen_address",
@@ -4263,7 +4263,7 @@
           "type": "enum",
           "class": "nvme_ana_state",
           "required": true,
-          "description": "ANA state to set (\"optimized\", \"non_optimized\", or \"inaccessible\")"
+          "description": "ANA state to set"
         },
         {
           "name": "anagrpid",
@@ -4291,7 +4291,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4313,7 +4313,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4341,7 +4341,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4358,27 +4358,27 @@
           "name": "host",
           "type": "string",
           "required": true,
-          "description": "Host NQN to add to the list of allowed host NQNs"
+          "description": "Host NQN to add to the allowed host list"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "psk",
           "type": "string",
-          "description": "Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)"
+          "description": "Pre-shared key name for TLS authentication (TCP only)"
         },
         {
           "name": "dhchap_key",
           "type": "string",
-          "description": "DH-HMAC-CHAP key name (required if controller key is specified)"
+          "description": "DH-HMAC-CHAP key name, required if a controller key is specified"
         },
         {
           "name": "dhchap_ctrlr_key",
           "type": "string",
-          "description": "DH-HMAC-CHAP controller key name."
+          "description": "DH-HMAC-CHAP controller key name"
         }
       ]
     },
@@ -4395,12 +4395,12 @@
           "name": "host",
           "type": "string",
           "required": true,
-          "description": "Host NQN to remove from the list of allowed host NQNs"
+          "description": "Host NQN to remove from the allowed host list"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "timeout_ms",
@@ -4422,12 +4422,12 @@
           "name": "allow_any_host",
           "type": "boolean",
           "required": true,
-          "description": "Allow any host (`true`) or enforce allowed host list (`false`)."
+          "description": "Allow any host to connect (`true`) or enforce allowed host NQN list (`false`)"
         },
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4454,7 +4454,7 @@
         {
           "name": "dhchap_key",
           "type": "string",
-          "description": "DH-HMAC-CHAP key name (required if controller key is specified)"
+          "description": "DH-HMAC-CHAP key name, required if a controller key is specified"
         },
         {
           "name": "dhchap_ctrlr_key",
@@ -4475,7 +4475,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4491,7 +4491,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4507,7 +4507,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4535,7 +4535,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "The name of the parent NVMe-oF target (optional)"
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4563,7 +4563,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "The name of the parent NVMe-oF target (optional)"
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4584,7 +4584,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "address",
@@ -4611,7 +4611,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "address",
@@ -4633,7 +4633,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4649,7 +4649,7 @@
         {
           "name": "poll_groups_mask",
           "type": "string",
-          "description": "Set cpumask for NVMf poll groups"
+          "description": "CPU mask for NVMe-oF poll groups"
         },
         {
           "name": "discovery_filter",
@@ -4667,13 +4667,13 @@
           "name": "dhchap_digests",
           "type": "bitmask",
           "class": "dhchap_digests",
-          "description": "List of allowed DH-HMAC-CHAP digests."
+          "description": "Comma-separated list of allowed DH-HMAC-CHAP digests"
         },
         {
           "name": "dhchap_dhgroups",
           "type": "bitmask",
           "class": "dhchap_dhgroups",
-          "description": "List of allowed DH-HMAC-CHAP DH groups."
+          "description": "Comma-separated list of allowed DH-HMAC-CHAP DH groups"
         },
         {
           "name": "dup_host_policy",
@@ -4689,12 +4689,12 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         },
         {
           "name": "trtype",
           "type": "string",
-          "description": "Transport type."
+          "description": "Transport type"
         }
       ]
     },
@@ -4704,7 +4704,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -4714,17 +4714,17 @@
         {
           "name": "crdt1",
           "type": "uint16",
-          "description": "Command Retry Delay Time 1"
+          "description": "Command Retry Delay Time 1 in units of 100 milliseconds"
         },
         {
           "name": "crdt2",
           "type": "uint16",
-          "description": "Command Retry Delay Time 2"
+          "description": "Command Retry Delay Time 2 in units of 100 milliseconds"
         },
         {
           "name": "crdt3",
           "type": "uint16",
-          "description": "Command Retry Delay Time 3"
+          "description": "Command Retry Delay Time 3 in units of 100 milliseconds"
         }
       ]
     },
@@ -6360,7 +6360,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
@@ -6370,7 +6370,7 @@
         {
           "name": "tgt_name",
           "type": "string",
-          "description": "Parent NVMe-oF target name."
+          "description": "Parent NVMe-oF target name"
         }
       ]
     },
