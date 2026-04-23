@@ -60,18 +60,27 @@ add_remove() {
 
 add_remove_resize() {
 	local nsid=$1 thread=$2
-	local current
+	local inc_nsid dec_nsid
 	local max_namespaces=$ns_per_thread
 	local bdev_name="null${thread}"
-	local resize_bdev_size resize_nsid stable_bdev_size stable_nsid
 
-	resize_bdev_size="$bdev_size"
-	resize_nsid="$((nsid + --max_namespaces))"
-	stable_bdev_size="$((bdev_size - thread))"
-	stable_nsid="$((nsid + --max_namespaces))"
+	local resize_bdev_size="$bdev_size"
+	local stable_bdev_size="$((bdev_size - thread))"
 
-	# Two bdevs will be added as NSID and NSID-1, forcing log page to contain
-	# entries with decreasing NSID.
+	# Split into two non-overlapping halves so that the "inc" and "dec"
+	# add/remove paths never reuse the same NSID. Each NSID is used
+	# exactly once -- no NSID that was removed is ever re-added. This
+	# avoids a race where the initiator is still processing the AER for
+	# a removed NSID when the target re-adds a namespace at that same
+	# NSID.
+	local inc_nsid_base=$nsid
+	local dec_nsid_base=$((nsid + 2 * max_namespaces - 1))
+	local resize_nsid="$((nsid + --max_namespaces))"
+	local stable_nsid="$((nsid + --max_namespaces))"
+
+	# Two bdevs will be added/removed with increasing and decreasing NSIDs
+	# respectively, forcing the log page to contain entries with diverging
+	# NSID ordering.
 	# A third bdev will be increased in size during the test, forcing AERs
 	# for namespace attribute changes other than add/remove.
 	# A fourth bdev will remain at fixed size, to verify that it persist
@@ -86,20 +95,16 @@ add_remove_resize() {
 		nvmf_subsystem_add_ns -n $stable_nsid $NVME_SUBNQN ${bdev_name}_stable
 	EOF
 
-	# Start at 1 to accommodate the namespace with decremented NSID.
-	# Max namespaces is ns_per_thread decreased by namespaces created above.
-	for ((i = 1; i < max_namespaces; i++)); do
-		current=$((nsid + i))
-		prev=$((nsid + i - 1))
+	for ((i = 0; i < max_namespaces; i++)); do
+		inc_nsid=$((inc_nsid_base + i))
+		dec_nsid=$((dec_nsid_base - i))
 		((++resize_bdev_size))
 
-		# Batch all target-side RPCs for this iteration: add/remove ns
-		# with increasing and decreasing NSIDs, then resize.
 		$tgt_rpc <<- EOF
-			nvmf_subsystem_add_ns -n $current $NVME_SUBNQN ${bdev_name}_inc
-			nvmf_subsystem_remove_ns $NVME_SUBNQN $current
-			nvmf_subsystem_add_ns -n $prev $NVME_SUBNQN ${bdev_name}_dec
-			nvmf_subsystem_remove_ns $NVME_SUBNQN $prev
+			nvmf_subsystem_add_ns -n $inc_nsid $NVME_SUBNQN ${bdev_name}_inc
+			nvmf_subsystem_remove_ns $NVME_SUBNQN $inc_nsid
+			nvmf_subsystem_add_ns -n $dec_nsid $NVME_SUBNQN ${bdev_name}_dec
+			nvmf_subsystem_remove_ns $NVME_SUBNQN $dec_nsid
 			bdev_null_resize ${bdev_name}_resize $resize_bdev_size
 		EOF
 
@@ -174,11 +179,17 @@ for ((i = 0; i < nthreads; ++i)); do
 done
 wait "${pids[@]}"
 
+$rpc_py bdev_nvme_detach_controller nvme0
+attach_controller
+
 # Test 3 - add/remove/resize ns
 
 for ((i = 0; i < nthreads; ++i)); do
-	# Every thread can use ns_per_thread NSIDs starting at specific offset.
-	start_nsid="$((1 + (ns_per_thread * i)))"
+	# Each thread needs 2 * ns_per_thread NSIDs:
+	# - the lower half is used for the increasing-NSID add/remove path
+	#   plus the persistent resize and stable namespaces
+	# - the upper half for the "dec" path
+	start_nsid="$((1 + (2 * ns_per_thread * i)))"
 	add_remove_resize "$start_nsid" "$i" &
 	pids+=($!)
 done
