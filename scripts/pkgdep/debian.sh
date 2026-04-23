@@ -39,6 +39,8 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		abigail-tools bash-completion ruby-dev pycodestyle bundler rake
 	# Additional dependencies for nvmf performance test script
 	apt-get install -y python3-paramiko
+	# Additional dependencies for bdev and raid functional test scripts
+	apt-get install -y socat fio xfsprogs
 fi
 if [[ $INSTALL_RBD == "true" ]]; then
 	# Additional dependencies for RBD bdev in NVMe over Fabrics
