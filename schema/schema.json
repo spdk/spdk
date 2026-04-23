@@ -469,12 +469,14 @@
       "name": "dhchap_digests",
       "item_type": "enum",
       "class": "dhchap_digest",
+      "bitmask": true,
       "max_count": 32
     },
     {
       "name": "dhchap_dhgroups",
       "item_type": "enum",
       "class": "dhchap_dhgroup",
+      "bitmask": true,
       "max_count": 32
     },
     {

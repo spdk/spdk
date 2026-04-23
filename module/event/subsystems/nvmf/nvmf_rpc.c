@@ -142,54 +142,12 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 	return -1;
 }
 
-static int
-decode_dhchap_digest_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	struct rpc_dhchap_digests digests = {};
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_dhchap_digests(val, &digests);
-	if (rc != 0) {
-		return rc;
-	}
-
-	*flags = 0;
-	for (i = 0; i < digests.count; i++) {
-		*flags |= SPDK_BIT(digests.items[i]);
-	}
-
-	return 0;
-}
-
-static int
-decode_dhchap_dhgroup_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	struct rpc_dhchap_dhgroups dhgroups = {};
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_dhchap_dhgroups(val, &dhgroups);
-	if (rc != 0) {
-		return rc;
-	}
-
-	*flags = 0;
-	for (i = 0; i < dhgroups.count; i++) {
-		*flags |= SPDK_BIT(dhgroups.items[i]);
-	}
-
-	return 0;
-}
-
 static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
-	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), decode_dhchap_digest_bitmask, true},
-	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), decode_dhchap_dhgroup_bitmask, true},
+	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests_bitmask, true},
+	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups_bitmask, true},
 };
 
 static void

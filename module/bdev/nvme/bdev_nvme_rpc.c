@@ -24,48 +24,6 @@
 
 static bool g_tls_log = false;
 
-static int
-decode_dhchap_digest_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	struct rpc_dhchap_digests digests = {};
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_dhchap_digests(val, &digests);
-	if (rc != 0) {
-		return rc;
-	}
-
-	*flags = 0;
-	for (i = 0; i < digests.count; i++) {
-		*flags |= SPDK_BIT(digests.items[i]);
-	}
-
-	return 0;
-}
-
-static int
-decode_dhchap_dhgroup_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	struct rpc_dhchap_dhgroups dhgroups = {};
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_dhchap_dhgroups(val, &dhgroups);
-	if (rc != 0) {
-		return rc;
-	}
-
-	*flags = 0;
-	for (i = 0; i < dhgroups.count; i++) {
-		*flags |= SPDK_BIT(dhgroups.items[i]);
-	}
-
-	return 0;
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_nvme_set_options_decoders[] = {
 	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_bdev_nvme_timeout_action, true},
 	{"keep_alive_timeout_ms", offsetof(struct spdk_bdev_nvme_opts, keep_alive_timeout_ms), spdk_json_decode_uint32, true},
@@ -94,8 +52,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_set_options_decoders[
 	{"rdma_srq_size", offsetof(struct spdk_bdev_nvme_opts, rdma_srq_size), spdk_json_decode_uint32, true},
 	{"rdma_max_cq_size", offsetof(struct spdk_bdev_nvme_opts, rdma_max_cq_size), spdk_json_decode_uint32, true},
 	{"rdma_cm_event_timeout_ms", offsetof(struct spdk_bdev_nvme_opts, rdma_cm_event_timeout_ms), spdk_json_decode_uint16, true},
-	{"dhchap_digests", offsetof(struct spdk_bdev_nvme_opts, dhchap_digests), decode_dhchap_digest_bitmask, true},
-	{"dhchap_dhgroups", offsetof(struct spdk_bdev_nvme_opts, dhchap_dhgroups), decode_dhchap_dhgroup_bitmask, true},
+	{"dhchap_digests", offsetof(struct spdk_bdev_nvme_opts, dhchap_digests), rpc_decode_dhchap_digests_bitmask, true},
+	{"dhchap_dhgroups", offsetof(struct spdk_bdev_nvme_opts, dhchap_dhgroups), rpc_decode_dhchap_dhgroups_bitmask, true},
 	{"rdma_umr_per_io", offsetof(struct spdk_bdev_nvme_opts, rdma_umr_per_io), spdk_json_decode_bool, true},
 	{"tcp_connect_timeout_ms", offsetof(struct spdk_bdev_nvme_opts, tcp_connect_timeout_ms), spdk_json_decode_uint32, true},
 	{"enable_flush", offsetof(struct spdk_bdev_nvme_opts, enable_flush), spdk_json_decode_bool, true},
