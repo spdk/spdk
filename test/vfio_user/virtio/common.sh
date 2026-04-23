@@ -14,7 +14,7 @@ function vfu_tgt_run() {
 	mkdir -p $vfio_user_dir
 
 	timing_enter vfu_tgt_start
-	$rootdir/build/bin/spdk_tgt -r $vfio_user_dir/rpc.sock "$@" &
+	$rootdir/build/bin/vhost -r $vfio_user_dir/rpc.sock "$@" &
 	vfupid=$!
 	echo $vfupid > $vfu_pid_file
 

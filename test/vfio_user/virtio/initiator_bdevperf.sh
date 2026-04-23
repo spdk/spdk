@@ -14,14 +14,12 @@ vfu_dir="$SPDK_TEST_STORAGE/vfu_devices"
 rm -rf $vfu_dir
 mkdir -p $vfu_dir
 
-# Start `spdk_tgt` and configure it
-vfu_tgt_run 0 -m 0x3 -s 512
+# Start `vhost` and configure it
+vfu_tgt_run 0 -m 0x3 -s 512 -S $vfu_dir
 
 $rpc_py bdev_malloc_create -b malloc0 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py bdev_malloc_create -b malloc1 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py bdev_malloc_create -b malloc2 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
-
-$rpc_py vfu_tgt_set_base_path $vfu_dir
 
 # Create vfio-user virtio-blk device
 $rpc_py vfu_virtio_create_blk_endpoint vfu.blk --bdev-name malloc0 --cpumask=0x1 \
