@@ -1820,6 +1820,22 @@ bs_batch_clear_dev(struct spdk_blob *blob, spdk_bs_batch_t *batch, uint64_t lba,
 	}
 }
 
+/*
+ * io_unit_size and md_page_size were added to the super block after the initial
+ * format; blobstores created before that have them zeroed on disk, so treat zero
+ * as unset and fall back to the size that was fixed at the time.
+ */
+static void
+bs_super_set_defaults_if_unset(struct spdk_bs_super_block *super)
+{
+	if (super->io_unit_size == 0) {
+		super->io_unit_size = SPDK_BS_PAGE_SIZE;
+	}
+	if (super->md_page_size == 0) {
+		super->md_page_size = SPDK_BS_PAGE_SIZE;
+	}
+}
+
 static int
 bs_super_validate(struct spdk_bs_super_block *super, struct spdk_blob_store *bs)
 {
@@ -5001,15 +5017,10 @@ bs_parse_super(struct spdk_bs_load_ctx *ctx)
 {
 	int rc;
 
+	bs_super_set_defaults_if_unset(ctx->super);
+
 	if (ctx->super->size == 0) {
 		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
-	}
-
-	if (ctx->super->io_unit_size == 0) {
-		ctx->super->io_unit_size = SPDK_BS_PAGE_SIZE;
-	}
-	if (ctx->super->md_page_size == 0) {
-		ctx->super->md_page_size = SPDK_BS_PAGE_SIZE;
 	}
 
 	ctx->bs->clean = 1;
@@ -9810,13 +9821,6 @@ bs_load_grow_continue(struct spdk_bs_load_ctx *ctx)
 		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
 	}
 
-	if (ctx->super->io_unit_size == 0) {
-		ctx->super->io_unit_size = SPDK_BS_PAGE_SIZE;
-	}
-	if (ctx->super->md_page_size == 0) {
-		ctx->super->md_page_size = SPDK_BS_PAGE_SIZE;
-	}
-
 	/* Parse the super block */
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
@@ -9958,6 +9962,8 @@ bs_grow_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	bs_super_set_defaults_if_unset(ctx->super);
+
 	bs_load_try_to_grow(ctx);
 }
 
@@ -10049,6 +10055,8 @@ bs_grow_live_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		bs_grow_live_done(ctx, rc);
 		return;
 	}
+
+	bs_super_set_defaults_if_unset(ctx->super);
 
 	dev_size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
 	total_clusters = dev_size / ctx->super->cluster_size;
