@@ -1796,10 +1796,10 @@ nvmf_rpc_ns_visible_paused(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_ns_visible(struct spdk_jsonrpc_request *request,
-		    const struct spdk_json_val *params,
-		    const struct spdk_json_object_decoder *decoders,
-		    size_t num_decoders, bool visible)
+_nvmf_rpc_ns_visible(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params,
+		     const struct spdk_json_object_decoder *decoders,
+		     size_t num_decoders, bool visible)
 {
 	struct nvmf_rpc_ns_visible_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -1849,8 +1849,8 @@ static void
 rpc_nvmf_ns_add_host(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	nvmf_rpc_ns_visible(request, params, rpc_nvmf_ns_add_host_decoders,
-			    SPDK_COUNTOF(rpc_nvmf_ns_add_host_decoders), true);
+	_nvmf_rpc_ns_visible(request, params, rpc_nvmf_ns_add_host_decoders,
+			     SPDK_COUNTOF(rpc_nvmf_ns_add_host_decoders), true);
 }
 SPDK_RPC_REGISTER("nvmf_ns_add_host", rpc_nvmf_ns_add_host, SPDK_RPC_RUNTIME)
 
@@ -1865,8 +1865,8 @@ static void
 rpc_nvmf_ns_remove_host(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	nvmf_rpc_ns_visible(request, params, rpc_nvmf_ns_remove_host_decoders,
-			    SPDK_COUNTOF(rpc_nvmf_ns_remove_host_decoders), false);
+	_nvmf_rpc_ns_visible(request, params, rpc_nvmf_ns_remove_host_decoders,
+			     SPDK_COUNTOF(rpc_nvmf_ns_remove_host_decoders), false);
 }
 SPDK_RPC_REGISTER("nvmf_ns_remove_host", rpc_nvmf_ns_remove_host, SPDK_RPC_RUNTIME)
 
