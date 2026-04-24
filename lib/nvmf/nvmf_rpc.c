@@ -2632,95 +2632,93 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_get_transports", rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)
 
-/* TODO: replace with rpc_nvmf_get_stats_ctx */
-struct rpc_nvmf_get_stats_ctx_tmp {
-	char *tgt_name;
+struct rpc_nvmf_get_stats_ctx_ext {
+	struct rpc_nvmf_get_stats_ctx req;
 	struct spdk_nvmf_tgt *tgt;
-	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
 };
 
 static const struct spdk_json_object_decoder rpc_nvmf_get_stats_decoders[] = {
-	{"tgt_name", offsetof(struct rpc_nvmf_get_stats_ctx_tmp, tgt_name), spdk_json_decode_string, true},
+	{"tgt_name", offsetof(struct rpc_nvmf_get_stats_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
-/* TODO: replace with free_rpc_nvmf_get_stats */
 static void
-free_get_stats_ctx(struct rpc_nvmf_get_stats_ctx_tmp *ctx)
+free_rpc_nvmf_get_stats_ext(struct rpc_nvmf_get_stats_ctx_ext *ereq)
 {
-	free(ctx->tgt_name);
-	free(ctx);
+	free_rpc_nvmf_get_stats(&ereq->req);
+	free(ereq);
 }
 
 static void
 rpc_nvmf_get_stats_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct rpc_nvmf_get_stats_ctx_tmp *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_nvmf_get_stats_ctx_ext *ereq = spdk_io_channel_iter_get_ctx(i);
 
-	spdk_json_write_array_end(ctx->w);
-	spdk_json_write_object_end(ctx->w);
-	spdk_jsonrpc_end_result(ctx->request, ctx->w);
-	free_get_stats_ctx(ctx);
+	spdk_json_write_array_end(ereq->w);
+	spdk_json_write_object_end(ereq->w);
+	spdk_jsonrpc_end_result(ereq->req.request, ereq->w);
+	free_rpc_nvmf_get_stats_ext(ereq);
 }
 
 static void
 _rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
 {
-	struct rpc_nvmf_get_stats_ctx_tmp *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_nvmf_get_stats_ctx_ext *ereq = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
 
-	ch = spdk_get_io_channel(ctx->tgt);
+	ch = spdk_get_io_channel(ereq->tgt);
 	group = spdk_io_channel_get_ctx(ch);
 
-	spdk_nvmf_poll_group_dump_stat(group, ctx->w);
+	spdk_nvmf_poll_group_dump_stat(group, ereq->w);
 
 	spdk_put_io_channel(ch);
 	spdk_for_each_channel_continue(i, 0);
 }
 
-
 static void
 rpc_nvmf_get_stats(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
-	struct rpc_nvmf_get_stats_ctx_tmp *ctx;
+	struct rpc_nvmf_get_stats_ctx_ext *ereq;
+	struct rpc_nvmf_get_stats_ctx *req;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	ereq = calloc(1, sizeof(*ereq));
+	if (!ereq) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Memory allocation error");
 		return;
 	}
-	ctx->request = request;
+	req = &ereq->req;
+	req->request = request;
 
 	if (params) {
 		if (spdk_json_decode_object(params, rpc_nvmf_get_stats_decoders,
 					    SPDK_COUNTOF(rpc_nvmf_get_stats_decoders),
-					    ctx)) {
+					    req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-			free_get_stats_ctx(ctx);
+			free_rpc_nvmf_get_stats_ext(ereq);
 			return;
 		}
 	}
 
-	ctx->tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
-	if (!ctx->tgt) {
+	ereq->tgt = spdk_nvmf_get_tgt(req->tgt_name);
+	if (!ereq->tgt) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		free_get_stats_ctx(ctx);
+		free_rpc_nvmf_get_stats_ext(ereq);
 		return;
 	}
 
-	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
-	spdk_json_write_object_begin(ctx->w);
-	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
-	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
+	ereq->w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(ereq->w);
+	spdk_json_write_named_uint64(ereq->w, "tick_rate", spdk_get_ticks_hz());
+	spdk_json_write_named_array_begin(ereq->w, "poll_groups");
 
-	spdk_for_each_channel(ctx->tgt,
+	spdk_for_each_channel(ereq->tgt,
 			      _rpc_nvmf_get_stats,
-			      ctx,
+			      ereq,
 			      rpc_nvmf_get_stats_done);
 }
 
