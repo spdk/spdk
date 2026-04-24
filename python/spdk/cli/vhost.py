@@ -125,13 +125,13 @@ def add_parser(subparsers):
     Result is array of added bdevs.""")
     p.add_argument('name', help='Prefix used to name the resulting bdev(s)')
     p.add_argument('-t', '--trtype',
-                   help='Virtio transport type: pci, user, vfio-user', required=True,
+                   help='Virtio transport type', required=True,
                    choices=['pci', 'user', 'vfio-user'])
     p.add_argument('-a', '--traddr',
                    help='Transport-specific address (PCI BDF for pci; UNIX socket path for user and vfio-user)',
                    required=True)
     p.add_argument('-d', '--dev-type',
-                   help='Virtio device type: blk, scsi', required=True,
+                   help='Virtio device type', required=True,
                    choices=['blk', 'scsi'])
     p.add_argument('--vq-count', help='Number of virtqueues (user transport only). Default: 1', type=int)
     p.add_argument('--vq-size', help='Entries per virtqueue, must be a power of 2 (user transport only). Default: 512',

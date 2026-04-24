@@ -223,7 +223,7 @@ def add_parser(subparsers):
                    help='Require all connections to immediately establish a secure channel',
                    action="store_true")
     p.add_argument('-n', '--ana-state',
-                   help='ANA state to set: optimized, non_optimized, or inaccessible',
+                   help='ANA state to set',
                    type=str, choices=['optimized', 'non_optimized', 'inaccessible'])
     p.add_argument('-S', '--sock-impl', help='Socket implementation to use for the listener', type=str)
     p.add_argument('--numa-id', type=int,
@@ -255,7 +255,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('nvmf_subsystem_listener_set_ana_state', help='Set ANA state of a listener for an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN')
     p.add_argument('-n', '--ana-state',
-                   help='ANA state to set: optimized, non_optimized, or inaccessible',
+                   help='ANA state to set',
                    required=True, choices=['optimized', 'non_optimized', 'inaccessible'])
     p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)

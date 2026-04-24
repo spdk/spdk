@@ -134,7 +134,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('dpdk_cryptodev_set_driver',
                               help='Set the DPDK cryptodev driver.')
     p.add_argument('-d', '--driver-name',
-                   help='DPDK crypto driver: crypto_aesni_mb, crypto_qat, crypto_uadk, mlx5_pci',
+                   help='DPDK crypto driver',
                    choices=['crypto_aesni_mb', 'crypto_qat', 'mlx5_pci', 'crypto_uadk'],
                    required=True)
     p.set_defaults(func=dpdk_cryptodev_set_driver)
@@ -178,7 +178,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('accel_mlx5_dump_stats', help='Dump accel mlx5 module statistics.')
     p.add_argument('-l', '--level',
                    choices=['total', 'channel', 'device'],
-                   help='Verbosity level: total, channel, device. Default: channel')
+                   help='Verbosity level')
     p.set_defaults(func=accel_mlx5_dump_stats)
 
     # cuda
@@ -204,7 +204,7 @@ def add_parser(subparsers):
                    help='Accel operation to inject errors into')
     p.add_argument('-t', '--type', required=True,
                    choices=['disable', 'corrupt', 'failure'],
-                   help='Injection type: corrupt (corrupt data), failure (fail operation), disable (disable injection)')
+                   help='Injection type')
     p.add_argument('-c', '--count', type=int,
                    help='Number of errors to inject on each IO channel; 0 disables injection. Default: UINT64_MAX (no limit)')
     p.add_argument('-i', '--interval', type=int, help='Inject every Nth operation')

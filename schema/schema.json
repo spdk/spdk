@@ -973,7 +973,7 @@
           "type": "enum",
           "class": "accel_crypto_cipher",
           "required": true,
-          "description": "Crypto cipher: AES_CBC, AES_XTS"
+          "description": "Crypto cipher"
         },
         {
           "name": "key",
@@ -990,7 +990,7 @@
           "name": "tweak_mode",
           "type": "enum",
           "class": "accel_crypto_tweak_mode",
-          "description": "Tweak mode, default: SIMPLE_LBA"
+          "description": "Tweak mode"
         },
         {
           "name": "name",
@@ -1080,7 +1080,7 @@
           "type": "enum",
           "class": "accel_error_inject_type",
           "required": true,
-          "description": "Injection type: corrupt (corrupt data), failure (fail operation), disable (disable injection)"
+          "description": "Injection type"
         },
         {
           "name": "count",
@@ -1144,7 +1144,7 @@
           "type": "enum",
           "class": "dpdk_cryptodev_driver",
           "required": true,
-          "description": "DPDK crypto PMD name"
+          "description": "DPDK crypto driver"
         }
       ]
     },
@@ -1189,7 +1189,7 @@
           "name": "level",
           "type": "enum",
           "class": "accel_mlx5_dump_state_level",
-          "description": "Verbosity level, default: channel"
+          "description": "Verbosity level"
         }
       ]
     },
@@ -3129,7 +3129,7 @@
           "type": "enum",
           "class": "bdev_virtio_trtype",
           "required": true,
-          "description": "Virtio transport type: pci, user, vfio-user"
+          "description": "Virtio transport type"
         },
         {
           "name": "traddr",
@@ -3142,7 +3142,7 @@
           "type": "enum",
           "class": "bdev_virtio_dev_type",
           "required": true,
-          "description": "Virtio device type: blk, scsi"
+          "description": "Virtio device type"
         },
         {
           "name": "vq_count",
