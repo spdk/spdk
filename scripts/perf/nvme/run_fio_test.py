@@ -123,7 +123,7 @@ def add_filename_to_conf(conf_file_name, bdf):
 
 
 if len(sys.argv) != 4:
-    print("usage: " % sys.argv[0] % " path_to_fio_conf path_to_ioengine num_ssds")
+    print(f"usage: {sys.argv[0]} path_to_fio_conf path_to_ioengine num_ssds")
     sys.exit()
 
 num_ssds = int(sys.argv[3])
