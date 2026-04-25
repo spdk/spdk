@@ -213,6 +213,7 @@ static int g_outstanding_commands;
 
 static bool g_latency_ssd_tracking_enable;
 static int g_latency_sw_tracking_level;
+static bool g_fua;
 
 static bool g_vmd;
 static const char *g_workload_type;
@@ -1259,6 +1260,10 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
 	}
 
+	if (g_fua) {
+		entry->io_flags |= SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS;
+	}
+
 	/* If metadata size = 8 bytes, PI is stripped (read) or inserted (write),
 	 *  and so reduce metadata size from block size.  (If metadata size > 8 bytes,
 	 *  PI is passed (read) or replaced (write).  So block size is not necessary
@@ -1877,6 +1882,7 @@ usage(char *program_name)
 	printf("\t--iova-mode <mode> specify DPDK IOVA mode: va|pa\n");
 	printf("\t--no-huge, SPDK is run without hugepages\n");
 	printf("\t--enforce-numa, SPDK is run with enforce-numa environment flag, useful to enforce NUMA restrictions on huge page allocations\n");
+	printf("\t--fua set the Force Unit Access (FUA) bit\n");
 	printf("\t--vfio-vf-token <token> VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	printf("\t--env-context, Opaque context for use of the DPDK env implementation\n");
 	spdk_trace_mask_usage(stdout, "-y");
@@ -2406,6 +2412,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"enforce-numa",			no_argument,	NULL, PERF_ENFORCE_NUMA},
 #define PERF_ENV_CONTEXT    276
 	{"env-context",			required_argument,	NULL, PERF_ENV_CONTEXT},
+#define PERF_FUA		277
+	{"fua",				no_argument,	NULL, PERF_FUA},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
@@ -2728,6 +2736,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_ENV_CONTEXT:
 			env_opts->env_context = optarg;
+			break;
+		case PERF_FUA:
+			g_fua = true;
 			break;
 		case PERF_VFIO_VF_TOKEN:
 			g_vf_token = strdup(optarg);
