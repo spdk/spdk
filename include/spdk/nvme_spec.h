@@ -1473,9 +1473,9 @@ struct spdk_nvme_cmd {
 	/* dword 1 */
 	uint32_t nsid;		/* namespace identifier */
 
-	/* dword 2-3 */
-	uint32_t rsvd2;
-	uint32_t rsvd3;
+	/* dword 2-3: command-specific (reserved by base spec) */
+	uint32_t cdw2;
+	uint32_t cdw3;
 
 	/* dword 4-5 */
 	uint64_t mptr;		/* metadata pointer */
