@@ -34,6 +34,8 @@ CONFIG.local
 .cproject
 .settings
 .gitreview
+.clangd
+.exrc
 mk/cc.mk
 mk/config.mk
 mk/cc.flags.mk
