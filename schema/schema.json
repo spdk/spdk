@@ -586,7 +586,7 @@
           "name": "name",
           "type": "string",
           "required": true,
-          "description": "Name of a scheduler"
+          "description": "Scheduler name: `static` (fixed core pinning) or `dynamic` (load-based thread migration across cores)"
         },
         {
           "name": "period",

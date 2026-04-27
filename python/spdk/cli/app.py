@@ -70,7 +70,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser(
         'framework_set_scheduler', help='Select thread scheduler that will be activated and its period (experimental)')
-    p.add_argument('name', help='Name of a scheduler')
+    p.add_argument('name', help='Scheduler name: `static` (fixed core pinning) or `dynamic` (load-based thread migration across cores)')
     p.add_argument('-p', '--period', help='Scheduler period in microseconds. Default: 1000000 (1 second) on first set', type=int)
     p.add_argument('--load-limit',
                    help='Thread load percentage above which threads may move (dynamic only). Default: 20', type=int)
