@@ -1187,8 +1187,8 @@ spdk_sock_group_close(struct spdk_sock_group **_group)
 	return 0;
 }
 
-static inline struct spdk_net_impl *
-sock_get_impl_by_name(const char *impl_name)
+struct spdk_net_impl *
+spdk_net_impl_get_by_name(const char *impl_name)
 {
 	struct spdk_net_impl *impl;
 
@@ -1211,7 +1211,7 @@ spdk_sock_impl_get_opts(const char *impl_name, struct spdk_sock_impl_opts *opts,
 		return -EINVAL;
 	}
 
-	impl = sock_get_impl_by_name(impl_name);
+	impl = spdk_net_impl_get_by_name(impl_name);
 	if (!impl) {
 		return -EINVAL;
 	}
@@ -1233,7 +1233,7 @@ spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts 
 		return -EINVAL;
 	}
 
-	impl = sock_get_impl_by_name(impl_name);
+	impl = spdk_net_impl_get_by_name(impl_name);
 	if (!impl) {
 		return -EINVAL;
 	}
@@ -1384,7 +1384,7 @@ spdk_sock_set_default_impl(const char *impl_name)
 		return -EINVAL;
 	}
 
-	impl = sock_get_impl_by_name(impl_name);
+	impl = spdk_net_impl_get_by_name(impl_name);
 	if (!impl) {
 		return -EINVAL;
 	}

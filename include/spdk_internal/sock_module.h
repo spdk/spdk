@@ -124,6 +124,7 @@ struct spdk_net_impl {
 };
 
 void spdk_net_impl_register(struct spdk_net_impl *impl);
+struct spdk_net_impl *spdk_net_impl_get_by_name(const char *impl_name);
 
 #define SPDK_NET_IMPL_REGISTER(name, impl) \
 static void __attribute__((constructor)) net_impl_register_##name(void) \

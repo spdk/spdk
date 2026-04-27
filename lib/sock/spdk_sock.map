@@ -46,6 +46,7 @@
 
 	# internal function in spdk_internal/sock_module.h
 	spdk_net_impl_register;
+	spdk_net_impl_get_by_name;
 	spdk_sock_posix_fd_create;
 	spdk_sock_posix_fd_connect;
 	spdk_sock_posix_fd_connect_async;
