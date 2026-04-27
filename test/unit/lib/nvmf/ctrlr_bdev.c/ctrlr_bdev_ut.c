@@ -66,6 +66,7 @@ DEFINE_STUB(spdk_bdev_get_write_unit_size, uint32_t, (const struct spdk_bdev *bd
 
 struct spdk_bdev_desc {
 	struct spdk_bdev *bdev;
+	struct spdk_bdev_open_opts opts;
 };
 
 uint32_t
@@ -149,6 +150,9 @@ spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev)
 uint32_t
 spdk_bdev_desc_get_md_size(struct spdk_bdev_desc *desc)
 {
+	if (desc->opts.hide_metadata) {
+		return 0;
+	}
 	return spdk_bdev_get_md_size(desc->bdev);
 }
 
@@ -164,6 +168,9 @@ typedef enum spdk_dif_type spdk_dif_type_t;
 spdk_dif_type_t
 spdk_bdev_desc_get_dif_type(struct spdk_bdev_desc *desc)
 {
+	if (desc->opts.hide_metadata) {
+		return SPDK_DIF_DISABLE;
+	}
 	return spdk_bdev_get_dif_type(desc->bdev);
 }
 
@@ -176,6 +183,9 @@ spdk_bdev_desc_is_dif_head_of_md(struct spdk_bdev_desc *desc)
 uint32_t
 spdk_bdev_desc_get_block_size(struct spdk_bdev_desc *desc)
 {
+	if (desc->opts.hide_metadata) {
+		return spdk_bdev_get_data_block_size(desc->bdev);
+	}
 	return spdk_bdev_get_block_size(desc->bdev);
 }
 
@@ -656,7 +666,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	bdev.optimal_io_boundary = SPDK_BDEV_IO_NUM_CHILD_IOV;
 	bdev.dif_is_head_of_md = true;
 
-	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, false, 128 * 1024);
+	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, 128 * 1024);
 	CU_ASSERT(nsdata.nsze == 10);
 	CU_ASSERT(nsdata.ncap == 10);
 	CU_ASSERT(nsdata.nuse == 10);
@@ -687,7 +697,8 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(!strncmp((uint8_t *)&nsdata.eui64, eui64, 8));
 
 	memset(&nsdata, 0, sizeof(nsdata));
-	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, true, 128 * 1024);
+	desc.opts.hide_metadata = true;
+	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, 128 * 1024);
 	CU_ASSERT(nsdata.nsze == 10);
 	CU_ASSERT(nsdata.ncap == 10);
 	CU_ASSERT(nsdata.nuse == 10);

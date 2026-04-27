@@ -253,7 +253,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
 
 void
 nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
-			    bool dif_insert_or_strip, uint32_t transport_max_io_size)
+			    uint32_t transport_max_io_size)
 {
 	uint64_t num_blocks;
 

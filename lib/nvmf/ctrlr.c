@@ -3123,7 +3123,7 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		return;
 	}
 
-	nvmf_bdev_ctrlr_identify_ns(ns, nsdata, ctrlr->dif_insert_or_strip,
+	nvmf_bdev_ctrlr_identify_ns(ns, nsdata,
 				    ctrlr->admin_qpair->transport->opts.max_io_size);
 
 	assert(ctrlr->admin_qpair);
@@ -3141,10 +3141,8 @@ nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 }
 
 int
-spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
-			    struct spdk_nvme_cmd *cmd,
-			    struct spdk_nvme_cpl *rsp,
-			    struct spdk_nvme_ns_data *nsdata)
+spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
+			    struct spdk_nvme_cpl *rsp, struct spdk_nvme_ns_data *nsdata)
 {
 	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, nsdata, cmd->nsid);
 
@@ -3432,10 +3430,7 @@ spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 	case SPDK_NVME_CSI_ZNS:
 		return nvmf_ns_identify_iocs_zns(ns, cmd, rsp, nsdata);
 	case SPDK_NVME_CSI_NVM:
-		if (!ctrlr->dif_insert_or_strip) {
-			return nvmf_ns_identify_iocs_nvm(ns, rsp, nsdata);
-		}
-		break;
+		return nvmf_ns_identify_iocs_nvm(ns, rsp, nsdata);
 	default:
 		break;
 	}

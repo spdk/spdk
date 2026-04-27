@@ -31,6 +31,12 @@ DEFINE_STUB(spdk_bdev_desc_get_block_size, uint32_t,
 DEFINE_STUB(spdk_bdev_desc_get_md_size, uint32_t,
 	    (struct spdk_bdev_desc *desc), 0);
 
+DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *,
+	    (const char *bdev_name), NULL);
+
+DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+
 DEFINE_STUB(spdk_bdev_desc_is_md_interleaved, bool,
 	    (struct spdk_bdev_desc *desc), false);
 

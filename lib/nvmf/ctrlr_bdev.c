@@ -118,7 +118,7 @@ nvmf_bdev_ctrlr_complete_admin_cmd(struct spdk_bdev_io *bdev_io, bool success,
 
 void
 nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
-			    bool dif_insert_or_strip, uint32_t transport_max_io_size)
+			    uint32_t transport_max_io_size)
 {
 	struct spdk_bdev *bdev = ns->bdev;
 	struct spdk_bdev_desc *desc = ns->desc;
@@ -137,37 +137,32 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->flbas.format = 0;
 	nsdata->flbas.msb_format = 0;
 	nsdata->nacwu = spdk_bdev_get_acwu(bdev) - 1; /* nacwu is 0-based */
-	if (!dif_insert_or_strip) {
-		nsdata->lbaf[0].ms = spdk_bdev_desc_get_md_size(desc);
-		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_desc_get_block_size(desc));
-		if (nsdata->lbaf[0].ms != 0) {
-			nsdata->flbas.extended = 1;
-			nsdata->mc.extended = 1;
-			nsdata->mc.pointer = 0;
-			nsdata->dps.md_start = spdk_bdev_desc_is_dif_head_of_md(desc);
+	nsdata->lbaf[0].ms = spdk_bdev_desc_get_md_size(desc);
+	nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_desc_get_block_size(desc));
+	if (nsdata->lbaf[0].ms != 0) {
+		nsdata->flbas.extended = 1;
+		nsdata->mc.extended = 1;
+		nsdata->mc.pointer = 0;
+		nsdata->dps.md_start = spdk_bdev_desc_is_dif_head_of_md(desc);
 
-			switch (spdk_bdev_get_dif_type(bdev)) {
-			case SPDK_DIF_TYPE1:
-				nsdata->dpc.pit1 = 1;
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
-				break;
-			case SPDK_DIF_TYPE2:
-				nsdata->dpc.pit2 = 1;
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE2;
-				break;
-			case SPDK_DIF_TYPE3:
-				nsdata->dpc.pit3 = 1;
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
-				break;
-			default:
-				SPDK_DEBUGLOG(nvmf, "Protection Disabled\n");
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
-				break;
-			}
+		switch (spdk_bdev_get_dif_type(bdev)) {
+		case SPDK_DIF_TYPE1:
+			nsdata->dpc.pit1 = 1;
+			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
+			break;
+		case SPDK_DIF_TYPE2:
+			nsdata->dpc.pit2 = 1;
+			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE2;
+			break;
+		case SPDK_DIF_TYPE3:
+			nsdata->dpc.pit3 = 1;
+			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
+			break;
+		default:
+			SPDK_DEBUGLOG(nvmf, "Protection Disabled\n");
+			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
+			break;
 		}
-	} else {
-		nsdata->lbaf[0].ms = 0;
-		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_data_block_size(bdev));
 	}
 
 	max_num_blocks = transport_max_io_size / (1U << nsdata->lbaf[0].lbads);
@@ -448,8 +443,7 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
-	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts, !req->dif_enabled &&
-					  !spdk_bdev_desc_hide_metadata(desc));
+	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts, !spdk_bdev_desc_hide_metadata(desc));
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");
@@ -502,8 +496,7 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
-	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts, !req->dif_enabled &&
-					  !spdk_bdev_desc_hide_metadata(desc));
+	nvmf_bdev_ctrlr_get_rw_ext_params(cmd, &opts, !spdk_bdev_desc_hide_metadata(desc));
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");

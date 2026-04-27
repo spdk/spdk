@@ -60,17 +60,6 @@ union nvmf_c2h_msg {
 };
 SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
-struct spdk_nvmf_dif_info {
-	struct spdk_dif_ctx			dif_ctx;
-	uint32_t				elba_length;
-	uint32_t				orig_length;
-};
-
-struct spdk_nvmf_stripped_data {
-	uint32_t			iovcnt;
-	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
-};
-
 enum spdk_nvmf_zcopy_phase {
 	NVMF_ZCOPY_PHASE_NONE,        /* Request is not using ZCOPY */
 	NVMF_ZCOPY_PHASE_INIT,        /* Requesting Buffers */
@@ -88,11 +77,10 @@ struct spdk_nvmf_request {
 		uint8_t raw;
 		struct {
 			uint8_t data_from_pool		: 1;
-			uint8_t dif_enabled		: 1;
 			uint8_t first_fused		: 1;
 			uint8_t reservation_queued	: 1;
 			uint8_t reservation_waiting	: 1; /* a reservation is waiting on this request */
-			uint8_t rsvd			: 3;
+			uint8_t rsvd			: 4;
 		};
 	};
 	uint8_t				zcopy_phase; /* type enum spdk_nvmf_zcopy_phase */
@@ -110,10 +98,6 @@ struct spdk_nvmf_request {
 	struct spdk_accel_sequence	*accel_sequence;
 
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
-
-	struct spdk_nvmf_stripped_data	*stripped_data;
-
-	struct spdk_nvmf_dif_info	dif;
 
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
@@ -133,7 +117,7 @@ struct spdk_nvmf_request {
 	uint32_t			orig_nsid;
 	STAILQ_ENTRY(spdk_nvmf_request)	reservation_link;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 832, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 752, "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
@@ -549,6 +533,10 @@ int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				  struct spdk_nvmf_transport *transport,
 				  uint32_t length);
 
+/**
+ * \deprecated This function is no longer used by built-in transports.
+ * DIF handling has moved to the bdev layer via hide_metadata.
+ */
 bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
 
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);

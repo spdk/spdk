@@ -390,7 +390,7 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 
 void
 nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
-			    bool dif_insert_or_strip, uint32_t transport_max_io_size)
+			    uint32_t transport_max_io_size)
 {
 	uint64_t num_blocks;
 
@@ -1566,7 +1566,6 @@ test_nvmf_tcp_get_request_resuse_flags(void)
 	/* Insert back into free queue with req flags */
 	tcp_req1.req.raw = 0xFF;
 	SPDK_CU_ASSERT_FATAL(tcp_req1.req.data_from_pool);
-	SPDK_CU_ASSERT_FATAL(tcp_req1.req.dif_enabled);
 	SPDK_CU_ASSERT_FATAL(tcp_req1.req.first_fused);
 	SPDK_CU_ASSERT_FATAL(tcp_req1.req.reservation_queued);
 
@@ -1583,7 +1582,6 @@ test_nvmf_tcp_get_request_resuse_flags(void)
 	/* Validate flags are not set */
 	SPDK_CU_ASSERT_FATAL(tcp_req->req.raw == 0);
 	SPDK_CU_ASSERT_FATAL(!tcp_req->req.data_from_pool);
-	SPDK_CU_ASSERT_FATAL(!tcp_req->req.dif_enabled);
 	SPDK_CU_ASSERT_FATAL(!tcp_req->req.first_fused);
 	SPDK_CU_ASSERT_FATAL(!tcp_req->req.reservation_queued);
 	/* Validate additional fields */

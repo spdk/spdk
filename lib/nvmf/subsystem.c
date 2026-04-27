@@ -2613,6 +2613,18 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	spdk_bdev_open_opts_init(&open_opts, sizeof(open_opts));
 	open_opts.hide_metadata = opts.hide_metadata;
 
+	transport = spdk_nvmf_transport_get_first(subsystem->tgt);
+	if (transport != NULL && transport->opts.dif_insert_or_strip) {
+		struct spdk_bdev *bdev = spdk_bdev_get_by_name(bdev_name);
+
+		/* Only hide metadata for bdevs that actually have some. Forcing the flag
+		 * on a bdev without metadata could confuse the many bdev paths that key
+		 * off it. */
+		if (bdev != NULL && spdk_bdev_get_md_size(bdev) != 0) {
+			open_opts.hide_metadata = true;
+		}
+	}
+
 	rc = spdk_bdev_open_ext_v2(bdev_name, true, nvmf_ns_event, ns, &open_opts, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",

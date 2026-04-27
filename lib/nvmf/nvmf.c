@@ -1168,9 +1168,35 @@ _nvmf_tgt_add_transport(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, rc);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_tgt_mixed_dif_insert_or_strip,
-			      "all transports must share dif_insert_or_strip value",
-			      "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
+static int
+nvmf_tgt_check_ns_metadata(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_ns *ns;
+	uint32_t i;
+
+	if (!transport->opts.dif_insert_or_strip) {
+		return 0;
+	}
+
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
+		for (i = 0; i < subsystem->max_nsid; i++) {
+			ns = subsystem->ns[i];
+			if (ns == NULL || ns->desc == NULL) {
+				continue;
+			}
+
+			if (spdk_bdev_desc_get_md_size(ns->desc) != 0) {
+				SPDK_ERRLOG("Transport %s dif_insert_or_strip=1 conflicts with existing namespace "
+					    "%u on subsystem %s opened with metadata visible\n",
+					    transport->ops->name, ns->nsid, subsystem->subnqn);
+				return -EINVAL;
+			}
+		}
+	}
+
+	return 0;
+}
 
 void
 spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
@@ -1180,6 +1206,7 @@ spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 {
 	struct spdk_nvmf_tgt_add_transport_ctx *ctx;
 	struct spdk_nvmf_transport *existing;
+	int rc;
 
 	SPDK_DTRACE_PROBE2_TICKS(nvmf_tgt_add_transport, transport, tgt->name);
 
@@ -1190,7 +1217,17 @@ spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 
 	existing = TAILQ_FIRST(&tgt->transports);
 	if (existing != NULL && existing->opts.dif_insert_or_strip != transport->opts.dif_insert_or_strip) {
-		SPDK_LOG_DEPRECATED(nvmf_tgt_mixed_dif_insert_or_strip);
+		SPDK_ERRLOG("Transport %s dif_insert_or_strip=%d conflicts with transport %s dif_insert_or_strip=%d\n",
+			    transport->ops->name, transport->opts.dif_insert_or_strip,
+			    existing->ops->name, existing->opts.dif_insert_or_strip);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	rc = nvmf_tgt_check_ns_metadata(tgt, transport);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+		return;
 	}
 
 	ctx = calloc(1, sizeof(*ctx));

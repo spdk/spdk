@@ -132,6 +132,11 @@ Added a JSON-RPC client batch request API. `spdk_jsonrpc_begin_batch()` and
 `spdk_jsonrpc_end_request()` may be called multiple times in batch mode to issue several
 requests in a single send.
 
+DIF handling for the RDMA and TCP transports moved into the bdev layer. When `dif_insert_or_strip`
+is enabled on the TCP transport and the POSIX sock implementation is in use, each I/O on a
+DIF-protected namespace now incurs one additional data copy. The accel framework can offload the
+combined copy and DIF generate/verify to hardware when available.
+
 ### nvme
 
 Removed the transport APIs `poll_group_connect_qpair` and `poll_group_disconnect_qpair`. None of

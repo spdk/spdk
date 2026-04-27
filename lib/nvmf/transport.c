@@ -893,24 +893,13 @@ nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t lengt
 	req->data_from_pool = true;
 }
 
-static inline void
-nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length)
-{
-	struct spdk_nvmf_stripped_data *data = req->stripped_data;
-
-	data->iov[data->iovcnt].iov_base = buf;
-	data->iov[data->iovcnt].iov_len  = length;
-	data->iovcnt++;
-	req->data_from_pool = true;
-}
-
 static void nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf);
 
 static inline int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
-			 uint32_t length, bool stripped_buffers)
+			 uint32_t length)
 {
 	struct spdk_iobuf_entry *entry = NULL;
 	uint32_t io_unit_size;
@@ -926,15 +915,15 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	}
 
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed.
-	 *  Fail it.
+	 * Fail it.
 	 */
 	num_buffers = SPDK_CEIL_DIV(length, io_unit_size);
 	if (spdk_unlikely(num_buffers > NVMF_REQ_MAX_BUFFERS)) {
 		return -EINVAL;
 	}
 
-	/* Use iobuf queuing only if transport supports it */
-	if (transport->ops->req_get_buffers_done != NULL && !stripped_buffers) {
+	/* Use iobuf queuing only if transport supports it. */
+	if (transport->ops->req_get_buffers_done != NULL) {
 		entry = &req->iobuf.entry;
 	}
 
@@ -946,11 +935,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			req->iobuf.remaining_length = length;
 			return -ENOMEM;
 		}
-		if (stripped_buffers) {
-			nvmf_request_set_stripped_buffer(req, buffer, iov_len);
-		} else {
-			nvmf_request_set_buffer(req, buffer, iov_len);
-		}
+		nvmf_request_set_buffer(req, buffer, iov_len);
 		assert(iov_len <= length);
 		length -= iov_len;
 		i++;
@@ -987,7 +972,7 @@ nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf)
 		transport->ops->req_get_buffers_done(req);
 		return;
 	}
-	rc = nvmf_request_get_buffers(req, tgroup, transport, length, false);
+	rc = nvmf_request_get_buffers(req, tgroup, transport, length);
 	if (rc == 0) {
 		transport->ops->req_get_buffers_done(req);
 	}
@@ -1004,7 +989,7 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	assert(nvmf_transport_use_iobuf(transport));
 
 	req->iovcnt = 0;
-	rc = nvmf_request_get_buffers(req, group, transport, length, false);
+	rc = nvmf_request_get_buffers(req, group, transport, length);
 	if (spdk_unlikely(rc == -ENOMEM && transport->ops->req_get_buffers_done == NULL)) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
 	}
@@ -1047,53 +1032,4 @@ nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req,
 
 	rc = spdk_iobuf_for_each_entry(group->buf_cache, nvmf_request_get_buffers_abort_cb, req);
 	return rc == 1;
-}
-
-void
-nvmf_request_free_stripped_buffers(struct spdk_nvmf_request *req,
-				   struct spdk_nvmf_transport_poll_group *group,
-				   struct spdk_nvmf_transport *transport)
-{
-	struct spdk_nvmf_stripped_data *data = req->stripped_data;
-	uint32_t i;
-
-	for (i = 0; i < data->iovcnt; i++) {
-		spdk_iobuf_put(group->buf_cache, data->iov[i].iov_base, data->iov[i].iov_len);
-	}
-	free(data);
-	req->stripped_data = NULL;
-}
-
-int
-nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
-				  struct spdk_nvmf_transport_poll_group *group,
-				  struct spdk_nvmf_transport *transport,
-				  uint32_t length)
-{
-	uint32_t block_size = req->dif.dif_ctx.block_size;
-	struct spdk_nvmf_stripped_data *data;
-	uint32_t i;
-	int rc;
-
-	/* Data blocks must be block aligned */
-	for (i = 0; i < req->iovcnt; i++) {
-		if (req->iov[i].iov_len % block_size) {
-			return -EINVAL;
-		}
-	}
-
-	data = calloc(1, sizeof(*data));
-	if (data == NULL) {
-		SPDK_ERRLOG("Unable to allocate memory for stripped_data.\n");
-		return -ENOMEM;
-	}
-	req->stripped_data = data;
-	req->stripped_data->iovcnt = 0;
-
-	rc = nvmf_request_get_buffers(req, group, transport, length, true);
-	if (rc == -ENOMEM) {
-		nvmf_request_free_stripped_buffers(req, group, transport);
-		return rc;
-	}
-	return rc;
 }
