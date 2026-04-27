@@ -6,7 +6,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = posix
+DIRS-y = posix error
 ifeq ($(OS), Linux)
 DIRS-$(CONFIG_URING) += uring
 endif

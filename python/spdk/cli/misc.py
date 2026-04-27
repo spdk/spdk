@@ -211,6 +211,38 @@ def add_parser(subparsers):
     p.add_argument('--errcode', type=int, help='Error code to return; only relevant for type=failure')
     p.set_defaults(func=accel_error_inject_error)
 
+    # sock_error
+    def sock_error_inject_error(args):
+        args.client.sock_error_inject_error(operation=args.operation,
+                                            type=args.type, count=args.count,
+                                            interval=args.interval,
+                                            errcode=args.errcode,
+                                            match_len=args.match_len)
+
+    p = subparsers.add_parser('sock_error_inject_error',
+                              help='Inject errors into socket operations')
+    p.add_argument('-o', '--operation', required=True,
+                   choices=['connect', 'recv', 'readv', 'writev', 'writev_async', 'flush'],
+                   help='Socket operation to inject errors on')
+    p.add_argument('-t', '--type', required=True,
+                   choices=['disable', 'failure', 'corrupt'],
+                   help='Type of error to inject')
+    p.add_argument('-c', '--count', type=int,
+                   help='Total number of errors to inject; 0 disables injection')
+    p.add_argument('-i', '--interval', type=int,
+                   help='Inject every Nth operation')
+    p.add_argument('--errcode', type=int,
+                   help='Error code to return; only relevant for type=failure')
+    p.add_argument('--match-len', type=int,
+                   help='Only inject when an operation requests a given length. Valid only for byte-moving operations')
+    p.set_defaults(func=sock_error_inject_error)
+
+    def sock_error_register(args):
+        args.client.sock_error_register()
+
+    p = subparsers.add_parser('sock_error_register', help='Register the sock_error sock implementation')
+    p.set_defaults(func=sock_error_register)
+
     def env_dpdk_get_mem_stats(args):
         print_dict(args.client.env_dpdk_get_mem_stats())
 

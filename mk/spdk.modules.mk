@@ -86,7 +86,7 @@ ifeq ($(CONFIG_VMD),y)
 BLOCKDEV_MODULES_LIST += vmd
 endif
 
-SOCK_MODULES_LIST = sock_posix
+SOCK_MODULES_LIST = sock_posix sock_error
 
 ifeq ($(OS), Linux)
 ifeq ($(CONFIG_URING),y)

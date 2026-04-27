@@ -130,6 +130,28 @@ enums:
         value: 1
       - name: failure
         value: 2
+  - name: sock_error_inject_operation
+    fields:
+      - name: connect
+        value: SPDK_SOCK_ERROR_OPERATION_CONNECT
+      - name: recv
+        value: SPDK_SOCK_ERROR_OPERATION_RECV
+      - name: readv
+        value: SPDK_SOCK_ERROR_OPERATION_READV
+      - name: writev
+        value: SPDK_SOCK_ERROR_OPERATION_WRITEV
+      - name: writev_async
+        value: SPDK_SOCK_ERROR_OPERATION_WRITEV_ASYNC
+      - name: flush
+        value: SPDK_SOCK_ERROR_OPERATION_FLUSH
+  - name: sock_error_inject_type
+    fields:
+      - name: disable
+        value: SPDK_SOCK_ERROR_TYPE_DISABLE
+      - name: failure
+        value: SPDK_SOCK_ERROR_TYPE_FAILURE
+      - name: corrupt
+        value: SPDK_SOCK_ERROR_TYPE_CORRUPT
   - name: bdev_raid_level
     fields:
       - name: raid0
@@ -1202,6 +1224,34 @@ methods:
       - name: errcode
         type: int32
         description: Error code to return; only relevant for type=failure
+  - name: sock_error_inject_error
+    description: Inject an error into a socket operation for testing.
+    params:
+      - name: operation
+        type: enum
+        class: sock_error_inject_operation
+        required: true
+        description: Socket operation to inject errors on
+      - name: type
+        type: enum
+        class: sock_error_inject_type
+        required: true
+        description: Type of error to inject
+      - name: count
+        type: uint64
+        description: Total number of errors to inject; 0 disables injection
+      - name: interval
+        type: uint64
+        description: Inject every Nth operation
+      - name: errcode
+        type: int32
+        description: Error code to return; only relevant for type=failure
+      - name: match_len
+        type: uint64
+        description: Only inject when an operation requests a given length. Valid only for byte-moving operations
+  - name: sock_error_register
+    description: Register the socket error injection module as a net impl
+    params: []
   - name: compressdev_scan_accel_module
     description: |
       Set config and enable compressdev accel module offload.

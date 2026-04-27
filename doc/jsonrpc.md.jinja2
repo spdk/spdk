@@ -9420,6 +9420,57 @@ Example response:
 }
 ~~~
 
+### sock_error_register {#rpc_sock_error_register}
+
+Register the `sock_error` sock implementation, which wraps the `posix` implementation and
+allows injecting errors into socket operations via `sock_error_inject_error`.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Example
+
+Example request:
+
+{{ example_request("sock_error_register") }}
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### sock_error_inject_error {#rpc_sock_error_inject_error}
+
+Inject an error into a given socket operation.  In order for the errors to actually be injected,
+the `sock_error` sock implementation should first be registered via `sock_error_register` and
+selected via `sock_set_default_impl`.
+
+#### Parameters
+
+{{ sock_error_inject_error_params }}
+
+#### Example
+
+Example request:
+
+{{ example_request("sock_error_inject_error", "-o", "recv", "-t", "failure", "-c", "1", "--errcode", "104") }}
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Miscellaneous RPC commands {#jsonrpc_components_misc}
 
 ### bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}

@@ -1,0 +1,33 @@
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (c) 2026 Nutanix Inc. All rights reserved.
+ */
+
+#ifndef SPDK_MODULE_SOCK_ERROR_H_
+#define SPDK_MODULE_SOCK_ERROR_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+enum spdk_sock_error_operation {
+	SPDK_SOCK_ERROR_OPERATION_CONNECT,
+	SPDK_SOCK_ERROR_OPERATION_RECV,
+	SPDK_SOCK_ERROR_OPERATION_READV,
+	SPDK_SOCK_ERROR_OPERATION_WRITEV,
+	SPDK_SOCK_ERROR_OPERATION_WRITEV_ASYNC,
+	SPDK_SOCK_ERROR_OPERATION_FLUSH,
+	SPDK_SOCK_ERROR_OPERATION_MAX,
+};
+
+enum spdk_sock_error_type {
+	SPDK_SOCK_ERROR_TYPE_DISABLE,
+	SPDK_SOCK_ERROR_TYPE_FAILURE,
+	SPDK_SOCK_ERROR_TYPE_CORRUPT,
+	SPDK_SOCK_ERROR_TYPE_MAX,
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* SPDK_MODULE_SOCK_ERROR_H_ */
