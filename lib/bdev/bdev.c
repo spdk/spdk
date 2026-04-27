@@ -1159,6 +1159,35 @@ bdev_io_decrement_outstanding(struct spdk_bdev_channel *bdev_ch,
 }
 
 static void
+bdev_io_set_dif_error_status(struct spdk_bdev_io *bdev_io)
+{
+	enum spdk_nvme_media_error_status_code sc;
+
+	if (!bdev_io->internal.f.has_metadata || bdev_io->type != SPDK_BDEV_IO_TYPE_READ) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		return;
+	}
+
+	switch (bdev_io->u.bdev.dif_err.err_type) {
+	case SPDK_DIF_REFTAG_ERROR:
+		sc = SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR;
+		break;
+	case SPDK_DIF_APPTAG_ERROR:
+		sc = SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR;
+		break;
+	case SPDK_DIF_GUARD_ERROR:
+		sc = SPDK_NVME_SC_GUARD_CHECK_ERROR;
+		break;
+	default:
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		return;
+	}
+
+	bdev_io->internal.status = spdk_bdev_io_set_nvme_status(bdev_io, 0,
+				   SPDK_NVME_SCT_MEDIA_ERROR, sc);
+}
+
+static void
 bdev_io_submit_sequence_cb(void *ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
@@ -1170,7 +1199,7 @@ bdev_io_submit_sequence_cb(void *ctx, int status)
 
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io_set_dif_error_status(bdev_io);
 		bdev_io_complete_unsubmitted(bdev_io);
 		return;
 	}
@@ -8073,7 +8102,7 @@ bdev_io_complete_sequence_cb(void *ctx, int status)
 
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io_set_dif_error_status(bdev_io);
 	}
 
 	bdev_io_complete(bdev_io);

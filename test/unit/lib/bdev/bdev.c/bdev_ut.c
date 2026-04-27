@@ -8086,6 +8086,54 @@ bdev_io_init_dif_ctx_test(void)
 }
 
 static void
+bdev_io_dif_error_status_test(void)
+{
+	const struct {
+		uint8_t err_type;
+		int sc;
+	} test_cases[] = {
+		{ SPDK_DIF_REFTAG_ERROR, SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR },
+		{ SPDK_DIF_APPTAG_ERROR, SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR },
+		{ SPDK_DIF_GUARD_ERROR, SPDK_NVME_SC_GUARD_CHECK_ERROR },
+	};
+	struct spdk_bdev_io bdev_io = {};
+	uint32_t cdw0;
+	int sct, sc;
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(test_cases); i++) {
+		memset(&bdev_io, 0, sizeof(bdev_io));
+		bdev_io.type = SPDK_BDEV_IO_TYPE_READ;
+		bdev_io.internal.f.has_metadata = true;
+		bdev_io.internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io.u.bdev.dif_err.err_type = test_cases[i].err_type;
+
+		bdev_io_set_dif_error_status(&bdev_io);
+		CU_ASSERT(bdev_io.internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR);
+
+		spdk_bdev_io_get_nvme_status(&bdev_io, &cdw0, &sct, &sc);
+		CU_ASSERT(cdw0 == 0);
+		CU_ASSERT(sct == SPDK_NVME_SCT_MEDIA_ERROR);
+		CU_ASSERT(sc == test_cases[i].sc);
+	}
+
+	memset(&bdev_io, 0, sizeof(bdev_io));
+	bdev_io.type = SPDK_BDEV_IO_TYPE_READ;
+	bdev_io.internal.f.has_metadata = true;
+	bdev_io.internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	bdev_io.u.bdev.dif_err.err_type = SPDK_DIF_DATA_ERROR;
+	bdev_io_set_dif_error_status(&bdev_io);
+	CU_ASSERT(bdev_io.internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	memset(&bdev_io, 0, sizeof(bdev_io));
+	bdev_io.type = SPDK_BDEV_IO_TYPE_READ;
+	bdev_io.internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	bdev_io.u.bdev.dif_err.err_type = SPDK_DIF_GUARD_ERROR;
+	bdev_io_set_dif_error_status(&bdev_io);
+	CU_ASSERT(bdev_io.internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void
 reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	g_reset_done = true;
@@ -8377,6 +8425,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, get_device_stat_with_reset);
 	CU_ADD_TEST(suite, open_ext_v2_test);
 	CU_ADD_TEST(suite, bdev_io_init_dif_ctx_test);
+	CU_ADD_TEST(suite, bdev_io_dif_error_status_test);
 	CU_ADD_TEST(suite, bdev_io_iobuf_wait_abort);
 
 	allocate_cores(1);
