@@ -128,6 +128,24 @@ add_remove_resize() {
 	EOF
 }
 
+test_case() {
+	local fn=$1 stride_nsid=$2 admin_poll_period_us=$3
+	local start_nsid i pids=()
+
+	$rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us "$admin_poll_period_us"
+	attach_controller
+
+	for ((i = 0; i < nthreads; ++i)); do
+		# Every thread can use stride_nsid NSIDs starting at specific offset.
+		start_nsid="$((1 + (stride_nsid * i)))"
+		"$fn" "$start_nsid" "$i" &
+		pids+=($!)
+	done
+	wait "${pids[@]}"
+
+	$rpc_py bdev_nvme_detach_controller nvme0
+}
+
 nvmftestinit
 DEFAULT_RPC_ADDR="$tgt_sock" nvmfappstart -r "$tgt_sock" -m 0x1
 
@@ -145,55 +163,21 @@ trap 'killprocess $spdk_app_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten "$spdk_app_pid"
 
 # Run several subsystem_{add,remove}_ns RPCs in parallel to ensure they'll get queued
-nthreads=6 pids=()
+nthreads=6
 ns_per_thread=15
 bdev_size=100
 blk_size=4096
 
-# Test case 1 - add/remove ns with delay for processing admin queue
+# Test case 1 - add/remove ns with the default admin queue poll period.
+run_test "nvmf_ns_hotplug_stress_tc1" test_case add_remove "$ns_per_thread" 10000
 
-# Instead of default 10ms, use 1 second timeout
-$rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us 1000000
-attach_controller
+# Test case 2 - add/remove ns with delay so AERs pile up on the initiator side.
+run_test "nvmf_ns_hotplug_stress_tc2" test_case add_remove "$ns_per_thread" 1000000
 
-for ((i = 0; i < nthreads; ++i)); do
-	# Every thread can use ns_per_thread NSIDs starting at specific offset.
-	start_nsid="$((1 + (ns_per_thread * i)))"
-	add_remove "$start_nsid" "$i" &
-	pids+=($!)
-done
-wait "${pids[@]}"
-
-# Reattach controller with restored admin queue poll period to 10ms
-$rpc_py bdev_nvme_detach_controller nvme0
-$rpc_py bdev_nvme_set_options --nvme-adminq-poll-period-us 10000
-attach_controller
-
-# Test case 2 - add/remove ns constantly
-
-for ((i = 0; i < nthreads; ++i)); do
-	# Every thread can use ns_per_thread NSIDs starting at specific offset.
-	start_nsid="$((1 + (ns_per_thread * i)))"
-	add_remove "$start_nsid" "$i" &
-	pids+=($!)
-done
-wait "${pids[@]}"
-
-$rpc_py bdev_nvme_detach_controller nvme0
-attach_controller
-
-# Test 3 - add/remove/resize ns
-
-for ((i = 0; i < nthreads; ++i)); do
-	# Each thread needs 2 * ns_per_thread NSIDs:
-	# - the lower half is used for the increasing-NSID add/remove path
-	#   plus the persistent resize and stable namespaces
-	# - the upper half for the "dec" path
-	start_nsid="$((1 + (2 * ns_per_thread * i)))"
-	add_remove_resize "$start_nsid" "$i" &
-	pids+=($!)
-done
-wait "${pids[@]}"
+# Test case 3 - add/remove/resize ns.
+# Each thread needs 2 * ns_per_thread NSIDs: the lower half drives the increasing-NSID
+# add/remove path (and the resize, stable namespaces), the upper half drives the "dec" path.
+run_test "nvmf_ns_hotplug_stress_tc3" test_case add_remove_resize "$((2 * ns_per_thread))" 10000
 
 waitforlisten "$spdk_app_pid"
 killprocess "$spdk_app_pid"
