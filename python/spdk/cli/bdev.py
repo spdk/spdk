@@ -926,7 +926,7 @@ def add_parser(subparsers):
                               help='Update one of the latency values for a given delay bdev')
     p.add_argument('delay_bdev_name', help='The name of the given delay bdev')
     p.add_argument('latency_type', choices=['avg_read', 'avg_write', 'p99_read', 'p99_write'],
-                   help='one of: avg_read, avg_write, p99_read, p99_write')
+                   help='Latency bucket to update')
     p.add_argument('latency_us', help='new latency value in microseconds.', type=int)
     p.set_defaults(func=bdev_delay_update_latency)
 

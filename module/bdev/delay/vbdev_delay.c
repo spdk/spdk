@@ -70,7 +70,7 @@ struct delay_bdev_io {
 
 	uint64_t completion_tick;
 
-	enum delay_io_type type;
+	enum spdk_bdev_delay_io_type type;
 
 	struct spdk_io_channel *ch;
 
@@ -206,23 +206,23 @@ _delay_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	/* Put the I/O into the proper list for processing by the channel poller. */
 	switch (io_ctx->type) {
-	case DELAY_AVG_READ:
+	case SPDK_BDEV_DELAY_IO_TYPE_AVG_READ:
 		io_ctx->completion_tick = spdk_get_ticks() + delay_node->average_read_latency_ticks;
 		STAILQ_INSERT_TAIL(&delay_ch->avg_read_io, io_ctx, link);
 		break;
-	case DELAY_AVG_WRITE:
+	case SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE:
 		io_ctx->completion_tick = spdk_get_ticks() + delay_node->average_write_latency_ticks;
 		STAILQ_INSERT_TAIL(&delay_ch->avg_write_io, io_ctx, link);
 		break;
-	case DELAY_P99_READ:
+	case SPDK_BDEV_DELAY_IO_TYPE_P99_READ:
 		io_ctx->completion_tick = spdk_get_ticks() + delay_node->p99_read_latency_ticks;
 		STAILQ_INSERT_TAIL(&delay_ch->p99_read_io, io_ctx, link);
 		break;
-	case DELAY_P99_WRITE:
+	case SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE:
 		io_ctx->completion_tick = spdk_get_ticks() + delay_node->p99_write_latency_ticks;
 		STAILQ_INSERT_TAIL(&delay_ch->p99_write_io, io_ctx, link);
 		break;
-	case DELAY_NONE:
+	case SPDK_BDEV_DELAY_IO_TYPE_NONE:
 	default:
 		spdk_bdev_io_complete(orig_io, io_ctx->status);
 		break;
@@ -403,19 +403,19 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	is_p99 = rand_r(&delay_ch->rand_seed) % 100 == 0 ? true : false;
 
 	io_ctx->ch = ch;
-	io_ctx->type = DELAY_NONE;
+	io_ctx->type = SPDK_BDEV_DELAY_IO_TYPE_NONE;
 	if (bdev_io->type != SPDK_BDEV_IO_TYPE_ZCOPY || bdev_io->u.bdev.zcopy.start) {
 		io_ctx->zcopy_bdev_io = NULL;
 	}
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		io_ctx->type = is_p99 ? DELAY_P99_READ : DELAY_AVG_READ;
+		io_ctx->type = is_p99 ? SPDK_BDEV_DELAY_IO_TYPE_P99_READ : SPDK_BDEV_DELAY_IO_TYPE_AVG_READ;
 		spdk_bdev_io_get_buf(bdev_io, delay_read_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		io_ctx->type = is_p99 ? DELAY_P99_WRITE : DELAY_AVG_WRITE;
+		io_ctx->type = is_p99 ? SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE : SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE;
 		delay_init_ext_io_opts(bdev_io, &io_opts);
 		rc = spdk_bdev_writev_blocks_ext(delay_node->base_desc, delay_ch->base_ch, bdev_io->u.bdev.iovs,
 						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
@@ -452,9 +452,9 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		break;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		if (bdev_io->u.bdev.zcopy.commit) {
-			io_ctx->type = is_p99 ? DELAY_P99_WRITE : DELAY_AVG_WRITE;
+			io_ctx->type = is_p99 ? SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE : SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE;
 		} else if (bdev_io->u.bdev.zcopy.populate) {
-			io_ctx->type = is_p99 ? DELAY_P99_READ : DELAY_AVG_READ;
+			io_ctx->type = is_p99 ? SPDK_BDEV_DELAY_IO_TYPE_P99_READ : SPDK_BDEV_DELAY_IO_TYPE_AVG_READ;
 		}
 		if (bdev_io->u.bdev.zcopy.start) {
 			rc = spdk_bdev_zcopy_start(delay_node->base_desc, delay_ch->base_ch,
@@ -639,7 +639,8 @@ vbdev_delay_insert_association(const char *bdev_name, const char *vbdev_name,
 }
 
 int
-vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us, enum delay_io_type type)
+vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us,
+				 enum spdk_bdev_delay_io_type type)
 {
 	struct vbdev_delay *delay_node;
 	uint64_t ticks_mhz = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
@@ -655,16 +656,16 @@ vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us, enum del
 	}
 
 	switch (type) {
-	case DELAY_AVG_READ:
+	case SPDK_BDEV_DELAY_IO_TYPE_AVG_READ:
 		delay_node->average_read_latency_ticks = ticks_mhz * latency_us;
 		break;
-	case DELAY_AVG_WRITE:
+	case SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE:
 		delay_node->average_write_latency_ticks = ticks_mhz * latency_us;
 		break;
-	case DELAY_P99_READ:
+	case SPDK_BDEV_DELAY_IO_TYPE_P99_READ:
 		delay_node->p99_read_latency_ticks = ticks_mhz * latency_us;
 		break;
-	case DELAY_P99_WRITE:
+	case SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE:
 		delay_node->p99_write_latency_ticks = ticks_mhz * latency_us;
 		break;
 	default:

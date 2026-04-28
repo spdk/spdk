@@ -13,7 +13,7 @@
 
 static const struct spdk_json_object_decoder rpc_bdev_delay_update_latency_decoders[] = {
 	{"delay_bdev_name", offsetof(struct rpc_bdev_delay_update_latency_ctx, delay_bdev_name), spdk_json_decode_string},
-	{"latency_type", offsetof(struct rpc_bdev_delay_update_latency_ctx, latency_type), spdk_json_decode_string},
+	{"latency_type", offsetof(struct rpc_bdev_delay_update_latency_ctx, latency_type), rpc_decode_bdev_delay_latency_type},
 	{"latency_us", offsetof(struct rpc_bdev_delay_update_latency_ctx, latency_us), spdk_json_decode_uint64}
 };
 
@@ -22,7 +22,6 @@ rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_delay_update_latency_ctx req = {};
-	enum delay_io_type latency_type;
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_bdev_delay_update_latency_decoders,
@@ -34,21 +33,8 @@ rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (!strncmp(req.latency_type, "avg_read", 9)) {
-		latency_type = DELAY_AVG_READ;
-	} else if (!strncmp(req.latency_type, "p99_read", 9)) {
-		latency_type = DELAY_P99_READ;
-	} else if (!strncmp(req.latency_type, "avg_write", 10)) {
-		latency_type = DELAY_AVG_WRITE;
-	} else if (!strncmp(req.latency_type, "p99_write", 10)) {
-		latency_type = DELAY_P99_WRITE;
-	} else {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Please specify a valid latency type.");
-		goto cleanup;
-	}
-
-	rc = vbdev_delay_update_latency_value(req.delay_bdev_name, req.latency_us, latency_type);
+	rc = vbdev_delay_update_latency_value(req.delay_bdev_name, req.latency_us,
+					      (enum spdk_bdev_delay_io_type)req.latency_type);
 
 	if (rc == -ENODEV) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

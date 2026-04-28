@@ -157,6 +157,15 @@
       "fields": [
         {"name": "fcws", "value": 0}
       ]
+    },
+    {
+      "name": "bdev_delay_latency_type",
+      "fields": [
+        {"name": "avg_read", "value": "SPDK_BDEV_DELAY_IO_TYPE_AVG_READ"},
+        {"name": "p99_read", "value": "SPDK_BDEV_DELAY_IO_TYPE_P99_READ"},
+        {"name": "avg_write", "value": "SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE"},
+        {"name": "p99_write", "value": "SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE"}
+      ]
     }
   ],
   "objects": [
@@ -2607,9 +2616,10 @@
         },
         {
           "name": "latency_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_delay_latency_type",
           "required": true,
-          "description": "One of: avg_read, avg_write, p99_read, p99_write"
+          "description": "Latency bucket to update"
         },
         {
           "name": "latency_us",
