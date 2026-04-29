@@ -9,23 +9,6 @@
 
 #include "spdk_internal/rpc_autogen.h"
 
-static int
-_parse_log_level(char *level)
-{
-	if (!strcasecmp(level, "ERROR")) {
-		return SPDK_LOG_ERROR;
-	} else if (!strcasecmp(level, "WARNING")) {
-		return SPDK_LOG_WARN;
-	} else if (!strcasecmp(level, "NOTICE")) {
-		return SPDK_LOG_NOTICE;
-	} else if (!strcasecmp(level, "INFO")) {
-		return SPDK_LOG_INFO;
-	} else if (!strcasecmp(level, "DEBUG")) {
-		return SPDK_LOG_DEBUG;
-	}
-	return -1;
-}
-
 static const char *
 _log_get_level_name(int level)
 {
@@ -44,7 +27,7 @@ _log_get_level_name(int level)
 }
 
 static const struct spdk_json_object_decoder rpc_log_set_print_level_decoders[] = {
-	{"level", offsetof(struct rpc_log_set_print_level_ctx, level), spdk_json_decode_string},
+	{"level", offsetof(struct rpc_log_set_print_level_ctx, level), rpc_decode_log_level},
 };
 
 static void
@@ -52,28 +35,17 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
 	struct rpc_log_set_print_level_ctx req = {};
-	int level;
 
 	if (spdk_json_decode_object(params, rpc_log_set_print_level_decoders,
 				    SPDK_COUNTOF(rpc_log_set_print_level_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto end;
+		return;
 	}
 
-	level = _parse_log_level(req.level);
-	if (level == -1) {
-		SPDK_DEBUGLOG(log_rpc, "tried to set invalid log level\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "invalid log level");
-		goto end;
-	}
-
-	spdk_log_set_print_level(level);
+	spdk_log_set_print_level((enum spdk_log_level)req.level);
 	spdk_jsonrpc_send_bool_response(request, true);
-end:
-	free_rpc_log_set_print_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_print_level", rpc_log_set_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -109,7 +81,7 @@ SPDK_RPC_REGISTER("log_get_print_level", rpc_log_get_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_log_set_level_decoders[] = {
-	{"level", offsetof(struct rpc_log_set_level_ctx, level), spdk_json_decode_string},
+	{"level", offsetof(struct rpc_log_set_level_ctx, level), rpc_decode_log_level},
 };
 
 static void
@@ -117,29 +89,17 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 		  const struct spdk_json_val *params)
 {
 	struct rpc_log_set_level_ctx req = {};
-	int level;
 
 	if (spdk_json_decode_object(params, rpc_log_set_level_decoders,
 				    SPDK_COUNTOF(rpc_log_set_level_decoders), &req)) {
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto end;
+		return;
 	}
 
-	level = _parse_log_level(req.level);
-	if (level == -1) {
-		SPDK_DEBUGLOG(log_rpc, "tried to set invalid log level\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "invalid log level");
-		goto end;
-	}
-
-
-	spdk_log_set_level(level);
+	spdk_log_set_level((enum spdk_log_level)req.level);
 	spdk_jsonrpc_send_bool_response(request, true);
-end:
-	free_rpc_log_set_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_level", rpc_log_set_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 

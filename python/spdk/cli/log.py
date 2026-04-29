@@ -38,8 +38,7 @@ def add_parser(subparsers):
         args.client.log_set_level(level=args.level)
 
     p = subparsers.add_parser('log_set_level', help='set log level')
-    p.add_argument('level', help='Log level: ERROR, WARNING, NOTICE, INFO, DEBUG',
-                   choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
+    p.add_argument('level', help='Log level', choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_level)
 
     def log_get_level(args):
@@ -52,8 +51,7 @@ def add_parser(subparsers):
         args.client.log_set_print_level(level=args.level)
 
     p = subparsers.add_parser('log_set_print_level', help='set log print level')
-    p.add_argument('level', help='Log print level: ERROR, WARNING, NOTICE, INFO, DEBUG',
-                   choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
+    p.add_argument('level', help='Log print level', choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_print_level)
 
     def log_get_print_level(args):

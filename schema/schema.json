@@ -183,6 +183,16 @@
         {"name": "AES_CBC", "value": "SPDK_ACCEL_CIPHER_AES_CBC"},
         {"name": "AES_XTS", "value": "SPDK_ACCEL_CIPHER_AES_XTS"}
       ]
+    },
+    {
+      "name": "log_level",
+      "fields": [
+        {"name": "ERROR",   "value": "SPDK_LOG_ERROR"},
+        {"name": "WARNING", "value": "SPDK_LOG_WARN"},
+        {"name": "NOTICE",  "value": "SPDK_LOG_NOTICE"},
+        {"name": "INFO",    "value": "SPDK_LOG_INFO"},
+        {"name": "DEBUG",   "value": "SPDK_LOG_DEBUG"}
+      ]
     }
   ],
   "objects": [
@@ -756,9 +766,10 @@
       "params": [
         {
           "name": "level",
-          "type": "string",
+          "type": "enum",
+          "class": "log_level",
           "required": true,
-          "description": "Log print level: ERROR, WARNING, NOTICE, INFO, DEBUG"
+          "description": "Log print level"
         }
       ]
     },
@@ -771,9 +782,10 @@
       "params": [
         {
           "name": "level",
-          "type": "string",
+          "type": "enum",
+          "class": "log_level",
           "required": true,
-          "description": "Log level: ERROR, WARNING, NOTICE, INFO, DEBUG"
+          "description": "Log level"
         }
       ]
     },
