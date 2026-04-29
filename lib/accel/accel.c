@@ -2743,10 +2743,58 @@ static const char *g_tweak_modes[] = {
 	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA] = "INCR_512_UPPER_LBA",
 };
 
+const char *
+accel_crypto_tweak_mode_to_str(enum spdk_accel_crypto_tweak_mode tweak_mode)
+{
+	if (tweak_mode < SPDK_COUNTOF(g_tweak_modes)) {
+		return g_tweak_modes[tweak_mode];
+	}
+	return NULL;
+}
+
+static int
+accel_crypto_tweak_mode_from_str(const char *str, enum spdk_accel_crypto_tweak_mode *out)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_tweak_modes); ++i) {
+		assert(g_tweak_modes[i]);
+		if (strcmp(str, g_tweak_modes[i]) == 0) {
+			*out = i;
+			return 0;
+		}
+	}
+	return -EINVAL;
+}
+
 static const char *g_ciphers[] = {
 	[SPDK_ACCEL_CIPHER_AES_CBC] = "AES_CBC",
 	[SPDK_ACCEL_CIPHER_AES_XTS] = "AES_XTS",
 };
+
+const char *
+accel_crypto_cipher_to_str(enum spdk_accel_cipher cipher)
+{
+	if (cipher < SPDK_COUNTOF(g_ciphers)) {
+		return g_ciphers[cipher];
+	}
+	return NULL;
+}
+
+static int
+accel_crypto_cipher_from_str(const char *str, enum spdk_accel_cipher *out)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_ciphers); ++i) {
+		assert(g_ciphers[i]);
+		if (strcmp(str, g_ciphers[i]) == 0) {
+			*out = i;
+			return 0;
+		}
+	}
+	return -EINVAL;
+}
 
 int
 spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *param)
@@ -2754,8 +2802,6 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 	struct spdk_accel_module_if *module;
 	struct spdk_accel_crypto_key *key;
 	size_t hex_key_size, hex_key2_size;
-	bool found = false;
-	size_t i;
 	int rc;
 
 	if (!param || !param->hex_key || !param->cipher || !param->key_name) {
@@ -2789,19 +2835,9 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		goto error;
 	}
 
-	for (i = 0; i < SPDK_COUNTOF(g_ciphers); ++i) {
-		assert(g_ciphers[i]);
-
-		if (strncmp(param->cipher, g_ciphers[i], strlen(g_ciphers[i])) == 0) {
-			key->cipher = i;
-			found = true;
-			break;
-		}
-	}
-
-	if (!found) {
+	rc = accel_crypto_cipher_from_str(param->cipher, &key->cipher);
+	if (rc != 0) {
 		SPDK_ERRLOG("Failed to parse cipher\n");
-		rc = -EINVAL;
 		goto error;
 	}
 
@@ -2869,27 +2905,15 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 
 	key->tweak_mode = ACCEL_CRYPTO_TWEAK_MODE_DEFAULT;
 	if (param->tweak_mode) {
-		found = false;
-
 		key->param.tweak_mode = strdup(param->tweak_mode);
 		if (!key->param.tweak_mode) {
 			rc = -ENOMEM;
 			goto error;
 		}
 
-		for (i = 0; i < SPDK_COUNTOF(g_tweak_modes); ++i) {
-			assert(g_tweak_modes[i]);
-
-			if (strncmp(param->tweak_mode, g_tweak_modes[i], strlen(g_tweak_modes[i])) == 0) {
-				key->tweak_mode = i;
-				found = true;
-				break;
-			}
-		}
-
-		if (!found) {
+		rc = accel_crypto_tweak_mode_from_str(param->tweak_mode, &key->tweak_mode);
+		if (rc != 0) {
 			SPDK_ERRLOG("Failed to parse tweak mode\n");
-			rc = -EINVAL;
 			goto error;
 		}
 	}

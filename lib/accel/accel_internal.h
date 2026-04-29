@@ -10,6 +10,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/accel.h"
+#include "spdk/accel_module.h"
 #include "spdk/queue.h"
 #include "spdk/config.h"
 
@@ -45,6 +46,8 @@ struct accel_stats {
 
 typedef void (*_accel_for_each_module_fn)(struct module_info *info);
 void _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn);
+const char *accel_crypto_tweak_mode_to_str(enum spdk_accel_crypto_tweak_mode tweak_mode);
+const char *accel_crypto_cipher_to_str(enum spdk_accel_cipher cipher);
 void _accel_crypto_key_dump_param(struct spdk_json_write_ctx *w, struct spdk_accel_crypto_key *key);
 void _accel_crypto_keys_dump_param(struct spdk_json_write_ctx *w);
 typedef void (*accel_get_stats_cb)(struct accel_stats *stats, void *cb_arg);
