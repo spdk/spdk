@@ -185,6 +185,14 @@
       ]
     },
     {
+      "name": "accel_mlx5_dump_state_level",
+      "fields": [
+        {"name": "total",   "value": "SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL"},
+        {"name": "channel", "value": "SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_CHANNEL"},
+        {"name": "device",  "value": "SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_DEVICE"}
+      ]
+    },
+    {
       "name": "log_level",
       "fields": [
         {"name": "ERROR",   "value": "SPDK_LOG_ERROR"},
@@ -1088,8 +1096,9 @@
       "params": [
         {
           "name": "level",
-          "type": "string",
-          "description": "Verbosity level: total, channel, device. Default: channel"
+          "type": "enum",
+          "class": "accel_mlx5_dump_state_level",
+          "description": "Verbosity level, default: channel"
         }
       ]
     },

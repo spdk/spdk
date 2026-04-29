@@ -232,7 +232,7 @@ struct accel_mlx5_psv_pool_iter_cb_args {
 struct accel_mlx5_dump_stats_ctx {
 	struct accel_mlx5_stats total;
 	struct spdk_json_write_ctx *w;
-	enum accel_mlx5_dump_state_level level;
+	enum spdk_accel_mlx5_dump_state_level level;
 	accel_mlx5_dump_stat_done_cb cb;
 	void *ctx;
 };
@@ -3321,11 +3321,11 @@ accel_mlx5_dump_channel_stat(struct spdk_io_channel_iter *i)
 	_ch = spdk_io_channel_iter_get_channel(i);
 	ch = spdk_io_channel_get_ctx(_ch);
 
-	if (ctx->level != ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
+	if (ctx->level != SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
 		spdk_json_write_object_begin(ctx->w);
 		spdk_json_write_named_object_begin(ctx->w, spdk_thread_get_name(spdk_get_thread()));
 	}
-	if (ctx->level == ACCEL_MLX5_DUMP_STAT_LEVEL_DEV) {
+	if (ctx->level == SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_DEVICE) {
 		spdk_json_write_named_array_begin(ctx->w, "devices");
 	}
 
@@ -3334,17 +3334,17 @@ accel_mlx5_dump_channel_stat(struct spdk_io_channel_iter *i)
 		/* Save grand total and channel stats */
 		accel_mlx5_add_stats(&ctx->total, &dev->stats);
 		accel_mlx5_add_stats(&ch_stat, &dev->stats);
-		if (ctx->level == ACCEL_MLX5_DUMP_STAT_LEVEL_DEV) {
+		if (ctx->level == SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_DEVICE) {
 			spdk_json_write_object_begin(ctx->w);
 			accel_mlx5_dump_stats_json(ctx->w, dev->dev_ctx->context->device->name, &dev->stats);
 			spdk_json_write_object_end(ctx->w);
 		}
 	}
 
-	if (ctx->level == ACCEL_MLX5_DUMP_STAT_LEVEL_DEV) {
+	if (ctx->level == SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_DEVICE) {
 		spdk_json_write_array_end(ctx->w);
 	}
-	if (ctx->level != ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
+	if (ctx->level != SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
 		accel_mlx5_dump_stats_json(ctx->w, "channel_total", &ch_stat);
 		spdk_json_write_object_end(ctx->w);
 		spdk_json_write_object_end(ctx->w);
@@ -3365,7 +3365,7 @@ accel_mlx5_dump_channel_stat_done(struct spdk_io_channel_iter *i, int status)
 	accel_mlx5_add_stats(&ctx->total, &g_accel_mlx5.stats);
 	spdk_spin_unlock(&g_accel_mlx5.lock);
 
-	if (ctx->level != ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
+	if (ctx->level != SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
 		/* channels[] */
 		spdk_json_write_array_end(ctx->w);
 	}
@@ -3380,7 +3380,7 @@ accel_mlx5_dump_channel_stat_done(struct spdk_io_channel_iter *i, int status)
 }
 
 int
-accel_mlx5_dump_stats(struct spdk_json_write_ctx *w, enum accel_mlx5_dump_state_level level,
+accel_mlx5_dump_stats(struct spdk_json_write_ctx *w, enum spdk_accel_mlx5_dump_state_level level,
 		      accel_mlx5_dump_stat_done_cb cb, void *ctx)
 {
 	struct accel_mlx5_dump_stats_ctx *stat_ctx;
@@ -3403,7 +3403,7 @@ accel_mlx5_dump_stats(struct spdk_json_write_ctx *w, enum accel_mlx5_dump_state_
 
 	spdk_json_write_object_begin(w);
 
-	if (level != ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
+	if (level != SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL) {
 		spdk_json_write_named_array_begin(w, "channels");
 	}
 

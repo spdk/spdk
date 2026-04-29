@@ -3,6 +3,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/module/accel/mlx5.h"
 
 struct accel_mlx5_attr {
 	/* The number of entries in qp submission/receive queue */
@@ -18,18 +19,10 @@ struct accel_mlx5_attr {
 	bool enable_driver;
 };
 
-enum accel_mlx5_dump_state_level {
-	/** Dump only grand total statistics */
-	ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL,
-	/** Dump grand total statistics and per channel statistics over all devices */
-	ACCEL_MLX5_DUMP_STAT_LEVEL_CHANNEL,
-	/** Dump grand total statistics and per channel statistics for each individual device */
-	ACCEL_MLX5_DUMP_STAT_LEVEL_DEV
-};
-
 typedef void(*accel_mlx5_dump_stat_done_cb)(void *ctx, int rc);
 
 void accel_mlx5_get_default_attr(struct accel_mlx5_attr *attr);
 int accel_mlx5_enable(struct accel_mlx5_attr *attr);
-int accel_mlx5_dump_stats(struct spdk_json_write_ctx *w, enum accel_mlx5_dump_state_level level,
+int accel_mlx5_dump_stats(struct spdk_json_write_ctx *w,
+			  enum spdk_accel_mlx5_dump_state_level level,
 			  accel_mlx5_dump_stat_done_cb cb, void *ctx);
