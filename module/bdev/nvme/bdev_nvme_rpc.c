@@ -718,6 +718,7 @@ SPDK_RPC_REGISTER("bdev_nvme_detach_controller", rpc_bdev_nvme_detach_controller
 static const struct spdk_json_object_decoder rpc_bdev_nvme_apply_firmware_decoders[] = {
 	{"filename", offsetof(struct rpc_bdev_nvme_apply_firmware_ctx, filename), spdk_json_decode_string},
 	{"bdev_name", offsetof(struct rpc_bdev_nvme_apply_firmware_ctx, bdev_name), spdk_json_decode_string},
+	{"commit_action", offsetof(struct rpc_bdev_nvme_apply_firmware_ctx, commit_action), spdk_json_decode_uint32, true},
 };
 
 struct firmware_update_info {
@@ -787,6 +788,29 @@ out:
 	apply_firmware_cleanup(firm_ctx);
 }
 
+static void
+apply_firmware_complete_no_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct firmware_update_info *firm_ctx = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "firmware commit failed.");
+		goto out;
+	}
+
+	w = spdk_jsonrpc_begin_result(firm_ctx->request);
+	spdk_json_write_string(w, "firmware commit succeeded.");
+	spdk_jsonrpc_end_result(firm_ctx->request, w);
+out:
+	apply_firmware_cleanup(firm_ctx);
+}
+
 static void apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
@@ -796,7 +820,7 @@ _apply_firmware_complete(struct firmware_update_info *firm_ctx)
 	struct spdk_nvme_fw_commit		fw_commit;
 	int					slot = 0;
 	int					rc;
-	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
+	spdk_bdev_io_completion_cb		cb_fn;
 
 	firm_ctx->p += firm_ctx->transfer;
 	firm_ctx->offset += firm_ctx->transfer;
@@ -807,12 +831,18 @@ _apply_firmware_complete(struct firmware_update_info *firm_ctx)
 		/* firmware download completed. Commit firmware */
 		memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
 		fw_commit.fs = slot;
-		fw_commit.ca = commit_action;
+		fw_commit.ca = firm_ctx->req.commit_action;
+
+		if (firm_ctx->req.commit_action == SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG) {
+			cb_fn = apply_firmware_complete_reset;
+		} else {
+			cb_fn = apply_firmware_complete_no_reset;
+		}
 
 		cmd.opc = SPDK_NVME_OPC_FIRMWARE_COMMIT;
 		memcpy(&cmd.cdw10, &fw_commit, sizeof(uint32_t));
 		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, &cmd, NULL, 0,
-						   apply_firmware_complete_reset, firm_ctx);
+					   cb_fn, firm_ctx);
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "firmware commit failed.");
@@ -881,11 +911,21 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	}
 	firm_ctx->fw_image = NULL;
 	firm_ctx->request = request;
+	firm_ctx->req.commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_apply_firmware_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_apply_firmware_decoders), &firm_ctx->req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed.");
+		goto err;
+	}
+
+	if (firm_ctx->req.commit_action != SPDK_NVME_FW_COMMIT_REPLACE_IMG &&
+	    firm_ctx->req.commit_action != SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG &&
+	    firm_ctx->req.commit_action != SPDK_NVME_FW_COMMIT_RUN_IMG) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					     "unsupported commit_action %u (allowed: 0, 1, 3)",
+					     firm_ctx->req.commit_action);
 		goto err;
 	}
 

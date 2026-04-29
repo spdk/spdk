@@ -2139,6 +2139,14 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
 	CU_ASSERT(ret == -EIO);
 
+	/* CA=3 (RUN_IMG) should not force a reset on successful commit. */
+	commit_action = SPDK_NVME_FW_COMMIT_RUN_IMG;
+	ctrlr.is_resetting = false;
+	set_status_cpl = 0;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
+	CU_ASSERT(ret == 0);
+	commit_action = SPDK_NVME_FW_COMMIT_REPLACE_IMG;
+
 	/* Set size check firmware download and firmware commit */
 	ctrlr.is_resetting = true;
 	set_status_cpl = 0;
