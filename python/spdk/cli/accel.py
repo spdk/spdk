@@ -40,12 +40,10 @@ def add_parser(subparsers):
                                                      name=args.name))
 
     p = subparsers.add_parser('accel_crypto_key_create', help='Create encryption key')
-    p.add_argument('-c', '--cipher', help='Crypto cipher: AES_CBC, AES_XTS', required=True)
+    p.add_argument('-c', '--cipher', choices=['AES_CBC', 'AES_XTS'], help='Crypto cipher', required=True)
     p.add_argument('-k', '--key', help='Key in hex form', required=True)
     p.add_argument('-e', '--key2', help='Second part of the key (or tweak) in hex form, required for AES_XTS', default=None)
-    p.add_argument('-t', '--tweak-mode',
-                   help='Tweak mode: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default: SIMPLE_LBA',
-                   default=None,
+    p.add_argument('-t', '--tweak-mode', help='Tweak mode', default=None,
                    choices=['SIMPLE_LBA', 'JOIN_NEG_LBA_WITH_LBA',
                             'INCR_512_FULL_LBA', 'INCR_512_UPPER_LBA'])
     p.add_argument('-n', '--name', help='Name of the key', required=True)

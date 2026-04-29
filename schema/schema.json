@@ -167,6 +167,22 @@
         {"name": "avg_write", "value": "SPDK_BDEV_DELAY_IO_TYPE_AVG_WRITE"},
         {"name": "p99_write", "value": "SPDK_BDEV_DELAY_IO_TYPE_P99_WRITE"}
       ]
+    },
+    {
+      "name": "accel_crypto_tweak_mode",
+      "fields": [
+        {"name": "SIMPLE_LBA", "value": "SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA"},
+        {"name": "JOIN_NEG_LBA_WITH_LBA", "value": "SPDK_ACCEL_CRYPTO_TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA"},
+        {"name": "INCR_512_FULL_LBA", "value": "SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_FULL_LBA"},
+        {"name": "INCR_512_UPPER_LBA", "value": "SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA"}
+      ]
+    },
+    {
+      "name": "accel_crypto_cipher",
+      "fields": [
+        {"name": "AES_CBC", "value": "SPDK_ACCEL_CIPHER_AES_CBC"},
+        {"name": "AES_XTS", "value": "SPDK_ACCEL_CIPHER_AES_XTS"}
+      ]
     }
   ],
   "objects": [
@@ -844,7 +860,8 @@
       "params": [
         {
           "name": "cipher",
-          "type": "string",
+          "type": "enum",
+          "class": "accel_crypto_cipher",
           "required": true,
           "description": "Crypto cipher: AES_CBC, AES_XTS"
         },
@@ -861,8 +878,9 @@
         },
         {
           "name": "tweak_mode",
-          "type": "string",
-          "description": "Tweak mode: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default: SIMPLE_LBA"
+          "type": "enum",
+          "class": "accel_crypto_tweak_mode",
+          "description": "Tweak mode, default: SIMPLE_LBA"
         },
         {
           "name": "name",

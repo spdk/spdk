@@ -164,10 +164,10 @@ cleanup:
 SPDK_RPC_REGISTER("accel_assign_opc", rpc_accel_assign_opc, SPDK_RPC_STARTUP)
 
 static const struct spdk_json_object_decoder rpc_accel_crypto_key_create_decoders[] = {
-	{"cipher", offsetof(struct rpc_accel_crypto_key_create_ctx, cipher), spdk_json_decode_string},
+	{"cipher", offsetof(struct rpc_accel_crypto_key_create_ctx, cipher), rpc_decode_accel_crypto_cipher},
 	{"key", offsetof(struct rpc_accel_crypto_key_create_ctx, key), spdk_json_decode_string},
 	{"key2", offsetof(struct rpc_accel_crypto_key_create_ctx, key2), spdk_json_decode_string, true},
-	{"tweak_mode", offsetof(struct rpc_accel_crypto_key_create_ctx, tweak_mode), spdk_json_decode_string, true},
+	{"tweak_mode", offsetof(struct rpc_accel_crypto_key_create_ctx, tweak_mode), rpc_decode_accel_crypto_tweak_mode, true},
 	{"name", offsetof(struct rpc_accel_crypto_key_create_ctx, name), spdk_json_decode_string},
 };
 
@@ -188,10 +188,12 @@ rpc_accel_crypto_key_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	param.cipher = req.cipher;
+	param.cipher = (char *)accel_crypto_cipher_to_str(
+			       (enum spdk_accel_cipher)req.cipher);
 	param.hex_key = req.key;
 	param.hex_key2 = req.key2;
-	param.tweak_mode = req.tweak_mode;
+	param.tweak_mode = (char *)accel_crypto_tweak_mode_to_str(
+				   (enum spdk_accel_crypto_tweak_mode)req.tweak_mode);
 	param.key_name = req.name;
 
 	rc = spdk_accel_crypto_key_create(&param);
