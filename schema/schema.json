@@ -185,6 +185,21 @@
       ]
     },
     {
+      "name": "bdev_virtio_trtype",
+      "fields": [
+        {"name": "pci",       "value": 0},
+        {"name": "user",      "value": 1},
+        {"name": "vfio-user", "value": 2}
+      ]
+    },
+    {
+      "name": "bdev_virtio_dev_type",
+      "fields": [
+        {"name": "blk",  "value": 0},
+        {"name": "scsi", "value": 1}
+      ]
+    },
+    {
       "name": "accel_mlx5_dump_state_level",
       "fields": [
         {"name": "total",   "value": "SPDK_ACCEL_MLX5_DUMP_STAT_LEVEL_TOTAL"},
@@ -3023,7 +3038,8 @@
         },
         {
           "name": "trtype",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_virtio_trtype",
           "required": true,
           "description": "Virtio transport type: pci, user, vfio-user"
         },
@@ -3035,7 +3051,8 @@
         },
         {
           "name": "dev_type",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_virtio_dev_type",
           "required": true,
           "description": "Virtio device type: blk, scsi"
         },
