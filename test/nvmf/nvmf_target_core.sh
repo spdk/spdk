@@ -34,6 +34,7 @@ run_test "nvmf_nvm_limits" $rootdir/test/nvmf/target/nvm_limits.sh "${TEST_ARGS[
 
 if [[ "$SPDK_TEST_SKIP_NVMF_KERNEL_TESTS" -eq 0 ]]; then
 	run_test "nvmf_target_multipath" $rootdir/test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_dup_host_policy" $rootdir/test/nvmf/target/dup_host_policy.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 fi
