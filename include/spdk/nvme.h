@@ -3,7 +3,6 @@
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   Copyright (c) 2023 Samsung Electronics Co., Ltd. All rights reserved.
- *   Copyright (c) 2025 Dell Inc. or its subsidiaries. All Rights Reserved
  */
 
 /** \file
@@ -1965,45 +1964,6 @@ void spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair);
  * the application should call spdk_nvme_ctrlr_reset to reset the entire controller.
  */
 int spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair);
-
-struct spdk_nvme_qpair_stats {
-	struct spdk_nvme_qpair_io_stats io_stats;
-
-	/* Current count of in-flight I/O requests */
-	uint32_t num_outstanding_reqs;
-};
-
-/**
- * Retrieve the statistics for a specific NVMe I/O qpair.
- *
- * \param qpair The NVMe qpair.
- * \param stats Output parameter for the statistics.
- */
-void spdk_nvme_qpair_get_stats(const struct spdk_nvme_qpair *qpair,
-			       struct spdk_nvme_qpair_stats *stats);
-
-/**
- * Clear IO statistics counters of specified NVMe I/O qpair.
- *
- * \param qpair The NVMe qpair.
- */
-void spdk_nvme_qpair_reset_stats(struct spdk_nvme_qpair *qpair);
-
-/**
- * Enable I/O statistics collection for the specified NVMe I/O qpair.
- *
- * \param qpair The NVMe qpair.
- */
-void spdk_nvme_qpair_enable_stats(struct spdk_nvme_qpair *qpair);
-
-/**
- * Disable I/O statistics collection for the specified NVMe I/O qpair.
- *
- * This does not clear any previously collected statistics.
- *
- * \param qpair The NVMe qpair.
- */
-void spdk_nvme_qpair_disable_stats(struct spdk_nvme_qpair *qpair);
 
 /**
  * Determine whether qpair is admin qpair.

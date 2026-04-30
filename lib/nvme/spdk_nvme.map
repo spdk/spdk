@@ -209,10 +209,6 @@
 	spdk_nvme_qpair_set_abort_dnr;
 	spdk_nvme_qpair_is_connected;
 	spdk_nvme_qpair_authenticate;
-	spdk_nvme_qpair_get_stats;
-	spdk_nvme_qpair_reset_stats;
-	spdk_nvme_qpair_enable_stats;
-	spdk_nvme_qpair_disable_stats;
 	spdk_nvme_qpair_is_admin_queue;
 	spdk_nvme_qpair_get_queue_depth;
 

@@ -1321,37 +1321,6 @@ spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair)
 	return qpair->num_outstanding_reqs;
 }
 
-void
-spdk_nvme_qpair_get_stats(const struct spdk_nvme_qpair *qpair,
-			  struct spdk_nvme_qpair_stats *stats)
-{
-	assert(qpair != NULL && stats != NULL);
-
-	stats->io_stats = qpair->io_stats;
-	stats->num_outstanding_reqs = qpair->num_outstanding_reqs;
-}
-
-void
-spdk_nvme_qpair_reset_stats(struct spdk_nvme_qpair *qpair)
-{
-	assert(qpair != NULL);
-	memset(&qpair->io_stats, 0, sizeof(qpair->io_stats));
-}
-
-void
-spdk_nvme_qpair_enable_stats(struct spdk_nvme_qpair *qpair)
-{
-	assert(qpair != NULL);
-	qpair->collect_stats = 1;
-}
-
-void
-spdk_nvme_qpair_disable_stats(struct spdk_nvme_qpair *qpair)
-{
-	assert(qpair != NULL);
-	qpair->collect_stats = 0;
-}
-
 bool
 spdk_nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)
 {
