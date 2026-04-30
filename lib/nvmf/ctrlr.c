@@ -501,7 +501,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	if (ctrlr->subsys->opts.ana_reporting) {
 		ctrlr->feat.async_event_configuration.bits.ana_change_notice = 1;
 	}
-	ctrlr->feat.volatile_write_cache.bits.wce = 1;
+	ctrlr->feat.volatile_write_cache.bits.wce = subsystem->vwc_present ? 1 : 0;
 	/* Coalescing Disable */
 	ctrlr->feat.interrupt_vector_configuration.bits.cd = 1;
 
@@ -1835,14 +1835,45 @@ nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_DEBUGLOG(nvmf, "Set Features - Volatile Write Cache (cdw11 = 0x%0x)\n", cmd->cdw11);
 
-	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11;
-	ctrlr->feat.volatile_write_cache.bits.reserved = 0;
+	if (!ctrlr->subsys->vwc_present) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
-	SPDK_DEBUGLOG(nvmf, "Set Features - Volatile Write Cache %s\n",
-		      ctrlr->feat.volatile_write_cache.bits.wce ? "Enabled" : "Disabled");
+	if (cmd->cdw11_bits.feat_volatile_write_cache.bits.wce == 0) {
+		/* SPDK has no way to actually drain or bypass a backend write cache,
+		 * so disabling the cache cannot be honoured. Report it as not
+		 * changeable rather than silently accept and mislead the host. */
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_FEATURE_NOT_CHANGEABLE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* wce=1 is set at controller create when vwc_present is true and cannot be
+	 * changed by Set Features (wce=0 is rejected above). The only legal incoming
+	 * value at this point is 1, so accepting it is a no-op. */
+	assert(ctrlr->feat.volatile_write_cache.bits.wce == 1);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+nvmf_ctrlr_get_features_volatile_write_cache(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	if (!ctrlr->subsys->vwc_present) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	rsp->cdw0 = ctrlr->feat.volatile_write_cache.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -3289,7 +3320,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->cqes.min = 4;
 		cdata->cqes.max = 4;
 		cdata->nn = subsystem->max_nsid;
-		cdata->vwc.present = 1;
+		cdata->vwc.present = subsystem->vwc_present ? 1 : 0;
 		cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
 
 		cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
@@ -4059,7 +4090,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_ERROR_RECOVERY:
 		return get_features_generic(req, ctrlr->feat.error_recovery.raw);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
-		return get_features_generic(req, ctrlr->feat.volatile_write_cache.raw);
+		return nvmf_ctrlr_get_features_volatile_write_cache(req);
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 		return get_features_generic(req, ctrlr->feat.number_of_queues.raw);
 	case SPDK_NVME_FEAT_INTERRUPT_COALESCING:

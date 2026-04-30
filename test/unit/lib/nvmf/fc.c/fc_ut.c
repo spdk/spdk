@@ -38,6 +38,7 @@ DEFINE_STUB(spdk_nvme_transport_id_compare, int,
 	    (const struct spdk_nvme_transport_id *trid1,
 	     const struct spdk_nvme_transport_id *trid2), 0);
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "fc_ut_test");
+DEFINE_STUB(spdk_bdev_has_write_cache, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB_V(nvmf_ctrlr_destruct, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB_V(nvmf_qpair_free_aer, (struct spdk_nvmf_qpair *qpair));
 DEFINE_STUB_V(nvmf_qpair_abort_pending_zcopy_reqs, (struct spdk_nvmf_qpair *qpair));

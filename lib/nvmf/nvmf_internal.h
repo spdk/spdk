@@ -387,6 +387,9 @@ struct spdk_nvmf_subsystem {
 	/* FDP related fields */
 	bool						fdp_supported;
 
+	/* Volatile Write Cache (VWC) related fields */
+	bool						vwc_present;
+
 	/* Zoned storage related fields */
 	uint64_t					max_zone_append_size_kib;
 

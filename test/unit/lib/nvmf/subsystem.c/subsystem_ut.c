@@ -193,10 +193,16 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static struct spdk_bdev g_bdevs[] = {
-	{ .name = "bdev1" },
+	{ .name = "bdev1", .write_cache = 1 },
 	{ .name = "bdev2" },
 	{ .name = "bdev3", .ctratt.raw = 0x80000 },
 };
+
+bool
+spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
+{
+	return bdev->write_cache != 0;
+}
 
 struct spdk_bdev_desc {
 	struct spdk_bdev	*bdev;
@@ -359,6 +365,125 @@ test_spdk_nvmf_subsystem_add_fdp_ns(void)
 
 	free(subsystem.ns);
 	free(subsystem.ana_group);
+}
+
+static void
+test_spdk_nvmf_subsystem_vwc_present_no_ctrlrs(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_ns_opts ns_opts;
+	const char nqn[] = "nqn.2016-06.io.spdk:vwc_no_ctrlrs";
+	uint32_t nsid;
+	int rc;
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
+	RB_INIT(&tgt.subsystems);
+
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+
+	/* Empty subsystem advertises VWC.Present so a cache-backed namespace
+	 * can be attached later, including after a controller connects. */
+	CU_ASSERT(subsystem->vwc_present == true);
+
+	/* Adding a namespace without a write cache flips the cached value to false. */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 1;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 1);
+	CU_ASSERT(subsystem->vwc_present == false);
+
+	/* Adding a cache-backed namespace flips it back to true. */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 2;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, "bdev1", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 2);
+	CU_ASSERT(subsystem->vwc_present == true);
+
+	/* Removing the non-cache namespace keeps the cached value true (bdev1 still
+	 * provides cache). */
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(subsystem->vwc_present == true);
+
+	/* Removing the last cache namespace leaves the subsystem empty - cached
+	 * value resets to the empty-subsystem default (true). */
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, 2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(subsystem->vwc_present == true);
+
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	spdk_bit_array_free(&tgt.subsystem_ids);
+}
+
+static void
+test_spdk_nvmf_subsystem_vwc_present_with_ctrlrs(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_ns_opts ns_opts;
+	const char nqn[] = "nqn.2016-06.io.spdk:vwc_with_ctrlrs";
+	uint32_t nsid;
+	int rc;
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
+	RB_INIT(&tgt.subsystems);
+
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 1;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 1);
+	CU_ASSERT(subsystem->vwc_present == false);
+
+	ctrlr.subsys = subsystem;
+	ctrlr.dynamic_ctrlr = true;
+	ctrlr.visible_ns = spdk_bit_array_create(subsystem->max_nsid);
+	SPDK_CU_ASSERT_FATAL(ctrlr.visible_ns != NULL);
+	rc = nvmf_subsystem_add_ctrlr(subsystem, &ctrlr);
+	CU_ASSERT(rc == 0);
+
+	/* Adding a cache-backed namespace must be refused while controllers are
+	 * attached and the cached value is false. */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 2;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, "bdev1", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 0);
+	CU_ASSERT(subsystem->vwc_present == false);
+
+	/* Removing a namespace while controllers are attached is always allowed and
+	 * leaves the cached value unchanged. */
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(subsystem->vwc_present == false);
+
+	/* Last controller leaving triggers a refresh; empty subsystem returns to
+	 * the empty-subsystem default (true). */
+	nvmf_subsystem_remove_ctrlr(subsystem, &ctrlr);
+	CU_ASSERT(subsystem->vwc_present == true);
+
+	/* With no controllers attached, adding a cache-backed namespace is allowed
+	 * and the cached value is recomputed. */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 3;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, "bdev1", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 3);
+	CU_ASSERT(subsystem->vwc_present == true);
+
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, 3);
+	CU_ASSERT(rc == 0);
+
+	spdk_bit_array_free(&ctrlr.visible_ns);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -3725,6 +3850,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, nvmf_test_create_subsystem);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_ns);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_fdp_ns);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_no_ctrlrs);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_with_ctrlrs);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_set_sn);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_visible);
 	CU_ADD_TEST(suite, test_reservation_register);

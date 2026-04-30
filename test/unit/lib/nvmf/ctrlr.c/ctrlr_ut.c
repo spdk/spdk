@@ -2156,6 +2156,93 @@ test_identify_ctrlr_iocs_specific(void)
 	CU_ASSERT(cdata_nvm.dmsl == 0);
 }
 
+static void
+test_nvmf_ctrlr_vwc(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.opts = {.type = SPDK_NVMF_SUBTYPE_NVME},
+		.tgt = &tgt,
+	};
+	struct spdk_nvmf_transport_ops tops = { .type = SPDK_NVME_TRANSPORT_TCP };
+	struct spdk_nvmf_transport transport = {
+		.ops = &tops,
+		.opts = { .in_capsule_data_size = 4096 },
+	};
+	struct spdk_nvmf_qpair qpair = { .transport = &transport };
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .admin_qpair = &qpair };
+	struct spdk_nvme_ctrlr_data cdata = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_request req = { .qpair = &qpair, .cmd = &cmd, .rsp = &rsp };
+	int rc;
+
+	qpair.ctrlr = &ctrlr;
+	nvmf_ctrlr_cdata_init(&transport, &subsystem, &ctrlr.cdata);
+
+	/* VWC not supported: Identify Controller reports vwc.present=0; Get/Set
+	 * Features for the VWC FID return Invalid Field in Command. */
+	subsystem.vwc_present = false;
+	ctrlr.feat.volatile_write_cache.bits.wce = 0;
+
+	memset(&cdata, 0, sizeof(cdata));
+	rc = spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.vwc.present == 0);
+
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.cdw11_bits.feat_volatile_write_cache.bits.wce = 1;
+	rc = nvmf_ctrlr_set_features_volatile_write_cache(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+	CU_ASSERT(ctrlr.feat.volatile_write_cache.bits.wce == 0);
+
+	memset(&rsp, 0, sizeof(rsp));
+	rc = nvmf_ctrlr_get_features_volatile_write_cache(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* VWC supported: Identify reports vwc.present=1; Set wce=0 is refused as
+	 * Feature Not Changeable; Set wce=1 is accepted as a no-op; Get returns
+	 * wce=1. wce is set at controller create and stays at 1 for the lifetime
+	 * of the controller. */
+	subsystem.vwc_present = true;
+	ctrlr.feat.volatile_write_cache.bits.wce = 1;
+
+	memset(&cdata, 0, sizeof(cdata));
+	rc = spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.vwc.present == 1);
+	CU_ASSERT(cdata.vwc.flush_broadcast == SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED);
+
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.cdw11 = 0;
+	cmd.nvme_cmd.cdw11_bits.feat_volatile_write_cache.bits.wce = 0;
+	rc = nvmf_ctrlr_set_features_volatile_write_cache(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_FEATURE_NOT_CHANGEABLE);
+	CU_ASSERT(ctrlr.feat.volatile_write_cache.bits.wce == 1);
+
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.cdw11 = 0;
+	cmd.nvme_cmd.cdw11_bits.feat_volatile_write_cache.bits.wce = 1;
+	rc = nvmf_ctrlr_set_features_volatile_write_cache(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(ctrlr.feat.volatile_write_cache.bits.wce == 1);
+
+	memset(&rsp, 0, sizeof(rsp));
+	rc = nvmf_ctrlr_get_features_volatile_write_cache(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(rsp.nvme_cpl.cdw0 == 1);
+}
+
 static int
 custom_admin_cmd_hdlr(struct spdk_nvmf_request *req)
 {
@@ -2823,6 +2910,7 @@ test_nvmf_ctrlr_create_destruct(void)
 	subsystem.tgt = &tgt;
 	subsystem.opts.type = SPDK_NVMF_SUBTYPE_NVME;
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	subsystem.vwc_present = true;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
 	subsystem.ns = ns_arr;
 
@@ -3901,6 +3989,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_set_get_features);
 	CU_ADD_TEST(suite, test_identify_ctrlr);
 	CU_ADD_TEST(suite, test_identify_ctrlr_iocs_specific);
+	CU_ADD_TEST(suite, test_nvmf_ctrlr_vwc);
 	CU_ADD_TEST(suite, test_custom_admin_cmd);
 	CU_ADD_TEST(suite, test_fused_compare_and_write);
 	CU_ADD_TEST(suite, test_multi_async_event_reqs);
