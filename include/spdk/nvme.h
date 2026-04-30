@@ -1639,37 +1639,6 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 void spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * Statistics for an NVMe I/O qpair.
- */
-struct spdk_nvme_qpair_io_stats {
-	uint64_t read_ios;
-	uint64_t bytes_read;
-	uint64_t write_ios;
-	uint64_t bytes_written;
-	uint64_t submission_count;
-	uint64_t completion_count;
-};
-
-static inline void
-spdk_nvme_qpair_io_stats_update(struct spdk_nvme_qpair_io_stats *st,
-				const struct spdk_nvme_cmd *cmd,
-				size_t length)
-{
-	switch (cmd->opc) {
-	case SPDK_NVME_OPC_READ:
-		st->read_ios++;
-		st->bytes_read += length;
-		break;
-	case SPDK_NVME_OPC_WRITE:
-		st->write_ios++;
-		st->bytes_written += length;
-		break;
-	default:
-		break;
-	}
-}
-
-/**
  * Opaque handle to a queue pair.
  *
  * I/O queue pairs may be allocated using spdk_nvme_ctrlr_alloc_io_qpair().
