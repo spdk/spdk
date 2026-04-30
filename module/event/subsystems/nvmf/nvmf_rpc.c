@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2026, Oracle and/or its affiliates.
  */
 
 #include "event_nvmf.h"
@@ -148,6 +149,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
 	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests_bitmask, true},
 	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups_bitmask, true},
+	{"dup_host_policy", offsetof(struct spdk_nvmf_tgt_conf, opts.dup_host_policy), rpc_decode_nvmf_dup_host_policy, true},
 };
 
 static void

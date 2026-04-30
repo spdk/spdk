@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2026, Oracle and/or its affiliates.
  */
 
 #include "spdk/bdev.h"
@@ -2230,7 +2231,8 @@ out:
 static const struct spdk_json_object_decoder rpc_nvmf_create_target_decoders[] = {
 	{"name", offsetof(struct rpc_nvmf_create_target_ctx, name), spdk_json_decode_string},
 	{"max_subsystems", offsetof(struct rpc_nvmf_create_target_ctx, max_subsystems), spdk_json_decode_uint32, true},
-	{"discovery_filter", offsetof(struct rpc_nvmf_create_target_ctx, discovery_filter), decode_discovery_filter, true}
+	{"discovery_filter", offsetof(struct rpc_nvmf_create_target_ctx, discovery_filter), decode_discovery_filter, true},
+	{"dup_host_policy", offsetof(struct rpc_nvmf_create_target_ctx, dup_host_policy), rpc_decode_nvmf_dup_host_policy, true},
 };
 
 static void
@@ -2254,7 +2256,8 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 	snprintf(opts.name, NVMF_TGT_NAME_MAX_LENGTH, "%s", ctx.name);
 	opts.max_subsystems = ctx.max_subsystems;
 	opts.discovery_filter = ctx.discovery_filter;
-	opts.size = SPDK_SIZEOF(&opts, discovery_filter);
+	opts.dup_host_policy = (enum spdk_nvmf_subsystem_dup_host_policy)ctx.dup_host_policy;
+	opts.size = SPDK_SIZEOF(&opts, dup_host_policy);
 
 	if (spdk_nvmf_get_tgt(opts.name) != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

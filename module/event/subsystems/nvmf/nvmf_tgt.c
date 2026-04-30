@@ -2,6 +2,7 @@
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2026, Oracle and/or its affiliates.
  */
 
 #include "event_nvmf.h"
@@ -47,13 +48,14 @@ struct nvmf_tgt_poll_group {
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 	.opts = {
-		.size = SPDK_SIZEOF(&g_spdk_nvmf_tgt_conf.opts, dhchap_dhgroups),
+		.size = SPDK_SIZEOF(&g_spdk_nvmf_tgt_conf.opts, dup_host_policy),
 		.name = "nvmf_tgt",
 		.max_subsystems = 0,
 		.crdt = { 0, 0, 0 },
 		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
 		.dhchap_digests = NVMF_TGT_DEFAULT_DIGESTS,
 		.dhchap_dhgroups = NVMF_TGT_DEFAULT_DHGROUPS,
+		.dup_host_policy = SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW,
 	},
 	.admin_passthru.identify_ctrlr = false,
 	.admin_passthru.identify_uuid_list = false,
@@ -883,6 +885,19 @@ nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
 				     answers[g_spdk_nvmf_tgt_conf.opts.discovery_filter]);
 }
 
+static const char *
+nvmf_subsystem_dup_host_policy_str(enum spdk_nvmf_subsystem_dup_host_policy policy)
+{
+	switch (policy) {
+	case SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW:
+		return "allow";
+	case SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER:
+	default:
+		assert(policy == SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER);
+		return "restrict_per_listener";
+	}
+}
+
 static void
 nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
@@ -932,6 +947,8 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 		}
 	}
 	spdk_json_write_array_end(w);
+	spdk_json_write_named_string(w, "dup_host_policy",
+				     nvmf_subsystem_dup_host_policy_str(g_spdk_nvmf_tgt_conf.opts.dup_host_policy));
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 

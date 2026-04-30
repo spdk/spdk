@@ -27,6 +27,7 @@ The transport now selects a buffer from a pool based on IO size.
 Add TGT option _Duplicate Host Policy_ (`dup_host_policy`).
 This introduces an enumeration `spdk_nvmf_subsystem_dup_host_policy`, which defines modes of
 restricting hostid reuse across multiple controllers.
+The policy may be configured with the `dup_host_policy` parameter of the `nvmf_set_config` RPC.
 
 1. `_ALLOW` is the default and maintains standards compliant behavior.
 1. `_RESTRICT_PER_LISTENER` places the restriction at the listener level while supporting multipath.

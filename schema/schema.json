@@ -153,6 +153,13 @@
       ]
     },
     {
+      "name": "nvmf_dup_host_policy",
+      "fields": [
+        {"name": "allow", "value": "SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_ALLOW"},
+        {"name": "restrict_per_listener", "value": "SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER"}
+      ]
+    },
+    {
       "name": "oncs_feature",
       "fields": [
         {"name": "nvmcmps", "value": 0},
@@ -3781,6 +3788,12 @@
           "name": "discovery_filter",
           "type": "uint32",
           "description": "Comma-separated list of discovery filters: transport, address, svcid"
+        },
+        {
+          "name": "dup_host_policy",
+          "type": "enum",
+          "class": "nvmf_dup_host_policy",
+          "description": "Duplicate host policy"
         }
       ]
     },
@@ -4599,6 +4612,12 @@
           "type": "array",
           "class": "dhchap_dhgroups",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
+        },
+        {
+          "name": "dup_host_policy",
+          "type": "enum",
+          "class": "nvmf_dup_host_policy",
+          "description": "Duplicate host policy"
         }
       ]
     },

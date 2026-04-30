@@ -3,6 +3,7 @@
 #  All rights reserved.
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#  Copyright (c) 2026, Oracle and/or its affiliates.
 #
 
 import argparse
@@ -39,7 +40,8 @@ def add_parser(subparsers):
                                     poll_groups_mask=args.poll_groups_mask,
                                     discovery_filter=args.discovery_filter,
                                     dhchap_digests=args.dhchap_digests,
-                                    dhchap_dhgroups=args.dhchap_dhgroups)
+                                    dhchap_dhgroups=args.dhchap_dhgroups,
+                                    dup_host_policy=args.dup_host_policy)
 
     p = subparsers.add_parser('nvmf_set_config', help='Set NVMf target config')
     p.add_argument('-p', '--passthru-admin-cmds', dest='admin_cmd_passthru', help="""Comma-separated list of admin commands to be passthru
@@ -54,6 +56,8 @@ def add_parser(subparsers):
                    type=partial(str.split, sep=','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
                    type=partial(str.split, sep=','))
+    p.add_argument('--dup-host-policy', choices=['allow', 'restrict_per_listener'],
+                   help='Duplicate host policy')
     p.set_defaults(func=nvmf_set_config)
 
     oncs = ('nvmcmps', 'nvmdsmsv', 'nvmwzsv', 'reservs', 'nvmcpys')
