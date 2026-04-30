@@ -2180,7 +2180,7 @@ static int
 decode_discovery_filter(const struct spdk_json_val *val, void *out)
 {
 	uint32_t *_filter = out;
-	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
 	char *tokens = spdk_json_strdup(val);
 	char *tok;
 	char *sp = NULL;
@@ -2194,21 +2194,21 @@ decode_discovery_filter(const struct spdk_json_val *val, void *out)
 	tok = strtok_r(tokens, ",", &sp);
 	while (tok) {
 		if (strncmp(tok, "match_any", 9) == 0) {
-			if (filter != SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY) {
+			if (filter != SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY) {
 				goto out;
 			}
-			filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+			filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
 			all_specified = true;
 		} else {
 			if (all_specified) {
 				goto out;
 			}
 			if (strncmp(tok, "transport", 9) == 0) {
-				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE;
+				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE);
 			} else if (strncmp(tok, "address", 7) == 0) {
-				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
+				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS);
 			} else if (strncmp(tok, "svcid", 5) == 0) {
-				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
 			} else {
 				SPDK_ERRLOG("Invalid value %s\n", tok);
 				goto out;

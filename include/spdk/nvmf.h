@@ -48,16 +48,23 @@ struct spdk_nvmf_transport;
  */
 enum spdk_nvmf_tgt_discovery_filter {
 	/** Log all listeners in discovery log page */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY = 0,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
 	/** Only log listeners with the same transport type on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE = 1u << 0u,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE,
 	/** Only log listeners with the same transport address on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS = 1u << 1u,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS,
 	/** Only log listeners with the same transport svcid on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID = 1u << 2u,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID,
 	/** Check with custom discovery filter */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM = 1u << 3u
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM
 };
+
+/** \deprecated Use SPDK_NVMF_TGT_DISCOVERY_FILTER_* instead. */
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE)
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS)
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID)
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM)
 
 typedef bool (*spdk_nvmf_custom_discovery_filter)(
 	const struct spdk_nvme_transport_id *listener_trid,
@@ -403,7 +410,7 @@ const struct spdk_nvme_transport_id *spdk_nvmf_referral_get_trid(struct spdk_nvm
  * Set a custom discovery filter.
  *
  * For this to take effect, the target must be created with the
- * SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM flag set in the discovery_filter field.
+ * SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM flag set in the discovery_filter field.
  *
  * \param filter The custom discovery filter to set.
  */

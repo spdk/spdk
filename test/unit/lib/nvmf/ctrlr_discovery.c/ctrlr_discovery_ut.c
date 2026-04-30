@@ -552,12 +552,12 @@ test_discovery_log_with_filters(void)
 	memset(buffer, 0, sizeof(buffer));
 
 	/* Test case 1 - check that all trids are reported */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 8);
 
 	/* Test case 2 - check that only entries of the same transport type are returned */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE;
+	tgt.discovery_filter = SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE);
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 5);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_1.trtype);
@@ -575,7 +575,7 @@ test_discovery_log_with_filters(void)
 	CU_ASSERT(disc_log->entries[4].trtype == rdma_trid_4.trtype);
 
 	/* Test case 3 - check that only entries of the same transport address are returned */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
+	tgt.discovery_filter = SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS);
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 5);
 	/* 1 tcp and 3 rdma  */
@@ -597,8 +597,8 @@ test_discovery_log_with_filters(void)
 	CU_ASSERT(strcasecmp(disc_log->entries[4].traddr, rdma_trid_4.traddr) == 0);
 
 	/* Test case 4 - check that only entries of the same transport address and type returned */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
-			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
+	tgt.discovery_filter = SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE) |
+			       SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS);
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 4);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);
@@ -640,8 +640,8 @@ test_discovery_log_with_filters(void)
 	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	/* Test case 5 - check that only entries of the same transport address and type returned */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
-			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+	tgt.discovery_filter = SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE) |
+			       SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 4);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_1.trsvcid) == 0);
@@ -684,8 +684,8 @@ test_discovery_log_with_filters(void)
 
 	/* Test case 6 - check that only entries of the same transport address and type returned.
 	 * That also implies trtype since RDMA and TCP listeners can't occupy the same socket */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
-			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+	tgt.discovery_filter = SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS) |
+			       SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);
@@ -759,9 +759,9 @@ test_discovery_log_with_filters(void)
 	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	/* Test case 7 - check that only entries of the same transport address, svcid and type returned */
-	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
-			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
-			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+	tgt.discovery_filter = SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE) |
+			       SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS) |
+			       SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
 	test_nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
 	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);

@@ -236,7 +236,7 @@ test_nvmf_target_opts_copy_bounds_size(void)
 	src.opts.size = sizeof(src);
 	snprintf(src.opts.name, sizeof(src.opts.name), "%s", "nvmf_target");
 	src.opts.max_subsystems = 17;
-	src.opts.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	src.opts.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
 	memset(src.extra, 0x5a, sizeof(src.extra));
 
 	nvmf_target_opts_copy(&dst.opts, &src.opts, src.opts.size);
@@ -245,7 +245,7 @@ test_nvmf_target_opts_copy_bounds_size(void)
 	CU_ASSERT(dst.opts.size == sizeof(src));
 	CU_ASSERT_STRING_EQUAL(dst.opts.name, "nvmf_target");
 	CU_ASSERT(dst.opts.max_subsystems == 17);
-	CU_ASSERT(dst.opts.discovery_filter == SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY);
+	CU_ASSERT(dst.opts.discovery_filter == SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY);
 }
 
 int

@@ -69,28 +69,28 @@ nvmf_discovery_compare_trid(uint32_t filter,
 			    const struct spdk_nvme_transport_id *trid1,
 			    const struct spdk_nvme_transport_id *trid2)
 {
-	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE) != 0 &&
+	if ((filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE)) != 0 &&
 	    !nvmf_discovery_compare_trtype(trid1, trid2)) {
 		SPDK_DEBUGLOG(nvmf, "transport type mismatch between %d (%s) and %d (%s)\n",
 			      trid1->trtype, trid1->trstring, trid2->trtype, trid2->trstring);
 		return false;
 	}
 
-	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS) != 0 &&
+	if ((filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS)) != 0 &&
 	    !nvmf_discovery_compare_tr_addr(trid1, trid2)) {
 		SPDK_DEBUGLOG(nvmf, "transport addr mismatch between %s and %s\n",
 			      trid1->traddr, trid2->traddr);
 		return false;
 	}
 
-	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID) != 0 &&
+	if ((filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID)) != 0 &&
 	    !nvmf_discovery_compare_tr_svcid(trid1, trid2)) {
 		SPDK_DEBUGLOG(nvmf, "transport svcid mismatch between %s and %s\n",
 			      trid1->trsvcid, trid2->trsvcid);
 		return false;
 	}
 
-	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM) != 0 &&
+	if ((filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM)) != 0 &&
 	    g_custom_discovery_filter(trid1, trid2)) {
 		SPDK_DEBUGLOG(nvmf, "custom discovery filter mismatch\n");
 		return false;

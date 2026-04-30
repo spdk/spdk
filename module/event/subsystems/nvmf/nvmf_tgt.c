@@ -51,7 +51,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 		.name = "nvmf_tgt",
 		.max_subsystems = 0,
 		.crdt = { 0, 0, 0 },
-		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
+		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
 		.dhchap_digests = NVMF_TGT_DEFAULT_DIGESTS,
 		.dhchap_dhgroups = NVMF_TGT_DEFAULT_DHGROUPS,
 	},
@@ -871,9 +871,9 @@ nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
 		"transport,address,svcid"
 	};
 
-	if ((g_spdk_nvmf_tgt_conf.opts.discovery_filter & ~(SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
-			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
-			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID)) != 0) {
+	if ((g_spdk_nvmf_tgt_conf.opts.discovery_filter & ~(SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE) |
+			SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS) |
+			SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID))) != 0) {
 		SPDK_ERRLOG("Incorrect discovery filter %d\n", g_spdk_nvmf_tgt_conf.opts.discovery_filter);
 		assert(0);
 		return;

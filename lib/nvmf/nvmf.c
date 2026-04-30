@@ -521,7 +521,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 	struct spdk_nvmf_tgt *tgt, *tmp_tgt;
 	struct spdk_nvmf_target_opts opts = {
 		.max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS,
-		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
+		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
 	};
 
 	nvmf_target_opts_copy(&opts, _opts, _opts->size);
@@ -537,7 +537,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 		}
 	}
 
-	if ((opts.discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM) &&
+	if ((opts.discovery_filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM)) &&
 	    !g_custom_discovery_filter) {
 		SPDK_ERRLOG("Custom discovery filter callback is NULL.\n");
 		return NULL;

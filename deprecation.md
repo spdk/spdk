@@ -40,6 +40,9 @@ value names are deprecated and will be removed in v25.09. Use the
 `SPDK_BDEV_NVME_MULTIPATH_POLICY_*` and `SPDK_BDEV_NVME_MULTIPATH_SELECTOR_*`
 names instead.
 
+The `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` enum value names are deprecated and will be removed in v25.09.
+Use the `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` names instead.
+
 ### gpt
 
 #### `old_gpt_guid`
