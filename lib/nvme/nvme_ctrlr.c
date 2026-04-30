@@ -5242,7 +5242,10 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		return -1;
 	}
 
-	/* Current support only for image replacement/activation actions. */
+	/* Current support only for SPDK_NVME_FW_COMMIT_REPLACE_IMG
+	 * and SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG
+	 * and SPDK_NVME_FW_COMMIT_RUN_IMG
+	*/
 	if ((commit_action != SPDK_NVME_FW_COMMIT_REPLACE_IMG) &&
 	    (commit_action != SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG) &&
 	    (commit_action != SPDK_NVME_FW_COMMIT_RUN_IMG)) {
@@ -5322,10 +5325,6 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 
 			return res;
 		}
-	}
-
-	if (commit_action == SPDK_NVME_FW_COMMIT_RUN_IMG) {
-		return 0;
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);

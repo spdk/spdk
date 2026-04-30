@@ -34,13 +34,6 @@ if [ -z "$rv" ]; then
 	exit 1
 fi
 
-# b) Try to apply firmware with commit_action=3 from non existing file
-unset rv
-$rpc_py bdev_nvme_apply_firmware non_existing_file Nvme0n1 -c 3 || rv=$?
-if [ -z "$rv" ]; then
-	exit 1
-fi
-
 $rpc_py bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT

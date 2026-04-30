@@ -2387,7 +2387,7 @@
         {
           "name": "commit_action",
           "type": "uint32",
-          "description": "Firmware commit action (supported values: 0, 1, 3). Default is 1"
+          "description": "Firmware commit action (supported values: 1, 3). Default is 1"
         }
       ]
     },
