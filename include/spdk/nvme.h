@@ -1655,8 +1655,6 @@ spdk_nvme_qpair_io_stats_update(struct spdk_nvme_qpair_io_stats *st,
 				const struct spdk_nvme_cmd *cmd,
 				size_t length)
 {
-	st->completion_count++;
-
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 		st->read_ios++;

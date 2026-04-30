@@ -2,7 +2,6 @@
  *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *   Copyright (c) 2025 Dell Inc. or its subsidiaries. All Rights Reserved
  */
 
 #ifndef __NVME_INTERNAL_H__
@@ -505,9 +504,6 @@ struct spdk_nvme_qpair {
 
 	uint8_t					in_connect_poll : 1;
 
-	/* Flag for enabling/disabling statistics collection */
-	uint8_t					collect_stats: 1;
-
 	uint8_t					err_cmd_enabled: 1;
 
 	/* Number of IO outstanding at transport level */
@@ -526,8 +522,6 @@ struct spdk_nvme_qpair {
 	STAILQ_ENTRY(spdk_nvme_qpair)		poll_group_stailq;
 
 	struct spdk_nvme_transport_poll_group	*poll_group;
-
-	struct spdk_nvme_qpair_io_stats		io_stats;
 
 	/* Entries below here are not touched in the main I/O path. */
 	/** Commands opcode in this list will return error */
@@ -1643,10 +1637,6 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 {
 	struct spdk_nvme_cpl            err_cpl;
 	struct nvme_error_cmd           *cmd;
-
-	if (spdk_unlikely(qpair->collect_stats)) {
-		spdk_nvme_qpair_io_stats_update(&qpair->io_stats, &req->cmd, req->payload.size);
-	}
 
 	if (spdk_unlikely(req->accel_sequence != NULL)) {
 		assert(qpair->poll_group != NULL);
