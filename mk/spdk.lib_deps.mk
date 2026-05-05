@@ -184,10 +184,10 @@ DEPDIRS-event_scheduler := event init json log
 
 DEPDIRS-event_nbd := init nbd event_bdev
 ifeq ($(CONFIG_UBLK),y)
-DEPDIRS-event_ublk := init ublk event_bdev
+DEPDIRS-event_ublk := init ublk event_bdev event_iobuf
 endif
 DEPDIRS-event_nvmf := init nvme nvmf event_bdev event_scheduler event_sock event_keyring \
-		      thread log bdev util $(JSON_LIBS)
+		      event_accel event_iobuf thread log bdev util $(JSON_LIBS)
 DEPDIRS-event_scsi := init scsi event_bdev
 
 DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock

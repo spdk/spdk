@@ -46,3 +46,4 @@ static struct spdk_subsystem g_spdk_subsystem_ublk = {
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_ublk);
 SPDK_SUBSYSTEM_DEPEND(ublk, bdev)
+SPDK_SUBSYSTEM_DEPEND(ublk, iobuf)
