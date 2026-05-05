@@ -194,7 +194,10 @@ DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock
 DEPDIRS-event_vhost_blk := init vhost
 DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock log util thread
-DEPDIRS-event_vfu_tgt := init vfu_tgt
+DEPDIRS-event_vfu_tgt := init vfu_tgt event_bdev event_scsi
+ifeq ($(CONFIG_FSDEV),y)
+DEPDIRS-event_vfu_tgt += event_fsdev
+endif
 DEPDIRS-event_iobuf := init log thread util $(JSON_LIBS)
 DEPDIRS-event_keyring := init json keyring
 DEPDIRS-event_fsdev := init fsdev
