@@ -55,6 +55,20 @@ static sem_t *g_sem_init_id;
 static sem_t *g_sem_child_id;
 
 static void
+admin_poll(void)
+{
+	struct dev *dev;
+	int rc;
+
+	foreach_dev(dev) {
+		rc = spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+		if (rc < 0) {
+			g_failed = 1;
+		}
+	}
+}
+
+static void
 set_temp_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct dev *dev = cb_arg;
@@ -437,9 +451,7 @@ spdk_aer_temperature_test(void)
 	}
 
 	while (!g_failed && g_temperature_done < g_num_devs) {
-		foreach_dev(dev) {
-			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-		}
+		admin_poll();
 	}
 
 	if (g_failed) {
@@ -471,9 +483,7 @@ spdk_aer_temperature_test(void)
 
 		AER_PRINTF("Waiting for all controllers temperature threshold to be set lower\n");
 		while (!g_failed && (g_temperature_done < g_num_devs)) {
-			foreach_dev(dev) {
-				spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-			}
+			admin_poll();
 		}
 
 		if (g_failed) {
@@ -488,11 +498,7 @@ spdk_aer_temperature_test(void)
 	}
 	/* Waiting for AEN to be occur here. Each device will increment g_aer_done on an AEN */
 	while (!g_failed && (g_aer_done < g_num_devs)) {
-		foreach_dev(dev) {
-			if (spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr) < 0) {
-				g_failed = 1;
-			}
-		}
+		admin_poll();
 	}
 
 	if (g_failed) {
@@ -521,9 +527,7 @@ spdk_aer_changed_ns_test(void)
 	}
 
 	while (!g_failed && (g_aer_done < g_num_devs)) {
-		foreach_dev(dev) {
-			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-		}
+		admin_poll();
 	}
 
 	if (g_failed) {
@@ -698,10 +702,8 @@ main(int argc, char **argv)
 
 	AER_PRINTF("Cleaning up...\n");
 
-	while (g_outstanding_commands) {
-		foreach_dev(dev) {
-			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-		}
+	while (!g_failed && g_outstanding_commands) {
+		admin_poll();
 	}
 
 	/* Only one process cleans up at a time - let child go first */
@@ -714,9 +716,7 @@ main(int argc, char **argv)
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, NULL, NULL);
 	}
 
-	foreach_dev(dev) {
-		spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-	}
+	admin_poll();
 
 	foreach_dev(dev) {
 		spdk_nvme_detach_async(dev->ctrlr, &detach_ctx);
