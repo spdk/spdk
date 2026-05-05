@@ -227,6 +227,15 @@
         {"name": "SIGKILL", "value": "SIGKILL"},
         {"name": "SIGUSR1", "value": "SIGUSR1"}
       ]
+    },
+    {
+      "name": "dpdk_cryptodev_driver",
+      "fields": [
+        {"name": "crypto_aesni_mb", "value": "SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB"},
+        {"name": "crypto_qat",      "value": "SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT"},
+        {"name": "mlx5_pci",        "value": "SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI"},
+        {"name": "crypto_uadk",     "value": "SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK"}
+      ]
     }
   ],
   "objects": [
@@ -1078,9 +1087,10 @@
       "params": [
         {
           "name": "driver_name",
-          "type": "string",
+          "type": "enum",
+          "class": "dpdk_cryptodev_driver",
           "required": true,
-          "description": "DPDK crypto driver: crypto_aesni_mb, crypto_qat, crypto_uadk, mlx5_pci"
+          "description": "DPDK crypto PMD name"
         }
       ]
     },

@@ -197,7 +197,7 @@ accel_dpdk_cryptodev_enable(void)
 	spdk_accel_module_list_add(&g_accel_dpdk_cryptodev_module);
 }
 
-static const char *
+const char *
 accel_dpdk_cryptodev_driver_to_str(enum spdk_accel_dpdk_cryptodev_driver driver)
 {
 	if (driver < SPDK_COUNTOF(g_driver_names)) {
@@ -222,22 +222,17 @@ accel_dpdk_cryptodev_driver_from_str(const char *str, enum spdk_accel_dpdk_crypt
 }
 
 int
-accel_dpdk_cryptodev_set_driver(const char *driver_name)
+accel_dpdk_cryptodev_set_driver(enum spdk_accel_dpdk_cryptodev_driver driver)
 {
-	if (accel_dpdk_cryptodev_driver_from_str(driver_name, &g_dpdk_cryptodev_driver)) {
-		SPDK_ERRLOG("Unsupported driver %s\n", driver_name);
-		return -EINVAL;
-	}
-
-	SPDK_NOTICELOG("Using driver %s\n", driver_name);
+	g_dpdk_cryptodev_driver = driver;
+	SPDK_NOTICELOG("Using driver %s\n", accel_dpdk_cryptodev_driver_to_str(driver));
 
 	return 0;
 }
 
-const char *
-accel_dpdk_cryptodev_get_driver(void)
-{
-	return accel_dpdk_cryptodev_driver_to_str(g_dpdk_cryptodev_driver);
+enum spdk_accel_dpdk_cryptodev_driver
+accel_dpdk_cryptodev_get_driver(void) {
+	return g_dpdk_cryptodev_driver;
 }
 
 static inline uint16_t

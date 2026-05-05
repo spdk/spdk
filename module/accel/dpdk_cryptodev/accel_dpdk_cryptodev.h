@@ -11,7 +11,8 @@
 #include "spdk/module/accel/dpdk_cryptodev.h"
 
 void accel_dpdk_cryptodev_enable(void);
-int accel_dpdk_cryptodev_set_driver(const char *driver_name);
-const char *accel_dpdk_cryptodev_get_driver(void);
+int accel_dpdk_cryptodev_set_driver(enum spdk_accel_dpdk_cryptodev_driver driver);
+enum spdk_accel_dpdk_cryptodev_driver accel_dpdk_cryptodev_get_driver(void);
+const char *accel_dpdk_cryptodev_driver_to_str(enum spdk_accel_dpdk_cryptodev_driver driver);
 
 #endif /* SPDK_ACCEL_DPDK_CRYPTODEV_MODULE_H */
