@@ -216,6 +216,17 @@
         {"name": "INFO",    "value": "SPDK_LOG_INFO"},
         {"name": "DEBUG",   "value": "SPDK_LOG_DEBUG"}
       ]
+    },
+    {
+      "name": "kill_signal",
+      "fields": [
+        {"name": "SIGINT",  "value": "SIGINT"},
+        {"name": "SIGTERM", "value": "SIGTERM"},
+        {"name": "SIGQUIT", "value": "SIGQUIT"},
+        {"name": "SIGHUP",  "value": "SIGHUP"},
+        {"name": "SIGKILL", "value": "SIGKILL"},
+        {"name": "SIGUSR1", "value": "SIGUSR1"}
+      ]
     }
   ],
   "objects": [
@@ -564,9 +575,10 @@
       "params": [
         {
           "name": "sig_name",
-          "type": "string",
+          "type": "enum",
+          "class": "kill_signal",
           "required": true,
-          "description": "Signal to send: SIGINT, SIGTERM, SIGQUIT, SIGHUP, SIGKILL, SIGUSR1"
+          "description": "Signal to send"
         }
       ]
     },

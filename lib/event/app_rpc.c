@@ -21,58 +21,26 @@
 #include "event_internal.h"
 
 static const struct spdk_json_object_decoder rpc_spdk_kill_instance_decoders[] = {
-	{"sig_name", offsetof(struct rpc_spdk_kill_instance_ctx, sig_name), spdk_json_decode_string},
+	{"sig_name", offsetof(struct rpc_spdk_kill_instance_ctx, sig_name), rpc_decode_kill_signal},
 };
 
 static void
 rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	static const struct {
-		const char	*signal_string;
-		int32_t		signal;
-	} signals[] = {
-		{"SIGINT",	SIGINT},
-		{"SIGTERM",	SIGTERM},
-		{"SIGQUIT",	SIGQUIT},
-		{"SIGHUP",	SIGHUP},
-		{"SIGKILL",	SIGKILL},
-		{"SIGUSR1",	SIGUSR1},
-	};
-	size_t i, sig_count;
-	int signal;
 	struct rpc_spdk_kill_instance_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_spdk_kill_instance_decoders,
 				    SPDK_COUNTOF(rpc_spdk_kill_instance_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(app_rpc, "spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		return;
 	}
 
-	sig_count = SPDK_COUNTOF(signals);
-	signal = spdk_strtol(req.sig_name, 10);
-	for (i = 0 ; i < sig_count; i++) {
-		if (strcmp(req.sig_name, signals[i].signal_string) == 0 ||
-		    signal == signals[i].signal) {
-			break;
-		}
-	}
-
-	if (i == sig_count) {
-		goto invalid;
-	}
-
-	SPDK_DEBUGLOG(app_rpc, "sending signal %d\n", signals[i].signal);
-	free_rpc_spdk_kill_instance(&req);
-	kill(getpid(), signals[i].signal);
-
+	SPDK_DEBUGLOG(app_rpc, "sending signal %d\n", req.sig_name);
+	kill(getpid(), req.sig_name);
 	spdk_jsonrpc_send_bool_response(request, true);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_spdk_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("spdk_kill_instance", rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
 
