@@ -205,18 +205,34 @@ accel_dpdk_cryptodev_enable(void)
 	spdk_accel_module_list_add(&g_accel_dpdk_cryptodev_module);
 }
 
+static const char *
+accel_dpdk_cryptodev_driver_to_str(enum accel_dpdk_cryptodev_driver_type driver)
+{
+	if (driver < SPDK_COUNTOF(g_driver_names)) {
+		return g_driver_names[driver];
+	}
+	return NULL;
+}
+
+static int
+accel_dpdk_cryptodev_driver_from_str(const char *str, enum accel_dpdk_cryptodev_driver_type *out)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_driver_names); ++i) {
+		assert(g_driver_names[i]);
+		if (strcmp(str, g_driver_names[i]) == 0) {
+			*out = i;
+			return 0;
+		}
+	}
+	return -EINVAL;
+}
+
 int
 accel_dpdk_cryptodev_set_driver(const char *driver_name)
 {
-	if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_QAT) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_QAT;
-	} else if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_AESNI_MB) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
-	} else if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_MLX5) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI;
-	} else if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_UADK) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_UADK;
-	} else {
+	if (accel_dpdk_cryptodev_driver_from_str(driver_name, &g_dpdk_cryptodev_driver)) {
 		SPDK_ERRLOG("Unsupported driver %s\n", driver_name);
 		return -EINVAL;
 	}
@@ -229,7 +245,7 @@ accel_dpdk_cryptodev_set_driver(const char *driver_name)
 const char *
 accel_dpdk_cryptodev_get_driver(void)
 {
-	return g_driver_names[g_dpdk_cryptodev_driver];
+	return accel_dpdk_cryptodev_driver_to_str(g_dpdk_cryptodev_driver);
 }
 
 static inline uint16_t
@@ -1013,27 +1029,22 @@ accel_dpdk_cryptodev_create(uint8_t index, uint16_t num_lcores)
 	cdrv_id = device->cdev_info.driver_id;
 	cdev_id = device->cdev_id = index;
 
-	if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_QAT) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_QAT;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_AESNI_MB) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_MLX5) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS_MLX5;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_QAT_ASYM) == 0) {
-		/* ACCEL_DPDK_CRYPTODEV_QAT_ASYM devices are not supported at this time. */
+	/* QAT_ASYM is not supported; skip silently before the unknown-driver error path */
+	if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_QAT_ASYM) == 0) {
 		rc = 0;
 		goto err;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_UADK) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_UADK;
-	} else {
+	}
+
+	if (accel_dpdk_cryptodev_driver_from_str(device->cdev_info.driver_name, &device->type)) {
 		SPDK_ERRLOG("Failed to start device %u. Invalid driver name \"%s\"\n",
 			    cdev_id, device->cdev_info.driver_name);
 		rc = -EINVAL;
 		goto err;
+	}
+
+	device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
+	if (device->type == ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
+		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS_MLX5;
 	}
 
 	/* Before going any further, make sure we have enough resources for this
