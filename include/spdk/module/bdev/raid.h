@@ -21,6 +21,26 @@ enum spdk_bdev_raid_level {
 	SPDK_BDEV_RAID_LEVEL_CONCAT	= 99,
 };
 
+enum spdk_bdev_raid_state {
+	/* raid bdev is ready and is seen by upper layers */
+	SPDK_BDEV_RAID_STATE_ONLINE = 0,
+
+	/*
+	 * raid bdev is configuring, not all underlying bdevs are present.
+	 * And can't be seen by upper layers.
+	 */
+	SPDK_BDEV_RAID_STATE_CONFIGURING,
+
+	/*
+	 * In offline state, raid bdev layer will complete all incoming commands without
+	 * submitting to underlying base nvme bdevs
+	 */
+	SPDK_BDEV_RAID_STATE_OFFLINE,
+
+	/* raid bdev state max, new states should be added before this */
+	SPDK_BDEV_RAID_STATE_MAX,
+};
+
 #ifdef __cplusplus
 }
 #endif

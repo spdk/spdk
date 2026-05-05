@@ -42,7 +42,7 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_raid_get_bdevs_ctx req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
-	enum raid_bdev_state        state;
+	enum spdk_bdev_raid_state   state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
@@ -53,7 +53,7 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	}
 
 	state = raid_bdev_str_to_state(req.category);
-	if (state == RAID_BDEV_STATE_MAX && strcmp(req.category, "all") != 0) {
+	if (state == SPDK_BDEV_RAID_STATE_MAX && strcmp(req.category, "all") != 0) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
 		goto cleanup;
 	}
@@ -63,7 +63,7 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	/* Get raid bdev list based on the category requested */
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-		if (raid_bdev->state == state || state == RAID_BDEV_STATE_MAX) {
+		if (raid_bdev->state == state || state == SPDK_BDEV_RAID_STATE_MAX) {
 			char uuid_str[SPDK_UUID_STRING_LEN];
 
 			spdk_json_write_object_begin(w);

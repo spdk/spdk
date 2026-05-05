@@ -12,29 +12,6 @@
 
 #define RAID_BDEV_MIN_DATA_OFFSET_SIZE	(1024*1024) /* 1 MiB */
 
-/*
- * Raid state describes the state of the raid. This raid bdev can be either in
- * configured list or configuring list
- */
-enum raid_bdev_state {
-	/* raid bdev is ready and is seen by upper layers */
-	RAID_BDEV_STATE_ONLINE,
-
-	/*
-	 * raid bdev is configuring, not all underlying bdevs are present.
-	 * And can't be seen by upper layers.
-	 */
-	RAID_BDEV_STATE_CONFIGURING,
-
-	/*
-	 * In offline state, raid bdev layer will complete all incoming commands without
-	 * submitting to underlying base nvme bdevs
-	 */
-	RAID_BDEV_STATE_OFFLINE,
-
-	/* raid bdev state max, new states should be added before this */
-	RAID_BDEV_STATE_MAX
-};
 
 enum raid_process_type {
 	RAID_PROCESS_NONE,
@@ -196,7 +173,7 @@ struct raid_bdev {
 	uint32_t			strip_size_shift;
 
 	/* state of raid bdev */
-	enum raid_bdev_state		state;
+	enum spdk_bdev_raid_state	state;
 
 	/* number of base bdevs comprising raid bdev  */
 	uint8_t				num_base_bdevs;
@@ -261,8 +238,8 @@ int raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 struct raid_bdev *raid_bdev_find_by_name(const char *name);
 enum spdk_bdev_raid_level raid_bdev_str_to_level(const char *str);
 const char *raid_bdev_level_to_str(enum spdk_bdev_raid_level level);
-enum raid_bdev_state raid_bdev_str_to_state(const char *str);
-const char *raid_bdev_state_to_str(enum raid_bdev_state state);
+enum spdk_bdev_raid_state raid_bdev_str_to_state(const char *str);
+const char *raid_bdev_state_to_str(enum spdk_bdev_raid_state state);
 const char *raid_bdev_process_to_str(enum raid_process_type value);
 void raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w);
 int raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_action_cb cb_fn,
