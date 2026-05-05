@@ -185,7 +185,9 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                     newtype = bool
                 elif action.choices is not None:
                     if "class" not in param:
-                        # TODO: handle this case later and fix issues raised by it
+                        msg = f"TODO: {method['name']}: '{param['name']}' has choices but no 'class'"
+                        if not method['name'].startswith('bdev_'):
+                            raise ValueError(msg)
                         continue
                     choices = {x['name'] for x in schema_enums[param.get('class')]['fields']}
                     if choices != set(action.choices):
