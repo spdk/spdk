@@ -16,7 +16,7 @@
  * Decoder object for RPC get_raids
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_get_bdevs_decoders[] = {
-	{"category", offsetof(struct rpc_bdev_raid_get_bdevs_ctx, category), spdk_json_decode_string},
+	{"category", offsetof(struct rpc_bdev_raid_get_bdevs_ctx, category), rpc_decode_bdev_raid_state},
 };
 
 /*
@@ -42,20 +42,13 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_raid_get_bdevs_ctx req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
-	enum spdk_bdev_raid_state   state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
-		goto cleanup;
-	}
-
-	state = raid_bdev_str_to_state(req.category);
-	if (state == SPDK_BDEV_RAID_STATE_MAX && strcmp(req.category, "all") != 0) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
-		goto cleanup;
+		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -63,7 +56,8 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	/* Get raid bdev list based on the category requested */
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-		if (raid_bdev->state == state || state == SPDK_BDEV_RAID_STATE_MAX) {
+		if (raid_bdev->state == (enum spdk_bdev_raid_state)req.category ||
+		    req.category == RPC_BDEV_RAID_STATE_ALL) {
 			char uuid_str[SPDK_UUID_STRING_LEN];
 
 			spdk_json_write_object_begin(w);
@@ -76,9 +70,6 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
-
-cleanup:
-	free_rpc_bdev_raid_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("bdev_raid_get_bdevs", rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
 

@@ -125,6 +125,15 @@
       ]
     },
     {
+      "name": "bdev_raid_state",
+      "fields": [
+        {"name": "online", "value": "SPDK_BDEV_RAID_STATE_ONLINE"},
+        {"name": "configuring", "value": "SPDK_BDEV_RAID_STATE_CONFIGURING"},
+        {"name": "offline", "value": "SPDK_BDEV_RAID_STATE_OFFLINE"},
+        {"name": "all", "value": "SPDK_BDEV_RAID_STATE_MAX"}
+      ]
+    },
+    {
       "name": "dhchap_digest",
       "fields": [
         {"name": "sha256", "value": "SPDK_NVMF_DHCHAP_HASH_SHA256"},
@@ -5366,7 +5375,8 @@
       "params": [
         {
           "name": "category",
-          "type": "string",
+          "type": "enum",
+          "class": "bdev_raid_state",
           "required": true,
           "description": "all or online or configuring or offline"
         }

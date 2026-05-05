@@ -1378,21 +1378,6 @@ raid_bdev_level_to_str(enum spdk_bdev_raid_level level)
 	return "";
 }
 
-raid_bdev_state_t
-raid_bdev_str_to_state(const char *str)
-{
-	unsigned int i;
-
-	assert(str != NULL);
-
-	for (i = 0; i < SPDK_BDEV_RAID_STATE_MAX; i++) {
-		if (strcasecmp(g_raid_state_names[i], str) == 0) {
-			break;
-		}
-	}
-
-	return i;
-}
 
 const char *
 raid_bdev_state_to_str(enum spdk_bdev_raid_state state)

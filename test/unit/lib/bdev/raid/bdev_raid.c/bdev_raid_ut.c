@@ -899,11 +899,10 @@ create_raid_bdev_delete_req(struct rpc_bdev_raid_delete_ctx *r, const char *raid
 }
 
 static void
-create_get_raids_req(struct rpc_bdev_raid_get_bdevs_ctx *r, const char *category,
+create_get_raids_req(struct rpc_bdev_raid_get_bdevs_ctx *r, enum rpc_bdev_raid_state category,
 		     uint8_t json_decode_obj_err)
 {
-	r->category = strdup(category);
-	SPDK_CU_ASSERT_FATAL(r->category != NULL);
+	r->category = category;
 
 	g_rpc_req = r;
 	g_rpc_req_size = sizeof(*r);
@@ -1213,7 +1212,7 @@ test_multi_raid(void)
 		verify_raid_bdev(&construct_req[i], true, SPDK_BDEV_RAID_STATE_ONLINE);
 	}
 
-	create_get_raids_req(&get_raids_req, "all", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ALL, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_get_raids(construct_req, g_max_raids, g_get_raids_output, g_get_raids_count);
@@ -1221,7 +1220,7 @@ test_multi_raid(void)
 		free(g_get_raids_output[i]);
 	}
 
-	create_get_raids_req(&get_raids_req, "online", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ONLINE, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_get_raids(construct_req, g_max_raids, g_get_raids_output, g_get_raids_count);
@@ -1229,28 +1228,22 @@ test_multi_raid(void)
 		free(g_get_raids_output[i]);
 	}
 
-	create_get_raids_req(&get_raids_req, "configuring", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_CONFIGURING, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	create_get_raids_req(&get_raids_req, "offline", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_OFFLINE, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	create_get_raids_req(&get_raids_req, "invalid_category", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ALL, 1);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	create_get_raids_req(&get_raids_req, "all", 1);
-	rpc_bdev_raid_get_bdevs(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
-	free(get_raids_req.category);
-	CU_ASSERT(g_get_raids_count == 0);
-
-	create_get_raids_req(&get_raids_req, "all", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ALL, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == g_max_raids);
