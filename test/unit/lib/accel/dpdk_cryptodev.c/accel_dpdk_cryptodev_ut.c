@@ -298,15 +298,15 @@ test_setup(void)
 	TAILQ_INIT(&g_crypto_ch->queued_tasks);
 	TAILQ_INIT(&g_crypto_ch->completed_tasks);
 
-	g_aesni_crypto_dev.type = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
+	g_aesni_crypto_dev.type = SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
 	g_aesni_crypto_dev.qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
 	TAILQ_INIT(&g_aesni_crypto_dev.qpairs);
 
 	g_aesni_qp.device = &g_aesni_crypto_dev;
-	g_crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] = &g_aesni_qp;
+	g_crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] = &g_aesni_qp;
 
 	g_key_handle.device = &g_aesni_crypto_dev;
-	g_key_priv.driver = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
+	g_key_priv.driver = SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
 	g_key_priv.cipher = SPDK_ACCEL_CIPHER_AES_CBC;
 	TAILQ_INIT(&g_key_priv.dev_keys);
 	TAILQ_INSERT_TAIL(&g_key_priv.dev_keys, &g_key_handle, link);
@@ -394,7 +394,7 @@ test_error_paths(void)
 	task.base.crypto_key = &g_key;
 
 	/* case 2 - crypto key with wrong module_if  */
-	key_priv.driver = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
+	key_priv.driver = SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
 	key_priv.cipher = SPDK_ACCEL_CIPHER_AES_CBC;
 	TAILQ_INIT(&key_priv.dev_keys);
 	key.priv = &key_priv;
@@ -1468,29 +1468,29 @@ _check_expected_values(struct accel_dpdk_cryptodev_io_channel *crypto_ch,
 	num_qpairs = accel_dpdk_cryptodev_assign_device_qps(crypto_ch);
 	CU_ASSERT(num_qpairs == 3);
 
-	SPDK_CU_ASSERT_FATAL(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_QAT] != NULL);
-	CU_ASSERT(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_QAT]->index == expected_qat_index);
-	CU_ASSERT(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_QAT]->in_use == true);
+	SPDK_CU_ASSERT_FATAL(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT] != NULL);
+	CU_ASSERT(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT]->index == expected_qat_index);
+	CU_ASSERT(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT]->in_use == true);
 	CU_ASSERT(g_next_qat_index == next_qat_index);
-	SPDK_CU_ASSERT_FATAL(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] != NULL);
-	CU_ASSERT(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB]->in_use == true);
-	SPDK_CU_ASSERT_FATAL(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI] != NULL);
-	CU_ASSERT(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]->in_use == true);
+	SPDK_CU_ASSERT_FATAL(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] != NULL);
+	CU_ASSERT(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB]->in_use == true);
+	SPDK_CU_ASSERT_FATAL(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI] != NULL);
+	CU_ASSERT(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]->in_use == true);
 }
 
 static void
 test_assign_device_qp(void)
 {
 	struct accel_dpdk_cryptodev_device qat_dev = {
-		.type = ACCEL_DPDK_CRYPTODEV_DRIVER_QAT,
+		.type = SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT,
 		.qpairs = TAILQ_HEAD_INITIALIZER(qat_dev.qpairs)
 	};
 	struct accel_dpdk_cryptodev_device aesni_dev = {
-		.type = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB,
+		.type = SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB,
 		.qpairs = TAILQ_HEAD_INITIALIZER(aesni_dev.qpairs)
 	};
 	struct accel_dpdk_cryptodev_device mlx5_dev = {
-		.type = ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI,
+		.type = SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI,
 		.qpairs = TAILQ_HEAD_INITIALIZER(mlx5_dev.qpairs)
 	};
 	struct accel_dpdk_cryptodev_qp *qat_qps;
