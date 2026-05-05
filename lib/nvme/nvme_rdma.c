@@ -2313,6 +2313,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
+	struct ibv_pd *pd = NULL;
 
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
@@ -2334,14 +2335,10 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 		}
 	}
 
-	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
-
-	if (rqpair->cm_id) {
-		if (rqpair->rdma_qp) {
-			spdk_rdma_utils_put_pd(rqpair->rdma_qp->qp->pd);
-			spdk_rdma_provider_qp_destroy(rqpair->rdma_qp);
-			rqpair->rdma_qp = NULL;
-		}
+	if (rqpair->rdma_qp) {
+		pd = rqpair->rdma_qp->qp->pd;
+		spdk_rdma_provider_qp_destroy(rqpair->rdma_qp);
+		rqpair->rdma_qp = NULL;
 	}
 
 	if (rqpair->poller) {
@@ -2359,6 +2356,12 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	nvme_rdma_free_reqs(rqpair);
 	nvme_rdma_free_rsps(rqpair->rsps);
 	rqpair->rsps = NULL;
+
+	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
+
+	if (pd) {
+		spdk_rdma_utils_put_pd(pd);
+	}
 
 	/* destroy cm_id last so cma device will not be freed before we destroy the cq. */
 	if (rqpair->cm_id) {
