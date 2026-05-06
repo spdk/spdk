@@ -111,6 +111,13 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             if parameter.get('required', False) != (not optional[0]):
                 raise ValueError(f"For method {method['name']}: parameter '{parameter['name']}': 'required' field is mismatched")
             code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
+            if parameter['type'] in ('enum', 'array', 'object'):
+                if 'class' not in parameter:
+                    msg = f"Invalid 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc"
+                    if method['name'] == 'nvmf_set_config' and parameter['name'] == 'admin_cmd_passthru':
+                        pass
+                    else:
+                        raise ValueError(msg)
             if 'class' in parameter:
                 if parameter['type'] not in ('enum', 'array', 'object'):
                     raise ValueError(f"Invalid 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc")
