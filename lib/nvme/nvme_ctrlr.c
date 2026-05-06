@@ -3645,12 +3645,10 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
 		if (rc) {
-			nvme_ctrlr_free_async_event(async_event);
-			return;
+			break;
 		}
 
-		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
-					      ctrlr);
+		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states, ctrlr);
 		break;
 	default:
 		break;
