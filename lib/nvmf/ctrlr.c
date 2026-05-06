@@ -3213,7 +3213,12 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN) ||
+	/* Identify Namespace is namespace-scoped, so admin-passthru support alone
+	 * isn't enough to forward it: only bdevs backed by a real NVMe namespace
+	 * (passthru_nsid != 0) have their own namespace data to return. Everything
+	 * else keeps the fabric-generated Identify Namespace data. */
+	if (ns->passthru_nsid == 0 ||
+	    !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN) ||
 	    req->qpair->transport->opts.disable_command_passthru) {
 		spdk_nvmf_request_copy_from_buf(req, &nsdata, sizeof(nsdata));
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
