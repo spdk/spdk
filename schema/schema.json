@@ -4574,7 +4574,8 @@
       "params": [
         {
           "name": "admin_cmd_passthru",
-          "type": "array",
+          "type": "object",
+          "class": "nvmf_admin_cmd_passthru",
           "description": "Admin command passthru configuration"
         },
         {

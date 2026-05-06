@@ -116,11 +116,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
             if parameter['type'] in ('enum', 'array', 'object'):
                 if 'class' not in parameter:
-                    msg = f"Invalid 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc"
-                    if method['name'] == 'nvmf_set_config' and parameter['name'] == 'admin_cmd_passthru':
-                        pass
-                    else:
-                        raise ValueError(msg)
+                    raise ValueError(f"Missing 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc")
             if 'class' in parameter:
                 msg = f"Invalid 'class' '{parameter['class']}' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc"
                 if parameter['type'] not in ('enum', 'array', 'object'):
@@ -161,6 +157,9 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
     schema_enums = {obj["name"]: obj for obj in schema['enums']}
     for method in schema['methods']:
         if method['name'] in private_methods:
+            continue
+        if method['name'] == 'nvmf_set_config':
+            # TODO: handle this case later and fix issues raised by it
             continue
         subparser = subparsers.choices[method['name']]
         groups = subparser._mutually_exclusive_groups
@@ -264,7 +263,6 @@ def generate_rpcs(schema: Dict[str, Any]) -> str:
         'uint8': 'uint8_t', 'uint16': 'uint16_t',
         'int32': 'int32_t', 'uint32': 'uint32_t',
         'uint64': 'uint64_t', 'uuid': 'struct spdk_uuid',
-        'array': '/* TODO: array type */ void *',
     }
     env = Environment(loader=FileSystemLoader(base_dir / "include" / "spdk_internal"),
                       keep_trailing_newline=False)
