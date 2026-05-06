@@ -19,13 +19,13 @@ function run_fio() {
 	local end_bytes_read
 	local run_time=5
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 	start_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	start_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
 	$fio_py -p iscsi -i 1024 -d 128 -t randread -r $run_time
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 	end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	end_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 

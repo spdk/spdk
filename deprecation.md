@@ -27,11 +27,6 @@ The tags can be matched with the level 4 headers below.
 Use `spdk_bdev_get_memory_domain_types` and `get_memory_domain_types` instead.
 Will be removed in the v26.09 release.
 
-#### `bdev_get_iostat`
-
-`--name` option will be removed in the 26.05 release. `--names` option should be used instead,
-it allows providing array of devices names to obtain statistics from.
-
 ### bdev/nvme
 
 The `BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE`, `BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE`,

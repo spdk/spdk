@@ -521,7 +521,7 @@ function qd_sampling_function_test() {
 
 	$rpc_py bdev_set_qd_sampling_period $bdev_name $sampling_period
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 
 	qd_sampling_period=$(jq -r '.bdevs[0].queue_depth_polling_period' <<< "$iostats")
 
@@ -564,16 +564,16 @@ function stat_function_test() {
 	local io_count_per_channel2
 	local io_count_per_channel_all=0
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 	io_count1=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 
-	iostats_per_channel=$($rpc_py bdev_get_iostat -b $bdev_name -c)
+	iostats_per_channel=$($rpc_py bdev_get_iostat --names $bdev_name -c)
 	io_count_per_channel1=$(jq -r '.channels[0].num_read_ops' <<< "$iostats_per_channel")
 	io_count_per_channel_all=$((io_count_per_channel_all + io_count_per_channel1))
 	io_count_per_channel2=$(jq -r '.channels[1].num_read_ops' <<< "$iostats_per_channel")
 	io_count_per_channel_all=$((io_count_per_channel_all + io_count_per_channel2))
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 	io_count2=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 
 	# There is little time passed between the three iostats collected. So that

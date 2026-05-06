@@ -92,7 +92,7 @@ run_app "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x2 \
 	--json <(gen_nvmf_target_json) -j "$testdir/nvm_limits_bdevperf.conf" -t 1
 
 # Verify unmap operations reached the target's backing bdev.
-bytes_unmapped=$($rpc_py bdev_get_iostat -b Malloc0 | jq -r '.bdevs[0].bytes_unmapped')
+bytes_unmapped=$($rpc_py bdev_get_iostat --names Malloc0 | jq -r '.bdevs[0].bytes_unmapped')
 [[ $bytes_unmapped -gt 0 ]]
 
 $rpc_py nvmf_delete_subsystem $NQN

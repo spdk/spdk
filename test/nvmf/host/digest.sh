@@ -24,7 +24,7 @@ cleanup() {
 }
 
 get_transient_errcount() {
-	bperf_rpc bdev_get_iostat -b "$1" \
+	bperf_rpc bdev_get_iostat --names "$1" \
 		| jq -r '.bdevs[0]
 			| .driver_specific
 			| .nvme_error

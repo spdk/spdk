@@ -323,7 +323,6 @@ bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 static void
 free_rpc_bdev_get_iostat_ctx(struct rpc_bdev_get_iostat_ctx *r)
 {
-	free(r->name);
 	if (r->names.count == UINT32_MAX) {
 		/* No value was provided */
 		return;
@@ -332,14 +331,10 @@ free_rpc_bdev_get_iostat_ctx(struct rpc_bdev_get_iostat_ctx *r)
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_get_iostat_ctx, name), spdk_json_decode_string, true},
 	{"per_channel", offsetof(struct rpc_bdev_get_iostat_ctx, per_channel), spdk_json_decode_bool, true},
 	{"reset_mode", offsetof(struct rpc_bdev_get_iostat_ctx, reset_mode), rpc_decode_bdev_reset_stat_mode, true},
 	{"names", offsetof(struct rpc_bdev_get_iostat_ctx, names), rpc_decode_bdev_iostat_names, true},
 };
-
-SPDK_LOG_DEPRECATION_REGISTER(bdev_get_iostat_with_name,
-			      "--name option for bdev_get_iostat is deprecated", "v26.05", SPDK_LOG_DEPRECATION_ALWAYS);
 
 static void
 rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
@@ -348,7 +343,6 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_get_iostat_ctx req = { .reset_mode = RPC_BDEV_RESET_STAT_MODE_NONE, .names.count = UINT32_MAX };
 	struct rpc_get_iostat_ctx *rpc_ctx;
 	int rc;
-	static bool deprecated_name_option_used = false;
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_bdev_get_iostat_decoders,
@@ -359,25 +353,6 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 							 "spdk_json_decode_object failed");
 			free_rpc_bdev_get_iostat_ctx(&req);
 			return;
-		}
-
-		if (req.name && req.names.count != UINT32_MAX) {
-			SPDK_ERRLOG("Can't report statistics when both name and names provided\n");
-			rc = -EINVAL;
-			goto err;
-		}
-
-		if (req.name) {
-			if (!deprecated_name_option_used) {
-				SPDK_LOG_DEPRECATED(bdev_get_iostat_with_name);
-				deprecated_name_option_used = true;
-			}
-			req.names.items[0] = strdup(req.name);
-			if (!req.names.items[0]) {
-				rc = -ENOMEM;
-				goto err;
-			}
-			req.names.count = 1;
 		}
 	}
 

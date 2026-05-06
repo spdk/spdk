@@ -154,7 +154,8 @@ class UIBdev(UINode):
             UIBdevObj(bdev, self)
 
     def ui_command_get_bdev_iostat(self, name=None):
-        ret = self.get_root().bdev_get_iostat(name=name)
+        kwargs = {"names": [name]} if name is not None else {}
+        ret = self.get_root().bdev_get_iostat(**kwargs)
         self.shell.log.info(json.dumps(ret, indent=2))
 
     def ui_command_delete_all(self):

@@ -1007,7 +1007,6 @@ def add_parser(subparsers):
 
     def bdev_get_iostat(args):
         print_dict(args.client.bdev_get_iostat(
-                                            name=args.name,
                                             per_channel=args.per_channel,
                                             reset_mode=args.reset_mode,
                                             names=args.names))
@@ -1017,11 +1016,9 @@ def add_parser(subparsers):
     p.add_argument('-c', '--per-channel', default=False, dest='per_channel', help='Display per channel IO stats for specified device',
                    action='store_true')
     p.add_argument('--reset-mode', help="Mode to reset I/O statistics after getting", choices=['all', 'maxmin', 'error', 'none'])
+    p.add_argument('--names', type=partial(str.split, sep=','),
+                   help='Bdev names to obtain I/O statistics from, comma-separated list in quotes')
     p.set_defaults(func=bdev_get_iostat)
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
-    group.add_argument('--names', type=partial(str.split, sep=','),
-                       help='Bdev names to obtain I/O statistics from, comma-separated list in quotes')
 
     def bdev_reset_iostat(args):
         args.client.bdev_reset_iostat(name=args.name, mode=args.mode)

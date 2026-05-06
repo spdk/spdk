@@ -1202,11 +1202,6 @@
       "name": "bdev_get_iostat",
       "params": [
         {
-          "name": "name",
-          "type": "string",
-          "description": "Block device name"
-        },
-        {
           "name": "names",
           "type": "array",
           "class": "bdev_iostat_names",
