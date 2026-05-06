@@ -41,7 +41,8 @@ DEFINE_STUB(spdk_accel_append_dif_generate_copy, int,
 	     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 	     spdk_accel_step_cb cb_fn, void *cb_arg), 0);
 #endif
-DEFINE_STUB(spdk_accel_get_memory_domain, struct spdk_memory_domain *, (void), NULL);
+DEFINE_STUB(spdk_accel_get_memory_domain, struct spdk_memory_domain *, (void),
+	    (struct spdk_memory_domain *)1);
 DEFINE_STUB(spdk_accel_get_buf, int, (struct spdk_io_channel *ch, uint64_t len, void **buf,
 				      struct spdk_memory_domain **domain, void **domain_ctx), 0);
 DEFINE_STUB_V(spdk_accel_put_buf, (struct spdk_io_channel *ch, void *buf,
