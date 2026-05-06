@@ -15,11 +15,213 @@
 
 #include "bdev/bdev.c"
 
+#define MOCK_ACCEL_SEQUENCE_FINISH
+#define MOCK_ACCEL_DIF_FUNCTIONS
 #include "common/lib/bdev/common_stubs.h"
 
 static bool g_memory_domain_pull_data_called;
 static bool g_memory_domain_push_data_called;
 static int g_accel_io_device;
+
+/* Mock accel sequence infrastructure for testing DIF generate/verify copy.
+ * Operations are stored and executed when spdk_accel_sequence_finish is called. */
+
+enum mock_accel_op_type {
+	MOCK_ACCEL_OP_DIF_GENERATE_COPY,
+	MOCK_ACCEL_OP_DIF_VERIFY_COPY,
+};
+
+struct mock_accel_op {
+	enum mock_accel_op_type type;
+	struct iovec *dst_iovs;
+	int dst_iovcnt;
+	struct iovec *src_iovs;
+	int src_iovcnt;
+	uint32_t num_blocks;
+	struct spdk_dif_ctx ctx;
+	struct spdk_dif_error *err;
+	TAILQ_ENTRY(mock_accel_op) link;
+};
+
+struct spdk_accel_sequence {
+	TAILQ_HEAD(, mock_accel_op) ops;
+};
+
+#define MAX_MOCK_ACCEL_SEQUENCES 16
+static struct spdk_accel_sequence g_mock_sequences[MAX_MOCK_ACCEL_SEQUENCES];
+static bool g_mock_sequence_used[MAX_MOCK_ACCEL_SEQUENCES];
+
+#define MAX_MOCK_ACCEL_OPS 32
+static struct mock_accel_op g_mock_ops[MAX_MOCK_ACCEL_OPS];
+static bool g_mock_op_used[MAX_MOCK_ACCEL_OPS];
+
+static struct spdk_accel_sequence *
+mock_sequence_alloc(void)
+{
+	int i;
+
+	for (i = 0; i < MAX_MOCK_ACCEL_SEQUENCES; i++) {
+		if (!g_mock_sequence_used[i]) {
+			g_mock_sequence_used[i] = true;
+			TAILQ_INIT(&g_mock_sequences[i].ops);
+			return &g_mock_sequences[i];
+		}
+	}
+	return NULL;
+}
+
+static void
+mock_sequence_free(struct spdk_accel_sequence *seq)
+{
+	struct mock_accel_op *op;
+	int idx;
+
+	while (!TAILQ_EMPTY(&seq->ops)) {
+		op = TAILQ_FIRST(&seq->ops);
+		TAILQ_REMOVE(&seq->ops, op, link);
+		idx = (int)(op - g_mock_ops);
+		g_mock_op_used[idx] = false;
+	}
+
+	idx = (int)(seq - g_mock_sequences);
+	g_mock_sequence_used[idx] = false;
+}
+
+static struct mock_accel_op *
+mock_op_alloc(void)
+{
+	int i;
+
+	for (i = 0; i < MAX_MOCK_ACCEL_OPS; i++) {
+		if (!g_mock_op_used[i]) {
+			g_mock_op_used[i] = true;
+			memset(&g_mock_ops[i], 0, sizeof(g_mock_ops[i]));
+			return &g_mock_ops[i];
+		}
+	}
+	return NULL;
+}
+
+void
+spdk_accel_sequence_finish(struct spdk_accel_sequence *seq, spdk_accel_completion_cb cb_fn,
+			   void *cb_arg)
+{
+	struct mock_accel_op *op;
+	int rc = 0;
+
+	TAILQ_FOREACH(op, &seq->ops, link) {
+		switch (op->type) {
+		case MOCK_ACCEL_OP_DIF_GENERATE_COPY:
+			rc = spdk_dif_generate_copy(op->src_iovs, op->src_iovcnt,
+						    op->dst_iovs, op->dst_iovcnt,
+						    op->num_blocks, &op->ctx);
+			break;
+		case MOCK_ACCEL_OP_DIF_VERIFY_COPY:
+			rc = spdk_dif_verify_copy(op->dst_iovs, op->dst_iovcnt,
+						  op->src_iovs, op->src_iovcnt,
+						  op->num_blocks, &op->ctx,
+						  op->err);
+			break;
+		}
+
+		if (rc != 0) {
+			break;
+		}
+	}
+
+	mock_sequence_free(seq);
+	cb_fn(cb_arg, rc);
+}
+
+void
+spdk_accel_sequence_reverse(struct spdk_accel_sequence *seq)
+{
+	struct mock_accel_op *op, *tmp;
+	TAILQ_HEAD(, mock_accel_op) reversed;
+
+	TAILQ_INIT(&reversed);
+	TAILQ_FOREACH_SAFE(op, &seq->ops, link, tmp) {
+		TAILQ_REMOVE(&seq->ops, op, link);
+		TAILQ_INSERT_HEAD(&reversed, op, link);
+	}
+	TAILQ_SWAP(&seq->ops, &reversed, mock_accel_op, link);
+}
+
+void
+spdk_accel_sequence_abort(struct spdk_accel_sequence *seq)
+{
+	mock_sequence_free(seq);
+}
+
+static int
+mock_accel_append_dif_op(struct spdk_accel_sequence **pseq, enum mock_accel_op_type type,
+			 struct iovec *dst_iovs, size_t dst_iovcnt,
+			 struct iovec *src_iovs, size_t src_iovcnt,
+			 uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+			 struct spdk_dif_error *err)
+{
+	struct spdk_accel_sequence *seq = *pseq;
+	struct mock_accel_op *op;
+
+	if (seq == NULL) {
+		seq = mock_sequence_alloc();
+		if (seq == NULL) {
+			return -ENOMEM;
+		}
+	}
+
+	op = mock_op_alloc();
+	if (op == NULL) {
+		if (*pseq == NULL) {
+			mock_sequence_free(seq);
+		}
+		return -ENOMEM;
+	}
+
+	op->type = type;
+	op->dst_iovs = dst_iovs;
+	op->dst_iovcnt = (int)dst_iovcnt;
+	op->src_iovs = src_iovs;
+	op->src_iovcnt = (int)src_iovcnt;
+	op->num_blocks = num_blocks;
+	op->ctx = *ctx;
+	op->err = err;
+
+	TAILQ_INSERT_TAIL(&seq->ops, op, link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
+spdk_accel_append_dif_verify_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+				  struct iovec *dst_iovs, size_t dst_iovcnt,
+				  struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				  struct iovec *src_iovs, size_t src_iovcnt,
+				  struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				  uint32_t num_blocks,
+				  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				  spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	return mock_accel_append_dif_op(pseq, MOCK_ACCEL_OP_DIF_VERIFY_COPY,
+					dst_iovs, dst_iovcnt, src_iovs, src_iovcnt,
+					num_blocks, ctx, err);
+}
+
+int
+spdk_accel_append_dif_generate_copy(struct spdk_accel_sequence **pseq,
+				    struct spdk_io_channel *ch,
+				    struct iovec *dst_iovs, size_t dst_iovcnt,
+				    struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				    struct iovec *src_iovs, size_t src_iovcnt,
+				    struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				    uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+				    spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	return mock_accel_append_dif_op(pseq, MOCK_ACCEL_OP_DIF_GENERATE_COPY,
+					dst_iovs, dst_iovcnt, src_iovs, src_iovcnt,
+					num_blocks, ctx, NULL);
+}
 
 DEFINE_RETURN_MOCK(spdk_memory_domain_pull_data, int);
 int
@@ -8346,6 +8548,237 @@ bdev_io_iobuf_wait_abort(void)
 	ut_fini_bdev();
 }
 
+static void
+bdev_io_hide_metadata_split(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_bdev_open_opts open_opts;
+	struct spdk_io_channel *io_ch;
+	uint32_t data_block_size = 512;
+	uint32_t md_len = 8;
+	uint32_t blocklen = data_block_size + md_len;
+	uint32_t num_blocks = 8;
+	char *io_buf;
+	struct iovec iov;
+	struct ut_expected_io *expected_io;
+	struct bdev_ut_io *bio;
+	struct spdk_bdev_io *bdev_io;
+	uint8_t *bounce_buf;
+	char *expected;
+	uint32_t i, j;
+	int rc;
+
+	ut_init_bdev(NULL);
+
+	bdev = allocate_bdev("bdev0");
+	bdev->md_interleave = true;
+	bdev->md_len = md_len;
+	bdev->blocklen = blocklen;
+
+	spdk_bdev_open_opts_init(&open_opts, sizeof(open_opts));
+	open_opts.hide_metadata = true;
+
+	rc = spdk_bdev_open_ext_v2("bdev0", true, bdev_ut_event_cb, NULL, &open_opts, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	bdev->optimal_io_boundary = 16;
+	bdev->split_on_optimal_io_boundary = true;
+
+	io_buf = calloc(1, data_block_size * num_blocks);
+	SPDK_CU_ASSERT_FATAL(io_buf != NULL);
+	expected = calloc(1, data_block_size * num_blocks);
+	SPDK_CU_ASSERT_FATAL(expected != NULL);
+
+	/* Fill buffer with a known pattern */
+	for (i = 0; i < data_block_size * num_blocks; i++) {
+		io_buf[i] = (char)(i % 251);
+	}
+
+	iov.iov_base = io_buf;
+	iov.iov_len = data_block_size * num_blocks;
+
+	/* === No-split write: offset 0, length 2, boundary 16 ===
+	 * Verify that the bounce buffer submitted to the bdev module contains
+	 * data in interleaved format: [512B data | 8B md] per block.
+	 */
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 0, 2, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 0, 2, io_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	/* Inspect the bounce buffer before completing the IO */
+	bio = TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io);
+	SPDK_CU_ASSERT_FATAL(bio != NULL);
+	bdev_io = spdk_bdev_io_from_ctx(bio);
+	CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
+	CU_ASSERT(bdev_io->u.bdev.iovs[0].iov_len == 2 * blocklen);
+	bounce_buf = bdev_io->u.bdev.iovs[0].iov_base;
+
+	/* Each block in the bounce buffer should have: data from io_buf followed by md gap */
+	for (i = 0; i < 2; i++) {
+		CU_ASSERT(memcmp(bounce_buf + i * blocklen,
+				 io_buf + i * data_block_size,
+				 data_block_size) == 0);
+	}
+
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* === No-split read: offset 0, length 2, boundary 16 ===
+	 * Fill the bounce buffer with known interleaved data before completing,
+	 * then verify user buffer gets the data-only portion.
+	 */
+	memset(io_buf, 0, data_block_size * num_blocks);
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 0, 2, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 0, 2, io_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	/* Fill the bounce buffer with known interleaved data before completing */
+	bio = TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io);
+	SPDK_CU_ASSERT_FATAL(bio != NULL);
+	bdev_io = spdk_bdev_io_from_ctx(bio);
+	CU_ASSERT(bdev_io->u.bdev.iovs[0].iov_len == 2 * blocklen);
+	bounce_buf = bdev_io->u.bdev.iovs[0].iov_base;
+
+	for (i = 0; i < 2; i++) {
+		for (j = 0; j < data_block_size; j++) {
+			bounce_buf[i * blocklen + j] = (i * blocklen + j) % 251;
+		}
+		memset(bounce_buf + i * blocklen + data_block_size, 0xDD, md_len);
+	}
+
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Verify user buffer has data-only portions stripped from the bounce buffer */
+	for (i = 0; i < 2; i++) {
+		for (j = 0; j < data_block_size; j++) {
+			expected[i * data_block_size + j] = (i * blocklen + j) % 251;
+		}
+	}
+	CU_ASSERT(memcmp(io_buf, expected, 2 * data_block_size) == 0);
+
+	/* === Split write: offset 14, length 8, boundary 16 => [14,2] + [16,6] ===
+	 * Verify both child IOs' bounce buffers contain correct interleaved data.
+	 */
+	for (i = 0; i < data_block_size * num_blocks; i++) {
+		io_buf[i] = (char)(i % 251);
+	}
+
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 14, 2, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 6, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 14, 8, io_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	/* Check first child IO: 2 blocks starting at offset 14 in parent buffer */
+	bio = TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io);
+	SPDK_CU_ASSERT_FATAL(bio != NULL);
+	bdev_io = spdk_bdev_io_from_ctx(bio);
+	CU_ASSERT(bdev_io->u.bdev.num_blocks == 2);
+	bounce_buf = bdev_io->u.bdev.iovs[0].iov_base;
+
+	for (i = 0; i < 2; i++) {
+		CU_ASSERT(memcmp(bounce_buf + i * blocklen,
+				 io_buf + i * data_block_size,
+				 data_block_size) == 0);
+	}
+
+	/* Check second child IO: 6 blocks starting at offset 2 in parent buffer */
+	bio = TAILQ_NEXT(bio, link);
+	SPDK_CU_ASSERT_FATAL(bio != NULL);
+	bdev_io = spdk_bdev_io_from_ctx(bio);
+	CU_ASSERT(bdev_io->u.bdev.num_blocks == 6);
+	bounce_buf = bdev_io->u.bdev.iovs[0].iov_base;
+
+	for (i = 0; i < 6; i++) {
+		CU_ASSERT(memcmp(bounce_buf + i * blocklen,
+				 io_buf + (2 + i) * data_block_size,
+				 data_block_size) == 0);
+	}
+
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* === Split read: offset 14, length 8, boundary 16 => [14,2] + [16,6] ===
+	 * Fill both child IOs' bounce buffers with known data, then verify
+	 * user buffer gets reassembled correctly.
+	 */
+	memset(io_buf, 0, data_block_size * num_blocks);
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 14, 2, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 6, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 14, 8, io_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	/* Fill first child IO bounce buffer: 2 blocks */
+	bio = TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io);
+	SPDK_CU_ASSERT_FATAL(bio != NULL);
+	bdev_io = spdk_bdev_io_from_ctx(bio);
+	bounce_buf = bdev_io->u.bdev.iovs[0].iov_base;
+
+	for (i = 0; i < 2; i++) {
+		for (j = 0; j < data_block_size; j++) {
+			bounce_buf[i * blocklen + j] = (i * blocklen + j) % 251;
+		}
+		memset(bounce_buf + i * blocklen + data_block_size, 0xDD, md_len);
+	}
+
+	/* Fill second child IO bounce buffer: 6 blocks, continuing the pattern */
+	bio = TAILQ_NEXT(bio, link);
+	SPDK_CU_ASSERT_FATAL(bio != NULL);
+	bdev_io = spdk_bdev_io_from_ctx(bio);
+	bounce_buf = bdev_io->u.bdev.iovs[0].iov_base;
+
+	for (i = 0; i < 6; i++) {
+		for (j = 0; j < data_block_size; j++) {
+			bounce_buf[i * blocklen + j] = ((2 + i) * blocklen + j) % 251;
+		}
+		memset(bounce_buf + i * blocklen + data_block_size, 0xDD, md_len);
+	}
+
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Verify user buffer: first 2 blocks from child 1, next 6 from child 2 */
+	for (i = 0; i < num_blocks; i++) {
+		for (j = 0; j < data_block_size; j++) {
+			expected[i * data_block_size + j] = (i * blocklen + j) % 251;
+		}
+	}
+	CU_ASSERT(memcmp(io_buf, expected, num_blocks * data_block_size) == 0);
+
+	free(expected);
+	free(io_buf);
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8427,6 +8860,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_io_init_dif_ctx_test);
 	CU_ADD_TEST(suite, bdev_io_dif_error_status_test);
 	CU_ADD_TEST(suite, bdev_io_iobuf_wait_abort);
+	CU_ADD_TEST(suite, bdev_io_hide_metadata_split);
 
 	allocate_cores(1);
 	allocate_threads(1);
