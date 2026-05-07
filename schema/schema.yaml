@@ -42,6 +42,12 @@ enums:
         value: SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET
       - name: abort
         value: SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT
+  - name: bdev_nvme_fw_commit_action
+    fields:
+      - name: replace_and_enable
+        value: SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG
+      - name: activate_immediate
+        value: SPDK_NVME_FW_COMMIT_RUN_IMG
   - name: bdev_error_inject_io_type
     fields:
       - name: clear
@@ -2455,6 +2461,10 @@ methods:
         type: string
         required: true
         description: Name of the NVMe block device
+      - name: commit_action
+        type: enum
+        class: bdev_nvme_fw_commit_action
+        description: 'Firmware commit action. replace_and_enable: activate at next reset. activate_immediate: activate immediately. Default: replace_and_enable'
   - name: bdev_nvme_get_transport_statistics
     description: Get bdev_nvme poll group transport statistics.
     params: []

@@ -422,11 +422,14 @@ def add_parser(subparsers):
     def bdev_nvme_apply_firmware(args):
         print_dict(args.client.bdev_nvme_apply_firmware(
                                                      bdev_name=args.bdev_name,
-                                                     filename=args.filename))
+                                                     filename=args.filename,
+                                                     commit_action=args.commit_action))
 
     p = subparsers.add_parser('bdev_nvme_apply_firmware', help='Download and commit firmware to NVMe device')
     p.add_argument('filename', help='filename of the firmware to download')
     p.add_argument('bdev_name', help='name of the NVMe device')
+    p.add_argument('commit_action', choices=['replace_and_enable', 'activate_immediate'], nargs='?',
+                   help='Firmware commit action (replace_and_enable: activate at next reset, activate_immediate: activate immediately)')
     p.set_defaults(func=bdev_nvme_apply_firmware)
 
     def bdev_nvme_get_transport_statistics(args):

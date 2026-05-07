@@ -28,9 +28,13 @@ if [ -f non_existing_file ]; then
 	exit 1
 fi
 
-# a) Try to apply firmware from non existing file
-$rpc_py bdev_nvme_apply_firmware non_existing_file Nvme0n1 || rv=$?
-if [ -z "$rv" ]; then
+# a) Try to apply firmware from non existing file (default commit_action)
+if $rpc_py bdev_nvme_apply_firmware non_existing_file Nvme0n1; then
+	exit 1
+fi
+
+# b) Try to apply firmware with explicit commit_action
+if $rpc_py bdev_nvme_apply_firmware non_existing_file Nvme0n1 activate_immediate; then
 	exit 1
 fi
 

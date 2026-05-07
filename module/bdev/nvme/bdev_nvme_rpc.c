@@ -687,21 +687,65 @@ apply_firmware_cleanup(struct firmware_update_info *firm_ctx)
 }
 
 static void
-apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+apply_firmware_complete_commit(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct firmware_update_info *firm_ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
+	uint32_t cdw0;
+	int sct, sc;
 
 	assert(spdk_thread_is_app_thread(NULL));
+
+	/* NVMe status must be read before freeing the bdev_io */
+	spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
 
 	spdk_bdev_free_io(bdev_io);
 
 	if (!success) {
+		if (sct == SPDK_NVME_SCT_COMMAND_SPECIFIC) {
+			switch (sc) {
+			case SPDK_NVME_SC_FIRMWARE_REQ_RESET:
+				/* The commit succeeded and only activation is deferred, so a
+				 * Controller Level Reset - what spdk_nvme_ctrlr_reset() performs -
+				 * is required regardless of the requested commit action. */
+				goto reset;
+			case SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET:
+				w = spdk_jsonrpc_begin_result(firm_ctx->request);
+				spdk_json_write_string(w,
+						       "firmware commit succeeded. Requires conventional reset.");
+				spdk_jsonrpc_end_result(firm_ctx->request, w);
+				goto out;
+			case SPDK_NVME_SC_FIRMWARE_REQ_NVM_RESET:
+				w = spdk_jsonrpc_begin_result(firm_ctx->request);
+				spdk_json_write_string(w,
+						       "firmware commit succeeded. Requires NVM subsystem reset.");
+				spdk_jsonrpc_end_result(firm_ctx->request, w);
+				goto out;
+			case SPDK_NVME_SC_FIRMWARE_REQ_MAX_TIME_VIOLATION:
+				w = spdk_jsonrpc_begin_result(firm_ctx->request);
+				spdk_json_write_string(w,
+						       "firmware commit succeeded. Firmware activation requires reset (max time violation).");
+				spdk_jsonrpc_end_result(firm_ctx->request, w);
+				goto out;
+			default:
+				break;
+			}
+		}
+
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "firmware commit failed.");
 		goto out;
 	}
 
+	if (firm_ctx->req.commit_action == RPC_BDEV_NVME_FW_COMMIT_ACTION_ACTIVATE_IMMEDIATE) {
+		w = spdk_jsonrpc_begin_result(firm_ctx->request);
+		spdk_json_write_string(w,
+				       "firmware commit succeeded. Firmware activated immediately without reset.");
+		spdk_jsonrpc_end_result(firm_ctx->request, w);
+		goto out;
+	}
+
+reset:
 	if (spdk_nvme_ctrlr_reset(firm_ctx->ctrlr) != 0) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Controller reset failed.");
@@ -724,7 +768,6 @@ _apply_firmware_complete(struct firmware_update_info *firm_ctx)
 	struct spdk_nvme_fw_commit		fw_commit;
 	int					slot = 0;
 	int					rc;
-	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
 
 	firm_ctx->p += firm_ctx->transfer;
 	firm_ctx->offset += firm_ctx->transfer;
@@ -735,12 +778,12 @@ _apply_firmware_complete(struct firmware_update_info *firm_ctx)
 		/* firmware download completed. Commit firmware */
 		memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
 		fw_commit.fs = slot;
-		fw_commit.ca = commit_action;
+		fw_commit.ca = (enum spdk_nvme_fw_commit_action)firm_ctx->req.commit_action;
 
 		cmd.opc = SPDK_NVME_OPC_FIRMWARE_COMMIT;
 		memcpy(&cmd.cdw10, &fw_commit, sizeof(uint32_t));
 		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, &cmd, NULL, 0,
-						   apply_firmware_complete_reset, firm_ctx);
+						   apply_firmware_complete_commit, firm_ctx);
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "firmware commit failed.");
@@ -777,7 +820,7 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 	if (!success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "firmware download failed .");
+						 "firmware download failed.");
 		apply_firmware_cleanup(firm_ctx);
 		return;
 	}
@@ -809,6 +852,8 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	}
 	firm_ctx->fw_image = NULL;
 	firm_ctx->request = request;
+	/* Default behavior when commit_action is omitted. */
+	firm_ctx->req.commit_action = RPC_BDEV_NVME_FW_COMMIT_ACTION_REPLACE_AND_ENABLE;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_apply_firmware_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_apply_firmware_decoders), &firm_ctx->req)) {
