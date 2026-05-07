@@ -1185,7 +1185,7 @@ fi
 if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
 	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
 	exit 1
-elif [[ "${CONFIG[PGO_CAPTURE]}" = "y" || "${CONFI[PGO_USE]}" = "y" ]]; then
+elif [[ "${CONFIG[PGO_CAPTURE]}" = "y" || "${CONFIG[PGO_USE]}" = "y" ]]; then
 	if [[ -z "${CONFIG[PGO_DIR]}" ]]; then
 		CONFIG[PGO_DIR]=$(realpath $rootdir/build/pgo)
 	fi
