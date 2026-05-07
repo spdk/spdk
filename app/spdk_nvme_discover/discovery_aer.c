@@ -252,6 +252,7 @@ get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (g_discovery_in_progress) {
 		g_pending_discovery = true;
+		return;
 	}
 
 	g_discovery_in_progress = true;
