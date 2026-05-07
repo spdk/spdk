@@ -1415,8 +1415,9 @@ struct rpc_bdev_nvme_start_discovery {
 	char *hostnqn;
 	bool wait_for_attach;
 	uint64_t attach_timeout_ms;
-	struct spdk_nvme_ctrlr_opts opts;
-	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
+	int32_t ctrlr_loss_timeout_sec;
+	uint32_t reconnect_delay_sec;
+	uint32_t fast_io_fail_timeout_sec;
 };
 
 /* TODO: replace with free_rpc_bdev_nvme_start_discovery */
@@ -1440,9 +1441,9 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_start_discovery_decod
 	{"hostnqn", offsetof(struct rpc_bdev_nvme_start_discovery, hostnqn), spdk_json_decode_string, true},
 	{"wait_for_attach", offsetof(struct rpc_bdev_nvme_start_discovery, wait_for_attach), spdk_json_decode_bool, true},
 	{"attach_timeout_ms", offsetof(struct rpc_bdev_nvme_start_discovery, attach_timeout_ms), spdk_json_decode_uint64, true},
-	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
-	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.reconnect_delay_sec), spdk_json_decode_uint32, true},
-	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
+	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
+	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_start_discovery, reconnect_delay_sec), spdk_json_decode_uint32, true},
+	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 };
 
 /* TODO: replace with rpc_bdev_nvme_start_discovery_ctx */
@@ -1468,6 +1469,8 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_start_discovery_ctx_tmp *ctx;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
+	struct spdk_nvme_ctrlr_opts ctrlr_opts = {};
 	struct spdk_nvme_transport_id trid = {};
 	size_t len, maxlen;
 	int rc;
@@ -1480,7 +1483,10 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->req.opts, sizeof(ctx->req.opts));
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctrlr_opts, sizeof(ctrlr_opts));
+	ctx->req.ctrlr_loss_timeout_sec = bdev_opts.ctrlr_loss_timeout_sec;
+	ctx->req.reconnect_delay_sec = bdev_opts.reconnect_delay_sec;
+	ctx->req.fast_io_fail_timeout_sec = bdev_opts.fast_io_fail_timeout_sec;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_start_discovery_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_start_discovery_decoders),
@@ -1490,6 +1496,10 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
+
+	bdev_opts.ctrlr_loss_timeout_sec = ctx->req.ctrlr_loss_timeout_sec;
+	bdev_opts.reconnect_delay_sec = ctx->req.reconnect_delay_sec;
+	bdev_opts.fast_io_fail_timeout_sec = ctx->req.fast_io_fail_timeout_sec;
 
 	/* Parse trstring */
 	rc = spdk_nvme_transport_id_populate_trstring(&trid, ctx->req.trtype);
@@ -1538,7 +1548,7 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.hostnqn) {
-		snprintf(ctx->req.opts.hostnqn, sizeof(ctx->req.opts.hostnqn), "%s",
+		snprintf(ctrlr_opts.hostnqn, sizeof(ctrlr_opts.hostnqn), "%s",
 			 ctx->req.hostnqn);
 	}
 
@@ -1549,7 +1559,7 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	cb_fn = ctx->req.wait_for_attach ? rpc_bdev_nvme_start_discovery_done : NULL;
 	cb_ctx = ctx->req.wait_for_attach ? request : NULL;
-	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts, &ctx->req.bdev_opts,
+	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctrlr_opts, &bdev_opts,
 				       ctx->req.attach_timeout_ms, false, cb_fn, cb_ctx);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
@@ -2056,8 +2066,6 @@ struct rpc_bdev_nvme_start_mdns_discovery {
 	char *name;
 	char *svcname;
 	char *hostnqn;
-	struct spdk_nvme_ctrlr_opts opts;
-	struct spdk_bdev_nvme_ctrlr_opts bdev_opts;
 };
 
 /* TODO: replace with free_rpc_bdev_nvme_start_mdns_discovery */
@@ -2086,6 +2094,8 @@ rpc_bdev_nvme_start_mdns_discovery(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_start_mdns_discovery_ctx_tmp *ctx;
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
+	struct spdk_nvme_ctrlr_opts ctrlr_opts = {};
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -2094,7 +2104,7 @@ rpc_bdev_nvme_start_mdns_discovery(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->req.opts, sizeof(ctx->req.opts));
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctrlr_opts, sizeof(ctrlr_opts));
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_start_mdns_discovery_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_start_mdns_discovery_decoders),
@@ -2106,12 +2116,12 @@ rpc_bdev_nvme_start_mdns_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.hostnqn) {
-		snprintf(ctx->req.opts.hostnqn, sizeof(ctx->req.opts.hostnqn), "%s",
+		snprintf(ctrlr_opts.hostnqn, sizeof(ctrlr_opts.hostnqn), "%s",
 			 ctx->req.hostnqn);
 	}
 	ctx->request = request;
-	rc = bdev_nvme_start_mdns_discovery(ctx->req.name, ctx->req.svcname, &ctx->req.opts,
-					    &ctx->req.bdev_opts);
+	rc = bdev_nvme_start_mdns_discovery(ctx->req.name, ctx->req.svcname, &ctrlr_opts,
+					    &bdev_opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 	} else {
