@@ -122,173 +122,93 @@ invalid:
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_hotplug", rpc_bdev_nvme_set_hotplug, SPDK_RPC_RUNTIME)
 
-
-/* TODO: replace with rpc_bdev_nvme_attach_controller_ctx */
-struct rpc_bdev_nvme_attach_controller {
-	char *name;
-	char *trtype;
-	char *adrfam;
-	char *traddr;
-	char *trsvcid;
-	char *priority;
-	char *subnqn;
-	char *hostnqn;
-	char *hostaddr;
-	char *hostsvcid;
-	char *psk;
-	char *dhchap_key;
-	char *dhchap_ctrlr_key;
-	enum rpc_bdev_nvme_multipath_mode multipath;
-	uint32_t prchk_flags;
-	bool header_digest;
-	bool data_digest;
-	uint64_t fabrics_connect_timeout_us;
-	uint32_t num_io_queues;
-	int32_t ctrlr_loss_timeout_sec;
-	uint32_t reconnect_delay_sec;
-	uint32_t fast_io_fail_timeout_sec;
-	bool allow_unrecognized_csi;
-	uint32_t max_bdevs;
+struct rpc_bdev_nvme_attach_controller_ext {
+	struct rpc_bdev_nvme_attach_controller_ctx req;
+	size_t bdev_count;
+	const char **names;
 };
 
-/* TODO: replace with free_rpc_bdev_nvme_attach_controller */
 static void
-free_rpc_bdev_nvme_attach_controller_ctx_tmp(struct rpc_bdev_nvme_attach_controller *req)
+free_rpc_bdev_nvme_attach_controller_ext(struct rpc_bdev_nvme_attach_controller_ext *ereq)
 {
-	free(req->name);
-	free(req->trtype);
-	free(req->adrfam);
-	free(req->traddr);
-	free(req->trsvcid);
-	free(req->priority);
-	free(req->subnqn);
-	free(req->hostnqn);
-	free(req->hostaddr);
-	free(req->hostsvcid);
-	free(req->psk);
-	free(req->dhchap_key);
-	free(req->dhchap_ctrlr_key);
-}
-
-static int
-bdev_nvme_decode_reftag(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flag = out;
-	bool reftag;
-	int rc;
-
-	rc = spdk_json_decode_bool(val, &reftag);
-	if (rc == 0 && reftag == true) {
-		*flag |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
-	}
-
-	return rc;
-}
-
-static int
-bdev_nvme_decode_guard(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flag = out;
-	bool guard;
-	int rc;
-
-	rc = spdk_json_decode_bool(val, &guard);
-	if (rc == 0 && guard == true) {
-		*flag |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
-	}
-
-	return rc;
+	free_rpc_bdev_nvme_attach_controller(&ereq->req);
+	free(ereq->names);
+	free(ereq);
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_nvme_attach_controller, name), spdk_json_decode_string},
-	{"trtype", offsetof(struct rpc_bdev_nvme_attach_controller, trtype), spdk_json_decode_string},
-	{"traddr", offsetof(struct rpc_bdev_nvme_attach_controller, traddr), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, name), spdk_json_decode_string},
 
-	{"adrfam", offsetof(struct rpc_bdev_nvme_attach_controller, adrfam), spdk_json_decode_string, true},
-	{"trsvcid", offsetof(struct rpc_bdev_nvme_attach_controller, trsvcid), spdk_json_decode_string, true},
-	{"priority", offsetof(struct rpc_bdev_nvme_attach_controller, priority), spdk_json_decode_string, true},
-	{"subnqn", offsetof(struct rpc_bdev_nvme_attach_controller, subnqn), spdk_json_decode_string, true},
-	{"hostnqn", offsetof(struct rpc_bdev_nvme_attach_controller, hostnqn), spdk_json_decode_string, true},
-	{"hostaddr", offsetof(struct rpc_bdev_nvme_attach_controller, hostaddr), spdk_json_decode_string, true},
-	{"hostsvcid", offsetof(struct rpc_bdev_nvme_attach_controller, hostsvcid), spdk_json_decode_string, true},
+	{"trtype", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, trtype), spdk_json_decode_string},
+	{"traddr", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, traddr), spdk_json_decode_string},
+	{"adrfam", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, adrfam), spdk_json_decode_string, true},
+	{"trsvcid", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, trsvcid), spdk_json_decode_string, true},
 
-	{"prchk_reftag", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_flags), bdev_nvme_decode_reftag, true},
-	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_flags), bdev_nvme_decode_guard, true},
-	{"hdgst", offsetof(struct rpc_bdev_nvme_attach_controller, header_digest), spdk_json_decode_bool, true},
-	{"ddgst", offsetof(struct rpc_bdev_nvme_attach_controller, data_digest), spdk_json_decode_bool, true},
-	{"fabrics_connect_timeout_us", offsetof(struct rpc_bdev_nvme_attach_controller, fabrics_connect_timeout_us), spdk_json_decode_uint64, true},
-	{"multipath", offsetof(struct rpc_bdev_nvme_attach_controller, multipath), rpc_decode_bdev_nvme_multipath_mode, true},
-	{"num_io_queues", offsetof(struct rpc_bdev_nvme_attach_controller, num_io_queues), spdk_json_decode_uint32, true},
-	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
-	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_attach_controller, reconnect_delay_sec), spdk_json_decode_uint32, true},
-	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
-	{"psk", offsetof(struct rpc_bdev_nvme_attach_controller, psk), spdk_json_decode_string, true},
-	{"max_bdevs", offsetof(struct rpc_bdev_nvme_attach_controller, max_bdevs), spdk_json_decode_uint32, true},
-	{"dhchap_key", offsetof(struct rpc_bdev_nvme_attach_controller, dhchap_key), spdk_json_decode_string, true},
-	{"dhchap_ctrlr_key", offsetof(struct rpc_bdev_nvme_attach_controller, dhchap_ctrlr_key), spdk_json_decode_string, true},
-	{"allow_unrecognized_csi", offsetof(struct rpc_bdev_nvme_attach_controller, allow_unrecognized_csi), spdk_json_decode_bool, true},
+	{"priority", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, priority), spdk_json_decode_string, true},
+	{"subnqn", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, subnqn), spdk_json_decode_string, true},
+	{"hostnqn", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, hostnqn), spdk_json_decode_string, true},
+	{"hostaddr", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, hostaddr), spdk_json_decode_string, true},
+	{"hostsvcid", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, hostsvcid), spdk_json_decode_string, true},
+
+	{"prchk_reftag", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, prchk_reftag), spdk_json_decode_bool, true},
+	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, prchk_guard), spdk_json_decode_bool, true},
+	{"hdgst", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, hdgst), spdk_json_decode_bool, true},
+	{"ddgst", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, ddgst), spdk_json_decode_bool, true},
+	{"fabrics_connect_timeout_us", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, fabrics_connect_timeout_us), spdk_json_decode_uint64, true},
+	{"multipath", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, multipath), rpc_decode_bdev_nvme_multipath_mode, true},
+	{"num_io_queues", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, num_io_queues), spdk_json_decode_uint32, true},
+	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
+	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, reconnect_delay_sec), spdk_json_decode_uint32, true},
+	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
+	{"psk", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, psk), spdk_json_decode_string, true},
+	{"max_bdevs", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, max_bdevs), spdk_json_decode_uint32, true},
+	{"dhchap_key", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, dhchap_key), spdk_json_decode_string, true},
+	{"dhchap_ctrlr_key", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, dhchap_ctrlr_key), spdk_json_decode_string, true},
+	{"allow_unrecognized_csi", offsetof(struct rpc_bdev_nvme_attach_controller_ctx, allow_unrecognized_csi), spdk_json_decode_bool, true},
 };
 
 #define DEFAULT_MAX_BDEVS_PER_RPC 128
 
-/* TODO: replace with rpc_bdev_nvme_attach_controller_ctx */
-struct rpc_bdev_nvme_attach_controller_ctx_tmp {
-	struct rpc_bdev_nvme_attach_controller req;
-	size_t bdev_count;
-	const char **names;
-	struct spdk_jsonrpc_request *request;
-};
-
-/* TODO: replace with free_rpc_bdev_nvme_attach_controller */
-static void
-free_rpc_bdev_nvme_attach_controller_ctx(struct rpc_bdev_nvme_attach_controller_ctx_tmp *ctx)
-{
-	free_rpc_bdev_nvme_attach_controller_ctx_tmp(&ctx->req);
-	free(ctx->names);
-	free(ctx);
-}
-
 static void
 rpc_bdev_nvme_attach_controller_examined(void *cb_ctx)
 {
-	struct rpc_bdev_nvme_attach_controller_ctx_tmp *ctx = cb_ctx;
-	struct spdk_jsonrpc_request *request = ctx->request;
+	struct rpc_bdev_nvme_attach_controller_ext *ereq = cb_ctx;
+	struct spdk_jsonrpc_request *request = ereq->req.request;
 	struct spdk_json_write_ctx *w;
 	size_t i;
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	for (i = 0; i < ctx->bdev_count; i++) {
-		spdk_json_write_string(w, ctx->names[i]);
+	for (i = 0; i < ereq->bdev_count; i++) {
+		spdk_json_write_string(w, ereq->names[i]);
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 
-	free_rpc_bdev_nvme_attach_controller_ctx(ctx);
+	free_rpc_bdev_nvme_attach_controller_ext(ereq);
 }
 
 static void
 rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 {
-	struct rpc_bdev_nvme_attach_controller_ctx_tmp *ctx = cb_ctx;
-	struct spdk_jsonrpc_request *request = ctx->request;
+	struct rpc_bdev_nvme_attach_controller_ext *ereq = cb_ctx;
 
 	if (rc < 0) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free_rpc_bdev_nvme_attach_controller_ctx(ctx);
+		spdk_jsonrpc_send_error_response(ereq->req.request, rc, spdk_strerror(-rc));
+		free_rpc_bdev_nvme_attach_controller_ext(ereq);
 		return;
 	}
 
-	ctx->bdev_count = bdev_count;
-	spdk_bdev_wait_for_examine(rpc_bdev_nvme_attach_controller_examined, ctx);
+	ereq->bdev_count = bdev_count;
+	spdk_bdev_wait_for_examine(rpc_bdev_nvme_attach_controller_examined, ereq);
 }
 
 static void
 rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_attach_controller_ctx_tmp *ctx;
+	struct rpc_bdev_nvme_attach_controller_ext *ereq;
+	struct rpc_bdev_nvme_attach_controller_ctx *req;
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
 	struct spdk_nvme_ctrlr_opts ctrlr_opts = {};
 	struct spdk_nvme_transport_id trid = {};
@@ -298,173 +218,176 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	size_t len, maxlen;
 	int rc;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	ereq = calloc(1, sizeof(*ereq));
+	if (!ereq) {
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		return;
 	}
 
+	req = &ereq->req;
+
+	/* Get defaults and populate the request */
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctrlr_opts, sizeof(ctrlr_opts));
 	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
-	ctx->req.multipath = RPC_BDEV_NVME_MULTIPATH_MODE_MULTIPATH;
-	ctx->req.max_bdevs = DEFAULT_MAX_BDEVS_PER_RPC;
-	ctx->req.prchk_flags = bdev_opts.prchk_flags;
-	ctx->req.header_digest = ctrlr_opts.header_digest;
-	ctx->req.data_digest = ctrlr_opts.data_digest;
-	ctx->req.fabrics_connect_timeout_us = ctrlr_opts.fabrics_connect_timeout_us;
-	ctx->req.num_io_queues = ctrlr_opts.num_io_queues;
-	ctx->req.ctrlr_loss_timeout_sec = bdev_opts.ctrlr_loss_timeout_sec;
-	ctx->req.reconnect_delay_sec = bdev_opts.reconnect_delay_sec;
-	ctx->req.fast_io_fail_timeout_sec = bdev_opts.fast_io_fail_timeout_sec;
-	ctx->req.allow_unrecognized_csi = bdev_opts.allow_unrecognized_csi;
+	req->multipath = RPC_BDEV_NVME_MULTIPATH_MODE_MULTIPATH;
+	req->max_bdevs = DEFAULT_MAX_BDEVS_PER_RPC;
+	req->prchk_reftag = bdev_opts.prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	req->prchk_guard = bdev_opts.prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	req->hdgst = ctrlr_opts.header_digest;
+	req->ddgst = ctrlr_opts.data_digest;
+	req->fabrics_connect_timeout_us = ctrlr_opts.fabrics_connect_timeout_us;
+	req->num_io_queues = ctrlr_opts.num_io_queues;
+	req->ctrlr_loss_timeout_sec = bdev_opts.ctrlr_loss_timeout_sec;
+	req->reconnect_delay_sec = bdev_opts.reconnect_delay_sec;
+	req->fast_io_fail_timeout_sec = bdev_opts.fast_io_fail_timeout_sec;
+	req->allow_unrecognized_csi = bdev_opts.allow_unrecognized_csi;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_attach_controller_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_attach_controller_decoders),
-				    &ctx->req)) {
+				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	bdev_opts.prchk_flags = ctx->req.prchk_flags;
-	ctrlr_opts.header_digest = ctx->req.header_digest;
-	ctrlr_opts.data_digest = ctx->req.data_digest;
-	ctrlr_opts.fabrics_connect_timeout_us = ctx->req.fabrics_connect_timeout_us;
-	ctrlr_opts.num_io_queues = ctx->req.num_io_queues;
-	bdev_opts.ctrlr_loss_timeout_sec = ctx->req.ctrlr_loss_timeout_sec;
-	bdev_opts.reconnect_delay_sec = ctx->req.reconnect_delay_sec;
-	bdev_opts.fast_io_fail_timeout_sec = ctx->req.fast_io_fail_timeout_sec;
-	bdev_opts.allow_unrecognized_csi = ctx->req.allow_unrecognized_csi;
+	if (req->prchk_reftag) {
+		bdev_opts.prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
 
-	if (ctx->req.max_bdevs == 0) {
+	if (req->prchk_guard) {
+		bdev_opts.prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
+	ctrlr_opts.header_digest = req->hdgst;
+	ctrlr_opts.data_digest = req->ddgst;
+	ctrlr_opts.fabrics_connect_timeout_us = req->fabrics_connect_timeout_us;
+	ctrlr_opts.num_io_queues = req->num_io_queues;
+	bdev_opts.ctrlr_loss_timeout_sec = req->ctrlr_loss_timeout_sec;
+	bdev_opts.reconnect_delay_sec = req->reconnect_delay_sec;
+	bdev_opts.fast_io_fail_timeout_sec = req->fast_io_fail_timeout_sec;
+	bdev_opts.allow_unrecognized_csi = req->allow_unrecognized_csi;
+
+	if (req->max_bdevs == 0) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, "max_bdevs cannot be zero");
 		goto cleanup;
 	}
 
-	ctx->names = calloc(ctx->req.max_bdevs, sizeof(char *));
-	if (ctx->names == NULL) {
+	ereq->names = calloc(req->max_bdevs, sizeof(char *));
+	if (ereq->names == NULL) {
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		goto cleanup;
 	}
 
-	/* Parse trstring */
-	rc = spdk_nvme_transport_id_populate_trstring(&trid, ctx->req.trtype);
+	rc = spdk_nvme_transport_id_populate_trstring(&trid, req->trtype);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to parse trtype: %s\n", ctx->req.trtype);
+		SPDK_ERRLOG("Failed to parse trtype: %s\n", req->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
-						     ctx->req.trtype);
+						     req->trtype);
 		goto cleanup;
 	}
 
-	/* Parse trtype */
-	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
+	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req->trtype);
 	assert(rc == 0);
 
-	/* Parse traddr */
 	maxlen = sizeof(trid.traddr);
-	len = strnlen(ctx->req.traddr, maxlen);
+	len = strnlen(req->traddr, maxlen);
 	if (len == maxlen) {
 		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "traddr too long: %s",
-						     ctx->req.traddr);
+						     req->traddr);
 		goto cleanup;
 	}
-	memcpy(trid.traddr, ctx->req.traddr, len + 1);
+	memcpy(trid.traddr, req->traddr, len + 1);
 
-	/* Parse adrfam */
-	if (ctx->req.adrfam) {
-		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, ctx->req.adrfam);
+	if (req->adrfam) {
+		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, req->adrfam);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to parse adrfam: %s\n", ctx->req.adrfam);
+			SPDK_ERRLOG("Failed to parse adrfam: %s\n", req->adrfam);
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse adrfam: %s",
-							     ctx->req.adrfam);
+							     req->adrfam);
 			goto cleanup;
 		}
 	}
 
-	/* Parse trsvcid */
-	if (ctx->req.trsvcid) {
+	if (req->trsvcid) {
 		maxlen = sizeof(trid.trsvcid);
-		len = strnlen(ctx->req.trsvcid, maxlen);
+		len = strnlen(req->trsvcid, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "trsvcid too long: %s",
-							     ctx->req.trsvcid);
+							     req->trsvcid);
 			goto cleanup;
 		}
-		memcpy(trid.trsvcid, ctx->req.trsvcid, len + 1);
+		memcpy(trid.trsvcid, req->trsvcid, len + 1);
 	}
 
-	/* Parse priority for the NVMe-oF transport connection */
-	if (ctx->req.priority) {
-		trid.priority = spdk_strtol(ctx->req.priority, 10);
+	if (req->priority) {
+		trid.priority = spdk_strtol(req->priority, 10);
 	}
 
-	/* Parse subnqn */
-	if (ctx->req.subnqn) {
+	if (req->subnqn) {
 		maxlen = sizeof(trid.subnqn);
-		len = strnlen(ctx->req.subnqn, maxlen);
+		len = strnlen(req->subnqn, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "subnqn too long: %s",
-							     ctx->req.subnqn);
+							     req->subnqn);
 			goto cleanup;
 		}
-		memcpy(trid.subnqn, ctx->req.subnqn, len + 1);
+		memcpy(trid.subnqn, req->subnqn, len + 1);
 	}
 
-	if (ctx->req.hostnqn) {
+	if (req->hostnqn) {
 		maxlen = sizeof(ctrlr_opts.hostnqn);
-		len = strnlen(ctx->req.hostnqn, maxlen);
+		len = strnlen(req->hostnqn, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostnqn too long: %s",
-							     ctx->req.hostnqn);
+							     req->hostnqn);
 			goto cleanup;
 		}
-		memcpy(ctrlr_opts.hostnqn, ctx->req.hostnqn, len + 1);
+		memcpy(ctrlr_opts.hostnqn, req->hostnqn, len + 1);
 	}
 
-	if (ctx->req.psk) {
+	if (req->psk) {
 		if (!g_tls_log) {
 			SPDK_NOTICELOG("TLS support is considered experimental\n");
 			g_tls_log = true;
 		}
 	}
 
-	if (ctx->req.hostaddr) {
+	if (req->hostaddr) {
 		maxlen = sizeof(ctrlr_opts.src_addr);
-		len = strnlen(ctx->req.hostaddr, maxlen);
+		len = strnlen(req->hostaddr, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostaddr too long: %s",
-							     ctx->req.hostaddr);
+							     req->hostaddr);
 			goto cleanup;
 		}
-		snprintf(ctrlr_opts.src_addr, maxlen, "%s", ctx->req.hostaddr);
+		snprintf(ctrlr_opts.src_addr, maxlen, "%s", req->hostaddr);
 	}
 
-	if (ctx->req.hostsvcid) {
+	if (req->hostsvcid) {
 		maxlen = sizeof(ctrlr_opts.src_svcid);
-		len = strnlen(ctx->req.hostsvcid, maxlen);
+		len = strnlen(req->hostsvcid, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostsvcid too long: %s",
-							     ctx->req.hostsvcid);
+							     req->hostsvcid);
 			goto cleanup;
 		}
-		snprintf(ctrlr_opts.src_svcid, maxlen, "%s", ctx->req.hostsvcid);
+		snprintf(ctrlr_opts.src_svcid, maxlen, "%s", req->hostsvcid);
 	}
 
-	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
+	ctrlr = nvme_ctrlr_get_by_name(req->name);
 
 	if (ctrlr) {
 		/* This controller already exists. Check what the user wants to do. */
-		if (ctx->req.multipath == RPC_BDEV_NVME_MULTIPATH_MODE_DISABLE) {
+		if (req->multipath == RPC_BDEV_NVME_MULTIPATH_MODE_DISABLE) {
 			/* The user does not want to do any form of multipathing. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
 							     "A controller named %s already exists and multipath is disabled",
-							     ctx->req.name);
+							     req->name);
 			goto cleanup;
 		}
 
-		assert(ctx->req.multipath == RPC_BDEV_NVME_MULTIPATH_MODE_FAILOVER ||
-		       ctx->req.multipath == RPC_BDEV_NVME_MULTIPATH_MODE_MULTIPATH);
+		assert(req->multipath == RPC_BDEV_NVME_MULTIPATH_MODE_FAILOVER ||
+		       req->multipath == RPC_BDEV_NVME_MULTIPATH_MODE_MULTIPATH);
 
 		/* The user wants to add this as a failover path or add this to create multipath. */
 		mp_ctrlr_opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
@@ -477,7 +400,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			/* Exactly same network path can't be added a second time */
 			spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
 							     "A controller named %s already exists with the specified network path",
-							     ctx->req.name);
+							     req->name);
 			goto cleanup;
 		}
 
@@ -487,7 +410,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			/* Different SUBNQN is not allowed when specifying the same controller name. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "A controller named %s already exists, but uses a different subnqn (%s)",
-							     ctx->req.name, mp_ctrlr_trid->subnqn);
+							     req->name, mp_ctrlr_trid->subnqn);
 			goto cleanup;
 		}
 
@@ -495,21 +418,21 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			/* Different HOSTNQN is not allowed when specifying the same controller name. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "A controller named %s already exists, but uses a different hostnqn (%s)",
-							     ctx->req.name, mp_ctrlr_opts->hostnqn);
+							     req->name, mp_ctrlr_opts->hostnqn);
 			goto cleanup;
 		}
 
 		if (bdev_opts.prchk_flags) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "A controller named %s already exists. To add a path, do not specify PI options.",
-							     ctx->req.name);
+							     req->name);
 			goto cleanup;
 		}
 
 		bdev_opts.prchk_flags = ctrlr->opts.prchk_flags;
 	}
 
-	if (ctx->req.multipath != RPC_BDEV_NVME_MULTIPATH_MODE_MULTIPATH) {
+	if (req->multipath != RPC_BDEV_NVME_MULTIPATH_MODE_MULTIPATH) {
 		bdev_opts.multipath = false;
 	}
 
@@ -520,14 +443,14 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	ctx->request = request;
+	req->request = request;
 	/* Should already be zero due to the calloc(), but set explicitly for clarity. */
 	bdev_opts.from_discovery_service = false;
-	bdev_opts.psk = ctx->req.psk;
-	bdev_opts.dhchap_key = ctx->req.dhchap_key;
-	bdev_opts.dhchap_ctrlr_key = ctx->req.dhchap_ctrlr_key;
-	rc = spdk_bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
-				   rpc_bdev_nvme_attach_controller_done, ctx, &ctrlr_opts,
+	bdev_opts.psk = req->psk;
+	bdev_opts.dhchap_key = req->dhchap_key;
+	bdev_opts.dhchap_ctrlr_key = req->dhchap_ctrlr_key;
+	rc = spdk_bdev_nvme_create(&trid, req->name, ereq->names, req->max_bdevs,
+				   rpc_bdev_nvme_attach_controller_done, ereq, &ctrlr_opts,
 				   &bdev_opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
@@ -537,7 +460,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_nvme_attach_controller_ctx(ctx);
+	free_rpc_bdev_nvme_attach_controller_ext(ereq);
 }
 SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller,
 		  SPDK_RPC_RUNTIME)
