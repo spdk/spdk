@@ -7,6 +7,7 @@
 
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk/nvmf_spec.h"
 #include "spdk_internal/nvme_util.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
@@ -22,15 +23,185 @@ static struct spdk_nvme_transport_id g_trid;
 static const char *g_hostnqn;
 static bool g_discovery_in_progress;
 static bool g_pending_discovery;
+static bool g_extended;
 
 static void get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr);
+
+static void
+print_discovery_entry(uint64_t idx, struct spdk_nvmf_discovery_log_page_entry *entry)
+{
+	char str[512];
+
+	printf("Discovery Log Entry %" PRIu64 "\n", idx);
+	printf("----------------------\n");
+	printf("Transport Type:                        %u (%s)\n",
+	       entry->trtype, spdk_nvme_transport_id_trtype_str(entry->trtype));
+	printf("Address Family:                        %u (%s)\n",
+	       entry->adrfam, spdk_nvme_transport_id_adrfam_str(entry->adrfam));
+	printf("Subsystem Type:                        %u (%s)\n",
+	       entry->subtype,
+	       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Referral to a discovery service" :
+	       entry->subtype == SPDK_NVMF_SUBTYPE_NVME ? "NVM Subsystem" :
+	       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ? "Current Discovery Subsystem" :
+	       "Unknown");
+	printf("Port ID:                               %" PRIu16 " (0x%04" PRIx16 ")\n",
+	       from_le16(&entry->portid), from_le16(&entry->portid));
+	printf("Controller ID:                         %" PRIu16 " (0x%04" PRIx16 ")\n",
+	       from_le16(&entry->cntlid), from_le16(&entry->cntlid));
+	snprintf(str, sizeof(entry->trsvcid) + 1, "%s", entry->trsvcid);
+	printf("Transport Service Identifier:          %s\n", str);
+	snprintf(str, sizeof(entry->subnqn) + 1, "%s", entry->subnqn);
+	printf("NVM Subsystem Qualified Name:          %s\n", str);
+	snprintf(str, sizeof(entry->traddr) + 1, "%s", entry->traddr);
+	printf("Transport Address:                     %s\n", str);
+}
+
+static const char *
+exattype_str(uint16_t exattype)
+{
+	switch (exattype) {
+	case SPDK_NVMF_EXTAT_HOST_ID:
+		return "Host Identifier";
+	case SPDK_NVMF_EXTAT_ADMIN_LABEL:
+		return "Admin Label";
+	case SPDK_NVMF_EXTAT_ADMIN_LABEL_UTF8:
+		return "Admin Label (UTF-8)";
+	default:
+		return "Unknown";
+	}
+}
+
+static int
+print_extended_attributes(struct spdk_nvmf_discovery_log_page_entry_extended *ext_hdr,
+			  uint8_t *entry_base, uint8_t *entry_end)
+{
+	uint8_t *attr_ptr;
+	size_t remaining;
+	uint16_t exattype, exatlen;
+	uint16_t numexat;
+	uint16_t i;
+	int rc = 0;
+
+	numexat = from_le16(&ext_hdr->numexat);
+	if (numexat == 0) {
+		return 0;
+	}
+
+	printf("Extended Attributes:                   %" PRIu16 "\n", numexat);
+
+	attr_ptr = entry_base + SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE;
+
+	for (i = 0; i < numexat; i++) {
+		remaining = entry_end - attr_ptr;
+		if (remaining < SPDK_NVMF_EXATTYPE_SIZE + SPDK_NVMF_EXATLEN_SIZE) {
+			fprintf(stderr, "Error: extended attribute %" PRIu16
+				" header exceeds entry boundary\n", i);
+			return -EINVAL;
+		}
+
+		exattype = from_le16(attr_ptr);
+		exatlen = from_le16(attr_ptr + SPDK_NVMF_EXATTYPE_SIZE);
+		attr_ptr += SPDK_NVMF_EXATTYPE_SIZE + SPDK_NVMF_EXATLEN_SIZE;
+		remaining = entry_end - attr_ptr;
+		if (exatlen > remaining) {
+			fprintf(stderr, "Error: extended attribute %" PRIu16 " length %" PRIu16
+				" exceeds remaining entry size %zu\n", i, exatlen, remaining);
+			exatlen = (uint16_t)remaining;
+			rc = -EINVAL;
+		}
+
+		printf("  Attribute[%u] Type:                   0x%04x (%s)\n",
+		       i, exattype, exattype_str(exattype));
+		printf("  Attribute[%u] Length:                 %" PRIu16 "\n", i, exatlen);
+
+		if (exattype == SPDK_NVMF_EXTAT_ADMIN_LABEL ||
+		    exattype == SPDK_NVMF_EXTAT_ADMIN_LABEL_UTF8) {
+			printf("  Attribute[%u] Value:                  \"%.*s\"\n",
+			       i, exatlen, attr_ptr);
+		}
+
+		attr_ptr += exatlen;
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static int
+print_extended_discovery_log(struct spdk_nvmf_discovery_log_page *log_page)
+{
+	uint64_t numrec = from_le64(&log_page->numrec);
+	uint32_t tdlpl = from_le32(&log_page->tdlpl);
+	struct spdk_nvmf_discovery_log_page_entry *entry;
+	struct spdk_nvmf_discovery_log_page_entry_extended *ext_hdr;
+	uint8_t *ptr, *end, *entry_end;
+	size_t remaining;
+	uint32_t tel;
+	uint64_t i;
+	int rc;
+
+	printf("Extended Discovery Log Page\n");
+	printf("===========================\n");
+	printf("Generation Counter:                    %" PRIu64 "\n",
+	       from_le64(&log_page->genctr));
+	printf("Number of Records:                     %" PRIu64 "\n", numrec);
+	printf("Record Format:                         %" PRIu16 "\n",
+	       from_le16(&log_page->recfmt));
+	printf("DLPF.extend:                           %u\n", log_page->dlpf.extend);
+	printf("Total Discovery Log Page Length:       %" PRIu32 " bytes\n", tdlpl);
+	printf("\n");
+
+	if (!log_page->dlpf.extend) {
+		fprintf(stderr, "Warning: dlpf.extend not set; controller may not support "
+			"extended discovery.\nFalling back to standard entry parsing.\n\n");
+		for (i = 0; i < numrec; i++) {
+			print_discovery_entry(i, &log_page->entries[i]);
+		}
+		return 0;
+	}
+
+	ptr = (uint8_t *)log_page + SPDK_NVMF_DISC_LOG_PAGE_HEADER_SIZE;
+	end = (uint8_t *)log_page + tdlpl;
+
+	for (i = 0; i < numrec; i++) {
+		remaining = end - ptr;
+		if (remaining < SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE) {
+			fprintf(stderr, "Error: extended discovery entry %" PRIu64 " is truncated\n", i);
+			return -EINVAL;
+		}
+
+		entry = (struct spdk_nvmf_discovery_log_page_entry *)ptr;
+		ext_hdr = (struct spdk_nvmf_discovery_log_page_entry_extended *)
+			  (ptr + SPDK_NVMF_DISC_ENTRY_SIZE);
+		tel = from_le32(&ext_hdr->tel);
+		if (tel < SPDK_NVMF_DISC_EXT_ENTRY_BASE_SIZE || tel > remaining) {
+			fprintf(stderr, "Error: invalid TEL %" PRIu32 " for entry %" PRIu64
+				" (remaining page size %zu)\n", tel, i, remaining);
+			return -EINVAL;
+		}
+		entry_end = ptr + tel;
+
+		print_discovery_entry(i, entry);
+		printf("Total Entry Length:                    %" PRIu32 " bytes\n", tel);
+		rc = print_extended_attributes(ext_hdr, ptr, entry_end);
+		if (rc != 0) {
+			return rc;
+		}
+		printf("\n");
+
+		ptr = entry_end;
+	}
+
+	return 0;
+}
 
 static void
 print_discovery_log(struct spdk_nvmf_discovery_log_page *log_page)
 {
 	uint64_t numrec;
-	char str[512];
-	uint32_t i;
+	uint64_t i;
 
 	printf("Discovery Log Page\n");
 	printf("==================\n");
@@ -43,30 +214,7 @@ print_discovery_log(struct spdk_nvmf_discovery_log_page *log_page)
 	printf("\n");
 
 	for (i = 0; i < numrec; i++) {
-		struct spdk_nvmf_discovery_log_page_entry *entry = &log_page->entries[i];
-
-		printf("Discovery Log Entry %u\n", i);
-		printf("----------------------\n");
-		printf("Transport Type:                        %u (%s)\n",
-		       entry->trtype, spdk_nvme_transport_id_trtype_str(entry->trtype));
-		printf("Address Family:                        %u (%s)\n",
-		       entry->adrfam, spdk_nvme_transport_id_adrfam_str(entry->adrfam));
-		printf("Subsystem Type:                        %u (%s)\n",
-		       entry->subtype,
-		       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Referral to a discovery service" :
-		       entry->subtype == SPDK_NVMF_SUBTYPE_NVME ? "NVM Subsystem" :
-		       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ? "Current Discovery Subsystem" :
-		       "Unknown");
-		printf("Port ID:                               %" PRIu16 " (0x%04" PRIx16 ")\n",
-		       from_le16(&entry->portid), from_le16(&entry->portid));
-		printf("Controller ID:                         %" PRIu16 " (0x%04" PRIx16 ")\n",
-		       from_le16(&entry->cntlid), from_le16(&entry->cntlid));
-		snprintf(str, sizeof(entry->trsvcid) + 1, "%s", entry->trsvcid);
-		printf("Transport Service Identifier:          %s\n", str);
-		snprintf(str, sizeof(entry->subnqn) + 1, "%s", entry->subnqn);
-		printf("NVM Subsystem Qualified Name:          %s\n", str);
-		snprintf(str, sizeof(entry->traddr) + 1, "%s", entry->traddr);
-		printf("Transport Address:                     %s\n", str);
+		print_discovery_entry(i, &log_page->entries[i]);
 	}
 }
 
@@ -79,7 +227,14 @@ get_log_page_completion(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		exit(1);
 	}
 
-	print_discovery_log(log_page);
+	if (log_page->dlpf.extend) {
+		rc = print_extended_discovery_log(log_page);
+		if (rc != 0) {
+			fprintf(stderr, "Extended discovery log page parsing failed\n");
+		}
+	} else {
+		print_discovery_log(log_page);
+	}
 	free(log_page);
 
 	g_discovery_in_progress = false;
@@ -92,14 +247,22 @@ get_log_page_completion(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 static void
 get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
+	union spdk_nvmf_discovery_log_lsp lsp = {};
+	int rc;
+
 	if (g_discovery_in_progress) {
 		g_pending_discovery = true;
 	}
 
 	g_discovery_in_progress = true;
 
-	if (spdk_nvme_ctrlr_get_discovery_log_page(ctrlr, get_log_page_completion, NULL)) {
-		fprintf(stderr, "spdk_nvme_ctrlr_get_discovery_log_page() failed\n");
+	if (g_extended) {
+		lsp.bits.extdlpe = 1;
+	}
+
+	rc = spdk_nvme_ctrlr_get_discovery_log_page_ext(ctrlr, lsp, get_log_page_completion, NULL);
+	if (rc) {
+		fprintf(stderr, "spdk_nvme_ctrlr_get_discovery_log_page_ext() failed\n");
 		exit(1);
 	}
 }
@@ -121,6 +284,7 @@ usage(char *program_name)
 	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 #endif
 	printf("\t[-H, --hostnqn Host NQN]\n");
+	printf("\t[-E, --extended Request Extended Discovery Log Page]\n");
 }
 
 static void
@@ -141,7 +305,7 @@ set_trid(const char *trid_str)
 			spdk_nvme_transport_id_trtype_str(trid->trtype));
 }
 
-#define AER_GETOPT_SHORT "r:GH:T:"
+#define AER_GETOPT_SHORT "r:GH:T:E"
 
 static const struct option g_aer_cmdline_opts[] = {
 #define AER_TRANSPORT		'r'
@@ -152,6 +316,8 @@ static const struct option g_aer_cmdline_opts[] = {
 	{"hostnqn",		required_argument,	NULL, AER_HOSTNQN},
 #define AER_LOG_FLAG		'T'
 	{"logflag",		required_argument,	NULL, AER_LOG_FLAG},
+#define AER_EXTENDED		'E'
+	{"extended",		no_argument,		NULL, AER_EXTENDED},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -191,6 +357,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 #ifdef DEBUG
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif
+			break;
+		case AER_EXTENDED:
+			g_extended = true;
 			break;
 		default:
 			usage(argv[0]);

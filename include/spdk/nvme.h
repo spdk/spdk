@@ -1783,11 +1783,36 @@ typedef void (*spdk_nvme_discovery_cb)(void *cb_arg, int rc,
  * \ref spdk_nvme_ctrlr_process_admin_completions to trigger processing of
  * completions submitted by this function.
  *
+ * \see spdk_nvme_ctrlr_get_discovery_log_page_ext for a variant that accepts
+ * Log Specific Parameter (LSP) options such as extended discovery log entries.
+ *
  * \param ctrlr Pointer to the discovery controller.
  * \param cb_fn Function to call when the operation is complete.
  * \param cb_arg Argument to pass to cb_fn.
  */
 int spdk_nvme_ctrlr_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_discovery_cb cb_fn, void *cb_arg);
+
+/**
+ * Get a full Discovery Log Page from the specified controller with
+ * additional Get Log Page options.
+ *
+ * This is the same two-phase, genctr-safe operation as
+ * \ref spdk_nvme_ctrlr_get_discovery_log_page, but issues GET LOG PAGE
+ * commands with the Log Specific Parameter (LSP) field set according to
+ * \p lsp.  Currently only the \b extdlpe bit is supported; when set the
+ * controller returns variable-length extended entries and advertises the
+ * total page size via tdlpl, which this function uses for buffer sizing.
+ * When \p lsp is zero the behavior is identical to
+ * \ref spdk_nvme_ctrlr_get_discovery_log_page.
+ *
+ * \param ctrlr Pointer to the discovery controller.
+ * \param lsp   Log Specific Parameter bits to pass in the command.
+ * \param cb_fn Function to call when the operation is complete.
+ * \param cb_arg Argument to pass to cb_fn.
+ */
+int spdk_nvme_ctrlr_get_discovery_log_page_ext(struct spdk_nvme_ctrlr *ctrlr,
+		union spdk_nvmf_discovery_log_lsp lsp,
 		spdk_nvme_discovery_cb cb_fn, void *cb_arg);
 
 /**
