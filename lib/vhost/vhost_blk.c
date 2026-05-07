@@ -714,6 +714,12 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	 */
 	task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
 
+	if (spdk_unlikely(task_idx >= vq->vring.size)) {
+		SPDK_ERRLOG("Guest provided out-of-bounds buffer_id %"PRIu16" (max %"PRIu16").\n",
+			    task_idx, vq->vring.size);
+		return;
+	}
+
 	task = &((struct spdk_vhost_user_blk_task *)vq->tasks)[task_idx];
 	blk_task = &task->blk_task;
 	if (spdk_unlikely(task->used)) {
@@ -775,6 +781,12 @@ process_packed_inflight_blk_task(struct spdk_vhost_virtqueue *vq,
 	if (vq->last_avail_idx >= vq->vring.size) {
 		vq->last_avail_idx -= vq->vring.size;
 		vq->packed.avail_phase = !vq->packed.avail_phase;
+	}
+
+	if (spdk_unlikely(task_idx >= vq->vring.size)) {
+		SPDK_ERRLOG("Inflight descriptor has out-of-bounds buffer_id %"PRIu16" (max %"PRIu16").\n",
+			    task_idx, vq->vring.size);
+		return;
 	}
 
 	task = &((struct spdk_vhost_user_blk_task *)vq->tasks)[task_idx];
@@ -991,6 +1003,13 @@ no_bdev_process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_
 	}
 
 	task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
+
+	if (spdk_unlikely(task_idx >= vq->vring.size)) {
+		SPDK_ERRLOG("Guest provided out-of-bounds buffer_id %"PRIu16" (max %"PRIu16").\n",
+			    task_idx, vq->vring.size);
+		return;
+	}
+
 	task = &((struct spdk_vhost_user_blk_task *)vq->tasks)[task_idx];
 	blk_task = &task->blk_task;
 	if (spdk_unlikely(task->used)) {
