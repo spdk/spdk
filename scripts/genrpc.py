@@ -113,17 +113,17 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 continue
             if parameter.get('required', False) != (not optional[0]):
                 raise ValueError(f"For method {method['name']}: parameter '{parameter['name']}': 'required' field is mismatched")
-            code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
-            if parameter['type'] in ('enum', 'array', 'object'):
-                if 'class' not in parameter:
-                    raise ValueError(f"Missing 'class' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc")
-            if 'class' in parameter:
-                msg = f"Invalid 'class' '{parameter['class']}' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc"
-                if parameter['type'] not in ('enum', 'array', 'object'):
-                    raise ValueError(msg)
-                if parameter['class'] not in schema_by_type[parameter['type']]:
-                    raise ValueError(msg)
+            has_class = 'class' in parameter
+            needs_class = parameter['type'] in schema_by_type
+            msg = f"Invalid 'class' '{parameter.get('class')}' for '{parameter['type']}' on '{parameter['name']}' in '{method['name']}' rpc"
+            if has_class != needs_class:
+                raise ValueError(msg)
+            if has_class and parameter['class'] not in schema_by_type[parameter['type']]:
+                raise ValueError(msg)
+            if has_class:
+                # TODO: handle this case later and fix issues raised by it
                 continue
+            code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
             if not code_type and method['name'] in cli_exceptions:
                 # TODO: handle this case later and fix issues raised by it
                 continue
