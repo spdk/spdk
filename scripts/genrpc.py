@@ -120,13 +120,20 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 raise ValueError(msg)
             if has_class and parameter['class'] not in schema_by_type[parameter['type']]:
                 raise ValueError(msg)
-            if has_class:
-                # TODO: handle this case later and fix issues raised by it
-                continue
             code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
             if not code_type and method['name'] in cli_exceptions:
                 # TODO: handle this case later and fix issues raised by it
                 continue
+            if has_class:
+                decoder = f"rpc_decode_{parameter['class']}"
+                if 'bitmask' in schema_by_type[parameter['type']][parameter['class']]:
+                    decoder += "_bitmask"
+                msg = f"For method {method['name']}: parameter '{parameter['name']}': decoder '{decoder}' not found in {code_type}"
+                if "decode_rpc_ns_params" in code_type:
+                    # TODO: handle this case later and fix issues raised by it
+                    continue
+                if decoder not in code_type:
+                    raise ValueError(msg)
             new_type = types.get(code_type[0])
             if not new_type:
                 # TODO: handle this case later and fix issues raised by it
