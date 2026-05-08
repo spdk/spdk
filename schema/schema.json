@@ -427,6 +427,7 @@
         {
           "name": "hide_metadata",
           "type": "boolean",
+          "deprecated": true,
           "description": "Enable hide_metadata option to the bdev. Default: false"
         }
       ]

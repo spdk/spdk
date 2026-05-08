@@ -314,7 +314,7 @@ def add_parser(subparsers):
     p.add_argument('-i', '--no-auto-visible', action='store_true',
                    help='Do not auto make namespace visible to controllers (optional)')
     p.add_argument('-N', '--hide-metadata', action='store_true',
-                   help='Enable hide_metadata option to the bdev (optional)')
+                   help='[Deprecated] Enable hide_metadata option to the bdev (optional)')
     p.set_defaults(func=nvmf_subsystem_add_ns)
 
     def nvmf_subsystem_set_ns_ana_group(args):

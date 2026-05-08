@@ -119,6 +119,31 @@ removed in v26.09. Use `dmrsl` instead.
 The `max_write_zeroes_size_kib` parameter of `nvmf_create_subsystem` RPC is deprecated and will be
 removed in v26.09. Use `wzsl` instead.
 
+#### `nvmf_namespace_hide_metadata`
+
+The `hide_metadata` parameter of `nvmf_subsystem_add_ns` RPC is deprecated and will be removed in
+v26.09. Metadata visibility on a namespace is determined by the transport's `dif_insert_or_strip`
+option: when any transport on the target has `dif_insert_or_strip` enabled, namespaces are opened
+with metadata hidden so the bdev layer can own DIF generate/verify.
+
+#### `nvmf_tgt_mixed_dif_insert_or_strip`
+
+Adding multiple transports to the same target with disagreeing `dif_insert_or_strip` values is
+deprecated and will be rejected starting in v26.09. All transports on a target must share the
+same `dif_insert_or_strip` setting. Because `dif_insert_or_strip` is applied when a namespace is
+added, a transport that disagrees with an already-attached namespace's setting will also be
+rejected; create the transport (or set the desired value on an existing one) before adding
+namespaces.
+
+#### `nvmf_transport.h`
+
+`struct spdk_nvmf_dif_info`, `struct spdk_nvmf_stripped_data`, `spdk_nvmf_request_get_dif_ctx`,
+and the `dif`, `dif_enabled`, and `stripped_data` fields of `struct spdk_nvmf_request` are
+deprecated and will be removed in v26.09. DIF handling has moved to the bdev layer via the
+namespace's `hide_metadata` open flag, so transports no longer touch DIF context directly. As a
+side effect, the POSIX sock impl without a DIF-capable accelerator now incurs one extra data copy
+per I/O on the DIF path (the old in-place transport-side path is gone).
+
 ### scripts
 
 The `autorun_post.py` symlink in the repository root is deprecated. The script has been moved to
