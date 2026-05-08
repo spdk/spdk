@@ -58,11 +58,11 @@
     {
       "name": "bdev_error_inject_error_type",
       "fields": [
-        {"name": "failure", "value": 1},
-        {"name": "pending", "value": 2},
-        {"name": "corrupt_data", "value": 3},
-        {"name": "nomem", "value": 4},
-        {"name": "nvme_failure", "value": 5}
+        {"name": "failure", "value": "SPDK_BDEV_ERROR_TYPE_FAILURE"},
+        {"name": "pending", "value": "SPDK_BDEV_ERROR_TYPE_PENDING"},
+        {"name": "corrupt_data", "value": "SPDK_BDEV_ERROR_TYPE_CORRUPT_DATA"},
+        {"name": "nomem", "value": "SPDK_BDEV_ERROR_TYPE_NOMEM"},
+        {"name": "nvme_failure", "value": "SPDK_BDEV_ERROR_TYPE_NVME_FAILURE"}
       ]
     },
     {

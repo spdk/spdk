@@ -8,16 +8,8 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
+#include "spdk/module/bdev/error.h"
 #include "spdk/uuid.h"
-
-enum vbdev_error_type {
-	VBDEV_IO_NO_ERROR = 0,
-	VBDEV_IO_FAILURE,
-	VBDEV_IO_PENDING,
-	VBDEV_IO_CORRUPT_DATA,
-	VBDEV_IO_NOMEM,
-	VBDEV_IO_NVME_FAILURE,
-};
 
 typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);
 
