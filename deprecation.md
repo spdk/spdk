@@ -144,6 +144,28 @@ namespace's `hide_metadata` open flag, so transports no longer touch DIF context
 side effect, the POSIX sock impl without a DIF-capable accelerator now incurs one extra data copy
 per I/O on the DIF path (the old in-place transport-side path is gone).
 
+### sock
+
+#### Zero Copy Receive API Removals
+
+`spdk_sock_group_poll_count`, `spdk_sock_recv_next`, `spdk_sock_group_provide_buf` and
+`spdk_sock_group_get_buf` are deprecated and will be removed in v26.09. A new zero copy
+API will replace them.
+
+#### `spdk_sock_group_add_sock`, `spdk_sock_group_create`
+
+The `cb_fn` and `cb_arg` parameters of `spdk_sock_group_add_sock` are deprecated and will be
+removed in v26.09. Instead, pass `cb_fn` and `cb_arg` via the new `spdk_sock_group_opts` struct
+passed to `spdk_sock_group_create`.
+
+#### `spdk_sock_connect`, `spdk_sock_connect_ext`, `spdk_sock_connect_async`
+
+These 3 APIs will be collapsed into a single replacement starting in v26.09.
+
+#### `spdk_sock_listen`, `spdk_sock_listen_ext`
+
+These two APIs will be collapsed into a single replacement starting in v26.09.
+
 ### scripts
 
 The `autorun_post.py` symlink in the repository root is deprecated. The script has been moved to

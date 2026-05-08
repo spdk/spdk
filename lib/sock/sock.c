@@ -858,9 +858,15 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	sock->net_impl->writev_async(sock, req);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_recv_next,
+			      "upcoming zero-copy receive API should be used instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
 {
+	SPDK_LOG_DEPRECATED(spdk_sock_recv_next);
+
 	if (sock == NULL || sock->flags.closed) {
 		return -EBADF;
 	}
@@ -990,12 +996,20 @@ spdk_sock_group_get_ctx(struct spdk_sock_group *group)
 	return group->ctx;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_add_sock_callbacks,
+			      "upcoming group-level receive callback should be used instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			 spdk_sock_cb cb_fn, void *cb_arg)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc;
+
+	if (cb_fn != NULL || cb_arg != NULL) {
+		SPDK_LOG_DEPRECATED(spdk_sock_group_add_sock_callbacks);
+	}
 
 	if (cb_fn == NULL) {
 		return -EINVAL;
@@ -1049,10 +1063,16 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	return rc;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_provide_buf,
+			      "upcoming zero-copy receive API should be used instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t len, void *ctx)
 {
 	struct spdk_sock_group_provided_buf *provided;
+
+	SPDK_LOG_DEPRECATED(spdk_sock_group_provide_buf);
 
 	provided = (struct spdk_sock_group_provided_buf *)buf;
 
@@ -1063,10 +1083,16 @@ spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t len
 	return 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_get_buf,
+			      "upcoming zero-copy receive API should be used instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 size_t
 spdk_sock_group_get_buf(struct spdk_sock_group *group, void **buf, void **ctx)
 {
 	struct spdk_sock_group_provided_buf *provided;
+
+	SPDK_LOG_DEPRECATED(spdk_sock_group_get_buf);
 
 	provided = STAILQ_FIRST(&group->pool);
 	if (provided == NULL) {
@@ -1078,12 +1104,6 @@ spdk_sock_group_get_buf(struct spdk_sock_group *group, void **buf, void **ctx)
 	*buf = provided;
 	*ctx = provided->ctx;
 	return provided->len;
-}
-
-int
-spdk_sock_group_poll(struct spdk_sock_group *group)
-{
-	return spdk_sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
 }
 
 static int
@@ -1113,8 +1133,8 @@ sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 	return num_events;
 }
 
-int
-spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+static int
+sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc, num_events = 0;
@@ -1143,6 +1163,23 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 	}
 
 	return num_events;
+}
+
+int
+spdk_sock_group_poll(struct spdk_sock_group *group)
+{
+	return sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_poll_count,
+			      "use spdk_sock_group_poll instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
+int
+spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+{
+	SPDK_LOG_DEPRECATED(spdk_sock_group_poll_count);
+	return sock_group_poll_count(group, max_events);
 }
 
 int
