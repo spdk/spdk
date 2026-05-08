@@ -11,31 +11,6 @@
 #include "vbdev_error.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static int
-rpc_error_bdev_decode_io_type(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *io_type = out;
-
-	if (spdk_json_strequal(val, "read") == true) {
-		*io_type = SPDK_BDEV_IO_TYPE_READ;
-	} else if (spdk_json_strequal(val, "write") == true) {
-		*io_type = SPDK_BDEV_IO_TYPE_WRITE;
-	} else if (spdk_json_strequal(val, "flush") == true) {
-		*io_type = SPDK_BDEV_IO_TYPE_FLUSH;
-	} else if (spdk_json_strequal(val, "unmap") == true) {
-		*io_type = SPDK_BDEV_IO_TYPE_UNMAP;
-	} else if (spdk_json_strequal(val, "all") == true) {
-		*io_type = 0xffffffff;
-	} else if (spdk_json_strequal(val, "clear") == true) {
-		*io_type = 0;
-	} else {
-		SPDK_NOTICELOG("Invalid parameter value: io_type\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_error_create_decoders[] = {
 	{"base_name", offsetof(struct rpc_bdev_error_create_ctx, base_name), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_bdev_error_create_ctx, uuid), spdk_json_decode_uuid, true},
@@ -109,7 +84,7 @@ SPDK_RPC_REGISTER("bdev_error_delete", rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_error_inject_error_ctx, name), spdk_json_decode_string},
-	{"io_type", offsetof(struct rpc_bdev_error_inject_error_ctx, io_type), rpc_error_bdev_decode_io_type},
+	{"io_type", offsetof(struct rpc_bdev_error_inject_error_ctx, io_type), rpc_decode_bdev_error_inject_io_type},
 	{"error_type", offsetof(struct rpc_bdev_error_inject_error_ctx, error_type), rpc_decode_bdev_error_inject_error_type},
 	{"nvme_sct", offsetof(struct rpc_bdev_error_inject_error_ctx, nvme_sct), spdk_json_decode_uint32, true},
 	{"nvme_sc", offsetof(struct rpc_bdev_error_inject_error_ctx, nvme_sc), spdk_json_decode_uint32, true},
@@ -168,12 +143,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_error_inject_error", rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)
 
-static void
-free_rpc_bdev_error_resume_pending_ctx(struct rpc_bdev_error_resume_pending_ctx *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_error_resume_pending_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_error_resume_pending_ctx, name), spdk_json_decode_string},
 };
@@ -210,7 +179,7 @@ rpc_bdev_error_resume_pending(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
-	free_rpc_bdev_error_resume_pending_ctx(&req);
+	free_rpc_bdev_error_resume_pending(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_resume_pending", rpc_bdev_error_resume_pending,
 		  SPDK_RPC_RUNTIME)
