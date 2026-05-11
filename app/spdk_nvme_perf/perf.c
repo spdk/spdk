@@ -2965,9 +2965,12 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		if (g_no_shn_notification) {
 			opts->no_shn_notification = true;
 		}
-		if (g_enable_interrupt) {
-			opts->enable_interrupts = true;
-		}
+	}
+
+	if (g_enable_interrupt &&
+	    (trid->trtype == SPDK_NVME_TRANSPORT_PCIE ||
+	     trid->trtype == SPDK_NVME_TRANSPORT_RDMA)) {
+		opts->enable_interrupts = true;
 	}
 
 	if (trid->trtype != trid_entry->trid.trtype &&
@@ -2999,11 +3002,9 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		if (g_enable_interrupt && !opts->enable_interrupts) {
-			fprintf(stderr, "Couldn't enable interrupts on NVMe controller at %s\n", trid->traddr);
-			return;
-		}
+	if (g_enable_interrupt && !opts->enable_interrupts) {
+		fprintf(stderr, "Couldn't enable interrupts on NVMe controller at %s\n", trid->traddr);
+		return;
 	}
 
 	register_ctrlr(ctrlr, cb_ctx);

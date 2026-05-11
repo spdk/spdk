@@ -65,6 +65,10 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * Enable interrupts for completion notification. This is only supported within a primary
 	 * SPDK process, and if enabled SPDK will not support secondary processes.
+	 *
+	 * Only transports that implement interrupt support can use this option. For such
+	 * transports, spdk_nvme_qpair_get_fd() may return a file descriptor that signals
+	 * completion events for a qpair.
 	 */
 	bool enable_interrupts;
 
