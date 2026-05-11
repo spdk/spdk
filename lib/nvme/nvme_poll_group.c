@@ -260,7 +260,7 @@ nvme_qpair_process_completion_wrapper(void *arg)
 	return total;
 }
 
-static int
+int
 nvme_poll_group_add_qpair_fd(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_poll_group *group;
@@ -276,6 +276,9 @@ nvme_poll_group_add_qpair_fd(struct spdk_nvme_qpair *qpair)
 
 	fd = spdk_nvme_qpair_get_fd(qpair, &opts);
 	if (fd < 0) {
+		if (fd == -EAGAIN && nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
+			return 0;
+		}
 		NVME_QPAIR_ERRLOG(qpair, "Cannot get fd for the qpair: %d\n", fd);
 		return -EINVAL;
 	}
@@ -297,6 +300,9 @@ nvme_poll_group_remove_qpair_fd(struct spdk_nvme_qpair *qpair)
 
 	fd = spdk_nvme_qpair_get_fd(qpair, NULL);
 	if (fd < 0) {
+		if (fd == -EAGAIN) {
+			return;
+		}
 		NVME_QPAIR_ERRLOG(qpair, "Cannot get fd for the qpair: %d\n", fd);
 		assert(false);
 		return;

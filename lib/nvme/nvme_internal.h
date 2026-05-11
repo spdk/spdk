@@ -1330,6 +1330,7 @@ nvme_ctrlr_unlock(struct spdk_nvme_ctrlr *ctrlr)
 /* Poll group management functions. */
 int nvme_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair);
 int nvme_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair);
+int nvme_poll_group_add_qpair_fd(struct spdk_nvme_qpair *qpair);
 void nvme_poll_group_write_disconnect_qpair_fd(struct spdk_nvme_poll_group *group);
 
 /* Admin functions */
