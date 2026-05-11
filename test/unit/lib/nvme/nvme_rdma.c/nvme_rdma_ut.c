@@ -21,6 +21,7 @@ DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_transla
 DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
 
 DEFINE_STUB(nvme_poll_group_connect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(nvme_poll_group_add_qpair_fd, int, (struct spdk_nvme_qpair *qpair), 0);
 
 DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair, uint32_t num_requests));
 DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,

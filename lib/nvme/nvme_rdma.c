@@ -203,6 +203,7 @@ struct nvme_rdma_qpair {
 	struct spdk_rdma_provider_qp		*rdma_qp;
 	struct rdma_cm_id			*cm_id;
 	struct ibv_cq				*cq;
+	struct ibv_comp_channel			*comp_channel;
 	struct spdk_rdma_provider_srq		*srq;
 
 	struct	spdk_nvme_rdma_req		*rdma_reqs;
@@ -740,6 +741,49 @@ nvme_rdma_qpair_set_poller(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+static int
+nvme_rdma_cq_process_events(struct ibv_comp_channel *comp_channel, struct ibv_cq *cq)
+{
+	struct ibv_cq *ev_cq;
+	void *ev_ctx;
+	uint32_t num_events = 0;
+	int rc;
+
+	if (comp_channel == NULL) {
+		return 0;
+	}
+
+	while ((rc = ibv_get_cq_event(comp_channel, &ev_cq, &ev_ctx)) == 0) {
+		if (spdk_unlikely(ev_cq != cq)) {
+			SPDK_ERRLOG("Unexpected CQ event on channel %p: expected %p, got %p\n",
+				    comp_channel, cq, ev_cq);
+			ibv_ack_cq_events(ev_cq, 1);
+			return -EINVAL;
+		}
+
+		num_events++;
+	}
+
+	if (rc != 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		SPDK_ERRLOG("ibv_get_cq_event failed: %s\n", spdk_strerror(errno));
+		return -errno;
+	}
+
+	if (num_events == 0) {
+		return 0;
+	}
+
+	ibv_ack_cq_events(cq, num_events);
+
+	rc = ibv_req_notify_cq(cq, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("ibv_req_notify_cq failed: %s\n", spdk_strerror(rc));
+		return -rc;
+	}
+
+	return 0;
+}
+
 static void
 nvme_rdma_qpair_release_poller(struct nvme_rdma_qpair *rqpair)
 {
@@ -778,7 +822,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	if (rqpair->qpair.poll_group) {
+	if (rqpair->qpair.poll_group && !rqpair->qpair.ctrlr->opts.enable_interrupts) {
 		assert(!rqpair->cq);
 		rc = nvme_rdma_qpair_set_poller(&rqpair->qpair);
 		if (rc) {
@@ -792,11 +836,34 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 		if (max_num_cqe != 0 && num_cqe > max_num_cqe) {
 			num_cqe = max_num_cqe;
 		}
-		rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, num_cqe, rqpair, NULL, 0);
+		if (rqpair->qpair.ctrlr->opts.enable_interrupts) {
+			rqpair->comp_channel = ibv_create_comp_channel(rqpair->cm_id->verbs);
+			if (rqpair->comp_channel == NULL) {
+				NVME_RQPAIR_ERRLOG(rqpair, "Unable to create completion channel\n");
+				return -1;
+			}
+
+			rc = spdk_fd_set_nonblock(rqpair->comp_channel->fd);
+			if (rc < 0) {
+				NVME_RQPAIR_ERRLOG(rqpair, "Failed to set completion channel fd %d non-blocking\n",
+						   rqpair->comp_channel->fd);
+				return -1;
+			}
+		}
+
+		rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, num_cqe, rqpair, rqpair->comp_channel, 0);
 		if (!rqpair->cq) {
 			NVME_RQPAIR_ERRLOG(rqpair, "Unable to create completion queue: errno %d: %s\n", errno,
 					   spdk_strerror(errno));
 			return -1;
+		}
+
+		if (rqpair->comp_channel != NULL) {
+			rc = ibv_req_notify_cq(rqpair->cq, 0);
+			if (rc != 0) {
+				NVME_RQPAIR_ERRLOG(rqpair, "ibv_req_notify_cq failed: %s\n", spdk_strerror(rc));
+				return -1;
+			}
 		}
 	}
 
@@ -2349,9 +2416,20 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 			rqpair->srq = NULL;
 			rqpair->rsps = NULL;
 		}
-	} else if (rqpair->cq) {
-		ibv_destroy_cq(rqpair->cq);
-		rqpair->cq = NULL;
+	} else {
+		if (rqpair->comp_channel != NULL) {
+			nvme_rdma_cq_process_events(rqpair->comp_channel, rqpair->cq);
+		}
+
+		if (rqpair->cq) {
+			ibv_destroy_cq(rqpair->cq);
+			rqpair->cq = NULL;
+		}
+
+		if (rqpair->comp_channel) {
+			ibv_destroy_comp_channel(rqpair->comp_channel);
+			rqpair->comp_channel = NULL;
+		}
 	}
 
 	nvme_rdma_free_reqs(rqpair);
@@ -3253,11 +3331,11 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	uint64_t			rdma_completions = 0;
 
 	/*
-	 * This is used during the connection phase. It's possible that we are still reaping error completions
-	 * from other qpairs so we need to call the poll group function. Also, it's more correct since the cq
-	 * is shared.
+	 * During connection, non-interrupt poll group qpairs may share a CQ, so process completions
+	 * through the poll group to reap completions from other qpairs. Interrupt-mode qpairs use a
+	 * per-qpair CQ and completion channel, so process their own CQ directly.
 	 */
-	if (qpair->poll_group != NULL) {
+	if (qpair->poll_group != NULL && !qpair->ctrlr->opts.enable_interrupts) {
 		return spdk_nvme_poll_group_process_completions(qpair->poll_group->group, max_completions,
 				dummy_disconnected_qpair_cb);
 	}
@@ -3296,6 +3374,11 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 
 	rqpair->num_completions = 0;
+	rc = nvme_rdma_cq_process_events(rqpair->comp_channel, rqpair->cq);
+	if (rc != 0) {
+		goto failed;
+	}
+
 	do {
 		batch_size = spdk_min((max_completions - rqpair->num_completions), MAX_COMPLETIONS_PER_POLL);
 		rc = nvme_rdma_qpair_process_cq_completions(rqpair, batch_size, &rdma_completions);
@@ -3821,15 +3904,32 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	TAILQ_FOREACH_SAFE(rqpair, &group->connecting_qpairs, link_connecting, tmp_rqpair) {
 		qpair = &rqpair->qpair;
 
-		rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		if (qpair->ctrlr->opts.enable_interrupts) {
+			rc = nvme_rdma_qpair_process_completions(qpair, 0);
+			if (rc >= 0) {
+				rc = nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING ? -EAGAIN : 0;
+			}
+		} else {
+			rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		}
 		if (rc == 0 || rc != -EAGAIN) {
 			TAILQ_REMOVE_CLEAR(&group->connecting_qpairs, rqpair, link_connecting);
 
 			if (rc == 0) {
+				if (qpair->ctrlr->opts.enable_interrupts) {
+					rc = nvme_poll_group_add_qpair_fd(qpair);
+					if (rc != 0) {
+						NVME_RQPAIR_ERRLOG(rqpair, "Failed to add qpair fd after connect\n");
+						nvme_rdma_fail_qpair(qpair, 0);
+						continue;
+					}
+				}
 				/* Once the connection is completed, we can submit queued requests */
 				nvme_qpair_resubmit_requests(qpair, rqpair->num_entries);
 			} else if (rc != -EAGAIN) {
-				NVME_RQPAIR_ERRLOG(rqpair, "Failed to connect\n");
+				NVME_RQPAIR_ERRLOG(rqpair,
+						   "Failed to connect, rc %d, rdma_state %d, failure_reason %d\n",
+						   rc, rqpair->state, qpair->transport_failure_reason);
 				nvme_rdma_fail_qpair(qpair, 0);
 			}
 		}
@@ -3883,6 +3983,38 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	}
 
 	return rc2 != 0 ? rc2 : total_completions;
+}
+
+static int
+nvme_rdma_qpair_get_fd(struct spdk_nvme_qpair *qpair, struct spdk_event_handler_opts *opts)
+{
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+
+	if (!qpair->ctrlr->opts.enable_interrupts) {
+		return -1;
+	}
+
+	if (rqpair->comp_channel == NULL) {
+		return -EAGAIN;
+	}
+
+	if (opts != NULL) {
+		if (!SPDK_FIELD_VALID(opts, fd_type, opts->opts_size)) {
+			return -EINVAL;
+		}
+
+		spdk_fd_group_get_default_event_handler_opts(opts, opts->opts_size);
+		opts->fd_type = SPDK_FD_TYPE_DEFAULT;
+	}
+
+	return rqpair->comp_channel->fd;
+}
+
+static int
+nvme_rdma_ctrlr_enable_interrupts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	(void)ctrlr;
+	return 0;
 }
 
 /*
@@ -4006,6 +4138,7 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.ctrlr_scan = nvme_fabric_ctrlr_scan,
 	.ctrlr_destruct = nvme_rdma_ctrlr_destruct,
 	.ctrlr_enable = nvme_rdma_ctrlr_enable,
+	.ctrlr_enable_interrupts = nvme_rdma_ctrlr_enable_interrupts,
 
 	.ctrlr_set_reg_4 = nvme_fabric_ctrlr_set_reg_4,
 	.ctrlr_set_reg_8 = nvme_fabric_ctrlr_set_reg_8,
@@ -4032,6 +4165,7 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.qpair_submit_request = nvme_rdma_qpair_submit_request,
 	.qpair_process_completions = nvme_rdma_qpair_process_completions,
 	.qpair_iterate_requests = nvme_rdma_qpair_iterate_requests,
+	.qpair_get_fd = nvme_rdma_qpair_get_fd,
 	.qpair_authenticate = nvme_rdma_qpair_authenticate,
 	.admin_qpair_abort_aers = nvme_rdma_admin_qpair_abort_aers,
 
