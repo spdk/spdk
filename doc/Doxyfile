@@ -831,6 +831,7 @@ INPUT                  += \
                          memory.md \
                          notify.md \
                          nvme.md \
+                         nvme_interrupt_mode.md \
                          nvme_multipath.md \
                          nvme_spec.md \
                          nvmf.md \

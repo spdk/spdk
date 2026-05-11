@@ -1,5 +1,7 @@
 # NVMe Driver {#nvme}
 
+@sa @ref nvme_interrupt_mode
+
 ## In this document {#nvme_toc}
 
 - @ref nvme_intro
@@ -67,6 +69,9 @@ Example: Using perf for 4K 100% Random Read workload to a remote NVMe SSD export
 ~~~{.sh}
 perf -q 128 -o 4096 -w randread -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' -t 300
 ~~~
+
+See @ref nvme_interrupt_mode for initiator-side interrupt mode usage details,
+including NVMe-oF RDMA examples.
 
 Example: Using perf for 4K 70/30 Random Read/Write mix workload to all local NVMe SSDs for 300 seconds
 ~~~{.sh}

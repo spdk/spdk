@@ -28,6 +28,17 @@
   -r "trtype:RDMA adrfam:IPv4 traddr:192.168.1.100 trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1"
 ```
 
+### Interrupt Mode
+
+Interrupt mode can be enabled with `-E` for initiator-side testing when the selected
+transport supports interrupt-capable queue pairs. This includes local PCIe devices
+and NVMe-oF RDMA initiators.
+
+```bash
+./spdk_nvme_perf -q 128 -o 4096 -w randread -t 300 -E \
+  -r "trtype:RDMA adrfam:IPv4 traddr:192.168.1.100 trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1"
+```
+
 ### Advanced Examples
 
 ```bash

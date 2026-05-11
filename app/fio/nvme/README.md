@@ -190,6 +190,9 @@ digest_enable=HEADER        # NVMe/TCP digest (NONE|HEADER|DATA|BOTH,
 enable_interrupts=1         # Enable interrupt mode (0/1, default: 0)
 ```
 
+This option may be used with transports that expose interrupt-capable qpairs,
+including PCIe and RDMA.
+
 ### Debugging and Logging
 
 ```bash
