@@ -2355,7 +2355,29 @@ rpc_nvmf_get_targets(struct spdk_jsonrpc_request *request,
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
 	char				*tgt_name;
-	struct spdk_nvmf_transport_opts	opts;
+	uint16_t			max_queue_depth;
+	uint16_t			max_qpairs_per_ctrlr;
+	uint32_t			in_capsule_data_size;
+	uint32_t			max_io_size;
+	uint32_t			io_unit_size;
+	uint32_t			max_aq_depth;
+	uint32_t			num_shared_buffers;
+	union {
+		uint32_t		buf_cache_size;
+		uint32_t		iobuf_small_cache_size;
+	};
+	uint32_t			iobuf_large_cache_size;
+	bool				dif_insert_or_strip;
+	uint32_t			abort_timeout_sec;
+	bool				zcopy;
+	uint32_t			acceptor_poll_rate;
+	uint32_t			ack_timeout;
+	uint32_t			data_wr_pool_size;
+	bool				disable_command_passthru;
+	uint16_t			kas;
+	uint32_t			min_kato;
+	uint16_t			masked_oncs;
+	uint16_t			masked_fuses;
 	struct spdk_jsonrpc_request	*request;
 	struct spdk_nvmf_transport	*transport;
 	int				status;
@@ -2416,28 +2438,28 @@ decode_io_unit_size(const struct spdk_json_val *val, void *out)
 
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
 	{"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
-	{"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth), spdk_json_decode_uint16, true},
-	{"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
-	{"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.in_capsule_data_size), spdk_json_decode_uint32, true},
-	{"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_io_size), spdk_json_decode_uint32, true},
-	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size), decode_io_unit_size, true},
-	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth), spdk_json_decode_uint32, true},
-	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers), decode_num_shared_buffers, true},
-	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size), decode_buf_cache_size, true},
-	{"iobuf_small_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.iobuf_small_cache_size), spdk_json_decode_uint32, true},
-	{"iobuf_large_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.iobuf_large_cache_size), spdk_json_decode_uint32, true},
-	{"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_insert_or_strip), spdk_json_decode_bool, true},
-	{"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, opts.abort_timeout_sec), spdk_json_decode_uint32, true},
-	{"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, opts.zcopy), spdk_json_decode_bool, true},
+	{"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, max_queue_depth), spdk_json_decode_uint16, true},
+	{"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, max_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
+	{"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, in_capsule_data_size), spdk_json_decode_uint32, true},
+	{"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, max_io_size), spdk_json_decode_uint32, true},
+	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, io_unit_size), decode_io_unit_size, true},
+	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, max_aq_depth), spdk_json_decode_uint32, true},
+	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, num_shared_buffers), decode_num_shared_buffers, true},
+	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, buf_cache_size), decode_buf_cache_size, true},
+	{"iobuf_small_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, iobuf_small_cache_size), spdk_json_decode_uint32, true},
+	{"iobuf_large_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, iobuf_large_cache_size), spdk_json_decode_uint32, true},
+	{"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, dif_insert_or_strip), spdk_json_decode_bool, true},
+	{"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, abort_timeout_sec), spdk_json_decode_uint32, true},
+	{"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, zcopy), spdk_json_decode_bool, true},
 	{"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name), spdk_json_decode_string, true},
-	{"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_poll_rate), spdk_json_decode_uint32, true},
-	{"ack_timeout", offsetof(struct nvmf_rpc_create_transport_ctx, opts.ack_timeout), spdk_json_decode_uint32, true},
-	{"data_wr_pool_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.data_wr_pool_size), spdk_json_decode_uint32, true},
-	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, opts.disable_command_passthru), spdk_json_decode_bool, true},
-	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, opts.kas), spdk_json_decode_uint16, true},
-	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, opts.min_kato), spdk_json_decode_uint32, true},
-	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, opts.oncs.raw), rpc_decode_oncs_features_bitmask, true},
-	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, opts.fuses.raw), rpc_decode_fuses_features_bitmask, true},
+	{"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, acceptor_poll_rate), spdk_json_decode_uint32, true},
+	{"ack_timeout", offsetof(struct nvmf_rpc_create_transport_ctx, ack_timeout), spdk_json_decode_uint32, true},
+	{"data_wr_pool_size", offsetof(struct nvmf_rpc_create_transport_ctx, data_wr_pool_size), spdk_json_decode_uint32, true},
+	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, disable_command_passthru), spdk_json_decode_bool, true},
+	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, kas), spdk_json_decode_uint16, true},
+	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, min_kato), spdk_json_decode_uint32, true},
+	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, masked_oncs), rpc_decode_oncs_features_bitmask, true},
+	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, masked_fuses), rpc_decode_fuses_features_bitmask, true},
 };
 
 /* TODO: replace with free_rpc_nvmf_create_transport */
@@ -2499,6 +2521,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_create_transport_ctx *ctx;
+	struct spdk_nvmf_transport_opts opts = {};
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
@@ -2530,7 +2553,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	/* Initialize all the transport options (based on transport type) and decode the
 	 * parameters again to update any options passed in rpc create transport call.
 	 */
-	if (!spdk_nvmf_transport_opts_init(ctx->trtype, &ctx->opts, sizeof(ctx->opts))) {
+	if (!spdk_nvmf_transport_opts_init(ctx->trtype, &opts, sizeof(opts))) {
 		/* This can happen if user specifies PCIE transport type which isn't valid for
 		 * NVMe-oF.
 		 */
@@ -2541,6 +2564,27 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	ctx->max_queue_depth = opts.max_queue_depth;
+	ctx->max_qpairs_per_ctrlr = opts.max_qpairs_per_ctrlr;
+	ctx->in_capsule_data_size = opts.in_capsule_data_size;
+	ctx->max_io_size = opts.max_io_size;
+	ctx->io_unit_size = opts.io_unit_size;
+	ctx->max_aq_depth = opts.max_aq_depth;
+	ctx->num_shared_buffers = opts.num_shared_buffers;
+	ctx->iobuf_small_cache_size = opts.iobuf_small_cache_size;
+	ctx->iobuf_large_cache_size = opts.iobuf_large_cache_size;
+	ctx->dif_insert_or_strip = opts.dif_insert_or_strip;
+	ctx->abort_timeout_sec = opts.abort_timeout_sec;
+	ctx->zcopy = opts.zcopy;
+	ctx->acceptor_poll_rate = opts.acceptor_poll_rate;
+	ctx->ack_timeout = opts.ack_timeout;
+	ctx->data_wr_pool_size = opts.data_wr_pool_size;
+	ctx->disable_command_passthru = opts.disable_command_passthru;
+	ctx->kas = opts.kas;
+	ctx->min_kato = opts.min_kato;
+	ctx->masked_oncs = opts.oncs.raw;
+	ctx->masked_fuses = opts.fuses.raw;
+
 	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders,
 					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders),
 					    ctx)) {
@@ -2549,6 +2593,27 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
+
+	opts.max_queue_depth = ctx->max_queue_depth;
+	opts.max_qpairs_per_ctrlr = ctx->max_qpairs_per_ctrlr;
+	opts.in_capsule_data_size = ctx->in_capsule_data_size;
+	opts.max_io_size = ctx->max_io_size;
+	opts.io_unit_size = ctx->io_unit_size;
+	opts.max_aq_depth = ctx->max_aq_depth;
+	opts.num_shared_buffers = ctx->num_shared_buffers;
+	opts.iobuf_small_cache_size = ctx->iobuf_small_cache_size;
+	opts.iobuf_large_cache_size = ctx->iobuf_large_cache_size;
+	opts.dif_insert_or_strip = ctx->dif_insert_or_strip;
+	opts.abort_timeout_sec = ctx->abort_timeout_sec;
+	opts.zcopy = ctx->zcopy;
+	opts.acceptor_poll_rate = ctx->acceptor_poll_rate;
+	opts.ack_timeout = ctx->ack_timeout;
+	opts.data_wr_pool_size = ctx->data_wr_pool_size;
+	opts.disable_command_passthru = ctx->disable_command_passthru;
+	opts.kas = ctx->kas;
+	opts.min_kato = ctx->min_kato;
+	opts.oncs.raw = ctx->masked_oncs;
+	opts.fuses.raw = ctx->masked_fuses;
 
 	if (spdk_nvmf_tgt_get_transport(tgt, ctx->trtype)) {
 		SPDK_ERRLOG("Transport type '%s' already exists\n", ctx->trtype);
@@ -2559,10 +2624,10 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Transport can parse additional params themselves */
-	ctx->opts.transport_specific = params;
+	opts.transport_specific = params;
 	ctx->request = request;
 
-	rc = spdk_nvmf_transport_create_async(ctx->trtype, &ctx->opts, nvmf_rpc_create_transport_done, ctx);
+	rc = spdk_nvmf_transport_create_async(ctx->trtype, &opts, nvmf_rpc_create_transport_done, ctx);
 	if (rc) {
 		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
