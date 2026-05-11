@@ -5,6 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
 
 #include "spdk/accel_module.h"
 #include "accel_internal.h"
@@ -18,6 +19,10 @@
 #include "spdk/util.h"
 #include "spdk/xor.h"
 #include "spdk/dif.h"
+
+#ifdef __linux__
+#include <sys/eventfd.h>
+#endif
 
 #ifdef SPDK_CONFIG_HAVE_LZ4
 #include <lz4.h>
@@ -65,6 +70,10 @@ struct sw_accel_io_channel {
 #endif
 	struct spdk_poller		*completion_poller;
 	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+
+	/* Interrupt mode support via eventfd */
+	int				efd;
+	struct spdk_interrupt		*intr;
 };
 
 typedef int (*sw_accel_crypto_op)(const uint8_t *k2, const uint8_t *k1,
@@ -83,12 +92,25 @@ static int sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key);
 static bool sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode);
 static bool sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size);
 
-/* Post SW completions to a list; processed by ->completion_poller. */
+/* Post SW completions to a list; processed by ->completion_poller.
+ * Signals the eventfd only on the first task that transitions the list
+ * from empty to non-empty. */
 inline static void
 _add_to_comp_list(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task, int status)
 {
+	bool need_signal = STAILQ_EMPTY(&sw_ch->tasks_to_complete);
+	uint64_t val = 1;
+	ssize_t rc;
+
 	accel_task->status = status;
 	STAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
+
+	if (need_signal && sw_ch->efd >= 0) {
+		rc = write(sw_ch->efd, &val, sizeof(val));
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to write to eventfd: %s\n", spdk_strerror(errno));
+		}
+	}
 }
 
 static bool
@@ -709,14 +731,6 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 	struct spdk_accel_task *tmp;
 	int rc = 0;
 
-	/*
-	 * Lazily initialize our completion poller. We don't want to complete
-	 * them inline as they'll likely submit another.
-	 */
-	if (spdk_unlikely(sw_ch->completion_poller == NULL)) {
-		sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
-	}
-
 	do {
 		switch (accel_task->op_code) {
 		case SPDK_ACCEL_OPC_COPY:
@@ -803,18 +817,39 @@ sw_accel_create_cb(void *io_device, void *ctx_buf)
 #endif
 
 	STAILQ_INIT(&sw_ch->tasks_to_complete);
-	sw_ch->completion_poller = NULL;
+	sw_ch->intr = NULL;
+
+#ifdef __linux__
+	/* Create eventfd for interrupt signaling if interrupt mode is enabled */
+	if (spdk_interrupt_mode_is_enabled()) {
+		sw_ch->efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+		if (sw_ch->efd < 0) {
+			SPDK_ERRLOG("Failed to create eventfd: %s\n", spdk_strerror(errno));
+			return -errno;
+		}
+	} else {
+		sw_ch->efd = -1;
+	}
+#else
+	sw_ch->efd = -1;
+#endif
 
 #ifdef SPDK_CONFIG_HAVE_LZ4
 	sw_ch->lz4_stream = LZ4_createStream();
 	if (sw_ch->lz4_stream == NULL) {
 		SPDK_ERRLOG("Failed to create the lz4 stream for compression\n");
+		if (sw_ch->efd >= 0) {
+			close(sw_ch->efd);
+		}
 		return -ENOMEM;
 	}
 	sw_ch->lz4_stream_decode = LZ4_createStreamDecode();
 	if (sw_ch->lz4_stream_decode == NULL) {
 		SPDK_ERRLOG("Failed to create the lz4 stream for decompression\n");
 		LZ4_freeStream(sw_ch->lz4_stream);
+		if (sw_ch->efd >= 0) {
+			close(sw_ch->efd);
+		}
 		return -ENOMEM;
 	}
 #endif
@@ -845,6 +880,28 @@ sw_accel_create_cb(void *io_device, void *ctx_buf)
 	isal_inflate_init(&sw_ch->state);
 #endif
 
+	sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
+
+	if (sw_ch->efd >= 0) {
+		struct spdk_event_handler_opts opts = {};
+
+		spdk_fd_group_get_default_event_handler_opts(&opts, sizeof(opts));
+		opts.fd_type = SPDK_FD_TYPE_EVENTFD;
+		sw_ch->intr = SPDK_INTERRUPT_REGISTER_EXT(sw_ch->efd, accel_comp_poll, sw_ch, &opts);
+		if (sw_ch->intr == NULL) {
+			SPDK_ERRLOG("Failed to register accel_sw interrupt\n");
+			close(sw_ch->efd);
+			sw_ch->efd = -1;
+			spdk_poller_unregister(&sw_ch->completion_poller);
+#ifdef SPDK_CONFIG_HAVE_LZ4
+			LZ4_freeStream(sw_ch->lz4_stream);
+			LZ4_freeStreamDecode(sw_ch->lz4_stream_decode);
+#endif
+			return -EINVAL;
+		}
+		spdk_poller_register_interrupt(sw_ch->completion_poller, NULL, NULL);
+	}
+
 	return 0;
 }
 
@@ -857,6 +914,16 @@ sw_accel_destroy_cb(void *io_device, void *ctx_buf)
 	LZ4_freeStream(sw_ch->lz4_stream);
 	LZ4_freeStreamDecode(sw_ch->lz4_stream_decode);
 #endif
+
+	/* Cleanup interrupt resources */
+	if (sw_ch->intr != NULL) {
+		spdk_interrupt_unregister(&sw_ch->intr);
+	}
+	if (sw_ch->efd >= 0) {
+		close(sw_ch->efd);
+		sw_ch->efd = -1;
+	}
+
 	spdk_poller_unregister(&sw_ch->completion_poller);
 }
 
