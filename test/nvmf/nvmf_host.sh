@@ -40,6 +40,10 @@ if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
 	run_test "nvmf_digest" "$rootdir/test/nvmf/host/digest.sh" "${TEST_ARGS[@]}"
 fi
 
+if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "rdma" ]]; then
+	run_test "nvmf_host_interrupt" "$rootdir/test/nvmf/host/interrupt.sh" "${TEST_ARGS[@]}"
+fi
+
 if [[ $SPDK_TEST_NVMF_MDNS -eq 1 && "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
 	# Skipping tests on RDMA because the rdma stack fails to configure the same IP for host and target.
 	run_test "nvmf_mdns_discovery" $rootdir/test/nvmf/host/mdns_discovery.sh "${TEST_ARGS[@]}"
