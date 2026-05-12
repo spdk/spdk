@@ -53,7 +53,7 @@ struct rpc_{{ array.name }};
 
 /* Enum definitions section */
 
-{% for enum in schema.get("enums", []) %}
+{% for enum in schema["enums"] %}
 enum rpc_{{ enum.name }} {
     {%- for val in enum.fields %}
     RPC_{{ enum.name | upper }}_{{ val.name | upper | replace('-', '_') }} = {{ val.value }},
@@ -63,7 +63,7 @@ enum rpc_{{ enum.name }} {
 
 /* Enum decoder functions section */
 
-{% for enum in schema.get("enums", []) %}
+{% for enum in schema["enums"] %}
 static inline int
 rpc_decode_{{ enum.name }}(const struct spdk_json_val *val, void *out)
 {
@@ -108,13 +108,15 @@ struct rpc_{{ object.name }} {
 {% if object.name != "nvmf_namespace" %}
 static const struct spdk_json_object_decoder rpc_{{ object.name }}_decoders[] = {
     {%- for field in object.fields if field.type != "array" %}
-	{%- set decode_fn = 'spdk_json_decode_' ~ ('bool' if field.type == 'boolean' else field.type) %}
 	{%- set optional = 'false' if field.required else 'true' %}
 	{%- if field.type == "enum" %}
-		{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), rpc_decode_{{ field.class }}, {{ optional }}},
+	{%- set decode_fn = 'rpc_decode_' ~ field.class %}
+	{%- elif field.type == "boolean" %}
+	{%- set decode_fn = 'spdk_json_decode_bool' %}
 	{%- else %}
-		{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), {{ decode_fn }}, {{ optional }}},
+	{%- set decode_fn = 'spdk_json_decode_' ~ field.type %}
 	{%- endif %}
+		{"{{ field.name }}", offsetof(struct rpc_{{ object.name }}, {{ field.name }}), {{ decode_fn }}, {{ optional }}},
     {%- endfor %}
 };
 
@@ -218,7 +220,7 @@ struct rpc_{{ method.name }}_ctx {
 		struct rpc_{{ param.class }} {{ param.name }};
 	{%- elif param.type == "enum" -%}
 		enum rpc_{{ param.class }} {{ param.name }};
-	{%- elif param.type == "array" and param.class -%}
+	{%- elif param.type == "array" -%}
 		struct rpc_{{ param.class }} {{ param.name }};
 	{%- else -%}
 		{{ types[param.type] }} {{ "is_private" if param.name == "private" else param.name }};
@@ -231,12 +233,9 @@ static inline void
 free_rpc_{{ method.name }}(struct rpc_{{ method.name }}_ctx *req)
 {
 {%- for param in method.params if param.type == "string" %}
-	free(req->{{ "is_private" if param.name == "private" else param.name }});
+	free(req->{{ param.name }});
 {%- endfor %}
-{%- for param in method.params if param.type == "object" %}
-	free_rpc_{{ param.class }}(&req->{{ param.name }});
-{%- endfor %}
-{%- for param in method.params if param.type == "array" and param.class %}
+{%- for param in method.params if param.type in ("object", "array") %}
 	free_rpc_{{ param.class }}(&req->{{ param.name }});
 {%- endfor %}
 }
