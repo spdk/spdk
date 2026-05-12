@@ -215,6 +215,8 @@ struct nvmf_vfio_user_sq {
 
 	/* Currently unallocated reqs. */
 	TAILQ_HEAD(, nvmf_vfio_user_req)	free_reqs;
+	/* Contiguous block backing the reqs. */
+	void					*req_buf;
 	/* Poll group entry */
 	TAILQ_ENTRY(nvmf_vfio_user_sq)		link;
 	/* Connected SQ entry */
@@ -1698,8 +1700,9 @@ free_sq_reqs(struct nvmf_vfio_user_sq *sq)
 	while (!TAILQ_EMPTY(&sq->free_reqs)) {
 		struct nvmf_vfio_user_req *vu_req = TAILQ_FIRST(&sq->free_reqs);
 		TAILQ_REMOVE(&sq->free_reqs, vu_req, link);
-		free(vu_req);
 	}
+	free(sq->req_buf);
+	sq->req_buf = NULL;
 }
 
 static void
@@ -1843,20 +1846,22 @@ init_cq(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t id)
 static int
 alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *sq)
 {
-	struct nvmf_vfio_user_req *vu_req, *tmp;
 	size_t req_size;
 	uint32_t i;
 
 	req_size = sizeof(struct nvmf_vfio_user_req) +
 		   (dma_sg_size() * NVMF_VFIO_USER_MAX_IOVECS);
 
+	sq->req_buf = calloc(sq->size, req_size);
+	if (sq->req_buf == NULL) {
+		return -ENOMEM;
+	}
+
 	for (i = 0; i < sq->size; i++) {
+		struct nvmf_vfio_user_req *vu_req;
 		struct spdk_nvmf_request *req;
 
-		vu_req = calloc(1, req_size);
-		if (vu_req == NULL) {
-			goto err;
-		}
+		vu_req = (struct nvmf_vfio_user_req *)((char *)sq->req_buf + i * req_size);
 
 		req = &vu_req->req;
 		req->qpair = &sq->qpair;
@@ -1868,12 +1873,6 @@ alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *s
 	}
 
 	return 0;
-
-err:
-	TAILQ_FOREACH_SAFE(vu_req, &sq->free_reqs, link, tmp) {
-		free(vu_req);
-	}
-	return -ENOMEM;
 }
 
 static volatile uint32_t *
