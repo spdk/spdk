@@ -3838,6 +3838,7 @@
         {
           "name": "io_unit_size",
           "type": "uint32",
+          "deprecated": true,
           "description": "I/O unit size (bytes)"
         },
         {
@@ -3848,11 +3849,13 @@
         {
           "name": "num_shared_buffers",
           "type": "uint32",
+          "deprecated": true,
           "description": "The number of pooled data buffers available to the transport"
         },
         {
           "name": "buf_cache_size",
           "type": "uint32",
+          "deprecated": true,
           "description": "The number of shared buffers to reserve for each poll group"
         },
         {
@@ -4048,11 +4051,13 @@
         {
           "name": "max_discard_size_kib",
           "type": "uint64",
+          "deprecated": true,
           "description": "Maximum discard size (Kib). Default: 0"
         },
         {
           "name": "max_write_zeroes_size_kib",
           "type": "uint64",
+          "deprecated": true,
           "description": "Maximum write_zeroes size (Kib). Default: 0"
         },
         {

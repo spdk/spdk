@@ -197,6 +197,9 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                                 action.required)
                 if param.get('required', False) != required:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'required' field is mismatched")
+                if param.get('deprecated', False):
+                    if 'Deprecated' not in action.help:
+                        raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'Deprecated' word must be in help")
                 # Check that schema has only those valid types:
                 if param['type'] not in types:
                     raise ValueError(f"Invalid schema type '{param['type']}' for '{param['name']}' in '{method['name']}' rpc")

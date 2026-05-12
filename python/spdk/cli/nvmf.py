@@ -86,7 +86,7 @@ def add_parser(subparsers):
     p.add_argument('-m', '--max-io-qpairs-per-ctrlr', help='Max number of IO qpairs per controller', type=int)
     p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
     p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
-    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
+    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes). Deprecated, use iobuf_set_options instead.', type=int)
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('-n', '--num-shared-buffers', help="""The number of pooled data buffers available to the transport.
     Deprecated, use iobuf_set_options instead""", type=int)
@@ -165,10 +165,12 @@ def add_parser(subparsers):
     p.add_argument("-i", "--min-cntlid", help="Minimum controller ID", type=int)
     p.add_argument("-I", "--max-cntlid", help="Maximum controller ID", type=int)
     discard_group = p.add_mutually_exclusive_group()
-    discard_group.add_argument("--max-discard-size", dest='max_discard_size_kib', help="Maximum discard size (Kib)", type=int)
+    discard_group.add_argument("--max-discard-size", dest='max_discard_size_kib',
+                               help="Maximum discard size (Kib). Deprecated, use --dmrsl instead.", type=int)
     discard_group.add_argument("--dmrsl", help="Dataset Management Range Size Limit in logical block units", type=int)
     wzsl_group = p.add_mutually_exclusive_group()
-    wzsl_group.add_argument("--max-write-zeroes-size", dest='max_write_zeroes_size_kib', help="Maximum write_zeroes size (Kib)", type=int)
+    wzsl_group.add_argument("--max-write-zeroes-size", dest='max_write_zeroes_size_kib',
+                            help="Maximum write_zeroes size (Kib). Deprecated, use --wzsl instead.", type=int)
     wzsl_group.add_argument("--wzsl", help="Write Zeroes Size Limit as power of two in minimum memory page size units", type=int)
     p.add_argument("-p", "--passthrough", action='store_true', help="""Use NVMe passthrough for all I/O commands and namespace-directed
                    admin commands""")
