@@ -342,6 +342,13 @@ nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 	struct spdk_nvmf_request *req = arg;
 	int rc;
 
+	/* The previous attempt may have rewritten nvme_cmd.nsid for passthrough.
+	 * Restore the host-supplied nsid so the namespace lookup at the top of
+	 * nvmf_ctrlr_process_io_cmd() picks the right ns (and so the rewrite on
+	 * retry stashes the original nsid again).
+	 */
+	nvmf_request_restore_orig_nsid(req);
+
 	rc = nvmf_ctrlr_process_io_cmd(req);
 	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
 		spdk_nvmf_request_complete(req);
@@ -353,6 +360,8 @@ nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
 	int rc;
+
+	nvmf_request_restore_orig_nsid(req);
 
 	rc = nvmf_ctrlr_process_admin_cmd(req);
 	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
