@@ -303,6 +303,8 @@ struct spdk_nvmf_ctrlr {
 	STAILQ_HEAD(, spdk_nvmf_async_event_completion) async_events;
 	uint64_t notice_aen_mask;
 	uint8_t nr_aer_reqs;
+	/* Host requested SQ flow control disable */
+	bool sq_flow_control_disabled;
 	struct spdk_uuid  hostid;
 
 	uint32_t association_timeout; /* in milliseconds */

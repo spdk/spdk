@@ -219,7 +219,16 @@ struct spdk_nvmf_fabric_connect_cmd {
 	uint16_t	recfmt; /* Connect Record Format */
 	uint16_t	qid; /* Queue Identifier */
 	uint16_t	sqsize; /* Submission Queue Size */
-	uint8_t		cattr; /* queue attributes */
+	union {
+		uint8_t	raw;
+		struct {
+			uint8_t	prioclass	: 2;
+			uint8_t	dissqfc		: 1;
+			uint8_t	indivioqels	: 1;
+			uint8_t	connent		: 1;
+			uint8_t	reserved	: 3;
+		} bits;
+	} cattr; /* queue attributes */
 	uint8_t		reserved3;
 	uint32_t	kato; /* keep alive timeout */
 	uint8_t		reserved4[12];

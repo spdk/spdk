@@ -220,6 +220,8 @@ def add_parser(subparsers):
     p.add_argument('--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
     p.add_argument('--min-io', type=int,
                    help='Number of IO to route to a path before switching (round_robin selector only)')
+    p.add_argument('--disable-sq-flow-control', help='Disable SQ flow control (set bit 2 of cattr in Fabrics Connect command).',
+                   action='store_true')
 
     p.set_defaults(func=bdev_nvme_attach_controller)
 

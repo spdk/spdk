@@ -2181,6 +2181,11 @@
           "type": "object",
           "class": "bdev_nvme_multipath_opts",
           "description": "Multipath options."
+	},
+	{
+          "name": "disable_sq_flow_control",
+          "type": "boolean",
+          "description": "Disable SQ flow control (set bit 2 of cattr in Fabrics Connect command). Default: false."
         }
       ]
     },

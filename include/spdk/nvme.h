@@ -270,8 +270,11 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	bool disable_read_ana_log_page;
 
-	/* Hole at bytes 610-616. */
-	uint8_t reserved610[7];
+	/* Hole at bytes 610-615. */
+	uint8_t reserved610[6];
+
+	/* Disable SQ flow control. Default: false (SQ flow control enabled) */
+	bool disable_sq_flow_control;
 
 	/**
 	 * Disable reading CHANGED_NS_LIST log page in response to an NS_ATTR_CHANGED AEN

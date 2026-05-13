@@ -228,6 +228,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_4096) |
 		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_6144) |
 		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_8192));
+	SET_FIELD(disable_sq_flow_control, false);
 #undef FIELD_OK
 #undef SET_FIELD
 }

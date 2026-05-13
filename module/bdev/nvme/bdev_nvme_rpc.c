@@ -153,6 +153,7 @@ free_rpc_bdev_nvme_attach_controller_ext(struct rpc_bdev_nvme_attach_controller_
 	free(ereq);
 }
 
+
 #define DEFAULT_MAX_BDEVS_PER_RPC 128
 
 static void
@@ -231,6 +232,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	req->multipath_opts.policy = (enum rpc_bdev_nvme_multipath_policy)bdev_opts.multipath_policy;
 	req->multipath_opts.selector = (enum rpc_bdev_nvme_multipath_selector)bdev_opts.multipath_selector;
 	req->multipath_opts.min_io = bdev_opts.multipath_min_io;
+	req->disable_sq_flow_control = ctrlr_opts.disable_sq_flow_control;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_attach_controller_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_attach_controller_decoders),
@@ -256,6 +258,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	bdev_opts.reconnect_delay_sec = req->reconnect_delay_sec;
 	bdev_opts.fast_io_fail_timeout_sec = req->fast_io_fail_timeout_sec;
 	bdev_opts.allow_unrecognized_csi = req->allow_unrecognized_csi;
+	ctrlr_opts.disable_sq_flow_control = req->disable_sq_flow_control;
 
 	if (req->max_bdevs == 0) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, "max_bdevs cannot be zero");

@@ -966,6 +966,7 @@ nvme_ctrlr_opts_init(struct spdk_nvme_ctrlr_opts *opts,
 	SET_FIELD(dhchap_ctrlr_key);
 	SET_FIELD(dhchap_digests);
 	SET_FIELD(dhchap_dhgroups);
+	SET_FIELD(disable_sq_flow_control);
 
 #undef FIELD_OK
 #undef SET_FIELD

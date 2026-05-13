@@ -568,7 +568,7 @@ test_connect(void)
 	cmd.connect_cmd.recfmt = 0;
 	cmd.connect_cmd.qid = 0;
 	cmd.connect_cmd.sqsize = 31;
-	cmd.connect_cmd.cattr = 0;
+	cmd.connect_cmd.cattr.raw = 0;
 	cmd.connect_cmd.kato = 120000;
 
 	memset(&req, 0, sizeof(req));
@@ -2967,7 +2967,7 @@ test_nvmf_ctrlr_create_destruct(void)
 	cmd.connect_cmd.recfmt = 0;
 	cmd.connect_cmd.qid = 0;
 	cmd.connect_cmd.sqsize = 31;
-	cmd.connect_cmd.cattr = 0;
+	cmd.connect_cmd.cattr.raw = 0;
 	cmd.connect_cmd.kato = 120000;
 
 	req.qpair = &qpair;

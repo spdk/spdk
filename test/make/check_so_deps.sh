@@ -188,6 +188,11 @@ function confirm_abi_deps() {
 			soname_regexp = ^libspdk_nvmf\\.so\\.21\\.*$
 			name = spdk_nvmf_registers
 			has_data_member = reserved
+		[suppress_type]
+			label = Added disable_sq_flow_control field using reserved space
+			name = spdk_nvme_ctrlr_opts
+			soname_regexp = ^libspdk_nvme\\.so\\.18\\.*$|^libspdk_bdev_nvme\\.so\\.9\\.*$
+			has_data_member_regexp = ^(reserved610|disable_sq_flow_control)$
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

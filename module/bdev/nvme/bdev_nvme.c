@@ -9388,6 +9388,7 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	}
 	spdk_json_write_named_uint64(w, "fabrics_connect_timeout_us", opts->fabrics_connect_timeout_us);
 	spdk_json_write_named_uint32(w, "num_io_queues", opts->num_io_queues);
+	spdk_json_write_named_bool(w, "disable_sq_flow_control", opts->disable_sq_flow_control);
 
 	bdev_nvme_write_multipath_config(w, bdev_opts->multipath_policy, bdev_opts->multipath_selector,
 					 bdev_opts->multipath_min_io);

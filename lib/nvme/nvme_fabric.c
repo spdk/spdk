@@ -534,6 +534,7 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	cmd.qid = qpair->id;
 	cmd.sqsize = num_entries - 1;
 	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
+	cmd.cattr.bits.dissqfc = ctrlr->opts.disable_sq_flow_control;
 
 	assert(qpair->reserved_req != NULL);
 	req = qpair->reserved_req;
