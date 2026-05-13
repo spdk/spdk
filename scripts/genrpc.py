@@ -47,6 +47,12 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_by_type = {'object': schema_objects, 'enum': schema_enums, 'array': schema_arrays, 'bitmask': schema_bitmasks}
     # TODO: those are embeeded objects decoders and will be resolved soon
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
+    # Methods whose decoder lives only in include/spdk_internal/rpc_autogen.h
+    # as rpc_<method>_decoders_autogen[]. The *_rpc.c file must NOT define a
+    # manual rpc_<method>_decoders[] for these — the autogen array is the
+    # single source of truth. Phase 3 lockdown will require every schema
+    # method to appear here.
+    migrated_decoders: set[str] = set()
     c_code_methods = dict()
     c_code_aliases = dict()
     c_code_free = set()
@@ -88,6 +94,17 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
         schema_params = set(parameter["name"] for parameter in method['params'])
         # if there are no params, there will be no decoder
         if not schema_params and decoder_name not in c_code_methods:
+            continue
+        if method['name'] in migrated_decoders:
+            # Decoder is the autogen array in rpc_autogen.h; the manual one
+            # in *_rpc.c must be gone. The autogen array is generated FROM
+            # the schema, so the param/type/required cross-checks below are
+            # tautological — skip them.
+            if decoder_name in c_code_methods:
+                raise ValueError(
+                    f"Method '{method['name']}' is in migrated_decoders but a manual "
+                    f"'{decoder_name}[]' still exists in *_rpc.c. Delete it and use "
+                    f"rpc_{method['name']}_decoders_autogen from rpc_autogen.h instead.")
             continue
         if not c_code_methods.get(decoder_name, {}):
             raise ValueError(f"Decoder of '{method['name']}' named '{decoder_name}' was not found. Update decoder names or exception list.")
