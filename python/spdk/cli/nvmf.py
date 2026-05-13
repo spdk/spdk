@@ -120,7 +120,9 @@ def add_parser(subparsers):
     p.add_argument('--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.add_argument('--ack-timeout', help='ACK timeout in milliseconds', type=int)
     p.add_argument('--data-wr-pool-size', help='RDMA data WR pool size. Relevant only for RDMA transport', type=int)
-    p.add_argument('--disable-command-passthru', help='Disallow command passthru', action='store_true')
+    p.add_argument('--disable-command-passthru', action='store_true',
+                   help="""Disallow forwarding unrecognized I/O opcodes and the Identify Namespace admin command to the
+    underlying bdev. Subsystems in passthrough mode and admin commands set via admin_cmd_passthru are not affected.""")
     p.add_argument('--kas', help="Keep alive support", type=int)
     p.add_argument('--min-kato', help="The minimum keep alive timeout in milliseconds", type=int)
     p.add_argument('--masked-oncs', help=f"Comma-separated list of ONCS features to mask (disable). Available options: {help_oncs}",

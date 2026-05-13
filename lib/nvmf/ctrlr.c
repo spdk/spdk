@@ -3185,7 +3185,6 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	struct spdk_nvme_ns_data nsdata = {};
-	struct spdk_iov_xfer ix;
 	int rc;
 
 	nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, &nsdata, cmd->nsid);
@@ -3195,10 +3194,9 @@ spdk_nvmf_ctrlr_identify_ns_ext(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {
-		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
-		spdk_iov_xfer_from_buf(&ix, &nsdata, sizeof(nsdata));
-
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN) ||
+	    req->qpair->transport->opts.disable_command_passthru) {
+		spdk_nvmf_request_copy_from_buf(req, &nsdata, sizeof(nsdata));
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
