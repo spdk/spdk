@@ -624,6 +624,22 @@ void nvmf_qpair_auth_dump(struct spdk_nvmf_qpair *qpair, struct spdk_json_write_
 int nvmf_auth_request_exec(struct spdk_nvmf_request *req);
 bool nvmf_auth_is_supported(void);
 
+static inline void
+nvmf_request_set_passthru_nsid(struct spdk_nvmf_request *req, uint32_t passthru_nsid)
+{
+	assert(passthru_nsid != 0);
+	req->orig_nsid = req->cmd->nvme_cmd.nsid;
+	req->cmd->nvme_cmd.nsid = passthru_nsid;
+}
+
+static inline void
+nvmf_request_restore_orig_nsid(struct spdk_nvmf_request *req)
+{
+	if (req->orig_nsid) {
+		req->cmd->nvme_cmd.nsid = req->orig_nsid;
+	}
+}
+
 static inline bool
 nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
 {
