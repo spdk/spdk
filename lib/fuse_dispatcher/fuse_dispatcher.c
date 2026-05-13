@@ -27,6 +27,10 @@
 #define DEFAULT_MAX_READAHEAD 0x00020000
 #define OFFSET_MAX 0x7fffffffffffffffLL
 
+SPDK_LOG_DEPRECATION_REGISTER(fuse_dispatcher,
+			      "the fuse_dispatcher library is being removed",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 /*
  * NOTE: It appeared that the open flags have different values on the different HW architechtures.
  *
@@ -2846,6 +2850,8 @@ spdk_fuse_dispatcher_create(const char *fsdev_name, spdk_fuse_dispatcher_event_c
 	char *io_dev_name;
 	size_t fsdev_name_len;
 	int rc;
+
+	SPDK_LOG_DEPRECATED(fuse_dispatcher);
 
 	if (!fsdev_name || !event_cb || !cb) {
 		SPDK_ERRLOG("Invalid params\n");

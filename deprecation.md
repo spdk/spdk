@@ -38,6 +38,29 @@ names instead.
 The `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` enum value names are deprecated and will be removed in v25.09.
 Use the `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` names instead.
 
+### fsdev
+
+The current `fsdev` layer and its consumers are deprecated in preparation for
+replacing with a new implementation in the v26.09 release.
+
+#### `fsdev`
+
+The `fsdev` library, including the public APIs in `include/spdk/fsdev.h` and
+`include/spdk/fsdev_module.h`, the `fsdev` event subsystem, and the `aio` fsdev module
+(the `fsdev_aio_create`/`fsdev_aio_delete` RPCs and the `--with-aio-fsdev` configure
+option) are deprecated and will be replaced in the v26.09 release.
+
+#### `fuse_dispatcher`
+
+The `fuse_dispatcher` library and its public API (`include/spdk/fuse_dispatcher.h`) are
+deprecated and will be removed in the v26.09 release. There will be no replacement;
+the new fsdev implementation will not require a fuse_dispatcher.
+
+#### `vfu_virtio_create_fs_endpoint`
+
+The `virtio-fs` vfu_device support, exposed via the `vfu_virtio_create_fs_endpoint` RPC,
+is deprecated and will be removed in the v26.09 release.
+
 ### gpt
 
 #### `old_gpt_guid`

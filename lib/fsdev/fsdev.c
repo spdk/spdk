@@ -18,6 +18,10 @@
 #define SPDK_FSDEV_IO_POOL_SIZE (64 * 1024 - 1)
 #define SPDK_FSDEV_IO_CACHE_SIZE 256
 
+SPDK_LOG_DEPRECATION_REGISTER(fsdev,
+			      "fsdev is being replaced by a new implementation",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 static struct spdk_fsdev_opts g_fsdev_opts = {
 	.fsdev_io_pool_size = SPDK_FSDEV_IO_POOL_SIZE,
 	.fsdev_io_cache_size = SPDK_FSDEV_IO_CACHE_SIZE,
@@ -1143,6 +1147,8 @@ int
 spdk_fsdev_register(struct spdk_fsdev *fsdev)
 {
 	int rc;
+
+	SPDK_LOG_DEPRECATED(fsdev);
 
 	rc = fsdev_register(fsdev);
 	if (rc != 0) {

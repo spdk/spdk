@@ -224,6 +224,10 @@ SPDK_RPC_REGISTER("vfu_virtio_create_scsi_endpoint", rpc_vfu_virtio_create_scsi_
 
 #ifdef SPDK_CONFIG_FSDEV
 
+SPDK_LOG_DEPRECATION_REGISTER(vfu_virtio_create_fs_endpoint,
+			      "virtio-fs vfu_device support is being removed",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 static const struct spdk_json_object_decoder rpc_vfu_virtio_create_fs_endpoint_decoders[] = {
 	{"name", offsetof(struct rpc_vfu_virtio_create_fs_endpoint_ctx, name), spdk_json_decode_string },
 	{"fsdev_name", offsetof(struct rpc_vfu_virtio_create_fs_endpoint_ctx, fsdev_name), spdk_json_decode_string },
@@ -248,6 +252,8 @@ rpc_vfu_virtio_create_fs_endpoint(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_vfu_virtio_create_fs_endpoint_ctx req = {};
 	int rc;
+
+	SPDK_LOG_DEPRECATED(vfu_virtio_create_fs_endpoint);
 
 	if (spdk_json_decode_object(params, rpc_vfu_virtio_create_fs_endpoint_decoders,
 				    SPDK_COUNTOF(rpc_vfu_virtio_create_fs_endpoint_decoders),
