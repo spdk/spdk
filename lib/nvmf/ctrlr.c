@@ -5171,9 +5171,7 @@ _nvmf_request_complete(void *ctx)
 		/* If we changed nvme_cmd.nsid to match the passthrough nsid, we need to
 		 * restore it here for accounting purposes.
 		 */
-		if (qpair->ctrlr->subsys->opts.passthrough) {
-			nvmf_request_restore_orig_nsid(req);
-		}
+		nvmf_request_restore_orig_nsid(req);
 
 		/*
 		 * Set the crd value.
@@ -5535,7 +5533,7 @@ nvmf_passthru_admin_cmd_for_bdev_nsid(struct spdk_nvmf_request *req, uint32_t bd
 	ns = nvmf_ctrlr_get_ns(ctrlr, bdev_nsid);
 
 	if (ns->passthru_nsid) {
-		req->cmd->nvme_cmd.nsid = ns->passthru_nsid;
+		nvmf_request_set_passthru_nsid(req, ns->passthru_nsid);
 	}
 
 	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, NULL);

@@ -637,6 +637,7 @@ nvmf_request_restore_orig_nsid(struct spdk_nvmf_request *req)
 {
 	if (req->orig_nsid) {
 		req->cmd->nvme_cmd.nsid = req->orig_nsid;
+		req->orig_nsid = 0;
 	}
 }
 
