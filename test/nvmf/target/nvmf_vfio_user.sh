@@ -15,7 +15,11 @@ NUM_DEVICES=2
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+export PYTHONPATH=$rootdir/test/nvme/aer
 export TEST_TRANSPORT=VFIOUSER
+
+aer_socket="$output_dir/spdk_aer_vfio.sock"
+aer_rpc_py="$rpc_py -s $aer_socket --plugin aer_plugin"
 
 function aer_vfio_user() {
 
@@ -24,22 +28,22 @@ function aer_vfio_user() {
 	local malloc_num=Malloc$(($3 + NUM_DEVICES))
 	$rpc_py nvmf_get_subsystems
 
-	AER_TOUCH_FILE=/tmp/aer_touch_file
-
 	# Namespace Attribute Notice Tests
 	run_app_bg "$rootdir/test/nvme/aer/aer" -r "\
 		trtype:$TEST_TRANSPORT \
 		traddr:$traddr \
-		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE
+		subnqn:$subnqn" -n $NUM_DEVICES -g -t $aer_socket
 	aerpid=$!
+	trap 'killprocess $aerpid; killprocess $nvmfpid; exit 1' SIGINT SIGTERM EXIT
 
-	# Waiting for aer start to work
-	waitforfile $AER_TOUCH_FILE
-	rm -f $AER_TOUCH_FILE
+	waitforlisten $aerpid $aer_socket
+
 	# Add a new namespace
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE --name $malloc_num
 	$rpc_py nvmf_subsystem_add_ns $subnqn $malloc_num -n $NUM_DEVICES
 	$rpc_py nvmf_get_subsystems
+
+	$aer_rpc_py check_changed_namespaces
 
 	wait $aerpid
 }

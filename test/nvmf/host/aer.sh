@@ -8,6 +8,12 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+export PYTHONPATH=$rootdir/test/nvme/aer
+aer_socket="$output_dir/spdk_aer.sock"
+
+rpc_py="$rootdir/scripts/rpc.py"
+aer_rpc_py="$rpc_py -s $aer_socket --plugin aer_plugin"
+
 nvmftestinit
 nvmfappstart -m 0xF
 
@@ -20,25 +26,24 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 
 $rpc_py nvmf_get_subsystems
 
-AER_TOUCH_FILE=/tmp/aer_touch_file
-rm -f $AER_TOUCH_FILE
-
 # Namespace Attribute Notice Tests
 run_app_bg "$rootdir/test/nvme/aer/aer" -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 -t $AER_TOUCH_FILE
+        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 -t $aer_socket
 aerpid=$!
+trap 'killprocess $aerpid || :; nvmftestfini || :; exit 1' SIGINT SIGTERM EXIT
 
-# Waiting for aer start to work
-waitforfile $AER_TOUCH_FILE
+waitforlisten $aerpid $aer_socket
 
 # Add a new namespace
 $rpc_py bdev_malloc_create 64 4096 --name Malloc1
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 2
 $rpc_py nvmf_get_subsystems
+
+$aer_rpc_py check_changed_namespaces
 
 wait $aerpid
 

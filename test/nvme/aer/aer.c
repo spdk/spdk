@@ -10,6 +10,7 @@
 #include "spdk_internal/nvme_util.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/rpc.h"
 
 #define MAX_DEVS 64
 
@@ -40,7 +41,6 @@ static int g_aer_done = 0;
 static int g_temperature_done = 0;
 static int g_failed = 0;
 static struct spdk_nvme_transport_id g_trid;
-static char *g_touch_file;
 
 /* Enable AER temperature test */
 static int g_enable_temp_test = 0;
@@ -55,6 +55,11 @@ static const char *g_sem_init_name = "/init";
 static const char *g_sem_child_name = "/child";
 static sem_t *g_sem_init_id;
 static sem_t *g_sem_child_id;
+
+static const char *g_rpc_addr = NULL;
+static struct spdk_rpc_server *g_rpc_server = NULL;
+static struct spdk_jsonrpc_request *g_rpc_request = NULL;
+static bool g_ns_test_start = false;
 
 static void
 admin_poll(void)
@@ -302,7 +307,7 @@ usage(const char *program_name)
 	AER_PRINTF("\t-g         use single file descriptor for DPDK memory segments]\n");
 	AER_PRINTF("\t-T         enable temperature tests\n");
 	AER_PRINTF("\t-n         expected Namespace attribute notice ID\n");
-	AER_PRINTF("\t-t <file>  touch specified file when ready to receive AER\n");
+	AER_PRINTF("\t-t <addr>  RPC listen address\n");
 	spdk_nvme_transport_id_usage(stdout, 0);
 	spdk_log_usage(stdout, "-L");
 	AER_PRINTF("\t-i <id>    shared memory group ID\n");
@@ -348,7 +353,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			}
 			break;
 		case 't':
-			g_touch_file = optarg;
+			g_rpc_addr = optarg;
 			break;
 		case 'L':
 			rc = spdk_log_set_flag(optarg);
@@ -540,25 +545,47 @@ spdk_aer_temperature_test(void)
 	return 0;
 }
 
-static int
-spdk_aer_changed_ns_test(void)
+static void
+rpc_check_changed_namespaces_cb(void)
+{
+	if (!g_rpc_request) {
+		return;
+	}
+
+	if (!g_failed) {
+		spdk_jsonrpc_send_bool_response(g_rpc_request, true);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(g_rpc_request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "changed namespaces test failed");
+	}
+
+	g_rpc_request = NULL;
+}
+
+static void
+aer_changed_ns_test_prepare(void)
 {
 	struct dev *dev;
 
 	g_aer_done = 0;
 
-	AER_PRINTF("Starting namespace attribute notice tests for all controllers...\n");
+	AER_PRINTF("Cache namespace state...\n");
 
 	foreach_dev(dev) {
 		get_feature_test(dev);
 		spdk_nvme_ctrlr_register_ns_attr_changed_callback(dev->ctrlr, ns_attr_changed_cb, dev);
 		dev->ns_test_active = spdk_nvme_ctrlr_is_active_ns(dev->ctrlr, g_expected_ns_test);
 	}
+}
 
-	if (g_failed) {
-		return g_failed;
-	}
+static int
+spdk_aer_changed_ns_test(void)
+{
+	AER_PRINTF("Verifying namespace attribute notice for all controllers...\n");
 
+	/* Drive admin completions until every device sees its AER. The AER may
+	 * have already fired before this RPC arrived, in which case the loop
+	 * exits immediately. */
 	while (!g_failed && (g_aer_done < g_num_devs)) {
 		admin_poll();
 	}
@@ -570,7 +597,42 @@ spdk_aer_changed_ns_test(void)
 		AER_PRINTF("ns_attr_changed_cb verified: %u namespace(s) changed\n", g_ns_changed_count);
 	}
 
+	rpc_check_changed_namespaces_cb();
 	return g_failed;
+}
+
+static void
+rpc_check_changed_namespaces(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "check_changed_namespaces requires no arguments");
+		return;
+	}
+
+	if (g_rpc_request) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Only one RPC can be handled at once");
+		return;
+	}
+
+	g_rpc_request = request;
+	g_ns_test_start = true;
+}
+SPDK_RPC_REGISTER("check_changed_namespaces", rpc_check_changed_namespaces, SPDK_RPC_RUNTIME);
+
+static int
+start_rpc_server(void)
+{
+	g_rpc_server = spdk_rpc_server_listen(g_rpc_addr);
+	if (!g_rpc_server) {
+		AER_FPRINTF(stderr, "Unable to initialize RPC server\n");
+		return -1;
+	}
+
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+	return 0;
 }
 
 static int
@@ -634,7 +696,17 @@ main(int argc, char **argv)
 		return rc;
 	}
 
+	if (g_expected_ns_test && !g_rpc_addr) {
+		AER_FPRINTF(stderr, "Namespace attribute test requires RPC listen address (-t <addr>)\n");
+		return 1;
+	}
+
 	if (g_multi_process_test)  {
+		if (g_rpc_addr) {
+			AER_FPRINTF(stderr, "Multi-process and RPC listen address (-t) cannot be used together\n");
+			return 1;
+		}
+
 		/* Multi-Process test only available with Temp Test */
 		if (!g_enable_temp_test) {
 			AER_FPRINTF(stderr, "Multi Process only available with Temp Test (-T)\n");
@@ -709,19 +781,6 @@ main(int argc, char **argv)
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, aer_cb, dev);
 	}
 
-	if (g_touch_file) {
-		int fd;
-
-		fd = open(g_touch_file, O_CREAT | O_EXCL | O_RDWR, S_IFREG);
-		if (fd == -1) {
-			AER_FPRINTF(stderr, "Could not touch %s (%s).\n", g_touch_file,
-				    strerror(errno));
-			g_failed = true;
-			goto done;
-		}
-		close(fd);
-	}
-
 	/* AER temperature test */
 	if (g_enable_temp_test) {
 		if (spdk_aer_temperature_test()) {
@@ -731,9 +790,23 @@ main(int argc, char **argv)
 
 	/* AER changed namespace list test */
 	if (g_expected_ns_test) {
-		if (spdk_aer_changed_ns_test()) {
+		aer_changed_ns_test_prepare();
+		rc = start_rpc_server();
+		if (rc < 0) {
+			g_failed = 1;
 			goto done;
 		}
+
+		while (!g_failed && !g_ns_test_start) {
+			admin_poll();
+			spdk_rpc_server_accept(g_rpc_server);
+		}
+
+		spdk_aer_changed_ns_test();
+
+		/* Run spdk_rpc_server_accept() to send the RPC response. */
+		spdk_rpc_server_accept(g_rpc_server);
+		spdk_rpc_server_close(g_rpc_server);
 	}
 
 	AER_PRINTF("Cleaning up...\n");
