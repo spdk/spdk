@@ -271,6 +271,9 @@ nvmf_ctrlr_send_connect_rsp(void *ctx)
 	assert(spdk_get_thread() == qpair->group->thread);
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
+
+	/* SQHD is 0xFFFF when SQ flow control is disabled, otherwise sq_head */
+	rsp->sqhd = ctrlr->sq_flow_control_disabled ? 0xFFFF : qpair->sq_head;
 	spdk_nvmf_request_complete(req);
 }
 

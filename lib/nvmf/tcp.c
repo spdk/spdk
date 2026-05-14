@@ -2914,8 +2914,10 @@ _nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 
 	c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
-	/* Need to send the capsule response if response is not all 0 */
+	/* Set SUCCESS flag only when both the transport allows it and the host
+	 * requested SQ flow control disable */
 	if (ttransport->tcp_opts.c2h_success &&
+	    (tqpair->qpair.ctrlr == NULL || tqpair->qpair.ctrlr->sq_flow_control_disabled) &&
 	    tcp_req->rsp.cdw0 == 0 && tcp_req->rsp.cdw1 == 0) {
 		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
 	}
@@ -2996,13 +2998,16 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	rsp = &req->rsp->nvme_cpl;
 	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 
-	/* Advance our sq_head pointer */
-	if (qpair->sq_head == qpair->sq_head_max) {
-		qpair->sq_head = 0;
-	} else {
-		qpair->sq_head++;
+	/* SQHD is reserved when SQ flow control is disabled;
+	 * rsp is already zeroed by nvmf_tcp_req_get() */
+	if (!qpair->ctrlr || !qpair->ctrlr->sq_flow_control_disabled) {
+		if (qpair->sq_head == qpair->sq_head_max) {
+			qpair->sq_head = 0;
+		} else {
+			qpair->sq_head++;
+		}
+		rsp->sqhd = qpair->sq_head;
 	}
-	rsp->sqhd = qpair->sq_head;
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
