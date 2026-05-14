@@ -650,14 +650,14 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_lvol_inflate", rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_decouple_parent_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_lvol_inflate_ctx, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_lvol_decouple_parent_ctx, name), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct rpc_bdev_lvol_inflate_ctx req = {};
+	struct rpc_bdev_lvol_decouple_parent_ctx req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
@@ -689,7 +689,7 @@ rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 	spdk_lvol_decouple_parent(lvol, rpc_bdev_lvol_inflate_cb, request);
 
 cleanup:
-	free_rpc_bdev_lvol_inflate(&req);
+	free_rpc_bdev_lvol_decouple_parent(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
@@ -1400,15 +1400,15 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_lvol_set_parent", rpc_bdev_lvol_set_parent, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_set_parent_bdev_decoders[] = {
-	{"lvol_name", offsetof(struct rpc_bdev_lvol_set_parent_ctx, lvol_name), spdk_json_decode_string},
-	{"parent_name", offsetof(struct rpc_bdev_lvol_set_parent_ctx, parent_name), spdk_json_decode_string},
+	{"lvol_name", offsetof(struct rpc_bdev_lvol_set_parent_bdev_ctx, lvol_name), spdk_json_decode_string},
+	{"parent_name", offsetof(struct rpc_bdev_lvol_set_parent_bdev_ctx, parent_name), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_lvol_set_parent_bdev(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct rpc_bdev_lvol_set_parent_ctx req = {};
+	struct rpc_bdev_lvol_set_parent_bdev_ctx req = {};
 	struct spdk_lvol *lvol;
 	struct spdk_bdev *lvol_bdev;
 
@@ -1440,7 +1440,7 @@ rpc_bdev_lvol_set_parent_bdev(struct spdk_jsonrpc_request *request,
 	vbdev_lvol_set_external_parent(lvol, req.parent_name, rpc_bdev_lvol_set_parent_cb, request);
 
 cleanup:
-	free_rpc_bdev_lvol_set_parent(&req);
+	free_rpc_bdev_lvol_set_parent_bdev(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_set_parent_bdev", rpc_bdev_lvol_set_parent_bdev,

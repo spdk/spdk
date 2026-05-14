@@ -329,7 +329,7 @@ SPDK_RPC_REGISTER("bdev_raid_add_base_bdev", rpc_bdev_raid_add_base_bdev, SPDK_R
  * Decoder object for RPC bdev_raid_remove_base_bdev
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_remove_base_bdev_decoders[] = {
-	{"name", 0, spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_raid_remove_base_bdev_ctx, name), spdk_json_decode_string},
 };
 
 static void
@@ -359,20 +359,20 @@ static void
 rpc_bdev_raid_remove_base_bdev(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
+	struct rpc_bdev_raid_remove_base_bdev_ctx req = {};
 	struct spdk_bdev_desc *desc;
-	char *name = NULL;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_remove_base_bdev_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_remove_base_bdev_decoders),
-				    &name)) {
+				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		return;
 	}
 
-	rc = spdk_bdev_open_ext(name, false, rpc_bdev_raid_event_cb, NULL, &desc);
-	free(name);
+	rc = spdk_bdev_open_ext(req.name, false, rpc_bdev_raid_event_cb, NULL, &desc);
+	free_rpc_bdev_raid_remove_base_bdev(&req);
 	if (rc != 0) {
 		goto err;
 	}

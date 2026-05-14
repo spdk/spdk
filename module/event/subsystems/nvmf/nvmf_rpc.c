@@ -12,14 +12,14 @@
 #include "spdk_internal/rpc_autogen.h"
 
 static const struct spdk_json_object_decoder rpc_nvmf_set_max_subsystems_decoders[] = {
-	{"max_subsystems", 0, spdk_json_decode_uint32}
+	{"max_subsystems", offsetof(struct rpc_nvmf_set_max_subsystems_ctx, max_subsystems), spdk_json_decode_uint32}
 };
 
 static void
 rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	uint32_t max_subsystems = 0;
+	struct rpc_nvmf_set_max_subsystems_ctx req = {};
 
 	if (g_spdk_nvmf_tgt_conf.opts.max_subsystems != 0) {
 		SPDK_ERRLOG("this RPC must not be called more than once.\n");
@@ -30,7 +30,7 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_nvmf_set_max_subsystems_decoders,
-					    SPDK_COUNTOF(rpc_nvmf_set_max_subsystems_decoders), &max_subsystems)) {
+					    SPDK_COUNTOF(rpc_nvmf_set_max_subsystems_decoders), &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -38,7 +38,7 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	g_spdk_nvmf_tgt_conf.opts.max_subsystems = max_subsystems;
+	g_spdk_nvmf_tgt_conf.opts.max_subsystems = req.max_subsystems;
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
