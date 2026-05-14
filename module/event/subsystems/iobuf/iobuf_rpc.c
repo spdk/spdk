@@ -8,29 +8,41 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/init.h"
+#include "spdk_internal/rpc_autogen.h"
 
 static const struct spdk_json_object_decoder rpc_iobuf_set_options_decoders[] = {
-	{"small_pool_count", offsetof(struct spdk_iobuf_opts, small_pool_count), spdk_json_decode_uint64, true},
-	{"large_pool_count", offsetof(struct spdk_iobuf_opts, large_pool_count), spdk_json_decode_uint64, true},
-	{"small_bufsize", offsetof(struct spdk_iobuf_opts, small_bufsize), spdk_json_decode_uint32, true},
-	{"large_bufsize", offsetof(struct spdk_iobuf_opts, large_bufsize), spdk_json_decode_uint32, true},
-	{"enable_numa", offsetof(struct spdk_iobuf_opts, enable_numa), spdk_json_decode_bool, true},
+	{"small_pool_count", offsetof(struct rpc_iobuf_set_options_ctx, small_pool_count), spdk_json_decode_uint64, true},
+	{"large_pool_count", offsetof(struct rpc_iobuf_set_options_ctx, large_pool_count), spdk_json_decode_uint64, true},
+	{"small_bufsize", offsetof(struct rpc_iobuf_set_options_ctx, small_bufsize), spdk_json_decode_uint32, true},
+	{"large_bufsize", offsetof(struct rpc_iobuf_set_options_ctx, large_bufsize), spdk_json_decode_uint32, true},
+	{"enable_numa", offsetof(struct rpc_iobuf_set_options_ctx, enable_numa), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_iobuf_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
+	struct rpc_iobuf_set_options_ctx req = {};
 	struct spdk_iobuf_opts opts;
 	int rc;
 
 	spdk_iobuf_get_opts(&opts, sizeof(opts));
+	req.small_pool_count = opts.small_pool_count;
+	req.large_pool_count = opts.large_pool_count;
+	req.small_bufsize = opts.small_bufsize;
+	req.large_bufsize = opts.large_bufsize;
+	req.enable_numa = opts.enable_numa;
 	rc = spdk_json_decode_object(params, rpc_iobuf_set_options_decoders,
-				     SPDK_COUNTOF(rpc_iobuf_set_options_decoders), &opts);
+				     SPDK_COUNTOF(rpc_iobuf_set_options_decoders), &req);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 		return;
 	}
+	opts.small_pool_count = req.small_pool_count;
+	opts.large_pool_count = req.large_pool_count;
+	opts.small_bufsize = req.small_bufsize;
+	opts.large_bufsize = req.large_bufsize;
+	opts.enable_numa = req.enable_numa;
 
 	rc = spdk_iobuf_set_opts(&opts);
 	if (rc != 0) {

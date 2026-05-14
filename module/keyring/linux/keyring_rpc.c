@@ -6,25 +6,29 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk_internal/rpc_autogen.h"
 
 static const struct spdk_json_object_decoder rpc_keyring_linux_set_options_decoders[] = {
-	{"enable", offsetof(struct keyring_linux_opts, enable), spdk_json_decode_bool, true},
+	{"enable", offsetof(struct rpc_keyring_linux_set_options_ctx, enable), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_keyring_linux_set_options(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
+	struct rpc_keyring_linux_set_options_ctx req = {};
 	struct keyring_linux_opts opts = {};
 	int rc;
 
 	keyring_linux_get_opts(&opts);
+	req.enable = opts.enable;
 	if (spdk_json_decode_object(params, rpc_keyring_linux_set_options_decoders,
-				    SPDK_COUNTOF(rpc_keyring_linux_set_options_decoders), &opts)) {
+				    SPDK_COUNTOF(rpc_keyring_linux_set_options_decoders), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 spdk_strerror(EINVAL));
 		return;
 	}
+	opts.enable = req.enable;
 
 	rc = keyring_linux_set_opts(&opts);
 	if (rc != 0) {

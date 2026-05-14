@@ -10,26 +10,32 @@
 #include "spdk_internal/rpc_autogen.h"
 
 static const struct spdk_json_object_decoder rpc_accel_error_inject_error_decoders[] = {
-	{"opcode", offsetof(struct accel_error_inject_opts, opcode), rpc_decode_accel_error_opcode},
-	{"type", offsetof(struct accel_error_inject_opts, type), rpc_decode_accel_error_inject_type},
-	{"count", offsetof(struct accel_error_inject_opts, count), spdk_json_decode_uint64, true},
-	{"interval", offsetof(struct accel_error_inject_opts, interval), spdk_json_decode_uint64, true},
-	{"errcode", offsetof(struct accel_error_inject_opts, errcode), spdk_json_decode_int32, true},
+	{"opcode", offsetof(struct rpc_accel_error_inject_error_ctx, opcode), rpc_decode_accel_error_opcode},
+	{"type", offsetof(struct rpc_accel_error_inject_error_ctx, type), rpc_decode_accel_error_inject_type},
+	{"count", offsetof(struct rpc_accel_error_inject_error_ctx, count), spdk_json_decode_uint64, true},
+	{"interval", offsetof(struct rpc_accel_error_inject_error_ctx, interval), spdk_json_decode_uint64, true},
+	{"errcode", offsetof(struct rpc_accel_error_inject_error_ctx, errcode), spdk_json_decode_int32, true},
 };
 
 static void
 rpc_accel_error_inject_error(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
+	struct rpc_accel_error_inject_error_ctx req = {.count = UINT64_MAX};
 	struct accel_error_inject_opts opts = {.count = UINT64_MAX};
 	int rc;
 
 	rc = spdk_json_decode_object(params, rpc_accel_error_inject_error_decoders,
-				     SPDK_COUNTOF(rpc_accel_error_inject_error_decoders), &opts);
+				     SPDK_COUNTOF(rpc_accel_error_inject_error_decoders), &req);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		return;
 	}
+	opts.opcode = (enum spdk_accel_opcode)req.opcode;
+	opts.type = (enum accel_error_inject_type)req.type;
+	opts.count = req.count;
+	opts.interval = req.interval;
+	opts.errcode = req.errcode;
 
 	rc = accel_error_inject_error(&opts);
 	if (rc != 0) {

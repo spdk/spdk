@@ -11,25 +11,28 @@
 #include "spdk_internal/rpc_autogen.h"
 
 static const struct spdk_json_object_decoder rpc_bdev_iscsi_set_options_decoders[] = {
-	{"timeout_sec", offsetof(struct spdk_bdev_iscsi_opts, timeout_sec), spdk_json_decode_uint64, true},
+	{"timeout_sec", offsetof(struct rpc_bdev_iscsi_set_options_ctx, timeout_sec), spdk_json_decode_uint64, true},
 };
 
 static void
 rpc_bdev_iscsi_set_options(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
+	struct rpc_bdev_iscsi_set_options_ctx req = {};
 	struct spdk_bdev_iscsi_opts opts;
 	int rc;
 
 	bdev_iscsi_get_opts(&opts);
+	req.timeout_sec = opts.timeout_sec;
 	if (params && spdk_json_decode_object(params, rpc_bdev_iscsi_set_options_decoders,
 					      SPDK_COUNTOF(rpc_bdev_iscsi_set_options_decoders),
-					      &opts)) {
+					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		return;
 	}
+	opts.timeout_sec = req.timeout_sec;
 
 	rc = bdev_iscsi_set_opts(&opts);
 	if (rc == -EPERM) {

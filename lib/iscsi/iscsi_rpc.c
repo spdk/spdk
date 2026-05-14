@@ -1289,34 +1289,35 @@ rpc_iscsi_get_auth_groups(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("iscsi_get_auth_groups", rpc_iscsi_get_auth_groups, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_iscsi_set_options_decoders[] = {
-	{"auth_file", offsetof(struct spdk_iscsi_opts, authfile), spdk_json_decode_string, true},
-	{"node_base", offsetof(struct spdk_iscsi_opts, nodebase), spdk_json_decode_string, true},
-	{"nop_timeout", offsetof(struct spdk_iscsi_opts, timeout), spdk_json_decode_int32, true},
-	{"nop_in_interval", offsetof(struct spdk_iscsi_opts, nopininterval), spdk_json_decode_int32, true},
-	{"disable_chap", offsetof(struct spdk_iscsi_opts, disable_chap), spdk_json_decode_bool, true},
-	{"require_chap", offsetof(struct spdk_iscsi_opts, require_chap), spdk_json_decode_bool, true},
-	{"mutual_chap", offsetof(struct spdk_iscsi_opts, mutual_chap), spdk_json_decode_bool, true},
-	{"chap_group", offsetof(struct spdk_iscsi_opts, chap_group), spdk_json_decode_int32, true},
-	{"max_sessions", offsetof(struct spdk_iscsi_opts, MaxSessions), spdk_json_decode_uint32, true},
-	{"max_queue_depth", offsetof(struct spdk_iscsi_opts, MaxQueueDepth), spdk_json_decode_uint32, true},
-	{"max_connections_per_session", offsetof(struct spdk_iscsi_opts, MaxConnectionsPerSession), spdk_json_decode_uint32, true},
-	{"default_time2wait", offsetof(struct spdk_iscsi_opts, DefaultTime2Wait), spdk_json_decode_uint32, true},
-	{"default_time2retain", offsetof(struct spdk_iscsi_opts, DefaultTime2Retain), spdk_json_decode_uint32, true},
-	{"first_burst_length", offsetof(struct spdk_iscsi_opts, FirstBurstLength), spdk_json_decode_uint32, true},
-	{"immediate_data", offsetof(struct spdk_iscsi_opts, ImmediateData), spdk_json_decode_bool, true},
-	{"error_recovery_level", offsetof(struct spdk_iscsi_opts, ErrorRecoveryLevel), spdk_json_decode_uint32, true},
-	{"allow_duplicated_isid", offsetof(struct spdk_iscsi_opts, AllowDuplicateIsid), spdk_json_decode_bool, true},
-	{"max_large_datain_per_connection", offsetof(struct spdk_iscsi_opts, MaxLargeDataInPerConnection), spdk_json_decode_uint32, true},
-	{"max_r2t_per_connection", offsetof(struct spdk_iscsi_opts, MaxR2TPerConnection), spdk_json_decode_uint32, true},
-	{"pdu_pool_size", offsetof(struct spdk_iscsi_opts, pdu_pool_size), spdk_json_decode_uint32, true},
-	{"immediate_data_pool_size", offsetof(struct spdk_iscsi_opts, immediate_data_pool_size), spdk_json_decode_uint32, true},
-	{"data_out_pool_size", offsetof(struct spdk_iscsi_opts, data_out_pool_size), spdk_json_decode_uint32, true},
+	{"auth_file", offsetof(struct rpc_iscsi_set_options_ctx, auth_file), spdk_json_decode_string, true},
+	{"node_base", offsetof(struct rpc_iscsi_set_options_ctx, node_base), spdk_json_decode_string, true},
+	{"nop_timeout", offsetof(struct rpc_iscsi_set_options_ctx, nop_timeout), spdk_json_decode_int32, true},
+	{"nop_in_interval", offsetof(struct rpc_iscsi_set_options_ctx, nop_in_interval), spdk_json_decode_int32, true},
+	{"disable_chap", offsetof(struct rpc_iscsi_set_options_ctx, disable_chap), spdk_json_decode_bool, true},
+	{"require_chap", offsetof(struct rpc_iscsi_set_options_ctx, require_chap), spdk_json_decode_bool, true},
+	{"mutual_chap", offsetof(struct rpc_iscsi_set_options_ctx, mutual_chap), spdk_json_decode_bool, true},
+	{"chap_group", offsetof(struct rpc_iscsi_set_options_ctx, chap_group), spdk_json_decode_int32, true},
+	{"max_sessions", offsetof(struct rpc_iscsi_set_options_ctx, max_sessions), spdk_json_decode_uint32, true},
+	{"max_queue_depth", offsetof(struct rpc_iscsi_set_options_ctx, max_queue_depth), spdk_json_decode_uint32, true},
+	{"max_connections_per_session", offsetof(struct rpc_iscsi_set_options_ctx, max_connections_per_session), spdk_json_decode_uint32, true},
+	{"default_time2wait", offsetof(struct rpc_iscsi_set_options_ctx, default_time2wait), spdk_json_decode_uint32, true},
+	{"default_time2retain", offsetof(struct rpc_iscsi_set_options_ctx, default_time2retain), spdk_json_decode_uint32, true},
+	{"first_burst_length", offsetof(struct rpc_iscsi_set_options_ctx, first_burst_length), spdk_json_decode_uint32, true},
+	{"immediate_data", offsetof(struct rpc_iscsi_set_options_ctx, immediate_data), spdk_json_decode_bool, true},
+	{"error_recovery_level", offsetof(struct rpc_iscsi_set_options_ctx, error_recovery_level), spdk_json_decode_uint32, true},
+	{"allow_duplicated_isid", offsetof(struct rpc_iscsi_set_options_ctx, allow_duplicated_isid), spdk_json_decode_bool, true},
+	{"max_large_datain_per_connection", offsetof(struct rpc_iscsi_set_options_ctx, max_large_datain_per_connection), spdk_json_decode_uint32, true},
+	{"max_r2t_per_connection", offsetof(struct rpc_iscsi_set_options_ctx, max_r2t_per_connection), spdk_json_decode_uint32, true},
+	{"pdu_pool_size", offsetof(struct rpc_iscsi_set_options_ctx, pdu_pool_size), spdk_json_decode_uint32, true},
+	{"immediate_data_pool_size", offsetof(struct rpc_iscsi_set_options_ctx, immediate_data_pool_size), spdk_json_decode_uint32, true},
+	{"data_out_pool_size", offsetof(struct rpc_iscsi_set_options_ctx, data_out_pool_size), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_iscsi_set_options(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
+	struct rpc_iscsi_set_options_ctx req = {};
 	struct spdk_iscsi_opts *opts;
 
 	if (g_spdk_iscsi_opts != NULL) {
@@ -1334,9 +1335,32 @@ rpc_iscsi_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	req.auth_file = opts->authfile;
+	req.node_base = opts->nodebase;
+	req.nop_timeout = opts->timeout;
+	req.nop_in_interval = opts->nopininterval;
+	req.disable_chap = opts->disable_chap;
+	req.require_chap = opts->require_chap;
+	req.mutual_chap = opts->mutual_chap;
+	req.chap_group = opts->chap_group;
+	req.max_sessions = opts->MaxSessions;
+	req.max_queue_depth = opts->MaxQueueDepth;
+	req.max_connections_per_session = opts->MaxConnectionsPerSession;
+	req.default_time2wait = opts->DefaultTime2Wait;
+	req.default_time2retain = opts->DefaultTime2Retain;
+	req.first_burst_length = opts->FirstBurstLength;
+	req.immediate_data = opts->ImmediateData;
+	req.error_recovery_level = opts->ErrorRecoveryLevel;
+	req.allow_duplicated_isid = opts->AllowDuplicateIsid;
+	req.max_large_datain_per_connection = opts->MaxLargeDataInPerConnection;
+	req.max_r2t_per_connection = opts->MaxR2TPerConnection;
+	req.pdu_pool_size = opts->pdu_pool_size;
+	req.immediate_data_pool_size = opts->immediate_data_pool_size;
+	req.data_out_pool_size = opts->data_out_pool_size;
+
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_iscsi_set_options_decoders,
-					    SPDK_COUNTOF(rpc_iscsi_set_options_decoders), opts)) {
+					    SPDK_COUNTOF(rpc_iscsi_set_options_decoders), &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -1344,6 +1368,33 @@ rpc_iscsi_set_options(struct spdk_jsonrpc_request *request,
 			return;
 		}
 	}
+
+	/* spdk_json_decode_string already freed the previous strdup'd value
+	 * (still owned by opts) before storing the new one in req, so a plain
+	 * assignment is correct for both the present-field and absent-field
+	 * cases. */
+	opts->authfile = req.auth_file;
+	opts->nodebase = req.node_base;
+	opts->timeout = req.nop_timeout;
+	opts->nopininterval = req.nop_in_interval;
+	opts->disable_chap = req.disable_chap;
+	opts->require_chap = req.require_chap;
+	opts->mutual_chap = req.mutual_chap;
+	opts->chap_group = req.chap_group;
+	opts->MaxSessions = req.max_sessions;
+	opts->MaxQueueDepth = req.max_queue_depth;
+	opts->MaxConnectionsPerSession = req.max_connections_per_session;
+	opts->DefaultTime2Wait = req.default_time2wait;
+	opts->DefaultTime2Retain = req.default_time2retain;
+	opts->FirstBurstLength = req.first_burst_length;
+	opts->ImmediateData = req.immediate_data;
+	opts->ErrorRecoveryLevel = req.error_recovery_level;
+	opts->AllowDuplicateIsid = req.allow_duplicated_isid;
+	opts->MaxLargeDataInPerConnection = req.max_large_datain_per_connection;
+	opts->MaxR2TPerConnection = req.max_r2t_per_connection;
+	opts->pdu_pool_size = req.pdu_pool_size;
+	opts->immediate_data_pool_size = req.immediate_data_pool_size;
+	opts->data_out_pool_size = req.data_out_pool_size;
 
 	g_spdk_iscsi_opts = iscsi_opts_copy(opts);
 	iscsi_opts_free(opts);
