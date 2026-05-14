@@ -256,6 +256,7 @@ static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
 static bool g_no_shn_notification;
+static bool g_disable_sq_flow_control;
 static bool g_mix_specified;
 static char *g_tpoint_group_mask = NULL;
 /* The flag is used to exit the program while keep alive fails on the transport */
@@ -2414,6 +2415,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"env-context",			required_argument,	NULL, PERF_ENV_CONTEXT},
 #define PERF_FUA		277
 	{"fua",				no_argument,	NULL, PERF_FUA},
+#define PERF_DISABLE_SQ_FLOW_CONTROL	278
+	{"disable-sq-flow-control", no_argument, NULL, PERF_DISABLE_SQ_FLOW_CONTROL},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
@@ -2608,6 +2611,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_DISABLE_SQ_CMB:
 			g_disable_sq_cmb = 1;
+			break;
+		case PERF_DISABLE_SQ_FLOW_CONTROL:
+			g_disable_sq_flow_control = true;
 			break;
 		case PERF_ENABLE_INTERRUPT:
 			g_enable_interrupt = 1;
@@ -2971,6 +2977,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	    (trid->trtype == SPDK_NVME_TRANSPORT_PCIE ||
 	     trid->trtype == SPDK_NVME_TRANSPORT_RDMA)) {
 		opts->enable_interrupts = true;
+	}
+
+	if (g_disable_sq_flow_control) {
+		opts->disable_sq_flow_control = true;
 	}
 
 	if (trid->trtype != trid_entry->trid.trtype &&
