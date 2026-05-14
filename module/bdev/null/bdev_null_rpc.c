@@ -12,22 +12,6 @@
 
 #include "bdev_null.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_null_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_null_create_ctx, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_bdev_null_create_ctx, uuid), spdk_json_decode_uuid, true},
-	{"num_blocks", offsetof(struct rpc_bdev_null_create_ctx, num_blocks), spdk_json_decode_uint64},
-	{"block_size", offsetof(struct rpc_bdev_null_create_ctx, block_size), spdk_json_decode_uint32},
-	{"physical_block_size", offsetof(struct rpc_bdev_null_create_ctx, physical_block_size), spdk_json_decode_uint32, true},
-	{"md_size", offsetof(struct rpc_bdev_null_create_ctx, md_size), spdk_json_decode_uint32, true},
-	{"dif_type", offsetof(struct rpc_bdev_null_create_ctx, dif_type), spdk_json_decode_int32, true},
-	{"dif_is_head_of_md", offsetof(struct rpc_bdev_null_create_ctx, dif_is_head_of_md), spdk_json_decode_bool, true},
-	{"dif_pi_format", offsetof(struct rpc_bdev_null_create_ctx, dif_pi_format), spdk_json_decode_uint32, true},
-	{"preferred_write_alignment", offsetof(struct rpc_bdev_null_create_ctx, preferred_write_alignment), spdk_json_decode_uint32, true},
-	{"preferred_write_granularity", offsetof(struct rpc_bdev_null_create_ctx, preferred_write_granularity), spdk_json_decode_uint32, true},
-	{"optimal_write_size", offsetof(struct rpc_bdev_null_create_ctx, optimal_write_size), spdk_json_decode_uint32, true},
-	{"preferred_unmap_alignment", offsetof(struct rpc_bdev_null_create_ctx, preferred_unmap_alignment), spdk_json_decode_uint32, true},
-	{"preferred_unmap_granularity", offsetof(struct rpc_bdev_null_create_ctx, preferred_unmap_granularity), spdk_json_decode_uint32, true},
-};
 
 static void
 rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
@@ -80,10 +64,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_null_create", rpc_bdev_null_create, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_null_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_null_delete_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_null_delete_cb(void *cb_arg, int bdeverrno)
 {
@@ -120,11 +100,6 @@ cleanup:
 	free_rpc_bdev_null_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_null_delete", rpc_bdev_null_delete, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_null_resize_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_null_resize_ctx, name), spdk_json_decode_string},
-	{"new_size", offsetof(struct rpc_bdev_null_resize_ctx, new_size), spdk_json_decode_uint64}
-};
 
 static void
 rpc_bdev_null_resize(struct spdk_jsonrpc_request *request,

@@ -12,11 +12,6 @@
 #include "spdk_internal/rpc_autogen.h"
 #include "ublk_internal.h"
 
-static const struct spdk_json_object_decoder rpc_ublk_create_target_decoders[] = {
-	{"cpumask", offsetof(struct rpc_ublk_create_target_ctx, cpumask), spdk_json_decode_string, true},
-	{"disable_user_copy", offsetof(struct rpc_ublk_create_target_ctx, disable_user_copy), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_ublk_create_target(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
@@ -67,13 +62,6 @@ rpc_ublk_destroy_target(struct spdk_jsonrpc_request *request, const struct spdk_
 	}
 }
 SPDK_RPC_REGISTER("ublk_destroy_target", rpc_ublk_destroy_target, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_ublk_start_disk_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_ublk_start_disk_ctx, bdev_name), spdk_json_decode_string},
-	{"ublk_id", offsetof(struct rpc_ublk_start_disk_ctx, ublk_id), spdk_json_decode_uint32},
-	{"num_queues", offsetof(struct rpc_ublk_start_disk_ctx, num_queues), spdk_json_decode_uint32, true},
-	{"queue_depth", offsetof(struct rpc_ublk_start_disk_ctx, queue_depth), spdk_json_decode_uint32, true},
-};
 
 static void
 rpc_ublk_start_disk_done(void *cb_arg, int rc)
@@ -128,10 +116,6 @@ rpc_ublk_start_disk(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("ublk_start_disk", rpc_ublk_start_disk, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_ublk_stop_disk_decoders[] = {
-	{"ublk_id", offsetof(struct rpc_ublk_stop_disk_ctx, ublk_id), spdk_json_decode_uint32},
-};
 
 static void
 rpc_ublk_stop_disk_done(void *cb_arg, int rc)
@@ -196,10 +180,6 @@ rpc_dump_ublk_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-static const struct spdk_json_object_decoder rpc_ublk_get_disks_decoders[] = {
-	{"ublk_id", offsetof(struct rpc_ublk_get_disks_ctx, ublk_id), spdk_json_decode_uint32, true},
-};
-
 static void
 rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
@@ -245,11 +225,6 @@ rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 	return;
 }
 SPDK_RPC_REGISTER("ublk_get_disks", rpc_ublk_get_disks, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_ublk_recover_disk_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_ublk_recover_disk_ctx, bdev_name), spdk_json_decode_string},
-	{"ublk_id", offsetof(struct rpc_ublk_recover_disk_ctx, ublk_id), spdk_json_decode_uint32},
-};
 
 static void
 rpc_ublk_recover_disk_done(void *cb_arg, int rc)

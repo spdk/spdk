@@ -10,15 +10,6 @@
 #include "fsdev_aio.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_fsdev_aio_create_decoders[] = {
-	{"name", offsetof(struct rpc_fsdev_aio_create_ctx, name), spdk_json_decode_string},
-	{"root_path", offsetof(struct rpc_fsdev_aio_create_ctx, root_path), spdk_json_decode_string},
-	{"enable_xattr", offsetof(struct rpc_fsdev_aio_create_ctx, enable_xattr), spdk_json_decode_bool, true},
-	{"enable_writeback_cache", offsetof(struct rpc_fsdev_aio_create_ctx, enable_writeback_cache), spdk_json_decode_bool, true},
-	{"max_write", offsetof(struct rpc_fsdev_aio_create_ctx, max_write), spdk_json_decode_uint32, true},
-	{"skip_rw", offsetof(struct rpc_fsdev_aio_create_ctx, skip_rw), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
@@ -67,10 +58,6 @@ rpc_fsdev_aio_create(struct spdk_jsonrpc_request *request, const struct spdk_jso
 	free_rpc_fsdev_aio_create(&req);
 }
 SPDK_RPC_REGISTER("fsdev_aio_create", rpc_fsdev_aio_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_fsdev_aio_delete_decoders[] = {
-	{"name", offsetof(struct rpc_fsdev_aio_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_aio_delete_cb(void *cb_arg, int fsdeverrno)

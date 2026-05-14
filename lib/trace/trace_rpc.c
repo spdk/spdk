@@ -11,11 +11,6 @@
 #include "spdk_internal/rpc_autogen.h"
 #include "trace_internal.h"
 
-static const struct spdk_json_object_decoder rpc_trace_set_tpoint_mask_decoders[] = {
-	{"name", offsetof(struct rpc_trace_set_tpoint_mask_ctx, name), spdk_json_decode_string},
-	{"tpoint_mask", offsetof(struct rpc_trace_set_tpoint_mask_ctx, tpoint_mask), spdk_json_decode_uint64},
-};
-
 static void
 rpc_trace_set_tpoint_mask(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
@@ -52,11 +47,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("trace_set_tpoint_mask", rpc_trace_set_tpoint_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_trace_clear_tpoint_mask_decoders[] = {
-	{"name", offsetof(struct rpc_trace_clear_tpoint_mask_ctx, name), spdk_json_decode_string},
-	{"tpoint_mask", offsetof(struct rpc_trace_clear_tpoint_mask_ctx, tpoint_mask), spdk_json_decode_uint64},
-};
 
 static void
 rpc_trace_clear_tpoint_mask(struct spdk_jsonrpc_request *request,
@@ -95,10 +85,6 @@ invalid:
 SPDK_RPC_REGISTER("trace_clear_tpoint_mask", rpc_trace_clear_tpoint_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_trace_enable_tpoint_group_decoders[] = {
-	{"name", offsetof(struct rpc_trace_enable_tpoint_group_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
@@ -131,10 +117,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("trace_enable_tpoint_group", rpc_trace_enable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_trace_disable_tpoint_group_decoders[] = {
-	{"name", offsetof(struct rpc_trace_disable_tpoint_group_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,

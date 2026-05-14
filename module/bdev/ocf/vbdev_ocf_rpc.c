@@ -11,35 +11,6 @@
 #include "spdk/string.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_ocf_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_delete_ctx, name), spdk_json_decode_string},
-};
-
-static const struct spdk_json_object_decoder rpc_bdev_ocf_get_stats_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_get_stats_ctx, name), spdk_json_decode_string},
-};
-
-static const struct spdk_json_object_decoder rpc_bdev_ocf_reset_stats_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_reset_stats_ctx, name), spdk_json_decode_string},
-};
-
-static const struct spdk_json_object_decoder rpc_bdev_ocf_flush_start_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_flush_start_ctx, name), spdk_json_decode_string},
-};
-
-static const struct spdk_json_object_decoder rpc_bdev_ocf_flush_status_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_flush_status_ctx, name), spdk_json_decode_string},
-};
-
-/* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_ocf_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_create_ctx, name), spdk_json_decode_string},
-	{"mode", offsetof(struct rpc_bdev_ocf_create_ctx, mode), spdk_json_decode_string},
-	{"cache_line_size", offsetof(struct rpc_bdev_ocf_create_ctx, cache_line_size), spdk_json_decode_uint64, true},
-	{"cache_bdev_name", offsetof(struct rpc_bdev_ocf_create_ctx, cache_bdev_name), spdk_json_decode_string},
-	{"core_bdev_name", offsetof(struct rpc_bdev_ocf_create_ctx, core_bdev_name), spdk_json_decode_string},
-};
-
 static void
 construct_cb(int status, struct vbdev_ocf *vbdev, void *cb_arg)
 {
@@ -275,10 +246,6 @@ end:
 SPDK_RPC_REGISTER("bdev_ocf_reset_stats", rpc_bdev_ocf_reset_stats, SPDK_RPC_RUNTIME)
 
 /* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_ocf_get_bdevs_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_get_bdevs_ctx, name), spdk_json_decode_string, true},
-};
-
 struct bdev_get_bdevs_ctx {
 	char *name;
 	struct spdk_json_write_ctx *w;
@@ -354,12 +321,6 @@ end:
 }
 SPDK_RPC_REGISTER("bdev_ocf_get_bdevs", rpc_bdev_ocf_get_bdevs, SPDK_RPC_RUNTIME)
 
-/* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_ocf_set_cache_mode_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_set_cache_mode_ctx, name), spdk_json_decode_string},
-	{"mode", offsetof(struct rpc_bdev_ocf_set_cache_mode_ctx, mode), spdk_json_decode_string},
-};
-
 static void
 cache_mode_cb(int status, struct vbdev_ocf *vbdev, void *cb_arg)
 {
@@ -421,14 +382,6 @@ seqcutoff_cb(int status, void *cb_arg)
 		spdk_jsonrpc_send_bool_response(request, true);
 	}
 }
-
-/* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_ocf_set_seqcutoff_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_ocf_set_seqcutoff_ctx, name), spdk_json_decode_string},
-	{"policy", offsetof(struct rpc_bdev_ocf_set_seqcutoff_ctx, policy), spdk_json_decode_string},
-	{"threshold", offsetof(struct rpc_bdev_ocf_set_seqcutoff_ctx, threshold), spdk_json_decode_uint32, true},
-	{"promotion_count", offsetof(struct rpc_bdev_ocf_set_seqcutoff_ctx, promotion_count), spdk_json_decode_uint32, true},
-};
 
 static void
 rpc_bdev_ocf_set_seqcutoff(struct spdk_jsonrpc_request *request,

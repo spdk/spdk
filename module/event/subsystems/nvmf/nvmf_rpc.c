@@ -12,10 +12,6 @@
 #include "spdk/cpuset.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_nvmf_set_max_subsystems_decoders[] = {
-	{"max_subsystems", offsetof(struct rpc_nvmf_set_max_subsystems_ctx, max_subsystems), spdk_json_decode_uint32}
-};
-
 static void
 rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
@@ -143,7 +139,7 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 	return -1;
 }
 
-static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
+static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders_manual[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
@@ -161,8 +157,8 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 	memcpy(&conf, &g_spdk_nvmf_tgt_conf, sizeof(conf));
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_nvmf_set_config_decoders,
-					    SPDK_COUNTOF(rpc_nvmf_set_config_decoders), &conf)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_config_decoders_manual,
+					    SPDK_COUNTOF(rpc_nvmf_set_config_decoders_manual), &conf)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -175,12 +171,6 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("nvmf_set_config", rpc_nvmf_set_config, SPDK_RPC_STARTUP)
-
-static const struct spdk_json_object_decoder rpc_nvmf_set_crdt_decoders[] = {
-	{"crdt1", offsetof(struct rpc_nvmf_set_crdt_ctx, crdt1), spdk_json_decode_uint16, true},
-	{"crdt2", offsetof(struct rpc_nvmf_set_crdt_ctx, crdt2), spdk_json_decode_uint16, true},
-	{"crdt3", offsetof(struct rpc_nvmf_set_crdt_ctx, crdt3), spdk_json_decode_uint16, true},
-};
 
 static void
 rpc_nvmf_set_crdt(struct spdk_jsonrpc_request *request,

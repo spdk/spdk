@@ -364,7 +364,7 @@ rpc_decode_metadata_len(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
-static const struct spdk_json_object_decoder rpc_bdev_nvme_send_cmd_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_nvme_send_cmd_decoders_manual[] = {
 	{"name", offsetof(struct rpc_bdev_nvme_send_cmd_req, name), spdk_json_decode_string},
 	{"cmd_type", offsetof(struct rpc_bdev_nvme_send_cmd_req, cmd_type), rpc_decode_bdev_nvme_cmd_type},
 	{"data_direction", offsetof(struct rpc_bdev_nvme_send_cmd_req, data_direction), rpc_decode_bdev_nvme_data_direction},
@@ -391,8 +391,8 @@ rpc_bdev_nvme_send_cmd(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (spdk_json_decode_object(params, rpc_bdev_nvme_send_cmd_decoders,
-				    SPDK_COUNTOF(rpc_bdev_nvme_send_cmd_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_send_cmd_decoders_manual,
+				    SPDK_COUNTOF(rpc_bdev_nvme_send_cmd_decoders_manual),
 				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;

@@ -11,13 +11,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-/* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_passthru_create_decoders[] = {
-	{"base_bdev_name", offsetof(struct rpc_bdev_passthru_create_ctx, base_bdev_name), spdk_json_decode_string},
-	{"name", offsetof(struct rpc_bdev_passthru_create_ctx, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_bdev_passthru_create_ctx, uuid), spdk_json_decode_uuid, true},
-};
-
 /* Decode the parameters for this RPC method and properly construct the passthru
  * device. Error status returned in the failed cases.
  */
@@ -52,10 +45,6 @@ cleanup:
 	free_rpc_bdev_passthru_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_passthru_create", rpc_bdev_passthru_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_passthru_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_passthru_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_passthru_delete_cb(void *cb_arg, int bdeverrno)

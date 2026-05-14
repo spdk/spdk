@@ -12,16 +12,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_daos_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_daos_create_ctx, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_bdev_daos_create_ctx, uuid), spdk_json_decode_uuid, true},
-	{"pool", offsetof(struct rpc_bdev_daos_create_ctx, pool), spdk_json_decode_string},
-	{"cont", offsetof(struct rpc_bdev_daos_create_ctx, cont), spdk_json_decode_string},
-	{"oclass", offsetof(struct rpc_bdev_daos_create_ctx, oclass), spdk_json_decode_string, true},
-	{"num_blocks", offsetof(struct rpc_bdev_daos_create_ctx, num_blocks), spdk_json_decode_uint64},
-	{"block_size", offsetof(struct rpc_bdev_daos_create_ctx, block_size), spdk_json_decode_uint32},
-};
-
 static void
 rpc_bdev_daos_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
@@ -59,10 +49,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_daos_create", rpc_bdev_daos_create, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_daos_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_daos_delete_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_daos_delete_cb(void *cb_arg, int bdeverrno)
 {
@@ -97,11 +83,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_daos_delete", rpc_bdev_daos_delete, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_daos_resize_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_daos_resize_ctx, name), spdk_json_decode_string},
-	{"new_size", offsetof(struct rpc_bdev_daos_resize_ctx, new_size), spdk_json_decode_uint64}
-};
 
 static void
 rpc_bdev_daos_resize(struct spdk_jsonrpc_request *request,

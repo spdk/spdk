@@ -26,10 +26,6 @@ _log_get_level_name(int level)
 	return NULL;
 }
 
-static const struct spdk_json_object_decoder rpc_log_set_print_level_decoders[] = {
-	{"level", offsetof(struct rpc_log_set_print_level_ctx, level), rpc_decode_log_level},
-};
-
 static void
 rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
@@ -80,10 +76,6 @@ rpc_log_get_print_level(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("log_get_print_level", rpc_log_get_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_log_set_level_decoders[] = {
-	{"level", offsetof(struct rpc_log_set_level_ctx, level), rpc_decode_log_level},
-};
-
 static void
 rpc_log_set_level(struct spdk_jsonrpc_request *request,
 		  const struct spdk_json_val *params)
@@ -132,10 +124,6 @@ rpc_log_get_level(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("log_get_level", rpc_log_get_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_log_set_flag_decoders[] = {
-	{"flag", offsetof(struct rpc_log_set_flag_ctx, flag), spdk_json_decode_string},
-};
-
 static void
 rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 		 const struct spdk_json_val *params)
@@ -162,10 +150,6 @@ end:
 	free_rpc_log_set_flag(&req);
 }
 SPDK_RPC_REGISTER("log_set_flag", rpc_log_set_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_log_clear_flag_decoders[] = {
-	{"flag", offsetof(struct rpc_log_clear_flag_ctx, flag), spdk_json_decode_string},
-};
 
 static void
 rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
@@ -220,10 +204,6 @@ rpc_log_get_flags(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("log_get_flags", rpc_log_get_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_log_enable_timestamps_decoders[] = {
-	{"enabled", offsetof(struct rpc_log_enable_timestamps_ctx, enabled), spdk_json_decode_bool},
-};
 
 static void
 rpc_log_enable_timestamps(struct spdk_jsonrpc_request *request,

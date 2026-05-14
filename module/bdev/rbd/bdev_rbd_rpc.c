@@ -77,7 +77,7 @@ bdev_rbd_decode_config(const struct spdk_json_val *values, void *out)
 	return 0;
 }
 
-static const struct spdk_json_object_decoder rpc_bdev_rbd_create_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_rbd_create_decoders_manual[] = {
 	{"name", offsetof(struct rpc_create_rbd, name), spdk_json_decode_string, true},
 	{"user_id", offsetof(struct rpc_create_rbd, user_id), spdk_json_decode_string, true},
 	{"pool_name", offsetof(struct rpc_create_rbd, pool_name), spdk_json_decode_string},
@@ -98,8 +98,8 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_bdev_rbd_create_decoders,
-				    SPDK_COUNTOF(rpc_bdev_rbd_create_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_rbd_create_decoders_manual,
+				    SPDK_COUNTOF(rpc_bdev_rbd_create_decoders_manual),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_rbd, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -124,10 +124,6 @@ cleanup:
 	free_rpc_bdev_rbd_create_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_create", rpc_bdev_rbd_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_rbd_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_rbd_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 _rpc_bdev_rbd_delete_cb(void *cb_arg, int bdeverrno)
@@ -161,11 +157,6 @@ cleanup:
 	free_rpc_bdev_rbd_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_delete", rpc_bdev_rbd_delete, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_rbd_resize_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_rbd_resize_ctx, name), spdk_json_decode_string},
-	{"new_size", offsetof(struct rpc_bdev_rbd_resize_ctx, new_size), spdk_json_decode_uint64}
-};
 
 static void
 rpc_bdev_rbd_resize(struct spdk_jsonrpc_request *request,
@@ -206,7 +197,7 @@ free_rpc_bdev_rbd_register_cluster_ctx(struct cluster_register_info *req)
 	free(req->core_mask);
 }
 
-static const struct spdk_json_object_decoder rpc_bdev_rbd_register_cluster_decoders[] = {
+static const struct spdk_json_object_decoder rpc_bdev_rbd_register_cluster_decoders_manual[] = {
 	{"name", offsetof(struct cluster_register_info, name), spdk_json_decode_string},
 	{"user_id", offsetof(struct cluster_register_info, user_id), spdk_json_decode_string, true},
 	{"config_param", offsetof(struct cluster_register_info, config_param), bdev_rbd_decode_config, true},
@@ -223,8 +214,8 @@ rpc_bdev_rbd_register_cluster(struct spdk_jsonrpc_request *request,
 	int rc = 0;
 	struct spdk_json_write_ctx *w;
 
-	if (spdk_json_decode_object(params, rpc_bdev_rbd_register_cluster_decoders,
-				    SPDK_COUNTOF(rpc_bdev_rbd_register_cluster_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_rbd_register_cluster_decoders_manual,
+				    SPDK_COUNTOF(rpc_bdev_rbd_register_cluster_decoders_manual),
 				    &req)) {
 		SPDK_DEBUGLOG(bdev_rbd, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -245,10 +236,6 @@ cleanup:
 	free_rpc_bdev_rbd_register_cluster_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_register_cluster", rpc_bdev_rbd_register_cluster, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_rbd_unregister_cluster_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_rbd_unregister_cluster_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_rbd_unregister_cluster(struct spdk_jsonrpc_request *request,
@@ -277,10 +264,6 @@ cleanup:
 	free_rpc_bdev_rbd_unregister_cluster(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_unregister_cluster", rpc_bdev_rbd_unregister_cluster, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_rbd_get_clusters_info_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_rbd_get_clusters_info_ctx, name), spdk_json_decode_string, true},
-};
 
 static void
 rpc_bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request,

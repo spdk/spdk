@@ -10,14 +10,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-/* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_uring_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_uring_create_ctx, name), spdk_json_decode_string},
-	{"filename", offsetof(struct rpc_bdev_uring_create_ctx, filename), spdk_json_decode_string},
-	{"block_size", offsetof(struct rpc_bdev_uring_create_ctx, block_size), spdk_json_decode_uint32, true},
-	{"uuid", offsetof(struct rpc_bdev_uring_create_ctx, uuid), spdk_json_decode_uuid, true},
-};
-
 /* Decode the parameters for this RPC method and properly create the uring
  * device. Error status returned in the failed cases.
  */
@@ -61,10 +53,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_uring_create", rpc_bdev_uring_create, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_uring_rescan_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_uring_rescan_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_uring_rescan(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
@@ -92,10 +80,6 @@ cleanup:
 	free_rpc_bdev_uring_rescan(&req);
 }
 SPDK_RPC_REGISTER("bdev_uring_rescan", rpc_bdev_uring_rescan, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_uring_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_uring_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 _rpc_bdev_uring_delete_cb(void *cb_arg, int bdeverrno)

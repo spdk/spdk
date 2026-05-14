@@ -12,12 +12,6 @@
 
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_split_create_decoders[] = {
-	{"base_bdev", offsetof(struct rpc_bdev_split_create_ctx, base_bdev), spdk_json_decode_string},
-	{"split_count", offsetof(struct rpc_bdev_split_create_ctx, split_count), spdk_json_decode_uint32},
-	{"split_size_mb", offsetof(struct rpc_bdev_split_create_ctx, split_size_mb), spdk_json_decode_uint64, true},
-};
-
 static void
 dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
@@ -81,10 +75,6 @@ out:
 	free_rpc_bdev_split_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_split_create", rpc_bdev_split_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_split_delete_decoders[] = {
-	{"base_bdev", offsetof(struct rpc_bdev_split_delete_ctx, base_bdev), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,

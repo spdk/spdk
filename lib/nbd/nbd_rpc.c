@@ -28,11 +28,6 @@ free_rpc_nbd_start_disk_ext(struct rpc_nbd_start_disk_ext *ereq)
 	free(ereq);
 }
 
-static const struct spdk_json_object_decoder rpc_nbd_start_disk_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_nbd_start_disk_ctx, bdev_name), spdk_json_decode_string},
-	{"nbd_device", offsetof(struct rpc_nbd_start_disk_ctx, nbd_device), spdk_json_decode_string, true},
-};
-
 /* Return 0 to indicate the nbd_device might be available,
  * or non-zero to indicate the nbd_device is invalid or in use.
  */
@@ -206,10 +201,6 @@ invalid:
 
 SPDK_RPC_REGISTER("nbd_start_disk", rpc_nbd_start_disk, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_nbd_stop_disk_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_nbd_stop_disk_ctx, nbd_device), spdk_json_decode_string},
-};
-
 struct nbd_disconnect_arg {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_nbd_disk *nbd;
@@ -311,10 +302,6 @@ rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_end(w);
 }
-
-static const struct spdk_json_object_decoder rpc_nbd_get_disks_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_nbd_get_disks_ctx, nbd_device), spdk_json_decode_string, true},
-};
 
 static void
 rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,

@@ -13,16 +13,6 @@
 /* Reasonable bdev name length + cipher's name len */
 #define MAX_KEY_NAME_LEN 128
 
-static const struct spdk_json_object_decoder rpc_bdev_crypto_create_decoders[] = {
-	{"base_bdev_name", offsetof(struct rpc_bdev_crypto_create_ctx, base_bdev_name), spdk_json_decode_string},
-	{"name", offsetof(struct rpc_bdev_crypto_create_ctx, name), spdk_json_decode_string},
-	{"crypto_pmd", offsetof(struct rpc_bdev_crypto_create_ctx, crypto_pmd), spdk_json_decode_string, true},
-	{"key", offsetof(struct rpc_bdev_crypto_create_ctx, key), spdk_json_decode_string, true},
-	{"cipher", offsetof(struct rpc_bdev_crypto_create_ctx, cipher), spdk_json_decode_string, true},
-	{"key2", offsetof(struct rpc_bdev_crypto_create_ctx, key2), spdk_json_decode_string, true},
-	{"key_name", offsetof(struct rpc_bdev_crypto_create_ctx, key_name), spdk_json_decode_string, true},
-};
-
 static struct vbdev_crypto_opts *
 create_crypto_opts(struct rpc_bdev_crypto_create_ctx *rpc, struct spdk_accel_crypto_key *key,
 		   bool key_owner)
@@ -175,10 +165,6 @@ cleanup:
 	free_rpc_bdev_crypto_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_crypto_create", rpc_bdev_crypto_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_crypto_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_crypto_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_crypto_delete_cb(void *cb_arg, int bdeverrno)

@@ -8,10 +8,6 @@
 #include "spdk/util.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_keyring_linux_set_options_decoders[] = {
-	{"enable", offsetof(struct rpc_keyring_linux_set_options_ctx, enable), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_keyring_linux_set_options(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)

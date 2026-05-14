@@ -10,16 +10,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_aio_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_aio_create_ctx, name), spdk_json_decode_string},
-	{"filename", offsetof(struct rpc_bdev_aio_create_ctx, filename), spdk_json_decode_string},
-	{"block_size", offsetof(struct rpc_bdev_aio_create_ctx, block_size), spdk_json_decode_uint32, true},
-	{"readonly", offsetof(struct rpc_bdev_aio_create_ctx, readonly), spdk_json_decode_bool, true},
-	{"fallocate", offsetof(struct rpc_bdev_aio_create_ctx, fallocate), spdk_json_decode_bool, true},
-	{"uuid", offsetof(struct rpc_bdev_aio_create_ctx, uuid), spdk_json_decode_uuid, true},
-	{"nowait", offsetof(struct rpc_bdev_aio_create_ctx, nowait), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_bdev_aio_create_cb(void *cb_arg)
 {
@@ -70,10 +60,6 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_aio_create", rpc_bdev_aio_create, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_aio_rescan_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_aio_rescan_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_aio_rescan(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
@@ -101,10 +87,6 @@ cleanup:
 	free_rpc_bdev_aio_rescan(&req);
 }
 SPDK_RPC_REGISTER("bdev_aio_rescan", rpc_bdev_aio_rescan, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_aio_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_aio_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 _rpc_bdev_aio_delete_cb(void *cb_arg, int bdeverrno)

@@ -11,14 +11,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-/* Structure to decode the input parameters for this RPC method. */
-static const struct spdk_json_object_decoder rpc_bdev_xnvme_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_xnvme_create_ctx, name), spdk_json_decode_string},
-	{"filename", offsetof(struct rpc_bdev_xnvme_create_ctx, filename), spdk_json_decode_string},
-	{"io_mechanism", offsetof(struct rpc_bdev_xnvme_create_ctx, io_mechanism), spdk_json_decode_string},
-	{"conserve_cpu", offsetof(struct rpc_bdev_xnvme_create_ctx, conserve_cpu), spdk_json_decode_bool, true},
-};
-
 /* Decode the parameters for this RPC method and properly create the xnvme
  * device. Error status returned in the failed cases.
  */
@@ -55,10 +47,6 @@ cleanup:
 	free_rpc_bdev_xnvme_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_xnvme_create", rpc_bdev_xnvme_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_xnvme_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_xnvme_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 _rpc_bdev_xnvme_delete_cb(void *cb_arg, int bdeverrno)

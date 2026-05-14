@@ -42,11 +42,6 @@ rpc_notify_get_types(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("notify_get_types", rpc_notify_get_types, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_notify_get_notifications_decoders[] = {
-	{"id", offsetof(struct rpc_notify_get_notifications_ctx, id), spdk_json_decode_uint64, true},
-	{"max", offsetof(struct rpc_notify_get_notifications_ctx, max), spdk_json_decode_uint64, true},
-};
-
 static int
 notify_get_notifications_cb(uint64_t id, const struct spdk_notify_event *ev, void *ctx)
 {

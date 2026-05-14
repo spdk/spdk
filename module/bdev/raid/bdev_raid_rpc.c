@@ -13,13 +13,6 @@
 #include "spdk_internal/rpc_autogen.h"
 
 /*
- * Decoder object for RPC get_raids
- */
-static const struct spdk_json_object_decoder rpc_bdev_raid_get_bdevs_decoders[] = {
-	{"category", offsetof(struct rpc_bdev_raid_get_bdevs_ctx, category), rpc_decode_bdev_raid_state},
-};
-
-/*
  * brief:
  * rpc_bdev_raid_get_bdevs function is the RPC for rpc_bdev_raid_get_bdevs. This is used to list
  * all the raid bdev names based on the input category requested. Category should be
@@ -72,18 +65,6 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("bdev_raid_get_bdevs", rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
-
-/*
- * Decoder object for RPC bdev_raid_create
- */
-static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_raid_create_ctx, name), spdk_json_decode_string},
-	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create_ctx, strip_size_kb), spdk_json_decode_uint32, true},
-	{"raid_level", offsetof(struct rpc_bdev_raid_create_ctx, raid_level), rpc_decode_bdev_raid_level},
-	{"base_bdevs", offsetof(struct rpc_bdev_raid_create_ctx, base_bdevs), rpc_decode_raid_base_bdevs},
-	{"uuid", offsetof(struct rpc_bdev_raid_create_ctx, uuid), spdk_json_decode_uuid, true},
-	{"superblock", offsetof(struct rpc_bdev_raid_create_ctx, superblock), spdk_json_decode_bool, true},
-};
 
 static void
 rpc_bdev_raid_create_cb(void *_ctx, int status)
@@ -164,14 +145,6 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_raid_create", rpc_bdev_raid_create, SPDK_RPC_RUNTIME)
 
 /*
- * Decoder object for RPC raid_bdev_delete
- */
-static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_raid_delete_ctx, name), spdk_json_decode_string},
-	{"clear_sb", offsetof(struct rpc_bdev_raid_delete_ctx, clear_sb), spdk_json_decode_bool, true},
-};
-
-/*
  * brief:
  * params:
  * cb_arg - pointer to the callback context.
@@ -248,14 +221,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
 
-/*
- * Decoder object for RPC bdev_raid_add_base_bdev
- */
-static const struct spdk_json_object_decoder rpc_bdev_raid_add_base_bdev_decoders[] = {
-	{"base_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev_ctx, base_bdev), spdk_json_decode_string},
-	{"raid_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev_ctx, raid_bdev), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_raid_add_base_bdev_done(void *ctx, int status)
 {
@@ -322,13 +287,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_raid_add_base_bdev", rpc_bdev_raid_add_base_bdev, SPDK_RPC_RUNTIME)
 
-/*
- * Decoder object for RPC bdev_raid_remove_base_bdev
- */
-static const struct spdk_json_object_decoder rpc_bdev_raid_remove_base_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_raid_remove_base_bdev_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_raid_remove_base_bdev_done(void *ctx, int status)
 {
@@ -386,11 +344,6 @@ err:
 	rpc_bdev_raid_remove_base_bdev_done(request, rc);
 }
 SPDK_RPC_REGISTER("bdev_raid_remove_base_bdev", rpc_bdev_raid_remove_base_bdev, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_raid_set_options_decoders[] = {
-	{"process_window_size_kb", offsetof(struct rpc_bdev_raid_set_options_ctx, process_window_size_kb), spdk_json_decode_uint32, true},
-	{"process_max_bandwidth_mb_sec", offsetof(struct rpc_bdev_raid_set_options_ctx, process_max_bandwidth_mb_sec), spdk_json_decode_uint32, true},
-};
 
 static void
 rpc_bdev_raid_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)

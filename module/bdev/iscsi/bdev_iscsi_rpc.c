@@ -10,10 +10,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_iscsi_set_options_decoders[] = {
-	{"timeout_sec", offsetof(struct rpc_bdev_iscsi_set_options_ctx, timeout_sec), spdk_json_decode_uint64, true},
-};
-
 static void
 rpc_bdev_iscsi_set_options(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
@@ -48,12 +44,6 @@ rpc_bdev_iscsi_set_options(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_iscsi_set_options", rpc_bdev_iscsi_set_options,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_iscsi_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_iscsi_create_ctx, name), spdk_json_decode_string},
-	{"initiator_iqn", offsetof(struct rpc_bdev_iscsi_create_ctx, initiator_iqn), spdk_json_decode_string},
-	{"url", offsetof(struct rpc_bdev_iscsi_create_ctx, url), spdk_json_decode_string},
-};
 
 static void
 bdev_iscsi_create_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
@@ -99,10 +89,6 @@ cleanup:
 	free_rpc_bdev_iscsi_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_iscsi_create", rpc_bdev_iscsi_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_iscsi_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_iscsi_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_iscsi_delete_cb(void *cb_arg, int bdeverrno)

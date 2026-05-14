@@ -16,12 +16,6 @@
 #include "spdk/bdev.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_vhost_create_scsi_controller_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_create_scsi_controller_ctx, ctrlr), spdk_json_decode_string },
-	{"cpumask", offsetof(struct rpc_vhost_create_scsi_controller_ctx, cpumask), spdk_json_decode_string, true},
-	{"delay", offsetof(struct rpc_vhost_create_scsi_controller_ctx, delay), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
@@ -59,10 +53,6 @@ invalid:
 SPDK_RPC_REGISTER("vhost_create_scsi_controller", rpc_vhost_create_scsi_controller,
 		  SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_vhost_start_scsi_controller_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_start_scsi_controller_ctx, ctrlr), spdk_json_decode_string },
-};
-
 static void
 rpc_vhost_start_scsi_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
@@ -95,12 +85,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_start_scsi_controller", rpc_vhost_start_scsi_controller,
 		  SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_vhost_scsi_controller_add_target_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_scsi_controller_add_target_ctx, ctrlr), spdk_json_decode_string },
-	{"scsi_target_num", offsetof(struct rpc_vhost_scsi_controller_add_target_ctx, scsi_target_num), spdk_json_decode_int32},
-	{"bdev_name", offsetof(struct rpc_vhost_scsi_controller_add_target_ctx, bdev_name), spdk_json_decode_string },
-};
 
 static void
 rpc_vhost_scsi_controller_add_target(struct spdk_jsonrpc_request *request,
@@ -147,11 +131,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_scsi_controller_add_target", rpc_vhost_scsi_controller_add_target,
 		  SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_vhost_scsi_controller_remove_target_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_scsi_controller_remove_target_ctx, ctrlr), spdk_json_decode_string },
-	{"scsi_target_num", offsetof(struct rpc_vhost_scsi_controller_remove_target_ctx, scsi_target_num), spdk_json_decode_uint32},
-};
 
 static int
 rpc_vhost_scsi_controller_remove_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
@@ -206,13 +185,6 @@ invalid:
 SPDK_RPC_REGISTER("vhost_scsi_controller_remove_target",
 		  rpc_vhost_scsi_controller_remove_target, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_vhost_create_blk_controller_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_create_blk_controller_ctx, ctrlr), spdk_json_decode_string },
-	{"dev_name", offsetof(struct rpc_vhost_create_blk_controller_ctx, dev_name), spdk_json_decode_string },
-	{"cpumask", offsetof(struct rpc_vhost_create_blk_controller_ctx, cpumask), spdk_json_decode_string, true},
-	{"transport", offsetof(struct rpc_vhost_create_blk_controller_ctx, transport), spdk_json_decode_string, true},
-};
-
 static void
 rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
@@ -246,10 +218,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_create_blk_controller", rpc_vhost_create_blk_controller,
 		  SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_vhost_delete_controller_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_delete_controller_ctx, ctrlr), spdk_json_decode_string },
-};
 
 struct vhost_delete_ctrlr_context {
 	struct spdk_jsonrpc_request *request;
@@ -349,10 +317,6 @@ _rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *
 	spdk_json_write_object_end(w);
 }
 
-static const struct spdk_json_object_decoder rpc_vhost_get_controllers_decoders[] = {
-	{"name", offsetof(struct rpc_vhost_get_controllers_ctx, name), spdk_json_decode_string, true},
-};
-
 static void
 rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
@@ -415,12 +379,6 @@ invalid:
 SPDK_RPC_REGISTER("vhost_get_controllers", rpc_vhost_get_controllers, SPDK_RPC_RUNTIME)
 
 
-static const struct spdk_json_object_decoder rpc_vhost_controller_set_coalescing_decoders[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_controller_set_coalescing_ctx, ctrlr), spdk_json_decode_string },
-	{"delay_base_us", offsetof(struct rpc_vhost_controller_set_coalescing_ctx, delay_base_us), spdk_json_decode_uint32},
-	{"iops_threshold", offsetof(struct rpc_vhost_controller_set_coalescing_ctx, iops_threshold), spdk_json_decode_uint32},
-};
-
 static void
 rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
 				    const struct spdk_json_val *params)
@@ -462,10 +420,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_controller_set_coalescing", rpc_vhost_controller_set_coalescing,
 		  SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_virtio_blk_get_transports_decoders[] = {
-	{"name", offsetof(struct rpc_virtio_blk_get_transports_ctx, name), spdk_json_decode_string, true},
-};
 
 static void
 rpc_virtio_blk_get_transports(struct spdk_jsonrpc_request *request,
@@ -512,10 +466,6 @@ rpc_virtio_blk_get_transports(struct spdk_jsonrpc_request *request,
 	free_rpc_virtio_blk_get_transports(&req);
 }
 SPDK_RPC_REGISTER("virtio_blk_get_transports", rpc_virtio_blk_get_transports, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_virtio_blk_create_transport_decoders[] = {
-	{"name", offsetof(struct rpc_virtio_blk_create_transport_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_virtio_blk_create_transport(struct spdk_jsonrpc_request *request,

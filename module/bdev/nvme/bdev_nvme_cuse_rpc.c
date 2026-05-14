@@ -15,10 +15,6 @@
 
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_nvme_cuse_register_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_nvme_cuse_register_ctx, name), spdk_json_decode_string},
-};
-
 static void
 rpc_bdev_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
@@ -56,10 +52,6 @@ cleanup:
 	free_rpc_bdev_nvme_cuse_register(&req);
 }
 SPDK_RPC_REGISTER("bdev_nvme_cuse_register", rpc_bdev_nvme_cuse_register, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_nvme_cuse_unregister_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_nvme_cuse_unregister_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,

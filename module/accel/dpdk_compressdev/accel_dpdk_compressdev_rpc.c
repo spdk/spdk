@@ -10,10 +10,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_compressdev_scan_accel_module_decoders[] = {
-	{"pmd", offsetof(struct rpc_compressdev_scan_accel_module_ctx, pmd), spdk_json_decode_uint32},
-};
-
 static void
 rpc_compressdev_scan_accel_module(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)

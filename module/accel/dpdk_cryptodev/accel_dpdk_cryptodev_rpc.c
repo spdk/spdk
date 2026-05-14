@@ -26,10 +26,6 @@ rpc_dpdk_cryptodev_scan_accel_module(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("dpdk_cryptodev_scan_accel_module", rpc_dpdk_cryptodev_scan_accel_module,
 		  SPDK_RPC_STARTUP)
 
-static const struct spdk_json_object_decoder rpc_dpdk_cryptodev_set_driver_decoders[] = {
-	{"driver_name", offsetof(struct rpc_dpdk_cryptodev_set_driver_ctx, driver_name), rpc_decode_dpdk_cryptodev_driver},
-};
-
 static void
 rpc_dpdk_cryptodev_set_driver(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)

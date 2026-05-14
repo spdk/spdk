@@ -14,13 +14,6 @@
 #include "spdk/log.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_zone_block_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_zone_block_create_ctx, name), spdk_json_decode_string},
-	{"base_bdev", offsetof(struct rpc_bdev_zone_block_create_ctx, base_bdev), spdk_json_decode_string},
-	{"zone_capacity", offsetof(struct rpc_bdev_zone_block_create_ctx, zone_capacity), spdk_json_decode_uint64},
-	{"optimal_open_zones", offsetof(struct rpc_bdev_zone_block_create_ctx, optimal_open_zones), spdk_json_decode_uint64},
-};
-
 static void
 rpc_bdev_zone_block_create(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
@@ -56,10 +49,6 @@ cleanup:
 	free_rpc_bdev_zone_block_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_zone_block_create", rpc_bdev_zone_block_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_zone_block_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_zone_block_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 _rpc_delete_zone_block_cb(void *cb_ctx, int rc)

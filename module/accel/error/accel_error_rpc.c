@@ -9,14 +9,6 @@
 #include "spdk/util.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_accel_error_inject_error_decoders[] = {
-	{"opcode", offsetof(struct rpc_accel_error_inject_error_ctx, opcode), rpc_decode_accel_error_opcode},
-	{"type", offsetof(struct rpc_accel_error_inject_error_ctx, type), rpc_decode_accel_error_inject_type},
-	{"count", offsetof(struct rpc_accel_error_inject_error_ctx, count), spdk_json_decode_uint64, true},
-	{"interval", offsetof(struct rpc_accel_error_inject_error_ctx, interval), spdk_json_decode_uint64, true},
-	{"errcode", offsetof(struct rpc_accel_error_inject_error_ctx, errcode), spdk_json_decode_int32, true},
-};
-
 static void
 rpc_accel_error_inject_error(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)

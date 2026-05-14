@@ -11,11 +11,6 @@
 #include "vbdev_error.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_error_create_decoders[] = {
-	{"base_name", offsetof(struct rpc_bdev_error_create_ctx, base_name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_bdev_error_create_ctx, uuid), spdk_json_decode_uuid, true},
-};
-
 static void
 rpc_bdev_error_create(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
@@ -44,10 +39,6 @@ cleanup:
 	free_rpc_bdev_error_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_create", rpc_bdev_error_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_error_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_error_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_error_delete_cb(void *cb_arg, int bdeverrno)
@@ -81,18 +72,6 @@ cleanup:
 	free_rpc_bdev_error_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_delete", rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_error_inject_error_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_error_inject_error_ctx, name), spdk_json_decode_string},
-	{"io_type", offsetof(struct rpc_bdev_error_inject_error_ctx, io_type), rpc_decode_bdev_error_inject_io_type},
-	{"error_type", offsetof(struct rpc_bdev_error_inject_error_ctx, error_type), rpc_decode_bdev_error_inject_error_type},
-	{"nvme_sct", offsetof(struct rpc_bdev_error_inject_error_ctx, nvme_sct), spdk_json_decode_uint32, true},
-	{"nvme_sc", offsetof(struct rpc_bdev_error_inject_error_ctx, nvme_sc), spdk_json_decode_uint32, true},
-	{"num", offsetof(struct rpc_bdev_error_inject_error_ctx, num), spdk_json_decode_uint32, true},
-	{"queue_depth", offsetof(struct rpc_bdev_error_inject_error_ctx, queue_depth), spdk_json_decode_uint64, true},
-	{"corrupt_offset", offsetof(struct rpc_bdev_error_inject_error_ctx, corrupt_offset), spdk_json_decode_uint64, true},
-	{"corrupt_value", offsetof(struct rpc_bdev_error_inject_error_ctx, corrupt_value), spdk_json_decode_uint8, true},
-};
 
 static void
 rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
@@ -142,10 +121,6 @@ cleanup:
 	free_rpc_bdev_error_inject_error(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_inject_error", rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_error_resume_pending_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_error_resume_pending_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_error_resume_pending(struct spdk_jsonrpc_request *request,

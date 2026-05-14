@@ -366,12 +366,6 @@ spdk_rpc_server_close(struct spdk_rpc_server *server)
 }
 
 /* This ugly rpc_rpc_ double prefix is needed for linting and avoids deprecation of this popular RPC  */
-static const struct spdk_json_object_decoder rpc_rpc_get_methods_decoders[] = {
-	{"current", offsetof(struct rpc_rpc_get_methods_ctx, current), spdk_json_decode_bool, true},
-	{"include_aliases", offsetof(struct rpc_rpc_get_methods_ctx, include_aliases), spdk_json_decode_bool, true},
-};
-
-/* This ugly rpc_rpc_ double prefix is needed for linting and avoids deprecation of this popular RPC  */
 static void
 rpc_rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {

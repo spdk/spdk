@@ -53,11 +53,6 @@ rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("framework_get_subsystems", rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_framework_get_config_decoders[] = {
-	{"name", offsetof(struct rpc_framework_get_config_ctx, name), spdk_json_decode_string},
-	{"with_batches", offsetof(struct rpc_framework_get_config_ctx, with_batches), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)

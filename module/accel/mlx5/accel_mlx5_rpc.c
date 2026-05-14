@@ -8,14 +8,6 @@
 #include "spdk_internal/rpc_autogen.h"
 #include "accel_mlx5.h"
 
-static const struct spdk_json_object_decoder rpc_mlx5_scan_accel_module_decoders[] = {
-	{"qp_size", offsetof(struct rpc_mlx5_scan_accel_module_ctx, qp_size), spdk_json_decode_uint16, true},
-	{"num_requests", offsetof(struct rpc_mlx5_scan_accel_module_ctx, num_requests), spdk_json_decode_uint32, true},
-	{"allowed_devs", offsetof(struct rpc_mlx5_scan_accel_module_ctx, allowed_devs), spdk_json_decode_string, true},
-	{"crypto_split_blocks", offsetof(struct rpc_mlx5_scan_accel_module_ctx, crypto_split_blocks), spdk_json_decode_uint16, true},
-	{"enable_driver", offsetof(struct rpc_mlx5_scan_accel_module_ctx, enable_driver), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
@@ -77,10 +69,6 @@ accel_mlx5_dump_stats_done(void *_ctx, int rc)
 	free_rpc_accel_mlx5_dump_stats(&ereq->req);
 	free(ereq);
 }
-
-static const struct spdk_json_object_decoder rpc_accel_mlx5_dump_stats_decoders[] = {
-	{"level", offsetof(struct rpc_accel_mlx5_dump_stats_ctx, level), rpc_decode_accel_mlx5_dump_state_level, true},
-};
 
 static void
 rpc_accel_mlx5_dump_stats(struct spdk_jsonrpc_request *request,

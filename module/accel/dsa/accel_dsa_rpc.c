@@ -13,10 +13,6 @@
 #include "spdk/string.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_dsa_scan_accel_module_decoders[] = {
-	{"config_kernel_mode", offsetof(struct rpc_dsa_scan_accel_module_ctx, config_kernel_mode), spdk_json_decode_bool, true},
-};
-
 static void
 rpc_dsa_scan_accel_module(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)

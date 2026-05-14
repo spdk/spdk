@@ -11,12 +11,6 @@
 #include "spdk_internal/assert.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_delay_update_latency_decoders[] = {
-	{"delay_bdev_name", offsetof(struct rpc_bdev_delay_update_latency_ctx, delay_bdev_name), spdk_json_decode_string},
-	{"latency_type", offsetof(struct rpc_bdev_delay_update_latency_ctx, latency_type), rpc_decode_bdev_delay_latency_type},
-	{"latency_us", offsetof(struct rpc_bdev_delay_update_latency_ctx, latency_us), spdk_json_decode_uint64}
-};
-
 static void
 rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
@@ -55,16 +49,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_delay_update_latency", rpc_bdev_delay_update_latency, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_delay_create_decoders[] = {
-	{"base_bdev_name", offsetof(struct rpc_bdev_delay_create_ctx, base_bdev_name), spdk_json_decode_string},
-	{"name", offsetof(struct rpc_bdev_delay_create_ctx, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_bdev_delay_create_ctx, uuid), spdk_json_decode_uuid, true},
-	{"avg_read_latency", offsetof(struct rpc_bdev_delay_create_ctx, avg_read_latency), spdk_json_decode_uint64},
-	{"p99_read_latency", offsetof(struct rpc_bdev_delay_create_ctx, p99_read_latency), spdk_json_decode_uint64},
-	{"avg_write_latency", offsetof(struct rpc_bdev_delay_create_ctx, avg_write_latency), spdk_json_decode_uint64},
-	{"p99_write_latency", offsetof(struct rpc_bdev_delay_create_ctx, p99_write_latency), spdk_json_decode_uint64},
-};
-
 static void
 rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
@@ -98,10 +82,6 @@ cleanup:
 	free_rpc_bdev_delay_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_delay_create", rpc_bdev_delay_create, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_delay_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_delay_delete_ctx, name), spdk_json_decode_string},
-};
 
 static void
 rpc_bdev_delay_delete_cb(void *cb_arg, int bdeverrno)

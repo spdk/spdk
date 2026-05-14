@@ -14,10 +14,6 @@
 #include "spdk_internal/rpc_autogen.h"
 
 
-static const struct spdk_json_object_decoder rpc_sock_impl_get_options_decoders[] = {
-	{ "impl_name", offsetof(struct rpc_sock_impl_get_options_ctx, impl_name), spdk_json_decode_string, false },
-};
-
 static void
 rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
@@ -63,20 +59,6 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("sock_impl_get_options", rpc_sock_impl_get_options,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_sock_impl_set_options_decoders[] = {
-	{"impl_name", offsetof(struct rpc_sock_impl_set_options_ctx, impl_name), spdk_json_decode_string, false},
-	{"recv_buf_size", offsetof(struct rpc_sock_impl_set_options_ctx, recv_buf_size), spdk_json_decode_uint32, true},
-	{"send_buf_size", offsetof(struct rpc_sock_impl_set_options_ctx, send_buf_size), spdk_json_decode_uint32, true},
-	{"enable_recv_pipe", offsetof(struct rpc_sock_impl_set_options_ctx, enable_recv_pipe), spdk_json_decode_bool, true},
-	{"enable_quickack", offsetof(struct rpc_sock_impl_set_options_ctx, enable_quickack), spdk_json_decode_bool, true},
-	{"enable_placement_id", offsetof(struct rpc_sock_impl_set_options_ctx, enable_placement_id), spdk_json_decode_uint32, true},
-	{"enable_zerocopy_send_server", offsetof(struct rpc_sock_impl_set_options_ctx, enable_zerocopy_send_server), spdk_json_decode_bool, true},
-	{"enable_zerocopy_send_client", offsetof(struct rpc_sock_impl_set_options_ctx, enable_zerocopy_send_client), spdk_json_decode_bool, true},
-	{"zerocopy_threshold", offsetof(struct rpc_sock_impl_set_options_ctx, zerocopy_threshold), spdk_json_decode_uint32, true},
-	{"tls_version", offsetof(struct rpc_sock_impl_set_options_ctx, tls_version), spdk_json_decode_uint32, true},
-	{"enable_ktls", offsetof(struct rpc_sock_impl_set_options_ctx, enable_ktls), spdk_json_decode_bool, true},
-};
 
 /*
  * X-macro list of fields shared between rpc_sock_impl_set_options_ctx
@@ -157,10 +139,6 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	free_rpc_sock_impl_set_options(&req);
 }
 SPDK_RPC_REGISTER("sock_impl_set_options", rpc_sock_impl_set_options, SPDK_RPC_STARTUP)
-
-static const struct spdk_json_object_decoder rpc_sock_set_default_impl_decoders[] = {
-	{ "impl_name", offsetof(struct rpc_sock_set_default_impl_ctx, impl_name), spdk_json_decode_string, false },
-};
 
 static void
 rpc_sock_set_default_impl(struct spdk_jsonrpc_request *request,

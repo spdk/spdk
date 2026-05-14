@@ -24,10 +24,6 @@ rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val 
 }
 SPDK_RPC_REGISTER("vmd_enable", rpc_vmd_enable, SPDK_RPC_STARTUP)
 
-static const struct spdk_json_object_decoder rpc_vmd_remove_device_decoders[] = {
-	{"addr", offsetof(struct rpc_vmd_remove_device_ctx, addr), spdk_json_decode_string},
-};
-
 static void
 rpc_vmd_remove_device(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {

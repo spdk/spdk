@@ -10,14 +10,6 @@
 #include "spdk/init.h"
 #include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_iobuf_set_options_decoders[] = {
-	{"small_pool_count", offsetof(struct rpc_iobuf_set_options_ctx, small_pool_count), spdk_json_decode_uint64, true},
-	{"large_pool_count", offsetof(struct rpc_iobuf_set_options_ctx, large_pool_count), spdk_json_decode_uint64, true},
-	{"small_bufsize", offsetof(struct rpc_iobuf_set_options_ctx, small_bufsize), spdk_json_decode_uint32, true},
-	{"large_bufsize", offsetof(struct rpc_iobuf_set_options_ctx, large_bufsize), spdk_json_decode_uint32, true},
-	{"enable_numa", offsetof(struct rpc_iobuf_set_options_ctx, enable_numa), spdk_json_decode_bool, true},
-};
-
 /*
  * X-macro list of fields shared between rpc_iobuf_set_options_ctx
  * and spdk_iobuf_opts.  Each entry is X(field).

@@ -17,11 +17,6 @@
 #define SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT		1
 #define SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE		512
 
-static const struct spdk_json_object_decoder rpc_bdev_virtio_blk_set_hotplug_decoders[] = {
-	{"enable", offsetof(struct rpc_bdev_virtio_blk_set_hotplug_ctx, enable), spdk_json_decode_bool, false},
-	{"period_us", offsetof(struct rpc_bdev_virtio_blk_set_hotplug_ctx, period_us), spdk_json_decode_uint64, true},
-};
-
 static void
 rpc_bdev_virtio_blk_set_hotplug(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
@@ -47,10 +42,6 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("bdev_virtio_blk_set_hotplug", rpc_bdev_virtio_blk_set_hotplug, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_virtio_detach_controller_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_virtio_detach_controller_ctx, name), spdk_json_decode_string },
-};
 
 static void
 rpc_bdev_virtio_detach_controller_cb(void *ctx, int errnum)
@@ -114,15 +105,6 @@ rpc_bdev_virtio_scsi_get_devices(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_virtio_scsi_get_devices",
 		  rpc_bdev_virtio_scsi_get_devices, SPDK_RPC_RUNTIME)
-
-static const struct spdk_json_object_decoder rpc_bdev_virtio_attach_controller_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, name), spdk_json_decode_string },
-	{"trtype", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, trtype), rpc_decode_bdev_virtio_trtype },
-	{"traddr", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, traddr), spdk_json_decode_string },
-	{"dev_type", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, dev_type), rpc_decode_bdev_virtio_dev_type },
-	{"vq_count", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, vq_count), spdk_json_decode_uint32, true },
-	{"vq_size", offsetof(struct rpc_bdev_virtio_attach_controller_ctx, vq_size), spdk_json_decode_uint32, true },
-};
 
 static void
 rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, size_t cnt)

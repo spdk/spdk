@@ -14,10 +14,6 @@
 #include "spdk_internal/rpc_autogen.h"
 #include "tgt_internal.h"
 
-static const struct spdk_json_object_decoder rpc_vfu_tgt_set_base_path_decoders[] = {
-	{"path", offsetof(struct rpc_vfu_tgt_set_base_path_ctx, path), spdk_json_decode_string }
-};
-
 static void
 rpc_vfu_tgt_set_base_path(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
