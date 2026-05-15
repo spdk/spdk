@@ -976,20 +976,26 @@ bdev_desc_get_block_size(struct spdk_bdev_desc *desc)
 	}
 }
 
-static inline uint32_t
-bdev_io_get_block_size(struct spdk_bdev_io *bdev_io)
+uint32_t
+spdk_bdev_io_get_block_size(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 
-	if (bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT) {
-		if (bdev->md_len == spdk_dif_pi_format_get_size(bdev->dif_pi_format)) {
-			return bdev->blocklen - bdev->md_len;
-		} else {
-			return bdev->blocklen;
-		}
+	if (bdev->md_len == 0) {
+		return bdev->blocklen;
 	}
 
-	return bdev_desc_get_block_size(bdev_io->internal.desc);
+	if (bdev_io->internal.f.has_metadata) {
+		return bdev->blocklen;
+	}
+
+	if (bdev_io->internal.desc->opts.hide_metadata ||
+	    (bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT &&
+	     bdev->md_len == spdk_dif_pi_format_get_size(bdev->dif_pi_format))) {
+		return bdev->blocklen - bdev->md_len;
+	} else {
+		return bdev->blocklen;
+	}
 }
 
 static inline void
@@ -2762,7 +2768,7 @@ bdev_is_read_io(struct spdk_bdev_io *bdev_io)
 static uint64_t
 bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
-	uint32_t blocklen = bdev_io_get_block_size(bdev_io);
+	uint32_t blocklen = spdk_bdev_io_get_block_size(bdev_io);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
@@ -3318,7 +3324,7 @@ _bdev_rw_split(void *_bdev_io)
 	void *md_buf = NULL;
 	int rc;
 
-	blocklen = bdev_io_get_block_size(bdev_io);
+	blocklen = spdk_bdev_io_get_block_size(bdev_io);
 
 	max_size = max_size ? max_size : UINT32_MAX;
 	max_segment_size = max_segment_size ? max_segment_size : UINT32_MAX;
@@ -3659,7 +3665,7 @@ bdev_io_split(struct spdk_bdev_io *bdev_io)
 		} else {
 			assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 			spdk_bdev_io_get_buf(bdev_io, bdev_rw_split_get_buf_cb,
-					     bdev_io->u.bdev.num_blocks * bdev_io_get_block_size(bdev_io));
+					     bdev_io->u.bdev.num_blocks * spdk_bdev_io_get_block_size(bdev_io));
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -4135,6 +4141,12 @@ bool
 spdk_bdev_io_hide_metadata(struct spdk_bdev_io *bdev_io)
 {
 	return bdev_io->internal.desc->opts.hide_metadata;
+}
+
+bool
+spdk_bdev_desc_hide_metadata(struct spdk_bdev_desc *desc)
+{
+	return desc->opts.hide_metadata;
 }
 
 int

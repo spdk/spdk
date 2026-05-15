@@ -733,6 +733,33 @@ bool spdk_bdev_desc_is_dif_check_enabled(struct spdk_bdev_desc *desc,
 		enum spdk_dif_check_type check_type);
 
 /**
+ * Query if metadata is hidden from the bdev descriptor.
+ *
+ * \param desc Open block device descriptor.
+ * \return true if metadata is hidden, or false otherwise.
+ */
+bool spdk_bdev_desc_hide_metadata(struct spdk_bdev_desc *desc);
+
+/**
+ * Query if metadata is hidden from the bdev I/O.
+ *
+ * \param bdev_io The bdev I/O to query.
+ * \return true if metadata is hidden from the bdev I/O, or false otherwise.
+ */
+bool spdk_bdev_io_hide_metadata(struct spdk_bdev_io *bdev_io);
+
+/**
+ * Get the block size for a bdev I/O, accounting for hide_metadata and PRACT.
+ *
+ * If hide_metadata is set or PRACT strip/insert applies, metadata is excluded
+ * from the reported block size.
+ *
+ * \param bdev_io The bdev I/O to query.
+ * \return Block size in bytes.
+ */
+uint32_t spdk_bdev_io_get_block_size(struct spdk_bdev_io *bdev_io);
+
+/**
  * Set a time limit for the timeout IO of the bdev and timeout callback.
  * We can use this function to enable/disable the timeout handler. If
  * the timeout_in_sec > 0 then it means to enable the timeout IO handling
