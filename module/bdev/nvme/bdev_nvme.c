@@ -3316,7 +3316,7 @@ static int bdev_nvme_unmap(struct nvme_bdev_io *bio, uint64_t offset_blocks,
 			   uint64_t num_blocks);
 
 static int bdev_nvme_write_zeroes(struct nvme_bdev_io *bio, uint64_t offset_blocks,
-				  uint64_t num_blocks);
+				  uint64_t num_blocks, uint32_t io_flags);
 
 static int bdev_nvme_flush(struct nvme_bdev_io *bio);
 
@@ -3364,6 +3364,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct nvme_bdev_io *nbdev_io_to_abort;
+	uint32_t io_flags;
 	int rc = 0;
 
 	switch (bdev_io->type) {
@@ -3426,9 +3427,11 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 				     bdev_io->u.bdev.num_blocks);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		io_flags = bdev->dif_type != SPDK_DIF_DISABLE ? SPDK_NVME_IO_FLAGS_PRACT : 0;
 		rc =  bdev_nvme_write_zeroes(nbdev_io,
 					     bdev_io->u.bdev.offset_blocks,
-					     bdev_io->u.bdev.num_blocks);
+					     bdev_io->u.bdev.num_blocks,
+					     io_flags);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		nbdev_io->io_path = NULL;
@@ -8901,7 +8904,8 @@ bdev_nvme_unmap(struct nvme_bdev_io *bio, uint64_t offset_blocks, uint64_t num_b
 }
 
 static int
-bdev_nvme_write_zeroes(struct nvme_bdev_io *bio, uint64_t offset_blocks, uint64_t num_blocks)
+bdev_nvme_write_zeroes(struct nvme_bdev_io *bio, uint64_t offset_blocks, uint64_t num_blocks,
+		       uint32_t io_flags)
 {
 	if (num_blocks > UINT16_MAX + 1) {
 		SPDK_ERRLOG("NVMe write zeroes is limited to 16-bit block count\n");
@@ -8912,7 +8916,7 @@ bdev_nvme_write_zeroes(struct nvme_bdev_io *bio, uint64_t offset_blocks, uint64_
 					     bio->io_path->qpair->qpair,
 					     offset_blocks, num_blocks,
 					     bdev_nvme_queued_done, bio,
-					     0);
+					     io_flags);
 }
 
 static int
