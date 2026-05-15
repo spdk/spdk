@@ -46,6 +46,8 @@ static char *g_touch_file;
 static int g_enable_temp_test = 0;
 /* Expected changed NS ID */
 static uint32_t g_expected_ns_test = 0;
+static uint32_t g_ns_changed_count = 0;
+static bool g_ns_changed_cb_fired = false;
 /* For multi-process test */
 static int g_multi_process_test = 0;
 static bool g_parent_process = true;
@@ -252,13 +254,43 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 			dev->reset_temp_active = true;
 		}
 		get_health_log_page(dev);
-	} else if (log_page_id == SPDK_NVME_LOG_CHANGED_NS_LIST) {
-		AER_PRINTF("aer_cb - Changed Namespace\n");
-		get_ns_state_test(dev, g_expected_ns_test);
-		g_aer_done++;
 	} else {
 		AER_PRINTF("aer_cb - Unknown Log Page\n");
 	}
+}
+
+static void
+ns_attr_changed_cb(void *cb_arg, const uint32_t *changed_ns_list, uint32_t count)
+{
+	struct dev *dev = cb_arg;
+	bool expected_ns_seen = false;
+	uint32_t i;
+
+	AER_PRINTF("%s: ns_attr_changed_cb: count=%u\n", dev->name, count);
+
+	g_ns_changed_cb_fired = true;
+	g_ns_changed_count = count;
+
+	if (changed_ns_list) {
+		for (i = 0; i < count; i++) {
+			AER_PRINTF("changed NSID: %u\n", changed_ns_list[i]);
+			if (changed_ns_list[i] == g_expected_ns_test) {
+				expected_ns_seen = true;
+			}
+		}
+	} else {
+		AER_PRINTF("NULL list, full rescan expected\n");
+		expected_ns_seen = true;
+	}
+
+	if (expected_ns_seen) {
+		get_ns_state_test(dev, g_expected_ns_test);
+	} else {
+		AER_FPRINTF(stderr, "%s: expected NSID %u not in list\n", dev->name, g_expected_ns_test);
+		g_failed = 1;
+	}
+
+	g_aer_done++;
 }
 
 static void
@@ -519,6 +551,7 @@ spdk_aer_changed_ns_test(void)
 
 	foreach_dev(dev) {
 		get_feature_test(dev);
+		spdk_nvme_ctrlr_register_ns_attr_changed_callback(dev->ctrlr, ns_attr_changed_cb, dev);
 		dev->ns_test_active = spdk_nvme_ctrlr_is_active_ns(dev->ctrlr, g_expected_ns_test);
 	}
 
@@ -530,11 +563,14 @@ spdk_aer_changed_ns_test(void)
 		admin_poll();
 	}
 
-	if (g_failed) {
-		return g_failed;
+	if (!g_failed && !g_ns_changed_cb_fired) {
+		AER_FPRINTF(stderr, "ns_attr_changed_cb never fired\n");
+		g_failed = 1;
+	} else if (!g_failed) {
+		AER_PRINTF("ns_attr_changed_cb verified: %u namespace(s) changed\n", g_ns_changed_count);
 	}
 
-	return 0;
+	return g_failed;
 }
 
 static int
@@ -714,6 +750,7 @@ main(int argc, char **argv)
 	/* unregister AER callback so we don't fail on aborted AERs when we close out qpairs. */
 	foreach_dev(dev) {
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, NULL, NULL);
+		spdk_nvme_ctrlr_register_ns_attr_changed_callback(dev->ctrlr, NULL, NULL);
 	}
 
 	admin_poll();
