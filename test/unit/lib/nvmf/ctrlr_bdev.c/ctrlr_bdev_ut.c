@@ -200,6 +200,7 @@ DEFINE_STUB_V(spdk_bdev_io_get_nvme_fused_status, (const struct spdk_bdev_io *bd
 
 DEFINE_STUB(spdk_bdev_desc_is_dif_check_enabled, bool,
 	    (struct spdk_bdev_desc *desc, enum spdk_dif_check_type check_type), false);
+DEFINE_STUB(spdk_bdev_desc_hide_metadata, bool, (struct spdk_bdev_desc *desc), false);
 
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
 	    (struct spdk_bdev_desc *desc), NULL);
