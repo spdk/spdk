@@ -1015,7 +1015,11 @@ struct spdk_bdev_io_internal_fields {
 			/** Whether the I/O is a sub-I/O of a split parent I/O */
 			uint8_t child_io		: 1;
 
-			uint8_t reserved			: 1;
+			/**
+			 * Whether DIF insert/strip has already been added to the accel sequence
+			 * for this I/O.  Used to prevent double-processing on split child I/Os.
+			 */
+			uint8_t has_metadata			: 1;
 		};
 		uint8_t raw;
 	} f;

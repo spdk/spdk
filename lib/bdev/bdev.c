@@ -421,12 +421,14 @@ static int bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io
 				     uint64_t num_blocks,
 				     struct spdk_memory_domain *domain, void *domain_ctx,
 				     struct spdk_accel_sequence *seq, uint32_t dif_check_flags,
+				     bool has_metadata,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 static int bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				      struct iovec *iov, int iovcnt, void *md_buf,
 				      uint64_t offset_blocks, uint64_t num_blocks,
 				      struct spdk_memory_domain *domain, void *domain_ctx,
 				      struct spdk_accel_sequence *seq, uint32_t dif_check_flags,
+				      bool has_metadata,
 				      uint32_t nvme_cdw12_raw, uint32_t nvme_cdw13_raw,
 				      spdk_bdev_io_completion_cb cb, void *cb_arg);
 
@@ -1078,9 +1080,39 @@ _are_iovs_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
 static inline bool
 bdev_io_needs_metadata(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
-	return (bdev_io->bdev->md_len != 0) &&
-	       (desc->opts.hide_metadata ||
-		(bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT));
+	struct spdk_bdev *bdev = bdev_io->bdev;
+
+	if (bdev->md_len == 0) {
+		return false;
+	}
+
+	if (!desc->opts.hide_metadata &&
+	    !(bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_NVME_PRACT &&
+	      bdev->md_len == spdk_dif_pi_format_get_size(bdev->dif_pi_format))) {
+		return false;
+	}
+
+	if (!(bdev_io->type == SPDK_BDEV_IO_TYPE_READ ||
+	      bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE)) {
+		return false;
+	}
+
+	/* If DIF insert/strip operation is already added to this I/O,
+	 * we do not need metadata anymore to this I/O.
+	 */
+	if (bdev_io->internal.f.has_metadata) {
+		return false;
+	}
+
+	/* If this I/O has accel sequence, we should append DIF insert/strip to the
+	 * sequence and finish it before I/O splitting. Otherwise, we can append DIF
+	 * insert/strip to each child I/O if I/O splitting happens.
+	 */
+	if (!bdev_io_use_accel_sequence(bdev_io) && bdev_io->internal.f.split) {
+		return false;
+	}
+
+	return true;
 }
 
 static bool
@@ -1381,6 +1413,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 
 		if (spdk_likely(rc == 0)) {
 			bdev_io->internal.f.has_accel_sequence = true;
+			bdev_io->internal.f.has_metadata = true;
 			bdev_io->u.bdev.accel_sequence = bdev_io->internal.accel_sequence;
 		} else if (rc != -ENOMEM) {
 			SPDK_ERRLOG("Failed to append generate/verify_copy to accel sequence: %p\n",
@@ -3191,7 +3224,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 					       bdev_io_use_memory_domain(bdev_io) ? bdev_io->u.bdev.memory_domain : NULL,
 					       bdev_io_use_memory_domain(bdev_io) ? bdev_io->u.bdev.memory_domain_ctx : NULL,
 					       NULL,
-					       bdev_io->u.bdev.dif_check_flags,
+					       bdev_io->u.bdev.dif_check_flags, bdev_io->internal.f.has_metadata,
 					       bdev_io_split_done, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -3203,7 +3236,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 						bdev_io_use_memory_domain(bdev_io) ? bdev_io->u.bdev.memory_domain : NULL,
 						bdev_io_use_memory_domain(bdev_io) ? bdev_io->u.bdev.memory_domain_ctx : NULL,
 						NULL,
-						bdev_io->u.bdev.dif_check_flags,
+						bdev_io->u.bdev.dif_check_flags, bdev_io->internal.f.has_metadata,
 						bdev_io->u.bdev.nvme_cdw12.raw,
 						bdev_io->u.bdev.nvme_cdw13.raw,
 						bdev_io_split_done, bdev_io);
@@ -3568,6 +3601,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
 				return;
 			} else if (parent_io->internal.f.has_bounce_buf &&
+				   !parent_io->internal.f.has_metadata &&
 				   !use_accel_sequence) {
 				/* bdev IO will be completed in the callback */
 				_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
@@ -5927,6 +5961,7 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 			  struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
 			  uint64_t num_blocks, struct spdk_memory_domain *domain, void *domain_ctx,
 			  struct spdk_accel_sequence *seq, uint32_t dif_check_flags,
+			  bool has_metadata,
 			  spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
@@ -5966,6 +6001,7 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io->u.bdev.memory_domain = domain;
 	bdev_io->u.bdev.memory_domain_ctx = domain_ctx;
 	bdev_io->u.bdev.accel_sequence = seq;
+	bdev_io->internal.f.has_metadata = has_metadata;
 	bdev_io->u.bdev.dif_check_flags = dif_check_flags;
 
 	_bdev_io_submit_ext(desc, bdev_io);
@@ -5982,7 +6018,7 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
-					 num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, cb, cb_arg);
+					 num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, false, cb, cb_arg);
 }
 
 int
@@ -6002,7 +6038,7 @@ spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 	}
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md_buf, offset_blocks,
-					 num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, cb, cb_arg);
+					 num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, false, cb, cb_arg);
 }
 
 static inline bool
@@ -6072,7 +6108,7 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   ~(bdev_get_ext_io_opt(opts, dif_check_flags_exclude_mask, 0));
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
-					 num_blocks, domain, domain_ctx, seq, dif_check_flags, cb, cb_arg);
+					 num_blocks, domain, domain_ctx, seq, dif_check_flags, false, cb, cb_arg);
 }
 
 static int
@@ -6167,6 +6203,7 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   uint64_t offset_blocks, uint64_t num_blocks,
 			   struct spdk_memory_domain *domain, void *domain_ctx,
 			   struct spdk_accel_sequence *seq, uint32_t dif_check_flags,
+			   bool has_metadata,
 			   uint32_t nvme_cdw12_raw, uint32_t nvme_cdw13_raw,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -6210,6 +6247,7 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->u.bdev.memory_domain = domain;
 	bdev_io->u.bdev.memory_domain_ctx = domain_ctx;
 	bdev_io->u.bdev.accel_sequence = seq;
+	bdev_io->internal.f.has_metadata = has_metadata;
 	bdev_io->u.bdev.dif_check_flags = dif_check_flags;
 	bdev_io->u.bdev.nvme_cdw12.raw = nvme_cdw12_raw;
 	bdev_io->u.bdev.nvme_cdw13.raw = nvme_cdw13_raw;
@@ -6243,7 +6281,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
-					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, 0, 0,
+					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, false, 0, 0,
 					  cb, cb_arg);
 }
 
@@ -6264,7 +6302,7 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	}
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md_buf, offset_blocks,
-					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, 0, 0,
+					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, false, 0, 0,
 					  cb, cb_arg);
 }
 
@@ -6322,7 +6360,7 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks, num_blocks,
 					  domain, domain_ctx, seq, dif_check_flags,
-					  nvme_cdw12_raw, nvme_cdw13_raw, cb, cb_arg);
+					  false, nvme_cdw12_raw, nvme_cdw13_raw, cb, cb_arg);
 }
 
 static void
@@ -8052,6 +8090,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 				bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
 				return;
 			} else if (spdk_unlikely(bdev_io->internal.f.has_bounce_buf &&
+						 !bdev_io->internal.f.has_metadata &&
 						 !bdev_io_use_accel_sequence(bdev_io))) {
 				_bdev_io_push_bounce_data_buffer(bdev_io,
 								 _bdev_io_complete_push_bounce_done);
