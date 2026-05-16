@@ -11,31 +11,32 @@
 SPDK_LOG_REGISTER_COMPONENT(wal_vbdev);
 
 #define WAL_SUPERBLOCK_MAGIC 0x57414c00 /* "WAL\0" */
-#define WAL_RECORD_MAGIC     0x52454348 /* "RECH" */
+#define WAL_RECORD_MAGIC 0x52454348     /* "RECH" */
 
 /* Суперблок — хранится в самом начале журнала (LBA 0) */
 struct wal_superblock
 {
-    uint32_t magic;          /* "WAL\0" */
-    uint32_t version;        /* Версия формата */
-    uint64_t write_pos;      /* Текущая позиция (оффсет) для записи в журнале */
-    uint64_t next_seq;       /* Номер (LSN) для следующей новой записи */
-    uint64_t checkpoint_seq; /* LSN последней записи, успешно перенесенной в main */
-    uint32_t hdr_crc;        /* CRC самого суперблока */
+    uint32_t magic;     /* "WAL\0" */
+    uint32_t version;   /* Версия формата */
+    uint64_t write_pos; /* Текущая позиция (оффсет) для записи в журнале */
+    uint64_t next_seq;  /* Номер (LSN) для следующей новой записи */
+    uint64_t
+            checkpoint_seq; /* LSN последней записи, успешно перенесенной в main */
+    uint32_t hdr_crc;       /* CRC самого суперблока */
 } __attribute__((packed));
 
 /* Заголовок записи — предваряет каждый блок данных в журнале */
 struct wal_record_header
 {
-    uint32_t magic;          /* "RECH" */
-    uint32_t type;           /* Тип записи (Data, Metadata, Checkpoint) */
-    uint64_t seq;            /* Порядковый номер (LSN) этой записи */
-    uint64_t lba;            /* Адрес начала диапазона на main bdev */
-    uint32_t num_blocks;     /* Количество блоков данных */
-    uint32_t rec_len;        /* Общий размер (header + data) */
-    uint32_t flags;          /* Флаги: DIRTY (нужен replay), CLEAN (уже в main) */
-    uint32_t data_crc;       /* CRC полезных данных */
-    uint32_t hdr_crc;        /* CRC самого заголовка */
+    uint32_t magic;      /* "RECH" */
+    uint32_t type;       /* Тип записи (Data, Metadata, Checkpoint) */
+    uint64_t seq;        /* LSN этой записи */
+    uint64_t lba;        /* Адрес начала диапазона на main bdev */
+    uint32_t num_blocks; /* Количество блоков данных */
+    uint32_t rec_len;    /* Общий размер (header + data) */
+    uint32_t flags;      /* Флаги: DIRTY, CLEAN */
+    uint32_t data_crc;   /* CRC полезных данных */
+    uint32_t hdr_crc;    /* CRC самого заголовка */
 } __attribute__((packed));
 
 /* Структура виртуального WAL-устройства и состояния восстановления */
@@ -517,17 +518,61 @@ static void wal_unregister(struct wal_vbdev *vb,
     spdk_bdev_unregister(&vb->bdev, cb_fn, cb_arg);
 }
 
+/* Контекст инициализации для асинхронной записи суперблока */
+struct wal_init_ctx
+{
+    struct wal_vbdev *vb;
+    void *buf;
+    wal_bdev_create_cb cb_fn;
+    void *cb_arg;
+    struct spdk_io_channel *ch;
+};
+
+/* Callback завершения записи суперблока */
+static void wal_sb_write_done(struct spdk_bdev_io *bdev_io,
+                              bool success,
+                              void *cb_arg)
+{
+    struct wal_init_ctx *ctx = cb_arg;
+    struct wal_vbdev *vb = ctx->vb;
+    int rc = success ? 0 : -EIO;
+
+    spdk_bdev_free_io(bdev_io);
+    spdk_put_io_channel(ctx->ch);
+    spdk_dma_free(ctx->buf);
+
+    if (rc == 0)
+    {
+        rc = spdk_bdev_register(&vb->bdev);
+        if (rc != 0)
+        {
+            SPDK_ERRLOG("wal: spdk_bdev_register failed: %d\n", rc);
+        }
+    }
+
+    if (rc != 0)
+    {
+        TAILQ_REMOVE(&g_wal, vb, link);
+    }
+
+    ctx->cb_fn(ctx->cb_arg, rc);
+    free(ctx);
+}
+
 /* Создание и регистрация нового WAL-диска на основе двух базовых bdev */
 int wal_bdev_create_disk(char *main_bdev_name,
                          char *journal_bdev_name,
                          char *name,
                          uint32_t *block_sz,
-                         uint64_t *size_mb)
+                         uint64_t *size_mb,
+                         wal_bdev_create_cb cb_fn,
+                         void *cb_arg)
 {
     int rc = 0;
     struct wal_vbdev *vb = NULL;
     struct spdk_bdev_desc *main_desc = NULL, *journal_desc = NULL;
     struct spdk_bdev *main_bdev = NULL, *journal_bdev = NULL;
+    struct wal_init_ctx *ctx = NULL;
 
     if (!main_bdev_name || !journal_bdev_name || !name)
     {
@@ -589,13 +634,16 @@ int wal_bdev_create_disk(char *main_bdev_name,
     vb->main_bdev = main_bdev;
     vb->journal_bdev = journal_bdev;
 
-    /* Инициализация суперблока */
+    /* superblock init */
     vb->sb.magic = WAL_SUPERBLOCK_MAGIC;
     vb->sb.version = 1;
-    vb->sb.write_pos = 1;      /* Первая запись пойдет после суперблока (LBA 1) */
+    vb->sb.write_pos = 1;
     vb->sb.next_seq = 1;
     vb->sb.checkpoint_seq = 0;
-    vb->sb.hdr_crc = spdk_crc32c_update(&vb->sb, offsetof(struct wal_superblock, hdr_crc), 0);
+    vb->sb.hdr_crc =
+            spdk_crc32c_update(&vb->sb,
+                               offsetof(struct wal_superblock, hdr_crc),
+                               0);
 
     vb->bdev.name = strdup(name);
     if (!vb->bdev.name)
@@ -623,11 +671,40 @@ int wal_bdev_create_disk(char *main_bdev_name,
                             sizeof(struct wal_io_channel),
                             vb->bdev.name);
 
-    rc = spdk_bdev_register(&vb->bdev);
+    /* Асинхронная запись суперблока */
+    ctx = calloc(1, sizeof(*ctx));
+    if (!ctx)
+    {
+        rc = -ENOMEM;
+        goto err_unregister_io_dev;
+    }
+
+    ctx->vb = vb;
+    ctx->cb_fn = cb_fn;
+    ctx->cb_arg = cb_arg;
+    ctx->buf = spdk_dma_zmalloc(vb->bdev.blocklen,
+                                spdk_bdev_get_buf_align(vb->journal_bdev),
+                                NULL);
+    if (!ctx->buf)
+    {
+        rc = -ENOMEM;
+        goto err_ctx;
+    }
+
+    memcpy(ctx->buf, &vb->sb, sizeof(vb->sb));
+    ctx->ch = spdk_bdev_get_io_channel(vb->journal_desc);
+    if (!ctx->ch)
+    {
+        rc = -ENOMEM;
+        goto err_buf;
+    }
+
+    rc = spdk_bdev_write_blocks(
+            vb->journal_desc, ctx->ch, ctx->buf, 0, 1, wal_sb_write_done, ctx);
     if (rc != 0)
     {
-        SPDK_ERRLOG("wal: spdk_bdev_register failed: %d\n", rc);
-        goto err_unregister_io_dev;
+        SPDK_ERRLOG("wal: failed to write superblock: %d\n", rc);
+        goto err_ch;
     }
 
     TAILQ_INSERT_TAIL(&g_wal, vb, link);
@@ -637,12 +714,15 @@ int wal_bdev_create_disk(char *main_bdev_name,
     if (size_mb)
         *size_mb = (vb->bdev.blockcnt * vb->bdev.blocklen) / (1024 * 1024);
 
-    SPDK_NOTICELOG("wal: created '%s' (main=%s, journal=%s)\n",
-                   name,
-                   main_bdev_name,
-                   journal_bdev_name);
+    SPDK_NOTICELOG("wal: init disk '%s' (async sb write started)\n", name);
     return 0;
 
+err_ch:
+    spdk_put_io_channel(ctx->ch);
+err_buf:
+    spdk_dma_free(ctx->buf);
+err_ctx:
+    free(ctx);
 err_unregister_io_dev:
     spdk_io_device_unregister(vb, NULL);
 err:

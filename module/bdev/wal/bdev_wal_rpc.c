@@ -58,10 +58,26 @@ static const struct spdk_json_object_decoder rpc_bdev_wal_delete_decoders[] = {
 	 offsetof(struct rpc_bdev_wal_delete, name),
 	 spdk_json_decode_string}};
 
+/* Call-back завершения создания */
+static void rpc_journaling_bdev_create_cb(void *cb_arg, int rc) {
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request,
+						 rc,
+						 spdk_strerror(-rc));
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_string(w, "success");
+	spdk_jsonrpc_end_result(request, w);
+}
+
 static void rpc_journaling_bdev_create(struct spdk_jsonrpc_request *request,
 				       const struct spdk_json_val *params) {
 	struct rpc_bdev_wal_create req = {NULL};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params,
@@ -82,7 +98,9 @@ static void rpc_journaling_bdev_create(struct spdk_jsonrpc_request *request,
 				  req.journal_bdev_name,
 				  req.name,
 				  &req.block_sz,
-				  &req.size_mb);
+				  &req.size_mb,
+				  rpc_journaling_bdev_create_cb,
+				  request);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request,
 						 rc,
@@ -90,9 +108,9 @@ static void rpc_journaling_bdev_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_string(w, req.name);
-	spdk_jsonrpc_end_result(request, w);
+	/* Мы не отправляем ответ здесь, так как создание теперь асинхронное */
+	free_rpc_bdev_wal_create(&req);
+	return;
 
 cleanup:
 	free_rpc_bdev_wal_create(&req);
