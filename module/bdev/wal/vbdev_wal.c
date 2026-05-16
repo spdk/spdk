@@ -979,7 +979,8 @@ static void wal_submit_request(struct spdk_io_channel *ch,
     {
         int rc;
 
-        if (__atomic_load_n(&vb->write_in_progress, __ATOMIC_ACQUIRE))
+        if (__atomic_load_n(&vb->rec_in_progress, __ATOMIC_ACQUIRE) ||
+            __atomic_load_n(&vb->write_in_progress, __ATOMIC_ACQUIRE))
         {
             spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
             return;

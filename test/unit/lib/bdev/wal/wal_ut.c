@@ -623,6 +623,34 @@ test_wal_checkpoint_not_advanced_on_sb_failure(void)
 }
 
 static void
+test_wal_flush_rejected_during_recovery(void)
+{
+    struct wal_vbdev *vb;
+    struct spdk_io_channel *qch;
+    struct spdk_bdev_io *bdev_io;
+
+    test_setup();
+    wal_bdev_create_disk("main", "journal", "wal0", NULL, NULL, test_cb, NULL);
+    poll_threads();
+    vb = TAILQ_FIRST(&g_wal);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(vb);
+    qch = wal_get_io_channel(vb);
+
+    __atomic_store_n(&vb->rec_in_progress, true, __ATOMIC_RELEASE);
+    bdev_io = ut_alloc_wal_io(vb, SPDK_BDEV_IO_TYPE_FLUSH, NULL, 0, 0, 0);
+    wal_submit_request(qch, bdev_io);
+
+    CU_ASSERT_EQUAL(g_last_io_status, SPDK_BDEV_IO_STATUS_FAILED);
+    CU_ASSERT_EQUAL(g_io_complete_count, 1);
+    CU_ASSERT_EQUAL(g_full_journal_flush_count, 0);
+
+    __atomic_store_n(&vb->rec_in_progress, false, __ATOMIC_RELEASE);
+    free(bdev_io);
+    spdk_put_io_channel(qch);
+    test_cleanup();
+}
+
+static void
 test_wal_recovery_rejects_bad_bounds(void)
 {
     struct wal_vbdev *vb;
@@ -726,6 +754,8 @@ main(int argc, char *argv[])
                     test_wal_write_immediate_error_releases_lock) == NULL ||
         CU_add_test(suite, "test_wal_checkpoint_not_advanced_on_sb_failure",
                     test_wal_checkpoint_not_advanced_on_sb_failure) == NULL ||
+        CU_add_test(suite, "test_wal_flush_rejected_during_recovery",
+                    test_wal_flush_rejected_during_recovery) == NULL ||
         CU_add_test(suite, "test_wal_recovery_rejects_bad_bounds",
                     test_wal_recovery_rejects_bad_bounds) == NULL ||
         CU_add_test(suite, "test_wal_recovery_pad_wrap",
