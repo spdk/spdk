@@ -68,7 +68,7 @@ extern "C" {
 #define SPDK_ALIGN_CEIL(val, align) \
 	SPDK_ALIGN_FLOOR(((val) + ((__typeof__(val)) (align) - 1)), align)
 
-#define SPDK_BIT(n) (1ul << (n))
+#define SPDK_BIT(n) (UINT64_C(1) << (n))
 
 /**
  * Check if a given field is valid in a structure with size tracking. The third

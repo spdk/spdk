@@ -7,29 +7,32 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-
 #include "spdk/log.h"
+#include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder rpc_bdev_iscsi_options_decoders[] = {
-	{"timeout_sec", offsetof(struct spdk_bdev_iscsi_opts, timeout_sec), spdk_json_decode_uint64, true},
+static const struct spdk_json_object_decoder rpc_bdev_iscsi_set_options_decoders[] = {
+	{"timeout_sec", offsetof(struct rpc_bdev_iscsi_set_options_ctx, timeout_sec), spdk_json_decode_uint64, true},
 };
 
 static void
 rpc_bdev_iscsi_set_options(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
+	struct rpc_bdev_iscsi_set_options_ctx req = {};
 	struct spdk_bdev_iscsi_opts opts;
 	int rc;
 
 	bdev_iscsi_get_opts(&opts);
-	if (params && spdk_json_decode_object(params, rpc_bdev_iscsi_options_decoders,
-					      SPDK_COUNTOF(rpc_bdev_iscsi_options_decoders),
-					      &opts)) {
+	req.timeout_sec = opts.timeout_sec;
+	if (params && spdk_json_decode_object(params, rpc_bdev_iscsi_set_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_iscsi_set_options_decoders),
+					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		return;
 	}
+	opts.timeout_sec = req.timeout_sec;
 
 	rc = bdev_iscsi_set_opts(&opts);
 	if (rc == -EPERM) {
@@ -46,25 +49,11 @@ rpc_bdev_iscsi_set_options(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("bdev_iscsi_set_options", rpc_bdev_iscsi_set_options,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_iscsi_create {
-	char *name;
-	char *initiator_iqn;
-	char *url;
-};
-
 static const struct spdk_json_object_decoder rpc_bdev_iscsi_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_iscsi_create, name), spdk_json_decode_string},
-	{"initiator_iqn", offsetof(struct rpc_bdev_iscsi_create, initiator_iqn), spdk_json_decode_string},
-	{"url", offsetof(struct rpc_bdev_iscsi_create, url), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_iscsi_create_ctx, name), spdk_json_decode_string},
+	{"initiator_iqn", offsetof(struct rpc_bdev_iscsi_create_ctx, initiator_iqn), spdk_json_decode_string},
+	{"url", offsetof(struct rpc_bdev_iscsi_create_ctx, url), spdk_json_decode_string},
 };
-
-static void
-free_rpc_bdev_iscsi_create(struct rpc_bdev_iscsi_create *req)
-{
-	free(req->name);
-	free(req->initiator_iqn);
-	free(req->url);
-}
 
 static void
 bdev_iscsi_create_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
@@ -89,7 +78,7 @@ static void
 rpc_bdev_iscsi_create(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
-	struct rpc_bdev_iscsi_create req = {};
+	struct rpc_bdev_iscsi_create_ctx req = {};
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_bdev_iscsi_create_decoders,
@@ -111,18 +100,8 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_iscsi_create", rpc_bdev_iscsi_create, SPDK_RPC_RUNTIME)
 
-struct rpc_delete_iscsi {
-	char *name;
-};
-
-static void
-free_rpc_delete_iscsi(struct rpc_delete_iscsi *r)
-{
-	free(r->name);
-}
-
-static const struct spdk_json_object_decoder rpc_delete_iscsi_decoders[] = {
-	{"name", offsetof(struct rpc_delete_iscsi, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_iscsi_delete_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_iscsi_delete_ctx, name), spdk_json_decode_string},
 };
 
 static void
@@ -141,10 +120,10 @@ static void
 rpc_bdev_iscsi_delete(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
-	struct rpc_delete_iscsi req = {NULL};
+	struct rpc_bdev_iscsi_delete_ctx req = {};
 
-	if (spdk_json_decode_object(params, rpc_delete_iscsi_decoders,
-				    SPDK_COUNTOF(rpc_delete_iscsi_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_iscsi_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_iscsi_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -154,6 +133,6 @@ rpc_bdev_iscsi_delete(struct spdk_jsonrpc_request *request,
 	delete_iscsi_disk(req.name, rpc_bdev_iscsi_delete_cb, request);
 
 cleanup:
-	free_rpc_delete_iscsi(&req);
+	free_rpc_bdev_iscsi_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_iscsi_delete", rpc_bdev_iscsi_delete, SPDK_RPC_RUNTIME)

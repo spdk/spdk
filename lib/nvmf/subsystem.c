@@ -2,6 +2,8 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2025, Oracle and/or its affiliates.
+ *   Copyright (C) 2025 Dell Inc, or its subsidiaries. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -215,14 +217,118 @@ nvmf_nqn_is_valid(const char *nqn)
 
 static void subsystem_state_change_on_pg(struct spdk_io_channel_iter *i);
 
+void
+spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type, struct spdk_nvmf_subsystem_opts *opts,
+			      size_t size)
+{
+	bool is_discovery = (type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+			     type == SPDK_NVMF_SUBTYPE_DISCOVERY);
+
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		assert(false);
+		return;
+	}
+
+	if (size == 0) {
+		SPDK_ERRLOG("size should not be zero\n");
+		assert(false);
+		return;
+	}
+
+	memset(opts, 0, size);
+	opts->opts_size = size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvmf_subsystem_opts, field) + sizeof(opts->field) <= size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(type, type);
+	SET_FIELD(max_namespaces, is_discovery ? 0 : NVMF_SUBSYSTEM_DEFAULT_NAMESPACES);
+
+	if (FIELD_OK(sn)) {
+		memset(opts->sn, '0', sizeof(opts->sn) - 1);
+		opts->sn[sizeof(opts->sn) - 1] = '\0';
+	}
+
+	if (FIELD_OK(mn)) {
+		snprintf(opts->mn, sizeof(opts->mn), "%s", MODEL_NUMBER_DEFAULT);
+	}
+
+	SET_FIELD(ana_reporting, false);
+	SET_FIELD(passthrough, false);
+	SET_FIELD(enable_nssr, false);
+	/* 1 GiB in logical blocks (512B): 1 GiB / 512 = 2097152 */
+	SET_FIELD(dmrsl, 2097152);
+	/* 2^12 pages * 4 KiB/page = 16 MiB */
+	SET_FIELD(wzsl, 12);
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+static void
+nvmf_subsystem_opts_copy(struct spdk_nvmf_subsystem_opts *opts,
+			 const struct spdk_nvmf_subsystem_opts *user_opts)
+{
+#define FIELD_OK(field)	\
+	offsetof(struct spdk_nvmf_subsystem_opts, field) + sizeof(opts->field) <= user_opts->opts_size
+
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		opts->field = user_opts->field;	\
+	} \
+
+	SET_FIELD(type);
+	SET_FIELD(max_namespaces);
+
+	if (FIELD_OK(sn)) {
+		memcpy(opts->sn, user_opts->sn, sizeof(opts->sn));
+	}
+
+	if (FIELD_OK(mn)) {
+		memcpy(opts->mn, user_opts->mn, sizeof(opts->mn));
+	}
+
+	SET_FIELD(ana_reporting);
+	SET_FIELD(passthrough);
+	SET_FIELD(enable_nssr);
+	SET_FIELD(dmrsl);
+	SET_FIELD(wzsl);
+
+	opts->opts_size = user_opts->opts_size;
+
+	/* We should not remove this statement, but need to update the assert statement
+	 * if we add a new field, and also add a corresponding SET_FIELD statement.
+	 */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88, "Incorrect size");
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
 struct spdk_nvmf_subsystem *
-spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
-			   const char *nqn,
-			   enum spdk_nvmf_subtype type,
-			   uint32_t num_ns)
+spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
+			       const char *nqn,
+			       enum spdk_nvmf_subtype type,
+			       const struct spdk_nvmf_subsystem_opts *user_opts)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
+	struct spdk_nvmf_subsystem_opts opts;
 	uint32_t			sid;
+
+	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
+	if (user_opts) {
+		nvmf_subsystem_opts_copy(&opts, user_opts);
+		if (opts.type != type) {
+			SPDK_ERRLOG("User provided opts type %d for Subsystem NQN '%s' does not match expected type %d\n",
+				    opts.type, nqn, type);
+			return NULL;
+		}
+	}
 
 	if (spdk_nvmf_tgt_find_subsystem(tgt, nqn)) {
 		SPDK_ERRLOG("Subsystem NQN '%s' already exists\n", nqn);
@@ -236,12 +342,12 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 
 	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
 	    type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		if (num_ns != 0) {
+		if (opts.max_namespaces != 0) {
 			SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
 			return NULL;
 		}
-	} else if (num_ns == 0) {
-		num_ns = NVMF_SUBSYSTEM_DEFAULT_NAMESPACES;
+	} else if (opts.max_namespaces == 0) {
+		opts.max_namespaces = NVMF_SUBSYSTEM_DEFAULT_NAMESPACES;
 	}
 
 	/* Find a free subsystem id (sid) */
@@ -250,6 +356,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		SPDK_ERRLOG("No free subsystem IDs are available for subsystem creation\n");
 		return NULL;
 	}
+
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem memory allocation failed\n");
@@ -260,12 +367,31 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	subsystem->tgt = tgt;
 	subsystem->id = sid;
-	subsystem->subtype = type;
-	subsystem->max_nsid = num_ns;
 	subsystem->next_cntlid = 1;
 	subsystem->min_cntlid = NVMF_MIN_CNTLID;
 	subsystem->max_cntlid = NVMF_MAX_CNTLID;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
+
+	subsystem->opts.type = opts.type;
+	subsystem->max_nsid = opts.max_namespaces;
+	subsystem->opts.max_namespaces = opts.max_namespaces;
+
+	if (nvmf_subsystem_copy_sn(subsystem->opts.sn, opts.sn, sizeof(subsystem->opts.sn))) {
+		free(subsystem);
+		return NULL;
+	}
+
+	if (nvmf_subsystem_copy_mn(subsystem->opts.mn, opts.mn, sizeof(subsystem->opts.mn))) {
+		free(subsystem);
+		return NULL;
+	}
+
+	subsystem->opts.ana_reporting = opts.ana_reporting;
+	subsystem->opts.passthrough = opts.passthrough;
+	subsystem->opts.enable_nssr = opts.enable_nssr;
+	subsystem->opts.dmrsl = opts.dmrsl;
+	subsystem->opts.wzsl = opts.wzsl;
+
 	pthread_mutex_init(&subsystem->mutex, NULL);
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
@@ -279,8 +405,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	if (num_ns != 0) {
-		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
+	if (opts.max_namespaces != 0) {
+		subsystem->ns = calloc(opts.max_namespaces, sizeof(struct spdk_nvmf_ns *));
 		if (subsystem->ns == NULL) {
 			SPDK_ERRLOG("Namespace memory allocation failed\n");
 			pthread_mutex_destroy(&subsystem->mutex);
@@ -288,7 +414,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			free(subsystem);
 			return NULL;
 		}
-		subsystem->ana_group = calloc(num_ns, sizeof(uint32_t));
+
+		subsystem->ana_group = calloc(opts.max_namespaces, sizeof(uint32_t));
 		if (subsystem->ana_group == NULL) {
 			SPDK_ERRLOG("ANA group memory allocation failed\n");
 			pthread_mutex_destroy(&subsystem->mutex);
@@ -299,18 +426,36 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 
-	memset(subsystem->sn, '0', sizeof(subsystem->sn) - 1);
-	subsystem->sn[sizeof(subsystem->sn) - 1] = '\0';
-
-	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s",
-		 MODEL_NUMBER_DEFAULT);
-
 	spdk_bit_array_set(tgt->subsystem_ids, sid);
 	RB_INSERT(subsystem_tree, &tgt->subsystems, subsystem);
 
 	SPDK_DTRACE_PROBE1(nvmf_subsystem_create, subsystem->subnqn);
 
 	return subsystem;
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_create,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
+struct spdk_nvmf_subsystem *
+spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
+			   const char *nqn,
+			   enum spdk_nvmf_subtype type,
+			   uint32_t num_ns)
+{
+	struct spdk_nvmf_subsystem_opts opts;
+
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_create);
+	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
+	opts.max_namespaces = num_ns;
+
+	return spdk_nvmf_subsystem_create_ext(tgt, nqn, type, &opts);
+}
+
+const struct spdk_nvmf_subsystem_opts *
+spdk_nvmf_subsystem_get_opts(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return &subsystem->opts;
 }
 
 static void
@@ -338,6 +483,8 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_ctrlr *ctrlr;
 
 	if (stop) {
+		assert(nvmf_subsystem_listener_is_active(listener));
+
 		transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid->trstring);
 		if (transport != NULL) {
 			spdk_nvmf_transport_stop_listen(transport, listener->trid);
@@ -376,17 +523,11 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_nvmf_ns		*ns;
 	nvmf_subsystem_destroy_cb	async_destroy_cb = NULL;
 	void				*async_destroy_cb_arg = NULL;
-	int				rc;
 
 	if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
 		SPDK_DEBUGLOG(nvmf, "subsystem %p %s has active controllers\n", subsystem, subsystem->subnqn);
 		subsystem->async_destroy = true;
-		rc = spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_destroy_msg, subsystem);
-		if (rc) {
-			SPDK_ERRLOG("Failed to send thread msg, rc %d\n", rc);
-			assert(0);
-			return rc;
-		}
+		spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_destroy_msg, subsystem);
 		return -EINPROGRESS;
 	}
 
@@ -465,13 +606,13 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 			    subsystem->subnqn, subsystem->state);
 		return -EAGAIN;
 	}
-	if (subsystem->destroying) {
-		SPDK_ERRLOG("Subsystem destruction is already started\n");
-		assert(0);
+
+	if (subsystem->destroy_state == NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS) {
+		SPDK_ERRLOG("Subsystem %s destruction is already in progress\n", subsystem->subnqn);
 		return -EALREADY;
 	}
 
-	subsystem->destroying = true;
+	subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS;
 
 	SPDK_DEBUGLOG(nvmf, "subsystem is %p %s\n", subsystem, subsystem->subnqn);
 
@@ -582,7 +723,6 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		__atomic_compare_exchange_n(&subsystem->state, &actual_old_state, state, false,
 					    __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 	}
-	assert(actual_old_state == expected_old_state);
 	return actual_old_state - expected_old_state;
 }
 
@@ -753,10 +893,17 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    uint32_t nsid,
 			    enum spdk_nvmf_subsystem_state requested_state,
 			    spdk_nvmf_subsystem_state_change_done cb_fn,
-			    void *cb_arg)
+			    void *cb_arg,
+			    bool skip_destroy_check)
 {
 	struct nvmf_subsystem_state_change_ctx *ctx;
 	struct spdk_thread *thread;
+
+	if (skip_destroy_check) {
+		assert(requested_state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
+	} else if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
+		return -ENODEV;
+	}
 
 	thread = spdk_get_thread();
 	if (thread == NULL) {
@@ -793,7 +940,8 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg,
+					   false);
 }
 
 int
@@ -801,7 +949,27 @@ spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			 spdk_nvmf_subsystem_state_change_done cb_fn,
 			 void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg,
+					   false);
+}
+
+int
+spdk_nvmf_subsystem_stop_for_destroy(struct spdk_nvmf_subsystem *subsystem,
+				     spdk_nvmf_subsystem_state_change_done cb_fn,
+				     void *cb_arg)
+{
+	int rc;
+
+	if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
+		return -ENODEV;
+	}
+	subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_PENDING;
+	rc = nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg,
+					 true);
+	if (rc != 0) {
+		subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_NOT_STARTED;
+	}
+	return rc;
 }
 
 int
@@ -810,7 +978,8 @@ spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, nsid, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, nsid, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg,
+					   false);
 }
 
 int
@@ -818,7 +987,8 @@ spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
 			   spdk_nvmf_subsystem_state_change_done cb_fn,
 			   void *cb_arg)
 {
-	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg,
+					   false);
 }
 
 struct spdk_nvmf_subsystem *
@@ -1163,35 +1333,69 @@ spdk_nvmf_subsystem_set_keys(struct spdk_nvmf_subsystem *subsystem, const char *
 	return 0;
 }
 
+enum nvmf_subsystem_disconnect_mode {
+	NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_DISCONNECT = 0,
+	NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_COUNT_QPAIRS,
+};
+
 struct nvmf_subsystem_disconnect_host_ctx {
 	struct spdk_nvmf_subsystem		*subsystem;
 	char					*hostnqn;
 	spdk_nvmf_tgt_subsystem_listen_done_fn	cb_fn;
 	void					*cb_arg;
+	uint64_t				retry_timeout_tsc;
+	uint64_t				timeout_ms;
+	int					qpairs_count;
+	enum nvmf_subsystem_disconnect_mode	mode;
 };
 
+static void nvmf_subsystem_count_qpairs_by_host_msg(void *host_ctx);
+
 static void
-nvmf_subsystem_disconnect_host_fini(struct spdk_io_channel_iter *i, int status)
+nvmf_subsystem_count_qpairs_by_host_fini(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvmf_subsystem_disconnect_host_ctx *ctx;
+	uint64_t now = 0;
+	int error = 0;
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 
+	if (status) {
+		error = status;
+		goto error;
+	}
+
+	if (ctx->qpairs_count != 0) {
+		now = spdk_get_ticks();
+		if (now < ctx->retry_timeout_tsc) {
+			/* Schedule a retry */
+			ctx->qpairs_count = 0;
+			spdk_thread_send_msg(spdk_get_thread(), nvmf_subsystem_count_qpairs_by_host_msg, ctx);
+			return;
+		} else {
+			SPDK_ERRLOG("Retry timeout = %lums reached, call callback with error\n",
+				    ctx->timeout_ms);
+			error = -ETIMEDOUT;
+		}
+	}
+
+error:
 	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_arg, status);
+		ctx->cb_fn(ctx->cb_arg, error);
 	}
 	free(ctx->hostnqn);
 	free(ctx);
 }
 
 static void
-nvmf_subsystem_disconnect_qpairs_by_host(struct spdk_io_channel_iter *i)
+nvmf_subsystem_disconnect_host_for_each_qpair(struct spdk_io_channel_iter *i)
 {
 	struct nvmf_subsystem_disconnect_host_ctx *ctx;
 	struct spdk_nvmf_poll_group *group;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_qpair *qpair, *tmp_qpair;
 	struct spdk_nvmf_ctrlr *ctrlr;
+	int status = 0, rc = 0;
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
@@ -1205,18 +1409,65 @@ nvmf_subsystem_disconnect_qpairs_by_host(struct spdk_io_channel_iter *i)
 		}
 
 		if (strncmp(ctrlr->hostnqn, ctx->hostnqn, sizeof(ctrlr->hostnqn)) == 0) {
-			/* Right now this does not wait for the queue pairs to actually disconnect. */
-			spdk_nvmf_qpair_disconnect(qpair);
+			if (ctx->mode == NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_DISCONNECT) {
+				/* Right now this does not wait for the queue pairs to actually disconnect. */
+				rc = spdk_nvmf_qpair_disconnect(qpair);
+				if (rc && (rc != -EINPROGRESS)) {
+					status = rc;
+				}
+			} else if (ctx->mode == NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_COUNT_QPAIRS) {
+				ctx->qpairs_count++;
+			}
 		}
 	}
-	spdk_for_each_channel_continue(i, 0);
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
+nvmf_subsystem_count_qpairs_by_host_msg(void *host_ctx)
+{
+	struct nvmf_subsystem_disconnect_host_ctx *ctx = host_ctx;
+
+	ctx->mode = NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_COUNT_QPAIRS;
+	spdk_for_each_channel(ctx->subsystem->tgt, nvmf_subsystem_disconnect_host_for_each_qpair, ctx,
+			      nvmf_subsystem_count_qpairs_by_host_fini);
+}
+
+static void
+nvmf_subsystem_disconnect_host_fini(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_subsystem_disconnect_host_ctx *ctx;
+	uint64_t timeout_ms = 0;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (status) {
+		if (ctx->cb_fn) {
+			ctx->cb_fn(ctx->cb_arg, status);
+		}
+		free(ctx->hostnqn);
+		free(ctx);
+		return;
+	}
+
+	/* If timeout was specified, use it, if not use the default */
+	if (ctx->timeout_ms != 0) {
+		timeout_ms = ctx->timeout_ms;
+	} else {
+		timeout_ms = NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS;
+	}
+
+	ctx->retry_timeout_tsc = spdk_get_ticks() + timeout_ms * spdk_get_ticks_hz() / SPDK_SEC_TO_MSEC;
+	ctx->mode = NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_COUNT_QPAIRS;
+	spdk_for_each_channel(ctx->subsystem->tgt, nvmf_subsystem_disconnect_host_for_each_qpair, ctx,
+			      nvmf_subsystem_count_qpairs_by_host_fini);
 }
 
 int
 spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
 				    const char *hostnqn,
 				    spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
-				    void *cb_arg)
+				    void *cb_arg, uint64_t timeout_ms)
 {
 	struct nvmf_subsystem_disconnect_host_ctx *ctx;
 
@@ -1234,8 +1485,10 @@ spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
 	ctx->subsystem = subsystem;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->timeout_ms = timeout_ms;
+	ctx->mode = NVMF_SUBSYSTEM_DISCONNECT_HOST_MODE_DISCONNECT;
 
-	spdk_for_each_channel(subsystem->tgt, nvmf_subsystem_disconnect_qpairs_by_host, ctx,
+	spdk_for_each_channel(subsystem->tgt, nvmf_subsystem_disconnect_host_for_each_qpair, ctx,
 			      nvmf_subsystem_disconnect_host_fini);
 
 	return 0;
@@ -1366,12 +1619,31 @@ nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_subsystem_listener *listener;
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return listener;
 		}
 	}
 
 	return NULL;
+}
+
+bool
+nvmf_subsystem_listener_is_active(const struct spdk_nvmf_subsystem_listener *listener)
+{
+	if (!listener) {
+		return false;
+	}
+
+	/* Listener was stopped. */
+	if (!listener->trid) {
+		return false;
+	}
+
+	return true;
 }
 
 /**
@@ -1384,27 +1656,34 @@ static void
 _nvmf_subsystem_add_listener_done(void *ctx, int status)
 {
 	struct spdk_nvmf_subsystem_listener *listener = ctx;
+	struct spdk_nvmf_subsystem *subsystem = listener->subsystem;
 
 	if (status) {
-		listener->cb_fn(listener->cb_arg, status);
-		free(listener);
-		return;
+		goto done;
 	}
 
-	TAILQ_INSERT_HEAD(&listener->subsystem->listeners, listener, link);
+	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 
-	if (spdk_nvmf_subsystem_is_discovery(listener->subsystem)) {
-		status = nvmf_tgt_update_mdns_prr(listener->subsystem->tgt);
+	if (spdk_nvmf_subsystem_is_discovery(subsystem)) {
+		status = nvmf_tgt_update_mdns_prr(subsystem->tgt);
 		if (status) {
-			TAILQ_REMOVE(&listener->subsystem->listeners, listener, link);
-			listener->cb_fn(listener->cb_arg, status);
-			free(listener);
-			return;
+			TAILQ_REMOVE(&subsystem->listeners, listener, link);
+			goto done;
 		}
 	}
 
-	spdk_nvmf_send_discovery_log_notice(listener->subsystem->tgt, NULL);
+	SPDK_DTRACE_PROBE4(nvmf_subsystem_add_listener, subsystem->subnqn, listener->trid->trtype,
+			   listener->trid->traddr, listener->trid->trsvcid);
+
+	spdk_nvmf_send_discovery_log_notice(subsystem->tgt, NULL);
+
+done:
 	listener->cb_fn(listener->cb_arg, status);
+	if (status) {
+		free(listener->ana_state);
+		free(listener->opts.sock_impl);
+		free(listener);
+	}
 }
 
 void
@@ -1528,8 +1807,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->subsystem = subsystem;
 	listener->ana_state = calloc(subsystem->max_nsid, sizeof(enum spdk_nvme_ana_state));
 	if (!listener->ana_state) {
-		free(listener);
-		cb_fn(cb_arg, -ENOMEM);
+		_nvmf_subsystem_add_listener_done(listener, -ENOMEM);
 		return;
 	}
 
@@ -1538,9 +1816,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		rc = listener_opts_copy(opts, &listener->opts);
 		if (rc) {
 			SPDK_ERRLOG("Unable to copy listener options\n");
-			free(listener->ana_state);
-			free(listener);
-			cb_fn(cb_arg, -EINVAL);
+			_nvmf_subsystem_add_listener_done(listener, -EINVAL);
 			return;
 		}
 	}
@@ -1548,10 +1824,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	id = spdk_bit_array_find_first_clear(subsystem->used_listener_ids, 0);
 	if (id == UINT32_MAX) {
 		SPDK_ERRLOG("Cannot add any more listeners\n");
-		free(listener->ana_state);
-		free(listener->opts.sock_impl);
-		free(listener);
-		cb_fn(cb_arg, -EINVAL);
+		_nvmf_subsystem_add_listener_done(listener, -EINVAL);
 		return;
 	}
 
@@ -1564,10 +1837,10 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	if (transport->ops->listen_associate != NULL) {
 		rc = transport->ops->listen_associate(transport, subsystem, trid);
+		if (rc) {
+			SPDK_ERRLOG("Associate listener for transport %s failed with rc:%d\n", trid->trstring, rc);
+		}
 	}
-
-	SPDK_DTRACE_PROBE4(nvmf_subsystem_add_listener, subsystem->subnqn, listener->trid->trtype,
-			   listener->trid->traddr, listener->trid->trsvcid);
 
 	_nvmf_subsystem_add_listener_done(listener, rc);
 }
@@ -1632,6 +1905,10 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_subsystem_listener *listener;
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (!nvmf_subsystem_listener_is_active(listener)) {
+			continue;
+		}
+
 		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return true;
 		}
@@ -1681,7 +1958,7 @@ spdk_nvmf_subsystem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->flags.allow_any_listener;
 }
 
-int
+void
 nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
 {
@@ -1701,67 +1978,168 @@ nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 	TAILQ_FOREACH(reg, &ns->registrants, link) {
 		if (j >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
 			SPDK_ERRLOG("Maximum %u registrants can support.\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
-			return -EINVAL;
+			/* This should never happen as we enforce SPDK_NVMF_MAX_NUM_REGISTRANTS
+			 * on ns->registrants, but we don't want to continue with poll groups
+			 * missing registrants.
+			 */
+			abort();
 		}
 		pg_ns->reg_hostid[j++] = reg->hostid;
 	}
-	return 0;
 }
 
-struct subsystem_update_ns_ctx {
-	struct spdk_nvmf_subsystem *subsystem;
-
-	spdk_nvmf_subsystem_state_change_done cb_fn;
-	void *cb_arg;
-};
-
-static void
-subsystem_update_ns_done(struct spdk_io_channel_iter *i, int status)
+static bool
+ns_reservation_hostid_list_contains_id(const struct spdk_uuid *hostid_list, uint32_t num_hostid,
+				       const struct spdk_uuid *id)
 {
-	struct subsystem_update_ns_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	size_t i;
 
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
+	for (i = 0; i < num_hostid; i++) {
+		if (!spdk_uuid_compare(&hostid_list[i], id)) {
+			return true;
+		}
 	}
-	free(ctx);
+	return false;
+}
+
+static bool
+ns_reservation_io_should_wait(const struct spdk_nvme_cmd *cmd)
+{
+	switch (cmd->opc) {
+	/* We don't wait on reservation commands that modify state because
+	 * those are serialized and will cause a deadlock.
+	 */
+	case SPDK_NVME_OPC_RESERVATION_REGISTER:
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		return false;
+	default:
+		return true;
+	}
+}
+
+static bool
+ns_reservation_req_is_preempt_abort(const struct spdk_nvmf_request *req)
+{
+	const struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	return cmd->opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE &&
+	       cmd->cdw10_bits.resv_acquire.racqa == SPDK_NVME_RESERVE_PREEMPT_ABORT;
 }
 
 static void
-subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
+poll_group_reservation_build_io_waiting(const struct spdk_nvmf_poll_group *group,
+					const struct spdk_nvmf_subsystem *subsystem, const struct spdk_nvmf_ns *ns,
+					const struct spdk_nvmf_request *req, struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
 {
-	int rc;
-	struct subsystem_update_ns_ctx *ctx;
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_request *q_req;
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+	const struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	bool hostid_match;
+
+	pg_ns->preempt_abort.io_waiting = 0;
+	if (!p_info->hostids_cnt) {
+		/* no preempted hostids */
+		return;
+	}
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (!qpair->ctrlr || qpair->ctrlr->subsys != subsystem) {
+			continue;
+		}
+		hostid_match = ns_reservation_hostid_list_contains_id(p_info->hostids,
+				p_info->hostids_cnt, &qpair->ctrlr->hostid);
+		if (!hostid_match) {
+			continue;
+		}
+
+		/* This is a preempted controller, check for IOs on the same namespace */
+		TAILQ_FOREACH(q_req, &qpair->outstanding, link) {
+			struct spdk_nvme_cmd *req_cmd = &q_req->cmd->nvme_cmd;
+			if (req_cmd->nsid == cmd->nsid && ns_reservation_io_should_wait(req_cmd)) {
+				pg_ns->preempt_abort.io_waiting++;
+				q_req->reservation_waiting = 1;
+			}
+		}
+	}
+}
+
+static void
+poll_group_reservation_preempt_abort_process(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_ns *ns, struct spdk_nvmf_subsystem_pg_ns_info *pg_ns)
+{
+	struct spdk_nvmf_request *req;
+
+	/* Check for in-progress reservations to process */
+	if (STAILQ_EMPTY(&ns->reservations)) {
+		return;
+	}
+	req = STAILQ_FIRST(&ns->reservations);
+	/* Check if this is a preempt-and-abort cmd */
+	if (!ns_reservation_req_is_preempt_abort(req)) {
+		return;
+	}
+
+	/* Ensure we have not already processed this */
+	if (ns->preempt_abort->hostids_gen == pg_ns->preempt_abort.hostids_gen) {
+		SPDK_ERRLOG("Poll group: %p already processed preempt hostids: %u\n",
+			    group, ns->preempt_abort->hostids_gen);
+		return;
+	}
+
+	if (pg_ns->preempt_abort.io_waiting) {
+		/* This could happen if a previous preempt-and-abort failed before
+		 * completing the IO waiting. Don't let this block the next abort
+		 */
+		SPDK_ERRLOG("Poll group: %p has incomplete preempted io waiting: %lu\n",
+			    group, pg_ns->preempt_abort.io_waiting);
+	}
+
+	poll_group_reservation_build_io_waiting(group, ns->subsystem, ns, req, pg_ns);
+	/* Commit gen as processed */
+	pg_ns->preempt_abort.hostids_gen = ns->preempt_abort->hostids_gen;
+}
+
+static void _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
+		void *cb_arg, int status);
+
+static void
+ns_reservation_pg_update_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)spdk_io_channel_iter_get_ctx(i);
+
+	if (status) {
+		SPDK_ERRLOG("Poll group reservation updated failed on subsystem: %p, ns: %u\n",
+			    ns->subsystem, ns->nsid);
+		/*
+		 * Errors paths have been eliminated for this poll group update, so
+		 * this should never happen but if it does, that means the poll group
+		 * reservation state is inconsistent and it's not safe to continue!!
+		 */
+		abort();
+	}
+
+	_nvmf_ns_reservation_update_done(ns->subsystem,
+					 STAILQ_FIRST(&ns->reservations), 0);
+}
+
+static void
+ns_reservation_pg_update(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
 
-	ctx = spdk_io_channel_iter_get_ctx(i);
+	ns = spdk_io_channel_iter_get_ctx(i);
 	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
-	subsystem = ctx->subsystem;
+	sgroup = &group->sgroups[ns->subsystem->id];
+	pg_ns = &sgroup->ns_info[ns->nsid - 1];
 
-	rc = nvmf_poll_group_update_subsystem(group, subsystem);
-	spdk_for_each_channel_continue(i, rc);
-}
+	nvmf_subsystem_poll_group_update_ns_reservation(ns, pg_ns);
+	poll_group_reservation_preempt_abort_process(group, ns, pg_ns);
 
-static int
-nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem,
-			 spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg)
-{
-	struct subsystem_update_ns_ctx *ctx;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		SPDK_ERRLOG("Can't alloc subsystem poll group update context\n");
-		return -ENOMEM;
-	}
-	ctx->subsystem = subsystem;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-
-	spdk_for_each_channel(subsystem->tgt,
-			      subsystem_update_ns_on_pg,
-			      ctx,
-			      subsystem_update_ns_done);
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -1788,7 +2166,6 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
-		assert(false);
 		return -1;
 	}
 
@@ -2079,10 +2456,10 @@ static struct spdk_bdev_module ns_bdev_module = {
 	.name	= "NVMe-oF Target",
 };
 
-static int nvmf_ns_reservation_update(const struct spdk_nvmf_ns *ns,
-				      const struct spdk_nvmf_reservation_info *info);
-static int nvmf_ns_reservation_load(const struct spdk_nvmf_ns *ns,
-				    struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_reservation_ptpl_store(const struct spdk_nvmf_ns *ns,
+		const struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_reservation_ptpl_load(const struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_reservation_info *info);
 static int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
 				       struct spdk_nvmf_reservation_info *info);
 
@@ -2220,7 +2597,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	}
 
 	ns->passthru_nsid = spdk_bdev_get_nvme_nsid(ns->bdev);
-	if (subsystem->passthrough && ns->passthru_nsid == 0) {
+	if (subsystem->opts.passthrough && ns->passthru_nsid == 0) {
 		SPDK_ERRLOG("Only bdev_nvme namespaces can be added to a passthrough subsystem.\n");
 		goto err;
 	}
@@ -2290,7 +2667,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	}
 
 	if (nvmf_ns_is_ptpl_capable(ns)) {
-		rc = nvmf_ns_reservation_load(ns, &info);
+		rc = nvmf_ns_reservation_ptpl_load(ns, &info);
 		if (rc) {
 			SPDK_ERRLOG("Subsystem load reservation failed\n");
 			goto err;
@@ -2443,18 +2820,23 @@ spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *o
 	memcpy(opts, &ns->opts, spdk_min(sizeof(ns->opts), opts_size));
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_sn,
+			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->sn;
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_sn);
+
+	return subsystem->opts.sn;
 }
 
 int
-spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
+nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size)
 {
 	size_t len, max_len;
 
-	max_len = sizeof(subsystem->sn) - 1;
+	max_len = size - 1;
 	len = strlen(sn);
 	if (len > max_len) {
 		SPDK_DEBUGLOG(nvmf, "Invalid sn \"%s\": length %zu > max %zu\n",
@@ -2468,26 +2850,40 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 		return -1;
 	}
 
-	snprintf(subsystem->sn, sizeof(subsystem->sn), "%s", sn);
-
-	return 0;
+	return snprintf(dst, size, "%s", sn) < 0 ? -1 : 0;
 }
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_sn,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
+int
+spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
+{
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_sn);
+
+	return nvmf_subsystem_copy_sn(subsystem->opts.sn, sn, sizeof(subsystem->opts.sn));
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_mn,
+			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 const char *
 spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->mn;
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_mn);
+
+	return subsystem->opts.mn;
 }
 
 int
-spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
+nvmf_subsystem_copy_mn(char *dst, const char *mn, size_t size)
 {
 	size_t len, max_len;
 
 	if (mn == NULL) {
 		mn = MODEL_NUMBER_DEFAULT;
 	}
-	max_len = sizeof(subsystem->mn) - 1;
+	max_len = size - 1;
 	len = strlen(mn);
 	if (len > max_len) {
 		SPDK_DEBUGLOG(nvmf, "Invalid mn \"%s\": length %zu > max %zu\n",
@@ -2501,9 +2897,18 @@ spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn
 		return -1;
 	}
 
-	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s", mn);
+	return snprintf(dst, size, "%s", mn) < 0 ? -1 : 0;
+}
 
-	return 0;
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_mn,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
+int
+spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
+{
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_mn);
+
+	return nvmf_subsystem_copy_mn(subsystem->opts.mn, mn, sizeof(subsystem->opts.mn));
 }
 
 const char *
@@ -2512,18 +2917,28 @@ spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subnqn;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_type,
+			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 /* We have to use the typedef in the function declaration to appease astyle. */
 typedef enum spdk_nvmf_subtype spdk_nvmf_subtype_t;
 
 spdk_nvmf_subtype_t
 spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->subtype;
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_type);
+
+	return subsystem->opts.type;
 }
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_max_nsid,
+			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 uint32_t
 spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
 {
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_max_nsid);
+
 	return subsystem->max_nsid;
 }
 
@@ -2631,9 +3046,14 @@ nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
 	return NULL;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_max_namespaces,
+			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 uint32_t
 spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
 {
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_max_namespaces);
+
 	return subsystem->max_nsid;
 }
 
@@ -2872,8 +3292,8 @@ nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 static int
-nvmf_ns_reservation_update_json(const struct spdk_nvmf_ns *ns,
-				const struct spdk_nvmf_reservation_info *info)
+nvmf_ns_reservation_store_json(const struct spdk_nvmf_ns *ns,
+			       const struct spdk_nvmf_reservation_info *info)
 {
 	const char *file = ns->ptpl_file;
 	struct spdk_json_write_ctx *w;
@@ -2912,17 +3332,14 @@ exit:
 }
 
 static int
-nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
+nvmf_ns_reservation_ptpl_update(struct spdk_nvmf_ns *ns)
 {
 	struct spdk_nvmf_reservation_info info;
 	struct spdk_nvmf_registrant *reg, *tmp;
 	uint32_t i = 0;
 
 	assert(ns != NULL);
-
-	if (!ns->bdev || !nvmf_ns_is_ptpl_capable(ns)) {
-		return 0;
-	}
+	assert(ns->bdev);
 
 	memset(&info, 0, sizeof(info));
 	spdk_uuid_fmt_lower(info.bdev_uuid, sizeof(info.bdev_uuid), spdk_bdev_get_uuid(ns->bdev));
@@ -2943,14 +3360,30 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 			info.registrants[i++].rkey = reg->rkey;
 		} else {
 			SPDK_ERRLOG("More registrants that can fit into reservation info, truncating\n");
-			break;
+			/* This should never happen as we enforce SPDK_NVMF_MAX_NUM_REGISTRANTS
+			 * on ns->registrants. We don't want to continue with missing registrants
+			 * from the ptpl state.
+			 */
+			abort();
 		}
 	}
 
 	info.num_regs = i;
 	info.ptpl_activated = ns->ptpl_activated;
 
-	return nvmf_ns_reservation_update(ns, &info);
+	return nvmf_ns_reservation_ptpl_store(ns, &info);
+}
+
+size_t
+nvmf_ns_registrants_get_count(const struct spdk_nvmf_ns *ns)
+{
+	size_t count = 0;
+	struct spdk_nvmf_registrant *reg;
+
+	TAILQ_FOREACH(reg, &ns->registrants, link) {
+		count++;
+	}
+	return count;
 }
 
 static struct spdk_nvmf_registrant *
@@ -3080,6 +3513,11 @@ nvmf_ns_reservation_add_registrant(struct spdk_nvmf_ns *ns,
 {
 	struct spdk_nvmf_registrant *reg;
 
+	if (nvmf_ns_registrants_get_count(ns) >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+		SPDK_ERRLOG("Registrant list full on subsystem: %p, nsid: %u\n", ns->subsystem, ns->nsid);
+		return -ENOMEM;
+	}
+
 	reg = calloc(1, sizeof(*reg));
 	if (!reg) {
 		return -ENOMEM;
@@ -3151,6 +3589,19 @@ nvmf_ns_reservation_remove_registrants_by_key(struct spdk_nvmf_ns *ns,
 		}
 	}
 	return count;
+}
+
+static void
+nvmf_ns_reservation_remove_other_registrants_by_key(struct spdk_nvmf_ns *ns,
+		uint64_t rkey, const struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *reg_tmp, *reg_tmp2;
+
+	TAILQ_FOREACH_SAFE(reg_tmp, &ns->registrants, link, reg_tmp2) {
+		if (reg_tmp->rkey == rkey && reg != reg_tmp) {
+			nvmf_ns_reservation_remove_registrant(ns, reg_tmp);
+		}
+	}
 }
 
 static uint32_t
@@ -3313,6 +3764,9 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 				goto exit;
 			}
 			reg->rkey = key.nrkey;
+			if (nvmf_ns_reservation_registrant_is_holder(ns, reg)) {
+				ns->crkey = key.nrkey;
+			}
 		} else if (iekey) { /* No registrant but IEKEY is set */
 			/* new registrant */
 			rc = nvmf_ns_reservation_add_registrant(ns, ctrlr, key.nrkey);
@@ -3454,7 +3908,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			}
 
 			if (ns->crkey == key.prkey) {
-				nvmf_ns_reservation_remove_registrant(ns, ns->holder);
+				nvmf_ns_reservation_remove_other_registrants_by_key(ns, key.prkey, reg);
 				nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
 				reservation_released = true;
 			} else if (key.prkey != 0) {
@@ -3528,6 +3982,8 @@ exit:
 			       sizeof(struct spdk_uuid) * num_hostid);
 			p_info->hostids_cnt = (uint8_t)num_hostid;
 			p_info->hostids_gen++;
+			p_info->io_waiting_done = false;
+			p_info->io_waiting_timeout_ticks = 0;
 		}
 	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3719,6 +4175,132 @@ nvmf_ns_reservation_complete(void *ctx)
 }
 
 static void
+ns_reservation_pg_io_wait_check(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_subsystem_pg_ns_info *pg_ns;
+
+	ns = spdk_io_channel_iter_get_ctx(i);
+	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	sgroup = &group->sgroups[ns->subsystem->id];
+	pg_ns = &sgroup->ns_info[ns->nsid - 1];
+
+	/* Pass io_waiting count as result, this will provide the following:
+	 *	1) If non-zero, this will immedately end the channel walk
+	 *	2) If zero, this will continue to next pg to check their io_waiting.
+	 *	3) If last pg reports 0, all IO waiting is done and completion is
+	 *	called with 0
+	 */
+	spdk_for_each_channel_continue(i, pg_ns->preempt_abort.io_waiting);
+}
+
+static void ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns);
+
+static void
+ns_reservation_pg_io_wait_check_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
+
+	if (!status) {
+		SPDK_DEBUGLOG(nvmf, "subsystem: %p, nsid: %u done waiting on IOs\n",
+			      ns->subsystem, ns->nsid);
+		ns->preempt_abort->io_waiting_done = true;
+		_nvmf_ns_reservation_update_done(ns->subsystem,
+						 STAILQ_FIRST(&ns->reservations), 0);
+	} else {
+		SPDK_DEBUGLOG(nvmf, "subsystem: %p, nsid: %u still waiting on %i IOs\n",
+			      ns->subsystem, ns->nsid, status);
+		ns_reservation_sched_next_io_wait_check(ns);
+	}
+}
+
+static void
+ns_reservation_pg_io_wait_clear_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)spdk_io_channel_iter_get_ctx(i);
+	/* If we entered this function we are always timed out */
+	_nvmf_ns_reservation_update_done(ns->subsystem,
+					 STAILQ_FIRST(&ns->reservations), -ETIMEDOUT);
+}
+
+static void
+ns_reservation_pg_io_wait_clear(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	struct spdk_nvmf_request *q_req;
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+	bool hostid_match;
+
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (!qpair->ctrlr || qpair->ctrlr->subsys != ns->subsystem) {
+			continue;
+		}
+		hostid_match = ns_reservation_hostid_list_contains_id(p_info->hostids,
+				p_info->hostids_cnt, &qpair->ctrlr->hostid);
+		if (!hostid_match) {
+			continue;
+		}
+		TAILQ_FOREACH(q_req, &qpair->outstanding, link) {
+			struct spdk_nvme_cmd *req_cmd = &q_req->cmd->nvme_cmd;
+			if (req_cmd->nsid == ns->nsid && q_req->reservation_waiting) {
+				q_req->reservation_waiting = 0;
+			}
+		}
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static int
+ns_reservation_next_io_wait_check(void *ctx)
+{
+	struct spdk_nvmf_ns *ns = (struct spdk_nvmf_ns *)ctx;
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+
+	/* this should not be running if io_waiting is complete */
+	assert(!p_info->io_waiting_done);
+
+	if (spdk_get_ticks() < p_info->io_waiting_timeout_ticks) {
+		/* Start a poll group check */
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_io_wait_check,
+				      ns,
+				      ns_reservation_pg_io_wait_check_done);
+	} else {
+		/* If the cmd timed out we call update_done during cleanup */
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_io_wait_clear,
+				      ns,
+				      ns_reservation_pg_io_wait_clear_done);
+	}
+
+	spdk_poller_unregister(&p_info->io_waiting_timer);
+	return SPDK_POLLER_BUSY;
+}
+
+#define NS_RESERVATION_IO_WAIT_CHECK_INTERVAL 100
+#define NS_RESERVATION_IO_WAIT_TIMEOUT_S 10
+static void
+ns_reservation_sched_next_io_wait_check(struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_reservation_preempt_abort_info *p_info = ns->preempt_abort;
+	assert(p_info);
+	assert(p_info->io_waiting_timer == NULL);
+
+	/* First time scheduling, calculate a total timeout */
+	if (!p_info->io_waiting_timeout_ticks) {
+		p_info->io_waiting_timeout_ticks = spdk_get_ticks() +
+						   NS_RESERVATION_IO_WAIT_TIMEOUT_S * spdk_get_ticks_hz();
+	}
+	/* We use a poller as a one-shot timer for next check */
+	p_info->io_waiting_timer =
+		SPDK_POLLER_REGISTER(ns_reservation_next_io_wait_check, ns, NS_RESERVATION_IO_WAIT_CHECK_INTERVAL);
+}
+
+static void
 _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 				 void *cb_arg, int status)
 {
@@ -3739,8 +4321,12 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 			SPDK_ERRLOG("ns_reservation failed internal device error\n");
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			break;
+		case -ETIMEDOUT:
+			SPDK_ERRLOG("ns_reservation failed due to time out: %i\n", status);
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_INTERRUPTED;
+			break;
 		default:
-			SPDK_ERRLOG("ns_reservation failed unknown error\n");
+			SPDK_ERRLOG("ns_reservation failed unknown error: %i\n", status);
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_UNRECOVERED_ERROR;
 			break;
 		}
@@ -3753,6 +4339,15 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 	/* sanity check: this req should be head of outstanding */
 	assert(req->reservation_queued == true);
 	assert(req == STAILQ_FIRST(&ns->reservations));
+
+	if (!status && ns_reservation_req_is_preempt_abort(req) && !ns->preempt_abort->io_waiting_done) {
+		/* Check for io_waiting completion */
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_io_wait_check,
+				      ns,
+				      ns_reservation_pg_io_wait_check_done);
+		return;
+	}
 
 	/* req is complete, remove from queue and continue if there's others */
 	STAILQ_REMOVE_HEAD(&ns->reservations, reservation_link);
@@ -3805,15 +4400,18 @@ nvmf_ns_reservation_update_state(struct spdk_nvmf_ns *ns,
 
 	/* update reservation information to subsystem's poll group */
 	if (update_sgroup) {
-		if (ns->ptpl_activated || opc == SPDK_NVME_OPC_RESERVATION_REGISTER) {
-			if (nvmf_ns_update_reservation_info(ns) != 0) {
+		/* update PTPL if activated or if registration command disabled PTPL */
+		if (nvmf_ns_is_ptpl_capable(ns) &&
+		    (ns->ptpl_activated || opc == SPDK_NVME_OPC_RESERVATION_REGISTER)) {
+			if (nvmf_ns_reservation_ptpl_update(ns) != 0) {
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			}
 		}
-		status = nvmf_subsystem_update_ns(ctrlr->subsys, _nvmf_ns_reservation_update_done, req);
-		if (status == 0) {
-			return;
-		}
+		spdk_for_each_channel(ns->subsystem->tgt,
+				      ns_reservation_pg_update,
+				      ns,
+				      ns_reservation_pg_update_done);
+		return;
 	}
 
 	_nvmf_ns_reservation_update_done(ctrlr->subsys, req, status);
@@ -3853,8 +4451,8 @@ nvmf_ns_is_ptpl_capable_json(const struct spdk_nvmf_ns *ns)
 
 static struct spdk_nvmf_ns_reservation_ops g_reservation_ops = {
 	.is_ptpl_capable = nvmf_ns_is_ptpl_capable_json,
-	.update = nvmf_ns_reservation_update_json,
-	.load = nvmf_ns_reservation_load_json,
+	.ptpl_store = nvmf_ns_reservation_store_json,
+	.ptpl_load = nvmf_ns_reservation_load_json,
 };
 
 bool
@@ -3863,17 +4461,34 @@ nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
 	return g_reservation_ops.is_ptpl_capable(ns);
 }
 
-static int
-nvmf_ns_reservation_update(const struct spdk_nvmf_ns *ns,
-			   const struct spdk_nvmf_reservation_info *info)
+struct spdk_nvme_rescap
+nvmf_ns_get_rescap(struct spdk_nvmf_ns *ns)
 {
-	return g_reservation_ops.update(ns, info);
+	struct spdk_nvme_rescap rescap = {
+		.ptpls = nvmf_ns_is_ptpl_capable(ns),
+		.wes = 1,
+		.eas = 1,
+		.weros = 1,
+		.earos = 1,
+		.wears = 1,
+		.eaars = 1,
+		.ieks = 1,
+	};
+	return rescap;
 }
 
 static int
-nvmf_ns_reservation_load(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
+nvmf_ns_reservation_ptpl_store(const struct spdk_nvmf_ns *ns,
+			       const struct spdk_nvmf_reservation_info *info)
 {
-	return g_reservation_ops.load(ns, info);
+	return g_reservation_ops.ptpl_store(ns, info);
+}
+
+static int
+nvmf_ns_reservation_ptpl_load(const struct spdk_nvmf_ns *ns,
+			      struct spdk_nvmf_reservation_info *info)
+{
+	return g_reservation_ops.ptpl_load(ns, info);
 }
 
 void
@@ -3882,23 +4497,33 @@ spdk_nvmf_set_custom_ns_reservation_ops(const struct spdk_nvmf_ns_reservation_op
 	g_reservation_ops = *ops;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_ana_reporting,
+			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 				      bool ana_reporting)
 {
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_ana_reporting);
+
 	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
 		return -EAGAIN;
 	}
 
-	subsystem->flags.ana_reporting = ana_reporting;
+	subsystem->opts.ana_reporting = ana_reporting;
 
 	return 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_ana_reporting,
+			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 bool
 spdk_nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->flags.ana_reporting;
+	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_ana_reporting);
+
+	return subsystem->opts.ana_reporting;
 }
 
 struct subsystem_listener_update_ctx {
@@ -3957,7 +4582,7 @@ spdk_nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
 
-	if (!subsystem->flags.ana_reporting) {
+	if (!subsystem->opts.ana_reporting) {
 		SPDK_ERRLOG("ANA reporting is disabled\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
@@ -4026,7 +4651,7 @@ spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
 
 	struct spdk_nvmf_subsystem_listener *listener;
 
-	if (!subsystem->flags.ana_reporting) {
+	if (!subsystem->opts.ana_reporting) {
 		SPDK_ERRLOG("ANA reporting is disabled\n");
 		return -EINVAL;
 	}
@@ -4049,8 +4674,8 @@ spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
 bool
 spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
-	       subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY;
+	return subsystem->opts.type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+	       subsystem->opts.type == SPDK_NVMF_SUBTYPE_DISCOVERY;
 }
 
 bool

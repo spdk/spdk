@@ -375,3 +375,22 @@ spdk_memory_domain_get_next(struct spdk_memory_domain *prev, const char *id)
 
 	return domain;
 }
+
+const char *
+spdk_dma_device_type_get_name(enum spdk_dma_device_type type)
+{
+	switch (type) {
+	case SPDK_DMA_DEVICE_TYPE_RDMA:
+		return "RDMA";
+	case SPDK_DMA_DEVICE_TYPE_DMA:
+		return "DMA";
+	case SPDK_DMA_DEVICE_TYPE_ACCEL:
+		return "ACCEL";
+	default:
+		if (type >= SPDK_DMA_DEVICE_VENDOR_SPECIFIC_TYPE_START &&
+		    type <= SPDK_DMA_DEVICE_VENDOR_SPECIFIC_TYPE_END) {
+			return "VENDOR_SPECIFIC";
+		}
+		return "UNKNOWN";
+	}
+}

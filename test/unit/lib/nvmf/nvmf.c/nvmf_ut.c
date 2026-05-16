@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2021 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2025, Oracle and/or its affiliates.
  */
 
 #include "spdk/stdinc.h"
@@ -26,12 +27,12 @@ DEFINE_STUB(nvmf_ctrlr_async_event_ana_change_notice, int,
 	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
 DEFINE_STUB(nvmf_transport_poll_group_remove, int, (struct spdk_nvmf_transport_poll_group *group,
 		struct spdk_nvmf_qpair *qpair), 0);
-DEFINE_STUB(nvmf_transport_req_free, int, (struct spdk_nvmf_request *req), 0);
+DEFINE_STUB_V(nvmf_transport_req_free, (struct spdk_nvmf_request *req));
 DEFINE_STUB(nvmf_transport_poll_group_poll, int, (struct spdk_nvmf_transport_poll_group *group), 0);
 DEFINE_STUB_V(nvmf_subsystem_remove_all_listeners, (struct spdk_nvmf_subsystem *subsystem,
 		bool stop));
-DEFINE_STUB(nvmf_subsystem_poll_group_update_ns_reservation, int, (const struct spdk_nvmf_ns *ns,
-		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns), 0);
+DEFINE_STUB_V(nvmf_subsystem_poll_group_update_ns_reservation, (const struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns));
 DEFINE_STUB(spdk_nvmf_subsystem_destroy, int, (struct spdk_nvmf_subsystem *subsystem,
 		nvmf_subsystem_destroy_cb cpl_cb, void *cpl_cb_arg), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_listener, struct spdk_nvmf_subsystem_listener *,
@@ -57,8 +58,6 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_min_cntlid, uint16_t,
 	    (const struct spdk_nvmf_subsystem *subsystem), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_max_cntlid, uint16_t,
 	    (const struct spdk_nvmf_subsystem *subsystem), 0);
-DEFINE_STUB(spdk_nvmf_subsystem_listener_get_trid, const struct spdk_nvme_transport_id *,
-	    (struct spdk_nvmf_subsystem_listener *listener), NULL);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_host, struct spdk_nvmf_host *,
 	    (struct spdk_nvmf_subsystem *subsystem), 0);
@@ -221,6 +220,34 @@ test_nvmf_tgt_create_poll_group(void)
 	MOCK_CLEAR(spdk_bdev_get_io_channel);
 }
 
+static void
+test_nvmf_target_opts_copy_bounds_size(void)
+{
+	struct {
+		struct spdk_nvmf_target_opts opts;
+		uint32_t canary;
+	} dst = {};
+	struct {
+		struct spdk_nvmf_target_opts opts;
+		uint8_t extra[32];
+	} src = {};
+
+	dst.canary = 0xdeadbeef;
+	src.opts.size = sizeof(src);
+	snprintf(src.opts.name, sizeof(src.opts.name), "%s", "nvmf_target");
+	src.opts.max_subsystems = 17;
+	src.opts.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
+	memset(src.extra, 0x5a, sizeof(src.extra));
+
+	nvmf_target_opts_copy(&dst.opts, &src.opts, src.opts.size);
+
+	CU_ASSERT(dst.canary == 0xdeadbeef);
+	CU_ASSERT(dst.opts.size == sizeof(src));
+	CU_ASSERT_STRING_EQUAL(dst.opts.name, "nvmf_target");
+	CU_ASSERT(dst.opts.max_subsystems == 17);
+	CU_ASSERT(dst.opts.discovery_filter == SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -232,6 +259,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_nvmf_tgt_create_poll_group);
+	CU_ADD_TEST(suite, test_nvmf_target_opts_copy_bounds_size);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

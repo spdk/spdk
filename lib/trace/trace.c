@@ -33,10 +33,22 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) == 9, "incorrect size");
 SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE == 128,
 		   "incorrect size");
 
+static inline void
+trace_history_increment_tpoint_count(struct spdk_trace_history *history, uint16_t tpoint_id)
+{
+	uint64_t *counts;
+
+	assert(history != NULL);
+	assert(tpoint_id < history->num_tpoint_ids);
+	counts = (uint64_t *)history->data;
+
+	counts[tpoint_id]++;
+}
+
 static inline struct spdk_trace_entry *
 get_trace_entry(struct spdk_trace_history *history, uint64_t offset)
 {
-	return &history->entries[offset & (history->num_entries - 1)];
+	return spdk_trace_history_get_entry(history, offset & (history->num_entries - 1));
 }
 
 void
@@ -66,9 +78,9 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id, uint32_t
 		tsc = spdk_get_ticks();
 	}
 
-	lcore_history->tpoint_count[tpoint_id]++;
+	trace_history_increment_tpoint_count(lcore_history, tpoint_id);
 
-	tpoint = &g_trace_file->tpoint[tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[tpoint_id];
 	/* Make sure that the number of arguments passed matches tracepoint definition */
 	if (spdk_unlikely(tpoint->num_args != num_args)) {
 		assert(0 && "Unexpected number of tracepoint arguments");
@@ -191,10 +203,10 @@ spdk_trace_register_user_thread(void)
 
 	assert(t_ut_lcore_history != NULL);
 
-	memset(g_trace_file->tname[ut_index], 0, SPDK_TRACE_THREAD_NAME_LEN);
+	memset(t_ut_lcore_history->tname, 0, SPDK_TRACE_THREAD_NAME_LEN);
 
 	tid = pthread_self();
-	ret = pthread_getname_np(tid, g_trace_file->tname[ut_index], SPDK_TRACE_THREAD_NAME_LEN);
+	ret = pthread_getname_np(tid, t_ut_lcore_history->tname, SPDK_TRACE_THREAD_NAME_LEN);
 	if (ret) {
 		SPDK_ERRLOG("cannot get thread name\n");
 		pthread_mutex_unlock(&g_ut_array_mutex);
@@ -236,8 +248,18 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 {
 	uint32_t i = 0, max_dedicated_cpu = 0;
 	uint64_t file_size;
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
-	uint64_t owner_offset;
+	uint64_t main_section_offset, tpoint_mask_section_offset, owner_type_section_offset;
+	uint64_t object_section_offset, tpoint_section_offset, lcore_offsets_section_offset;
+	uint64_t owner_section_offset;
+	uint32_t max_lcore;
+	struct spdk_trace_section_main *main_section;
+	struct spdk_trace_section_owner *owner_section;
+	struct spdk_trace_section_tpoint_mask *tpoint_mask_section;
+	struct spdk_trace_section_owner_type *owner_type_section;
+	struct spdk_trace_section_object *object_section;
+	struct spdk_trace_section_tpoint *tpoint_section;
+	struct spdk_trace_section_lcore_offsets *lcore_offsets_section;
+	uint64_t next_lcore_offset;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -252,11 +274,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 
 	spdk_cpuset_zero(&cpuset);
-	file_size = sizeof(struct spdk_trace_file);
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
-		lcore_offsets[i] = file_size;
-		file_size += spdk_get_trace_history_size(num_entries);
 		max_dedicated_cpu = i;
 	}
 
@@ -273,13 +293,39 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		return 1;
 	}
 
-	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
-		lcore_offsets[i] = file_size;
-		file_size += spdk_get_trace_history_size(num_entries);
-	}
-	owner_offset = file_size;
-	file_size += TRACE_NUM_OWNERS *
-		     (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
+	max_lcore = g_user_thread_index_start + num_threads;
+
+	file_size = sizeof(struct spdk_trace_file);
+
+	main_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_main);
+
+	owner_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_owner) +
+		     TRACE_NUM_OWNERS * (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
+
+	tpoint_mask_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_tpoint_mask) +
+		     SPDK_TRACE_MAX_GROUP_ID * sizeof(uint64_t);
+
+	owner_type_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_owner_type) +
+		     SPDK_TRACE_MAX_OWNER_TYPE * sizeof(struct spdk_trace_owner_type);
+
+	object_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_object) +
+		     SPDK_TRACE_MAX_OBJECT * sizeof(struct spdk_trace_object);
+
+	tpoint_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_tpoint) +
+		     SPDK_TRACE_MAX_TPOINT_ID * sizeof(struct spdk_trace_tpoint);
+
+	lcore_offsets_section_offset = file_size;
+	file_size += sizeof(struct spdk_trace_section_lcore_offsets) +
+		     max_lcore * sizeof(uint64_t);
+
+	file_size += (spdk_env_get_core_count() + num_threads) *
+		     spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -319,28 +365,63 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	memset(g_trace_file, 0, file_size);
 
-	g_trace_file->tsc_rate = spdk_get_ticks_hz();
+	g_trace_file->num_sections = SPDK_TRACE_NUM_SECTIONS;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_MAIN] = main_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT_MASK] = tpoint_mask_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER_TYPE] = owner_type_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OBJECT] = object_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_TPOINT] = tpoint_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_LCORE_OFFSETS] = lcore_offsets_section_offset;
+	g_trace_file->section_offsets[SPDK_TRACE_SECTION_OWNER] = owner_section_offset;
 
-	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+	main_section = spdk_trace_get_main_section(g_trace_file);
+	main_section->tsc_rate = spdk_get_ticks_hz();
+
+	tpoint_mask_section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	tpoint_mask_section->count = SPDK_TRACE_MAX_GROUP_ID;
+
+	owner_type_section = spdk_trace_get_owner_type_section(g_trace_file);
+	owner_type_section->count = SPDK_TRACE_MAX_OWNER_TYPE;
+
+	object_section = spdk_trace_get_object_section(g_trace_file);
+	object_section->count = SPDK_TRACE_MAX_OBJECT;
+
+	tpoint_section = spdk_trace_get_tpoint_section(g_trace_file);
+	tpoint_section->count = SPDK_TRACE_MAX_TPOINT_ID;
+
+	owner_section = spdk_trace_get_owner_section(g_trace_file);
+	owner_section->num_owners = TRACE_NUM_OWNERS;
+	owner_section->owner_description_size = TRACE_OWNER_DESCRIPTION_SIZE;
+
+	lcore_offsets_section = spdk_trace_get_lcore_offsets_section(g_trace_file);
+	lcore_offsets_section->count = max_lcore;
+
+	next_lcore_offset = lcore_offsets_section_offset + sizeof(struct spdk_trace_section_lcore_offsets) +
+			    max_lcore * sizeof(uint64_t);
+
+	SPDK_ENV_FOREACH_CORE(i) {
 		struct spdk_trace_history *lcore_history;
 
-		g_trace_file->lcore_history_offsets[i] = lcore_offsets[i];
-		if (lcore_offsets[i] == 0) {
-			continue;
-		}
-
-		if (i <= max_dedicated_cpu) {
-			assert(spdk_cpuset_get_cpu(&cpuset, i));
-		}
-
+		assert(spdk_cpuset_get_cpu(&cpuset, i));
+		lcore_offsets_section->lcore_offsets[i] = next_lcore_offset;
 		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
+		lcore_history->num_tpoint_ids = SPDK_TRACE_MAX_TPOINT_ID;
+		next_lcore_offset += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
+	}
+
+	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
+		struct spdk_trace_history *lcore_history;
+
+		lcore_offsets_section->lcore_offsets[i] = next_lcore_offset;
+		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
+		lcore_history->lcore = i;
+		lcore_history->num_entries = num_entries;
+		lcore_history->num_tpoint_ids = SPDK_TRACE_MAX_TPOINT_ID;
+		next_lcore_offset += spdk_get_trace_history_size(num_entries, SPDK_TRACE_MAX_TPOINT_ID);
 	}
 	g_trace_file->file_size = file_size;
-	g_trace_file->num_owners = TRACE_NUM_OWNERS;
-	g_trace_file->owner_description_size = TRACE_OWNER_DESCRIPTION_SIZE;
-	g_trace_file->owner_offset = owner_offset;
 
 	if (trace_flags_init()) {
 		goto trace_init_err;
@@ -385,7 +466,7 @@ spdk_trace_cleanup(void)
 		if (lcore_history == NULL) {
 			continue;
 		}
-		unlink = lcore_history->entries[0].tsc == 0;
+		unlink = spdk_trace_history_get_entry(lcore_history, 0)->tsc == 0;
 		if (!unlink) {
 			break;
 		}

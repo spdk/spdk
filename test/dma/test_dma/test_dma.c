@@ -681,39 +681,25 @@ dma_test_construct_task_on_thread(void *ctx)
 static bool
 dma_test_check_bdev_supports_rdma_memory_domain(struct spdk_bdev *bdev)
 {
-	struct spdk_memory_domain **bdev_domains;
-	int bdev_domains_count, bdev_domains_count_tmp, i;
+	enum spdk_dma_device_type types[16];
+	int types_count, i;
 	bool rdma_domain_supported = false;
 
-	bdev_domains_count = spdk_bdev_get_memory_domains(bdev, NULL, 0);
+	types_count = spdk_bdev_get_memory_domain_types(bdev, types, SPDK_COUNTOF(types));
 
-	if (bdev_domains_count < 0) {
-		fprintf(stderr, "Failed to get bdev memory domains count, rc %d\n", bdev_domains_count);
+	if (types_count < 0) {
+		fprintf(stderr, "Failed to get bdev memory domain types count, rc %d\n", types_count);
 		return false;
-	} else if (bdev_domains_count == 0) {
+	} else if (types_count == 0) {
 		fprintf(stderr, "bdev %s doesn't support any memory domains\n", spdk_bdev_get_name(bdev));
 		return false;
 	}
 
-	fprintf(stdout, "bdev %s reports %d memory domains\n", spdk_bdev_get_name(bdev),
-		bdev_domains_count);
+	fprintf(stdout, "bdev %s reports %d memory domain types\n", spdk_bdev_get_name(bdev),
+		types_count);
 
-	bdev_domains = calloc((size_t)bdev_domains_count, sizeof(*bdev_domains));
-	if (!bdev_domains) {
-		fprintf(stderr, "Failed to allocate memory domains\n");
-		return false;
-	}
-
-	bdev_domains_count_tmp = spdk_bdev_get_memory_domains(bdev, bdev_domains, bdev_domains_count);
-	if (bdev_domains_count_tmp != bdev_domains_count) {
-		fprintf(stderr, "Unexpected bdev domains return value %d\n", bdev_domains_count_tmp);
-		return false;
-	}
-
-	for (i = 0; i < bdev_domains_count; i++) {
-		if (spdk_memory_domain_get_dma_device_type(bdev_domains[i]) == SPDK_DMA_DEVICE_TYPE_RDMA) {
-			/* Bdev supports memory domain of RDMA type, we can try to submit IO request to it using
-			 * bdev ext API */
+	for (i = 0; i < types_count; i++) {
+		if (types[i] == SPDK_DMA_DEVICE_TYPE_RDMA) {
 			rdma_domain_supported = true;
 			break;
 		}
@@ -721,7 +707,6 @@ dma_test_check_bdev_supports_rdma_memory_domain(struct spdk_bdev *bdev)
 
 	fprintf(stdout, "bdev %s %s RDMA memory domain\n", spdk_bdev_get_name(bdev),
 		rdma_domain_supported ? "supports" : "doesn't support");
-	free(bdev_domains);
 
 	return rdma_domain_supported;
 }

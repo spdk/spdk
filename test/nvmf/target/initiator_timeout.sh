@@ -10,6 +10,7 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
+subnqn=nqn.2016-06.io.spdk:cnode$$
 
 nvmftestinit
 nvmfappstart -m 0xF
@@ -22,11 +23,11 @@ $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py bdev_delay_create -b Malloc0 -d Delay0 -r 30 -t 30 -w 30 -n 30
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Delay0
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_create_subsystem $subnqn -a -s $NVMF_SERIAL
+$rpc_py nvmf_subsystem_add_ns $subnqn Delay0
+$rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "$subnqn" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial "$NVMF_SERIAL"
 
@@ -53,7 +54,7 @@ $rpc_py bdev_delay_update_latency Delay0 p99_write 30
 fio_status=0
 wait $fio_pid || fio_status=$?
 
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+nvme disconnect -n "$subnqn"
 waitforserial_disconnect "$NVMF_SERIAL"
 
 if [ $fio_status -eq 0 ]; then
@@ -64,7 +65,7 @@ else
 	exit 1
 fi
 
-$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem $subnqn
 
 rm -f ./local-job0-0-verify.state
 

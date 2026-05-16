@@ -1867,7 +1867,7 @@ nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
 	return false;
 }
 
-static int
+static void
 nvmf_fc_request_complete(struct spdk_nvmf_request *req)
 {
 	int rc = 0;
@@ -1900,7 +1900,6 @@ nvmf_fc_request_complete(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Error in request complete.\n");
 		_nvmf_fc_request_free(fc_req);
 	}
-	return 0;
 }
 
 struct spdk_nvmf_tgt *
@@ -1922,7 +1921,6 @@ nvmf_fc_get_tgt(void)
 #define SPDK_NVMF_FC_DEFAULT_IN_CAPSULE_DATA_SIZE 0
 #define SPDK_NVMF_FC_DEFAULT_MAX_IO_SIZE 65536
 #define SPDK_NVMF_FC_DEFAULT_IO_UNIT_SIZE 4096
-#define SPDK_NVMF_FC_DEFAULT_NUM_SHARED_BUFFERS 8192
 #define SPDK_NVMF_FC_DEFAULT_MAX_SGE (SPDK_NVMF_FC_DEFAULT_MAX_IO_SIZE /	\
 				      SPDK_NVMF_FC_DEFAULT_IO_UNIT_SIZE)
 
@@ -1933,9 +1931,7 @@ nvmf_fc_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_qpairs_per_ctrlr = SPDK_NVMF_FC_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size = SPDK_NVMF_FC_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size =          SPDK_NVMF_FC_DEFAULT_MAX_IO_SIZE;
-	opts->io_unit_size =         SPDK_NVMF_FC_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =         SPDK_NVMF_FC_DEFAULT_AQ_DEPTH;
-	opts->num_shared_buffers =   SPDK_NVMF_FC_DEFAULT_NUM_SHARED_BUFFERS;
 }
 
 static int nvmf_fc_accept(void *ctx);
@@ -2012,7 +2008,7 @@ nvmf_fc_destroy_done_cb(void *cb_arg)
 	}
 }
 
-static int
+static void
 nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 		spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
@@ -2032,8 +2028,6 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 		/* low level FC driver clean up */
 		nvmf_fc_lld_fini(nvmf_fc_destroy_done_cb, cb_arg);
 	}
-
-	return 0;
 }
 
 static int
@@ -2193,7 +2187,7 @@ nvmf_fc_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return (int) count;
 }
 
-static int
+static void
 nvmf_fc_request_free(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fc_request *fc_req = nvmf_fc_get_fc_req(req);
@@ -2204,8 +2198,6 @@ nvmf_fc_request_free(struct spdk_nvmf_request *req)
 	} else {
 		nvmf_fc_request_abort_complete(fc_req);
 	}
-
-	return 0;
 }
 
 static void
@@ -3156,8 +3148,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 
 	spdk_nvmf_listen_opts_init(&opts, sizeof(opts));
 
-	subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	while (subsystem) {
+	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
 		struct nvmf_fc_add_rem_listener_ctx *ctx;
 
 		if (spdk_nvmf_subsystem_any_listener_allowed(subsystem) == true) {
@@ -3183,8 +3174,6 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 				}
 			}
 		}
-
-		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
 	}
 
 	return 0;

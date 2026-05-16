@@ -5,8 +5,7 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+from spdk.rpc.cmd_parser import print_dict, print_json
 
 
 def add_parser(subparsers):

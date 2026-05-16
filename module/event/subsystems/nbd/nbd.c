@@ -7,7 +7,7 @@
 
 #include "spdk/nbd.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 nbd_subsystem_init(void)

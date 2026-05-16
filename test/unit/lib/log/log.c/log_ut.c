@@ -63,9 +63,11 @@ log_test(void)
 	spdk_log_close();
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(unit_test_not_limited, "not rate limited", "never", 0)
+SPDK_LOG_DEPRECATION_REGISTER(unit_test_not_limited, "not rate limited", "never",
+			      SPDK_LOG_DEPRECATION_ALWAYS)
 SPDK_LOG_DEPRECATION_REGISTER(unit_test_limited, "with rate limit", "sometime", 1)
-SPDK_LOG_DEPRECATION_REGISTER(unit_test_never_called, "not called", "maybe", 0)
+SPDK_LOG_DEPRECATION_REGISTER(unit_test_never_called, "not called", "maybe",
+			      SPDK_LOG_DEPRECATION_ALWAYS)
 
 int g_ut_dep_expect_line;
 const char *g_ut_dep_expect_func;

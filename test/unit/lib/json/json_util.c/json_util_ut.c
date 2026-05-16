@@ -720,6 +720,24 @@ test_decode_uint64(void)
 	i = 0;
 	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
 	CU_ASSERT(i == 4);
+
+	/* invalid value (overflow) */
+	v.start = "3.4e19";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* valid (UINT64_MAX) */
+	v.start = "18446744073709551615";
+	v.len = 20;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
+
+	/* overflow (UINT64_MAX + 1) */
+	v.start = "18446744073709551616";
+	v.len = 20;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
 }
 
 static void

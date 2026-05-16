@@ -54,6 +54,8 @@ struct compress_dev {
 	void				*decomp_xform;	/* shared private xform for decomp on this PMD */
 	bool				sgl_in;
 	bool				sgl_out;
+	TAILQ_HEAD(, comp_device_qp)    dev_qps;
+	uint8_t                         free_qp_num;
 	TAILQ_ENTRY(compress_dev)	link;
 };
 static TAILQ_HEAD(, compress_dev) g_compress_devs = TAILQ_HEAD_INITIALIZER(g_compress_devs);
@@ -66,7 +68,6 @@ struct comp_device_qp {
 	struct compress_io_channel	*chan;
 	TAILQ_ENTRY(comp_device_qp)	link;
 };
-static TAILQ_HEAD(, comp_device_qp) g_comp_device_qp = TAILQ_HEAD_INITIALIZER(g_comp_device_qp);
 static pthread_mutex_t g_comp_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct compress_io_channel {
@@ -133,6 +134,7 @@ create_compress_dev(uint8_t index)
 	if (!device) {
 		return -ENOMEM;
 	}
+	TAILQ_INIT(&device->dev_qps);
 
 	/* Get details about this device. */
 	rte_compressdev_info_get(index, &device->cdev_info);
@@ -221,7 +223,8 @@ create_compress_dev(uint8_t index)
 		dev_qp->device = device;
 		dev_qp->qp = i;
 		dev_qp->chan = NULL;
-		TAILQ_INSERT_TAIL(&g_comp_device_qp, dev_qp, link);
+		TAILQ_INSERT_TAIL(&device->dev_qps, dev_qp, link);
+		device->free_qp_num++;
 	}
 
 	TAILQ_INSERT_TAIL(&g_compress_devs, device, link);
@@ -241,8 +244,8 @@ create_compress_dev(uint8_t index)
 	return 0;
 
 err_qp:
-	TAILQ_FOREACH_SAFE(dev_qp, &g_comp_device_qp, link, tmp_qp) {
-		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
+	TAILQ_FOREACH_SAFE(dev_qp, &device->dev_qps, link, tmp_qp) {
+		TAILQ_REMOVE(&device->dev_qps, dev_qp, link);
 		free(dev_qp);
 	}
 err_stop:
@@ -748,6 +751,8 @@ compress_create_cb(void *io_device, void *ctx_buf)
 	struct compress_io_channel *chan = ctx_buf;
 	const struct rte_compressdev_capabilities *capab;
 	struct comp_device_qp *device_qp;
+	struct compress_dev *optimal_comp_dev = NULL, *comp_dev;
+	uint8_t max_value = 0;
 	size_t length;
 
 	if (_set_pmd(chan) == false) {
@@ -773,13 +778,27 @@ compress_create_cb(void *io_device, void *ctx_buf)
 	STAILQ_INIT(&chan->queued_tasks);
 
 	pthread_mutex_lock(&g_comp_device_qp_lock);
-	TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
-		if (strcmp(device_qp->device->cdev_info.driver_name, chan->drv_name) == 0) {
-			if (device_qp->chan == NULL) {
-				chan->device_qp = device_qp;
-				device_qp->chan = chan;
-				break;
-			}
+	TAILQ_FOREACH(comp_dev, &g_compress_devs, link) {
+		if (comp_dev->free_qp_num > max_value &&
+		    strcmp(comp_dev->cdev_info.driver_name, chan->drv_name) == 0) {
+			optimal_comp_dev = comp_dev;
+			max_value = comp_dev->free_qp_num;
+		}
+	}
+
+	if (optimal_comp_dev == NULL) {
+		SPDK_ERRLOG("Don't found any available comp dev\n");
+		assert(false);
+		return -ENOMEM;
+	}
+
+	TAILQ_FOREACH(device_qp, &optimal_comp_dev->dev_qps, link) {
+		if (device_qp->chan == NULL) {
+			chan->device_qp = device_qp;
+			device_qp->chan = chan;
+			assert(optimal_comp_dev->free_qp_num != 0);
+			optimal_comp_dev->free_qp_num--;
+			break;
 		}
 	}
 	pthread_mutex_unlock(&g_comp_device_qp_lock);
@@ -830,6 +849,7 @@ compress_destroy_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&g_comp_device_qp_lock);
 	chan->device_qp = NULL;
 	device_qp->chan = NULL;
+	device_qp->device->free_qp_num++;
 	pthread_mutex_unlock(&g_comp_device_qp_lock);
 }
 
@@ -919,15 +939,14 @@ _device_unregister_cb(void *io_device)
 	struct compress_dev *device;
 
 	while ((device = TAILQ_FIRST(&g_compress_devs))) {
+		while ((dev_qp = TAILQ_FIRST(&device->dev_qps))) {
+			TAILQ_REMOVE(&device->dev_qps, dev_qp, link);
+			free(dev_qp);
+		}
 		TAILQ_REMOVE(&g_compress_devs, device, link);
 		rte_compressdev_stop(device->cdev_id);
 		rte_compressdev_close(device->cdev_id);
 		free(device);
-	}
-
-	while ((dev_qp = TAILQ_FIRST(&g_comp_device_qp))) {
-		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
-		free(dev_qp);
 	}
 
 	if (g_opts == COMPRESS_PMD_UADK_ONLY) {

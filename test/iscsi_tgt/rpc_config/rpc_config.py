@@ -4,14 +4,9 @@
 #  All rights reserved.
 #
 
-import os
-import os.path
-import re
-import sys
-import time
 import json
-import random
-from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
+import sys
+from subprocess import check_output
 
 if (len(sys.argv) == 6):
     target_ip = sys.argv[2]
@@ -43,7 +38,7 @@ rpc_param = {
     'header_digest': False,
     'data_digest': False,
     'log_flag': 'rpc',
-    'cpumask': 0x1
+    'cpumask': 0x1,
 }
 
 
@@ -178,7 +173,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 def create_malloc_bdevs_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
 
-    for i in range(1, rpc_param['lun_total'] + 1):
+    for _ in range(1, rpc_param['lun_total'] + 1):
         rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
 
     print("create_malloc_bdevs_rpc_methods passed")

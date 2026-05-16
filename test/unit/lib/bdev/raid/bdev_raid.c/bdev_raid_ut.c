@@ -154,13 +154,17 @@ DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB_V(spdk_jsonrpc_send_bool_response, (struct spdk_jsonrpc_request *request,
 		bool value));
+DEFINE_STUB(spdk_json_decode_int32, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_decode_uint64, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_uuid, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
 		spdk_json_decode_fn decode_func,
 		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
 DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_strequal, bool, (const struct spdk_json_val *val, const char *str), false);
+DEFINE_STUB(spdk_json_strdup, char *, (const struct spdk_json_val *val), NULL);
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
@@ -179,6 +183,10 @@ DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_i
 		struct spdk_bdev_io_wait_entry *entry), 0);
 DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
 		struct spdk_memory_domain **domains,	int array_size), 0);
+DEFINE_STUB(spdk_bdev_get_memory_domain_types, int, (struct spdk_bdev *bdev,
+		enum spdk_dma_device_type *types, uint32_t array_size), 0);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *domain), SPDK_DMA_DEVICE_TYPE_RDMA);
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), MD_SIZE);
 DEFINE_STUB(spdk_bdev_is_md_interleaved, bool, (const struct spdk_bdev *bdev), false);
@@ -436,19 +444,19 @@ int
 spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
 	if (!g_test_multi_raids) {
-		struct rpc_bdev_raid_create *req = g_rpc_req;
+		struct rpc_bdev_raid_create_ctx *req = g_rpc_req;
 		if (strcmp(name, "strip_size_kb") == 0) {
 			CU_ASSERT(req->strip_size_kb == val);
 		} else if (strcmp(name, "blocklen_shift") == 0) {
 			CU_ASSERT(spdk_u32log2(g_block_len) == val);
 		} else if (strcmp(name, "num_base_bdevs") == 0) {
-			CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
+			CU_ASSERT(req->base_bdevs.count == val);
 		} else if (strcmp(name, "state") == 0) {
-			CU_ASSERT(val == RAID_BDEV_STATE_ONLINE);
+			CU_ASSERT(val == SPDK_BDEV_RAID_STATE_ONLINE);
 		} else if (strcmp(name, "destruct_called") == 0) {
 			CU_ASSERT(val == 0);
 		} else if (strcmp(name, "num_base_bdevs_discovered") == 0) {
-			CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
+			CU_ASSERT(req->base_bdevs.count == val);
 		}
 	}
 	return 0;
@@ -464,9 +472,9 @@ spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, co
 			g_get_raids_count++;
 		}
 	} else {
-		struct rpc_bdev_raid_create *req = g_rpc_req;
+		struct rpc_bdev_raid_create_ctx *req = g_rpc_req;
 		if (strcmp(name, "raid_level") == 0) {
-			CU_ASSERT(strcmp(val, raid_bdev_level_to_str(req->level)) == 0);
+			CU_ASSERT(strcmp(val, raid_bdev_level_to_str((enum spdk_bdev_raid_level)req->raid_level)) == 0);
 		}
 	}
 	return 0;
@@ -476,9 +484,9 @@ int
 spdk_json_write_named_bool(struct spdk_json_write_ctx *w, const char *name, bool val)
 {
 	if (!g_test_multi_raids) {
-		struct rpc_bdev_raid_create *req = g_rpc_req;
+		struct rpc_bdev_raid_create_ctx *req = g_rpc_req;
 		if (strcmp(name, "superblock") == 0) {
-			CU_ASSERT(val == req->superblock_enabled);
+			CU_ASSERT(val == req->superblock);
 		}
 	}
 	return 0;
@@ -520,7 +528,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 			const struct spdk_json_object_decoder *decoders, size_t num_decoders,
 			void *out)
 {
-	struct rpc_bdev_raid_create *req, *_out;
+	struct rpc_bdev_raid_create_ctx *req, *_out;
 	size_t i;
 
 	if (g_json_decode_obj_err) {
@@ -532,12 +540,12 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 		_out->name = strdup(req->name);
 		SPDK_CU_ASSERT_FATAL(_out->name != NULL);
 		_out->strip_size_kb = req->strip_size_kb;
-		_out->level = req->level;
-		_out->superblock_enabled = req->superblock_enabled;
-		_out->base_bdevs.num_base_bdevs = req->base_bdevs.num_base_bdevs;
-		for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
-			_out->base_bdevs.base_bdevs[i] = strdup(req->base_bdevs.base_bdevs[i]);
-			SPDK_CU_ASSERT_FATAL(_out->base_bdevs.base_bdevs[i]);
+		_out->raid_level = req->raid_level;
+		_out->superblock = req->superblock;
+		_out->base_bdevs.count = req->base_bdevs.count;
+		for (i = 0; i < req->base_bdevs.count; i++) {
+			_out->base_bdevs.items[i] = strdup(req->base_bdevs.items[i]);
+			SPDK_CU_ASSERT_FATAL(_out->base_bdevs.items[i]);
 		}
 	} else {
 		memcpy(out, g_rpc_req, g_rpc_req_size);
@@ -728,7 +736,7 @@ verify_raid_bdev_present(const char *name, bool presence)
 }
 
 static void
-verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_state)
+verify_raid_bdev(struct rpc_bdev_raid_create_ctx *r, bool presence, uint32_t raid_state)
 {
 	struct raid_bdev *pbdev;
 	struct raid_base_bdev_info *base_info;
@@ -748,9 +756,9 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 			CU_ASSERT(pbdev->strip_size_shift == spdk_u32log2(((r->strip_size_kb * 1024) /
 					g_block_len)));
 			CU_ASSERT((uint32_t)pbdev->state == raid_state);
-			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.num_base_bdevs);
-			CU_ASSERT(pbdev->num_base_bdevs_discovered == r->base_bdevs.num_base_bdevs);
-			CU_ASSERT(pbdev->level == r->level);
+			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.count);
+			CU_ASSERT(pbdev->num_base_bdevs_discovered == r->base_bdevs.count);
+			CU_ASSERT(pbdev->level == (enum spdk_bdev_raid_level)r->raid_level);
 			CU_ASSERT(pbdev->base_bdev_info != NULL);
 			RAID_FOR_EACH_BASE_BDEV(pbdev, base_info) {
 				CU_ASSERT(base_info->desc != NULL);
@@ -782,7 +790,7 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 }
 
 static void
-verify_get_raids(struct rpc_bdev_raid_create *construct_req,
+verify_get_raids(struct rpc_bdev_raid_create_ctx *construct_req,
 		 uint8_t g_max_raids,
 		 char **g_get_raids_output, uint32_t g_get_raids_count)
 {
@@ -826,7 +834,7 @@ create_base_bdevs(uint32_t bbdev_start_idx)
 }
 
 static void
-create_test_req(struct rpc_bdev_raid_create *r, const char *raid_name,
+create_test_req(struct rpc_bdev_raid_create_ctx *r, const char *raid_name,
 		uint8_t bbdev_start_idx, bool create_base_bdev, bool superblock_enabled)
 {
 	uint8_t i;
@@ -836,13 +844,13 @@ create_test_req(struct rpc_bdev_raid_create *r, const char *raid_name,
 	r->name = strdup(raid_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
 	r->strip_size_kb = (g_strip_size * g_block_len) / 1024;
-	r->level = 123;
-	r->superblock_enabled = superblock_enabled;
-	r->base_bdevs.num_base_bdevs = g_max_base_drives;
+	r->raid_level = 123;
+	r->superblock = superblock_enabled;
+	r->base_bdevs.count = g_max_base_drives;
 	for (i = 0; i < g_max_base_drives; i++, bbdev_idx++) {
 		snprintf(name, 16, "%s%u%s", "Nvme", bbdev_idx, "n1");
-		r->base_bdevs.base_bdevs[i] = strdup(name);
-		SPDK_CU_ASSERT_FATAL(r->base_bdevs.base_bdevs[i] != NULL);
+		r->base_bdevs.items[i] = strdup(name);
+		SPDK_CU_ASSERT_FATAL(r->base_bdevs.items[i] != NULL);
 	}
 	if (create_base_bdev == true) {
 		create_base_bdevs(bbdev_start_idx);
@@ -852,7 +860,7 @@ create_test_req(struct rpc_bdev_raid_create *r, const char *raid_name,
 }
 
 static void
-create_raid_bdev_create_req(struct rpc_bdev_raid_create *r, const char *raid_name,
+create_raid_bdev_create_req(struct rpc_bdev_raid_create_ctx *r, const char *raid_name,
 			    uint8_t bbdev_start_idx, bool create_base_bdev,
 			    uint8_t json_decode_obj_err, bool superblock_enabled)
 {
@@ -865,18 +873,18 @@ create_raid_bdev_create_req(struct rpc_bdev_raid_create *r, const char *raid_nam
 }
 
 static void
-free_test_req(struct rpc_bdev_raid_create *r)
+free_test_req(struct rpc_bdev_raid_create_ctx *r)
 {
 	uint8_t i;
 
 	free(r->name);
-	for (i = 0; i < r->base_bdevs.num_base_bdevs; i++) {
-		free(r->base_bdevs.base_bdevs[i]);
+	for (i = 0; i < r->base_bdevs.count; i++) {
+		free(r->base_bdevs.items[i]);
 	}
 }
 
 static void
-create_raid_bdev_delete_req(struct rpc_bdev_raid_delete *r, const char *raid_name,
+create_raid_bdev_delete_req(struct rpc_bdev_raid_delete_ctx *r, const char *raid_name,
 			    uint8_t json_decode_obj_err)
 {
 	r->name = strdup(raid_name);
@@ -891,11 +899,10 @@ create_raid_bdev_delete_req(struct rpc_bdev_raid_delete *r, const char *raid_nam
 }
 
 static void
-create_get_raids_req(struct rpc_bdev_raid_get_bdevs *r, const char *category,
+create_get_raids_req(struct rpc_bdev_raid_get_bdevs_ctx *r, enum rpc_bdev_raid_state category,
 		     uint8_t json_decode_obj_err)
 {
-	r->category = strdup(category);
-	SPDK_CU_ASSERT_FATAL(r->category != NULL);
+	r->category = category;
 
 	g_rpc_req = r;
 	g_rpc_req_size = sizeof(*r);
@@ -909,8 +916,8 @@ create_get_raids_req(struct rpc_bdev_raid_get_bdevs *r, const char *category,
 static void
 test_create_raid(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete delete_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx delete_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -919,7 +926,7 @@ test_create_raid(void)
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&req);
 
 	create_raid_bdev_delete_req(&delete_req, "raid1", 0);
@@ -933,8 +940,8 @@ test_create_raid(void)
 static void
 test_delete_raid(void)
 {
-	struct rpc_bdev_raid_create construct_req;
-	struct rpc_bdev_raid_delete delete_req;
+	struct rpc_bdev_raid_create_ctx construct_req;
+	struct rpc_bdev_raid_delete_ctx delete_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -943,7 +950,7 @@ test_delete_raid(void)
 	create_raid_bdev_create_req(&construct_req, "raid1", 0, true, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&construct_req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&construct_req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&construct_req);
 
 	create_raid_bdev_delete_req(&delete_req, "raid1", 0);
@@ -959,8 +966,8 @@ test_delete_raid(void)
 static void
 test_create_raid_invalid_args(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *raid_bdev;
 
 	set_globals();
@@ -968,7 +975,7 @@ test_create_raid_invalid_args(void)
 
 	verify_raid_bdev_present("raid1", false);
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
-	req.level = INVALID_RAID_LEVEL;
+	req.raid_level = (enum rpc_bdev_raid_level)SPDK_BDEV_RAID_LEVEL_INVALID;
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	free_test_req(&req);
@@ -990,7 +997,7 @@ test_create_raid_invalid_args(void)
 	create_raid_bdev_create_req(&req, "raid1", 0, false, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&req);
 
 	create_raid_bdev_create_req(&req, "raid1", 0, false, 0, false);
@@ -1005,18 +1012,18 @@ test_create_raid_invalid_args(void)
 	verify_raid_bdev_present("raid2", false);
 
 	create_raid_bdev_create_req(&req, "raid2", g_max_base_drives, true, 0, false);
-	free(req.base_bdevs.base_bdevs[g_max_base_drives - 1]);
-	req.base_bdevs.base_bdevs[g_max_base_drives - 1] = strdup("Nvme0n1");
-	SPDK_CU_ASSERT_FATAL(req.base_bdevs.base_bdevs[g_max_base_drives - 1] != NULL);
+	free(req.base_bdevs.items[g_max_base_drives - 1]);
+	req.base_bdevs.items[g_max_base_drives - 1] = strdup("Nvme0n1");
+	SPDK_CU_ASSERT_FATAL(req.base_bdevs.items[g_max_base_drives - 1] != NULL);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	free_test_req(&req);
 	verify_raid_bdev_present("raid2", false);
 
 	create_raid_bdev_create_req(&req, "raid2", g_max_base_drives, true, 0, false);
-	free(req.base_bdevs.base_bdevs[g_max_base_drives - 1]);
-	req.base_bdevs.base_bdevs[g_max_base_drives - 1] = strdup("Nvme100000n1");
-	SPDK_CU_ASSERT_FATAL(req.base_bdevs.base_bdevs[g_max_base_drives - 1] != NULL);
+	free(req.base_bdevs.items[g_max_base_drives - 1]);
+	req.base_bdevs.items[g_max_base_drives - 1] = strdup("Nvme100000n1");
+	SPDK_CU_ASSERT_FATAL(req.base_bdevs.items[g_max_base_drives - 1] != NULL);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	free_test_req(&req);
@@ -1044,8 +1051,8 @@ test_create_raid_invalid_args(void)
 static void
 test_delete_raid_invalid_args(void)
 {
-	struct rpc_bdev_raid_create construct_req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx construct_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1054,7 +1061,7 @@ test_delete_raid_invalid_args(void)
 	create_raid_bdev_create_req(&construct_req, "raid1", 0, true, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&construct_req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&construct_req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&construct_req);
 
 	create_raid_bdev_delete_req(&destroy_req, "raid2", 0);
@@ -1080,8 +1087,8 @@ test_delete_raid_invalid_args(void)
 static void
 test_io_channel(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
@@ -1093,7 +1100,7 @@ test_io_channel(void)
 	verify_raid_bdev_present("raid1", false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
@@ -1126,8 +1133,8 @@ test_io_channel(void)
 static void
 test_reset_io(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
@@ -1140,7 +1147,7 @@ test_reset_io(void)
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
@@ -1164,7 +1171,7 @@ test_reset_io(void)
 	memset(g_io_output, 0, g_max_base_drives * sizeof(struct io_output));
 	g_io_output_index = 0;
 	raid_bdev_submit_request(ch, bdev_io);
-	verify_reset_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
+	verify_reset_io(bdev_io, req.base_bdevs.count, ch_ctx, pbdev,
 			true);
 	bdev_io_cleanup(bdev_io);
 
@@ -1184,15 +1191,15 @@ test_reset_io(void)
 static void
 test_multi_raid(void)
 {
-	struct rpc_bdev_raid_create *construct_req;
-	struct rpc_bdev_raid_delete destroy_req;
-	struct rpc_bdev_raid_get_bdevs get_raids_req;
+	struct rpc_bdev_raid_create_ctx *construct_req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
+	struct rpc_bdev_raid_get_bdevs_ctx get_raids_req;
 	uint8_t i;
 	char name[16];
 	uint8_t bbdev_idx = 0;
 
 	set_globals();
-	construct_req = calloc(MAX_RAIDS, sizeof(struct rpc_bdev_raid_create));
+	construct_req = calloc(MAX_RAIDS, sizeof(struct rpc_bdev_raid_create_ctx));
 	SPDK_CU_ASSERT_FATAL(construct_req != NULL);
 	CU_ASSERT(raid_bdev_init() == 0);
 	for (i = 0; i < g_max_raids; i++) {
@@ -1202,10 +1209,10 @@ test_multi_raid(void)
 		bbdev_idx += g_max_base_drives;
 		rpc_bdev_raid_create(NULL, NULL);
 		CU_ASSERT(g_rpc_err == 0);
-		verify_raid_bdev(&construct_req[i], true, RAID_BDEV_STATE_ONLINE);
+		verify_raid_bdev(&construct_req[i], true, SPDK_BDEV_RAID_STATE_ONLINE);
 	}
 
-	create_get_raids_req(&get_raids_req, "all", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ALL, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_get_raids(construct_req, g_max_raids, g_get_raids_output, g_get_raids_count);
@@ -1213,7 +1220,7 @@ test_multi_raid(void)
 		free(g_get_raids_output[i]);
 	}
 
-	create_get_raids_req(&get_raids_req, "online", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ONLINE, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_get_raids(construct_req, g_max_raids, g_get_raids_output, g_get_raids_count);
@@ -1221,28 +1228,22 @@ test_multi_raid(void)
 		free(g_get_raids_output[i]);
 	}
 
-	create_get_raids_req(&get_raids_req, "configuring", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_CONFIGURING, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	create_get_raids_req(&get_raids_req, "offline", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_OFFLINE, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	create_get_raids_req(&get_raids_req, "invalid_category", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ALL, 1);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	create_get_raids_req(&get_raids_req, "all", 1);
-	rpc_bdev_raid_get_bdevs(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
-	free(get_raids_req.category);
-	CU_ASSERT(g_get_raids_count == 0);
-
-	create_get_raids_req(&get_raids_req, "all", 0);
+	create_get_raids_req(&get_raids_req, RPC_BDEV_RAID_STATE_ALL, 0);
 	rpc_bdev_raid_get_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == g_max_raids);
@@ -1278,8 +1279,8 @@ test_io_type_supported(void)
 static void
 test_raid_json_dump_info(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 
 	set_globals();
@@ -1289,7 +1290,7 @@ test_raid_json_dump_info(void)
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
@@ -1323,24 +1324,24 @@ test_raid_level_conversions(void)
 {
 	const char *raid_str;
 
-	CU_ASSERT(raid_bdev_str_to_level("abcd123") == INVALID_RAID_LEVEL);
-	CU_ASSERT(raid_bdev_str_to_level("0") == RAID0);
-	CU_ASSERT(raid_bdev_str_to_level("raid0") == RAID0);
-	CU_ASSERT(raid_bdev_str_to_level("RAID0") == RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("abcd123") == SPDK_BDEV_RAID_LEVEL_INVALID);
+	CU_ASSERT(raid_bdev_str_to_level("0") == SPDK_BDEV_RAID_LEVEL_RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("raid0") == SPDK_BDEV_RAID_LEVEL_RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("RAID0") == SPDK_BDEV_RAID_LEVEL_RAID0);
 
-	raid_str = raid_bdev_level_to_str(INVALID_RAID_LEVEL);
+	raid_str = raid_bdev_level_to_str(SPDK_BDEV_RAID_LEVEL_INVALID);
 	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);
 	raid_str = raid_bdev_level_to_str(1234);
 	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);
-	raid_str = raid_bdev_level_to_str(RAID0);
+	raid_str = raid_bdev_level_to_str(SPDK_BDEV_RAID_LEVEL_RAID0);
 	CU_ASSERT(raid_str != NULL && strcmp(raid_str, "raid0") == 0);
 }
 
 static void
 test_create_raid_superblock(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete delete_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx delete_req;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1349,7 +1350,7 @@ test_create_raid_superblock(void)
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, true);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&req);
 
 	create_raid_bdev_delete_req(&delete_req, "raid1", 0);
@@ -1363,8 +1364,8 @@ test_create_raid_superblock(void)
 static void
 test_raid_process(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_bdev *base_bdev;
 	struct spdk_thread *process_thread;
@@ -1380,7 +1381,7 @@ test_raid_process(void)
 	}
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&req);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
@@ -1424,8 +1425,8 @@ test_raid_process(void)
 static void
 test_raid_process_with_qos(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_bdev *base_bdev;
 	struct spdk_thread *process_thread;
@@ -1443,7 +1444,7 @@ test_raid_process_with_qos(void)
 	}
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 	free_test_req(&req);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
@@ -1496,8 +1497,8 @@ test_raid_process_with_qos(void)
 static void
 test_raid_io_split(void)
 {
-	struct rpc_bdev_raid_create req;
-	struct rpc_bdev_raid_delete destroy_req;
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *raid_ch;
@@ -1514,7 +1515,7 @@ test_raid_io_split(void)
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, "raid1") == 0) {

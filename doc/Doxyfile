@@ -790,6 +790,7 @@ INPUT                  += \
                          intro.md \
                          concepts.md \
                          user_guides.md \
+                         releases.md \
                          prog_guides.md \
                          general.md \
                          misc.md \
@@ -820,6 +821,7 @@ INPUT                  += \
                          gdb_macros.md \
                          getting_started.md \
                          idxd.md \
+                         interrupt_mode.md \
                          ioat.md \
                          iscsi.md \
                          jsonrpc.md \
@@ -832,6 +834,7 @@ INPUT                  += \
                          nvme_multipath.md \
                          nvme_spec.md \
                          nvmf.md \
+                         nvmf_interrupt_mode.md \
                          nvmf_tgt_pg.md \
                          nvmf_multipath_howto.md \
                          overview.md \

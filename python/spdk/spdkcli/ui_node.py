@@ -2,10 +2,12 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
-from configshell_fb import ConfigNode, ExecutionError
-from uuid import UUID
-from ..rpc.client import JSONRPCException
 import json
+from uuid import UUID
+
+from configshell_fb import ConfigNode
+
+from ..rpc.client import JSONRPCException
 
 
 def convert_bytes_to_human(size):
@@ -39,7 +41,11 @@ class UINode(ConfigNode):
         """
         self.ui_command_ls(path, depth)
 
-    def execute_command(self, command, pparams=[], kparams={}):
+    def execute_command(self, command, pparams=None, kparams=None):
+        if kparams is None:
+            kparams = {}
+        if pparams is None:
+            pparams = []
         try:
             result = ConfigNode.execute_command(self, command,
                                                 pparams, kparams)
@@ -148,7 +154,8 @@ class UIBdev(UINode):
             UIBdevObj(bdev, self)
 
     def ui_command_get_bdev_iostat(self, name=None):
-        ret = self.get_root().bdev_get_iostat(name=name)
+        kwargs = {"names": [name]} if name is not None else {}
+        ret = self.get_root().bdev_get_iostat(**kwargs)
         self.shell.log.info(json.dumps(ret, indent=2))
 
     def ui_command_delete_all(self):
@@ -791,8 +798,8 @@ class UIVhostTargetObj(UINode):
 
     def summary(self):
         luns = "LUNs: %s" % len(self.target["luns"])
-        id = "TargetID: %s" % self.target["scsi_dev_num"]
-        info = ",".join([luns, id])
+        tgt_id = "TargetID: %s" % self.target["scsi_dev_num"]
+        info = ",".join([luns, tgt_id])
         return info, True
 
 

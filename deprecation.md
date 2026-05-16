@@ -19,26 +19,24 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### util/net
+### bdev
 
-#### `spdk_net_getaddr`
+#### `bdev_get_memory_domains`
 
-Returning -1 and setting errno on this function is deprecated and will be changed in the 26.01
-release. This function will return negative errno values instead.
+`spdk_bdev_get_memory_domains` and the `get_memory_domains` fn_table entry are deprecated.
+Use `spdk_bdev_get_memory_domain_types` and `get_memory_domain_types` instead.
+Will be removed in the v26.09 release.
 
-### sock
+### bdev/nvme
 
-#### `spdk_sock_\*`
+The `BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE`, `BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE`,
+`BDEV_NVME_MP_SELECTOR_ROUND_ROBIN`, and `BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH` enum
+value names are deprecated and will be removed in v25.09. Use the
+`SPDK_BDEV_NVME_MULTIPATH_POLICY_*` and `SPDK_BDEV_NVME_MULTIPATH_SELECTOR_*`
+names instead.
 
-`spdk_sock_getaddr`, `spdk_sock_close`, `spdk_sock_flush`, `spdk_sock_recv`, `spdk_sock_writev`,
-`spdk_sock_readv`, `spdk_sock_recv_next`, `spdk_sock_set_recvlowat`, `spdk_sock_set_recvbuf`,
-`spdk_sock_set_sendbuf`, `spdk_sock_group_add_sock`, `spdk_sock_group_remove_sock`,
-`spdk_sock_group_provide_buf`, `spdk_sock_group_poll`, `spdk_sock_group_poll_count`,
-`spdk_sock_group_close`, `spdk_sock_impl_get_opts`, `spdk_sock_impl_set_opts`,
-`spdk_sock_set_default_impl`, `spdk_sock_group_register_interrupt`
-
-Returning -1 and setting errno on these functions is deprecated and will be changed in the 26.01
-release. These functions will return negative errno values instead.
+The `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` enum value names are deprecated and will be removed in v25.09.
+Use the `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` names instead.
 
 ### gpt
 
@@ -54,3 +52,60 @@ See GitHub issue [2801](https://github.com/spdk/spdk/issues/2801) for additional
 
 New SPDK partition types should use GUID `6527994e-2c5a-4eec-9613-8f5944074e8b` which will create
 a bdev of the correct size.
+
+### nvme
+
+#### nvme_spec.h
+
+`spdk_nvme_cdata_ctratt`
+
+Updated bit definitions to NVMe 2.3. Old bit names will be removed in the v26.09 release.
+
+#### `nvme_cpl_without_opc`
+
+`spdk_nvme_cpl_get_status_string`, `spdk_nvme_print_completion`, and
+`spdk_nvme_qpair_print_completion` are deprecated and will be removed in v26.09.
+Use `spdk_nvme_cpl_get_status_string_ext`, `spdk_nvme_print_completion_ext`, and
+`spdk_nvme_qpair_print_completion_ext` instead. The new APIs accept the command opcode
+to correctly distinguish fabric command-specific status codes from NVMe command-specific
+status codes.
+
+### nvmf
+
+`spdk_nvmf_subsystem_create`, `spdk_nvmf_subsystem_set_sn`, `spdk_nvmf_subsystem_set_mn`,
+`spdk_nvmf_subsystem_set_ana_reporting` are deprecated and will be removed in v26.09.
+Use `spdk_nvmf_subsystem_create_ext` with subsystem options instead.
+
+`spdk_nvmf_subsystem_get_sn`, `spdk_nvmf_subsystem_get_mn`, `spdk_nvmf_subsystem_get_max_nsid`,
+`spdk_nvmf_subsystem_get_max_namespaces`, `spdk_nvmf_subsystem_get_ana_reporting`, `spdk_nvmf_subsystem_get_type`
+are deprecated and will be removed in v26.09. Use `spdk_nvmf_subsystem_get_opts` instead.
+
+#### `nvmf_create_subsystem_max_discard_size_kib`
+
+The `max_discard_size_kib` parameter of `nvmf_create_subsystem` RPC is deprecated and will be
+removed in v26.09. Use `dmrsl` instead.
+
+#### `nvmf_create_subsystem_max_write_zeroes_size_kib`
+
+The `max_write_zeroes_size_kib` parameter of `nvmf_create_subsystem` RPC is deprecated and will be
+removed in v26.09. Use `wzsl` instead.
+
+### scripts
+
+The `autorun_post.py` symlink in the repository root is deprecated. The script has been moved to
+`scripts/autorun_post.py`. The symlink will be removed in the v26.09 release.
+
+#### `nvmf_create_transport`
+
+buf-cache-size parameter is deprecated in favor of iobuf-small-cache-size and will be removed in 26.09 release.
+num-shared-buffers parameter is deprecated and will be removed in 26.09 release. Instead the user can use
+`iobuf_set_options` to specify the number of small and large pool entries and use `iobuf-small-cache-size` and
+`iobuf-large-cache-size` parameters of `nvmf_create_transport` RPC to configure desired buffers caches.
+io-unit-size is NOP, it is deprecated and will be removed in v26.09 release.
+
+### app/spdk_nvme_perf
+
+#### perf_g_option
+
+The `-G` command line option is deprecated and will be removed in the v26.05 release.
+Use `--log-level debug -T nvme` instead.

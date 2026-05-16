@@ -519,9 +519,9 @@ idxd_attach(struct spdk_pci_device *device)
 	}
 
 	idxd = &user_idxd->idxd;
-	if (did == PCI_DEVICE_ID_INTEL_DSA) {
+	if (did == PCI_DEVICE_ID_INTEL_DSA || did == PCI_DEVICE_ID_INTEL_DSA3) {
 		idxd->type = IDXD_DEV_TYPE_DSA;
-	} else if (did == PCI_DEVICE_ID_INTEL_IAA) {
+	} else if (did == PCI_DEVICE_ID_INTEL_IAA || did == PCI_DEVICE_ID_INTEL_IAA3) {
 		idxd->type = IDXD_DEV_TYPE_IAA;
 		idxd->aecs = spdk_zmalloc(sizeof(struct iaa_aecs),
 					  0x20, NULL,

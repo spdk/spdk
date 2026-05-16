@@ -95,6 +95,7 @@
 	spdk_bdev_zcopy_end;
 	spdk_bdev_write_zeroes;
 	spdk_bdev_write_zeroes_blocks;
+	spdk_bdev_write_uncorrectable_blocks;
 	spdk_bdev_unmap;
 	spdk_bdev_unmap_blocks;
 	spdk_bdev_flush;
@@ -125,6 +126,7 @@
 	spdk_bdev_channel_get_histogram;
 	spdk_bdev_get_media_events;
 	spdk_bdev_get_memory_domains;
+	spdk_bdev_get_memory_domain_types;
 	spdk_bdev_readv_blocks_ext;
 	spdk_bdev_writev_blocks_ext;
 	spdk_bdev_for_each_channel;
@@ -133,6 +135,7 @@
 	spdk_bdev_copy_blocks;
 	spdk_bdev_get_nvme_ctratt;
 	spdk_bdev_get_nvme_nsid;
+	spdk_bdev_get_nvme_csi;
 	spdk_bdev_get_io_type_name;
 	spdk_bdev_get_io_type;
 
@@ -155,8 +158,6 @@
 	spdk_bdev_alias_del_all;
 	spdk_bdev_get_aliases;
 	spdk_bdev_io_get_buf;
-	spdk_bdev_io_get_aux_buf;
-	spdk_bdev_io_put_aux_buf;
 	spdk_bdev_io_set_buf;
 	spdk_bdev_io_set_md_buf;
 	spdk_bdev_io_complete;

@@ -581,19 +581,25 @@ test_spdk_accel_module_find_by_name(void)
 	struct spdk_accel_module_if mod1 = {};
 	struct spdk_accel_module_if mod2 = {};
 	struct spdk_accel_module_if mod3 = {};
+	struct spdk_accel_module_if mod4 = {};
 	struct spdk_accel_module_if *accel_module = NULL;
 
 	mod1.name = "ioat";
 	mod2.name = "idxd";
-	mod3.name = "software";
+	mod3.name = "ae4dma";
+	mod4.name = "software";
 
 	TAILQ_INIT(&spdk_accel_module_list);
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod1, tailq);
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod2, tailq);
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod3, tailq);
+	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod4, tailq);
 
 	/* Now let's find a valid engine */
 	accel_module = _module_find_by_name("ioat");
+	CU_ASSERT(accel_module != NULL);
+
+	accel_module = _module_find_by_name("ae4dma");
 	CU_ASSERT(accel_module != NULL);
 
 	/* Try to find one that doesn't exist */
@@ -4338,6 +4344,85 @@ test_sequence_dix(void)
 }
 #endif
 
+static void
+test_sequence_compare(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_sequence ut_seq;
+	char buf1[4096], buf2[4096];
+	struct iovec src1_iovs[2], src2_iovs[1];
+	int rc, completed;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	memset(buf1, 0xa5, sizeof(buf1));
+	memset(buf2, 0xa5, sizeof(buf2));
+
+	src1_iovs[0].iov_base = buf1;
+	src1_iovs[0].iov_len = sizeof(buf1) / 2;
+	src1_iovs[1].iov_base = buf1 + sizeof(buf1) / 2;
+	src1_iovs[1].iov_len = sizeof(buf1) / 2;
+	src2_iovs[0].iov_base = buf2;
+	src2_iovs[0].iov_len = sizeof(buf2);
+	completed = 0;
+	seq = NULL;
+
+	/* Succesfull compare */
+	rc = spdk_accel_append_compare(&seq, ioch,
+				       src1_iovs, 2, NULL, NULL,
+				       src2_iovs, 1, NULL, NULL,
+				       ut_sequence_step_cb, &completed);
+
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(completed, 0);
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+
+	completed = 0;
+	seq = NULL;
+	memset(buf1, 0xa6, sizeof(buf1));
+	src1_iovs[0].iov_base = buf1;
+	src1_iovs[0].iov_len = sizeof(buf1) / 2;
+	src1_iovs[1].iov_base = buf1 + sizeof(buf1) / 2;
+	src1_iovs[1].iov_len = sizeof(buf1) / 2;
+
+	/* Misscompare */
+	rc = spdk_accel_append_compare(&seq, ioch,
+				       src1_iovs, 2, NULL, NULL,
+				       src2_iovs, 1, NULL, NULL,
+				       ut_sequence_step_cb, &completed);
+
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(completed, 0);
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, -EILSEQ);
+
+	seq = NULL;
+	completed = 0;
+
+	/* Invalid Argument (src2_domain != NULL) */
+	rc = spdk_accel_append_compare(&seq, ioch,
+				       src1_iovs, 2, NULL, NULL,
+				       src2_iovs, 1, (void *)0x1, NULL,
+				       ut_sequence_step_cb, &completed);
+
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+	CU_ASSERT_PTR_NULL(seq);
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
 static int
 test_sequence_setup(void)
 {
@@ -4414,6 +4499,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_abort);
 	CU_ADD_TEST(seq_suite, test_sequence_append_error);
 	CU_ADD_TEST(seq_suite, test_sequence_completion_error);
+	CU_ADD_TEST(seq_suite, test_sequence_compare);
 #ifdef SPDK_CONFIG_ISAL /* accel_sw requires isa-l for compression */
 	CU_ADD_TEST(seq_suite, test_sequence_decompress);
 	CU_ADD_TEST(seq_suite, test_sequence_reverse);

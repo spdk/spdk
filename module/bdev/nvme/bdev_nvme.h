@@ -18,9 +18,6 @@
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
-extern pthread_mutex_t g_bdev_nvme_mutex;
-extern bool g_bdev_nvme_module_finish;
-extern struct spdk_thread *g_bdev_nvme_init_thread;
 
 #define NVME_MAX_CONTROLLERS 1024
 
@@ -59,13 +56,6 @@ struct nvme_ns {
 	struct nvme_async_probe_ctx	*probe_ctx;
 	TAILQ_ENTRY(nvme_ns)		tailq;
 	RB_ENTRY(nvme_ns)		node;
-
-	/**
-	 * record io path stat before destroyed. Allocation of stat is
-	 * decided by option io_path_stat of RPC
-	 * bdev_nvme_set_options
-	 */
-	struct spdk_bdev_io_stat	*stat;
 };
 
 struct nvme_bdev_io;
@@ -85,6 +75,30 @@ struct spdk_nvme_path_id {
 typedef void (*bdev_nvme_ctrlr_op_cb)(void *cb_arg, int rc);
 typedef void (*nvme_ctrlr_disconnected_cb)(struct nvme_ctrlr *nvme_ctrlr);
 
+/**
+ * Threading model for nvme_ctrlr
+ *
+ * All flags are MODIFIED exclusively on the app thread.
+ *
+ * Flags read ONLY on the app thread (no synchronization needed):
+ *   in_failover, pending_failover, io_path_cache_clearing
+ *
+ * Flags read on IO threads as best-effort informational checks
+ * (via nvme_ctrlr_is_available, nvme_ctrlr_is_failed, and direct reads):
+ *   resetting, reconnect_is_delayed, fast_io_fail_timedout,
+ *   destruct, ana_log_page_updating, dont_retry, disabled
+ *
+ * Stale reads are harmless - the IO path handles unavailable controllers
+ * gracefully. The worst outcome of an IO thread seeing an outdated value
+ * is a single extra IO attempt that fails and enters the normal error
+ * handling path. The system converges to correct behavior within one
+ * retry cycle, without any risk of data corruption or undefined behavior.
+ *
+ * Lists are MODIFIED and read exclusively on the app thread:
+ *   namespaces, pending_resets, trids
+ *
+ * Reference counter ref is protected by mutex.
+ */
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -113,7 +127,6 @@ struct nvme_ctrlr {
 	struct spdk_opal_dev			*opal_dev;
 
 	struct spdk_poller			*adminq_timer_poller;
-	struct spdk_thread			*thread;
 	struct spdk_interrupt			*intr;
 
 	bdev_nvme_ctrlr_op_cb			ctrlr_op_cb_fn;
@@ -144,6 +157,9 @@ struct nvme_ctrlr {
 	struct spdk_key				*dhchap_key;
 	struct spdk_key				*dhchap_ctrlr_key;
 
+	enum spdk_dma_device_type		memory_domain_types[8];
+	uint32_t				num_memory_domain_types;
+
 	pthread_mutex_t				mutex;
 };
 
@@ -163,13 +179,23 @@ struct nvme_bdev {
 	struct spdk_bdev			disk;
 	uint32_t				nsid;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
+
+	/* Used for namespace list, multipath settings and err stats protection. */
 	pthread_mutex_t				mutex;
+
 	int					ref;
 	enum spdk_bdev_nvme_multipath_policy	mp_policy;
 	enum spdk_bdev_nvme_multipath_selector	mp_selector;
 	uint32_t				rr_min_io;
+
+	/* This list is modified on the app thread only but can be accessed on other threads:
+	 * - Modifications must use the mutex.
+	 * - Access on the app thread does not require locking.
+	 * - Access on other threads must use the mutex.
+	 */
 	TAILQ_HEAD(, nvme_ns)			nvme_ns_list;
 	bool					opal;
+	bool					multipath_conf_updating;
 	TAILQ_ENTRY(nvme_bdev)			tailq;
 	struct nvme_error_stat			*err_stat;
 };
@@ -280,11 +306,9 @@ void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 void nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrlr);
 
 struct nvme_ns *nvme_ctrlr_get_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
-struct nvme_ns *nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr);
-struct nvme_ns *nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns);
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
-int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
+int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us);
 
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
 			      struct spdk_nvme_ctrlr_opts *drv_opts, struct spdk_bdev_nvme_ctrlr_opts *bdev_opts,

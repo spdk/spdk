@@ -5,8 +5,9 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+import argparse
+
+from spdk.rpc.cmd_parser import print_dict
 
 
 def add_parser(subparsers):
@@ -16,7 +17,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('log_set_flag', help='set log flag')
     p.add_argument(
-        'flag', help='log flag we want to set. (for example "nvme").')
+        'flag', help='Log flag name (e.g. "nvme") or "all" to set all flags')
     p.set_defaults(func=log_set_flag)
 
     def log_clear_flag(args):
@@ -24,7 +25,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('log_clear_flag', help='clear log flag')
     p.add_argument(
-        'flag', help='log flag we want to clear. (for example "nvme").')
+        'flag', help='Log flag name (e.g. "nvme") or "all" to clear all flags')
     p.set_defaults(func=log_clear_flag)
 
     def log_get_flags(args):
@@ -37,7 +38,7 @@ def add_parser(subparsers):
         args.client.log_set_level(level=args.level)
 
     p = subparsers.add_parser('log_set_level', help='set log level')
-    p.add_argument('level', help='log level we want to set. (for example "DEBUG").')
+    p.add_argument('level', help='Log level', choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_level)
 
     def log_get_level(args):
@@ -50,7 +51,7 @@ def add_parser(subparsers):
         args.client.log_set_print_level(level=args.level)
 
     p = subparsers.add_parser('log_set_print_level', help='set log print level')
-    p.add_argument('level', help='log print level we want to set. (for example "DEBUG").')
+    p.add_argument('level', help='Log print level', choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_print_level)
 
     def log_get_print_level(args):
@@ -60,10 +61,9 @@ def add_parser(subparsers):
     p.set_defaults(func=log_get_print_level)
 
     def log_enable_timestamps(args):
-        ret = args.client.log_enable_timestamps(enabled=args.enabled)
+        args.client.log_enable_timestamps(enabled=args.enabled)
     p = subparsers.add_parser('log_enable_timestamps',
                               help='Enable or disable timestamps.')
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument('-d', '--disable', dest='enabled', action='store_false', help="Disable timestamps", default=False)
-    group.add_argument('-e', '--enable',  dest='enabled', action='store_true', help="Enable timestamps")
+    p.add_argument('--timestamps', dest='enabled', action=argparse.BooleanOptionalAction,
+                   required=True, help='Enable (true) or disable (false) timestamps in log output')
     p.set_defaults(func=log_enable_timestamps)

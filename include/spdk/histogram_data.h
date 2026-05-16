@@ -279,6 +279,87 @@ spdk_histogram_data_free(struct spdk_histogram_data *h)
 	free(h);
 }
 
+struct spdk_histogram_borders {
+	uint64_t *borders;
+	size_t index;
+	size_t num_borders_count;
+	uint64_t border_count[0];
+};
+
+static inline void
+__spdk_histogram_get_borders_count_cb(void *_ctx, uint64_t start, uint64_t end,
+				      uint64_t count,
+				      uint64_t total, uint64_t so_far)
+{
+	struct spdk_histogram_borders *ctx = (struct spdk_histogram_borders *)_ctx;
+	size_t old_index;
+
+	while ((ctx->index < ctx->num_borders_count - 1) && start > ctx->borders[ctx->index]) {
+		old_index = ctx->index;
+		ctx->index++;
+		ctx->border_count[ctx->index] = ctx->border_count[old_index];
+	}
+
+	ctx->border_count[ctx->index] = so_far;
+}
+
+/**
+ * Dump histogram buckets for specified borders.
+ *
+ * \param h The histogram data to dump.
+ * \param ctx The context to dump histogram buckets for specified borders, allocated by spdk_histogram_get_borders_count_alloc_ctx().
+ */
+static inline void
+spdk_histogram_get_borders_count(struct spdk_histogram_data *h,
+				 struct spdk_histogram_borders *ctx)
+{
+	spdk_histogram_data_iterate(h, __spdk_histogram_get_borders_count_cb, ctx);
+}
+
+/**
+ * Allocate a context to dump histogram buckets for specified borders.
+ * The borders array must be sorted in ascending order, each border represents a value which is an upper bound of a bucket.
+ * border_count will contain the count of all values that are less or equal to its border value.
+ * Reported border_count will contain one more element than the borders array, the last element will represent total count of all elements in the histogram.
+ *
+ * \param borders An array of border values, must be sorted in ascending order.
+ * \param num_borders The number of borders in the borders array.
+ *
+ * \return A context to dump histogram buckets for specified borders.
+ */
+static inline struct spdk_histogram_borders *
+spdk_histogram_get_borders_count_alloc_ctx(uint64_t *borders, size_t num_borders)
+{
+	struct spdk_histogram_borders *ctx;
+
+	if (num_borders == 0) {
+		return NULL;
+	}
+
+	ctx = (struct spdk_histogram_borders *)calloc(1,
+			sizeof(*ctx) + sizeof(uint64_t) * (num_borders + 1));
+	if (!ctx) {
+		return NULL;
+	}
+
+	ctx->borders = borders;
+	/** +1 for bucket containing values from last border to +Inf */
+	ctx->num_borders_count = num_borders + 1;
+
+	return ctx;
+}
+
+/**
+ * Free the context allocated by spdk_histogram_get_borders_count_alloc_ctx().
+ *
+ * \param ctx The context to free.
+ */
+static inline void
+spdk_histogram_get_borders_count_free_ctx(struct spdk_histogram_borders *ctx)
+{
+	free(ctx);
+}
+
 #ifdef __cplusplus
 }
 #endif

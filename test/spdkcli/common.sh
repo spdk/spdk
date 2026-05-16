@@ -23,13 +23,13 @@ function cleanup() {
 }
 
 function run_spdk_tgt() {
-	$SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0 &
+	run_app_bg $SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 }
 
 function run_nvmf_tgt() {
-	$SPDK_BIN_DIR/nvmf_tgt -m 0x3 -p 0 &
+	run_app_bg $SPDK_BIN_DIR/nvmf_tgt -m 0x3 -p 0
 	nvmf_tgt_pid=$!
 	waitforlisten $nvmf_tgt_pid
 }

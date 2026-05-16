@@ -19,7 +19,12 @@ DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
+DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns, struct spdk_nvmf_ns *,
+	    (struct spdk_nvmf_subsystem *subsystem), NULL);
+DEFINE_STUB(spdk_nvmf_subsystem_get_next_ns, struct spdk_nvmf_ns *,
+	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns), NULL);
 DEFINE_STUB(spdk_bdev_desc_get_block_size, uint32_t, (struct spdk_bdev_desc *desc), 512);
+DEFINE_STUB(spdk_bdev_get_numa_id, int32_t, (struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_pause, int, (struct spdk_nvmf_subsystem *subsystem,
 		uint32_t nsid, spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_resume, int, (struct spdk_nvmf_subsystem *subsystem,
@@ -225,7 +230,6 @@ test_nvmf_vfio_user_create_destroy(void)
 	struct nvmf_vfio_user_transport *vu_transport = NULL;
 	struct nvmf_vfio_user_endpoint *endpoint = NULL;
 	struct spdk_nvmf_transport_opts opts = {};
-	int rc;
 	int done;
 
 	/* Initialize transport_specific NULL to avoid decoding json */
@@ -242,8 +246,7 @@ test_nvmf_vfio_user_create_destroy(void)
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
 	done = 0;
 
-	rc = nvmf_vfio_user_destroy(transport, ut_transport_destroy_done_cb, &done);
-	CU_ASSERT(rc == 0);
+	nvmf_vfio_user_destroy(transport, ut_transport_destroy_done_cb, &done);
 	CU_ASSERT(done == 1);
 }
 

@@ -63,7 +63,7 @@ declare -A method_bdev_xnvme_create_0=(
 
 rpc_xnvme() {
 	rpc_cmd framework_get_config bdev \
-		| jq -r ".[] | select(.method == \"bdev_xnvme_create\").params.${1:-name}"
+		| jq -r "map(select(.method == \"bdev_xnvme_create\") | .params.${1:-name}) | .[]"
 }
 
 prep_nvme() {

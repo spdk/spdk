@@ -140,6 +140,32 @@ struct rdma_cm_id;
  */
 int32_t spdk_rdma_cm_id_get_numa_id(struct rdma_cm_id *cm_id);
 
+/**
+ * Poll a completion queue.
+ *
+ * \param cq Completion queue
+ * \param num_entries Number of entries to poll
+ * \param wc Completion records
+ * \return Number of entries polled
+ */
+int spdk_rdma_utils_poll_cq(struct ibv_cq *cq, int num_entries, struct ibv_wc *wc);
+
+/**
+ * Inject completion error \p status with error rate of \p err_rate_num / \p err_rate_den.
+ *
+ * \param status Completion status
+ * \param err_rate_num Error rate numerator
+ * \param err_rate_den Error rate denominator
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_rdma_utils_inject_wc_error(enum ibv_wc_status status, uint32_t err_rate_num,
+				    uint32_t err_rate_den);
+
+/**
+ * Cancel completion error injection.
+ */
+void spdk_rdma_utils_cancel_wc_error(void);
+
 #ifdef __cplusplus
 }
 #endif

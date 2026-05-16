@@ -10,36 +10,13 @@
 #include "spdk/string.h"
 #include "spdk/log.h"
 #include "spdk/env.h"
-
-#define RPC_MAX_BASE_BDEVS 255
-
-/*
- * Input structure for bdev_raid_get_bdevs RPC
- */
-struct rpc_bdev_raid_get_bdevs {
-	/* category - all or online or configuring or offline */
-	char *category;
-};
-
-/*
- * brief:
- * free_rpc_bdev_raid_get_bdevs function frees RPC bdev_raid_get_bdevs related parameters
- * params:
- * req - pointer to RPC request
- * returns:
- * none
- */
-static void
-free_rpc_bdev_raid_get_bdevs(struct rpc_bdev_raid_get_bdevs *req)
-{
-	free(req->category);
-}
+#include "spdk_internal/rpc_autogen.h"
 
 /*
  * Decoder object for RPC get_raids
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_get_bdevs_decoders[] = {
-	{"category", offsetof(struct rpc_bdev_raid_get_bdevs, category), spdk_json_decode_string},
+	{"category", offsetof(struct rpc_bdev_raid_get_bdevs_ctx, category), rpc_decode_bdev_raid_state},
 };
 
 /*
@@ -62,23 +39,16 @@ static void
 rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct rpc_bdev_raid_get_bdevs   req = {};
+	struct rpc_bdev_raid_get_bdevs_ctx req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
-	enum raid_bdev_state        state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
-		goto cleanup;
-	}
-
-	state = raid_bdev_str_to_state(req.category);
-	if (state == RAID_BDEV_STATE_MAX && strcmp(req.category, "all") != 0) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
-		goto cleanup;
+		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -86,7 +56,8 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	/* Get raid bdev list based on the category requested */
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-		if (raid_bdev->state == state || state == RAID_BDEV_STATE_MAX) {
+		if (raid_bdev->state == (enum spdk_bdev_raid_state)req.category ||
+		    req.category == RPC_BDEV_RAID_STATE_ALL) {
 			char uuid_str[SPDK_UUID_STRING_LEN];
 
 			spdk_json_write_object_begin(w);
@@ -99,146 +70,37 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
-
-cleanup:
-	free_rpc_bdev_raid_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("bdev_raid_get_bdevs", rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
-
-/*
- * Base bdevs in RPC bdev_raid_create
- */
-struct rpc_bdev_raid_create_base_bdevs {
-	/* Number of base bdevs */
-	size_t           num_base_bdevs;
-
-	/* List of base bdevs names */
-	char             *base_bdevs[RPC_MAX_BASE_BDEVS];
-};
-
-/*
- * Input structure for RPC rpc_bdev_raid_create
- */
-struct rpc_bdev_raid_create {
-	/* Raid bdev name */
-	char                                 *name;
-
-	/* RAID strip size in KB */
-	uint32_t                             strip_size_kb;
-
-	/* RAID raid level */
-	enum raid_level                      level;
-
-	/* Base bdevs information */
-	struct rpc_bdev_raid_create_base_bdevs base_bdevs;
-
-	/* UUID for this raid bdev */
-	struct spdk_uuid		     uuid;
-
-	/* If set, information about raid bdev will be stored in superblock on each base bdev */
-	bool                                 superblock_enabled;
-};
-
-/*
- * Decoder function for RPC bdev_raid_create to decode raid level
- */
-static int
-decode_raid_level(const struct spdk_json_val *val, void *out)
-{
-	int ret;
-	char *str = NULL;
-	enum raid_level level;
-
-	ret = spdk_json_decode_string(val, &str);
-	if (ret == 0 && str != NULL) {
-		level = raid_bdev_str_to_level(str);
-		if (level == INVALID_RAID_LEVEL) {
-			ret = -EINVAL;
-		} else {
-			*(enum raid_level *)out = level;
-		}
-	}
-
-	free(str);
-	return ret;
-}
-
-/*
- * Decoder function for RPC bdev_raid_create to decode base bdevs list
- */
-static int
-decode_base_bdevs(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_bdev_raid_create_base_bdevs *base_bdevs = out;
-	return spdk_json_decode_array(val, spdk_json_decode_string, base_bdevs->base_bdevs,
-				      RPC_MAX_BASE_BDEVS, &base_bdevs->num_base_bdevs, sizeof(char *));
-}
 
 /*
  * Decoder object for RPC bdev_raid_create
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_raid_create, name), spdk_json_decode_string},
-	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create, strip_size_kb), spdk_json_decode_uint32, true},
-	{"raid_level", offsetof(struct rpc_bdev_raid_create, level), decode_raid_level},
-	{"base_bdevs", offsetof(struct rpc_bdev_raid_create, base_bdevs), decode_base_bdevs},
-	{"uuid", offsetof(struct rpc_bdev_raid_create, uuid), spdk_json_decode_uuid, true},
-	{"superblock", offsetof(struct rpc_bdev_raid_create, superblock_enabled), spdk_json_decode_bool, true},
-};
-
-struct rpc_bdev_raid_create_ctx {
-	struct rpc_bdev_raid_create req;
-	struct raid_bdev *raid_bdev;
-	struct spdk_jsonrpc_request *request;
-	uint8_t remaining;
-	int status;
+	{"name", offsetof(struct rpc_bdev_raid_create_ctx, name), spdk_json_decode_string},
+	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create_ctx, strip_size_kb), spdk_json_decode_uint32, true},
+	{"raid_level", offsetof(struct rpc_bdev_raid_create_ctx, raid_level), rpc_decode_bdev_raid_level},
+	{"base_bdevs", offsetof(struct rpc_bdev_raid_create_ctx, base_bdevs), rpc_decode_raid_base_bdevs},
+	{"uuid", offsetof(struct rpc_bdev_raid_create_ctx, uuid), spdk_json_decode_uuid, true},
+	{"superblock", offsetof(struct rpc_bdev_raid_create_ctx, superblock), spdk_json_decode_bool, true},
 };
 
 static void
-free_rpc_bdev_raid_create_ctx(struct rpc_bdev_raid_create_ctx *ctx)
-{
-	struct rpc_bdev_raid_create *req;
-	size_t i;
-
-	if (!ctx) {
-		return;
-	}
-
-	req = &ctx->req;
-
-	free(req->name);
-	for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
-		free(req->base_bdevs.base_bdevs[i]);
-	}
-
-	free(ctx);
-}
-
-static void
-rpc_bdev_raid_create_add_base_bdev_cb(void *_ctx, int status)
+rpc_bdev_raid_create_cb(void *_ctx, int status)
 {
 	struct rpc_bdev_raid_create_ctx *ctx = _ctx;
 
 	if (status != 0) {
-		ctx->status = status;
-	}
-
-	assert(ctx->remaining != 0);
-	if (--ctx->remaining > 0) {
-		return;
-	}
-
-	if (ctx->status != 0) {
-		raid_bdev_delete(ctx->raid_bdev, NULL, NULL);
-		spdk_jsonrpc_send_error_response_fmt(ctx->request, ctx->status,
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, status,
 						     "Failed to create RAID bdev %s: %s",
-						     ctx->req.name,
-						     spdk_strerror(-ctx->status));
+						     ctx->name,
+						     spdk_strerror(-status));
 	} else {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	}
 
-	free_rpc_bdev_raid_create_ctx(ctx);
+	free_rpc_bdev_raid_create(ctx);
+	free(ctx);
 }
 
 /*
@@ -255,31 +117,28 @@ static void
 rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_raid_create	*req;
-	struct raid_bdev		*raid_bdev;
+	struct rpc_bdev_raid_create_ctx	*ctx;
 	int				rc;
 	size_t				i;
-	struct rpc_bdev_raid_create_ctx *ctx;
-	uint8_t				num_base_bdevs;
+	size_t				num_base_bdevs;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		goto cleanup;
+		return;
 	}
-	req = &ctx->req;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_create_decoders),
-				    req)) {
+				    ctx)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
-	num_base_bdevs = req->base_bdevs.num_base_bdevs;
+	num_base_bdevs = ctx->base_bdevs.count;
 
 	for (i = 0; i < num_base_bdevs; i++) {
-		if (strlen(req->base_bdevs.base_bdevs[i]) == 0) {
+		if (strlen(ctx->base_bdevs.items[i]) == 0) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "The base bdev name cannot be empty: %s",
 							     spdk_strerror(EINVAL));
@@ -287,76 +146,30 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	rc = raid_bdev_create(req->name, req->strip_size_kb, num_base_bdevs,
-			      req->level, req->superblock_enabled, &req->uuid, &raid_bdev);
+	ctx->request = request;
+
+	rc = raid_bdev_create(ctx->name, ctx->strip_size_kb, num_base_bdevs,
+			      ctx->base_bdevs.items, (enum spdk_bdev_raid_level)ctx->raid_level,
+			      ctx->superblock, &ctx->uuid, rpc_bdev_raid_create_cb, ctx);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
 						     "Failed to create RAID bdev %s: %s",
-						     req->name, spdk_strerror(-rc));
+						     ctx->name, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
-	ctx->raid_bdev = raid_bdev;
-	ctx->request = request;
-	ctx->remaining = num_base_bdevs;
-
-	assert(num_base_bdevs > 0);
-
-	for (i = 0; i < num_base_bdevs; i++) {
-		const char *base_bdev_name = req->base_bdevs.base_bdevs[i];
-
-		rc = raid_bdev_add_base_bdev(raid_bdev, base_bdev_name,
-					     rpc_bdev_raid_create_add_base_bdev_cb, ctx);
-		if (rc == -ENODEV) {
-			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n", base_bdev_name);
-			assert(ctx->remaining > 1 || i + 1 == num_base_bdevs);
-			rpc_bdev_raid_create_add_base_bdev_cb(ctx, 0);
-		} else if (rc != 0) {
-			SPDK_DEBUGLOG(bdev_raid, "Failed to add base bdev %s to RAID bdev %s: %s",
-				      base_bdev_name, req->name, spdk_strerror(-rc));
-			ctx->remaining -= (num_base_bdevs - i - 1);
-			rpc_bdev_raid_create_add_base_bdev_cb(ctx, rc);
-			break;
-		}
-	}
 	return;
 cleanup:
-	free_rpc_bdev_raid_create_ctx(ctx);
+	free_rpc_bdev_raid_create(ctx);
+	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_create", rpc_bdev_raid_create, SPDK_RPC_RUNTIME)
-
-/*
- * Input structure for RPC deleting a raid bdev
- */
-struct rpc_bdev_raid_delete {
-	/* raid bdev name */
-	char *name;
-};
-
-/*
- * brief:
- * free_rpc_bdev_raid_delete function is used to free RPC bdev_raid_delete related parameters
- * params:
- * req - pointer to RPC request
- * params:
- * none
- */
-static void
-free_rpc_bdev_raid_delete(struct rpc_bdev_raid_delete *req)
-{
-	free(req->name);
-}
 
 /*
  * Decoder object for RPC raid_bdev_delete
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_raid_delete, name), spdk_json_decode_string},
-};
-
-struct rpc_bdev_raid_delete_ctx {
-	struct rpc_bdev_raid_delete req;
-	struct spdk_jsonrpc_request *request;
+	{"name", offsetof(struct rpc_bdev_raid_delete_ctx, name), spdk_json_decode_string},
 };
 
 /*
@@ -371,19 +184,18 @@ static void
 bdev_raid_delete_done(void *cb_arg, int rc)
 {
 	struct rpc_bdev_raid_delete_ctx *ctx = cb_arg;
-	struct spdk_jsonrpc_request *request = ctx->request;
 
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to delete raid bdev %s (%d): %s\n",
-			    ctx->req.name, rc, spdk_strerror(-rc));
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+			    ctx->name, rc, spdk_strerror(-rc));
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
 		goto exit;
 	}
 
-	spdk_jsonrpc_send_bool_response(request, true);
+	spdk_jsonrpc_send_bool_response(ctx->request, true);
 exit:
-	free_rpc_bdev_raid_delete(&ctx->req);
+	free_rpc_bdev_raid_delete(ctx);
 	free(ctx);
 }
 
@@ -413,17 +225,17 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_delete_decoders),
-				    &ctx->req)) {
+				    ctx)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	raid_bdev = raid_bdev_find_by_name(ctx->req.name);
+	raid_bdev = raid_bdev_find_by_name(ctx->name);
 	if (raid_bdev == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV,
 						     "raid bdev %s not found",
-						     ctx->req.name);
+						     ctx->name);
 		goto cleanup;
 	}
 
@@ -434,44 +246,17 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_raid_delete(&ctx->req);
+	free_rpc_bdev_raid_delete(ctx);
 	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
 
 /*
- * Base bdevs in RPC bdev_raid_add_base_bdev
- */
-struct rpc_bdev_raid_add_base_bdev {
-	/* Base bdev name */
-	char			*base_bdev;
-
-	/* Raid bdev name */
-	char			*raid_bdev;
-};
-
-/*
- * brief:
- * free_rpc_bdev_raid_add_base_bdev function is to free RPC
- * bdev_raid_add_base_bdev related parameters.
- * params:
- * req - pointer to RPC request
- * returns:
- * none
- */
-static void
-free_rpc_bdev_raid_add_base_bdev(struct rpc_bdev_raid_add_base_bdev *req)
-{
-	free(req->base_bdev);
-	free(req->raid_bdev);
-}
-
-/*
  * Decoder object for RPC bdev_raid_add_base_bdev
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_add_base_bdev_decoders[] = {
-	{"base_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev, base_bdev), spdk_json_decode_string},
-	{"raid_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev, raid_bdev), spdk_json_decode_string},
+	{"base_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev_ctx, base_bdev), spdk_json_decode_string},
+	{"raid_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev_ctx, raid_bdev), spdk_json_decode_string},
 };
 
 static void
@@ -507,7 +292,7 @@ static void
 rpc_bdev_raid_add_base_bdev(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_raid_add_base_bdev req = {};
+	struct rpc_bdev_raid_add_base_bdev_ctx req = {};
 	struct raid_bdev *raid_bdev;
 	int rc;
 
@@ -544,7 +329,7 @@ SPDK_RPC_REGISTER("bdev_raid_add_base_bdev", rpc_bdev_raid_add_base_bdev, SPDK_R
  * Decoder object for RPC bdev_raid_remove_base_bdev
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_remove_base_bdev_decoders[] = {
-	{"name", 0, spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_raid_remove_base_bdev_ctx, name), spdk_json_decode_string},
 };
 
 static void
@@ -574,20 +359,20 @@ static void
 rpc_bdev_raid_remove_base_bdev(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
+	struct rpc_bdev_raid_remove_base_bdev_ctx req = {};
 	struct spdk_bdev_desc *desc;
-	char *name = NULL;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_remove_base_bdev_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_remove_base_bdev_decoders),
-				    &name)) {
+				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		return;
 	}
 
-	rc = spdk_bdev_open_ext(name, false, rpc_bdev_raid_event_cb, NULL, &desc);
-	free(name);
+	rc = spdk_bdev_open_ext(req.name, false, rpc_bdev_raid_event_cb, NULL, &desc);
+	free_rpc_bdev_raid_remove_base_bdev(&req);
 	if (rc != 0) {
 		goto err;
 	}
@@ -605,25 +390,30 @@ err:
 }
 SPDK_RPC_REGISTER("bdev_raid_remove_base_bdev", rpc_bdev_raid_remove_base_bdev, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_bdev_raid_options_decoders[] = {
-	{"process_window_size_kb", offsetof(struct spdk_raid_bdev_opts, process_window_size_kb), spdk_json_decode_uint32, true},
-	{"process_max_bandwidth_mb_sec", offsetof(struct spdk_raid_bdev_opts, process_max_bandwidth_mb_sec), spdk_json_decode_uint32, true},
+static const struct spdk_json_object_decoder rpc_bdev_raid_set_options_decoders[] = {
+	{"process_window_size_kb", offsetof(struct rpc_bdev_raid_set_options_ctx, process_window_size_kb), spdk_json_decode_uint32, true},
+	{"process_max_bandwidth_mb_sec", offsetof(struct rpc_bdev_raid_set_options_ctx, process_max_bandwidth_mb_sec), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_bdev_raid_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
+	struct rpc_bdev_raid_set_options_ctx req = {};
 	struct spdk_raid_bdev_opts opts;
 	int rc;
 
 	raid_bdev_get_opts(&opts);
-	if (params && spdk_json_decode_object(params, rpc_bdev_raid_options_decoders,
-					      SPDK_COUNTOF(rpc_bdev_raid_options_decoders),
-					      &opts)) {
+	req.process_window_size_kb = opts.process_window_size_kb;
+	req.process_max_bandwidth_mb_sec = opts.process_max_bandwidth_mb_sec;
+	if (params && spdk_json_decode_object(params, rpc_bdev_raid_set_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_raid_set_options_decoders),
+					      &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		return;
 	}
+	opts.process_window_size_kb = req.process_window_size_kb;
+	opts.process_max_bandwidth_mb_sec = req.process_max_bandwidth_mb_sec;
 
 	rc = raid_bdev_set_opts(&opts);
 	if (rc) {

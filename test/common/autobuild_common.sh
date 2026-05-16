@@ -49,7 +49,6 @@ _build_native_dpdk() {
 	local external_dpdk_base_dir
 	local compiler_version
 	local compiler
-	local dpdk_kmods
 	local repo='dpdk'
 
 	compiler=${CC:-gcc}
@@ -159,13 +158,8 @@ _build_native_dpdk() {
 		patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/24.07/uio-open-in-primary.patch"
 	fi
 
-	dpdk_kmods="false"
-	if [ "$(uname -s)" = "FreeBSD" ]; then
-		dpdk_kmods="true"
-	fi
-
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
-		-Denable_docs=false -Denable_kmods="$dpdk_kmods" -Dtests=false \
+		-Denable_docs=false -Dtests=false \
 		-Dc_link_args="$dpdk_ldflags" -Dc_args="$dpdk_cflags" \
 		-Dmachine=native -Denable_drivers=$(printf "%s," "${DPDK_DRIVERS[@]}")
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
@@ -224,7 +218,7 @@ _scanbuild_make() {
 	xtrace_disable
 
 	rm -f $out/*files.txt
-	for ent in $(find app examples lib module test -type f | grep -vF ".h"); do
+	for ent in $(find -L app examples lib module test -type f | grep -vF ".h"); do
 		if [[ $ent == lib/env_ocf* ]]; then continue; fi
 		if file -bi $ent | grep -q 'text/x-c'; then
 			echo $ent | sed 's/\.cp\{0,2\}$//g' >> $out/all_c_files.txt
@@ -436,9 +430,7 @@ _build_release() (
 		jobs=$(($(nproc) / 2))
 		case "$(uname -s)" in
 			Linux)
-				# ld.gold is shipped by default with binutils under most of the Linux distros.
-				# But just in case, look for ld.lld as it's still better suited for the LTO
-				# build under clang.
+				# Just in case, look for ld.lld as it's better suited for the LTO build under clang.
 				if ! LD=$(type -P ld.lld); then
 					LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs"
 				fi

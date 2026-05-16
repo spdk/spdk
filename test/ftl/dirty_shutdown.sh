@@ -53,7 +53,7 @@ if [ -n "$nv_cache" ]; then
 fi
 
 l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * 10 / 100 / 1024))
-ftl_construct_args="bdev_ftl_create -b ftl0 -d $split_bdev --l2p_dram_limit $l2p_dram_size_mb"
+ftl_construct_args="bdev_ftl_create -b ftl0 -d $split_bdev --l2p-dram-limit $l2p_dram_size_mb"
 
 [ -n "$uuid" ] && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
@@ -77,7 +77,7 @@ md5sum $testdir/testfile > $testdir/testfile.md5
 $spdk_dd -m 0x2 --if=$testdir/testfile --of=/dev/nbd0 --bs=$block_size --count=$data_size --oflag=direct
 sync /dev/nbd0
 $rpc_py nbd_stop_disk /dev/nbd0
-$rpc_py bdev_ftl_unload -b ftl0
+$rpc_py bdev_ftl_delete -b ftl0
 
 # Force kill bdev service (dirty shutdown) and start it again
 kill -9 $svcpid

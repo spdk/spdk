@@ -119,7 +119,8 @@ iscsi_poll_group_add_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi_co
 
 	rc = spdk_sock_group_add_sock(pg->sock_group, conn->sock, iscsi_conn_sock_cb, conn);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to add sock=%p of conn=%p\n", conn->sock, conn);
+		SPDK_ERRLOG("spdk_sock_group_add_sock() failed, sock=%p, conn=%p, rc %d: %s\n", conn->sock, conn,
+			    rc, spdk_strerror(-rc));
 		return;
 	}
 
@@ -135,7 +136,8 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 	assert(conn->sock != NULL);
 	rc = spdk_sock_group_remove_sock(pg->sock_group, conn->sock);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
+		SPDK_ERRLOG("spdk_sock_group_remove_sock() failed, sock=%p, conn=%p, rc %d: %s\n", conn->sock, conn,
+			    rc, spdk_strerror(-rc));
 	}
 
 	conn->is_stopped = true;
@@ -226,14 +228,14 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	rc = spdk_sock_getaddr(sock, conn->target_addr, sizeof conn->target_addr, NULL,
 			       conn->initiator_addr, sizeof conn->initiator_addr, NULL);
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
+		SPDK_ERRLOG("spdk_sock_getaddr() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		goto error_return;
 	}
 
 	/* set low water mark */
 	rc = spdk_sock_set_recvlowat(conn->sock, 1);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed\n");
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		goto error_return;
 	}
 
@@ -1293,31 +1295,28 @@ int
 iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		     void *buf)
 {
-	int ret;
+	int rc;
 
 	if (bytes == 0) {
 		return 0;
 	}
 
-	ret = spdk_sock_recv(conn->sock, buf, bytes);
-
-	if (ret > 0) {
-		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->trace_id, ret, 0);
-		return ret;
+	rc = spdk_sock_recv(conn->sock, buf, bytes);
+	if (rc > 0) {
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->trace_id, rc, 0);
+		return rc;
 	}
 
-	if (ret < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (rc < 0) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 			return 0;
 		}
 
 		/* For connect reset issue, do not output error log */
-		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(iscsi, "spdk_sock_recv() failed, errno %d: %s\n",
-				      errno, spdk_strerror(errno));
+		if (rc == -ECONNRESET) {
+			SPDK_DEBUGLOG(iscsi, "spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		} else {
-			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+			SPDK_ERRLOG("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		}
 	}
 
@@ -1329,7 +1328,7 @@ int
 iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 		      struct iovec *iov, int iovcnt)
 {
-	int ret;
+	int rc;
 
 	if (iov == NULL || iovcnt == 0) {
 		return 0;
@@ -1340,25 +1339,22 @@ iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 					    iov[0].iov_base);
 	}
 
-	ret = spdk_sock_readv(conn->sock, iov, iovcnt);
-
-	if (ret > 0) {
-		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->trace_id, ret, 0);
-		return ret;
+	rc = spdk_sock_readv(conn->sock, iov, iovcnt);
+	if (rc > 0) {
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->trace_id, rc, 0);
+		return rc;
 	}
 
-	if (ret < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (rc < 0) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 			return 0;
 		}
 
 		/* For connect reset issue, do not output error log */
-		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(iscsi, "spdk_sock_readv() failed, errno %d: %s\n",
-				      errno, spdk_strerror(errno));
+		if (rc == -ECONNRESET) {
+			SPDK_DEBUGLOG(iscsi, "spdk_sock_readv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		} else {
-			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+			SPDK_ERRLOG("spdk_sock_readv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		}
 	}
 

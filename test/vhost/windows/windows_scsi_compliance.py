@@ -4,11 +4,11 @@
 #  All rights reserved.
 #
 
-import os
-import sys
-import re
-import pprint
 import collections
+import os
+import pprint
+import re
+import sys
 
 os.chdir(os.path.join(os.path.dirname(sys.argv[0]), "results"))
 
@@ -57,7 +57,7 @@ for log in scsi_logs:
                 os.mkdir(d_name)
             except OSError:
                 pass
-    except IOError as e:
+    except IOError:
         print("ERROR: While opening log file: {log_file}".format(log_file=log))
         exit(1)
 

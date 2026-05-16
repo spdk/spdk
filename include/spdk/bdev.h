@@ -123,6 +123,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_COPY,
 	SPDK_BDEV_IO_TYPE_NVME_IOV_MD,
 	SPDK_BDEV_IO_TYPE_NVME_NSSR,
+	SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -225,15 +226,19 @@ struct spdk_bdev_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 /**
- * Union for controller attributes field, to list whether bdev supports fdp etc.
- * By convention we match the NVMe definition, allowing other bdevs to use this feature
+ * Controller attributes indicating optional bdev capabilities (e.g. Flexible Data Placement).
+ * The layout follows the NVMe controller attributes definition so that non-NVMe bdevs can
+ * advertise the same features through a common interface.
  */
 union spdk_bdev_nvme_ctratt {
 	uint32_t raw;
 
 	struct {
-		uint32_t reserved	: 19;
-		/* Supports flexible data placement */
+		uint32_t reserved	: 16;
+		/* MDTS and Size Limits Exclude Metadata (MEM) */
+		uint32_t mem		: 1;
+		uint32_t reserved1	: 2;
+		/* Flexible Data Placement Support (FDPS) */
 		uint32_t fdps		: 1;
 		uint32_t reserved2	: 12;
 	} bits;
@@ -280,7 +285,7 @@ struct spdk_bdev_ext_io_opts {
 	/** Size of this structure in bytes */
 	size_t size;
 	/** Memory domain which describes payload in this IO request. bdev must support DMA device type that
-	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domains and \ref spdk_memory_domain_get_dma_device_type
+	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domain_types
 	 * If set, that means that data buffers can't be accessed directly and the memory domain must
 	 * be used to fetch data to local buffers or to translate data to another memory domain */
 	struct spdk_memory_domain *memory_domain;
@@ -323,6 +328,8 @@ enum spdk_bdev_reset_stat_mode {
 	SPDK_BDEV_RESET_STAT_ALL,
 	/** Reset only max and min stats */
 	SPDK_BDEV_RESET_STAT_MAXMIN,
+	/** Reset i/o error stats */
+	SPDK_BDEV_RESET_STAT_ERROR,
 	/** Do not reset stats at all */
 	SPDK_BDEV_RESET_STAT_NONE,
 };
@@ -377,6 +384,9 @@ typedef void (*spdk_bdev_io_timeout_cb)(void *cb_arg, struct spdk_bdev_io *bdev_
 /**
  * Initialize block device modules.
  *
+ * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
+ * This function should be called from the SPDK app thread.
+ *
  * \param cb_fn Called when the initialization is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
@@ -384,6 +394,9 @@ void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg);
 
 /**
  * Perform cleanup work to remove the registered block device modules.
+ *
+ * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
+ * This function should be called from the SPDK app thread.
  *
  * \param cb_fn Called when the removal is complete.
  * \param cb_arg Argument passed to function cb_fn.
@@ -1851,6 +1864,30 @@ int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_ch
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a write uncorrectable request to the bdev on the given channel. This command writes logical
+ * bad block to the device.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write bad block.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ *   * -ENOTSUP - the bdev does not support the command.
+ */
+int spdk_bdev_write_uncorrectable_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or
  * deallocate. This notifies the device that the data in the blocks described is no
  * longer valid. Reading blocks that have been unmapped results in indeterminate data.
@@ -2425,6 +2462,8 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
  * Get SPDK memory domains used by the given bdev. If bdev reports that it uses memory domains
  * that means that it can work with data buffers located in those memory domains.
  *
+ * Deprecated: use \ref spdk_bdev_get_memory_domain_types instead. Will be removed in v26.09.
+ *
  * The user can call this function with \b domains set to NULL and \b array_size set to 0 to get the
  * number of memory domains used by bdev
  *
@@ -2439,6 +2478,27 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
  */
 int spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
 				 int array_size);
+
+/**
+ * Get SPDK memory domain types used by the given bdev. If bdev reports that it uses memory domains
+ * that means that it can work with data buffers located in those memory domains.
+ *
+ * The user can call this function with \b types set to NULL and \b array_size set to 0 to get the
+ * number of memory domain types used by bdev
+ *
+ * \param bdev Block device
+ * \param types Pointer to an array of memory domain types to be filled by this function. The user
+ * should allocate big enough array to keep all memory domain types used by bdev and all underlying
+ * bdevs
+ * \param array_size size of \b types array
+ * \return the number of entries in \b types array or negated errno. If returned value is bigger
+ * than \b array_size passed by the user, the first \b array_size entries in the array are valid
+ * but the list is not complete. The user should increase the size of the array and call this
+ * function again to get the full list.
+ *         -EINVAL if input parameters were invalid
+ */
+int spdk_bdev_get_memory_domain_types(struct spdk_bdev *bdev, enum spdk_dma_device_type *types,
+				      uint32_t array_size);
 
 /**
  * \brief SPDK bdev channel iterator.
@@ -2510,6 +2570,18 @@ union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev);
  * \return Namespace ID or 0 if it's not available.
  */
 uint32_t spdk_bdev_get_nvme_nsid(struct spdk_bdev *bdev);
+
+/**
+ * Get the NVMe I/O Command Set Identifier for the bdev.
+ *
+ * Returns SPDK_NVME_CSI_NVM if the bdev does not have a namespace ID
+ * or does not set a CSI.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return NVMe CSI value.
+ */
+enum spdk_nvme_csi spdk_bdev_get_nvme_csi(const struct spdk_bdev *bdev);
 
 #ifdef __cplusplus
 }

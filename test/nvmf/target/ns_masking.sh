@@ -13,7 +13,7 @@ loops=5
 ns1uuid=$(uuidgen)
 ns2uuid=$(uuidgen)
 
-SUBSYSNQN="nqn.2016-06.io.spdk:cnode1"
+SUBSYSNQN="nqn.2016-06.io.spdk:cnode$$"
 HOSTNQN1="nqn.2016-06.io.spdk:host1"
 HOSTNQN2="nqn.2016-06.io.spdk:host2"
 HOSTID=$(uuidgen)
@@ -114,7 +114,7 @@ ns_is_visible "0x2"
 disconnect
 
 # check two connections with different NQNs to the same subsystem on the same traddr using bdev_nvme
-"$rootdir/build/bin/spdk_tgt" -r "$hostsock" -m 2 &
+run_app_bg "$SPDK_BIN_DIR/spdk_tgt" -r "$hostsock" -m 2
 hostpid=$!
 trap 'killprocess $hostpid; nvmftestfini' SIGINT SIGTERM EXIT
 

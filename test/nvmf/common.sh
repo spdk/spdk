@@ -13,7 +13,7 @@ NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
-NVMF_SERIAL=SPDKISFASTANDAWESOME
+NVMF_SERIAL=SPDKISAWESOME$$
 NVME_HOSTNQN=$(nvme gen-hostnqn)
 NVME_HOSTID=${NVME_HOSTNQN##*:}
 NVME_HOST=("--hostnqn=$NVME_HOSTNQN" "--hostid=$NVME_HOSTID")
@@ -26,7 +26,8 @@ function build_nvmf_app_args() {
 		# We assume that test script is started from sudo
 		NVMF_APP=(sudo -E -u $SUDO_USER "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" "${NVMF_APP[@]}")
 	fi
-	NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
+	NVMF_APP+=(-i "$NVMF_APP_SHM_ID")
+	NVMF_APP+=(${NVMF_APP_TRACE_ARG:--e 0xFFFF})
 
 	NVMF_APP+=("${NO_HUGE[@]}")
 
@@ -493,7 +494,6 @@ function nvmftestinit() {
 			echo "no RDMA NIC for nvmf test"
 			exit 1
 		fi
-		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS --num-shared-buffers 1024"
 	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
@@ -688,7 +688,12 @@ configure_kernel_target() {
 		block_in_use "${block##*/}" || nvme="/dev/${block##*/}"
 	done
 
-	[[ -b $nvme ]]
+	if [[ ! -b $nvme ]]; then
+		echo "INFO: Using ram disk for kernel target"
+		[[ ! -e /sys/module/brd ]] && modprobe brd rd_size=262144 max_part=1 rd_nr=1
+		nvme="/dev/ram0"
+		[[ ! -e $nvme ]]
+	fi
 
 	mkdir "$kernel_subsystem"
 	mkdir "$kernel_namespace"
@@ -793,6 +798,9 @@ get_main_ns_ip() {
 uuid2nguid() {
 	tr -d - <<< "${1^^}"
 }
+
+get_pci_dir() { readlink -e "/sys/class/net/$1/device"; }
+get_rdma_device_name() { ls "$(get_pci_dir $1)/infiniband"; }
 
 ipts() { iptables "$@" -m comment --comment "SPDK_NVMF:$*"; }
 iptr() { iptables-save | grep -v SPDK_NVMF | iptables-restore; }

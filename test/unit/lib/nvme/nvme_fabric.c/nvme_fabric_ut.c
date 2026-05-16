@@ -61,7 +61,7 @@ static struct nvme_request *g_request;
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
-	CU_ASSERT(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_CONTIG);
 
 	g_request = req;
 	memcpy(&g_nvmf_data, req->payload.contig_or_cb_arg, sizeof(g_nvmf_data));
@@ -378,6 +378,7 @@ test_nvme_fabric_qpair_connect(void)
 	CU_ASSERT(!strncmp(g_nvmf_data.subnqn, ctrlr.trid.subnqn, sizeof(ctrlr.trid.subnqn)));
 	/* Make sure we used the qpair's reserved_req, and not one from the STAILQ */
 	CU_ASSERT(g_request == qpair.reserved_req);
+	CU_ASSERT(g_request->qpair_reserved == true);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
 
 	/* qid is adminq */
@@ -400,6 +401,7 @@ test_nvme_fabric_qpair_connect(void)
 	CU_ASSERT(!strncmp(g_nvmf_data.subnqn, ctrlr.trid.subnqn, sizeof(ctrlr.trid.subnqn)));
 	/* Make sure we used the qpair's reserved_req, and not one from the STAILQ */
 	CU_ASSERT(g_request == qpair.reserved_req);
+	CU_ASSERT(g_request->qpair_reserved == true);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
 
 	/* Wait_for completion timeout */

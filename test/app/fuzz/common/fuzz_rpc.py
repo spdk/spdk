@@ -4,21 +4,12 @@
 #  All rights reserved.
 #
 
-from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
-
-import logging
 import argparse
-import sys
+import logging
 import shlex
+import sys
 
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-
-
-def print_array(a):
-    print(" ".join((quote(v) for v in a)))
+from spdk.rpc.client import JSONRPCClient, JSONRPCException
 
 
 def _fuzz_vhost_create_dev(client, socket, is_blk, use_bogus_buffer, use_valid_buffer, test_scsi_tmf, valid_lun):

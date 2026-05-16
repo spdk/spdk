@@ -28,6 +28,12 @@ Status 200 with resultant JSON object included on success.
 
 ## Client side
 
+Simple curl one-liner example:
+
+~~~bash
+$ curl --fail -k --user "user:password" -H "Content-Type: application/json" --data "{\"id\": 1, \"method\": \"bdev_get_bdevs\", \"params\": {\"name\": \"Malloc0\"}}" http://192.168.0.2:8000/
+~~~
+
 Below is a sample python script acting as a client side. It sends `bdev_get_bdevs` method with optional `name`
 parameter and prints JSON object returned from remote_rpc script.
 

@@ -387,6 +387,10 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 					   bdev_io->u.bdev.num_blocks, bdev_part_complete_io,
 					   bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_UNCORRECTABLE:
+		rc = spdk_bdev_write_uncorrectable_blocks(base_desc, base_ch, remapped_offset,
+				bdev_io->u.bdev.num_blocks, bdev_part_complete_io, bdev_io);
+		break;
 	default:
 		SPDK_ERRLOG("unknown I/O type %d\n", bdev_io->type);
 		return SPDK_BDEV_IO_STATUS_FAILED;
@@ -580,6 +584,8 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 	part->internal.bdev.ctxt = part;
 	part->internal.bdev.module = base->module;
 	part->internal.bdev.fn_table = base->fn_table;
+
+	part->internal.bdev.numa = base->bdev->numa;
 
 	part->internal.bdev.md_interleave = base->bdev->md_interleave;
 	part->internal.bdev.md_len = base->bdev->md_len;

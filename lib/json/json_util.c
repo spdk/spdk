@@ -24,6 +24,29 @@ spdk_json_val_len(const struct spdk_json_val *val)
 	return 1;
 }
 
+size_t
+spdk_json_array_count(const struct spdk_json_val *val)
+{
+	const struct spdk_json_val *elem;
+	const struct spdk_json_val *end;
+	size_t count;
+
+	if (val == NULL || val->type != SPDK_JSON_VAL_ARRAY_BEGIN) {
+		return 0;
+	}
+
+	count = 0;
+	elem = val + 1;
+	end = val + val->len + 1;
+
+	while (elem < end && elem->type != SPDK_JSON_VAL_ARRAY_END) {
+		count++;
+		elem += spdk_json_val_len(elem);
+	}
+
+	return count;
+}
+
 bool
 spdk_json_strequal(const struct spdk_json_val *val, const char *str)
 {
@@ -125,11 +148,9 @@ json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
 			assert(state == NUM_STATE_EXP);
 			/* exp_negative = false; */ /* already false by default */
 		} else {
-			uint64_t new_val;
-
 			assert(c >= '0' && c <= '9');
-			new_val = *pval * 10 + c - '0';
-			if (new_val < *pval) {
+			/* Check if adding the current digit would overflow */
+			if (*pval > ((UINT64_MAX - (c - '0')) / 10)) {
 				return -ERANGE;
 			}
 
@@ -137,7 +158,7 @@ json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
 				frac_digits++;
 			}
 
-			*pval = new_val;
+			*pval = *pval * 10 + c - '0';
 		}
 	}
 
@@ -162,13 +183,11 @@ json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
 		}
 	} else { /* positive exponent */
 		while (num->exponent) {
-			uint64_t new_val = num->significand * 10;
-
-			if (new_val < num->significand) {
+			if (num->significand > (UINT64_MAX / 10)) {
 				break;
 			}
 
-			num->significand = new_val;
+			num->significand *= 10;
 			num->exponent--;
 		}
 	}

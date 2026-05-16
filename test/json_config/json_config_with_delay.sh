@@ -32,7 +32,7 @@ tgt_rpc rpc_get_methods -c | grep -q "framework_start_init"
 NOT tgt_rpc bdev_get_bdevs &> /dev/null
 
 # Set additional configuration.
-tgt_rpc bdev_set_options -d -p 8192 -c 128
+tgt_rpc bdev_set_options --no-auto-examine -p 8192 -c 128
 
 tgt_rpc framework_start_init
 
@@ -55,11 +55,11 @@ tgt_rpc rpc_get_methods -c | grep -q "framework_start_init"
 expected_auto_examine="true"
 expected_io_pool_size="16384"
 expected_io_cache_size="256"
-tgt_rpc bdev_set_options -e -p $expected_io_pool_size -c $expected_io_cache_size
+tgt_rpc bdev_set_options --auto-examine -p $expected_io_pool_size -c $expected_io_cache_size
 tgt_rpc framework_start_init
 
 # Check if the configuration override was successful.
-jq_args='.[] | select(.method=="bdev_set_options").params'
+jq_args='map(select(.method=="bdev_set_options")) | .[].params'
 bdev_set_options_params=$(tgt_rpc framework_get_config bdev | jq -r "$jq_args")
 set_auto_examine=$(echo $bdev_set_options_params | jq .bdev_auto_examine)
 set_io_pool_size=$(echo $bdev_set_options_params | jq .bdev_io_pool_size)

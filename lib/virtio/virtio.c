@@ -8,6 +8,7 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 #include "spdk/barrier.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/virtio.h"
 
@@ -297,6 +298,16 @@ virtio_dev_destruct(struct virtio_dev *dev)
 	free(dev->name);
 }
 
+int
+virtio_dev_enable_interrupts(struct virtio_dev *dev, uint16_t max_queues, bool intr_per_vq)
+{
+	if (virtio_dev_backend_ops(dev)->enable_interrupts == NULL) {
+		return -ENOTSUP;
+	}
+
+	return virtio_dev_backend_ops(dev)->enable_interrupts(dev, max_queues, intr_per_vq);
+}
+
 static void
 vq_ring_free_chain(struct virtqueue *vq, uint16_t desc_idx)
 {
@@ -497,6 +508,7 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 				desc->addr  = (uintptr_t)current_base;
 			} else {
 				desc->addr = spdk_vtophys(current_base, &current_length);
+				assert(desc->addr != SPDK_VTOPHYS_ERROR);
 			}
 
 			desc->len = current_length;

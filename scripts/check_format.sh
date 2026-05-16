@@ -96,7 +96,7 @@ function check_permissions() {
 		fname=$(basename -- "$path")
 
 		case ${fname##*.} in
-			c | h | cpp | cc | cxx | hh | hpp | md | html | js | json | svg | Doxyfile | yml | LICENSE | README | conf | in | Makefile | mk | gitignore | go | txt)
+			c | h | cpp | cc | cxx | cu | hh | hpp | md | html | js | json | svg | Doxyfile | yml | LICENSE | README | conf | in | Makefile | mk | gitignore | go | txt)
 				# These file types should never be executable
 				if [ "$perm" -eq 100755 ]; then
 					echo "ERROR: $path is marked executable but is a code file."
@@ -145,7 +145,7 @@ function check_c_style() {
 			rm -f astyle.log
 			touch astyle.log
 			# Exclude DPDK header files copied into our tree
-			git ls-files '*.[ch]' ':!:*/env_dpdk/*/*.h' ':!:include/linux/fuse_kernel.h' \
+			git ls-files '*.[ch]' '*.cu' ':!:*/env_dpdk/*/*.h' ':!:include/linux/fuse_kernel.h' \
 				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
 					--options=.astylerc >> astyle.log
 			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
@@ -175,11 +175,11 @@ function check_comment_style() {
 
 	echo -n "Checking comment style..."
 
-	git grep --line-number -e '\/[*][^ *-]' -- '*.[ch]' > comment.log || true
-	git grep --line-number -e '[^ ][*]\/' -- '*.[ch]' ':!lib/rte_vhost*/*' >> comment.log || true
-	git grep --line-number -e '^[*]' -- '*.[ch]' ':!include/linux/fuse_kernel.h' >> comment.log || true
-	git grep --line-number -e '\s\/\/' -- '*.[ch]' >> comment.log || true
-	git grep --line-number -e '^\/\/' -- '*.[ch]' >> comment.log || true
+	git grep --line-number -e '\/[*][^ *-]' -- '*.[ch]' '*.cu' > comment.log || true
+	git grep --line-number -e '[^ ][*]\/' -- '*.[ch]' '*.cu' ':!lib/rte_vhost*/*' >> comment.log || true
+	git grep --line-number -e '^[*]' -- '*.[ch]' '*.cu' ':!include/linux/fuse_kernel.h' >> comment.log || true
+	git grep --line-number -e '\s\/\/' -- '*.[ch]' '*.cu' >> comment.log || true
+	git grep --line-number -e '^\/\/' -- '*.[ch]' '*.cu' >> comment.log || true
 
 	if [ -s comment.log ]; then
 		echo " Incorrect comment formatting detected"
@@ -215,7 +215,7 @@ function check_trailing_whitespace() {
 
 	echo -n "Checking trailing whitespace in output strings..."
 
-	git grep --line-number -e ' \\n"' -- '*.[ch]' > whitespace.log || true
+	git grep --line-number -e ' \\n"' -- '*.[ch]' '*.cu' > whitespace.log || true
 
 	if [ -s whitespace.log ]; then
 		echo " Incorrect trailing whitespace detected"
@@ -234,7 +234,7 @@ function check_forbidden_functions() {
 
 	echo -n "Checking for use of forbidden library functions..."
 
-	git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\|strtok\)' -- './*.c' ':!lib/rte_vhost*/**' > badfunc.log || true
+	git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\|strtok\)' -- '*.c' '*.cu' ':!lib/rte_vhost*/**' > badfunc.log || true
 	if [ -s badfunc.log ]; then
 		echo " Forbidden library functions detected"
 		cat badfunc.log
@@ -418,7 +418,7 @@ function check_include_style() {
 	local rc=0
 
 	echo -n "Checking #include style..."
-	git grep -I -i --line-number "#include <spdk/" -- '*.[ch]' > scripts/includes.log || true
+	git grep -I -i --line-number "#include <spdk/" -- '*.[ch]' '*.cu' > scripts/includes.log || true
 	if [ -s scripts/includes.log ]; then
 		echo "Incorrect #include syntax. #includes of spdk/ files should use quotes."
 		cat scripts/includes.log
@@ -471,29 +471,36 @@ function check_attr_packed() {
 function check_python_style() {
 	local rc=0
 
-	if hash pycodestyle 2> /dev/null; then
-		PEP8=pycodestyle
-	elif hash pep8 2> /dev/null; then
-		PEP8=pep8
+	if hash ruff 2> /dev/null; then
+		echo -n "Linting Python with ruff..."
+		if out=$(ruff --config "$rootdir/python/pyproject.toml" check 2>&1); then
+			echo " OK"
+		else
+			cat <<- WARN
+				Python formatting errors detected.
+
+				$out
+			WARN
+			rc=1
+		fi
+	else
+		echo "You do not have ruff installed, so ruff style will not be checked!"
 	fi
 
-	if [ -n "${PEP8}" ]; then
-		echo -n "Checking Python style..."
-
-		PEP8_ARGS=" --max-line-length=140"
-
-		error=0
-		git ls-files '*.py' | xargs -P$(nproc) -n1 $PEP8 $PEP8_ARGS > pep8.log || error=1
-		if [ $error -ne 0 ]; then
-			echo " Python formatting errors detected"
-			cat pep8.log
-			rc=1
-		else
+	if hash mypy 2> /dev/null; then
+		echo -n "Performing static type checking with mypy..."
+		if out=$(mypy --config-file "$rootdir/python/pyproject.toml" python 2>&1); then
 			echo " OK"
+		else
+			cat <<- WARN
+				Python formatting errors detected.
+
+				$out
+			WARN
+			rc=1
 		fi
-		rm -f pep8.log
 	else
-		echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
+		echo "You do not have mypy installed, so mypy style will not be checked!"
 	fi
 
 	return $rc
@@ -764,19 +771,23 @@ function check_json_rpc() {
 }
 
 function check_markdown_format() {
-	local rc=0
+	local rc=0 md_files=()
+
+	mapfile -t md_files < <(git ls-files '*.md')
+	mapfile -t md_files < <(get_diffed_dups "${md_files[@]}")
+
+	((${#md_files[@]} > 0)) || return 0
 
 	if hash mdl 2> /dev/null; then
 		echo -n "Checking markdown files format..."
-		mdl -g -s $rootdir/mdl_rules.rb . > mdl.log || true
-		if [ -s mdl.log ]; then
+		local mdl_log
+		if ! mdl_log=$(mdl -s "$rootdir/mdl_rules.rb" "${md_files[@]}" 2>&1); then
 			echo " Errors in .md files detected:"
-			cat mdl.log
+			echo "$mdl_log"
 			rc=1
 		else
 			echo " OK"
 		fi
-		rm -f mdl.log
 	else
 		echo "You do not have markdownlint installed so .md files not being checked!"
 	fi
@@ -788,7 +799,7 @@ function check_rpc_args() {
 	local rc=0
 
 	echo -n "Checking rpc.py argument option names..."
-	grep add_argument scripts/rpc.py | $GNU_GREP -oP "(?<=--)[a-z0-9\-\_]*(?=\')" | grep "_" > badargs.log
+	grep add_argument scripts/rpc.py python/spdk/cli/*.py | $GNU_GREP -oP "(?<=--)[a-z0-9\-_]*(?=['\"])" | grep "_" > badargs.log
 
 	if [[ -s badargs.log ]]; then
 		echo "rpc.py arguments with underscores detected!"
@@ -829,6 +840,7 @@ function get_files_for_lic() {
 	f_suffix+=("*.c")
 	f_suffix+=("*.cpp")
 	f_suffix+=("*.h")
+	f_suffix+=("*.cu")
 	f_suffix+=("*.go")
 	f_suffix+=("*.mk")
 	f_suffix+=("*.pl")

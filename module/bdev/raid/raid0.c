@@ -435,7 +435,7 @@ raid0_resize(struct raid_bdev *raid_bdev)
 }
 
 static struct raid_bdev_module g_raid0_module = {
-	.level = RAID0,
+	.level = SPDK_BDEV_RAID_LEVEL_RAID0,
 	.base_bdevs_min = 1,
 	.memory_domains_supported = true,
 	.dif_supported = true,

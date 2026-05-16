@@ -9,16 +9,17 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/cpuset.h"
+#include "spdk_internal/rpc_autogen.h"
 
-static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder[] = {
-	{"max_subsystems", 0, spdk_json_decode_uint32, true}
+static const struct spdk_json_object_decoder rpc_nvmf_set_max_subsystems_decoders[] = {
+	{"max_subsystems", offsetof(struct rpc_nvmf_set_max_subsystems_ctx, max_subsystems), spdk_json_decode_uint32}
 };
 
 static void
 rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	uint32_t max_subsystems = 0;
+	struct rpc_nvmf_set_max_subsystems_ctx req = {};
 
 	if (g_spdk_nvmf_tgt_conf.opts.max_subsystems != 0) {
 		SPDK_ERRLOG("this RPC must not be called more than once.\n");
@@ -28,8 +29,8 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 	}
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_opts_decoder,
-					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_opts_decoder), &max_subsystems)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_max_subsystems_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_set_max_subsystems_decoders), &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -37,45 +38,18 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	g_spdk_nvmf_tgt_conf.opts.max_subsystems = max_subsystems;
+	g_spdk_nvmf_tgt_conf.opts.max_subsystems = req.max_subsystems;
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 
-static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
-	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool, true},
-	{"identify_uuid_list", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_uuid_list), spdk_json_decode_bool, true},
-	{"get_log_page", offsetof(struct spdk_nvmf_admin_passthru_conf, get_log_page), spdk_json_decode_bool, true},
-	{"get_set_features", offsetof(struct spdk_nvmf_admin_passthru_conf, get_set_features), spdk_json_decode_bool, true},
-	{"sanitize", offsetof(struct spdk_nvmf_admin_passthru_conf, sanitize), spdk_json_decode_bool, true},
-	{"security_send_recv", offsetof(struct spdk_nvmf_admin_passthru_conf, security_send_recv), spdk_json_decode_bool, true},
-	{"fw_update", offsetof(struct spdk_nvmf_admin_passthru_conf, fw_update), spdk_json_decode_bool, true},
-	{"nvme_mi", offsetof(struct spdk_nvmf_admin_passthru_conf, nvme_mi), spdk_json_decode_bool, true},
-	{"vendor_specific", offsetof(struct spdk_nvmf_admin_passthru_conf, vendor_specific), spdk_json_decode_bool, true},
-};
-
-static int
-decode_admin_passthru(const struct spdk_json_val *val, void *out)
-{
-	struct spdk_nvmf_admin_passthru_conf *req = (struct spdk_nvmf_admin_passthru_conf *)out;
-
-	if (spdk_json_decode_object(val, admin_passthru_decoder,
-				    SPDK_COUNTOF(admin_passthru_decoder),
-				    req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		return -1;
-	}
-
-	return 0;
-}
-
 static int
 decode_discovery_filter(const struct spdk_json_val *val, void *out)
 {
 	uint32_t *_filter = out;
-	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
 	char *tokens = spdk_json_strdup(val);
 	char *tok;
 	char *sp = NULL;
@@ -89,21 +63,21 @@ decode_discovery_filter(const struct spdk_json_val *val, void *out)
 	tok = strtok_r(tokens, ",", &sp);
 	while (tok) {
 		if (strncmp(tok, "match_any", 9) == 0) {
-			if (filter != SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY) {
+			if (filter != SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY) {
 				goto out;
 			}
-			filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+			filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
 			all_specified = true;
 		} else {
 			if (all_specified) {
 				goto out;
 			}
 			if (strncmp(tok, "transport", 9) == 0) {
-				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE;
+				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE);
 			} else if (strncmp(tok, "address", 7) == 0) {
-				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
+				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS);
 			} else if (strncmp(tok, "svcid", 5) == 0) {
-				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
 			} else {
 				SPDK_ERRLOG("Invalid value %s\n", tok);
 				goto out;
@@ -168,78 +142,12 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 	return -1;
 }
 
-static int
-decode_digest(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	char *digest = NULL;
-	int rc;
-
-	rc = spdk_json_decode_string(val, &digest);
-	if (rc != 0) {
-		return rc;
-	}
-
-	rc = spdk_nvme_dhchap_get_digest_id(digest);
-	if (rc >= 0) {
-		*flags |= SPDK_BIT(rc);
-		rc = 0;
-	}
-	free(digest);
-
-	return rc;
-}
-
-static int
-decode_digest_array(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	size_t count;
-
-	*flags = 0;
-
-	return spdk_json_decode_array(val, decode_digest, out, 32, &count, 0);
-}
-
-static int
-decode_dhgroup(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	char *dhgroup = NULL;
-	int rc;
-
-	rc = spdk_json_decode_string(val, &dhgroup);
-	if (rc != 0) {
-		return rc;
-	}
-
-	rc = spdk_nvme_dhchap_get_dhgroup_id(dhgroup);
-	if (rc >= 0) {
-		*flags |= SPDK_BIT(rc);
-		rc = 0;
-	}
-	free(dhgroup);
-
-	return rc;
-}
-
-static int
-decode_dhgroup_array(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *flags = out;
-	size_t count;
-
-	*flags = 0;
-
-	return spdk_json_decode_array(val, decode_dhgroup, out, 32, &count, 0);
-}
-
-static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
-	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
+static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
+	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
-	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), decode_digest_array, true},
-	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), decode_dhgroup_array, true},
+	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests_bitmask, true},
+	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups_bitmask, true},
 };
 
 static void
@@ -251,8 +159,8 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 	memcpy(&conf, &g_spdk_nvmf_tgt_conf, sizeof(conf));
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_conf_decoder,
-					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_conf_decoder), &conf)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_config_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_set_config_decoders), &conf)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -266,31 +174,25 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_set_config", rpc_nvmf_set_config, SPDK_RPC_STARTUP)
 
-struct nvmf_rpc_set_crdt {
-	uint16_t crdt1;
-	uint16_t crdt2;
-	uint16_t crdt3;
-};
-
-static const struct spdk_json_object_decoder rpc_set_crdt_opts_decoders[] = {
-	{"crdt1", offsetof(struct nvmf_rpc_set_crdt, crdt1), spdk_json_decode_uint16, true},
-	{"crdt2", offsetof(struct nvmf_rpc_set_crdt, crdt2), spdk_json_decode_uint16, true},
-	{"crdt3", offsetof(struct nvmf_rpc_set_crdt, crdt3), spdk_json_decode_uint16, true},
+static const struct spdk_json_object_decoder rpc_nvmf_set_crdt_decoders[] = {
+	{"crdt1", offsetof(struct rpc_nvmf_set_crdt_ctx, crdt1), spdk_json_decode_uint16, true},
+	{"crdt2", offsetof(struct rpc_nvmf_set_crdt_ctx, crdt2), spdk_json_decode_uint16, true},
+	{"crdt3", offsetof(struct rpc_nvmf_set_crdt_ctx, crdt3), spdk_json_decode_uint16, true},
 };
 
 static void
 rpc_nvmf_set_crdt(struct spdk_jsonrpc_request *request,
 		  const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_set_crdt rpc_set_crdt;
+	struct rpc_nvmf_set_crdt_ctx rpc_set_crdt;
 
 	rpc_set_crdt.crdt1 = 0;
 	rpc_set_crdt.crdt2 = 0;
 	rpc_set_crdt.crdt3 = 0;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_set_crdt_opts_decoders,
-					    SPDK_COUNTOF(rpc_set_crdt_opts_decoders), &rpc_set_crdt)) {
+		if (spdk_json_decode_object(params, rpc_nvmf_set_crdt_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_set_crdt_decoders), &rpc_set_crdt)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");

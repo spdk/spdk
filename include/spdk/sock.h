@@ -15,7 +15,6 @@
 #include "spdk/queue.h"
 #include "spdk/json.h"
 #include "spdk/assert.h"
-#include "spdk/thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -262,6 +261,46 @@ struct spdk_sock_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 56, "Incorrect size");
 
 /**
+ * Options for the socket library.
+ */
+struct spdk_sock_initialize_opts {
+	/**
+	 * The size of spdk_sock_initialize_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 */
+	size_t opts_size;
+
+	/*
+	 * Enable or disable interrupt mode.
+	 */
+	bool enable_interrupt_mode;
+};
+
+/**
+ * Initialize the default value of socket initialization opts.
+ *
+ * \param opts Data structure where SPDK will initialize the default socket initialization options.
+ * \param opts_size Size of the opts structure being passed.
+ */
+void spdk_sock_get_default_initialize_opts(struct spdk_sock_initialize_opts *opts,
+		size_t opts_size);
+
+/**
+ * Initialize the socket module.
+ *
+ * This is an optional call that may be called before any use of the socket library.
+ *
+ * This function is not thread safe and should be called only once. Subsequent calls will succeed
+ * if the options passed in are the same as the first invocation, otherwise it will return -EALREADY.
+ *
+ * \param opts Options for the socket library.
+ *
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_sock_initialize(struct spdk_sock_initialize_opts *opts);
+
+/**
  * Initialize the default value of opts.
  *
  * \param opts Data structure where SPDK will initialize the default sock options.
@@ -277,9 +316,6 @@ void spdk_sock_get_default_opts(struct spdk_sock_opts *opts);
  *
  * This function is allowed only when connection is established.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to get address.
  * \param saddr A pointer to the buffer to hold the address of server.
  * \param slen Length of the buffer 'saddr'.
@@ -288,7 +324,7 @@ void spdk_sock_get_default_opts(struct spdk_sock_opts *opts);
  * \param clen Length of the buffer 'caddr'.
  * \param cport A pointer(May be NULL) to the buffer to hold the port info of server.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
 		      char *caddr, int clen, uint16_t *cport);
@@ -424,58 +460,46 @@ int32_t spdk_sock_get_numa_id(struct spdk_sock *sock);
 /**
  * Close a socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to close.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_close(struct spdk_sock **sock);
 
 /**
  * Flush a socket from data gathered in previous writev_async calls.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to flush.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_flush(struct spdk_sock *sock);
 
 /**
  * Receive a message from the given socket.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to receive message.
  * \param buf Pointer to a buffer to hold the data.
  * \param len Length of the buffer.
  *
- * \return the length of the received message on success, -1 on failure with errno set.
+ * \return the length of the received message on success, negative errno value on failure.
  */
 ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 
 /**
  * Write message to the given socket from the I/O vector array.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to write to.
  * \param iov I/O vector.
  * \param iovcnt Number of I/O vectors in the array.
  *
- * \return the length of written message on success, -1 on failure with errno set.
+ * \return the length of written message on success, negative errno value on failure.
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
@@ -491,14 +515,13 @@ void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *re
 /**
  * Read message from the given socket to the I/O vector array.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check errno matching EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to receive message.
  * \param iov I/O vector.
  * \param iovcnt Number of I/O vectors in the array.
  *
- * \return the length of the received message on success, -1 on failure.
+ * \return the length of the received message on success, negative errno value on failure.
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
@@ -519,55 +542,43 @@ ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
  * This code path will only work if the recvbuf is disabled. To disable
  * the recvbuf, call spdk_sock_set_recvbuf with a size of 0.
  *
- * On failure check errno matching EAGAIN to determine failure is retryable.
- *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
+ * On failure check rc matching -EAGAIN to determine failure is retryable.
  *
  * \param sock Socket to receive from.
  * \param buf Populated with the next portion of the stream
  * \param ctx Returned context pointer from when the buffer was provided.
  *
- * \return On success, the length of the buffer placed into buf, On failure, -1 with errno set.
+ * \return On success, the length of the buffer placed into buf, negative errno value on failure.
  */
 int spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx);
 
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to set for.
  * \param nbytes Value for recvlowat.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes);
 
 /**
  * Set receive buffer size for the given socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to set buffer size for.
  * \param sz Buffer size in bytes.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz);
 
 /**
  * Set send buffer size for the given socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock Socket to set buffer size for.
  * \param sz Buffer size in bytes.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
 
@@ -631,15 +642,12 @@ void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
 /**
  * Add a socket to the group.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param group Socket group.
  * \param sock Socket to add.
  * \param cb_fn Called when the operation completes.
  * \param cb_arg Argument passed to the callback function.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			     spdk_sock_cb cb_fn, void *cb_arg);
@@ -650,7 +658,7 @@ int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *so
  * \param group Socket group.
  * \param sock Socket to remove.
  *
- * \return 0 on success, -1 on failure with errno set.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock);
 
@@ -658,15 +666,12 @@ int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock 
  * Provides a buffer to the group to be used in its receive pool.
  * See spdk_sock_recv_next() for more details.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param group Socket group.
  * \param buf Pointer the buffer provided.
  * \param len Length of the buffer.
  * \param ctx Pointer that will be returned in spdk_sock_recv_next()
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t len, void *ctx);
 
@@ -675,35 +680,29 @@ int spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t
  *
  * \param group Group to poll.
  *
- * \return the number of events on success, -1 on failure.
+ * \return the number of events on success, negative errno value on failure.
  */
 int spdk_sock_group_poll(struct spdk_sock_group *group);
 
 /**
  * Poll incoming events up to max_events for each registered socket.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param group Group to poll.
  * \param max_events Number of maximum events to poll for each socket.
  *
- * \return the number of events on success, -1 on failure.
+ * \return the number of events on success, negative errno value on failure.
  */
 int spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events);
 
 /**
  * Close all registered sockets of the group and then remove the group.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * If any sockets were added to the group by \ref spdk_sock_group_add_sock
  * these must be removed first by using \ref spdk_sock_group_remove_sock.
  *
  * \param group Group to close.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_group_close(struct spdk_sock_group **group);
 
@@ -712,14 +711,11 @@ int spdk_sock_group_close(struct spdk_sock_group **group);
  *
  * This function is allowed only when connection is established.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param sock The socket
  * \param group Returns the optimal sock group. If there is no optimal sock group, returns NULL.
  * \param hint When return is 0 and group is set to NULL, hint is used to set optimal sock group for the socket.
  *
- * \return 0 on success. Negated errno on failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group,
 				     struct spdk_sock_group *hint);
@@ -727,28 +723,22 @@ int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_gr
 /**
  * Get current socket implementation options.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param impl_name The socket implementation to use, such as "posix".
  * \param opts Pointer to allocated spdk_sock_impl_opts structure that will be filled with actual values.
  * \param len On input specifies size of passed opts structure. On return it is set to actual size that was filled with values.
  *
- * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_impl_get_opts(const char *impl_name, struct spdk_sock_impl_opts *opts, size_t *len);
 
 /**
  * Set socket implementation options.
  *
- * Returning -1 and setting errno is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
  * \param impl_name The socket implementation to use, such as "posix".
  * \param opts Pointer to allocated spdk_sock_impl_opts structure with new options values.
  * \param len Size of passed opts structure.
  *
- * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts *opts,
 			    size_t len);
@@ -760,7 +750,7 @@ int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_o
  * (such as @ref spdk_sock_connect, @ref spdk_sock_listen and etc) ignores the default value set by this function.
  *
  * \param impl_name The socket implementation to use, such as "posix".
- * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ * \return 0 on success, negative errno value on failure.
  */
 int spdk_sock_set_default_impl(const char *impl_name);
 
@@ -779,40 +769,15 @@ const char *spdk_sock_get_default_impl(void);
 void spdk_sock_write_config_json(struct spdk_json_write_ctx *w);
 
 /**
- * Register an spdk_interrupt with specific event types on the current thread for the given socket group.
+ * Obtain an fd that becomes ready when one of the sockets in this group is ready. This fd
+ * is suitable for use in APIs such as spdk_interrupt_register_for_events().
  *
- * Returning non-zero is deprecated and will be changed in the 26.01 release.
- * This function will return negative errno values instead.
- *
- * The provided function will be called any time one of specified event types triggers on
- * the associated file descriptor.
- * Event types argument is a bit mask composed by ORing together
- * enum spdk_interrupt_event_types values.
  *
  * \param group Socket group.
- * \param events Event notification types.
- * \param fn Called each time there are events in spdk_interrupt.
- * \param arg Function argument for fn.
- * \param name Human readable name for the spdk_interrupt.
  *
- * \return 0 on success or non-zero on failure.
+ * \return fd (>0) on success or negated errno on failure.
  */
-int spdk_sock_group_register_interrupt(struct spdk_sock_group *group, uint32_t events,
-				       spdk_interrupt_fn fn, void *arg, const char *name);
-
-/*
- * \brief Register an spdk_interrupt on the current thread for the given socket group
- * and with setting its name to the string of the spdk_interrupt function name.
- */
-#define SPDK_SOCK_GROUP_REGISTER_INTERRUPT(sock, events, fn, arg)	\
-	spdk_sock_group_register_interrupt(sock, events, fn, arg, #fn)
-
-/**
- * Unregister an spdk_interrupt for the given socket group from the current thread.
- *
- * \param group Socket group.
- */
-void spdk_sock_group_unregister_interrupt(struct spdk_sock_group *group);
+int spdk_sock_group_get_interruptfd(struct spdk_sock_group *group);
 
 #ifdef __cplusplus
 }

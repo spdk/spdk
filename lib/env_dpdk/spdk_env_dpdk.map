@@ -64,6 +64,7 @@
 	spdk_pci_vmd_get_driver;
 	spdk_pci_idxd_get_driver;
 	spdk_pci_ioat_get_driver;
+	spdk_pci_ae4dma_get_driver;
 	spdk_pci_virtio_get_driver;
 	spdk_pci_enumerate;
 	spdk_pci_for_each_device;
@@ -130,6 +131,7 @@
 	spdk_env_dpdk_post_fini;
 	spdk_env_dpdk_external_init;
 	spdk_env_dpdk_dump_mem_stats;
+	spdk_env_dpdk_get_mem_stats;
 
 	local: *;
 };

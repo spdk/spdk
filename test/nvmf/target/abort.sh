@@ -27,8 +27,8 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPOR
 $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # Run abort application
-$SPDK_EXAMPLE_DIR/abort -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
-	-c 0x1 -t 1 -l warning -q 128 "${NO_HUGE[@]}"
+run_app "$SPDK_EXAMPLE_DIR/abort" -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
+	-c 0x1 -t 1 -l warning -q 128
 
 # Clean up
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode0

@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2025, Oracle and/or its affiliates.
  */
 
 #ifndef __NVMF_INTERNAL_H__
@@ -38,6 +39,9 @@
 #define __spdk_nonstring
 #endif
 
+#define NVMF_CC_RESET_SHN_TIMEOUT_IN_MS	10000
+#define NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS	(NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + 5000)
+
 enum spdk_nvmf_tgt_state {
 	NVMF_TGT_IDLE = 0,
 	NVMF_TGT_RUNNING,
@@ -55,6 +59,28 @@ enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_RESUMING,
 	SPDK_NVMF_SUBSYSTEM_DEACTIVATING,
 	SPDK_NVMF_SUBSYSTEM_NUM_STATES,
+};
+
+enum nvmf_auth_key_type {
+	NVMF_AUTH_KEY_HOST,
+	NVMF_AUTH_KEY_CTRLR,
+};
+
+/*
+ * Asynchronous Event Mask Bit
+ */
+enum spdk_nvme_async_event_mask_bit {
+	/* Mask Namespace Change Notification */
+	SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT		= 0,
+	/* Mask Asymmetric Namespace Access Change Notification */
+	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT		= 1,
+	/* Mask Discovery Log Change Notification */
+	SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT	= 2,
+	/* Mask Reservation Log Page Available Notification */
+	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT	= 3,
+	/* Mask Error Event */
+	SPDK_NVME_ASYNC_EVENT_ERROR_MASK_BIT			= 4,
+	/* 4 - 63 Reserved */
 };
 
 RB_HEAD(subsystem_tree, spdk_nvmf_subsystem);
@@ -117,10 +143,16 @@ struct spdk_nvmf_subsystem_listener {
 };
 
 struct spdk_nvmf_referral {
+	/* Target to which the referral belongs */
+	struct spdk_nvmf_tgt *tgt;
 	/* Discovery Log Page Entry for this referral */
 	struct spdk_nvmf_discovery_log_page_entry entry;
 	/* Transport ID */
 	struct spdk_nvme_transport_id trid;
+	/* Visible to these hosts */
+	TAILQ_HEAD(, spdk_nvmf_host) hosts;
+	/* Visible to all hosts or not */
+	bool allow_any_host;
 	TAILQ_ENTRY(spdk_nvmf_referral) link;
 };
 
@@ -137,6 +169,12 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_uuid		reg_hostid[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 	uint64_t			num_blocks;
 	uint32_t			anagrpid;
+	struct {
+		/* Generational counter for preempted hostids list */
+		uint32_t			hostids_gen;
+		/* Count of IOs preempt-and-abort is waiting on */
+		uint64_t			io_waiting;
+	} preempt_abort;
 
 	/* I/O outstanding to this namespace */
 	uint64_t			io_outstanding;
@@ -170,8 +208,15 @@ struct spdk_nvmf_registrant {
 struct spdk_nvmf_reservation_preempt_abort_info {
 	/* preempted controllers */
 	struct spdk_uuid hostids[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	struct {
+		uint8_t io_waiting_done:	1; /* IO waiting is complete */
+		uint8_t rsvd_1:			7;
+	};
+	uint8_t rsvd_2[2];
 	uint8_t hostids_cnt;
 	uint32_t hostids_gen; /* Generational counter every time the list changes */
+	struct spdk_poller *io_waiting_timer;
+	uint64_t io_waiting_timeout_ticks;
 };
 SPDK_STATIC_ASSERT(SPDK_NVMF_MAX_NUM_REGISTRANTS <= UINT8_MAX, "hostids_cnt storage type");
 
@@ -289,6 +334,11 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
 
+#define NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) \
+	for ((subsystem) = spdk_nvmf_subsystem_get_first(tgt); \
+	     (subsystem) != NULL; \
+	     (subsystem) = spdk_nvmf_subsystem_get_next(subsystem))
+
 #define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
 
 struct nvmf_subsystem_state_change_ctx {
@@ -305,25 +355,31 @@ struct nvmf_subsystem_state_change_ctx {
 	TAILQ_ENTRY(nvmf_subsystem_state_change_ctx)	link;
 };
 
+enum nvmf_subsystem_destroy_state {
+	NVMF_SUBSYSTEM_DESTROY_NOT_STARTED = 0,
+	NVMF_SUBSYSTEM_DESTROY_PENDING,
+	NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS,
+};
+
 struct spdk_nvmf_subsystem {
 	struct spdk_thread				*thread;
 
 	uint32_t					id;
 
 	enum spdk_nvmf_subsystem_state			state;
-	enum spdk_nvmf_subtype				subtype;
 
 	uint16_t					next_cntlid;
 	struct {
 		uint8_t					allow_any_listener : 1;
-		uint8_t					ana_reporting : 1;
 		uint8_t					reserved : 6;
 	} flags;
 
 	/* Protected against concurrent access by ->mutex */
 	bool						allow_any_host;
 
-	bool						destroying;
+	/* Tracks subsystem destruction state */
+	enum nvmf_subsystem_destroy_state		destroy_state;
+	/* Set when destroy() must wait for active controllers to disconnect */
 	bool						async_destroy;
 
 	/* FDP related fields */
@@ -337,13 +393,13 @@ struct spdk_nvmf_subsystem {
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns				**ns;
+
 	uint32_t					max_nsid;
 
 	uint16_t					min_cntlid;
 	uint16_t					max_cntlid;
 
-	uint64_t					max_discard_size_kib;
-	uint64_t					max_write_zeroes_size_kib;
+	struct spdk_nvmf_subsystem_opts			opts;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 
@@ -363,8 +419,6 @@ struct spdk_nvmf_subsystem {
 	nvmf_subsystem_destroy_cb			async_destroy_cb;
 	void						*async_destroy_cb_arg;
 
-	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
-	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
 	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	/* Array of namespace count per ANA group of size max_nsid indexed anagrpid - 1
@@ -375,9 +429,9 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, nvmf_subsystem_state_change_ctx)	state_changes;
 	/* In-band authentication sequence number, protected by ->mutex */
 	uint32_t					auth_seqnum;
-	bool						passthrough;
-	bool						nssr_enabled;
 };
+
+extern spdk_nvmf_custom_discovery_filter g_custom_discovery_filter;
 
 static int
 subsystem_cmp(struct spdk_nvmf_subsystem *subsystem1, struct spdk_nvmf_subsystem *subsystem2)
@@ -401,10 +455,13 @@ void nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 void nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 
-int nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-				uint32_t iovcnt, uint64_t offset, uint32_t length,
-				struct spdk_nvme_transport_id *cmd_source_trid);
+void nvmf_get_discovery_log_page_async(struct spdk_nvmf_request *req,
+				       uint64_t offset, uint32_t length,
+				       struct spdk_nvme_transport_id *cmd_source_trid,
+				       bool rae);
 
+void nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
+			   enum spdk_nvme_async_event_mask_bit mask);
 void nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 int nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
@@ -449,17 +506,14 @@ void nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 bool nvmf_subsystem_host_auth_required(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
-enum nvmf_auth_key_type {
-	NVMF_AUTH_KEY_HOST,
-	NVMF_AUTH_KEY_CTRLR,
-};
 struct spdk_key *nvmf_subsystem_get_dhchap_key(struct spdk_nvmf_subsystem *subsys, const char *nqn,
 		enum nvmf_auth_key_type type);
 struct spdk_nvmf_subsystem_listener *nvmf_subsystem_find_listener(
 	struct spdk_nvmf_subsystem *subsystem,
 	const struct spdk_nvme_transport_id *trid);
+bool nvmf_subsystem_listener_is_active(const struct spdk_nvmf_subsystem_listener *listener);
 bool nvmf_subsystem_zone_append_supported(struct spdk_nvmf_subsystem *subsystem);
-int nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
+void nvmf_subsystem_poll_group_update_ns_reservation(const struct spdk_nvmf_ns *ns,
 		struct spdk_nvmf_subsystem_pg_ns_info *pg_ns);
 struct spdk_nvmf_listener *nvmf_transport_find_listener(
 	struct spdk_nvmf_transport *transport,
@@ -480,6 +534,8 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 				       enum spdk_nvme_reservation_notification_log_page_type type);
 
 bool nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns);
+struct spdk_nvme_rescap nvmf_ns_get_rescap(struct spdk_nvmf_ns *ns);
+size_t nvmf_ns_registrants_get_count(const struct spdk_nvmf_ns *ns);
 
 static inline struct spdk_nvmf_host *
 nvmf_ns_find_host(struct spdk_nvmf_ns *ns, const char *hostnqn)
@@ -659,5 +715,8 @@ nvmf_get_transport_poll_group(struct spdk_nvmf_poll_group *group,
  * \return unique controller id or 0xFFFF when all controller ids are in use
  */
 uint16_t nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem);
+
+int nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size);
+int nvmf_subsystem_copy_mn(char *dst, const char *mn, size_t size);
 
 #endif /* __NVMF_INTERNAL_H__ */

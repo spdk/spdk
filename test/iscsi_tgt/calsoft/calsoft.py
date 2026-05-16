@@ -4,12 +4,12 @@
 #  All rights reserved.
 #
 
-import os
-import time
-import sys
-import subprocess
-import threading
 import json
+import os
+import subprocess
+import sys
+import threading
+import time
 
 CALSOFT_BIN_PATH = "/usr/local/calsoft/iscsi-pcts-v1.5/bin"
 
@@ -96,7 +96,7 @@ def main():
     parallel_cases = nopin_cases
 
     for test_case in serial_cases:
-        thread_obj = threading.Thread(target=run_case, args=(test_case, case_result_list, log_dir, ))
+        thread_obj = threading.Thread(target=run_case, args=(test_case, case_result_list, log_dir ))
         thread_obj.start()
         thread_obj.join(30)
         if thread_obj.is_alive():
@@ -105,7 +105,7 @@ def main():
             exit(1)
 
     for test_case in parallel_cases:
-        thread_obj = threading.Thread(target=run_case, args=(test_case, case_result_list, log_dir, ))
+        thread_obj = threading.Thread(target=run_case, args=(test_case, case_result_list, log_dir ))
         thread_obj.start()
         time.sleep(0.02)
         thread_objs.append(thread_obj)

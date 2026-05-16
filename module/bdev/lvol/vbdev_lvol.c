@@ -620,7 +620,6 @@ vbdev_lvol_unregister(void *ctx)
 	assert(lvol != NULL);
 	lvol_bdev = SPDK_CONTAINEROF(lvol->bdev, struct lvol_bdev, bdev);
 
-	spdk_bdev_alias_del_all(lvol->bdev);
 	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol_bdev);
 
 	/* return 1 to indicate we have an operation that must finish asynchronously before the
@@ -1084,6 +1083,29 @@ vbdev_lvol_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, in
 	return base_cnt + esnap_cnt;
 }
 
+/* TODO: when get_memory_domains() logic is removed, fix get_memory_domain_types() here
+ * to only report the types supported by both the base bdev and its esnap parent (if it
+ * exists).
+ */
+static int
+vbdev_lvol_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types, uint32_t array_size)
+{
+	struct spdk_memory_domain *domains[16] = {};
+	uint32_t i;
+	int rc;
+
+	rc = vbdev_lvol_get_memory_domains(ctx, domains, SPDK_COUNTOF(domains));
+	if (rc <= 0) {
+		return rc;
+	}
+
+	for (i = 0; i < spdk_min((uint32_t)rc, array_size); i++) {
+		types[i] = spdk_memory_domain_get_dma_device_type(domains[i]);
+	}
+
+	return rc;
+}
+
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.destruct		= vbdev_lvol_unregister,
 	.io_type_supported	= vbdev_lvol_io_type_supported,
@@ -1092,6 +1114,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.dump_info_json		= vbdev_lvol_dump_info_json,
 	.write_config_json	= vbdev_lvol_write_config_json,
 	.get_memory_domains	= vbdev_lvol_get_memory_domains,
+	.get_memory_domain_types = vbdev_lvol_get_memory_domain_types,
 };
 
 static void
@@ -1177,6 +1200,8 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = &g_lvol_if;
 	bdev->phys_blocklen = lvol->lvol_store->bs_dev->phys_blocklen;
+
+	bdev->numa = lvs_bdev->bdev->numa;
 
 	/* Set default bdev reset waiting time. This value indicates how much
 	 * time a reset should wait before forcing a reset down to the underlying

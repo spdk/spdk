@@ -163,6 +163,7 @@ hello_sock_close_timeout_poll(void *arg)
 
 	spdk_poller_unregister(&ctx->time_out);
 	spdk_poller_unregister(&ctx->poller_in);
+	spdk_sock_group_remove_sock(ctx->group, ctx->sock);
 	spdk_sock_close(&ctx->sock);
 	spdk_sock_group_close(&ctx->group);
 
@@ -182,8 +183,8 @@ hello_sock_quit(struct hello_context_t *ctx, int rc)
 	return 0;
 }
 
-static int
-hello_sock_recv_poll(void *arg)
+static void
+hello_sock_recv_poll(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct hello_context_t *ctx = arg;
 	int rc;
@@ -192,11 +193,10 @@ hello_sock_recv_poll(void *arg)
 	/*
 	 * Get response
 	 */
-	rc = spdk_sock_recv(ctx->sock, buf_in, sizeof(buf_in) - 1);
-
+	rc = spdk_sock_recv(sock, buf_in, sizeof(buf_in) - 1);
 	if (rc <= 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			return SPDK_POLLER_IDLE;
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
+			return;
 		}
 
 		/* This poller drains recv buffer until hello_sock_close_timeout_poll()
@@ -205,9 +205,9 @@ hello_sock_recv_poll(void *arg)
 		if (ctx->rc == 0) {
 			hello_sock_quit(ctx, -1);
 		}
-		SPDK_ERRLOG_RATELIMIT("spdk_sock_recv() failed, errno %d: %s\n",
-				      errno, spdk_strerror(errno));
-		return SPDK_POLLER_BUSY;
+
+		SPDK_ERRLOG_RATELIMIT("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+		return;
 	}
 
 	if (rc > 0) {
@@ -216,7 +216,7 @@ hello_sock_recv_poll(void *arg)
 		printf("%s", buf_in);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return;
 }
 
 static int
@@ -231,13 +231,12 @@ hello_sock_writev_poll(void *arg)
 	if (ctx->n != 0) {
 		iov.iov_base = ctx->buf;
 		iov.iov_len = ctx->n;
-		errno = 0;
 		rc = spdk_sock_writev(ctx->sock, &iov, 1);
 		if (rc < 0) {
-			if (errno == EAGAIN) {
+			if (rc == -EAGAIN) {
 				return SPDK_POLLER_BUSY;
 			}
-			SPDK_ERRLOG("Write to socket failed. Closing connection...\n");
+			SPDK_ERRLOG("spdk_sock_writev failed, rc %d: %s. Closing connection...\n", rc, spdk_strerror(-rc));
 			hello_sock_quit(ctx, -1);
 			return SPDK_POLLER_IDLE;
 		}
@@ -245,8 +244,9 @@ hello_sock_writev_poll(void *arg)
 		ctx->n = 0;
 	}
 
+
 	n = read(STDIN_FILENO, ctx->buf, BUFFER_SIZE);
-	if (n == 0 || !g_is_running) {
+	if (n <= 0 || !g_is_running) {
 		/* EOF */
 		SPDK_NOTICELOG("Closing connection...\n");
 		hello_sock_quit(ctx, 0);
@@ -258,13 +258,12 @@ hello_sock_writev_poll(void *arg)
 		 */
 		iov.iov_base = ctx->buf;
 		iov.iov_len = n;
-		errno = 0;
 		rc = spdk_sock_writev(ctx->sock, &iov, 1);
 		if (rc < 0) {
-			if (errno == EAGAIN) {
+			if (rc == -EAGAIN) {
 				ctx->n = n;
 			} else {
-				SPDK_ERRLOG("Write to socket failed. Closing connection...\n");
+				SPDK_ERRLOG("spdk_sock_writev failed, rc %d: %s. Closing connection...\n", rc, spdk_strerror(-rc));
 				hello_sock_quit(ctx, -1);
 				return SPDK_POLLER_IDLE;
 			}
@@ -272,6 +271,25 @@ hello_sock_writev_poll(void *arg)
 		if (rc > 0) {
 			ctx->bytes_out += rc;
 		}
+	}
+
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
+static int
+hello_sock_group_poll(void *arg)
+{
+	struct hello_context_t *ctx = arg;
+	int rc;
+
+	if (!g_is_running) {
+		hello_sock_quit(ctx, 0);
+		return SPDK_POLLER_IDLE;
+	}
+
+	rc = spdk_sock_group_poll(ctx->group);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to poll sock_group=%p\n", ctx->group);
 	}
 
 	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
@@ -286,6 +304,15 @@ hello_sock_connect(struct hello_context_t *ctx)
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+
+	/*
+	 * Create sock group for client socket
+	 */
+	ctx->group = spdk_sock_group_create(NULL);
+	if (ctx->group == NULL) {
+		SPDK_ERRLOG("Cannot create sock group\n");
+		return -1;
+	}
 
 	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
 	impl_opts.enable_ktls = ctx->ktls;
@@ -307,6 +334,7 @@ hello_sock_connect(struct hello_context_t *ctx)
 	ctx->sock = spdk_sock_connect_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("connect error(%d): %s\n", errno, spdk_strerror(errno));
+		spdk_sock_group_close(&ctx->group);
 		return -1;
 	}
 
@@ -322,47 +350,89 @@ hello_sock_connect(struct hello_context_t *ctx)
 		goto err;
 	}
 
+	rc = spdk_sock_group_add_sock(ctx->group, ctx->sock, hello_sock_recv_poll, ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Cannot add socket to group\n");
+		goto err;
+	}
+
 	g_is_running = true;
-	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_recv_poll, ctx, 0);
+	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_group_poll, ctx, 0);
 	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_writev_poll, ctx, 0);
 
 	return 0;
 err:
 	spdk_sock_close(&ctx->sock);
+	spdk_sock_group_close(&ctx->group);
 	return -1;
 }
 
 static void
 hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
-	int rc;
-	struct hello_context_t *ctx = arg;
-	struct iovec iov = {};
 	ssize_t n;
-	void *user_ctx;
+	struct iovec iov;
+	struct hello_context_t *ctx = arg;
+	int rc;
+	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
+	uint16_t cport, sport;
+	struct spdk_sock *new_sock;
 
-	rc = spdk_sock_recv_next(sock, &iov.iov_base, &user_ctx);
-	if (rc < 0) {
+	if (ctx->sock == sock) {
+		/* Listener socket has an event */
+		while (1) {
+			new_sock = spdk_sock_accept(ctx->sock);
+			if (new_sock != NULL) {
+				rc = spdk_sock_getaddr(new_sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
+				if (rc < 0) {
+					SPDK_ERRLOG("Cannot get connection addresses\n");
+					spdk_sock_close(&new_sock);
+					return;
+				}
+
+				SPDK_NOTICELOG("Accepting a new connection from (%s, %hu) to (%s, %hu)\n",
+					       caddr, cport, saddr, sport);
+
+				rc = spdk_sock_group_add_sock(ctx->group, new_sock,
+							      hello_sock_cb, ctx);
+
+				if (rc < 0) {
+					spdk_sock_close(&new_sock);
+					SPDK_ERRLOG("failed\n");
+					break;
+				}
+
+			} else {
+				if (errno != EAGAIN && errno != EWOULDBLOCK) {
+					SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
+				}
+				break;
+			}
+		}
+
+		return;
+	}
+
+	n = spdk_sock_recv(sock, ctx->buf, BUFFER_SIZE);
+	if (n < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
 			return;
 		}
 
-		if (errno != ENOTCONN && errno != ECONNRESET) {
-			SPDK_ERRLOG("spdk_sock_recv_zcopy() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
-		}
+		SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+			    errno, spdk_strerror(errno));
 	}
 
-	if (rc > 0) {
-		iov.iov_len = rc;
-		ctx->bytes_in += iov.iov_len;
+	if (n > 0) {
+		ctx->bytes_in += n;
+		iov.iov_base = ctx->buf;
+		iov.iov_len = n;
 		n = spdk_sock_writev(sock, &iov, 1);
 		if (n > 0) {
-			assert(n == rc);
 			ctx->bytes_out += n;
 		}
-
-		spdk_sock_group_provide_buf(ctx->group, iov.iov_base, BUFFER_SIZE, NULL);
 		return;
 	}
 
@@ -373,74 +443,22 @@ hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 }
 
 static int
-hello_sock_accept_poll(void *arg)
-{
-	struct hello_context_t *ctx = arg;
-	struct spdk_sock *sock;
-	int rc;
-	int count = 0;
-	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
-	uint16_t cport, sport;
-
-	if (!g_is_running) {
-		hello_sock_quit(ctx, 0);
-		return SPDK_POLLER_IDLE;
-	}
-
-	while (1) {
-		sock = spdk_sock_accept(ctx->sock);
-		if (sock != NULL) {
-			rc = spdk_sock_getaddr(sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
-			if (rc < 0) {
-				SPDK_ERRLOG("Cannot get connection addresses\n");
-				spdk_sock_close(&sock);
-				return SPDK_POLLER_IDLE;
-			}
-
-			SPDK_NOTICELOG("Accepting a new connection from (%s, %hu) to (%s, %hu)\n",
-				       caddr, cport, saddr, sport);
-
-			rc = spdk_sock_group_add_sock(ctx->group, sock,
-						      hello_sock_cb, ctx);
-
-			if (rc < 0) {
-				spdk_sock_close(&sock);
-				SPDK_ERRLOG("failed\n");
-				break;
-			}
-
-			count++;
-		} else {
-			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
-			}
-			break;
-		}
-	}
-
-	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
-}
-
-static int
-hello_sock_group_poll(void *arg)
-{
-	struct hello_context_t *ctx = arg;
-	int rc;
-
-	rc = spdk_sock_group_poll(ctx->group);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to poll sock_group=%p\n", ctx->group);
-	}
-
-	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
-}
-
-static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
+	int rc;
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+
+	/*
+	 * Create sock group for server socket
+	 */
+	ctx->group = spdk_sock_group_create(NULL);
+	if (ctx->group == NULL) {
+		SPDK_ERRLOG("Cannot create sock group\n");
+		spdk_sock_close(&ctx->sock);
+		return -1;
+	}
 
 	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
 	impl_opts.enable_ktls = ctx->ktls;
@@ -459,31 +477,24 @@ hello_sock_listen(struct hello_context_t *ctx)
 	ctx->sock = spdk_sock_listen_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
+		spdk_sock_group_close(&ctx->group);
+		return -1;
+	}
+
+	rc = spdk_sock_group_add_sock(ctx->group, ctx->sock, hello_sock_cb, ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Cannot add sock to group\n");
+		spdk_sock_group_close(&ctx->group);
+		spdk_sock_close(&ctx->sock);
 		return -1;
 	}
 
 	SPDK_NOTICELOG("Listening connection on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
 
-	/*
-	 * Create sock group for server socket
-	 */
-	ctx->group = spdk_sock_group_create(NULL);
-	if (ctx->group == NULL) {
-		SPDK_ERRLOG("Cannot create sock group\n");
-		spdk_sock_close(&ctx->sock);
-		return -1;
-	}
-
-	spdk_sock_group_provide_buf(ctx->group, ctx->buf, BUFFER_SIZE, NULL);
 
 	g_is_running = true;
 
-	/*
-	 * Start acceptor and group poller
-	 */
-	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_accept_poll, ctx,
-					      ACCEPT_TIMEOUT_US);
 	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_group_poll, ctx, 0);
 
 	return 0;
@@ -562,22 +573,6 @@ main(int argc, char **argv)
 		exit(-1);
 	}
 	hello_context.n = 0;
-
-	if (hello_context.is_server) {
-		struct spdk_sock_impl_opts impl_opts = {};
-		size_t len = sizeof(impl_opts);
-
-		rc = spdk_sock_impl_get_opts(hello_context.sock_impl_name, &impl_opts, &len);
-		if (rc < 0) {
-			free(hello_context.buf);
-			exit(rc);
-		}
-
-		/* Our applications will post buffers to be used for receiving. That feature
-		 * is mutually exclusive with the recv pipe, so we need to disable it. */
-		impl_opts.enable_recv_pipe = false;
-		spdk_sock_impl_set_opts(hello_context.sock_impl_name, &impl_opts, len);
-	}
 
 	rc = spdk_app_start(&opts, hello_start, &hello_context);
 	if (rc) {

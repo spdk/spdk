@@ -20,9 +20,7 @@ struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.max_qpairs_per_ctrlr = SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR,
 	.in_capsule_data_size = SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE,
 	.max_io_size = (SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
-	.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE,
 	.max_aq_depth = SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH,
-	.num_shared_buffers = SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS,
 	.opts_size = sizeof(g_rdma_ut_transport_opts)
 };
 
@@ -37,8 +35,8 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), 0);
-DEFINE_STUB(ut_transport_destroy, int, (struct spdk_nvmf_transport *transport,
-					spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB_V(ut_transport_destroy, (struct spdk_nvmf_transport *transport,
+				     spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg));
 DEFINE_STUB(ibv_get_device_name, const char *, (struct ibv_device *device), NULL);
 DEFINE_STUB(ibv_query_qp, int, (struct ibv_qp *qp, struct ibv_qp_attr *attr,
 				int attr_mask,
@@ -87,6 +85,12 @@ DEFINE_STUB_V(ut_transport_stop_listen, (struct spdk_nvmf_transport *transport,
 		const struct spdk_nvme_transport_id *trid));
 DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 DEFINE_STUB(spdk_rdma_cm_id_get_numa_id, int32_t, (struct rdma_cm_id *cm_id), 0);
+DEFINE_STUB(spdk_rdma_utils_poll_cq, int, (struct ibv_cq *cq, int num_entries, struct ibv_wc *wc),
+	    0);
+DEFINE_STUB(spdk_nvmf_subsystem_get_first, struct spdk_nvmf_subsystem *,
+	    (struct spdk_nvmf_tgt *tgt), NULL);
+DEFINE_STUB(spdk_nvmf_subsystem_get_next, struct spdk_nvmf_subsystem *,
+	    (struct spdk_nvmf_subsystem *subsystem), NULL);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -152,22 +156,6 @@ test_spdk_nvmf_transport_create(void)
 	CU_ASSERT(transport == NULL);
 
 	spdk_nvmf_transport_register(&ops);
-
-	/* Ensure io_unit_size cannot be set to 0 */
-	g_rdma_ut_transport_opts.io_unit_size = 0;
-	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
-					      test_nvmf_create_transport_done, &transport);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(transport == NULL);
-
-	/* Ensure io_unit_size cannot be larger than large_bufsize */
-	g_rdma_ut_transport_opts.io_unit_size = opts_iobuf.large_bufsize * 2;
-	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
-					      test_nvmf_create_transport_done, &transport);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(transport == NULL);
-
-	g_rdma_ut_transport_opts.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
 
 	/* Ensure kas cannot be set to 0 */
 	g_rdma_ut_transport_opts.kas = 0;

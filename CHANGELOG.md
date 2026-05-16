@@ -1,10 +1,160 @@
 # Changelog
 
-## v26.01: (Upcoming Release)
+## v26.05: (Upcoming Release)
+
+### nvmf
+
+Deprecated API spdk_nvmf_ctrlr_connect() was removed.
+
+The behavior of `spdk_nvmf_subsystem_disconnect_host` has been changed. Previously,
+the function could return a status before all queues were actually disconnected.
+In the current version, the function will invoke the callback only after all
+disconnect operations have completed or the provided timeout has been exceeded.
+If the function is called with the timeout set to 0, the default timeout value
+equal to `NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS` is used. The
+`nvmf_subsystem_remove_host` json-rpc methods also reflects to above behavior and
+allow to configure the timeout now.
+
+Added the spdk_nvmf_subsystem_create_ext API. It is meant to replace some API setters and
+getters. By using creation time options, the design is improved - it becomes clear that
+certain settings are not meant to be modified dynamically.
+
+Parameters of `nvmf_create_transport` and buffers caching logic has been updated. The following parameters
+are deprecated and will be removed: `buf-cache-size`, `num-shared-buffers`. New parameters to set the exact
+number of small or large buffers were added: `iobuf-small-cache-size` and `iobuf-large-cache-size`.
+The transport now selects a buffer from a pool based on IO size.
+
+### nvme
+
+Removed the transport APIs poll_group_connect_qpair and poll_group_disconnet_qpair. None of the
+transports did anything inside of these functions, and we've simplified the model such that
+connections are only added or removed while disconnected.
+
+Changed the NVME request timeout tracking - now the timeout includes the time the request spent
+in the internal SPDK queues, before it was sent to the disk/network.
+
+Added `spdk_nvme_nvm_ctrlr_get_data` API for NVM I/O Command Set Specific Identify Controller Data.
+
+## v26.01
+
+### accel_ae4dma
+
+Added a user-space driver with support for the AE4DMA (AMD EPYC 4th Generation
+Direct Memory Access) offload engine. The AE4DMA user-space driver offloads memory copies to
+the DMA engine in AMD Embedded EPYC processors. Added a new AE4DMA module to the Accel
+Framework. To use the AE4DMA module, use the new RPC `ae4dma_scan_accel_module`.
+
+### accel_cuda
+
+Added new acceleration framework module for Nvidia GPU devices allowing to offload XOR,
+FILL and COPY operations. To enable the module configure --with-cuda and use the new
+RPC `cuda_scan_accel_module`.
+
+### bdev
+
+All aliases are now removed from the block device names list upon unregistration.
+
+Added `spdk_bdev_write_uncorrectable_blocks()` API to write uncorrectable blocks to a bdev.
+
+Added `spdk_for_each_bdev_by_name()` API to iterate over bdevs by their names.
+
+Added `names` field to `bdev_get_iostat` RPC to allow obtaining statistics from multiple
+bdevs at once.
+
+Added `SPDK_BDEV_RESET_STAT_ERROR` mode to `spdk_bdev_reset_stat_mode` enum. In this mode,
+only the I/O error stats are reset, leaving the rest of the stats unchanged.
+
+Removed the deprecated `spdk_bdev_io_get_aux_buf()` and `spdk_bdev_io_put_aux_buf()` APIs.
+
+Added new API `spdk_bdev_get_memory_domain_types` and corresponding `get_memory_domain_types`
+fn_table entry. These return DMA device types supported by a bdev rather than memory domain
+pointers. Deprecated `spdk_bdev_get_memory_domains` and the `get_memory_domains` fn_table
+entry, which will be removed in v26.09.
+
+### dma
+
+Added `spdk_dma_device_type_get_name()` to return a human-readable name for a DMA device type.
+
+### bdev_aio
+
+Disabled `RWF_NOWAIT` default flag usage - user needs to explicitly request to enable it using
+`--no-wait` (nowait) option.
+
+### blobstore
+
+Added `spdk_bs_get_max_growable_size()` API to get the maximum growable size of a blobstore.
+
+`spdk_bs_unload()` now handles hot-removed devices by returning -EIO and invalidating
+the blobstore pointer.
+
+### env_dpdk
+
+Added `spdk_env_dpdk_get_mem_stats()` API to retrieve memory allocation statistics.
+
+DPDK submodule was updated to DPDK 25.11.
 
 ### event
 
-Added new public API: `spdk_app_setup_trace()` to set up SPDK tracing for applications.
+Added new public API `spdk_app_setup_trace()` to set up SPDK tracing for applications.
+
+### nvme
+
+Removed the `spdk_nvme_qpair_get_optimal_poll_group()` API. It was unused.
+Removed the `spdk_nvme_poll_group_get_fd()` API. It was unused. An fd can still be obtained
+by calling `spdk_nvme_poll_group_get_fd_group()` and then asking the fd_group for its fd.
+
+### nvmf
+
+SPDK NVMe-oF target now supports all required NVMe 2.0 features.
+
+Added `oncs` and `fuses` fields to `spdk_nvmf_transport_opts` structure, together with
+`masked_oncs` and `maksed_fuses` in `nvmf_create_transport` RPC to selectively
+disable Optional NVM Command Support and Fused Operation Support capabilities.
+
+Added support for NVMe 2.0 mandatory Identify CNS 07h – Active Namespace ID list associated
+with the specified I/O Command Set.
+
+Added interrupt-driven mode support for NVMe-oF RDMA transport to reduce CPU polling overhead
+and improve efficiency under low-load conditions, while preserving the existing polling model
+for high-throughput workloads.
+
+Introduced the API `spdk_nvmf_set_custom_discovery_filter()` to set up custom discovery filter.
+
+Added support for preempt-and-abort mode of persistent reservations acquire command.
+
+Added support for adding and deleting hosts from a discovery referral. New APIs include
+`spdk_nvmf_referral_add_host()`, `spdk_nvmf_referral_remove_host()`,
+`spdk_nvmf_referral_set_allow_any_host()`, `spdk_nvmf_referral_get_allow_any_host()`,
+`spdk_nvmf_referral_host_allowed()`, `spdk_nvmf_referral_get_first_host()`,
+`spdk_nvmf_referral_get_next_host()`, `spdk_nvmf_tgt_get_first_referral()`, and
+`spdk_nvmf_tgt_referral_get_next()`, and `spdk_nvmf_referral_get_trid()`.
+
+### python
+
+Deprecate some boolean python cli arguments to use new modern argparse format instead.
+
+### sock
+
+Introduced `spdk_sock_initialize()`, which may optionally be called before any use of the
+sock APIs. It is automatically called by the SPDK app framework. `spdk_sock_initialize()` is
+not thread safe and should be called only once. Subsequent calls with the same options will
+succeed, but with different options will return `-EALREADY`.
+
+Following APIs now return negative errno value on failure instead of -1 and setting errno:
+`spdk_sock_getaddr()`, `spdk_sock_close()`, `spdk_sock_flush()`, `spdk_sock_recv()`,
+`spdk_sock_writev()`, `spdk_sock_readv()`, `spdk_sock_recv_next()`,
+`spdk_sock_set_recvlowat()`, `spdk_sock_set_recvbuf()`, `spdk_sock_set_sendbuf()`,
+`spdk_sock_group_add_sock()`, `spdk_sock_group_remove_sock()`,
+`spdk_sock_group_provide_buf()`, `spdk_sock_group_poll()`, `spdk_sock_group_poll_count()`,
+`spdk_sock_group_close()`, `spdk_sock_impl_get_opts()`, `spdk_sock_impl_set_opts()`,
+`spdk_sock_set_default_impl()`, `spdk_sock_group_register_interrupt()`.
+
+Added `spdk_sock_group_get_interruptfd()` API to get the interrupt file descriptor for a socket
+group. This fd is suitable for use in APIs such as `spdk_interrupt_register_for_events()`.
+
+### util
+
+`spdk_net_getaddr()` returns negative errno value on failure instead of -1 and setting errno.
 
 ## v25.09
 

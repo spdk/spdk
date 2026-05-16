@@ -61,7 +61,6 @@ _nvme_ocssd_ns_cmd_vector_rw_with_md(struct spdk_nvme_ns *ns,
 {
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
-	struct nvme_payload	payload;
 	uint32_t valid_flags = SPDK_OCSSD_IO_FLAGS_LIMITED_RETRY;
 
 	if (io_flags & ~valid_flags) {
@@ -73,13 +72,13 @@ _nvme_ocssd_ns_cmd_vector_rw_with_md(struct spdk_nvme_ns *ns,
 		return -EINVAL;
 	}
 
-	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
 
-	req = nvme_allocate_request(qpair, &payload, num_lbas * ns->sector_size, num_lbas * ns->md_size,
-				    cb_fn, cb_arg);
+	req = nvme_allocate_request(qpair);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
+	NVME_INIT_REQUEST_CONTIG(req, cb_fn, cb_arg, buffer, metadata, num_lbas * ns->sector_size,
+				 num_lbas * ns->md_size, 0, 0);
 
 	cmd = &req->cmd;
 	cmd->opc = opc;

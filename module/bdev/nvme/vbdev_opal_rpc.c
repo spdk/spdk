@@ -10,29 +10,18 @@
 #include "spdk/opal.h"
 
 #include "vbdev_opal.h"
-
-struct rpc_bdev_nvme_opal_init {
-	char *nvme_ctrlr_name;
-	char *password;
-};
-
-static void
-free_rpc_bdev_nvme_opal_init(struct rpc_bdev_nvme_opal_init *req)
-{
-	free(req->nvme_ctrlr_name);
-	free(req->password);
-}
+#include "spdk_internal/rpc_autogen.h"
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_opal_init_decoders[] = {
-	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_nvme_opal_init, nvme_ctrlr_name), spdk_json_decode_string},
-	{"password", offsetof(struct rpc_bdev_nvme_opal_init, password), spdk_json_decode_string},
+	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_nvme_opal_init_ctx, nvme_ctrlr_name), spdk_json_decode_string},
+	{"password", offsetof(struct rpc_bdev_nvme_opal_init_ctx, password), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_opal_init req = {};
+	struct rpc_bdev_nvme_opal_init_ctx req = {};
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc;
 
@@ -86,28 +75,16 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_nvme_opal_init", rpc_bdev_nvme_opal_init, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_nvme_opal_revert {
-	char *nvme_ctrlr_name;
-	char *password;
-};
-
-static void
-free_rpc_bdev_nvme_opal_revert(struct rpc_bdev_nvme_opal_revert *req)
-{
-	free(req->nvme_ctrlr_name);
-	free(req->password);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_nvme_opal_revert_decoders[] = {
-	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_nvme_opal_revert, nvme_ctrlr_name), spdk_json_decode_string},
-	{"password", offsetof(struct rpc_bdev_nvme_opal_revert, password), spdk_json_decode_string},
+	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_nvme_opal_revert_ctx, nvme_ctrlr_name), spdk_json_decode_string},
+	{"password", offsetof(struct rpc_bdev_nvme_opal_revert_ctx, password), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_opal_revert req = {};
+	struct rpc_bdev_nvme_opal_revert_ctx req = {};
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc;
 
@@ -143,36 +120,20 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_nvme_opal_revert", rpc_bdev_nvme_opal_revert, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_opal_create {
-	char *nvme_ctrlr_name;
-	uint32_t nsid;
-	uint16_t locking_range_id;
-	uint64_t range_start;
-	uint64_t range_length;
-	char *password;
-};
-
-static void
-free_rpc_bdev_opal_create(struct rpc_bdev_opal_create *req)
-{
-	free(req->nvme_ctrlr_name);
-	free(req->password);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_opal_create_decoders[] = {
-	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_opal_create, nvme_ctrlr_name), spdk_json_decode_string},
-	{"nsid", offsetof(struct rpc_bdev_opal_create, nsid), spdk_json_decode_uint32},
-	{"locking_range_id", offsetof(struct rpc_bdev_opal_create, locking_range_id), spdk_json_decode_uint16},
-	{"range_start", offsetof(struct rpc_bdev_opal_create, range_start), spdk_json_decode_uint64},
-	{"range_length", offsetof(struct rpc_bdev_opal_create, range_length), spdk_json_decode_uint64},
-	{"password", offsetof(struct rpc_bdev_opal_create, password), spdk_json_decode_string},
+	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_opal_create_ctx, nvme_ctrlr_name), spdk_json_decode_string},
+	{"nsid", offsetof(struct rpc_bdev_opal_create_ctx, nsid), spdk_json_decode_uint32},
+	{"locking_range_id", offsetof(struct rpc_bdev_opal_create_ctx, locking_range_id), spdk_json_decode_uint16},
+	{"range_start", offsetof(struct rpc_bdev_opal_create_ctx, range_start), spdk_json_decode_uint64},
+	{"range_length", offsetof(struct rpc_bdev_opal_create_ctx, range_length), spdk_json_decode_uint64},
+	{"password", offsetof(struct rpc_bdev_opal_create_ctx, password), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_opal_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_opal_create req = {};
+	struct rpc_bdev_opal_create_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	char *opal_bdev_name;
 	int rc;
@@ -197,6 +158,11 @@ rpc_bdev_opal_create(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 	opal_bdev_name = spdk_sprintf_alloc("%sn%dr%d", req.nvme_ctrlr_name, req.nsid,
 					    req.locking_range_id);
+	if (!opal_bdev_name) {
+		SPDK_ERRLOG("Unable to allocate memory for opal_bdev_name.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		goto out;
+	}
 	spdk_json_write_string(w, opal_bdev_name);
 	spdk_jsonrpc_end_result(request, w);
 	free(opal_bdev_name);
@@ -206,28 +172,16 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_opal_create", rpc_bdev_opal_create, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_opal_get_info {
-	char *bdev_name;
-	char *password;
-};
-
-static void
-free_rpc_bdev_opal_get_info(struct rpc_bdev_opal_get_info *req)
-{
-	free(req->bdev_name);
-	free(req->password);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_opal_get_info_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_bdev_opal_get_info, bdev_name), spdk_json_decode_string},
-	{"password", offsetof(struct rpc_bdev_opal_get_info, password), spdk_json_decode_string},
+	{"bdev_name", offsetof(struct rpc_bdev_opal_get_info_ctx, bdev_name), spdk_json_decode_string},
+	{"password", offsetof(struct rpc_bdev_opal_get_info_ctx, password), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_opal_get_info(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_opal_get_info req = {};
+	struct rpc_bdev_opal_get_info_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_opal_locking_range_info *info;
 
@@ -265,28 +219,16 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_opal_get_info", rpc_bdev_opal_get_info, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_opal_delete {
-	char *bdev_name;
-	char *password;
-};
-
-static void
-free_rpc_bdev_opal_delete(struct rpc_bdev_opal_delete *req)
-{
-	free(req->bdev_name);
-	free(req->password);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_opal_delete_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_bdev_opal_delete, bdev_name), spdk_json_decode_string},
-	{"password", offsetof(struct rpc_bdev_opal_delete, password), spdk_json_decode_string},
+	{"bdev_name", offsetof(struct rpc_bdev_opal_delete_ctx, bdev_name), spdk_json_decode_string},
+	{"password", offsetof(struct rpc_bdev_opal_delete_ctx, password), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_opal_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_opal_delete req = {};
+	struct rpc_bdev_opal_delete_ctx req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_opal_delete_decoders,
@@ -309,33 +251,18 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_opal_delete", rpc_bdev_opal_delete, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_opal_set_lock_state {
-	char *bdev_name;
-	uint16_t user_id;
-	char *password;
-	char *lock_state;
-};
-
-static void
-free_rpc_bdev_opal_set_lock_state(struct rpc_bdev_opal_set_lock_state *req)
-{
-	free(req->bdev_name);
-	free(req->password);
-	free(req->lock_state);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_opal_set_lock_state_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_bdev_opal_set_lock_state, bdev_name), spdk_json_decode_string},
-	{"user_id", offsetof(struct rpc_bdev_opal_set_lock_state, user_id), spdk_json_decode_uint16},
-	{"password", offsetof(struct rpc_bdev_opal_set_lock_state, password), spdk_json_decode_string},
-	{"lock_state", offsetof(struct rpc_bdev_opal_set_lock_state, lock_state), spdk_json_decode_string},
+	{"bdev_name", offsetof(struct rpc_bdev_opal_set_lock_state_ctx, bdev_name), spdk_json_decode_string},
+	{"user_id", offsetof(struct rpc_bdev_opal_set_lock_state_ctx, user_id), spdk_json_decode_uint16},
+	{"password", offsetof(struct rpc_bdev_opal_set_lock_state_ctx, password), spdk_json_decode_string},
+	{"lock_state", offsetof(struct rpc_bdev_opal_set_lock_state_ctx, lock_state), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_opal_set_lock_state(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_opal_set_lock_state req = {};
+	struct rpc_bdev_opal_set_lock_state_ctx req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_opal_set_lock_state_decoders,
@@ -359,33 +286,18 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_opal_set_lock_state", rpc_bdev_opal_set_lock_state, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_opal_new_user {
-	char *bdev_name;
-	char *admin_password;
-	uint16_t user_id;
-	char *user_password;
-};
-
-static void
-free_rpc_bdev_opal_new_user(struct rpc_bdev_opal_new_user *req)
-{
-	free(req->bdev_name);
-	free(req->admin_password);
-	free(req->user_password);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_opal_new_user_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_bdev_opal_new_user, bdev_name), spdk_json_decode_string},
-	{"admin_password", offsetof(struct rpc_bdev_opal_new_user, admin_password), spdk_json_decode_string},
-	{"user_id", offsetof(struct rpc_bdev_opal_new_user, user_id), spdk_json_decode_uint16},
-	{"user_password", offsetof(struct rpc_bdev_opal_new_user, user_password), spdk_json_decode_string},
+	{"bdev_name", offsetof(struct rpc_bdev_opal_new_user_ctx, bdev_name), spdk_json_decode_string},
+	{"admin_password", offsetof(struct rpc_bdev_opal_new_user_ctx, admin_password), spdk_json_decode_string},
+	{"user_id", offsetof(struct rpc_bdev_opal_new_user_ctx, user_id), spdk_json_decode_uint16},
+	{"user_password", offsetof(struct rpc_bdev_opal_new_user_ctx, user_password), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_opal_new_user(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_opal_new_user req = {};
+	struct rpc_bdev_opal_new_user_ctx req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_opal_new_user_decoders,

@@ -51,7 +51,6 @@ struct mdns_discovery_ctx {
 	struct spdk_bdev_nvme_ctrlr_opts        bdev_opts;
 	uint32_t                                seqno;
 	bool                                    stop;
-	struct spdk_thread                      *calling_thread;
 	TAILQ_ENTRY(mdns_discovery_ctx)         tailq;
 	TAILQ_HEAD(, mdns_discovery_entry_ctx)  mdns_discovery_entry_ctxs;
 };
@@ -331,7 +330,7 @@ mdns_resolve_handler(
 		}
 		entry_ctx = create_mdns_discovery_entry_ctx(ctx, trid);
 		TAILQ_INSERT_TAIL(&ctx->mdns_discovery_entry_ctxs, entry_ctx, tailq);
-		spdk_thread_send_msg(ctx->calling_thread, mdns_bdev_nvme_start_discovery, entry_ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), mdns_bdev_nvme_start_discovery, entry_ctx);
 		free(trid);
 		avahi_free(subnqn);
 		avahi_free(proto);
@@ -443,16 +442,6 @@ bdev_nvme_avahi_iterate(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-static void
-start_mdns_discovery_poller(void *arg)
-{
-	struct mdns_discovery_ctx *ctx = arg;
-
-	assert(arg);
-	TAILQ_INSERT_TAIL(&g_mdns_discovery_ctxs, ctx, tailq);
-	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_avahi_iterate, ctx, 100 * 1000);
-}
-
 int
 bdev_nvme_start_mdns_discovery(const char *base_name,
 			       const char *svcname,
@@ -465,6 +454,7 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
 
 	assert(base_name);
 	assert(svcname);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	TAILQ_FOREACH(ctx, &g_mdns_discovery_ctxs, tailq) {
 		if (strcmp(ctx->name, base_name) == 0) {
@@ -532,7 +522,6 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
 	memcpy(&ctx->drv_opts, drv_opts, sizeof(*drv_opts));
 	memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
 	ctx->sb = sb;
-	ctx->calling_thread = spdk_get_thread();
 	TAILQ_INIT(&ctx->mdns_discovery_entry_ctxs);
 	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
 	ctx->hostnqn = strdup(ctx->drv_opts.hostnqn);
@@ -541,8 +530,9 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
 		free_mdns_discovery_ctx(ctx);
 		return -ENOMEM;
 	}
-	/* Start the poller for the Avahi client browser in g_bdev_nvme_init_thread */
-	spdk_thread_send_msg(g_bdev_nvme_init_thread, start_mdns_discovery_poller, ctx);
+	/* Start the poller for the Avahi client browser */
+	TAILQ_INSERT_TAIL(&g_mdns_discovery_ctxs, ctx, tailq);
+	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_avahi_iterate, ctx, 100 * 1000);
 	return 0;
 }
 

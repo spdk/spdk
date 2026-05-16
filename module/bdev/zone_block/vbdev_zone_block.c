@@ -787,6 +787,8 @@ zone_block_register(const char *base_bdev_name)
 		bdev_node->bdev.fn_table = &zone_block_fn_table;
 		bdev_node->bdev.module = &bdev_zoned_if;
 
+		bdev_node->bdev.numa = base_bdev->numa;
+
 		/* Generate UUID based on namespace UUID + base bdev UUID. */
 		rc = spdk_uuid_generate_sha1(&bdev_node->bdev.uuid, &ns_uuid,
 					     (const char *)&base_bdev->uuid, sizeof(struct spdk_uuid));

@@ -185,7 +185,9 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 	}
 
 	if (rbd->image) {
-		rbd_update_unwatch(rbd->image, rbd->rbd_watch_handle);
+		if (rbd->rbd_watch_handle) {
+			rbd_update_unwatch(rbd->image, rbd->rbd_watch_handle);
+		}
 		rbd_flush(rbd->image);
 		rbd_close(rbd->image);
 	}

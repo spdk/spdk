@@ -57,19 +57,9 @@ function rescan_pci() {
 	echo 1 > /sys/bus/pci/rescan
 }
 
-function get_pci_dir() {
-	dev_name=$1
-	readlink -f /sys/bus/pci/devices/*/net/${dev_name}/device
-}
-
 function remove_one_nic() {
 	dev_name=$1
 	echo 1 > $(get_pci_dir $dev_name)/remove
-}
-
-function get_rdma_device_name() {
-	dev_name=$1
-	ls $(get_pci_dir $dev_name)/infiniband
 }
 
 function check_rdma_dev_exists_in_nvmf_tgt() {
@@ -87,7 +77,7 @@ function generate_io_traffic_with_bdevperf() {
 	local dev_names=("$@")
 
 	mkdir -p $testdir
-	$rootdir/build/examples/bdevperf -m $bdevperf_core_mask -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m $bdevperf_core_mask -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt
 	bdevperf_pid=$!
 
 	trap 'process_shm --id $NVMF_APP_SHM_ID; cat $testdir/try.txt; rm -f $testdir/try.txt; kill -9 $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT

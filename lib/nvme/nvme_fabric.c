@@ -537,13 +537,15 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 
 	assert(qpair->reserved_req != NULL);
 	req = qpair->reserved_req;
-	NVME_INIT_REQUEST(req, nvme_completion_poll_cb, status, NVME_PAYLOAD_CONTIG(nvmf_data, NULL),
-			  sizeof(*nvmf_data), 0);
+	NVME_INIT_REQUEST_CONTIG(req, nvme_completion_poll_cb, status, nvmf_data, NULL, sizeof(*nvmf_data),
+				 0, 0, 0);
+	req->qpair_reserved = true;
 
 	memcpy(&req->cmd, &cmd, sizeof(cmd));
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvmf_data->cntlid = 0xFFFF;
+		req->pid = g_spdk_nvme_pid;
 	} else {
 		nvmf_data->cntlid = ctrlr->cntlid;
 	}

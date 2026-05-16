@@ -403,23 +403,21 @@ static int
 nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 		   void *buf)
 {
-	int ret;
+	int rc;
 
-	ret = spdk_sock_recv(sock, buf, bytes);
-
-	if (ret > 0) {
-		return ret;
+	rc = spdk_sock_recv(sock, buf, bytes);
+	if (rc > 0) {
+		return rc;
 	}
 
-	if (ret < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (rc < 0) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 			return 0;
 		}
 
 		/* For connect reset issue, do not output error log */
-		if (errno != ECONNRESET) {
-			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+		if (rc != -ECONNRESET) {
+			SPDK_ERRLOG("spdk_sock_recv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		}
 	}
 
@@ -430,7 +428,7 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 static int
 nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
-	int ret;
+	int rc;
 
 	assert(sock != NULL);
 	if (iov == NULL || iovcnt == 0) {
@@ -441,28 +439,25 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base);
 	}
 
-	ret = spdk_sock_readv(sock, iov, iovcnt);
-
-	if (ret > 0) {
-		return ret;
+	rc = spdk_sock_readv(sock, iov, iovcnt);
+	if (rc > 0) {
+		return rc;
 	}
 
-	if (ret < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (rc < 0) {
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
 			return 0;
 		}
 
 		/* For connect reset issue, do not output error log */
-		if (errno != ECONNRESET) {
-			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+		if (rc != -ECONNRESET) {
+			SPDK_ERRLOG("spdk_sock_readv() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
 		}
 	}
 
 	/* connection closed */
 	return NVME_TCP_CONNECTION_FATAL;
 }
-
 
 static int
 nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)

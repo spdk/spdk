@@ -7,33 +7,24 @@
 #include "spdk/util.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
+
+#include "spdk_internal/rpc_autogen.h"
 #include "trace_internal.h"
 
-struct rpc_tpoint_group {
-	char *name;
-	uint64_t tpoint_mask;
-};
-
-static void
-free_rpc_tpoint_group(struct rpc_tpoint_group *p)
-{
-	free(p->name);
-}
-
-static const struct spdk_json_object_decoder rpc_tpoint_mask_decoders[] = {
-	{"name", offsetof(struct rpc_tpoint_group, name), spdk_json_decode_string},
-	{"tpoint_mask", offsetof(struct rpc_tpoint_group, tpoint_mask), spdk_json_decode_uint64, true},
+static const struct spdk_json_object_decoder rpc_trace_set_tpoint_mask_decoders[] = {
+	{"name", offsetof(struct rpc_trace_set_tpoint_mask_ctx, name), spdk_json_decode_string},
+	{"tpoint_mask", offsetof(struct rpc_trace_set_tpoint_mask_ctx, tpoint_mask), spdk_json_decode_uint64},
 };
 
 static void
 rpc_trace_set_tpoint_mask(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_tpoint_group req = {};
+	struct rpc_trace_set_tpoint_mask_ctx req = {};
 	uint64_t tpoint_group_mask = 0;
 
-	if (spdk_json_decode_object(params, rpc_tpoint_mask_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_mask_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_set_tpoint_mask_decoders,
+				    SPDK_COUNTOF(rpc_trace_set_tpoint_mask_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -50,27 +41,32 @@ rpc_trace_set_tpoint_mask(struct spdk_jsonrpc_request *request,
 
 	spdk_trace_set_tpoints(spdk_u64log2(tpoint_group_mask), req.tpoint_mask);
 
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_set_tpoint_mask(&req);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_set_tpoint_mask(&req);
 }
 SPDK_RPC_REGISTER("trace_set_tpoint_mask", rpc_trace_set_tpoint_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static const struct spdk_json_object_decoder rpc_trace_clear_tpoint_mask_decoders[] = {
+	{"name", offsetof(struct rpc_trace_clear_tpoint_mask_ctx, name), spdk_json_decode_string},
+	{"tpoint_mask", offsetof(struct rpc_trace_clear_tpoint_mask_ctx, tpoint_mask), spdk_json_decode_uint64},
+};
 
 static void
 rpc_trace_clear_tpoint_mask(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_tpoint_group req = {};
+	struct rpc_trace_clear_tpoint_mask_ctx req = {};
 	uint64_t tpoint_group_mask = 0;
 
-	if (spdk_json_decode_object(params, rpc_tpoint_mask_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_mask_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_clear_tpoint_mask_decoders,
+				    SPDK_COUNTOF(rpc_trace_clear_tpoint_mask_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -87,30 +83,30 @@ rpc_trace_clear_tpoint_mask(struct spdk_jsonrpc_request *request,
 
 	spdk_trace_clear_tpoints(spdk_u64log2(tpoint_group_mask), req.tpoint_mask);
 
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_clear_tpoint_mask(&req);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_clear_tpoint_mask(&req);
 }
 SPDK_RPC_REGISTER("trace_clear_tpoint_mask", rpc_trace_clear_tpoint_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_tpoint_group_decoders[] = {
-	{"name", offsetof(struct rpc_tpoint_group, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_trace_enable_tpoint_group_decoders[] = {
+	{"name", offsetof(struct rpc_trace_enable_tpoint_group_ctx, name), spdk_json_decode_string},
 };
 
 static void
 rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct rpc_tpoint_group req = {};
+	struct rpc_trace_enable_tpoint_group_ctx req = {};
 
-	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_enable_tpoint_group_decoders,
+				    SPDK_COUNTOF(rpc_trace_enable_tpoint_group_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -124,26 +120,30 @@ rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_enable_tpoint_group(&req);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_enable_tpoint_group(&req);
 }
 SPDK_RPC_REGISTER("trace_enable_tpoint_group", rpc_trace_enable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static const struct spdk_json_object_decoder rpc_trace_disable_tpoint_group_decoders[] = {
+	{"name", offsetof(struct rpc_trace_disable_tpoint_group_ctx, name), spdk_json_decode_string},
+};
 
 static void
 rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct rpc_tpoint_group req = {};
+	struct rpc_trace_disable_tpoint_group_ctx req = {};
 
-	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
-				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_trace_disable_tpoint_group_decoders,
+				    SPDK_COUNTOF(rpc_trace_disable_tpoint_group_decoders), &req)) {
 		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -157,14 +157,14 @@ rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_disable_tpoint_group(&req);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_tpoint_group(&req);
+	free_rpc_trace_disable_tpoint_group(&req);
 }
 SPDK_RPC_REGISTER("trace_disable_tpoint_group", rpc_trace_disable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -173,11 +173,12 @@ static void
 rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	uint64_t tpoint_group_mask;
+	uint64_t tpoint_group_mask, tpoint_mask;
 	char mask_str[20];
 	bool enabled;
 	struct spdk_json_write_ctx *w;
 	struct spdk_trace_register_fn *register_fn;
+	uint16_t group_base, next_group_base, i;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -195,13 +196,35 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 
 	register_fn = spdk_trace_get_first_register_fn();
 	while (register_fn) {
-		enabled = spdk_trace_get_tpoint_mask(register_fn->tgroup_id) != 0;
+		tpoint_mask = spdk_trace_get_tpoint_mask(register_fn->tgroup_id);
+		enabled = tpoint_mask != 0;
 
 		spdk_json_write_named_object_begin(w, register_fn->name);
 		spdk_json_write_named_bool(w, "enabled", enabled);
 
 		snprintf(mask_str, sizeof(mask_str), "0x%lx", (1UL << register_fn->tgroup_id));
 		spdk_json_write_named_string(w, "mask", mask_str);
+
+		snprintf(mask_str, sizeof(mask_str), "0x%" PRIx64, tpoint_mask);
+		spdk_json_write_named_string(w, "tpoint_mask", mask_str);
+
+		spdk_json_write_named_array_begin(w, "tpoints");
+		group_base = SPDK_TPOINT_ID(register_fn->tgroup_id, 0);
+		next_group_base = SPDK_TPOINT_ID(register_fn->tgroup_id + 1, 0);
+		for (i = group_base; i < next_group_base; i++) {
+			struct spdk_trace_tpoint *tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[i];
+
+			if (tpoint->name[0] == '\0') {
+				continue;
+			}
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "name", tpoint->name);
+			spdk_json_write_named_uint32(w, "tpoint_id", i - group_base);
+			spdk_json_write_named_bool(w, "enabled", tpoint_mask & SPDK_BIT(i - group_base));
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
+
 		spdk_json_write_object_end(w);
 
 		register_fn = spdk_trace_get_next_register_fn(register_fn);
@@ -212,6 +235,21 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("trace_get_tpoint_group_mask", rpc_trace_get_tpoint_group_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+rpc_trace_clear(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "trace_clear requires no parameters");
+		return;
+	}
+
+	spdk_trace_clear();
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("trace_clear", rpc_trace_clear, SPDK_RPC_RUNTIME)
 
 static void
 rpc_trace_get_info(struct spdk_jsonrpc_request *request,

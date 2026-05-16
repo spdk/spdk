@@ -68,7 +68,12 @@ SPDK_STATIC_ASSERT(NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR >= 2 &&
 	SPDK_ALIGN_CEIL( \
 		(NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * 2 * SPDK_NVME_DOORBELL_REGISTER_SIZE), \
 		0x1000)
-#define NVME_REG_BAR0_SIZE (NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
+/*
+ * NVMe 1.0e section 2.1.10: MLBAR base address bits are 31:14,
+ * requiring the BAR to be at least 16 KB.
+ */
+#define NVME_REG_BAR0_MIN_SIZE 0x4000
+#define NVME_REG_BAR0_SIZE spdk_max(NVME_REG_BAR0_MIN_SIZE, (NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE))
 
 /*
  * TODO check the PCI spec whether BAR4 and BAR5 really have to be at least one
@@ -314,6 +319,7 @@ struct nvmf_vfio_user_poll_group {
 
 	/* Whether this PG needs kicking to wake up again. */
 	bool need_kick;
+	int32_t numa_id;
 };
 
 struct nvmf_vfio_user_shadow_doorbells {
@@ -380,6 +386,7 @@ struct nvmf_vfio_user_endpoint {
 
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_nvmf_subsystem		*subsystem;
+	int32_t					numa_id;
 
 	/* Controller is associated with an active socket connection,
 	 * the lifecycle of the controller is same as the VM.
@@ -401,7 +408,6 @@ struct nvmf_vfio_user_transport_opts {
 	bool					disable_mappable_bar0;
 	bool					disable_adaptive_irq;
 	bool					disable_shadow_doorbells;
-	bool					disable_compare;
 	bool					enable_intr_mode_sq_spreading;
 };
 
@@ -414,13 +420,12 @@ struct nvmf_vfio_user_transport {
 
 	pthread_mutex_t				pg_lock;
 	TAILQ_HEAD(, nvmf_vfio_user_poll_group)	poll_groups;
-	struct nvmf_vfio_user_poll_group	*next_pg;
 };
 
 /*
  * function prototypes
  */
-static int nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
+static void nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
 
 static struct nvmf_vfio_user_req *get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *sq);
 
@@ -1078,7 +1083,7 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 }
 
 /* called when process exits */
-static int
+static void
 nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 		       spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
@@ -1103,8 +1108,6 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 	if (cb_fn) {
 		cb_fn(cb_arg);
 	}
-
-	return 0;
 }
 
 static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] = {
@@ -1121,11 +1124,6 @@ static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] 
 	{
 		"disable_shadow_doorbells",
 		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_shadow_doorbells),
-		spdk_json_decode_bool, true
-	},
-	{
-		"disable_compare",
-		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_compare),
 		spdk_json_decode_bool, true
 	},
 	{
@@ -3590,6 +3588,16 @@ out:
 	return err;
 }
 
+struct nvmf_vfio_user_listen_opts {
+	int32_t numa_id;
+};
+
+static const struct spdk_json_object_decoder vfio_user_listen_opts_decoder[] = {
+	{
+		"numa_id", offsetof(struct nvmf_vfio_user_listen_opts, numa_id), spdk_json_decode_int32, true
+	},
+};
+
 static int
 nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid,
@@ -3597,6 +3605,8 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint, *tmp;
+	struct nvmf_vfio_user_listen_opts vu_listen_opts = {};
+	struct nvmf_vfio_user_poll_group *vu_group;
 	char path[PATH_MAX] = {};
 	char uuid[PATH_MAX] = {};
 	int ret;
@@ -3614,6 +3624,14 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 	pthread_mutex_unlock(&vu_transport->lock);
 
+	vu_listen_opts.numa_id = SPDK_ENV_NUMA_ID_ANY;
+	if (listen_opts->transport_specific != NULL &&
+	    spdk_json_decode_object_relaxed(listen_opts->transport_specific, vfio_user_listen_opts_decoder,
+					    SPDK_COUNTOF(vfio_user_listen_opts_decoder), &vu_listen_opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
+		return -EINVAL;
+	}
+
 	endpoint = calloc(1, sizeof(*endpoint));
 	if (!endpoint) {
 		return -ENOMEM;
@@ -3623,6 +3641,27 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	endpoint->devmem_fd = -1;
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
 	endpoint->transport = vu_transport;
+	endpoint->numa_id = vu_listen_opts.numa_id;
+
+	/*
+	 * Endpoint cannot require NUMA for which there is no poll group.
+	 */
+	if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY) {
+		pthread_mutex_lock(&vu_transport->pg_lock);
+		TAILQ_FOREACH(vu_group, &vu_transport->poll_groups, link) {
+			if (endpoint->numa_id == vu_group->numa_id) {
+				break;
+			}
+		}
+		pthread_mutex_unlock(&vu_transport->pg_lock);
+
+		if (vu_group == NULL) {
+			ret = -EINVAL;
+			SPDK_ERRLOG("Endpoint %s cannot require numa_id %d, when no poll group is assigned to that numa_id.\n",
+				    endpoint_id(endpoint), endpoint->numa_id);
+			goto out;
+		}
+	}
 
 	ret = snprintf(path, PATH_MAX, "%s/bar0", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
@@ -3769,11 +3808,91 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 	cdata->ieee[2] = 0x50;
 	memset(&cdata->sgls, 0, sizeof(struct spdk_nvme_cdata_sgls));
 	cdata->sgls.supported = SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED;
-	cdata->oncs.compare = !vu_transport->transport_opts.disable_compare;
+	cdata->oncs.nvmcmps = vu_transport->transport.opts.oncs.nvmcmps;
 	/* libvfio-user can only support 1 connection for now */
-	cdata->oncs.reservations = 0;
-	cdata->oacs.doorbell_buffer_config = !vu_transport->transport_opts.disable_shadow_doorbells;
-	cdata->fuses.compare_and_write = !vu_transport->transport_opts.disable_compare;
+	cdata->oncs.reservs = 0;
+	cdata->oacs.dbcs = !vu_transport->transport_opts.disable_shadow_doorbells;
+	cdata->fuses.fcws = vu_transport->transport.opts.oncs.nvmcmps &&
+			    vu_transport->transport.opts.fuses.fcws;
+}
+
+static int32_t
+nvmf_vfio_user_get_subsystem_numa_id(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+	int32_t result_numa_id = SPDK_ENV_NUMA_ID_ANY;
+	int32_t bdev_numa_id;
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		assert(ns->bdev != NULL);
+
+		bdev_numa_id = spdk_bdev_get_numa_id(ns->bdev);
+
+		/*
+		 * Even one bdev without NUMA assigned,
+		 * marks the endpoint as ANY NUMA node ID.
+		 */
+		if (bdev_numa_id == SPDK_ENV_NUMA_ID_ANY) {
+			return SPDK_ENV_NUMA_ID_ANY;
+		}
+
+		/* First bdev with specific NUMA node ID */
+		if (result_numa_id == SPDK_ENV_NUMA_ID_ANY) {
+			result_numa_id = bdev_numa_id;
+		}
+
+		/*
+		 * Even one bdev with mismatched NUMA assigned,
+		 * marks the endpoint as ANY NUMA node ID.
+		 */
+		if (result_numa_id != bdev_numa_id) {
+			return SPDK_ENV_NUMA_ID_ANY;
+		}
+	}
+
+	return result_numa_id;
+}
+
+static int
+nvmf_vfio_user_subsystem_add_ns(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvmf_subsystem *subsystem,
+				struct spdk_nvmf_ns *ns)
+{
+	struct nvmf_vfio_user_transport *vu_transport;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
+
+	pthread_mutex_lock(&vu_transport->lock);
+	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
+		if (endpoint->subsystem == subsystem) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vu_transport->lock);
+
+	if (endpoint == NULL) {
+		/*
+		 * Listener not yet associated with a subsystem.
+		 * NUMA verification will be done when the subsystem
+		 * is associated via listen_associate.
+		 */
+		return 0;
+	}
+
+	/*
+	 * Endpoint can require specific NUMA node ID, if it does compare it
+	 * with new bdev added to the subsystem.
+	 */
+	if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY &&
+	    endpoint->numa_id != spdk_bdev_get_numa_id(ns->bdev)) {
+		SPDK_ERRLOG("Endpoint %s requires numa_id %d, cannot add bdev with numa_id %d\n",
+			    endpoint_id(endpoint), endpoint->numa_id, spdk_bdev_get_numa_id(ns->bdev));
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 static int
@@ -3783,6 +3902,7 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint;
+	int32_t subsystem_numa_id;
 
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
 
@@ -3798,10 +3918,47 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 		return -ENOENT;
 	}
 
+	/*
+	 * Endpoint can require specific NUMA node ID, if it does compare it
+	 * with every bdev in subsystem.
+	 */
+	subsystem_numa_id = nvmf_vfio_user_get_subsystem_numa_id((struct spdk_nvmf_subsystem *)subsystem);
+	if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY &&
+	    endpoint->numa_id != subsystem_numa_id) {
+		SPDK_ERRLOG("Endpoint %s requires numa_id %d, cannot add listener for subsystem with numa_id %d\n",
+			    endpoint_id(endpoint), endpoint->numa_id, subsystem_numa_id);
+		return -EINVAL;
+	}
+
 	/* Drop const - we will later need to pause/unpause. */
 	endpoint->subsystem = (struct spdk_nvmf_subsystem *)subsystem;
 
+	SPDK_DEBUGLOG(nvmf_vfio, "Endpoint %s created with numa_id %d\n",
+		      endpoint_id(endpoint), endpoint->numa_id);
+
 	return 0;
+}
+
+static void
+nvmf_vfio_user_listen_dump_opts(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+{
+	struct nvmf_vfio_user_transport *vu_transport;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	assert(w != NULL);
+
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
+
+	pthread_mutex_lock(&vu_transport->lock);
+	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
+		/* Only compare traddr */
+		if (strncmp(endpoint->trid.traddr, trid->traddr, sizeof(endpoint->trid.traddr)) == 0) {
+			spdk_json_write_named_int32(w, "numa_id", endpoint->numa_id);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vu_transport->lock);
 }
 
 /*
@@ -3892,26 +4049,44 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 	}
 
 	TAILQ_INIT(&vu_group->sqs);
+	vu_group->numa_id = spdk_env_get_numa_id(spdk_env_get_current_core());
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	TAILQ_INSERT_TAIL(&vu_transport->poll_groups, vu_group, link);
-	if (vu_transport->next_pg == NULL) {
-		vu_transport->next_pg = vu_group;
-	}
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 
 	return &vu_group->group;
+}
+
+static uint32_t
+nvmf_poll_group_get_io_qpair_count(struct spdk_nvmf_poll_group *group)
+{
+	uint32_t count;
+
+	/*
+	 * Just assume that unassociated qpairs will eventually be io
+	 * qpairs.  This is close enough for the use cases for this
+	 * function.
+	 */
+	pthread_mutex_lock(&group->mutex);
+	count = group->stat.current_io_qpairs + group->current_unassociated_qpairs;
+	pthread_mutex_unlock(&group->mutex);
+
+	return count;
 }
 
 static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
-	struct nvmf_vfio_user_poll_group **vu_group;
+	struct nvmf_vfio_user_endpoint *endpoint;
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
 
 	struct spdk_nvmf_transport_poll_group *result = NULL;
+	struct nvmf_vfio_user_poll_group *vu_group;
+	struct spdk_nvmf_poll_group *group;
+	uint32_t qpair_count, min_qpair_count = UINT32_MAX;
 
 	sq = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_sq, qpair);
 	cq = sq->ctrlr->cqs[sq->cqid];
@@ -3948,14 +4123,32 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 	}
 
-	vu_group = &vu_transport->next_pg;
-	assert(*vu_group != NULL);
+	endpoint = sq->ctrlr->endpoint;
 
-	result = &(*vu_group)->group;
-	*vu_group = TAILQ_NEXT(*vu_group, link);
-	if (*vu_group == NULL) {
-		*vu_group = TAILQ_FIRST(&vu_transport->poll_groups);
+	/* Select the group with the smallest number of qpairs */
+	TAILQ_FOREACH(vu_group, &vu_transport->poll_groups, link) {
+		group = vu_group->group.group;
+
+		/*
+		 * If endpoint requires specific NUMA node ID, it can be processed only
+		 * by a poll group assigned to that NUMA node ID.
+		 */
+		if (endpoint->numa_id != SPDK_ENV_NUMA_ID_ANY &&
+		    endpoint->numa_id != vu_group->numa_id) {
+			continue;
+		}
+		if (nvmf_qpair_is_admin_queue(qpair)) {
+			qpair_count = group->stat.current_admin_qpairs;
+		} else {
+			qpair_count = nvmf_poll_group_get_io_qpair_count(group);
+		}
+		if (qpair_count < min_qpair_count) {
+			min_qpair_count = qpair_count;
+			result = &vu_group->group;
+		}
 	}
+
+	assert(result != NULL);
 
 out:
 	if (cq->group == NULL) {
@@ -3981,7 +4174,7 @@ vfio_user_poll_group_del_intr(struct nvmf_vfio_user_poll_group *vu_group)
 static void
 nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct nvmf_vfio_user_poll_group *vu_group, *next_tgroup;
+	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_transport *vu_transport;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "destroy poll group\n");
@@ -3995,14 +4188,7 @@ nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
-	next_tgroup = TAILQ_NEXT(vu_group, link);
 	TAILQ_REMOVE(&vu_transport->poll_groups, vu_group, link);
-	if (next_tgroup == NULL) {
-		next_tgroup = TAILQ_FIRST(&vu_transport->poll_groups);
-	}
-	if (vu_transport->next_pg == vu_group) {
-		vu_transport->next_pg = next_tgroup;
-	}
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 
 	free(vu_group);
@@ -4456,7 +4642,7 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_sq *sq, struct nvmf_vfio_user_req
 	TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
 }
 
-static int
+static void
 nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 {
 	struct nvmf_vfio_user_sq *sq;
@@ -4468,11 +4654,9 @@ nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 	sq = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_sq, qpair);
 
 	_nvmf_vfio_user_req_free(sq, vu_req);
-
-	return 0;
 }
 
-static int
+static void
 nvmf_vfio_user_req_complete(struct spdk_nvmf_request *req)
 {
 	struct nvmf_vfio_user_sq *sq;
@@ -4490,8 +4674,6 @@ nvmf_vfio_user_req_complete(struct spdk_nvmf_request *req)
 	}
 
 	_nvmf_vfio_user_req_free(sq, vu_req);
-
-	return 0;
 }
 
 static void
@@ -5019,6 +5201,7 @@ nvmf_vfio_user_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group
 
 	spdk_json_write_named_uint64(w, "cqh_admin_writes", vu_group->stats.cqh_admin_writes);
 	spdk_json_write_named_uint64(w, "cqh_io_writes", vu_group->stats.cqh_io_writes);
+	spdk_json_write_named_int32(w, "numa_id", vu_group->numa_id);
 }
 
 static void
@@ -5030,7 +5213,6 @@ nvmf_vfio_user_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_io_size =		NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE;
 	opts->io_unit_size =		NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =		NVMF_VFIO_USER_DEFAULT_AQ_DEPTH;
-	opts->num_shared_buffers =	0;
 	opts->buf_cache_size =		0;
 	opts->association_timeout =	0;
 	opts->transport_specific =      NULL;
@@ -5047,6 +5229,9 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 	.stop_listen = nvmf_vfio_user_stop_listen,
 	.cdata_init = nvmf_vfio_user_cdata_init,
 	.listen_associate = nvmf_vfio_user_listen_associate,
+	.listen_dump_opts = nvmf_vfio_user_listen_dump_opts,
+
+	.subsystem_add_ns = nvmf_vfio_user_subsystem_add_ns,
 
 	.listener_discover = nvmf_vfio_user_discover,
 

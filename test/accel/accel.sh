@@ -32,6 +32,7 @@ build_accel_config() {
 	[[ $SPDK_TEST_ACCEL_DSA -gt 0 ]] && accel_json_cfg+=('{"method": "dsa_scan_accel_module"}')
 	[[ $SPDK_TEST_ACCEL_IAA -gt 0 ]] && accel_json_cfg+=('{"method": "iaa_scan_accel_module"}')
 	[[ $SPDK_TEST_IOAT -gt 0 ]] && accel_json_cfg+=('{"method": "ioat_scan_accel_module"}')
+	[[ $SPDK_TEST_AE4DMA -gt 0 ]] && accel_json_cfg+=('{"method": "ae4dma_scan_accel_module"}')
 
 	if [[ $COMPRESSDEV ]]; then
 		accel_json_cfg+=('{"method": "compressdev_scan_accel_module", "params":{"pmd": 0}}')
@@ -65,6 +66,7 @@ function get_expected_opcs() {
 	[[ $SPDK_TEST_ACCEL_DSA -gt 0 ]] && check_save_config "dsa_scan_accel_module"
 	[[ $SPDK_TEST_ACCEL_IAA -gt 0 ]] && check_save_config "iaa_scan_accel_module"
 	[[ $SPDK_TEST_IOAT -gt 0 ]] && check_save_config "ioat_scan_accel_module"
+	[[ $SPDK_TEST_AE4DMA -gt 0 ]] && check_save_config "ae4dma_scan_accel_module"
 	[[ $COMPRESSDEV ]] && check_save_config "compressdev_scan_accel_module"
 
 	exp_opcs=($($rpc_py accel_get_opc_assignments | jq -r ". | to_entries | map(\"\(.key)=\(.value)\") | .[]"))

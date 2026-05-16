@@ -25,6 +25,7 @@ DEFINE_STUB_V(spdk_pci_driver_register, (const char *name, struct spdk_pci_id *i
 		uint32_t flags));
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_ioat_get_driver, struct spdk_pci_driver *, (void), NULL)
+DEFINE_STUB(spdk_pci_ae4dma_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_virtio_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_env_thread_launch_pinned, int, (uint32_t core, thread_start_fn fn, void *arg), 0);
 DEFINE_STUB_V(spdk_env_thread_wait_all, (void));

@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+#define SPDK_LOG_DEPRECATION_EVERY_24H	86400
+#define SPDK_LOG_DEPRECATION_ALWAYS	0
+
 /**
  * for passing user-provided log call
  *

@@ -2,10 +2,16 @@
 #  Copyright (C) 2019 Intel Corporation.
 #  All rights reserved.
 
-import sys
 import functools
+import sys
+from typing import Dict
 
-deprecated_aliases = {}
+deprecated_aliases: Dict[str, str] = {}
+
+
+def check_called_name(name):
+    if name in deprecated_aliases:
+        print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
 
 def deprecated_alias(old_name):
@@ -35,7 +41,7 @@ def deprecated_method(method):
 
 def hint_rpc_name(parser):
     try:
-        from CommandNotFound.CommandNotFound import similar_words as similar_rpcs
+        from CommandNotFound.CommandNotFound import similar_words as similar_rpcs  # type: ignore[import]
     except (ImportError, ModuleNotFoundError):
         return parser
 

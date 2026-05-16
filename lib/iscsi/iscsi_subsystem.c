@@ -962,7 +962,8 @@ iscsi_poll_group_poll(void *ctx)
 
 	rc = spdk_sock_group_poll(group->sock_group);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
+		SPDK_ERRLOG("spdk_sock_group_poll() failed, sock_group=%p, rc %d: %s\n", group->sock_group, rc,
+			    spdk_strerror(-rc));
 	}
 
 	STAILQ_FOREACH_SAFE(conn, &group->connections, pg_link, tmp) {

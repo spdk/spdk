@@ -8,56 +8,36 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk_internal/rpc_autogen.h"
 
-struct rpc_construct_aio {
-	char *name;
-	char *filename;
-	uint32_t block_size;
-	bool readonly;
-	bool fallocate;
-	struct spdk_uuid uuid;
-};
-
-struct rpc_construct_aio_ctx {
-	struct rpc_construct_aio req;
-	struct spdk_jsonrpc_request *request;
-};
-
-static void
-free_rpc_construct_aio(struct rpc_construct_aio_ctx *ctx)
-{
-	free(ctx->req.name);
-	free(ctx->req.filename);
-	free(ctx);
-}
-
-static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
-	{"name", offsetof(struct rpc_construct_aio, name), spdk_json_decode_string},
-	{"filename", offsetof(struct rpc_construct_aio, filename), spdk_json_decode_string},
-	{"block_size", offsetof(struct rpc_construct_aio, block_size), spdk_json_decode_uint32, true},
-	{"readonly", offsetof(struct rpc_construct_aio, readonly), spdk_json_decode_bool, true},
-	{"fallocate", offsetof(struct rpc_construct_aio, fallocate), spdk_json_decode_bool, true},
-	{"uuid", offsetof(struct rpc_construct_aio, uuid), spdk_json_decode_uuid, true},
+static const struct spdk_json_object_decoder rpc_bdev_aio_create_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_aio_create_ctx, name), spdk_json_decode_string},
+	{"filename", offsetof(struct rpc_bdev_aio_create_ctx, filename), spdk_json_decode_string},
+	{"block_size", offsetof(struct rpc_bdev_aio_create_ctx, block_size), spdk_json_decode_uint32, true},
+	{"readonly", offsetof(struct rpc_bdev_aio_create_ctx, readonly), spdk_json_decode_bool, true},
+	{"fallocate", offsetof(struct rpc_bdev_aio_create_ctx, fallocate), spdk_json_decode_bool, true},
+	{"uuid", offsetof(struct rpc_bdev_aio_create_ctx, uuid), spdk_json_decode_uuid, true},
+	{"nowait", offsetof(struct rpc_bdev_aio_create_ctx, nowait), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_bdev_aio_create_cb(void *cb_arg)
 {
-	struct rpc_construct_aio_ctx *ctx = cb_arg;
-	struct spdk_jsonrpc_request *request = ctx->request;
+	struct rpc_bdev_aio_create_ctx *ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_string(w, ctx->req.name);
-	spdk_jsonrpc_end_result(request, w);
-	free_rpc_construct_aio(ctx);
+	w = spdk_jsonrpc_begin_result(ctx->request);
+	spdk_json_write_string(w, ctx->name);
+	spdk_jsonrpc_end_result(ctx->request, w);
+	free_rpc_bdev_aio_create(ctx);
+	free(ctx);
 }
 
 static void
 rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_construct_aio_ctx *ctx;
+	struct rpc_bdev_aio_create_ctx *ctx;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -66,22 +46,24 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
-				    SPDK_COUNTOF(rpc_construct_aio_decoders),
-				    &ctx->req)) {
+	if (spdk_json_decode_object(params, rpc_bdev_aio_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_aio_create_decoders),
+				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		free_rpc_construct_aio(ctx);
+		free_rpc_bdev_aio_create(ctx);
+		free(ctx);
 		return;
 	}
 
 	ctx->request = request;
-	rc = create_aio_bdev(ctx->req.name, ctx->req.filename, ctx->req.block_size,
-			     ctx->req.readonly, ctx->req.fallocate, &ctx->req.uuid);
+	rc = create_aio_bdev(ctx->name, ctx->filename, ctx->block_size,
+			     ctx->readonly, ctx->fallocate, &ctx->uuid, ctx->nowait);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free_rpc_construct_aio(ctx);
+		free_rpc_bdev_aio_create(ctx);
+		free(ctx);
 		return;
 	}
 
@@ -89,23 +71,19 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_aio_create", rpc_bdev_aio_create, SPDK_RPC_RUNTIME)
 
-struct rpc_rescan_aio {
-	char *name;
-};
-
-static const struct spdk_json_object_decoder rpc_rescan_aio_decoders[] = {
-	{"name", offsetof(struct rpc_rescan_aio, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_aio_rescan_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_aio_rescan_ctx, name), spdk_json_decode_string},
 };
 
 static void
 rpc_bdev_aio_rescan(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_rescan_aio req = {NULL};
+	struct rpc_bdev_aio_rescan_ctx req = {};
 	int bdeverrno;
 
-	if (spdk_json_decode_object(params, rpc_rescan_aio_decoders,
-				    SPDK_COUNTOF(rpc_rescan_aio_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_aio_rescan_decoders,
+				    SPDK_COUNTOF(rpc_bdev_aio_rescan_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -121,22 +99,12 @@ rpc_bdev_aio_rescan(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_send_bool_response(request, true);
 cleanup:
-	free(req.name);
+	free_rpc_bdev_aio_rescan(&req);
 }
 SPDK_RPC_REGISTER("bdev_aio_rescan", rpc_bdev_aio_rescan, SPDK_RPC_RUNTIME)
 
-struct rpc_delete_aio {
-	char *name;
-};
-
-static void
-free_rpc_delete_aio(struct rpc_delete_aio *r)
-{
-	free(r->name);
-}
-
-static const struct spdk_json_object_decoder rpc_delete_aio_decoders[] = {
-	{"name", offsetof(struct rpc_delete_aio, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_aio_delete_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_aio_delete_ctx, name), spdk_json_decode_string},
 };
 
 static void
@@ -155,10 +123,10 @@ static void
 rpc_bdev_aio_delete(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_delete_aio req = {NULL};
+	struct rpc_bdev_aio_delete_ctx req = {};
 
-	if (spdk_json_decode_object(params, rpc_delete_aio_decoders,
-				    SPDK_COUNTOF(rpc_delete_aio_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_aio_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_aio_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -168,6 +136,6 @@ rpc_bdev_aio_delete(struct spdk_jsonrpc_request *request,
 	bdev_aio_delete(req.name, _rpc_bdev_aio_delete_cb, request);
 
 cleanup:
-	free_rpc_delete_aio(&req);
+	free_rpc_bdev_aio_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_aio_delete", rpc_bdev_aio_delete, SPDK_RPC_RUNTIME)

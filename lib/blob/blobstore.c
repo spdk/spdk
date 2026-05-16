@@ -1766,7 +1766,7 @@ blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	}
 
 	ctx->blob = blob;
-	ctx->pages = spdk_realloc(ctx->pages, bs->md_page_size, 0);
+	ctx->pages =  spdk_malloc(bs->md_page_size, 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->pages) {
 		free(ctx);
 		cb_fn(seq, cb_arg, -ENOMEM);
@@ -2871,7 +2871,6 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->blob = blob;
 	ctx->io_unit = cluster_start_io_unit;
 	ctx->new_cluster_page = ch->new_cluster_page;
-	memset(ctx->new_cluster_page, 0, blob->bs->md_page_size);
 
 	/* Check if the cluster that we intend to do CoW for is valid for
 	 * the backing dev. For zeroes backing dev, it'll be always valid.
@@ -4419,7 +4418,6 @@ bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->mask->length);
 	if (rc < 0) {
-		spdk_free(ctx->mask);
 		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
@@ -4577,10 +4575,6 @@ bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx, struct spdk_blob_md_p
 				 * in the used cluster map.
 				 */
 				if (cluster_idx != 0) {
-					if (cluster_idx < desc_extent->start_cluster_idx &&
-					    cluster_idx >= desc_extent->start_cluster_idx + cluster_count) {
-						return -EINVAL;
-					}
 					spdk_bit_array_set(ctx->used_clusters, cluster_idx);
 					if (bs->num_free_clusters == 0) {
 						return -ENOSPC;
@@ -5014,6 +5008,11 @@ bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	int rc;
 
+	if (bserrno != 0) {
+		bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+
 	rc = bs_super_validate(ctx->super, ctx->bs);
 	if (rc != 0) {
 		bs_load_ctx_fail(ctx, rc);
@@ -5355,7 +5354,9 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent_page *)desc;
 
-			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
+			for (i = 0;
+			     i < (desc_extent->length - sizeof(desc_extent->start_cluster_idx)) / sizeof(
+				     desc_extent->cluster_idx[0]); i++) {
 				if (desc_extent->cluster_idx[i] != 0) {
 					fprintf(ctx->fp, "Allocated Extent - Start: %" PRIu32,
 						desc_extent->cluster_idx[i]);
@@ -5428,11 +5429,16 @@ bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	int rc;
 
+	if (bserrno != 0) {
+		bs_dump_finish(seq, ctx, bserrno);
+		return;
+	}
+
 	fprintf(ctx->fp, "Signature: \"%.8s\" ", ctx->super->signature);
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 		   sizeof(ctx->super->signature)) != 0) {
 		fprintf(ctx->fp, "(Mismatch)\n");
-		bs_dump_finish(seq, ctx, bserrno);
+		bs_dump_finish(seq, ctx, -EILSEQ);
 		return;
 	} else {
 		fprintf(ctx->fp, "(OK)\n");
@@ -5840,7 +5846,11 @@ bs_unload_finish(struct spdk_bs_load_ctx *ctx, int bserrno)
 	spdk_free(ctx->super);
 	free(ctx);
 
-	if (bserrno != 0) {
+	/*
+	 * Exception for EIO is made for hot-remove cases where the underlying
+	 * block device is no longer available.
+	 */
+	if (bserrno != 0 && bserrno != -EIO) {
 		bs_sequence_finish(seq, bserrno);
 		return;
 	}
@@ -8308,7 +8318,6 @@ delete_snapshot_update_extent_pages(void *cb_arg, int bserrno)
 		/* Clone and snapshot both contain partially filled matching extent pages.
 		 * Update the clone extent page in place with cluster map containing the mix of both. */
 		ctx->next_extent_page = i + 1;
-		memset(ctx->page, 0, SPDK_BS_PAGE_SIZE);
 
 		blob_write_extent_page(ctx->clone, *extent_page, i * SPDK_EXTENTS_PER_EP, ctx->page,
 				       delete_snapshot_update_extent_pages, ctx);
@@ -8933,6 +8942,7 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 	ctx->bs = blob->bs;
 	ctx->extent = extent;
 	ctx->page = page;
+	memset(ctx->page, 0, blob->bs->md_page_size);
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;

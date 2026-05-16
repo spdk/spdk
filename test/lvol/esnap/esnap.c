@@ -20,13 +20,6 @@
 
 #include "unit/lib/json_mock.c"
 
-#ifdef SPDK_CONFIG_PMDK
-DEFINE_STUB(pmem_msync, int, (const void *addr, size_t len), 0);
-DEFINE_STUB(pmem_memcpy_persist, void *, (void *pmemdest, const void *src, size_t len), NULL);
-DEFINE_STUB(pmem_is_pmem, int, (const void *addr, size_t len), 0);
-DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
-#endif
-
 char g_testdir[PATH_MAX];
 
 static void
@@ -376,7 +369,7 @@ esnap_hotplug(void)
 	/* Create aio device to hold the lvstore. */
 	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "esnap_hotplug.aio");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid, false);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	poll_threads();
 
@@ -421,7 +414,7 @@ esnap_hotplug(void)
 	SPDK_CU_ASSERT_FATAL(spdk_bdev_get_by_name(uuid_esnap) == NULL);
 
 	/* Trigger the reload of the lvstore */
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid, false);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	rc = 0xbad;
 	spdk_bdev_wait_for_examine(esnap_wait_for_examine, &rc);
@@ -477,7 +470,7 @@ esnap_remove_degraded(void)
 	/* Create aio device to hold the lvstore. */
 	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "remove_degraded.aio");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid, false);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	poll_threads();
 
@@ -545,7 +538,7 @@ esnap_remove_degraded(void)
 	 *   (missing) <-- vol2 <-- vol1
 	 *                    `---- vol3
 	 */
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid, false);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	rc = 0xbad;
 	spdk_bdev_wait_for_examine(esnap_wait_for_examine, &rc);
@@ -694,7 +687,7 @@ late_delete(void)
 	 */
 	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "late_delete.aio");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false, false, &uuid, false);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	poll_threads();
 

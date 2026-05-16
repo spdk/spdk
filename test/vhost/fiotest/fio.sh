@@ -168,8 +168,8 @@ for vm_conf in "${vms[@]}"; do
 	fi
 
 	setup_cmd="vm_setup --force=${conf[0]} --disk-type=$test_type"
-	[[ x"${conf[1]}" != x"" ]] && setup_cmd+=" --os=${conf[1]}"
-	[[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disks=${conf[2]}"
+	[[ -n "${conf[1]}" ]] && setup_cmd+=" --os=${conf[1]}"
+	[[ -n "${conf[2]}" ]] && setup_cmd+=" --disks=${conf[2]}"
 
 	if [[ "$test_type" == "spdk_vhost_blk" ]] && $packed; then
 		setup_cmd+=" --packed"

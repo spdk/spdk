@@ -13,6 +13,12 @@ HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
 # on FreeBSD, we want to ignore queue_extras.h entirely.
 HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/queue_extras.h,$(HEADERS))
 HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/vfu_target.h,$(HEADERS))
+ifneq ($(CONFIG_ISAL),y)
+HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/isa-l.h,$(HEADERS))
+endif
+ifneq ($(CONFIG_ISAL_CRYPTO),y)
+HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/isa-l-crypto.h,$(HEADERS))
+endif
 CXX_SRCS := $(patsubst %.h,%.cpp,$(notdir $(HEADERS)))
 
 install : all

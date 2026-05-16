@@ -135,7 +135,6 @@
 	spdk_nvme_poll_group_all_connected;
 	spdk_nvme_poll_group_get_ctx;
 	spdk_nvme_poll_group_wait;
-	spdk_nvme_poll_group_get_fd;
 	spdk_nvme_poll_group_get_fd_group;
 	spdk_nvme_poll_group_set_interrupt_callback;
 
@@ -153,6 +152,7 @@
 	spdk_nvme_ns_get_md_size;
 	spdk_nvme_ns_get_format_index;
 	spdk_nvme_ns_supports_extended_lba;
+	spdk_nvme_ns_supports_write_uncorrectable;
 	spdk_nvme_ns_supports_compare;
 	spdk_nvme_ns_get_dealloc_logical_block_read_value;
 	spdk_nvme_ns_get_optimal_io_boundary;
@@ -162,7 +162,9 @@
 	spdk_nvme_ns_get_flags;
 	spdk_nvme_ns_get_ana_group_id;
 	spdk_nvme_ns_get_ana_state;
+
 	spdk_nvme_nvm_ns_get_data;
+	spdk_nvme_nvm_ctrlr_get_data;
 
 	spdk_nvme_ns_cmd_write;
 	spdk_nvme_ns_cmd_writev;
@@ -189,28 +191,34 @@
 	spdk_nvme_ns_cmd_compare_with_md;
 	spdk_nvme_ns_cmd_writev_ext;
 	spdk_nvme_ns_cmd_write_ext;
+	spdk_nvme_ns_cmd_write_iov;
 	spdk_nvme_ns_cmd_readv_ext;
 	spdk_nvme_ns_cmd_read_ext;
+	spdk_nvme_ns_cmd_read_iov;
 	spdk_nvme_ns_cmd_verify;
 
-	spdk_nvme_qpair_get_optimal_poll_group;
 	spdk_nvme_qpair_process_completions;
 	spdk_nvme_qpair_get_failure_reason;
 	spdk_nvme_qpair_add_cmd_error_injection;
 	spdk_nvme_qpair_remove_cmd_error_injection;
 	spdk_nvme_qpair_print_command;
 	spdk_nvme_qpair_print_completion;
+	spdk_nvme_qpair_print_completion_ext;
 	spdk_nvme_qpair_get_id;
 	spdk_nvme_qpair_get_fd;
 	spdk_nvme_qpair_get_num_outstanding_reqs;
 	spdk_nvme_qpair_set_abort_dnr;
 	spdk_nvme_qpair_is_connected;
 	spdk_nvme_qpair_authenticate;
+	spdk_nvme_qpair_is_admin_queue;
+	spdk_nvme_qpair_get_queue_depth;
 
 	spdk_nvme_print_command;
 	spdk_nvme_print_completion;
+	spdk_nvme_print_completion_ext;
 
 	spdk_nvme_cpl_get_status_string;
+	spdk_nvme_cpl_get_status_string_ext;
 	spdk_nvme_cpl_get_status_type_string;
 
 	spdk_nvme_rdma_init_hooks;
@@ -258,6 +266,15 @@
 	spdk_nvme_zns_set_zone_desc_ext;
 	spdk_nvme_zns_report_zones;
 	spdk_nvme_zns_ext_report_zones;
+
+	# public functions from nvme_kv.h
+	spdk_nvme_kv_ns_get_data;
+	spdk_nvme_kv_ctrlr_get_data;
+	spdk_nvme_kv_store;
+	spdk_nvme_kv_retrieve;
+	spdk_nvme_kv_delete;
+	spdk_nvme_kv_exist;
+	spdk_nvme_kv_list;
 
 	# public functions from nvme_ocssd.h
 	spdk_nvme_ctrlr_is_ocssd_supported;

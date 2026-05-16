@@ -2,6 +2,7 @@
 
 - @subpage about
 - @subpage getting_started
+- @subpage releases
 - @subpage vagrant
 - @subpage changelog
 - @subpage deprecation

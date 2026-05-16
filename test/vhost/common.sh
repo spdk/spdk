@@ -5,7 +5,7 @@
 
 : ${SPDK_VHOST_VERBOSE=false}
 : ${VHOST_DIR="$HOME/vhost_test"}
-: ${QEMU_BIN:="qemu-system-x86_64"}
+: ${QEMU_BIN:="/usr/local/qemu/vhost-latest/bin/qemu-system-x86_64"}
 : ${QEMU_IMG_BIN="qemu-img"}
 
 TEST_DIR=$(readlink -f $rootdir/..)
@@ -671,6 +671,7 @@ function vm_setup() {
 	local node_num=${!qemu_numa_node_param}
 	local boot_disk_present=false
 	notice "NUMA NODE: $node_num"
+	cmd+=(-M "type=q35,kernel_irqchip=split" -device "intel-iommu,pt=on,intremap=on")
 	cmd+=(-m "$guest_memory" --enable-kvm -cpu host -smp "$cpu_num" -vga std -vnc ":$vnc_socket" -daemonize)
 	cmd+=(-object "memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind")
 	[[ $os_mode == snapshot ]] && cmd+=(-snapshot)
@@ -756,7 +757,10 @@ function vm_setup() {
 				;;
 			vfio_user)
 				notice "using socket $VM_DIR/$vm_num/domain/muser$disk/$disk/cntrl"
-				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
+				printf -v vfio_user_pci \
+					\''{"driver":"vfio-user-pci","socket":{"path":"%s","type":"unix"}}'\' \
+					"$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl"
+				cmd+=(-device "$vfio_user_pci")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true
@@ -764,7 +768,10 @@ function vm_setup() {
 				;;
 			vfio_user_virtio)
 				notice "using socket $VM_DIR/vfu_tgt/virtio.$disk"
-				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/vfu_tgt/virtio.$disk")
+				printf -v vfio_user_pci \
+					\''{"driver":"vfio-user-pci","socket":{"path":"%s","type":"unix"}}'\' \
+					"$VM_DIR/vfu_tgt/virtio.$disk"
+				cmd+=(-device "$vfio_user_pci")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true

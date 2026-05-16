@@ -46,7 +46,7 @@ if [ -n "$nv_cache" ]; then
 fi
 
 l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * 10 / 100 / 1024))
-ftl_construct_args="bdev_ftl_create -b ftl0 -d $split_bdev --l2p_dram_limit $l2p_dram_size_mb"
+ftl_construct_args="bdev_ftl_create -b ftl0 -d $split_bdev --l2p-dram-limit $l2p_dram_size_mb"
 
 [ -n "$uuid" ] && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
@@ -62,7 +62,7 @@ $rpc_py -t $timeout $ftl_construct_args
 	$rpc_py save_subsystem_config -n bdev
 	echo ']}'
 ) > $testdir/config/ftl.json
-$rpc_py bdev_ftl_unload -b ftl0
+$rpc_py bdev_ftl_delete -b ftl0
 killprocess $svcpid
 
 # Generate random data and calculate checksum

@@ -10,7 +10,7 @@ name = "spdk"
 dynamic = ["version"]
 readme = "README.md"
 description = "Python bindings for the Storage Performance Development Kit (SPDK)"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { text = "BSD-3-Clause" }
 
 authors = [
@@ -58,6 +58,25 @@ cli = [
 mcp = [
     "mcp[cli]>=1.9.2"
 ]
+dev = [
+    "grpcio",
+    "grpcio-tools",
+    "ijson",
+    "jinja2",
+    "meson",
+    "ninja",
+    "pandas",
+    "pyelftools",
+    "python-magic",
+    "pyyaml",
+    "tabulate",
+    "ruff",
+    "mypy",
+    "build",
+    "twine",
+    "uv",
+    "scikit-build; platform_machine == 'aarch64'"
+]
 
 [tool.hatch.version]
 path = "spdk/version.py"
@@ -72,3 +91,36 @@ path = "spdk/version.py"
 "../scripts/rpc.py" = "spdk/spdk_rpc.py"
 "../scripts/sma.py" = "spdk/spdk_sma.py"
 "../scripts/spdkcli.py" = "spdk/spdk_cli.py"
+
+[tool.ruff]
+fix = false
+line-length = 140
+exclude = [
+    "xnvme",
+    "python/spdk/sma",
+    "ocf",
+    "libvfio-user",
+    "intel-ipsec-mb",
+    "dpdk",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "W",  # warnings
+    "I",  # isort (import sorting)
+    "B",  # flake8-bugbear
+    "A",  # flake8-builtins
+    "COM",# flake8-commas
+    "RUF",# Ruff-specific rules
+]
+ignore = [
+    "RUF012",        # mutable class attributes must use ClassVar
+]
+
+[tool.mypy]
+exclude = [
+    "/spdk/sma",
+    "/spdk/spdkcli",
+]

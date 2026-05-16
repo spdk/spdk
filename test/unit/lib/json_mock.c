@@ -12,6 +12,7 @@ DEFINE_STUB(spdk_json_write_begin, struct spdk_json_write_ctx *, (spdk_json_writ
 
 DEFINE_STUB(spdk_json_write_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB_V(spdk_json_write_reset, (struct spdk_json_write_ctx *w));
+DEFINE_STUB_V(spdk_json_write_set_flags, (struct spdk_json_write_ctx *w, uint32_t flags));
 DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
 DEFINE_STUB(spdk_json_write_uint8, int, (struct spdk_json_write_ctx *w, uint8_t val), 0);
@@ -28,6 +29,8 @@ DEFINE_STUB(spdk_json_write_string_fmt, int, (struct spdk_json_write_ctx *w, con
 
 DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_batch_begin, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_batch_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);

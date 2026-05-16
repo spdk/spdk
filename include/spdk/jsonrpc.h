@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
- *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2023, 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /**
@@ -15,6 +15,11 @@
 
 #include "spdk/json.h"
 #include "spdk/log.h"
+
+/**
+ * It is required to invoke API functions on the SPDK app thread;
+ * otherwise, race conditions may lead to undefined behavior.
+ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -212,8 +217,13 @@ void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
  * If this function returns non-NULL, the user must call spdk_jsonrpc_end_request()
  * on the request after writing the desired request object to the spdk_json_write_ctx.
  *
+ * This function works for both single requests and batch requests. If
+ * spdk_jsonrpc_begin_batch() was called first, this adds a request to the batch
+ * and returns the same write context. In batch mode, if id < 0, an ID is
+ * auto-assigned starting from 0.
+ *
  * \param request JSON-RPC request.
- * \param id ID index for the request. If < 0 skip ID.
+ * \param id ID index for the request. If < 0, skip ID (single) or auto-assign (batch).
  * \param method Name of the RPC method. If NULL caller will have to create "method" key.
  *
  * \return JSON write context or NULL in case of error.
@@ -224,6 +234,9 @@ spdk_jsonrpc_begin_request(struct spdk_jsonrpc_client_request *request, int32_t 
 
 /**
  * Complete a JSON-RPC request.
+ *
+ * In batch mode (after spdk_jsonrpc_begin_batch()), this just closes the current
+ * request object. Call spdk_jsonrpc_end_batch() after all requests are added.
  *
  * \param request JSON-RPC request.
  * \param w JSON write context returned from spdk_jsonrpc_begin_request().
@@ -267,6 +280,28 @@ struct spdk_jsonrpc_client_request *spdk_jsonrpc_client_create_request(void);
  * \param req pointer to JSON-RPC request object.
  */
 void spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req);
+
+/**
+ * Begin building a JSON-RPC batch request.
+ *
+ * A batch request is an array of individual requests sent together.
+ * After calling this function, use spdk_jsonrpc_begin_request() and
+ * spdk_jsonrpc_end_request() to add each request to the batch (they
+ * detect batch mode automatically), then call spdk_jsonrpc_end_batch()
+ * to complete the batch.
+ *
+ * \param request JSON-RPC request object to build the batch in.
+ *
+ * \return 0 on success, negative errno on error.
+ */
+int spdk_jsonrpc_begin_batch(struct spdk_jsonrpc_client_request *request);
+
+/**
+ * Complete a JSON-RPC batch request.
+ *
+ * \param request JSON-RPC request object.
+ */
+void spdk_jsonrpc_end_batch(struct spdk_jsonrpc_client_request *request);
 
 /**
  * Send the JSON-RPC request in JSON-RPC client. Library takes ownership of the

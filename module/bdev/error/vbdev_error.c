@@ -31,13 +31,15 @@ static TAILQ_HEAD(, spdk_vbdev_error_config) g_error_config
 struct vbdev_error_info {
 	uint32_t			error_type;
 	uint32_t			error_num;
+	uint32_t			nvme_sct;
+	uint32_t			nvme_sc;
 	uint64_t			error_qd;
 	uint64_t			corrupt_offset;
 	uint8_t				corrupt_value;
 };
 
 struct error_io {
-	enum vbdev_error_type error_type;
+	enum spdk_bdev_error_type error_type;
 	TAILQ_ENTRY(error_io) link;
 };
 
@@ -98,7 +100,7 @@ vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
 	uint32_t i;
 	int rc = 0;
 
-	if (opts->error_type == VBDEV_IO_CORRUPT_DATA) {
+	if (opts->error_type == SPDK_BDEV_ERROR_TYPE_CORRUPT_DATA) {
 		if (opts->corrupt_value == 0) {
 			/* If corrupt_value is 0, XOR cannot cause data corruption. */
 			SPDK_ERRLOG("corrupt_value should be non-zero.\n");
@@ -133,6 +135,8 @@ vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
 	if (0xffffffff == opts->io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
 			error_disk->error_vector[i].error_type = opts->error_type;
+			error_disk->error_vector[i].nvme_sct = opts->nvme_sct;
+			error_disk->error_vector[i].nvme_sc = opts->nvme_sc;
 			error_disk->error_vector[i].error_num = opts->error_num;
 			error_disk->error_vector[i].error_qd = opts->error_qd;
 			error_disk->error_vector[i].corrupt_offset = opts->corrupt_offset;
@@ -144,6 +148,8 @@ vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
 		}
 	} else {
 		error_disk->error_vector[opts->io_type].error_type = opts->error_type;
+		error_disk->error_vector[opts->io_type].nvme_sct = opts->nvme_sct;
+		error_disk->error_vector[opts->io_type].nvme_sc = opts->nvme_sc;
 		error_disk->error_vector[opts->io_type].error_num = opts->error_num;
 		error_disk->error_vector[opts->io_type].error_qd = opts->error_qd;
 		error_disk->error_vector[opts->io_type].corrupt_offset = opts->corrupt_offset;
@@ -205,19 +211,19 @@ vbdev_error_get_error_type(struct error_disk *error_disk, struct error_channel *
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		break;
 	default:
-		return VBDEV_IO_NO_ERROR;
+		return SPDK_BDEV_ERROR_TYPE_NO_ERROR;
 	}
 
 	error_info = &error_disk->error_vector[io_type];
 
 	if (ch->io_inflight < error_info->error_qd) {
-		return VBDEV_IO_NO_ERROR;
+		return SPDK_BDEV_ERROR_TYPE_NO_ERROR;
 	}
 
 	error_num = error_info->error_num;
 	do {
 		if (error_num == 0) {
-			return VBDEV_IO_NO_ERROR;
+			return SPDK_BDEV_ERROR_TYPE_NO_ERROR;
 		}
 	} while (!__atomic_compare_exchange_n(&error_info->error_num,
 					      &error_num, error_num - 1,
@@ -261,7 +267,7 @@ vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *c
 	ch->io_inflight--;
 
 	if (success && bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		if (error_io->error_type == VBDEV_IO_CORRUPT_DATA) {
+		if (error_io->error_type == SPDK_BDEV_ERROR_TYPE_CORRUPT_DATA) {
 			vbdev_error_corrupt_io_data(bdev_io,
 						    error_disk->error_vector[bdev_io->type].corrupt_offset,
 						    error_disk->error_vector[bdev_io->type].corrupt_value);
@@ -287,23 +293,27 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	error_io->error_type = vbdev_error_get_error_type(error_disk, ch, bdev_io->type);
 
 	switch (error_io->error_type) {
-	case VBDEV_IO_FAILURE:
+	case SPDK_BDEV_ERROR_TYPE_FAILURE:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
-	case VBDEV_IO_NOMEM:
+	case SPDK_BDEV_ERROR_TYPE_NVME_FAILURE:
+		spdk_bdev_io_complete_nvme_status(bdev_io, 0, error_disk->error_vector[bdev_io->type].nvme_sct,
+						  error_disk->error_vector[bdev_io->type].nvme_sc);
+		break;
+	case SPDK_BDEV_ERROR_TYPE_NOMEM:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		break;
-	case VBDEV_IO_PENDING:
+	case SPDK_BDEV_ERROR_TYPE_PENDING:
 		TAILQ_INSERT_TAIL(&ch->pending_ios, error_io, link);
 		break;
-	case VBDEV_IO_CORRUPT_DATA:
+	case SPDK_BDEV_ERROR_TYPE_CORRUPT_DATA:
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			vbdev_error_corrupt_io_data(bdev_io,
 						    error_disk->error_vector[bdev_io->type].corrupt_offset,
 						    error_disk->error_vector[bdev_io->type].corrupt_value);
 		}
 	/* fallthrough */
-	case VBDEV_IO_NO_ERROR:
+	case SPDK_BDEV_ERROR_TYPE_NO_ERROR:
 		ch->io_inflight++;
 		rc = spdk_bdev_part_submit_request_ext(&ch->part_ch, bdev_io,
 						       vbdev_error_complete_request);
@@ -602,6 +612,64 @@ vbdev_error_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_json_write_object_end(w);
 	}
+
+	return 0;
+}
+
+static void
+vbdev_error_resume_io(void *ctx)
+{
+	struct spdk_bdev_io *pending_io = ctx;
+	struct spdk_io_channel *_ch = spdk_bdev_io_get_io_channel(pending_io);
+
+	vbdev_error_submit_request(_ch, pending_io);
+}
+
+static void
+vbdev_error_ch_resume_ios(struct spdk_io_channel_iter *i)
+{
+	struct error_channel *ch = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	struct error_io *pending_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(pending_io, &ch->pending_ios, link, tmp) {
+		TAILQ_REMOVE(&ch->pending_ios, pending_io, link);
+		spdk_thread_send_msg(spdk_get_thread(), vbdev_error_resume_io, spdk_bdev_io_from_ctx(pending_io));
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+vbdev_error_resume_pending(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_part *part;
+	struct error_disk *error_disk = NULL;
+	uint32_t i;
+
+	pthread_mutex_lock(&g_vbdev_error_mutex);
+
+	TAILQ_FOREACH(part, &g_error_disks, tailq) {
+		if (bdev == spdk_bdev_part_get_bdev(part)) {
+			error_disk = (struct error_disk *)part;
+			break;
+		}
+	}
+
+	if (error_disk == NULL) {
+		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", bdev->name);
+		pthread_mutex_unlock(&g_vbdev_error_mutex);
+		return -ENODEV;
+	}
+
+	for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
+		if (error_disk->error_vector[i].error_type == SPDK_BDEV_ERROR_TYPE_PENDING) {
+			error_disk->error_vector[i].error_num = 0;
+		}
+	}
+
+	pthread_mutex_unlock(&g_vbdev_error_mutex);
+
+	spdk_for_each_channel(&error_disk->part, vbdev_error_ch_resume_ios, NULL, NULL);
 
 	return 0;
 }

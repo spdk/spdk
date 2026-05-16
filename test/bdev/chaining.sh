@@ -190,7 +190,7 @@ bperfpid=$!
 
 waitforlisten $bperfpid "$bperfsock"
 rpc_bperf <<- CONFIG
-	bdev_set_options --disable-auto-examine
+	bdev_set_options --no-auto-examine
 	bdev_nvme_set_options --allow-accel-sequence
 	framework_start_init
 	bdev_nvme_attach_controller -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $nqn -b nvme0 --ddgst
@@ -220,7 +220,7 @@ bperfpid=$!
 
 waitforlisten $bperfpid "$bperfsock"
 rpc_bperf <<- CONFIG
-	bdev_set_options --disable-auto-examine
+	bdev_set_options --no-auto-examine
 	bdev_nvme_set_options --allow-accel-sequence
 	framework_start_init
 	bdev_nvme_attach_controller -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $nqn -b nvme0 --ddgst

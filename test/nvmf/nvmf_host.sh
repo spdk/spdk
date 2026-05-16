@@ -21,11 +21,15 @@ fi
 
 run_test "nvmf_identify" $rootdir/test/nvmf/host/identify.sh "${TEST_ARGS[@]}"
 run_test "nvmf_perf" $rootdir/test/nvmf/host/perf.sh "${TEST_ARGS[@]}"
-run_test "nvmf_fio_host" $rootdir/test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_failover" $rootdir/test/nvmf/host/failover.sh "${TEST_ARGS[@]}"
 run_test "nvmf_host_discovery" $rootdir/test/nvmf/host/discovery.sh "${TEST_ARGS[@]}"
 run_test "nvmf_host_multipath_status" $rootdir/test/nvmf/host/multipath_status.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery_remove_ifc" $rootdir/test/nvmf/host/discovery_remove_ifc.sh "${TEST_ARGS[@]}"
+
+if [[ -z ${NO_HUGE[*]} ]]; then
+	# fio plugin does not support the no-huge mode so skip the test when NO_HUGE is defined
+	run_test "nvmf_fio_host" $rootdir/test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
+fi
 
 if [[ "$SPDK_TEST_SKIP_NVMF_KERNEL_TESTS" -eq 0 ]]; then
 	run_test "nvmf_identify_kernel_target" "$rootdir/test/nvmf/host/identify_kernel_nvmf.sh" "${TEST_ARGS[@]}"

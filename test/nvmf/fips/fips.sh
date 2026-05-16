@@ -143,8 +143,7 @@ setup_nvmf_tgt_conf $key_path
 
 # Use bdevperf as initiator.
 bdevperf_rpc_sock="/var/tmp/bdevperf.sock"
-"$rootdir/build/examples/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock \
-	-q 128 -o 4096 -w verify -t 10 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10
 bdevperf_pid=$!
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 

@@ -5,8 +5,9 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+from functools import partial
+
+from spdk.rpc.cmd_parser import print_dict
 
 
 def add_parser(subparsers):
@@ -17,8 +18,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('trace_enable_tpoint_group',
                               help='enable trace on a specific tpoint group')
     p.add_argument(
-        'name', help="""trace group name we want to enable in tpoint_group_mask.
-        (for example "bdev" for bdev trace group, "all" for all trace groups).""")
+        'name', help='Name of a registered trace group, or "all" to enable every group')
     p.set_defaults(func=trace_enable_tpoint_group)
 
     def trace_disable_tpoint_group(args):
@@ -27,8 +27,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('trace_disable_tpoint_group',
                               help='disable trace on a specific tpoint group')
     p.add_argument(
-        'name', help="""trace group name we want to disable in tpoint_group_mask.
-        (for example "bdev" for bdev trace group, "all" for all trace groups).""")
+        'name', help='Name of a registered trace group, or "all" to disable every group')
     p.set_defaults(func=trace_disable_tpoint_group)
 
     def trace_set_tpoint_mask(args):
@@ -37,12 +36,11 @@ def add_parser(subparsers):
     p = subparsers.add_parser('trace_set_tpoint_mask',
                               help='enable tracepoint mask on a specific tpoint group')
     p.add_argument(
-        'name', help="""trace group name we want to enable in tpoint_group_mask.
-        (for example "bdev" for bdev trace group)""")
+        'name', help='Name of a registered trace group (e.g. "bdev", "nvmf_rdma", "nvmf_tcp")')
     p.add_argument(
-        'tpoint_mask', help="""tracepoints to be enabled inside a given trace group.
-        (for example value of "0x3" will enable only the first two tpoints in this group)""",
-        type=lambda m: int(m, 16))
+        'tpoint_mask',
+        help='Bitmask of tracepoints to enable within the group (e.g. 0x3 enables the first two)',
+        type=partial(int, base=16))
     p.set_defaults(func=trace_set_tpoint_mask)
 
     def trace_clear_tpoint_mask(args):
@@ -51,12 +49,11 @@ def add_parser(subparsers):
     p = subparsers.add_parser('trace_clear_tpoint_mask',
                               help='disable tracepoint mask on a specific tpoint group')
     p.add_argument(
-        'name', help="""trace group name we want to disable in tpoint_group_mask.
-        (for example "bdev" for bdev trace group)""")
+        'name', help='Name of a registered trace group (e.g. "bdev", "nvmf_rdma", "nvmf_tcp")')
     p.add_argument(
-        'tpoint_mask', help="""tracepoints to be disabled inside a given trace group.
-        (for example value of "0x3" will disable the first two tpoints in this group)""",
-        type=lambda m: int(m, 16))
+        'tpoint_mask',
+        help='Bitmask of tracepoints to disable within the group (e.g. 0x3 disables the first two)',
+        type=partial(int, base=16))
     p.set_defaults(func=trace_clear_tpoint_mask)
 
     def trace_get_tpoint_group_mask(args):
@@ -64,6 +61,13 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('trace_get_tpoint_group_mask', help='get trace point group mask')
     p.set_defaults(func=trace_get_tpoint_group_mask)
+
+    def trace_clear(args):
+        args.client.trace_clear()
+
+    p = subparsers.add_parser('trace_clear',
+                              help='clear trace history so subsequent reads only see new entries')
+    p.set_defaults(func=trace_clear)
 
     def trace_get_info(args):
         print_dict(args.client.trace_get_info())

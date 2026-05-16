@@ -685,21 +685,12 @@ ublk_poller_register(void *args)
 	}
 }
 
-struct rpc_create_target {
-	bool disable_user_copy;
-};
-
-static const struct spdk_json_object_decoder rpc_ublk_create_target[] = {
-	{"disable_user_copy", offsetof(struct rpc_create_target, disable_user_copy), spdk_json_decode_bool, true},
-};
-
 int
-ublk_create_target(const char *cpumask_str, const struct spdk_json_val *params)
+ublk_create_target(const char *cpumask_str, bool disable_user_copy)
 {
 	int rc;
 	uint32_t i;
 	char thread_name[32];
-	struct rpc_create_target req = {};
 	struct ublk_poll_group *poll_group;
 
 	if (g_ublk_tgt.active == true) {
@@ -712,15 +703,7 @@ ublk_create_target(const char *cpumask_str, const struct spdk_json_val *params)
 		return rc;
 	}
 
-	if (params) {
-		if (spdk_json_decode_object_relaxed(params, rpc_ublk_create_target,
-						    SPDK_COUNTOF(rpc_ublk_create_target),
-						    &req)) {
-			SPDK_ERRLOG("spdk_json_decode_object failed\n");
-			return -EINVAL;
-		}
-		g_disable_user_copy = req.disable_user_copy;
-	}
+	g_disable_user_copy = disable_user_copy;
 
 	assert(g_ublk_tgt.poll_groups == NULL);
 	g_ublk_tgt.poll_groups = calloc(spdk_env_get_core_count(), sizeof(*poll_group));

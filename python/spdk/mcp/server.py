@@ -2,10 +2,12 @@
 # Copyright (C) 2025 Dell Inc, or its subsidiaries.  All rights reserved.
 
 import os
-from spdk.rpc import bdev
-from functools import partial
+from functools import partial, update_wrapper
+
+from mcp.server.fastmcp import FastMCP  # type: ignore[import-not-found]
+
+from spdk.rpc import bdev  # type: ignore[attr-defined]
 from spdk.rpc.client import JSONRPCClient
-from mcp.server.fastmcp import FastMCP
 
 # Create an MCP server
 mcp = FastMCP("SPDK")
@@ -26,8 +28,7 @@ bdev_functions = [y for x, y in bdev.__dict__.items() if x.startswith('bdev')]
 # add all functions as tools to MCP server
 for func in bdev_functions:
     newfunc = partial(func, client)
-    newfunc.__name__ = func.__name__
-    newfunc.__doc__ = func.__doc__
+    update_wrapper(newfunc, func)
     mcp.add_tool(newfunc)
 
 if __name__ == "__main__":

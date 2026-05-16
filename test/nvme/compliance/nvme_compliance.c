@@ -1075,7 +1075,7 @@ admin_identify_ns(void)
 	CU_ASSERT(rc == 0);
 
 	wait_for_admin_completion(&s, ctrlr);
-	if (!cdata->oacs.ns_manage) {
+	if (!cdata->oacs.nms) {
 		CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
 	} else {
 		CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));

@@ -9,14 +9,14 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-MALLOC_BDEV_SIZE=64
+MALLOC_BDEV_SIZE=4
 MALLOC_BLOCK_SIZE=512
 
 function starttarget() {
 	nvmftestinit
 
 	# Start the target
-	nvmfappstart -m 0x1E
+	nvmfappstart -m 0xE
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
@@ -58,7 +58,7 @@ function waitforio() {
 	local ret=1
 	local i
 	for ((i = 10; i != 0; i--)); do
-		read_io_count=$($rpc_py -s $1 bdev_get_iostat -b $2 | jq -r '.bdevs[0].num_read_ops')
+		read_io_count=$($rpc_py -s $1 bdev_get_iostat --names $2 | jq -r '.bdevs[0].num_read_ops')
 		# A few I/O will happen during initial examine.  So wait until at least 100 I/O
 		#  have completed to know that bdevperf is really generating the I/O.
 		if [ $read_io_count -ge 100 ]; then
@@ -75,7 +75,7 @@ function nvmf_shutdown_tc1() {
 	starttarget
 
 	# Run bdev_svc, which connects but does not issue I/O
-	$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") &
+	run_app_bg "$rootdir/test/app/bdev_svc/bdev_svc" -m 0x1 -i 1 -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}")
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -89,8 +89,7 @@ function nvmf_shutdown_tc1() {
 	kill -0 $nvmfpid
 
 	# Connect with bdevperf and confirm it works
-	$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json "${num_subsystems[@]}") \
-		-q 64 -o 65536 -w verify -t 1
+	run_app "$SPDK_EXAMPLE_DIR/bdevperf" --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 1
 
 	stoptarget
 }
@@ -100,7 +99,7 @@ function nvmf_shutdown_tc2() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10 &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -122,7 +121,7 @@ function nvmf_shutdown_tc3() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10 &
+	run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -145,7 +144,7 @@ function nvmf_shutdown_tc4() {
 	starttarget
 
 	# Run nvme_perf with highly fragmented payload
-	$rootdir/build/bin/spdk_nvme_perf -q 128 -o 45056 -O 4096 -w randwrite -t 20 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -P 4 &
+	run_app_bg "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 45056 -O 4096 -w randwrite -t 20 -r "trtype:$TEST_TRANSPORT adrfam:IPV4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -P 4
 	perfpid=$!
 	sleep 5
 	# Expand the trap to clean up bdevperf if something goes wrong

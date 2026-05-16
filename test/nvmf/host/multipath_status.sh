@@ -39,7 +39,7 @@ $rpc_py nvmf_subsystem_add_ns $NQN Malloc0
 $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
 
-"$rootdir/build/examples/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 "${NO_HUGE[@]}" &> "$testdir/try.txt" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> "$testdir/try.txt"
 bdevperf_pid=$!
 
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
@@ -58,17 +58,16 @@ function set_ANA_state() {
 	$rpc_py nvmf_subsystem_listener_set_ana_state $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT -n $2
 }
 
-function port_status() {
-	[[ $($rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_io_paths | jq -r ".poll_groups[].io_paths[] | select (.transport.trsvcid==\"$1\").$2") == "$3" ]]
-}
-
 function check_status() {
-	port_status $NVMF_PORT current $1
-	port_status $NVMF_SECOND_PORT current $2
-	port_status $NVMF_PORT connected $3
-	port_status $NVMF_SECOND_PORT connected $4
-	port_status $NVMF_PORT accessible $5
-	port_status $NVMF_SECOND_PORT accessible $6
+	local io_paths
+	io_paths=$($rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_io_paths)
+
+	[[ $(jq -r ".poll_groups[].io_paths[] | select(.transport.trsvcid==\"$NVMF_PORT\").current" <<< "$io_paths") == "$1" ]]
+	[[ $(jq -r ".poll_groups[].io_paths[] | select(.transport.trsvcid==\"$NVMF_SECOND_PORT\").current" <<< "$io_paths") == "$2" ]]
+	[[ $(jq -r ".poll_groups[].io_paths[] | select(.transport.trsvcid==\"$NVMF_PORT\").connected" <<< "$io_paths") == "$3" ]]
+	[[ $(jq -r ".poll_groups[].io_paths[] | select(.transport.trsvcid==\"$NVMF_SECOND_PORT\").connected" <<< "$io_paths") == "$4" ]]
+	[[ $(jq -r ".poll_groups[].io_paths[] | select(.transport.trsvcid==\"$NVMF_PORT\").accessible" <<< "$io_paths") == "$5" ]]
+	[[ $(jq -r ".poll_groups[].io_paths[] | select(.transport.trsvcid==\"$NVMF_SECOND_PORT\").accessible" <<< "$io_paths") == "$6" ]]
 }
 
 "$rootdir/examples/bdev/bdevperf/bdevperf.py" -t 120 -s $bdevperf_rpc_sock perform_tests &

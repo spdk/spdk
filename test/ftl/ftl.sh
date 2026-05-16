@@ -37,7 +37,7 @@ PCI_ALLOWED="$device" PCI_BLOCKED="" DRIVER_OVERRIDE="" $rootdir/scripts/setup.s
 spdk_tgt_pid=$!
 waitforlisten "$spdk_tgt_pid"
 
-$rpc_py bdev_set_options -d
+$rpc_py bdev_set_options --no-auto-examine
 $rpc_py framework_start_init
 
 "$rpc_py" load_subsystem_config -j <($rootdir/scripts/gen_nvme.sh)

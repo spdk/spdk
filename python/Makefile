@@ -7,43 +7,16 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-setup_cmd = pip install --prefix=$(CONFIG_PREFIX)
-ifneq ($(DESTDIR),)
-setup_cmd += --root $(DESTDIR)
-endif
-
-pylibdir := $(abspath $(shell python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])"))
-ifneq ($(CONFIG_PREFIX),)
-# Consider different scenarios where purelib can be located:
-#
-# - /usr/lib/python*/site-packages
-# - /usr/local/lib/python*/site-packages
-# - /foo/bar/lib/python*/site-packages
-#
-# The latter here can be a result of using interpreter from within a venv
-# located at custom location - see how we handle PEP668 under ubuntu in
-# pkgdep/ubuntu.sh for instance.
-#
-# So the common part here is:
-#   *lib/python*/site-packages
-#
-# So we cut the path to get the prefix (whatever it may be) and then we nuke
-# it from the main path. So the corner case would look like so:
-#
-# pylibdir := /foo/bar/lib/python*/site-packages
-# pylibprefix := /foo/bar
-# pylibdir := $(CONFIG_PREFIX)/lib/python*/site-packages
-#
-# FIXME: I couldn't get patsubst to do the heavy lifting here, hence fallback
-# to shell.
-pylibprefix := $(shell a=$(pylibdir); echo $${a%/lib*})
-pylibdir := $(CONFIG_PREFIX)$(pylibdir:$(pylibprefix)%=%)
+USE_SYSTEM_PYTHON :=
+ifeq ($(VIRTUAL_ENV),)
+USE_SYSTEM_PYTHON += --system
 endif
 
 all: spdk/version.py
 
 clean:
 	$(Q)rm -f spdk/version.py
+	$(Q)rm -rf $(SPDK_ROOT_DIR)/python/dist
 
 spdk/version.py: $(SPDK_ROOT_DIR)/VERSION
 	$(Q)printf "__version__ = '%d.%d%s%s'\n" \
@@ -51,15 +24,18 @@ spdk/version.py: $(SPDK_ROOT_DIR)/VERSION
 		$(shell [ $(version_patch) != 0 ] && echo -n ".$(version_patch)") \
 		$(shell echo -n \"$(version_suffix)\" | sed 's/-pre/rc0/g' | tr -d -) > spdk/version.py
 
+build: spdk/version.py
+	$(Q)python -m build $(SPDK_ROOT_DIR)/python/
+
+check: build
+	$(Q)python -m twine check $(SPDK_ROOT_DIR)/python/dist/*
+
 install:
-	$(Q)$(setup_cmd) $(SPDK_ROOT_DIR)/python
-	rm -rf $(SPDK_ROOT_DIR)/python/spdk.egg-info
+	$(Q)uv pip install $(USE_SYSTEM_PYTHON) --prefix=$(DESTDIR)$(CONFIG_PREFIX) $(SPDK_ROOT_DIR)/python
+	$(Q)rm -rf $(SPDK_ROOT_DIR)/python/spdk.egg-info $(DESTDIR)$(CONFIG_PREFIX)/.lock
 
 uninstall:
-	$(Q)rm -rf $(DESTDIR)/$(pylibdir)/spdk*
-	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-rpc
-	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-sma
-	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-cli
-	$(Q)rm -f $(DESTDIR)/$(bindir)/spdk-mcp
+	$(Q)uv pip uninstall $(USE_SYSTEM_PYTHON) --prefix=$(DESTDIR)$(CONFIG_PREFIX) spdk
+	$(Q)rm -rf $(DESTDIR)$(CONFIG_PREFIX)/.lock
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall build check

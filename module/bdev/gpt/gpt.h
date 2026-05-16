@@ -27,7 +27,7 @@
  * old GUID to the new GUID. Wrap it in this REGISTER_GUID_DEPRECATION flag to avoid defining
  * this deprecation in multiple compilation units.
  */
-SPDK_LOG_DEPRECATION_REGISTER(old_gpt_guid, "old gpt guid", "Never", 0)
+SPDK_LOG_DEPRECATION_REGISTER(old_gpt_guid, "old gpt guid", "Never", SPDK_LOG_DEPRECATION_ALWAYS)
 #endif
 #define SPDK_GPT_PART_TYPE_GUID_OLD SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
 

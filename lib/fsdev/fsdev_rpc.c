@@ -7,6 +7,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/fsdev.h"
+#include "spdk_internal/rpc_autogen.h"
 
 static void
 rpc_fsdev_get_opts(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
@@ -37,20 +38,15 @@ rpc_fsdev_get_opts(struct spdk_jsonrpc_request *request, const struct spdk_json_
 }
 SPDK_RPC_REGISTER("fsdev_get_opts", rpc_fsdev_get_opts, SPDK_RPC_RUNTIME)
 
-struct rpc_fsdev_set_opts {
-	uint32_t fsdev_io_pool_size;
-	uint32_t fsdev_io_cache_size;
-};
-
 static const struct spdk_json_object_decoder rpc_fsdev_set_opts_decoders[] = {
-	{"fsdev_io_pool_size", offsetof(struct rpc_fsdev_set_opts, fsdev_io_pool_size), spdk_json_decode_uint32, false},
-	{"fsdev_io_cache_size", offsetof(struct rpc_fsdev_set_opts, fsdev_io_cache_size), spdk_json_decode_uint32, false},
+	{"fsdev_io_pool_size", offsetof(struct rpc_fsdev_set_opts_ctx, fsdev_io_pool_size), spdk_json_decode_uint32, false},
+	{"fsdev_io_cache_size", offsetof(struct rpc_fsdev_set_opts_ctx, fsdev_io_cache_size), spdk_json_decode_uint32, false},
 };
 
 static void
 rpc_fsdev_set_opts(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_fsdev_set_opts req = {};
+	struct rpc_fsdev_set_opts_ctx req = {};
 	int rc;
 	struct spdk_fsdev_opts opts = {};
 

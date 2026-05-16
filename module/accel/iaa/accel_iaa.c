@@ -380,7 +380,7 @@ accel_iaa_enable_probe(void)
 static bool
 caller_probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 {
-	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_IAA) {
+	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_IAA || dev->id.device_id == PCI_DEVICE_ID_INTEL_IAA3) {
 		return true;
 	}
 

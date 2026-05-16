@@ -117,6 +117,7 @@ thread_send_msg(void)
 {
 	struct spdk_thread *thread0;
 	bool done = false;
+	int rc;
 
 	allocate_threads(2);
 	set_thread(0);
@@ -124,7 +125,8 @@ thread_send_msg(void)
 
 	set_thread(1);
 	/* Simulate thread 1 sending a message to thread 0. */
-	spdk_thread_send_msg(thread0, send_msg_cb, &done);
+	rc = spdk_thread_send_msg(thread0, send_msg_cb, &done);
+	CU_ASSERT(rc == 0); /* ensure API compatibility */
 
 	/* We have not polled thread 0 yet, so done should be false. */
 	CU_ASSERT(!done);
@@ -536,7 +538,6 @@ for_each_channel_remove(void)
 	struct spdk_io_channel *ch0, *ch1, *ch2, *new_ch0;
 	int ch_count = 0;
 	int msg_count = 0;
-	int rc;
 
 	allocate_threads(3);
 	set_thread(0);
@@ -606,8 +607,7 @@ for_each_channel_remove(void)
 	CU_ASSERT(ch_count == 3);
 	spdk_put_io_channel(ch0);
 	CU_ASSERT(ch_count == 3);
-	rc = spdk_thread_send_msg(spdk_get_thread(), _get_channel, &ch_count);
-	CU_ASSERT(rc == 0);
+	spdk_thread_send_msg(spdk_get_thread(), _get_channel, &ch_count);
 	CU_ASSERT(ch_count == 3);
 	spdk_for_each_channel(&ch_count, channel_msg, &msg_count, channel_cpl);
 	poll_threads();
@@ -951,8 +951,7 @@ thread_exit_test(void)
 	thread = spdk_get_thread();
 
 	/* Sending message to thread 0 will be accepted. */
-	rc = spdk_thread_send_msg(thread, send_msg_cb, &done1);
-	CU_ASSERT(rc == 0);
+	spdk_thread_send_msg(thread, send_msg_cb, &done1);
 	CU_ASSERT(!done1);
 
 	/* Move thread 0 to the exiting state. */
@@ -961,8 +960,7 @@ thread_exit_test(void)
 	CU_ASSERT(spdk_thread_is_exited(thread) == false);
 
 	/* Sending message to thread 0 will be still accepted. */
-	rc = spdk_thread_send_msg(thread, send_msg_cb, &done2);
-	CU_ASSERT(rc == 0);
+	spdk_thread_send_msg(thread, send_msg_cb, &done2);
 
 	/* Thread 0 will reap pending messages. */
 	poll_thread(0);

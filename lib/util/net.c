@@ -7,6 +7,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/net.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 int
 spdk_net_get_interface_name(const char *ip, char *ifc, size_t len)
@@ -134,8 +135,8 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 	len = sizeof(sa);
 	rc = getsockname(fd, (struct sockaddr *)&sa, &len);
 	if (rc != 0) {
-		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
-		return -1;
+		SPDK_ERRLOG("getsockname() failed, rc %d: %s\n", rc, spdk_strerror(errno));
+		return -errno;
 	}
 
 	switch (sa.ss_family) {
@@ -148,16 +149,14 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		break;
 	default:
 		/* Unsupported socket family */
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	if (laddr) {
 		rc = spdk_net_get_address_string((struct sockaddr *)&sa, laddr, llen);
 		if (rc != 0) {
-			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", abs(rc));
-			errno = abs(rc);
-			return -1;
+			SPDK_ERRLOG("spdk_net_get_address_string() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+			return rc;
 		}
 	}
 
@@ -175,8 +174,7 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		/* It is an error to getaddr for a peer address on a listen socket. */
 		if (paddr != NULL || pport != NULL) {
 			SPDK_ERRLOG("paddr, pport not valid on listen sockets\n");
-			errno = EINVAL;
-			return -1;
+			return -EINVAL;
 		}
 		return 0;
 	}
@@ -186,17 +184,16 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		len = sizeof(sa);
 		rc = getpeername(fd, (struct sockaddr *)&sa, &len);
 		if (rc != 0) {
-			SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
-			return -1;
+			SPDK_ERRLOG("getpeername() failed, rc %d: %s\n", rc, spdk_strerror(errno));
+			return -errno;
 		}
 	}
 
 	if (paddr) {
 		rc = spdk_net_get_address_string((struct sockaddr *)&sa, paddr, plen);
 		if (rc != 0) {
-			SPDK_ERRLOG("spdk_net_get_address_string() failed (errno=%d)\n", abs(rc));
-			errno = abs(rc);
-			return -1;
+			SPDK_ERRLOG("spdk_net_get_address_string() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+			return rc;
 		}
 	}
 
@@ -208,5 +205,42 @@ spdk_net_getaddr(int fd, char *laddr, int llen, uint16_t *lport,
 		}
 	}
 
+	return 0;
+}
+
+int
+spdk_net_compare_address(int adrfam, const char *addr1, const char *addr2, int *cmp)
+{
+	union {
+		struct in_addr v4;
+		struct in6_addr v6;
+	} in_addr1, in_addr2;
+	size_t addr_len;
+
+	if (addr1 == NULL || addr2 == NULL || cmp == NULL) {
+		SPDK_ERRLOG("Compare parameters cannot be NULL\n");
+		return -EINVAL;
+	}
+
+	switch (adrfam) {
+	case AF_INET:
+		addr_len = sizeof(struct in_addr);
+		break;
+	case AF_INET6:
+		addr_len = sizeof(struct in6_addr);
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported address family: %d\n", adrfam);
+		return -EAFNOSUPPORT;
+	}
+
+	if (inet_pton(adrfam, addr1, &in_addr1) != 1 ||
+	    inet_pton(adrfam, addr2, &in_addr2) != 1) {
+		SPDK_ERRLOG("Invalid IP addresses of family(%d) to "
+			    "compare: %s, %s\n", adrfam, addr1, addr2);
+		return -EINVAL;
+	}
+
+	*cmp = memcmp(&in_addr1, &in_addr2, addr_len);
 	return 0;
 }

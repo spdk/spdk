@@ -2,20 +2,14 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
+import io
 import json
 import os
 import sys
-import io
-
-
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-
+from shlex import quote
 
 args_global = ['server_addr', 'port', 'timeout', 'verbose', 'dry_run', 'conn_retries',
-               'is_server', 'rpc_plugin', 'called_rpc_name', 'func', 'client', 'go_client']
+               'is_server', 'batch_mode', 'rpc_plugin', 'called_rpc_name', 'func', 'client', 'go_client']
 
 
 def strip_globals(kwargs):
@@ -33,7 +27,13 @@ def apply_defaults(kwargs, **defaults):
 def group_as(kwargs, name, values):
     group = {k: v for k, v in kwargs.items() if k in values and v is not None}
     rest = {k: v for k, v in kwargs.items() if k not in values}
-    return {**rest, name: group}
+    if group:
+        rest[name] = group
+    return rest
+
+
+def print_null(arg):
+    pass
 
 
 def print_array(a):

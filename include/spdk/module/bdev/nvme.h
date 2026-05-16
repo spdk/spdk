@@ -21,14 +21,20 @@ typedef void (*spdk_bdev_nvme_set_multipath_policy_cb)(void *cb_arg, int rc);
 typedef void (*spdk_bdev_nvme_delete_cb)(void *ctx, int rc);
 
 enum spdk_bdev_nvme_multipath_policy {
-	BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE,
-	BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
+	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE,
+	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE,
 };
 
 enum spdk_bdev_nvme_multipath_selector {
-	BDEV_NVME_MP_SELECTOR_ROUND_ROBIN = 1,
-	BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH,
+	SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN = 1,
+	SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH,
 };
+
+/** \deprecated Use SPDK_BDEV_NVME_MULTIPATH_POLICY_* and SPDK_BDEV_NVME_MULTIPATH_SELECTOR_* instead. */
+#define BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE
+#define BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE
+#define BDEV_NVME_MP_SELECTOR_ROUND_ROBIN	SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN
+#define BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH	SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH
 
 struct spdk_bdev_nvme_ctrlr_opts {
 	uint32_t prchk_flags;
@@ -160,6 +166,8 @@ int spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path
 
 /**
  * Set multipath policy of the NVMe bdev.
+ *
+ * Subsequent calls for the same bdev must wait until the current execution finishes.
  *
  * \param name NVMe bdev name.
  * \param policy Multipath policy (active-passive or active-active).

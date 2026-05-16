@@ -2,12 +2,11 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
-from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
-from .ui_node_nvmf import UINVMf
-from .ui_node_iscsi import UIISCSI
 from ..rpc import config
-from ..rpc.cmd_parser import strip_globals, apply_defaults, group_as, remove_null
-from functools import wraps
+from ..rpc.cmd_parser import apply_defaults, group_as, remove_null, strip_globals
+from .ui_node import UIBdevs, UILvolStores, UINode, UIVhosts
+from .ui_node_iscsi import UIISCSI
+from .ui_node_nvmf import UINVMf
 
 
 class UIRoot(UINode):
@@ -62,9 +61,9 @@ class UIRoot(UINode):
         # Do not use for "get_*" methods so that output is not
         # flooded.
         def w(self, **kwargs):
-            self.client.log_set_level("INFO" if self.verbose else "ERROR")
+            self.client.set_log_level("INFO" if self.verbose else "ERROR")
             r = f(self, **kwargs)
-            self.client.log_set_level("ERROR")
+            self.client.set_log_level("ERROR")
             return r
         return w
 
@@ -188,6 +187,7 @@ class UIRoot(UINode):
     @verbose
     def create_error_bdev(self, **kwargs):
         response = self.client.bdev_error_create(**kwargs)
+        return response
 
     @verbose
     def bdev_error_delete(self, **kwargs):

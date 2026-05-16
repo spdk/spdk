@@ -645,6 +645,33 @@ int spdk_accel_append_copy(struct spdk_accel_sequence **seq, struct spdk_io_chan
 			   spdk_accel_step_cb cb_fn, void *cb_arg);
 
 /**
+ * Append a compare operation to a sequence. This operation compares data from two
+ * source buffers to verify they are identical. If a mismatch is found, the operation
+ * will typically complete with a failure status.
+ *
+ * \param pseq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param src1_iovs First source I/O vector array.
+ * \param src1_iovcnt Size of the `src1_iovs` array.
+ * \param src1_domain Memory domain to which the first source buffers belong.
+ * \param src1_domain_ctx First source buffer domain context.
+ * \param src2_iovs Second source I/O vector array.
+ * \param src2_iovcnt Size of the `src2_iovs` array.
+ * \param src2_domain Memory domain to which the second source buffers belong.
+ * \param src2_domain_ctx Second source buffer domain context.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_compare(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			      struct iovec *src1_iovs, uint32_t src1_iovcnt,
+			      struct spdk_memory_domain *src1_domain, void *src1_domain_ctx,
+			      struct iovec *src2_iovs, uint32_t src2_iovcnt,
+			      struct spdk_memory_domain *src2_domain, void *src2_domain_ctx,
+			      spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
  * Append a fill operation to a sequence.
  *
  * \param seq Sequence object.  If NULL, a new sequence object will be created.

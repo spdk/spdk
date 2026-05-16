@@ -18,6 +18,7 @@
 	spdk_json_free_object;
 
 	spdk_json_val_len;
+	spdk_json_array_count;
 	spdk_json_strequal;
 	spdk_json_strdup;
 
@@ -30,6 +31,7 @@
 	spdk_json_write_begin;
 	spdk_json_write_end;
 	spdk_json_write_reset;
+	spdk_json_write_add_flags;
 	spdk_json_write_null;
 	spdk_json_write_bool;
 	spdk_json_write_uint8;
@@ -50,6 +52,8 @@
 	spdk_json_write_uuid;
 	spdk_json_write_array_begin;
 	spdk_json_write_array_end;
+	spdk_json_write_batch_begin;
+	spdk_json_write_batch_end;
 	spdk_json_write_object_begin;
 	spdk_json_write_object_end;
 	spdk_json_write_name;

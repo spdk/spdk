@@ -7,6 +7,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
+#include "spdk/net.h"
 #include "nvme_internal.h"
 #include "nvme_io_msg.h"
 
@@ -329,14 +330,15 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 	void *user_cb_arg;
 	enum spdk_nvme_data_transfer xfer;
 
-	if (req->user_buffer && req->payload_size) {
+	if (!spdk_nvme_cpl_is_error(cpl) && req->user_buffer && req->payload.size) {
 		/* Copy back to the user buffer */
-		assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+		assert(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_CONTIG);
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
-			assert(req->pid == getpid());
-			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload_size);
+			assert(req->qpair);
+			assert(req->qpair->id != 0 || req->pid == getpid());
+			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload.size);
 		}
 	}
 
@@ -381,6 +383,9 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 		spdk_free(dma_buffer);
 		return NULL;
 	}
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		req->pid = g_spdk_nvme_pid;
+	}
 
 	req->user_cb_fn = cb_fn;
 	req->user_cb_arg = cb_arg;
@@ -410,38 +415,41 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 {
 	struct spdk_nvme_qpair *qpair = req->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
-	uint64_t timeout_ticks = nvme_qpair_is_admin_queue(qpair) ?
-				 active_proc->timeout_admin_ticks : active_proc->timeout_io_ticks;
+	uint64_t timeout_ticks = active_proc->timeout_io_ticks;
 
 	assert(active_proc->timeout_cb_fn != NULL);
+
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
+		if (req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+			return 0;
+		}
+
+		timeout_ticks = active_proc->timeout_admin_ticks;
+		if (req->cmd.opc == SPDK_NVME_OPC_KEEP_ALIVE && ctrlr->opts.keep_alive_timeout_ms) {
+			timeout_ticks = ctrlr->opts.keep_alive_timeout_ms * spdk_get_ticks_hz() / SPDK_SEC_TO_MSEC;
+		}
+
+		if (req->pid != g_spdk_nvme_pid) {
+			return 0;
+		}
+		/*
+		 * We don't want to expose the admin queue to the user, so when
+		 * we're timing out admin commands set the qpair to NULL.
+		 */
+		qpair = NULL;
+	}
 
 	if (spdk_unlikely(req->timed_out || req->submit_tick == 0)) {
 		return 0;
 	}
 
-	if (spdk_unlikely(req->pid != g_spdk_nvme_pid)) {
-		return 0;
-	}
-
-	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair) &&
-			  req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
-		return 0;
-	}
 
 	if (spdk_likely(req->submit_tick + timeout_ticks > now_tick)) {
 		return 1;
 	}
 
 	req->timed_out = true;
-
-	/*
-	 * We don't want to expose the admin queue to the user,
-	 * so when we're timing out admin commands set the
-	 * qpair to NULL.
-	 */
-	active_proc->timeout_cb_fn(active_proc->timeout_cb_arg, ctrlr,
-				   nvme_qpair_is_admin_queue(qpair) ? NULL : qpair,
-				   cid);
+	active_proc->timeout_cb_fn(active_proc->timeout_cb_arg, ctrlr, qpair, cid);
 	return 0;
 }
 
@@ -617,7 +625,6 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 		ctrlr->remove_cb = probe_ctx->remove_cb;
 		ctrlr->cb_ctx = probe_ctx->cb_ctx;
 
-		nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
 		TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 		return 0;
 	}
@@ -1374,7 +1381,8 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 {
 	int cmp;
 
-	if (trid1->trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
+	if (trid1->trtype == SPDK_NVME_TRANSPORT_CUSTOM ||
+	    trid1->trtype == SPDK_NVME_TRANSPORT_CUSTOM_FABRICS) {
 		cmp = strcasecmp(trid1->trstring, trid2->trstring);
 	} else {
 		cmp = cmp_int(trid1->trtype, trid2->trtype);
@@ -1398,12 +1406,27 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return spdk_pci_addr_compare(&pci_addr1, &pci_addr2);
 	}
 
-	cmp = strcasecmp(trid1->traddr, trid2->traddr);
+	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
 	if (cmp) {
 		return cmp;
 	}
 
-	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
+	switch (trid1->adrfam) {
+	case SPDK_NVMF_ADRFAM_IPV4:
+		if (spdk_net_compare_address(AF_INET, trid1->traddr, trid2->traddr, &cmp) != 0) {
+			return -1;
+		}
+		break;
+	case SPDK_NVMF_ADRFAM_IPV6:
+		if (spdk_net_compare_address(AF_INET6, trid1->traddr, trid2->traddr, &cmp) != 0) {
+			return -1;
+		}
+		break;
+	default:
+		cmp = strcasecmp(trid1->traddr, trid2->traddr);
+		break;
+	}
+
 	if (cmp) {
 		return cmp;
 	}

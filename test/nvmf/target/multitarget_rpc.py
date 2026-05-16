@@ -6,17 +6,13 @@
 
 # Not for use in production. Please see the changelog for v19.10.
 
-from spdk.rpc.client import print_dict, JSONRPCException, JSONRPCClient
-
-import logging
 import argparse
-import sys
+import logging
 import shlex
+import sys
 
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
+from spdk.rpc.client import JSONRPCClient, JSONRPCException
+from spdk.rpc.cmd_parser import print_dict
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

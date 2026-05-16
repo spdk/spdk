@@ -256,7 +256,6 @@ map_cpufreq() {
 	local -g cpufreq_is_turbo=()
 	local -g cpufreq_available_freqs=()
 	local -g cpufreq_available_governors=()
-	local -g cpufreq_high_prio=()
 	local -g cpufreq_non_turbo_ratio=()
 	local -g cpufreq_setspeed=()
 	local -g cpuinfo_max_freqs=()
@@ -299,15 +298,15 @@ map_cpufreq() {
 			intel_pstate | intel_cpufreq) # active or passive
 				local non_turbo_ratio base_max_freq num_freq freq is_turbo=0
 
-				non_turbo_ratio=$("$testdir/rdmsr.pl" "$cpu_idx" 0xce)
+				non_turbo_ratio=$(< "$sysfs_cpu/intel_pstate/turbo_pct")
 				cpuinfo_min_freqs[cpu_idx]=$(< "$cpu/cpufreq/cpuinfo_min_freq")
 				cpuinfo_max_freqs[cpu_idx]=$(< "$cpu/cpufreq/cpuinfo_max_freq")
-				cpufreq_non_turbo_ratio[cpu_idx]=$(((non_turbo_ratio >> 8) & 0xff))
+				cpufreq_non_turbo_ratio[cpu_idx]=$(( \
+					1 * (cpuinfo_min_freqs[cpu_idx] + (100 - non_turbo_ratio) * \
+					1 * (cpuinfo_max_freqs[cpu_idx] - cpuinfo_min_freqs[cpu_idx]) / 100) / 100000))
 				if ((cpufreq_base_freqs[cpu_idx] / 100000 > cpufreq_non_turbo_ratio[cpu_idx])); then
-					cpufreq_high_prio[cpu_idx]=1
 					base_max_freq=${cpufreq_base_freqs[cpu_idx]}
 				else
-					cpufreq_high_prio[cpu_idx]=0
 					base_max_freq=$((cpufreq_non_turbo_ratio[cpu_idx] * 100000))
 				fi
 				num_freqs=$(((base_max_freq - cpuinfo_min_freqs[cpu_idx]) / 100000 + 1))

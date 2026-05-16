@@ -64,6 +64,8 @@ function usage() {
 	echo " --without-idxd            Disabled while experimental. Only built for x86 when enabled."
 	echo " --with-crypto             Build isa-l-crypto and vbdev crypto module. No path required."
 	echo " --without-crypto          Disable isa-l-crypto and vbdev crypto module."
+	echo " --with-isal[=DIR]         Don't build isa-l, use external library instead."
+	echo " --with-isal-crypto[=DIR]  Don't build isa-l_crypto, use external library instead."
 	echo " --with-fio[=DIR]          Build fio_plugin."
 	echo " --without-fio             default: /usr/src/fio"
 	echo " --with-cuda               Enable the CUDA accel module."
@@ -570,6 +572,28 @@ for i in "$@"; do
 			;;
 		--without-cuda)
 			CONFIG[CUDA]=n
+			;;
+		--with-isal) ;&
+		--with-isal=*)
+			# if set, set a default value
+			CONFIG[ISAL_PATH]=/usr
+			if [[ -n ${i#*=} ]] && [[ ${i#*=} != "$i" ]]; then
+				CONFIG[ISAL_PATH]=${i#*=}
+			fi
+			check_dir "--with-isal=${CONFIG[ISAL_PATH]}"
+			CONFIG[ISAL]=y
+			CONFIG[ISAL_INSTALLED]=y
+			;;
+		--with-isal-crypto) ;&
+		--with-isal-crypto=*)
+			# if set, set a default value
+			CONFIG[ISAL_CRYPTO_PATH]=/usr
+			if [[ -n ${i#*=} ]] && [[ ${i#*=} != "$i" ]]; then
+				CONFIG[ISAL_CRYPTO_PATH]=${i#*=}
+			fi
+			check_dir "--with-isal-crypto=${CONFIG[ISAL_CRYPTO_PATH]}"
+			CONFIG[ISAL_CRYPTO]=y
+			CONFIG[ISAL_CRYPTO_INSTALLED]=y
 			;;
 		--with-fio) ;&
 		--with-fio=*)
@@ -1207,7 +1231,13 @@ if [[ "${CONFIG[FUZZER]}" = "y" && "$CC_TYPE" != "clang" ]]; then
 	exit 1
 fi
 
-if [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
+if [[ "${CONFIG[ISAL_INSTALLED]}" = "y" ]]; then
+	if [[ "${CONFIG[SHARED]}" != "y" ]]; then
+		echo "External isa-l only supported with --with-shared"
+		exit 1
+	fi
+	echo "Using ISA-L from ${CONFIG[ISAL_PATH]}"
+elif [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
 	CONFIG[ISAL]=y
 	# make sure the submodule is initialized
 	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
@@ -1245,34 +1275,43 @@ else
 fi
 
 # now either configure ISA-L or disable unavailable features
-if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	cd $rootdir/isa-l
-	ISAL_LOG=$rootdir/.spdk-isal.log
-	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
-		ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
+if [[ ! "${CONFIG[ISAL_INSTALLED]}" = "y" ]]; then
+	if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+		cd $rootdir/isa-l
+		ISAL_LOG=$rootdir/.spdk-isal.log
+		if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
+			ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
+		else
+			ISAL_OPTS=()
+		fi
+		if [[ "${CONFIG[SHARED]}" = "y" ]]; then
+			ISAL_OPTS+=("--enable-shared=yes")
+		else
+			ISAL_OPTS+=("--enable-shared=no")
+		fi
+		ISAL_OPTS+=("--prefix=${CONFIG[PREFIX]}")
+		echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
+		./autogen.sh &> $ISAL_LOG
+		./configure CFLAGS="-fPIC -g -O2 -fuse-ld=$LD_TYPE -Wno-unused-command-line-argument" "${ISAL_OPTS[@]}" >> $ISAL_LOG 2>&1
+		echo "done."
+		cd $rootdir
 	else
-		ISAL_OPTS=()
+		echo "Without ISA-L, there is no software support for crypto or compression,"
+		echo "so these features will be disabled."
+		CONFIG[CRYPTO]=n
+		CONFIG[DPDK_COMPRESSDEV]=n
 	fi
-	if [[ "${CONFIG[SHARED]}" = "y" ]]; then
-		ISAL_OPTS+=("--enable-shared=yes")
-	else
-		ISAL_OPTS+=("--enable-shared=no")
-	fi
-	ISAL_OPTS+=("--prefix=${CONFIG[PREFIX]}")
-	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
-	./autogen.sh &> $ISAL_LOG
-	./configure CFLAGS="-fPIC -g -O2 -fuse-ld=$LD_TYPE -Wno-unused-command-line-argument" "${ISAL_OPTS[@]}" >> $ISAL_LOG 2>&1
-	echo "done."
-	cd $rootdir
-else
-	echo "Without ISA-L, there is no software support for crypto or compression,"
-	echo "so these features will be disabled."
-	CONFIG[CRYPTO]=n
-	CONFIG[DPDK_COMPRESSDEV]=n
 fi
 
 # ISA-L-crypto complements ISA-L functionality, it is only enabled together with ISA-L
-if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+if [[ "${CONFIG[ISAL_CRYPTO_INSTALLED]}" = "y" ]]; then
+	if [[ "${CONFIG[SHARED]}" != "y" ]]; then
+		echo "External isa-l_crypto only supported with --with-shared"
+		exit 1
+	fi
+	echo "Using isa-l_crypto from ${CONFIG[ISAL_CRYPTO_PATH]}"
+	CONFIG[ISAL_CRYPTO]=y
+elif [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [ ! -f "$rootdir"/isa-l-crypto/autogen.sh ]; then
 		echo "ISA-L-crypto is required but was not found, please init the submodule with:"
 		echo "  git submodule update --init"

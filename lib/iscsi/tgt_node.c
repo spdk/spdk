@@ -932,7 +932,7 @@ iscsi_tgt_node_redirect(struct spdk_iscsi_tgt_node *target, int pg_tag,
 			return -EINVAL;
 		}
 
-		if (iscsi_portal_grp_find_portal_by_addr(pg, port, host) != NULL) {
+		if (iscsi_portal_grp_find_portal_by_addr(pg, host, port) != NULL) {
 			SPDK_ERRLOG("IP address-port pair must be chosen from a "
 				    "different private portal group\n");
 			return -EINVAL;

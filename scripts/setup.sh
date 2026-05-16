@@ -91,12 +91,15 @@ function usage() {
 	echo "PCI_BLOCK_SYNC_ON_RESET"
 	echo "                  If set in the environment, the attempt to wait for block devices associated"
 	echo "                  with given PCI device will be made upon reset"
+	echo "UEVENT_TIMEOUT    Timeout in seconds for waiting on block device uevents during reset."
+	echo "                  Default is 10 seconds. This value is passed as an idle timeout to"
+	echo "                  sync_dev_uevents.sh, implying that the timer resets each time a uevent is received."
 	echo "UNBIND_ENTIRE_IOMMU_GROUP"
 	echo "                  If set, all devices from nvme's iommu group will be unbound from their drivers."
 	echo "                  Use with caution."
 	echo "DEV_TYPE"
 	echo "                  Perform action only against selected type of devices. Supported:"
-	echo "                    IOAT|DSA|IAA|VIRTIO|VMD|NVME."
+	echo "                    IOAT|AE4DMA|DSA|IAA|VIRTIO|VMD|NVME."
 	echo "                  Default is to select all types."
 	echo "FORCE_NIC_UIO_REBIND"
 	echo "                  When set to 'yes', an attempt to reload nic_uio will be made regardless"
@@ -358,6 +361,7 @@ function collect_driver() {
 		[[ -n ${iaa_d["$bdf"]} ]] && driver=idxd
 		[[ -n ${virtio_d["$bdf"]} ]] && driver=virtio-pci
 		[[ -n ${vmd_d["$bdf"]} ]] && driver=vmd
+		[[ -n ${ae4dma_d["$bdf"]} ]] && driver=ae4dma
 	fi 2> /dev/null
 	echo "$driver"
 }
@@ -528,10 +532,25 @@ clear_hugepages() {
 configure_linux_hugepages() {
 	local node system_nodes
 	local nodes_to_use nodes_hp
+	local hugetlbfs_mounts
+
+	if [[ -z $HUGEPG_SUPPORTED ]]; then
+		# Can't do much with no support, just bail
+		return 0
+	fi
 
 	if [[ $SKIP_HUGE == yes ]]; then
 		# Do nothing as requested
 		return 0
+	fi
+
+	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
+
+	if [[ -z $hugetlbfs_mounts ]]; then
+		local hugetlbfs_mounts=/mnt/huge
+		echo "Mounting hugetlbfs at $hugetlbfs_mounts"
+		mkdir -p "$hugetlbfs_mounts"
+		mount -t hugetlbfs nodev "$hugetlbfs_mounts"
 	fi
 
 	if [[ $CLEAR_HUGE == yes ]]; then
@@ -590,15 +609,6 @@ configure_linux_hugepages() {
 
 function configure_linux() {
 	configure_linux_pci
-	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
-
-	if [ -z "$hugetlbfs_mounts" ]; then
-		hugetlbfs_mounts=/mnt/huge
-		echo "Mounting hugetlbfs at $hugetlbfs_mounts"
-		mkdir -p "$hugetlbfs_mounts"
-		mount -t hugetlbfs nodev "$hugetlbfs_mounts"
-	fi
-
 	configure_linux_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
@@ -667,8 +677,17 @@ function reset_linux() {
 	rm -f /run/.spdk*
 }
 
-function status_linux() {
-	echo "Hugepages" >&2
+function status_linux_hp() {
+	printf 'Hugepages\n'
+
+	if [[ -z $HUGEPG_SUPPORTED ]]; then
+		printf '  NOT SUPPORTED\n'
+		return 0
+	fi
+
+	local numa_nodes node path
+	local free_pages all_pages huge_size
+
 	printf "%-6s %10s %8s / %6s\n" "node" "hugesize" "free" "total" >&2
 
 	numa_nodes=0
@@ -686,14 +705,17 @@ function status_linux() {
 	done
 
 	# fall back to system-wide hugepages
-	if [ "$numa_nodes" = "0" ]; then
-		free_pages=$(grep HugePages_Free /proc/meminfo | awk '{ print $2 }')
-		all_pages=$(grep HugePages_Total /proc/meminfo | awk '{ print $2 }')
-		node="-"
-		huge_size="$HUGEPGSZ"
+	((numa_nodes == 0)) || return 0
+	free_pages=$(grep HugePages_Free /proc/meminfo | awk '{ print $2 }')
+	all_pages=$(grep HugePages_Total /proc/meminfo | awk '{ print $2 }')
+	node="-"
+	huge_size="$HUGEPGSZ"
 
-		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
-	fi
+	printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
+}
+
+function status_linux() {
+	status_linux_hp
 
 	printf '\n%-25s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices" >&2
@@ -729,6 +751,7 @@ function status_linux() {
 		desc=${desc:-${iaa_d["$bdf"]:+IAA}}
 		desc=${desc:-${virtio_d["$bdf"]:+virtio}}
 		desc=${desc:-${vmd_d["$bdf"]:+VMD}}
+		desc=${desc:-${ae4dma_d["$bdf"]:+AE4DMA}}
 
 		printf '%-25s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 			"$desc" "$bdf" "${pci_ids_vendor["$bdf"]#0x}" "${pci_ids_device["$bdf"]#0x}" \
@@ -784,6 +807,7 @@ function status_freebsd() {
 	status_print "DSA" "${!dsa_d[@]}"
 	status_print "IAA" "${!iaa_d[@]}"
 	status_print "VMD" "${!vmd_d[@]}"
+	status_print "AE4DMA" "${!ae4dma_d[@]}"
 }
 
 function configure_freebsd_pci() {
@@ -833,7 +857,7 @@ function warn_unsupported_nic_uio_hw() {
 }
 
 function configure_freebsd() {
-	_configure_freebsd "${!nvme_d[@]}" "${!ioat_d[@]}" "${!dsa_d[@]}" "${!iaa_d[@]}" "${!vmd_d[@]}"
+	_configure_freebsd "${!nvme_d[@]}" "${!ioat_d[@]}" "${!dsa_d[@]}" "${!iaa_d[@]}" "${!vmd_d[@]}" "${!ae4dma_d[@]}"
 }
 
 function _configure_freebsd() {
@@ -887,6 +911,13 @@ function reset_freebsd() {
 }
 
 function set_hp() {
+	if ! grep -q hugetlbfs /proc/filesystems; then
+		echo "Hugepages are not supported by the running kernel" >&2
+		return 0
+	fi
+
+	HUGEPG_SUPPORTED=yes
+
 	if [[ -n $HUGEPGSZ && ! -e /sys/kernel/mm/hugepages/hugepages-${HUGEPGSZ}kB ]]; then
 		echo "${HUGEPGSZ}kB is not supported by the running kernel, ignoring" >&2
 		unset -v HUGEPGSZ
@@ -954,7 +985,7 @@ if [[ $mode == reset && $PCI_BLOCK_SYNC_ON_RESET == yes ]]; then
 	done
 	if ((${#bdfs_to_wait_for[@]} > 0)); then
 		echo "Waiting for block devices as requested"
-		export UEVENT_TIMEOUT=5 DEVPATH_LOOKUP=yes DEVPATH_SUBSYSTEM=pci
+		export UEVENT_TIMEOUT=${UEVENT_TIMEOUT:-10} DEVPATH_LOOKUP=yes DEVPATH_SUBSYSTEM=pci
 		"$rootdir/scripts/sync_dev_uevents.sh" \
 			block/disk \
 			"${bdfs_to_wait_for[@]}" &

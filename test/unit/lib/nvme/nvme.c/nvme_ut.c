@@ -607,19 +607,24 @@ dummy_cb(void *user_cb_arg, const struct spdk_nvme_cpl *cpl)
 static void
 test_nvme_user_copy_cmd_complete(void)
 {
+	struct spdk_nvme_qpair qpair = {.id = 1};
 	struct nvme_request req;
 	int test_data = 0xdeadbeef;
+	int zero_data = 0;
 	int buff_size = sizeof(int);
 	void *user_buffer, *buff;
 	int user_cb_arg = 0x123;
-	static struct spdk_nvme_cpl cpl;
+	struct spdk_nvme_cpl cpl;
 
 	memset(&req, 0, sizeof(req));
 	memset(&cpl, 0x5a, sizeof(cpl));
 
 	/* test without a user buffer provided */
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
 	req.user_cb_fn = (void *)dummy_cb;
 	req.user_cb_arg = (void *)&user_cb_arg;
+	req.qpair = &qpair;
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
 	CU_ASSERT(req.user_cb_fn == NULL);
@@ -633,19 +638,44 @@ test_nvme_user_copy_cmd_complete(void)
 	req.user_buffer = user_buffer;
 	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
 	memset(req.user_buffer, 0, buff_size);
-	req.payload_size = buff_size;
 	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
-	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
+	req.payload.contig_or_cb_arg = buff;
+	req.payload.size = buff_size;
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	req.pid = getpid();
 
 	/* zero out the test value set in the callback */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
 
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(user_buffer, &test_data, buff_size) == 0);
+	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+	CU_ASSERT(req.user_cb_fn == NULL);
+	CU_ASSERT(req.user_cb_arg == NULL);
+	CU_ASSERT(req.user_buffer == NULL);
+
+	/* test with a failure status: the data shouldn't be transferred */
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+	req.user_cb_fn = (void *)dummy_cb;
+	req.user_cb_arg = (void *)&user_cb_arg;
+	req.user_buffer = user_buffer;
+	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
+	memset(req.user_buffer, 0, buff_size);
+	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	SPDK_CU_ASSERT_FATAL(buff != NULL);
+	req.payload.contig_or_cb_arg = buff;
+	req.payload.size = buff_size;
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
+	memcpy(buff, &test_data, buff_size);
+	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+
+	/* zero out the test value set in the callback */
+	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
+
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(memcmp(user_buffer, &zero_data, buff_size) == 0);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
 	CU_ASSERT(req.user_cb_fn == NULL);
 	CU_ASSERT(req.user_cb_arg == NULL);
@@ -662,7 +692,9 @@ test_nvme_user_copy_cmd_complete(void)
 	memset(req.user_buffer, 0, buff_size);
 	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
-	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
+	req.payload.contig_or_cb_arg = buff;
+	req.payload.size = buff_size;
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	nvme_user_copy_cmd_complete(&req, &cpl);
@@ -692,6 +724,7 @@ test_nvme_allocate_request_null(void)
 	 * Put a dummy on the queue so we can make a request
 	 * and confirm that what comes back is what we expect.
 	 */
+	dummy_req.pid = getpid();
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
 
 	req = nvme_allocate_request_null(&qpair, cb_fn, cb_arg);
@@ -704,7 +737,7 @@ test_nvme_allocate_request_null(void)
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(req->pid == getpid());
-	CU_ASSERT(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(nvme_req_payload_type(req) == NVME_PAYLOAD_TYPE_CONTIG);
 	CU_ASSERT(req->payload.md == NULL);
 	CU_ASSERT(req->payload.contig_or_cb_arg == NULL);
 }
@@ -713,38 +746,32 @@ static void
 test_nvme_allocate_request(void)
 {
 	struct spdk_nvme_qpair qpair;
-	struct nvme_payload payload;
-	uint32_t payload_struct_size = sizeof(payload);
+	uint32_t payload_struct_size = sizeof(struct nvme_payload);
 	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x1234;
 	void *cb_arg = (void *)0x6789;
 	struct nvme_request *req = NULL;
 	struct nvme_request dummy_req;
 
-	/* Fill the whole payload struct with a known pattern */
-	memset(&payload, 0x5a, payload_struct_size);
 	STAILQ_INIT(&qpair.free_req);
 	STAILQ_INIT(&qpair.queued_req);
 	qpair.num_outstanding_reqs = 0;
 
 	/* Test trying to allocate a request when no requests are available */
-	req = nvme_allocate_request(&qpair, &payload, payload_struct_size, 0,
-				    cb_fn, cb_arg);
+	req = nvme_allocate_request(&qpair);
 	CU_ASSERT(req == NULL);
 	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 
 	/* put a dummy on the queue, and then allocate one */
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
-	req = nvme_allocate_request(&qpair, &payload, payload_struct_size, 0,
-				    cb_fn, cb_arg);
-
-	/* all the req elements should now match the passed in parameters */
+	req = nvme_allocate_request(&qpair);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	NVME_INIT_REQUEST_CONTIG(req, cb_fn, cb_arg, NULL, NULL, payload_struct_size, 0, 0, 0);
+	/* all the req elements should now match the passed in parameters */
 	CU_ASSERT(qpair.num_outstanding_reqs == 1);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
-	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
-	CU_ASSERT(req->payload_size == payload_struct_size);
-	CU_ASSERT(req->pid == getpid());
+	CU_ASSERT(req->payload.size == payload_struct_size);
 }
 
 static void
@@ -762,6 +789,7 @@ test_nvme_free_request(void)
 	match_req.num_children = 0;
 	STAILQ_INIT(&qpair.free_req);
 	match_req.qpair->reserved_req = NULL;
+	match_req.qpair_reserved = false;
 
 	nvme_free_request(&match_req);
 	req = STAILQ_FIRST(&match_req.qpair->free_req);
@@ -772,7 +800,7 @@ test_nvme_free_request(void)
 static void
 test_nvme_allocate_request_user_copy(void)
 {
-	struct spdk_nvme_qpair qpair;
+	struct spdk_nvme_qpair qpair = {};
 	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x12345;
 	void *cb_arg = (void *)0x12345;
 	bool host_to_controller = true;
@@ -1066,6 +1094,52 @@ test_trid_parse_and_compare(void)
 					       "priority:2\n"
 					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
 	CU_ASSERT(trid1.priority == 2);
+
+	/* Compare IP addresses via their binary representations instead of as strings */
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
+					       "trtype:tcp\n"
+					       "adrfam:ipv4\n"
+					       "traddr:192.168.100.nvm\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2,
+					       "trtype:tcp\n"
+					       "adrfam:ipv4\n"
+					       "traddr:192.168.100.nvm\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:0123:4567:89ab:cdef:nvme:0098:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:123:4567:89ab:cdef::98:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:0123:4567:89ab:cdef:0000:0098:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2,
+					       "trtype:tcp\n"
+					       "adrfam:ipv6\n"
+					       "traddr:123:4567:89ab:cdef::98:7654:3210\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) == 0);
 }
 
 static void
@@ -1281,6 +1355,7 @@ test_nvme_request_check_timeout(void)
 	CU_ASSERT(ut_timeout_cb_call == false);
 
 	/* req->pid isn't right then return directly */
+	qpair.id = 0;
 	req.submit_tick = 1;
 	req.pid = g_spdk_nvme_pid + 1;
 	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);

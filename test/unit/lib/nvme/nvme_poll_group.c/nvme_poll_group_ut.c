@@ -46,11 +46,6 @@ int g_destroy_return_value = 0;
 TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
-DEFINE_STUB(nvme_transport_qpair_get_optimal_poll_group,
-	    struct spdk_nvme_transport_poll_group *,
-	    (const struct spdk_nvme_transport *transport,
-	     struct spdk_nvme_qpair *qpair),
-	    NULL);
 DEFINE_STUB(nvme_transport_get_trtype,
 	    enum spdk_nvme_transport_type,
 	    (const struct spdk_nvme_transport *transport),
@@ -499,6 +494,8 @@ test_spdk_nvme_poll_group_process_completions(void)
 	CU_ASSERT(nvme_poll_group_connect_qpair(&qpair1_1) == 0);
 	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 128,
 			unit_test_disconnected_qpair_cb) == 32);
+	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
+	CU_ASSERT(nvme_transport_poll_group_disconnect_qpair(&qpair1_1) == 0);
 	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair1_1) == 0);
 	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
 		CU_ASSERT(STAILQ_EMPTY(&tgroup->connected_qpairs));

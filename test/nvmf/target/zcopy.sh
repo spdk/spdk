@@ -30,12 +30,10 @@ $rpc_py bdev_malloc_create 32 4096 -b malloc0
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
 
 # First send IO with verification
-$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
-	-t 10 -q 128 -w verify -o 8192 "${NO_HUGE[@]}"
+run_app "$SPDK_EXAMPLE_DIR/bdevperf" --json <(gen_nvmf_target_json) -t 10 -q 128 -w verify -o 8192
 
 # Then send IO in the background while pausing/resuming the subsystem
-$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
-	-t 5 -q 128 -w randrw -M 50 -o 8192 "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" --json <(gen_nvmf_target_json) -t 5 -q 128 -w randrw -M 50 -o 8192
 perfpid=$!
 
 xtrace_disable
@@ -53,8 +51,8 @@ $rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 1
 $rpc_py bdev_delay_create -b malloc0 -d delay0 -r 1000000 -t 1000000 -w 1000000 -n 1000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 delay0 -n 1
 
-$SPDK_EXAMPLE_DIR/abort -c 0x1 -t 5 -q 64 -w randrw -M 50 -l warning \
-	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT ns:1" "${NO_HUGE[@]}"
+run_app "$SPDK_EXAMPLE_DIR/abort" -c 0x1 -t 5 -q 64 -w randrw -M 50 -l warning \
+	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT ns:1"
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini

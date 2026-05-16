@@ -8,8 +8,7 @@
 #include "spdk/bdev.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
-
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 bdev_initialize_complete(void *cb_arg, int rc)

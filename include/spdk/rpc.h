@@ -11,6 +11,11 @@
 
 #include "spdk/jsonrpc.h"
 
+/**
+ * It is required to invoke API functions on the SPDK app thread;
+ * otherwise, race conditions may lead to undefined behavior.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

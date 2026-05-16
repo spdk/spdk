@@ -15,7 +15,7 @@ packages=(
 	jq
 	gdb
 	fio
-	p5-extutils-pkgconfig
+	p5-ExtUtils-PkgConfig
 	libtool
 	flex
 	bison
@@ -27,4 +27,5 @@ packages=(
 	llvm-devel
 	avahi
 	xxd
+	flock
 )

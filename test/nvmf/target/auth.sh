@@ -12,7 +12,7 @@ source "$rootdir/test/nvmf/common.sh"
 # shellcheck disable=SC2190
 digests=("sha256" "sha384" "sha512")
 dhgroups=("null" "ffdhe2048" "ffdhe3072" "ffdhe4096" "ffdhe6144" "ffdhe8192")
-subnqn="nqn.2024-03.io.spdk:cnode0"
+subnqn="nqn.2024-03.io.spdk:cnode$$"
 hostnqn="$NVME_HOSTNQN"
 hostsock="/var/tmp/host.sock"
 keys=() ckeys=()
@@ -85,7 +85,7 @@ connect_authenticate() {
 
 nvmftestinit
 nvmfappstart -L nvmf_auth &> "$output_dir/nvmf-auth.log"
-"$rootdir/build/bin/spdk_tgt" -m 2 -r "$hostsock" -L nvme_auth "${NO_HUGE[@]}" &> "$output_dir/nvme-auth.log" &
+run_app_bg "$SPDK_BIN_DIR/spdk_tgt" -m 2 -r "$hostsock" -L nvme_auth > "$output_dir/nvme-auth.log"
 hostpid=$!
 
 trap "dumplogs; cleanup" SIGINT SIGTERM EXIT

@@ -76,8 +76,10 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 * caller is aware that an error occurred.
 	 */
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
-		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		spdk_nvme_qpair_print_completion_ext(sequence->ns_entry->qpair, completion,
+						     SPDK_NVME_OPC_READ);
+		fprintf(stderr, "I/O error status: %s\n",
+			spdk_nvme_cpl_get_status_string_ext(&completion->status, SPDK_NVME_OPC_READ));
 		fprintf(stderr, "Read I/O failed, aborting run\n");
 		sequence->is_completed = 2;
 		exit(1);
@@ -110,8 +112,10 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 * caller is aware that an error occurred.
 	 */
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
-		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		spdk_nvme_qpair_print_completion_ext(sequence->ns_entry->qpair, completion,
+						     SPDK_NVME_OPC_WRITE);
+		fprintf(stderr, "I/O error status: %s\n",
+			spdk_nvme_cpl_get_status_string_ext(&completion->status, SPDK_NVME_OPC_WRITE));
 		fprintf(stderr, "Write I/O failed, aborting run\n");
 		sequence->is_completed = 2;
 		exit(1);
@@ -150,8 +154,11 @@ reset_zone_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 * caller is aware that an error occurred.
 	 */
 	if (spdk_nvme_cpl_is_error(completion)) {
-		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
-		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		spdk_nvme_qpair_print_completion_ext(sequence->ns_entry->qpair, completion,
+						     SPDK_NVME_OPC_ZONE_MGMT_SEND);
+		fprintf(stderr, "I/O error status: %s\n",
+			spdk_nvme_cpl_get_status_string_ext(&completion->status,
+					SPDK_NVME_OPC_ZONE_MGMT_SEND));
 		fprintf(stderr, "Reset zone I/O failed, aborting run\n");
 		sequence->is_completed = 2;
 		exit(1);
@@ -377,57 +384,77 @@ static void
 usage(const char *program_name)
 {
 	printf("%s [options]", program_name);
-	printf("\t\n");
+	printf("\n");
 	printf("options:\n");
-	printf("\t[-d DPDK huge memory size in MB]\n");
-	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
-	printf("\t[-i shared memory group ID]\n");
+	printf("\t-d, --hugemem-size <MB>     DPDK huge memory size in MB\n");
+	printf("\t-g, --mem-single-seg        use single file descriptor for DPDK memory segments\n");
+	printf("\t-i, --shmem-grp-id <id>     shared memory group ID\n");
 	spdk_nvme_transport_id_usage(stdout, 0);
-	printf("\t[-V enumerate VMD]\n");
-#ifdef DEBUG
-	printf("\t[-L enable debug logging]\n");
-#else
-	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
-#endif
+	printf("\t-V, --enable-vmd            enable VMD enumeration\n");
+	spdk_log_usage(stdout, "\t-L");
+	printf("\t-h, --help                  show this usage\n");
+	printf("\t--iova-mode <mode>          specify DPDK IOVA mode: va|pa\n");
 }
+
+#define HELLO_GETOPT_SHORT "d:ghi:r:L:V"
+
+static const struct option g_hello_cmdline_opts[] = {
+#define HELLO_HUGEMEM_SIZE	'd'
+	{"hugemem-size", required_argument, NULL, HELLO_HUGEMEM_SIZE},
+#define HELLO_MEM_SINGLE_SEG	'g'
+	{"mem-single-seg", no_argument, NULL, HELLO_MEM_SINGLE_SEG},
+#define HELLO_HELP		'h'
+	{"help", no_argument, NULL, HELLO_HELP},
+#define HELLO_SHMEM_GROUP_ID	'i'
+	{"shmem-grp-id", required_argument, NULL, HELLO_SHMEM_GROUP_ID},
+#define HELLO_TRANSPORT		'r'
+	{"transport", required_argument, NULL, HELLO_TRANSPORT},
+#define HELLO_LOG_FLAG		'L'
+	{"logflag", required_argument, NULL, HELLO_LOG_FLAG},
+#define HELLO_ENABLE_VMD	'V'
+	{"enable-vmd", no_argument, NULL, HELLO_ENABLE_VMD},
+#define HELLO_IOVA_MODE		256
+	{"iova-mode", required_argument, NULL, HELLO_IOVA_MODE},
+	{0, 0, 0, 0}
+};
 
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
-	int op, rc;
+	int op, long_idx, rc;
 
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:ghi:r:L:V")) != -1) {
+	while ((op = getopt_long(argc, argv, HELLO_GETOPT_SHORT, g_hello_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
-		case 'V':
+		case HELLO_ENABLE_VMD:
 			g_vmd = true;
 			break;
-		case 'i':
+		case HELLO_SHMEM_GROUP_ID:
 			env_opts->shm_id = spdk_strtol(optarg, 10);
 			if (env_opts->shm_id < 0) {
 				fprintf(stderr, "Invalid shared memory ID\n");
 				return env_opts->shm_id;
 			}
 			break;
-		case 'g':
+		case HELLO_MEM_SINGLE_SEG:
 			env_opts->hugepage_single_segments = true;
 			break;
-		case 'r':
+		case HELLO_TRANSPORT:
 			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
 				fprintf(stderr, "Error parsing transport address\n");
 				return 1;
 			}
 			break;
-		case 'd':
+		case HELLO_HUGEMEM_SIZE:
 			env_opts->mem_size = spdk_strtol(optarg, 10);
 			if (env_opts->mem_size < 0) {
 				fprintf(stderr, "Invalid DPDK memory size\n");
 				return env_opts->mem_size;
 			}
 			break;
-		case 'L':
+		case HELLO_LOG_FLAG:
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
@@ -438,9 +465,12 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif
 			break;
-		case 'h':
+		case HELLO_HELP:
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
+		case HELLO_IOVA_MODE:
+			env_opts->iova_mode = optarg;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;

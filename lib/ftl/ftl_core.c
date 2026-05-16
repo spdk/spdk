@@ -889,9 +889,7 @@ _ftl_get_stats(void *_ctx)
 
 	*stats_ctx->stats = stats_ctx->dev->stats;
 
-	if (spdk_thread_send_msg(stats_ctx->thread, _ftl_get_stats_cb, stats_ctx)) {
-		ftl_abort();
-	}
+	spdk_thread_send_msg(stats_ctx->thread, _ftl_get_stats_cb, stats_ctx);
 }
 
 int
@@ -899,7 +897,6 @@ spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_ftl_s
 		   void *cb_arg)
 {
 	struct ftl_get_stats_ctx *stats_ctx;
-	int rc;
 
 	stats_ctx = calloc(1, sizeof(struct ftl_get_stats_ctx));
 	if (!stats_ctx) {
@@ -912,16 +909,9 @@ spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_ftl_s
 	stats_ctx->cb_arg = cb_arg;
 	stats_ctx->thread = spdk_get_thread();
 
-	rc = spdk_thread_send_msg(dev->core_thread, _ftl_get_stats, stats_ctx);
-	if (rc) {
-		goto stats_allocated;
-	}
+	spdk_thread_send_msg(dev->core_thread, _ftl_get_stats, stats_ctx);
 
 	return 0;
-
-stats_allocated:
-	free(stats_ctx);
-	return rc;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)

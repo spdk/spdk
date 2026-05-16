@@ -101,6 +101,12 @@ spdk_json_write_reset(struct spdk_json_write_ctx *w)
 	w->indent = 0;
 }
 
+void
+spdk_json_write_add_flags(struct spdk_json_write_ctx *w, uint32_t flags)
+{
+	w->flags |= flags;
+}
+
 static inline int
 emit(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -588,6 +594,24 @@ spdk_json_write_array_end(struct spdk_json_write_ctx *w)
 	}
 	w->new_indent = false;
 	return emit(w, "]", 1);
+}
+
+int
+spdk_json_write_batch_begin(struct spdk_json_write_ctx *w)
+{
+	if (w->flags & SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES) {
+		return 0;
+	}
+	return spdk_json_write_array_begin(w);
+}
+
+int
+spdk_json_write_batch_end(struct spdk_json_write_ctx *w)
+{
+	if (w->flags & SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES) {
+		return 0;
+	}
+	return spdk_json_write_array_end(w);
 }
 
 int

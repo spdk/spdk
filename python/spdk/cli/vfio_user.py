@@ -5,8 +5,6 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
 
 
 def add_parser(subparsers):
@@ -15,14 +13,14 @@ def add_parser(subparsers):
         args.client.vfu_tgt_set_base_path(path=args.path)
 
     p = subparsers.add_parser('vfu_tgt_set_base_path', help='Set socket base path.')
-    p.add_argument('path', help='socket base path')
+    p.add_argument('path', help='Base path for the vfio-user UNIX sockets')
     p.set_defaults(func=vfu_tgt_set_base_path)
 
     def vfu_virtio_delete_endpoint(args):
         args.client.vfu_virtio_delete_endpoint(name=args.name)
 
     p = subparsers.add_parser('vfu_virtio_delete_endpoint', help='Delete the PCI device via endpoint name.')
-    p.add_argument('name', help='Endpoint name')
+    p.add_argument('name', help='Name of the endpoint')
     p.set_defaults(func=vfu_virtio_delete_endpoint)
 
     def vfu_virtio_create_blk_endpoint(args):
@@ -36,11 +34,11 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('vfu_virtio_create_blk_endpoint', help='Create virtio-blk endpoint.')
     p.add_argument('name', help='Name of the endpoint')
-    p.add_argument('--bdev-name', help='block device name', type=str, required=True)
-    p.add_argument('--cpumask', help='CPU masks')
-    p.add_argument('--num-queues', help='number of vrings', type=int, default=0)
-    p.add_argument('--qsize', help='number of element for each vring', type=int, default=0)
-    p.add_argument("--packed-ring", action='store_true', help='Enable packed ring')
+    p.add_argument('--bdev-name', help='Name of the backing block device', type=str, required=True)
+    p.add_argument('--cpumask', help="CPU mask for the endpoint's I/O threads")
+    p.add_argument('--num-queues', help='Number of virtqueues. Default: 64', type=int)
+    p.add_argument('--qsize', help='Number of entries per virtqueue. Default: 128', type=int)
+    p.add_argument("--packed-ring", action='store_true', help='Enable packed virtqueue layout. Default: false')
     p.set_defaults(func=vfu_virtio_create_blk_endpoint)
 
     def vfu_virtio_scsi_add_target(args):
@@ -51,8 +49,8 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('vfu_virtio_scsi_add_target', help='Attach a block device to SCSI target of PCI endpoint.')
     p.add_argument('name', help='Name of the endpoint')
-    p.add_argument('--scsi-target-num', help='number of SCSI Target', type=int, required=True)
-    p.add_argument('--bdev-name', help='block device name', type=str, required=True)
+    p.add_argument('--scsi-target-num', help='SCSI target number: 0-7', type=int, required=True)
+    p.add_argument('--bdev-name', help='Name of the backing block device', type=str, required=True)
     p.set_defaults(func=vfu_virtio_scsi_add_target)
 
     def vfu_virtio_scsi_remove_target(args):
@@ -62,7 +60,7 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('vfu_virtio_scsi_remove_target', help='Remove the specified SCSI target of PCI endpoint.')
     p.add_argument('name', help='Name of the endpoint')
-    p.add_argument('--scsi-target-num', help='number of SCSI Target', type=int, required=True)
+    p.add_argument('--scsi-target-num', help='SCSI target number: 0-7', type=int, required=True)
     p.set_defaults(func=vfu_virtio_scsi_remove_target)
 
     def vfu_virtio_create_scsi_endpoint(args):
@@ -75,10 +73,12 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('vfu_virtio_create_scsi_endpoint', help='Create virtio-scsi endpoint.')
     p.add_argument('name', help='Name of the endpoint')
-    p.add_argument('--cpumask', help='CPU masks')
-    p.add_argument('--num-io-queues', help='number of IO vrings', type=int, default=0)
-    p.add_argument('--qsize', help='number of element for each vring', type=int, default=0)
-    p.add_argument("--packed-ring", action='store_true', help='Enable packed ring')
+    p.add_argument('--cpumask', help="CPU mask for the endpoint's I/O threads")
+    p.add_argument('--num-io-queues',
+                   help='Number of I/O virtqueues (control + event virtqueues added automatically). Default: 62',
+                   type=int)
+    p.add_argument('--qsize', help='Number of entries per virtqueue. Default: 128', type=int)
+    p.add_argument("--packed-ring", action='store_true', help='Enable packed virtqueue layout. Default: false')
     p.set_defaults(func=vfu_virtio_create_scsi_endpoint)
 
     def vfu_virtio_create_fs_endpoint(args):
@@ -93,10 +93,10 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('vfu_virtio_create_fs_endpoint', help='Create virtio-fs endpoint.')
     p.add_argument('name', help='Name of the endpoint')
-    p.add_argument('--fsdev-name', help='fsdev name', type=str, required=True)
-    p.add_argument('--tag', help='virtiofs tag', type=str, required=True)
-    p.add_argument('--cpumask', help='CPU masks')
-    p.add_argument('--num-queues', help='number of vrings', type=int, default=0)
-    p.add_argument('--qsize', help='number of element for each vring', type=int, default=0)
-    p.add_argument("--packed-ring", action='store_true', help='Enable packed ring')
+    p.add_argument('--fsdev-name', help='Name of the backing fsdev', type=str, required=True)
+    p.add_argument('--tag', help='virtiofs mount tag (per virtio specification)', type=str, required=True)
+    p.add_argument('--cpumask', help="CPU mask for the endpoint's I/O threads")
+    p.add_argument('--num-queues', help='Number of virtqueues. Default: 64', type=int)
+    p.add_argument('--qsize', help='Number of entries per virtqueue. Default: 128', type=int)
+    p.add_argument("--packed-ring", action='store_true', help='Enable packed virtqueue layout. Default: false')
     p.set_defaults(func=vfu_virtio_create_fs_endpoint)

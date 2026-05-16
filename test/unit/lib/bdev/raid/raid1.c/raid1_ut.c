@@ -143,7 +143,7 @@ test_raid1_start(void)
 
 		SPDK_CU_ASSERT_FATAL(r1_info != NULL);
 
-		CU_ASSERT_EQUAL(r1_info->raid_bdev->level, RAID1);
+		CU_ASSERT_EQUAL(r1_info->raid_bdev->level, SPDK_BDEV_RAID_LEVEL_RAID1);
 		CU_ASSERT_EQUAL(r1_info->raid_bdev->bdev.blockcnt, params->base_bdev_blockcnt);
 		CU_ASSERT_PTR_EQUAL(r1_info->raid_bdev->module, &g_raid1_module);
 

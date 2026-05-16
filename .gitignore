@@ -26,6 +26,7 @@ dpdk-*
 CUnit-Memory-Dump.xml
 include/spdk/config.h
 include/spdk/version.h
+include/spdk_internal/rpc_autogen.h
 CONFIG.local
 *VC.db
 .vscode
@@ -42,7 +43,10 @@ doc/jsonrpc.md
 test_completions.txt
 timing.txt
 test/common/build_config.sh
+scripts/pkgdep/requirements.txt
 .coredump_path
 .run_test_name
 .spdk-isal.log
 .spdk-isal-crypto.log
+.venv/
+__pycache__/

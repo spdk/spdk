@@ -3,6 +3,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/config.h"
 #include "spdk_internal/cunit.h"
 #include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
@@ -217,6 +218,79 @@ test_spdk_rdma_pd(void)
 	ut_rdma_remove_dev(ut_dev2);
 }
 
+static int
+ut_ibv_poll_cq(struct ibv_cq *cq, int num_entries, struct ibv_wc *wc)
+{
+	return num_entries;
+}
+
+static void
+test_spdk_rdma_utils_wc_error_injection(void)
+{
+	struct ibv_context context = {
+		.ops = {
+			.poll_cq = ut_ibv_poll_cq,
+		},
+	};
+	struct ibv_cq cq = {
+		.context = &context,
+	};
+	struct ibv_wc wcs[32] = {0};
+	int ret;
+
+	/* Test spdk_rdma_utils_inject_wc_error with invalid parameters. */
+	ret = spdk_rdma_utils_inject_wc_error(IBV_WC_GENERAL_ERR, 0, 0);
+	CU_ASSERT(ret == -EINVAL);
+	ret = spdk_rdma_utils_inject_wc_error(IBV_WC_GENERAL_ERR, 11, 10);
+	CU_ASSERT(ret == -EINVAL);
+
+	/* Test inject errors with 0% rate. */
+	ret = spdk_rdma_utils_inject_wc_error(IBV_WC_GENERAL_ERR, 0, 100);
+	CU_ASSERT(ret == 0);
+	memset(wcs, 0, sizeof(wcs));
+	ret = spdk_rdma_utils_poll_cq(&cq, SPDK_COUNTOF(wcs), wcs);
+	CU_ASSERT(ret == SPDK_COUNTOF(wcs));
+	for (int i = 0; i < ret; i++) {
+		CU_ASSERT(wcs[i].status == IBV_WC_SUCCESS);
+	}
+
+	/* Test inject errors with 100% rate. */
+	ret = spdk_rdma_utils_inject_wc_error(IBV_WC_GENERAL_ERR, 100, 100);
+	CU_ASSERT(ret == 0);
+	memset(wcs, 0, sizeof(wcs));
+	ret = spdk_rdma_utils_poll_cq(&cq, SPDK_COUNTOF(wcs), wcs);
+	CU_ASSERT(ret == SPDK_COUNTOF(wcs));
+	for (int i = 0; i < ret; i++) {
+		CU_ASSERT(wcs[i].status == IBV_WC_GENERAL_ERR);
+	}
+
+	/* Test inject errors with 50% rate. */
+	ret = spdk_rdma_utils_inject_wc_error(IBV_WC_GENERAL_ERR, 50, 100);
+	CU_ASSERT(ret == 0);
+	memset(wcs, 0, sizeof(wcs));
+	ret = spdk_rdma_utils_poll_cq(&cq, SPDK_COUNTOF(wcs), wcs);
+	CU_ASSERT(ret == SPDK_COUNTOF(wcs));
+	int err_count = 0;
+	for (int i = 0; i < ret; i++) {
+		if (wcs[i].status == IBV_WC_GENERAL_ERR) {
+			err_count++;
+		} else {
+			CU_ASSERT(wcs[i].status == IBV_WC_SUCCESS);
+		}
+	}
+	CU_ASSERT(err_count > 0);
+	CU_ASSERT(err_count < ret);
+
+	/* Test cancel error injection. */
+	spdk_rdma_utils_cancel_wc_error();
+	memset(wcs, 0, sizeof(wcs));
+	ret = spdk_rdma_utils_poll_cq(&cq, SPDK_COUNTOF(wcs), wcs);
+	CU_ASSERT(ret == SPDK_COUNTOF(wcs));
+	for (int i = 0; i < ret; i++) {
+		CU_ASSERT(wcs[i].status == IBV_WC_SUCCESS);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -227,6 +301,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("rdma_common", NULL, NULL);
 	CU_ADD_TEST(suite, test_spdk_rdma_pd);
+	CU_ADD_TEST(suite, test_spdk_rdma_utils_wc_error_injection);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

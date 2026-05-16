@@ -18,8 +18,12 @@ DIRS-$(CONFIG_EXAMPLES) += examples
 DIRS-$(CONFIG_APPS) += app
 DIRS-y += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
+ifeq ($(CONFIG_ISAL_PATH),)
 DIRS-$(CONFIG_ISAL) += isalbuild
+endif
+ifeq ($(CONFIG_ISAL_CRYPTO_PATH),)
 DIRS-$(CONFIG_ISAL_CRYPTO) += isalcryptobuild
+endif
 DIRS-$(CONFIG_VFIO_USER) += vfiouserbuild
 DIRS-$(CONFIG_SMA) += proto
 DIRS-$(CONFIG_XNVME) += xnvmebuild
@@ -63,12 +67,16 @@ DPDK_DEPS += ipsecbuild
 endif
 
 ifeq ($(CONFIG_ISAL),y)
+ifeq ($(CONFIG_ISAL_PATH),)
 ISALBUILD = isalbuild
 LIB += isalbuild
 DPDK_DEPS += isalbuild
 ifeq ($(CONFIG_ISAL_CRYPTO),y)
+ifeq ($(CONFIG_ISAL_CRYPTO_PATH),)
 ISALCRYPTOBUILD = isalcryptobuild
 LIB += isalcryptobuild
+endif
+endif
 endif
 endif
 
@@ -84,8 +92,8 @@ endif
 
 all: mk/cc.mk $(DIRS-y)
 clean: $(DIRS-y)
-	$(Q)rm -f include/spdk/config.h
-	$(Q)rm -f include/spdk/version.h
+	$(Q)rm -f include/spdk/config.h include/spdk/config.h.tmp
+	$(Q)rm -f include/spdk/version.h include/spdk/version.h.tmp
 	$(Q)rm -rf build
 
 install: all
@@ -99,7 +107,7 @@ dpdkdeps $(DPDK_DEPS): $(WPDK)
 dpdkbuild: $(WPDK) $(DPDK_DEPS)
 endif
 
-lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD) $(XNVMEBUILD) $(ISALBUILD) $(ISALCRYPTOBUILD)
+lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD) $(XNVMEBUILD) $(ISALBUILD) $(ISALCRYPTOBUILD) include
 module: lib
 shared_lib: module
 app: $(LIB)
@@ -122,12 +130,12 @@ build_dir: mk/cc.mk
 	$(Q)mkdir -p build/include/spdk
 
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
-	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
-	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
-	scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
-	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp && \
+	echo "#define SPDK_CONFIG_H" >> $@.tmp && \
+	scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp && \
+	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp && \
+	{ cmp -s $@.tmp $@ && rm -f $@.tmp || mv $@.tmp $@; } || \
+	{ rm -f $@.tmp; echo "ERROR: scripts/genconfig.py failed to generate $@."; exit 1; }
 
 include/spdk/version.h: include/spdk/version.h.in VERSION
 	$(Q)sed " \
@@ -135,7 +143,9 @@ include/spdk/version.h: include/spdk/version.h.in VERSION
 		s/\$$SPDK_VERSION_MINOR/$(version_minor)/g; \
 		s/\$$SPDK_VERSION_PATCH/$(version_patch)/g; \
 		s/\$$SPDK_VERSION_SUFFIX/$(version_suffix)/g;" \
-		$@.in > $@
+		$@.in > $@.tmp && \
+		{ cmp -s $@.tmp $@ && rm -f $@.tmp || mv $@.tmp $@; } || \
+		{ rm -f $@.tmp; echo "ERROR: Failed to generate $@."; exit 1; }
 
 cc_version: mk/cc.mk
 	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
