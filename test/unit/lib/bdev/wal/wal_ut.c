@@ -15,18 +15,59 @@ DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module))
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
 DEFINE_STUB_V(spdk_bdev_unregister, (struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg));
 DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
-DEFINE_STUB(spdk_bdev_open_ext, int, (const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb, void *event_ctx, struct spdk_bdev_desc **_desc), 0);
-DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
+
+/* Mock spdk_bdev_open_ext to set a dummy descriptor */
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+                   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+    if (strcmp(bdev_name, "main") == 0) {
+        *_desc = (struct spdk_bdev_desc *)0x11111111;
+    } else if (strcmp(bdev_name, "journal") == 0) {
+        *_desc = (struct spdk_bdev_desc *)0x22222222;
+    } else {
+        *_desc = (struct spdk_bdev_desc *)0x12345678;
+    }
+    return 0;
+}
+
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 64);
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
-DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc), (void *)0x1);
-DEFINE_STUB_V(spdk_put_io_channel, (struct spdk_io_channel *ch));
-DEFINE_STUB(spdk_io_device_register, int, (void *io_device, spdk_io_channel_create_cb create_cb, spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size, const char *name), 0);
-DEFINE_STUB_V(spdk_io_device_unregister, (void *io_device, spdk_io_device_unregister_cb unregister_cb));
+
+/* Global dummy device to provide real IO channels in UT */
+static int g_dummy_io_device = 0;
+
+static int
+dummy_io_channel_create_cb(void *io_device, void *ctx_buf)
+{
+    return 0;
+}
+
+static void
+dummy_io_channel_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+/* Mock spdk_bdev_desc_get_bdev to return a non-NULL dummy bdev */
+struct spdk_bdev *
+spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
+{
+    return (struct spdk_bdev *)0x87654321;
+}
+
+/* Mock spdk_bdev_get_io_channel to return a real channel from a dummy device */
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
+{
+    return spdk_get_io_channel(&g_dummy_io_device);
+}
+
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
+DEFINE_STUB_V(spdk_bdev_io_complete, (struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status));
+DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 
 /* Global state for async results */
 int g_async_rc = 0;
@@ -66,7 +107,6 @@ ut_wal_io_cpl(spdk_bdev_io_completion_cb cb_fn, bool success, void *cb_arg)
     spdk_thread_send_msg(spdk_get_thread(), _ut_wal_io_cpl, cpl_args);
 }
 
-/* Mock spdk_bdev_write_blocks */
 /* Global state for I/O tracking */
 uint64_t g_last_write_lba = 0;
 uint32_t g_last_write_blocks = 0;
@@ -99,12 +139,18 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
                         uint64_t offset_blocks, uint64_t num_blocks,
                         spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-    g_last_write_lba = offset_blocks;
-    g_last_write_blocks = (uint32_t)num_blocks;
-    
-    /* Если это запись в журнал с заголовком */
-    if (iovcnt > 0 && iov[0].iov_len == sizeof(struct wal_record_header)) {
-        memcpy(&g_last_hdr, iov[0].iov_base, sizeof(struct wal_record_header));
+    /* Only track journal writes (0x22222222) for test assertions */
+    if (desc == (struct spdk_bdev_desc *)0x22222222) {
+        g_last_write_lba = offset_blocks;
+        g_last_write_blocks = (uint32_t)num_blocks;
+        
+        /* If this is a journal write with a header */
+        if (iovcnt > 0 && iov[0].iov_len >= sizeof(struct wal_record_header)) {
+            struct wal_record_header *potential_hdr = (struct wal_record_header *)iov[0].iov_base;
+            if (potential_hdr && potential_hdr->magic == WAL_RECORD_MAGIC) {
+                memcpy(&g_last_hdr, iov[0].iov_base, sizeof(struct wal_record_header));
+            }
+        }
     }
 
     ut_wal_io_cpl(cb, true, cb_arg);
@@ -149,55 +195,31 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 static void
-test_wal_recovery(void)
+test_setup(void)
 {
-    struct wal_vbdev *vb;
-    struct wal_record_header hdr = {0};
-    char data[512] = "recovery payload";
-    
+    g_last_write_lba = 0;
+    g_last_write_blocks = 0;
+    memset(&g_last_hdr, 0, sizeof(g_last_hdr));
+    g_async_rc = 0;
+    g_async_done = false;
+
     allocate_threads(1);
     set_thread(0);
+    spdk_io_device_register(&g_dummy_io_device, dummy_io_channel_create_cb, dummy_io_channel_destroy_cb, 0, "dummy");
+}
 
-    /* 1. Setup: Create WAL bdev */
-    wal_bdev_create_disk("main", "journal", "wal0", NULL, NULL, test_cb, NULL);
-    poll_threads();
-    vb = TAILQ_FIRST(&g_wal);
-    CU_ASSERT_FATAL(vb != NULL);
-
-    /* 2. Prepare fake journal content at LBA 1 */
-    hdr.magic = WAL_RECORD_MAGIC;
-    hdr.seq = 10; /* Greater than checkpoint 0 */
-    hdr.lba = 500; /* Replay to main LBA 500 */
-    hdr.num_blocks = 1;
-    hdr.data_crc = spdk_crc32c_update(data, 512, 0);
-    hdr.hdr_crc = spdk_crc32c_update(&hdr, offsetof(struct wal_record_header, hdr_crc), 0);
-    
-    memcpy(&g_journal_data[1 * 512], &hdr, sizeof(hdr));
-    memcpy(&g_journal_data[2 * 512], data, 512);
-
-    /* 3. Start Recovery */
-    g_async_done = false;
-    wal_bdev_recover("wal0", test_cb, NULL);
-    
-    /* 4. Drive the poller manually. 
-     * Step 1: Read Header
-     * Step 2: Read Data
-     * Step 3: Write to Main
-     * Step 4: Next Step (finds invalid magic and stops)
-     */
-    for (int i = 0; i < 10; i++) {
-        wal_recover_poll(vb);
-        poll_threads();
-        if (g_async_done) break;
+static void
+test_cleanup(void)
+{
+    struct wal_vbdev *vb, *tmp;
+    TAILQ_FOREACH_SAFE(vb, &g_wal, link, tmp) {
+        TAILQ_REMOVE(&g_wal, vb, link);
+        spdk_io_device_unregister(vb, NULL);
+        free(vb->bdev.name);
+        free(vb);
     }
 
-    /* 5. Verify Results */
-    CU_ASSERT(g_async_done == true);
-    CU_ASSERT(g_async_rc == 0);
-    CU_ASSERT(g_last_write_lba == 500);
-    CU_ASSERT(g_last_write_blocks == 1);
-    CU_ASSERT(memcmp(g_main_captured_data, data, 512) == 0);
-
+    spdk_io_device_unregister(&g_dummy_io_device, NULL);
     free_threads();
 }
 
@@ -209,10 +231,7 @@ test_wal_init(void)
     uint64_t size_mb = 0;
     
     g_async_done = false;
-
-    /* Initialize threads for async processing */
-    allocate_threads(1);
-    set_thread(0);
+    test_setup();
 
     rc = wal_bdev_create_disk("main", "journal", "wal0", &block_sz, &size_mb, test_cb, NULL);
     CU_ASSERT(rc == 0);
@@ -224,31 +243,28 @@ test_wal_init(void)
     CU_ASSERT(g_async_rc == 0);
     CU_ASSERT(block_sz == 512);
 
-    free_threads();
+    test_cleanup();
 }
 
 static void
 test_wal_write(void)
 {
     struct wal_vbdev *vb;
-    struct wal_io_channel *wch;
     struct spdk_io_channel *qch;
     struct spdk_bdev_io *bdev_io;
     struct iovec iov;
-    char data[512] = "test data";
+    void *data = calloc(1, 512);
 
-    allocate_threads(1);
-    set_thread(0);
+    test_setup();
 
     /* Setup: Create disk */
     wal_bdev_create_disk("main", "journal", "wal0", NULL, NULL, test_cb, NULL);
     poll_threads();
     vb = TAILQ_FIRST(&g_wal);
-    CU_ASSERT_FATAL(vb != NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(vb);
 
     /* Create channel and IO */
     qch = wal_get_io_channel(vb);
-    wch = spdk_io_channel_get_ctx(qch);
     
     bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct wal_bdev_io));
     bdev_io->bdev = &vb->bdev;
@@ -265,8 +281,8 @@ test_wal_write(void)
     poll_threads();
 
     /* Verify: Journal write LBA should be write_pos (1) */
-    CU_ASSERT(g_last_write_lba == 1);
-    CU_ASSERT(g_last_write_blocks == 2); /* Header(1) + Data(1) */
+    CU_ASSERT_EQUAL(g_last_write_lba, 1);
+    CU_ASSERT_EQUAL(g_last_write_blocks, 2); /* Header(1) + Data(1) */
     CU_ASSERT(g_last_hdr.magic == WAL_RECORD_MAGIC);
     CU_ASSERT(g_last_hdr.lba == 100);
     CU_ASSERT(g_last_hdr.seq == 1);
@@ -276,7 +292,8 @@ test_wal_write(void)
 
     spdk_put_io_channel(qch);
     free(bdev_io);
-    free_threads();
+    free(data);
+    test_cleanup();
 }
 
 static void
@@ -286,15 +303,16 @@ test_wal_wrap_around(void)
     struct spdk_io_channel *qch;
     struct spdk_bdev_io *bdev_io;
     struct iovec iov;
+    void *data = calloc(1, 10 * 512);
 
-    allocate_threads(1);
-    set_thread(0);
+    test_setup();
 
     wal_bdev_create_disk("main", "journal", "wal0", NULL, NULL, test_cb, NULL);
     poll_threads();
     vb = TAILQ_FIRST(&g_wal);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(vb);
     
-    /* Симулируем конец журнала: ставим write_pos почти в конец (размер 1024) */
+    /* Simulate end of journal: set write_pos near the end (size 1024) */
     vb->sb.write_pos = 1023; 
     
     qch = wal_get_io_channel(vb);
@@ -305,19 +323,68 @@ test_wal_wrap_around(void)
     bdev_io->u.bdev.iovcnt = 1;
     bdev_io->u.bdev.offset_blocks = 500;
     bdev_io->u.bdev.num_blocks = 10;
-    iov.iov_base = NULL;
+    iov.iov_base = data;
     iov.iov_len = 10 * 512;
 
+    /* Submit write */
     wal_submit_request(qch, bdev_io);
     poll_threads();
 
     /* Verify: should have wrapped to LBA 1 */
-    CU_ASSERT(g_last_write_lba == 1);
-    CU_ASSERT(vb->sb.write_pos == 1 + 10 + 1);
+    CU_ASSERT_EQUAL(g_last_write_lba, 1);
+    CU_ASSERT_EQUAL(vb->sb.write_pos, 1 + 10 + 1);
 
     spdk_put_io_channel(qch);
     free(bdev_io);
-    free_threads();
+    free(data);
+    test_cleanup();
+}
+
+static void
+test_wal_recovery(void)
+{
+    struct wal_vbdev *vb;
+    struct wal_record_header hdr = {0};
+    char data[512] = "recovery payload";
+    
+    test_setup();
+
+    /* 1. Setup: Create WAL bdev */
+    wal_bdev_create_disk("main", "journal", "wal0", NULL, NULL, test_cb, NULL);
+    poll_threads();
+    vb = TAILQ_FIRST(&g_wal);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(vb);
+
+    /* 2. Prepare fake journal content at LBA 1 */
+    hdr.magic = WAL_RECORD_MAGIC;
+    hdr.seq = 10; /* Greater than checkpoint 0 */
+    hdr.lba = 500; /* Replay to main LBA 500 */
+    hdr.num_blocks = 1;
+    hdr.data_crc = spdk_crc32c_update(data, 512, 0);
+    hdr.hdr_crc = spdk_crc32c_update(&hdr, offsetof(struct wal_record_header, hdr_crc), 0);
+    
+    memcpy(&g_journal_data[1 * 512], &hdr, sizeof(hdr));
+    memcpy(&g_journal_data[2 * 512], data, 512);
+
+    /* 3. Start Recovery */
+    g_async_done = false;
+    wal_bdev_recover("wal0", test_cb, NULL);
+    
+    /* 4. Drive the poller manually. */
+    for (int i = 0; i < 10; i++) {
+        wal_recover_poll(vb);
+        poll_threads();
+        if (g_async_done) break;
+    }
+
+    /* 5. Verify Results */
+    CU_ASSERT(g_async_done == true);
+    CU_ASSERT(g_async_rc == 0);
+    CU_ASSERT(g_last_write_lba == 500);
+    CU_ASSERT(g_last_write_blocks == 1);
+    CU_ASSERT(memcmp(g_main_captured_data, data, 512) == 0);
+
+    test_cleanup();
 }
 
 int

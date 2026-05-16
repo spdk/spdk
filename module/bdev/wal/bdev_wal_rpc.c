@@ -5,7 +5,7 @@
 #include <spdk/log.h>
 #include "vbdev_wal.h"
 
-/* Структура нашего журналируемого устройства для rpc-запроса */
+/* Structure for the WAL bdev creation RPC request */
 struct rpc_bdev_wal_create {
 	char *name;
 	uint32_t block_sz;
@@ -14,7 +14,7 @@ struct rpc_bdev_wal_create {
 	char *main_bdev_name;
 };
 
-/* Парсинг с json полей для функции создания */
+/* JSON decoders for the WAL bdev creation request */
 static const struct spdk_json_object_decoder rpc_bdev_wal_create_decoders[] = {
 	{"name",
 	 offsetof(struct rpc_bdev_wal_create, name),
@@ -35,30 +35,30 @@ static const struct spdk_json_object_decoder rpc_bdev_wal_create_decoders[] = {
 	 spdk_json_decode_string},
 };
 
-/* Функция для очистки указателей-полей структуры rpc-запроса */
+/* Free RPC creation request fields */
 static void free_rpc_bdev_wal_create(struct rpc_bdev_wal_create *req) {
 	free(req->name);
 	free(req->journal_bdev_name);
 	free(req->main_bdev_name);
 }
 
-/* Структура для удаления нашего журналируемого устройства */
+/* Structure for the WAL bdev deletion RPC request */
 struct rpc_bdev_wal_delete {
 	char *name;
 };
 
-/* Функция для очистки указателя-поля структуры для удаления журналируемого устройства */
+/* Free RPC deletion request fields */
 static void free_rpc_bdev_wal_delete(struct rpc_bdev_wal_delete *req) {
 	free(req->name);
 }
 
-/* Парсинг с json поля для структуры удаления */
+/* JSON decoders for the WAL bdev deletion request */
 static const struct spdk_json_object_decoder rpc_bdev_wal_delete_decoders[] = {
 	{"name",
 	 offsetof(struct rpc_bdev_wal_delete, name),
 	 spdk_json_decode_string}};
 
-/* Call-back завершения создания */
+/* Callback for WAL bdev creation completion */
 static void rpc_journaling_bdev_create_cb(void *cb_arg, int rc) {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -86,7 +86,7 @@ static void rpc_journaling_bdev_create(struct spdk_jsonrpc_request *request,
 				    &req)) {
 		SPDK_DEBUGLOG(
 			wal_vbdev,
-			"spdk_json_decode_object failed\n"); // добавить wal_vbdev
+			"spdk_json_decode_object failed\n"); /* TODO: add wal_vbdev logging */
 		spdk_jsonrpc_send_error_response(
 			request,
 			SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -108,19 +108,19 @@ static void rpc_journaling_bdev_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	/* Мы не отправляем ответ здесь, так как создание теперь асинхронное */
+	/* Response is deferred due to asynchronous creation */
 	free_rpc_bdev_wal_create(&req);
 	return;
 
 cleanup:
 	free_rpc_bdev_wal_create(&req);
 }
-/* Зарегистрировали устройство */
+/* Register RPC method for device creation */
 SPDK_RPC_REGISTER("wal_bdev_create",
 		  rpc_journaling_bdev_create,
 		  SPDK_RPC_RUNTIME)
 
-/* Call-back завершения удаления */
+/* Callback for WAL bdev deletion completion */
 static void rpc_journaling_bdev_delete_cb(void *cb_arg, int bdeverrno) {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
@@ -133,7 +133,7 @@ static void rpc_journaling_bdev_delete_cb(void *cb_arg, int bdeverrno) {
 	}
 }
 
-/* Удаление нашего устройства */
+/* Delete WAL bdev RPC handler */
 static void rpc_wal_bdev_delete(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params) {
 	struct rpc_bdev_wal_delete req = {NULL};
@@ -155,7 +155,7 @@ cleanup:
 	free_rpc_bdev_wal_delete(&req);
 }
 
-/* Удаление зарегистрированного устройства */
+/* Register RPC method for device deletion */
 SPDK_RPC_REGISTER("wal_bdev_delete", rpc_wal_bdev_delete, SPDK_RPC_RUNTIME)
 
 struct rpc_wal_bdev_recover {
@@ -181,7 +181,15 @@ static void rpc_wal_bdev_recover_done(void *cb_arg, int bdeverrno) {
 	}
 }
 
-/* Восстановления при сбое записи */
+/**
+ * @brief Handle the JSON-RPC request to start WAL recovery.
+ *
+ * Initiates the background recovery process that reads the journal and
+ * replays uncommitted data to the main device.
+ *
+ * @param request The JSON-RPC request context.
+ * @param params The JSON parameters containing the WAL bdev name.
+ */
 static void rpc_wal_bdev_recover(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params) {
 	struct rpc_wal_bdev_recover req = {};
@@ -208,3 +216,13 @@ static void rpc_wal_bdev_recover(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("wal_bdev_recover", rpc_wal_bdev_recover, SPDK_RPC_RUNTIME)
+GISTER("wal_bdev_recover", rpc_wal_bdev_recover, SPDK_RPC_RUNTIME)
+_bdev_recover, SPDK_RPC_RUNTIME)
+SPDK_RPC_RUNTIME)
+_RPC_RUNTIME)
+PDK_RPC_RUNTIME)
+R("wal_bdev_recover", rpc_wal_bdev_recover, SPDK_RPC_RUNTIME)
+_bdev_recover, SPDK_RPC_RUNTIME)
+SPDK_RPC_RUNTIME)
+_RPC_RUNTIME)
+PDK_RPC_RUNTIME)
