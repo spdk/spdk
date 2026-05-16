@@ -1037,7 +1037,7 @@ function raid_nvmf_uaf_test() {
 
 			# Connect back to own NVMe-oF target to create local controller
 			$rpc_py bdev_nvme_attach_controller -b $controller -t tcp -a $tcp_addr -n $nqn -s $port -f ipv4 \
-				--ctrlr_loss_timeout_sec=2 --fast_io_fail_timeout_sec=2 --reconnect_delay_sec=1
+				--ctrlr-loss-timeout-sec=2 --fast-io-fail-timeout-sec=2 --reconnect-delay-sec=1
 		done
 
 		# Build RAID1 array from attached NVMe controllers
@@ -1152,8 +1152,6 @@ trap 'cleanup; exit 1' EXIT
 
 base_blocklen=512
 
-run_test "raid_io_resource_dependence" raid_io_resource_dependence
-
 run_test "raid1_resize_data_offset_test" raid_resize_data_offset_test
 
 run_test "raid0_resize_superblock_test" raid_resize_superblock_test 0
@@ -1162,6 +1160,7 @@ run_test "raid1_resize_superblock_test" raid_resize_superblock_test 1
 if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 	has_nbd=true
 	modprobe nbd
+	run_test "raid_io_resource_dependence" raid_io_resource_dependence
 	run_test "raid_unmap_function_test_raid0" raid_unmap_function_test raid0
 	run_test "raid_unmap_function_test_concat" raid_unmap_function_test concat
 	run_test "raid_unmap_function_test_raid1" raid_unmap_function_test raid1

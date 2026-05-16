@@ -10,7 +10,7 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-nqn=nqn.2016-06.io.spdk:cnode1
+nqn=nqn.2016-06.io.spdk:cnode$$
 
 rpc_py="$rootdir/scripts/rpc.py"
 
@@ -34,7 +34,7 @@ get_subsystem() {
 	local nqn=$1 serial=$2 s
 
 	for s in /sys/class/nvme-subsystem/*; do
-		[[ $nqn == "$(< "$s/subsysnqn")" && "$serial" == "$(< "$s/serial")" ]] || continue
+		[[ $nqn == "$(< "$s/subsysnqn")" && "$serial" == "$(sed 's/ *$//' "$s/serial")" ]] || continue
 		echo "${s##*/}" && return 0
 	done
 	return 1

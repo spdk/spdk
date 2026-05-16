@@ -4,20 +4,16 @@
 #  All rights reserved.
 #
 
-import logging
 import argparse
+import logging
 import os
-import sys
 import shlex
-
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
+import sys
 
 try:
     sys.path.append(os.path.dirname(__file__) + '/../../../python')
-    from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException  # noqa
+    from spdk.rpc.client import JSONRPCClient, JSONRPCException
+    from spdk.rpc.cmd_parser import print_dict
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
     print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
@@ -26,10 +22,6 @@ except ImportError:
 
 PATTERN_TYPES_STR = ("read", "write", "randread", "randwrite", "rw", "randrw", "verify", "reset",
                      "unmap", "flush", "write_zeroes")
-
-
-def print_array(a):
-    print(" ".join((quote(v) for v in a)))
 
 
 def perform_tests_func(args):
@@ -80,7 +72,7 @@ if __name__ == "__main__":
     p.add_argument('-M', dest="rw_percentage", help='rwmixread (100 for reads, 0 for writes)',
                    type=int, choices=range(0, 101), metavar="[0-100]")
     p.add_argument('-w', dest="workload_type", choices=PATTERN_TYPES_STR, type=str.lower,
-                   help=f'io pattern type, must be one of {PATTERN_TYPES_STR}',)
+                   help=f'io pattern type, must be one of {PATTERN_TYPES_STR}')
     p.set_defaults(func=perform_tests)
 
     def call_rpc_func(args):

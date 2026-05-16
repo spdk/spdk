@@ -19,15 +19,15 @@ nvmfappstart -m 0xF
 
 function perf_app() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		sudo -E -u $SUDO_USER "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" $SPDK_BIN_DIR/spdk_nvme_perf "$@"
+		sudo -E -u $SUDO_USER "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" run_app $SPDK_BIN_DIR/spdk_nvme_perf "$@"
 	else
-		$SPDK_BIN_DIR/spdk_nvme_perf "$@"
+		run_app $SPDK_BIN_DIR/spdk_nvme_perf "$@"
 	fi
 }
 
 $rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
 
-local_nvme_trid=$($rpc_py framework_get_config bdev | jq -r '.[].params | select(.name=="Nvme0").traddr')
+local_nvme_trid=$($rpc_py framework_get_config bdev | jq -r 'map(select(.params.name=="Nvme0") | .params.traddr) | .[]')
 bdevs="$bdevs $($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 if [ -n "$local_nvme_trid" ]; then
@@ -53,16 +53,16 @@ if [ -n "$local_nvme_trid" ]; then
 	perf_app -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:PCIe traddr:$local_nvme_trid"
 fi
 
-$SPDK_BIN_DIR/spdk_nvme_perf -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" "${NO_HUGE[@]}"
-$SPDK_BIN_DIR/spdk_nvme_perf -q 32 -o 4096 -w randrw -M 50 -t 1 -HI -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" "${NO_HUGE[@]}"
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 32 -o 4096 -w randrw -M 50 -t 1 -HI -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 # Temporarily disable on e810 due to issue #3228
 if ! [[ "$SPDK_TEST_NVMF_NICS" == "e810" && "$TEST_TRANSPORT" == "rdma" ]]; then
-	$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -o 262144 -O 16384 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" "${NO_HUGE[@]}"
+	run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 262144 -O 16384 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 fi
 # this perf run aims to test handling of multi SGL payload in RDMA transport. Here we send 9 sge elements while
 # standard read_depth is 16. That triggers split of Write IO into several parts
-$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -o 36964 -O 4096 -w randrw -M 50 -t 5 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -c 0xf -P 4 "${NO_HUGE[@]}"
-$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" --transport-stat "${NO_HUGE[@]}"
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 36964 -O 4096 -w randrw -M 50 -t 5 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -c 0xf -P 4
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" --transport-stat
 sync
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
@@ -96,7 +96,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		io_size=("512" "131072")
 		for qd in "${qd_depth[@]}"; do
 			for o in "${io_size[@]}"; do
-				$SPDK_BIN_DIR/spdk_nvme_perf -q $qd -o $o -w randrw -M 50 -t 10 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+				run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q $qd -o $o -w randrw -M 50 -t 10 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 			done
 		done
 

@@ -70,6 +70,7 @@ make clean %{make} &>/dev/null || :
 %setup
 
 %build
+cd %{name}-%{version} 2>/dev/null || :
 set +x
 
 cfs() {
@@ -88,7 +89,7 @@ cl() {
 }
 
 %if %{deps}
-_PKGDEP_OPTS="--docs --pmem --rdma --uring"
+_PKGDEP_OPTS="--docs --rdma --uring"
 %if %{rbd}
 _PKGDEP_OPTS="$_PKGDEP_OPTS --rbd"
 %endif
@@ -99,7 +100,7 @@ _PKGDEP_OPTS="$_PKGDEP_OPTS --rbd"
 git submodule update --init
 ./configure --disable-unit-tests --disable-tests %{configure}
 make %{make}
-make DESTDIR=%{buildroot} install %{make}
+make VIRTUAL_ENV= DESTDIR=%{buildroot} install %{make}
 # DPDK always builds both static and shared, so we need to remove one or the other
 # SPDK always builds static, so remove it if we want shared.
 %if %{shared}

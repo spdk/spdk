@@ -1,6 +1,5 @@
 packages+=(
 	rdma-core
-	libpmempool1
 	clang-tools
 	targetcli-fb
 	open-isns-utils

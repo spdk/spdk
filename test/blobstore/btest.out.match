@@ -85,4 +85,72 @@ Blobstore Private Info:
 	Metadata start (pages): $(N)
 	Metadata length (pages): $(N)
 
+SCRIPT NOW PROCESSING: -D
+Init blobstore using bdev Name: Malloc0
+Signature: "SPDKBLOB" (OK)
+Version: $(N)
+CRC: $(XX) (OK)
+Blobstore Type: $(W)
+Cluster Size: 1048576
+Super Blob ID: $(XX)
+Clean: 1
+Used Metadata Page Mask Start: $(N)
+Used Metadata Page Mask Length: $(N)
+Used Cluster Mask Start: $(N)
+Used Cluster Mask Length: $(N)
+Used Blob ID Mask Start: $(N)
+Used Blob ID Mask Length: $(N)
+Metadata Start: $(N)
+Metadata Length: $(N)
+=========
+Metadata Page Index: 0 (0x0)
+Start LBA: $(N)
+Blob ID: $(XX)
+Sequence: 0
+Next: None
+In used bit array: md blob
+CRC: $(XX) (OK)
+Flags:
+	invalid: 0x0000000000000004
+		 0x0000000000000004 SPDK_BLOB_EXTENT_TABLE
+	data_ro: 0x0000000000000000
+	  md_ro: 0x0000000000000000
+		 0x0000000000000000 BLOB_CLEAR_WITH_DEFAULT (mask 0x3 value 0x0)
+Extent table:
+	Extent page:     1 length   1 at LBA $(N)
+=========
+Metadata Page Index: 1 (0x1)
+Start LBA: $(N)
+Blob ID: $(XX)
+Sequence: 0
+Next: None
+In used bit array: md
+CRC: $(XX) (OK)
+Allocated Extent - Start: 1
+=========
+Metadata Page Index: 2 (0x2)
+Start LBA: $(N)
+Blob ID: $(XX)
+Sequence: 0
+Next: None
+In used bit array: md blob
+CRC: $(XX) (OK)
+Flags:
+	invalid: 0x0000000000000004
+		 0x0000000000000004 SPDK_BLOB_EXTENT_TABLE
+	data_ro: 0x0000000000000000
+	  md_ro: 0x0000000000000000
+		 0x0000000000000000 BLOB_CLEAR_WITH_DEFAULT (mask 0x3 value 0x0)
+Extent table:
+	Extent page:     3 length   1 at LBA $(N)
+=========
+Metadata Page Index: 3 (0x3)
+Start LBA: $(N)
+Blob ID: $(XX)
+Sequence: 0
+Next: None
+In used bit array: md
+CRC: $(XX) (OK)
+Allocated Extent - Start: 2
+
 SCRIPT NOW PROCESSING: -X

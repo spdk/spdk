@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2025, Oracle and/or its affiliates.
  */
 
 /** \file
@@ -36,6 +37,7 @@ struct spdk_bdev;
 struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_subsystem_listener;
+struct spdk_nvmf_referral;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_json_val;
@@ -46,14 +48,27 @@ struct spdk_nvmf_transport;
  */
 enum spdk_nvmf_tgt_discovery_filter {
 	/** Log all listeners in discovery log page */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY = 0,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
 	/** Only log listeners with the same transport type on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE = 1u << 0u,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE,
 	/** Only log listeners with the same transport address on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS = 1u << 1u,
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS,
 	/** Only log listeners with the same transport svcid on which the DISCOVERY command was received */
-	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID = 1u << 2u
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID,
+	/** Check with custom discovery filter */
+	SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM
 };
+
+/** \deprecated Use SPDK_NVMF_TGT_DISCOVERY_FILTER_* instead. */
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE)
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS)
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID)
+#define SPDK_NVMF_TGT_DISCOVERY_MATCH_CUSTOM SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM)
+
+typedef bool (*spdk_nvmf_custom_discovery_filter)(
+	const struct spdk_nvme_transport_id *listener_trid,
+	const struct spdk_nvme_transport_id *discovery_cmd_source_trid);
 
 struct spdk_nvmf_target_opts {
 	size_t		size;
@@ -74,7 +89,10 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	io_unit_size;
 	uint32_t	max_aq_depth;
 	uint32_t	num_shared_buffers;
-	uint32_t	buf_cache_size;
+	union {
+		uint32_t	buf_cache_size;
+		uint32_t	iobuf_small_cache_size;
+	};
 	bool		dif_insert_or_strip;
 	bool		disable_command_passthru;
 
@@ -114,8 +132,15 @@ struct spdk_nvmf_transport_opts {
 	uint32_t min_kato;
 	/* kas indicates the granularity of the Keep Alive Timer in 100ms units. */
 	uint16_t kas;
+	/* Enable or disable ONCS features. By default, all supported features are enabled. */
+	struct spdk_nvme_cdata_oncs oncs;
+	/* Enable or disable FUSES features. By default, all supported features are enabled. */
+	struct spdk_nvme_cdata_fuses fuses;
+	uint8_t reserved82[2];
+	/* The number of shared buffers from a large iobuf pool to reserve for each poll group. If set to UINT32_MAX then 50% of the large buffers will be used. */
+	uint32_t iobuf_large_cache_size;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 78, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 88, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**
@@ -164,6 +189,58 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 32, "Incorrect size")
  */
 void spdk_nvmf_listen_opts_init(struct spdk_nvmf_listen_opts *opts, size_t opts_size);
 
+struct spdk_nvmf_subsystem_opts {
+	/**
+	 * The size of spdk_nvmf_subsystem_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
+
+	/* Subsystem type. */
+	enum spdk_nvmf_subtype type;
+
+	/* Maximum number of NSID/namespaces that can be attached to the subsystem. */
+	union {
+		uint32_t max_namespaces;
+		uint32_t max_nsid;
+	};
+
+	/* Serial number. */
+	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+
+	/* Model number. */
+	char mn[SPDK_NVME_CTRLR_MN_LEN + 1];
+
+	/* Enable ANA reporting feature. */
+	bool ana_reporting;
+
+	/* Use NVMe passthrough for I/O commands and namespace-directed admin commands. */
+	bool passthrough;
+
+	/* Enable NSSR (NVMe subsystem reset). */
+	bool enable_nssr;
+
+	/* Hole at bytes 81-82. */
+	uint8_t reserved81[2];
+
+	/* Write Zeroes Size Limit (WZSL) in units of minimum memory
+	 * page size, reported as a power of two (2^wzsl). 0 means no limit.
+	 */
+	uint8_t wzsl;
+
+	/* Dataset Management Range Size Limit (DMRSL) in logical block units.
+	 * 0 means no limit.
+	 */
+	uint32_t dmrsl;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88,
+		   "Incorrect size");
+
+void spdk_nvmf_subsystem_opts_init(enum spdk_nvmf_subtype type,
+				   struct spdk_nvmf_subsystem_opts *opts, size_t opts_size);
+
 struct spdk_nvmf_poll_group_stat {
 	/* cumulative admin qpair count */
 	uint32_t admin_qpairs;
@@ -195,10 +272,14 @@ struct spdk_nvmf_referral_opts {
 	struct spdk_nvme_transport_id trid;
 	/** The referral describes a referral to a subsystem which requires a secure channel */
 	bool secure_channel;
+	/** Whether this will be visible to all hosts */
+	bool allow_any_host;
 };
 
 /**
  * Add a discovery service referral to an NVMe-oF target
+ *
+ * This function must be called from the app thread.
  *
  * \param tgt The target to which the referral will be added
  * \param opts Options describing the referral referral.
@@ -211,6 +292,8 @@ int spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 /**
  * Remove a discovery service referral from an NVMeoF target
  *
+ * This function must be called from the app thread.
+ *
  * \param tgt The target from which the referral will be removed
  * \param opts Options describing the referral referral.
  *
@@ -219,6 +302,119 @@ int spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 int spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 				  const struct spdk_nvmf_referral_opts *opts);
 
+/**
+ * Get the first referral in a target.
+ *
+ * \param tgt Target to query
+ *
+ * \return First referral in this target, or NULL if none exist
+ */
+struct spdk_nvmf_referral *spdk_nvmf_tgt_get_first_referral(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Get the next referral in a target.
+ *
+ * \param tgt Target to query
+ * \param prev_referral Previous referral returned from this function
+ *
+ * \return next referral in this target, or NULL if prev_referral was the last referral
+ */
+struct spdk_nvmf_referral *spdk_nvmf_tgt_referral_get_next(struct spdk_nvmf_tgt *tgt,
+		struct spdk_nvmf_referral *prev_referral);
+
+/*
+ * Add a host to a discovery service referral. This makes the
+ * referral visible to the host.
+ *
+ * \param referral The referral to which host is to be added
+ * \param hostnqn NQN of the host which is to be added
+ *
+ * \return 0 on success or a negated errno on failure
+ */
+int spdk_nvmf_referral_add_host(struct spdk_nvmf_referral *referral,
+				const char *hostnqn);
+
+/**
+ * Remove a host from a discovery service referral.
+ *
+ * \param referral The referral from which host is to be removed
+ * \param hostnqn NQN of the host which is to be removed
+ *
+ * \return 0 on success or a negated errno on failure
+ */
+int spdk_nvmf_referral_remove_host(struct spdk_nvmf_referral *referral,
+				   const char *hostnqn);
+
+/**
+ * Set whether a referral should allow any host or only hosts in the allowed list.
+ *
+ * \param referral Referral to modify.
+ * \param allow_any_host true to allow any host to see this referral in discovery
+ * log, or false to enforce the list configured with spdk_nvmf_referral_add_host().
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_referral_set_allow_any_host(struct spdk_nvmf_referral *referral,
+		bool allow_any_host);
+
+/**
+ * Get whether a referral allows any host or only hosts in the allowed list.
+ *
+ * \param referral Referral to query.
+ *
+ * \return true if any host is allowed, false if only hosts in the allowed list are allowed.
+ */
+bool spdk_nvmf_referral_get_allow_any_host(struct spdk_nvmf_referral *referral);
+
+/**
+ * Check whether a host is allowed to see a referral.
+ *
+ * \param referral Referral to query.
+ * \param hostnqn NQN of the host to check.
+ *
+ * \return true if the host is allowed, false if not.
+ */
+bool spdk_nvmf_referral_host_allowed(struct spdk_nvmf_referral *referral, const char *hostnqn);
+
+/**
+ * Get the first allowed host in a referral.
+ *
+ * \param referral Referral to query
+ *
+ * \return First allowed host in this referral, or NULL if none allowed
+ */
+struct spdk_nvmf_host *spdk_nvmf_referral_get_first_host(struct spdk_nvmf_referral *referral);
+
+/**
+ * Get the next allowed host in a referral.
+ *
+ * \param referral Referral to query
+ * \param prev_host Previous host returned from this function
+ *
+ * \return next allowed host in this referral, or NULL if prev_host was the last host
+ */
+struct spdk_nvmf_host *spdk_nvmf_referral_get_next_host(struct spdk_nvmf_referral *referral,
+		struct spdk_nvmf_host *prev_host);
+
+/**
+ * Get the transport ID of a referral.
+ *
+ * \param referral Referral to query
+ *
+ * \return Transport ID of the referral
+ */
+const struct spdk_nvme_transport_id *spdk_nvmf_referral_get_trid(struct spdk_nvmf_referral
+		*referral);
+
+/**
+ * Set a custom discovery filter.
+ *
+ * For this to take effect, the target must be created with the
+ * SPDK_NVMF_TGT_DISCOVERY_FILTER_CUSTOM flag set in the discovery_filter field.
+ *
+ * \param filter The custom discovery filter to set.
+ */
+void spdk_nvmf_set_custom_discovery_filter(spdk_nvmf_custom_discovery_filter filter);
 
 /**
  * Construct an NVMe-oF target.
@@ -448,6 +644,37 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt
 		enum spdk_nvmf_subtype type,
 		uint32_t num_ns);
 
+/**
+ * Create an NVMe-oF subsystem.
+ *
+ * Subsystems are in one of three states: Inactive, Active, Paused. This
+ * state affects which operations may be performed on the subsystem. Upon
+ * creation, the subsystem will be in the Inactive state and may be activated
+ * by calling spdk_nvmf_subsystem_start(). No I/O will be processed in the Inactive
+ * or Paused states, but changes to the state of the subsystem may be made.
+ *
+ * \param tgt The NVMe-oF target that will own this subsystem.
+ * \param nqn The NVMe qualified name of this subsystem.
+ * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
+ * \param opts Subsystem options.
+ *
+ * \return a pointer to a NVMe-oF subsystem on success, or NULL on failure.
+ */
+struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
+		const char *nqn,
+		enum spdk_nvmf_subtype type,
+		const struct spdk_nvmf_subsystem_opts *opts);
+
+/**
+ * Get the options specified for a NVMe-oF subsystem.
+ *
+ * \param subsystem NVMe-oF subsystem from which to retrieve options.
+ *
+ * \return the NVMe-oF subsystem options.
+ */
+const struct spdk_nvmf_subsystem_opts *spdk_nvmf_subsystem_get_opts(
+	const struct spdk_nvmf_subsystem *subsystem);
+
 typedef void (*nvmf_subsystem_destroy_cb)(void *cb_arg);
 
 /**
@@ -507,6 +734,20 @@ int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
 int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			     spdk_nvmf_subsystem_state_change_done cb_fn,
 			     void *cb_arg);
+
+/**
+ * Transition an NVMe-oF subsystem from Active to Inactive state, preparing
+ * for destruction. This prevents any further state changes on the subsystem.
+ *
+ * \param subsystem The NVMe-oF subsystem.
+ * \param cb_fn A function that will be called once the subsystem has changed state.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * \return 0 on success, -ENODEV if already being destroyed, or negated errno on failure.
+ */
+int spdk_nvmf_subsystem_stop_for_destroy(struct spdk_nvmf_subsystem *subsystem,
+		spdk_nvmf_subsystem_state_change_done cb_fn,
+		void *cb_arg);
 
 /**
  * Transition an NVMe-oF subsystem from Active to Paused state.
@@ -686,13 +927,15 @@ int spdk_nvmf_subsystem_set_keys(struct spdk_nvmf_subsystem *subsystem, const ch
  * \param hostnqn The NQN for the host
  * \param cb_fn The function to call on completion.
  * \param cb_arg The argument to pass to the cb_fn.
+ * \param timeout_ms The time in milliseconds to wait for the asynchronous operations to complete,
+ * or 0 for default value derived from the controller CAP.TO.
  *
  * \return int. 0 when the asynchronous process starts successfully or a negated errno on failure.
  */
 int spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
 					const char *hostnqn,
 					spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
-					void *cb_arg);
+					void *cb_arg, uint64_t timeout_ms);
 
 /**
  * Set whether a subsystem should allow any host or only hosts in the allowed list.
@@ -1333,7 +1576,7 @@ typedef void (*spdk_nvmf_transport_destroy_done_cb)(void *cb_arg);
  * \param cb_fn A callback that will be called once the transport is destroyed
  * \param cb_arg A context argument passed to cb_fn.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 always (left in for API compatibility)
  */
 int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 				spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
@@ -1555,15 +1798,16 @@ struct spdk_nvmf_ns_reservation_ops {
 	/* Checks if the namespace supports the Persist Through Power Loss capability. */
 	bool (*is_ptpl_capable)(const struct spdk_nvmf_ns *ns);
 
-	/* Called when namespace reservation information needs to be updated.
-	 * The new reservation information is provided via the info parameter.
+	/* Called when PTPL is capable and the namespace reservation state needs to be stored
+	 * persistently (including when PTPL is inactive and state needs to be cleared).
+	 * The current reservation information is provided via the info parameter.
 	 * Returns 0 on success, negated errno on failure. */
-	int (*update)(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info);
+	int (*ptpl_store)(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info);
 
-	/* Called when restoring the namespace reservation information.
-	 * The new reservation information is returned via the info parameter.
+	/* Called when PTLP is capable, to load (if present) persistently stored reservation state.
+	 * The loaded reservation state is returned via the info parameter.
 	 * Returns 0 on success, negated errno on failure. */
-	int (*load)(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+	int (*ptpl_load)(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
 };
 
 /**

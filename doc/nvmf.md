@@ -233,6 +233,13 @@ For example, to allow SPDK to use cores 24, 25, 26 and 27:
 build/bin/nvmf_tgt -m 0xF000000
 ~~~
 
+### Interrupt Mode {#nvmf_config_interrupt}
+
+The NVMe-oF target supports interrupt mode for the vfio-user, TCP, and RDMA
+transports. Interrupt mode allows reactors to sleep when idle and wake on network
+or device events, reducing CPU usage when the target is not under load. For details
+on enabling and using interrupt mode, see @ref nvmf_interrupt_mode.
+
 ## Configuring the Linux NVMe over Fabrics Host {#nvmf_host}
 
 Both the Linux kernel and SPDK implement an NVMe over Fabrics host.

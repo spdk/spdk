@@ -1388,7 +1388,7 @@ spdk_thread_get_last_tsc(struct spdk_thread *thread)
 	return thread->tsc_last;
 }
 
-static inline int
+static inline void
 thread_send_msg_notification(const struct spdk_thread *target_thread)
 {
 	uint64_t notify = 1;
@@ -1396,7 +1396,7 @@ thread_send_msg_notification(const struct spdk_thread *target_thread)
 
 	/* Not necessary to do notification if interrupt facility is not enabled */
 	if (spdk_likely(!spdk_interrupt_mode_is_enabled())) {
-		return 0;
+		return;
 	}
 
 	/* When each spdk_thread can switch between poll and interrupt mode dynamically,
@@ -1407,11 +1407,9 @@ thread_send_msg_notification(const struct spdk_thread *target_thread)
 		rc = write(target_thread->msg_fd, &notify, sizeof(notify));
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
-			return -EIO;
+			abort();
 		}
 	}
-
-	return 0;
 }
 
 int
@@ -1425,7 +1423,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 
 	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITED)) {
 		SPDK_ERRLOG("Thread %s is marked as exited.\n", thread->name);
-		return -EIO;
+		abort();
 	}
 
 	local_thread = _get_thread();
@@ -1444,7 +1442,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		msg = spdk_mempool_get(g_spdk_msg_mempool);
 		if (!msg) {
 			SPDK_ERRLOG("msg could not be allocated\n");
-			return -ENOMEM;
+			abort();
 		}
 	}
 
@@ -1454,11 +1452,12 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	rc = spdk_ring_enqueue(thread->messages, (void **)&msg, 1, NULL);
 	if (rc != 1) {
 		SPDK_ERRLOG("msg could not be enqueued\n");
-		spdk_mempool_put(g_spdk_msg_mempool, msg);
-		return -EIO;
+		abort();
 	}
 
-	return thread_send_msg_notification(thread);
+	thread_send_msg_notification(thread);
+
+	return 0;
 }
 
 int
@@ -1468,10 +1467,12 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 
 	if (!__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
 					 __ATOMIC_SEQ_CST)) {
-		return -EIO;
+		abort();
 	}
 
-	return thread_send_msg_notification(thread);
+	thread_send_msg_notification(thread);
+
+	return 0;
 }
 
 #ifdef __linux__
@@ -2062,7 +2063,9 @@ _back_to_orig_thread(void *ctx)
 	assert(ct->orig_thread->for_each_count > 0);
 	ct->orig_thread->for_each_count--;
 
-	ct->cpl(ct->ctx);
+	if (ct->cpl) {
+		ct->cpl(ct->ctx);
+	}
 	free(ctx);
 }
 
@@ -2070,7 +2073,6 @@ static void
 _on_thread(void *ctx)
 {
 	struct call_thread *ct = ctx;
-	int rc __attribute__((unused));
 
 	ct->fn(ct->ctx);
 
@@ -2086,14 +2088,13 @@ _on_thread(void *ctx)
 	if (!ct->cur_thread) {
 		SPDK_DEBUGLOG(thread, "Completed thread iteration\n");
 
-		rc = spdk_thread_send_msg(ct->orig_thread, _back_to_orig_thread, ctx);
+		spdk_thread_send_msg(ct->orig_thread, _back_to_orig_thread, ctx);
 	} else {
 		SPDK_DEBUGLOG(thread, "Continuing thread iteration to %s\n",
 			      ct->cur_thread->name);
 
-		rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ctx);
+		spdk_thread_send_msg(ct->cur_thread, _on_thread, ctx);
 	}
-	assert(rc == 0);
 }
 
 void
@@ -2101,7 +2102,6 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 {
 	struct call_thread *ct;
 	struct spdk_thread *thread;
-	int rc __attribute__((unused));
 
 	ct = calloc(1, sizeof(*ct));
 	if (!ct) {
@@ -2132,8 +2132,7 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	SPDK_DEBUGLOG(thread, "Starting thread iteration from %s\n",
 		      ct->orig_thread->name);
 
-	rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ct);
-	assert(rc == 0);
+	spdk_thread_send_msg(ct->cur_thread, _on_thread, ct);
 }
 
 static inline void
@@ -2266,16 +2265,13 @@ _finish_unregister(void *arg)
 static void
 io_device_free(struct io_device *dev)
 {
-	int rc __attribute__((unused));
-
 	if (dev->unregister_cb == NULL) {
 		free(dev);
 	} else {
 		assert(dev->unregister_thread != NULL);
 		SPDK_DEBUGLOG(thread, "io_device %s (%p) needs to unregister from thread %s\n",
 			      dev->name, dev->io_device, dev->unregister_thread->name);
-		rc = spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
-		assert(rc == 0);
+		spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
 	}
 }
 
@@ -2536,7 +2532,6 @@ void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 	struct spdk_thread *thread;
-	int rc __attribute__((unused));
 
 	spdk_trace_record(TRACE_THREAD_IOCH_PUT, 0, 0,
 			  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
@@ -2561,8 +2556,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 
 	if (ch->ref == 0) {
 		ch->destroy_ref++;
-		rc = spdk_thread_send_msg(thread, put_io_channel, ch);
-		assert(rc == 0);
+		spdk_thread_send_msg(thread, put_io_channel, ch);
 	}
 }
 
@@ -2684,7 +2678,6 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 {
 	struct spdk_io_channel_iter *i;
 	struct thread_link *thr_link;
-	int rc __attribute__((unused));
 
 	i = calloc(1, sizeof(*i));
 	if (!i) {
@@ -2723,21 +2716,15 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	if (thr_link != NULL) {
 		i->dev->for_each_count++;
 		i->cur_thread = thr_link->thread;
-		rc = spdk_thread_send_msg(i->cur_thread, _call_channel, i);
-		if (rc == 0) {
-			pthread_mutex_unlock(&g_devlist_mutex);
-			return;
-		}
-		SPDK_ERRLOG("spdk_for_each_channel(): can't continue iteration on thread '%s', spdk_thread_send_msg() rc = %d\n",
-			    thr_link->thread->name, rc);
-		assert(false);
+		spdk_thread_send_msg(i->cur_thread, _call_channel, i);
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
 	}
 
 end:
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
-	assert(rc == 0);
+	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
 
 static void
@@ -2765,7 +2752,6 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_thread *thread;
 	struct io_device *dev;
-	int rc __attribute__((unused));
 
 	assert(i->cur_thread == spdk_get_thread());
 
@@ -2780,14 +2766,9 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	thread = io_dev_get_next_thread(i->dev, i->cur_thread);
 	if (thread != NULL) {
 		i->cur_thread = thread;
-		rc = spdk_thread_send_msg(i->cur_thread, _call_channel, i);
-		if (rc == 0) {
-			pthread_mutex_unlock(&g_devlist_mutex);
-			return;
-		}
-		SPDK_ERRLOG("spdk_for_each_channel(): can't continue iteration on thread '%s', spdk_thread_send_msg() rc = %d\n",
-			    thread->name, rc);
-		assert(false);
+		spdk_thread_send_msg(i->cur_thread, _call_channel, i);
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
 	}
 
 end:
@@ -2795,13 +2776,11 @@ end:
 	i->ch = NULL;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
-	assert(rc == 0);
+	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	if (dev->pending_unregister && dev->for_each_count == 0) {
-		rc = spdk_thread_send_msg(dev->unregister_thread, __pending_unregister, dev);
-		assert(rc == 0);
+		spdk_thread_send_msg(dev->unregister_thread, __pending_unregister, dev);
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 }

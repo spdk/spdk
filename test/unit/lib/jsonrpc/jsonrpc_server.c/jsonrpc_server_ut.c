@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
+ *   Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
  */
 
@@ -18,10 +19,23 @@ static size_t g_response_data_len;
 
 const struct spdk_json_val *g_cur_param;
 
+/* Batch test infrastructure */
+#define MAX_BATCH_REQUESTS 16
+static struct spdk_jsonrpc_request *g_batch_requests[MAX_BATCH_REQUESTS];
+static int g_batch_errors[MAX_BATCH_REQUESTS];
+static const struct spdk_json_val *g_batch_methods[MAX_BATCH_REQUESTS];
+static const struct spdk_json_val *g_batch_params[MAX_BATCH_REQUESTS];
+static int g_batch_request_count;
+
 #define PARSE_PASS(in, trailing) \
 	CU_ASSERT(g_cur_param == NULL); \
 	g_cur_param = NULL; \
 	CU_ASSERT(jsonrpc_parse_request(conn, in, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
+
+#define BATCH_PARSE(in) \
+	ut_reset_batch_state(); \
+	rc = jsonrpc_parse_request(conn, in, sizeof(in) - 1); \
+	CU_ASSERT(rc > 0)
 
 #define REQ_BEGIN(expected_error) \
 	if (expected_error != 0 ) { \
@@ -148,6 +162,20 @@ static void
 ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_json_val *method,
 	  const struct spdk_json_val *params)
 {
+	if (request->batch != NULL) {
+		/* Batch request - store in batch arrays */
+		CU_ASSERT(g_batch_request_count < MAX_BATCH_REQUESTS);
+		if (g_batch_request_count < MAX_BATCH_REQUESTS) {
+			g_batch_requests[g_batch_request_count] = request;
+			g_batch_errors[g_batch_request_count] = error;
+			g_batch_methods[g_batch_request_count] = method;
+			g_batch_params[g_batch_request_count] = params;
+			g_batch_request_count++;
+		}
+		return;
+	}
+
+	/* Single request */
 	CU_ASSERT(g_request == NULL);
 	g_request = request;
 	g_parse_error = error;
@@ -173,6 +201,65 @@ jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
 	memcpy(g_response_data, request->send_buf, request->send_len);
 	g_response_data_len = request->send_len;
+}
+
+static void
+ut_reset_batch_state(void)
+{
+	g_batch_request_count = 0;
+	memset(g_batch_requests, 0, sizeof(g_batch_requests));
+	memset(g_batch_errors, 0, sizeof(g_batch_errors));
+	memset(g_batch_methods, 0, sizeof(g_batch_methods));
+	memset(g_batch_params, 0, sizeof(g_batch_params));
+}
+
+static void
+ut_batch_send_responses(void)
+{
+	int i;
+	struct spdk_json_write_ctx *w;
+
+	for (i = 0; i < g_batch_request_count; i++) {
+		struct spdk_jsonrpc_request *request = g_batch_requests[i];
+		if (request == NULL) {
+			continue;
+		}
+
+		if (g_batch_errors[i] != 0) {
+			spdk_jsonrpc_send_error_response_fmt(request, g_batch_errors[i],
+							     "UT batch error response");
+		} else {
+			w = spdk_jsonrpc_begin_result(request);
+			spdk_json_write_string(w, "UT batch response");
+			spdk_jsonrpc_end_result(request, w);
+		}
+		/* Request is freed by end_response/send_error_response for batch requests */
+		g_batch_requests[i] = NULL;
+	}
+}
+
+static void
+ut_cleanup_send_queue(struct spdk_jsonrpc_server_conn *conn)
+{
+	struct spdk_jsonrpc_request *request;
+
+	/* Clean up any pending requests in the send queue (e.g., batch pseudo-requests) */
+	while (!STAILQ_EMPTY(&conn->send_queue)) {
+		pthread_spin_lock(&conn->queue_lock);
+		request = STAILQ_FIRST(&conn->send_queue);
+		if (request) {
+			STAILQ_REMOVE_HEAD(&conn->send_queue, link);
+			conn->outstanding_requests--;
+		}
+		pthread_spin_unlock(&conn->queue_lock);
+
+		if (request) {
+			free(request->recv_buffer);
+			free(request->values);
+			free(request->send_buf);
+			free(request);
+		}
+	}
 }
 
 static void
@@ -290,20 +377,6 @@ test_parse_request(void)
 
 	/* empty array */
 	PARSE_PASS("[]", "");
-	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
-	FREE_REQUEST();
-
-	/* batch - not supported */
-	PARSE_PASS(
-		"["
-		"{\"jsonrpc\": \"2.0\", \"method\": \"sum\", \"params\": [1,2,4], \"id\": \"1\"},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"notify_hello\", \"params\": [7]},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42,23], \"id\": \"2\"},"
-		"{\"foo\": \"boo\"},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"foo.get\", \"params\": {\"name\": \"myself\"}, \"id\": \"5\"},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"get_data\", \"id\": \"9\"}"
-		"]", "");
-
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	FREE_REQUEST();
 
@@ -457,6 +530,139 @@ test_error_response_fmt(void)
 	free(conn);
 }
 
+static void
+test_batch_request(void)
+{
+	struct spdk_jsonrpc_server *server;
+	struct spdk_jsonrpc_server_conn *conn;
+	int rc;
+
+	server = calloc(1, sizeof(*server));
+	SPDK_CU_ASSERT_FATAL(server != NULL);
+
+	conn = calloc(1, sizeof(*conn));
+	SPDK_CU_ASSERT_FATAL(conn != NULL);
+	pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE);
+	STAILQ_INIT(&conn->outstanding_queue);
+	STAILQ_INIT(&conn->send_queue);
+
+	conn->server = server;
+
+	/* Test 1: Single element batch */
+	BATCH_PARSE("[{\"jsonrpc\":\"2.0\",\"method\":\"test\",\"params\":[1],\"id\":1}]");
+	CU_ASSERT(g_batch_request_count == 1);
+	CU_ASSERT(g_batch_errors[0] == 0);
+	CU_ASSERT(g_batch_methods[0] != NULL);
+	if (g_batch_methods[0] != NULL) {
+		CU_ASSERT(spdk_json_strequal(g_batch_methods[0], "test") == true);
+	}
+	/* Send responses to complete the batch */
+	ut_batch_send_responses();
+	ut_cleanup_send_queue(conn);
+	ut_reset_batch_state();
+
+	/* Test 2: Multiple requests in batch */
+	BATCH_PARSE(
+		"["
+		"{\"jsonrpc\":\"2.0\",\"method\":\"sum\",\"params\":[1,2],\"id\":\"1\"},"
+		"{\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[42,23],\"id\":\"2\"}"
+		"]");
+	CU_ASSERT(g_batch_request_count == 2);
+	CU_ASSERT(g_batch_errors[0] == 0);
+	CU_ASSERT(g_batch_errors[1] == 0);
+	CU_ASSERT(g_batch_methods[0] != NULL);
+	CU_ASSERT(g_batch_methods[1] != NULL);
+	if (g_batch_methods[0] != NULL) {
+		CU_ASSERT(spdk_json_strequal(g_batch_methods[0], "sum") == true);
+	}
+	if (g_batch_methods[1] != NULL) {
+		CU_ASSERT(spdk_json_strequal(g_batch_methods[1], "subtract") == true);
+	}
+	ut_batch_send_responses();
+	ut_cleanup_send_queue(conn);
+	ut_reset_batch_state();
+
+	/* Test 3: Batch with notification (no id) */
+	BATCH_PARSE(
+		"["
+		"{\"jsonrpc\":\"2.0\",\"method\":\"notify\",\"params\":[1]},"
+		"{\"jsonrpc\":\"2.0\",\"method\":\"test\",\"params\":[2],\"id\":1}"
+		"]");
+	CU_ASSERT(g_batch_request_count == 2);
+	/* First is notification - should have method but request->id is NULL */
+	CU_ASSERT(g_batch_errors[0] == 0);
+	CU_ASSERT(g_batch_methods[0] != NULL);
+	if (g_batch_methods[0] != NULL) {
+		CU_ASSERT(spdk_json_strequal(g_batch_methods[0], "notify") == true);
+	}
+	/* Second is regular request with id */
+	CU_ASSERT(g_batch_errors[1] == 0);
+	CU_ASSERT(g_batch_methods[1] != NULL);
+	if (g_batch_methods[1] != NULL) {
+		CU_ASSERT(spdk_json_strequal(g_batch_methods[1], "test") == true);
+	}
+	ut_batch_send_responses();
+	ut_cleanup_send_queue(conn);
+	ut_reset_batch_state();
+
+	/* Test 4: Batch with invalid element */
+	BATCH_PARSE(
+		"["
+		"{\"jsonrpc\":\"2.0\",\"method\":\"valid\",\"id\":1},"
+		"{\"foo\":\"bar\"},"
+		"{\"jsonrpc\":\"2.0\",\"method\":\"valid2\",\"id\":2}"
+		"]");
+	CU_ASSERT(g_batch_request_count == 3);
+	/* First is valid */
+	CU_ASSERT(g_batch_errors[0] == 0);
+	CU_ASSERT(g_batch_methods[0] != NULL);
+	/* Second is invalid - should have error */
+	CU_ASSERT(g_batch_errors[1] == SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+	CU_ASSERT(g_batch_methods[1] == NULL);
+	/* Third is valid */
+	CU_ASSERT(g_batch_errors[2] == 0);
+	CU_ASSERT(g_batch_methods[2] != NULL);
+	ut_batch_send_responses();
+	ut_cleanup_send_queue(conn);
+	ut_reset_batch_state();
+
+	/* Test 5: Batch with non-object elements */
+	BATCH_PARSE("[1, 2, 3]");
+	CU_ASSERT(g_batch_request_count == 3);
+	/* All should be invalid since they're not objects */
+	CU_ASSERT(g_batch_errors[0] == SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+	CU_ASSERT(g_batch_errors[1] == SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+	CU_ASSERT(g_batch_errors[2] == SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+	ut_batch_send_responses();
+	ut_cleanup_send_queue(conn);
+	ut_reset_batch_state();
+
+	/*
+	 * Test 6: All notifications batch.
+	 * Per JSON-RPC spec: "If there are no Response objects contained within
+	 * the Response array as it is to be sent to the client, the server MUST NOT
+	 * return an empty Array and should return nothing at all."
+	 */
+	BATCH_PARSE(
+		"["
+		"{\"jsonrpc\":\"2.0\",\"method\":\"notify1\",\"params\":[1]},"
+		"{\"jsonrpc\":\"2.0\",\"method\":\"notify2\",\"params\":[2]}"
+		"]");
+	CU_ASSERT(g_batch_request_count == 2);
+	/* Both are notifications - no id */
+	CU_ASSERT(g_batch_errors[0] == 0);
+	CU_ASSERT(g_batch_errors[1] == 0);
+	ut_batch_send_responses();
+	/* Verify no response was queued - send_queue must be empty */
+	CU_ASSERT(STAILQ_EMPTY(&conn->send_queue));
+	ut_cleanup_send_queue(conn);
+	ut_reset_batch_state();
+
+	CU_ASSERT(conn->outstanding_requests == 0);
+	free(conn);
+	free(server);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -471,6 +677,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_parse_request_streaming);
 	CU_ADD_TEST(suite, test_error_response);
 	CU_ADD_TEST(suite, test_error_response_fmt);
+	CU_ADD_TEST(suite, test_batch_request);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 

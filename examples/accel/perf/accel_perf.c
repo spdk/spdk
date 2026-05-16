@@ -21,7 +21,6 @@
 #define COMP_BUF_PAD_PERCENTAGE 1.1L
 
 static uint64_t	g_tsc_rate;
-static uint64_t g_tsc_end;
 static int g_rc;
 static int g_xfer_size_bytes = 4096;
 static int g_block_size_bytes = 512;
@@ -44,6 +43,7 @@ static enum spdk_accel_opcode g_workload_selection = SPDK_ACCEL_OPC_LAST;
 static const char *g_module_name = NULL;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
+static int g_num_workers_total = 0;
 static char *g_cd_file_in_name = NULL;
 static pthread_mutex_t g_workers_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct spdk_app_opts g_opts = {};
@@ -91,22 +91,29 @@ struct ap_task {
 	uint32_t		num_blocks; /* used for the DIF related operations */
 	struct spdk_dif_ctx	dif_ctx;
 	struct spdk_dif_error	dif_err;
-	TAILQ_ENTRY(ap_task)	link;
-};
+	STAILQ_ENTRY(ap_task)	link;
+	uint64_t		start_ticks;
+} __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct worker_thread {
 	struct spdk_io_channel		*ch;
 	struct spdk_accel_opcode_stats	stats;
+	uint64_t			lat_total;
+	uint64_t			lat_min;
+	uint64_t			lat_max;
 	uint64_t			xfer_failed;
 	uint64_t			injected_miscompares;
 	uint64_t			current_queue_depth;
-	TAILQ_HEAD(, ap_task)		tasks_pool;
+	STAILQ_HEAD(, ap_task)		tasks_pool;
 	struct worker_thread		*next;
 	unsigned			core;
 	struct spdk_thread		*thread;
 	bool				is_draining;
 	struct spdk_poller		*is_draining_poller;
 	struct spdk_poller		*stop_poller;
+	uint64_t			start_time;
+	uint64_t			stop_time;
+	struct spdk_poller		*start_poller;
 	void				*task_base;
 	struct display_info		display;
 	enum spdk_accel_opcode		workload;
@@ -317,8 +324,9 @@ unregister_worker(void *arg1)
 		spdk_put_io_channel(worker->ch);
 		worker->ch = NULL;
 	}
-	free(worker->task_base);
+
 	spdk_thread_exit(spdk_get_thread());
+
 	pthread_mutex_lock(&g_workers_lock);
 	assert(g_num_workers >= 1);
 	if (--g_num_workers == 0) {
@@ -670,9 +678,8 @@ _get_task(struct worker_thread *worker)
 {
 	struct ap_task *task;
 
-	if (!TAILQ_EMPTY(&worker->tasks_pool)) {
-		task = TAILQ_FIRST(&worker->tasks_pool);
-		TAILQ_REMOVE(&worker->tasks_pool, task, link);
+	if ((task = STAILQ_FIRST(&worker->tasks_pool)) != NULL) {
+		STAILQ_REMOVE_HEAD(&worker->tasks_pool, link);
 	} else {
 		fprintf(stderr, "Unable to get ap_task\n");
 		return NULL;
@@ -689,6 +696,10 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 	int rc = 0;
 
 	assert(worker);
+
+	worker->current_queue_depth++;
+
+	task->start_ticks = spdk_get_ticks();
 
 	switch (worker->workload) {
 	case SPDK_ACCEL_OPC_COPY:
@@ -776,7 +787,6 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 
 	}
 
-	worker->current_queue_depth++;
 	if (rc) {
 		accel_done(task, rc);
 	}
@@ -786,6 +796,8 @@ static void
 _free_task_buffers(struct ap_task *task)
 {
 	uint32_t i;
+
+	assert(task);
 
 	if (g_workload_selection == SPDK_ACCEL_OPC_DECOMPRESS ||
 	    g_workload_selection == SPDK_ACCEL_OPC_COMPRESS) {
@@ -798,28 +810,20 @@ _free_task_buffers(struct ap_task *task)
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY_COPY ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIX_VERIFY ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIX_GENERATE) {
-		if (task->crc_dst) {
-			spdk_dma_free(task->crc_dst);
-		}
+		spdk_dma_free(task->crc_dst);
 		if (task->src_iovs) {
 			for (i = 0; i < task->src_iovcnt; i++) {
-				if (task->src_iovs[i].iov_base) {
-					spdk_dma_free(task->src_iovs[i].iov_base);
-				}
+				spdk_dma_free(task->src_iovs[i].iov_base);
 			}
 			free(task->src_iovs);
 		}
 		if (task->dst_iovs) {
 			for (i = 0; i < task->dst_iovcnt; i++) {
-				if (task->dst_iovs[i].iov_base) {
-					spdk_dma_free(task->dst_iovs[i].iov_base);
-				}
+				spdk_dma_free(task->dst_iovs[i].iov_base);
 			}
 			free(task->dst_iovs);
 		}
-		if (task->md_iov.iov_base) {
-			spdk_dma_free(task->md_iov.iov_base);
-		}
+		spdk_dma_free(task->md_iov.iov_base);
 	} else if (g_workload_selection == SPDK_ACCEL_OPC_XOR) {
 		if (task->sources) {
 			for (i = 0; i < g_xor_src_count; i++) {
@@ -868,9 +872,14 @@ accel_done(void *arg1, int status)
 	struct worker_thread *worker = task->worker;
 	uint32_t sw_crc32c;
 	struct spdk_dif_error err_blk;
+	uint64_t time = spdk_get_ticks() - task->start_ticks;
 
 	assert(worker);
 	assert(worker->current_queue_depth > 0);
+
+	worker->lat_total += time;
+	worker->lat_max = spdk_max(worker->lat_max, time);
+	worker->lat_min = spdk_min(worker->lat_min, time);
 
 	if (g_verify && status == 0) {
 		switch (worker->workload) {
@@ -996,67 +1005,85 @@ accel_done(void *arg1, int status)
 	worker->current_queue_depth--;
 
 	if (!worker->is_draining && status == 0) {
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		STAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task = _get_task(worker);
 		_submit_single(worker, task);
 	} else {
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		STAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 	}
 }
 
 static int
 dump_result(void)
 {
-	uint64_t total_completed = 0;
 	uint64_t total_failed = 0;
 	uint64_t total_miscompared = 0;
-	uint64_t total_xfer_per_sec, total_bw_in_MiBps = 0;
+	uint64_t total_xfer_per_sec = 0;
+	uint64_t total_executed  = 0;
+	double total_bw_in_MiBps = 0;
+	double total_lat_req_ms = 0;
+	double total_lat_min_ms = 1.0E10;
+	double total_lat_max_ms = 0;
 	struct worker_thread *worker = g_workers;
 	char tmp[64];
 
-	printf("\n%-12s %20s %16s %16s %16s\n",
-	       "Core,Thread", "Transfers", "Bandwidth", "Failed", "Miscompares");
-	printf("------------------------------------------------------------------------------------\n");
+	printf("\n%-12s %8s %14s %10s %10s %10s %7s %8s\n",
+	       "Core,Thread", "IOPS", "B/W,MiB/s", "Lat,ms", "MinLat", "MaxLat", "Failed", "Miscomp");
+	printf("--------------------------------------------------------------------------------------\n");
+
 	while (worker != NULL) {
+		assert(worker->stop_time >= worker->start_time);
+		double test_time = (double)(worker->stop_time - worker->start_time) / g_tsc_rate;
+		uint64_t xfer_per_sec = (uint64_t)(worker->stats.executed / test_time);
+		double bw_in_MiBps = (double)worker->stats.num_bytes / (test_time * 1024 * 1024);
+		double lat_req_ms = (double)worker->lat_total * 1000 / g_tsc_rate;
+		double lat_min_ms = (double)worker->lat_min * 1000 / g_tsc_rate;
+		double lat_max_ms = (double)worker->lat_max * 1000 / g_tsc_rate;
 
-		uint64_t xfer_per_sec = worker->stats.executed / g_time_in_sec;
-		uint64_t bw_in_MiBps = worker->stats.num_bytes /
-				       (g_time_in_sec * 1024 * 1024);
+		total_executed += worker->stats.executed;
+		total_lat_req_ms += lat_req_ms;
+		total_lat_min_ms = spdk_min(total_lat_min_ms, lat_min_ms);
+		total_lat_max_ms = spdk_max(total_lat_max_ms, lat_max_ms);
 
-		total_completed += worker->stats.executed;
 		total_failed += worker->xfer_failed;
 		total_miscompared += worker->injected_miscompares;
 		total_bw_in_MiBps += bw_in_MiBps;
+		total_xfer_per_sec += xfer_per_sec;
 
 		snprintf(tmp, sizeof(tmp), "%u,%u", worker->display.core, worker->display.thread);
 		if (xfer_per_sec) {
-			printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
-			       tmp, xfer_per_sec, bw_in_MiBps, worker->xfer_failed,
-			       worker->injected_miscompares);
+			printf("%-12s %8" PRIu64 " %14.3f %10.3f %10.3f %10.3f %7" PRIu64 " %8" PRIu64 "\n",
+			       tmp, xfer_per_sec, bw_in_MiBps, lat_req_ms / worker->stats.executed,
+			       lat_min_ms, lat_max_ms, worker->xfer_failed, worker->injected_miscompares);
 		}
 
 		worker = worker->next;
 	}
 
-	total_xfer_per_sec = total_completed / g_time_in_sec;
-
-	printf("====================================================================================\n");
-	printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
-	       "Total", total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
+	printf("======================================================================================\n");
+	printf("%-12s %8" PRIu64 " %14.3f %10.3f %10.3f %10.3f %7" PRIu64 " %8" PRIu64 "\n\n",
+	       "Total", total_xfer_per_sec, total_bw_in_MiBps,
+	       total_lat_req_ms / total_executed, total_lat_min_ms, total_lat_max_ms,
+	       total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;
 }
 
 static inline void
-_free_task_buffers_in_pool(struct worker_thread *worker)
+_free_all_task_buffers(struct worker_thread *worker)
 {
-	struct ap_task *task;
+	int i;
+	struct ap_task *task = worker->task_base;
 
-	assert(worker);
-	while ((task = TAILQ_FIRST(&worker->tasks_pool))) {
-		TAILQ_REMOVE(&worker->tasks_pool, task, link);
+	if (task == NULL) {
+		return;
+	}
+
+	for (i = 0; i < g_allocate_depth; i++, task++) {
 		_free_task_buffers(task);
 	}
+
+	free(worker->task_base);
 }
 
 static int
@@ -1067,7 +1094,8 @@ _check_draining(void *arg)
 	assert(worker);
 
 	if (worker->current_queue_depth == 0) {
-		_free_task_buffers_in_pool(worker);
+		worker->stop_time = spdk_get_ticks();
+		_free_all_task_buffers(worker);
 		spdk_poller_unregister(&worker->is_draining_poller);
 		unregister_worker(worker);
 	}
@@ -1087,6 +1115,42 @@ _worker_stop(void *arg)
 	/* now let the worker drain and check it's outstanding IO with a poller */
 	worker->is_draining = true;
 	worker->is_draining_poller = SPDK_POLLER_REGISTER(_check_draining, worker, 0);
+
+	return SPDK_POLLER_BUSY;
+}
+
+static int
+_worker_start(void *arg)
+{
+	struct worker_thread *worker = arg;
+	int i;
+
+	assert(worker);
+
+	/* wait for all our workers are ready to start */
+	if (g_num_workers < g_num_workers_total) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	spdk_poller_unregister(&worker->start_poller);
+
+	/* Register a poller that will stop the worker at time elapsed */
+	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker, SPDK_SEC_TO_USEC * g_time_in_sec);
+
+	worker->start_time = spdk_get_ticks();
+
+	/* Load up queue depth worth of operations. */
+	for (i = 0; i < g_queue_depth; i++) {
+		struct ap_task *task;
+
+		task = _get_task(worker);
+		if (task == NULL) {
+			_worker_stop(worker);
+			break;
+		}
+
+		_submit_single(worker, task);
+	}
 
 	return SPDK_POLLER_BUSY;
 }
@@ -1115,18 +1179,15 @@ _init_thread(void *arg1)
 	free(display);
 	worker->core = spdk_env_get_current_core();
 	worker->thread = spdk_get_thread();
-	pthread_mutex_lock(&g_workers_lock);
-	g_num_workers++;
-	worker->next = g_workers;
-	g_workers = worker;
-	pthread_mutex_unlock(&g_workers_lock);
+
 	worker->ch = spdk_accel_get_io_channel();
 	if (worker->ch == NULL) {
 		fprintf(stderr, "Unable to get an accel channel\n");
 		goto error;
 	}
+	worker->lat_min = UINT64_MAX;
 
-	TAILQ_INIT(&worker->tasks_pool);
+	STAILQ_INIT(&worker->tasks_pool);
 
 	worker->task_base = calloc(num_tasks, sizeof(struct ap_task));
 	if (worker->task_base == NULL) {
@@ -1136,35 +1197,38 @@ _init_thread(void *arg1)
 
 	task = worker->task_base;
 	for (i = 0; i < num_tasks; i++) {
-		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task->worker = worker;
 		if (_get_task_data_bufs(task)) {
 			fprintf(stderr, "Unable to get data bufs\n");
 			goto error;
 		}
+		STAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task++;
 	}
 
-	/* Register a poller that will stop the worker at time elapsed */
-	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker,
-			      g_time_in_sec * 1000000ULL);
+	pthread_mutex_lock(&g_workers_lock);
+	g_num_workers++;
+	worker->next = g_workers;
+	g_workers = worker;
+	pthread_mutex_unlock(&g_workers_lock);
 
-	/* Load up queue depth worth of operations. */
-	for (i = 0; i < g_queue_depth; i++) {
-		task = _get_task(worker);
-		if (task == NULL) {
-			goto error;
-		}
+	/* Register a poller that will start testing when all workers are ready */
+	worker->start_poller = SPDK_POLLER_REGISTER(_worker_start, worker, 10);
 
-		_submit_single(worker, task);
-	}
 	return;
-error:
 
-	_free_task_buffers_in_pool(worker);
-	free(worker->task_base);
-	worker->task_base = NULL;
+error:
+	_free_all_task_buffers(worker);
+	if (worker->ch) {
+		spdk_put_io_channel(worker->ch);
+	}
+	free(worker);
+
 no_worker:
+	pthread_mutex_lock(&g_workers_lock);
+	g_num_workers_total--;
+	pthread_mutex_unlock(&g_workers_lock);
+
 	shutdown_cb();
 	g_rc = -1;
 }
@@ -1180,12 +1244,15 @@ accel_perf_start(void *arg1)
 	struct display_info *display;
 
 	g_tsc_rate = spdk_get_ticks_hz();
-	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	dump_user_config();
 
 	printf("Running for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		g_num_workers_total += g_threads_per_core;
+	}
 
 	/* Create worker threads for each core that was specified. */
 	SPDK_ENV_FOREACH_CORE(i) {

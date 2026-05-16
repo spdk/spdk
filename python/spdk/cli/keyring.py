@@ -5,8 +5,7 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+from spdk.rpc.cmd_parser import print_dict
 
 
 def add_parser(subparsers):
@@ -15,15 +14,15 @@ def add_parser(subparsers):
         args.client.keyring_file_add_key(name=args.name, path=args.path)
 
     p = subparsers.add_parser('keyring_file_add_key', help='Add a file-based key to the keyring')
-    p.add_argument('name', help='Name of the key to add')
-    p.add_argument('path', help='Path of the file containing the key')
+    p.add_argument('name', help='Name of the key')
+    p.add_argument('path', help='Path to the file containing the key')
     p.set_defaults(func=keyring_file_add_key)
 
     def keyring_file_remove_key(args):
         args.client.keyring_file_remove_key(name=args.name)
 
     p = subparsers.add_parser('keyring_file_remove_key', help='Remove a file-based key from the keyring')
-    p.add_argument('name', help='Name of the key to remove')
+    p.add_argument('name', help='Name of the key')
     p.set_defaults(func=keyring_file_remove_key)
 
     def keyring_get_keys(args):
@@ -36,5 +35,5 @@ def add_parser(subparsers):
         args.client.keyring_linux_set_options(enable=args.enable)
 
     p = subparsers.add_parser('keyring_linux_set_options', help='Set options of the keyring_linux module')
-    p.add_argument('-e', '--enable', help='Enable keyring_linux module', action='store_true')
+    p.add_argument('-e', '--enable', help='Enable the Linux keyring module. Default: false', action='store_true')
     p.set_defaults(func=keyring_linux_set_options)

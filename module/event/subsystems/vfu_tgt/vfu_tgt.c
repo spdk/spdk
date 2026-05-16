@@ -6,7 +6,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/vfu_target.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 vfu_subsystem_init_done(int rc)

@@ -9,38 +9,30 @@
 #include "spdk/util.h"
 #include "spdk/log.h"
 
+#include "spdk_internal/rpc_autogen.h"
 #include "ublk_internal.h"
 
-struct rpc_ublk_create_target {
-	char		*cpumask;
-};
-
 static const struct spdk_json_object_decoder rpc_ublk_create_target_decoders[] = {
-	{"cpumask", offsetof(struct rpc_ublk_create_target, cpumask), spdk_json_decode_string, true},
+	{"cpumask", offsetof(struct rpc_ublk_create_target_ctx, cpumask), spdk_json_decode_string, true},
+	{"disable_user_copy", offsetof(struct rpc_ublk_create_target_ctx, disable_user_copy), spdk_json_decode_bool, true},
 };
-
-static void
-free_rpc_ublk_create_target(struct rpc_ublk_create_target *req)
-{
-	free(req->cpumask);
-}
 
 static void
 rpc_ublk_create_target(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	int rc = 0;
-	struct rpc_ublk_create_target req = {};
+	struct rpc_ublk_create_target_ctx req = {};
 
 	if (params != NULL) {
-		if (spdk_json_decode_object_relaxed(params, rpc_ublk_create_target_decoders,
-						    SPDK_COUNTOF(rpc_ublk_create_target_decoders),
-						    &req)) {
+		if (spdk_json_decode_object(params, rpc_ublk_create_target_decoders,
+					    SPDK_COUNTOF(rpc_ublk_create_target_decoders),
+					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			rc = -EINVAL;
 			goto invalid;
 		}
 	}
-	rc = ublk_create_target(req.cpumask, params);
+	rc = ublk_create_target(req.cpumask, req.disable_user_copy);
 	if (rc != 0) {
 		goto invalid;
 	}
@@ -76,32 +68,17 @@ rpc_ublk_destroy_target(struct spdk_jsonrpc_request *request, const struct spdk_
 }
 SPDK_RPC_REGISTER("ublk_destroy_target", rpc_ublk_destroy_target, SPDK_RPC_RUNTIME)
 
-struct rpc_ublk_start_disk {
-	char		*bdev_name;
-	uint32_t	ublk_id;
-	uint32_t	num_queues;
-	uint32_t	queue_depth;
-	struct spdk_jsonrpc_request *request;
-};
-
 static const struct spdk_json_object_decoder rpc_ublk_start_disk_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_ublk_start_disk, bdev_name), spdk_json_decode_string},
-	{"ublk_id", offsetof(struct rpc_ublk_start_disk, ublk_id), spdk_json_decode_uint32},
-	{"num_queues", offsetof(struct rpc_ublk_start_disk, num_queues), spdk_json_decode_uint32, true},
-	{"queue_depth", offsetof(struct rpc_ublk_start_disk, queue_depth), spdk_json_decode_uint32, true},
+	{"bdev_name", offsetof(struct rpc_ublk_start_disk_ctx, bdev_name), spdk_json_decode_string},
+	{"ublk_id", offsetof(struct rpc_ublk_start_disk_ctx, ublk_id), spdk_json_decode_uint32},
+	{"num_queues", offsetof(struct rpc_ublk_start_disk_ctx, num_queues), spdk_json_decode_uint32, true},
+	{"queue_depth", offsetof(struct rpc_ublk_start_disk_ctx, queue_depth), spdk_json_decode_uint32, true},
 };
-
-static void
-free_rpc_ublk_start_disk(struct rpc_ublk_start_disk *req)
-{
-	free(req->bdev_name);
-	free(req);
-}
 
 static void
 rpc_ublk_start_disk_done(void *cb_arg, int rc)
 {
-	struct rpc_ublk_start_disk *req = cb_arg;
+	struct rpc_ublk_start_disk_ctx *req = cb_arg;
 	struct spdk_json_write_ctx *w;
 
 	if (rc == 0) {
@@ -113,13 +90,14 @@ rpc_ublk_start_disk_done(void *cb_arg, int rc)
 	}
 
 	free_rpc_ublk_start_disk(req);
+	free(req);
 }
 
 static void
 rpc_ublk_start_disk(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_ublk_start_disk *req;
+	struct rpc_ublk_start_disk_ctx *req;
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -138,7 +116,9 @@ rpc_ublk_start_disk(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto out;
+		free_rpc_ublk_start_disk(req);
+		free(req);
+		return;
 	}
 
 	rc = ublk_start_disk(req->bdev_name, req->ublk_id, req->num_queues, req->queue_depth,
@@ -146,44 +126,29 @@ rpc_ublk_start_disk(struct spdk_jsonrpc_request *request,
 	if (rc != 0) {
 		rpc_ublk_start_disk_done(req, rc);
 	}
-
-	return;
-
-out:
-	free_rpc_ublk_start_disk(req);
 }
 
 SPDK_RPC_REGISTER("ublk_start_disk", rpc_ublk_start_disk, SPDK_RPC_RUNTIME)
 
-struct rpc_ublk_stop_disk {
-	uint32_t ublk_id;
-	struct spdk_jsonrpc_request *request;
-};
-
-static void
-free_rpc_ublk_stop_disk(struct rpc_ublk_stop_disk *req)
-{
-	free(req);
-}
-
 static const struct spdk_json_object_decoder rpc_ublk_stop_disk_decoders[] = {
-	{"ublk_id", offsetof(struct rpc_ublk_stop_disk, ublk_id), spdk_json_decode_uint32},
+	{"ublk_id", offsetof(struct rpc_ublk_stop_disk_ctx, ublk_id), spdk_json_decode_uint32},
 };
 
 static void
 rpc_ublk_stop_disk_done(void *cb_arg, int rc)
 {
-	struct rpc_ublk_stop_disk *req = cb_arg;
+	struct rpc_ublk_stop_disk_ctx *req = cb_arg;
 
 	spdk_jsonrpc_send_bool_response(req->request, true);
 	free_rpc_ublk_stop_disk(req);
+	free(req);
 }
 
 static void
 rpc_ublk_stop_disk(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
-	struct rpc_ublk_stop_disk *req;
+	struct rpc_ublk_stop_disk_ctx *req;
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -200,18 +165,17 @@ rpc_ublk_stop_disk(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto invalid;
+		free_rpc_ublk_stop_disk(req);
+		free(req);
+		return;
 	}
 
 	rc = ublk_stop_disk(req->ublk_id, rpc_ublk_stop_disk_done, req);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto invalid;
+		free_rpc_ublk_stop_disk(req);
+		free(req);
 	}
-	return;
-
-invalid:
-	free_rpc_ublk_stop_disk(req);
 }
 
 SPDK_RPC_REGISTER("ublk_stop_disk", rpc_ublk_stop_disk, SPDK_RPC_RUNTIME)
@@ -234,19 +198,15 @@ rpc_dump_ublk_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_ublk_get_disks {
-	uint32_t ublk_id;
-};
-
 static const struct spdk_json_object_decoder rpc_ublk_get_disks_decoders[] = {
-	{"ublk_id", offsetof(struct rpc_ublk_get_disks, ublk_id), spdk_json_decode_uint32, true},
+	{"ublk_id", offsetof(struct rpc_ublk_get_disks_ctx, ublk_id), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
-	struct rpc_ublk_get_disks req = {};
+	struct rpc_ublk_get_disks_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_ublk_dev *ublk = NULL;
 
@@ -288,28 +248,15 @@ rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("ublk_get_disks", rpc_ublk_get_disks, SPDK_RPC_RUNTIME)
 
-struct rpc_ublk_recover_disk {
-	char		*bdev_name;
-	uint32_t	ublk_id;
-	struct spdk_jsonrpc_request *request;
-};
-
 static const struct spdk_json_object_decoder rpc_ublk_recover_disk_decoders[] = {
-	{"bdev_name", offsetof(struct rpc_ublk_recover_disk, bdev_name), spdk_json_decode_string},
-	{"ublk_id", offsetof(struct rpc_ublk_recover_disk, ublk_id), spdk_json_decode_uint32},
+	{"bdev_name", offsetof(struct rpc_ublk_recover_disk_ctx, bdev_name), spdk_json_decode_string},
+	{"ublk_id", offsetof(struct rpc_ublk_recover_disk_ctx, ublk_id), spdk_json_decode_uint32},
 };
-
-static void
-free_rpc_ublk_recover_disk(struct rpc_ublk_recover_disk *req)
-{
-	free(req->bdev_name);
-	free(req);
-}
 
 static void
 rpc_ublk_recover_disk_done(void *cb_arg, int rc)
 {
-	struct rpc_ublk_recover_disk *req = cb_arg;
+	struct rpc_ublk_recover_disk_ctx *req = cb_arg;
 	struct spdk_json_write_ctx *w;
 
 	if (rc == 0) {
@@ -321,13 +268,14 @@ rpc_ublk_recover_disk_done(void *cb_arg, int rc)
 	}
 
 	free_rpc_ublk_recover_disk(req);
+	free(req);
 }
 
 static void
 rpc_ublk_recover_disk(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
-	struct rpc_ublk_recover_disk *req;
+	struct rpc_ublk_recover_disk_ctx *req;
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -344,6 +292,7 @@ rpc_ublk_recover_disk(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
+		free_rpc_ublk_recover_disk(req);
 		free(req);
 		return;
 	}

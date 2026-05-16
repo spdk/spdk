@@ -327,6 +327,12 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		rc = spdk_bdev_abort(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.abort.bio_to_abort,
 				     _pt_complete_io, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+		rc = spdk_bdev_comparev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+					       bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					       bdev_io->u.bdev.num_blocks,
+					       _pt_complete_io, bdev_io);
+		break;
 	case SPDK_BDEV_IO_TYPE_COPY:
 		rc = spdk_bdev_copy_blocks(pt_node->base_desc, pt_ch->base_ch,
 					   bdev_io->u.bdev.offset_blocks,
@@ -545,6 +551,15 @@ vbdev_passthru_get_memory_domains(void *ctx, struct spdk_memory_domain **domains
 	return spdk_bdev_get_memory_domains(pt_node->base_bdev, domains, array_size);
 }
 
+static int
+vbdev_passthru_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types,
+				       uint32_t array_size)
+{
+	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
+
+	return spdk_bdev_get_memory_domain_types(pt_node->base_bdev, types, array_size);
+}
+
 /* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.destruct		= vbdev_passthru_destruct,
@@ -554,6 +569,7 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.dump_info_json		= vbdev_passthru_dump_info_json,
 	.write_config_json	= vbdev_passthru_write_config_json,
 	.get_memory_domains	= vbdev_passthru_get_memory_domains,
+	.get_memory_domain_types = vbdev_passthru_get_memory_domain_types,
 };
 
 static void
@@ -667,6 +683,8 @@ vbdev_passthru_register(const char *bdev_name)
 		pt_node->pt_bdev.dif_is_head_of_md = bdev->dif_is_head_of_md;
 		pt_node->pt_bdev.dif_check_flags = bdev->dif_check_flags;
 		pt_node->pt_bdev.dif_pi_format = bdev->dif_pi_format;
+
+		pt_node->pt_bdev.numa = bdev->numa;
 
 		/* This is the context that is passed to us when the bdev
 		 * layer calls in so we'll save our pt_bdev node here.

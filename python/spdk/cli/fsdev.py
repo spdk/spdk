@@ -5,8 +5,9 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-import sys
-from spdk.rpc.client import print_dict, print_json, print_array  # noqa
+import argparse
+
+from spdk.rpc.cmd_parser import print_json
 
 
 def add_parser(subparsers):
@@ -22,8 +23,8 @@ def add_parser(subparsers):
                                          fsdev_io_cache_size=args.fsdev_io_cache_size))
 
     p = subparsers.add_parser('fsdev_set_opts', help='Set the fsdev subsystem options')
-    p.add_argument('fsdev_io_pool_size', help='Size of fsdev IO objects pool', type=int)
-    p.add_argument('fsdev_io_cache_size', help='Size of fsdev IO objects cache per thread', type=int)
+    p.add_argument('fsdev_io_pool_size', help='Size of the fsdev IO objects pool', type=int)
+    p.add_argument('fsdev_io_cache_size', help='Size of the per-thread fsdev IO objects cache', type=int)
     p.set_defaults(func=fsdev_set_opts)
 
     def fsdev_aio_create(args):
@@ -32,31 +33,21 @@ def add_parser(subparsers):
                                            max_write=args.max_write, skip_rw=args.skip_rw))
 
     p = subparsers.add_parser('fsdev_aio_create', help='Create a aio filesystem')
-    p.add_argument('name', help='Filesystem name. Example: aio0.')
-    p.add_argument('root_path', help='Path on the system fs to expose as SPDK filesystem')
-
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-xattr',  help='Enable extended attributes', dest='enable_xattr',
-                       action='store_true', default=None)
-    group.add_argument('--disable-xattr', help='Disable extended attributes', dest='enable_xattr',
-                       action='store_false', default=None)
-
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('--enable-writeback-cache',  help='Enable writeback cache', dest='enable_writeback_cache',
-                       action='store_true', default=None)
-    group.add_argument('--disable-writeback-cache', help='Disable writeback cache', dest='enable_writeback_cache',
-                       action='store_false', default=None)
-
-    p.add_argument('-w', '--max-write', help='Max write size in bytes', type=int)
-
-    p.add_argument('--skip-rw', dest='skip_rw', help="Do not process read or write commands. This is used for testing.",
+    p.add_argument('name', help='Name of the AIO fsdev')
+    p.add_argument('root_path', help='Host directory to expose as the SPDK filesystem root')
+    p.add_argument('--xattr', dest='enable_xattr', action=argparse.BooleanOptionalAction,
+                   help='Enable extended attributes. Default: false')
+    p.add_argument('--writeback-cache', dest='enable_writeback_cache', action=argparse.BooleanOptionalAction,
+                   help='Enable the writeback cache. Default: true')
+    p.add_argument('-w', '--max-write', help='Maximum write size in bytes. Default: 131072', type=int)
+    p.add_argument('--skip-rw', dest='skip_rw',
+                   help='Skip read and write operations and complete them immediately (for benchmarking). Default: false',
                    action='store_true', default=None)
-
     p.set_defaults(func=fsdev_aio_create)
 
     def fsdev_aio_delete(args):
         print(args.client.fsdev_aio_delete(name=args.name))
 
     p = subparsers.add_parser('fsdev_aio_delete', help='Delete a aio filesystem')
-    p.add_argument('name', help='Filesystem name. Example: aio0.')
+    p.add_argument('name', help='Name of the AIO fsdev to delete')
     p.set_defaults(func=fsdev_aio_delete)

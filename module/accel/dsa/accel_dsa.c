@@ -597,7 +597,7 @@ accel_dsa_enable_probe(bool kernel_mode)
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 {
-	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_DSA) {
+	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_DSA || dev->id.device_id == PCI_DEVICE_ID_INTEL_DSA3) {
 		return true;
 	}
 

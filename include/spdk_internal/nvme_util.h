@@ -16,12 +16,14 @@ enum spdk_nvme_trid_usage_opt {
 	SPDK_NVME_TRID_USAGE_OPT_NS = 1 << 6,
 	SPDK_NVME_TRID_USAGE_OPT_HOSTNQN = 1 << 7,
 	SPDK_NVME_TRID_USAGE_OPT_ALT_TRADDR = 1 << 8,
+	SPDK_NVME_TRID_USAGE_OPT_HOSTADDR = 1 << 9,
 };
 
 struct spdk_nvme_trid_entry {
 	struct spdk_nvme_transport_id trid;
 	uint16_t nsid;
 	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	char hostaddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 	struct spdk_nvme_transport_id	failover_trid;
 };
 
@@ -42,6 +44,7 @@ void spdk_nvme_transport_id_usage(FILE *f, uint32_t opts);
  * ------------ | -----
  * ns           | NVMe namespace ID (all active namespaces are used by default)
  * hostnqn      | Host NQN
+ * hostaddr     | Source address for NVMe-oF (e.g. local IP for RDMA/TCP)
  * alt_traddr   | Alternative Transport address for failover
  *
  * \param str Input string representation of a transport ID to parse.

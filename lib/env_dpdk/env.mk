@@ -35,8 +35,9 @@ endif
 
 DPDK_INC := -I$(DPDK_INC_DIR)
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_bus_pci rte_pci rte_mempool_ring
-DPDK_LIB_LIST += rte_telemetry rte_kvargs rte_rcu
+DPDK_LIB_LIST = rte_eal rte_kvargs rte_log rte_telemetry rte_argparse
+DPDK_LIB_LIST += rte_mempool_ring rte_mempool rte_ring
+DPDK_LIB_LIST += rte_bus_pci rte_pci
 
 DPDK_POWER=n
 
@@ -45,9 +46,7 @@ ifeq ($(OS),Linux)
 # some DPDK packages do not include it. See #2534.
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_power.*))
 DPDK_POWER=y
-# Since DPDK 21.02 rte_power depends on rte_ethdev that
-# in turn depends on rte_net.
-DPDK_LIB_LIST += rte_power rte_ethdev rte_net
+DPDK_LIB_LIST += rte_power rte_timer rte_ethdev rte_net rte_mbuf rte_meter
 # rte_power drivers, available since 24.11.0
 ifneq ($(wildcard $(DPDK_LIB_DIR)/librte_power_*),)
 DPDK_LIB_LIST += rte_power_acpi rte_power_amd_pstate rte_power_cppc rte_power_intel_pstate \
@@ -61,69 +60,44 @@ endif
 # ones after that.
 DPDK_FRAMEWORK=n
 
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)),y)
-DPDK_LIB_LIST += rte_common_mlx5
-# Introduced in DPDK 21.08
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
-DPDK_LIB_LIST += rte_bus_auxiliary
-endif
-endif
+LINK_HASH=n
 
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_ipsec_mb.*))
-# PMD name as of DPDK 21.11
 DPDK_LIB_LIST += rte_crypto_ipsec_mb
-else
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_aesni_mb.*))
-# PMD name for DPDK 21.08 and earlier
-DPDK_LIB_LIST += rte_crypto_aesni_mb
-endif
 endif
 
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_mlx5.*))
-DPDK_LIB_LIST += rte_crypto_mlx5
-endif
+DPDK_LIB_LIST += rte_common_mlx5 rte_bus_auxiliary rte_crypto_mlx5
+LINK_HASH=y
 endif
 
 ifeq ($(CONFIG_DPDK_UADK),y)
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_uadk.*))
 DPDK_LIB_LIST += rte_crypto_uadk
 endif
 endif
-endif
 
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)),y)
+ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
 endif
 ifeq ($(CONFIG_DPDK_UADK),y)
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_uadk.*))
 DPDK_LIB_LIST += rte_compress_uadk
-endif
 endif
 endif
 
 ifeq ($(DPDK_FRAMEWORK),y)
-DPDK_LIB_LIST += rte_cryptodev rte_compressdev rte_bus_vdev
+DPDK_LIB_LIST += rte_cryptodev rte_mbuf rte_rcu
+DPDK_LIB_LIST += rte_compressdev
+DPDK_LIB_LIST += rte_bus_vdev
 DPDK_LIB_LIST += rte_common_qat
 endif
 
-LINK_HASH=n
-
 ifeq ($(CONFIG_VHOST),y)
-DPDK_LIB_LIST += rte_vhost rte_net
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_dmadev.*))
-# Introduced in DPDK 21.11, and rte_vhost became dependent on
-# it shortly thereafter
-DPDK_LIB_LIST += rte_dmadev
-endif
+DPDK_LIB_LIST += rte_vhost rte_ethdev rte_meter rte_cryptodev rte_dmadev
 LINK_HASH=y
-ifneq ($(DPDK_FRAMEWORK),y)
-DPDK_LIB_LIST += rte_cryptodev
-endif
 endif
 
 ifeq ($(CONFIG_FC),y)
@@ -131,12 +105,7 @@ LINK_HASH=y
 endif
 
 ifeq ($(LINK_HASH),y)
-DPDK_LIB_LIST += rte_hash
-endif
-
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_log.*))
-# Since DPDK 23.11.0-rc0 logging functions are in a separate library
-DPDK_LIB_LIST += rte_log
+DPDK_LIB_LIST += rte_hash rte_net rte_mbuf rte_rcu
 endif
 
 DPDK_LIB_LIST_SORTED = $(sort $(DPDK_LIB_LIST))

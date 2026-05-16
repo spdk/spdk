@@ -132,6 +132,8 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *opts)
 	struct init_rpc_server *init_server;
 	int rc;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (listen_addr == NULL) {
 		return -EINVAL;
 	}
@@ -185,6 +187,8 @@ spdk_rpc_server_finish(const char *listen_addr)
 {
 	struct init_rpc_server *init_server;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	init_server = get_server_by_addr(listen_addr);
 	if (!init_server) {
 		SPDK_ERRLOG("No server listening on provided address: %s\n", listen_addr);
@@ -214,6 +218,8 @@ static void
 set_server_active_flag(const char *listen_addr, bool is_active)
 {
 	struct init_rpc_server *init_server;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	init_server = get_server_by_addr(listen_addr);
 	if (!init_server) {

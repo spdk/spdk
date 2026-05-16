@@ -143,6 +143,7 @@ static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static bool g_legacy_mem;
 static bool g_huge_pages = true;
+static bool g_vtophys = true;
 
 static inline uint64_t
 mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, int *page_size)
@@ -1900,12 +1901,14 @@ vtophys_init(void)
 		}
 	}
 
-	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
-	if (g_vtophys_map == NULL) {
-		DEBUG_PRINT("vtophys map allocation failed\n");
-		spdk_mem_map_free(&g_numa_map);
-		spdk_mem_map_free(&g_phys_ref_map);
-		return -ENOMEM;
+	if (g_vtophys) {
+		g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
+		if (g_vtophys_map == NULL) {
+			DEBUG_PRINT("vtophys map allocation failed\n");
+			spdk_mem_map_free(&g_numa_map);
+			spdk_mem_map_free(&g_phys_ref_map);
+			return -ENOMEM;
+		}
 	}
 
 	return 0;
@@ -1923,6 +1926,11 @@ uint64_t
 spdk_vtophys(const void *buf, uint64_t *size)
 {
 	uint64_t vaddr, paddr, mask;
+
+	/* vtophys map do not get created in no-pci env */
+	if (g_vtophys_map == NULL) {
+		return SPDK_VTOPHYS_ERROR;
+	}
 
 	vaddr = (uint64_t)buf;
 	paddr = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
@@ -1973,4 +1981,10 @@ void
 mem_disable_huge_pages(void)
 {
 	g_huge_pages = false;
+}
+
+void
+mem_disable_vtophys(void)
+{
+	g_vtophys = false;
 }

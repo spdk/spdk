@@ -375,8 +375,7 @@ _sock(const char *ip, int port, char *impl_name)
 
 	/* Test spdk_sock_set_default_impl when name is NULL */
 	rc = spdk_sock_set_default_impl(NULL);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	/* Test spdk_sock_is _ipv6 */
 	CU_ASSERT(!spdk_sock_is_ipv6(client_sock));
@@ -519,16 +518,14 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	/* pass null cb_fn */
 	rc = spdk_sock_group_add_sock(group, server_sock, NULL, NULL);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
 	CU_ASSERT(rc == 0);
 
 	/* try adding sock a second time */
 	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	g_read_data_called = false;
 	g_bytes_read = 0;
@@ -564,13 +561,11 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	/* Try to close sock_group while it still has sockets. */
 	rc = spdk_sock_group_close(&group);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EBUSY);
+	CU_ASSERT(rc == -EBUSY);
 
 	/* Try to close sock while it is still part of a sock_group. */
 	rc = spdk_sock_close(&server_sock);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EBUSY);
+	CU_ASSERT(rc == -EBUSY);
 
 	rc = spdk_sock_group_remove_sock(group, server_sock);
 	CU_ASSERT(rc == 0);
@@ -803,8 +798,7 @@ _sock_close(const char *ip, int port, char *impl_name)
 
 	/* Test spdk_sock_flush when sock is NULL */
 	rc = spdk_sock_flush(NULL);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EBADF);
+	CU_ASSERT(rc == -EBADF);
 
 	/* Test spdk_sock_flush when sock is not NULL */
 	rc = spdk_sock_flush(client_sock);
@@ -887,21 +881,16 @@ ut_sock_impl_get_set_opts(void)
 	struct spdk_sock_impl_opts *opts = (struct spdk_sock_impl_opts *)0x123456789;
 
 	rc = spdk_sock_impl_get_opts("ut", NULL, &len);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 	rc = spdk_sock_impl_get_opts("ut", opts, NULL);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 	rc = spdk_sock_impl_get_opts("ut", opts, &len);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == ENOTSUP);
+	CU_ASSERT(rc == -ENOTSUP);
 
 	rc = spdk_sock_impl_set_opts("ut", NULL, len);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 	rc = spdk_sock_impl_set_opts("ut", opts, len);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == ENOTSUP);
+	CU_ASSERT(rc == -ENOTSUP);
 }
 
 static void
@@ -912,11 +901,9 @@ posix_sock_impl_get_set_opts(void)
 	struct spdk_sock_impl_opts opts = {};
 
 	rc = spdk_sock_impl_get_opts("posix", NULL, &len);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 	rc = spdk_sock_impl_get_opts("posix", &opts, NULL);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	/* Check default opts */
 	len = sizeof(opts);
@@ -933,8 +920,7 @@ posix_sock_impl_get_set_opts(void)
 	CU_ASSERT(len == 0);
 
 	rc = spdk_sock_impl_set_opts("posix", NULL, len);
-	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EINVAL);
+	CU_ASSERT(rc == -EINVAL);
 
 	opts.recv_buf_size = 16;
 	opts.send_buf_size = 4;

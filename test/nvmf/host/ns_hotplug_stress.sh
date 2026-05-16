@@ -41,8 +41,10 @@ add_remove() {
 
 	for ((i = 0; i < ns_per_thread; i++)); do
 		current=$((nsid + i))
-		$tgt_rpc nvmf_subsystem_add_ns -n "$current" "$NVME_SUBNQN" "${bdev_name}"
-		$tgt_rpc nvmf_subsystem_remove_ns "$NVME_SUBNQN" "$current"
+		$tgt_rpc <<- EOF
+			nvmf_subsystem_add_ns -n $current $NVME_SUBNQN ${bdev_name}
+			nvmf_subsystem_remove_ns $NVME_SUBNQN $current
+		EOF
 
 		# Check if intiator is still alive, otherwise we'd wait until all threads finish
 		kill -s 0 "$spdk_app_pid"
@@ -63,40 +65,45 @@ add_remove_resize() {
 	local bdev_name="null${thread}"
 	local resize_bdev_size resize_nsid stable_bdev_size stable_nsid
 
+	resize_bdev_size="$bdev_size"
+	resize_nsid="$((nsid + --max_namespaces))"
+	stable_bdev_size="$((bdev_size - thread))"
+	stable_nsid="$((nsid + --max_namespaces))"
+
 	# Two bdevs will be added as NSID and NSID-1, forcing log page to contain
 	# entries with decreasing NSID.
-	$tgt_rpc bdev_null_create "${bdev_name}_inc" "$bdev_size" "$blk_size"
-	$tgt_rpc bdev_null_create "${bdev_name}_dec" "$bdev_size" "$blk_size"
-
-	# This bdev will be increased in size during the test, forcing AERs
+	# A third bdev will be increased in size during the test, forcing AERs
 	# for namespace attribute changes other than add/remove.
-	resize_bdev_size="$bdev_size"
-	$tgt_rpc bdev_null_create "${bdev_name}_resize" "$resize_bdev_size" "$blk_size"
-	resize_nsid="$((nsid + --max_namespaces))"
-	$tgt_rpc nvmf_subsystem_add_ns -n "$resize_nsid" "$NVME_SUBNQN" "${bdev_name}_resize"
-
-	# This bdev will remain at fixed size, to verify that it persist throughout
-	# the test and no changes to its attributes were made. Size is unique
-	# among all threads.
-	stable_bdev_size="$((bdev_size - thread))"
-	$tgt_rpc bdev_null_create "${bdev_name}_stable" "$stable_bdev_size" "$blk_size"
-	stable_nsid="$((nsid + --max_namespaces))"
-	$tgt_rpc nvmf_subsystem_add_ns -n "$stable_nsid" "$NVME_SUBNQN" "${bdev_name}_stable"
+	# A fourth bdev will remain at fixed size, to verify that it persist
+	# throughout the test and no changes to its attributes were made. Size
+	# is unique among all threads.
+	$tgt_rpc <<- EOF
+		bdev_null_create ${bdev_name}_inc $bdev_size $blk_size
+		bdev_null_create ${bdev_name}_dec $bdev_size $blk_size
+		bdev_null_create ${bdev_name}_resize $resize_bdev_size $blk_size
+		nvmf_subsystem_add_ns -n $resize_nsid $NVME_SUBNQN ${bdev_name}_resize
+		bdev_null_create ${bdev_name}_stable $stable_bdev_size $blk_size
+		nvmf_subsystem_add_ns -n $stable_nsid $NVME_SUBNQN ${bdev_name}_stable
+	EOF
 
 	# Start at 1 to accommodate the namespace with decremented NSID.
 	# Max namespaces is ns_per_thread decreased by namespaces created above.
 	for ((i = 1; i < max_namespaces; i++)); do
 		current=$((nsid + i))
-		$tgt_rpc nvmf_subsystem_add_ns -n "$current" "$NVME_SUBNQN" "${bdev_name}_inc"
-		$tgt_rpc nvmf_subsystem_remove_ns "$NVME_SUBNQN" "$current"
+		prev=$((nsid + i - 1))
+		((++resize_bdev_size))
 
-		# Rather than just increasing NSID, interleave with lower NSID values.
-		current=$((nsid + i - 1))
-		$tgt_rpc nvmf_subsystem_add_ns -n "$current" "$NVME_SUBNQN" "${bdev_name}_dec"
-		$tgt_rpc nvmf_subsystem_remove_ns "$NVME_SUBNQN" "$current"
+		# Batch all target-side RPCs for this iteration: add/remove ns
+		# with increasing and decreasing NSIDs, then resize.
+		$tgt_rpc <<- EOF
+			nvmf_subsystem_add_ns -n $current $NVME_SUBNQN ${bdev_name}_inc
+			nvmf_subsystem_remove_ns $NVME_SUBNQN $current
+			nvmf_subsystem_add_ns -n $prev $NVME_SUBNQN ${bdev_name}_dec
+			nvmf_subsystem_remove_ns $NVME_SUBNQN $prev
+			bdev_null_resize ${bdev_name}_resize $resize_bdev_size
+		EOF
 
-		# Resize the bdev and wait for updated size on the initiator
-		$tgt_rpc bdev_null_resize "${bdev_name}_resize" "$((++resize_bdev_size))"
+		# Wait for updated size on the initiator
 		waitforcondition '[[ "$(get_bdev_size_s nvme0n${resize_nsid})" == "$resize_bdev_size" ]]'
 
 		# Check if namespace for stable bdev still has the same size
@@ -106,13 +113,14 @@ add_remove_resize() {
 		kill -s 0 "$spdk_app_pid"
 	done
 
-	$tgt_rpc nvmf_subsystem_remove_ns "$NVME_SUBNQN" "$stable_nsid"
-	$tgt_rpc nvmf_subsystem_remove_ns "$NVME_SUBNQN" "$resize_nsid"
-
-	$tgt_rpc bdev_null_delete "${bdev_name}_inc"
-	$tgt_rpc bdev_null_delete "${bdev_name}_dec"
-	$tgt_rpc bdev_null_delete "${bdev_name}_resize"
-	$tgt_rpc bdev_null_delete "${bdev_name}_stable"
+	$tgt_rpc <<- EOF
+		nvmf_subsystem_remove_ns $NVME_SUBNQN $stable_nsid
+		nvmf_subsystem_remove_ns $NVME_SUBNQN $resize_nsid
+		bdev_null_delete ${bdev_name}_inc
+		bdev_null_delete ${bdev_name}_dec
+		bdev_null_delete ${bdev_name}_resize
+		bdev_null_delete ${bdev_name}_stable
+	EOF
 }
 
 nvmftestinit
@@ -126,14 +134,14 @@ for ((i = 0; i < io_paths_nr; i++)); do
 	$tgt_rpc nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$((NVMF_PORT + i))"
 done
 
-"${SPDK_APP[@]}" -m 0x2 "${NO_HUGE[@]}" &
+run_app_bg "${SPDK_APP[@]}" -m 0x2
 spdk_app_pid=$!
 trap 'killprocess $spdk_app_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten "$spdk_app_pid"
 
 # Run several subsystem_{add,remove}_ns RPCs in parallel to ensure they'll get queued
-nthreads=8 pids=()
-ns_per_thread=20
+nthreads=6 pids=()
+ns_per_thread=15
 bdev_size=100
 blk_size=4096
 

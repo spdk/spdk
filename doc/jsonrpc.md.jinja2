@@ -91,6 +91,14 @@ scripts/rpc.py save_config > config.json
 'config.json' can then be passed to a new SPDK application using the '-c' command line parameter
 to reproduce the same configuration.
 
+### JSON-RPC Remote access
+
+Visit this [link](https://spdk.io/doc/jsonrpc_proxy.html) for detailed information. Usage example:
+
+~~~bash
+spdk/scripts/rpc_http_proxy.py 192.168.0.2 8000 user password
+~~~
+
 ### JSON-RPC batching
 
 'rpc.py' also supports batching of multiple JSON-RPC methods with one invocation.  So instead of
@@ -138,47 +146,16 @@ argument that adds new RPC calls (subparsers.add_parser()).  The new parsers sho
 functions registered within the external module using the SPDK_RPC_REGISTER() macro.  Example:
 
 ~~~python
-from spdk.rpc.client import print_json
-
-
-def example_create(client, num_blocks, block_size, name=None, uuid=None):
-    """Construct an example block device.
-
-    Args:
-        num_blocks: size of block device in blocks
-        block_size: block size of device; must be a power of 2 and at least 512
-        name: name of block device (optional)
-        uuid: UUID of block device (optional)
-
-    Returns:
-        Name of created block device.
-    """
-    params = {'num_blocks': num_blocks, 'block_size': block_size}
-    if name:
-        params['name'] = name
-    if uuid:
-        params['uuid'] = uuid
-    return client.call('bdev_example_create', params)
-
-
-def example_delete(client, name):
-    """Delete example block device.
-
-    Args:
-        bdev_name: name of bdev to delete
-    """
-    params = {'name': name}
-    return client.call('bdev_example_delete', params)
+from spdk.rpc.cmd_parser import print_json
 
 
 def spdk_rpc_plugin_initialize(subparsers):
     def bdev_example_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
-        print_json(example_create(args.client,
-                                  num_blocks=int(num_blocks),
-                                  block_size=args.block_size,
-                                  name=args.name,
-                                  uuid=args.uuid))
+        print_json(args.client.bdev_example_create(num_blocks=int(num_blocks),
+                                                   block_size=args.block_size,
+                                                   name=args.name,
+                                                   uuid=args.uuid))
 
     p = subparsers.add_parser('bdev_example_create',
                               help='Create an example bdev')
@@ -190,8 +167,7 @@ def spdk_rpc_plugin_initialize(subparsers):
     p.set_defaults(func=bdev_example_create)
 
     def bdev_example_delete(args):
-        example_delete(args.client,
-                      name=args.name)
+        args.client.bdev_example_delete(name=args.name)
 
     p = subparsers.add_parser('bdev_example_delete',
                               help='Delete an example disk')
@@ -396,110 +372,9 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": [
-    "framework_start_init",
-    "rpc_get_methods",
-    "scsi_get_devices",
-    "nbd_get_disks",
-    "nbd_stop_disk",
-    "nbd_start_disk",
-    "log_get_flags",
-    "log_clear_flag",
-    "log_set_flag",
-    "log_get_level",
-    "log_set_level",
-    "log_get_print_level",
-    "log_set_print_level",
-    "iscsi_get_options",
-    "iscsi_target_node_add_lun",
-    "iscsi_get_connections",
-    "iscsi_delete_portal_group",
-    "iscsi_create_portal_group",
-    "iscsi_get_portal_groups",
-    "iscsi_delete_target_node",
-    "iscsi_target_node_remove_pg_ig_maps",
-    "iscsi_target_node_add_pg_ig_maps",
-    "iscsi_create_target_node",
-    "iscsi_get_target_nodes",
-    "iscsi_delete_initiator_group",
-    "iscsi_initiator_group_remove_initiators",
-    "iscsi_initiator_group_add_initiators",
-    "iscsi_create_initiator_group",
-    "iscsi_get_initiator_groups",
-    "iscsi_set_options",
-    "bdev_set_options",
-    "bdev_set_qos_limit",
-    "bdev_get_bdevs",
-    "bdev_get_iostat",
-    "framework_get_config",
-    "framework_get_subsystems",
-    "framework_monitor_context_switch",
-    "spdk_kill_instance",
-    "accel_set_options",
-    "accel_set_driver",
-    "accel_crypto_key_create",
-    "accel_crypto_key_destroy",
-    "accel_crypto_keys_get",
-    "accel_assign_opc",
-    "accel_get_module_info",
-    "accel_get_opc_assignments",
-    "accel_error_inject_error",
-    "ioat_scan_accel_module",
-    "dsa_scan_accel_module",
-    "cuda_scan_accel_module",
-    "dpdk_cryptodev_scan_accel_module",
-    "dpdk_cryptodev_set_driver",
-    "dpdk_cryptodev_get_driver",
-    "mlx5_scan_accel_module",
-    "accel_mlx5_dump_stats",
-    "bdev_virtio_attach_controller",
-    "bdev_virtio_scsi_get_devices",
-    "bdev_virtio_detach_controller",
-    "bdev_virtio_blk_set_hotplug",
-    "bdev_aio_delete",
-    "bdev_aio_create",
-    "bdev_split_delete",
-    "bdev_split_create",
-    "bdev_error_inject_error",
-    "bdev_error_delete",
-    "bdev_error_create",
-    "bdev_passthru_create",
-    "bdev_passthru_delete",
-    "bdev_nvme_apply_firmware",
-    "bdev_nvme_get_transport_statistics",
-    "bdev_nvme_get_controller_health_info",
-    "bdev_nvme_detach_controller",
-    "bdev_nvme_attach_controller",
-    "bdev_null_create",
-    "bdev_malloc_delete",
-    "bdev_malloc_create",
-    "bdev_ftl_delete",
-    "bdev_ftl_unload",
-    "bdev_ftl_create",
-    "bdev_ftl_load",
-    "bdev_ftl_unmap",
-    "bdev_ftl_get_stats",
-    "bdev_ftl_get_properties",
-    "bdev_ftl_set_property",
-    "bdev_lvol_get_lvstores",
-    "bdev_lvol_delete",
-    "bdev_lvol_resize",
-    "bdev_lvol_set_read_only",
-    "bdev_lvol_decouple_parent",
-    "bdev_lvol_inflate",
-    "bdev_lvol_rename",
-    "bdev_lvol_clone",
-    "bdev_lvol_snapshot",
-    "bdev_lvol_create",
-    "bdev_lvol_delete_lvstore",
-    "bdev_lvol_rename_lvstore",
-    "bdev_lvol_create_lvstore",
-    "bdev_lvol_start_shallow_copy",
-    "bdev_lvol_check_shallow_copy",
-    "bdev_lvol_set_parent",
-    "bdev_lvol_set_parent_bdev",
-    "bdev_daos_delete",
-    "bdev_daos_create",
-    "bdev_daos_resize"
+    {% for name in all_methods | sort -%}
+    "{{ name }}"{% if not loop.last %},{% endif %}
+    {% endfor %}
   ]
 }
 ~~~
@@ -1229,28 +1104,93 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "tpoint_group_mask": "0x0",
+    "tpoint_group_mask": "0x8",
     "iscsi_conn": {
       "enabled": false,
-      "mask": "0x2"
+      "mask": "0x2",
+      "tpoint_mask": "0x0",
+      "tpoints": [
+        {"name": "ISCSI_READ_DONE", "id": 0, "enabled": false},
+        {"name": "ISCSI_READ_PDU", "id": 1, "enabled": false},
+        {"name": "ISCSI_TASK_DONE", "id": 2, "enabled": false},
+        {"name": "ISCSI_TASK_QUEUE", "id": 3, "enabled": false},
+        {"name": "ISCSI_TASK_EXECUTED", "id": 4, "enabled": false},
+        {"name": "ISCSI_PDU_COMPLETED", "id": 5, "enabled": false}
+      ]
     },
     "scsi": {
       "enabled": false,
-      "mask": "0x4"
+      "mask": "0x4",
+      "tpoint_mask": "0x0",
+      "tpoints": [
+        {"name": "SCSI_TASK_DONE", "id": 0, "enabled": false},
+        {"name": "SCSI_TASK_START", "id": 1, "enabled": false}
+      ]
     },
     "bdev": {
-      "enabled": false,
-      "mask": "0x8"
+      "enabled": true,
+      "mask": "0x8",
+      "tpoint_mask": "0xffffffffffffffff",
+      "tpoints": [
+        {"name": "BDEV_IO_START", "id": 0, "enabled": true},
+        {"name": "BDEV_IO_DONE", "id": 1, "enabled": true},
+        {"name": "BDEV_IOCH_CREATE", "id": 2, "enabled": true},
+        {"name": "BDEV_IOCH_DESTROY", "id": 3, "enabled": true}
+      ]
     },
     "nvmf_tcp": {
       "enabled": false,
-      "mask": "0x20"
+      "mask": "0x20",
+      "tpoint_mask": "0x0",
+      "tpoints": [
+        {"name": "TCP_REQ_NEW", "id": 0, "enabled": false},
+        {"name": "TCP_REQ_NEED_BUFFER", "id": 1, "enabled": false},
+        {"name": "TCP_REQ_EXECUTED", "id": 2, "enabled": false},
+        {"name": "TCP_REQ_COMPLETED", "id": 3, "enabled": false}
+      ]
     },
     "ftl": {
       "enabled": false,
-      "mask": "0x40"
+      "mask": "0x40",
+      "tpoint_mask": "0x0",
+      "tpoints": [
+        {"name": "U_band_reloc", "id": 0, "enabled": false},
+        {"name": "U_band_write", "id": 1, "enabled": false}
+      ]
     }
   }
+}
+~~~
+
+### trace_clear {#rpc_trace_clear}
+
+Clear trace history. All entries recorded before this call will be
+hidden from subsequent reads by external trace tools such as spdk_trace.
+This does not disable tracing; new entries continue to be recorded.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "trace_clear",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 
@@ -2251,6 +2191,36 @@ Example response:
 }
 ~~~
 
+### ae4dma_scan_accel_module {#rpc_ae4dma_scan_accel_module}
+
+Enable ae4dma accel module offload.
+
+#### Parameters
+
+{{ ae4dma_scan_accel_module_params }}
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ae4dma_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### cuda_scan_accel_module {#rpc_cuda_scan_accel_module}
 
 Enable cuda accel module offload.
@@ -2648,8 +2618,8 @@ Get I/O statistics of block devices (bdevs).
 
 #### Parameters
 
-The user may specify no parameters in order to list all block devices, or a block device may be
-specified by name.
+The user may specify no parameters in order to list all block devices, or one or more block
+devices may be specified via the `names` array.
 
 {{ bdev_get_iostat_params }}
 
@@ -2667,7 +2637,7 @@ Example request:
   "id": 1,
   "method": "bdev_get_iostat",
   "params": {
-    "name": "Nvme0n1",
+    "names": ["Nvme0n1", "Nvme0n2"],
     "per_channel": false
   }
 }
@@ -2684,6 +2654,22 @@ Example response:
     "bdevs": [
       {
         "name": "Nvme0n1",
+        "bytes_read": 36864,
+        "num_read_ops": 2,
+        "bytes_written": 0,
+        "num_write_ops": 0,
+        "bytes_unmapped": 0,
+        "num_unmap_ops": 0,
+        "read_latency_ticks": 178904,
+        "write_latency_ticks": 0,
+        "unmap_latency_ticks": 0,
+        "queue_depth_polling_period": 2,
+        "queue_depth": 0,
+        "io_time": 0,
+        "weighted_io_time": 0
+      },
+      {
+        "name": "Nvme0n2",
         "bytes_read": 36864,
         "num_read_ops": 2,
         "bytes_written": 0,
@@ -2825,6 +2811,63 @@ Example response:
     "min_range": 5,
     "max_range": 25,
     "tsc_rate": 2300000000
+  }
+}
+~~~
+
+### bdev_get_histogram_borders {#rpc_bdev_get_histogram_borders}
+
+Dump latency histogram for specified bdev into user-provided borders.
+
+#### Parameters
+
+{{ bdev_get_histogram_borders_params }}
+
+#### Response
+
+ Name          | Type   | Description
+-------------- | ------ | ------------------------------------------------------------
+ borders_count | array  | Number of requests whose latency was less than given border
+
+#### Example
+
+Note that last value represents total number of elements in histogram (i.e. +Inf border).
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_get_histogram_borders",
+  "params": {
+    "name": "Nvme0n1",
+    "borders": [
+      100,
+      200,
+      1000,
+      5000,
+      100000
+    ]
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "borders_count": [
+      42,
+      42,
+      133,
+      1024,
+      2002,
+      2018
+    ]
   }
 }
 ~~~
@@ -5412,6 +5455,39 @@ Example response:
 }
 ~~~
 
+### bdev_error_resume_pending {#rpc_bdev_error_resume_pending}
+
+Resume all error bdev pending requests.
+
+#### Parameters
+
+{{ bdev_error_resume_pending_params }}
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_error_resume_pending",
+  "id": 1,
+  "params": {
+    "name": "EE_Malloc0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_iscsi_set_options {#rpc_bdev_iscsi_set_options}
 
 This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.
@@ -5568,53 +5644,6 @@ Example response:
 }
 ~~~
 
-### bdev_ftl_load {#rpc_bdev_ftl_load}
-
-Loads FTL bdev.
-
-This RPC is subject to change.
-
-#### Parameters
-
-{{ bdev_ftl_load_params }}
-
-#### Response
-
-Name of loaded bdev.
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "params": {
-    "name": "ftl0",
-    "base_bdev": "nvme0n1",
-    "cache": "nvme1n1",
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
-    "core_mask": "[0]",
-    "overprovisioning": 10
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_load",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": {
-    "name": "ftl0",
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
-  }
-}
-~~~
-
 ### bdev_ftl_delete {#rpc_bdev_ftl_delete}
 
 Delete FTL bdev.
@@ -5636,41 +5665,6 @@ Example request:
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_delete",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
-### bdev_ftl_unload {#rpc_bdev_ftl_unload}
-
-Unloads FTL bdev.
-
-This RPC is subject to change.
-
-#### Parameters
-
-{{ bdev_ftl_unload_params }}
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "params": {
-    "name": "ftl0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_unload",
   "id": 1
 }
 ~~~
@@ -7060,7 +7054,7 @@ Add initiator group to portal group mappings to an existing iSCSI target node.
 
 ##### Portal to Initiator group mappings object
 
-{{ iscsi_tgt_pg_ig_map_object }}
+{{ iscsi_pg_ig_map_object }}
 
 #### Example
 
@@ -7111,7 +7105,7 @@ Delete initiator group to portal group mappings from an existing iSCSI target no
 
 ##### Portal to Initiator group mappings object
 
-{{ iscsi_tgt_pg_ig_map_object }}
+{{ iscsi_pg_ig_map_object }}
 
 #### Example
 
@@ -9335,13 +9329,7 @@ Response is an array of objects describing requested controller(s). Common field
 
 Object of type:
 
-{{ vhost_scsi_luns_controller_params_object }}
-
-##### Vhost NVMe {#rpc_vhost_get_controllers_nvme}
-
-`backend_specific` contains `namespaces` array of following objects:
-
-{{ vhost_nvme_controller_params_object }}
+{{ scsi_lun_object }}
 
 #### Example
 
@@ -9404,24 +9392,6 @@ Example response:
       },
       "iops_threshold": 60000,
       "ctrlr": "VhostScsi0",
-      "delay_base_us": 0
-    },
-    {
-      "cpumask": "0x2",
-      "backend_specific": {
-        "namespaces": [
-          {
-            "bdev": "Malloc3",
-            "nsid": 1
-          },
-          {
-            "bdev": "Malloc4",
-            "nsid": 2
-          }
-        ]
-      },
-      "iops_threshold": 60000,
-      "ctrlr": "VhostNvme0",
       "delay_base_us": 0
     }
   ]

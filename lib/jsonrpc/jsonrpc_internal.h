@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
+ *   Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
  */
 
@@ -12,13 +13,15 @@
 
 #include "spdk/log.h"
 
-#define SPDK_JSONRPC_RECV_BUF_SIZE	(32 * 1024)
+#define SPDK_JSONRPC_RECV_BUF_SIZE	(256 * 1024)
 #define SPDK_JSONRPC_SEND_BUF_SIZE_INIT	(32 * 1024)
 #define SPDK_JSONRPC_SEND_BUF_SIZE_MAX	(32 * 1024 * 1024)
 #define SPDK_JSONRPC_ID_MAX_LEN		128
 #define SPDK_JSONRPC_MAX_CONNS		64
-#define SPDK_JSONRPC_MAX_VALUES		1024
+#define SPDK_JSONRPC_MAX_VALUES		8192
 #define SPDK_JSONRPC_CLIENT_MAX_VALUES		8192
+
+struct spdk_jsonrpc_batch_request;
 
 struct spdk_jsonrpc_request {
 	struct spdk_jsonrpc_server_conn *conn;
@@ -42,7 +45,45 @@ struct spdk_jsonrpc_request {
 
 	struct spdk_json_write_ctx *response;
 
+	/* Pointer to batch context if this request is part of a batch, NULL otherwise */
+	struct spdk_jsonrpc_batch_request *batch;
+
 	STAILQ_ENTRY(spdk_jsonrpc_request) link;
+};
+
+struct spdk_jsonrpc_batch_request {
+	struct spdk_jsonrpc_server_conn *conn;
+
+	/* Protects concurrent access during batch completion */
+	pthread_spinlock_t lock;
+
+	/* Total number of requests in this batch */
+	uint32_t count;
+
+	/*
+	 * Number of requests that have completed (RPC handler finished).
+	 * When this equals count, the batch is ready to be finalized and sent.
+	 */
+	uint32_t completed;
+
+	/*
+	 * Number of responses appended to send_buf. May be less than completed
+	 * because notifications (requests without an id) produce no response.
+	 * Used for comma separators and to detect all-notification batches.
+	 */
+	uint32_t num_responses;
+
+	/* Aggregated response buffer for the batch */
+	uint8_t *send_buf;
+	size_t send_buf_size;
+	size_t send_len;
+
+	/* Original recv buffer for the entire batch (freed when batch completes) */
+	uint8_t *recv_buffer;
+
+	/* JSON values for the entire batch */
+	struct spdk_json_val *values;
+	size_t values_cnt;
 };
 
 struct spdk_jsonrpc_server_conn {
@@ -88,6 +129,12 @@ struct spdk_jsonrpc_client_request {
 	size_t send_offset;
 
 	uint8_t *send_buf;
+
+	/* Batch mode state: non-NULL when building a batch request */
+	struct spdk_json_write_ctx *batch_write_ctx;
+
+	/* Counter for auto-assigned batch request IDs */
+	uint32_t batch_id;
 };
 
 struct spdk_jsonrpc_client_response_internal {
@@ -129,6 +176,10 @@ void jsonrpc_free_request(struct spdk_jsonrpc_request *request);
 
 /* Must be called only from server poll thread */
 void jsonrpc_complete_request(struct spdk_jsonrpc_request *request);
+
+/* Batch handling functions */
+void jsonrpc_complete_batched_request(struct spdk_jsonrpc_request *request);
+void jsonrpc_free_batch(struct spdk_jsonrpc_batch_request *batch);
 
 /*
  * Parse JSON data as RPC command response.

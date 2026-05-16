@@ -7,7 +7,7 @@
 
 #include "spdk/accel.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 #include "spdk/env.h"
 
 static void

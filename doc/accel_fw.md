@@ -139,6 +139,14 @@ sudo PCI_BLOCKED="0000:04:00.0 0000:05:00.0" ./setup.sh
 Note: you might need to run `sudo ./setup.sh reset` to unbind all drivers before performing
 the step above.
 
+### AE4DMA Module {#accel_ae4dma}
+
+The AE4DMA module enables SPDK applications to offload memory-to-memory copy operations
+to the AE4DMA engines on AMD Embedded EPYC processors.
+To use the AE4DMA module, use the RPC [`ae4dma_scan_accel_module`]
+(https://spdk.io/doc/jsonrpc.html#rpc_ae4dma_scan_accel_module ) before starting the
+application.
+
 ### Software Module {#accel_sw}
 
 The software module is enabled by default. If no hardware module is explicitly

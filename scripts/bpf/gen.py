@@ -4,11 +4,11 @@
 #  All rights reserved.
 #
 
-from argparse import ArgumentParser
 import os
 import re
 import subprocess
 import sys
+from argparse import ArgumentParser
 
 
 class TraceProcess:

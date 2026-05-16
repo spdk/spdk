@@ -26,7 +26,7 @@ trap cleanup EXIT
 key0path=$(prep_key "key0" "$key0" 0)
 key1path=$(prep_key "key1" "$key1" 0)
 
-"$rootdir/build/bin/spdk_tgt" &
+run_app_bg "$SPDK_BIN_DIR/spdk_tgt"
 tgtpid=$!
 
 waitforlisten $tgtpid
@@ -43,7 +43,7 @@ CMD
 # Test, if another listener cannot be added, with different secure channel value
 NOT rpc_cmd nvmf_subsystem_add_listener -t tcp -a 127.0.0.1 -s 4420 "$subnqn"
 
-"$rootdir/build/examples/bdevperf" -q 128 -o 4k -w randrw -M 50 -t 1 -m 2 -r "$bperfsock" -z &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -q 128 -o 4k -w randrw -M 50 -t 1 -m 2 -r "$bperfsock" -z
 bperfpid=$!
 
 waitforlisten $bperfpid "$bperfsock"
@@ -113,8 +113,8 @@ bperf_cmd bdev_nvme_attach_controller -b nvme0 -t tcp -a 127.0.0.1 -s 4420 -f ip
 config=$(bperf_cmd save_config)
 
 killprocess $bperfpid
-"$rootdir/build/examples/bdevperf" -q 128 -o 4k -w randrw -M 50 -t 1 -m 2 -r "$bperfsock" \
-	-z -c <(echo "$config") &
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -q 128 -o 4k -w randrw -M 50 -t 1 -m 2 -r "$bperfsock" \
+	-z -c <(echo "$config")
 bperfpid=$!
 
 waitforlisten $bperfpid "$bperfsock"

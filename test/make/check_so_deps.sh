@@ -163,6 +163,31 @@ function confirm_abi_deps() {
 			name = spdk_app_opts
 			soname_regexp = ^libspdk_event\\.so\\.15\\.*$
 			has_data_member_regexp = ^(reserved191|reserved187|num_trace_threads)$
+		[suppress_type]
+			label = Added new registers from NVMe 2.0 using reserved space
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name = spdk_nvme_registers
+			has_data_member_inserted_between = {offset_after(cmbsts), offset_of(pmrcap)}
+		[suppress_type]
+			label = Added new bits from NVMe 2.0 to CAP register using reserved space
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name = spdk_nvme_cap_register
+			has_data_member_inserted_between = {offset_after(cmbs), offset_of(reserved3)}
+		[suppress_type]
+			label = Added new CRIME bit to CC register from NVMe 2.0 using reserved space
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name = spdk_nvme_cc_register
+			has_data_member_inserted_at = 24
+		[suppress_type]
+			label = Change NMIC, FPI and NSATTR naming to conform to NVMe 2.2 specification
+			soname_regexp = ^libspdk_nvme\\.so\\.16\\.*$|^libspdk_nvmf\\.so\\.21\\.*$
+			name_regexp  = ^(spdk_nvme_ns_data|spdk_nvme_nmic|spdk_nvme_fpi|spdk_nvme_nsattr)$
+			has_size_change = no
+		[suppress_type]
+			label = Added CRTO register to nvmf registers using reserved space
+			soname_regexp = ^libspdk_nvmf\\.so\\.21\\.*$
+			name = spdk_nvmf_registers
+			has_data_member = reserved
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

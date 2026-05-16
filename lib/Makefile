@@ -10,7 +10,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
 DIRS-y += bdev blob conf dma accel event json jsonrpc \
           log lvol rpc sock thread trace util nvme vmd nvmf scsi \
-          ioat ut_mock iscsi notify init trace_parser keyring
+          ioat ut_mock iscsi notify init trace_parser keyring ae4dma
 ifeq ($(OS),Linux)
 DIRS-y += nbd ftl vfio_user
 ifeq ($(CONFIG_UBLK),y)
@@ -20,7 +20,7 @@ endif
 
 # The ut library is used by unit tests and some functional tests, so build it only when either of
 # these configs is enabled
-ifeq ($(filter $(CONFIG_TESTS) $(CONFIG_UNIT_TESTS),y),y)
+ifeq ($(or $(filter y,$(CONFIG_TESTS)),$(filter y,$(CONFIG_UNIT_TESTS))),y)
 DIRS-y += ut
 endif
 

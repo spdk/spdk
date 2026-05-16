@@ -111,8 +111,8 @@ spdk_trace_parser::get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore)
 	assert(history);
 
 	if (spdk_unlikely(static_cast<void *>(buf) ==
-			  static_cast<void *>(&history->entries[history->num_entries - 1]))) {
-		return reinterpret_cast<spdk_trace_entry_buffer *>(&history->entries[0]);
+			  static_cast<void *>(spdk_trace_history_get_entry(history, history->num_entries - 1)))) {
+		return reinterpret_cast<spdk_trace_entry_buffer *>(spdk_trace_history_get_entry(history, 0));
 	} else {
 		return buf + 1;
 	}
@@ -171,10 +171,11 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 
 	pe->entry = entry = _iter->second;
 	pe->lcore = _iter->first.lcore;
+	pe->tname = spdk_get_per_lcore_history(_trace_file, pe->lcore)->tname;
 	/* Set related index to the max value to indicate "empty" state */
 	pe->related_index = UINT64_MAX;
 	pe->related_type = OBJECT_NONE;
-	tpoint = &_trace_file->tpoint[entry->tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(_trace_file)->tpoint[entry->tpoint_id];
 	stats = &_stats[tpoint->object_type];
 
 	if (tpoint->new_object) {
@@ -231,7 +232,7 @@ spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries,
 	int first, last, lcore;
 
 	lcore = history->lcore;
-	e = history->entries;
+	e = spdk_trace_history_get_entry(history, 0);
 
 	num_entries_filled = num_entries;
 	while (e[num_entries_filled - 1].tsc == 0) {
@@ -266,7 +267,8 @@ spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries,
 
 	i = first;
 	while (1) {
-		if (e[i].tpoint_id != SPDK_TRACE_MAX_TPOINT_ID) {
+		if (e[i].tpoint_id != SPDK_TRACE_MAX_TPOINT_ID &&
+		    e[i].tsc >= spdk_trace_get_main_section(_trace_file)->clear_tsc) {
 			_entries[entry_key(lcore, e[i].tsc)] = &e[i];
 		}
 		if (i == last) {
@@ -345,13 +347,14 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		/* Check if any reactors have overwritten their circular buffer. */
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(_trace_file, i);
-			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
+			if (history == NULL || history->num_entries == 0 ||
+			    spdk_trace_history_get_entry(history, 0)->tsc == 0) {
 				continue;
 			}
 			entry_num = history->num_entries - 1;
 			overflowed = true;
 			while (entry_num >= 0) {
-				if (history->entries[entry_num].tsc == 0) {
+				if (spdk_trace_history_get_entry(history, entry_num)->tsc == 0) {
 					overflowed = false;
 					break;
 				}
@@ -364,7 +367,8 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		}
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(_trace_file, i);
-			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
+			if (history == NULL || history->num_entries == 0 ||
+			    spdk_trace_history_get_entry(history, 0)->tsc == 0) {
 				continue;
 			}
 			populate_events(history, history->num_entries, overflowed);
@@ -376,12 +380,15 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 				    opts->filename, opts->lcore);
 			return false;
 		}
-		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
+		if (history->num_entries > 0 && spdk_trace_history_get_entry(history, 0)->tsc != 0) {
 			populate_events(history, history->num_entries, false);
 		}
 	}
 
 	_iter = _entries.begin();
+	if (_tsc_offset == 0 && !_entries.empty()) {
+		_tsc_offset = _iter->first.tsc;
+	}
 	return true;
 }
 

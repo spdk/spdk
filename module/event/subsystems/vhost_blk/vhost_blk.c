@@ -7,7 +7,7 @@
 
 #include "spdk/vhost.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 vhost_blk_subsystem_init_done(int rc)

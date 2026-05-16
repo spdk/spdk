@@ -17,7 +17,7 @@ vhosttestinit
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
-vfu_tgt_run 0
+vfu_tgt_run 0 -m 0xf -s 512
 
 vfu_vm_dir="$VM_DIR/vfu_tgt"
 rm -rf $vfu_vm_dir
@@ -27,8 +27,8 @@ mkdir -p $vfu_vm_dir
 disk_no="1"
 vm_num="1"
 job_file="default_fsdev.job"
-be_virtiofs_dir=/tmp/vfio-test.$disk_no
-vm_virtiofs_dir=/tmp/virtiofs.$disk_no
+be_virtiofs_dir="$SPDK_TEST_STORAGE/vfio-test.$disk_no"
+vm_virtiofs_dir="/tmp/virtiofs.$disk_no"
 
 $rpc_py vfu_tgt_set_base_path $vfu_vm_dir
 
@@ -42,7 +42,7 @@ $rpc_py fsdev_aio_create aio.$disk_no $be_virtiofs_dir
 $rpc_py vfu_virtio_create_fs_endpoint virtio.$disk_no --fsdev-name aio.$disk_no \
 	--tag vfu_test.$disk_no --num-queues=2 --qsize=512 --packed-ring
 
-vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --disks="1"
+vm_setup --disk-type=vfio_user_virtio --force=1 --os=$VM_IMAGE --memory=512 --disks="1"
 vm_run $vm_num
 vm_wait_for_boot 60 $vm_num
 

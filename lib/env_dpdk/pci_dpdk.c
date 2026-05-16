@@ -32,7 +32,7 @@ dpdk_pci_init(void)
 	 * Only DPDK in development has additional suffix past minor version.
 	 */
 	if (strlen(release) != 0) {
-		if (year == 25 && month == 11 && minor == 0) {
+		if (year == 26 && month == 3 && minor == 0) {
 			g_dpdk_fn_table = &fn_table_2211;
 			SPDK_NOTICELOG("In-development %s is used. There is no support for it in SPDK. "
 				       "Enabled only for validation.\n", rte_version());
@@ -40,8 +40,8 @@ dpdk_pci_init(void)
 		}
 	}
 
-	/* Anything 26.x or higher is not supported. */
-	if (year >= 26) {
+	/* Anything 27.x or higher is not supported. */
+	if (year >= 27) {
 		goto not_supported;
 	}
 
@@ -75,8 +75,9 @@ dpdk_pci_init(void)
 		/* There were no changes between 22.11 and 24.*, so use the 22.11 implementation. */
 		g_dpdk_fn_table = &fn_table_2211;
 	} else if (year == 25) {
-		/* Only 25.03.0 and 25.07.0 are supported. */
-		if ((month != 7 || minor != 0) &&
+		/* Only 25.03.0, 25.07.0 and 25.11.0 are supported. */
+		if ((month != 11 || minor != 0) &&
+		    (month != 7 || minor != 0) &&
 		    (month != 3 || minor != 0)) {
 			goto not_supported;
 		}

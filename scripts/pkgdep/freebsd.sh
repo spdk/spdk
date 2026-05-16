@@ -4,14 +4,14 @@
 #  All rights reserved.
 #
 # Minimal install
-pkg install -y pkgconf gmake cunit openssl git bash python ncurses ninja meson
+pkg install -y pkgconf gmake cunit openssl git bash python ncurses ninja meson gcc
 pkg install -g -y "py*-pyelftools-*" "py*-pandas" "py*-Jinja2" "py*-tabulate-*"
 # Additional dependencies for ISA-L used in compression
 pkg install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	pkg install -y devel/astyle bash sysutils/sg3_utils nasm \
-		bash-completion ruby devel/ruby-gems lcov
+		bash-completion ruby devel/ruby-gems lcov cmake
 	pkg install -g -y "py*-pycodestyle"
 	# ruby and ruby-gems are not preinstalled on FreeBSD but are needed to
 	# build mdl - make sure they are in place.

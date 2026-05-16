@@ -342,7 +342,6 @@ fuse_disp_event_cb(enum spdk_fuse_dispatcher_event_type type, struct spdk_fuse_d
 		if (fs_endpoint->fuse_disp) {
 			spdk_thread_send_msg(fs_endpoint->init_thread, _vfu_virtio_fs_fuse_disp_delete,
 					     fs_endpoint);
-			fs_endpoint->fuse_disp = NULL;
 		}
 		break;
 	default:

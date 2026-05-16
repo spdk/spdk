@@ -81,10 +81,9 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "max_io_qpairs_per_ctrlr", opts->max_qpairs_per_ctrlr - 1);
 	spdk_json_write_named_uint32(w, "in_capsule_data_size", opts->in_capsule_data_size);
 	spdk_json_write_named_uint32(w, "max_io_size", opts->max_io_size);
-	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
-	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
-	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
+	spdk_json_write_named_uint32(w, "iobuf_small_cache_size", opts->iobuf_small_cache_size);
+	spdk_json_write_named_uint32(w, "iobuf_large_cache_size", opts->iobuf_large_cache_size);
 	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
 	spdk_json_write_named_bool(w, "zcopy", opts->zcopy);
 
@@ -95,6 +94,9 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "abort_timeout_sec", opts->abort_timeout_sec);
 	spdk_json_write_named_uint32(w, "ack_timeout", opts->ack_timeout);
 	spdk_json_write_named_uint32(w, "data_wr_pool_size", opts->data_wr_pool_size);
+	spdk_json_write_named_bool(w, "disable_command_passthru", opts->disable_command_passthru);
+	spdk_json_write_named_uint16(w, "kas", opts->kas);
+	spdk_json_write_named_uint32(w, "min_kato", opts->min_kato);
 	spdk_json_write_object_end(w);
 }
 
@@ -141,10 +143,9 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(max_qpairs_per_ctrlr);
 	SET_FIELD(in_capsule_data_size);
 	SET_FIELD(max_io_size);
-	SET_FIELD(io_unit_size);
 	SET_FIELD(max_aq_depth);
-	SET_FIELD(buf_cache_size);
-	SET_FIELD(num_shared_buffers);
+	SET_FIELD(iobuf_small_cache_size);
+	SET_FIELD(iobuf_large_cache_size);
 	SET_FIELD(dif_insert_or_strip);
 	SET_FIELD(abort_timeout_sec);
 	SET_FIELD(association_timeout);
@@ -155,10 +156,12 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(data_wr_pool_size);
 	SET_FIELD(min_kato);
 	SET_FIELD(kas);
+	SET_FIELD(oncs);
+	SET_FIELD(fuses);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 78, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 88, "Incorrect size");
 
 #undef SET_FIELD
 #undef FILED_CHECK
@@ -174,7 +177,7 @@ struct nvmf_transport_create_ctx {
 static bool
 nvmf_transport_use_iobuf(struct spdk_nvmf_transport *transport)
 {
-	return transport->opts.num_shared_buffers || transport->opts.buf_cache_size;
+	return transport->opts.iobuf_small_cache_size || transport->opts.iobuf_large_cache_size;
 }
 
 static void
@@ -200,6 +203,11 @@ nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *trans
 	}
 
 	if (nvmf_transport_use_iobuf(transport)) {
+		struct spdk_iobuf_opts opts_iobuf = {};
+
+		spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
+		transport->large_bufsize = opts_iobuf.large_bufsize;
+		transport->small_bufsize = opts_iobuf.small_bufsize;
 		spdk_iobuf_register_module(transport->iobuf_name);
 	}
 
@@ -231,7 +239,6 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 	struct nvmf_transport_create_ctx *ctx;
 	struct spdk_iobuf_opts opts_iobuf = {};
 	int rc;
-	uint64_t count;
 	uint32_t kas_in_ms;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -283,27 +290,21 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 	ctx->opts.min_kato = spdk_round_up(ctx->opts.min_kato, kas_in_ms);
 
 	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
-	if (ctx->opts.io_unit_size == 0) {
-		SPDK_ERRLOG("io_unit_size cannot be 0\n");
-		goto err;
+	if (ctx->opts.iobuf_small_cache_size != UINT32_MAX && ctx->opts.iobuf_small_cache_size != 0) {
+		if (ctx->opts.iobuf_small_cache_size * spdk_env_get_core_count() > opts_iobuf.small_pool_count) {
+			SPDK_WARNLOG("per core iobuf_small_cache_size %u is larger than iobuf small buffer count %" PRIu64
+				     ", limiting to 50%% of the pool\n",
+				     ctx->opts.iobuf_small_cache_size * spdk_env_get_core_count(), opts_iobuf.small_pool_count);
+			ctx->opts.iobuf_small_cache_size = opts_iobuf.small_pool_count / spdk_env_get_core_count() / 2;
+		}
 	}
-	if (ctx->opts.io_unit_size > opts_iobuf.large_bufsize) {
-		SPDK_ERRLOG("io_unit_size %u is larger than iobuf pool large buffer size %d\n",
-			    ctx->opts.io_unit_size, opts_iobuf.large_bufsize);
-		goto err;
-	}
-
-	if (ctx->opts.io_unit_size <= opts_iobuf.small_bufsize) {
-		/* We'll be using the small buffer pool only */
-		count = opts_iobuf.small_pool_count;
-	} else {
-		count = spdk_min(opts_iobuf.small_pool_count, opts_iobuf.large_pool_count);
-	}
-
-	if (ctx->opts.num_shared_buffers > count) {
-		SPDK_WARNLOG("The num_shared_buffers value (%u) is larger than the available iobuf"
-			     " pool size (%lu). Please increase the iobuf pool sizes.\n",
-			     ctx->opts.num_shared_buffers, count);
+	if (ctx->opts.iobuf_large_cache_size != UINT32_MAX && ctx->opts.iobuf_large_cache_size != 0) {
+		if (ctx->opts.iobuf_large_cache_size * spdk_env_get_core_count() > opts_iobuf.large_pool_count) {
+			SPDK_WARNLOG("per core iobuf_large_cache_size %u is larger than iobuf large buffer count %" PRIu64
+				     ", limiting to 50%% of the pool\n",
+				     ctx->opts.iobuf_large_cache_size * spdk_env_get_core_count(), opts_iobuf.large_pool_count);
+			ctx->opts.iobuf_large_cache_size = opts_iobuf.large_pool_count / spdk_env_get_core_count() / 2;
+		}
 	}
 
 	ctx->cb_fn = cb_fn;
@@ -316,11 +317,7 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 			return 0;
 		}
 
-		rc = spdk_thread_send_msg(spdk_get_thread(), _nvmf_transport_create_done, ctx);
-		if (rc) {
-			goto err;
-		}
-
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_transport_create_done, ctx);
 		return 0;
 	}
 
@@ -393,7 +390,8 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 	}
 
 	pthread_mutex_destroy(&transport->mutex);
-	return transport->ops->destroy(transport, cb_fn, cb_arg);
+	transport->ops->destroy(transport, cb_fn, cb_arg);
+	return 0;
 }
 
 struct spdk_nvmf_listener *
@@ -454,6 +452,8 @@ int
 spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvme_transport_id *trid)
 {
+	struct spdk_nvmf_subsystem_listener *subsystem_listener;
+	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listener *listener;
 
 	listener = nvmf_transport_find_listener(transport, trid);
@@ -466,6 +466,16 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 		pthread_mutex_lock(&transport->mutex);
 		transport->ops->stop_listen(transport, trid);
 		pthread_mutex_unlock(&transport->mutex);
+
+		/* The transport listener has stopped and we are about to free trid; clear dangling pointers. */
+		NVMF_SUBSYSTEM_FOREACH(transport->tgt, subsystem) {
+			TAILQ_FOREACH(subsystem_listener, &subsystem->listeners, link) {
+				if (subsystem_listener->trid == &listener->trid) {
+					subsystem_listener->trid = NULL;
+				}
+			}
+		}
+
 		free(listener);
 	}
 
@@ -598,7 +608,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_transport_poll_group *tgroup;
 	struct spdk_iobuf_opts opts_iobuf = {};
-	uint32_t buf_cache_size, small_cache_size, large_cache_size;
+	uint32_t small_cache_size, large_cache_size;
 	int rc;
 
 	pthread_mutex_lock(&transport->mutex);
@@ -616,18 +626,17 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		/* We aren't going to allocate any shared buffers or cache, so just return now. */
 		return tgroup;
 	}
+	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
 
-	buf_cache_size = transport->opts.buf_cache_size;
+	small_cache_size = transport->opts.iobuf_small_cache_size;
 
-	/* buf_cache_size of UINT32_MAX means the value should be calculated dynamically
+	/* iobuf_small_cache_size of UINT32_MAX means the value should be calculated dynamically
 	 * based on the number of buffers in the shared pool and the number of poll groups
-	 * that are sharing them.  We allocate 75% of the pool for the cache, and then
+	 * that are sharing them.  We allocate 50% of the pool for the cache, and then
 	 * divide that by number of poll groups to determine the buf_cache_size for this
 	 * poll group.
 	 */
-	if (buf_cache_size == UINT32_MAX) {
-		uint32_t num_shared_buffers = transport->opts.num_shared_buffers;
-
+	if (small_cache_size == UINT32_MAX) {
 		/* Theoretically the nvmf library can dynamically add poll groups to
 		 * the target, after transports have already been created.  We aren't
 		 * going to try to really handle this case efficiently, just do enough
@@ -635,15 +644,14 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		 */
 		uint16_t num_poll_groups = group->tgt->num_poll_groups ? : spdk_env_get_core_count();
 
-		buf_cache_size = (num_shared_buffers * 3 / 4) / num_poll_groups;
+		small_cache_size = (opts_iobuf.small_pool_count / 2) / num_poll_groups;
 	}
 
-	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
-	small_cache_size = buf_cache_size;
-	if (transport->opts.io_unit_size <= opts_iobuf.small_bufsize) {
-		large_cache_size = 0;
-	} else {
-		large_cache_size = buf_cache_size;
+	large_cache_size = transport->opts.iobuf_large_cache_size;
+	if (large_cache_size == UINT32_MAX) {
+		uint16_t num_poll_groups = group->tgt->num_poll_groups ? : spdk_env_get_core_count();
+
+		large_cache_size = (opts_iobuf.large_pool_count / 2) / num_poll_groups;
 	}
 
 	tgroup->buf_cache = calloc(1, sizeof(*tgroup->buf_cache));
@@ -771,16 +779,16 @@ nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return group->transport->ops->poll_group_poll(group);
 }
 
-int
+void
 nvmf_transport_req_free(struct spdk_nvmf_request *req)
 {
-	return req->qpair->transport->ops->req_free(req);
+	req->qpair->transport->ops->req_free(req);
 }
 
-int
+void
 nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 {
-	return req->qpair->transport->ops->req_complete(req);
+	req->qpair->transport->ops->req_complete(req);
 }
 
 void
@@ -851,6 +859,8 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 	opts_local.disable_command_passthru = false;
 	opts_local.kas = NVMF_DEFAULT_KAS;
 	opts_local.min_kato = NVMF_DEFAULT_MIN_KATO;
+	opts_local.oncs.raw = UINT16_MAX;
+	opts_local.fuses.raw = UINT16_MAX;
 	ops->opts_init(&opts_local);
 
 	nvmf_transport_opts_copy(opts, &opts_local, opts_size);
@@ -874,47 +884,46 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 	req->data_from_pool = false;
 }
 
-static int
-nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
-			uint32_t io_unit_size)
+static inline void
+nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length)
 {
 	req->iov[req->iovcnt].iov_base = buf;
-	req->iov[req->iovcnt].iov_len  = spdk_min(length, io_unit_size);
-	length -= req->iov[req->iovcnt].iov_len;
+	req->iov[req->iovcnt].iov_len  = length;
 	req->iovcnt++;
 	req->data_from_pool = true;
-
-	return length;
 }
 
-static int
-nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
-				 uint32_t io_unit_size)
+static inline void
+nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length)
 {
 	struct spdk_nvmf_stripped_data *data = req->stripped_data;
 
 	data->iov[data->iovcnt].iov_base = buf;
-	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
-	length -= data->iov[data->iovcnt].iov_len;
+	data->iov[data->iovcnt].iov_len  = length;
 	data->iovcnt++;
 	req->data_from_pool = true;
-
-	return length;
 }
 
 static void nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf);
 
-static int
+static inline int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
-			 uint32_t length, uint32_t io_unit_size,
-			 bool stripped_buffers)
+			 uint32_t length, bool stripped_buffers)
 {
 	struct spdk_iobuf_entry *entry = NULL;
+	uint32_t io_unit_size;
 	uint32_t num_buffers;
+	uint32_t iov_len;
 	uint32_t i = 0;
 	void *buffer;
+
+	if (length > transport->small_bufsize) {
+		io_unit_size = transport->large_bufsize;
+	} else {
+		io_unit_size = transport->small_bufsize;
+	}
 
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed.
 	 *  Fail it.
@@ -930,17 +939,20 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	}
 
 	while (i < num_buffers) {
-		buffer = spdk_iobuf_get(group->buf_cache, spdk_min(io_unit_size, length), entry,
+		iov_len = spdk_min(io_unit_size, length);
+		buffer = spdk_iobuf_get(group->buf_cache, iov_len, entry,
 					nvmf_request_iobuf_get_cb);
 		if (spdk_unlikely(buffer == NULL)) {
 			req->iobuf.remaining_length = length;
 			return -ENOMEM;
 		}
 		if (stripped_buffers) {
-			length = nvmf_request_set_stripped_buffer(req, buffer, length, io_unit_size);
+			nvmf_request_set_stripped_buffer(req, buffer, iov_len);
 		} else {
-			length = nvmf_request_set_buffer(req, buffer, length, io_unit_size);
+			nvmf_request_set_buffer(req, buffer, iov_len);
 		}
+		assert(iov_len <= length);
+		length -= iov_len;
 		i++;
 	}
 
@@ -957,13 +969,25 @@ nvmf_request_iobuf_get_cb(struct spdk_iobuf_entry *entry, void *buf)
 	struct spdk_nvmf_poll_group *group = req->qpair->group;
 	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(group, transport);
 	uint32_t length = req->iobuf.remaining_length;
-	uint32_t io_unit_size = transport->opts.io_unit_size;
+	uint32_t io_unit_size = transport->small_bufsize;
+	uint32_t iov_len;
 	int rc;
 
 	assert(tgroup != NULL);
 
-	length = nvmf_request_set_buffer(req, buf, length, io_unit_size);
-	rc = nvmf_request_get_buffers(req, tgroup, transport, length, io_unit_size, false);
+	if (length > transport->small_bufsize) {
+		io_unit_size = transport->large_bufsize;
+	}
+	iov_len = spdk_min(io_unit_size, length);
+	nvmf_request_set_buffer(req, buf, iov_len);
+
+	assert(iov_len <= length);
+	length -= iov_len;
+	if (length == 0) {
+		transport->ops->req_get_buffers_done(req);
+		return;
+	}
+	rc = nvmf_request_get_buffers(req, tgroup, transport, length, false);
 	if (rc == 0) {
 		transport->ops->req_get_buffers_done(req);
 	}
@@ -980,7 +1004,7 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	assert(nvmf_transport_use_iobuf(transport));
 
 	req->iovcnt = 0;
-	rc = nvmf_request_get_buffers(req, group, transport, length, transport->opts.io_unit_size, false);
+	rc = nvmf_request_get_buffers(req, group, transport, length, false);
 	if (spdk_unlikely(rc == -ENOMEM && transport->ops->req_get_buffers_done == NULL)) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
 	}
@@ -993,27 +1017,35 @@ nvmf_request_get_buffers_abort_cb(struct spdk_iobuf_channel *ch, struct spdk_iob
 				  void *cb_ctx)
 {
 	struct spdk_nvmf_request *req, *req_to_abort = cb_ctx;
+	struct spdk_nvmf_transport *transport;
+	uint32_t io_unit_size;
 
 	req = SPDK_CONTAINEROF(entry, struct spdk_nvmf_request, iobuf.entry);
 	if (req != req_to_abort) {
 		return 0;
 	}
 
-	spdk_iobuf_entry_abort(ch, entry, spdk_min(req->iobuf.remaining_length,
-			       req->qpair->transport->opts.io_unit_size));
+	transport = req->qpair->transport;
+
+	if (req->iobuf.remaining_length > transport->small_bufsize) {
+		io_unit_size = transport->large_bufsize;
+	} else {
+		io_unit_size = transport->small_bufsize;
+	}
+
+	spdk_iobuf_entry_abort(ch, entry, spdk_min(req->iobuf.remaining_length, io_unit_size));
 	return 1;
 }
 
 bool
-nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req)
+nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req,
+			       struct spdk_nvmf_transport_poll_group *group)
 {
-	struct spdk_nvmf_transport_poll_group *tgroup = nvmf_get_transport_poll_group(req->qpair->group,
-			req->qpair->transport);
 	int rc;
 
-	assert(tgroup != NULL);
+	assert(group != NULL);
 
-	rc = spdk_iobuf_for_each_entry(tgroup->buf_cache, nvmf_request_get_buffers_abort_cb, req);
+	rc = spdk_iobuf_for_each_entry(group->buf_cache, nvmf_request_get_buffers_abort_cb, req);
 	return rc == 1;
 }
 
@@ -1039,8 +1071,6 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 				  uint32_t length)
 {
 	uint32_t block_size = req->dif.dif_ctx.block_size;
-	uint32_t data_block_size = block_size - req->dif.dif_ctx.md_size;
-	uint32_t io_unit_size = transport->opts.io_unit_size / block_size * data_block_size;
 	struct spdk_nvmf_stripped_data *data;
 	uint32_t i;
 	int rc;
@@ -1060,7 +1090,7 @@ nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 	req->stripped_data = data;
 	req->stripped_data->iovcnt = 0;
 
-	rc = nvmf_request_get_buffers(req, group, transport, length, io_unit_size, true);
+	rc = nvmf_request_get_buffers(req, group, transport, length, true);
 	if (rc == -ENOMEM) {
 		nvmf_request_free_stripped_buffers(req, group, transport);
 		return rc;

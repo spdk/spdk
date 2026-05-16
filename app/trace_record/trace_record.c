@@ -70,7 +70,7 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 
 	ctx->trace_file = (struct spdk_trace_file *)history_ptr;
 
-	g_tsc_rate = ctx->trace_file->tsc_rate;
+	g_tsc_rate = spdk_trace_get_tsc_rate(ctx->trace_file);
 	g_utsc_rate = g_tsc_rate / 1000;
 	if (g_tsc_rate == 0) {
 		fprintf(stderr, "Invalid tsc_rate %ju\n", g_tsc_rate);
@@ -168,7 +168,8 @@ output_trace_files_prepare(struct aggr_trace_record_ctx *ctx, const char *aggr_p
 			printf("Create tmp lcore trace file %s for lcore %d\n", port_ctx->lcore_file, i);
 		}
 
-		port_ctx->out_history = calloc(1, sizeof(struct spdk_trace_history));
+		port_ctx->out_history =
+			calloc(1, spdk_get_trace_history_size(0, port_ctx->in_history->num_tpoint_ids));
 		if (port_ctx->out_history == NULL) {
 			fprintf(stderr, "Failed to allocate memory for out_history.\n");
 			goto err;
@@ -280,7 +281,7 @@ circular_buffer_padding_backward(int fd, struct spdk_trace_history *in_history,
 		return -1;
 	}
 
-	rc = cont_write(fd, &in_history->entries[cir_start],
+	rc = cont_write(fd, spdk_trace_history_get_entry(in_history, cir_start),
 			sizeof(struct spdk_trace_entry) * (cir_end - cir_start));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to append entries into lcore file\n");
@@ -302,7 +303,7 @@ circular_buffer_padding_across(int fd, struct spdk_trace_history *in_history,
 		return -1;
 	}
 
-	rc = cont_write(fd, &in_history->entries[cir_start],
+	rc = cont_write(fd, spdk_trace_history_get_entry(in_history, cir_start),
 			sizeof(struct spdk_trace_entry) * (num_entries - cir_start));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to append entries into lcore file backward\n");
@@ -313,7 +314,8 @@ circular_buffer_padding_across(int fd, struct spdk_trace_history *in_history,
 		return 0;
 	}
 
-	rc = cont_write(fd, &in_history->entries[0], sizeof(struct spdk_trace_entry) * cir_end);
+	rc = cont_write(fd, spdk_trace_history_get_entry(in_history, 0),
+			sizeof(struct spdk_trace_entry) * cir_end);
 	if (rc < 0) {
 		fprintf(stderr, "Failed to append entries into lcore file forward\n");
 		return rc;
@@ -368,7 +370,7 @@ lcore_trace_record(struct lcore_trace_record_ctx *lcore_port)
 			/* Updates haven't been across circular buffer yet.
 			 * The first entry in shared memory is the eldest one.
 			 */
-			lcore_port->first_entry_tsc = in_history->entries[0].tsc;
+			lcore_port->first_entry_tsc = spdk_trace_history_get_entry(in_history, 0)->tsc;
 
 			lcore_port->num_entries += shm_cir_next;
 			rc = circular_buffer_padding_backward(fd, in_history, 0, shm_cir_next);
@@ -376,7 +378,7 @@ lcore_trace_record(struct lcore_trace_record_ctx *lcore_port)
 			/* Updates have already been across circular buffer.
 			 * The eldest entry in shared memory is pointed by shm_cir_next.
 			 */
-			lcore_port->first_entry_tsc = in_history->entries[shm_cir_next].tsc;
+			lcore_port->first_entry_tsc = spdk_trace_history_get_entry(in_history, shm_cir_next)->tsc;
 
 			lcore_port->num_entries += num_cir_entries;
 			rc = circular_buffer_padding_all(fd, in_history, shm_cir_next);
@@ -422,11 +424,12 @@ out:
 	}
 
 	/* Update tpoint_count info */
-	memcpy(lcore_port->out_history, lcore_port->in_history, sizeof(struct spdk_trace_history));
+	memcpy(lcore_port->out_history, lcore_port->in_history,
+	       spdk_get_trace_history_size(0, in_history->num_tpoint_ids));
 
 	/* Update last_entry_tsc to align with appended entries */
 	last_idx = lcore_trace_last_entry_idx(in_history, shm_cir_next);
-	lcore_port->last_entry_tsc = in_history->entries[last_idx].tsc;
+	lcore_port->last_entry_tsc = spdk_trace_history_get_entry(in_history, last_idx)->tsc;
 	lcore_port->rec_next_entry = shm_next_entry;
 
 	return rc;
@@ -438,13 +441,16 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	int flags = O_CREAT | O_EXCL | O_RDWR;
 	struct lcore_trace_record_ctx *lcore_port;
 	char copy_buff[TRACE_FILE_COPY_SIZE];
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE];
-	int rc, i;
+	struct spdk_trace_file header;
+	struct spdk_trace_section_lcore_offsets *in_lcore_offsets_section;
+	struct spdk_trace_section_lcore_offsets out_lcore_offsets_header;
+	uint64_t *lcore_offsets;
+	uint64_t next_lcore_offset;
+	int rc;
+	uint32_t i;
 	ssize_t len = 0;
 	uint64_t current_offset;
-	uint64_t owner_offset, owner_size;
 	uint64_t len_sum;
-	uint8_t *owner_buf;
 
 	ctx->out_fd = open(ctx->out_file, flags, 0600);
 	if (ctx->out_fd < 0) {
@@ -456,54 +462,71 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		printf("Create trace file %s for output\n", ctx->out_file);
 	}
 
-	/* Calculate lcore offsets for converged trace file */
-	current_offset = sizeof(struct spdk_trace_file);
-	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+	memcpy(&header, ctx->trace_file, sizeof(header));
+
+	in_lcore_offsets_section = spdk_trace_get_lcore_offsets_section(ctx->trace_file);
+	current_offset = sizeof(header) +
+			 spdk_trace_file_get_sections_size(ctx->trace_file);
+
+	for (i = 0; i < in_lcore_offsets_section->count; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {
-			lcore_offsets[i] = current_offset;
-			current_offset += spdk_get_trace_history_size(lcore_port->num_entries);
-		} else {
-			lcore_offsets[i] = 0;
+			current_offset += spdk_get_trace_history_size(lcore_port->num_entries,
+					  lcore_port->in_history->num_tpoint_ids);
 		}
 	}
-	owner_size = (uint64_t)ctx->trace_file->num_owners *
-		     (sizeof(struct spdk_trace_owner) + ctx->trace_file->owner_description_size);
-	owner_offset = current_offset;
-	current_offset += owner_size;
+	header.file_size = current_offset;
 
-	/* Write size of converged trace file */
-	rc = cont_write(ctx->out_fd, &current_offset, sizeof(ctx->trace_file->file_size));
+	rc = cont_write(ctx->out_fd, &header, sizeof(header));
 	if (rc < 0) {
-		fprintf(stderr, "Failed to write file size into trace file\n");
+		fprintf(stderr, "Failed to write trace file header\n");
 		goto out;
 	}
 
-	/* Write rest of metadata (spdk_trace_file) of converged trace file */
-	rc = cont_write(ctx->out_fd, &ctx->trace_file->tsc_rate,
-			sizeof(struct spdk_trace_file) - sizeof(lcore_offsets) -
-			sizeof(owner_offset) - sizeof(ctx->trace_file->file_size));
+	rc = cont_write(ctx->out_fd, (char *)ctx->trace_file + sizeof(header),
+			header.section_offsets[SPDK_TRACE_SECTION_LCORE_OFFSETS] - sizeof(header));
 	if (rc < 0) {
-		fprintf(stderr, "Failed to write metadata into trace file\n");
+		fprintf(stderr, "Failed to write sections into trace file\n");
 		goto out;
 	}
 
-	/* Write lcore offsets of converged trace file */
-	rc = cont_write(ctx->out_fd, lcore_offsets, sizeof(lcore_offsets));
-	if (rc < 0) {
-		fprintf(stderr, "Failed to write lcore offsets into trace file\n");
+	memset(&out_lcore_offsets_header, 0, sizeof(out_lcore_offsets_header));
+	out_lcore_offsets_header.count = in_lcore_offsets_section->count;
+	lcore_offsets = calloc(in_lcore_offsets_section->count, sizeof(uint64_t));
+	if (!lcore_offsets) {
+		fprintf(stderr, "Failed to allocate lcore offsets\n");
+		rc = -ENOMEM;
 		goto out;
 	}
 
-	/* Write owner_offset of converged trace file */
-	rc = cont_write(ctx->out_fd, &owner_offset, sizeof(owner_offset));
+	next_lcore_offset = sizeof(header) +
+			    spdk_trace_file_get_sections_size(ctx->trace_file);
+
+	for (i = 0; i < in_lcore_offsets_section->count; i++) {
+		lcore_port = &ctx->lcore_ports[i];
+		if (lcore_port->valid) {
+			lcore_offsets[i] = next_lcore_offset;
+			next_lcore_offset += spdk_get_trace_history_size(lcore_port->num_entries,
+					     lcore_port->in_history->num_tpoint_ids);
+		}
+	}
+
+	rc = cont_write(ctx->out_fd, &out_lcore_offsets_header, sizeof(out_lcore_offsets_header));
 	if (rc < 0) {
-		fprintf(stderr, "Failed to write owner_description_size into trace file\n");
+		fprintf(stderr, "Failed to write lcore section header into trace file\n");
+		free(lcore_offsets);
+		goto out;
+	}
+	rc = cont_write(ctx->out_fd, lcore_offsets,
+			in_lcore_offsets_section->count * sizeof(uint64_t));
+	free(lcore_offsets);
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write lcore section offsets into trace file\n");
 		goto out;
 	}
 
 	/* Append each lcore trace file into converged trace file */
-	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+	for (i = 0; i < in_lcore_offsets_section->count; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 
 		if (!lcore_port->valid) {
@@ -511,7 +534,8 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		}
 
 		lcore_port->out_history->num_entries = lcore_port->num_entries;
-		rc = cont_write(ctx->out_fd, lcore_port->out_history, sizeof(struct spdk_trace_history));
+		rc = cont_write(ctx->out_fd, lcore_port->out_history,
+				spdk_get_trace_history_size(0, lcore_port->out_history->num_tpoint_ids));
 		if (rc < 0) {
 			fprintf(stderr, "Failed to write lcore trace header into trace file\n");
 			goto out;
@@ -537,14 +561,6 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		if (len_sum != lcore_port->num_entries * sizeof(struct spdk_trace_entry)) {
 			fprintf(stderr, "Len of lcore trace file doesn't match number of entries for lcore\n");
 		}
-	}
-
-	/* Append owner data into converged trace file */
-	owner_buf = (uint8_t *)ctx->trace_file + ctx->trace_file->owner_offset;
-	rc = cont_write(ctx->out_fd, owner_buf, owner_size);
-	if (rc < 0) {
-		fprintf(stderr, "Failed to write owner_data into trace file\n");
-		goto out;
 	}
 
 	printf("All lcores trace entries are aggregated into trace file %s\n", ctx->out_file);

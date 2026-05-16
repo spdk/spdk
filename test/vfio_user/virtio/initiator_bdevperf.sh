@@ -5,23 +5,21 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vfio_user/common.sh
+source $rootdir/test/vfio_user/virtio/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-vfu_dir="/tmp/vfu_devices"
+vfu_dir="$SPDK_TEST_STORAGE/vfu_devices"
 rm -rf $vfu_dir
 mkdir -p $vfu_dir
 
-# Start `spdk_tgt` and configure it
-$SPDK_BIN_DIR/spdk_tgt -m 0xf -L vfu_virtio &
-spdk_tgt_pid=$!
-waitforlisten $spdk_tgt_pid
+# Start `vhost` and configure it
+vfu_tgt_run 0 -m 0x3 -s 512 -S $vfu_dir
 
-$rpc_py bdev_malloc_create -b malloc0 64 512
-$rpc_py bdev_malloc_create -b malloc1 64 512
-$rpc_py bdev_malloc_create -b malloc2 64 512
-
-$rpc_py vfu_tgt_set_base_path $vfu_dir
+$rpc_py bdev_malloc_create -b malloc0 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py bdev_malloc_create -b malloc1 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py bdev_malloc_create -b malloc2 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 
 # Create vfio-user virtio-blk device
 $rpc_py vfu_virtio_create_blk_endpoint vfu.blk --bdev-name malloc0 --cpumask=0x1 \
@@ -37,7 +35,7 @@ $rpc_py vfu_virtio_scsi_add_target vfu.scsi --scsi-target-num=1 --bdev-name mall
 bdevperf=$rootdir/build/examples/bdevperf
 bdevperf_rpc_sock=/tmp/bdevperf.sock
 
-$bdevperf -r $bdevperf_rpc_sock -g -s 2048 -q 256 -o 4096 -w randrw -M 50 -t 30 -m 0xf0 -L vfio_pci -L virtio_vfio_user &
+$bdevperf -r $bdevperf_rpc_sock -g -s 512 -q 256 -o 4096 -w randrw -M 50 -t 30 -m 0xc -L vfio_pci -L virtio_vfio_user &
 bdevperf_pid=$!
 trap 'killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -56,4 +54,5 @@ trap - SIGINT SIGTERM EXIT
 $rpc_py vfu_virtio_delete_endpoint vfu.blk
 $rpc_py vfu_virtio_delete_endpoint vfu.scsi
 
-killprocess $spdk_tgt_pid
+vhost_kill 0
+vhosttestfini

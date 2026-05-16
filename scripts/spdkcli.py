@@ -4,17 +4,17 @@
 #  All rights reserved.
 #
 
+import argparse
 import os
 import sys
-import argparse
+
 from configshell_fb import ConfigShell, ExecutionError
-from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
-                       removeQuotes, dblQuotedString, OneOrMore, locatedExpr)
+from pyparsing import OneOrMore, Optional, Regex, Suppress, Word, alphanums, dblQuotedString, locatedExpr, removeQuotes
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
-from spdk.rpc.client import JSONRPCException, JSONRPCClient  # noqa
-from spdk.spdkcli import UIRoot  # noqa
+from spdk.rpc.client import JSONRPCClient, JSONRPCException
+from spdk.spdkcli import UIRoot
 
 
 def add_quotes_to_shell(spdk_shell):

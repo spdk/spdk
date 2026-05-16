@@ -7,29 +7,20 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk_internal/rpc_autogen.h"
 
-struct rpc_keyring_file_add_key {
-	char *name;
-	char *path;
-};
 
 static const struct spdk_json_object_decoder rpc_keyring_file_add_key_decoders[] = {
-	{"name", offsetof(struct rpc_keyring_file_add_key, name), spdk_json_decode_string},
-	{"path", offsetof(struct rpc_keyring_file_add_key, path), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_keyring_file_add_key_ctx, name), spdk_json_decode_string},
+	{"path", offsetof(struct rpc_keyring_file_add_key_ctx, path), spdk_json_decode_string},
 };
 
-static void
-free_rpc_keyring_file_add_key(struct rpc_keyring_file_add_key *opts)
-{
-	free(opts->name);
-	free(opts->path);
-}
 
 static void
 rpc_keyring_file_add_key(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_keyring_file_add_key opts = {};
+	struct rpc_keyring_file_add_key_ctx opts = {};
 	int rc;
 
 	if (spdk_json_decode_object_relaxed(params, rpc_keyring_file_add_key_decoders,
@@ -52,25 +43,17 @@ out:
 }
 SPDK_RPC_REGISTER("keyring_file_add_key", rpc_keyring_file_add_key, SPDK_RPC_RUNTIME)
 
-struct rpc_keyring_file_remove_key {
-	char *name;
-};
 
 static const struct spdk_json_object_decoder rpc_keyring_file_remove_key_decoders[] = {
-	{"name", offsetof(struct rpc_keyring_file_remove_key, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_keyring_file_remove_key_ctx, name), spdk_json_decode_string},
 };
 
-static void
-free_rpc_keyring_file_remove_key(struct rpc_keyring_file_remove_key *r)
-{
-	free(r->name);
-}
 
 static void
 rpc_keyring_file_remove_key(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_keyring_file_remove_key req = {};
+	struct rpc_keyring_file_remove_key_ctx req = {};
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_keyring_file_remove_key_decoders,

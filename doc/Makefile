@@ -23,8 +23,10 @@ changelog.md: ../CHANGELOG.md
 	    -e '/# v..\...:/s/\./-/2' \
 	    < $< > $@
 
-jsonrpc:
-	$(Q)$(SPDK_ROOT_DIR)/scripts/genrpc.py --schema ../schema/schema.json --doc > jsonrpc.md
+jsonrpc: $(SPDK_ROOT_DIR)/doc/jsonrpc.md
+
+$(SPDK_ROOT_DIR)/doc/jsonrpc.md: $(SPDK_ROOT_DIR)/scripts/genrpc.py $(SPDK_ROOT_DIR)/schema/schema.json $(SPDK_ROOT_DIR)/doc/jsonrpc.md.jinja2
+	$(Q)$(SPDK_ROOT_DIR)/scripts/genrpc.py --schema $(SPDK_ROOT_DIR)/schema/schema.json --doc > $@
 
 output: jsonrpc Doxyfile changelog.md deprecation.md $(wildcard *.md) $(wildcard ../include/spdk/*.h)
 	$(Q)rm -rf $@

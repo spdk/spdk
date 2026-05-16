@@ -4,10 +4,11 @@
 #  All rights reserved.
 #
 
-import pexpect
 import os
-import sys
 import re
+import sys
+
+import pexpect
 
 
 def execute_command(cmd, element=None, element_exists=False):

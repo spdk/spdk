@@ -28,3 +28,21 @@ pkgdep_toolpath() {
 	echo "echo \$PATH" >> "${export_file}"
 	chmod a+x "${export_file}"
 }
+
+pkgdep_setup_python_venv() {
+	# Usage: pkgdep_setup_python_venv ROOTDIR
+	#
+	# Sets up Python virtual environment and installs dependencies
+	# per PEP668 work inside virtual env
+	local rootdir="$1"
+	local virtdir=${PIP_VIRTDIR:-/var/spdk/dependencies/pip}
+
+	python3 -m venv --system-site-packages "$virtdir"
+	source "$virtdir/bin/activate"
+	python -m pip install -U "pip<26" setuptools wheel pip-tools
+	pip-compile --extra dev --strip-extras -o "$rootdir/scripts/pkgdep/requirements.txt" "${rootdir}/python/pyproject.toml"
+	pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
+
+	# Fixes issue: #3721
+	pkgdep_toolpath meson "${virtdir}/bin"
+}

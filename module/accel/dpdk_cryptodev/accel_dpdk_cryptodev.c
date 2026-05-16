@@ -96,14 +96,6 @@ static const struct rte_mbuf_dynfield rte_mbuf_dynfield_io_context = {
 
 struct accel_dpdk_cryptodev_device;
 
-enum accel_dpdk_cryptodev_driver_type {
-	ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB = 0,
-	ACCEL_DPDK_CRYPTODEV_DRIVER_QAT,
-	ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI,
-	ACCEL_DPDK_CRYPTODEV_DRIVER_UADK,
-	ACCEL_DPDK_CRYPTODEV_DRIVER_LAST
-};
-
 struct accel_dpdk_cryptodev_qp {
 	struct accel_dpdk_cryptodev_device *device;	/* ptr to crypto device */
 	uint32_t num_enqueued_ops;	/* Used to decide whether to poll the qp or not */
@@ -114,7 +106,7 @@ struct accel_dpdk_cryptodev_qp {
 };
 
 struct accel_dpdk_cryptodev_device {
-	enum accel_dpdk_cryptodev_driver_type type;
+	enum spdk_accel_dpdk_cryptodev_driver type;
 	struct rte_cryptodev_info cdev_info; /* includes DPDK device friendly name */
 	uint32_t qp_desc_nr; /* max number of qp descriptors to be enqueued in burst */
 	uint8_t cdev_id; /* identifier for the device */
@@ -131,7 +123,7 @@ struct accel_dpdk_cryptodev_key_handle {
 };
 
 struct accel_dpdk_cryptodev_key_priv {
-	enum accel_dpdk_cryptodev_driver_type driver;
+	enum spdk_accel_dpdk_cryptodev_driver driver;
 	enum spdk_accel_cipher cipher;
 	char *xts_key;
 	TAILQ_HEAD(, accel_dpdk_cryptodev_key_handle) dev_keys;
@@ -145,7 +137,7 @@ struct accel_dpdk_cryptodev_io_channel {
 	/* completion poller */
 	struct spdk_poller *poller;
 	/* Array of qpairs for each available device. The specific device will be selected depending on the crypto key */
-	struct accel_dpdk_cryptodev_qp *device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_LAST];
+	struct accel_dpdk_cryptodev_qp *device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_LAST];
 	/* Used to queue tasks when qpair is full or only part of crypto ops was submitted to the PMD */
 	TAILQ_HEAD(, accel_dpdk_cryptodev_task) queued_tasks;
 	/* Used to queue tasks that were completed in submission path - to avoid calling cpl_cb and possibly overflow
@@ -176,18 +168,18 @@ static uint8_t g_qat_total_qp = 0;
 static uint8_t g_next_qat_index;
 
 static const char *g_driver_names[] = {
-	[ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB]	= ACCEL_DPDK_CRYPTODEV_AESNI_MB,
-	[ACCEL_DPDK_CRYPTODEV_DRIVER_QAT]	= ACCEL_DPDK_CRYPTODEV_QAT,
-	[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]	= ACCEL_DPDK_CRYPTODEV_MLX5,
-	[ACCEL_DPDK_CRYPTODEV_DRIVER_UADK]	= ACCEL_DPDK_CRYPTODEV_UADK
+	[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB]	= ACCEL_DPDK_CRYPTODEV_AESNI_MB,
+	[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT]		= ACCEL_DPDK_CRYPTODEV_QAT,
+	[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]	= ACCEL_DPDK_CRYPTODEV_MLX5,
+	[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK]		= ACCEL_DPDK_CRYPTODEV_UADK
 };
 static const char *g_cipher_names[] = {
 	[SPDK_ACCEL_CIPHER_AES_CBC]	= ACCEL_DPDK_CRYPTODEV_AES_CBC,
 	[SPDK_ACCEL_CIPHER_AES_XTS]	= ACCEL_DPDK_CRYPTODEV_AES_XTS,
 };
 
-static enum accel_dpdk_cryptodev_driver_type g_dpdk_cryptodev_driver =
-	ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
+static enum spdk_accel_dpdk_cryptodev_driver g_dpdk_cryptodev_driver =
+	SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
 
 /* Global list of all crypto devices */
 static TAILQ_HEAD(, accel_dpdk_cryptodev_device) g_crypto_devices = TAILQ_HEAD_INITIALIZER(
@@ -205,31 +197,42 @@ accel_dpdk_cryptodev_enable(void)
 	spdk_accel_module_list_add(&g_accel_dpdk_cryptodev_module);
 }
 
-int
-accel_dpdk_cryptodev_set_driver(const char *driver_name)
+const char *
+accel_dpdk_cryptodev_driver_to_str(enum spdk_accel_dpdk_cryptodev_driver driver)
 {
-	if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_QAT) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_QAT;
-	} else if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_AESNI_MB) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
-	} else if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_MLX5) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI;
-	} else if (strcmp(driver_name, ACCEL_DPDK_CRYPTODEV_UADK) == 0) {
-		g_dpdk_cryptodev_driver = ACCEL_DPDK_CRYPTODEV_DRIVER_UADK;
-	} else {
-		SPDK_ERRLOG("Unsupported driver %s\n", driver_name);
-		return -EINVAL;
+	if (driver < SPDK_COUNTOF(g_driver_names)) {
+		return g_driver_names[driver];
 	}
+	return NULL;
+}
 
-	SPDK_NOTICELOG("Using driver %s\n", driver_name);
+static int
+accel_dpdk_cryptodev_driver_from_str(const char *str, enum spdk_accel_dpdk_cryptodev_driver *out)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_driver_names); ++i) {
+		assert(g_driver_names[i]);
+		if (strcmp(str, g_driver_names[i]) == 0) {
+			*out = i;
+			return 0;
+		}
+	}
+	return -EINVAL;
+}
+
+int
+accel_dpdk_cryptodev_set_driver(enum spdk_accel_dpdk_cryptodev_driver driver)
+{
+	g_dpdk_cryptodev_driver = driver;
+	SPDK_NOTICELOG("Using driver %s\n", accel_dpdk_cryptodev_driver_to_str(driver));
 
 	return 0;
 }
 
-const char *
-accel_dpdk_cryptodev_get_driver(void)
-{
-	return g_driver_names[g_dpdk_cryptodev_driver];
+enum spdk_accel_dpdk_cryptodev_driver
+accel_dpdk_cryptodev_get_driver(void) {
+	return g_dpdk_cryptodev_driver;
 }
 
 static inline uint16_t
@@ -328,7 +331,7 @@ accel_dpdk_cryptodev_poller(void *args)
 	uint32_t num_dequeued_ops = 0, num_enqueued_ops = 0, num_completed_tasks = 0;
 	int i, rc;
 
-	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_DRIVER_LAST; i++) {
+	for (i = 0; i < SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_LAST; i++) {
 		qp = crypto_ch->device_qp[i];
 		/* Avoid polling "idle" qps since it may affect performance */
 		if (qp && qp->num_enqueued_ops) {
@@ -438,12 +441,12 @@ accel_dpdk_find_key_handle_in_channel(struct accel_dpdk_cryptodev_io_channel *cr
 {
 	struct accel_dpdk_cryptodev_key_handle *key_handle;
 
-	if (key->driver == ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
+	if (key->driver == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
 		/* Crypto key is registered on all available devices while io_channel opens CQ/QP on a single device.
 		 * We need to iterate a list of key entries to find a suitable device */
 		TAILQ_FOREACH(key_handle, &key->dev_keys, link) {
 			if (key_handle->device->cdev_id ==
-			    crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]->device->cdev_id) {
+			    crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]->device->cdev_id) {
 				return key_handle;
 			}
 		}
@@ -599,7 +602,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	}
 
 	priv = task->base.crypto_key->priv;
-	assert(priv->driver < ACCEL_DPDK_CRYPTODEV_DRIVER_LAST);
+	assert(priv->driver < SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_LAST);
 
 	if (task->cryop_completed) {
 		/* We continue to process remaining blocks */
@@ -655,7 +658,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 		return -EINVAL;
 	}
 	/* mlx5_pci binds keys to a specific device, we can't use a key with any device */
-	assert(dev == key_handle->device || priv->driver != ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI);
+	assert(dev == key_handle->device || priv->driver != SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI);
 
 	if (task->base.op_code == SPDK_ACCEL_OPC_ENCRYPT) {
 		session = key_handle->session_encrypt;
@@ -794,7 +797,7 @@ free_ops:
 }
 
 static inline struct accel_dpdk_cryptodev_qp *
-accel_dpdk_cryptodev_get_next_device_qpair(enum accel_dpdk_cryptodev_driver_type type)
+accel_dpdk_cryptodev_get_next_device_qpair(enum spdk_accel_dpdk_cryptodev_driver type)
 {
 	struct accel_dpdk_cryptodev_device *device, *device_tmp;
 	struct accel_dpdk_cryptodev_qp *qpair;
@@ -827,7 +830,7 @@ accel_dpdk_cryptodev_assign_device_qps(struct accel_dpdk_cryptodev_io_channel *c
 	pthread_mutex_lock(&g_device_lock);
 
 	TAILQ_FOREACH(device, &g_crypto_devices, link) {
-		if (device->type == ACCEL_DPDK_CRYPTODEV_DRIVER_QAT && !qat_found) {
+		if (device->type == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT && !qat_found) {
 			/* For some QAT devices, the optimal qp to use is every 32nd as this spreads the
 			 * workload out over the multiple virtual functions in the device. For the devices
 			 * where this isn't the case, it doesn't hurt.
@@ -837,8 +840,8 @@ accel_dpdk_cryptodev_assign_device_qps(struct accel_dpdk_cryptodev_io_channel *c
 					continue;
 				}
 				if (device_qp->in_use == false) {
-					assert(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_QAT] == NULL);
-					crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_QAT] = device_qp;
+					assert(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT] == NULL);
+					crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT] = device_qp;
 					device_qp->in_use = true;
 					g_next_qat_index = (g_next_qat_index + ACCEL_DPDK_CRYPTODEV_QAT_VF_SPREAD) % g_qat_total_qp;
 					qat_found = true;
@@ -853,24 +856,24 @@ accel_dpdk_cryptodev_assign_device_qps(struct accel_dpdk_cryptodev_io_channel *c
 	}
 
 	/* For ACCEL_DPDK_CRYPTODEV_AESNI_MB and MLX5_PCI select devices in round-robin manner */
-	device_qp = accel_dpdk_cryptodev_get_next_device_qpair(ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB);
+	device_qp = accel_dpdk_cryptodev_get_next_device_qpair(SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB);
 	if (device_qp) {
-		assert(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] == NULL);
-		crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] = device_qp;
+		assert(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] == NULL);
+		crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB] = device_qp;
 		num_drivers++;
 	}
 
-	device_qp = accel_dpdk_cryptodev_get_next_device_qpair(ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI);
+	device_qp = accel_dpdk_cryptodev_get_next_device_qpair(SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI);
 	if (device_qp) {
-		assert(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI] == NULL);
-		crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI] = device_qp;
+		assert(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI] == NULL);
+		crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI] = device_qp;
 		num_drivers++;
 	}
 
-	device_qp = accel_dpdk_cryptodev_get_next_device_qpair(ACCEL_DPDK_CRYPTODEV_DRIVER_UADK);
+	device_qp = accel_dpdk_cryptodev_get_next_device_qpair(SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK);
 	if (device_qp) {
-		assert(crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_UADK] == NULL);
-		crypto_ch->device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_UADK] = device_qp;
+		assert(crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK] == NULL);
+		crypto_ch->device_qp[SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK] = device_qp;
 		num_drivers++;
 	}
 	pthread_mutex_unlock(&g_device_lock);
@@ -886,7 +889,7 @@ _accel_dpdk_cryptodev_destroy_cb(void *io_device, void *ctx_buf)
 	int i;
 
 	pthread_mutex_lock(&g_device_lock);
-	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_DRIVER_LAST; i++) {
+	for (i = 0; i < SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_LAST; i++) {
 		if (crypto_ch->device_qp[i]) {
 			crypto_ch->device_qp[i]->in_use = false;
 		}
@@ -1013,27 +1016,22 @@ accel_dpdk_cryptodev_create(uint8_t index, uint16_t num_lcores)
 	cdrv_id = device->cdev_info.driver_id;
 	cdev_id = device->cdev_id = index;
 
-	if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_QAT) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_QAT;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_AESNI_MB) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_MLX5) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS_MLX5;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_QAT_ASYM) == 0) {
-		/* ACCEL_DPDK_CRYPTODEV_QAT_ASYM devices are not supported at this time. */
+	/* QAT_ASYM is not supported; skip silently before the unknown-driver error path */
+	if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_QAT_ASYM) == 0) {
 		rc = 0;
 		goto err;
-	} else if (strcmp(device->cdev_info.driver_name, ACCEL_DPDK_CRYPTODEV_UADK) == 0) {
-		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
-		device->type = ACCEL_DPDK_CRYPTODEV_DRIVER_UADK;
-	} else {
+	}
+
+	if (accel_dpdk_cryptodev_driver_from_str(device->cdev_info.driver_name, &device->type)) {
 		SPDK_ERRLOG("Failed to start device %u. Invalid driver name \"%s\"\n",
 			    cdev_id, device->cdev_info.driver_name);
 		rc = -EINVAL;
 		goto err;
+	}
+
+	device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
+	if (device->type == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
+		device->qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS_MLX5;
 	}
 
 	/* Before going any further, make sure we have enough resources for this
@@ -1093,7 +1091,7 @@ accel_dpdk_cryptodev_create(uint8_t index, uint16_t num_lcores)
 		dev_qp->qp = j;
 		dev_qp->in_use = false;
 		TAILQ_INSERT_TAIL(&device->qpairs, dev_qp, link);
-		if (device->type == ACCEL_DPDK_CRYPTODEV_DRIVER_QAT) {
+		if (device->type == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT) {
 			dev_qp->index = g_qat_total_qp++;
 		}
 	}
@@ -1108,7 +1106,7 @@ err_qp_alloc:
 			continue;
 		}
 		free(dev_qp);
-		if (device->type == ACCEL_DPDK_CRYPTODEV_DRIVER_QAT) {
+		if (device->type == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT) {
 			assert(g_qat_total_qp);
 			g_qat_total_qp--;
 		}
@@ -1133,7 +1131,7 @@ accel_dpdk_cryptodev_release(struct accel_dpdk_cryptodev_device *device)
 	TAILQ_FOREACH_SAFE(dev_qp, &device->qpairs, link, tmp) {
 		free(dev_qp);
 	}
-	if (device->type == ACCEL_DPDK_CRYPTODEV_DRIVER_QAT) {
+	if (device->type == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT) {
 		assert(g_qat_total_qp >= device->cdev_info.max_nb_queue_pairs);
 		g_qat_total_qp -= device->cdev_info.max_nb_queue_pairs;
 	}
@@ -1159,8 +1157,8 @@ accel_dpdk_cryptodev_init(void)
 		return 0;
 	}
 
-	if (g_dpdk_cryptodev_driver == ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB ||
-	    g_dpdk_cryptodev_driver == ACCEL_DPDK_CRYPTODEV_DRIVER_UADK) {
+	if (g_dpdk_cryptodev_driver == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB ||
+	    g_dpdk_cryptodev_driver == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK) {
 		snprintf(init_args, sizeof(init_args), "max_nb_queue_pairs=%d",
 			 ACCEL_DPDK_CRYPTODEV_AESNI_MB_NUM_QP);
 		rc = rte_vdev_init(driver_name, init_args);
@@ -1286,8 +1284,8 @@ accel_dpdk_cryptodev_fini_cb(void *io_device)
 		accel_dpdk_cryptodev_release(device);
 	}
 
-	if (g_dpdk_cryptodev_driver == ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB ||
-	    g_dpdk_cryptodev_driver == ACCEL_DPDK_CRYPTODEV_DRIVER_UADK) {
+	if (g_dpdk_cryptodev_driver == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB ||
+	    g_dpdk_cryptodev_driver == SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK) {
 		rte_vdev_uninit(g_driver_names[g_dpdk_cryptodev_driver]);
 	}
 
@@ -1417,9 +1415,9 @@ static bool
 accel_dpdk_cryptodev_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 {
 	switch (g_dpdk_cryptodev_driver) {
-	case ACCEL_DPDK_CRYPTODEV_DRIVER_QAT:
-	case ACCEL_DPDK_CRYPTODEV_DRIVER_UADK:
-	case ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB:
+	case SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT:
+	case SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_UADK:
+	case SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB:
 		switch (cipher) {
 		case SPDK_ACCEL_CIPHER_AES_XTS:
 			return key_size == SPDK_ACCEL_AES_XTS_128_KEY_SIZE;
@@ -1429,7 +1427,7 @@ accel_dpdk_cryptodev_supports_cipher(enum spdk_accel_cipher cipher, size_t key_s
 		default:
 			return false;
 		}
-	case ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI:
+	case SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI:
 		switch (cipher) {
 		case SPDK_ACCEL_CIPHER_AES_XTS:
 			return key_size == SPDK_ACCEL_AES_XTS_128_KEY_SIZE || key_size == SPDK_ACCEL_AES_XTS_256_KEY_SIZE;
@@ -1447,7 +1445,7 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	struct accel_dpdk_cryptodev_device *device;
 	struct accel_dpdk_cryptodev_key_priv *priv;
 	struct accel_dpdk_cryptodev_key_handle *key_handle;
-	enum accel_dpdk_cryptodev_driver_type driver;
+	enum spdk_accel_dpdk_cryptodev_driver driver;
 	int rc;
 
 	driver = g_dpdk_cryptodev_driver;
@@ -1493,7 +1491,7 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 			accel_dpdk_cryptodev_key_deinit(key);
 			return rc;
 		}
-		if (driver != ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
+		if (driver != SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
 			/* For MLX5_PCI we need to register a key on each device since
 			 * the key is bound to a specific Protection Domain,
 			 * so don't break the loop */
@@ -1537,7 +1535,7 @@ accel_dpdk_cryptodev_get_operation_info(enum spdk_accel_opcode opcode,
 	}
 
 	switch (g_dpdk_cryptodev_driver) {
-	case ACCEL_DPDK_CRYPTODEV_DRIVER_QAT:
+	case SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_QAT:
 		info->required_alignment = spdk_u32log2(ctx->block_size);
 		break;
 	default:

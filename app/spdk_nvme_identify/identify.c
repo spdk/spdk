@@ -235,7 +235,7 @@ get_features(struct spdk_nvme_ctrlr *ctrlr, uint8_t *features_to_get, size_t num
 			struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
 
-			if (!cdata->ctratt.bits.fdps) {
+			if (!cdata->ctratt.fdps) {
 				continue;
 			} else {
 				cdw11 = nsdata->endgid;
@@ -474,7 +474,7 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 			printf("Get Log Page (Asymmetric Namespace Access) failed\n");
 		}
 	}
-	if (cdata->lpa.celp) {
+	if (cdata->lpa.cses) {
 		if (get_cmd_effects_log_page(ctrlr) == 0) {
 			outstanding_commands++;
 		} else {
@@ -1474,7 +1474,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       nsdata->flbas.extended ? "Extended Data LBA" : "Separate Metadata Buffer");
 	}
 	printf("Namespace Sharing Capabilities:        %s\n",
-	       nsdata->nmic.can_share ? "Multiple Controllers" : "Private");
+	       nsdata->nmic.shrns ? "Multiple Controllers" : "Private");
 	blocksize = 1 << nsdata->lbaf[format_index].lbads;
 	printf("Size (in LBAs):                        %lld (%lldGiB)\n",
 	       (long long)nsdata->nsze,
@@ -1529,7 +1529,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("  Atomic Boundary Offset:              %d\n", nsdata->nabo);
 	}
 
-	if (cdata->oncs.copy) {
+	if (cdata->oncs.nvmcpys) {
 		printf("Maximum Single Source Range Length:    %d\n", nsdata->mssrl);
 		printf("Maximum Copy Length:                   %d\n", nsdata->mcl);
 		printf("Maximum Source Range Count:            %d\n", nsdata->msrc + 1);
@@ -1538,18 +1538,18 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	printf("NGUID/EUI64 Never Reused:              %s\n",
 	       nsdata->nsfeat.guid_never_reused ? "Yes" : "No");
 
-	if (cdata->cmic.ana_reporting) {
+	if (cdata->cmic.anars) {
 		printf("ANA group ID:                          %u\n", nsdata->anagrpid);
 	}
 
 	printf("Namespace Write Protected:             %s\n",
-	       nsdata->nsattr.write_protected ? "Yes" : "No");
+	       nsdata->nsattr.cwp ? "Yes" : "No");
 
-	if (cdata->ctratt.bits.nvm_sets) {
+	if (cdata->ctratt.nsets) {
 		printf("NVM set ID:                            %u\n", nsdata->nvmsetid);
 	}
 
-	if (cdata->ctratt.bits.endurance_groups) {
+	if (cdata->ctratt.egs) {
 		printf("Endurance group ID:                    %u\n", nsdata->endgid);
 	}
 
@@ -1567,7 +1567,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	}
 	printf("\n");
 
-	if (cdata->ctratt.bits.fdps) {
+	if (cdata->ctratt.fdps) {
 		union spdk_nvme_feat_fdp_cdw12 fdp_res;
 
 		if (features[SPDK_NVME_FEAT_FDP].valid) {
@@ -1782,9 +1782,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
 	printf("Multi-path I/O\n");
-	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.multi_port ? "Yes" : "No");
-	printf("  May have multiple controllers:       %s\n", cdata->cmic.multi_ctrlr ? "Yes" : "No");
-	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
+	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.mports ? "Yes" : "No");
+	printf("  May have multiple controllers:       %s\n", cdata->cmic.mctrs ? "Yes" : "No");
+	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.ft ? "Yes" : "No");
 	printf("Max Data Transfer Size:                ");
 	if (cdata->mdts == 0) {
 		printf("Unlimited\n");
@@ -1852,39 +1852,39 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	printf("Controller Attributes\n");
 	printf("  128-bit Host Identifier:             %s\n",
-	       cdata->ctratt.bits.host_id_exhid_supported ? "Supported" : "Not Supported");
+	       cdata->ctratt.hids ? "Supported" : "Not Supported");
 	printf("  Non-Operational Permissive Mode:     %s\n",
-	       cdata->ctratt.bits.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
+	       cdata->ctratt.nopspm ? "Supported" : "Not Supported");
 	printf("  NVM Sets:                            %s\n",
-	       cdata->ctratt.bits.nvm_sets ? "Supported" : "Not Supported");
+	       cdata->ctratt.nsets ? "Supported" : "Not Supported");
 	printf("  Read Recovery Levels:                %s\n",
-	       cdata->ctratt.bits.read_recovery_levels ? "Supported" : "Not Supported");
+	       cdata->ctratt.rrlvls ? "Supported" : "Not Supported");
 	printf("  Endurance Groups:                    %s\n",
-	       cdata->ctratt.bits.endurance_groups ? "Supported" : "Not Supported");
+	       cdata->ctratt.egs ? "Supported" : "Not Supported");
 	printf("  Predictable Latency Mode:            %s\n",
-	       cdata->ctratt.bits.predictable_latency_mode ? "Supported" : "Not Supported");
+	       cdata->ctratt.plm ? "Supported" : "Not Supported");
 	printf("  Traffic Based Keep ALive:            %s\n",
-	       cdata->ctratt.bits.tbkas ? "Supported" : "Not Supported");
+	       cdata->ctratt.tbkas ? "Supported" : "Not Supported");
 	printf("  Namespace Granularity:               %s\n",
-	       cdata->ctratt.bits.namespace_granularity ? "Supported" : "Not Supported");
+	       cdata->ctratt.ng ? "Supported" : "Not Supported");
 	printf("  SQ Associations:                     %s\n",
-	       cdata->ctratt.bits.sq_associations ? "Supported" : "Not Supported");
+	       cdata->ctratt.sqa ? "Supported" : "Not Supported");
 	printf("  UUID List:                           %s\n",
-	       cdata->ctratt.bits.uuid_list ? "Supported" : "Not Supported");
+	       cdata->ctratt.ulist ? "Supported" : "Not Supported");
 	printf("  Multi-Domain Subsystem:              %s\n",
-	       cdata->ctratt.bits.mds ? "Supported" : "Not Supported");
+	       cdata->ctratt.mds ? "Supported" : "Not Supported");
 	printf("  Fixed Capacity Management:           %s\n",
-	       cdata->ctratt.bits.fixed_capacity_management ? "Supported" : "Not Supported");
+	       cdata->ctratt.fcm ? "Supported" : "Not Supported");
 	printf("  Variable Capacity Management:        %s\n",
-	       cdata->ctratt.bits.variable_capacity_management ? "Supported" : "Not Supported");
+	       cdata->ctratt.vcm ? "Supported" : "Not Supported");
 	printf("  Delete Endurance Group:              %s\n",
-	       cdata->ctratt.bits.delete_endurance_group ? "Supported" : "Not Supported");
+	       cdata->ctratt.deg ? "Supported" : "Not Supported");
 	printf("  Delete NVM Set:                      %s\n",
-	       cdata->ctratt.bits.delete_nvm_set ? "Supported" : "Not Supported");
+	       cdata->ctratt.dnvms ? "Supported" : "Not Supported");
 	printf("  Extended LBA Formats Supported:      %s\n",
-	       cdata->ctratt.bits.elbas ? "Supported" : "Not Supported");
+	       cdata->ctratt.elbas ? "Supported" : "Not Supported");
 	printf("  Flexible Data Placement Supported:   %s\n",
-	       cdata->ctratt.bits.fdps ? "Supported" : "Not Supported");
+	       cdata->ctratt.fdps ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Controller Memory Buffer Support\n");
@@ -1939,49 +1939,49 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
 	printf("Security Send/Receive:                 %s\n",
-	       cdata->oacs.security ? "Supported" : "Not Supported");
+	       cdata->oacs.ssrs ? "Supported" : "Not Supported");
 	printf("Format NVM:                            %s\n",
-	       cdata->oacs.format ? "Supported" : "Not Supported");
+	       cdata->oacs.fnvms ? "Supported" : "Not Supported");
 	printf("Firmware Activate/Download:            %s\n",
-	       cdata->oacs.firmware ? "Supported" : "Not Supported");
+	       cdata->oacs.fwds ? "Supported" : "Not Supported");
 	printf("Namespace Management:                  %s\n",
-	       cdata->oacs.ns_manage ? "Supported" : "Not Supported");
+	       cdata->oacs.nms ? "Supported" : "Not Supported");
 	printf("Device Self-Test:                      %s\n",
-	       cdata->oacs.device_self_test ? "Supported" : "Not Supported");
+	       cdata->oacs.dsts ? "Supported" : "Not Supported");
 	printf("Directives:                            %s\n",
-	       cdata->oacs.directives ? "Supported" : "Not Supported");
+	       cdata->oacs.dirs ? "Supported" : "Not Supported");
 	printf("NVMe-MI:                               %s\n",
-	       cdata->oacs.nvme_mi ? "Supported" : "Not Supported");
+	       cdata->oacs.nsrs ? "Supported" : "Not Supported");
 	printf("Virtualization Management:             %s\n",
-	       cdata->oacs.virtualization_management ? "Supported" : "Not Supported");
+	       cdata->oacs.vms ? "Supported" : "Not Supported");
 	printf("Doorbell Buffer Config:                %s\n",
-	       cdata->oacs.doorbell_buffer_config ? "Supported" : "Not Supported");
+	       cdata->oacs.dbcs ? "Supported" : "Not Supported");
 	printf("Get LBA Status Capability:             %s\n",
-	       cdata->oacs.get_lba_status ? "Supported" : "Not Supported");
+	       cdata->oacs.glss ? "Supported" : "Not Supported");
 	printf("Command & Feature Lockdown Capability: %s\n",
-	       cdata->oacs.command_feature_lockdown ? "Supported" : "Not Supported");
+	       cdata->oacs.cfls ? "Supported" : "Not Supported");
 	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
 	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
 	printf("Number of Firmware Slots:              ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%d\n", cdata->frmw.num_slots);
 	} else {
 		printf("N/A\n");
 	}
 	printf("Firmware Slot 1 Read-Only:             ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%s\n", cdata->frmw.slot1_ro ? "Yes" : "No");
 	} else {
 		printf("N/A\n");
 	}
 	printf("Firmware Activation Without Reset:     ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%s\n", cdata->frmw.activation_without_reset ? "Yes" : "No");
 	} else {
 		printf("N/A\n");
 	}
 	printf("Multiple Update Detection Support:     ");
-	if (cdata->oacs.firmware != 0) {
+	if (cdata->oacs.fwds != 0) {
 		printf("%s\n", cdata->frmw.multiple_update_detection ? "Yes" : "No");
 	} else {
 		printf("N/A\n");
@@ -1995,8 +1995,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		       cdata->fwug * 4);
 	}
 	printf("Per-Namespace SMART Log:               %s\n",
-	       cdata->lpa.ns_smart ? "Yes" : "No");
-	if (cdata->cmic.ana_reporting == 0) {
+	       cdata->lpa.smarts ? "Yes" : "No");
+	if (cdata->cmic.anars == 0) {
 		printf("Asymmetric Namespace Access Log Page:  Not Supported\n");
 	} else {
 		printf("Asymmetric Namespace Access Log Page:  Supported\n");
@@ -2024,23 +2024,23 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("Subsystem NQN:                         %s\n", cdata->subnqn);
 	printf("Command Effects Log Page:              %s\n",
-	       cdata->lpa.celp ? "Supported" : "Not Supported");
+	       cdata->lpa.cses ? "Supported" : "Not Supported");
 	printf("Get Log Page Extended Data:            %s\n",
-	       cdata->lpa.edlp ? "Supported" : "Not Supported");
+	       cdata->lpa.lpeds ? "Supported" : "Not Supported");
 	printf("Telemetry Log Pages:                   %s\n",
-	       cdata->lpa.telemetry ? "Supported" : "Not Supported");
+	       cdata->lpa.ts ? "Supported" : "Not Supported");
 	printf("Persistent Event Log Pages:            %s\n",
-	       cdata->lpa.pelp ? "Supported" : "Not Supported");
+	       cdata->lpa.pes ? "Supported" : "Not Supported");
 	printf("Supported Log Pages Log Page:          %s\n",
-	       cdata->lpa.lplp ? "Supported" : "May Support");
+	       cdata->lpa.mlps ? "Supported" : "May Support");
 	printf("Commands Supported & Effects Log Page: %s\n",
-	       cdata->lpa.lplp ? "Supported" : "Not Supported");
+	       cdata->lpa.mlps ? "Supported" : "Not Supported");
 	printf("Feature Identifiers & Effects Log Page:%s\n",
-	       cdata->lpa.lplp ? "Supported" : "May Support");
+	       cdata->lpa.mlps ? "Supported" : "May Support");
 	printf("NVMe-MI Commands & Effects Log Page:   %s\n",
-	       cdata->lpa.lplp ? "Supported" : "May Support");
+	       cdata->lpa.mlps ? "Supported" : "May Support");
 	printf("Data Area 4 for Telemetry Log:         %s\n",
-	       cdata->lpa.da4_telemetry ? "Supported" : "Not Supported");
+	       cdata->lpa.da4s ? "Supported" : "Not Supported");
 	printf("Error Log Page Entries Supported:      %d\n", cdata->elpe + 1);
 	if (cdata->kas == 0) {
 		printf("Keep Alive:                            Not Supported\n");
@@ -2061,28 +2061,28 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("  Min:                       %d\n", 1 << cdata->cqes.min);
 	printf("Number of Namespaces:        %d\n", cdata->nn);
 	printf("Compare Command:             %s\n",
-	       cdata->oncs.compare ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmcmps ? "Supported" : "Not Supported");
 	printf("Write Uncorrectable Command: %s\n",
-	       cdata->oncs.write_unc ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmwusv ? "Supported" : "Not Supported");
 	printf("Dataset Management Command:  %s\n",
-	       cdata->oncs.dsm ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmdsmsv ? "Supported" : "Not Supported");
 	printf("Write Zeroes Command:        %s\n",
-	       cdata->oncs.write_zeroes ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmwzsv ? "Supported" : "Not Supported");
 	printf("Set Features Save Field:     %s\n",
-	       cdata->oncs.set_features_save ? "Supported" : "Not Supported");
+	       cdata->oncs.ssfs ? "Supported" : "Not Supported");
 	printf("Reservations:                %s\n",
-	       cdata->oncs.reservations ? "Supported" : "Not Supported");
+	       cdata->oncs.reservs ? "Supported" : "Not Supported");
 	printf("Timestamp:                   %s\n",
-	       cdata->oncs.timestamp ? "Supported" : "Not Supported");
+	       cdata->oncs.tss ? "Supported" : "Not Supported");
 	printf("Copy:                        %s\n",
-	       cdata->oncs.copy ? "Supported" : "Not Supported");
+	       cdata->oncs.nvmcpys ? "Supported" : "Not Supported");
 	printf("Volatile Write Cache:        %s\n",
 	       cdata->vwc.present ? "Present" : "Not Present");
 	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);
 	printf("Atomic Write Unit (PFail):   %d\n", cdata->awupf + 1);
 	printf("Atomic Compare & Write Unit: %d\n", cdata->acwu + 1);
 	printf("Fused Compare & Write:       %s\n",
-	       cdata->fuses.compare_and_write ? "Supported" : "Not Supported");
+	       cdata->fuses.fcws ? "Supported" : "Not Supported");
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
 	       cdata->sgls.supported == SPDK_NVME_SGLS_SUPPORTED ? "Supported" :
@@ -2180,7 +2180,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	printf("\n");
 
-	if (cdata->lpa.celp) {
+	if (cdata->lpa.cses) {
 		printf("Commands Supported and Effects\n");
 		printf("==============================\n");
 
@@ -2340,7 +2340,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 			}
 		}
 		printf("Non-Operational Permissive Mode: %s\n",
-		       cdata->ctratt.bits.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
+		       cdata->ctratt.nopspm ? "Supported" : "Not Supported");
 		printf("\n");
 	}
 

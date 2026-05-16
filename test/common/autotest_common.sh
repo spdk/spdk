@@ -41,6 +41,10 @@ if [ -z "${output_dir:-}" ]; then
 	export output_dir="$rootdir/../output"
 fi
 
+# create .backtrace.lock early on to avoid ownership issues when print_backtrace()
+# ends up being called from root and non-root context under a single workflow.
+touch "$output_dir/.backtrace.lock"
+
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
 elif [[ -e $rootdir/mk/config.mk ]]; then
@@ -54,6 +58,7 @@ fi
 source "$rootdir/test/common/applications.sh"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/scripts/perf/pm/common"
+source "$rootdir/test/common/colors.sh"
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
@@ -174,6 +179,8 @@ export SPDK_TEST_SETUP
 export SPDK_TEST_NVME_INTERRUPT
 : ${SPDK_TEST_SKIP_NVMF_KERNEL_TESTS=0}
 export SPDK_TEST_SKIP_NVMF_KERNEL_TESTS
+: ${SPDK_TEST_NO_HUGE=0}
+export SPDK_TEST_NO_HUGE
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -282,7 +289,7 @@ fi
 
 if [ "$(uname -s)" = "Linux" ]; then
 	HUGEMEM=${HUGEMEM:-4096}
-	export CLEAR_HUGE=yes
+	export CLEAR_HUGE=${CLEAR_HUGE:-yes}
 
 	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
@@ -304,6 +311,10 @@ fi
 export HUGEMEM=$HUGEMEM
 
 NO_HUGE=()
+if [[ $SPDK_TEST_NO_HUGE -eq 1 ]]; then
+	NO_HUGE=(--no-huge -s 1024)
+fi
+
 TEST_MODE=
 for i in "$@"; do
 	case "$i" in
@@ -314,7 +325,8 @@ for i in "$@"; do
 			TEST_TRANSPORT="${i#*=}"
 			;;
 		--no-hugepages)
-			NO_HUGE=(--no-huge -s 1024)
+			echo "Parameter --no-hugepages is deprecated, use the SPDK_TEST_NO_HUGE variable instead"
+			exit 1
 			;;
 		--interrupt-mode)
 			TEST_INTERRUPT_MODE=1
@@ -413,11 +425,9 @@ function get_config_params() {
 		config_params+=" --with-usdt"
 	fi
 
-	case "$(uname -s)" in
-		FreeBSD) [[ $(sysctl -n hw.model) == Intel* ]] ;;
-		Linux) [[ $(< /proc/cpuinfo) == *GenuineIntel* ]] ;;
-		*) false ;;
-	esac && config_params+=" --with-idxd" || config_params+=" --without-idxd"
+	if [ $SPDK_TEST_ACCEL_IAA -eq 1 ] || [ $SPDK_TEST_ACCEL_DSA -eq 1 ]; then
+		config_params+=" --with-idxd"
+	fi
 
 	if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
 		config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
@@ -666,7 +676,7 @@ function timing() {
 	direction="$1"
 	testname="$2"
 
-	now=$(date +%s)
+	now=$(get_epoch_seconds)
 
 	if [ "$direction" = "enter" ]; then
 		export timing_stack="${timing_stack:-};${now}"
@@ -729,6 +739,10 @@ function timing_finish() {
 		--countname seconds \
 		"$output_dir/timing.txt" \
 		> "$output_dir/timing.svg"
+}
+
+function get_epoch_seconds() {
+	echo "${EPOCHSECONDS:-"$(date "+%s")"}"
 }
 
 function create_test_list() {
@@ -899,7 +913,7 @@ function waitforbdev() {
 
 function waitforcondition() {
 	local cond=$1
-	local max=${2:-10}
+	local max=${2:-20}
 	while ((max--)); do
 		if eval $cond; then
 			return 0
@@ -1104,17 +1118,17 @@ function run_test() {
 	# Signal our daemons to update the test tag
 	update_tag_monitor_resources "$test_domain"
 
+	echo "************************************"
+	echo "START TEST $(colorize yellow "$test_name")"
+	echo "************************************"
 	timing_enter $test_name
-	echo "************************************"
-	echo "START TEST $test_name"
-	echo "************************************"
 	xtrace_restore
-	time "$@"
+	"$@"
 	xtrace_disable
-	echo "************************************"
-	echo "END TEST $test_name"
-	echo "************************************"
 	timing_exit $test_name
+	echo "************************************"
+	echo "END TEST $(colorize green "$test_name") (in $((now - start_time))s)"
+	echo "************************************"
 
 	export test_domain=${test_domain%"$test_name"}
 	if [ -n "$test_domain" ]; then
@@ -1135,50 +1149,274 @@ function skip_run_test_with_warning() {
 	echo "Please check your $rootdir/test/common/skipped_tests.txt"
 }
 
+function column_backtrace() {
+	if [[ $(uname) == Linux ]]; then
+		column "$@"
+		return 0
+	fi
+
+	# Poor's man column is on board, keeping it best-effort
+	local trace_line
+	local source_line
+	local column_delim
+	local column_header
+	local column_header_length _column_header_length
+
+	# Parse all the local opts as we were dealing with util-linux column
+	local OPTIND OPTARG arg
+	while getopts :l:N:s:t arg; do
+		case "$arg" in
+			l) column_header_length=$OPTARG ;;
+			N) IFS="," read -ra column_header <<< "$OPTARG" ;;
+			s) column_delim=$OPTARG ;;
+			t) ;; # compatibility
+			*) return 1 ;;
+		esac
+	done
+	# Print the header. TODO: make the modifiers a bit more dynamic
+	printf '%-5s %-15s %-20s %-45s %-45s %s\n' "${column_header[@]}"
+	# Read the trace line from stdin as-is
+	while read -r trace_line; do
+		# Now, based on column_header_length, locate the actual source line. Normally
+		# we would split this with IFS, but source may break the delimiter. See comment
+		# in the print_backtrace().
+		source_line=$trace_line _column_header_length=$column_header_length
+		while ((--_column_header_length)); do
+			source_line=${source_line#*"$column_delim"}
+		done
+		# Now remove the source line and split remaining components
+		trace_line=${trace_line%"$source_line"}
+		IFS="$column_delim" read -ra trace_line <<< "$trace_line"
+		# And now add the source line back for the final printout
+		trace_line+=("$source_line")
+		# TODO: make the modifiers a bit more dynamic
+		printf '%-5s %-15s %-20s %-45s %-45s %s\n' "${trace_line[@]}"
+	done
+}
+
 function print_backtrace() {
-	# if errexit is not enabled, don't print a backtrace
-	[[ "$-" =~ e ]] || return 0
-
-	local args=("${BASH_ARGV[@]}")
-
 	xtrace_disable
-	# Reset IFS in case we were called from an environment where it was modified
-	IFS=" "$'\t'$'\n'
-	echo "========== Backtrace start: =========="
-	echo ""
-	for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
-		local func="${FUNCNAME[$i]}"
-		local line_nr="${BASH_LINENO[$((i - 1))]}"
-		local src="${BASH_SOURCE[$i]}"
-		local bt="" cmdline=()
+
+	local bt_id bt_file bts
+	local bt_counter=0
+	local trace_name
+	local trace_lock
+
+	exec {trace_lock}< "$output_dir/.backtrace.lock"
+	flock "$trace_lock"
+
+	bts=("$output_dir/"+([0-9])backtrace.!(*.@(stack|context)))
+	bt_counter=${#bts[@]}
+
+	if [[ -n $test_stack ]]; then
+		# Get the last test reported on the running stack
+		trace_name=${test_stack##*;}
+	fi
+	trace_name=${trace_name:-"${0##*/}"}
+
+	printf -v bt_file '%02ubacktrace.%s' "$bt_counter" "$trace_name"
+	# We expect to get context of the failing code on stderr
+	_print_backtrace 2> "$output_dir/$bt_file.context" > "$output_dir/$bt_file"
+	((bt_counter == 0)) && print_context "$output_dir/$bt_file.context"
+	# Preserve test stack and timings for this instance - in case test fails these
+	# are not dumped to timing.txt.
+	if [[ -n $test_stack && -n $timing_stack ]]; then
+		echo "${test_stack#;}@${timing_stack##*;}@$(get_epoch_seconds)@$trace_name" > "$output_dir/$bt_file.stack"
+	fi
+
+	flock -u "$trace_lock"
+	xtrace_restore
+}
+
+function get_context() {
+	local line_idx=$1 line=$2 src=$3 src_map=("${!4}") context_size=${5:-${BACKTRACE_CONTEXT_SIZE:-5}}
+	local context_prev_idx context_post_idx
+	local context_prev context_post
+
+	context_prev_idx=$((line_idx - context_size))
+	context_post_idx=$((line_idx + 1))
+
+	context_prev_idx=$((context_prev_idx < 0 ? 0 : context_prev_idx))
+	if ((context_prev_idx != line_idx)); then
+		context_prev=("${src_map[@]:context_prev_idx:context_size}")
+	fi
+	context_post=("${src_map[@]:context_post_idx:context_size}")
+
+	printf '==> %s <==\n' "$src"
+	if ((${#context_prev[@]} > 0)); then
+		printf ' %s\n' "${context_prev[@]}"
+	fi
+	# Colorize and underline the failing line to make it stand out within the provided context.
+	printf '%s\n' "$(colorize red "$line") # line:$((line_idx - 1)) <-- $(underline "FAILURE HERE")"
+	if ((${#context_post[@]} > 0)); then
+		printf ' %s\n' "${context_post[@]}"
+	fi
+
+}
+
+function print_context() {
+	local context_file=$1 context
+	[[ -s $context_file ]] || return 0
+
+	printf '* Failing Code:\n\n'
+	mapfile -t context < "$context_file"
+	printf '  %s\n' "${context[@]}"
+}
+
+function _print_backtrace() {
+	# Make sure we keep IFS local to not inherit potential garbage from the caller's
+	# environment
+	local IFS
+	# Stack-related vars
+	local func line_nr line
+	local func_idx frame_idx frame
+	local src src_map
+	# arg{c,v}-related vars used to map arguments to proper function on the stack
+	local argc argc_idx arg
+	local args_shift
+	local cmdline
+
+	# Paint each failing frame red for visibility
+	local color_frame=()
+	color_frame[0]="colorize red"
+
+	echo "========== BACKTRACE START: (caught in $0) =========="
+	for ((func_idx = 2, frame_idx = 0; func_idx < ${#FUNCNAME[@]}; func_idx++)); do
+		func=${FUNCNAME[func_idx]}
+		line_nr=${BASH_LINENO[func_idx - 1]}
+		src=${BASH_SOURCE[func_idx]}
 
 		if [[ -f $src ]]; then
-			bt=$(nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^${line_nr}[^0-9]" \
-				| sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g")
+			mapfile -t src_map < "$src"
+			# shellcheck  disable=SC1003
+			# Check if this is a line continuation. If so, shift our pointer
+			# to the previous line.
+			[[ ${src_map[line_nr - 2]} == *'\' ]] && ((--line_nr))
+			line=${src_map[line_nr - 1]}
+			# Gather source context and send it to stderr, including original line
+			get_context \
+				$((line_nr - 1)) \
+				"$line" \
+				"$src" \
+				"src_map[@]" >&2
+			line=${line##+([[:space:]])}
 		fi
 
-		# If extdebug set the BASH_ARGC[i], try to fetch all the args
-		if ((BASH_ARGC[i] > 0)); then
-			# Use argc as index to reverse the stack
-			local argc=${BASH_ARGC[i]} arg
-			for arg in "${args[@]::BASH_ARGC[i]}"; do
-				cmdline[argc--]="[\"$arg\"]"
+		# If extdebug set the BASH_ARGC[func_idx], try to fetch all the args. We
+		# try to keep it robust enough to collect args regardless of the order in
+		# which we iterate over the stack. Refer to BASH(1) for full description
+		# of how BASH_ARGV[@] is constructed in relation to the function stack.
+		argc_idx=0 args_shift=0 cmdline=()
+		if ((BASH_ARGC[func_idx] > 0)); then
+			while ((argc_idx < func_idx)); do
+				# We need to find starting index of the arguments from the
+				# $func at the $func_idx. We do this by jumping over all
+				# argc belonging to previous functions (if any).
+				: $((args_shift += BASH_ARGC[argc_idx++]))
 			done
-			args=("${args[@]:BASH_ARGC[i]}")
+			# Use separate counter to reverse order of the arguments from
+			# last-to-first to first-to-last.
+			argc=${BASH_ARGC[func_idx]}
+			# Iterate from argument at $args_shift for ARGC number of arguments
+			for arg in "${BASH_ARGV[@]:args_shift:BASH_ARGC[func_idx]}"; do
+				cmdline[argc--]=\"$arg\"
+			done
+		else
+			# Consistently report lack of arguments with an empty string
+			# surrounded with double quotes.
+			cmdline+=('""')
 		fi
-
-		echo "in $src:$line_nr -> $func($(
-			IFS=","
-			printf '%s\n' "${cmdline[*]:-[]}"
-		))"
-		echo "     ..."
-		echo "${bt:-backtrace unavailable}"
-		echo "     ..."
-	done
-	echo ""
-	echo "========== Backtrace end =========="
-	xtrace_restore
+		# We use separate counter to mark each frame|func in case we want to
+		# filter specific functions from the stack in the future - in case of
+		# deep nesting, use of debug wrappers, etc. some functions may always
+		# pop up in the stack (e.g. run_test()) which are not very useful
+		# and may simply clutter the output.
+		printf -v frame '[%u]@%s@(%s)@%s:%u@%s' \
+			"$frame_idx" "$func" \
+			"$(
+				IFS=","
+				echo "${cmdline[*]}"
+			)" \
+			"${src#"$rootdir/"}" \
+			"$line_nr" \
+			"${line:-NO LINE AVAILABLE}"
+		${color_frame[frame_idx++]:-colorize none} "$frame"
+		# Note that we explicitly pass number of requested columns to format to make
+		# sure that any string that comes from reading a line doesn't break the
+		# delimeter (@) we selected - any instances of '@' coming in from the actual
+		# src will be simply treated literally and as part of the "line" column.
+	done | column_backtrace -t -s "@" -N "id,func_name,func_args,source,source_line" -l5
+	echo "========== BACKTRACE END =========="
 	return 0
+}
+
+function dump_backtrace() {
+	xtrace_disable
+
+	local backtraces=("$output_dir/"+([0-9])backtrace.!(*.@(stack|context)))
+	local stacks=("$output_dir/"+([0-9])backtrace*.stack)
+	local contexts=("$output_dir/"+([0-9])backtrace*.context)
+	local test_name test_stack test_timing test_timing_dump
+	local bt bt_map
+	local dump_time
+	local context
+
+	((${#backtraces[@]} > 0)) || return 0
+
+	dump_time=$(get_epoch_seconds)
+	# Pretty dump, in order, backtraces caught at various places in the autotest chain.
+	# Filter out "==========" START/END headers - "as is" backtraces should be still
+	# visible in the log after each print_backtrace() call, here we just want to make
+	# the summary as readable as possible, present in a single place.
+
+	printf '\n\n > %s\n\n' "$(underline "$(colorize orange "START BACKTRACE SUMMARY")")"
+	# Failing entity (most likely a run_test() instance) is always part of the first
+	# backtrace. Describe it properly for visibility.
+	printf '* Failing Component: "%s"\n' "$(colorize red ${backtraces[0]#*backtrace.})"
+	if [[ -s ${stacks[0]} ]]; then
+		IFS="@" read -r test_stack test_timing test_timing_dump test_name < "${stacks[0]}"
+		printf '* Failing Test Name: %s\n' "$(colorize red "$test_name")"
+		printf '* Failing Test Stack: %s\n' "${test_stack//;/->}"
+		# $test_timing is in seconds, normally we would use date to format it into something
+		# more meaningful, but date from coreutils and freebsd's date are not compatible -
+		# freebsd variant doesn't support -d. So instead, just leave it to printf.
+		printf '* Failing Test Started At: %(%c)T\n' "$test_timing"
+		printf '* Failing Test Runtime: %us\n' $((test_timing_dump - test_timing))
+		printf '* Cleanup Time: %us\n' $((dump_time - test_timing_dump))
+	fi
+	# Similarly to the above, print code context but only for the first backtrace instance.
+	print_context "${contexts[0]}"
+	printf '\n\n'
+
+	local -A track_bt_bases=()
+	local bt_base bt_merged
+	for bt in "${!backtraces[@]}"; do
+		mapfile -t bt_map < "${backtraces[bt]}"
+		if [[ -z $BACKTRACE_INCLUDE_DUPLICATES ]]; then
+			bt_base=$(base64 -w0 "${backtraces[bt]}")
+			[[ -n ${track_bt_bases["$bt_base"]} ]] && continue
+			track_bt_bases["$bt_base"]=${backtraces[bt]}
+		fi
+		# Drop the header and the footer strings
+		bt_merged+=("${bt_map[@]:2:${#bt_map[@]}-3}")
+	done
+
+	# Reassemble individual traces and merge them together - this is done by joining
+	# all the columns from each line and sending all of them to column_backtrace()
+	# again (similarly to what print_backtrace() is doing).
+	local id=0 func_name func_args source source_line
+	while read -r _ func_name func_args source source_line; do
+		printf '[%u]@%s@%s@%s@%s\n' \
+			"$((++id))" \
+			"$func_name" \
+			"$func_args" \
+			"$source" \
+			"$source_line"
+	done < <(printf '%s\n' "${bt_merged[@]}") | column_backtrace \
+		-t -s "@" -N "id,func_name,func_args,source,source_line" -l5
+	printf '\n\n < %s\n\n' "$(underline "$(colorize orange "END BACKTRACE SUMMARY")")"
+
+	rm -f "${backtraces[@]}" "${stacks[@]}" "${contexts[@]}"
 }
 
 function waitforserial() {
@@ -1347,6 +1585,20 @@ function fio_nvme() {
 	fio_plugin "$rootdir/build/fio/spdk_nvme" "$@"
 }
 
+function run_app() {
+	local app="$1"
+	valid_exec_arg "$app" || return 1
+	shift
+	"$app" "${NO_HUGE[@]}" "$@"
+}
+
+function run_app_bg() {
+	local app="$1"
+	valid_exec_arg "$app" || return 1
+	shift
+	"$app" "${NO_HUGE[@]}" "$@" &
+}
+
 function get_lvs_free_mb() {
 	local lvs_uuid=$1
 	local lvs_info
@@ -1396,7 +1648,7 @@ function autotest_cleanup() {
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup
 	if [ $(uname -s) = "Linux" ]; then
-		modprobe -r uio_pci_generic
+		modprobe -r uio_pci_generic || true
 	fi
 	rm -rf "$asan_suppression_file"
 	if [[ -n ${old_core_pattern:-} ]]; then
@@ -1761,17 +2013,16 @@ function init_linux_env() {
 
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
+enable_coverage
 
 set -o errtrace
 shopt -s extdebug
 trap "trap - ERR; print_backtrace >&2" ERR
 
-PS4=' \t ${test_domain:-} -- ${BASH_SOURCE#${BASH_SOURCE%/*/*}/}@${LINENO} -- \$ '
+PS4='+ \t ${test_domain:-} -- ${BASH_SOURCE#"$rootdir/"}@${LINENO}: '
 if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces, overriding any tracking information.
 	xtrace_fd
 else
 	xtrace_disable
 fi
-
-enable_coverage

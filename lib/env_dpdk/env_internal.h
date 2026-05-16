@@ -61,6 +61,11 @@ void vtophys_pci_device_removed(struct rte_pci_device *pci_device);
 void mem_disable_huge_pages(void);
 
 /**
+ * Disable vtophys map based on no_pci environment option
+ */
+void mem_disable_vtophys(void);
+
+/**
  * Enforce socket ID allocations.
  */
 void mem_enforce_numa(void);

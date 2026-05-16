@@ -6,6 +6,22 @@
 
 #include "common/lib/test_env.c"
 
+#define NVME_PAYLOAD_CONTIG(contig_, md_) \
+	(struct nvme_payload) { \
+		.reset_sgl_fn = NULL, \
+		.next_sge_fn = NULL, \
+		.contig_or_cb_arg = (contig_), \
+		.md = (md_), \
+	}
+
+#define NVME_PAYLOAD_SGL(reset_sgl_fn_, next_sge_fn_, cb_arg_, md_) \
+	(struct nvme_payload) { \
+		.reset_sgl_fn = (reset_sgl_fn_), \
+		.next_sge_fn = (next_sge_fn_), \
+		.contig_or_cb_arg = (cb_arg_), \
+		.md = (md_), \
+	}
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {

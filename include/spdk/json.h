@@ -164,6 +164,15 @@ void spdk_json_free_object(const struct spdk_json_object_decoder *decoders, size
 size_t spdk_json_val_len(const struct spdk_json_val *val);
 
 /**
+ * Count the number of immediate elements in a JSON array.
+ *
+ * \param val Pointer to a JSON value of type SPDK_JSON_VAL_ARRAY_BEGIN.
+ *
+ * \return Number of elements in the array, or 0 if val is NULL or not an array.
+ */
+size_t spdk_json_array_count(const struct spdk_json_val *val);
+
+/**
  * Compare JSON string with null terminated C string.
  *
  * \return true if strings are equal or false if not
@@ -188,7 +197,8 @@ int spdk_json_number_to_uint64(const struct spdk_json_val *val, uint64_t *num);
 
 struct spdk_json_write_ctx;
 
-#define SPDK_JSON_WRITE_FLAG_FORMATTED	0x00000001
+#define SPDK_JSON_WRITE_FLAG_FORMATTED		0x00000001
+#define SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES	0x00000002
 
 typedef int (*spdk_json_write_cb)(void *cb_ctx, const void *data, size_t size);
 
@@ -196,6 +206,17 @@ struct spdk_json_write_ctx *spdk_json_write_begin(spdk_json_write_cb write_cb, v
 		uint32_t flags);
 int spdk_json_write_end(struct spdk_json_write_ctx *w);
 void spdk_json_write_reset(struct spdk_json_write_ctx *w);
+
+/**
+ * Set additional flags on a JSON write context.
+ *
+ * The provided flags are OR'd into the existing flags.
+ *
+ * \param w JSON write context.
+ * \param flags Flags to add
+ */
+void spdk_json_write_add_flags(struct spdk_json_write_ctx *w, uint32_t flags);
+
 int spdk_json_write_null(struct spdk_json_write_ctx *w);
 int spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val);
 int spdk_json_write_uint8(struct spdk_json_write_ctx *w, uint8_t val);
@@ -237,6 +258,32 @@ int spdk_json_write_string_fmt_v(struct spdk_json_write_ctx *w, const char *fmt,
 
 int spdk_json_write_array_begin(struct spdk_json_write_ctx *w);
 int spdk_json_write_array_end(struct spdk_json_write_ctx *w);
+
+/**
+ * Begin a batch array.
+ *
+ * This is similar to spdk_json_write_array_begin(), but respects the
+ * SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES flag if it is set on the write
+ * context. If that flag is set, this function is a no-op (no '['
+ * is emitted), allowing batch arrays to be flattened into the parent array.
+ *
+ * \param w JSON write context.
+ * \return 0 on success or negative on failure.
+ */
+int spdk_json_write_batch_begin(struct spdk_json_write_ctx *w);
+
+/**
+ * End a batch array.
+ *
+ * This is similar to spdk_json_write_array_end(), but respects the
+ * SPDK_JSON_WRITE_FLAG_FLATTEN_BATCHES flag if it is set on the write
+ * context. If that flag is set, this function is a no-op (no ']'
+ * is emitted).
+ *
+ * \param w JSON write context.
+ * \return 0 on success or negative on failure.
+ */
+int spdk_json_write_batch_end(struct spdk_json_write_ctx *w);
 int spdk_json_write_object_begin(struct spdk_json_write_ctx *w);
 int spdk_json_write_object_end(struct spdk_json_write_ctx *w);
 int spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name);

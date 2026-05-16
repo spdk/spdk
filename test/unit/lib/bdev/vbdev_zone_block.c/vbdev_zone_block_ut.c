@@ -40,8 +40,16 @@ struct io_output {
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
+DEFINE_STUB(spdk_json_decode_int32, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_uint64, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
+		spdk_json_decode_fn decode_func,
+		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
+DEFINE_STUB(spdk_json_strequal, bool, (const struct spdk_json_val *val, const char *str), false);
+DEFINE_STUB(spdk_json_strdup, char *, (const struct spdk_json_val *val), NULL);
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
@@ -153,7 +161,7 @@ spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module *mod
 int
 spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
 {
-	struct rpc_construct_zone_block *req = g_rpc_req;
+	struct rpc_bdev_zone_block_create_ctx *req = g_rpc_req;
 	if (strcmp(name, "zone_capacity") == 0) {
 		CU_ASSERT(req->zone_capacity == val);
 	} else if (strcmp(name, "optimal_open_zones") == 0) {
@@ -215,8 +223,8 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 			const struct spdk_json_object_decoder *decoders, size_t num_decoders,
 			void *out)
 {
-	struct rpc_construct_zone_block *construct, *_construct;
-	struct rpc_delete_zone_block *delete, *_delete;
+	struct rpc_bdev_zone_block_create_ctx *construct, *_construct;
+	struct rpc_bdev_zone_block_delete_ctx *delete, *_delete;
 
 	if (g_json_decode_obj_construct) {
 		construct = g_rpc_req;
@@ -462,9 +470,9 @@ static void
 initialize_create_req(const char *vbdev_name, const char *base_name,
 		      uint64_t zone_capacity, uint64_t optimal_open_zones, bool create_base_bdev)
 {
-	struct rpc_construct_zone_block *r;
+	struct rpc_bdev_zone_block_create_ctx *r;
 
-	r = g_rpc_req = calloc(1, sizeof(struct rpc_construct_zone_block));
+	r = g_rpc_req = calloc(1, sizeof(struct rpc_bdev_zone_block_create_ctx));
 	SPDK_CU_ASSERT_FATAL(r != NULL);
 
 	r->name = strdup(vbdev_name);
@@ -484,7 +492,7 @@ initialize_create_req(const char *vbdev_name, const char *base_name,
 static void
 free_create_req(void)
 {
-	struct rpc_construct_zone_block *r = g_rpc_req;
+	struct rpc_bdev_zone_block_create_ctx *r = g_rpc_req;
 
 	free(r->name);
 	free(r->base_bdev);
@@ -495,9 +503,9 @@ free_create_req(void)
 static void
 initialize_delete_req(const char *vbdev_name)
 {
-	struct rpc_delete_zone_block *r;
+	struct rpc_bdev_zone_block_delete_ctx *r;
 
-	r = g_rpc_req = calloc(1, sizeof(struct rpc_delete_zone_block));
+	r = g_rpc_req = calloc(1, sizeof(struct rpc_bdev_zone_block_delete_ctx));
 	SPDK_CU_ASSERT_FATAL(r != NULL);
 	r->name = strdup(vbdev_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
@@ -509,7 +517,7 @@ initialize_delete_req(const char *vbdev_name)
 static void
 free_delete_req(void)
 {
-	struct rpc_delete_zone_block *r = g_rpc_req;
+	struct rpc_bdev_zone_block_delete_ctx *r = g_rpc_req;
 
 	free(r->name);
 	free(r);
@@ -519,7 +527,7 @@ free_delete_req(void)
 static void
 verify_zone_config(bool presence)
 {
-	struct rpc_construct_zone_block *r = g_rpc_req;
+	struct rpc_bdev_zone_block_create_ctx *r = g_rpc_req;
 	struct bdev_zone_block_config *cfg = NULL;
 
 	TAILQ_FOREACH(cfg, &g_bdev_configs, link) {
@@ -544,7 +552,7 @@ verify_zone_config(bool presence)
 static void
 verify_zone_bdev(bool presence)
 {
-	struct rpc_construct_zone_block *r = g_rpc_req;
+	struct rpc_bdev_zone_block_create_ctx *r = g_rpc_req;
 	struct block_zone *zone;
 	struct bdev_zone_block *bdev;
 	bool bdev_found = false;
@@ -596,7 +604,7 @@ send_create_vbdev(char *vdev_name, char *name, uint64_t zone_capacity, uint64_t 
 		  bool create_bdev, bool success)
 {
 	initialize_create_req(vdev_name, name, zone_capacity, optimal_open_zones, create_bdev);
-	rpc_zone_block_create(NULL, NULL);
+	rpc_bdev_zone_block_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err != success);
 	verify_zone_config(success);
 	verify_zone_bdev(success);
@@ -607,7 +615,7 @@ static void
 send_delete_vbdev(char *name, bool success)
 {
 	initialize_delete_req(name);
-	rpc_zone_block_delete(NULL, NULL);
+	rpc_bdev_zone_block_delete(NULL, NULL);
 	verify_config_present(name, false);
 	verify_bdev_present(name, false);
 	CU_ASSERT(g_rpc_err != success);
@@ -638,7 +646,7 @@ test_zone_block_create(void)
 	verify_config_present("zone_dev1", false);
 	verify_bdev_present("zone_dev1", false);
 	initialize_create_req("zone_dev1", name, zone_capacity, 1, false);
-	rpc_zone_block_create(NULL, NULL);
+	rpc_bdev_zone_block_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_zone_config(true);
 	verify_zone_bdev(false);

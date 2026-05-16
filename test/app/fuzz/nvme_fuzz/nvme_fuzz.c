@@ -141,19 +141,19 @@ parse_nvme_cmd_obj(void *item, struct spdk_json_val *value, size_t num_values)
 					}
 					cmd->nsid = tmp_val;
 				}
-			} else if (!strncmp(value->start, "rsvd2", value->len)) {
+			} else if (!strncmp(value->start, "cdw2", value->len)) {
 				if (next_val->type == SPDK_JSON_VAL_NUMBER) {
 					if (fuzz_parse_json_num(next_val, UINT32_MAX, &tmp_val)) {
 						goto invalid;
 					}
-					cmd->rsvd2 = tmp_val;
+					cmd->cdw2 = tmp_val;
 				}
-			} else if (!strncmp(value->start, "rsvd3", value->len)) {
+			} else if (!strncmp(value->start, "cdw3", value->len)) {
 				if (next_val->type == SPDK_JSON_VAL_NUMBER) {
 					if (fuzz_parse_json_num(next_val, UINT32_MAX, &tmp_val)) {
 						goto invalid;
 					}
-					cmd->rsvd3 = tmp_val;
+					cmd->cdw3 = tmp_val;
 				}
 			} else if (!strncmp(value->start, "mptr", value->len)) {
 				if (next_val->type == SPDK_JSON_VAL_NUMBER) {
@@ -270,8 +270,8 @@ json_dump_nvme_cmd(struct spdk_nvme_cmd *cmd)
 	spdk_json_write_named_uint32(w, "psdt", cmd->psdt);
 	spdk_json_write_named_uint32(w, "cid", cmd->cid);
 	spdk_json_write_named_uint32(w, "nsid", cmd->nsid);
-	spdk_json_write_named_uint32(w, "rsvd2", cmd->rsvd2);
-	spdk_json_write_named_uint32(w, "rsvd3", cmd->rsvd3);
+	spdk_json_write_named_uint32(w, "cdw2", cmd->cdw2);
+	spdk_json_write_named_uint32(w, "cdw3", cmd->cdw3);
 	spdk_json_write_named_uint32(w, "mptr", cmd->mptr);
 	spdk_json_write_named_string(w, "dptr", dptr_value);
 	spdk_json_write_named_uint32(w, "cdw10", cmd->cdw10);

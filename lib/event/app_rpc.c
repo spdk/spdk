@@ -17,88 +17,43 @@
 #include "spdk/log.h"
 #include "spdk_internal/event.h"
 #include "spdk_internal/thread.h"
+#include "spdk_internal/rpc_autogen.h"
 #include "event_internal.h"
 
-struct rpc_spdk_kill_instance {
-	char *sig_name;
-};
-
-static void
-free_rpc_spdk_kill_instance(struct rpc_spdk_kill_instance *req)
-{
-	free(req->sig_name);
-}
-
 static const struct spdk_json_object_decoder rpc_spdk_kill_instance_decoders[] = {
-	{"sig_name", offsetof(struct rpc_spdk_kill_instance, sig_name), spdk_json_decode_string},
+	{"sig_name", offsetof(struct rpc_spdk_kill_instance_ctx, sig_name), rpc_decode_kill_signal},
 };
 
 static void
 rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	static const struct {
-		const char	*signal_string;
-		int32_t		signal;
-	} signals[] = {
-		{"SIGINT",	SIGINT},
-		{"SIGTERM",	SIGTERM},
-		{"SIGQUIT",	SIGQUIT},
-		{"SIGHUP",	SIGHUP},
-		{"SIGKILL",	SIGKILL},
-		{"SIGUSR1",	SIGUSR1},
-	};
-	size_t i, sig_count;
-	int signal;
-	struct rpc_spdk_kill_instance req = {};
+	struct rpc_spdk_kill_instance_ctx req = {};
 
 	if (spdk_json_decode_object(params, rpc_spdk_kill_instance_decoders,
 				    SPDK_COUNTOF(rpc_spdk_kill_instance_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(app_rpc, "spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		return;
 	}
 
-	sig_count = SPDK_COUNTOF(signals);
-	signal = spdk_strtol(req.sig_name, 10);
-	for (i = 0 ; i < sig_count; i++) {
-		if (strcmp(req.sig_name, signals[i].signal_string) == 0 ||
-		    signal == signals[i].signal) {
-			break;
-		}
-	}
-
-	if (i == sig_count) {
-		goto invalid;
-	}
-
-	SPDK_DEBUGLOG(app_rpc, "sending signal %d\n", signals[i].signal);
-	free_rpc_spdk_kill_instance(&req);
-	kill(getpid(), signals[i].signal);
-
+	SPDK_DEBUGLOG(app_rpc, "sending signal %d\n", req.sig_name);
+	kill(getpid(), req.sig_name);
 	spdk_jsonrpc_send_bool_response(request, true);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_spdk_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("spdk_kill_instance", rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
 
 
-struct rpc_framework_monitor_context_switch {
-	bool enabled;
-};
-
 static const struct spdk_json_object_decoder rpc_framework_monitor_context_switch_decoders[] = {
-	{"enabled", offsetof(struct rpc_framework_monitor_context_switch, enabled), spdk_json_decode_bool},
+	{"enabled", offsetof(struct rpc_framework_monitor_context_switch_ctx, enabled), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
 				     const struct spdk_json_val *params)
 {
-	struct rpc_framework_monitor_context_switch req = {};
+	struct rpc_framework_monitor_context_switch_ctx req = {};
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
@@ -371,6 +326,7 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint32(ctx->w, "lcore", current_core);
+	spdk_json_write_named_int32(ctx->w, "numa_id", spdk_env_get_numa_id(current_core));
 	spdk_json_write_named_uint64(ctx->w, "tid", spdk_get_tid());
 	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
@@ -443,38 +399,27 @@ rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("framework_get_reactors", rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
 
-struct rpc_set_scheduler_ctx {
-	char *name;
-	uint64_t period;
-};
-
-static void
-free_rpc_framework_set_scheduler(struct rpc_set_scheduler_ctx *r)
-{
-	free(r->name);
-}
-
-static const struct spdk_json_object_decoder rpc_set_scheduler_decoders[] = {
-	{"name", offsetof(struct rpc_set_scheduler_ctx, name), spdk_json_decode_string},
-	{"period", offsetof(struct rpc_set_scheduler_ctx, period), spdk_json_decode_uint64, true},
+static const struct spdk_json_object_decoder rpc_framework_set_scheduler_decoders[] = {
+	{"name", offsetof(struct rpc_framework_set_scheduler_ctx, name), spdk_json_decode_string},
+	{"period", offsetof(struct rpc_framework_set_scheduler_ctx, period), spdk_json_decode_uint64, true},
 };
 
 static void
 rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_set_scheduler_ctx req = {NULL};
+	struct rpc_framework_set_scheduler_ctx req = {};
 	struct spdk_scheduler *scheduler;
 	bool has_custom_opts = false;
 	int ret;
 
-	ret = spdk_json_decode_object(params, rpc_set_scheduler_decoders,
-				      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+	ret = spdk_json_decode_object(params, rpc_framework_set_scheduler_decoders,
+				      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders),
 				      &req);
 	if (ret) {
 		has_custom_opts = true;
-		ret = spdk_json_decode_object_relaxed(params, rpc_set_scheduler_decoders,
-						      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+		ret = spdk_json_decode_object_relaxed(params, rpc_framework_set_scheduler_decoders,
+						      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders),
 						      &req);
 	}
 	if (ret) {
@@ -613,33 +558,22 @@ rpc_framework_get_governor(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("framework_get_governor", rpc_framework_get_governor, SPDK_RPC_RUNTIME)
 
-struct rpc_set_scheduler_opts_ctx {
-	char *isolated_core_mask;
-	uint32_t scheduling_core;
+static const struct spdk_json_object_decoder rpc_scheduler_set_options_decoders[] = {
+	{"isolated_core_mask", offsetof(struct rpc_scheduler_set_options_ctx, isolated_core_mask), spdk_json_decode_string, true},
+	{"scheduling_core", offsetof(struct rpc_scheduler_set_options_ctx, scheduling_core), spdk_json_decode_uint32, true},
 };
-
-static const struct spdk_json_object_decoder rpc_set_scheduler_opts_decoders[] = {
-	{"isolated_core_mask", offsetof(struct rpc_set_scheduler_opts_ctx, isolated_core_mask), spdk_json_decode_string, true},
-	{"scheduling_core", offsetof(struct rpc_set_scheduler_opts_ctx, scheduling_core), spdk_json_decode_uint32, true},
-};
-
-static void
-free_rpc_scheduler_set_options(struct rpc_set_scheduler_opts_ctx *r)
-{
-	free(r->isolated_core_mask);
-}
 
 static void
 rpc_scheduler_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_set_scheduler_opts_ctx req = {NULL};
+	struct rpc_scheduler_set_options_ctx req = {};
 	struct spdk_cpuset core_mask;
 
 	req.scheduling_core = spdk_scheduler_get_scheduling_lcore();
 
-	if (spdk_json_decode_object(params, rpc_set_scheduler_opts_decoders,
-				    SPDK_COUNTOF(rpc_set_scheduler_opts_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_scheduler_set_options_decoders,
+				    SPDK_COUNTOF(rpc_scheduler_set_options_decoders), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		goto end;
@@ -671,7 +605,7 @@ end:
 }
 SPDK_RPC_REGISTER("scheduler_set_options", rpc_scheduler_set_options, SPDK_RPC_STARTUP)
 
-struct rpc_thread_set_cpumask_ctx {
+struct rpc_thread_set_cpumask {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_cpuset cpumask;
 	int status;
@@ -681,7 +615,7 @@ struct rpc_thread_set_cpumask_ctx {
 static void
 rpc_thread_set_cpumask_done(void *_ctx)
 {
-	struct rpc_thread_set_cpumask_ctx *ctx = _ctx;
+	struct rpc_thread_set_cpumask *ctx = _ctx;
 
 	if (ctx->status == 0) {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
@@ -696,29 +630,24 @@ rpc_thread_set_cpumask_done(void *_ctx)
 static void
 _rpc_thread_set_cpumask(void *_ctx)
 {
-	struct rpc_thread_set_cpumask_ctx *ctx = _ctx;
+	struct rpc_thread_set_cpumask *ctx = _ctx;
 
 	ctx->status = spdk_thread_set_cpumask(&ctx->cpumask);
 
 	spdk_thread_send_msg(ctx->orig_thread, rpc_thread_set_cpumask_done, ctx);
 }
 
-struct rpc_thread_set_cpumask {
-	uint64_t id;
-	char *cpumask;
-};
-
 static const struct spdk_json_object_decoder rpc_thread_set_cpumask_decoders[] = {
-	{"id", offsetof(struct rpc_thread_set_cpumask, id), spdk_json_decode_uint64},
-	{"cpumask", offsetof(struct rpc_thread_set_cpumask, cpumask), spdk_json_decode_string},
+	{"id", offsetof(struct rpc_thread_set_cpumask_ctx, id), spdk_json_decode_uint64},
+	{"cpumask", offsetof(struct rpc_thread_set_cpumask_ctx, cpumask), spdk_json_decode_string},
 };
 
 static void
 rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_thread_set_cpumask req = {};
-	struct rpc_thread_set_cpumask_ctx *ctx;
+	struct rpc_thread_set_cpumask_ctx req = {};
+	struct rpc_thread_set_cpumask *ctx;
 	const struct spdk_cpuset *coremask;
 	struct spdk_cpuset tmp_mask;
 	struct spdk_thread *thread;
@@ -793,11 +722,11 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 
 	spdk_thread_send_msg(thread, _rpc_thread_set_cpumask, ctx);
 
-	free(req.cpumask);
+	free_rpc_thread_set_cpumask(&req);
 	return;
 
 err:
-	free(req.cpumask);
+	free_rpc_thread_set_cpumask(&req);
 	free(ctx);
 }
 SPDK_RPC_REGISTER("thread_set_cpumask", rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)

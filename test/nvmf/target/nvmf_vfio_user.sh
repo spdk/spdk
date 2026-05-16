@@ -27,10 +27,10 @@ function aer_vfio_user() {
 	AER_TOUCH_FILE=/tmp/aer_touch_file
 
 	# Namespace Attribute Notice Tests
-	$rootdir/test/nvme/aer/aer -r "\
+	run_app_bg "$rootdir/test/nvme/aer/aer" -r "\
 		trtype:$TEST_TRANSPORT \
 		traddr:$traddr \
-		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE "${NO_HUGE[@]}" &
+		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE
 	aerpid=$!
 
 	# Waiting for aer start to work
@@ -80,9 +80,9 @@ function run_nvmf_vfio_user() {
 	for i in $(seq 1 $NUM_DEVICES); do
 		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
 		test_subnqn=nqn.2019-07.io.spdk:cnode$i
-		$SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci "${NO_HUGE[@]}"
-		$SPDK_BIN_DIR/spdk_nvme_perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
-		$SPDK_BIN_DIR/spdk_nvme_perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
+		run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
+		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
+		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
 		$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
 		$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
 		$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"

@@ -29,11 +29,18 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cpl *cpl));
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion_ext, (const struct spdk_nvme_qpair *qpair,
+		const struct spdk_nvme_cpl *cpl, uint8_t opc));
 
 DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
 
-DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
-	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+static struct spdk_nvme_ctrlr_process *g_current_process;
+
+struct spdk_nvme_ctrlr_process *
+nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return g_current_process;
+}
 
 DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 	    (struct spdk_nvme_qpair *qpair, uint32_t max_completions), 0);
@@ -42,11 +49,36 @@ DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t
 		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
 DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
 
-DEFINE_STUB_V(nvme_ctrlr_disable, (struct spdk_nvme_ctrlr *ctrlr));
+static int g_nvme_ctrlr_disable_calls;
+static struct spdk_nvme_ctrlr *g_nvme_ctrlr_disable_ctrlr;
 
-DEFINE_STUB(nvme_ctrlr_disable_poll, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+void
+nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
+{
+	g_nvme_ctrlr_disable_calls++;
+	g_nvme_ctrlr_disable_ctrlr = ctrlr;
+}
 
-DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair_done, (struct spdk_nvme_qpair *qpair));
+static int g_nvme_ctrlr_disable_poll_calls;
+static int g_nvme_ctrlr_disable_poll_rc;
+
+int
+nvme_ctrlr_disable_poll(struct spdk_nvme_ctrlr *ctrlr)
+{
+	g_nvme_ctrlr_disable_poll_calls++;
+	return g_nvme_ctrlr_disable_poll_rc;
+}
+
+static int g_nvme_transport_ctrlr_disconnect_qpair_done_calls;
+static struct spdk_nvme_qpair *g_nvme_transport_ctrlr_disconnect_qpair_done_qpair;
+
+void
+nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
+{
+	g_nvme_transport_ctrlr_disconnect_qpair_done_calls++;
+	g_nvme_transport_ctrlr_disconnect_qpair_done_qpair = qpair;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+}
 DEFINE_STUB(spdk_nvme_ctrlr_get_numa_id, int32_t, (struct spdk_nvme_ctrlr *ctrlr),
 	    SPDK_ENV_NUMA_ID_ANY);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
@@ -138,6 +170,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	pqpair->num_entries = 2;
 	pqpair->qpair.id = 1;
 	pqpair->cpl = cpl;
+	pqpair->qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
 	/* Enable submission queue in controller memory buffer. */
 	pctrlr.ctrlr.opts.use_cmb_sqs = true;
@@ -197,6 +230,7 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	pqpair->num_entries = 2;
 	pqpair->qpair.id = 1;
 	pqpair->cpl = cpl;
+	pqpair->qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	MOCK_SET(spdk_vtophys, 0xDAADBEEF);
 
 	rc = nvme_pcie_qpair_construct(&pqpair->qpair, NULL);
@@ -504,6 +538,125 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(rc == -ENOMEM);
 }
 
+struct adminq_disconnect_ctx {
+	bool called;
+	uint16_t sct;
+	uint16_t sc;
+	uint16_t dnr;
+};
+
+static void
+adminq_disconnect_req_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct adminq_disconnect_ctx *ctx = arg;
+
+	ctx->called = true;
+	ctx->sct = cpl->status.sct;
+	ctx->sc = cpl->status.sc;
+	ctx->dnr = cpl->status.dnr;
+}
+
+static void
+reset_adminq_disconnect_mocks(void)
+{
+	g_current_process = NULL;
+	g_nvme_ctrlr_disable_calls = 0;
+	g_nvme_ctrlr_disable_ctrlr = NULL;
+	g_nvme_ctrlr_disable_poll_calls = 0;
+	g_nvme_ctrlr_disable_poll_rc = 0;
+	g_nvme_transport_ctrlr_disconnect_qpair_done_calls = 0;
+	g_nvme_transport_ctrlr_disconnect_qpair_done_qpair = NULL;
+}
+
+static void
+test_nvme_pcie_ctrlr_disconnect_admin_qpair(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_ctrlr_process proc = {};
+	struct spdk_nvme_pcie_stat stat = {};
+	struct spdk_nvme_cpl cpl = {};
+	struct nvme_tracker tr = {};
+	struct nvme_request req = {};
+	struct adminq_disconnect_ctx cb_ctx = {};
+	int32_t rc;
+
+	reset_adminq_disconnect_mocks();
+	pthread_mutex_init(&pctrlr.ctrlr.ctrlr_lock, NULL);
+
+	STAILQ_INIT(&proc.active_reqs);
+	g_current_process = &proc;
+
+	/* Model an enabled admin qpair with one command submitted to hardware. */
+	pctrlr.ctrlr.adminq = &pqpair.qpair;
+	pctrlr.ctrlr.is_disconnecting = true;
+	pqpair.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair.qpair.id = 0;
+	pqpair.qpair.abort_dnr = 1;
+	pqpair.qpair.num_outstanding_reqs = 1;
+	pqpair.qpair.queue_depth = 1;
+	pqpair.qpair.state = NVME_QPAIR_ENABLED;
+	STAILQ_INIT(&pqpair.qpair.free_req);
+	STAILQ_INIT(&pqpair.qpair.queued_req);
+	TAILQ_INIT(&pqpair.qpair.err_cmd_head);
+
+	pqpair.cpl = &cpl;
+	pqpair.num_entries = 1;
+	pqpair.max_completions_cap = 1;
+	pqpair.flags.phase = 1;
+	pqpair.stat = &stat;
+	TAILQ_INIT(&pqpair.free_tr);
+	TAILQ_INIT(&pqpair.outstanding_tr);
+
+	/* The tracker represents a stuck admin command that never posts a CQE. */
+	tr.cid = 1;
+	tr.req = &req;
+	tr.cb_fn = adminq_disconnect_req_cb;
+	tr.cb_arg = &cb_ctx;
+	req.qpair = &pqpair.qpair;
+	req.cmd.cid = tr.cid;
+	/* Same-process admin completions invoke the request callback directly. */
+	req.pid = getpid();
+	TAILQ_INSERT_TAIL(&pqpair.outstanding_tr, &tr, tq_list);
+
+	/* The common transport layer sets DISCONNECTING before calling into PCIe. */
+	nvme_qpair_set_state(&pqpair.qpair, NVME_QPAIR_DISCONNECTING);
+	g_nvme_ctrlr_disable_poll_rc = -EAGAIN;
+	nvme_pcie_ctrlr_disconnect_qpair(&pctrlr.ctrlr, &pqpair.qpair);
+	CU_ASSERT(g_nvme_ctrlr_disable_calls == 1);
+	CU_ASSERT(g_nvme_ctrlr_disable_ctrlr == &pctrlr.ctrlr);
+	CU_ASSERT(g_nvme_transport_ctrlr_disconnect_qpair_done_calls == 0);
+
+	/* While controller disable is still in progress, the tracker stays outstanding. */
+	rc = nvme_pcie_qpair_process_completions(&pqpair.qpair, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_nvme_ctrlr_disable_poll_calls == 1);
+	CU_ASSERT(g_nvme_transport_ctrlr_disconnect_qpair_done_calls == 0);
+	CU_ASSERT(cb_ctx.called == false);
+	CU_ASSERT(!TAILQ_EMPTY(&pqpair.outstanding_tr));
+
+	/* Once disable completes, PCIe aborts outstanding admin trackers before disconnect done. */
+	g_nvme_ctrlr_disable_poll_rc = 0;
+	rc = nvme_pcie_qpair_process_completions(&pqpair.qpair, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_nvme_ctrlr_disable_poll_calls == 2);
+	CU_ASSERT(g_nvme_transport_ctrlr_disconnect_qpair_done_calls == 1);
+	CU_ASSERT(g_nvme_transport_ctrlr_disconnect_qpair_done_qpair == &pqpair.qpair);
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_DISCONNECTED);
+	CU_ASSERT(cb_ctx.called == true);
+	CU_ASSERT(cb_ctx.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(cb_ctx.sc == SPDK_NVME_SC_ABORTED_BY_REQUEST);
+	CU_ASSERT(cb_ctx.dnr == 1);
+	CU_ASSERT(TAILQ_EMPTY(&pqpair.outstanding_tr));
+	CU_ASSERT(TAILQ_FIRST(&pqpair.free_tr) == &tr);
+	CU_ASSERT(STAILQ_FIRST(&pqpair.qpair.free_req) == &req);
+	CU_ASSERT(pqpair.qpair.num_outstanding_reqs == 0);
+	CU_ASSERT(pqpair.qpair.queue_depth == 0);
+
+	pthread_mutex_destroy(&pctrlr.ctrlr.ctrlr_lock);
+	reset_adminq_disconnect_mocks();
+}
+
 static void
 test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 {
@@ -590,6 +743,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_connect_qpair);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_disconnect_admin_qpair);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_construct_admin_qpair);
 	CU_ADD_TEST(suite, test_nvme_pcie_poll_group_get_stats);
 

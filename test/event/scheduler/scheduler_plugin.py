@@ -2,7 +2,7 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
-from spdk.rpc.client import print_json
+from spdk.rpc.cmd_parser import print_json
 
 
 def thread_create(args):
@@ -31,7 +31,7 @@ def thread_delete(args):
 def spdk_rpc_plugin_initialize(subparsers):
     p = subparsers.add_parser('scheduler_thread_create', help='Create spdk thread')
     p.add_argument('-n', '--name', help='Name of spdk thread and poller')
-    p.add_argument('-m', '--cpu_mask', help='CPU mask for spdk thread')
+    p.add_argument('-m', '--cpu-mask', help='CPU mask for spdk thread')
     p.add_argument('-a', '--active', help='Percent of time thread is active', type=int)
     p.set_defaults(func=create_thread)
 

@@ -501,13 +501,14 @@ uint64_t spdk_thread_get_last_tsc(struct spdk_thread *thread);
  * The message will be sent asynchronously - i.e. spdk_thread_send_msg will always return
  * prior to `fn` being called.
  *
+ * Errors are handled internally and are fatal. Calling code can skip checking the return
+ * value as it has been left only for compatibility.
+ *
  * \param thread The target thread.
  * \param fn This function will be called on the given thread.
  * \param ctx This context will be passed to fn when called.
  *
- * \return 0 on success
- * \return -ENOMEM if the message could not be allocated
- * \return -EIO if the message could not be sent to the destination thread
+ * \return 0 left for API compatibility
  */
 int spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
@@ -519,12 +520,13 @@ int spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void 
  * The message will be sent asynchronously - i.e. spdk_thread_send_critical_msg will always return
  * prior to `fn` being called.
  *
+ *  Errors are handled internally and are fatal. Calling code can skip checking the return
+ * value as it has been left only for compatibility.
+ *
  * \param thread The target thread.
  * \param fn This function will be called on the given thread.
  *
- * \return 0 on success
- * \return -EIO if the message could not be sent to the destination thread, due to an already
- * outstanding critical message
+ * \return 0 left for API compatibility
  */
 int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
 
@@ -533,13 +535,14 @@ int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
  * thread, the callback is executed immediately; otherwise a message is sent to
  * the thread, and it's run asynchronously.
  *
+ * Errors are handled internally and are fatal. Calling code can skip checking the return
+ * value as it has been left only for compatibility.
+ *
  * \param thread The target thread.
  * \param fn This function will be called on the given thread.
  * \param ctx This context will be passed to fn when called.
  *
- * \return 0 on success
- * \return -ENOMEM if the message could not be allocated
- * \return -EIO if the message could not be sent to the destination thread
+ * \return 0 left for API compatibility
  */
 static inline int
 spdk_thread_exec_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
@@ -563,7 +566,7 @@ spdk_thread_exec_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
  * \param fn This is the function that will be called on each thread.
  * \param ctx This context will be passed to fn when called.
  * \param cpl This will be called on the originating thread after `fn` has been
- * called on each thread.
+ * called on each thread. Optional - may be NULL.
  */
 void spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl);
 
@@ -790,7 +793,7 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
  * \param ctx Context buffer registered to spdk_io_channel_iter that can be obtained
  * form the function spdk_io_channel_iter_get_ctx().
  * \param cpl Called on the thread that spdk_for_each_channel was initially called
- * from when 'fn' has been called on each channel.
+ * from when 'fn' has been called on each channel. Optional - may be NULL.
  */
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
@@ -1105,6 +1108,8 @@ struct spdk_iobuf_opts {
 };
 
 struct spdk_iobuf_pool_stats {
+	/* Number of buffers cached by the module */
+	uint32_t	cache_size;
 	/** Buffer got from local per-thread cache */
 	uint64_t	cache;
 	/** Buffer got from the main shared pool */

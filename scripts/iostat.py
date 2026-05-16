@@ -4,16 +4,15 @@
 #  All rights reserved.
 #
 
+import argparse
 import logging
 import os
 import sys
-import argparse
 import time
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
-from spdk.rpc.client import JSONRPCClient  # noqa
-
+from spdk.rpc.client import JSONRPCClient
 
 SPDK_CPU_STAT = "/proc/stat"
 SPDK_UPTIME = "/proc/uptime"
@@ -347,7 +346,7 @@ def io_stat_display(args, cpu_info, stat):
         return _cpu_info, None
 
     if args.bdev_stat and not args.cpu_stat:
-        _stat = args.client.bdev_get_iostat(name=args.name)
+        _stat = args.client.bdev_get_iostat(names=args.names)
         bdev_stats = read_bdev_stat(
             stat, _stat, args.mb_display, args.use_uptime, args.extended_display)
         return None, bdev_stats
@@ -355,7 +354,7 @@ def io_stat_display(args, cpu_info, stat):
     _cpu_info = get_cpu_stat()
     read_cpu_stat(cpu_info, _cpu_info)
 
-    _stat = args.client.bdev_get_iostat(name=args.name)
+    _stat = args.client.bdev_get_iostat(names=args.names)
     bdev_stats = read_bdev_stat(stat, _stat, args.mb_display, args.use_uptime, args.extended_display)
     return _cpu_info, bdev_stats
 
@@ -423,8 +422,10 @@ if __name__ == "__main__":
                         help='RPC port number (if server_addr is IP address)',
                         default=4420, type=int)
 
-    parser.add_argument('-b', '--name', dest='name',
-                        help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    parser.add_argument('-b', '--names', dest='names',
+                        type=lambda s: s.split(','),
+                        help="Bdev names to obtain I/O statistics from, comma-separated list. Example: Nvme0n1",
+                        required=False)
 
     parser.add_argument('-o', '--timeout', dest='timeout',
                         help='Timeout as a floating point number expressed in seconds \

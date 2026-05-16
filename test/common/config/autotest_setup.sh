@@ -17,7 +17,7 @@ shopt -s extglob nullglob
 
 UPGRADE=false
 INSTALL=false
-CONF="fio,flamegraph,tsocks,qemu,libiscsi,nvmecli,qat,spdk,refspdk,vagrant,igb_uio,ice"
+CONF="fio,flamegraph,tsocks,qemu,libiscsi,nvmecli,spdk,refspdk,vagrant,igb_uio"
 package_manager=
 
 function pre_install() { :; }
@@ -32,7 +32,7 @@ function usage() {
 	echo "  -h --help"
 	echo "  -u --upgrade Run $package_manager upgrade"
 	echo "  -i --install-deps Install $package_manager based dependencies"
-	echo "  -t --test-conf List of test configurations to enable (${CONF},irdma,lcov,bpftrace,doxygen)"
+	echo "  -t --test-conf List of test configurations to enable (${CONF},lcov,bpftrace,doxygen)"
 	echo "  -c --conf-path Path to configuration file"
 	echo "  -d --dir-git Path to where git sources should be saved"
 	echo "  -s --disable-tsocks Disable use of tsocks"
@@ -141,6 +141,8 @@ fi
 
 if $INSTALL; then
 	sudo "$rootdir/scripts/pkgdep.sh" --all
+	# Re-source the scripts/common.sh to make sure $PATH is updated with changes committed via pkgdep_toolpath() as "meson" depends on it.
+	source "$rootdir/scripts/common.sh"
 	pre_install
 	install "${packages[@]}"
 fi

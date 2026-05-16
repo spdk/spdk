@@ -529,6 +529,14 @@ vfu_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 }
 
 static void
+vfu_fini_cb(void *arg1)
+{
+	spdk_vfu_fini_cb fini_cb = arg1;
+
+	fini_cb();
+}
+
+static void
 tgt_endpoint_start_thread(void *arg1)
 {
 	struct spdk_vfu_endpoint *endpoint = arg1;
@@ -541,7 +549,7 @@ static void
 tgt_endpoint_thread_try_exit(void *arg1)
 {
 	struct spdk_vfu_endpoint *endpoint = arg1;
-	static spdk_vfu_fini_cb fini_cb = NULL;
+	spdk_vfu_fini_cb fini_cb;
 	int res;
 
 	res = endpoint->ops.destruct(endpoint);
@@ -559,17 +567,13 @@ tgt_endpoint_thread_try_exit(void *arg1)
 	pthread_mutex_lock(&g_endpoint_lock);
 	if (g_fini_cb) { /* called due to spdk_vfu_fini() */
 		g_fini_endpoint_cnt--;
-
 		if (!g_fini_endpoint_cnt) {
 			fini_cb = g_fini_cb;
 			g_fini_cb = NULL;
+			spdk_thread_send_msg(spdk_thread_get_app_thread(), vfu_fini_cb, fini_cb);
 		}
 	}
 	pthread_mutex_unlock(&g_endpoint_lock);
-
-	if (fini_cb) {
-		fini_cb();
-	}
 
 	spdk_thread_exit(spdk_get_thread());
 }
@@ -821,6 +825,8 @@ spdk_vfu_fini(spdk_vfu_fini_cb fini_cb)
 	struct spdk_vfu_endpoint *endpoint, *tmp;
 	struct tgt_pci_device_ops *ops, *ops_tmp;
 	uint32_t endpoint_cnt = 0;
+
+	assert(spdk_thread_is_app_thread(NULL));
 
 	pthread_mutex_lock(&g_endpoint_lock);
 	assert(!g_fini_cb);

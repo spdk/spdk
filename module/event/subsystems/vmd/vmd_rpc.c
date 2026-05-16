@@ -13,6 +13,8 @@
 #include "spdk/log.h"
 #include "event_vmd.h"
 
+#include "spdk_internal/rpc_autogen.h"
+
 static void
 rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
@@ -22,18 +24,14 @@ rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val 
 }
 SPDK_RPC_REGISTER("vmd_enable", rpc_vmd_enable, SPDK_RPC_STARTUP)
 
-struct rpc_vmd_remove_device {
-	char *addr;
-};
-
 static const struct spdk_json_object_decoder rpc_vmd_remove_device_decoders[] = {
-	{"addr", offsetof(struct rpc_vmd_remove_device, addr), spdk_json_decode_string},
+	{"addr", offsetof(struct rpc_vmd_remove_device_ctx, addr), spdk_json_decode_string},
 };
 
 static void
 rpc_vmd_remove_device(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_vmd_remove_device req = {};
+	struct rpc_vmd_remove_device_ctx req = {};
 	struct spdk_pci_addr addr;
 	int rc;
 
@@ -65,7 +63,7 @@ rpc_vmd_remove_device(struct spdk_jsonrpc_request *request, const struct spdk_js
 
 	spdk_jsonrpc_send_bool_response(request, true);
 out:
-	free(req.addr);
+	free_rpc_vmd_remove_device(&req);
 }
 SPDK_RPC_REGISTER("vmd_remove_device", rpc_vmd_remove_device, SPDK_RPC_RUNTIME)
 

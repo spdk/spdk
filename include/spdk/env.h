@@ -825,6 +825,13 @@ struct spdk_pci_driver *spdk_pci_ioat_get_driver(void);
 struct spdk_pci_driver *spdk_pci_idxd_get_driver(void);
 
 /**
+ * Get the AE4DMA PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_ae4dma_get_driver(void);
+
+/**
  * Get the Virtio PCI driver object.
  *
  * \return PCI driver.

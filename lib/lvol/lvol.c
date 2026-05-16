@@ -44,22 +44,20 @@ static int
 add_lvs_to_list(struct spdk_lvol_store *lvs)
 {
 	struct spdk_lvol_store *tmp;
-	bool name_conflict = false;
 
 	pthread_mutex_lock(&g_lvol_stores_mutex);
 	TAILQ_FOREACH(tmp, &g_lvol_stores, link) {
 		if (!strncmp(lvs->name, tmp->name, SPDK_LVS_NAME_MAX)) {
-			name_conflict = true;
-			break;
+			pthread_mutex_unlock(&g_lvol_stores_mutex);
+			return -1;
 		}
 	}
-	if (!name_conflict) {
-		lvs->on_list = true;
-		TAILQ_INSERT_TAIL(&g_lvol_stores, lvs, link);
-	}
+
+	lvs->on_list = true;
+	TAILQ_INSERT_TAIL(&g_lvol_stores, lvs, link);
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 
-	return name_conflict ? -1 : 0;
+	return 0;
 }
 
 static struct spdk_lvol_store *

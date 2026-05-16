@@ -108,7 +108,7 @@ flush(void)
 	cb_arg1 = false;
 	cb_arg2 = false;
 	rc = _sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EAGAIN);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(cb_arg2 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req2);
@@ -120,7 +120,7 @@ flush(void)
 	MOCK_SET(sendmsg, 10);
 	cb_arg1 = false;
 	rc = _sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EAGAIN);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
@@ -128,7 +128,7 @@ flush(void)
 	MOCK_SET(sendmsg, 24);
 	cb_arg1 = false;
 	rc = _sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EAGAIN);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
@@ -209,7 +209,7 @@ flush_req_chunks_with_zero_copy_threshold(void)
 	/* Send first chunk above zcopy threshold. */
 	MOCK_SET(sendmsg, 75);
 	rc = posix_sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EAGAIN);
 	/* Sent partially, request is not completed. */
 	CU_ASSERT(req_completed == false);
 
@@ -282,7 +282,7 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	/* No zcopy notification for req1. */
 	MOCK_SET(recvmsg, -EAGAIN);
 	rc = posix_sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EAGAIN);
 	CU_ASSERT(req1_completed == false);
 	CU_ASSERT(req2_completed == false);
 
@@ -294,7 +294,7 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	MOCK_ENQUEUE(recvmsg, 0); /* Pass notification range high. */
 	MOCK_ENQUEUE(recvmsg, -EAGAIN); /* No more messages. */
 	rc = posix_sock_flush(sock);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EAGAIN);
 	CU_ASSERT(req1_completed == true);
 	CU_ASSERT(req2_completed == false);
 
@@ -310,6 +310,79 @@ flush_two_reqs_chunks_with_zero_copy_threshold(void)
 	free(req2);
 }
 
+static int g_ut_poll_rc;
+static short g_ut_poll_revents;
+static ssize_t g_ut_recv_rc;
+static int g_ut_recv_errno;
+
+int __wrap_poll(struct pollfd *fds, nfds_t nfds, int timeout);
+ssize_t __wrap_recv(int sockfd, void *buf, size_t len, int flags);
+
+int
+__wrap_poll(struct pollfd *fds, nfds_t nfds, int timeout)
+{
+	if (nfds > 0 && fds != NULL) {
+		fds[0].revents = g_ut_poll_revents;
+	}
+
+	return g_ut_poll_rc;
+}
+
+ssize_t
+__wrap_recv(int sockfd, void *buf, size_t len, int flags)
+{
+	errno = g_ut_recv_errno;
+	return g_ut_recv_rc;
+}
+
+static void
+test_posix_sock_is_connected(void)
+{
+	struct spdk_posix_sock psock = {};
+
+	psock.fd = 1;
+	psock.ready = true;
+
+	g_ut_poll_rc = 1;
+	g_ut_poll_revents = 0;
+
+	/* recv returns EAGAIN -> connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = EAGAIN;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == true);
+
+	/* recv returns EWOULDBLOCK -> connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = EWOULDBLOCK;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == true);
+
+	/* recv returns 0 (peer closed, no buffered data) -> not connected */
+	g_ut_recv_rc = 0;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	/* recv returns > 0 (data available) -> connected */
+	g_ut_recv_rc = 1;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == true);
+
+	/* recv error other than EAGAIN/EWOULDBLOCK -> not connected */
+	g_ut_recv_rc = -1;
+	g_ut_recv_errno = ECONNRESET;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	/* POLLHUP with buffered data -> not connected */
+	g_ut_poll_rc = 1;
+	g_ut_poll_revents = POLLHUP;
+	g_ut_recv_rc = 1;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+
+	g_ut_poll_rc = 1;
+	g_ut_poll_revents = 0;
+
+	/* Socket not ready with no connect context -> not connected */
+	psock.ready = false;
+	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -323,6 +396,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, flush);
 	CU_ADD_TEST(suite, flush_req_chunks_with_zero_copy_threshold);
 	CU_ADD_TEST(suite, flush_two_reqs_chunks_with_zero_copy_threshold);
+	CU_ADD_TEST(suite, test_posix_sock_is_connected);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 

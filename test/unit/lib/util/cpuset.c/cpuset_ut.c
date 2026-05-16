@@ -148,6 +148,10 @@ test_cpuset_parse(void)
 	rc = spdk_cpuset_parse(core_mask, buf);
 	CU_ASSERT(rc < 0);
 
+	/* Overflow value (INT64_MAX + 2) */
+	rc = spdk_cpuset_parse(core_mask, "[9223372036854775809]");
+	CU_ASSERT(rc < 0);
+
 	/* Overflow value (UINT64_MAX * 10) */
 	rc = spdk_cpuset_parse(core_mask, "[184467440737095516150]");
 	CU_ASSERT(rc < 0);

@@ -28,7 +28,7 @@ function create_lvs() {
 	size_bytes=$1
 	truncate -s "$size_bytes" "$aio_disk"
 	$rpc_py bdev_aio_create "$aio_disk" "$bdev_name" $block_size
-	$rpc_py bdev_lvol_create_lvstore "$bdev_name" "$lvs_name" -c "$2" --md_pages_per_cluster_ratio="$3"
+	$rpc_py bdev_lvol_create_lvstore "$bdev_name" "$lvs_name" -c "$2" --md-pages-per-cluster-ratio="$3"
 }
 
 function grow_lvs() {

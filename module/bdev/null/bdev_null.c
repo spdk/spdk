@@ -36,6 +36,7 @@ static void *g_null_read_buf;
 
 static int bdev_null_initialize(void);
 static void bdev_null_finish(void);
+static int bdev_null_config_json(struct spdk_json_write_ctx *w);
 
 static int
 bdev_null_get_ctx_size(void)
@@ -47,6 +48,7 @@ static struct spdk_bdev_module null_if = {
 	.name = "null",
 	.module_init = bdev_null_initialize,
 	.module_fini = bdev_null_finish,
+	.config_json = bdev_null_config_json,
 	.async_fini = true,
 	.get_ctx_size = bdev_null_get_ctx_size,
 };
@@ -233,12 +235,25 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_object_end(w);
 }
 
+static int
+bdev_null_config_json(struct spdk_json_write_ctx *w)
+{
+	struct null_bdev *bdev;
+
+	spdk_json_write_batch_begin(w);
+	TAILQ_FOREACH(bdev, &g_null_bdev_head, tailq) {
+		bdev_null_write_config_json(&bdev->bdev, w);
+	}
+	spdk_json_write_batch_end(w);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table null_fn_table = {
 	.destruct		= bdev_null_destruct,
 	.submit_request		= bdev_null_submit_request,
 	.io_type_supported	= bdev_null_io_type_supported,
 	.get_io_channel		= bdev_null_get_io_channel,
-	.write_config_json	= bdev_null_write_config_json,
 };
 
 /* Use a dummy DIF context to validate DIF configuration of the

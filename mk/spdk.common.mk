@@ -179,25 +179,39 @@ endif
 
 IPSEC_MB_DIR=$(CONFIG_IPSEC_MB_DIR)
 
+ifeq ($(CONFIG_ISAL_PATH),)
 ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
+ISAL_INCLUDE_DIR=$(ISAL_DIR)/..
+ISAL_LIB_DIR=$(ISAL_DIR)/.libs
+else
+ISAL_INCLUDE_DIR=$(CONFIG_ISAL_PATH)/include
+ISAL_LIB_DIR=$(CONFIG_ISAL_PATH)/lib64
+endif
+ifeq ($(CONFIG_ISAL_CRYPTO_PATH),)
 ISAL_CRYPTO_DIR=$(SPDK_ROOT_DIR)/isa-l-crypto
+ISAL_CRYPTO_INCLUDE_DIR=$(ISAL_CRYPTO_DIR)/..
+ISAL_CRYPTO_LIB_DIR=$(ISAL_CRYPTO_DIR)/.libs
+else
+ISAL_CRYPTO_INCLUDE_DIR=$(CONFIG_ISAL_CRYPTO_PATH)/include
+ISAL_CRYPTO_LIB_DIR=$(CONFIG_ISAL_CRYPTO_PATH)/lib64
+endif
 ISAL_BUILD_DIR=$(SPDK_ROOT_DIR)/isalbuild
 ISAL_CRYPTO_BUILD_DIR=$(SPDK_ROOT_DIR)/isalcryptobuild
 ifeq ($(CONFIG_ISAL), y)
-COMMON_CFLAGS += -I$(ISAL_DIR)/.. -I$(ISAL_BUILD_DIR)
+COMMON_CFLAGS += -I$(ISAL_INCLUDE_DIR) -I$(ISAL_BUILD_DIR)
 ifeq ($(CONFIG_SHARED),y)
-SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
-LDFLAGS += -Wl,-rpath=$(ISAL_DIR)/.libs
+SYS_LIBS += -L$(ISAL_LIB_DIR) -lisal
+LDFLAGS += -Wl,-rpath=$(ISAL_LIB_DIR)
 else
-SYS_LIBS += $(ISAL_DIR)/.libs/libisal.a
+SYS_LIBS += $(ISAL_LIB_DIR)/libisal.a
 endif
-ifeq ($(CONFIG_ISAL_CRYPTO), y)
-COMMON_CFLAGS += -I$(ISAL_CRYPTO_DIR)/.. -I$(ISAL_CRYPTO_BUILD_DIR)
+ifeq ($(CONFIG_ISAL_CRYPTO),y)
+COMMON_CFLAGS += -I$(ISAL_CRYPTO_INCLUDE_DIR) -I$(ISAL_CRYPTO_BUILD_DIR)
 ifeq ($(CONFIG_SHARED),y)
-SYS_LIBS += -L$(ISAL_CRYPTO_DIR)/.libs -lisal_crypto
-LDFLAGS += -Wl,-rpath=$(ISAL_CRYPTO_DIR)/.libs
+SYS_LIBS += -L$(ISAL_CRYPTO_LIB_DIR) -lisal_crypto
+LDFLAGS += -Wl,-rpath=$(ISAL_CRYPTO_LIB_DIR)
 else
-SYS_LIBS += $(ISAL_CRYPTO_DIR)/.libs/libisal_crypto.a
+SYS_LIBS += $(ISAL_CRYPTO_LIB_DIR)/libisal_crypto.a
 endif
 endif
 endif
@@ -279,11 +293,8 @@ COMMON_CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 endif
 
 ifeq ($(CONFIG_COVERAGE), y)
-COMMON_CFLAGS += -fprofile-arcs -ftest-coverage
-LDFLAGS += -fprofile-arcs -ftest-coverage
-ifeq ($(OS),FreeBSD)
+COMMON_CFLAGS += --coverage -fprofile-update=atomic
 LDFLAGS += --coverage
-endif
 endif
 
 ifeq ($(OS),Windows)

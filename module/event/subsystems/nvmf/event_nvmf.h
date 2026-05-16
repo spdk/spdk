@@ -12,7 +12,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 #include "spdk/log.h"
 
 struct spdk_nvmf_admin_passthru_conf {

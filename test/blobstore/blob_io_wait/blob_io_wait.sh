@@ -37,19 +37,19 @@ killprocess "$bdev_svc_pid"
 $bdevperf --json "$testdir/bdevperf.json" -q 128 -o 4096 -w write -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
 waitforlisten "$bdev_perf_pid"
-$rpc_py bdev_enable_histogram aio0 -e
+$rpc_py bdev_enable_histogram aio0 --histogram
 sleep 2
 $rpc_py bdev_get_histogram aio0 | "$rootdir/scripts/histogram.py"
-$rpc_py bdev_enable_histogram aio0 -d
+$rpc_py bdev_enable_histogram aio0 --no-histogram
 wait "$bdev_perf_pid"
 
 $bdevperf --json "$testdir/bdevperf.json" -q 128 -o 4096 -w read -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
 waitforlisten "$bdev_perf_pid"
-$rpc_py bdev_enable_histogram aio0 -e
+$rpc_py bdev_enable_histogram aio0 --histogram
 sleep 2
 $rpc_py bdev_get_histogram aio0 | "$rootdir/scripts/histogram.py"
-$rpc_py bdev_enable_histogram aio0 -d
+$rpc_py bdev_enable_histogram aio0 --no-histogram
 wait "$bdev_perf_pid"
 
 $bdevperf --json "$testdir/bdevperf.json" -q 128 -o 4096 -w unmap -t 1

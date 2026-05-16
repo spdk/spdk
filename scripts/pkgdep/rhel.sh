@@ -5,6 +5,8 @@
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 
+yum_opts=()
+
 disclaimer() {
 	case "$ID" in
 		rhel)
@@ -20,14 +22,15 @@ disclaimer() {
 
 			# Don't trigger errexit, simply install what's available. This is default
 			# behavior of older yum versions (e.g. the one present on RHEL 7.x) anyway.
-			yum() { "$(type -P yum)" --skip-broken "$@"; }
+			yum_opts+=(--skip-broken)
 			# For systems which are not registered, subscription-manager will most likely
 			# fail on most calls so simply ignore its failures.
 			sub() { subscription-manager "$@" || :; }
 			;;
 		rocky)
-			[[ $VERSION_ID == 8* ]] || return 0
-			yum() { "$(type -P yum)" --setopt=skip_if_unavailable=True "$@"; }
+			if [[ $VERSION_ID == 8* ]]; then
+				yum_opts+=(--setopt=skip_if_unavailable=True)
+			fi
 			;;
 	esac
 }
@@ -41,10 +44,24 @@ if [[ $ID == centos && $VERSION_ID =~ ^[78].* ]]; then
 	exit 1
 fi
 
+yum() {
+	local attempt max_attempts=3
+	for ((attempt = 1; attempt < max_attempts; attempt++)); do
+		"$(type -P yum)" "${yum_opts[@]}" "$@" && return 0
+		echo "Warning: yum failed (attempt $attempt/$max_attempts), retrying in $((attempt * 10))s..." >&2
+		sleep "$((attempt * 10))"
+	done
+	"$(type -P yum)" "${yum_opts[@]}" "$@"
+}
+
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
-if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
-	repos=() enable=("epel" "elrepo" "elrepo-testing") add=()
+if [[ $ID == centos || $ID == rhel || $ID == rocky || $ID == almalinux ]]; then
+	repos=() enable=("epel" "elrepo" "elrepo-testing") add=() elrepo_configured=false
+
+	if [[ -n $(yum repolist --all elrepo) ]]; then
+		elrepo_configured=true
+	fi
 
 	if [[ $VERSION_ID == 8* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
@@ -98,20 +115,18 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 		[[ $VERSION_ID == 8* ]] && sub repos --enable codeready-builder-for-rhel-8-x86_64-rpms
 		[[ $VERSION_ID == 9* ]] && sub repos --enable codeready-builder-for-rhel-9-x86_64-rpms
 	fi
+
+	if [[ $elrepo_configured == false ]]; then
+		yum-config-manager --setopt elrepo.mirrorlist= --setopt elrepo-testing.mirrorlist= --save
+	fi
 fi
 
 yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	libuuid-devel ncurses-devel json-c-devel libcmocka-devel \
+	lld libuuid-devel ncurses-devel json-c-devel libcmocka-devel \
 	clang clang-devel python3-pip unzip keyutils keyutils-libs-devel fuse3-devel patchelf \
 	pkgconfig
 
 [[ $VERSION_ID != 10* ]] && yum install -y libiscsi-devel
-
-# Minimal install
-# workaround for arm: ninja fails with dep on skbuild python module
-if [ "$(uname -m)" = "aarch64" ]; then
-	pip3 install scikit-build
-fi
 
 if echo "$ID $VERSION_ID" | grep -E -q 'rhel 8|rocky 8'; then
 	yum install -y python36 python36-devel
@@ -119,17 +134,11 @@ if echo "$ID $VERSION_ID" | grep -E -q 'rhel 8|rocky 8'; then
 	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
 		ln -s /etc/alternatives/python3 /usr/bin/python
 	fi
-	# pip3, which is shipped with centos8 and rocky8, is currently providing faulty ninja binary
-	# which segfaults at each run. To workaround it, upgrade pip itself and then use it for each
-	# package - new pip will provide ninja at the same version but with the actually working
-	# binary.
-	pip3 install --upgrade pip
-	pip3() { /usr/local/bin/pip "$@"; }
 else
 	yum install -y python python3-devel
 fi
 
-pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
+pkgdep_setup_python_venv "$rootdir"
 
 # Additional dependencies for SPDK CLI
 yum install -y python3-configshell python3-pexpect
@@ -141,21 +150,21 @@ yum install -y numactl-devel nasm
 yum install -y systemtap-sdt-devel
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	devtool_pkgs=(git sg3_utils pciutils libabigail bash-completion ruby-devel)
+	devtool_pkgs=(git cmake sg3_utils pciutils libabigail bash-completion ruby-devel)
 
 	if echo "$ID $VERSION_ID" | grep -E -q 'rocky 8'; then
-		devtool_pkgs+=(python3-pycodestyle astyle)
+		devtool_pkgs+=(python3-pycodestyle)
 	elif echo "$ID $VERSION_ID" | grep -E -q 'rocky 10'; then
 		echo "Rocky 10 do not have python3-pycodestyle and lcov dependencies"
-		devtool_pkgs+=(astyle ShellCheck)
+		devtool_pkgs+=(ShellCheck)
 	elif [[ $ID == openeuler ]]; then
 		devtool_pkgs+=(python3-pycodestyle)
-		echo "openEuler does not have astyle, lcov and ShellCheck dependencies"
+		echo "openEuler does not have lcov and ShellCheck dependencies"
 	else
-		devtool_pkgs+=(python-pycodestyle astyle lcov ShellCheck)
+		devtool_pkgs+=(python-pycodestyle lcov ShellCheck)
 	fi
 
-	if [[ $ID == fedora ]]; then
+	if [[ $ID == fedora || $ID == rhel ]]; then
 		devtool_pkgs+=(rubygem-{bundler,rake})
 	fi
 

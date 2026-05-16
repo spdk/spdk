@@ -142,8 +142,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_DEFAULT_SOCK_IMPL:
 			rc = spdk_sock_set_default_impl(optarg);
-			if (rc) {
-				fprintf(stderr, "Failed to set sock impl %s, err %d (%s)\n", optarg, errno, strerror(errno));
+			if (rc < 0) {
+				fprintf(stderr, "spdk_sock_set_default_impl() failed to set sock impl %s, rc %d: %s\n", optarg, rc,
+					strerror(-rc));
 				return 1;
 			}
 			break;

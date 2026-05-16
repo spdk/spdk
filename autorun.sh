@@ -19,7 +19,7 @@ fi
 source "$rootdir/test/common/autotest_common.sh"
 source "$conf"
 
-trap 'timing_finish || exit 1' EXIT
+trap 'dump_backtrace; timing_finish || exit 1' EXIT
 
 # Runs agent scripts
 $rootdir/autobuild.sh "$conf"

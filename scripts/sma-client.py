@@ -4,21 +4,19 @@
 #  All rights reserved.
 #
 
-from argparse import ArgumentParser
-import grpc
-import google.protobuf.json_format as json_format
 import importlib
 import json
 import logging
 import os
 import sys
+from argparse import ArgumentParser
+
+import google.protobuf.json_format as json_format
+import grpc
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
-import spdk.sma.proto.sma_pb2 as sma_pb2                        # noqa
-import spdk.sma.proto.sma_pb2_grpc as sma_pb2_grpc              # noqa
-import spdk.sma.proto.nvmf_tcp_pb2 as nvmf_tcp_pb2              # noqa
-import spdk.sma.proto.nvmf_tcp_pb2_grpc as nvmf_tcp_pb2_grpc    # noqa
+from spdk.sma.proto import sma_pb2, sma_pb2_grpc
 
 
 class Client:
@@ -39,8 +37,8 @@ class Client:
         with grpc.insecure_channel(f'{self.addr}:{self.port}') as channel:
             stub = sma_pb2_grpc.StorageManagementAgentStub(channel)
             func = getattr(stub, method)
-            input, output = self._get_method_types(method)
-            response = func(request=json_format.ParseDict(params, input()))
+            input_type, _ = self._get_method_types(method)
+            response = func(request=json_format.ParseDict(params, input_type()))
             return json_format.MessageToDict(response,
                                              preserving_proto_field_name=True)
 
@@ -49,6 +47,7 @@ def load_plugins(plugins):
     for plugin in plugins:
         logging.debug(f'Loading external plugin: {plugin}')
         module = importlib.import_module(plugin)
+        logging.debug(f'Loaded external plugin: {module}')
 
 
 def parse_argv():

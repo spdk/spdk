@@ -945,13 +945,12 @@ virtio_vfu_pci_common_cfg(struct vfu_virtio_endpoint *virtio_endpoint, char *buf
 				      value);
 			break;
 		case VIRTIO_PCI_COMMON_GF:
-			assert(dev->cfg.guest_feature_select <= 1);
-			if (dev->cfg.guest_feature_select) {
+			if (dev->cfg.guest_feature_select == 1) {
 				dev->cfg.guest_feat_hi = value;
 				SPDK_DEBUGLOG(vfu_virtio, "%s: WRITE PCI_COMMON_GF_HI with 0x%x\n",
 					      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
 					      value);
-			} else {
+			} else if (dev->cfg.guest_feature_select == 0) {
 				dev->cfg.guest_feat_lo = value;
 				SPDK_DEBUGLOG(vfu_virtio, "%s: WRITE PCI_COMMON_GF_LO with 0x%x\n",
 					      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
@@ -1061,17 +1060,18 @@ virtio_vfu_pci_common_cfg(struct vfu_virtio_endpoint *virtio_endpoint, char *buf
 				      value);
 			break;
 		case VIRTIO_PCI_COMMON_DF:
-			assert(dev->cfg.host_feature_select <= 1);
-			if (dev->cfg.host_feature_select) {
+			if (dev->cfg.host_feature_select == 1) {
 				value = dev->host_features >> 32;
 				SPDK_DEBUGLOG(vfu_virtio, "%s: READ PCI_COMMON_DF_HI with 0x%x\n",
 					      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
 					      value);
-			} else {
+			} else if (dev->cfg.host_feature_select == 0) {
 				value = dev->host_features;
 				SPDK_DEBUGLOG(vfu_virtio, "%s: READ PCI_COMMON_DF_LO with 0x%x\n",
 					      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
 					      value);
+			} else {
+				value = 0;
 			}
 			break;
 		case VIRTIO_PCI_COMMON_GFSELECT:
@@ -1081,17 +1081,18 @@ virtio_vfu_pci_common_cfg(struct vfu_virtio_endpoint *virtio_endpoint, char *buf
 				      value);
 			break;
 		case VIRTIO_PCI_COMMON_GF:
-			assert(dev->cfg.guest_feature_select <= 1);
-			if (dev->cfg.guest_feature_select) {
+			if (dev->cfg.guest_feature_select == 1) {
 				value = dev->cfg.guest_feat_hi;
 				SPDK_DEBUGLOG(vfu_virtio, "%s: READ PCI_COMMON_GF_HI with 0x%x\n",
 					      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
 					      value);
-			} else {
+			} else if (dev->cfg.guest_feature_select == 0) {
 				value = dev->cfg.guest_feat_lo;
 				SPDK_DEBUGLOG(vfu_virtio, "%s: READ PCI_COMMON_GF_LO with 0x%x\n",
 					      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
 					      value);
+			} else {
+				value = 0;
 			}
 			break;
 		case VIRTIO_PCI_COMMON_MSIX:

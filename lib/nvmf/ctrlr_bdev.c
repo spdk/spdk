@@ -218,17 +218,8 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 		 */
 		nsdata->noiob = spdk_min(spdk_bdev_get_optimal_io_boundary(bdev), max_num_blocks);
 	}
-	nsdata->nmic.can_share = 1;
-	if (nvmf_ns_is_ptpl_capable(ns)) {
-		nsdata->nsrescap.rescap.persist = 1;
-	}
-	nsdata->nsrescap.rescap.write_exclusive = 1;
-	nsdata->nsrescap.rescap.exclusive_access = 1;
-	nsdata->nsrescap.rescap.write_exclusive_reg_only = 1;
-	nsdata->nsrescap.rescap.exclusive_access_reg_only = 1;
-	nsdata->nsrescap.rescap.write_exclusive_all_reg = 1;
-	nsdata->nsrescap.rescap.exclusive_access_all_reg = 1;
-	nsdata->nsrescap.rescap.ignore_existing_key = 1;
+	nsdata->nmic.shrns = 1;
+	nsdata->nsrescap.rescap = nvmf_ns_get_rescap(ns);
 
 	SPDK_STATIC_ASSERT(sizeof(nsdata->nguid) == sizeof(ns->opts.nguid), "size mismatch");
 	memcpy(nsdata->nguid, ns->opts.nguid, sizeof(nsdata->nguid));
@@ -597,6 +588,12 @@ nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+static uint64_t
+nvmf_mps_to_blocks(uint8_t val, uint32_t block_size)
+{
+	return ((uint64_t)1 << (val + 12)) / block_size;
+}
+
 int
 nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
@@ -604,18 +601,19 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	uint64_t max_write_zeroes_size = req->qpair->ctrlr->subsys->max_write_zeroes_size_kib;
+	uint8_t wzsl = req->qpair->ctrlr->subsys->opts.wzsl;
+	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	uint64_t start_lba;
 	uint64_t num_blocks;
+	uint64_t max_blocks;
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
-	if (spdk_unlikely(max_write_zeroes_size > 0 &&
-			  num_blocks > (max_write_zeroes_size << 10) / spdk_bdev_desc_get_block_size(desc))) {
-		SPDK_ERRLOG("invalid write zeroes size, should not exceed %" PRIu64 "Kib\n", max_write_zeroes_size);
-		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	max_blocks = nvmf_mps_to_blocks(wzsl, block_size);
+	if (spdk_unlikely(wzsl > 0 && num_blocks > max_blocks)) {
+		SPDK_DEBUGLOG(nvmf, "write zeroes size %" PRIu64 " blocks exceeds WZSL"
+			      " %" PRIu64 " blocks, processing may take longer\n",
+			      num_blocks, max_blocks);
 	}
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
@@ -736,8 +734,8 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	uint16_t nr, i;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	uint64_t max_discard_size = req->qpair->ctrlr->subsys->max_discard_size_kib;
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
+	uint32_t dmrsl = req->qpair->ctrlr->subsys->opts.dmrsl;
+	uint32_t dmrl = req->qpair->ctrlr->subsys->opts.dmrsl ? 1 : 0;
 	struct spdk_iov_xfer ix;
 	uint64_t lba;
 	uint32_t lba_count;
@@ -773,16 +771,21 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	for (i = unmap_ctx->range_index; i < nr; i++) {
 		struct spdk_nvme_dsm_range dsm_range = { 0 };
 
+		if (dmrl && unmap_ctx->range_index >= dmrl) {
+			SPDK_DEBUGLOG(nvmf, "Maximum number of logical block ranges %" PRIu32
+				      " exceeded, skip processing remaining ranges %" PRIu32 ".\n", dmrl, nr - dmrl);
+			break;
+		}
+
 		spdk_iov_xfer_to_buf(&ix, &dsm_range, sizeof(dsm_range));
 
 		lba = dsm_range.starting_lba;
 		lba_count = dsm_range.length;
-		if (max_discard_size > 0 && lba_count > (max_discard_size << 10) / block_size) {
-			SPDK_ERRLOG("invalid unmap size %" PRIu32 " blocks, should not exceed %" PRIu64 " blocks\n",
-				    lba_count, max_discard_size << 1);
-			response->status.sct = SPDK_NVME_SCT_GENERIC;
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			break;
+
+		if (dmrsl && lba_count > dmrsl) {
+			SPDK_DEBUGLOG(nvmf, "Maximum number of logical block in a single range exceeded %" PRIu32
+				      ", skip processing remaining blocks %" PRIu32 ".\n", dmrsl, lba_count - dmrsl);
+			lba_count = dmrsl;
 		}
 
 		unmap_ctx->count++;

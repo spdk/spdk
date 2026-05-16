@@ -51,6 +51,8 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cpl *cpl));
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion_ext, (const struct spdk_nvme_qpair *qpair,
+		const struct spdk_nvme_cpl *cpl, uint8_t opc));
 DEFINE_STUB(spdk_key_get_key, int, (struct spdk_key *key, void *buf, int len), 0);
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *key), NULL);
 
@@ -256,6 +258,7 @@ test_nvme_tcp_build_sgl_request(void)
 	tcp_req.req = &req;
 
 	req.payload = NVME_PAYLOAD_SGL(nvme_tcp_ut_reset_sgl, nvme_tcp_ut_next_sge, &bio, NULL);
+	req.payload_type = NVME_PAYLOAD_TYPE_SGL;
 	req.qpair = &tqpair.qpair;
 
 	for (i = 0; i < NVME_TCP_MAX_SGL_DESCRIPTORS; i++) {
@@ -265,8 +268,8 @@ test_nvme_tcp_build_sgl_request(void)
 
 	/* Test case 1: Single SGL. Expected: PASS */
 	bio.iovpos = 0;
-	req.payload_offset = 0;
-	req.payload_size = 0x1000;
+	req.payload.offset = 0;
+	req.payload.size = 0x1000;
 	bio.iovs[0].iov_len = 0x1000;
 	rc = nvme_tcp_build_sgl_request(&tqpair, &tcp_req);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -277,8 +280,8 @@ test_nvme_tcp_build_sgl_request(void)
 
 	/* Test case 2: Multiple SGL. Expected: PASS */
 	bio.iovpos = 0;
-	req.payload_offset = 0;
-	req.payload_size = 0x4000;
+	req.payload.offset = 0;
+	req.payload.size = 0x4000;
 	for (i = 0; i < 4; i++) {
 		bio.iovs[i].iov_len = 0x1000;
 	}
@@ -293,8 +296,8 @@ test_nvme_tcp_build_sgl_request(void)
 
 	/* Test case 3: Payload is bigger than SGL. Expected: FAIL */
 	bio.iovpos = 0;
-	req.payload_offset = 0;
-	req.payload_size = 0x17000;
+	req.payload.offset = 0;
+	req.payload.size = 0x17000;
 	for (i = 0; i < NVME_TCP_MAX_SGL_DESCRIPTORS; i++) {
 		bio.iovs[i].iov_len = 0x1000;
 	}
@@ -540,6 +543,8 @@ test_nvme_tcp_req_init(void)
 	struct nvme_tcp_req tcp_req = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_tcp_ut_bdev_io bio = {};
+	struct iovec iov[16] = {};
+	uint32_t i;
 	int rc;
 
 	tqpair.qpair.ctrlr = &ctrlr;
@@ -547,8 +552,9 @@ test_nvme_tcp_req_init(void)
 
 	tcp_req.cid = 1;
 	req.payload = NVME_PAYLOAD_SGL(nvme_tcp_ut_reset_sgl, nvme_tcp_ut_next_sge, &bio, NULL);
-	req.payload_offset = 0;
-	req.payload_size = 4096;
+	req.payload_type = NVME_PAYLOAD_TYPE_SGL;
+	req.payload.offset = 0;
+	req.payload.size = 4096;
 	ctrlr.max_sges = NVME_TCP_MAX_SGL_DESCRIPTORS;
 	ctrlr.ioccsz_bytes = 1024;
 	bio.iovpos = 0;
@@ -557,20 +563,19 @@ test_nvme_tcp_req_init(void)
 
 	/* Test case1: payload type SGL. Expect: PASS */
 	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
-	req.payload.reset_sgl_fn = nvme_tcp_ut_reset_sgl;
 
 	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tcp_req.req == &req);
 	CU_ASSERT(tcp_req.in_capsule_data == true);
 	CU_ASSERT(tcp_req.iovcnt == 1);
-	CU_ASSERT(tcp_req.iov[0].iov_len == req.payload_size);
+	CU_ASSERT(tcp_req.iov[0].iov_len == req.payload.size);
 	CU_ASSERT(tcp_req.iov[0].iov_base == bio.iovs[0].iov_base);
 	CU_ASSERT(req.cmd.cid == tcp_req.cid);
 	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
-	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.size);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
 
 	/* Test case2: payload type CONTIG. Expect: PASS */
@@ -578,22 +583,103 @@ test_nvme_tcp_req_init(void)
 	memset(&tcp_req, 0, sizeof(tcp_req));
 	tcp_req.cid = 1;
 	req.payload = NVME_PAYLOAD_CONTIG(&bio, NULL);
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 
 	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tcp_req.req == &req);
 	CU_ASSERT(tcp_req.in_capsule_data == true);
-	CU_ASSERT(tcp_req.iov[0].iov_len == req.payload_size);
+	CU_ASSERT(tcp_req.iov[0].iov_len == req.payload.size);
 	CU_ASSERT(tcp_req.iov[0].iov_base == &bio);
 	CU_ASSERT(tcp_req.iovcnt == 1);
 	CU_ASSERT(req.cmd.cid == tcp_req.cid);
 	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
-	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.size);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
 
+	/* Test case3: payload type IOV. Expect: PASS */
+	for (i = 0; i < 16; i++) {
+		iov[i].iov_base = (void *)((uint64_t)0xFEEDB000 + i * 0x1000);
+		iov[i].iov_len = 0x1000;
+	}
+	memset(&req.cmd, 0, sizeof(req.cmd));
+	memset(&tcp_req, 0, sizeof(tcp_req));
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+	req.payload.iov = iov;
+	req.payload.iov_count = 16;
+	req.payload.size = 16 * 0x1000;
+	req.payload.offset = 0;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tcp_req.req == &req);
+	CU_ASSERT(tcp_req.in_capsule_data == false);
+	for (i = 0; i < 16; i++) {
+		CU_ASSERT(tcp_req.iov[i].iov_base == iov[i].iov_base);
+		CU_ASSERT(tcp_req.iov[i].iov_len == iov[i].iov_len);
+	}
+	CU_ASSERT(tcp_req.iovcnt == 16);
+	CU_ASSERT(req.cmd.cid == tcp_req.cid);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+
+	/* Test case4: payload type IOV. Controller's max_sge is less than iovcount. Expect FAIL */
+	memset(&req.cmd, 0, sizeof(req.cmd));
+	memset(&tcp_req, 0, sizeof(tcp_req));
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+	req.payload.iov = iov;
+	req.payload.iov_count = 16;
+	req.payload.size = 16 * 0x1000;
+	req.payload.offset = 0;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	ctrlr.max_sges = NVME_TCP_MAX_SGL_DESCRIPTORS - 1;
+	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
+	CU_ASSERT(rc != 0);
+	ctrlr.max_sges = NVME_TCP_MAX_SGL_DESCRIPTORS;
+
+	/* Test case5: payload type IOV with offset. Expect: PASS */
+	iov[0].iov_len += 0x1000; /* offset */
+	iov[15].iov_len += 0x2000; /* extra data which must not be consumed */
+	memset(&req.cmd, 0, sizeof(req.cmd));
+	memset(&tcp_req, 0, sizeof(tcp_req));
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+	req.payload.iov = iov;
+	req.payload.iov_count = 16;
+	req.payload.size = 16 * 0x1000;
+	req.payload.offset = 0x1000;
+	req.payload_type = NVME_PAYLOAD_TYPE_IOV;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	rc = nvme_tcp_req_init(&tqpair, &req, &tcp_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tcp_req.req == &req);
+	CU_ASSERT(tcp_req.in_capsule_data == false);
+	CU_ASSERT(tcp_req.iov[0].iov_base == iov[0].iov_base + 0x1000);
+	CU_ASSERT(tcp_req.iov[0].iov_len == 0x1000);
+	for (i = 1; i < 16; i++) {
+		CU_ASSERT(tcp_req.iov[i].iov_base == iov[i].iov_base);
+		CU_ASSERT(tcp_req.iov[i].iov_len == 0x1000);
+	}
+	CU_ASSERT(tcp_req.iovcnt == 16);
+	CU_ASSERT(req.cmd.cid == tcp_req.cid);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
 }
 
 static void
@@ -654,7 +740,7 @@ test_nvme_tcp_qpair_capsule_cmd_send(void)
 	tcp_req.iov[1].iov_base = (void *)iov_base1;
 	tcp_req.iov[1].iov_len = 4096;
 	tcp_req.iovcnt = 2;
-	tcp_req.req->payload_size = 8192;
+	tcp_req.req->payload.size = 8192;
 	tcp_req.in_capsule_data = true;
 	tqpair.cpda = NVME_TCP_HPDA_DEFAULT;
 
@@ -663,7 +749,7 @@ test_nvme_tcp_qpair_capsule_cmd_send(void)
 	tqpair.flags.host_ddgst_enable = 1;
 	pdo = plen = sizeof(struct spdk_nvme_tcp_cmd) +
 		     SPDK_NVME_TCP_DIGEST_LEN;
-	plen += tcp_req.req->payload_size;
+	plen += tcp_req.req->payload.size;
 	plen += SPDK_NVME_TCP_DIGEST_LEN;
 
 	nvme_tcp_qpair_capsule_cmd_send(&tqpair, &tcp_req);
@@ -687,7 +773,7 @@ test_nvme_tcp_qpair_capsule_cmd_send(void)
 	tqpair.flags.host_ddgst_enable = 0;
 
 	pdo = plen = sizeof(struct spdk_nvme_tcp_cmd);
-	plen += tcp_req.req->payload_size;
+	plen += tcp_req.req->payload.size;
 
 	nvme_tcp_qpair_capsule_cmd_send(&tqpair, &tcp_req);
 	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
@@ -708,7 +794,7 @@ test_nvme_tcp_qpair_capsule_cmd_send(void)
 	tqpair.cpda = SPDK_NVME_TCP_CPDA_MAX;
 
 	pdo = plen = (SPDK_NVME_TCP_CPDA_MAX + 1) << 2;
-	plen += tcp_req.req->payload_size;
+	plen += tcp_req.req->payload.size;
 	plen += SPDK_NVME_TCP_DIGEST_LEN;
 
 	nvme_tcp_qpair_capsule_cmd_send(&tqpair, &tcp_req);
@@ -1156,7 +1242,7 @@ test_nvme_tcp_c2h_payload_handle(void)
 
 	/* case 1: nvme_tcp_c2h_data_payload_handle: tcp_req->datao != tcp_req->req->payload_size */
 	tcp_req.datao = 1024;
-	tcp_req.req->payload_size = 2048;
+	tcp_req.req->payload.size = 2048;
 	tcp_req.state = NVME_TCP_REQ_ACTIVE;
 	tcp_req.ordering.bits.send_ack = 1;
 	memset(&tcp_req.rsp, 0, sizeof(tcp_req.rsp));
@@ -1176,7 +1262,7 @@ test_nvme_tcp_c2h_payload_handle(void)
 
 	/* case 2: nvme_tcp_c2h_data_payload_handle: tcp_req->datao == tcp_req->req->payload_size */
 	tcp_req.datao = 1024;
-	tcp_req.req->payload_size = 1024;
+	tcp_req.req->payload.size = 1024;
 	tcp_req.state = NVME_TCP_REQ_ACTIVE;
 	tcp_req.ordering.bits.send_ack = 1;
 	memset(&tcp_req.rsp, 0, sizeof(tcp_req.rsp));
@@ -1197,7 +1283,7 @@ test_nvme_tcp_c2h_payload_handle(void)
 	/* case 3: nvme_tcp_c2h_data_payload_handle: flag does not have SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS */
 	pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
 	tcp_req.datao = 1024;
-	tcp_req.req->payload_size = 1024;
+	tcp_req.req->payload.size = 1024;
 	tcp_req.state = NVME_TCP_REQ_ACTIVE;
 	tcp_req.ordering.bits.send_ack = 1;
 	memset(&tcp_req.rsp, 0, sizeof(tcp_req.rsp));
@@ -1320,7 +1406,7 @@ test_nvme_tcp_pdu_payload_handle(void)
 	/* C2H_DATA */
 	recv_pdu.hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_C2H_DATA;
 	tcp_req.datao = 1024;
-	tcp_req.req->payload_size = 2048;
+	tcp_req.req->payload.size = 2048;
 	tcp_req.state = NVME_TCP_REQ_ACTIVE;
 	tcp_req.ordering.bits.send_ack = 1;
 
@@ -1362,6 +1448,7 @@ test_nvme_tcp_capsule_resp_hdr_handle(void)
 	req.qpair = &tqpair.qpair;
 	req.qpair->ctrlr = &ctrlr;
 	req.payload = NVME_PAYLOAD_CONTIG(NULL, NULL);
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
 
 	rc = nvme_tcp_alloc_reqs(&tqpair);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -1497,7 +1584,11 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	struct nvme_tcp_req treq = { .req = &req, .tqpair = &tqpair };
 	int rc, disconnected;
 
+	tgroup.sock_group = spdk_sock_group_create(&tgroup);
+	SPDK_CU_ASSERT_FATAL(tgroup.sock_group != NULL);
+
 	qpair = &tqpair.qpair;
+	tqpair.shared_stats = true;
 	qpair->poll_group = &tgroup.group;
 	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	TAILQ_INIT(&tgroup.needs_poll);
@@ -1623,6 +1714,8 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	nvme_tcp_ctrlr_disconnect_qpair(&ctrlr, qpair);
 
 	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTED);
+
+	spdk_sock_group_close(&tgroup.sock_group);
 }
 
 static void
@@ -1718,12 +1811,10 @@ static void
 test_nvme_tcp_poll_group_get_stats(void)
 {
 	int rc = 0;
-	struct spdk_sock_group sgroup = {};
 	struct nvme_tcp_poll_group *pgroup = NULL;
 	struct spdk_nvme_transport_poll_group *tgroup = NULL;
 	struct spdk_nvme_transport_poll_group_stat *tgroup_stat = NULL;
 
-	MOCK_SET(spdk_sock_group_create, &sgroup);
 	tgroup = nvme_tcp_poll_group_create();
 	CU_ASSERT(tgroup != NULL);
 	pgroup = nvme_tcp_poll_group(tgroup);
@@ -1748,8 +1839,6 @@ test_nvme_tcp_poll_group_get_stats(void)
 	nvme_tcp_poll_group_free_stats(tgroup, tgroup_stat);
 	rc = nvme_tcp_poll_group_destroy(tgroup);
 	CU_ASSERT(rc == 0);
-
-	MOCK_CLEAR(spdk_sock_group_create);
 }
 
 static void
@@ -1770,6 +1859,7 @@ test_nvme_tcp_ctrlr_construct(void)
 		.src_addr = "192.168.1.77",
 		.src_svcid = "23",
 	};
+	int rc;
 
 	/* Transmit ACK timeout value exceeds max, expected to pass and using max */
 	opts.transport_ack_timeout = NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT + 1;
@@ -1808,13 +1898,17 @@ test_nvme_tcp_ctrlr_construct(void)
 	opts.admin_queue_size = 2;
 	trid.adrfam = SPDK_NVMF_ADRFAM_INTRA_HOST;
 	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
-	CU_ASSERT(ctrlr == NULL);
+	rc = nvme_tcp_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+	CU_ASSERT(rc == -1);
+	nvme_tcp_ctrlr_destruct(ctrlr);
 
 	/* Error connecting socket, expected to create Admin qpair failed */
 	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	MOCK_SET(spdk_sock_connect_async, NULL);
 	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
-	CU_ASSERT(ctrlr == NULL);
+	rc = nvme_tcp_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+	CU_ASSERT(rc == -1);
+	nvme_tcp_ctrlr_destruct(ctrlr);
 
 	MOCK_CLEAR(spdk_sock_connect_async);
 }
@@ -1861,11 +1955,12 @@ test_nvme_tcp_qpair_submit_request(void)
 	req.qpair = &tqpair->qpair;
 	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 	req.payload = NVME_PAYLOAD_SGL(nvme_tcp_ut_reset_sgl, nvme_tcp_ut_next_sge, &bio, NULL);
+	req.payload_type = NVME_PAYLOAD_TYPE_SGL;
 
 	/* Failed to construct request, because not enough max_sges */
 	req.qpair->ctrlr->max_sges = 1;
-	req.payload_size = 2048;
-	req.payload_offset = 0;
+	req.payload.size = 2048;
+	req.payload.offset = 0;
 	bio.iovpos = 0;
 	bio.iovs[0].iov_len = 1024;
 	bio.iovs[1].iov_len = 1024;
@@ -1896,7 +1991,7 @@ test_nvme_tcp_qpair_submit_request(void)
 	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
-	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload.size);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
 	CU_ASSERT(tcp_req->in_capsule_data == true);
 	CU_ASSERT(tcp_req->iov[0].iov_len == bio.iovs[0].iov_len);
@@ -1907,10 +2002,10 @@ test_nvme_tcp_qpair_submit_request(void)
 	CU_ASSERT((tcp_req->pdu->hdr.capsule_cmd.common.flags & SPDK_NVME_TCP_CH_FLAGS_HDGSTF) == 0);
 	CU_ASSERT((tcp_req->pdu->hdr.capsule_cmd.common.flags & SPDK_NVME_TCP_CH_FLAGS_DDGSTF) == 0);
 	CU_ASSERT(tcp_req->datao == 0);
-	CU_ASSERT(tcp_req->pdu->data_len == req.payload_size);
+	CU_ASSERT(tcp_req->pdu->data_len == req.payload.size);
 	CU_ASSERT(tcp_req->pdu->hdr.capsule_cmd.common.pdo == sizeof(struct spdk_nvme_tcp_cmd));
 	CU_ASSERT(tcp_req->pdu->hdr.capsule_cmd.common.plen == sizeof(struct spdk_nvme_tcp_cmd) +
-		  req.payload_size);
+		  req.payload.size);
 	CU_ASSERT(tcp_req->pdu->data_iov[0].iov_base == (void *)0xDEADBEEF);
 	CU_ASSERT(tcp_req->pdu->data_iov[0].iov_len == 1024);
 	CU_ASSERT(tcp_req->pdu->data_iov[1].iov_base == (void *)0xDFADBEEF);

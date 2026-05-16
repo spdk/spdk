@@ -3,6 +3,7 @@
 #  All rights reserved.
 
 from configshell_fb import ExecutionError
+
 from ..rpc.client import JSONRPCException
 from .ui_node import UINode
 

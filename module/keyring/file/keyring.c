@@ -32,8 +32,15 @@ keyring_file_check_path(const char *path, int *size)
 		return -errsv;
 	}
 
-	if ((st.st_mode & 077) || st.st_uid != getuid()) {
-		SPDK_ERRLOG("Invalid permissions for key file '%s': 0%o\n", path, st.st_mode);
+	if (st.st_mode & 077) {
+		SPDK_ERRLOG("Invalid permissions of key file '%s': 0%o required: 0%o\n", path,
+			    st.st_mode, st.st_mode & ~077);
+		return -EPERM;
+	}
+
+	if (st.st_uid != getuid()) {
+		SPDK_ERRLOG("Invalid owner of key file '%s': %d, must be: %d\n", path, st.st_uid,
+			    getuid());
 		return -EPERM;
 	}
 

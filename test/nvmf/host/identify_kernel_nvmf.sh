@@ -15,17 +15,15 @@ trap 'nvmftestfini || :; clean_kernel_target' EXIT
 target_ip=$(get_main_ns_ip)
 configure_kernel_target "$NVME_SUBNQN" "$target_ip"
 
-"$SPDK_BIN_DIR/spdk_nvme_identify" -r "\
+run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "\
 	trtype:$TEST_TRANSPORT \
 	adrfam:IPv4 \
 	traddr:$target_ip
 	trsvcid:$NVMF_PORT \
-	subnqn:nqn.2014-08.org.nvmexpress.discovery" \
-	"${NO_HUGE[@]}"
-$SPDK_BIN_DIR/spdk_nvme_identify -r "\
+	subnqn:nqn.2014-08.org.nvmexpress.discovery"
+run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "\
 	trtype:$TEST_TRANSPORT \
 	adrfam:IPv4 \
 	traddr:$target_ip \
 	trsvcid:$NVMF_PORT \
-	subnqn:$NVME_SUBNQN" \
-	"${NO_HUGE[@]}"
+	subnqn:$NVME_SUBNQN"

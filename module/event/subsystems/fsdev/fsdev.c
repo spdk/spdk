@@ -7,9 +7,8 @@
 #include "spdk/fsdev.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
-
-#include "spdk_internal/init.h"
 #include "spdk/env.h"
+#include "spdk/init.h"
 
 static void
 fsdev_initialize_complete(void *cb_arg, int rc)

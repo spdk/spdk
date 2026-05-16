@@ -11,6 +11,7 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 NVME_CONNECT="nvme connect -i 16"
+subnqn=nqn.2016-06.io.spdk:cnode$$
 
 nvmftestinit
 
@@ -20,11 +21,11 @@ nvmfappstart -m 0xF
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -s 1024
 
 for i in $(seq 0 5); do
-	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s "SPDK0000000000000${i}"
-	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$rpc_py nvmf_create_subsystem ${subnqn}_${i} -a -s "SPDK0000000000000${i}"
+	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc${i}
+	$rpc_py nvmf_subsystem_add_ns ${subnqn}_${i} Malloc${i}
+	$rpc_py nvmf_subsystem_add_listener ${subnqn}_${i} -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "${subnqn}_${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	waitforblk "nvme${i}n1"
 done
 
@@ -38,9 +39,9 @@ $rootdir/scripts/fio-wrapper -p nvmf -i 1048576 -d 128 -t read -r 10 -n 13
 sync
 
 for i in $(seq 0 5); do
-	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
+	nvme disconnect -n "${subnqn}_${i}"
 	waitforserial_disconnect "SPDK0000000000000${i}"
-	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode$i
+	$rpc_py nvmf_delete_subsystem ${subnqn}_${i}
 done
 
 trap - SIGINT SIGTERM EXIT

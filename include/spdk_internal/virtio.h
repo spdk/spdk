@@ -86,6 +86,9 @@ struct virtio_dev_ops {
 	 */
 	int (*set_features)(struct virtio_dev *vdev, uint64_t features);
 
+	/** Enable interrupts */
+	int (*enable_interrupts)(struct virtio_dev *vdev, uint16_t max_queues, bool intr_per_vq);
+
 	/** Destruct virtio device */
 	void (*destruct_dev)(struct virtio_dev *vdev);
 
@@ -375,6 +378,18 @@ int virtio_dev_write_dev_config(struct virtio_dev *vdev, size_t offset, const vo
  * \return 0 on success, negative errno otherwise
  */
 int virtio_dev_read_dev_config(struct virtio_dev *vdev, size_t offset, void *dst, int len);
+
+/**
+ * Enable interrupts.
+ *
+ * \param vdev virtio device.
+ * \param max_queues Maximum number of virtqueues.
+ * \param intr_per_vq Use separate interrupt vectors for each virtqueue.  It's not very useful to
+ *        use one vector for all virtqueues, but there are some devices that require interrupts to
+ *        be configured, so this option will allow them to function.
+ * \return 0 on success, negative errno otherwise.
+ */
+int virtio_dev_enable_interrupts(struct virtio_dev *vdev, uint16_t max_queues, bool intr_per_vq);
 
 /**
  * Get backend-specific ops for given device.

@@ -7,7 +7,7 @@
 
 #include "spdk/scsi.h"
 
-#include "spdk_internal/init.h"
+#include "spdk/init.h"
 
 static void
 scsi_subsystem_init(void)

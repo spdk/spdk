@@ -10,6 +10,7 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
+subnqn=nqn.2016-06.io.spdk:cnode$$
 
 # connect disconnect is geared towards ensuring that we are properly freeing resources after disconnecting qpairs.
 nvmftestinit
@@ -19,9 +20,9 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c 0
 
 bdev="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_create_subsystem $subnqn -a -s $NVMF_SERIAL
+$rpc_py nvmf_subsystem_add_ns $subnqn $bdev
+$rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	num_iterations=100
@@ -33,9 +34,9 @@ fi
 
 set +x
 for i in $(seq 1 $num_iterations); do
-	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "$subnqn" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	waitforserial "$NVMF_SERIAL"
-	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+	nvme disconnect -n "$subnqn"
 	waitforserial_disconnect "$NVMF_SERIAL"
 done
 set -x

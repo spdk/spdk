@@ -28,6 +28,7 @@
 	spdk_accel_assign_opc;
 	spdk_accel_write_config_json;
 	spdk_accel_append_copy;
+	spdk_accel_append_compare;
 	spdk_accel_append_fill;
 	spdk_accel_append_decompress;
 	spdk_accel_append_encrypt;

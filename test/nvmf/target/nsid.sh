@@ -8,9 +8,9 @@ rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 
-subnqn1="nqn.2024-10.io.spdk:cnode0"
-subnqn2="nqn.2024-10.io.spdk:cnode1"
-subnqn3="nqn.2024-10.io.spdk:cnode2"
+subnqn1="nqn.2024-10.io.spdk:cnode0_$$"
+subnqn2="nqn.2024-10.io.spdk:cnode1_$$"
+subnqn3="nqn.2024-10.io.spdk:cnode2_$$"
 tgt2sock="/var/tmp/tgt2.sock"
 tgt2pid=
 
@@ -55,7 +55,7 @@ nvmfappstart -m 1
 
 trap cleanup SIGINT SIGTERM EXIT
 
-"$rootdir/build/bin/spdk_tgt" -m 2 -r "$tgt2sock" "${NO_HUGE[@]}" &
+run_app_bg "$SPDK_BIN_DIR/spdk_tgt" -m 2 -r "$tgt2sock"
 tgt2pid=$!
 
 tgt1addr="$NVMF_FIRST_TARGET_IP"

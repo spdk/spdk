@@ -20,6 +20,7 @@ DEPDIRS-rte_vhost :=
 DEPDIRS-env_dpdk := log util
 
 DEPDIRS-ioat := log
+DEPDIRS-ae4dma := log util
 DEPDIRS-idxd := log util
 DEPDIRS-sock := log $(JSON_LIBS) trace util
 DEPDIRS-util := log
@@ -106,11 +107,12 @@ DEPDIRS-blob_bdev := log thread bdev
 
 # module/accel
 DEPDIRS-accel_ioat := log ioat thread $(JSON_LIBS) accel
+DEPDIRS-accel_ae4dma := log ae4dma thread $(JSON_LIBS) accel
 DEPDIRS-accel_dsa := log util idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log util idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel util
 DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
-DEPDIRS-accel_error := accel $(JSON_LIBS) thread util
+DEPDIRS-accel_error := accel log $(JSON_LIBS) thread util
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma_utils util
@@ -124,8 +126,8 @@ endif
 DEPDIRS-env_dpdk_rpc := $(JSON_LIBS)
 
 # module/sock
-DEPDIRS-sock_posix := log sock util thread trace
-DEPDIRS-sock_uring := log sock util thread trace
+DEPDIRS-sock_posix := log sock util trace
+DEPDIRS-sock_uring := log sock util trace
 
 # module/scheduler
 DEPDIRS-scheduler_dynamic := event log thread util json
@@ -140,18 +142,18 @@ DEPDIRS-bdev_ftl := $(BDEV_DEPS) ftl
 endif
 DEPDIRS-bdev_gpt := bdev json log thread util
 
-DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
+DEPDIRS-bdev_lvol := $(BDEV_DEPS) dma lvol blob blob_bdev
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
 DEPDIRS-bdev_split := $(BDEV_DEPS)
 
 DEPDIRS-bdev_aio := $(BDEV_DEPS_THREAD)
-DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel
+DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel dma
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_error := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_THREAD) accel dma
 DEPDIRS-bdev_null := $(BDEV_DEPS_THREAD)
-DEPDIRS-bdev_nvme = $(BDEV_DEPS_THREAD) accel keyring nvme trace
+DEPDIRS-bdev_nvme = $(BDEV_DEPS_THREAD) accel dma keyring nvme trace
 DEPDIRS-bdev_ocf := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_wal := $(BDEV_DEPS_THREAD)
@@ -192,7 +194,7 @@ DEPDIRS-event_scsi := init scsi event_bdev
 DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock
 DEPDIRS-event_vhost_blk := init vhost
 DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
-DEPDIRS-event_sock := init sock log
+DEPDIRS-event_sock := init sock log util thread
 DEPDIRS-event_vfu_tgt := init vfu_tgt
 DEPDIRS-event_iobuf := init log thread util $(JSON_LIBS)
 DEPDIRS-event_keyring := init json keyring

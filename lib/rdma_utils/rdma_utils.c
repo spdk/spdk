@@ -5,11 +5,13 @@
 
 #include "spdk_internal/rdma_utils.h"
 
+#include "spdk/config.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/net.h"
 #include "spdk/file.h"
+#include "spdk/barrier.h"
 
 #include "spdk_internal/assert.h"
 
@@ -53,6 +55,11 @@ static pthread_mutex_t g_rdma_mr_maps_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, rdma_utils_memory_domain) g_memory_domains = TAILQ_HEAD_INITIALIZER(
 			g_memory_domains);
 static pthread_mutex_t g_memory_domains_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static bool g_enable_error_injection = false;
+static enum ibv_wc_status g_error_injection_wc_status = IBV_WC_SUCCESS;
+static uint32_t g_error_inject_rate_num = 0;
+static uint32_t g_error_inject_rate_den = 1;
 
 static int
 rdma_utils_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
@@ -550,4 +557,53 @@ spdk_rdma_cm_id_get_numa_id(struct rdma_cm_id *cm_id)
 		return SPDK_ENV_NUMA_ID_ANY;
 	}
 	return (int32_t)numa_id;
+}
+
+int
+spdk_rdma_utils_poll_cq(struct ibv_cq *cq, int num_entries, struct ibv_wc *wc)
+{
+	int rc = ibv_poll_cq(cq, num_entries, wc);
+
+	if (spdk_unlikely(g_enable_error_injection)) {
+		for (int i = 0; i < rc; i++) {
+			if (spdk_unlikely(wc[i].status != IBV_WC_SUCCESS)) {
+				continue;
+			}
+
+			if (((uint32_t)rand() % g_error_inject_rate_den) < g_error_inject_rate_num) {
+				wc[i].status = g_error_injection_wc_status;
+			}
+		}
+	}
+
+	return rc;
+}
+
+int
+spdk_rdma_utils_inject_wc_error(enum ibv_wc_status status, uint32_t err_rate_num,
+				uint32_t err_rate_den)
+{
+	if (err_rate_den == 0 || err_rate_num > err_rate_den) {
+		SPDK_ERRLOG("Invalid error injection rate: numerator=%u, denominator=%u\n", err_rate_num,
+			    err_rate_den);
+		return -EINVAL;
+	}
+
+	g_error_inject_rate_num = err_rate_num;
+	g_error_inject_rate_den = err_rate_den;
+	g_error_injection_wc_status = status;
+	spdk_smp_mb();
+	g_enable_error_injection = true;
+
+	return 0;
+}
+
+void
+spdk_rdma_utils_cancel_wc_error(void)
+{
+	g_enable_error_injection = false;
+	spdk_smp_mb();
+	g_error_inject_rate_num = 0;
+	g_error_inject_rate_den = 1;
+	g_error_injection_wc_status = IBV_WC_SUCCESS;
 }

@@ -13,9 +13,9 @@
 #include "spdk/base64.h"
 #include "spdk/bdev_module.h"
 #include "spdk/dma.h"
-
 #include "spdk/log.h"
 
+#include "spdk_internal/rpc_autogen.h"
 #include "bdev_internal.h"
 
 #define SPDK_BDEV_HISTOGRAM_DEFAULT_MIN_VALUE_NS (1000)
@@ -26,30 +26,41 @@ dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void
 {
 }
 
-static const struct spdk_json_object_decoder rpc_set_bdev_opts_decoders[] = {
-	{"bdev_io_pool_size", offsetof(struct spdk_bdev_opts, bdev_io_pool_size), spdk_json_decode_uint32, true},
-	{"bdev_io_cache_size", offsetof(struct spdk_bdev_opts, bdev_io_cache_size), spdk_json_decode_uint32, true},
-	{"bdev_auto_examine", offsetof(struct spdk_bdev_opts, bdev_auto_examine), spdk_json_decode_bool, true},
-	{"iobuf_small_cache_size", offsetof(struct spdk_bdev_opts, iobuf_small_cache_size), spdk_json_decode_uint32, true},
-	{"iobuf_large_cache_size", offsetof(struct spdk_bdev_opts, iobuf_large_cache_size), spdk_json_decode_uint32, true},
+static const struct spdk_json_object_decoder rpc_bdev_set_options_decoders[] = {
+	{"bdev_io_pool_size", offsetof(struct rpc_bdev_set_options_ctx, bdev_io_pool_size), spdk_json_decode_uint32, true},
+	{"bdev_io_cache_size", offsetof(struct rpc_bdev_set_options_ctx, bdev_io_cache_size), spdk_json_decode_uint32, true},
+	{"bdev_auto_examine", offsetof(struct rpc_bdev_set_options_ctx, bdev_auto_examine), spdk_json_decode_bool, true},
+	{"iobuf_small_cache_size", offsetof(struct rpc_bdev_set_options_ctx, iobuf_small_cache_size), spdk_json_decode_uint32, true},
+	{"iobuf_large_cache_size", offsetof(struct rpc_bdev_set_options_ctx, iobuf_large_cache_size), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
+	struct rpc_bdev_set_options_ctx req = {};
 	struct spdk_bdev_opts opts;
 	int rc;
 
 	spdk_bdev_get_opts(&opts, sizeof(opts));
+	req.bdev_io_pool_size = opts.bdev_io_pool_size;
+	req.bdev_io_cache_size = opts.bdev_io_cache_size;
+	req.bdev_auto_examine = opts.bdev_auto_examine;
+	req.iobuf_small_cache_size = opts.iobuf_small_cache_size;
+	req.iobuf_large_cache_size = opts.iobuf_large_cache_size;
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_set_bdev_opts_decoders,
-					    SPDK_COUNTOF(rpc_set_bdev_opts_decoders), &opts)) {
+		if (spdk_json_decode_object(params, rpc_bdev_set_options_decoders,
+					    SPDK_COUNTOF(rpc_bdev_set_options_decoders), &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
 			return;
 		}
 	}
+	opts.bdev_io_pool_size = req.bdev_io_pool_size;
+	opts.bdev_io_cache_size = req.bdev_io_cache_size;
+	opts.bdev_auto_examine = req.bdev_auto_examine;
+	opts.iobuf_small_cache_size = req.iobuf_small_cache_size;
+	opts.iobuf_large_cache_size = req.iobuf_large_cache_size;
 
 	rc = spdk_bdev_set_opts(&opts);
 	if (rc != 0) {
@@ -90,29 +101,19 @@ rpc_bdev_wait_for_examine(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_wait_for_examine", rpc_bdev_wait_for_examine, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_examine {
-	char *name;
+static const struct spdk_json_object_decoder rpc_bdev_examine_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_examine_ctx, name), spdk_json_decode_string},
 };
 
 static void
-free_rpc_bdev_examine(struct rpc_bdev_examine *r)
+rpc_bdev_examine(struct spdk_jsonrpc_request *request,
+		 const struct spdk_json_val *params)
 {
-	free(r->name);
-}
-
-static const struct spdk_json_object_decoder rpc_examine_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_examine, name), spdk_json_decode_string},
-};
-
-static void
-rpc_bdev_examine_bdev(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
-{
-	struct rpc_bdev_examine req = {NULL};
+	struct rpc_bdev_examine_ctx req = {};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_examine_bdev_decoders,
-				    SPDK_COUNTOF(rpc_examine_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_examine_decoders,
+				    SPDK_COUNTOF(rpc_bdev_examine_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -131,7 +132,7 @@ rpc_bdev_examine_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_examine(&req);
 }
-SPDK_RPC_REGISTER("bdev_examine", rpc_bdev_examine_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_examine", rpc_bdev_examine, SPDK_RPC_RUNTIME)
 
 struct rpc_get_iostat_ctx {
 	int bdev_count;
@@ -214,6 +215,8 @@ bdev_get_iostat_done(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
 	struct rpc_get_iostat_ctx *rpc_ctx = bdev_ctx->rpc_ctx;
 	struct spdk_json_write_ctx *w = rpc_ctx->w;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	if (rc != 0 || rpc_ctx->rc != 0) {
 		if (rpc_ctx->rc == 0) {
 			rpc_ctx->rc = rc;
@@ -256,35 +259,6 @@ done:
 	bdev_iostat_ctx_free(bdev_ctx);
 }
 
-static int
-bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
-{
-	struct rpc_get_iostat_ctx *rpc_ctx = ctx;
-	struct bdev_get_iostat_ctx *bdev_ctx;
-	int rc;
-
-	bdev_ctx = bdev_iostat_ctx_alloc(true);
-	if (bdev_ctx == NULL) {
-		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
-		return -ENOMEM;
-	}
-
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, dummy_bdev_event_cb, NULL,
-				&bdev_ctx->desc);
-	if (rc != 0) {
-		bdev_iostat_ctx_free(bdev_ctx);
-		SPDK_ERRLOG("Failed to open bdev\n");
-		return rc;
-	}
-
-	rpc_ctx->bdev_count++;
-	bdev_ctx->rpc_ctx = rpc_ctx;
-	spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode, bdev_get_iostat_done,
-				  bdev_ctx);
-
-	return 0;
-}
-
 static void
 bdev_get_per_channel_stat_done(struct spdk_bdev *bdev, void *ctx, int status)
 {
@@ -314,52 +288,71 @@ bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
-struct rpc_bdev_get_iostat {
-	char *name;
-	bool per_channel;
-	enum spdk_bdev_reset_stat_mode reset_mode;
-};
-
-static void
-free_rpc_bdev_get_iostat(struct rpc_bdev_get_iostat *r)
-{
-	free(r->name);
-}
-
 static int
-rpc_decode_reset_iostat_mode(const struct spdk_json_val *val, void *out)
+bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 {
-	enum spdk_bdev_reset_stat_mode *mode = out;
+	struct rpc_get_iostat_ctx *rpc_ctx = ctx;
+	struct bdev_get_iostat_ctx *bdev_ctx;
+	int rc;
 
-	if (spdk_json_strequal(val, "all") == true) {
-		*mode = SPDK_BDEV_RESET_STAT_ALL;
-	} else if (spdk_json_strequal(val, "maxmin") == true) {
-		*mode = SPDK_BDEV_RESET_STAT_MAXMIN;
-	} else if (spdk_json_strequal(val, "none") == true) {
-		*mode = SPDK_BDEV_RESET_STAT_NONE;
+	bdev_ctx = bdev_iostat_ctx_alloc(true);
+	if (bdev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, dummy_bdev_event_cb, NULL,
+				&bdev_ctx->desc);
+	if (rc != 0) {
+		bdev_iostat_ctx_free(bdev_ctx);
+		SPDK_ERRLOG("Failed to open bdev\n");
+		return rc;
+	}
+
+	rpc_ctx->bdev_count++;
+	bdev_ctx->rpc_ctx = rpc_ctx;
+
+	if (rpc_ctx->per_channel) {
+		/* bdev_count equals 2 because of initial increment */
+		assert(rpc_ctx->bdev_count == 2 && "we support per_channel only for single bdev");
+		rpc_get_iostat_started(rpc_ctx);
+		spdk_json_write_named_string(rpc_ctx->w, "name", spdk_bdev_get_name(bdev));
+		spdk_json_write_named_array_begin(rpc_ctx->w, "channels");
+
+		spdk_bdev_for_each_channel(bdev,
+					   bdev_get_per_channel_stat,
+					   bdev_ctx,
+					   bdev_get_per_channel_stat_done);
 	} else {
-		SPDK_NOTICELOG("Invalid parameter value: mode\n");
-		return -EINVAL;
+		spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode, bdev_get_iostat_done,
+					  bdev_ctx);
 	}
 
 	return 0;
 }
 
+static void
+free_rpc_bdev_get_iostat_ctx(struct rpc_bdev_get_iostat_ctx *r)
+{
+	if (r->names.count == UINT32_MAX) {
+		/* No value was provided */
+		return;
+	}
+	free_rpc_bdev_iostat_names(&r->names);
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_get_iostat, name), spdk_json_decode_string, true},
-	{"per_channel", offsetof(struct rpc_bdev_get_iostat, per_channel), spdk_json_decode_bool, true},
-	{"reset_mode", offsetof(struct rpc_bdev_get_iostat, reset_mode), rpc_decode_reset_iostat_mode, true},
+	{"per_channel", offsetof(struct rpc_bdev_get_iostat_ctx, per_channel), spdk_json_decode_bool, true},
+	{"reset_mode", offsetof(struct rpc_bdev_get_iostat_ctx, reset_mode), rpc_decode_bdev_reset_stat_mode, true},
+	{"names", offsetof(struct rpc_bdev_get_iostat_ctx, names), rpc_decode_bdev_iostat_names, true},
 };
 
 static void
 rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_get_iostat req = { .reset_mode = SPDK_BDEV_RESET_STAT_NONE };
-	struct spdk_bdev_desc *desc = NULL;
+	struct rpc_bdev_get_iostat_ctx req = { .reset_mode = RPC_BDEV_RESET_STAT_MODE_NONE, .names.count = UINT32_MAX };
 	struct rpc_get_iostat_ctx *rpc_ctx;
-	struct bdev_get_iostat_ctx *bdev_ctx;
-	struct spdk_bdev *bdev;
 	int rc;
 
 	if (params != NULL) {
@@ -369,35 +362,22 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "spdk_json_decode_object failed");
-			free_rpc_bdev_get_iostat(&req);
+			free_rpc_bdev_get_iostat_ctx(&req);
 			return;
-		}
-
-		if (req.per_channel == true && !req.name) {
-			SPDK_ERRLOG("Bdev name is required for per channel IO statistics\n");
-			spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
-			free_rpc_bdev_get_iostat(&req);
-			return;
-		}
-
-		if (req.name) {
-			rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
-			if (rc != 0) {
-				SPDK_ERRLOG("Failed to open bdev '%s': %d\n", req.name, rc);
-				spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-				free_rpc_bdev_get_iostat(&req);
-				return;
-			}
 		}
 	}
 
-	free_rpc_bdev_get_iostat(&req);
+	if (req.per_channel && req.names.count != 1) {
+		SPDK_ERRLOG("Can't use per_channel with multiple bdevs\n");
+		rc = -EINVAL;
+		goto err;
+	}
 
 	rpc_ctx = calloc(1, sizeof(struct rpc_get_iostat_ctx));
 	if (rpc_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate rpc_iostat_ctx struct\n");
-		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		return;
+		rc = -ENOMEM;
+		goto err;
 	}
 
 	/*
@@ -407,42 +387,13 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	rpc_ctx->bdev_count++;
 	rpc_ctx->request = request;
 	rpc_ctx->per_channel = req.per_channel;
-	rpc_ctx->reset_mode = req.reset_mode;
+	rpc_ctx->reset_mode = (enum spdk_bdev_reset_stat_mode)req.reset_mode;
 
-	if (desc != NULL) {
-		bdev = spdk_bdev_desc_get_bdev(desc);
-
-		bdev_ctx = bdev_iostat_ctx_alloc(req.per_channel == false);
-		if (bdev_ctx == NULL) {
-			SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
-			rpc_ctx->rc = -ENOMEM;
-
-			spdk_bdev_close(desc);
-		} else {
-			bdev_ctx->desc = desc;
-
-			rpc_ctx->bdev_count++;
-			bdev_ctx->rpc_ctx = rpc_ctx;
-			if (req.per_channel == false) {
-				spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, rpc_ctx->reset_mode,
-							  bdev_get_iostat_done, bdev_ctx);
-			} else {
-				/* If per_channel is true, there is no failure after here and
-				 * we have to start RPC response before executing
-				 * spdk_bdev_for_each_channel().
-				 */
-				rpc_get_iostat_started(rpc_ctx);
-				spdk_json_write_named_string(rpc_ctx->w, "name", spdk_bdev_get_name(bdev));
-				spdk_json_write_named_array_begin(rpc_ctx->w, "channels");
-
-				spdk_bdev_for_each_channel(bdev,
-							   bdev_get_per_channel_stat,
-							   bdev_ctx,
-							   bdev_get_per_channel_stat_done);
-
-				rpc_get_iostat_done(rpc_ctx);
-				return;
-			}
+	if (req.names.count != UINT32_MAX) {
+		rc = spdk_for_each_bdev_by_name(rpc_ctx, bdev_get_iostat, (const char **)req.names.items,
+						req.names.count);
+		if (rc != 0 && rpc_ctx->rc == 0) {
+			rpc_ctx->rc = rc;
 		}
 	} else {
 		rc = spdk_for_each_bdev(rpc_ctx, bdev_get_iostat);
@@ -451,7 +402,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	if (rpc_ctx->rc == 0) {
+	if (rpc_ctx->rc == 0 && !req.per_channel) {
 		/* We want to fail the RPC for all failures. If per_channel is false,
 		 * it is enough to defer starting RPC response until it is ensured that
 		 * all spdk_bdev_for_each_channel() calls will succeed or there is no bdev.
@@ -461,6 +412,11 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	}
 
 	rpc_get_iostat_done(rpc_ctx);
+	free_rpc_bdev_get_iostat_ctx(&req);
+	return;
+err:
+	spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	free_rpc_bdev_get_iostat_ctx(&req);
 }
 SPDK_RPC_REGISTER("bdev_get_iostat", rpc_bdev_get_iostat, SPDK_RPC_RUNTIME)
 
@@ -519,6 +475,8 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 	struct bdev_reset_iostat_ctx *bdev_ctx;
 	int rc;
 
+	assert(spdk_thread_is_app_thread(NULL));
+
 	bdev_ctx = calloc(1, sizeof(struct bdev_reset_iostat_ctx));
 	if (bdev_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
@@ -544,26 +502,15 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 	return 0;
 }
 
-struct rpc_bdev_reset_iostat {
-	char *name;
-	enum spdk_bdev_reset_stat_mode mode;
-};
-
-static void
-free_rpc_bdev_reset_iostat(struct rpc_bdev_reset_iostat *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_reset_iostat_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_reset_iostat, name), spdk_json_decode_string, true},
-	{"mode", offsetof(struct rpc_bdev_reset_iostat, mode), rpc_decode_reset_iostat_mode, true},
+	{"name", offsetof(struct rpc_bdev_reset_iostat_ctx, name), spdk_json_decode_string, true},
+	{"mode", offsetof(struct rpc_bdev_reset_iostat_ctx, mode), rpc_decode_bdev_reset_stat_mode, true},
 };
 
 static void
 rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_bdev_reset_iostat req = { .mode = SPDK_BDEV_RESET_STAT_ALL, };
+	struct rpc_bdev_reset_iostat_ctx req = { .mode = RPC_BDEV_RESET_STAT_MODE_ALL, };
 	struct spdk_bdev_desc *desc = NULL;
 	struct rpc_reset_iostat_ctx *rpc_ctx;
 	struct bdev_reset_iostat_ctx *bdev_ctx;
@@ -580,7 +527,7 @@ rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_js
 			return;
 		}
 
-		if (req.mode == SPDK_BDEV_RESET_STAT_NONE) {
+		if (req.mode == RPC_BDEV_RESET_STAT_MODE_NONE) {
 			SPDK_NOTICELOG("bdev_reset_iostat called with mode none, aborting operation\n");
 			spdk_jsonrpc_send_bool_response(request, true);
 			free_rpc_bdev_reset_iostat(&req);
@@ -613,7 +560,7 @@ rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_js
 	 */
 	rpc_ctx->bdev_count++;
 	rpc_ctx->request = request;
-	rpc_ctx->mode = req.mode;
+	rpc_ctx->mode = (enum spdk_bdev_reset_stat_mode)req.mode;
 
 	free_rpc_bdev_reset_iostat(&req);
 
@@ -649,7 +596,7 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	struct spdk_json_write_ctx *w = ctx;
 	struct spdk_bdev_alias *tmp;
 	uint64_t qos_limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
-	struct spdk_memory_domain **domains;
+	enum spdk_dma_device_type types[16];
 	enum spdk_bdev_io_type io_type;
 	const char *name = NULL;
 	int i, rc;
@@ -730,29 +677,20 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	}
 	spdk_json_write_object_end(w);
 
-	rc = spdk_bdev_get_memory_domains(bdev, NULL, 0);
+	rc = spdk_bdev_get_memory_domain_types(bdev, types, SPDK_COUNTOF(types));
 	if (rc > 0) {
-		domains = calloc(rc, sizeof(struct spdk_memory_domain *));
-		if (domains) {
-			i = spdk_bdev_get_memory_domains(bdev, domains, rc);
-			if (i == rc) {
-				spdk_json_write_named_array_begin(w, "memory_domains");
-				for (i = 0; i < rc; i++) {
-					spdk_json_write_object_begin(w);
-					spdk_json_write_named_string(w, "dma_device_id", spdk_memory_domain_get_dma_device_id(domains[i]));
-					spdk_json_write_named_int32(w, "dma_device_type",
-								    spdk_memory_domain_get_dma_device_type(domains[i]));
-					spdk_json_write_object_end(w);
-				}
-				spdk_json_write_array_end(w);
-			} else {
-				SPDK_ERRLOG("Unexpected number of memory domains %d (should be %d)\n", i, rc);
-			}
-
-			free(domains);
-		} else {
-			SPDK_ERRLOG("Memory allocation failed\n");
+		if (rc > (int)SPDK_COUNTOF(types)) {
+			SPDK_ERRLOG("Unexpected high number (%d) of memory domain types, listing only "
+				    "first %d.\n", rc, (int)SPDK_COUNTOF(types));
 		}
+		spdk_json_write_named_array_begin(w, "memory_domains");
+		for (i = 0; i < spdk_min(rc, (int)SPDK_COUNTOF(types)); i++) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "dma_device_type",
+						     spdk_dma_device_type_get_name(types[i]));
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
 	}
 
 	spdk_json_write_named_object_begin(w, "driver_specific");
@@ -764,20 +702,9 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 	return 0;
 }
 
-struct rpc_bdev_get_bdevs {
-	char		*name;
-	uint64_t	timeout;
-};
-
-static void
-free_rpc_bdev_get_bdevs(struct rpc_bdev_get_bdevs *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_get_bdevs_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_get_bdevs, name), spdk_json_decode_string, true},
-	{"timeout", offsetof(struct rpc_bdev_get_bdevs, timeout), spdk_json_decode_uint64, true},
+	{"name", offsetof(struct rpc_bdev_get_bdevs_ctx, name), spdk_json_decode_string, true},
+	{"timeout", offsetof(struct rpc_bdev_get_bdevs_ctx, timeout), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -804,7 +731,7 @@ static void
 rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
-	struct rpc_bdev_get_bdevs req = {};
+	struct rpc_bdev_get_bdevs_ctx req = {};
 	struct spdk_bdev_open_async_opts opts = {};
 	struct spdk_json_write_ctx *w;
 	int rc;
@@ -847,28 +774,17 @@ rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_get_bdevs", rpc_bdev_get_bdevs, SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_set_qd_sampling_period {
-	char *name;
-	uint64_t period;
-};
-
-static void
-free_rpc_bdev_set_qd_sampling_period(struct rpc_bdev_set_qd_sampling_period *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder
 	rpc_bdev_set_qd_sampling_period_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_set_qd_sampling_period, name), spdk_json_decode_string},
-	{"period", offsetof(struct rpc_bdev_set_qd_sampling_period, period), spdk_json_decode_uint64},
+	{"name", offsetof(struct rpc_bdev_set_qd_sampling_period_ctx, name), spdk_json_decode_string},
+	{"period", offsetof(struct rpc_bdev_set_qd_sampling_period_ctx, period), spdk_json_decode_uint64},
 };
 
 static void
 rpc_bdev_set_qd_sampling_period(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	struct rpc_bdev_set_qd_sampling_period req = {0};
+	struct rpc_bdev_set_qd_sampling_period_ctx req = {0};
 	struct spdk_bdev_desc *desc;
 	int rc;
 
@@ -900,39 +816,12 @@ SPDK_RPC_REGISTER("bdev_set_qd_sampling_period",
 		  rpc_bdev_set_qd_sampling_period,
 		  SPDK_RPC_RUNTIME)
 
-struct rpc_bdev_set_qos_limit {
-	char		*name;
-	uint64_t	limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
-};
-
-static void
-free_rpc_bdev_set_qos_limit(struct rpc_bdev_set_qos_limit *r)
-{
-	free(r->name);
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_set_qos_limit_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_set_qos_limit, name), spdk_json_decode_string},
-	{
-		"rw_ios_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					   limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
-	{
-		"rw_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					      limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
-	{
-		"r_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					     limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
-	{
-		"w_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit,
-					     limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT]),
-		spdk_json_decode_uint64, true
-	},
+	{"name", offsetof(struct rpc_bdev_set_qos_limit_ctx, name), spdk_json_decode_string},
+	{"rw_ios_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, rw_ios_per_sec), spdk_json_decode_uint64, true},
+	{"rw_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, rw_mbytes_per_sec), spdk_json_decode_uint64, true},
+	{"r_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, r_mbytes_per_sec), spdk_json_decode_uint64, true},
+	{"w_mbytes_per_sec", offsetof(struct rpc_bdev_set_qos_limit_ctx, w_mbytes_per_sec), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -954,7 +843,12 @@ static void
 rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_set_qos_limit req = {NULL, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
+	struct rpc_bdev_set_qos_limit_ctx req = {.rw_ios_per_sec = UINT64_MAX,
+		       .rw_mbytes_per_sec = UINT64_MAX,
+		       .r_mbytes_per_sec = UINT64_MAX,
+		       .w_mbytes_per_sec = UINT64_MAX
+	};
+	uint64_t limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
 	struct spdk_bdev_desc *desc;
 	int i, rc;
 
@@ -974,8 +868,13 @@ rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = req.rw_ios_per_sec;
+	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = req.rw_mbytes_per_sec;
+	limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] = req.r_mbytes_per_sec;
+	limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] = req.w_mbytes_per_sec;
+
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (req.limits[i] != UINT64_MAX) {
+		if (limits[i] != UINT64_MAX) {
 			break;
 		}
 	}
@@ -986,7 +885,7 @@ rpc_bdev_set_qos_limit(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_bdev_set_qos_rate_limits(spdk_bdev_desc_get_bdev(desc), req.limits,
+	spdk_bdev_set_qos_rate_limits(spdk_bdev_desc_get_bdev(desc), limits,
 				      rpc_bdev_set_qos_limit_complete, request);
 
 	spdk_bdev_close(desc);
@@ -997,31 +896,13 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_set_qos_limit", rpc_bdev_set_qos_limit, SPDK_RPC_RUNTIME)
 
-/* SPDK_RPC_ENABLE_BDEV_HISTOGRAM */
-
-struct rpc_bdev_enable_histogram_request {
-	char *name;
-	bool enable;
-	char *opc;
-	uint8_t granularity;
-	uint64_t min_nsec;
-	uint64_t max_nsec;
-};
-
-static void
-free_rpc_bdev_enable_histogram_request(struct rpc_bdev_enable_histogram_request *r)
-{
-	free(r->name);
-	free(r->opc);
-}
-
-static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_request_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_enable_histogram_request, name), spdk_json_decode_string},
-	{"enable", offsetof(struct rpc_bdev_enable_histogram_request, enable), spdk_json_decode_bool},
-	{"opc", offsetof(struct rpc_bdev_enable_histogram_request, opc), spdk_json_decode_string, true},
-	{"granularity", offsetof(struct rpc_bdev_enable_histogram_request, granularity), spdk_json_decode_uint8, true},
-	{"min_nsec", offsetof(struct rpc_bdev_enable_histogram_request, min_nsec), spdk_json_decode_uint64, true},
-	{"max_nsec", offsetof(struct rpc_bdev_enable_histogram_request, max_nsec), spdk_json_decode_uint64, true},
+static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_enable_histogram_ctx, name), spdk_json_decode_string},
+	{"enable", offsetof(struct rpc_bdev_enable_histogram_ctx, enable), spdk_json_decode_bool},
+	{"opc", offsetof(struct rpc_bdev_enable_histogram_ctx, opc), spdk_json_decode_string, true},
+	{"granularity", offsetof(struct rpc_bdev_enable_histogram_ctx, granularity), spdk_json_decode_uint8, true},
+	{"min_nsec", offsetof(struct rpc_bdev_enable_histogram_ctx, min_nsec), spdk_json_decode_uint64, true},
+	{"max_nsec", offsetof(struct rpc_bdev_enable_histogram_ctx, max_nsec), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -1040,17 +921,18 @@ static void
 rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_bdev_enable_histogram_request req = {.granularity = SPDK_HISTOGRAM_GRANULARITY_DEFAULT,
-		       .min_nsec = SPDK_BDEV_HISTOGRAM_DEFAULT_MIN_VALUE_NS,
-		       .max_nsec = SPDK_BDEV_HISTOGRAM_DEFAULT_MAX_VALUE_NS
+	struct rpc_bdev_enable_histogram_ctx req = {
+		.granularity = SPDK_HISTOGRAM_GRANULARITY_DEFAULT,
+		.min_nsec = SPDK_BDEV_HISTOGRAM_DEFAULT_MIN_VALUE_NS,
+		.max_nsec = SPDK_BDEV_HISTOGRAM_DEFAULT_MAX_VALUE_NS
 	};
 	struct spdk_bdev_desc *desc;
 	int rc;
 	struct spdk_bdev_enable_histogram_opts opts = {};
 	int io_type = 0;
 
-	if (spdk_json_decode_object(params, rpc_bdev_enable_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_bdev_enable_histogram_request_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_enable_histogram_decoders,
+				    SPDK_COUNTOF(rpc_bdev_enable_histogram_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -1087,42 +969,34 @@ rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 	spdk_bdev_close(desc);
 
 cleanup:
-	free_rpc_bdev_enable_histogram_request(&req);
+	free_rpc_bdev_enable_histogram(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_enable_histogram", rpc_bdev_enable_histogram, SPDK_RPC_RUNTIME)
 
 /* SPDK_RPC_GET_BDEV_HISTOGRAM */
 
-struct rpc_bdev_get_histogram_request {
-	char *name;
+static const struct spdk_json_object_decoder rpc_bdev_get_histogram_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_histogram_ctx, name), spdk_json_decode_string},
 };
 
-static const struct spdk_json_object_decoder rpc_bdev_get_histogram_request_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_get_histogram_request, name), spdk_json_decode_string}
+static const struct spdk_json_object_decoder rpc_bdev_get_histogram_borders_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_histogram_borders_ctx, name), spdk_json_decode_string},
+	{"borders", offsetof(struct rpc_bdev_get_histogram_borders_ctx, borders), rpc_decode_bdev_histogram_borders},
+};
+
+struct _rpc_bdev_get_histogram_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct rpc_bdev_histogram_borders borders;
 };
 
 static void
-free_rpc_bdev_get_histogram_request(struct rpc_bdev_get_histogram_request *r)
+rpc_encode_histogram(struct spdk_jsonrpc_request *request, struct spdk_histogram_data *histogram)
 {
-	free(r->name);
-}
-
-static void
-_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
-{
-	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
 	int rc;
+	struct spdk_json_write_ctx *w;
 	char *encoded_histogram;
 	size_t src_len, dst_len;
-
-
-	if (status != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 spdk_strerror(-status));
-		goto invalid;
-	}
 
 	src_len = SPDK_HISTOGRAM_NUM_BUCKETS(histogram) * sizeof(uint64_t);
 	dst_len = spdk_base64_get_encoded_strlen(src_len) + 1;
@@ -1131,14 +1005,15 @@ _rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 	if (encoded_histogram == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(ENOMEM));
-		goto invalid;
+		return;
 	}
 
 	rc = spdk_base64_encode(encoded_histogram, histogram->bucket, src_len);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
-		goto free_encoded_histogram;
+		free(encoded_histogram);
+		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -1151,35 +1026,76 @@ _rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 
-free_encoded_histogram:
 	free(encoded_histogram);
-invalid:
-	spdk_histogram_data_free(histogram);
 }
 
 static void
-rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+rpc_dump_histogram_borders(struct _rpc_bdev_get_histogram_ctx *rpc_ctx,
+			   struct spdk_histogram_data *histogram)
 {
-	struct rpc_bdev_get_histogram_request req = {NULL};
+	struct spdk_histogram_borders *ctx;
+	struct spdk_json_write_ctx *w;
+	size_t i;
+
+	ctx = spdk_histogram_get_borders_count_alloc_ctx(rpc_ctx->borders.items, rpc_ctx->borders.count);
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(rpc_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(ENOMEM));
+		return;
+	}
+
+	spdk_histogram_get_borders_count(histogram, ctx);
+	w = spdk_jsonrpc_begin_result(rpc_ctx->request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_array_begin(w, "borders_count");
+	for (i = 0; i < ctx->num_borders_count; i++) {
+		spdk_json_write_uint64(w, ctx->border_count[i]);
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(rpc_ctx->request, w);
+
+	spdk_histogram_get_borders_count_free_ctx(ctx);
+}
+
+static void
+_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	struct _rpc_bdev_get_histogram_ctx *rpc_ctx = cb_arg;
+	struct spdk_jsonrpc_request *request = rpc_ctx->request;
+
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-status));
+		spdk_histogram_data_free(histogram);
+		free(rpc_ctx);
+		return;
+	}
+
+	if (rpc_ctx->borders.count > 0) {
+		rpc_dump_histogram_borders(rpc_ctx, histogram);
+	} else {
+		rpc_encode_histogram(request, histogram);
+	}
+
+	spdk_histogram_data_free(histogram);
+	free(rpc_ctx);
+}
+
+static void
+rpc_bdev_get_histogram_common(struct spdk_jsonrpc_request *request,
+			      char *bdev_name, struct _rpc_bdev_get_histogram_ctx *rpc_ctx)
+{
 	struct spdk_histogram_data *histogram;
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_bdev_get_histogram_request_decoders),
-				    &req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "spdk_json_decode_object failed");
-		goto cleanup;
-	}
-
-	rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
+	rc = spdk_bdev_open_ext(bdev_name, false, dummy_bdev_event_cb, NULL, &desc);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto cleanup;
+		free(rpc_ctx);
+		return;
 	}
 
 	bdev = spdk_bdev_desc_get_bdev(desc);
@@ -1189,16 +1105,84 @@ rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 	if (histogram == NULL) {
 		spdk_bdev_close(desc);
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		goto cleanup;
+		free(rpc_ctx);
+		return;
 	}
 
 	spdk_bdev_histogram_get(bdev, histogram,
-				_rpc_bdev_histogram_data_cb, request);
+				_rpc_bdev_histogram_data_cb, rpc_ctx);
 
 	spdk_bdev_close(desc);
+}
+
+static void
+rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_get_histogram_ctx req = {};
+	struct _rpc_bdev_get_histogram_ctx *rpc_ctx;
+
+	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_decoders,
+				    SPDK_COUNTOF(rpc_bdev_get_histogram_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rpc_ctx = calloc(1, sizeof(*rpc_ctx));
+	if (rpc_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate _rpc_bdev_get_histogram_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate _rpc_bdev_get_histogram_ctx struct");
+		goto cleanup;
+	}
+	rpc_ctx->request = request;
+	rpc_ctx->borders.count = 0;
+
+	rpc_bdev_get_histogram_common(request, req.name, rpc_ctx);
 
 cleanup:
-	free_rpc_bdev_get_histogram_request(&req);
+	free_rpc_bdev_get_histogram(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_get_histogram", rpc_bdev_get_histogram, SPDK_RPC_RUNTIME)
+
+static void
+rpc_bdev_get_histogram_borders(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_get_histogram_borders_ctx req = {};
+	struct _rpc_bdev_get_histogram_ctx *rpc_ctx;
+	size_t i;
+
+	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_borders_decoders,
+				    SPDK_COUNTOF(rpc_bdev_get_histogram_borders_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rpc_ctx = calloc(1, sizeof(struct _rpc_bdev_get_histogram_ctx));
+	if (rpc_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate _rpc_bdev_get_histogram_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate _rpc_bdev_get_histogram_ctx struct");
+		goto cleanup;
+	}
+	rpc_ctx->request = request;
+	memcpy(&rpc_ctx->borders, &req.borders, sizeof(req.borders));
+	for (i = 0; i < rpc_ctx->borders.count; i++) {
+		rpc_ctx->borders.items[i] *= spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	}
+
+	rpc_bdev_get_histogram_common(request, req.name, rpc_ctx);
+
+cleanup:
+	free_rpc_bdev_get_histogram_borders(&req);
+}
+
+SPDK_RPC_REGISTER("bdev_get_histogram_borders", rpc_bdev_get_histogram_borders, SPDK_RPC_RUNTIME)

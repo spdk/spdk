@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2025, Oracle and/or its affiliates.
  */
 
 /** \file
@@ -90,7 +91,8 @@ struct spdk_nvmf_request {
 			uint8_t dif_enabled		: 1;
 			uint8_t first_fused		: 1;
 			uint8_t reservation_queued	: 1;
-			uint8_t rsvd			: 4;
+			uint8_t reservation_waiting	: 1; /* a reservation is waiting on this request */
+			uint8_t rsvd			: 3;
 		};
 	};
 	uint8_t				zcopy_phase; /* type enum spdk_nvmf_zcopy_phase */
@@ -261,15 +263,12 @@ struct spdk_nvmf_ctrlr_data {
 
 #define MAX_MEMPOOL_NAME_LENGTH 40
 
-/* abidiff has a problem with changes in spdk_nvmf_transport_opts, so spdk_nvmf_transport had to be
- * added to the suppression list, so if spdk_nvmf_transport is changed, we need to remove the
- * suppression and bump up the major version.
- */
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
 	struct spdk_nvmf_transport_opts		opts;
-
+	uint32_t				large_bufsize;
+	uint32_t				small_bufsize;
 	char					iobuf_name[MAX_MEMPOOL_NAME_LENGTH];
 
 	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
@@ -313,8 +312,8 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Destroy the transport
 	 */
-	int (*destroy)(struct spdk_nvmf_transport *transport,
-		       spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
+	void (*destroy)(struct spdk_nvmf_transport *transport,
+			spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
 	/**
 	  * Instruct the transport to accept new connections at the address
@@ -412,13 +411,13 @@ struct spdk_nvmf_transport_ops {
 	 * Free the request without sending a response
 	 * to the originator. Release memory tied to this request.
 	 */
-	int (*req_free)(struct spdk_nvmf_request *req);
+	void (*req_free)(struct spdk_nvmf_request *req);
 
 	/*
 	 * Signal request completion, which sends a response
 	 * to the originator.
 	 */
-	int (*req_complete)(struct spdk_nvmf_request *req);
+	void (*req_complete)(struct spdk_nvmf_request *req);
 
 	/**
 	 * Callback for the iobuf based queuing of requests awaiting free buffers.
@@ -508,8 +507,6 @@ struct spdk_nvmf_transport_ops {
  */
 void spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops);
 
-int spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
-
 /**
  * Function to be called for each newly discovered qpair.
  *
@@ -538,7 +535,7 @@ struct spdk_nvmf_registers {
 	uint64_t			asq;
 	uint64_t			acq;
 	uint32_t			nssr;
-	uint32_t			reserved;
+	union spdk_nvme_crto_register	crto;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_registers) == 48, "Incorrect size");
 

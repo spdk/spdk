@@ -14,7 +14,7 @@ storage stack. Specifically, this library provides the following
 functionality:
 
 * A pluggable module API for implementing block devices that interface with different types of block storage devices.
-* Driver modules for NVMe, malloc (ramdisk), Linux AIO, virtio-scsi, Ceph RBD, Pmem and Vhost-SCSI Initiator and more.
+* Driver modules for NVMe, malloc (ramdisk), Linux AIO, virtio-scsi, Ceph RBD and Vhost-SCSI Initiator and more.
 * An application API for enumerating and claiming SPDK block devices and then performing operations (read, write, unmap, etc.) on those devices.
 * Facilities to stack block devices to create complex I/O pipelines, including logical volume management (lvol) and partition support (GPT).
 * Configuration of block devices via JSON-RPC.

@@ -193,7 +193,7 @@ parse_list(const char *mask, struct spdk_cpuset *set)
 {
 	char *end;
 	const char *ptr = mask;
-	uint32_t lcore;
+	unsigned long lcore;
 	uint32_t lcore_min, lcore_max;
 
 	spdk_cpuset_zero(set);
@@ -217,7 +217,7 @@ parse_list(const char *mask, struct spdk_cpuset *set)
 		}
 
 		if (lcore >= sizeof(set->cpus) * 8) {
-			SPDK_ERRLOG("Core number %" PRIu32 " is out of range in '%s'\n", lcore, mask);
+			SPDK_ERRLOG("Core number %lu is out of range in '%s'\n", lcore, mask);
 			return -1;
 		}
 

@@ -51,7 +51,6 @@ packages=(
 	perl-open
 	perl-Switch
 	pixman-devel
-	pmempool
 	python3
 	rpm-build
 	rpmdevtools

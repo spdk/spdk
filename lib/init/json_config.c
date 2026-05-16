@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022, 2023, 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -59,7 +59,6 @@ typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 
 struct load_json_config_ctx {
 	/* Thread used during configuration. */
-	struct spdk_thread *thread;
 	spdk_subsystem_init_fn cb_fn;
 	void *cb_arg;
 	bool stop_on_error;
@@ -155,6 +154,22 @@ json_write_stdout(void *cb_ctx, const void *data, size_t size)
 	return rc == size ? 0 : -1;
 }
 
+static void
+log_rpc_error(struct spdk_json_val *error, const char *prefix)
+{
+	struct json_write_buf buf = {};
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_json_write_begin(json_write_stdout, &buf, SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
+	if (w == NULL) {
+		SPDK_ERRLOG("%s: (?)\n", prefix);
+	} else {
+		spdk_json_write_val(w, error);
+		spdk_json_write_end(w);
+		SPDK_ERRLOG("%s:\n%s\n", prefix, buf.data);
+	}
+}
+
 static int
 rpc_client_poller(void *arg)
 {
@@ -163,7 +178,7 @@ rpc_client_poller(void *arg)
 	client_resp_handler cb;
 	int rc;
 
-	assert(spdk_get_thread() == ctx->thread);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	rc = spdk_jsonrpc_client_poll(ctx->client_conn, 0);
 	if (rc == 0) {
@@ -186,17 +201,7 @@ rpc_client_poller(void *arg)
 	assert(resp);
 
 	if (resp->error) {
-		struct json_write_buf buf = {};
-		struct spdk_json_write_ctx *w = spdk_json_write_begin(json_write_stdout,
-						&buf, SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
-
-		if (w == NULL) {
-			SPDK_ERRLOG("error response: (?)\n");
-		} else {
-			spdk_json_write_val(w, resp->error);
-			spdk_json_write_end(w);
-			SPDK_ERRLOG("error response: \n%s\n", buf.data);
-		}
+		log_rpc_error(resp->error, "error response");
 	}
 
 	if (resp->error && ctx->stop_on_error) {
@@ -246,7 +251,7 @@ client_send_request(struct load_json_config_ctx *ctx, struct spdk_jsonrpc_client
 {
 	int rc;
 
-	assert(spdk_get_thread() == ctx->thread);
+	assert(spdk_thread_is_app_thread(NULL));
 
 	ctx->client_resp_cb = client_resp_cb;
 	rpc_client_set_timeout(ctx, RPC_CLIENT_REQUEST_TIMEOUT_US);
@@ -322,6 +327,153 @@ app_json_config_load_subsystem_config_entry_next(struct load_json_config_ctx *ct
 	app_json_config_load_subsystem_config_entry(ctx);
 }
 
+/* Context for batch element encoding callback */
+struct batch_encode_ctx {
+	struct spdk_jsonrpc_client_request *request;
+	uint32_t count;
+	uint32_t allowed_states;  /* Intersection of all methods' allowed states */
+	bool stop_on_error;
+	const char *subsystem_name;
+};
+
+static int
+encode_batch_element(const struct spdk_json_val *val, void *out)
+{
+	struct batch_encode_ctx *enc_ctx = out;
+	struct config_entry cfg = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_json_val *params_end;
+	size_t params_len;
+	uint32_t method_state_mask;
+	int rc;
+
+	if (val->type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+		SPDK_ERRLOG("Batch array element is not an object\n");
+		return enc_ctx->stop_on_error ? -1 : 0;
+	}
+
+	if (spdk_json_decode_object(val, jsonrpc_cmd_decoders,
+				    SPDK_COUNTOF(jsonrpc_cmd_decoders), &cfg)) {
+		SPDK_ERRLOG("Failed to decode batch entry\n");
+		free(cfg.method);
+		return enc_ctx->stop_on_error ? -1 : 0;
+	}
+
+	/* Narrow down allowed states based on this method's requirements */
+	method_state_mask = 0;
+	rc = spdk_rpc_get_method_state_mask(cfg.method, &method_state_mask);
+	if (rc == -ENOENT) {
+		/* By default, skip this element, continue with others */
+		rc = 0;
+		if (enc_ctx->stop_on_error) {
+			if (!spdk_subsystem_exists(enc_ctx->subsystem_name)) {
+				SPDK_NOTICELOG("Skipping batch method '%s' because its subsystem '%s' "
+					       "is not linked into this application.\n",
+					       cfg.method, enc_ctx->subsystem_name);
+			} else {
+				rc = -1;
+			}
+		}
+		free(cfg.method);
+		return rc;
+	}
+
+	assert(rc == 0);
+	enc_ctx->allowed_states &= method_state_mask;
+
+	SPDK_DEBUG_APP_CFG("\tBatch[%u]: method=%s\n", enc_ctx->count, cfg.method);
+
+	w = spdk_jsonrpc_begin_request(enc_ctx->request, -1, cfg.method);
+	enc_ctx->count++;
+
+	if (cfg.params) {
+		params_end = cfg.params + spdk_json_val_len(cfg.params) - 1;
+		params_len = params_end->start - cfg.params->start + 1;
+		spdk_json_write_name(w, "params");
+		spdk_json_write_val_raw(w, cfg.params->start, params_len);
+	}
+
+	spdk_jsonrpc_end_request(enc_ctx->request, w);
+	free(cfg.method);
+
+	return 0;
+}
+
+/*
+ * Send an explicit batch array from the config file.
+ * The batch_array points to the ARRAY_BEGIN token.
+ * Returns 0 on success, positive to skip, negative error code on failure.
+ */
+static int
+send_batch_array(struct load_json_config_ctx *ctx, struct spdk_json_val *batch_array)
+{
+	struct spdk_jsonrpc_client_request *request;
+	struct batch_encode_ctx enc_ctx = { .allowed_states = SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME };
+	size_t out_size;
+	int rc;
+
+	assert(batch_array->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	/* Skip empty arrays - nothing to send */
+	if (batch_array[1].type == SPDK_JSON_VAL_ARRAY_END) {
+		return 1;
+	}
+
+	request = spdk_jsonrpc_client_create_request();
+	if (!request) {
+		return -ENOMEM;
+	}
+
+	rc = spdk_jsonrpc_begin_batch(request);
+	if (rc != 0) {
+		spdk_jsonrpc_client_free_request(request);
+		return rc;
+	}
+
+	enc_ctx.request = request;
+	enc_ctx.stop_on_error = ctx->stop_on_error;
+	enc_ctx.subsystem_name = ctx->subsystem_name_str;
+
+	/*
+	 * Process batch elements using spdk_json_decode_array with stride=0.
+	 * This keeps enc_ctx as the 'out' pointer for all iterations,
+	 * effectively using it as a context rather than output storage.
+	 * Each method's state_mask is ANDed with allowed_states to find
+	 * the intersection of states where all methods can run.
+	 */
+	rc = spdk_json_decode_array(batch_array, encode_batch_element,
+				    &enc_ctx, batch_array->len + 1, &out_size, 0);
+
+	spdk_jsonrpc_end_batch(request);
+
+	if (rc != 0 || enc_ctx.count == 0) {
+		SPDK_ERRLOG("Empty or invalid batch array\n");
+		spdk_jsonrpc_client_free_request(request);
+		return -EINVAL;
+	}
+
+	if (enc_ctx.allowed_states == 0) {
+		SPDK_ERRLOG("Batch contains methods with incompatible state requirements\n");
+		spdk_jsonrpc_client_free_request(request);
+		return -EINVAL;
+	}
+
+	if (spdk_rpc_get_state() == SPDK_RPC_STARTUP) {
+		if (!(enc_ctx.allowed_states & SPDK_RPC_STARTUP)) {
+			SPDK_DEBUG_APP_CFG("Batch requires RUNTIME state, deferring\n");
+			spdk_jsonrpc_client_free_request(request);
+			return 1;
+		}
+	} else if (enc_ctx.allowed_states & SPDK_RPC_STARTUP) {
+		SPDK_DEBUG_APP_CFG("Batch already executed in STARTUP state, skipping\n");
+		spdk_jsonrpc_client_free_request(request);
+		return 1;
+	}
+
+	SPDK_DEBUG_APP_CFG("Sending batch of %u requests\n", enc_ctx.count);
+	return client_send_request(ctx, request, app_json_config_load_subsystem_config_entry_next);
+}
+
 /* Load "config" entry */
 static void
 app_json_config_load_subsystem_config_entry(void *_ctx)
@@ -340,7 +492,25 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 				   (char *)ctx->subsystem_name->start);
 		ctx->subsystems_it = spdk_json_next(ctx->subsystems_it);
 		/* Invoke later to avoid recursion */
-		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem, ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem, ctx);
+		return;
+	}
+
+	/*
+	 * Check if this config entry is an array (explicit batch).
+	 * Arrays in the config are sent as JSON-RPC batch requests.
+	 */
+	if (ctx->config_it->type == SPDK_JSON_VAL_ARRAY_BEGIN) {
+		SPDK_DEBUG_APP_CFG("Processing explicit batch array\n");
+		rc = send_batch_array(ctx, ctx->config_it);
+		if (rc < 0) {
+			app_json_config_load_done(ctx, rc);
+		} else if (rc > 0) {
+			/* Batch methods not allowed in current state - skip for now */
+			ctx->config_it = spdk_json_next(ctx->config_it);
+			spdk_thread_send_msg(spdk_thread_get_app_thread(),
+					     app_json_config_load_subsystem_config_entry, ctx);
+		}
 		return;
 	}
 
@@ -356,7 +526,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		if (!ctx->stop_on_error) {
 			/* Invoke later to avoid recursion */
 			ctx->config_it = spdk_json_next(ctx->config_it);
-			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+			spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+					     ctx);
 		} else if (!spdk_subsystem_exists(ctx->subsystem_name_str)) {
 			/* If the subsystem does not exist, just skip it, even
 			 * if we are supposed to stop_on_error. Users may generate
@@ -373,7 +544,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 				       cfg.method, ctx->subsystem_name_str);
 			/* Invoke later to avoid recursion */
 			ctx->config_it = spdk_json_next(ctx->config_it);
-			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+			spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+					     ctx);
 		} else {
 			SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
 			app_json_config_load_done(ctx, rc);
@@ -385,7 +557,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		SPDK_DEBUG_APP_CFG("Method '%s' not allowed -> skipping\n", cfg.method);
 		/* Invoke later to avoid recursion */
 		ctx->config_it = spdk_json_next(ctx->config_it);
-		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+				     ctx);
 		goto out;
 	}
 	if ((state_mask & startup_runtime) == startup_runtime && cur_state_mask == SPDK_RPC_RUNTIME) {
@@ -394,7 +567,8 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		SPDK_DEBUG_APP_CFG("Method '%s' has already been run in STARTUP state\n", cfg.method);
 		/* Invoke later to avoid recursion */
 		ctx->config_it = spdk_json_next(ctx->config_it);
-		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), app_json_config_load_subsystem_config_entry,
+				     ctx);
 		goto out;
 	}
 
@@ -586,7 +760,6 @@ json_config_prepare_ctx(spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	ctx->stop_on_error = stop_on_error;
-	ctx->thread = spdk_get_thread();
 	ctx->initalize_subsystems = initalize_subsystems;
 
 	rc = parse_json(json, json_size, ctx);
@@ -650,6 +823,8 @@ spdk_subsystem_load_config(void *json, ssize_t json_size, spdk_subsystem_init_fn
 			   void *cb_arg, bool stop_on_error)
 {
 	assert(cb_fn);
+	assert(spdk_thread_is_app_thread(NULL));
+
 	json_config_prepare_ctx(cb_fn, cb_arg, stop_on_error, json, json_size, false);
 }
 

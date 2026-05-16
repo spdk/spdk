@@ -56,6 +56,17 @@ F:	test/unit/lib/accel/
 X:	test/unit/lib/accel/dpdk_*dev.c/
 S:	Supported
 
+AMD AE4DMA DRIVER
+M:	Bhagyada Modali <bhagyada.modali@amd.com>
+F:	lib/ae4dma/
+F:	test/unit/lib/ae4dma/
+S:	Supported
+
+AMD ACCEL MODULE
+M:	Bhagyada Modali <bhagyada.modali@amd.com>
+F:	module/accel/ae4dma/
+S:	Supported
+
 BDEV (BLOCK DEVICE) LAYER
 M:	Jim Harris <jim.harris@nvidia.com>
 M:	Konrad Sztyber <ksztyber@nvidia.com>
@@ -78,7 +89,9 @@ F:	test/unit/lib/blob/
 S:	Supported
 
 CEPH RBD BDEV MODULE
+M:	Gil Bregman <gbregman@il.ibm.com>
 F:	module/bdev/rbd/
+S:	Supported
 
 CONF FILE LIBRARY
 F:	lib/conf/
@@ -93,6 +106,12 @@ M:	Mateusz Kozlowski <mateusz.kozlowski@solidigm.com>
 M:	Wojciech Malikowski <wojciech.malikowski@solidigm.com>
 F:	lib/ftl/
 F:	module/bdev/ftl/
+S:	Supported
+
+CUDA ACCEL MODULE
+M:	Valerii Hlushkov <valerii.hlushkov@datacore.com>
+F:	module/accel/cuda/
+F:	module/accel/scripts/
 S:	Supported
 
 DAOS BDEV MODULE
@@ -183,6 +202,11 @@ JSON AND RPC LIBRARIES
 F:	lib/json/
 F:	lib/jsonrpc/
 F:	lib/rpc/
+
+JSON-RPC SCHEMA
+M:	Boris Glimcher <Boris.Glimcher@emc.com>
+F:	schema/
+S:	Supported
 
 KEYRING LIBRARIES
 M:	Konrad Sztyber <ksztyber@nvidia.com>
@@ -337,6 +361,12 @@ M:	Jacek Kalwas <jacek.kalwas@nutanix.com>
 F:	module/sock/posix/
 S:	Supported
 
+PYTHON FILES
+M:	Boris Glimcher <Boris.Glimcher@emc.com>
+F:	python/
+F:	scripts/*.py
+S:	Supported
+
 RAID BDEV MODULE
 M:	Artur Paszkiewicz <artur.paszkiewicz@solidigm.com>
 S:	Supported
@@ -370,6 +400,10 @@ S:	Supported
 
 SPDK COMBINED TARGET APPLICATION
 F:	app/spdk_tgt/
+
+SPDK-CSI REPOSITORY (https://github.com/spdk/spdk-csi)
+M:	Yibo Cai <yibo.cai@arm.com>
+S:	Supported
 
 SPDK TOP APPLICATION
 F:	app/spdk_top/

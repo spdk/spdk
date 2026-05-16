@@ -9,7 +9,7 @@ source $rootdir/test/common/autotest_common.sh
 
 trap 'killprocess $spdk_tgt_pid; exit 1' ERR
 
-$SPDK_BIN_DIR/spdk_tgt &
+run_app_bg $SPDK_BIN_DIR/spdk_tgt
 spdk_tgt_pid=$!
 waitforlisten $spdk_tgt_pid
 

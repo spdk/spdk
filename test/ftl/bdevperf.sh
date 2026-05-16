@@ -23,7 +23,7 @@ split_bdev=$(create_base_bdev nvme0 $device $((1024 * 101)))
 nv_cache=$(create_nv_cache_bdev nvc0 $cache_device $split_bdev)
 
 l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * 20 / 100 / 1024))
-$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev $use_append -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
+$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev $use_append -c $nv_cache --l2p-dram-limit $l2p_dram_size_mb
 # Check ftl0 was created properly
 $rpc_py bdev_ftl_get_stats -b ftl0 | jq -r '.name' | grep -qw ftl0
 

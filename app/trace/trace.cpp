@@ -112,14 +112,16 @@ print_object_id(const struct spdk_trace_tpoint *d, struct spdk_trace_parser_entr
 	/* Set size to 128 and 256 bytes to make sure we can fit all the characters we need */
 	char related_id[128] = {'\0'};
 	char ids[256] = {'\0'};
+	struct spdk_trace_section_object *obj_section;
 
+	obj_section = spdk_trace_get_object_section(g_file);
 	if (entry->related_type != OBJECT_NONE) {
 		snprintf(related_id, sizeof(related_id), " (%c%jd)",
-			 g_file->object[entry->related_type].id_prefix,
+			 obj_section->object[entry->related_type].id_prefix,
 			 entry->related_index);
 	}
 
-	snprintf(ids, sizeof(ids), "%c%jd%s", g_file->object[d->object_type].id_prefix,
+	snprintf(ids, sizeof(ids), "%c%jd%s", obj_section->object[d->object_type].id_prefix,
 		 entry->object_index, related_id);
 	printf("id:    %-17s", ids);
 }
@@ -134,23 +136,27 @@ static void
 print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t tsc_offset)
 {
 	struct spdk_trace_entry		*e = entry->entry;
-	struct spdk_trace_owner		*owner;
 	const struct spdk_trace_tpoint	*d;
 	float				us;
 	size_t				i;
 
-	d = &g_file->tpoint[e->tpoint_id];
+	d = &spdk_trace_get_tpoint_section(g_file)->tpoint[e->tpoint_id];
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
-	printf("%-*s ", (int)sizeof(g_file->tname[entry->lcore]), g_file->tname[entry->lcore]);
+	printf("%-*s ", SPDK_TRACE_THREAD_NAME_LEN, entry->tname);
 	printf("%2d: %10.3f ", entry->lcore, us);
 	if (g_print_tsc) {
 		printf("(%9ju) ", e->tsc - tsc_offset);
 	}
-	owner = spdk_get_trace_owner(g_file, e->owner_id);
 	/* For now, only try to print first 64 bytes of description. */
-	if (e->owner_id > 0 && owner->tsc < e->tsc) {
-		printf("%-*s ", 64, owner->description);
+	if (e->owner_id != OWNER_ID_NONE) {
+		struct spdk_trace_owner *owner = spdk_get_trace_owner(g_file, e->owner_id);
+
+		if (owner->tsc < e->tsc) {
+			printf("%-*s ", 64, owner->description);
+		} else {
+			printf("%-*s ", 64, "");
+		}
 	} else {
 		printf("%-*s ", 64, "");
 	}
@@ -198,34 +204,45 @@ static void
 print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t tsc_offset)
 {
 	struct spdk_trace_entry *e = entry->entry;
+	struct spdk_trace_section_owner_type *ot_section;
+	struct spdk_trace_section_object *obj_section;
 	const struct spdk_trace_tpoint *d;
 	size_t i;
 
-	d = &g_file->tpoint[e->tpoint_id];
+	d = &spdk_trace_get_tpoint_section(g_file)->tpoint[e->tpoint_id];
 
 	spdk_json_write_object_begin(g_json);
 	spdk_json_write_named_uint64(g_json, "lcore", entry->lcore);
 	spdk_json_write_named_uint64(g_json, "tpoint", e->tpoint_id);
 	spdk_json_write_named_uint64(g_json, "tsc", e->tsc);
 
-	if (g_file->owner_type[d->owner_type].id_prefix) {
+	ot_section = spdk_trace_get_owner_type_section(g_file);
+	if (ot_section->owner_type[d->owner_type].id_prefix) {
 		spdk_json_write_named_string_fmt(g_json, "poller", "%c%02d",
-						 g_file->owner_type[d->owner_type].id_prefix,
+						 ot_section->owner_type[d->owner_type].id_prefix,
 						 e->owner_id);
+	}
+	if (e->owner_id != OWNER_ID_NONE) {
+		struct spdk_trace_owner *owner = spdk_get_trace_owner(g_file, e->owner_id);
+
+		if (owner->tsc < e->tsc) {
+			spdk_json_write_named_string(g_json, "owner", owner->description);
+		}
 	}
 	if (e->size != 0) {
 		spdk_json_write_named_uint32(g_json, "size", e->size);
 	}
+	obj_section = spdk_trace_get_object_section(g_file);
 	if (d->new_object || d->object_type != OBJECT_NONE || e->object_id != 0) {
 		char object_type;
 
 		spdk_json_write_named_object_begin(g_json, "object");
 		if (d->new_object) {
-			object_type =  g_file->object[d->object_type].id_prefix;
+			object_type =  obj_section->object[d->object_type].id_prefix;
 			spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64, object_type,
 							 entry->object_index);
 		} else if (d->object_type != OBJECT_NONE) {
-			object_type =  g_file->object[d->object_type].id_prefix;
+			object_type =  obj_section->object[d->object_type].id_prefix;
 			if (entry->object_index != UINT64_MAX) {
 				spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64,
 								 object_type,
@@ -238,10 +255,9 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 		spdk_json_write_object_end(g_json);
 	}
 
-	/* Print related objects array */
 	if (entry->related_index != UINT64_MAX) {
 		spdk_json_write_named_string_fmt(g_json, "related", "%c%" PRIu64,
-						 g_file->object[entry->related_type].id_prefix,
+						 obj_section->object[entry->related_type].id_prefix,
 						 entry->related_index);
 	}
 
@@ -269,6 +285,7 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 static void
 print_tpoint_definitions(void)
 {
+	struct spdk_trace_section_tpoint *tp_section;
 	const struct spdk_trace_tpoint *tpoint;
 	size_t i, j;
 
@@ -277,11 +294,12 @@ print_tpoint_definitions(void)
 		return;
 	}
 
-	spdk_json_write_named_uint64(g_json, "tsc_rate", g_file->tsc_rate);
+	spdk_json_write_named_uint64(g_json, "tsc_rate", spdk_trace_get_tsc_rate(g_file));
 	spdk_json_write_named_array_begin(g_json, "tpoints");
 
-	for (i = 0; i < SPDK_COUNTOF(g_file->tpoint); ++i) {
-		tpoint = &g_file->tpoint[i];
+	tp_section = spdk_trace_get_tpoint_section(g_file);
+	for (i = 0; i < tp_section->count; ++i) {
+		tpoint = &tp_section->tpoint[i];
 		if (tpoint->tpoint_id == 0) {
 			continue;
 		}
@@ -330,7 +348,7 @@ trace_print(int lcore)
 	struct spdk_trace_parser_entry	entry;
 	int		i;
 	uint64_t	tsc_offset, entry_count, tsc_base_offset;
-	uint64_t	tsc_rate = g_file->tsc_rate;
+	uint64_t	tsc_rate = spdk_trace_get_tsc_rate(g_file);
 
 	printf("TSC Rate: %ju\n", tsc_rate);
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; ++i) {
@@ -361,7 +379,8 @@ trace_print_json(void)
 {
 	struct spdk_trace_parser_entry	entry;
 	uint64_t	tsc_offset, tsc_base_offset;
-	uint64_t	tsc_rate = g_file->tsc_rate;
+	uint64_t	tsc_rate = spdk_trace_get_tsc_rate(g_file);
+	uint16_t	i;
 
 	g_json = spdk_json_write_begin(print_json, NULL, 0);
 	if (g_json == NULL) {
@@ -371,6 +390,20 @@ trace_print_json(void)
 
 	spdk_json_write_object_begin(g_json);
 	print_tpoint_definitions();
+
+	spdk_json_write_named_object_begin(g_json, "owners");
+	for (i = 1; i < spdk_trace_get_owner_section(g_file)->num_owners; i++) {
+		struct spdk_trace_owner *owner = spdk_get_trace_owner(g_file, i);
+		char key[16];
+
+		if (owner->tsc == 0) {
+			continue;
+		}
+		snprintf(key, sizeof(key), "%d", i);
+		spdk_json_write_named_string(g_json, key, owner->description);
+	}
+	spdk_json_write_object_end(g_json);
+
 	spdk_json_write_named_array_begin(g_json, "entries");
 
 	tsc_base_offset = tsc_offset = spdk_trace_parser_get_tsc_offset(g_parser);

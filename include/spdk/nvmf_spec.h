@@ -114,6 +114,9 @@ enum spdk_nvmf_trtype {
  * Address family types
  */
 enum spdk_nvmf_adrfam {
+	/** Address family not specified */
+	SPDK_NVMF_ADRFAM_NOT_SPECIFIED	= 0x0,
+
 	/** IPv4 (AF_INET) */
 	SPDK_NVMF_ADRFAM_IPV4		= 0x1,
 

@@ -4,11 +4,20 @@
 #  All rights reserved.
 #
 
-import os
-import sys
 import argparse
 import logging
-from spdk.rpc.client import print_dict, JSONRPCClient, JSONRPCException
+
+from spdk.rpc.client import JSONRPCClient, JSONRPCException
+
+
+def flatten_config(config):
+    """Flatten config entries, expanding any batch arrays."""
+    for entry in config:
+        if isinstance(entry, list):
+            # Batch array - yield each element
+            yield from entry
+        else:
+            yield entry
 
 
 def get_bdev_name_key(bdev):
@@ -54,8 +63,7 @@ def get_bdev_delete_method(bdev):
 
 
 def clear_bdev_subsystem(args, bdev_config):
-    rpc_bdevs = args.client.call("bdev_get_bdevs")
-    for bdev in bdev_config:
+    for bdev in flatten_config(bdev_config):
         bdev_name_key = get_bdev_name_key(bdev)
         bdev_name = get_bdev_name(bdev)
         destroy_method = get_bdev_delete_method(bdev)
@@ -79,7 +87,7 @@ def get_nvmf_destroy_method(nvmf):
 
 
 def clear_nvmf_subsystem(args, nvmf_config):
-    for nvmf in nvmf_config:
+    for nvmf in flatten_config(nvmf_config):
         destroy_method = get_nvmf_destroy_method(nvmf)
         if destroy_method:
             args.client.call(destroy_method, {'nqn': nvmf['params']['nqn']})
@@ -89,7 +97,7 @@ def get_iscsi_destroy_method(iscsi):
     delete_method_map = {'iscsi_create_portal_group': "iscsi_delete_portal_group",
                          'iscsi_create_initiator_group': "iscsi_delete_initiator_group",
                          'iscsi_create_target_node': "iscsi_delete_target_node",
-                         'iscsi_set_options': None
+                         'iscsi_set_options': None,
                          }
     return delete_method_map[iscsi['method']]
 
@@ -109,20 +117,20 @@ def get_iscsi_name_key(iscsi):
 
 
 def clear_iscsi_subsystem(args, iscsi_config):
-    for iscsi in iscsi_config:
+    for iscsi in flatten_config(iscsi_config):
         destroy_method = get_iscsi_destroy_method(iscsi)
         if destroy_method:
             args.client.call(destroy_method, {get_iscsi_name_key(iscsi): get_iscsi_name(iscsi)})
 
 
 def get_nbd_destroy_method(nbd):
-    delete_method_map = {'nbd_start_disk': "nbd_stop_disk"
+    delete_method_map = {'nbd_start_disk': "nbd_stop_disk",
                          }
     return delete_method_map[nbd['method']]
 
 
 def clear_nbd_subsystem(args, nbd_config):
-    for nbd in nbd_config:
+    for nbd in flatten_config(nbd_config):
         destroy_method = get_nbd_destroy_method(nbd)
         if destroy_method:
             args.client.call(destroy_method, {'nbd_device': nbd['params']['nbd_device']})
@@ -134,14 +142,14 @@ def get_ublk_destroy_method(ublk):
 
 
 def clear_ublk_subsystem(args, ublk_config):
-    for ublk in ublk_config:
+    for ublk in flatten_config(ublk_config):
         destroy_method = get_ublk_destroy_method(ublk)
         if destroy_method:
             args.client.call(destroy_method, {'ublk_device': ublk['params']['ublk_device']})
 
 
 def clear_vhost_scsi_subsystem(args, vhost_config):
-    for vhost in reversed(vhost_config):
+    for vhost in reversed(list(flatten_config(vhost_config))):
         if 'method' in vhost:
             method = vhost['method']
             if method in ['vhost_scsi_controller_add_target']:
@@ -153,7 +161,7 @@ def clear_vhost_scsi_subsystem(args, vhost_config):
 
 
 def clear_vhost_blk_subsystem(args, vhost_config):
-    for vhost in reversed(vhost_config):
+    for vhost in reversed(list(flatten_config(vhost_config))):
         if 'method' in vhost:
             method = vhost['method']
             if method in ['vhost_create_blk_controller']:

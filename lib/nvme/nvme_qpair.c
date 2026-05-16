@@ -458,10 +458,27 @@ static const struct nvme_string path_status[] = {
 	{ 0xFFFF, "PATH ERROR" }
 };
 
+static const struct nvme_string fabric_cmd_status[] = {
+	{ SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT, "INCOMPATIBLE FORMAT" },
+	{ SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY, "CONTROLLER BUSY" },
+	{ SPDK_NVMF_FABRIC_SC_INVALID_PARAM, "INVALID PARAM" },
+	{ SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY, "RESTART DISCOVERY" },
+	{ SPDK_NVMF_FABRIC_SC_INVALID_HOST, "INVALID HOST" },
+	{ SPDK_NVMF_FABRIC_SC_LOG_RESTART_DISCOVERY, "LOG RESTART DISCOVERY" },
+	{ SPDK_NVMF_FABRIC_SC_AUTH_REQUIRED, "AUTH REQUIRED" },
+	{ 0xFFFF, "FABRIC COMMAND SPECIFIC" }
+};
+
+SPDK_LOG_DEPRECATION_REGISTER(nvme_cpl_without_opc,
+			      "use _ext APIs with opcode parameter instead",
+			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 const char *
 spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 {
 	const struct nvme_string *entry;
+
+	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
 
 	switch (status->sct) {
 	case SPDK_NVME_SCT_GENERIC:
@@ -486,6 +503,16 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 }
 
 const char *
+spdk_nvme_cpl_get_status_string_ext(const struct spdk_nvme_status *status, uint8_t opc)
+{
+	if (opc == SPDK_NVME_OPC_FABRIC && status->sct == SPDK_NVME_SCT_COMMAND_SPECIFIC) {
+		return nvme_get_string(fabric_cmd_status, status->sc);
+	}
+
+	return spdk_nvme_cpl_get_status_string(status);
+}
+
+const char *
 spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status)
 {
 	return nvme_get_string(status_type, status->sct);
@@ -503,10 +530,26 @@ nvme_get_completion_string(char *buf, size_t size, uint16_t qid, struct spdk_nvm
 		 cpl->cdw0, cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
 }
 
+static void
+nvme_get_completion_string_ext(char *buf, size_t size, uint16_t qid,
+			       const struct spdk_nvme_cpl *cpl, uint8_t opc)
+{
+	assert(cpl != NULL);
+
+	snprintf(buf, size,
+		 "%s (%02" PRIx8 "/%02" PRIx8 ") qid:%" PRIu16 " cid:%" PRIu16 " cdw0:%08" PRIx32 " sqhd:%04" PRIx16
+		 " p:%" PRIx16 " m:%" PRIx16 " dnr:%" PRIx16,
+		 spdk_nvme_cpl_get_status_string_ext(&cpl->status, opc), cpl->status.sct,
+		 cpl->status.sc, qid, cpl->cid, cpl->cdw0, cpl->sqhd, cpl->status.p,
+		 cpl->status.m, cpl->status.dnr);
+}
+
 void
 spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
+
+	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
 
 	/* Check that sqid matches qid. Note that sqid is reserved
 	 * for fabrics so don't print an error when sqid is 0. */
@@ -519,7 +562,36 @@ spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
 }
 
 void
+spdk_nvme_print_completion_ext(uint16_t qid, const struct spdk_nvme_cpl *cpl, uint8_t opc)
+{
+	char buf[NVME_CMD_STR_SIZE] = {'\0'};
+
+	if (cpl->sqid != qid && cpl->sqid != 0) {
+		SPDK_ERRLOG("sqid %u doesn't match qid\n", cpl->sqid);
+	}
+
+	nvme_get_completion_string_ext(buf, sizeof(buf), qid, cpl, opc);
+	SPDK_NOTICELOG("%s\n", buf);
+}
+
+void
 spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl)
+{
+	char buf[NVME_CMD_STR_SIZE] = {'\0'};
+
+	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
+
+	if (cpl->sqid != qpair->id && cpl->sqid != 0) {
+		NVME_QPAIR_ERRLOG(qpair, "sqid %u doesn't match qid\n", cpl->sqid);
+	}
+
+	nvme_get_completion_string(buf, sizeof(buf), qpair->id, cpl);
+	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
+}
+
+void
+spdk_nvme_qpair_print_completion_ext(const struct spdk_nvme_qpair *qpair,
+				     const struct spdk_nvme_cpl *cpl, uint8_t opc)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
 
@@ -527,7 +599,7 @@ spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 		NVME_QPAIR_ERRLOG(qpair, "sqid %u doesn't match qid\n", cpl->sqid);
 	}
 
-	nvme_get_completion_string(buf, sizeof(buf), qpair->id, cpl);
+	nvme_get_completion_string_ext(buf, sizeof(buf), qpair->id, cpl, opc);
 	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
 }
 
@@ -628,7 +700,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
 		NVME_QPAIR_NOTICELOG(qpair, "Command completed manually:\n");
 		spdk_nvme_qpair_print_command(qpair, &req->cmd);
-		spdk_nvme_qpair_print_completion(qpair, &cpl);
+		spdk_nvme_qpair_print_completion_ext(qpair, &cpl, req->cmd.opc);
 	}
 
 	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, &cpl);
@@ -722,8 +794,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		 * but we have historically not disconnected pcie qpairs during reset so we have to abort requests
 		 * here.
 		 */
-		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
-		    !qpair->is_new_qpair) {
+		if (qpair->trtype == SPDK_NVME_TRANSPORT_PCIE && !qpair->is_new_qpair) {
 			nvme_qpair_abort_all_queued_reqs(qpair);
 			nvme_transport_qpair_abort_reqs(qpair);
 		}
@@ -748,7 +819,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE &&
 			  nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED)) {
 		/* Don't disconnect PCIe qpairs. They are a special case for reset. */
-		if (qpair->ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		if (qpair->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 			nvme_ctrlr_disconnect_qpair(qpair);
 		}
 		if (qpair->transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_RESET) {
@@ -864,9 +935,9 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	/* error injection for those queued error requests */
-	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->err_req_head))) {
+	if (spdk_unlikely(qpair->err_cmd_enabled && !STAILQ_EMPTY(&qpair->err_req_head))) {
 		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
-			if (req->pid == getpid() &&
+			if ((qpair->id != 0 || req->pid == getpid()) &&
 			    spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
 				STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
 				nvme_qpair_manual_complete_request(qpair, req,
@@ -995,7 +1066,7 @@ nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 
 	while (!STAILQ_EMPTY(&qpair->err_req_head)) {
 		req = STAILQ_FIRST(&qpair->err_req_head);
-		assert(req->pid == getpid());
+		assert(qpair->id != 0 || req->pid == getpid());
 		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
 		nvme_qpair_manual_complete_request(qpair, req,
 						   req->cpl.status.sct,
@@ -1081,7 +1152,7 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 	/* queue those requests which matches with opcode in err_cmd list */
-	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_cmd_head))) {
+	if (spdk_unlikely(qpair->err_cmd_enabled)) {
 		TAILQ_FOREACH(cmd, &qpair->err_cmd_head, link) {
 			if (!cmd->do_not_submit) {
 				continue;
@@ -1103,16 +1174,6 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	if (spdk_unlikely(ctrlr->is_failed)) {
 		rc = -ENXIO;
 		goto error;
-	}
-
-	/* assign submit_tick before submitting req to specific transport */
-	if (spdk_unlikely(ctrlr->timeout_enabled)) {
-		if (req->submit_tick == 0) { /* req submitted for the first time */
-			req->submit_tick = spdk_get_ticks();
-			req->timed_out = false;
-		}
-	} else {
-		req->submit_tick = 0;
 	}
 
 	/* Allow two cases:
@@ -1171,7 +1232,15 @@ error:
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	int rc;
+
+	/* That is the first submission of the request, assign submit_tick if requested by the configuration.
+	 * Parent requests are ignored */
+	if (ctrlr->timeout_enabled && req->num_children == 0) {
+		req->submit_tick = spdk_get_ticks();
+		req->timed_out = false;
+	}
 
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
 		/*
@@ -1268,6 +1337,8 @@ spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->opc = opc;
 	cmd->status.sct = sct;
 	cmd->status.sc = sc;
+
+	qpair->err_cmd_enabled = true;
 out:
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_ctrlr_unlock(ctrlr);
@@ -1296,6 +1367,8 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		}
 	}
 
+	qpair->err_cmd_enabled = !TAILQ_EMPTY(&qpair->err_cmd_head);
+
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_ctrlr_unlock(ctrlr);
 	}
@@ -1311,4 +1384,16 @@ uint32_t
 spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair)
 {
 	return qpair->num_outstanding_reqs;
+}
+
+bool
+spdk_nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)
+{
+	return nvme_qpair_is_admin_queue(qpair);
+}
+
+uint16_t
+spdk_nvme_qpair_get_queue_depth(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->queue_depth;
 }

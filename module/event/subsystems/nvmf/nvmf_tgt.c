@@ -19,8 +19,8 @@ enum nvmf_tgt_state {
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_RUNNING,
-	NVMF_TGT_FINI_STOP_LISTEN,
 	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
+	NVMF_TGT_FINI_STOP_LISTEN,
 	NVMF_TGT_FINI_DESTROY_SUBSYSTEMS,
 	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
 	NVMF_TGT_FINI_DESTROY_TARGET,
@@ -51,7 +51,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 		.name = "nvmf_tgt",
 		.max_subsystems = 0,
 		.crdt = { 0, 0, 0 },
-		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
+		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY,
 		.dhchap_digests = NVMF_TGT_DEFAULT_DIGESTS,
 		.dhchap_dhgroups = NVMF_TGT_DEFAULT_DHGROUPS,
 	},
@@ -95,7 +95,7 @@ nvmf_shutdown_cb(void *arg1)
 		/* Parse configuration error */
 		g_tgt_state = NVMF_TGT_FINI_DESTROY_TARGET;
 	} else {
-		g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
+		g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 	}
 	nvmf_tgt_advance_state();
 }
@@ -238,7 +238,7 @@ nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 	if (subsystem) {
 		rc = spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
 		if (rc) {
-			g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
+			g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 			SPDK_ERRLOG("Unable to start NVMe-oF subsystem. Stopping app.\n");
 			nvmf_tgt_advance_state();
 		}
@@ -266,7 +266,7 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	g_tgt_state = NVMF_TGT_FINI_DESTROY_SUBSYSTEMS;
+	g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
 	nvmf_tgt_advance_state();
 }
 
@@ -296,7 +296,7 @@ nvmf_tgt_stop_listen(void)
 		}
 	}
 
-	g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+	g_tgt_state = NVMF_TGT_FINI_DESTROY_SUBSYSTEMS;
 }
 
 static void
@@ -339,9 +339,11 @@ static int
 nvmf_add_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_opts opts;
 
-	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, SPDK_NVMF_DISCOVERY_NQN,
-					       SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, 0);
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, &opts, sizeof(opts));
+	subsystem = spdk_nvmf_subsystem_create_ext(g_spdk_nvmf_tgt, SPDK_NVMF_DISCOVERY_NQN,
+			SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, &opts);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;
@@ -573,16 +575,19 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 		nvmf_cdata.sanicap = nvme_cdata.sanicap;
 	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.security_send_recv) {
-		nvmf_cdata.oacs.security = nvme_cdata.oacs.security;
+		nvmf_cdata.oacs.ssrs = nvme_cdata.oacs.ssrs;
 	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.fw_update) {
-		nvmf_cdata.oacs.firmware = nvme_cdata.oacs.firmware;
+		nvmf_cdata.oacs.fwds = nvme_cdata.oacs.fwds;
 		nvmf_cdata.frmw = nvme_cdata.frmw;
 		nvmf_cdata.fwug = nvme_cdata.fwug;
 		nvmf_cdata.mtfa = nvme_cdata.mtfa;
 	}
+	if (g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi) {
+		nvmf_cdata.oacs.nsrs = nvme_cdata.oacs.nsrs;
+	}
 	if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_uuid_list) {
-		nvmf_cdata.ctratt.bits.uuid_list = nvme_cdata.ctratt.bits.uuid_list;
+		nvmf_cdata.ctratt.ulist = nvme_cdata.ctratt.ulist;
 	}
 
 	/* Copy the fixed up data back to the response */
@@ -597,6 +602,7 @@ nvmf_admin_passthru_generic_hdlr(struct spdk_nvmf_request *req,
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem *subsys;
+	const struct spdk_nvmf_subsystem_opts *subsys_opts;
 	int rc;
 
 	subsys = spdk_nvmf_request_get_subsystem(req);
@@ -604,8 +610,10 @@ nvmf_admin_passthru_generic_hdlr(struct spdk_nvmf_request *req,
 		return -1;
 	}
 
+	subsys_opts = spdk_nvmf_subsystem_get_opts(subsys);
+
 	/* Only procss this request if it has exactly one namespace */
-	if (spdk_nvmf_subsystem_get_max_nsid(subsys) != 1) {
+	if (subsys_opts->max_namespaces != 1) {
 		return -1;
 	}
 
@@ -658,6 +666,16 @@ nvmf_custom_get_log_page_hdlr(struct spdk_nvmf_request *req)
 	 */
 	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 	case SPDK_NVME_LOG_CHANGED_NS_LIST:
+		return -1;
+	/* SPDK reports zeroed buffer for NVMe MI Commands log
+	 * indicating that no NVMe MI commands are supported by SPDK.
+	 * If NVMe MI Send/Receive passthru is enabled let the drive
+	 * handle this log page.
+	 */
+	case SPDK_NVME_LOG_NVME_MI_COMMANDS_EFFECTS:
+		if (g_spdk_nvmf_tgt_conf.admin_passthru.nvme_mi) {
+			return nvmf_admin_passthru_generic_hdlr(req, NULL);
+		}
 		return -1;
 	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
 		return nvmf_admin_passthru_generic_hdlr(req, fixup_get_feature_ids_effects_log_page);
@@ -781,7 +799,7 @@ nvmf_tgt_advance_state(void)
 				ret = spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
 				if (ret) {
 					SPDK_ERRLOG("Unable to start NVMe-oF subsystem. Stopping app.\n");
-					g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
+					g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 				}
 			} else {
 				g_tgt_state = NVMF_TGT_RUNNING;
@@ -790,9 +808,6 @@ nvmf_tgt_advance_state(void)
 		}
 		case NVMF_TGT_RUNNING:
 			spdk_subsystem_init_next(0);
-			break;
-		case NVMF_TGT_FINI_STOP_LISTEN:
-			nvmf_tgt_stop_listen();
 			break;
 		case NVMF_TGT_FINI_STOP_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
@@ -805,10 +820,13 @@ nvmf_tgt_advance_state(void)
 					nvmf_tgt_subsystem_stopped(subsystem, NULL, 0);
 				}
 			} else {
-				g_tgt_state = NVMF_TGT_FINI_DESTROY_SUBSYSTEMS;
+				g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
 			}
 			break;
 		}
+		case NVMF_TGT_FINI_STOP_LISTEN:
+			nvmf_tgt_stop_listen();
+			break;
 		case NVMF_TGT_FINI_DESTROY_SUBSYSTEMS:
 			_nvmf_tgt_subsystem_destroy(NULL);
 			/* Function above can be asynchronous, it will call nvmf_tgt_advance_state() once done.
@@ -853,9 +871,9 @@ nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
 		"transport,address,svcid"
 	};
 
-	if ((g_spdk_nvmf_tgt_conf.opts.discovery_filter & ~(SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
-			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
-			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID)) != 0) {
+	if ((g_spdk_nvmf_tgt_conf.opts.discovery_filter & ~(SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE) |
+			SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS) |
+			SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID))) != 0) {
 		SPDK_ERRLOG("Incorrect discovery filter %d\n", g_spdk_nvmf_tgt_conf.opts.discovery_filter);
 		assert(0);
 		return;

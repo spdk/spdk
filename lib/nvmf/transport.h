@@ -34,9 +34,9 @@ int nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *grou
 
 int nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
-int nvmf_transport_req_free(struct spdk_nvmf_request *req);
+void nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
-int nvmf_transport_req_complete(struct spdk_nvmf_request *req);
+void nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
 void nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
 			       spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg);
@@ -62,6 +62,7 @@ int nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
 				      struct spdk_nvmf_transport *transport,
 				      uint32_t length);
 
-bool nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req);
+bool nvmf_request_get_buffers_abort(struct spdk_nvmf_request *req,
+				    struct spdk_nvmf_transport_poll_group *group);
 
 #endif /* SPDK_NVMF_TRANSPORT_H */

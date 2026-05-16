@@ -64,7 +64,7 @@ struct spdk_trace_object {
 #define	SPDK_TRACE_THREAD_NAME_LEN 16
 #define SPDK_TRACE_MAX_GROUP_ID  20
 #define SPDK_TRACE_MAX_TPOINT_ID (SPDK_TRACE_MAX_GROUP_ID * 64)
-#define SPDK_TPOINT_ID(group, tpoint)	((group * 64) + tpoint)
+#define SPDK_TPOINT_ID(group, tpoint)	(((group) * 64) + (tpoint))
 
 #define SPDK_TRACE_ARG_TYPE_INT 0
 #define SPDK_TRACE_ARG_TYPE_PTR 1
@@ -98,61 +98,151 @@ struct spdk_trace_history {
 	/** Logical core number associated with this structure instance. */
 	int				lcore;
 
+	/** Thread name associated with this lcore. */
+	char				tname[SPDK_TRACE_THREAD_NAME_LEN];
+
 	/** Number of trace_entries contained in each trace_history. */
 	uint64_t			num_entries;
 
-	/**
-	 * Running count of number of occurrences of each tracepoint on this
-	 *  lcore.  Debug tools can use this to easily count tracepoints such as
-	 *  number of SCSI tasks completed or PDUs read.
-	 */
-	uint64_t			tpoint_count[SPDK_TRACE_MAX_TPOINT_ID];
+	/** Number of tracepoint IDs for the tpoint_count array. */
+	uint64_t			num_tpoint_ids;
 
 	/** Index to next spdk_trace_entry to fill. */
 	uint64_t			next_entry;
 
-	/**
-	 * Circular buffer of spdk_trace_entry structures for tracing
-	 *  tpoints on this core.  Debug tool spdk_trace reads this
-	 *  buffer from shared memory to post-process the tpoint entries and
-	 *  display in a human-readable format.
+	/*
+	 * Variable-length data follows:
+	 *   uint64_t tpoint_count[num_tpoint_ids]
+	 *   struct spdk_trace_entry entries[num_entries]
 	 */
-	struct spdk_trace_entry		entries[0];
+	uint8_t				data[0];
 };
 
 #define SPDK_TRACE_MAX_LCORE		1024
 
+enum spdk_trace_section_type {
+	SPDK_TRACE_SECTION_MAIN = 0,
+	SPDK_TRACE_SECTION_OWNER = 1,
+	SPDK_TRACE_SECTION_TPOINT_MASK = 2,
+	SPDK_TRACE_SECTION_OWNER_TYPE = 3,
+	SPDK_TRACE_SECTION_OBJECT = 4,
+	SPDK_TRACE_SECTION_TPOINT = 5,
+	SPDK_TRACE_SECTION_LCORE_OFFSETS = 6,
+	SPDK_TRACE_NUM_SECTIONS,
+};
+
+struct spdk_trace_section_main {
+	uint64_t	tsc_rate;
+	/** TSC value set by spdk_trace_clear(); the parser ignores entries older than this. */
+	uint64_t	clear_tsc;
+	uint8_t		reserved[496];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_main) == 512, "incorrect size");
+
+struct spdk_trace_section_owner {
+	uint16_t	num_owners;
+	uint16_t	owner_description_size;
+	uint8_t		reserved[124];
+	uint8_t		data[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_owner) == 128, "incorrect size");
+
+struct spdk_trace_section_tpoint_mask {
+	uint16_t	count;
+	uint8_t		reserved[126];
+	uint64_t	tpoint_mask[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_tpoint_mask) == 128, "incorrect size");
+
+struct spdk_trace_section_owner_type {
+	uint16_t			count;
+	uint8_t				reserved[126];
+	struct spdk_trace_owner_type	owner_type[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_owner_type) == 128, "incorrect size");
+
+struct spdk_trace_section_object {
+	uint16_t			count;
+	uint8_t				reserved[126];
+	struct spdk_trace_object	object[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_object) == 128, "incorrect size");
+
+struct spdk_trace_section_tpoint {
+	uint16_t			count;
+	uint8_t				reserved[126];
+	struct spdk_trace_tpoint	tpoint[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_tpoint) == 128, "incorrect size");
+
+struct spdk_trace_section_lcore_offsets {
+	uint16_t	count;
+	uint8_t		reserved[126];
+	uint64_t	lcore_offsets[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_section_lcore_offsets) == 128, "incorrect size");
+
 struct spdk_trace_file {
 	uint64_t			file_size;
-	uint64_t			tsc_rate;
-	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
-	char				tname[SPDK_TRACE_MAX_LCORE][SPDK_TRACE_THREAD_NAME_LEN];
-	struct spdk_trace_owner_type	owner_type[SPDK_TRACE_MAX_OWNER_TYPE];
-	struct spdk_trace_object	object[UCHAR_MAX + 1];
-	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
-
-	uint16_t			num_owners;
-	uint16_t			owner_description_size;
-	uint8_t				reserved[4];
-
-	/** Offset of each trace_history from the beginning of this data structure. */
-	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
-
-	/** Offset of beginning of struct spdk_trace_owner data. */
-	uint64_t			owner_offset;
-
-	/** Variable sized data sections are at the end of this data structure,
-	 *  referenced by offsets defined in this structure.
-	 */
-	uint8_t	data[0];
+	uint16_t			num_sections;
+	uint8_t				reserved[6];
+	uint64_t			section_offsets[SPDK_TRACE_NUM_SECTIONS];
 };
 extern struct spdk_trace_file *g_trace_file;
 
-static inline uint64_t
-spdk_get_trace_history_size(uint64_t num_entries)
+static inline struct spdk_trace_entry *
+spdk_trace_history_get_entry(struct spdk_trace_history *history, uint64_t offset)
 {
-	return sizeof(struct spdk_trace_history) + num_entries * sizeof(struct spdk_trace_entry);
+	uint64_t *counts = (uint64_t *)history->data;
+	struct spdk_trace_entry *entries = (struct spdk_trace_entry *)(counts + history->num_tpoint_ids);
+
+	return &entries[offset];
 }
+
+static inline uint64_t
+spdk_get_trace_history_size(uint64_t num_entries, uint64_t num_tpoint_ids)
+{
+	return sizeof(struct spdk_trace_history) +
+	       num_tpoint_ids * sizeof(uint64_t) +
+	       num_entries * sizeof(struct spdk_trace_entry);
+}
+
+static inline void *
+spdk_trace_get_section(const struct spdk_trace_file *f, enum spdk_trace_section_type type)
+{
+	if ((uint32_t)type >= f->num_sections || f->section_offsets[type] == 0) {
+		return NULL;
+	}
+	return (char *)f + f->section_offsets[type];
+}
+
+#define spdk_trace_get_main_section(f) \
+	((struct spdk_trace_section_main *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_MAIN))
+
+static inline uint64_t
+spdk_trace_get_tsc_rate(const struct spdk_trace_file *trace_file)
+{
+	return spdk_trace_get_main_section(trace_file)->tsc_rate;
+}
+
+
+#define spdk_trace_get_tpoint_mask_section(f) \
+	((struct spdk_trace_section_tpoint_mask *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_TPOINT_MASK))
+
+#define spdk_trace_get_owner_type_section(f) \
+	((struct spdk_trace_section_owner_type *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OWNER_TYPE))
+
+#define spdk_trace_get_object_section(f) \
+	((struct spdk_trace_section_object *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OBJECT))
+
+#define spdk_trace_get_tpoint_section(f) \
+	((struct spdk_trace_section_tpoint *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_TPOINT))
+
+#define spdk_trace_get_lcore_offsets_section(f) \
+	((struct spdk_trace_section_lcore_offsets *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_LCORE_OFFSETS))
+
+#define spdk_trace_get_owner_section(f) \
+	((struct spdk_trace_section_owner *)spdk_trace_get_section(f, SPDK_TRACE_SECTION_OWNER))
 
 static inline uint64_t
 spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
@@ -160,16 +250,43 @@ spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 	return trace_file->file_size;
 }
 
+static inline uint64_t
+spdk_trace_file_get_sections_size(const struct spdk_trace_file *f)
+{
+	struct spdk_trace_section_owner *os = spdk_trace_get_owner_section(f);
+	struct spdk_trace_section_tpoint_mask *tpm = spdk_trace_get_tpoint_mask_section(f);
+	struct spdk_trace_section_owner_type *ot = spdk_trace_get_owner_type_section(f);
+	struct spdk_trace_section_object *obj = spdk_trace_get_object_section(f);
+	struct spdk_trace_section_tpoint *tp = spdk_trace_get_tpoint_section(f);
+	struct spdk_trace_section_lcore_offsets *lc = spdk_trace_get_lcore_offsets_section(f);
+
+	return sizeof(struct spdk_trace_section_main) +
+	       sizeof(struct spdk_trace_section_owner) +
+	       os->num_owners * (sizeof(struct spdk_trace_owner) + os->owner_description_size) +
+	       sizeof(struct spdk_trace_section_tpoint_mask) +
+	       tpm->count * sizeof(uint64_t) +
+	       sizeof(struct spdk_trace_section_owner_type) +
+	       ot->count * sizeof(struct spdk_trace_owner_type) +
+	       sizeof(struct spdk_trace_section_object) +
+	       obj->count * sizeof(struct spdk_trace_object) +
+	       sizeof(struct spdk_trace_section_tpoint) +
+	       tp->count * sizeof(struct spdk_trace_tpoint) +
+	       sizeof(struct spdk_trace_section_lcore_offsets) +
+	       lc->count * sizeof(uint64_t);
+}
+
 static inline struct spdk_trace_history *
 spdk_get_per_lcore_history(struct spdk_trace_file *trace_file, unsigned lcore)
 {
+	struct spdk_trace_section_lcore_offsets *section;
 	uint64_t lcore_history_offset;
 
-	if (lcore >= SPDK_TRACE_MAX_LCORE) {
+	section = spdk_trace_get_lcore_offsets_section(trace_file);
+	if (section == NULL || lcore >= section->count) {
 		return NULL;
 	}
 
-	lcore_history_offset = trace_file->lcore_history_offsets[lcore];
+	lcore_history_offset = section->lcore_offsets[lcore];
 	if (lcore_history_offset == 0) {
 		return NULL;
 	}
@@ -180,15 +297,16 @@ spdk_get_per_lcore_history(struct spdk_trace_file *trace_file, unsigned lcore)
 static inline struct spdk_trace_owner *
 spdk_get_trace_owner(const struct spdk_trace_file *trace_file, uint16_t owner_id)
 {
+	struct spdk_trace_section_owner *section;
 	uint64_t owner_size;
 
-	if (owner_id >= trace_file->num_owners) {
+	section = spdk_trace_get_owner_section(trace_file);
+	if (section == NULL || owner_id >= section->num_owners) {
 		return NULL;
 	}
 
-	owner_size = sizeof(struct spdk_trace_owner) + trace_file->owner_description_size;
-	return (struct spdk_trace_owner *)
-	       (((char *)trace_file) + trace_file->owner_offset + owner_id * owner_size);
+	owner_size = sizeof(struct spdk_trace_owner) + section->owner_description_size;
+	return (struct spdk_trace_owner *)(section->data + owner_id * owner_size);
 }
 
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id,
@@ -196,7 +314,8 @@ void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id,
 
 #define spdk_trace_tpoint_enabled(tpoint_id)	\
 	spdk_unlikely((g_trace_file != NULL  && \
-	((1ULL << (tpoint_id & 0x3F)) &	g_trace_file->tpoint_mask[tpoint_id >> 6])))
+	((1ULL << (tpoint_id & 0x3F)) &	\
+	 spdk_trace_get_tpoint_mask_section(g_trace_file)->tpoint_mask[tpoint_id >> 6])))
 
 #define _spdk_trace_record_tsc(tsc, tpoint_id, owner_id, size, object_id, num_args, ...)	\
 	do {											\
@@ -325,6 +444,13 @@ int spdk_trace_unregister_user_thread(void);
  */
 void spdk_trace_cleanup(void);
 
+/**
+ * Record the current TSC as a clear point. Subsequent reads by the trace
+ * parser will skip all entries recorded before this point.
+ */
+void spdk_trace_clear(void);
+
+#define OWNER_ID_NONE 0
 #define OWNER_TYPE_NONE 0
 #define OBJECT_NONE 0
 
@@ -471,6 +597,15 @@ void spdk_trace_mask_usage(FILE *f, const char *tmask_arg);
  * \return tpoint group mask on success, 0 on failure
  */
 uint64_t spdk_trace_create_tpoint_group_mask(const char *group_name);
+
+/**
+ * Create a tracepoint mask from a tracepoint name within a group
+ *
+ * \param group_id tracepoint group id
+ * \param tpoint_name tracepoint name string (case-insensitive)
+ * \return tpoint mask (single bit) on success, 0 on failure
+ */
+uint64_t spdk_trace_create_tpoint_mask(uint32_t group_id, const char *tpoint_name);
 
 struct spdk_trace_register_fn {
 	const char *name;

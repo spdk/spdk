@@ -70,7 +70,7 @@ function go_rpc() {
 	[ "$(jq length <<< "$bdevs")" == "0" ]
 }
 
-$SPDK_BIN_DIR/spdk_tgt -e bdev &
+run_app_bg $SPDK_BIN_DIR/spdk_tgt -e bdev
 spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid

@@ -69,8 +69,8 @@ function setup_bdev_conf() {
 		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
 		bdev_raid_create -n concat0 -z 64 -r concat -b "Malloc6 Malloc7"
 		bdev_raid_create -n raid1 -r 1 -b "Malloc8 Malloc9"
-		bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
-		bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
+		bdev_set_qos_limit --rw-mbytes-per-sec 100 Malloc3
+		bdev_set_qos_limit --rw-ios-per-sec 20000 Malloc0
 	RPC
 
 	dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
@@ -123,11 +123,15 @@ function setup_gpt_conf() {
 		typeset -g g_unique_partguid=6f89f330-603b-4116-ac73-2ca8eae53030
 		typeset -g g_unique_partguid_old=abf1734f-66e5-4c0f-aa29-4021d4d307df
 
+		# This Partition Table GUID was randomly generated for testing.
+		typeset -g g_partition_table_guid=68680d47-26ac-49ac-8885-6b5eb35b63b2
+
 		# Create gpt partition table
 		parted -s "$gpt_nvme" mklabel gpt mkpart SPDK_TEST_first '0%' '50%' mkpart SPDK_TEST_second '50%' '100%'
 		# Change the partition type GUIDs to SPDK partition type values
 		SPDK_GPT_OLD_GUID=$(get_spdk_gpt_old)
 		SPDK_GPT_GUID=$(get_spdk_gpt)
+		sgdisk -U "$g_partition_table_guid" "$gpt_nvme"
 		sgdisk -t "1:$SPDK_GPT_GUID" -u "1:$g_unique_partguid" "$gpt_nvme"
 		sgdisk -t "2:$SPDK_GPT_OLD_GUID" -u "2:$g_unique_partguid_old" "$gpt_nvme"
 		"$rootdir/scripts/setup.sh"
@@ -418,7 +422,7 @@ function qos_function_test() {
 	if [ $iops_limit -gt $qos_lower_iops_limit ]; then
 
 		# Run bdevperf with IOPS rate limit on bdev 1
-		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV_1
+		$rpc_py bdev_set_qos_limit --rw-ios-per-sec $iops_limit $QOS_DEV_1
 		run_test "bdev_qos_iops" run_qos_test $iops_limit IOPS $QOS_DEV_1
 
 		# Run bdevperf with bandwidth rate limit on bdev 2
@@ -428,11 +432,11 @@ function qos_function_test() {
 		if [ $bw_limit -lt $qos_lower_bw_limit ]; then
 			bw_limit=$qos_lower_bw_limit
 		fi
-		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV_2
+		$rpc_py bdev_set_qos_limit --rw-mbytes-per-sec $bw_limit $QOS_DEV_2
 		run_test "bdev_qos_bw" run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
 
 		# Run bdevperf with additional read only bandwidth rate limit on bdev 1
-		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $qos_lower_bw_limit $QOS_DEV_1
+		$rpc_py bdev_set_qos_limit --r-mbytes-per-sec $qos_lower_bw_limit $QOS_DEV_1
 		run_test "bdev_qos_ro_bw" run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"
@@ -521,7 +525,7 @@ function qd_sampling_function_test() {
 
 	$rpc_py bdev_set_qd_sampling_period $bdev_name $sampling_period
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 
 	qd_sampling_period=$(jq -r '.bdevs[0].queue_depth_polling_period' <<< "$iostats")
 
@@ -564,16 +568,16 @@ function stat_function_test() {
 	local io_count_per_channel2
 	local io_count_per_channel_all=0
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 	io_count1=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 
-	iostats_per_channel=$($rpc_py bdev_get_iostat -b $bdev_name -c)
+	iostats_per_channel=$($rpc_py bdev_get_iostat --names $bdev_name -c)
 	io_count_per_channel1=$(jq -r '.channels[0].num_read_ops' <<< "$iostats_per_channel")
 	io_count_per_channel_all=$((io_count_per_channel_all + io_count_per_channel1))
 	io_count_per_channel2=$(jq -r '.channels[1].num_read_ops' <<< "$iostats_per_channel")
 	io_count_per_channel_all=$((io_count_per_channel_all + io_count_per_channel2))
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat --names $bdev_name)
 	io_count2=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 
 	# There is little time passed between the three iostats collected. So that
@@ -647,6 +651,74 @@ function dif_insert_strip_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+# Verify persistent configuration
+function get_malloc_config_numa() {
+	bdev_config=$("$rpc_py" framework_get_config bdev)
+	jq_filter="map(select(.params.name == \"$1\") | .params.numa_id) | .[]"
+	jq -r "$jq_filter" <<< "$bdev_config"
+}
+
+# Verify running info
+function get_bdev_numa() {
+	bdev=$("$rpc_py" bdev_get_bdevs)
+	jq_filter=".[] | select(.name == \"$1\") | .numa_id"
+	jq -r "$jq_filter" <<< "$bdev"
+}
+
+# Create bdevs with or without assigning specific NUMA.
+# Note that tests expect NUMA 0 to exist on the system.
+function numa_id_test_suite() {
+	NUMA_DEV="Malloc_numa"
+	NUMA_SPLIT="${NUMA_DEV}p0"
+	NUMA_PT="${NUMA_SPLIT}_pt"
+
+	start_spdk_tgt
+	$rpc_py framework_start_init
+
+	# Malloc -> Split -> Passthru
+	# PT bdev is re-created from config any time Split bdev is added
+	$rpc_py bdev_passthru_create -b "$NUMA_SPLIT" -p "$NUMA_PT"
+
+	# Default NUMA
+	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512
+	$rpc_py bdev_split_create "$NUMA_DEV" 1
+	waitforbdev "$NUMA_PT"
+
+	[[ "$(get_bdev_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_bdev_numa $NUMA_SPLIT)" == "-1" ]]
+	[[ "$(get_bdev_numa $NUMA_PT)" == "-1" ]]
+
+	$rpc_py bdev_malloc_delete "$NUMA_DEV"
+
+	# Explicitly any NUMA
+	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512 --numa-id -1
+	$rpc_py bdev_split_create "$NUMA_DEV" 1
+	waitforbdev "$NUMA_PT"
+
+	[[ "$(get_bdev_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "-1" ]]
+	[[ "$(get_bdev_numa $NUMA_SPLIT)" == "-1" ]]
+	[[ "$(get_bdev_numa $NUMA_PT)" == "-1" ]]
+
+	$rpc_py bdev_malloc_delete "$NUMA_DEV"
+
+	# NUMA 0
+	$rpc_py bdev_malloc_create -b "$NUMA_DEV" 1 512 --numa-id 0
+	$rpc_py bdev_split_create "$NUMA_DEV" 1
+	waitforbdev "$NUMA_PT"
+
+	[[ "$(get_bdev_numa $NUMA_DEV)" == "0" ]]
+	[[ "$(get_malloc_config_numa $NUMA_DEV)" == "0" ]]
+	[[ "$(get_bdev_numa $NUMA_SPLIT)" == "0" ]]
+	[[ "$(get_bdev_numa $NUMA_PT)" == "0" ]]
+
+	$rpc_py bdev_passthru_delete "$NUMA_PT"
+	$rpc_py bdev_malloc_delete "$NUMA_DEV"
+
+	killprocess "$spdk_tgt_pid"
+}
+
 function bdev_gpt_uuid() {
 	local bdev
 
@@ -659,11 +731,13 @@ function bdev_gpt_uuid() {
 	[[ "$(jq -r 'length' <<< "$bdev")" == "1" ]]
 	[[ "$(jq -r '.[0].aliases[0]' <<< "$bdev")" == "$g_unique_partguid" ]]
 	[[ "$(jq -r '.[0].driver_specific.gpt.unique_partition_guid' <<< "$bdev")" == "$g_unique_partguid" ]]
+	[[ "$(jq -r '.[0].driver_specific.gpt.partition_table_guid' <<< "$bdev")" == "$g_partition_table_guid" ]]
 
 	bdev=$("$rpc_py" bdev_get_bdevs -b "$g_unique_partguid_old")
 	[[ "$(jq -r 'length' <<< "$bdev")" == "1" ]]
 	[[ "$(jq -r '.[0].aliases[0]' <<< "$bdev")" == "$g_unique_partguid_old" ]]
 	[[ "$(jq -r '.[0].driver_specific.gpt.unique_partition_guid' <<< "$bdev")" == "$g_unique_partguid_old" ]]
+	[[ "$(jq -r '.[0].driver_specific.gpt.partition_table_guid' <<< "$bdev")" == "$g_partition_table_guid" ]]
 
 	killprocess "$spdk_tgt_pid"
 }
@@ -827,6 +901,7 @@ if [[ $test_type == bdev ]]; then
 	run_test "bdev_error" error_test_suite "$env_ctx"
 	run_test "bdev_stat" stat_test_suite "$env_ctx"
 	run_test "bdev_dif_insert_strip" dif_insert_strip_test_suite "$env_ctx"
+	run_test "bdev_numa_id" numa_id_test_suite "$env_ctx"
 fi
 
 if [[ $test_type == gpt ]]; then

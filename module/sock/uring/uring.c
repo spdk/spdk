@@ -246,7 +246,7 @@ uring_sock_get_interface_name(struct spdk_sock *_sock)
 	int rc;
 
 	rc = spdk_net_getaddr(sock->fd, saddr, sizeof(saddr), NULL, NULL, 0, NULL);
-	if (rc != 0) {
+	if (rc < 0) {
 		return NULL;
 	}
 
@@ -309,7 +309,7 @@ uring_sock_alloc_pipe(struct spdk_uring_sock *sock, int sz)
 		return 0;
 	} else if (sz < MIN_SOCK_PIPE_SIZE) {
 		SPDK_ERRLOG("The size of the pipe must be larger than %d\n", MIN_SOCK_PIPE_SIZE);
-		return -1;
+		return -EINVAL;
 	}
 
 	/* Round up to next 64 byte multiple */
@@ -381,11 +381,10 @@ uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
 	if (rc < 0) {
-		return rc;
+		return -errno;
 	}
 
 	_sock->impl_opts.recv_buf_size = sz;
-
 	return 0;
 }
 
@@ -408,11 +407,10 @@ uring_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
 	if (rc < 0) {
-		return rc;
+		return -errno;
 	}
 
 	_sock->impl_opts.send_buf_size = sz;
-
 	return 0;
 }
 
@@ -577,22 +575,12 @@ retry:
 static struct spdk_sock *
 uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	if (spdk_interrupt_mode_is_enabled()) {
-		SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.");
-		return NULL;
-	}
-
 	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
 }
 
 static struct spdk_sock *
 uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	if (spdk_interrupt_mode_is_enabled()) {
-		SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.");
-		return NULL;
-	}
-
 	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 }
 
@@ -694,19 +682,15 @@ uring_sock_recv_from_pipe(struct spdk_uring_sock *sock, struct iovec *diov, int 
 
 	sbytes = spdk_pipe_reader_get_buffer(sock->recv_pipe, sock->recv_buf_sz, siov);
 	if (sbytes < 0) {
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	} else if (sbytes == 0) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	bytes = spdk_iovcpy(siov, 2, diov, diovcnt);
-
 	if (bytes == 0) {
 		/* The only way this happens is if diov is 0 length */
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 
 	spdk_pipe_reader_advance(sock->recv_pipe, bytes);
@@ -728,8 +712,10 @@ sock_readv(int fd, struct iovec *iov, int iovcnt)
 		.msg_iov = iov,
 		.msg_iovlen = iovcnt,
 	};
+	int rc;
 
-	return recvmsg(fd, &msg, MSG_DONTWAIT);
+	rc = recvmsg(fd, &msg, MSG_DONTWAIT);
+	return rc < 0 ? -errno : rc;
 }
 
 static inline ssize_t
@@ -764,13 +750,11 @@ uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
 	struct spdk_uring_buf_tracker *tr;
 
 	if (sock->connection_status < 0) {
-		errno = -sock->connection_status;
-		return -1;
+		return sock->connection_status;
 	}
 
 	if (sock->recv_pipe != NULL) {
-		errno = ENOTSUP;
-		return -1;
+		return -ENOTSUP;
 	}
 
 	group = __uring_group_impl(_sock->group_impl);
@@ -779,13 +763,12 @@ uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
 	if (tr == NULL) {
 		if (sock->group->buf_ring_count > 0) {
 			/* There are buffers posted, but data hasn't arrived. */
-			errno = EAGAIN;
+			return -EAGAIN;
 		} else {
 			/* There are no buffers posted, so this won't ever
 			 * make forward progress. */
-			errno = ENOBUFS;
+			return -ENOBUFS;
 		}
-		return -1;
 	}
 	assert(sock->pending_recv == true);
 	assert(tr->buf != NULL);
@@ -814,8 +797,7 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 	int i;
 
 	if (sock->connection_status < 0) {
-		errno = -sock->connection_status;
-		return -1;
+		return sock->connection_status;
 	}
 
 	if (_sock->group_impl == NULL) {
@@ -836,8 +818,7 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 			return sock_readv(sock->fd, iovs, iovcnt);
 		}
 
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	total = 0;
@@ -889,8 +870,7 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	size_t len;
 
 	if (sock->connection_status < 0) {
-		errno = -sock->connection_status;
-		return -1;
+		return sock->connection_status;
 	}
 
 	if (sock->recv_pipe == NULL) {
@@ -930,21 +910,34 @@ uring_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 	return uring_sock_readv(sock, iov, 1);
 }
 
+static int
+uring_writev(struct spdk_uring_sock *sock, struct iovec *iov, int iovcnt, int flags)
+{
+	struct msghdr msg = {.msg_iov = iov, .msg_iovlen = iovcnt};
+	int rc;
+
+	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
+	if (rc <= 0) {
+		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
+			return -EAGAIN;
+		}
+
+		return -errno;
+	}
+
+	return rc;
+}
+
 static ssize_t
 uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct msghdr msg = {
-		.msg_iov = iov,
-		.msg_iovlen = iovcnt,
-	};
 
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
-	return sendmsg(sock->fd, &msg, MSG_DONTWAIT);
+	return uring_writev(sock, iov, iovcnt, 0);
 }
 
 static ssize_t
@@ -1458,7 +1451,7 @@ uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
 	if (!sock->group) {
 		if (_sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 			rc = uring_sock_flush(_sock);
-			if (rc < 0 && errno != EAGAIN) {
+			if (rc < 0 && rc != -EAGAIN) {
 				spdk_sock_abort_requests(_sock);
 			}
 		}
@@ -1476,9 +1469,10 @@ uring_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 
 	val = nbytes;
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
-	if (rc != 0) {
-		return -1;
+	if (rc < 0) {
+		return -errno;
 	}
+
 	return 0;
 }
 
@@ -1530,6 +1524,14 @@ uring_sock_is_connected(struct spdk_sock *_sock)
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	uint8_t byte;
 	int rc;
+	struct pollfd pfd;
+
+	pfd.fd = sock->fd;
+	pfd.events = 0;
+	pfd.revents = 0;
+	if (poll(&pfd, 1, 0) >= 0 && (pfd.revents & POLLHUP)) {
+		return false;
+	}
 
 	rc = recv(sock->fd, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
 	if (rc == 0) {
@@ -1579,9 +1581,12 @@ uring_sock_group_impl_buf_pool_alloc(struct spdk_uring_sock_group_impl *group_im
 {
 	struct io_uring_buf_reg buf_reg = {};
 	struct io_uring_buf_ring *buf_ring;
+	size_t page_size = sysconf(_SC_PAGESIZE);
 	int i, rc;
 
-	rc = posix_memalign((void **)&buf_ring, 0x1000, URING_BUF_POOL_SIZE * sizeof(struct io_uring_buf));
+	/* uring requires the buffer be aligned on system page boundary */
+	rc = posix_memalign((void **)&buf_ring, page_size,
+			    URING_BUF_POOL_SIZE * sizeof(struct io_uring_buf));
 	if (rc != 0) {
 		/* posix_memalign returns positive errno values */
 		return -rc;
@@ -1776,7 +1781,7 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		 * It will automatically call io_uring_enter appropriately. */
 		ret = io_uring_submit(&group->uring);
 		if (ret < 0) {
-			return 1;
+			return ret;
 		}
 		group->io_queued = 0;
 		group->io_inflight += to_submit;
@@ -1884,7 +1889,6 @@ static int
 uring_sock_flush(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct msghdr msg = {};
 	struct iovec iovs[IOV_BATCH_SIZE];
 	int iovcnt;
 	ssize_t rc;
@@ -1895,8 +1899,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (_sock->cb_cnt > 0) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	if (sock->connect_cb_fn) {
@@ -1907,8 +1910,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 
 	/* Can't flush while a write is already outstanding */
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		errno = EAGAIN;
-		return -1;
+		return -EAGAIN;
 	}
 
 	/* Gather an iov */
@@ -1918,15 +1920,9 @@ uring_sock_flush(struct spdk_sock *_sock)
 		return 0;
 	}
 
-	/* Perform the vectored write */
-	msg.msg_iov = iovs;
-	msg.msg_iovlen = iovcnt;
-	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
-	if (rc <= 0) {
-		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
-			errno = EAGAIN;
-		}
-		return -1;
+	rc = uring_writev(sock, iovs, iovcnt, flags);
+	if (rc < 0) {
+		return rc;
 	}
 
 #ifdef SPDK_ZEROCOPY
@@ -1935,8 +1931,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 	retval = sock_complete_write_reqs(_sock, rc, is_zcopy);
 	if (retval < 0) {
 		/* if the socket is closed, return to avoid heap-use-after-free error */
-		errno = ENOTCONN;
-		return -1;
+		return -ENOTCONN;
 	}
 
 #ifdef SPDK_ZEROCOPY
@@ -1956,21 +1951,18 @@ uring_sock_flush(struct spdk_sock *_sock)
 }
 
 static int
-uring_sock_group_impl_register_interrupt(struct spdk_sock_group_impl *_group, uint32_t events,
-		spdk_interrupt_fn fn, void *arg, const char *name)
+uring_net_impl_init(struct spdk_sock_initialize_opts *opts)
 {
-	SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.");
-
-	return -ENOTSUP;
-}
-
-static void
-uring_sock_group_impl_unregister_interrupt(struct spdk_sock_group_impl *_group)
-{
+	if (opts->enable_interrupt_mode) {
+		SPDK_ERRLOG("Interrupt mode is not supported in the uring sock implementation.\n");
+		return -ENOTSUP;
+	}
+	return 0;
 }
 
 static struct spdk_net_impl g_uring_net_impl = {
 	.name		= "uring",
+	.init		= uring_net_impl_init,
 	.getaddr	= uring_sock_getaddr,
 	.get_interface_name = uring_sock_get_interface_name,
 	.get_numa_id	= uring_sock_get_numa_id,
@@ -1996,8 +1988,6 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.group_impl_add_sock	= uring_sock_group_impl_add_sock,
 	.group_impl_remove_sock	= uring_sock_group_impl_remove_sock,
 	.group_impl_poll	= uring_sock_group_impl_poll,
-	.group_impl_register_interrupt    = uring_sock_group_impl_register_interrupt,
-	.group_impl_unregister_interrupt  = uring_sock_group_impl_unregister_interrupt,
 	.group_impl_close	= uring_sock_group_impl_close,
 	.get_opts		= uring_sock_impl_get_opts,
 	.set_opts		= uring_sock_impl_set_opts,

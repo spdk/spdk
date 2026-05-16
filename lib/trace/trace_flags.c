@@ -26,6 +26,8 @@ SPDK_LOG_REGISTER_COMPONENT(trace)
 uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)
 {
+	struct spdk_trace_section_tpoint_mask *section;
+
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
 		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return 0ULL;
@@ -35,12 +37,15 @@ spdk_trace_get_tpoint_mask(uint32_t group_id)
 		return 0ULL;
 	}
 
-	return g_trace_file->tpoint_mask[group_id];
+	section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	return section->tpoint_mask[group_id];
 }
 
 void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	struct spdk_trace_section_tpoint_mask *section;
+
 	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
@@ -51,12 +56,15 @@ spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 		return;
 	}
 
-	g_trace_file->tpoint_mask[group_id] |= tpoint_mask;
+	section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	section->tpoint_mask[group_id] |= tpoint_mask;
 }
 
 void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	struct spdk_trace_section_tpoint_mask *section;
+
 	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
@@ -67,7 +75,8 @@ spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 		return;
 	}
 
-	g_trace_file->tpoint_mask[group_id] &= ~tpoint_mask;
+	section = spdk_trace_get_tpoint_mask_section(g_trace_file);
+	section->tpoint_mask[group_id] &= ~tpoint_mask;
 }
 
 uint64_t
@@ -119,6 +128,17 @@ spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask)
 	}
 }
 
+void
+spdk_trace_clear(void)
+{
+	if (g_trace_file == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
+	spdk_trace_get_main_section(g_trace_file)->clear_tsc = spdk_get_ticks();
+}
+
 struct spdk_trace_register_fn *
 spdk_trace_get_first_register_fn(void)
 {
@@ -129,6 +149,33 @@ struct spdk_trace_register_fn *
 spdk_trace_get_next_register_fn(struct spdk_trace_register_fn *register_fn)
 {
 	return register_fn->next;
+}
+
+uint64_t
+spdk_trace_create_tpoint_mask(uint32_t group_id, const char *tpoint_name)
+{
+	uint16_t group_base = SPDK_TPOINT_ID(group_id, 0);
+	uint16_t next_group_base = SPDK_TPOINT_ID(group_id + 1, 0);
+	uint16_t i;
+
+	if (g_trace_file == NULL) {
+		return 0;
+	}
+
+	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
+		return 0;
+	}
+
+	for (i = group_base; i < next_group_base; i++) {
+		struct spdk_trace_tpoint *tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[i];
+
+		if (tpoint->tpoint_id != 0 &&
+		    strcasecmp(tpoint->name, tpoint_name) == 0) {
+			return SPDK_BIT(i - group_base);
+		}
+	}
+
+	return 0;
 }
 
 uint64_t
@@ -211,7 +258,8 @@ spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
 	uint64_t curr_entry_len;
 	struct spdk_trace_register_fn *register_fn;
 
-	fprintf(f, " %s, --tpoint-group <group-name>[:<tpoint_mask>]\n", tmask_arg);
+	fprintf(f, " %s, --tpoint-group <group-name>[:<tpoint_mask>|<tpoint_name>[+<tpoint_name>...]]\n",
+		tmask_arg);
 	fprintf(f, "%s%s", LINE_PREFIX, first_entry);
 	curr_line_len = prefix_len + strlen(first_entry);
 
@@ -260,10 +308,7 @@ spdk_trace_register_owner_type(uint8_t type, char id_prefix)
 		return;
 	}
 
-	/* 'owner_type' has 256 entries and since 'type' is a uint8_t, it
-	 * can't overrun the array.
-	 */
-	owner_type = &g_trace_file->owner_type[type];
+	owner_type = &spdk_trace_get_owner_type_section(g_trace_file)->owner_type[type];
 	assert(owner_type->type == 0);
 
 	owner_type->type = type;
@@ -274,16 +319,18 @@ static void
 _owner_set_description(uint16_t owner_id, const char *description, bool append)
 {
 	struct spdk_trace_owner *owner;
+	struct spdk_trace_section_owner *section;
 	char old[256] = {};
 
-	assert(sizeof(old) >= g_trace_file->owner_description_size);
+	section = spdk_trace_get_owner_section(g_trace_file);
+	assert(sizeof(old) >= section->owner_description_size);
 	owner = spdk_get_trace_owner(g_trace_file, owner_id);
 	assert(owner != NULL);
 	if (append) {
-		memcpy(old, owner->description, g_trace_file->owner_description_size);
+		memcpy(old, owner->description, section->owner_description_size);
 	}
 
-	snprintf(owner->description, g_trace_file->owner_description_size,
+	snprintf(owner->description, section->owner_description_size,
 		 "%s%s%s", old, append ? " " : "", description);
 }
 
@@ -331,9 +378,9 @@ spdk_trace_unregister_owner(uint16_t owner_id)
 		return;
 	}
 
-	if (owner_id == 0) {
-		/* owner_id 0 means no owner. Allow this to be passed here, it
-		 * avoids caller having to do extra checking.
+	if (owner_id == OWNER_ID_NONE) {
+		/* Allow this to be passed here, it avoids caller having
+		 * to do extra checking.
 		 */
 		return;
 	}
@@ -371,9 +418,9 @@ spdk_trace_owner_append_description(uint16_t owner_id, const char *description)
 		return;
 	}
 
-	if (owner_id == 0) {
-		/* owner_id 0 means no owner. Allow this to be passed here, it
-		 * avoids caller having to do extra checking.
+	if (owner_id == OWNER_ID_NONE) {
+		/* Allow this to be passed here, it avoids caller having
+		 * to do extra checking.
 		 */
 		return;
 	}
@@ -398,7 +445,7 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 	/* 'object' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	 */
-	object = &g_trace_file->object[type];
+	object = &spdk_trace_get_object_section(g_trace_file)->object[type];
 	assert(object->type == 0);
 
 	object->type = type;
@@ -417,7 +464,7 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 		SPDK_ERRLOG("name (%s) too long\n", opts->name);
 	}
 
-	tpoint = &g_trace_file->tpoint[opts->tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[opts->tpoint_id];
 	assert(tpoint->tpoint_id == 0);
 
 	snprintf(tpoint->name, sizeof(tpoint->name), "%s", opts->name);
@@ -515,7 +562,7 @@ spdk_trace_tpoint_register_relation(uint16_t tpoint_id, uint8_t object_type, uin
 	 * there is no order in which trace definitions are registered.
 	 * This way we can create relations between tpoint and objects
 	 * that will be declared later. */
-	tpoint = &g_trace_file->tpoint[tpoint_id];
+	tpoint = &spdk_trace_get_tpoint_section(g_trace_file)->tpoint[tpoint_id];
 	for (i = 0; i < SPDK_COUNTOF(tpoint->related_objects); ++i) {
 		if (tpoint->related_objects[i].object_type == OBJECT_NONE) {
 			tpoint->related_objects[i].object_type = object_type;
@@ -580,6 +627,7 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 int
 trace_flags_init(void)
 {
+	struct spdk_trace_section_owner *owner_section;
 	struct spdk_trace_register_fn *reg_fn;
 	uint16_t i;
 	uint16_t owner_id_start;
@@ -599,14 +647,15 @@ trace_flags_init(void)
 	 * owner_ids at 256 to avoid collisions.
 	 */
 	owner_id_start = 256;
-	g_owner_ids.ring = calloc(g_trace_file->num_owners, sizeof(uint16_t));
+	owner_section = spdk_trace_get_owner_section(g_trace_file);
+	g_owner_ids.ring = calloc(owner_section->num_owners, sizeof(uint16_t));
 	if (g_owner_ids.ring == NULL) {
 		SPDK_ERRLOG("could not allocate g_owner_ids.ring\n");
 		return -ENOMEM;
 	}
 	g_owner_ids.head = 0;
-	g_owner_ids.tail = g_trace_file->num_owners - owner_id_start;
-	g_owner_ids.size = g_trace_file->num_owners;
+	g_owner_ids.tail = owner_section->num_owners - owner_id_start;
+	g_owner_ids.size = owner_section->num_owners;
 	for (i = 0; i < g_owner_ids.tail; i++) {
 		g_owner_ids.ring[i] = i + owner_id_start;
 	}

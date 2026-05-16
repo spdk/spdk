@@ -23,12 +23,6 @@ endif
 endif
 endif
 
-DPDK_KMODS = false
-ifeq ($(OS),FreeBSD)
-DPDK_KMODS = true
-endif
-DPDK_OPTS += -Denable_kmods=$(DPDK_KMODS)
-
 ifeq ($(CONFIG_DEBUG),y)
 DPDK_OPTS += --buildtype=debug
 endif
@@ -63,66 +57,63 @@ endif
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
-# Core DPDK libs
-DPDK_LIBS = eal ring mempool pci
-DPDK_LIBS += log kvargs telemetry
+# Core DPDK libs - used by SPDK directly
+DPDK_LIBS = eal hash log mbuf mempool pci ring
+# Depdencies of core DPDK libs
+DPDK_LIBS += argparse cmdline ethdev kvargs meter net rcu stack telemetry
+
 # Governor required libs
-DPDK_LIBS += power timer ethdev net
+ifeq ($(OS),Linux)
+DPDK_LIBS += power timer
 # rte_power drivers
 DPDK_DRIVERS += power/acpi power/amd_pstate power/cppc power/intel_pstate power/intel_uncore \
 		power/kvm_vm
-# common crypto/compress drivers
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_CRYPTO)),y)
-DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
-# common mlx5 libs
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)),y)
-DPDK_DRIVERS += common/mlx5 bus/auxiliary
+# Both crypto and compress QAT drivers are bunched up in common/qat. Crypto and compress drivers can only be disabled,
+# but not explicitly enabled. Rather than trying to separate them out, enable both and their dependencies.
+ifeq ($(or $(filter y,$(CONFIG_CRYPTO)),$(filter y,$(CONFIG_DPDK_COMPRESSDEV))),y)
+DPDK_DRIVERS += crypto/qat compress/qat common/qat
+DPDK_LIBS += compressdev cryptodev security
 endif
 
 # uadk drivers
-ifeq ($(findstring y,$(CONFIG_DPDK_UADK)),y)
+ifeq ($(CONFIG_DPDK_UADK),y)
 DPDK_DRIVERS += crypto/uadk
 DPDK_DRIVERS += compress/uadk
 endif
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_DRIVERS += crypto
-# aesni_mb is name of the PMD in DPDK 21.08 and earlier
-DPDK_DRIVERS += crypto/aesni_mb
+DPDK_LIBS += cryptodev
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
-DPDK_DRIVERS += crypto/mlx5
+DPDK_DRIVERS += common/mlx5 bus/auxiliary crypto/mlx5
 endif
 ifeq ($(CONFIG_IPSEC_MB),y)
 DPDK_DRIVERS += crypto/ipsec_mb
+DPDK_LIBS += security
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
-# Workaround for DPDK 22.07 and DPDK 22.11.1,
-# will be able to remove starting with DPDK 23.03.
-ifeq ($(shell grep "define NO_COMPAT_IMB_API_053" $(SPDK_ROOT_DIR)/dpdk/drivers/crypto/qat/qat_sym_session.c), )
-DPDK_CFLAGS += -DNO_COMPAT_IMB_API_053
-endif
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
 endif
 
-ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)),y)
+ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
 DPDK_DRIVERS += compress compress/isal
+DPDK_LIBS += compressdev
+ifeq ($(CONFIG_ISAL_PATH),)
 DPDK_CFLAGS += -I$(ISAL_DIR) -I$(ISAL_BUILD_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
+else
+DPDK_CFLAGS += -I$(ISAL_DIR)/include
+DPDK_LDFLAGS += -L$(ISAL_DIR)/lib64 -lisal
+endif
 endif
 
 DPDK_ENABLED_DRIVERS = $(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")
 
-# crypto & compress deps
-DPDK_LIBS += reorder cryptodev
-DPDK_LIBS += compressdev
-DPDK_LIBS += security
-
 # vhost and deps
-DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost dmadev
-
-# raid5 deps
-DPDK_LIBS += hash rcu
+ifeq ($(CONFIG_VHOST),y)
+DPDK_LIBS += vhost cryptodev dmadev
+endif
 
 DPDK_OPTS += -Dcpu_instruction_set=$(TARGET_ARCHITECTURE)
 
@@ -173,15 +164,7 @@ DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
 # Force-disable scan-build
 SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
 
-DPDK_ALL_LIB_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/lib -mindepth 1 -maxdepth 1 -type d)
-DPDK_ALL_LIBS = $(DPDK_ALL_LIB_DIRS:$(SPDK_ROOT_DIR)/dpdk/lib/%=%)
-DPDK_DISABLED_LIBS = $(shell echo $(filter-out $(DPDK_LIBS),$(DPDK_ALL_LIBS)) | sed -E "s/ +/,/g")
-
-ifeq ($(shell grep -q disable_apps $(SPDK_ROOT_DIR)/dpdk/meson_options.txt && echo 1), 1)
-DPDK_ALL_APP_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/app -mindepth 1 -maxdepth 1 -type d)
-DPDK_ALL_APPS = $(DPDK_ALL_APP_DIRS:$(SPDK_ROOT_DIR)/dpdk/app/%=%)
-DPDK_DISABLED_APPS = -Ddisable_apps="$(shell echo $(DPDK_ALL_APPS) | sed -E "s/ +/,/g")"
-endif
+DPDK_ENABLED_LIBS = $(shell echo $(DPDK_LIBS) | sed -E "s/ +/,/g")
 
 ifneq ($(OS),FreeBSD)
 SED_INPLACE_FLAG = "-i"
@@ -200,6 +183,15 @@ MAKE_PID := $(shell echo $$PPID)
 endif
 
 MAKE_NUMJOBS := $(shell ps T | sed -nE 's/[[:space:]]*$(MAKE_PID)[[:space:]].* (-j|--jobs=)( *[0-9]+).*/\1\2/p')
+
+ifeq ($(OS),Linux)
+# FIXME: set path to allow meson build in Linux environment
+virtdir=$(PIP_VIRTDIR)
+ifeq ($(virtdir),)
+virtdir=/var/spdk/dependencies/pip
+endif
+export PATH := $(virtdir)/bin:$(PATH)
+endif
 
 all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 	$(Q)# DPDK doesn't handle nested make calls, so unset MAKEFLAGS
@@ -223,7 +215,7 @@ all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 
 $(SPDK_ROOT_DIR)/dpdk/build-tmp: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp
-	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(DPDK_ENABLED_DRIVERS)" -Ddisable_libs="$(DPDK_DISABLED_LIBS)" $(DPDK_DISABLED_APPS) $(DPDKBUILD_FLAGS) build-tmp
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(DPDK_ENABLED_DRIVERS)" -Denable_libs="$(DPDK_ENABLED_LIBS)" -Ddisable_apps="*" $(DPDKBUILD_FLAGS) build-tmp
 	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_EAL_PMD_PATH .*/#define RTE_EAL_PMD_PATH ""/g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
 
 clean:

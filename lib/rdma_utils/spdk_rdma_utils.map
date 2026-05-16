@@ -10,6 +10,9 @@
 	spdk_rdma_utils_get_memory_domain;
 	spdk_rdma_utils_put_memory_domain;
 	spdk_rdma_cm_id_get_numa_id;
+	spdk_rdma_utils_poll_cq;
+	spdk_rdma_utils_inject_wc_error;
+	spdk_rdma_utils_cancel_wc_error;
 
 	local: *;
 };

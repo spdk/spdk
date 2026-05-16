@@ -15,6 +15,7 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
+		SPDK_ERRLOG("Failed to allocate poll group\n");
 		return NULL;
 	}
 
@@ -77,18 +78,6 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 	return group;
 }
 
-int
-spdk_nvme_poll_group_get_fd(struct spdk_nvme_poll_group *group)
-{
-	if (!group->fgrp) {
-		SPDK_ERRLOG("No fd group present for the nvme poll group.\n");
-		assert(false);
-		return -EINVAL;
-	}
-
-	return spdk_fd_group_get_fd(group->fgrp);
-}
-
 struct spdk_fd_group *
 spdk_nvme_poll_group_get_fd_group(struct spdk_nvme_poll_group *group)
 {
@@ -107,20 +96,6 @@ spdk_nvme_poll_group_set_interrupt_callback(struct spdk_nvme_poll_group *group,
 	group->interrupt.cb_ctx = cb_ctx;
 
 	return 0;
-}
-
-struct spdk_nvme_poll_group *
-spdk_nvme_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
-{
-	struct spdk_nvme_transport_poll_group *tgroup;
-
-	tgroup = nvme_transport_qpair_get_optimal_poll_group(qpair->transport, qpair);
-
-	if (tgroup == NULL) {
-		return NULL;
-	}
-
-	return tgroup->group;
 }
 
 #ifdef __linux__
@@ -249,6 +224,10 @@ spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group, struct spdk_nvme
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
 
+	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTED) {
+		return -EINVAL;
+	}
+
 	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			return nvme_transport_poll_group_remove(tgroup, qpair);
@@ -262,8 +241,23 @@ static int
 nvme_qpair_process_completion_wrapper(void *arg)
 {
 	struct spdk_nvme_qpair *qpair = arg;
+	int total = 0;
+	int rc;
 
-	return spdk_nvme_qpair_process_completions(qpair, 0);
+	/*
+	 * In interrupt mode, the eventfd is cleared before calling this function.
+	 * We must loop to drain all completions, because the underlying transport
+	 * (e.g. PCIe) may cap the number of completions processed per call.
+	 * If we leave items in the CQ, we may not get another event.
+	 */
+	do {
+		rc = spdk_nvme_qpair_process_completions(qpair, 0);
+		if (rc > 0) {
+			total += rc;
+		}
+	} while (rc > 0);
+
+	return total;
 }
 
 static int

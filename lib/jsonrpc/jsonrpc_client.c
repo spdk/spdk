@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
  */
 
@@ -47,6 +48,42 @@ static const struct spdk_json_object_decoder jsonrpc_response_decoders[] = {
 	{"result", offsetof(struct spdk_jsonrpc_client_response, result), capture_any, true},
 	{"error", offsetof(struct spdk_jsonrpc_client_response, error), capture_any, true},
 };
+
+/*
+ * Note: This simplified handling is sufficient for the current use case (JSON
+ * config loading) where we only need to know if the batch as a whole succeeded.
+ * A more complete implementation would return all individual responses.
+ */
+struct batch_response_ctx {
+	struct spdk_jsonrpc_client_response *out;
+	bool found_error;
+};
+
+static int
+decode_batch_response_element(const struct spdk_json_val *val, void *out)
+{
+	struct batch_response_ctx *ctx = out;
+	struct spdk_jsonrpc_client_response temp_resp = {};
+
+	if (spdk_json_decode_object(val, jsonrpc_response_decoders,
+				    SPDK_COUNTOF(jsonrpc_response_decoders), &temp_resp)) {
+		SPDK_ERRLOG("failed to decode batch response element\n");
+		return -EINVAL;
+	}
+
+	/* If this response has an error and we haven't captured one yet, save it */
+	if (temp_resp.error != NULL && !ctx->found_error) {
+		ctx->out->error = temp_resp.error;
+		ctx->out->id = temp_resp.id;
+		ctx->found_error = true;
+	} else if (!ctx->found_error && ctx->out->result == NULL) {
+		/* Callers expect a non-NULL result on success, so keep the first one */
+		ctx->out->result = temp_resp.result;
+		ctx->out->id = temp_resp.id;
+	}
+
+	return 0;
+}
 
 int
 jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
@@ -106,8 +143,21 @@ jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 
 	assert(end != NULL);
 
-	if (r->values[0].type != SPDK_JSON_VAL_OBJECT_BEGIN) {
-		SPDK_ERRLOG("top-level JSON value was not object\n");
+	if (r->values[0].type == SPDK_JSON_VAL_ARRAY_BEGIN) {
+		/* Batch response - an array of response objects */
+		struct batch_response_ctx ctx = { .out = &r->jsonrpc };
+		size_t count;
+
+		if (spdk_json_decode_array(r->values, decode_batch_response_element, &ctx,
+					   SPDK_JSONRPC_MAX_VALUES, &count, 0)) {
+			SPDK_ERRLOG("failed to decode batch response array\n");
+			goto err;
+		}
+
+		r->ready = 1;
+		return 1;
+	} else if (r->values[0].type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+		SPDK_ERRLOG("top-level JSON value was not object or array\n");
 		goto err;
 	}
 
@@ -167,15 +217,22 @@ spdk_jsonrpc_begin_request(struct spdk_jsonrpc_client_request *request, int32_t 
 {
 	struct spdk_json_write_ctx *w;
 
-	w = spdk_json_write_begin(jsonrpc_client_write_cb, request, 0);
+	w = request->batch_write_ctx;
 	if (w == NULL) {
-		return NULL;
+		/* Single request mode - create new write context */
+		w = spdk_json_write_begin(jsonrpc_client_write_cb, request, 0);
+		if (w == NULL) {
+			return NULL;
+		}
 	}
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "jsonrpc", "2.0");
 
-	if (id >= 0) {
+	if (request->batch_write_ctx != NULL && id < 0) {
+		/* Batch mode with auto-ID */
+		spdk_json_write_named_uint32(w, "id", request->batch_id++);
+	} else if (id >= 0) {
 		spdk_json_write_named_int32(w, "id", id);
 	}
 
@@ -192,8 +249,48 @@ spdk_jsonrpc_end_request(struct spdk_jsonrpc_client_request *request, struct spd
 	assert(w != NULL);
 
 	spdk_json_write_object_end(w);
+
+	if (request->batch_write_ctx == NULL) {
+		/* Single request mode - finalize */
+		spdk_json_write_end(w);
+		jsonrpc_client_write_cb(request, "\n", 1);
+	}
+	/* In batch mode, just close the object - don't finalize yet */
+}
+
+int
+spdk_jsonrpc_begin_batch(struct spdk_jsonrpc_client_request *request)
+{
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	w = spdk_json_write_begin(jsonrpc_client_write_cb, request, 0);
+	if (w == NULL) {
+		return -ENOMEM;
+	}
+
+	rc = spdk_json_write_array_begin(w);
+	if (rc) {
+		spdk_json_write_end(w);
+		return rc;
+	}
+
+	request->batch_write_ctx = w;
+	request->batch_id = 0;
+	return 0;
+}
+
+void
+spdk_jsonrpc_end_batch(struct spdk_jsonrpc_client_request *request)
+{
+	struct spdk_json_write_ctx *w = request->batch_write_ctx;
+
+	assert(w != NULL);
+
+	spdk_json_write_array_end(w);
 	spdk_json_write_end(w);
 	jsonrpc_client_write_cb(request, "\n", 1);
+	request->batch_write_ctx = NULL;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(rpc_client)

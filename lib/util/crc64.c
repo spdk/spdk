@@ -7,7 +7,7 @@
 #include "spdk/crc64.h"
 
 #ifdef SPDK_CONFIG_ISAL
-#include "isa-l/include/crc64.h"
+#include "spdk/isa-l.h"
 
 uint64_t
 spdk_crc64_nvme(const void *buf, size_t len, uint64_t crc)
