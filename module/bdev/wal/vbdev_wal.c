@@ -12,36 +12,35 @@ SPDK_LOG_REGISTER_COMPONENT(wal_vbdev);
 
 #define WAL_SUPERBLOCK_MAGIC 0x57414c00 /* "WAL\0" */
 #define WAL_RECORD_MAGIC 0x52454348     /* "RECH" */
+#define WAL_RECORD_TYPE_DATA 1
+#define WAL_RECORD_TYPE_PAD 2
 
-/* Superblock - stored at the very beginning of the journal (LBA 0) */
 struct wal_superblock
 {
-    uint32_t magic;     /* "WAL\0" */
-    uint32_t version;   /* Format version */
-    uint64_t write_pos; /* Current write offset in the journal */
-    uint64_t head_pos;  /* Position of the oldest active record */
-    uint64_t next_seq;  /* LSN for the next new record */
+    uint32_t magic;     /* WAL_SUPERBLOCK_MAGIC */
+    uint32_t version;
+    uint64_t write_pos;
+    uint64_t head_pos;
+    uint64_t next_seq;
     uint64_t
-            checkpoint_seq; /* LSN of the last record successfully flushed to main */
-    uint64_t journal_size; /* Total journal size in blocks */
-    uint32_t hdr_crc;      /* CRC of the superblock itself */
+            checkpoint_seq;
+    uint64_t journal_size;
+    uint32_t hdr_crc;
 } __attribute__((packed));
 
-/* Record header - precedes each data block in the journal */
 struct wal_record_header
 {
-    uint32_t magic;      /* "RECH" */
-    uint32_t type;       /* Record type (Data, Metadata, Checkpoint) */
-    uint64_t seq;        /* LSN of this record */
-    uint64_t lba;        /* Target starting LBA on the main bdev */
-    uint32_t num_blocks; /* Number of data blocks */
-    uint32_t rec_len;    /* Total size (header + data) */
-    uint32_t flags;      /* Flags: DIRTY, CLEAN */
-    uint32_t data_crc;   /* Payload CRC */
-    uint32_t hdr_crc;    /* Header CRC */
+    uint32_t magic;      /* WAL_RECORD_MAGIC */
+    uint32_t type;
+    uint64_t seq;
+    uint64_t lba;
+    uint32_t num_blocks;
+    uint32_t rec_len;
+    uint32_t flags;
+    uint32_t data_crc;
+    uint32_t hdr_crc;
 } __attribute__((packed));
 
-/* Structure representing the WAL virtual block device and its state */
 struct wal_vbdev
 {
     struct spdk_bdev bdev;
@@ -52,6 +51,7 @@ struct wal_vbdev
     TAILQ_ENTRY(wal_vbdev) link;
 
     bool rec_in_progress;
+    bool write_in_progress;
     uint64_t rec_off_blocks;
     uint32_t rec_chunk_blocks;
 
@@ -73,39 +73,39 @@ struct wal_vbdev
         bool delete_pending;
         bool step_inflight;
         bool stop;
+        uint64_t scanned_blocks;
     } rec;
 
     struct wal_superblock sb;
 };
 
-/* IO channel context for accessing main and journal devices */
 struct wal_io_channel
 {
     struct spdk_io_channel *main_ch;
     struct spdk_io_channel *journal_ch;
 };
 
-/* Stages of a WAL IO operation */
 enum wal_stage
 {
     WAL_STAGE_NONE = 0,
+    WAL_STAGE_J_PAD,
+    WAL_STAGE_J_PAD_FLUSH,
     WAL_STAGE_J_WRITE,
     WAL_STAGE_J_FLUSH,
     WAL_STAGE_M_WRITE,
     WAL_STAGE_M_FLUSH,
-    WAL_STAGE_SB_UPDATE, /* Superblock update on disk */
+    WAL_STAGE_SB_UPDATE,
 };
 
-/* Context for superblock update (allocated on flush) */
 struct wal_sb_update_ctx
 {
     struct wal_vbdev *vb;
     struct spdk_io_channel *ch;
     void *buf;
     struct spdk_bdev_io *orig_io;
+    struct wal_superblock sb;
 };
 
-/* Context for a single WAL IO operation */
 struct wal_bdev_io
 {
     struct wal_io_channel *ch;
@@ -114,53 +114,227 @@ struct wal_bdev_io
     int iovcnt;
     uint64_t offset_blocks;
     uint64_t num_blocks;
-    uint64_t journal_pos;         /* Record position in the journal */
-    struct wal_record_header hdr; /* Record header on disk */
+    uint64_t journal_pos;
+    struct wal_record_header hdr;
+    struct wal_record_header pad_hdr;
+    void *hdr_block;
+    void *pad_block;
+    bool owns_write_lock;
     struct iovec log_iovs[SPDK_BDEV_IO_NUM_CHILD_IOV
-                          + 1]; /* iovec for journal write (hdr + data) */
+                          + 1];
 };
 
-/* Initialize the WAL module */
 static int vbdev_wal_init(void)
 {
     return 0;
 }
 
-/* Cleanup the WAL module */
 static void vbdev_wal_fini(void) {}
 
-/* Examine configuration for the SPDK module */
 static void vbdev_wal_examine(struct spdk_bdev *bdev);
 
-/* Returns the size of the private context on bdev_io */
 static int vbdev_wal_get_ctx_size(void)
 {
     return sizeof(struct wal_bdev_io);
 }
 
-/* One step of the data recovery process */
+static void wal_superblock_update_crc(struct wal_superblock *sb)
+{
+    sb->hdr_crc = spdk_crc32c_update(sb,
+                                     offsetof(struct wal_superblock, hdr_crc),
+                                     0);
+}
+
+static void wal_superblock_init(struct wal_vbdev *vb)
+{
+    memset(&vb->sb, 0, sizeof(vb->sb));
+    vb->sb.magic = WAL_SUPERBLOCK_MAGIC;
+    vb->sb.version = 1;
+    vb->sb.write_pos = 1;
+    vb->sb.head_pos = 1;
+    vb->sb.next_seq = 1;
+    vb->sb.checkpoint_seq = 0;
+    vb->sb.journal_size = spdk_bdev_get_num_blocks(vb->journal_bdev);
+    wal_superblock_update_crc(&vb->sb);
+}
+
+static bool wal_superblock_valid(struct wal_vbdev *vb,
+                                 const struct wal_superblock *sb)
+{
+    uint32_t crc;
+
+    if (sb->magic != WAL_SUPERBLOCK_MAGIC || sb->version != 1)
+    {
+        return false;
+    }
+    if (sb->journal_size != spdk_bdev_get_num_blocks(vb->journal_bdev))
+    {
+        return false;
+    }
+    if (sb->journal_size < 4 || sb->write_pos == 0 || sb->head_pos == 0 ||
+        sb->write_pos >= sb->journal_size || sb->head_pos >= sb->journal_size)
+    {
+        return false;
+    }
+    if (sb->next_seq == 0 || sb->checkpoint_seq >= sb->next_seq)
+    {
+        return false;
+    }
+
+    crc = spdk_crc32c_update(sb,
+                             offsetof(struct wal_superblock, hdr_crc),
+                             0);
+    return sb->hdr_crc == crc;
+}
+
+static bool wal_superblock_empty(const struct wal_superblock *sb)
+{
+    const uint8_t *data = (const uint8_t *)sb;
+
+    for (size_t i = 0; i < sizeof(*sb); i++)
+    {
+        if (data[i] != 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static uint64_t wal_record_next_pos(struct wal_vbdev *vb, uint64_t pos,
+                                    uint64_t blocks)
+{
+    pos += blocks;
+    return pos >= vb->sb.journal_size ? 1 : pos;
+}
+
+static bool wal_journal_has_space(struct wal_vbdev *vb, uint64_t needed)
+{
+    uint64_t tail = vb->sb.write_pos;
+    uint64_t head = vb->sb.head_pos;
+    uint64_t usable = vb->sb.journal_size - 1;
+    uint64_t next;
+
+    if (needed == 0 || needed >= usable)
+    {
+        return false;
+    }
+
+    if (tail == head)
+    {
+        return true;
+    }
+
+    if (tail < head)
+    {
+        return tail + needed < head;
+    }
+
+    if (tail + needed < vb->sb.journal_size)
+    {
+        return true;
+    }
+    if (tail + needed == vb->sb.journal_size)
+    {
+        return head > 1;
+    }
+
+    /* After a wrap, the new write position must stay before head_pos. */
+    next = needed;
+    return next < head;
+}
+
+static bool wal_iovs_len(struct iovec *iovs, int iovcnt, uint64_t *total)
+{
+    uint64_t len = 0;
+
+    for (int i = 0; i < iovcnt; i++)
+    {
+        if (iovs[i].iov_len > UINT64_MAX - len)
+        {
+            return false;
+        }
+        len += iovs[i].iov_len;
+    }
+
+    *total = len;
+    return true;
+}
+
+static uint32_t wal_crc32c_iov_update_len(struct iovec *iovs, int iovcnt,
+                                          uint64_t len, uint32_t crc)
+{
+    for (int i = 0; i < iovcnt && len > 0; i++)
+    {
+        size_t chunk = spdk_min((uint64_t)iovs[i].iov_len, len);
+        crc = spdk_crc32c_update(iovs[i].iov_base, chunk, crc);
+        len -= chunk;
+    }
+
+    return crc;
+}
+
+static void wal_bdev_io_cleanup(struct spdk_bdev_io *orig)
+{
+    struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
+    struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+
+    if (wio->hdr_block)
+    {
+        spdk_dma_free(wio->hdr_block);
+        wio->hdr_block = NULL;
+    }
+    if (wio->pad_block)
+    {
+        spdk_dma_free(wio->pad_block);
+        wio->pad_block = NULL;
+    }
+    if (wio->owns_write_lock)
+    {
+        __atomic_clear(&vb->write_in_progress, __ATOMIC_RELEASE);
+        wio->owns_write_lock = false;
+    }
+}
+
 static void wal_recover_step(struct wal_vbdev *vb);
 static int wal_recover_poll(void *cb_arg);
 
-/* Callback for journal read completion during recovery */
+static void wal_journal_write_done(struct spdk_bdev_io *child_io, bool success, void *cb_arg);
+static void wal_user_journal_flush_done(struct spdk_bdev_io *child_io, bool success,
+                                        void *cb_arg);
+static void wal_main_reset_done(struct spdk_bdev_io *child_io, bool success, void *cb_arg);
+
 static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
                                     bool success,
                                     void *cb_arg);
 
-/* Callback for main device read completion during recovery */
 static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
                                     bool success,
                                     void *cb_arg);
 
-/* Callback for main device write completion during recovery */
 static void wal_recover_write_done(struct spdk_bdev_io *child_io,
                                    bool success,
                                    void *cb_arg);
+static void wal_recover_sb_write_done(struct spdk_bdev_io *child_io,
+                                      bool success,
+                                      void *cb_arg);
+static void wal_recover_flush_done(struct spdk_bdev_io *child_io,
+                                   bool success,
+                                   void *cb_arg);
+static void wal_recover_sb_done(struct spdk_bdev_io *child_io,
+                                bool success,
+                                void *cb_arg);
+static void wal_recover_finish_sb_write_done(struct spdk_bdev_io *child_io,
+                                             bool success,
+                                             void *cb_arg);
+static void wal_recover_finish_sb_flush_done(struct spdk_bdev_io *child_io,
+                                             bool success,
+                                             void *cb_arg);
 
-/* Finishes the recovery process (success/failure) */
 static void wal_recover_finish(struct wal_vbdev *vb, bool ok);
+static void wal_recover_complete(struct wal_vbdev *vb, bool ok);
 
-/* SPDK bdev module descriptor for WAL */
 static struct spdk_bdev_module wal_bdev_if = {
         .name = "wal",
         .module_init = vbdev_wal_init,
@@ -174,13 +348,10 @@ static void vbdev_wal_examine(struct spdk_bdev *bdev)
     spdk_bdev_module_examine_done(&wal_bdev_if);
 }
 
-/* Register the WAL module in SPDK */
 SPDK_BDEV_MODULE_REGISTER(wal, &wal_bdev_if)
 
-/* Global list of registered WAL devices */
 TAILQ_HEAD(wal_vbdev_list, wal_vbdev) g_wal = TAILQ_HEAD_INITIALIZER(g_wal);
 
-/* Create an IO channel for the WAL device */
 static int wal_io_channel_create_cb(void *io_device, void *ctx_buf)
 {
     struct wal_vbdev *vbdev = io_device;
@@ -200,7 +371,6 @@ static int wal_io_channel_create_cb(void *io_device, void *ctx_buf)
     return 0;
 }
 
-/* Destroy the IO channel of the WAL device */
 static void wal_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 {
     struct wal_io_channel *ch = ctx_buf;
@@ -216,27 +386,64 @@ static void wal_io_channel_destroy_cb(void *io_device, void *ctx_buf)
     }
 }
 
-/* Complete the original IO request with the specified status */
 static void wal_complete(struct spdk_bdev_io *orig, bool success)
 {
+    wal_bdev_io_cleanup(orig);
     spdk_bdev_io_complete(orig,
                           success ? SPDK_BDEV_IO_STATUS_SUCCESS
                                   : SPDK_BDEV_IO_STATUS_FAILED);
 }
 
-static void wal_sb_flush_done(struct spdk_bdev_io *child_io,
-                              bool success,
-                              void *cb_arg)
+static void wal_sb_update_complete(struct wal_sb_update_ctx *ctx, bool success)
 {
-    struct wal_sb_update_ctx *ctx = cb_arg;
     struct spdk_bdev_io *orig = ctx->orig_io;
 
-    spdk_bdev_free_io(child_io);
     spdk_put_io_channel(ctx->ch);
     spdk_dma_free(ctx->buf);
 
+    if (success)
+    {
+        ctx->vb->sb = ctx->sb;
+    }
     wal_complete(orig, success);
     free(ctx);
+}
+
+static void wal_sb_update_flush_done(struct spdk_bdev_io *child_io,
+                                     bool success,
+                                     void *cb_arg)
+{
+    struct wal_sb_update_ctx *ctx = cb_arg;
+
+    spdk_bdev_free_io(child_io);
+    wal_sb_update_complete(ctx, success);
+}
+
+static void wal_sb_update_write_done(struct spdk_bdev_io *child_io,
+                                     bool success,
+                                     void *cb_arg)
+{
+    struct wal_sb_update_ctx *ctx = cb_arg;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+
+    if (!success)
+    {
+        wal_sb_update_complete(ctx, false);
+        return;
+    }
+
+    rc = spdk_bdev_flush_blocks(ctx->vb->journal_desc,
+                                ctx->ch,
+                                0,
+                                1,
+                                wal_sb_update_flush_done,
+                                ctx);
+    if (rc != 0)
+    {
+        wal_sb_update_complete(ctx, false);
+    }
 }
 
 static void wal_main_flush_done(struct spdk_bdev_io *child_io,
@@ -245,6 +452,8 @@ static void wal_main_flush_done(struct spdk_bdev_io *child_io,
 {
     struct spdk_bdev_io *orig = cb_arg;
     struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
+    int rc;
 
     spdk_bdev_free_io(child_io);
 
@@ -254,7 +463,6 @@ static void wal_main_flush_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Start superblock update on disk (Checkpoint) */
     struct wal_sb_update_ctx *ctx = calloc(1, sizeof(*ctx));
     if (!ctx)
     {
@@ -274,24 +482,33 @@ static void wal_main_flush_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Update CRC and checkpoint before writing */
-    vb->sb.checkpoint_seq = vb->sb.next_seq - 1;
-    /* In this simplified model, we move Head to the current Tail on Flush,
-     * assuming all data up to Tail is now in main. */
-    vb->sb.head_pos = vb->sb.write_pos;
-
-    vb->sb.hdr_crc =
-            spdk_crc32c_update(&vb->sb,
-                               offsetof(struct wal_superblock, hdr_crc),
-                               0);
-    memcpy(ctx->buf, &vb->sb, sizeof(vb->sb));
+    ctx->sb = vb->sb;
+    ctx->sb.checkpoint_seq = wio->hdr.seq;
+    ctx->sb.head_pos = ctx->sb.write_pos;
+    wal_superblock_update_crc(&ctx->sb);
+    memcpy(ctx->buf, &ctx->sb, sizeof(ctx->sb));
+    wio->stage = WAL_STAGE_SB_UPDATE;
 
     ctx->ch = spdk_bdev_get_io_channel(vb->journal_desc);
-    spdk_bdev_write_blocks(
-            vb->journal_desc, ctx->ch, ctx->buf, 0, 1, wal_sb_flush_done, ctx);
+    if (!ctx->ch)
+    {
+        spdk_dma_free(ctx->buf);
+        free(ctx);
+        wal_complete(orig, false);
+        return;
+    }
+
+    rc = spdk_bdev_write_blocks(
+            vb->journal_desc, ctx->ch, ctx->buf, 0, 1, wal_sb_update_write_done, ctx);
+    if (rc != 0)
+    {
+        spdk_put_io_channel(ctx->ch);
+        spdk_dma_free(ctx->buf);
+        free(ctx);
+        wal_complete(orig, false);
+    }
 }
 
-/* Callback for main device write completion */
 static void wal_main_write_done(struct spdk_bdev_io *child_io,
                                 bool success,
                                 void *cb_arg)
@@ -299,6 +516,7 @@ static void wal_main_write_done(struct spdk_bdev_io *child_io,
     struct spdk_bdev_io *orig = cb_arg;
     struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
     struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    int rc;
 
     spdk_bdev_free_io(child_io);
     if (!success)
@@ -308,15 +526,18 @@ static void wal_main_write_done(struct spdk_bdev_io *child_io,
     }
 
     wio->stage = WAL_STAGE_M_FLUSH;
-    spdk_bdev_flush_blocks(vb->main_desc,
-                           wio->ch->main_ch,
-                           wio->offset_blocks,
-                           wio->num_blocks,
-                           wal_main_flush_done,
-                           orig);
+    rc = spdk_bdev_flush_blocks(vb->main_desc,
+                                wio->ch->main_ch,
+                                wio->offset_blocks,
+                                wio->num_blocks,
+                                wal_main_flush_done,
+                                orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
 }
 
-/* Callback for journal flush completion */
 static void wal_journal_flush_done(struct spdk_bdev_io *child_io,
                                    bool success,
                                    void *cb_arg)
@@ -324,6 +545,7 @@ static void wal_journal_flush_done(struct spdk_bdev_io *child_io,
     struct spdk_bdev_io *orig = cb_arg;
     struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
     struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    int rc;
 
     spdk_bdev_free_io(child_io);
     if (!success)
@@ -332,29 +554,131 @@ static void wal_journal_flush_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    if (orig->type == SPDK_BDEV_IO_TYPE_FLUSH)
-    {
-        wio->stage = WAL_STAGE_M_FLUSH;
-        spdk_bdev_flush_blocks(vb->main_desc,
-                               wio->ch->main_ch,
-                               wio->offset_blocks,
-                               wio->num_blocks,
-                               wal_main_flush_done,
-                               orig);
-        return;
-    }
     wio->stage = WAL_STAGE_M_WRITE;
-    spdk_bdev_writev_blocks(vb->main_desc,
-                            wio->ch->main_ch,
-                            wio->iovs,
-                            wio->iovcnt,
-                            wio->offset_blocks,
-                            wio->num_blocks,
-                            wal_main_write_done,
-                            orig);
+    rc = spdk_bdev_writev_blocks(vb->main_desc,
+                                 wio->ch->main_ch,
+                                 wio->iovs,
+                                 wio->iovcnt,
+                                 wio->offset_blocks,
+                                 wio->num_blocks,
+                                 wal_main_write_done,
+                                 orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
 }
 
-/* Callback for journal write completion */
+static void wal_user_main_flush_done(struct spdk_bdev_io *child_io,
+                                     bool success,
+                                     void *cb_arg)
+{
+    struct spdk_bdev_io *orig = cb_arg;
+
+    spdk_bdev_free_io(child_io);
+    wal_complete(orig, success);
+}
+
+static void wal_user_journal_flush_done(struct spdk_bdev_io *child_io,
+                                        bool success,
+                                        void *cb_arg)
+{
+    struct spdk_bdev_io *orig = cb_arg;
+    struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
+    struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+    if (!success)
+    {
+        wal_complete(orig, false);
+        return;
+    }
+
+    wio->stage = WAL_STAGE_M_FLUSH;
+    rc = spdk_bdev_flush_blocks(vb->main_desc,
+                                wio->ch->main_ch,
+                                wio->offset_blocks,
+                                wio->num_blocks,
+                                wal_user_main_flush_done,
+                                orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
+}
+
+static void wal_journal_pad_flush_done(struct spdk_bdev_io *child_io,
+                                       bool success,
+                                       void *cb_arg)
+{
+    struct spdk_bdev_io *orig = cb_arg;
+    struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
+    struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    struct wal_io_channel *wch = wio->ch;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+    if (!success)
+    {
+        wal_complete(orig, false);
+        return;
+    }
+
+    wio->stage = WAL_STAGE_J_WRITE;
+    vb->sb.write_pos = 1;
+    wio->journal_pos = vb->sb.write_pos;
+
+    wio->log_iovs[0].iov_base = wio->hdr_block;
+    wio->log_iovs[0].iov_len = vb->bdev.blocklen;
+    for (int i = 0; i < wio->iovcnt; i++)
+    {
+        wio->log_iovs[i + 1] = wio->iovs[i];
+    }
+
+    rc = spdk_bdev_writev_blocks(vb->journal_desc,
+                                 wch->journal_ch,
+                                 wio->log_iovs,
+                                 wio->iovcnt + 1,
+                                 wio->journal_pos,
+                                 wio->num_blocks + 1,
+                                 wal_journal_write_done,
+                                 orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
+}
+
+static void wal_journal_pad_done(struct spdk_bdev_io *child_io,
+                                 bool success,
+                                 void *cb_arg)
+{
+    struct spdk_bdev_io *orig = cb_arg;
+    struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
+    struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+    if (!success)
+    {
+        wal_complete(orig, false);
+        return;
+    }
+
+    wio->stage = WAL_STAGE_J_PAD_FLUSH;
+    rc = spdk_bdev_flush_blocks(vb->journal_desc,
+                                wio->ch->journal_ch,
+                                0,
+                                spdk_bdev_get_num_blocks(vb->journal_bdev),
+                                wal_journal_pad_flush_done,
+                                orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
+}
+
 static void wal_journal_write_done(struct spdk_bdev_io *child_io,
                                    bool success,
                                    void *cb_arg)
@@ -362,6 +686,8 @@ static void wal_journal_write_done(struct spdk_bdev_io *child_io,
     struct spdk_bdev_io *orig = cb_arg;
     struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
     struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    uint64_t record_blocks = wio->num_blocks + 1;
+    int rc;
 
     spdk_bdev_free_io(child_io);
     if (!success)
@@ -370,16 +696,20 @@ static void wal_journal_write_done(struct spdk_bdev_io *child_io,
         return;
     }
 
+    vb->sb.write_pos = wal_record_next_pos(vb, wio->journal_pos, record_blocks);
     wio->stage = WAL_STAGE_J_FLUSH;
-    spdk_bdev_flush_blocks(vb->journal_desc,
-                           wio->ch->journal_ch,
-                           wio->offset_blocks,
-                           wio->num_blocks,
-                           wal_journal_flush_done,
-                           orig);
+    rc = spdk_bdev_flush_blocks(vb->journal_desc,
+                                wio->ch->journal_ch,
+                                0,
+                                spdk_bdev_get_num_blocks(vb->journal_bdev),
+                                wal_journal_flush_done,
+                                orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
 }
 
-/* General completion callback for passthrough operations */
 static void wal_passthru_done(struct spdk_bdev_io *child_io,
                               bool success,
                               void *cb_arg)
@@ -389,7 +719,42 @@ static void wal_passthru_done(struct spdk_bdev_io *child_io,
     wal_complete(orig, success);
 }
 
-/* Handle incoming I/O request for the WAL device */
+static void wal_journal_reset_done(struct spdk_bdev_io *child_io,
+                                   bool success,
+                                   void *cb_arg)
+{
+    struct spdk_bdev_io *orig = cb_arg;
+
+    spdk_bdev_free_io(child_io);
+    wal_complete(orig, success);
+}
+
+static void wal_main_reset_done(struct spdk_bdev_io *child_io,
+                                bool success,
+                                void *cb_arg)
+{
+    struct spdk_bdev_io *orig = cb_arg;
+    struct wal_bdev_io *wio = (struct wal_bdev_io *)orig->driver_ctx;
+    struct wal_vbdev *vb = (struct wal_vbdev *)orig->bdev->ctxt;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+    if (!success)
+    {
+        wal_complete(orig, false);
+        return;
+    }
+
+    rc = spdk_bdev_reset(vb->journal_desc,
+                         wio->ch->journal_ch,
+                         wal_journal_reset_done,
+                         orig);
+    if (rc != 0)
+    {
+        wal_complete(orig, false);
+    }
+}
+
 static void wal_submit_request(struct spdk_io_channel *ch,
                                struct spdk_bdev_io *bdev_io)
 {
@@ -398,6 +763,7 @@ static void wal_submit_request(struct spdk_io_channel *ch,
     struct wal_io_channel *wch = spdk_io_channel_get_ctx(ch);
 
     struct wal_bdev_io *wio = (struct wal_bdev_io *)bdev_io->driver_ctx;
+    memset(wio, 0, sizeof(*wio));
     wio->ch = wch;
     wio->offset_blocks = bdev_io->u.bdev.offset_blocks;
     wio->num_blocks = bdev_io->u.bdev.num_blocks;
@@ -408,117 +774,250 @@ static void wal_submit_request(struct spdk_io_channel *ch,
     {
         struct iovec *iovs = bdev_io->u.bdev.iovs;
         int iovcnt = bdev_io->u.bdev.iovcnt;
-        uint64_t end = wio->offset_blocks + wio->num_blocks;
-        bool use_journal = vb->rec_in_progress && end > vb->rec_off_blocks;
-        struct spdk_bdev_desc *target_desc =
-                use_journal ? vb->journal_desc : vb->main_desc;
-        struct spdk_io_channel *target_ch =
-                use_journal ? wch->journal_ch : wch->main_ch;
+        int rc;
 
-        spdk_bdev_readv_blocks(target_desc,
-                               target_ch,
-                               iovs,
-                               iovcnt,
-                               wio->offset_blocks,
-                               wio->num_blocks,
-                               wal_passthru_done,
-                               bdev_io);
+        if (__atomic_load_n(&vb->rec_in_progress, __ATOMIC_ACQUIRE) ||
+            __atomic_load_n(&vb->write_in_progress, __ATOMIC_ACQUIRE))
+        {
+            spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+            return;
+        }
+
+        rc = spdk_bdev_readv_blocks(vb->main_desc,
+                                    wch->main_ch,
+                                    iovs,
+                                    iovcnt,
+                                    wio->offset_blocks,
+                                    wio->num_blocks,
+                                    wal_passthru_done,
+                                    bdev_io);
+        if (rc != 0)
+        {
+            wal_complete(bdev_io, false);
+        }
         break;
     }
 
     case SPDK_BDEV_IO_TYPE_WRITE:
     {
-        if (vb->rec_in_progress)
+        uint64_t data_bytes;
+        uint64_t needed;
+        uint64_t iov_bytes;
+        size_t align;
+        int rc;
+
+        if (__atomic_load_n(&vb->rec_in_progress, __ATOMIC_ACQUIRE))
         {
             spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
             return;
         }
+
+        if (__atomic_test_and_set(&vb->write_in_progress, __ATOMIC_ACQUIRE))
+        {
+            spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+            return;
+        }
+        wio->owns_write_lock = true;
 
         wio->iovs = bdev_io->u.bdev.iovs;
         wio->iovcnt = bdev_io->u.bdev.iovcnt;
         wio->stage = WAL_STAGE_J_WRITE;
 
-        /* Prepare record header */
+        if (wio->iovcnt < 1 || wio->iovcnt > SPDK_BDEV_IO_NUM_CHILD_IOV ||
+            wio->num_blocks == 0 || wio->num_blocks > vb->rec_chunk_blocks)
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        if (wio->num_blocks > UINT64_MAX / vb->bdev.blocklen)
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        data_bytes = wio->num_blocks * vb->bdev.blocklen;
+        if (data_bytes > UINT32_MAX - sizeof(struct wal_record_header))
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        if (wio->offset_blocks + wio->num_blocks < wio->offset_blocks ||
+            wio->offset_blocks + wio->num_blocks > vb->bdev.blockcnt)
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        if (!wal_iovs_len(wio->iovs, wio->iovcnt, &iov_bytes))
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+        if (iov_bytes != data_bytes)
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        needed = wio->num_blocks + 1;
+        if (vb->sb.write_pos + needed > vb->sb.journal_size)
+        {
+            needed++;
+        }
+
+        if (!wal_journal_has_space(vb, needed))
+        {
+            SPDK_ERRLOG("wal: journal overflow (Tail reached Head)\n");
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        align = spdk_bdev_get_buf_align(vb->journal_bdev);
+        wio->hdr_block = spdk_dma_zmalloc(vb->bdev.blocklen, align, NULL);
+        if (!wio->hdr_block)
+        {
+            wal_complete(bdev_io, false);
+            return;
+        }
+
+        if (vb->sb.write_pos + wio->num_blocks + 1 > vb->sb.journal_size)
+        {
+            wio->stage = WAL_STAGE_J_PAD;
+
+            wio->pad_block = spdk_dma_zmalloc(vb->bdev.blocklen, align, NULL);
+            if (!wio->pad_block)
+            {
+                wal_complete(bdev_io, false);
+                return;
+            }
+
+            wio->pad_hdr.magic = WAL_RECORD_MAGIC;
+            wio->pad_hdr.type = WAL_RECORD_TYPE_PAD;
+            wio->pad_hdr.seq = vb->sb.next_seq++;
+            wio->pad_hdr.lba = 0;
+            wio->pad_hdr.num_blocks = 0;
+            wio->pad_hdr.rec_len = sizeof(struct wal_record_header);
+            wio->pad_hdr.flags = 1;
+            wio->pad_hdr.data_crc = 0;
+            wio->pad_hdr.hdr_crc =
+                    spdk_crc32c_update(&wio->pad_hdr,
+                                       offsetof(struct wal_record_header, hdr_crc),
+                                       0);
+            memcpy(wio->pad_block, &wio->pad_hdr, sizeof(wio->pad_hdr));
+
+            wio->hdr.magic = WAL_RECORD_MAGIC;
+            wio->hdr.type = WAL_RECORD_TYPE_DATA;
+            wio->hdr.seq = vb->sb.next_seq++;
+            wio->hdr.lba = wio->offset_blocks;
+            wio->hdr.num_blocks = (uint32_t)wio->num_blocks;
+            wio->hdr.rec_len = sizeof(struct wal_record_header) + data_bytes;
+            wio->hdr.flags = 1;
+            wio->hdr.data_crc = wal_crc32c_iov_update_len(wio->iovs, wio->iovcnt, data_bytes, 0);
+            wio->hdr.hdr_crc = spdk_crc32c_update(&wio->hdr, offsetof(struct wal_record_header, hdr_crc), 0);
+            memcpy(wio->hdr_block, &wio->hdr, sizeof(wio->hdr));
+
+            wio->log_iovs[0].iov_base = wio->pad_block;
+            wio->log_iovs[0].iov_len = vb->bdev.blocklen;
+
+            wio->journal_pos = vb->sb.write_pos;
+
+            rc = spdk_bdev_writev_blocks(
+                vb->journal_desc,
+                wch->journal_ch,
+                wio->log_iovs,
+                1,
+                wio->journal_pos,
+                1,
+                wal_journal_pad_done,
+                bdev_io);
+            if (rc != 0)
+            {
+                wal_complete(bdev_io, false);
+            }
+            return;
+        }
+
         wio->hdr.magic = WAL_RECORD_MAGIC;
-        wio->hdr.type = 1; /* Data */
+        wio->hdr.type = WAL_RECORD_TYPE_DATA;
         wio->hdr.seq = vb->sb.next_seq++;
         wio->hdr.lba = wio->offset_blocks;
         wio->hdr.num_blocks = (uint32_t)wio->num_blocks;
-        wio->hdr.rec_len = sizeof(struct wal_record_header)
-                           + (wio->hdr.num_blocks * vb->bdev.blocklen);
-        wio->hdr.flags = 1; /* DIRTY */
+        wio->hdr.rec_len = sizeof(struct wal_record_header) + data_bytes;
+        wio->hdr.flags = 1;
+        wio->hdr.data_crc = wal_crc32c_iov_update_len(wio->iovs, wio->iovcnt, data_bytes, 0);
+        wio->hdr.hdr_crc = spdk_crc32c_update(&wio->hdr, offsetof(struct wal_record_header, hdr_crc), 0);
+        memcpy(wio->hdr_block, &wio->hdr, sizeof(wio->hdr));
 
-        /* Calculate data CRC */
-        wio->hdr.data_crc = spdk_crc32c_iov_update(wio->iovs, wio->iovcnt, 0);
-        /* Calculate header CRC */
-        wio->hdr.hdr_crc =
-                spdk_crc32c_update(&wio->hdr,
-                                   offsetof(struct wal_record_header, hdr_crc),
-                                   0);
+        wio->journal_pos = vb->sb.write_pos;
 
-        /* Construct iovec array for journal write: [Header][Data...] */
-        wio->log_iovs[0].iov_base = &wio->hdr;
-        wio->log_iovs[0].iov_len = sizeof(struct wal_record_header);
+        wio->log_iovs[0].iov_base = wio->hdr_block;
+        wio->log_iovs[0].iov_len = vb->bdev.blocklen;
         for (int i = 0; i < wio->iovcnt; i++)
         {
             wio->log_iovs[i + 1] = wio->iovs[i];
         }
 
-        /* Check journal boundaries and handle wrap-around */
-        uint64_t needed = wio->num_blocks + 1;
-        if (vb->sb.write_pos + needed > vb->sb.journal_size)
-        {
-            vb->sb.write_pos =
-                    1; /* Return to start (LBA 0 is occupied by the superblock) */
-        }
-
-        /* Overflow check (Tail reaches Head) */
-        if (vb->sb.write_pos < vb->sb.head_pos
-            && (vb->sb.write_pos + needed) >= vb->sb.head_pos)
-        {
-            SPDK_ERRLOG("wal: journal overflow (Tail reached Head)\n");
-            spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-            return;
-        }
-
-        wio->journal_pos = vb->sb.write_pos;
-
-        /* Write to journal at the current write_pos */
-        /* IMPORTANT: We assume header + data is aligned or bdev allows such writes. 
-         * In reality, the header might require padding to the block size. */
-        spdk_bdev_writev_blocks(
+        rc = spdk_bdev_writev_blocks(
                 vb->journal_desc,
                 wch->journal_ch,
                 wio->log_iovs,
                 wio->iovcnt + 1,
                 vb->sb.write_pos,
-                wio->num_blocks + 1, /* +1 for the header block (simplified) */
+                wio->num_blocks + 1,
                 wal_journal_write_done,
                 bdev_io);
-
-        /* Update write position in memory */
-        vb->sb.write_pos += (wio->num_blocks + 1);
+        if (rc != 0)
+        {
+            wal_complete(bdev_io, false);
+        }
         break;
     }
 
     case SPDK_BDEV_IO_TYPE_FLUSH:
     {
+        int rc;
+
+        if (__atomic_load_n(&vb->write_in_progress, __ATOMIC_ACQUIRE))
+        {
+            spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+            return;
+        }
+
         wio->stage = WAL_STAGE_J_FLUSH;
-        spdk_bdev_flush_blocks(vb->journal_desc,
-                               wch->journal_ch,
-                               wio->offset_blocks,
-                               wio->num_blocks,
-                               wal_journal_flush_done,
-                               bdev_io);
+        rc = spdk_bdev_flush_blocks(vb->journal_desc,
+                                    wch->journal_ch,
+                                    0,
+                                    spdk_bdev_get_num_blocks(vb->journal_bdev),
+                                    wal_user_journal_flush_done,
+                                    bdev_io);
+        if (rc != 0)
+        {
+            wal_complete(bdev_io, false);
+        }
         break;
     }
 
     case SPDK_BDEV_IO_TYPE_RESET:
     {
-        spdk_bdev_reset(vb->main_desc,
-                        wch->main_ch,
-                        wal_passthru_done,
-                        bdev_io);
+        int rc;
+
+        if (__atomic_load_n(&vb->rec_in_progress, __ATOMIC_ACQUIRE) ||
+            __atomic_load_n(&vb->write_in_progress, __ATOMIC_ACQUIRE))
+        {
+            spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+            return;
+        }
+
+        rc = spdk_bdev_reset(vb->main_desc,
+                             wch->main_ch,
+                             wal_main_reset_done,
+                             bdev_io);
+        if (rc != 0)
+        {
+            wal_complete(bdev_io, false);
+        }
         break;
     }
 
@@ -528,29 +1027,34 @@ static void wal_submit_request(struct spdk_io_channel *ch,
     }
 }
 
-/* Check supported bdev I/O types */
 static bool wal_io_type_supported(void *ctx, enum spdk_bdev_io_type t)
 {
+    struct wal_vbdev *vb = ctx;
+
     switch (t)
     {
     case SPDK_BDEV_IO_TYPE_READ:
+        return spdk_bdev_io_type_supported(vb->main_bdev, t);
     case SPDK_BDEV_IO_TYPE_WRITE:
+        return spdk_bdev_io_type_supported(vb->main_bdev, t) &&
+               spdk_bdev_io_type_supported(vb->journal_bdev, t);
     case SPDK_BDEV_IO_TYPE_FLUSH:
+        return spdk_bdev_io_type_supported(vb->main_bdev, t) &&
+               spdk_bdev_io_type_supported(vb->journal_bdev, t);
     case SPDK_BDEV_IO_TYPE_RESET:
-        return true;
+        return spdk_bdev_io_type_supported(vb->main_bdev, t) &&
+               spdk_bdev_io_type_supported(vb->journal_bdev, t);
     default:
         return false;
     }
 }
 
-/* Get IO channel for the WAL bdev */
 static struct spdk_io_channel *wal_get_io_channel(void *ctx)
 {
     struct wal_vbdev *vbdev = ctx;
     return spdk_get_io_channel(vbdev);
 }
 
-/* WAL device destructor (close and free resources) */
 static int wal_destruct(void *ctx)
 {
     struct wal_vbdev *vb = ctx;
@@ -598,7 +1102,6 @@ static int wal_destruct(void *ctx)
     return 0;
 }
 
-/* Bdev function table for WAL */
 static const struct spdk_bdev_fn_table g_wal_fn_table = {
         .destruct = wal_destruct,
         .submit_request = wal_submit_request,
@@ -606,7 +1109,6 @@ static const struct spdk_bdev_fn_table g_wal_fn_table = {
         .get_io_channel = wal_get_io_channel,
 };
 
-/* Handle events from base bdevs (logging) */
 static void wal_base_bdev_event_cb(enum spdk_bdev_event_type type,
                                    struct spdk_bdev *bdev,
                                    void *arg)
@@ -616,7 +1118,6 @@ static void wal_base_bdev_event_cb(enum spdk_bdev_event_type type,
                    spdk_bdev_get_name(bdev));
 }
 
-/* Find a WAL instance by its exported bdev name */
 static struct wal_vbdev *wal_find_by_name(const char *name)
 {
     struct wal_vbdev *vb;
@@ -638,7 +1139,6 @@ static void wal_unregister(struct wal_vbdev *vb,
     spdk_bdev_unregister(&vb->bdev, cb_fn, cb_arg);
 }
 
-/* Initialization context for asynchronous superblock write */
 struct wal_init_ctx
 {
     struct wal_vbdev *vb;
@@ -648,18 +1148,35 @@ struct wal_init_ctx
     struct spdk_io_channel *ch;
 };
 
-/* Callback for superblock write completion */
-static void wal_sb_write_done(struct spdk_bdev_io *bdev_io,
-                              bool success,
-                              void *cb_arg)
+static void wal_init_free_vb(struct wal_vbdev *vb)
 {
-    struct wal_init_ctx *ctx = cb_arg;
-    struct wal_vbdev *vb = ctx->vb;
-    int rc = success ? 0 : -EIO;
+    spdk_io_device_unregister(vb, NULL);
+    if (vb->journal_desc)
+    {
+        spdk_bdev_close(vb->journal_desc);
+        vb->journal_desc = NULL;
+    }
+    if (vb->main_desc)
+    {
+        spdk_bdev_close(vb->main_desc);
+        vb->main_desc = NULL;
+    }
+    free(vb->bdev.name);
+    free(vb);
+}
 
-    spdk_bdev_free_io(bdev_io);
-    spdk_put_io_channel(ctx->ch);
-    spdk_dma_free(ctx->buf);
+static void wal_init_complete(struct wal_init_ctx *ctx, int rc)
+{
+    struct wal_vbdev *vb = ctx->vb;
+
+    if (ctx->ch)
+    {
+        spdk_put_io_channel(ctx->ch);
+    }
+    if (ctx->buf)
+    {
+        spdk_dma_free(ctx->buf);
+    }
 
     if (rc == 0)
     {
@@ -673,13 +1190,74 @@ static void wal_sb_write_done(struct spdk_bdev_io *bdev_io,
     if (rc != 0)
     {
         TAILQ_REMOVE(&g_wal, vb, link);
+        wal_init_free_vb(vb);
     }
 
-    ctx->cb_fn(ctx->cb_arg, rc);
+    if (ctx->cb_fn)
+    {
+        ctx->cb_fn(ctx->cb_arg, rc);
+    }
     free(ctx);
 }
 
-/* Create and register a new WAL disk based on two base bdevs */
+static void wal_sb_write_done(struct spdk_bdev_io *bdev_io,
+                              bool success,
+                              void *cb_arg)
+{
+    struct wal_init_ctx *ctx = cb_arg;
+
+    spdk_bdev_free_io(bdev_io);
+    wal_init_complete(ctx, success ? 0 : -EIO);
+}
+
+static void wal_sb_read_done(struct spdk_bdev_io *bdev_io,
+                             bool success,
+                             void *cb_arg)
+{
+    struct wal_init_ctx *ctx = cb_arg;
+    struct wal_vbdev *vb = ctx->vb;
+    struct wal_superblock *disk_sb = (struct wal_superblock *)ctx->buf;
+    int rc;
+
+    spdk_bdev_free_io(bdev_io);
+
+    if (!success)
+    {
+        wal_init_complete(ctx, -EIO);
+        return;
+    }
+
+    if (success && wal_superblock_valid(vb, disk_sb))
+    {
+        memcpy(&vb->sb, disk_sb, sizeof(vb->sb));
+        wal_init_complete(ctx, 0);
+        return;
+    }
+    if (!wal_superblock_empty(disk_sb))
+    {
+        SPDK_ERRLOG("wal: invalid non-empty superblock on journal\n");
+        wal_init_complete(ctx, -EIO);
+        return;
+    }
+
+    wal_superblock_init(vb);
+    memset(ctx->buf, 0, vb->bdev.blocklen);
+    memcpy(ctx->buf, &vb->sb, sizeof(vb->sb));
+
+    rc = spdk_bdev_write_blocks(vb->journal_desc,
+                                ctx->ch,
+                                ctx->buf,
+                                0,
+                                1,
+                                wal_sb_write_done,
+                                ctx);
+    if (rc != 0)
+    {
+        SPDK_ERRLOG("wal: failed to write superblock: %d\n", rc);
+        wal_init_complete(ctx, rc);
+    }
+}
+
 int wal_bdev_create_disk(char *main_bdev_name,
                          char *journal_bdev_name,
                          char *name,
@@ -702,6 +1280,10 @@ int wal_bdev_create_disk(char *main_bdev_name,
     {
         SPDK_ERRLOG("WAL: main and journal must be different bdevs\n");
         return -EINVAL;
+    }
+    if (wal_find_by_name(name))
+    {
+        return -EEXIST;
     }
 
     rc = spdk_bdev_open_ext(main_bdev_name,
@@ -741,6 +1323,12 @@ int wal_bdev_create_disk(char *main_bdev_name,
         rc = -EINVAL;
         goto err;
     }
+    if (spdk_bdev_get_num_blocks(journal_bdev) < 4)
+    {
+        SPDK_ERRLOG("WAL: journal bdev is too small\n");
+        rc = -EINVAL;
+        goto err;
+    }
 
     vb = calloc(1, sizeof(*vb));
     if (!vb)
@@ -754,18 +1342,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
     vb->main_bdev = main_bdev;
     vb->journal_bdev = journal_bdev;
 
-    /* superblock init */
-    vb->sb.magic = WAL_SUPERBLOCK_MAGIC;
-    vb->sb.version = 1;
-    vb->sb.write_pos = 1;
-    vb->sb.head_pos = 1;
-    vb->sb.next_seq = 1;
-    vb->sb.checkpoint_seq = 0;
-    vb->sb.journal_size = spdk_bdev_get_num_blocks(journal_bdev);
-    vb->sb.hdr_crc =
-            spdk_crc32c_update(&vb->sb,
-                               offsetof(struct wal_superblock, hdr_crc),
-                               0);
+    wal_superblock_init(vb);
 
     vb->bdev.name = strdup(name);
     if (!vb->bdev.name)
@@ -782,7 +1359,7 @@ int wal_bdev_create_disk(char *main_bdev_name,
     vb->bdev.blockcnt = spdk_bdev_get_num_blocks(main_bdev);
     vb->rec_chunk_blocks = 1024;
 
-    size_t align = max(spdk_bdev_get_buf_align(main_bdev),
+    size_t align = spdk_max(spdk_bdev_get_buf_align(main_bdev),
                        spdk_bdev_get_buf_align(journal_bdev));
     vb->bdev.required_alignment =
             (align > 1) ? spdk_u32log2((uint32_t)align) : 0;
@@ -793,7 +1370,6 @@ int wal_bdev_create_disk(char *main_bdev_name,
                             sizeof(struct wal_io_channel),
                             vb->bdev.name);
 
-    /* Asynchronous superblock write */
     ctx = calloc(1, sizeof(*ctx));
     if (!ctx)
     {
@@ -813,7 +1389,6 @@ int wal_bdev_create_disk(char *main_bdev_name,
         goto err_ctx;
     }
 
-    memcpy(ctx->buf, &vb->sb, sizeof(vb->sb));
     ctx->ch = spdk_bdev_get_io_channel(vb->journal_desc);
     if (!ctx->ch)
     {
@@ -821,15 +1396,16 @@ int wal_bdev_create_disk(char *main_bdev_name,
         goto err_buf;
     }
 
-    rc = spdk_bdev_write_blocks(
-            vb->journal_desc, ctx->ch, ctx->buf, 0, 1, wal_sb_write_done, ctx);
+    TAILQ_INSERT_TAIL(&g_wal, vb, link);
+
+    rc = spdk_bdev_read_blocks(
+            vb->journal_desc, ctx->ch, ctx->buf, 0, 1, wal_sb_read_done, ctx);
     if (rc != 0)
     {
-        SPDK_ERRLOG("wal: failed to write superblock: %d\n", rc);
+        SPDK_ERRLOG("wal: failed to read superblock: %d\n", rc);
+        TAILQ_REMOVE(&g_wal, vb, link);
         goto err_ch;
     }
-
-    TAILQ_INSERT_TAIL(&g_wal, vb, link);
 
     if (block_sz)
         *block_sz = vb->bdev.blocklen;
@@ -864,7 +1440,6 @@ err:
     return rc;
 }
 
-/* Delete and unregister a WAL disk by name */
 int wal_bdev_delete_disk(char *name,
                          spdk_bdev_unregister_cb cb_fn,
                          void *cb_arg)
@@ -886,12 +1461,15 @@ int wal_bdev_delete_disk(char *name,
         vb->rec.delete_arg = cb_arg;
         return 0;
     }
+    if (vb->write_in_progress)
+    {
+        return -EBUSY;
+    }
 
     wal_unregister(vb, cb_fn, cb_arg);
     return 0;
 }
 
-/* Start the data recovery process from the journal to the main device */
 int wal_bdev_recover(const char *name,
                      spdk_bdev_unregister_cb cb_fn,
                      void *cb_arg)
@@ -900,16 +1478,16 @@ int wal_bdev_recover(const char *name,
     struct wal_vbdev *vb = wal_find_by_name(name);
     if (!vb)
         return -ENODEV;
-    if (vb->rec_in_progress)
+    if (__atomic_test_and_set(&vb->rec_in_progress, __ATOMIC_ACQUIRE))
         return -EBUSY;
 
-    vb->rec_in_progress = true;
     vb->rec_off_blocks = 0;
     vb->rec.done_cb = cb_fn;
     vb->rec.done_arg = cb_arg;
     vb->rec.stop = false;
     vb->rec.step_inflight = false;
     vb->rec.last_step = 0;
+    vb->rec.scanned_blocks = 0;
     vb->rec.delete_cb = NULL;
     vb->rec.delete_arg = NULL;
     vb->rec.delete_pending = false;
@@ -924,7 +1502,7 @@ int wal_bdev_recover(const char *name,
 
     size_t bl = vb->bdev.blocklen;
     size_t need = (size_t)vb->rec_chunk_blocks * bl;
-    size_t align = max(spdk_bdev_get_buf_align(vb->main_bdev),
+    size_t align = spdk_max(spdk_bdev_get_buf_align(vb->main_bdev),
                        spdk_bdev_get_buf_align(vb->journal_bdev));
     if (!vb->rec.buf_j)
         vb->rec.buf_j = spdk_dma_zmalloc(need, align, NULL);
@@ -967,7 +1545,7 @@ err_ch:
         spdk_put_io_channel(vb->rec.mch);
         vb->rec.mch = NULL;
     }
-    vb->rec_in_progress = false;
+    __atomic_clear(&vb->rec_in_progress, __ATOMIC_RELEASE);
     vb->rec.stop = false;
     vb->rec.step_inflight = false;
     vb->rec.done_cb = NULL;
@@ -1001,9 +1579,91 @@ static int wal_recover_poll(void *cb_arg)
     return vb->rec_in_progress ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
-/* Finish the recovery process, free resources, and notify RPC */
 static void wal_recover_finish(struct wal_vbdev *vb, bool ok)
 {
+    int rc;
+
+    if (vb->rec.poller)
+    {
+        spdk_poller_unregister(&vb->rec.poller);
+        vb->rec.poller = NULL;
+    }
+
+    if (!ok)
+    {
+        wal_recover_complete(vb, false);
+        return;
+    }
+
+    if (!vb->rec.jch || !vb->rec.buf_j)
+    {
+        wal_recover_complete(vb, false);
+        return;
+    }
+
+    vb->sb.write_pos = vb->sb.head_pos;
+    wal_superblock_update_crc(&vb->sb);
+    memset(vb->rec.buf_j, 0, vb->bdev.blocklen);
+    memcpy(vb->rec.buf_j, &vb->sb, sizeof(vb->sb));
+
+    rc = spdk_bdev_write_blocks(vb->journal_desc,
+                                vb->rec.jch,
+                                vb->rec.buf_j,
+                                0,
+                                1,
+                                wal_recover_finish_sb_write_done,
+                                vb);
+    if (rc != 0)
+    {
+        wal_recover_complete(vb, false);
+    }
+}
+
+static void wal_recover_finish_sb_write_done(struct spdk_bdev_io *child_io,
+                                             bool success,
+                                             void *cb_arg)
+{
+    struct wal_vbdev *vb = cb_arg;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+
+    if (!success)
+    {
+        wal_recover_complete(vb, false);
+        return;
+    }
+
+    rc = spdk_bdev_flush_blocks(vb->journal_desc,
+                                vb->rec.jch,
+                                0,
+                                1,
+                                wal_recover_finish_sb_flush_done,
+                                vb);
+    if (rc != 0)
+    {
+        wal_recover_complete(vb, false);
+    }
+}
+
+static void wal_recover_finish_sb_flush_done(struct spdk_bdev_io *child_io,
+                                             bool success,
+                                             void *cb_arg)
+{
+    struct wal_vbdev *vb = cb_arg;
+
+    spdk_bdev_free_io(child_io);
+    wal_recover_complete(vb, success);
+}
+
+static void wal_recover_complete(struct wal_vbdev *vb, bool ok)
+{
+    spdk_bdev_unregister_cb done_cb = vb->rec.done_cb;
+    void *done_arg = vb->rec.done_arg;
+    bool delete_pending = vb->rec.delete_pending;
+    spdk_bdev_unregister_cb delete_cb = vb->rec.delete_cb;
+    void *delete_arg = vb->rec.delete_arg;
+
     if (vb->rec.poller)
     {
         spdk_poller_unregister(&vb->rec.poller);
@@ -1023,14 +1683,12 @@ static void wal_recover_finish(struct wal_vbdev *vb, bool ok)
 
     vb->rec.step_inflight = false;
     vb->rec.stop = false;
-    vb->rec_in_progress = false;
-
-    if (vb->rec.done_cb)
-    {
-        vb->rec.done_cb(vb->rec.done_arg, ok ? 0 : -EIO);
-        vb->rec.done_cb = NULL;
-        vb->rec.done_arg = NULL;
-    }
+    __atomic_clear(&vb->rec_in_progress, __ATOMIC_RELEASE);
+    vb->rec.done_cb = NULL;
+    vb->rec.done_arg = NULL;
+    vb->rec.delete_pending = false;
+    vb->rec.delete_cb = NULL;
+    vb->rec.delete_arg = NULL;
 
     if (vb->rec.buf_j)
     {
@@ -1043,16 +1701,17 @@ static void wal_recover_finish(struct wal_vbdev *vb, bool ok)
         vb->rec.buf_m = NULL;
     }
 
-    if (vb->rec.delete_pending)
+    if (delete_pending)
     {
-        wal_unregister(vb, vb->rec.delete_cb, vb->rec.delete_arg);
-        vb->rec.delete_pending = false;
-        vb->rec.delete_cb = NULL;
-        vb->rec.delete_arg = NULL;
+        wal_unregister(vb, delete_cb, delete_arg);
+    }
+
+    if (done_cb)
+    {
+        done_cb(done_arg, ok ? 0 : -EIO);
     }
 }
 
-/* Recovery step: reads a record header from the journal */
 static void wal_recover_step(struct wal_vbdev *vb)
 {
     if (vb->rec.stop)
@@ -1061,19 +1720,23 @@ static void wal_recover_step(struct wal_vbdev *vb)
         return;
     }
 
-    /* Scan the journal starting from Head */
     if (vb->rec_off_blocks == 0)
     {
         vb->rec_off_blocks = vb->sb.head_pos;
     }
 
-    /* Wrap-around to the beginning if we reach the end of the physical disk */
     if (vb->rec_off_blocks >= vb->sb.journal_size)
     {
         vb->rec_off_blocks = 1;
     }
 
-    /* Read one block for the header */
+    if (vb->rec.scanned_blocks >= vb->sb.journal_size)
+    {
+        SPDK_NOTICELOG("wal: recovery scanned entire journal, stopping.\n");
+        wal_recover_finish(vb, true);
+        return;
+    }
+
     int rc = spdk_bdev_read_blocks(vb->journal_desc,
                                    vb->rec.jch,
                                    vb->rec.buf_j,
@@ -1088,7 +1751,6 @@ static void wal_recover_step(struct wal_vbdev *vb)
     }
 }
 
-/* Callback: journal header read completed */
 static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
                                     bool success,
                                     void *cb_arg)
@@ -1103,21 +1765,18 @@ static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Check header validity */
     uint32_t crc =
             spdk_crc32c_update(hdr,
                                offsetof(struct wal_record_header, hdr_crc),
                                0);
     if (hdr->magic != WAL_RECORD_MAGIC || hdr->hdr_crc != crc)
     {
-        /* Reached the end of valid records or encountered garbage */
         SPDK_NOTICELOG("wal: recovery reached end of log at block %lu\n",
                        vb->rec_off_blocks);
         wal_recover_finish(vb, true);
         return;
     }
 
-    /* LSN check (protection against records from the previous journal lap) */
     if (hdr->seq <= vb->sb.checkpoint_seq)
     {
         SPDK_NOTICELOG("wal: recovery found old LSN %lu (last checkpoint was "
@@ -1128,16 +1787,55 @@ static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Header is valid, now read the data */
     uint32_t data_blocks = hdr->num_blocks;
-    if (data_blocks == 0)
+
+    if (hdr->type == WAL_RECORD_TYPE_PAD)
     {
-        vb->rec_off_blocks += 1;
+        if (hdr->num_blocks != 0 ||
+            hdr->rec_len != sizeof(struct wal_record_header) ||
+            hdr->data_crc != 0)
+        {
+            SPDK_ERRLOG("wal: invalid pad record at block %lu\n",
+                        vb->rec_off_blocks);
+            wal_recover_finish(vb, false);
+            return;
+        }
+        vb->rec.scanned_blocks += (vb->sb.journal_size - vb->rec_off_blocks);
+        vb->rec_off_blocks = 1;
         vb->rec.step_inflight = false;
         return;
     }
 
-    /* Use buf_m to read data from the journal */
+    if (hdr->type != WAL_RECORD_TYPE_DATA)
+    {
+        SPDK_ERRLOG("wal: unknown record type %u at block %lu\n",
+                    hdr->type,
+                    vb->rec_off_blocks);
+        wal_recover_finish(vb, false);
+        return;
+    }
+
+    if (data_blocks == 0)
+    {
+        SPDK_ERRLOG("wal: zero-length data record at block %lu\n",
+                    vb->rec_off_blocks);
+        wal_recover_finish(vb, false);
+        return;
+    }
+
+    if (data_blocks > vb->rec_chunk_blocks ||
+        vb->rec_off_blocks + 1 + data_blocks > vb->sb.journal_size ||
+        hdr->lba + data_blocks < hdr->lba ||
+        hdr->lba + data_blocks > spdk_bdev_get_num_blocks(vb->main_bdev) ||
+        hdr->rec_len != sizeof(struct wal_record_header) +
+                        (uint64_t)data_blocks * vb->bdev.blocklen)
+    {
+        SPDK_ERRLOG("wal: invalid record bounds at block %lu\n",
+                    vb->rec_off_blocks);
+        wal_recover_finish(vb, false);
+        return;
+    }
+
     int rc = spdk_bdev_read_blocks(vb->journal_desc,
                                    vb->rec.jch,
                                    vb->rec.buf_m,
@@ -1152,7 +1850,6 @@ static void wal_recover_read_j_done(struct spdk_bdev_io *child_io,
     }
 }
 
-/* Callback: journal data read completed, write to main at the address from the header */
 static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
                                     bool success,
                                     void *cb_arg)
@@ -1167,7 +1864,6 @@ static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Check data CRC before writing (optional, but reliable) */
     uint32_t data_crc = spdk_crc32c_update(vb->rec.buf_m,
                                            hdr->num_blocks * vb->bdev.blocklen,
                                            0);
@@ -1179,7 +1875,6 @@ static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Write data to the main disk at the LBA from the header */
     int rc = spdk_bdev_write_blocks(vb->main_desc,
                                     vb->rec.mch,
                                     vb->rec.buf_m,
@@ -1194,13 +1889,13 @@ static void wal_recover_read_m_done(struct spdk_bdev_io *child_io,
     }
 }
 
-/* Callback: main device write completed, advance the journal offset */
 static void wal_recover_write_done(struct spdk_bdev_io *child_io,
                                    bool success,
                                    void *cb_arg)
 {
     struct wal_vbdev *vb = cb_arg;
     struct wal_record_header *hdr = (struct wal_record_header *)vb->rec.buf_j;
+    int rc;
     spdk_bdev_free_io(child_io);
 
     if (!success)
@@ -1209,11 +1904,102 @@ static void wal_recover_write_done(struct spdk_bdev_io *child_io,
         return;
     }
 
-    /* Advance the scan position in the journal: header (1 block) + data */
+    rc = spdk_bdev_flush_blocks(vb->main_desc,
+                                vb->rec.mch,
+                                hdr->lba,
+                                hdr->num_blocks,
+                                wal_recover_flush_done,
+                                vb);
+    if (rc != 0)
+    {
+        wal_recover_finish(vb, false);
+    }
+}
+
+static void wal_recover_flush_done(struct spdk_bdev_io *child_io,
+                                   bool success,
+                                   void *cb_arg)
+{
+    struct wal_vbdev *vb = cb_arg;
+    struct wal_record_header *hdr = (struct wal_record_header *)vb->rec.buf_j;
+
+    spdk_bdev_free_io(child_io);
+
+    if (!success)
+    {
+        wal_recover_finish(vb, false);
+        return;
+    }
+
     vb->rec_off_blocks += (1 + hdr->num_blocks);
+    vb->rec.scanned_blocks += (1 + hdr->num_blocks);
     if (vb->rec_off_blocks >= vb->sb.journal_size)
     {
         vb->rec_off_blocks = 1;
     }
+    vb->sb.checkpoint_seq = hdr->seq;
+    if (vb->sb.next_seq <= hdr->seq)
+    {
+        vb->sb.next_seq = hdr->seq + 1;
+    }
+    vb->sb.head_pos = vb->rec_off_blocks;
+    wal_superblock_update_crc(&vb->sb);
+    memset(vb->rec.buf_j, 0, vb->bdev.blocklen);
+    memcpy(vb->rec.buf_j, &vb->sb, sizeof(vb->sb));
+
+    int rc = spdk_bdev_write_blocks(vb->journal_desc,
+                                    vb->rec.jch,
+                                    vb->rec.buf_j,
+                                    0,
+                                    1,
+                                    wal_recover_sb_write_done,
+                                    vb);
+    if (rc != 0)
+    {
+        wal_recover_finish(vb, false);
+    }
+}
+
+static void wal_recover_sb_write_done(struct spdk_bdev_io *child_io,
+                                      bool success,
+                                      void *cb_arg)
+{
+    struct wal_vbdev *vb = cb_arg;
+    int rc;
+
+    spdk_bdev_free_io(child_io);
+
+    if (!success)
+    {
+        wal_recover_finish(vb, false);
+        return;
+    }
+
+    rc = spdk_bdev_flush_blocks(vb->journal_desc,
+                                vb->rec.jch,
+                                0,
+                                1,
+                                wal_recover_sb_done,
+                                vb);
+    if (rc != 0)
+    {
+        wal_recover_finish(vb, false);
+    }
+}
+
+static void wal_recover_sb_done(struct spdk_bdev_io *child_io,
+                                bool success,
+                                void *cb_arg)
+{
+    struct wal_vbdev *vb = cb_arg;
+
+    spdk_bdev_free_io(child_io);
+
+    if (!success)
+    {
+        wal_recover_finish(vb, false);
+        return;
+    }
+
     vb->rec.step_inflight = false;
 }
