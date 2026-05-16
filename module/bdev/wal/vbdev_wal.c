@@ -5,9 +5,13 @@
 #include <spdk/queue.h>
 #include <spdk/thread.h>
 #include <spdk/util.h>
+#include <spdk/crc32.h>
 #include <string.h>
 
 SPDK_LOG_REGISTER_COMPONENT(wal_vbdev);
+
+#define WAL_SUPERBLOCK_MAGIC 0x57414c00 /* "WAL\0" */
+#define WAL_RECORD_MAGIC     0x52454348 /* "RECH" */
 
 /* Суперблок — хранится в самом начале журнала (LBA 0) */
 struct wal_superblock
@@ -584,6 +588,14 @@ int wal_bdev_create_disk(char *main_bdev_name,
     vb->journal_desc = journal_desc;
     vb->main_bdev = main_bdev;
     vb->journal_bdev = journal_bdev;
+
+    /* Инициализация суперблока */
+    vb->sb.magic = WAL_SUPERBLOCK_MAGIC;
+    vb->sb.version = 1;
+    vb->sb.write_pos = 1;      /* Первая запись пойдет после суперблока (LBA 1) */
+    vb->sb.next_seq = 1;
+    vb->sb.checkpoint_seq = 0;
+    vb->sb.hdr_crc = spdk_crc32c_update(&vb->sb, offsetof(struct wal_superblock, hdr_crc), 0);
 
     vb->bdev.name = strdup(name);
     if (!vb->bdev.name)
