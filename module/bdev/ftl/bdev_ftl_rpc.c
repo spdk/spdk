@@ -31,24 +31,24 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_get_stats_decoders[] =
 };
 
 static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
-	{"name", offsetof(struct spdk_ftl_conf, name), spdk_json_decode_string},
-	{"base_bdev", offsetof(struct spdk_ftl_conf, base_bdev), spdk_json_decode_string},
-	{"uuid", offsetof(struct spdk_ftl_conf, uuid), spdk_json_decode_uuid, true},
-	{"cache", offsetof(struct spdk_ftl_conf, cache_bdev), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_bdev_ftl_create_ctx, name), spdk_json_decode_string},
+	{"base_bdev", offsetof(struct rpc_bdev_ftl_create_ctx, base_bdev), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_bdev_ftl_create_ctx, uuid), spdk_json_decode_uuid, true},
+	{"cache", offsetof(struct rpc_bdev_ftl_create_ctx, cache), spdk_json_decode_string},
 	{
-		"overprovisioning", offsetof(struct spdk_ftl_conf, overprovisioning),
+		"overprovisioning", offsetof(struct rpc_bdev_ftl_create_ctx, overprovisioning),
 		spdk_json_decode_uint64, true
 	},
 	{
-		"l2p_dram_limit", offsetof(struct spdk_ftl_conf, l2p_dram_limit),
+		"l2p_dram_limit", offsetof(struct rpc_bdev_ftl_create_ctx, l2p_dram_limit),
 		spdk_json_decode_uint64, true
 	},
 	{
-		"core_mask", offsetof(struct spdk_ftl_conf, core_mask),
+		"core_mask", offsetof(struct rpc_bdev_ftl_create_ctx, core_mask),
 		spdk_json_decode_string, true
 	},
 	{
-		"fast_shutdown", offsetof(struct spdk_ftl_conf, fast_shutdown),
+		"fast_shutdown", offsetof(struct rpc_bdev_ftl_create_ctx, fast_shutdown),
 		spdk_json_decode_bool, true
 	},
 };
@@ -79,18 +79,37 @@ rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
 	struct spdk_ftl_conf conf = {};
+	struct rpc_bdev_ftl_create_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
 	spdk_ftl_get_default_conf(&conf, sizeof(conf));
+	req.name = conf.name;
+	req.base_bdev = conf.base_bdev;
+	req.uuid = conf.uuid;
+	req.cache = conf.cache_bdev;
+	req.overprovisioning = conf.overprovisioning;
+	req.l2p_dram_limit = conf.l2p_dram_limit;
+	req.core_mask = conf.core_mask;
+	req.fast_shutdown = conf.fast_shutdown;
 
 	if (spdk_json_decode_object(params, rpc_bdev_ftl_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_ftl_create_decoders),
-				    &conf)) {
+				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		goto out;
+		free_rpc_bdev_ftl_create(&req);
+		return;
 	}
+
+	conf.name = req.name;
+	conf.base_bdev = req.base_bdev;
+	conf.uuid = req.uuid;
+	conf.cache_bdev = req.cache;
+	conf.overprovisioning = req.overprovisioning;
+	conf.l2p_dram_limit = req.l2p_dram_limit;
+	conf.core_mask = req.core_mask;
+	conf.fast_shutdown = req.fast_shutdown;
 
 	if (spdk_uuid_is_null(&conf.uuid)) {
 		conf.mode |= SPDK_FTL_MODE_CREATE;
@@ -101,7 +120,8 @@ rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Failed to create FTL bdev: %s",
 						     spdk_strerror(EEXIST));
-		goto out;
+		free_rpc_bdev_ftl_create(&req);
+		return;
 	}
 
 	rc = bdev_ftl_create_bdev(&conf, rpc_bdev_ftl_create_cb, request);
@@ -119,8 +139,7 @@ rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 						     "Failed to create FTL bdev: %s",
 						     spdk_strerror(-rc));
 	}
-out:
-	spdk_ftl_conf_deinit(&conf);
+	free_rpc_bdev_ftl_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_ftl_create", rpc_bdev_ftl_create, SPDK_RPC_RUNTIME)
 
