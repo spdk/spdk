@@ -1450,19 +1450,19 @@ int wal_bdev_delete_disk(char *name,
     {
         return -ENODEV;
     }
-    if (vb->rec_in_progress)
+    if (__atomic_load_n(&vb->rec_in_progress, __ATOMIC_SEQ_CST))
     {
         if (vb->rec.delete_pending)
         {
             return -EBUSY;
         }
         vb->rec.stop = true;
-        vb->rec.delete_pending = true;
+        __atomic_store_n(&vb->rec.delete_pending, true, __ATOMIC_SEQ_CST);
         vb->rec.delete_cb = cb_fn;
         vb->rec.delete_arg = cb_arg;
         return 0;
     }
-    if (vb->write_in_progress)
+    if (__atomic_load_n(&vb->write_in_progress, __ATOMIC_SEQ_CST))
     {
         return -EBUSY;
     }

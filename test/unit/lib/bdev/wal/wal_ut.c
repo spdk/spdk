@@ -141,8 +141,14 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
         g_last_write_lba = offset_blocks;
         g_last_write_blocks = (uint32_t)num_blocks;
         g_main_write_count++;
+        if (num_blocks > sizeof(g_main_captured_data) / 512) {
+            return -EINVAL;
+        }
         memcpy(g_main_captured_data, buf, num_blocks * 512);
     } else if (vb && desc == vb->journal_desc) {
+        if (offset_blocks + num_blocks > sizeof(g_journal_data) / 512) {
+            return -EINVAL;
+        }
         memcpy(&g_journal_data[offset_blocks * 512], buf, num_blocks * 512);
     }
     
@@ -163,6 +169,9 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
     if (desc == (struct spdk_bdev_desc *)0x22222222) {
         g_last_write_lba = offset_blocks;
         g_last_write_blocks = (uint32_t)num_blocks;
+        if (offset_blocks + num_blocks > sizeof(g_journal_data) / 512) {
+            return -EINVAL;
+        }
         uint8_t *dst = &g_journal_data[offset_blocks * 512];
         size_t remaining = num_blocks * 512;
 
@@ -197,6 +206,9 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
     }
     
     if (vb && desc == vb->journal_desc) {
+        if (offset_blocks + num_blocks > sizeof(g_journal_data) / 512) {
+            return -EINVAL;
+        }
         memcpy(buf, &g_journal_data[offset_blocks * 512], num_blocks * 512);
     }
     
