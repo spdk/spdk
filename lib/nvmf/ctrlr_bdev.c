@@ -18,6 +18,7 @@
 #include "spdk/trace.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
+#include "spdk/dif.h"
 #include "spdk/util.h"
 
 #include "spdk/log.h"
@@ -328,6 +329,38 @@ nvmf_bdev_ctrlr_get_rw_ext_params(const struct spdk_nvme_cmd *cmd,
 	}
 }
 
+/*
+ * Per NVMe NVM Command Set spec, Section 3.1.3.2 / 3.1.3.3:
+ *
+ * When PRACT=1 and the namespace has end-to-end protection enabled
+ * (PI type 1/2/3), the behavior depends on the metadata size vs PI size:
+ *
+ *   - If metadata size == PI size: the controller generates/strips PI.
+ *     The host transfers ONLY data (no metadata at all).
+ *     Expected transfer size = NLB * data_block_size.
+ *
+ *   - If metadata size > PI size: the host still transfers metadata.
+ *     The controller overwrites/verifies PI within the metadata.
+ *     Expected transfer size = NLB * (data_block_size + metadata_size).
+ *
+ * PI sizes: 8B for 16-bit Guard, 16B for 32-bit/64-bit Guard.
+ *
+ * This mirrors the bdev layer logic in bdev_io_get_block_size() and
+ * the NVMe initiator logic in _nvme_md_excluded_from_xfer().
+ */
+static uint32_t
+nvmf_bdev_ctrlr_get_block_size(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			       const struct spdk_nvme_cmd *cmd)
+{
+	if ((from_le32(&cmd->cdw12) & SPDK_NVME_IO_FLAGS_PRACT) &&
+	    spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE &&
+	    spdk_bdev_get_md_size(bdev) == spdk_dif_pi_format_get_size(spdk_bdev_get_dif_pi_format(bdev))) {
+		return spdk_bdev_get_data_block_size(bdev);
+	}
+
+	return spdk_bdev_desc_get_block_size(desc);
+}
+
 static bool
 nvmf_bdev_ctrlr_lba_in_range(uint64_t bdev_num_blocks, uint64_t io_start_lba,
 			     uint64_t io_num_blocks)
@@ -407,8 +440,8 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		.accel_sequence = req->accel_sequence,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint32_t block_size = nvmf_bdev_ctrlr_get_block_size(bdev, desc, cmd);
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
 	uint64_t num_blocks;
@@ -461,8 +494,8 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		.accel_sequence = req->accel_sequence,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint32_t block_size = nvmf_bdev_ctrlr_get_block_size(bdev, desc, cmd);
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
 	uint64_t num_blocks;
@@ -509,8 +542,8 @@ nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint32_t block_size = nvmf_bdev_ctrlr_get_block_size(bdev, desc, cmd);
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
 	uint64_t num_blocks;
@@ -553,13 +586,17 @@ nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 				      struct spdk_io_channel *ch, struct spdk_nvmf_request *cmp_req, struct spdk_nvmf_request *write_req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
 	struct spdk_nvme_cmd *cmp_cmd = &cmp_req->cmd->nvme_cmd;
 	struct spdk_nvme_cmd *write_cmd = &write_req->cmd->nvme_cmd;
+	uint32_t block_size = nvmf_bdev_ctrlr_get_block_size(bdev, desc, write_cmd);
 	struct spdk_nvme_cpl *rsp = &write_req->rsp->nvme_cpl;
 	uint64_t write_start_lba, cmp_start_lba;
 	uint64_t write_num_blocks, cmp_num_blocks;
 	int rc;
+
+	/* Fused Compare and Write operations should have matching PRACT settings */
+	assert((from_le32(&cmp_cmd->cdw12) & SPDK_NVME_IO_FLAGS_PRACT) ==
+	       (from_le32(&write_cmd->cdw12) & SPDK_NVME_IO_FLAGS_PRACT));
 
 	nvmf_bdev_ctrlr_get_rw_params(cmp_cmd, &cmp_start_lba, &cmp_num_blocks);
 	nvmf_bdev_ctrlr_get_rw_params(write_cmd, &write_start_lba, &write_num_blocks);
@@ -1098,14 +1135,15 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 			    struct spdk_io_channel *ch,
 			    struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_desc_get_block_size(desc);
+	uint32_t block_size = nvmf_bdev_ctrlr_get_block_size(bdev, desc, cmd);
 	uint64_t start_lba;
 	uint64_t num_blocks;
 	int rc;
 
-	nvmf_bdev_ctrlr_get_rw_params(&req->cmd->nvme_cmd, &start_lba, &num_blocks);
+	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");
@@ -1122,7 +1160,7 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bool populate = (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_READ) ? true : false;
+	bool populate = cmd->opc == SPDK_NVME_OPC_READ;
 
 	rc = spdk_bdev_zcopy_start(desc, ch, req->iov, req->iovcnt, start_lba,
 				   num_blocks, populate, nvmf_bdev_ctrlr_zcopy_start_complete, req);

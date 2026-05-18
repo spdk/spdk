@@ -185,6 +185,25 @@ spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc)
 	return spdk_bdev_get_dif_pi_format(desc->bdev);
 }
 
+/* Stub to avoid linking conflict with lib/util/dif.o.
+ * The unit test has a stub for spdk_dif_ctx_init to test with 520-byte blocks
+ * (real implementation requires 512-byte multiples). This would conflict with
+ * the real dif.o, so we stub spdk_dif_pi_format_get_size to avoid pulling it in.
+ */
+uint32_t
+spdk_dif_pi_format_get_size(enum spdk_dif_pi_format dif_pi_format)
+{
+	switch (dif_pi_format) {
+	case SPDK_DIF_PI_FORMAT_16:
+		return 8;
+	case SPDK_DIF_PI_FORMAT_32:
+	case SPDK_DIF_PI_FORMAT_64:
+		return 16;
+	default:
+		return 0;
+	}
+}
+
 DEFINE_STUB(spdk_bdev_comparev_and_writev_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct iovec *compare_iov, int compare_iovcnt,
