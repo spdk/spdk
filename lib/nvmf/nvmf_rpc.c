@@ -2357,7 +2357,7 @@ rpc_nvmf_get_targets(struct spdk_jsonrpc_request *request,
 /* private */ SPDK_RPC_REGISTER("nvmf_get_targets", rpc_nvmf_get_targets, SPDK_RPC_RUNTIME);
 
 /* TODO: replace with rpc_nvmf_create_transport_ctx */
-struct nvmf_rpc_create_transport_ctx {
+struct rpc_nvmf_create_transport_ext {
 	char				*trtype;
 	char				*tgt_name;
 	uint16_t			max_queue_depth;
@@ -2421,96 +2421,96 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 			      "io_unit_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
 
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[] = {
-	{"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
-	{"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, max_queue_depth), spdk_json_decode_uint16, true},
-	{"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, max_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
-	{"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, in_capsule_data_size), spdk_json_decode_uint32, true},
-	{"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, max_io_size), spdk_json_decode_uint32, true},
-	{"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, io_unit_size), rpc_decode_io_unit_size, true},
-	{"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, max_aq_depth), spdk_json_decode_uint32, true},
-	{"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, num_shared_buffers), rpc_decode_num_shared_buffers, true},
-	{"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, buf_cache_size), rpc_decode_buf_cache_size, true},
-	{"iobuf_small_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, iobuf_small_cache_size), spdk_json_decode_uint32, true},
-	{"iobuf_large_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, iobuf_large_cache_size), spdk_json_decode_uint32, true},
-	{"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, dif_insert_or_strip), spdk_json_decode_bool, true},
-	{"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, abort_timeout_sec), spdk_json_decode_uint32, true},
-	{"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, zcopy), spdk_json_decode_bool, true},
-	{"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name), spdk_json_decode_string, true},
-	{"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, acceptor_poll_rate), spdk_json_decode_uint32, true},
-	{"ack_timeout", offsetof(struct nvmf_rpc_create_transport_ctx, ack_timeout), spdk_json_decode_uint32, true},
-	{"data_wr_pool_size", offsetof(struct nvmf_rpc_create_transport_ctx, data_wr_pool_size), spdk_json_decode_uint32, true},
-	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, disable_command_passthru), spdk_json_decode_bool, true},
-	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, kas), spdk_json_decode_uint16, true},
-	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, min_kato), spdk_json_decode_uint32, true},
-	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, masked_oncs), rpc_decode_oncs_features, true},
-	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, masked_fuses), rpc_decode_fuses_features, true},
+	{"trtype", offsetof(struct rpc_nvmf_create_transport_ext, trtype), spdk_json_decode_string},
+	{"max_queue_depth", offsetof(struct rpc_nvmf_create_transport_ext, max_queue_depth), spdk_json_decode_uint16, true},
+	{"max_io_qpairs_per_ctrlr", offsetof(struct rpc_nvmf_create_transport_ext, max_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
+	{"in_capsule_data_size", offsetof(struct rpc_nvmf_create_transport_ext, in_capsule_data_size), spdk_json_decode_uint32, true},
+	{"max_io_size", offsetof(struct rpc_nvmf_create_transport_ext, max_io_size), spdk_json_decode_uint32, true},
+	{"io_unit_size", offsetof(struct rpc_nvmf_create_transport_ext, io_unit_size), rpc_decode_io_unit_size, true},
+	{"max_aq_depth", offsetof(struct rpc_nvmf_create_transport_ext, max_aq_depth), spdk_json_decode_uint32, true},
+	{"num_shared_buffers", offsetof(struct rpc_nvmf_create_transport_ext, num_shared_buffers), rpc_decode_num_shared_buffers, true},
+	{"buf_cache_size", offsetof(struct rpc_nvmf_create_transport_ext, buf_cache_size), rpc_decode_buf_cache_size, true},
+	{"iobuf_small_cache_size", offsetof(struct rpc_nvmf_create_transport_ext, iobuf_small_cache_size), spdk_json_decode_uint32, true},
+	{"iobuf_large_cache_size", offsetof(struct rpc_nvmf_create_transport_ext, iobuf_large_cache_size), spdk_json_decode_uint32, true},
+	{"dif_insert_or_strip", offsetof(struct rpc_nvmf_create_transport_ext, dif_insert_or_strip), spdk_json_decode_bool, true},
+	{"abort_timeout_sec", offsetof(struct rpc_nvmf_create_transport_ext, abort_timeout_sec), spdk_json_decode_uint32, true},
+	{"zcopy", offsetof(struct rpc_nvmf_create_transport_ext, zcopy), spdk_json_decode_bool, true},
+	{"tgt_name", offsetof(struct rpc_nvmf_create_transport_ext, tgt_name), spdk_json_decode_string, true},
+	{"acceptor_poll_rate", offsetof(struct rpc_nvmf_create_transport_ext, acceptor_poll_rate), spdk_json_decode_uint32, true},
+	{"ack_timeout", offsetof(struct rpc_nvmf_create_transport_ext, ack_timeout), spdk_json_decode_uint32, true},
+	{"data_wr_pool_size", offsetof(struct rpc_nvmf_create_transport_ext, data_wr_pool_size), spdk_json_decode_uint32, true},
+	{"disable_command_passthru", offsetof(struct rpc_nvmf_create_transport_ext, disable_command_passthru), spdk_json_decode_bool, true},
+	{"kas", offsetof(struct rpc_nvmf_create_transport_ext, kas), spdk_json_decode_uint16, true},
+	{"min_kato", offsetof(struct rpc_nvmf_create_transport_ext, min_kato), spdk_json_decode_uint32, true},
+	{"masked_oncs", offsetof(struct rpc_nvmf_create_transport_ext, masked_oncs), rpc_decode_oncs_features, true},
+	{"masked_fuses", offsetof(struct rpc_nvmf_create_transport_ext, masked_fuses), rpc_decode_fuses_features, true},
 };
 
 /* TODO: replace with free_rpc_nvmf_create_transport */
 static void
-nvmf_rpc_create_transport_ctx_free(struct nvmf_rpc_create_transport_ctx *ctx)
+free_rpc_nvmf_create_transport_ext(struct rpc_nvmf_create_transport_ext *ereq)
 {
-	free(ctx->trtype);
-	free(ctx->tgt_name);
-	free(ctx);
+	free(ereq->trtype);
+	free(ereq->tgt_name);
+	free(ereq);
 }
 
 static void
 nvmf_rpc_transport_destroy_done_cb(void *cb_arg)
 {
-	struct nvmf_rpc_create_transport_ctx *ctx = cb_arg;
+	struct rpc_nvmf_create_transport_ext *ereq = cb_arg;
 
-	spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-					     "Failed to add transport to tgt.(%d)", ctx->status);
-	nvmf_rpc_create_transport_ctx_free(ctx);
+	spdk_jsonrpc_send_error_response_fmt(ereq->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+					     "Failed to add transport to tgt.(%d)", ereq->status);
+	free_rpc_nvmf_create_transport_ext(ereq);
 }
 
 static void
 nvmf_rpc_tgt_add_transport_done(void *cb_arg, int status)
 {
-	struct nvmf_rpc_create_transport_ctx *ctx = cb_arg;
+	struct rpc_nvmf_create_transport_ext *ereq = cb_arg;
 
 	if (status) {
 		SPDK_ERRLOG("Failed to add transport to tgt.(%d)\n", status);
-		ctx->status = status;
-		spdk_nvmf_transport_destroy(ctx->transport, nvmf_rpc_transport_destroy_done_cb, ctx);
+		ereq->status = status;
+		spdk_nvmf_transport_destroy(ereq->transport, nvmf_rpc_transport_destroy_done_cb, ereq);
 		return;
 	}
 
-	spdk_jsonrpc_send_bool_response(ctx->request, true);
-	nvmf_rpc_create_transport_ctx_free(ctx);
+	spdk_jsonrpc_send_bool_response(ereq->request, true);
+	free_rpc_nvmf_create_transport_ext(ereq);
 }
 
 static void
 nvmf_rpc_create_transport_done(void *cb_arg, struct spdk_nvmf_transport *transport)
 {
-	struct nvmf_rpc_create_transport_ctx *ctx = cb_arg;
+	struct rpc_nvmf_create_transport_ext *ereq = cb_arg;
 
 	if (!transport) {
 		SPDK_ERRLOG("Failed to create transport.\n");
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(ereq->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Failed to create transport.");
-		nvmf_rpc_create_transport_ctx_free(ctx);
+		free_rpc_nvmf_create_transport_ext(ereq);
 		return;
 	}
 
-	ctx->transport = transport;
+	ereq->transport = transport;
 
-	spdk_nvmf_tgt_add_transport(spdk_nvmf_get_tgt(ctx->tgt_name), transport,
-				    nvmf_rpc_tgt_add_transport_done, ctx);
+	spdk_nvmf_tgt_add_transport(spdk_nvmf_get_tgt(ereq->tgt_name), transport,
+				    nvmf_rpc_tgt_add_transport_done, ereq);
 }
 
 static void
 rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_create_transport_ctx *ctx;
+	struct rpc_nvmf_create_transport_ext *req;
 	struct spdk_nvmf_transport_opts opts = {};
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	req = calloc(1, sizeof(*req));
+	if (!req) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
 		return;
 	}
@@ -2518,105 +2518,105 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	/* Decode parameters the first time to get the transport type */
 	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders,
 					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders),
-					    ctx)) {
+					    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_create_transport_ctx_free(ctx);
+		free_rpc_nvmf_create_transport_ext(req);
 		return;
 	}
 
-	tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
+	tgt = spdk_nvmf_get_tgt(req->tgt_name);
 	if (!tgt) {
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		nvmf_rpc_create_transport_ctx_free(ctx);
+		free_rpc_nvmf_create_transport_ext(req);
 		return;
 	}
 
 	/* Initialize all the transport options (based on transport type) and decode the
 	 * parameters again to update any options passed in rpc create transport call.
 	 */
-	if (!spdk_nvmf_transport_opts_init(ctx->trtype, &opts, sizeof(opts))) {
+	if (!spdk_nvmf_transport_opts_init(req->trtype, &opts, sizeof(opts))) {
 		/* This can happen if user specifies PCIE transport type which isn't valid for
 		 * NVMe-oF.
 		 */
-		SPDK_ERRLOG("Invalid transport type '%s'\n", ctx->trtype);
+		SPDK_ERRLOG("Invalid transport type '%s'\n", req->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid transport type '%s'", ctx->trtype);
-		nvmf_rpc_create_transport_ctx_free(ctx);
+						     "Invalid transport type '%s'", req->trtype);
+		free_rpc_nvmf_create_transport_ext(req);
 		return;
 	}
 
-	ctx->max_queue_depth = opts.max_queue_depth;
-	ctx->max_qpairs_per_ctrlr = opts.max_qpairs_per_ctrlr;
-	ctx->in_capsule_data_size = opts.in_capsule_data_size;
-	ctx->max_io_size = opts.max_io_size;
-	ctx->io_unit_size = opts.io_unit_size;
-	ctx->max_aq_depth = opts.max_aq_depth;
-	ctx->num_shared_buffers = opts.num_shared_buffers;
-	ctx->iobuf_small_cache_size = opts.iobuf_small_cache_size;
-	ctx->iobuf_large_cache_size = opts.iobuf_large_cache_size;
-	ctx->dif_insert_or_strip = opts.dif_insert_or_strip;
-	ctx->abort_timeout_sec = opts.abort_timeout_sec;
-	ctx->zcopy = opts.zcopy;
-	ctx->acceptor_poll_rate = opts.acceptor_poll_rate;
-	ctx->ack_timeout = opts.ack_timeout;
-	ctx->data_wr_pool_size = opts.data_wr_pool_size;
-	ctx->disable_command_passthru = opts.disable_command_passthru;
-	ctx->kas = opts.kas;
-	ctx->min_kato = opts.min_kato;
-	ctx->masked_oncs = opts.oncs.raw;
-	ctx->masked_fuses = opts.fuses.raw;
+	req->max_queue_depth = opts.max_queue_depth;
+	req->max_qpairs_per_ctrlr = opts.max_qpairs_per_ctrlr;
+	req->in_capsule_data_size = opts.in_capsule_data_size;
+	req->max_io_size = opts.max_io_size;
+	req->io_unit_size = opts.io_unit_size;
+	req->max_aq_depth = opts.max_aq_depth;
+	req->num_shared_buffers = opts.num_shared_buffers;
+	req->iobuf_small_cache_size = opts.iobuf_small_cache_size;
+	req->iobuf_large_cache_size = opts.iobuf_large_cache_size;
+	req->dif_insert_or_strip = opts.dif_insert_or_strip;
+	req->abort_timeout_sec = opts.abort_timeout_sec;
+	req->zcopy = opts.zcopy;
+	req->acceptor_poll_rate = opts.acceptor_poll_rate;
+	req->ack_timeout = opts.ack_timeout;
+	req->data_wr_pool_size = opts.data_wr_pool_size;
+	req->disable_command_passthru = opts.disable_command_passthru;
+	req->kas = opts.kas;
+	req->min_kato = opts.min_kato;
+	req->masked_oncs = opts.oncs.raw;
+	req->masked_fuses = opts.fuses.raw;
 
 	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders,
 					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders),
-					    ctx)) {
+					    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_create_transport_ctx_free(ctx);
+		free_rpc_nvmf_create_transport_ext(req);
 		return;
 	}
 
-	opts.max_queue_depth = ctx->max_queue_depth;
-	opts.max_qpairs_per_ctrlr = ctx->max_qpairs_per_ctrlr;
-	opts.in_capsule_data_size = ctx->in_capsule_data_size;
-	opts.max_io_size = ctx->max_io_size;
-	opts.io_unit_size = ctx->io_unit_size;
-	opts.max_aq_depth = ctx->max_aq_depth;
-	opts.num_shared_buffers = ctx->num_shared_buffers;
-	opts.iobuf_small_cache_size = ctx->iobuf_small_cache_size;
-	opts.iobuf_large_cache_size = ctx->iobuf_large_cache_size;
-	opts.dif_insert_or_strip = ctx->dif_insert_or_strip;
-	opts.abort_timeout_sec = ctx->abort_timeout_sec;
-	opts.zcopy = ctx->zcopy;
-	opts.acceptor_poll_rate = ctx->acceptor_poll_rate;
-	opts.ack_timeout = ctx->ack_timeout;
-	opts.data_wr_pool_size = ctx->data_wr_pool_size;
-	opts.disable_command_passthru = ctx->disable_command_passthru;
-	opts.kas = ctx->kas;
-	opts.min_kato = ctx->min_kato;
-	opts.oncs.raw = ctx->masked_oncs;
-	opts.fuses.raw = ctx->masked_fuses;
+	opts.max_queue_depth = req->max_queue_depth;
+	opts.max_qpairs_per_ctrlr = req->max_qpairs_per_ctrlr;
+	opts.in_capsule_data_size = req->in_capsule_data_size;
+	opts.max_io_size = req->max_io_size;
+	opts.io_unit_size = req->io_unit_size;
+	opts.max_aq_depth = req->max_aq_depth;
+	opts.num_shared_buffers = req->num_shared_buffers;
+	opts.iobuf_small_cache_size = req->iobuf_small_cache_size;
+	opts.iobuf_large_cache_size = req->iobuf_large_cache_size;
+	opts.dif_insert_or_strip = req->dif_insert_or_strip;
+	opts.abort_timeout_sec = req->abort_timeout_sec;
+	opts.zcopy = req->zcopy;
+	opts.acceptor_poll_rate = req->acceptor_poll_rate;
+	opts.ack_timeout = req->ack_timeout;
+	opts.data_wr_pool_size = req->data_wr_pool_size;
+	opts.disable_command_passthru = req->disable_command_passthru;
+	opts.kas = req->kas;
+	opts.min_kato = req->min_kato;
+	opts.oncs.raw = req->masked_oncs;
+	opts.fuses.raw = req->masked_fuses;
 
-	if (spdk_nvmf_tgt_get_transport(tgt, ctx->trtype)) {
-		SPDK_ERRLOG("Transport type '%s' already exists\n", ctx->trtype);
+	if (spdk_nvmf_tgt_get_transport(tgt, req->trtype)) {
+		SPDK_ERRLOG("Transport type '%s' already exists\n", req->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Transport type '%s' already exists", ctx->trtype);
-		nvmf_rpc_create_transport_ctx_free(ctx);
+						     "Transport type '%s' already exists", req->trtype);
+		free_rpc_nvmf_create_transport_ext(req);
 		return;
 	}
 
 	/* Transport can parse additional params themselves */
 	opts.transport_specific = params;
-	ctx->request = request;
+	req->request = request;
 
-	rc = spdk_nvmf_transport_create_async(ctx->trtype, &opts, nvmf_rpc_create_transport_done, ctx);
+	rc = spdk_nvmf_transport_create_async(req->trtype, &opts, nvmf_rpc_create_transport_done, req);
 	if (rc) {
-		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
+		SPDK_ERRLOG("Transport type '%s' create failed\n", req->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Transport type '%s' create failed", ctx->trtype);
-		nvmf_rpc_create_transport_ctx_free(ctx);
+						     "Transport type '%s' create failed", req->trtype);
+		free_rpc_nvmf_create_transport_ext(req);
 	}
 }
 SPDK_RPC_REGISTER("nvmf_create_transport", rpc_nvmf_create_transport, SPDK_RPC_RUNTIME)
