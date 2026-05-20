@@ -24,60 +24,86 @@
 
 static bool g_tls_log = false;
 
-struct rpc_bdev_nvme_set_options {
-	struct spdk_bdev_nvme_opts opts;
-	struct rpc_bdev_nvme_multipath_opts multipath_opts;
-};
-
 static const struct spdk_json_object_decoder rpc_bdev_nvme_set_options_decoders[] = {
-	{"action_on_timeout", offsetof(struct rpc_bdev_nvme_set_options, opts.action_on_timeout), rpc_decode_bdev_nvme_timeout_action, true},
-	{"keep_alive_timeout_ms", offsetof(struct rpc_bdev_nvme_set_options, opts.keep_alive_timeout_ms), spdk_json_decode_uint32, true},
-	{"timeout_us", offsetof(struct rpc_bdev_nvme_set_options, opts.timeout_us), spdk_json_decode_uint64, true},
-	{"timeout_admin_us", offsetof(struct rpc_bdev_nvme_set_options, opts.timeout_admin_us), spdk_json_decode_uint64, true},
-	{"arbitration_burst", offsetof(struct rpc_bdev_nvme_set_options, opts.arbitration_burst), spdk_json_decode_uint32, true},
-	{"low_priority_weight", offsetof(struct rpc_bdev_nvme_set_options, opts.low_priority_weight), spdk_json_decode_uint32, true},
-	{"medium_priority_weight", offsetof(struct rpc_bdev_nvme_set_options, opts.medium_priority_weight), spdk_json_decode_uint32, true},
-	{"high_priority_weight", offsetof(struct rpc_bdev_nvme_set_options, opts.high_priority_weight), spdk_json_decode_uint32, true},
-	{"io_queue_requests", offsetof(struct rpc_bdev_nvme_set_options, opts.io_queue_requests), spdk_json_decode_uint32, true},
-	{"nvme_adminq_poll_period_us", offsetof(struct rpc_bdev_nvme_set_options, opts.nvme_adminq_poll_period_us), spdk_json_decode_uint64, true},
-	{"nvme_ioq_poll_period_us", offsetof(struct rpc_bdev_nvme_set_options, opts.nvme_ioq_poll_period_us), spdk_json_decode_uint64, true},
-	{"delay_cmd_submit", offsetof(struct rpc_bdev_nvme_set_options, opts.delay_cmd_submit), spdk_json_decode_bool, true},
-	{"transport_retry_count", offsetof(struct rpc_bdev_nvme_set_options, opts.transport_retry_count), spdk_json_decode_uint32, true},
-	{"bdev_retry_count", offsetof(struct rpc_bdev_nvme_set_options, opts.bdev_retry_count), spdk_json_decode_int32, true},
-	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_set_options, opts.ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
-	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_set_options, opts.reconnect_delay_sec), spdk_json_decode_uint32, true},
-	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_set_options, opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
-	{"transport_ack_timeout", offsetof(struct rpc_bdev_nvme_set_options, opts.transport_ack_timeout), spdk_json_decode_uint8, true},
-	{"disable_auto_failback", offsetof(struct rpc_bdev_nvme_set_options, opts.disable_auto_failback), spdk_json_decode_bool, true},
-	{"generate_uuids", offsetof(struct rpc_bdev_nvme_set_options, opts.generate_uuids), spdk_json_decode_bool, true},
-	{"transport_tos", offsetof(struct rpc_bdev_nvme_set_options, opts.transport_tos), spdk_json_decode_uint8, true},
-	{"nvme_error_stat", offsetof(struct rpc_bdev_nvme_set_options, opts.nvme_error_stat), spdk_json_decode_bool, true},
-	{"io_path_stat", offsetof(struct rpc_bdev_nvme_set_options, opts.io_path_stat), spdk_json_decode_bool, true},
-	{"allow_accel_sequence", offsetof(struct rpc_bdev_nvme_set_options, opts.allow_accel_sequence), spdk_json_decode_bool, true},
-	{"rdma_srq_size", offsetof(struct rpc_bdev_nvme_set_options, opts.rdma_srq_size), spdk_json_decode_uint32, true},
-	{"rdma_max_cq_size", offsetof(struct rpc_bdev_nvme_set_options, opts.rdma_max_cq_size), spdk_json_decode_uint32, true},
-	{"rdma_cm_event_timeout_ms", offsetof(struct rpc_bdev_nvme_set_options, opts.rdma_cm_event_timeout_ms), spdk_json_decode_uint16, true},
-	{"dhchap_digests", offsetof(struct rpc_bdev_nvme_set_options, opts.dhchap_digests), rpc_decode_dhchap_digests, true},
-	{"dhchap_dhgroups", offsetof(struct rpc_bdev_nvme_set_options, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups, true},
-	{"rdma_umr_per_io", offsetof(struct rpc_bdev_nvme_set_options, opts.rdma_umr_per_io), spdk_json_decode_bool, true},
-	{"tcp_connect_timeout_ms", offsetof(struct rpc_bdev_nvme_set_options, opts.tcp_connect_timeout_ms), spdk_json_decode_uint32, true},
-	{"enable_flush", offsetof(struct rpc_bdev_nvme_set_options, opts.enable_flush), spdk_json_decode_bool, true},
-	{"multipath_opts", offsetof(struct rpc_bdev_nvme_set_options, multipath_opts), rpc_decode_bdev_nvme_multipath_opts, true},
+	{"action_on_timeout", offsetof(struct rpc_bdev_nvme_set_options_ctx, action_on_timeout), rpc_decode_bdev_nvme_timeout_action, true},
+	{"keep_alive_timeout_ms", offsetof(struct rpc_bdev_nvme_set_options_ctx, keep_alive_timeout_ms), spdk_json_decode_uint32, true},
+	{"timeout_us", offsetof(struct rpc_bdev_nvme_set_options_ctx, timeout_us), spdk_json_decode_uint64, true},
+	{"timeout_admin_us", offsetof(struct rpc_bdev_nvme_set_options_ctx, timeout_admin_us), spdk_json_decode_uint64, true},
+	{"arbitration_burst", offsetof(struct rpc_bdev_nvme_set_options_ctx, arbitration_burst), spdk_json_decode_uint32, true},
+	{"low_priority_weight", offsetof(struct rpc_bdev_nvme_set_options_ctx, low_priority_weight), spdk_json_decode_uint32, true},
+	{"medium_priority_weight", offsetof(struct rpc_bdev_nvme_set_options_ctx, medium_priority_weight), spdk_json_decode_uint32, true},
+	{"high_priority_weight", offsetof(struct rpc_bdev_nvme_set_options_ctx, high_priority_weight), spdk_json_decode_uint32, true},
+	{"io_queue_requests", offsetof(struct rpc_bdev_nvme_set_options_ctx, io_queue_requests), spdk_json_decode_uint32, true},
+	{"nvme_adminq_poll_period_us", offsetof(struct rpc_bdev_nvme_set_options_ctx, nvme_adminq_poll_period_us), spdk_json_decode_uint64, true},
+	{"nvme_ioq_poll_period_us", offsetof(struct rpc_bdev_nvme_set_options_ctx, nvme_ioq_poll_period_us), spdk_json_decode_uint64, true},
+	{"delay_cmd_submit", offsetof(struct rpc_bdev_nvme_set_options_ctx, delay_cmd_submit), spdk_json_decode_bool, true},
+	{"transport_retry_count", offsetof(struct rpc_bdev_nvme_set_options_ctx, transport_retry_count), spdk_json_decode_uint32, true},
+	{"bdev_retry_count", offsetof(struct rpc_bdev_nvme_set_options_ctx, bdev_retry_count), spdk_json_decode_int32, true},
+	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_set_options_ctx, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
+	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_set_options_ctx, reconnect_delay_sec), spdk_json_decode_uint32, true},
+	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_set_options_ctx, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
+	{"transport_ack_timeout", offsetof(struct rpc_bdev_nvme_set_options_ctx, transport_ack_timeout), spdk_json_decode_uint8, true},
+	{"disable_auto_failback", offsetof(struct rpc_bdev_nvme_set_options_ctx, disable_auto_failback), spdk_json_decode_bool, true},
+	{"generate_uuids", offsetof(struct rpc_bdev_nvme_set_options_ctx, generate_uuids), spdk_json_decode_bool, true},
+	{"transport_tos", offsetof(struct rpc_bdev_nvme_set_options_ctx, transport_tos), spdk_json_decode_uint8, true},
+	{"nvme_error_stat", offsetof(struct rpc_bdev_nvme_set_options_ctx, nvme_error_stat), spdk_json_decode_bool, true},
+	{"io_path_stat", offsetof(struct rpc_bdev_nvme_set_options_ctx, io_path_stat), spdk_json_decode_bool, true},
+	{"allow_accel_sequence", offsetof(struct rpc_bdev_nvme_set_options_ctx, allow_accel_sequence), spdk_json_decode_bool, true},
+	{"rdma_srq_size", offsetof(struct rpc_bdev_nvme_set_options_ctx, rdma_srq_size), spdk_json_decode_uint32, true},
+	{"rdma_max_cq_size", offsetof(struct rpc_bdev_nvme_set_options_ctx, rdma_max_cq_size), spdk_json_decode_uint32, true},
+	{"rdma_cm_event_timeout_ms", offsetof(struct rpc_bdev_nvme_set_options_ctx, rdma_cm_event_timeout_ms), spdk_json_decode_uint16, true},
+	{"dhchap_digests", offsetof(struct rpc_bdev_nvme_set_options_ctx, dhchap_digests), rpc_decode_dhchap_digests, true},
+	{"dhchap_dhgroups", offsetof(struct rpc_bdev_nvme_set_options_ctx, dhchap_dhgroups), rpc_decode_dhchap_dhgroups, true},
+	{"rdma_umr_per_io", offsetof(struct rpc_bdev_nvme_set_options_ctx, rdma_umr_per_io), spdk_json_decode_bool, true},
+	{"tcp_connect_timeout_ms", offsetof(struct rpc_bdev_nvme_set_options_ctx, tcp_connect_timeout_ms), spdk_json_decode_uint32, true},
+	{"enable_flush", offsetof(struct rpc_bdev_nvme_set_options_ctx, enable_flush), spdk_json_decode_bool, true},
+	{"multipath_opts", offsetof(struct rpc_bdev_nvme_set_options_ctx, multipath_opts), rpc_decode_bdev_nvme_multipath_opts, true},
 };
 
 static void
 rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_set_options req = {};
+	struct rpc_bdev_nvme_set_options_ctx req = {};
+	struct spdk_bdev_nvme_opts opts;
 	int rc;
 
-	spdk_bdev_nvme_get_opts(&req.opts, sizeof(req.opts));
-
-	req.multipath_opts.policy = (enum rpc_bdev_nvme_multipath_policy)req.opts.multipath_policy;
-	req.multipath_opts.selector = (enum rpc_bdev_nvme_multipath_selector)req.opts.multipath_selector;
-	req.multipath_opts.min_io = req.opts.multipath_min_io;
-
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
+	req.action_on_timeout = (enum rpc_bdev_nvme_timeout_action)opts.action_on_timeout;
+	req.timeout_us = opts.timeout_us;
+	req.timeout_admin_us = opts.timeout_admin_us;
+	req.keep_alive_timeout_ms = opts.keep_alive_timeout_ms;
+	req.arbitration_burst = opts.arbitration_burst;
+	req.low_priority_weight = opts.low_priority_weight;
+	req.medium_priority_weight = opts.medium_priority_weight;
+	req.high_priority_weight = opts.high_priority_weight;
+	req.nvme_adminq_poll_period_us = opts.nvme_adminq_poll_period_us;
+	req.nvme_ioq_poll_period_us = opts.nvme_ioq_poll_period_us;
+	req.io_queue_requests = opts.io_queue_requests;
+	req.delay_cmd_submit = opts.delay_cmd_submit;
+	req.transport_retry_count = opts.transport_retry_count;
+	req.bdev_retry_count = opts.bdev_retry_count;
+	req.transport_ack_timeout = opts.transport_ack_timeout;
+	req.ctrlr_loss_timeout_sec = opts.ctrlr_loss_timeout_sec;
+	req.reconnect_delay_sec = opts.reconnect_delay_sec;
+	req.fast_io_fail_timeout_sec = opts.fast_io_fail_timeout_sec;
+	req.disable_auto_failback = opts.disable_auto_failback;
+	req.generate_uuids = opts.generate_uuids;
+	req.transport_tos = opts.transport_tos;
+	req.nvme_error_stat = opts.nvme_error_stat;
+	req.io_path_stat = opts.io_path_stat;
+	req.allow_accel_sequence = opts.allow_accel_sequence;
+	req.rdma_srq_size = opts.rdma_srq_size;
+	req.rdma_max_cq_size = opts.rdma_max_cq_size;
+	req.rdma_cm_event_timeout_ms = opts.rdma_cm_event_timeout_ms;
+	req.dhchap_digests = opts.dhchap_digests;
+	req.dhchap_dhgroups = opts.dhchap_dhgroups;
+	req.rdma_umr_per_io = opts.rdma_umr_per_io;
+	req.tcp_connect_timeout_ms = opts.tcp_connect_timeout_ms;
+	req.enable_flush = opts.enable_flush;
+	req.multipath_opts.policy = (enum rpc_bdev_nvme_multipath_policy)opts.multipath_policy;
+	req.multipath_opts.selector = (enum rpc_bdev_nvme_multipath_selector)opts.multipath_selector;
+	req.multipath_opts.min_io = opts.multipath_min_io;
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_set_options_decoders,
 					      SPDK_COUNTOF(rpc_bdev_nvme_set_options_decoders),
 					      &req)) {
@@ -86,12 +112,43 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 						 "spdk_json_decode_object failed");
 		return;
 	}
+	opts.action_on_timeout = (enum spdk_bdev_timeout_action)req.action_on_timeout;
+	opts.timeout_us = req.timeout_us;
+	opts.timeout_admin_us = req.timeout_admin_us;
+	opts.keep_alive_timeout_ms = req.keep_alive_timeout_ms;
+	opts.arbitration_burst = req.arbitration_burst;
+	opts.low_priority_weight = req.low_priority_weight;
+	opts.medium_priority_weight = req.medium_priority_weight;
+	opts.high_priority_weight = req.high_priority_weight;
+	opts.nvme_adminq_poll_period_us = req.nvme_adminq_poll_period_us;
+	opts.nvme_ioq_poll_period_us = req.nvme_ioq_poll_period_us;
+	opts.io_queue_requests = req.io_queue_requests;
+	opts.delay_cmd_submit = req.delay_cmd_submit;
+	opts.transport_retry_count = req.transport_retry_count;
+	opts.bdev_retry_count = req.bdev_retry_count;
+	opts.transport_ack_timeout = req.transport_ack_timeout;
+	opts.ctrlr_loss_timeout_sec = req.ctrlr_loss_timeout_sec;
+	opts.reconnect_delay_sec = req.reconnect_delay_sec;
+	opts.fast_io_fail_timeout_sec = req.fast_io_fail_timeout_sec;
+	opts.disable_auto_failback = req.disable_auto_failback;
+	opts.generate_uuids = req.generate_uuids;
+	opts.transport_tos = req.transport_tos;
+	opts.nvme_error_stat = req.nvme_error_stat;
+	opts.io_path_stat = req.io_path_stat;
+	opts.allow_accel_sequence = req.allow_accel_sequence;
+	opts.rdma_srq_size = req.rdma_srq_size;
+	opts.rdma_max_cq_size = req.rdma_max_cq_size;
+	opts.rdma_cm_event_timeout_ms = req.rdma_cm_event_timeout_ms;
+	opts.dhchap_digests = req.dhchap_digests;
+	opts.dhchap_dhgroups = req.dhchap_dhgroups;
+	opts.rdma_umr_per_io = req.rdma_umr_per_io;
+	opts.tcp_connect_timeout_ms = req.tcp_connect_timeout_ms;
+	opts.enable_flush = req.enable_flush;
+	opts.multipath_policy = (enum spdk_bdev_nvme_multipath_policy)req.multipath_opts.policy;
+	opts.multipath_selector = (enum spdk_bdev_nvme_multipath_selector)req.multipath_opts.selector;
+	opts.multipath_min_io = req.multipath_opts.min_io;
 
-	req.opts.multipath_policy = (enum spdk_bdev_nvme_multipath_policy)req.multipath_opts.policy;
-	req.opts.multipath_selector = (enum spdk_bdev_nvme_multipath_selector)req.multipath_opts.selector;
-	req.opts.multipath_min_io = req.multipath_opts.min_io;
-
-	rc = spdk_bdev_nvme_set_opts(&req.opts);
+	rc = spdk_bdev_nvme_set_opts(&opts);
 	if (rc == -EPERM) {
 		spdk_jsonrpc_send_error_response(request, -EPERM,
 						 "RPC not permitted with nvme controllers already attached");
