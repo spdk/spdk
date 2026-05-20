@@ -15,6 +15,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/version.h"
+#include "spdk_internal/rpc_autogen.h"
 
 static uint32_t g_rpc_state = SPDK_RPC_STARTUP;
 static bool g_rpcs_correct = true;
@@ -364,22 +365,17 @@ spdk_rpc_server_close(struct spdk_rpc_server *server)
 	free(server);
 }
 
-struct rpc_get_methods {
-	bool current;
-	bool include_aliases;
-};
-
 /* This ugly rpc_rpc_ double prefix is needed for linting and avoids deprecation of this popular RPC  */
 static const struct spdk_json_object_decoder rpc_rpc_get_methods_decoders[] = {
-	{"current", offsetof(struct rpc_get_methods, current), spdk_json_decode_bool, true},
-	{"include_aliases", offsetof(struct rpc_get_methods, include_aliases), spdk_json_decode_bool, true},
+	{"current", offsetof(struct rpc_rpc_get_methods_ctx, current), spdk_json_decode_bool, true},
+	{"include_aliases", offsetof(struct rpc_rpc_get_methods_ctx, include_aliases), spdk_json_decode_bool, true},
 };
 
 /* This ugly rpc_rpc_ double prefix is needed for linting and avoids deprecation of this popular RPC  */
 static void
 rpc_rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_get_methods req = {};
+	struct rpc_rpc_get_methods_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_rpc_method *m;
 
