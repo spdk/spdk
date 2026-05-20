@@ -43,7 +43,8 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_aliases = {method["name"]:method["alias"] for method in schema['methods'] if "alias" in method}
     schema_enums = {obj["name"]: obj for obj in schema['enums']}
     schema_arrays = {obj["name"]: obj for obj in schema['arrays']}
-    schema_by_type = {'object': schema_objects, 'enum': schema_enums, 'array': schema_arrays}
+    schema_bitmasks = {obj["name"]: obj for obj in schema['bitmasks']}
+    schema_by_type = {'object': schema_objects, 'enum': schema_enums, 'array': schema_arrays, 'bitmask': schema_bitmasks}
     # TODO: those are embeeded objects decoders and will be resolved soon
     exceptions_decoders = {f"rpc_{name}_decoders" for name in schema_objects}
     c_code_methods = dict()
@@ -126,8 +127,6 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
                 continue
             if has_class:
                 decoder = f"rpc_decode_{parameter['class']}"
-                if 'bitmask' in schema_by_type[parameter['type']][parameter['class']]:
-                    decoder += "_bitmask"
                 msg = f"For method {method['name']}: parameter '{parameter['name']}': decoder '{decoder}' not found in {code_type}"
                 if "decode_rpc_ns_params" in code_type:
                     # TODO: handle this case later and fix issues raised by it
@@ -144,7 +143,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
 
 def lint_py_cli(schema: Dict[str, Any]) -> None:
     types = {'string' : str, 'uint8': int, 'uint16': int, 'int32': int, 'uint32': int, 'uint64': int, 'boolean':bool,
-             'uuid' : str, 'enum': str, 'array': str.split}
+             'uuid' : str, 'enum': str, 'array': str.split, 'bitmask': str.split}
     exceptions = {'load_config', 'load_subsystem_config', 'save_config', 'save_subsystem_config'}
     _, subparsers = rpc.create_parser()
     schema_methods = set(method["name"] for method in schema['methods'])

@@ -570,37 +570,35 @@
       "max_count": 64
     },
     {
-      "name": "dhchap_digests",
-      "item_type": "enum",
-      "class": "dhchap_digest",
-      "bitmask": "set",
-      "max_count": 32
-    },
-    {
-      "name": "dhchap_dhgroups",
-      "item_type": "enum",
-      "class": "dhchap_dhgroup",
-      "bitmask": "set",
-      "max_count": 32
-    },
-    {
-      "name": "oncs_features",
-      "item_type": "enum",
-      "class": "oncs_feature",
-      "bitmask": "clear",
-      "max_count": 16
-    },
-    {
-      "name": "fuses_features",
-      "item_type": "enum",
-      "class": "fuses_feature",
-      "bitmask": "clear",
-      "max_count": 16
-    },
-    {
       "name": "raid_base_bdevs",
       "item_type": "string",
       "max_count": 255
+    }
+  ],
+  "bitmasks": [
+    {
+      "name": "dhchap_digests",
+      "enum": "dhchap_digest",
+      "mode": "set",
+      "width": 32
+    },
+    {
+      "name": "dhchap_dhgroups",
+      "enum": "dhchap_dhgroup",
+      "mode": "set",
+      "width": 32
+    },
+    {
+      "name": "oncs_features",
+      "enum": "oncs_feature",
+      "mode": "clear",
+      "width": 16
+    },
+    {
+      "name": "fuses_features",
+      "enum": "fuses_feature",
+      "mode": "clear",
+      "width": 16
     }
   ],
   "methods": [
@@ -1966,13 +1964,13 @@
         },
         {
           "name": "dhchap_digests",
-          "type": "array",
+          "type": "bitmask",
           "class": "dhchap_digests",
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
-          "type": "array",
+          "type": "bitmask",
           "class": "dhchap_dhgroups",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         },
@@ -4018,14 +4016,14 @@
         },
         {
           "name": "masked_oncs",
-          "type": "array",
+          "type": "bitmask",
           "class": "oncs_features",
           "required": false,
           "description": "List of ONCS features to mask (disable)"
         },
         {
           "name": "masked_fuses",
-          "type": "array",
+          "type": "bitmask",
           "class": "fuses_features",
           "required": false,
           "description": "List of FUSES features to mask (disable)"
@@ -4638,13 +4636,13 @@
         },
         {
           "name": "dhchap_digests",
-          "type": "array",
+          "type": "bitmask",
           "class": "dhchap_digests",
           "description": "List of allowed DH-HMAC-CHAP digests."
         },
         {
           "name": "dhchap_dhgroups",
-          "type": "array",
+          "type": "bitmask",
           "class": "dhchap_dhgroups",
           "description": "List of allowed DH-HMAC-CHAP DH groups."
         },

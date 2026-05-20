@@ -147,8 +147,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
-	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests_bitmask, true},
-	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups_bitmask, true},
+	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests, true},
+	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups, true},
 	{"dup_host_policy", offsetof(struct spdk_nvmf_tgt_conf, opts.dup_host_policy), rpc_decode_nvmf_dup_host_policy, true},
 };
 

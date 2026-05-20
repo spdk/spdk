@@ -2442,8 +2442,8 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders[
 	{"disable_command_passthru", offsetof(struct nvmf_rpc_create_transport_ctx, disable_command_passthru), spdk_json_decode_bool, true},
 	{"kas", offsetof(struct nvmf_rpc_create_transport_ctx, kas), spdk_json_decode_uint16, true},
 	{"min_kato", offsetof(struct nvmf_rpc_create_transport_ctx, min_kato), spdk_json_decode_uint32, true},
-	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, masked_oncs), rpc_decode_oncs_features_bitmask, true},
-	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, masked_fuses), rpc_decode_fuses_features_bitmask, true},
+	{"masked_oncs", offsetof(struct nvmf_rpc_create_transport_ctx, masked_oncs), rpc_decode_oncs_features, true},
+	{"masked_fuses", offsetof(struct nvmf_rpc_create_transport_ctx, masked_fuses), rpc_decode_fuses_features, true},
 };
 
 /* TODO: replace with free_rpc_nvmf_create_transport */

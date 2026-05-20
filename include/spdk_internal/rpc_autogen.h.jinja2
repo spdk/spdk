@@ -112,6 +112,8 @@ struct rpc_{{ object.name }} {
     {%- for field in object.fields %}
 	{% if field.type == "enum" -%}
 		enum rpc_{{ field.class }} {{ field.name }};
+	{%- elif field.type == "bitmask" -%}
+		uint{{ (schema["bitmasks"] | selectattr("name", "equalto", field.class) | first).width }}_t {{ field.name }};
 	{%- elif field.type == "array" -%}
 		struct rpc_{{ field.class }} *{{ field.name }};
     {%- elif field.name == "nguid" -%}
@@ -130,7 +132,7 @@ static const struct spdk_json_object_decoder rpc_{{ object.name }}_decoders[] = 
 	{%- set optional = 'false' if field.required else 'true' %}
 	{%- if field.deprecated %}
 	{%- set decode_fn = 'rpc_decode_' ~ field.name %}
-	{%- elif field.type == "enum" %}
+	{%- elif field.type in ("enum", "bitmask") %}
 	{%- set decode_fn = 'rpc_decode_' ~ field.class %}
 	{%- elif field.type == "boolean" %}
 	{%- set decode_fn = 'spdk_json_decode_bool' %}
@@ -188,30 +190,6 @@ rpc_decode_{{ array.name }}(const struct spdk_json_val *val, void *out)
 				      sizeof(arr->items[0]));
 }
 
-{% if array.bitmask %}
-static inline int
-rpc_decode_{{ array.name }}_bitmask(const struct spdk_json_val *val, void *out)
-{
-	uint{{ array.max_count }}_t *flags = out;
-	uint{{ array.max_count }}_t mask = 0;
-	struct rpc_{{ array.name }} array = {};
-	size_t i;
-	int rc;
-
-	rc = rpc_decode_{{ array.name }}(val, &array);
-	if (rc != 0) {
-		return rc;
-	}
-
-	for (i = 0; i < array.count; i++) {
-		mask |= SPDK_BIT(array.items[i]);
-	}
-	*flags {{ '&= ~' if array.bitmask == 'clear' else '= ' }}mask;
-
-	return 0;
-}
-{% endif %}
-
 static inline void
 free_rpc_{{ array.name }}(struct rpc_{{ array.name }} *arr)
 {
@@ -228,6 +206,33 @@ free_rpc_{{ array.name }}(struct rpc_{{ array.name }} *arr)
 		free_rpc_{{ array.class }}(&arr->items[i]);
 	}
 {%- endif %}
+}
+{% endfor %}
+
+/* Bitmask decoder section */
+
+{% for bitmask in schema["bitmasks"] %}
+static inline int
+rpc_decode_{{ bitmask.name }}(const struct spdk_json_val *val, void *out)
+{
+	uint{{ bitmask.width }}_t *flags = out;
+	uint{{ bitmask.width }}_t mask = 0;
+	enum rpc_{{ bitmask.enum }} items[{{ bitmask.width }}];
+	size_t count, i;
+	int rc;
+
+	rc = spdk_json_decode_array(val, rpc_decode_{{ bitmask.enum }}, items,
+				    {{ bitmask.width }}, &count, sizeof(items[0]));
+	if (rc != 0) {
+		return rc;
+	}
+
+	for (i = 0; i < count; i++) {
+		mask |= SPDK_BIT(items[i]);
+	}
+	*flags {{ '&= ~' if bitmask.mode == 'clear' else '= ' }}mask;
+
+	return 0;
 }
 {% endfor %}
 
@@ -274,6 +279,8 @@ struct rpc_{{ method.name }}_ctx {
 		struct rpc_{{ param.class }} {{ param.name }};
 	{%- elif param.type == "enum" -%}
 		enum rpc_{{ param.class }} {{ param.name }};
+	{%- elif param.type == "bitmask" -%}
+		uint{{ (schema["bitmasks"] | selectattr("name", "equalto", param.class) | first).width }}_t {{ param.name }};
 	{%- elif param.type == "array" -%}
 		struct rpc_{{ param.class }} {{ param.name }};
 	{%- else -%}
