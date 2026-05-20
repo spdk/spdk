@@ -46,6 +46,22 @@ in the internal SPDK queues, before it was sent to the disk/network.
 
 Added `spdk_nvme_nvm_ctrlr_get_data` API for NVM I/O Command Set Specific Identify Controller Data.
 
+### bdev_nvme
+
+Added per-controller multipath configuration to the `spdk_bdev_nvme_create()` API and
+`bdev_nvme_attach_controller` RPC via a new `multipath_opts` parameter exposing `policy`, `selector`
+and `min_io`. The same fields were added to `bdev_nvme_set_options` so they can be configured
+as global defaults that apply when an attach does not override them.
+
+Added `spdk_bdev_nvme_first_bdev_ctrlr()`, `spdk_bdev_nvme_next_bdev_ctrlr()` and
+`spdk_bdev_nvme_ctrlr_get_name()` APIs to iterate over the bdev_nvme controller groups, together
+with `spdk_bdev_nvme_ctrlr_first_ctrlr()` and `spdk_bdev_nvme_ctrlr_next_ctrlr()` to walk the
+underlying `spdk_nvme_ctrlr` instances within a group. The `spdk_bdev_nvme_ctrlr` type is now
+exposed as an opaque handle in the public header.
+
+Added `spdk_bdev_nvme_ctrlr_get_opts()` to retrieve the creation-time
+`spdk_bdev_nvme_ctrlr_opts` (including the multipath options) for a controller.
+
 ## v26.01
 
 ### accel_ae4dma
