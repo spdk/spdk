@@ -662,6 +662,10 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 {
 	struct nvme_pcie_ctrlr pctrlr = {};
 	struct nvme_pcie_qpair *pqpair = NULL;
+	struct nvme_tracker *tr;
+	struct nvme_request req = {};
+	struct adminq_disconnect_ctx cb_ctx = {};
+	struct spdk_nvme_ctrlr_process proc = {};
 	int rc = 0;
 
 	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
@@ -692,8 +696,34 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 	CU_ASSERT(pqpair->qpair.ctrlr == &pctrlr.ctrlr);
 	CU_ASSERT(pqpair->stat != NULL);
 
+	/* Inject an outstanding admin tracker before destroy to verify
+	 * that nvme_pcie_qpair_destroy aborts it with a proper status. */
+	STAILQ_INIT(&proc.active_reqs);
+	g_current_process = &proc;
+	pctrlr.ctrlr.adminq->abort_dnr = 1;
+
+	tr = TAILQ_FIRST(&pqpair->free_tr);
+	SPDK_CU_ASSERT_FATAL(tr != NULL);
+	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list);
+
+	tr->req = &req;
+	tr->cb_fn = adminq_disconnect_req_cb;
+	tr->cb_arg = &cb_ctx;
+	req.qpair = &pqpair->qpair;
+	req.cmd.cid = tr->cid;
+	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	req.pid = getpid();
+	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
+	pqpair->qpair.num_outstanding_reqs = 1;
+
 	rc = nvme_pcie_qpair_destroy(pctrlr.ctrlr.adminq);
 	CU_ASSERT(rc == 0);
+
+
+	CU_ASSERT(cb_ctx.called == true);
+	CU_ASSERT(cb_ctx.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(cb_ctx.sc == SPDK_NVME_SC_ABORTED_BY_REQUEST);
+	CU_ASSERT(cb_ctx.dnr == 1);
 }
 
 static void
