@@ -90,6 +90,24 @@ rpc_decode_{{ enum.name }}(const struct spdk_json_val *val, void *out)
 /* Embedded objects section */
 
 {% for object in schema["objects"] %}
+{%- for field in object.fields if field.deprecated %}
+extern struct spdk_deprecation *_deprecated_{{ object.name }}_{{ field.name }};
+{%- endfor %}
+{%- endfor %}
+
+{% for object in schema["objects"] %}
+{%- for field in object.fields if field.deprecated %}
+{%- set base_decoder = 'spdk_json_decode_bool' if field.type == 'boolean' else 'spdk_json_decode_' ~ field.type %}
+static inline int
+rpc_decode_{{ field.name }}(const struct spdk_json_val *val, void *out)
+{
+	SPDK_LOG_DEPRECATED({{ object.name }}_{{ field.name }});
+	return {{ base_decoder }}(val, out);
+}
+{% endfor %}
+{%- endfor %}
+
+{% for object in schema["objects"] %}
 struct rpc_{{ object.name }} {
     {%- for field in object.fields %}
 	{% if field.type == "enum" -%}
@@ -110,7 +128,9 @@ struct rpc_{{ object.name }} {
 static const struct spdk_json_object_decoder rpc_{{ object.name }}_decoders[] = {
     {%- for field in object.fields if field.type != "array" %}
 	{%- set optional = 'false' if field.required else 'true' %}
-	{%- if field.type == "enum" %}
+	{%- if field.deprecated %}
+	{%- set decode_fn = 'rpc_decode_' ~ field.name %}
+	{%- elif field.type == "enum" %}
 	{%- set decode_fn = 'rpc_decode_' ~ field.class %}
 	{%- elif field.type == "boolean" %}
 	{%- set decode_fn = 'spdk_json_decode_bool' %}
