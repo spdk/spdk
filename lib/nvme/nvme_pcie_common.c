@@ -821,7 +821,7 @@ nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 void
 nvme_pcie_admin_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
-	nvme_pcie_admin_qpair_abort_aers(qpair);
+	nvme_pcie_qpair_abort_trackers(qpair, qpair->abort_dnr);
 }
 
 void
