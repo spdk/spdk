@@ -790,7 +790,7 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 			NVME_QPAIR_ERRLOG(qpair, "aborting outstanding command\n");
 		}
 		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
-							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
+							SPDK_NVME_SC_ABORTED_SQ_DELETION, dnr, true);
 
 		if (tr == last) {
 			break;
