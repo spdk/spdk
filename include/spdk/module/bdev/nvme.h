@@ -292,7 +292,8 @@ struct spdk_nvme_ctrlr *spdk_bdev_nvme_ctrlr_next_ctrlr(
  *
  * Must be called from the app thread.
  *
- * \warning The returned pointer is valid only while the controller group exists.
+ * \warning The returned pointer is valid only while the controller is attached.
+ * Do not hold references across operations that may disconnect controllers.
  *
  * \param nbdev_ctrlr Controller group handle.
  * \param ctrlr Controller handle (optional); if not provided opts are retrived from the first.
