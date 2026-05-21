@@ -9400,7 +9400,7 @@ bdev_nvme_multipath_config_json(struct nvme_bdev *nbdev, struct spdk_json_write_
 	/* Skip dump if it is matching the default conf. */
 	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE &&
 	    nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN &&
-	    nbdev->rr_min_io == UINT32_MAX) {
+	    nbdev->rr_min_io == BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT) {
 		return;
 	}
 
