@@ -128,9 +128,6 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             if has_class:
                 decoder = f"rpc_decode_{parameter['class']}"
                 msg = f"For method {method['name']}: parameter '{parameter['name']}': decoder '{decoder}' not found in {code_type}"
-                if "decode_rpc_ns_params" in code_type:
-                    # TODO: handle this case later and fix issues raised by it
-                    continue
                 if decoder not in code_type:
                     raise ValueError(msg)
             new_type = types.get(code_type[0])
