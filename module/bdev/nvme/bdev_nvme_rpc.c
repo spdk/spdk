@@ -60,6 +60,48 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_set_options_decoders[
 	{"multipath_opts", offsetof(struct rpc_bdev_nvme_set_options_ctx, multipath_opts), rpc_decode_bdev_nvme_multipath_opts, true},
 };
 
+/*
+ * X-macro list of fields shared between rpc_bdev_nvme_set_options_ctx
+ * and spdk_bdev_nvme_opts.  Each entry is X(field).
+ * action_on_timeout is excluded because it requires an enum cast.
+ */
+#define BDEV_NVME_SET_OPTIONS_FIELDS(X) \
+	X(timeout_us)                   \
+	X(timeout_admin_us)             \
+	X(keep_alive_timeout_ms)        \
+	X(arbitration_burst)            \
+	X(low_priority_weight)          \
+	X(medium_priority_weight)       \
+	X(high_priority_weight)         \
+	X(nvme_adminq_poll_period_us)   \
+	X(nvme_ioq_poll_period_us)      \
+	X(io_queue_requests)            \
+	X(delay_cmd_submit)             \
+	X(transport_retry_count)        \
+	X(bdev_retry_count)             \
+	X(transport_ack_timeout)        \
+	X(ctrlr_loss_timeout_sec)       \
+	X(reconnect_delay_sec)          \
+	X(fast_io_fail_timeout_sec)     \
+	X(disable_auto_failback)        \
+	X(generate_uuids)               \
+	X(transport_tos)                \
+	X(nvme_error_stat)              \
+	X(io_path_stat)                 \
+	X(allow_accel_sequence)         \
+	X(rdma_srq_size)                \
+	X(rdma_max_cq_size)             \
+	X(rdma_cm_event_timeout_ms)     \
+	X(dhchap_digests)               \
+	X(dhchap_dhgroups)              \
+	X(rdma_umr_per_io)              \
+	X(tcp_connect_timeout_ms)       \
+	X(enable_flush)
+
+/* Bump and audit BDEV_NVME_SET_OPTIONS_FIELDS when this size changes. */
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_nvme_opts) == 136,
+		   "opts grew -- update BDEV_NVME_SET_OPTIONS_FIELDS");
+
 static void
 rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
@@ -70,37 +112,9 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 
 	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
 	req.action_on_timeout = (enum rpc_bdev_nvme_timeout_action)opts.action_on_timeout;
-	req.timeout_us = opts.timeout_us;
-	req.timeout_admin_us = opts.timeout_admin_us;
-	req.keep_alive_timeout_ms = opts.keep_alive_timeout_ms;
-	req.arbitration_burst = opts.arbitration_burst;
-	req.low_priority_weight = opts.low_priority_weight;
-	req.medium_priority_weight = opts.medium_priority_weight;
-	req.high_priority_weight = opts.high_priority_weight;
-	req.nvme_adminq_poll_period_us = opts.nvme_adminq_poll_period_us;
-	req.nvme_ioq_poll_period_us = opts.nvme_ioq_poll_period_us;
-	req.io_queue_requests = opts.io_queue_requests;
-	req.delay_cmd_submit = opts.delay_cmd_submit;
-	req.transport_retry_count = opts.transport_retry_count;
-	req.bdev_retry_count = opts.bdev_retry_count;
-	req.transport_ack_timeout = opts.transport_ack_timeout;
-	req.ctrlr_loss_timeout_sec = opts.ctrlr_loss_timeout_sec;
-	req.reconnect_delay_sec = opts.reconnect_delay_sec;
-	req.fast_io_fail_timeout_sec = opts.fast_io_fail_timeout_sec;
-	req.disable_auto_failback = opts.disable_auto_failback;
-	req.generate_uuids = opts.generate_uuids;
-	req.transport_tos = opts.transport_tos;
-	req.nvme_error_stat = opts.nvme_error_stat;
-	req.io_path_stat = opts.io_path_stat;
-	req.allow_accel_sequence = opts.allow_accel_sequence;
-	req.rdma_srq_size = opts.rdma_srq_size;
-	req.rdma_max_cq_size = opts.rdma_max_cq_size;
-	req.rdma_cm_event_timeout_ms = opts.rdma_cm_event_timeout_ms;
-	req.dhchap_digests = opts.dhchap_digests;
-	req.dhchap_dhgroups = opts.dhchap_dhgroups;
-	req.rdma_umr_per_io = opts.rdma_umr_per_io;
-	req.tcp_connect_timeout_ms = opts.tcp_connect_timeout_ms;
-	req.enable_flush = opts.enable_flush;
+#define X(f) req.f = opts.f;
+	BDEV_NVME_SET_OPTIONS_FIELDS(X)
+#undef X
 	req.multipath_opts.policy = (enum rpc_bdev_nvme_multipath_policy)opts.multipath_policy;
 	req.multipath_opts.selector = (enum rpc_bdev_nvme_multipath_selector)opts.multipath_selector;
 	req.multipath_opts.min_io = opts.multipath_min_io;
@@ -113,37 +127,9 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 	opts.action_on_timeout = (enum spdk_bdev_timeout_action)req.action_on_timeout;
-	opts.timeout_us = req.timeout_us;
-	opts.timeout_admin_us = req.timeout_admin_us;
-	opts.keep_alive_timeout_ms = req.keep_alive_timeout_ms;
-	opts.arbitration_burst = req.arbitration_burst;
-	opts.low_priority_weight = req.low_priority_weight;
-	opts.medium_priority_weight = req.medium_priority_weight;
-	opts.high_priority_weight = req.high_priority_weight;
-	opts.nvme_adminq_poll_period_us = req.nvme_adminq_poll_period_us;
-	opts.nvme_ioq_poll_period_us = req.nvme_ioq_poll_period_us;
-	opts.io_queue_requests = req.io_queue_requests;
-	opts.delay_cmd_submit = req.delay_cmd_submit;
-	opts.transport_retry_count = req.transport_retry_count;
-	opts.bdev_retry_count = req.bdev_retry_count;
-	opts.transport_ack_timeout = req.transport_ack_timeout;
-	opts.ctrlr_loss_timeout_sec = req.ctrlr_loss_timeout_sec;
-	opts.reconnect_delay_sec = req.reconnect_delay_sec;
-	opts.fast_io_fail_timeout_sec = req.fast_io_fail_timeout_sec;
-	opts.disable_auto_failback = req.disable_auto_failback;
-	opts.generate_uuids = req.generate_uuids;
-	opts.transport_tos = req.transport_tos;
-	opts.nvme_error_stat = req.nvme_error_stat;
-	opts.io_path_stat = req.io_path_stat;
-	opts.allow_accel_sequence = req.allow_accel_sequence;
-	opts.rdma_srq_size = req.rdma_srq_size;
-	opts.rdma_max_cq_size = req.rdma_max_cq_size;
-	opts.rdma_cm_event_timeout_ms = req.rdma_cm_event_timeout_ms;
-	opts.dhchap_digests = req.dhchap_digests;
-	opts.dhchap_dhgroups = req.dhchap_dhgroups;
-	opts.rdma_umr_per_io = req.rdma_umr_per_io;
-	opts.tcp_connect_timeout_ms = req.tcp_connect_timeout_ms;
-	opts.enable_flush = req.enable_flush;
+#define X(f) opts.f = req.f;
+	BDEV_NVME_SET_OPTIONS_FIELDS(X)
+#undef X
 	opts.multipath_policy = (enum spdk_bdev_nvme_multipath_policy)req.multipath_opts.policy;
 	opts.multipath_selector = (enum spdk_bdev_nvme_multipath_selector)req.multipath_opts.selector;
 	opts.multipath_min_io = req.multipath_opts.min_io;

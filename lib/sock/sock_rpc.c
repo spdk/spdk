@@ -78,6 +78,26 @@ static const struct spdk_json_object_decoder rpc_sock_impl_set_options_decoders[
 	{"enable_ktls", offsetof(struct rpc_sock_impl_set_options_ctx, enable_ktls), spdk_json_decode_bool, true},
 };
 
+/*
+ * X-macro list of fields shared between rpc_sock_impl_set_options_ctx
+ * and spdk_sock_impl_opts.  Each entry is X(field).
+ */
+#define SOCK_IMPL_SET_OPTIONS_FIELDS(X) \
+	X(recv_buf_size)                \
+	X(send_buf_size)                \
+	X(enable_recv_pipe)             \
+	X(enable_quickack)              \
+	X(enable_placement_id)          \
+	X(enable_zerocopy_send_server)  \
+	X(enable_zerocopy_send_client)  \
+	X(zerocopy_threshold)           \
+	X(tls_version)                  \
+	X(enable_ktls)
+
+/* Bump and audit SOCK_IMPL_SET_OPTIONS_FIELDS when this size changes. */
+SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_impl_opts) == 80,
+		   "opts grew -- update SOCK_IMPL_SET_OPTIONS_FIELDS");
+
 static void
 rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
@@ -108,16 +128,9 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Pre-fill req with defaults, then decode again so user values override */
-	req.recv_buf_size = sock_opts.recv_buf_size;
-	req.send_buf_size = sock_opts.send_buf_size;
-	req.enable_recv_pipe = sock_opts.enable_recv_pipe;
-	req.enable_quickack = sock_opts.enable_quickack;
-	req.enable_placement_id = sock_opts.enable_placement_id;
-	req.enable_zerocopy_send_server = sock_opts.enable_zerocopy_send_server;
-	req.enable_zerocopy_send_client = sock_opts.enable_zerocopy_send_client;
-	req.zerocopy_threshold = sock_opts.zerocopy_threshold;
-	req.tls_version = sock_opts.tls_version;
-	req.enable_ktls = sock_opts.enable_ktls;
+#define X(f) req.f = sock_opts.f;
+	SOCK_IMPL_SET_OPTIONS_FIELDS(X)
+#undef X
 
 	if (spdk_json_decode_object(params, rpc_sock_impl_set_options_decoders,
 				    SPDK_COUNTOF(rpc_sock_impl_set_options_decoders), &req)) {
@@ -127,16 +140,9 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	sock_opts.recv_buf_size = req.recv_buf_size;
-	sock_opts.send_buf_size = req.send_buf_size;
-	sock_opts.enable_recv_pipe = req.enable_recv_pipe;
-	sock_opts.enable_quickack = req.enable_quickack;
-	sock_opts.enable_placement_id = req.enable_placement_id;
-	sock_opts.enable_zerocopy_send_server = req.enable_zerocopy_send_server;
-	sock_opts.enable_zerocopy_send_client = req.enable_zerocopy_send_client;
-	sock_opts.zerocopy_threshold = req.zerocopy_threshold;
-	sock_opts.tls_version = req.tls_version;
-	sock_opts.enable_ktls = req.enable_ktls;
+#define X(f) sock_opts.f = req.f;
+	SOCK_IMPL_SET_OPTIONS_FIELDS(X)
+#undef X
 
 	rc = spdk_sock_impl_set_opts(req.impl_name, &sock_opts, sizeof(sock_opts));
 	if (rc < 0) {

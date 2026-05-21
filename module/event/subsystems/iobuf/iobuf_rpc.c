@@ -18,6 +18,21 @@ static const struct spdk_json_object_decoder rpc_iobuf_set_options_decoders[] = 
 	{"enable_numa", offsetof(struct rpc_iobuf_set_options_ctx, enable_numa), spdk_json_decode_bool, true},
 };
 
+/*
+ * X-macro list of fields shared between rpc_iobuf_set_options_ctx
+ * and spdk_iobuf_opts.  Each entry is X(field).
+ */
+#define IOBUF_SET_OPTIONS_FIELDS(X) \
+	X(small_pool_count)         \
+	X(large_pool_count)         \
+	X(small_bufsize)            \
+	X(large_bufsize)            \
+	X(enable_numa)
+
+/* Bump and audit IOBUF_SET_OPTIONS_FIELDS when this size changes. */
+SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_opts) == 40,
+		   "opts grew -- update IOBUF_SET_OPTIONS_FIELDS");
+
 static void
 rpc_iobuf_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
@@ -26,11 +41,9 @@ rpc_iobuf_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 	int rc;
 
 	spdk_iobuf_get_opts(&opts, sizeof(opts));
-	req.small_pool_count = opts.small_pool_count;
-	req.large_pool_count = opts.large_pool_count;
-	req.small_bufsize = opts.small_bufsize;
-	req.large_bufsize = opts.large_bufsize;
-	req.enable_numa = opts.enable_numa;
+#define X(f) req.f = opts.f;
+	IOBUF_SET_OPTIONS_FIELDS(X)
+#undef X
 	rc = spdk_json_decode_object(params, rpc_iobuf_set_options_decoders,
 				     SPDK_COUNTOF(rpc_iobuf_set_options_decoders), &req);
 	if (rc != 0) {
@@ -38,11 +51,9 @@ rpc_iobuf_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 						 "spdk_json_decode_object failed");
 		return;
 	}
-	opts.small_pool_count = req.small_pool_count;
-	opts.large_pool_count = req.large_pool_count;
-	opts.small_bufsize = req.small_bufsize;
-	opts.large_bufsize = req.large_bufsize;
-	opts.enable_numa = req.enable_numa;
+#define X(f) opts.f = req.f;
+	IOBUF_SET_OPTIONS_FIELDS(X)
+#undef X
 
 	rc = spdk_iobuf_set_opts(&opts);
 	if (rc != 0) {

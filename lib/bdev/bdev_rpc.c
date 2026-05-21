@@ -34,6 +34,21 @@ static const struct spdk_json_object_decoder rpc_bdev_set_options_decoders[] = {
 	{"iobuf_large_cache_size", offsetof(struct rpc_bdev_set_options_ctx, iobuf_large_cache_size), spdk_json_decode_uint32, true},
 };
 
+/*
+ * X-macro list of fields shared between rpc_bdev_set_options_ctx
+ * and spdk_bdev_opts.  Each entry is X(field).
+ */
+#define BDEV_SET_OPTIONS_FIELDS(X) \
+	X(bdev_io_pool_size)       \
+	X(bdev_io_cache_size)      \
+	X(bdev_auto_examine)       \
+	X(iobuf_small_cache_size)  \
+	X(iobuf_large_cache_size)
+
+/* Bump and audit BDEV_SET_OPTIONS_FIELDS when this size changes. */
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32,
+		   "opts grew -- update BDEV_SET_OPTIONS_FIELDS");
+
 static void
 rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
@@ -42,11 +57,9 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 	int rc;
 
 	spdk_bdev_get_opts(&opts, sizeof(opts));
-	req.bdev_io_pool_size = opts.bdev_io_pool_size;
-	req.bdev_io_cache_size = opts.bdev_io_cache_size;
-	req.bdev_auto_examine = opts.bdev_auto_examine;
-	req.iobuf_small_cache_size = opts.iobuf_small_cache_size;
-	req.iobuf_large_cache_size = opts.iobuf_large_cache_size;
+#define X(f) req.f = opts.f;
+	BDEV_SET_OPTIONS_FIELDS(X)
+#undef X
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_bdev_set_options_decoders,
 					    SPDK_COUNTOF(rpc_bdev_set_options_decoders), &req)) {
@@ -56,11 +69,9 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 			return;
 		}
 	}
-	opts.bdev_io_pool_size = req.bdev_io_pool_size;
-	opts.bdev_io_cache_size = req.bdev_io_cache_size;
-	opts.bdev_auto_examine = req.bdev_auto_examine;
-	opts.iobuf_small_cache_size = req.iobuf_small_cache_size;
-	opts.iobuf_large_cache_size = req.iobuf_large_cache_size;
+#define X(f) opts.f = req.f;
+	BDEV_SET_OPTIONS_FIELDS(X)
+#undef X
 
 	rc = spdk_bdev_set_opts(&opts);
 	if (rc != 0) {
