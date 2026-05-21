@@ -645,7 +645,7 @@ test_nvme_pcie_ctrlr_disconnect_admin_qpair(void)
 	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_DISCONNECTED);
 	CU_ASSERT(cb_ctx.called == true);
 	CU_ASSERT(cb_ctx.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(cb_ctx.sc == SPDK_NVME_SC_ABORTED_BY_REQUEST);
+	CU_ASSERT(cb_ctx.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
 	CU_ASSERT(cb_ctx.dnr == 1);
 	CU_ASSERT(TAILQ_EMPTY(&pqpair.outstanding_tr));
 	CU_ASSERT(TAILQ_FIRST(&pqpair.free_tr) == &tr);
@@ -722,7 +722,7 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 
 	CU_ASSERT(cb_ctx.called == true);
 	CU_ASSERT(cb_ctx.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(cb_ctx.sc == SPDK_NVME_SC_ABORTED_BY_REQUEST);
+	CU_ASSERT(cb_ctx.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
 	CU_ASSERT(cb_ctx.dnr == 1);
 }
 
