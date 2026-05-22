@@ -2941,7 +2941,7 @@ static void
 nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct spdk_nvme_rdma_req *rdma_req, *tmp;
-	struct spdk_nvme_cpl cpl;
+	struct spdk_nvme_cpl cpl = {};
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
 	cpl.sqid = qpair->id;
@@ -3409,7 +3409,7 @@ static void
 nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_rdma_req *rdma_req, *tmp;
-	struct spdk_nvme_cpl cpl;
+	struct spdk_nvme_cpl cpl = {};
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
 	cpl.sqid = qpair->id;
