@@ -14,6 +14,7 @@
 #include "rpc/rpc.c"
 
 #include "unit/lib/json_mock.c"
+#include "common/lib/json/common_stubs.h"
 
 static int g_rpc_err;
 void fn_rpc_method_handler(struct spdk_jsonrpc_request *request,
@@ -23,15 +24,6 @@ DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_jsonrpc_begin_result, struct spdk_json_write_ctx *,
 	    (struct spdk_jsonrpc_request *request), (void *)1);
-DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_uint64, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_int32, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
-		spdk_json_decode_fn decode_func, void *out, size_t max_size, size_t *out_size,
-		size_t stride), 0);
-DEFINE_STUB(spdk_json_strdup, char *, (const struct spdk_json_val *val), NULL);
 DEFINE_STUB(spdk_jsonrpc_server_listen, struct spdk_jsonrpc_server *, (int domain, int protocol,
 		struct sockaddr *listen_addr, socklen_t addrlen, spdk_jsonrpc_handle_request_fn handle_request),
 	    (struct spdk_jsonrpc_server *)0Xdeaddead);

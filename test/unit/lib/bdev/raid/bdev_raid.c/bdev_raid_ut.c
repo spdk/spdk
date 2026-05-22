@@ -13,6 +13,7 @@
 #include "bdev/raid/bdev_raid.c"
 #include "bdev/raid/bdev_raid_rpc.c"
 #include "common/lib/test_env.c"
+#include "common/lib/json/common_stubs.h"
 
 #define MAX_BASE_DRIVES 32
 #define MAX_RAIDS 2
@@ -154,17 +155,7 @@ DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB_V(spdk_jsonrpc_send_bool_response, (struct spdk_jsonrpc_request *request,
 		bool value));
-DEFINE_STUB(spdk_json_decode_int32, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_uint64, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_uuid, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
-		spdk_json_decode_fn decode_func,
-		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
-DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_strequal, bool, (const struct spdk_json_val *val, const char *str), false);
-DEFINE_STUB(spdk_json_strdup, char *, (const struct spdk_json_val *val), NULL);
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
