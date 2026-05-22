@@ -12,6 +12,7 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 #include "spdk/string.h"
+#include "spdk/hexlify.h"
 #include "spdk/util.h"
 #include "spdk/bit_array.h"
 #include "spdk/config.h"
@@ -22,93 +23,21 @@
 #include "nvmf_internal.h"
 
 static int
-json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
-{
-	static const char __spdk_nonstring hex_char[16] = "0123456789ABCDEF";
-	const uint8_t *buf = data;
-	char *str, *out;
-	int rc;
-
-	str = malloc(size * 2 + 1);
-	if (str == NULL) {
-		return -1;
-	}
-
-	out = str;
-	while (size--) {
-		unsigned byte = *buf++;
-
-		out[0] = hex_char[(byte >> 4) & 0xF];
-		out[1] = hex_char[byte & 0xF];
-
-		out += 2;
-	}
-	*out = '\0';
-
-	rc = spdk_json_write_string(w, str);
-	free(str);
-
-	return rc;
-}
-
-static int
-hex_nybble_to_num(char c)
-{
-	if (c >= '0' && c <= '9') {
-		return c - '0';
-	}
-
-	if (c >= 'a' && c <= 'f') {
-		return c - 'a' + 0xA;
-	}
-
-	if (c >= 'A' && c <= 'F') {
-		return c - 'A' + 0xA;
-	}
-
-	return -1;
-}
-
-static int
-hex_byte_to_num(const char *str)
-{
-	int hi, lo;
-
-	hi = hex_nybble_to_num(str[0]);
-	if (hi < 0) {
-		return hi;
-	}
-
-	lo = hex_nybble_to_num(str[1]);
-	if (lo < 0) {
-		return lo;
-	}
-
-	return hi * 16 + lo;
-}
-
-static int
 decode_hex_string_be(const char *str, uint8_t *out, size_t size)
 {
-	size_t i;
+	char *bin;
 
-	/* Decode a string in "ABCDEF012345" format to its binary representation */
-	for (i = 0; i < size; i++) {
-		int num = hex_byte_to_num(str);
-
-		if (num < 0) {
-			/* Invalid hex byte or end of string */
-			return -1;
-		}
-
-		out[i] = (uint8_t)num;
-		str += 2;
+	if (strlen(str) != size * 2) {
+		return -EINVAL;
 	}
 
-	if (i != size || *str != '\0') {
-		/* Length mismatch */
-		return -1;
+	bin = spdk_unhexlify(str);
+	if (bin == NULL) {
+		return -EINVAL;
 	}
+
+	memcpy(out, bin, size);
+	free(bin);
 
 	return 0;
 }
@@ -231,13 +160,11 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 						     spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
 
 			if (!spdk_mem_all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
-				spdk_json_write_name(w, "nguid");
-				json_write_hex_str(w, ns_opts.nguid, sizeof(ns_opts.nguid));
+				spdk_json_write_named_bytearray(w, "nguid", ns_opts.nguid, sizeof(ns_opts.nguid));
 			}
 
 			if (!spdk_mem_all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
-				spdk_json_write_name(w, "eui64");
-				json_write_hex_str(w, ns_opts.eui64, sizeof(ns_opts.eui64));
+				spdk_json_write_named_bytearray(w, "eui64", ns_opts.eui64, sizeof(ns_opts.eui64));
 			}
 
 			if (!spdk_uuid_is_null(&ns_opts.uuid)) {
