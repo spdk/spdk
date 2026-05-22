@@ -3017,6 +3017,225 @@ struct spdk_nvme_nsattr {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_nsattr) == 1, "Incorrect size");
 
+#define SPDK_NVME_NS_MAX_LBA_FORMATS 64
+
+struct spdk_nvme_ns_data_lbaf {
+	/** Metadata Size */
+	uint32_t ms		: 16;
+
+	/** LBA Data Size */
+	uint32_t lbads		: 8;
+
+	/** Relative Performance */
+	uint32_t rp		: 2;
+
+	uint32_t reserved6	: 6;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data_lbaf) == 4, "Incorrect size");
+
+/**
+ * Header subset of spdk_nvme_ns_data covering everything before lbaf[] and vendor_specific[].
+ */
+struct spdk_nvme_ns_data_head {
+	/** namespace size */
+	uint64_t		nsze;
+
+	/** namespace capacity */
+	uint64_t		ncap;
+
+	/** namespace utilization */
+	uint64_t		nuse;
+
+	/** namespace features */
+	struct {
+		/** thin provisioning */
+		uint8_t		thin_prov : 1;
+
+		/** NAWUN, NAWUPF, and NACWU are defined for this namespace */
+		uint8_t		ns_atomic_write_unit : 1;
+
+		/** Supports Deallocated or Unwritten LBA error for this namespace */
+		uint8_t		dealloc_or_unwritten_error : 1;
+
+		/** Non-zero NGUID and EUI64 for namespace are never reused */
+		uint8_t		guid_never_reused : 1;
+
+		/** Optimal Performance field */
+		uint8_t		optperf : 1;
+
+		uint8_t		reserved1 : 3;
+	} nsfeat;
+
+	/** number of lba formats */
+	uint8_t			nlbaf;
+
+	/** formatted lba size */
+	struct {
+		/** LSB for Format index */
+		uint8_t		format     : 4;
+		uint8_t		extended   : 1;
+		/** MSB for Format index, to be ignored if nlbaf <= 16 */
+		uint8_t		msb_format : 2;
+		uint8_t		reserved2  : 1;
+	} flbas;
+
+	/** metadata capabilities */
+	struct {
+		/** metadata can be transferred as part of data prp list */
+		uint8_t		extended  : 1;
+
+		/** metadata can be transferred with separate metadata pointer */
+		uint8_t		pointer   : 1;
+
+		/** reserved */
+		uint8_t		reserved3 : 6;
+	} mc;
+
+	/** end-to-end data protection capabilities */
+	struct {
+		/** protection information type 1 */
+		uint8_t		pit1     : 1;
+
+		/** protection information type 2 */
+		uint8_t		pit2     : 1;
+
+		/** protection information type 3 */
+		uint8_t		pit3     : 1;
+
+		/** first eight bytes of metadata */
+		uint8_t		md_start : 1;
+
+		/** last eight bytes of metadata */
+		uint8_t		md_end   : 1;
+	} dpc;
+
+	/** end-to-end data protection type settings */
+	struct {
+		/** protection information type */
+		uint8_t		pit       : 3;
+
+		/** 1 == protection info transferred at start of metadata */
+		/** 0 == protection info transferred at end of metadata */
+		uint8_t		md_start  : 1;
+
+		uint8_t		reserved4 : 4;
+	} dps;
+
+	/** namespace multi-path I/O and namespace sharing capabilities */
+	struct spdk_nvme_nmic nmic;
+
+	/** reservation capabilities */
+	union {
+		struct spdk_nvme_rescap rescap;
+		uint8_t raw;
+	} nsrescap;
+	/** format progress indicator */
+	struct spdk_nvme_fpi fpi;
+
+	/** deallocate logical features */
+	union {
+		uint8_t		raw;
+		struct {
+			/**
+			 * Value read from deallocated blocks
+			 *
+			 * 000b = not reported
+			 * 001b = all bytes 0x00
+			 * 010b = all bytes 0xFF
+			 *
+			 * \ref spdk_nvme_dealloc_logical_block_read_value
+			 */
+			uint8_t	read_value : 3;
+
+			/** Supports Deallocate bit in Write Zeroes */
+			uint8_t	write_zero_deallocate : 1;
+
+			/**
+			 * Guard field behavior for deallocated logical blocks
+			 * 0: contains 0xFFFF
+			 * 1: contains CRC for read value
+			 */
+			uint8_t	guard_value : 1;
+
+			uint8_t	reserved : 3;
+		} bits;
+	} dlfeat;
+
+	/** namespace atomic write unit normal */
+	uint16_t		nawun;
+
+	/** namespace atomic write unit power fail */
+	uint16_t		nawupf;
+
+	/** namespace atomic compare & write unit */
+	uint16_t		nacwu;
+
+	/** namespace atomic boundary size normal */
+	uint16_t		nabsn;
+
+	/** namespace atomic boundary offset */
+	uint16_t		nabo;
+
+	/** namespace atomic boundary size power fail */
+	uint16_t		nabspf;
+
+	/** namespace optimal I/O boundary in logical blocks */
+	uint16_t		noiob;
+
+	/** NVM capacity */
+	uint64_t		nvmcap[2];
+
+	/** Namespace Preferred Write Granularity */
+	uint16_t		npwg;
+
+	/** Namespace Preferred Write Alignment */
+	uint16_t                npwa;
+
+	/** Namespace Preferred Deallocate Granularity */
+	uint16_t                npdg;
+
+	/** Namespace Preferred Deallocate Alignment */
+	uint16_t                npda;
+
+	/** Namespace Optimal Write Size */
+	uint16_t                nows;
+
+	/** Maximum Single Source Range Length */
+	uint16_t                mssrl;
+
+	/** Maximum Copy Length */
+	uint32_t                mcl;
+
+	/** Maximum Source Range Count */
+	uint8_t	                msrc;
+
+	uint8_t			reserved81[11];
+
+	/** ANA group identifier */
+	uint32_t		anagrpid;
+
+	uint8_t			reserved96[3];
+
+	/** namespace attributes */
+	struct spdk_nvme_nsattr nsattr;
+
+	/** NVM Set Identifier */
+	uint16_t		nvmsetid;
+
+	/** Endurance group identifier */
+	uint16_t		endgid;
+
+	/** namespace globally unique identifier */
+	uint8_t			nguid[16];
+
+	/** IEEE extended unique identifier */
+	uint64_t		eui64;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data_head) == 128, "Incorrect size");
+
+/**
+ * Both spdk_nvme_ns_data_head and spdk_nvme_ns_data must be in sync.
+ */
 struct spdk_nvme_ns_data {
 	/** namespace size */
 	uint64_t		nsze;
@@ -3213,18 +3432,7 @@ struct spdk_nvme_ns_data {
 	uint64_t		eui64;
 
 	/** lba format support */
-	struct {
-		/** metadata size */
-		uint32_t	ms	  : 16;
-
-		/** lba data size */
-		uint32_t	lbads	  : 8;
-
-		/** relative performance */
-		uint32_t	rp	  : 2;
-
-		uint32_t	reserved6 : 6;
-	} lbaf[64];
+	struct spdk_nvme_ns_data_lbaf lbaf[SPDK_NVME_NS_MAX_LBA_FORMATS];
 
 	uint8_t			vendor_specific[3712];
 };
@@ -3264,7 +3472,7 @@ struct spdk_nvme_nvm_ns_data {
 		uint32_t	pif		: 2;
 
 		uint32_t	reserved	: 23;
-	} elbaf[64];
+	} elbaf[SPDK_NVME_NS_MAX_LBA_FORMATS];
 
 	uint8_t			reserved2[3828];
 };
@@ -3348,7 +3556,7 @@ struct spdk_nvme_zns_ns_data {
 		uint64_t	zdes : 8;
 
 		uint64_t	reserved15 : 56;
-	} lbafe[64];
+	} lbafe[SPDK_NVME_NS_MAX_LBA_FORMATS];
 
 	uint8_t			vendor_specific[256];
 };
