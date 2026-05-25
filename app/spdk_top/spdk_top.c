@@ -261,6 +261,7 @@ struct rpc_core_info {
 	bool in_interrupt;
 	struct rpc_core_threads threads;
 	uint64_t tid;
+	int32_t numa_id;
 };
 
 struct rpc_scheduler {
@@ -523,6 +524,7 @@ static const struct spdk_json_object_decoder rpc_core_info_decoders[] = {
 	{"in_interrupt", offsetof(struct rpc_core_info, in_interrupt), spdk_json_decode_bool},
 	{"lw_threads", offsetof(struct rpc_core_info, threads), rpc_decode_cores_lw_threads},
 	{"tid", offsetof(struct rpc_core_info, tid), spdk_json_decode_uint64},
+	{"numa_id", offsetof(struct rpc_core_info, numa_id), spdk_json_decode_int32},
 };
 
 static int
