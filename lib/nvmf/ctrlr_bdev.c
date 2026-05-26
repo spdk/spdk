@@ -973,6 +973,18 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 }
 
 static void
+nvmf_ctrlr_process_abort_cmd_resubmit(void *arg)
+{
+	struct spdk_nvmf_request *req = arg;
+	int rc;
+
+	rc = nvmf_ctrlr_abort_request(req);
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
+}
+
+static void
 nvmf_bdev_ctrlr_complete_abort_cmd(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_nvmf_request *req = cb_arg;
@@ -998,7 +1010,7 @@ spdk_nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *de
 	if (spdk_likely(rc == 0)) {
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	} else if (rc == -ENOMEM) {
-		nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_admin_cmd_resubmit, req);
+		nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_abort_cmd_resubmit, req);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	} else {
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
