@@ -1,1 +1,0 @@
-scripts/autorun_post.py
