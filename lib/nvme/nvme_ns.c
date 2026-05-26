@@ -20,6 +20,7 @@ _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
+	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
 	struct spdk_nvme_ns_data	*nsdata;
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	uint32_t			format_index;
@@ -49,41 +50,39 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
 	ns->sectors_per_max_io_no_md = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
-	if (ns->ctrlr->quirks & NVME_QUIRK_MDTS_EXCLUDE_MD) {
+	if (ctrlr->quirks & NVME_QUIRK_MDTS_EXCLUDE_MD) {
 		ns->sectors_per_max_io = ns->sectors_per_max_io_no_md;
 	}
 
 	if (nsdata->noiob) {
 		ns->sectors_per_stripe = nsdata->noiob;
-		NVME_CTRLR_DEBUGLOG(ns->ctrlr, "ns %u optimal IO boundary %" PRIu32 " blocks\n", ns->id,
+		NVME_CTRLR_DEBUGLOG(ctrlr, "ns %u optimal IO boundary %" PRIu32 " blocks\n", ns->id,
 				    ns->sectors_per_stripe);
-	} else if (ns->ctrlr->quirks & NVME_INTEL_QUIRK_STRIPING &&
-		   ns->ctrlr->cdata.vs[3] != 0) {
-		ns->sectors_per_stripe = (1ULL << ns->ctrlr->cdata.vs[3]) * ns->ctrlr->min_page_size /
-					 ns->sector_size;
-		NVME_CTRLR_DEBUGLOG(ns->ctrlr, "ns %u stripe size quirk %" PRIu32 " blocks\n", ns->id,
+	} else if (ctrlr->quirks & NVME_INTEL_QUIRK_STRIPING && ctrlr->cdata.vs[3] != 0) {
+		ns->sectors_per_stripe = (1ULL << ctrlr->cdata.vs[3]) * ctrlr->min_page_size / ns->sector_size;
+		NVME_CTRLR_DEBUGLOG(ctrlr, "ns %u stripe size quirk %" PRIu32 " blocks\n", ns->id,
 				    ns->sectors_per_stripe);
 	} else {
 		ns->sectors_per_stripe = 0;
 	}
 
-	if (ns->ctrlr->cdata.oncs.nvmdsmsv) {
+	if (ctrlr->cdata.oncs.nvmdsmsv) {
 		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.oncs.nvmcmps) {
+	if (ctrlr->cdata.oncs.nvmcmps) {
 		ns->flags |= SPDK_NVME_NS_COMPARE_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.vwc.present) {
+	if (ctrlr->cdata.vwc.present) {
 		ns->flags |= SPDK_NVME_NS_FLUSH_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.oncs.nvmwzsv) {
+	if (ctrlr->cdata.oncs.nvmwzsv) {
 		ns->flags |= SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED;
 	}
 
-	if (ns->ctrlr->cdata.oncs.nvmwusv) {
+	if (ctrlr->cdata.oncs.nvmwusv) {
 		ns->flags |= SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED;
 	}
 
@@ -95,7 +94,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	if (nsdata->lbaf[format_index].ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
-		if (nsdata_nvm != NULL && ns->ctrlr->cdata.ctratt.elbas) {
+		if (nsdata_nvm != NULL && ctrlr->cdata.ctratt.elbas) {
 			/* We may have nsdata_nvm for other purposes but
 			 * the elbaf array is only valid when elbas is 1.
 			 */
@@ -110,17 +109,18 @@ static int
 nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status	*status;
+	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
 	struct spdk_nvme_ns_data		*nsdata;
 	int					rc;
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
-		NVME_CTRLR_ERRLOG(ns->ctrlr, "Failed to allocate status tracker\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
 		return -ENOMEM;
 	}
 
 	nsdata = _nvme_ns_get_data(ns);
-	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
 				     nsdata, sizeof(*nsdata),
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
@@ -128,10 +128,10 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status, true);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		/* This can occur if the namespace is not active. */
-		NVME_CTRLR_WARNLOG(ns->ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
+		NVME_CTRLR_WARNLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				   spdk_strerror(abs(rc)));
 	}
 
@@ -298,25 +298,26 @@ static int
 nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status      *status;
+	struct spdk_nvme_ctrlr                  *ctrlr = ns->ctrlr;
 	int                                     rc;
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 
-	if ((ns->ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
-	     !(ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
-	    (ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
-		NVME_CTRLR_DEBUGLOG(ns->ctrlr, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
+	if ((ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
+	     !(ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
+	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		return 0;
 	}
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
-		NVME_CTRLR_ERRLOG(ns->ctrlr, "Failed to allocate status tracker\n");
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
 		return -ENOMEM;
 	}
 
-	NVME_CTRLR_DEBUGLOG(ns->ctrlr, "Attempting to retrieve NS ID Descriptor List\n");
-	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
+	NVME_CTRLR_DEBUGLOG(ctrlr, "Attempting to retrieve NS ID Descriptor List\n");
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
 				     0, ns->id_desc_list, sizeof(ns->id_desc_list),
 				     nvme_completion_poll_cb, status);
 	if (rc < 0) {
@@ -324,9 +325,9 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ns->ctrlr, status, true);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
-		NVME_CTRLR_WARNLOG(ns->ctrlr, "Failed to retrieve NS ID Descriptor List\n");
+		NVME_CTRLR_WARNLOG(ctrlr, "Failed to retrieve NS ID Descriptor List\n");
 		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 	}
 
