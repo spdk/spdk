@@ -313,8 +313,6 @@ struct _trid_entry {
 	TAILQ_ENTRY(_trid_entry) tailq;
 };
 
-SPDK_LOG_DEPRECATION_REGISTER(perf_g_option, "perf -G option", "v26.05", 0);
-
 #define MAX_TRID_ENTRY 256
 static struct _trid_entry g_trids[MAX_TRID_ENTRY];
 static TAILQ_HEAD(, _trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
@@ -1926,11 +1924,6 @@ usage(char *program_name)
 	printf("\t-Q, --continue-on-error <val> Do not stop on error. Log I/O errors every N times (default: 1)\n");
 	spdk_log_usage(stdout, "\t-T");
 	printf("\t-m, --cpu-usage display real-time overall cpu usage on used cores\n");
-#ifdef DEBUG
-	printf("\t-G, --enable-debug enable debug logging\n");
-#else
-	printf("\t-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
-#endif
 	printf("\t--transport-stats dump transport statistics\n");
 	printf("\n\n");
 }
@@ -2294,7 +2287,7 @@ alloc_key(const char *name, const char *path)
 	return key;
 }
 
-#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:v:w:y:z:A:C:DEF:GHILM:NO:P:Q:RS:T:U:VZ:"
+#define PERF_GETOPT_SHORT "a:b:c:d:e:ghi:lmo:q:r:k:s:t:v:w:y:z:A:C:DEF:HILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2343,8 +2336,6 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"enable-interrupt",			no_argument,	NULL, PERF_ENABLE_INTERRUPT},
 #define PERF_ZIPF		'F'
 	{"zipf",				required_argument,	NULL, PERF_ZIPF},
-#define PERF_ENABLE_DEBUG	'G'
-	{"enable-debug",			no_argument,	NULL, PERF_ENABLE_DEBUG},
 #define PERF_ENABLE_TCP_HDGST	'H'
 	{"enable-tcp-hdgst",			no_argument,	NULL, PERF_ENABLE_TCP_HDGST},
 #define PERF_ENABLE_TCP_DDGST	'I'
@@ -2613,18 +2604,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_ENABLE_INTERRUPT:
 			g_enable_interrupt = 1;
 			break;
-		case PERF_ENABLE_DEBUG:
-#ifndef DEBUG
-			fprintf(stderr, "%s must be configured with --enable-debug for -G flag\n",
-				argv[0]);
-			usage(argv[0]);
-			return 1;
-#else
-			SPDK_LOG_DEPRECATED(perf_g_option);
-			spdk_log_set_flag("nvme");
-			debug_implied = true;
-			break;
-#endif
 		case PERF_ENABLE_TCP_HDGST:
 			g_header_digest = 1;
 			break;
@@ -2908,7 +2887,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	}
 
 	/*
-	 * If the user didn't explicitly set a log level, but used -G or -T,
+	 * If the user didn't explicitly set a log level, but used -T,
 	 * default to DEBUG to preserve legacy behavior.
 	 */
 	if (!log_level_set && debug_implied) {
