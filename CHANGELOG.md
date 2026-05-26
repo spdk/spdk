@@ -2,6 +2,51 @@
 
 ## v26.05: (Upcoming Release)
 
+### accel
+
+Added `spdk_accel_append_compare()` API to append a compare operation to an acceleration
+sequence. Block device drivers can use it to chain data integrity checks with the rest of their
+accel pipeline.
+
+### bdev
+
+Added `spdk_bdev_get_nvme_csi()` accessor and a matching CSI (Command Set Identifier) field on
+`struct spdk_bdev`, so bdev modules can advertise which NVMe I/O command set a namespace uses and
+upper layers like NVMe-oF can make routing decisions based on the command set without reaching
+into module internals.
+
+Added `spdk_bdev_desc_hide_metadata()`, `spdk_bdev_io_hide_metadata()` and `spdk_bdev_io_get_block_size()`.
+Together they let upper layers (NVMe-oF) make correct decisions about DIF check flag handling
+and block size accounting when the bdev layer owns metadata insert/strip on a descriptor.
+
+Added the `bdev_get_histogram_borders` RPC to dump histogram values into user-provided borders,
+allowing callers to obtain only the ranges they care about without parsing the base64-encoded
+output of the standard `bdev_get_histogram` RPC.
+
+`spdk_bdev_io_get_nvme_status()` now translates the internal `SPDK_BDEV_IO_STATUS_MISCOMPARE` to
+the correct NVMe Compare Failure status (`SCT=0x02` Media Error, `SC=0x85`, `0x285`) instead of a
+generic Internal Error, so NVMe initiators receive the spec-defined code.
+
+`spdk_bdev_initialize()`, `spdk_bdev_finish()`, `spdk_bdev_register()`, `spdk_bdev_examine()`,
+`spdk_bdev_unregister()` and `spdk_bdev_unregister_by_name()` are now enforced on the app thread.
+
+### bdev_error
+
+Added the `error_sct` and `error_sc` options to `bdev_error_inject_error`, so injected NVMe errors
+can carry an exact Status Code Type and Status Code.
+
+Added the `bdev_error_resume_io` RPC to release IOs queued by the pending error injection mode.
+
+### bdev_ftl
+
+Removed the deprecated `bdev_ftl_load` and `bdev_ftl_unload` RPCs. Use `bdev_ftl_create` and
+`bdev_ftl_delete` instead.
+
+### bdev_malloc
+
+Implemented `SPDK_BDEV_IO_TYPE_COMPARE` for the malloc bdev. The compare itself is delegated to
+the acceleration framework via `spdk_accel_append_compare()`.
+
 ### bdev_nvme
 
 Added per-controller multipath configuration to the `spdk_bdev_nvme_create()` API and
@@ -18,6 +63,58 @@ exposed as an opaque handle in the public header.
 Added `spdk_bdev_nvme_ctrlr_get_opts()` to retrieve the creation-time `spdk_bdev_nvme_ctrlr_opts`
 (including the multipath options) for a controller.
 
+`spdk_bdev_nvme_set_multipath_policy()` and the matching `bdev_nvme_set_multipath_policy` RPC are
+deprecated and will be removed in v26.09. Use `spdk_bdev_nvme_create()` / `bdev_nvme_attach_controller`
+with multipath options instead.
+
+### bdev_passthru
+
+Added support for `SPDK_BDEV_IO_TYPE_COMPARE`, compare commands are forwarded to the underlying
+base bdev via `spdk_bdev_comparev_blocks()`.
+
+### bdev_raid
+
+Added a `clear_sb` parameter to the `bdev_raid_delete` RPC to clear the superblock from base
+bdevs when the raid bdev is deleted. The superblock is also cleared on a failed
+`bdev_raid_create`.
+
+### build
+
+Added `--with-isal` and `--with-isal-crypto` configure options to link against system-installed
+ISA-L libraries instead of the in-tree submodules. The `<isa-l/...>` and `<isa-l_crypto/...>`
+umbrella headers were promoted to the public SPDK include tree as `include/spdk/isa-l.h` and
+`include/spdk/isa-l-crypto.h`.
+
+### fsdev
+
+The current upstream `fsdev` library and its consumers are deprecated in preparation for a
+wholesale replacement in v26.09. This includes the public APIs in `include/spdk/fsdev.h` and
+`include/spdk/fsdev_module.h`, the `fsdev` event subsystem, the `aio` fsdev module
+(`fsdev_aio_create` / `fsdev_aio_delete` RPCs and `--with-aio-fsdev`), the `fuse_dispatcher`
+library (`include/spdk/fuse_dispatcher.h`), and the `vfu_virtio_create_fs_endpoint` RPC.
+
+### init
+
+Promoted the subsystem registration APIs to the public header `include/spdk/init.h`:
+`struct spdk_subsystem`, `struct spdk_subsystem_depend`, `spdk_add_subsystem()`,
+`spdk_add_subsystem_depend()`, `spdk_subsystem_init_next()` and `spdk_subsystem_fini_next()`,
+along with the `SPDK_SUBSYSTEM_REGISTER()` and `SPDK_SUBSYSTEM_DEPEND()` macros. Applications can
+plug their own components into SPDK's initialization, teardown and config-dump system alongside
+the built-in subsystems.
+
+### json
+
+Added `spdk_json_write_add_flags()` to update write context flags after creation.
+
+Added `spdk_json_array_count()` to count the elements of a decoded JSON array.
+
+### jsonrpc
+
+Added a JSON-RPC client batch request API. `spdk_jsonrpc_begin_batch()` and
+`spdk_jsonrpc_end_batch()` build a single batch and `spdk_jsonrpc_begin_request()` /
+`spdk_jsonrpc_end_request()` may be called multiple times in batch mode to issue several
+requests in a single send.
+
 ### nvme
 
 Removed the transport APIs `poll_group_connect_qpair` and `poll_group_disconnect_qpair`. None of
@@ -29,6 +126,27 @@ Data.
 
 Changed the NVME request timeout tracking - now the timeout includes the time the request spent
 in the internal SPDK queues, before it was sent to the disk/network.
+
+Added support for the NVMe Key Value (KV) command set. The new public header
+`include/spdk/nvme_kv.h` exposes `spdk_nvme_kv_store()`, `spdk_nvme_kv_retrieve()`,
+`spdk_nvme_kv_delete()`, `spdk_nvme_kv_exist()`, `spdk_nvme_kv_list()` and
+`spdk_nvme_kv_ns_get_data()`. The KV-aware identify data structures are updated to the NVMe Key
+Value Command Set Specification 1.3 and the controller initialization state machine now fetches
+the KV Command Set specific identify data for both the controller and each KV namespace.
+
+Added the `_ext` family of completion APIs that accept the command opcode so fabric
+command-specific status codes are no longer confused with NVMe command-specific status codes:
+`spdk_nvme_cpl_get_status_string_ext()`, `spdk_nvme_print_completion_ext()` and
+`spdk_nvme_qpair_print_completion_ext()`. The non-`_ext` variants are deprecated and will be
+removed in v26.09.
+
+Added `spdk_nvme_qpair_get_queue_depth()` and `spdk_nvme_qpair_is_admin_queue()` helpers.
+
+Added `spdk_nvme_ctrlr_register_ns_attr_changed_callback()` so consumers can react to the list of
+changed namespace IDs published by the Changed Namespace List log page.
+
+Updated `spdk_nvme_cdata_ctratt` bit definitions to NVMe 2.3, adding the `MEM` bit
+("MDTS and Size Limits Exclude Metadata"). Old bit names will be removed in v26.09.
 
 ### nvmf
 
@@ -42,15 +160,29 @@ default timeout value equal to `NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS` is used. The
 `nvmf_subsystem_remove_host` JSON-RPC method also reflects the above behavior and now allows
 configuring the timeout.
 
-Added `spdk_nvmf_subsystem_create_ext()` API. It is meant to replace some API setters and getters.
-By using creation-time options, the design is improved - it becomes clear that certain settings
-are not meant to be modified dynamically.
+Added `spdk_nvmf_subsystem_create_ext()` and `spdk_nvmf_subsystem_get_opts()` APIs, replacing
+several individual setters and getters with a single options struct. By using creation-time
+options, the design makes it clear which settings are creation-time only and which can be
+modified dynamically. `spdk_nvmf_subsystem_create`, `spdk_nvmf_subsystem_set_sn`,
+`spdk_nvmf_subsystem_set_mn`, `spdk_nvmf_subsystem_set_ana_reporting`,
+`spdk_nvmf_subsystem_get_sn`, `spdk_nvmf_subsystem_get_mn`, `spdk_nvmf_subsystem_get_max_nsid`,
+`spdk_nvmf_subsystem_get_max_namespaces`, `spdk_nvmf_subsystem_get_ana_reporting` and
+`spdk_nvmf_subsystem_get_type` are deprecated and will be removed in v26.09.
+
+Added `spdk_nvmf_subsystem_stop_for_destroy()`, which stops a subsystem in a way that prevents it
+from being started again, in preparation for destroy. Combined with the internal cleanup it allows
+multiple `nvmf_subsystem_delete` RPCs for the same subsystem to be handled safely.
 
 Parameters of `nvmf_create_transport` and the buffer caching logic have been updated. The
 following parameters are deprecated and will be removed: `buf-cache-size`, `num-shared-buffers`.
 New parameters to set the exact number of small or large buffers were added:
 `iobuf-small-cache-size` and `iobuf-large-cache-size`. The transport now selects a buffer from a
-pool based on IO size.
+pool based on IO size. The `io_unit_size` parameter is now a no-op and is also deprecated.
+
+`nvmf_create_subsystem` RPC now uses the NVMe spec fields `dmrsl` (in logical blocks) and `wzsl`
+(as the spec power-of-two unit) directly. The legacy `max_discard_size_kib` and
+`max_write_zeroes_size_kib` parameters are deprecated and will be removed in v26.09. They are now
+converted internally, which also fixes wrong limits on namespaces with non-512-byte block sizes.
 
 Added target option Duplicate Host Policy (`dup_host_policy`). This introduces an enumeration
 `spdk_nvmf_subsystem_dup_host_policy`, which defines modes of restricting hostid reuse across
@@ -63,6 +195,69 @@ multiple controllers. The policy may be configured with the `dup_host_policy` pa
 
 Restricting duplicate hostids is a basic IO fencing mechanism that ensures any previous
 controller has disconnected at the target side before it can connect again.
+
+Renamed the `update` and `load` ops in `struct spdk_nvmf_ns_reservation_ops` to make their PTPL
+(Persist Through Power Loss) purpose explicit in the public header.
+
+The transport option `disable_command_passthru` now also gates Identify Namespace admin
+passthrough, matching the documented behavior.
+
+The `hide_metadata` parameter of the `nvmf_subsystem_add_ns` RPC is deprecated and will be removed
+in v26.09. Metadata visibility on a namespace is now determined by the transport's
+`dif_insert_or_strip` option. Targets that mix transports with disagreeing `dif_insert_or_strip`
+values are also deprecated and will be rejected in v26.09.
+
+### schema
+
+The JSON-RPC schema (`schema/schema.json`) is now the source of truth for most RPC parameter
+decoders, completion helpers, request-context structs and Python CLI help text. New RPCs and
+parameters should be described in the schema and consumed via the autogenerated code rather than
+implemented through hand-written `spdk_json_decoders` and CLI argparse wiring.
+
+### scripts
+
+The `autorun_post.py` symlink in the repository root is deprecated. The script has been moved to
+`scripts/autorun_post.py`, the symlink will be removed in v26.09.
+
+### sock
+
+Several APIs are deprecated in preparation for an upcoming socket-layer refactor and will be
+removed in v26.09:
+
+- `spdk_sock_connect`, `spdk_sock_connect_ext`, `spdk_sock_connect_async` will collapse into a
+  single replacement.
+- `spdk_sock_listen`, `spdk_sock_listen_ext` will collapse into a single replacement.
+- The `cb_fn` / `cb_arg` parameters of `spdk_sock_group_add_sock` move to a new
+  `spdk_sock_group_opts` struct passed to `spdk_sock_group_create`.
+- The legacy zero-copy receive API (`spdk_sock_group_poll_count`, `spdk_sock_recv_next`,
+  `spdk_sock_group_provide_buf`, `spdk_sock_group_get_buf`) will be replaced by a new
+  zero-copy API.
+
+### trace
+
+The shared-memory trace file (`spdk_trace_file`) was reorganized into a sequence of typed sections
+(main, owner, tpoint_mask, owner_type, object, tpoint and lcore_offsets) with a section table for
+tool discoverability. `tpoint_count` per history is now dynamic, decoupling SPDK builds from a
+fixed tpoint count. External readers that depend on the old layout must be rebuilt.
+
+Added `spdk_trace_clear()` and the matching `trace_clear` RPC, subsequent reads from external
+tools such as `spdk_trace` hide entries older than the recorded clear point.
+
+Added `spdk_trace_create_tpoint_mask()` to resolve a tracepoint name within a group. The
+`-e` / `--tpoint-group` CLI option now accepts a `+`-separated list of tracepoint names in
+addition to hex masks (for example `-e nvmf_tcp:TCP_REQ_NEW+TCP_REQ_EXECUTING`).
+
+The `trace_get_tpoint_group_mask` RPC response now includes a per-group `tpoint_mask` and a
+`tpoints` array describing each registered tracepoint, so callers can discover tracepoint names
+without reading SPDK headers.
+
+`spdk_trace`'s JSON output now includes owner descriptions alongside the existing text-mode
+output.
+
+### util
+
+Added `spdk_net_compare_address()` for normalizing and comparing IP address strings (handles
+equivalent IPv6 representations such as `::1` versus `0:0:0:0:0:0:0:1`).
 
 ## v26.01
 
