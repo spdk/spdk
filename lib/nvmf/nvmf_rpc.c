@@ -242,71 +242,40 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_subsystem_max_discard_size_kib,
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_subsystem_max_write_zeroes_size_kib,
 			      "use wzsl instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
 
-static int
-decode_subsystem_serial_number(const struct spdk_json_val *val, void *out)
-{
-	char *str = NULL;
-	int rc;
+/*
+ * X-macro list of fields shared between rpc_nvmf_create_subsystem_ctx
+ * and spdk_nvmf_subsystem_opts.  Each entry is X(field).
+ * serial_number/model_number are excluded because the ctx uses char*
+ * while opts uses fixed-size char arrays (sn/mn).
+ */
+#define NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS(X) \
+	X(max_namespaces)                    \
+	X(ana_reporting)                     \
+	X(dmrsl)                             \
+	X(wzsl)                              \
+	X(passthrough)                       \
+	X(enable_nssr)
 
-	rc = spdk_json_decode_string(val, &str);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvmf_subsystem_copy_sn(out, str, SPDK_NVME_CTRLR_SN_LEN + 1);
-	if (rc) {
-		SPDK_ERRLOG("Invalid SN '%s'\n", str);
-	}
-	free(str);
-	return rc;
-}
-
-static int
-decode_subsystem_model_number(const struct spdk_json_val *val, void *out)
-{
-	char *str = NULL;
-	int rc;
-
-	rc = spdk_json_decode_string(val, &str);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvmf_subsystem_copy_mn(out, str, SPDK_NVME_CTRLR_MN_LEN + 1);
-	if (rc) {
-		SPDK_ERRLOG("Invalid MN '%s'\n", str);
-	}
-	free(str);
-	return rc;
-}
-
-struct rpc_subsystem_create {
-	char *nqn;
-	char *tgt_name;
-	bool allow_any_host;
-	uint16_t min_cntlid;
-	uint16_t max_cntlid;
-	uint64_t max_discard_size_kib;
-	uint64_t max_write_zeroes_size_kib;
-	struct spdk_nvmf_subsystem_opts opts;
-};
+/* Bump and audit NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS when this size changes. */
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_subsystem_opts) == 88,
+		   "opts grew -- update NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS");
 
 static const struct spdk_json_object_decoder rpc_nvmf_create_subsystem_decoders[] = {
-	{"nqn", offsetof(struct rpc_subsystem_create, nqn), spdk_json_decode_string},
-	{"serial_number", offsetof(struct rpc_subsystem_create, opts.sn), decode_subsystem_serial_number, true},
-	{"model_number", offsetof(struct rpc_subsystem_create, opts.mn), decode_subsystem_model_number, true},
-	{"tgt_name", offsetof(struct rpc_subsystem_create, tgt_name), spdk_json_decode_string, true},
-	{"max_namespaces", offsetof(struct rpc_subsystem_create, opts.max_namespaces), spdk_json_decode_uint32, true},
-	{"allow_any_host", offsetof(struct rpc_subsystem_create, allow_any_host), spdk_json_decode_bool, true},
-	{"ana_reporting", offsetof(struct rpc_subsystem_create, opts.ana_reporting), spdk_json_decode_bool, true},
-	{"min_cntlid", offsetof(struct rpc_subsystem_create, min_cntlid), spdk_json_decode_uint16, true},
-	{"max_cntlid", offsetof(struct rpc_subsystem_create, max_cntlid), spdk_json_decode_uint16, true},
-	{"max_discard_size_kib", offsetof(struct rpc_subsystem_create, max_discard_size_kib), rpc_decode_max_discard_size_kib, true},
-	{"max_write_zeroes_size_kib", offsetof(struct rpc_subsystem_create, max_write_zeroes_size_kib), rpc_decode_max_write_zeroes_size_kib, true},
-	{"dmrsl", offsetof(struct rpc_subsystem_create, opts.dmrsl), spdk_json_decode_uint32, true},
-	{"wzsl", offsetof(struct rpc_subsystem_create, opts.wzsl), spdk_json_decode_uint8, true},
-	{"passthrough", offsetof(struct rpc_subsystem_create, opts.passthrough), spdk_json_decode_bool, true},
-	{"enable_nssr", offsetof(struct rpc_subsystem_create, opts.enable_nssr), spdk_json_decode_bool, true},
+	{"nqn", offsetof(struct rpc_nvmf_create_subsystem_ctx, nqn), spdk_json_decode_string},
+	{"serial_number", offsetof(struct rpc_nvmf_create_subsystem_ctx, serial_number), spdk_json_decode_string, true},
+	{"model_number", offsetof(struct rpc_nvmf_create_subsystem_ctx, model_number), spdk_json_decode_string, true},
+	{"tgt_name", offsetof(struct rpc_nvmf_create_subsystem_ctx, tgt_name), spdk_json_decode_string, true},
+	{"max_namespaces", offsetof(struct rpc_nvmf_create_subsystem_ctx, max_namespaces), spdk_json_decode_uint32, true},
+	{"allow_any_host", offsetof(struct rpc_nvmf_create_subsystem_ctx, allow_any_host), spdk_json_decode_bool, true},
+	{"ana_reporting", offsetof(struct rpc_nvmf_create_subsystem_ctx, ana_reporting), spdk_json_decode_bool, true},
+	{"min_cntlid", offsetof(struct rpc_nvmf_create_subsystem_ctx, min_cntlid), spdk_json_decode_uint16, true},
+	{"max_cntlid", offsetof(struct rpc_nvmf_create_subsystem_ctx, max_cntlid), spdk_json_decode_uint16, true},
+	{"max_discard_size_kib", offsetof(struct rpc_nvmf_create_subsystem_ctx, max_discard_size_kib), rpc_decode_max_discard_size_kib, true},
+	{"max_write_zeroes_size_kib", offsetof(struct rpc_nvmf_create_subsystem_ctx, max_write_zeroes_size_kib), rpc_decode_max_write_zeroes_size_kib, true},
+	{"dmrsl", offsetof(struct rpc_nvmf_create_subsystem_ctx, dmrsl), spdk_json_decode_uint32, true},
+	{"wzsl", offsetof(struct rpc_nvmf_create_subsystem_ctx, wzsl), spdk_json_decode_uint8, true},
+	{"passthrough", offsetof(struct rpc_nvmf_create_subsystem_ctx, passthrough), spdk_json_decode_bool, true},
+	{"enable_nssr", offsetof(struct rpc_nvmf_create_subsystem_ctx, enable_nssr), spdk_json_decode_bool, true},
 };
 
 static void
@@ -329,17 +298,21 @@ static void
 rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_subsystem_create req = {};
+	struct rpc_nvmf_create_subsystem_ctx req = {};
+	struct spdk_nvmf_subsystem_opts opts;
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 	struct spdk_nvmf_tgt *tgt;
 	int rc = -1;
 
 	req.min_cntlid = NVMF_MIN_CNTLID;
 	req.max_cntlid = NVMF_MAX_CNTLID;
-
-	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &req.opts, sizeof(req.opts));
 	req.max_discard_size_kib = UINT64_MAX;
 	req.max_write_zeroes_size_kib = UINT64_MAX;
+
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+#define X(f) req.f = opts.f;
+	NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS(X)
+#undef X
 
 	if (spdk_json_decode_object(params, rpc_nvmf_create_subsystem_decoders,
 				    SPDK_COUNTOF(rpc_nvmf_create_subsystem_decoders),
@@ -357,9 +330,33 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+#define X(f) opts.f = req.f;
+	NVMF_CREATE_SUBSYSTEM_OPTS_FIELDS(X)
+#undef X
+
+	if (req.serial_number != NULL) {
+		rc = nvmf_subsystem_copy_sn(opts.sn, req.serial_number, sizeof(opts.sn));
+		if (rc) {
+			SPDK_ERRLOG("Invalid SN '%s'\n", req.serial_number);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			goto cleanup;
+		}
+	}
+
+	if (req.model_number != NULL) {
+		rc = nvmf_subsystem_copy_mn(opts.mn, req.model_number, sizeof(opts.mn));
+		if (rc) {
+			SPDK_ERRLOG("Invalid MN '%s'\n", req.model_number);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			goto cleanup;
+		}
+	}
+
 	if (req.max_discard_size_kib != UINT64_MAX) {
 		/* Convert KiB to logical blocks assuming 512B block size. */
-		req.opts.dmrsl = req.max_discard_size_kib << 1;
+		opts.dmrsl = req.max_discard_size_kib << 1;
 	}
 
 	if (req.max_write_zeroes_size_kib != UINT64_MAX) {
@@ -369,10 +366,10 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 		 * or power of 2 >= 8.
 		 */
 		if (req.max_write_zeroes_size_kib == 0) {
-			req.opts.wzsl = 0;
+			opts.wzsl = 0;
 		} else if (req.max_write_zeroes_size_kib >= 8 &&
 			   spdk_u64_is_pow2(req.max_write_zeroes_size_kib)) {
-			req.opts.wzsl = spdk_u64log2(req.max_write_zeroes_size_kib >> 2);
+			opts.wzsl = spdk_u64log2(req.max_write_zeroes_size_kib >> 2);
 		} else {
 			SPDK_ERRLOG("Subsystem %s: invalid "
 				    "max_write_zeroes_size_kib %"PRIu64"\n",
@@ -385,7 +382,7 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, &req.opts);
+	subsystem = spdk_nvmf_subsystem_create_ext(tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to create subsystem %s\n", req.nqn);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -412,8 +409,7 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 cleanup:
-	free(req.nqn);
-	free(req.tgt_name);
+	free_rpc_nvmf_create_subsystem(&req);
 
 	if (rc && subsystem) {
 		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
