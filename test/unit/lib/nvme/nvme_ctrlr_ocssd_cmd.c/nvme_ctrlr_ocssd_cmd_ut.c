@@ -5,6 +5,7 @@
 
 #include "spdk_internal/cunit.h"
 #include "common/lib/test_env.c"
+#include "common/lib/nvme/cmd_ut_common.h"
 
 #include "nvme/nvme_ctrlr_ocssd_cmd.c"
 
@@ -109,13 +110,12 @@ static void
 test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
-	struct spdk_nvme_ns ns = {};
-	uint8_t *vendor_specific = nvme_ns_get_vendor_specific(&ns);
+	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
+	uint8_t *vendor_specific = nvme_ns_get_vendor_specific(ns);
 	bool rc;
 
 	RB_INIT(&ctrlr.ns);
-	ns.id = 1;
-	RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns);
+	RB_INSERT(nvme_ns_tree, &ctrlr.ns, ns);
 
 	vendor_specific[0] = 1;
 	ctrlr.quirks |= NVME_QUIRK_OCSSD;
@@ -136,6 +136,8 @@ test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 
 	rc = spdk_nvme_ctrlr_is_ocssd_supported(&ctrlr);
 	CU_ASSERT(rc == false);
+
+	ut_ns_free(ns);
 }
 
 int

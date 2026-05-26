@@ -34,4 +34,22 @@ ut_qpair_cleanup(struct spdk_nvme_qpair *qpair)
 	free(qpair->req_buf);
 }
 
+static inline struct spdk_nvme_ns *
+ut_ns_alloc(uint32_t id, struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ns *ns;
+
+	ns = calloc(1, sizeof(*ns));
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+	ns->id = id;
+	ns->ctrlr = ctrlr;
+	return ns;
+}
+
+static inline void
+ut_ns_free(struct spdk_nvme_ns *ns)
+{
+	free(ns);
+}
+
 #endif /* SPDK_NVME_CMD_UT_COMMON_H */
