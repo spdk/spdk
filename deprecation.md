@@ -162,10 +162,3 @@ num-shared-buffers parameter is deprecated and will be removed in 26.09 release.
 `iobuf_set_options` to specify the number of small and large pool entries and use `iobuf-small-cache-size` and
 `iobuf-large-cache-size` parameters of `nvmf_create_transport` RPC to configure desired buffers caches.
 io-unit-size is NOP, it is deprecated and will be removed in v26.09 release.
-
-### app/spdk_nvme_perf
-
-#### perf_g_option
-
-The `-G` command line option is deprecated and will be removed in the v26.05 release.
-Use `--log-level debug -T nvme` instead.
