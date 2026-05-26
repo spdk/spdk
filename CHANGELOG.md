@@ -4,50 +4,6 @@
 
 ## v26.05
 
-### nvmf
-
-Deprecated API spdk_nvmf_ctrlr_connect() was removed.
-
-The behavior of `spdk_nvmf_subsystem_disconnect_host` has been changed. Previously,
-the function could return a status before all queues were actually disconnected.
-In the current version, the function will invoke the callback only after all
-disconnect operations have completed or the provided timeout has been exceeded.
-If the function is called with the timeout set to 0, the default timeout value
-equal to `NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS` is used. The
-`nvmf_subsystem_remove_host` json-rpc methods also reflects to above behavior and
-allow to configure the timeout now.
-
-Added the spdk_nvmf_subsystem_create_ext API. It is meant to replace some API setters and
-getters. By using creation time options, the design is improved - it becomes clear that
-certain settings are not meant to be modified dynamically.
-
-Parameters of `nvmf_create_transport` and buffers caching logic has been updated. The following parameters
-are deprecated and will be removed: `buf-cache-size`, `num-shared-buffers`. New parameters to set the exact
-number of small or large buffers were added: `iobuf-small-cache-size` and `iobuf-large-cache-size`.
-The transport now selects a buffer from a pool based on IO size.
-
-Add TGT option _Duplicate Host Policy_ (`dup_host_policy`).
-This introduces an enumeration `spdk_nvmf_subsystem_dup_host_policy`, which defines modes of
-restricting hostid reuse across multiple controllers.
-The policy may be configured with the `dup_host_policy` parameter of the `nvmf_set_config` RPC.
-
-1. `_ALLOW` is the default and maintains standards compliant behavior.
-1. `_RESTRICT_PER_LISTENER` places the restriction at the listener level while supporting multipath.
-
-Restricting duplicate hostids is a basic IO fencing mechanism that ensures any previous controller
-has disconnected at the target side before it can conntect again.
-
-### nvme
-
-Removed the transport APIs poll_group_connect_qpair and poll_group_disconnet_qpair. None of the
-transports did anything inside of these functions, and we've simplified the model such that
-connections are only added or removed while disconnected.
-
-Changed the NVME request timeout tracking - now the timeout includes the time the request spent
-in the internal SPDK queues, before it was sent to the disk/network.
-
-Added `spdk_nvme_nvm_ctrlr_get_data` API for NVM I/O Command Set Specific Identify Controller Data.
-
 ### bdev_nvme
 
 Added per-controller multipath configuration to the `spdk_bdev_nvme_create()` API and
@@ -61,8 +17,54 @@ with `spdk_bdev_nvme_ctrlr_first_ctrlr()` and `spdk_bdev_nvme_ctrlr_next_ctrlr()
 underlying `spdk_nvme_ctrlr` instances within a group. The `spdk_bdev_nvme_ctrlr` type is now
 exposed as an opaque handle in the public header.
 
-Added `spdk_bdev_nvme_ctrlr_get_opts()` to retrieve the creation-time
-`spdk_bdev_nvme_ctrlr_opts` (including the multipath options) for a controller.
+Added `spdk_bdev_nvme_ctrlr_get_opts()` to retrieve the creation-time `spdk_bdev_nvme_ctrlr_opts`
+(including the multipath options) for a controller.
+
+### nvme
+
+Removed the transport APIs `poll_group_connect_qpair` and `poll_group_disconnect_qpair`. None of
+the transports did anything inside of these functions, and the model has been simplified such that
+connections are only added or removed while disconnected.
+
+Added `spdk_nvme_nvm_ctrlr_get_data()` API for NVM I/O Command Set Specific Identify Controller
+Data.
+
+Changed the NVME request timeout tracking - now the timeout includes the time the request spent
+in the internal SPDK queues, before it was sent to the disk/network.
+
+### nvmf
+
+Removed the deprecated `spdk_nvmf_ctrlr_connect()` API.
+
+The behavior of `spdk_nvmf_subsystem_disconnect_host` has been changed. Previously, the function
+could return a status before all queues were actually disconnected. In the current version, the
+function will invoke the callback only after all disconnect operations have completed or the
+provided timeout has been exceeded. If the function is called with the timeout set to 0, the
+default timeout value equal to `NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS` is used. The
+`nvmf_subsystem_remove_host` JSON-RPC method also reflects the above behavior and now allows
+configuring the timeout.
+
+Added `spdk_nvmf_subsystem_create_ext()` API. It is meant to replace some API setters and getters.
+By using creation-time options, the design is improved - it becomes clear that certain settings
+are not meant to be modified dynamically.
+
+Parameters of `nvmf_create_transport` and the buffer caching logic have been updated. The
+following parameters are deprecated and will be removed: `buf-cache-size`, `num-shared-buffers`.
+New parameters to set the exact number of small or large buffers were added:
+`iobuf-small-cache-size` and `iobuf-large-cache-size`. The transport now selects a buffer from a
+pool based on IO size.
+
+Added target option Duplicate Host Policy (`dup_host_policy`). This introduces an enumeration
+`spdk_nvmf_subsystem_dup_host_policy`, which defines modes of restricting hostid reuse across
+multiple controllers. The policy may be configured with the `dup_host_policy` parameter of the
+`nvmf_set_config` RPC:
+
+- `_ALLOW` is the default and maintains standards compliant behavior.
+- `_RESTRICT_PER_LISTENER` places the restriction at the listener level while supporting
+  multipath.
+
+Restricting duplicate hostids is a basic IO fencing mechanism that ensures any previous
+controller has disconnected at the target side before it can connect again.
 
 ## v26.01
 
