@@ -91,17 +91,12 @@ rpc_decode_{{ enum.name }}(const struct spdk_json_val *val, void *out)
 
 {% for object in schema["objects"] %}
 {%- for field in object.fields if field.deprecated %}
-extern struct spdk_deprecation *_deprecated_{{ object.name }}_{{ field.name }};
-{%- endfor %}
-{%- endfor %}
-
-{% for object in schema["objects"] %}
-{%- for field in object.fields if field.deprecated %}
 {%- set base_decoder = 'spdk_json_decode_bool' if field.type == 'boolean' else 'spdk_json_decode_' ~ field.type %}
 static inline int
 rpc_decode_{{ field.name }}(const struct spdk_json_val *val, void *out)
 {
-	SPDK_LOG_DEPRECATED({{ object.name }}_{{ field.name }});
+	struct spdk_deprecation *dep = spdk_log_deprecation_find_by_tag("{{ object.name }}_{{ field.name }}");
+	spdk_log_deprecated(dep, __FILE__, __LINE__, __func__);
 	return {{ base_decoder }}(val, out);
 }
 {% endfor %}
@@ -236,40 +231,19 @@ rpc_decode_{{ bitmask.name }}(const struct spdk_json_val *val, void *out)
 }
 {% endfor %}
 
-/* Deprecated-parameter decoder helpers section
- *
- * For each method parameter marked `"deprecated": true` in the schema,
- * emit a `static inline` decoder that logs a deprecation warning before
- * delegating to the normal type decoder. The matching
- * SPDK_LOG_DEPRECATION_REGISTER (defining `_deprecated_<tag>`) must live
- * in the consuming .c file so that each tag is registered exactly once.
- *
- * Because this header is pulled in by every TU that includes
- * <spdk/rpc.h>, forward-declare each `_deprecated_<tag>` symbol as
- * extern so the static-inline bodies parse cleanly even in TUs that do
- * not own the REGISTER macro. Unused static-inline functions are not
- * emitted, so only TUs that actually call a decoder require the symbol
- * at link time.
- */
-
-{% for method in schema["methods"] %}
-{%- for param in method.params if param.deprecated %}
-extern struct spdk_deprecation *_deprecated_{{ method.name }}_{{ param.name }};
-{%- endfor %}
-{%- endfor %}
+/* RPC objects section */
 
 {% for method in schema["methods"] %}
 {%- for param in method.params if param.deprecated %}
 static inline int
 rpc_decode_{{ param.name }}(const struct spdk_json_val *val, void *out)
 {
-	SPDK_LOG_DEPRECATED({{ method.name }}_{{ param.name }});
+	struct spdk_deprecation *dep = spdk_log_deprecation_find_by_tag("{{ method.name }}_{{ param.name }}");
+	spdk_log_deprecated(dep, __FILE__, __LINE__, __func__);
 	return spdk_json_decode_{{ param.type }}(val, out);
 }
 {% endfor %}
 {%- endfor %}
-
-/* RPC objects section */
 
 {% for method in schema["methods"] %}
 {%- if method.params %}

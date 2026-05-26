@@ -103,6 +103,20 @@ spdk_log_deprecated(struct spdk_deprecation *dep, const char *file, uint32_t lin
 	}
 }
 
+struct spdk_deprecation *
+spdk_log_deprecation_find_by_tag(const char *tag)
+{
+	struct spdk_deprecation *dep;
+
+	TAILQ_FOREACH(dep, &g_deprecations, link) {
+		if (strcmp(dep->tag, tag) == 0) {
+			return dep;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_log_for_each_deprecation(void *ctx, spdk_log_for_each_deprecation_fn fn)
 {

@@ -22,6 +22,7 @@
 	spdk_log_enable_timestamps;
 	spdk_log_deprecation_register;
 	spdk_log_deprecated;
+	spdk_log_deprecation_find_by_tag;
 	spdk_log_for_each_deprecation;
 	spdk_deprecation_get_tag;
 	spdk_deprecation_get_description;

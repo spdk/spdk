@@ -360,7 +360,7 @@ int spdk_log_deprecation_register(const char *tag, const char *description,
 				  struct spdk_deprecation **reg);
 
 #define SPDK_LOG_DEPRECATION_REGISTER(tag, desc, release, rate) \
-	struct spdk_deprecation *_deprecated_##tag; \
+	static struct spdk_deprecation *_deprecated_##tag; \
 	static void __attribute__((constructor)) _spdk_deprecation_register_##tag(void) \
 	{ \
 		int rc; \
@@ -383,6 +383,14 @@ void spdk_log_deprecated(struct spdk_deprecation *deprecation, const char *file,
 
 #define SPDK_LOG_DEPRECATED(tag) \
 	spdk_log_deprecated(_deprecated_##tag, __FILE__, __LINE__, __func__)
+
+/**
+ * Find a registered deprecation by its tag string.
+ *
+ * \param tag The deprecation tag string to look up.
+ * \return Pointer to the deprecation, or NULL if not registered.
+ */
+struct spdk_deprecation *spdk_log_deprecation_find_by_tag(const char *tag);
 
 /**
  * Callback function for spdk_log_for_each_deprecation().
