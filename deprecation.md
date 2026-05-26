@@ -27,17 +27,6 @@ The tags can be matched with the level 4 headers below.
 Use `spdk_bdev_get_memory_domain_types` and `get_memory_domain_types` instead.
 Will be removed in the v26.09 release.
 
-### bdev/nvme
-
-The `BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE`, `BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE`,
-`BDEV_NVME_MP_SELECTOR_ROUND_ROBIN`, and `BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH` enum
-value names are deprecated and will be removed in v26.09. Use the
-`SPDK_BDEV_NVME_MULTIPATH_POLICY_*` and `SPDK_BDEV_NVME_MULTIPATH_SELECTOR_*`
-names instead.
-
-The `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` enum value names are deprecated and will be removed in v26.09.
-Use the `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` names instead.
-
 #### `bdev_nvme_set_multipath_policy`
 
 The `spdk_bdev_nvme_set_multipath_policy` function and the `bdev_nvme_set_multipath_policy` RPC
