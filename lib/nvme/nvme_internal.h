@@ -588,8 +588,8 @@ struct spdk_nvme_ns {
 	uint32_t			extended_lba_size;
 
 	uint32_t			md_size;
-	uint32_t			pi_type;
-	uint32_t			pi_format;
+	uint8_t				pi_type			: 3;	/* \ref spdk_nvme_pi_type */
+	uint8_t				pi_format		: 2;	/* \ref spdk_nvme_pi_format */
 	uint32_t			sectors_per_max_io;
 	uint32_t			sectors_per_max_io_no_md;
 	uint32_t			sectors_per_stripe;
