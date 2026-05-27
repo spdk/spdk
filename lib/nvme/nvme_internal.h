@@ -595,15 +595,15 @@ struct spdk_nvme_ns {
 	uint32_t			sectors_per_stripe;
 	uint32_t			id;
 	uint16_t			flags;
-	bool				active;
-	bool				identify_pending;
+	uint8_t				active			: 1;
+	uint8_t				identify_pending	: 1;
+	uint8_t				has_uuid		: 1;
 
 	/* Command Set Identifier */
 	enum spdk_nvme_csi		csi;
 
 	/* Parsed from Namespace Identification Descriptor List (CNS = 03h). */
 	struct spdk_uuid		uuid;
-	bool				has_uuid;
 
 	uint32_t			ana_group_id;
 	enum spdk_nvme_ana_state	ana_state;
