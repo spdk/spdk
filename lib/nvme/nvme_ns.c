@@ -522,18 +522,39 @@ nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, si
 const uint8_t *
 spdk_nvme_ns_get_nguid(const struct spdk_nvme_ns *ns)
 {
-	const uint8_t *nguid;
-	size_t size;
+	const struct spdk_nvme_ns_data *nsdata = &ns->nsdata;
 
-	nguid = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_NGUID, &size);
-	if (nguid && size != SPDK_SIZEOF_MEMBER(struct spdk_nvme_ns_data, nguid)) {
-		NVME_CTRLR_WARNLOG(ns->ctrlr,
-				   "Invalid NIDT_NGUID descriptor length reported: %zu (expected: %zu)\n",
-				   size, SPDK_SIZEOF_MEMBER(struct spdk_nvme_ns_data, nguid));
+	if (spdk_mem_all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
 		return NULL;
 	}
 
-	return nguid;
+	return nsdata->nguid;
+}
+
+static bool
+nvme_ns_check_desc_len(const void *val, size_t val_size, size_t expected_size, const char *label,
+		       struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (val_size != expected_size) {
+		NVME_CTRLR_WARNLOG(ctrlr, "Invalid %s descriptor length reported: %zu (expected: %zu)\n", label,
+				   val_size, expected_size);
+		return false;
+	}
+
+	return true;
+}
+
+static void
+nvme_ns_backfill_nsdata(const void *val, void *dst, size_t dst_size, const char *label,
+			struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (spdk_mem_all_zero(dst, dst_size)) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "%s not in Identify NS data; using descriptor list value\n", label);
+		memcpy(dst, val, dst_size);
+	} else if (memcmp(val, dst, dst_size) != 0) {
+		NVME_CTRLR_WARNLOG(ctrlr,
+				   "%s descriptor differs from Identify NS data; using Identify NS value\n", label);
+	}
 }
 
 const struct spdk_uuid *
@@ -543,9 +564,7 @@ spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 	size_t uuid_size;
 
 	uuid = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_UUID, &uuid_size);
-	if (uuid && uuid_size != sizeof(*uuid)) {
-		NVME_CTRLR_WARNLOG(ns->ctrlr, "Invalid NIDT_UUID descriptor length reported: %zu (expected: %zu)\n",
-				   uuid_size, sizeof(*uuid));
+	if (uuid && !nvme_ns_check_desc_len(uuid, uuid_size, sizeof(*uuid), "UUID", ns->ctrlr)) {
 		return NULL;
 	}
 
@@ -558,12 +577,11 @@ nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 	size_t csi_size;
 
 	csi = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_CSI, &csi_size);
-	if (csi && csi_size != sizeof(*csi))
+	if (csi && !nvme_ns_check_desc_len(csi, csi_size, sizeof(*csi), "CSI", ns->ctrlr))
 	{
-		NVME_CTRLR_WARNLOG(ns->ctrlr, "Invalid NIDT_CSI descriptor length reported: %zu (expected: %zu)\n",
-				   csi_size, sizeof(*csi));
 		return SPDK_NVME_CSI_NVM;
 	}
+
 	if (!csi)
 	{
 		if (ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS) {
@@ -578,7 +596,22 @@ nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 void
 nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns)
 {
+	struct spdk_nvme_ns_data *nsdata = &ns->nsdata;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	const void *val;
+	size_t val_size;
+
 	ns->csi = nvme_ns_get_csi(ns);
+
+	val = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_NGUID, &val_size);
+	if (val && nvme_ns_check_desc_len(val, val_size, sizeof(nsdata->nguid), "NGUID", ctrlr)) {
+		nvme_ns_backfill_nsdata(val, nsdata->nguid, sizeof(nsdata->nguid), "NGUID", ctrlr);
+	}
+
+	val = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_EUI64, &val_size);
+	if (val && nvme_ns_check_desc_len(val, val_size, sizeof(nsdata->eui64), "EUI64", ctrlr)) {
+		nvme_ns_backfill_nsdata(val, &nsdata->eui64, sizeof(nsdata->eui64), "EUI64", ctrlr);
+	}
 }
 
 enum spdk_nvme_csi
