@@ -2005,8 +2005,13 @@ print_performance(void)
 	TAILQ_FOREACH(worker, &g_workers, link) {
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			if (ns_ctx->stats.io_completed != 0) {
-				io_per_second = (double)ns_ctx->stats.io_completed * 1000 * 1000 / g_elapsed_time_in_usec;
-				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+				if (g_elapsed_time_in_usec == 0) {
+					io_per_second = 0.0;
+					mb_per_second = 0.0;
+				} else {
+					io_per_second = (double)ns_ctx->stats.io_completed * 1000 * 1000 / g_elapsed_time_in_usec;
+					mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+				}
 				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) * 1000 * 1000 /
 						  g_tsc_rate;
 				min_latency = (double)ns_ctx->stats.min_tsc * 1000 * 1000 / g_tsc_rate;
