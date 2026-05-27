@@ -599,14 +599,13 @@ struct spdk_nvme_ns {
 	uint8_t				identify_pending	: 1;
 	uint8_t				has_uuid		: 1;
 
-	/* Command Set Identifier */
-	enum spdk_nvme_csi		csi;
+	uint8_t				csi;				/* \ref spdk_nvme_csi */
 
 	/* Parsed from Namespace Identification Descriptor List (CNS = 03h). */
 	struct spdk_uuid		uuid;
 
 	uint32_t			ana_group_id;
-	enum spdk_nvme_ana_state	ana_state;
+	uint8_t				ana_state;			/* \ref spdk_nvme_ana_state */
 
 	/* I/O Command Set Specific Identify Namespace data. */
 	union {
